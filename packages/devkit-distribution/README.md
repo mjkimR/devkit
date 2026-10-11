@@ -29,19 +29,17 @@ In this monorepo, run `uv sync --all-packages` first, then run `uv run --package
 | --- | --- | --- |
 | `devkit sync [options]` | Lifecycle | Synchronizes installed content wheels into `.devkit/managed/` and projects native agent assets. |
 | `devkit list [--target <dir>]` | Inspection | Outputs JSON listing installed content packages, bundle metadata, presets, and asset paths. |
-| `devkit inventory [--target <dir>]` | Inspection | Previews planned file inventories without modifying the filesystem. |
+| `devkit plan <source> [--preset <name>]` | Authoring | Previews managed inventory for a local bundle without writing to a project. |
 | `devkit recover [--target <dir>]` | Fault Tolerance | Uses write-ahead journal in `.devkit/transient/` to safely roll back an interrupted transaction. |
 | `devkit get-context <bundle>` | Context | Returns bundle constitution and catalog of instruction headers for progressive loading. |
 | `devkit playbook search <query>` | Context | Runs lexical BM25 search over synchronized playbooks. |
-| `devkit explain-playbook <id>` | Context | Displays full markdown procedure and metadata for a specific playbook. |
-| `devkit read <path> [--max-bytes N]` | Context | Safely reads managed file contents bounded by byte budget. |
 | `devkit override list` | Customization | Lists active project overrides and their drift status. |
 | `devkit override create <bundle>:<asset>` | Customization | Copies upstream asset to `.devkit/overrides/` and records upstream baseline digest. |
 | `devkit override diff <bundle>:<asset>` | Customization | Shows 3-way diff between upstream baseline, updated wheel, and local override. |
 | `devkit override accept <bundle>:<asset>` | Customization | Reconciles upstream updates and advances baseline digest. |
 | `devkit override remove <bundle>:<asset>` | Customization | Unlinks local override and restores pristine upstream projection. |
-| `devkit validate <path>` | Authoring | Verifies manifest syntax (`bundle.toml` schema 1) and relative file sources. |
-| `devkit pack <path> -o <zip>` | Packaging | Builds a deterministic ZIP archive with sorted entries and normalized permissions. |
+| `devkit bundle validate <source>` | Authoring | Verifies manifest syntax (`bundle.toml` schema 1) and relative file sources. |
+| `devkit bundle build <source> --output <zip>` | Packaging | Builds a deterministic ZIP archive with sorted entries and normalized permissions. |
 
 ---
 

@@ -109,23 +109,33 @@ Playbooks can be Markdown files or directories containing `SKILL.md` and support
 
 ---
 
-## 5. Inspection CLI Commands
+## 5. Playbook Discovery Workflow and CLI
 
-### `devkit playbook search` / `devkit find-playbook`
+### 1. Search Query Execution
 ```bash
 uv run devkit playbook search "replica recovery" --limit 3 --min-score 0.2 --max-bytes 4096
 ```
-
-### `devkit explain-playbook`
-```bash
-uv run devkit explain-playbook recover-postgres-replica
+The search returns matching candidates containing bundle name, asset ID, absolute file path, relevance score, and frontmatter metadata:
+```json
+{
+  "matches": [
+    {
+      "bundle": "starter",
+      "asset": "review-flow",
+      "path": "/abs/path/.devkit/managed/starter/playbooks/review.md",
+      "score": 0.85,
+      "metadata": {
+        "name": "review-flow",
+        "description": "Pull request review checklist"
+      }
+    }
+  ],
+  "truncated": false
+}
 ```
 
-### `devkit read`
-Reads file content bounded by token/byte limits:
-```bash
-uv run devkit read .devkit/managed/starter/playbooks/review.md --max-bytes 4096
-```
+### 2. On-Demand Procedure Reading
+Once a matching candidate is identified, the agent loads its procedure body directly from the returned absolute file path. If the playbook belongs to a bundle whose context has not yet been loaded in the current session, the agent calls `devkit get-context <bundle>` first.
 
-### Draft Saving Workflow
+### 3. Draft Saving Workflow
 If an agent searches for a task procedure and finds no matching playbook, it completes the user request and asks whether to save a reusable draft into an authoring source. Writing drafts requires explicit user approval and authoring paths; it never mutates installed wheel resources or generated projections.

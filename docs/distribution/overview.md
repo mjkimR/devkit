@@ -93,6 +93,6 @@ The distribution tooling lives in `packages/devkit-distribution/src/devkit_distr
   - `transaction.py`: Project advisory locking (`fcntl.flock`), write-ahead journaling (`sync-journal.json`), atomic file writes (`mkstemp` + rename + directory `fsync`), and rollback recovery.
   - `overrides.py`: Overrides authoring, baseline digest tracking, upstream drift detection, and 3-way diff reconciliation.
   - `playbook_search.py`: Lexical BM25 search over managed playbooks.
-  - `reading.py`: Budgeted context loading and document viewing.
+  - `reading.py`: Ownership and integrity verification for reading receipt-managed context files.
 - `cli/`:
-  - Click-based `devkit` CLI providing `sync`, `list`, `pack`, `validate`, `inventory`, `read`, `find-playbook`, `explain-playbook`, `recover`, and `override`.
+  - Click-based `devkit` CLI providing `sync`, `list`, `plan`, `get-context`, `playbook search`, `recover`, `override`, and `bundle` (`validate`, `build`).

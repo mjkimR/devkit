@@ -114,19 +114,17 @@ All mutating operations enforce strict transactional safety:
 | --- | --- | --- |
 | `devkit sync [options]` | Deployment | Discovers installed content packages, computes plan, performs pre-flight conflict checks, executes atomic transaction, and updates receipt. |
 | `devkit list [--target <dir>]` | Discovery | Outputs JSON listing installed content packages, bundle metadata, available presets, and synchronized asset paths. |
-| `devkit inventory [--target <dir>]` | Inspection | Previews planned file inventories without applying changes. |
+| `devkit plan <source> [--preset <name>]` | Authoring | Previews managed file inventory for a local bundle source without writing to a consumer project. |
 | `devkit get-context <bundle>` | Context | Returns bundle constitution and catalog of instruction headers for progressive loading. |
 | `devkit playbook search <query>` | Context | Runs lexical BM25 search over synchronized playbooks. |
-| `devkit explain-playbook <id>` | Context | Displays full markdown procedure and metadata for a specific playbook. |
-| `devkit read <path> [--max-bytes N]` | Context | Safely reads managed file contents bounded by byte budget. |
 | `devkit override list` | Customization | Lists active project overrides and their drift status. |
 | `devkit override create <bundle>:<asset>` | Customization | Copies upstream asset to `.devkit/overrides/` and records upstream baseline digest. |
 | `devkit override diff <bundle>:<asset>` | Customization | Shows 3-way diff between upstream baseline, updated wheel, and local override. |
 | `devkit override accept <bundle>:<asset>` | Customization | Reconciles upstream updates and advances baseline digest. |
 | `devkit override remove <bundle>:<asset>` | Customization | Unlinks local override and restores pristine upstream projection. |
 | `devkit recover [--target <dir>]` | Fault Tolerance | Uses write-ahead journal in `.devkit/transient/` to roll back an interrupted transaction without overwriting newer edits. |
-| `devkit pack <source> -o <zip>` | Packaging | Produces a deterministic ZIP archive with inventory hashes and normalized file permissions. |
-| `devkit validate <source>` | Authoring | Verifies manifest syntax, schema rules, and existence of declared local source files. |
+| `devkit bundle validate <source>` | Authoring | Verifies manifest syntax, schema rules, and existence of declared local source files. |
+| `devkit bundle build <source> --output <zip>` | Packaging | Produces a deterministic ZIP archive with inventory hashes and normalized file permissions. |
 
 ### Sync Options and Modes
 - `--agent <name>`: Adds an agent target to active selections (persisted in receipt). Repeatable.

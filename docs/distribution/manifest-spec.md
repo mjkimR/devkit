@@ -110,7 +110,7 @@ assets = ["development", "review-flow", "review"]
 
 ## 5. Deterministic Local Archive Build
 
-The `devkit pack` (or `devkit bundle build`) command produces bit-for-bit reproducible ZIP archives for local authoring and verification:
+The `devkit bundle build <source> --output <zip>` command produces bit-for-bit reproducible ZIP archives for local authoring and verification:
 - Files are sorted lexicographically by archive path.
 - Entry timestamps are pinned to a fixed epoch (`1980-01-01 00:00:00 UTC`).
 - File permissions are normalized to POSIX `0644` (regular files) or `0755` (executables).

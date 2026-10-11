@@ -69,10 +69,10 @@ The CLI provides two primary commands:
 
 ```bash
 # Check mode: strictly read-only, never mutates files
-agent-rules check [--phase linter|hygiene] [--format text|json]
+agent-rules check [-w DIRECTORY] [-p linter|hygiene] [--rules-dir DIRECTORY] [--format text|json] [FILES]...
 
 # Fix mode: applies deterministic repairs and verifies convergence
-agent-rules fix [--dry-run] [--phase linter|hygiene]
+agent-rules fix [-w DIRECTORY] [-p linter|hygiene] [--rules-dir DIRECTORY] [--dry-run] [--format text|json] [FILES]...
 ```
 
 - **Phases**:
