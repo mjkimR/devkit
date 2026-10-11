@@ -6,10 +6,10 @@ from pathlib import Path
 
 import click
 
-from agent_rule_engine.cache import WorkspaceCache
-from agent_rule_engine.evaluator import evaluate
-from agent_rule_engine.models import Phase, RuleContext
-from agent_rule_engine.registry import default_registry
+from agent_rule_engine.engine.evaluator import EvaluationResult, evaluate
+from agent_rule_engine.engine.models import Phase, RuleContext
+from agent_rule_engine.engine.registry import default_registry
+from agent_rule_engine.workspace.cache import WorkspaceCache
 
 
 def _run_rules(
@@ -24,29 +24,32 @@ def _run_rules(
     root_path = Path(workspace_root).resolve()
     cache = WorkspaceCache(root_path)
 
-    ctx = RuleContext(
-        workspace_root=root_path,
-        changed_files=list(target_files),
-        phase=Phase(phase.lower()),
-        fix=fix,
-        dry_run=dry_run,
-        cache=cache,
-        rules_dir=Path(rules_dir).resolve() if rules_dir else None,
-    )
+    try:
+        ctx = RuleContext(
+            workspace_root=root_path,
+            changed_files=list(target_files),
+            phase=Phase(phase.lower()),
+            fix=fix,
+            dry_run=dry_run,
+            cache=cache,
+            rules_dir=Path(rules_dir).resolve() if rules_dir else None,
+        )
+    except ValueError as exc:
+        raise click.BadParameter(str(exc), param_hint="files") from exc
 
     registry = default_registry()
     if ctx.rules_dir:
         registry.discover_from_dir(ctx.rules_dir)
 
     rules = registry.get_all()
-    result = evaluate(ctx, rules)
+    result = EvaluationResult(errors=list(registry.errors)) if registry.errors else evaluate(ctx, rules)
 
     if output_format.lower() == "json":
         data = [v.to_dict() for v in result.violations]
         click.echo(json.dumps(data, indent=2))
     else:
         # Human-readable text format
-        if not result.violations:
+        if not result.violations and not result.errors:
             click.secho("✓ All governance checks passed cleanly.", fg="green", bold=True)
         else:
             for v in result.violations:

@@ -3,10 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
-if TYPE_CHECKING:
-    from agent_rule_engine.cache import WorkspaceCache
+from agent_rule_engine.workspace.cache import WorkspaceCache
 
 
 class Phase(StrEnum):
@@ -60,11 +59,32 @@ class RuleContext:
     cache: WorkspaceCache = field(default=None)  # type: ignore[assignment]
     options: dict[str, Any] = field(default_factory=dict)
 
+    def __post_init__(self) -> None:
+        self.workspace_root = self.workspace_root.resolve()
+        if self.cache is None:
+            self.cache = WorkspaceCache(self.workspace_root)
+        elif self.cache.workspace_root != self.workspace_root:
+            raise ValueError("Context and cache must use the same workspace root")
+        normalized: list[str] = []
+        for name in self.changed_files:
+            path = Path(name)
+            resolved = (path if path.is_absolute() else self.workspace_root / path).resolve()
+            try:
+                normalized.append(resolved.relative_to(self.workspace_root).as_posix())
+            except ValueError as exc:
+                raise ValueError(f"Target file is outside the workspace: {name}") from exc
+        self.changed_files = normalized
+
     def is_file_targeted(self, path: str) -> bool:
         if not self.changed_files:
             return True
-        norm = Path(path).as_posix()
-        return any(norm == Path(cf).as_posix() or norm.endswith(Path(cf).as_posix()) for cf in self.changed_files)
+        candidate = Path(path)
+        resolved = (candidate if candidate.is_absolute() else self.workspace_root / candidate).resolve()
+        try:
+            relative = resolved.relative_to(self.workspace_root).as_posix()
+        except ValueError:
+            return False
+        return relative in self.changed_files
 
 
 @runtime_checkable

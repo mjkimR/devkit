@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import inspect
+import sys
 from pathlib import Path
 from typing import Any
 
-from agent_rule_engine.models import Rule
+from agent_rule_engine.engine.models import Rule
 from agent_rule_engine.rules import (
     BaseRule,
     DocumentReferenceRule,
@@ -21,6 +23,7 @@ class RuleRegistry:
 
     def __init__(self) -> None:
         self._rules: dict[str, Rule] = {}
+        self.errors: list[str] = []
 
     def register(self, rule: Rule) -> None:
         self._rules[rule.id] = rule
@@ -40,25 +43,33 @@ class RuleRegistry:
         if not rules_dir.exists() or not rules_dir.is_dir():
             return discovered
 
-        for py_file in rules_dir.rglob("*.py"):
+        for py_file in sorted(rules_dir.rglob("*.py")):
             if py_file.name.startswith(("_", ".")):
                 continue
 
-            module_name = f"custom_rule_{py_file.stem}"
+            digest = hashlib.sha256(str(py_file.resolve()).encode()).hexdigest()[:16]
+            module_name = f"custom_rule_{digest}"
             spec = importlib.util.spec_from_file_location(module_name, py_file)
             if spec and spec.loader:
                 module = importlib.util.module_from_spec(spec)
                 try:
+                    sys.modules[module_name] = module
                     spec.loader.exec_module(module)
                     for _, obj in inspect.getmembers(module, inspect.isclass):
-                        if issubclass(obj, BaseRule) and obj is not BaseRule and not inspect.isabstract(obj):
+                        if (
+                            obj.__module__ == module_name
+                            and issubclass(obj, BaseRule)
+                            and obj is not BaseRule
+                            and not inspect.isabstract(obj)
+                        ):
                             rule_cls: type[Any] = obj
                             instance = rule_cls()
                             if isinstance(instance, Rule):
                                 self.register(instance)
                                 discovered.append(instance)
                 except Exception as exc:
-                    print(f"Warning: Failed to load rule from {py_file}: {exc}")
+                    sys.modules.pop(module_name, None)
+                    self.errors.append(f"Failed to load rule from {py_file}: {exc}")
 
         return discovered
 

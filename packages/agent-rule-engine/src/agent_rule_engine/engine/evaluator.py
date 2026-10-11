@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 
-from agent_rule_engine.models import Autofixable, Phase, Rule, RuleContext, Violation
+from agent_rule_engine.engine.models import Autofixable, Phase, Rule, RuleContext, Violation
 
 logger = logging.getLogger(__name__)
 
@@ -56,12 +56,15 @@ def evaluate(ctx: RuleContext, rules: list[Rule]) -> EvaluationResult:
                 changed = r.fix(ctx)
                 if changed:
                     modified_files.update(changed)
+                    ctx.cache.invalidate_many(changed)
             except Exception as exc:
                 msg = f"Rule fix error ({r.id}): {exc}"
                 logger.exception(msg)
                 result.errors.append(msg)
+                ctx.cache.invalidate_all()
+                break
 
-    if not modified_files or result.errors:
+    if not modified_files and not result.errors:
         result.violations = initial_violations
         return result
 
@@ -87,7 +90,7 @@ def evaluate(ctx: RuleContext, rules: list[Rule]) -> EvaluationResult:
 
     final_violations: list[Violation] = []
     for v in initial_violations:
-        if v.fixable and _violation_key(v) not in remaining_keys:
+        if not result.errors and v.fixable and _violation_key(v) not in remaining_keys:
             v.fixed = True
             final_violations.append(v)
 

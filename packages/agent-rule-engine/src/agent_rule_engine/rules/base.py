@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from agent_rule_engine.models import Phase, Rule, Severity
+from agent_rule_engine.engine.models import Phase, Rule, Severity
 
 
 @dataclass

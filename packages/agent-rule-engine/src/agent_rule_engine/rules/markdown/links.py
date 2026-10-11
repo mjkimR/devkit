@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from agent_rule_engine.models import Autofixable, Phase, RuleContext, Severity, Violation
+from agent_rule_engine.engine.models import Autofixable, Phase, RuleContext, Severity, Violation
 from agent_rule_engine.rules.base import BaseRule
 
 
@@ -35,7 +35,7 @@ class MarkdownLinkRule(BaseRule, Autofixable):
                 continue
 
             links = ctx.cache.get_links(p)
-            for link in links:
+            for link in reversed(links):
                 if not self._is_relative_file_link(link.target):
                     continue
 
@@ -79,9 +79,10 @@ class MarkdownLinkRule(BaseRule, Autofixable):
 
             links = ctx.cache.get_links(p)
             text = ctx.cache.read_text(p)
+            lines = text.splitlines(keepends=True)
             changed = False
 
-            for link in links:
+            for link in reversed(links):
                 if not self._is_relative_file_link(link.target):
                     continue
 
@@ -98,14 +99,13 @@ class MarkdownLinkRule(BaseRule, Autofixable):
                         # Compute relative path from p.parent to target_abs
                         new_rel = os.path.relpath(target_abs, p.parent)
                         new_target = f"{new_rel}{anchor}"
-                        old_link_str = f"[{link.text}]({link.target})"
                         new_link_str = f"[{link.text}]({new_target})"
-                        if old_link_str in text:
-                            text = text.replace(old_link_str, new_link_str, 1)
-                            changed = True
+                        line = lines[link.line - 1]
+                        lines[link.line - 1] = line[: link.start] + new_link_str + line[link.end :]
+                        changed = True
 
             if changed:
-                ctx.cache.write_text(p, text, dry_run=ctx.dry_run)
+                ctx.cache.write_text(p, "".join(lines), dry_run=ctx.dry_run)
                 modified.append(rel)
 
         return modified

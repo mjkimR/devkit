@@ -1,35 +1,50 @@
 #!/usr/bin/env bash
-# Shared helpers for devkit module resolution.
-# Source this file from scripts or justfile recipes: source ./scripts/_lib.sh
+# Discover workspace modules from package metadata; source from workspace root.
 
-AVAILABLE_MODULES="all agent-rule-engine"
+list_modules() {
+    python3 - <<'PY'
+import tomllib
+from pathlib import Path
+
+for parent in (Path("packages"), Path("tools")):
+    for metadata in sorted(parent.glob("*/pyproject.toml")):
+        with metadata.open("rb") as stream:
+            print(tomllib.load(stream)["project"]["name"])
+PY
+}
 
 resolve_module() {
     case "$1" in
-        agent-rule-engine|rule-engine|rules|rule) echo "agent-rule-engine" ;;
-        all) echo "all" ;;
+        rule-engine|rules|rule) echo "agent-rule-engine" ;;
         *) echo "$1" ;;
     esac
 }
 
 resolve_module_path() {
-    case "$1" in
-        agent-rule-engine) echo "packages/agent-rule-engine" ;;
-        *) echo "$1" ;;
-    esac
+    local requested=$1
+    python3 - "$requested" <<'PY'
+import sys
+import tomllib
+from pathlib import Path
+
+for parent in (Path("packages"), Path("tools")):
+    for metadata in sorted(parent.glob("*/pyproject.toml")):
+        with metadata.open("rb") as stream:
+            if tomllib.load(stream)["project"]["name"] == sys.argv[1]:
+                print(metadata.parent)
+                sys.exit(0)
+sys.exit(1)
+PY
 }
 
 should_run() {
-    [ "$1" = "all" ] || [ "$1" = "$2" ]
+    [ "$1" = all ] || [ "$1" = "$2" ]
 }
 
 validate_module() {
-    case "$1" in
-        all|agent-rule-engine) ;;
-        *)
-            echo "Unknown module: $1" >&2
-            echo "Available modules: $AVAILABLE_MODULES" >&2
-            return 1
-            ;;
-    esac
+    if [ "$1" != all ] && ! resolve_module_path "$1" >/dev/null; then
+        echo "Unknown module: $1" >&2
+        echo "Available modules: all $(list_modules | tr '\n' ' ')" >&2
+        return 1
+    fi
 }

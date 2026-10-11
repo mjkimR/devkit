@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from agent_rule_engine.cache import WorkspaceCache
+    from agent_rule_engine.workspace.cache import WorkspaceCache
 
 ID_PATTERN = re.compile(r"^(CAP|US|ARCH|ADR|PROP|PADR|SPEC|PLAN|TASKS|REC|FB|MAT)-[A-Za-z0-9][A-Za-z0-9_-]*$")
 DOC_ID_EXTRACTOR = re.compile(
@@ -63,7 +63,7 @@ class DocumentCatalog:
                 status = str(fm.get("status") or "").strip()
 
             # Find references mentioned in body or frontmatter
-            refs = list(set(DOC_ID_EXTRACTOR.findall(body)))
+            refs = sorted(set(DOC_ID_EXTRACTOR.findall(body)))
 
             if doc_id:
                 doc = Document(

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import yaml
 
-from agent_rule_engine.models import Autofixable, Phase, RuleContext, Severity, Violation
+from agent_rule_engine.engine.models import Autofixable, Phase, RuleContext, Severity, Violation
 from agent_rule_engine.rules.base import BaseRule
 
 _H1_PATTERN = re.compile(r"^#\s+(.+)$", re.MULTILINE)
@@ -29,7 +29,7 @@ class SpecFormatRule(BaseRule, Autofixable):
             if p.name == "README.md":
                 continue
             rel = p.relative_to(ctx.workspace_root).as_posix()
-            if any(rel.startswith(td) for td in _TARGET_DIRS) and ctx.is_file_targeted(rel):
+            if any(rel.startswith(f"{td}/") for td in _TARGET_DIRS) and ctx.is_file_targeted(rel):
                 target_files.append(p)
         return target_files
 
@@ -88,7 +88,7 @@ class SpecFormatRule(BaseRule, Autofixable):
 
             stem = p.stem
             # Derive default title from first H1 or stem
-            h1_match = _H1_PATTERN.search(body if fm else raw_text)
+            h1_match = _H1_PATTERN.search(body if fm is not None else raw_text)
             title = h1_match.group(1).strip() if h1_match else stem.replace("-", " ").capitalize()
 
             if fm is None:

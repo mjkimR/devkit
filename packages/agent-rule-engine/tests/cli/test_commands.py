@@ -47,3 +47,39 @@ def test_cli_rules_fix(tmp_path: Path) -> None:
     result = runner.invoke(cli, ["fix", "--workspace-root", str(tmp_path)])
     assert result.exit_code == 0
     assert "FIXED" in result.output
+
+
+def test_cli_plugin_failure_preserves_json_and_fails(tmp_path: Path) -> None:
+    rules = tmp_path / "rules"
+    rules.mkdir()
+    (rules / "broken.py").write_text('raise RuntimeError("broken plugin")\n')
+    result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--rules-dir", str(rules), "--format", "json"])
+    assert result.exit_code == 1
+    assert json.loads(result.stdout) == []
+    assert "broken plugin" in result.stderr
+    assert "passed cleanly" not in result.stdout
+
+
+def test_cli_malformed_frontmatter_is_not_overwritten(tmp_path: Path) -> None:
+    docs = tmp_path / "docs/stories"
+    docs.mkdir(parents=True)
+    doc = docs / "US-invalid.md"
+    original = "---\nid: [invalid\n---\n# Keep this content\n"
+    doc.write_text(original)
+    result = CliRunner().invoke(cli, ["fix", "-w", str(tmp_path)])
+    assert result.exit_code == 1
+    assert "Invalid YAML frontmatter" in result.stderr
+    assert "passed cleanly" not in result.stdout
+    assert doc.read_text() == original
+
+
+def test_cli_dry_run_does_not_modify_file(tmp_path: Path) -> None:
+    docs = tmp_path / "specs"
+    docs.mkdir()
+    doc = docs / "SPEC-example.md"
+    original = "# Example\n"
+    doc.write_text(original)
+    result = CliRunner().invoke(cli, ["fix", "-w", str(tmp_path), "--dry-run"])
+    assert result.exit_code == 1
+    assert "FIXABLE" in result.stdout
+    assert doc.read_text() == original

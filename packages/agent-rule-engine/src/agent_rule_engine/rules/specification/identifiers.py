@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from agent_rule_engine.index import is_valid_doc_id
-from agent_rule_engine.models import Phase, RuleContext, Severity, Violation
+from agent_rule_engine.engine.models import Phase, RuleContext, Severity, Violation
 from agent_rule_engine.rules.base import BaseRule
+from agent_rule_engine.workspace.catalog import is_valid_doc_id
 
 _TARGET_DIRS = ("docs/capabilities", "docs/stories", "docs/proposals", "docs/specs", "specs")
 
@@ -25,7 +25,7 @@ class IdConventionRule(BaseRule):
             if p.name == "README.md":
                 continue
             rel = p.relative_to(ctx.workspace_root).as_posix()
-            if not any(rel.startswith(td) for td in _TARGET_DIRS):
+            if not any(rel.startswith(f"{td}/") for td in _TARGET_DIRS):
                 continue
             if not ctx.is_file_targeted(rel):
                 continue

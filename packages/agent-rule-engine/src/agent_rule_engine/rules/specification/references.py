@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from agent_rule_engine.models import Phase, RuleContext, Severity, Violation
+from agent_rule_engine.engine.models import Phase, RuleContext, Severity, Violation
 from agent_rule_engine.rules.base import BaseRule
 
 

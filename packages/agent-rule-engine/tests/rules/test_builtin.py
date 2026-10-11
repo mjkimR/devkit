@@ -125,3 +125,23 @@ def test_file_length_rule(temp_workspace: Path, workspace_cache: WorkspaceCache)
     violations = rule.check(ctx)
     assert len(violations) == 1
     assert "exceeds line length limit" in violations[0].message
+
+
+def test_link_fix_preserves_identical_link_inside_code(tmp_path: Path) -> None:
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs/target.md").write_text("# Target\n")
+    source = tmp_path / "README.md"
+    source.write_text("`[Target](wrong/target.md)`\n[Target](wrong/target.md)\n")
+    ctx = RuleContext(workspace_root=tmp_path)
+    rule = MarkdownLinkRule()
+    rule.fix(ctx)
+    assert source.read_text() == "`[Target](wrong/target.md)`\n[Target](docs/target.md)\n"
+    assert rule.check(ctx) == []
+
+
+def test_spec_rules_ignore_similarly_named_directory(tmp_path: Path) -> None:
+    (tmp_path / "specs-backup").mkdir()
+    (tmp_path / "specs-backup/invalid.md").write_text("# Not a specification\n")
+    ctx = RuleContext(workspace_root=tmp_path)
+    assert SpecFormatRule().check(ctx) == []
+    assert SpecFormatRule().fix(ctx) == []

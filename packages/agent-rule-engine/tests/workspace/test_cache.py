@@ -46,3 +46,23 @@ def test_cache_markdown_links(temp_workspace: Path, workspace_cache: WorkspaceCa
     assert links[0].target == "./specs/SPEC-auth.md"
     assert links[1].text == "External"
     assert links[1].target == "https://example.com"
+
+
+def test_frontmatter_delimiters_inside_values(temp_workspace: Path, workspace_cache: WorkspaceCache) -> None:
+    (temp_workspace / "doc.md").write_text('---\ntitle: "before---after"\n---\n# Body\n')
+    fm, body, offset = workspace_cache.get_frontmatter("doc.md")
+    assert fm == {"title": "before---after"}
+    assert body == "# Body\n"
+    assert offset == 3
+
+
+def test_file_listing_cached_and_invalidated(temp_workspace: Path, workspace_cache: WorkspaceCache) -> None:
+    (temp_workspace / "b.md").touch()
+    ignored = temp_workspace / ".venv"
+    ignored.mkdir()
+    (ignored / "ignored.md").touch()
+    assert workspace_cache.find_files(temp_workspace) == [temp_workspace / "b.md"]
+    (temp_workspace / "a.md").touch()
+    assert workspace_cache.find_files(temp_workspace) == [temp_workspace / "b.md"]
+    workspace_cache.invalidate("a.md")
+    assert workspace_cache.find_files(temp_workspace) == [temp_workspace / "a.md", temp_workspace / "b.md"]

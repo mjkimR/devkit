@@ -55,3 +55,52 @@ def test_evaluator_phase_filtering(temp_workspace: Path, workspace_cache: Worksp
     )
     res_hygiene = evaluate(ctx_hygiene, registry.get_all())
     assert any(v.rule_id == "RULE-file-length" for v in res_hygiene.violations)
+
+
+def test_fix_failure_rechecks_partial_changes(tmp_path: Path) -> None:
+    from agent_rule_engine import Violation
+    from agent_rule_engine.rules import BaseRule
+
+    class FailingFix(BaseRule):
+        def __init__(self) -> None:
+            super().__init__(id="RULE-failing", name="failing", description="Partial fix failure")
+
+        def check(self, ctx: RuleContext) -> list[Violation]:
+            return [Violation(self.id, "doc.md", 1, ctx.cache.read_text("doc.md"), fixable=True)]
+
+        def fix(self, ctx: RuleContext) -> list[str]:
+            (ctx.workspace_root / "doc.md").write_text("after")
+            raise RuntimeError("Failed after writing")
+
+    (tmp_path / "doc.md").write_text("before")
+    ctx = RuleContext(workspace_root=tmp_path, fix=True)
+    result = evaluate(ctx, [FailingFix()])
+    assert result.has_errors
+    assert result.violations[0].message == "after"
+    assert not result.violations[0].fixed
+    assert ctx.cache.read_text("doc.md") == "after"
+
+
+def test_each_fix_invalidates_cache_for_next_rule(tmp_path: Path) -> None:
+    from agent_rule_engine.rules import BaseRule
+
+    class DirectWrite(BaseRule):
+        def __init__(self) -> None:
+            super().__init__(id="RULE-write", name="write", description="Direct writer")
+
+        def check(self, ctx: RuleContext) -> list:
+            ctx.cache.read_text("doc.md")
+            return []
+
+        def fix(self, ctx: RuleContext) -> list[str]:
+            (ctx.workspace_root / "doc.md").write_text("updated")
+            return ["doc.md"]
+
+    class Reader(DirectWrite):
+        def fix(self, ctx: RuleContext) -> list[str]:
+            assert ctx.cache.read_text("doc.md") == "updated"
+            return []
+
+    (tmp_path / "doc.md").write_text("original")
+    ctx = RuleContext(workspace_root=tmp_path, fix=True)
+    assert not evaluate(ctx, [DirectWrite(), Reader()]).has_errors

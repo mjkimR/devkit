@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import os
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -8,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 import yaml
 
 if TYPE_CHECKING:
-    from agent_rule_engine.index import DocumentCatalog
+    from agent_rule_engine.workspace.catalog import DocumentCatalog
 
 
 @dataclass(slots=True)
@@ -34,12 +36,13 @@ class WorkspaceCache:
         self._frontmatter_cache: dict[str, tuple[dict[str, Any] | None, str, int]] = {}
         self._links_cache: dict[str, list[MarkdownLink]] = {}
         self._catalog: DocumentCatalog | None = None
+        self._files_cache: dict[tuple[Path, tuple[str, ...], tuple[str, ...] | None], list[Path]] = {}
 
     def _resolve_path(self, path: str | Path) -> Path:
         p = Path(path)
         if not p.is_absolute():
             p = (self.workspace_root / p).resolve()
-        return p
+        return p.resolve()
 
     def _key(self, path: str | Path) -> str:
         return self._resolve_path(path).as_posix()
@@ -82,19 +85,23 @@ class WorkspaceCache:
             except FileNotFoundError:
                 return None, "", 0
 
-            if text.startswith("---\n") or text.startswith("---\r\n"):
-                parts = text.split("---", 2)
-                if len(parts) >= 3:
-                    fm_raw = parts[1]
-                    body = parts[2]
-                    try:
-                        parsed = yaml.safe_load(fm_raw)
-                        if isinstance(parsed, dict):
-                            line_offset = fm_raw.count("\n") + 2
-                            self._frontmatter_cache[key] = (parsed, body, line_offset)
-                            return self._frontmatter_cache[key]
-                    except yaml.YAMLError:
-                        pass
+            lines = text.splitlines(keepends=True)
+            if lines and lines[0].strip() == "---":
+                closing = next((i for i, line in enumerate(lines[1:], 1) if line.strip() == "---"), None)
+                if closing is None:
+                    raise ValueError(f"Unclosed YAML frontmatter in {path}")
+                fm_raw = "".join(lines[1:closing])
+                body = "".join(lines[closing + 1 :])
+                try:
+                    parsed = yaml.safe_load(fm_raw)
+                except yaml.YAMLError as exc:
+                    raise ValueError(f"Invalid YAML frontmatter in {path}: {exc}") from exc
+                if parsed is None:
+                    parsed = {}
+                if not isinstance(parsed, dict):
+                    raise ValueError(f"YAML frontmatter must be a mapping in {path}")
+                self._frontmatter_cache[key] = (parsed, body, closing + 1)
+                return self._frontmatter_cache[key]
             self._frontmatter_cache[key] = (None, text, 0)
         return self._frontmatter_cache[key]
 
@@ -136,7 +143,7 @@ class WorkspaceCache:
         return self._links_cache[key]
 
     def get_catalog(self, workspace_root: Path | None = None) -> DocumentCatalog:
-        from agent_rule_engine.index import DocumentCatalog
+        from agent_rule_engine.workspace.catalog import DocumentCatalog
 
         if self._catalog is None:
             root = (workspace_root or self.workspace_root).resolve()
@@ -152,20 +159,22 @@ class WorkspaceCache:
         subdirs: tuple[str, ...] | None = None,
     ) -> list[Path]:
         """Recursively scan files matching extensions under subdirs, skipping ignored directories."""
-        results: list[Path] = []
-        target_dirs = [root / d for d in subdirs] if subdirs else [root]
-
-        for target_dir in target_dirs:
-            if not target_dir.exists():
-                continue
-            for p in target_dir.rglob("*"):
-                if p.is_file() and p.suffix in extensions:
-                    # check if any parent part is in ignored dirs
-                    rel_parts = p.relative_to(root).parts
-                    if any(part in _IGNORED_DIRS for part in rel_parts):
-                        continue
-                    results.append(p)
-        return results
+        root = root.resolve()
+        key = (root, extensions, subdirs)
+        if key not in self._files_cache:
+            results: set[Path] = set()
+            target_dirs = [root / d for d in subdirs] if subdirs else [root]
+            for target_dir in target_dirs:
+                if not target_dir.is_dir():
+                    continue
+                for directory, dirs, files in os.walk(target_dir):
+                    dirs[:] = sorted(d for d in dirs if d not in _IGNORED_DIRS)
+                    for name in files:
+                        path = Path(directory) / name
+                        if path.suffix in extensions and path.is_file():
+                            results.add(path)
+            self._files_cache[key] = sorted(results)
+        return list(self._files_cache[key])
 
     def invalidate(self, path: str | Path) -> None:
         key = self._key(path)
@@ -174,8 +183,9 @@ class WorkspaceCache:
         self._frontmatter_cache.pop(key, None)
         self._links_cache.pop(key, None)
         self._catalog = None
+        self._files_cache.clear()
 
-    def invalidate_many(self, paths: list[str | Path]) -> None:
+    def invalidate_many(self, paths: Iterable[str | Path]) -> None:
         for p in paths:
             self.invalidate(p)
 
@@ -185,3 +195,4 @@ class WorkspaceCache:
         self._frontmatter_cache.clear()
         self._links_cache.clear()
         self._catalog = None
+        self._files_cache.clear()
