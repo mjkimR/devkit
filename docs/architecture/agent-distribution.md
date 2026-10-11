@@ -129,6 +129,8 @@ A bundle declares assets across five supported kinds:
 - `playbook`: Operational workflows, checklists, and procedural guides.
 - `rule`: Python-based governance rules evaluated by `agent-rule-engine`.
 
+For full classification criteria, guidance placement rules, and naming standards, see the [Resource Taxonomy](resource-taxonomy.md).
+
 ### Manifest Syntax (`schema = 1`)
 
 Every asset is identified by a logical tuple: `(bundle, kind, id)`. Asset IDs must be unique within each bundle.
