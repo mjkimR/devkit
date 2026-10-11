@@ -11,7 +11,7 @@ from devkit_distribution.bundles import BundleError
 from devkit_distribution.bundles.playbooks import read_playbook_header, require_english_text
 
 from .reading import read_owned, synchronized_root
-from .sync import read_receipt
+from .sync import read_playbook_config, read_receipt
 from .transaction import JOURNAL, project_lock, snapshot
 
 
@@ -45,17 +45,31 @@ def bm25_scores(documents: list[str], query: str) -> list[float]:
 
 
 def search_playbooks(
-    start: Path, query: str, *, limit: int = 5, min_score: float = 0.1, max_bytes: int = 8192
+    start: Path,
+    query: str,
+    *,
+    limit: int | None = None,
+    min_score: float | None = None,
+    max_bytes: int | None = None,
 ) -> dict[str, object]:
     require_english_text(query, "search query")
     if not tokenize(query) or len(query.encode()) > 512:
         raise BundleError("search query must contain English search terms and fit within 512 bytes")
-    if not 1 <= limit <= 20 or not math.isfinite(min_score) or min_score < 0 or not 1024 <= max_bytes <= 65536:
+    root = synchronized_root(start)
+    cfg = read_playbook_config(root)
+    eff_limit = limit if limit is not None else int(cfg.get("limit", 5))
+    eff_min_score = min_score if min_score is not None else float(cfg.get("min_score", 0.1))
+    eff_max_bytes = max_bytes if max_bytes is not None else int(cfg.get("max_bytes", 8192))
+    if (
+        not 1 <= eff_limit <= 20
+        or not math.isfinite(eff_min_score)
+        or eff_min_score < 0
+        or not 1024 <= eff_max_bytes <= 65536
+    ):
         raise BundleError("invalid search bounds: limit 1..20, finite nonnegative min-score, max-bytes 1024..65536")
     empty = {"query": query, "results": [], "truncated": False}
-    if len(json.dumps(empty, indent=2, ensure_ascii=False).encode()) + 1 > max_bytes:
+    if len(json.dumps(empty, indent=2, ensure_ascii=False).encode()) + 1 > eff_max_bytes:
         raise BundleError("search query exceeds the result output budget")
-    root = synchronized_root(start)
     candidates: list[dict[str, object]] = []
     documents: list[str] = []
     with project_lock(root):
@@ -86,16 +100,16 @@ def search_playbooks(
     ranked = [
         (score, candidate)
         for score, candidate in zip(bm25_scores(documents, query), candidates, strict=True)
-        if score > 0 and score >= min_score
+        if score > 0 and score >= eff_min_score
     ]
     ranked.sort(key=lambda pair: (-pair[0], str(pair[1]["bundle"]), str(pair[1]["id"]), str(pair[1]["path"])))
     results: list[dict[str, object]] = []
     response: dict[str, object] = {"query": query, "results": results, "truncated": bool(ranked)}
-    for score, candidate in ranked[:limit]:
+    for score, candidate in ranked[:eff_limit]:
         result = {**candidate, "score": round(score, 6)}
         results.append(result)
         response["truncated"] = len(results) < len(ranked)
-        if len(json.dumps(response, indent=2, ensure_ascii=False).encode()) + 1 > max_bytes:
+        if len(json.dumps(response, indent=2, ensure_ascii=False).encode()) + 1 > eff_max_bytes:
             results.pop()
             break
     response["truncated"] = len(results) < len(ranked)

@@ -313,6 +313,10 @@ presets = { team = "minimal" }
         ("[presets]\n'bad slug!' = 'minimal'\n", "config: invalid presets"),
         ("unknown_field = 42\n", "config: unknown fields"),
         ("[selection]\nunknown_subfield = true\n", "config selection: unknown fields"),
+        ("[playbooks]\nunknown_subfield = true\n", "config playbooks: unknown fields"),
+        ("[playbooks]\nlimit = 0\n", "config playbooks: limit must be an integer between 1 and 20"),
+        ("[playbooks]\nmin_score = -1\n", "config playbooks: min_score must be a finite nonnegative number"),
+        ("[playbooks]\nmax_bytes = 100\n", "config playbooks: max_bytes must be an integer between 1024 and 65536"),
         ("invalid toml [[\n", "invalid config"),
     ],
 )
@@ -322,6 +326,25 @@ def test_invalid_project_config(installed: list[InstalledBundle], target: Path, 
     config_file.write_text(content)
     with pytest.raises(BundleError, match=error_match):
         sync_project(target, installed)
+
+
+def test_sync_accepts_playbooks_config(installed: list[InstalledBundle], target: Path) -> None:
+    config_file = target / CONFIG
+    config_file.parent.mkdir(parents=True, exist_ok=True)
+    config_file.write_text("""schema = 1
+agents = ["codex"]
+
+[presets]
+team = "minimal"
+
+[playbooks]
+min_score = 0.2
+limit = 3
+max_bytes = 4096
+""")
+    sync_project(target, installed)
+    receipt = json.loads((target / RECEIPT).read_text())
+    assert receipt["selection"] == {"agents": ["codex"], "presets": {"team": "minimal"}}
 
 
 def test_receipt_cannot_own_config(installed: list[InstalledBundle], target: Path) -> None:

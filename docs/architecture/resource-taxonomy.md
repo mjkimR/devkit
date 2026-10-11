@@ -135,11 +135,13 @@ inspect conversation history to enforce user-only invocation.
    score, capped at top N and a total header-output budget. Scores rank lexical
    matches, not execution suitability; allow an empty result and calibrate the
    threshold with representative queries rather than treating it as confidence.
-   Defaults: `--limit 5`, `--min-score 0.1`, `--max-bytes 8192`. The byte budget
-   covers the complete JSON response and final newline; omit entire candidates
-   rather than truncating individual headers. BM25 uses k1=1.5, b=0.75, positive
-   IDF, and unique query terms; normalize case, Latin accents, and punctuation.
-   Use aliases for alternate terms; no stemming or semantic expansion is applied.
+   Defaults: `--limit 5`, `--min-score 0.1`, `--max-bytes 8192`. Defaults can be
+   configured per project in `.devkit/config.toml` under `[playbooks]` and overridden
+   by explicit CLI flags. The byte budget covers the complete JSON response and
+   final newline; omit entire candidates rather than truncating individual headers.
+   BM25 uses k1=1.5, b=0.75, positive IDF, and unique query terms; normalize case,
+   Latin accents, and punctuation. Use aliases for alternate terms; no stemming
+   or semantic expansion is applied.
 5. Select an applicable candidate from its metadata, read the full procedure, and
    check prerequisites before executing it. A search match does not grant extra
    permission or make the procedure automatically applicable.
@@ -285,7 +287,7 @@ assets = ["development", "review-flow", "review"]
 ```
 
 #### 2. Declarative Consumer Configuration (`.devkit/config.toml`)
-Consumer repositories declare their desired baseline presets and agents in a Git-tracked project configuration file:
+Consumer repositories declare their desired baseline presets, agents, and playbook search defaults in a Git-tracked project configuration file:
 
 ```toml
 # .devkit/config.toml (Consumer Project, Git-tracked)
@@ -294,16 +296,21 @@ agents = ["codex", "claude-code"]
 
 [presets]
 starter-workflow = "daily"
+
+[playbooks]
+min_score = 0.1
+limit = 5
+max_bytes = 8192
 ```
 
-Running `uv run devkit sync` automatically converges the workspace to the declared configuration without requiring developers or CI pipelines to pass manual CLI flags.
+Running `uv run devkit sync` automatically converges the workspace to the declared configuration without requiring developers or CI pipelines to pass manual CLI flags. Playbook search (`uv run devkit playbook search`) adopts the `[playbooks]` defaults when explicit CLI flags are omitted.
 
 #### 3. Configuration Precedence Matrix
-Selections are resolved using a clear three-tier hierarchy:
+Selections and search defaults are resolved using a clear three-tier hierarchy:
 
-1. **CLI Overrides**: Explicit CLI flags (`--preset bundle:name`, `--all-assets`, `--agent name`, `--no-agents`) take highest priority for ad-hoc experimentation and scripting.
-2. **Project Configuration (`.devkit/config.toml`)**: Repository-level baseline committed to Git; governs clean checkouts and default `devkit sync` runs.
-3. **Installation Receipt (`.devkit/installation.json`)**: Preserves previously synchronized selections when neither CLI flags nor `config.toml` specify restrictions.
+1. **CLI Overrides**: Explicit CLI flags (`--preset bundle:name`, `--all-assets`, `--agent name`, `--no-agents`, `--limit`, `--min-score`, `--max-bytes`) take highest priority for ad-hoc experimentation and scripting.
+2. **Project Configuration (`.devkit/config.toml`)**: Repository-level baseline committed to Git; governs clean checkouts, default `devkit sync` runs, and playbook search parameters.
+3. **Installation Receipt (`.devkit/installation.json`) & Built-in Defaults**: Preserves previously synchronized selections when neither CLI flags nor `config.toml` specify restrictions, and falls back to built-in search defaults (`limit=5`, `min_score=0.1`, `max_bytes=8192`).
 
 ---
 

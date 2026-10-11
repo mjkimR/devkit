@@ -83,7 +83,8 @@ uv run devkit recover
 ```
 
 Sync deploys all registered packages into `.devkit/managed/<bundle>/` by default.
-Repeated `--preset bundle:name` restricts that bundle's selected assets. Agent and
+Repeated `--preset bundle:name` restricts that bundle's selected assets; repeated
+`--exclude-bundle bundle` excludes that bundle entirely. Agent and
 preset choices persist in `.devkit/installation.json`; `--all-assets` clears
 preset restrictions. `--no-agents` clears native agent selections and removes
 unchanged native copies. Shared skills project into `.agents/skills/` for Codex and
@@ -109,20 +110,26 @@ project's own `.gitignore`; devkit does not edit ignore rules or the Git index.
 
 ## Project configuration (`.devkit/config.toml`)
 
-Consumer repositories can declare default agent projections and bundle presets in an optional `.devkit/config.toml` file (committed to Git):
+Consumer repositories can declare default agent projections, bundle presets, and excluded bundles in an optional `.devkit/config.toml` file (committed to Git):
 
 ```toml
 schema = 1
 agents = ["codex", "claude-code"]
+exclude_bundles = ["upstream-bundle"]
 
 [presets]
 starter = "daily"
+
+[playbooks]
+min_score = 0.1
+limit = 5
+max_bytes = 8192
 ```
 
-Running `uv run devkit sync` automatically adopts the declared agents and bundle presets without requiring CLI flags. Selection precedence:
-1. **Explicit CLI options** (`--agent`, `--no-agents`, `--preset bundle:name`, `--all-assets`) take highest precedence.
+Running `uv run devkit sync` automatically adopts the declared agents, bundle presets, and exclusions without requiring CLI flags. Playbook search (`uv run devkit playbook search`) uses `[playbooks]` as defaults when CLI options are omitted. Selection and search precedence:
+1. **Explicit CLI options** (`--agent`, `--no-agents`, `--preset bundle:name`, `--exclude-bundle bundle`, `--all-assets`, `--limit`, `--min-score`, `--max-bytes`) take highest precedence.
 2. **Project configuration** (`.devkit/config.toml`) applies whenever corresponding CLI flags are omitted.
-3. **Installation receipt** (`.devkit/installation.json`) preserves selections when neither CLI flags nor `config.toml` specify them.
+3. **Installation receipt & defaults** (`.devkit/installation.json` and built-in search defaults) preserve selections and defaults when neither CLI flags nor `config.toml` specify them.
 
 ## Project overrides and drift review (`.devkit/overrides/`)
 

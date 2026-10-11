@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import re
 import tomllib
 from pathlib import Path
@@ -93,6 +94,52 @@ def read_receipt(root: Path) -> dict:
     return receipt
 
 
+def validate_playbooks_config(playbooks: object) -> dict[str, int | float]:
+    if playbooks is None:
+        return {}
+    if not isinstance(playbooks, dict):
+        raise BundleError("config playbooks: expected a table")
+    unknown = set(playbooks) - {"min_score", "limit", "max_bytes"}
+    if unknown:
+        raise BundleError(f"config playbooks: unknown fields: {sorted(unknown)}")
+    result: dict[str, int | float] = {}
+    if "limit" in playbooks:
+        val = playbooks["limit"]
+        if type(val) is not int or not 1 <= val <= 20:
+            raise BundleError("config playbooks: limit must be an integer between 1 and 20")
+        result["limit"] = val
+    if "min_score" in playbooks:
+        val = playbooks["min_score"]
+        if not isinstance(val, (int, float)) or not math.isfinite(val) or val < 0:
+            raise BundleError("config playbooks: min_score must be a finite nonnegative number")
+        result["min_score"] = float(val)
+    if "max_bytes" in playbooks:
+        val = playbooks["max_bytes"]
+        if type(val) is not int or not 1024 <= val <= 65536:
+            raise BundleError("config playbooks: max_bytes must be an integer between 1024 and 65536")
+        result["max_bytes"] = val
+    return result
+
+
+def read_playbook_config(root: Path) -> dict[str, int | float]:
+    path = root / CONFIG
+    if not path.is_file():
+        return {}
+    try:
+        data = tomllib.loads(path.read_text("utf-8"))
+    except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+        raise BundleError(f"invalid config: {exc}") from exc
+    if not isinstance(data, dict):
+        raise BundleError("config: expected a table")
+    allowed = {"schema", "agents", "presets", "selection", "playbooks"}
+    unknown = set(data) - allowed
+    if unknown:
+        raise BundleError(f"config: unknown fields: {sorted(unknown)}")
+    if "schema" in data and (type(data["schema"]) is not int or data["schema"] != 1):
+        raise BundleError("unsupported config schema")
+    return validate_playbooks_config(data.get("playbooks"))
+
+
 def read_config(root: Path) -> tuple[list[str] | None, dict[str, str] | None]:
     path = root / CONFIG
     if not path.is_file():
@@ -103,12 +150,13 @@ def read_config(root: Path) -> tuple[list[str] | None, dict[str, str] | None]:
         raise BundleError(f"invalid config: {exc}") from exc
     if not isinstance(data, dict):
         raise BundleError("config: expected a table")
-    allowed = {"schema", "agents", "presets", "selection"}
+    allowed = {"schema", "agents", "presets", "selection", "playbooks"}
     unknown = set(data) - allowed
     if unknown:
         raise BundleError(f"config: unknown fields: {sorted(unknown)}")
     if "schema" in data and (type(data["schema"]) is not int or data["schema"] != 1):
         raise BundleError("unsupported config schema")
+    validate_playbooks_config(data.get("playbooks"))
     agents = data.get("agents")
     presets = data.get("presets")
     if "selection" in data:

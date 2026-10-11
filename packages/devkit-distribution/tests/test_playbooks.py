@@ -15,7 +15,7 @@ from devkit_distribution.installation.discovery import InstalledBundle
 from devkit_distribution.installation.playbook_search import bm25_scores, search_playbooks
 from devkit_distribution.installation.playbook_skill import MANAGED_ROOT
 from devkit_distribution.installation.sync import sync_project
-from devkit_distribution.installation.transaction import JOURNAL, RECEIPT
+from devkit_distribution.installation.transaction import CONFIG, JOURNAL, RECEIPT
 
 
 def make_bundle(tmp_path: Path, bundle: str, *, directory: bool = False) -> InstalledBundle:
@@ -192,3 +192,61 @@ def test_bm25_length_normalization_and_term_frequency() -> None:
     assert bm25_scores([], "replica") == []
     assert bm25_scores([""], "replica") == [0]
     assert all(math.isfinite(score) for score in scores)
+
+
+def test_search_adopts_playbooks_config_defaults(tmp_path: Path, target: Path) -> None:
+    sync_project(target, [make_bundle(tmp_path, "team"), make_bundle(tmp_path, "ops")])
+    config_file = target / CONFIG
+    config_file.parent.mkdir(parents=True, exist_ok=True)
+    config_file.write_text("""schema = 1
+
+[playbooks]
+min_score = 0.5
+limit = 1
+max_bytes = 4096
+""")
+    # With limit=1 from config, only 1 result is returned
+    res = search_playbooks(target, "replica")
+    assert len(res["results"]) == 1
+    assert res["truncated"] is True
+
+    # With higher min_score in config, matching below 50.0 works, but if min_score is high it filters
+    config_file.write_text("""schema = 1
+
+[playbooks]
+min_score = 50.0
+""")
+    assert search_playbooks(target, "replica")["results"] == []
+
+
+def test_cli_overrides_playbooks_config(tmp_path: Path, target: Path) -> None:
+    sync_project(target, [make_bundle(tmp_path, "team"), make_bundle(tmp_path, "ops")])
+    config_file = target / CONFIG
+    config_file.parent.mkdir(parents=True, exist_ok=True)
+    config_file.write_text("""schema = 1
+
+[playbooks]
+min_score = 50.0
+limit = 1
+""")
+    runner = CliRunner()
+    # Default CLI run uses config min_score=50.0 -> 0 results
+    res_default = runner.invoke(cli, ["playbook", "search", "replica", "--target", str(target)])
+    assert res_default.exit_code == 0
+    data_default = json.loads(res_default.output)
+    assert len(data_default["results"]) == 0
+
+    # Explicit CLI override --min-score 0.1 -> returns results
+    res_override = runner.invoke(cli, ["playbook", "search", "replica", "--target", str(target), "--min-score", "0.1"])
+    assert res_override.exit_code == 0
+    data_override = json.loads(res_override.output)
+    # limit was 1 from config, so 1 result
+    assert len(data_override["results"]) == 1
+
+    # Overriding limit as well
+    res_override2 = runner.invoke(
+        cli, ["playbook", "search", "replica", "--target", str(target), "--min-score", "0.1", "--limit", "2"]
+    )
+    assert res_override2.exit_code == 0
+    data_override2 = json.loads(res_override2.output)
+    assert len(data_override2["results"]) == 2

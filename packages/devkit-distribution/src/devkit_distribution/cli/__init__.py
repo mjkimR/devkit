@@ -46,10 +46,19 @@ def playbook() -> None:
 @playbook.command(name="search")
 @click.argument("query")
 @click.option("--target", default=".", type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--limit", default=5, show_default=True, type=click.IntRange(1, 20))
-@click.option("--min-score", default=0.1, show_default=True, type=click.FloatRange(min=0))
-@click.option("--max-bytes", default=8192, show_default=True, type=click.IntRange(1024, 65536))
-def search(query: str, target: Path, limit: int, min_score: float, max_bytes: int) -> None:
+@click.option(
+    "--limit", default=None, type=click.IntRange(1, 20), help="Maximum candidates to return (default: 5 or config)."
+)
+@click.option(
+    "--min-score", default=None, type=click.FloatRange(min=0), help="Minimum score threshold (default: 0.1 or config)."
+)
+@click.option(
+    "--max-bytes",
+    default=None,
+    type=click.IntRange(1024, 65536),
+    help="Maximum JSON response byte budget (default: 8192 or config).",
+)
+def search(query: str, target: Path, limit: int | None, min_score: float | None, max_bytes: int | None) -> None:
     """Search synchronized playbook metadata with an English query; return headers only."""
     try:
         result = search_playbooks(target, query, limit=limit, min_score=min_score, max_bytes=max_bytes)

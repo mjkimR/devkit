@@ -380,8 +380,13 @@ Target agents, bundle presets, and excluded bundles are resolved using three pre
 
    [presets]
    starter = "daily"
+
+   [playbooks]
+   min_score = 0.1
+   limit = 5
+   max_bytes = 8192
    ```
-   When running `uv run devkit sync` without flags, values in `config.toml` take precedence over previous receipt state, ensuring clean checkouts and CI environments automatically synchronize the declared bundle presets and exclusions.
+   When running `uv run devkit sync` without flags, values in `config.toml` take precedence over previous receipt state, ensuring clean checkouts and CI environments automatically synchronize the declared bundle presets and exclusions. Playbook search (`uv run devkit playbook search`) uses `[playbooks]` defaults when CLI flags are omitted.
 3. **Receipt State (`.devkit/installation.json`)**: When neither CLI options nor `config.toml` specify a selection, the existing receipt's selections are preserved.
 
 ### Project Overrides & 3-Way Drift Review Architecture
