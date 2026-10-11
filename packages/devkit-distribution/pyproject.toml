@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Bundle distribution tooling for devkit agent assets"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["click>=8.1.7"]
+dependencies = ["click>=8.1.7", "pyyaml>=6.0.1"]
 
 [project.scripts]
 devkit = "devkit_distribution.cli:cli"

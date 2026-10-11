@@ -85,6 +85,8 @@ def source_files(root: Path, source: str) -> list[Path]:
 
 
 def load_bundle(root: Path) -> Bundle:
+    from .playbooks import playbook_entry, read_playbook_header
+
     root = root.resolve()
     manifest = safe_source(root, "bundle.toml")
     try:
@@ -130,6 +132,9 @@ def load_bundle(root: Path) -> Bundle:
             source_files(root, source)
             if kind == "skill" and (not path.is_dir() or not (path / "SKILL.md").is_file()):
                 raise BundleError(f"{asset_id}: skill source must contain SKILL.md")
+            if kind == "playbook":
+                entry = playbook_entry(root, source)
+                read_playbook_header(entry.read_bytes(), f"{asset_id}/{source}")
             sources.append((target, source))
         assets.append(Asset(asset_id, kind, tuple(sources)))
     raw_presets = data.get("presets", {})

@@ -134,6 +134,89 @@ Source skills are unchanged. Managed and native copies are generated afresh, so
 repeated sync does not accumulate prerequisites. ZIP exports preserve authoring
 sources, including the constitution; prerequisites are added when synchronized.
 
+## Playbook discovery and reuse
+
+Instructions expose headers through `get-context` so the agent can select relevant
+rules and judgment criteria during normal work. Playbooks hold occasional task
+procedures and expose neither headers nor bodies through that command. Recurring,
+explicit execution flows belong to workflows.
+
+When selected playbooks exist, sync generates one shared `devkit-playbook` skill
+under `.devkit/managed/_devkit/skills/devkit-playbook/` and projects it to selected
+native skill directories. It is removed when no selected playbooks remain. Source
+skills using the same native name cause a destination collision. Generated files
+are receipt-owned and protected from overwriting user edits, like other assets.
+Without an agent selection, only the managed entry skill is generated. Local
+`plan` previews bundle source assets; project `sync --dry-run` also shows this
+shared generated skill.
+
+Invoke `$devkit-playbook <task>` in Codex or `/devkit-playbook <task>` in Claude
+Code. Codex receives `policy.allow_implicit_invocation: false` in
+`agents/openai.yaml`; Claude Code receives `disable-model-invocation: true` in
+frontmatter. These use the documented [Codex invocation policy](https://learn.chatgpt.com/docs/build-skills)
+and [Claude Code invocation control](https://code.claude.com/docs/en/skills#control-who-invokes-a-skill).
+Other consumers of the shared skill, including Antigravity, must follow the
+explicit-invocation instruction in its body; native enforcement is not verified.
+Invocation is scoped to the current requested task, not future conversation turns.
+
+```bash
+uv run devkit playbook search "postgres standby repair"
+uv run devkit playbook search "replica recovery" --limit 3 --min-score 0.2 --max-bytes 4096
+```
+
+The search CLI is read-only and does not verify conversational authorization;
+the generated skill and supported native invocation controls govern agent use.
+Run from the consumer project or a subdirectory, or use `--target`. Search uses
+synchronized playbooks across bundles and honors presets. Old receipts without
+playbook entrypoints require another sync. Missing/modified entry files or a
+pending transaction cause an error.
+
+Playbooks can be Markdown files or directories with `SKILL.md` and supporting
+resources. Bundle validation requires YAML frontmatter with nonempty English
+`name` and `description` strings, plus an optional `aliases` array of nonempty
+English strings. Other fields, including `tags`, are rejected. Headers are limited
+to 4096 bytes. YAML parsing uses PyYAML; the BM25 implementation uses only the
+Python standard library and has no search-package dependency.
+
+```yaml
+---
+name: recover-postgres-replica
+description: Recover a PostgreSQL replica after replication has stopped.
+aliases: [postgres standby repair, replication failure]
+---
+```
+
+The skill translates requests into English queries; the CLI rejects non-Latin
+letters and empty search terms. Validation cannot establish that Latin prose is
+English, so English remains an authoring/review and skill instruction requirement.
+Case and Latin accents are normalized; punctuation separates terms. Search has
+no stemming or semantic matching: use aliases for alternate terms. BM25 indexes
+only `name`, `description`, and `aliases`, with k1=1.5, b=0.75, positive IDF, and
+unique query terms. Bodies and supporting resources are never indexed or returned.
+The index is rebuilt from receipt-owned files for each search, avoiding stale
+persistent indexes.
+
+Results contain bundle/asset identity, metadata, score, and an absolute file path.
+Defaults are top 5, minimum score 0.1, and 8192 bytes for the serialized JSON output
+including its final newline. Bounds are configurable (limit 1–20, finite
+nonnegative minimum score, output 1024–65536 bytes). Only positive matches meeting
+the threshold appear; results may be empty. Whole candidates are omitted when
+the output budget is reached, and `truncated` reports omitted qualifying matches.
+Scores are lexical ranks, not applicability confidence; calibrate the threshold
+with real tasks. Queries are limited to 512 UTF-8 bytes.
+
+After choosing a playbook, the agent loads its bundle's context once if needed,
+reads relevant instructions, and reads the selected procedure body. If no suitable
+procedure exists, it completes the task and asks whether to save a reusable draft
+into an authoring source. Saving requires user approval and an available source;
+the skill never writes into generated copies or installed wheel resources. See
+the [consumption and search contract](../../docs/architecture/resource-taxonomy.md#devkit-playbook-entry-point-and-search-contract).
+
+**TODO:** Evaluate `devkit get-context <bundle> [query]` for filtering instruction
+headers in larger catalogs. This optional argument is not implemented. Any future
+design must preserve full constitution delivery, on-demand instruction bodies, and
+the explicit user entry boundary for playbooks.
+
 ## Local authoring and export
 
 ```bash

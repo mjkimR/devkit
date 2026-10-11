@@ -9,6 +9,7 @@ from devkit_distribution.bundles import BundleError, build_bundle, load_bundle, 
 from devkit_distribution.installation.context import get_context
 from devkit_distribution.installation.discovery import discover_bundles
 from devkit_distribution.installation.inventory import AGENTS
+from devkit_distribution.installation.playbook_search import search_playbooks
 from devkit_distribution.installation.sync import read_receipt, recover_project, sync_project
 
 
@@ -25,6 +26,26 @@ def context(bundle_name: str, target: Path) -> None:
     """Return the full constitution and instruction headers for a synced bundle."""
     try:
         result = get_context(target, bundle_name)
+    except (BundleError, OSError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(json.dumps(result, indent=2, ensure_ascii=False))
+
+
+@cli.group()
+def playbook() -> None:
+    """Discover occasional procedures after explicit devkit-playbook invocation."""
+
+
+@playbook.command(name="search")
+@click.argument("query")
+@click.option("--target", default=".", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--limit", default=5, show_default=True, type=click.IntRange(1, 20))
+@click.option("--min-score", default=0.1, show_default=True, type=click.FloatRange(min=0))
+@click.option("--max-bytes", default=8192, show_default=True, type=click.IntRange(1024, 65536))
+def search(query: str, target: Path, limit: int, min_score: float, max_bytes: int) -> None:
+    """Search synchronized playbook metadata with an English query; return headers only."""
+    try:
+        result = search_playbooks(target, query, limit=limit, min_score=min_score, max_bytes=max_bytes)
     except (BundleError, OSError) as exc:
         raise click.ClickException(str(exc)) from exc
     click.echo(json.dumps(result, indent=2, ensure_ascii=False))

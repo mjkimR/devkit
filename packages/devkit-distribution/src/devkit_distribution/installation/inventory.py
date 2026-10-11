@@ -6,8 +6,11 @@ from pathlib import Path
 from devkit_distribution.bundles import BundleError
 from devkit_distribution.bundles.guidance import prepend_context
 from devkit_distribution.bundles.manifest import source_files
+from devkit_distribution.bundles.playbooks import playbook_entry
 
 from .discovery import InstalledBundle
+from .playbook_skill import MANAGED_ROOT, NAME
+from .playbook_skill import skill_files as generated_skill_files
 
 AGENTS = {"codex": (".agents/skills", ".codex/agents"), "claude-code": (".claude/skills", ".claude/agents")}
 
@@ -98,5 +101,26 @@ def desired_inventory(
                         dest = f"{subagent_dir}/{asset.id}{suffix}"
                     add(dest, path, bundle.name if has_context and path in skill_files else None)
                     paths.add(dest)
-            assets.append({"bundle": bundle.name, "id": asset.id, "kind": asset.kind, "paths": sorted(paths)})
+            record: dict[str, object] = {
+                "bundle": bundle.name,
+                "id": asset.id,
+                "kind": asset.kind,
+                "paths": sorted(paths),
+            }
+            if asset.kind == "playbook":
+                record["entrypoints"] = sorted(
+                    {
+                        prefix + playbook_entry(bundle.root, source).relative_to(bundle.root).as_posix()
+                        for _, source in asset.sources
+                    }
+                )
+            assets.append(record)
+    if any(asset["kind"] == "playbook" for asset in assets):
+        projections = [(MANAGED_ROOT, None), *((f"{AGENTS[agent][0]}/{NAME}", agent) for agent in agents)]
+        for directory, agent in projections:
+            for relative, data in generated_skill_files(agent).items():
+                destination = f"{directory}/{relative}"
+                if destination in files:
+                    raise BundleError(f"destination collision: {destination}")
+                files[destination] = Content(data, 0o644)
     return files, assets, packages

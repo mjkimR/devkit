@@ -29,7 +29,7 @@ Resources are classified along three dimensions: **Guidance & Context Layer** (n
 │  - host-guidance-block  : Host orientation marker (in root AGENTS.md)        │
 │  - package-constitution : Package-level constitution (.devkit/.../AGENTS.md) │
 │  - package-instruction  : Instruction headers; bodies loaded on demand       │
-│  - package-playbook     : Multi-step procedural checklist (workflows)       │
+│  - package-playbook     : Occasional procedures, explicitly requested       │
 └──────────────────────────────────────┬───────────────────────────────────────┘
                                        │
 ┌──────────────────────────────────────┴───────────────────────────────────────┐
@@ -73,7 +73,7 @@ Resources are classified along three dimensions: **Guidance & Context Layer** (n
 - **Consumption**: **Progressive disclosure**, like agent skills: `get-context` exposes the YAML headers and readable file paths of synchronized instructions, never their bodies. The agent uses the names and descriptions to select relevant instructions and reads their full files only when needed. There is no category of instruction bodies eagerly included in the default context.
 - **Token Budget**: Headers consume context when the bundle is first used; instruction bodies consume context only when selected.
 - **Target Location**: `.devkit/managed/<bundle>/instructions/<name>.md`.
-- **Format Requirements**: Single markdown document with YAML frontmatter specifying `name` and `description` to enable semantic discovery.
+- **Format Requirements**: Single markdown document with English YAML frontmatter specifying `name` and `description` to enable discovery.
 
 #### Bundle context delivery contract
 
@@ -82,12 +82,107 @@ Resources are classified along three dimensions: **Guidance & Context Layer** (n
 - The prerequisite explicitly requires **one command execution per bundle per current agent context**, not one per skill or turn. Other package entry points may explicitly request the same context using this command and the same deduplication rule.
 - The command is stateless and always returns the complete response. It does not record that an agent has loaded it or suppress later output. Context deduplication is the agent's responsibility; automatic injection and exactly-once runtime enforcement are not guaranteed.
 - Installation, listing, and skill discovery do not load this context. Instruction bodies remain on demand even after `get-context` runs. Presets restrict the instruction catalog; the constitution is included independently of presets.
+- Playbook headers and bodies are excluded from `get-context`. An ordinary task request does not trigger playbook search.
 
 #### 4. `package-playbook`
-- **Role**: Multi-step operational workflows that require state tracking, ordered execution steps, and verification checkpoints (e.g., database migration, release checklist, triage procedures).
-- **Consumption**: Triggered intentionally when executing a designated operational task.
-- **Format Requirements**: Structured checklist containing explicit `Prerequisites`, numbered `Step N` actions, and unambiguous termination conditions.
+- **Role**: Procedures for occasional tasks, retrieved for reuse and extended through experience. Explicit, recurring execution flows belong to workflows; frequency alone does not turn a policy or judgment criterion into a playbook.
+- **Consumption**: Search and use only after the user explicitly invokes the shared `devkit-playbook` skill for a task. Individual playbooks are not exposed in the default context or native skill catalog. References from instructions or other skills do not bypass this entry condition.
+- **Format Requirements**: English YAML frontmatter with required `name` and `description`, plus an optional `aliases` string array. The body contains explicit `Prerequisites`, numbered `Step N` actions, and unambiguous completion conditions.
 - **Target Location**: `.devkit/managed/<bundle>/playbooks/<slug>/SKILL.md`.
+
+#### Instruction and playbook consumption boundaries
+
+| Concern | `package-instruction` | `package-playbook` |
+| --- | --- | --- |
+| Purpose | Rules, constraints, and judgment criteria for the current work | Procedures for occasional tasks |
+| Default disclosure | Headers and paths in the bundle's `get-context` response | No individual headers or bodies |
+| Entry condition | The agent determines relevance from the instruction catalog | The user explicitly invokes `devkit-playbook` for the requested task |
+| Full text | Read when relevant, before the affected action | Read after selecting a search candidate, before executing its procedure |
+| Example | Compatibility requirements for database changes | Recovery steps for a particular database failure |
+
+The explicit invocation applies to the requested task, not all future tasks in the
+conversation. For example, "recover the database" alone does not initiate playbook
+search; "use devkit-playbook to recover the database" does. Selected playbooks do
+not replace package guidance: load their bundle's context if it is not already
+available, then apply the constitution and any relevant instructions. The
+once-per-bundle rule concerns context loading, not the procedure's execution state.
+
+#### `devkit-playbook` entry point and search contract
+
+Sync generates the shared entry skill when selected playbooks exist. Search and
+metadata validation are implemented. Codex and Claude Code projections use their
+native explicit-invocation settings; other runtimes rely on the skill's body
+instructions until native support is verified. The search CLI itself does not
+inspect conversation history to enforce user-only invocation.
+
+1. Generate one shared `devkit-playbook` skill for the consumer project, rather
+   than one skill per playbook. Its instructions require explicit user invocation;
+   use native invocation controls where supported by the target runtime. Codex
+   uses `agents/openai.yaml` with `policy.allow_implicit_invocation: false`; Claude
+   Code uses `disable-model-invocation: true`. Removing the last selected playbook
+   removes the generated skill. The managed copy lives under
+   `.devkit/managed/_devkit/skills/devkit-playbook/`.
+2. After invocation, convert the user's task into an English search query. User
+   requests and conversation may use any language; search queries must be English.
+3. Search synchronized playbooks across bundles, respecting asset selection.
+   Implement BM25 within devkit without an additional search package. Initially
+   index only `name`, `description`, and `aliases`, not procedure bodies. The
+   command is `uv run devkit playbook search "<English query>"`; it returns parsed
+   metadata and paths. Rebuild its in-memory index from receipt-owned entry files
+   on each invocation. Directory playbooks index only their root `SKILL.md`, not
+   supporting resources.
+4. Return only candidate metadata and readable paths above a configurable minimum
+   score, capped at top N and a total header-output budget. Scores rank lexical
+   matches, not execution suitability; allow an empty result and calibrate the
+   threshold with representative queries rather than treating it as confidence.
+   Defaults: `--limit 5`, `--min-score 0.1`, `--max-bytes 8192`. The byte budget
+   covers the complete JSON response and final newline; omit entire candidates
+   rather than truncating individual headers. BM25 uses k1=1.5, b=0.75, positive
+   IDF, and unique query terms; normalize case, Latin accents, and punctuation.
+   Use aliases for alternate terms; no stemming or semantic expansion is applied.
+5. Select an applicable candidate from its metadata, read the full procedure, and
+   check prerequisites before executing it. A search match does not grant extra
+   permission or make the procedure automatically applicable.
+6. If no suitable playbook was found, complete the requested task using the
+   applicable guidance. After completion, ask whether to add the reusable
+   procedure as a playbook, presenting a draft and proposed bundle/source path.
+   Do not persist it without the user's approval or write into generated managed
+   copies; an authoring location must be available for the approved addition.
+
+All frontmatter prose must be English. `aliases` provide
+alternative English terms, abbreviations, and phrases that users may search for.
+Product names and technical identifiers retain their canonical spelling. For
+example:
+
+```yaml
+---
+name: recover-postgres-replica
+description: Recover a PostgreSQL replica after replication has stopped.
+aliases: [postgres standby recovery, repair replica, replication failure]
+---
+```
+
+Validate required fields and field types mechanically, reject duplicate/unknown
+fields, and cap frontmatter at 4096 UTF-8 bytes. The supported fields are exactly
+`name`, `description`, and `aliases`; classification tags are not supported.
+English authoring is also an authoring/review requirement. Reject non-Latin letters
+in headers and queries as a practical guard, without claiming this proves English
+language use. Queries must contain search terms and fit within 512 UTF-8 bytes.
+Playbooks may be single Markdown files or directories containing `SKILL.md` and
+supporting resources. Validate metadata at bundle load and again when searching
+synchronized files; preserve receipt ownership, hash checks, and transaction checks.
+
+#### Follow-up TODO: optional query for bundle context
+
+- Evaluate whether to support `devkit get-context <bundle> [query]` in the future;
+  this is a review item, not an implemented command signature or a commitment.
+- Consider using the optional English query to narrow instruction header exposure
+  as catalogs grow. Preserve the full constitution in every response when present
+  and keep instruction bodies on demand. Keep the existing no-query behavior.
+- Review relevance, omitted-instruction risks, output budgets, and whether a new
+  query should refresh the catalog despite the once-per-context loading rule.
+- Preserve the explicit `devkit-playbook` entry boundary. Adding a context query
+  must not silently enable playbook discovery during ordinary task handling.
 
 ---
 
@@ -129,8 +224,9 @@ Q3: Is it an agent persona definition or subagent configuration file?
  ├─ YES ──> [ agent-subagent ] (Projected into .codex/agents/ or .claude/agents/)
  └─ NO  ──> Q4
 
-Q4: Is it a multi-step operational procedure with an ordered checklist?
- ├─ YES ──> [ package-playbook ] (Stored in playbooks/<slug>/SKILL.md)
+Q4: Is it a task procedure rather than a rule or judgment criterion?
+ ├─ YES, recurring explicit flow ──> [ workflow ] (Separate workflow design)
+ ├─ YES, occasional procedure ──> [ package-playbook ] (Explicit devkit-playbook entry)
  └─ NO  ──> Q5
 
 Q5: Is it a global orientation pointer required in root bootstrap files?
@@ -192,7 +288,7 @@ Both options remain open architectural alternatives. The core resource taxonomy 
 | **`host-guidance-block`** | Guidance | Injected Marker Block | Session bootstrap | Minimal pointer index | Root `AGENTS.md` / `CLAUDE.md` |
 | **`package-constitution`** | Guidance | Markdown (~50–100 lines) | Before first bundle skill | Bounded (~100 lines) | `.devkit/managed/<bundle>/AGENTS.md` |
 | **`package-instruction`** | Guidance | Markdown (`instructions/*.md`) | Headers on first bundle use; bodies on demand | Header catalog plus selected bodies | `.devkit/managed/<bundle>/instructions/` |
-| **`package-playbook`** | Guidance | Checklist (`playbooks/<slug>/SKILL.md`) | Workflow command trigger | On-demand workflow | `.devkit/managed/<bundle>/playbooks/` |
+| **`package-playbook`** | Guidance | Metadata and checklist (`playbooks/<slug>/SKILL.md`) | Explicit user invocation of `devkit-playbook`, then search and selection | Bounded candidate headers; selected body only | `.devkit/managed/<bundle>/playbooks/` |
 | **`governance-rule`** | Mechanized | Python (`rules/*.py`) | Linters / `just rules-check` | **0 tokens** (pure code) | `.devkit/managed/<bundle>/rules/` |
 | **`agent-skill`** | Mechanized | Directory (`skills/<slug>/`) | Tool/function invocation | Tool registry metadata | Projected (`.agents/skills/`, etc.) |
 | **`agent-subagent`** | Mechanized | Config (`agents/<slug>.{toml,md}`) | Subagent delegation | Persona config on load | Projected (`.codex/agents/`, etc.) |

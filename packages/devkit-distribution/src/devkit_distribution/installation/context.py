@@ -5,18 +5,16 @@ from pathlib import Path
 from devkit_distribution.bundles import BundleError
 from devkit_distribution.bundles.manifest import SLUG
 
+from .reading import read_owned, synchronized_root
 from .sync import read_receipt
-from .transaction import JOURNAL, RECEIPT, project_lock, signature, snapshot
+from .transaction import JOURNAL, project_lock, snapshot
 
 
 def get_context(start: Path, bundle: str) -> dict[str, object]:
     """Read synchronized constitution and instruction headers without session state."""
     if not SLUG.fullmatch(bundle):
         raise BundleError("bundle: expected a lowercase slug")
-    start = start.resolve()
-    root = next((path for path in (start, *start.parents) if (path / RECEIPT).exists()), None)
-    if root is None:
-        raise BundleError("no synchronized project found; run devkit sync first")
+    root = synchronized_root(start)
     with project_lock(root):
         if snapshot(root, JOURNAL) is not None:
             raise BundleError("pending transaction; run devkit recover first")
@@ -26,11 +24,8 @@ def get_context(start: Path, bundle: str) -> dict[str, object]:
             raise BundleError(f"bundle is not synchronized: {bundle}")
 
         def read(name: str) -> str:
-            content = snapshot(root, name)
-            if content is None or signature(content) != receipt["files"].get(name):
-                raise BundleError(f"missing or modified context file: {name}; reconcile with devkit sync")
             try:
-                return content.data.decode("utf-8")
+                return read_owned(root, receipt, name).decode("utf-8")
             except UnicodeError as exc:
                 raise BundleError(f"context file must be UTF-8: {name}") from exc
 
