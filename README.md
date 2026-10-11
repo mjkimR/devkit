@@ -39,15 +39,15 @@ be passed after the module: `just test agent-rule-engine -k cache`.
 
 `just lint-check` verifies formatting without changes. `just test-cov` reports
 coverage. See [agent-rule-engine](packages/agent-rule-engine/README.md) for its
-feature layout, custom rule API, CLI behavior, and current limits.
+CLI usage and custom rule API.
 
-The proposed unified lifecycle for agent-native assets, rule bundles, skills,
-instructions, playbooks, and presets is documented in the
-[agent distribution design](docs/architecture/agent-distribution.md).
-The initial [devkit distribution CLI](packages/devkit-distribution/README.md)
-supports local bundle validation, packaging, and managed inventory planning.
-It also discovers installed content wheels and synchronizes their resources
-with receipts, conflict checks, and interrupted-operation recovery.
+The unified lifecycle for agent assets, rule bundles, skills, instructions,
+playbooks, and presets is documented in the
+[Architecture Overview](docs/architecture/overview.md) and
+[Distribution Documentation](docs/distribution/overview.md).
+The [devkit distribution CLI](packages/devkit-distribution/README.md)
+supports bundle validation, packaging, managed inventory planning,
+and transactional synchronization with receipts and rollback recovery.
 
 Consumers install the CLI and content packages together as uv dev dependencies:
 

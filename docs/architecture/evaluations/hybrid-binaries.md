@@ -2,7 +2,7 @@
 
 **Status**: Architectural Evaluation & Future Consideration  
 **Target Subsystems**: `devkit-distribution` (search, sync engine), `agent-rule-engine` (workspace scanner)  
-**Related Documents**: [Resource Taxonomy](resource-taxonomy.md), [Agent Distribution Architecture](agent-distribution.md)
+**Related Documents**: [Resource Taxonomy](../resource-taxonomy.md), [Distribution Overview](../../distribution/overview.md)
 
 ---
 
@@ -123,7 +123,7 @@ If word embeddings (e.g., Word2Vec vectors) or large inverted indexes require wa
 ### 1. Hybrid Playbook & Asset Search Engine
 
 * **Current Implementation**:
-  - Pure Python standard library BM25 in [playbook_search.py](../../packages/devkit-distribution/src/devkit_distribution/installation/playbook_search.py).
+  - Pure Python standard library BM25 in [playbook_search.py](../../../packages/devkit-distribution/src/devkit_distribution/installation/playbook_search.py).
   - Lexical-only index built from receipt-owned entry files on each invocation.
   - Strict limitation: No semantic vector expansion, requires explicit aliases in frontmatter for alternate search vocabulary.
 * **Go Hybrid Evaluation**:

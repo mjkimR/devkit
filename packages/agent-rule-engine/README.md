@@ -93,5 +93,13 @@ Caches live for one evaluation session. File discovery is cached and ignores
 common dependency/cache directories. Markdown links use a lightweight regex
 extractor with fenced/inline code skipping, not a full Markdown AST parser.
 The runner checks working-tree files; Git snapshot evaluation, Go CLI IPC,
-`rule.yaml` metadata and parallel workers are future work. Performance claims
-require measurement; see the architecture notes for the experiment plan.
+`rule.yaml` metadata and parallel workers are future work.
+
+## Architectural Specifications & Deep-Dives
+
+Detailed technical designs and protocols are documented in `docs/rule-engine/`:
+
+- [Rule Engine Architecture Overview](../../docs/rule-engine/overview.md): Core subsystems, workspace cache, and document catalog.
+- [Evaluation Lifecycle & Convergence](../../docs/rule-engine/evaluation-lifecycle.md): Phased checks, single-pass autofix, and convergence verification.
+- [Rule Authoring Guide](../../docs/rule-engine/rule-authoring.md): Protocols, finding models, cache APIs, and custom rule implementation.
+- [Resource Taxonomy](../../docs/architecture/resource-taxonomy.md): Governance rules within the multi-tier agent asset taxonomy.

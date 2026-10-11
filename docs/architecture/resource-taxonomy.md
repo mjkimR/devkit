@@ -2,7 +2,7 @@
 
 **Status**: Architecture Specification & Design Blueprint  
 **Scope**: Taxonomy, naming standards, and placement decision rules for agent guidance, operational playbooks, governance rules, and runtime assets.  
-**Related Documents**: [Unified Agent Asset Distribution Architecture](agent-distribution.md)
+**Related Documents**: [Distribution Architecture Overview](../distribution/overview.md)
 
 ---
 
@@ -215,7 +215,7 @@ synchronized files; preserve receipt ownership, hash checks, and transaction che
 
 #### Future Search Engine Evaluation
 
-- For potential search engine performance scaling and lightweight semantic hybrid matching (e.g., Go-based BM25 and word2vec/portion representation bundled via `uv`), see the [Hybrid Architecture & Native Binary Distribution Evaluation](hybrid-binary-distribution.md).
+- For potential search engine performance scaling and lightweight semantic hybrid matching (e.g., Go-based BM25 and word2vec/portion representation bundled via `uv`), see the [Hybrid Architecture & Native Binary Distribution Evaluation](evaluations/hybrid-binaries.md).
 
 ---
 
