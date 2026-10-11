@@ -1,3 +1,8 @@
+---
+name: development
+description: Project instruction discovery and verification before completing changes.
+---
+
 # Development
 
 Read the project's instructions before editing. Run the checks relevant to the

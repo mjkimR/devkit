@@ -30,6 +30,16 @@ class Bundle:
     assets: tuple[Asset, ...]
     presets: dict[str, tuple[str, ...]]
 
+    @property
+    def constitution(self) -> Path | None:
+        path = self.root / "AGENTS.md"
+        if not path.exists() and not path.is_symlink():
+            return None
+        path = safe_source(self.root, "AGENTS.md")
+        if not path.is_file():
+            raise BundleError("constitution AGENTS.md must be a file")
+        return path
+
 
 def _mapping(value: Any, keys: set[str], context: str) -> dict[str, Any]:
     if not isinstance(value, dict) or not all(isinstance(key, str) for key in value):
@@ -135,4 +145,10 @@ def load_bundle(root: Path) -> Bundle:
         if len(set(selected)) != len(selected) or set(selected) - ids:
             raise BundleError(f"{preset}: duplicate or unknown asset selection")
         presets[preset] = tuple(selected)
-    return Bundle(root, name, version, tuple(assets), presets)
+    bundle = Bundle(root, name, version, tuple(assets), presets)
+    if bundle.constitution is not None:
+        try:
+            bundle.constitution.read_text(encoding="utf-8")
+        except UnicodeError as exc:
+            raise BundleError("constitution AGENTS.md must be UTF-8") from exc
+    return bundle

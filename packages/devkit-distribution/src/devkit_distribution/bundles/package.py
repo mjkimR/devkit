@@ -6,11 +6,14 @@ import stat
 import zipfile
 from pathlib import Path
 
+from .guidance import prepend_context
 from .manifest import Bundle, BundleError, source_files
 
 
 def _payload(bundle: Bundle) -> dict[str, tuple[bytes, int]]:
     payload = {"bundle.toml": ((bundle.root / "bundle.toml").read_bytes(), 0o644)}
+    if bundle.constitution is not None:
+        payload["AGENTS.md"] = (bundle.constitution.read_bytes(), 0o644)
     for asset in bundle.assets:
         for _, source in asset.sources:
             for path in source_files(bundle.root, source):
@@ -51,6 +54,20 @@ def plan_bundle(bundle: Bundle, preset: str | None = None) -> dict[str, object]:
     selected = set(bundle.presets[preset]) if preset else {asset.id for asset in bundle.assets}
     payload = _payload(bundle)
     files = set()
+    if bundle.constitution is not None:
+        files.add("AGENTS.md")
+    if bundle.constitution is not None or any(
+        asset.kind == "instruction" and asset.id in selected for asset in bundle.assets
+    ):
+        skill_files = {
+            f"{source}/SKILL.md"
+            for asset in bundle.assets
+            if asset.kind == "skill" and asset.id in selected
+            for _, source in asset.sources
+        }
+        for name in skill_files:
+            data, mode = payload[name]
+            payload[name] = (prepend_context(data, bundle.name), mode)
     assets = []
     for asset in bundle.assets:
         if asset.id not in selected:

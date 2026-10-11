@@ -28,7 +28,7 @@ Resources are classified along three dimensions: **Guidance & Context Layer** (n
 │                       1. Guidance & Context Layer                            │
 │  - host-guidance-block  : Host orientation marker (in root AGENTS.md)        │
 │  - package-constitution : Package-level constitution (.devkit/.../AGENTS.md) │
-│  - package-instruction  : On-demand natural-language policy (0 tokens)       │
+│  - package-instruction  : Instruction headers; bodies loaded on demand       │
 │  - package-playbook     : Multi-step procedural checklist (workflows)       │
 └──────────────────────────────────────┬───────────────────────────────────────┘
                                        │
@@ -64,16 +64,24 @@ Resources are classified along three dimensions: **Guidance & Context Layer** (n
 
 #### 2. `package-constitution`
 - **Role**: The foundational architecture guide and constitution for a specific bundle or domain (e.g., repository rules, backend conventions, testing architecture).
-- **Consumption**: Read once per session when the agent focuses on that package's functional domain.
+- **Consumption**: Before the first skill from the bundle is performed, run `uv run devkit get-context <bundle>`. The response always includes the complete constitution when present. Load once per bundle in the current agent context, shared across all its skills; reload only when the guidance is no longer available, such as after compaction or in a new agent context.
 - **Token Budget**: Strictly bounded (~50–100 lines). Summarizes core contracts and points to granular `package-instruction` documents.
 - **Target Location**: `.devkit/managed/<bundle>/AGENTS.md`.
 
 #### 3. `package-instruction`
 - **Role**: Natural-language coding standards, API design rules, domain constraints, and architectural guidelines that require developer judgment.
-- **Consumption**: **On-demand discovery**. Discovered via `devkit list` or referenced from constitutions, and loaded into context only when relevant files or tasks are touched.
-- **Token Budget**: **Zero permanent token overhead**. Leaves the default context window clean.
+- **Consumption**: **Progressive disclosure**, like agent skills: `get-context` exposes the YAML headers and readable file paths of synchronized instructions, never their bodies. The agent uses the names and descriptions to select relevant instructions and reads their full files only when needed. There is no category of instruction bodies eagerly included in the default context.
+- **Token Budget**: Headers consume context when the bundle is first used; instruction bodies consume context only when selected.
 - **Target Location**: `.devkit/managed/<bundle>/instructions/<name>.md`.
 - **Format Requirements**: Single markdown document with YAML frontmatter specifying `name` and `description` to enable semantic discovery.
+
+#### Bundle context delivery contract
+
+- `get-context <bundle>` returns the full constitution (when present) and an instruction header catalog with paths. It returns content; the agent reads that output into its context.
+- During sync, bundles with a constitution or selected instructions receive a generated prerequisite at the beginning of each deployed skill body, after YAML frontmatter. Managed and native skill copies receive the same prerequisite. Source files and authoring ZIP exports remain unchanged.
+- The prerequisite explicitly requires **one command execution per bundle per current agent context**, not one per skill or turn. Other package entry points may explicitly request the same context using this command and the same deduplication rule.
+- The command is stateless and always returns the complete response. It does not record that an agent has loaded it or suppress later output. Context deduplication is the agent's responsibility; automatic injection and exactly-once runtime enforcement are not guaranteed.
+- Installation, listing, and skill discovery do not load this context. Instruction bodies remain on demand even after `get-context` runs. Presets restrict the instruction catalog; the constitution is included independently of presets.
 
 #### 4. `package-playbook`
 - **Role**: Multi-step operational workflows that require state tracking, ordered execution steps, and verification checkpoints (e.g., database migration, release checklist, triage procedures).
@@ -129,7 +137,7 @@ Q5: Is it a global orientation pointer required in root bootstrap files?
  ├─ YES ──> [ host-guidance-block ] (Injected into root AGENTS.md / CLAUDE.md)
  └─ NO  ──> Q6
 
-Q6: Is it a high-level package constitution read when working in that domain?
+Q6: Is it a high-level package constitution loaded before the first bundle skill?
  ├─ YES ──> [ package-constitution ] (Stored in package AGENTS.md)
  └─ NO  ──> [ package-instruction ] (Default for policies, coding standards, and judgment criteria)
 ```
@@ -182,8 +190,8 @@ Both options remain open architectural alternatives. The core resource taxonomy 
 | Resource Kind | Tier / Layer | Typical File Form | Consumption Timing | Token / Context Impact | Physical Destination |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **`host-guidance-block`** | Guidance | Injected Marker Block | Session bootstrap | Minimal pointer index | Root `AGENTS.md` / `CLAUDE.md` |
-| **`package-constitution`** | Guidance | Markdown (~50–100 lines) | Domain task initiation | Bounded (~100 lines) | `.devkit/managed/<bundle>/AGENTS.md` |
-| **`package-instruction`** | Guidance | Markdown (`instructions/*.md`) | On-demand before action | **0 permanent tokens** | `.devkit/managed/<bundle>/instructions/` |
+| **`package-constitution`** | Guidance | Markdown (~50–100 lines) | Before first bundle skill | Bounded (~100 lines) | `.devkit/managed/<bundle>/AGENTS.md` |
+| **`package-instruction`** | Guidance | Markdown (`instructions/*.md`) | Headers on first bundle use; bodies on demand | Header catalog plus selected bodies | `.devkit/managed/<bundle>/instructions/` |
 | **`package-playbook`** | Guidance | Checklist (`playbooks/<slug>/SKILL.md`) | Workflow command trigger | On-demand workflow | `.devkit/managed/<bundle>/playbooks/` |
 | **`governance-rule`** | Mechanized | Python (`rules/*.py`) | Linters / `just rules-check` | **0 tokens** (pure code) | `.devkit/managed/<bundle>/rules/` |
 | **`agent-skill`** | Mechanized | Directory (`skills/<slug>/`) | Tool/function invocation | Tool registry metadata | Projected (`.agents/skills/`, etc.) |

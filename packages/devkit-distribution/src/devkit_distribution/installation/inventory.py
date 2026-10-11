@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from devkit_distribution.bundles import BundleError
+from devkit_distribution.bundles.guidance import prepend_context
 from devkit_distribution.bundles.manifest import source_files
 
 from .discovery import InstalledBundle
@@ -29,10 +30,13 @@ def desired_inventory(
     if set(agents) - AGENTS.keys():
         raise BundleError("unsupported agent selection")
 
-    def add(destination: str, path: Path) -> None:
+    def add(destination: str, path: Path, context_bundle: str | None = None) -> None:
         if destination in files:
             raise BundleError(f"destination collision: {destination}")
-        files[destination] = Content(path.read_bytes(), 0o755 if path.stat().st_mode & 0o111 else 0o644)
+        data = path.read_bytes()
+        if context_bundle is not None:
+            data = prepend_context(data, context_bundle)
+        files[destination] = Content(data, 0o755 if path.stat().st_mode & 0o111 else 0o644)
 
     for item in installed:
         bundle = item.bundle
@@ -51,6 +55,19 @@ def desired_inventory(
         prefix = f".devkit/managed/{bundle.name}/"
         add(prefix + "bundle.toml", bundle.root / "bundle.toml")
         managed: set[str] = {prefix + "bundle.toml"}
+        constitution = bundle.constitution
+        if constitution is not None:
+            add(prefix + "AGENTS.md", constitution)
+            managed.add(prefix + "AGENTS.md")
+        has_context = constitution is not None or any(
+            asset.kind == "instruction" and asset.id in selected for asset in bundle.assets
+        )
+        skill_files = {
+            bundle.root / source / "SKILL.md"
+            for asset in bundle.assets
+            if asset.kind == "skill" and asset.id in selected
+            for _, source in asset.sources
+        }
         for asset in bundle.assets:
             if asset.id not in selected:
                 continue
@@ -59,7 +76,7 @@ def desired_inventory(
                 for path in source_files(bundle.root, source):
                     dest = prefix + path.relative_to(bundle.root).as_posix()
                     if dest not in managed:
-                        add(dest, path)
+                        add(dest, path, bundle.name if has_context and path in skill_files else None)
                         managed.add(dest)
                     paths.add(dest)
             for agent in agents:
@@ -79,7 +96,7 @@ def desired_inventory(
                         if not origin.is_file() or origin.suffix != suffix:
                             raise BundleError(f"{asset.id}: {agent} subagent must be one {suffix} file")
                         dest = f"{subagent_dir}/{asset.id}{suffix}"
-                    add(dest, path)
+                    add(dest, path, bundle.name if has_context and path in skill_files else None)
                     paths.add(dest)
             assets.append({"bundle": bundle.name, "id": asset.id, "kind": asset.kind, "paths": sorted(paths)})
     return files, assets, packages

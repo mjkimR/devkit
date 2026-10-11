@@ -30,6 +30,7 @@ src/package_b_playbooks/
   __init__.py               # No side effects; content module only
   bundle/
     bundle.toml
+    AGENTS.md                # Optional bundle constitution
     playbooks/review.md
     instructions/development.md
     skills/review/SKILL.md
@@ -47,7 +48,8 @@ nonempty `[[assets]]`. Assets have a unique `id`, a `kind` (`skill`, `subagent`,
 Sources are relative POSIX files/directories. A skill is a directory with `SKILL.md`.
 Optional `[presets.<name>]` tables select asset IDs through `assets = ["id", ...]`.
 Unknown manifest keys, missing sources, path escapes and symlinks are errors.
-Native content is copied verbatim, with modes normalized to 0644 or 0755.
+Native content is copied verbatim except for the generated skill context prerequisite
+described below, with modes normalized to 0644 or 0755.
 
 ```toml
 schema = 1
@@ -99,6 +101,38 @@ may remain after rollback/removal. Runtime support is currently POSIX (Linux/mac
 
 Commit the receipt. Ignore managed/transient and generated native files using your
 project's own `.gitignore`; devkit does not edit ignore rules or the Git index.
+
+## Bundle context and progressive disclosure
+
+An optional UTF-8 `AGENTS.md` at the bundle root is its constitution. Sync always
+includes it, independently of presets. Instruction sources should be Markdown
+files with YAML frontmatter containing `name` and `description`.
+
+```bash
+uv run devkit get-context team
+```
+
+Run from the synchronized consumer project or a subdirectory; `--target` can
+select another project. The command uses the nearest installation receipt and
+returns JSON containing the full `constitution` (or null when absent) and an
+`instructions` catalog of YAML `header` strings and absolute file `path` values.
+Only synchronized instructions selected by presets appear. Instruction bodies
+are never included: the agent selects relevant entries from their headers and
+reads those files on demand, just as with skill discovery. Missing frontmatter,
+unclosed headers, and missing or modified context files produce errors.
+
+For bundles with a constitution or selected instructions, sync prepends a context
+loading prerequisite to every deployed skill body, immediately after frontmatter.
+It requires `get-context` **only once per bundle in the current agent context**,
+shared across all skills, not once per skill or turn. Reload only when context
+is no longer available, such as after compaction or in a new agent context.
+Package entry points may also explicitly request context using the same rule.
+The CLI always returns the full response and keeps no agent loading state;
+following the prerequisite and avoiding duplicate reads are agent responsibilities.
+
+Source skills are unchanged. Managed and native copies are generated afresh, so
+repeated sync does not accumulate prerequisites. ZIP exports preserve authoring
+sources, including the constitution; prerequisites are added when synchronized.
 
 ## Local authoring and export
 

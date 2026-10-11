@@ -6,6 +6,7 @@ from pathlib import Path
 import click
 
 from devkit_distribution.bundles import BundleError, build_bundle, load_bundle, plan_bundle
+from devkit_distribution.installation.context import get_context
 from devkit_distribution.installation.discovery import discover_bundles
 from devkit_distribution.installation.inventory import AGENTS
 from devkit_distribution.installation.sync import read_receipt, recover_project, sync_project
@@ -15,6 +16,18 @@ from devkit_distribution.installation.sync import read_receipt, recover_project,
 @click.version_option(package_name="devkit-distribution")
 def cli() -> None:
     """Devkit agent asset distribution tools."""
+
+
+@cli.command(name="get-context")
+@click.argument("bundle_name")
+@click.option("--target", default=".", type=click.Path(exists=True, file_okay=False, path_type=Path))
+def context(bundle_name: str, target: Path) -> None:
+    """Return the full constitution and instruction headers for a synced bundle."""
+    try:
+        result = get_context(target, bundle_name)
+    except (BundleError, OSError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(json.dumps(result, indent=2, ensure_ascii=False))
 
 
 @cli.group()
