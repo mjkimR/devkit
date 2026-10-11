@@ -317,6 +317,9 @@ presets = { team = "minimal" }
         ("[playbooks]\nlimit = 0\n", "config playbooks: limit must be an integer between 1 and 20"),
         ("[playbooks]\nmin_score = -1\n", "config playbooks: min_score must be a finite nonnegative number"),
         ("[playbooks]\nmax_bytes = 100\n", "config playbooks: max_bytes must be an integer between 1024 and 65536"),
+        ("exclude_bundles = 'bad'\n", "config: invalid exclude_bundles"),
+        ("exclude_bundles = ['bad slug!']\n", "config: invalid exclude_bundles"),
+        ("[selection]\nexclude_bundles = 123\n", "config: invalid exclude_bundles"),
         ("invalid toml [[\n", "invalid config"),
     ],
 )
@@ -354,4 +357,107 @@ def test_receipt_cannot_own_config(installed: list[InstalledBundle], target: Pat
     receipt["files"][CONFIG] = {"sha256": "a" * 64, "mode": 0o644}
     path.write_text(json.dumps(receipt))
     with pytest.raises(BundleError, match="receipt cannot own installation metadata"):
+        sync_project(target, installed)
+
+
+def make_extra_bundle(tmp_path: Path) -> InstalledBundle:
+    root = tmp_path / "extra_source"
+    root.mkdir(parents=True, exist_ok=True)
+    (root / "bundle.toml").write_text("""schema = 1
+name = "extra"
+version = "0.1.0"
+[[assets]]
+id = "note"
+kind = "instruction"
+source = "note.md"
+""")
+    (root / "note.md").write_text("# Note\n")
+    return InstalledBundle("extra-content", "0.1.0", load_bundle(root))
+
+
+def test_sync_exclude_bundles_in_config(installed: list[InstalledBundle], target: Path, tmp_path: Path) -> None:
+    all_installed = [*installed, make_extra_bundle(tmp_path)]
+    # Initial sync without exclusions
+    sync_project(target, all_installed)
+    assert (target / ".devkit/managed/team/guide.md").exists()
+    assert (target / ".devkit/managed/extra/note.md").exists()
+
+    # Now exclude "team" via config.toml
+    config_file = target / CONFIG
+    config_file.parent.mkdir(parents=True, exist_ok=True)
+    config_file.write_text("""schema = 1
+exclude_bundles = ["team"]
+""")
+    sync_project(target, all_installed)
+    assert not (target / ".devkit/managed/team/guide.md").exists()
+    assert (target / ".devkit/managed/extra/note.md").exists()
+
+    receipt = json.loads((target / RECEIPT).read_text())
+    assert [p["bundle"] for p in receipt["packages"]] == ["extra"]
+    assert receipt["selection"]["exclude_bundles"] == ["team"]
+
+
+def test_sync_exclude_bundles_cli_flag(
+    installed: list[InstalledBundle], target: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    all_installed = [*installed, make_extra_bundle(tmp_path)]
+    sync_project(target, all_installed, exclude_bundles=["team"])
+    assert not (target / ".devkit/managed/team/guide.md").exists()
+    assert (target / ".devkit/managed/extra/note.md").exists()
+
+    receipt = json.loads((target / RECEIPT).read_text())
+    assert receipt["selection"]["exclude_bundles"] == ["team"]
+
+    # Test CLI invocation with mock discovery
+    @contextmanager
+    def mock_discover():
+        yield all_installed
+
+    monkeypatch.setattr("devkit_distribution.cli.discover_bundles", mock_discover)
+    runner = CliRunner()
+    result = runner.invoke(
+        cli, ["sync", "--target", str(target), "--exclude-bundle", "team", "--exclude-bundle", "extra"]
+    )
+    assert result.exit_code == 0
+    receipt = json.loads((target / RECEIPT).read_text())
+    assert receipt["selection"]["exclude_bundles"] == ["extra", "team"]
+    assert receipt["packages"] == []
+
+
+def test_sync_exclude_bundles_cli_overrides_config(
+    installed: list[InstalledBundle], target: Path, tmp_path: Path
+) -> None:
+    all_installed = [*installed, make_extra_bundle(tmp_path)]
+    config_file = target / CONFIG
+    config_file.parent.mkdir(parents=True, exist_ok=True)
+    config_file.write_text("""schema = 1
+exclude_bundles = ["team"]
+""")
+    # CLI specifies exclude_bundles=["extra"], overriding config
+    sync_project(target, all_installed, exclude_bundles=["extra"])
+    assert (target / ".devkit/managed/team/guide.md").exists()
+    assert not (target / ".devkit/managed/extra/note.md").exists()
+
+    receipt = json.loads((target / RECEIPT).read_text())
+    assert [p["bundle"] for p in receipt["packages"]] == ["team"]
+    assert receipt["selection"]["exclude_bundles"] == ["extra"]
+
+
+def test_sync_exclude_bundles_conflict_with_preset(installed: list[InstalledBundle], target: Path) -> None:
+    with pytest.raises(BundleError, match=r"excluded bundle cannot have preset: \['team'\]"):
+        sync_project(target, installed, presets={"team": "minimal"}, exclude_bundles=["team"])
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["sync", "--preset", "team:minimal", "--exclude-bundle", "team"])
+    assert result.exit_code != 0
+    assert "cannot combine --preset and --exclude-bundle for 'team'" in result.output
+
+
+def test_receipt_invalid_exclude_bundles(installed: list[InstalledBundle], target: Path) -> None:
+    sync_project(target, installed)
+    path = target / RECEIPT
+    receipt = json.loads(path.read_text())
+    receipt["selection"]["exclude_bundles"] = "not_a_list"
+    path.write_text(json.dumps(receipt))
+    with pytest.raises(BundleError, match="invalid receipt exclude_bundles"):
         sync_project(target, installed)

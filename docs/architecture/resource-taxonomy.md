@@ -29,7 +29,7 @@ Resources are classified along three dimensions: **Guidance & Context Layer** (n
 │  - host-guidance-block  : Host orientation marker (in root AGENTS.md)        │
 │  - package-constitution : Package-level constitution (.devkit/.../AGENTS.md) │
 │  - package-instruction  : Instruction headers; bodies loaded on demand       │
-│  - package-playbook     : Occasional procedures, explicitly requested       │
+│  - package-playbook     : Occasional procedures (explicit or rule-triggered) │
 └──────────────────────────────────────┬───────────────────────────────────────┘
                                        │
 ┌──────────────────────────────────────┴───────────────────────────────────────┐
@@ -86,7 +86,7 @@ Resources are classified along three dimensions: **Guidance & Context Layer** (n
 
 #### 4. `package-playbook`
 - **Role**: Procedures for occasional tasks, retrieved for reuse and extended through experience. Explicit, recurring execution flows belong to workflows; frequency alone does not turn a policy or judgment criterion into a playbook.
-- **Consumption**: Search and use only after the user explicitly invokes the shared `devkit-playbook` skill for a task. Individual playbooks are not exposed in the default context or native skill catalog. References from instructions or other skills do not bypass this entry condition.
+- **Consumption**: Retrieved and executed through two recommended trigger pathways: (1) **Explicit user invocation** of the shared `devkit-playbook` skill, or (2) **Rule-triggered remediation** where an out-of-band `governance-rule` violation prescribes an operational playbook. Individual playbooks are not exposed in the default context or native skill catalog. Ordinary prompt instructions and implicit agent guessing do not bypass this entry condition.
 - **Format Requirements**: English YAML frontmatter with required `name` and `description`, plus an optional `aliases` string array. The body contains explicit `Prerequisites`, numbered `Step N` actions, and unambiguous completion conditions.
 - **Target Location**: `.devkit/managed/<bundle>/playbooks/<slug>/SKILL.md`.
 
@@ -96,7 +96,7 @@ Resources are classified along three dimensions: **Guidance & Context Layer** (n
 | --- | --- | --- |
 | Purpose | Rules, constraints, and judgment criteria for the current work | Procedures for occasional tasks |
 | Default disclosure | Headers and paths in the bundle's `get-context` response | No individual headers or bodies |
-| Entry condition | The agent determines relevance from the instruction catalog | The user explicitly invokes `devkit-playbook` for the requested task |
+| Entry condition | The agent determines relevance from the instruction catalog | Explicit user invocation of `devkit-playbook`, OR explicit remediation guidance from a failing `governance-rule` |
 | Full text | Read when relevant, before the affected action | Read after selecting a search candidate, before executing its procedure |
 | Example | Compatibility requirements for database changes | Recovery steps for a particular database failure |
 
@@ -106,6 +106,33 @@ search; "use devkit-playbook to recover the database" does. Selected playbooks d
 not replace package guidance: load their bundle's context if it is not already
 available, then apply the constitution and any relevant instructions. The
 once-per-bundle rule concerns context loading, not the procedure's execution state.
+
+#### Recommended Playbook Triggering Pathways
+
+Playbooks should not be discovered through implicit LLM scanning during ordinary coding tasks, as that introduces latency, prompt bloat, and hallucinated runbooks. Instead, two official triggering patterns are recommended:
+
+1. **Explicit User Triggering (`devkit-playbook`)**:
+   - The user explicitly instructs the agent to run an operational runbook (e.g., `"use devkit-playbook to review the change"` or `"use devkit-playbook to recover replica"`).
+   - Keeps baseline prompt context lean; normal task handling never indexes or loads playbooks.
+
+2. **Rule-Triggered Remediation (Governance Bridge Pattern)**:
+   - Evaluated out-of-band by `agent-rule-engine` (`just rules-check`, CI gates, pre-commit) with **zero LLM token consumption** during ordinary turns.
+   - When a rule detects an invariant breach or hygiene threshold violation, its `Violation.remediation` field provides an unambiguous pointer to the appropriate playbook rather than embedding multi-step procedural runbooks into the rule engine.
+   - The agent or developer acts on the rule output and follows the suggested playbook search query or path to perform the remedial procedure.
+
+##### Exemplar: `AGENTS.md` Size Budget & Curation Playbook
+
+A canonical demonstration of the rule-triggered pattern is root agent guide governance:
+
+- **Root Guide Budget Guideline**: Root agent guides (`AGENTS.md`, `CLAUDE.md`) are pre-prompt context injected on **every turn**. Exceeding **8 KB (8,192 bytes)** (~1,000–2,000 tokens) causes attention dilution ("Lost in the Middle") and wastes token budgets. The recommended size budget is **4 KB to 8 KB**, maintaining a "Hub & Router" structure where deep package configs are offloaded to package READMEs.
+- **Mechanical Detection (Layer B)**: A governance hygiene rule checks the byte size of `AGENTS.md`. If it exceeds 8,192 bytes, `agent-rule-engine` emits a warning:
+  ```text
+  [WARNING] RULE-agent-guide-size (AGENTS.md:1)
+    Message: AGENTS.md exceeds recommended size (9,412 > 8,192 bytes). Root guides should remain concise to prevent context bloat.
+    Remediation: Offload domain details to package READMEs or instructions, and refer to the guide curation playbook: `uv run devkit playbook search "curate AGENTS.md"`.
+  ```
+- **Procedural Resolution (Layer A)**: The developer or agent runs `uv run devkit playbook search "curate AGENTS.md"` and follows the step-by-step procedure in the selected playbook to relocate package details to `packages/<pkg>/README.md`, leaving lightweight summary links in `AGENTS.md`.
+- **Architectural Boundary**: The rule engine handles fast, 100% mechanical threshold checks without prose bloating; the playbook provides structured human/agent operational workflows.
 
 #### `devkit-playbook` entry point and search contract
 
@@ -185,6 +212,10 @@ synchronized files; preserve receipt ownership, hash checks, and transaction che
   query should refresh the catalog despite the once-per-context loading rule.
 - Preserve the explicit `devkit-playbook` entry boundary. Adding a context query
   must not silently enable playbook discovery during ordinary task handling.
+
+#### Future Search Engine Evaluation
+
+- For potential search engine performance scaling and lightweight semantic hybrid matching (e.g., Go-based BM25 and word2vec/portion representation bundled via `uv`), see the [Hybrid Architecture & Native Binary Distribution Evaluation](hybrid-binary-distribution.md).
 
 ---
 
@@ -321,7 +352,7 @@ Selections and search defaults are resolved using a clear three-tier hierarchy:
 | **`host-guidance-block`** | Guidance | Injected Marker Block | Session bootstrap | Minimal pointer index | Root `AGENTS.md` / `CLAUDE.md` |
 | **`package-constitution`** | Guidance | Markdown (~50–100 lines) | Before first bundle skill | Bounded (~100 lines) | `.devkit/managed/<bundle>/AGENTS.md` |
 | **`package-instruction`** | Guidance | Markdown (`instructions/*.md`) | Headers on first bundle use; bodies on demand | Header catalog plus selected bodies | `.devkit/managed/<bundle>/instructions/` |
-| **`package-playbook`** | Guidance | Metadata and checklist (`playbooks/<slug>/SKILL.md`) | Explicit user invocation of `devkit-playbook`, then search and selection | Bounded candidate headers; selected body only | `.devkit/managed/<bundle>/playbooks/` |
+| **`package-playbook`** | Guidance | Metadata and checklist (`playbooks/<slug>/SKILL.md`) | Explicit `devkit-playbook` invocation OR rule-triggered remediation, then search and selection | Bounded candidate headers; selected body only | `.devkit/managed/<bundle>/playbooks/` |
 | **`governance-rule`** | Mechanized | Python (`rules/*.py`) | Linters / `just rules-check` | **0 tokens** (pure code) | `.devkit/managed/<bundle>/rules/` |
 | **`agent-skill`** | Mechanized | Directory (`skills/<slug>/`) | Tool/function invocation | Tool registry metadata | Projected (`.agents/skills/`, etc.) |
 | **`agent-subagent`** | Mechanized | Config (`agents/<slug>.{toml,md}`) | Subagent delegation | Persona config on load | Projected (`.codex/agents/`, etc.) |

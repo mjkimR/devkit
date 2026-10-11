@@ -6,6 +6,7 @@ from pathlib import Path
 import click
 
 from devkit_distribution.bundles import BundleError, build_bundle, load_bundle, plan_bundle
+from devkit_distribution.bundles.manifest import SLUG
 from devkit_distribution.installation.context import get_context
 from devkit_distribution.installation.discovery import discover_bundles
 from devkit_distribution.installation.inventory import AGENTS
@@ -114,6 +115,12 @@ def plan(source: Path, preset: str | None) -> None:
 @click.option("--agent", "agents", multiple=True, type=click.Choice(sorted(AGENTS)))
 @click.option("--no-agents", is_flag=True, help="Clear recorded native agent selections.")
 @click.option("--preset", "presets", multiple=True, help="Select bundle:preset; repeat for multiple bundles.")
+@click.option(
+    "--exclude-bundle",
+    "exclude_bundles",
+    multiple=True,
+    help="Exclude bundle from synchronization; repeat for multiple bundles.",
+)
 @click.option("--all-assets", is_flag=True, help="Clear recorded preset restrictions.")
 @click.option("--dry-run", is_flag=True)
 @click.option("--check", is_flag=True, help="Read-only check; exit 1 when synchronization is needed.")
@@ -122,6 +129,7 @@ def sync(
     agents: tuple[str, ...],
     no_agents: bool,
     presets: tuple[str, ...],
+    exclude_bundles: tuple[str, ...],
     all_assets: bool,
     dry_run: bool,
     check: bool,
@@ -135,6 +143,11 @@ def sync(
         if not separator or not name or not preset or name in selected:
             raise click.BadParameter("expected unique bundle:preset selections", param_hint="--preset")
         selected[name] = preset
+    for exc in exclude_bundles:
+        if not SLUG.fullmatch(exc):
+            raise click.BadParameter("expected lowercase slug bundle name", param_hint="--exclude-bundle")
+        if exc in selected:
+            raise click.UsageError(f"cannot combine --preset and --exclude-bundle for '{exc}'")
     try:
         with discover_bundles() as installed:
             result = sync_project(
@@ -142,6 +155,7 @@ def sync(
                 installed,
                 agents=[] if no_agents else (list(agents) if agents else None),
                 presets=selected,
+                exclude_bundles=list(exclude_bundles) if exclude_bundles else None,
                 all_assets=all_assets,
                 dry_run=dry_run or check,
             )

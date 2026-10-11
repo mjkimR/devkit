@@ -55,7 +55,9 @@ def read_receipt(root: Path) -> dict:
         ):
             raise BundleError(f"invalid receipt hash/mode: {name}")
     selection = receipt["selection"]
-    if not isinstance(selection, dict) or set(selection) != {"agents", "presets"}:
+    if not isinstance(selection, dict) or not (
+        {"agents", "presets"} <= set(selection) <= {"agents", "presets", "exclude_bundles"}
+    ):
         raise BundleError("invalid receipt selection")
     agents, presets = selection["agents"], selection["presets"]
     if not isinstance(agents, list) or not all(isinstance(v, str) and v in AGENTS for v in agents):
@@ -65,6 +67,10 @@ def read_receipt(root: Path) -> dict:
         for k, v in presets.items()
     ):
         raise BundleError("invalid receipt presets")
+    if "exclude_bundles" in selection:
+        exc_b = selection["exclude_bundles"]
+        if not isinstance(exc_b, list) or not all(isinstance(v, str) and SLUG.fullmatch(v) for v in exc_b):
+            raise BundleError("invalid receipt exclude_bundles")
     if not isinstance(receipt["packages"], list) or not isinstance(receipt["assets"], list):
         raise BundleError("invalid receipt catalog")
     if "overrides" in receipt:
@@ -131,7 +137,7 @@ def read_playbook_config(root: Path) -> dict[str, int | float]:
         raise BundleError(f"invalid config: {exc}") from exc
     if not isinstance(data, dict):
         raise BundleError("config: expected a table")
-    allowed = {"schema", "agents", "presets", "selection", "playbooks"}
+    allowed = {"schema", "agents", "presets", "selection", "playbooks", "exclude_bundles"}
     unknown = set(data) - allowed
     if unknown:
         raise BundleError(f"config: unknown fields: {sorted(unknown)}")
@@ -140,17 +146,17 @@ def read_playbook_config(root: Path) -> dict[str, int | float]:
     return validate_playbooks_config(data.get("playbooks"))
 
 
-def read_config(root: Path) -> tuple[list[str] | None, dict[str, str] | None]:
+def read_config(root: Path) -> tuple[list[str] | None, dict[str, str] | None, list[str] | None]:
     path = root / CONFIG
     if not path.is_file():
-        return None, None
+        return None, None, None
     try:
         data = tomllib.loads(path.read_text("utf-8"))
     except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
         raise BundleError(f"invalid config: {exc}") from exc
     if not isinstance(data, dict):
         raise BundleError("config: expected a table")
-    allowed = {"schema", "agents", "presets", "selection", "playbooks"}
+    allowed = {"schema", "agents", "presets", "selection", "playbooks", "exclude_bundles"}
     unknown = set(data) - allowed
     if unknown:
         raise BundleError(f"config: unknown fields: {sorted(unknown)}")
@@ -159,17 +165,20 @@ def read_config(root: Path) -> tuple[list[str] | None, dict[str, str] | None]:
     validate_playbooks_config(data.get("playbooks"))
     agents = data.get("agents")
     presets = data.get("presets")
+    exclude_bundles = data.get("exclude_bundles")
     if "selection" in data:
         selection = data["selection"]
         if not isinstance(selection, dict):
             raise BundleError("config selection: expected a table")
-        unknown_sel = set(selection) - {"agents", "presets"}
+        unknown_sel = set(selection) - {"agents", "presets", "exclude_bundles"}
         if unknown_sel:
             raise BundleError(f"config selection: unknown fields: {sorted(unknown_sel)}")
         if agents is None and "agents" in selection:
             agents = selection["agents"]
         if presets is None and "presets" in selection:
             presets = selection["presets"]
+        if exclude_bundles is None and "exclude_bundles" in selection:
+            exclude_bundles = selection["exclude_bundles"]
     parsed_agents: list[str] | None = None
     if agents is not None:
         if not isinstance(agents, list) or not all(isinstance(v, str) and v in AGENTS for v in agents):
@@ -183,7 +192,14 @@ def read_config(root: Path) -> tuple[list[str] | None, dict[str, str] | None]:
         ):
             raise BundleError("config: invalid presets")
         parsed_presets = dict(presets)
-    return parsed_agents, parsed_presets
+    parsed_exclude_bundles: list[str] | None = None
+    if exclude_bundles is not None:
+        if not isinstance(exclude_bundles, list) or not all(
+            isinstance(v, str) and SLUG.fullmatch(v) for v in exclude_bundles
+        ):
+            raise BundleError("config: invalid exclude_bundles")
+        parsed_exclude_bundles = sorted(set(exclude_bundles))
+    return parsed_agents, parsed_presets, parsed_exclude_bundles
 
 
 def sync_project(
@@ -192,6 +208,7 @@ def sync_project(
     *,
     agents: list[str] | None = None,
     presets: dict[str, str] | None = None,
+    exclude_bundles: list[str] | None = None,
     all_assets: bool = False,
     dry_run: bool = False,
 ) -> dict[str, object]:
@@ -201,7 +218,7 @@ def sync_project(
     with project_lock(root):
         if snapshot(root, JOURNAL) is not None:
             raise BundleError("pending transaction; run devkit recover first")
-        config_agents, config_presets = read_config(root)
+        config_agents, config_presets, config_exclude_bundles = read_config(root)
         previous = read_receipt(root)
         selection = previous.get("selection", {"agents": [], "presets": {}})
         if agents is not None:
@@ -210,7 +227,23 @@ def sync_project(
             active_agents = config_agents
         else:
             active_agents = sorted(set(selection["agents"]))
-        names = {item.bundle.name for item in installed}
+
+        if exclude_bundles is not None:
+            active_exclude_bundles = sorted(set(exclude_bundles))
+        elif config_exclude_bundles is not None:
+            active_exclude_bundles = config_exclude_bundles
+        else:
+            active_exclude_bundles = sorted(set(selection.get("exclude_bundles", [])))
+
+        excluded_names = set(active_exclude_bundles)
+        active_installed = [item for item in installed if item.bundle.name not in excluded_names]
+        names = {item.bundle.name for item in active_installed}
+
+        if presets is not None:
+            overlap = set(presets) & excluded_names
+            if overlap:
+                raise BundleError(f"excluded bundle cannot have preset: {sorted(overlap)}")
+
         if all_assets:
             active_presets = {}
         else:
@@ -220,7 +253,7 @@ def sync_project(
                 active_presets = {k: v for k, v in selection["presets"].items() if k in names}
             active_presets.update(presets or {})
         desired, assets, packages, overrides_record, drift_list = desired_inventory(
-            installed,
+            active_installed,
             active_presets,
             active_agents,
             root=root,
@@ -242,10 +275,13 @@ def sync_project(
                 actions.append(
                     {"path": name, "action": "remove" if after is None else ("create" if current is None else "update")}
                 )
+        receipt_selection: dict[str, object] = {"agents": active_agents, "presets": active_presets}
+        if active_exclude_bundles:
+            receipt_selection["exclude_bundles"] = active_exclude_bundles
         receipt = {
             "schema": 1,
             "packages": packages,
-            "selection": {"agents": active_agents, "presets": active_presets},
+            "selection": receipt_selection,
             "assets": assets,
             "files": {name: signature(content) for name, content in sorted(desired.items())},
         }
