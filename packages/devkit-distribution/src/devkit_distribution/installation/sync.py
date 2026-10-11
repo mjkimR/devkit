@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import tomllib
 from pathlib import Path
 
 from devkit_distribution.bundles import BundleError
@@ -9,6 +10,7 @@ from devkit_distribution.bundles.manifest import SLUG
 from .discovery import InstalledBundle
 from .inventory import AGENTS, Content, desired_inventory
 from .transaction import (
+    CONFIG,
     JOURNAL,
     RECEIPT,
     apply_changes,
@@ -38,7 +40,7 @@ def read_receipt(root: Path) -> dict:
     if not isinstance(files, dict):
         raise BundleError("invalid receipt files")
     for name, meta in files.items():
-        if name in {RECEIPT, JOURNAL}:
+        if name in {RECEIPT, JOURNAL, CONFIG}:
             raise BundleError("receipt cannot own installation metadata")
         project_path(root, name)
         if (
@@ -66,6 +68,51 @@ def read_receipt(root: Path) -> dict:
     return receipt
 
 
+def read_config(root: Path) -> tuple[list[str] | None, dict[str, str] | None]:
+    path = root / CONFIG
+    if not path.is_file():
+        return None, None
+    try:
+        data = tomllib.loads(path.read_text("utf-8"))
+    except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+        raise BundleError(f"invalid config: {exc}") from exc
+    if not isinstance(data, dict):
+        raise BundleError("config: expected a table")
+    allowed = {"schema", "agents", "presets", "selection"}
+    unknown = set(data) - allowed
+    if unknown:
+        raise BundleError(f"config: unknown fields: {sorted(unknown)}")
+    if "schema" in data and (type(data["schema"]) is not int or data["schema"] != 1):
+        raise BundleError("unsupported config schema")
+    agents = data.get("agents")
+    presets = data.get("presets")
+    if "selection" in data:
+        selection = data["selection"]
+        if not isinstance(selection, dict):
+            raise BundleError("config selection: expected a table")
+        unknown_sel = set(selection) - {"agents", "presets"}
+        if unknown_sel:
+            raise BundleError(f"config selection: unknown fields: {sorted(unknown_sel)}")
+        if agents is None and "agents" in selection:
+            agents = selection["agents"]
+        if presets is None and "presets" in selection:
+            presets = selection["presets"]
+    parsed_agents: list[str] | None = None
+    if agents is not None:
+        if not isinstance(agents, list) or not all(isinstance(v, str) and v in AGENTS for v in agents):
+            raise BundleError("config: invalid agents")
+        parsed_agents = sorted(set(agents))
+    parsed_presets: dict[str, str] | None = None
+    if presets is not None:
+        if not isinstance(presets, dict) or not all(
+            isinstance(k, str) and SLUG.fullmatch(k) and isinstance(v, str) and SLUG.fullmatch(v)
+            for k, v in presets.items()
+        ):
+            raise BundleError("config: invalid presets")
+        parsed_presets = dict(presets)
+    return parsed_agents, parsed_presets
+
+
 def sync_project(
     root: Path,
     installed: list[InstalledBundle],
@@ -81,12 +128,24 @@ def sync_project(
     with project_lock(root):
         if snapshot(root, JOURNAL) is not None:
             raise BundleError("pending transaction; run devkit recover first")
+        config_agents, config_presets = read_config(root)
         previous = read_receipt(root)
         selection = previous.get("selection", {"agents": [], "presets": {}})
-        active_agents = sorted(set(agents if agents is not None else selection["agents"]))
+        if agents is not None:
+            active_agents = sorted(set(agents))
+        elif config_agents is not None:
+            active_agents = config_agents
+        else:
+            active_agents = sorted(set(selection["agents"]))
         names = {item.bundle.name for item in installed}
-        active_presets = {} if all_assets else {k: v for k, v in selection["presets"].items() if k in names}
-        active_presets.update(presets or {})
+        if all_assets:
+            active_presets = {}
+        else:
+            if config_presets is not None:
+                active_presets = {k: v for k, v in config_presets.items() if k in names}
+            else:
+                active_presets = {k: v for k, v in selection["presets"].items() if k in names}
+            active_presets.update(presets or {})
         desired, assets, packages = desired_inventory(installed, active_presets, active_agents)
         old_files = previous.get("files", {})
         changes: dict[str, Content | None] = {}

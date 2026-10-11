@@ -99,8 +99,25 @@ journal. An interrupted operation must be recovered before further sync. Recover
 checks every recorded file for subsequent edits before rollback. Empty directories
 may remain after rollback/removal. Runtime support is currently POSIX (Linux/macOS).
 
-Commit the receipt. Ignore managed/transient and generated native files using your
+Commit the receipt and `.devkit/config.toml` (if authored). Ignore managed/transient and generated native files using your
 project's own `.gitignore`; devkit does not edit ignore rules or the Git index.
+
+## Project configuration (`.devkit/config.toml`)
+
+Consumer repositories can declare default agent projections and bundle presets in an optional `.devkit/config.toml` file (committed to Git):
+
+```toml
+schema = 1
+agents = ["codex", "claude-code"]
+
+[presets]
+starter = "daily"
+```
+
+Running `uv run devkit sync` automatically adopts the declared agents and bundle presets without requiring CLI flags. Selection precedence:
+1. **Explicit CLI options** (`--agent`, `--no-agents`, `--preset bundle:name`, `--all-assets`) take highest precedence.
+2. **Project configuration** (`.devkit/config.toml`) applies whenever corresponding CLI flags are omitted.
+3. **Installation receipt** (`.devkit/installation.json`) preserves selections when neither CLI flags nor `config.toml` specify them.
 
 ## Bundle context and progressive disclosure
 

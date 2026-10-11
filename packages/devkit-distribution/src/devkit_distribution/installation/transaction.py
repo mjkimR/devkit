@@ -17,6 +17,7 @@ from .inventory import Content
 
 RECEIPT = ".devkit/installation.json"
 JOURNAL = ".devkit/transient/sync-journal.json"
+CONFIG = ".devkit/config.toml"
 
 
 def project_path(root: Path, name: str) -> Path:

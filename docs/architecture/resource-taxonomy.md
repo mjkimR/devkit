@@ -240,44 +240,70 @@ Q6: Is it a high-level package constitution loaded before the first bundle skill
 
 ---
 
-## 5. Selection and Packaging Mechanics (Presets vs. Extras)
+## 5. Selection and Packaging Mechanics (Manifest Presets & Configuration)
 
-Selecting which assets to install from a package requires an ergonomic selection mechanism. Two design options are currently evaluated:
+Selecting which assets to install from a package requires an ergonomic and deterministic selection mechanism. During architectural evaluation, two approaches were compared: Python Package Extras (`package[feature]`) and Manifest Presets (`bundle.toml`) paired with declarative project configuration (`.devkit/config.toml`).
 
-### Option 1: Manifest Presets (`bundle.toml`)
-- **Mechanism**: Bundles declare named subsets in their manifest:
-  ```toml
-  [presets.daily]
-  assets = ["development", "review-flow", "review"]
-  ```
-- **CLI Workflow**:
-  ```bash
-  uv run devkit sync --preset team:daily
-  ```
-- **Strengths**:
-  - Fine-grained control within a single content wheel.
-  - Native authoring ergonomics; does not require multiple Python distribution wheels.
-  - Allows consumer repositories to combine assets dynamically without package reinstallation.
+### Architecture Decision: Rejection of Python Package Extras
 
-### Option 2: Python Package Extras (`package[feature]`)
-- **Mechanism**: Leverage Python packaging standards via `pyproject.toml`:
-  ```toml
-  [project.optional-dependencies]
-  daily = ["package-b-playbooks", "package-b-rules"]
-  ```
-- **CLI Workflow**:
-  ```bash
-  uv add --dev "team-bundle[daily]"
-  uv run devkit sync
-  ```
-- **Strengths**:
-  - Aligns with standard Python packaging (`uv.lock` natively locks feature sets).
-  - Eliminates custom preset filtering syntax in `bundle.toml`.
-- **Considerations**:
-  - Python wheels traditionally bundle all static resource files within the package directory; omitting files based on extras requires either multiple separate sub-packages or dynamic wheel inspection.
+Python package extras (`[project.optional-dependencies]`) were evaluated and **formally rejected** for asset selection due to fundamental ecosystem impedance mismatches:
 
-### Current Position
-Both options remain open architectural alternatives. The core resource taxonomy defines **what** can be distributed, while selection mechanics (`presets` vs. `extras`) govern **how** subsets are filtered.
+1. **Wheel Immutability & Asset Bundling**: Python wheels are static ZIP archives that unpack their entire contents into the environment. Package extras control external dependency resolution; they cannot selectively extract or omit static resource files within a single wheel.
+2. **Missing Runtime Introspection**: Standard Python packaging metadata (`importlib.metadata`) does not expose which extras the consumer project requested for top-level dev dependencies. Resolving activated extras at runtime requires brittle, ad-hoc inspection of consumer `pyproject.toml` or `uv.lock` files.
+3. **Micro-Package Explosion**: Achieving true selective installation through extras would require fracturing cohesive domain bundles into fragmented micro-wheels (e.g., `pkg-core`, `pkg-git-commits`, `pkg-skill-authoring`), dramatically increasing authoring friction, CI overhead, and cross-package version synchronization complexity.
+
+### Adopted Architecture: Manifest Presets & Project Configuration
+
+Asset filtering is governed by **bundle-level manifest presets** and **project-level declarative configuration**:
+
+#### 1. Bundle Manifest Presets (`bundle.toml`)
+Content bundles declare cohesive, purpose-specific asset subsets directly in their manifest (analogous to `specrig`'s modular preset bundles such as `git-commits` or `skill-authoring`):
+
+```toml
+# bundle.toml (Content Wheel)
+schema = 1
+name = "starter-workflow"
+version = "0.1.0"
+
+[[assets]]
+id = "development"
+kind = "instruction"
+source = "instructions/development.md"
+
+[[assets]]
+id = "review-flow"
+kind = "playbook"
+source = "playbooks/review.md"
+
+[[assets]]
+id = "review"
+kind = "skill"
+source = "skills/review"
+
+[presets.daily]
+assets = ["development", "review-flow", "review"]
+```
+
+#### 2. Declarative Consumer Configuration (`.devkit/config.toml`)
+Consumer repositories declare their desired baseline presets and agents in a Git-tracked project configuration file:
+
+```toml
+# .devkit/config.toml (Consumer Project, Git-tracked)
+schema = 1
+agents = ["codex", "claude-code"]
+
+[presets]
+starter-workflow = "daily"
+```
+
+Running `uv run devkit sync` automatically converges the workspace to the declared configuration without requiring developers or CI pipelines to pass manual CLI flags.
+
+#### 3. Configuration Precedence Matrix
+Selections are resolved using a clear three-tier hierarchy:
+
+1. **CLI Overrides**: Explicit CLI flags (`--preset bundle:name`, `--all-assets`, `--agent name`, `--no-agents`) take highest priority for ad-hoc experimentation and scripting.
+2. **Project Configuration (`.devkit/config.toml`)**: Repository-level baseline committed to Git; governs clean checkouts and default `devkit sync` runs.
+3. **Installation Receipt (`.devkit/installation.json`)**: Preserves previously synchronized selections when neither CLI flags nor `config.toml` specify restrictions.
 
 ---
 

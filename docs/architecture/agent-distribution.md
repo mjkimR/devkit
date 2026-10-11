@@ -67,6 +67,7 @@ The distribution architecture comprises five primary units:
 | Content Wheel | Versioned asset sources, native variants, dependencies, metadata | Python wheel with semantic package version and bundle version |
 | `bundle.toml` | Manifest declaring assets, kinds, sources/variants, and presets | Pinned to `schema = 1` contract within the wheel's resource module |
 | `agent-rule-engine` | Governance rule discovery, sequential evaluation, autofix convergence recheck | Monorepo package/CLI; rules declare dependencies through wheels |
+| Project Config | Declarative baseline agent targets and bundle presets | Optional TOML (`schema = 1`) in `.devkit/config.toml` (Git-tracked) |
 | Consumer Receipt | Pinned packages, bundle versions, selections, asset paths, file hashes/modes | Explicit receipt schema version (`schema = 1`) in `.devkit/installation.json` |
 
 ### Codebase Organization
@@ -193,6 +194,7 @@ Consuming projects integrate bundles under a dedicated root directory: `.devkit/
 
 ```text
 .devkit/
+  config.toml             # Project-authored configuration: presets and agents (Git-tracked)
   installation.json       # Pinned packages, bundle versions, selections, file hashes & modes (Git-tracked)
   managed/<bundle>/       # Clean extracted upstream resources from wheels (Generated, Git-ignored)
   transient/              # Transaction lock and recovery journal (Git-ignored)
@@ -204,23 +206,27 @@ Consuming projects integrate bundles under a dedicated root directory: `.devkit/
 
 ### Ownership Categories
 
-1. **Managed Assets (`.devkit/managed/<bundle>/`)**:
+1. **Project Configuration (`.devkit/config.toml`)**:
+   - Project-authored, Git-tracked TOML file defining repository baseline `agents` and bundle `presets`.
+   - Owned exclusively by the developer; never generated or overwritten by `devkit sync`.
+   - Receipt files cannot claim ownership of `config.toml`.
+2. **Managed Assets (`.devkit/managed/<bundle>/`)**:
    - Exact unpacked representation of upstream bundle resources extracted from installed wheels.
    - Read-only cache. Always regenerated deterministically by `devkit sync`.
    - Preserves original relative paths for instructions, playbooks, and rules.
-2. **Project Native Projections**:
+3. **Project Native Projections**:
    - Copied projections placed into agent-specific directories (such as `.agents/skills/`, `.claude/skills/`, `.codex/agents/`, `.claude/agents/`).
    - Tracked explicitly by file path, SHA-256 hash, and POSIX mode in `installation.json`.
-3. **Foreign File Protection**:
+4. **Foreign File Protection**:
    - The distributor strictly manages only files recorded in `installation.json`.
    - Files created manually or by other tools in native agent directories are preserved.
    - If a synchronization step targets a file that already exists but is not recorded in the receipt, it is treated as an unmanaged collision and sync aborts immediately.
-4. **User Modification Detection**:
+5. **User Modification Detection**:
    - If a deployed file's disk content or mode differs from its recorded receipt signature, it is treated as a user modification.
    - Sync aborts immediately across the entire project before making any disk changes.
    - Package removal or preset narrowing will only delete files that remain byte-for-byte identical to their recorded receipt signature. Modified files are never deleted.
-5. **Git & Ignore Policy**:
-   - The receipt (`.devkit/installation.json`) must be committed to version control.
+6. **Git & Ignore Policy**:
+   - The project configuration (`.devkit/config.toml`) and receipt (`.devkit/installation.json`) must be committed to version control.
    - Generated resources (`.devkit/managed/`), transient transaction files (`.devkit/transient/`), and generated native copies should be ignored according to the consumer repository's own `.gitignore` policy.
    - `devkit` never automatically modifies `.gitignore` or the Git index.
 
@@ -340,6 +346,22 @@ Receipt properties:
 - `--dry-run`: Computes inventory and returns planned actions without writing to disk.
 - `--check`: Read-only execution for CI pipelines. Returns JSON actions and exits with code `1` if workspace requires synchronization.
 
+### Configuration Precedence & Presets
+
+Target agents and bundle presets are resolved using three precedence tiers:
+
+1. **Explicit CLI Options**: CLI arguments (`--agent`, `--no-agents`, `--preset`, `--all-assets`) take highest precedence for temporary or ad-hoc runs and are persisted into the receipt.
+2. **Project Configuration (`.devkit/config.toml`)**: A Git-tracked repository configuration declaring default agents and presets:
+   ```toml
+   schema = 1
+   agents = ["codex", "claude-code"]
+
+   [presets]
+   starter = "daily"
+   ```
+   When running `uv run devkit sync` without flags, values in `config.toml` take precedence over previous receipt state, ensuring clean checkouts and CI environments automatically synchronize the declared bundle presets.
+3. **Receipt State (`.devkit/installation.json`)**: When neither CLI options nor `config.toml` specify a selection, the existing receipt's selections are preserved.
+
 ### Transaction Safety Guarantees (ACID Engine)
 
 All mutating operations enforce strict transactional safety:
@@ -417,6 +439,7 @@ Phase 1: Manifest & Local Packaging (Complete)
 Phase 2: UV Wheel Distribution & Sync Core (Complete)
   ├── Entry-point discovery via devkit_distribution.bundles
   ├── Workspace layout (.devkit/managed, .devkit/transient)
+  ├── Declarative project configuration (.devkit/config.toml)
   ├── Transactional ACID engine with lock, journal & recover
   ├── Installation receipt (.devkit/installation.json)
   └── Native projection adapters for Codex and Claude Code

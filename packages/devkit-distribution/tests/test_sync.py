@@ -13,7 +13,7 @@ from devkit_distribution.cli import cli
 from devkit_distribution.installation import discovery, transaction
 from devkit_distribution.installation.discovery import InstalledBundle, discover_bundles
 from devkit_distribution.installation.sync import recover_project, sync_project
-from devkit_distribution.installation.transaction import JOURNAL, RECEIPT, Content, snapshot
+from devkit_distribution.installation.transaction import CONFIG, JOURNAL, RECEIPT, Content, snapshot
 
 
 @pytest.fixture
@@ -247,3 +247,88 @@ def test_native_name_collision_between_packages(installed: list[InstalledBundle]
     with pytest.raises(BundleError, match="destination collision"):
         sync_project(target, [*installed, other], agents=["codex"])
     assert list(target.iterdir()) == []
+
+
+def test_sync_reads_project_config(installed: list[InstalledBundle], target: Path) -> None:
+    config_file = target / CONFIG
+    config_file.parent.mkdir(parents=True, exist_ok=True)
+    config_file.write_text("""schema = 1
+agents = ["codex"]
+
+[presets]
+team = "minimal"
+""")
+    sync_project(target, installed)
+    assert (target / ".devkit/managed/team/guide.md").exists()
+    assert not (target / ".devkit/managed/team/skills/review/SKILL.md").exists()
+    # "reviewer" is not in the "minimal" preset, so its projection does not exist
+    assert not (target / ".codex/agents/reviewer.toml").exists()
+    receipt = json.loads((target / RECEIPT).read_text())
+    assert receipt["selection"] == {"agents": ["codex"], "presets": {"team": "minimal"}}
+
+
+def test_sync_precedence_cli_overrides_config(installed: list[InstalledBundle], target: Path) -> None:
+    config_file = target / CONFIG
+    config_file.parent.mkdir(parents=True, exist_ok=True)
+    config_file.write_text("""schema = 1
+agents = ["codex"]
+
+[presets]
+team = "minimal"
+""")
+    sync_project(target, installed, all_assets=True)
+    assert (target / ".devkit/managed/team/skills/review/SKILL.md").exists()
+    # Now that all assets are selected, codex agent reviewer.toml is projected
+    assert (target / ".codex/agents/reviewer.toml").exists()
+    receipt = json.loads((target / RECEIPT).read_text())
+    assert receipt["selection"]["presets"] == {}
+    assert receipt["selection"]["agents"] == ["codex"]
+
+    sync_project(target, installed, agents=[])
+    assert not (target / ".codex/agents/reviewer.toml").exists()
+    receipt = json.loads((target / RECEIPT).read_text())
+    assert receipt["selection"]["agents"] == []
+
+
+def test_sync_config_selection_table(installed: list[InstalledBundle], target: Path) -> None:
+    config_file = target / CONFIG
+    config_file.parent.mkdir(parents=True, exist_ok=True)
+    config_file.write_text("""schema = 1
+
+[selection]
+agents = ["codex"]
+presets = { team = "minimal" }
+""")
+    sync_project(target, installed)
+    receipt = json.loads((target / RECEIPT).read_text())
+    assert receipt["selection"] == {"agents": ["codex"], "presets": {"team": "minimal"}}
+
+
+@pytest.mark.parametrize(
+    ("content", "error_match"),
+    [
+        ("schema = 2\n", "unsupported config schema"),
+        ("schema = 'bad'\n", "unsupported config schema"),
+        ("agents = ['unsupported']\n", "config: invalid agents"),
+        ("[presets]\n'bad slug!' = 'minimal'\n", "config: invalid presets"),
+        ("unknown_field = 42\n", "config: unknown fields"),
+        ("[selection]\nunknown_subfield = true\n", "config selection: unknown fields"),
+        ("invalid toml [[\n", "invalid config"),
+    ],
+)
+def test_invalid_project_config(installed: list[InstalledBundle], target: Path, content: str, error_match: str) -> None:
+    config_file = target / CONFIG
+    config_file.parent.mkdir(parents=True, exist_ok=True)
+    config_file.write_text(content)
+    with pytest.raises(BundleError, match=error_match):
+        sync_project(target, installed)
+
+
+def test_receipt_cannot_own_config(installed: list[InstalledBundle], target: Path) -> None:
+    sync_project(target, installed)
+    path = target / RECEIPT
+    receipt = json.loads(path.read_text())
+    receipt["files"][CONFIG] = {"sha256": "a" * 64, "mode": 0o644}
+    path.write_text(json.dumps(receipt))
+    with pytest.raises(BundleError, match="receipt cannot own installation metadata"):
+        sync_project(target, installed)
