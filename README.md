@@ -7,7 +7,9 @@ Personal developer tools monorepo.
 ```text
 devkit/
 ├── packages/
-│   └── agent-rule-engine/     # Agent-managed rule & governance engine with built-in CLI
+│   ├── agent-rule-engine/     # Agent-managed rule & governance engine with built-in CLI
+│   └── devkit-distribution/   # Bundle validation, packaging, and planning (devkit CLI)
+├── examples/bundles/          # Local distribution examples
 ├── scripts/                   # Shared shell helpers
 └── docs/                      # Documentation and architecture notes
 ```
@@ -37,3 +39,10 @@ be passed after the module: `just test agent-rule-engine -k cache`.
 `just lint-check` verifies formatting without changes. `just test-cov` reports
 coverage. See [agent-rule-engine](packages/agent-rule-engine/README.md) for its
 feature layout, custom rule API, CLI behavior, and current limits.
+
+The proposed unified lifecycle for agent-native assets, rule bundles, skills,
+instructions, playbooks, and presets is documented in the
+[agent distribution design](docs/architecture/agent-distribution.md).
+The initial [devkit distribution CLI](packages/devkit-distribution/README.md)
+supports local bundle validation, packaging, and managed inventory planning.
+Installation and agent-native adapters are not implemented yet.

@@ -13,6 +13,10 @@ Personal developer tools monorepo.
   - Feature folders: `engine/`, `workspace/`, `cli/`, and `rules/{specification,markdown,hygiene}/`; tests mirror these groups outside `src/`.
   - Minimal dependencies (`click`, `pyyaml`).
 - Keep `justfile` recipes thin; shared shell logic belongs in `scripts/`.
+- `devkit-distribution` provides the `devkit` CLI for local bundle validation,
+  deterministic packaging, and managed inventory planning. Bundle sources use
+  `bundle.toml`; consumer paths use `.devkit/`. Native adapters and installation
+  lifecycle are pending. Keep native asset contents intact when packaging.
 - Do not commit `.env`, log secrets/PII, or commit/push without explicit instructions.
 
 ## Verification
