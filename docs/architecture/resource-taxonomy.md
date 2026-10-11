@@ -41,7 +41,7 @@ Resources are classified along three dimensions: **Guidance & Context Layer** (n
                                        │
 ┌──────────────────────────────────────┴───────────────────────────────────────┐
 │                       3. Packaging & Selection Layer                         │
-│  - Asset Selectors: Manifest Presets vs. Python Package Extras               │
+│  - Asset Selectors: Manifest Presets & Project Configuration                │
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 

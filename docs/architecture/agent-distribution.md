@@ -225,8 +225,13 @@ Consuming projects integrate bundles under a dedicated root directory: `.devkit/
    - If a deployed file's disk content or mode differs from its recorded receipt signature, it is treated as a user modification.
    - Sync aborts immediately across the entire project before making any disk changes.
    - Package removal or preset narrowing will only delete files that remain byte-for-byte identical to their recorded receipt signature. Modified files are never deleted.
-6. **Git & Ignore Policy**:
-   - The project configuration (`.devkit/config.toml`) and receipt (`.devkit/installation.json`) must be committed to version control.
+6. **Project Overrides (`.devkit/overrides/<bundle>/`)**:
+   - Complete replacement files for upstream bundle assets authored by the developer or an AI agent.
+   - Committed to version control and tracked in `installation.json` alongside `baseline_upstream_sha256`.
+   - When an override is defined, `devkit sync` projects the local override file instead of the upstream wheel's content.
+   - Prevents silent upstream drift by comparing the installed wheel's digest with the recorded baseline digest during synchronization.
+7. **Git & Ignore Policy**:
+   - The project configuration (`.devkit/config.toml`), overrides (`.devkit/overrides/`), and receipt (`.devkit/installation.json`) must be committed to version control.
    - Generated resources (`.devkit/managed/`), transient transaction files (`.devkit/transient/`), and generated native copies should be ignored according to the consumer repository's own `.gitignore` policy.
    - `devkit` never automatically modifies `.gitignore` or the Git index.
 
@@ -310,6 +315,16 @@ The receipt is the single source of truth for the installed state. It is committ
       ]
     }
   ],
+  "overrides": {
+    "starter": {
+      "development": {
+        "kind": "instruction",
+        "relative_path": "instructions/development.md",
+        "baseline_upstream_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "override_sha256": "8f434346648f6b96df8932b12bc85d0d12e624c92ee24041b6179b0051280879"
+      }
+    }
+  },
   "files": {
     ".devkit/managed/starter/bundle.toml": {
       "mode": 420,
@@ -322,6 +337,7 @@ The receipt is the single source of truth for the installed state. It is committ
 Receipt properties:
 - Tracks exact package names, package versions, bundle names, and bundle versions.
 - Records active agent selections and active preset restrictions.
+- Stores active project overrides with their baseline upstream digests and local override hashes.
 - Stores deployed asset mappings linking logical asset IDs to physical workspace file paths.
 - Records expected SHA-256 digests and POSIX file modes (`0644` or `0755`) for every deployed file.
 - Omits absolute filesystem paths and machine timestamps to ensure clean Git diffs across developer workstations.
@@ -335,6 +351,10 @@ Receipt properties:
 | `devkit plan <source> [--preset <name>]` | Evaluation | Previews desired managed inventory for a local bundle source without inspecting a consumer project. |
 | `devkit sync [options]` | Deployment | Discovers installed content packages, computes plan, performs pre-flight conflict checks, executes atomic transaction, and updates receipt. |
 | `devkit list [--target <dir>]` | Discovery | Outputs JSON listing installed content packages, bundle metadata, available presets, and synchronized asset paths. |
+| `devkit override create <bundle>:<asset>` | Customization | Copies upstream managed asset into `.devkit/overrides/` and records baseline upstream digest. |
+| `devkit override diff <bundle>:<asset>` | Drift Review | Outputs 3-way diff between baseline digest, updated upstream content, and local override. |
+| `devkit override accept <bundle>:<asset>` | Reconciliation | Accepts upstream changes and advances `baseline_upstream_sha256` to current upstream digest. |
+| `devkit override remove <bundle>:<asset>` | Restoration | Safely unlinks local override file, cleans receipt tracking, and restores upstream projection. |
 | `devkit recover [--target <dir>]` | Fault Tolerance | Uses write-ahead journal in `.devkit/transient/` to roll back an interrupted transaction without overwriting newer edits. |
 
 ### Sync Options and Modes
@@ -361,6 +381,39 @@ Target agents and bundle presets are resolved using three precedence tiers:
    ```
    When running `uv run devkit sync` without flags, values in `config.toml` take precedence over previous receipt state, ensuring clean checkouts and CI environments automatically synchronize the declared bundle presets.
 3. **Receipt State (`.devkit/installation.json`)**: When neither CLI options nor `config.toml` specify a selection, the existing receipt's selections are preserved.
+
+### Project Overrides & 3-Way Drift Review Architecture
+
+Consuming projects frequently require customizing an upstream guide, playbook, or skill for repository-specific nuances without maintaining a full upstream fork.
+
+#### 1. Full-File Replacement Authoring Model
+Overrides are stored as complete, valid files under `.devkit/overrides/<bundle>/<relative-path>` rather than unified `.patch` files:
+- **Clean Readability & Tooling**: Overrides remain standard Markdown, TOML, or Python documents. They can be read, syntax-highlighted, formatted, and linted by standard IDE tools and AI agents without diff parser dependencies.
+- **Zero Patch Drift / Rejection**: Eliminates fragile `patch reject` (`.rej`) failures caused by upstream line-number shifts or minor prose wording updates.
+- **Direct Agent Editing**: AI coding agents can interact directly with the entire customized asset rather than having to parse and edit diff syntax.
+
+#### 2. Baseline Digest Tracking
+When an asset override is initialized (`devkit override create <bundle>:<asset>`), the current upstream resource's SHA-256 digest is saved into the receipt under `baseline_upstream_sha256`.
+
+#### 3. Upstream Drift Detection
+During `devkit sync`:
+- If an overridden asset's upstream wheel is upgraded, `sync` compares the newly installed upstream digest with the recorded `baseline_upstream_sha256`.
+- If the digests match, synchronization proceeds without interruption, projecting the local override into target agent directories.
+- If the digests differ (`new_upstream_sha256 != baseline_upstream_sha256`), `sync` detects upstream drift, retains the local override projection safely, and emits an advisory:
+  ```text
+  WARNING: Upstream changed for overridden asset 'starter:development' (drift detected).
+  Run 'devkit override diff starter:development' to review changes.
+  ```
+
+#### 4. Agent-Assisted 3-Way Reconciliation
+To reconcile upstream updates with local customizations:
+- `devkit override diff <bundle>:<asset>` provides a structured 3-way comparison:
+  1. **Base**: Original upstream file content when the override was established.
+  2. **Theirs (Upstream)**: Updated upstream file content in the current wheel package.
+  3. **Mine (Override)**: Local customized file in `.devkit/overrides/<bundle>/...`.
+- AI coding agents can inspect this 3-way diff, identify what new guidelines, contracts, or fixes upstream introduced, and intelligently merge those changes into the project's `.devkit/overrides/` file.
+- Once merged, running `devkit override accept <bundle>:<asset>` updates `baseline_upstream_sha256` to the new upstream digest.
+- Running `devkit override remove <bundle>:<asset>` unlinks the local override, cleans the receipt entry, and restores pristine upstream managed projection on the next sync.
 
 ### Transaction Safety Guarantees (ACID Engine)
 
@@ -445,9 +498,11 @@ Phase 2: UV Wheel Distribution & Sync Core (Complete)
   └── Native projection adapters for Codex and Claude Code
 
 Phase 3: Project Overrides & Drift Review (Upcoming)
-  ├── Project override directory (.devkit/overrides/<bundle>/)
+  ├── Full-file replacement authoring in .devkit/overrides/<bundle>/
   ├── Baseline upstream digest tracking in receipt
-  └── Upstream change detection and interactive drift review
+  ├── Upstream drift detection during sync
+  ├── 3-way drift review CLI (devkit override diff)
+  └── Reconciliation & acceptance CLI (devkit override accept)
 
 Phase 4: Instruction Integration & Session Hooks (Upcoming)
   ├── Entry-point link injection into AGENTS.md / CLAUDE.md
