@@ -29,6 +29,7 @@ typeCheckingMode = "basic"
 extraPaths = [
     "./packages/agent-rule-engine/src",
     "./packages/devkit-distribution/src",
+    "./packages/devkit-starter/src",
 ]
 
 [dependency-groups]

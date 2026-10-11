@@ -1,0 +1,21 @@
+schema = 1
+name = "starter"
+version = "0.1.0"
+
+[[assets]]
+id = "development"
+kind = "instruction"
+source = "instructions/development.md"
+
+[[assets]]
+id = "review-flow"
+kind = "playbook"
+source = "playbooks/review.md"
+
+[[assets]]
+id = "review"
+kind = "skill"
+source = "skills/review"
+
+[presets.daily]
+assets = ["development", "review-flow", "review"]

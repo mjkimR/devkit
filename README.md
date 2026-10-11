@@ -8,7 +8,8 @@ Personal developer tools monorepo.
 devkit/
 ├── packages/
 │   ├── agent-rule-engine/     # Agent-managed rule & governance engine with built-in CLI
-│   └── devkit-distribution/   # Bundle validation, packaging, and planning (devkit CLI)
+│   ├── devkit-distribution/   # Installed resource synchronization (devkit CLI)
+│   └── devkit-starter/        # Example content wheel for devkit sync
 ├── examples/bundles/          # Local distribution examples
 ├── scripts/                   # Shared shell helpers
 └── docs/                      # Documentation and architecture notes
@@ -45,4 +46,17 @@ instructions, playbooks, and presets is documented in the
 [agent distribution design](docs/architecture/agent-distribution.md).
 The initial [devkit distribution CLI](packages/devkit-distribution/README.md)
 supports local bundle validation, packaging, and managed inventory planning.
-Installation and agent-native adapters are not implemented yet.
+It also discovers installed content wheels and synchronizes their resources
+with receipts, conflict checks, and interrupted-operation recovery.
+
+Consumers install the CLI and content packages together as uv dev dependencies:
+
+```bash
+uv add --dev devkit-distribution devkit-starter
+uv run devkit sync
+uv run devkit list
+```
+
+For a local workspace smoke test, use an existing temporary project directory:
+`uv run --package devkit-distribution devkit sync --target /tmp/my-project`.
+Select native skill/subagent copies with `--agent codex` or `--agent claude-code`.
