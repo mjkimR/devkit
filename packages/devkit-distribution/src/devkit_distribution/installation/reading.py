@@ -16,6 +16,11 @@ def synchronized_root(start: Path) -> Path:
 
 
 def read_owned(root: Path, receipt: dict, name: str) -> bytes:
+    if name.startswith(".devkit/overrides/"):
+        path = root / name
+        if not path.is_file():
+            raise BundleError(f"missing override file: {name}; reconcile with devkit sync")
+        return path.read_bytes()
     content = snapshot(root, name)
     if content is None or signature(content) != receipt["files"].get(name):
         raise BundleError(f"missing or modified context file: {name}; reconcile with devkit sync")

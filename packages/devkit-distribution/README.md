@@ -41,6 +41,11 @@ map their existing content into this tree at build time using Hatch force-includ
 Discovery reads `importlib.metadata` entry points and `importlib.resources`; it does
 not execute rule implementations. Loading a resource module executes its ordinary
 Python initialization, so keep it empty. Bundle names must be unique across packages.
+Content wheels can declare dependencies on other content wheels in `[project.dependencies]`.
+Downstream consumers installing the package will transitively receive and synchronize
+upstream bundles by default, enabling layered bundle composition. Dependencies placed
+in development groups (`[dependency-groups.dev]`) remain internal to the authoring package
+and do not transit.
 
 `bundle.toml` schema 1 declares a lowercase slug `name`, an `X.Y.Z` `version`, and
 nonempty `[[assets]]`. Assets have a unique `id`, a `kind` (`skill`, `subagent`,
@@ -118,6 +123,25 @@ Running `uv run devkit sync` automatically adopts the declared agents and bundle
 1. **Explicit CLI options** (`--agent`, `--no-agents`, `--preset bundle:name`, `--all-assets`) take highest precedence.
 2. **Project configuration** (`.devkit/config.toml`) applies whenever corresponding CLI flags are omitted.
 3. **Installation receipt** (`.devkit/installation.json`) preserves selections when neither CLI flags nor `config.toml` specify them.
+
+## Project overrides and drift review (`.devkit/overrides/`)
+
+Consumer repositories can selectively customize specific bundle assets without modifying upstream packages or blocking updates.
+Project overrides are tracked in Git under `.devkit/overrides/<bundle>/...`.
+
+```bash
+uv run devkit override create <bundle>:<asset>
+uv run devkit override diff <bundle>:<asset>
+uv run devkit override accept <bundle>:<asset>
+uv run devkit override remove <bundle>:<asset>
+uv run devkit override list
+```
+
+1. **Override creation**: `devkit override create team:reviewer` copies the upstream asset into `.devkit/overrides/team/` and preserves a pristine baseline copy in `.devkit/overrides/.baseline/team/`.
+2. **Transparent projection**: Subsequent `devkit sync` uses the local override files for native projections (`.codex/agents/...`, `.agents/skills/...`) and context loading (`devkit get-context`) while keeping `.devkit/managed/<bundle>/` pristine.
+3. **Drift detection**: When an upstream bundle wheel is updated via `uv`, `devkit sync` issues a warning when overridden assets differ from their recorded upstream baseline.
+4. **3-way drift review**: `devkit override diff team:reviewer` presents differences between the baseline upstream, current upstream wheel, and local override, allowing developers or coding agents to cleanly reconcile changes.
+5. **Acceptance & removal**: `devkit override accept team:reviewer` advances the baseline digest to the current upstream version. `devkit override remove team:reviewer` cleans up the override files and restores pristine upstream behavior on next sync.
 
 ## Bundle context and progressive disclosure
 
@@ -247,7 +271,7 @@ ZIP build is an optional deterministic local export, not the sync transport.
 The example source is `packages/devkit-starter/src/devkit_starter/bundle/`;
 `examples/bundles/starter/` is its local authoring demonstration.
 
-Still pending: local/override merging, agent trust/config/instruction integration,
-agent version/runtime verification, and rule plugin discovery/execution. Installed
-Python rule dependencies use the uv environment, but syncing code does not activate
-rules automatically. See the [design](../../docs/architecture/agent-distribution.md).
+Still pending: agent trust/config/instruction integration, agent version/runtime
+verification, and rule plugin discovery/execution. Installed Python rule dependencies
+use the uv environment, but syncing code does not activate rules automatically.
+See the [design](../../docs/architecture/agent-distribution.md).

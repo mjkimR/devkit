@@ -39,7 +39,7 @@ def get_context(start: Path, bundle: str) -> dict[str, object]:
         }
         instructions = []
         for name in sorted(paths):
-            if not name.startswith(prefix):
+            if not (name.startswith(prefix) or name.startswith(f".devkit/overrides/{bundle}/")):
                 raise BundleError(f"instruction outside bundle: {name}")
             lines = read(name).splitlines(keepends=True)
             if not lines or lines[0].strip() != "---":

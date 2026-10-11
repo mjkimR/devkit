@@ -30,8 +30,9 @@ def read_receipt(root: Path) -> dict:
         if snapshot(root, RECEIPT) is not None:
             raise BundleError("invalid empty installation receipt")
         return {}
+    valid_keys = {"schema", "packages", "selection", "assets", "files", "overrides"}
     if (
-        set(receipt) != {"schema", "packages", "selection", "assets", "files"}
+        not ({"schema", "packages", "selection", "assets", "files"} <= set(receipt) <= valid_keys)
         or type(receipt["schema"]) is not int
         or receipt["schema"] != 1
     ):
@@ -40,7 +41,7 @@ def read_receipt(root: Path) -> dict:
     if not isinstance(files, dict):
         raise BundleError("invalid receipt files")
     for name, meta in files.items():
-        if name in {RECEIPT, JOURNAL, CONFIG}:
+        if name in {RECEIPT, JOURNAL, CONFIG} or name.startswith(".devkit/overrides/"):
             raise BundleError("receipt cannot own installation metadata")
         project_path(root, name)
         if (
@@ -65,6 +66,30 @@ def read_receipt(root: Path) -> dict:
         raise BundleError("invalid receipt presets")
     if not isinstance(receipt["packages"], list) or not isinstance(receipt["assets"], list):
         raise BundleError("invalid receipt catalog")
+    if "overrides" in receipt:
+        overrides = receipt["overrides"]
+        if not isinstance(overrides, dict):
+            raise BundleError("invalid receipt overrides")
+        for b_name, b_meta in overrides.items():
+            if not (isinstance(b_name, str) and SLUG.fullmatch(b_name) and isinstance(b_meta, dict)):
+                raise BundleError("invalid receipt overrides")
+            for a_id, meta in b_meta.items():
+                if (
+                    not (isinstance(a_id, str) and SLUG.fullmatch(a_id))
+                    or not isinstance(meta, dict)
+                    or set(meta) != {"kind", "relative_path", "baseline_upstream_sha256", "override_sha256"}
+                    or not isinstance(meta["kind"], str)
+                    or not isinstance(meta["relative_path"], str)
+                    or not (
+                        isinstance(meta["baseline_upstream_sha256"], str)
+                        and re.fullmatch(r"[0-9a-f]{64}", meta["baseline_upstream_sha256"])
+                    )
+                    or not (
+                        isinstance(meta["override_sha256"], str)
+                        and re.fullmatch(r"[0-9a-f]{64}", meta["override_sha256"])
+                    )
+                ):
+                    raise BundleError("invalid receipt overrides")
     return receipt
 
 
@@ -146,7 +171,13 @@ def sync_project(
             else:
                 active_presets = {k: v for k, v in selection["presets"].items() if k in names}
             active_presets.update(presets or {})
-        desired, assets, packages = desired_inventory(installed, active_presets, active_agents)
+        desired, assets, packages, overrides_record, drift_list = desired_inventory(
+            installed,
+            active_presets,
+            active_agents,
+            root=root,
+            previous_overrides=previous.get("overrides"),
+        )
         old_files = previous.get("files", {})
         changes: dict[str, Content | None] = {}
         actions = []
@@ -170,13 +201,21 @@ def sync_project(
             "assets": assets,
             "files": {name: signature(content) for name, content in sorted(desired.items())},
         }
+        if overrides_record:
+            receipt["overrides"] = overrides_record
         # Preserve exact receipt bytes on a no-op (including a fresh checkout restore).
         if receipt != previous:
             changes[RECEIPT] = json_content(receipt)
             actions.append({"path": RECEIPT, "action": "update" if previous else "create"})
         if not dry_run:
             apply_changes(root, changes)
-        return {"dry_run": dry_run, "packages": packages, "assets": assets, "actions": actions}
+        return {
+            "dry_run": dry_run,
+            "packages": packages,
+            "assets": assets,
+            "actions": actions,
+            "drift": drift_list,
+        }
 
 
 def recover_project(root: Path) -> int:

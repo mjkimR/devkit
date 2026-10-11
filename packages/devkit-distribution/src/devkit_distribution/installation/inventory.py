@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from .discovery import InstalledBundle
 from .playbook_skill import MANAGED_ROOT, NAME
 from .playbook_skill import skill_files as generated_skill_files
 
+OVERRIDES = ".devkit/overrides"
 AGENTS = {"codex": (".agents/skills", ".codex/agents"), "claude-code": (".claude/skills", ".claude/agents")}
 
 
@@ -22,11 +24,24 @@ class Content:
 
 
 def desired_inventory(
-    installed: list[InstalledBundle], presets: dict[str, str], agents: list[str]
-) -> tuple[dict[str, Content], list[dict[str, object]], list[dict[str, str]]]:
+    installed: list[InstalledBundle],
+    presets: dict[str, str],
+    agents: list[str],
+    *,
+    root: Path | None = None,
+    previous_overrides: dict[str, dict[str, dict[str, str]]] | None = None,
+) -> tuple[
+    dict[str, Content],
+    list[dict[str, object]],
+    list[dict[str, str]],
+    dict[str, dict[str, dict[str, str]]],
+    list[dict[str, str]],
+]:
     files: dict[str, Content] = {}
     assets: list[dict[str, object]] = []
     packages = []
+    overrides_record: dict[str, dict[str, dict[str, str]]] = {}
+    drift_list: list[dict[str, str]] = []
     unknown = set(presets) - {item.bundle.name for item in installed}
     if unknown:
         raise BundleError(f"preset bundle is not installed: {sorted(unknown)}")
@@ -75,13 +90,20 @@ def desired_inventory(
             if asset.id not in selected:
                 continue
             paths: set[str] = set()
+            asset_overridden = False
             for _, source in asset.sources:
                 for path in source_files(bundle.root, source):
                     dest = prefix + path.relative_to(bundle.root).as_posix()
                     if dest not in managed:
                         add(dest, path, bundle.name if has_context and path in skill_files else None)
                         managed.add(dest)
-                    paths.add(dest)
+                    rel = path.relative_to(bundle.root).as_posix()
+                    override_file = root / OVERRIDES / bundle.name / rel if root else None
+                    if override_file is not None and override_file.is_file():
+                        asset_overridden = True
+                        paths.add(f"{OVERRIDES}/{bundle.name}/{rel}")
+                    else:
+                        paths.add(dest)
             for agent in agents:
                 if asset.kind not in {"skill", "subagent"}:
                     continue
@@ -92,6 +114,13 @@ def desired_inventory(
                 origin = bundle.root / source
                 skill_dir, subagent_dir = AGENTS[agent]
                 for path in source_files(bundle.root, source):
+                    rel = path.relative_to(bundle.root).as_posix()
+                    override_file = root / OVERRIDES / bundle.name / rel if root else None
+                    if override_file is not None and override_file.is_file():
+                        asset_overridden = True
+                        source_to_use = override_file
+                    else:
+                        source_to_use = path
                     if asset.kind == "skill":
                         dest = f"{skill_dir}/{asset.id}/{path.relative_to(origin).as_posix()}"
                     else:
@@ -99,7 +128,7 @@ def desired_inventory(
                         if not origin.is_file() or origin.suffix != suffix:
                             raise BundleError(f"{asset.id}: {agent} subagent must be one {suffix} file")
                         dest = f"{subagent_dir}/{asset.id}{suffix}"
-                    add(dest, path, bundle.name if has_context and path in skill_files else None)
+                    add(dest, source_to_use, bundle.name if has_context and path in skill_files else None)
                     paths.add(dest)
             record: dict[str, object] = {
                 "bundle": bundle.name,
@@ -108,13 +137,54 @@ def desired_inventory(
                 "paths": sorted(paths),
             }
             if asset.kind == "playbook":
-                record["entrypoints"] = sorted(
-                    {
-                        prefix + playbook_entry(bundle.root, source).relative_to(bundle.root).as_posix()
-                        for _, source in asset.sources
-                    }
-                )
+                entrypoints = set()
+                for _, source in asset.sources:
+                    entry = playbook_entry(bundle.root, source)
+                    rel = entry.relative_to(bundle.root).as_posix()
+                    override_entry = root / OVERRIDES / bundle.name / rel if root else None
+                    if override_entry is not None and override_entry.is_file():
+                        entrypoints.add(f"{OVERRIDES}/{bundle.name}/{rel}")
+                    else:
+                        entrypoints.add(prefix + rel)
+                record["entrypoints"] = sorted(entrypoints)
             assets.append(record)
+
+            if asset_overridden and root is not None:
+                chosen_upstream = None
+                chosen_override = None
+                for _, src in asset.sources:
+                    p = bundle.root / src
+                    up_f = (p / "SKILL.md") if p.is_dir() and (p / "SKILL.md").is_file() else p
+                    rel_p = up_f.relative_to(bundle.root).as_posix()
+                    ov_f = root / OVERRIDES / bundle.name / rel_p
+                    if ov_f.is_file():
+                        chosen_upstream = up_f
+                        chosen_override = ov_f
+                        break
+                if chosen_upstream is not None and chosen_override is not None:
+                    rel_primary = chosen_upstream.relative_to(bundle.root).as_posix()
+                    cur_upstream_sha = hashlib.sha256(chosen_upstream.read_bytes()).hexdigest()
+                    cur_override_sha = hashlib.sha256(chosen_override.read_bytes()).hexdigest()
+                    prev_meta = (previous_overrides or {}).get(bundle.name, {}).get(asset.id, {})
+                    baseline_sha = prev_meta.get("baseline_upstream_sha256", cur_upstream_sha)
+                    if cur_upstream_sha != baseline_sha:
+                        drift_list.append(
+                            {
+                                "bundle": bundle.name,
+                                "asset": asset.id,
+                                "path": rel_primary,
+                                "message": f"upstream drift detected for {bundle.name}:{asset.id}",
+                            }
+                        )
+                    if bundle.name not in overrides_record:
+                        overrides_record[bundle.name] = {}
+                    overrides_record[bundle.name][asset.id] = {
+                        "kind": asset.kind,
+                        "relative_path": rel_primary,
+                        "baseline_upstream_sha256": baseline_sha,
+                        "override_sha256": cur_override_sha,
+                    }
+
     if any(asset["kind"] == "playbook" for asset in assets):
         projections = [(MANAGED_ROOT, None), *((f"{AGENTS[agent][0]}/{NAME}", agent) for agent in agents)]
         for directory, agent in projections:
@@ -123,4 +193,4 @@ def desired_inventory(
                 if destination in files:
                     raise BundleError(f"destination collision: {destination}")
                 files[destination] = Content(data, 0o644)
-    return files, assets, packages
+    return files, assets, packages, overrides_record, drift_list

@@ -362,24 +362,26 @@ Receipt properties:
 - `--agent <name>`: Adds an agent target to active selections (persisted in receipt). Repeatable.
 - `--no-agents`: Clears all active agent selections and unlinks unchanged native projections.
 - `--preset <bundle>:<name>`: Restricts synchronization for `<bundle>` to `<name>`. Repeatable across bundles.
+- `--exclude-bundle <name>`: Excludes `<name>` from synchronization. Repeatable across bundles.
 - `--all-assets`: Clears recorded preset restrictions, restoring full bundle asset deployment.
 - `--dry-run`: Computes inventory and returns planned actions without writing to disk.
 - `--check`: Read-only execution for CI pipelines. Returns JSON actions and exits with code `1` if workspace requires synchronization.
 
 ### Configuration Precedence & Presets
 
-Target agents and bundle presets are resolved using three precedence tiers:
+Target agents, bundle presets, and excluded bundles are resolved using three precedence tiers:
 
-1. **Explicit CLI Options**: CLI arguments (`--agent`, `--no-agents`, `--preset`, `--all-assets`) take highest precedence for temporary or ad-hoc runs and are persisted into the receipt.
-2. **Project Configuration (`.devkit/config.toml`)**: A Git-tracked repository configuration declaring default agents and presets:
+1. **Explicit CLI Options**: CLI arguments (`--agent`, `--no-agents`, `--preset`, `--exclude-bundle`, `--all-assets`) take highest precedence for temporary or ad-hoc runs and are persisted into the receipt.
+2. **Project Configuration (`.devkit/config.toml`)**: A Git-tracked repository configuration declaring default agents, presets, and excluded bundles:
    ```toml
    schema = 1
    agents = ["codex", "claude-code"]
+   exclude_bundles = ["starter"]
 
    [presets]
    starter = "daily"
    ```
-   When running `uv run devkit sync` without flags, values in `config.toml` take precedence over previous receipt state, ensuring clean checkouts and CI environments automatically synchronize the declared bundle presets.
+   When running `uv run devkit sync` without flags, values in `config.toml` take precedence over previous receipt state, ensuring clean checkouts and CI environments automatically synchronize the declared bundle presets and exclusions.
 3. **Receipt State (`.devkit/installation.json`)**: When neither CLI options nor `config.toml` specify a selection, the existing receipt's selections are preserved.
 
 ### Project Overrides & 3-Way Drift Review Architecture
@@ -451,6 +453,25 @@ Running `uv tool install --global devkit-distribution` installs the CLI into an 
 - **Upgrade**: Run `uv lock --upgrade-package <package>`, then run `uv run devkit sync`.
 - **Teardown**: Run `uv remove --dev <package>`, then run `uv run devkit sync`.
 - **Clean Checkout Replication**: Run `uv sync`, then run `uv run devkit sync`. If the repository ignores managed and native files, `sync` cleanly reconstructs all projections from installed wheels.
+
+### Transitive Bundle Distribution and Dependency Boundaries
+
+Python content wheels naturally inherit `uv` and Python packaging dependency resolution semantics. When a bundle package (`packageB`) depends on an upstream package (`packageA`), the distribution boundary between runtime inheritance and internal tooling is determined by standard dependency declarations in `packageB`'s `pyproject.toml`:
+
+1. **Layered / Meta Bundles (`dependencies = [...]`)**:
+   - Declaring `packageA` in `[project.dependencies]` includes it in the built wheel's `Requires-Dist` metadata.
+   - When consumer project `repo C` adds `packageB` as a dev dependency (`uv add --dev packageB`), `uv` transitively installs `packageA` into `repo C`'s virtual environment.
+   - Because `devkit` discovers bundles via `importlib.metadata.entry_points(group="devkit_distribution.bundles")`, `packageA`'s bundle is discovered and deployed into `.devkit/managed/packageA/` by default alongside `packageB`.
+   - **Use Case**: Composing layered agent configurations (e.g., a domain bundle `team-backend` inheriting organization-wide base standards from `company-base`).
+
+2. **Isolated Tooling & Testing (`dependency-groups.dev = [...]`)**:
+   - Declaring `packageA` in development groups (`[dependency-groups.dev]`) keeps the dependency strictly internal to `packageB`'s local repository.
+   - Wheel builds omit development dependencies. When `repo C` installs `packageB`, `packageA` is neither installed nor discovered.
+   - **Use Case**: Authoring packages that consume utility bundles or test suites locally without leaking upstream assets to downstream consumers.
+
+3. **Consumer Opt-Out (`exclude_bundles`)**:
+   - Even when an upstream bundle is transitively pulled into the virtual environment, the consumer workspace retains ultimate control over asset deployment.
+   - Consumers can explicitly opt out of synchronizing specific bundles using `exclude_bundles` in `.devkit/config.toml` or the `--exclude-bundle` CLI option.
 
 ---
 

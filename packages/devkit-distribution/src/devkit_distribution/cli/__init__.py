@@ -9,6 +9,13 @@ from devkit_distribution.bundles import BundleError, build_bundle, load_bundle, 
 from devkit_distribution.installation.context import get_context
 from devkit_distribution.installation.discovery import discover_bundles
 from devkit_distribution.installation.inventory import AGENTS
+from devkit_distribution.installation.overrides import (
+    accept_override,
+    create_override,
+    diff_override,
+    list_overrides,
+    remove_override,
+)
 from devkit_distribution.installation.playbook_search import search_playbooks
 from devkit_distribution.installation.sync import read_receipt, recover_project, sync_project
 
@@ -132,6 +139,17 @@ def sync(
     except (BundleError, OSError) as exc:
         raise click.ClickException(str(exc)) from exc
     click.echo(json.dumps(result, indent=2))
+    drift = result.get("drift")
+    if isinstance(drift, list):
+        for item in drift:
+            if isinstance(item, dict):
+                bundle_name = item.get("bundle")
+                asset_id = item.get("asset")
+                click.echo(
+                    f"WARNING: upstream drift detected for {bundle_name}:{asset_id}. "
+                    f"Run 'devkit override diff {bundle_name}:{asset_id}' to review.",
+                    err=True,
+                )
     if check and result["actions"]:
         raise click.exceptions.Exit(1)
 
@@ -155,6 +173,7 @@ def list_resources(target: Path) -> None:
                     for item in installed
                 ],
                 "synchronized_assets": receipt.get("assets", []),
+                "overrides": receipt.get("overrides", {}),
             }
     except (BundleError, OSError) as exc:
         raise click.ClickException(str(exc)) from exc
@@ -170,3 +189,73 @@ def recover(target: Path) -> None:
     except (BundleError, OSError) as exc:
         raise click.ClickException(str(exc)) from exc
     click.echo(json.dumps({"recovered_files": count}))
+
+
+@cli.group()
+def override() -> None:
+    """Manage local project asset overrides and upstream drift review."""
+
+
+@override.command(name="create")
+@click.argument("selector")
+@click.option("--target", default=".", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--force", is_flag=True, help="Overwrite existing override files.")
+def override_create(selector: str, target: Path, force: bool) -> None:
+    """Create a local override for an installed bundle asset (bundle:asset)."""
+    try:
+        with discover_bundles() as installed:
+            result = create_override(target, installed, selector, force=force)
+    except (BundleError, OSError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(json.dumps(result, indent=2))
+
+
+@override.command(name="diff")
+@click.argument("selector")
+@click.option("--target", default=".", type=click.Path(exists=True, file_okay=False, path_type=Path))
+def override_diff(selector: str, target: Path) -> None:
+    """Display 3-way or upstream diff for an overridden asset (bundle:asset)."""
+    try:
+        with discover_bundles() as installed:
+            result = diff_override(target, installed, selector)
+    except (BundleError, OSError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(json.dumps(result, indent=2))
+
+
+@override.command(name="accept")
+@click.argument("selector")
+@click.option("--target", default=".", type=click.Path(exists=True, file_okay=False, path_type=Path))
+def override_accept(selector: str, target: Path) -> None:
+    """Accept upstream updates and advance the baseline digest (bundle:asset)."""
+    try:
+        with discover_bundles() as installed:
+            result = accept_override(target, installed, selector)
+    except (BundleError, OSError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(json.dumps(result, indent=2))
+
+
+@override.command(name="remove")
+@click.argument("selector")
+@click.option("--target", default=".", type=click.Path(exists=True, file_okay=False, path_type=Path))
+def override_remove(selector: str, target: Path) -> None:
+    """Remove a local override and restore pristine upstream asset (bundle:asset)."""
+    try:
+        with discover_bundles() as installed:
+            result = remove_override(target, installed, selector)
+    except (BundleError, OSError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(json.dumps(result, indent=2))
+
+
+@override.command(name="list")
+@click.option("--target", default=".", type=click.Path(exists=True, file_okay=False, path_type=Path))
+def override_list_cmd(target: Path) -> None:
+    """List active overrides and their drift status."""
+    try:
+        with discover_bundles() as installed:
+            result = list_overrides(target, installed)
+    except (BundleError, OSError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(json.dumps(result, indent=2))
