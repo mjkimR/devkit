@@ -1,33 +1,96 @@
-# Agent 자산 통합 배포 체계
+# Unified Agent Asset Distribution Architecture
 
-상태: uv 프로젝트 의존성 기반 구현. CLI는 `devkit`, 소비 경로는 `.devkit/`이다.
+**Status**: Architecture Specification & Reference Implementation  
+**Tooling Package**: `devkit-distribution` (`devkit` CLI)  
+**Consumer Root**: `.devkit/`  
+**Current State**: Implemented uv-based content wheel distribution, entry-point discovery, deterministic bundle manifests and archive packaging, preset and agent selection, ACID transactional synchronization with durable journaling, and native agent projection for Codex and Claude Code.
 
-## 채택한 배포 방식
+For command usage and manifest reference, see the [package README](../../packages/devkit-distribution/README.md).  
+For the reference content package implementation, see the [devkit-starter package](../../packages/devkit-starter/README.md).
 
-소비 프로젝트의 dev 의존성으로 배포 CLI와 콘텐츠 패키지를 함께 설치한다.
-Python 코드가 없는 콘텐츠도 manifest와 리소스를 담은 wheel로 배포한다.
+---
 
-```bash
-uv add --dev devkit-distribution package-a-rules package-b-playbooks
-uv run devkit sync
+## 1. Overview and Objectives
+
+The `devkit` distribution system manages the unified distribution, projection, upgrade, audit, and restoration lifecycle for developer agent assets. It targets a curated set of personal AI coding agents (such as Codex, Claude Code, and Antigravity) while treating agent configurations, instructions, governance rules, playbooks, and skills as first-class versioned packages.
+
+AI coding agents typically rely on vendor-specific directories (such as `.agents/`, `.codex/`, or `.claude/`) with disjointed configuration schemas, divergent subagent formats, and ad-hoc file placement conventions. The `devkit` distribution architecture addresses these challenges by establishing a structured contract between content producers, distribution tooling, and consumer workspaces.
+
+### Core Principles
+
+1. **Native Config Fidelity**: Preserve native configuration formats without forcing a compromised lowest-common-denominator schema. Native subagent definitions and tool configurations are copied verbatim; unsupported agent features fail explicitly during planning rather than being silently stripped, modified, or degraded.
+2. **Decoupled Versioning & uv Ecosystem Synergy**: Leverage standard Python packaging infrastructure (`uv`, wheels, `importlib.metadata`, and `uv.lock`) instead of inventing custom archive resolvers, external release downloaders, or bespoke caching systems. Consumer projects install content wheels directly as dev dependencies.
+3. **Deterministic Packaging & Ingestion**: Reproducible bundle manifests, static resource verification, normalized POSIX file permissions (`0644`/`0755`), and strict relative path containment without execution side effects.
+4. **Explicit Ownership Boundaries & Conflict Protection**: Maintain strict isolation between pristine managed assets, project-specific local additions, explicit complete overrides, and untracked foreign files. Any unmanaged collision or modified deployed file halts synchronization immediately to prevent data loss.
+5. **Transactional Integrity & Fault Tolerance**: All project-level installations, upgrades, and removals are planned upfront, checked for conflicts, and executed atomically using advisory locking, a write-ahead journal (`sync-journal.json`), temporary sibling writes, and automated rollback recovery.
+
+---
+
+## 2. Architecture Units and Boundaries
+
+The distribution architecture comprises five primary units:
+
+```text
+┌──────────────────────────────────────────────────────────────────┐
+│                   Python Content Wheels (uv)                     │
+│  - Installed via `uv add --dev <content-wheel>`                  │
+│  - Entry point: `devkit_distribution.bundles`                    │
+│  - Resource module containing `bundle/bundle.toml` & assets      │
+└─────────────────────────────────┬────────────────────────────────┘
+                                  │ (importlib discovery)
+                                  ▼
+┌──────────────────────────────────────────────────────────────────┐
+│              devkit-distribution (Python CLI: devkit)            │
+│  - Entry-point & resource discovery (`importlib.resources`)      │
+│  - Manifest validation, inventory planning & preset selection    │
+│  - ACID transaction engine, advisory locking & write journal     │
+│  - Native agent projection adapters (Codex, Claude Code)         │
+│  - Local authoring validator & deterministic ZIP builder         │
+└──────────────────┬───────────────────────────────┬───────────────┘
+                   │                               │
+       (Projects & Manages)              (Dispatches to)
+                   │                               │
+                   ▼                               ▼
+┌────────────────────────────────────┐ ┌───────────────────────────┐
+│       Consumer Project Workspace   │ │     agent-rule-engine     │
+│  - .devkit/installation.json       │ │  - Governance evaluation  │
+│  - .devkit/managed/<bundle>/       │ │  - Rule discovery         │
+│  - .devkit/transient/ (lock/journ) │ │  - Convergence recheck    │
+│  - Projected native agent files    │ │  - Wheel dependencies via │
+│    (.agents/, .codex/, .claude/)   │ │    consumer uv environment│
+└────────────────────────────────────┘ └───────────────────────────┘
 ```
 
-uv는 패키지 획득·버전·Python 의존성·환경을 관리하고 `uv.lock`으로 고정한다.
-`devkit sync`는 같은 환경의 콘텐츠 패키지를 발견해 리소스를 프로젝트에 배치한다.
-업데이트는 uv에서 의존성을 갱신한 다음 sync하며, 새 checkout은 uv 환경 복원과
-sync로 재생성한다. 별도 ZIP 배포·다운로드 cache·release resolver는 기본 흐름에 없다.
-기존 ZIP build는 로컬 export 보조 명령으로 유지한다.
+| Unit | Responsibilities | Distribution & Versioning Model |
+| --- | --- | --- |
+| `devkit-distribution` | CLI, manifest validator, bundle packager, planner, transactional workspace engine, native projection adapters | Semantic versioning (`X.Y.Z`) as a standard Python package |
+| Content Wheel | Versioned asset sources, native variants, dependencies, metadata | Python wheel with semantic package version and bundle version |
+| `bundle.toml` | Manifest declaring assets, kinds, sources/variants, and presets | Pinned to `schema = 1` contract within the wheel's resource module |
+| `agent-rule-engine` | Governance rule discovery, sequential evaluation, autofix convergence recheck | Monorepo package/CLI; rules declare dependencies through wheels |
+| Consumer Receipt | Pinned packages, bundle versions, selections, asset paths, file hashes/modes | Explicit receipt schema version (`schema = 1`) in `.devkit/installation.json` |
 
-전역 `uv tool install` 환경은 프로젝트 dev 의존성을 발견하지 못할 수 있으므로
-프로젝트에서는 `uv run devkit`을 사용한다. 실제 배포 패키지 이름은
-`devkit-distribution`이며 실행 명령은 `devkit`이다.
+### Codebase Organization
 
-## 패키지 계약
+The distribution tool lives in `packages/devkit-distribution/src/devkit_distribution/`, with test suites located under `packages/devkit-distribution/tests/`:
 
-콘텐츠 패키지는 `devkit_distribution.bundles` entry point group에 리소스 모듈을
-등록한다. entry point 값은 callable이 아닌 import 가능한 module 이름이다.
-그 모듈 아래 `bundle/`에 `bundle.toml`과 모든 선언 리소스를 wheel에 포함한다.
-module 초기화에는 부작용을 두지 않는다. sync는 rule 구현을 import하지 않는다.
+- `bundles/`:
+  - `manifest.py`: Manifest schema definition (`bundle.toml` schema 1), TOML parsing, slug/version validation, path sanitization (`safe_source`), and asset inventory resolution.
+  - `package.py`: Deterministic local ZIP packaging with normalized epoch timestamps, POSIX permissions, sorted archive entries, and hashed inventory verification.
+- `installation/`:
+  - `discovery.py`: Discovery of installed content wheels via `importlib.metadata` entry points and live resource materialization via `importlib.resources`.
+  - `inventory.py`: Computation of desired managed and native file inventories, preset filtering, agent target directory mappings, and destination collision detection.
+  - `sync.py`: Project synchronization lifecycle, receipt validation, conflict evaluation, and recovery orchestration.
+  - `transaction.py`: Project advisory locking (`fcntl.flock`), write-ahead journaling (`sync-journal.json`), atomic file writes (`mkstemp` + rename + directory `fsync`), and rollback recovery.
+- `cli/`:
+  - Click-based `devkit` command-line interface providing `bundle validate`, `bundle build`, `plan`, `sync`, `list`, and `recover`.
+
+---
+
+## 3. Package & Bundle Specification (`bundle.toml`)
+
+### Content Wheel Contract
+
+Content packages distribute assets as standard Python wheels installed into the consumer project's development environment. A content wheel registers an entry point under the `devkit_distribution.bundles` group:
 
 ```toml
 [project.entry-points."devkit_distribution.bundles"]
@@ -37,75 +100,342 @@ team = "package_b_playbooks"
 packages = ["src/package_b_playbooks"]
 ```
 
-`bundle.toml` schema 1은 name·version·assets·presets를 선언한다. asset 종류는
-skill·subagent·instruction·playbook·rule이다. source 또는 agent별 variants를
-선언하며 native 파일의 본문·설정 키는 변환하지 않는다. skill은 references,
-scripts 등 전체 디렉터리를 포함한다. 상대 경로 탈출·symlink·특수 파일은 거부한다.
-정확한 schema와 예제는 [패키지 README](../../packages/devkit-distribution/README.md)에 있다.
+```text
+src/package_b_playbooks/
+  __init__.py               # Empty module; strictly no side effects
+  bundle/
+    bundle.toml             # Manifest declaring metadata and assets
+    playbooks/review.md
+    instructions/development.md
+    skills/review/
+      SKILL.md
+```
 
-bundle name은 환경 전체에서 유일해야 한다. 서로 다른 패키지가 같은 bundle을
-제공하면 오류다. Python dependency 해결은 uv에 맡기며 bundle 버전 solver나
-별도 다운로드 메커니즘을 만들지 않는다. receipt는 package 버전과 bundle 버전을
-함께 기록한다. 배포 여부는 entry point 등록으로 명시하며 일반 설치 패키지는 무시한다.
+#### Discovery & Isolation Rules
+- **Resource Module Reference**: The entry point value must point to an importable Python module, not a callable.
+- **Root Directory**: The bundle contents and `bundle.toml` reside under the module's `bundle/` directory.
+- **No Side Effects**: Loading a resource module triggers standard Python module initialization. Modules must keep `__init__.py` free of runtime side effects.
+- **Static Inspection**: Synchronizing a bundle reads files purely through `importlib.resources.as_file`; it never executes rule scripts or imports rule code.
+- **Unique Bundle Names**: Bundle names must be unique across all installed packages in the environment. Multiple packages declaring the same bundle name trigger an immediate error.
+- **Non-Python Repositories**: Upstream repositories without Python logic (such as prompt collections or Go tools) can map their native directory layout into a content wheel at build time using Hatch `force-include` without modifying their original file structure.
 
-## 설치 및 소유권
+### Asset Kinds
+
+A bundle declares assets across five supported kinds:
+
+- `skill`: A directory containing `SKILL.md` along with supporting scripts, references, and assets. The entire directory tree is preserved, maintaining executable permissions (`0755`) for scripts.
+- `subagent`: Native agent persona definitions or configuration files.
+- `instruction`: Contextual guidance and prompt markdown documents linked to agent startup instructions.
+- `playbook`: Operational workflows, checklists, and procedural guides.
+- `rule`: Python-based governance rules evaluated by `agent-rule-engine`.
+
+### Manifest Syntax (`schema = 1`)
+
+Every asset is identified by a logical tuple: `(bundle, kind, id)`. Asset IDs must be unique within each bundle.
+
+```toml
+schema = 1
+name = "starter-workflow"
+version = "0.1.0"
+
+[[assets]]
+id = "review"
+kind = "skill"
+source = "skills/review"
+
+[[assets]]
+id = "reviewer"
+kind = "subagent"
+[assets.variants]
+codex = "native/codex/reviewer.toml"
+claude-code = "native/claude-code/reviewer.md"
+
+[[assets]]
+id = "development"
+kind = "instruction"
+source = "instructions/development.md"
+
+[[assets]]
+id = "review-flow"
+kind = "playbook"
+source = "playbooks/review.md"
+
+[presets.daily]
+assets = ["development", "review-flow", "review"]
+```
+
+### Manifest Rules and Validation
+
+- **Strict Schema**: Unknown top-level keys or unrecognized table fields trigger immediate validation errors.
+- **Slug Validation**: Bundle names and asset IDs must match lowercase slug regex `^[a-z][a-z0-9-]*$`.
+- **Semantic Versioning**: Bundle versions must strictly follow `MAJOR.MINOR.PATCH` format.
+- **Relative Path Sanitization**: Source paths must be relative POSIX paths. Paths containing traversal segments (`..`), backslashes (`\`), symlinks, or special device files are strictly rejected.
+- **Source vs. Variants**: An asset must declare either a single `source` or a `variants` mapping matching supported agent names, never both.
+- **Skills Integrity**: A `skill` source must point to a directory containing a valid `SKILL.md` file.
+- **Verbatim Native Content**: Files declared under `variants` remain untouched during packaging and sync. The distributor does not parse, modify, or strip vendor-specific configuration keys.
+
+### Deterministic Local Archive Build
+
+The `devkit bundle build` command provides an optional local export helper producing bit-for-bit reproducible ZIP archives:
+- Files are sorted lexicographically by archive path.
+- Entry timestamps are pinned to a fixed epoch (`1980-01-01 00:00:00 UTC`).
+- File permissions are normalized to POSIX `0644` (regular files) or `0755` (executables).
+- An internal SHA-256 inventory manifest is embedded to verify integrity before extraction.
+*(Note: ZIP archives serve as a portable local export mechanism; the primary project synchronization transport uses installed uv content wheels).*
+
+---
+
+## 4. Consumer Workspace & Ownership Model
+
+Consuming projects integrate bundles under a dedicated root directory: `.devkit/`.
 
 ```text
 .devkit/
-  installation.json       # 배포 package·선택·파일 해시/mode·asset 경로: Git 보존
-  managed/<bundle>/       # wheel에서 복원하는 리소스: Git 제외
-  transient/              # 중단 복구 journal: Git 제외
-<agent native paths>      # 선택 agent의 skill/subagent 배포 사본
+  installation.json       # Pinned packages, bundle versions, selections, file hashes & modes (Git-tracked)
+  managed/<bundle>/       # Clean extracted upstream resources from wheels (Generated, Git-ignored)
+  transient/              # Transaction lock and recovery journal (Git-ignored)
+    sync-journal.json     # Active write-ahead journal
+  overrides/<bundle>/     # (Future) Full replacements for managed assets (Git-tracked)
+  local/                  # (Future) Project-authored custom assets (Git-tracked)
+<agent native paths>      # Projected native assets (e.g., .agents/, .codex/, .claude/)
 ```
 
-기본 sync는 발견한 모든 bundle의 모든 asset을 managed에 배포한다.
-`--preset bundle:name`으로 특정 bundle의 asset 선택을 제한한다. 설정을 생략한
-재실행은 기존 선택을 유지하고 `--all-assets`로 preset 제한을 해제한다.
-선택한 agent는 `--agent`로 지정하고 이후 receipt에서 유지한다.
-`--no-agents`로 native 배포 선택을 해제할 수 있다.
+### Ownership Categories
 
-instructions·playbooks·rule은 managed의 원래 상대 경로를 보존한다. receipt의
-asset 목록에 실제 배포 경로를 제공하고 `devkit list`로 발견한다. Python rule의
-dependency는 해당 wheel의 dependency로 선언한다. rule 실행·plugin API 연결은
-별도 후속 작업이며 파일 설치만으로 rule이 자동 실행되지는 않는다.
+1. **Managed Assets (`.devkit/managed/<bundle>/`)**:
+   - Exact unpacked representation of upstream bundle resources extracted from installed wheels.
+   - Read-only cache. Always regenerated deterministically by `devkit sync`.
+   - Preserves original relative paths for instructions, playbooks, and rules.
+2. **Project Native Projections**:
+   - Copied projections placed into agent-specific directories (such as `.agents/skills/`, `.claude/skills/`, `.codex/agents/`, `.claude/agents/`).
+   - Tracked explicitly by file path, SHA-256 hash, and POSIX mode in `installation.json`.
+3. **Foreign File Protection**:
+   - The distributor strictly manages only files recorded in `installation.json`.
+   - Files created manually or by other tools in native agent directories are preserved.
+   - If a synchronization step targets a file that already exists but is not recorded in the receipt, it is treated as an unmanaged collision and sync aborts immediately.
+4. **User Modification Detection**:
+   - If a deployed file's disk content or mode differs from its recorded receipt signature, it is treated as a user modification.
+   - Sync aborts immediately across the entire project before making any disk changes.
+   - Package removal or preset narrowing will only delete files that remain byte-for-byte identical to their recorded receipt signature. Modified files are never deleted.
+5. **Git & Ignore Policy**:
+   - The receipt (`.devkit/installation.json`) must be committed to version control.
+   - Generated resources (`.devkit/managed/`), transient transaction files (`.devkit/transient/`), and generated native copies should be ignored according to the consumer repository's own `.gitignore` policy.
+   - `devkit` never automatically modifies `.gitignore` or the Git index.
 
-Codex와 Claude Code의 파일 배치 adapter는 skill 전체 트리와 agent별 native
-subagent 변형을 복사한다. 선택 agent의 subagent 변형이 없으면 실패한다.
-공통 subagent를 임의로 변환하지 않는다. native 파일 생성과 실제 agent 로딩은
-별도다. trust·전역 설정·공유 config 및 AGENTS/CLAUDE 지침 진입점은 자동 수정하지
-않는다. agent별 실제 세션 발견·실행과 버전 호환성은 아직 검증하지 않았다.
+---
 
-배포 도구는 기록에 있는 파일만 관리한다. 다른 도구의 파일은 보존하며 기존
-동일 내용 파일도 기록 없는 상태에서는 충돌이다. 기존 내용·mode가 배포 기록과
-다르면 사용자 편집으로 보고 전체 sync를 중단한다. 패키지 제거·preset 해제로
-제외된 파일은 기록된 상태와 같은 경우에만 삭제한다. 편집된 파일은 삭제하지 않는다.
-사용자 local/override 합성 및 원본 변경 review 계약은 아직 구현하지 않았다.
+## 5. Agent Native Adapters and Projection
 
-sync는 설치 전 전체 충돌 검사 후 lock·durable journal·atomic replacement로
-파일과 receipt를 적용한다. 중단 journal이 있으면 다음 sync를 막는다.
-`devkit recover`는 기록된 before/after와 같은 파일만 이전 상태로 복원한다.
-`--dry-run`은 변경 목록을 출력하고 프로젝트에는 쓰지 않는다. `--check`는 변경이
-필요하면 실패 상태를 반환한다. `.gitignore`나 Git index는 자동 수정하지 않는다.
-managed/transient 및 생성 native 파일의 ignore 정책은 소비 프로젝트에서 설정한다.
+Adapters bridge the abstract bundle asset model to concrete vendor-specific directory hierarchies.
 
-## specrig와의 관계
+### Agent Projection Matrix
 
-조사한 원본은 `/home/mj/projects/workbench/repos/specrig` 로컬 checkout이다.
-`cli/internal/scaffold/{layers,manifest,transaction}.go`의 소유권·해시 기반
-충돌 검사·복구 구조와 `cli/internal/harness/assets.go`의 공통 resolver를 참고했다.
-원격 릴리즈나 실제 agent 실행은 이번 조사에서 검증하지 않았다.
+| Agent | Target Kind | Destination Path in Project | Source Contract |
+| --- | --- | --- | --- |
+| `codex` | `skill` | `.agents/skills/<asset-id>/` | Common `source` or `variants.codex` directory |
+| `codex` | `subagent` | `.codex/agents/<asset-id>.toml` | `variants.codex` single `.toml` file |
+| `claude-code` | `skill` | `.claude/skills/<asset-id>/` | Common `source` or `variants.claude-code` directory |
+| `claude-code` | `subagent` | `.claude/agents/<asset-id>.md` | `variants.claude-code` single `.md` file |
 
-specrig 콘텐츠는 얇은 Python 리소스 패키지로 포장할 수 있다. 생산자의 기존
-디렉터리는 빌드 설정으로 wheel 리소스 경로에 포함하며 원본을 재작성할 필요가 없다.
-specrig Go 실행파일은 기존 릴리즈 수명주기를 유지한다. 동일 native 파일을
-specrig와 devkit이 동시에 소유하지 않도록 기존 배포 경로는 충돌로 처리한다.
+### Multi-Agent Projection Semantics
 
-## 검증 및 후속 범위
+- **Shared Skills**: Skills are directory-based assets. The entire source directory (including supporting references and executable scripts) is projected into `.agents/skills/<asset-id>/` for Codex and `.claude/skills/<asset-id>/` for Claude Code.
+- **Native Subagents**: Subagents require an explicit native file for each target agent. Codex requires a `.toml` configuration file; Claude Code requires a `.md` markdown definition.
+- **No Lossy Downgrades**: If a selected agent does not have a native variant defined for a subagent, synchronization fails immediately with an explicit error. The distributor never attempts heuristic conversions or parameter stripping.
+- **Target Selection**:
+  - `devkit sync --agent codex`: Projects assets for Codex.
+  - `devkit sync --agent codex --agent claude-code`: Projects assets for both agents simultaneously.
+  - `devkit sync --no-agents`: Clears native agent selections and safely unlinks unchanged native projections while keeping managed resources intact.
+  - Running `devkit sync` without `--agent` preserves previously recorded agent selections from the receipt.
 
-검증은 `just lint`, `just check`, `just test`, `just rules-check`로 수행한다.
-wheel 빌드·설치 후 실제 entry point 발견과 프로젝트 동기화를 별도로 확인한다.
-테스트는 패키지 발견·중복 bundle·preset 선택·native bytes·실행 mode·재실행,
-업데이트·제거·사용자 편집·symlink·dry-run·transaction rollback·recover를 다룬다.
+### Host Environment Boundaries
 
-후속 범위는 local/override, agent별 지침 진입점과 config 등록, rule plugin 실행,
-agent 버전 호환성 및 실제 세션 검증이다. 개인 전역 설치는 초기 범위에 없다.
+- **Bootstrap Instructions**: Instructions (`kind = "instruction"`) and playbooks (`kind = "playbook"`) remain in `.devkit/managed/<bundle>/` and are recorded in the receipt's asset index. Discovered via `devkit list`.
+- **No Host Mutation**: The distributor does not automatically modify host system settings, user credentials, agent trust configurations, or global instruction files (e.g., `AGENTS.md` or `CLAUDE.md`). Session integration is handled explicitly by developer configuration or entry point linking.
+
+---
+
+## 6. Rule Distribution and Engine Integration
+
+Governance rules evaluated by `agent-rule-engine` have specialized distribution requirements:
+
+- **Wheel Dependency Resolution**: Python rules distributed via content wheels declare their third-party dependencies as standard wheel dependencies in `pyproject.toml`. These dependencies are resolved and locked by `uv` within the consumer project's environment.
+- **Resource Placement**: Synced rule scripts are placed into `.devkit/managed/<bundle>/rules/` preserving their original relative structure.
+- **Decoupled Evaluation**: Synchronizing files does not automatically trigger rule execution. Rule evaluation is dispatched separately through `agent-rules` or `just rules-check`.
+- **Static Inspection**: Bundles are inspected purely as static resources during packaging, discovery, and sync. Rule code is never imported or executed during distribution lifecycle operations.
+- **Plugin Integration (Follow-up)**: Dynamic rule plugin discovery, namespace isolation, and engine evaluation APIs represent planned future extensions.
+
+---
+
+## 7. Lifecycle Operations, Receipts & Transaction Safety
+
+### The Installation Receipt (`.devkit/installation.json`)
+
+The receipt is the single source of truth for the installed state. It is committed to source control and adheres to `schema = 1`:
+
+```json
+{
+  "schema": 1,
+  "packages": [
+    {
+      "package": "devkit-starter",
+      "package_version": "0.1.0",
+      "bundle": "starter",
+      "bundle_version": "0.1.0"
+    }
+  ],
+  "selection": {
+    "agents": ["codex", "claude-code"],
+    "presets": {
+      "starter": "daily"
+    }
+  },
+  "assets": [
+    {
+      "bundle": "starter",
+      "id": "review",
+      "kind": "skill",
+      "paths": [
+        ".agents/skills/review/SKILL.md",
+        ".claude/skills/review/SKILL.md",
+        ".devkit/managed/starter/skills/review/SKILL.md"
+      ]
+    }
+  ],
+  "files": {
+    ".devkit/managed/starter/bundle.toml": {
+      "mode": 420,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  }
+}
+```
+
+Receipt properties:
+- Tracks exact package names, package versions, bundle names, and bundle versions.
+- Records active agent selections and active preset restrictions.
+- Stores deployed asset mappings linking logical asset IDs to physical workspace file paths.
+- Records expected SHA-256 digests and POSIX file modes (`0644` or `0755`) for every deployed file.
+- Omits absolute filesystem paths and machine timestamps to ensure clean Git diffs across developer workstations.
+
+### Command Matrix
+
+| Command | Lifecycle Phase | Contract |
+| --- | --- | --- |
+| `devkit bundle validate <source>` | Authoring | Verifies manifest syntax, schema rules, and existence of declared local source files. |
+| `devkit bundle build <source> --output <zip>` | Packaging | Produces a deterministic ZIP archive with inventory hashes and normalized file permissions. |
+| `devkit plan <source> [--preset <name>]` | Evaluation | Previews desired managed inventory for a local bundle source without inspecting a consumer project. |
+| `devkit sync [options]` | Deployment | Discovers installed content packages, computes plan, performs pre-flight conflict checks, executes atomic transaction, and updates receipt. |
+| `devkit list [--target <dir>]` | Discovery | Outputs JSON listing installed content packages, bundle metadata, available presets, and synchronized asset paths. |
+| `devkit recover [--target <dir>]` | Fault Tolerance | Uses write-ahead journal in `.devkit/transient/` to roll back an interrupted transaction without overwriting newer edits. |
+
+### Sync Options and Modes
+
+- `--agent <name>`: Adds an agent target to active selections (persisted in receipt). Repeatable.
+- `--no-agents`: Clears all active agent selections and unlinks unchanged native projections.
+- `--preset <bundle>:<name>`: Restricts synchronization for `<bundle>` to `<name>`. Repeatable across bundles.
+- `--all-assets`: Clears recorded preset restrictions, restoring full bundle asset deployment.
+- `--dry-run`: Computes inventory and returns planned actions without writing to disk.
+- `--check`: Read-only execution for CI pipelines. Returns JSON actions and exits with code `1` if workspace requires synchronization.
+
+### Transaction Safety Guarantees (ACID Engine)
+
+All mutating operations enforce strict transactional safety:
+
+1. **Pre-Flight Validation**: Computes the complete desired file inventory, scans existing disk state, verifies file ownership, and checks for collisions before writing any bytes.
+2. **Project Advisory Lock**: Acquires an exclusive, non-blocking file lock via `fcntl.flock` in `/tmp` keyed by SHA-256 hash of the target project directory path (`devkit-<uid>-<hash>.lock`). Concurrent operations fail immediately with an informative message.
+3. **Write-Ahead Journal**: Before modifying disk, pending operations (file additions, modifications, unlinks) and base64-encoded backups of existing file contents are flushed to `.devkit/transient/sync-journal.json`.
+4. **Atomic Replacement**: New and updated files are written to temporary sibling files (`.devkit-write-*`), permissions applied via `fchmod`, flushed with `fsync`, and atomically moved into place using `os.replace`. Directory entries are synced using directory `fsync`.
+5. **Rollback Recovery**: If an operation is killed or interrupted mid-flight, subsequent `sync` invocations detect the existing journal and halt. Running `devkit recover` inspects every recorded file and safely restores original contents provided the file has not undergone subsequent user modifications.
+
+---
+
+## 8. Distribution Mechanism and Ecosystem Integration
+
+### The uv Dev Dependency Model
+
+Rather than establishing an external artifact registry or proprietary CLI resolver, `devkit` relies on Python's mature packaging ecosystem:
+
+```bash
+# Add distribution CLI and content packages to the project
+uv add --dev devkit-distribution devkit-starter package-b-playbooks
+
+# Synchronize resources into the project
+uv run devkit sync --agent codex --agent claude-code
+
+# Verify synchronized resources
+uv run devkit list
+```
+
+#### Why Project-Level Dev Dependencies?
+Running `uv tool install --global devkit-distribution` installs the CLI into an isolated tool environment. In that isolated environment, `importlib.metadata` cannot discover content packages installed inside the consumer project's virtual environment. Using `uv run devkit sync` ensures the CLI executes within the project's dev environment, discovering all installed content wheels seamlessly.
+
+#### Upgrades and Teardown
+- **Upgrade**: Run `uv lock --upgrade-package <package>`, then run `uv run devkit sync`.
+- **Teardown**: Run `uv remove --dev <package>`, then run `uv run devkit sync`.
+- **Clean Checkout Replication**: Run `uv sync`, then run `uv run devkit sync`. If the repository ignores managed and native files, `sync` cleanly reconstructs all projections from installed wheels.
+
+---
+
+## 9. Verification and Future Scope
+
+### Verification Commands
+
+All changes in the monorepo must pass standard verification targets:
+
+| Target | Command |
+| --- | --- |
+| Code Formatting & Linting | `just lint devkit-distribution` |
+| Static Type Checking | `just check devkit-distribution` |
+| Test Suite | `just test devkit-distribution` |
+| Governance Rules | `just rules-check` |
+
+### Test Suite Coverage
+
+The automated test suite in `packages/devkit-distribution/tests/` covers:
+- Package and entry-point discovery via `importlib.metadata`.
+- Duplicate bundle name rejection across packages.
+- Preset filtering, `--all-assets` clearing, and invalid preset rejection.
+- Verbatim preservation of native configuration bytes and file modes.
+- Re-execution idempotency (no-op runs preserve receipt bytes exactly).
+- Update and package removal handling (clean deletion of unedited files).
+- Foreign file collision detection and user modification protection.
+- Symlink and path traversal security rejections.
+- `--dry-run` and `--check` validation.
+- ACID transaction execution, lock contention, and rollback recovery via `devkit recover`.
+
+### Implementation Roadmap
+
+```text
+Phase 1: Manifest & Local Packaging (Complete)
+  ├── bundle.toml schema 1 validation
+  ├── Deterministic ZIP packager (devkit bundle build)
+  └── Local preview planner (devkit plan)
+
+Phase 2: UV Wheel Distribution & Sync Core (Complete)
+  ├── Entry-point discovery via devkit_distribution.bundles
+  ├── Workspace layout (.devkit/managed, .devkit/transient)
+  ├── Transactional ACID engine with lock, journal & recover
+  ├── Installation receipt (.devkit/installation.json)
+  └── Native projection adapters for Codex and Claude Code
+
+Phase 3: Project Overrides & Drift Review (Upcoming)
+  ├── Project override directory (.devkit/overrides/<bundle>/)
+  ├── Baseline upstream digest tracking in receipt
+  └── Upstream change detection and interactive drift review
+
+Phase 4: Instruction Integration & Session Hooks (Upcoming)
+  ├── Entry-point link injection into AGENTS.md / CLAUDE.md
+  ├── Host environment prerequisite auditing (trust, auth)
+  └── Custom project asset authoring in .devkit/local/
+
+Phase 5: Rule Engine Plugin API & Runtime Isolation (Upcoming)
+  ├── agent-rule-engine dynamic plugin loader for managed rules
+  ├── Rule ID collision detection across bundles
+  └── rules check and rules fix command dispatch
+
+Phase 6: Multi-Agent Expansion & Ecosystem Validation (Upcoming)
+  ├── Antigravity adapter (.agents/rules/, .agents/skills/)
+  ├── Live session verification across agent CLIs
+  └── End-to-end repository pilot and CI verification
+```

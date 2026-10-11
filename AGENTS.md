@@ -6,20 +6,17 @@ Personal developer tools monorepo.
 
 - Python monorepo managed with `uv` workspaces and `just`.
 - Python sources live in `packages/<package>/src/` or `tools/<tool>/src/`; tests belong in each package's `tests/`, never under `src/`.
-- `agent-rule-engine` is the agent-managed rule & governance engine:
-  - Self-contained package providing both core evaluation library and `agent-rules` CLI entry point.
-  - Uses unified in-memory `WorkspaceCache` for file reads, YAML frontmatter, lightweight markdown link extraction, and catalog index.
-  - Sequentially evaluates rules with convergence recheck after autofix.
-  - Feature folders: `engine/`, `workspace/`, `cli/`, and `rules/{specification,markdown,hygiene}/`; tests mirror these groups outside `src/`.
-  - Minimal dependencies (`click`, `pyyaml`).
 - Keep `justfile` recipes thin; shared shell logic belongs in `scripts/`.
-- `devkit-distribution` provides the `devkit` CLI. Consumer projects install it
-  and content wheels as uv dev dependencies, then run `uv run devkit sync`.
-  Discover content through `devkit_distribution.bundles` module entry points;
-  resources live under the module's `bundle/` with `bundle.toml`. Keep native
-  bytes intact, protect unowned/edited files, and use `.devkit/` receipts.
-  `devkit-starter` is the example resource package.
+- Write all documentation, architecture specifications, and guide materials in English.
 - Do not commit `.env`, log secrets/PII, or commit/push without explicit instructions.
+
+## Packages
+
+Keep package descriptions in this guide to a high-level summary of their purpose. Do not add package-specific configurations or detailed architectural explanations here; refer to the respective package's `README.md` when deeper details are needed:
+
+- `agent-rule-engine`: Agent-managed rule and repository governance engine. See [packages/agent-rule-engine/README.md](packages/agent-rule-engine/README.md).
+- `devkit-distribution`: CLI tool (`devkit`) and runtime for packaging and synchronizing agent asset bundles across workspaces. See [packages/devkit-distribution/README.md](packages/devkit-distribution/README.md).
+- `devkit-starter`: Example resource package demonstrating bundle packaging and distribution. See [packages/devkit-starter/README.md](packages/devkit-starter/README.md).
 
 ## Verification
 
