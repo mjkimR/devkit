@@ -43,6 +43,8 @@ HOST_FILES = {"claude-code": ".md", "codex": ".toml", "antigravity": ".md"}
 # Frontmatter every Antigravity subagent file carries in addition to the contract's keys.
 ANTIGRAVITY_FIXED: tuple[tuple[str, Any], ...] = (("subagent", True), ("mainAgent", False))
 FIELDS = {"role", "title", "description", "skill", "hosts"}
+# Extension keys: carried by the contract for other tools, never rendered or interpreted by devkit.
+EXTENSION_KEY = re.compile(r"x-[a-z][a-z0-9-]*\Z")
 
 
 @dataclass(frozen=True)
@@ -59,6 +61,8 @@ class Contract:
     skill: str | None
     hosts: dict[str, HostBlock]
     body: str
+    # ``x-*`` frontmatter keys in document order, verbatim; devkit does not interpret them.
+    extensions: tuple[tuple[str, Any], ...] = ()
 
 
 def subagent_entry(root: Path, source: str) -> Path:
@@ -99,8 +103,9 @@ def read_contract(data: bytes, context: str, asset_id: str | None = None) -> Con
         raise BundleError(f"{context}: invalid YAML frontmatter") from exc
     if not isinstance(metadata, dict):
         raise BundleError(f"{context}: frontmatter must be a mapping")
-    if unknown := set(metadata) - FIELDS:
-        raise BundleError(f"{context}: unknown frontmatter keys {sorted(unknown)}")
+    if unknown := {key for key in metadata if key not in FIELDS and not EXTENSION_KEY.fullmatch(str(key))}:
+        raise BundleError(f"{context}: unknown frontmatter keys {sorted(map(str, unknown))} (extensions use x-<name>)")
+    extensions = tuple((key, value) for key, value in metadata.items() if key not in FIELDS)
     role = metadata.get("role")
     if not isinstance(role, str) or not SLUG.fullmatch(role):
         raise BundleError(f"{context}: role must be a lowercase slug")
@@ -146,7 +151,7 @@ def read_contract(data: bytes, context: str, asset_id: str | None = None) -> Con
         hosts[name] = HostBlock(status, tuple(settings))
     if not body.strip():
         raise BundleError(f"{context}: subagent contract body (the prompt) is empty")
-    return Contract(role, title.strip(), description.strip(), skill, hosts, body)
+    return Contract(role, title.strip(), description.strip(), skill, hosts, body, extensions)
 
 
 SUBAGENT_DIRS = {"claude-code": ".claude/agents", "codex": ".codex/agents", "antigravity": ".agents/agents"}

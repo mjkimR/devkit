@@ -18,6 +18,8 @@ DEFAULT_WORK_DIR = ".devkit/transient/work"
 DEFAULT_UNIT_PATH = "{slug}"
 DEFAULT_ANCHOR = "task.md"
 DEFAULT_DEFINITIONS_DIR = ".devkit/workflows"
+DEFAULT_ROLES_DIR = ".devkit/roles"
+DEFAULT_CHECKS_DIR = ".devkit/workflow-checks"
 
 POLICIES = ("ask", "auto", "off")
 STAGE_POLICIES = ("on", "off")
@@ -35,6 +37,8 @@ class WorkflowConfig:
     unit_path: str = DEFAULT_UNIT_PATH
     anchor: str = DEFAULT_ANCHOR
     definitions_dir: str = DEFAULT_DEFINITIONS_DIR
+    roles_dir: str = DEFAULT_ROLES_DIR  # project-authored subagent contracts, <role>.md
+    checks_dir: str = DEFAULT_CHECKS_DIR  # project-authored plugin checks, *.py
     default: str | None = None
     approvals: dict[str, str] = field(default_factory=dict)
     stages: dict[str, str] = field(default_factory=dict)
@@ -69,7 +73,17 @@ def parse_workflow_config(data: object, source: Path | None = None) -> WorkflowC
         return WorkflowConfig(source=source)
     if not isinstance(section, dict):
         raise ConfigError(f"config {WORKFLOW_TABLE}: expected a table")
-    allowed = {"work_dir", "unit_path", "anchor", "definitions_dir", "default", APPROVALS_KEY, STAGES_KEY}
+    allowed = {
+        "work_dir",
+        "unit_path",
+        "anchor",
+        "definitions_dir",
+        "roles_dir",
+        "checks_dir",
+        "default",
+        APPROVALS_KEY,
+        STAGES_KEY,
+    }
     unknown = set(section) - allowed
     if unknown:
         raise ConfigError(f"config {WORKFLOW_TABLE}: unknown fields: {sorted(unknown)}")
@@ -84,6 +98,8 @@ def parse_workflow_config(data: object, source: Path | None = None) -> WorkflowC
         raise ConfigError(f"config {WORKFLOW_TABLE}.unit_path: {exc}") from exc
     anchor = _file_name(section.get("anchor", DEFAULT_ANCHOR), "anchor")
     definitions_dir = _relative_dir(section.get("definitions_dir", DEFAULT_DEFINITIONS_DIR), "definitions_dir")
+    roles_dir = _relative_dir(section.get("roles_dir", DEFAULT_ROLES_DIR), "roles_dir")
+    checks_dir = _relative_dir(section.get("checks_dir", DEFAULT_CHECKS_DIR), "checks_dir")
 
     default = section.get("default")
     if default is not None and (not isinstance(default, str) or not default.strip()):
@@ -124,6 +140,8 @@ def parse_workflow_config(data: object, source: Path | None = None) -> WorkflowC
         unit_path=unit_path,
         anchor=anchor,
         definitions_dir=definitions_dir,
+        roles_dir=roles_dir,
+        checks_dir=checks_dir,
         default=default,
         approvals=approvals,
         stages=stages,

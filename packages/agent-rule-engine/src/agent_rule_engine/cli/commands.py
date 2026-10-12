@@ -31,11 +31,47 @@ from agent_rule_engine.workspace.cache import WorkspaceCache
 from agent_rule_engine.workspace.snapshot import Snapshot, SnapshotError, git_snapshot, materialize
 
 
+class EvaluationFailure(click.ClickException):
+    """The run could not evaluate: invalid policy, a bad target, or a snapshot failure (exit code 2)."""
+
+    exit_code = 2
+
+
 def _load_config(root_path: Path) -> RulesConfig:
     try:
         return load_rules_config(root_path)
     except ConfigError as exc:
-        raise click.ClickException(str(exc)) from exc
+        raise EvaluationFailure(str(exc)) from exc
+
+
+def _expand_targets(root_path: Path, cache: WorkspaceCache, targets: tuple[str, ...]) -> list[str]:
+    """Explicit targets as workspace-relative files; a directory expands to the files under it.
+
+    Expansion lists what ``WorkspaceCache.find_files`` lists (regular files,
+    skipping ignored directories). Anything that is not an existing file or
+    directory inside the workspace is an ``INVALID_LINT_TARGET`` failure.
+    """
+    files: list[str] = []
+    for target in targets:
+        path = Path(target)
+        resolved = (path if path.is_absolute() else root_path / path).resolve()
+        try:
+            relative = resolved.relative_to(root_path).as_posix()
+        except ValueError:
+            raise EvaluationFailure(f"INVALID_LINT_TARGET: {target} is outside the workspace {root_path}") from None
+        if resolved.is_dir():
+            for found in cache.find_files(resolved, extensions=None):
+                rel = found.relative_to(root_path).as_posix()
+                if rel not in files:
+                    files.append(rel)
+        elif resolved.is_file():
+            if relative not in files:
+                files.append(relative)
+        else:
+            raise EvaluationFailure(
+                f"INVALID_LINT_TARGET: {target} is not an existing file or directory inside the workspace"
+            )
+    return files
 
 
 def _build_registry(
@@ -95,11 +131,33 @@ def _guide_display(rule: Rule | None, workspace_root: Path) -> str | None:
         return str(path)
 
 
-def _print_violations(result: EvaluationResult, rules_by_id: dict[str, Rule], workspace_root: Path) -> None:
+def _print_rule_counts(violations: list[Violation]) -> None:
+    """One line per rule with its unresolved error, warning and fixed counts (``--summary-only``)."""
+    counts: dict[str, dict[str, int]] = {}
+    for v in violations:
+        entry = counts.setdefault(v.rule_id, {"error": 0, "warning": 0, "fixed": 0})
+        if v.fixed:
+            entry["fixed"] += 1
+        elif v.severity.value in entry:
+            entry[v.severity.value] += 1
+    for rule_id in sorted(counts):
+        entry = counts[rule_id]
+        parts = [f"{entry['error']} error(s)", f"{entry['warning']} warning(s)"]
+        if entry["fixed"]:
+            parts.append(f"{entry['fixed']} fixed")
+        color = "red" if entry["error"] else ("yellow" if entry["warning"] else "green")
+        click.secho(f"{rule_id}: {', '.join(parts)}", fg=color)
+
+
+def _print_violations(
+    result: EvaluationResult, rules_by_id: dict[str, Rule], workspace_root: Path, summary_only: bool = False
+) -> None:
     if not result.violations and not result.errors:
         click.secho("✓ All governance checks passed cleanly.", fg="green", bold=True)
         return
-    for v in result.violations:
+    if summary_only:
+        _print_rule_counts(result.violations)
+    for v in result.violations if not summary_only else ():
         prefix = f"[{v.severity.value.upper()}]"
         color = "green" if v.fixed else ("red" if v.severity.value == "error" else "yellow")
         status_tag = " [FIXED]" if v.fixed else (" [FIXABLE]" if v.fixable else "")
@@ -137,6 +195,7 @@ def _run_rules(
     output_format: str,
     target_files: tuple[str, ...],
     snapshot: Snapshot | None = None,
+    summary_only: bool = False,
 ) -> None:
     root_path = Path(workspace_root).resolve()
     is_json = output_format.lower() == "json"
@@ -155,10 +214,11 @@ def _run_rules(
         root_path, rules_dir, source_root=snapshot.root if snapshot is not None else None
     )
 
+    targets = list(snapshot.changed) if snapshot is not None else _expand_targets(root_path, cache, target_files)
     try:
         ctx = RuleContext(
             workspace_root=root_path,
-            changed_files=list(snapshot.changed) if snapshot is not None else list(target_files),
+            changed_files=targets,
             phase=Phase(phase.lower()),
             fix=fix,
             dry_run=dry_run,
@@ -167,9 +227,10 @@ def _run_rules(
             phase_overrides=dict(config.phase_overrides),
             severity_overrides=dict(config.severity_overrides),
             rule_settings=dict(config.settings),
+            exclude=config.exclude,
         )
     except ValueError as exc:
-        raise click.BadParameter(str(exc), param_hint="files") from exc
+        raise EvaluationFailure(f"INVALID_LINT_TARGET: {exc}") from exc
 
     rules = registry.get_all()
     result = EvaluationResult(errors=list(registry.errors)) if registry.errors else evaluate(ctx, rules)
@@ -180,11 +241,12 @@ def _run_rules(
         click.echo(json.dumps(data, indent=2))
     else:
         _print_transitions(entries, ctx.phase, result.violations)
-        _print_violations(result, {r.id: r for r in rules}, root_path)
+        _print_violations(result, {r.id: r for r in rules}, root_path, summary_only=summary_only)
 
     if result.errors:
         for err in result.errors:
             click.secho(f"Error: {err}", fg="red", err=True)
+        sys.exit(2)
 
     if result.has_errors:
         sys.exit(1)
@@ -199,6 +261,7 @@ def _run_on_snapshot(
     staged: bool,
     ci: bool,
     base: str,
+    summary_only: bool = False,
 ) -> None:
     if staged and ci:
         raise click.UsageError("--staged and --ci are mutually exclusive")
@@ -207,12 +270,12 @@ def _run_on_snapshot(
     try:
         snapshot = git_snapshot(Path(workspace_root), staged=staged, base=base)
     except SnapshotError as exc:
-        raise click.ClickException(f"{exc}; verify the Git repository and the --base ref") from exc
+        raise EvaluationFailure(f"{exc}; verify the Git repository and the --base ref") from exc
     with tempfile.TemporaryDirectory(prefix="agent-rules-snapshot-") as directory:
         try:
             materialize(snapshot, Path(directory))
         except SnapshotError as exc:
-            raise click.ClickException(str(exc)) from exc
+            raise EvaluationFailure(str(exc)) from exc
         _run_rules(
             workspace_root=directory,
             phase=phase,
@@ -222,6 +285,7 @@ def _run_on_snapshot(
             output_format=output_format,
             target_files=(),
             snapshot=snapshot,
+            summary_only=summary_only,
         )
 
 
@@ -258,6 +322,11 @@ _phase_option = click.option(
     default="linter",
     help="Rule phase to execute",
 )
+_summary_option = click.option(
+    "--summary-only",
+    is_flag=True,
+    help="Text output: per-rule counts, status lines and the summary only, no individual findings",
+)
 
 
 @cli.command(name="check")
@@ -265,6 +334,7 @@ _phase_option = click.option(
 @_phase_option
 @_rules_dir_option
 @_format_option
+@_summary_option
 @click.option("--staged", is_flag=True, help="Evaluate the exact staged Git tree instead of the working directory")
 @click.option("--ci", is_flag=True, help="Evaluate the HEAD tree against its merge base with --base")
 @click.option("--base", default="origin/main", show_default=True, help="Comparison base ref for --ci")
@@ -274,14 +344,15 @@ def check_cmd(
     phase: str,
     rules_dir: str | None,
     output_format: str,
+    summary_only: bool,
     staged: bool,
     ci: bool,
     base: str,
     files: tuple[str, ...],
 ) -> None:
-    """Check repository files against rules without modifying files."""
+    """Check repository files or directories against rules without modifying files."""
     if staged or ci:
-        _run_on_snapshot(workspace_root, phase, rules_dir, output_format, files, staged, ci, base)
+        _run_on_snapshot(workspace_root, phase, rules_dir, output_format, files, staged, ci, base, summary_only)
         return
     _run_rules(
         workspace_root=workspace_root,
@@ -291,6 +362,7 @@ def check_cmd(
         rules_dir=rules_dir,
         output_format=output_format,
         target_files=files,
+        summary_only=summary_only,
     )
 
 
@@ -304,6 +376,7 @@ def check_cmd(
     help="Preview fixes without modifying files on disk",
 )
 @_format_option
+@_summary_option
 @click.argument("files", nargs=-1, type=str)
 def fix_cmd(
     workspace_root: str,
@@ -311,9 +384,10 @@ def fix_cmd(
     rules_dir: str | None,
     dry_run: bool,
     output_format: str,
+    summary_only: bool,
     files: tuple[str, ...],
 ) -> None:
-    """Automatically apply safe deterministic repairs to files."""
+    """Automatically apply safe deterministic repairs to files or directories."""
     _run_rules(
         workspace_root=workspace_root,
         phase=phase,
@@ -322,6 +396,7 @@ def fix_cmd(
         rules_dir=rules_dir,
         output_format=output_format,
         target_files=files,
+        summary_only=summary_only,
     )
 
 
@@ -366,7 +441,7 @@ def phases_cmd(workspace_root: str, rules_dir: str | None, output_format: str) -
     for err in errors:
         click.secho(f"Error: {err}", fg="red", err=True)
     if errors:
-        sys.exit(1)
+        sys.exit(2)
 
 
 @cli.command(name="explain")
@@ -386,7 +461,7 @@ def explain_cmd(workspace_root: str, rules_dir: str | None, output_format: str, 
     if errors:
         for err in errors:
             click.secho(f"Error: {err}", fg="red", err=True)
-        sys.exit(1)
+        sys.exit(2)
     assert rule is not None
     resolvers, _ = build_resolvers([rule], {k: v for k, v in config.settings.items() if k == rule.id})
     resolver = resolvers.get(rule.id)

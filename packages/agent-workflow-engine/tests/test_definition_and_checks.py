@@ -62,6 +62,9 @@ def test_registry_declared_checks_must_be_runner_or_human() -> None:
 def test_count_tasks() -> None:
     text = "- [ ] a\n- [x] b\n* [X] c\n  - [ ] nested\n- not a task\n"
     assert count_tasks(text) == (2, 4)
+    # Shared with agent-rule-engine: frontmatter and fenced examples are not tasks.
+    fenced = "---\nstatus: draft\n- [ ] in frontmatter\n---\n```\n- [ ] in a fence\n```\n- [x] real\n"
+    assert count_tasks(fenced) == (1, 1)
 
 
 # --- definitions --------------------------------------------------------------

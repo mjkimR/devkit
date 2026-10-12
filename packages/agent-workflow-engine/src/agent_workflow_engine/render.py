@@ -52,7 +52,8 @@ def render_result(res: Result) -> str:
             )
         lines.append(f"[NEXT_SKILL: {_dash(res.next_skill)}]")
         if res.delegate:
-            lines.append(f"[DELEGATE: role={res.delegate.role} isolation={res.delegate.isolation}]")
+            contract = f" contract={res.delegate.contract}" if res.delegate.contract else ""
+            lines.append(f"[DELEGATE: role={res.delegate.role} isolation={res.delegate.isolation}{contract}]")
         if stage.returns:
             parts = "; ".join(f"{r.to} when={r.when}" for r in stage.returns)
             lines.append(f"[RETURNS: {parts}]")

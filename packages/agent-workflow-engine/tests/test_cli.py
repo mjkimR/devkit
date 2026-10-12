@@ -216,7 +216,8 @@ def test_cli_uses_synchronized_workflow_from_receipt(tmp_path: Path) -> None:
                 "packages": [],
                 "selection": {},
                 "assets": [
-                    {"kind": "workflow", "id": "delivery", "entrypoints": [".devkit/managed/team/flows/delivery.md"]}
+                    {"kind": "workflow", "id": "delivery", "entrypoints": [".devkit/managed/team/flows/delivery.md"]},
+                    {"kind": "subagent", "id": "reviewer", "paths": [".claude/agents/reviewer.md"]},
                 ],
                 "files": {},
             }
@@ -225,6 +226,7 @@ def test_cli_uses_synchronized_workflow_from_receipt(tmp_path: Path) -> None:
     write_config(tmp_path, CONFIG)
     validated = _run("validate", "-w", str(tmp_path))
     assert validated.exit_code == 0 and ".devkit/managed/team/flows/delivery.md id=direct-delivery" in validated.output
+    assert "[NOTE: role check skipped" not in validated.output
     created = _run("new", "-w", str(tmp_path), "login")
     assert created.exit_code == 0, created.output
     nxt = _run("next", "-w", str(tmp_path), "--unit", ".devkit/transient/work/login", "--no-lint")

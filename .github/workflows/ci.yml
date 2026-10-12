@@ -1,0 +1,47 @@
+# Continuous integration for the devkit monorepo.
+#
+# Two jobs: the workspace checks every package (lint, types, tests, governance
+# rules) on Linux and macOS, and the consumer smoke builds the wheels and
+# installs them into a fresh project the way a consumer would. There is no
+# release or publish job yet: no package index exists for these wheels, so
+# consumers install from Git or from a built wheel (see scripts/smoke.sh).
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  workspace:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - uses: extractions/setup-just@v2
+      - run: uv python install 3.12
+      - run: just init
+      - run: just lint-check
+      - run: just check
+      - run: just test
+      - run: just rules-check
+
+  consumer-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - uses: extractions/setup-just@v2
+      - run: uv python install 3.12
+      - run: just smoke

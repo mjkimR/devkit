@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from agent_workflow_engine.plugins import BaseCheck
 
 SKELETON_MARKER = "<!-- devkit:skeleton -->"
 GATE_PREFIX = "gate:"
@@ -15,6 +19,7 @@ class CheckClass(StrEnum):
     LINT = "lint"  # evaluated by running agent-rule-engine
     RUNNER = "runner"  # an external runner; declared, never evaluated here
     HUMAN = "human"  # a person; declared, never evaluated here
+    PLUGIN = "plugin"  # evaluated by a check loaded from a bundle asset or the project's checks_dir
 
 
 DECLARABLE = (CheckClass.RUNNER, CheckClass.HUMAN)
@@ -35,6 +40,24 @@ class Check:
             "description": self.description,
             "params": list(self.params),
             "alias": self.alias,
+        }
+
+
+@dataclass(frozen=True)
+class CheckResult:
+    name: str
+    class_: CheckClass
+    satisfied: bool
+    evaluated: bool
+    detail: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "name": self.name,
+            "class": self.class_.value,
+            "satisfied": self.satisfied,
+            "evaluated": self.evaluated,
+            "detail": self.detail,
         }
 
 
@@ -151,20 +174,26 @@ def parse_check(text: str) -> Invocation:
 
 @dataclass
 class Registry:
-    """Built-in checks plus anchor aliases plus a workflow's declared runner/human checks."""
+    """Built-in checks, anchor aliases, loaded plugin checks and a workflow's declared runner/human checks."""
 
     checks: dict[str, Check] = field(default_factory=dict)
+    plugins: dict[str, BaseCheck] = field(default_factory=dict)
 
     @classmethod
-    def build(cls, anchor: str, declared: tuple[Check, ...] = ()) -> Registry:
+    def build(cls, anchor: str, declared: tuple[Check, ...] = (), plugins: Iterable[BaseCheck] = ()) -> Registry:
         reg = cls()
         for c in PRIMITIVES + anchor_aliases(anchor):
             reg.checks[c.name] = c
+        for plugin in plugins:
+            if plugin.name in reg.checks:
+                raise CheckError(f"plugin check {plugin.name!r} collides with a built-in check")
+            reg.checks[plugin.name] = plugin.to_check()
+            reg.plugins[plugin.name] = plugin
         for c in declared:
             if c.class_ not in DECLARABLE:
                 raise CheckError(f"declared check {c.name!r} must be runner or human")
             if c.name in reg.checks:
-                raise CheckError(f"declared check {c.name!r} collides with a built-in check")
+                raise CheckError(f"declared check {c.name!r} collides with a built-in or plugin check")
             reg.checks[c.name] = c
         return reg
 
@@ -195,18 +224,8 @@ class Registry:
         return self.resolve(parse_check(text))
 
 
-def count_tasks(text: str) -> tuple[int, int]:
-    """Return (checked, total) Markdown task checkboxes."""
-    checked = total = 0
-    for line in text.splitlines():
-        stripped = line.lstrip()
-        if stripped[:2] in {"- ", "* ", "+ "}:
-            rest = stripped[2:]
-        else:
-            continue
-        if rest.startswith("[ ] "):
-            total += 1
-        elif rest[:4].lower() == "[x] ":
-            total += 1
-            checked += 1
-    return checked, total
+# The checklist counter is shared with agent-rule-engine so a rule about task
+# completion and the ``tasks-checked`` check never disagree on what a task is.
+from agent_rule_engine import count_tasks  # noqa: E402
+
+__all__ = ["count_tasks"]

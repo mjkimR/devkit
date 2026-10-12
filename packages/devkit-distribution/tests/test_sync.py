@@ -111,8 +111,16 @@ def test_user_edit_blocks_all_writes(installed: list[InstalledBundle], target: P
     guide = target / ".devkit/managed/team/guide.md"
     guide.write_text("user edit")
     receipt = (target / RECEIPT).read_bytes()
+    if removal:
+        # No longer desired: the edited file becomes an orphan, everything else proceeds.
+        result = sync_project(target, [], deselect=["team"])
+        assert result["orphans"] == [".devkit/managed/team/guide.md"]
+        assert any("left modified file in place" in text for text in result["notices"])
+        assert guide.read_text() == "user edit"
+        assert ".devkit/managed/team/guide.md" not in json.loads((target / RECEIPT).read_text())["files"]
+        return
     with pytest.raises(BundleError, match="user-modified"):
-        sync_project(target, [] if removal else installed, deselect=["team"] if removal else ())
+        sync_project(target, installed)
     assert guide.read_text() == "user edit"
     assert (target / RECEIPT).read_bytes() == receipt
 
@@ -377,7 +385,9 @@ anything = true
     sync_project(bare, installed)
     receipt = json.loads((bare / RECEIPT).read_text())
     assert receipt["selection"]["presets"] == {"team": ["minimal"]}
-    assert "tool" not in receipt
+    # The receipt's ``tool`` is the distributor's identity, never the config's [tool.*] tables.
+    assert receipt["tool"]["package"] == "devkit-distribution"
+    assert "specrig" not in json.dumps(receipt)
 
 
 def test_sync_accepts_playbooks_config(installed: list[InstalledBundle], bare: Path) -> None:
@@ -461,6 +471,30 @@ enabled = true
         receipt["assets"]
     )
     assert (bare / ".devkit/managed/gates/gates/block.py").is_file()
+
+
+def test_sync_records_workflow_check_assets_like_rules(tmp_path: Path, bare: Path) -> None:
+    root = tmp_path / "checks-source"
+    (root / "checks").mkdir(parents=True)
+    (root / "checks/materials.py").write_text("raise RuntimeError('must not run at sync')\n")
+    (root / "bundle.toml").write_text("""schema = 1
+name = "sdd"
+version = "0.1.0"
+[[assets]]
+id = "materials-present"
+kind = "workflow-check"
+source = "checks/materials.py"
+""")
+    write_config(bare, 'schema = 1\n[presets]\nsdd = "all"\n')
+    sync_project(bare, [InstalledBundle("sdd-content", "0.1.0", load_bundle(root))])
+    receipt = json.loads((bare / RECEIPT).read_text())
+    assert {
+        "bundle": "sdd",
+        "id": "materials-present",
+        "kind": "workflow-check",
+        "paths": [".devkit/managed/sdd/checks/materials.py"],
+    } in receipt["assets"]
+    assert (bare / ".devkit/managed/sdd/checks/materials.py").is_file()
 
 
 def test_receipt_cannot_own_config(installed: list[InstalledBundle], target: Path) -> None:

@@ -16,7 +16,10 @@ src/agent_workflow_engine/
 ├── layout.py        # Work unit layout: unit_path template, discovery, per-definition layout spec
 ├── frontmatter.py   # Frontmatter read/update preserving other bytes
 ├── definition.py    # Workflow document parsing, validation, schema hash
-├── checks.py        # Check registry: syntax, classes, primitives, aliases
+├── checks.py        # Check registry: syntax, classes, primitives, aliases, plugin registration
+├── plugins.py       # Plugin checks loaded from receipt workflow-check assets and checks_dir
+├── roles.py         # Subagent role vocabulary from receipt subagent assets and roles_dir
+├── receipt.py       # Read-only access to .devkit/installation.json
 ├── envelope.py      # envelopes/<kind>-NN.yaml loading, review state and authoring
 ├── evaluate.py      # Stage evaluation, gates, --given, delegate, waiting
 ├── binding.py       # workflow / workflow_hash / workflow_history in the anchor file
@@ -31,8 +34,8 @@ src/agent_workflow_engine/
 From this monorepo, run `just init`, then:
 
 ```bash
-just workflow checks                                  # registered checks
-just workflow validate                                # definitions under definitions_dir
+just workflow checks                                  # registered checks, plugin checks included
+just workflow validate                                # definitions under definitions_dir, roles, shared stages
 just workflow new login-flow                          # create and bind a unit
 just workflow next --unit .devkit/transient/work/login-flow
 just workflow next --unit <dir> --given integration   # assert a gate after the user's OK
@@ -41,7 +44,9 @@ just workflow requests --unit <dir>                   # open human requests (app
 just workflow answer --unit <dir> --request gate:integration --action accept
 just workflow handoff --unit <dir>                    # continue a completed unit with the recorded or auto choice
 just workflow show direct-delivery
+just workflow show --unit <dir>                       # the unit's bound workflow plus its binding and drift
 just workflow list                                    # units across every layout in use
+just workflow list --exclude-status completed         # active units; --status <value> keeps exact matches
 just workflow envelope new --unit <dir> --kind review # needs_input skeleton to fill in
 just workflow envelope new --unit <dir> --kind review --summary "..." --findings-file findings.yaml --check tests="PASS 3/3"
 just workflow envelope new --unit <dir> --kind reverify --from latest --resolve 1 --waive "2=accepted cost"
@@ -59,7 +64,8 @@ Exit codes: `0` success, `1` any error. Errors are Agent Advisory Protocol
 blocks on stderr (`agent-advisory`) with a stable code such as
 `WORKFLOW_DRIFT`, `UNIT_NOT_FOUND` or `CONFIG_INVALID` and an `[ACTION]`
 directive; `--format json` also emits them on stdout. `next` exits `0` whether
-or not the unit is complete.
+or not the unit is complete. `validate` and `show` exit `1` when a definition
+has problems, which is a result rather than an advisory.
 
 ## Configuration
 
@@ -71,6 +77,8 @@ work_dir = ".devkit/transient/work"   # root of work units
 unit_path = "{slug}"                  # str.format template; {slug} and {date:%Y%m%d} only
 anchor = "task.md"                    # file that identifies a unit and carries the binding
 definitions_dir = ".devkit/workflows" # workflow definition files
+roles_dir = ".devkit/roles"           # project-authored subagent contracts, <role>.md
+checks_dir = ".devkit/workflow-checks" # project-authored plugin checks, *.py
 default = "direct-delivery"           # used by `new` and by unbound units
 
 [workflow.approvals]
@@ -113,6 +121,52 @@ Definitions are discovered from the project's `definitions_dir` and from every
 with the same id. Bundles that ship a workflow also get the generated
 `devkit-workflow` entry skill, so an agent knows to run `next`.
 
+`validate` with no arguments checks every discovered definition and, across
+them, that a stage id used by several definitions is the same stage: equal
+`exit`, `human_gate`, `role`, `isolation`, `skills` and `artifacts`. A
+difference is reported as `[INVALID: shared stage '<id>' differs between <a>
+and <b>: <field>]`, because skills, runners and people recognize a stage by
+its id.
+
+## Roles and plugin checks
+
+A stage `role` other than `developer` or `-` must name a subagent the project
+has: a `kind = "subagent"` asset recorded in the receipt (its asset id, plus
+the `role` its contract declares), or a project-authored `<roles_dir>/<role>.md`,
+which shadows the receipt entry. `validate`, `show`, `next` and `bind` report
+`unknown role '<role>' (no subagent contract found)` otherwise. When neither
+the receipt nor `roles_dir` exists, the check is skipped and `validate` says so
+with a `[NOTE]`, so definitions can be authored before any bundle is synced.
+`[DELEGATE: role=<role> isolation=<level> contract=<path>]` then cites the
+contract that defines the role.
+
+Checks are extensible. A Python file under `checks_dir`, or recorded in the
+receipt under a `kind = "workflow-check"` asset, defines `BaseCheck` subclasses:
+
+```python
+from agent_workflow_engine import BaseCheck, CheckContext, CheckResult
+
+
+class MaterialsPresent(BaseCheck):
+    name = "materials-present"
+    description = "the unit has at least one file under materials/"
+    params = ()
+
+    def evaluate(self, ctx: CheckContext) -> CheckResult:
+        found = any((ctx.unit_dir / "materials").glob("*"))
+        return ctx.passed() if found else ctx.failed("materials/ is empty or missing")
+```
+
+Loaded checks appear in `agent-workflow checks` with class `plugin` and are
+referenced from definitions like primitives (`name` or `name(arg ...)` with the
+declared `params`). A name that collides with a built-in is an error; a file
+that fails to load, or a receipt path missing from disk, is `CHECK_LOAD_FAILED`
+rather than a silent skip. A check that raises is an unsatisfied, evaluated
+result with the exception in its detail. Plugin files are executable Python
+and must come from a trusted source. The `workflow-check` manifest kind on the
+`devkit-distribution` side is a follow-up; the engine already reads it from the
+receipt when present.
+
 A definition declares `id`, `schema_version: 1`, optional `checks` (runner or
 human checks it introduces), ordered `stages`, each with `exit` checks,
 `skills`, `role`, `isolation`, `human_gate` and `returns`, an optional
@@ -143,9 +197,11 @@ Only `TemplateLayout` exists; a plugin layout fits behind the `Layout`
 protocol but is not loaded from a directory yet. A handoff to a workflow
 whose anchor differs from the unit's is refused (`HANDOFF_LAYOUT_MISMATCH`);
 moving a unit between layouts is the caller's job, followed by `bind`.
-Subagent delegation names a role and isolation level only; the host
-projection of that role belongs to `devkit-distribution`. `entry` checks are
-reported, not evaluated.
+Subagent delegation names a role, its isolation level and the contract path;
+the host projection of that role belongs to `devkit-distribution`. `entry`
+checks are reported, not evaluated. `devkit sync` does not yet declare a
+`workflow-check` asset kind, so synchronized plugin checks need that
+follow-up; project checks under `checks_dir` work today.
 
 ## Architectural Specifications & Deep-Dives
 

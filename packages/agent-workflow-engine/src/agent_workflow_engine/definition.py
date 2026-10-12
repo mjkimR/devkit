@@ -5,14 +5,19 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from agent_workflow_engine import frontmatter
 from agent_workflow_engine.checks import DECLARABLE, Check, CheckClass, CheckError, Registry
 from agent_workflow_engine.layout import LayoutSpec, parse_layout_spec
+from agent_workflow_engine.receipt import asset_paths, receipt_assets
+from agent_workflow_engine.roles import is_builtin_role
+
+if TYPE_CHECKING:
+    from agent_workflow_engine.plugins import BaseCheck
 
 SCHEMA_VERSION = 1
 WORKFLOW_ID = re.compile(r"^[a-z][a-z0-9-]*$")
@@ -284,25 +289,38 @@ def load(path: Path) -> WorkflowDocument:
 HANDOFF_GATE = "handoff"
 
 
-def validate(doc: WorkflowDocument, anchor: str, known_ids: Iterable[str] | None = None) -> list[Problem]:
+def validate(
+    doc: WorkflowDocument,
+    anchor: str,
+    known_ids: Iterable[str] | None = None,
+    roles: Mapping[str, str] | None = None,
+    plugins: Iterable[BaseCheck] = (),
+) -> list[Problem]:
     """Every problem in the document; an empty list means it is usable.
 
     ``anchor`` is the project default; a definition that declares its own
     anchor is validated against that one. ``known_ids`` are the workflow ids
     that exist in the workspace; when given, a ``next`` candidate naming
-    another id is reported.
+    another id is reported. ``roles`` is the project's subagent vocabulary
+    (``role -> contract path``); when given, a stage role outside it is
+    reported, and ``None`` skips that check. ``plugins`` are the loaded plugin
+    checks that definitions may reference.
     """
     problems: list[Problem] = []
     anchor = doc.anchor(anchor)
+    plugins = tuple(plugins)
     if not WORKFLOW_ID.match(doc.id):
         problems.append(Problem("", "id", f"{doc.id!r} must match [a-z][a-z0-9-]*"))
     if doc.schema_version != SCHEMA_VERSION:
         problems.append(Problem("", "schema_version", f"unsupported schema_version {doc.schema_version} (expected 1)"))
     try:
-        registry = Registry.build(anchor, doc.declared_checks)
+        registry = Registry.build(anchor, doc.declared_checks, plugins)
     except CheckError as exc:
         problems.append(Problem("", "checks", str(exc)))
-        registry = Registry.build(anchor)
+        try:
+            registry = Registry.build(anchor, (), plugins)
+        except CheckError:
+            registry = Registry.build(anchor)
 
     ids = [s.id for s in doc.stages]
     seen: set[str] = set()
@@ -317,6 +335,8 @@ def validate(doc: WorkflowDocument, anchor: str, known_ids: Iterable[str] | None
             problems.append(Problem(s.id, key, "unknown stage key"))
         if s.isolation not in ISOLATIONS:
             problems.append(Problem(s.id, "isolation", f"{s.isolation!r} not in {'|'.join(ISOLATIONS)}"))
+        if roles is not None and not is_builtin_role(s.role) and s.role not in roles:
+            problems.append(Problem(s.id, "role", f"unknown role {s.role!r} (no subagent contract found)"))
         if s.gate == HANDOFF_GATE:
             problems.append(Problem(s.id, "human_gate", f"{HANDOFF_GATE!r} is reserved for workflow handoff"))
         for fld in ("entry", "exit"):
@@ -353,7 +373,31 @@ def validate(doc: WorkflowDocument, anchor: str, known_ids: Iterable[str] | None
     return problems
 
 
-RECEIPT_PATH = ".devkit/installation.json"
+SHARED_STAGE_FIELDS = ("exit", "gate", "role", "isolation", "skills", "artifacts")
+
+
+def shared_stage_problems(docs: Iterable[WorkflowDocument]) -> list[str]:
+    """Stages that share an id across definitions but are not the same stage.
+
+    A stage id is shared vocabulary: skills, runners and people recognize it by
+    name. Two definitions that give the same id different ``exit`` checks,
+    gate, role, isolation, skills or artifacts are reported once per field,
+    each against the first definition that declared the id.
+    """
+    first: dict[str, tuple[WorkflowDocument, Stage]] = {}
+    problems: list[str] = []
+    for doc in docs:
+        for stage in doc.stages:
+            if stage.id not in first:
+                first[stage.id] = (doc, stage)
+                continue
+            base_doc, base = first[stage.id]
+            if base_doc.id == doc.id:
+                continue
+            for fld in SHARED_STAGE_FIELDS:
+                if getattr(base, fld) != getattr(stage, fld):
+                    problems.append(f"shared stage {stage.id!r} differs between {base_doc.id} and {doc.id}: {fld}")
+    return problems
 
 
 def _load_paths(paths: Iterable[Path]) -> tuple[list[WorkflowDocument], list[str]]:
@@ -376,21 +420,12 @@ def load_all(definitions_dir: Path) -> tuple[list[WorkflowDocument], list[str]]:
 
 def managed_definition_paths(workspace_root: Path) -> list[Path]:
     """Workflow assets recorded in the devkit installation receipt, if any."""
-    receipt = workspace_root / RECEIPT_PATH
-    if not receipt.is_file():
-        return []
-    try:
-        data = json.loads(receipt.read_text("utf-8"))
-    except (OSError, UnicodeError, ValueError):
-        return []
-    assets = data.get("assets") if isinstance(data, dict) else None
     paths: list[Path] = []
-    for asset in assets or []:
-        if not isinstance(asset, dict) or asset.get("kind") != "workflow":
-            continue
-        for rel in asset.get("entrypoints") or asset.get("paths") or []:
-            if isinstance(rel, str) and rel.endswith(".md"):
-                paths.append(workspace_root / rel)
+    for asset in receipt_assets(workspace_root, "workflow"):
+        rels = asset_paths(asset, ".md")
+        # ``entrypoints`` name the definition files; fall back to every .md path.
+        chosen = [r for r in asset.get("entrypoints") or [] if isinstance(r, str) and r.endswith(".md")] or rels
+        paths.extend(workspace_root / rel for rel in chosen)
     return sorted(set(paths))
 
 

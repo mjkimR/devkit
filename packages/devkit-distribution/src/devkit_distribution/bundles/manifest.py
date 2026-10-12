@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-KINDS = {"skill", "subagent", "instruction", "playbook", "rule", "workflow", "gate", "document"}
+KINDS = {"skill", "subagent", "instruction", "playbook", "rule", "workflow", "workflow-check", "gate", "document"}
 # Workspace roots a seeded target may never enter: devkit's own state, Git, agent projections
 # and the root guidance file are owned by devkit, the host or the project in other ways.
 SEED_FORBIDDEN_ROOTS = {".devkit", ".git", ".agents", ".claude", ".codex"}

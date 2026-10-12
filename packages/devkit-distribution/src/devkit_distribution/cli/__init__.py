@@ -19,6 +19,7 @@ from devkit_distribution.installation.overrides import (
     remove_override,
 )
 from devkit_distribution.installation.playbook_search import search_playbooks
+from devkit_distribution.installation.status import project_status
 from devkit_distribution.installation.sync import read_receipt, recover_project, sync_project
 
 
@@ -162,6 +163,10 @@ def _report(result: dict[str, object]) -> None:
             f"NOTICE: installed bundles not selected: {names}. Select with 'devkit add <bundle>[:<preset>]'.",
             err=True,
         )
+    notices = result.get("notices")
+    if isinstance(notices, list):
+        for text in notices:
+            click.echo(f"NOTICE: {text}", err=True)
 
 
 @cli.command()
@@ -272,6 +277,18 @@ def list_resources(target: Path) -> None:
                 "seeded": receipt.get("seeded", []),
                 "overrides": receipt.get("overrides", {}),
             }
+    except (BundleError, OSError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(json.dumps(result, indent=2))
+
+
+@cli.command()
+@click.option("--target", default=".", type=click.Path(exists=True, file_okay=False, path_type=Path))
+def status(target: Path) -> None:
+    """Report the installed state against the receipt without writing anything."""
+    try:
+        with discover_bundles() as installed:
+            result = project_status(target, installed)
     except (BundleError, OSError) as exc:
         raise click.ClickException(str(exc)) from exc
     click.echo(json.dumps(result, indent=2))

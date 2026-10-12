@@ -1,12 +1,18 @@
 from __future__ import annotations
 
+import re
 import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import yaml
 
 from .manifest import BundleError
+
+FIELDS = {"name", "description", "aliases"}
+# Extension keys: kept for other tools, never indexed by search nor shown by devkit.
+EXTENSION_KEY = re.compile(r"x-[a-z][a-z0-9-]*\Z")
 
 
 @dataclass(frozen=True)
@@ -14,6 +20,7 @@ class PlaybookHeader:
     name: str
     description: str
     aliases: tuple[str, ...]
+    extensions: tuple[tuple[str, Any], ...] = ()
 
 
 def require_english_text(value: str, context: str) -> None:
@@ -55,8 +62,10 @@ def read_playbook_header(data: bytes, context: str) -> PlaybookHeader:
         metadata = yaml.safe_load(header)
     except yaml.YAMLError as exc:
         raise BundleError(f"{context}: invalid YAML frontmatter") from exc
-    if not isinstance(metadata, dict) or set(metadata) - {"name", "description", "aliases"}:
-        raise BundleError(f"{context}: supported frontmatter fields are name, description, aliases")
+    if not isinstance(metadata, dict) or any(
+        key not in FIELDS and not EXTENSION_KEY.fullmatch(str(key)) for key in metadata
+    ):
+        raise BundleError(f"{context}: supported frontmatter fields are name, description, aliases and x-<name>")
     for field in ("name", "description"):
         value = metadata.get(field)
         if not isinstance(value, str) or not value.strip():
@@ -67,4 +76,5 @@ def read_playbook_header(data: bytes, context: str) -> PlaybookHeader:
         raise BundleError(f"{context}: aliases must be an array of nonempty strings")
     for alias in aliases:
         require_english_text(alias, f"{context}.aliases")
-    return PlaybookHeader(metadata["name"].strip(), metadata["description"].strip(), tuple(aliases))
+    extensions = tuple((key, value) for key, value in metadata.items() if key not in FIELDS)
+    return PlaybookHeader(metadata["name"].strip(), metadata["description"].strip(), tuple(aliases), extensions)

@@ -96,11 +96,15 @@ Prose for humans and agents. Not parsed.
 | `exit` | list of checks | The stage is done when every exit check is satisfied. |
 | `artifacts` | list of strings | Files or things the stage produces. Informational. |
 | `skills` | list of strings | Skills that perform this stage; the first is `[NEXT_SKILL]`. |
-| `role` | string | `developer`, `-`, or a subagent role name. |
+| `role` | string | `developer`, `-`, or a subagent role name. A role name must exist in the project's role vocabulary when one is known: receipt `subagent` assets or `[workflow] roles_dir`; see [Overview, section 6](overview.md#6-integration-with-the-rule-engine-and-distribution). |
 | `isolation` | string | `none`, `preferred`, `required`. A non-developer role with isolation other than `none` yields `[DELEGATE]`. |
 | `returns` | list of `{to, when}` | Stages this stage may return to and why. `to` must name a stage in the same document. |
 
-Unknown stage keys, malformed or duplicate ids, unregistered checks, malformed check invocations, unknown `returns.to` targets and invalid `isolation` values are validation errors. `agent-workflow validate` reports every problem with the stage id and field. A malformed `layout` mapping is a structural error reported with the file.
+Unknown stage keys, malformed or duplicate ids, unregistered checks, malformed check invocations, unknown `returns.to` targets, invalid `isolation` values and unknown roles (`unknown role '<role>' (no subagent contract found)`) are validation errors. `agent-workflow validate` reports every problem with the stage id and field. A malformed `layout` mapping is a structural error reported with the file.
+
+### Shared Stages
+
+A stage id is shared vocabulary across definitions: `[workflow.stages]` turns it off by id everywhere, and skills, runners and people recognize it by name. `agent-workflow validate` with no arguments therefore also compares every stage id that appears in more than one discovered definition and reports `shared stage '<id>' differs between <a> and <b>: <field>` for each of `exit`, `gate`, `role`, `isolation`, `skills` and `artifacts` that differ, against the first definition (in discovery order) that declared the id. This is a validation problem with exit code `1`. Validating explicit paths does not run the comparison.
 
 ### Handoff Candidates
 
@@ -141,6 +145,7 @@ A check reference is `name` or `name(arg1 arg2 ...)`. Arguments are whitespace-s
 | `lint` | the engine, by running `agent-rule-engine` | no violation in the unit's files |
 | `runner` | an external runner (CI); declared only | named in `--given` |
 | `human` | a person; declared only | named in `--given` |
+| `plugin` | the engine, by calling a loaded plugin check | the plugin's `evaluate` returns a satisfied result |
 
 ### Primitives
 
@@ -148,7 +153,7 @@ A check reference is `name` or `name(arg1 arg2 ...)`. Arguments are whitespace-s
 | --- | --- | --- |
 | `file-exists` | `file` | the file exists in the unit directory |
 | `frontmatter` | `file field value` | the file's top-level frontmatter field equals the value |
-| `tasks-checked` | `file` | the file has at least one `- [ ]`/`- [x]` task and none unchecked |
+| `tasks-checked` | `file` | the file has at least one `- [ ]`/`- [x]` task and none unchecked; items inside YAML frontmatter or fenced code are not tasks (the counter is `agent_rule_engine.count_tasks`, shared with rules) |
 | `not-skeleton` | `file` | the file is missing or has no line equal to `<!-- devkit:skeleton -->` |
 | `envelope-completed` | `kind` | the deciding `envelopes/<kind>-NN.yaml` has `status: completed` and no open finding |
 | `envelope-check-pass` | `kind key` | the deciding envelope is completed and `checks.<key>` starts with `PASS` |
@@ -168,6 +173,30 @@ Aliases are resolved against the anchor name in force for the workflow (its own 
 | `tasks-exists` | `file-exists(tasks.md)` |
 | `tasks-all-checked` | `tasks-checked(tasks.md)` |
 | `envelope-review-passed` | `envelope-completed(review)` |
+
+### Plugin Checks
+
+Checks beyond the primitives come from Python files, loaded in this order: every `.py` path recorded in the installation receipt under a `kind = "workflow-check"` asset, then every `*.py` under `[workflow] checks_dir` (default `.devkit/workflow-checks`). A file defines one or more `BaseCheck` subclasses:
+
+```python
+from agent_workflow_engine import BaseCheck, CheckContext, CheckResult
+
+
+class HasWord(BaseCheck):
+    name = "has-word"                       # [a-z][a-z0-9-]*; must not collide with a built-in or alias
+    description = "the file contains the word"
+    params = ("file", "word")               # positional argument names, as `checks` prints them
+
+    def evaluate(self, ctx: CheckContext) -> CheckResult:
+        text = ctx.read(ctx.args[0])        # text of a file in the unit directory, or None
+        if text is None:
+            return ctx.failed(f"{ctx.args[0]} missing")
+        return ctx.passed() if ctx.args[1] in text else ctx.failed("word not found")
+```
+
+`CheckContext` carries `workspace_root`, `unit_dir`, `anchor`, the reference as written (`ref`), `name`, `args` and the unit's loaded `envelopes`; `ctx.passed(detail)` and `ctx.failed(detail)` build results with the right name and class. A loaded check is listed by `agent-workflow checks` with class `plugin`, resolved by `validate` like a primitive (argument count must match `params`), and evaluated by `next`. A check that raises yields an unsatisfied, evaluated result whose detail starts with `check failed:`; a result the plugin builds with another name or class is normalized. Files whose name starts with `_` or `.` are skipped. A file that fails to import, a check with an invalid `name` or `params`, a name defined twice, or a receipt path that is missing from disk is `CHECK_LOAD_FAILED` (`MAINTENANCE`), never a silent skip. A definition's declared `runner`/`human` check may not reuse a plugin's name.
+
+A bundle declares such files as `kind = "workflow-check"` assets in `bundle.toml`; `devkit sync` deploys them under `.devkit/managed/<bundle>/` and records their paths in the receipt, exactly as for `kind = "rule"`.
 
 ### Implicit Gate Check
 
@@ -264,7 +293,7 @@ On `next`:
 [UNMET: envelope-review-passed]
 [CHECK: envelope-review-passed class=disk evaluated=true detail="no review envelope"]
 [NEXT_SKILL: wf-review]
-[DELEGATE: role=reviewer isolation=preferred]
+[DELEGATE: role=reviewer isolation=preferred contract=.devkit/managed/team/subagents/reviewer.md]
 [RETURNS: build-verify when=defects]
 [GATE: integration policy=ask given=no]
 [WAITING: human gate:integration]
@@ -275,6 +304,7 @@ On `next`:
 - `[SKIPPED: <id> reason=...]` names the policy entry that skipped the stage: `stages.<id>=off` or `approvals.<gate>=off`.
 - `[WAITING]` appears when the current stage is gated, or when every unmet check is `runner` or `human`. Its class is `human` when any unmet check is human.
 - `[GATE]` appears only for a gated current stage.
+- `[DELEGATE]` carries `contract=<path>` when the role is in the project's vocabulary (receipt `subagent` asset or `roles_dir` file); otherwise the key is absent.
 
 When the workflow is complete and declares `next` candidates (and `approvals.handoff` is not `off`), the handoff block follows:
 
@@ -307,7 +337,7 @@ Whenever a person must act, one `[REQUEST: ...]` line per open request follows t
   "stage": {"id": "review", "name": "Review loop", "human_gate": null, "role": "reviewer", "isolation": "preferred", "skills": ["wf-review"], "entry": [], "exit": [], "artifacts": [], "returns": []},
   "unmet": [{"name": "envelope-review-passed", "class": "disk", "satisfied": false, "evaluated": true, "detail": "no review envelope"}],
   "next_skill": "wf-review",
-  "delegate": {"role": "reviewer", "isolation": "preferred"},
+  "delegate": {"role": "reviewer", "isolation": "preferred", "contract": ".devkit/managed/team/subagents/reviewer.md"},
   "gate": null,
   "waiting": null,
   "complete": false,
@@ -321,4 +351,4 @@ Whenever a person must act, one `[REQUEST: ...]` line per open request follows t
 
 `handoff` is `null` until the workflow is complete; then it is `{"policy", "candidates": [{"workflow", "recommended", "eligible", "checks": [...]}], "eligible": [...], "recommended": [...], "chosen"}`.
 
-`show --format json` emits the parsed document plus `hash`, `layout`, the effective `anchor`, `approvals` and `stages_off`. `checks --format json` emits the registry. `list --format json` emits `[{"unit", "anchor", "status", "workflow", "workflow_hash", "history"}]` across every layout in use; the text form is `[UNIT: <dir> status=S workflow=W anchor=A]`. `handoff --format json` emits `{"unit", "from", "to", "workflow_hash", "policy", "history"}`. `requests --format json` emits the `requests` array alone; `answer --format json` emits the written record with its `file`.
+`show --format json` emits the parsed document plus `hash`, `layout`, the effective `anchor`, `approvals` and `stages_off`; `show --unit <dir>` adds `binding` (`workflow`, `workflow_hash`, `workflow_history`, `drift`) and, in text, a `[BINDING: workflow=W hash=H drift=true|false]` line after the document. `checks --format json` emits the registry, plugin checks included. `list --format json` emits `[{"unit", "anchor", "status", "workflow", "workflow_hash", "history"}]` across every layout in use; the text form is `[UNIT: <dir> status=S workflow=W anchor=A]`. `list --status <value>` keeps units whose anchor `status` equals a given value (repeatable) and `--exclude-status <value>` drops them; both are exact matches, so active units are `--exclude-status completed`. `handoff --format json` emits `{"unit", "from", "to", "workflow_hash", "policy", "history"}`. `requests --format json` emits the `requests` array alone; `answer --format json` emits the written record with its `file`.

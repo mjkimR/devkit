@@ -108,13 +108,14 @@ class Autofixable(Rule, Protocol):
 
 Rules inspect files using `ctx.cache` rather than direct disk I/O to maximize performance:
 
-- `ctx.is_file_targeted(path)`: Returns `True` if the file is included in the current run targets.
+- `ctx.is_file_targeted(path)`: Returns `True` if the file is included in the current run targets. It is `False` for any path matched by the project's `[rules] exclude` patterns, even in a whole-workspace run, so a rule that scans with `find_files` must call it before reporting. `ctx.changed_files` already has excluded paths removed; `ctx.has_targets` says whether the run named explicit targets at all.
 - `ctx.cache.list_files(pattern)`: Scans repository files matching a glob pattern (cached).
 - `ctx.cache.get_text(path)`: Returns the string content of a relative file path.
 - `ctx.cache.get_lines(path)`: Returns lines of text with newline characters preserved.
 - `ctx.cache.get_frontmatter(path)`: Parses and caches YAML frontmatter dictionaries.
 - `ctx.cache.get_markdown_links(path)`: Extracts and returns parsed Markdown relative links.
 - `ctx.cache.get_catalog(root)`: Returns the `DocumentCatalog`: every Markdown path, a basename index for link repair, and the frontmatter `id`, `title` and `status` of each file recorded verbatim (with duplicate `id`s listed). It applies no identifier grammar and extracts no references; a rule that needs those parses the body itself.
+- `agent_rule_engine.count_tasks(text)`: Returns `(checked, total)` Markdown checklist items, ignoring YAML frontmatter and fenced code. `agent-workflow-engine` uses the same function for its `tasks-checked` check, so a rule about task completion and a workflow gate never disagree.
 
 ---
 

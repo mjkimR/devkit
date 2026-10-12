@@ -32,7 +32,21 @@ SCHEMA = 1
 # (gate settings); all are only passed through here. ``[tool.<name>]`` tables belong
 # to whichever tool ``<name>`` is and are passed through unread, like ``[tool.*]`` in
 # ``pyproject.toml``; every other top-level key is rejected so typos are caught.
-FIELDS = frozenset({"schema", "agents", "presets", "playbooks", "rules", "workflow", "gates", "guidance_block", "tool"})
+FIELDS = frozenset(
+    {
+        "schema",
+        "agents",
+        "presets",
+        "playbooks",
+        "rules",
+        "workflow",
+        "gates",
+        "guidance_block",
+        "override_drift",
+        "tool",
+    }
+)
+OVERRIDE_DRIFT = ("warn", "block")
 TOOL_NAME = re.compile(r"[a-z][a-z0-9_-]*\Z")
 
 
@@ -46,6 +60,8 @@ class ProjectConfig:
     presets: dict[str, list[str]] = field(default_factory=dict)
     # ``guidance_block = false`` stops ``devkit sync`` from managing the block in root AGENTS.md.
     guidance_block: bool = True
+    # ``override_drift = "block"`` makes upstream drift behind an override abort the sync.
+    override_drift: str = "warn"
 
 
 def _load(root: Path) -> dict[str, Any] | None:
@@ -143,10 +159,14 @@ def read_config(root: Path) -> ProjectConfig:
     guidance_block = data.get("guidance_block", True)
     if type(guidance_block) is not bool:
         raise BundleError("config: guidance_block must be a boolean")
+    override_drift = data.get("override_drift", "warn")
+    if override_drift not in OVERRIDE_DRIFT:
+        raise BundleError(f"config: override_drift must be one of {list(OVERRIDE_DRIFT)}")
     return ProjectConfig(
         agents=_agents(data["agents"]) if "agents" in data else all_agents(),
         presets=parse_presets(data.get("presets", {})),
         guidance_block=guidance_block,
+        override_drift=override_drift,
     )
 
 

@@ -149,7 +149,11 @@ def test_generated_skill_collision_and_user_edits_are_protected(tmp_path: Path, 
     sync_project(target, installed, agents=["codex"])
     skill.write_text("user edit")
     with pytest.raises(BundleError, match="user-modified"):
-        sync_project(target, [], deselect=["team"])
+        sync_project(target, installed, agents=["codex"])
+    # Deselecting leaves the edited generated file behind as an orphan instead of aborting.
+    result = sync_project(target, [], deselect=["team"])
+    assert ".agents/skills/devkit-playbook/SKILL.md" in result["orphans"]
+    assert skill.read_text() == "user edit"
 
 
 def test_search_rejects_modified_files_and_pending_transactions(tmp_path: Path, target: Path) -> None:
@@ -263,3 +267,25 @@ limit = 1
     assert res_override2.exit_code == 0
     data_override2 = json.loads(res_override2.output)
     assert len(data_override2["results"]) == 2
+
+
+def test_playbook_extension_keys_are_accepted_but_not_indexed(tmp_path: Path, target: Path) -> None:
+    header = read_playbook_header(
+        b"---\nname: restore-replica\ndescription: Restore a replica.\nx-trigger: [replica down, zebra]\nx-scope: repo\n---\n",
+        "x",
+    )
+    assert header.extensions == (("x-trigger", ["replica down", "zebra"]), ("x-scope", "repo"))
+    with pytest.raises(BundleError, match="supported frontmatter fields are name, description, aliases and x-<name>"):
+        read_playbook_header(b"---\nname: a\ndescription: b\ntrigger: c\n---\n", "x")
+    with pytest.raises(BundleError, match="supported frontmatter fields"):
+        read_playbook_header(b"---\nname: a\ndescription: b\nx-Trigger: c\n---\n", "x")
+    item = make_bundle(tmp_path, "team")
+    (item.bundle.root / "recovery.md").write_text(
+        "---\nname: restore-replica\ndescription: Restore a PostgreSQL replica.\nx-trigger: [zebra]\n---\nbody\n"
+    )
+    select(target, "team")
+    sync_project(target, [item], agents=["codex"])
+    assert "x-trigger" in (target / ".devkit/managed/team/recovery.md").read_text()
+    assert search_playbooks(target, "zebra")["results"] == []
+    hit = search_playbooks(target, "replica")["results"][0]
+    assert hit["name"] == "restore-replica" and "x-trigger" not in json.dumps(hit)

@@ -22,6 +22,7 @@ from agent_workflow_engine.checks import (
     Check,
     CheckClass,
     CheckError,
+    CheckResult,
     Invocation,
     Registry,
     count_tasks,
@@ -30,6 +31,7 @@ from agent_workflow_engine.decisions import Decision, DecisionError, Decisions, 
 from agent_workflow_engine.definition import HANDOFF_GATE, Stage, WorkflowDocument, schema_hash
 from agent_workflow_engine.envelope import Envelopes, load_envelopes
 from agent_workflow_engine.git import REVISION
+from agent_workflow_engine.plugins import BaseCheck, CheckContext
 
 # Returns one description per violation, or raises on a rule execution failure.
 LintFunc = Callable[[Path, list[str]], list[str]]
@@ -55,24 +57,8 @@ class Options:
     lint: LintFunc | None = None
     skip_lint: bool = False
     ancestor: AncestorFunc | None = None
-
-
-@dataclass(frozen=True)
-class CheckResult:
-    name: str
-    class_: CheckClass
-    satisfied: bool
-    evaluated: bool
-    detail: str = ""
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "name": self.name,
-            "class": self.class_.value,
-            "satisfied": self.satisfied,
-            "evaluated": self.evaluated,
-            "detail": self.detail,
-        }
+    plugins: tuple[BaseCheck, ...] = ()  # loaded plugin checks definitions may reference
+    roles: dict[str, str] = field(default_factory=dict)  # role -> contract path, for [DELEGATE]
 
 
 @dataclass(frozen=True)
@@ -98,9 +84,10 @@ class Gate:
 class Delegate:
     role: str
     isolation: str
+    contract: str | None = None  # workspace-relative path of the role's contract, when known
 
-    def to_dict(self) -> dict[str, str]:
-        return {"role": self.role, "isolation": self.isolation}
+    def to_dict(self) -> dict[str, str | None]:
+        return {"role": self.role, "isolation": self.isolation, "contract": self.contract}
 
 
 @dataclass(frozen=True)
@@ -321,6 +308,8 @@ class _Evaluator:
         if check.class_ == CheckClass.LINT:
             evaluated, ok, detail = self.lint()
             return CheckResult(ref, check.class_, ok, evaluated, detail)
+        if check.class_ == CheckClass.PLUGIN:
+            return self.plugin(ref, inv)
         if ref in self.given:
             return CheckResult(ref, check.class_, True, False, "given by executor")
         if check.class_ == CheckClass.HUMAN:
@@ -328,6 +317,26 @@ class _Evaluator:
             if accepted is not None:
                 return CheckResult(ref, check.class_, True, False, f"accepted by {accepted.file}")
         return CheckResult(ref, check.class_, False, False, f"declared for {check.class_.value}; not evaluated")
+
+    def plugin(self, ref: str, inv: Invocation) -> CheckResult:
+        """Run a loaded plugin check; a raising plugin is an unsatisfied, evaluated result."""
+        plugin = self.registry.plugins[inv.name]
+        ctx = CheckContext(
+            workspace_root=self.opts.workspace_root,
+            unit_dir=self.unit_dir,
+            anchor=self.opts.anchor,
+            ref=ref,
+            name=inv.name,
+            args=inv.args,
+            envelopes=self.envelopes,
+        )
+        try:
+            result = plugin.evaluate(ctx)
+        except Exception as exc:
+            return CheckResult(ref, CheckClass.PLUGIN, False, True, f"check failed: {exc}")
+        if not isinstance(result, CheckResult):
+            return CheckResult(ref, CheckClass.PLUGIN, False, True, "check returned no CheckResult")
+        return CheckResult(ref, CheckClass.PLUGIN, result.satisfied, result.evaluated, result.detail)
 
     def accepted(self, request_id: str) -> Decision | None:
         decision = self.decisions.effective(request_id)
@@ -548,7 +557,7 @@ def evaluate(doc: WorkflowDocument, opts: Options) -> Result:
     status = frontmatter.field(anchor_data, "status")
     binding = read_binding(anchor_path) if anchor_data else Binding()
 
-    registry = Registry.build(opts.anchor, doc.declared_checks)
+    registry = Registry.build(opts.anchor, doc.declared_checks, opts.plugins)
     ev = _Evaluator(doc, registry, opts)
     try:
         unit_rel = opts.unit_dir.relative_to(opts.workspace_root).as_posix()
@@ -585,7 +594,7 @@ def evaluate(doc: WorkflowDocument, opts: Options) -> Result:
         res.unmet = unmet
         res.next_skill = stage.skills[0] if stage.skills else ""
         if stage.isolation != "none" and stage.role not in ("developer", "-", ""):
-            res.delegate = Delegate(stage.role, stage.isolation)
+            res.delegate = Delegate(stage.role, stage.isolation, opts.roles.get(stage.role))
         if stage.gate and policy:
             res.gate = Gate(stage.gate, policy, stage.gate in ev.given)
         res.waiting = _waiting_for(stage, unmet)

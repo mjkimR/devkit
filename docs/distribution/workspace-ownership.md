@@ -49,8 +49,8 @@ AGENTS.md                 # Project-owned; only the DEVKIT:START/END block insid
    - Files under `.devkit/managed/` that neither the receipt nor the current inventory owns are reported by `devkit sync` as `stray` (a `WARNING` on stderr) and left untouched. The managed root is a regenerated cache; a hand-placed file there is never deployed or removed, yet consumers that scan the directory could pick it up. Project-owned content belongs outside the managed root (for example custom rules under a `--rules-dir`, or an override under `.devkit/overrides/`).
 5. **User Modification Detection**:
    - If a deployed file's disk content or mode differs from its recorded receipt signature, it is treated as a user modification.
-   - Sync aborts immediately across the entire project before making any disk changes.
-   - Package removal, bundle deselection, or preset narrowing will only delete files that remain byte-for-byte identical to their recorded receipt signature. Modified files are never deleted.
+   - When that file is still part of the desired inventory, sync aborts immediately across the entire project before making any disk changes.
+   - When it is no longer desired (package removal, bundle deselection, preset narrowing, or an asset removed or renamed upstream), the modified file is an **orphan**: it stays on disk untouched, it is dropped from the receipt's `files` map, the sync continues, and the result lists it under `orphans` with a `NOTICE: left modified file in place: <path>` line. Delete or move it yourself. From the next sync on, an orphan under `.devkit/managed/` is reported as a stray file. Only files that remain byte-for-byte identical to their recorded signature are deleted; modified files are never deleted.
 6. **Host Guidance Block (root `AGENTS.md`)**:
    - `devkit sync` maintains one block between `<!-- DEVKIT:START -->` and `<!-- DEVKIT:END -->` in the root `AGENTS.md`: the `host-guidance-block` of the [Resource Taxonomy](../architecture/resource-taxonomy.md#1-host-guidance-block). It is generated from the current selection (installed bundle names, the once-per-bundle `devkit get-context` rule, the generated entry skills) and is deterministic for the same selection.
    - The file is created when absent, the block is appended when the file has no markers, and it is replaced in place otherwise. Every byte outside the markers is project-owned and preserved.
@@ -95,6 +95,7 @@ During `devkit sync`:
   WARNING: Upstream changed for overridden asset 'starter:development' (drift detected).
   Run 'devkit override diff starter:development' to review changes.
   ```
+- That is the default policy, `override_drift = "warn"` in `.devkit/config.toml`. With `override_drift = "block"`, the same drift aborts the sync before any write, naming every drifted `bundle:asset` and the `devkit override diff` / `devkit override accept` commands that resolve it. Choose `block` where an override shadows governance content (rules, gates, workflows) and a silently stale baseline would be a risk; `warn` keeps upgrades flowing for prose.
 
 ### Agent-Assisted 3-Way Reconciliation
 

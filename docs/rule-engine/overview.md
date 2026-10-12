@@ -41,6 +41,7 @@ src/agent_rule_engine/
 ├── workspace/               # Shared file caching, Markdown file catalog and Git snapshots
 │   ├── cache.py             # WorkspaceCache (bytes, text, YAML frontmatter, links)
 │   ├── catalog.py           # DocumentCatalog (paths, basenames, frontmatter id/title/status)
+│   ├── markdown.py          # count_tasks: the checklist counter shared with agent-workflow-engine
 │   └── snapshot.py          # Staged / CI Git trees materialized for gate evaluation
 ├── rules/                   # Built-in governance rules (repository-generic only)
 │   ├── base.py              # Base rule helper class (settings, guide, promote_to)

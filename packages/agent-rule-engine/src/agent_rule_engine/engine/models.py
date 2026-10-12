@@ -5,7 +5,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
-from agent_rule_engine.engine.settings import RawSettings, SettingsResolver
+from agent_rule_engine.engine.settings import RawSettings, SettingsResolver, match_path
 from agent_rule_engine.workspace.cache import WorkspaceCache
 
 
@@ -66,6 +66,10 @@ class RuleContext:
     rule_settings: dict[str, RawSettings] = field(default_factory=dict)
     # Resolved settings per rule; populated by ``evaluate`` before any check runs.
     settings_resolvers: dict[str, SettingsResolver] = field(default_factory=dict)
+    # Project exclusions (``[rules] exclude``): workspace-relative ``**`` patterns no rule targets.
+    exclude: tuple[str, ...] = ()
+    # Whether the run named explicit targets (before exclusions were applied).
+    has_targets: bool = field(init=False, default=False)
 
     def __post_init__(self) -> None:
         self.workspace_root = self.workspace_root.resolve()
@@ -73,25 +77,37 @@ class RuleContext:
             self.cache = WorkspaceCache(self.workspace_root)
         elif self.cache.workspace_root != self.workspace_root:
             raise ValueError("Context and cache must use the same workspace root")
+        self.has_targets = bool(self.changed_files)
         normalized: list[str] = []
         for name in self.changed_files:
-            path = Path(name)
-            resolved = (path if path.is_absolute() else self.workspace_root / path).resolve()
-            try:
-                normalized.append(resolved.relative_to(self.workspace_root).as_posix())
-            except ValueError as exc:
-                raise ValueError(f"Target file is outside the workspace: {name}") from exc
+            relative = self._relative(name)
+            if relative is None:
+                raise ValueError(f"Target file is outside the workspace: {name}")
+            if not self.is_excluded(relative):
+                normalized.append(relative)
         self.changed_files = normalized
 
-    def is_file_targeted(self, path: str) -> bool:
-        if not self.changed_files:
-            return True
+    def _relative(self, path: str | Path) -> str | None:
         candidate = Path(path)
         resolved = (candidate if candidate.is_absolute() else self.workspace_root / candidate).resolve()
         try:
-            relative = resolved.relative_to(self.workspace_root).as_posix()
+            return resolved.relative_to(self.workspace_root).as_posix()
         except ValueError:
+            return None
+
+    def is_excluded(self, path: str | Path) -> bool:
+        """Whether a workspace-relative (or absolute, inside the workspace) path is excluded by policy."""
+        if not self.exclude:
             return False
+        relative = self._relative(path)
+        return relative is not None and any(match_path(p, relative) for p in self.exclude)
+
+    def is_file_targeted(self, path: str) -> bool:
+        relative = self._relative(path)
+        if relative is None or self.is_excluded(relative):
+            return False
+        if not self.has_targets:
+            return True
         return relative in self.changed_files
 
     def settings(self, rule: Rule, path: str | Path | None = None) -> Any:

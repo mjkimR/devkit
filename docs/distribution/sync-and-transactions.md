@@ -61,11 +61,13 @@ The receipt is the single source of truth for the installed state. It is committ
   "guidance_block": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
   "seeded": [
     { "bundle": "starter", "id": "docs-skeleton", "path": "docs/README.md" }
-  ]
+  ],
+  "tool": { "package": "devkit-distribution", "version": "0.1.0" }
 }
 ```
 
 ### Receipt Properties
+- `tool` records which distributor wrote the receipt (package name and version from the installed distribution metadata). It is rewritten on every sync; the first sync after an upgrade prints `NOTICE: devkit-distribution <recorded> -> <running>` and `devkit status` reports whether the recorded and running versions match. A mismatch never refuses anything: the version pin lives in `uv.lock`, the receipt only makes the change visible.
 - `guidance_block` is the SHA-256 of the managed block in the root `AGENTS.md` (markers included). It is absent when `guidance_block = false` is configured. The file itself is never listed under `files`, because only the block is owned ([Workspace Ownership, section 2](workspace-ownership.md#2-ownership-categories-and-invariants)).
 - `seeded` lists, for every selected seeded `document` asset, the workspace paths it seeds (bundle, asset id, path), sorted by path. It is present only while such an asset is selected and is informational: seeded files are project-owned, never appear under `files`, and the list is never read back as a selection input. A seeded asset's entry under `assets` has an empty `paths` and a `seeded` array of its targets.
 - Tracks exact package names, package versions, bundle names, and bundle versions of **selected** bundles only. Installed but unselected bundles are not recorded.
@@ -100,7 +102,7 @@ limit = 5
 max_bytes = 8192
 ```
 
-- **Allowed top-level fields**: `schema`, `agents`, `presets`, `playbooks`, `rules`, `workflow`, `gates`, `guidance_block`, `tool`. Unknown fields are rejected. `guidance_block = false` stops `devkit sync` from managing the block in the root `AGENTS.md` (default `true`). `[rules]` is owned by `agent-rule-engine` (phase and severity overrides, typed settings), `[workflow]` by `agent-workflow-engine` and `[gates]` by `agent-commit-gate`; `devkit` passes them through untouched.
+- **Allowed top-level fields**: `schema`, `agents`, `presets`, `playbooks`, `rules`, `workflow`, `gates`, `guidance_block`, `override_drift`, `tool`. Unknown fields are rejected. `guidance_block = false` stops `devkit sync` from managing the block in the root `AGENTS.md` (default `true`). `override_drift = "block"` makes upstream drift behind any override abort the sync before it writes (default `"warn"`: the drift is reported and the sync proceeds); see [Workspace Ownership, section 3](workspace-ownership.md#3-project-overrides--3-way-drift-review-architecture). `[rules]` is owned by `agent-rule-engine` (phase and severity overrides, typed settings), `[workflow]` by `agent-workflow-engine` and `[gates]` by `agent-commit-gate`; `devkit` passes them through untouched.
 - **`[tool.<name>]`** is the extension namespace, as in `pyproject.toml`: any tool built on devkit keeps its own policy in `[tool.<name>]` and reads it itself. `devkit` only checks that `<name>` matches `[a-z][a-z0-9_-]*` and that the value is a table; the contents are never inspected, so no registration is needed and devkit does not learn the tool's schema. Everything outside `[tool]` stays an explicit allowlist so a mistyped devkit key is still an error.
 - **`agents`** narrows native projection. Absent, every supported agent (`antigravity`, `claude-code`, `codex`) is a target; `agents = []` (written by `devkit sync --no-agents`) turns projection off while managed copies stay.
 - **`[presets]`** is the selection: a bundle is synchronized if and only if it has an entry. The value is a preset name or a nonempty array of unique preset names; an array selects the union of their assets. `all` is a reserved preset available in every bundle.
@@ -137,11 +139,16 @@ When installed bundles are not selected, `devkit sync` still succeeds and report
 
 All mutating operations enforce strict transactional safety:
 
-1. **Pre-Flight Validation**: Computes the complete desired file inventory, the seeded files whose targets do not exist yet, and the root `AGENTS.md` guidance block; scans existing disk state, verifies file and block ownership, and checks for collisions before writing any bytes. The JSON result lists every planned write under `actions` (`create`, `update` or `remove` per managed path, `seed` for a seeded file, `AGENTS.md` included).
+1. **Pre-Flight Validation**: Computes the complete desired file inventory, the seeded files whose targets do not exist yet, and the root `AGENTS.md` guidance block; scans existing disk state, verifies file and block ownership, and checks for collisions before writing any bytes. The JSON result lists every planned write under `actions` (`create`, `update` or `remove` per managed path, `seed` for a seeded file, `AGENTS.md` included). A managed file that was edited by hand and is still desired aborts the sync; one that was edited and is no longer desired (deselected, removed or renamed upstream) is left on disk, dropped from the receipt and listed under `orphans` ([Workspace Ownership, section 2](workspace-ownership.md#2-ownership-categories-and-invariants)).
 2. **Project Advisory Lock**: Acquires an exclusive, non-blocking file lock via `fcntl.flock` in `/tmp` keyed by SHA-256 hash of the target project directory path (`devkit-<uid>-<hash>.lock`). Concurrent operations fail immediately with an informative message.
 3. **Write-Ahead Journal**: Before modifying disk, pending operations (file additions, modifications, unlinks) and base64-encoded backups of existing file contents are flushed to `.devkit/transient/sync-journal.json`.
 4. **Atomic Replacement**: New and updated files are written to temporary sibling files (`.devkit-write-*`), permissions applied via `fchmod`, flushed with `fsync`, and atomically moved into place using `os.replace`. Directory entries are synced using directory `fsync`.
 5. **Rollback Recovery**: If an operation is killed or interrupted mid-flight, subsequent `sync` invocations detect the existing journal and halt. Running `devkit recover` inspects every recorded file and safely restores original contents provided the file has not undergone subsequent user modifications.
+6. **Post-Sync Hooks**: After the transaction has committed (never on `--dry-run` or `--check`), `devkit sync` calls every callable registered under the `devkit.post_sync` entry-point group, in sorted entry-point name order, as `hook(root: Path, result: dict) -> list[str] | None`. The strings a hook returns are appended to the result's `notices` and printed as `NOTICE: <text>` on stderr. A hook that raises becomes `NOTICE: post-sync hook <name> failed: <error>`; it cannot fail or roll back the sync, because the files are already on disk. This is how a package built on devkit reacts to a changed workspace (for example, checking in-flight work units against a changed workflow definition) without devkit knowing the package.
+
+### Result and Notices
+
+The JSON result of `sync`, `add` and `remove` carries, besides `actions`, `selection`, `packages`, `assets` and `unselected`: `drift` (overrides whose upstream changed), `orphans` (modified files left behind, see above), `stray` (unmanaged files under the managed root), `unprojected` (subagents without a native variant) and `notices` (free-text lines: orphans, a tool upgrade, post-sync hook output). Everything in `notices` is also printed to stderr as `NOTICE: <text>`; drift and stray files are `WARNING` lines.
 
 ---
 
@@ -153,6 +160,7 @@ All mutating operations enforce strict transactional safety:
 | `devkit add <bundle>[:<preset>]...` | Selection | Records bundle selections in `config.toml` (resolving `default_preset` when no preset is named), then synchronizes. |
 | `devkit remove <bundle>...` | Selection | Removes bundle selections from `config.toml`, then synchronizes. |
 | `devkit list [--target <dir>]` | Discovery | Outputs JSON listing installed content packages, bundle metadata, available and default presets, selection state, and synchronized asset paths. |
+| `devkit status [--target <dir>]` | Inspection | Read-only JSON summary of the installed state against the receipt: selection, managed file counts (`ok`, `missing`, `modified`, `mode-mismatch`) with the offending paths, override drift, guidance block state (`ok`, `missing`, `modified`, `unowned`, `disabled`), seeded paths and whether each exists, a pending journal, and the recorded versus running tool version. Exits 0 unless the receipt or configuration cannot be read; it never writes. |
 | `devkit plan <source> [--preset <name>]` | Authoring | Previews managed file inventory for a local bundle source without writing to a consumer project. Without `--preset`, previews the default preset, or `all` when none is declared. |
 | `devkit get-context <bundle>` | Context | Returns bundle constitution and catalog of instruction headers for progressive loading. |
 | `devkit playbook search <query>` | Context | Runs lexical BM25 search over synchronized playbooks. |
@@ -171,4 +179,4 @@ All mutating operations enforce strict transactional safety:
 - `--preset <bundle>[:<name>]`: Selects `<bundle>` with `<name>` (or its default preset), replacing that bundle's entry in `config.toml`. Repeat a bundle to select a union. Use `<bundle>:all` for every asset.
 - `--no-save`: Applies selection flags to this run only, without editing `config.toml`.
 - `--dry-run`: Computes inventory and returns planned actions without writing to disk or configuration.
-- `--check`: Read-only execution for CI pipelines. Exits with code `1` if workspace requires synchronization, a missing or stale `AGENTS.md` guidance block or a seeded file that was never written included. Seeded files that exist are never compared.
+- `--check`: Read-only execution for CI pipelines. Exits with code `1` if workspace requires synchronization, a missing or stale `AGENTS.md` guidance block or a seeded file that was never written included. Seeded files that exist are never compared. An orphan alone does not fail `--check`: the modified file is no longer managed, so there is nothing to synchronize; it appears under `orphans` on that run and as a `stray` file afterwards if it sits under the managed root.

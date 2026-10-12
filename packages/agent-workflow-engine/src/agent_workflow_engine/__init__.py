@@ -1,7 +1,15 @@
 from __future__ import annotations
 
 from agent_workflow_engine.binding import Binding, HistoryEntry, read_binding, write_binding
-from agent_workflow_engine.checks import Check, CheckClass, CheckError, Invocation, Registry, parse_check
+from agent_workflow_engine.checks import (
+    Check,
+    CheckClass,
+    CheckError,
+    CheckResult,
+    Invocation,
+    Registry,
+    parse_check,
+)
 from agent_workflow_engine.config import ConfigError, WorkflowConfig, load_workflow_config
 from agent_workflow_engine.decisions import Decision, Decisions, load_decisions, write_decision
 from agent_workflow_engine.definition import (
@@ -14,6 +22,7 @@ from agent_workflow_engine.definition import (
     parse,
     resolve,
     schema_hash,
+    shared_stage_problems,
     validate,
 )
 from agent_workflow_engine.envelope import (
@@ -26,7 +35,7 @@ from agent_workflow_engine.envelope import (
     render_draft,
 )
 from agent_workflow_engine.evaluate import (
-    CheckResult,
+    Delegate,
     Handoff,
     Options,
     Request,
@@ -35,19 +44,24 @@ from agent_workflow_engine.evaluate import (
     evaluate,
 )
 from agent_workflow_engine.layout import Layout, LayoutSpec, TemplateLayout, parse_layout_spec, validate_template
+from agent_workflow_engine.plugins import BaseCheck, CheckContext, PluginError, load_check_files, load_plugin_checks
 from agent_workflow_engine.render import render_document, render_result
+from agent_workflow_engine.roles import discover_roles
 
 __all__ = [
     "AuthoringError",
+    "BaseCheck",
     "Binding",
     "Check",
     "CheckClass",
+    "CheckContext",
     "CheckError",
     "CheckResult",
     "ConfigError",
     "Decision",
     "Decisions",
     "DefinitionError",
+    "Delegate",
     "Draft",
     "Envelope",
     "Envelopes",
@@ -57,6 +71,7 @@ __all__ = [
     "Layout",
     "LayoutSpec",
     "Options",
+    "PluginError",
     "Problem",
     "Registry",
     "Request",
@@ -68,10 +83,13 @@ __all__ = [
     "WorkflowDocument",
     "compose",
     "discover",
+    "discover_roles",
     "evaluate",
     "load",
+    "load_check_files",
     "load_decisions",
     "load_envelopes",
+    "load_plugin_checks",
     "load_workflow_config",
     "parse",
     "parse_check",
@@ -82,6 +100,7 @@ __all__ = [
     "render_result",
     "resolve",
     "schema_hash",
+    "shared_stage_problems",
     "validate",
     "validate_template",
     "write_binding",

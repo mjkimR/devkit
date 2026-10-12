@@ -39,6 +39,7 @@ consumed and authored. See [section 4](#4-the-devkit-guide-bundle).
 | `devkit add <bundle>[:<preset>]...` | Selection | Selects bundles in `.devkit/config.toml` (default preset when none is named) and synchronizes. |
 | `devkit remove <bundle>...` | Selection | Deselects bundles in `.devkit/config.toml` and synchronizes. |
 | `devkit list [--target <dir>]` | Inspection | Outputs JSON listing installed content packages, bundle metadata, presets, selection state, and asset paths. |
+| `devkit status [--target <dir>]` | Inspection | Read-only JSON: managed file counts (`ok`/`missing`/`modified`/`mode-mismatch`), override drift, guidance block state, seeded paths, pending journal, recorded vs running tool version. Never writes. |
 | `devkit plan <source> [--preset <name>]` | Authoring | Previews managed inventory for a local bundle without writing to a project. |
 | `devkit recover [--target <dir>]` | Fault Tolerance | Uses write-ahead journal in `.devkit/transient/` to safely roll back an interrupted transaction. |
 | `devkit get-context <bundle>` | Context | Returns bundle constitution and catalog of instruction headers for progressive loading. |
@@ -62,6 +63,7 @@ Installing a content wheel only makes its bundle available; a bundle is deployed
 schema = 1
 agents = ["codex", "claude-code"]     # optional; absent means every supported agent, [] means none
 guidance_block = true                 # optional; false stops sync from managing the block in root AGENTS.md
+override_drift = "warn"               # optional; "block" aborts sync while an override's upstream has changed
 
 [presets]
 starter = "daily"                     # a preset name, "all", or an array of presets (union)
@@ -98,6 +100,13 @@ A bundle can also scaffold project-owned files: a `document` asset with `seeded 
 (for example a `docs/` skeleton or a glossary) is written once, only where the target does not exist, and is then
 yours. Sync never compares, updates or removes it, deselecting the bundle leaves it, and the receipt only notes which
 asset seeded which path (`devkit list` shows the `seeded` list). Commit seeded files like any project file.
+A managed file you edited by hand stops the sync while it is still part of the selection. Once it is no longer
+desired (deselected, or removed upstream), sync leaves it in place, forgets it in the receipt and prints
+`NOTICE: left modified file in place: <path>`; delete it yourself. The receipt also records the `devkit-distribution`
+version that wrote it; the first sync after an upgrade prints a `NOTICE` and `devkit status` shows the mismatch.
+Packages built on devkit can register a `devkit.post_sync` entry point (`hook(root, result) -> list[str] | None`)
+to react after a successful sync; the strings they return are printed as notices and never fail the sync.
+
 The `[rules]` table is owned by `agent-rule-engine` and is passed through untouched by `devkit sync`; see the
 [agent-rule-engine README](../agent-rule-engine/README.md#project-configuration). Rules shipped as `kind = "rule"`
 assets are recorded in the receipt and loaded by `agent-rules` without flags, and subagents may ship either native

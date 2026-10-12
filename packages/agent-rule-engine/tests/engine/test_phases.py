@@ -55,12 +55,22 @@ def test_config_reads_phase_overrides(tmp_path: Path) -> None:
         ('[rules.phase_overrides]\nRULE-x = "linter"\n', "is not 'hygiene'"),
         ("[rules.phase_overrides]\nRULE-x = 1\n", "is not 'hygiene'"),
         ("invalid toml [[\n", "invalid config"),
+        ('[rules]\nexclude = "docs/**"\n', "expected an array of path patterns"),
+        ('[rules]\nexclude = ["/abs/**"]\n', r"exclude\[0\].*workspace-relative"),
+        ('[rules]\nexclude = ["a/**", "a/**"]\n', "duplicate pattern"),
+        ('[rules]\nexclude = ["../up"]\n', "parent segment"),
     ],
 )
 def test_invalid_rules_config(tmp_path: Path, body: str, match: str) -> None:
     _write_config(tmp_path, body)
     with pytest.raises(ConfigError, match=match):
         load_rules_config(tmp_path)
+
+
+def test_config_reads_exclude_patterns(tmp_path: Path) -> None:
+    _write_config(tmp_path, '[rules]\nexclude = ["docs/research/**", "CHANGELOG.md"]\n')
+    assert load_rules_config(tmp_path).exclude == ("docs/research/**", "CHANGELOG.md")
+    assert load_rules_config(tmp_path / "nowhere").exclude == ()
 
 
 def test_parse_rules_config_rejects_non_table() -> None:

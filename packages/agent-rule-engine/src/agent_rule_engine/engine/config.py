@@ -21,9 +21,10 @@ RULES_TABLE = "rules"
 PHASE_OVERRIDES_KEY = "phase_overrides"
 SEVERITY_OVERRIDES_KEY = "severity_overrides"
 SETTINGS_KEY = "settings"
+EXCLUDE_KEY = "exclude"
 OVERRIDES_KEY = "overrides"
 PATH_KEY = "path"
-KNOWN_KEYS = {PHASE_OVERRIDES_KEY, SEVERITY_OVERRIDES_KEY, SETTINGS_KEY}
+KNOWN_KEYS = {PHASE_OVERRIDES_KEY, SEVERITY_OVERRIDES_KEY, SETTINGS_KEY, EXCLUDE_KEY}
 
 
 class ConfigError(ValueError):
@@ -42,11 +43,17 @@ class RulesConfig:
     ``severity_overrides`` maps a rule ID to the severity its violations report
     in this project. ``settings`` holds each configured rule's values and path
     overrides; they are matched to the rule's declared settings at evaluation.
+
+    ``exclude`` lists workspace-relative path patterns (``**`` grammar of the
+    settings overrides) that no rule targets: they are dropped from explicit and
+    snapshot targets and ``is_file_targeted`` is false for them. They stay in the
+    document catalog so link repair can still point at them.
     """
 
     phase_overrides: dict[str, Phase] = field(default_factory=dict)
     severity_overrides: dict[str, Severity] = field(default_factory=dict)
     settings: dict[str, RawSettings] = field(default_factory=dict)
+    exclude: tuple[str, ...] = ()
     source: Path | None = None
 
 
@@ -109,6 +116,22 @@ def _settings(raw: object) -> dict[str, RawSettings]:
     return result
 
 
+def _exclude(raw: object) -> tuple[str, ...]:
+    context = f"{RULES_TABLE}.{EXCLUDE_KEY}"
+    if not isinstance(raw, list):
+        raise ConfigError(f"config {context}: expected an array of path patterns")
+    patterns: list[str] = []
+    for index, pattern in enumerate(raw):
+        try:
+            validate_pattern(pattern)  # type: ignore[arg-type]
+        except ValueError as exc:
+            raise ConfigError(f"config {context}[{index}]: {exc}") from None
+        if pattern in patterns:
+            raise ConfigError(f"config {context}[{index}]: duplicate pattern {pattern!r}")
+        patterns.append(pattern)
+    return tuple(patterns)
+
+
 def parse_rules_config(data: object, source: Path | None = None) -> RulesConfig:
     """Validate the ``[rules]`` table from an already parsed TOML document."""
     if not isinstance(data, dict):
@@ -126,6 +149,7 @@ def parse_rules_config(data: object, source: Path | None = None) -> RulesConfig:
         if SEVERITY_OVERRIDES_KEY in rules
         else {},
         settings=_settings(rules[SETTINGS_KEY]) if SETTINGS_KEY in rules else {},
+        exclude=_exclude(rules[EXCLUDE_KEY]) if EXCLUDE_KEY in rules else (),
         source=source,
     )
 

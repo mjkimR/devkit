@@ -20,8 +20,10 @@ description: Read before using, changing or troubleshooting devkit-managed asset
 
 Generated paths are rebuilt by `uv run devkit sync` from the installed packages
 and the configuration. Edit sources and configuration, never generated copies.
-`sync` halts when a managed file was modified or when an unmanaged file sits
-where it needs to write; it never deletes foreign files.
+`sync` halts when a managed file that is still selected was modified, or when an
+unmanaged file sits where it needs to write; it never deletes foreign files. A
+modified file that is no longer selected is left in place and reported as
+`NOTICE: left modified file in place: <path>`; remove it yourself.
 
 The block in the root `AGENTS.md` is the orientation index every session reads:
 installed bundles, the once-per-bundle `get-context` rule and the generated entry
@@ -122,6 +124,15 @@ uv run devkit override remove <bundle>:<asset>   # back to the pristine upstream
 An override replaces one asset file and is projected in place of the managed
 copy. For assets the repository owns itself, edit the source bundle instead
 (see the `in-repo-bundle` instruction).
+
+## Checking the installed state
+
+`uv run devkit status` prints, without writing anything, how the workspace
+compares with the receipt: managed files that are missing, modified or have a
+wrong mode, overrides whose upstream changed, the guidance block state, seeded
+files that no longer exist, a pending journal, and whether the `devkit`
+version that wrote the receipt is the one running. Use `uv run devkit sync
+--check` to learn whether a sync is needed; use `status` to learn why.
 
 ## Recovering an interrupted sync
 

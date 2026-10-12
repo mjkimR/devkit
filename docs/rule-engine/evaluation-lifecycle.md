@@ -72,14 +72,14 @@ The CLI provides two primary commands:
 
 ```bash
 # Check mode: strictly read-only, never mutates files
-agent-rules check [-w DIRECTORY] [-p linter|hygiene] [--rules-dir DIRECTORY] [--format text|json] [FILES]...
+agent-rules check [-w DIRECTORY] [-p linter|hygiene] [--rules-dir DIRECTORY] [--format text|json] [--summary-only] [TARGETS]...
 
 # Git snapshot gates: the exact staged tree, or HEAD against its merge base with --base
-agent-rules check --staged [-w DIRECTORY] [--rules-dir DIRECTORY] [--format text|json]
-agent-rules check --ci [--base REF] [-w DIRECTORY] [--rules-dir DIRECTORY] [--format text|json]
+agent-rules check --staged [-w DIRECTORY] [--rules-dir DIRECTORY] [--format text|json] [--summary-only]
+agent-rules check --ci [--base REF] [-w DIRECTORY] [--rules-dir DIRECTORY] [--format text|json] [--summary-only]
 
 # Fix mode: applies deterministic repairs and verifies convergence
-agent-rules fix [-w DIRECTORY] [-p linter|hygiene] [--rules-dir DIRECTORY] [--dry-run] [--format text|json] [FILES]...
+agent-rules fix [-w DIRECTORY] [-p linter|hygiene] [--rules-dir DIRECTORY] [--dry-run] [--format text|json] [--summary-only] [TARGETS]...
 
 # Phase plan: default and effective phase of every rule, plus pending transitions
 agent-rules phases [-w DIRECTORY] [--rules-dir DIRECTORY] [--format text|json]
@@ -93,9 +93,13 @@ Rules come from three sources, in order: the built-in registry, every `kind = "r
 - **Phases**:
   - `linter`: Markdown relative link validity, safety checks on explicit targets, and every bundle-distributed rule declared in this phase (frontmatter schemas, identifiers, document references). This is the gate for pre-commit hooks and CI.
   - `hygiene`: Includes `linter` rules plus file size warnings and formatting guidelines, and every rule parked there by a project phase override.
+- **Targets**: `TARGETS` are workspace-relative or absolute paths inside the workspace. A file is checked as is; a directory expands recursively to the regular files under it, skipping the same directories as workspace scans (`.git`, `.venv`, `node_modules`, caches). No targets means the whole workspace. A target that is neither an existing file nor a directory inside the workspace is an `INVALID_LINT_TARGET` failure before any rule runs. Snapshot gates refuse targets.
+- **Exclusions**: `exclude` under `[rules]` lists workspace-relative patterns (`**` grammar of settings overrides) that no rule targets. Excluded paths are removed from explicit, directory-expanded and snapshot targets and `ctx.is_file_targeted` is `False` for them; a run whose explicit targets are all excluded checks nothing rather than falling back to the whole workspace. They remain in the document catalog so link repair can still resolve to them. An invalid pattern is a policy error that fails the run before evaluation.
+- **`--summary-only`**: text output prints one line per rule (`RULE-id: N error(s), M warning(s)[, K fixed]`) instead of individual findings, keeping `[SNAPSHOT]`, `[PHASE_OVERRIDE]` and `[PROMOTION]` lines and the final summary. JSON output ignores the flag.
 - **Exit Status**:
   - `0`: All checks passed cleanly, or all fixable findings were successfully repaired.
-  - `1`: Unresolved errors, runtime failures, rule loading errors, or invalid project policy.
+  - `1`: Unresolved error violations. The run evaluated and found errors.
+  - `2`: The run could not evaluate: rule loading failures, rule execution errors, invalid project policy, an invalid target, or a Git snapshot failure. Execution errors take precedence over violations found in the same run. (`click` usage errors such as `--staged` with file arguments also exit `2`; they print a `Usage:` block.)
 
 ---
 

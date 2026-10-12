@@ -76,7 +76,8 @@ When synchronized playbooks exist, `devkit sync` generates a shared entry skill 
 ### Playbook Authoring Contract
 Playbooks can be Markdown files or directories containing `SKILL.md` and supporting resources:
 - **Frontmatter Fields**: Must be YAML frontmatter with nonempty English `name` and `description` strings, plus an optional `aliases` array of nonempty English strings.
-- **Strict Validation**: Other fields (including `tags`) are strictly rejected.
+- **Extension Keys**: Keys of the form `x-<name>` (`x-[a-z][a-z0-9-]*`, any YAML value) are accepted for tools built on devkit and ignored by devkit: they are not indexed by search, not returned in results and not interpreted. They remain in the managed copy for the tool that owns them.
+- **Strict Validation**: Other fields (including `tags`) are strictly rejected. The whole header, extension values included, must still use Latin letters and fit in 4096 bytes.
 - **Size & Language Limits**: Headers are limited to 4096 bytes. The parser verifies that header text uses Latin characters (English).
 - **Example**:
   ```markdown

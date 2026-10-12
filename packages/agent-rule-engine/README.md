@@ -14,7 +14,7 @@ src/agent_rule_engine/
 ├── engine/                  # Rule contracts, registry, config, settings, phases, evaluation and autofix recheck
 │   ├── discovery.py         # Rule assets recorded by devkit sync in .devkit/installation.json
 │   └── settings.py          # Typed per-rule settings with path-scoped overrides
-├── workspace/               # Shared file cache, parsing, Markdown file catalog and Git snapshots
+├── workspace/               # Shared file cache, parsing, Markdown file catalog, task counter and Git snapshots
 ├── cli/                     # Click commands and output formatting
 └── rules/
     ├── base.py              # Common rule implementation (settings, guide, promote_to)
@@ -55,15 +55,25 @@ uv run agent-rules check --workspace-root .
 without writes. `hygiene` includes linter rules as well as hygiene checks.
 `phases` prints each rule's default and effective phase without evaluating.
 `explain <RULE-id>` prints a rule's phase, severity, effective settings and its
-guide document. Exit code 1 indicates unresolved error violations, rule
-execution failures, custom rule loading failures, or invalid project policy.
-Warnings alone do not fail the command. `--format json` emits an array of
-violations to stdout; execution and loading errors are reported separately to
-stderr.
+guide document. Exit codes: `0` clean (or every fixable finding repaired), `1`
+unresolved error violations, `2` the run could not evaluate: a rule loading or
+execution failure, invalid project policy, an invalid target, or a Git snapshot
+failure (`click` usage errors also exit `2`). Warnings alone do not fail the
+command. `--format json` emits an array of violations to stdout; execution and
+loading errors are reported separately to stderr.
 
-File arguments are exact workspace-relative paths or absolute paths inside the
-workspace. An empty list checks the whole workspace. Link repair still indexes
-every Markdown file in the workspace, even when checking selected files.
+Targets are workspace-relative or absolute paths inside the workspace. A file
+is checked as is; a directory expands to every regular file under it (same
+ignored directories as workspace scans, such as `.git` and `node_modules`).
+An empty list checks the whole workspace. A target that is neither an existing
+file nor a directory inside the workspace fails with `INVALID_LINT_TARGET`
+before any rule runs. Link repair still indexes every Markdown file in the
+workspace, even when checking selected files.
+
+`--summary-only` (text output) replaces the per-finding listing with one line
+per rule (`RULE-id: N error(s), M warning(s)[, K fixed]`), keeping the status
+lines (`[SNAPSHOT]`, `[PHASE_OVERRIDE]`, `[PROMOTION]`) and the final summary.
+Exit codes are unchanged; `--format json` ignores the flag.
 
 ## Git snapshot gates
 
@@ -91,6 +101,9 @@ files, logs above 1 MiB). A run without targets reports nothing for them.
 Everything lives in the Git-tracked `.devkit/config.toml` under `[rules]`:
 
 ```toml
+[rules]
+exclude = ["docs/research/**", "CHANGELOG.md"]   # never targeted by any rule
+
 [rules.phase_overrides]
 RULE-markdown-link = "hygiene"          # only "hygiene": park a linter rule while debt is cleared
 
@@ -111,6 +124,12 @@ types and invalid patterns fail the run before any rule executes, with the rule
 ID in the message. Later matching overrides win and omitted keys inherit the
 earlier value. Because managed files are hash-checked by `devkit sync`, this
 table is the only place a project changes a distributed rule's behavior.
+
+`exclude` lists workspace-relative patterns with the same `**` grammar as
+settings overrides. An excluded path is never a target: it is dropped from
+explicit, directory-expanded and snapshot targets, `ctx.is_file_targeted`
+returns `False` for it, and naming only excluded files checks nothing. Excluded
+files stay in the document catalog, so link repair can still point at them.
 
 ### Phase overrides and promotions
 
@@ -135,7 +154,7 @@ Rules shipped by a bundle (`kind = "rule"`) are recorded by `devkit sync` in
 such an asset (an override under `.devkit/overrides/` replaces the managed
 copy) after the built-in rules and before `--rules-dir`, so no flag is needed.
 A rule with the same ID as an earlier one replaces it. A listed file that does
-not exist on disk is a loading error (exit code 1), not a silent skip: run
+not exist on disk is a loading error (exit code 2), not a silent skip: run
 `devkit sync` to restore the managed copies.
 
 This is also where document-model rules live. The built-in rules are limited to

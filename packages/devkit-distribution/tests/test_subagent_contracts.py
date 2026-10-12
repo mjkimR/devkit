@@ -215,3 +215,29 @@ def test_override_of_contract_is_rendered_and_cited(tmp_path: Path) -> None:
     assert "Role contract: `.devkit/overrides/team/subagents/reviewer.md`." in projected
     receipt = json.loads((target / RECEIPT).read_text())
     assert receipt["overrides"]["team"]["reviewer"]["kind"] == "subagent"
+
+
+def test_contract_extension_keys_are_kept_but_never_rendered(tmp_path: Path) -> None:
+    contract = CONTRACT.replace(
+        "skill: review\n", "skill: review\nx-model-profile: {tier: strong, temperature: 0}\nx-git-actions: [commit]\n"
+    )
+    parsed = read_contract(contract.encode(), "x", "reviewer")
+    assert parsed.extensions == (
+        ("x-model-profile", {"tier": "strong", "temperature": 0}),
+        ("x-git-actions", ["commit"]),
+    )
+    for agent in ("claude-code", "codex"):
+        rendered = render(agent, parsed, ".devkit/managed/team/subagents/reviewer.md")
+        assert rendered is not None and b"x-" not in rendered and b"strong" not in rendered
+    with pytest.raises(BundleError, match=r"unknown frontmatter keys \['model_profile'\] \(extensions use x-<name>\)"):
+        read_contract(CONTRACT.replace("skill: review\n", "skill: review\nmodel_profile: strong\n").encode(), "x")
+    with pytest.raises(BundleError, match="unknown frontmatter keys"):
+        read_contract(CONTRACT.replace("skill: review\n", "skill: review\nx-Bad: 1\n").encode(), "x")
+    # The managed copy is the contract verbatim, so the keys stay readable to other tools.
+    item = make_bundle(tmp_path, "team", contract)
+    target = tmp_path / "consumer"
+    target.mkdir()
+    update_config(target, presets={"team": ["all"]}, agents=["claude-code"])
+    sync_project(target, [item])
+    assert "x-model-profile" in (target / ".devkit/managed/team/subagents/reviewer.md").read_text()
+    assert "x-model-profile" not in (target / ".claude/agents/reviewer.md").read_text()

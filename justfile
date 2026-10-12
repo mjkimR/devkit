@@ -49,3 +49,7 @@ workflow +args="":
 # Run the commit gate CLI (install, uninstall, status, run)
 gate +args="":
     uv run --no-active --package agent-commit-gate commit-gate {{ args }}
+
+# Build all wheels and exercise them from a fresh consumer project
+smoke:
+    bash scripts/smoke.sh

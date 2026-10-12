@@ -26,11 +26,13 @@ from agent_workflow_engine.decisions import (
 from agent_workflow_engine.definition import (
     HANDOFF_GATE,
     DefinitionError,
+    Problem,
     WorkflowDocument,
     discover,
     load_all,
     resolve,
     schema_hash,
+    shared_stage_problems,
     validate,
 )
 from agent_workflow_engine.envelope import (
@@ -45,7 +47,9 @@ from agent_workflow_engine.envelope import (
 from agent_workflow_engine.evaluate import Options, UnitNotFoundError, evaluate, is_completed
 from agent_workflow_engine.git import is_ancestor
 from agent_workflow_engine.layout import TemplateLayout
+from agent_workflow_engine.plugins import BaseCheck, load_plugin_checks
 from agent_workflow_engine.render import render_document, render_requests, render_result
+from agent_workflow_engine.roles import discover_roles
 
 EXIT_INVALID = 1  # validate/show: a definition has problems (a result, not an advisory)
 
@@ -105,6 +109,9 @@ class _Env:
             ) from exc
         self.layout = TemplateLayout(self.config.work_dir, self.config.unit_path, self.config.anchor)
         self._docs: list[WorkflowDocument] | None = None
+        self._roles: dict[str, str] | None = None
+        self._roles_loaded = False
+        self._plugins: list[BaseCheck] | None = None
 
     @property
     def definitions_dir(self) -> Path:
@@ -144,6 +151,34 @@ class _Env:
 
     def known_ids(self) -> set[str]:
         return {d.id for d in self.discovered()}
+
+    def roles(self) -> dict[str, str] | None:
+        """The project's subagent vocabulary; ``None`` when no receipt and no roles_dir exist."""
+        if not self._roles_loaded:
+            self._roles = discover_roles(self.root, self.config.roles_dir)
+            self._roles_loaded = True
+        return self._roles
+
+    def plugins(self) -> list[BaseCheck]:
+        """Plugin checks from receipt ``workflow-check`` assets and ``checks_dir``; a load failure is an error."""
+        if self._plugins is None:
+            loaded, errors = load_plugin_checks(self.root, self.config.checks_dir)
+            if errors:
+                raise WorkflowError(
+                    "plugin checks could not be loaded",
+                    *errors,
+                    code="CHECK_LOAD_FAILED",
+                    actor=Actor.DEVELOPER,
+                    retry=Retry.AFTER_FIX,
+                    fix=f"Fix or remove the failing check file, or run `devkit sync` to restore a synchronized one ({self.config.checks_dir} holds project checks)",
+                )
+            self._plugins = loaded
+        return self._plugins
+
+    def validate(self, doc: WorkflowDocument, known: set[str] | None = None) -> list[Problem]:
+        """Validate against the project anchor, known ids, the role vocabulary and the loaded plugin checks."""
+        ids = known if known is not None else self.known_ids() | {doc.id}
+        return validate(doc, self.config.anchor, ids, self.roles(), self.plugins())
 
     def candidate_anchors(self) -> list[str]:
         """The project anchor first, then every distinct anchor a discovered definition declares."""
@@ -207,7 +242,7 @@ class _Env:
                 code="WORKFLOW_NOT_FOUND",
                 fix=f"Add a definition with id {chosen!r} under {self.config.definitions_dir}, sync a bundle that ships it, or pass --workflow <path>",
             ) from exc
-        problems = validate(doc, self.config.anchor, self.known_ids() | {doc.id})
+        problems = self.validate(doc)
         if problems:
             raise WorkflowError.invalid_input(
                 f"workflow {doc.id} is invalid",
@@ -296,6 +331,8 @@ def _evaluate_unit(
         lint=_lint_func,
         skip_lint=no_lint,
         ancestor=is_ancestor,
+        plugins=tuple(env.plugins()),
+        roles=dict(env.roles() or {}),
     )
     try:
         result = evaluate(doc, opts)
@@ -399,7 +436,7 @@ def next_cmd(
     env = _Env(workspace_root)
     unit_dir, anchor, _, doc = env.resolve_unit(unit, workflow_ref)
 
-    registry = Registry.build(anchor, doc.declared_checks)
+    registry = Registry.build(anchor, doc.declared_checks, env.plugins())
     gates = {s.gate for s in doc.stages if s.gate}
     for name in given:
         check = registry.lookup(name)
@@ -686,26 +723,46 @@ def answer_cmd(
 
 @cli.command(name="show")
 @WORKSPACE
-@click.argument("ref", type=str)
+@click.argument("ref", type=str, required=False)
+@click.option("--unit", "-u", "unit", default=None, help="Show the workflow this unit is bound to instead of REF")
 @FORMAT
 @_boundary
-def show_cmd(workspace_root: str, ref: str, output_format: str) -> None:
-    """Print a workflow definition's stages, gates and schema hash."""
+def show_cmd(workspace_root: str, ref: str | None, unit: str | None, output_format: str) -> None:
+    """Print a workflow definition's stages, gates and schema hash (by id/path, or a unit's binding)."""
     env = _Env(workspace_root)
-    try:
-        doc = resolve(env.definitions_dir, ref, env.root)
-    except DefinitionError as exc:
-        raise WorkflowError.invalid_input(str(exc), code="WORKFLOW_NOT_FOUND") from exc
-    problems = validate(doc, env.config.anchor, env.known_ids() | {doc.id})
+    binding: Binding | None = None
+    if (ref is None) == (unit is None):
+        raise WorkflowError.invalid_input(
+            "pass exactly one of REF or --unit",
+            code="WORKFLOW_NOT_SELECTED",
+            fix="Run `agent-workflow show <id|path>` or `agent-workflow show --unit <dir>`",
+        )
+    if unit is not None:
+        _, _, binding, doc = env.resolve_unit(unit, None)
+        problems = env.validate(doc)
+    else:
+        assert ref is not None
+        try:
+            doc = resolve(env.definitions_dir, ref, env.root)
+        except DefinitionError as exc:
+            raise WorkflowError.invalid_input(str(exc), code="WORKFLOW_NOT_FOUND") from exc
+        problems = env.validate(doc)
+    drift = bool(binding and binding.bound and binding.hash != schema_hash(doc))
     if output_format.lower() == "json":
         data = doc.to_dict()
         data["problems"] = [str(p) for p in problems]
         data["approvals"] = {s.gate: env.config.policy(s.gate) for s in doc.stages if s.gate}
         data["stages_off"] = [s.id for s in doc.stages if env.config.stage_policy(s.id) == "off"]
         data["anchor"] = env.anchor_for(doc)
+        if binding is not None:
+            data["binding"] = {**binding.to_dict(), "drift": drift}
         _echo_json(data)
     else:
         click.echo(render_document(doc, env.config.approvals, env.config.stages), nl=False)
+        if binding is not None:
+            click.echo(
+                f"[BINDING: workflow={binding.workflow or '-'} hash={binding.hash or '-'} drift={str(drift).lower()}]"
+            )
         for p in problems:
             click.secho(f"[PROBLEM: {p}]", fg="red")
     if problems:
@@ -719,7 +776,7 @@ def show_cmd(workspace_root: str, ref: str, output_format: str) -> None:
 def checks_cmd(workspace_root: str, output_format: str) -> None:
     """List registered check names, classes and parameters."""
     env = _Env(workspace_root)
-    entries = Registry.build(env.config.anchor).entries()
+    entries = Registry.build(env.config.anchor, (), env.plugins()).entries()
     if output_format.lower() == "json":
         _echo_json([c.to_dict() for c in entries])
         return
@@ -751,13 +808,15 @@ def validate_cmd(workspace_root: str, paths: tuple[str, ...]) -> None:
             except DefinitionError as exc:
                 batches.append(([], [str(exc)]))
     known = env.known_ids() | {doc.id for docs, _ in batches for doc in docs}
+    if env.roles() is None:
+        click.echo(f"[NOTE: role check skipped: no installation receipt and no {env.config.roles_dir}]")
     for docs, errors in batches:
         for err in errors:
             failed = True
             click.secho(f"[INVALID: {err}]", fg="red")
         for doc in docs:
             seen += 1
-            problems = validate(doc, env.config.anchor, known)
+            problems = env.validate(doc, known)
             where = env.rel(doc.path) if doc.path else doc.id
             if problems:
                 failed = True
@@ -766,6 +825,11 @@ def validate_cmd(workspace_root: str, paths: tuple[str, ...]) -> None:
                     click.echo(f"  - {p}")
             else:
                 click.secho(f"[VALID: {where} id={doc.id} hash={schema_hash(doc)}]", fg="green")
+    if not targets:
+        shared = shared_stage_problems([doc for docs, _ in batches for doc in docs])
+        for problem in shared:
+            failed = True
+            click.secho(f"[INVALID: {problem}]", fg="red")
     if seen == 0 and not failed:
         click.echo(f"[VALID: no definitions under {env.config.definitions_dir}]")
     if failed:
@@ -774,9 +838,13 @@ def validate_cmd(workspace_root: str, paths: tuple[str, ...]) -> None:
 
 @cli.command(name="list")
 @WORKSPACE
+@click.option("--status", "statuses", multiple=True, help="Keep units whose anchor status equals this (repeatable)")
+@click.option(
+    "--exclude-status", "excluded", multiple=True, help="Drop units whose anchor status equals this (repeatable)"
+)
 @FORMAT
 @_boundary
-def list_cmd(workspace_root: str, output_format: str) -> None:
+def list_cmd(workspace_root: str, statuses: tuple[str, ...], excluded: tuple[str, ...], output_format: str) -> None:
     """List discovered work units with their status and binding, across every layout in use."""
     env = _Env(workspace_root)
     layouts: list[TemplateLayout] = [env.layout]
@@ -805,6 +873,10 @@ def list_cmd(workspace_root: str, output_format: str) -> None:
                 "history": " ".join(h.workflow for h in binding.history) or None,
             }
     ordered = [rows[k] for k in sorted(rows)]
+    if statuses:
+        ordered = [row for row in ordered if (row["status"] or "") in statuses]
+    if excluded:
+        ordered = [row for row in ordered if (row["status"] or "") not in excluded]
     if output_format.lower() == "json":
         _echo_json(ordered)
         return

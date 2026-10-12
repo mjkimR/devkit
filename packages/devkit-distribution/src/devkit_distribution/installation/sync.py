@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from importlib import metadata
 from pathlib import Path
 
 from devkit_distribution.bundles import BundleError
@@ -9,6 +10,7 @@ from devkit_distribution.bundles.manifest import SLUG, seed_target
 from . import guidance_block
 from .config import parse_presets, read_config
 from .discovery import InstalledBundle
+from .hooks import run_post_sync
 from .inventory import AGENTS, GENERATED_SKILLS, Content, Seed, desired_inventory
 from .transaction import (
     AGENTS_FILE,
@@ -26,6 +28,16 @@ from .transaction import (
 )
 
 MANAGED = ".devkit/managed"
+TOOL_PACKAGE = "devkit-distribution"
+
+
+def tool_identity() -> dict[str, str]:
+    """The running distributor, recorded in the receipt on every sync."""
+    try:
+        version = metadata.version(TOOL_PACKAGE)
+    except metadata.PackageNotFoundError:
+        version = "unknown"
+    return {"package": TOOL_PACKAGE, "version": version}
 
 
 def stray_managed_files(root: Path, owned: set[str]) -> list[str]:
@@ -54,7 +66,7 @@ def read_receipt(root: Path) -> dict:
         if snapshot(root, RECEIPT) is not None:
             raise BundleError("invalid empty installation receipt")
         return {}
-    valid_keys = {"schema", "packages", "selection", "assets", "files", "overrides", "guidance_block", "seeded"}
+    valid_keys = {"schema", "packages", "selection", "assets", "files", "overrides", "guidance_block", "seeded", "tool"}
     if (
         not ({"schema", "packages", "selection", "assets", "files"} <= set(receipt) <= valid_keys)
         or type(receipt["schema"]) is not int
@@ -65,6 +77,14 @@ def read_receipt(root: Path) -> dict:
         isinstance(receipt["guidance_block"], str) and re.fullmatch(r"[0-9a-f]{64}", receipt["guidance_block"])
     ):
         raise BundleError("invalid receipt guidance_block")
+    if "tool" in receipt:
+        tool = receipt["tool"]
+        if (
+            not isinstance(tool, dict)
+            or set(tool) != {"package", "version"}
+            or not all(isinstance(v, str) and v for v in tool.values())
+        ):
+            raise BundleError("invalid receipt tool")
     files = receipt["files"]
     if not isinstance(files, dict):
         raise BundleError("invalid receipt files")
@@ -237,14 +257,27 @@ def sync_project(
             root=root,
             previous_overrides=previous.get("overrides"),
         )
+        if config.override_drift == "block" and drift_list:
+            listed = ", ".join(f"{item['bundle']}:{item['asset']}" for item in drift_list)
+            raise BundleError(
+                f'upstream drift behind an override (override_drift = "block"): {listed}; review with'
+                " 'devkit override diff <bundle>:<asset>' and accept with 'devkit override accept <bundle>:<asset>'"
+            )
         old_files = previous.get("files", {})
         changes: dict[str, Content | None] = {}
         actions = []
+        notices: list[str] = []
+        # Managed files that were edited by hand and are no longer desired: left on disk,
+        # dropped from the receipt, reported. A modified file that is still desired aborts.
+        orphans: list[str] = []
         for name in sorted(old_files.keys() | desired.keys()):
             current = snapshot(root, name)
             after = desired.get(name)
             if name in old_files:
                 if current is not None and signature(current) != old_files[name]:
+                    if after is None:
+                        orphans.append(name)
+                        continue
                     raise BundleError(f"user-modified deployment file: {name}")
             elif current is not None:
                 raise BundleError(f"unowned destination already exists: {name}")
@@ -253,12 +286,19 @@ def sync_project(
                 actions.append(
                     {"path": name, "action": "remove" if after is None else ("create" if current is None else "update")}
                 )
+        for name in orphans:
+            notices.append(f"left modified file in place: {name} (no longer managed; delete it yourself)")
+        tool = tool_identity()
+        recorded_tool = previous.get("tool")
+        if isinstance(recorded_tool, dict) and recorded_tool != tool:
+            notices.append(f"{recorded_tool['package']} {recorded_tool['version']} -> {tool['version']}")
         receipt = {
             "schema": 1,
             "packages": packages,
             "selection": {"agents": active_agents, "presets": active_presets},
             "assets": assets,
             "files": {name: signature(content) for name, content in sorted(desired.items())},
+            "tool": tool,
         }
         if overrides_record:
             receipt["overrides"] = overrides_record
@@ -282,7 +322,7 @@ def sync_project(
             actions.append({"path": RECEIPT, "action": "update" if previous else "create"})
         if not dry_run:
             apply_changes(root, changes)
-        return {
+        result: dict[str, object] = {
             "dry_run": dry_run,
             "stray": stray_managed_files(root, old_files.keys() | desired.keys()),
             "selection": receipt["selection"],
@@ -290,7 +330,9 @@ def sync_project(
             "assets": assets,
             "actions": actions,
             "drift": drift_list,
+            "orphans": orphans,
             "unprojected": unprojected,
+            "notices": notices,
             "unselected": [
                 {
                     "bundle": item.bundle.name,
@@ -302,6 +344,9 @@ def sync_project(
                 if item.bundle.name not in active_presets
             ],
         }
+        if not dry_run:
+            notices.extend(run_post_sync(root, result))
+        return result
 
 
 def recover_project(root: Path) -> int:

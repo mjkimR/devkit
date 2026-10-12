@@ -60,7 +60,7 @@ def test_cli_plugin_failure_preserves_json_and_fails(tmp_path: Path) -> None:
     rules.mkdir()
     (rules / "broken.py").write_text('raise RuntimeError("broken plugin")\n')
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--rules-dir", str(rules), "--format", "json"])
-    assert result.exit_code == 1
+    assert result.exit_code == 2
     assert json.loads(result.stdout) == []
     assert "broken plugin" in result.stderr
     assert "passed cleanly" not in result.stdout
@@ -72,7 +72,7 @@ def test_cli_malformed_frontmatter_is_not_overwritten(tmp_path: Path) -> None:
     original = "---\nid: [invalid\n---\n# Keep this content\n"
     doc.write_text(original)
     result = CliRunner().invoke(cli, ["fix", "-w", str(tmp_path)])
-    assert result.exit_code == 1
+    assert result.exit_code == 2
     assert "Invalid YAML frontmatter" in result.stderr
     assert "passed cleanly" not in result.stdout
     assert doc.read_text() == original
@@ -138,14 +138,14 @@ def test_cli_json_output_stays_a_violation_list_with_effective_phase(tmp_path: P
 def test_cli_invalid_rules_config_fails(tmp_path: Path) -> None:
     _write_config(tmp_path, '[rules.phase_overrides]\nRULE-markdown-link = "linter"\n')
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path)])
-    assert result.exit_code != 0
+    assert result.exit_code == 2
     assert "is not 'hygiene'" in result.output
 
 
 def test_cli_override_for_unknown_rule_fails(tmp_path: Path) -> None:
     _write_config(tmp_path, '[rules.phase_overrides]\nRULE-nope = "hygiene"\n')
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--format", "json"])
-    assert result.exit_code == 1
+    assert result.exit_code == 2
     assert json.loads(result.stdout) == []
     assert "unknown rule: RULE-nope" in result.stderr
 
@@ -212,7 +212,7 @@ def test_cli_phases_command_text_and_json(tmp_path: Path) -> None:
 def test_cli_phases_command_flags_unknown_override(tmp_path: Path) -> None:
     _write_config(tmp_path, '[rules.phase_overrides]\nRULE-nope = "hygiene"\n')
     result = CliRunner().invoke(cli, ["phases", "-w", str(tmp_path)])
-    assert result.exit_code == 1
+    assert result.exit_code == 2
     assert "unknown rule: RULE-nope" in result.stderr
 
 
@@ -242,7 +242,7 @@ def test_cli_settings_override_by_path_and_guide_line(tmp_path: Path) -> None:
 def test_cli_invalid_settings_fail_before_checks(tmp_path: Path) -> None:
     _write_config(tmp_path, "[rules.settings.RULE-file-length]\nmax_lines = 'many'\n")
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--format", "json"])
-    assert result.exit_code == 1
+    assert result.exit_code == 2
     assert json.loads(result.stdout) == []
     assert "RULE-file-length: settings.max_lines: expected integer" in result.stderr
 
@@ -276,7 +276,7 @@ def test_cli_explain_text_and_json(tmp_path: Path) -> None:
     assert data["settings"]["overrides"] == [{"path": "docs/**", "max_lines": 800}]
 
     unknown = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-nope"])
-    assert unknown.exit_code == 1 and "unknown rule: RULE-nope" in unknown.stderr
+    assert unknown.exit_code == 2 and "unknown rule: RULE-nope" in unknown.stderr
 
     plain = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-markdown-link"])
     assert plain.exit_code == 0 and "Settings: none" in plain.output
@@ -408,11 +408,15 @@ def test_cli_ci_gate_uses_base_ref(tmp_path: Path) -> None:
 def test_cli_snapshot_flag_validation(tmp_path: Path) -> None:
     root = _repo(tmp_path)
     runner = CliRunner()
-    assert runner.invoke(cli, ["check", "-w", str(root), "--staged", "--ci"]).exit_code == 2
-    assert runner.invoke(cli, ["check", "-w", str(root), "--staged", "README.md"]).exit_code == 2
-    assert runner.invoke(cli, ["check", "-w", str(root), "--staged", "--phase", "hygiene"]).exit_code == 2
+    both = runner.invoke(cli, ["check", "-w", str(root), "--staged", "--ci"])
+    assert both.exit_code == 2 and "mutually exclusive" in both.stderr
+    with_file = runner.invoke(cli, ["check", "-w", str(root), "--staged", "README.md"])
+    assert with_file.exit_code == 2 and "without file arguments" in with_file.stderr
+    hygiene = runner.invoke(cli, ["check", "-w", str(root), "--staged", "--phase", "hygiene"])
+    assert hygiene.exit_code == 2 and "without file arguments" in hygiene.stderr
     outside = runner.invoke(cli, ["check", "-w", str(tmp_path), "--staged"])
-    assert outside.exit_code == 1 and "git write-tree failed" in outside.output
+    assert outside.exit_code == 2 and "git write-tree failed" in outside.output
+    assert "Usage:" not in outside.output  # an evaluation failure, not a usage error
 
 
 NO_TODO_RULE = """from agent_rule_engine import RuleContext, Violation
@@ -471,11 +475,11 @@ def test_cli_staged_gate_rejects_managed_rule_that_drifted_from_the_receipt(tmp_
     _git(root, "add", "notes.md")
     (root / ".devkit/managed/team/rules/no_todo.py").write_text(NO_TODO_RULE + "\n# edited\n")
     result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged"])
-    assert result.exit_code == 1
+    assert result.exit_code == 2
     assert "differs from the hash in the receipt" in result.stderr
     (root / ".devkit/managed/team/rules/no_todo.py").unlink()
     result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged"])
-    assert result.exit_code == 1
+    assert result.exit_code == 2
     assert "missing from the working tree" in result.stderr
 
 
@@ -490,5 +494,138 @@ def test_cli_missing_managed_rule_fails_in_working_tree_check(tmp_path: Path) ->
         )
     )
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path)])
-    assert result.exit_code == 1
+    assert result.exit_code == 2
     assert "synchronized rule .devkit/managed/team/r.py is missing" in result.stderr
+
+
+# --- directory targets, exclusions, summary-only, exit codes ---------------
+
+
+def _two_broken_docs(root: Path) -> None:
+    (root / "docs/research").mkdir(parents=True)
+    (root / "docs/a.md").write_text("[broken](missing.md)\n", encoding="utf-8")
+    (root / "docs/research/b.md").write_text("[broken](missing.md)\n", encoding="utf-8")
+    (root / "README.md").write_text("[broken](missing.md)\n", encoding="utf-8")
+
+
+def test_cli_directory_target_expands_recursively(tmp_path: Path) -> None:
+    _two_broken_docs(tmp_path)
+    (tmp_path / "docs/node_modules").mkdir()
+    (tmp_path / "docs/node_modules/ignored.md").write_text("[broken](missing.md)\n", encoding="utf-8")
+    result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--format", "json", "docs"])
+    assert result.exit_code == 1
+    assert sorted(v["file"] for v in json.loads(result.stdout)) == ["docs/a.md", "docs/research/b.md"]
+
+    mixed = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--format", "json", "docs/research", "README.md"])
+    assert sorted(v["file"] for v in json.loads(mixed.stdout)) == ["README.md", "docs/research/b.md"]
+
+
+def test_cli_invalid_target_fails_before_evaluation(tmp_path: Path) -> None:
+    _two_broken_docs(tmp_path)
+    runner = CliRunner()
+    missing = runner.invoke(cli, ["check", "-w", str(tmp_path), "docs/nope.md"])
+    assert missing.exit_code == 2
+    assert "INVALID_LINT_TARGET" in missing.stderr and "docs/nope.md" in missing.stderr
+    assert "broken" not in missing.stdout
+
+    outside = runner.invoke(cli, ["check", "-w", str(tmp_path), "../elsewhere"])
+    assert outside.exit_code == 2 and "INVALID_LINT_TARGET" in outside.stderr
+
+    fixed = runner.invoke(cli, ["fix", "-w", str(tmp_path), "--dry-run", "docs/nope"])
+    assert fixed.exit_code == 2 and "INVALID_LINT_TARGET" in fixed.stderr
+
+
+def test_cli_exclude_patterns_drop_files_from_targets_and_scans(tmp_path: Path) -> None:
+    _two_broken_docs(tmp_path)
+    _write_config(tmp_path, '[rules]\nexclude = ["docs/research/**"]\n')
+    runner = CliRunner()
+
+    whole = runner.invoke(cli, ["check", "-w", str(tmp_path), "--format", "json"])
+    assert sorted(v["file"] for v in json.loads(whole.stdout)) == ["README.md", "docs/a.md"]
+
+    directory = runner.invoke(cli, ["check", "-w", str(tmp_path), "--format", "json", "docs"])
+    assert [v["file"] for v in json.loads(directory.stdout)] == ["docs/a.md"]
+
+    explicit = runner.invoke(cli, ["check", "-w", str(tmp_path), "--format", "json", "docs/research/b.md"])
+    assert explicit.exit_code == 0 and json.loads(explicit.stdout) == []
+
+
+def test_cli_excluded_files_remain_link_repair_candidates(tmp_path: Path) -> None:
+    (tmp_path / "docs/research").mkdir(parents=True)
+    (tmp_path / "docs/research/target.md").write_text("# Target\n", encoding="utf-8")
+    (tmp_path / "docs/a.md").write_text("[t](wrong/target.md)\n", encoding="utf-8")
+    _write_config(tmp_path, '[rules]\nexclude = ["docs/research/**"]\n')
+    result = CliRunner().invoke(cli, ["fix", "-w", str(tmp_path)])
+    assert result.exit_code == 0, result.output
+    assert (tmp_path / "docs/a.md").read_text(encoding="utf-8") == "[t](research/target.md)\n"
+
+
+def test_cli_invalid_exclude_pattern_fails_before_rules(tmp_path: Path) -> None:
+    _two_broken_docs(tmp_path)
+    _write_config(tmp_path, '[rules]\nexclude = ["/docs/**"]\n')
+    result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--format", "json"])
+    assert result.exit_code == 2
+    assert "exclude[0]" in result.stderr
+    assert "broken" not in result.stdout
+
+
+def test_cli_summary_only_prints_counts_not_findings(tmp_path: Path) -> None:
+    _two_broken_docs(tmp_path)
+    _long_doc(tmp_path, "docs/long.md", 500)
+    runner = CliRunner()
+    result = runner.invoke(cli, ["check", "-w", str(tmp_path), "--phase", "hygiene", "--summary-only"])
+    assert result.exit_code == 1
+    assert "RULE-markdown-link: 3 error(s), 0 warning(s)" in result.output
+    assert "RULE-file-length: 0 error(s), 1 warning(s)" in result.output
+    assert "Summary: 3 errors, 1 warnings" in result.output
+    assert "Message:" not in result.output and "docs/a.md" not in result.output
+
+    _fixable_link_workspace(tmp_path / "other")
+    fixed = runner.invoke(cli, ["fix", "-w", str(tmp_path / "other"), "--summary-only"])
+    assert fixed.exit_code == 0, fixed.output
+    assert "RULE-markdown-link: 0 error(s), 0 warning(s), 1 fixed" in fixed.output
+    assert "[FIXED]" not in fixed.output
+
+    clean = runner.invoke(cli, ["check", "-w", str(tmp_path / "other"), "--summary-only"])
+    assert clean.exit_code == 0 and "passed cleanly" in clean.output
+
+    as_json = runner.invoke(cli, ["check", "-w", str(tmp_path), "--summary-only", "--format", "json"])
+    assert len(json.loads(as_json.stdout)) == 3  # JSON ignores the flag
+
+
+def test_cli_summary_only_keeps_sentinel_lines(tmp_path: Path) -> None:
+    _broken_link_workspace(tmp_path)
+    _write_config(tmp_path, '[rules.phase_overrides]\nRULE-markdown-link = "hygiene"\n')
+    result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--phase", "hygiene", "--summary-only"])
+    assert "[PHASE_OVERRIDE: RULE-markdown-link=hygiene" in result.output
+    assert "RULE-markdown-link: 1 error(s), 0 warning(s)" in result.output
+
+    (tmp_path / "repo-dir").mkdir()
+    root = _repo(tmp_path / "repo-dir")
+    (root / "docs").mkdir()
+    (root / "docs/a.md").write_text("[broken](missing.md)\n")
+    _git(root, "add", "docs")
+    staged = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "--summary-only"])
+    assert staged.exit_code == 1
+    assert "[SNAPSHOT: mode=staged" in staged.output and "Message:" not in staged.output
+
+
+def test_cli_exit_codes_distinguish_violations_from_failures(tmp_path: Path) -> None:
+    _broken_link_workspace(tmp_path)
+    runner = CliRunner()
+    assert runner.invoke(cli, ["check", "-w", str(tmp_path)]).exit_code == 1  # unresolved violations
+    rules = tmp_path / "rules"
+    rules.mkdir()
+    (rules / "boom.py").write_text("""from agent_rule_engine.rules import BaseRule
+
+
+class Boom(BaseRule):
+    def __init__(self) -> None:
+        super().__init__(id="RULE-boom", name="boom", description="raises")
+
+    def check(self, ctx):
+        raise RuntimeError("boom")
+""")
+    failed = runner.invoke(cli, ["check", "-w", str(tmp_path), "--rules-dir", str(rules)])
+    assert failed.exit_code == 2  # execution error, even though violations also exist
+    assert "Rule execution error (RULE-boom)" in failed.stderr

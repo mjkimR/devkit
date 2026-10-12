@@ -168,9 +168,10 @@ agent-workflow handoff --unit DIR [--workflow ID] [--date YYYY-MM-DD]  # continu
 agent-workflow requests --unit DIR [--format text|json]        # open human requests of a unit
 agent-workflow answer --unit DIR --request ID --action ACTION [--value V]... [--note TEXT] [--by NAME]
 agent-workflow show <ID|PATH> [--format text|json]              # print a definition's stages, hash and next candidates
-agent-workflow checks [--format text|json]                      # registered check names, classes and parameters
-agent-workflow validate [PATH]...                               # validate definitions (default: definitions_dir)
-agent-workflow list [--format text|json]                        # discovered units across every layout, with anchor, status and binding
+agent-workflow show --unit DIR [--format text|json]             # the unit's bound definition plus [BINDING: ... drift=bool]
+agent-workflow checks [--format text|json]                      # registered check names, classes and parameters (plugins included)
+agent-workflow validate [PATH]...                               # validate definitions (default: both sources, plus roles and shared stages)
+agent-workflow list [--status S]... [--exclude-status S]... [--format text|json]  # discovered units across every layout
 agent-workflow envelope new --unit DIR --kind KIND [--stage ID] # write the next envelopes/<kind>-NN.yaml skeleton
 agent-workflow envelope new --unit DIR --kind KIND [--status S] [--summary TEXT] [--assume TEXT]... [--unverified TEXT]...
                             [--check NAME=PASS|FAIL|SKIP[ detail]]... [--base REV] [--head REV] [--findings-file PATH|-]
@@ -197,6 +198,7 @@ Errors are reported on stderr as Agent Advisory Protocol blocks from the `agent-
 | `REQUEST_UNKNOWN`, `DECISION_INVALID` | `INPUT_ERROR` | `answer` names a request that is not open, or an action/value that does not fit it (see [Human Interaction Contract](human-interaction.md)) |
 | `WORKFLOW_DRIFT` | `BLOCKED` | the bound schema hash changed under in-flight work; `[FIX]` names the `bind` command |
 | `LINT_FAILED` | `MAINTENANCE` | `agent-rule-engine` raised a rule execution error during `lint-clean` |
+| `CHECK_LOAD_FAILED` | `MAINTENANCE` | a plugin check file failed to load, declares an invalid check, or a receipt `workflow-check` path is missing from disk |
 
 Output contracts are specified in [Workflow Definitions and Checks, section 5](definition-and-checks.md#5-output-signals); the request and decision formats in [Human Interaction Contract](human-interaction.md).
 
@@ -207,7 +209,8 @@ Output contracts are specified in [Workflow Definitions and Checks, section 5](d
 - **Lint check.** The `lint-clean` check runs `agent-rule-engine` in the `linter` phase on the files of the work unit, honoring the project's `[rules]` policy (phase and severity overrides, typed settings) and loading the rules that `devkit sync` recorded in the installation receipt. Violations are reported in the check detail; a rule execution or loading error fails the command.
 - **Workflow definitions as assets.** A bundle declares `kind = "workflow"` assets (one Markdown definition each). `devkit sync` places them under `.devkit/managed/<bundle>/` and records their paths in the installation receipt under `entrypoints`. The engine discovers definitions from two sources: the project's `definitions_dir`, and every workflow asset in `.devkit/installation.json`. A project definition with the same `id` shadows the synchronized one, so a repository can adapt a distributed workflow without editing managed files. `agent-workflow validate` with no arguments covers both sources.
 - **Entry skill.** When at least one workflow asset is synchronized, `devkit sync` generates the shared `devkit-workflow` skill and projects it into every selected agent's skill directory, exactly as it does for `devkit-playbook`. The skill tells the agent to run `agent-workflow next --unit <dir>`, treat `[STAGE]` as the diagnosed stage, open the skill named by `[NEXT_SKILL]`, never pass `--given` for an approval it did not receive, and on `[HANDOFF]` present the candidates and run `handoff` only after the user's choice (or immediately under `policy=auto`). It is identical for every host; Codex gets `allow_implicit_invocation: true` because the agent should pick it up whenever a task follows a workflow. Repositories that use no workflow never see the skill.
-- **Subagent delegation.** `[DELEGATE: role=<role> isolation=<level>]` names a role; the host's projected subagent file for that role is the contract. A bundle ships the role as a `kind = "subagent"` asset, either as native files per agent or as one host-neutral role contract that `devkit sync` renders for each selected agent (see [Agent Projections](../distribution/agent-projections.md)). The engine does not resolve host paths.
+- **Subagent delegation.** `[DELEGATE: role=<role> isolation=<level> contract=<path>]` names a role and the contract that defines it. A bundle ships the role as a `kind = "subagent"` asset, either as native files per agent or as one host-neutral role contract that `devkit sync` renders for each selected agent (see [Agent Projections](../distribution/agent-projections.md)). The engine reads the receipt's `subagent` assets (asset id, plus the `role` a managed contract declares) and the project's `[workflow] roles_dir` (`<role>.md`, shadowing the receipt) as the role vocabulary: `validate` rejects a stage role outside it, and `[DELEGATE]` cites the managed or overridden contract, else the first projected file. With no receipt and no `roles_dir` the check is skipped with a `[NOTE]`.
+- **Plugin checks.** A bundle may ship check evaluators as Python files under a `kind = "workflow-check"` asset (a manifest kind `devkit-distribution` does not declare yet; the engine already reads it from the receipt). The project may also drop files under `[workflow] checks_dir`. Each file defines `BaseCheck` subclasses with `name`, `description`, `params` and `evaluate(ctx)`; they register with class `plugin` and are referenced from definitions like primitives. See [Workflow Definitions and Checks, Plugin Checks](definition-and-checks.md#plugin-checks).
 
 ---
 
@@ -223,4 +226,10 @@ The stage schema, check classes, evaluation loop, binding hash, envelope file co
 | `human_gate: true` interpreted by skill prose | `[workflow.approvals]` enforced by the CLI with `ask`, `auto`, `off` |
 | `workflow envelope new` with authoring flags and `envelope check` | same flag surface (`--status`, `--summary`, `--assume`, `--unverified`, `--check`, `--base`, `--head`, `--findings-file`, `--from`, `--resolve`, `--waive`) and `envelope check`; plain `envelope new` still writes a `needs_input` skeleton |
 
-Proposal handoff as relocation (moving a bundle from `docs/proposals/` to `specs/` with link rewriting), worktree commands, the scope registry and the feedback counter are specrig methodology and are not part of this engine. The engine provides the layout, binding and skip primitives such a layer needs.
+| role vocabulary validated against `.specrig/subagents/<role>.md`; `[DELEGATE]` prints the contract path | validated against receipt `subagent` assets plus `[workflow] roles_dir`; `[DELEGATE]` prints `contract=` |
+| own evaluators (`materials-present`, `envelope-final-report-present`) compiled into the Go binary | plugin checks loaded from `kind = "workflow-check"` assets or `checks_dir` |
+| `RULE-workflow-shared-stage` lint rule | `validate` reports differing shared stages across definitions |
+| `workflow show --spec <dir>` | `show --unit <dir>` with `[BINDING]` |
+| `list spec` excludes completed specs by default | `list --exclude-status completed` (exact-match filters, no default exclusion) |
+
+Proposal handoff as relocation (moving a bundle from `docs/proposals/` to `specs/` with link rewriting), worktree commands, the scope registry and the feedback counter are specrig methodology and are not part of this engine. The engine provides the layout, binding, role, plugin-check and skip primitives such a layer needs.

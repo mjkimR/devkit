@@ -16,6 +16,7 @@ from agent_rule_engine.engine.registry import RuleRegistry, default_registry
 from agent_rule_engine.engine.settings import RawSettings, SettingsError, SettingsResolver, match_path
 from agent_rule_engine.workspace.cache import MarkdownLink, WorkspaceCache
 from agent_rule_engine.workspace.catalog import Document, DocumentCatalog
+from agent_rule_engine.workspace.markdown import count_tasks
 from agent_rule_engine.workspace.snapshot import Snapshot, SnapshotError, git_snapshot, materialize
 
 __all__ = [
@@ -40,6 +41,7 @@ __all__ = [
     "SnapshotError",
     "Violation",
     "WorkspaceCache",
+    "count_tasks",
     "default_registry",
     "evaluate",
     "git_snapshot",
