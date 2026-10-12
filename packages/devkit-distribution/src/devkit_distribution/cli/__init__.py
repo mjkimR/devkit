@@ -7,6 +7,7 @@ import click
 
 from devkit_distribution.bundles import BundleError, build_bundle, load_bundle, plan_bundle
 from devkit_distribution.bundles.manifest import SLUG
+from devkit_distribution.installation.config import read_config, resolve_selection, update_config
 from devkit_distribution.installation.context import get_context
 from devkit_distribution.installation.discovery import discover_bundles
 from devkit_distribution.installation.inventory import AGENTS
@@ -110,57 +111,20 @@ def plan(source: Path, preset: str | None) -> None:
     _run("plan", source, preset=preset)
 
 
-@cli.command()
-@click.option("--target", default=".", type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--agent", "agents", multiple=True, type=click.Choice(sorted(AGENTS)))
-@click.option("--no-agents", is_flag=True, help="Clear recorded native agent selections.")
-@click.option("--preset", "presets", multiple=True, help="Select bundle:preset; repeat for multiple bundles.")
-@click.option(
-    "--exclude-bundle",
-    "exclude_bundles",
-    multiple=True,
-    help="Exclude bundle from synchronization; repeat for multiple bundles.",
-)
-@click.option("--all-assets", is_flag=True, help="Clear recorded preset restrictions.")
-@click.option("--dry-run", is_flag=True)
-@click.option("--check", is_flag=True, help="Read-only check; exit 1 when synchronization is needed.")
-def sync(
-    target: Path,
-    agents: tuple[str, ...],
-    no_agents: bool,
-    presets: tuple[str, ...],
-    exclude_bundles: tuple[str, ...],
-    all_assets: bool,
-    dry_run: bool,
-    check: bool,
-) -> None:
-    """Synchronize resources from installed content packages into a project."""
-    if agents and no_agents:
-        raise click.UsageError("--agent and --no-agents cannot be combined")
-    selected = {}
-    for value in presets:
+def _parse_selections(values: tuple[str, ...], param_hint: str) -> dict[str, list[str]]:
+    """Parse ``bundle[:preset]`` values; repeating a bundle selects a union, a bare bundle its default preset."""
+    selected: dict[str, list[str]] = {}
+    for value in values:
         name, separator, preset = value.partition(":")
-        if not separator or not name or not preset or name in selected:
-            raise click.BadParameter("expected unique bundle:preset selections", param_hint="--preset")
-        selected[name] = preset
-    for exc in exclude_bundles:
-        if not SLUG.fullmatch(exc):
-            raise click.BadParameter("expected lowercase slug bundle name", param_hint="--exclude-bundle")
-        if exc in selected:
-            raise click.UsageError(f"cannot combine --preset and --exclude-bundle for '{exc}'")
-    try:
-        with discover_bundles() as installed:
-            result = sync_project(
-                target,
-                installed,
-                agents=[] if no_agents else (list(agents) if agents else None),
-                presets=selected,
-                exclude_bundles=list(exclude_bundles) if exclude_bundles else None,
-                all_assets=all_assets,
-                dry_run=dry_run or check,
-            )
-    except (BundleError, OSError) as exc:
-        raise click.ClickException(str(exc)) from exc
+        if not SLUG.fullmatch(name) or (separator and not SLUG.fullmatch(preset)):
+            raise click.BadParameter(f"expected bundle[:preset] slugs: {value}", param_hint=param_hint)
+        presets = selected.setdefault(name, [])
+        if preset and preset not in presets:
+            presets.append(preset)
+    return selected
+
+
+def _report(result: dict[str, object]) -> None:
     click.echo(json.dumps(result, indent=2))
     drift = result.get("drift")
     if isinstance(drift, list):
@@ -173,24 +137,115 @@ def sync(
                     f"Run 'devkit override diff {bundle_name}:{asset_id}' to review.",
                     err=True,
                 )
+    unselected = result.get("unselected")
+    if isinstance(unselected, list) and unselected:
+        names = ", ".join(str(item["bundle"]) for item in unselected if isinstance(item, dict))
+        click.echo(
+            f"NOTICE: installed bundles not selected: {names}. Select with 'devkit add <bundle>[:<preset>]'.",
+            err=True,
+        )
+
+
+@cli.command()
+@click.option("--target", default=".", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--agent", "agents", multiple=True, type=click.Choice(sorted(AGENTS)), help="Set agent targets.")
+@click.option("--no-agents", is_flag=True, help="Clear agent targets.")
+@click.option(
+    "--preset",
+    "presets",
+    multiple=True,
+    help="Select bundle[:preset]; a bare bundle uses its default preset; repeat a bundle for a union.",
+)
+@click.option("--no-save", is_flag=True, help="Apply selection flags to this run without editing .devkit/config.toml.")
+@click.option("--dry-run", is_flag=True)
+@click.option("--check", is_flag=True, help="Read-only check; exit 1 when synchronization is needed.")
+def sync(
+    target: Path,
+    agents: tuple[str, ...],
+    no_agents: bool,
+    presets: tuple[str, ...],
+    no_save: bool,
+    dry_run: bool,
+    check: bool,
+) -> None:
+    """Synchronize the bundles selected in .devkit/config.toml into a project."""
+    if agents and no_agents:
+        raise click.UsageError("--agent and --no-agents cannot be combined")
+    requested = _parse_selections(presets, "--preset")
+    active_agents = [] if no_agents else (list(agents) if agents else None)
+    dry_run = dry_run or check
+    try:
+        with discover_bundles() as installed:
+            selected = resolve_selection(installed, requested)
+            result = sync_project(target, installed, agents=active_agents, presets=selected, dry_run=dry_run)
+            if not (no_save or dry_run) and (selected or active_agents is not None):
+                update_config(target.resolve(), agents=active_agents, presets=selected)
+    except (BundleError, OSError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    _report(result)
     if check and result["actions"]:
         raise click.exceptions.Exit(1)
+
+
+@cli.command()
+@click.argument("selections", nargs=-1, required=True)
+@click.option("--target", default=".", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--dry-run", is_flag=True, help="Preview without editing configuration or files.")
+def add(selections: tuple[str, ...], target: Path, dry_run: bool) -> None:
+    """Select bundle[:preset] in .devkit/config.toml and synchronize.
+
+    Without a preset, the bundle's default preset is recorded by name.
+    """
+    requested = _parse_selections(selections, "SELECTIONS")
+    try:
+        with discover_bundles() as installed:
+            selected = resolve_selection(installed, requested)
+            result = sync_project(target, installed, presets=selected, dry_run=dry_run)
+            if not dry_run:
+                update_config(target.resolve(), presets=selected)
+    except (BundleError, OSError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    _report(result)
+
+
+@cli.command()
+@click.argument("bundles", nargs=-1, required=True)
+@click.option("--target", default=".", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--dry-run", is_flag=True, help="Preview without editing configuration or files.")
+def remove(bundles: tuple[str, ...], target: Path, dry_run: bool) -> None:
+    """Deselect bundles in .devkit/config.toml and synchronize."""
+    try:
+        configured = read_config(target.resolve()).presets
+        missing = sorted(set(bundles) - set(configured))
+        if missing:
+            raise BundleError(f"bundle is not selected in .devkit/config.toml: {missing}")
+        with discover_bundles() as installed:
+            result = sync_project(target, installed, deselect=bundles, dry_run=dry_run)
+            if not dry_run:
+                update_config(target.resolve(), deselect=bundles)
+    except (BundleError, OSError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    _report(result)
 
 
 @cli.command(name="list")
 @click.option("--target", default=".", type=click.Path(exists=True, file_okay=False, path_type=Path))
 def list_resources(target: Path) -> None:
-    """List installed bundle metadata and the project's synchronized asset paths."""
+    """List installed bundles, their selection state, and the project's synchronized asset paths."""
+    root = target.resolve()
     try:
         with discover_bundles() as installed:
-            receipt = read_receipt(target.resolve())
+            receipt = read_receipt(root)
+            configured = read_config(root).presets
             result = {
                 "installed": [
                     {
                         "package": item.package,
                         "version": item.package_version,
                         "bundle": item.bundle.name,
-                        "presets": sorted(item.bundle.presets),
+                        "presets": item.bundle.preset_names,
+                        "default_preset": item.bundle.default_preset,
+                        "selected": configured.get(item.bundle.name),
                         "assets": [{"id": asset.id, "kind": asset.kind} for asset in item.bundle.assets],
                     }
                     for item in installed

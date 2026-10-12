@@ -58,6 +58,8 @@ class RuleContext:
     dry_run: bool = False
     cache: WorkspaceCache = field(default=None)  # type: ignore[assignment]
     options: dict[str, Any] = field(default_factory=dict)
+    # Project policy moving rules out of their declared phase (``[rules.phase_overrides]``).
+    phase_overrides: dict[str, Phase] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         self.workspace_root = self.workspace_root.resolve()

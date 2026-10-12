@@ -6,6 +6,7 @@ import pytest
 from click.testing import CliRunner
 from devkit_distribution.bundles import BundleError, build_bundle, load_bundle, plan_bundle
 from devkit_distribution.cli import cli
+from devkit_distribution.installation.config import update_config
 from devkit_distribution.installation.context import get_context
 from devkit_distribution.installation.discovery import InstalledBundle
 from devkit_distribution.installation.sync import sync_project
@@ -42,6 +43,7 @@ assets = ["review", "test"]
 """)
     target = tmp_path / "consumer"
     target.mkdir()
+    update_config(target, presets={"team": ["all"]})
     installed = [InstalledBundle("team-content", "0.1.0", load_bundle(source))]
     return source, target, installed
 
@@ -61,7 +63,7 @@ def test_progressive_disclosure_and_stateless_repeated_reads(project) -> None:
     cli_result = CliRunner().invoke(cli, ["get-context", "team", "--target", str(nested)])
     assert cli_result.exit_code == 0, cli_result.output
     assert "BODY_ONLY_SENTINEL" not in cli_result.output
-    sync_project(target, installed, presets={"team": "skills"})
+    sync_project(target, installed, presets={"team": ["skills"]})
     assert get_context(target, "team")["instructions"] == []
     assert get_context(target, "team")["constitution"] == result["constitution"]
 
@@ -69,7 +71,8 @@ def test_progressive_disclosure_and_stateless_repeated_reads(project) -> None:
 def test_deployed_prerequisite_preserves_frontmatter_and_source(project) -> None:
     source, target, installed = project
     original = (source / "review/SKILL.md").read_bytes()
-    sync_project(target, installed, agents=["codex", "claude-code"])
+    update_config(target, agents=["codex", "claude-code"])
+    sync_project(target, installed)
     for directory in [".devkit/managed/team", ".agents/skills", ".claude/skills"]:
         for skill in ["review", "test"]:
             output = (target / directory / skill / "SKILL.md").read_bytes()
@@ -87,7 +90,7 @@ def test_instruction_only_bundle_still_gets_discovery(project) -> None:
     sync_project(target, installed)
     assert get_context(target, "team")["constitution"] is None
     assert b"get-context team" in (target / ".devkit/managed/team/review/SKILL.md").read_bytes()
-    sync_project(target, installed, presets={"team": "skills"})
+    sync_project(target, installed, presets={"team": ["skills"]})
     assert (target / ".devkit/managed/team/review/SKILL.md").read_bytes() == (source / "review/SKILL.md").read_bytes()
 
 
@@ -134,4 +137,4 @@ def test_unclosed_skill_frontmatter_fails_before_deployment(project) -> None:
     (source / "review/SKILL.md").write_text("---\nname: review\n")
     with pytest.raises(BundleError, match="unclosed YAML"):
         sync_project(target, installed)
-    assert not (target / ".devkit").exists()
+    assert not (target / ".devkit/managed").exists()

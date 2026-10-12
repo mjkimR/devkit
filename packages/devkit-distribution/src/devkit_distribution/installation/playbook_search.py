@@ -10,8 +10,9 @@ from pathlib import Path
 from devkit_distribution.bundles import BundleError
 from devkit_distribution.bundles.playbooks import read_playbook_header, require_english_text
 
+from .config import read_playbook_config
 from .reading import read_owned, synchronized_root
-from .sync import read_playbook_config, read_receipt
+from .sync import read_receipt
 from .transaction import JOURNAL, project_lock, snapshot
 
 

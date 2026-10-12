@@ -25,7 +25,7 @@ class Content:
 
 def desired_inventory(
     installed: list[InstalledBundle],
-    presets: dict[str, str],
+    presets: dict[str, list[str]],
     agents: list[str],
     *,
     root: Path | None = None,
@@ -42,9 +42,9 @@ def desired_inventory(
     packages = []
     overrides_record: dict[str, dict[str, dict[str, str]]] = {}
     drift_list: list[dict[str, str]] = []
-    unknown = set(presets) - {item.bundle.name for item in installed}
-    if unknown:
-        raise BundleError(f"preset bundle is not installed: {sorted(unknown)}")
+    # Every bundle passed in is deployed, so each needs an explicit preset selection.
+    if set(presets) != {item.bundle.name for item in installed}:
+        raise BundleError("inventory requires exactly one preset selection per bundle")
     if set(agents) - AGENTS.keys():
         raise BundleError("unsupported agent selection")
 
@@ -66,10 +66,7 @@ def desired_inventory(
                 "bundle_version": bundle.version,
             }
         )
-        preset = presets.get(bundle.name)
-        if preset is not None and preset not in bundle.presets:
-            raise BundleError(f"{bundle.name}: unknown preset {preset}")
-        selected = set(bundle.presets[preset]) if preset else {asset.id for asset in bundle.assets}
+        selected = bundle.select(presets[bundle.name])
         prefix = f".devkit/managed/{bundle.name}/"
         add(prefix + "bundle.toml", bundle.root / "bundle.toml")
         managed: set[str] = {prefix + "bundle.toml"}

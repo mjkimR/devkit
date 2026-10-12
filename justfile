@@ -42,3 +42,7 @@ rules-check +args="":
 # Run rule engine autofix
 rules-fix +args="":
     uv run --no-active --package agent-rule-engine agent-rules fix {{ args }}
+
+# Show each rule's default/effective phase, project overrides, and pending promotions
+rules-phases +args="":
+    uv run --no-active --package agent-rule-engine agent-rules phases {{ args }}

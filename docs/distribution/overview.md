@@ -70,10 +70,10 @@ The distribution architecture comprises five primary units:
 | --- | --- | --- |
 | `devkit-distribution` | CLI, manifest validator, bundle packager, planner, transactional workspace engine, native projection adapters | Semantic versioning (`X.Y.Z`) as a standard Python package |
 | Content Wheel | Versioned asset sources, native variants, dependencies, metadata | Python wheel with semantic package version and bundle version |
-| `bundle.toml` | Manifest declaring assets, kinds, sources/variants, and presets | Pinned to `schema = 1` contract within the wheel's resource module |
+| `bundle.toml` | Manifest declaring assets, kinds, sources/variants, presets, and an optional default preset | Pinned to `schema = 1` contract within the wheel's resource module |
 | `agent-rule-engine` | Governance rule discovery, sequential evaluation, autofix convergence recheck | Monorepo package/CLI; rules declare dependencies through wheels |
-| Project Config | Declarative baseline agent targets, bundle presets, and exclusions | Optional TOML (`schema = 1`) in `.devkit/config.toml` (Git-tracked) |
-| Consumer Receipt | Pinned packages, bundle versions, selections, asset paths, file hashes/modes | Explicit receipt schema version (`schema = 1`) in `.devkit/installation.json` |
+| Project Config | Explicit bundle selection with presets, agent targets, and rule-engine phase overrides | TOML (`schema = 1`) in `.devkit/config.toml` (Git-tracked); no entry means not deployed; `[rules]` is owned by `agent-rule-engine` |
+| Consumer Receipt | Pinned packages and bundle versions of selected bundles, applied selection, asset paths, file hashes/modes | Explicit receipt schema version (`schema = 1`) in `.devkit/installation.json` |
 
 ---
 

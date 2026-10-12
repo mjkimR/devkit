@@ -9,6 +9,8 @@ from typing import Any
 KINDS = {"skill", "subagent", "instruction", "playbook", "rule"}
 SLUG = re.compile(r"[a-z][a-z0-9-]*\Z")
 VERSION = re.compile(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\Z")
+# Reserved preset available in every bundle; selects every declared asset.
+ALL = "all"
 
 
 class BundleError(ValueError):
@@ -29,6 +31,25 @@ class Bundle:
     version: str
     assets: tuple[Asset, ...]
     presets: dict[str, tuple[str, ...]]
+    default_preset: str | None = None
+
+    @property
+    def preset_names(self) -> list[str]:
+        return [ALL, *sorted(self.presets)]
+
+    def select(self, presets: list[str] | tuple[str, ...]) -> set[str]:
+        """Return the union of asset IDs selected by ``presets``."""
+        if not presets:
+            raise BundleError(f"{self.name}: at least one preset is required")
+        selected: set[str] = set()
+        for preset in presets:
+            if preset == ALL:
+                selected.update(asset.id for asset in self.assets)
+            elif preset in self.presets:
+                selected.update(self.presets[preset])
+            else:
+                raise BundleError(f"{self.name}: unknown preset {preset}; available: {', '.join(self.preset_names)}")
+        return selected
 
     @property
     def constitution(self) -> Path | None:
@@ -91,7 +112,9 @@ def load_bundle(root: Path) -> Bundle:
     manifest = safe_source(root, "bundle.toml")
     try:
         data = _mapping(
-            tomllib.loads(manifest.read_text()), {"schema", "name", "version", "assets", "presets"}, "bundle"
+            tomllib.loads(manifest.read_text()),
+            {"schema", "name", "version", "assets", "presets", "default_preset"},
+            "bundle",
         )
     except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
         raise BundleError(f"cannot read bundle.toml: {exc}") from exc
@@ -143,6 +166,8 @@ def load_bundle(root: Path) -> Bundle:
     presets = {}
     for preset, raw in raw_presets.items():
         _slug(preset, "preset")
+        if preset == ALL:
+            raise BundleError(f"preset {ALL} is reserved")
         item = _mapping(raw, {"assets"}, f"preset {preset}")
         selected = item.get("assets")
         if not isinstance(selected, list) or not selected or not all(isinstance(v, str) for v in selected):
@@ -150,7 +175,10 @@ def load_bundle(root: Path) -> Bundle:
         if len(set(selected)) != len(selected) or set(selected) - ids:
             raise BundleError(f"{preset}: duplicate or unknown asset selection")
         presets[preset] = tuple(selected)
-    bundle = Bundle(root, name, version, tuple(assets), presets)
+    default_preset = data.get("default_preset")
+    if default_preset is not None and (not isinstance(default_preset, str) or default_preset not in {ALL, *presets}):
+        raise BundleError(f"default_preset: expected {ALL} or a declared preset")
+    bundle = Bundle(root, name, version, tuple(assets), presets, default_preset)
     if bundle.constitution is not None:
         try:
             bundle.constitution.read_text(encoding="utf-8")

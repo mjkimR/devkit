@@ -31,6 +31,8 @@ The rule engine is implemented in `packages/agent-rule-engine/src/agent_rule_eng
 src/agent_rule_engine/
 ├── engine/                  # Core evaluation engine & contracts
 │   ├── models.py            # Violation, RuleContext, Rule, Autofixable protocols
+│   ├── config.py            # [rules] section of .devkit/config.toml (phase overrides)
+│   ├── phases.py            # Effective phase resolution, overrides, promotions
 │   ├── registry.py          # RuleRegistry & default_registry
 │   └── evaluator.py         # Sequential rule evaluation & convergence recheck
 ├── workspace/               # Shared file caching & document catalog
@@ -42,7 +44,7 @@ src/agent_rule_engine/
 │   ├── markdown/            # Relative link validation & repair
 │   └── hygiene/             # File length & formatting checks
 └── cli/                     # CLI entry point
-    └── commands.py          # Click commands: check and fix
+    └── commands.py          # Click commands: check, fix and phases
 ```
 
 ---

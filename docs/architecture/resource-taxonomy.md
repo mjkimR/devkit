@@ -287,7 +287,7 @@ Python package extras (`[project.optional-dependencies]`) were evaluated and **f
 
 ### Adopted Architecture: Manifest Presets & Project Configuration
 
-Asset filtering is governed by **bundle-level manifest presets** and **project-level declarative configuration**:
+Asset filtering is governed by **bundle-level manifest presets** and **project-level declarative configuration**. Selection is **explicit opt-in**: installing a wheel makes a bundle available, and only a project configuration entry makes it deployed.
 
 #### 1. Bundle Manifest Presets (`bundle.toml`)
 Content bundles declare cohesive, purpose-specific asset subsets directly in their manifest (analogous to `specrig`'s modular preset bundles such as `git-commits` or `skill-authoring`):
@@ -297,6 +297,7 @@ Content bundles declare cohesive, purpose-specific asset subsets directly in the
 schema = 1
 name = "starter-workflow"
 version = "0.1.0"
+default_preset = "daily"
 
 [[assets]]
 id = "development"
@@ -317,8 +318,10 @@ source = "skills/review"
 assets = ["development", "review-flow", "review"]
 ```
 
+Every bundle also provides the reserved preset `all`. The optional `default_preset` is the author's recommended entry point; it is applied only when a consumer selects the bundle without naming a preset.
+
 #### 2. Declarative Consumer Configuration (`.devkit/config.toml`)
-Consumer repositories declare their desired baseline presets, agents, and playbook search defaults in a Git-tracked project configuration file:
+Consumer repositories declare which bundles they adopt, with which presets, in a Git-tracked project configuration file:
 
 ```toml
 # .devkit/config.toml (Consumer Project, Git-tracked)
@@ -334,14 +337,28 @@ limit = 5
 max_bytes = 8192
 ```
 
-Running `uv run devkit sync` automatically converges the workspace to the declared configuration without requiring developers or CI pipelines to pass manual CLI flags. Playbook search (`uv run devkit playbook search`) adopts the `[playbooks]` defaults when explicit CLI flags are omitted.
+`devkit add starter-workflow` writes the `[presets]` entry (resolving `default_preset` to `"daily"`) and synchronizes. Afterwards, a plain `devkit sync` converges the workspace to the declared configuration without CLI flags. Playbook search (`devkit playbook search`) adopts the `[playbooks]` defaults when explicit CLI flags are omitted.
 
-#### 3. Configuration Precedence Matrix
-Selections and search defaults are resolved using a clear three-tier hierarchy:
+#### 3. Architecture Decision: Explicit Opt-In over Install-Implies-Deploy
 
-1. **CLI Overrides**: Explicit CLI flags (`--preset bundle:name`, `--all-assets`, `--agent name`, `--no-agents`, `--limit`, `--min-score`, `--max-bytes`) take highest priority for ad-hoc experimentation and scripting.
-2. **Project Configuration (`.devkit/config.toml`)**: Repository-level baseline committed to Git; governs clean checkouts, default `devkit sync` runs, and playbook search parameters.
-3. **Installation Receipt (`.devkit/installation.json`) & Built-in Defaults**: Preserves previously synchronized selections when neither CLI flags nor `config.toml` specify restrictions, and falls back to built-in search defaults (`limit=5`, `min_score=0.1`, `max_bytes=8192`).
+The initial design deployed **every asset of every installed bundle** unless a preset or an `exclude_bundles` entry narrowed it, and fell back to receipt-recorded selections when the configuration was silent. It was replaced before release because:
+
+1. **Transitive leakage**: Bundles arrive through runtime dependencies (for example, a library shipping its own usage guide). Install-implies-deploy injected those assets into every downstream workspace and forced consumers to enumerate opt-outs.
+2. **Upstream-controlled scope**: Whatever an upstream release added to a bundle appeared in consumer workspaces on upgrade, without a consumer-side change to review.
+3. **Hidden state**: Selections passed once on the CLI persisted only in the receipt, so the effective selection could not be read from Git-tracked configuration.
+
+Alternatives considered:
+
+- **Author default preset applied automatically**: Narrows the blast radius but keeps both transitive leakage and upstream-controlled scope. Adopted only in its selection-time form (`default_preset` resolved by `devkit add` and recorded by name).
+- **Automatic for direct dependencies, opt-in for transitive ones**: Rejected for the same reason as extras: `importlib.metadata` cannot tell which packages the consumer requested directly, and the CLI may run in a tool environment (`uvx --with ...`) with no consumer `pyproject.toml` at all.
+
+#### 4. Selection Resolution
+
+1. **CLI Selection** (`devkit add`, `devkit remove`, `devkit sync --agent/--no-agents/--preset`): Edits `config.toml` and then synchronizes; `--no-save` applies flags to one run only.
+2. **Project Configuration (`.devkit/config.toml`)**: The only persistent selection input. A bundle without a `[presets]` entry is not deployed.
+3. **Built-in Defaults**: No agents and no bundles; playbook search defaults (`limit=5`, `min_score=0.1`, `max_bytes=8192`).
+
+The installation receipt records the applied selection for audit and ownership tracking but is never read back as a selection input. The normative rules are in [Synchronization & Transactions](../distribution/sync-and-transactions.md#2-asset-selection-model).
 
 ---
 

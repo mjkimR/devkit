@@ -5,7 +5,7 @@ contains `bundle/bundle.toml`, an instruction, a playbook, and a skill.
 
 ```bash
 uv add --dev devkit-distribution devkit-starter
-uv run devkit sync --preset starter:daily
+uv run devkit add starter   # records starter = "daily" (the default preset)
 ```
 
 No rule code is executed by this package. Native placement requires an explicit

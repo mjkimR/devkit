@@ -7,7 +7,7 @@ Requires Python 3.12 or later; runtime dependencies are `click` and `pyyaml`.
 
 ```text
 src/agent_rule_engine/
-├── engine/                  # Rule contracts, registry, evaluation and autofix recheck
+├── engine/                  # Rule contracts, registry, config, phases, evaluation and autofix recheck
 ├── workspace/               # Shared file cache, parsing and document catalog
 ├── cli/                     # Click commands and output formatting
 └── rules/
@@ -32,6 +32,7 @@ just rules-check docs/stories/US-login.md
 just rules-fix --dry-run
 just rules-fix
 just rules-check --phase hygiene
+just rules-phases
 ```
 
 To install directly in another project:
@@ -43,6 +44,7 @@ uv run agent-rules check --workspace-root .
 
 `check` never writes files. `fix --dry-run` returns the initial fixable findings
 without writes. `hygiene` includes linter rules as well as hygiene checks.
+`phases` prints each rule's default and effective phase without evaluating.
 Exit code 1 indicates unresolved error violations, rule execution failures, or
 custom rule loading failures. Warnings alone do not fail the command.
 `--format json` emits an array of violations to stdout; execution and loading
@@ -51,6 +53,29 @@ errors are reported separately to stderr.
 File arguments are exact workspace-relative paths or absolute paths inside the
 workspace. An empty list checks the whole workspace. Relationship checks still
 build the full `docs/` and `specs/` catalog, even when checking selected files.
+
+## Phase overrides and promotions
+
+The `linter` phase is the gate for hooks and CI. To adopt a rule against a
+codebase that already violates it, park it in `hygiene` while the debt is
+cleared, then return it once `check --phase hygiene` reports `remaining=0`:
+
+- A project moves a built-in or custom `linter` rule to `hygiene` in its
+  Git-tracked `.devkit/config.toml`. Only `"hygiene"` is accepted, and an entry
+  for an unknown rule fails the run.
+
+  ```toml
+  [rules.phase_overrides]
+  RULE-markdown-link = "hygiene"
+  ```
+
+- A rule author declares a new `hygiene` rule with `promote_to=Phase.LINTER`
+  to record that it becomes a linter rule once clean.
+
+`check --phase hygiene` prints a `[PHASE_OVERRIDE: ...]` or `[PROMOTION: ...]`
+line per pending transition with its remaining count. `agent-rules phases`
+lists the full plan, and `--format json` emits one object per rule. Details are
+in [Evaluation Lifecycle](../../docs/rule-engine/evaluation-lifecycle.md).
 
 ## Library and custom rules
 
@@ -93,7 +118,9 @@ Caches live for one evaluation session. File discovery is cached and ignores
 common dependency/cache directories. Markdown links use a lightweight regex
 extractor with fenced/inline code skipping, not a full Markdown AST parser.
 The runner checks working-tree files; Git snapshot evaluation, Go CLI IPC,
-`rule.yaml` metadata and parallel workers are future work.
+`rule.yaml` metadata and parallel workers are future work. Phase overrides can
+only move a rule to `hygiene`; promoting a rule to `linter` is done by editing
+its declared phase.
 
 ## Architectural Specifications & Deep-Dives
 

@@ -70,6 +70,22 @@ def test_plan_preset_is_read_only(source: Path) -> None:
         plan_bundle(load_bundle(source), "missing")
 
 
+def test_default_preset_and_reserved_all(source: Path) -> None:
+    bundle = load_bundle(source)
+    assert bundle.default_preset is None
+    assert bundle.preset_names == ["all", "daily"]
+    assert bundle.select(["all"]) == {"review", "reviewer"}
+    assert [asset["id"] for asset in plan_bundle(bundle)["assets"]] == ["review", "reviewer"]
+    manifest = source / "bundle.toml"
+    manifest.write_text(
+        manifest.read_text().replace('version = "0.1.0"', 'version = "0.1.0"\ndefault_preset = "daily"')
+    )
+    bundle = load_bundle(source)
+    assert bundle.default_preset == "daily"
+    assert [asset["id"] for asset in plan_bundle(bundle)["assets"]] == ["review"]
+    assert [asset["id"] for asset in plan_bundle(bundle, "all")["assets"]] == ["review", "reviewer"]
+
+
 @pytest.mark.parametrize(
     ("original", "replacement", "message"),
     [
@@ -82,6 +98,9 @@ def test_plan_preset_is_read_only(source: Path) -> None:
         ('kind = "skill"', 'kind = "unknown"', "unknown asset kind"),
         ('assets = ["review"]', 'assets = ["missing"]', "unknown asset selection"),
         ("schema = 1", "schema = 1\nextra = true", "unknown keys"),
+        ("[presets.daily]", "[presets.all]", "preset all is reserved"),
+        ('version = "0.1.0"', 'version = "0.1.0"\ndefault_preset = "missing"', "default_preset"),
+        ('version = "0.1.0"', 'version = "0.1.0"\ndefault_preset = 1', "default_preset"),
     ],
 )
 def test_invalid_manifest(source: Path, original: str, replacement: str, message: str) -> None:

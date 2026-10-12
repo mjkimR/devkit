@@ -3,7 +3,8 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 
-from agent_rule_engine.engine.models import Autofixable, Phase, Rule, RuleContext, Violation
+from agent_rule_engine.engine.models import Autofixable, Rule, RuleContext, Violation
+from agent_rule_engine.engine.phases import effective_phase, runs_in_phase, validate_phase_overrides
 
 logger = logging.getLogger(__name__)
 
@@ -22,21 +23,30 @@ def evaluate(ctx: RuleContext, rules: list[Rule]) -> EvaluationResult:
     """Evaluate rules sequentially using context and cache, applying autofix and convergence rechecks."""
     result = EvaluationResult()
 
-    # 1. Phase filtering
-    active_rules: list[Rule] = []
-    for r in rules:
-        if ctx.phase == Phase.LINTER and r.phase != Phase.LINTER:
-            continue
-        active_rules.append(r)
+    # 0. Project phase overrides must name known rules and change something
+    override_errors = validate_phase_overrides(rules, ctx.phase_overrides)
+    if override_errors:
+        result.errors.extend(override_errors)
+        return result
+
+    # 1. Phase filtering on the effective (overridden) phase
+    phases = {r.id: effective_phase(r, ctx.phase_overrides) for r in rules}
+    active_rules: list[Rule] = [r for r in rules if runs_in_phase(phases[r.id], ctx.phase)]
 
     # 2. Prerequisite ordering: format rules run before relationship checks
     active_rules.sort(key=lambda r: 0 if r.id == "RULE-spec-format" else 1)
+
+    def _check(rule: Rule) -> list[Violation]:
+        found = rule.check(ctx)
+        for v in found:
+            v.phase = phases[rule.id]
+        return found
 
     # 3. Initial check
     initial_violations: list[Violation] = []
     for r in active_rules:
         try:
-            violations = r.check(ctx)
+            violations = _check(r)
             initial_violations.extend(violations)
         except Exception as exc:
             msg = f"Rule execution error ({r.id}): {exc}"
@@ -75,7 +85,7 @@ def evaluate(ctx: RuleContext, rules: list[Rule]) -> EvaluationResult:
     recheck_violations: list[Violation] = []
     for r in active_rules:
         try:
-            violations = r.check(ctx)
+            violations = _check(r)
             recheck_violations.extend(violations)
         except Exception as exc:
             msg = f"Rule recheck error ({r.id}): {exc}"

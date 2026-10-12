@@ -7,7 +7,7 @@ import zipfile
 from pathlib import Path
 
 from .guidance import prepend_context
-from .manifest import Bundle, BundleError, source_files
+from .manifest import ALL, Bundle, BundleError, source_files
 
 
 def _payload(bundle: Bundle) -> dict[str, tuple[bytes, int]]:
@@ -49,9 +49,8 @@ def build_bundle(bundle: Bundle, output: Path) -> dict[str, str | int]:
 
 
 def plan_bundle(bundle: Bundle, preset: str | None = None) -> dict[str, object]:
-    if preset is not None and preset not in bundle.presets:
-        raise BundleError(f"unknown preset: {preset}")
-    selected = set(bundle.presets[preset]) if preset else {asset.id for asset in bundle.assets}
+    preset = preset or bundle.default_preset or ALL
+    selected = bundle.select([preset])
     payload = _payload(bundle)
     files = set()
     if bundle.constitution is not None:

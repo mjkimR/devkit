@@ -32,6 +32,29 @@ class Rule(Protocol):
         ...
 ```
 
+`phase` is the rule's default phase. A project may move a `linter` rule to `hygiene` through `[rules.phase_overrides]` in `.devkit/config.toml`; the evaluator applies that override before filtering, so a rule never needs to inspect it. See [Evaluation Lifecycle, section 4](evaluation-lifecycle.md#4-phase-transitions-overrides-and-promotions).
+
+### Optional `promote_to`
+
+`BaseRule` accepts an optional `promote_to` field. It is not part of the `Rule` protocol, so plain classes may omit it. Declare it on a `hygiene` rule that is meant to become a `linter` rule once the codebase is clean:
+
+```python
+from agent_rule_engine.rules import BaseRule
+
+class NoTodoRule(BaseRule):
+    def __init__(self) -> None:
+        super().__init__(
+            id="RULE-no-todo",
+            name="no-todo",
+            description="TODO markers are tracked debt.",
+            phase=Phase.HYGIENE,
+            severity=Severity.WARNING,
+            promote_to=Phase.LINTER,
+        )
+```
+
+`promote_to` is only valid as `Phase.LINTER` on a `Phase.HYGIENE` rule; any other combination raises `ValueError` at construction. `agent-rules check --phase hygiene` reports the remaining violation count for every rule declaring a promotion, and `agent-rules phases` lists the pending transition.
+
 ### The `Autofixable` Protocol
 
 Rules that support automated deterministic repairs implement `Autofixable`:

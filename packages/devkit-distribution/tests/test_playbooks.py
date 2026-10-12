@@ -10,6 +10,7 @@ from click.testing import CliRunner
 from devkit_distribution.bundles import BundleError, load_bundle
 from devkit_distribution.bundles.playbooks import read_playbook_header
 from devkit_distribution.cli import cli
+from devkit_distribution.installation.config import update_config
 from devkit_distribution.installation.context import get_context
 from devkit_distribution.installation.discovery import InstalledBundle
 from devkit_distribution.installation.playbook_search import bm25_scores, search_playbooks
@@ -57,6 +58,10 @@ assets = ["recovery", "guide"]
     return InstalledBundle(f"{bundle}-content", "0.1.0", load_bundle(root))
 
 
+def select(target: Path, *bundles: str) -> None:
+    update_config(target, presets={name: ["all"] for name in bundles})
+
+
 @pytest.fixture
 def target(tmp_path: Path) -> Path:
     root = tmp_path / "consumer"
@@ -66,6 +71,7 @@ def target(tmp_path: Path) -> Path:
 
 def test_search_aliases_across_bundles_without_body_disclosure(tmp_path: Path, target: Path) -> None:
     installed = [make_bundle(tmp_path, "team", directory=True), make_bundle(tmp_path, "ops")]
+    select(target, "team", "ops")
     sync_project(target, installed)
     nested = target / "nested"
     nested.mkdir()
@@ -81,6 +87,7 @@ def test_search_aliases_across_bundles_without_body_disclosure(tmp_path: Path, t
 
 
 def test_search_caps_threshold_and_cli_budget(tmp_path: Path, target: Path) -> None:
+    select(target, "team", "ops")
     sync_project(target, [make_bundle(tmp_path, "team"), make_bundle(tmp_path, "ops")])
     limited = search_playbooks(target, "replica", limit=1)
     assert len(limited["results"]) == 1
@@ -101,7 +108,9 @@ def test_search_caps_threshold_and_cli_budget(tmp_path: Path, target: Path) -> N
 
 def test_generated_skill_policies_and_sync_lifecycle(tmp_path: Path, target: Path) -> None:
     installed = [make_bundle(tmp_path, "team"), make_bundle(tmp_path, "ops")]
-    sync_project(target, installed, agents=["codex", "claude-code"])
+    select(target, "team", "ops")
+    update_config(target, agents=["codex", "claude-code"])
+    sync_project(target, installed)
     assert (target / MANAGED_ROOT / "SKILL.md").exists()
     codex = target / ".agents/skills/devkit-playbook"
     claude = target / ".claude/skills/devkit-playbook"
@@ -114,21 +123,22 @@ def test_generated_skill_policies_and_sync_lifecycle(tmp_path: Path, target: Pat
     receipt = (target / RECEIPT).read_bytes()
     assert sync_project(target, installed)["actions"] == []
     assert (target / RECEIPT).read_bytes() == receipt
-    sync_project(target, installed, presets={"team": "guidance"})
+    sync_project(target, installed, presets={"team": ["guidance"]})
     assert [item["bundle"] for item in search_playbooks(target, "replica")["results"]] == ["ops"]
-    sync_project(target, installed, presets={"ops": "guidance"})
+    sync_project(target, installed, presets={"team": ["guidance"], "ops": ["guidance"]})
     assert not (codex / "SKILL.md").exists()
     assert not (target / MANAGED_ROOT / "SKILL.md").exists()
     assert search_playbooks(target, "replica")["results"] == []
-    sync_project(target, installed, all_assets=True, agents=[])
+    sync_project(target, installed, agents=[])
     assert (target / MANAGED_ROOT / "SKILL.md").exists()
     assert not (claude / "SKILL.md").exists()
-    sync_project(target, [])
+    sync_project(target, [], deselect=["team", "ops"])
     assert not (target / MANAGED_ROOT / "SKILL.md").exists()
 
 
 def test_generated_skill_collision_and_user_edits_are_protected(tmp_path: Path, target: Path) -> None:
     installed = [make_bundle(tmp_path, "team")]
+    select(target, "team")
     skill = target / ".agents/skills/devkit-playbook/SKILL.md"
     skill.parent.mkdir(parents=True)
     skill.write_text("user owned")
@@ -139,10 +149,11 @@ def test_generated_skill_collision_and_user_edits_are_protected(tmp_path: Path, 
     sync_project(target, installed, agents=["codex"])
     skill.write_text("user edit")
     with pytest.raises(BundleError, match="user-modified"):
-        sync_project(target, [])
+        sync_project(target, [], deselect=["team"])
 
 
 def test_search_rejects_modified_files_and_pending_transactions(tmp_path: Path, target: Path) -> None:
+    select(target, "team")
     sync_project(target, [make_bundle(tmp_path, "team")])
     (target / JOURNAL).write_text("{}")
     with pytest.raises(BundleError, match="pending transaction"):
@@ -195,6 +206,7 @@ def test_bm25_length_normalization_and_term_frequency() -> None:
 
 
 def test_search_adopts_playbooks_config_defaults(tmp_path: Path, target: Path) -> None:
+    select(target, "team", "ops")
     sync_project(target, [make_bundle(tmp_path, "team"), make_bundle(tmp_path, "ops")])
     config_file = target / CONFIG
     config_file.parent.mkdir(parents=True, exist_ok=True)
@@ -220,6 +232,7 @@ min_score = 50.0
 
 
 def test_cli_overrides_playbooks_config(tmp_path: Path, target: Path) -> None:
+    select(target, "team", "ops")
     sync_project(target, [make_bundle(tmp_path, "team"), make_bundle(tmp_path, "ops")])
     config_file = target / CONFIG
     config_file.parent.mkdir(parents=True, exist_ok=True)

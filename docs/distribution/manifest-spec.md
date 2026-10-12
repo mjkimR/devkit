@@ -67,6 +67,7 @@ Every asset is identified by a logical tuple: `(bundle, kind, id)`. Asset IDs mu
 schema = 1
 name = "starter-workflow"
 version = "0.1.0"
+default_preset = "daily"
 
 [[assets]]
 id = "review"
@@ -94,6 +95,14 @@ source = "playbooks/review.md"
 assets = ["development", "review-flow", "review"]
 ```
 
+### Presets and the Default Preset
+
+- **Presets** (`[presets.<slug>]`) name purpose-specific asset subsets. Each preset lists one or more unique, declared asset IDs.
+- **Reserved `all` preset**: Every bundle implicitly provides a preset named `all` that selects every declared asset. Authors cannot declare `[presets.all]`.
+- **`default_preset`** (optional): Names the preset a consumer receives when it selects the bundle without naming a preset (for example `devkit add starter-workflow`). The value must be a declared preset or `all`.
+- The default preset is a recommendation applied **only at selection time**. Installing the wheel never selects the bundle, and consumer configuration records the resolved preset name rather than a reference to the default, so a later upstream change to `default_preset` never changes an existing consumer selection. See [Synchronization & Transactions](sync-and-transactions.md#2-asset-selection-model).
+- A bundle without `default_preset` must be selected with an explicit preset name.
+
 ---
 
 ## 4. Manifest Rules and Validation
@@ -104,6 +113,7 @@ assets = ["development", "review-flow", "review"]
 - **Relative Path Sanitization**: Source paths must be relative POSIX paths. Paths containing traversal segments (`..`), backslashes (`\`), symlinks, or special device files are strictly rejected.
 - **Source vs. Variants**: An asset must declare either a single `source` or a `variants` mapping matching supported agent names, never both.
 - **Skills Integrity**: A `skill` source must point to a directory containing a valid `SKILL.md` file.
+- **Preset Integrity**: Preset names are slugs and `all` is reserved. Preset asset lists must be nonempty, unique, and reference declared asset IDs. `default_preset` must name a declared preset or `all`.
 - **Verbatim Native Content**: Files declared under `variants` remain untouched during packaging and sync. The distributor does not parse, modify, or strip vendor-specific configuration keys.
 
 ---

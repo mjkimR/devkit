@@ -27,9 +27,8 @@ The receipt is the single source of truth for the installed state. It is committ
   "selection": {
     "agents": ["codex", "claude-code"],
     "presets": {
-      "starter": "daily"
-    },
-    "exclude_bundles": ["experimental-bundle"]
+      "starter": ["daily"]
+    }
   },
   "assets": [
     {
@@ -63,8 +62,8 @@ The receipt is the single source of truth for the installed state. It is committ
 ```
 
 ### Receipt Properties
-- Tracks exact package names, package versions, bundle names, and bundle versions.
-- Records active agent selections and active preset restrictions.
+- Tracks exact package names, package versions, bundle names, and bundle versions of **selected** bundles only. Installed but unselected bundles are not recorded.
+- Records the effective agent and preset selection applied by the last sync. The recorded selection is an audit record: it is never read back as an input for later selections.
 - Stores active project overrides with their baseline upstream digests and local override hashes.
 - Stores deployed asset mappings linking logical asset IDs to physical workspace file paths.
 - Records expected SHA-256 digests and POSIX file modes (`0644` or `0755`) for every deployed file.
@@ -72,27 +71,57 @@ The receipt is the single source of truth for the installed state. It is committ
 
 ---
 
-## 2. Configuration Precedence
+## 2. Asset Selection Model
 
-Target agents, bundle presets, and excluded bundles are resolved across three precedence tiers:
+### Principle: Explicit Opt-In
 
-1. **Explicit CLI Options**: CLI arguments (`--agent`, `--no-agents`, `--preset`, `--exclude-bundle`, `--all-assets`) take highest precedence for temporary or ad-hoc runs and are persisted into the receipt.
-2. **Project Configuration (`.devkit/config.toml`)**: A Git-tracked repository configuration declaring default agents, presets, and excluded bundles:
-   ```toml
-   schema = 1
-   agents = ["codex", "claude-code"]
-   exclude_bundles = ["starter"]
+Installing a content wheel makes its bundle **available**; it never makes the bundle **selected**. `devkit sync` deploys only bundles the consumer project has selected in `.devkit/config.toml`. This keeps transitive runtime dependencies (for example, a library that ships its own usage guide) from injecting assets into a workspace that did not ask for them, and it makes every deployed asset traceable to a reviewed, Git-tracked line of configuration.
 
-   [presets]
-   starter = "daily"
+### Project Configuration (`.devkit/config.toml`, `schema = 1`)
 
-   [playbooks]
-   min_score = 0.1
-   limit = 5
-   max_bytes = 8192
-   ```
-   When running `devkit sync` without flags, values in `config.toml` take precedence over previous receipt state.
-3. **Receipt State (`.devkit/installation.json`)**: When neither CLI options nor `config.toml` specify a selection, the existing receipt's selections are preserved.
+```toml
+schema = 1
+agents = ["codex", "claude-code"]
+
+[presets]
+starter = "daily"                       # one preset
+error-advisory = ["core", "python"]     # union of several presets
+team-backend = "all"                    # reserved preset: every asset
+
+[playbooks]
+min_score = 0.1
+limit = 5
+max_bytes = 8192
+```
+
+- **Allowed top-level fields**: `schema`, `agents`, `presets`, `playbooks`, `rules`. Unknown fields are rejected. `[rules]` is owned by `agent-rule-engine`; `devkit` passes it through untouched.
+- **`[presets]`** is the selection: a bundle is synchronized if and only if it has an entry. The value is a preset name or a nonempty array of unique preset names; an array selects the union of their assets. `all` is a reserved preset available in every bundle.
+- **Selected but not installed**: A selected bundle that no installed package provides is an error. Install the package or deselect the bundle with `devkit remove <bundle>`.
+- **`schema`**: Optional; `1` is the only supported version. `devkit add` writes it when it creates the file.
+
+### Resolution Order
+
+1. **CLI selection flags** (`--agent`, `--no-agents`, `--preset`) on `devkit sync`, and the `devkit add` / `devkit remove` commands, edit the matching entries of `config.toml` and then synchronize. Edits preserve unrelated tables, comments, and formatting. `--no-save` applies the flags to a single run without editing the file; `--dry-run` and `--check` never edit it.
+2. **Project configuration** (`config.toml`) is the only persistent selection input.
+3. **Built-in defaults**: no agents, no bundles, and playbook search defaults (`limit=5`, `min_score=0.1`, `max_bytes=8192`).
+
+The receipt is not a resolution tier. A selection exists only while it is written in `config.toml` (or passed with `--no-save` for one run).
+
+### Selecting a Bundle
+
+```bash
+devkit add starter                # resolves the bundle's default_preset and records it, e.g. starter = "daily"
+devkit add error-advisory:python  # records the named preset
+devkit add error-advisory:core error-advisory:python   # repeat a bundle to record a union
+devkit remove starter             # deselects; unchanged deployed files are removed
+```
+
+- `devkit add` replaces any existing entry for the named bundle. When no preset is named, it uses the bundle's `default_preset` ([Manifest Specification](manifest-spec.md#presets-and-the-default-preset)); a bundle without one must be added with an explicit preset.
+- The **resolved** preset name is written, never a symbolic default, so upstream releases cannot silently change what a consumer deploys.
+
+### Unselected Bundle Notice
+
+When installed bundles are not selected, `devkit sync` still succeeds and reports them in the JSON result under `unselected` (bundle, package, available presets, default preset). A notice on stderr names them together with the `devkit add <bundle>` command. `devkit list` shows the selection state of every installed bundle.
 
 ---
 
@@ -112,9 +141,11 @@ All mutating operations enforce strict transactional safety:
 
 | Command | Lifecycle Phase | Description |
 | --- | --- | --- |
-| `devkit sync [options]` | Deployment | Discovers installed content packages, computes plan, performs pre-flight conflict checks, executes atomic transaction, and updates receipt. |
-| `devkit list [--target <dir>]` | Discovery | Outputs JSON listing installed content packages, bundle metadata, available presets, and synchronized asset paths. |
-| `devkit plan <source> [--preset <name>]` | Authoring | Previews managed file inventory for a local bundle source without writing to a consumer project. |
+| `devkit sync [options]` | Deployment | Synchronizes selected bundles: computes plan, performs pre-flight conflict checks, executes atomic transaction, and updates receipt. |
+| `devkit add <bundle>[:<preset>]...` | Selection | Records bundle selections in `config.toml` (resolving `default_preset` when no preset is named), then synchronizes. |
+| `devkit remove <bundle>...` | Selection | Removes bundle selections from `config.toml`, then synchronizes. |
+| `devkit list [--target <dir>]` | Discovery | Outputs JSON listing installed content packages, bundle metadata, available and default presets, selection state, and synchronized asset paths. |
+| `devkit plan <source> [--preset <name>]` | Authoring | Previews managed file inventory for a local bundle source without writing to a consumer project. Without `--preset`, previews the default preset, or `all` when none is declared. |
 | `devkit get-context <bundle>` | Context | Returns bundle constitution and catalog of instruction headers for progressive loading. |
 | `devkit playbook search <query>` | Context | Runs lexical BM25 search over synchronized playbooks. |
 | `devkit override list` | Customization | Lists active project overrides and their drift status. |
@@ -127,10 +158,9 @@ All mutating operations enforce strict transactional safety:
 | `devkit bundle build <source> --output <zip>` | Packaging | Produces a deterministic ZIP archive with inventory hashes and normalized file permissions. |
 
 ### Sync Options and Modes
-- `--agent <name>`: Adds an agent target to active selections (persisted in receipt). Repeatable.
-- `--no-agents`: Clears all active agent selections and unlinks unchanged native projections.
-- `--preset <bundle>:<name>`: Restricts synchronization for `<bundle>` to `<name>`. Repeatable across bundles.
-- `--exclude-bundle <name>`: Excludes `<name>` from synchronization. Repeatable across bundles.
-- `--all-assets`: Clears recorded preset restrictions, restoring full bundle asset deployment.
-- `--dry-run`: Computes inventory and returns planned actions without writing to disk.
+- `--agent <name>`: Sets the agent targets (recorded as `agents` in `config.toml`). Repeatable.
+- `--no-agents`: Clears agent targets and unlinks unchanged native projections.
+- `--preset <bundle>[:<name>]`: Selects `<bundle>` with `<name>` (or its default preset), replacing that bundle's entry in `config.toml`. Repeat a bundle to select a union. Use `<bundle>:all` for every asset.
+- `--no-save`: Applies selection flags to this run only, without editing `config.toml`.
+- `--dry-run`: Computes inventory and returns planned actions without writing to disk or configuration.
 - `--check`: Read-only execution for CI pipelines. Exits with code `1` if workspace requires synchronization.

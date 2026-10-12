@@ -11,6 +11,7 @@ from click.testing import CliRunner
 from devkit_distribution.bundles import BundleError, load_bundle
 from devkit_distribution.cli import cli
 from devkit_distribution.installation import discovery, transaction
+from devkit_distribution.installation.config import update_config
 from devkit_distribution.installation.discovery import InstalledBundle, discover_bundles
 from devkit_distribution.installation.sync import recover_project, sync_project
 from devkit_distribution.installation.transaction import CONFIG, JOURNAL, RECEIPT, Content, snapshot
@@ -52,11 +53,26 @@ assets = ["guide"]
 def target(tmp_path: Path) -> Path:
     root = tmp_path / "consumer"
     root.mkdir()
+    update_config(root, presets={"team": ["all"]})
     return root
 
 
+@pytest.fixture
+def bare(tmp_path: Path) -> Path:
+    root = tmp_path / "bare"
+    root.mkdir()
+    return root
+
+
+def write_config(root: Path, content: str) -> None:
+    path = root / CONFIG
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content)
+
+
 def test_sync_noop_restore_and_package_removal(installed: list[InstalledBundle], target: Path) -> None:
-    first = sync_project(target, installed, agents=["codex"])
+    update_config(target, agents=["codex"])
+    first = sync_project(target, installed)
     assert first["actions"]
     receipt = (target / RECEIPT).read_bytes()
     native = target / ".codex/agents/reviewer.toml"
@@ -68,7 +84,7 @@ def test_sync_noop_restore_and_package_removal(installed: list[InstalledBundle],
     native.unlink()
     assert sync_project(target, installed)["actions"] == [{"path": ".codex/agents/reviewer.toml", "action": "create"}]
     assert (target / RECEIPT).read_bytes() == receipt
-    sync_project(target, [])
+    sync_project(target, [], deselect=["team"])
     assert not native.exists()
     assert not script.exists()
     assert json.loads((target / RECEIPT).read_text())["files"] == {}
@@ -79,11 +95,12 @@ def test_update_preset_and_reset(installed: list[InstalledBundle], target: Path)
     root = installed[0].bundle.root
     (root / "guide.md").write_text("updated")
     newer = [InstalledBundle("team-content", "0.2.0", load_bundle(root))]
-    sync_project(target, newer, presets={"team": "minimal"})
+    update_config(target, presets={"team": ["minimal"]})
+    sync_project(target, newer)
     assert (target / ".devkit/managed/team/guide.md").read_text() == "updated"
     assert not (target / ".devkit/managed/team/skills/review/SKILL.md").exists()
     assert sync_project(target, newer)["actions"] == []
-    sync_project(target, newer, all_assets=True)
+    sync_project(target, newer, presets={"team": ["all"]})
     assert (target / ".devkit/managed/team/skills/review/SKILL.md").exists()
     assert json.loads((target / RECEIPT).read_text())["packages"][0]["package_version"] == "0.2.0"
 
@@ -95,7 +112,7 @@ def test_user_edit_blocks_all_writes(installed: list[InstalledBundle], target: P
     guide.write_text("user edit")
     receipt = (target / RECEIPT).read_bytes()
     with pytest.raises(BundleError, match="user-modified"):
-        sync_project(target, [] if removal else installed)
+        sync_project(target, [] if removal else installed, deselect=["team"] if removal else ())
     assert guide.read_text() == "user edit"
     assert (target / RECEIPT).read_bytes() == receipt
 
@@ -114,19 +131,19 @@ def test_unowned_native_collision_preserves_other_tool(installed: list[Installed
     with pytest.raises(BundleError, match="unowned"):
         sync_project(target, installed, agents=["codex"])
     assert agent.read_text() == "owned by another tool"
-    assert not (target / ".devkit").exists()
+    assert not (target / RECEIPT).exists()
 
 
 def test_dry_run_and_invalid_variant_are_read_only(installed: list[InstalledBundle], target: Path) -> None:
     assert sync_project(target, installed, dry_run=True)["actions"]
-    assert list(target.iterdir()) == []
+    assert not (target / RECEIPT).exists()
     with pytest.raises(BundleError, match="missing native variant"):
         sync_project(target, installed, agents=["claude-code"])
-    assert list(target.iterdir()) == []
+    assert not (target / ".devkit/managed").exists()
 
 
 def test_destination_symlink_rejected(installed: list[InstalledBundle], target: Path, tmp_path: Path) -> None:
-    (target / ".devkit").symlink_to(tmp_path / "source", target_is_directory=True)
+    (target / ".devkit/managed").symlink_to(tmp_path / "source", target_is_directory=True)
     with pytest.raises(BundleError, match="deployment symlink"):
         sync_project(target, installed)
 
@@ -200,12 +217,15 @@ def test_cli_check_and_catalog(installed: list[InstalledBundle], target: Path, m
     result = runner.invoke(cli, ["sync", "--target", str(target), "--check"])
     assert result.exit_code == 1
     assert json.loads(result.output)["dry_run"] is True
-    assert list(target.iterdir()) == []
+    assert not (target / RECEIPT).exists()
     assert runner.invoke(cli, ["sync", "--target", str(target)]).exit_code == 0
     assert runner.invoke(cli, ["sync", "--target", str(target), "--check"]).exit_code == 0
     result = runner.invoke(cli, ["list", "--target", str(target)])
     assert json.loads(result.output)["synchronized_assets"]
     assert runner.invoke(cli, ["sync", "--target", str(target), "--agent", "codex"]).exit_code == 0
+    assert (target / ".codex/agents/reviewer.toml").exists()
+    assert 'agents = ["codex"]' in (target / CONFIG).read_text()
+    assert runner.invoke(cli, ["sync", "--target", str(target)]).exit_code == 0
     assert (target / ".codex/agents/reviewer.toml").exists()
     assert runner.invoke(cli, ["sync", "--target", str(target), "--no-agents"]).exit_code == 0
     assert not (target / ".codex/agents/reviewer.toml").exists()
@@ -245,63 +265,63 @@ def test_native_name_collision_between_packages(installed: list[InstalledBundle]
 
     other = InstalledBundle("other-content", "0.1.0", replace(installed[0].bundle, name="other"))
     with pytest.raises(BundleError, match="destination collision"):
-        sync_project(target, [*installed, other], agents=["codex"])
-    assert list(target.iterdir()) == []
+        sync_project(target, [*installed, other], agents=["codex"], presets={"other": ["all"]})
+    assert not (target / RECEIPT).exists()
 
 
-def test_sync_reads_project_config(installed: list[InstalledBundle], target: Path) -> None:
-    config_file = target / CONFIG
-    config_file.parent.mkdir(parents=True, exist_ok=True)
-    config_file.write_text("""schema = 1
+def test_sync_reads_project_config(installed: list[InstalledBundle], bare: Path) -> None:
+    write_config(
+        bare,
+        """schema = 1
 agents = ["codex"]
 
 [presets]
 team = "minimal"
-""")
-    sync_project(target, installed)
-    assert (target / ".devkit/managed/team/guide.md").exists()
-    assert not (target / ".devkit/managed/team/skills/review/SKILL.md").exists()
+""",
+    )
+    sync_project(bare, installed)
+    assert (bare / ".devkit/managed/team/guide.md").exists()
+    assert not (bare / ".devkit/managed/team/skills/review/SKILL.md").exists()
     # "reviewer" is not in the "minimal" preset, so its projection does not exist
-    assert not (target / ".codex/agents/reviewer.toml").exists()
-    receipt = json.loads((target / RECEIPT).read_text())
-    assert receipt["selection"] == {"agents": ["codex"], "presets": {"team": "minimal"}}
+    assert not (bare / ".codex/agents/reviewer.toml").exists()
+    receipt = json.loads((bare / RECEIPT).read_text())
+    assert receipt["schema"] == 1
+    assert receipt["selection"] == {"agents": ["codex"], "presets": {"team": ["minimal"]}}
 
 
-def test_sync_precedence_cli_overrides_config(installed: list[InstalledBundle], target: Path) -> None:
-    config_file = target / CONFIG
-    config_file.parent.mkdir(parents=True, exist_ok=True)
-    config_file.write_text("""schema = 1
-agents = ["codex"]
+def test_unselected_bundles_are_not_deployed(installed: list[InstalledBundle], bare: Path) -> None:
+    result = sync_project(bare, installed)
+    assert not (bare / ".devkit/managed").exists()
+    assert result["packages"] == []
+    assert result["unselected"] == [
+        {"bundle": "team", "package": "team-content", "presets": ["all", "minimal"], "default_preset": None}
+    ]
+    assert json.loads((bare / RECEIPT).read_text())["selection"] == {"agents": [], "presets": {}}
 
-[presets]
-team = "minimal"
-""")
-    sync_project(target, installed, all_assets=True)
+
+def test_preset_union_and_one_run_selection(installed: list[InstalledBundle], target: Path, tmp_path: Path) -> None:
+    root = installed[0].bundle.root
+    with (root / "bundle.toml").open("a") as stream:
+        stream.write('[presets.skills]\nassets = ["review"]\n')
+    union = [InstalledBundle("team-content", "0.1.0", load_bundle(root))]
+    update_config(target, presets={"team": ["minimal", "skills"]})
+    assert 'team = ["minimal", "skills"]' in (target / CONFIG).read_text()
+    sync_project(target, union)
+    assert (target / ".devkit/managed/team/guide.md").exists()
     assert (target / ".devkit/managed/team/skills/review/SKILL.md").exists()
-    # Now that all assets are selected, codex agent reviewer.toml is projected
-    assert (target / ".codex/agents/reviewer.toml").exists()
-    receipt = json.loads((target / RECEIPT).read_text())
-    assert receipt["selection"]["presets"] == {}
-    assert receipt["selection"]["agents"] == ["codex"]
-
-    sync_project(target, installed, agents=[])
-    assert not (target / ".codex/agents/reviewer.toml").exists()
-    receipt = json.loads((target / RECEIPT).read_text())
-    assert receipt["selection"]["agents"] == []
+    assert not (target / ".devkit/managed/team/reviewer.toml").exists()
+    # One-run selections are not persisted: the next plain sync converges back to config.
+    sync_project(target, union, presets={"team": ["minimal"]})
+    assert not (target / ".devkit/managed/team/skills/review/SKILL.md").exists()
+    sync_project(target, union)
+    assert (target / ".devkit/managed/team/skills/review/SKILL.md").exists()
 
 
-def test_sync_config_selection_table(installed: list[InstalledBundle], target: Path) -> None:
-    config_file = target / CONFIG
-    config_file.parent.mkdir(parents=True, exist_ok=True)
-    config_file.write_text("""schema = 1
-
-[selection]
-agents = ["codex"]
-presets = { team = "minimal" }
-""")
-    sync_project(target, installed)
-    receipt = json.loads((target / RECEIPT).read_text())
-    assert receipt["selection"] == {"agents": ["codex"], "presets": {"team": "minimal"}}
+def test_selected_bundle_must_be_installed(installed: list[InstalledBundle], target: Path) -> None:
+    with pytest.raises(BundleError, match=r"selected bundle is not installed: \['team'\]"):
+        sync_project(target, [])
+    with pytest.raises(BundleError, match="unknown preset missing"):
+        sync_project(target, installed, presets={"team": ["missing"]})
 
 
 @pytest.mark.parametrize(
@@ -311,30 +331,29 @@ presets = { team = "minimal" }
         ("schema = 'bad'\n", "unsupported config schema"),
         ("agents = ['unsupported']\n", "config: invalid agents"),
         ("[presets]\n'bad slug!' = 'minimal'\n", "config: invalid presets"),
+        ("[presets]\nteam = []\n", "config: invalid presets"),
+        ("[presets]\nteam = ['minimal', 'minimal']\n", "config: invalid presets"),
+        ("[presets]\nteam = 1\n", "config: invalid presets"),
         ("unknown_field = 42\n", "config: unknown fields"),
-        ("[selection]\nunknown_subfield = true\n", "config selection: unknown fields"),
+        ("exclude_bundles = ['team']\n", "config: unknown fields"),
+        ("[selection]\nagents = []\n", "config: unknown fields"),
         ("[playbooks]\nunknown_subfield = true\n", "config playbooks: unknown fields"),
         ("[playbooks]\nlimit = 0\n", "config playbooks: limit must be an integer between 1 and 20"),
         ("[playbooks]\nmin_score = -1\n", "config playbooks: min_score must be a finite nonnegative number"),
         ("[playbooks]\nmax_bytes = 100\n", "config playbooks: max_bytes must be an integer between 1024 and 65536"),
-        ("exclude_bundles = 'bad'\n", "config: invalid exclude_bundles"),
-        ("exclude_bundles = ['bad slug!']\n", "config: invalid exclude_bundles"),
-        ("[selection]\nexclude_bundles = 123\n", "config: invalid exclude_bundles"),
         ("invalid toml [[\n", "invalid config"),
     ],
 )
-def test_invalid_project_config(installed: list[InstalledBundle], target: Path, content: str, error_match: str) -> None:
-    config_file = target / CONFIG
-    config_file.parent.mkdir(parents=True, exist_ok=True)
-    config_file.write_text(content)
+def test_invalid_project_config(installed: list[InstalledBundle], bare: Path, content: str, error_match: str) -> None:
+    write_config(bare, content)
     with pytest.raises(BundleError, match=error_match):
-        sync_project(target, installed)
+        sync_project(bare, installed)
 
 
-def test_sync_accepts_playbooks_config(installed: list[InstalledBundle], target: Path) -> None:
-    config_file = target / CONFIG
-    config_file.parent.mkdir(parents=True, exist_ok=True)
-    config_file.write_text("""schema = 1
+def test_sync_accepts_playbooks_config(installed: list[InstalledBundle], bare: Path) -> None:
+    write_config(
+        bare,
+        """schema = 1
 agents = ["codex"]
 
 [presets]
@@ -344,10 +363,26 @@ team = "minimal"
 min_score = 0.2
 limit = 3
 max_bytes = 4096
-""")
-    sync_project(target, installed)
-    receipt = json.loads((target / RECEIPT).read_text())
-    assert receipt["selection"] == {"agents": ["codex"], "presets": {"team": "minimal"}}
+""",
+    )
+    sync_project(bare, installed)
+    receipt = json.loads((bare / RECEIPT).read_text())
+    assert receipt["selection"] == {"agents": ["codex"], "presets": {"team": ["minimal"]}}
+
+
+def test_sync_ignores_rules_table_owned_by_rule_engine(installed: list[InstalledBundle], bare: Path) -> None:
+    write_config(
+        bare,
+        """schema = 1
+agents = ["codex"]
+
+[rules.phase_overrides]
+RULE-markdown-link = "hygiene"
+""",
+    )
+    sync_project(bare, installed)
+    receipt = json.loads((bare / RECEIPT).read_text())
+    assert receipt["selection"]["agents"] == ["codex"]
 
 
 def test_receipt_cannot_own_config(installed: list[InstalledBundle], target: Path) -> None:
@@ -360,104 +395,117 @@ def test_receipt_cannot_own_config(installed: list[InstalledBundle], target: Pat
         sync_project(target, installed)
 
 
-def make_extra_bundle(tmp_path: Path) -> InstalledBundle:
-    root = tmp_path / "extra_source"
-    root.mkdir(parents=True, exist_ok=True)
-    (root / "bundle.toml").write_text("""schema = 1
-name = "extra"
-version = "0.1.0"
-[[assets]]
-id = "note"
-kind = "instruction"
-source = "note.md"
-""")
-    (root / "note.md").write_text("# Note\n")
-    return InstalledBundle("extra-content", "0.1.0", load_bundle(root))
-
-
-def test_sync_exclude_bundles_in_config(installed: list[InstalledBundle], target: Path, tmp_path: Path) -> None:
-    all_installed = [*installed, make_extra_bundle(tmp_path)]
-    # Initial sync without exclusions
-    sync_project(target, all_installed)
-    assert (target / ".devkit/managed/team/guide.md").exists()
-    assert (target / ".devkit/managed/extra/note.md").exists()
-
-    # Now exclude "team" via config.toml
-    config_file = target / CONFIG
-    config_file.parent.mkdir(parents=True, exist_ok=True)
-    config_file.write_text("""schema = 1
-exclude_bundles = ["team"]
-""")
-    sync_project(target, all_installed)
-    assert not (target / ".devkit/managed/team/guide.md").exists()
-    assert (target / ".devkit/managed/extra/note.md").exists()
-
-    receipt = json.loads((target / RECEIPT).read_text())
-    assert [p["bundle"] for p in receipt["packages"]] == ["extra"]
-    assert receipt["selection"]["exclude_bundles"] == ["team"]
-
-
-def test_sync_exclude_bundles_cli_flag(
-    installed: list[InstalledBundle], target: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    all_installed = [*installed, make_extra_bundle(tmp_path)]
-    sync_project(target, all_installed, exclude_bundles=["team"])
-    assert not (target / ".devkit/managed/team/guide.md").exists()
-    assert (target / ".devkit/managed/extra/note.md").exists()
-
-    receipt = json.loads((target / RECEIPT).read_text())
-    assert receipt["selection"]["exclude_bundles"] == ["team"]
-
-    # Test CLI invocation with mock discovery
-    @contextmanager
-    def mock_discover():
-        yield all_installed
-
-    monkeypatch.setattr("devkit_distribution.cli.discover_bundles", mock_discover)
-    runner = CliRunner()
-    result = runner.invoke(
-        cli, ["sync", "--target", str(target), "--exclude-bundle", "team", "--exclude-bundle", "extra"]
-    )
-    assert result.exit_code == 0
-    receipt = json.loads((target / RECEIPT).read_text())
-    assert receipt["selection"]["exclude_bundles"] == ["extra", "team"]
-    assert receipt["packages"] == []
-
-
-def test_sync_exclude_bundles_cli_overrides_config(
-    installed: list[InstalledBundle], target: Path, tmp_path: Path
-) -> None:
-    all_installed = [*installed, make_extra_bundle(tmp_path)]
-    config_file = target / CONFIG
-    config_file.parent.mkdir(parents=True, exist_ok=True)
-    config_file.write_text("""schema = 1
-exclude_bundles = ["team"]
-""")
-    # CLI specifies exclude_bundles=["extra"], overriding config
-    sync_project(target, all_installed, exclude_bundles=["extra"])
-    assert (target / ".devkit/managed/team/guide.md").exists()
-    assert not (target / ".devkit/managed/extra/note.md").exists()
-
-    receipt = json.loads((target / RECEIPT).read_text())
-    assert [p["bundle"] for p in receipt["packages"]] == ["team"]
-    assert receipt["selection"]["exclude_bundles"] == ["extra"]
-
-
-def test_sync_exclude_bundles_conflict_with_preset(installed: list[InstalledBundle], target: Path) -> None:
-    with pytest.raises(BundleError, match=r"excluded bundle cannot have preset: \['team'\]"):
-        sync_project(target, installed, presets={"team": "minimal"}, exclude_bundles=["team"])
-
-    runner = CliRunner()
-    result = runner.invoke(cli, ["sync", "--preset", "team:minimal", "--exclude-bundle", "team"])
-    assert result.exit_code != 0
-    assert "cannot combine --preset and --exclude-bundle for 'team'" in result.output
-
-
-def test_receipt_invalid_exclude_bundles(installed: list[InstalledBundle], target: Path) -> None:
+def test_receipt_rejects_invalid_presets(installed: list[InstalledBundle], target: Path) -> None:
     sync_project(target, installed)
     path = target / RECEIPT
     receipt = json.loads(path.read_text())
-    receipt["selection"]["exclude_bundles"] = "not_a_list"
+    receipt["selection"]["presets"] = {"team": "minimal"}
     path.write_text(json.dumps(receipt))
-    with pytest.raises(BundleError, match="invalid receipt exclude_bundles"):
+    with pytest.raises(BundleError, match="invalid receipt presets"):
         sync_project(target, installed)
+
+
+def make_extra_bundle(tmp_path: Path, default_preset: str | None = None) -> InstalledBundle:
+    root = tmp_path / "extra_source"
+    root.mkdir(parents=True, exist_ok=True)
+    default = f'default_preset = "{default_preset}"\n' if default_preset else ""
+    (root / "bundle.toml").write_text(f"""schema = 1
+name = "extra"
+version = "0.1.0"
+{default}[[assets]]
+id = "note"
+kind = "instruction"
+source = "note.md"
+[[assets]]
+id = "extended"
+kind = "instruction"
+source = "extended.md"
+[presets.core]
+assets = ["note"]
+""")
+    (root / "note.md").write_text("# Note\n")
+    (root / "extended.md").write_text("# Extended\n")
+    return InstalledBundle("extra-content", "0.1.0", load_bundle(root))
+
+
+def mock_discovery(monkeypatch: pytest.MonkeyPatch, installed: list[InstalledBundle]) -> None:
+    @contextmanager
+    def found():
+        yield installed
+
+    monkeypatch.setattr("devkit_distribution.cli.discover_bundles", found)
+
+
+def test_cli_add_resolves_default_preset_and_remove(
+    installed: list[InstalledBundle], target: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    all_installed = [*installed, make_extra_bundle(tmp_path, default_preset="core")]
+    mock_discovery(monkeypatch, all_installed)
+    (target / CONFIG).write_text(
+        (target / CONFIG).read_text() + '\n# phase overrides\n[rules.phase_overrides]\nRULE-x = "hygiene"\n'
+    )
+    runner = CliRunner()
+    result = runner.invoke(cli, ["sync", "--target", str(target)])
+    assert result.exit_code == 0, result.output
+    assert "NOTICE: installed bundles not selected: extra" in result.stderr
+
+    result = runner.invoke(cli, ["add", "extra", "--target", str(target)])
+    assert result.exit_code == 0, result.output
+    config = (target / CONFIG).read_text()
+    assert 'extra = "core"' in config
+    assert "# phase overrides" in config and 'RULE-x = "hygiene"' in config
+    assert (target / ".devkit/managed/extra/note.md").exists()
+    assert not (target / ".devkit/managed/extra/extended.md").exists()
+    assert "NOTICE" not in result.stderr
+
+    listed = json.loads(runner.invoke(cli, ["list", "--target", str(target)]).output)
+    extra = next(item for item in listed["installed"] if item["bundle"] == "extra")
+    assert extra["selected"] == ["core"]
+    assert extra["default_preset"] == "core"
+
+    result = runner.invoke(cli, ["remove", "extra", "--target", str(target)])
+    assert result.exit_code == 0, result.output
+    assert "extra" not in (target / CONFIG).read_text().split("[presets]")[1].split("[rules")[0]
+    assert not (target / ".devkit/managed/extra/note.md").exists()
+
+    result = runner.invoke(cli, ["remove", "extra", "--target", str(target)])
+    assert result.exit_code != 0
+    assert "not selected" in result.output
+
+
+def test_cli_add_requires_preset_without_default(
+    installed: list[InstalledBundle], bare: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    mock_discovery(monkeypatch, installed)
+    runner = CliRunner()
+    result = runner.invoke(cli, ["add", "team", "--target", str(bare)])
+    assert result.exit_code != 0
+    assert "team: no default preset; choose one of: team:all, team:minimal" in result.output
+    assert not (bare / CONFIG).exists()
+    result = runner.invoke(cli, ["add", "team:minimal", "--target", str(bare), "--dry-run"])
+    assert result.exit_code == 0, result.output
+    assert not (bare / CONFIG).exists()
+    assert not (bare / RECEIPT).exists()
+    result = runner.invoke(cli, ["add", "team:minimal", "team:all", "--target", str(bare)])
+    assert result.exit_code == 0, result.output
+    assert 'team = ["minimal", "all"]' in (bare / CONFIG).read_text()
+    assert (bare / CONFIG).read_text().startswith("schema = 1\n")
+
+
+def test_cli_sync_preset_saves_unless_no_save(
+    installed: list[InstalledBundle], target: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    mock_discovery(monkeypatch, installed)
+    runner = CliRunner()
+    result = runner.invoke(cli, ["sync", "--target", str(target), "--preset", "team:minimal", "--no-save"])
+    assert result.exit_code == 0, result.output
+    assert 'team = "all"' in (target / CONFIG).read_text()
+    assert not (target / ".devkit/managed/team/skills/review/SKILL.md").exists()
+    result = runner.invoke(cli, ["sync", "--target", str(target), "--preset", "team:minimal"])
+    assert result.exit_code == 0, result.output
+    assert 'team = "minimal"' in (target / CONFIG).read_text()
+    result = runner.invoke(cli, ["sync", "--target", str(target), "--preset", "team"])
+    assert result.exit_code != 0
+    assert "no default preset" in result.output
+    result = runner.invoke(cli, ["sync", "--target", str(target), "--preset", "Bad!"])
+    assert result.exit_code != 0

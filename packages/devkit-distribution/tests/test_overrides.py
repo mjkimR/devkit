@@ -8,6 +8,7 @@ import pytest
 from click.testing import CliRunner
 from devkit_distribution.bundles import BundleError, load_bundle
 from devkit_distribution.cli import cli
+from devkit_distribution.installation.config import update_config
 from devkit_distribution.installation.context import get_context
 from devkit_distribution.installation.discovery import InstalledBundle
 from devkit_distribution.installation.overrides import (
@@ -60,6 +61,7 @@ source = "playbooks/recovery.md"
 def target(tmp_path: Path) -> Path:
     root = tmp_path / "consumer"
     root.mkdir()
+    update_config(root, presets={"team": ["all"]})
     return root
 
 

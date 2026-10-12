@@ -73,11 +73,63 @@ agent-rules check [-w DIRECTORY] [-p linter|hygiene] [--rules-dir DIRECTORY] [--
 
 # Fix mode: applies deterministic repairs and verifies convergence
 agent-rules fix [-w DIRECTORY] [-p linter|hygiene] [--rules-dir DIRECTORY] [--dry-run] [--format text|json] [FILES]...
+
+# Phase plan: default and effective phase of every rule, plus pending transitions
+agent-rules phases [-w DIRECTORY] [--rules-dir DIRECTORY] [--format text|json]
 ```
 
 - **Phases**:
-  - `linter`: Structural specifications, frontmatter invariants, document references, and Markdown relative link validity.
-  - `hygiene`: Includes `linter` rules plus file size warnings and formatting guidelines.
+  - `linter`: Structural specifications, frontmatter invariants, document references, and Markdown relative link validity. This is the gate for pre-commit hooks and CI.
+  - `hygiene`: Includes `linter` rules plus file size warnings and formatting guidelines, and every rule parked there by a project phase override.
 - **Exit Status**:
   - `0`: All checks passed cleanly, or all fixable findings were successfully repaired.
   - `1`: Unresolved errors, runtime failures, or rule loading errors.
+
+---
+
+## 4. Phase Transitions: Overrides and Promotions
+
+A rule's declared `phase` is its default. Two mechanisms move a rule between phases without editing the rule, so that a gate can stay green while existing debt is cleared:
+
+### Project Phase Overrides (`[rules.phase_overrides]`)
+
+A consumer repository can park a `linter` rule in the `hygiene` phase through its Git-tracked `.devkit/config.toml`:
+
+```toml
+# .devkit/config.toml
+[rules.phase_overrides]
+RULE-markdown-link = "hygiene"
+```
+
+- Only `"hygiene"` is accepted as a value. An override for an unknown rule ID, or for a rule that already runs in `hygiene`, is reported as an error and the run fails.
+- `linter` runs skip the overridden rule entirely. `hygiene` runs include it and print its remaining violation count:
+
+  ```text
+  [PHASE_OVERRIDE: RULE-markdown-link=hygiene default=linter source=.devkit/config.toml remaining=3]
+  ```
+
+- `remaining=0` is the signal to delete the entry and return the rule to its default phase.
+- Violations report the phase the rule ran in (`phase: "hygiene"`), not the rule's declared default.
+
+### Rule Promotions (`promote_to`)
+
+A new rule introduced into a codebase with many pre-existing violations should be declared as `phase=Phase.HYGIENE` with `promote_to=Phase.LINTER` instead of blocking every session immediately:
+
+```python
+super().__init__(id="RULE-no-todo", name="no-todo", description="...", phase=Phase.HYGIENE, promote_to=Phase.LINTER)
+```
+
+- `promote_to` is only valid as `linter` on a `hygiene` rule; `BaseRule` rejects any other combination at construction time.
+- `hygiene` runs print the remaining count for each such rule:
+
+  ```text
+  [PROMOTION: RULE-no-todo=hygiene promote_to=linter remaining=12]
+  ```
+
+- When the count reaches zero, flip the rule's declared `phase` to `linter` and drop `promote_to`.
+
+### Inspecting the Plan
+
+`agent-rules phases` lists every rule with its default phase, effective phase, and pending transition. `--format json` emits one object per rule with `rule_id`, `default_phase`, `effective_phase`, `overridden`, and `promote_to`, which is the stable surface for agents deciding whether an override can be retired.
+
+`check --format json` remains a flat array of violations; count entries per `rule_id` to compute the same remaining totals.

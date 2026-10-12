@@ -35,7 +35,7 @@ AI coding agents use distinct directory structures, file formats, and subagent s
   - `devkit sync --agent codex`: Projects assets for Codex.
   - `devkit sync --agent codex --agent claude-code`: Projects assets for both agents simultaneously.
   - `devkit sync --no-agents`: Clears native agent selections and safely unlinks unchanged native projections while keeping managed resources intact.
-  - Running `devkit sync` without `--agent` preserves previously recorded agent selections from the receipt or uses `.devkit/config.toml`.
+  - `--agent` and `--no-agents` record the selection as `agents` in `.devkit/config.toml` (unless `--no-save`). Running `devkit sync` without them uses `.devkit/config.toml`; with no configured agents, nothing is projected.
 
 ---
 

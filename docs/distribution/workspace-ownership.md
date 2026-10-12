@@ -15,7 +15,7 @@ Consuming projects integrate bundles under a dedicated root directory: `.devkit/
 
 ```text
 .devkit/
-  config.toml             # Project-authored configuration: presets and agents (Git-tracked)
+  config.toml             # Project-authored configuration: selected bundles/presets and agents (Git-tracked)
   installation.json       # Pinned packages, bundle versions, selections, file hashes & modes (Git-tracked)
   managed/<bundle>/       # Clean extracted upstream resources from wheels (Generated, Git-ignored)
   overrides/<bundle>/     # Full file replacements for managed assets (Git-tracked)
@@ -30,8 +30,8 @@ Consuming projects integrate bundles under a dedicated root directory: `.devkit/
 ## 2. Ownership Categories and Invariants
 
 1. **Project Configuration (`.devkit/config.toml`)**:
-   - Project-authored, Git-tracked TOML file defining repository baseline `agents`, bundle `presets`, and exclusions.
-   - Owned exclusively by the developer; never generated or overwritten by `devkit sync`.
+   - Project-authored, Git-tracked TOML file declaring the selected bundles and their presets (`[presets]`) and the `agents` targets. Only selected bundles are deployed.
+   - Owned by the developer. `devkit sync` never edits it on its own; only explicit selection commands (`devkit add`, `devkit remove`, and `devkit sync` selection flags without `--no-save`) edit the `agents` and `[presets]` entries, preserving unrelated tables, comments, and formatting.
    - Receipt files cannot claim ownership of `config.toml`.
 2. **Managed Assets (`.devkit/managed/<bundle>/`)**:
    - Exact unpacked representation of upstream bundle resources extracted from installed wheels.
@@ -47,7 +47,7 @@ Consuming projects integrate bundles under a dedicated root directory: `.devkit/
 5. **User Modification Detection**:
    - If a deployed file's disk content or mode differs from its recorded receipt signature, it is treated as a user modification.
    - Sync aborts immediately across the entire project before making any disk changes.
-   - Package removal or preset narrowing will only delete files that remain byte-for-byte identical to their recorded receipt signature. Modified files are never deleted.
+   - Package removal, bundle deselection, or preset narrowing will only delete files that remain byte-for-byte identical to their recorded receipt signature. Modified files are never deleted.
 6. **Git & Ignore Policy**:
    - The project configuration (`.devkit/config.toml`), overrides (`.devkit/overrides/`), and receipt (`.devkit/installation.json`) must be committed to version control.
    - Generated resources (`.devkit/managed/`), transient transaction files (`.devkit/transient/`), and generated native copies should be ignored according to the consumer repository's own `.gitignore` policy.
