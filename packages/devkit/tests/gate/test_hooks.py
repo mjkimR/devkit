@@ -160,7 +160,7 @@ def test_hooks_path_naming_the_default_directory_is_not_a_conflict(repo: Path) -
     assert _status(repo)["hooks_path"] is None
 
 
-def test_commits_run_built_in_and_deployed_gates(repo: Path) -> None:
+def test_commits_run_built_in_gates(repo: Path) -> None:
     _install(repo)
     code, output = _commit(repo, "-m", "feat: first")
     assert code == 0, output
@@ -168,20 +168,23 @@ def test_commits_run_built_in_and_deployed_gates(repo: Path) -> None:
     code, output = _commit(repo, "--allow-empty-message", "-m", "")
     assert code != 0 and "GATE_MESSAGE_EMPTY" in output
 
-    code, output = _commit(repo, "-m", "#123 fix the parser")
+    code, output = _commit(repo, "-m", "#123 fix the parser")  # `git commit -m` hands the hook the '#' line
     assert code == 0, output
 
+
+def test_deployed_gates_read_the_project_and_clone_config(repo: Path) -> None:
+    # Gate logic runs in-process; the commits above and the worktree test cover the wrappers.
     deploy_gate(repo, gate_source())
-    code, output = _commit(repo, "-m", "feat: blocked")
-    assert code != 0 and "[DETAIL] gate=team-block stage=pre-commit" in output and "TEST_REFUSED" in output
+    code, output = _invoke("run", "-w", str(repo), "pre-commit")
+    assert code == 1 and "[DETAIL] gate=team-block stage=pre-commit" in output and "TEST_REFUSED" in output
 
     # The tracked project config is overridden by the clone-local one.
     (repo / ".devkit/config.toml").write_text("[gates.settings.team-block]\nallow = true\n")
-    code, _ = _commit(repo, "-m", "feat: allowed by project")
-    assert code == 0
+    code, output = _invoke("run", "-w", str(repo), "pre-commit")
+    assert code == 0, output
     (repo / ".git/devkit.config").write_text("[gates.settings.team-block]\nallow = false\n")
-    code, output = _commit(repo, "-m", "feat: blocked locally")
-    assert code != 0 and "TEST_REFUSED" in output
+    code, output = _invoke("run", "-w", str(repo), "pre-commit")
+    assert code == 1 and "TEST_REFUSED" in output
 
 
 def test_repository_modules_do_not_shadow_the_hook(repo: Path) -> None:
@@ -228,11 +231,11 @@ def test_wrapper_prefers_the_work_tree_venv_when_it_has_devkit(repo: Path, tmp_p
 
 
 def test_commit_all_and_partial_commits_check_what_is_committed(repo: Path) -> None:
-    _install(repo)
     (repo / "README.md").write_text("# Repo\n")
     (repo / "a.md").write_text("[ok](README.md)\n")
     git(repo, "add", ".")
-    assert git(repo, "commit", "-m", "init", check=False).returncode == 0
+    git(repo, "commit", "-m", "init")
+    _install(repo)
 
     (repo / "a.md").write_text("[bad](missing.md)\n")
     result = git(repo, "commit", "-am", "feat: all", check=False)
@@ -270,7 +273,7 @@ def test_linked_worktree_shares_hooks_and_clone_config(repo: Path, tmp_path: Pat
 
     # The clone-local config lives in the common git dir, so every worktree reads it.
     (repo / ".git/devkit.config").write_text("[gates.settings.where]\nenabled = false\n")
-    code, output = _commit(worktree, "-m", "feat: disabled for the clone")
+    code, output = _invoke("run", "-w", str(worktree), "pre-commit")
     assert code == 0, output
 
 

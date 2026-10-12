@@ -21,19 +21,12 @@ Use one subject line. Omit unused body and footer sections, including their plac
 
 ## Type and scope
 
-Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `ci`, `build`, `revert`.
+Allowed types: `feat` (a feature or capability), `fix` (a defect), `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `ci`, `build`, `revert` (undo an earlier change). Where the boundary is not obvious:
 
-- `feat`: add a feature or capability.
-- `fix`: correct a defect.
-- `docs`: change documentation.
-- `style`: change formatting or whitespace without changing behavior; visual product changes use the type that describes their intent.
+- `style`: formatting or whitespace only, without changing behavior; visual product changes use the type that describes their intent.
 - `refactor`: restructure code without adding a feature or fixing a defect.
-- `perf`: improve performance.
-- `test`: add or change tests.
-- `chore`: perform maintenance that does not fit a more specific type.
-- `ci`: change continuous integration workflows or configuration.
-- `build`: change build tooling, packaging or dependencies.
-- `revert`: undo an earlier change.
+- `chore`: maintenance that does not fit a more specific type.
+- `ci`: continuous integration workflows or configuration; `build`: build tooling, packaging or dependencies.
 
 Choose the type that describes the primary intent of the commit. Supporting tests or documentation can share the implementation commit. Split unrelated changes into separate commits when practical.
 
@@ -51,7 +44,7 @@ Scope is optional. When useful, use a short component or area name in parenthese
 
 Use a body when the subject alone does not explain the change or its motivation. Explain what changed and why it was needed, focusing on behavior and intent rather than step-by-step implementation details.
 
-Use `- ` for body bullet points. Keep each sentence on one physical line and let the editor wrap it visually. Use intentional newlines between bullets and paragraphs; do not hard-wrap sentences to a fixed column width.
+Use `- ` for body bullet points. Keep each sentence on one physical line and let the editor wrap it visually: never break a line in the middle of a sentence or hard-wrap to a fixed column width. Newlines belong only between sections, paragraphs, bullets and footer entries.
 
 ## Breaking changes and footers
 
@@ -64,8 +57,6 @@ Keep footer entries on separate lines. Include only applicable metadata required
 When asked to produce a commit message, return only the message text without introductory prose, Markdown headings or code fences.
 
 Do not include citations, references, links or source annotations such as `[cite: 1]`, `[1]` or `(source)` in the subject, body or footers. Do not append a references or sources section.
-
-Do not insert arbitrary line breaks in the middle of a sentence. Blank lines separating message sections and newlines separating body bullets or footer entries are intentional structure.
 
 ## Example
 

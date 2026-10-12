@@ -2,70 +2,52 @@
 
 A sequential Python rule engine for repository governance: deterministic checks
 over a workspace, with autofix, project policy and Git snapshot gates. The engine
-carries no document model of its own; rules that define identifier grammars,
-frontmatter schemas or cross-reference semantics ship in bundles (`kind = "rule"`)
-and load through the installation receipt.
-Part of the `devkit` distribution (`devkit rules` CLI); requires Python 3.12 or later.
+carries no document model of its own; rules for identifier grammars, frontmatter
+schemas or cross-references ship in bundles (`kind = "rule"`) and load through
+the installation receipt. Part of the `devkit` distribution (`devkit rules` CLI);
+requires Python 3.12 or later.
 
-## Structure
-
-```text
-src/devkit/rules/
-├── engine/                  # Rule contracts, registry, config, settings, phases, evaluation and autofix recheck
-│   ├── discovery.py         # Rule assets recorded by devkit sync in .devkit/installation.json
-│   ├── policy.py            # One validation of [rules] policy (phases, severities, settings)
-│   ├── project.py           # run_project_rules: the one assembly of config, registry, context and evaluation
-│   └── settings.py          # Typed per-rule settings with path-scoped overrides
-├── workspace/               # File cache, Markdown links and fences, file catalog, task counter and Git snapshots
-├── cli/                     # Click commands (commands.py) and rendering (output.py)
-├── authoring/bundle/        # The opt-in `authoring` bundle (size rules and playbooks; see below)
-└── rules/
-    ├── base.py              # Common rule implementation (settings, guide, promote_to)
-    ├── markdown/            # Relative link validation and repair
-    ├── hygiene/             # File length checks
-    └── safety/              # Secrets and generated artifacts in the files under check
-```
-
-Tests live in `tests/` with the same feature groups. Library callers import the
-public API from `devkit.rules`; built-in rule classes are exported by
-`devkit.rules.rules`. Implementation modules live under the folders above.
+Semantics: [Rule Engine Overview](overview.md) (architecture, layout),
+[Evaluation Lifecycle](evaluation-lifecycle.md) (phases, targets, autofix,
+policy, snapshot gates), [Rule Authoring Guide](rule-authoring.md) (rule
+protocol, workspace API, rule sources), [Resource Taxonomy](../architecture/resource-taxonomy.md).
 
 ## CLI usage
 
-From this monorepo, run `just init`, then:
-
 ```bash
-just rules-check
-just rules-check --format json
-just rules-check docs/rules/overview.md
-just rules-check --staged                      # the exact staged tree (what the `rules-staged` commit gate runs)
-just rules-check --ci --base origin/main       # HEAD against its merge base (CI gate)
-just rules-fix --dry-run
-just rules-fix
-just rules-check --phase hygiene
-just rules-phases
-just rules-explain RULE-file-length
+devkit rules check [-w DIR] [-p linter|hygiene] [--rules-dir DIR] [--format text|json] [--summary-only] [TARGETS]...
+devkit rules check --staged [-w DIR] [--rules-dir DIR] [--format text|json] [--summary-only]
+devkit rules check --ci [--base REF] [-w DIR] [--rules-dir DIR] [--format text|json] [--summary-only]   # --base defaults to origin/main
+devkit rules fix [-w DIR] [-p linter|hygiene] [--rules-dir DIR] [--dry-run] [--format text|json] [--summary-only] [TARGETS]...
+devkit rules phases [-w DIR] [--rules-dir DIR] [--format text|json]
+devkit rules explain RULE-ID [-w DIR] [--rules-dir DIR] [--format text|json]
 ```
 
-To install directly in another project:
+In another project: `uv add "git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"`,
+then `uv run devkit rules check`. In this monorepo, `just rules-check`,
+`just rules-fix`, `just rules-phases` and `just rules-explain` pass their
+arguments through.
 
-```bash
-uv add "git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
-uv run devkit rules check --workspace-root .
-```
-
-Without `--workspace-root` the commands use the project root of the current
+Without `-w`/`--workspace-root` the commands use the project root of the current
 directory: the nearest directory with a `.devkit/` folder, else the Git work
 tree top level, else the current directory.
 
-`check` never writes files. `fix --dry-run` reports the initial findings,
-marking fixable ones `status=fixable`, without running any fixer. `hygiene` includes linter rules as well as hygiene checks.
-`phases` prints each rule's default and effective phase without evaluating.
-`explain <RULE-id>` prints a rule's phase, severity, effective settings and its
-guide document.
+- `check` never writes files. Targets, exclusions and phases:
+  [Evaluation Lifecycle, section 3](evaluation-lifecycle.md#3-cli-execution-and-phases).
+- `check --staged` evaluates the Git index (what the `rules-staged` commit gate
+  runs); `check --ci --base <ref>` evaluates `HEAD` against its merge base with
+  `<ref>`. Both run the linter phase over the changed files of a materialized
+  tree and refuse file arguments, `--phase hygiene` and `fix`
+  ([Evaluation Lifecycle, section 6](evaluation-lifecycle.md#6-git-snapshot-gates)).
+- `fix --dry-run` reports the initial findings, marking fixable ones
+  `status=fixable`, without running any fixer.
+- `phases` prints each rule's default and effective phase without evaluating.
+- `explain <RULE-id>` prints a rule's phase, severity, effective settings and
+  its guide document.
 
-Exit codes follow the devkit convention
-([Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)):
+### Exit codes
+
+The devkit convention ([Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)):
 
 | Command | `0` | `1` | `2` |
 | --- | --- | --- | --- |
@@ -78,35 +60,18 @@ highest `exit_code` among them (`2` for every such problem today). Argument
 checks beyond click's syntax (`--staged` with `--ci`, `--base` without `--ci`,
 file arguments or `--phase hygiene` with a snapshot, a `--rules-dir` or
 `--workspace-root` that is not an existing directory, an unknown rule ID) are
-`ARGUMENT_INVALID` (`INPUT_ERROR`).
+`ARGUMENT_INVALID` (`INPUT_ERROR`); only click's own syntax errors print a
+`Usage:` block.
+
+### Output
 
 Every problem is printed on stderr as an Agent Advisory Protocol block with its
-code (see [Errors](#errors)). `--format json` prints exactly one object on
-stdout: `{"violations": [...], "errors": [...], "notices": [...]}` (`check`, `fix`),
-`{"rules": [...], "errors": [...]}` with one phase entry per rule (`phases`),
-or `{"rule": {...}, "notices": [...], "errors": [...]}` (`explain`); `errors`
-holds the collected problems and `notices` the warnings and notices, as
-`to_dict()` objects (each with its `code`, `level`, `exit_code`, `rule_id` and
-advisory). A command that fails before it has
-a result prints `{"error": {...}}` instead.
+code ([Errors](#errors)); problems that do not fail a command are `[WARN]`
+blocks after the result ([Agent-First Output](../architecture/agent-output.md)).
 
-Targets are workspace-relative or absolute paths inside the workspace. A file
-is checked as is; a directory expands to every regular file under it, with the
-same discovery as whole-workspace scans: dependency and cache directories
-(`.git`, `.venv`, `node_modules`, ...) and the receipt-pinned copies under
-`.devkit/managed/` and `.devkit/overrides/` are skipped, symlinks that resolve
-outside the workspace are skipped, and inside a Git work tree only files Git
-does not ignore are listed (tracked plus untracked, not ignored). A file named
-explicitly is checked even when Git ignores it (for example a workflow unit
-under `.devkit/transient/`). No file arguments checks the whole workspace; a directory with no
-files checks nothing. A target that is neither an existing
-file nor a directory inside the workspace fails with `RULES_TARGET_INVALID`
-before any rule runs. Link repair still indexes every Markdown file in the
-workspace, even when checking selected files.
-
-Text output is one `[KIND: ...]` sentinel line per fact, without colour or
-emoji; free text (messages, remediations, descriptions) is written as a JSON
-string so every line stays parseable:
+Text output is one `[KIND: ...]` sentinel line per fact; free text (messages,
+remediations, descriptions) is written as a JSON string so every line stays
+parseable:
 
 ```text
 [SNAPSHOT: mode=staged tree=3f2a9c1d0b7e base=9e8d7c6b5a4f changed=2 deleted=0]
@@ -114,64 +79,41 @@ string so every line stays parseable:
 [SUMMARY: errors=1 warnings=0 infos=0 fixed=0]
 ```
 
-`check` and `fix` print a `[VIOLATION: ...]` line per finding (`status` is
-`open`, `fixable` or `fixed`; `remediation` and `guide` appear when the rule
-gives them), then `[SUMMARY: errors=N warnings=N infos=N fixed=N]` counting the
-unfixed findings per severity and the fixed ones, then `[OK: ...]` when the
-command exits `0`. A run that could not evaluate and found nothing prints no
-summary; its problems are on stderr. A hygiene run adds the
-`[PHASE_OVERRIDE: ...]`/`[PROMOTION: ...]` lines described below, and reports
-a `RULES_PROMOTION_READY` notice on stderr when a transition has `remaining=0`. `phases` prints one
-`[PHASE: RULE-id default=... effective=... overridden=yes|no promote_to=...]`
-line per rule. `explain` prints `[RULE: ...]`, `[DESCRIPTION: ...]`, one
-`[SETTING: key=value default=value]` per setting and one
-`[SETTING_OVERRIDE: path=... key=value ...]` per override (or
-`[SETTINGS: none]`), then the guide document as written. Problems that do not
-fail a command are `[WARN]` blocks on stderr, after the result
-([Agent-First Output](../architecture/agent-output.md)).
+- `check` and `fix`: a `[SNAPSHOT: ...]` line first in a snapshot gate; one
+  `[VIOLATION: ...]` per finding (`status` is `open`, `fixable` or `fixed`;
+  `remediation` and `guide` appear when the rule gives them); a hygiene run's
+  `[PHASE_OVERRIDE: ...]`/`[PROMOTION: ...]` lines
+  ([Evaluation Lifecycle, section 4](evaluation-lifecycle.md#4-phase-transitions-overrides-and-promotions))
+  and a `RULES_PROMOTION_READY` notice on stderr when one has `remaining=0`;
+  then `[SUMMARY: errors=N warnings=N infos=N fixed=N]` counting unfixed
+  findings per severity and the fixed ones; then `[OK: ...]` when the command
+  exits `0`. A run that could not evaluate and found nothing prints no summary.
+- `--summary-only` replaces the `[VIOLATION: ...]` lines with one
+  `[RULE_COUNTS: RULE-id errors=N warnings=N infos=N fixed=N]` line per rule
+  and keeps the other lines. Exit codes are unchanged; `--format json` ignores
+  the flag.
+- `phases`: one `[PHASE: RULE-id default=... effective=... overridden=yes|no promote_to=...]` line per rule.
+- `explain`: `[RULE: ...]`, `[DESCRIPTION: ...]`, one
+  `[SETTING: key=value default=value]` per setting and one
+  `[SETTING_OVERRIDE: path=... key=value ...]` per override (or
+  `[SETTINGS: none]`), then the guide document as written.
 
-`--summary-only` (text output) replaces the `[VIOLATION: ...]` lines with one
-`[RULE_COUNTS: RULE-id errors=N warnings=N infos=N fixed=N]` line per rule,
-keeping the other sentinel lines (`[SNAPSHOT]`, `[PHASE_OVERRIDE]`,
-`[PROMOTION]`, `[SUMMARY]`, `[OK]`). Exit codes are unchanged; `--format json`
-ignores the flag.
-
-## Git snapshot gates
-
-`check --staged` evaluates the Git index (what a commit would contain) and
-`check --ci --base <ref>` evaluates `HEAD` against its merge base with `<ref>`.
-Both read the tree from Git, materialize it into a temporary directory and run
-the linter phase there, with the changed files of the diff as targets, plus
-every Markdown file whose relative links point at a path the snapshot deletes
-(so a deletion-only commit still catches the links it breaks). Unstaged
-edits, untracked files and local-only configuration cannot change the result:
-`.devkit/config.toml`, the installation receipt and synchronized rules are all
-taken from the snapshot. Managed rule copies under `.devkit/managed/` are
-usually Git-ignored and therefore absent from the tree; the gate reads such a
-file from the working tree only when its SHA-256 matches the hash recorded in
-the snapshot's receipt. A rule file that is missing or differs from the receipt
-fails the gate (`RULES_LOAD_FAILED`) with the fix to run `devkit sync` and commit the receipt.
-Snapshot gates refuse file arguments, `--phase hygiene` and `fix`; `--base`
-applies to `--ci` only. The workspace root must be the Git work tree top level
-(a subdirectory is refused, because Git reports tree paths from the top level).
-`--rules-dir` must lie inside the repository and is read from the snapshot, so
-an unstaged edit of a custom rule cannot change the result; a directory outside
-the repository or missing from the snapshot fails with exit code 2. Tracked
-symlinks whose target stays inside the tree are recreated and submodules become
-empty directories, so links to them resolve as in the working tree; only
-regular files are targets. A snapshot with no changed or deleted files passes without
-evaluating. The text output starts with a
-`[SNAPSHOT: mode=... changed=N deleted=M]` line.
-
-Two built-in linter rules exist for these gates and inspect explicit targets
-only: `RULE-secret-leak` (credential file names, and PEM/PGP private keys, AWS,
-GitHub, `sk-`, Stripe, Slack and Google key patterns, reported per line) and
-`RULE-clean-artifacts` (compiled binaries, database files, logs above 1 MiB). A
-run without targets reports nothing for them.
+`--format json` prints exactly one object on stdout:
+`{"violations": [...], "errors": [...], "notices": [...]}` (`check`, `fix`),
+`{"rules": [...], "errors": [...]}` with one object per rule carrying
+`rule_id`, `default_phase`, `effective_phase`, `overridden` and `promote_to`
+(`phases`), or `{"rule": {...}, "notices": [...], "errors": [...]}`
+(`explain`). `errors` holds the collected problems and `notices` the warnings
+and notices, as `to_dict()` objects (each with its `code`, `level`,
+`exit_code`, `rule_id` and advisory). A command that fails before it has a
+result prints `{"error": {...}}` instead.
 
 ## Project configuration
 
-Everything lives in the Git-tracked `.devkit/config.toml` under `[rules]`:
+Everything lives in the Git-tracked `.devkit/config.toml` under `[rules]`, the
+only place a project changes a distributed rule's behavior. Semantics and
+validation: [Evaluation Lifecycle](evaluation-lifecycle.md), sections 3
+(`exclude`), 4 (phase overrides) and 5 (severity overrides, settings).
 
 ```toml
 [rules]
@@ -193,71 +135,27 @@ max_lines = 800
 ```
 
 Entries for unknown rules, redundant overrides, unknown settings keys, wrong
-types and invalid patterns fail the run before any rule executes, with the rule
-ID in the message. Later matching overrides win and omitted keys inherit the
-earlier value. Each override is validated against the base values; two
-overrides that are only invalid together (for example one sets `lo`, another
-`hi`) are reported for the first file both match, as an `Invalid settings`
-error (exit code 2). Because managed rule files are hash-checked when they load, this
-table is the only place a project changes a distributed rule's behavior.
+types and invalid patterns fail the run (exit code `2`) before any rule
+executes, with the rule ID in the message.
 
-`exclude` lists workspace-relative patterns with the same `**` grammar as
-settings overrides. An excluded path is never a target: it is dropped from
-explicit, directory-expanded and snapshot targets, `ctx.is_file_targeted`
-returns `False` for it, and naming only excluded files checks nothing. Excluded
-files stay in the document catalog, so link repair can still point at them.
+## Built-in rules
 
-### Phase overrides and promotions
+| Rule | Module | Phase, severity | Checks | Guide |
+| --- | --- | --- | --- | --- |
+| `RULE-markdown-link` | `rules.markdown` | linter, error | relative Markdown links point at existing files; autofix rewrites a broken link when exactly one Markdown file has its basename | - |
+| `RULE-file-length` | `rules.hygiene` | hygiene, warning | files above `max_lines` (settings `max_lines`, `extensions`) | [file_length.md](../../packages/devkit/src/devkit/rules/rules/hygiene/file_length.md) |
+| `RULE-secret-leak` | `rules.safety` | linter, error | credential file names and private key or token patterns in explicit targets | [secrets.md](../../packages/devkit/src/devkit/rules/rules/safety/secrets.md) |
+| `RULE-clean-artifacts` | `rules.safety` | linter, error | compiled binaries, database files and logs above 1 MiB in explicit targets | [artifacts.md](../../packages/devkit/src/devkit/rules/rules/safety/artifacts.md) |
 
-The `linter` phase is the gate for hooks and CI. To adopt a rule against a
-codebase that already violates it, park it in `hygiene` while the debt is
-cleared, then return it once `check --phase hygiene` reports `remaining=0`:
+The guide of each rule is canonical for its behavior; `devkit rules explain
+<RULE-id>` prints it. The safety rules report nothing for a run without
+explicit targets.
 
-- A project moves a built-in or custom `linter` rule to `hygiene` through
-  `[rules.phase_overrides]`. Only `"hygiene"` is accepted.
-- A rule author declares a new `hygiene` rule with `promote_to=Phase.LINTER`
-  to record that it becomes a linter rule once clean.
+### Built-in authoring bundle
 
-`check --phase hygiene` prints a `[PHASE_OVERRIDE: ...]` or `[PROMOTION: ...]`
-line per pending transition with its remaining count, and a `RULES_PROMOTION_READY`
-notice names the transitions whose count reached zero. `devkit rules phases`
-lists the full plan, and `--format json` emits `{"rules": [...], "errors": [...]}`
-with one object per rule. Details are
-in [Evaluation Lifecycle](evaluation-lifecycle.md).
-
-## Synchronized rules
-
-Rules shipped by a bundle (`kind = "rule"`) are recorded by `devkit sync` in
-`.devkit/installation.json`. `devkit rules` loads every `.py` file listed under
-such an asset's `entrypoints` and `paths`, whatever its name (an override under
-`.devkit/overrides/` replaces the managed copy), after the built-in rules and
-before `--rules-dir`, so no flag is needed. Only files found by scanning
-`--rules-dir` skip names starting with `_` or `.`.
-A rule with the same ID as an earlier one replaces it. Every listed file is
-verified the way the commit gate registry verifies gate files
-(`devkit.core.verified_asset_files`), in a plain run and in a Git snapshot
-alike: a file with a `files` entry in the receipt must match its SHA-256, and a
-file without one (a project override under `.devkit/overrides/`) is loaded as
-it is. A listed file that does not exist, resolves outside the project, or
-differs from its recorded hash is a loading error (`RULES_LOAD_FAILED`, exit
-code 2), not a silent skip: `devkit sync` restores the managed copy, and
-`devkit override create <bundle>:<asset>` keeps a deliberate edit as a project
-override.
-
-This is also where document-model rules live. The built-in rules are limited to
-what holds for any repository (relative links, file length, secrets and build
-artifacts). A bundle that defines a documentation layout, an identifier grammar
-or document relationships ships the rules that enforce them, together with the
-guides and templates those rules cite. The engine's `DocumentCatalog` only
-indexes Markdown paths, basenames and the frontmatter `id`, `title` and
-`status` fields verbatim; it does not validate identifiers or extract references.
-
-## Built-in authoring bundle
-
-The package ships the opt-in bundle `authoring` (sources in
-`src/devkit/rules/authoring/bundle/`). It is not deployed until a project
-selects it, and both of its rules run in the `hygiene` phase only, so they never
-block a commit or a CI linter run:
+The opt-in bundle `authoring` (sources in `src/devkit/rules/authoring/bundle/`)
+is deployed only when a project selects it. Both rules run in the `hygiene`
+phase only, so they never block a commit or a CI linter run:
 
 ```bash
 uv run devkit add authoring                          # both presets (default preset `all`)
@@ -267,33 +165,22 @@ uv run devkit rules check --phase hygiene
 
 | Preset | Rule (warning, hygiene) | Playbook |
 | --- | --- | --- |
-| `skill-authoring` | `RULE-skill-document-size`: a skill or playbook Markdown file above `max_bytes` (8192) | `skill-authoring`: router structure for new skills, the four restructuring steps, helper-script rules |
-| `agent-guide-authoring` | `RULE-agent-guide-size`: an `AGENTS.md` or `CLAUDE.md` above `max_bytes` (8192), reporting the devkit guidance block's share | `agent-guide-authoring`: what stays in an always-loaded guide (no structure trees; module specifics only as links), where the rest moves, per-host loading |
+| `skill-authoring` | `RULE-skill-document-size`: a skill or playbook Markdown file above `max_bytes` (8192 UTF-8 bytes) ([guide](../../packages/devkit/src/devkit/rules/authoring/bundle/rules/skill_document_size/skill_document_size.md)) | `skill-authoring`: router structure for new skills, the four restructuring steps, helper-script rules |
+| `agent-guide-authoring` | `RULE-agent-guide-size`: an `AGENTS.md` or `CLAUDE.md` above `max_bytes` (8192 UTF-8 bytes), reporting the devkit guidance block's share ([guide](../../packages/devkit/src/devkit/rules/authoring/bundle/rules/agent_guide_size/agent_guide_size.md)) | `agent-guide-authoring`: what stays in an always-loaded guide (no structure trees; module specifics only as links), where the rest moves, per-host loading |
 
-Sizes are UTF-8 bytes, which follow token cost better than lines.
-`RULE-skill-document-size` checks `.md` files under `paths` (project skills in
-`.agents/skills/` and `.claude/skills/`, and `**/bundle/skills/**` and
-`**/bundle/playbooks/**` of bundle sources) and skips files the receipt owns,
-such as agent projections of bundle skills. `RULE-agent-guide-size` checks
-`**/AGENTS.md` and `**/CLAUDE.md` except `exclude` (`**/bundle/AGENTS.md`,
-bundle constitutions); a symlinked guide is measured once, through its target.
-Both remediations name the playbook search (`uv run devkit playbook search
-"..."`). Settings and exceptions use `[rules.settings.<RULE-id>]` and its path
-overrides; `devkit rules explain <RULE-id>` prints the full guide. The rule
-files are bundle assets loaded from the receipt, never imported from the
-package.
+Both remediations name the playbook and its `uv run devkit playbook search`
+query. The rule files are bundle assets loaded from the receipt, never imported
+from the package; their guides define the checked paths and settings.
 
-## Library and custom rules
+## Library
 
-`run_project_rules` evaluates a project exactly as `devkit rules check` does. It
-reads the `[rules]` policy (including `exclude`) and registers the built-in
-rules, the rules recorded in the installation receipt and the files under
-`rules_dir`. It then builds the full `RuleContext` and evaluates. The CLI, the
-`rules-staged` commit gate and the workflow engine's `lint-clean` check all
-call it, so they cannot disagree on policy. `load_project_rules(root, rules_dir)`
-is the loading half on its own: it returns a `ProjectRules` with the `config`,
-the `registry`, the settings `resolvers`, `load_errors` and `policy_errors`,
-without evaluating (`devkit rules phases` and `explain` use it).
+`run_project_rules` evaluates a project exactly as `devkit rules check` does: it
+reads the `[rules]` policy, registers the built-in rules, the receipt's rules and
+the files under `rules_dir`, builds the full `RuleContext` and evaluates.
+`load_project_rules(root, rules_dir)` is the loading half on its own: it returns
+a `ProjectRules` with the `config`, the `registry`, the settings `resolvers`,
+`load_errors` and `policy_errors`, without evaluating (`phases` and `explain`
+use it).
 
 ```python
 from pathlib import Path
@@ -313,67 +200,26 @@ for violation in run.blocking_violations:  # unfixed error-severity findings
 ```
 
 Keyword arguments are `targets`, `snapshot`, `phase`, `fix`, `dry_run` and
-`rules_dir`. An invalid `[rules]` table raises `RulesConfigError`. An invalid
-explicit target raises `TargetError`, and a `rules_dir` that a snapshot run
-cannot read from the snapshot raises `RulesDirError`; a snapshot that cannot be
-read or materialized raises `SnapshotError`. Rule loading problems, such as a
-malformed receipt or a missing or drifted synchronized rule, are returned in
-`run.load_errors`, and no rule is evaluated. `run.blocking_violations` (also
-on `EvaluationResult`) are the unfixed error-severity violations, `run.ok` is
-true when there are neither problems nor blocking violations, and
-`run.raise_for_problems()` raises `RulesRunError` when there are problems.
-`build_project_registry` and `expand_targets` expose the individual steps;
-`RuleContext`, `default_rule_registry` and `evaluate_rules` remain available
-for callers that assemble a run themselves;
+`rules_dir`. Configuration, target, rules-directory and snapshot failures are
+raised ([Errors](#errors)). Rule loading problems, such as a malformed receipt or
+a missing or drifted synchronized rule, are returned in `run.load_errors`, and
+no rule is evaluated. `run.blocking_violations` (also on `EvaluationResult`)
+are the unfixed error-severity violations, `run.ok` is true when there are
+neither problems nor blocking violations, and `run.raise_for_problems()` raises
+`RulesRunError` when there are problems. `build_project_registry` and
+`expand_targets` expose the individual steps; `RuleContext`,
+`default_rule_registry` and `evaluate_rules` serve callers that assemble a run
+themselves ([Rule Authoring Guide, section 5](rule-authoring.md#5-rule-sources-and-registration));
 `validate_policy` checks a `[rules]` policy against loaded rules and returns
 `PolicyError` objects that carry the rule ID.
 
-## Errors
+### Custom rules
 
-Every error the library raises or collects is an `AdvisoryError`
-(`devkit.advisory`) and a `RulesError`; branch on `error.code`, never on the
-message. Raised errors stop a run before any rule is evaluated; collected
-problems (`RuleProblem`, with `rule_id` naming the rule they concern or `None`)
-are returned in `RuleRegistry.errors`, `ProjectRun.load_errors` and
-`EvaluationResult.errors`, and `str(problem)` is the message.
-
-| Class | Code | Mode | When |
-| --- | --- | --- | --- |
-| `RulesConfigError` | `RULES_CONFIG_INVALID` | `INPUT_ERROR` | `[rules]` in `.devkit/config.toml` is malformed (raised; a subclass of the core `ConfigError`, which is raised unchanged as `CONFIG_INVALID` when the file itself cannot be read or parsed) |
-| `TargetError` | `RULES_TARGET_INVALID` | `INPUT_ERROR` | an explicit target is outside the workspace or does not exist (raised) |
-| `RulesDirError` | `RULES_DIR_INVALID` | `INPUT_ERROR` | a snapshot run cannot read `--rules-dir` from the snapshot (raised) |
-| `SnapshotError` | `RULES_SNAPSHOT_FAILED` | `INPUT_ERROR` (not a work tree top level, unknown `--base`) or `MAINTENANCE` (Git failure) | a Git snapshot cannot be taken or materialized (raised) |
-| `PinnedWriteError` | `RULES_PINNED_WRITE_REFUSED` | `BLOCKED` | a fixer tried to write a receipt-pinned copy under `.devkit/managed/` or `.devkit/overrides/` |
-| `RuleDefinitionError` | `RULES_DEFINITION_INVALID` | `MAINTENANCE` | a rule class declares an invalid `promote_to` (raised at construction) |
-| `PolicyError` | `RULES_POLICY_INVALID` | `INPUT_ERROR` | a phase or severity override or settings entry names an unknown rule or changes nothing (collected) |
-| `SettingsError` | `RULES_SETTINGS_INVALID` | `INPUT_ERROR`, or `MAINTENANCE` for a defect in the rule's settings declaration | settings do not type-check or `validate_settings` rejects them (collected; a `PolicyError`) |
-| `RuleLoadError` | `RULES_LOAD_FAILED` | `MAINTENANCE` | a rule file fails to load, or the receipt is malformed or lists a missing or drifted rule (collected; `fix` names `devkit sync`) |
-| `RuleExecutionError` | `RULES_EXECUTION_FAILED` | `MAINTENANCE` | a rule raised while checking or fixing; `[TARGET]` is the file defining it (collected) |
-| `RulesRunError` | `RULES_RUN_FAILED` | `MAINTENANCE` | raised by `ProjectRun.raise_for_problems()` for callers that need one error for a failed run, such as the workflow engine's `lint-clean`; `problems` keeps the collected problems |
-
-Warnings and notices are returned, never raised, at level `WARNING` or
-`NOTICE` ([Agent Advisory Protocol](../advisory/protocol.md#2-levels)):
-
-| Code | Level | When |
-| --- | --- | --- |
-| `RULES_PROMOTION_READY` | `NOTICE` | a `hygiene` run finds a phase override or promotion with `remaining=0`; `target_files` names the files to edit (`.devkit/config.toml` for an override, the file declaring the rule for a promotion), `fix` the edit (drop the `[rules.phase_overrides]` entry, or switch the declared phase to its `promote_to`) |
-| any collected problem's code | `WARNING` | `explain` reports a loading or policy problem that does not concern the described rule (`with_level`; the code is unchanged) |
-
-Rule violations of severity `warning` or `info` are findings, not advisories:
-they are results on stdout and never affect `--strict`.
-
-`expand_targets`, `RuleContext` (targets outside the workspace) and
-`ctx.settings(rule, path)` raise `TargetError` too. Passing `targets` or
-`fix=True` together with a snapshot, or a snapshot taken from another root, is
-a programming error and raises `ValueError`. A rule's `validate_settings`
-raises `ValueError`, which the engine reports as `SettingsError`.
-
-Use `--rules-dir path/to/rules` to load Python files defining `BaseRule`
-subclasses. Files load in sorted path order and classes in definition order;
-imported classes and files or directories whose name starts with `_` or `.` are
-ignored. A file that fails to import, or whose rule classes cannot be
-instantiated without arguments, contributes no rule and is a loading error.
-Custom rules are executable Python and should come from a trusted source.
+`--rules-dir path/to/rules` (`rules_dir`) loads the `BaseRule` subclasses
+defined in the Python files under it; loading order, skipped names and failure
+handling are in [Rule sources](rule-authoring.md#5-rule-sources-and-registration),
+and the rule contract (settings, `guide`, autofix) in the
+[Rule Authoring Guide](rule-authoring.md#1-rule-protocols-and-contracts).
 
 ```python
 from dataclasses import dataclass, field
@@ -413,43 +259,57 @@ class BannedWordsRule(BaseRule):
         return out
 ```
 
-`settings` is a frozen dataclass instance carrying the defaults; its fields may
-be `int`, `float`, `str`, `bool` or `list[str]`. `ctx.settings(rule, path)`
-returns the effective instance for a file after project overrides.
-`validate_settings` rejects values the types alone cannot express. `guide` names
-a Markdown file next to the rule module that `explain` prints and violations
-cite.
+## Errors
 
-Autofix rules also implement `fix(ctx) -> list[str]`, returning every modified
-workspace-relative file path. Use `ctx.cache` for shared reads and writes:
-`ctx.cache.write_text` writes exact UTF-8 bytes and refuses paths under
-`.devkit/managed/` and `.devkit/overrides/`, and `ctx.cache.read_text_strict` returns `None` for a file that is
-not valid UTF-8 and must not be rewritten. The evaluator invalidates returned
-paths after each fix and rechecks all active rules once; a fixable finding is
-marked fixed when the recheck reports fewer findings with the same rule, file
-and message. A failed fix clears the cache and rechecks disk contents; it does
-not roll back writes. A rule execution error prevents the autofix pass from
-starting. Malformed frontmatter is not an error for the built-in rules: the
-catalog records it in `frontmatter_errors` and keeps indexing.
+Every error the library raises or collects is an `AdvisoryError`
+(`devkit.advisory`) and a `RulesError`; branch on `error.code`, never on the
+message. Raised errors stop a run before any rule is evaluated; collected
+problems (`RuleProblem`, with `rule_id` naming the rule they concern or `None`)
+are returned in `RuleRegistry.errors`, `ProjectRun.load_errors` and
+`EvaluationResult.errors`, and `str(problem)` is the message.
+
+| Class | Code | Mode | When |
+| --- | --- | --- | --- |
+| `RulesConfigError` | `RULES_CONFIG_INVALID` | `INPUT_ERROR` | `[rules]` in `.devkit/config.toml` is malformed (raised; a subclass of the core `ConfigError`, which is raised unchanged as `CONFIG_INVALID` when the file itself cannot be read or parsed) |
+| `TargetError` | `RULES_TARGET_INVALID` | `INPUT_ERROR` | an explicit target is outside the workspace or does not exist (raised) |
+| `RulesDirError` | `RULES_DIR_INVALID` | `INPUT_ERROR` | a snapshot run cannot read `--rules-dir` from the snapshot: outside the repository or not in the snapshot (raised) |
+| `SnapshotError` | `RULES_SNAPSHOT_FAILED` | `INPUT_ERROR` (not a work tree top level, unknown `--base`) or `MAINTENANCE` (Git failure) | a Git snapshot cannot be taken or materialized (raised) |
+| `PinnedWriteError` | `RULES_PINNED_WRITE_REFUSED` | `BLOCKED` | a fixer tried to write a receipt-pinned copy under `.devkit/managed/` or `.devkit/overrides/` |
+| `RuleDefinitionError` | `RULES_DEFINITION_INVALID` | `MAINTENANCE` | a rule class declares an invalid `promote_to` (raised at construction) |
+| `PolicyError` | `RULES_POLICY_INVALID` | `INPUT_ERROR` | a phase or severity override or settings entry names an unknown rule or changes nothing (collected) |
+| `SettingsError` | `RULES_SETTINGS_INVALID` | `INPUT_ERROR`, or `MAINTENANCE` for a defect in the rule's settings declaration | settings do not type-check or `validate_settings` rejects them (collected; a `PolicyError`) |
+| `RuleLoadError` | `RULES_LOAD_FAILED` | `MAINTENANCE` | a rule file fails to load, or the receipt is malformed or lists a missing or drifted rule (collected; `fix` names `devkit sync`) |
+| `RuleExecutionError` | `RULES_EXECUTION_FAILED` | `MAINTENANCE` | a rule raised while checking or fixing; `[TARGET]` is the file defining it (collected) |
+| `RulesRunError` | `RULES_RUN_FAILED` | `MAINTENANCE` | raised by `ProjectRun.raise_for_problems()` for callers that need one error for a failed run, such as the workflow engine's `lint-clean`; `problems` keeps the collected problems |
+
+`expand_targets`, `RuleContext` (targets outside the workspace) and
+`ctx.settings(rule, path)` raise `TargetError` too. Passing `targets` or
+`fix=True` together with a snapshot, or a snapshot taken from another root, is
+a programming error and raises `ValueError`. A rule's `validate_settings`
+raises `ValueError`, which the engine reports as `SettingsError`.
+
+Warnings and notices are returned, never raised, at level `WARNING` or
+`NOTICE` ([Agent Advisory Protocol](../advisory/protocol.md#2-levels)):
+
+| Code | Level | When |
+| --- | --- | --- |
+| `RULES_PROMOTION_READY` | `NOTICE` | a `hygiene` run finds a phase override or promotion with `remaining=0`; `target_files` names the files to edit (`.devkit/config.toml` for an override, the file declaring the rule for a promotion), `fix` the edit (drop the `[rules.phase_overrides]` entry, or switch the declared phase to its `promote_to`) |
+| any collected problem's code | `WARNING` | `explain` reports a loading or policy problem that does not concern the described rule (`with_level`; the code is unchanged) |
+
+Rule violations of severity `warning` or `info` are findings, not advisories:
+they are results on stdout and never affect `--strict`.
 
 ## Current limits
 
-Caches live for one evaluation session. Markdown links come from a CommonMark
-inline-link scanner (angle-bracket destinations, titles, balanced parentheses,
-escapes, code spans and fences); reference-style links and autolinks are not
-checked, and links spanning several lines are not recognized. A link
-destination is decoded (percent-encoding, escapes) and its `?query` and
-`#fragment` are ignored when resolving the file. Settings fields are scalars
-and string lists; nested tables are not supported. Snapshot gates materialize
-the whole tree, so time and disk use grow with repository size; blobs are
-streamed from one `git cat-file --batch` process and written as they arrive. Phase overrides can only move a rule to `hygiene`; promoting a rule to
-`linter` is done by editing its declared phase. Parallel workers are future work.
-
-## Architectural Specifications & Deep-Dives
-
-Detailed technical designs and protocols are documented in `docs/rules/`:
-
-- [Rule Engine Architecture Overview](overview.md): Core subsystems, workspace cache, and Markdown file catalog.
-- [Evaluation Lifecycle & Convergence](evaluation-lifecycle.md): Phased checks, project policy, snapshot gates, single-pass autofix, and convergence verification.
-- [Rule Authoring Guide](rule-authoring.md): Protocols, settings, guides, finding models, cache APIs, and custom rule implementation.
-- [Resource Taxonomy](../architecture/resource-taxonomy.md): Governance rules within the multi-tier agent asset taxonomy.
+- Caches live for one evaluation session; parallel workers are future work.
+- Markdown links come from a CommonMark inline-link scanner (angle-bracket
+  destinations, titles, balanced parentheses, escapes, code spans and fences);
+  reference-style links and autolinks are not checked, and links spanning
+  several lines are not recognized. A destination is decoded (percent-encoding,
+  escapes) and its `?query` and `#fragment` are ignored when resolving the file.
+- Settings fields are scalars and string lists; nested tables are not supported.
+- Snapshot gates materialize the whole tree, so time and disk use grow with
+  repository size; blobs are streamed from one `git cat-file --batch` process
+  and written as they arrive.
+- Phase overrides can only move a rule to `hygiene`; promoting a rule to
+  `linter` is done by editing its declared phase.

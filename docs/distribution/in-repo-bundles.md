@@ -1,67 +1,40 @@
-# In-Repository Bundles (Self-Consumed Content Packages)
+# In-Repository Bundles
 
-**Status**: Architecture Decision & Usage Guide  
-**Package**: `devkit`  
-**Related Documents**:
-- [Distribution Overview](overview.md)
-- [Bundle Manifest Specification](manifest-spec.md)
-- [Transitive Dependencies](transitive-dependencies.md)
-- [Workspace Ownership & Overrides](workspace-ownership.md)
-- [Evaluation Lifecycle: Git Snapshot Gates](../rules/evaluation-lifecycle.md#6-git-snapshot-gates)
+A repository's own assets (a rule encoding a project convention, a skill driving its release script, an on-call
+playbook) must be versioned with it, never published, and still get everything devkit does for distributed assets:
+planning, hash-tracked projection, receipt recording, rule discovery and Git snapshot gates. The consumer-facing
+version of this document is the `in-repo-bundle` instruction of the [`devkit` guide bundle](reference.md#4-bundles-shipped-with-devkit);
+keep the two in step.
 
----
+## 1. Decision
 
-## 1. Problem
+**A repository ships its own assets as an ordinary content package inside the repository, installed as a
+development dependency of that same repository.** There is no local asset directory under `.devkit/` and no second
+loader: `importlib.metadata.entry_points(group="devkit.bundles")` does not distinguish a registry wheel, a Git or
+`path` dependency, or a workspace member.
 
-A repository often needs assets that belong only to itself: a governance rule that encodes a project convention, a skill that drives its own release script, a playbook for its on-call procedure. These assets must be versioned with the repository, must not be published to anyone else, and should still participate in everything `devkit` does for distributed assets: planning, hash-tracked projection into agent directories, receipt recording, rule discovery and Git snapshot gates.
+A `.devkit/local/` directory was rejected. It would need a second discovery and planning path, its own receipt and
+ownership rules, a second rule source for `devkit rules`, explicit support per asset kind, and it would blur the line
+with `.devkit/overrides/` (overrides change upstream files; bundles add assets). The in-repository bundle costs only a
+`pyproject.toml`, an entry point and a `bundle.toml`, paid once.
 
-## 2. Decision
+## 2. Layout
 
-**A repository ships its own assets as an ordinary content package that lives inside the repository and is installed as a development dependency of that same repository.** There is no separate "local" asset directory under `.devkit/` and no second loader for it.
-
-The package is discovered, planned, synchronized and recorded exactly like a bundle installed from a wheel, because to `devkit` it *is* one: `importlib.metadata.entry_points(group="devkit.bundles")` does not distinguish between a wheel from a registry, a Git dependency, a `path` dependency or a workspace member.
-
-### Why not a `.devkit/local/` directory?
-
-A dedicated local directory was considered and rejected:
-
-| Concern | `.devkit/local/` directory | In-repository bundle |
-| --- | --- | --- |
-| Discovery, planning, projection | A second code path next to installed bundles | The existing entry-point path |
-| Receipt, hashes, drift detection | Needs its own ownership rules and receipt entries | Recorded like any bundle |
-| Rule loading and snapshot gates | `devkit rules` needs a second discovery source | Receipt-driven loading already works |
-| Asset kinds beyond rules | Each kind needs explicit local support | Every kind in `bundle.toml` works unchanged |
-| Overrides vs. additions | Blurs the line with `.devkit/overrides/` | Overrides stay for upstream edits, bundles for additions |
-| Setup cost | None | A `pyproject.toml`, an entry point and a `bundle.toml` |
-
-The only cost of the chosen approach is the packaging boilerplate in the last row. It is a few lines and is paid once per repository.
-
-## 3. Layout
-
-The package can live anywhere in the repository. By convention, put it under `tools/` and name it after the repository:
+By convention the package lives under `tools/` and is named after the repository:
 
 ```text
 my-repo/
-  pyproject.toml                      # the repository's own project
-  .devkit/
-    config.toml                       # selects the in-repo bundle like any other
-    installation.json                 # receipt (Git-tracked)
-    managed/                          # Git-ignored projections, written by devkit sync
-  tools/
-    my-repo-devkit/
-      pyproject.toml
-      src/
-        my_repo_devkit/
-          __init__.py                 # empty; no runtime side effects
-          bundle/
-            bundle.toml
-            rules/
-              no_todo.py
-            skills/
-              release/
-                SKILL.md
-            playbooks/
-              on-call.md
+  pyproject.toml
+  .devkit/config.toml                 # selects the in-repo bundle like any other
+  tools/my-repo-devkit/
+    pyproject.toml
+    src/my_repo_devkit/
+      __init__.py                     # empty; no runtime side effects
+      bundle/
+        bundle.toml
+        rules/no_todo.py
+        skills/release/SKILL.md
+        playbooks/on-call.md
 ```
 
 ```toml
@@ -107,13 +80,12 @@ kind = "playbook"
 source = "playbooks/on-call.md"
 ```
 
-The manifest follows the [Bundle Manifest Specification](manifest-spec.md) without exception. `devkit bundle validate tools/my-repo-devkit/src/my_repo_devkit/bundle` and `devkit bundle plan <that path>` work on it before it is ever installed.
+The manifest follows the [Manifest Specification](manifest-spec.md) without exception; `devkit bundle validate` and
+`devkit bundle plan` work on `tools/my-repo-devkit/src/my_repo_devkit/bundle` before it is installed.
 
-## 4. Installation
+## 3. Installation
 
-### 4.1 Repository that is a uv workspace
-
-Add the package directory to the workspace members and depend on it from the development group. `uv` records the member as a workspace source:
+In a **uv workspace**, add the package to the members and the dev group:
 
 ```toml
 # pyproject.toml (repository root)
@@ -127,79 +99,67 @@ dev = ["devkit", "my-repo-devkit"]
 my-repo-devkit = { workspace = true }
 ```
 
+In a **single project**, `uv add --dev --editable ./tools/my-repo-devkit` writes the same dev dependency with
+`my-repo-devkit = { path = "tools/my-repo-devkit", editable = true }` as its source. A repository **without Python
+code** already has a `pyproject.toml` for `devkit`; its root project needs no build system, only `[project]` with a
+name, `[dependency-groups]` and `[tool.uv.sources]`.
+
+Then:
+
 ```bash
 uv sync
-uv run devkit add my-repo        # records [presets] my-repo = "all" in .devkit/config.toml
-uv run devkit sync
+uv run devkit add my-repo        # records [presets] my-repo = "all" and synchronizes
 ```
 
-### 4.2 Repository that is a single project
+The package belongs in `[dependency-groups].dev`, never `[project.dependencies]`: dependency groups are not written
+to a built wheel, so if the repository is itself published, its consumers never receive the bundle, its rules or its
+entry point ([Content Packages, section 3](content-packages.md#3-dependency-boundaries)). To share the bundle later,
+publish the package or let other repositories depend on it with a Git URL and `subdirectory`.
 
-Depend on the package by path, as an editable development dependency:
+## 4. Editing Lifecycle
 
-```bash
-uv add --dev --editable ./tools/my-repo-devkit
-```
+1. Edit the sources under `tools/my-repo-devkit/src/.../bundle/`.
+2. Run `uv run devkit sync`. The editable install exposes the change at once and `sync` compares hashes against the
+   receipt on every run, so the package version need not change.
+3. Commit the source change with the updated `.devkit/installation.json`.
 
-```toml
-# pyproject.toml, written by uv add
-[dependency-groups]
-dev = ["devkit", "my-repo-devkit"]
+Never edit `.devkit/managed/<bundle>/`: a modified managed file stops the sync as for any bundle. Overrides are for
+bundles the repository does not own. Bump the bundle `version` once another repository consumes the bundle, so
+their receipts record which version they run.
 
-[tool.uv.sources]
-my-repo-devkit = { path = "tools/my-repo-devkit", editable = true }
-```
+## 5. Rules and Snapshot Gates
 
-Then `uv run devkit add my-repo` and `uv run devkit sync` as above.
+The bundle's rules deploy to `.devkit/managed/my-repo/rules/`, are listed under their asset's `paths`, load in
+`devkit rules check` without flags and are configured in `[rules]` like any rule.
 
-### 4.3 Repository without Python code
+Snapshot gates (`devkit rules check --staged`, `--ci`) evaluate a materialized Git tree, which lacks the Git-ignored
+managed copies; the gate reads such a file from the working tree only when its SHA-256 matches the `files` entry of
+the receipt committed to the snapshot
+([Evaluation Lifecycle](../rules/evaluation-lifecycle.md#6-git-snapshot-gates)). Hence:
 
-Using `devkit` at all requires a `pyproject.toml` with `devkit` as a development dependency, so the in-repository bundle adds no new requirement. The root project needs no build system; a `[project]` table with a name plus `[dependency-groups]` and `[tool.uv.sources]` is enough.
+- After editing a rule, run `devkit sync` and stage the receipt with the rule source; a stale receipt fails the gate,
+  whose `[FIX]` says to run `devkit sync`.
+- A fresh clone runs `uv sync` and `uv run devkit sync` before the gate can run; otherwise it reports the managed
+  rule as missing, as for upstream bundles.
+- The committed receipt pins exactly which rule code a gate executed.
 
-## 5. Dependency Boundary
+`devkit rules` loads built-in rules, then rule assets in receipt order (bundle name order), then `--rules-dir`; a
+rule with an earlier rule's ID replaces it. An in-repository bundle can shadow an upstream rule that way, but the
+order between bundles is not a declared priority, so prefer IDs prefixed with the repository name
+(`RULE-myrepo-no-todo`) unless shadowing is the intent.
 
-The bundle package is declared in `[dependency-groups].dev`, never in `[project.dependencies]`. Development groups are not written to a built wheel's `Requires-Dist`, so if the repository is itself published as a package, its consumers never receive the bundle, its rules or its entry point. This is the boundary described in [Transitive Dependencies, section 2](transitive-dependencies.md#2-transitive-bundle-distribution-and-dependency-boundaries): dependency groups isolate tooling to the authoring repository.
-
-Conversely, when a repository wants to *share* an in-repository bundle with other repositories, nothing changes in the bundle: publish the package, or let consumers depend on it with a Git URL and `subdirectory`, and they install it like any other content wheel.
-
-## 6. Editing Lifecycle
-
-1. Edit the asset sources under `tools/my-repo-devkit/src/.../bundle/`.
-2. Run `uv run devkit sync`. The editable install exposes the new content immediately, and `sync` replans from the installed resources on every run and compares file hashes against the receipt, so the package version does not need to change for edits to be projected.
-3. Commit the source change together with the updated `.devkit/installation.json`.
-
-Never edit `.devkit/managed/<bundle>/` directly: `devkit sync` detects a modified managed file as a conflict and halts, exactly as it would for an upstream bundle. `.devkit/overrides/` exists to replace files of bundles the repository does not own; for an in-repository bundle, edit the source instead.
-
-The bundle `version` in `bundle.toml` is still meaningful: bump it when another repository consumes the bundle, so their receipts record which version they are on.
-
-## 7. Governance Rules and Snapshot Gates
-
-Rules in an in-repository bundle are deployed to `.devkit/managed/my-repo/rules/` and listed in the receipt under their asset's `paths`. `devkit rules check` loads them from there with no flags. They are configured in `[rules]` of `.devkit/config.toml` like any other rule.
-
-Git snapshot gates (`devkit rules check --staged`, `--ci`) evaluate a materialized Git tree, and `.devkit/managed/` is Git-ignored, so the managed rule copies are not in that tree. The gate reads such a file from the working tree only when its SHA-256 matches the `files` entry in the receipt committed to the snapshot. Consequences for an in-repository bundle:
-
-- After editing a rule, run `devkit sync` and stage the updated receipt alongside the rule source. A staged rule source with a stale receipt fails the gate: the working-tree managed copy no longer matches the receipt's hash, and the advisory's `[FIX]` says to run `devkit sync`.
-- A fresh clone must run `uv sync` and `uv run devkit sync` before the gate can run; otherwise the gate reports the managed rule as missing. This is identical to upstream bundles.
-- The committed receipt pins exactly which rule code a gate executed, which is the property the snapshot gates exist to provide.
-
-### Rule ID precedence
-
-`devkit rules` loads built-in rules first, then rule assets in receipt order, then `--rules-dir`. A rule with the same ID as an earlier one replaces it. An in-repository bundle can therefore deliberately shadow an upstream rule by reusing its ID, but the order between bundles follows bundle name sorting in the receipt, not a declared priority. Prefer unique IDs prefixed with the repository name (for example `RULE-myrepo-no-todo`) unless shadowing is the intent.
-
-## 8. Comparison of Project-Specific Mechanisms
+## 6. Project-Specific Mechanisms
 
 | Need | Mechanism |
 | --- | --- |
 | Change a setting, phase or severity of a distributed rule | `[rules]` in `.devkit/config.toml` |
-| Replace the content of one upstream asset file | `.devkit/overrides/<bundle>/...` with `devkit override create` |
-| Add rules, skills, playbooks, subagents, workflows or gates that belong to this repository | In-repository bundle (this document) |
-| Try an unfinished rule without recording it anywhere | `devkit rules check --rules-dir <dir>`; with `--staged`/`--ci` a directory inside the repository is read from the snapshot, one outside it or untracked is refused, and the commit gate's staged-rules gate never takes it |
+| Replace the content of one upstream asset file | `devkit override create` (`.devkit/overrides/<bundle>/...`) |
+| Add rules, skills, playbooks, subagents, workflows or gates that belong to this repository | In-repository bundle |
+| Try an unfinished rule without recording it | `devkit rules check --rules-dir <dir>`; with `--staged`/`--ci` a directory inside the repository is read from the snapshot, one outside it or untracked is refused, and the commit gate's staged-rules gate never takes it |
 
-## 9. Delivery to Consumers
+## 7. Open Items
 
-This document is the developer-facing specification. The consumer-facing version is the `in-repo-bundle` instruction of the `devkit` guide bundle shipped inside `devkit` (`src/devkit/distribution/guide/bundle/`), delivered to agents through `devkit get-context devkit`. Keep the two in step when the mechanism changes.
-
-## 10. Open Items
-
-- **Scaffolding**: a `devkit bundle init <path>` command that writes the `pyproject.toml`, `__init__.py` and a minimal `bundle.toml` would remove the remaining setup cost. Not implemented.
-- **Explicit rule precedence**: if shadowing upstream rules from an in-repository bundle becomes common, a declared load order would replace the implicit bundle name ordering. Not planned until a concrete need appears.
+- **Scaffolding**: a `devkit bundle init <path>` command writing the `pyproject.toml`, `__init__.py` and a minimal
+  `bundle.toml`. Not implemented.
+- **Explicit rule precedence**: a declared load order replacing bundle name ordering, if shadowing upstream rules
+  becomes common. Not planned until a concrete need appears.

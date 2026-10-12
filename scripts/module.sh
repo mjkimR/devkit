@@ -11,6 +11,9 @@ shift $(($# < 2 ? $# : 2))
 validate_module "$target"
 # Assigned before the loop so a discovery failure aborts under `set -e`.
 modules=$(list_modules)
+# pytest-xdist: worksteal keeps the slow Git-hook tests from piling onto one worker;
+# extra arguments come later, so `-n0` runs serially (for pdb or a single test).
+xdist=(-n auto --maxprocesses 8 --dist worksteal)
 
 if [ "$action" = init ]; then
     if [ "$target" = all ]; then
@@ -26,7 +29,7 @@ fi
 if [ "$target" = all ]; then
     case "$action" in
         test)
-            uv run --no-active pytest "$@"
+            uv run --no-active pytest "${xdist[@]}" "$@"
             exit 0
             ;;
         test-cov)
@@ -34,7 +37,7 @@ if [ "$target" = all ]; then
             for module in $modules; do
                 cov+=("--cov=$(resolve_module_path "$module")/src")
             done
-            uv run --no-active pytest "${cov[@]}" --cov-config=pyproject.toml "$@"
+            uv run --no-active pytest "${xdist[@]}" "${cov[@]}" --cov-config=pyproject.toml "$@"
             exit 0
             ;;
     esac
@@ -53,10 +56,10 @@ for module in $modules; do
             uv run --no-active ruff format --check "$path"
             ;;
         check) uv run --no-active pyright "$path" ;;
-        test) uv run --no-active pytest "$path/tests" "$@" ;;
+        test) uv run --no-active pytest "${xdist[@]}" "$path/tests" "$@" ;;
         test-cov)
             COVERAGE_FILE=".coverage.$module" \
-                uv run --no-active pytest --cov="$path/src" --cov-config=pyproject.toml "$path/tests" "$@"
+                uv run --no-active pytest "${xdist[@]}" --cov="$path/src" --cov-config=pyproject.toml "$path/tests" "$@"
             ;;
         *) echo "Unknown action: $action" >&2; exit 1 ;;
     esac

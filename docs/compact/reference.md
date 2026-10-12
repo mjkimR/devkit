@@ -1,8 +1,6 @@
 # devkit.compact
 
-Compact command output for agents (`devkit run`), part of the `devkit` distribution. A command runs with its complete output in a log file; the caller gets its outcome, recognized summaries (or, when a command passed without one, its last lines) and warnings, the advisory blocks of nested `devkit` commands and, on failure, a head-and-tail excerpt, each within a fixed budget.
-
-Architecture and design rationale: [Compact Command Output Overview](overview.md).
+Compact command output for agents (`devkit run`): a command runs with its complete output in a log file, and the caller gets a bounded view of it. Semantics, budgets and recognized formats: [Compact Command Output Overview](overview.md).
 
 ## Usage
 
@@ -35,17 +33,20 @@ Options go before the command; everything from the command on is passed to it un
 <last 5,000 characters>
 ```
 
-`[RUN_OMITTED]` appears only when a budget was exceeded (the excerpt's only when it is shown), `[RUN_OUTPUT]` and the excerpt only when the command failed. The omission marker names the log lines it left out (`sed -n '41,212p' <log>` reads them). A command that passed without a recognized summary gets `[RUN_LAST_LINE: "..."]` lines instead: the last non-blank lines of its filtered output, at most 5 and 500 characters. A command that failed gets `[RUN_FAILURE: ...]` lines for the failed tests pytest names (`FAILED`/`ERROR` lines) that the excerpt cuts out, within 2,000 characters, so excerpt and failures together name every failed test or count it in `failures=`. Identical lines in a row collapse into the first and a `[... previous line repeated N more times, log lines A-B ...]` line. Under `-v`, an `[INFO]` line gives the size of the view against the output. The excerpt filters out progress (pytest's dots and `PASSED` lines, `✓` lines, overwritten progress bar states), noise (pytest's session header, uv's success messages), pytest's warnings summary (its warnings are `[RUN_WARNING]` lines) and repeated blank lines, counted in `filtered=`; the log keeps them. Warning locations under the working directory are relative to it. For shorter reports, set the tools' own options in the recipe: `pytest --tb=short`, `ruff check --output-format=concise`. stderr carries the advisory blocks of nested `devkit` commands (warnings and notices, then the runner's notices, then errors). JSON keys: `command`, `outcome`, `exit_code`, `log`, `summaries`, `last_lines`, `failures`, `warnings`, `advisories`, `omitted`, `output`, `filtered`, `notices`. Budgets, recognized formats and ordering: [Overview, sections 4 and 5](overview.md#4-the-bounded-view).
+`[RUN_LAST_LINE]` lines replace summaries only when the command passed without a recognized one; `[RUN_FAILURE]` lines (failed tests the excerpt cuts out), `[RUN_OUTPUT]` and the excerpt appear only when it failed; `[RUN_OMITTED]` only when a budget was exceeded. Each omission marker names the log lines it left out (`sed -n '41,212p' <log>` reads them), and a `[... previous line repeated N more times, log lines A-B ...]` line stands for identical lines in a row. `filtered=` counts the progress, noise and repeated lines filtered out of the excerpt; the log keeps them. stderr carries the relayed advisory blocks of nested `devkit` commands (warnings and notices, then the runner's notices, then errors). JSON keys: `command`, `outcome`, `exit_code`, `log`, `summaries`, `last_lines`, `failures`, `warnings`, `advisories`, `omitted`, `output`, `filtered`, `notices`. Line formats, budgets and filters: [Overview, sections 4 and 5](overview.md#4-the-bounded-view). For shorter reports, set the tools' own options in the recipe: `pytest --tb=short`, `ruff check --output-format=concise`.
 
 Logs: `<tmp>/devkit-run-<uid>/<project hash>/` (the first level private to the user, `0700`), the 20 newest per project.
 
-Exit codes: `0` the command succeeded; `1` it failed (its own code is `exit=`, `128 + N` for signal `N`); `2` it could not be started or the arguments are invalid.
+## Exit and error codes
 
-| Code | Level | Condition |
-| --- | --- | --- |
-| `RUN_COMMAND_NOT_STARTED` | `ERROR` (`INPUT_ERROR`) | The command does not exist or is not executable, or the working directory does not exist or cannot be entered; `[TARGET]` names which. |
-| `RUN_LOG_DIR_INVALID` | `ERROR` (`INTERACTION`) | The per-user log directory is a symlink, another user's, or cannot be created. |
-| `RUN_SLOW_COMMAND` | `NOTICE` | The command ran at least `--slow-after` seconds. |
+`0` the command succeeded; `1` it failed (its own code is `exit=`, `128 + N` for signal `N`); `2` it could not be started, the log directory is unusable or the arguments are invalid. Codes carry the `RUN_` prefix of the command agents call, not the module name.
+
+| Code | Level | Class | Condition |
+| --- | --- | --- | --- |
+| `RUN_COMMAND_NOT_STARTED` | `ERROR` (`INPUT_ERROR`, exit `2`) | `CommandNotStartedError` | The command does not exist or is not executable, or the working directory does not exist (also when the shell's current directory was removed) or cannot be entered; `[TARGET]` names the command or the directory. |
+| `RUN_LOG_DIR_INVALID` | `ERROR` (`INTERACTION`, exit `2`) | `LogDirectoryError` | The per-user log directory is a symlink, belongs to another user, or cannot be created. |
+| `RUN_SLOW_COMMAND` | `NOTICE` | `SlowCommandNotice` | The command ran at least `--slow-after` seconds. |
+| `ARGUMENT_INVALID` | `ERROR` (exit `2`) | `devkit.core.ArgumentError` | `--slow-after` is negative or not finite. |
 
 ## Library
 
@@ -57,11 +58,11 @@ run.passed, run.exit_code, run.log
 run.scan.summaries, run.scan.last_lines, run.scan.failures, run.scan.warnings, run.scan.advisories, run.scan.output, run.scan.omitted
 ```
 
-`run_command(argv, *, cwd=None, env=None, slow_after=60.0, notices=True, log_dir=None)` never prints and raises `CommandNotStartedError`; `scan(stream, *, notices=True)` reads any text stream into a `Scan`.
+`run_command(argv, *, cwd=None, env=None, slow_after=60.0, notices=True, log_dir=None)` never prints and raises `CommandNotStartedError`, or `LogDirectoryError` when it uses the default log directory and that is unusable; `scan(stream, *, notices=True)` reads any text stream into a `Scan`. Fields: [Overview, Library](overview.md#6-library).
 
 ## Agent guidance
 
-The `devkit` guide bundle (selected by default) carries the instruction `devkit-run`: when to use `devkit run`, how to read its output and log, and how to put it inside a project's recipes (`just`, `make`, `npm` scripts). Agents find it through `devkit get-context devkit`; it adds nothing to `AGENTS.md`. Its source is `src/devkit/distribution/guide/bundle/instructions/devkit-run.md`; keep it in step with this reference.
+The `devkit` guide bundle (selected by default) carries the instruction `devkit-run`: when to use `devkit run`, how to read its output and log, and how to put it inside a project's recipes. Agents find it through `devkit get-context devkit`; it adds nothing to `AGENTS.md`. Its source is `src/devkit/distribution/guide/bundle/instructions/devkit-run.md`; keep it in step with this reference.
 
 ## Module map
 

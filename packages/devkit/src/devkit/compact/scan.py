@@ -130,6 +130,8 @@ _PROGRESS = tuple(
         # pytest: an optional test file, one character per test, then [ 45%] (or [ 12/130]). A line with
         # F or E records which file failed, for a run that ends without its failures section: it stays.
         rf"(?:\S+ )?[.sxXR]+\s*{_PERCENT}",
+        # pytest-xdist may end a run with the percentage alone.
+        _PERCENT,
         # pytest -v: a test that passed, was skipped or xfailed; FAILED and ERROR lines stay.
         rf"\S+::\S.* (?:PASSED|SKIPPED|XFAIL|XPASS)(?: \(.*\))?\s*{_PERCENT}",
         # pytest-xdist -v, and the passed tests pytest -rA lists in its short summary.
@@ -149,6 +151,11 @@ _NOISE = tuple(
     for pattern in (
         r"platform \S+ -- Python \S+.*",
         r"(?:rootdir|configfile|inifile|cachedir|testpaths|plugins): .*",
+        # pytest-xdist starting its workers, and the worker's platform line above each failure.
+        r"created: \d+/\d+ workers?",
+        r"bringing up nodes\.\.\.",
+        r"scheduling tests via \w+",
+        r"\[gw\d+\] \S+ -- Python \S+ .*",
         r"(?:Resolved|Prepared|Installed|Uninstalled|Audited|Downloaded) \d+ packages? in [\d.]+m?s",
         r"(?:Building|Built|Downloading|Downloaded) \S+ (?:@ \S+|\([\d.]+ ?[KMG]i?B\))",
         r"[+~-] [A-Za-z0-9][\w.\[\],-]*(?:==\S+(?: \(from .+\))?| @ \S+)",
@@ -163,6 +170,9 @@ _FILTERED_BANNERS = {"test session starts", "warnings summary"}
 _FILTERED_SECTIONS = {"warnings summary"}
 
 _FILTERS = (*_PROGRESS, *_NOISE)
+# pytest-xdist -v names each test as it starts: the node ID and one space. Matched before stripping, since a
+# --collect-only listing, which is the result, prints node IDs without the space.
+_STARTED = re.compile(rf"{_NODE_ID} ")
 # A count is shorter than this many repeats of any line (two characters each, newline included).
 _REPEATS_KEPT = 64
 
@@ -286,7 +296,7 @@ def is_filtered(line: str) -> bool:
     """Whether ``line`` (one visible line) only reports progress or a passing item, or carries nothing an
     agent acts on; pytest's filtered sections are decided by the scan, which follows the banners."""
     clean = line.strip()
-    return bool(clean) and any(pattern.fullmatch(clean) for pattern in _FILTERS)
+    return bool(clean) and (any(pattern.fullmatch(clean) for pattern in _FILTERS) or bool(_STARTED.fullmatch(line)))
 
 
 class _Excerpt:

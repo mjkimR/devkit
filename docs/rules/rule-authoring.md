@@ -1,17 +1,12 @@
 # Rule Authoring Guide and Rule Protocol
 
-**Status**: Architecture Specification & Developer Guide  
-**Package**: `devkit.rules`  
-**Related Documents**:
-- [Rule Engine Overview](overview.md)
-- [Evaluation Lifecycle](evaluation-lifecycle.md)
-- [Resource Taxonomy](../architecture/resource-taxonomy.md)
-
----
+Rule contracts, the workspace API rules read through, and where rules load from.
+Related: [Rule Engine Overview](overview.md), [Evaluation Lifecycle](evaluation-lifecycle.md),
+[Rules Reference](reference.md).
 
 ## 1. Rule Protocols and Contracts
 
-All governance rules in `devkit.rules` implement Python `typing.Protocol` contracts defined in `devkit.rules.engine.models`.
+Rules implement the `typing.Protocol` contracts in `devkit.rules.engine.models`.
 
 ### The `Rule` Protocol
 
@@ -32,13 +27,13 @@ class Rule(Protocol):
         ...
 ```
 
-`phase` is the rule's default phase. A project may move a `linter` rule to `hygiene` through `[rules.phase_overrides]` in `.devkit/config.toml`; the evaluator applies that override before filtering, so a rule never needs to inspect it. See [Evaluation Lifecycle, section 4](evaluation-lifecycle.md#4-phase-transitions-overrides-and-promotions).
+`phase` is the rule's default phase; the evaluator applies project phase overrides before filtering, so a rule never inspects them ([Evaluation Lifecycle, section 4](evaluation-lifecycle.md#4-phase-transitions-overrides-and-promotions)). The evaluator sets each violation's `severity` and `phase` to the rule's effective values, so a rule does not pass them.
 
-Any object satisfying the protocol can be passed to `RuleRegistry.register`. Rule files loaded from `--rules-dir` or from the installation receipt contribute only the `BaseRule` subclasses they define, instantiated without arguments; a file that fails to import or whose classes cannot be instantiated contributes no rule and is reported as a loading error.
+Any object satisfying the protocol can be passed to `RuleRegistry.register`. Rule files (section 5) contribute only the `BaseRule` subclasses they define.
 
 ### Optional `promote_to`
 
-`BaseRule` accepts an optional `promote_to` field. It is not part of the `Rule` protocol, so plain classes may omit it. Declare it on a `hygiene` rule that is meant to become a `linter` rule once the codebase is clean:
+`BaseRule` accepts an optional `promote_to` (not part of the `Rule` protocol). Declare it on a `hygiene` rule meant to become a `linter` rule once the codebase is clean:
 
 ```python
 from devkit.rules import Phase, Severity
@@ -56,11 +51,11 @@ class NoTodoRule(BaseRule):
         )
 ```
 
-`promote_to` is only valid as `Phase.LINTER` on a `Phase.HYGIENE` rule; any other combination raises `RuleDefinitionError` (`RULES_DEFINITION_INVALID`) at construction, which makes the rule file a loading error. `devkit rules check --phase hygiene` reports the remaining violation count for every rule declaring a promotion, and `devkit rules phases` lists the pending transition.
+`promote_to` is only valid as `Phase.LINTER` on a `Phase.HYGIENE` rule; any other combination raises `RuleDefinitionError` (`RULES_DEFINITION_INVALID`) at construction, which makes the rule file a loading error. How the pending promotion is reported: [Evaluation Lifecycle, section 4](evaluation-lifecycle.md#rule-promotions-promote_to).
 
 ### Optional `settings` and `validate_settings`
 
-`BaseRule.settings` holds a frozen dataclass instance with the rule's defaults. Its fields may be `int`, `float`, `str`, `bool` or `list[str]`, each optionally `| None` (the only fields that accept `null`); any other annotation is rejected when the rule is loaded. Gate settings use the same type checker (`devkit.rules.engine.settings.check_setting_value`). A project changes the values, globally or per path, in `[rules.settings.<RULE-id>]` of `.devkit/config.toml` (see [Evaluation Lifecycle, section 5](evaluation-lifecycle.md#5-project-policy-severity-overrides-and-typed-settings)). Rules read the effective instance with `ctx.settings(self, path)`; without a resolver (library callers that skip `evaluate_rules`) the defaults are returned.
+`BaseRule.settings` holds a frozen dataclass instance with the rule's defaults. Its fields may be `int`, `float`, `str`, `bool` or `list[str]`, each optionally `| None` (the only fields that accept `null`); nested tables are not supported, and any other annotation is rejected when the rule is loaded. Gate settings use the same type checker (`devkit.rules.engine.settings.check_setting_value`). A project sets the values, globally or per path, in `[rules.settings.<RULE-id>]` ([Evaluation Lifecycle, section 5](evaluation-lifecycle.md#5-project-policy-severity-overrides-and-typed-settings)). Rules read the effective instance with `ctx.settings(self, path)`; without a resolver (library callers that skip `evaluate_rules`) the defaults are returned.
 
 ```python
 from dataclasses import dataclass, field
@@ -87,15 +82,13 @@ class FileLengthRule(BaseRule):
             ...
 ```
 
-`validate_settings` runs on the defaults, the configured values and every override layer (each applied to the configured values) before any rule executes; raise `ValueError` for values the field types cannot express. The evaluator reports the failure with the rule ID and stops. Several overrides matching the same file are combined when `ctx.settings` is first called for it; a combination that `validate_settings` rejects raises `SettingsError` (`RULES_SETTINGS_INVALID`), which the evaluator reports as `Invalid settings (RULE-id): ...`. Results are memoized per combination of matching overrides.
+`validate_settings` raises `ValueError` for values the field types cannot express. It runs on the defaults, the configured values and every override layer (each applied to the configured values) before any rule executes. Several overrides matching one file are combined when `ctx.settings` is first called for it, and a rejected combination raises `SettingsError` (`RULES_SETTINGS_INVALID`). Results are memoized per combination of matching overrides.
 
 ### Optional `guide`
 
-`guide` names a Markdown file relative to the module that defines the rule class. `devkit rules explain <RULE-id>` prints it and violation output cites its path, so an agent can read the full remediation without the rule carrying it in every message. Built-in guides live next to their rules (for example `rules/hygiene/file_length.md`).
+`guide` names a Markdown file relative to the module that defines the rule class. `devkit rules explain <RULE-id>` prints it and violation output cites its path, so the full remediation need not travel in every message. Built-in guides live next to their rules (for example `rules/hygiene/file_length.md`).
 
 ### The `Autofixable` Protocol
-
-Rules that support automated deterministic repairs implement `Autofixable`:
 
 ```python
 @runtime_checkable
@@ -105,27 +98,25 @@ class Autofixable(Rule, Protocol):
         ...
 ```
 
----
+`fix` returns every workspace-relative path it modified; the evaluator invalidates those paths and rechecks ([Evaluation Lifecycle](evaluation-lifecycle.md#2-autofix-and-convergence)). Fixers write through `ctx.cache.write_text` and leave alone files `read_text_strict` rejects.
 
 ## 2. Rule Context and Workspace Cache
 
-Rules inspect files using `ctx.cache` rather than direct disk I/O to maximize performance:
+Rules read files through `ctx.cache`, not direct disk I/O:
 
-- `ctx.is_file_targeted(path)`: Returns `True` if the file is included in the current run targets. It is `False` for any path matched by the project's `[rules] exclude` patterns, even in a whole-workspace run, so a rule that scans with `find_files` must call it before reporting. `ctx.changed_files` already has excluded paths removed; `ctx.has_targets` says whether the run named explicit targets at all.
-- `ctx.cache.find_files(root, extensions=(".md",))`: Sorted absolute paths of the regular files under `root` with one of `extensions` (`None` lists every file). Dependency and cache directories, `.devkit/managed/` and `.devkit/overrides/`, symlinks resolving outside the workspace and, inside a Git work tree, Git-ignored files that are not explicit targets are skipped (cached).
-- `ctx.cache.read_text(path)` / `ctx.cache.read_bytes(path)`: File contents for a workspace-relative or absolute path (cached). `read_text` replaces undecodable bytes with U+FFFD; `read_text_strict(path)` returns `None` for a file that is not valid UTF-8, which a fixer must then leave alone.
+- `ctx.is_file_targeted(path)`: `True` if the file is in the current run's targets. It is `False` for any path matched by `[rules] exclude`, even in a whole-workspace run, so a rule that scans with `find_files` must call it before reporting. `ctx.changed_files` already has excluded paths removed; `ctx.has_targets` says whether the run named explicit targets.
+- `ctx.cache.find_files(root, extensions=(".md",))`: Sorted absolute paths of the regular files under `root` with one of `extensions` (`None` lists every file), with the target discovery of [Evaluation Lifecycle, section 3](evaluation-lifecycle.md#3-cli-execution-and-phases) (cached).
+- `ctx.cache.read_text(path)` / `ctx.cache.read_bytes(path)`: Contents of a workspace-relative or absolute path (cached). `read_text` replaces undecodable bytes with U+FFFD; `read_text_strict(path)` returns `None` for a file that is not valid UTF-8, which a fixer must then leave alone.
 - `ctx.cache.write_text(path, content)`: Writes exact UTF-8 bytes (no newline translation) and refreshes the cache; paths under `.devkit/managed/` and `.devkit/overrides/` are refused with `PinnedWriteError` (`RULES_PINNED_WRITE_REFUSED`).
 - `ctx.cache.get_frontmatter(path)`: The YAML frontmatter mapping (`devkit.core.frontmatter` grammar) or `None`; raises `devkit.core.FrontmatterError` (`FRONTMATTER_INVALID`) for a malformed block.
 - `ctx.cache.get_links(path)`: Inline Markdown links (`MarkdownLink`: `text`, `target` as written, `line`, `start`/`end` of the link and `target_start`/`target_end` of the destination on its line), skipping fenced code and code spans. `devkit.rules.extract_links(text)` does the same for a string.
-- `ctx.cache.get_catalog(root)`: Returns the `DocumentCatalog`: every Markdown path, a basename index for link repair, and the frontmatter `id`, `title` and `status` of each file recorded verbatim (with duplicate `id`s listed). A file whose frontmatter cannot be parsed is listed in `frontmatter_errors` instead of failing the run. It applies no identifier grammar and extracts no references; a rule that needs those parses the body itself.
+- `ctx.cache.get_catalog(root)`: The `DocumentCatalog`: every Markdown path, a basename index for link repair, and the frontmatter `id`, `title` and `status` of each file recorded verbatim (with duplicate `id`s listed). A file whose frontmatter cannot be parsed is listed in `frontmatter_errors` instead of failing the run. It applies no identifier grammar and extracts no references; a rule that needs those parses the body itself.
 - `ctx.settings(rule, path)`: The rule's effective settings for a workspace-relative or absolute path inside the workspace.
-- `devkit.rules.count_tasks(text)`: Returns `(checked, total)` Markdown checklist items, ignoring YAML frontmatter and fenced code. `devkit.workflow` uses the same function for its `tasks-checked` check, so a rule about task completion and a workflow gate never disagree.
-
----
+- `devkit.rules.count_tasks(text)`: `(checked, total)` Markdown checklist items, ignoring YAML frontmatter and fenced code. `devkit.workflow`'s `tasks-checked` check uses the same function, so a rule and a workflow gate never disagree.
 
 ## 3. Implementing a Custom Rule Example
 
-Here is an example rule checking that Markdown files under `docs/` begin with a level 1 heading. It subclasses `BaseRule`, so the same file works with `--rules-dir` and as a bundle's `kind = "rule"` asset (the loaders instantiate `BaseRule` subclasses without arguments):
+This rule requires Markdown files under `docs/` to begin with a level 1 heading. As a `BaseRule` subclass it works both with `--rules-dir` and as a bundle's `kind = "rule"` asset:
 
 ```python
 from devkit.rules import Phase, RuleContext, Severity, Violation
@@ -162,25 +153,23 @@ class DocHeadingRule(BaseRule):
         return violations
 ```
 
-Saved as `rules/doc_heading.py`, it runs with `devkit rules check --rules-dir rules`. The evaluator sets each violation's `severity` and `phase` to the rule's effective values, so a rule does not need to pass them.
+Saved as `rules/doc_heading.py`, it runs with `devkit rules check --rules-dir rules`.
 
----
+## 4. Built-in Rules
 
-## 4. Built-in Rule Modules
+Built-in rules (`devkit.rules.rules`, catalog in the [Rules Reference](reference.md#built-in-rules)) are limited to invariants that hold for any repository. Rules about a particular documentation model (frontmatter schemas, identifier grammars, directory layouts, cross-references) ship in the bundle that owns that model, together with the guides and templates they cite, as `kind = "rule"` assets.
 
-The built-in rules reside in `devkit.rules.rules`:
+## 5. Rule Sources and Registration
 
-| Module | Rules | Phase | Description |
-| --- | --- | --- | --- |
-| `rules.markdown` | `RULE-markdown-link` | linter | Verifies that relative links in Markdown point to existing files and fixes broken relative links. |
-| `rules.hygiene` | `RULE-file-length` | hygiene | Warns on excessive line counts; `max_lines` and `extensions` are typed settings. |
-| `rules.safety` | `RULE-secret-leak`, `RULE-clean-artifacts` | linter | Flags credentials and generated artifacts among explicit targets, chiefly in `check --staged` / `--ci` gates. |
+`devkit rules` and `run_project_rules` load rules from three sources, in order; a rule with the same ID as an earlier one replaces it:
 
-Built-in rules are deliberately limited to invariants that hold for any repository. Rules about a particular documentation model (frontmatter schemas, identifier grammars, directory layouts, cross-references between documents) are authored in the bundle that owns that model and distributed as `kind = "rule"` assets, as described in the next section.
+1. The built-in registry.
+2. Every `.py` file listed under the `entrypoints` and `paths` of a `kind = "rule"` asset recorded by `devkit sync` in `.devkit/installation.json`, whatever its name; `devkit sync` deploys them under `.devkit/managed/<bundle>/`, and an override under `.devkit/overrides/` replaces the managed copy. Each file is verified as commit gate files are (`devkit.core.verified_asset_files`), in a plain run and in a Git snapshot alike: a file with a `files` entry in the receipt must match its SHA-256, and a file without one (a project override) is loaded as it is. A listed file that does not exist, resolves outside the project or differs from its hash is a loading error (`RULES_LOAD_FAILED`, exit code 2), not a silent skip: `devkit sync` restores the managed copy, and `devkit override create <bundle>:<asset>` keeps a deliberate edit as a project override. A project configures these rules only through `[rules]` in `.devkit/config.toml`.
+3. `--rules-dir` (`rules_dir`): the Python files under it, in sorted path order; files and directories whose name starts with `_` or `.` are skipped (only this scan skips them).
 
----
+Rule files are loaded with `devkit.core.plugins`: classes in definition order, imported classes ignored, every `BaseRule` subclass instantiated without arguments. A file that fails to import, or whose rule classes cannot be instantiated, contributes no rule and is a loading error. Rule files are executable Python and should come from a trusted source.
 
-## 5. Registering and Executing Custom Rules
+Registering and evaluating by hand:
 
 ```python
 from pathlib import Path
@@ -197,8 +186,4 @@ result = evaluate_rules(ctx, registry.get_all())
 print(f"Total findings: {len(result.violations)}")
 ```
 
-`RuleContext` takes every argument by keyword; only `workspace_root` is required. Pass `cache=WorkspaceCache(root)` to share one cache across several evaluations; without it the context creates its own, so `ctx.cache` is always a `WorkspaceCache`. A cache built for another root is refused.
-
-To run a project the way `devkit rules check` does (project policy, receipt rules and `--rules-dir` together), call `run_project_rules(Path("."), rules_dir=...)` instead; see the [reference](reference.md#library-and-custom-rules).
-
-Rules distributed in a bundle (`kind = "rule"`) are plain Python files like the one above. `devkit sync` deploys them under `.devkit/managed/<bundle>/` and lists each file in the installation receipt; `devkit rules` loads them from there, and a project configures them through `[rules]` in `.devkit/config.toml` rather than by editing the managed copy.
+`RuleContext` takes every argument by keyword; only `workspace_root` is required. Pass `cache=WorkspaceCache(root)` to share one cache across several evaluations; without it the context creates its own. A cache built for another root is refused. To run a project as `devkit rules check` does (policy, receipt rules and `rules_dir` together), call `run_project_rules` instead ([Rules Reference, Library](reference.md#library)).

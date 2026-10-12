@@ -1,72 +1,62 @@
 # Bundle Manifest Specification (`bundle.toml`)
 
-**Status**: Architecture Specification & Reference Implementation  
-**Package**: `devkit`  
-**Schema Version**: `1`  
-**Related Documents**:
-- [Distribution Overview](overview.md)
-- [Workspace Ownership & Overrides](workspace-ownership.md)
-- [Transitive Dependencies](transitive-dependencies.md)
-- [Resource Taxonomy](../architecture/resource-taxonomy.md)
+Schema version `1`. How a bundle reaches a project as a Python package is specified in
+[Content Packages](content-packages.md).
 
----
+## 1. Bundle Layout
 
-## 1. Content Wheel Contract
-
-Content packages distribute assets as standard Python wheels installed into the consumer project's development environment. A content wheel registers an entry point under the `devkit.distribution.bundles` group:
-
-```toml
-[project.entry-points."devkit.bundles"]
-team = "package_b_playbooks"
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/package_b_playbooks"]
-```
+A bundle is a directory with `bundle.toml` at its root, an optional `AGENTS.md` constitution (returned by
+`devkit get-context`, see [Context Loading](context-and-playbooks.md)) and the asset sources the manifest declares:
 
 ```text
-src/package_b_playbooks/
-  __init__.py               # Empty module; strictly no runtime side effects
-  bundle/
-    bundle.toml             # Manifest declaring metadata and assets
-    AGENTS.md               # Optional bundle constitution
-    playbooks/review.md
-    instructions/development.md
-    skills/review/
-      SKILL.md
+bundle/
+  bundle.toml
+  AGENTS.md                 # optional constitution
+  instructions/development.md
+  playbooks/review.md
+  skills/review/SKILL.md
 ```
-
-### Discovery & Isolation Rules
-- **Resource Module Reference**: The entry point value must point to an importable Python module, not a callable.
-- **Root Directory**: The bundle contents and `bundle.toml` reside under the module's `bundle/` directory.
-- **No Side Effects**: Loading a resource module triggers standard Python module initialization. Modules must keep `__init__.py` free of runtime side effects.
-- **Static Inspection**: Synchronizing a bundle reads files purely through `importlib.resources.as_file`; it never executes rule scripts or imports rule code.
-- **Unique Bundle Names**: Bundle names must be unique across all installed packages in the environment. Multiple packages declaring the same bundle name trigger an immediate error.
-- **Non-Python Repositories**: Upstream repositories without Python logic (such as prompt collections or Go tools) can map their native directory layout into a content wheel at build time using Hatch `force-include` without modifying their original file structure.
-
----
 
 ## 2. Asset Kinds
 
-A bundle declares assets across ten supported kinds:
+Every asset is identified by `(bundle, kind, id)`; ids are unique within a bundle. Classification criteria and naming
+standards are in the [Resource Taxonomy](../architecture/resource-taxonomy.md).
 
-- `skill`: A directory containing `SKILL.md` along with supporting scripts, references, and assets. The entire directory tree is preserved, maintaining executable permissions (`0755`) for scripts.
-- `subagent`: A delegated agent persona. Either native files per agent (`variants`, copied verbatim) or one host-neutral role contract (`source`, a single Markdown file) whose frontmatter declares `role` (equal to the asset id), `title`, `description`, an optional `skill` and a `hosts` table with one block per agent (`claude-code`, `codex`, `antigravity`). Each block carries a `status` (`native`, `emulated`, `unsupported`, `unverified`) and only allowlisted host-native keys; `devkit sync` renders the projection for each selected agent from that block, writes no file for `unsupported`, and fails for an agent the contract does not mention. The body is the role's prompt. See [Agent Projections](agent-projections.md).
-- `instruction`: Contextual guidance: Markdown documents whose YAML frontmatter declares a nonempty `name` and `description` (the header `devkit get-context` catalogs). Every file of an instruction source, including each file of a directory source, must carry such a header; it is validated when the bundle is loaded.
-- `playbook`: Operational workflows, checklists, and procedural guides.
-- `rule`: Python-based governance rules evaluated by `devkit.rules`. The receipt lists every deployed file under the asset's `paths`, and `devkit rules` loads them from there; a consumer configures them in `[rules]` of `.devkit/config.toml` rather than editing the managed copy.
-- `workflow`: A single Markdown delivery workflow definition (frontmatter `id` and `stages`) evaluated by `devkit.workflow`. Distribution validates the header only; `devkit workflow validate` validates stage semantics. When at least one workflow asset is synchronized, `devkit sync` generates the shared `devkit-workflow` entry skill under `.devkit/managed/_devkit/skills/` and projects it into every selected agent's skill directory, and the receipt records the definition under `entrypoints` so `devkit workflow` discovers it without configuration.
-- `workflow-check`: Python check evaluators (`BaseCheck` subclasses) that `devkit.workflow` adds to its check registry. Deployed and recorded like `rule` files; the engine loads them from the receipt. See [Workflow Definitions and Checks](../workflow/definition-and-checks.md).
-- `gate`: A Python commit gate run by `devkit.gate` at a Git hook stage. Like rules, deployed files are listed in the receipt under the asset's `paths` and loaded from there at commit time; a consumer configures them in `[gates]` of `.devkit/config.toml` or the per-clone `.git/devkit.config`. See [Commit Gate Overview](../gate/overview.md).
-- `document`: Plain files with no engine semantics. Unseeded, a document is a managed copy under `.devkit/managed/<bundle>/` (reference material agents read by path). With `seeded = true` and a `target`, it is a **seeded** asset: written once to the workspace-relative `target` when that path does not exist, then owned by the project. A directory source seeds every file under it to `target/<relative path>`, preserving executable bits. Only `document` assets may be seeded; this is how a bundle scaffolds a documentation tree, a glossary or a policy file that the project is expected to edit. Seeded files are never catalogued by `get-context`, playbook search or projections. See [Workspace Ownership, section 2](workspace-ownership.md#2-ownership-categories-and-invariants).
-- `guidance`: A fragment of the root `AGENTS.md` guidance block, for a pointer that must reach every agent session (for example "read the commit conventions before writing a commit message"). The source is one Markdown file of list items: every line is a `- ` item or a two-space continuation line, without blank lines or HTML comments, at most 300 UTF-8 bytes. `{path:<asset-id>}` names another asset of the same bundle that has a single file source; `devkit sync` replaces it with the path agents read (the project override, else the managed copy). Selected fragments follow devkit's own lines in the block, ordered by bundle name and then asset id, so the block only changes when the selection does. A fragment is also deployed as a managed copy and can be overridden like any asset; an override must meet the same rules. With `guidance_block = false` fragments are not written anywhere. See [Workspace Ownership, section 2](workspace-ownership.md#2-ownership-categories-and-invariants).
+- `skill`: a directory containing `SKILL.md` and supporting files; the whole tree is deployed, executable bits
+  (`0755`) preserved.
+- `subagent`: a delegated agent persona: native files per agent (`variants`, copied verbatim) or one host-neutral
+  role contract (`source`) rendered per selected agent. See [Agent Projections](agent-projections.md).
+- `instruction`: Markdown whose YAML frontmatter declares a nonempty `name` and `description`, the header
+  `devkit get-context` catalogs. Every file of the source, including each file of a directory source, carries one.
+- `playbook`: a procedure for an occasional task, found through playbook search; header rules are in
+  [Context Loading & Playbooks, section 3](context-and-playbooks.md#3-playbook-discovery-and-search-devkit-playbook).
+- `rule`: Python governance rules run by `devkit.rules`. The receipt lists every deployed file under the asset's
+  `paths` and `devkit rules` loads them from there; a consumer configures them in `[rules]` of `.devkit/config.toml`.
+- `workflow`: one Markdown delivery workflow definition (frontmatter `id` and `stages`) run by `devkit.workflow`.
+  Distribution validates the header only (`devkit workflow validate` checks stage semantics). When at least one
+  workflow is synchronized, `devkit sync` generates the `devkit-workflow` entry skill under
+  `.devkit/managed/_devkit/skills/`, projects it into every selected agent, and records the definition under
+  `entrypoints` in the receipt so `devkit workflow` finds it without configuration.
+- `workflow-check`: Python check evaluators (`BaseCheck` subclasses) that `devkit.workflow` loads from the receipt
+  into its check registry; see [Workflow Definitions and Checks](../workflow/definition-and-checks.md).
+- `gate`: a Python commit gate run by `devkit.gate` at a Git hook stage, loaded from the receipt's `paths` and
+  configured in `[gates]` of `.devkit/config.toml` or the per-clone `.git/devkit.config`; see the
+  [Commit Gate Overview](../gate/overview.md).
+- `document`: plain files with no engine semantics. Unseeded, a managed copy agents read by path. With
+  `seeded = true` and a `target`, a **seeded** asset: written once to the workspace-relative `target` (a directory
+  source to `target/<relative path>`, executable bits preserved) when that path does not exist, then project-owned;
+  this is how a bundle scaffolds a docs tree, a glossary or a policy file. Seeded files are never catalogued by
+  `get-context`, playbook search or projections. Runtime behavior:
+  [Workspace Ownership, section 2](workspace-ownership.md#2-ownership-categories-and-invariants).
+- `guidance`: a fragment of the root `AGENTS.md` guidance block, for a pointer every agent session must see (for
+  example "read the commit conventions before writing a commit message"). The source is one Markdown file of list
+  items: every line is a `- ` item or a two-space continuation line, no blank lines or HTML comments, at most 300
+  UTF-8 bytes. `{path:<asset-id>}` names another asset of the same bundle; `devkit sync` replaces it with the path
+  agents read (the project override, else the managed copy). A fragment is also deployed as a managed copy and may be
+  overridden; the override must meet the same rules. With `guidance_block = false` fragments are written nowhere.
+  Block placement and ordering: [Workspace Ownership, section 2](workspace-ownership.md#2-ownership-categories-and-invariants).
 
-For full classification criteria, guidance placement rules, and naming standards, see the [Resource Taxonomy](../architecture/resource-taxonomy.md).
-
----
-
-## 3. Manifest Syntax (`schema = 1`)
-
-Every asset is identified by a logical tuple: `(bundle, kind, id)`. Asset IDs must be unique within each bundle.
+## 3. Manifest Syntax
 
 ```toml
 schema = 1
@@ -123,40 +113,53 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
 
 ### Presets and the Default Preset
 
-- **Presets** (`[presets.<slug>]`) name purpose-specific asset subsets. Each preset lists one or more unique, declared asset IDs.
-- **Reserved `all` preset**: Every bundle implicitly provides a preset named `all` that selects every declared asset. Authors cannot declare `[presets.all]`.
-- **`default_preset`** (optional): Names the preset a consumer receives when it selects the bundle without naming a preset (for example `devkit add starter-workflow`). The value must be a declared preset or `all`.
-- The default preset is a recommendation applied **only at selection time**. Installing the wheel never selects the bundle, and consumer configuration records the resolved preset name rather than a reference to the default, so a later upstream change to `default_preset` never changes an existing consumer selection. See [Synchronization & Transactions](sync-and-transactions.md#2-asset-selection-model).
-- A bundle without `default_preset` must be selected with an explicit preset name.
-- **`auto_select`** (optional boolean, default `false`): The bundle is deployed with its `default_preset`, which is then required, without `devkit add`; a project opts out with `[presets] <bundle> = false`. Only bundles shipped by the `devkit` distribution itself may set it (`devkit` and `advisory` do); discovery rejects it in any other package, because content packages can arrive as transitive dependencies. Built-in bundles without it (`authoring`, `git-commits`) are opt-in like any content bundle.
+- `[presets.<slug>]` names a purpose-specific asset subset. Every bundle also has the reserved preset `all`
+  (every declared asset); `[presets.all]` cannot be declared.
+- `default_preset` (optional) is the preset a consumer receives when selecting the bundle without naming one (for
+  example `devkit add starter-workflow`); it must be a declared preset or `all`. It applies only at selection time:
+  the consumer configuration records the resolved preset name, so a later upstream change to `default_preset`
+  never changes an existing selection. A bundle without it must be selected with an explicit preset.
+- `auto_select` (optional boolean, default `false`) deploys the bundle with its `default_preset`, which is then
+  required, without `devkit add`; a project opts out with `[presets] <bundle> = false`. Only bundles shipped inside
+  the `devkit` distribution may set it (`devkit` and `advisory` do); discovery rejects it in any other package,
+  because content packages can arrive as transitive dependencies. See the
+  [selection model](sync-and-transactions.md#2-asset-selection-model).
 
----
+## 4. Validation
 
-## 4. Manifest Rules and Validation
-
-- **Strict Schema**: Unknown top-level keys or unrecognized table fields trigger immediate validation errors.
-- **Slug Validation**: Bundle names and asset IDs must match lowercase slug regex `^[a-z][a-z0-9-]*$`.
-- **Semantic Versioning**: Bundle versions must strictly follow `MAJOR.MINOR.PATCH` format.
-- **Relative Path Sanitization**: Source paths must be canonical relative POSIX paths (validated by `devkit.core.paths`). Paths containing traversal segments (`..`), redundant `.` segments or separators, symlinks, or special device files are rejected. Backslashes are rejected too, as an authoring rule, so a manifest names the same files on every platform.
-- **Editing By-Products**: Inside a directory source, `.DS_Store` files, `__pycache__/` directories and `*.pyc` files are not bundle content: they are never validated, deployed, hashed or archived.
-- **Source vs. Variants**: An asset must declare either a single `source` or a `variants` mapping, never both. `variants` keys must be supported agent names (`antigravity`, `claude-code`, `codex`); any other key is rejected.
-- **Skills Integrity**: A `skill` source must point to a directory containing a valid `SKILL.md` file.
-- **Header Integrity**: Instruction, playbook and workflow headers and role contracts follow the one frontmatter grammar of `devkit.core.frontmatter` (a `---` opener, a `---` or `...` closer, a YAML mapping without duplicate keys).
-- **Contract Integrity**: A `subagent` declared with `source` must be a single Markdown file whose frontmatter has `role` equal to the asset id, `title`, `description`, a nonempty `hosts` table with valid statuses and allowlisted keys, and a nonempty body.
-- **Preset Integrity**: Preset names are slugs and `all` is reserved. Preset asset lists must be nonempty, unique, and reference declared asset IDs. `default_preset` must name a declared preset or `all`.
-- **Verbatim Native Content**: Files declared under `variants` remain untouched during packaging and sync. The distributor does not parse, modify, or strip vendor-specific configuration keys.
-- **Guidance Fragments**: A `guidance` asset declares a single `source` file (no `variants`, never `seeded`) that meets the fragment rules above. Each `{path:<asset-id>}` must name an asset of the bundle with exactly one file `source` that is neither `guidance` nor seeded, and every preset that selects the fragment must select the named assets too.
-- **Seeded Assets**: `seeded` is a boolean (default `false`) allowed only on `document` assets declared with a single `source`. A seeded asset requires `target`, and `target` is rejected otherwise. `target` is a normalized relative POSIX path (no `..`, no leading `/`, no backslashes, no `.`) whose first segment is not `.devkit`, `.git`, `.agents`, `.claude` or `.codex`, and which is not `AGENTS.md`, all compared case-insensitively. Two selected bundles may not seed the same path.
-
----
+- **Strict schema**: unknown top-level keys or table fields are errors.
+- **Slugs**: bundle names, asset ids and preset names match `^[a-z][a-z0-9-]*$`.
+- **Versions**: bundle versions are `MAJOR.MINOR.PATCH`.
+- **Source paths**: canonical relative POSIX paths (validated by `devkit.core.paths`); `..`, redundant `.` segments
+  or separators, symlinks and special files are rejected, and so are backslashes, so a manifest names the same files
+  on every platform.
+- **Editing by-products**: inside a directory source, `.DS_Store`, `__pycache__/` and `*.pyc` are not bundle content:
+  never validated, deployed, hashed or archived.
+- **Source vs. variants**: an asset declares either one `source` or a `variants` mapping, never both; `variants` keys
+  must be supported agent names (`antigravity`, `claude-code`, `codex`).
+- **Skills**: a `skill` source is a directory containing a valid `SKILL.md`.
+- **Headers**: instruction, playbook and workflow headers and role contracts follow the frontmatter grammar of
+  `devkit.core.frontmatter` (a `---` opener, a `---` or `...` closer, a YAML mapping without duplicate keys).
+- **Role contracts**: a `subagent` declared with `source` is a single Markdown file whose frontmatter has `role` equal
+  to the asset id, `title`, `description`, a nonempty `hosts` table with valid statuses and allowlisted keys, and a
+  nonempty body ([format](agent-projections.md#role-contract-format)).
+- **Presets**: asset lists are nonempty, unique and reference declared ids.
+- **Verbatim native content**: files under `variants` are never parsed, modified or stripped.
+- **Guidance fragments**: a single `source` file (no `variants`, never `seeded`) meeting the fragment rules above.
+  Each `{path:<asset-id>}` names an asset of the bundle with exactly one file `source` that is neither `guidance` nor
+  seeded, and every preset that selects the fragment selects the named assets too.
+- **Seeded assets**: `seeded` (boolean, default `false`) is allowed only on a `document` with a single `source`, and
+  requires `target`; `target` is rejected otherwise. `target` is a normalized relative POSIX path (no `..`, leading
+  `/`, backslash or `.` segment) whose first segment is not `.devkit`, `.git`, `.agents`, `.claude` or `.codex`, and
+  which is not `AGENTS.md`, all compared case-insensitively (macOS file systems usually are). Two selected bundles
+  may not seed the same path.
 
 ## 5. Deterministic Local Archive Build
 
-The `devkit bundle build <source> --output <zip>` command produces bit-for-bit reproducible ZIP archives for local authoring and verification:
-- Files are sorted lexicographically by archive path.
-- Entry timestamps are pinned to a fixed epoch (`1980-01-01 00:00:00 UTC`).
-- File permissions are normalized to POSIX `0644` (regular files) or `0755` (executables).
-- An `inventory.json` with the SHA-256 and mode of every archived file is embedded, so the archive can be checked against it.
-- A build that fails leaves no partial archive behind; an existing output file is never replaced.
+`devkit bundle build <source> --output <zip>` produces a bit-for-bit reproducible ZIP for local export and
+verification; projects receive bundles as installed wheels, not archives.
 
-*(Note: ZIP archives serve as a portable local export mechanism; the primary project synchronization transport uses installed uv content wheels).*
+- Entries are sorted by archive path, timestamps pinned to `1980-01-01 00:00:00 UTC`, modes normalized to `0644` or
+  `0755`.
+- An embedded `inventory.json` records the SHA-256 and mode of every archived file.
+- A failed build leaves no partial archive; an existing output file is never replaced.

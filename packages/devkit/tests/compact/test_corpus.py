@@ -61,6 +61,17 @@ CASES = [
         ('[RUN_FAILURE: "tests/test_many.py::test_limits[0]"', "FAILED tests/test_many.py::test_limits[149]"),
     ),
     Case("pytest-verbose.txt", 1, ("1 failed, 2 passed in 0.01s",), 800, ("AssertionError: two plus two",)),
+    Case(
+        "pytest-xdist-verbose.txt",
+        1,
+        ("3 failed, 119 passed, 1 skipped, 1 xfailed, 1 warning, 1 error in 0.27s",),
+        2_400,
+        (
+            "worker 'gw3' crashed while running 'tests/test_mix.py::test_crash'",
+            "RuntimeError: fixture exploded",
+            "FAILED tests/test_mix.py::test_many[17]",
+        ),
+    ),
     Case("uv-run-pytest-quiet.txt", 1, ("1 failed, 2 passed in 0.01s",), 850, ("assert 4 == 5",)),
     Case("ruff-check-full.txt", 1, ("Found 4 errors.",), 1_200, ("F841",)),
     Case("ruff-check-concise.txt", 1, ("Found 4 errors.",), 500, ("src/app/__init__.py:7:5: F841",)),

@@ -1,10 +1,6 @@
 # Agent-First Output
 
-`devkit` is built for AI coding agents first. Its primary consumer is an agent that runs `devkit` through a shell or a tool call and acts on what comes back; a person reads the same output, but no output is shaped for a person at the agent's expense. Everything a command prints lands in an agent's context window, so output is a contract, not a log.
-
-This document is the canonical specification of that contract for every `devkit` command: what goes to stdout and stderr, how text and JSON are shaped, how verbosity works, and how output relates to exit codes. The advisory blocks themselves (errors, warnings, notices) are specified in the [Agent Advisory Protocol](../advisory/protocol.md); exit codes in [Architecture Overview, section 4](overview.md#4-errors-exit-codes-and-platforms).
-
----
+The primary consumer of every `devkit` command is an AI coding agent that runs it through a shell or a tool call and acts on what comes back; a person reads the same output, but nothing is shaped for a person at the agent's expense. Everything a command prints lands in the agent's context window, so output is a contract, not a log. This document specifies that contract; the advisory blocks themselves are specified in the [Agent Advisory Protocol](../advisory/protocol.md), exit codes in [Architecture Overview, section 4](overview.md#4-errors-exit-codes-and-platforms).
 
 ## 1. Principles
 
@@ -16,8 +12,6 @@ This document is the canonical specification of that contract for every `devkit`
 6. **Deterministic.** The same state gives the same bytes: no colour, no emoji, no box drawing, no progress bars, no alignment tables, no output that changes with the terminal (TTY detection, width, locale).
 7. **Libraries never print.** Library functions return results and collected advisories, and raise `AdvisoryError`; only the CLI layer writes to stdout or stderr. An embedding caller (another tool, an MCP server, a test) gets the same information as data.
 
----
-
 ## 2. Channels
 
 | Channel | Carries | Never carries |
@@ -28,8 +22,6 @@ This document is the canonical specification of that contract for every `devkit`
 | exit code | `0` success, `1` negative result, `2` could not do its job | anything finer; the code says which, the advisories say why |
 
 Every stderr line is either a sentinel line or a continuation line indented 9 spaces under the sentinel above it.
-
----
 
 ## 3. stdout: Text
 
@@ -46,8 +38,6 @@ Text-mode stdout is made of one-line sentinels:
 - A document a command is asked to print (`devkit rules explain`'s guide, `devkit workflow show`'s rendering) follows its sentinel lines as written.
 
 **Reserved names.** `ERROR`, `WARN`, `WARNING`, `NOTICE`, `INFO`, `DEBUG`, `ACTION`, `WHEN`, `TARGET`, `FIX`, `REPORT` and `DETAIL` are stderr sentinels and are never used as a stdout `KIND`. Something that would read as `[NOTICE: ...]` on stdout is a notice and goes to stderr; a fact that merely mentions a notice-like state gets its own kind (for example `[STALE_APPROVAL: ...]`).
-
----
 
 ## 4. stdout: JSON
 
@@ -66,8 +56,6 @@ Under `--format json` (and for every distribution command, which is JSON-only), 
 - A command that fails outright prints `{"error": {...}}` (the same envelope) instead of a result. Warnings and notices collected before the failure then appear on stderr only.
 - JSON is never filtered by `-q` or `-v`: it always carries every error and notice.
 
----
-
 ## 5. stderr: Advisories
 
 Every error, warning and notice is an Agent Advisory Protocol block ([format](../advisory/protocol.md#3-block-format)). Their order on stderr is fixed:
@@ -77,8 +65,6 @@ Every error, warning and notice is an Agent Advisory Protocol block ([format](..
 3. errors, last, so the decisive block ends the output.
 
 A command prints each block once. A command whose JSON result already carries an error (`Reported`) still renders that error on stderr, so the text channel stays complete.
-
----
 
 ## 6. Verbosity and Strictness
 
@@ -90,26 +76,15 @@ Every command takes the same three output options (`devkit.core.cli.output_optio
 | `-v`, `--verbose` | `DEVKIT_VERBOSE=1` | Also print `[INFO]` log lines on stderr, including the traceback behind an `UNEXPECTED_ERROR`. |
 | `--strict` | `DEVKIT_STRICT=1` | Exit `1` instead of `0` when the run reported a warning. |
 
-| stderr shows | default | `-q` | `-v` |
-| --- | --- | --- | --- |
-| `[ERROR]` | yes | yes | yes |
-| `[WARN]` | yes | yes | yes |
-| `[NOTICE]` | yes | no | yes |
-| `[INFO]` | no | no | yes |
-
 - An environment variable is on only when its value is exactly `1`. A command-line flag wins over the environment.
 - `-q` and `-v` together (from flags, or from the environment when no flag is given) are `ARGUMENT_INVALID`.
 - `-q` and `-v` affect stderr only; stdout, text or JSON, is the same in all three.
 - `--strict` only ever raises the exit code (`0` to `1`); notices never count. It concerns advisory warnings only: a rule violation of severity `warning` is a finding, governed by the rule's severity in `[rules]`, not by `--strict`.
 - Options go before positional arguments. `devkit gate run` passes everything after `<stage>` to the gates as hook arguments, so `devkit gate run -v pre-commit`, not `devkit gate run pre-commit -v`.
 
----
-
 ## 7. Exit Codes
 
-Exit codes follow the checker convention (`0` success, `1` the command ran and reports a negative result, `2` it could not do its job); the full rules, including how a command that collects several problems picks its code, are in [Architecture Overview, section 4](overview.md#4-errors-exit-codes-and-platforms). Output adds one rule: warnings and notices never change the exit code, except `--strict` as above.
-
----
+`0` success, `1` the command ran and reports a negative result, `2` it could not do its job; the full rules are in [Architecture Overview, section 4](overview.md#4-errors-exit-codes-and-platforms). Warnings and notices never change the exit code, except under `--strict` (section 6).
 
 ## 8. Logs (`INFO`)
 
@@ -119,8 +94,6 @@ Diagnostics that neither change the agent's next step nor need to reach the user
 - Under `-v`, the CLI boundary attaches a stderr handler for the run that prints every `devkit` record as `[INFO]   <module>: <message>` (`<module>` is the logger name without `devkit.`, such as `gate.engine.runner`), with a traceback and further lines indented 9 spaces as continuation lines. The sentinel is `[INFO]` whatever the record's level: a log line is never a directive.
 - What to log: passed and skipped checks, timing, cache hits, why a candidate was or was not selected, the traceback behind an error the run already reports as an advisory.
 - What never to log: anything the agent must act on or the user must learn. That is a warning or notice, returned with the result. Library code does not log at `WARNING` or above to communicate; `logger.exception` is used only to keep the traceback of an error that is also reported as an advisory.
-
----
 
 ## 9. Implementation Map
 
@@ -132,8 +105,6 @@ Diagnostics that neither change the agent's next step nor need to reach the user
 | Result lines and JSON payloads of each command | each area's `cli/` package, documented in its reference |
 | Warnings and notices each area reports | each area's reference (error and notice code tables) |
 
----
-
 ## 10. Checklist for a New Command or Output
 
 - [ ] The result goes to stdout only: `[KIND: ...]` lines in text mode, one object under `--format json`; no reserved name used as a kind.
@@ -142,8 +113,6 @@ Diagnostics that neither change the agent's next step nor need to reach the user
 - [ ] Diagnostics are `logging` calls, not output.
 - [ ] The command goes through `boundary` (which adds the output options) and, when it prints text, takes `--format`.
 - [ ] Its reference documents the result lines, the JSON keys, and every error and notice code with its level.
-
----
 
 ## 11. Example
 

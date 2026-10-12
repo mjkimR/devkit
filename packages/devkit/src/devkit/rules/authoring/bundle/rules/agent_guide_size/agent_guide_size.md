@@ -3,10 +3,9 @@
 Agent guides (`AGENTS.md`, `CLAUDE.md`) are loaded into every agent turn, so
 each byte costs context on every request. A guide larger than the effective
 `max_bytes` receives a warning with its size and the limit. The rule never
-rewrites files. The full procedure is the `agent-guide-authoring` playbook of
-the `authoring` bundle (`uv run devkit playbook search "curate agent guide"`).
-
-This is a hygiene rule: it runs under `devkit rules check --phase hygiene` only.
+rewrites files. It runs under `devkit rules check --phase hygiene` only. The
+full procedure is the `agent-guide-authoring` playbook of the `authoring`
+bundle (`uv run devkit playbook search "curate agent guide"`).
 
 ## What the size includes
 
@@ -21,19 +20,12 @@ yourself when a host expands them.
 
 ## Remediation
 
-Drop project structure trees: they are large, change with every file and go
-stale; a one-line-per-module map with links is enough. Move other content to
-where it is read on demand:
-
-- module-specific conventions, commands, layout or architecture: the module's
-  README or `docs/`, with at most a conditional link left in the guide;
-- judgment rules for a kind of work: an instruction;
-- multi-step procedures: a playbook or skill;
-- mechanically checkable invariants: a rule;
-- guidance for one directory: a nested guide in that directory.
-
-Keep orientation, boundaries, invariants, verification commands and pointers
-whose read condition is explicit.
+Follow the `agent-guide-authoring` playbook: drop project structure trees (a
+one-line-per-module map with links is enough) and move module-specific
+content, judgment rules, procedures, checkable invariants and single-directory
+guidance to where they are read on demand. Keep orientation, boundaries,
+invariants, verification commands and pointers whose read condition is
+explicit.
 
 ## Configuration
 

@@ -21,7 +21,7 @@ from typing import Any, Unpack
 from devkit.advisory import Actor, Advisory, AdvisoryError, AdvisoryFields, ExitCode, Level, Retry
 from devkit.core import errors as core_errors
 
-ENVELOPE_CONTRACT = "docs/workflow/definition-and-checks.md section 3"
+ENVELOPE_CONTRACT = "docs/workflow/envelopes.md"
 
 
 class WorkflowError(AdvisoryError):

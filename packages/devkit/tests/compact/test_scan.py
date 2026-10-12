@@ -236,6 +236,9 @@ def test_lines_that_only_look_like_continuations_stay_in_the_excerpt() -> None:
         "tests/test_mix.py::test_xf XFAIL                                               [ 99%]",
         "[gw0] [ 12%] PASSED tests/test_mix.py::test_many[3]",
         "[gw3] [ 40%] SKIPPED tests/test_mix.py::test_skip",
+        "tests/test_mix.py::test_many[3] ",  # pytest-xdist -v, as the test starts
+        "tests/test_mix.py::test_param[a b] ",
+        "                                                                         [100%]",
         "PASSED tests/test_mix.py::test_many[1]",
         " ✓ src/a.test.ts (3 tests) 5ms",
         "  ✓  1 [chromium] › a.spec.ts:3:5 › has title (1.1s)",  # noqa: RUF001
@@ -265,6 +268,11 @@ def test_progress_lines_are_filtered_and_counted(line: str) -> None:
         "··F··",
         "tests/test_mix.py ..F.. [ 45%]",
         "..E..sx [100%]",
+        "tests/test_mix.py::test_many[3]",  # a --collect-only listing
+        "4 workers [125 items]",
+        "[gw1] node down: Not properly terminated",
+        "replacing crashed worker gw1",
+        "worker 'gw1' crashed while running 'tests/test_mix.py::test_crash'",
     ],
 )
 def test_lines_that_name_a_failure_or_carry_content_are_kept(line: str) -> None:
@@ -294,6 +302,10 @@ def test_a_long_progress_bar_without_newlines_keeps_its_final_state() -> None:
         "configfile: pyproject.toml",
         "cachedir: .pytest_cache",
         "plugins: cov-7.1.0, xdist-3.6.1",
+        "created: 8/8 workers",
+        "bringing up nodes...",
+        "scheduling tests via WorkStealingScheduling",
+        "[gw3] darwin -- Python 3.12.8 /work/project/.venv/bin/python",
         "Resolved 120 packages in 1ms",
         "Installed 1 package in 1ms",
         "Audited 118 packages in 0.52ms",

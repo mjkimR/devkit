@@ -1,28 +1,17 @@
 # [RULE-skill-document-size] Skill document size warning
 
 A skill or playbook Markdown file larger than the effective `max_bytes` receives
-a warning with its size, the limit and the restructuring steps. The rule never
-rewrites files. Its value is the remediation it delivers at the moment a skill
-grows; the full procedure is the `skill-authoring` playbook of the `authoring`
-bundle (`uv run devkit playbook search "restructure a large skill"`).
+a warning with its size, the limit and a summary of the restructuring steps. The
+rule never rewrites files. It runs under `devkit rules check --phase hygiene`
+only.
 
-This is a hygiene rule: it runs under `devkit rules check --phase hygiene` only.
+## Restructuring
 
-## Restructuring steps
-
-1. **Compress**: remove repeated explanation, long background and overlapping
-   examples. Keep execution conditions, required constraints and verification
-   criteria. Joining lines to shrink a file is not a fix.
-2. **Split conditional content**: move recovery procedures, tool-specific
-   instructions, detailed schemas of one stage and rare long examples to
-   `references/`, and state when each file is read.
-3. **Thin router**: `SKILL.md` keeps purpose and trigger, shared constraints,
-   task branches and situational reference paths. Telling the agent to read
-   every reference at start removes the benefit.
-4. **Review supporting files**: apply the same steps to large references. Avoid
-   many tiny files and reference chains.
-
-Never hide always-required safety or boundary constraints in a rarely read file.
+Follow Step 2 of the `skill-authoring` playbook of the `authoring` bundle
+(`uv run devkit playbook search "restructure a large skill"`): compress, split
+conditional content into `references/`, keep `SKILL.md` a thin router, then
+review supporting files. Never hide always-required safety or boundary
+constraints in a rarely read file, and do not shrink a file by joining lines.
 Size is a signal for review, not a goal.
 
 ## Configuration

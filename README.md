@@ -2,26 +2,14 @@
 
 Personal developer tools monorepo. Its main product is `devkit`: one Python
 package with one CLI for agent asset distribution, repository rules, delivery
-workflows and commit gates.
+workflows, commit gates, agent advisories and compact command output.
 
 ## Structure
 
-```text
-devkit/
-├── packages/
-│   ├── devkit/                # The devkit package and its single `devkit` CLI
-│   │   └── src/devkit/
-│   │       ├── core/          # Shared foundation: frontmatter, receipt, paths, Git, plugins, project root
-│   │       ├── advisory/      # Agent Advisory Protocol (errors, warnings, notices) and the `advisory` guide bundle
-│   │       ├── rules/         # Repository rule engine (`devkit rules`)
-│   │       ├── workflow/      # Delivery workflow engine (`devkit workflow`)
-│   │       ├── gate/          # Pluggable Git commit gates (`devkit gate`)
-│   │       └── distribution/  # Bundle synchronization (`devkit sync`, `add`, ...) and the `devkit` guide bundle
-│   └── devkit-starter/        # Example external content package
-├── examples/bundles/          # Example bundle `delivery-workflow` (the starter bundle lives in devkit-starter)
-├── scripts/                   # Shell logic behind the justfile recipes
-└── docs/                      # Documentation per module (see Documentation below)
-```
+`packages/devkit` is the package, `packages/devkit-starter` an example content
+package, `examples/bundles/` further example bundles, `scripts/` the shell logic
+behind the justfile recipes, and `docs/` the documentation per module; see
+[Architecture Overview, section 2](docs/architecture/overview.md#2-monorepo-structure).
 
 ## Development
 
@@ -72,6 +60,5 @@ without a consumer project, point `-w` at an existing empty directory:
 ## Documentation
 
 - [Architecture Overview](docs/architecture/overview.md): modules, interaction model, and the full documentation index.
-- [devkit package](packages/devkit/README.md): module map and layering.
-- References: [distribution](docs/distribution/reference.md), [rules](docs/rules/reference.md), [workflow](docs/workflow/reference.md), [gate](docs/gate/reference.md), [advisory](docs/advisory/reference.md), [core](docs/core/reference.md).
+- [devkit package](packages/devkit/README.md): module table with links to each module's reference.
 - Examples: [devkit-starter](packages/devkit-starter/README.md), [delivery-workflow bundle](examples/bundles/delivery-workflow/README.md).

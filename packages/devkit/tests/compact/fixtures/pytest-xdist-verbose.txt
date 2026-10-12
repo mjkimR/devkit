@@ -1,0 +1,316 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.8, pytest-9.1.1, pluggy-1.6.0 -- /work/project/.venv/bin/python
+rootdir: /work/project
+configfile: pytest.ini
+plugins: cov-7.1.0, xdist-3.8.0
+created: 4/4 workers
+4 workers [125 items]
+
+scheduling tests via WorkStealingScheduling
+
+tests/test_mix.py::test_many[93] 
+tests/test_mix.py::test_many[31] 
+tests/test_mix.py::test_many[0] 
+tests/test_mix.py::test_many[62] 
+[gw1] [  0%] PASSED tests/test_mix.py::test_many[31] 
+[gw3] [  1%] PASSED tests/test_mix.py::test_many[93] 
+tests/test_mix.py::test_many[94] 
+tests/test_mix.py::test_many[32] 
+[gw0] [  2%] PASSED tests/test_mix.py::test_many[0] 
+tests/test_mix.py::test_many[1] 
+[gw2] [  3%] PASSED tests/test_mix.py::test_many[62] 
+tests/test_mix.py::test_many[63] 
+[gw0] [  4%] PASSED tests/test_mix.py::test_many[1] 
+[gw3] [  4%] PASSED tests/test_mix.py::test_many[94] 
+tests/test_mix.py::test_many[95] 
+[gw2] [  5%] PASSED tests/test_mix.py::test_many[63] 
+[gw3] [  6%] PASSED tests/test_mix.py::test_many[95] 
+[gw1] [  7%] PASSED tests/test_mix.py::test_many[32] 
+tests/test_mix.py::test_many[33] 
+[gw1] [  8%] PASSED tests/test_mix.py::test_many[33] 
+tests/test_mix.py::test_many[34] 
+[gw1] [  8%] PASSED tests/test_mix.py::test_many[34] 
+tests/test_mix.py::test_many[35] 
+tests/test_mix.py::test_many[96] 
+[gw3] [  9%] PASSED tests/test_mix.py::test_many[96] 
+tests/test_mix.py::test_many[64] 
+[gw2] [ 10%] PASSED tests/test_mix.py::test_many[64] 
+tests/test_mix.py::test_many[65] 
+tests/test_mix.py::test_many[97] 
+tests/test_mix.py::test_many[2] 
+[gw0] [ 11%] PASSED tests/test_mix.py::test_many[2] 
+tests/test_mix.py::test_many[3] 
+[gw0] [ 12%] PASSED tests/test_mix.py::test_many[3] 
+tests/test_mix.py::test_many[4] 
+[gw2] [ 12%] PASSED tests/test_mix.py::test_many[65] 
+tests/test_mix.py::test_many[66] 
+[gw3] [ 13%] PASSED tests/test_mix.py::test_many[97] 
+[gw1] [ 14%] PASSED tests/test_mix.py::test_many[35] 
+tests/test_mix.py::test_many[36] 
+[gw1] [ 15%] PASSED tests/test_mix.py::test_many[36] 
+tests/test_mix.py::test_many[37] 
+[gw1] [ 16%] PASSED tests/test_mix.py::test_many[37] 
+tests/test_mix.py::test_many[38] 
+[gw0] [ 16%] PASSED tests/test_mix.py::test_many[4] 
+tests/test_mix.py::test_many[5] 
+[gw0] [ 17%] PASSED tests/test_mix.py::test_many[5] 
+[gw2] [ 18%] PASSED tests/test_mix.py::test_many[66] 
+tests/test_mix.py::test_many[67] 
+[gw2] [ 19%] PASSED tests/test_mix.py::test_many[67] 
+tests/test_mix.py::test_many[68] 
+tests/test_mix.py::test_many[6] 
+[gw0] [ 20%] PASSED tests/test_mix.py::test_many[6] 
+tests/test_mix.py::test_many[98] 
+[gw3] [ 20%] PASSED tests/test_mix.py::test_many[98] 
+tests/test_mix.py::test_many[99] 
+[gw3] [ 21%] PASSED tests/test_mix.py::test_many[99] 
+tests/test_mix.py::test_many[100] 
+[gw3] [ 22%] PASSED tests/test_mix.py::test_many[100] 
+tests/test_mix.py::test_many[101] 
+[gw3] [ 23%] PASSED tests/test_mix.py::test_many[101] 
+[gw1] [ 24%] PASSED tests/test_mix.py::test_many[38] 
+tests/test_mix.py::test_many[39] 
+[gw1] [ 24%] PASSED tests/test_mix.py::test_many[39] 
+tests/test_mix.py::test_many[40] 
+[gw1] [ 25%] PASSED tests/test_mix.py::test_many[40] 
+tests/test_mix.py::test_many[41] 
+[gw1] [ 26%] PASSED tests/test_mix.py::test_many[41] 
+tests/test_mix.py::test_many[42] 
+[gw2] [ 27%] PASSED tests/test_mix.py::test_many[68] 
+tests/test_mix.py::test_many[69] 
+[gw2] [ 28%] PASSED tests/test_mix.py::test_many[69] 
+tests/test_mix.py::test_many[70] 
+[gw2] [ 28%] PASSED tests/test_mix.py::test_many[70] 
+tests/test_mix.py::test_many[71] 
+[gw1] [ 29%] PASSED tests/test_mix.py::test_many[42] 
+tests/test_mix.py::test_many[43] 
+[gw1] [ 30%] PASSED tests/test_mix.py::test_many[43] 
+[gw2] [ 31%] PASSED tests/test_mix.py::test_many[71] 
+tests/test_mix.py::test_many[72] 
+tests/test_mix.py::test_many[102] 
+[gw3] [ 32%] PASSED tests/test_mix.py::test_many[102] 
+tests/test_mix.py::test_many[103] 
+[gw3] [ 32%] PASSED tests/test_mix.py::test_many[103] 
+tests/test_mix.py::test_many[104] 
+[gw3] [ 33%] PASSED tests/test_mix.py::test_many[104] 
+[gw2] [ 34%] PASSED tests/test_mix.py::test_many[72] 
+tests/test_mix.py::test_many[73] 
+[gw2] [ 35%] PASSED tests/test_mix.py::test_many[73] 
+tests/test_mix.py::test_many[105] 
+tests/test_mix.py::test_many[44] 
+[gw1] [ 36%] PASSED tests/test_mix.py::test_many[44] 
+tests/test_mix.py::test_many[45] 
+[gw1] [ 36%] PASSED tests/test_mix.py::test_many[45] 
+tests/test_mix.py::test_many[46] 
+[gw1] [ 37%] PASSED tests/test_mix.py::test_many[46] 
+tests/test_mix.py::test_many[7] 
+[gw0] [ 38%] PASSED tests/test_mix.py::test_many[7] 
+tests/test_mix.py::test_many[8] 
+[gw0] [ 39%] PASSED tests/test_mix.py::test_many[8] 
+tests/test_mix.py::test_many[9] 
+[gw0] [ 40%] PASSED tests/test_mix.py::test_many[9] 
+tests/test_mix.py::test_many[10] 
+[gw0] [ 40%] PASSED tests/test_mix.py::test_many[10] 
+tests/test_mix.py::test_many[11] 
+[gw0] [ 41%] PASSED tests/test_mix.py::test_many[11] 
+tests/test_mix.py::test_many[12] 
+[gw0] [ 42%] PASSED tests/test_mix.py::test_many[12] 
+tests/test_mix.py::test_many[13] 
+[gw0] [ 43%] PASSED tests/test_mix.py::test_many[13] 
+tests/test_mix.py::test_many[14] 
+[gw0] [ 44%] PASSED tests/test_mix.py::test_many[14] 
+tests/test_mix.py::test_many[47] 
+[gw1] [ 44%] PASSED tests/test_mix.py::test_many[47] 
+tests/test_mix.py::test_many[48] 
+[gw1] [ 45%] PASSED tests/test_mix.py::test_many[48] 
+tests/test_mix.py::test_many[49] 
+tests/test_mix.py::test_many[15] 
+[gw0] [ 46%] PASSED tests/test_mix.py::test_many[15] 
+tests/test_mix.py::test_many[74] 
+[gw2] [ 47%] PASSED tests/test_mix.py::test_many[74] 
+tests/test_mix.py::test_many[75] 
+[gw2] [ 48%] PASSED tests/test_mix.py::test_many[75] 
+tests/test_mix.py::test_many[76] 
+[gw2] [ 48%] PASSED tests/test_mix.py::test_many[76] 
+tests/test_mix.py::test_many[77] 
+tests/test_mix.py::test_many[16] 
+[gw0] [ 49%] PASSED tests/test_mix.py::test_many[16] 
+tests/test_mix.py::test_many[17] 
+[gw3] [ 50%] PASSED tests/test_mix.py::test_many[105] 
+tests/test_mix.py::test_many[106] 
+[gw3] [ 51%] PASSED tests/test_mix.py::test_many[106] 
+tests/test_mix.py::test_many[107] 
+[gw3] [ 52%] PASSED tests/test_mix.py::test_many[107] 
+tests/test_mix.py::test_many[108] 
+[gw3] [ 52%] PASSED tests/test_mix.py::test_many[108] 
+tests/test_mix.py::test_many[109] 
+[gw3] [ 53%] PASSED tests/test_mix.py::test_many[109] 
+tests/test_mix.py::test_many[110] 
+[gw3] [ 54%] PASSED tests/test_mix.py::test_many[110] 
+tests/test_mix.py::test_many[111] 
+[gw3] [ 55%] PASSED tests/test_mix.py::test_many[111] 
+tests/test_mix.py::test_many[112] 
+[gw1] [ 56%] PASSED tests/test_mix.py::test_many[49] 
+tests/test_mix.py::test_many[50] 
+[gw1] [ 56%] PASSED tests/test_mix.py::test_many[50] 
+tests/test_mix.py::test_many[51] 
+[gw1] [ 57%] PASSED tests/test_mix.py::test_many[51] 
+tests/test_mix.py::test_many[52] 
+[gw1] [ 58%] PASSED tests/test_mix.py::test_many[52] 
+tests/test_mix.py::test_many[53] 
+[gw1] [ 59%] PASSED tests/test_mix.py::test_many[53] 
+tests/test_mix.py::test_many[54] 
+[gw3] [ 60%] PASSED tests/test_mix.py::test_many[112] 
+tests/test_mix.py::test_many[113] 
+[gw3] [ 60%] PASSED tests/test_mix.py::test_many[113] 
+tests/test_mix.py::test_many[114] 
+[gw1] [ 61%] PASSED tests/test_mix.py::test_many[54] 
+tests/test_mix.py::test_many[55] 
+[gw3] [ 62%] PASSED tests/test_mix.py::test_many[114] 
+[gw1] [ 63%] PASSED tests/test_mix.py::test_many[55] 
+tests/test_mix.py::test_many[115] 
+tests/test_mix.py::test_many[56] 
+[gw1] [ 64%] PASSED tests/test_mix.py::test_many[56] 
+tests/test_mix.py::test_many[57] 
+[gw3] [ 64%] PASSED tests/test_mix.py::test_many[115] 
+tests/test_mix.py::test_many[116] 
+[gw3] [ 65%] PASSED tests/test_mix.py::test_many[116] 
+tests/test_mix.py::test_many[117] 
+[gw1] [ 66%] PASSED tests/test_mix.py::test_many[57] 
+tests/test_mix.py::test_many[58] 
+[gw3] [ 67%] PASSED tests/test_mix.py::test_many[117] 
+[gw1] [ 68%] PASSED tests/test_mix.py::test_many[58] 
+tests/test_mix.py::test_many[118] 
+[gw3] [ 68%] PASSED tests/test_mix.py::test_many[118] 
+tests/test_mix.py::test_many[59] 
+[gw1] [ 69%] PASSED tests/test_mix.py::test_many[59] 
+tests/test_mix.py::test_many[119] 
+tests/test_mix.py::test_many[60] 
+[gw3] [ 70%] PASSED tests/test_mix.py::test_many[119] 
+[gw1] [ 71%] PASSED tests/test_mix.py::test_many[60] 
+tests/test_mix.py::test_skip 
+[gw3] [ 72%] SKIPPED tests/test_mix.py::test_skip 
+tests/test_mix.py::test_xfail 
+tests/test_mix.py::test_many[61] 
+[gw1] [ 72%] PASSED tests/test_mix.py::test_many[61] 
+tests/test_mix.py::test_many[85] 
+[gw1] [ 73%] PASSED tests/test_mix.py::test_many[85] 
+tests/test_mix.py::test_many[86] 
+[gw1] [ 74%] PASSED tests/test_mix.py::test_many[86] 
+tests/test_mix.py::test_many[87] 
+[gw1] [ 75%] PASSED tests/test_mix.py::test_many[87] 
+tests/test_mix.py::test_many[88] 
+[gw1] [ 76%] PASSED tests/test_mix.py::test_many[88] 
+tests/test_mix.py::test_many[89] 
+[gw1] [ 76%] PASSED tests/test_mix.py::test_many[89] 
+tests/test_mix.py::test_many[90] 
+[gw1] [ 77%] PASSED tests/test_mix.py::test_many[90] 
+tests/test_mix.py::test_many[91] 
+[gw1] [ 78%] PASSED tests/test_mix.py::test_many[91] 
+tests/test_mix.py::test_many[92] 
+[gw1] [ 79%] PASSED tests/test_mix.py::test_many[92] 
+tests/test_mix.py::test_many[24] 
+[gw1] [ 80%] PASSED tests/test_mix.py::test_many[24] 
+tests/test_mix.py::test_many[25] 
+[gw1] [ 80%] PASSED tests/test_mix.py::test_many[25] 
+[gw2] [ 81%] FAILED tests/test_mix.py::test_many[77] 
+tests/test_mix.py::test_many[26] 
+[gw0] [ 82%] FAILED tests/test_mix.py::test_many[17] 
+tests/test_mix.py::test_many[18] 
+[gw1] [ 83%] PASSED tests/test_mix.py::test_many[26] 
+tests/test_mix.py::test_many[27] 
+tests/test_mix.py::test_many[78] 
+[gw2] [ 84%] PASSED tests/test_mix.py::test_many[78] 
+tests/test_mix.py::test_many[79] 
+[gw1] [ 84%] PASSED tests/test_mix.py::test_many[27] 
+[gw0] [ 85%] PASSED tests/test_mix.py::test_many[18] 
+tests/test_mix.py::test_many[19] 
+tests/test_mix.py::test_many[28] 
+[gw1] [ 86%] PASSED tests/test_mix.py::test_many[28] 
+[gw2] [ 87%] PASSED tests/test_mix.py::test_many[79] 
+tests/test_mix.py::test_many[80] 
+tests/test_mix.py::test_many[29] 
+[gw0] [ 88%] PASSED tests/test_mix.py::test_many[19] 
+tests/test_mix.py::test_many[20] 
+[gw0] [ 88%] PASSED tests/test_mix.py::test_many[20] 
+[gw2] [ 89%] PASSED tests/test_mix.py::test_many[80] 
+tests/test_mix.py::test_many[81] 
+tests/test_mix.py::test_many[21] 
+[gw2] [ 90%] PASSED tests/test_mix.py::test_many[81] 
+tests/test_mix.py::test_many[82] 
+[gw1] [ 91%] PASSED tests/test_mix.py::test_many[29] 
+[gw0] [ 92%] PASSED tests/test_mix.py::test_many[21] 
+tests/test_mix.py::test_many[22] 
+[gw3] [ 92%] XFAIL tests/test_mix.py::test_xfail 
+tests/test_mix.py::test_warns 
+[gw3] [ 93%] PASSED tests/test_mix.py::test_warns 
+[gw0] [ 94%] PASSED tests/test_mix.py::test_many[22] 
+tests/test_mix.py::test_setup_error 
+[gw2] [ 95%] PASSED tests/test_mix.py::test_many[82] 
+tests/test_mix.py::test_many[83] 
+[gw2] [ 96%] PASSED tests/test_mix.py::test_many[83] 
+tests/test_mix.py::test_many[23] 
+tests/test_mix.py::test_many[30] 
+tests/test_mix.py::test_many[84] 
+[gw0] [ 96%] PASSED tests/test_mix.py::test_many[23] 
+[gw1] [ 97%] PASSED tests/test_mix.py::test_many[30] 
+[gw2] [ 98%] PASSED tests/test_mix.py::test_many[84] 
+[gw3] [ 99%] ERROR tests/test_mix.py::test_setup_error 
+tests/test_mix.py::test_crash 
+[gw3] node down: Not properly terminated
+[gw3] [100%] FAILED tests/test_mix.py::test_crash 
+
+replacing crashed worker gw3
+
+==================================== ERRORS ====================================
+______________________ ERROR at setup of test_setup_error ______________________
+[gw3] darwin -- Python 3.12.8 /work/project/.venv/bin/python
+
+    @pytest.fixture
+    def broken():
+>       raise RuntimeError("fixture exploded")
+E       RuntimeError: fixture exploded
+
+tests/test_mix.py:28: RuntimeError
+=================================== FAILURES ===================================
+________________________________ test_many[77] _________________________________
+[gw2] darwin -- Python 3.12.8 /work/project/.venv/bin/python
+
+n = 77
+
+    @pytest.mark.parametrize("n", range(120))
+    def test_many(n):
+        if n in (17, 77):
+>           assert n == -1, f"value {n} is wrong"
+E           AssertionError: value 77 is wrong
+E           assert 77 == -1
+
+tests/test_mix.py:10: AssertionError
+________________________________ test_many[17] _________________________________
+[gw0] darwin -- Python 3.12.8 /work/project/.venv/bin/python
+
+n = 17
+
+    @pytest.mark.parametrize("n", range(120))
+    def test_many(n):
+        if n in (17, 77):
+>           assert n == -1, f"value {n} is wrong"
+E           AssertionError: value 17 is wrong
+E           assert 17 == -1
+
+tests/test_mix.py:10: AssertionError
+______________________________ tests/test_mix.py _______________________________
+[gw3] darwin -- Python 3.12.8 /work/project/.venv/bin/python
+worker 'gw3' crashed while running 'tests/test_mix.py::test_crash'
+=============================== warnings summary ===============================
+tests/test_mix.py::test_warns
+  /work/project/tests/test_mix.py:23: DeprecationWarning: old api
+    warnings.warn("old api", DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_mix.py::test_many[77] - AssertionError: value 77 is wrong
+FAILED tests/test_mix.py::test_many[17] - AssertionError: value 17 is wrong
+FAILED tests/test_mix.py::test_crash - worker 'gw3' crashed while running 'te...
+ERROR tests/test_mix.py::test_setup_error - RuntimeError: fixture exploded
+=== 3 failed, 119 passed, 1 skipped, 1 xfailed, 1 warning, 1 error in 0.27s ====

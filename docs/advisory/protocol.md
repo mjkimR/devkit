@@ -2,9 +2,7 @@
 
 The Agent Advisory Protocol is how a tool tells an AI agent what happened **and what to do next**. Every error, warning and notice a `devkit` command reports is an advisory: a block of sentinel lines on stderr (or the same envelope as JSON) whose `[ACTION]` directive the agent follows instead of guessing, improvising workarounds or retrying in loops.
 
-This document is the canonical specification. `devkit.advisory` implements it (see the [reference](reference.md)); the `agent-advisory` and `agent-advisory-python` instructions of the built-in `advisory` bundle are the consumer-facing mirrors that teach it to agents in other repositories, and are kept in step with this document. Where an advisory sits among the rest of a command's output (stdout, JSON, logs, verbosity) is specified in [Agent-First Output](../architecture/agent-output.md).
-
----
+This is the canonical specification. `devkit.advisory` implements it ([reference](reference.md)); the `agent-advisory` and `agent-advisory-python` instructions of the built-in `advisory` bundle are its consumer-facing mirrors, kept in step with it. Where an advisory sits among the rest of a command's output is specified in [Agent-First Output](../architecture/agent-output.md).
 
 ## 1. Principles
 
@@ -12,9 +10,7 @@ This document is the canonical specification. `devkit.advisory` implements it (s
 2. **Deterministic wording.** Directives never hedge. "Retrying will likely fail" invites one more try; "retrying unchanged fails identically" does not.
 3. **Scoped prohibition.** Agents fail in two ways: blind retries of an identical command, and destructive side-quests (inventing `--force`, editing a rule to pass, finishing the job by hand). Directives forbid both, conditionally on the cause, without freezing the agent when the fix is in its reach (see [section 7](#7-the-retry-directive-principle)).
 4. **Stable codes.** Every advisory has an `UPPER_SNAKE` code. Callers branch on the code (or the derived mode), never on message text.
-5. **Context budget.** Every line lands in an agent's context window. An advisory is emitted only when it changes the agent's next step or must reach the user. Diagnostics that do neither are logs, shown only on request (`-v`), and are not part of this protocol.
-
----
+5. **Context budget.** An advisory is emitted only when it changes the agent's next step or must reach the user; diagnostics that do neither are logs, not advisories (section 2).
 
 ## 2. Levels
 
@@ -35,9 +31,7 @@ Choosing a level:
 3. The command did its job, and the agent may want to know why the result looks as it does or what it could do next (a newly installed bundle not selected yet, a check skipped because its input does not exist yet, a tracked file rewritten with a new tool version): **`NOTICE`**.
 4. Nobody needs to act and nothing needs explaining: no advisory; log it at most.
 
-The same condition can sit at different levels in different commands: override drift is an `ERROR` in `devkit status` (a report that lists problems) and a `WARNING` after `devkit sync` (which succeeded). The code stays the same; only the level changes.
-
----
+The same condition can sit at different levels in different commands: override drift is an `ERROR` in `devkit status` (a report that lists problems) and a `WARNING` after `devkit sync` (which succeeded). It keeps its code: the implementation copies the error at the lower level (`with_level` in Python) rather than defining a second code.
 
 ## 3. Block Format
 
@@ -100,8 +94,6 @@ A notice, with and without its directive:
 [NOTICE] (TOOL_VERSION_CHANGED) devkit 0.4.0 -> 0.5.0
 ```
 
----
-
 ## 4. Fields
 
 | Field | Levels | Meaning |
@@ -121,8 +113,6 @@ A notice, with and without its directive:
 
 `actor`, `retry`, `guardrail`, `input_error` and `retry_after` describe a failure; they are ignored for `WARNING` and `NOTICE`, whose mode is fixed by the level.
 
----
-
 ## 5. Mode Derivation
 
 The mode is never set directly; it is derived. The first matching rule wins:
@@ -138,8 +128,6 @@ The mode is never set directly; it is derived. The first matching rule wins:
 8. otherwise → `HALT`
 
 Choose the level first, then (for an error) the fields, by asking which directive the agent must follow; confirm the derived mode matches.
-
----
 
 ## 6. Action Modes
 
@@ -246,8 +234,6 @@ NOTE — For awareness only; nothing needs doing now. Continue. Mention it
        when it bears on the task; run [FIX] only when the user asks for it.
 ```
 
----
-
 ## 7. The Retry Directive Principle
 
 To prevent blind retries and destructive side-quests without paralyzing the agent:
@@ -257,34 +243,25 @@ To prevent blind retries and destructive side-quests without paralyzing the agen
 - **Never use probabilistic phrasing**: do not write "retrying will likely fail" or "this might work now". Directives are deterministic and conditional on fixing the cause.
 - **Never let a non-error advisory start work**: `CONTINUE` and `NOTE` forbid running `[FIX]` unasked, because an agent that reads a fix command next to a finished operation tends to run it.
 
----
-
 ## 8. Warnings and Notices in Practice
 
 - **Never raised.** A warning or notice describes an operation that succeeded, so it is never raised as an exception. A function collects it and returns it with its result (in `notices`); the command prints the result first and the notices after it. A notice that reaches a CLI boundary as an exception is a programming error and is reported as `UNEXPECTED_ERROR`.
-- **Exit code.** Warnings and notices never change the exit code, except that `--strict` turns a run that would exit `0` into `1` when it reported a warning. Notices never count.
-- **Same code, different level.** A condition that is an error in one command and a warning in another keeps its code; the implementation copies the error at the lower level (`with_level` in Python) rather than defining a second code.
 - **Extension points.** When a tool collects advisories from third-party code that must not fail the operation (for example post-sync hooks), an `ERROR` it receives is lowered to `WARNING`.
 - **One advisory per condition.** Report a condition once per run, naming all affected items in `[TARGET]` or the message, rather than one block per file.
 - **Lasting conditions.** A condition that persists across runs is reported by what it asks for. One the user must act on is a `WARNING` and is reported on every run until it is resolved (a stray file, an override behind upstream). One that asks for nothing is a `NOTICE` reported when it appears or changes, not on every run that finds it unchanged (a bundle that became available); afterwards it stays visible as data (a JSON field, a list command). A condition the user decided on (an opted-out bundle) is never announced again.
-- **Warnings first.** On stderr, warnings precede notices, each in the order they were collected, and errors come last; JSON keeps the collected order.
 - **Targets are files.** `[TARGET]` names what the agent would open: a file path, a flag, or a `path:line:col` location. Identifiers such as rule IDs or `bundle:asset` labels belong in the message or `[DETAIL]`.
 - **Fixes are runnable.** `[FIX]` is an exact command or edit, never a template with placeholders such as `<bundle>`. When there are several candidates, `[FIX]` names a command that lists them (or the command for the single one), and `[DETAIL]` gives one exact command per candidate.
-- **Quiet runs.** `-q` hides notices on stderr but never warnings or errors; JSON always carries every advisory.
-
----
+- **Order and quiet runs.** On stderr, warnings precede notices, each in collected order, and errors come last; JSON keeps the collected order. `-q` hides notices, never warnings or errors; JSON always carries every advisory. See [Agent-First Output, sections 5 and 6](../architecture/agent-output.md#5-stderr-advisories).
 
 ## 9. Structured Output
 
 Machine channels carry the same envelope as data:
 
-- **JSON**: `{"code", "level", "message", "exit_code", "advisory": {code, level, mode, actor, retry, guardrail, input_error, retry_after, fix, what_to_report, target_files, details, brief}}`. A warning or notice has `exit_code` `0`. A command's JSON result lists collected errors under `errors` and warnings and notices under `notices`; a command that fails outright prints `{"error": {...}}`.
+- **JSON**: `{"code", "level", "message", "exit_code", "advisory": {code, level, mode, actor, retry, guardrail, input_error, retry_after, fix, what_to_report, target_files, details, brief}}`. A warning or notice has `exit_code` `0`. A result lists collected errors under `errors` and warnings and notices under `notices`; a command that fails outright prints `{"error": {...}}` ([Agent-First Output, section 4](../architecture/agent-output.md#4-stdout-json)).
 - **HTTP (RFC 7807)**: errors only: `{"type", "title": <code>, "status": <HTTP status>, "detail": <message>, "code", "advisory"}`. `type` is `<documentation base URI>/<code>` or `about:blank`. The server decides whether to expose `advisory` (for example, only on authenticated or internal APIs); request headers never enable it. Warnings and notices travel inside the successful response body, in its `notices`.
 - **MCP tools**: a failed call returns the rendered error block as the error result text; a successful call appends its rendered warning and notice blocks after the result text.
 
 A consumer never executes `fix` automatically outside `AUTO` (and `INTERACTION` after approval, `CONTINUE`/`NOTE` when the user asks). A transport adapter never executes `fix` on the agent's behalf.
-
----
 
 ## 10. Authoring Checklist
 

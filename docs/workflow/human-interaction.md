@@ -1,29 +1,11 @@
 # Human Interaction Contract
 
-**Status**: Architecture Specification & Reference Implementation  
-**Package**: `devkit.workflow`  
-**Related Documents**:
-- [Workflow Engine Overview](overview.md)
-- [Workflow Definitions and Checks](definition-and-checks.md)
-
----
+**Package**: `devkit.workflow`. Commands and error codes: [CLI and Output Contract](cli-and-output.md).  
+**Related**: [Workflow Engine Overview](overview.md#3-approval-gates), [Workflow Definitions and Checks](definition-and-checks.md).
 
 ## 1. Scope
 
-The workflow engine stops for a person in three situations: an approval gate, a declared `human` check, and the choice of the next workflow after a handoff. This document defines the data contract between the engine and whoever answers: what a request looks like, what an answer looks like, where answers are stored and how the engine applies them.
-
-It deliberately defines nothing about presentation. A terminal agent, an IDE panel, a chat bot or a web page may render requests however it likes; it is compliant as long as it reads requests from the engine's output and writes answers in the record format below. The engine never infers an answer from conversation.
-
-The contract borrows the parts that several agent frameworks agree on:
-
-- flat, JSON-serializable requests with a small set of primitive fields (MCP elicitation, LangGraph interrupts);
-- a three-way answer, `accept` / `decline` / `cancel`, that separates an explicit refusal from a dismissed dialog (MCP elicitation);
-- the engine, not the UI, supplies the set of options and the recommendation (Codex `availableDecisions`, Claude Code `AskUserQuestion`);
-- every request has an identifier and an answer always carries it, because several requests can be open at once (LangGraph interrupt ids, OpenAI Agents SDK interruptions);
-- answers are durable records so that a run can stop, wait as long as it needs, and resume idempotently (Claude Agent SDK `defer`, LangGraph checkpoints);
-- a refusal carries a note that flows back into the work (HumanLayer, Claude Agent SDK `deny(message)`).
-
----
+The engine stops for a person in three situations: an approval gate, a declared `human` check, and the choice of the next workflow after a handoff. This document defines the data contract between the engine and whoever answers: what a request looks like, what an answer looks like, where answers are stored and how the engine applies them. Presentation is out of scope: a terminal agent, an IDE panel, a chat bot or a web page is compliant as long as it reads requests from the engine's output and writes answers in the record format below. The engine never infers an answer from conversation.
 
 ## 2. Request Kinds
 
@@ -36,8 +18,6 @@ The contract borrows the parts that several agent frameworks agree on:
 `cancel` is valid for every kind: the person dismissed the request without deciding. A cancelled record is kept for the audit trail and has no effect on evaluation.
 
 Two more record kinds are written by the engine itself rather than answering a request: `return` records (section 5) and the `choose` record that `handoff --workflow <id>` writes for an explicit choice.
-
----
 
 ## 3. Request
 
@@ -77,8 +57,6 @@ Text form (free text is a JSON string literal, so it always stays on one line):
 
 Requests appear only for the current stage (or the pending handoff), so a unit has at most a handful open at once. Everything in a request is derived from the definition, the project policy and the unit's files; nothing is stored.
 
----
-
 ## 4. Answer
 
 An answer is a decision record written to `<unit>/decisions/<NN>-<request>.yaml`, where `NN` is a sequence per unit of at least two digits and `<request>` is the request id with `:` replaced by `-`. The file is YAML with these keys:
@@ -110,8 +88,6 @@ No other key is allowed. Records are never edited or deleted by the engine. Only
 
 `devkit workflow answer --unit DIR --request ID --action ACTION [--value V] [--note TEXT] [--by NAME]` validates the answer against the open requests and writes the record with the next free sequence number. A host with its own UI may write the same file directly. The engine validates every record on read and reports a malformed record, or a handoff choice that is not an eligible candidate, as `[DECISION_ERROR: file "reason"]` without failing. In JSON each one is an entry of the result's `errors` list, the `to_dict()` of an advisory error with `code`, `message` and `file`: `DECISION_RECORD_INVALID` (`DecisionRecordError`) for a malformed record, `HANDOFF_CHOICE_IGNORED` (`HandoffChoiceIgnoredError`) for an ignored choice.
 
----
-
 ## 5. How the Engine Applies Answers
 
 - **Approve gate.** The implicit `gate:<gate>` check is satisfied when the effective decision is `accept` (`[GATE: ... source=decision:decisions/NN-...yaml]`), or when the executor passes `--given <gate>`. The gate is asked only once the stage's exit checks hold. A `decline` leaves the stage current; `next` prints `[DECLINED: ...]` with the note next to the stage's `[RETURNS]` so the agent can take the work back.
@@ -122,24 +98,3 @@ No other key is allowed. Records are never edited or deleted by the engine. Only
 - **Policy `auto` and `off`.** No request is emitted; the output records the policy that decided (`[GATE: ... source=policy]` while the stage is current, `[SKIPPED: ...]`), so a reader can tell a delegated decision from a human one.
 
 Decision records stay in the unit through handoffs as an audit trail, but they belong to the segment they were given in: an approval or handoff choice from a finished segment never counts in the next one, even for a gate with the same name.
-
----
-
-## 6. CLI Summary
-
-```bash
-devkit workflow requests --unit DIR [--no-lint] [--format text|json]          # open requests only
-devkit workflow answer --unit DIR --request ID --action accept|decline|cancel \
-    [--value V] [--note TEXT] [--by NAME] [--no-lint] [--format text|json]  # write a decision record
-devkit workflow return --unit DIR --to STAGE [--note TEXT] [--by NAME]        # approvals of STAGE and later are asked again
-devkit workflow next --unit DIR                                              # requests are part of the output
-```
-
-These errors exit `2`; an open request or a recorded decline is a result and `next` exits `0`.
-
-| Code | Mode | Raised when |
-| --- | --- | --- |
-| `REQUEST_UNKNOWN` | `INPUT_ERROR` | `--request` is not an open request of the unit (and not `feedback:*`); the details list the open ids |
-| `DECISION_INVALID` | `INPUT_ERROR` | the action or value does not fit the request: a value on `approve` or on an action other than `accept`, a missing, unknown or ineligible option, more than one value |
-| `RETURN_INVALID` | `INPUT_ERROR` | `return --to` names no stage of the workflow, or one after the current stage |
-| `HANDOFF_CHOICE_REQUIRED` | `INTERACTION` | `handoff` under `approvals.handoff = "ask"` without a recorded choice: stop and ask the user; `[FIX]` is the `answer` command to run with their choice |

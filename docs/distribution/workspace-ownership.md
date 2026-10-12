@@ -1,106 +1,112 @@
-# Workspace Ownership and Overrides Model
+# Workspace Ownership and Overrides
 
-**Status**: Architecture Specification & Reference Implementation  
-**Package**: `devkit`  
-**Related Documents**:
-- [Distribution Overview](overview.md)
-- [Synchronization & Transactions](sync-and-transactions.md)
-- [Bundle Manifest Specification](manifest-spec.md)
-
----
-
-## 1. Consumer Workspace Directory Structure
-
-Consuming projects integrate bundles under a dedicated root directory: `.devkit/`.
+## 1. Consumer Workspace Layout
 
 ```text
 .devkit/
-  config.toml             # Project-authored configuration: selected bundles/presets and agents (Git-tracked)
-  installation.json       # Pinned packages, bundle versions, selections, file hashes & modes (Git-tracked)
-  managed/<bundle>/       # Clean extracted upstream resources from wheels (Generated, Git-ignored)
+  config.toml             # Project configuration: selection, agents, module tables (Git-tracked)
+  installation.json       # Receipt: packages, selection, file hashes & modes (Git-tracked)
+  managed/<bundle>/       # Pristine copies of upstream bundle files (generated)
   overrides/
     <bundle>/             # Full file replacements for managed assets (Git-tracked)
     .baseline/<bundle>/   # Upstream copies taken at create/accept, for `override diff` (Git-tracked)
-  transient/              # Git-ignored
+  transient/
     lock                  # Project lock (fcntl.flock): exclusive for writers, shared for readers
     sync-journal.json     # Write-ahead journal of an unfinished transaction
     seen-bundles.json     # Installed bundles this clone was told about (BUNDLE_UNSELECTED is announced once)
-<agent native paths>      # Projected native assets (e.g., .agents/, .codex/, .claude/)
+<agent native paths>      # Projected native assets (.agents/, .codex/, .claude/)
 AGENTS.md                 # Project-owned; only the DEVKIT:START/END block inside it is managed (Git-tracked)
-<seeded targets>          # Files a seeded document asset wrote once (e.g. docs/README.md); project-owned (Git-tracked)
+<seeded targets>          # Files a seeded document asset wrote once; project-owned (Git-tracked)
 ```
-
----
 
 ## 2. Ownership Categories and Invariants
 
-1. **Project Configuration (`.devkit/config.toml`)**:
-   - Project-authored, Git-tracked TOML file declaring the selected bundles and their presets (`[presets]`) and the `agents` targets. Only selected bundles are deployed.
-   - Owned by the developer. `devkit sync` never edits it on its own; only explicit selection commands (`devkit add`, `devkit remove`, and `devkit sync` selection flags without `--no-save`) edit the `agents` and `[presets]` entries, preserving unrelated tables, comments, and formatting.
-   - Receipt files cannot claim ownership of `config.toml`.
-2. **Managed Assets (`.devkit/managed/<bundle>/`)**:
-   - Exact unpacked representation of upstream bundle resources extracted from installed wheels.
-   - Read-only cache. Always regenerated deterministically by `devkit sync`.
-   - Preserves original relative paths for instructions, playbooks, and rules.
-3. **Project Native Projections**:
-   - Copied or rendered projections placed into agent-specific directories (`.agents/skills/` and `.agents/agents/` for Codex and Antigravity, `.claude/skills/` and `.claude/agents/` for Claude Code, `.codex/agents/` for Codex).
-   - Tracked explicitly by file path, SHA-256 hash, and POSIX mode in `installation.json`.
-4. **Foreign File Protection**:
-   - The distributor strictly manages only files recorded in `installation.json`.
-   - Files created manually or by other tools in native agent directories are preserved.
-   - If a synchronization step targets a file that already exists but is not recorded in the receipt, it is treated as an unmanaged collision and sync aborts before any write with `unowned destination already exists: <path>`.
-   - Files under `.devkit/managed/` that neither the receipt nor the current inventory owns are reported by `devkit sync` as `stray` (a `MANAGED_FILE_STRAY` warning) and left untouched. The managed root is a regenerated cache; a hand-placed file there is never deployed or removed, yet consumers that scan the directory could pick it up. Project-owned content belongs outside the managed root (for example custom rules under a `--rules-dir`, or an override under `.devkit/overrides/`).
-5. **User Modification Detection**:
-   - If a deployed file's disk content or execute bit differs from its recorded receipt signature, it is treated as a user modification. Other permission bits (`0664` from a umask `002` checkout, `0600`) are not.
-   - When that file is still part of the desired inventory, sync aborts immediately across the entire project before making any disk changes.
-   - When it is no longer desired (package removal, bundle deselection, preset narrowing, or an asset removed or renamed upstream), the modified file is an **orphan**: it stays on disk untouched, it is dropped from the receipt's `files` map, the sync continues, and the result's `notices` carry an `ORPHAN_LEFT` warning naming it in `target_files` (a `[WARN]   (ORPHAN_LEFT) left modified file in place: <path> ...` block on stderr). Delete or move it yourself. From the next sync on, an orphan under `.devkit/managed/` is reported as a stray file. Only files that remain byte-for-byte identical to their recorded signature are deleted; modified files are never deleted.
-6. **Host Guidance Block (root `AGENTS.md`)**:
-   - `devkit sync` maintains one block between `<!-- DEVKIT:START -->` and `<!-- DEVKIT:END -->` in the root `AGENTS.md`: the `host-guidance-block` of the [Resource Taxonomy](../architecture/resource-taxonomy.md#1-host-guidance-block). It is generated from the current selection (installed bundle names, the once-per-bundle `devkit get-context` rule, the generated entry skills, and the selected `guidance` fragments ordered by bundle and asset id) and is deterministic for the same selection. A project changes a fragment with `devkit override create <bundle>:<asset>`, never inside the markers; an overridden instruction a fragment names is cited by its override path.
-   - The file is created when absent, the block is appended when the file has no markers, and it is replaced in place otherwise. Every byte outside the markers is project-owned and preserved. Each marker must stand on a line of its own; a marker anywhere else, or more than one of either, is a malformed block and stops the sync. The block is written with the file's line ending (CRLF files stay CRLF) and its digest is taken over LF line endings, so a checkout that converts line endings is not an edit.
-   - The root `AGENTS.md` must be a regular file while the block is managed; a symlink stops the sync with instructions (make `AGENTS.md` the file and point other names at it, or set `guidance_block = false`). With `guidance_block = false` and no recorded block, sync never reads `AGENTS.md` at all.
-   - The receipt records the block's SHA-256 under `guidance_block`. A block whose digest differs from the receipt is a user modification: sync aborts before any write, exactly as for a managed file. A block that was deleted is written again. A file that contains markers the receipt does not know is an unowned collision.
-   - `guidance_block = false` in `.devkit/config.toml` turns the block off. On that transition the block is removed (the file too, when nothing else is in it) provided its digest still matches the receipt; the receipt then stops recording it.
-   - `CLAUDE.md` is never written; point it at `AGENTS.md` with the project's own symlink or include line.
-7. **Seeded Files (write-once scaffolding)**:
-   - A `document` asset with `seeded = true` names a workspace-relative `target` ([Manifest Specification, section 2](manifest-spec.md#2-asset-kinds)). `devkit sync` writes each seeded file only when its destination does not exist; the planned write is reported as a `seed` action and goes through the same journal as every other write, so an interrupted sync rolls it back.
-   - Once written, a seeded file belongs to the project. It is never compared with the bundle, updated, removed or hash-checked: hand edits stand, an upstream change to the source does nothing, deselecting the bundle leaves the file, and `sync --check` never compares its content. A seeded file the project deletes while the asset is still selected is seeded again on the next sync (until then `sync --check` exits 1).
-   - The receipt never lists seeded files under `files`. It records which selected asset seeded which path under `seeded` (bundle, asset id, path) for inspection by `devkit list`; that record is informational and never a selection input.
-   - An existing file at the target is not a collision; it is simply left alone. A directory or symlink at the target, two selected bundles seeding the same path, or a seeded path that coincides with a managed or projected destination stop the sync before any write. Targets may not point into `.devkit/`, `.git/`, agent projection directories or the root `AGENTS.md`; these names are compared case-insensitively (`.GIT/hooks/...` is rejected), because macOS file systems usually are.
-   - Seeded files are not bundle context: `get-context`, playbook search and native projections ignore them, because their bodies are project-owned from the first sync on.
-8. **Git & Ignore Policy**:
-   - The project configuration (`.devkit/config.toml`), overrides (`.devkit/overrides/`), receipt (`.devkit/installation.json`), the root `AGENTS.md` and seeded files must be committed to version control.
-   - Generated resources (`.devkit/managed/`), transient transaction files (`.devkit/transient/`), and generated native copies should be ignored according to the consumer repository's own `.gitignore` policy.
-   - `devkit` never automatically modifies `.gitignore` or the Git index.
-
----
+1. **Project configuration (`.devkit/config.toml`)**: owned by the developer. `devkit sync` never edits it on its
+   own; only the selection commands (`devkit add`, `devkit remove`, and `devkit sync` selection flags without
+   `--no-save`) edit `agents` and `[presets]`, preserving unrelated tables, comments and formatting. The receipt
+   cannot claim it.
+2. **Managed assets (`.devkit/managed/<bundle>/`)**: a read-only cache of the upstream bundle files at their
+   original relative paths, regenerated deterministically by `devkit sync`.
+3. **Native projections**: copied or rendered files in agent directories
+   ([Agent Projections](agent-projections.md)), tracked by path, SHA-256 and mode in the receipt.
+4. **Foreign files**: devkit manages only files recorded in the receipt and preserves every other file. A planned
+   write onto an existing file the receipt does not record aborts the sync before any write
+   (`unowned destination already exists: <path>`, `SYNC_CONFLICT`). Files under `.devkit/managed/` that neither the
+   receipt nor the inventory owns are left untouched and reported as `stray` (`MANAGED_FILE_STRAY`): they are never
+   deployed or removed, but consumers scanning the directory could pick them up. Project-owned content belongs
+   outside the managed root (custom rules under a `--rules-dir`, overrides under `.devkit/overrides/`).
+5. **User modifications**: a deployed file whose content or execute bit differs from its receipt signature is a
+   user modification; other permission bits (`0664` under umask `002`, `0600`) are not.
+   - Still desired: the sync aborts before any write.
+   - No longer desired (package removal, deselection, preset narrowing, an asset removed or renamed upstream): the
+     file is an **orphan**. It stays on disk, is dropped from the receipt's `files`, and the sync continues with an
+     `ORPHAN_LEFT` warning naming it; the user deletes or moves it. From the next sync on, an orphan under
+     `.devkit/managed/` is a stray file.
+   - Only files byte-for-byte identical to their recorded signature are ever deleted.
+6. **Host guidance block (root `AGENTS.md`)**: the
+   [host guidance block](../architecture/resource-taxonomy.md#1-host-guidance-block) between `<!-- DEVKIT:START -->`
+   and `<!-- DEVKIT:END -->`.
+   - Content: the installed bundle names, the once-per-bundle `devkit get-context` rule, the generated entry
+     skills, then the selected `guidance` fragments ordered by bundle name and asset id; deterministic for a given
+     selection. A project changes a fragment with `devkit override create <bundle>:<asset>`, never inside the
+     markers; an overridden instruction a fragment names is cited by its override path.
+   - Placement: the file is created when absent, the block appended when it has no markers, and replaced in place
+     otherwise. Bytes outside the markers are project-owned. Each marker stands on a line of its own; a marker
+     elsewhere, or more than one of either, is malformed and stops the sync (`GUIDANCE_BLOCK_INVALID`). The block is
+     written with the file's line ending, and its digest is taken over LF line endings, so a line-ending conversion
+     is not an edit.
+   - Ownership: the receipt records the block's SHA-256 under `guidance_block`. A block whose digest differs is a
+     user modification and aborts the sync before any write; a deleted block is written again; markers the receipt
+     does not know are an unowned collision.
+   - `AGENTS.md` must be a regular file while the block is managed; a symlink stops the sync (`WORKSPACE_UNSAFE`:
+     make `AGENTS.md` the file and point other names at it, or set `guidance_block = false`).
+   - `guidance_block = false`: on that transition the block is removed (the file too, when nothing else is in it)
+     if its digest still matches, and the receipt stops recording it. With no recorded block, sync never reads
+     `AGENTS.md`.
+   - `CLAUDE.md` is never written; the project points it at `AGENTS.md` with its own symlink or include line.
+7. **Seeded files (write-once scaffolding)**: the `target` of a seeded `document` asset
+   ([Manifest Specification](manifest-spec.md#2-asset-kinds)).
+   - Written only when the destination does not exist, as a `seed` action through the same journal as every other
+     write. An existing file there is not a collision; it is left alone. A directory or symlink at the target, two
+     selected bundles seeding one path, or a seeded path equal to a managed or projected destination stop the sync
+     before any write.
+   - Once written, the file is project-owned: never compared, updated, removed or hash-checked, not even by
+     `sync --check`; deselecting the bundle leaves it. One deleted while its asset is still selected is seeded again
+     by the next sync (until then `sync --check` exits `1`).
+   - The receipt records which asset seeded which path under `seeded`, never under `files`; the record is
+     informational. Seeded files are not bundle context.
+8. **Git policy**: commit `.devkit/config.toml`, `.devkit/overrides/`, `.devkit/installation.json`, the root
+   `AGENTS.md` and seeded files. Ignore `.devkit/managed/`, `.devkit/transient/` and native copies according to the
+   repository's own `.gitignore`; devkit never modifies `.gitignore` or the Git index.
 
 ## 3. Project Overrides and Drift Review
 
-Consuming projects frequently require customizing an upstream guide, playbook, or skill for repository-specific nuances without maintaining a full upstream fork.
-
-### Full-File Replacement Authoring Model
-
-Overrides are stored as complete, valid files under `.devkit/overrides/<bundle>/<relative-path>` rather than unified `.patch` files:
-- **Clean Readability & Tooling**: Overrides remain standard Markdown, TOML, or Python documents. They can be read, syntax-highlighted, formatted, and linted by standard IDE tools and AI agents without diff parser dependencies.
-- **Zero Patch Drift / Rejection**: Eliminates fragile `patch reject` (`.rej`) failures caused by upstream line-number shifts or minor prose wording updates.
-- **Direct Agent Editing**: AI coding agents can interact directly with the entire customized asset rather than having to parse and edit diff syntax.
+An override customizes an upstream asset without a fork. It is a set of complete files under
+`.devkit/overrides/<bundle>/<path in the bundle>`, not patches: agents and tools read and edit them as ordinary files,
+and upstream line shifts cannot make them fail to apply.
 
 ### Creating an Override
 
-`devkit override create <bundle>:<asset>` copies every upstream file of the asset (all files of a skill or directory source) to `.devkit/overrides/<bundle>/<path in the bundle>` and to `.devkit/overrides/.baseline/<bundle>/...`, written as ordinary `0644`/`0755` files, then synchronizes. Copying and synchronizing happen under one project lock; when the synchronization fails, the override files are put back as they were. The bundle must be selected, the asset must be part of the selected presets, and seeded assets cannot be overridden (their files are already project-owned). `--force` overwrites existing override files.
+`devkit override create <bundle>:<asset>` copies every upstream file of the asset (all files of a skill or directory
+source) to `.devkit/overrides/<bundle>/...` and to `.devkit/overrides/.baseline/<bundle>/...` as ordinary
+`0644`/`0755` files, then synchronizes, all under one project lock; when the sync fails, the override files are put
+back as they were. The bundle must be selected and the asset part of its selected presets; seeded assets cannot be
+overridden. `--force` overwrites existing override files.
 
-An override replaces individual files: files the override directory lacks are read from upstream, and extra files in it are ignored.
+An override replaces individual files: files missing from the override directory are read from upstream, and extra
+files are ignored. Projections, `get-context` and playbook search read the override in place of the upstream file.
 
-### Baseline Digest Tracking
+### Drift Detection
 
-The first sync that sees an override records it in the receipt under `overrides.<bundle>.<asset>`: `baseline_upstream_sha256` is a digest over **every** upstream file of the asset (SHA-256 of the sorted `path NUL sha256` lines), `override_sha256` the same over the override files, and `relative_path` names the asset (its `SKILL.md`, file, or directory source).
+The first sync that sees an override records it in the receipt under `overrides.<bundle>.<asset>`:
+`baseline_upstream_sha256` is a digest over **every** upstream file of the asset (SHA-256 of the sorted
+`path NUL sha256` lines), `override_sha256` the same over the override files, and `relative_path` names the asset
+(its `SKILL.md`, file or directory source).
 
-### Upstream Drift Detection
+On every sync the current upstream digest is compared with the baseline. Because it covers every file, a change to a
+skill's script is drift even when only its `SKILL.md` is overridden. On drift the override stays projected and:
 
-During `devkit sync`:
-- If an overridden asset's upstream wheel is upgraded, `sync` compares the newly installed upstream digest with the recorded `baseline_upstream_sha256`. Because the digest covers every file of the asset, a change to a skill's script or reference file is drift even when only its `SKILL.md` is overridden.
-- If the digests match, synchronization proceeds without interruption, projecting the local override into target agent directories.
-- If the digests differ (`new_upstream_sha256 != baseline_upstream_sha256`), `sync` detects upstream drift, retains the local override projection safely, and reports an `OVERRIDE_DRIFT` warning:
+- under `override_drift = "warn"` (default), the sync reports an `OVERRIDE_DRIFT` warning:
   ```text
   [WARN]   (OVERRIDE_DRIFT) upstream drift behind the override of starter:development
   [ACTION] CONTINUE — The operation succeeded; this does not block it. Do not retry
@@ -110,16 +116,21 @@ During `devkit sync`:
   [FIX]    devkit override diff starter:development
   [REPORT] Upstream changed an asset this project overrides; review the diff, then accept it or keep the override
   ```
-- That is the default policy, `override_drift = "warn"` in `.devkit/config.toml`. With `override_drift = "block"`, the same drift aborts the sync before any write (`OVERRIDE_DRIFT`), naming every drifted `bundle:asset`; its `fix` names the `devkit override diff` / `devkit override accept` commands that resolve it. `devkit status` reports the drift under `errors` and exits `1`. Choose `block` where an override shadows governance content (rules, gates, workflows) and a silently stale baseline would be a risk; `warn` keeps upgrades flowing for prose.
+- under `override_drift = "block"`, the sync aborts before any write (`OVERRIDE_DRIFT`), naming every drifted
+  `bundle:asset`, with the `devkit override diff` / `devkit override accept` commands as its `fix`. Choose it where
+  an override shadows governance content (rules, gates, workflows); `warn` keeps prose upgrades flowing.
 
-### Agent-Assisted Reconciliation
+`devkit status` reports drift under `errors` and exits `1` under either policy.
 
-To reconcile upstream updates with local customizations:
-- `devkit override diff <bundle>:<asset>` returns, for each overridden file and each upstream file that changed since the baseline copy, two unified diffs:
-  - `upstream_diff`: baseline copy (upstream when the override was created or last accepted) to current upstream, which is what upstream changed;
-  - `diff`: current upstream to the override, which is what the project changed.
-  A diff is `null` when there is nothing to compare (no baseline copy, a file that is not overridden, or a non-UTF-8 file). The result also carries `drift_detected` and both digests.
-- AI coding agents can read both diffs, identify what new guidelines, contracts, or fixes upstream introduced, and merge them into the project's `.devkit/overrides/` files.
-- `devkit override list` displays all tracked overrides and indicates whether upstream drift has been detected.
-- Once merged, `devkit override accept <bundle>:<asset>` records the current upstream digest as the baseline (through the journal) and refreshes the baseline copies. It fails for an asset without a tracked override.
-- `devkit override remove <bundle>:<asset>` deletes the override and baseline files, prunes empty directories, and synchronizes the pristine upstream files, under one lock with the same rollback as `create`; the receipt entry disappears with that sync.
+### Reconciliation
+
+- `devkit override diff <bundle>:<asset>` returns, for each overridden file and each upstream file changed since the
+  baseline copy, `upstream_diff` (baseline copy to current upstream: what upstream changed) and `diff` (current
+  upstream to the override: what the project changed). A diff is `null` when there is nothing to compare (no
+  baseline copy, a file that is not overridden, a non-UTF-8 file). The result also carries `drift_detected` and both
+  digests. An agent merges the upstream changes into the override files.
+- `devkit override accept <bundle>:<asset>` then records the current upstream digest as the baseline (through the
+  journal) and refreshes the baseline copies; it fails for an asset without a tracked override.
+- `devkit override remove <bundle>:<asset>` deletes the override and baseline files, prunes empty directories and
+  synchronizes the pristine upstream files, under one lock with the same rollback as `create`; the receipt entry
+  disappears with that sync.

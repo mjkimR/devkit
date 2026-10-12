@@ -1,39 +1,26 @@
-# Unified Agent Asset Distribution Architecture: Overview
+# Agent Asset Distribution: Overview
 
-**Status**: Architecture Specification & Reference Implementation  
-**Tooling Package**: `devkit` (`devkit` CLI)  
-**Consumer Root**: `.devkit/`  
-**Related Documents**:
-- [Bundle Manifest Specification](manifest-spec.md)
-- [Workspace Ownership & Overrides](workspace-ownership.md)
-- [Synchronization & Transactions](sync-and-transactions.md)
-- [Native Agent Projections](agent-projections.md)
-- [Context Loading & Playbooks](context-and-playbooks.md)
-- [Transitive Dependencies](transitive-dependencies.md)
-- [In-Repository Bundles](in-repo-bundles.md)
-- [Resource Taxonomy](../architecture/resource-taxonomy.md)
+`devkit.distribution` packages, projects, upgrades, audits and restores agent assets (instructions, playbooks,
+skills, subagents, workflows, rules, gates) for Codex, Claude Code and Antigravity as versioned Python packages.
+Commands, configuration and codes are in the [reference](reference.md); its
+[section 5](reference.md#5-specifications) lists the specifications.
 
----
+## 1. Principles
 
-## 1. Overview and Objectives
+1. **Native config fidelity**: native subagent definitions and tool configurations are copied verbatim, never
+   converted between hosts. An agent without a native variant gets no projection and the sync reports it
+   (`unprojected`); a role contract that does not mention a selected agent fails the sync. Nothing is silently
+   stripped or degraded.
+2. **Standard Python packaging**: content ships as wheels installed with `uv` as dev dependencies and discovered
+   through `importlib.metadata`; versions are pinned by `uv.lock`. There is no custom resolver, downloader or cache.
+3. **Deterministic, side-effect-free ingestion**: reproducible manifests, normalized modes (`0644`/`0755`), strict
+   relative path containment, and no execution of bundle code during a sync.
+4. **Explicit ownership**: managed assets, overrides, seeded files and foreign files are kept apart; an unmanaged
+   collision or a modified deployed file halts the sync before any write.
+5. **Transactional integrity**: every installation, upgrade and removal is planned and conflict-checked up front,
+   then executed under a project lock with a write-ahead journal, atomic replacement and recovery.
 
-The `devkit` distribution system manages the unified packaging, distribution, projection, upgrade, audit, and restoration lifecycle for developer agent assets. It targets personal AI coding agents (such as Codex, Claude Code, and Antigravity) while treating agent configurations, instructions, governance rules, playbooks, and skills as first-class versioned packages.
-
-AI coding agents typically rely on vendor-specific directories (such as `.agents/`, `.codex/`, or `.claude/`) with disjointed configuration schemas, divergent subagent formats, and ad-hoc file placement conventions. The `devkit` distribution architecture addresses these challenges by establishing a structured contract between content producers, distribution tooling, and consumer workspaces.
-
-### Core Principles
-
-1. **Native Config Fidelity**: Preserve native configuration formats without forcing a compromised lowest-common-denominator schema. Native subagent definitions and tool configurations are copied verbatim, never converted between hosts: an agent without a native variant gets no projection and the sync reports it (`unprojected`), and a role contract that does not mention a selected agent fails the sync, rather than anything being silently stripped, modified, or degraded.
-2. **Decoupled Versioning & uv Ecosystem Synergy**: Leverage standard Python packaging infrastructure (`uv`, wheels, `importlib.metadata`, and `uv.lock`) instead of inventing custom archive resolvers, external release downloaders, or bespoke caching systems. Consumer projects install content wheels directly as dev dependencies.
-3. **Deterministic Packaging & Ingestion**: Reproducible bundle manifests, static resource verification, normalized POSIX file permissions (`0644`/`0755`), and strict relative path containment without execution side effects.
-4. **Explicit Ownership Boundaries & Conflict Protection**: Maintain strict isolation between pristine managed assets, assets added through in-repository bundles, explicit complete overrides, and untracked foreign files. Any unmanaged collision or modified deployed file halts synchronization immediately to prevent data loss.
-5. **Transactional Integrity & Fault Tolerance**: All project-level installations, upgrades, and removals are planned upfront, checked for conflicts, and executed atomically using advisory locking, a write-ahead journal (`sync-journal.json`), temporary sibling writes, and automated rollback recovery.
-
----
-
-## 2. Architecture Units and Boundaries
-
-The distribution architecture comprises these units:
+## 2. Architecture Units
 
 ```text
 ┌──────────────────────────────────────────────────────────────────┐
@@ -48,9 +35,9 @@ The distribution architecture comprises these units:
 │                   devkit (Python CLI: devkit)                    │
 │  - Entry-point & resource discovery (`importlib.resources`)      │
 │  - Manifest validation, inventory planning & preset selection    │
-│  - ACID transaction engine, advisory locking & write journal     │
+│  - Transaction engine, advisory locking & write-ahead journal    │
 │  - Native projections (Codex, Claude Code, Antigravity)          │
-│  - Progressive playbook search & context loading                 │
+│  - Context loading & playbook search                             │
 │  - Local authoring validator & deterministic ZIP builder         │
 └──────────────────┬───────────────────────────────┬───────────────┘
                    │                               │
@@ -67,48 +54,50 @@ The distribution architecture comprises these units:
 └────────────────────────────────────┘ └───────────────────────────┘
 ```
 
-| Unit | Responsibilities | Distribution & Versioning Model |
-| --- | --- | --- |
-| `devkit` | CLI, manifest validator, bundle packager, planner, transactional workspace engine, native projection adapters | Semantic versioning (`X.Y.Z`) as a standard Python package |
-| Content Wheel | Versioned asset sources, native variants, dependencies, metadata | Python wheel with semantic package version and bundle version |
-| `bundle.toml` | Manifest declaring assets, kinds, sources/variants, presets, and an optional default preset | Pinned to `schema = 1` contract within the wheel's resource module |
-| Receipt consumers (`devkit.rules`, `devkit.workflow`, `devkit.gate`) | Load the rule, workflow, workflow-check, subagent and gate assets recorded in the receipt | Modules of the same `devkit` package; asset code declares its dependencies through wheels |
-| Project Config | Bundle selection with presets, agent targets, playbook search defaults, guidance block and override drift policy, plus the tables of the other modules | TOML (`schema = 1`) in `.devkit/config.toml` (Git-tracked); no entry means not deployed, except built-in bundles declaring `auto_select`, which are deployed with their default preset unless set to `false`; `[rules]`, `[workflow]` and `[gates]` are owned by their modules, `[tool.<name>]` by other tools |
-| Consumer Receipt | Pinned packages and bundle versions of selected bundles, applied selection, asset paths, file hashes/modes | Explicit receipt schema version (`schema = 1`) in `.devkit/installation.json` |
+Three `schema = 1` contracts connect the units: the bundle manifest `bundle.toml` inside each content wheel
+([Manifest Specification](manifest-spec.md)), the Git-tracked project configuration `.devkit/config.toml`
+([selection model](sync-and-transactions.md#2-asset-selection-model)) and the Git-tracked receipt
+`.devkit/installation.json` ([receipt](sync-and-transactions.md#1-the-installation-receipt-devkitinstallationjson)).
+`devkit.rules`, `devkit.workflow` and `devkit.gate` load the assets the receipt records; asset code declares its
+own dependencies through wheels.
 
----
+## 3. Module Layout
 
-## 3. Subsystem Implementation Layout
+The code lives in `packages/devkit/src/devkit/distribution/` and imports only `devkit.core` (frontmatter grammar,
+typed receipt reader, safe relative paths, project root discovery) and `devkit.advisory`. Modules import each other
+by absolute path (`devkit.distribution...`), never relatively. The library surface is exported from
+`devkit.distribution`: `sync_project`, `load_bundle`, `get_context`, `search_playbooks`, the override operations,
+`plan_bundle`, `get_project_status`, `get_project_listing`, and their results, frozen dataclasses whose `to_dict()`
+is the JSON the command prints.
 
-The distribution tooling lives in `packages/devkit/src/devkit/distribution/`. It builds on `devkit.core`
-(frontmatter grammar, the typed receipt reader, safe relative paths, project root discovery) and may import
-only `devkit.core` and `devkit.advisory`. The library surface is exported from `devkit.distribution`
-(`sync_project`, `load_bundle`, `get_context`, `search_playbooks`, the override operations, `plan_bundle`,
-`get_project_status`, `get_project_listing` and their results: frozen dataclasses whose `to_dict()` is the JSON the
-command prints). Modules import each other by absolute path (`devkit.distribution...`), never relatively.
-
-- `content.py`: the neutral file content helpers shared by both sides: `Content` (bytes plus mode), `normal_mode`, `same_content`, the one `sha256` digest helper, canonical JSON (`json_content`) and the receipt `signature`.
-- `bundles/` (authoring side; no workspace knowledge, imports nothing from `installation/`):
-  - `common.py`: slug, version and `x-<name>` extension key grammars, the reserved `all` preset, supported agent names, and `read_frontmatter`/`locate_frontmatter` (UTF-8 decoding and the shared frontmatter grammar, every failure a `BundleError`).
-  - `manifest.py`: `bundle.toml` schema 1, source path rules (canonical relative POSIX, no backslash, no symlink), seeded targets, `source_files` (skips `.DS_Store`, `__pycache__/`, `*.pyc`), and kind-specific validation at load.
-  - `instructions.py`, `playbooks.py`, `workflows.py`, `subagents.py`: headers of each kind on the shared frontmatter grammar; role contract rendering per agent.
-  - `guidance.py`: the context-loading prerequisite inserted after a skill's frontmatter.
-  - `fragments.py`: `guidance` fragments for the root `AGENTS.md` block: format and size rules, `{path:<asset-id>}` placeholders.
-  - `package.py`: deterministic ZIP archives with a hashed inventory, built on `content.py`.
-- `installation/` (consumer workspace side):
-  - `workspace.py`: well-known paths (`.devkit/...`, root `AGENTS.md`), path safety for reads and writes, and file snapshots.
-  - `transaction.py`: the project lock (`.devkit/transient/lock`), the write-ahead journal, atomic replacement (also used to save `.devkit/config.toml`), recovery and directory pruning (`prune_empty_parents`, up to an owned prefix or a given stop directory).
+- `content.py`: file content helpers shared by both sides: `Content` (bytes plus mode), `normal_mode`,
+  `same_content`, the one `sha256` helper, canonical JSON (`json_content`) and the receipt `signature`.
+- `bundles/`: the authoring side; no workspace knowledge, imports nothing from `installation/`.
+  - `common.py`: slug, version and `x-<name>` key grammars, the reserved `all` preset, supported agent names, and
+    `read_frontmatter`/`locate_frontmatter` (every failure a `BundleError`).
+  - `manifest.py`: `bundle.toml` schema 1, source path rules, seeded targets, `source_files`, kind-specific
+    validation at load.
+  - `instructions.py`, `playbooks.py`, `workflows.py`, `subagents.py`: per-kind headers; role contract rendering.
+  - `guidance.py`: the context-loading prerequisite inserted into skills. `fragments.py`: `guidance` fragments.
+  - `package.py`: deterministic ZIP archives.
+- `installation/`: the consumer workspace side.
+  - `workspace.py`: well-known paths, path safety for reads and writes, file snapshots.
+  - `transaction.py`: project lock, write-ahead journal, atomic replacement (also used to save
+    `.devkit/config.toml`), recovery, `prune_empty_parents`.
   - `receipt.py`: strict receipt reading (`devkit.core.receipt` plus ownership rules) and serialization.
-  - `config.py`: `.devkit/config.toml` reading, selection resolution, and edits checked before a sync and saved after it.
-  - `discovery.py`: installed bundles via the `devkit.bundles` entry-point group; built-in bundles and which of them are auto-selected.
-  - `inventory.py`: the desired state (`Inventory`): managed copies, native projections per agent, role contract rendering, generated entry skills, rendered guidance fragments, seeds and override tracking.
-  - `overrides.py`: which file a deployment reads (override or upstream) and whole-asset drift tracking.
-  - `override_commands.py`: `override create|diff|accept|remove|list`.
-  - `sync.py`: `sync_project` (lock, `sync_locked`, then post-sync hooks) and recovery. `sync_locked` resolves the selection, refuses override drift under `override_drift = "block"`, plans managed files (collecting orphans as warnings), seeds and the guidance block, builds the receipt and assembles the `SyncResult`.
-  - `guidance_block.py`: the root `AGENTS.md` block (devkit's lines, then the selection's fragments); its markers come from `devkit.core`.
-  - `context.py`, `playbook_search.py`, `reading.py`: agent-facing reads of receipt-recorded files under the shared lock.
-  - `status.py`, `plan.py`, `results.py`: `status` (with its problems under `errors`) and `list` reports, `bundle plan`, and the result dataclasses with their JSON forms.
+  - `config.py`: `.devkit/config.toml` reading, selection resolution, edits checked before a sync and saved after it.
+  - `discovery.py`: installed bundles via `devkit.bundles`; built-in and auto-selected bundles.
+  - `inventory.py`: the desired state (`Inventory`): managed copies, projections, rendered role contracts,
+    generated entry skills, rendered fragments, seeds, override tracking.
+  - `overrides.py`, `override_commands.py`: which file a deployment reads, drift tracking, `override ...` commands.
+  - `sync.py`: `sync_project` (lock, `sync_locked`, then post-sync hooks) and recovery.
+  - `guidance_block.py`: the root `AGENTS.md` block; its markers come from `devkit.core`.
+  - `context.py`, `playbook_search.py`, `reading.py`: agent-facing reads under the shared lock.
+  - `status.py`, `plan.py`, `results.py`: `status`, `list`, `bundle plan` and the result dataclasses.
   - `playbook_skill.py`, `workflow_skill.py`: the generated `devkit-playbook` and `devkit-workflow` entry skills.
-  - `hooks.py`: the `devkit.post_sync` extension point; what a hook returns becomes coded notices (an `ERROR` is lowered to `WARNING`).
-- `errors.py`: the `DistributionError` hierarchy (`BundleError`, `SelectionError`, `ConflictError`, `LockHeldError`, ...), each an `AdvisoryError` with a stable code, one class per code, and the warning and notice classes a successful sync collects (`ORPHAN_LEFT`, `MANAGED_FILE_STRAY`, `POST_SYNC_HOOK_FAILED` at `WARNING`; `SUBAGENT_UNPROJECTED`, `BUNDLE_UNSELECTED`, `TOOL_VERSION_CHANGED`, `POST_SYNC_NOTICE` at `NOTICE`); see the [reference](reference.md#sync-output-and-notices).
-- `cli/`: the distribution commands of the `devkit` CLI: `sync`, `add`, `remove`, `list`, `status`, `recover`, `get-context`, `playbook search`, `override` (`create`, `diff`, `accept`, `remove`, `list`) and `bundle` (`validate`, `plan`, `build`). `register(cli)` adds them to the root `devkit` group. Every command takes `-w/--workspace-root`, prints exactly one JSON object (the result, or `{"error": {...}}`), renders an error as an advisory on stderr and exits `2` on error (`1` for `sync --check` when a sync is needed and for `status` when its report shows a problem, listed under `errors`). Warnings and notices are listed under `notices` in the result and rendered after it on stderr as `[WARN]` and `[NOTICE]` blocks ([Agent-First Output](../architecture/agent-output.md)).
+  - `hooks.py`: the `devkit.post_sync` extension point.
+- `errors.py`: the `DistributionError` hierarchy, one class per code, and the sync notice classes
+  ([codes](reference.md#error-codes), [notices](reference.md#sync-output-and-notices)).
+- `cli/`: the distribution commands; `register(cli)` adds them to the root `devkit` group. Output and exit codes
+  follow [Agent-First Output](../architecture/agent-output.md) and the
+  [reference conventions](reference.md#1-quick-start).
