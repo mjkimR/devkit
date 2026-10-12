@@ -25,6 +25,8 @@ When the project's recipe already wraps the command (a `just` recipe that calls
 | --- | --- |
 | `[RUN: "<command>" outcome=passed\|failed exit=<code> log=<path>]` | The result; `exit` is the command's own code. |
 | `[RUN_SUMMARY: "..."]` | A summary line the tool printed (`3 passed in 0.5s`). |
+| `[RUN_LAST_LINE: "..."]` | Passed without a recognized summary: the last lines of the output, usually the tool's verdict. |
+| `[RUN_FAILURE: "<test>" kind=... message=...]` | Failure only: a failed test the excerpt cuts out; rerun it by its node ID. |
 | `[RUN_WARNING: "..." location=...]` | A warning the tool printed, once per message. |
 | `[RUN_OMITTED: ...]` | Something did not fit the budget; it is in the log. |
 | `[RUN_OUTPUT: shown=N omitted=N filtered=N]` | Failure only: the excerpt follows, head and tail of the output; `filtered` lines of progress and noise are only in the log. |
@@ -33,8 +35,11 @@ Advisory blocks (`[ERROR]`, `[WARN]`, `[NOTICE]`) from nested `devkit` commands
 come on stderr, whole; follow their `[ACTION]` as usual.
 
 Act on the excerpt first. Read the log at `log=` only when the excerpt is not
-enough, and read the part you need (`rg -n "<test name>" <log>`, `sed -n`), not
-the whole file.
+enough, and read the part you need, not the whole file: the excerpt's
+`[... N characters omitted, log lines A-B ...]` line names what it left out
+(`sed -n 'A,Bp' <log>`); otherwise search it (`rg -n "<test name>" <log>`). A
+`[... previous line repeated N more times ...]` line stands for copies of the
+line above it.
 
 `devkit run` exits `0` when the command passed, `1` when it failed, and `2` when
 the command could not be started (`RUN_COMMAND_NOT_STARTED`: `[TARGET]` names

@@ -3,17 +3,22 @@
 from __future__ import annotations
 
 import io
+import re
 
 import pytest
 from devkit.advisory import AdvisoryError, Level
 from devkit.compact.scan import (
     ADVISORY_BUDGET,
+    FAILURE_BUDGET,
     HEAD,
+    LAST_BUDGET,
+    LAST_LINES,
     MAX_LINE,
     SUMMARY_BUDGET,
     TAIL,
     WARNING_BUDGET,
     WARNING_MESSAGE,
+    Failure,
     Scan,
     ToolWarning,
     scan,
@@ -39,6 +44,17 @@ def _scan(text: str, *, notices: bool = True, base: list[str] | None = None) -> 
         "1 file reformatted, 12 files left unchanged",
         "All checks passed!",
         "Found 3 errors (3 fixed, 0 remaining).",
+        "Found 3 errors.",
+        "Found 1 error in src/index.ts:3",
+        "Found 3 errors in 2 files.",
+        "Found 3 errors in the same file, starting at: src/index.ts:1",
+        "Found 0 errors. Watching for file changes.",
+        "Found 5 errors in 2 files (checked 10 source files)",
+        "Success: no issues found in 5 source files",
+        "Tests:       1 failed, 3 passed, 4 total",
+        "Test Suites: 2 passed, 2 total",
+        "test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
+        "test result: FAILED. 1 passed; 1 failed; 0 ignored",
         "0 errors, 2 warnings, 0 informations",
         "svelte-check found 0 errors and 2 warnings in 1 file",
         "✖ 2 problems (0 errors, 2 warnings)",
@@ -135,14 +151,36 @@ def test_small_output_is_kept_whole() -> None:
     assert result.output == text and not result.omitted
 
 
+_MARKER = re.compile(r"\[\.\.\. (?P<chars>\d+) characters omitted, log lines (?P<first>\d+)-(?P<last>\d+) \.\.\.\]\n")
+
+
 def test_large_output_keeps_head_and_tail_with_a_marker() -> None:
     text = "".join(f"line {i:05d} {'x' * 60}\n" for i in range(1000)) + "FAILED tests/test_a.py::test_last\n"
     result = _scan(text)
-    head, tail = result.output.split(f"[... {result.omitted.output} characters omitted ...]\n")
+    head, chars, first, last, tail = _MARKER.split(result.output)
+    assert int(chars) == result.omitted.output
     assert text.startswith(head) and text.endswith(tail)
     assert len(head) <= HEAD and len(tail) <= TAIL
     assert len(head) + result.omitted.output + len(tail) == len(text)
     assert tail.endswith("FAILED tests/test_a.py::test_last\n")
+    # The marker names exactly the log lines it stands for: `sed -n 'FIRST,LASTp' <log>` reads them.
+    assert "".join(text.splitlines(keepends=True)[int(first) - 1 : int(last)]) == text[len(head) : -len(tail)]
+
+
+def test_the_marker_counts_log_lines_including_filtered_lines_and_advisory_blocks() -> None:
+    block = _block(Level.WARNING, "OVERRIDE_DRIFT", "drift")
+    lines = [
+        "tests/test_a.py ..... [ 10%]",
+        *block.splitlines(),
+        *(f"line {i:05d} {'x' * 60}" for i in range(400)),
+    ]
+    result = _scan("".join(f"{line}\n" for line in lines))
+    match = _MARKER.search(result.output)
+    assert match
+    first, last = int(match["first"]), int(match["last"])
+    head = result.output[: match.start()].splitlines()
+    tail = result.output[match.end() :].splitlines()
+    assert lines[first - 2] == head[-1] and lines[last] == tail[0]
 
 
 def _block(level: Level, code: str, message: str) -> str:
@@ -159,8 +197,8 @@ def test_advisory_blocks_are_relayed_whole_and_left_out_of_the_excerpt() -> None
 
 def test_an_advisory_survives_when_the_output_around_it_is_cut() -> None:
     error = _block(Level.ERROR, "RULES_CONFIG_INVALID", "bad table")
-    filler = "y" * 80 + "\n"
-    result = _scan(filler * 200 + error + "\n" + filler * 200)
+    filler = "".join(f"{i:03d} {'y' * 80}\n" for i in range(200))
+    result = _scan(filler + error + "\n" + filler)
     assert [a.text for a in result.advisories] == [error]
     assert result.omitted.output > 0 and "RULES_CONFIG_INVALID" not in result.output
 
@@ -381,5 +419,148 @@ def test_an_over_long_line_keeps_its_start_and_end_and_marks_the_cut() -> None:
     first, marker, last = result.output.splitlines()
     assert first.startswith("Error: the real cause") and len(first) == MAX_LINE
     assert last.endswith(" the end") and len(last) == MAX_LINE
-    assert marker == f"[... {result.omitted.output} characters of this line omitted ...]"
+    assert marker == f"[... {result.omitted.output} characters of log line 1 omitted ...]"
     assert len(first) + result.omitted.output + len(last) == len("Error: the real cause ") + 200_000 + len(" the end")
+
+
+def test_last_lines_are_the_last_non_blank_lines_of_the_excerpt() -> None:
+    notice = _block(Level.NOTICE, "BUNDLE_UNSELECTED", "extras")
+    result = _scan(
+        "".join(f"step {i}\n" for i in range(10))
+        + "  Success: built 3 targets  \n\n"
+        + "Installed 3 packages in 2ms\n"  # filtered noise is not a last line
+        + f"{notice}\n\n"
+    )
+    assert result.last_lines == ("step 6", "step 7", "step 8", "step 9", "Success: built 3 targets")
+    assert len(result.last_lines) == LAST_LINES
+
+
+def test_last_lines_keep_to_their_budget_and_cut_only_an_over_long_last_line() -> None:
+    lines = [f"{i} {'y' * 148}" for i in range(10)]
+    result = _scan("".join(f"{line}\n" for line in lines))
+    assert result.last_lines == tuple(lines[-3:])
+    assert sum(len(text) + 1 for text in result.last_lines) <= LAST_BUDGET
+    (last,) = _scan("short\n" + "z" * (MAX_LINE * 3) + "\n").last_lines
+    assert last.endswith("...") and len(last) + 1 <= LAST_BUDGET
+
+
+def test_last_lines_come_from_the_tail_when_the_output_is_cut() -> None:
+    result = _scan("".join(f"line {i:05d} {'x' * 60}\n" for i in range(1000)))
+    assert result.last_lines[-1] == f"line 00999 {'x' * 60}"
+    assert _scan("").last_lines == ()
+
+
+def _filler(name: str, size: int) -> str:
+    """Distinct lines of about ``size`` characters, so none of them collapses into a repeat."""
+    return "".join(f"{name} {i:05d} {'.' * 60}\n" for i in range(size // 72 + 1))
+
+
+def _cut_out(text: str) -> str:
+    """``text`` between enough output that the excerpt's head and tail leave it out."""
+    return _filler("before", HEAD + 500) + text + _filler("after", TAIL + 500)
+
+
+@pytest.mark.parametrize(
+    "line,expected",
+    [
+        (
+            "FAILED tests/test_a.py::test_x - AssertionError: assert 1 == 2",
+            Failure("tests/test_a.py::test_x", "failed", "AssertionError: assert 1 == 2"),
+        ),
+        (
+            "FAILED tests/test_a.py::TestCase::test_param[a b-1]",
+            Failure("tests/test_a.py::TestCase::test_param[a b-1]", "failed"),
+        ),
+        (
+            "ERROR tests/test_a.py::test_db - RuntimeError: database is not reachable",
+            Failure("tests/test_a.py::test_db", "error", "RuntimeError: database is not reachable"),
+        ),
+        (
+            "ERROR tests/test_broken.py - ImportError: no module",
+            Failure("tests/test_broken.py", "error", "ImportError: no module"),
+        ),
+        ("[gw1] [ 59%] FAILED tests/test_a.py::test_x", Failure("tests/test_a.py::test_x", "failed")),
+        (
+            "tests/test_a.py::test_x FAILED                                            [ 59%]",
+            Failure("tests/test_a.py::test_x", "failed"),
+        ),
+    ],
+)
+def test_failed_tests_the_excerpt_cuts_out_are_listed(line: str, expected: Failure) -> None:
+    result = _scan(_cut_out(f"{line}\n"))
+    assert line not in result.output
+    assert result.failures == (expected,)
+
+
+def test_failed_tests_the_excerpt_shows_are_not_repeated() -> None:
+    assert _scan("FAILED tests/test_a.py::test_x - assert 1 == 2\n").failures == ()
+    # Named by its -v line in the head, the test is in the excerpt although its short summary line is cut.
+    result = _scan(
+        "tests/test_a.py::test_x FAILED [ 50%]\n" + _cut_out("FAILED tests/test_a.py::test_x - assert 1 == 2\n")
+    )
+    assert result.failures == ()
+
+
+def test_a_failure_takes_the_message_its_short_summary_gives() -> None:
+    result = _scan(_cut_out("tests/test_a.py::test_x FAILED [ 50%]\nFAILED tests/test_a.py::test_x - assert 1 == 2\n"))
+    assert result.failures == (Failure("tests/test_a.py::test_x", "failed", "assert 1 == 2"),)
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "FAILED",
+        "Build FAILED.",
+        "ERROR: Could not find a version that satisfies the requirement nope",
+        "FAIL src/b.test.js",
+        "FAILED (errors=2)",
+    ],
+)
+def test_other_failure_lines_are_not_tests(line: str) -> None:
+    assert _scan(_cut_out(f"{line}\n")).failures == ()
+
+
+def test_failures_have_a_budget_and_each_left_out_test_is_counted_once() -> None:
+    progress = "".join(f"tests/test_a.py::test_{i:03d} FAILED [ 1%]\n" for i in range(300))
+    summary = "".join(f"FAILED tests/test_a.py::test_{i:03d} - AssertionError: value {i}\n" for i in range(300))
+    result = _scan(_cut_out(progress + summary))
+    named = {failure.test for failure in result.failures}
+    assert sum(len(f.test) + len(f.message) + 1 for f in result.failures) <= FAILURE_BUDGET
+    assert len(named) + result.omitted.failures + sum(f"::test_{i:03d} " in result.output for i in range(300)) == 300
+
+
+def test_identical_lines_keep_the_first_and_a_count_with_their_log_lines() -> None:
+    line = "connect ECONNREFUSED 127.0.0.1:5432, retrying in 1s"
+    text = "start\n" + f"{line}\n" * 100 + "Error: gave up\n"
+    result = _scan(text)
+    assert result.output.splitlines() == [
+        "start",
+        line,
+        "[... previous line repeated 99 more times, log lines 3-101 ...]",
+        "Error: gave up",
+    ]
+    assert result.filtered == 99
+
+
+def test_a_count_is_used_only_when_it_is_shorter() -> None:
+    result = _scan("ok\nok\nok\nend\n")
+    assert result.output == "ok\nok\nok\nend\n" and result.filtered == 0
+
+
+def test_repeats_at_the_end_of_the_output_are_counted_too() -> None:
+    line = "x" * 80
+    result = _scan(f"{line}\n" * 3)
+    assert result.output == f"{line}\n[... previous line repeated 2 more times, log lines 2-3 ...]\n"
+
+
+def test_only_consecutive_lines_of_the_excerpt_collapse() -> None:
+    line = "y" * 80
+    assert _scan(f"{line}\n\n{line}\n").output == f"{line}\n\n{line}\n"
+    # A filtered line between them leaves them consecutive in the excerpt.
+    result = _scan(f"{line}\ntests/test_a.py .... [ 50%]\n{line}\n")
+    assert result.output == f"{line}\n[... previous line repeated 1 more time, log line 3 ...]\n"
+
+
+def test_read_counts_every_character_of_the_output() -> None:
+    text = "a\r\nb\x1b[31mred\x1b[0m\n" + "z" * 200_000 + "\n"
+    assert _scan(text).read == len(text)

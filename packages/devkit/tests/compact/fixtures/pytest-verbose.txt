@@ -1,0 +1,21 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.8, pytest-9.1.1, pluggy-1.6.0 -- /work/project/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /work/project
+configfile: pyproject.toml
+plugins: cov-7.1.0
+collecting ... collected 3 items
+
+tests/test_small.py::test_add PASSED                                     [ 33%]
+tests/test_small.py::test_add_wrong FAILED                               [ 66%]
+tests/test_small.py::test_add_more PASSED                                [100%]
+
+=================================== FAILURES ===================================
+________________________________ test_add_wrong ________________________________
+tests/test_small.py:11: in test_add_wrong
+    assert result == 5, "two plus two"
+E   AssertionError: two plus two
+E   assert 4 == 5
+=========================== short test summary info ============================
+FAILED tests/test_small.py::test_add_wrong - AssertionError: two plus two
+========================= 1 failed, 2 passed in 0.01s ==========================

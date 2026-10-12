@@ -1,7 +1,9 @@
 """``devkit run``: run a command and print a bounded view of its output; the full log stays on disk.
 
-Text stdout is ``[RUN: ...]``, then ``[RUN_SUMMARY: ...]`` and
-``[RUN_WARNING: ...]`` lines, ``[RUN_OMITTED: ...]`` when a budget was
+Text stdout is ``[RUN: ...]``, then ``[RUN_SUMMARY: ...]`` lines (for a
+command that passed without one, ``[RUN_LAST_LINE: ...]`` lines: the last lines
+of its output; for a command that failed, ``[RUN_FAILURE: ...]`` lines for the
+failed tests the excerpt cuts out) and ``[RUN_WARNING: ...]`` lines, ``[RUN_OMITTED: ...]`` when a budget was
 exceeded and, only when the command failed, ``[RUN_OUTPUT: ...]`` (with the
 number of lines filtered out) followed by the excerpt. stderr carries the advisory blocks of nested ``devkit`` commands
 (warnings and notices, then the runner's own notices, then errors). The
@@ -17,6 +19,7 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import logging
 import math
 import os
 import re
@@ -26,7 +29,7 @@ import click
 
 from devkit.advisory import ExitCode, Level
 from devkit.compact.execute import CommandRun, run_command
-from devkit.compact.scan import Omitted, RelayedAdvisory
+from devkit.compact.scan import Failure, Omitted, RelayedAdvisory
 from devkit.core.cli import (
     FORMAT_OPTION,
     QUIET_ENV,
@@ -42,6 +45,8 @@ from devkit.core.cli import (
 from devkit.core.errors import ArgumentError
 
 _BARE = re.compile(r'[^\s"\]]+')
+
+_log = logging.getLogger(__name__)
 
 
 def _quote(value: str) -> str:
@@ -60,52 +65,69 @@ def _outcome(run: CommandRun) -> str:
 
 
 def _omitted(run: CommandRun) -> Omitted:
-    """What the view left out; the excerpt counts only when it is shown (the command failed)."""
-    return run.scan.omitted if not run.passed else dataclasses.replace(run.scan.omitted, output=0)
+    """What the view left out; the excerpt and the failures beside it count only when they are shown (the
+    command failed)."""
+    return run.scan.omitted if not run.passed else dataclasses.replace(run.scan.omitted, failures=0, output=0)
 
 
-def _echo_text(run: CommandRun) -> None:
+def _failures(run: CommandRun) -> tuple[Failure, ...]:
+    """The failed tests the excerpt cuts out, shown beside it: only for a command that failed."""
+    return () if run.passed else run.scan.failures
+
+
+def _last_lines(run: CommandRun) -> tuple[str, ...]:
+    """The output's last lines, in place of a summary: only for a command that passed without one."""
+    return run.scan.last_lines if run.passed and not run.scan.summaries else ()
+
+
+def _text(run: CommandRun) -> str:
     found = run.scan
-    click.echo(f"[RUN: {_quote(run.command)} outcome={_outcome(run)} exit={run.exit_code} log={_value(str(run.log))}]")
-    for summary in found.summaries:
-        click.echo(f"[RUN_SUMMARY: {_quote(summary)}]")
-    for warning in found.warnings:
-        click.echo(f"[RUN_WARNING: {_quote(warning.message)} location={_value(warning.location)}]")
+    lines = [f"[RUN: {_quote(run.command)} outcome={_outcome(run)} exit={run.exit_code} log={_value(str(run.log))}]"]
+    lines += [f"[RUN_SUMMARY: {_quote(summary)}]" for summary in found.summaries]
+    lines += [f"[RUN_LAST_LINE: {_quote(line)}]" for line in _last_lines(run)]
+    lines += [
+        f"[RUN_FAILURE: {_quote(failure.test)} kind={failure.kind} message={_value(failure.message)}]"
+        for failure in _failures(run)
+    ]
+    lines += [f"[RUN_WARNING: {_quote(w.message)} location={_value(w.location)}]" for w in found.warnings]
     omitted = _omitted(run)
     if omitted:
-        click.echo(
-            f"[RUN_OMITTED: summaries={omitted.summaries} warnings={omitted.warnings} "
+        lines.append(
+            f"[RUN_OMITTED: summaries={omitted.summaries} failures={omitted.failures} warnings={omitted.warnings} "
             f"advisories={omitted.advisories} output={omitted.output}]"
         )
+    text = "\n".join(lines) + "\n"
     if not run.passed:
-        click.echo(f"[RUN_OUTPUT: shown={len(found.output)} omitted={omitted.output} filtered={found.filtered}]")
+        text += f"[RUN_OUTPUT: shown={len(found.output)} omitted={omitted.output} filtered={found.filtered}]\n"
         if found.output:
-            click.echo(found.output, nl=not found.output.endswith("\n"))
+            text += found.output if found.output.endswith("\n") else found.output + "\n"
+    return text
 
 
-def _echo_json(run: CommandRun) -> None:
+def _json(run: CommandRun) -> dict[str, object]:
     found = run.scan
     omitted = _omitted(run)
-    echo_json(
-        {
-            "command": list(run.argv),
-            "outcome": _outcome(run),
-            "exit_code": run.exit_code,
-            "log": str(run.log),
-            "summaries": list(found.summaries),
-            "warnings": [{"message": w.message, "location": w.location} for w in found.warnings],
-            "advisories": [{"level": a.level.value, "text": a.text} for a in found.advisories],
-            "omitted": {
-                "summaries": omitted.summaries,
-                "warnings": omitted.warnings,
-                "advisories": omitted.advisories,
-                "output": omitted.output,
-            },
-            "output": None if run.passed else found.output,
-            "filtered": 0 if run.passed else found.filtered,
-            "notices": [notice.to_dict() for notice in run.notices],
-        }
-    )
+    return {
+        "command": list(run.argv),
+        "outcome": _outcome(run),
+        "exit_code": run.exit_code,
+        "log": str(run.log),
+        "summaries": list(found.summaries),
+        "last_lines": list(_last_lines(run)),
+        "failures": [{"test": f.test, "kind": f.kind, "message": f.message} for f in _failures(run)],
+        "warnings": [{"message": w.message, "location": w.location} for w in found.warnings],
+        "advisories": [{"level": a.level.value, "text": a.text} for a in found.advisories],
+        "omitted": {
+            "summaries": omitted.summaries,
+            "failures": omitted.failures,
+            "warnings": omitted.warnings,
+            "advisories": omitted.advisories,
+            "output": omitted.output,
+        },
+        "output": None if run.passed else found.output,
+        "filtered": 0 if run.passed else found.filtered,
+        "notices": [notice.to_dict() for notice in run.notices],
+    }
 
 
 def _echo_advisories(advisories: tuple[RelayedAdvisory, ...]) -> None:
@@ -150,10 +172,17 @@ def run_cmd(slow_after: float, output_format: str, command: tuple[str, ...]) -> 
     }
     run = run_command(command, env=env, slow_after=slow_after, notices=not settings.quiet)
     if is_json(output_format):
-        _echo_json(run)
+        data = _json(run)
+        echo_json(data)
+        shown = len(json.dumps(data, indent=2, ensure_ascii=False)) + 1  # as echo_json prints it
     else:
-        _echo_text(run)
+        text = _text(run)
+        click.echo(text, nl=False)
+        shown = len(text)
     advisories = run.scan.advisories
+    shown += sum(len(a.text) + 1 for a in advisories)
+    read = run.scan.read
+    _log.info("showed %d characters for %d of output (%.0f%%)", shown, read, 100 * shown / read if read else 0)
     _echo_advisories(tuple(a for a in advisories if a.level is not Level.ERROR))
     echo_notices(run.notices)
     _echo_advisories(tuple(a for a in advisories if a.level is Level.ERROR))

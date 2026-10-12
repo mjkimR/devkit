@@ -13,8 +13,18 @@ progress bar leaves only its final state. Lines that only report progress or a
 passing item (pytest's dots, ``PASSED`` lines, ``✓`` lines) are filtered, and
 so are lines that carry nothing an agent acts on (pytest's session header, uv's
 success messages) and pytest's warnings summary, whose warnings are already
-reported; a run of blank lines keeps one. A line that names a failure is never
-filtered.
+reported; a run of blank lines keeps one, and a run of identical lines keeps
+the first with a count. A line that names a failure is never filtered.
+
+The tests a pytest run names as failed or errored and the excerpt cuts out are
+listed apart (``Scan.failures``), so the caller learns what failed, and can
+rerun it, even when the excerpt is cut, without a test the excerpt shows
+being repeated.
+
+The excerpt's omission markers name the log lines they stand for, so the
+caller can read exactly those. The last lines of the output are kept apart
+(``Scan.last_lines``): a tool whose summary is not recognized usually ends with
+its verdict.
 
 Agent Advisory Protocol blocks that a nested ``devkit`` command printed are
 taken out whole (a headline, then field and continuation lines), so they reach
@@ -38,11 +48,17 @@ MAX_LINE = 1_000
 SUMMARY_BUDGET = 2_000
 WARNING_BUDGET = 2_000
 WARNING_MESSAGE = 500
+FAILURE_BUDGET = 2_000
+FAILURE_MESSAGE = 200
+FAILURES_KEPT = 10_000  # failed tests remembered until the excerpt is known; later ones are only counted
 ADVISORY_BUDGET = 4_000  # for errors, and again for warnings and notices: errors are never crowded out
 # Failures usually end with the most useful part (pytest's short test summary,
 # a linter's last findings and counts), so the tail gets the larger share.
 HEAD = 3_000
 TAIL = 5_000
+# The output's last lines, shown in place of a summary when none was recognized.
+LAST_LINES = 5
+LAST_BUDGET = 500
 CHUNK = 8_192
 LINE_CAP = 64_000
 
@@ -62,6 +78,14 @@ _SUMMARIES = tuple(
         r"(?:, \d+ files? (?:reformatted|left unchanged|already formatted|would be reformatted))*",
         r"All checks passed!",
         r"Found \d+ errors? \(\d+ fixed, \d+ remaining\)\.",
+        # tsc (and ruff without fixes), with the file forms tsc prints; mypy adds the files it checked.
+        r"Found \d+ errors?(?: in (?:\d+ files?(?: \(checked \d+ source files?\))?|the same file, starting at: \S+"
+        r"|\S+:\d+))?\.?(?: Watching for file changes\.)?",
+        r"Success: no issues found in \d+ source files?",
+        # Jest.
+        r"(?:Test Suites|Tests):\s+(?:\d+ (?:failed|passed|skipped|todo|pending), )*\d+ total",
+        # cargo test, once per test binary.
+        r"test result: (?:ok|FAILED)\. \d+ passed; \d+ failed;.*",
         # Pyright, svelte-check, and ESLint retain warning counts even on success.
         r"\d+ errors?, \d+ warnings?, \d+ informations?",
         r"svelte-check found \d+ errors? and \d+ warnings?(?: in \d+ files?)?",
@@ -85,9 +109,21 @@ _WARNINGS = tuple(
         r"(?:warning|Warning|WARNING|Warn): (?P<message>.+)",
     )
 )
+# A pytest node ID: a test file, then classes and the test, a parameter set in brackets (it may contain spaces).
+_NODE_ID = r"[^\s:]+\.py(?:::[^\s\[]+(?:\[.*?\])?)*"
+_PERCENT = r"\[\s*\d+(?:%|/\d+)\]"
+_FAILURES = tuple(
+    re.compile(pattern)
+    for pattern in (
+        # pytest's short test summary (FAILED for a failed test, ERROR for a setup, teardown or collection
+        # error), also as pytest-xdist -v prints it.
+        rf"(?:\[gw\d+\] {_PERCENT} )?(?P<kind>FAILED|ERROR) (?P<test>{_NODE_ID})(?: - (?P<message>.+))?",
+        # pytest -v.
+        rf"(?P<test>{_NODE_ID}) (?P<kind>FAILED|ERROR)(?: .*?)?\s*{_PERCENT}",
+    )
+)
 _SOURCE_LOCATION = re.compile(r".+\.(?:svelte|[cm]?[jt]sx?|vue)(?::\d+:\d+)?")
 _ESLINT_WARNING = re.compile(r"(?P<position>\d+:\d+)\s+warning\s+(?P<message>.+)")
-_PERCENT = r"\[\s*\d+(?:%|/\d+)\]"
 _PROGRESS = tuple(
     re.compile(pattern)
     for pattern in (
@@ -127,6 +163,8 @@ _FILTERED_BANNERS = {"test session starts", "warnings summary"}
 _FILTERED_SECTIONS = {"warnings summary"}
 
 _FILTERS = (*_PROGRESS, *_NOISE)
+# A count is shorter than this many repeats of any line (two characters each, newline included).
+_REPEATS_KEPT = 64
 
 # The Agent Advisory Protocol block grammar (docs/advisory/protocol.md, section 3). A continued value
 # that contains an empty line renders that line empty, so an empty line inside a block continues it.
@@ -143,6 +181,16 @@ class ToolWarning:
 
 
 @dataclass(frozen=True)
+class Failure:
+    """A test the output names as failed: its node ID, ``failed`` or ``error`` (setup, teardown or
+    collection), and the message printed with it (``""`` when none)."""
+
+    test: str
+    kind: str
+    message: str = ""
+
+
+@dataclass(frozen=True)
 class RelayedAdvisory:
     """An advisory block a nested ``devkit`` command printed, as it was printed."""
 
@@ -155,12 +203,13 @@ class Omitted:
     """What did not fit a budget: items per kind, characters of the excerpt."""
 
     summaries: int = 0
+    failures: int = 0
     warnings: int = 0
     advisories: int = 0
     output: int = 0
 
     def __bool__(self) -> bool:
-        return any((self.summaries, self.warnings, self.advisories, self.output))
+        return any((self.summaries, self.failures, self.warnings, self.advisories, self.output))
 
 
 @dataclass(frozen=True)
@@ -173,11 +222,14 @@ class Scan:
     """
 
     summaries: tuple[str, ...] = ()
+    failures: tuple[Failure, ...] = ()  # failed tests no line of the excerpt names
     warnings: tuple[ToolWarning, ...] = ()
     advisories: tuple[RelayedAdvisory, ...] = ()
     output: str = ""
     omitted: Omitted = field(default_factory=Omitted)
     filtered: int = 0  # lines filtered out of the excerpt, overwritten progress states included
+    last_lines: tuple[str, ...] = ()  # the excerpt's last non-blank lines, within LAST_LINES and LAST_BUDGET
+    read: int = 0  # characters read, the whole output
 
 
 def warning_message(line: str, source: str) -> tuple[str, str] | None:
@@ -238,38 +290,73 @@ def is_filtered(line: str) -> bool:
 
 
 class _Excerpt:
-    """The first ``HEAD`` and last ``TAIL`` characters of what it is given, in whole pieces."""
+    """The first ``HEAD`` and last ``TAIL`` characters of what it is given, in whole pieces, each piece with
+    the log line it came from."""
 
     def __init__(self) -> None:
         self.head: list[str] = []
         self.head_size = 0
         self.head_open = True
-        self.tail: deque[str] = deque()
+        self.tail: deque[tuple[str, int]] = deque()
         self.tail_size = 0
         self.dropped = 0  # between head and tail, where the marker line goes
+        self.first_dropped = 0  # the log lines the dropped characters came from, 1-based
+        self.last_dropped = 0
         self.inline = 0  # inside over-long lines, marked where they were cut
 
-    def add(self, piece: str) -> None:
+    def add(self, piece: str, line: int) -> None:
         if self.head_open:
             if self.head_size + len(piece) <= HEAD:
                 self.head.append(piece)
                 self.head_size += len(piece)
                 return
             self.head_open = False
-        self.tail.append(piece)
+        self.tail.append((piece, line))
         self.tail_size += len(piece)
         while self.tail_size > TAIL:
-            left = self.tail.popleft()
+            left, number = self.tail.popleft()
             self.tail_size -= len(left)
             self.dropped += len(left)
+            self.first_dropped = self.first_dropped or number
+            self.last_dropped = number
+
+    def ending(self) -> str:
+        """The end of the excerpt, after the marker line when there is one."""
+        tail = "".join(piece for piece, _ in self.tail)
+        return tail if self.dropped else "".join(self.head) + tail
 
     def text(self) -> str:
         head = "".join(self.head)
         if not self.dropped:
-            return head + "".join(self.tail)
+            return self.ending()
         if head and not head.endswith("\n"):
             head += "\n"
-        return f"{head}[... {self.dropped} characters omitted ...]\n{''.join(self.tail)}"
+        lines = _lines(self.first_dropped, self.last_dropped)
+        return f"{head}[... {self.dropped} characters omitted, {lines} ...]\n{self.ending()}"
+
+
+def _lines(first: int, last: int) -> str:
+    return f"log line {first}" if first == last else f"log lines {first}-{last}"
+
+
+def _last_lines(text: str) -> tuple[str, ...]:
+    """The last non-blank lines of ``text``, newest last, within ``LAST_LINES`` and ``LAST_BUDGET``; a last
+    line longer than the budget is cut."""
+    found: list[str] = []
+    budget = LAST_BUDGET
+    for line in reversed(text.splitlines()):
+        clean = line.strip()
+        if not clean:
+            continue
+        if len(clean) + 1 > budget:
+            if not found:
+                found.append(clean[: budget - 4] + "...")
+            break
+        found.append(clean)
+        budget -= len(clean) + 1
+        if len(found) == LAST_LINES:
+            break
+    return tuple(reversed(found))
 
 
 class _Scanner:
@@ -278,6 +365,9 @@ class _Scanner:
         self.base = base
         self.summaries: list[str] = []
         self.summary_budget = SUMMARY_BUDGET
+        # Every failed test, keyed by kind and test in order of appearance, with the log lines naming it.
+        self.failures: dict[tuple[str, str], tuple[Failure, list[int]]] = {}
+        self.failures_not_kept = 0
         self.warnings: list[ToolWarning] = []
         self.warning_budget = WARNING_BUDGET
         self.seen_warnings: set[str] = set()
@@ -285,13 +375,21 @@ class _Scanner:
         self.advisory_budget = {True: ADVISORY_BUDGET, False: ADVISORY_BUDGET}  # keyed by "is an error"
         self.block: list[str] = []
         self.excerpt = _Excerpt()
-        self.omitted = {"summaries": 0, "warnings": 0, "advisories": 0}
+        self.omitted = {"summaries": 0, "failures": 0, "warnings": 0, "advisories": 0}
         self.filtered = 0
         self.section = ""
         self.last_blank = False
         self.source = ""
+        self.line = 0  # the log line being fed, 1-based
+        self.read = 0
+        self.previous = ""  # the last non-blank line the excerpt was given, "" when the last was blank or cut
+        self.repeats = 0  # identical lines after it, held back
+        self.repeat_lines: list[int] = []  # their log lines, as many as could be given back instead of a count
+        self.last_repeat = 0
 
     def feed(self, line: _Line) -> None:
+        self.line += 1
+        self.read += line.cut + len(line.text)
         text, overwritten = _visible(line.text)
         cut = line.cut
         # A cut line without carriage returns is read from its start: that is where a tool puts what it means.
@@ -329,18 +427,43 @@ class _Scanner:
         if blank and self.last_blank:
             self.filtered += 1
             return
+        if not blank and not cut and text == self.previous:
+            self.repeats += 1
+            if len(self.repeat_lines) < _REPEATS_KEPT:
+                self.repeat_lines.append(self.line)
+            self.last_repeat = self.line
+            self.filtered += 1
+            return
+        self.close_repeats()
         self.last_blank = blank
+        self.previous = "" if blank or cut else text
         if cut and not overwritten:
             # Too long to keep: its start (where a tool puts what it means) and its end, marked in between.
             start = _visible(line.head)[0]
             end = text[-MAX_LINE:]
             hidden = cut + len(text) - len(start) - len(end)
             self.excerpt.inline += hidden
-            text = f"{start}\n[... {hidden} characters of this line omitted ...]\n{end}"
+            text = f"{start}\n[... {hidden} characters of {_lines(self.line, self.line)} omitted ...]\n{end}"
         chunks = [text[start : start + MAX_LINE] for start in range(0, len(text), MAX_LINE)] or [""]
         chunks[-1] += "\n"
         for chunk in chunks:
-            self.excerpt.add(chunk)
+            self.excerpt.add(chunk, self.line)
+
+    def close_repeats(self) -> None:
+        """Give the excerpt the identical lines held back: as a count, unless the count is longer."""
+        if not self.repeats:
+            return
+        times = "time" if self.repeats == 1 else "times"
+        lines = _lines(self.repeat_lines[0], self.last_repeat)
+        marker = f"[... previous line repeated {self.repeats} more {times}, {lines} ...]"
+        if len(marker) < self.repeats * (len(self.previous) + 1):
+            self.excerpt.add(marker + "\n", self.last_repeat)
+        else:
+            self.filtered -= self.repeats
+            for number in self.repeat_lines:
+                self.excerpt.add(self.previous + "\n", number)
+        self.repeats = self.last_repeat = 0
+        self.repeat_lines = []
 
     def close_block(self) -> None:
         if not self.block:
@@ -362,6 +485,10 @@ class _Scanner:
     def classify(self, text: str, *, oversized: bool) -> bool:
         """Record ``text`` as a warning or a summary; return whether it is a summary line."""
         clean = text.strip().strip("=").strip()
+        for pattern in _FAILURES:
+            if match := pattern.fullmatch(clean):
+                self.add_failure(match["test"], match["kind"], match.groupdict().get("message") or "")
+                return False
         if not clean:
             self.source = ""
         elif _SOURCE_LOCATION.fullmatch(clean):
@@ -380,6 +507,40 @@ class _Scanner:
         self.summaries.append(clean)
         self.summary_budget -= len(clean) + 1
         return True
+
+    def add_failure(self, test: str, kind: str, message: str) -> None:
+        kind = "failed" if kind == "FAILED" else "error"
+        message = " ".join(message.split())
+        if len(message) > FAILURE_MESSAGE:
+            message = message[:FAILURE_MESSAGE] + "..."
+        key = (kind, test)
+        if known := self.failures.get(key):
+            failure, lines = known
+            lines.append(self.line)
+            if message and not failure.message:  # pytest -v names a test before its short summary does
+                self.failures[key] = (Failure(test, kind, message), lines)
+        elif len(self.failures) < FAILURES_KEPT:
+            self.failures[key] = (Failure(test, kind, message), [self.line])
+        else:
+            self.failures_not_kept += 1
+
+    def unshown_failures(self) -> tuple[list[Failure], int]:
+        """The failed tests no line of the excerpt names, within ``FAILURE_BUDGET``; and how many more."""
+        first, last = self.excerpt.first_dropped, self.excerpt.last_dropped
+        listed: list[Failure] = []
+        omitted = self.failures_not_kept
+        budget = FAILURE_BUDGET
+        for failure, lines in self.failures.values():
+            if not first or any(not first <= line <= last for line in lines):
+                continue
+            size = len(failure.test) + len(failure.message) + 1
+            if size > budget:
+                omitted += 1
+                budget = 0
+                continue
+            listed.append(failure)
+            budget -= size
+        return listed, omitted
 
     def add_warning(self, message: str, location: str) -> None:
         if message in self.seen_warnings:
@@ -401,13 +562,18 @@ class _Scanner:
 
     def result(self) -> Scan:
         self.close_block()
+        self.close_repeats()
+        failures, self.omitted["failures"] = self.unshown_failures()
         return Scan(
             summaries=tuple(self.summaries),
+            failures=tuple(failures),
             warnings=tuple(self.warnings),
             advisories=tuple(self.advisories),
             output=self.excerpt.text(),
             omitted=Omitted(**self.omitted, output=self.excerpt.dropped + self.excerpt.inline),
             filtered=self.filtered,
+            last_lines=_last_lines(self.excerpt.ending()),
+            read=self.read,
         )
 
 

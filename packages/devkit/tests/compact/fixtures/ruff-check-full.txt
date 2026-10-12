@@ -1,0 +1,52 @@
+I001 [*] Import block is un-sorted or un-formatted
+ --> src/app/__init__.py:1:1
+  |
+1 | / import os, sys
+2 | | import json
+  | |___________^
+help: Organize imports
+  |
+  - import os, sys
+1 | import json
+2 + import os
+3 + import sys
+4 |
+  |
+
+F401 `os` imported but unused
+ --> src/app/__init__.py:1:8
+  |
+1 | import os, sys
+  |        ^^
+2 | import json
+  |
+help: Remove unused import
+
+F401 `sys` imported but unused
+ --> src/app/__init__.py:1:12
+  |
+1 | import os, sys
+  |            ^^^
+2 | import json
+  |
+help: Remove unused import
+
+F841 Local variable `unused` is assigned to but never used
+ --> src/app/__init__.py:7:5
+  |
+5 | def parse(text):
+6 |     data = json.loads(text)
+7 |     unused = 1
+  |     ^^^^^^
+8 |     return data["value"]
+  |
+help: Remove assignment to unused variable `unused`
+  |
+6 |     data = json.loads(text)
+  -     unused = 1
+7 |     return data["value"]
+  |
+note: This is an unsafe fix and may change runtime behavior
+
+Found 4 errors.
+[*] 1 fixable with `--fix` (1 unsafe fix available with `--fix --unsafe-fixes`).

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 
 from click.testing import CliRunner, Result
@@ -27,6 +28,18 @@ def test_a_passing_command_prints_its_result_and_summaries_only() -> None:
     assert lines[0].startswith('[RUN: "') and " outcome=passed exit=0 log=" in lines[0]
     assert lines[1:] == ['[RUN_SUMMARY: "4 passed in 0.2s"]', '[RUN_WARNING: "UserWarning: old" location=a.py:3]']
     assert len(lines) == 3 and result.stderr == ""
+
+
+def test_a_passing_command_without_a_recognized_summary_shows_its_last_lines() -> None:
+    result = _python("print('a.py:3: UserWarning: x'); print(); print('Success: no issues in 3 modules')")
+    assert result.exit_code == 0, result.output
+    assert result.stdout.splitlines()[1:] == [
+        '[RUN_LAST_LINE: "a.py:3: UserWarning: x"]',
+        '[RUN_LAST_LINE: "Success: no issues in 3 modules"]',
+        '[RUN_WARNING: "UserWarning: x" location=a.py:3]',
+    ]
+    data = json.loads(_python("print('done')", "--format", "json").stdout)
+    assert data["summaries"] == [] and data["last_lines"] == ["done"]
 
 
 def test_a_failing_command_adds_the_excerpt_and_exits_1() -> None:
@@ -56,15 +69,15 @@ def test_progress_is_filtered_out_of_the_excerpt_and_counted() -> None:
 
 
 def test_omissions_are_reported() -> None:
-    result = _python("import sys; [print('x' * 79) for _ in range(500)]; sys.exit(1)")
-    assert "[RUN_OMITTED: summaries=0 warnings=0 advisories=0 output=" in result.stdout
-    assert "characters omitted ...]" in result.stdout
+    result = _python("import sys; [print(f'{i:04d}' + 'x' * 75) for i in range(500)]; sys.exit(1)")
+    assert "[RUN_OMITTED: summaries=0 failures=0 warnings=0 advisories=0 output=" in result.stdout
+    assert "characters omitted, log lines " in result.stdout
 
 
 def test_a_passing_command_does_not_count_the_excerpt_it_does_not_show() -> None:
-    result = _python("[print('x' * 79) for _ in range(500)]")
+    result = _python("[print(f'{i:04d}' + 'x' * 75) for i in range(500)]")
     assert result.exit_code == 0 and "RUN_OMITTED" not in result.stdout
-    data = json.loads(_python("[print('x' * 79) for _ in range(500)]", "--format", "json").stdout)
+    data = json.loads(_python("[print(f'{i:04d}' + 'x' * 75) for i in range(500)]", "--format", "json").stdout)
     assert data["omitted"]["output"] == 0 and data["output"] is None
 
 
@@ -108,10 +121,10 @@ def test_json_is_one_object() -> None:
     assert data["outcome"] == "failed" and data["exit_code"] == 1
     assert data["command"][1:] == ["-c", "import sys; print('2 failed in 0.1s'); sys.exit(1)"]
     assert data["summaries"] == ["2 failed in 0.1s"] and data["output"] == "2 failed in 0.1s\n"
-    assert data["omitted"] == {"summaries": 0, "warnings": 0, "advisories": 0, "output": 0}
-    assert data["notices"] == [] and data["advisories"] == []
+    assert data["omitted"] == {"summaries": 0, "failures": 0, "warnings": 0, "advisories": 0, "output": 0}
+    assert data["notices"] == [] and data["advisories"] == [] and data["last_lines"] == []
     passed = json.loads(_python("pass", "--format", "json").stdout)
-    assert passed["outcome"] == "passed" and passed["output"] is None
+    assert passed["outcome"] == "passed" and passed["output"] is None and passed["last_lines"] == []
 
 
 def test_a_slow_command_notice_follows_the_result_and_quiet_hides_it() -> None:
@@ -147,3 +160,10 @@ def test_invalid_slow_after_is_an_argument_error() -> None:
 
 def test_a_command_is_required() -> None:
     assert _run().exit_code == 2
+
+
+def test_verbose_reports_how_much_of_the_output_the_view_shows() -> None:
+    result = _python("print('x' * 999)", "-v")
+    assert "[RUN_LAST_LINE: " in result.stdout
+    assert re.search(r"^\[INFO\] .*showed \d+ characters for 1000 of output \(\d+%\)$", result.stderr, re.MULTILINE)
+    assert "showed" not in _python("print('x' * 999)").stderr
