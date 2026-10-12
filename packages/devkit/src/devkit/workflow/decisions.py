@@ -18,6 +18,8 @@ from typing import Any
 
 import yaml
 
+from devkit.advisory import Actor, Retry
+from devkit.workflow.errors import WorkflowError, input_error
 from devkit.workflow.ids import IDENT_PATTERN, is_ident
 
 DECISIONS_DIR = "decisions"
@@ -88,11 +90,23 @@ class Decision:
 
 @dataclass(frozen=True)
 class DecisionError:
+    """A decision record that does not count (malformed, or an ignored choice), collected instead of raised."""
+
     file: str
     reason: str
+    code: str = "DECISION_RECORD_INVALID"
 
     def to_dict(self) -> dict[str, str]:
-        return {"file": self.file, "reason": self.reason}
+        return {"code": self.code, "file": self.file, "reason": self.reason}
+
+
+class DecisionRecordError(WorkflowError):
+    """A decision record file does not match the record format (``DECISION_RECORD_INVALID``)."""
+
+    code = "DECISION_RECORD_INVALID"
+    actor = Actor.DEVELOPER
+    retry = Retry.AFTER_FIX
+    input_error = True
 
 
 @dataclass
@@ -130,51 +144,51 @@ def _timestamp(value: Any) -> str:
         return value.isoformat()
     if isinstance(value, str) and value.strip():
         return value
-    raise ValueError("at: expected an ISO 8601 timestamp")
+    raise DecisionRecordError("at: expected an ISO 8601 timestamp")
 
 
 def parse_record(data: Any, file: str, seq: int) -> Decision:
     """Validate one record; ``file`` is its unit-relative path, whose name must match the request."""
     if not isinstance(data, dict):
-        raise ValueError("record must be a mapping")
+        raise DecisionRecordError("record must be a mapping")
     missing = [k for k in REQUIRED_KEYS if k not in data]
     if missing:
-        raise ValueError(f"missing keys {missing}")
+        raise DecisionRecordError(f"missing keys {missing}")
     unknown = set(data) - set(REQUIRED_KEYS) - set(OPTIONAL_KEYS)
     if unknown:
-        raise ValueError(f"unknown keys {sorted(unknown)}")
+        raise DecisionRecordError(f"unknown keys {sorted(unknown)}")
     request = data["request"]
     if not isinstance(request, str) or not REQUEST_ID.match(request):
-        raise ValueError("invalid request id")
+        raise DecisionRecordError("invalid request id")
     kind = expected_kind(request)
     if kind is None:
-        raise ValueError(f"unknown request {request!r} (gate:, check:, handoff, feedback: or return:)")
+        raise DecisionRecordError(f"unknown request {request!r} (gate:, check:, handoff, feedback: or return:)")
     if data["kind"] != kind:
-        raise ValueError(f"kind {data['kind']!r} does not match request {request!r} (expected {kind})")
+        raise DecisionRecordError(f"kind {data['kind']!r} does not match request {request!r} (expected {kind})")
     match = FILE.match(Path(file).name)
     if match is None or match.group(2) != request_slug(request):
-        raise ValueError(f"file name must be NN-{request_slug(request)}.yaml for request {request!r}")
+        raise DecisionRecordError(f"file name must be NN-{request_slug(request)}.yaml for request {request!r}")
     action = data["action"]
     if action not in ACTIONS:
-        raise ValueError(f"action must be one of {'|'.join(ACTIONS)}")
+        raise DecisionRecordError(f"action must be one of {'|'.join(ACTIONS)}")
     workflow = data["workflow"]
     if not is_ident(workflow):
-        raise ValueError("workflow: expected a workflow id")
+        raise DecisionRecordError("workflow: expected a workflow id")
     value = data.get("value")
     if value is not None:
         if kind in ("approve", "return"):
-            raise ValueError(f"a {kind} record takes no value")
+            raise DecisionRecordError(f"a {kind} record takes no value")
         if action != "accept":
-            raise ValueError("value is only valid with action accept")
+            raise DecisionRecordError("value is only valid with action accept")
         if not (isinstance(value, str) or (isinstance(value, list) and all(isinstance(v, str) for v in value))):
-            raise ValueError("value must be a string or a list of strings")
+            raise DecisionRecordError("value must be a string or a list of strings")
     elif action == "accept" and kind in ("choose", "feedback"):
-        raise ValueError(f"an accepted {kind} record needs a value")
+        raise DecisionRecordError(f"an accepted {kind} record needs a value")
     stage = data.get("stage")
     if stage is not None and not is_ident(stage):
-        raise ValueError("stage: expected a stage id")
+        raise DecisionRecordError("stage: expected a stage id")
     if kind == "approve" and not stage:
-        raise ValueError("an approve record needs the stage of the request it answers")
+        raise DecisionRecordError("an approve record needs the stage of the request it answers")
     return Decision(
         file=file,
         seq=seq,
@@ -206,7 +220,7 @@ def load_decisions(unit_dir: Path) -> Decisions:
         try:
             data = yaml.safe_load(path.read_text("utf-8"))
             out.records.append(parse_record(data, rel, seq))
-        except (OSError, UnicodeError, yaml.YAMLError, ValueError) as exc:
+        except (OSError, UnicodeError, yaml.YAMLError, DecisionRecordError) as exc:
             out.errors.append(DecisionError(rel, str(exc)))
     return out
 
@@ -226,7 +240,11 @@ def new_decision(
     """The next record for ``request``; its kind follows from the request id."""
     kind = expected_kind(request)
     if kind is None:
-        raise ValueError(f"unknown request {request!r}")
+        raise input_error(
+            f"unknown request {request!r}",
+            code="REQUEST_UNKNOWN",
+            fix="Use gate:<gate>, check:<name>, handoff, feedback:<target> or return:<stage>",
+        )
     seq = decisions.next_sequence()
     return Decision(
         file=f"{DECISIONS_DIR}/{seq:02d}-{request_slug(request)}.yaml",

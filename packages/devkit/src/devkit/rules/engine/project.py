@@ -18,6 +18,7 @@ from pathlib import Path, PurePosixPath
 
 from devkit.rules.engine.config import RulesConfig, load_rules_config
 from devkit.rules.engine.discovery import resolve_managed_rules
+from devkit.rules.engine.errors import RuleProblem, RulesDirError, TargetError
 from devkit.rules.engine.evaluator import EvaluationResult, evaluate
 from devkit.rules.engine.models import Phase, Rule, RuleContext
 from devkit.rules.engine.registry import RuleRegistry, default_registry
@@ -26,14 +27,6 @@ from devkit.rules.workspace.markdown import local_target
 from devkit.rules.workspace.snapshot import Snapshot, materialize
 
 SNAPSHOT_PREFIX = "devkit-rules-snapshot-"
-
-
-class TargetError(ValueError):
-    """An explicit target is outside the workspace or is not an existing file or directory."""
-
-
-class RulesDirError(ValueError):
-    """``rules_dir`` cannot be used for a Git snapshot run (outside the repository, or not in the snapshot)."""
 
 
 @dataclass(frozen=True)
@@ -56,14 +49,14 @@ class ProjectRun:
     rules_dir: Path | None
     context: RuleContext | None
     result: EvaluationResult
-    load_errors: tuple[str, ...] = ()
+    load_errors: tuple[RuleProblem, ...] = ()
 
     @property
     def rules(self) -> list[Rule]:
         return self.registry.get_all()
 
     @property
-    def errors(self) -> list[str]:
+    def errors(self) -> list[RuleProblem]:
         """Load errors followed by evaluation errors; any of them means the run could not complete."""
         return [*self.load_errors, *self.result.errors]
 
@@ -106,7 +99,7 @@ def expand_targets(workspace_root: Path, cache: WorkspaceCache, targets: Sequenc
         if not absolute.is_relative_to(workspace_root):
             absolute = absolute.resolve()
         if not absolute.is_relative_to(workspace_root):
-            raise TargetError(f"{target} is outside the workspace {workspace_root}")
+            raise TargetError(f"{target} is outside the workspace {workspace_root}", target_files=[str(target)])
         if absolute.is_dir():
             for found in cache.find_files(absolute, extensions=None):
                 rel = found.relative_to(workspace_root).as_posix()
@@ -114,12 +107,17 @@ def expand_targets(workspace_root: Path, cache: WorkspaceCache, targets: Sequenc
                     files.append(rel)
         elif absolute.is_file():
             if not absolute.resolve().is_relative_to(workspace_root):
-                raise TargetError(f"{target} is a symlink that resolves outside the workspace {workspace_root}")
+                raise TargetError(
+                    f"{target} is a symlink that resolves outside the workspace {workspace_root}",
+                    target_files=[str(target)],
+                )
             relative = absolute.relative_to(workspace_root).as_posix()
             if relative not in files:
                 files.append(relative)
         else:
-            raise TargetError(f"{target} is not an existing file or directory inside the workspace")
+            raise TargetError(
+                f"{target} is not an existing file or directory inside the workspace", target_files=[str(target)]
+            )
     return files
 
 
@@ -210,12 +208,16 @@ def run_project_rules(
     Markdown files whose links point at a path the snapshot deletes. ``rules_dir`` must lie
     inside the repository and is read from the snapshot (``RulesDirError``
     otherwise), so unstaged rule edits cannot change the result. A snapshot
-    run cannot take ``targets`` or ``fix``.
+    run cannot take ``targets`` or ``fix``, and ``snapshot`` must come from
+    ``root``; violating that contract is a programming error (``ValueError``).
 
-    Raises ``ConfigError`` for an invalid ``[rules]`` table, ``TargetError``
-    for an invalid explicit target, and ``SnapshotError`` when the snapshot
-    cannot be materialized. Rule loading problems are returned in
-    ``load_errors``; policy and rule execution errors in ``result.errors``.
+    Raises ``ConfigError`` (``RULES_CONFIG_INVALID``) for an invalid ``[rules]``
+    table, ``TargetError`` (``RULES_TARGET_INVALID``) for an invalid explicit
+    target, ``RulesDirError`` (``RULES_DIR_INVALID``) and ``SnapshotError``
+    (``RULES_SNAPSHOT_FAILED``) when the snapshot cannot be materialized. Rule
+    loading problems (``RuleLoadError``) are returned in ``load_errors``;
+    policy problems (``PolicyError``, ``SettingsError``) and rule execution
+    errors (``RuleExecutionError``) in ``result.errors``.
     """
     if snapshot is None:
         return _run(
@@ -244,7 +246,9 @@ def run_project_rules(
             if not snapshot_rules.is_dir():
                 raise RulesDirError(
                     f"rules directory {rules_rel.as_posix()} is not in the {snapshot.mode} snapshot; "
-                    "commit or stage it (untracked and ignored files are not part of a snapshot)"
+                    "commit or stage it (untracked and ignored files are not part of a snapshot)",
+                    target_files=["--rules-dir"],
+                    fix=f"git add {rules_rel.as_posix()}",
                 )
         return _run(
             workspace,
@@ -295,6 +299,8 @@ def _snapshot_rules_dir(snapshot: Snapshot, rules_dir: Path | None) -> Path | No
     if not resolved.is_relative_to(snapshot.root):
         raise RulesDirError(
             f"rules directory {resolved} is outside the repository {snapshot.root}; a snapshot run reads rules "
-            "from the snapshot only, so keep custom rules in the repository"
+            "from the snapshot only, so keep custom rules in the repository",
+            target_files=["--rules-dir"],
+            fix="Move the custom rules into the repository and pass that directory to --rules-dir",
         )
     return resolved.relative_to(snapshot.root)

@@ -15,8 +15,10 @@ from __future__ import annotations
 import hashlib
 import re
 
-from ..bundles.common import BundleError
+from ..errors import DistributionError
 from .workspace import AGENTS_FILE
+
+GUIDANCE_BLOCK_INVALID = "GUIDANCE_BLOCK_INVALID"
 
 START = "<!-- DEVKIT:START -->"
 END = "<!-- DEVKIT:END -->"
@@ -53,7 +55,7 @@ def render(bundles: list[str], entry_skills: list[str]) -> str:
         )
     for kind in sorted(entry_skills):
         if kind not in ENTRY_SKILLS:
-            raise BundleError(f"unknown entry skill kind: {kind}")
+            raise DistributionError(f"unknown entry skill kind: {kind}")
     for kind in sorted(entry_skills):
         lines.append(f"- Entry skill {ENTRY_SKILLS[kind]}.")
     lines.extend(
@@ -89,9 +91,11 @@ def _locate(text: str) -> tuple[int, int] | None:
         or text.count(END) != 1
         or ends[0].start() < starts[0].end()
     ):
-        raise BundleError(
+        raise DistributionError.invalid_input(
             f"malformed guidance block in {AGENTS_FILE}: expected exactly one {START} line and one {END} line,"
-            " each on a line of its own"
+            " each on a line of its own",
+            code=GUIDANCE_BLOCK_INVALID,
+            target_files=[AGENTS_FILE],
         )
     end = ends[0].end()
     if text[end - 1 : end] == "\r":
@@ -105,7 +109,9 @@ def decode(data: bytes | None) -> str | None:
     try:
         return data.decode("utf-8")
     except UnicodeDecodeError as exc:
-        raise BundleError(f"{AGENTS_FILE} is not UTF-8") from exc
+        raise DistributionError.invalid_input(
+            f"{AGENTS_FILE} is not UTF-8", code=GUIDANCE_BLOCK_INVALID, target_files=[AGENTS_FILE]
+        ) from exc
 
 
 def extract(text: str | None) -> str | None:

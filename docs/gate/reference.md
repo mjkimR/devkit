@@ -22,6 +22,8 @@ uv run devkit sync                    # deploys the gate files and records them 
 
 `devkit gate run <stage> [hook args]` is what the wrappers call; run it by hand to test a stage. Set `DEVKIT_GATES_VERBOSE=1` (or pass `-v`) to also see passed and skipped gates. `git commit --no-verify` skips `pre-commit` and `commit-msg` as usual. Existing executable hooks are kept: `install --force` moves them to `<hook>.pre-gate` and the wrapper runs them before the gates. The wrapper prefers the work tree's `.venv` interpreter when `devkit` is installed there; see [Hook Wrappers](overview.md#3-hook-wrappers).
 
+Exit codes: `install`/`uninstall` exit `0` or `2`; `status` exits `1` when it reports a problem that would fail a commit and `2` outside a Git work tree; `run` on a blocking stage exits `1` when a gate refused the commit or the setup has a problem and `2` when the stage cannot run; `run post-commit` always exits `0`. Codes and the full table: [Commit Gate Overview, CLI](overview.md#7-cli).
+
 ## Built-in gates
 
 | Gate | Stage | Default | Behavior |

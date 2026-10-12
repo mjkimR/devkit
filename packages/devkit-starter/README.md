@@ -1,9 +1,9 @@
 # devkit-starter
 
 Example content-only wheel for `devkit sync`. Its registered resource module
-contains `bundle/bundle.toml`, an instruction, a playbook, and a skill. The
-bundle is mirrored at [`examples/bundles/starter`](../../examples/bundles/starter)
-(a test keeps both copies identical).
+contains `bundle/bundle.toml`, an instruction, a playbook, and a skill. This
+package is the starter example bundle's only copy:
+[`src/devkit_starter/bundle`](src/devkit_starter/bundle).
 
 ```bash
 uv add --dev devkit devkit-starter

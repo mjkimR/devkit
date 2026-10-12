@@ -19,7 +19,7 @@ from collections.abc import Iterable
 from devkit.advisory import Actor, Retry
 from devkit.gate.base import BaseGate
 from devkit.gate.models import GateConfigError, GateContext, GateError, GateResult, Stage
-from devkit.rules import ConfigError, SnapshotError, git_snapshot, run_project_rules
+from devkit.rules import ConfigError, RuleProblem, SnapshotError, git_snapshot, run_project_rules
 
 MAX_DETAIL_LINES = 40
 
@@ -66,18 +66,21 @@ class StagedRulesGate(BaseGate):
         if run.load_errors:
             raise GateError(
                 "synchronized rules could not be loaded",
-                *_cap(run.load_errors),
+                *_cap(_problem(problem) for problem in run.load_errors),
                 code="GATE_RULES_LOAD_FAILED",
                 actor=Actor.DEVELOPER,
                 retry=Retry.AFTER_FIX,
-                fix="devkit sync  (restores managed rule files recorded in the receipt), then stage the receipt",
+                fix=(
+                    "devkit sync (restores managed rule files; restore a malformed receipt from version control first), "
+                    "or devkit override create <bundle>:<asset> to keep an edited rule; then stage the result"
+                ),
             )
 
         result = run.result
         if result.errors:
             raise GateError(
                 "rule evaluation failed on the staged tree",
-                *_cap(result.errors),
+                *_cap(_problem(problem) for problem in result.errors),
                 code="GATE_RULES_FAILED",
                 actor=Actor.DEVELOPER,
                 retry=Retry.AFTER_FIX,
@@ -104,6 +107,10 @@ class StagedRulesGate(BaseGate):
         if warnings:
             note += f", {warnings} warning(s)"
         return GateResult.passed(note)
+
+
+def _problem(problem: RuleProblem) -> str:
+    return f"({problem.code}) {problem}"
 
 
 def _cap(lines: Iterable[object]) -> list[str]:

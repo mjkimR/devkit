@@ -9,7 +9,7 @@ from typing import Any
 from devkit.core import frontmatter
 from devkit.core.errors import FrontmatterError
 
-from .common import BundleError
+from ..errors import BundleError
 
 FIELDS = {"name", "description", "aliases"}
 # Extension keys: kept for other tools, never indexed by search nor shown by devkit.

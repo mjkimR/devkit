@@ -7,6 +7,7 @@ from pathlib import Path
 
 import click
 
+from devkit.advisory import ExitCode
 from devkit.workflow.cli.app import FORMAT, UNIT, WORKSPACE, Reported, boundary, cli, echo_json, is_json, workspace
 from devkit.workflow.decisions import utc_timestamp
 from devkit.workflow.envelope import KIND, compose, load_envelopes, render_envelope, skeleton, write_next
@@ -152,6 +153,7 @@ def envelope_check_cmd(workspace_root: str | None, unit: str, output_format: str
             f"{len(errors)} envelope file(s) of {unit_rel} are malformed",
             *(f"{err.file}: {err.reason}" for err in errors),
             code="ENVELOPE_INVALID",
+            exit_code=ExitCode.FINDINGS,
             target_files=[f"{unit_rel}/{err.file}" for err in errors],
             fix="Fix or remove the listed files; the contract is docs/workflow/definition-and-checks.md section 3",
         )

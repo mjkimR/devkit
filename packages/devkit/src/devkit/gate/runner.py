@@ -8,9 +8,9 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Any
 
-from devkit.advisory import Actor, AdvisoryError, Retry, as_advisory_error
+from devkit.advisory import AdvisoryError, as_advisory_error
 from devkit.gate.config import GatesConfig, resolve_settings
-from devkit.gate.models import GateConfigError, GateContext, GateError, GateResult, Outcome, Stage
+from devkit.gate.models import RESULT_INVALID, GateConfigError, GateContext, GateResult, Outcome, Stage
 from devkit.gate.registry import GateRegistry
 
 INVALID_SETTINGS_NOTE = "invalid settings"
@@ -71,12 +71,11 @@ def validate(registry: GateRegistry, config: GatesConfig) -> Validation:
     return Validation(MappingProxyType(settings), tuple(errors))
 
 
-def _invalid_result(gate_id: str, result: object) -> GateError:
-    return GateError(
+def _invalid_result(gate_id: str, result: object) -> GateConfigError:
+    return GateConfigError(
         f"gate {gate_id!r} returned {type(result).__name__}; run() returns a GateResult or None",
-        code="GATE_RESULT_INVALID",
-        actor=Actor.DEVELOPER,
-        retry=Retry.AFTER_FIX,
+        code=RESULT_INVALID,
+        input_error=False,
     )
 
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from devkit.core import frontmatter
 from devkit.core.errors import FrontmatterError
 
-from .common import BundleError
+from ..errors import BundleError
 
 
 def read_instruction_header(data: bytes, context: str) -> str:

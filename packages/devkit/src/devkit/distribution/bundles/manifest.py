@@ -10,7 +10,8 @@ from typing import Any
 from devkit.core.errors import UnsafePathError
 from devkit.core.paths import normalize_relpath
 
-from .common import AGENT_NAMES, ALL, SLUG, VERSION, BundleError
+from ..errors import BundleError, SelectionError
+from .common import AGENT_NAMES, ALL, SLUG, VERSION
 from .instructions import read_instruction_header
 from .playbooks import playbook_entry, read_playbook_header
 from .subagents import read_contract, subagent_entry
@@ -28,7 +29,7 @@ SEED_FORBIDDEN_FILES = frozenset({"agents.md"})
 IGNORED_NAMES = frozenset({".DS_Store", "__pycache__"})
 IGNORED_SUFFIXES = (".pyc",)
 
-__all__ = ["ALL", "SLUG", "Asset", "Bundle", "BundleError", "load_bundle", "safe_source", "seed_target", "source_files"]
+__all__ = ["ALL", "SLUG", "Asset", "Bundle", "load_bundle", "safe_source", "seed_target", "source_files"]
 
 
 @dataclass(frozen=True)
@@ -60,7 +61,7 @@ class Bundle:
     def select(self, presets: list[str] | tuple[str, ...]) -> set[str]:
         """Return the union of asset IDs selected by ``presets``."""
         if not presets:
-            raise BundleError(f"{self.name}: at least one preset is required")
+            raise SelectionError(f"{self.name}: at least one preset is required")
         selected: set[str] = set()
         for preset in presets:
             if preset == ALL:
@@ -68,7 +69,10 @@ class Bundle:
             elif preset in self.presets:
                 selected.update(self.presets[preset])
             else:
-                raise BundleError(f"{self.name}: unknown preset {preset}; available: {', '.join(self.preset_names)}")
+                raise SelectionError(
+                    f"{self.name}: unknown preset {preset}; available: {', '.join(self.preset_names)}",
+                    fix=f"Select one of: {', '.join(f'{self.name}:{name}' for name in self.preset_names)}",
+                )
         return selected
 
     @property

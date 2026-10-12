@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from devkit.distribution.bundles import BundleError
+from devkit.distribution.errors import ConflictError, OverrideDriftError, SelectionError
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.discovery import InstalledBundle
 from devkit.distribution.installation.override_commands import (
@@ -105,7 +105,7 @@ def test_directory_override_is_tracked_and_its_drift_can_block(item: InstalledBu
     drift = sync_project(target, [newer])["drift"]
     assert [(entry["bundle"], entry["asset"]) for entry in drift] == [("team", "policy")]
     _set_override_drift(target, "block")
-    with pytest.raises(BundleError, match="team:policy"):
+    with pytest.raises(OverrideDriftError, match="team:policy"):
         sync_project(target, [newer])
     accept_override(target, [newer], "team:policy")
     assert sync_project(target, [newer])["drift"] == []
@@ -126,19 +126,19 @@ def test_drift_covers_every_upstream_file_of_an_overridden_skill(item: Installed
 
 def test_accept_requires_a_tracked_override(item: InstalledBundle, target: Path) -> None:
     sync_project(target, [item])
-    with pytest.raises(BundleError, match="no tracked override"):
+    with pytest.raises(SelectionError, match="no tracked override"):
         accept_override(target, [item], "team:guide")
 
 
 def test_create_refuses_what_an_override_cannot_affect(item: InstalledBundle, target: Path) -> None:
     sync_project(target, [item])
-    with pytest.raises(BundleError, match="seeded asset"):
+    with pytest.raises(SelectionError, match="seeded asset"):
         create_override(target, [item], "team:scaffold")
     update_config(target, presets={"team": ["slim"]})
-    with pytest.raises(BundleError, match="not part of the selected presets"):
+    with pytest.raises(SelectionError, match="not part of the selected presets"):
         create_override(target, [item], "team:review")
     update_config(target, deselect=["team"])
-    with pytest.raises(BundleError, match="bundle is not selected"):
+    with pytest.raises(SelectionError, match="bundle is not selected"):
         create_override(target, [item], "team:guide")
     assert not (target / OVERRIDES).exists()
 
@@ -146,7 +146,7 @@ def test_create_refuses_what_an_override_cannot_affect(item: InstalledBundle, ta
 def test_create_rolls_back_when_the_sync_fails(item: InstalledBundle, target: Path) -> None:
     sync_project(target, [item])
     (target / ".devkit/managed/team/rules/no_todo.py").write_text("edited by hand\n")
-    with pytest.raises(BundleError, match="user-modified"):
+    with pytest.raises(ConflictError, match="user-modified"):
         create_override(target, [item], "team:guide")
     assert not (target / OVERRIDES).exists()
 
@@ -158,7 +158,7 @@ def test_create_force_restores_previous_override_on_failure(item: InstalledBundl
     override.write_text(instruction("guide", "Ours.\n"))
     sync_project(target, [item])
     (target / ".devkit/managed/team/rules/no_todo.py").write_text("edited by hand\n")
-    with pytest.raises(BundleError, match="user-modified"):
+    with pytest.raises(ConflictError, match="user-modified"):
         create_override(target, [item], "team:guide", force=True)
     assert override.read_text() == instruction("guide", "Ours.\n")
 
@@ -167,7 +167,7 @@ def test_remove_rolls_back_when_the_sync_fails(item: InstalledBundle, target: Pa
     sync_project(target, [item])
     create_override(target, [item], "team:review")
     (target / ".devkit/managed/team/guide.md").write_text("edited by hand\n")
-    with pytest.raises(BundleError, match="user-modified"):
+    with pytest.raises(ConflictError, match="user-modified"):
         remove_override(target, [item], "team:review")
     assert (target / OVERRIDES / "team/skills/review/SKILL.md").is_file()
     assert (target / OVERRIDES / ".baseline/team/skills/review/reference.md").is_file()
@@ -182,7 +182,7 @@ def test_remove_prunes_override_directories(item: InstalledBundle, target: Path)
         f"{OVERRIDES}/team/skills/review/reference.md",
     ]
     assert not (target / OVERRIDES).exists()
-    with pytest.raises(BundleError, match="no override found"):
+    with pytest.raises(SelectionError, match="no override found"):
         remove_override(target, [item], "team:review")
 
 

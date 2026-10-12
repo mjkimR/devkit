@@ -18,7 +18,7 @@ from devkit.core.errors import UnsafePathError
 from devkit.core.paths import normalize_relpath
 from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH
 
-from ..bundles.common import BundleError
+from ..errors import UnsafeWorkspaceError
 
 RECEIPT = RECEIPT_PATH
 CONFIG = CONFIG_PATH
@@ -71,16 +71,16 @@ def checked_path(root: Path, name: str) -> Path:
     try:
         rel = normalize_relpath(name, canonical=True)
     except UnsafePathError as exc:
-        raise BundleError(f"unsafe deployment path: {name}") from exc
+        raise UnsafeWorkspaceError(f"unsafe deployment path: {name}", target_files=[name]) from exc
     if "\\" in name:
-        raise BundleError(f"unsafe deployment path: {name}")
+        raise UnsafeWorkspaceError(f"unsafe deployment path: {name}", target_files=[name])
     path = root
     for part in rel.parts:
         path /= part
         if path.is_symlink():
-            raise BundleError(f"deployment symlink: {name}")
+            raise UnsafeWorkspaceError(f"deployment symlink: {name}", target_files=[name])
     if path.exists() and not path.is_file():
-        raise BundleError(f"nonregular deployment path: {name}")
+        raise UnsafeWorkspaceError(f"nonregular deployment path: {name}", target_files=[name])
     return path
 
 
@@ -98,14 +98,14 @@ def project_path(root: Path, name: str) -> Path:
         or folded == CONFIG.casefold()
         or folded.startswith(OVERRIDES.casefold() + "/")
     ):
-        raise BundleError(f"unsafe deployment path: {name}")
+        raise UnsafeWorkspaceError(f"unsafe deployment path: {name}", target_files=[name])
     return checked_path(root, name)
 
 
 def owned_path(root: Path, name: str) -> Path:
     """A path the receipt's ``files`` map may own: managed cache or agent projection."""
     if name in METADATA or not name.startswith(OWNED_PREFIXES):
-        raise BundleError(f"unsafe deployment path: {name}")
+        raise UnsafeWorkspaceError(f"unsafe deployment path: {name}", target_files=[name])
     return project_path(root, name)
 
 

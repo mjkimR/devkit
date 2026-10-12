@@ -9,8 +9,10 @@ from types import SimpleNamespace
 
 import pytest
 from click.testing import CliRunner
-from devkit.distribution.bundles import BundleError, load_bundle
+from devkit.core.errors import ConfigError
+from devkit.distribution.bundles import load_bundle
 from devkit.distribution.cli import cli
+from devkit.distribution.errors import PackageError
 from devkit.distribution.installation import discovery
 from devkit.distribution.installation.config import read_config, update_config
 from devkit.distribution.installation.discovery import InstalledBundle, discover_bundles
@@ -87,7 +89,7 @@ def test_one_run_selection_overrides_an_opt_out(bundles: list[InstalledBundle], 
 def test_invalid_preset_values_are_rejected(target: Path, value: str) -> None:
     (target / ".devkit").mkdir()
     (target / CONFIG).write_text(f"[presets]\nkit = {value}\n")
-    with pytest.raises(BundleError, match="invalid presets"):
+    with pytest.raises(ConfigError, match="invalid presets"):
         read_config(target)
 
 
@@ -114,7 +116,7 @@ def test_builtin_without_default_preset_is_rejected(tmp_path: Path, monkeypatch:
     )
     monkeypatch.setattr(discovery.resources, "files", lambda name: module)
     monkeypatch.setattr(discovery.metadata, "entry_points", lambda **kwargs: [entry])
-    with pytest.raises(BundleError, match="must declare default_preset"), discover_bundles():
+    with pytest.raises(PackageError, match="must declare default_preset"), discover_bundles():
         pass
     entry.dist.metadata["Name"] = "kit-content"
     with discover_bundles() as found:

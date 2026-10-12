@@ -137,7 +137,7 @@ def return_to(
             code="RETURN_INVALID",
             fix=f"Use one of: {', '.join(s.id for s in ref.doc.stages)}",
         )
-    result = ws.evaluate_unit(ref, lint=lint, record_returns=False)
+    result = ws.evaluate_unit(ref, lint=lint)
     if result.stage is not None and target > ref.doc.stage_index(result.stage.id):
         raise input_error(
             f"stage {stage!r} comes after the current stage {result.stage.id!r}",

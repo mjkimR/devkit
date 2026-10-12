@@ -68,8 +68,10 @@ def test_resolve_managed_rules_reports_missing_file(tmp_path: Path) -> None:
     managed = resolve_managed_rules(tmp_path)
     assert managed.paths == ()
     assert len(managed.errors) == 1
-    assert "synchronized rule .devkit/managed/team/r.py is missing" in managed.errors[0]
-    assert "devkit sync" in managed.errors[0]
+    assert "synchronized rule .devkit/managed/team/r.py is missing" in str(managed.errors[0])
+    assert "devkit sync" in str(managed.errors[0])
+    assert managed.errors[0].code == "RULES_LOAD_FAILED"
+    assert managed.errors[0].target_files == (".devkit/managed/team/r.py",) and managed.errors[0].fix
 
 
 def test_resolve_managed_rules_without_receipt_or_rule_assets_is_empty(tmp_path: Path) -> None:
@@ -93,14 +95,15 @@ def test_resolve_managed_rules_reports_a_malformed_receipt(tmp_path: Path, conte
     managed = resolve_managed_rules(tmp_path)
     assert managed.paths == ()
     assert len(managed.errors) == 1
-    assert managed.errors[0].startswith("invalid installation receipt: .devkit/installation.json")
-    assert problem in managed.errors[0] and "devkit sync" in managed.errors[0]
+    assert str(managed.errors[0]).startswith("invalid installation receipt: .devkit/installation.json")
+    assert problem in str(managed.errors[0]) and "devkit sync" in str(managed.errors[0])
+    assert managed.errors[0].target_files == (".devkit/installation.json",)
 
 
 def test_resolve_managed_rules_rejects_unsafe_receipt_paths(tmp_path: Path) -> None:
     _receipt(tmp_path, [{"bundle": "team", "id": "rules", "kind": "rule", "paths": ["../outside/rule.py"]}])
     managed = resolve_managed_rules(tmp_path)
-    assert managed.paths == () and "unsafe path" in managed.errors[0]
+    assert managed.paths == () and "unsafe path" in str(managed.errors[0])
 
 
 def test_resolve_managed_rules_falls_back_to_source_root_by_hash(tmp_path: Path) -> None:
@@ -132,9 +135,42 @@ def test_resolve_managed_rules_falls_back_to_source_root_by_hash(tmp_path: Path)
     )
     managed = resolve_managed_rules(snapshot, source_root=source)
     assert managed.paths == (source / ".devkit/managed/team/rules/a.py", snapshot / ".devkit/overrides/team/rules/b.py")
-    assert [e.split(";")[0] for e in managed.errors] == [
+    assert [str(e).split(";")[0] for e in managed.errors] == [
         "synchronized rule .devkit/managed/team/rules/drift.py differs from the hash in the receipt",
         "synchronized rule .devkit/managed/team/rules/gone.py is missing from the working tree",
         "synchronized rule .devkit/managed/team/rules/unhashed.py has no hash in the receipt",
     ]
-    assert all("devkit sync" in e for e in managed.errors)
+    assert all("devkit sync" in str(e) for e in managed.errors)
+
+
+def test_plain_check_verifies_managed_rules_against_the_receipt_hash(tmp_path: Path) -> None:
+    managed_rel = ".devkit/managed/team/rules/a.py"
+    override_rel = ".devkit/overrides/team/rules/b.py"
+    (tmp_path / ".devkit/managed/team/rules").mkdir(parents=True)
+    (tmp_path / managed_rel).write_text(RULE.format(n="a"))
+    (tmp_path / ".devkit/overrides/team/rules").mkdir(parents=True)
+    (tmp_path / override_rel).write_text(RULE.format(n="b") + "# a project override, not recorded\n")
+    _receipt(
+        tmp_path,
+        [{"bundle": "team", "id": "rules", "kind": "rule", "paths": [managed_rel, override_rel]}],
+        files={managed_rel: _sha(RULE.format(n="a"))},
+    )
+    assert resolve_managed_rules(tmp_path) == ManagedRules((tmp_path / managed_rel, tmp_path / override_rel), ())
+
+    (tmp_path / managed_rel).write_text(RULE.format(n="a") + "# edited by hand\n")
+    managed = resolve_managed_rules(tmp_path)
+    assert managed.paths == (tmp_path / override_rel,)
+    [error] = managed.errors
+    assert error.code == "RULES_LOAD_FAILED" and error.target_files == (managed_rel,)
+    assert str(error).startswith(f"synchronized rule {managed_rel} differs from the hash in the receipt")
+    assert error.fix is not None and "devkit sync" in error.fix and "devkit override create team:rules" in error.fix
+
+
+def test_plain_and_snapshot_runs_share_the_check_with_the_gate_registry() -> None:
+    import inspect
+
+    from devkit.gate import registry
+    from devkit.rules.engine import discovery
+
+    for module in (discovery, registry):
+        assert "verified_asset_file(" in inspect.getsource(module)

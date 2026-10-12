@@ -6,8 +6,9 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from devkit.distribution.bundles import BundleError, load_bundle
+from devkit.distribution.bundles import load_bundle
 from devkit.distribution.cli import cli
+from devkit.distribution.errors import ArgumentError, SelectionError
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.context import get_context
 from devkit.distribution.installation.discovery import InstalledBundle
@@ -218,11 +219,11 @@ def test_override_cli_commands(installed: list[InstalledBundle], target: Path, m
 
 
 def test_override_validation_errors(installed: list[InstalledBundle], target: Path) -> None:
-    with pytest.raises(BundleError, match="expected bundle:asset selector"):
+    with pytest.raises(ArgumentError, match="expected bundle:asset selector"):
         create_override(target, installed, "invalid")
 
-    with pytest.raises(BundleError, match="bundle is not installed"):
+    with pytest.raises(SelectionError, match="bundle is not installed"):
         create_override(target, installed, "unknown:asset")
 
-    with pytest.raises(BundleError, match="asset not found"):
+    with pytest.raises(SelectionError, match="asset not found"):
         create_override(target, installed, "team:unknown")

@@ -8,8 +8,18 @@ from types import SimpleNamespace
 
 import pytest
 from click.testing import CliRunner
-from devkit.distribution.bundles import BundleError, load_bundle
+from devkit.core.errors import ConfigError, ReceiptError
+from devkit.distribution.bundles import load_bundle
 from devkit.distribution.cli import cli
+from devkit.distribution.errors import (
+    ConflictError,
+    LockHeldError,
+    PackageError,
+    PendingTransactionError,
+    RecoveryError,
+    SelectionError,
+    UnsafeWorkspaceError,
+)
 from devkit.distribution.installation import discovery, transaction
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.discovery import InstalledBundle, discover_bundles
@@ -119,7 +129,7 @@ def test_user_edit_blocks_all_writes(installed: list[InstalledBundle], target: P
         assert guide.read_text() == "user edit"
         assert ".devkit/managed/team/guide.md" not in json.loads((target / RECEIPT).read_text())["files"]
         return
-    with pytest.raises(BundleError, match="user-modified"):
+    with pytest.raises(ConflictError, match="user-modified"):
         sync_project(target, installed)
     assert guide.read_text() == "user edit"
     assert (target / RECEIPT).read_bytes() == receipt
@@ -128,7 +138,7 @@ def test_user_edit_blocks_all_writes(installed: list[InstalledBundle], target: P
 def test_mode_edit_is_protected(installed: list[InstalledBundle], target: Path) -> None:
     sync_project(target, installed)
     (target / ".devkit/managed/team/guide.md").chmod(0o755)
-    with pytest.raises(BundleError, match="user-modified"):
+    with pytest.raises(ConflictError, match="user-modified"):
         sync_project(target, installed)
 
 
@@ -146,7 +156,7 @@ def test_unowned_native_collision_preserves_other_tool(installed: list[Installed
     agent = target / ".codex/agents/reviewer.toml"
     agent.parent.mkdir(parents=True)
     agent.write_text("owned by another tool")
-    with pytest.raises(BundleError, match="unowned"):
+    with pytest.raises(ConflictError, match="unowned"):
         sync_project(target, installed, agents=["codex"])
     assert agent.read_text() == "owned by another tool"
     assert not (target / RECEIPT).exists()
@@ -163,7 +173,7 @@ def test_dry_run_is_read_only_and_missing_variant_is_reported(installed: list[In
 
 def test_destination_symlink_rejected(installed: list[InstalledBundle], target: Path, tmp_path: Path) -> None:
     (target / ".devkit/managed").symlink_to(tmp_path / "source", target_is_directory=True)
-    with pytest.raises(BundleError, match="deployment symlink"):
+    with pytest.raises(UnsafeWorkspaceError, match="deployment symlink"):
         sync_project(target, installed)
 
 
@@ -173,7 +183,7 @@ def test_receipt_path_escape_rejected(installed: list[InstalledBundle], target: 
     receipt = json.loads(path.read_text())
     receipt["files"][".devkit/managed/../../outside"] = {"sha256": "a" * 64, "mode": 0o644}
     path.write_text(json.dumps(receipt))
-    with pytest.raises(BundleError, match="unsafe path"):
+    with pytest.raises(ReceiptError, match="unsafe path"):
         sync_project(target, installed)
 
 
@@ -192,11 +202,11 @@ def test_interruption_recovery_and_later_edit_protection(
         sync_project(target, installed)
     monkeypatch.setattr(transaction, "atomic_write", original)
     assert (target / JOURNAL).exists()
-    with pytest.raises(BundleError, match="pending transaction"):
+    with pytest.raises(PendingTransactionError, match="interrupted synchronization"):
         sync_project(target, installed)
     guide = target / ".devkit/managed/team/guide.md"
     guide.write_text("subsequent edit")
-    with pytest.raises(BundleError, match="subsequent edit"):
+    with pytest.raises(RecoveryError, match="subsequent edit"):
         recover_project(target)
     assert guide.read_text() == "subsequent edit"
     guide.write_bytes((installed[0].bundle.root / "guide.md").read_bytes())
@@ -270,12 +280,12 @@ def test_discovery_uses_resource_module_and_rejects_duplicate(
         assert found[0].bundle.name == "team"
         assert (found[0].bundle.root / "skills/review/SKILL.md").is_file()
     monkeypatch.setattr(discovery.metadata, "entry_points", lambda **kwargs: [starter, starter])
-    with pytest.raises(BundleError, match="duplicate installed bundle"), discover_bundles():
+    with pytest.raises(PackageError, match="duplicate installed bundle"), discover_bundles():
         pass
 
 
 def test_project_lock_contention(installed: list[InstalledBundle], target: Path) -> None:
-    with transaction.project_lock(target), pytest.raises(BundleError, match="project lock"):
+    with transaction.project_lock(target), pytest.raises(LockHeldError, match="project lock"):
         sync_project(target, installed)
 
 
@@ -283,7 +293,7 @@ def test_native_name_collision_between_packages(installed: list[InstalledBundle]
     from dataclasses import replace
 
     other = InstalledBundle("other-content", "0.1.0", replace(installed[0].bundle, name="other"))
-    with pytest.raises(BundleError, match="destination collision"):
+    with pytest.raises(ConflictError, match="destination collision"):
         sync_project(target, [*installed, other], agents=["codex"], presets={"other": ["all"]})
     assert not (target / RECEIPT).exists()
 
@@ -341,9 +351,9 @@ def test_preset_union_and_one_run_selection(installed: list[InstalledBundle], ta
 
 
 def test_selected_bundle_must_be_installed(installed: list[InstalledBundle], target: Path) -> None:
-    with pytest.raises(BundleError, match=r"selected bundle is not installed: \['team'\]"):
+    with pytest.raises(SelectionError, match=r"selected bundle is not installed: \['team'\]"):
         sync_project(target, [])
-    with pytest.raises(BundleError, match="unknown preset missing"):
+    with pytest.raises(SelectionError, match="unknown preset missing"):
         sync_project(target, installed, presets={"team": ["missing"]})
 
 
@@ -372,7 +382,7 @@ def test_selected_bundle_must_be_installed(installed: list[InstalledBundle], tar
 )
 def test_invalid_project_config(installed: list[InstalledBundle], bare: Path, content: str, error_match: str) -> None:
     write_config(bare, content)
-    with pytest.raises(BundleError, match=error_match):
+    with pytest.raises(ConfigError, match=error_match):
         sync_project(bare, installed)
 
 
@@ -513,7 +523,7 @@ def test_receipt_cannot_own_config(installed: list[InstalledBundle], target: Pat
     receipt = json.loads(path.read_text())
     receipt["files"][CONFIG] = {"sha256": "a" * 64, "mode": 0o644}
     path.write_text(json.dumps(receipt))
-    with pytest.raises(BundleError, match="receipt cannot own installation metadata"):
+    with pytest.raises(ReceiptError, match="receipt cannot own installation metadata"):
         sync_project(target, installed)
 
 
@@ -523,7 +533,7 @@ def test_receipt_rejects_invalid_presets(installed: list[InstalledBundle], targe
     receipt = json.loads(path.read_text())
     receipt["selection"]["presets"] = {"team": "minimal"}
     path.write_text(json.dumps(receipt))
-    with pytest.raises(BundleError, match=r"selection\.presets"):
+    with pytest.raises(ReceiptError, match=r"selection\.presets"):
         sync_project(target, installed)
 
 

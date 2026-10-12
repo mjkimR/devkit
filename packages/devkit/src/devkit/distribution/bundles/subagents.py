@@ -19,7 +19,8 @@ from typing import Any
 from devkit.core import frontmatter
 from devkit.core.errors import FrontmatterError
 
-from .common import SLUG, BundleError
+from ..errors import BundleError
+from .common import SLUG
 
 STATUSES = ("native", "emulated", "unsupported", "unverified")
 ALLOWED_KEYS: dict[str, tuple[str, ...]] = {

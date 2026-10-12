@@ -11,7 +11,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from devkit.core.errors import ReceiptError
+from devkit.core.errors import ConfigError, ReceiptError
 from devkit.core.receipt import (
     AssetRecord,
     FileRecord,
@@ -24,12 +24,23 @@ from devkit.core.receipt import (
     parse_receipt,
 )
 
-from ..bundles.common import AGENT_NAMES, BundleError
+from ..bundles.common import AGENT_NAMES
 from ..bundles.manifest import seed_target
+from ..errors import BundleError
 from .config import parse_presets
 from .results import asset_json, package_json
 from .transaction import json_content
-from .workspace import MANAGED, METADATA, OVERRIDES, RECEIPT, Content, checked_path, owned_path, snapshot
+from .workspace import (
+    MANAGED,
+    METADATA,
+    OVERRIDES,
+    OWNED_PREFIXES,
+    RECEIPT,
+    Content,
+    checked_path,
+    owned_path,
+    snapshot,
+)
 
 __all__ = [
     "AssetRecord",
@@ -54,28 +65,35 @@ def asset_path_allowed(bundle: str, name: str) -> bool:
 
 
 def read_receipt(root: Path) -> Receipt | None:
-    """The validated receipt of ``root``; ``None`` when there is none. Any defect is a ``BundleError``."""
+    """The validated receipt of ``root``; ``None`` when there is none.
+
+    A malformed receipt, or one that claims paths devkit never writes, is
+    ``ReceiptError`` (``RECEIPT_INVALID``); a symlink or non-regular file at a
+    recorded path is ``UnsafeWorkspaceError``.
+    """
     content = snapshot(root, RECEIPT)
     if content is None:
         return None
-    try:
-        receipt = parse_receipt(content.data)
-    except ReceiptError as exc:
-        raise BundleError(str(exc)) from exc
+    receipt = parse_receipt(content.data)
     for name in receipt.file_records:
         if name in METADATA or name.startswith(f"{OVERRIDES}/"):
-            raise BundleError(f"receipt cannot own installation metadata: {name}")
+            raise ReceiptError(f"{RECEIPT}: receipt cannot own installation metadata: {name}")
+        if not name.startswith(OWNED_PREFIXES):
+            raise ReceiptError(f"{RECEIPT}: files: path outside what devkit owns: {name}")
         owned_path(root, name)
     if not set(receipt.selection.agents) <= set(AGENT_NAMES):
-        raise BundleError("invalid receipt agents")
-    parse_presets({name: list(values) for name, values in receipt.selection.presets.items()}, "receipt")
+        raise ReceiptError(f"{RECEIPT}: selection.agents: unsupported agent")
+    try:
+        parse_presets({name: list(values) for name, values in receipt.selection.presets.items()}, "receipt")
+        for entry in receipt.seeded:
+            seed_target(entry.path, "receipt seeded")
+    except (ConfigError, BundleError) as exc:
+        raise ReceiptError(f"{RECEIPT}: {exc.message}") from exc
     for asset in receipt.asset_records:
         for name in (*asset.paths, *asset.entrypoints):
             if not asset_path_allowed(asset.bundle, name):
-                raise BundleError(f"invalid receipt asset path: {name}")
+                raise ReceiptError(f"{RECEIPT}: invalid asset path: {name}")
             checked_path(root, name)
-    for entry in receipt.seeded:
-        seed_target(entry.path, "receipt seeded")
     return receipt
 
 

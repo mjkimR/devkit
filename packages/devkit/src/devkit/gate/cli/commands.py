@@ -11,7 +11,7 @@ from typing import Any
 
 import click
 
-from devkit.advisory import AdvisoryError, as_advisory_error
+from devkit.advisory import AdvisoryError, ExitCode, as_advisory_error
 from devkit.gate import git, hooks
 from devkit.gate.config import GatesConfig, load_gates_config
 from devkit.gate.models import GateConfigError, GateContext, Outcome, Stage
@@ -33,7 +33,10 @@ FORMAT = click.option(
 
 
 def _boundary(fn: Callable[..., None]) -> Callable[..., None]:
-    """Render any error as an advisory on stderr."""
+    """Render any error as an advisory on stderr (and as ``{"error": ...}`` on stdout under --format json).
+
+    The process exits with the error's ``exit_code``: ``2`` (``ERROR``) unless the error says otherwise.
+    """
 
     @functools.wraps(fn)
     def wrapper(*args: Any, **kwargs: Any) -> None:
@@ -43,6 +46,8 @@ def _boundary(fn: Callable[..., None]) -> Callable[..., None]:
             raise
         except Exception as exc:
             error = as_advisory_error(exc)
+            if kwargs.get("output_format") == "json":
+                click.echo(json.dumps({"error": error.to_dict()}))
             click.echo(error.render(), err=True)
             sys.exit(int(error.exit_code))
 
@@ -123,7 +128,9 @@ def uninstall_cmd(workspace_root: str) -> None:
 @_boundary
 def status_cmd(workspace_root: str, output_format: str) -> None:
     """Show hook wrappers, every known gate with its effective state, the configuration layers and every problem
-    that would fail a commit."""
+    that would fail a commit.
+
+    Exits 1 when any such problem is reported, 2 when the status cannot be read (not a Git work tree)."""
     project = _load(workspace_root)
     location = hooks.locate(project.root)
     hook_rows = [
@@ -162,6 +169,8 @@ def status_cmd(workspace_root: str, output_format: str) -> None:
                 }
             )
         )
+        if errors:
+            sys.exit(int(ExitCode.FINDINGS))
         return
     hooks_path = f" core.hooksPath={location.hooks_path} (wrappers do not run)" if location.hooks_path else ""
     click.echo(f"[HOOKS: dir={_rel(location.directory, project.root)}{hooks_path}]")
@@ -176,6 +185,8 @@ def status_cmd(workspace_root: str, output_format: str) -> None:
     click.echo(f"[CONFIG: sources={','.join(sources) or 'none'}]")
     for error in errors:
         click.echo(error.render(), err=True)
+    if errors:
+        sys.exit(int(ExitCode.FINDINGS))
 
 
 def _report(report: StageReport, verbose: bool) -> None:
@@ -198,7 +209,10 @@ def _report(report: StageReport, verbose: bool) -> None:
 @click.argument("hook_args", nargs=-1, type=click.UNPROCESSED)
 @_boundary
 def run_cmd(workspace_root: str, verbose: bool, stage: str, hook_args: tuple[str, ...]) -> None:
-    """Run one stage's gates; this is what the hook wrappers call. post-commit always exits 0."""
+    """Run one stage's gates; this is what the hook wrappers call.
+
+    A blocking stage exits 1 when a gate refused the commit or the gate setup has problems, and 2 when the
+    stage cannot run at all (not a Git work tree, an unexpected error). post-commit always exits 0."""
     current = Stage(stage)
     try:
         project = _load(workspace_root)
@@ -221,4 +235,4 @@ def run_cmd(workspace_root: str, verbose: bool, stage: str, hook_args: tuple[str
         return
     _report(report, verbose or os.environ.get(VERBOSE_ENV) == "1")
     if report.failed and current.blocking:
-        sys.exit(1)
+        sys.exit(int(ExitCode.FINDINGS))

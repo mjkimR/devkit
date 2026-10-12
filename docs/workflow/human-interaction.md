@@ -108,7 +108,7 @@ at: "2026-10-12T09:30:00Z"
 
 No other key is allowed. Records are never edited or deleted by the engine. Only records of the **current workflow segment** count: those whose `workflow` is the evaluated workflow and whose sequence is above the `last_decision` of the anchor's latest `workflow_history` entry. Within the segment, the **effective** decision for a request is its latest non-`cancel` record by sequence that no later `return` record voided (section 5). A new `accept` after a `decline` supersedes it; a `cancel` changes nothing.
 
-`devkit workflow answer --unit DIR --request ID --action ACTION [--value V] [--note TEXT] [--by NAME]` validates the answer against the open requests and writes the record with the next free sequence number. A host with its own UI may write the same file directly. The engine validates every record on read and reports a malformed record, or a handoff choice that is not an eligible candidate, as `[DECISION_ERROR: file "reason"]` without failing.
+`devkit workflow answer --unit DIR --request ID --action ACTION [--value V] [--note TEXT] [--by NAME]` validates the answer against the open requests and writes the record with the next free sequence number. A host with its own UI may write the same file directly. The engine validates every record on read and reports a malformed record, or a handoff choice that is not an eligible candidate, as `[DECISION_ERROR: file "reason"]` without failing. In JSON (`decision_errors`) each entry is `{"code", "file", "reason"}`: `DECISION_RECORD_INVALID` for a malformed record, `HANDOFF_INVALID` for an ignored choice.
 
 ---
 
@@ -117,7 +117,7 @@ No other key is allowed. Records are never edited or deleted by the engine. Only
 - **Approve gate.** The implicit `gate:<gate>` check is satisfied when the effective decision is `accept` (`[GATE: ... source=decision:decisions/NN-...yaml]`), or when the executor passes `--given <gate>`. The gate is asked only once the stage's exit checks hold. A `decline` leaves the stage current; `next` prints `[DECLINED: ...]` with the note next to the stage's `[RETURNS]` so the agent can take the work back.
 - **Human check.** A declared `human` check behaves like a gate under the id `check:<name>`.
 - **Handoff choice.** Under `approvals.handoff = "ask"`, an `accept` whose value is an eligible candidate sets `chosen` in `[HANDOFF: ...]`; `devkit workflow handoff --unit DIR` then rebinds without `--workflow`. `handoff --workflow <id>` writes the same accepted `handoff` record before rebinding. Under `auto`, a recorded choice takes precedence over the engine's first-eligible pick. A recorded choice that is not an eligible candidate is reported as a `[DECISION_ERROR]` and ignored.
-- **Returns.** When the unit goes back to an earlier stage, approvals given for that stage and later ones must be given again. `devkit workflow return --unit DIR --to STAGE [--note TEXT] [--by NAME]` records it as an accepted `return:<stage>` record; `STAGE` must be the current stage or an earlier one. `next` records the same on its own when it finds the current stage earlier than a stage with a valid approval, listing those approvals as `[STALE_APPROVAL: ...]` (`by: devkit`). An `approve` record is void once a later `return` record targets its stage or an earlier one.
+- **Returns.** When the unit goes back to an earlier stage, approvals given for that stage and later ones must be given again. `devkit workflow return --unit DIR --to STAGE [--note TEXT] [--by NAME]` records it as an accepted `return:<stage>` record; `STAGE` must be the current stage or an earlier one. `next` never records a return: when it finds the current stage earlier than a stage with a valid approval, it lists those approvals as `[STALE_APPROVAL: ... counts=yes void_with="devkit workflow return --unit DIR --to STAGE"]` and they keep counting. Whether the redone work needs fresh approval is a person's decision; run `return` to require it. An `approve` record is void once a later `return` record targets its stage or an earlier one.
 - **Given versus recorded.** `--given` is an assertion for the current invocation only, intended for runner checks (CI evidence) and scripted use; it is not stored. A recorded decision is the durable form and the one hosts should use for approvals.
 - **Policy `auto` and `off`.** No request is emitted; the output records the policy that decided (`[GATE: ... source=policy]` while the stage is current, `[SKIPPED: ...]`), so a reader can tell a delegated decision from a human one.
 
@@ -134,6 +134,8 @@ devkit workflow answer --unit DIR --request ID --action accept|decline|cancel \
 devkit workflow return --unit DIR --to STAGE [--note TEXT] [--by NAME]        # approvals of STAGE and later are asked again
 devkit workflow next --unit DIR                                              # requests are part of the output
 ```
+
+These errors exit `2`; an open request or a recorded decline is a result and `next` exits `0`.
 
 | Code | Mode | Raised when |
 | --- | --- | --- |

@@ -3,8 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from devkit.advisory import ActionMode
 from devkit.core import FrontmatterError
-from devkit.rules import WorkspaceCache
+from devkit.rules import PinnedWriteError, WorkspaceCache
 from testsupport.rules import init_repo, write
 
 
@@ -109,8 +110,9 @@ def test_scans_skip_symlinks_resolving_outside(tmp_path: Path) -> None:
 def test_write_text_is_exact_and_never_under_devkit(temp_workspace: Path, workspace_cache: WorkspaceCache) -> None:
     workspace_cache.write_text("a.md", "one\r\ntwo\n")
     assert (temp_workspace / "a.md").read_bytes() == b"one\r\ntwo\n"
-    with pytest.raises(PermissionError, match=r"under \.devkit/"):
+    with pytest.raises(PinnedWriteError, match=r"under \.devkit/") as refused:
         workspace_cache.write_text(".devkit/managed/x.md", "x")
+    assert refused.value.code == "RULES_PINNED_WRITE_REFUSED" and refused.value.mode is ActionMode.BLOCKED
     assert not (temp_workspace / ".devkit").exists()
 
 
@@ -134,5 +136,5 @@ def test_transient_devkit_files_and_explicit_ignored_targets_are_scanned(tmp_pat
         ".devkit/transient/work/unit/tasks.md",
         "README.md",
     ]
-    with pytest.raises(PermissionError):
+    with pytest.raises(PinnedWriteError):
         cache.write_text(".devkit/overrides/b/rule.md", "y")

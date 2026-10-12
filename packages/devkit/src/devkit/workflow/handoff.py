@@ -99,7 +99,9 @@ def evaluate_handoff(
         if isinstance(recorded.value, str) and recorded.value in eligible:
             return Handoff(policy, tuple(results), recorded.value, recorded), None
         ignored = DecisionError(
-            recorded.file, f"handoff choice {recorded.value!r} is not an eligible candidate of {doc.id}; ignored"
+            recorded.file,
+            f"handoff choice {recorded.value!r} is not an eligible candidate of {doc.id}; ignored",
+            code="HANDOFF_INVALID",
         )
     chosen = next((c.workflow for c in results if c.eligible), None) if policy == "auto" else None
     return Handoff(policy, tuple(results), chosen), ignored

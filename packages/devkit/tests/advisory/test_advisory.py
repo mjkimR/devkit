@@ -70,7 +70,7 @@ def test_lines_follow_sentinel_format() -> None:
 def test_error_defaults_and_overrides() -> None:
     error = AdvisoryError("Something went wrong", "first detail")
     assert str(error) == "Something went wrong"
-    assert (error.code, error.exit_code, error.mode) == ("GENERAL_ERROR", ExitCode.FAILED, ActionMode.HALT)
+    assert (error.code, error.exit_code, error.mode) == ("GENERAL_ERROR", ExitCode.ERROR, ActionMode.HALT)
     assert error.details == ("first detail",)
     assert repr(error) == "AdvisoryError(code='GENERAL_ERROR', message='Something went wrong')"
 
@@ -79,9 +79,9 @@ def test_error_defaults_and_overrides() -> None:
         actor = Actor.NONE
         retry = Retry.SAFE
 
-    deferred = LockHeldError("Another sync is running", retry_after="30s", exit_code=ExitCode.INCOMPLETE)
+    deferred = LockHeldError("Another sync is running", retry_after="30s", exit_code=ExitCode.FINDINGS)
     assert deferred.mode is ActionMode.DEFER
-    assert deferred.exit_code == ExitCode.INCOMPLETE
+    assert deferred.exit_code == ExitCode.FINDINGS
     assert "[WHEN]   Not before: 30s" in deferred.render()
     assert LockHeldError("x", retry=Retry.UNSAFE).mode is ActionMode.HALT
     assert LockHeldError.retry is Retry.SAFE
@@ -114,7 +114,7 @@ def test_factories_keep_subclass() -> None:
 
 def test_serialization_and_problem_details() -> None:
     error = AdvisoryError.interaction("Invalid token", code="AUTH_FAILED", what_to_report="Log in again")
-    assert error.to_dict(include_advisory=False) == {"code": "AUTH_FAILED", "message": "Invalid token", "exit_code": 1}
+    assert error.to_dict(include_advisory=False) == {"code": "AUTH_FAILED", "message": "Invalid token", "exit_code": 2}
     advisory = error.to_dict()["advisory"]
     assert advisory["mode"] == "INTERACTION"
     assert advisory["input_error"] is False
@@ -197,5 +197,30 @@ def test_details_are_strings_and_serialize_to_json() -> None:
     error = AdvisoryError.invalid_input("bad", Path("a/b"), 3, ValueError("v"), target_files=["x"])
     assert error.details == ("a/b", "3", "v")
     payload = json.loads(json.dumps(error.to_dict()))
-    assert payload["advisory"]["details"] == ["a/b", "3", "v"] and payload["exit_code"] == int(ExitCode.FAILED)
+    assert payload["advisory"]["details"] == ["a/b", "3", "v"] and payload["exit_code"] == int(ExitCode.ERROR)
     assert json.loads(json.dumps(error.to_problem_details(status=422)))["status"] == 422
+
+
+def test_exit_codes_follow_the_checker_convention() -> None:
+    assert [(code.name, int(code)) for code in ExitCode] == [("OK", 0), ("FINDINGS", 1), ("ERROR", 2)]
+
+
+def test_advisory_fields_forward_through_a_subclass_constructor() -> None:
+    from typing import Unpack
+
+    from devkit.advisory import AdvisoryFields
+
+    class StatefulError(AdvisoryError):
+        code = "STATEFUL"
+
+        def __init__(self, message: str, *, extra: int, **fields: Unpack[AdvisoryFields]) -> None:
+            super().__init__(message, **fields)
+            self.extra = extra
+
+    error = StatefulError("x", extra=3, input_error=True, exit_code=ExitCode.FINDINGS, target_files=["a"])
+    assert (error.extra, error.mode, error.exit_code, error.target_files) == (
+        3,
+        ActionMode.INPUT_ERROR,
+        ExitCode.FINDINGS,
+        ("a",),
+    )

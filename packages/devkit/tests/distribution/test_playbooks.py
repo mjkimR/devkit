@@ -7,9 +7,10 @@ from pathlib import Path
 import pytest
 import yaml
 from click.testing import CliRunner
-from devkit.distribution.bundles import BundleError, load_bundle
+from devkit.distribution.bundles import load_bundle
 from devkit.distribution.bundles.playbooks import read_playbook_header
 from devkit.distribution.cli import cli
+from devkit.distribution.errors import BundleError, ConflictError, NotSynchronizedError, PendingTransactionError
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.context import get_context
 from devkit.distribution.installation.playbook_search import bm25_scores, search_playbooks
@@ -108,13 +109,13 @@ def test_generated_skill_collision_and_user_edits_are_protected(tmp_path: Path, 
     skill = target / ".agents/skills/devkit-playbook/SKILL.md"
     skill.parent.mkdir(parents=True)
     skill.write_text("user owned")
-    with pytest.raises(BundleError, match="unowned"):
+    with pytest.raises(ConflictError, match="unowned"):
         sync_project(target, installed, agents=["codex"])
     assert skill.read_text() == "user owned"
     skill.unlink()
     sync_project(target, installed, agents=["codex"])
     skill.write_text("user edit")
-    with pytest.raises(BundleError, match="user-modified"):
+    with pytest.raises(ConflictError, match="user-modified"):
         sync_project(target, installed, agents=["codex"])
     # Deselecting leaves the edited generated file behind as an orphan instead of aborting.
     result = sync_project(target, [], deselect=["team"])
@@ -126,11 +127,11 @@ def test_search_rejects_modified_files_and_pending_transactions(tmp_path: Path, 
     select(target, "team")
     sync_project(target, [make_bundle(tmp_path, "team")])
     (target / JOURNAL).write_text("{}")
-    with pytest.raises(BundleError, match="pending transaction"):
+    with pytest.raises(PendingTransactionError, match="interrupted synchronization"):
         search_playbooks(target, "replica")
     (target / JOURNAL).unlink()
     (target / ".devkit/managed/team/recovery.md").write_text("unowned changes")
-    with pytest.raises(BundleError, match="modified context"):
+    with pytest.raises(NotSynchronizedError, match="modified context"):
         search_playbooks(target, "replica")
 
 

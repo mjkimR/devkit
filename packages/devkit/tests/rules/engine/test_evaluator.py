@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from devkit.advisory import ActionMode
 from devkit.rules import Phase, RuleContext, WorkspaceCache, default_registry, evaluate
 
 
@@ -157,5 +158,7 @@ def test_recheck_errors_are_reported(tmp_path: Path) -> None:
 
     (tmp_path / "doc.md").write_text("x")
     result = evaluate(RuleContext(workspace_root=tmp_path, fix=True), [FlakyRecheck()])
-    assert result.errors == ["Rule recheck error (RULE-flaky): boom"]
+    assert [str(e) for e in result.errors] == ["Rule recheck error (RULE-flaky): boom"]
+    assert result.errors[0].code == "RULES_EXECUTION_FAILED" and result.errors[0].rule_id == "RULE-flaky"
+    assert result.errors[0].mode is ActionMode.MAINTENANCE and result.errors[0].target_files == (__file__,)
     assert result.violations == [] and result.has_errors

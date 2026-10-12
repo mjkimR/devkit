@@ -9,7 +9,7 @@ from typing import Any
 
 import pytest
 from devkit.core import CONFIG_PATH, RECEIPT_PATH, ReceiptError, load_receipt, parse_receipt
-from devkit.core.receipt import FileRecord
+from devkit.core.receipt import FileRecord, Receipt
 
 SHA_A = hashlib.sha256(b"a").hexdigest()
 SHA_B = hashlib.sha256(b"b").hexdigest()
@@ -242,3 +242,52 @@ def test_backslash_inside_a_file_name_is_accepted() -> None:
     data["assets"][0]["paths"] = [".devkit/managed/team/rules/odd\\name.py"]
     receipt = parse_receipt(json.dumps(data))
     assert receipt.assets()[0].paths == (".devkit/managed/team/rules/odd\\name.py",)
+
+
+def test_verified_asset_file_checks_recorded_hashes_and_snapshot_fallback(tmp_path: Path) -> None:
+    from devkit.core import AssetFileError, AssetRecord, verified_asset_file
+
+    def receipt_for(files: dict[str, bytes]) -> Receipt:
+        return parse_receipt(
+            json.dumps(
+                {
+                    "schema": 1,
+                    "packages": [],
+                    "selection": {"agents": [], "presets": {}},
+                    "assets": [],
+                    "files": {k: {"sha256": hashlib.sha256(v).hexdigest(), "mode": 420} for k, v in files.items()},
+                }
+            )
+        )
+
+    asset = AssetRecord("team", "rules", "rule", ())
+    managed, override = ".devkit/managed/team/r.py", ".devkit/overrides/team/o.py"
+    (tmp_path / ".devkit/managed/team").mkdir(parents=True)
+    (tmp_path / ".devkit/overrides/team").mkdir(parents=True)
+    (tmp_path / managed).write_bytes(b"x = 1\n")
+    (tmp_path / override).write_bytes(b"y = 2\n")
+    receipt = receipt_for({managed: b"x = 1\n"})
+    assert verified_asset_file(tmp_path, managed, receipt, asset) == tmp_path / managed
+    assert verified_asset_file(tmp_path, override, receipt, asset) == tmp_path / override  # unrecorded: as is
+
+    (tmp_path / managed).write_bytes(b"x = 2\n")
+    with pytest.raises(AssetFileError, match="differs from the hash") as info:
+        verified_asset_file(tmp_path, managed, receipt, asset)
+    assert info.value.code == "ASSET_FILE_INVALID" and info.value.target_files == (managed,)
+    assert info.value.fix is not None and "devkit override create team:rules" in info.value.fix
+
+    with pytest.raises(AssetFileError, match=r"is missing$"):
+        verified_asset_file(tmp_path, ".devkit/managed/team/gone.py", receipt, asset)
+
+    snapshot = tmp_path / "snapshot"
+    snapshot.mkdir()
+    (tmp_path / managed).write_bytes(b"x = 1\n")
+    assert verified_asset_file(snapshot, managed, receipt, asset, source_root=tmp_path) == tmp_path / managed
+    with pytest.raises(AssetFileError, match="no hash in the receipt"):
+        verified_asset_file(snapshot, override, receipt, asset, source_root=tmp_path)
+    with pytest.raises(AssetFileError, match="missing from the working tree"):
+        verified_asset_file(snapshot, ".devkit/managed/team/gone.py", receipt, asset, source_root=tmp_path)
+
+    (tmp_path / ".devkit/managed/team/link.py").symlink_to(tmp_path.parent / "elsewhere.py")
+    with pytest.raises(AssetFileError, match="unsafe"):
+        verified_asset_file(tmp_path, ".devkit/managed/team/link.py", receipt, asset)

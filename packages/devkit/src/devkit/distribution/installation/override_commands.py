@@ -15,8 +15,9 @@ from types import MappingProxyType
 
 from devkit.core.receipt import OverrideRecord, Receipt
 
-from ..bundles.common import SLUG, BundleError
+from ..bundles.common import SLUG
 from ..bundles.manifest import Asset
+from ..errors import ArgumentError, ConflictError, SelectionError
 from .config import effective_selection, read_config
 from .discovery import InstalledBundle
 from .hooks import run_post_sync
@@ -39,19 +40,21 @@ from .workspace import OVERRIDES, RECEIPT, Content, checked_path, normal_mode
 def _parse_selector(selector: str) -> tuple[str, str]:
     bundle, separator, asset = selector.partition(":")
     if not separator or not bundle or not asset:
-        raise BundleError(f"expected bundle:asset selector (e.g. starter:development): {selector}")
+        raise ArgumentError(
+            f"expected bundle:asset selector (e.g. starter:development): {selector}", target_files=["SELECTOR"]
+        )
     if not SLUG.fullmatch(bundle) or not SLUG.fullmatch(asset):
-        raise BundleError(f"bundle and asset must be lowercase slugs: {selector}")
+        raise ArgumentError(f"bundle and asset must be lowercase slugs: {selector}", target_files=["SELECTOR"])
     return bundle, asset
 
 
 def _find(installed: list[InstalledBundle], bundle_name: str, asset_id: str) -> tuple[InstalledBundle, Asset]:
     item = next((b for b in installed if b.bundle.name == bundle_name), None)
     if item is None:
-        raise BundleError(f"bundle is not installed: {bundle_name}")
+        raise SelectionError(f"bundle is not installed: {bundle_name}", fix="List installed bundles with `devkit list`")
     asset = item.bundle.asset(asset_id)
     if asset is None:
-        raise BundleError(f"asset not found in {bundle_name}: {asset_id}")
+        raise SelectionError(f"asset not found in {bundle_name}: {asset_id}", fix="List the assets with `devkit list`")
     return item, asset
 
 
@@ -98,11 +101,11 @@ def _require_overridable(root: Path, installed: list[InstalledBundle], item: Ins
     name = item.bundle.name
     selection = effective_selection(installed, read_config(root))
     if name not in selection:
-        raise BundleError(f"bundle is not selected: {name}; select it with 'devkit add {name}' first")
+        raise SelectionError(f"bundle is not selected: {name}; select it with 'devkit add {name}' first")
     if asset.id not in item.bundle.select(selection[name]):
-        raise BundleError(f"asset {name}:{asset.id} is not part of the selected presets {selection[name]}")
+        raise SelectionError(f"asset {name}:{asset.id} is not part of the selected presets {selection[name]}")
     if asset.seeded:
-        raise BundleError(f"{name}:{asset.id} is a seeded asset; its files are project-owned, edit them directly")
+        raise SelectionError(f"{name}:{asset.id} is a seeded asset; its files are project-owned, edit them directly")
 
 
 def _after_sync(root: Path, result: SyncResult) -> None:
@@ -123,7 +126,12 @@ def create_override(
         if not force:
             existing = [rel for rel in files if (root / override_rel(bundle_name, rel)).exists()]
             if existing:
-                raise BundleError(f"override already exists: {override_rel(bundle_name, existing[0])}")
+                raise ConflictError(
+                    f"override already exists: {override_rel(bundle_name, existing[0])}",
+                    target_files=[override_rel(bundle_name, rel) for rel in existing],
+                    what_to_report="Whether to replace the existing override files with the upstream copy",
+                    fix=f"devkit override create {selector} --force",
+                )
         undo = _Undo(root)
         try:
             for rel in files:
@@ -158,7 +166,7 @@ def remove_override(root: Path, installed: list[InstalledBundle], selector: str)
                 found = sorted(p for p in base.rglob("*") if p.is_file()) if base.is_dir() else [base]
                 names.extend(p.relative_to(root).as_posix() for p in found if p.is_file() or p.is_symlink())
         if not any(name.startswith(f"{OVERRIDES}/{bundle_name}/") for name in names):
-            raise BundleError(f"no override found for {selector}")
+            raise SelectionError(f"no override found for {selector}", fix="List overrides with `devkit override list`")
         undo = _Undo(root)
         try:
             for name in names:
@@ -179,7 +187,7 @@ def remove_override(root: Path, installed: list[InstalledBundle], selector: str)
 def _tracked(receipt: Receipt | None, bundle: str, asset: str, selector: str) -> OverrideRecord:
     record = receipt.overrides.get(bundle, {}).get(asset) if receipt is not None else None
     if record is None:
-        raise BundleError(
+        raise SelectionError(
             f"{selector} has no tracked override; create one with 'devkit override create {selector}'"
             " (or run devkit sync if its files already exist)"
         )
@@ -245,7 +253,7 @@ def diff_override(root: Path, installed: list[InstalledBundle], selector: str) -
         require_no_journal(root)
         item, asset = _find(installed, bundle_name, asset_id)
         if not overridden_files(root, item.bundle, asset):
-            raise BundleError(f"no override found for {selector}")
+            raise SelectionError(f"no override found for {selector}", fix="List overrides with `devkit override list`")
         receipt = read_receipt(root)
         record = receipt.overrides.get(bundle_name, {}).get(asset_id) if receipt is not None else None
         current = upstream_digest(item.bundle, asset)

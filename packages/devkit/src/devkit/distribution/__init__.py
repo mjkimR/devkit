@@ -2,11 +2,28 @@
 
 The library surface below is what the ``devkit`` distribution commands use;
 results are JSON-shaped ``TypedDict`` values (see ``installation.results``).
-Every operation raises ``BundleError`` for invalid input or a state it refuses
-to change. The receipt model is ``devkit.core.receipt``.
+Every operation raises an ``AdvisoryError``: a ``DistributionError`` subclass
+from ``devkit.distribution.errors`` (``BUNDLE_INVALID``, ``SYNC_CONFLICT``,
+``LOCK_HELD``, ...) or a ``devkit.core`` error it passes through
+(``RECEIPT_INVALID``, ``CONFIG_INVALID``). The receipt model is
+``devkit.core.receipt``.
 """
 
-from .bundles import Asset, Bundle, BundleError, build_bundle, load_bundle
+from .bundles import Asset, Bundle, build_bundle, load_bundle
+from .errors import (
+    ArgumentError,
+    BundleError,
+    ConflictError,
+    DistributionError,
+    LockHeldError,
+    NotSynchronizedError,
+    OverrideDriftError,
+    PackageError,
+    PendingTransactionError,
+    RecoveryError,
+    SelectionError,
+    UnsafeWorkspaceError,
+)
 from .installation.config import ProjectConfig, read_config, update_config
 from .installation.context import get_context
 from .installation.discovery import InstalledBundle, discover_bundles
@@ -32,20 +49,31 @@ from .installation.status import ProjectListing, ProjectStatus, project_listing,
 from .installation.sync import recover_project, sync_project
 
 __all__ = [
+    "ArgumentError",
     "Asset",
     "Bundle",
     "BundleError",
     "BundlePlan",
+    "ConflictError",
     "ContextResult",
+    "DistributionError",
     "InstalledBundle",
+    "LockHeldError",
+    "NotSynchronizedError",
     "OverrideChange",
     "OverrideDiff",
+    "OverrideDriftError",
     "OverrideStatus",
+    "PackageError",
+    "PendingTransactionError",
     "ProjectConfig",
     "ProjectListing",
     "ProjectStatus",
+    "RecoveryError",
     "SearchResult",
+    "SelectionError",
     "SyncResult",
+    "UnsafeWorkspaceError",
     "accept_override",
     "build_bundle",
     "create_override",

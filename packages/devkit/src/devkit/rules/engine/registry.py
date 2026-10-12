@@ -4,6 +4,7 @@ from collections.abc import Iterable
 from pathlib import Path
 
 from devkit.core import iter_plugin_files, load_subclasses
+from devkit.rules.engine.errors import RuleLoadError, RuleProblem
 from devkit.rules.engine.models import Rule
 from devkit.rules.rules import (
     BaseRule,
@@ -24,7 +25,7 @@ class RuleRegistry:
 
     def __init__(self) -> None:
         self._rules: dict[str, Rule] = {}
-        self.errors: list[str] = []
+        self.errors: list[RuleProblem] = []
 
     def register(self, rule: Rule) -> None:
         self._rules[rule.id] = rule
@@ -51,7 +52,8 @@ class RuleRegistry:
         Files whose name starts with ``_`` or ``.`` or that are not ``.py``
         files are skipped. Loading is atomic per file (``devkit.core.plugins``):
         a file that fails to import or whose classes cannot be instantiated
-        contributes no rule, and the failure is recorded in ``errors``.
+        contributes no rule, and the failure is recorded in ``errors`` as a
+        ``RuleLoadError`` (``RULES_LOAD_FAILED``) naming the file.
         """
         selected = [path for path in files if path.suffix == ".py" and not path.name.startswith(("_", "."))]
         loaded = load_subclasses(selected, BaseRule, namespace=PLUGIN_NAMESPACE)
@@ -59,7 +61,12 @@ class RuleRegistry:
         for instance in loaded.instances:
             self.register(instance)
             discovered.append(instance)
-        self.errors.extend(f"Failed to load rule from {failure.path}: {failure.message}" for failure in loaded.errors)
+        self.errors.extend(
+            RuleLoadError(
+                f"Failed to load rule from {failure.path}: {failure.message}", target_files=[str(failure.path)]
+            )
+            for failure in loaded.errors
+        )
         return discovered
 
 

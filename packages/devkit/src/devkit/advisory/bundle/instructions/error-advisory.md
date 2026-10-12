@@ -39,7 +39,15 @@ Omit a line when its field is empty. `[ERROR]` and `[ACTION]` are always present
 | `target_files` | Exact files, flags, or `path:line:col` locations involved. |
 | `details` | Diagnostic lines. |
 
-Process exit codes: `0` OK, `1` failed, `2` incomplete (for example, rule violations remain), `64` usage error.
+Process exit codes follow the checker convention of `grep`, `diff` and `ruff`:
+
+| Exit code | Meaning |
+| --- | --- |
+| `0` | Success; nothing found. |
+| `1` | The command ran and reports a negative result: violations remain, a check fails, a guardrail refused the change. |
+| `2` | The command could not do its job: usage error, unreadable or invalid input, unexpected failure. This is the default for an error. |
+
+A state that waits for a person or for later work is a result, not a failure, and exits `0`.
 
 ## Mode derivation
 

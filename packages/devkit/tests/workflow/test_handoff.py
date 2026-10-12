@@ -218,13 +218,13 @@ def test_cli_handoff_ask_flow(tmp_path: Path) -> None:
     assert "[HANDOFF: policy=ask" in nxt.output and "[WAITING: human handoff]" in nxt.output
 
     undecided = _run("handoff", "-w", str(root), "--unit", unit, "--no-lint")
-    assert undecided.exit_code == 1 and "(HANDOFF_CHOICE_REQUIRED)" in undecided.stderr
+    assert undecided.exit_code == 2 and "(HANDOFF_CHOICE_REQUIRED)" in undecided.stderr
     assert "[DETAIL] spec-driven: eligible=false recommended=true" in undecided.stderr
 
     bad = _run("handoff", "-w", str(root), "--unit", unit, "--no-lint", "--workflow", "nope")
-    assert bad.exit_code == 1 and "(HANDOFF_INVALID)" in bad.stderr
+    assert bad.exit_code == 2 and "(HANDOFF_INVALID)" in bad.stderr
     ineligible = _run("handoff", "-w", str(root), "--unit", unit, "--no-lint", "--workflow", "spec-driven")
-    assert ineligible.exit_code == 1 and "(HANDOFF_INELIGIBLE)" in ineligible.stderr
+    assert ineligible.exit_code == 2 and "(HANDOFF_INELIGIBLE)" in ineligible.stderr
 
     (root / unit / "spec.md").write_text("---\nstatus: draft\n---\n")
     done = _run(
@@ -250,7 +250,7 @@ def test_cli_handoff_ask_flow(tmp_path: Path) -> None:
     nxt = _run("next", "-w", str(root), "--unit", unit, "--no-lint")
     assert "[STAGE: - complete=true]" in nxt.output and "[HANDOFF" not in nxt.output
     none = _run("handoff", "-w", str(root), "--unit", unit, "--no-lint")
-    assert none.exit_code == 1 and "(HANDOFF_NONE)" in none.stderr
+    assert none.exit_code == 2 and "(HANDOFF_NONE)" in none.stderr
 
 
 def test_cli_handoff_auto_and_not_ready_and_off(tmp_path: Path) -> None:
@@ -269,7 +269,7 @@ def test_cli_handoff_auto_and_not_ready_and_off(tmp_path: Path) -> None:
 
     not_ready = _run("handoff", "-w", str(root), "--unit", unit, "--no-lint")
     assert (
-        not_ready.exit_code == 1
+        not_ready.exit_code == 2
         and "(HANDOFF_NOT_READY)" in not_ready.stderr
         and "stage specify is current" in not_ready.stderr
     )
@@ -277,7 +277,7 @@ def test_cli_handoff_auto_and_not_ready_and_off(tmp_path: Path) -> None:
     write_config(root, 'schema = 1\n[workflow]\ndefault = "triage"\n[workflow.approvals]\nhandoff = "off"\n')
     _run("new", "-w", str(root), "other")
     off = _run("handoff", "-w", str(root), "--unit", ".devkit/transient/work/other", "--no-lint")
-    assert off.exit_code == 1 and "(HANDOFF_OFF)" in off.stderr
+    assert off.exit_code == 2 and "(HANDOFF_OFF)" in off.stderr
 
 
 def test_cli_handoff_auto_undecided(tmp_path: Path) -> None:
@@ -289,7 +289,7 @@ def test_cli_handoff_auto_undecided(tmp_path: Path) -> None:
     )
     _run("new", "-w", str(root), "login")
     undecided = _run("handoff", "-w", str(root), "--unit", ".devkit/transient/work/login", "--no-lint")
-    assert undecided.exit_code == 1 and "(HANDOFF_UNDECIDED)" in undecided.stderr
+    assert undecided.exit_code == 2 and "(HANDOFF_UNDECIDED)" in undecided.stderr
 
 
 def test_cli_validate_reports_unknown_candidate(tmp_path: Path) -> None:

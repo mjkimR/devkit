@@ -17,11 +17,15 @@ from devkit.workflow.definition import (
     WorkflowDocument,
     schema_hash,
 )
+from devkit.workflow.errors import WorkflowProblem
 from devkit.workflow.ids import IDENT_HINT, is_ident
 from devkit.workflow.roles import is_builtin_role
 
 if TYPE_CHECKING:
     from devkit.workflow.plugins import BaseCheck
+
+ROLE_UNKNOWN = "ROLE_UNKNOWN"
+SHARED_STAGE_MISMATCH = "SHARED_STAGE_MISMATCH"
 
 
 def validate(
@@ -57,7 +61,7 @@ def validate(
     try:
         registry = Registry.build(anchor, doc.declared_checks, plugins)
     except CheckError as exc:
-        problems.append(Problem("", "checks", str(exc)))
+        problems.append(Problem("", "checks", str(exc), exc.code))
         try:
             registry = Registry.build(anchor, (), plugins)
         except CheckError:
@@ -93,7 +97,7 @@ def validate(
             try:
                 registry.resolve_name(ref)
             except CheckError as exc:
-                problems.append(Problem("", f"{where}.when", str(exc)))
+                problems.append(Problem("", f"{where}.when", str(exc), exc.code))
     return problems
 
 
@@ -110,7 +114,7 @@ def _stage_problems(
     if s.isolation not in ISOLATIONS:
         problems.append(Problem(s.id, "isolation", f"{s.isolation!r} not in {'|'.join(ISOLATIONS)}"))
     if roles is not None and not is_builtin_role(s.role) and s.role not in roles:
-        problems.append(Problem(s.id, "role", f"unknown role {s.role!r} (no subagent contract found)"))
+        problems.append(Problem(s.id, "role", f"unknown role {s.role!r} (no subagent contract found)", ROLE_UNKNOWN))
     if s.gate == HANDOFF_GATE:
         problems.append(Problem(s.id, "human_gate", f"{HANDOFF_GATE!r} is reserved for workflow handoff"))
     elif s.gate is not None and not is_ident(s.gate):
@@ -120,7 +124,7 @@ def _stage_problems(
             try:
                 registry.resolve_name(ref)
             except CheckError as exc:
-                problems.append(Problem(s.id, fld, str(exc)))
+                problems.append(Problem(s.id, fld, str(exc), exc.code))
     for i, r in enumerate(s.returns):
         if not r.to:
             problems.append(Problem(s.id, f"returns[{i}].to", "missing target stage"))
@@ -134,7 +138,7 @@ def _stage_problems(
 SHARED_STAGE_FIELDS = ("exit", "gate", "role", "isolation", "skills", "artifacts")
 
 
-def shared_stage_problems(docs: Iterable[WorkflowDocument]) -> list[str]:
+def shared_stage_problems(docs: Iterable[WorkflowDocument]) -> list[WorkflowProblem]:
     """Stages that share an id across definitions but are not the same stage.
 
     A stage id is shared vocabulary: skills, runners and people recognize it by
@@ -143,7 +147,7 @@ def shared_stage_problems(docs: Iterable[WorkflowDocument]) -> list[str]:
     each against the first definition that declared the id.
     """
     first: dict[str, tuple[WorkflowDocument, Stage]] = {}
-    problems: list[str] = []
+    problems: list[WorkflowProblem] = []
     for doc in docs:
         for stage in doc.stages:
             if stage.id not in first:
@@ -154,7 +158,13 @@ def shared_stage_problems(docs: Iterable[WorkflowDocument]) -> list[str]:
                 continue
             for fld in SHARED_STAGE_FIELDS:
                 if getattr(base, fld) != getattr(stage, fld):
-                    problems.append(f"shared stage {stage.id!r} differs between {base_doc.id} and {doc.id}: {fld}")
+                    problems.append(
+                        WorkflowProblem(
+                            f"shared stage {stage.id!r} differs between {base_doc.id} and {doc.id}: {fld}",
+                            SHARED_STAGE_MISMATCH,
+                            target=doc.path.as_posix() if doc.path else "",
+                        )
+                    )
     return problems
 
 
@@ -178,7 +188,7 @@ class DefinitionReport:
             "path": path.as_posix() if path else None,
             "valid": self.ok,
             "hash": None if self.problems else schema_hash(self.doc),
-            "problems": [str(p) for p in self.problems],
+            "problems": [p.to_dict() for p in self.problems],
         }
 
 
@@ -187,8 +197,8 @@ class ValidationReport:
     """Every definition checked, the files that could not be loaded and cross-definition problems."""
 
     definitions: tuple[DefinitionReport, ...] = ()
-    load_errors: tuple[str, ...] = ()
-    shared: tuple[str, ...] = ()
+    load_errors: tuple[WorkflowProblem, ...] = ()
+    shared: tuple[WorkflowProblem, ...] = ()
     roles_checked: bool = True
 
     @property
@@ -198,7 +208,7 @@ class ValidationReport:
 
 def validate_workspace(
     docs: Sequence[WorkflowDocument],
-    load_errors: Sequence[str],
+    load_errors: Sequence[WorkflowProblem],
     *,
     anchor: str,
     known_ids: Iterable[str],

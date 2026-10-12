@@ -4,8 +4,9 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from devkit.distribution.bundles import BundleError, build_bundle, load_bundle
+from devkit.distribution.bundles import build_bundle, load_bundle
 from devkit.distribution.cli import cli
+from devkit.distribution.errors import ArgumentError, BundleError, NotSynchronizedError, SelectionError
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.context import get_context
 from devkit.distribution.installation.discovery import InstalledBundle
@@ -103,12 +104,12 @@ def test_context_errors_do_not_expose_instruction_bodies(project) -> None:
     assert result.exit_code == 2
     assert "frontmatter" in result.output
     assert "BODY_ONLY_SENTINEL" not in result.output
-    with pytest.raises(BundleError, match="not synchronized"):
+    with pytest.raises(SelectionError, match="not synchronized"):
         get_context(target, "missing")
-    with pytest.raises(BundleError, match="lowercase slug"):
+    with pytest.raises(ArgumentError, match="lowercase slug"):
         get_context(target, "../team")
     (target / ".devkit/managed/team/AGENTS.md").write_text("changed")
-    with pytest.raises(BundleError, match="modified context"):
+    with pytest.raises(NotSynchronizedError, match="modified context"):
         get_context(target, "team")
 
 

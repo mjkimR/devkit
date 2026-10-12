@@ -7,16 +7,19 @@ from pathlib import Path
 
 from devkit.core.receipt import AssetRecord, OverrideRecord, PackageRecord
 
-from ..bundles.common import BundleError
 from ..bundles.guidance import prepend_context
 from ..bundles.manifest import Asset, Bundle, source_files
 from ..bundles.playbooks import playbook_entry
 from ..bundles.subagents import HOST_FILES, SUBAGENT_DIRS, projection_path, read_contract, render
 from ..bundles.workflows import workflow_entry
+from ..errors import BundleError, ConflictError, SelectionError
 from . import playbook_skill, workflow_skill
 from .discovery import InstalledBundle
 from .overrides import Drift, resolve_source, track
 from .workspace import MANAGED, Content, normal_mode
+
+BUNDLE_CONFLICT = "BUNDLE_CONFLICT"
+_DESELECT = "Which bundle to keep; deselect the other with `devkit remove <bundle>`"
 
 # Shared entry skills generated when at least one asset of the kind is synchronized.
 GENERATED_SKILLS = {"playbook": playbook_skill, "workflow": workflow_skill}
@@ -64,7 +67,12 @@ class Inventory:
         # Agents sharing a directory (Codex and Antigravity) project the same bytes twice.
         existing = self.files.get(destination)
         if existing is not None and existing != content:
-            raise BundleError(f"destination collision: {destination}")
+            raise ConflictError(
+                f"destination collision: {destination}",
+                code=BUNDLE_CONFLICT,
+                target_files=[destination],
+                what_to_report=_DESELECT,
+            )
         self.files[destination] = content
 
     def copy(self, destination: str, path: Path, context_bundle: str | None = None) -> None:
@@ -129,7 +137,12 @@ class _BundleInventory:
         for path in source_files(self.bundle.root, source):
             dest = asset.target if origin.is_file() else f"{asset.target}/{path.relative_to(origin).as_posix()}"
             if dest in seeds:
-                raise BundleError(f"seeded target collision: {dest} ({seeds[dest].bundle} and {self.bundle.name})")
+                raise ConflictError(
+                    f"seeded target collision: {dest} ({seeds[dest].bundle} and {self.bundle.name})",
+                    code=BUNDLE_CONFLICT,
+                    target_files=[dest],
+                    what_to_report=_DESELECT,
+                )
             seeds[dest] = Seed(self.bundle.name, asset.id, Content(path.read_bytes(), normal_mode(path.stat().st_mode)))
             targets.append(dest)
         self.inventory.assets.append(
@@ -219,9 +232,9 @@ def desired_inventory(
     """
     # Every bundle passed in is deployed, so each needs an explicit preset selection.
     if set(presets) != {item.bundle.name for item in installed}:
-        raise BundleError("inventory requires exactly one preset selection per bundle")
+        raise SelectionError("inventory requires exactly one preset selection per bundle")
     if set(agents) - AGENTS.keys():
-        raise BundleError("unsupported agent selection")
+        raise SelectionError(f"unsupported agent selection: {sorted(set(agents) - AGENTS.keys())}")
     inventory = Inventory()
     for item in installed:
         bundle = item.bundle
@@ -238,5 +251,10 @@ def desired_inventory(
                 inventory.put(f"{directory}/{relative}", Content(data, 0o644))
     for dest in inventory.seeds:
         if dest in inventory.files:
-            raise BundleError(f"seeded target collides with a managed destination: {dest}")
+            raise ConflictError(
+                f"seeded target collides with a managed destination: {dest}",
+                code=BUNDLE_CONFLICT,
+                target_files=[dest],
+                what_to_report=_DESELECT,
+            )
     return inventory

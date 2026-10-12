@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 from devkit.core.paths import is_safe_relpath
 from devkit.rules import count_tasks
+from devkit.workflow.errors import CheckError
 
 if TYPE_CHECKING:
     from devkit.workflow.plugins import BaseCheck
@@ -86,10 +87,6 @@ class Invocation:
 
     def __str__(self) -> str:
         return self.name if not self.args else f"{self.name}({' '.join(self.args)})"
-
-
-class CheckError(ValueError):
-    """Malformed or unregistered check reference."""
 
 
 # Primitive names; the ``tasks-checked`` counter is ``devkit.rules.count_tasks``, so a

@@ -7,8 +7,9 @@ from pathlib import Path
 
 import click
 
+from devkit.advisory import ExitCode
 from devkit.workflow.checks import Registry
-from devkit.workflow.cli.app import EXIT_INVALID, FORMAT, WORKSPACE, boundary, cli, echo_json, is_json, workspace
+from devkit.workflow.cli.app import FORMAT, WORKSPACE, boundary, cli, echo_json, is_json, workspace
 from devkit.workflow.definition import schema_hash
 from devkit.workflow.render import quote
 
@@ -45,8 +46,8 @@ def validate_cmd(workspace_root: str | None, paths: tuple[str, ...], output_form
                 "valid": report.ok,
                 "roles_checked": report.roles_checked,
                 "definitions": [r.to_dict(ws.root) for r in report.definitions],
-                "errors": list(report.load_errors),
-                "shared": list(report.shared),
+                "errors": [e.to_dict() for e in report.load_errors],
+                "shared": [p.to_dict() for p in report.shared],
             }
         )
     else:
@@ -67,4 +68,4 @@ def validate_cmd(workspace_root: str | None, paths: tuple[str, ...], output_form
         if not report.definitions and report.ok:
             click.echo(f"[VALID: no definitions under {ws.config.definitions_dir}]")
     if not report.ok:
-        sys.exit(EXIT_INVALID)
+        sys.exit(int(ExitCode.FINDINGS))

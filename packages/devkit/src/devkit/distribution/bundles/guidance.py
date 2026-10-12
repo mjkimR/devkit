@@ -3,7 +3,7 @@ from __future__ import annotations
 from devkit.core import frontmatter
 from devkit.core.errors import FrontmatterError
 
-from .common import BundleError
+from ..errors import BundleError
 
 CONTEXT_START = "<!-- DEVKIT:CONTEXT -->"
 CONTEXT_END = "<!-- /DEVKIT:CONTEXT -->"

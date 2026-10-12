@@ -10,6 +10,7 @@ from typing import Any
 
 import click
 
+from devkit.advisory import AdvisoryError
 from devkit.rules.engine.config import CONFIG_PATH, RulesConfig
 from devkit.rules.engine.models import Phase, Rule, Severity, Violation
 from devkit.rules.engine.phases import (
@@ -30,9 +31,16 @@ def echo_json(data: object) -> None:
     click.echo(json.dumps(data, indent=2))
 
 
-def echo_errors(errors: Sequence[str], *, label: str = "Error") -> None:
-    for err in errors:
-        click.secho(f"{label}: {err}", fg="red" if label == "Error" else "yellow", err=True)
+def echo_problems(problems: Sequence[AdvisoryError]) -> None:
+    """Each problem as an Agent Advisory Protocol block on stderr."""
+    for problem in problems:
+        click.echo(problem.render(), err=True)
+
+
+def echo_warnings(problems: Sequence[AdvisoryError]) -> None:
+    """Problems that do not fail the command, one ``Warning: (CODE) message`` line each on stderr."""
+    for problem in problems:
+        click.secho(f"Warning: ({problem.code}) {problem}", fg="yellow", err=True)
 
 
 def guide_display(rule: Rule | None, workspace_root: Path) -> str | None:
@@ -109,7 +117,7 @@ def _print_rule_counts(violations: Sequence[Violation]) -> None:
 
 def print_violations(
     violations: Sequence[Violation],
-    errors: Sequence[str],
+    errors: Sequence[object],
     rules_by_id: dict[str, Rule],
     workspace_root: Path,
     *,

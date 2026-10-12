@@ -124,7 +124,7 @@ integration = "ask"
 | `auto` | The gate is satisfied by policy. The stage passes once its other exit checks hold; while it is current, `[GATE: <gate> policy=auto satisfied=yes source=policy]` makes the delegation visible. |
 | `off` | The stage is skipped and reported as `[SKIPPED: <id> reason=approvals.<gate>=off]`. |
 
-Under `ask`, `next` emits an `approve` request (`[REQUEST: id=gate:<gate> ...]`) and the answer is a decision record under `<unit>/decisions/` written by `devkit workflow answer` or by a host UI; `--given` remains as an assertion for the current invocation that is not stored. The CLI never infers approval from conversation. An approval belongs to the workflow segment it was given in: it does not carry over a handoff, and when the unit goes back to an earlier stage (`devkit workflow return`, or `next` finding an earlier stage current again) the approvals of that stage and later ones must be given again. Raising a gate later is a configuration change back to `ask`; lowering it is a change to `auto` or `off`. The workflow definition does not change in either case. The request and answer formats are specified in [Human Interaction Contract](human-interaction.md).
+Under `ask`, `next` emits an `approve` request (`[REQUEST: id=gate:<gate> ...]`) and the answer is a decision record under `<unit>/decisions/` written by `devkit workflow answer` or by a host UI; `--given` remains as an assertion for the current invocation that is not stored. The CLI never infers approval from conversation. An approval belongs to the workflow segment it was given in: it does not carry over a handoff, and when `devkit workflow return` takes the unit back to an earlier stage, the approvals of that stage and later ones must be given again. `next` and the other read commands never write files: when they find an earlier stage current again, they list the approvals of later stages as `[STALE_APPROVAL: ...]` (JSON `stale_approvals`) and those approvals keep counting until a `return` is recorded. Raising a gate later is a configuration change back to `ask`; lowering it is a change to `auto` or `off`. The workflow definition does not change in either case. The request and answer formats are specified in [Human Interaction Contract](human-interaction.md).
 
 ### Stage Policy
 
@@ -173,28 +173,45 @@ devkit workflow envelope new --unit DIR --kind KIND [--status S] [--summary TEXT
 devkit workflow envelope check --unit DIR [--format text|json]   # every envelope file and any contract violation
 ```
 
-All commands accept `-w/--workspace-root`; it defaults to the devkit project containing the current directory. Exit codes: `0` success, `1` an error (or an invalid definition for `validate` and `show`), `2` a usage error from the command line parser. `next` exits `0` whether or not the unit is complete; the stage is in the output.
+All commands accept `-w/--workspace-root`; it defaults to the devkit project containing the current directory. Exit codes follow the devkit convention ([Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)):
 
-Errors are reported on stderr as Agent Advisory Protocol blocks from the `devkit.advisory` module, with a stable code and an `[ACTION]` directive, so an agent knows whether to fix input, stop for a person, or respect a guardrail. Under `--format json` stdout carries exactly one JSON document: the command's result, or `{"error": {...}}` when it has none. A `next` whose lint run failed prints its result (with `lint_error`) and reports `LINT_FAILED` on stderr only; `envelope check` does the same with `ENVELOPE_INVALID`. The library raises the same codes as `WorkflowError` instances.
+| Exit | When |
+| --- | --- |
+| `0` | The command did its job. `next` exits `0` whatever the stage, including a unit that waits for a person (`[WAITING]`, `[REQUEST]`), a delegation (`[DELEGATE]`) or a handoff choice. |
+| `1` | The command ran and reports a negative result: `validate` found invalid definitions or shared-stage differences, `show` found problems in the definition, `envelope check` found malformed envelope files (`ENVELOPE_INVALID`), or `next` refused a unit whose bound stage schema changed (`WORKFLOW_DRIFT`). |
+| `2` | The command could not do its job: a usage error from the command line parser, and every other error code below (unreadable configuration, receipt, definition or anchor, a refused input, a lint run that could not execute, an unexpected error). |
 
-| Code | Mode | Raised when |
+Errors are reported on stderr as Agent Advisory Protocol blocks from the `devkit.advisory` module, with a stable code and an `[ACTION]` directive, so an agent knows whether to fix input, stop for a person, or respect a guardrail. Under `--format json` stdout carries exactly one JSON document: the command's result, or `{"error": {...}}` when it has none. A `next` whose lint run failed prints its result (with `lint_error`) and reports `LINT_FAILED` on stderr only; `envelope check` does the same with `ENVELOPE_INVALID`. The library raises the same codes: `WorkflowError` and its subclasses (`ConfigError`, `DefinitionError`, `LayoutError`, `CheckError`, `PluginError`, `DriftError`, ...), plus the `devkit.core` errors it passes through unchanged (`RECEIPT_INVALID`, `GIT_FAILED`).
+
+| Code | Mode | Exit | Raised when |
+| --- | --- | --- | --- |
+| `CONFIG_INVALID` | `INPUT_ERROR` | `2` | `.devkit/config.toml` cannot be parsed or its `[workflow]` tables are malformed (`ConfigError`, also a `devkit.core` `ConfigError`) |
+| `WORKFLOW_NOT_SELECTED`, `WORKFLOW_NOT_FOUND`, `WORKFLOW_INVALID` | `INPUT_ERROR` | `2` | no definition chosen, none matches, or the chosen one fails validation (problems become `[DETAIL]` lines) |
+| `UNIT_NOT_FOUND`, `UNIT_EXISTS`, `ANCHOR_INVALID` | `INPUT_ERROR` | `2` | the unit directory has no anchor, already exists, or its frontmatter is unreadable |
+| `ANCHOR_AMBIGUOUS`, `ANCHOR_MISMATCH` | `INPUT_ERROR` | `2` | several candidate anchor files exist in the unit (pass `--workflow`); the selected workflow declares a different anchor than the file that identifies the unit |
+| `HANDOFF_LAYOUT_MISMATCH` | `INPUT_ERROR` | `2` | the chosen candidate's anchor differs from the unit's; relocate the unit, then `bind` |
+| `ENVELOPE_STATUS_INVALID`, `ENVELOPE_FLAG_INVALID`, `ENVELOPE_FROM_INVALID`, `ENVELOPE_FINDINGS_INVALID` | `INPUT_ERROR` | `2` | `envelope new` authoring flags that cannot produce a valid envelope (details name the flag) |
+| `ENVELOPE_INVALID` | `INPUT_ERROR` | `1` | `envelope check` found malformed envelope files; `[DETAIL]` lines carry file and reason, `[TARGET]` the files. The library's `EnvelopeFormatError` (a malformed finding or list) and every collected `EnvelopeError` entry carry the same code |
+| `SLUG_INVALID`, `DATE_INVALID`, `GIVEN_INVALID`, `KIND_INVALID` | `INPUT_ERROR` | `2` | a flag or argument is malformed |
+| `HANDOFF_NOT_READY`, `HANDOFF_NONE`, `HANDOFF_OFF` | `INPUT_ERROR` | `2` | the unit's workflow is not complete, declares no `next`, or handoff is disabled by policy |
+| `HANDOFF_CHOICE_REQUIRED`, `HANDOFF_UNDECIDED`, `HANDOFF_INVALID`, `HANDOFF_INELIGIBLE` | `INPUT_ERROR` | `2` | `ask` needs a recorded choice or `--workflow`; `auto` found no eligible candidate; the choice is not a candidate, or its `when` checks fail (details list the candidates) |
+| `REQUEST_UNKNOWN`, `DECISION_INVALID` | `INPUT_ERROR` | `2` | `answer` names a request that is not open, or an action/value that does not fit it (see [Human Interaction Contract](human-interaction.md)) |
+| `RETURN_INVALID` | `INPUT_ERROR` | `2` | `return --to` names no stage of the workflow, or one after the current stage |
+| `WORKFLOW_DRIFT` | `BLOCKED` | `1` | the bound schema hash changed under in-flight work; `[FIX]` names the `bind` command |
+| `LINT_FAILED` | `MAINTENANCE` | `2` | `devkit.rules` raised a rule loading or execution error during `lint-clean` |
+| `CHECK_LOAD_FAILED` | `MAINTENANCE` | `2` | a plugin check file failed to load, declares an invalid check (`PluginError`), or a receipt `workflow-check` file is missing, unsafe or differs from its recorded hash (`[FIX]`: `devkit sync`, or `devkit override create` to keep an edit) |
+| `RECEIPT_INVALID` | `MAINTENANCE` | `2` | `.devkit/installation.json` exists but does not match its schema (`devkit.core` `ReceiptError`); restore it from version control, then run `devkit sync` |
+
+Library calls that the CLI wraps with a more specific code raise these directly; their messages name the offending key or file:
+
+| Code | Class | Raised when |
 | --- | --- | --- |
-| `CONFIG_INVALID` | `INPUT_ERROR` | the `[workflow]` table is malformed |
-| `WORKFLOW_NOT_SELECTED`, `WORKFLOW_NOT_FOUND`, `WORKFLOW_INVALID` | `INPUT_ERROR` | no definition chosen, none matches, or the chosen one fails validation (problems become `[DETAIL]` lines) |
-| `UNIT_NOT_FOUND`, `UNIT_EXISTS`, `ANCHOR_INVALID` | `INPUT_ERROR` | the unit directory has no anchor, already exists, or its frontmatter is unreadable |
-| `ANCHOR_AMBIGUOUS`, `ANCHOR_MISMATCH` | `INPUT_ERROR` | several candidate anchor files exist in the unit (pass `--workflow`); the selected workflow declares a different anchor than the file that identifies the unit |
-| `HANDOFF_LAYOUT_MISMATCH` | `INPUT_ERROR` | the chosen candidate's anchor differs from the unit's; relocate the unit, then `bind` |
-| `ENVELOPE_STATUS_INVALID`, `ENVELOPE_FLAG_INVALID`, `ENVELOPE_FROM_INVALID`, `ENVELOPE_FINDINGS_INVALID` | `INPUT_ERROR` | `envelope new` authoring flags that cannot produce a valid envelope (details name the flag) |
-| `ENVELOPE_INVALID` | `INPUT_ERROR` | `envelope check` found malformed envelope files; `[DETAIL]` lines carry file and reason, `[TARGET]` the files |
-| `SLUG_INVALID`, `DATE_INVALID`, `GIVEN_INVALID`, `KIND_INVALID` | `INPUT_ERROR` | a flag or argument is malformed |
-| `HANDOFF_NOT_READY`, `HANDOFF_NONE`, `HANDOFF_OFF` | `INPUT_ERROR` | the unit's workflow is not complete, declares no `next`, or handoff is disabled by policy |
-| `HANDOFF_CHOICE_REQUIRED`, `HANDOFF_UNDECIDED`, `HANDOFF_INVALID`, `HANDOFF_INELIGIBLE` | `INPUT_ERROR` | `ask` needs a recorded choice or `--workflow`; `auto` found no eligible candidate; the choice is not a candidate, or its `when` checks fail (details list the candidates) |
-| `REQUEST_UNKNOWN`, `DECISION_INVALID` | `INPUT_ERROR` | `answer` names a request that is not open, or an action/value that does not fit it (see [Human Interaction Contract](human-interaction.md)) |
-| `RETURN_INVALID` | `INPUT_ERROR` | `return --to` names no stage of the workflow, or one after the current stage |
-| `WORKFLOW_DRIFT` | `BLOCKED` | the bound schema hash changed under in-flight work; `[FIX]` names the `bind` command |
-| `LINT_FAILED` | `MAINTENANCE` | `devkit.rules` raised a rule execution error during `lint-clean` |
-| `CHECK_LOAD_FAILED` | `MAINTENANCE` | a plugin check file failed to load, declares an invalid check, or a receipt `workflow-check` path is missing from disk |
-| `RECEIPT_INVALID` | `MAINTENANCE` | `.devkit/installation.json` exists but does not match its schema; run `devkit sync` |
+| `DEFINITION_INVALID` | `DefinitionError` | a definition file cannot be read or parsed (`parse`, `load`); `resolve`/`find` name no or several definitions (the CLI reports `WORKFLOW_NOT_FOUND`) |
+| `LAYOUT_INVALID` | `LayoutError` | a layout template, slug, directory or anchor file name is malformed (`validate_template`, `parse_layout_spec`, `TemplateLayout.new_unit`); the CLI reports `SLUG_INVALID` or `CONFIG_INVALID` |
+| `CHECK_INVALID` | `CheckError` | a check reference is malformed, unregistered or collides (`parse_check`, `Registry`); validation reports it as a problem |
+| `ROLE_UNKNOWN`, `SHARED_STAGE_MISMATCH`, `WORKFLOW_ASSET_MISSING` | collected entries | validation `Problem` for a role outside the vocabulary; `WorkflowProblem` for stages that share an id but differ, and for a receipt-listed definition missing from disk |
+| `DECISION_RECORD_INVALID` | `DecisionRecordError` | a decision record file does not match the format (`parse_record`); `load_decisions` collects it as a `DecisionError` entry with this code |
+| `GIT_FAILED` | `devkit.core` `GitError` | `is_ancestor` cannot answer, or is given a non-hexadecimal revision (`INPUT_ERROR`) |
 
 Output contracts are specified in [Workflow Definitions and Checks, section 5](definition-and-checks.md#5-output-signals); the request and decision formats in [Human Interaction Contract](human-interaction.md).
 

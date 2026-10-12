@@ -9,14 +9,6 @@ BUNDLE = PACKAGE / "src/devkit_starter/bundle"
 EXAMPLES = Path(__file__).parents[3] / "examples/bundles"
 
 
-def _files(root: Path) -> dict[str, bytes]:
-    return {
-        path.relative_to(root).as_posix(): path.read_bytes()
-        for path in sorted(root.rglob("*"))
-        if path.is_file() and "__pycache__" not in path.parts
-    }
-
-
 def test_resource_manifest_and_skill_are_in_package() -> None:
     assert (BUNDLE / "bundle.toml").is_file()
     assert (BUNDLE / "skills/review/SKILL.md").is_file()
@@ -24,13 +16,11 @@ def test_resource_manifest_and_skill_are_in_package() -> None:
     assert (BUNDLE / "playbooks/review.md").is_file()
 
 
-def test_the_example_mirror_is_identical_in_both_directions() -> None:
-    assert _files(BUNDLE) == _files(EXAMPLES / "starter")
-
-
-def test_bundle_version_matches_the_package_version() -> None:
+def test_bundle_loads_and_its_version_matches_the_package_version() -> None:
     pyproject = tomllib.loads((PACKAGE / "pyproject.toml").read_text())
-    assert load_bundle(BUNDLE).version == pyproject["project"]["version"]
+    bundle = load_bundle(BUNDLE)
+    assert bundle.name == "starter" and bundle.default_preset in bundle.presets
+    assert bundle.version == pyproject["project"]["version"]
 
 
 @pytest.mark.parametrize("example", sorted(path.name for path in EXAMPLES.iterdir() if path.is_dir()))

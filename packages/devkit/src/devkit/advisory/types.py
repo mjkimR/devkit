@@ -4,12 +4,11 @@ from enum import IntEnum, StrEnum
 
 
 class ExitCode(IntEnum):
-    """Process exit codes for CLI execution."""
+    """Process exit codes, following the checker convention of grep, diff and ruff."""
 
-    OK = 0
-    FAILED = 1
-    INCOMPLETE = 2  # Partial result, such as rule violations remaining
-    USAGE = 64
+    OK = 0  # Success; nothing found
+    FINDINGS = 1  # The command ran and reports a negative result (violations, a needed sync, a refused commit)
+    ERROR = 2  # The command could not do its job (usage, unreadable input or configuration, unexpected failure)
 
 
 class Actor(StrEnum):

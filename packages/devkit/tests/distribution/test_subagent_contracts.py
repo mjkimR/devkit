@@ -6,8 +6,9 @@ from pathlib import Path
 
 import pytest
 import yaml
-from devkit.distribution.bundles import BundleError, load_bundle
+from devkit.distribution.bundles import load_bundle
 from devkit.distribution.bundles.subagents import projection_path, read_contract, render
+from devkit.distribution.errors import BundleError
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.discovery import InstalledBundle
 from devkit.distribution.installation.sync import sync_project

@@ -6,9 +6,9 @@ import sys
 
 import click
 
+from devkit.advisory import ExitCode
 from devkit.workflow.binding import Binding, write_binding
 from devkit.workflow.cli.app import (
-    EXIT_INVALID,
     FORMAT,
     UNIT,
     WORKSPACE,
@@ -83,7 +83,7 @@ def show_cmd(workspace_root: str | None, ref: str | None, unit: str | None, outp
         assert ref is not None
         doc = ws.load_definition(ref)
     data = ws.describe(doc, binding)
-    problems: list[str] = data["problems"]
+    problems: list[dict[str, str]] = data["problems"]
     if is_json(output_format):
         echo_json(data)
     else:
@@ -92,9 +92,9 @@ def show_cmd(workspace_root: str | None, ref: str | None, unit: str | None, outp
             drift = str(data["binding"]["drift"]).lower()
             click.echo(f"[BINDING: workflow={binding.workflow or '-'} hash={binding.hash or '-'} drift={drift}]")
         for p in problems:
-            click.secho(f"[PROBLEM: {p}]", fg="red")
+            click.secho(f"[PROBLEM: {p['where']}: {p['message']}]", fg="red")
     if problems:
-        sys.exit(EXIT_INVALID)
+        sys.exit(int(ExitCode.FINDINGS))
 
 
 @cli.command(name="list")

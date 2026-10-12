@@ -503,14 +503,14 @@ def test_cli_invalid_target_fails_before_evaluation(tmp_path: Path) -> None:
     runner = CliRunner()
     missing = runner.invoke(cli, ["check", "-w", str(tmp_path), "docs/nope.md"])
     assert missing.exit_code == 2
-    assert "INVALID_LINT_TARGET" in missing.stderr and "docs/nope.md" in missing.stderr
+    assert "(RULES_TARGET_INVALID)" in missing.stderr and "docs/nope.md" in missing.stderr
     assert "broken" not in missing.stdout
 
     outside = runner.invoke(cli, ["check", "-w", str(tmp_path), "../elsewhere"])
-    assert outside.exit_code == 2 and "INVALID_LINT_TARGET" in outside.stderr
+    assert outside.exit_code == 2 and "(RULES_TARGET_INVALID)" in outside.stderr
 
     fixed = runner.invoke(cli, ["fix", "-w", str(tmp_path), "--dry-run", "docs/nope"])
-    assert fixed.exit_code == 2 and "INVALID_LINT_TARGET" in fixed.stderr
+    assert fixed.exit_code == 2 and "(RULES_TARGET_INVALID)" in fixed.stderr
 
 
 def test_cli_target_directory_without_files_checks_nothing(tmp_path: Path) -> None:
@@ -713,9 +713,13 @@ def test_cli_explain_reports_only_its_rules_problems_as_errors(tmp_path: Path) -
     runner = CliRunner()
     other = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-secret-leak"])
     assert other.exit_code == 0, other.output
-    assert "Warning: severity override for RULE-file-length is redundant" in other.stderr
+    assert "Warning: (RULES_POLICY_INVALID) severity override for RULE-file-length is redundant" in other.stderr
     own = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-file-length"])
-    assert own.exit_code == 2 and "Error: severity override for RULE-file-length" in own.stderr
+    assert own.exit_code == 2 and "[ERROR]  (RULES_POLICY_INVALID) severity override for RULE-file-length" in own.stderr
+    assert "Warning: (RULES_POLICY_INVALID) settings for RULE-markdown-link" in own.stderr
+    as_json = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-file-length", "--format", "json"])
+    assert as_json.exit_code == 2
+    assert json.loads(as_json.stdout)["error"]["code"] == "RULES_POLICY_INVALID"
 
 
 def test_cli_deletion_only_commit_rechecks_linking_files(tmp_path: Path) -> None:
@@ -729,3 +733,87 @@ def test_cli_deletion_only_commit_rechecks_linking_files(tmp_path: Path) -> None
     result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "--format", "json"])
     assert result.exit_code == 1, result.output
     assert [v["file"] for v in json.loads(result.stdout)] == ["docs/index.md"]
+
+
+# --- exit-code convention: 0 nothing found, 1 findings, 2 could not run -------
+
+
+def test_exit_codes_of_check_and_fix(tmp_path: Path) -> None:
+    runner = CliRunner()
+    assert runner.invoke(cli, ["check", "-w", str(tmp_path)]).exit_code == 0
+    _broken_link_workspace(tmp_path)
+    assert runner.invoke(cli, ["check", "-w", str(tmp_path)]).exit_code == 1
+    assert runner.invoke(cli, ["fix", "-w", str(tmp_path)]).exit_code == 1  # nothing to repair it with
+    assert runner.invoke(cli, ["check", "-w", str(tmp_path), "--staged", "--ci"]).exit_code == 2  # usage
+    _write_config(tmp_path, "[rules]\nunknown = 1\n")
+    for command in ("check", "fix"):
+        result = runner.invoke(cli, [command, "-w", str(tmp_path)])
+        assert result.exit_code == 2 and "[ERROR]  (RULES_CONFIG_INVALID)" in result.stderr
+        assert "[TARGET] .devkit/config.toml" in result.stderr
+
+
+def test_exit_code_of_fix_that_repairs_everything(tmp_path: Path) -> None:
+    _fixable_link_workspace(tmp_path)
+    assert CliRunner().invoke(cli, ["fix", "-w", str(tmp_path)]).exit_code == 0
+
+
+def test_json_check_that_cannot_run_prints_the_error_envelope(tmp_path: Path) -> None:
+    result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--format", "json", "nope.md"])
+    assert result.exit_code == 2
+    error = json.loads(result.stdout)["error"]
+    assert (error["code"], error["advisory"]["mode"]) == ("RULES_TARGET_INVALID", "INPUT_ERROR")
+
+
+def test_exit_codes_of_phases(tmp_path: Path) -> None:
+    runner = CliRunner()
+    assert runner.invoke(cli, ["phases", "-w", str(tmp_path)]).exit_code == 0
+    _write_config(tmp_path, '[rules.phase_overrides]\nRULE-nope = "hygiene"\n')
+    result = runner.invoke(cli, ["phases", "-w", str(tmp_path)])
+    assert (
+        result.exit_code == 2 and "(RULES_POLICY_INVALID) phase override for unknown rule: RULE-nope" in result.stderr
+    )
+
+
+def test_exit_codes_of_explain(tmp_path: Path) -> None:
+    runner = CliRunner()
+    assert runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-file-length"]).exit_code == 0
+    unknown = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-nope", "--format", "json"])
+    assert unknown.exit_code == 2 and "[ACTION] INPUT_ERROR" in unknown.stderr
+    assert json.loads(unknown.stdout)["error"]["code"] == "RULES_UNKNOWN_RULE"
+
+
+def test_unexpected_errors_exit_2_as_advisories(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def explode(*_args: object, **_kwargs: object) -> None:
+        raise RuntimeError("disk on fire")
+
+    monkeypatch.setattr("devkit.rules.cli.commands.run_project_rules", explode)
+    result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path)])
+    assert result.exit_code == 2
+    assert "[ERROR]  (UNEXPECTED_ERROR) disk on fire" in result.stderr and "[ACTION] MAINTENANCE" in result.stderr
+
+
+def test_check_refuses_a_hand_edited_managed_rule(tmp_path: Path) -> None:
+    import hashlib
+
+    rel = ".devkit/managed/team/rules/r.py"
+    source = (
+        "from devkit.rules import RuleContext, Violation\n"
+        "from devkit.rules.rules import BaseRule\n\n\n"
+        "class R(BaseRule):\n"
+        "    def __init__(self) -> None:\n"
+        "        super().__init__(id='RULE-team-r', name='r', description='r')\n\n"
+        "    def check(self, ctx: RuleContext) -> list[Violation]:\n"
+        "        return []\n"
+    )
+    (tmp_path / ".devkit/managed/team/rules").mkdir(parents=True)
+    (tmp_path / rel).write_text(source)
+    write_receipt(
+        tmp_path,
+        [{"bundle": "team", "id": "rules", "kind": "rule", "paths": [rel]}],
+        {rel: hashlib.sha256(source.encode()).hexdigest()},
+    )
+    assert CliRunner().invoke(cli, ["check", "-w", str(tmp_path)]).exit_code == 0
+    (tmp_path / rel).write_text(source + "# edited\n")
+    result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path)])
+    assert result.exit_code == 2
+    assert "(RULES_LOAD_FAILED)" in result.output and "differs from the hash in the receipt" in result.output

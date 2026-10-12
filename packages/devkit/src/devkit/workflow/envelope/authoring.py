@@ -16,6 +16,7 @@ from devkit.workflow.envelope.model import (
     STATUSES,
     Envelope,
     EnvelopeError,
+    EnvelopeFormatError,
     Envelopes,
     Finding,
     parse_envelope,
@@ -126,7 +127,7 @@ def parse_findings(text: str, kind: str) -> tuple[Finding, ...]:
     for i, item in enumerate(data, start=1):
         try:
             finding = parse_finding(item, f"finding {i}")
-        except ValueError as exc:
+        except EnvelopeFormatError as exc:
             raise AuthoringError(
                 "ENVELOPE_FINDINGS_INVALID",
                 f"--findings-file: {exc}",

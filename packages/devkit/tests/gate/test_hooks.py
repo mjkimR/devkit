@@ -26,9 +26,9 @@ def _install(repo: Path, *extra: str) -> str:
     return output
 
 
-def _status(repo: Path) -> dict:
+def _status(repo: Path, expected: int = 0) -> dict:
     code, output = _invoke("status", "-w", str(repo), "--format", "json")
-    assert code == 0, output
+    assert code == expected, output
     return json.loads(output)
 
 
@@ -196,8 +196,15 @@ def test_wrapper_without_interpreter(repo: Path, tmp_path: Path) -> None:
         (directory / stage.value).chmod(0o755)
     code, output = _commit(repo, "-m", "feat: x")
     assert code != 0 and "no interpreter with devkit found" in output
-    # post-commit is not blocking: its wrapper exits 0 when the interpreter is gone.
-    assert f"exit {int(Stage.POST_COMMIT.blocking)}" in (directory / "post-commit").read_text()
+    # Blocking stages exit 2 (the gates could not run); post-commit is not blocking and exits 0.
+    assert "    exit 2\n" in (directory / "pre-commit").read_text()
+    assert "    exit 0\n" in (directory / "post-commit").read_text()
+
+
+def test_wrapper_probes_only_the_posix_venv_layout() -> None:
+    script = hooks.wrapper_script(Stage.PRE_COMMIT, PYTHON)
+    assert "Scripts" not in script and ".exe" not in script and "/Lib/" not in script
+    assert '"$top/.venv/bin/python"' in script
 
 
 def test_wrapper_prefers_the_work_tree_venv_when_it_has_devkit(repo: Path, tmp_path: Path) -> None:
@@ -285,21 +292,52 @@ def test_run_command_verbose_and_post_commit_never_blocks(repo: Path) -> None:
 
 def test_status_reports_every_problem_that_fails_a_commit(repo: Path) -> None:
     (repo / ".git/devkit.config").write_text("[gates.settings.typo-gate]\nenabled = true\n")
-    data = _status(repo)
+    data = _status(repo, 1)
     assert [e["code"] for e in data["errors"]] == ["GATE_CONFIG_INVALID"]
     assert "not installed: ['typo-gate']" in data["errors"][0]["message"]
 
     (repo / ".git/devkit.config").write_text("[gates.settings.message-nonempty]\nenabled = false\nbogus = 1\n")
-    assert "gate has no settings" in _status(repo)["errors"][0]["message"]
+    assert "gate has no settings" in _status(repo, 1)["errors"][0]["message"]
 
     (repo / ".git/devkit.config").write_text("[gates\n")
-    data = _status(repo)
+    data = _status(repo, 1)
     assert "invalid config" in data["errors"][0]["message"] and data["gates"]
+    code, output = _invoke("status", "-w", str(repo))
+    assert code == 1 and "(GATE_CONFIG_INVALID)" in output
+
+    (repo / ".git/devkit.config").unlink()
+    assert _status(repo)["errors"] == []
 
 
 def test_outside_a_repository_is_an_input_error(tmp_path: Path) -> None:
     code, output = _invoke("status", "-w", str(tmp_path))
-    assert code != 0 and "GATE_GIT_FAILED" in output and "INPUT_ERROR" in output
+    assert code == 2 and "(GIT_FAILED)" in output and "INPUT_ERROR" in output
+
+    result = CliRunner().invoke(cli, ["status", "-w", str(tmp_path), "--format", "json"])
+    assert result.exit_code == 2
+    assert json.loads(result.stdout)["error"]["code"] == "GIT_FAILED"
+
+
+def test_run_exit_codes(repo: Path, tmp_path: Path) -> None:
+    assert _invoke("run", "-w", str(repo), "pre-commit")[0] == 0
+    deploy_gate(repo, gate_source())
+    code, output = _invoke("run", "-w", str(repo), "pre-commit")
+    assert code == 1 and "(TEST_REFUSED)" in output  # a gate refused the commit
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    code, output = _invoke("run", "-w", str(outside), "pre-commit")
+    assert code == 2 and "(GIT_FAILED)" in output  # the stage could not run, and still blocks
+    code, output = _invoke("run", "-w", str(outside), "post-commit")
+    assert code == 0 and "(GIT_FAILED)" in output  # post-commit reports only
+    assert _invoke("run", "-w", str(repo), "pre-commit-typo")[0] == 2  # usage error
+
+
+def test_install_refusals_exit_2(repo: Path, tmp_path: Path) -> None:
+    code, _ = _invoke("install", "-w", str(repo), "--python", str(tmp_path / "gone/python"))
+    assert code == 2
+    git(repo, "config", "core.hooksPath", ".husky")
+    code, output = _invoke("install", "-w", str(repo), "--python", sys.executable)
+    assert code == 2 and "GATE_HOOKS_PATH_SET" in output
 
 
 @pytest.mark.parametrize("stage", list(Stage))

@@ -7,7 +7,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, Protocol
 
-from devkit.advisory import Actor, AdvisoryError, Retry
+from devkit.advisory import Actor, AdvisoryError, ExitCode, Retry
 
 
 class Stage(StrEnum):
@@ -21,6 +21,9 @@ class Stage(StrEnum):
     def blocking(self) -> bool:
         """Git aborts the commit when this hook exits non-zero; post-commit runs after the commit exists."""
         return self is not Stage.POST_COMMIT
+
+
+RESULT_INVALID = "GATE_RESULT_INVALID"
 
 
 class Outcome(StrEnum):
@@ -42,7 +45,11 @@ class GateResult:
 
     def __post_init__(self) -> None:
         if self.outcome not in (Outcome.PASSED, Outcome.SKIPPED):
-            raise ValueError(f"a GateResult is passed or skipped, not {self.outcome!r}; refuse by raising GateError")
+            raise GateConfigError(
+                f"a GateResult is passed or skipped, not {self.outcome!r}; refuse by raising GateError",
+                code=RESULT_INVALID,
+                input_error=False,
+            )
 
     @classmethod
     def passed(cls, note: str = "") -> GateResult:
@@ -54,13 +61,21 @@ class GateResult:
 
 
 class GateError(AdvisoryError):
-    """Raised by a gate to refuse the commit; use ``GateError.blocked(...)`` for policy refusals."""
+    """Raised by a gate to refuse the commit; use ``GateError.blocked(...)`` for policy refusals.
+
+    A refusal is a negative result of a check that ran, so it exits ``FINDINGS`` (``1``).
+    """
 
     code = "GATE_FAILED"
+    exit_code = ExitCode.FINDINGS
 
 
 class GateConfigError(AdvisoryError):
-    """The ``[gates]`` configuration, a gate's settings, or a deployed gate file is invalid."""
+    """The ``[gates]`` configuration, a gate's settings, or a deployed gate file is invalid.
+
+    ``input_error=False`` marks a defect in a gate's code (``MAINTENANCE``), such
+    as an invalid ``id`` or a ``GateResult`` that is neither passed nor skipped.
+    """
 
     code = "GATE_CONFIG_INVALID"
     actor = Actor.DEVELOPER

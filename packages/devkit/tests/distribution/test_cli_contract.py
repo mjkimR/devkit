@@ -8,9 +8,11 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
+from devkit.advisory import ExitCode
 from devkit.distribution.cli import cli
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.discovery import InstalledBundle
+from devkit.distribution.installation.transaction import project_lock
 from devkit.distribution.installation.workspace import CONFIG, RECEIPT
 from testsupport.distribution import instruction, write_bundle
 
@@ -61,7 +63,9 @@ def test_add_checks_the_configuration_before_syncing(item: InstalledBundle, targ
 
 def test_sync_check_exit_codes(item: InstalledBundle, target: Path) -> None:
     update_config(target, presets={"team": ["all"]}, agents=[])
-    assert _invoke("sync", "--check", "-w", str(target)).exit_code == 1  # synchronization needed
+    needed = _invoke("sync", "--check", "-w", str(target))
+    assert needed.exit_code == int(ExitCode.FINDINGS)  # synchronization needed: a result, not an error
+    assert json.loads(needed.stdout)["actions"] and not needed.stderr.startswith("[ERROR]")
     assert _invoke("sync", "-w", str(target)).exit_code == 0
     assert _invoke("sync", "--check", "-w", str(target)).exit_code == 0
     (target / ".devkit/managed/team/guide.md").write_text("edited")
@@ -73,6 +77,62 @@ def test_errors_exit_2_on_every_command(item: InstalledBundle, target: Path) -> 
     assert _invoke("get-context", "team", "-w", str(target)).exit_code == 2
     assert _invoke("override", "accept", "team:guide", "-w", str(target)).exit_code == 2
     assert _invoke("remove", "team", "-w", str(target)).exit_code == 2
+
+
+def test_an_error_is_one_json_document_on_stdout_and_an_advisory_on_stderr(item: InstalledBundle, target: Path) -> None:
+    result = _invoke("get-context", "team", "-w", str(target))
+    assert result.exit_code == int(ExitCode.ERROR)
+    error = json.loads(result.stdout)["error"]
+    assert (error["code"], error["exit_code"], error["advisory"]["mode"]) == ("NOT_SYNCHRONIZED", 2, "AUTO")
+    assert error["advisory"]["fix"] == "devkit sync"
+    assert result.stderr.startswith("[ERROR]  (NOT_SYNCHRONIZED) no synchronized project found")
+    assert "[ACTION] AUTO" in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("args", "code", "mode"),
+    [
+        (("override", "create", "team", "-w", "{target}"), "ARGUMENT_INVALID", "INPUT_ERROR"),
+        (("add", "missing", "-w", "{target}"), "SELECTION_INVALID", "INPUT_ERROR"),
+        (("remove", "team", "-w", "{target}"), "SELECTION_INVALID", "INPUT_ERROR"),
+    ],
+)
+def test_error_codes_reach_the_cli(
+    item: InstalledBundle, target: Path, args: tuple[str, ...], code: str, mode: str
+) -> None:
+    result = _invoke(*(arg.format(target=target) for arg in args))
+    assert result.exit_code == int(ExitCode.ERROR), result.output
+    error = json.loads(result.stdout)["error"]
+    assert (error["code"], error["advisory"]["mode"]) == (code, mode)
+
+
+def test_usage_errors_exit_2(item: InstalledBundle, target: Path) -> None:
+    assert _invoke("sync", "--agent", "codex", "--no-agents", "-w", str(target)).exit_code == 2
+    assert _invoke("add", "Bad Slug!", "-w", str(target)).exit_code == 2
+    assert _invoke("sync", "--no-such-flag").exit_code == 2
+
+
+def test_a_held_lock_defers_and_exits_2(item: InstalledBundle, target: Path) -> None:
+    update_config(target, presets={"team": ["all"]}, agents=[])
+    with project_lock(target):
+        result = _invoke("sync", "-w", str(target))
+    assert result.exit_code == int(ExitCode.ERROR)
+    error = json.loads(result.stdout)["error"]
+    assert (error["code"], error["advisory"]["mode"]) == ("LOCK_HELD", "DEFER")
+    assert "[WHEN]   Not before: the running devkit command finishes" in result.stderr
+
+
+def test_unexpected_errors_are_maintenance_and_exit_2(
+    item: InstalledBundle, target: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def explode(*args: object, **kwargs: object) -> None:
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr("devkit.distribution.cli.project_status", explode)
+    result = _invoke("status", "-w", str(target))
+    assert result.exit_code == int(ExitCode.ERROR)
+    assert json.loads(result.stdout)["error"]["code"] == "UNEXPECTED_ERROR"
+    assert "[ACTION] MAINTENANCE" in result.stderr
 
 
 def test_workspace_root_defaults_to_the_project_root(

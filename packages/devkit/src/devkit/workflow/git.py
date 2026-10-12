@@ -23,7 +23,7 @@ def is_ancestor(workspace_root: Path, ancestor: str, descendant: str, *, timeout
     """
     for revision in (ancestor, descendant):
         if not REVISION.match(revision):
-            raise GitError(f"{revision!r} is not a hexadecimal revision")
+            raise GitError(f"{revision!r} is not a hexadecimal revision", input_error=True)
     try:
         run_git(workspace_root, "merge-base", "--is-ancestor", ancestor, descendant, timeout=timeout)
     except GitError as exc:

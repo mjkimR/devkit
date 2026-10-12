@@ -18,14 +18,14 @@ devkit/
 │   │       ├── gate/          # Pluggable Git commit gates (`devkit gate`)
 │   │       └── distribution/  # Bundle synchronization (`devkit sync`, `add`, ...) and the `devkit` guide bundle
 │   └── devkit-starter/        # Example external content package
-├── examples/bundles/          # Example bundles: `starter` (mirror of devkit-starter's bundle) and `delivery-workflow`
+├── examples/bundles/          # Example bundle `delivery-workflow` (the starter bundle lives in devkit-starter)
 ├── scripts/                   # Shell logic behind the justfile recipes
 └── docs/                      # Documentation per module (see Documentation below)
 ```
 
 ## Development
 
-Python 3.12+, `uv`, and `just` are required (`git` too for `just smoke`).
+Supported platforms: macOS and Linux only (POSIX). Python 3.12+, `uv`, and `just` are required (`git` too for `just smoke`).
 
 ```bash
 just init                  # create the virtualenv with every workspace package

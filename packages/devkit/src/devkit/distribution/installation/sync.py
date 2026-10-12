@@ -8,7 +8,7 @@ from types import MappingProxyType
 
 from devkit.core.receipt import FileRecord, OverrideRecord, Receipt, SeededRecord, Selection, ToolRecord
 
-from ..bundles.common import BundleError
+from ..errors import ArgumentError, ConflictError, OverrideDriftError, SelectionError, UnsafeWorkspaceError
 from . import guidance_block
 from .config import effective_selection, read_config
 from .discovery import InstalledBundle
@@ -54,7 +54,7 @@ def stray_managed_files(root: Path, owned: set[str]) -> list[str]:
 def project_root(root: Path) -> Path:
     root = root.resolve()
     if not root.is_dir():
-        raise BundleError("target must be an existing directory")
+        raise ArgumentError(f"target must be an existing directory: {root}", target_files=["--workspace-root"])
     return root
 
 
@@ -82,7 +82,7 @@ def _plan_guidance_block(
     if (root / AGENTS_FILE).is_symlink():
         if not enabled:
             return None
-        raise BundleError(
+        raise UnsafeWorkspaceError(
             f"{AGENTS_FILE} is a symlink; devkit writes its guidance block only into a regular root {AGENTS_FILE}."
             f" Make {AGENTS_FILE} the file (and point CLAUDE.md or other names at it), or set"
             " guidance_block = false in .devkit/config.toml"
@@ -92,9 +92,13 @@ def _plan_guidance_block(
     existing = guidance_block.extract(text)
     if existing is not None:
         if recorded is None:
-            raise BundleError(f"unowned guidance block already exists: {AGENTS_FILE}")
+            raise ConflictError(
+                f"unowned guidance block already exists: {AGENTS_FILE}",
+                target_files=[AGENTS_FILE],
+                what_to_report=f"Whether to remove the devkit block markers that {AGENTS_FILE} already has, so sync can write its own",
+            )
         if guidance_block.digest(existing) != recorded:
-            raise BundleError(
+            raise ConflictError(
                 f"user-modified guidance block: {AGENTS_FILE}; restore the block between the markers"
                 f" (for example 'git checkout -- {AGENTS_FILE}'), keep project text outside them,"
                 " and rerun devkit sync"
@@ -192,7 +196,7 @@ def sync_locked(
     available = {item.bundle.name for item in installed}
     missing = sorted(set(active_presets) - available)
     if missing:
-        raise BundleError(
+        raise SelectionError(
             f"selected bundle is not installed: {missing}; install its package or run 'devkit remove <bundle>'"
         )
     active_presets = {name: sorted(set(values)) for name, values in sorted(active_presets.items())}
@@ -206,7 +210,7 @@ def sync_locked(
     )
     if config.override_drift == "block" and inventory.drift:
         listed = ", ".join(f"{item.bundle}:{item.asset}" for item in inventory.drift)
-        raise BundleError(
+        raise OverrideDriftError(
             f'upstream drift behind an override (override_drift = "block"): {listed}; review with'
             " 'devkit override diff <bundle>:<asset>' and accept with 'devkit override accept <bundle>:<asset>'"
         )
@@ -227,9 +231,18 @@ def sync_locked(
                 if after is None:
                     orphans.append(name)
                     continue
-                raise BundleError(f"user-modified deployment file: {name}")
+                raise ConflictError(
+                    f"user-modified deployment file: {name}",
+                    target_files=[name],
+                    what_to_report=f"Whether to keep the edit to {name} (as a project override) or discard it",
+                    fix=f"Keep it: copy it aside, run `devkit override create <bundle>:<asset>` and reapply the edit there; discard it: git checkout -- {name}",
+                )
         elif current is not None:
-            raise BundleError(f"unowned destination already exists: {name}")
+            raise ConflictError(
+                f"unowned destination already exists: {name}",
+                target_files=[name],
+                what_to_report=f"Whether {name} may be replaced by the bundle's file; devkit does not overwrite files it does not own",
+            )
         if not same_content(current, after):
             changes[name] = after
             action = "remove" if after is None else ("create" if current is None else "update")

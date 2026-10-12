@@ -87,7 +87,7 @@ only `devkit.core` and `devkit.advisory`. The library surface is exported from `
 `project_status`, `project_listing` and their `TypedDict` results).
 
 - `bundles/` (authoring side; no workspace knowledge):
-  - `common.py`: `BundleError`, slug and version grammars, the reserved `all` preset, supported agent names.
+  - `common.py`: slug and version grammars, the reserved `all` preset, supported agent names.
   - `manifest.py`: `bundle.toml` schema 1, source path rules (canonical relative POSIX, no backslash, no symlink), seeded targets, `source_files` (skips `.DS_Store`, `__pycache__/`, `*.pyc`), and kind-specific validation at load.
   - `instructions.py`, `playbooks.py`, `workflows.py`, `subagents.py`: headers of each kind on the shared frontmatter grammar; role contract rendering per agent.
   - `guidance.py`: the context-loading prerequisite inserted after a skill's frontmatter.
@@ -107,4 +107,5 @@ only `devkit.core` and `devkit.advisory`. The library surface is exported from `
   - `status.py`, `plan.py`, `results.py`: `status` and `list` reports, `bundle plan`, and the JSON result types.
   - `playbook_skill.py`, `workflow_skill.py`: the generated `devkit-playbook` and `devkit-workflow` entry skills.
   - `hooks.py`: the `devkit.post_sync` extension point.
-- `cli/`: the distribution commands of the `devkit` CLI: `sync`, `add`, `remove`, `list`, `status`, `recover`, `get-context`, `playbook search`, `override` (`create`, `diff`, `accept`, `remove`, `list`) and `bundle` (`validate`, `plan`, `build`). Every command takes `-w/--workspace-root`, prints JSON and exits `2` on error (`1` only for `sync --check` when a sync is needed).
+- `errors.py`: the `DistributionError` hierarchy (`BundleError`, `SelectionError`, `ConflictError`, `LockHeldError`, ...), each an `AdvisoryError` with a stable code; see the [reference](reference.md#error-codes).
+- `cli/`: the distribution commands of the `devkit` CLI: `sync`, `add`, `remove`, `list`, `status`, `recover`, `get-context`, `playbook search`, `override` (`create`, `diff`, `accept`, `remove`, `list`) and `bundle` (`validate`, `plan`, `build`). Every command takes `-w/--workspace-root`, prints one JSON document (the result, or `{"error": {...}}`), renders an error as an advisory on stderr and exits `2` on error (`1` only for `sync --check` when a sync is needed).

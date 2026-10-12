@@ -3,13 +3,15 @@
 One implementation of what several packages need to agree on: the frontmatter
 grammar, the installation receipt, safe workspace-relative paths, the Git
 runner, plugin file loading and project discovery. Free of import-time side
-effects; the only third-party dependency is PyYAML.
+effects; the only third-party dependency is PyYAML, and the only devkit module
+it imports is ``devkit.advisory`` (every core error is an ``AdvisoryError``).
 
 Frontmatter functions are used through their module
 (``devkit.core.frontmatter.parse`` / ``locate`` / ``load_header``).
 """
 
 from devkit.core.errors import (
+    AssetFileError,
     ConfigError,
     DevkitCoreError,
     FrontmatterError,
@@ -35,11 +37,13 @@ from devkit.core.receipt import (
     ToolRecord,
     load_receipt,
     parse_receipt,
+    verified_asset_file,
 )
 
 __all__ = [
     "CONFIG_PATH",
     "RECEIPT_PATH",
+    "AssetFileError",
     "AssetRecord",
     "ConfigError",
     "DevkitCoreError",
@@ -70,4 +74,5 @@ __all__ = [
     "read_project_config",
     "resolve_within",
     "run_git",
+    "verified_asset_file",
 ]

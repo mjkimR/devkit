@@ -11,9 +11,9 @@ Each wrapper is static. On every commit it:
 1. runs ``<hook>.pre-gate`` first when that file exists and is executable (the
    hook ``install --force`` moved aside), and stops when a blocking stage's
    hook fails;
-2. picks the interpreter: the work tree's ``.venv`` Python when ``devkit`` is
-   installed in it, otherwise the absolute interpreter recorded at install
-   time;
+2. picks the interpreter: the work tree's ``.venv/bin/python`` when ``devkit``
+   is installed in it, otherwise the absolute interpreter recorded at install
+   time, and exits ``2`` on a blocking stage when neither exists;
 3. execs ``<python> -P -m devkit.gate run <stage>`` (``-P`` keeps repository
    files from shadowing standard library modules).
 
@@ -32,7 +32,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
-from devkit.advisory import AdvisoryError
+from devkit.advisory import AdvisoryError, ExitCode
 from devkit.gate import git
 from devkit.gate.models import Stage
 
@@ -96,8 +96,9 @@ def locate(cwd: Path) -> HooksLocation:
 
 def wrapper_script(stage: Stage, python: str) -> str:
     """The wrapper for one stage. ``python`` is the absolute fallback interpreter (POSIX separators)."""
-    # Blocking stages fail closed when no interpreter is found; post-commit cannot undo the commit anyway.
-    missing_exit = 1 if stage.blocking else 0
+    # Blocking stages fail closed with ERROR (the gates could not run) when no interpreter is found;
+    # post-commit cannot undo the commit anyway.
+    missing_exit = int(ExitCode.ERROR) if stage.blocking else int(ExitCode.OK)
     chained = f'"$0{BACKUP_SUFFIX}" "$@"' + (" || exit $?" if stage.blocking else "")
     return f"""#!/bin/sh
 {MARKER}
@@ -107,15 +108,15 @@ if [ -x "$0{BACKUP_SUFFIX}" ]; then
 fi
 top=$(git rev-parse --show-toplevel 2>/dev/null)
 if [ -n "$top" ]; then
-    for candidate in "$top/.venv/bin/python" "$top/.venv/Scripts/python.exe"; do
-        [ -x "$candidate" ] || continue
-        for info in "$top"/.venv/lib/python*/site-packages/devkit-*.dist-info "$top"/.venv/Lib/site-packages/devkit-*.dist-info; do
+    candidate="$top/.venv/bin/python"
+    if [ -x "$candidate" ]; then
+        for info in "$top"/.venv/lib/python*/site-packages/devkit-*.dist-info; do
             if [ -d "$info" ]; then
                 python=$candidate
-                break 2
+                break
             fi
         done
-    done
+    fi
 fi
 if [ ! -x "$python" ]; then
     echo "[devkit gate] {stage}: no interpreter with devkit found ($python); run 'uv sync' in this repository" >&2

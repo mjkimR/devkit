@@ -205,8 +205,12 @@ def test_discover_merges_receipt_and_local_with_local_shadowing(workspace: Path)
     defs = workspace / ".devkit/workflows"
     docs, errors = discover(workspace, defs)
     # A recorded definition missing from disk is reported, not silently skipped (R9).
-    assert errors == [
-        "synchronized workflow .devkit/managed/team/flows/missing.md is missing from the working tree (run devkit sync)"
+    assert [(str(e), e.code, e.target) for e in errors] == [
+        (
+            "synchronized workflow .devkit/managed/team/flows/missing.md is missing from the working tree (run devkit sync)",
+            "WORKFLOW_ASSET_MISSING",
+            ".devkit/managed/team/flows/missing.md",
+        )
     ]
     by_id = {d.id: d for d in docs}
     assert set(by_id) == {"direct-delivery", "bugfix"}

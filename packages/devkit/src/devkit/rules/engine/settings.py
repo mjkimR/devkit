@@ -30,14 +30,10 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from devkit.rules.engine.errors import PolicyError
+from devkit.rules.engine.errors import PolicyError, SettingsError
 
 if TYPE_CHECKING:
     from devkit.rules.engine.models import Rule
-
-
-class SettingsError(ValueError):
-    """A settings declaration or configuration problem, prefixed with the rule ID."""
 
 
 @dataclass(frozen=True)
@@ -99,7 +95,11 @@ def _describe(annotation: Any) -> str:
         return _SCALARS[annotation]
     if typing.get_origin(annotation) is list and typing.get_args(annotation) == (str,):
         return "array of strings"
-    raise SettingsError(f"unsupported settings field type {annotation!r}; use int, float, str, bool or list[str]")
+    raise SettingsError(
+        f"unsupported settings field type {annotation!r}; use int, float, str, bool or list[str]",
+        input_error=False,
+        target_files=[],
+    )
 
 
 def _check_value(name: str, annotation: Any, value: Any) -> Any:
@@ -131,7 +131,12 @@ def declared_settings(rule: Rule) -> Any | None:
     if value is None:
         return None
     if not dataclasses.is_dataclass(value) or isinstance(value, type):
-        raise SettingsError(f"{rule.id}: settings must be a dataclass instance carrying the defaults")
+        raise SettingsError(
+            f"{rule.id}: settings must be a dataclass instance carrying the defaults",
+            rule_id=rule.id,
+            input_error=False,
+            target_files=[],
+        )
     return value
 
 
@@ -165,7 +170,7 @@ class SettingsResolver:
                     self._decode(candidate, f"overrides[{index}]")
                     self.overrides.append(Override(override.path, dict(override.values)))
         except SettingsError as exc:
-            raise SettingsError(f"{rule_id}: {exc}") from None
+            raise _for_rule(rule_id, f"{rule_id}: {exc}", exc) from None
 
     def _merge(self, base: dict[str, Any], values: dict[str, Any], context: str) -> dict[str, Any]:
         merged = dict(base)
@@ -206,9 +211,11 @@ class SettingsResolver:
                 self._by_match[matched] = self._decode(values, "settings")
             except SettingsError as exc:
                 paths = ", ".join(repr(self.overrides[index].path) for index in matched)
-                raise SettingsError(
+                raise _for_rule(
+                    self.rule_id,
                     f"{self.rule_id}: {file}: the overrides matching this file ({paths}) combine to invalid settings: "
-                    f"{exc}"
+                    f"{exc}",
+                    exc,
                 ) from None
         return self._by_match[matched]
 
@@ -230,14 +237,14 @@ def build_resolvers(
     by_id = {rule.id: rule for rule in rules}
     for rule_id in sorted(configured):
         if rule_id not in by_id:
-            errors.append(PolicyError(f"settings for unknown rule: {rule_id}", rule_id))
+            errors.append(PolicyError(f"settings for unknown rule: {rule_id}", rule_id=rule_id))
             continue
         try:
             declared = declared_settings(by_id[rule_id])
         except SettingsError:
             continue  # reported once by the loop below
         if declared is None:
-            errors.append(PolicyError(f"settings for {rule_id}: the rule declares no settings", rule_id))
+            errors.append(PolicyError(f"settings for {rule_id}: the rule declares no settings", rule_id=rule_id))
     for rule in rules:
         try:
             default = declared_settings(rule)
@@ -247,5 +254,10 @@ def build_resolvers(
                 rule.id, default, configured.get(rule.id), getattr(rule, "validate_settings", None)
             )
         except SettingsError as exc:
-            errors.append(PolicyError(str(exc), rule.id))
+            errors.append(exc if exc.rule_id == rule.id else _for_rule(rule.id, str(exc), exc))
     return resolvers, errors
+
+
+def _for_rule(rule_id: str, message: str, cause: SettingsError) -> SettingsError:
+    """``cause`` attributed to ``rule_id`` with a new message, keeping whether it is an input or a declaration defect."""
+    return SettingsError(message, rule_id=rule_id, input_error=cause.input_error, target_files=cause.target_files)

@@ -4,7 +4,8 @@ from datetime import date
 from pathlib import Path, PurePosixPath
 
 import pytest
-from devkit.workflow import ConfigError, TemplateLayout, load_workflow_config, validate_template
+from devkit.advisory import ActionMode
+from devkit.workflow import ConfigError, LayoutError, TemplateLayout, load_workflow_config, validate_template
 from devkit.workflow.config import parse_workflow_config
 from testsupport.workflow import write_config, write_unit
 
@@ -30,8 +31,9 @@ def test_valid_templates(template: str) -> None:
     ],
 )
 def test_invalid_templates(template: str, match: str) -> None:
-    with pytest.raises(ValueError, match=match):
+    with pytest.raises(LayoutError, match=match) as info:
         validate_template(template)
+    assert info.value.code == "LAYOUT_INVALID" and info.value.mode is ActionMode.INPUT_ERROR
 
 
 # --- layout -----------------------------------------------------------------------
@@ -44,7 +46,7 @@ def test_new_unit_renders_specrig_style_layout() -> None:
 
 def test_new_unit_rejects_bad_slug() -> None:
     layout = TemplateLayout("work", "{slug}", "task.md")
-    with pytest.raises(ValueError, match="slug"):
+    with pytest.raises(LayoutError, match="slug"):
         layout.new_unit("Bad Slug", date(2026, 10, 12))
 
 

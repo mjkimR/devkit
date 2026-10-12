@@ -7,8 +7,11 @@ import unicodedata
 from collections import Counter
 from pathlib import Path
 
-from ..bundles.common import BundleError
+from devkit.core.errors import ReceiptError
+from devkit.core.receipt import RECEIPT_PATH
+
 from ..bundles.playbooks import read_playbook_header, require_english_text
+from ..errors import ArgumentError, BundleError
 from .config import read_playbook_config
 from .overrides import override_rel
 from .reading import read_owned, read_synchronized, synchronized_root
@@ -54,9 +57,14 @@ def search_playbooks(
     min_score: float | None = None,
     max_bytes: int | None = None,
 ) -> SearchResult:
-    require_english_text(query, "search query")
+    try:
+        require_english_text(query, "search query")
+    except BundleError as exc:
+        raise ArgumentError(exc.message, target_files=["QUERY"]) from exc
     if not tokenize(query) or len(query.encode()) > 512:
-        raise BundleError("search query must contain English search terms and fit within 512 bytes")
+        raise ArgumentError(
+            "search query must contain English search terms and fit within 512 bytes", target_files=["QUERY"]
+        )
     root = synchronized_root(start)
     cfg = read_playbook_config(root)
     eff_limit = limit if limit is not None else int(cfg.get("limit", 5))
@@ -68,10 +76,17 @@ def search_playbooks(
         or eff_min_score < 0
         or not 1024 <= eff_max_bytes <= 65536
     ):
-        raise BundleError("invalid search bounds: limit 1..20, finite nonnegative min-score, max-bytes 1024..65536")
+        raise ArgumentError(
+            "invalid search bounds: limit 1..20, finite nonnegative min-score, max-bytes 1024..65536",
+            target_files=["--limit", "--min-score", "--max-bytes", ".devkit/config.toml"],
+        )
     empty: SearchResult = {"query": query, "results": [], "truncated": False}
     if len(json.dumps(empty, indent=2, ensure_ascii=False).encode()) + 1 > eff_max_bytes:
-        raise BundleError("search query exceeds the result output budget")
+        raise ArgumentError(
+            "search query exceeds the result output budget",
+            target_files=["QUERY", "--max-bytes"],
+            fix="Shorten the query or raise --max-bytes",
+        )
     candidates: list[PlaybookCandidate] = []
     documents: list[str] = []
     with project_lock(root, shared=True):
@@ -81,7 +96,7 @@ def search_playbooks(
             allowed = (f"{MANAGED}/{asset.bundle}/", override_rel(asset.bundle, ""))
             for name in asset.entrypoints:
                 if not name.startswith(allowed) or name not in asset.paths:
-                    raise BundleError(f"invalid playbook entrypoint in receipt: {name}")
+                    raise ReceiptError(f"{RECEIPT_PATH}: invalid playbook entrypoint: {name}")
                 metadata = read_playbook_header(read_owned(root, receipt, name), name)
                 documents.append(" ".join((metadata.name, metadata.description, *metadata.aliases)))
                 candidates.append(

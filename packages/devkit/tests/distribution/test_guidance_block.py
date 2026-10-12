@@ -6,8 +6,10 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from devkit.distribution.bundles import BundleError, load_bundle
+from devkit.core.errors import ConfigError, ReceiptError
+from devkit.distribution.bundles import load_bundle
 from devkit.distribution.cli import cli
+from devkit.distribution.errors import ConflictError, DistributionError
 from devkit.distribution.installation import guidance_block, transaction
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.discovery import InstalledBundle
@@ -109,7 +111,7 @@ def test_hand_edited_block_blocks_all_writes(installed: list[InstalledBundle], t
     agents.write_text(edited)
     receipt = (target / RECEIPT).read_bytes()
     update_config(target, presets={"team": ["minimal"]})
-    with pytest.raises(BundleError, match="user-modified guidance block"):
+    with pytest.raises(ConflictError, match="user-modified guidance block"):
         sync_project(target, installed)
     assert agents.read_text() == edited
     assert (target / RECEIPT).read_bytes() == receipt
@@ -128,14 +130,14 @@ def test_removed_block_is_written_again(installed: list[InstalledBundle], target
 
 def test_unowned_or_malformed_block_is_rejected(installed: list[InstalledBundle], target: Path) -> None:
     (target / AGENTS_FILE).write_text(f"{START}\nhand written\n{END}\n")
-    with pytest.raises(BundleError, match="unowned guidance block"):
+    with pytest.raises(ConflictError, match="unowned guidance block"):
         sync_project(target, installed)
     assert not (target / RECEIPT).exists()
     (target / AGENTS_FILE).write_text(f"{START}\n{END}\n{START}\n{END}\n")
-    with pytest.raises(BundleError, match="malformed guidance block"):
+    with pytest.raises(DistributionError, match="malformed guidance block"):
         sync_project(target, installed)
     (target / AGENTS_FILE).write_text(f"{END}\n{START}\n")
-    with pytest.raises(BundleError, match="malformed guidance block"):
+    with pytest.raises(DistributionError, match="malformed guidance block"):
         sync_project(target, installed)
 
 
@@ -162,7 +164,7 @@ def test_opt_out_refuses_to_remove_edited_block(installed: list[InstalledBundle]
     agents = target / AGENTS_FILE
     agents.write_text(agents.read_text().replace("## devkit", "## mine"))
     write_config(target, extra="guidance_block = false")
-    with pytest.raises(BundleError, match="user-modified guidance block"):
+    with pytest.raises(ConflictError, match="user-modified guidance block"):
         sync_project(target, installed)
 
 
@@ -175,19 +177,19 @@ def test_opt_out_from_the_start_writes_nothing(installed: list[InstalledBundle],
 
 def test_invalid_config_and_receipt_values(installed: list[InstalledBundle], target: Path) -> None:
     write_config(target, extra='guidance_block = "no"')
-    with pytest.raises(BundleError, match="guidance_block must be a boolean"):
+    with pytest.raises(ConfigError, match="guidance_block must be a boolean"):
         sync_project(target, installed)
     write_config(target)
     sync_project(target, installed)
     receipt = json.loads((target / RECEIPT).read_text())
     receipt["guidance_block"] = "short"
     (target / RECEIPT).write_text(json.dumps(receipt))
-    with pytest.raises(BundleError, match="guidance_block: expected a lowercase hex SHA-256"):
+    with pytest.raises(ReceiptError, match="guidance_block: expected a lowercase hex SHA-256"):
         sync_project(target, installed)
     receipt["guidance_block"] = "a" * 64
     receipt["files"][AGENTS_FILE] = {"sha256": "a" * 64, "mode": 0o644}
     (target / RECEIPT).write_text(json.dumps(receipt))
-    with pytest.raises(BundleError, match="receipt cannot own installation metadata"):
+    with pytest.raises(ReceiptError, match="receipt cannot own installation metadata"):
         sync_project(target, installed)
 
 

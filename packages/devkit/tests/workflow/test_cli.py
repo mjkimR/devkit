@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner, Result
+from devkit.advisory import AdvisoryError
 from devkit.workflow.cli import cli
 from testsupport.workflow import WORKFLOW, write_config, write_receipt
 
@@ -52,7 +53,7 @@ def test_validate_and_show(workspace: Path) -> None:
     data = json.loads(_run("show", "-w", str(workspace), "direct-delivery", "--format", "json").stdout)
     assert data["hash"].startswith("sha256:") and data["approvals"] == {"direction": "ask", "integration": "ask"}
     missing = _run("show", "-w", str(workspace), "missing")
-    assert missing.exit_code == 1 and "(WORKFLOW_NOT_FOUND)" in missing.stderr
+    assert missing.exit_code == 2 and "(WORKFLOW_NOT_FOUND)" in missing.stderr
 
 
 def test_validate_with_no_definitions(tmp_path: Path) -> None:
@@ -62,7 +63,7 @@ def test_validate_with_no_definitions(tmp_path: Path) -> None:
 
 def test_new_requires_a_workflow_selection(workspace: Path) -> None:
     result = _run("new", "-w", str(workspace), "login")
-    assert result.exit_code == 1 and "(WORKFLOW_NOT_SELECTED)" in result.stderr and "[ACTION]" in result.stderr
+    assert result.exit_code == 2 and "(WORKFLOW_NOT_SELECTED)" in result.stderr and "[ACTION]" in result.stderr
 
 
 def test_end_to_end_new_next_bind_envelope_list(workspace: Path) -> None:
@@ -77,7 +78,7 @@ def test_end_to_end_new_next_bind_envelope_list(workspace: Path) -> None:
     )
     assert (unit / "envelopes").is_dir()
     dup = _run("new", "-w", str(workspace), "login")
-    assert dup.exit_code == 1 and "(UNIT_EXISTS)" in dup.stderr
+    assert dup.exit_code == 2 and "(UNIT_EXISTS)" in dup.stderr
 
     nxt = _run("next", "-w", str(workspace), "--unit", ".devkit/transient/work/login", "--no-lint")
     assert nxt.exit_code == 0, nxt.output
@@ -97,7 +98,7 @@ def test_end_to_end_new_next_bind_envelope_list(workspace: Path) -> None:
     env = _run("envelope", "new", "-w", str(workspace), "--unit", str(unit), "--kind", "review")
     assert "seq=02" in env.output
     bad_kind = _run("envelope", "new", "-w", str(workspace), "--unit", str(unit), "--kind", "Bad")
-    assert bad_kind.exit_code == 1 and "(KIND_INVALID)" in bad_kind.stderr
+    assert bad_kind.exit_code == 2 and "(KIND_INVALID)" in bad_kind.stderr
 
     as_json = json.loads(
         _run("next", "-w", str(workspace), "--unit", str(unit), "--no-lint", "--format", "json").stdout
@@ -149,13 +150,13 @@ def test_given_validation_and_gate_flow(workspace: Path) -> None:
     passed = _run("next", "-w", str(workspace), "--unit", unit, "--no-lint", "--given", "direction")
     assert "[DONE: intent]" in passed.output
     bad = _run("next", "-w", str(workspace), "--unit", unit, "--no-lint", "--given", "anchor-exists")
-    assert bad.exit_code == 1 and "(GIVEN_INVALID)" in bad.stderr
+    assert bad.exit_code == 2 and "(GIVEN_INVALID)" in bad.stderr
 
 
 def test_next_unknown_unit_is_unit_not_found(workspace: Path) -> None:
     write_config(workspace, CONFIG)
     result = _run("next", "-w", str(workspace), "--unit", "nowhere")
-    assert result.exit_code == 1 and "(UNIT_NOT_FOUND) no anchor file (task.md) found in nowhere" in result.stderr
+    assert result.exit_code == 2 and "(UNIT_NOT_FOUND) no anchor file (task.md) found in nowhere" in result.stderr
 
 
 def test_specrig_style_layout_from_config(workspace: Path) -> None:
@@ -206,7 +207,7 @@ def test_lint_function_reports_a_malformed_receipt(tmp_path: Path) -> None:
     (tmp_path / "a.md").write_text("fine\n")
     (tmp_path / ".devkit").mkdir()
     (tmp_path / ".devkit/installation.json").write_text("{not json")
-    with pytest.raises(RuntimeError, match="installation"):
+    with pytest.raises(AdvisoryError, match="installation"):
         rules_lint(tmp_path, ["a.md"])
     assert rules_lint(tmp_path, []) == []
 
@@ -214,7 +215,7 @@ def test_lint_function_reports_a_malformed_receipt(tmp_path: Path) -> None:
 def test_invalid_config_is_a_clean_error(tmp_path: Path) -> None:
     write_config(tmp_path, '[workflow.approvals]\nx = "maybe"\n')
     result = _run("checks", "-w", str(tmp_path))
-    assert result.exit_code == 1 and "(CONFIG_INVALID)" in result.stderr and "not one of" in result.stderr
+    assert result.exit_code == 2 and "(CONFIG_INVALID)" in result.stderr and "not one of" in result.stderr
     assert "[TARGET] .devkit/config.toml" in result.stderr
 
 
@@ -224,7 +225,7 @@ def test_invalid_bound_workflow_reports_problems_as_details(workspace: Path) -> 
     definition = workspace / ".devkit/workflows/direct-delivery.md"
     definition.write_text(definition.read_text().replace("anchor-exists", "nope"))
     result = _run("next", "-w", str(workspace), "--unit", ".devkit/transient/work/login", "--no-lint")
-    assert result.exit_code == 1 and "(WORKFLOW_INVALID)" in result.stderr
+    assert result.exit_code == 2 and "(WORKFLOW_INVALID)" in result.stderr
     assert "[DETAIL] intent.exit: unregistered check 'nope'" in result.stderr
     assert "[TARGET] .devkit/workflows/direct-delivery.md" in result.stderr
 

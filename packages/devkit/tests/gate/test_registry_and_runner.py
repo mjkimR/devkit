@@ -4,10 +4,13 @@ import json
 from pathlib import Path
 
 import pytest
+from devkit.advisory import ActionMode, ExitCode
 from devkit.gate import (
     BaseGate,
+    GateConfigError,
     GateContext,
     GateEntry,
+    GateError,
     GateRegistry,
     GateResult,
     GatesConfig,
@@ -47,8 +50,8 @@ def test_deployed_gate_paths_reads_gate_assets_only(tmp_path: Path) -> None:
         ".devkit/managed/team/gates/block.py",
         ".devkit/overrides/team/gates/other.py",
     ]
-    assert [e.message for e in deployed.errors] == ["deployed gate file is missing: gone.py"]
-    assert deployed.errors[0].target_files == ("gone.py",) and deployed.errors[0].fix == "devkit sync"
+    assert [e.message for e in deployed.errors] == ["deployed gate file gone.py is missing"]
+    assert deployed.errors[0].target_files == ("gone.py",) and deployed.errors[0].fix == "Run `devkit sync`"
 
 
 def test_gate_files_are_checked_against_the_receipt_hash(tmp_path: Path) -> None:
@@ -59,6 +62,7 @@ def test_gate_files_are_checked_against_the_receipt_hash(tmp_path: Path) -> None
     path.write_text(gate_source() + "\n# edited by hand\n")
     deployed = deployed_gate_paths(tmp_path)
     assert deployed.paths == () and "differs from the hash in the receipt" in deployed.errors[0].message
+    assert deployed.errors[0].fix is not None and "devkit override create team:block" in deployed.errors[0].fix
     registry = project_registry(tmp_path)
     assert registry.get("team-block") is None and registry.errors
 
@@ -70,7 +74,7 @@ def test_unsafe_receipt_paths_are_rejected(tmp_path: Path, unsafe: str) -> None:
     data["assets"][0]["paths"] = [unsafe]
     _save_receipt(tmp_path, data)
     deployed = deployed_gate_paths(tmp_path)
-    assert deployed.paths == () and "invalid installation receipt" in deployed.errors[0].message
+    assert deployed.paths == () and deployed.errors[0].code == "RECEIPT_INVALID"
 
 
 def test_gate_file_symlinked_outside_the_project_is_rejected(tmp_path: Path) -> None:
@@ -141,7 +145,8 @@ def test_unreadable_receipt_is_a_registry_error(tmp_path: Path) -> None:
     (tmp_path / ".devkit").mkdir()
     (tmp_path / ".devkit/installation.json").write_text("{nope")
     registry = project_registry(tmp_path)
-    assert registry.errors and "invalid installation receipt" in registry.errors[0].message
+    assert registry.errors and registry.errors[0].code == "RECEIPT_INVALID"
+    assert registry.errors[0].target_files == (".devkit/installation.json",)
 
 
 class Recorder(BaseGate):
@@ -173,8 +178,14 @@ def test_run_stage_orders_gates_and_runs_past_failures(tmp_path: Path) -> None:
 
 
 def test_gate_result_cannot_report_failure() -> None:
-    with pytest.raises(ValueError, match="refuse by raising GateError"):
+    with pytest.raises(GateConfigError, match="refuse by raising GateError") as info:
         GateResult(Outcome.FAILED, "why")
+    assert (info.value.code, info.value.mode) == ("GATE_RESULT_INVALID", ActionMode.MAINTENANCE)
+
+
+def test_gate_refusals_exit_findings_and_config_errors_exit_error() -> None:
+    assert GateError.blocked("refused").exit_code is ExitCode.FINDINGS
+    assert GateConfigError("bad").exit_code is ExitCode.ERROR
 
 
 def test_every_failed_run_carries_an_error(tmp_path: Path) -> None:

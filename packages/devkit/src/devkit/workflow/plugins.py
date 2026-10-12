@@ -19,18 +19,17 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
+from devkit.core.errors import AssetFileError
 from devkit.core.plugins import iter_plugin_files, load_subclasses
-from devkit.core.receipt import Receipt, load_receipt
+from devkit.core.receipt import Receipt, load_receipt, verified_asset_file
 from devkit.workflow.checks import Check, CheckClass, CheckResult
 from devkit.workflow.envelope import Envelopes
+from devkit.workflow.errors import PluginError, WorkflowProblem
 from devkit.workflow.ids import IDENT_HINT, is_ident
 
 PLUGIN_KIND = "workflow-check"
 NAMESPACE = "devkit_workflow_check"
-
-
-class PluginError(ValueError):
-    """A plugin file declares an invalid check."""
+CHECK_LOAD_FAILED = PluginError.code
 
 
 @dataclass(frozen=True)
@@ -83,15 +82,17 @@ def _validate(plugin: BaseCheck) -> None:
         raise PluginError(f"{plugin.name}: params must be a tuple of names matching {IDENT_HINT}")
 
 
-def load_check_files(files: Iterable[Path]) -> tuple[list[BaseCheck], list[str]]:
+def load_check_files(files: Iterable[Path]) -> tuple[list[BaseCheck], list[WorkflowProblem]]:
     """Instantiate every ``BaseCheck`` subclass defined in the files, in order.
 
-    A file that fails contributes nothing and is reported as an error string; so
-    is a file that defines a check name an earlier file already defined.
+    A file that fails contributes nothing and is reported as a ``CHECK_LOAD_FAILED``
+    problem; so is a file that defines a check name an earlier file already defined.
     """
     paths = [p for p in files if p.suffix == ".py" and not p.name.startswith(("_", "."))]
     load = load_subclasses(paths, BaseCheck, namespace=NAMESPACE, validate=_validate)
-    errors = [str(failure) for failure in load.errors]
+    errors = [
+        WorkflowProblem(str(failure), CHECK_LOAD_FAILED, target=failure.path.as_posix()) for failure in load.errors
+    ]
     by_file: dict[Path, list[BaseCheck]] = {}
     for plugin in load.plugins:
         by_file.setdefault(plugin.path, []).append(plugin.instance)
@@ -104,7 +105,11 @@ def load_check_files(files: Iterable[Path]) -> tuple[list[BaseCheck], list[str]]
         )
         if clash is not None:
             where = seen.get(clash, path)
-            errors.append(f"{path}: check {clash!r} is already defined in {where}")
+            errors.append(
+                WorkflowProblem(
+                    f"{path}: check {clash!r} is already defined in {where}", CHECK_LOAD_FAILED, target=path.as_posix()
+                )
+            )
             continue
         for check in checks:
             seen[check.name] = path
@@ -114,22 +119,32 @@ def load_check_files(files: Iterable[Path]) -> tuple[list[BaseCheck], list[str]]
 
 def plugin_check_paths(
     workspace_root: Path, checks_dir: str, receipt: Receipt | None = None
-) -> tuple[list[Path], list[str]]:
+) -> tuple[list[Path], list[WorkflowProblem]]:
     """Plugin files in load order: receipt ``workflow-check`` assets, then ``checks_dir``.
 
-    A receipt path that is not on disk is an error, not a silent skip: the
-    managed copy must be restored with ``devkit sync``.
+    Every receipt path is checked with ``devkit.core.receipt.verified_asset_file``,
+    as rules and gates are: a file that is missing, resolves outside the project
+    or differs from the SHA-256 the receipt records is a ``CHECK_LOAD_FAILED``
+    problem (``devkit sync`` restores it, ``devkit override create`` keeps an
+    edit), never a silent skip; a file without a record (a project override) is
+    loaded as it is.
     """
     paths: list[Path] = []
-    errors: list[str] = []
-    for asset in receipt.assets(PLUGIN_KIND) if receipt is not None else ():
-        for rel in asset.files(".py"):
-            path = workspace_root / rel
-            if not path.is_file():
-                errors.append(f"synchronized check {rel} is missing from the working tree (run devkit sync)")
-                continue
-            if path not in paths:
-                paths.append(path)
+    errors: list[WorkflowProblem] = []
+    if receipt is not None:
+        for asset in receipt.assets(PLUGIN_KIND):
+            for rel in asset.files(".py"):
+                try:
+                    path = verified_asset_file(workspace_root, rel, receipt, asset)
+                except AssetFileError as exc:
+                    errors.append(
+                        WorkflowProblem(
+                            f"synchronized check {exc.message}", CHECK_LOAD_FAILED, target=rel, fix=exc.fix or ""
+                        )
+                    )
+                    continue
+                if path not in paths:
+                    paths.append(path)
     directory = workspace_root / checks_dir
     for path in iter_plugin_files(directory):
         if path.parent == directory and path not in paths:
@@ -139,8 +154,8 @@ def plugin_check_paths(
 
 def load_plugin_checks(
     workspace_root: Path, checks_dir: str, receipt: Receipt | None = None
-) -> tuple[list[BaseCheck], list[str]]:
-    """Every plugin check the project has, plus the loading errors.
+) -> tuple[list[BaseCheck], list[WorkflowProblem]]:
+    """Every plugin check the project has, plus the loading problems.
 
     ``receipt`` defaults to the workspace's installation receipt; a malformed
     receipt raises ``devkit.core.errors.ReceiptError``.

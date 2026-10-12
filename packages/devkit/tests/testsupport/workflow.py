@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -80,10 +81,11 @@ def write_unit(root: Path, rel: str, anchor: str = "task.md", status: str = "pla
     return unit
 
 
-def write_receipt(root: Path, assets: list[dict[str, Any]]) -> Path:
+def write_receipt(root: Path, assets: list[dict[str, Any]], *, hashed: tuple[str, ...] = ()) -> Path:
     """Write a valid installation receipt with ``assets`` (each needs ``kind`` and ``id``).
 
     ``paths`` defaults to the asset's ``entrypoints``; ``bundle`` defaults to ``team``.
+    ``hashed`` paths get a ``files`` record with the SHA-256 of their current content.
     """
     records = []
     for asset in assets:
@@ -92,7 +94,8 @@ def write_receipt(root: Path, assets: list[dict[str, Any]]) -> Path:
         if "entrypoints" in asset:
             record["entrypoints"] = list(asset["entrypoints"])
         records.append(record)
-    data = {"schema": 1, "packages": [], "selection": {"agents": [], "presets": {}}, "assets": records, "files": {}}
+    files = {rel: {"sha256": hashlib.sha256((root / rel).read_bytes()).hexdigest(), "mode": 0o644} for rel in hashed}
+    data = {"schema": 1, "packages": [], "selection": {"agents": [], "presets": {}}, "assets": records, "files": files}
     path = root / ".devkit" / "installation.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data), encoding="utf-8")

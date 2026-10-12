@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import pytest
+from devkit.advisory import ActionMode
 from devkit.rules import (
     ConfigError,
     Phase,
@@ -170,7 +171,7 @@ def test_build_resolvers_reports_unknown_and_settings_less_rules() -> None:
     resolvers, errors = build_resolvers(
         rules, {"RULE-nope": RawSettings({"x": 1}), "RULE-markdown-link": RawSettings({"x": 1})}
     )
-    assert sorted(errors) == [
+    assert sorted(str(e) for e in errors) == [
         "settings for RULE-markdown-link: the rule declares no settings",
         "settings for unknown rule: RULE-nope",
     ]
@@ -218,7 +219,8 @@ def test_evaluate_fails_before_checks_on_bad_settings(tmp_path: Path) -> None:
     )
     result = evaluate(ctx, [FileLengthRule()])
     assert result.violations == []
-    assert result.errors == ["RULE-file-length: settings: max_lines must be a positive integer"]
+    assert [str(e) for e in result.errors] == ["RULE-file-length: settings: max_lines must be a positive integer"]
+    assert result.errors[0].code == "RULES_SETTINGS_INVALID" and result.errors[0].mode is ActionMode.INPUT_ERROR
 
 
 def test_severity_override_changes_reported_severity(tmp_path: Path) -> None:
@@ -233,9 +235,11 @@ def test_severity_override_changes_reported_severity(tmp_path: Path) -> None:
 
 def test_severity_override_validation(tmp_path: Path) -> None:
     ctx = RuleContext(workspace_root=tmp_path, severity_overrides={"RULE-nope": Severity.INFO})
-    assert evaluate(ctx, default_registry().get_all()).errors == ["severity override for unknown rule: RULE-nope"]
+    assert [str(e) for e in evaluate(ctx, default_registry().get_all()).errors] == [
+        "severity override for unknown rule: RULE-nope"
+    ]
     ctx = RuleContext(workspace_root=tmp_path, severity_overrides={"RULE-file-length": Severity.WARNING})
-    assert "redundant" in evaluate(ctx, default_registry().get_all()).errors[0]
+    assert "redundant" in str(evaluate(ctx, default_registry().get_all()).errors[0])
 
 
 def test_custom_rule_with_settings(tmp_path: Path) -> None:
@@ -296,7 +300,7 @@ def test_overrides_that_conflict_only_together_are_reported_as_settings_errors(t
 
     ctx = RuleContext(workspace_root=tmp_path, rule_settings={"RULE-range": raw})
     result = evaluate(ctx, [RangeRule()])
-    assert len(result.errors) == 1 and result.errors[0].startswith(
+    assert len(result.errors) == 1 and str(result.errors[0]).startswith(
         "Invalid settings (RULE-range): RULE-range: docs/a.md"
     )
 
@@ -318,5 +322,6 @@ def test_non_dataclass_settings_with_config_is_a_policy_error() -> None:
 
     resolvers, errors = build_resolvers([DictSettings()], {"RULE-dict": RawSettings({"a": 2})})
     assert resolvers == {}
-    assert errors == ["RULE-dict: settings must be a dataclass instance carrying the defaults"]
+    assert [str(e) for e in errors] == ["RULE-dict: settings must be a dataclass instance carrying the defaults"]
     assert errors[0].rule_id == "RULE-dict"
+    assert errors[0].code == "RULES_SETTINGS_INVALID" and errors[0].mode is ActionMode.MAINTENANCE

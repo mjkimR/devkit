@@ -1,14 +1,15 @@
 from __future__ import annotations
 
+import inspect
 import logging
 from collections import Counter
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
+from devkit.rules.engine.errors import RuleExecutionError, RuleProblem, SettingsError
 from devkit.rules.engine.models import Autofixable, Rule, RuleContext, Severity, Violation
 from devkit.rules.engine.phases import effective_phase, runs_in_phase
 from devkit.rules.engine.policy import effective_severity, validate_policy
-from devkit.rules.engine.settings import SettingsError
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +17,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class EvaluationResult:
     violations: list[Violation] = field(default_factory=list)
-    errors: list[str] = field(default_factory=list)
+    errors: list[RuleProblem] = field(default_factory=list)
 
     @property
     def has_errors(self) -> bool:
@@ -49,16 +50,21 @@ def evaluate(ctx: RuleContext, rules: Sequence[Rule]) -> EvaluationResult:
     severities = {r.id: effective_severity(r, ctx.severity_overrides) for r in rules}
     active_rules: list[Rule] = [r for r in rules if runs_in_phase(phases[r.id], ctx.phase)]
 
-    def _check(rule: Rule, stage: str, errors: list[str]) -> list[Violation]:
+    def _check(rule: Rule, stage: str, errors: list[RuleProblem]) -> list[Violation]:
         try:
             found = rule.check(ctx)
         except SettingsError as exc:
-            errors.append(f"Invalid settings ({rule.id}): {exc}")
+            errors.append(
+                SettingsError(
+                    f"Invalid settings ({rule.id}): {exc}",
+                    rule_id=rule.id,
+                    input_error=exc.input_error,
+                    target_files=exc.target_files,
+                )
+            )
             return []
         except Exception as exc:
-            msg = f"Rule {stage} error ({rule.id}): {exc}"
-            logger.exception(msg)
-            errors.append(msg)
+            errors.append(_execution_error(rule, f"Rule {stage} error ({rule.id}): {exc}"))
             return []
         for v in found:
             v.phase = phases[rule.id]
@@ -85,9 +91,7 @@ def evaluate(ctx: RuleContext, rules: Sequence[Rule]) -> EvaluationResult:
                     modified_files.update(changed)
                     ctx.cache.invalidate_many(changed)
             except Exception as exc:
-                msg = f"Rule fix error ({r.id}): {exc}"
-                logger.exception(msg)
-                result.errors.append(msg)
+                result.errors.append(_execution_error(r, f"Rule fix error ({r.id}): {exc}"))
                 ctx.cache.invalidate_all()
                 break
 
@@ -116,3 +120,13 @@ def evaluate(ctx: RuleContext, rules: Sequence[Rule]) -> EvaluationResult:
     final_violations.extend(recheck_violations)
     result.violations = final_violations
     return result
+
+
+def _execution_error(rule: Rule, message: str) -> RuleExecutionError:
+    """A rule that raised: logged with its traceback, reported with the file defining the rule."""
+    logger.exception(message)
+    try:
+        source = [inspect.getfile(type(rule))]
+    except (TypeError, OSError):
+        source = []
+    return RuleExecutionError(message, rule_id=rule.id, target_files=source)

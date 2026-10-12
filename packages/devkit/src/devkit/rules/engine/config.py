@@ -13,10 +13,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from devkit.rules.engine.errors import CONFIG_PATH, ConfigError
 from devkit.rules.engine.models import Phase, Severity
 from devkit.rules.engine.settings import Override, RawSettings, validate_pattern
 
-CONFIG_PATH = ".devkit/config.toml"
+__all__ = ["CONFIG_PATH", "ConfigError", "RulesConfig", "load_rules_config", "parse_rules_config"]
+
 RULES_TABLE = "rules"
 PHASE_OVERRIDES_KEY = "phase_overrides"
 SEVERITY_OVERRIDES_KEY = "severity_overrides"
@@ -25,10 +27,6 @@ EXCLUDE_KEY = "exclude"
 OVERRIDES_KEY = "overrides"
 PATH_KEY = "path"
 KNOWN_KEYS = {PHASE_OVERRIDES_KEY, SEVERITY_OVERRIDES_KEY, SETTINGS_KEY, EXCLUDE_KEY}
-
-
-class ConfigError(ValueError):
-    """Raised when the ``[rules]`` configuration is malformed."""
 
 
 @dataclass(frozen=True)

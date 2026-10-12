@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Any
 
 from devkit.core import GitError, run_git
 from devkit.core.frontmatter import parse as parse_frontmatter
+from devkit.rules.engine.errors import PinnedWriteError
 from devkit.rules.workspace.markdown import MarkdownLink, extract_links
 
 if TYPE_CHECKING:
@@ -88,12 +89,14 @@ class WorkspaceCache:
         """Write ``content`` as UTF-8 bytes, exactly (no newline translation), and refresh the cache.
 
         Files under ``.devkit/managed/`` and ``.devkit/overrides/`` are never
-        written: the installation receipt pins their hashes.
+        written: the installation receipt pins their hashes, so writing one
+        raises ``PinnedWriteError`` (``RULES_PINNED_WRITE_REFUSED``, ``BLOCKED``).
         """
         resolved = self._resolve_path(path)
         if self._pinned(resolved):
-            raise PermissionError(
-                f"refusing to write a receipt-pinned copy under {' or '.join(PINNED_DIRS)}: {resolved}"
+            raise PinnedWriteError(
+                f"refusing to write a receipt-pinned copy under {' or '.join(PINNED_DIRS)}: {resolved}",
+                target_files=[str(resolved)],
             )
         key = resolved.as_posix()
         data = content.encode("utf-8")
@@ -108,7 +111,7 @@ class WorkspaceCache:
         """The YAML frontmatter mapping of a file (``devkit.core.frontmatter`` grammar), or ``None``.
 
         A missing file and a file without frontmatter are ``None``. Raises
-        ``devkit.core.FrontmatterError`` (a ``ValueError``) for a block that
+        ``devkit.core.FrontmatterError`` (``FRONTMATTER_INVALID``) for a block that
         is unclosed, invalid YAML or not a mapping with string keys.
         """
         key = self._key(path)

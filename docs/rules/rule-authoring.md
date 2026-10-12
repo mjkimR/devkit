@@ -56,7 +56,7 @@ class NoTodoRule(BaseRule):
         )
 ```
 
-`promote_to` is only valid as `Phase.LINTER` on a `Phase.HYGIENE` rule; any other combination raises `ValueError` at construction. `devkit rules check --phase hygiene` reports the remaining violation count for every rule declaring a promotion, and `devkit rules phases` lists the pending transition.
+`promote_to` is only valid as `Phase.LINTER` on a `Phase.HYGIENE` rule; any other combination raises `RuleDefinitionError` (`RULES_DEFINITION_INVALID`) at construction, which makes the rule file a loading error. `devkit rules check --phase hygiene` reports the remaining violation count for every rule declaring a promotion, and `devkit rules phases` lists the pending transition.
 
 ### Optional `settings` and `validate_settings`
 
@@ -87,7 +87,7 @@ class FileLengthRule(BaseRule):
             ...
 ```
 
-`validate_settings` runs on the defaults, the configured values and every override layer (each applied to the configured values) before any rule executes; raise `ValueError` for values the field types cannot express. The evaluator reports the failure with the rule ID and stops. Several overrides matching the same file are combined when `ctx.settings` is first called for it; a combination that `validate_settings` rejects raises `SettingsError`, which the evaluator reports as `Invalid settings (RULE-id): ...`. Results are memoized per combination of matching overrides.
+`validate_settings` runs on the defaults, the configured values and every override layer (each applied to the configured values) before any rule executes; raise `ValueError` for values the field types cannot express. The evaluator reports the failure with the rule ID and stops. Several overrides matching the same file are combined when `ctx.settings` is first called for it; a combination that `validate_settings` rejects raises `SettingsError` (`RULES_SETTINGS_INVALID`), which the evaluator reports as `Invalid settings (RULE-id): ...`. Results are memoized per combination of matching overrides.
 
 ### Optional `guide`
 
@@ -114,8 +114,8 @@ Rules inspect files using `ctx.cache` rather than direct disk I/O to maximize pe
 - `ctx.is_file_targeted(path)`: Returns `True` if the file is included in the current run targets. It is `False` for any path matched by the project's `[rules] exclude` patterns, even in a whole-workspace run, so a rule that scans with `find_files` must call it before reporting. `ctx.changed_files` already has excluded paths removed; `ctx.has_targets` says whether the run named explicit targets at all.
 - `ctx.cache.find_files(root, extensions=(".md",))`: Sorted absolute paths of the regular files under `root` with one of `extensions` (`None` lists every file). Dependency and cache directories, `.devkit/managed/` and `.devkit/overrides/`, symlinks resolving outside the workspace and, inside a Git work tree, Git-ignored files that are not explicit targets are skipped (cached).
 - `ctx.cache.read_text(path)` / `ctx.cache.read_bytes(path)`: File contents for a workspace-relative or absolute path (cached). `read_text` replaces undecodable bytes with U+FFFD; `read_text_strict(path)` returns `None` for a file that is not valid UTF-8, which a fixer must then leave alone.
-- `ctx.cache.write_text(path, content)`: Writes exact UTF-8 bytes (no newline translation) and refreshes the cache; paths under `.devkit/managed/` and `.devkit/overrides/` are refused.
-- `ctx.cache.get_frontmatter(path)`: The YAML frontmatter mapping (`devkit.core.frontmatter` grammar) or `None`; raises `devkit.core.FrontmatterError` (a `ValueError`) for a malformed block.
+- `ctx.cache.write_text(path, content)`: Writes exact UTF-8 bytes (no newline translation) and refreshes the cache; paths under `.devkit/managed/` and `.devkit/overrides/` are refused with `PinnedWriteError` (`RULES_PINNED_WRITE_REFUSED`).
+- `ctx.cache.get_frontmatter(path)`: The YAML frontmatter mapping (`devkit.core.frontmatter` grammar) or `None`; raises `devkit.core.FrontmatterError` (`FRONTMATTER_INVALID`) for a malformed block.
 - `ctx.cache.get_links(path)`: Inline Markdown links (`MarkdownLink`: `text`, `target` as written, `line`, `start`/`end` of the link and `target_start`/`target_end` of the destination on its line), skipping fenced code and code spans. `devkit.rules.extract_links(text)` does the same for a string.
 - `ctx.cache.get_catalog(root)`: Returns the `DocumentCatalog`: every Markdown path, a basename index for link repair, and the frontmatter `id`, `title` and `status` of each file recorded verbatim (with duplicate `id`s listed). A file whose frontmatter cannot be parsed is listed in `frontmatter_errors` instead of failing the run. It applies no identifier grammar and extracts no references; a rule that needs those parses the body itself.
 - `ctx.settings(rule, path)`: The rule's effective settings for a workspace-relative or absolute path inside the workspace.
@@ -189,13 +189,15 @@ from devkit.rules import RuleContext, RuleRegistry, evaluate, resolve_managed_ru
 registry = RuleRegistry()
 registry.register(DocHeadingRule())
 managed = resolve_managed_rules(Path("."))                   # rules synchronized by devkit
-registry.discover_from_files(managed.paths)                   # managed.errors: malformed receipt, entries not on disk
+registry.discover_from_files(managed.paths)                   # managed.errors: RuleLoadError per malformed receipt or missing entry
 
 ctx = RuleContext(workspace_root=Path("."))
 result = evaluate(ctx, registry.get_all())
 
 print(f"Total findings: {len(result.violations)}")
 ```
+
+`RuleContext` takes every argument by keyword; only `workspace_root` is required. Pass `cache=WorkspaceCache(root)` to share one cache across several evaluations; without it the context creates its own, so `ctx.cache` is always a `WorkspaceCache`. A cache built for another root is refused.
 
 To run a project the way `devkit rules check` does (project policy, receipt rules and `--rules-dir` together), call `run_project_rules(Path("."), rules_dir=...)` instead; see the [reference](reference.md#library-and-custom-rules).
 

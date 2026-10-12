@@ -6,8 +6,10 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from devkit.distribution.bundles import BundleError, load_bundle
+from devkit.core.errors import ReceiptError
+from devkit.distribution.bundles import load_bundle
 from devkit.distribution.cli import cli
+from devkit.distribution.errors import BundleError, ConflictError, UnsafeWorkspaceError
 from devkit.distribution.installation import transaction
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.discovery import InstalledBundle
@@ -242,19 +244,19 @@ target = "docs/README.md"
         InstalledBundle("sdd-content", "0.1.0", load_bundle(first)),
     ]
     update_config(target, presets={"sdd": ["all"], "other": ["all"]})
-    with pytest.raises(BundleError, match=r"seeded target collision: docs/README\.md"):
+    with pytest.raises(ConflictError, match=r"seeded target collision: docs/README\.md"):
         sync_project(target, installed)
     assert not (target / "docs").exists()
 
 
 def test_seeded_target_blocked_by_directory_or_symlink(installed: list[InstalledBundle], target: Path) -> None:
     (target / "docs/README.md").mkdir(parents=True)
-    with pytest.raises(BundleError, match=r"nonregular deployment path: docs/README\.md"):
+    with pytest.raises(UnsafeWorkspaceError, match=r"nonregular deployment path: docs/README\.md"):
         sync_project(target, installed)
     (target / "docs/README.md").rmdir()
     (target / "elsewhere.md").write_text("x\n")
     (target / "docs/README.md").symlink_to(target / "elsewhere.md")
-    with pytest.raises(BundleError, match=r"deployment symlink: docs/README\.md"):
+    with pytest.raises(UnsafeWorkspaceError, match=r"deployment symlink: docs/README\.md"):
         sync_project(target, installed)
     assert not (target / RECEIPT).exists()
 
@@ -307,5 +309,5 @@ def test_receipt_rejects_invalid_seeded_records(installed: list[InstalledBundle]
     receipt = json.loads((target / RECEIPT).read_text())
     receipt["seeded"] = [entry]
     (target / RECEIPT).write_text(json.dumps(receipt))
-    with pytest.raises(BundleError, match=r"seeded|may not"):
+    with pytest.raises(ReceiptError, match=r"seeded|may not"):
         read_receipt(target)

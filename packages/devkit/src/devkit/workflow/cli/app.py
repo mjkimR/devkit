@@ -16,8 +16,6 @@ from devkit.advisory import AdvisoryError, as_advisory_error
 from devkit.workflow.errors import input_error
 from devkit.workflow.workspace import Workspace
 
-EXIT_INVALID = 1  # validate/show: a definition has problems (a result, not an advisory)
-
 FORMAT = click.option(
     "--format",
     "output_format",
@@ -47,7 +45,11 @@ class Reported(Exception):
 
 
 def boundary(fn: Callable[..., None]) -> Callable[..., None]:
-    """Render any error as an advisory on stderr (and as JSON on stdout under --format json)."""
+    """Render any error as an advisory on stderr (and as JSON on stdout under --format json).
+
+    The exit code is the error's: ``ERROR`` (2) unless the error reports a
+    negative result (``WORKFLOW_DRIFT``, ``ENVELOPE_INVALID``: ``FINDINGS``, 1).
+    """
 
     @functools.wraps(fn)
     def wrapper(*args: Any, **kwargs: Any) -> None:

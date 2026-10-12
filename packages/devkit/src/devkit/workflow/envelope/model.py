@@ -9,6 +9,8 @@ from typing import Any
 
 import yaml
 
+from devkit.advisory import Actor, Retry
+from devkit.workflow.errors import WorkflowError, input_error
 from devkit.workflow.ids import IDENT_PATTERN
 
 ENVELOPES_DIR = "envelopes"
@@ -87,11 +89,23 @@ class Envelope:
 
 @dataclass(frozen=True)
 class EnvelopeError:
+    """A malformed envelope file, collected by ``load_envelopes`` instead of raised."""
+
     file: str
     reason: str
+    code: str = "ENVELOPE_INVALID"
 
     def to_dict(self) -> dict[str, str]:
-        return {"file": self.file, "reason": self.reason}
+        return {"code": self.code, "file": self.file, "reason": self.reason}
+
+
+class EnvelopeFormatError(WorkflowError):
+    """A finding or list inside an envelope document is malformed (``ENVELOPE_INVALID``)."""
+
+    code = "ENVELOPE_INVALID"
+    actor = Actor.DEVELOPER
+    retry = Retry.AFTER_FIX
+    input_error = True
 
 
 @dataclass
@@ -131,20 +145,20 @@ def _text_list(value: Any, what: str) -> tuple[str, ...]:
     if value is None:
         return ()
     if not isinstance(value, list):
-        raise ValueError(f"{what}: expected a list of strings")
+        raise EnvelopeFormatError(f"{what}: expected a list of strings")
     return tuple(_text(v) for v in value)
 
 
 def parse_finding(item: Any, where: str) -> Finding:
-    """One finding mapping; raises ``ValueError`` naming ``where``."""
+    """One finding mapping; raises ``EnvelopeFormatError`` naming ``where``."""
     if not isinstance(item, dict):
-        raise ValueError(f"{where}: expected a mapping")
+        raise EnvelopeFormatError(f"{where}: expected a mapping")
     unknown = set(item) - set(FINDING_KEYS)
     if unknown:
-        raise ValueError(f"{where}: unknown keys {sorted(unknown)}")
+        raise EnvelopeFormatError(f"{where}: unknown keys {sorted(unknown)}")
     resolution = _text(item.get("resolution")) or "open"
     if resolution not in RESOLUTIONS:
-        raise ValueError(f"{where}.resolution {resolution!r} not in {'|'.join(RESOLUTIONS)}")
+        raise EnvelopeFormatError(f"{where}.resolution {resolution!r} not in {'|'.join(RESOLUTIONS)}")
     return Finding(
         issue=_text(item.get("issue")),
         evidence=_text(item.get("evidence")),
@@ -179,7 +193,7 @@ def parse_envelope(rel: str, seq: int, name_kind: str, data: Any) -> Envelope | 
         findings = tuple(parse_finding(item, f"findings[{i}]") for i, item in enumerate(raw_findings))
         assumptions = _text_list(data.get("assumptions"), "assumptions")
         unverified = _text_list(data.get("unverified_areas"), "unverified_areas")
-    except ValueError as exc:
+    except EnvelopeFormatError as exc:
         return EnvelopeError(rel, str(exc))
     raw_checks = data.get("checks") or {}
     if not isinstance(raw_checks, dict):
@@ -244,7 +258,9 @@ def write_next(unit_dir: Path, kind: str, body: str) -> tuple[Path, int]:
     malformed ones included. Returns the path and the sequence number.
     """
     if not KIND.match(kind):
-        raise ValueError(f"kind {kind!r} must match [a-z][a-z0-9-]*")
+        raise input_error(
+            f"kind {kind!r} must match [a-z][a-z0-9-]*", code="KIND_INVALID", fix="Use a lowercase kind such as review"
+        )
     directory = unit_dir / ENVELOPES_DIR
     directory.mkdir(parents=True, exist_ok=True)
     taken = [

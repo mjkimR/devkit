@@ -1,12 +1,30 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any, Self
+from typing import Any, Self, TypedDict
 
 from devkit.advisory.advisory import DEFAULT_CODE, Advisory
 from devkit.advisory.types import ActionMode, Actor, ExitCode, Retry
 
 UNEXPECTED_CODE = "UNEXPECTED_ERROR"
+
+
+class AdvisoryFields(TypedDict, total=False):
+    """The keyword arguments of ``AdvisoryError``, for subclasses that add constructor state of their own.
+
+    A subclass declares ``**fields: Unpack[AdvisoryFields]`` and forwards them to ``super().__init__``.
+    """
+
+    code: str | None
+    actor: Actor | None
+    retry: Retry | None
+    guardrail: bool | None
+    input_error: bool | None
+    retry_after: str | None
+    fix: str | None
+    what_to_report: str | None
+    target_files: Sequence[str] | None
+    exit_code: ExitCode | None
 
 
 class AdvisoryError(Exception):
@@ -19,7 +37,7 @@ class AdvisoryError(Exception):
     after the message become ``[DETAIL]`` lines and are converted to ``str``.
     """
 
-    exit_code: ExitCode = ExitCode.FAILED
+    exit_code: ExitCode = ExitCode.ERROR
     code: str = DEFAULT_CODE
     actor: Actor = Actor.NONE
     retry: Retry = Retry.UNSAFE

@@ -1,34 +1,65 @@
-"""``devkit rules`` commands: argument handling and exit codes; rendering lives in ``cli.output``."""
+"""``devkit rules`` commands: argument handling and exit codes; rendering lives in ``cli.output``.
+
+Exit codes (``devkit.advisory.ExitCode``): ``0`` no error-severity violation
+remains; ``1`` violations remain (``check``/``fix``); ``2`` the command could
+not do its job: usage errors, an invalid ``[rules]`` table, rule loading,
+policy or execution problems, a bad target or snapshot, an unknown rule.
+"""
 
 from __future__ import annotations
 
+import functools
 import sys
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, NoReturn
 
 import click
 from click.core import ParameterSource
 
+from devkit.advisory import AdvisoryError, ExitCode, as_advisory_error
 from devkit.core import find_project_root
 from devkit.rules.cli import output
-from devkit.rules.engine.config import ConfigError, RulesConfig, load_rules_config
+from devkit.rules.engine.config import RulesConfig, load_rules_config
+from devkit.rules.engine.errors import RuleProblem, RulesError
 from devkit.rules.engine.models import Phase, Rule
 from devkit.rules.engine.phases import resolve_phases
 from devkit.rules.engine.policy import validate_policy
-from devkit.rules.engine.project import (
-    RulesDirError,
-    TargetError,
-    build_project_registry,
-    run_project_rules,
-)
+from devkit.rules.engine.project import build_project_registry, run_project_rules
 from devkit.rules.engine.registry import RuleRegistry
-from devkit.rules.workspace.snapshot import Snapshot, SnapshotError, git_snapshot
+from devkit.rules.workspace.snapshot import Snapshot, git_snapshot
 
 
-class EvaluationFailure(click.ClickException):
-    """The run could not evaluate: invalid policy, a bad target, or a snapshot failure (exit code 2)."""
+def _is_json(output_format: object) -> bool:
+    return str(output_format or "text").lower() == "json"
 
-    exit_code = 2
+
+def _boundary(fn: Callable[..., None]) -> Callable[..., None]:
+    """Render any error as an advisory on stderr (and as ``{"error": ...}`` on stdout under ``--format json``)."""
+
+    @functools.wraps(fn)
+    def wrapper(*args: Any, **kwargs: Any) -> None:
+        try:
+            fn(*args, **kwargs)
+        except (click.exceptions.Exit, click.ClickException, SystemExit):
+            raise
+        except Exception as exc:
+            error = as_advisory_error(exc)
+            if _is_json(kwargs.get("output_format")):
+                output.echo_json({"error": error.to_dict()})
+            click.echo(error.render(), err=True)
+            sys.exit(int(error.exit_code))
+
+    return wrapper
+
+
+def _fail(problems: Sequence[AdvisoryError], *, json_error: bool = False) -> NoReturn:
+    """Report collected problems as advisories and exit ``ERROR``; ``json_error`` also puts the first on stdout."""
+    if json_error:
+        output.echo_json({"error": problems[0].to_dict()})
+    output.echo_problems(problems)
+    sys.exit(int(ExitCode.ERROR))
 
 
 @dataclass(frozen=True)
@@ -53,13 +84,6 @@ def _root(workspace_root: str | None) -> Path:
     return find_project_root(Path.cwd())
 
 
-def _load_config(root: Path) -> RulesConfig:
-    try:
-        return load_rules_config(root)
-    except ConfigError as exc:
-        raise EvaluationFailure(str(exc)) from exc
-
-
 def _rules_path(rules_dir: str | None) -> Path | None:
     return Path(rules_dir).resolve() if rules_dir else None
 
@@ -76,22 +100,15 @@ def _execute(request: RunRequest) -> None:
                 click.secho("✓ No changed files in the snapshot; nothing to check.", fg="green", bold=True)
             return
 
-    try:
-        run = run_project_rules(
-            request.root,
-            targets=(request.targets or None) if snapshot is None else None,
-            snapshot=snapshot,
-            phase=request.phase,
-            fix=request.fix,
-            dry_run=request.dry_run,
-            rules_dir=request.rules_dir,
-        )
-    except ConfigError as exc:
-        raise EvaluationFailure(str(exc)) from exc
-    except TargetError as exc:
-        raise EvaluationFailure(f"INVALID_LINT_TARGET: {exc}") from exc
-    except (SnapshotError, RulesDirError) as exc:
-        raise EvaluationFailure(str(exc)) from exc
+    run = run_project_rules(
+        request.root,
+        targets=(request.targets or None) if snapshot is None else None,
+        snapshot=snapshot,
+        phase=request.phase,
+        fix=request.fix,
+        dry_run=request.dry_run,
+        rules_dir=request.rules_dir,
+    )
 
     violations = run.result.violations
     errors = run.errors
@@ -109,10 +126,9 @@ def _execute(request: RunRequest) -> None:
         )
 
     if errors:
-        output.echo_errors(errors)
-        sys.exit(2)
+        _fail(errors)
     if run.result.has_errors:
-        sys.exit(1)
+        sys.exit(int(ExitCode.FINDINGS))
 
 
 def _snapshot_request(
@@ -124,10 +140,7 @@ def _snapshot_request(
         raise click.UsageError("--base applies to --ci only")
     if targets or phase.lower() != Phase.LINTER.value:
         raise click.UsageError("Git snapshot gates run the linter phase without file arguments")
-    try:
-        return git_snapshot(root, staged=staged, base=base)
-    except SnapshotError as exc:
-        raise EvaluationFailure(f"{exc}; verify the Git repository and the --base ref") from exc
+    return git_snapshot(root, staged=staged, base=base)
 
 
 @click.group(name="rules")
@@ -181,6 +194,7 @@ _summary_option = click.option(
 @click.option("--base", default="origin/main", show_default=True, help="Comparison base ref for --ci")
 @click.argument("files", nargs=-1, type=str)
 @click.pass_context
+@_boundary
 def check_cmd(
     ctx: click.Context,
     workspace_root: str | None,
@@ -227,6 +241,7 @@ def check_cmd(
 @_format_option
 @_summary_option
 @click.argument("files", nargs=-1, type=str)
+@_boundary
 def fix_cmd(
     workspace_root: str | None,
     phase: str,
@@ -251,9 +266,9 @@ def fix_cmd(
     )
 
 
-def _registry_and_policy(root: Path, rules_dir: str | None) -> tuple[RulesConfig, RuleRegistry, list[str]]:
+def _registry_and_policy(root: Path, rules_dir: str | None) -> tuple[RulesConfig, RuleRegistry, list[RuleProblem]]:
     """The project's config and registry, with every loading and policy problem."""
-    config = _load_config(root)
+    config = load_rules_config(root)
     registry = build_project_registry(root, rules_dir=_rules_path(rules_dir))
     _, policy_errors = validate_policy(
         registry.get_all(),
@@ -268,6 +283,7 @@ def _registry_and_policy(root: Path, rules_dir: str | None) -> tuple[RulesConfig
 @_workspace_option
 @_rules_dir_option
 @_format_option
+@_boundary
 def phases_cmd(workspace_root: str | None, rules_dir: str | None, output_format: str) -> None:
     """Show each rule's default and effective phase, project overrides, and pending promotions."""
     config, registry, errors = _registry_and_policy(_root(workspace_root), rules_dir)
@@ -277,14 +293,12 @@ def phases_cmd(workspace_root: str | None, rules_dir: str | None, output_format:
     else:
         output.print_phase_plan(entries)
     if errors:
-        output.echo_errors(errors)
-        sys.exit(2)
+        _fail(errors)
 
 
-def _concerns(error: str, rule: Rule | None) -> bool:
+def _concerns(problem: RuleProblem, rule: Rule | None) -> bool:
     """Whether a loading or policy problem is about ``rule`` (unattributed problems concern every rule)."""
-    rule_id = getattr(error, "rule_id", None)
-    return rule is None or rule_id is None or rule_id == rule.id
+    return rule is None or problem.rule_id is None or problem.rule_id == rule.id
 
 
 @cli.command(name="explain")
@@ -292,24 +306,34 @@ def _concerns(error: str, rule: Rule | None) -> bool:
 @_rules_dir_option
 @_format_option
 @click.argument("rule_id", type=str)
+@_boundary
 def explain_cmd(workspace_root: str | None, rules_dir: str | None, output_format: str, rule_id: str) -> None:
     """Describe one rule: phase, severity, effective settings and its guide.
 
-    Policy problems of other rules are printed as warnings; problems of this
-    rule, and an unknown rule ID, exit with status 2.
+    Loading problems and policy problems of other rules are printed as
+    warnings; policy problems of this rule, and an unknown rule ID, exit with
+    status 2.
     """
     root = _root(workspace_root)
     config, registry, problems = _registry_and_policy(root, rules_dir)
     rule = registry.get(rule_id)
-    load_errors = set(registry.errors)
-    errors = [p for p in problems if p not in load_errors and _concerns(p, rule)]
+    load_errors = [id(p) for p in registry.errors]
+    errors: list[AdvisoryError] = [p for p in problems if id(p) not in load_errors and _concerns(p, rule)]
     warnings = [p for p in problems if p not in errors]
     if rule is None:
-        errors.append(f"unknown rule: {rule_id}; available: {', '.join(sorted(r.id for r in registry.get_all()))}")
-    output.echo_errors(warnings, label="Warning")
+        available = ", ".join(sorted(r.id for r in registry.get_all()))
+        errors.insert(
+            0,
+            RulesError.invalid_input(
+                f"unknown rule: {rule_id}; available: {available}",
+                code="RULES_UNKNOWN_RULE",
+                target_files=["RULE_ID"],
+                fix="Pass a rule ID listed by `devkit rules phases`",
+            ),
+        )
+    output.echo_warnings(warnings)
     if errors or rule is None:
-        output.echo_errors(errors)
-        sys.exit(2)
+        _fail(errors, json_error=_is_json(output_format))
     resolvers, _ = validate_policy(
         [rule],
         phase_overrides={},

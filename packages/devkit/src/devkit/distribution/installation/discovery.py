@@ -5,7 +5,8 @@ from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from importlib import metadata, resources
 
-from devkit.distribution.bundles import Bundle, BundleError, load_bundle
+from devkit.distribution.bundles import Bundle, load_bundle
+from devkit.distribution.errors import BundleError, PackageError
 
 GROUP = "devkit.bundles"
 # Bundles registered by this distribution are built in: selected by default (see ``config``).
@@ -29,18 +30,20 @@ def discover_bundles() -> Iterator[list[InstalledBundle]]:
     with ExitStack() as stack:
         for entry in sorted(metadata.entry_points(group=GROUP), key=lambda item: (item.name, item.value)):
             if entry.attr is not None or entry.extras or entry.dist is None:
-                raise BundleError(f"{entry.name}: bundle entry point must reference a resource module")
+                raise PackageError(f"{entry.name}: bundle entry point must reference a resource module")
             try:
                 root = stack.enter_context(resources.as_file(resources.files(entry.module).joinpath("bundle")))
                 bundle = load_bundle(root)
             except (ImportError, OSError, TypeError) as exc:
-                raise BundleError(f"{entry.name}: cannot read content resources: {exc}") from exc
+                raise PackageError(f"{entry.name}: cannot read content resources: {exc}") from exc
+            except BundleError as exc:
+                raise PackageError(f"{entry.name}: installed bundle is invalid: {exc.message}", *exc.details) from exc
             if bundle.name in names:
-                raise BundleError(f"duplicate installed bundle: {bundle.name}")
+                raise PackageError(f"duplicate installed bundle: {bundle.name}")
             names.add(bundle.name)
             package = entry.dist.metadata["Name"]
             builtin = package == BUILTIN_DISTRIBUTION
             if builtin and bundle.default_preset is None:
-                raise BundleError(f"{entry.name}: a built-in bundle must declare default_preset")
+                raise PackageError(f"{entry.name}: a built-in bundle must declare default_preset")
             found.append(InstalledBundle(package, entry.dist.version, bundle, builtin))
         yield sorted(found, key=lambda item: item.bundle.name)

@@ -24,8 +24,11 @@ never derive it from files yourself.
    drift check ran.
    To take one of the `[RETURNS]` paths, run `uv run devkit workflow return
    --unit <dir> --to <stage>`; approvals for that stage and later ones are asked
-   again. `[STALE_APPROVAL]` means `next` found the unit back at an earlier stage
-   and recorded that return.
+   again. `[STALE_APPROVAL]` means the unit is back at an earlier stage and
+   approvals of later stages still count; `next` never writes files. If the
+   redone work needs fresh approval, run the command in its `void_with` field
+   (`uv run devkit workflow return --unit <dir> --to <stage>`); ask the user when
+   unsure.
 3. Act on the signals. Open the skill named by `[NEXT_SKILL]` and perform the
    stage, producing the artifacts the definition names. `[DELEGATE]` asks for a
    subagent with that role and isolation; delegate when the host supports it,

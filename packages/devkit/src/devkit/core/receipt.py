@@ -39,11 +39,12 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
-from devkit.core.errors import ReceiptError, UnsafePathError
-from devkit.core.paths import normalize_relpath
+from devkit.core.errors import AssetFileError, ReceiptError, UnsafePathError
+from devkit.core.paths import normalize_relpath, resolve_within
 
 RECEIPT_PATH = ".devkit/installation.json"
 CONFIG_PATH = ".devkit/config.toml"
+OVERRIDES_PATH = ".devkit/overrides"
 SCHEMA = 1
 FILE_MODES = frozenset({0o644, 0o755})
 
@@ -367,3 +368,55 @@ def load_receipt(root: Path) -> Receipt | None:
     except OSError as exc:
         raise ReceiptError(f"{RECEIPT_PATH}: cannot be read: {exc}") from exc
     return parse_receipt(raw)
+
+
+def _asset_file_fix(item: str, asset: AssetRecord) -> str:
+    if item.startswith(f"{OVERRIDES_PATH}/"):
+        return f"Run `devkit sync` to record the edited override {item}, then commit the receipt"
+    return (
+        f"Run `devkit sync` to restore {item}, or `devkit override create {asset.bundle}:{asset.id}` "
+        "to keep the edit as a project override"
+    )
+
+
+def verified_asset_file(
+    root: Path, item: str, receipt: Receipt, asset: AssetRecord, *, source_root: Path | None = None
+) -> Path:
+    """The file to load for ``item``, one of ``asset.paths``, checked against the receipt.
+
+    The one verification every consumer of receipt-listed code (rules, gates, workflow plugin checks)
+    applies before importing a synchronized file:
+
+    - ``item`` must stay inside ``root`` once symlinks are resolved;
+    - a file with a ``files`` entry must match its SHA-256; a file without one
+      (a project override under ``.devkit/overrides/``) is used as it is;
+    - ``source_root`` is the working tree a Git snapshot at ``root`` was taken
+      from: a file absent from ``root`` (a Git-ignored managed copy) is read
+      from there, and only when the receipt records a hash it matches.
+
+    Returns ``root / item`` or ``source_root / item``. Raises ``AssetFileError``
+    (message ``"<item> <problem>"``) when the file cannot be used.
+    """
+    try:
+        resolve_within(root, item)
+    except UnsafePathError as exc:
+        raise AssetFileError(f"{item} is unsafe: {exc}", target_files=[item]) from exc
+    record = receipt.file(item)
+    path = root / item
+    if not path.is_file():
+        if source_root is None:
+            raise AssetFileError(f"{item} is missing", target_files=[item])
+        try:
+            resolve_within(source_root, item)
+        except UnsafePathError as exc:
+            raise AssetFileError(f"{item} is unsafe in the working tree: {exc}", target_files=[item]) from exc
+        path = source_root / item
+        if not path.is_file():
+            raise AssetFileError(f"{item} is missing from the working tree", target_files=[item])
+        if record is None:
+            raise AssetFileError(f"{item} has no hash in the receipt", target_files=[item])
+    if record is not None and not record.matches(path.read_bytes()):
+        raise AssetFileError(
+            f"{item} differs from the hash in the receipt", target_files=[item], fix=_asset_file_fix(item, asset)
+        )
+    return path

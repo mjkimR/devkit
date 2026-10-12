@@ -8,6 +8,7 @@ from pathlib import Path
 from devkit.core import errors as core_errors
 from devkit.core.project import read_project_config
 from devkit.core.receipt import CONFIG_PATH
+from devkit.workflow.errors import LayoutError, WorkflowError
 from devkit.workflow.ids import IDENT, IDENT_HINT
 from devkit.workflow.layout import TemplateLayout, validate_file_name, validate_relative_dir, validate_template
 
@@ -27,8 +28,10 @@ POLICIES = ("ask", "auto", "off")
 STAGE_POLICIES = ("on", "off")
 
 
-class ConfigError(core_errors.ConfigError):
-    """Raised when the ``[workflow]`` configuration is malformed."""
+class ConfigError(core_errors.ConfigError, WorkflowError):
+    """``.devkit/config.toml`` cannot be read or its ``[workflow]`` tables are malformed (``CONFIG_INVALID``)."""
+
+    fix = "Correct .devkit/config.toml: its TOML syntax and the [workflow], [workflow.approvals] and [workflow.stages] tables"
 
 
 @dataclass(frozen=True)
@@ -59,14 +62,14 @@ class WorkflowConfig:
 def _relative_dir(value: object, key: str) -> str:
     try:
         return validate_relative_dir(value)
-    except ValueError as exc:
+    except LayoutError as exc:
         raise ConfigError(f"config {WORKFLOW_TABLE}.{key}: {exc}") from exc
 
 
 def _file_name(value: object, key: str) -> str:
     try:
         return validate_file_name(value)
-    except ValueError as exc:
+    except LayoutError as exc:
         raise ConfigError(f"config {WORKFLOW_TABLE}.{key}: {exc}") from exc
 
 
@@ -99,7 +102,7 @@ def parse_workflow_config(data: object, source: Path | None = None) -> WorkflowC
         raise ConfigError(f"config {WORKFLOW_TABLE}.unit_path: expected a string")
     try:
         validate_template(unit_path)
-    except ValueError as exc:
+    except LayoutError as exc:
         raise ConfigError(f"config {WORKFLOW_TABLE}.unit_path: {exc}") from exc
     anchor = _file_name(section.get("anchor", DEFAULT_ANCHOR), "anchor")
     definitions_dir = _relative_dir(section.get("definitions_dir", DEFAULT_DEFINITIONS_DIR), "definitions_dir")

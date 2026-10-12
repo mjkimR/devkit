@@ -22,7 +22,10 @@ from typing import Any
 import tomlkit
 from tomlkit.exceptions import TOMLKitError
 
-from ..bundles.common import AGENT_NAMES, SLUG, BundleError
+from devkit.core.errors import ConfigError
+
+from ..bundles.common import AGENT_NAMES, SLUG
+from ..errors import SelectionError
 from .discovery import InstalledBundle
 from .workspace import CONFIG
 
@@ -70,7 +73,7 @@ def _config_path(root: Path) -> Path:
     """``root/.devkit/config.toml``; it is read and written in place, so it must be a regular file."""
     path = root / CONFIG
     if path.is_symlink() or (path.exists() and not path.is_file()):
-        raise BundleError(f"config must be a regular file: {CONFIG}")
+        raise ConfigError(f"config must be a regular file: {CONFIG}")
     return path
 
 
@@ -81,12 +84,12 @@ def _load(root: Path) -> dict[str, Any] | None:
     try:
         data = tomllib.loads(path.read_text("utf-8"))
     except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
-        raise BundleError(f"invalid config: {exc}") from exc
+        raise ConfigError(f"invalid config: {exc}") from exc
     if "schema" in data and (type(data["schema"]) is not int or data["schema"] != SCHEMA):
-        raise BundleError("unsupported config schema")
+        raise ConfigError("unsupported config schema")
     unknown = set(data) - FIELDS
     if unknown:
-        raise BundleError(f"config: unknown fields: {sorted(unknown)}")
+        raise ConfigError(f"config: unknown fields: {sorted(unknown)}")
     validate_tool_tables(data.get("tool"))
     return data
 
@@ -96,23 +99,23 @@ def validate_tool_tables(tool: object) -> None:
     if tool is None:
         return
     if not isinstance(tool, dict):
-        raise BundleError("config tool: expected a table of [tool.<name>] tables")
+        raise ConfigError("config tool: expected a table of [tool.<name>] tables")
     for name, value in tool.items():
         if not (isinstance(name, str) and TOOL_NAME.fullmatch(name)):
-            raise BundleError(f"config tool: invalid tool name: {name!r}")
+            raise ConfigError(f"config tool: invalid tool name: {name!r}")
         if not isinstance(value, dict):
-            raise BundleError(f"config tool.{name}: expected a table")
+            raise ConfigError(f"config tool.{name}: expected a table")
 
 
 def _agents(value: object) -> list[str]:
     if not isinstance(value, list) or not all(isinstance(v, str) and v in AGENT_NAMES for v in value):
-        raise BundleError("config: invalid agents")
+        raise ConfigError("config: invalid agents")
     return sorted(set(value))
 
 
 def parse_presets(value: object, context: str = "config") -> dict[str, list[str]]:
     if not isinstance(value, dict):
-        raise BundleError(f"{context}: invalid presets")
+        raise ConfigError(f"{context}: invalid presets")
     result = {}
     for bundle, presets in value.items():
         if isinstance(presets, str):
@@ -124,7 +127,7 @@ def parse_presets(value: object, context: str = "config") -> dict[str, list[str]
             or not all(isinstance(v, str) and SLUG.fullmatch(v) for v in presets)
             or len(set(presets)) != len(presets)
         ):
-            raise BundleError(f"{context}: invalid presets")
+            raise ConfigError(f"{context}: invalid presets")
         result[bundle] = list(presets)
     return result
 
@@ -132,11 +135,11 @@ def parse_presets(value: object, context: str = "config") -> dict[str, list[str]
 def parse_selection(value: object) -> tuple[dict[str, list[str]], frozenset[str]]:
     """``[presets]`` of the config: preset selections and the bundles set to ``false``."""
     if not isinstance(value, dict):
-        raise BundleError("config: invalid presets")
+        raise ConfigError("config: invalid presets")
     opted_out = frozenset(name for name, presets in value.items() if presets is False)
     for name in opted_out:
         if not (isinstance(name, str) and SLUG.fullmatch(name)):
-            raise BundleError("config: invalid presets")
+            raise ConfigError("config: invalid presets")
     return parse_presets({k: v for k, v in value.items() if k not in opted_out}), opted_out
 
 
@@ -161,25 +164,25 @@ def validate_playbooks_config(playbooks: object) -> dict[str, int | float]:
     if playbooks is None:
         return {}
     if not isinstance(playbooks, dict):
-        raise BundleError("config playbooks: expected a table")
+        raise ConfigError("config playbooks: expected a table")
     unknown = set(playbooks) - {"min_score", "limit", "max_bytes"}
     if unknown:
-        raise BundleError(f"config playbooks: unknown fields: {sorted(unknown)}")
+        raise ConfigError(f"config playbooks: unknown fields: {sorted(unknown)}")
     result: dict[str, int | float] = {}
     if "limit" in playbooks:
         val = playbooks["limit"]
         if type(val) is not int or not 1 <= val <= 20:
-            raise BundleError("config playbooks: limit must be an integer between 1 and 20")
+            raise ConfigError("config playbooks: limit must be an integer between 1 and 20")
         result["limit"] = val
     if "min_score" in playbooks:
         val = playbooks["min_score"]
         if not isinstance(val, (int, float)) or not math.isfinite(val) or val < 0:
-            raise BundleError("config playbooks: min_score must be a finite nonnegative number")
+            raise ConfigError("config playbooks: min_score must be a finite nonnegative number")
         result["min_score"] = float(val)
     if "max_bytes" in playbooks:
         val = playbooks["max_bytes"]
         if type(val) is not int or not 1024 <= val <= 65536:
-            raise BundleError("config playbooks: max_bytes must be an integer between 1024 and 65536")
+            raise ConfigError("config playbooks: max_bytes must be an integer between 1024 and 65536")
         result["max_bytes"] = val
     return result
 
@@ -196,10 +199,10 @@ def read_config(root: Path) -> ProjectConfig:
     validate_playbooks_config(data.get("playbooks"))
     guidance_block = data.get("guidance_block", True)
     if type(guidance_block) is not bool:
-        raise BundleError("config: guidance_block must be a boolean")
+        raise ConfigError("config: guidance_block must be a boolean")
     override_drift = data.get("override_drift", "warn")
     if override_drift not in OVERRIDE_DRIFT:
-        raise BundleError(f"config: override_drift must be one of {list(OVERRIDE_DRIFT)}")
+        raise ConfigError(f"config: override_drift must be one of {list(OVERRIDE_DRIFT)}")
     presets, opted_out = parse_selection(data.get("presets", {}))
     return ProjectConfig(
         agents=_agents(data["agents"]) if "agents" in data else all_agents(),
@@ -217,10 +220,13 @@ def resolve_selection(installed: list[InstalledBundle], requested: dict[str, lis
     for name, presets in requested.items():
         bundle = bundles.get(name)
         if bundle is None:
-            raise BundleError(f"bundle is not installed: {name}")
+            raise SelectionError(
+                f"bundle is not installed: {name}",
+                fix="Install the content package that ships it, or run `devkit list`",
+            )
         if not presets:
             if bundle.default_preset is None:
-                raise BundleError(
+                raise SelectionError(
                     f"{name}: no default preset; choose one of: {', '.join(f'{name}:{p}' for p in bundle.preset_names)}"
                 )
             presets = [bundle.default_preset]
@@ -238,7 +244,7 @@ def _document(root: Path) -> tomlkit.TOMLDocument:
     try:
         return tomlkit.parse(path.read_text("utf-8"))
     except (OSError, UnicodeError, TOMLKitError) as exc:
-        raise BundleError(f"invalid config: {exc}") from exc
+        raise ConfigError(f"invalid config: {exc}") from exc
 
 
 def _check_writable(root: Path) -> None:
@@ -246,9 +252,9 @@ def _check_writable(root: Path) -> None:
     path = _config_path(root)
     directory = next((parent for parent in (path.parent, root) if parent.exists()), root)
     if path.exists() and not os.access(path, os.R_OK):
-        raise BundleError(f"config is not readable: {CONFIG}")
+        raise ConfigError(f"config is not readable: {CONFIG}")
     if not os.access(directory, os.W_OK | os.X_OK):
-        raise BundleError(f"cannot write {CONFIG}: {directory} is not writable")
+        raise ConfigError(f"cannot write {CONFIG}: {directory} is not writable")
 
 
 def _write(root: Path, text: str) -> None:

@@ -6,7 +6,8 @@ import stat
 import zipfile
 from pathlib import Path
 
-from .manifest import Bundle, BundleError, source_files
+from ..errors import ArgumentError, BundleError
+from .manifest import Bundle, source_files
 
 
 def _payload(bundle: Bundle) -> dict[str, tuple[bytes, int]]:
@@ -28,7 +29,11 @@ def build_bundle(bundle: Bundle, output: Path) -> dict[str, str | int]:
     output = output.absolute()
     # An output inside the source can become part of a future skill payload.
     if output.resolve().is_relative_to(bundle.root):
-        raise BundleError("archive output must be outside the bundle source")
+        raise ArgumentError(
+            "archive output must be outside the bundle source",
+            target_files=["--output"],
+            fix="Pass an --output path outside the bundle directory",
+        )
     payload = _payload(bundle)
     if "inventory.json" in payload:
         raise BundleError("inventory.json is reserved for archive metadata")
@@ -39,7 +44,14 @@ def build_bundle(bundle: Bundle, output: Path) -> dict[str, str | int]:
     payload["inventory.json"] = ((json.dumps(inventory, sort_keys=True, indent=2) + "\n").encode(), 0o644)
     output.parent.mkdir(parents=True, exist_ok=True)
     # Exclusive creation protects existing artifacts from accidental replacement.
-    stream = output.open("xb")
+    try:
+        stream = output.open("xb")
+    except FileExistsError as exc:
+        raise ArgumentError(
+            f"archive already exists: {output}",
+            target_files=["--output"],
+            fix="Pass a new --output path; devkit never replaces an existing archive",
+        ) from exc
     try:
         with stream, zipfile.ZipFile(stream, "w", compression=zipfile.ZIP_STORED) as archive:
             for name, (data, mode) in sorted(payload.items()):

@@ -9,9 +9,11 @@ from types import SimpleNamespace
 
 import pytest
 from click.testing import CliRunner
+from devkit.core.errors import ConfigError, ReceiptError
 from devkit.core.receipt import ToolRecord
-from devkit.distribution.bundles import BundleError, load_bundle
+from devkit.distribution.bundles import load_bundle
 from devkit.distribution.cli import cli
+from devkit.distribution.errors import ConflictError, OverrideDriftError
 from devkit.distribution.installation import discovery, hooks
 from devkit.distribution.installation import status as status_module
 from devkit.distribution.installation import sync as sync_module
@@ -161,7 +163,7 @@ def test_override_drift_block_aborts_before_writes(
     write_config(target, extra='override_drift = "block"')
     receipt = (target / RECEIPT).read_bytes()
     with pytest.raises(
-        BundleError, match=r"override_drift = \"block\"\): team:guide; review with 'devkit override diff"
+        OverrideDriftError, match=r"override_drift = \"block\"\): team:guide; review with 'devkit override diff"
     ):
         sync_project(target, installed)
     assert (target / RECEIPT).read_bytes() == receipt
@@ -170,7 +172,7 @@ def test_override_drift_block_aborts_before_writes(
 
 def test_override_drift_config_is_validated(installed: list[InstalledBundle], target: Path) -> None:
     write_config(target, extra='override_drift = "ignore"')
-    with pytest.raises(BundleError, match="override_drift must be one of"):
+    with pytest.raises(ConfigError, match="override_drift must be one of"):
         sync_project(target, installed)
 
 
@@ -203,7 +205,7 @@ source = "guide.md"
     assert all(a["path"] != ".agents/skills/review/SKILL.md" for a in result["actions"])
     # Still desired and modified: abort, as before.
     (target / ".devkit/managed/team/guide.md").write_text("edited")
-    with pytest.raises(BundleError, match="user-modified deployment file"):
+    with pytest.raises(ConflictError, match="user-modified deployment file"):
         sync_project(target, newer)
 
 
@@ -253,7 +255,7 @@ def test_receipt_tool_field_is_validated(installed: list[InstalledBundle], targe
     receipt = json.loads((target / RECEIPT).read_text())
     receipt["tool"] = {"package": "devkit"}
     (target / RECEIPT).write_text(json.dumps(receipt))
-    with pytest.raises(BundleError, match="tool: missing keys"):
+    with pytest.raises(ReceiptError, match="tool: missing keys"):
         sync_project(target, installed)
 
 

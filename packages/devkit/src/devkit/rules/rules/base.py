@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from devkit.rules.engine.errors import RuleDefinitionError
 from devkit.rules.engine.models import Phase, Rule, Severity
 
 
@@ -28,7 +29,7 @@ class BaseRule(Rule):
         if self.promote_to is None:
             return
         if self.phase != Phase.HYGIENE or self.promote_to != Phase.LINTER:
-            raise ValueError(
+            raise RuleDefinitionError(
                 f"{self.id}: promote_to is only valid as 'linter' on a 'hygiene' rule "
                 f"(got phase={self.phase.value}, promote_to={self.promote_to.value})"
             )

@@ -3,7 +3,8 @@
 ``Workspace`` is the library entry point the CLI is built on. It loads each
 source once, resolves a unit directory to its anchor, binding and workflow,
 and evaluates units with the project's policies (approvals, stage switches,
-lint, Git, drift). Every failure is a ``WorkflowError`` with a stable code.
+lint, Git, drift). Every failure is an ``AdvisoryError`` with a stable code: a
+``WorkflowError``, or a ``devkit.core`` error such as ``RECEIPT_INVALID``.
 """
 
 from __future__ import annotations
@@ -13,16 +14,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from devkit.core.errors import FrontmatterError, ReceiptError
+from devkit.core.errors import FrontmatterError
 from devkit.core.project import find_project_root
 from devkit.core.receipt import Receipt, load_receipt
 from devkit.workflow.binding import Binding, read_binding
 from devkit.workflow.checks import DECLARABLE, Registry
-from devkit.workflow.config import CONFIG_PATH, ConfigError, WorkflowConfig, load_workflow_config
+from devkit.workflow.config import WorkflowConfig, load_workflow_config
 from devkit.workflow.decisions import RETURN_PREFIX, Decision, load_decisions, new_decision, write_decision
 from devkit.workflow.definition import DefinitionError, Problem, WorkflowDocument, schema_hash
-from devkit.workflow.discovery import discover, load_all, resolve
-from devkit.workflow.errors import DriftError, input_error, maintenance_error
+from devkit.workflow.discovery import discover, load_all, load_problem, resolve
+from devkit.workflow.errors import DriftError, WorkflowProblem, input_error, maintenance_error
 from devkit.workflow.evaluate import LintFunc, Options, evaluate
 from devkit.workflow.git import is_ancestor
 from devkit.workflow.layout import TemplateLayout
@@ -34,7 +35,6 @@ from devkit.workflow.roles import discover_roles
 from devkit.workflow.validation import ValidationReport, validate, validate_workspace
 
 UNIT_FIX = "Pass an existing unit directory (`devkit workflow list`) or create one with `devkit workflow new <slug>`"
-RETURN_BY = "devkit"
 
 
 @dataclass(frozen=True)
@@ -63,21 +63,13 @@ class Workspace:
         ancestor: AncestorFunc | None = is_ancestor,
     ) -> None:
         self.root = (Path(root) if root is not None else find_project_root(Path.cwd())).resolve()
-        try:
-            self.config: WorkflowConfig = load_workflow_config(self.root)
-        except ConfigError as exc:
-            raise input_error(
-                str(exc),
-                code="CONFIG_INVALID",
-                target_files=[CONFIG_PATH],
-                fix="Correct the [workflow] table in .devkit/config.toml",
-            ) from exc
+        self.config: WorkflowConfig = load_workflow_config(self.root)
         self.lint = lint
         self.ancestor = ancestor
         self._receipt_loaded = False
         self._receipt: Receipt | None = None
         self._docs: list[WorkflowDocument] | None = None
-        self._discovery_errors: list[str] = []
+        self._discovery_errors: list[WorkflowProblem] = []
         self._roles_loaded = False
         self._roles: dict[str, str] | None = None
         self._plugins: list[BaseCheck] | None = None
@@ -106,16 +98,9 @@ class Workspace:
 
     @property
     def receipt(self) -> Receipt | None:
-        """The installation receipt, ``None`` when absent; a malformed one is ``RECEIPT_INVALID``."""
+        """The installation receipt, ``None`` when absent; a malformed one raises ``ReceiptError`` (``RECEIPT_INVALID``)."""
         if not self._receipt_loaded:
-            try:
-                self._receipt = load_receipt(self.root)
-            except ReceiptError as exc:
-                raise maintenance_error(
-                    str(exc),
-                    code="RECEIPT_INVALID",
-                    fix="Run `devkit sync` to rewrite the installation receipt",
-                ) from exc
+            self._receipt = load_receipt(self.root)
             self._receipt_loaded = True
         return self._receipt
 
@@ -126,7 +111,7 @@ class Workspace:
         return self._docs
 
     @property
-    def discovery_errors(self) -> list[str]:
+    def discovery_errors(self) -> list[WorkflowProblem]:
         self.definitions()
         return list(self._discovery_errors)
 
@@ -145,11 +130,14 @@ class Workspace:
         if self._plugins is None:
             loaded, errors = load_plugin_checks(self.root, self.config.checks_dir, self.receipt)
             if errors:
+                fixes = list(dict.fromkeys(e.fix for e in errors if e.fix))
                 raise maintenance_error(
                     "plugin checks could not be loaded",
-                    *errors,
+                    *(str(e) for e in errors),
                     code="CHECK_LOAD_FAILED",
-                    fix=f"Fix or remove the failing check file, or run `devkit sync` to restore a synchronized one ({self.config.checks_dir} holds project checks)",
+                    fix="; ".join(fixes)
+                    or f"Fix or remove the failing check file, or run `devkit sync` to restore a synchronized one ({self.config.checks_dir} holds project checks)",
+                    target_files=list(dict.fromkeys(e.target for e in errors if e.target)),
                 )
             self._plugins = loaded
         return self._plugins
@@ -209,7 +197,7 @@ class Workspace:
         Only a whole-workspace run compares stages shared across definitions.
         """
         docs: list[WorkflowDocument] = []
-        errors: list[str] = []
+        errors: list[WorkflowProblem] = []
         if not paths:
             docs, errors = list(self.definitions()), self.discovery_errors
         for target in paths:
@@ -221,7 +209,7 @@ class Workspace:
             try:
                 docs.append(resolve(self.definitions_dir, str(target), self.root))
             except DefinitionError as exc:
-                errors.append(str(exc))
+                errors.append(load_problem(exc))
         return validate_workspace(
             docs,
             errors,
@@ -235,7 +223,7 @@ class Workspace:
     def describe(self, doc: WorkflowDocument, binding: Binding | None = None) -> dict[str, Any]:
         """The definition as data with its problems, effective policies and anchor (``show --format json``)."""
         data = doc.to_dict()
-        data["problems"] = [str(p) for p in self.validate(doc)]
+        data["problems"] = [p.to_dict() for p in self.validate(doc)]
         data["approvals"] = {s.gate: self.config.policy(s.gate) for s in doc.stages if s.gate}
         data["stages_off"] = [s.id for s in doc.stages if self.config.stage_policy(s.id) == "off"]
         data["anchor"] = self.anchor_for(doc)
@@ -344,15 +332,14 @@ class Workspace:
         given: Sequence[str] = (),
         lint: bool = True,
         enforce_drift: bool = True,
-        record_returns: bool = True,
     ) -> Result:
-        """Evaluate ``unit`` with the project's policies.
+        """Evaluate ``unit`` with the project's policies; never writes a file.
 
         Raises ``DriftError`` (``WORKFLOW_DRIFT``) when the bound definition
         changed and a stage is still current, unless ``enforce_drift`` is off.
-        When approvals for stages after the current one are found (the unit
-        went back), a ``return:<stage>`` decision record is written so those
-        approvals must be given again (``record_returns``).
+        Approvals for stages after the current one (the unit went back) are
+        listed in ``Result.stale_approvals`` and keep counting until an
+        explicit ``record_return`` voids them.
         """
         self.check_given(unit.doc, given)
         result = evaluate(unit.doc, self.options(unit, given=given, lint=lint))
@@ -364,15 +351,6 @@ class Workspace:
                 f"current={result.drift.current}",
                 target_files=[self.rel(unit.anchor_path)],
                 fix=f"Review the change to {unit.doc.id}, then run `devkit workflow bind --unit {unit.rel}` to accept it",
-            )
-        if record_returns and result.stale_approvals and result.stage is not None:
-            stage = result.stage.id
-            files = ", ".join(d.file for d in result.stale_approvals)
-            record_return(
-                unit,
-                stage,
-                note=f"the unit is back at stage {stage}; approvals for later stages ({files}) must be given again",
-                by=RETURN_BY,
             )
         return result
 

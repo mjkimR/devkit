@@ -53,7 +53,8 @@ class NeedsArgs(BaseRule):
     registry = RuleRegistry()
     discovered = registry.discover_from_dir(tmp_path)
     assert [rule.id for rule in discovered] == ["RULE-zeta", "RULE-alpha"]
-    assert len(registry.errors) == 1 and "b.py" in registry.errors[0] and "limit" in registry.errors[0]
+    assert len(registry.errors) == 1 and "b.py" in str(registry.errors[0]) and "limit" in str(registry.errors[0])
+    assert registry.errors[0].code == "RULES_LOAD_FAILED" and registry.errors[0].target_files[0].endswith("b.py")
     assert registry.get("RULE-fine") is None
 
 

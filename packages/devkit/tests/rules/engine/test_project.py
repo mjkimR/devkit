@@ -104,7 +104,8 @@ def test_invalid_policy_raises_config_error(tmp_path: Path) -> None:
 def test_policy_errors_are_returned_in_the_result(tmp_path: Path) -> None:
     _write(tmp_path, ".devkit/config.toml", '[rules.severity_overrides]\nRULE-nope = "warning"\n')
     run = run_project_rules(tmp_path)
-    assert run.errors == ["severity override for unknown rule: RULE-nope"] and run.failed
+    assert [str(e) for e in run.errors] == ["severity override for unknown rule: RULE-nope"] and run.failed
+    assert run.errors[0].code == "RULES_POLICY_INVALID" and run.errors[0].rule_id == "RULE-nope"
 
 
 def test_load_errors_skip_evaluation(tmp_path: Path) -> None:
@@ -112,7 +113,8 @@ def test_load_errors_skip_evaluation(tmp_path: Path) -> None:
     _write(tmp_path, ".devkit/installation.json", "{not json")
     run = run_project_rules(tmp_path)
     assert run.result.violations == [] and run.result.errors == []
-    assert len(run.load_errors) == 1 and "invalid installation receipt" in run.load_errors[0]
+    assert len(run.load_errors) == 1 and "invalid installation receipt" in str(run.load_errors[0])
+    assert run.load_errors[0].code == "RULES_LOAD_FAILED"
     assert run.errors == list(run.load_errors) and run.failed
 
 

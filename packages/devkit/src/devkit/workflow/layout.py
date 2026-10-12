@@ -13,57 +13,59 @@ from datetime import date as date_type
 from pathlib import Path, PurePosixPath
 from string import Formatter
 
+from devkit.workflow.errors import LayoutError
+
 ALLOWED_FIELDS = {"slug", "date"}
 SLUG = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 LAYOUT_KEYS = ("work_dir", "unit_path", "anchor")
 
 
 def validate_template(template: str) -> list[tuple[str, str]]:
-    """Return the template's (field, spec) pairs or raise ``ValueError``."""
+    """Return the template's (field, spec) pairs or raise ``LayoutError``."""
     if not template.strip():
-        raise ValueError("template is empty")
+        raise LayoutError("template is empty")
     if template.startswith("/") or "\\" in template or ".." in PurePosixPath(template).parts:
-        raise ValueError("template must be a relative path without '..'")
+        raise LayoutError("template must be a relative path without '..'")
     fields: list[tuple[str, str]] = []
     try:
         parsed = list(Formatter().parse(template))
-    except ValueError as exc:
-        raise ValueError(f"invalid format syntax: {exc}") from exc
+    except ValueError as exc:  # str.format syntax
+        raise LayoutError(f"invalid format syntax: {exc}") from exc
     for _, name, spec, conversion in parsed:
         if name is None:
             continue
         if name not in ALLOWED_FIELDS:
-            raise ValueError(f"unknown placeholder {{{name}}}; allowed: {{slug}}, {{date}}")
+            raise LayoutError(f"unknown placeholder {{{name}}}; allowed: {{slug}}, {{date}}")
         if conversion:
-            raise ValueError(f"conversion !{conversion} is not supported")
+            raise LayoutError(f"conversion !{conversion} is not supported")
         if name == "slug" and spec:
-            raise ValueError("{slug} takes no format spec")
+            raise LayoutError("{slug} takes no format spec")
         fields.append((name, spec or ""))
     if not any(name == "slug" for name, _ in fields):
-        raise ValueError("template must contain {slug}")
+        raise LayoutError("template must contain {slug}")
     return fields
 
 
 def validate_slug(slug: str) -> str:
     if not SLUG.match(slug):
-        raise ValueError(f"slug {slug!r} must match [a-z0-9][a-z0-9-]*")
+        raise LayoutError(f"slug {slug!r} must match [a-z0-9][a-z0-9-]*")
     return slug
 
 
 def validate_relative_dir(value: object) -> str:
     """A nonempty workspace-relative POSIX path without ``..``, normalized."""
     if not isinstance(value, str) or not value.strip():
-        raise ValueError("expected a nonempty string")
+        raise LayoutError("expected a nonempty string")
     rel = PurePosixPath(value)
     if rel.is_absolute() or "\\" in value or ".." in rel.parts:
-        raise ValueError("must be a workspace-relative path without '..'")
+        raise LayoutError("must be a workspace-relative path without '..'")
     return rel.as_posix()
 
 
 def validate_file_name(value: object) -> str:
     """A bare file name: no directory separators, not ``.`` or ``..``."""
     if not isinstance(value, str) or not value.strip() or "/" in value or "\\" in value or value in {".", ".."}:
-        raise ValueError("expected a bare file name")
+        raise LayoutError("expected a bare file name")
     return value
 
 
@@ -86,31 +88,31 @@ class LayoutSpec:
 
 
 def parse_layout_spec(raw: object, where: str = "layout") -> LayoutSpec:
-    """Validate a ``layout`` mapping; every key is optional. Raises ``ValueError`` naming the key."""
+    """Validate a ``layout`` mapping; every key is optional. Raises ``LayoutError`` naming the key."""
     if not isinstance(raw, dict):
-        raise ValueError(f"{where}: expected a mapping with work_dir, unit_path, anchor")
+        raise LayoutError(f"{where}: expected a mapping with work_dir, unit_path, anchor")
     unknown = set(raw) - set(LAYOUT_KEYS)
     if unknown:
-        raise ValueError(f"{where}: unknown keys {sorted(unknown)}")
+        raise LayoutError(f"{where}: unknown keys {sorted(unknown)}")
     work_dir = unit_path = anchor = None
     try:
         if raw.get("work_dir") is not None:
             work_dir = validate_relative_dir(raw["work_dir"])
-    except ValueError as exc:
-        raise ValueError(f"{where}.work_dir: {exc}") from exc
+    except LayoutError as exc:
+        raise LayoutError(f"{where}.work_dir: {exc}") from exc
     if raw.get("unit_path") is not None:
         if not isinstance(raw["unit_path"], str):
-            raise ValueError(f"{where}.unit_path: expected a string")
+            raise LayoutError(f"{where}.unit_path: expected a string")
         try:
             validate_template(raw["unit_path"])
-        except ValueError as exc:
-            raise ValueError(f"{where}.unit_path: {exc}") from exc
+        except LayoutError as exc:
+            raise LayoutError(f"{where}.unit_path: {exc}") from exc
         unit_path = raw["unit_path"]
     try:
         if raw.get("anchor") is not None:
             anchor = validate_file_name(raw["anchor"])
-    except ValueError as exc:
-        raise ValueError(f"{where}.anchor: {exc}") from exc
+    except LayoutError as exc:
+        raise LayoutError(f"{where}.anchor: {exc}") from exc
     return LayoutSpec(work_dir, unit_path, anchor)
 
 
@@ -128,7 +130,7 @@ class TemplateLayout:
         rendered = self.unit_path.format(slug=slug, date=when)
         rel = PurePosixPath(self.work_dir) / rendered
         if ".." in rel.parts:
-            raise ValueError("rendered unit path escapes the work directory")
+            raise LayoutError("rendered unit path escapes the work directory")
         return rel
 
     def discovery_glob(self) -> str:

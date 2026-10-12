@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pytest
-from devkit.rules import RuleContext
+from devkit.rules import RuleContext, TargetError
 
 
 def test_context_creates_cache_and_matches_exact_paths(tmp_path: Path) -> None:
@@ -36,7 +36,7 @@ def test_context_exclusions_apply_to_targets_and_whole_workspace_runs(tmp_path: 
 
 
 def test_context_rejects_targets_outside_workspace(tmp_path: Path) -> None:
-    with pytest.raises(ValueError, match="outside the workspace"):
+    with pytest.raises(TargetError, match="outside the workspace"):
         RuleContext(workspace_root=tmp_path, changed_files=["../outside.md"])
 
 
@@ -58,5 +58,18 @@ def test_settings_for_a_path_outside_the_workspace_is_refused(tmp_path: Path) ->
     evaluate(ctx, [rule])
     assert ctx.settings(rule).max_lines == 400
     assert ctx.settings(rule, tmp_path / "a.md").max_lines == 400
-    with pytest.raises(ValueError, match="outside the workspace"):
+    with pytest.raises(TargetError, match="outside the workspace"):
         ctx.settings(rule, tmp_path.parent / "elsewhere.md")
+
+
+def test_cache_is_always_a_workspace_cache(tmp_path: Path) -> None:
+    from devkit.rules.workspace.cache import WorkspaceCache
+
+    own = RuleContext(workspace_root=tmp_path)
+    assert isinstance(own.cache, WorkspaceCache) and own.cache.workspace_root == tmp_path.resolve()
+    shared = WorkspaceCache(tmp_path)
+    assert RuleContext(workspace_root=tmp_path, cache=shared).cache is shared
+    other = tmp_path / "other"
+    other.mkdir()
+    with pytest.raises(ValueError, match="same workspace root"):
+        RuleContext(workspace_root=tmp_path, cache=WorkspaceCache(other))

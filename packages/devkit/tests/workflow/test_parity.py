@@ -5,15 +5,20 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
 from click.testing import CliRunner, Result
+from devkit.advisory import ActionMode
 from devkit.workflow import (
     BaseCheck,
     CheckClass,
     Options,
     Registry,
+    WorkflowError,
+    Workspace,
     discover_roles,
     evaluate,
     load_check_files,
+    load_plugin_checks,
     parse,
     shared_stage_problems,
     validate,
@@ -160,9 +165,9 @@ def test_show_unit_prints_binding_and_drift(workspace: Path) -> None:
     assert drifted.exit_code == 0 and "drift=true]" in drifted.output
 
     both = _run("show", "-w", str(workspace), "direct-delivery", "--unit", unit)
-    assert both.exit_code == 1 and "(WORKFLOW_NOT_SELECTED)" in both.stderr
+    assert both.exit_code == 2 and "(WORKFLOW_NOT_SELECTED)" in both.stderr
     neither = _run("show", "-w", str(workspace))
-    assert neither.exit_code == 1 and "(WORKFLOW_NOT_SELECTED)" in neither.stderr
+    assert neither.exit_code == 2 and "(WORKFLOW_NOT_SELECTED)" in neither.stderr
 
 
 # --- list filters ---------------------------------------------------------------
@@ -202,10 +207,12 @@ def test_load_check_files_validates_and_reports(tmp_path: Path) -> None:
     (tmp_path / "_private.py").write_text("raise RuntimeError('never loaded')\n")
     loaded, errors = load_check_files(sorted(tmp_path.glob("*.py")))
     assert [c.name for c in loaded] == ["explodes", "has-word"] or [c.name for c in loaded] == ["has-word", "explodes"]
-    assert len(errors) == 3
-    assert any("must match [a-z][a-z0-9-]*" in e for e in errors)
-    assert any("cannot import" in e for e in errors)
-    assert any("already defined" in e for e in errors)
+    assert len(errors) == 3 and {e.code for e in errors} == {"CHECK_LOAD_FAILED"}
+    messages = [str(e) for e in errors]
+    assert any("must match [a-z][a-z0-9-]*" in m for m in messages)
+    assert any("cannot import" in m for m in messages)
+    assert any("already defined" in m for m in messages)
+    assert {e.target for e in errors} == {bad_name.as_posix(), broken.as_posix(), good.as_posix()}  # dup.py loads first
 
 
 def test_registry_rejects_plugin_colliding_with_builtin() -> None:
@@ -266,13 +273,47 @@ def test_plugin_checks_from_receipt_and_load_failures(workspace: Path) -> None:
 
     (managed / "words.py").unlink()
     missing = _run("checks", "-w", str(workspace))
-    assert missing.exit_code == 1 and "(CHECK_LOAD_FAILED)" in missing.stderr
+    assert missing.exit_code == 2 and "(CHECK_LOAD_FAILED)" in missing.stderr
     assert "synchronized check .devkit/managed/team/checks/words.py is missing" in missing.stderr
     assert "[ACTION]" in missing.stderr
 
     (managed / "words.py").write_text("raise RuntimeError('broken plugin')\n")
     broken = _run("validate", "-w", str(workspace))
-    assert broken.exit_code == 1 and "(CHECK_LOAD_FAILED)" in broken.stderr and "broken plugin" in broken.stderr
+    assert broken.exit_code == 2 and "(CHECK_LOAD_FAILED)" in broken.stderr and "broken plugin" in broken.stderr
+
+
+def test_receipt_listed_plugin_checks_are_verified_like_rules_and_gates(workspace: Path) -> None:
+    write_config(workspace, CONFIG)
+    (workspace / ".devkit/roles").mkdir()
+    (workspace / ".devkit/roles/reviewer.md").write_text("# reviewer\n")
+    managed = workspace / ".devkit/managed/team/checks/words.py"
+    override = workspace / ".devkit/overrides/team/checks/extra.py"
+    for path in (managed, override):
+        path.parent.mkdir(parents=True)
+    managed.write_text(PLUGIN)
+    override.write_text(PLUGIN.replace("has-word", "extra-word").replace("explodes", "extra-explodes"))
+    asset = {
+        "kind": "workflow-check",
+        "id": "words",
+        "paths": [".devkit/managed/team/checks/words.py", ".devkit/overrides/team/checks/extra.py"],
+    }
+    write_receipt(workspace, [asset], hashed=(".devkit/managed/team/checks/words.py",))
+    # A recorded file matching its hash and an override without a record both load.
+    names = {c.name for c in Workspace(workspace).plugins()}
+    assert {"has-word", "extra-word"} <= names
+
+    managed.write_text(PLUGIN + "\n# edited by hand\n")
+    with pytest.raises(WorkflowError) as info:
+        Workspace(workspace).plugins()
+    error = info.value
+    assert error.code == "CHECK_LOAD_FAILED" and error.mode is ActionMode.MAINTENANCE
+    assert "differs from the hash in the receipt" in error.render()
+    assert error.fix is not None and "devkit sync" in error.fix and "devkit override create team:words" in error.fix
+    assert error.target_files == (".devkit/managed/team/checks/words.py",)
+    _, problems = load_plugin_checks(workspace, ".devkit/workflow-checks")
+    assert [(p.code, p.target) for p in problems] == [("CHECK_LOAD_FAILED", ".devkit/managed/team/checks/words.py")]
+    cli = _run("checks", "-w", str(workspace))
+    assert cli.exit_code == 2 and "(CHECK_LOAD_FAILED)" in cli.stderr
 
 
 def test_definition_declared_check_cannot_shadow_plugin(workspace: Path) -> None:
@@ -314,10 +355,12 @@ def test_shared_stage_problems() -> None:
         .replace("exit: [envelope-review-passed]", "exit: [envelope-review-passed, ci-passed]")
         .replace("role: reviewer", "role: developer")
     )
-    assert shared_stage_problems([a, different]) == [
+    problems = shared_stage_problems([a, different])
+    assert [str(p) for p in problems] == [
         "shared stage 'review' differs between direct-delivery and bugfix: exit",
         "shared stage 'review' differs between direct-delivery and bugfix: role",
     ]
+    assert {p.code for p in problems} == {"SHARED_STAGE_MISMATCH"}
 
 
 def test_validate_cli_reports_shared_stage_drift_only_for_the_whole_workspace(workspace: Path) -> None:
@@ -332,3 +375,29 @@ def test_validate_cli_reports_shared_stage_drift_only_for_the_whole_workspace(wo
     assert single.exit_code == 0, single.output
     other.write_text(WORKFLOW.replace("id: direct-delivery", "id: bugfix"))
     assert _run("validate", "-w", str(workspace)).exit_code == 0
+
+
+def test_validation_problems_and_load_errors_are_coded_entries(workspace: Path) -> None:
+    write_config(workspace, CONFIG)
+    (workspace / ".devkit/roles").mkdir()
+    (workspace / ".devkit/roles/other.md").write_text("# other\n")  # `reviewer` is not in the vocabulary
+    (workspace / ".devkit/workflows/broken.md").write_text("---\nid: [\n---\n")
+    result = _run("validate", "-w", str(workspace), "--format", "json")
+    assert result.exit_code == 1
+    data = json.loads(result.stdout)
+    [definition] = data["definitions"]
+    assert {"code": "ROLE_UNKNOWN", "where": "review.role"} in [
+        {k: p[k] for k in ("code", "where")} for p in definition["problems"]
+    ]
+    [load_error] = data["errors"]
+    assert load_error["code"] == "DEFINITION_INVALID"
+    assert load_error["target"].endswith("broken.md") and load_error["message"]
+    text = _run("validate", "-w", str(workspace))
+    assert "[INVALID: " in text.output and "review.role: unknown role 'reviewer'" in text.output
+
+    shown = _run("show", "-w", str(workspace), "direct-delivery", "--format", "json")
+    assert shown.exit_code == 1
+    assert any(p["code"] == "ROLE_UNKNOWN" for p in json.loads(shown.stdout)["problems"])
+    assert (
+        "[PROBLEM: review.role: unknown role 'reviewer'" in _run("show", "-w", str(workspace), "direct-delivery").output
+    )

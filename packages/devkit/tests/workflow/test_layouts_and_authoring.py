@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 import yaml
 from click.testing import CliRunner, Result
-from devkit.workflow import ConfigError, LayoutSpec, load_workflow_config, parse, parse_layout_spec
+from devkit.workflow import ConfigError, LayoutError, LayoutSpec, load_workflow_config, parse, parse_layout_spec
 from devkit.workflow.cli import cli
 from devkit.workflow.definition import DefinitionError
 from devkit.workflow.envelope import AuthoringError, compose, load_envelopes, render_envelope
@@ -69,7 +69,7 @@ def test_parse_layout_spec_partial_and_errors() -> None:
         ({"unit_path": "{ticket}"}, "layout.unit_path"),
         ({"anchor": "a/b.md"}, "layout.anchor"),
     ]:
-        with pytest.raises(ValueError, match=match):
+        with pytest.raises(LayoutError, match=match):
             parse_layout_spec(raw)
 
 
@@ -131,16 +131,16 @@ def test_anchor_ambiguous_and_mismatch(two_layouts: Path) -> None:
     unit = write_unit(root, "docs/proposals/dup", anchor="proposal.md", extra="workflow: incubate\n")
     (unit / "spec.md").write_text("---\nid: dup\nstatus: planned\n---\n")
     ambiguous = _run("next", "-w", str(root), "--unit", "docs/proposals/dup", "--no-lint")
-    assert ambiguous.exit_code == 1 and "(ANCHOR_AMBIGUOUS)" in ambiguous.stderr and "--workflow" in ambiguous.stderr
+    assert ambiguous.exit_code == 2 and "(ANCHOR_AMBIGUOUS)" in ambiguous.stderr and "--workflow" in ambiguous.stderr
     explicit = _run("next", "-w", str(root), "--unit", "docs/proposals/dup", "--no-lint", "--workflow", "incubate")
     assert explicit.exit_code == 0 and "[WORKFLOW: incubate" in explicit.output
 
     # bound to a workflow whose anchor is not the file that identifies the unit
     write_unit(root, "specs/2026-10/20261012-x", anchor="spec.md", extra="workflow: incubate\n")
     mismatch = _run("next", "-w", str(root), "--unit", "specs/2026-10/20261012-x", "--no-lint")
-    assert mismatch.exit_code == 1 and "(ANCHOR_MISMATCH)" in mismatch.stderr and "proposal.md" in mismatch.stderr
+    assert mismatch.exit_code == 2 and "(ANCHOR_MISMATCH)" in mismatch.stderr and "proposal.md" in mismatch.stderr
     missing = _run("next", "-w", str(root), "--unit", "specs/2026-10/20261012-x", "--workflow", "incubate")
-    assert missing.exit_code == 1 and "(UNIT_NOT_FOUND) proposal.md not found" in missing.stderr
+    assert missing.exit_code == 2 and "(UNIT_NOT_FOUND) proposal.md not found" in missing.stderr
 
 
 def test_handoff_refuses_a_candidate_with_another_anchor(two_layouts: Path) -> None:
@@ -151,7 +151,7 @@ def test_handoff_refuses_a_candidate_with_another_anchor(two_layouts: Path) -> N
     result = _run(
         "handoff", "-w", str(root), "--unit", "docs/proposals/search", "--no-lint", "--workflow", "direct-delivery"
     )
-    assert result.exit_code == 1 and "(HANDOFF_LAYOUT_MISMATCH)" in result.stderr and "spec.md" in result.stderr
+    assert result.exit_code == 2 and "(HANDOFF_LAYOUT_MISMATCH)" in result.stderr and "spec.md" in result.stderr
     assert "workflow: incubate" in (unit / "proposal.md").read_text()
 
 
@@ -367,11 +367,11 @@ def test_cli_envelope_new_authoring_and_check(workspace: Path, tmp_path: Path) -
     assert data["review"] == "review-01.yaml" and data["findings"][0]["resolution"] == "resolved"
 
     bad = _run("envelope", "new", "-w", str(workspace), "--unit", unit, "--kind", "review", "--status", "nope")
-    assert bad.exit_code == 1 and "(ENVELOPE_STATUS_INVALID)" in bad.stderr
+    assert bad.exit_code == 2 and "(ENVELOPE_STATUS_INVALID)" in bad.stderr
     unreadable = _run(
         "envelope", "new", "-w", str(workspace), "--unit", unit, "--kind", "review", "--findings-file", "/nope.yaml"
     )
-    assert unreadable.exit_code == 1 and "(ENVELOPE_FLAG_INVALID)" in unreadable.stderr
+    assert unreadable.exit_code == 2 and "(ENVELOPE_FLAG_INVALID)" in unreadable.stderr
 
     ok = _run("envelope", "check", "-w", str(workspace), "--unit", unit)
     assert ok.exit_code == 0, ok.output

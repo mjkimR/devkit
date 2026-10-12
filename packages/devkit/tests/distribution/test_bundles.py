@@ -8,8 +8,9 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from devkit.distribution.bundles import BundleError, build_bundle, load_bundle
+from devkit.distribution.bundles import build_bundle, load_bundle
 from devkit.distribution.cli import cli
+from devkit.distribution.errors import ArgumentError, BundleError, SelectionError
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.discovery import InstalledBundle
 from devkit.distribution.installation.plan import plan_bundle
@@ -82,7 +83,7 @@ def test_plan_preset_is_read_only(source: Path) -> None:
     assert {file["destination"] for file in narrowed["files"]} >= {".codex/agents/reviewer.toml"}
     assert not any(file["destination"].startswith(".claude/") for file in narrowed["files"])
     assert sorted(source.rglob("*")) == before
-    with pytest.raises(BundleError, match="unknown preset"):
+    with pytest.raises(SelectionError, match="unknown preset"):
         plan_bundle(load_bundle(source), "missing")
 
 
@@ -136,12 +137,14 @@ def test_nested_symlink_rejected(source: Path, tmp_path: Path) -> None:
 
 def test_build_protects_output(source: Path, tmp_path: Path) -> None:
     bundle = load_bundle(source)
-    with pytest.raises(BundleError, match="outside"):
+    with pytest.raises(ArgumentError, match="outside") as outside:
         build_bundle(bundle, source / "output.zip")
+    assert outside.value.target_files == ("--output",)
     output = tmp_path / "existing.zip"
     output.write_bytes(b"keep")
-    with pytest.raises(FileExistsError):
+    with pytest.raises(ArgumentError, match="archive already exists") as exists:
         build_bundle(bundle, output)
+    assert exists.value.code == "ARGUMENT_INVALID"
     assert output.read_bytes() == b"keep"
 
 

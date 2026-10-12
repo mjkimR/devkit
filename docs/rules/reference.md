@@ -61,12 +61,22 @@ tree top level, else the current directory.
 marking fixable ones `[FIXABLE]`, without running any fixer. `hygiene` includes linter rules as well as hygiene checks.
 `phases` prints each rule's default and effective phase without evaluating.
 `explain <RULE-id>` prints a rule's phase, severity, effective settings and its
-guide document. Exit codes: `0` clean (or every fixable finding repaired), `1`
-unresolved error violations, `2` the run could not evaluate: a rule loading or
-execution failure, invalid project policy, an invalid target, or a Git snapshot
-failure (`click` usage errors also exit `2`). Warnings alone do not fail the
-command. `--format json` emits an array of violations to stdout; execution and
-loading errors are reported separately to stderr.
+guide document.
+
+Exit codes follow the devkit convention
+([Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)):
+
+| Command | `0` | `1` | `2` |
+| --- | --- | --- | --- |
+| `check`, `fix` | no unresolved error-severity violation (warnings and infos alone do not fail; `fix` repaired every fixable finding) | unresolved error violations remain | the run could not evaluate: usage error, invalid `[rules]` table, rule loading, policy or execution problem, invalid target, Git snapshot failure; takes precedence over violations found in the same run |
+| `phases` | plan printed | - | usage error, invalid `[rules]` table, any loading or policy problem (printed after the plan) |
+| `explain` | rule described (problems of other rules are `Warning:` lines) | - | usage error, unknown rule ID (`RULES_UNKNOWN_RULE`), invalid `[rules]` table, a policy problem of the described rule |
+
+Every problem is printed on stderr as an Agent Advisory Protocol block with its
+code (see [Errors](#errors)). `--format json` emits an array of violations
+(`check`, `fix`) or phase entries (`phases`) to stdout and reports problems on
+stderr only; a command that fails before it has a result, and `explain` with
+errors, prints `{"error": {...}}` (the first problem's envelope) instead.
 
 Targets are workspace-relative or absolute paths inside the workspace. A file
 is checked as is; a directory expands to every regular file under it, with the
@@ -78,7 +88,7 @@ does not ignore are listed (tracked plus untracked, not ignored). A file named
 explicitly is checked even when Git ignores it (for example a workflow unit
 under `.devkit/transient/`). No file arguments checks the whole workspace; a directory with no
 files checks nothing. A target that is neither an existing
-file nor a directory inside the workspace fails with `INVALID_LINT_TARGET`
+file nor a directory inside the workspace fails with `RULES_TARGET_INVALID`
 before any rule runs. Link repair still indexes every Markdown file in the
 workspace, even when checking selected files.
 
@@ -149,7 +159,7 @@ ID in the message. Later matching overrides win and omitted keys inherit the
 earlier value. Each override is validated against the base values; two
 overrides that are only invalid together (for example one sets `lo`, another
 `hi`) are reported for the first file both match, as an `Invalid settings`
-error (exit code 2). Because managed files are hash-checked by `devkit sync`, this
+error (exit code 2). Because managed rule files are hash-checked when they load, this
 table is the only place a project changes a distributed rule's behavior.
 
 `exclude` lists workspace-relative patterns with the same `**` grammar as
@@ -180,9 +190,16 @@ Rules shipped by a bundle (`kind = "rule"`) are recorded by `devkit sync` in
 `.devkit/installation.json`. `devkit rules` loads every `.py` file listed under
 such an asset (an override under `.devkit/overrides/` replaces the managed
 copy) after the built-in rules and before `--rules-dir`, so no flag is needed.
-A rule with the same ID as an earlier one replaces it. A listed file that does
-not exist on disk is a loading error (exit code 2), not a silent skip: run
-`devkit sync` to restore the managed copies.
+A rule with the same ID as an earlier one replaces it. Every listed file is
+verified the way the commit gate registry verifies gate files
+(`devkit.core.verified_asset_file`), in a plain run and in a Git snapshot
+alike: a file with a `files` entry in the receipt must match its SHA-256, and a
+file without one (a project override under `.devkit/overrides/`) is loaded as
+it is. A listed file that does not exist, resolves outside the project, or
+differs from its recorded hash is a loading error (`RULES_LOAD_FAILED`, exit
+code 2), not a silent skip: `devkit sync` restores the managed copy, and
+`devkit override create <bundle>:<asset>` keeps a deliberate edit as a project
+override.
 
 This is also where document-model rules live. The built-in rules are limited to
 what holds for any repository (relative links, file length, secrets and build
@@ -203,7 +220,7 @@ call it, so they cannot disagree on policy.
 
 ```python
 from pathlib import Path
-from devkit.rules import git_snapshot, run_project_rules
+from devkit.rules import RulesRunError, git_snapshot, run_project_rules
 
 run = run_project_rules(Path("."))  # whole workspace, linter phase
 run = run_project_rules(Path("."), targets=["docs"])  # files or directories; [] checks nothing
@@ -211,21 +228,53 @@ staged = git_snapshot(Path("."), staged=True)
 run = run_project_rules(staged.root, snapshot=staged)  # the exact index, as `check --staged`
 for violation in run.result.violations:
     print(violation.rule_id, violation.file, violation.line)
-if run.errors:  # load_errors, then policy/execution errors
-    raise SystemExit("; ".join(run.errors))
+for problem in run.errors:  # load_errors, then policy/execution errors
+    print(problem.code, problem.rule_id, problem)
+if run.errors:
+    raise RulesRunError(run.errors)  # RULES_RUN_FAILED, one detail per problem
 ```
 
 Keyword arguments are `targets`, `snapshot`, `phase`, `fix`, `dry_run` and
 `rules_dir`. An invalid `[rules]` table raises `ConfigError`. An invalid
 explicit target raises `TargetError`, and a `rules_dir` that a snapshot run
-cannot read from the snapshot raises `RulesDirError`. Rule loading problems, such as a
+cannot read from the snapshot raises `RulesDirError`; a snapshot that cannot be
+read or materialized raises `SnapshotError`. Rule loading problems, such as a
 malformed receipt or a missing or drifted synchronized rule, are returned in
 `run.load_errors`, and no rule is evaluated. `run.failed` is true when there
 are errors or unfixed error-severity violations. `build_project_registry` and
 `expand_targets` expose the individual steps; `RuleContext`, `default_registry`
 and `evaluate` remain available for callers that assemble a run themselves;
 `validate_policy` checks a `[rules]` policy against loaded rules and returns
-`PolicyError` messages that carry the rule ID.
+`PolicyError` objects that carry the rule ID.
+
+## Errors
+
+Every error the library raises or collects is an `AdvisoryError`
+(`devkit.advisory`) and a `RulesError`; branch on `error.code`, never on the
+message. Raised errors stop a run before any rule is evaluated; collected
+problems (`RuleProblem`, with `rule_id` naming the rule they concern or `None`)
+are returned in `RuleRegistry.errors`, `ProjectRun.load_errors` and
+`EvaluationResult.errors`, and `str(problem)` is the message.
+
+| Class | Code | Mode | When |
+| --- | --- | --- | --- |
+| `ConfigError` | `RULES_CONFIG_INVALID` | `INPUT_ERROR` | `[rules]` in `.devkit/config.toml` is malformed (raised) |
+| `TargetError` | `RULES_TARGET_INVALID` | `INPUT_ERROR` | an explicit target is outside the workspace or does not exist (raised) |
+| `RulesDirError` | `RULES_DIR_INVALID` | `INPUT_ERROR` | a snapshot run cannot read `--rules-dir` from the snapshot (raised) |
+| `SnapshotError` | `RULES_SNAPSHOT_FAILED` | `INPUT_ERROR` (not a work tree top level, unknown `--base`) or `MAINTENANCE` (Git failure) | a Git snapshot cannot be taken or materialized (raised) |
+| `PinnedWriteError` | `RULES_PINNED_WRITE_REFUSED` | `BLOCKED` | a fixer tried to write a receipt-pinned copy under `.devkit/managed/` or `.devkit/overrides/` |
+| `RuleDefinitionError` | `RULES_DEFINITION_INVALID` | `MAINTENANCE` | a rule class declares an invalid `promote_to` (raised at construction) |
+| `PolicyError` | `RULES_POLICY_INVALID` | `INPUT_ERROR` | a phase or severity override or settings entry names an unknown rule or changes nothing (collected) |
+| `SettingsError` | `RULES_SETTINGS_INVALID` | `INPUT_ERROR`, or `MAINTENANCE` for a defect in the rule's settings declaration | settings do not type-check or `validate_settings` rejects them (collected; a `PolicyError`) |
+| `RuleLoadError` | `RULES_LOAD_FAILED` | `MAINTENANCE` | a rule file fails to load, or the receipt is malformed or lists a missing or drifted rule (collected; `fix` names `devkit sync`) |
+| `RuleExecutionError` | `RULES_EXECUTION_FAILED` | `MAINTENANCE` | a rule raised while checking or fixing; `[TARGET]` is the file defining it (collected) |
+| `RulesRunError` | `RULES_RUN_FAILED` | `MAINTENANCE` | raised by callers that need one error for a failed run, such as the workflow engine's `lint-clean`; `problems` keeps the collected problems |
+
+`expand_targets`, `RuleContext` (targets outside the workspace) and
+`ctx.settings(rule, path)` raise `TargetError` too. Passing `targets` or
+`fix=True` together with a snapshot, or a snapshot taken from another root, is
+a programming error and raises `ValueError`. A rule's `validate_settings`
+raises `ValueError`, which the engine reports as `SettingsError`.
 
 Use `--rules-dir path/to/rules` to load Python files defining `BaseRule`
 subclasses. Files load in sorted path order and classes in definition order;
@@ -300,8 +349,8 @@ checked, and links spanning several lines are not recognized. A link
 destination is decoded (percent-encoding, escapes) and its `?query` and
 `#fragment` are ignored when resolving the file. Settings fields are scalars
 and string lists; nested tables are not supported. Snapshot gates materialize
-the whole tree and read all blobs in one batch, so time and memory are
-proportional to repository size. Phase overrides can only move a rule to `hygiene`; promoting a rule to
+the whole tree, so time and disk use grow with repository size; blobs are
+streamed from one `git cat-file --batch` process and written as they arrive. Phase overrides can only move a rule to `hygiene`; promoting a rule to
 `linter` is done by editing its declared phase. Parallel workers are future work.
 
 ## Architectural Specifications & Deep-Dives

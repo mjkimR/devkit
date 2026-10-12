@@ -17,7 +17,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-from ..bundles.common import BundleError
+from ..errors import LockHeldError, PendingTransactionError, RecoveryError, UnsafeWorkspaceError
 from .workspace import JOURNAL, LOCK, Content, checked_path, owned_prefix, project_path, snapshot
 
 # How long a reader waits for a writer to release the lock before giving up.
@@ -39,16 +39,16 @@ def read_json(root: Path, name: str) -> dict | None:
         result = {}
         for key, value in pairs:
             if key in result:
-                raise BundleError(f"{name}: duplicate JSON key {key}")
+                raise RecoveryError(f"{name}: duplicate JSON key {key}", target_files=[name])
             result[key] = value
         return result
 
     try:
         value = json.loads(content.data, object_pairs_hook=unique)
     except (ValueError, UnicodeError) as exc:
-        raise BundleError(f"invalid {name}: {exc}") from exc
+        raise RecoveryError(f"invalid {name}: {exc}", target_files=[name]) from exc
     if not isinstance(value, dict):
-        raise BundleError(f"invalid {name}: expected object")
+        raise RecoveryError(f"invalid {name}: expected object", target_files=[name])
     return value
 
 
@@ -117,11 +117,11 @@ def project_lock(root: Path, *, shared: bool = False) -> Iterator[None]:
         fd = os.open(path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
     except OSError as exc:
         if exc.errno == errno.ELOOP:
-            raise BundleError(f"unsafe lock file: {LOCK}") from exc
+            raise UnsafeWorkspaceError(f"unsafe lock file: {LOCK}", target_files=[LOCK]) from exc
         raise
     try:
         if not stat.S_ISREG(os.fstat(fd).st_mode):
-            raise BundleError(f"unsafe lock file: {LOCK}")
+            raise UnsafeWorkspaceError(f"unsafe lock file: {LOCK}", target_files=[LOCK])
         deadline = time.monotonic() + (READ_LOCK_TIMEOUT if shared else 0.0)
         while True:
             try:
@@ -129,7 +129,7 @@ def project_lock(root: Path, *, shared: bool = False) -> Iterator[None]:
                 break
             except BlockingIOError as exc:
                 if time.monotonic() >= deadline:
-                    raise BundleError("another devkit operation holds the project lock") from exc
+                    raise LockHeldError("another devkit operation holds the project lock", target_files=[LOCK]) from exc
                 time.sleep(_POLL)
         yield
     finally:
@@ -144,13 +144,13 @@ def _decode(value: object) -> Content | None:
     if value is None:
         return None
     if not isinstance(value, dict) or set(value) != {"data", "mode"}:
-        raise BundleError("invalid journal content")
+        raise RecoveryError("invalid journal content", target_files=[JOURNAL])
     if not isinstance(value["data"], str) or type(value["mode"]) is not int or not 0 <= value["mode"] <= 0o777:
-        raise BundleError("invalid journal content types")
+        raise RecoveryError("invalid journal content types", target_files=[JOURNAL])
     try:
         return Content(base64.b64decode(value["data"], validate=True), value["mode"])
     except ValueError as exc:
-        raise BundleError("invalid journal bytes") from exc
+        raise RecoveryError("invalid journal bytes", target_files=[JOURNAL]) from exc
 
 
 def pending_journal(root: Path) -> bool:
@@ -159,7 +159,7 @@ def pending_journal(root: Path) -> bool:
 
 def require_no_journal(root: Path) -> None:
     if pending_journal(root):
-        raise BundleError("pending transaction; run devkit recover first")
+        raise PendingTransactionError("an interrupted synchronization left its journal; run devkit recover first")
 
 
 def recover_locked(root: Path) -> int:
@@ -172,14 +172,19 @@ def recover_locked(root: Path) -> int:
         or journal["schema"] != 1
         or not isinstance(journal["changes"], dict)
     ):
-        raise BundleError("invalid recovery journal")
+        raise RecoveryError("invalid recovery journal", target_files=[JOURNAL])
     changes = {}
     for name, values in journal["changes"].items():
         if name == JOURNAL or not isinstance(values, dict) or set(values) != {"before", "after"}:
-            raise BundleError("invalid recovery entry")
+            raise RecoveryError("invalid recovery entry", target_files=[JOURNAL])
         before, after = _decode(values["before"]), _decode(values["after"])
         if snapshot(root, name) not in (before, after):
-            raise BundleError(f"recovery blocked by subsequent edit: {name}")
+            raise RecoveryError(
+                f"recovery blocked by subsequent edit: {name}",
+                target_files=[name, JOURNAL],
+                what_to_report=f"{name} changed after the interrupted synchronization; decide which content to keep, "
+                f"then delete {JOURNAL}",
+            )
         changes[name] = before
     for name, before in reversed(list(changes.items())):
         atomic_write(root, name, before)

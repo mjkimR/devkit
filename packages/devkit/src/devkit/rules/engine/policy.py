@@ -25,13 +25,13 @@ def validate_severity_overrides(rules: Sequence[Rule], overrides: Mapping[str, S
     for rule_id in sorted(overrides):
         rule = by_id.get(rule_id)
         if rule is None:
-            errors.append(PolicyError(f"severity override for unknown rule: {rule_id}", rule_id))
+            errors.append(PolicyError(f"severity override for unknown rule: {rule_id}", rule_id=rule_id))
         elif rule.severity == overrides[rule_id]:
             errors.append(
                 PolicyError(
                     f"severity override for {rule_id} is redundant: the rule already reports "
                     f"{rule.severity.value}; remove the entry",
-                    rule_id,
+                    rule_id=rule_id,
                 )
             )
     return errors

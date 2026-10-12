@@ -26,9 +26,11 @@ In this monorepo, run `uv sync --all-packages` first, then run `uv run --package
 
 Every distribution command takes `-w/--workspace-root <dir>`. Without it, the project root is the nearest
 directory (the current one first, then its parents, up to the Git top level) that contains `.devkit/`, else
-the Git top level, else the current directory. Commands print JSON on stdout. Exit code `0` is success,
-`1` is returned only by `devkit sync --check` when a synchronization is needed, and `2` is any error. The
-commands run on POSIX systems (macOS, Linux); they rely on `fcntl` file locks.
+the Git top level, else the current directory. Commands print one JSON document on stdout: the result, or
+`{"error": {...}}` when the command fails, with the Agent Advisory Protocol block on stderr. Exit code `0` is
+success, `1` is returned only by `devkit sync --check` when a synchronization is needed, and `2` is any error
+(see [Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)).
+`devkit status` is a report, not a check: it exits `0` whatever drift it shows; use `sync --check` in CI.
 
 The package also registers the `devkit` guide bundle (`devkit.distribution.guide`), an
 instruction-only bundle that tells agents in a consumer repository how devkit-managed assets are
@@ -120,6 +122,28 @@ Packages built on devkit can register a `devkit.post_sync` entry point (`hook(ro
 to react after a successful sync; hooks run after the project lock is released, the strings they return are
 printed as notices and never fail the sync. The library surface (`sync_project`, `load_bundle`, `get_context`,
 `search_playbooks`, the override operations and their typed results) is exported from `devkit.distribution`.
+
+### Error codes
+
+Every error the library raises is an `AdvisoryError`; the CLI renders it as it is. `devkit.core` errors pass
+through: an unreadable or invalid `.devkit/installation.json` (including paths devkit never writes) is
+`ReceiptError` (`RECEIPT_INVALID`), an invalid `.devkit/config.toml` is `ConfigError` (`CONFIG_INVALID`).
+The others are `DistributionError` subclasses from `devkit.distribution.errors`:
+
+| Class | Code | Mode | When |
+| --- | --- | --- | --- |
+| `BundleError` | `BUNDLE_INVALID` | `INPUT_ERROR` | `bundle.toml`, a declared source or an asset header is invalid |
+| `PackageError` | `BUNDLE_PACKAGE_INVALID` | `MAINTENANCE` | an installed content package registers an unusable or duplicate bundle |
+| `ArgumentError` | `ARGUMENT_INVALID` | `INPUT_ERROR` | a malformed selector, query, search bound, workspace root or archive `--output` |
+| `SelectionError` | `SELECTION_INVALID` | `INPUT_ERROR` | an unknown or unselected bundle, preset, asset or override |
+| `NotSynchronizedError` | `NOT_SYNCHRONIZED` | `AUTO` (`devkit sync`) | no receipt, or a context file no longer matches it |
+| `ConflictError` | `SYNC_CONFLICT`, `BUNDLE_CONFLICT` | `INTERACTION` | a hand-edited or unowned file, an existing override, or two bundles claiming one path |
+| `OverrideDriftError` | `OVERRIDE_DRIFT` | `BLOCKED` | `override_drift = "block"` and an override hides upstream changes |
+| `UnsafeWorkspaceError` | `WORKSPACE_UNSAFE` | `BLOCKED` | a symlink or non-regular file where devkit reads or writes, or a reserved path |
+| `LockHeldError` | `LOCK_HELD` | `DEFER` | another devkit command holds the project lock |
+| `PendingTransactionError` | `TRANSACTION_PENDING` | `AUTO` (`devkit recover`) | an interrupted sync left its journal |
+| `RecoveryError` | `RECOVERY_BLOCKED` | `HALT` | the journal is unusable, or later edits block its rollback |
+| `DistributionError` | `GUIDANCE_BLOCK_INVALID` | `INPUT_ERROR` | the root `AGENTS.md` has malformed devkit markers or is not UTF-8 |
 
 The `[rules]`, `[workflow]` and `[gates]` tables are owned by `devkit.rules`, `devkit.workflow` and `devkit.gate`
 and are passed through untouched by `devkit sync`; see the [Rules Reference](../rules/reference.md#project-configuration),

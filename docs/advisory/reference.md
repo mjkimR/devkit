@@ -12,7 +12,7 @@ This module implements the Agent Advisory Protocol and nothing else. It is not a
 
 ## Contents
 
-- **Runtime**: `devkit.advisory` (standard library only): `AdvisoryError`, `Advisory`, `Actor`, `Retry`, `ActionMode`, `ExitCode`, and renderers for CLI/MCP text, JSON, and RFC 7807.
+- **Runtime**: `devkit.advisory` (standard library only; the lowest layer of `devkit`, importing no other devkit module): `AdvisoryError`, `AdvisoryFields`, `Advisory`, `Actor`, `Retry`, `ActionMode`, `ExitCode` (`OK = 0`, `FINDINGS = 1`, `ERROR = 2`), and renderers for CLI/MCP text, JSON, and RFC 7807. Every other devkit module raises `AdvisoryError` subclasses; see [Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms).
 - **Bundle** `advisory` (`default_preset = "core"`), built into `devkit` and therefore selected by default:
 
 | Preset | Assets | For |
@@ -45,5 +45,6 @@ The `error-advisory` instruction in the `advisory` bundle is the canonical speci
 
 ## Python API notes
 
-- Every `AdvisoryError` field can be a class-level default on a subclass (`code`, `actor`, `retry`, `guardrail`, `input_error`, `retry_after`, `fix`, `what_to_report`, `target_files`, `exit_code`); a keyword argument other than `None` overrides it per raise, and the factories (`blocked`, `interaction`, `auto_fix`, `invalid_input`) keep the subclass's defaults for the fields they do not set.
+- Every `AdvisoryError` field can be a class-level default on a subclass (`code`, `actor`, `retry`, `guardrail`, `input_error`, `retry_after`, `fix`, `what_to_report`, `target_files`, `exit_code`); a keyword argument other than `None` overrides it per raise (`exit_code` defaults to `ExitCode.ERROR`), and the factories (`blocked`, `interaction`, `auto_fix`, `invalid_input`) keep the subclass's defaults for the fields they do not set.
 - Positional details are converted to `str`, so `to_dict()` and `to_problem_details()` are always JSON-serializable.
+- A subclass with constructor arguments of its own types the forwarded advisory keywords as `**fields: Unpack[AdvisoryFields]`.

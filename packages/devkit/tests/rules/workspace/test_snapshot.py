@@ -125,3 +125,56 @@ def test_changed_and_deleted_from_one_diff(repo: Path) -> None:
     assert snapshot.changed == ("docs/a.md", "docs/new.md")
     assert snapshot.deleted == ("run.sh",)
     assert "changed=2 deleted=1" in snapshot.describe()
+
+
+def test_materialize_streams_large_and_many_blobs(repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from devkit.rules.workspace import snapshot as snapshot_module
+
+    monkeypatch.setattr(snapshot_module, "_CHUNK", 4096)  # many chunk boundaries inside one blob
+    big = bytes(range(256)) * 4099 + b"\n\n"  # binary, newlines, not a multiple of the chunk size
+    (repo / "big.bin").write_bytes(big)
+    many = repo / "many"
+    many.mkdir()
+    for index in range(3000):  # object names exceed a pipe buffer: the writer must not block the reader
+        (many / f"f{index:04d}.txt").write_text(f"{index}\n")
+    (repo / "empty.txt").write_bytes(b"")
+    _git(repo, "add", ".")
+
+    out = tmp_path / "out"
+    materialize(git_snapshot(repo, staged=True), out)
+    assert (out / "big.bin").read_bytes() == big
+    assert (out / "empty.txt").read_bytes() == b""
+    assert (out / "many/f2999.txt").read_text() == "2999\n"
+    assert len(list((out / "many").iterdir())) == 3000
+
+
+def test_materialize_reports_a_missing_object(repo: Path, tmp_path: Path) -> None:
+    import dataclasses
+
+    snapshot = git_snapshot(repo, staged=True)
+    bogus = dataclasses.replace(snapshot, files=(("ghost.md", "0" * 40, "100644"),))
+    with pytest.raises(SnapshotError, match="missing") as info:
+        materialize(bogus, tmp_path / "out")
+    assert info.value.code == "RULES_SNAPSHOT_FAILED"
+
+
+def test_materialize_reports_a_git_failure_and_a_timeout(repo: Path, tmp_path: Path) -> None:
+    from devkit.rules.workspace.snapshot import _BlobReader
+
+    snapshot = git_snapshot(repo, staged=True)
+    gone = tmp_path / "gone"
+    gone.mkdir()
+    reader = _BlobReader(gone, [sha for _, sha, _ in snapshot.files])  # not a repository: git exits nonzero
+    with pytest.raises(SnapshotError, match="cat-file failed"):
+        reader.header("docs/a.md", snapshot.files[0][1])
+    reader.close()
+
+    import time
+
+    slow = _BlobReader(repo, [], timeout=0.0)
+    deadline = time.monotonic() + 10
+    while not slow._timed_out and time.monotonic() < deadline:
+        time.sleep(0.01)
+    with pytest.raises(SnapshotError, match="timed out"):
+        slow.finish()
+    slow.close()

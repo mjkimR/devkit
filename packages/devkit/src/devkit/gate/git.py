@@ -1,7 +1,7 @@
 """The Git queries the gate system needs, built on ``devkit.core.git.run_git``.
 
-``GateGitError`` is the advisory form of ``devkit.core.GitError``: every query
-here maps a failed Git call to it, so the CLI boundary renders one error code.
+A failed Git call raises ``devkit.core.GitError`` (``GIT_FAILED``) as it is;
+``repo_root`` re-raises it as an input error naming ``--workspace-root``.
 """
 
 from __future__ import annotations
@@ -9,24 +9,13 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from devkit.advisory import Actor, AdvisoryError, Retry
 from devkit.core import GitError, run_git
 
 _TIMEOUT = 30.0
 
 
-class GateGitError(AdvisoryError):
-    code = "GATE_GIT_FAILED"
-    actor = Actor.DEVELOPER
-    retry = Retry.AFTER_FIX
-
-
 def _git(cwd: Path, *args: str) -> str:
-    try:
-        output = run_git(cwd, *args, timeout=_TIMEOUT)
-    except GitError as exc:
-        raise GateGitError(str(exc)) from exc
-    return os.fsdecode(output.rstrip(b"\n"))
+    return os.fsdecode(run_git(cwd, *args, timeout=_TIMEOUT).rstrip(b"\n"))
 
 
 def _path(cwd: Path, *args: str) -> Path:
@@ -37,9 +26,12 @@ def repo_root(cwd: Path) -> Path:
     """The top level of the work tree containing ``cwd``: where Git runs hooks and gates read the project."""
     try:
         return _path(cwd, "rev-parse", "--show-toplevel")
-    except GateGitError as exc:
-        raise GateGitError(
+    except GitError as exc:
+        raise GitError(
             f"{cwd} is not inside a Git work tree: {exc.message}",
+            command=exc.command,
+            returncode=exc.returncode,
+            stderr=exc.stderr,
             input_error=True,
             target_files=[str(cwd)],
             fix="Pass --workspace-root/-w a directory inside the repository",
@@ -63,6 +55,6 @@ def config_value(cwd: Path, key: str) -> str | None:
     except GitError as exc:
         if exc.returncode == 1:  # the key is not set
             return None
-        raise GateGitError(str(exc)) from exc
+        raise
     value = os.fsdecode(output).strip()
     return value or None

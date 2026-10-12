@@ -32,7 +32,7 @@ Architecture and the documentation index:
 | `devkit.gate` | Pluggable Git commit gates and managed hook wrappers | `devkit gate` | [docs/gate](../../docs/gate/reference.md) |
 | `devkit.distribution` | Bundle packaging and transactional synchronization, plus the built-in `devkit` guide bundle | `devkit sync`, `add`, `remove`, `list`, `status`, ... | [docs/distribution](../../docs/distribution/reference.md) |
 
-Layering: `core` imports no other module; `advisory` may import `core`;
+Layering: `advisory` imports no other module; `core` may import `advisory`;
 `rules` may import `core` and `advisory`; `workflow` and `gate` may import
 `core`, `advisory` and `rules`; `distribution` may import only `core` and
 `advisory`. `devkit.cli` assembles the command line. A test enforces this.

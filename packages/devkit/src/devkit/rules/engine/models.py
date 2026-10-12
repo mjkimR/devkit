@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
+from devkit.rules.engine.errors import TargetError
 from devkit.rules.engine.settings import RawSettings, SettingsResolver, match_path
 from devkit.rules.workspace.cache import WorkspaceCache
 
@@ -49,40 +50,72 @@ class Violation:
         }
 
 
-@dataclass
+@dataclass(init=False)
 class RuleContext:
-    workspace_root: Path
-    changed_files: list[str] = field(default_factory=list)
-    rules_dir: Path | None = None
-    phase: Phase = Phase.LINTER
-    fix: bool = False
-    dry_run: bool = False
-    cache: WorkspaceCache = field(default=None)  # type: ignore[assignment]
-    # Project policy moving rules out of their declared phase (``[rules.phase_overrides]``).
-    phase_overrides: dict[str, Phase] = field(default_factory=dict)
-    # Project policy changing the severity a rule reports (``[rules.severity_overrides]``).
-    severity_overrides: dict[str, Severity] = field(default_factory=dict)
-    # Project values for rule settings (``[rules.settings.<id>]``), matched to rules by the evaluator.
-    rule_settings: dict[str, RawSettings] = field(default_factory=dict)
-    # Resolved settings per rule; populated by ``evaluate`` before any check runs.
-    settings_resolvers: dict[str, SettingsResolver] = field(default_factory=dict)
-    # Project exclusions (``[rules] exclude``): workspace-relative ``**`` patterns no rule targets.
-    exclude: tuple[str, ...] = ()
-    # Whether the run named explicit targets (before exclusions were applied).
-    has_targets: bool = field(init=False, default=False)
+    """What a rule sees during one evaluation: the workspace, the targets, the cache and the project policy.
 
-    def __post_init__(self) -> None:
-        self.workspace_root = self.workspace_root.resolve()
-        if self.cache is None:
-            self.cache = WorkspaceCache(self.workspace_root)
-        elif self.cache.workspace_root != self.workspace_root:
+    Every argument is keyword-friendly and optional except ``workspace_root``.
+    ``cache`` defaults to a fresh ``WorkspaceCache`` of the workspace, so
+    ``ctx.cache`` is always a ``WorkspaceCache``.
+    """
+
+    workspace_root: Path
+    changed_files: list[str]
+    rules_dir: Path | None
+    phase: Phase
+    fix: bool
+    dry_run: bool
+    cache: WorkspaceCache
+    # Project policy moving rules out of their declared phase (``[rules.phase_overrides]``).
+    phase_overrides: dict[str, Phase]
+    # Project policy changing the severity a rule reports (``[rules.severity_overrides]``).
+    severity_overrides: dict[str, Severity]
+    # Project values for rule settings (``[rules.settings.<id>]``), matched to rules by the evaluator.
+    rule_settings: dict[str, RawSettings]
+    # Resolved settings per rule; populated by ``evaluate`` before any check runs.
+    settings_resolvers: dict[str, SettingsResolver]
+    # Project exclusions (``[rules] exclude``): workspace-relative ``**`` patterns no rule targets.
+    exclude: tuple[str, ...]
+    # Whether the run named explicit targets (before exclusions were applied).
+    has_targets: bool
+
+    def __init__(
+        self,
+        workspace_root: Path,
+        changed_files: list[str] | None = None,
+        rules_dir: Path | None = None,
+        phase: Phase = Phase.LINTER,
+        fix: bool = False,
+        dry_run: bool = False,
+        cache: WorkspaceCache | None = None,
+        phase_overrides: dict[str, Phase] | None = None,
+        severity_overrides: dict[str, Severity] | None = None,
+        rule_settings: dict[str, RawSettings] | None = None,
+        settings_resolvers: dict[str, SettingsResolver] | None = None,
+        exclude: tuple[str, ...] = (),
+    ) -> None:
+        self.workspace_root = workspace_root.resolve()
+        if cache is None:
+            cache = WorkspaceCache(self.workspace_root)
+        elif cache.workspace_root != self.workspace_root:
             raise ValueError("Context and cache must use the same workspace root")
-        self.has_targets = bool(self.changed_files)
+        self.cache = cache
+        self.rules_dir = rules_dir
+        self.phase = phase
+        self.fix = fix
+        self.dry_run = dry_run
+        self.phase_overrides = phase_overrides if phase_overrides is not None else {}
+        self.severity_overrides = severity_overrides if severity_overrides is not None else {}
+        self.rule_settings = rule_settings if rule_settings is not None else {}
+        self.settings_resolvers = settings_resolvers if settings_resolvers is not None else {}
+        self.exclude = tuple(exclude)
+        targets = changed_files or []
+        self.has_targets = bool(targets)
         normalized: list[str] = []
-        for name in self.changed_files:
+        for name in targets:
             relative = self._relative(name)
             if relative is None:
-                raise ValueError(f"Target file is outside the workspace: {name}")
+                raise TargetError(f"Target file is outside the workspace: {name}", target_files=[str(name)])
             if not self._excluded(relative):
                 normalized.append(relative)
         self.changed_files = normalized
@@ -137,7 +170,7 @@ class RuleContext:
             return resolver.resolve()
         relative = self._relative(path)
         if relative is None:
-            raise ValueError(f"{path} is outside the workspace {self.workspace_root}")
+            raise TargetError(f"{path} is outside the workspace {self.workspace_root}", target_files=[str(path)])
         return resolver.for_file(relative)
 
 

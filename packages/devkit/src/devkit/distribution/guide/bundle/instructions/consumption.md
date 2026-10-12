@@ -137,15 +137,17 @@ different execute bit, overrides whose upstream changed, the guidance block stat
 files that no longer exist, a pending journal, and whether the `devkit`
 version that wrote the receipt is the one running. Use `uv run devkit sync
 --check` to learn whether a sync is needed (exit 1; exit 2 means an error such
-as a hand-edited managed file); use `status` to learn why. Every command takes
+as a hand-edited managed file, reported as an advisory with its code on stderr
+and as `{"error": ...}` on stdout); use `status` to learn why. Every command takes
 `-w <dir>` for a project other than the one containing the current directory.
 
 ## Recovering an interrupted sync
 
-If `devkit sync` or `devkit get-context` reports a pending transaction, run
-`uv run devkit recover`. It rolls the files named in the journal under
-`.devkit/transient/` back to their state before the interrupted run and refuses
-if one of them was edited since; then run `devkit sync` again.
+If a devkit command reports `TRANSACTION_PENDING`, run `uv run devkit
+recover`. It rolls the files named in the journal under `.devkit/transient/`
+back to their state before the interrupted run and refuses (`RECOVERY_BLOCKED`)
+if one of them was edited since; then run `devkit sync` again. `LOCK_HELD`
+means another devkit command is running: wait for it, do not delete the lock.
 
 ## Commit discipline
 

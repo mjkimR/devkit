@@ -1,25 +1,30 @@
 """The distribution commands of ``devkit`` (``sync``, ``add``, ``remove``, ``list``, ``status``, ...).
 
-Every command prints JSON on stdout. Exit codes: ``0`` success; ``1`` only
-from ``devkit sync --check`` when a synchronization is needed; ``2`` for any
-error (invalid input, a conflict, an unreadable receipt or configuration).
+Every command prints one JSON document on stdout: its result, or
+``{"error": {...}}`` when it fails. A failure is also rendered as an Agent
+Advisory Protocol block on stderr. Exit codes follow ``devkit.advisory.ExitCode``:
+``0`` success; ``1`` only from ``devkit sync --check`` when a synchronization is
+needed; ``2`` for any error (invalid input, a conflict, a held lock, an
+unreadable receipt or configuration, usage errors).
 """
 
 from __future__ import annotations
 
 import functools
 import json
+import sys
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 import click
 
-from devkit.core.errors import DevkitCoreError
+from devkit.advisory import ExitCode, as_advisory_error
 from devkit.core.project import find_project_root
 
-from ..bundles import BundleError, build_bundle, load_bundle
+from ..bundles import build_bundle, load_bundle
 from ..bundles.common import AGENT_NAMES, SLUG
+from ..errors import SelectionError
 from ..installation.config import effective_selection, prepare_config_update, read_config, resolve_selection
 from ..installation.context import get_context
 from ..installation.discovery import InstalledBundle, discover_bundles
@@ -37,21 +42,20 @@ from ..installation.status import project_listing, project_status
 from ..installation.sync import recover_project, sync_project
 
 
-class DistributionError(click.ClickException):
-    """Any failed distribution command; exit code 2 keeps 1 free for ``sync --check``."""
-
-    exit_code = 2
-
-
 def _json_command(fn: Callable[..., Any]) -> Callable[..., None]:
-    """Run ``fn``, print its result as JSON, and report devkit errors as exit code 2."""
+    """Run ``fn`` and print its result as JSON; render any error as JSON on stdout and an advisory on stderr."""
 
     @functools.wraps(fn)
     def wrapper(*args: Any, **kwargs: Any) -> None:
         try:
             result = fn(*args, **kwargs)
-        except (BundleError, DevkitCoreError, OSError) as exc:
-            raise DistributionError(str(exc)) from exc
+        except (click.exceptions.Exit, click.ClickException, click.exceptions.Abort, SystemExit):
+            raise
+        except Exception as exc:
+            error = as_advisory_error(exc)
+            click.echo(json.dumps({"error": error.to_dict()}, indent=2, ensure_ascii=False))
+            click.echo(error.render(), err=True)
+            sys.exit(int(error.exit_code))
         if result is not None:
             click.echo(json.dumps(result, indent=2, ensure_ascii=False))
 
@@ -258,7 +262,7 @@ def sync(
         )
         _report(result)
         if check and result["actions"]:
-            raise click.exceptions.Exit(1)
+            sys.exit(int(ExitCode.FINDINGS))
 
     run()
 
@@ -304,7 +308,7 @@ def remove(bundles: tuple[str, ...], workspace: str | None, dry_run: bool) -> No
     def save(installed: list[InstalledBundle], _selected: dict[str, list[str]]) -> dict[str, Any]:
         missing = sorted(set(bundles) - set(effective_selection(installed, read_config(root))))
         if missing:
-            raise BundleError(f"bundle is not selected: {missing}")
+            raise SelectionError(f"bundle is not selected: {missing}", fix="List selected bundles with `devkit list`")
         builtin = {item.bundle.name for item in installed if item.builtin}
         return {
             "deselect": [name for name in bundles if name not in builtin],

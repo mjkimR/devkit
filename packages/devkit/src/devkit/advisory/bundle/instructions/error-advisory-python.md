@@ -39,6 +39,26 @@ For one-off errors, use the factories. They set the field combination for each m
 | `AdvisoryError.auto_fix(msg, *details, fix=, code=, target_files=)` | `AUTO` | `TOOL`, `AFTER_FIX` |
 | `AdvisoryError.interaction(msg, *details, code=, what_to_report=, fix=)` | `INTERACTION` | `USER`, `AFTER_FIX` |
 
+`exit_code` defaults to `ExitCode.ERROR` (`2`, the command could not do its job). An error that reports a negative result of a check that did run, such as a guardrail refusing a commit, sets `exit_code = ExitCode.FINDINGS` (`1`); `ExitCode.OK` is `0`.
+
+A subclass that takes constructor arguments of its own forwards the advisory keywords typed with `AdvisoryFields`:
+
+```python
+from typing import Unpack
+
+from devkit.advisory import AdvisoryError, AdvisoryFields
+
+
+class GitFailedError(AdvisoryError):
+    code = "GIT_FAILED"
+
+    def __init__(
+        self, message: str, *details: object, returncode: int | None = None, **fields: Unpack[AdvisoryFields]
+    ) -> None:
+        super().__init__(message, *details, **fields)
+        self.returncode = returncode
+```
+
 Factories are classmethods, so `MyDomainError.blocked(...)` returns `MyDomainError`. Other modes (`HALT`, `MAINTENANCE`, `DEFER`) are set through `actor`, `retry`, and `retry_after` on the constructor or the subclass. A bare `AdvisoryError("...")` derives `HALT` (`actor=NONE`, `retry=UNSAFE`); choose fields deliberately instead of relying on that default.
 
 ## Rendering at boundaries

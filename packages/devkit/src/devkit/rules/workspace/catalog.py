@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from devkit.core import FrontmatterError
+
 if TYPE_CHECKING:
     from devkit.rules.workspace.cache import WorkspaceCache
 
@@ -66,7 +68,7 @@ class DocumentCatalog:
             rel_path = file_path.relative_to(self._root).as_posix()
             try:
                 fm = self._cache.get_frontmatter(file_path)
-            except ValueError as exc:
+            except FrontmatterError as exc:
                 self._frontmatter_errors[rel_path] = str(exc)
                 continue
             if not fm:

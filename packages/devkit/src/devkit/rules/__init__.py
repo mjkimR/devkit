@@ -2,7 +2,16 @@ from __future__ import annotations
 
 from devkit.rules.engine.config import ConfigError, RulesConfig, load_rules_config
 from devkit.rules.engine.discovery import ManagedRules, resolve_managed_rules
-from devkit.rules.engine.errors import PolicyError
+from devkit.rules.engine.errors import (
+    PinnedWriteError,
+    PolicyError,
+    RuleDefinitionError,
+    RuleExecutionError,
+    RuleLoadError,
+    RuleProblem,
+    RulesError,
+    RulesRunError,
+)
 from devkit.rules.engine.evaluator import EvaluationResult, evaluate
 from devkit.rules.engine.models import (
     Autofixable,
@@ -39,14 +48,21 @@ __all__ = [
     "MarkdownLink",
     "Phase",
     "PhaseEntry",
+    "PinnedWriteError",
     "PolicyError",
     "ProjectRun",
     "RawSettings",
     "Rule",
     "RuleContext",
+    "RuleDefinitionError",
+    "RuleExecutionError",
+    "RuleLoadError",
+    "RuleProblem",
     "RuleRegistry",
     "RulesConfig",
     "RulesDirError",
+    "RulesError",
+    "RulesRunError",
     "SettingsError",
     "SettingsResolver",
     "Severity",

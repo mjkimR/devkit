@@ -15,6 +15,7 @@ from typing import Any
 from devkit.core import frontmatter as core_frontmatter
 from devkit.core.errors import FrontmatterError
 from devkit.workflow.checks import DECLARABLE, Check, CheckClass
+from devkit.workflow.errors import DefinitionError, LayoutError
 from devkit.workflow.ids import IDENT_HINT, is_ident
 from devkit.workflow.layout import LayoutSpec, parse_layout_spec
 
@@ -40,10 +41,6 @@ STAGE_KEYS = frozenset(
 )
 # Display-only stage fields; changing them never causes drift.
 DISPLAY_FIELDS = frozenset({"name"})
-
-
-class DefinitionError(ValueError):
-    """Structural failure that prevents a document from being represented."""
 
 
 @dataclass(frozen=True)
@@ -143,15 +140,32 @@ class WorkflowDocument:
         return self.layout.anchor if self.layout and self.layout.anchor else default
 
 
+DEFINITION_INVALID = "DEFINITION_INVALID"
+
+
 @dataclass(frozen=True)
 class Problem:
+    """One validation problem of a definition, collected rather than raised.
+
+    ``code`` is ``DEFINITION_INVALID``, ``CHECK_INVALID`` (a check reference
+    that does not resolve) or ``ROLE_UNKNOWN`` (a role outside the project's
+    vocabulary).
+    """
+
     stage: str
     field: str
     message: str
+    code: str = DEFINITION_INVALID
+
+    @property
+    def where(self) -> str:
+        return f"{self.stage}.{self.field}" if self.stage else self.field
 
     def __str__(self) -> str:
-        where = f"{self.stage}.{self.field}" if self.stage else self.field
-        return f"{where}: {self.message}"
+        return f"{self.where}: {self.message}"
+
+    def to_dict(self) -> dict[str, str]:
+        return {"code": self.code, "where": self.where, "message": self.message}
 
 
 def schema_hash(doc: WorkflowDocument) -> str:
@@ -253,7 +267,7 @@ def _declared(raw: Any) -> tuple[Check, ...]:
             raise DefinitionError(f"checks[{i}].name: {item['name']!r} must match {IDENT_HINT}")
         try:
             class_ = CheckClass(str(item.get("class") or ""))
-        except ValueError as exc:
+        except ValueError as exc:  # not a CheckClass member
             raise DefinitionError(f"checks[{i}].class: expected runner or human") from exc
         if class_ not in DECLARABLE:
             raise DefinitionError(f"checks[{i}].class: expected runner or human")
@@ -301,7 +315,7 @@ def parse(text: str, path: Path | None = None) -> WorkflowDocument:
     if data.get("layout") is not None:
         try:
             layout = parse_layout_spec(data["layout"])
-        except ValueError as exc:
+        except LayoutError as exc:
             raise DefinitionError(str(exc)) from exc
     return WorkflowDocument(
         id=doc_id,
@@ -321,8 +335,8 @@ def load(path: Path) -> WorkflowDocument:
     try:
         text = path.read_text("utf-8")
     except (OSError, UnicodeError) as exc:
-        raise DefinitionError(f"{path}: {exc}") from exc
+        raise DefinitionError(f"{path}: {exc}", target_files=[path.as_posix()]) from exc
     try:
         return parse(text, path)
     except DefinitionError as exc:
-        raise DefinitionError(f"{path}: {exc}") from exc
+        raise DefinitionError(f"{path}: {exc}", target_files=[path.as_posix()]) from exc

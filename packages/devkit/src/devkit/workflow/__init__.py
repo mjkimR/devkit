@@ -6,14 +6,23 @@ evaluates it with the project's policies (``evaluate_unit``), including the
 drift guard. ``create_unit``, ``list_units``, ``record_answer``,
 ``return_to``, ``plan_handoff``/``apply_handoff`` and the envelope helpers
 cover the commands; ``evaluate`` is the pure evaluation underneath. Errors are
-``WorkflowError`` instances with a stable ``code``.
+``AdvisoryError`` instances with a stable ``code``: ``WorkflowError`` and its
+subclasses, plus ``devkit.core`` errors (``RECEIPT_INVALID``, ...) passed through.
 """
 
 from devkit.workflow.answers import record_answer, return_to, validate_answer
 from devkit.workflow.binding import Binding, HistoryEntry, read_binding, write_binding
 from devkit.workflow.checks import Check, CheckClass, CheckError, CheckResult, Invocation, Registry, parse_check
 from devkit.workflow.config import ConfigError, WorkflowConfig, load_workflow_config
-from devkit.workflow.decisions import Decision, DecisionError, Decisions, load_decisions, new_decision, write_decision
+from devkit.workflow.decisions import (
+    Decision,
+    DecisionError,
+    DecisionRecordError,
+    Decisions,
+    load_decisions,
+    new_decision,
+    write_decision,
+)
 from devkit.workflow.definition import (
     Candidate,
     DefinitionError,
@@ -30,6 +39,7 @@ from devkit.workflow.envelope import (
     AuthoringError,
     Envelope,
     EnvelopeError,
+    EnvelopeFormatError,
     Envelopes,
     Finding,
     compose,
@@ -37,7 +47,14 @@ from devkit.workflow.envelope import (
     render_envelope,
     write_next,
 )
-from devkit.workflow.errors import AnchorInvalidError, DriftError, UnitNotFoundError, WorkflowError
+from devkit.workflow.errors import (
+    AnchorInvalidError,
+    DriftError,
+    LayoutError,
+    UnitNotFoundError,
+    WorkflowError,
+    WorkflowProblem,
+)
 from devkit.workflow.evaluate import LintFunc, Options, evaluate
 from devkit.workflow.git import is_ancestor
 from devkit.workflow.handoff import CandidateResult, Handoff, HandoffOutcome, HandoffPlan, apply_handoff, plan_handoff
@@ -73,6 +90,7 @@ __all__ = [
     "ConfigError",
     "Decision",
     "DecisionError",
+    "DecisionRecordError",
     "Decisions",
     "DefinitionError",
     "DefinitionReport",
@@ -81,6 +99,7 @@ __all__ = [
     "DriftError",
     "Envelope",
     "EnvelopeError",
+    "EnvelopeFormatError",
     "Envelopes",
     "Finding",
     "Gate",
@@ -89,6 +108,7 @@ __all__ = [
     "HandoffPlan",
     "HistoryEntry",
     "Invocation",
+    "LayoutError",
     "LayoutSpec",
     "LintFunc",
     "Option",
@@ -111,6 +131,7 @@ __all__ = [
     "WorkflowConfig",
     "WorkflowDocument",
     "WorkflowError",
+    "WorkflowProblem",
     "Workspace",
     "apply_handoff",
     "compose",

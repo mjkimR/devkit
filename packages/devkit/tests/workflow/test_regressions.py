@@ -134,16 +134,29 @@ def test_b1_return_loop_requires_the_gate_again(tmp_path: Path) -> None:
     _answer(root, "gate:integration", "--action", "accept")
     assert "[STAGE: - complete=true]" in _next(root).output
 
-    # The unit goes back to build: the integration approval is stale and is voided by a return record.
+    # The unit goes back to build: `next` reports the integration approval as stale but writes nothing.
     (unit / "tasks.md").write_text("- [ ] a\n")
+    before = sorted(p.relative_to(unit).as_posix() for p in unit.rglob("*"))
     back = _next(root)
-    assert "[STAGE: build" in back.output
+    assert back.exit_code == 0 and "[STAGE: build" in back.output
     assert (
-        "[STALE_APPROVAL: decisions/01-gate-integration.yaml request=gate:integration stage=integrate]" in back.output
+        "[STALE_APPROVAL: decisions/01-gate-integration.yaml request=gate:integration stage=integrate counts=yes "
+        f'void_with="devkit workflow return --unit {UNIT} --to build"]' in back.output
     )
-    records = load_decisions(unit).records
-    assert [(r.request, r.by) for r in records] == [("gate:integration", ""), ("return:build", "devkit")]
+    as_json = json.loads(_next(root, "--format", "json").output)
+    assert as_json["stale_approvals"] == ["decisions/01-gate-integration.yaml"]
+    assert sorted(p.relative_to(unit).as_posix() for p in unit.rglob("*")) == before
+    assert [r.request for r in load_decisions(unit).records] == ["gate:integration"]
 
+    # Until an explicit return, the stale approval still counts: redoing build completes the unit again.
+    (unit / "tasks.md").write_text("- [x] a\n")
+    assert "[STAGE: - complete=true]" in _next(root).output
+
+    # After `devkit workflow return`, the approval no longer counts and must be given again.
+    (unit / "tasks.md").write_text("- [ ] a\n")
+    returned = _run("return", "-w", str(root), "--unit", UNIT, "--no-lint", "--to", "build")
+    assert returned.exit_code == 0, returned.stderr
+    assert [r.request for r in load_decisions(unit).records] == ["gate:integration", "return:build"]
     (unit / "tasks.md").write_text("- [x] a\n")
     again = _next(root)
     assert "[STAGE: integrate" in again.output and "[REQUEST: id=gate:integration" in again.output
@@ -156,9 +169,9 @@ def test_b1_explicit_return_command(tmp_path: Path) -> None:
     _answer(root, "gate:direction", "--action", "accept")
     assert "[DONE: intent]" in _next(root).output
     later = _run("return", "-w", str(root), "--unit", UNIT, "--no-lint", "--to", "review")
-    assert later.exit_code == 1 and "(RETURN_INVALID)" in later.stderr
+    assert later.exit_code == 2 and "(RETURN_INVALID)" in later.stderr
     unknown = _run("return", "-w", str(root), "--unit", UNIT, "--no-lint", "--to", "nope")
-    assert unknown.exit_code == 1 and "(RETURN_INVALID)" in unknown.stderr
+    assert unknown.exit_code == 2 and "(RETURN_INVALID)" in unknown.stderr
     back = _run("return", "-w", str(root), "--unit", UNIT, "--no-lint", "--to", "intent", "--note", "new scope")
     assert back.exit_code == 0 and back.output.strip() == "[RETURNED: decisions/02-return-intent.yaml to=intent]"
     nxt = _next(root)
@@ -312,7 +325,7 @@ def test_b9_json_output_is_a_single_document_when_lint_fails(tmp_path: Path, mon
     assert _run("new", "-w", str(root), "u").exit_code == 0
     monkeypatch.setattr(devkit.rules, "run_project_rules", broken)
     result = _run("next", "-w", str(root), "--unit", UNIT, "--format", "json")
-    assert result.exit_code == 1 and "(LINT_FAILED)" in result.stderr
+    assert result.exit_code == 2 and "(LINT_FAILED)" in result.stderr
     assert json.loads(result.stdout)["lint_error"] == "rule exploded"
     text = _run("next", "-w", str(root), "--unit", UNIT)
     assert '[LINT_ERROR: "rule exploded"]' in text.output
@@ -521,8 +534,8 @@ def test_r10_plugin_files_load_atomically(tmp_path: Path) -> None:
     loaded, errors = load_check_files([tmp_path / "mixed.py", tmp_path / "first.py", tmp_path / "second.py"])
     assert [c.name for c in loaded] == ["good"]  # only first.py
     assert len(errors) == 2
-    assert "mixed.py" in errors[0] and "must match" in errors[0]
-    assert "second.py" in errors[1] and "already defined" in errors[1]
+    assert "mixed.py" in str(errors[0]) and "must match" in str(errors[0])
+    assert "second.py" in str(errors[1]) and "already defined" in str(errors[1])
 
 
 def test_nit_feedback_value_requires_accept_and_list_reports_unreadable_anchors(tmp_path: Path) -> None:
@@ -531,7 +544,7 @@ def test_nit_feedback_value_requires_accept_and_list_reports_unreadable_anchors(
     declined = _run(
         "answer", "-w", str(root), "--unit", UNIT, "--request", "feedback:x", "--action", "decline", "--value", "t"
     )
-    assert declined.exit_code == 1 and "(DECISION_INVALID)" in declined.stderr
+    assert declined.exit_code == 2 and "(DECISION_INVALID)" in declined.stderr
     broken = root / ".devkit/transient/work/broken"
     broken.mkdir()
     (broken / "task.md").write_text("---\nid: [x\n---\n")
@@ -546,7 +559,7 @@ def test_nit_new_refuses_a_directory_that_already_is_a_unit(tmp_path: Path) -> N
     root = _workspace(tmp_path, {"direct-delivery": WORKFLOW}, "direct-delivery")
     assert _run("new", "-w", str(root), "u").exit_code == 0
     again = _run("new", "-w", str(root), "u")
-    assert again.exit_code == 1 and "(UNIT_EXISTS)" in again.stderr
+    assert again.exit_code == 2 and "(UNIT_EXISTS)" in again.stderr
 
 
 def test_workspace_root_defaults_to_the_enclosing_project(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

@@ -13,7 +13,8 @@ from pathlib import Path
 from devkit.core import frontmatter
 from devkit.core.errors import FrontmatterError
 
-from .common import SLUG, BundleError
+from ..errors import BundleError
+from .common import SLUG
 
 
 @dataclass(frozen=True)

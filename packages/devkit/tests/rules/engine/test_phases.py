@@ -14,6 +14,7 @@ from devkit.rules import (
     resolve_phases,
 )
 from devkit.rules.engine.config import parse_rules_config
+from devkit.rules.engine.errors import RuleDefinitionError
 from devkit.rules.engine.phases import remaining_by_rule, transition_entries, validate_phase_overrides
 from devkit.rules.rules import BaseRule
 
@@ -91,9 +92,9 @@ def _rule(rule_id: str, phase: Phase, promote_to: Phase | None = None) -> BaseRu
 
 def test_promote_to_requires_hygiene_rule_targeting_linter() -> None:
     assert _rule("RULE-ok", Phase.HYGIENE, Phase.LINTER).promote_to == Phase.LINTER
-    with pytest.raises(ValueError, match="promote_to is only valid"):
+    with pytest.raises(RuleDefinitionError, match="promote_to is only valid"):
         _rule("RULE-bad", Phase.LINTER, Phase.LINTER)
-    with pytest.raises(ValueError, match="promote_to is only valid"):
+    with pytest.raises(RuleDefinitionError, match="promote_to is only valid"):
         _rule("RULE-bad", Phase.HYGIENE, Phase.HYGIENE)
 
 
@@ -131,8 +132,9 @@ def test_transition_entries_only_for_rules_active_in_phase() -> None:
 def test_validate_phase_overrides_rejects_unknown_and_redundant() -> None:
     rules = [_rule("RULE-a", Phase.LINTER), _rule("RULE-h", Phase.HYGIENE)]
     errors = validate_phase_overrides(rules, {"RULE-h": Phase.HYGIENE, "RULE-zzz": Phase.HYGIENE})
-    assert any("redundant" in e and "RULE-h" in e for e in errors)
-    assert any("unknown rule: RULE-zzz" in e for e in errors)
+    assert any("redundant" in str(e) and e.rule_id == "RULE-h" for e in errors)
+    assert any("unknown rule: RULE-zzz" in str(e) and e.rule_id == "RULE-zzz" for e in errors)
+    assert {e.code for e in errors} == {"RULES_POLICY_INVALID"}
     assert validate_phase_overrides(rules, {"RULE-a": Phase.HYGIENE}) == []
 
 
@@ -165,7 +167,7 @@ def test_override_for_unknown_rule_is_an_evaluation_error(tmp_path: Path) -> Non
     result = evaluate(RuleContext(workspace_root=tmp_path, phase_overrides={"RULE-nope": Phase.HYGIENE}), [])
     assert result.has_errors
     assert result.violations == []
-    assert "unknown rule: RULE-nope" in result.errors[0]
+    assert "unknown rule: RULE-nope" in str(result.errors[0])
 
 
 def test_builtin_override_end_to_end(tmp_path: Path) -> None:

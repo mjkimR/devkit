@@ -15,8 +15,8 @@ import pytest
 SRC = Path(__file__).parents[1] / "src/devkit"
 
 ALLOWED: dict[str, set[str]] = {
-    "core": set(),
-    "advisory": {"core"},
+    "advisory": set(),
+    "core": {"advisory"},
     "rules": {"core", "advisory"},
     "workflow": {"core", "advisory", "rules"},
     "gate": {"core", "advisory", "rules"},

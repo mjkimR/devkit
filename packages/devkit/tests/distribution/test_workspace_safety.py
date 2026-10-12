@@ -7,8 +7,10 @@ import threading
 from pathlib import Path
 
 import pytest
-from devkit.distribution.bundles import BundleError, build_bundle, load_bundle
+from devkit.core.errors import ReceiptError
+from devkit.distribution.bundles import build_bundle, load_bundle
 from devkit.distribution.bundles.subagents import read_contract, render
+from devkit.distribution.errors import BundleError, DistributionError, LockHeldError, UnsafeWorkspaceError
 from devkit.distribution.installation import hooks, transaction
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.context import get_context
@@ -71,14 +73,14 @@ def test_reserved_seed_targets_are_case_insensitive(tmp_path: Path, seed_target:
 
 @pytest.mark.parametrize("name", [".GIT/hooks/pre-commit", ".Devkit/Config.toml", ".devkit/OVERRIDES/team/x.md"])
 def test_transactions_never_write_reserved_paths_in_any_case(tmp_path: Path, name: str) -> None:
-    with pytest.raises(BundleError, match="unsafe deployment path"):
+    with pytest.raises(UnsafeWorkspaceError, match="unsafe deployment path"):
         project_path(tmp_path, name)
 
 
 def test_symlinked_agents_md_is_left_alone_when_the_block_is_off(item: InstalledBundle, target: Path) -> None:
     (target / "CLAUDE.md").write_text("# Project\n")
     (target / AGENTS_FILE).symlink_to("CLAUDE.md")
-    with pytest.raises(BundleError, match="guidance_block = false"):
+    with pytest.raises(UnsafeWorkspaceError, match="guidance_block = false"):
         sync_project(target, [item])
     (target / CONFIG).write_text("guidance_block = false\n" + (target / CONFIG).read_text())
     assert sync_project(target, [item])["actions"]
@@ -100,7 +102,7 @@ def test_crlf_agents_md_keeps_one_block_and_its_line_endings(item: InstalledBund
 
 def test_marker_not_on_its_own_line_is_malformed(item: InstalledBundle, target: Path) -> None:
     (target / AGENTS_FILE).write_text(f"Intro {START} trailing\n")
-    with pytest.raises(BundleError, match="malformed guidance block"):
+    with pytest.raises(DistributionError, match="malformed guidance block"):
         sync_project(target, [item])
 
 
@@ -113,7 +115,7 @@ def test_receipt_paths_cannot_leave_the_project(item: InstalledBundle, target: P
         if asset["id"] == "guide":
             asset["paths"] = [".devkit/overrides/team/../../../../secret.md"]
     (target / RECEIPT).write_text(json.dumps(receipt))
-    with pytest.raises(BundleError, match=r"must not contain '\.\.'"):
+    with pytest.raises(ReceiptError, match=r"must not contain '\.\.'"):
         get_context(target, "team")
 
 
@@ -122,17 +124,18 @@ def test_receipt_paths_cannot_leave_the_project(item: InstalledBundle, target: P
     [
         (lambda r: r["assets"][0].pop("paths"), "missing keys"),
         (lambda r: r["assets"].append("not an object"), "expected an object"),
-        (lambda r: r["assets"][0].update(paths=["outside/file.md"]), "invalid receipt asset path"),
+        (lambda r: r["assets"][0].update(paths=["outside/file.md"]), "invalid asset path"),
     ],
 )
-def test_malformed_receipt_entries_are_bundle_errors(item: InstalledBundle, target: Path, mutate, match: str) -> None:
+def test_malformed_receipt_entries_are_receipt_errors(item: InstalledBundle, target: Path, mutate, match: str) -> None:
     sync_project(target, [item])
     receipt = json.loads((target / RECEIPT).read_text())
     mutate(receipt)
     (target / RECEIPT).write_text(json.dumps(receipt))
-    with pytest.raises(BundleError, match=match):
+    with pytest.raises(ReceiptError, match=match) as raised:
         get_context(target, "team")
-    with pytest.raises(BundleError, match=match):
+    assert raised.value.code == "RECEIPT_INVALID"
+    with pytest.raises(ReceiptError, match=match):
         read_receipt(target)
 
 
@@ -143,10 +146,10 @@ def test_readers_share_the_lock_and_writers_exclude_them(
     assert (target / LOCK).is_file()
     with transaction.project_lock(target, shared=True):
         assert get_context(target, "team")["bundle"] == "team"
-        with pytest.raises(BundleError, match="project lock"):
+        with pytest.raises(LockHeldError, match="project lock"):
             sync_project(target, [item])
     monkeypatch.setattr(transaction, "READ_LOCK_TIMEOUT", 0.05)
-    with transaction.project_lock(target), pytest.raises(BundleError, match="project lock"):
+    with transaction.project_lock(target), pytest.raises(LockHeldError, match="project lock"):
         get_context(target, "team")
 
 

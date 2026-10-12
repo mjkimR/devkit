@@ -41,7 +41,7 @@ src/devkit/rules/
 │   ├── project.py           # run_project_rules: config, registry, context and evaluation in one call
 │   ├── phases.py            # Effective phase resolution, overrides, promotions
 │   ├── policy.py            # validate_policy: phase, severity and settings policy in one pass
-│   ├── errors.py            # PolicyError: a policy message carrying its rule ID
+│   ├── errors.py            # RulesError hierarchy: raised errors and collected RuleProblems with codes
 │   ├── registry.py          # RuleRegistry & default_registry (plugin files via devkit.core.plugins)
 │   └── evaluator.py         # Sequential rule evaluation, single autofix pass & convergence recheck
 ├── workspace/               # Shared file caching, Markdown file catalog and Git snapshots

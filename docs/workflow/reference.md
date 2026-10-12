@@ -77,15 +77,19 @@ uv add "git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
 uv run devkit workflow next --unit <dir>
 ```
 
-Exit codes: `0` success, `1` an error or an invalid definition, `2` a usage
-error reported by the command line parser (an unknown option, a missing
-required option). Errors are Agent Advisory Protocol blocks on stderr
-(`devkit.advisory`) with a stable code such as `WORKFLOW_DRIFT`,
-`UNIT_NOT_FOUND` or `CONFIG_INVALID` and an `[ACTION]` directive. Under
+Exit codes follow the devkit convention
+([Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)):
+`0` the command did its job, `1` it reports a negative result, `2` it could
+not do its job. `next` exits `0` whatever the stage, including a unit waiting
+for a person or a delegation. `1` comes from `validate` (invalid definitions),
+`show` (a definition with problems), `envelope check` (`ENVELOPE_INVALID`) and
+`next` refusing a drifted unit (`WORKFLOW_DRIFT`). Everything else that fails,
+from a usage error to `UNIT_NOT_FOUND`, `CONFIG_INVALID` or `RECEIPT_INVALID`,
+exits `2`. Errors are Agent Advisory Protocol blocks on stderr
+(`devkit.advisory`) with a stable code and an `[ACTION]` directive; the codes
+are listed in [Overview, section 5](overview.md#5-cli-surface). Under
 `--format json` stdout carries exactly one JSON document: the result, or
-`{"error": {...}}` when there is none. `next` exits `0` whether or not the unit
-is complete. `validate` and `show` exit `1` when a definition has problems,
-which is a result rather than an advisory.
+`{"error": {...}}` when there is none.
 
 ## Configuration
 
@@ -140,8 +144,9 @@ segment never count in the next one.
 Definitions are discovered from the project's `definitions_dir` and from every
 `kind = "workflow"` asset that `devkit sync` recorded in
 `.devkit/installation.json`; a project definition shadows a synchronized one
-with the same id. A recorded definition missing from disk is reported (run
-`devkit sync`), and a malformed receipt is `RECEIPT_INVALID`. Bundles that
+with the same id. A recorded definition missing from disk is reported as
+`WORKFLOW_ASSET_MISSING` (run `devkit sync`), and a malformed receipt is `RECEIPT_INVALID` (restore it
+from version control, then run `devkit sync`). Bundles that
 ship a workflow also get the generated `devkit-workflow` entry skill, so an
 agent knows to run `next`.
 
@@ -152,7 +157,11 @@ difference is reported as `[INVALID: shared stage '<id>' differs between <a>
 and <b>: <field>]`, because skills, runners and people recognize a stage by
 its id. `validate --format json` emits `{"valid", "roles_checked",
 "definitions": [{"id", "path", "valid", "hash", "problems"}], "errors",
-"shared"}`.
+"shared"}`. Every problem is a coded entry: `problems` hold
+`{"code", "where", "message"}` (`code` is `DEFINITION_INVALID`,
+`CHECK_INVALID` or `ROLE_UNKNOWN`), and `errors` (files that could not be
+loaded) and `shared` (`SHARED_STAGE_MISMATCH`) hold `{"code", "message",
+"target", "fix"}`. `show --format json` reports its `problems` the same way.
 
 ## Roles and plugin checks
 
@@ -187,8 +196,13 @@ Loaded checks appear in `devkit workflow checks` with class `plugin` and are
 referenced from definitions like primitives (`name` or `name(arg ...)` with the
 declared `params`). A name that collides with a built-in is an error. Loading
 is atomic per file: a file that fails to import, declares an invalid check or
-redefines a name contributes nothing and is `CHECK_LOAD_FAILED`, as is a
-receipt path missing from disk. A check that raises is an unsatisfied,
+redefines a name contributes nothing and is `CHECK_LOAD_FAILED`. Every
+receipt-listed file is first checked with `devkit.core.receipt.verified_asset_file`,
+exactly as rules and gates are: a file that is missing, resolves outside the
+project or differs from the SHA-256 the receipt records is `CHECK_LOAD_FAILED`
+too, with the fix `devkit sync` (restore) or `devkit override create
+<bundle>:<asset>` (keep the edit); a file without a record (a project
+override) loads as it is. A check that raises is an unsatisfied,
 evaluated result with the exception in its detail. Plugin files are executable
 Python and must come from a trusted source.
 
@@ -209,8 +223,18 @@ the check table, the envelope contract and the output signals.
 ## Library
 
 `Workspace` is the entry point. It applies the same configuration, plugin
-checks, roles, lint binding and drift guard as the CLI. Every failure is a
-`WorkflowError` with a stable `code`.
+checks, roles, lint binding and drift guard as the CLI. Every failure is an
+`AdvisoryError` with a stable `code`: a `WorkflowError` (or one of its
+subclasses such as `ConfigError`, `DefinitionError`, `LayoutError`,
+`CheckError` or `DriftError`), or a `devkit.core` error passed through
+unchanged (`RECEIPT_INVALID`, `GIT_FAILED`). Branch on `exc.code`, never on the
+message. Problems the library collects rather than raises are typed entries
+with a `code`: `EnvelopeError`, `DecisionError`, validation `Problem`s
+(`stage`, `field`, `message`, `code`) and `WorkflowProblem`s (`message`,
+`code`, `target`, `fix`) for definition and plugin check files that could not
+be loaded (`Workspace.discovery_errors`, `load_plugin_checks`,
+`ValidationReport.load_errors`) and for shared-stage differences
+(`shared_stage_problems`).
 
 ```python
 from pathlib import Path
@@ -234,7 +258,7 @@ The main calls:
 | --- | --- |
 | `Workspace(root=None, *, lint=rules_lint, ancestor=is_ancestor)` | Load `[workflow]` configuration; definitions, roles and plugins load lazily, once. |
 | `ws.resolve_unit(unit, workflow=None) -> UnitRef` | Unit directory, anchor, binding and the workflow to evaluate against. |
-| `ws.evaluate_unit(unit, *, given=(), lint=True, enforce_drift=True, record_returns=True) -> Result` | Evaluate with the project's policies; raises `DriftError`; records a return when approvals went stale. |
+| `ws.evaluate_unit(unit, *, given=(), lint=True, enforce_drift=True) -> Result` | Evaluate with the project's policies; raises `DriftError`; never writes a file. Approvals of later stages are listed in `Result.stale_approvals` and count until `record_return(unit, stage)` voids them. |
 | `ws.definition(ref=None, binding=None)`, `ws.load_definition(ref)` | A validated (or raw) definition by id or path relative to the root. |
 | `ws.validate_definitions(paths=()) -> ValidationReport` | What `validate` reports. |
 | `ws.describe(doc, binding=None) -> dict` | What `show --format json` emits. |

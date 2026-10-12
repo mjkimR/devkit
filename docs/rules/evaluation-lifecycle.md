@@ -97,13 +97,13 @@ Rules come from three sources, in order: the built-in registry, every `kind = "r
 - **Phases**:
   - `linter`: Markdown relative link validity, safety checks on explicit targets, and every bundle-distributed rule declared in this phase. This is the phase evaluated by `check --staged` (and by the `rules-staged` pre-commit gate of [`devkit gate`](../gate/overview.md#2a-built-in-gates)) and by `check --ci`.
   - `hygiene`: Includes `linter` rules plus file size warnings, every bundle rule declared in this phase, and every rule parked there by a project phase override.
-- **Targets**: `TARGETS` are workspace-relative or absolute paths inside the workspace. A file is checked as is; a directory expands recursively to the regular files under it with the same discovery as workspace scans: dependency and cache directories (`.git`, `.venv`, `node_modules`, caches) and `.devkit/managed/` and `.devkit/overrides/` are skipped, symlinks resolving outside the workspace are skipped, and inside a Git work tree Git-ignored files are skipped unless named explicitly. No targets means the whole workspace; a directory without files checks nothing. A target that is neither an existing file nor a directory inside the workspace is an `INVALID_LINT_TARGET` failure before any rule runs. Snapshot gates refuse targets.
+- **Targets**: `TARGETS` are workspace-relative or absolute paths inside the workspace. A file is checked as is; a directory expands recursively to the regular files under it with the same discovery as workspace scans: dependency and cache directories (`.git`, `.venv`, `node_modules`, caches) and `.devkit/managed/` and `.devkit/overrides/` are skipped, symlinks resolving outside the workspace are skipped, and inside a Git work tree Git-ignored files are skipped unless named explicitly. No targets means the whole workspace; a directory without files checks nothing. A target that is neither an existing file nor a directory inside the workspace is a `RULES_TARGET_INVALID` failure before any rule runs. Snapshot gates refuse targets.
 - **Exclusions**: `exclude` under `[rules]` lists workspace-relative patterns (`**` grammar of settings overrides) that no rule targets. Excluded paths are removed from explicit, directory-expanded and snapshot targets and `ctx.is_file_targeted` is `False` for them; a run whose explicit targets are all excluded checks nothing rather than falling back to the whole workspace. They remain in the document catalog so link repair can still resolve to them. An invalid pattern is a policy error that fails the run before evaluation.
 - **`--summary-only`**: text output prints one line per rule (`RULE-id: N error(s), M warning(s)[, I info(s)][, K fixed]`) instead of individual findings, keeping `[SNAPSHOT]`, `[PHASE_OVERRIDE]` and `[PROMOTION]` lines and the final summary. JSON output ignores the flag.
-- **Exit Status**:
+- **Exit Status** (the devkit convention of [Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)):
   - `0`: All checks passed cleanly, or all fixable findings were successfully repaired.
   - `1`: Unresolved error violations. The run evaluated and found errors.
-  - `2`: The run could not evaluate: rule loading failures, rule execution errors, invalid project policy, an invalid target, or a Git snapshot failure. Execution errors take precedence over violations found in the same run. (`click` usage errors such as `--staged` with file arguments also exit `2`; they print a `Usage:` block.)
+  - `2`: The run could not evaluate: rule loading failures, rule execution errors, invalid project policy, an invalid target, or a Git snapshot failure, each reported on stderr as an advisory with its code (see the [Rules Reference, Errors](reference.md#errors)). Execution errors take precedence over violations found in the same run. (`click` usage errors such as `--staged` with file arguments also exit `2`; they print a `Usage:` block.)
 
 ---
 
@@ -160,7 +160,7 @@ super().__init__(id="RULE-no-todo", name="no-todo", description="...", phase=Pha
 
 ## 5. Project Policy: Severity Overrides and Typed Settings
 
-The `[rules]` table of `.devkit/config.toml` is the only place a project changes a distributed rule's behavior; managed rule files are hash-checked by `devkit sync` and are never edited.
+The `[rules]` table of `.devkit/config.toml` is the only place a project changes a distributed rule's behavior; managed rule files are checked against their receipt hash every time they load (a hand-edited copy is a `RULES_LOAD_FAILED` loading error) and are never edited.
 
 ### Severity Overrides (`[rules.severity_overrides]`)
 
@@ -186,7 +186,7 @@ max_lines = 800
 ```
 
 - Every layer is validated before any rule runs: unknown keys, wrong types (`true` is not an integer, `"10"` is not a number), explicit nulls and unsupported patterns fail with the rule ID in the message, and so does a rule's own `validate_settings` rejection. Settings for an unknown rule, or for a rule that declares none, are errors.
-- Each override is validated applied to the base values. Overrides that are valid alone but invalid together (one sets `lo`, another `hi`) can only be detected for a file both match: the run then fails with `Invalid settings (RULE-id): RULE-id: <file>: the overrides matching this file (...) combine to invalid settings`, exit code 2.
+- Each override is validated applied to the base values. Overrides that are valid alone but invalid together (one sets `lo`, another `hi`) can only be detected for a file both match: the run then fails with `RULES_SETTINGS_INVALID` (`RULE-id: <file>: the overrides matching this file (...) combine to invalid settings: ...`), exit code 2.
 - `path` is workspace-relative. A standalone `**` matches zero or more segments; `*`, `?` and character classes match within one segment. Overrides apply in declaration order to every file they match, so later matching overrides win; keys an override omits keep the earlier value. Arrays replace.
 - `ctx.settings(rule, path)` returns the effective dataclass for a file; `devkit rules explain <RULE-id>` prints the defaults, the configured values and each override.
 
@@ -205,7 +205,7 @@ The workspace root must be the Git work tree top level; a subdirectory is refuse
 
 - Unstaged edits, untracked files and ignored local files do not exist for the gate.
 - `.devkit/config.toml`, `.devkit/installation.json` and synchronized rules are read from the snapshot, so policy must be committed to take effect in a gate.
-- Managed rule copies under `.devkit/managed/` are normally Git-ignored and absent from the tree. A rule file listed in the snapshot's receipt but missing from the snapshot is read from the working tree only when its SHA-256 matches the receipt's `files` entry; a missing or drifted file fails the gate with a `devkit sync` hint. The committed receipt therefore still pins exactly which rule code a gate runs.
+- Managed rule copies under `.devkit/managed/` are normally Git-ignored and absent from the tree. A rule file listed in the snapshot's receipt but missing from the snapshot is read from the working tree only when its SHA-256 matches the receipt's `files` entry; a missing or drifted file fails the gate with a `devkit sync` hint. A file present in the snapshot is checked against the same `files` entry, exactly as in a plain `check`. The committed receipt therefore still pins exactly which rule code a gate runs.
 - The changed files of the diff are the targets, plus every Markdown file in the tree whose relative links point at a deleted path (or into a directory that lost files), so a deletion-only commit still reports the links it breaks. Deleted paths are reported in the `[SNAPSHOT: ...]` line. A snapshot with neither changed nor deleted files passes without loading rules.
 - `--rules-dir` must lie inside the repository; it is read from the snapshot, so an unstaged edit of a custom rule does not change the result. A directory outside the repository, or one that is not in the snapshot (untracked or ignored), fails the run with exit code 2.
 - Only regular files are targets. The rule engine's whole-workspace discovery is not Git-filtered inside a snapshot: the tree already holds tracked files only.

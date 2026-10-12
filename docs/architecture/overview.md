@@ -48,7 +48,7 @@ All of them build on `devkit.core`, the SDD-agnostic shared foundation (frontmat
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-Layering inside the package: `core` imports no other module; `advisory` may import `core`; `rules` may import `core` and `advisory`; `workflow` and `gate` may import `core`, `advisory` and `rules`; `distribution` may import only `core` and `advisory`. `devkit.cli` assembles the command line. A test enforces this.
+Layering inside the package: `advisory` imports no other module; `core` may import `advisory`; `rules` may import `core` and `advisory`; `workflow` and `gate` may import `core`, `advisory` and `rules`; `distribution` may import only `core` and `advisory`. `devkit.cli` assembles the command line. A test enforces this.
 
 ---
 
@@ -66,7 +66,7 @@ devkit/
 │   │       ├── gate/          # Commit gate system (`devkit gate`)
 │   │       └── distribution/  # Bundle packaging and sync (`devkit sync`, ...) and the `devkit` guide bundle
 │   └── devkit-starter/        # Example external content package
-├── examples/bundles/          # Example bundles (starter mirror, delivery-workflow)
+├── examples/bundles/          # Example bundle delivery-workflow (the starter bundle lives in devkit-starter)
 ├── scripts/                   # Shared shell logic behind the justfile recipes
 └── docs/                      # Documentation per module (see the index below)
 ```
@@ -87,7 +87,27 @@ devkit/
 
 ---
 
-## 4. Documentation Index
+## 4. Errors, Exit Codes and Platforms
+
+**Library errors.** Every expected failure a `devkit` library function raises is an `AdvisoryError` subclass from `devkit.advisory` with a stable `UPPER_SNAKE` code (`RECEIPT_INVALID`, `BUNDLE_INVALID`, `RULES_CONFIG_INVALID`, `UNIT_NOT_FOUND`, `GATE_CONFIG_INVALID`, ...) and the advisory fields that direct the caller's next step. An embedding caller branches on `error.code` or `error.mode` instead of matching messages; problems a function collects rather than raises (rule loading, policy and execution problems; workflow validation, file loading and shared-stage problems; envelope and decision record errors) are typed entries with a code too. Each module's reference lists its codes. Built-in exceptions remain only for programming errors, such as calling an API with arguments its contract forbids.
+
+**CLI boundary.** Every command group renders an uncaught `AdvisoryError` as an Agent Advisory Protocol block on stderr and exits with the error's `exit_code`; any other exception is reported as `UNEXPECTED_ERROR` (`MAINTENANCE`). When stdout is JSON (`--format json`, and every distribution command), a failed command that has no result of its own prints `{"error": {...}}` there (the `AdvisoryError.to_dict()` envelope), so stdout is always one JSON document.
+
+**Exit codes.** Every `devkit` command follows the checker convention of `grep`, `diff` and `ruff` (`devkit.advisory.ExitCode`):
+
+| Code | `ExitCode` | Meaning | Examples |
+| --- | --- | --- | --- |
+| `0` | `OK` | Success; nothing found | `rules check` without violations; `workflow next` waiting for a human |
+| `1` | `FINDINGS` | The command ran and reports a negative result | rule violations remain; `sync --check` needs a sync; a gate refused the commit; `workflow validate` found invalid definitions |
+| `2` | `ERROR` | The command could not do its job | usage errors (click), unreadable configuration, receipt or definition, refused invalid input, unexpected errors |
+
+A workflow state that waits for a person or a delegated role is a result, not a failure, and exits `0`. The per-command details are in each module's reference.
+
+**Platforms.** `devkit` supports macOS and Linux only (POSIX): it relies on `fcntl` locks, POSIX file modes and `/bin/sh` hook wrappers. It writes LF line endings.
+
+---
+
+## 5. Documentation Index
 
 Each module's `reference.md` is the quick reference (CLI, configuration, library); the other documents in its directory are canonical for semantics.
 
@@ -127,4 +147,5 @@ Each module's `reference.md` is the quick reference (CLI, configuration, library
 - [Commit Gate Overview](../gate/overview.md): Hook wrappers, built-in gates, gate contract, bundle distribution, configuration layers, and CLI.
 
 ### Examples
+- [devkit-starter](../../packages/devkit-starter/README.md): An external content package whose `src/devkit_starter/bundle` is the starter example bundle.
 - [delivery-workflow example bundle](../../examples/bundles/delivery-workflow/README.md): A workflow asset with a host-neutral reviewer role.

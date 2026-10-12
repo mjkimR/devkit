@@ -66,6 +66,10 @@ echo "==> creating a fresh consumer project"
     test -d .devkit/managed/devkit
     echo "--- devkit rules check"
     uv run devkit rules check
+    echo "--- exit codes: a usage error is 2"
+    status=0
+    uv run devkit rules check --no-such-option 2>/dev/null || status=$?
+    test "$status" -eq 2
     echo "--- devkit workflow --help / devkit gate --help"
     uv run devkit workflow --help >/dev/null
     uv run devkit gate --help >/dev/null

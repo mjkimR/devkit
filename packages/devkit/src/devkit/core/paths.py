@@ -10,7 +10,7 @@ root. ``normalize_relpath`` is the single validator for them:
 - a backslash is an ordinary file-name character on POSIX and is accepted,
   but a value that would escape its root if backslashes were read as
   separators (``\\x``, ``..\\x``, ``a\\..\\b``) or that starts with a Windows
-  drive (``C:``) is rejected, so the same value is safe on every platform;
+  drive (``C:``) is rejected, so a recorded value never reads as an escape;
 - redundant separators and ``.`` segments are normalized away (``a//./b`` is
   ``a/b``); ``canonical=True`` rejects such values instead.
 """

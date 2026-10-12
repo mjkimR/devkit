@@ -61,14 +61,14 @@ def validate_phase_overrides(rules: Sequence[Rule], overrides: Mapping[str, Phas
     for rule_id in sorted(overrides):
         rule = by_id.get(rule_id)
         if rule is None:
-            errors.append(PolicyError(f"phase override for unknown rule: {rule_id}", rule_id))
+            errors.append(PolicyError(f"phase override for unknown rule: {rule_id}", rule_id=rule_id))
             continue
         if rule.phase == overrides[rule_id]:
             errors.append(
                 PolicyError(
                     f"phase override for {rule_id} is redundant: the rule already runs in the "
                     f"{rule.phase.value} phase; remove the entry",
-                    rule_id,
+                    rule_id=rule_id,
                 )
             )
     return errors

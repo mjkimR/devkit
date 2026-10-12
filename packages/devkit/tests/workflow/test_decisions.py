@@ -7,7 +7,7 @@ import yaml
 from click.testing import CliRunner, Result
 from devkit.workflow import Options, evaluate, load_decisions, parse, render_result
 from devkit.workflow.cli import cli
-from devkit.workflow.decisions import Decisions, new_decision, parse_record, write_decision
+from devkit.workflow.decisions import DecisionRecordError, Decisions, new_decision, parse_record, write_decision
 from testsupport.workflow import WORKFLOW, write_config, write_unit
 
 HUMAN_CHECK = """---
@@ -150,8 +150,8 @@ def test_parse_record_validation() -> None:
             parse_record(
                 bad, "decisions/01-gate-x.yaml" if bad["request"] != "handoff" else "decisions/01-handoff.yaml", 1
             )
-        except ValueError as exc:
-            assert reason in str(exc)
+        except DecisionRecordError as exc:
+            assert reason in str(exc) and exc.code == "DECISION_RECORD_INVALID"
         else:
             raise AssertionError(reason)
     assert Decisions().next_sequence() == 1
@@ -285,7 +285,7 @@ def test_cli_requests_answer_and_next(tmp_path: Path) -> None:
         "answer", "-w", str(root), "--unit", unit, "--no-lint", "--request", "gate:integration", "--action", "accept"
     )
     assert (
-        unknown.exit_code == 1
+        unknown.exit_code == 2
         and "(REQUEST_UNKNOWN)" in unknown.stderr
         and "[DETAIL] open: gate:direction" in unknown.stderr
     )
@@ -303,7 +303,7 @@ def test_cli_requests_answer_and_next(tmp_path: Path) -> None:
         "--value",
         "x",
     )
-    assert with_value.exit_code == 1 and "(DECISION_INVALID)" in with_value.stderr
+    assert with_value.exit_code == 2 and "(DECISION_INVALID)" in with_value.stderr
 
     declined = _run(
         "answer",
@@ -372,11 +372,11 @@ def test_cli_requests_answer_and_next(tmp_path: Path) -> None:
     no_text = _run(
         "answer", "-w", str(root), "--unit", unit, "--no-lint", "--request", "feedback:x", "--action", "accept"
     )
-    assert no_text.exit_code == 1 and "(DECISION_INVALID)" in no_text.stderr
+    assert no_text.exit_code == 2 and "(DECISION_INVALID)" in no_text.stderr
     bad_id = _run(
         "answer", "-w", str(root), "--unit", unit, "--no-lint", "--request", "Not An Id", "--action", "accept"
     )
-    assert bad_id.exit_code == 1 and "(REQUEST_UNKNOWN)" in bad_id.stderr
+    assert bad_id.exit_code == 2 and "(REQUEST_UNKNOWN)" in bad_id.stderr
 
 
 def test_cli_handoff_uses_recorded_choice(tmp_path: Path) -> None:
@@ -385,7 +385,7 @@ def test_cli_handoff_uses_recorded_choice(tmp_path: Path) -> None:
     unit = ".devkit/transient/work/login"
     required = _run("handoff", "-w", str(root), "--unit", unit, "--no-lint")
     assert (
-        required.exit_code == 1
+        required.exit_code == 2
         and "(HANDOFF_CHOICE_REQUIRED)" in required.stderr
         and "answer --unit" in required.stderr
     )
@@ -405,7 +405,7 @@ def test_cli_handoff_uses_recorded_choice(tmp_path: Path) -> None:
         "spec-driven",
     )
     assert (
-        ineligible.exit_code == 1 and "(DECISION_INVALID)" in ineligible.stderr and "not eligible" in ineligible.stderr
+        ineligible.exit_code == 2 and "(DECISION_INVALID)" in ineligible.stderr and "not eligible" in ineligible.stderr
     )
     two = _run(
         "answer",
@@ -423,7 +423,7 @@ def test_cli_handoff_uses_recorded_choice(tmp_path: Path) -> None:
         "--value",
         "spec-driven",
     )
-    assert two.exit_code == 1 and "exactly one --value" in two.stderr
+    assert two.exit_code == 2 and "exactly one --value" in two.stderr
     other = _run(
         "answer",
         "-w",
@@ -438,7 +438,7 @@ def test_cli_handoff_uses_recorded_choice(tmp_path: Path) -> None:
         "--value",
         "custom",
     )
-    assert other.exit_code == 1 and "not an option" in other.stderr
+    assert other.exit_code == 2 and "not an option" in other.stderr
 
     chosen = _run(
         "answer",

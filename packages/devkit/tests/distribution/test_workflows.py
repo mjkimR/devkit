@@ -5,8 +5,9 @@ from pathlib import Path
 
 import pytest
 import yaml
-from devkit.distribution.bundles import BundleError, load_bundle
+from devkit.distribution.bundles import load_bundle
 from devkit.distribution.bundles.workflows import read_workflow_header
+from devkit.distribution.errors import BundleError
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.discovery import InstalledBundle
 from devkit.distribution.installation.sync import sync_project
@@ -134,6 +135,8 @@ def test_entry_skill_names_the_current_workflow_signals() -> None:
         "source=policy",
         "devkit workflow return",
         "[STALE_APPROVAL]",
+        "approvals of later stages still count",
+        "ask the user when\n   unsure",
         "[BOUND_ELSEWHERE]",
         "handoff --workflow <id>",
     ):

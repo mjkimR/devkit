@@ -11,7 +11,7 @@ from devkit.workflow import frontmatter
 from devkit.workflow.binding import Binding, binding_from
 from devkit.workflow.definition import schema_hash
 from devkit.workflow.envelope import ENVELOPES_DIR
-from devkit.workflow.errors import input_error
+from devkit.workflow.errors import LayoutError, input_error
 from devkit.workflow.layout import TemplateLayout
 from devkit.workflow.workspace import UnitRef, Workspace
 
@@ -31,7 +31,7 @@ def create_unit(
     anchor = ws.anchor_for(doc)
     try:
         rel = layout.new_unit(slug, day)
-    except ValueError as exc:
+    except LayoutError as exc:
         raise input_error(str(exc), code="SLUG_INVALID", fix="Use lowercase letters, digits and hyphens") from exc
     unit_dir = ws.root / rel
     if any((unit_dir / name).is_file() for name in {anchor, *ws.candidate_anchors()}):
