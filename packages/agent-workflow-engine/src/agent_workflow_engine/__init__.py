@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from agent_workflow_engine.binding import Binding, read_binding, write_binding
+from agent_workflow_engine.binding import Binding, HistoryEntry, read_binding, write_binding
 from agent_workflow_engine.checks import Check, CheckClass, CheckError, Invocation, Registry, parse_check
 from agent_workflow_engine.config import ConfigError, WorkflowConfig, load_workflow_config
 from agent_workflow_engine.definition import (
@@ -16,7 +16,7 @@ from agent_workflow_engine.definition import (
     validate,
 )
 from agent_workflow_engine.envelope import Envelope, Envelopes, load_envelopes
-from agent_workflow_engine.evaluate import CheckResult, Options, Result, UnitNotFoundError, evaluate
+from agent_workflow_engine.evaluate import CheckResult, Handoff, Options, Result, UnitNotFoundError, evaluate
 from agent_workflow_engine.layout import Layout, TemplateLayout, validate_template
 from agent_workflow_engine.render import render_document, render_result
 
@@ -30,6 +30,8 @@ __all__ = [
     "DefinitionError",
     "Envelope",
     "Envelopes",
+    "Handoff",
+    "HistoryEntry",
     "Invocation",
     "Layout",
     "Options",

@@ -80,6 +80,7 @@ Prose for humans and agents. Not parsed.
 | `schema_version` | yes | Must be `1`. |
 | `checks` | no | Extra `runner` or `human` checks the workflow declares. Each has `name`, `class`, `description`. Names must not collide with built-in checks. |
 | `stages` | yes | Ordered stage list, at least one. |
+| `next` | no | Workflows this one may hand a completed unit to. See [Handoff Candidates](#handoff-candidates). |
 
 ### Stage Fields
 
@@ -100,9 +101,28 @@ Prose for humans and agents. Not parsed.
 
 Unknown stage keys, duplicate ids, unregistered checks, malformed check invocations, unknown `returns.to` targets and invalid `isolation` values are validation errors. `agent-workflow validate` reports every problem with the stage id and field.
 
+### Handoff Candidates
+
+A workflow is one segment of delivery. When a unit completes every stage, the definition's `next` list says which workflows may continue the same unit:
+
+```yaml
+next:
+  - { workflow: spec-driven, when: [file-exists(spec.md)], recommended: true }
+  - { workflow: hotfix, when: [frontmatter(task.md kind hotfix)] }
+  - { workflow: direct-delivery }
+```
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `workflow` | string | Id of the candidate definition. Must not be this workflow; must exist in the workspace (`validate` and `show` report an unknown id). |
+| `when` | list of checks | Preconditions evaluated against the unit, in the same syntax as `exit`. A candidate is *eligible* when every check holds; an empty list is always eligible. |
+| `recommended` | bool | Shown to the person choosing; informational. |
+
+Eligibility is computed from checks so that an automatic handoff is deterministic. Whether a person chooses or the engine does is project policy: the reserved gate name `handoff` in `[workflow.approvals]` (see [Overview, section 4](overview.md#4-approval-gates)); a stage may not use `handoff` as its `human_gate`. The candidate's own first stage then evaluates the unit's existing files, so a candidate whose entry checks require earlier artifacts is naturally filtered by `when`.
+
 ### Schema Hash
 
-`sha256:<hex>` of the canonical JSON (`sort_keys=True`, compact separators) of the `stages` list after normalization. Title, status, body, comments and the `checks` declaration do not affect it. `show` prints it; `bind` records it in the anchor.
+`sha256:<hex>` of the canonical JSON (`sort_keys=True`, compact separators) of the `stages` list after normalization. Title, status, body, comments, the `checks` declaration and the `next` list do not affect it. `show` prints it; `bind` records it in the anchor.
 
 ---
 
@@ -185,7 +205,15 @@ review: review-01.yaml       # reverify only: the review round it closes
 
 ## 4. Binding and Drift
 
-`new` and `bind` write `workflow: <id>` and `workflow_hash: <hash>` into the anchor's frontmatter, replacing existing values and preserving every other line.
+`new` and `bind` write `workflow: <id>` and `workflow_hash: <hash>` into the anchor's frontmatter, replacing existing values and preserving every other line. `handoff` rebinds the unit to the chosen candidate and appends the finished segment to `workflow_history`, one flow-style line:
+
+```yaml
+workflow: spec-driven
+workflow_hash: sha256:74bc...
+workflow_history: [{workflow: triage, hash: 'sha256:a017...', completed: '2026-10-13'}]
+```
+
+After a handoff, `next` evaluates the new workflow from its first stage against the unit's files; finished segments are history and are never re-evaluated, and drift applies to the current binding only.
 
 On `next`:
 
@@ -219,6 +247,21 @@ On `next`:
 - `[WAITING]` appears when the current stage is gated, or when every unmet check is `runner` or `human`. Its class is `human` when any unmet check is human.
 - `[GATE]` appears only for a gated current stage.
 
+When the workflow is complete and declares `next` candidates (and `approvals.handoff` is not `off`), the handoff block follows:
+
+```text
+[STAGE: - complete=true]
+[HANDOFF: policy=ask candidates=spec-driven hotfix direct-delivery eligible=hotfix direct-delivery recommended=- chosen=-]
+[CANDIDATE: spec-driven eligible=no recommended=yes when=file-exists(spec.md)=false]
+[CANDIDATE: hotfix eligible=yes recommended=no when=frontmatter(task.md kind hotfix)=true]
+[CANDIDATE: direct-delivery eligible=yes recommended=no when=-]
+[WAITING: human handoff]
+```
+
+- `recommended=` lists only candidates that are both recommended and eligible.
+- Under `policy=auto`, `chosen=` names the first eligible candidate and no `[WAITING]` line appears; with no eligible candidate the engine falls back to waiting for a person.
+- No `[HANDOFF]` line means the unit is finished.
+
 `--format json` emits one object:
 
 ```json
@@ -237,8 +280,11 @@ On `next`:
   "waiting": null,
   "complete": false,
   "envelope_errors": [],
-  "drift": null
+  "drift": null,
+  "handoff": null
 }
 ```
 
-`show --format json` emits the parsed document plus `hash`. `checks --format json` emits the registry. `list --format json` emits `[{"unit", "status", "workflow", "workflow_hash"}]`.
+`handoff` is `null` until the workflow is complete; then it is `{"policy", "candidates": [{"workflow", "recommended", "eligible", "checks": [...]}], "eligible": [...], "recommended": [...], "chosen"}`.
+
+`show --format json` emits the parsed document plus `hash`. `checks --format json` emits the registry. `list --format json` emits `[{"unit", "status", "workflow", "workflow_hash", "history"}]`. `handoff --format json` emits `{"unit", "from", "to", "workflow_hash", "policy", "history"}`.

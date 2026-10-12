@@ -124,3 +124,19 @@ def test_workflow_and_playbook_skills_coexist(tmp_path: Path, target: Path) -> N
     sync_project(target, installed)
     assert (target / ".agents/skills/devkit-workflow/SKILL.md").exists()
     assert (target / ".agents/skills/devkit-playbook/SKILL.md").exists()
+
+
+def test_generated_skills_are_shared_by_codex_and_antigravity(tmp_path: Path, target: Path) -> None:
+    from test_playbooks import make_bundle as make_playbook_bundle
+
+    installed = [make_bundle(tmp_path, "team"), make_playbook_bundle(tmp_path, "ops")]
+    update_config(target, presets={"team": ["all"], "ops": ["all"]}, agents=["codex", "antigravity"])
+    result = sync_project(target, installed)
+    paths = [a["path"] for a in result["actions"]]
+    for name in ("devkit-workflow", "devkit-playbook"):
+        assert paths.count(f".agents/skills/{name}/SKILL.md") == 1
+        assert (target / f".agents/skills/{name}/agents/openai.yaml").exists()  # Codex policy file
+    # Antigravity alone gets the same SKILL.md without the Codex policy file.
+    sync_project(target, installed, agents=["antigravity"])
+    assert (target / ".agents/skills/devkit-workflow/SKILL.md").exists()
+    assert not (target / ".agents/skills/devkit-workflow/agents/openai.yaml").exists()

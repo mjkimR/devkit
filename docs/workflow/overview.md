@@ -113,6 +113,18 @@ integration = "ask"
 
 `--given` is the only way to assert a human or runner check. The CLI never writes an approval file and never infers approval from conversation. Raising a gate later is a configuration change back to `ask`; lowering it is a change to `auto` or `off`. The workflow definition does not change in either case.
 
+### The `handoff` Gate
+
+Workflows are segments: a definition's `next` list names the workflows that may continue a completed unit ([Definitions, Handoff Candidates](definition-and-checks.md#handoff-candidates)). The reserved gate name `handoff` governs who picks:
+
+| Policy | Behavior |
+| --- | --- |
+| `ask` (default) | `next` lists every candidate with its eligibility and recommendation and reports `[WAITING: human handoff]`. The executor presents them, and after the user's choice runs `handoff --unit DIR --workflow <id>`; the choice must be an eligible candidate. |
+| `auto` | The first candidate whose `when` checks all hold is `chosen=`; `handoff --unit DIR` rebinds to it without a choice. With no eligible candidate the engine waits for a person, and `handoff` without `--workflow` fails with `HANDOFF_UNDECIDED`. |
+| `off` | No handoff is offered; the unit is finished when its workflow completes. |
+
+`handoff` records the finished segment in the anchor's `workflow_history` and binds the unit to the chosen workflow, whose stages are then evaluated from the start against the same unit directory.
+
 ---
 
 ## 5. CLI Surface
@@ -121,7 +133,8 @@ integration = "ask"
 agent-workflow new <slug> [--workflow ID] [--date YYYY-MM-DD]   # create a unit from the layout template and bind it
 agent-workflow bind --unit DIR [--workflow ID]                  # record or refresh the binding (accepts drift)
 agent-workflow next --unit DIR [--given NAME]... [--no-lint] [--format text|json]
-agent-workflow show <ID|PATH> [--format text|json]              # print a definition's stages and hash
+agent-workflow handoff --unit DIR [--workflow ID] [--date YYYY-MM-DD]  # continue a completed unit with a next candidate
+agent-workflow show <ID|PATH> [--format text|json]              # print a definition's stages, hash and next candidates
 agent-workflow checks [--format text|json]                      # registered check names, classes and parameters
 agent-workflow validate [PATH]...                               # validate definitions (default: definitions_dir)
 agent-workflow list [--format text|json]                        # discovered units with status and binding
@@ -138,6 +151,8 @@ Errors are reported on stderr as Agent Advisory Protocol blocks from the `agent-
 | `WORKFLOW_NOT_SELECTED`, `WORKFLOW_NOT_FOUND`, `WORKFLOW_INVALID` | `INPUT_ERROR` | no definition chosen, none matches, or the chosen one fails validation (problems become `[DETAIL]` lines) |
 | `UNIT_NOT_FOUND`, `UNIT_EXISTS`, `ANCHOR_INVALID` | `INPUT_ERROR` | the unit directory has no anchor, already exists, or its frontmatter is unreadable |
 | `SLUG_INVALID`, `DATE_INVALID`, `GIVEN_INVALID`, `KIND_INVALID` | `INPUT_ERROR` | a flag or argument is malformed |
+| `HANDOFF_NOT_READY`, `HANDOFF_NONE`, `HANDOFF_OFF` | `INPUT_ERROR` | the unit's workflow is not complete, declares no `next`, or handoff is disabled by policy |
+| `HANDOFF_CHOICE_REQUIRED`, `HANDOFF_UNDECIDED`, `HANDOFF_INVALID`, `HANDOFF_INELIGIBLE` | `INPUT_ERROR` | `ask` needs `--workflow`; `auto` found no eligible candidate; the choice is not a candidate, or its `when` checks fail (details list the candidates) |
 | `WORKFLOW_DRIFT` | `BLOCKED` | the bound schema hash changed under in-flight work; `[FIX]` names the `bind` command |
 | `LINT_FAILED` | `MAINTENANCE` | `agent-rule-engine` raised a rule execution error during `lint-clean` |
 
@@ -149,7 +164,7 @@ Output contracts are specified in [Workflow Definitions and Checks, section 5](d
 
 - **Lint check.** The `lint-clean` check runs `agent-rule-engine` in the `linter` phase on the files of the work unit, honoring the project's `[rules]` policy (phase and severity overrides, typed settings) and loading the rules that `devkit sync` recorded in the installation receipt. Violations are reported in the check detail; a rule execution or loading error fails the command.
 - **Workflow definitions as assets.** A bundle declares `kind = "workflow"` assets (one Markdown definition each). `devkit sync` places them under `.devkit/managed/<bundle>/` and records their paths in the installation receipt under `entrypoints`. The engine discovers definitions from two sources: the project's `definitions_dir`, and every workflow asset in `.devkit/installation.json`. A project definition with the same `id` shadows the synchronized one, so a repository can adapt a distributed workflow without editing managed files. `agent-workflow validate` with no arguments covers both sources.
-- **Entry skill.** When at least one workflow asset is synchronized, `devkit sync` generates the shared `devkit-workflow` skill and projects it into every selected agent's skill directory, exactly as it does for `devkit-playbook`. The skill tells the agent to run `agent-workflow next --unit <dir>`, treat `[STAGE]` as the diagnosed stage, open the skill named by `[NEXT_SKILL]`, and never pass `--given` for an approval it did not receive. It is identical for every host; Codex gets `allow_implicit_invocation: true` because the agent should pick it up whenever a task follows a workflow. Repositories that use no workflow never see the skill.
+- **Entry skill.** When at least one workflow asset is synchronized, `devkit sync` generates the shared `devkit-workflow` skill and projects it into every selected agent's skill directory, exactly as it does for `devkit-playbook`. The skill tells the agent to run `agent-workflow next --unit <dir>`, treat `[STAGE]` as the diagnosed stage, open the skill named by `[NEXT_SKILL]`, never pass `--given` for an approval it did not receive, and on `[HANDOFF]` present the candidates and run `handoff` only after the user's choice (or immediately under `policy=auto`). It is identical for every host; Codex gets `allow_implicit_invocation: true` because the agent should pick it up whenever a task follows a workflow. Repositories that use no workflow never see the skill.
 - **Subagent delegation.** `[DELEGATE: role=<role> isolation=<level>]` names a role; the host's projected subagent file for that role is the contract. A bundle ships the role as a `kind = "subagent"` asset, either as native files per agent or as one host-neutral role contract that `devkit sync` renders for each selected agent (see [Agent Projections](../distribution/agent-projections.md)). The engine does not resolve host paths.
 
 ---

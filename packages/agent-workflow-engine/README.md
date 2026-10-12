@@ -36,6 +36,7 @@ just workflow new login-flow                          # create and bind a unit
 just workflow next --unit .devkit/transient/work/login-flow
 just workflow next --unit <dir> --given integration   # assert a gate after the user's OK
 just workflow next --unit <dir> --format json
+just workflow handoff --unit <dir> --workflow spec-driven  # continue a completed unit with a next candidate
 just workflow show direct-delivery
 just workflow list
 just workflow envelope new --unit <dir> --kind review
@@ -69,12 +70,21 @@ default = "direct-delivery"           # used by `new` and by unbound units
 [workflow.approvals]
 direction = "auto"                    # ask (default) | auto | off
 integration = "ask"
+handoff = "ask"                       # reserved: who picks the next workflow of a completed unit
 ```
 
 `ask` keeps a gated stage current until `next --given <gate>` is passed after
 the user's approval. `auto` passes the gate by policy and records it in the
 output. `off` skips the stage. Lowering or raising a gate later is a change to
 this table only.
+
+Workflows chain. A definition's `next` list names candidate workflows with
+`when` preconditions (check syntax) and a `recommended` flag. Once a unit
+completes its workflow, `next` prints `[HANDOFF]` and one `[CANDIDATE]` line
+per candidate with its eligibility. Under `handoff = "ask"` a person chooses
+and the agent runs `handoff --unit <dir> --workflow <id>`; under `"auto"` the
+first eligible candidate is chosen and `handoff --unit <dir>` rebinds the unit
+to it, recording the finished segment in the anchor's `workflow_history`.
 
 ## Workflow definitions
 
@@ -85,8 +95,9 @@ with the same id. Bundles that ship a workflow also get the generated
 `devkit-workflow` entry skill, so an agent knows to run `next`.
 
 A definition declares `id`, `schema_version: 1`, optional `checks` (runner or
-human checks it introduces) and ordered `stages`, each with `exit` checks,
-`skills`, `role`, `isolation`, `human_gate` and `returns`. Checks are
+human checks it introduces), ordered `stages`, each with `exit` checks,
+`skills`, `role`, `isolation`, `human_gate` and `returns`, and an optional
+`next` list of handoff candidates. Checks are
 `name` or `name(arg ...)` from `agent-workflow checks`; aliases such as
 `anchor-exists`, `tasks-all-checked` and `envelope-review-passed` resolve
 against the configured anchor. `lint-clean` runs `agent-rule-engine` on the

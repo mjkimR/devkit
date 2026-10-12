@@ -46,6 +46,18 @@ class Return:
 
 
 @dataclass(frozen=True)
+class Candidate:
+    """A workflow this one may hand the unit to once it is complete."""
+
+    workflow: str
+    when: tuple[str, ...] = ()  # check references that must hold for the candidate to be eligible
+    recommended: bool = False
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"workflow": self.workflow, "when": list(self.when), "recommended": self.recommended}
+
+
+@dataclass(frozen=True)
 class Stage:
     id: str
     name: str = ""
@@ -85,6 +97,7 @@ class WorkflowDocument:
     schema_version: int = SCHEMA_VERSION
     declared_checks: tuple[Check, ...] = ()
     stages: tuple[Stage, ...] = ()
+    next: tuple[Candidate, ...] = ()
     path: Path | None = None
     # Unknown keys per stage, aligned with ``stages`` by index.
     unknown_keys: tuple[tuple[str, ...], ...] = field(default=(), compare=False)
@@ -101,6 +114,7 @@ class WorkflowDocument:
             "path": self.path.as_posix() if self.path else None,
             "checks": [c.to_dict() for c in self.declared_checks],
             "stages": [s.to_dict() for s in self.stages],
+            "next": [c.to_dict() for c in self.next],
             "hash": schema_hash(self),
         }
 
@@ -188,6 +202,27 @@ def _declared(raw: Any) -> tuple[Check, ...]:
     return tuple(out)
 
 
+def _candidates(raw: Any) -> tuple[Candidate, ...]:
+    if raw is None:
+        return ()
+    if not isinstance(raw, list):
+        raise DefinitionError("next: expected a list of candidate mappings")
+    out: list[Candidate] = []
+    for i, item in enumerate(raw):
+        if not isinstance(item, dict):
+            raise DefinitionError(f"next[{i}]: expected a mapping with workflow, when, recommended")
+        if unknown := set(item) - {"workflow", "when", "recommended"}:
+            raise DefinitionError(f"next[{i}]: unknown keys {sorted(unknown)}")
+        workflow = item.get("workflow")
+        if not isinstance(workflow, str) or not workflow:
+            raise DefinitionError(f"next[{i}].workflow: expected a nonempty string")
+        recommended = item.get("recommended", False)
+        if not isinstance(recommended, bool):
+            raise DefinitionError(f"next[{i}].recommended: expected true or false")
+        out.append(Candidate(workflow, _str_list(item.get("when"), f"next[{i}].when"), recommended))
+    return tuple(out)
+
+
 def parse(text: str, path: Path | None = None) -> WorkflowDocument:
     front, _ = frontmatter.split(text)
     if front is None:
@@ -214,6 +249,7 @@ def parse(text: str, path: Path | None = None) -> WorkflowDocument:
         schema_version=version if isinstance(version, int) else 0,
         declared_checks=_declared(data.get("checks")),
         stages=stages,
+        next=_candidates(data.get("next")),
         path=path,
         unknown_keys=unknown_keys,
     )
@@ -230,8 +266,15 @@ def load(path: Path) -> WorkflowDocument:
         raise DefinitionError(f"{path}: {exc}") from exc
 
 
-def validate(doc: WorkflowDocument, anchor: str) -> list[Problem]:
-    """Every problem in the document; an empty list means it is usable."""
+HANDOFF_GATE = "handoff"
+
+
+def validate(doc: WorkflowDocument, anchor: str, known_ids: Iterable[str] | None = None) -> list[Problem]:
+    """Every problem in the document; an empty list means it is usable.
+
+    ``known_ids`` are the workflow ids that exist in the workspace; when given,
+    a ``next`` candidate naming another id is reported.
+    """
     problems: list[Problem] = []
     if not WORKFLOW_ID.match(doc.id):
         problems.append(Problem("", "id", f"{doc.id!r} must match [a-z][a-z0-9-]*"))
@@ -254,6 +297,8 @@ def validate(doc: WorkflowDocument, anchor: str) -> list[Problem]:
             problems.append(Problem(s.id, key, "unknown stage key"))
         if s.isolation not in ISOLATIONS:
             problems.append(Problem(s.id, "isolation", f"{s.isolation!r} not in {'|'.join(ISOLATIONS)}"))
+        if s.gate == HANDOFF_GATE:
+            problems.append(Problem(s.id, "human_gate", f"{HANDOFF_GATE!r} is reserved for workflow handoff"))
         for fld in ("entry", "exit"):
             for ref in getattr(s, fld):
                 try:
@@ -267,6 +312,24 @@ def validate(doc: WorkflowDocument, anchor: str) -> list[Problem]:
                 problems.append(Problem(s.id, f"returns[{i}].to", f"unknown stage {r.to!r}"))
             if not r.when:
                 problems.append(Problem(s.id, f"returns[{i}].when", "missing reason"))
+    known = set(known_ids) if known_ids is not None else None
+    seen_candidates: set[str] = set()
+    for i, c in enumerate(doc.next):
+        where = f"next[{i}]"
+        if not WORKFLOW_ID.match(c.workflow):
+            problems.append(Problem("", f"{where}.workflow", f"{c.workflow!r} must match [a-z][a-z0-9-]*"))
+        elif c.workflow == doc.id:
+            problems.append(Problem("", f"{where}.workflow", "a workflow cannot hand off to itself"))
+        elif known is not None and c.workflow not in known:
+            problems.append(Problem("", f"{where}.workflow", f"unknown workflow {c.workflow!r}"))
+        if c.workflow in seen_candidates:
+            problems.append(Problem("", f"{where}.workflow", f"duplicate candidate {c.workflow!r}"))
+        seen_candidates.add(c.workflow)
+        for ref in c.when:
+            try:
+                registry.resolve_name(ref)
+            except CheckError as exc:
+                problems.append(Problem("", f"{where}.when", str(exc)))
     return problems
 
 

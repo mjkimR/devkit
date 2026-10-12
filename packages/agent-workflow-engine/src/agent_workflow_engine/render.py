@@ -27,6 +27,20 @@ def render_result(res: Result) -> str:
     stage = res.stage
     if stage is None:
         lines.append("[STAGE: - complete=true]")
+        if res.handoff:
+            h = res.handoff
+            lines.append(
+                f"[HANDOFF: policy={h.policy} candidates={_dash(' '.join(c.workflow for c in h.candidates))} "
+                f"eligible={_dash(' '.join(h.eligible))} recommended={_dash(' '.join(h.recommended))} "
+                f"chosen={_dash(h.chosen or '')}]"
+            )
+            for c in h.candidates:
+                when = " ".join(f"{k.name}={str(k.satisfied).lower()}" for k in c.checks)
+                lines.append(
+                    f"[CANDIDATE: {c.workflow} eligible={_yn(c.eligible)} recommended={_yn(c.recommended)} when={_dash(when)}]"
+                )
+            if res.waiting:
+                lines.append(f"[WAITING: {res.waiting.class_.value} {' '.join(res.waiting.checks)}]")
     else:
         lines.append(
             f"[STAGE: {stage.id} human_gate={_dash(stage.gate or '')} role={_dash(stage.role)} isolation={_dash(stage.isolation)}]"
@@ -71,4 +85,6 @@ def render_document(doc: WorkflowDocument, approvals: dict[str, str] | None = No
         lines.append(f"[SKILLS: {_dash(' '.join(s.skills))}]")
         if s.returns:
             lines.append(f"[RETURNS: {'; '.join(f'{r.to} when={r.when}' for r in s.returns)}]")
+    for c in doc.next:
+        lines.append(f"[NEXT: {c.workflow} recommended={_yn(c.recommended)} when={_dash(' '.join(c.when))}]")
     return "\n".join(lines) + "\n"

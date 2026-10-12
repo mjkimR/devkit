@@ -12,10 +12,11 @@ import click
 from agent_advisory import Actor, AdvisoryError, Retry, as_advisory_error
 
 from agent_workflow_engine import frontmatter
-from agent_workflow_engine.binding import Binding, read_binding, write_binding
+from agent_workflow_engine.binding import Binding, HistoryEntry, read_binding, write_binding
 from agent_workflow_engine.checks import Registry
 from agent_workflow_engine.config import CONFIG_PATH, ConfigError, WorkflowConfig, load_workflow_config
 from agent_workflow_engine.definition import (
+    HANDOFF_GATE,
     DefinitionError,
     WorkflowDocument,
     discover,
@@ -124,6 +125,10 @@ class _Env:
                 fix="Repair the anchor's YAML frontmatter",
             ) from exc
 
+    def known_ids(self) -> set[str]:
+        docs, _ = discover(self.root, self.definitions_dir)
+        return {d.id for d in docs}
+
     def definition(self, ref: str | None, binding: Binding | None = None) -> WorkflowDocument:
         chosen = ref or (binding.workflow if binding and binding.workflow else None) or self.config.default
         if not chosen:
@@ -140,7 +145,7 @@ class _Env:
                 code="WORKFLOW_NOT_FOUND",
                 fix=f"Add a definition with id {chosen!r} under {self.config.definitions_dir}, sync a bundle that ships it, or pass --workflow <path>",
             ) from exc
-        problems = validate(doc, self.config.anchor)
+        problems = validate(doc, self.config.anchor, self.known_ids() | {doc.id})
         if problems:
             raise WorkflowError.invalid_input(
                 f"workflow {doc.id} is invalid",
@@ -185,6 +190,35 @@ def _lint_func(root: Path, files: list[str]) -> list[str]:
 
 def _echo_json(data: object) -> None:
     click.echo(json.dumps(data, indent=2))
+
+
+def _evaluate_unit(env: _Env, doc: WorkflowDocument, unit_dir: Path, given: tuple[str, ...], no_lint: bool) -> Any:
+    """Evaluate ``unit_dir`` against ``doc``; refuse drift under in-flight work."""
+    opts = Options(
+        workspace_root=env.root,
+        unit_dir=unit_dir,
+        anchor=env.config.anchor,
+        approvals=dict(env.config.approvals),
+        given=tuple(given),
+        lint=_lint_func,
+        skip_lint=no_lint,
+        ancestor=is_ancestor,
+    )
+    try:
+        result = evaluate(doc, opts)
+    except UnitNotFoundError as exc:
+        raise WorkflowError.invalid_input(str(exc), code="UNIT_NOT_FOUND") from exc
+
+    if result.drift and not is_completed(result):
+        raise WorkflowError.blocked(
+            "the bound stage schema changed under in-flight work",
+            f"recorded={result.drift.recorded}",
+            f"current={result.drift.current}",
+            code="WORKFLOW_DRIFT",
+            target_files=[env.rel(unit_dir / env.config.anchor)],
+            fix=f"Review the change to {doc.id}, then run `agent-workflow bind --unit {env.rel(unit_dir)}` to accept it",
+        )
+    return result
 
 
 @click.group(name="agent-workflow")
@@ -285,30 +319,7 @@ def next_cmd(
                 fix=f"Use a gate name ({', '.join(sorted(gates)) or 'none'}) or a runner/human check from `agent-workflow checks`",
             )
 
-    opts = Options(
-        workspace_root=env.root,
-        unit_dir=unit_dir,
-        anchor=env.config.anchor,
-        approvals=dict(env.config.approvals),
-        given=tuple(given),
-        lint=_lint_func,
-        skip_lint=no_lint,
-        ancestor=is_ancestor,
-    )
-    try:
-        result = evaluate(doc, opts)
-    except UnitNotFoundError as exc:
-        raise WorkflowError.invalid_input(str(exc), code="UNIT_NOT_FOUND") from exc
-
-    if result.drift and not is_completed(result):
-        raise WorkflowError.blocked(
-            "the bound stage schema changed under in-flight work",
-            f"recorded={result.drift.recorded}",
-            f"current={result.drift.current}",
-            code="WORKFLOW_DRIFT",
-            target_files=[env.rel(unit_dir / env.config.anchor)],
-            fix=f"Review the change to {doc.id}, then run `agent-workflow bind --unit {env.rel(unit_dir)}` to accept it",
-        )
+    result = _evaluate_unit(env, doc, unit_dir, given, no_lint)
 
     if output_format.lower() == "json":
         _echo_json(result.to_dict())
@@ -324,6 +335,116 @@ def next_cmd(
         )
 
 
+@cli.command(name="handoff")
+@WORKSPACE
+@UNIT
+@click.option(
+    "--workflow",
+    "workflow_ref",
+    default=None,
+    help="Candidate to continue with (required under approvals.handoff=ask; optional under auto)",
+)
+@click.option(
+    "--date", "when", default=None, help="Completion date recorded in the history, YYYY-MM-DD (default: today)"
+)
+@click.option("--no-lint", is_flag=True, help="Skip lint-class checks while confirming completion")
+@FORMAT
+@_boundary
+def handoff_cmd(
+    workspace_root: str, unit: str, workflow_ref: str | None, when: str | None, no_lint: bool, output_format: str
+) -> None:
+    """Hand a completed unit to one of its workflow's ``next`` candidates and rebind it."""
+    env = _Env(workspace_root)
+    unit_dir = env.require_unit(unit)
+    binding = env.binding(unit_dir)
+    doc = env.definition(None, binding)
+    try:
+        day = date.fromisoformat(when) if when else date.today()
+    except ValueError as exc:
+        raise WorkflowError.invalid_input(f"--date: {exc}", code="DATE_INVALID", fix="Pass --date YYYY-MM-DD") from exc
+
+    result = _evaluate_unit(env, doc, unit_dir, (), no_lint)
+    unit_rel = env.rel(unit_dir)
+    if not result.complete:
+        raise WorkflowError.invalid_input(
+            f"unit {unit_rel} has not completed workflow {doc.id}: stage {result.stage.id} is current",  # type: ignore[union-attr]
+            *(f"unmet={u.name}" for u in result.unmet),
+            code="HANDOFF_NOT_READY",
+            fix=f"Finish the current stage (`agent-workflow next --unit {unit_rel}`) before handing off",
+        )
+    handoff = result.handoff
+    policy = env.config.policy(HANDOFF_GATE)
+    if not doc.next:
+        raise WorkflowError.invalid_input(
+            f"workflow {doc.id} declares no next candidates",
+            code="HANDOFF_NONE",
+            fix=f"Add a `next` list to {doc.id}, or start a new unit with `agent-workflow new`",
+        )
+    if handoff is None or policy == "off":
+        raise WorkflowError.invalid_input(
+            f"handoff is disabled by policy (approvals.{HANDOFF_GATE}=off)",
+            code="HANDOFF_OFF",
+            fix=f"Set [workflow.approvals].{HANDOFF_GATE} to ask or auto in {CONFIG_PATH}",
+        )
+    by_id = {c.workflow: c for c in handoff.candidates}
+    if workflow_ref is None:
+        if handoff.chosen is None:
+            if policy == "auto":
+                raise WorkflowError.invalid_input(
+                    f"no candidate of {doc.id} is eligible for automatic handoff",
+                    *(
+                        f"{c.workflow}: " + ", ".join(f"{k.name}={str(k.satisfied).lower()}" for k in c.checks)
+                        for c in handoff.candidates
+                    ),
+                    code="HANDOFF_UNDECIDED",
+                    fix="Satisfy a candidate's `when` checks, or choose one explicitly with --workflow <id>",
+                )
+            raise WorkflowError.invalid_input(
+                f"handoff from {doc.id} requires a choice (approvals.{HANDOFF_GATE}=ask)",
+                *(
+                    f"{c.workflow}: eligible={str(c.eligible).lower()} recommended={str(c.recommended).lower()}"
+                    for c in handoff.candidates
+                ),
+                code="HANDOFF_CHOICE_REQUIRED",
+                fix="Present the candidates to the user and rerun with --workflow <id> after their choice",
+            )
+        chosen = handoff.chosen
+    else:
+        candidate = by_id.get(workflow_ref)
+        if candidate is None:
+            raise WorkflowError.invalid_input(
+                f"{workflow_ref!r} is not a next candidate of {doc.id}",
+                code="HANDOFF_INVALID",
+                fix=f"Choose one of: {', '.join(by_id)}",
+            )
+        if not candidate.eligible:
+            raise WorkflowError.invalid_input(
+                f"candidate {workflow_ref!r} is not eligible: its preconditions do not hold",
+                *(f"{k.name}={str(k.satisfied).lower()} {k.detail}".rstrip() for k in candidate.checks),
+                code="HANDOFF_INELIGIBLE",
+                fix="Satisfy the candidate's `when` checks first, or choose another candidate",
+            )
+        chosen = workflow_ref
+
+    target = env.definition(chosen)
+    history = (*binding.history, HistoryEntry(doc.id, binding.hash or schema_hash(doc), day.isoformat()))
+    new_binding = Binding(target.id, schema_hash(target), history)
+    write_binding(unit_dir / env.config.anchor, new_binding)
+    payload = {
+        "unit": unit_rel,
+        "from": doc.id,
+        "to": target.id,
+        "workflow_hash": new_binding.hash,
+        "policy": policy,
+        "history": [h.to_dict() for h in history],
+    }
+    if output_format.lower() == "json":
+        _echo_json(payload)
+    else:
+        click.echo(f"[HANDOFF: from={doc.id} to={target.id} hash={new_binding.hash} policy={policy}]")
+        click.echo(f"[HISTORY: {' '.join(h.workflow for h in history)}]")
+
+
 @cli.command(name="show")
 @WORKSPACE
 @click.argument("ref", type=str)
@@ -336,7 +457,7 @@ def show_cmd(workspace_root: str, ref: str, output_format: str) -> None:
         doc = resolve(env.definitions_dir, ref, env.root)
     except DefinitionError as exc:
         raise WorkflowError.invalid_input(str(exc), code="WORKFLOW_NOT_FOUND") from exc
-    problems = validate(doc, env.config.anchor)
+    problems = validate(doc, env.config.anchor, env.known_ids() | {doc.id})
     if output_format.lower() == "json":
         data = doc.to_dict()
         data["problems"] = [str(p) for p in problems]
@@ -388,13 +509,14 @@ def validate_cmd(workspace_root: str, paths: tuple[str, ...]) -> None:
                 batches.append(([resolve(env.definitions_dir, str(target), env.root)], []))
             except DefinitionError as exc:
                 batches.append(([], [str(exc)]))
+    known = env.known_ids() | {doc.id for docs, _ in batches for doc in docs}
     for docs, errors in batches:
         for err in errors:
             failed = True
             click.secho(f"[INVALID: {err}]", fg="red")
         for doc in docs:
             seen += 1
-            problems = validate(doc, env.config.anchor)
+            problems = validate(doc, env.config.anchor, known)
             where = env.rel(doc.path) if doc.path else doc.id
             if problems:
                 failed = True
@@ -430,6 +552,7 @@ def list_cmd(workspace_root: str, output_format: str) -> None:
                 "status": frontmatter.field(data, "status") or None,
                 "workflow": binding.workflow or None,
                 "workflow_hash": binding.hash or None,
+                "history": " ".join(h.workflow for h in binding.history) or None,
             }
         )
     if output_format.lower() == "json":

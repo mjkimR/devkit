@@ -36,6 +36,14 @@ never derive it from files yourself.
    command the `[FIX]` line names.
 6. After each stage, rerun `next` to confirm progress before reporting. Report
    the stage you reached and anything the output listed as unmet.
+7. Hand off when the workflow is complete. `[STAGE: - complete=true]` followed
+   by `[HANDOFF: policy=ask ...]` lists the workflows this unit may continue
+   with; `[CANDIDATE]` lines say which are eligible and recommended. Present
+   them to the user, and only after their choice run
+   `uv run agent-workflow handoff --unit <dir> --workflow <id>`. Under
+   `policy=auto` with a `chosen=` value, run `uv run agent-workflow handoff
+   --unit <dir>` and report which candidate was chosen and why. Then continue
+   with `next`. No `[HANDOFF]` line means the unit is finished.
 """
 
 

@@ -26,7 +26,7 @@ from agent_workflow_engine.checks import (
     Registry,
     count_tasks,
 )
-from agent_workflow_engine.definition import Stage, WorkflowDocument, schema_hash
+from agent_workflow_engine.definition import HANDOFF_GATE, Stage, WorkflowDocument, schema_hash
 from agent_workflow_engine.envelope import Envelopes, load_envelopes
 from agent_workflow_engine.git import REVISION
 
@@ -119,6 +119,53 @@ class Drift:
         return {"recorded": self.recorded, "current": self.current}
 
 
+@dataclass(frozen=True)
+class CandidateResult:
+    workflow: str
+    recommended: bool
+    eligible: bool
+    checks: tuple[CheckResult, ...]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "workflow": self.workflow,
+            "recommended": self.recommended,
+            "eligible": self.eligible,
+            "checks": [c.to_dict() for c in self.checks],
+        }
+
+
+@dataclass(frozen=True)
+class Handoff:
+    """The handoff decision once the bound workflow is complete.
+
+    ``chosen`` is set only under ``policy=auto`` when an eligible candidate
+    exists; under ``ask`` a person picks, and with no eligible candidate the
+    engine falls back to asking.
+    """
+
+    policy: str
+    candidates: tuple[CandidateResult, ...]
+    chosen: str | None = None
+
+    @property
+    def eligible(self) -> tuple[str, ...]:
+        return tuple(c.workflow for c in self.candidates if c.eligible)
+
+    @property
+    def recommended(self) -> tuple[str, ...]:
+        return tuple(c.workflow for c in self.candidates if c.recommended and c.eligible)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "policy": self.policy,
+            "candidates": [c.to_dict() for c in self.candidates],
+            "eligible": list(self.eligible),
+            "recommended": list(self.recommended),
+            "chosen": self.chosen,
+        }
+
+
 @dataclass
 class Result:
     workflow: str
@@ -136,6 +183,7 @@ class Result:
     envelope_errors: list[Any] = field(default_factory=list)
     drift: Drift | None = None
     lint_error: str | None = None
+    handoff: Handoff | None = None
 
     @property
     def complete(self) -> bool:
@@ -159,6 +207,7 @@ class Result:
             "envelope_errors": [e.to_dict() for e in self.envelope_errors],
             "drift": self.drift.to_dict() if self.drift else None,
             "lint_error": self.lint_error,
+            "handoff": self.handoff.to_dict() if self.handoff else None,
         }
 
 
@@ -320,6 +369,20 @@ def _waiting_for(stage: Stage, unmet: list[CheckResult]) -> Waiting | None:
     return Waiting(class_, tuple(names))
 
 
+def _handoff(doc: WorkflowDocument, ev: _Evaluator, policy: str) -> Handoff | None:
+    """Evaluate every ``next`` candidate's preconditions and apply the handoff policy."""
+    if not doc.next or policy == "off":
+        return None
+    results: list[CandidateResult] = []
+    for cand in doc.next:
+        checks = tuple(ev.eval_ref(ref) for ref in cand.when)
+        results.append(CandidateResult(cand.workflow, cand.recommended, all(c.satisfied for c in checks), checks))
+    chosen = None
+    if policy == "auto":
+        chosen = next((c.workflow for c in results if c.eligible), None)
+    return Handoff(policy, tuple(results), chosen)
+
+
 def evaluate(doc: WorkflowDocument, opts: Options) -> Result:
     """Compute the current stage of a unit against a workflow document."""
     anchor_path = opts.unit_dir / opts.anchor
@@ -371,6 +434,11 @@ def evaluate(doc: WorkflowDocument, opts: Options) -> Result:
             res.gate = Gate(stage.gate, policy, stage.gate in ev.given)
         res.waiting = _waiting_for(stage, unmet)
         break
+
+    if res.stage is None:
+        res.handoff = _handoff(doc, ev, opts.approvals.get(HANDOFF_GATE, "ask"))
+        if res.handoff is not None and res.handoff.chosen is None:
+            res.waiting = Waiting(CheckClass.HUMAN, (HANDOFF_GATE,))
 
     res.lint_error = ev.lint_error
     return res
