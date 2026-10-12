@@ -1,0 +1,22 @@
+schema = 1
+name = "agent-advisory"
+version = "0.1.0"
+default_preset = "core"
+
+[[assets]]
+id = "error-advisory"
+kind = "instruction"
+source = "instructions/error-advisory.md"
+
+[[assets]]
+id = "error-advisory-python"
+kind = "instruction"
+source = "instructions/error-advisory-python.md"
+
+# Language-agnostic protocol and authoring rules for any repository.
+[presets.core]
+assets = ["error-advisory"]
+
+# Adds the agent_advisory Python library guide.
+[presets.python]
+assets = ["error-advisory", "error-advisory-python"]

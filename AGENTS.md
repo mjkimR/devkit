@@ -10,10 +10,16 @@ Personal developer tools monorepo.
 - Write all documentation, architecture specifications, and guide materials in English.
 - Do not commit `.env`, log secrets/PII, or commit/push without explicit instructions.
 
+## Compatibility
+
+- No external consumers exist yet. Breaking changes to schemas (`bundle.toml`, `.devkit/config.toml`, `.devkit/installation.json`), CLI commands, and APIs may be made in place: do not bump schema versions or add migration paths, deprecation shims, or legacy readers.
+- Once a real consumer exists, delete this section and treat these formats as versioned contracts that require migrations.
+
 ## Packages
 
 Keep package descriptions in this guide to a high-level summary of their purpose. Do not add package-specific configurations or detailed architectural explanations here; refer to the respective package's `README.md` when deeper details are needed:
 
+- `agent-advisory`: Agent Advisory Protocol implementation (current scope: error advisories only) plus a bundle that installs its language-agnostic and Python authoring guides. See [packages/agent-advisory/README.md](packages/agent-advisory/README.md).
 - `agent-rule-engine`: Agent-managed rule and repository governance engine. See [packages/agent-rule-engine/README.md](packages/agent-rule-engine/README.md).
 - `devkit-distribution`: CLI tool (`devkit`) and runtime for packaging and synchronizing agent asset bundles across workspaces. See [packages/devkit-distribution/README.md](packages/devkit-distribution/README.md).
 - `devkit-starter`: Example resource package demonstrating bundle packaging and distribution. See [packages/devkit-starter/README.md](packages/devkit-starter/README.md).

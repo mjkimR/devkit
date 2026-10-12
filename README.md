@@ -7,6 +7,7 @@ Personal developer tools monorepo.
 ```text
 devkit/
 ├── packages/
+│   ├── agent-advisory/        # Agent Advisory Protocol errors and their authoring guide bundle
 │   ├── agent-rule-engine/     # Agent-managed rule & governance engine with built-in CLI
 │   ├── devkit-distribution/   # Installed resource synchronization (devkit CLI)
 │   └── devkit-starter/        # Example content wheel for devkit sync

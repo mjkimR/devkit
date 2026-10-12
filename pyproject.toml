@@ -27,6 +27,7 @@ venv = ".venv"
 pythonVersion = "3.12"
 typeCheckingMode = "basic"
 extraPaths = [
+    "./packages/agent-advisory/src",
     "./packages/agent-rule-engine/src",
     "./packages/devkit-distribution/src",
     "./packages/devkit-starter/src",

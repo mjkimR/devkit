@@ -4,6 +4,7 @@ requires-python = ">=3.12"
 
 [manifest]
 members = [
+    "agent-advisory",
     "agent-rule-engine",
     "devkit-distribution",
     "devkit-starter",
@@ -17,6 +18,25 @@ dev = [
     { name = "pytest-asyncio", specifier = ">=0.23.0" },
     { name = "pytest-cov", specifier = ">=5.0.0" },
     { name = "ruff", specifier = ">=0.9.0" },
+]
+
+[[package]]
+name = "agent-advisory"
+version = "0.1.0"
+source = { editable = "packages/agent-advisory" }
+
+[package.dev-dependencies]
+dev = [
+    { name = "devkit-distribution" },
+    { name = "pytest" },
+]
+
+[package.metadata]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "devkit-distribution", editable = "packages/devkit-distribution" },
+    { name = "pytest", specifier = ">=8.0.0" },
 ]
 
 [[package]]
