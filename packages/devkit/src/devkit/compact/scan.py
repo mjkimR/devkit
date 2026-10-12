@@ -116,8 +116,11 @@ _NOISE = tuple(
         r"[+~-] [A-Za-z0-9][\w.\[\],-]*(?:==\S+(?: \(from .+\))?| @ \S+)",
     )
 )
-# pytest's section banners; a filtered section runs until the next banner.
+# pytest's section banners. A filtered section ends at the next banner, at its closing line (the
+# documentation link pytest prints last) or at a summary line: under -q the final summary has no banner,
+# and the output of a command run after pytest must not be filtered with the section.
 _BANNER = re.compile(r"={2,} (?P<title>.+?) ={2,}")
+_SECTION_END = "-- Docs: "
 _FILTERED_BANNERS = {"test session starts", "warnings summary"}
 _FILTERED_SECTIONS = {"warnings summary"}
 
@@ -299,10 +302,19 @@ class _Scanner:
             self.block.append(text)
             return
         self.close_block()
-        self.classify(prefix, oversized=not complete)
-        banner = _BANNER.fullmatch(text.strip())
+        summary = self.classify(prefix, oversized=not complete)
+        clean = text.strip()
+        banner = _BANNER.fullmatch(clean)
+        # pytest prints a section's end unindented; an indented or cut line inside the section never ends it.
+        ends = complete and text == clean
+        closing = ends and clean.startswith(_SECTION_END)
         if banner:
             self.section = banner["title"]
+        elif self.section in _FILTERED_SECTIONS and ends and (closing or summary):
+            self.section = ""
+            if closing:
+                self.filtered += 1
+                return
         if (banner and banner["title"] in _FILTERED_BANNERS) or self.section in _FILTERED_SECTIONS or is_filtered(text):
             self.filtered += 1
             return
@@ -334,7 +346,8 @@ class _Scanner:
         self.advisories.append(RelayedAdvisory(level, text))
         self.advisory_budget -= len(text) + 1
 
-    def classify(self, text: str, *, oversized: bool) -> None:
+    def classify(self, text: str, *, oversized: bool) -> bool:
+        """Record ``text`` as a warning or a summary; return whether it is a summary line."""
         clean = text.strip().strip("=").strip()
         if not clean:
             self.source = ""
@@ -342,17 +355,18 @@ class _Scanner:
             self.source = clean
         if warning := warning_message(clean, self.source):
             self.add_warning(*warning)
-            return
+            return False
         if oversized or not any(pattern.fullmatch(clean) for pattern in _SUMMARIES):
-            return
+            return False
         if clean.startswith("TOTAL"):
             clean = f"Coverage: {clean}"
         if len(clean) + 1 > self.summary_budget:
             self.omitted["summaries"] += 1
             self.summary_budget = 0
-            return
+            return True
         self.summaries.append(clean)
         self.summary_budget -= len(clean) + 1
+        return True
 
     def add_warning(self, message: str, location: str) -> None:
         if message in self.seen_warnings:

@@ -17,7 +17,8 @@ class CompactError(AdvisoryError):
 
 
 class CommandNotStartedError(CompactError):
-    """The command could not be started: it does not exist, or it is not executable (``INPUT_ERROR``)."""
+    """The command could not be started (``INPUT_ERROR``): there is none, it does not exist or is not
+    executable, or its working directory does not exist or cannot be entered."""
 
     code = "RUN_COMMAND_NOT_STARTED"
     input_error = True

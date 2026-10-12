@@ -319,6 +319,41 @@ def test_the_pytest_warnings_summary_is_filtered_but_its_warnings_are_reported()
     assert result.summaries == ("1 failed, 4 passed, 5 warnings in 0.01s",)
 
 
+@pytest.mark.parametrize("closing", ["-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n", ""])
+def test_the_warnings_summary_ends_without_a_banner_under_quiet(closing: str) -> None:
+    # pytest -q prints its final summary without a banner; what a recipe runs next must stay visible.
+    result = _scan(
+        "============================== warnings summary ===============================\n"
+        "tests/test_ok.py::test_ok\n"
+        "  /work/tests/test_ok.py:2: DeprecationWarning: old\n"
+        "\n"
+        f"{closing}"
+        "1 passed, 1 warning in 0.01s\n"
+        "src/app.py:3:1 - error: Cannot access attribute\n"
+        "1 error, 0 warnings, 0 informations\n"
+    )
+    assert result.output.splitlines() == [
+        "1 passed, 1 warning in 0.01s",
+        "src/app.py:3:1 - error: Cannot access attribute",
+        "1 error, 0 warnings, 0 informations",
+    ]
+    assert result.summaries == ("1 passed, 1 warning in 0.01s", "1 error, 0 warnings, 0 informations")
+
+
+def test_only_an_unindented_complete_line_ends_the_warnings_summary() -> None:
+    result = _scan(
+        "=============================== warnings summary ===============================\n"
+        "tests/test_a.py::test_a\n"
+        "  /work/tests/test_a.py:2: UserWarning: counts\n"
+        "    3 warnings\n"
+        "  " + "x" * (MAX_LINE + 10) + " 2 passed\n"
+        "  more warning detail\n"
+        "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"
+        "after\n"
+    )
+    assert result.output == "after\n"
+
+
 def test_warning_locations_outside_the_base_stay_absolute() -> None:
     result = _scan("/elsewhere/lib.py:3: UserWarning: x\n/work/app.py:1: UserWarning: y\n", base=["/work/"])
     assert [w.location for w in result.warnings] == ["/elsewhere/lib.py:3", "app.py:1"]

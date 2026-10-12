@@ -77,10 +77,18 @@ def run_command(
     ``slow_after`` (seconds, ``0`` off) adds a ``RUN_SLOW_COMMAND`` notice;
     ``notices=False`` drops relayed ``[NOTICE]`` blocks. The newest
     ``KEEP_LOGS`` logs of ``log_dir`` (default ``default_log_dir``) are kept.
-    Raises ``CommandNotStartedError`` when the command cannot be started.
+    Raises ``CommandNotStartedError`` when there is no command, the command
+    cannot be started, or the working directory cannot be entered.
     """
     argv = tuple(argv)
-    directory = (cwd or Path.cwd()).resolve()
+    if not argv:
+        raise CommandNotStartedError("no command to start", fix="Pass the command and its arguments")
+    try:
+        directory = (cwd or Path.cwd()).resolve()
+    except FileNotFoundError as error:  # the shell's current directory was removed
+        raise _directory_error(argv, os.environ.get("PWD", "."), "the current directory no longer exists") from error
+    if not directory.is_dir():
+        raise _directory_error(argv, str(directory), "not an existing directory")
     logs = log_dir or default_log_dir(directory)
     logs.mkdir(parents=True, exist_ok=True)
     _prune(logs, KEEP_LOGS - 1)
@@ -101,9 +109,11 @@ def run_command(
         except OSError as error:
             log.close()
             path.unlink(missing_ok=True)
-            raise CommandNotStartedError(
-                f"cannot start {argv[0]!r}: {error.strerror or error}", target_files=[argv[0]]
-            ) from error
+            reason = error.strerror or str(error)
+            # The child reports a failed chdir with the directory as filename, a failed exec with the command.
+            if error.filename is not None and Path(error.filename) == directory:
+                raise _directory_error(argv, str(directory), reason) from error
+            raise CommandNotStartedError(f"cannot start {argv[0]!r}: {reason}", target_files=[argv[0]]) from error
         with _signals_exit():
             try:
                 code = process.wait()
@@ -132,6 +142,14 @@ def run_command(
             )
         )
     return CommandRun(argv, code, path, duration, result, tuple(found))
+
+
+def _directory_error(argv: Sequence[str], directory: str, reason: str) -> CommandNotStartedError:
+    return CommandNotStartedError(
+        f"cannot start {argv[0]!r}: working directory {directory}: {reason}",
+        target_files=[directory],
+        fix="Run the command from an existing directory you can enter",
+    )
 
 
 def _slug(argv: Sequence[str]) -> str:

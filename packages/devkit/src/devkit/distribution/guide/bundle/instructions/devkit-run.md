@@ -37,8 +37,9 @@ enough, and read the part you need (`rg -n "<test name>" <log>`, `sed -n`), not
 the whole file.
 
 `devkit run` exits `0` when the command passed, `1` when it failed, and `2` when
-the command could not be started (`RUN_COMMAND_NOT_STARTED`: check the command
-name).
+the command could not be started (`RUN_COMMAND_NOT_STARTED`: `[TARGET]` names
+the command that does not exist, or the working directory that cannot be
+entered).
 
 ## Setting up recipes
 

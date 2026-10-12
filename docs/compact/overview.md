@@ -67,7 +67,7 @@ When an item does not fit its budget, it and every later item of that part are c
 
 - *Progress*: pytest's progress lines (`tests/test_a.py ..F.s [ 45%]`, the continuation lines of status characters, and the `[ 12/130]` count style), `-v` lines of tests that passed, were skipped or xfailed, pytest-xdist's `[gw0] [ 12%] PASSED ...` lines, the `PASSED <test>` lines `-rA` adds to the short summary, Vitest's and Playwright's `✓` (and skipped `↓`) item lines, Jest's `PASS <file>` lines and Playwright's dot reporter lines of `·` only; plus every state a carriage return overwrote.
 - *Noise*: pytest's session header (the `test session starts` banner and the `platform`, `rootdir`, `configfile`, `inifile`, `cachedir`, `testpaths` and `plugins` lines; `collected N items` stays), and uv's success messages (`Resolved`/`Prepared`/`Installed`/`Uninstalled`/`Audited`/`Downloaded N packages in ...`, `Building`/`Built <package> @ <source>`, `Downloading <package> (<size>)`, and the ` + pkg==1.2` / ` - pkg==1.2` / ` ~ pkg==1.2 (from ...)` lines). uv's `error:` and `× No solution found` lines stay.
-- *Repeated sections*: pytest's `warnings summary`, from its banner up to the next banner. Its warnings are read before the section is filtered, so they reach `[RUN_WARNING]`.
+- *Repeated sections*: pytest's `warnings summary`, from its banner up to its closing `-- Docs:` line, the next banner or a summary line, whichever comes first (under `-q` the final summary has no banner, and a command a recipe runs after pytest must not be filtered with the section). Its warnings are read before the section is filtered, so they reach `[RUN_WARNING]`.
 - *Blank runs*: a blank line that follows another blank line of the excerpt, so the blank lines around a filtered line collapse as well.
 
 A `FAILED` or `ERROR` line, `SKIPPED [n] <reason>` in the short summary, any line with a failure marker other than pytest's status characters, and a diff line that does not name a pinned package stay. The log keeps everything: when a run stops without a summary (a crash, a hang the host killed), its last progress line there shows where.
@@ -107,7 +107,7 @@ stderr, after the result: the relayed `[WARN]` and `[NOTICE]` blocks in output o
 
 | Code | Level | Class | Condition |
 | --- | --- | --- | --- |
-| `RUN_COMMAND_NOT_STARTED` | `ERROR` (`INPUT_ERROR`, exit `2`) | `CommandNotStartedError` | The command does not exist or is not executable. |
+| `RUN_COMMAND_NOT_STARTED` | `ERROR` (`INPUT_ERROR`, exit `2`) | `CommandNotStartedError` | The command does not exist or is not executable, or the working directory does not exist (also when the shell's current directory was removed) or cannot be entered; `[TARGET]` names the command or the directory. |
 | `RUN_SLOW_COMMAND` | `NOTICE` | `SlowCommandNotice` | The command ran at least `--slow-after` seconds. |
 | `ARGUMENT_INVALID` | `ERROR` (exit `2`) | `devkit.core.ArgumentError` | `--slow-after` is negative or not finite. |
 

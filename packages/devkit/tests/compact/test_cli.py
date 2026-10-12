@@ -116,6 +116,17 @@ def test_a_command_that_cannot_start_exits_2() -> None:
     assert result.stderr.startswith("[ERROR]  (RUN_COMMAND_NOT_STARTED) cannot start 'devkit-no-such-command'")
 
 
+def test_a_removed_current_directory_is_an_input_error(tmp_path, monkeypatch) -> None:
+    gone = tmp_path / "gone"
+    gone.mkdir()
+    monkeypatch.chdir(gone)
+    gone.rmdir()
+    result = _run("--", "true")
+    assert result.exit_code == 2
+    assert result.stderr.startswith("[ERROR]  (RUN_COMMAND_NOT_STARTED) cannot start 'true': working directory ")
+    assert "the current directory no longer exists" in result.stderr
+
+
 def test_invalid_slow_after_is_an_argument_error() -> None:
     for value in ("-1", "inf", "nan"):
         result = _run("--slow-after", value, "--", "true")

@@ -42,7 +42,7 @@ Exit codes: `0` the command succeeded; `1` it failed (its own code is `exit=`, `
 
 | Code | Level | Condition |
 | --- | --- | --- |
-| `RUN_COMMAND_NOT_STARTED` | `ERROR` (`INPUT_ERROR`) | The command does not exist or is not executable. |
+| `RUN_COMMAND_NOT_STARTED` | `ERROR` (`INPUT_ERROR`) | The command does not exist or is not executable, or the working directory does not exist or cannot be entered; `[TARGET]` names which. |
 | `RUN_SLOW_COMMAND` | `NOTICE` | The command ran at least `--slow-after` seconds. |
 
 ## Library

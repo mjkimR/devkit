@@ -42,6 +42,30 @@ def test_a_command_that_cannot_start_is_an_input_error_and_leaves_no_log(tmp_pat
     assert list(logs.iterdir()) == []
 
 
+def test_a_missing_working_directory_is_named_not_the_command(tmp_path: Path) -> None:
+    missing = tmp_path / "missing"
+    with pytest.raises(CommandNotStartedError) as caught:
+        run_command(["true"], cwd=missing)
+    assert "working directory" in str(caught.value) and caught.value.target_files == (str(missing.resolve()),)
+
+
+def test_no_command_is_not_started() -> None:
+    with pytest.raises(CommandNotStartedError, match="no command to start"):
+        run_command([])
+
+
+@pytest.mark.skipif(os.geteuid() == 0, reason="root can enter any directory")
+def test_a_directory_that_cannot_be_entered_is_named_not_the_command(tmp_path: Path) -> None:
+    locked = tmp_path / "locked"
+    locked.mkdir(mode=0o000)
+    try:
+        with pytest.raises(CommandNotStartedError) as caught:
+            run_command(["true"], cwd=locked, log_dir=tmp_path / "logs")
+    finally:
+        locked.chmod(0o755)
+    assert "working directory" in str(caught.value) and caught.value.target_files == (str(locked.resolve()),)
+
+
 def test_a_slow_command_returns_a_notice() -> None:
     run = run_command([PY, "-c", "import time; time.sleep(0.2)"], slow_after=0.1)
     assert [n.code for n in run.notices] == ["RUN_SLOW_COMMAND"]
