@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-KINDS = {"skill", "subagent", "instruction", "playbook", "rule", "workflow"}
+KINDS = {"skill", "subagent", "instruction", "playbook", "rule", "workflow", "gate"}
 SLUG = re.compile(r"[a-z][a-z0-9-]*\Z")
 VERSION = re.compile(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\Z")
 # Reserved preset available in every bundle; selects every declared asset.

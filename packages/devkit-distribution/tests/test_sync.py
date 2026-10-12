@@ -403,6 +403,36 @@ integration = "ask"
     assert receipt["selection"]["agents"] == ["codex"]
 
 
+def test_sync_deploys_gate_assets_and_ignores_gates_table(tmp_path: Path, bare: Path) -> None:
+    root = tmp_path / "gate_source"
+    (root / "gates").mkdir(parents=True)
+    (root / "gates/block.py").write_text("raise RuntimeError('must not run at sync')\n")
+    (root / "bundle.toml").write_text("""schema = 1
+name = "gates"
+version = "0.1.0"
+[[assets]]
+id = "block"
+kind = "gate"
+source = "gates/block.py"
+""")
+    write_config(
+        bare,
+        """schema = 1
+[presets]
+gates = "all"
+
+[gates.settings.block]
+enabled = true
+""",
+    )
+    sync_project(bare, [InstalledBundle("gate-content", "0.1.0", load_bundle(root))])
+    receipt = json.loads((bare / RECEIPT).read_text())
+    assert {"bundle": "gates", "id": "block", "kind": "gate", "paths": [".devkit/managed/gates/gates/block.py"]} in (
+        receipt["assets"]
+    )
+    assert (bare / ".devkit/managed/gates/gates/block.py").is_file()
+
+
 def test_receipt_cannot_own_config(installed: list[InstalledBundle], target: Path) -> None:
     sync_project(target, installed)
     path = target / RECEIPT

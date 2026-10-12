@@ -45,3 +45,7 @@ rules-explain +args="":
 # Run the workflow engine CLI (new, bind, next, show, checks, validate, list, envelope)
 workflow +args="":
     uv run --no-active --package agent-workflow-engine agent-workflow {{ args }}
+
+# Run the commit gate CLI (install, uninstall, status, run)
+gate +args="":
+    uv run --no-active --package agent-commit-gate commit-gate {{ args }}

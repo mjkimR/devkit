@@ -11,7 +11,7 @@ from agent_rule_engine import WorkspaceCache
 @pytest.fixture
 def temp_workspace() -> Generator[Path, None, None]:
     with tempfile.TemporaryDirectory() as tmp_dir:
-        yield Path(tmp_dir)
+        yield Path(tmp_dir).resolve()
 
 
 @pytest.fixture

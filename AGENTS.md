@@ -20,6 +20,7 @@ Personal developer tools monorepo.
 Keep package descriptions in this guide to a high-level summary of their purpose. Do not add package-specific configurations or detailed architectural explanations here; refer to the respective package's `README.md` when deeper details are needed:
 
 - `agent-advisory`: Agent Advisory Protocol implementation (current scope: error advisories only) plus a bundle that installs its language-agnostic and Python authoring guides. See [packages/agent-advisory/README.md](packages/agent-advisory/README.md).
+- `agent-commit-gate`: Pluggable Git commit gate system (`commit-gate`): managed hook wrappers, layered configuration, and gates distributed as bundle assets. See [packages/agent-commit-gate/README.md](packages/agent-commit-gate/README.md).
 - `agent-rule-engine`: Agent-managed rule and repository governance engine. See [packages/agent-rule-engine/README.md](packages/agent-rule-engine/README.md).
 - `agent-workflow-engine`: Data-driven delivery workflow engine (`agent-workflow`) computing the current stage, approval gates and drift for work units. See [packages/agent-workflow-engine/README.md](packages/agent-workflow-engine/README.md).
 - `devkit-distribution`: CLI tool (`devkit`) and runtime for packaging and synchronizing agent asset bundles across workspaces. See [packages/devkit-distribution/README.md](packages/devkit-distribution/README.md).

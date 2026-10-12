@@ -37,6 +37,7 @@ Resources are classified along three dimensions: **Guidance & Context Layer** (n
 │  - governance-rule      : Deterministic invariant (evaluated by rule engine) │
 │  - agent-skill          : Executable tool directory (.agents/skills/, etc.)  │
 │  - agent-subagent       : Native agent persona config (.codex/agents/, etc.) │
+│  - commit-gate          : Git hook policy (run by agent-commit-gate)         │
 └──────────────────────────────────────┬───────────────────────────────────────┘
                                        │
 ┌──────────────────────────────────────┴───────────────────────────────────────┐
@@ -243,6 +244,12 @@ synchronized files; preserve receipt ownership, hash checks, and transaction che
 - **Format Requirements**: Either vendor-native files per agent (`.toml` for Codex in `.codex/agents/<name>.toml`, `.md` for Claude Code in `.claude/agents/<name>.md`), or one host-neutral role contract (Markdown with a `hosts` table of allowlisted per-agent keys and a status) that `devkit sync` renders into those native files.
 - **Target Location**: Native agent persona directories; a contract itself stays under `.devkit/managed/<bundle>/`.
 
+#### 8. `commit-gate`
+- **Role**: Policy enforced at Git's `pre-commit`, `commit-msg` or `post-commit` hook: what may be committed, how the message must look, and what happens after the commit exists.
+- **Consumption**: Run by `agent-commit-gate` through static hook wrappers that discover deployed gates from the installation receipt on every commit. Configured in `[gates]` of `.devkit/config.toml`, overridden per clone by `.git/devkit.config`. See [Commit Gate Overview](../commit-gate/overview.md).
+- **Token Budget**: Zero LLM context; refusals are Agent Advisory Protocol errors.
+- **Target Location**: `.devkit/managed/<bundle>/gates/<gate>.py`.
+
 ---
 
 ## 4. Placement Decision Matrix
@@ -377,4 +384,5 @@ The installation receipt records the applied selection for audit and ownership t
 | **`package-playbook`** | Guidance | Metadata and checklist (`playbooks/<slug>/SKILL.md`) | Explicit `devkit-playbook` invocation OR rule-triggered remediation, then search and selection | Bounded candidate headers; selected body only | `.devkit/managed/<bundle>/playbooks/` |
 | **`governance-rule`** | Mechanized | Python (`rules/*.py`) | Linters / `just rules-check` | **0 tokens** (pure code) | `.devkit/managed/<bundle>/rules/` |
 | **`agent-skill`** | Mechanized | Directory (`skills/<slug>/`) | Tool/function invocation | Tool registry metadata | Projected (`.agents/skills/`, etc.) |
+| **`commit-gate`** | Mechanized | Python (`gates/*.py`) | Git commit hooks | **0 tokens** (pure code) | `.devkit/managed/<bundle>/gates/` |
 | **`agent-subagent`** | Mechanized | Native config (`agents/<slug>.{toml,md}`) or role contract (`subagents/<slug>.md`) | Subagent delegation | Persona config on load | Projected (`.codex/agents/`, etc.) |

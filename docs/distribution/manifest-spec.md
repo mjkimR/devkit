@@ -47,7 +47,7 @@ src/package_b_playbooks/
 
 ## 2. Asset Kinds
 
-A bundle declares assets across six supported kinds:
+A bundle declares assets across seven supported kinds:
 
 - `skill`: A directory containing `SKILL.md` along with supporting scripts, references, and assets. The entire directory tree is preserved, maintaining executable permissions (`0755`) for scripts.
 - `subagent`: A delegated agent persona. Either native files per agent (`variants`, copied verbatim) or one host-neutral role contract (`source`, a single Markdown file) whose frontmatter declares `role` (equal to the asset id), `title`, `description`, an optional `skill` and a `hosts` table with one block per agent (`claude-code`, `codex`). Each block carries a `status` (`native`, `emulated`, `unsupported`, `unverified`) and only allowlisted host-native keys; `devkit sync` renders the projection for each selected agent from that block, writes no file for `unsupported`, and fails for an agent the contract does not mention. The body is the role's prompt. See [Agent Projections](agent-projections.md).
@@ -55,6 +55,7 @@ A bundle declares assets across six supported kinds:
 - `playbook`: Operational workflows, checklists, and procedural guides.
 - `rule`: Python-based governance rules evaluated by `agent-rule-engine`. The receipt lists every deployed file under the asset's `paths`, and `agent-rules` loads them from there; a consumer configures them in `[rules]` of `.devkit/config.toml` rather than editing the managed copy.
 - `workflow`: A single Markdown delivery workflow definition (frontmatter `id` and `stages`) evaluated by `agent-workflow-engine`. Distribution validates the header only; `agent-workflow validate` validates stage semantics. When at least one workflow asset is synchronized, `devkit sync` generates the shared `devkit-workflow` entry skill under `.devkit/managed/_devkit/skills/` and projects it into every selected agent's skill directory, and the receipt records the definition under `entrypoints` so `agent-workflow` discovers it without configuration.
+- `gate`: A Python commit gate run by `agent-commit-gate` at a Git hook stage. Like rules, deployed files are listed in the receipt under the asset's `paths` and loaded from there at commit time; a consumer configures them in `[gates]` of `.devkit/config.toml` or the per-clone `.git/devkit.config`. See [Commit Gate Overview](../commit-gate/overview.md).
 
 For full classification criteria, guidance placement rules, and naming standards, see the [Resource Taxonomy](../architecture/resource-taxonomy.md).
 

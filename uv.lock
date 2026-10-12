@@ -5,6 +5,7 @@ requires-python = ">=3.12"
 [manifest]
 members = [
     "agent-advisory",
+    "agent-commit-gate",
     "agent-rule-engine",
     "agent-workflow-engine",
     "devkit-distribution",
@@ -38,6 +39,29 @@ dev = [
     { name = "devkit-distribution", editable = "packages/devkit-distribution" },
     { name = "pytest", specifier = ">=8.0.0" },
 ]
+
+[[package]]
+name = "agent-commit-gate"
+version = "0.1.0"
+source = { editable = "packages/agent-commit-gate" }
+dependencies = [
+    { name = "agent-advisory" },
+    { name = "click" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "agent-advisory", editable = "packages/agent-advisory" },
+    { name = "click", specifier = ">=8.1.7" },
+]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=8.0.0" }]
 
 [[package]]
 name = "agent-rule-engine"

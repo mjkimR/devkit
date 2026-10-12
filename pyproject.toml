@@ -28,6 +28,7 @@ pythonVersion = "3.12"
 typeCheckingMode = "basic"
 extraPaths = [
     "./packages/agent-advisory/src",
+    "./packages/agent-commit-gate/src",
     "./packages/agent-rule-engine/src",
     "./packages/agent-workflow-engine/src",
     "./packages/devkit-distribution/src",
