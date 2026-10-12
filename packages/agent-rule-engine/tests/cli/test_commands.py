@@ -410,3 +410,82 @@ def test_cli_snapshot_flag_validation(tmp_path: Path) -> None:
     assert runner.invoke(cli, ["check", "-w", str(root), "--staged", "--phase", "hygiene"]).exit_code == 2
     outside = runner.invoke(cli, ["check", "-w", str(tmp_path), "--staged"])
     assert outside.exit_code == 1 and "git write-tree failed" in outside.output
+
+
+NO_TODO_RULE = """from agent_rule_engine import RuleContext, Violation
+from agent_rule_engine.rules import BaseRule
+
+
+class NoTodoRule(BaseRule):
+    def __init__(self) -> None:
+        super().__init__(id="RULE-no-todo", name="no-todo", description="no TODO")
+
+    def check(self, ctx: RuleContext) -> list[Violation]:
+        out = []
+        for p in ctx.cache.find_files(ctx.workspace_root, extensions=(".md",)):
+            if "TODO" in ctx.cache.read_text(p):
+                out.append(Violation(self.id, p.relative_to(ctx.workspace_root).as_posix(), 1, "TODO found"))
+        return out
+"""
+
+
+def _managed_rule_repo(tmp_path: Path) -> Path:
+    """A repo whose committed receipt lists a managed rule while ``.devkit/managed/`` is Git-ignored."""
+    import hashlib
+
+    root = _repo(tmp_path)
+    (root / ".gitignore").write_text(".devkit/managed/\n")
+    rule_path = ".devkit/managed/team/rules/no_todo.py"
+    (root / rule_path).parent.mkdir(parents=True)
+    (root / rule_path).write_text(NO_TODO_RULE)
+    (root / ".devkit/installation.json").write_text(
+        json.dumps(
+            {
+                "schema": 1,
+                "assets": [{"bundle": "team", "id": "rules", "kind": "rule", "paths": [rule_path]}],
+                "files": {rule_path: {"sha256": hashlib.sha256(NO_TODO_RULE.encode()).hexdigest(), "mode": 420}},
+            }
+        )
+    )
+    _git(root, "add", ".")
+    _git(root, "commit", "-q", "-m", "devkit sync")
+    assert ".devkit/managed" not in _git(root, "ls-files")
+    return root
+
+
+def test_cli_staged_gate_loads_ignored_managed_rules_pinned_by_the_receipt(tmp_path: Path) -> None:
+    root = _managed_rule_repo(tmp_path)
+    (root / "notes.md").write_text("TODO\n")
+    _git(root, "add", "notes.md")
+    result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "--format", "json"])
+    assert result.exit_code == 1, result.output
+    assert [v["rule_id"] for v in json.loads(result.stdout)] == ["RULE-no-todo"]
+
+
+def test_cli_staged_gate_rejects_managed_rule_that_drifted_from_the_receipt(tmp_path: Path) -> None:
+    root = _managed_rule_repo(tmp_path)
+    (root / "notes.md").write_text("fine\n")
+    _git(root, "add", "notes.md")
+    (root / ".devkit/managed/team/rules/no_todo.py").write_text(NO_TODO_RULE + "\n# edited\n")
+    result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged"])
+    assert result.exit_code == 1
+    assert "differs from the hash in the receipt" in result.stderr
+    (root / ".devkit/managed/team/rules/no_todo.py").unlink()
+    result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged"])
+    assert result.exit_code == 1
+    assert "missing from the working tree" in result.stderr
+
+
+def test_cli_missing_managed_rule_fails_in_working_tree_check(tmp_path: Path) -> None:
+    (tmp_path / ".devkit").mkdir()
+    (tmp_path / ".devkit/installation.json").write_text(
+        json.dumps(
+            {
+                "schema": 1,
+                "assets": [{"bundle": "team", "id": "rules", "kind": "rule", "paths": [".devkit/managed/team/r.py"]}],
+            }
+        )
+    )
+    result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path)])
+    assert result.exit_code == 1
+    assert "synchronized rule .devkit/managed/team/r.py is missing" in result.stderr

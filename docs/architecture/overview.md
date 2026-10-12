@@ -92,6 +92,7 @@ The subsystems are decoupled yet operate synergistically:
 - [Native Agent Projections](../distribution/agent-projections.md): Multi-agent projection matrix for Codex, Claude Code, and Antigravity.
 - [Context Loading & Playbooks](../distribution/context-and-playbooks.md): Progressive context disclosure, BM25 search, and CLI tools.
 - [Transitive Dependencies](../distribution/transitive-dependencies.md): Python wheel composition and dependency boundaries.
+- [In-Repository Bundles](../distribution/in-repo-bundles.md): Repository-owned assets as a self-consumed content package.
 
 ### Governance Engine (`agent-rule-engine`)
 - [Rule Engine Overview](../rule-engine/overview.md): Engine architecture, workspace cache, and document catalog.

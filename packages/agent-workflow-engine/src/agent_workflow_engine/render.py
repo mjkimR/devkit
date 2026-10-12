@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from agent_workflow_engine.definition import WorkflowDocument, schema_hash
-from agent_workflow_engine.evaluate import Result
+from agent_workflow_engine.evaluate import Request, Result
 
 
 def _dash(value: str) -> str:
@@ -32,7 +32,7 @@ def render_result(res: Result) -> str:
             lines.append(
                 f"[HANDOFF: policy={h.policy} candidates={_dash(' '.join(c.workflow for c in h.candidates))} "
                 f"eligible={_dash(' '.join(h.eligible))} recommended={_dash(' '.join(h.recommended))} "
-                f"chosen={_dash(h.chosen or '')}]"
+                f"chosen={_dash(h.chosen or '')}" + (f" decision={h.decision.file}" if h.decision else "") + "]"
             )
             for c in h.candidates:
                 when = " ".join(f"{k.name}={str(k.satisfied).lower()}" for k in c.checks)
@@ -60,9 +60,33 @@ def render_result(res: Result) -> str:
             lines.append(f"[GATE: {res.gate.name} policy={res.gate.policy} given={_yn(res.gate.given)}]")
         if res.waiting:
             lines.append(f"[WAITING: {res.waiting.class_.value} {' '.join(res.waiting.checks)}]")
+    lines.extend(render_requests(res.requests))
     for e in res.envelope_errors:
         lines.append(f"[ENVELOPE_ERROR: {e.file} {e.reason}]")
+    for d in res.decision_errors:
+        lines.append(f"[DECISION_ERROR: {d.file} {d.reason}]")
     return "\n".join(lines) + "\n"
+
+
+def render_requests(requests: list[Request]) -> list[str]:
+    lines: list[str] = []
+    for r in requests:
+        if r.kind == "choose":
+            lines.append(
+                f'[REQUEST: id={r.id} kind=choose title="{r.title}" '
+                f"options={_dash(','.join(o.id for o in r.options))} "
+                f"eligible={_dash(','.join(o.id for o in r.options if o.eligible))} "
+                f"recommended={_dash(','.join(o.id for o in r.options if o.recommended and o.eligible))} "
+                f"multi={_yn(r.multi)} other={_yn(r.allow_other)}]"
+            )
+        else:
+            lines.append(
+                f'[REQUEST: id={r.id} kind={r.kind} title="{r.title}" target={r.target.type}:{r.target.name} '
+                f"stage={_dash(r.target.stage or '')} note={'allowed' if r.allow_note else 'no'}]"
+            )
+        if r.declined:
+            lines.append(f'[DECLINED: id={r.id} file={r.declined.file} note="{r.declined.note}"]')
+    return lines
 
 
 def render_document(doc: WorkflowDocument, approvals: dict[str, str] | None = None) -> str:

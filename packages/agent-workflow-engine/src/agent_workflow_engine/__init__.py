@@ -3,6 +3,7 @@ from __future__ import annotations
 from agent_workflow_engine.binding import Binding, HistoryEntry, read_binding, write_binding
 from agent_workflow_engine.checks import Check, CheckClass, CheckError, Invocation, Registry, parse_check
 from agent_workflow_engine.config import ConfigError, WorkflowConfig, load_workflow_config
+from agent_workflow_engine.decisions import Decision, Decisions, load_decisions, write_decision
 from agent_workflow_engine.definition import (
     DefinitionError,
     Problem,
@@ -16,7 +17,15 @@ from agent_workflow_engine.definition import (
     validate,
 )
 from agent_workflow_engine.envelope import Envelope, Envelopes, load_envelopes
-from agent_workflow_engine.evaluate import CheckResult, Handoff, Options, Result, UnitNotFoundError, evaluate
+from agent_workflow_engine.evaluate import (
+    CheckResult,
+    Handoff,
+    Options,
+    Request,
+    Result,
+    UnitNotFoundError,
+    evaluate,
+)
 from agent_workflow_engine.layout import Layout, TemplateLayout, validate_template
 from agent_workflow_engine.render import render_document, render_result
 
@@ -27,6 +36,8 @@ __all__ = [
     "CheckError",
     "CheckResult",
     "ConfigError",
+    "Decision",
+    "Decisions",
     "DefinitionError",
     "Envelope",
     "Envelopes",
@@ -37,6 +48,7 @@ __all__ = [
     "Options",
     "Problem",
     "Registry",
+    "Request",
     "Result",
     "Stage",
     "TemplateLayout",
@@ -46,6 +58,7 @@ __all__ = [
     "discover",
     "evaluate",
     "load",
+    "load_decisions",
     "load_envelopes",
     "load_workflow_config",
     "parse",
@@ -58,4 +71,5 @@ __all__ = [
     "validate",
     "validate_template",
     "write_binding",
+    "write_decision",
 ]

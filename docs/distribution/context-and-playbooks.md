@@ -25,6 +25,8 @@ To solve this, `devkit` implements **Progressive Context Disclosure**:
 
 ## 2. Bundle Constitution and Context Loading (`devkit get-context`)
 
+The response of `devkit get-context <bundle>` is the bundle's **context**: the constitution when the bundle ships one, plus the header catalog of its synchronized instructions. Instruction-only bundles therefore still deliver a context; the catalog is what the agent reads to decide which bodies to open.
+
 ### Bundle Constitution (`AGENTS.md`)
 An optional UTF-8 `AGENTS.md` at the bundle root serves as its constitution. `devkit sync` always extracts it into `.devkit/managed/<bundle>/AGENTS.md`, independently of presets.
 

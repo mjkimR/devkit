@@ -26,10 +26,13 @@ never derive it from files yourself.
    envelopes with `uv run agent-workflow envelope new --unit <dir> --kind <kind>`
    and fill them in; never overwrite an existing envelope.
 4. Respect gates. `[GATE: <name> policy=ask]` with `[WAITING: human ...]` means
-   a person must approve. Present the result and ask; only after the user's
-   explicit approval rerun `next` with `--given <name>`. `policy=auto` was
-   delegated by project policy: report that basis in your summary. Never pass
-   `--given` for an approval you did not receive.
+   a person must approve; the matching `[REQUEST: id=gate:<name> ...]` line is
+   the question. Present the result and ask. Only after the user's explicit
+   answer record it with `uv run agent-workflow answer --unit <dir> --request
+   gate:<name> --action accept` (or `--action decline --note "<reason>"`), then
+   rerun `next`. A host with its own approval UI writes the same record; never
+   record an answer you did not receive. `policy=auto` was delegated by project
+   policy: report that basis in your summary.
 5. Stop on errors. An `[ERROR] (CODE)` block on stderr carries an `[ACTION]`
    directive; follow it. `WORKFLOW_DRIFT` means the definition changed under
    this unit: review the change with the user before running the `bind`
@@ -39,11 +42,13 @@ never derive it from files yourself.
 7. Hand off when the workflow is complete. `[STAGE: - complete=true]` followed
    by `[HANDOFF: policy=ask ...]` lists the workflows this unit may continue
    with; `[CANDIDATE]` lines say which are eligible and recommended. Present
-   them to the user, and only after their choice run
-   `uv run agent-workflow handoff --unit <dir> --workflow <id>`. Under
-   `policy=auto` with a `chosen=` value, run `uv run agent-workflow handoff
-   --unit <dir>` and report which candidate was chosen and why. Then continue
-   with `next`. No `[HANDOFF]` line means the unit is finished.
+   them to the user (the `[REQUEST: id=handoff ...]` line is the question), and
+   only after their choice record it with `uv run agent-workflow answer --unit
+   <dir> --request handoff --action accept --value <id>` and run
+   `uv run agent-workflow handoff --unit <dir>`. Under `policy=auto` with a
+   `chosen=` value, run `handoff` directly and report which candidate was
+   chosen and why. Then continue with `next`. No `[HANDOFF]` line means the
+   unit is finished.
 """
 
 

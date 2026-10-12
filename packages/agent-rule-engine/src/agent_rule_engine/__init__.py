@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from agent_rule_engine.engine.config import ConfigError, RulesConfig, load_rules_config
-from agent_rule_engine.engine.discovery import managed_rule_paths
+from agent_rule_engine.engine.discovery import ManagedRules, resolve_managed_rules
 from agent_rule_engine.engine.evaluator import EvaluationResult, evaluate
 from agent_rule_engine.engine.models import (
     Autofixable,
@@ -24,6 +24,7 @@ __all__ = [
     "Document",
     "DocumentCatalog",
     "EvaluationResult",
+    "ManagedRules",
     "MarkdownLink",
     "Phase",
     "PhaseEntry",
@@ -44,8 +45,8 @@ __all__ = [
     "git_snapshot",
     "is_valid_doc_id",
     "load_rules_config",
-    "managed_rule_paths",
     "match_path",
     "materialize",
+    "resolve_managed_rules",
     "resolve_phases",
 ]

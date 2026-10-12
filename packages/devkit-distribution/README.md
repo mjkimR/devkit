@@ -12,7 +12,8 @@ Install the distribution CLI and content packages together into your project dev
 # Add devkit-distribution and content packages
 uv add --dev devkit-distribution devkit-starter
 
-# Select a bundle (recorded in .devkit/config.toml) and synchronize it
+# Select the devkit guide bundle shipped with this package, then a content bundle
+uv run devkit add devkit
 uv run devkit add starter
 
 # Native projections go to Codex, Claude Code and Antigravity by default; narrow them if needed
@@ -23,6 +24,10 @@ uv run devkit list
 ```
 
 In this monorepo, run `uv sync --all-packages` first, then run `uv run --package devkit-distribution devkit sync --target <target-directory>`.
+
+The package also registers the `devkit` guide bundle (`devkit_distribution.guide`), an
+instruction-only bundle that tells agents in a consumer repository how devkit-managed assets are
+consumed and authored. See [section 4](#4-the-devkit-guide-bundle).
 
 ---
 
@@ -85,7 +90,25 @@ files per agent or one host-neutral role contract that `devkit sync` renders per
 
 ---
 
-## 4. Architectural Specifications & Deep-Dives
+## 4. The `devkit` Guide Bundle
+
+`devkit-distribution` ships one bundle of its own, named `devkit`, so that the guidance about devkit
+travels with the CLI version it describes. It contains no code assets: a constitution (`AGENTS.md`)
+with the consumption contracts and three instructions, delivered to agents through
+`devkit get-context devkit`.
+
+| Asset | Read before |
+| --- | --- |
+| `consumption` | Using, changing or troubleshooting devkit-managed assets: context loading, playbooks, rules and gates, overrides, selection and the sync/receipt lifecycle. |
+| `resource-kinds` | Adding a rule, skill, subagent, instruction, playbook, workflow or gate: the decision tree and comparison of asset kinds. |
+| `in-repo-bundle` | Adding repository-specific assets: shipping them as a bundle installed from the same repository. |
+
+Select it like any other bundle with `uv run devkit add devkit` (preset `core`, the only one). The
+sources live in `src/devkit_distribution/guide/bundle/` and are validated by the package tests.
+
+---
+
+## 5. Architectural Specifications & Deep-Dives
 
 Detailed technical designs and schemas are documented in `docs/distribution/`:
 
@@ -96,4 +119,5 @@ Detailed technical designs and schemas are documented in `docs/distribution/`:
 - [Native Agent Projections](../../docs/distribution/agent-projections.md): Projection matrix and adapter rules for Codex, Claude Code, and Antigravity.
 - [Context Loading & Playbooks](../../docs/distribution/context-and-playbooks.md): Progressive disclosure, BM25 search, token budgets, and skill integration.
 - [Transitive Dependencies](../../docs/distribution/transitive-dependencies.md): Python wheel composition, `[project.dependencies]`, and consumer opt-in.
+- [In-Repository Bundles](../../docs/distribution/in-repo-bundles.md): Repository-owned assets shipped as a content package installed from the same repository as a dev dependency.
 - [Resource Taxonomy](../../docs/architecture/resource-taxonomy.md): Three-tier guidance taxonomy and naming standards.

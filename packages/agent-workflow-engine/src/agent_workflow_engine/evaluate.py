@@ -26,6 +26,7 @@ from agent_workflow_engine.checks import (
     Registry,
     count_tasks,
 )
+from agent_workflow_engine.decisions import Decision, DecisionError, Decisions, load_decisions
 from agent_workflow_engine.definition import HANDOFF_GATE, Stage, WorkflowDocument, schema_hash
 from agent_workflow_engine.envelope import Envelopes, load_envelopes
 from agent_workflow_engine.git import REVISION
@@ -120,6 +121,73 @@ class Drift:
 
 
 @dataclass(frozen=True)
+class Option:
+    id: str
+    label: str
+    description: str = ""
+    recommended: bool = False
+    eligible: bool = True
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "label": self.label,
+            "description": self.description,
+            "recommended": self.recommended,
+            "eligible": self.eligible,
+        }
+
+
+@dataclass(frozen=True)
+class Target:
+    type: str  # gate | check | handoff
+    name: str
+    stage: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"type": self.type, "name": self.name, "stage": self.stage}
+
+
+@dataclass(frozen=True)
+class Request:
+    """An open question for a person; see docs/workflow/human-interaction.md."""
+
+    id: str
+    kind: str  # approve | choose
+    title: str
+    prompt: str
+    target: Target
+    options: tuple[Option, ...] = ()
+    multi: bool = False
+    allow_other: bool = False
+    allow_note: bool = True
+    declined: Decision | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "kind": self.kind,
+            "title": self.title,
+            "prompt": self.prompt,
+            "target": self.target.to_dict(),
+            "options": [o.to_dict() for o in self.options],
+            "multi": self.multi,
+            "allow_other": self.allow_other,
+            "allow_note": self.allow_note,
+            "declined": (
+                {"file": self.declined.file, "note": self.declined.note, "at": self.declined.at}
+                if self.declined
+                else None
+            ),
+        }
+
+
+GATE_REQUEST = "gate:"
+CHECK_REQUEST = "check:"
+HANDOFF_REQUEST = "handoff"
+
+
+@dataclass(frozen=True)
 class CandidateResult:
     workflow: str
     recommended: bool
@@ -147,6 +215,7 @@ class Handoff:
     policy: str
     candidates: tuple[CandidateResult, ...]
     chosen: str | None = None
+    decision: Decision | None = None  # recorded choice that produced ``chosen``, if any
 
     @property
     def eligible(self) -> tuple[str, ...]:
@@ -163,6 +232,7 @@ class Handoff:
             "eligible": list(self.eligible),
             "recommended": list(self.recommended),
             "chosen": self.chosen,
+            "decision": self.decision.file if self.decision else None,
         }
 
 
@@ -184,6 +254,8 @@ class Result:
     drift: Drift | None = None
     lint_error: str | None = None
     handoff: Handoff | None = None
+    requests: list[Request] = field(default_factory=list)
+    decision_errors: list[DecisionError] = field(default_factory=list)
 
     @property
     def complete(self) -> bool:
@@ -208,6 +280,8 @@ class Result:
             "drift": self.drift.to_dict() if self.drift else None,
             "lint_error": self.lint_error,
             "handoff": self.handoff.to_dict() if self.handoff else None,
+            "requests": [r.to_dict() for r in self.requests],
+            "decision_errors": [e.to_dict() for e in self.decision_errors],
         }
 
 
@@ -218,6 +292,7 @@ class _Evaluator:
         self.opts = opts
         self.unit_dir = opts.unit_dir
         self.envelopes: Envelopes = load_envelopes(self.unit_dir)
+        self.decisions: Decisions = load_decisions(self.unit_dir)
         self.given = set(opts.given)
         self.cache: dict[str, CheckResult] = {}
         self.lint_done = False
@@ -247,7 +322,19 @@ class _Evaluator:
             return CheckResult(ref, check.class_, ok, evaluated, detail)
         if ref in self.given:
             return CheckResult(ref, check.class_, True, False, "given by executor")
+        if check.class_ == CheckClass.HUMAN:
+            accepted = self.accepted(CHECK_REQUEST + ref)
+            if accepted is not None:
+                return CheckResult(ref, check.class_, True, False, f"accepted by {accepted.file}")
         return CheckResult(ref, check.class_, False, False, f"declared for {check.class_.value}; not evaluated")
+
+    def accepted(self, request_id: str) -> Decision | None:
+        decision = self.decisions.effective(request_id)
+        return decision if decision is not None and decision.action == "accept" else None
+
+    def declined(self, request_id: str) -> Decision | None:
+        decision = self.decisions.effective(request_id)
+        return decision if decision is not None and decision.action == "decline" else None
 
     def gate_check(self, gate: str, policy: str) -> CheckResult:
         name = GATE_PREFIX + gate
@@ -255,6 +342,9 @@ class _Evaluator:
             return CheckResult(name, CheckClass.HUMAN, True, False, "policy=auto")
         if gate in self.given:
             return CheckResult(name, CheckClass.HUMAN, True, False, "given by executor")
+        accepted = self.accepted(GATE_REQUEST + gate)
+        if accepted is not None:
+            return CheckResult(name, CheckClass.HUMAN, True, False, f"accepted by {accepted.file}")
         return CheckResult(name, CheckClass.HUMAN, False, False, f"approval for gate {gate!r} not given")
 
     def _read(self, name: str) -> str | None:
@@ -370,17 +460,79 @@ def _waiting_for(stage: Stage, unmet: list[CheckResult]) -> Waiting | None:
 
 
 def _handoff(doc: WorkflowDocument, ev: _Evaluator, policy: str) -> Handoff | None:
-    """Evaluate every ``next`` candidate's preconditions and apply the handoff policy."""
+    """Evaluate every ``next`` candidate's preconditions and apply the handoff policy.
+
+    A recorded, still-eligible choice wins under either policy; ``auto`` then
+    falls back to the first eligible candidate.
+    """
     if not doc.next or policy == "off":
         return None
     results: list[CandidateResult] = []
     for cand in doc.next:
         checks = tuple(ev.eval_ref(ref) for ref in cand.when)
         results.append(CandidateResult(cand.workflow, cand.recommended, all(c.satisfied for c in checks), checks))
+    eligible = {c.workflow for c in results if c.eligible}
     chosen = None
-    if policy == "auto":
-        chosen = next((c.workflow for c in results if c.eligible), None)
-    return Handoff(policy, tuple(results), chosen)
+    decision = ev.accepted(HANDOFF_REQUEST)
+    if decision is not None and isinstance(decision.value, str) and decision.value in eligible:
+        chosen = decision.value
+    else:
+        decision = None
+        if policy == "auto":
+            chosen = next((c.workflow for c in results if c.eligible), None)
+    return Handoff(policy, tuple(results), chosen, decision)
+
+
+def _stage_requests(doc: WorkflowDocument, stage: Stage, unmet: list[CheckResult], ev: _Evaluator) -> list[Request]:
+    requests: list[Request] = []
+    for u in unmet:
+        if stage.gate and u.name == GATE_PREFIX + stage.gate:
+            rid = GATE_REQUEST + stage.gate
+            requests.append(
+                Request(
+                    id=rid,
+                    kind="approve",
+                    title=f"Approve {stage.gate}"[:40],
+                    prompt=f"Approve gate {stage.gate!r} to finish stage {stage.id!r} of {doc.id}.",
+                    target=Target("gate", stage.gate, stage.id),
+                    declined=ev.declined(rid),
+                )
+            )
+        elif u.class_ == CheckClass.HUMAN and u.satisfied is False:
+            rid = CHECK_REQUEST + u.name
+            requests.append(
+                Request(
+                    id=rid,
+                    kind="approve",
+                    title=f"Confirm {u.name}"[:40],
+                    prompt=f"Confirm human check {u.name!r} for stage {stage.id!r} of {doc.id}.",
+                    target=Target("check", u.name, stage.id),
+                    declined=ev.declined(rid),
+                )
+            )
+    return requests
+
+
+def _handoff_request(doc: WorkflowDocument, handoff: Handoff, ev: _Evaluator) -> Request:
+    options = tuple(
+        Option(
+            c.workflow,
+            c.workflow,
+            " ".join(f"{k.name}={str(k.satisfied).lower()}" for k in c.checks),
+            c.recommended,
+            c.eligible,
+        )
+        for c in handoff.candidates
+    )
+    return Request(
+        id=HANDOFF_REQUEST,
+        kind="choose",
+        title="Choose next workflow",
+        prompt=f"Workflow {doc.id} is complete; choose the workflow that continues this unit.",
+        target=Target("handoff", doc.id, None),
+        options=options,
+        declined=ev.declined(HANDOFF_REQUEST),
+    )
 
 
 def evaluate(doc: WorkflowDocument, opts: Options) -> Result:
@@ -433,13 +585,16 @@ def evaluate(doc: WorkflowDocument, opts: Options) -> Result:
         if stage.gate and policy:
             res.gate = Gate(stage.gate, policy, stage.gate in ev.given)
         res.waiting = _waiting_for(stage, unmet)
+        res.requests = _stage_requests(doc, stage, unmet, ev)
         break
 
     if res.stage is None:
         res.handoff = _handoff(doc, ev, opts.approvals.get(HANDOFF_GATE, "ask"))
         if res.handoff is not None and res.handoff.chosen is None:
             res.waiting = Waiting(CheckClass.HUMAN, (HANDOFF_GATE,))
+            res.requests = [_handoff_request(doc, res.handoff, ev)]
 
+    res.decision_errors = list(ev.decisions.errors)
     res.lint_error = ev.lint_error
     return res
 

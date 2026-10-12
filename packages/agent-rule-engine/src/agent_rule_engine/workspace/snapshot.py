@@ -6,7 +6,10 @@ with ``<ref>``. Both read the tree from Git rather than the working directory,
 so unstaged edits, ignored files and local-only configuration cannot change the
 result. The tree is materialized into a temporary directory, which becomes the
 workspace root for the run: ``.devkit/config.toml``, the installation receipt
-and synchronized rules are therefore taken from the same snapshot.
+and synchronized rules are therefore taken from the same snapshot. Managed rule
+copies are usually Git-ignored and absent from the tree; the CLI then reads
+them from the working tree only when they match the hash recorded in the
+snapshot's receipt (see ``engine.discovery``).
 """
 
 from __future__ import annotations

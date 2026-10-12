@@ -10,6 +10,7 @@
 - [Native Agent Projections](agent-projections.md)
 - [Context Loading & Playbooks](context-and-playbooks.md)
 - [Transitive Dependencies](transitive-dependencies.md)
+- [In-Repository Bundles](in-repo-bundles.md)
 - [Resource Taxonomy](../architecture/resource-taxonomy.md)
 
 ---

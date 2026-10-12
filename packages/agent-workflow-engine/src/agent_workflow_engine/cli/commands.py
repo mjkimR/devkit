@@ -15,6 +15,14 @@ from agent_workflow_engine import frontmatter
 from agent_workflow_engine.binding import Binding, HistoryEntry, read_binding, write_binding
 from agent_workflow_engine.checks import Registry
 from agent_workflow_engine.config import CONFIG_PATH, ConfigError, WorkflowConfig, load_workflow_config
+from agent_workflow_engine.decisions import (
+    ACTIONS,
+    FEEDBACK_PREFIX,
+    REQUEST_ID,
+    load_decisions,
+    new_decision,
+    write_decision,
+)
 from agent_workflow_engine.definition import (
     HANDOFF_GATE,
     DefinitionError,
@@ -29,7 +37,7 @@ from agent_workflow_engine.envelope import ENVELOPES_DIR, KIND, load_envelopes, 
 from agent_workflow_engine.evaluate import Options, UnitNotFoundError, evaluate, is_completed
 from agent_workflow_engine.git import is_ancestor
 from agent_workflow_engine.layout import TemplateLayout
-from agent_workflow_engine.render import render_document, render_result
+from agent_workflow_engine.render import render_document, render_requests, render_result
 
 EXIT_INVALID = 1  # validate/show: a definition has problems (a result, not an advisory)
 
@@ -159,7 +167,7 @@ class _Env:
 
 def _lint_func(root: Path, files: list[str]) -> list[str]:
     """Run agent-rule-engine's linter phase over ``files`` and describe each violation."""
-    from agent_rule_engine import Phase, RuleContext, default_registry, managed_rule_paths
+    from agent_rule_engine import Phase, RuleContext, default_registry, resolve_managed_rules
     from agent_rule_engine import evaluate as rules_evaluate
     from agent_rule_engine.engine.config import load_rules_config
 
@@ -175,7 +183,9 @@ def _lint_func(root: Path, files: list[str]) -> list[str]:
         rule_settings=dict(config.settings),
     )
     registry = default_registry()
-    registry.discover_from_files(managed_rule_paths(root))
+    managed = resolve_managed_rules(root)
+    registry.errors.extend(managed.errors)
+    registry.discover_from_files(managed.paths)
     result = rules_evaluate(ctx, registry.get_all())
     if registry.errors or result.errors:
         raise RuntimeError("; ".join([*registry.errors, *result.errors]))
@@ -406,7 +416,11 @@ def handoff_cmd(
                     for c in handoff.candidates
                 ),
                 code="HANDOFF_CHOICE_REQUIRED",
-                fix="Present the candidates to the user and rerun with --workflow <id> after their choice",
+                fix=(
+                    "Present the candidates to the user, record their choice with "
+                    f"`agent-workflow answer --unit {unit_rel} --request handoff --action accept --value <id>` "
+                    "(or rerun with --workflow <id>), then run handoff again"
+                ),
             )
         chosen = handoff.chosen
     else:
@@ -430,19 +444,158 @@ def handoff_cmd(
     history = (*binding.history, HistoryEntry(doc.id, binding.hash or schema_hash(doc), day.isoformat()))
     new_binding = Binding(target.id, schema_hash(target), history)
     write_binding(unit_dir / env.config.anchor, new_binding)
+    decision_file = handoff.decision.file if handoff.decision and workflow_ref is None else None
     payload = {
         "unit": unit_rel,
         "from": doc.id,
         "to": target.id,
         "workflow_hash": new_binding.hash,
         "policy": policy,
+        "decision": decision_file,
         "history": [h.to_dict() for h in history],
     }
     if output_format.lower() == "json":
         _echo_json(payload)
     else:
-        click.echo(f"[HANDOFF: from={doc.id} to={target.id} hash={new_binding.hash} policy={policy}]")
+        tail = f" decision={decision_file}" if decision_file else ""
+        click.echo(f"[HANDOFF: from={doc.id} to={target.id} hash={new_binding.hash} policy={policy}{tail}]")
         click.echo(f"[HISTORY: {' '.join(h.workflow for h in history)}]")
+
+
+@cli.command(name="requests")
+@WORKSPACE
+@UNIT
+@click.option("--no-lint", is_flag=True, help="Skip lint-class checks")
+@FORMAT
+@_boundary
+def requests_cmd(workspace_root: str, unit: str, no_lint: bool, output_format: str) -> None:
+    """List the open human requests of a unit (approvals and choices)."""
+    env = _Env(workspace_root)
+    unit_dir = env.require_unit(unit)
+    doc = env.definition(None, env.binding(unit_dir))
+    result = _evaluate_unit(env, doc, unit_dir, (), no_lint)
+    if output_format.lower() == "json":
+        _echo_json([r.to_dict() for r in result.requests])
+        return
+    lines = render_requests(result.requests)
+    click.echo("\n".join(lines) if lines else "[REQUESTS: none]")
+
+
+@cli.command(name="answer")
+@WORKSPACE
+@UNIT
+@click.option(
+    "--request",
+    "request_id",
+    required=True,
+    help="Open request id (gate:<gate>, check:<name>, handoff) or feedback:<target>",
+)
+@click.option("--action", required=True, type=click.Choice(list(ACTIONS)), help="accept, decline or cancel")
+@click.option(
+    "--value", "values", multiple=True, help="Chosen option id or free text (choose/feedback; repeat for multi)"
+)
+@click.option("--note", default="", help="Free-text note, recommended on decline")
+@click.option("--by", "by", default="", help="Who answered (person or host)")
+@click.option("--no-lint", is_flag=True, help="Skip lint-class checks while computing open requests")
+@FORMAT
+@_boundary
+def answer_cmd(
+    workspace_root: str,
+    unit: str,
+    request_id: str,
+    action: str,
+    values: tuple[str, ...],
+    note: str,
+    by: str,
+    no_lint: bool,
+    output_format: str,
+) -> None:
+    """Record a decision for an open request as <unit>/decisions/NN-<request>.yaml."""
+    env = _Env(workspace_root)
+    unit_dir = env.require_unit(unit)
+    if not REQUEST_ID.match(request_id):
+        raise WorkflowError.invalid_input(
+            f"--request {request_id!r} is not a request id",
+            code="REQUEST_UNKNOWN",
+            fix="Use an id printed by `agent-workflow requests`, or feedback:<target>",
+        )
+    value: Any = None
+    if request_id.startswith(FEEDBACK_PREFIX):
+        kind = "feedback"
+        if action == "accept":
+            if len(values) != 1 or not values[0].strip():
+                raise WorkflowError.invalid_input(
+                    "feedback requires exactly one --value with the text",
+                    code="DECISION_INVALID",
+                    fix="Pass --value <text>",
+                )
+            value = values[0]
+    else:
+        doc = env.definition(None, env.binding(unit_dir))
+        result = _evaluate_unit(env, doc, unit_dir, (), no_lint)
+        open_requests = {r.id: r for r in result.requests}
+        request = open_requests.get(request_id)
+        if request is None:
+            raise WorkflowError.invalid_input(
+                f"{request_id!r} is not an open request of {env.rel(unit_dir)}",
+                *([f"open: {rid}" for rid in open_requests] or ["open: none"]),
+                code="REQUEST_UNKNOWN",
+                fix="Run `agent-workflow requests --unit <dir>` and answer one of the listed ids",
+            )
+        kind = request.kind
+        if action == "accept":
+            if kind == "approve":
+                if values:
+                    raise WorkflowError.invalid_input(
+                        "an approve request takes no --value",
+                        code="DECISION_INVALID",
+                        fix="Pass --action accept or --action decline, optionally with --note",
+                    )
+            else:
+                option_ids = {o.id: o for o in request.options}
+                if not values:
+                    raise WorkflowError.invalid_input(
+                        "a choose request requires --value",
+                        code="DECISION_INVALID",
+                        fix=f"Choose one of: {', '.join(o.id for o in request.options if o.eligible) or 'none eligible'}",
+                    )
+                if len(values) > 1 and not request.multi:
+                    raise WorkflowError.invalid_input(
+                        "this request accepts a single --value",
+                        code="DECISION_INVALID",
+                        fix="Pass exactly one --value",
+                    )
+                for v in values:
+                    option = option_ids.get(v)
+                    if option is None:
+                        if request.allow_other:
+                            continue
+                        raise WorkflowError.invalid_input(
+                            f"{v!r} is not an option of {request_id}",
+                            code="DECISION_INVALID",
+                            fix=f"Choose one of: {', '.join(option_ids)}",
+                        )
+                    if not option.eligible:
+                        raise WorkflowError.invalid_input(
+                            f"option {v!r} is not eligible: {option.description or 'preconditions do not hold'}",
+                            code="DECISION_INVALID",
+                            fix="Satisfy its preconditions first, or choose an eligible option",
+                        )
+                value = list(values) if request.multi else next(iter(values))
+        elif values:
+            raise WorkflowError.invalid_input(
+                "--value is only valid with --action accept",
+                code="DECISION_INVALID",
+                fix="Drop --value, or use --action accept",
+            )
+    decisions = load_decisions(unit_dir)
+    at = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    decision = new_decision(decisions, request_id, kind, action, at, value=value, note=note, by=by)
+    write_decision(unit_dir, decision)
+    if output_format.lower() == "json":
+        _echo_json(decision.to_dict())
+    else:
+        click.echo(f"[DECISION: {decision.file} request={request_id} kind={kind} action={action}]")
 
 
 @cli.command(name="show")

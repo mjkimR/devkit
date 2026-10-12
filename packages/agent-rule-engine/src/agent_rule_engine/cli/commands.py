@@ -8,7 +8,7 @@ from pathlib import Path
 import click
 
 from agent_rule_engine.engine.config import CONFIG_PATH, ConfigError, RulesConfig, load_rules_config
-from agent_rule_engine.engine.discovery import managed_rule_paths
+from agent_rule_engine.engine.discovery import resolve_managed_rules
 from agent_rule_engine.engine.evaluator import (
     EvaluationResult,
     effective_severity,
@@ -38,10 +38,18 @@ def _load_config(root_path: Path) -> RulesConfig:
         raise click.ClickException(str(exc)) from exc
 
 
-def _build_registry(root_path: Path, rules_dir: str | None) -> tuple[RuleRegistry, Path | None]:
-    """Built-in rules, then rule assets recorded by ``devkit sync``, then ``--rules-dir``."""
+def _build_registry(
+    root_path: Path, rules_dir: str | None, source_root: Path | None = None
+) -> tuple[RuleRegistry, Path | None]:
+    """Built-in rules, then rule assets recorded by ``devkit sync``, then ``--rules-dir``.
+
+    ``source_root`` is the working tree behind a Git snapshot: Git-ignored
+    managed rule files are read from there when they match the receipt.
+    """
     registry = default_registry()
-    registry.discover_from_files(managed_rule_paths(root_path))
+    managed = resolve_managed_rules(root_path, source_root=source_root)
+    registry.errors.extend(managed.errors)
+    registry.discover_from_files(managed.paths)
     rules_path = Path(rules_dir).resolve() if rules_dir else None
     if rules_path:
         registry.discover_from_dir(rules_path)
@@ -143,7 +151,9 @@ def _run_rules(
 
     cache = WorkspaceCache(root_path)
     config = _load_config(root_path)
-    registry, rules_path = _build_registry(root_path, rules_dir)
+    registry, rules_path = _build_registry(
+        root_path, rules_dir, source_root=snapshot.root if snapshot is not None else None
+    )
 
     try:
         ctx = RuleContext(

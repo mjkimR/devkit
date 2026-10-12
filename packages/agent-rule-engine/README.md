@@ -70,8 +70,12 @@ Both read the tree from Git, materialize it into a temporary directory and run
 the linter phase there, with the changed files of the diff as targets. Unstaged
 edits, untracked files and local-only configuration cannot change the result:
 `.devkit/config.toml`, the installation receipt and synchronized rules are all
-taken from the snapshot. Snapshot gates refuse file arguments, `--phase hygiene`
-and `fix`. A snapshot with no changed files passes without evaluating. The text
+taken from the snapshot. Managed rule copies under `.devkit/managed/` are
+usually Git-ignored and therefore absent from the tree; the gate reads such a
+file from the working tree only when its SHA-256 matches the hash recorded in
+the snapshot's receipt. A rule file that is missing or differs from the receipt
+fails the gate with a message to run `devkit sync` and commit the receipt.
+Snapshot gates refuse file arguments, `--phase hygiene` and `fix`. A snapshot with no changed files passes without evaluating. The text
 output starts with a `[SNAPSHOT: mode=... changed=N deleted=M]` line.
 
 Two built-in linter rules exist for these gates and inspect explicit targets
@@ -127,7 +131,9 @@ Rules shipped by a bundle (`kind = "rule"`) are recorded by `devkit sync` in
 `.devkit/installation.json`. `agent-rules` loads every `.py` file listed under
 such an asset (an override under `.devkit/overrides/` replaces the managed
 copy) after the built-in rules and before `--rules-dir`, so no flag is needed.
-A rule with the same ID as an earlier one replaces it.
+A rule with the same ID as an earlier one replaces it. A listed file that does
+not exist on disk is a loading error (exit code 1), not a silent skip: run
+`devkit sync` to restore the managed copies.
 
 ## Library and custom rules
 

@@ -78,6 +78,7 @@ Resources are classified along three dimensions: **Guidance & Context Layer** (n
 
 #### Bundle context delivery contract
 
+- The **bundle context** is the whole `get-context <bundle>` response: the constitution (when present) plus the instruction header catalog. A bundle that ships instructions without an `AGENTS.md` still has a context; its catalog is the context. The constitution is the part read in full, the catalog the part read selectively.
 - `get-context <bundle>` returns the full constitution (when present) and an instruction header catalog with paths. It returns content; the agent reads that output into its context.
 - During sync, bundles with a constitution or selected instructions receive a generated prerequisite at the beginning of each deployed skill body, after YAML frontmatter. Managed and native skill copies receive the same prerequisite. Source files and authoring ZIP exports remain unchanged.
 - The prerequisite explicitly requires **one command execution per bundle per current agent context**, not one per skill or turn. Other package entry points may explicitly request the same context using this command and the same deduplication rule.

@@ -6,6 +6,7 @@
 - [Distribution Overview](overview.md)
 - [Bundle Manifest Specification](manifest-spec.md)
 - [Synchronization & Transactions](sync-and-transactions.md)
+- [In-Repository Bundles](in-repo-bundles.md)
 
 ---
 

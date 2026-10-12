@@ -194,6 +194,7 @@ The tree's regular files are materialized into a temporary directory (symlinks a
 
 - Unstaged edits, untracked files and ignored local files do not exist for the gate.
 - `.devkit/config.toml`, `.devkit/installation.json` and synchronized rules are read from the snapshot, so policy must be committed to take effect in a gate.
+- Managed rule copies under `.devkit/managed/` are normally Git-ignored and absent from the tree. A rule file listed in the snapshot's receipt but missing from the snapshot is read from the working tree only when its SHA-256 matches the receipt's `files` entry; a missing or drifted file fails the gate with a `devkit sync` hint. The committed receipt therefore still pins exactly which rule code a gate runs.
 - The changed files of the diff are the targets; deleted paths are reported in the `[SNAPSHOT: ...]` line and never evaluated. A snapshot with no changed files passes without loading rules.
 - Snapshot gates run the `linter` phase only and refuse file arguments, `--phase hygiene` and `fix`; `--staged` and `--ci` are mutually exclusive.
 

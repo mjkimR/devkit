@@ -180,11 +180,12 @@ The built-in rules reside in `agent_rule_engine.rules`:
 
 ```python
 from pathlib import Path
-from agent_rule_engine import RuleContext, RuleRegistry, evaluate, managed_rule_paths
+from agent_rule_engine import RuleContext, RuleRegistry, evaluate, resolve_managed_rules
 
 registry = RuleRegistry()
 registry.register(DocHeadingRule())
-registry.discover_from_files(managed_rule_paths(Path(".")))   # rules synchronized by devkit
+managed = resolve_managed_rules(Path("."))                   # rules synchronized by devkit
+registry.discover_from_files(managed.paths)                   # managed.errors lists receipt entries not on disk
 
 ctx = RuleContext(workspace_root=Path("."))
 result = evaluate(ctx, registry.get_all())

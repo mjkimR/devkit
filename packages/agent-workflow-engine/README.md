@@ -19,7 +19,8 @@ src/agent_workflow_engine/
 ├── checks.py        # Check registry: syntax, classes, primitives, aliases
 ├── envelope.py      # envelopes/<kind>-NN.yaml loading and review state
 ├── evaluate.py      # Stage evaluation, gates, --given, delegate, waiting
-├── binding.py       # workflow / workflow_hash in the anchor file
+├── binding.py       # workflow / workflow_hash / workflow_history in the anchor file
+├── decisions.py     # decisions/NN-<request>.yaml records answering human requests
 ├── render.py        # Sentinel text output
 ├── git.py           # merge-base ancestry for revision checks
 └── cli/             # agent-workflow commands
@@ -36,7 +37,9 @@ just workflow new login-flow                          # create and bind a unit
 just workflow next --unit .devkit/transient/work/login-flow
 just workflow next --unit <dir> --given integration   # assert a gate after the user's OK
 just workflow next --unit <dir> --format json
-just workflow handoff --unit <dir> --workflow spec-driven  # continue a completed unit with a next candidate
+just workflow requests --unit <dir>                   # open human requests (approvals, choices)
+just workflow answer --unit <dir> --request gate:integration --action accept
+just workflow handoff --unit <dir>                    # continue a completed unit with the recorded or auto choice
 just workflow show direct-delivery
 just workflow list
 just workflow envelope new --unit <dir> --kind review
@@ -73,18 +76,23 @@ integration = "ask"
 handoff = "ask"                       # reserved: who picks the next workflow of a completed unit
 ```
 
-`ask` keeps a gated stage current until `next --given <gate>` is passed after
-the user's approval. `auto` passes the gate by policy and records it in the
-output. `off` skips the stage. Lowering or raising a gate later is a change to
-this table only.
+`ask` keeps a gated stage current and emits an `approve` request; the answer is
+a decision record under `<unit>/decisions/` written by `agent-workflow answer`
+(or by a host UI), while `next --given <gate>` remains as a non-persisted
+assertion. `auto` passes the gate by policy and records it in the output.
+`off` skips the stage. Lowering or raising a gate later is a change to this
+table only. The request and record formats are the
+[Human Interaction Contract](../../docs/workflow/human-interaction.md).
 
 Workflows chain. A definition's `next` list names candidate workflows with
 `when` preconditions (check syntax) and a `recommended` flag. Once a unit
 completes its workflow, `next` prints `[HANDOFF]` and one `[CANDIDATE]` line
-per candidate with its eligibility. Under `handoff = "ask"` a person chooses
-and the agent runs `handoff --unit <dir> --workflow <id>`; under `"auto"` the
-first eligible candidate is chosen and `handoff --unit <dir>` rebinds the unit
-to it, recording the finished segment in the anchor's `workflow_history`.
+per candidate with its eligibility, plus a `choose` request. Under
+`handoff = "ask"` the person's choice is recorded with `answer --request
+handoff --action accept --value <id>` (or passed as `handoff --workflow <id>`);
+under `"auto"` the first eligible candidate is chosen. `handoff --unit <dir>`
+then rebinds the unit, recording the finished segment in the anchor's
+`workflow_history`.
 
 ## Workflow definitions
 
@@ -126,3 +134,4 @@ role and isolation level only; the host projection of that role belongs to
 
 - [Workflow Engine Overview](../../docs/workflow/overview.md): delivery model, layout template, approval gates, CLI surface and the relationship to specrig.
 - [Workflow Definitions and Checks](../../docs/workflow/definition-and-checks.md): document schema, check registry, envelopes, binding and drift, output signals.
+- [Human Interaction Contract](../../docs/workflow/human-interaction.md): request kinds, decision records, how answers are applied.

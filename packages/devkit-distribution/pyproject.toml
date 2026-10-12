@@ -13,6 +13,9 @@ dependencies = [
 [project.scripts]
 devkit = "devkit_distribution.cli:cli"
 
+[project.entry-points."devkit_distribution.bundles"]
+devkit = "devkit_distribution.guide"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

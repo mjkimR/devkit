@@ -41,10 +41,11 @@ packages/agent-workflow-engine/src/agent_workflow_engine/
 ├── checks.py        # Check registry: syntax, classes, primitives, aliases
 ├── envelope.py      # envelopes/<kind>-NN.yaml loading and review/reverify state
 ├── evaluate.py      # Stage evaluation: checks, gates, --given, delegate, waiting
-├── binding.py       # workflow / workflow_hash recorded in the anchor file
+├── decisions.py     # decision records answering human requests
+├── binding.py       # workflow / workflow_hash / workflow_history recorded in the anchor file
 ├── render.py        # Sentinel text lines and JSON
 ├── git.py           # merge-base ancestry for revision checks
-└── cli/commands.py  # agent-workflow: new, bind, next, show, checks, validate, list, envelope
+└── cli/commands.py  # agent-workflow: new, bind, next, handoff, requests, answer, show, checks, validate, list, envelope
 ```
 
 ---
@@ -111,7 +112,7 @@ integration = "ask"
 | `auto` | The gate is satisfied by policy. The stage passes once its other exit checks hold, and the output records `[GATE: <gate> policy=auto]` so the delegation is visible. |
 | `off` | The stage is skipped and reported as `[SKIPPED: <id> policy=approvals.<gate>=off]`. |
 
-`--given` is the only way to assert a human or runner check. The CLI never writes an approval file and never infers approval from conversation. Raising a gate later is a configuration change back to `ask`; lowering it is a change to `auto` or `off`. The workflow definition does not change in either case.
+Under `ask`, `next` emits an `approve` request (`[REQUEST: id=gate:<gate> ...]`) and the answer is a decision record under `<unit>/decisions/` written by `agent-workflow answer` or by a host UI; `--given` remains as a non-persisted assertion for the current invocation. The CLI never infers approval from conversation. Raising a gate later is a configuration change back to `ask`; lowering it is a change to `auto` or `off`. The workflow definition does not change in either case. The request and answer formats are specified in [Human Interaction Contract](human-interaction.md).
 
 ### The `handoff` Gate
 
@@ -119,7 +120,7 @@ Workflows are segments: a definition's `next` list names the workflows that may 
 
 | Policy | Behavior |
 | --- | --- |
-| `ask` (default) | `next` lists every candidate with its eligibility and recommendation and reports `[WAITING: human handoff]`. The executor presents them, and after the user's choice runs `handoff --unit DIR --workflow <id>`; the choice must be an eligible candidate. |
+| `ask` (default) | `next` lists every candidate with its eligibility and recommendation, emits a `choose` request (`id=handoff`) and reports `[WAITING: human handoff]`. The person's choice is recorded with `answer --request handoff --action accept --value <id>` (or passed as `handoff --workflow <id>`); the choice must be an eligible candidate. |
 | `auto` | The first candidate whose `when` checks all hold is `chosen=`; `handoff --unit DIR` rebinds to it without a choice. With no eligible candidate the engine waits for a person, and `handoff` without `--workflow` fails with `HANDOFF_UNDECIDED`. |
 | `off` | No handoff is offered; the unit is finished when its workflow completes. |
 
@@ -134,6 +135,8 @@ agent-workflow new <slug> [--workflow ID] [--date YYYY-MM-DD]   # create a unit 
 agent-workflow bind --unit DIR [--workflow ID]                  # record or refresh the binding (accepts drift)
 agent-workflow next --unit DIR [--given NAME]... [--no-lint] [--format text|json]
 agent-workflow handoff --unit DIR [--workflow ID] [--date YYYY-MM-DD]  # continue a completed unit with a next candidate
+agent-workflow requests --unit DIR [--format text|json]        # open human requests of a unit
+agent-workflow answer --unit DIR --request ID --action ACTION [--value V]... [--note TEXT] [--by NAME]
 agent-workflow show <ID|PATH> [--format text|json]              # print a definition's stages, hash and next candidates
 agent-workflow checks [--format text|json]                      # registered check names, classes and parameters
 agent-workflow validate [PATH]...                               # validate definitions (default: definitions_dir)
@@ -152,11 +155,12 @@ Errors are reported on stderr as Agent Advisory Protocol blocks from the `agent-
 | `UNIT_NOT_FOUND`, `UNIT_EXISTS`, `ANCHOR_INVALID` | `INPUT_ERROR` | the unit directory has no anchor, already exists, or its frontmatter is unreadable |
 | `SLUG_INVALID`, `DATE_INVALID`, `GIVEN_INVALID`, `KIND_INVALID` | `INPUT_ERROR` | a flag or argument is malformed |
 | `HANDOFF_NOT_READY`, `HANDOFF_NONE`, `HANDOFF_OFF` | `INPUT_ERROR` | the unit's workflow is not complete, declares no `next`, or handoff is disabled by policy |
-| `HANDOFF_CHOICE_REQUIRED`, `HANDOFF_UNDECIDED`, `HANDOFF_INVALID`, `HANDOFF_INELIGIBLE` | `INPUT_ERROR` | `ask` needs `--workflow`; `auto` found no eligible candidate; the choice is not a candidate, or its `when` checks fail (details list the candidates) |
+| `HANDOFF_CHOICE_REQUIRED`, `HANDOFF_UNDECIDED`, `HANDOFF_INVALID`, `HANDOFF_INELIGIBLE` | `INPUT_ERROR` | `ask` needs a recorded choice or `--workflow`; `auto` found no eligible candidate; the choice is not a candidate, or its `when` checks fail (details list the candidates) |
+| `REQUEST_UNKNOWN`, `DECISION_INVALID` | `INPUT_ERROR` | `answer` names a request that is not open, or an action/value that does not fit it (see [Human Interaction Contract](human-interaction.md)) |
 | `WORKFLOW_DRIFT` | `BLOCKED` | the bound schema hash changed under in-flight work; `[FIX]` names the `bind` command |
 | `LINT_FAILED` | `MAINTENANCE` | `agent-rule-engine` raised a rule execution error during `lint-clean` |
 
-Output contracts are specified in [Workflow Definitions and Checks, section 5](definition-and-checks.md#5-output-signals).
+Output contracts are specified in [Workflow Definitions and Checks, section 5](definition-and-checks.md#5-output-signals); the request and decision formats in [Human Interaction Contract](human-interaction.md).
 
 ---
 

@@ -260,7 +260,10 @@ When the workflow is complete and declares `next` candidates (and `approvals.han
 
 - `recommended=` lists only candidates that are both recommended and eligible.
 - Under `policy=auto`, `chosen=` names the first eligible candidate and no `[WAITING]` line appears; with no eligible candidate the engine falls back to waiting for a person.
+- A recorded choice (`decisions/NN-handoff.yaml`, see [Human Interaction Contract](human-interaction.md)) sets `chosen=` under either policy and adds `decision=<file>`.
 - No `[HANDOFF]` line means the unit is finished.
+
+Whenever a person must act, one `[REQUEST: ...]` line per open request follows the stage block, with `[DECLINED: ...]` for a request that was refused and is still open, and `[DECISION_ERROR: ...]` for a malformed record. The JSON object carries them as `requests` and `decision_errors`. Formats are in [Human Interaction Contract](human-interaction.md).
 
 `--format json` emits one object:
 
@@ -281,10 +284,12 @@ When the workflow is complete and declares `next` candidates (and `approvals.han
   "complete": false,
   "envelope_errors": [],
   "drift": null,
-  "handoff": null
+  "handoff": null,
+  "requests": [],
+  "decision_errors": []
 }
 ```
 
 `handoff` is `null` until the workflow is complete; then it is `{"policy", "candidates": [{"workflow", "recommended", "eligible", "checks": [...]}], "eligible": [...], "recommended": [...], "chosen"}`.
 
-`show --format json` emits the parsed document plus `hash`. `checks --format json` emits the registry. `list --format json` emits `[{"unit", "status", "workflow", "workflow_hash", "history"}]`. `handoff --format json` emits `{"unit", "from", "to", "workflow_hash", "policy", "history"}`.
+`show --format json` emits the parsed document plus `hash`. `checks --format json` emits the registry. `list --format json` emits `[{"unit", "status", "workflow", "workflow_hash", "history"}]`. `handoff --format json` emits `{"unit", "from", "to", "workflow_hash", "policy", "history"}`. `requests --format json` emits the `requests` array alone; `answer --format json` emits the written record with its `file`.
