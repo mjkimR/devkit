@@ -9,6 +9,7 @@ devkit/
 ├── packages/
 │   ├── agent-advisory/        # Agent Advisory Protocol errors and their authoring guide bundle
 │   ├── agent-rule-engine/     # Agent-managed rule & governance engine with built-in CLI
+│   ├── agent-workflow-engine/ # Data-driven delivery workflow engine (agent-workflow CLI)
 │   ├── devkit-distribution/   # Installed resource synchronization (devkit CLI)
 │   └── devkit-starter/        # Example content wheel for devkit sync
 ├── examples/bundles/          # Local distribution examples

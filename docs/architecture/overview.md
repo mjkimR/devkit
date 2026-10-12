@@ -12,6 +12,8 @@ This document provides a high-level overview of the `devkit` monorepo architectu
    Packaging, versioning, selecting, and synchronizing agent guidance, instructions, operational playbooks, native skills, and configurations across developer repositories.
 2. **Repository Governance & Deterministic Verification (`agent-rule-engine`)**:
    Evaluating static invariants, specification document integrity, cross-references, and code hygiene with automated repairs and convergence rechecks.
+3. **Delivery Workflow Orchestration (`agent-workflow-engine`)**:
+   Declaring multi-stage delivery procedures as data, computing the current stage of a work unit from its files, enforcing approval gates by project policy, and detecting procedure drift, so every agent host follows the same procedure from the same state.
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -44,13 +46,16 @@ devkit/
 ├── packages/
 │   ├── devkit-distribution/   # Distribution CLI (`devkit`) and sync engine
 │   ├── agent-rule-engine/     # Governance rule engine and CLI (`agent-rules`)
+│   ├── agent-workflow-engine/ # Delivery workflow engine and CLI (`agent-workflow`)
+│   ├── agent-advisory/        # Agent Advisory Protocol errors and authoring guide bundle
 │   └── devkit-starter/        # Reference content package for bundles
 ├── examples/bundles/          # Example distribution bundles
 ├── scripts/                   # Shared shell logic and tooling helpers
 └── docs/                      # Central architectural and package specifications
     ├── architecture/          # Cross-cutting system design & taxonomy
     ├── distribution/          # Detailed specifications for devkit-distribution
-    └── rule-engine/           # Detailed specifications for agent-rule-engine
+    ├── rule-engine/           # Detailed specifications for agent-rule-engine
+    └── workflow/              # Detailed specifications for agent-workflow-engine
 ```
 
 ---
@@ -88,3 +93,7 @@ The subsystems are decoupled yet operate synergistically:
 - [Rule Engine Overview](../rule-engine/overview.md): Engine architecture, workspace cache, and document catalog.
 - [Evaluation Lifecycle](../rule-engine/evaluation-lifecycle.md): Single-pass repair, convergence check, and CLI execution.
 - [Rule Authoring Guide](../rule-engine/rule-authoring.md): Protocols, finding models, and creating custom rules.
+
+### Workflow Engine (`agent-workflow-engine`)
+- [Workflow Engine Overview](../workflow/overview.md): Delivery model, work unit layout template, approval gate policies, CLI surface, and the relationship to specrig.
+- [Workflow Definitions and Checks](../workflow/definition-and-checks.md): Definition schema, check registry, envelope contract, binding and drift, and output signals.

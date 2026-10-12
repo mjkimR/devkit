@@ -385,6 +385,24 @@ RULE-markdown-link = "hygiene"
     assert receipt["selection"]["agents"] == ["codex"]
 
 
+def test_sync_ignores_workflow_table_owned_by_workflow_engine(installed: list[InstalledBundle], bare: Path) -> None:
+    write_config(
+        bare,
+        """schema = 1
+agents = ["codex"]
+
+[workflow]
+anchor = "task.md"
+
+[workflow.approvals]
+integration = "ask"
+""",
+    )
+    sync_project(bare, installed)
+    receipt = json.loads((bare / RECEIPT).read_text())
+    assert receipt["selection"]["agents"] == ["codex"]
+
+
 def test_receipt_cannot_own_config(installed: list[InstalledBundle], target: Path) -> None:
     sync_project(target, installed)
     path = target / RECEIPT

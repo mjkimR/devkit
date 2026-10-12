@@ -46,3 +46,7 @@ rules-fix +args="":
 # Show each rule's default/effective phase, project overrides, and pending promotions
 rules-phases +args="":
     uv run --no-active --package agent-rule-engine agent-rules phases {{ args }}
+
+# Run the workflow engine CLI (new, bind, next, show, checks, validate, list, envelope)
+workflow +args="":
+    uv run --no-active --package agent-workflow-engine agent-workflow {{ args }}

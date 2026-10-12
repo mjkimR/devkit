@@ -16,6 +16,7 @@ PY
 resolve_module() {
     case "$1" in
         rule-engine|rules|rule) echo "agent-rule-engine" ;;
+        workflow-engine|workflow|wf) echo "agent-workflow-engine" ;;
         *) echo "$1" ;;
     esac
 }

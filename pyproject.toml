@@ -29,6 +29,7 @@ typeCheckingMode = "basic"
 extraPaths = [
     "./packages/agent-advisory/src",
     "./packages/agent-rule-engine/src",
+    "./packages/agent-workflow-engine/src",
     "./packages/devkit-distribution/src",
     "./packages/devkit-starter/src",
 ]
@@ -44,7 +45,7 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-pythonpath = ["packages/agent-rule-engine/src", "packages/devkit-distribution/src"]
+pythonpath = ["packages/agent-rule-engine/src", "packages/agent-workflow-engine/src", "packages/devkit-distribution/src"]
 log_level = "INFO"
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"

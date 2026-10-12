@@ -24,8 +24,9 @@ from .inventory import AGENTS
 from .transaction import CONFIG
 
 SCHEMA = 1
-# ``rules`` is owned by ``agent-rule-engine`` (phase overrides) and is only passed through here.
-FIELDS = frozenset({"schema", "agents", "presets", "playbooks", "rules"})
+# ``rules`` is owned by ``agent-rule-engine`` (phase overrides) and ``workflow`` by
+# ``agent-workflow-engine`` (layout, approvals); both are only passed through here.
+FIELDS = frozenset({"schema", "agents", "presets", "playbooks", "rules", "workflow"})
 
 
 @dataclass(frozen=True)

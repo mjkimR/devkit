@@ -6,6 +6,7 @@ requires-python = ">=3.12"
 members = [
     "agent-advisory",
     "agent-rule-engine",
+    "agent-workflow-engine",
     "devkit-distribution",
     "devkit-starter",
 ]
@@ -65,6 +66,33 @@ dev = [
     { name = "pytest", specifier = ">=8.0.0" },
     { name = "pytest-asyncio", specifier = ">=0.23.0" },
 ]
+
+[[package]]
+name = "agent-workflow-engine"
+version = "0.1.0"
+source = { editable = "packages/agent-workflow-engine" }
+dependencies = [
+    { name = "agent-advisory" },
+    { name = "agent-rule-engine" },
+    { name = "click" },
+    { name = "pyyaml" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "agent-advisory", editable = "packages/agent-advisory" },
+    { name = "agent-rule-engine", editable = "packages/agent-rule-engine" },
+    { name = "click", specifier = ">=8.1.7" },
+    { name = "pyyaml", specifier = ">=6.0.1" },
+]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=8.0.0" }]
 
 [[package]]
 name = "cfgv"
