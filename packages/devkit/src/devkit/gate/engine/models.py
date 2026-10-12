@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 from typing import Any, Protocol
 
+from devkit.advisory import AdvisoryError
 from devkit.core.errors import ArgumentError
 from devkit.gate.errors import GateDefinitionError, GateResultError
 
@@ -36,11 +38,14 @@ class GateResult:
 
     Refusal is an ``AdvisoryError`` (normally ``GateRefusedError``) raised from
     ``run``, so every failure carries an advisory; a ``FAILED`` result is
-    rejected with ``GateResultError``.
+    rejected with ``GateResultError``. ``notices`` are warnings and notices the
+    commit should not be blocked for (``AdvisoryError`` at level ``WARNING`` or
+    ``NOTICE``; the runner lowers an ``ERROR`` to ``WARNING``).
     """
 
     outcome: Outcome = Outcome.PASSED
     note: str = ""
+    notices: tuple[AdvisoryError, ...] = ()
 
     def __post_init__(self) -> None:
         if self.outcome not in (Outcome.PASSED, Outcome.SKIPPED):
@@ -49,8 +54,8 @@ class GateResult:
             )
 
     @classmethod
-    def passed(cls, note: str = "") -> GateResult:
-        return cls(Outcome.PASSED, note)
+    def passed(cls, note: str = "", notices: Sequence[AdvisoryError] = ()) -> GateResult:
+        return cls(Outcome.PASSED, note, tuple(notices))
 
     @classmethod
     def skipped(cls, reason: str) -> GateResult:

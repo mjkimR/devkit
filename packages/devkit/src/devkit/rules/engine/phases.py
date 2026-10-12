@@ -6,7 +6,8 @@ are cleared. A rule authored for a codebase with pre-existing violations can
 declare ``promote_to = Phase.LINTER`` on a ``hygiene`` rule to record that it is
 meant to become a linter rule once clean. Both transitions are reported by the
 CLI with the count of remaining violations; ``remaining=0`` is the signal to
-drop the override or flip the rule's declared phase.
+drop the override or flip the rule's declared phase, and ``promotion_notices``
+turns it into a ``RULES_PROMOTION_READY`` notice.
 """
 
 from __future__ import annotations
@@ -15,7 +16,9 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from devkit.rules.engine.errors import PolicyError
+from devkit.advisory import AdvisoryError
+from devkit.core.receipt import CONFIG_PATH
+from devkit.rules.engine.errors import PolicyError, PromotionReadyNotice
 from devkit.rules.engine.models import Phase, Rule, Violation
 
 
@@ -117,3 +120,27 @@ def remaining_by_rule(violations: Sequence[Violation]) -> dict[str, int]:
             continue
         counts[v.rule_id] = counts.get(v.rule_id, 0) + 1
     return counts
+
+
+def promotion_notices(
+    entries: Sequence[PhaseEntry], active: Phase, violations: Sequence[Violation]
+) -> list[AdvisoryError]:
+    """One ``RULES_PROMOTION_READY`` notice naming every pending transition with no unfixed violation left."""
+    remaining = remaining_by_rule(violations)
+    ready = [e for e in transition_entries(entries, active) if remaining.get(e.rule_id, 0) == 0]
+    if not ready:
+        return []
+    edits = [
+        f"drop {e.rule_id} from [rules.phase_overrides] in {CONFIG_PATH}"
+        if e.overridden
+        else f"declare {e.rule_id} with phase={e.promote_to.value if e.promote_to else Phase.LINTER.value} and drop promote_to"
+        for e in ready
+    ]
+    ids = [e.rule_id for e in ready]
+    return [
+        PromotionReadyNotice(
+            f"phase transitions are ready (remaining=0): {', '.join(ids)}",
+            target_files=ids,
+            fix="; ".join(edits),
+        )
+    ]

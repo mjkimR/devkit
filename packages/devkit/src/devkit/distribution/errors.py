@@ -10,12 +10,15 @@ the CLI renders the error as it is.
 
 A ``SyncNotice`` is never raised: a synchronization collects it in
 ``SyncResult.notices`` (exit code ``0``) for something the caller should know
-about although the sync succeeded.
+about although the sync succeeded, at level ``WARNING`` (the user must learn
+or decide something) or ``NOTICE`` (worth knowing). Override drift under
+``override_drift = "warn"`` is an ``OverrideDriftError`` lowered to
+``WARNING``.
 """
 
 from __future__ import annotations
 
-from devkit.advisory import Actor, AdvisoryError, ExitCode, Retry
+from devkit.advisory import Actor, AdvisoryError, Level, Retry
 
 LOCK_RETRY_AFTER = "the running devkit command finishes"
 
@@ -125,33 +128,55 @@ class SyncNotice(DistributionError):
     """Base class of what a successful synchronization reports in ``SyncResult.notices``; never raised."""
 
     code = "SYNC_NOTICE"
-    exit_code = ExitCode.OK
-    actor = Actor.NONE
-    retry = Retry.SAFE
+    level = Level.NOTICE
 
 
 class OrphanLeftNotice(SyncNotice):
     """A managed file edited by hand is no longer desired: left on disk untouched and dropped from the receipt."""
 
     code = "ORPHAN_LEFT"
-    actor = Actor.USER
+    level = Level.WARNING
 
 
-class ToolVersionChangedNotice(SyncNotice):
-    """The receipt was written by another devkit version; this sync recorded the running one."""
+class StrayFilesNotice(SyncNotice):
+    """Files under ``.devkit/managed/`` that neither the receipt nor the inventory owns: never deployed or removed."""
 
-    code = "TOOL_VERSION_CHANGED"
-
-
-class PostSyncNotice(SyncNotice):
-    """A line a ``devkit.post_sync`` hook returned; the hook's package owns its meaning."""
-
-    code = "POST_SYNC_NOTICE"
+    code = "MANAGED_FILE_STRAY"
+    level = Level.WARNING
+    what_to_report = (
+        "devkit neither deploys nor removes these files, yet tools that scan the managed root may read them; "
+        "move project-owned files out of .devkit/managed/"
+    )
 
 
 class PostSyncHookFailedNotice(SyncNotice):
     """A ``devkit.post_sync`` hook raised or returned something other than a list; the sync itself succeeded."""
 
     code = "POST_SYNC_HOOK_FAILED"
-    actor = Actor.DEVELOPER
-    retry = Retry.AFTER_FIX
+    level = Level.WARNING
+
+
+class SubagentUnprojectedNotice(SyncNotice):
+    """A subagent has no native variant for a selected agent and was not projected for it."""
+
+    code = "SUBAGENT_UNPROJECTED"
+    what_to_report = "Add the variant, ship a role contract, or narrow `agents` in .devkit/config.toml"
+
+
+class BundleUnselectedNotice(SyncNotice):
+    """Installed bundles that the synchronization did not deploy."""
+
+    code = "BUNDLE_UNSELECTED"
+
+
+class ToolVersionChangedNotice(SyncNotice):
+    """The receipt was written by another devkit version; this sync recorded the running one."""
+
+    code = "TOOL_VERSION_CHANGED"
+    brief = True
+
+
+class PostSyncNotice(SyncNotice):
+    """A line a ``devkit.post_sync`` hook returned; the hook's package owns its meaning."""
+
+    code = "POST_SYNC_NOTICE"

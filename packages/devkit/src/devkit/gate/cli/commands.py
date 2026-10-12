@@ -13,7 +13,6 @@ any problem that would fail a commit and 2 only when it cannot run. A blocking
 
 from __future__ import annotations
 
-import os
 import sys
 from pathlib import Path
 
@@ -25,7 +24,9 @@ from devkit.core.cli import (
     FORMAT_OPTION,
     boundary,
     echo_json,
+    echo_notices,
     existing_directory,
+    exit_on_warnings,
     is_json,
     report_exit_code,
     workspace_option,
@@ -34,8 +35,6 @@ from devkit.gate.engine.models import Outcome, Stage
 from devkit.gate.engine.registry import display_path
 from devkit.gate.engine.runner import StageReport, load_gate_project, run_hook
 from devkit.gate.hooks import hooks
-
-VERBOSE_ENV = "DEVKIT_GATES_VERBOSE"
 
 WORKSPACE = workspace_option(
     "Any directory inside the repository [default: the current directory]; "
@@ -153,31 +152,29 @@ def status_cmd(workspace_root: str | None, output_format: str) -> None:
         sys.exit(report_exit_code(errors))
 
 
-def _report(report: StageReport, verbose: bool) -> None:
+def _report(report: StageReport) -> None:
+    """Notices first, then the setup problems, then one block per failed gate, its last ``[DETAIL]`` naming it."""
+    echo_notices(report.notices)
     for error in report.errors:
-        click.echo(f"[GATE_CONFIG: stage={report.stage}]", err=True)
         click.echo(error.render(), err=True)
     for run in report.runs:
         if run.outcome is Outcome.FAILED and run.error is not None:
-            click.echo(f"[GATE: {run.gate_id} stage={report.stage} outcome=failed]", err=True)
-            click.echo(run.error.render(), err=True)
-        elif verbose:
-            note = f" note={run.note}" if run.note else ""
-            click.echo(f"[GATE: {run.gate_id} stage={report.stage} outcome={run.outcome}{note}]", err=True)
+            lines = [*run.error.lines(), f"[DETAIL] gate={run.gate_id} stage={report.stage}"]
+            click.echo("\n".join(lines), err=True)
 
 
 @cli.command(name="run", context_settings={"ignore_unknown_options": True})
 @WORKSPACE
-@click.option("--verbose", "-v", is_flag=True, help=f"Also report passed and skipped gates (or set {VERBOSE_ENV}=1)")
 @click.argument("stage", type=click.Choice([stage.value for stage in Stage]))
 @click.argument("hook_args", nargs=-1, type=click.UNPROCESSED)
 @boundary
-def run_cmd(workspace_root: str | None, verbose: bool, stage: str, hook_args: tuple[str, ...]) -> None:
+def run_cmd(workspace_root: str | None, stage: str, hook_args: tuple[str, ...]) -> None:
     """Run one stage's gates; this is what the hook wrappers call.
 
-    A blocking stage exits with the highest exit code among its problems: 1 when gates refused the commit,
-    2 when the gate setup has a configuration, registry or load problem, a gate failed unexpectedly, or the
-    stage cannot run at all (not a Git work tree). post-commit always exits 0."""
+    Prints nothing on stdout. A blocking stage exits with the highest exit code among its problems: 1 when
+    gates refused the commit, 2 when the gate setup has a configuration, registry or load problem, a gate
+    failed unexpectedly, or the stage cannot run at all (not a Git work tree). post-commit always exits 0.
+    Options go before STAGE; hooks set DEVKIT_QUIET, DEVKIT_VERBOSE or DEVKIT_STRICT instead."""
     current = Stage(stage)
     try:
         report = run_hook(_start(workspace_root), current, hook_args)
@@ -186,6 +183,8 @@ def run_cmd(workspace_root: str | None, verbose: bool, stage: str, hook_args: tu
             raise
         click.echo(as_advisory_error(exc).render(), err=True)  # the commit exists; report only
         return
-    _report(report, verbose or os.environ.get(VERBOSE_ENV) == "1")
+    _report(report)
     if current.blocking and not report.ok:
         sys.exit(int(report.exit_code))
+    if current.blocking:
+        exit_on_warnings(report.notices)

@@ -1,15 +1,15 @@
 ---
-name: error-advisory-python
-description: Read before raising, rendering, or serializing errors in Python code. Explains the devkit.advisory library (AdvisoryError, factories, CLI/MCP/HTTP rendering) that implements the Agent Advisory Protocol.
+name: agent-advisory-python
+description: Read before raising, returning, rendering, or serializing errors, warnings or notices in Python code. Explains the devkit.advisory library (AdvisoryError, levels, factories, CLI/MCP/HTTP rendering) that implements the Agent Advisory Protocol.
 ---
 
 # Agent Advisory Protocol in Python (`devkit.advisory`)
 
-The `devkit.advisory` module implements the protocol defined in the `error-advisory` instruction. It is standard-library only. Read `error-advisory` first for mode semantics; this guide covers the Python API.
+The `devkit.advisory` module implements the protocol defined in the `agent-advisory` instruction. It is standard-library only. Read `agent-advisory` first for level and mode semantics; this guide covers the Python API.
 
 ## Raising errors
 
-Raise `AdvisoryError` subclasses instead of bare `ValueError`, `RuntimeError`, or framework exceptions at boundaries agents read. Declare stable defaults on the subclass and pass per-raise context as keywords. Every field can have a class-level default (`code`, `actor`, `retry`, `guardrail`, `input_error`, `retry_after`, `fix`, `what_to_report`, `target_files`, `exit_code`); a keyword argument other than `None` overrides it for one raise. Positional arguments after the message become `[DETAIL]` lines and are converted to `str`:
+Raise `AdvisoryError` subclasses instead of bare `ValueError`, `RuntimeError`, or framework exceptions at boundaries agents read. Declare stable defaults on the subclass and pass per-raise context as keywords. Every field can have a class-level default (`code`, `level`, `actor`, `retry`, `guardrail`, `input_error`, `retry_after`, `fix`, `what_to_report`, `target_files`, `brief`, `exit_code`); a keyword argument other than `None` overrides it for one instance. Positional arguments after the message become `[DETAIL]` lines and are converted to `str`:
 
 ```python
 from devkit.advisory import Actor, AdvisoryError, Retry
@@ -61,6 +61,36 @@ class GitFailedError(AdvisoryError):
 
 Factories are classmethods, so `MyDomainError.blocked(...)` returns `MyDomainError`. Other modes (`HALT`, `MAINTENANCE`, `DEFER`) are set through `actor`, `retry`, and `retry_after` on the constructor or the subclass. A bare `AdvisoryError("...")` derives `HALT` (`actor=NONE`, `retry=UNSAFE`); choose fields deliberately instead of relying on that default.
 
+## Returning warnings and notices
+
+Something an operation that **succeeded** must tell its caller is an `AdvisoryError` at level `WARNING` or `NOTICE`. It is never raised: return it with the result, typically in a `notices` list, and let the boundary print the result first and the notices after it. Its `exit_code` is `0` and its mode is `CONTINUE` (warning) or `NOTE` (notice); `actor`, `retry`, `guardrail`, `input_error` and `retry_after` are ignored.
+
+```python
+from dataclasses import dataclass, field
+
+from devkit.advisory import AdvisoryError, Level
+
+
+class OrphanLeftNotice(AdvisoryError):
+    code = "ORPHAN_LEFT"
+    level = Level.WARNING
+    what_to_report = "A hand-edited file is no longer managed; delete or move it"
+
+
+class ToolVersionChangedNotice(AdvisoryError):
+    code = "TOOL_VERSION_CHANGED"
+    level = Level.NOTICE
+    brief = True  # self-explanatory, no fix: rendered without [ACTION]
+
+
+@dataclass
+class SyncResult:
+    written: list[str]
+    notices: list[AdvisoryError] = field(default_factory=list)
+```
+
+A condition that is an error in one place and a warning in another keeps its class and code: `error.with_level(Level.WARNING)` returns a copy at the lower level. A raised warning or notice is a defect: `as_advisory_error` reports it as `UNEXPECTED_ERROR`.
+
 ## Rendering at boundaries
 
 Catch at the process or transport boundary, not deep inside the code:
@@ -81,10 +111,11 @@ def main() -> int:
     return 0
 ```
 
-- `error.lines()` / `error.render()`: sentinel lines for stderr or an MCP tool error result; multi-line values continue on lines indented under their sentinel.
-- `error.to_dict(include_advisory=True)`: JSON payload `{code, message, exit_code, advisory}`.
+- `error.lines()` / `error.render()`: sentinel lines (`[ERROR]`, `[WARN]` or `[NOTICE]` headline by level) for stderr or an MCP tool result; multi-line values continue on lines indented under their sentinel.
+- `error.to_dict(include_advisory=True)`: JSON payload `{code, level, message, exit_code, advisory}`.
+- Print the result before its warnings and notices, and errors last; a quiet mode may skip notices, never warnings or errors.
 - `error.to_problem_details(status=404, type_base="https://docs.example.com/errors")`: RFC 7807 body. `status` is the HTTP status chosen by the web layer; the library never maps codes to statuses.
-- `as_advisory_error(exc)` / `render_error(exc)`: pass through `AdvisoryError`, adapt anything else to `UNEXPECTED_ERROR` (`MAINTENANCE`).
+- `as_advisory_error(exc)` / `render_error(exc)`: pass through an `ERROR`-level `AdvisoryError`, adapt anything else to `UNEXPECTED_ERROR` (`MAINTENANCE`).
 
 ## Boundary rules
 

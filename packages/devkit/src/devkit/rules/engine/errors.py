@@ -7,6 +7,8 @@ instead of raising (``RuleProblem`` and its subclasses) are returned in
 ``RuleRegistry.errors``, ``ProjectRun.load_errors`` and
 ``EvaluationResult.errors``; each carries a code and, when it concerns one rule,
 that rule's ID in ``rule_id``. ``str(problem)`` is its message.
+``PromotionReadyNotice`` is a notice a completed run returns in
+``ProjectRun.notices``; it is never raised.
 """
 
 from __future__ import annotations
@@ -14,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any, Unpack
 
-from devkit.advisory import Actor, AdvisoryError, AdvisoryFields, Retry
+from devkit.advisory import Actor, AdvisoryError, AdvisoryFields, Level, Retry
 from devkit.core import errors as core_errors
 from devkit.core.receipt import CONFIG_PATH
 
@@ -121,6 +123,13 @@ class RuleDefinitionError(RulesError):
     """A rule class declares an invalid combination of attributes (for example ``promote_to``)."""
 
     code = "RULES_DEFINITION_INVALID"
+
+
+class PromotionReadyNotice(RulesError):
+    """A hygiene run found phase transitions with no violation left: drop the override or flip the phase (``NOTICE``)."""
+
+    code = "RULES_PROMOTION_READY"
+    level = Level.NOTICE
 
 
 class RulesRunError(RulesError):

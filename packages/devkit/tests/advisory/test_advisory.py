@@ -9,6 +9,7 @@ from devkit.advisory import (
     Advisory,
     AdvisoryError,
     ExitCode,
+    Level,
     Retry,
     as_advisory_error,
     render_error,
@@ -27,6 +28,8 @@ from devkit.advisory import (
         (Advisory(actor=Actor.NONE, retry=Retry.SAFE), ActionMode.DEFER),
         (Advisory(actor=Actor.NONE, retry=Retry.AFTER_FIX), ActionMode.HALT),
         (Advisory(), ActionMode.HALT),
+        (Advisory(level=Level.WARNING, input_error=True, actor=Actor.USER), ActionMode.CONTINUE),
+        (Advisory(level=Level.NOTICE, guardrail=True, retry=Retry.UNSAFE), ActionMode.NOTE),
     ],
 )
 def test_mode_derivation_order(advisory: Advisory, mode: ActionMode) -> None:
@@ -114,12 +117,18 @@ def test_factories_keep_subclass() -> None:
 
 def test_serialization_and_problem_details() -> None:
     error = AdvisoryError.interaction("Invalid token", code="AUTH_FAILED", what_to_report="Log in again")
-    assert error.to_dict(include_advisory=False) == {"code": "AUTH_FAILED", "message": "Invalid token", "exit_code": 2}
+    assert error.to_dict(include_advisory=False) == {
+        "code": "AUTH_FAILED",
+        "level": "ERROR",
+        "message": "Invalid token",
+        "exit_code": 2,
+    }
     advisory = error.to_dict()["advisory"]
     assert advisory["mode"] == "INTERACTION"
     assert advisory["input_error"] is False
     assert set(advisory) == {
         "code",
+        "level",
         "mode",
         "actor",
         "retry",
@@ -130,6 +139,7 @@ def test_serialization_and_problem_details() -> None:
         "what_to_report",
         "target_files",
         "details",
+        "brief",
     }
 
     problem = error.to_problem_details(status=401, type_base="https://docs.example.com/errors/")
@@ -224,3 +234,77 @@ def test_advisory_fields_forward_through_a_subclass_constructor() -> None:
         ExitCode.FINDINGS,
         ("a",),
     )
+
+
+class OrphanWarning(AdvisoryError):
+    code = "ORPHAN_LEFT"
+    level = Level.WARNING
+    actor = Actor.USER
+
+
+class VersionNotice(AdvisoryError):
+    code = "TOOL_VERSION_CHANGED"
+    level = Level.NOTICE
+    brief = True
+
+
+def test_warning_renders_continue_and_never_fails() -> None:
+    warning = OrphanWarning("left modified file in place: a.md", target_files=["a.md"], what_to_report="Delete it")
+    assert (warning.mode, warning.exit_code) == (ActionMode.CONTINUE, ExitCode.OK)
+    lines = warning.lines()
+    assert lines[0] == "[WARN]   (ORPHAN_LEFT) left modified file in place: a.md"
+    assert lines[1].startswith("[ACTION] CONTINUE — ")
+    assert "[TARGET] a.md" in lines and "[REPORT] Delete it" in lines
+    assert warning.to_dict()["level"] == "WARNING" and warning.to_dict()["exit_code"] == 0
+
+
+def test_notice_action_is_recommended_and_omitted_only_when_brief_without_fix() -> None:
+    assert VersionNotice("devkit 1 -> 2").lines() == ["[NOTICE] (TOOL_VERSION_CHANGED) devkit 1 -> 2"]
+    with_fix = VersionNotice("devkit 1 -> 2", fix="devkit status").lines()
+    assert with_fix[1].startswith("[ACTION] NOTE — ") and with_fix[-1] == "[FIX]    devkit status"
+    full = AdvisoryError("installed bundles not selected: x", code="BUNDLE_UNSELECTED", level=Level.NOTICE)
+    assert full.lines()[1].startswith("[ACTION] NOTE — ")
+    assert AdvisoryError("x", brief=True).lines()[1].startswith("[ACTION] HALT")  # brief applies to notices only
+
+
+def test_retry_after_is_an_error_field() -> None:
+    notice = AdvisoryError("x", level=Level.NOTICE, retry_after="1m")
+    assert not any(line.startswith("[WHEN]") for line in notice.lines())
+
+
+def test_sentinels_are_nine_characters_wide() -> None:
+    from devkit.advisory.advisory import HEADLINE
+
+    assert {len(sentinel) for sentinel in HEADLINE.values()} == {9}
+
+
+def test_with_level_copies_without_calling_the_constructor() -> None:
+    class DriftError(AdvisoryError):
+        code = "OVERRIDE_DRIFT"
+        actor = Actor.USER
+        retry = Retry.AFTER_FIX
+
+        def __init__(self, message: str, *, selectors: list[str]) -> None:
+            super().__init__(message, "detail", fix="devkit override diff a:b", target_files=selectors)
+            self.selectors = selectors
+
+    error = DriftError("drift", selectors=["a:b"])
+    warning = error.with_level(Level.WARNING)
+    assert isinstance(warning, DriftError) and warning is not error
+    assert (warning.code, warning.selectors, warning.details, warning.fix) == (
+        "OVERRIDE_DRIFT",
+        ["a:b"],
+        ("detail",),
+        "devkit override diff a:b",
+    )
+    assert (warning.level, warning.mode, warning.exit_code) == (Level.WARNING, ActionMode.CONTINUE, ExitCode.OK)
+    assert (error.level, error.mode, error.exit_code) == (Level.ERROR, ActionMode.INTERACTION, ExitCode.ERROR)
+    assert str(warning) == "drift"
+    assert error.with_level(Level.NOTICE, brief=True).brief is True
+    assert warning.with_level(Level.ERROR).exit_code == ExitCode.ERROR
+
+
+def test_a_raised_notice_is_a_defect() -> None:
+    wrapped = as_advisory_error(VersionNotice("devkit 1 -> 2"))
+    assert (wrapped.code, wrapped.level, wrapped.mode) == (UNEXPECTED_CODE, Level.ERROR, ActionMode.MAINTENANCE)
+    assert "NOTICE advisory was raised" in wrapped.message

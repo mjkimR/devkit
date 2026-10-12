@@ -1,9 +1,10 @@
 """``devkit rules`` commands: argument handling and exit codes; rendering lives in ``cli.output``.
 
-``--format json`` prints one object: ``{"violations", "errors"}`` (``check``,
-``fix``), ``{"rules", "errors"}`` (``phases``), ``{"rule", "warnings",
-"errors"}`` (``explain``), or ``{"error"}`` when the command fails outright.
-Text output is ``[KIND: ...]`` sentinel lines (``cli.output``).
+``--format json`` prints one object: ``{"violations", "errors", "notices"}``
+(``check``, ``fix``), ``{"rules", "errors"}`` (``phases``), ``{"rule",
+"notices", "errors"}`` (``explain``), or ``{"error"}`` when the command fails
+outright. Text output is ``[KIND: ...]`` sentinel lines (``cli.output``);
+warnings and notices follow the result on stderr as advisory blocks.
 
 Exit codes (``devkit.advisory.ExitCode``): ``0`` no error-severity violation
 remains; ``1`` violations remain (``check``/``fix``); ``2`` the command could
@@ -21,13 +22,15 @@ from pathlib import Path
 import click
 from click.core import ParameterSource
 
-from devkit.advisory import AdvisoryError, ExitCode
+from devkit.advisory import AdvisoryError, ExitCode, Level
 from devkit.core.cli import (
     FORMAT_OPTION,
     boundary,
     echo_json,
+    echo_notices,
     existing_directory,
     exit_on_problems,
+    exit_on_warnings,
     is_json,
     resolve_root,
     workspace_option,
@@ -67,7 +70,7 @@ def _execute(request: RunRequest) -> None:
             click.echo(snapshot.describe())
         if not snapshot.changed and not snapshot.deleted:
             if request.json:
-                echo_json({"violations": [], "errors": []})
+                echo_json({"violations": [], "errors": [], "notices": []})
             else:
                 output.echo_ok(output.NOTHING_TO_CHECK)
             return
@@ -84,8 +87,15 @@ def _execute(request: RunRequest) -> None:
 
     violations = run.result.violations
     errors = run.errors
+    notices = run.notices
     if request.json:
-        echo_json({"violations": [v.to_dict() for v in violations], "errors": [e.to_dict() for e in errors]})
+        echo_json(
+            {
+                "violations": [v.to_dict() for v in violations],
+                "errors": [e.to_dict() for e in errors],
+                "notices": [n.to_dict() for n in notices],
+            }
+        )
     else:
         entries = resolve_phases(run.rules, run.config.phase_overrides) if not errors else []
         output.print_transitions(entries, run.phase, violations)
@@ -99,9 +109,11 @@ def _execute(request: RunRequest) -> None:
         if run.ok:
             output.echo_ok()
 
+    echo_notices(notices)
     exit_on_problems(errors)
     if run.blocking_violations:
         raise SystemExit(int(ExitCode.FINDINGS))
+    exit_on_warnings(notices)
 
 
 def _snapshot_request(
@@ -259,17 +271,17 @@ def _concerns(problem: RuleProblem, rule: Rule | None) -> bool:
 def explain_cmd(workspace_root: str | None, rules_dir: str | None, output_format: str, rule_id: str) -> None:
     """Describe one rule: phase, severity, effective settings and its guide.
 
-    Loading problems and policy problems of other rules are printed as
-    warnings; policy problems of this rule exit with status 2, and an unknown
-    rule ID is an argument error.
+    Loading problems and policy problems of other rules are reported as
+    warnings (with ``--strict``, exit status 1); policy problems of this rule
+    exit with status 2, and an unknown rule ID is an argument error.
     """
     root = resolve_root(workspace_root)
     project = load_project_rules(root, _rules_path(rules_dir))
     rule = project.registry.get(rule_id)
     errors: list[AdvisoryError] = [p for p in project.policy_errors if _concerns(p, rule)]
-    warnings = [p for p in project.errors if p not in errors]
-    output.echo_warnings(warnings)
+    warnings = [p.with_level(Level.WARNING) for p in project.errors if p not in errors]
     if rule is None:
+        echo_notices(warnings)
         available = ", ".join(sorted(r.id for r in project.rules))
         raise ArgumentError(
             f"unknown rule: {rule_id}; available: {available}",
@@ -282,10 +294,12 @@ def explain_cmd(workspace_root: str | None, rules_dir: str | None, output_format
         echo_json(
             {
                 "rule": entry,
-                "warnings": [w.to_dict() for w in warnings],
+                "notices": [w.to_dict() for w in warnings],
                 "errors": [e.to_dict() for e in errors],
             }
         )
     elif not errors:
         output.print_explain(rule, entry, resolver)
+    echo_notices(warnings)
     exit_on_problems(errors)
+    exit_on_warnings(warnings)

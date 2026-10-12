@@ -584,7 +584,13 @@ def test_cli_add_resolves_default_preset_and_remove(
     runner = CliRunner()
     result = runner.invoke(cli, ["sync", "--workspace-root", str(target)])
     assert result.exit_code == 0, result.output
-    assert "[NOTICE: installed bundles not selected: extra;" in result.stderr
+    assert "[NOTICE] (BUNDLE_UNSELECTED) installed bundles not selected: extra" in result.stderr
+    assert "[FIX]    devkit add extra" in result.stderr
+    assert [n["code"] for n in json.loads(result.stdout)["notices"]] == ["BUNDLE_UNSELECTED"]
+    quiet = runner.invoke(cli, ["sync", "-q", "--workspace-root", str(target)])
+    assert quiet.exit_code == 0 and quiet.stderr == ""  # -q hides notices; JSON keeps them
+    assert [n["code"] for n in json.loads(quiet.stdout)["notices"]] == ["BUNDLE_UNSELECTED"]
+    assert runner.invoke(cli, ["sync", "--strict", "--workspace-root", str(target)]).exit_code == 0
 
     result = runner.invoke(cli, ["add", "extra", "--workspace-root", str(target)])
     assert result.exit_code == 0, result.output
@@ -669,9 +675,13 @@ def test_stray_files_under_managed_root_are_reported_not_touched(
     out = CliRunner().invoke(cli, ["sync", "--workspace-root", str(target)])
     assert out.exit_code == 0
     assert (
-        "[WARNING: (MANAGED_FILE_STRAY) unmanaged files under .devkit/managed/: .devkit/managed/team/rules/local_rule.py"
+        "[WARN]   (MANAGED_FILE_STRAY) unmanaged files under .devkit/managed/: .devkit/managed/team/rules/local_rule.py"
         in out.stderr
     )
+    strict = CliRunner().invoke(cli, ["sync", "--strict", "--workspace-root", str(target)])
+    assert strict.exit_code == 1 and "(MANAGED_FILE_STRAY)" in strict.stderr  # a warning fails only under --strict
+    quiet = CliRunner().invoke(cli, ["sync", "-q", "--workspace-root", str(target)], env={"DEVKIT_STRICT": "1"})
+    assert quiet.exit_code == 1 and "(MANAGED_FILE_STRAY)" in quiet.stderr  # -q never hides a warning
 
 
 def test_agents_default_to_every_host_and_empty_list_disables_projection(

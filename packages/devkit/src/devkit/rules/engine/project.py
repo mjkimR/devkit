@@ -18,11 +18,13 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
+from devkit.advisory import AdvisoryError
 from devkit.rules.engine.config import RulesConfig, load_rules_config
 from devkit.rules.engine.discovery import resolve_managed_rules
 from devkit.rules.engine.errors import PolicyError, RuleProblem, RulesDirError, RulesRunError, TargetError
 from devkit.rules.engine.evaluator import EvaluationResult, evaluate_rules
 from devkit.rules.engine.models import Phase, Rule, RuleContext, Violation
+from devkit.rules.engine.phases import promotion_notices, resolve_phases
 from devkit.rules.engine.policy import validate_policy
 from devkit.rules.engine.registry import RuleRegistry, default_rule_registry
 from devkit.rules.engine.settings import SettingsResolver
@@ -123,6 +125,14 @@ class ProjectRun:
     def blocking_violations(self) -> list[Violation]:
         """Unfixed error-severity violations: the findings that fail the run."""
         return self.result.blocking_violations
+
+    @property
+    def notices(self) -> list[AdvisoryError]:
+        """Notices of a completed run (``RULES_PROMOTION_READY``); none when the run could not complete."""
+        if self.errors:
+            return []
+        entries = resolve_phases(self.rules, self.config.phase_overrides)
+        return promotion_notices(entries, self.phase, self.result.violations)
 
     @property
     def ok(self) -> bool:

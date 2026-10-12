@@ -6,9 +6,10 @@ hook is called in sorted entry-point name order as ``hook(root, result)``,
 with the project root and the sync result as its JSON object
 (``SyncResult.to_dict()``). It returns ``None`` or a list whose items become
 notices: a string is a ``PostSyncNotice`` (``POST_SYNC_NOTICE``), an
-``AdvisoryError`` is kept with its own code. A hook cannot fail the sync: the
-files are already on disk, so an exception or a malformed return value becomes
-a ``PostSyncHookFailedNotice`` (``POST_SYNC_HOOK_FAILED``).
+``AdvisoryError`` is kept with its own code and level, except that an
+``ERROR`` is lowered to ``WARNING``. A hook cannot fail the sync: the files are
+already on disk, so an exception or a malformed return value becomes a
+``PostSyncHookFailedNotice`` (``POST_SYNC_HOOK_FAILED``, a warning).
 """
 
 from __future__ import annotations
@@ -18,7 +19,7 @@ from importlib import metadata
 from pathlib import Path
 from typing import Any
 
-from devkit.advisory import AdvisoryError
+from devkit.advisory import AdvisoryError, Level
 from devkit.distribution.errors import PostSyncHookFailedNotice, PostSyncNotice
 
 GROUP = "devkit.post_sync"
@@ -31,6 +32,12 @@ def _failed(name: str, problem: str) -> PostSyncHookFailedNotice:
         f"post-sync hook {name} failed: {problem}",
         what_to_report=f"The failure of the {GROUP} entry point {name}; the sync itself succeeded",
     )
+
+
+def _notice(item: str | AdvisoryError, hook: str) -> AdvisoryError:
+    if isinstance(item, str):
+        return PostSyncNotice(item, f"hook: {hook}")
+    return item.with_level(Level.WARNING) if item.level is Level.ERROR else item
 
 
 def run_post_sync(root: Path, result: dict[str, Any]) -> list[AdvisoryError]:
@@ -50,8 +57,5 @@ def run_post_sync(root: Path, result: dict[str, Any]) -> list[AdvisoryError]:
                 _failed(entry.name, f"returned {type(returned).__name__}, expected list[str | AdvisoryError]")
             )
             continue
-        notices.extend(
-            item if isinstance(item, AdvisoryError) else PostSyncNotice(item, f"hook: {entry.name}")
-            for item in returned
-        )
+        notices.extend(_notice(item, entry.name) for item in returned)
     return notices

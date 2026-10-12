@@ -14,7 +14,7 @@ So do the rule engine's errors raised inside the ``rules-staged`` gate.
 
 from __future__ import annotations
 
-from devkit.advisory import Actor, AdvisoryError, ExitCode, Retry
+from devkit.advisory import Actor, AdvisoryError, ExitCode, Level, Retry
 from devkit.core.errors import ConfigError
 
 PYTHON_FIX = (
@@ -40,6 +40,17 @@ class GateRefusedError(GateError):
     code = "GATE_FAILED"
     guardrail = True
     exit_code = ExitCode.FINDINGS
+
+
+class RulesWarningsNotice(GateError):
+    """``rules-staged`` passed while warning-severity violations remain in the staged tree (``NOTICE``).
+
+    Returned in the gate's ``GateResult.notices``, never raised: warnings do not block a commit.
+    """
+
+    code = "GATE_RULES_WARNINGS"
+    level = Level.NOTICE
+    fix = "devkit rules check --staged"
 
 
 class GateConfigError(GateError, ConfigError):

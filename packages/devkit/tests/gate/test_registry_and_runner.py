@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 import pytest
-from devkit.advisory import ActionMode, ExitCode
+from devkit.advisory import ActionMode, AdvisoryError, ExitCode, Level
 from devkit.gate import (
     BaseGate,
     GateConfigError,
@@ -231,6 +231,20 @@ def test_every_failed_run_carries_an_error(tmp_path: Path) -> None:
     assert all(r.error is not None for r in report.runs)
     assert report.runs[0].error is not None and "refuse by raising GateRefusedError" in report.runs[0].error.message
     assert report.runs[1].error is not None and report.runs[1].error.code == "GATE_RESULT_INVALID"
+
+
+def test_gate_notices_never_fail_the_stage_and_errors_are_lowered(tmp_path: Path) -> None:
+    warning = AdvisoryError("hook-like problem", code="TEAM_ERROR")
+    notice = AdvisoryError("fyi", code="TEAM_NOTICE", level=Level.NOTICE)
+    registry = GateRegistry()
+    registry.register(Recorder("noisy", 100, [], GateResult.passed("ok", notices=[warning, notice])))
+    report = run_stage(gate_ctx(tmp_path), registry, GatesConfig())
+    assert report.ok and report.exit_code is ExitCode.OK
+    assert [(n.code, n.level, n.exit_code) for n in report.notices] == [
+        ("TEAM_ERROR", Level.WARNING, ExitCode.OK),
+        ("TEAM_NOTICE", Level.NOTICE, ExitCode.OK),
+    ]
+    assert warning.level is Level.ERROR  # the gate's own object is not changed
 
 
 def test_run_stage_applies_enabled_and_settings(tmp_path: Path) -> None:

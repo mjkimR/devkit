@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 
 from click.testing import CliRunner
-from devkit.advisory import AdvisoryError, ExitCode
+from devkit.advisory import AdvisoryError, ExitCode, Level
 from devkit.gate import GateContext, GatesConfig, Outcome, Stage, default_gate_registry, run_stage
 from devkit.gate.cli import cli
 from devkit.gate.gates import StagedRulesGate
@@ -103,6 +103,16 @@ def test_warning_only_passes_and_policy_comes_from_the_snapshot(repo: Path) -> N
     git(repo, "add", ".devkit")
     result = StagedRulesGate().run(_ctx(repo))
     assert result.outcome is Outcome.PASSED and "1 warning(s)" in result.note
+    [notice] = result.notices
+    assert (notice.code, notice.level, notice.target_files) == ("GATE_RULES_WARNINGS", Level.NOTICE, ("docs/a.md",))
+
+    result = CliRunner().invoke(cli, ["run", "-w", str(repo), "pre-commit"])
+    assert result.exit_code == 0 and result.output.startswith("[NOTICE] (GATE_RULES_WARNINGS) 1 warning-severity")
+    assert "[FIX]    devkit rules check --staged" in result.output
+    quiet = CliRunner().invoke(cli, ["run", "-w", str(repo), "-q", "pre-commit"])
+    assert (quiet.exit_code, quiet.output) == (0, "")
+    strict = CliRunner().invoke(cli, ["run", "-w", str(repo), "pre-commit"], env={"DEVKIT_STRICT": "1"})
+    assert strict.exit_code == 0  # a notice never fails, even under --strict
 
 
 def test_invalid_rules_policy_passes_through(repo: Path) -> None:
@@ -186,11 +196,12 @@ def test_pre_commit_stage_reports_the_refusal(repo: Path) -> None:
 
     result = CliRunner().invoke(cli, ["run", "-w", str(repo), "pre-commit"])
     assert result.exit_code == 1
-    assert "[GATE: rules-staged stage=pre-commit outcome=failed]" in result.output
+    assert result.output.rstrip().endswith("[DETAIL] gate=rules-staged stage=pre-commit")
     assert "GATE_RULES_VIOLATION" in result.output and "RULE-markdown-link docs/a.md:1" in result.output
 
     (repo / ".git/devkit.config").write_text("[gates.settings.rules-staged]\nenabled = false\n")
     result = CliRunner().invoke(cli, ["run", "-w", str(repo), "-v", "pre-commit"])
     assert (
-        result.exit_code == 0 and "[GATE: rules-staged stage=pre-commit outcome=skipped note=disabled]" in result.output
+        result.exit_code == 0
+        and "[INFO]   gate rules-staged stage=pre-commit outcome=skipped note=disabled" in result.output
     )

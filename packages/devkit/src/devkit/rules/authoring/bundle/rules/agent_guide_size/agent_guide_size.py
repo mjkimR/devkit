@@ -17,9 +17,10 @@ from devkit.rules.engine.settings import match_path, validate_pattern
 from devkit.rules.rules.base import BaseRule
 
 REMEDIATION = (
-    "Keep the guide to orientation, boundaries, invariants and verification commands; drop project"
-    " structure trees, move module-specific details to the module's README or docs behind a link, judgment rules to instructions, procedures to playbooks or skills, mechanical checks"
-    " to rules, and directory-specific guidance to a nested guide."
+    "Keep the guide to orientation, boundaries, invariants and verification commands. Drop project"
+    " structure trees; move module-specific details to the module's README or docs behind a link,"
+    " judgment rules to instructions, procedures to playbooks or skills, mechanical checks to rules,"
+    " and directory-specific guidance to a nested guide."
     ' Follow the agent-guide-authoring playbook (`uv run devkit playbook search "curate agent guide"`).'
     " The devkit block shrinks only by deselecting presets that contribute guidance."
     " For a justified exception, raise max_bytes for this exact path in"

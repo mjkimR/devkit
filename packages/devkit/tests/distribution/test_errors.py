@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pytest
-from devkit.advisory import ActionMode, AdvisoryError, ExitCode
+from devkit.advisory import ActionMode, AdvisoryError, ExitCode, Level
 from devkit.distribution import errors
 
 
@@ -32,17 +32,22 @@ def test_error_classes_carry_code_and_mode(cls: type[errors.DistributionError], 
 
 
 @pytest.mark.parametrize(
-    ("cls", "code", "mode"),
+    ("cls", "code", "level"),
     [
-        (errors.OrphanLeftNotice, "ORPHAN_LEFT", ActionMode.INTERACTION),
-        (errors.ToolVersionChangedNotice, "TOOL_VERSION_CHANGED", ActionMode.DEFER),
-        (errors.PostSyncNotice, "POST_SYNC_NOTICE", ActionMode.DEFER),
-        (errors.PostSyncHookFailedNotice, "POST_SYNC_HOOK_FAILED", ActionMode.MAINTENANCE),
+        (errors.OrphanLeftNotice, "ORPHAN_LEFT", Level.WARNING),
+        (errors.StrayFilesNotice, "MANAGED_FILE_STRAY", Level.WARNING),
+        (errors.PostSyncHookFailedNotice, "POST_SYNC_HOOK_FAILED", Level.WARNING),
+        (errors.SubagentUnprojectedNotice, "SUBAGENT_UNPROJECTED", Level.NOTICE),
+        (errors.BundleUnselectedNotice, "BUNDLE_UNSELECTED", Level.NOTICE),
+        (errors.ToolVersionChangedNotice, "TOOL_VERSION_CHANGED", Level.NOTICE),
+        (errors.PostSyncNotice, "POST_SYNC_NOTICE", Level.NOTICE),
     ],
 )
-def test_notices_are_coded_and_never_fail(cls: type[errors.SyncNotice], code: str, mode: ActionMode) -> None:
+def test_notices_are_coded_and_never_fail(cls: type[errors.SyncNotice], code: str, level: Level) -> None:
     notice = cls("x")
-    assert (notice.code, notice.mode, notice.exit_code) == (code, mode, ExitCode.OK)
+    mode = ActionMode.CONTINUE if level is Level.WARNING else ActionMode.NOTE
+    assert (notice.code, notice.level, notice.mode, notice.exit_code) == (code, level, mode, ExitCode.OK)
+    assert notice.lines()[0].startswith("[WARN]   " if level is Level.WARNING else "[NOTICE] ")
 
 
 def test_fixes_name_the_command_that_repairs_the_state() -> None:

@@ -82,7 +82,7 @@ A command prints each block once. A command whose JSON result already carries an
 
 ## 6. Verbosity and Strictness
 
-Every command takes the same three output options (`devkit.core.cli.output_options`), each also settable through the environment, which is how Git hooks (`devkit gate run`) receive them:
+Every command takes the same three output options (`devkit.core.cli.output_options`, which the error boundary adds to every command), each also settable through the environment, which is how Git hooks (`devkit gate run`) receive them:
 
 | Option | Environment | Effect |
 | --- | --- | --- |
@@ -116,7 +116,7 @@ Exit codes follow the checker convention (`0` success, `1` the command ran and r
 Diagnostics that neither change the agent's next step nor need to reach the user are logs, written with the standard library's `logging` under the `devkit` logger hierarchy (`logging.getLogger(__name__)`).
 
 - `devkit` installs a `NullHandler` on the `devkit` logger, so log records never reach the interpreter's last-resort handler and never leak onto stderr, in the CLI or in an embedding program.
-- Under `-v`, `output_options` attaches a stderr handler that prints every `devkit` record as `[INFO]   <message>`, with a traceback and further lines indented 9 spaces as continuation lines. The sentinel is `[INFO]` whatever the record's level: a log line is never a directive.
+- Under `-v`, the CLI boundary attaches a stderr handler for the run that prints every `devkit` record as `[INFO]   <message>`, with a traceback and further lines indented 9 spaces as continuation lines. The sentinel is `[INFO]` whatever the record's level: a log line is never a directive.
 - What to log: passed and skipped checks, timing, cache hits, why a candidate was or was not selected, the traceback behind an error the run already reports as an advisory.
 - What never to log: anything the agent must act on or the user must learn. That is a warning or notice, returned with the result. Library code does not log at `WARNING` or above to communicate; `logger.exception` is used only to keep the traceback of an error that is also reported as an advisory.
 
@@ -127,7 +127,7 @@ Diagnostics that neither change the agent's next step nor need to reach the user
 | Concern | Where |
 | --- | --- |
 | Advisory model, levels, modes, `[ACTION]` texts, block rendering, `to_dict` | `devkit.advisory` ([reference](../advisory/reference.md)) |
-| `output_options`, `echo_notices`, `exit_on_warnings`, `echo_json`, `boundary`, `exit_on_problems`, log handler | `devkit.core.cli` ([reference](../core/reference.md)) |
+| `boundary` (with `output_options` and the log handler), `echo_notices`, `exit_on_warnings`, `echo_json`, `exit_on_problems` | `devkit.core.cli` ([reference](../core/reference.md)) |
 | `NullHandler` on the `devkit` logger | `devkit/__init__.py` |
 | Result lines and JSON payloads of each command | each area's `cli/` package, documented in its reference |
 | Warnings and notices each area reports | each area's reference (error and notice code tables) |
@@ -140,7 +140,7 @@ Diagnostics that neither change the agent's next step nor need to reach the user
 - [ ] Every condition the agent must act on is an advisory with a code: raised as an `AdvisoryError` when the command cannot do its job or refuses, returned in `notices` at `WARNING` or `NOTICE` when it succeeded.
 - [ ] The library function returns its warnings and notices; the command prints the result, then `echo_notices`, then `exit_on_warnings`.
 - [ ] Diagnostics are `logging` calls, not output.
-- [ ] The command carries `output_options` and, when it prints text, `--format`.
+- [ ] The command goes through `boundary` (which adds the output options) and, when it prints text, takes `--format`.
 - [ ] Its reference documents the result lines, the JSON keys, and every error and notice code with its level.
 
 ---

@@ -26,6 +26,7 @@ from devkit.workflow.errors import (
     CheckError,
     CheckReferenceProblem,
     DefinitionProblem,
+    RolesUncheckedNotice,
     RoleUnknownProblem,
     SharedStageMismatchError,
     WorkflowError,
@@ -237,6 +238,7 @@ class ValidationReport:
     load_errors: tuple[WorkflowError, ...] = ()
     shared: tuple[SharedStageMismatchError, ...] = ()
     roles_checked: bool = True
+    roles_dir: str | None = None  # the project's ``[workflow] roles_dir``, named by the roles notice
 
     @property
     def errors(self) -> tuple[WorkflowError, ...]:
@@ -247,13 +249,23 @@ class ValidationReport:
     def ok(self) -> bool:
         return not self.errors
 
+    @property
+    def notices(self) -> tuple[RolesUncheckedNotice, ...]:
+        """``WORKFLOW_ROLES_UNCHECKED`` when stage roles could not be checked; notices never fail validation."""
+        if self.roles_checked:
+            return ()
+        missing = self.roles_dir or "[workflow] roles_dir directory"
+        return (RolesUncheckedNotice(f"stage roles were not checked: no installation receipt and no {missing}"),)
+
     def to_dict(self, root: Path | None = None) -> dict[str, Any]:
-        """``validate --format json``: definitions with their own ``errors``, plus load and shared-stage ``errors``."""
+        """``validate --format json``: definitions with their own ``errors``, load and shared-stage ``errors``,
+        and ``notices``."""
         return {
             "ok": self.ok,
             "roles_checked": self.roles_checked,
             "definitions": [r.to_dict(root) for r in self.definitions],
             "errors": [e.to_dict() for e in (*self.load_errors, *self.shared)],
+            "notices": [n.to_dict() for n in self.notices],
         }
 
 

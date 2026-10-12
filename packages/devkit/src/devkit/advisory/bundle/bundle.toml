@@ -6,19 +6,19 @@ default_preset = "core"
 auto_select = true
 
 [[assets]]
-id = "error-advisory"
+id = "agent-advisory"
 kind = "instruction"
-source = "instructions/error-advisory.md"
+source = "instructions/agent-advisory.md"
 
 [[assets]]
-id = "error-advisory-python"
+id = "agent-advisory-python"
 kind = "instruction"
-source = "instructions/error-advisory-python.md"
+source = "instructions/agent-advisory-python.md"
 
-# Language-agnostic protocol and authoring rules for any repository.
+# Language-agnostic protocol and authoring rules (errors, warnings, notices) for any repository.
 [presets.core]
-assets = ["error-advisory"]
+assets = ["agent-advisory"]
 
 # Adds the devkit.advisory Python library guide.
 [presets.python]
-assets = ["error-advisory", "error-advisory-python"]
+assets = ["agent-advisory", "agent-advisory-python"]

@@ -9,7 +9,7 @@ from types import SimpleNamespace
 
 import pytest
 from click.testing import CliRunner
-from devkit.advisory import AdvisoryError
+from devkit.advisory import ActionMode, AdvisoryError, ExitCode, Level
 from devkit.core.errors import ConfigError, ReceiptError
 from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH, ToolRecord
 from devkit.distribution.bundles import load_bundle
@@ -125,7 +125,8 @@ def test_post_sync_hooks_run_in_name_order_and_never_fail_the_sync(
         ),
     ]
     assert result.notices[0].details == ("hook: a-first",)
-    assert result.to_dict()["notices"][1]["advisory"]["mode"] == "MAINTENANCE"
+    assert [notice["level"] for notice in result.to_dict()["notices"]] == ["NOTICE", "WARNING", "WARNING"]
+    assert result.to_dict()["notices"][1]["advisory"]["mode"] == "CONTINUE"
     assert (target / RECEIPT_PATH).is_file()
 
 
@@ -144,19 +145,30 @@ def test_post_sync_hooks_do_not_run_on_dry_run_or_check(
     assert checked.exit_code == 1 and calls == []
     synced = runner.invoke(cli, ["sync", "--workspace-root", str(target)])
     assert synced.exit_code == 0, synced.output
-    assert calls == ["ran"] and "[NOTICE: (POST_SYNC_NOTICE) x]" in synced.stderr
+    assert calls == ["ran"] and "[NOTICE] (POST_SYNC_NOTICE) x\n[ACTION] NOTE — " in synced.stderr
 
 
 def test_post_sync_hooks_may_return_coded_notices_and_reach_override_commands(
     installed: list[InstalledBundle], target: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    coded = AdvisoryError("units need review", code="UNITS_STALE")
-    entries = [_entry("coded", lambda root, result: [coded, "plain"])]
+    coded = AdvisoryError("units need review", code="UNITS_STALE")  # an ERROR: a hook cannot fail the sync
+    kept = AdvisoryError("units checked", code="UNITS_CHECKED", level=Level.NOTICE)
+    entries = [_entry("coded", lambda root, result: [coded, kept, "plain"])]
     monkeypatch.setattr(hooks.metadata, "entry_points", lambda group: entries if group == hooks.GROUP else [])
-    assert [notice.code for notice in sync_project(target, installed).notices] == ["UNITS_STALE", "POST_SYNC_NOTICE"]
+    notices = sync_project(target, installed).notices
+    assert [(notice.code, notice.level) for notice in notices] == [
+        ("UNITS_STALE", Level.WARNING),
+        ("UNITS_CHECKED", Level.NOTICE),
+        ("POST_SYNC_NOTICE", Level.NOTICE),
+    ]
+    assert coded.level is Level.ERROR and notices[1] is kept
     change = create_override(target, installed, "team:guide")
-    assert change.notices[0] is coded
-    assert [notice["code"] for notice in change.to_dict()["notices"]] == ["UNITS_STALE", "POST_SYNC_NOTICE"]
+    assert change.notices[1] is kept
+    assert [notice["code"] for notice in change.to_dict()["notices"]] == [
+        "UNITS_STALE",
+        "UNITS_CHECKED",
+        "POST_SYNC_NOTICE",
+    ]
 
 
 # --- override drift policy ---------------------------------------------------
@@ -217,7 +229,7 @@ source = "guide.md"
     # Only the edited projection is left behind; the untouched managed copy is removed as usual.
     (orphan,) = synced.notices
     assert (orphan.code, orphan.target_files) == ("ORPHAN_LEFT", (".agents/skills/review/SKILL.md",))
-    assert result["notices"][0]["advisory"]["mode"] == "INTERACTION"
+    assert (result["notices"][0]["level"], result["notices"][0]["advisory"]["mode"]) == ("WARNING", "CONTINUE")
     assert skill.read_text() == "# my review\n"
     assert not (target / ".devkit/managed/team/skills/review/SKILL.md").exists()
     files = json.loads((target / RECEIPT_PATH).read_text())["files"]
@@ -239,7 +251,7 @@ def test_orphan_alone_does_not_fail_check(
     runner = CliRunner()
     first = runner.invoke(cli, ["sync", "--workspace-root", str(target)])
     assert first.exit_code == 0, first.output
-    assert "[NOTICE: (ORPHAN_LEFT) left modified file in place: .devkit/managed/team/guide.md" in first.stderr
+    assert "[WARN]   (ORPHAN_LEFT) left modified file in place: .devkit/managed/team/guide.md" in first.stderr
     # Nothing left to sync: the orphan is reported, not pending.
     check = runner.invoke(cli, ["sync", "--workspace-root", str(target), "--check"])
     assert check.exit_code == 0, check.output
@@ -355,7 +367,11 @@ def test_status_reports_override_drift_disabled_block_and_cli(
     _drift(source, installed, target)
     assert get_project_status(target, installed).to_dict()["override_drift"] == [{"bundle": "team", "asset": "guide"}]
     write_config(target, extra="guidance_block = false")
-    sync_project(target, installed)
+    synced = sync_project(target, installed)
+    (warning,) = [notice for notice in synced.notices if notice.code == "OVERRIDE_DRIFT"]
+    assert (warning.level, warning.exit_code, warning.mode) == (Level.WARNING, ExitCode.OK, ActionMode.CONTINUE)
+    assert warning.message == "upstream drift behind an override: team:guide"
+    assert warning.fix is not None and "devkit override diff team:guide" in warning.fix
     assert get_project_status(target, installed).to_dict()["guidance_block"] == "disabled"
     write_config(target)
     (target / AGENTS_FILE).unlink(missing_ok=True)

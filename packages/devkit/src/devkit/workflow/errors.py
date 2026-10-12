@@ -18,7 +18,7 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import Any, Unpack
 
-from devkit.advisory import Actor, Advisory, AdvisoryError, AdvisoryFields, ExitCode, Retry
+from devkit.advisory import Actor, Advisory, AdvisoryError, AdvisoryFields, ExitCode, Level, Retry
 from devkit.core import errors as core_errors
 
 ENVELOPE_CONTRACT = "docs/workflow/definition-and-checks.md section 3"
@@ -112,6 +112,14 @@ class RoleUnknownProblem(DefinitionProblem):
     """A stage role outside the project's subagent vocabulary."""
 
     code = "ROLE_UNKNOWN"
+
+
+class RolesUncheckedNotice(WorkflowError):
+    """Neither a receipt nor ``[workflow] roles_dir`` exists, so stage roles were not checked (``NOTICE``, never raised)."""
+
+    code = "WORKFLOW_ROLES_UNCHECKED"
+    level = Level.NOTICE
+    brief = True
 
 
 class SharedStageMismatchError(WorkflowError):

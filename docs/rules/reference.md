@@ -268,7 +268,7 @@ uv run devkit rules check --phase hygiene
 | Preset | Rule (warning, hygiene) | Playbook |
 | --- | --- | --- |
 | `skill-authoring` | `RULE-skill-document-size`: a skill or playbook Markdown file above `max_bytes` (8192) | `skill-authoring`: router structure for new skills, the four restructuring steps, helper-script rules |
-| `agent-guide-authoring` | `RULE-agent-guide-size`: an `AGENTS.md` or `CLAUDE.md` above `max_bytes` (8192), reporting the devkit guidance block's share | `agent-guide-authoring`: what stays in an always-loaded guide, where the rest moves, per-host loading |
+| `agent-guide-authoring` | `RULE-agent-guide-size`: an `AGENTS.md` or `CLAUDE.md` above `max_bytes` (8192), reporting the devkit guidance block's share | `agent-guide-authoring`: what stays in an always-loaded guide (no structure trees; module specifics only as links), where the rest moves, per-host loading |
 
 Sizes are UTF-8 bytes, which follow token cost better than lines.
 `RULE-skill-document-size` checks `.md` files under `paths` (project skills in

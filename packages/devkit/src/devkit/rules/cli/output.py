@@ -5,8 +5,7 @@ Text output is one ``[KIND: ...]`` sentinel line per fact, without colour:
 ``--summary-only``), then ``[SUMMARY: errors=N warnings=N infos=N fixed=N]``
 and ``[OK: ...]`` when the run passes. Free text (messages, remediations,
 descriptions) is written as a JSON string, so every fact stays on one line.
-Problems that do not fail the command are ``[WARNING: (CODE) message]`` lines
-on stderr.
+Warnings and notices are advisory blocks on stderr (``devkit.core.cli.echo_notices``).
 """
 
 from __future__ import annotations
@@ -19,7 +18,6 @@ from typing import Any
 
 import click
 
-from devkit.advisory import AdvisoryError
 from devkit.core.receipt import CONFIG_PATH
 from devkit.rules.engine.config import RulesConfig
 from devkit.rules.engine.models import Phase, Rule, Severity, Violation
@@ -46,12 +44,6 @@ def _quote(value: str) -> str:
 def _value(value: object) -> str:
     """A setting value as one-line JSON (``null`` for ``None``)."""
     return json.dumps(value, ensure_ascii=False)
-
-
-def echo_warnings(problems: Sequence[AdvisoryError]) -> None:
-    """Problems that do not fail the command, one ``[WARNING: (CODE) message]`` line each on stderr."""
-    for problem in problems:
-        click.echo(f"[WARNING: ({problem.code}) {problem}]", err=True)
 
 
 def echo_ok(text: str = OK_TEXT) -> None:
@@ -89,10 +81,6 @@ def print_transitions(entries: Sequence[PhaseEntry], active: Phase, violations: 
     remaining = remaining_by_rule(violations)
     for entry in pending:
         click.echo(_transition_line(entry, remaining))
-    if any(remaining.get(e.rule_id, 0) == 0 for e in pending):
-        click.echo(
-            "[NOTICE: remaining=0: drop the override in config, or switch the rule's declared phase to its promote_to]"
-        )
 
 
 def _counts(violations: Sequence[Violation]) -> Counter[str]:

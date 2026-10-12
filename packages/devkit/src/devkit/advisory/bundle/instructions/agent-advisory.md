@@ -1,0 +1,222 @@
+---
+name: agent-advisory
+description: Read before authoring CLI commands, tool or API errors, warnings, notices, rule violations, or advisory envelopes. Defines the Agent Advisory Protocol format, the ERROR/WARNING/NOTICE levels, ActionMode selection (HALT vs INPUT_ERROR vs BLOCKED, CONTINUE, NOTE), and deterministic directives.
+---
+
+# The Agent Advisory Protocol
+
+Apply these conventions when authoring CLI commands, deterministic rules, validation, MCP tools, or anything else an AI agent will read and act on. Every error, warning and notice follows the **Agent Advisory Protocol**, so that agents act on explicit directives instead of guessing, improvising workarounds, or retrying in loops.
+
+## Principles
+
+- **Direct, do not describe.** An advisory exists to change the agent's next step. `[ACTION]` says what to do; the other lines supply what that step needs.
+- **Deterministic wording.** Directives never hedge ("likely", "might").
+- **Stable codes.** Every advisory has an `UPPER_SNAKE_CASE` code; callers branch on the code, never on message text.
+- **Context budget.** Emit an advisory only when it changes the agent's next step or must reach the user. Diagnostics that do neither are logs, hidden unless the user asks for verbose output.
+- **Channels.** The result goes to stdout (one-line sentinels or one JSON object); advisories go to stderr. Never mix them.
+
+## Levels
+
+| Level | Headline | The operation | Exit code | `[ACTION]` |
+| --- | --- | --- | --- | --- |
+| `ERROR` | `[ERROR]` | did not do its job, or refused | the error's (`1` negative result, `2` could not run) | always; mode derived from the fields |
+| `WARNING` | `[WARN]` | succeeded; the user must learn or decide something | unchanged (a strict mode may turn `0` into `1`) | always; mode `CONTINUE` |
+| `NOTICE` | `[NOTICE]` | succeeded; something is worth knowing | unchanged | recommended; mode `NOTE`; may be omitted (`brief`) |
+
+Choose the level first:
+
+1. The command could not do its job, or a check it ran found a negative result: `ERROR`. A refusal is never a warning.
+2. It succeeded, and the user must learn or decide something afterwards: `WARNING`.
+3. It succeeded, and the agent may want to know why the result looks as it does or what it could do next: `NOTICE`.
+4. Nobody needs to act and nothing needs explaining: no advisory; log it at most.
+
+The same condition can be an `ERROR` in one command and a `WARNING` in another; it keeps its code.
+
+## Block format
+
+Render advisories as sentinel lines on standard error (or as the text of a tool result):
+
+```text
+<HEADLINE> (<CODE>) <Concise description>
+[ACTION] <MODE> — <Behavioral directive>
+         <Continuation lines indented 9 spaces>
+[WHEN]   Not before: <time or duration>           (ERROR only, when retry_after is set)
+[TARGET] <File path, flag, or argument involved>
+[FIX]    <Concrete command or edit that remediates the issue>
+[REPORT] <What must be communicated to the user>
+[DETAIL] <Diagnostic context; one line per detail>
+```
+
+The headline is `[ERROR]  `, `[WARN]   ` or `[NOTICE] ` (each sentinel is padded to 9 characters) and always carries the code. `[ACTION]` is always present for errors and warnings; a notice may omit it only when it is `brief` and has no `[FIX]`, since a fix without a directive reads as an instruction to run it. Omit any other line whose field is empty. A value that spans several lines continues on lines indented 9 spaces under its sentinel, so every line either starts with a sentinel or belongs to the one above it. No colour, emoji or Markdown.
+
+## Fields
+
+| Field | Levels | Meaning |
+| --- | --- | --- |
+| `code` | all | Stable identifier (`UPPER_SNAKE_CASE`). Default `GENERAL_ERROR`. |
+| `level` | all | `ERROR` (default), `WARNING` or `NOTICE`. |
+| `actor` | error | Who takes the next step: `TOOL` (the agent itself runs the fix), `USER` (a human decides), `DEVELOPER` (code or input must be edited), `NONE` (nobody right now). |
+| `retry` | error | `SAFE` (retry unchanged is safe), `AFTER_FIX` (safe only after the fix), `UNSAFE` (retry risks corruption or duplicate effects). |
+| `guardrail` | error | `true` when a deliberate policy refused the operation. |
+| `input_error` | error | `true` when a flag, argument, or input file is malformed. |
+| `retry_after` | error | Earliest retry time or duration (for `DEFER`). |
+| `fix` | all | Exact, copy-pasteable command or edit. |
+| `what_to_report` | all | Summary or question the agent must relay to the user. |
+| `target_files` | all | Exact files, flags, or `path:line:col` locations involved. |
+| `details` | all | Diagnostic lines. |
+| `brief` | notice | `true` omits `[ACTION]` when there is no `fix`. |
+
+Process exit codes follow the checker convention of `grep`, `diff` and `ruff`: `0` success, `1` the command ran and reports a negative result (violations, a failed check, a refused change), `2` the command could not do its job (usage error, unreadable or invalid input, unexpected failure; the default for an error). A state that waits for a person or for later work is a result, not a failure, and exits `0`. Warnings and notices never change the exit code, except under an explicit strict mode.
+
+## Mode derivation
+
+The mode is never set directly; it is derived. The first matching rule wins:
+
+0. `level = WARNING` → `CONTINUE`; `level = NOTICE` → `NOTE`
+1. `input_error` → `INPUT_ERROR`
+2. `guardrail` → `BLOCKED`
+3. `actor = DEVELOPER` → `MAINTENANCE`
+4. `retry = UNSAFE` → `HALT`
+5. `actor = TOOL` → `AUTO`
+6. `actor = USER` → `INTERACTION`
+7. `retry = SAFE` → `DEFER`
+8. otherwise → `HALT`
+
+Choose fields by asking which directive the agent must follow, then confirm the derived mode matches.
+
+## The retry directive principle
+
+Agents exhibit two failure modes when they meet errors: **infinite blind retries** of an identical command, and **destructive side-questing** (inventing bypass flags such as `--force`, editing rules to pass, finishing the job by hand outside the tool). To prevent both without paralyzing the agent:
+
+- **Prohibit blind retries deterministically**: state that retrying unchanged input or state fails identically.
+- **Never use an unconditional "Do not retry" for fixable input errors**: direct the agent to correct the `[TARGET]` and rerun.
+- **Never use probabilistic phrasing**: directives are deterministic and conditional on fixing the cause.
+- **Never let a warning or notice start work**: `CONTINUE` and `NOTE` forbid running `[FIX]` unasked.
+
+## Action modes
+
+The `[ACTION]` text is canonical. Implementations render exactly these directives so that every tool speaks with one voice.
+
+### `INPUT_ERROR`: invalid arguments, syntax, or user files
+
+- **Use for**: malformed flags or options, missing required arguments, YAML/JSON/TOML parse errors in user-supplied files.
+- **Set**: `input_error = true`, `actor = DEVELOPER`, `retry = AFTER_FIX`, and `target_files` naming the flag, file, or line.
+
+```text
+INPUT_ERROR — Do not retry with identical input. Retrying unchanged will
+              fail identically. Correct the flag, argument, or input file before rerunning.
+```
+
+### `HALT`: critical state hazard or corruption risk
+
+- **Use for**: half-applied mutations, lock conflicts, possible state corruption, unrecoverable filesystem hazards. Reserved **strictly** for cases where further execution can damage state.
+- **Never use for** input typos or fixable syntax errors; use `INPUT_ERROR`.
+- **Set**: `retry = UNSAFE` with `actor` `NONE` or `TOOL`.
+
+```text
+HALT — Unsafe to retry. Execution stopped to prevent state corruption.
+       Report what happened, including anything left half-done. Do not retry or finish by hand.
+```
+
+### `BLOCKED`: deliberate guardrail or policy refusal
+
+- **Use for**: protected branches, out-of-scope edits, workflow or architecture rule refusals, commit gate refusals.
+- **Set**: `guardrail = true`. `fix` may name the sanctioned exception mechanism, such as an ignore comment that requires a justification.
+
+```text
+BLOCKED — A deliberate guardrail refused this. Report it and stop.
+          Do not propose or apply a way around it; changing the rule is the
+          user's decision, not a fix.
+```
+
+### `AUTO`: deterministic machine fix available
+
+- **Use for**: a safe, idempotent remediation command exists (formatter, cache rebuild, regenerate lock).
+- **Set**: `actor = TOOL`, `retry = AFTER_FIX` (or `SAFE`), and `fix` with the exact command.
+
+```text
+AUTO — Run the [FIX] command once, then retry the operation once.
+       This is the only mode that authorizes a retry. Stop after it either way.
+```
+
+### `INTERACTION`: human decision or permission required
+
+- **Use for**: ambiguous intent, drift that needs confirmation, destructive operations that need sign-off, missing credentials.
+- **Set**: `actor = USER`, `retry = AFTER_FIX`, `what_to_report` with the question, and `fix` with the command to run once the user agrees. Do not use `retry = UNSAFE` here: it derives `HALT`, which forbids that follow-up.
+
+```text
+INTERACTION — Stop and ask the user. Do not retry, and do not
+              improvise a way around this. [FIX], when present, is the command
+              for once they agree.
+```
+
+### `MAINTENANCE`: internal bug or tool defect
+
+- **Use for**: invariant violations, unexpected exceptions, unsupported toolchain states. Unhandled exceptions are adapted to `UNEXPECTED_ERROR` with `actor = DEVELOPER`, `retry = UNSAFE`.
+- **Set**: `actor = DEVELOPER`, with `target_files` naming the affected code when known.
+
+```text
+MAINTENANCE — A codebase defect or tool failure occurred.
+              Report it and stop; repairing the code/tool is a separate task.
+              [TARGET] names the affected files.
+```
+
+### `DEFER`: not an error; retry later
+
+- **Use for**: rate limits, external jobs still running, a lock another process holds, scheduled windows. The operation did not happen; something that did happen and only deserves mention is a `NOTICE`.
+- **Set**: `actor = NONE`, `retry = SAFE`, and `retry_after`.
+
+```text
+DEFER — Nothing is broken and nothing here is yours to fix.
+        Do not retry now. Report the cause and when it can be retried.
+```
+
+### `CONTINUE`: a warning; the operation succeeded and the user needs to know
+
+- **Use for**: a hand-edited file left behind, an override hiding upstream changes, files the tool ignores where they may cause harm, a post-operation hook that failed after the work was done.
+- **Set**: `level = WARNING`, `what_to_report` with what the user must learn or decide, and `fix` with the command for when they ask.
+
+```text
+CONTINUE — The operation succeeded; this does not block it. Do not retry
+           or undo it. Tell the user about it ([REPORT] when present); run [FIX]
+           only when they ask for it.
+```
+
+### `NOTE`: a notice; the operation succeeded and this is worth knowing
+
+- **Use for**: an available but unused option, a check skipped because its input does not exist yet, a tracked file rewritten for a benign reason, a transition that is ready.
+- **Set**: `level = NOTICE`; `fix` when there is an obvious follow-up; `brief = true` for a self-explanatory notice without `fix`.
+
+```text
+NOTE — For awareness only; nothing needs doing now. Continue. Mention it
+       when it bears on the task; run [FIX] only when the user asks for it.
+```
+
+## Warnings and notices in practice
+
+- **Never raised.** A warning or notice describes an operation that succeeded: collect it and return it with the result (under `notices`); the command prints the result first and the notices after it. A raised warning or notice is a defect and is reported as `UNEXPECTED_ERROR`.
+- **One advisory per condition.** Name all affected items in one advisory rather than one block per file.
+- **Extension points.** An `ERROR` received from third-party code that must not fail the operation (a post-operation hook) is lowered to `WARNING`.
+- **Quiet output.** A quiet mode hides notices, never warnings or errors; JSON always carries every advisory.
+
+## Structured output
+
+Machine channels carry the same envelope as data:
+
+- **JSON**: `{"code", "level", "message", "exit_code", "advisory": {code, level, mode, actor, retry, guardrail, input_error, retry_after, fix, what_to_report, target_files, details, brief}}`. A result lists collected errors under `errors` and warnings and notices under `notices`; a command that fails outright prints `{"error": {...}}`.
+- **HTTP (RFC 7807)**: errors only: `{"type", "title": <code>, "status": <HTTP status>, "detail": <message>, "code", "advisory"}`. `type` is `<documentation base URI>/<code>` or `about:blank`. The server decides whether to expose `advisory` (for example, only on authenticated or internal APIs); request headers never enable it. Warnings and notices travel in the successful response body.
+- **MCP tools**: a failed call returns the rendered error block as the error result text; a successful call appends its rendered warning and notice blocks after the result text.
+
+A consumer never executes `fix` automatically outside `AUTO` (and `INTERACTION` after approval, `CONTINUE`/`NOTE` when the user asks). A transport adapter never executes `fix` on the agent's behalf.
+
+## Authoring checklist
+
+When writing an advisory in any language or rule format:
+
+- [ ] **Level**: Did the operation fail or refuse (`ERROR`), succeed with something the user must learn (`WARNING`), or succeed with something worth knowing (`NOTICE`)? Would a log line do?
+- [ ] **Headline**: Does `code` uniquely identify the condition without string matching?
+- [ ] **`[ACTION]`**: For an error, does the derived mode match the intended directive and distinguish a blind retry from a corrected rerun?
+- [ ] **`[TARGET]`**: Does it point to the exact file path, flag name, or line?
+- [ ] **`[FIX]`**: If remediation is possible, is it exact and copy-pasteable?
+- [ ] **`[REPORT]`**: If the user must decide or learn something, is the question or summary clear?
+- [ ] **Wording**: Is every directive deterministic, with no "likely" or "might"?

@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from devkit.advisory.types import ActionMode, Actor, Retry
+from devkit.advisory.types import ActionMode, Actor, Level, Retry
 
 # Canonical directive texts; keep identical across implementations of the protocol.
 ACTION_TEXT: dict[ActionMode, str] = {
@@ -38,7 +38,18 @@ ACTION_TEXT: dict[ActionMode, str] = {
         "INPUT_ERROR — Do not retry with identical input. Retrying unchanged will\n"
         "fail identically. Correct the flag, argument, or input file before rerunning."
     ),
+    ActionMode.CONTINUE: (
+        "CONTINUE — The operation succeeded; this does not block it. Do not retry\n"
+        "or undo it. Tell the user about it ([REPORT] when present); run [FIX]\n"
+        "only when they ask for it."
+    ),
+    ActionMode.NOTE: (
+        "NOTE — For awareness only; nothing needs doing now. Continue. Mention it\n"
+        "when it bears on the task; run [FIX] only when the user asks for it."
+    ),
 }
+
+HEADLINE: dict[Level, str] = {Level.ERROR: "[ERROR]  ", Level.WARNING: "[WARN]   ", Level.NOTICE: "[NOTICE] "}
 
 DEFAULT_CODE = "GENERAL_ERROR"
 _CONTINUATION = " " * len("[ACTION] ")
@@ -55,6 +66,7 @@ class Advisory:
     """Structured directive and metadata for calling agents and automated runners."""
 
     code: str = DEFAULT_CODE
+    level: Level = Level.ERROR
     actor: Actor = Actor.NONE
     retry: Retry = Retry.UNSAFE
     guardrail: bool = False
@@ -64,10 +76,15 @@ class Advisory:
     what_to_report: str | None = None
     target_files: tuple[str, ...] = ()
     details: tuple[str, ...] = ()
+    brief: bool = False
 
     @property
     def mode(self) -> ActionMode:
-        """Derive the directive; the first matching rule wins."""
+        """Derive the directive; the first matching rule wins. The level decides first; the error fields after it."""
+        if self.level is Level.WARNING:
+            return ActionMode.CONTINUE
+        if self.level is Level.NOTICE:
+            return ActionMode.NOTE
         if self.input_error:
             return ActionMode.INPUT_ERROR
         if self.guardrail:
@@ -87,15 +104,18 @@ class Advisory:
     def lines(self, message: str | None = None) -> list[str]:
         """Render the advisory block as sentinel lines for stderr.
 
-        A value that spans several lines continues on lines indented like the
-        ``[ACTION]`` continuation, so every line either starts with a sentinel
-        or belongs to the sentinel above it.
+        The headline (``[ERROR]``, ``[WARN]`` or ``[NOTICE]`` by level) comes
+        first when a message is given. ``[ACTION]`` is left out only for a
+        ``brief`` notice without ``fix``. A value that spans several lines
+        continues on lines indented like the ``[ACTION]`` continuation, so every
+        line either starts with a sentinel or belongs to the sentinel above it.
         """
         rendered: list[str] = []
         if message:
-            rendered.extend(_field("[ERROR]  ", f"({self.code or DEFAULT_CODE}) {message}"))
-        rendered.extend(_field("[ACTION] ", ACTION_TEXT[self.mode]))
-        if self.retry_after:
+            rendered.extend(_field(HEADLINE[self.level], f"({self.code or DEFAULT_CODE}) {message}"))
+        if not (self.level is Level.NOTICE and self.brief and not self.fix):
+            rendered.extend(_field("[ACTION] ", ACTION_TEXT[self.mode]))
+        if self.level is Level.ERROR and self.retry_after:
             rendered.extend(_field("[WHEN]   ", f"Not before: {self.retry_after}"))
         if self.target_files:
             rendered.extend(_field("[TARGET] ", ", ".join(self.target_files)))
@@ -111,6 +131,7 @@ class Advisory:
         """Serialize advisory metadata, including the derived mode."""
         return {
             "code": self.code,
+            "level": self.level.value,
             "mode": self.mode.value,
             "actor": self.actor.value,
             "retry": self.retry.value,
@@ -121,4 +142,5 @@ class Advisory:
             "what_to_report": self.what_to_report,
             "target_files": list(self.target_files),
             "details": list(self.details),
+            "brief": self.brief,
         }

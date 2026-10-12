@@ -4,8 +4,9 @@
 exactly one JSON object on stdout: its result's ``to_dict()`` (``override
 list`` wraps its entries as ``{"overrides": [...]}``), or ``{"error": {...}}``
 when it fails. A failure is also rendered as an Agent Advisory Protocol block
-on stderr. Synchronizing commands print warnings and coded notices on stderr
-as ``[WARNING: (CODE) ...]`` and ``[NOTICE: (CODE) ...]`` lines; ``devkit
+on stderr. Synchronizing commands list their warnings and notices under
+``notices`` and render them after the result as ``[WARN]`` and ``[NOTICE]``
+blocks on stderr (``--strict`` exits 1 on a warning); ``devkit
 status`` renders each problem of its ``errors`` as an advisory block. Exit
 codes follow ``devkit.advisory.ExitCode``: ``0`` success; ``1`` from
 ``devkit sync --check`` when a synchronization is needed and from
@@ -25,12 +26,20 @@ from typing import Any, Protocol
 
 import click
 
-from devkit.advisory import AdvisoryError, ExitCode
-from devkit.core.cli import boundary, echo_json, exit_on_problems, resolve_root, workspace_option
+from devkit.advisory import ExitCode
+from devkit.core.cli import (
+    boundary,
+    echo_json,
+    echo_notices,
+    exit_on_problems,
+    exit_on_warnings,
+    resolve_root,
+    workspace_option,
+)
 from devkit.core.errors import ArgumentError
 from devkit.distribution.bundles import build_bundle, load_bundle
 from devkit.distribution.bundles.common import AGENT_NAMES, SLUG
-from devkit.distribution.errors import OverrideDriftError, SelectionError
+from devkit.distribution.errors import SelectionError
 from devkit.distribution.installation.config import (
     DEFAULT_PLAYBOOK_LIMIT,
     DEFAULT_PLAYBOOK_MAX_BYTES,
@@ -61,7 +70,6 @@ from devkit.distribution.installation.status import get_project_listing, get_pro
 from devkit.distribution.installation.sync import recover_project, sync_project
 
 # Code of the stderr warning for files under the managed root that nothing owns.
-STRAY_CODE = "MANAGED_FILE_STRAY"
 
 
 class _Result(Protocol):
@@ -185,47 +193,23 @@ def _parse_selections(values: tuple[str, ...], param_hint: str) -> dict[str, lis
     return selected
 
 
-def _echo_notices(notices: list[AdvisoryError]) -> None:
-    for notice in notices:
-        click.echo(f"[NOTICE: ({notice.code}) {notice.message}]", err=True)
+def _report(result: SyncResult, *, check: bool = False) -> None:
+    """Print the result, then its warnings and notices on stderr.
 
-
-def _report(result: SyncResult) -> None:
-    """Print the result, then its warnings and notices on stderr."""
+    Exits 1 when ``check`` finds a synchronization needed, or under ``--strict`` when there is a warning.
+    """
     echo_json(result.to_dict())
-    for item in result.drift:
-        selector = f"{item.bundle}:{item.asset}"
-        click.echo(
-            f"[WARNING: ({OverrideDriftError.code}) upstream drift behind the override of {selector};"
-            f" review it with `devkit override diff {selector}`]",
-            err=True,
-        )
-    if result.stray:
-        click.echo(
-            f"[WARNING: ({STRAY_CODE}) unmanaged files under .devkit/managed/: {', '.join(result.stray)};"
-            " devkit does not deploy or remove them, move project-owned files out of the managed root]",
-            err=True,
-        )
-    if result.unprojected:
-        items = ", ".join(f"{item.bundle}:{item.asset} ({item.agent})" for item in result.unprojected)
-        click.echo(
-            f"[NOTICE: subagents without a native variant for a selected agent were not projected: {items};"
-            " add the variant, ship a role contract, or narrow agents in .devkit/config.toml]",
-            err=True,
-        )
-    if result.unselected:
-        names = ", ".join(item.bundle for item in result.unselected)
-        click.echo(
-            f"[NOTICE: installed bundles not selected: {names}; select one with `devkit add <bundle>[:<preset>]`]",
-            err=True,
-        )
-    _echo_notices(result.notices)
+    echo_notices(result.notices)
+    if check and result.actions:
+        sys.exit(int(ExitCode.FINDINGS))
+    exit_on_warnings(result.notices)
 
 
 def _report_change(change: OverrideChange) -> None:
-    """Print an override change, then the notices of the synchronization it ran on stderr."""
+    """Print an override change, then the warnings and notices of the synchronization it ran."""
     echo_json(change.to_dict())
-    _echo_notices(change.notices)
+    echo_notices(change.notices)
+    exit_on_warnings(change.notices)
 
 
 # Builds the configuration edit for a command from the installed bundles and the resolved selection.
@@ -298,9 +282,7 @@ def sync(
         presets=requested,
         dry_run=dry_run or check,
     )
-    _report(result)
-    if check and result.actions:
-        sys.exit(int(ExitCode.FINDINGS))
+    _report(result, check=check)
 
 
 @click.command()

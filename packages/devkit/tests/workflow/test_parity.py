@@ -112,9 +112,12 @@ def test_validate_reports_unknown_role_only_when_vocabulary_is_known() -> None:
 
 def test_validate_cli_skips_or_enforces_roles(workspace: Path) -> None:
     skipped = _run("validate", "-w", str(workspace))
-    assert skipped.exit_code == 0 and "[NOTICE: role check skipped: no installation receipt and no .devkit/roles]" in (
-        skipped.output
-    )
+    assert skipped.exit_code == 0
+    assert skipped.stderr == (
+        "[NOTICE] (WORKFLOW_ROLES_UNCHECKED) stage roles were not checked: no installation receipt and no .devkit/roles\n"
+    )  # brief: no [ACTION] line
+    as_json = json.loads(_run("validate", "-w", str(workspace), "--format", "json").stdout)
+    assert as_json["roles_checked"] is False and [n["code"] for n in as_json["notices"]] == ["WORKFLOW_ROLES_UNCHECKED"]
     (workspace / ".devkit/roles").mkdir()
     enforced = _run("validate", "-w", str(workspace))
     assert enforced.exit_code == 1 and "review.role: unknown role 'reviewer'" in enforced.output

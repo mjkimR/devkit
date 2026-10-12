@@ -11,6 +11,14 @@ class ExitCode(IntEnum):
     ERROR = 2  # The command could not do its job (usage, unreadable input or configuration, unexpected failure)
 
 
+class Level(StrEnum):
+    """Whether the operation failed (``ERROR``) or succeeded with something to report."""
+
+    ERROR = "ERROR"  # The operation did not do its job, or refused
+    WARNING = "WARNING"  # It succeeded; the user must learn or decide something
+    NOTICE = "NOTICE"  # It succeeded; something is worth knowing
+
+
 class Actor(StrEnum):
     """Who takes the next step to resolve the error."""
 
@@ -38,3 +46,5 @@ class ActionMode(StrEnum):
     HALT = "HALT"  # Unsafe failure; stop immediately and report
     MAINTENANCE = "MAINTENANCE"  # Codebase or tool defect; needs code repair
     INPUT_ERROR = "INPUT_ERROR"  # Malformed input/flag; fix input before rerunning
+    CONTINUE = "CONTINUE"  # A warning: the operation succeeded; tell the user
+    NOTE = "NOTE"  # A notice: the operation succeeded; for awareness

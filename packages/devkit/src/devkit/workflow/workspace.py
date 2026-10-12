@@ -271,7 +271,7 @@ class Workspace:
                 docs.append(load_definition_file(target, self.rel(target)))
             except WorkflowError as exc:
                 errors.append(exc)
-        return validate_definitions(
+        report = validate_definitions(
             docs,
             errors,
             anchor=self.config.anchor,
@@ -280,6 +280,7 @@ class Workspace:
             plugins=self.plugins(),
             compare_shared=not paths,
         )
+        return replace(report, roles_dir=self.config.roles_dir)
 
     def describe(self, doc: WorkflowDocument, binding: Binding | None = None) -> DefinitionDescription:
         """The definition with its problems, effective policies and anchor (what ``show`` reports)."""

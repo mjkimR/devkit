@@ -16,7 +16,15 @@ distribution commands must agree on:
 - ``report_exit_code``: a status or show command (``devkit status``,
   ``gate status``, ``workflow show``) exits ``1`` when its report lists any
   problem, whatever the problems' own codes; ``2`` is left for a command that
-  cannot run at all.
+  cannot run at all;
+- ``output_options`` (applied by ``boundary``, so every command has them):
+  ``-q/--quiet``, ``-v/--verbose`` and ``--strict``, or ``DEVKIT_QUIET``,
+  ``DEVKIT_VERBOSE`` and ``DEVKIT_STRICT``; ``echo_notices`` prints the
+  warnings and notices a command returned after its result, and
+  ``exit_on_warnings`` applies ``--strict``. Under ``--verbose`` every
+  ``devkit`` log record is printed on stderr as an ``[INFO]`` line.
+
+The output contract is ``docs/architecture/agent-output.md``.
 
 click only parses syntax here: every semantic argument check raises
 ``ArgumentError`` (``ARGUMENT_INVALID``) through the boundary, so a JSON
@@ -25,20 +33,33 @@ caller still receives one document.
 
 from __future__ import annotations
 
+import contextlib
+import contextvars
 import functools
 import json
+import logging
+import os
 import sys
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import click
 
-from devkit.advisory import AdvisoryError, ExitCode, as_advisory_error
+from devkit.advisory import AdvisoryError, ExitCode, Level, as_advisory_error
 from devkit.core.errors import ArgumentError
 from devkit.core.project import find_project_root
 
 WORKSPACE_HELP = "Workspace root directory [default: the devkit project containing the current directory]"
+
+QUIET_ENV = "DEVKIT_QUIET"
+VERBOSE_ENV = "DEVKIT_VERBOSE"
+STRICT_ENV = "DEVKIT_STRICT"
+
+LOGGER = "devkit"
+_CONTINUATION = " " * len("[INFO]   ")
+_log = logging.getLogger(__name__)
 
 FORMAT_OPTION = click.option(
     "--format",
@@ -118,22 +139,130 @@ def exit_on_problems(problems: Sequence[AdvisoryError], *, report: bool = False)
     sys.exit(report_exit_code(problems) if report else highest_exit_code(problems))
 
 
-def boundary[**P, R](fn: Callable[P, R] | None = None, *, json_only: bool = False) -> Any:
+@dataclass(frozen=True)
+class OutputSettings:
+    """The output options of the running command: ``quiet`` hides notices, ``verbose`` shows logs, ``strict``
+    makes a warning exit ``1``."""
+
+    quiet: bool = False
+    verbose: bool = False
+    strict: bool = False
+
+
+_settings: contextvars.ContextVar[OutputSettings | None] = contextvars.ContextVar("devkit_output", default=None)
+
+
+def output_settings() -> OutputSettings:
+    """The ``OutputSettings`` of the running command; all off outside one."""
+    return _settings.get() or OutputSettings()
+
+
+def _env(name: str) -> bool:
+    return os.environ.get(name) == "1"
+
+
+def resolve_output(quiet: bool, verbose: bool, strict: bool) -> OutputSettings:
+    """Combine the flags with the environment: a flag wins; quiet together with verbose is ``ArgumentError``."""
+    if quiet or verbose:
+        sources = ["--quiet", "--verbose"]
+    else:
+        quiet, verbose = _env(QUIET_ENV), _env(VERBOSE_ENV)
+        sources = [f"{QUIET_ENV}=1", f"{VERBOSE_ENV}=1"]
+    if quiet and verbose:
+        raise ArgumentError(
+            f"{' and '.join(sources)} cannot be combined",
+            target_files=sources,
+            fix="Pass at most one of -q/--quiet and -v/--verbose",
+        )
+    return OutputSettings(quiet=quiet, verbose=verbose, strict=strict or _env(STRICT_ENV))
+
+
+def output_options[F: Callable[..., Any]](fn: F) -> F:
+    """Add ``-q/--quiet``, ``-v/--verbose`` and ``--strict`` (parameters ``quiet``, ``verbose``, ``strict``).
+
+    ``boundary`` applies it and consumes the three parameters, so a command never sees them.
+    """
+    fn = click.option(
+        "--strict", "strict", is_flag=True, help=f"Exit 1 when a warning was reported (or {STRICT_ENV}=1)"
+    )(fn)
+    fn = click.option(
+        "--verbose", "-v", "verbose", is_flag=True, help=f"Also print [INFO] log lines on stderr (or {VERBOSE_ENV}=1)"
+    )(fn)
+    return click.option(
+        "--quiet", "-q", "quiet", is_flag=True, help=f"Hide [NOTICE] blocks on stderr (or {QUIET_ENV}=1)"
+    )(fn)
+
+
+def echo_notices(notices: Iterable[AdvisoryError]) -> None:
+    """Render the warnings and notices a command returned on stderr, after its result; ``--quiet`` skips notices."""
+    quiet = output_settings().quiet
+    for notice in notices:
+        if quiet and notice.level is Level.NOTICE:
+            continue
+        click.echo(notice.render(), err=True)
+
+
+def exit_on_warnings(notices: Iterable[AdvisoryError]) -> None:
+    """Under ``--strict``, exit ``1`` when any of ``notices`` is a warning; otherwise return."""
+    if output_settings().strict and any(notice.level is Level.WARNING for notice in notices):
+        sys.exit(int(ExitCode.FINDINGS))
+
+
+class _InfoFormatter(logging.Formatter):
+    """A log record as an ``[INFO]`` line, its further lines (a traceback) indented as continuation lines."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        head, *rest = super().format(record).splitlines() or [""]
+        return "\n".join([f"[INFO]   {head}".rstrip(), *(f"{_CONTINUATION}{line}".rstrip() for line in rest)])
+
+
+@contextlib.contextmanager
+def _logs_on_stderr(enabled: bool) -> Iterator[None]:
+    """Print every ``devkit`` log record on stderr while the command runs, when ``enabled``."""
+    if not enabled:
+        yield
+        return
+    logger = logging.getLogger(LOGGER)
+    handler = logging.StreamHandler(sys.stderr)
+    handler.setFormatter(_InfoFormatter())
+    previous = logger.level
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
+    try:
+        yield
+    finally:
+        logger.removeHandler(handler)
+        logger.setLevel(previous)
+
+
+def boundary(fn: Callable[..., Any] | None = None, *, json_only: bool = False) -> Any:
     """Decorate a click command so every error leaves through the Agent Advisory Protocol.
 
-    Use as ``@boundary`` or ``@boundary(json_only=True)``. An error is
-    rendered on stderr; when stdout is JSON (``json_only``, or the command's
-    ``output_format`` parameter is ``json``) ``{"error": {...}}`` is printed
-    there too, unless the error is ``Reported`` (its result is already there).
-    The process exits with the error's ``exit_code``; any other exception is
-    ``UNEXPECTED_ERROR``. click's own exits and usage errors pass through.
+    Use as ``@boundary`` or ``@boundary(json_only=True)``. It adds the output
+    options (``output_options``) and applies them while the command runs. An
+    error is rendered on stderr; when stdout is JSON (``json_only``, or the
+    command's ``output_format`` parameter is ``json``) ``{"error": {...}}`` is
+    printed there too, unless the error is ``Reported`` (its result is already
+    there). The process exits with the error's ``exit_code``; any other
+    exception is ``UNEXPECTED_ERROR``, its traceback logged for ``--verbose``.
+    click's own exits and usage errors pass through.
     """
 
-    def decorate(func: Callable[P, R]) -> Callable[P, R]:
+    def decorate(func: Callable[..., Any]) -> Callable[..., Any]:
         @functools.wraps(func)
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        def wrapper(*args: Any, quiet: bool = False, verbose: bool = False, strict: bool = False, **kwargs: Any) -> Any:
+            token: contextvars.Token[OutputSettings | None] | None = None
             try:
-                return func(*args, **kwargs)
+                settings = resolve_output(quiet, verbose, strict)
+                token = _settings.set(settings)
+                with _logs_on_stderr(settings.verbose):
+                    try:
+                        return func(*args, **kwargs)
+                    except Exception as exc:
+                        expected = isinstance(exc, AdvisoryError) and exc.level is Level.ERROR
+                        if not (expected or isinstance(exc, (click.ClickException, Reported))):
+                            _log.debug("unexpected error", exc_info=exc)  # a raised notice included
+                        raise
             except (click.exceptions.Exit, click.ClickException, click.exceptions.Abort, SystemExit):
                 raise
             except Reported as reported:
@@ -145,7 +274,10 @@ def boundary[**P, R](fn: Callable[P, R] | None = None, *, json_only: bool = Fals
                     echo_json({"error": error.to_dict()})
                 click.echo(error.render(), err=True)
                 sys.exit(int(error.exit_code))
+            finally:
+                if token is not None:
+                    _settings.reset(token)
 
-        return wrapper
+        return output_options(wrapper)
 
     return decorate if fn is None else decorate(fn)

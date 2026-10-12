@@ -21,7 +21,7 @@ Personal developer tools monorepo.
 - **Codes and directives**: everything an agent must act on has a stable `UPPER_SNAKE` code and a deterministic `[ACTION]` directive. Branch and test on codes, never on message text; never write hedged directives ("likely", "might").
 - **Levels**: a failure or refusal is raised as an `AdvisoryError`; something a successful operation must report is returned with its result under `notices` at `WARNING` or `NOTICE`, never raised and never logged. Warnings and notices do not change exit codes (`0` success, `1` negative result, `2` could not run), except under `--strict`.
 - **Context budget**: default output carries only what changes the agent's next step or must reach the user. Diagnostics are `logging` calls, visible under `-v`.
-- **Libraries never print**: commands write output only through `devkit.core.cli` (`boundary`, `echo_json`, `echo_notices`, `output_options`).
+- **Libraries never print**: commands write output only through `devkit.core.cli` (`boundary`, `echo_json`, `echo_notices`, `exit_on_warnings`).
 - Specifications: [Agent-First Output](docs/architecture/agent-output.md) and [Agent Advisory Protocol](docs/advisory/protocol.md).
 
 ## Compatibility

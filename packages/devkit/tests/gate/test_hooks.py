@@ -173,7 +173,7 @@ def test_commits_run_built_in_and_deployed_gates(repo: Path) -> None:
 
     deploy_gate(repo, gate_source())
     code, output = _commit(repo, "-m", "feat: blocked")
-    assert code != 0 and "[GATE: team-block stage=pre-commit outcome=failed]" in output and "TEST_REFUSED" in output
+    assert code != 0 and "[DETAIL] gate=team-block stage=pre-commit" in output and "TEST_REFUSED" in output
 
     # The tracked project config is overridden by the clone-local one.
     (repo / ".devkit/config.toml").write_text("[gates.settings.team-block]\nallow = true\n")
@@ -278,7 +278,9 @@ def test_run_command_verbose_and_post_commit_never_blocks(repo: Path) -> None:
     message = repo / "MSG"
     message.write_text("fix: y\n")
     code, output = _invoke("run", "-w", str(repo), "-v", "commit-msg", "MSG")
-    assert code == 0 and "[GATE: message-nonempty stage=commit-msg outcome=passed]" in output
+    assert code == 0 and "[INFO]   gate message-nonempty stage=commit-msg outcome=passed" in output
+    code, output = _invoke("run", "-w", str(repo), "commit-msg", "MSG")
+    assert code == 0 and output == ""  # silent when every gate passes
 
     (repo / ".git/devkit.config").write_text("[gates.settings.unknown]\nenabled = true\n")
     assert _invoke("run", "-w", str(repo), "post-commit")[0] == 0
@@ -364,7 +366,7 @@ def test_rule_engine_errors_pass_through_the_staged_gate(repo: Path) -> None:
     (repo / "a.md").write_text("# a\n")
     git(repo, "add", ".")
     code, output = _invoke("run", "-w", str(repo), "pre-commit")
-    assert code == 2 and "[GATE: rules-staged stage=pre-commit outcome=failed]" in output
+    assert code == 2 and "[DETAIL] gate=rules-staged stage=pre-commit" in output
     assert "(RULES_CONFIG_INVALID)" in output and "GATE_RULES" not in output
 
 

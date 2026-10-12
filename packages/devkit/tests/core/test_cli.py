@@ -3,20 +3,26 @@
 from __future__ import annotations
 
 import json
+import logging
+import re
 from pathlib import Path
 
 import click
 import pytest
 from click.testing import CliRunner
-from devkit.advisory import AdvisoryError, ExitCode
+from devkit.advisory import AdvisoryError, ExitCode, Level
 from devkit.cli import cli as root_cli
 from devkit.core.cli import (
     FORMAT_OPTION,
+    OutputSettings,
     Reported,
     boundary,
     echo_json,
+    echo_notices,
     exit_on_problems,
+    exit_on_warnings,
     highest_exit_code,
+    output_settings,
     report_exit_code,
     resolve_root,
     workspace_option,
@@ -49,6 +55,26 @@ def probe(workspace_root: str | None, output_format: str, mode: str) -> None:
         exit_on_problems([Finding("one"), AdvisoryError("two")], report=True)
     if mode == "crash":
         raise RuntimeError("boom")
+    if mode == "notices":
+        notices = [
+            AdvisoryError("left behind", code="TEST_WARNING", level=Level.WARNING),
+            AdvisoryError("fyi", code="TEST_NOTICE", level=Level.NOTICE),
+        ]
+        echo_json({"notices": [n.to_dict() for n in notices]})
+        echo_notices(notices)
+        exit_on_warnings(notices)
+        return
+    if mode == "log":
+        logging.getLogger("devkit.probe").info("checked %d files", 3)
+        try:
+            raise ValueError("kept for -v")
+        except ValueError:
+            logging.getLogger("devkit.probe").exception("a rule raised")
+        echo_json({"logged": True})
+        return
+    if mode == "settings":
+        echo_json(vars(output_settings()))
+        return
     echo_json({"root": str(root), "text": "ü"})
 
 
@@ -113,3 +139,72 @@ def test_version_lives_only_on_the_root_group() -> None:
         result = runner.invoke(root_cli, [group, "--version"])
         assert result.exit_code == 2 and "No such option" in result.output
     assert {"sync", "status", "list", "override", "bundle", "rules", "workflow", "gate"} <= set(root_cli.commands)
+
+
+def _leaf_commands(command: click.Command, path: str = "devkit"):
+    if isinstance(command, click.Group):
+        for name, sub in command.commands.items():
+            yield from _leaf_commands(sub, f"{path} {name}")
+    else:
+        yield path, command
+
+
+def test_every_command_has_the_output_options() -> None:
+    missing = [
+        path
+        for path, command in _leaf_commands(root_cli)
+        if not {"quiet", "verbose", "strict"} <= {param.name for param in command.params}
+    ]
+    assert missing == []
+
+
+def test_notices_follow_the_result_and_respect_quiet_and_strict(tmp_path: Path) -> None:
+    result = _invoke("-w", str(tmp_path), "--mode", "notices")
+    assert result.exit_code == 0 and len(json.loads(result.stdout)["notices"]) == 2
+    assert result.stderr.startswith("[WARN]   (TEST_WARNING) left behind\n[ACTION] CONTINUE — ")
+    assert "[NOTICE] (TEST_NOTICE) fyi\n[ACTION] NOTE — " in result.stderr
+    quiet = _invoke("-w", str(tmp_path), "--mode", "notices", "-q")
+    assert quiet.exit_code == 0 and "TEST_WARNING" in quiet.stderr and "TEST_NOTICE" not in quiet.stderr
+    assert json.loads(quiet.stdout) == json.loads(result.stdout)  # JSON is never filtered
+    assert _invoke("-w", str(tmp_path), "--mode", "notices", "--strict").exit_code == 1
+    assert CliRunner().invoke(probe, ["--mode", "notices"], env={"DEVKIT_STRICT": "1"}).exit_code == 1
+
+
+def test_quiet_and_verbose_conflict_and_flags_win_over_the_environment(tmp_path: Path) -> None:
+    both = _invoke("-w", str(tmp_path), "--format", "json", "-q", "-v")
+    assert both.exit_code == 2 and json.loads(both.stdout)["error"]["code"] == "ARGUMENT_INVALID"
+    assert both.stderr.startswith("[ERROR]  (ARGUMENT_INVALID) --quiet and --verbose cannot be combined")
+    env = {"DEVKIT_QUIET": "1", "DEVKIT_VERBOSE": "1"}
+    from_env = CliRunner().invoke(probe, ["--mode", "settings"], env=env)
+    assert from_env.exit_code == 2 and "DEVKIT_QUIET=1 and DEVKIT_VERBOSE=1 cannot be combined" in from_env.stderr
+    flag = CliRunner().invoke(probe, ["--mode", "settings", "-q"], env=env)
+    assert json.loads(flag.stdout) == {"quiet": True, "verbose": False, "strict": False}
+    off = CliRunner().invoke(probe, ["--mode", "settings"], env={"DEVKIT_VERBOSE": "true"})
+    assert json.loads(off.stdout) == {"quiet": False, "verbose": False, "strict": False}  # only "1" turns it on
+    assert output_settings() == OutputSettings()  # reset after the command
+
+
+def test_logs_are_silent_by_default_and_info_lines_under_verbose(tmp_path: Path) -> None:
+    quiet = _invoke("-w", str(tmp_path), "--mode", "log")
+    assert quiet.exit_code == 0 and quiet.stderr == ""  # the NullHandler keeps logger.exception off stderr
+    verbose = _invoke("-w", str(tmp_path), "--mode", "log", "-v")
+    lines = verbose.stderr.splitlines()
+    assert lines[:2] == ["[INFO]   checked 3 files", "[INFO]   a rule raised"]
+    assert lines[2] == "         Traceback (most recent call last):"
+    assert all(line.startswith(("[INFO]   ", " " * 9)) for line in lines)
+    assert not logging.getLogger("devkit").handlers[1:]  # the stderr handler is removed after the command
+    crash = _invoke("-w", str(tmp_path), "--mode", "crash", "-v")
+    assert "[INFO]   unexpected error" in crash.stderr and "RuntimeError: boom" in crash.stderr
+    assert crash.stderr.index("[INFO]   unexpected error") < crash.stderr.index("[ERROR]  (UNEXPECTED_ERROR) boom")
+
+
+def test_stdout_never_uses_an_advisory_sentinel_as_a_kind() -> None:
+    reserved = re.compile(r"\[(ERROR|WARN|WARNING|NOTICE|INFO|DEBUG|ACTION|WHEN|TARGET|FIX|REPORT|DETAIL):")
+    source = Path(__file__).parents[2] / "src/devkit"
+    offenders = [
+        f"{path.relative_to(source)}:{number}"
+        for path in sorted(source.rglob("*.py"))
+        for number, line in enumerate(path.read_text("utf-8").splitlines(), 1)
+        if reserved.search(line)
+    ]
+    assert offenders == []

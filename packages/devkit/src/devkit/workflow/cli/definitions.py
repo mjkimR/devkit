@@ -7,7 +7,7 @@ from pathlib import Path
 
 import click
 
-from devkit.core.cli import FORMAT_OPTION, boundary, echo_json, highest_exit_code, is_json
+from devkit.core.cli import FORMAT_OPTION, boundary, echo_json, echo_notices, highest_exit_code, is_json
 from devkit.core.errors import ArgumentError
 from devkit.workflow.cli.app import WORKSPACE, cli, workspace
 from devkit.workflow.definition.checks import Registry
@@ -56,8 +56,6 @@ def validate_cmd(workspace_root: str | None, paths: tuple[str, ...], output_form
     if is_json(output_format):
         echo_json(report.to_dict(ws.root))
     else:
-        if not report.roles_checked:
-            click.echo(f"[NOTICE: role check skipped: no installation receipt and no {ws.config.roles_dir}]")
         for err in report.load_errors:
             click.echo(f"[INVALID: {err}]")
         for r in report.definitions:
@@ -72,5 +70,6 @@ def validate_cmd(workspace_root: str | None, paths: tuple[str, ...], output_form
             click.echo(f"[INVALID: {problem}]")
         if not report.definitions and report.ok:
             click.echo(f"[VALID: no definitions under {ws.config.definitions_dir}]")
+    echo_notices(report.notices)
     if not report.ok:
         sys.exit(highest_exit_code(report.errors))

@@ -6,7 +6,7 @@ from importlib import metadata
 from pathlib import Path
 from types import MappingProxyType
 
-from devkit.advisory import AdvisoryError, ExitCode
+from devkit.advisory import AdvisoryError, ExitCode, Level
 from devkit.core.errors import ArgumentError
 from devkit.core.receipt import (
     MANAGED_PATH,
@@ -21,10 +21,13 @@ from devkit.core.receipt import (
 )
 from devkit.distribution.content import Content, same_content, signature
 from devkit.distribution.errors import (
+    BundleUnselectedNotice,
     ConflictError,
     OrphanLeftNotice,
     OverrideDriftError,
     SelectionError,
+    StrayFilesNotice,
+    SubagentUnprojectedNotice,
     ToolVersionChangedNotice,
     UnsafeWorkspaceError,
 )
@@ -123,16 +126,25 @@ def _resolve_selection(
     )
 
 
-def _refuse_override_drift(drift: list[Drift]) -> None:
-    """``override_drift = "block"``: refuse the sync while an override hides upstream changes."""
-    if not drift:
-        return
+def _override_drift(drift: list[Drift], *, blocked: bool) -> OverrideDriftError:
+    """One advisory for every override whose upstream changed: the refusal under ``block``, else a warning."""
     listed = [f"{item.bundle}:{item.asset}" for item in drift]
-    raise OverrideDriftError(
-        f'upstream drift behind an override (override_drift = "block"): {", ".join(listed)}',
+    policy = ' (override_drift = "block")' if blocked else ""
+    error = OverrideDriftError(
+        f"upstream drift behind an override{policy}: {', '.join(listed)}",
         target_files=[item.path for item in drift],
         fix=f"Review with `devkit override diff {listed[0]}` and accept with `devkit override accept {listed[0]}`",
+        what_to_report=(
+            "Upstream changed an asset this project overrides; review the diff, then accept it or keep the override"
+        ),
     )
+    return error if blocked else error.with_level(Level.WARNING)
+
+
+def _refuse_override_drift(drift: list[Drift]) -> None:
+    """``override_drift = "block"``: refuse the sync while an override hides upstream changes."""
+    if drift:
+        raise _override_drift(drift, blocked=True)
 
 
 def _plan_managed_files(
@@ -332,6 +344,12 @@ def _sync_result(
     *,
     dry_run: bool,
 ) -> SyncResult:
+    stray = stray_managed_files(root, owned)
+    unselected = [
+        Unselected(item.bundle.name, item.package, item.bundle.preset_names, item.bundle.default_preset)
+        for item in installed
+        if item.bundle.name not in selection.presets
+    ]
     return SyncResult(
         dry_run=dry_run,
         selection=selection,
@@ -339,15 +357,45 @@ def _sync_result(
         assets=list(inventory.assets),
         actions=actions,
         drift=list(inventory.drift),
-        stray=stray_managed_files(root, owned),
+        stray=stray,
         unprojected=list(inventory.unprojected),
-        unselected=[
-            Unselected(item.bundle.name, item.package, item.bundle.preset_names, item.bundle.default_preset)
-            for item in installed
-            if item.bundle.name not in selection.presets
-        ],
-        notices=notices,
+        unselected=unselected,
+        notices=[*_state_notices(list(inventory.drift), stray), *notices, *_selection_notices(inventory, unselected)],
     )
+
+
+def _state_notices(drift: list[Drift], stray: list[str]) -> list[AdvisoryError]:
+    """Warnings about the workspace the sync leaves: overrides behind upstream, unmanaged files in the managed root."""
+    notices: list[AdvisoryError] = []
+    if drift:
+        notices.append(_override_drift(drift, blocked=False))
+    if stray:
+        notices.append(
+            StrayFilesNotice(f"unmanaged files under .devkit/managed/: {', '.join(stray)}", target_files=stray)
+        )
+    return notices
+
+
+def _selection_notices(inventory: Inventory, unselected: list[Unselected]) -> list[AdvisoryError]:
+    """Notices about what the selection left out: subagents without a native variant, installed bundles not selected."""
+    notices: list[AdvisoryError] = []
+    if inventory.unprojected:
+        items = [f"{item.bundle}:{item.asset} ({item.agent})" for item in inventory.unprojected]
+        notices.append(
+            SubagentUnprojectedNotice(
+                f"subagents without a native variant for a selected agent were not projected: {', '.join(items)}",
+                target_files=items,
+            )
+        )
+    if unselected:
+        names = [item.bundle for item in unselected]
+        notices.append(
+            BundleUnselectedNotice(
+                f"installed bundles not selected: {', '.join(names)}",
+                fix=f"devkit add {names[0]}" if len(names) == 1 else "devkit add <bundle>[:<preset>]",
+            )
+        )
+    return notices
 
 
 def sync_project(

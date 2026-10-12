@@ -9,22 +9,25 @@ reports), ``run_hook`` runs one stage the way the hook wrappers do.
 from __future__ import annotations
 
 import dataclasses
+import logging
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
-from devkit.advisory import AdvisoryError, ExitCode, as_advisory_error
+from devkit.advisory import AdvisoryError, ExitCode, Level, as_advisory_error
 from devkit.core import ConfigError, require_git_toplevel
 from devkit.gate.engine.config import GatesConfig, load_gates_config, resolve_settings
-from devkit.gate.engine.models import GateContext, GateResult, Outcome, Stage
+from devkit.gate.engine.models import Gate, GateContext, GateResult, Outcome, Stage
 from devkit.gate.engine.registry import GateRegistry, project_registry
 from devkit.gate.errors import GateConfigError, GateResultError
 from devkit.gate.hooks import git
 
 INVALID_SETTINGS_NOTE = "invalid settings"
 NOT_INSTALLED_FIX = "Select the bundle that ships them and run `devkit sync`, or remove their [gates.settings] entries"
+
+_log = logging.getLogger(__name__)
 
 
 def _highest_exit_code(problems: Sequence[AdvisoryError]) -> ExitCode:
@@ -37,6 +40,7 @@ class GateRun:
     outcome: Outcome
     note: str = ""
     error: AdvisoryError | None = None  # set exactly when ``outcome`` is ``FAILED``
+    notices: tuple[AdvisoryError, ...] = ()  # warnings and notices of a gate that passed or was skipped
 
 
 @dataclass(frozen=True)
@@ -66,6 +70,11 @@ class StageReport:
     def problems(self) -> tuple[AdvisoryError, ...]:
         """The setup problems, then the error of every failed gate, in run order."""
         return (*self.errors, *(run.error for run in self.runs if run.error is not None))
+
+    @property
+    def notices(self) -> tuple[AdvisoryError, ...]:
+        """The warnings and notices of every gate, in run order; they never fail the stage."""
+        return tuple(notice for run in self.runs for notice in run.notices)
 
     @property
     def ok(self) -> bool:
@@ -116,32 +125,37 @@ def run_stage(
     """Run the stage's gates in order. A failing gate does not stop the others, so one run reports every refusal.
 
     ``validation`` defaults to ``validate_gates(registry, config)``; its errors
-    fail the stage, and a gate whose settings are invalid is skipped.
+    fail the stage, and a gate whose settings are invalid is skipped. Each
+    outcome is logged (``devkit gate run -v`` prints it as an ``[INFO]`` line).
     """
     checked = validation if validation is not None else validate_gates(registry, config)
     runs: list[GateRun] = []
     for gate in registry.for_stage(ctx.stage):
-        if not config.enabled(gate):
-            runs.append(GateRun(gate.id, Outcome.SKIPPED, "disabled"))
-            continue
-        if gate.id not in checked.settings:
-            runs.append(GateRun(gate.id, Outcome.SKIPPED, INVALID_SETTINGS_NOTE))
-            continue
-        try:
-            result = gate.run(dataclasses.replace(ctx, settings=checked.settings[gate.id]))
-        except Exception as exc:
-            runs.append(GateRun(gate.id, Outcome.FAILED, error=as_advisory_error(exc)))
-            continue
-        if result is None:
-            result = GateResult.passed()
-        if not isinstance(result, GateResult):
-            error = GateResultError(
-                f"gate {gate.id!r} returned {type(result).__name__}; run() returns a GateResult or None"
-            )
-            runs.append(GateRun(gate.id, Outcome.FAILED, error=error))
-            continue
-        runs.append(GateRun(gate.id, result.outcome, result.note))
+        run = _run_gate(gate, ctx, config, checked)
+        note = f" note={run.note}" if run.note else ""
+        _log.info("gate %s stage=%s outcome=%s%s", run.gate_id, ctx.stage, run.outcome, note)
+        runs.append(run)
     return StageReport(ctx.stage, tuple(runs), checked.errors)
+
+
+def _run_gate(gate: Gate, ctx: GateContext, config: GatesConfig, checked: Validation) -> GateRun:
+    if not config.enabled(gate):
+        return GateRun(gate.id, Outcome.SKIPPED, "disabled")
+    if gate.id not in checked.settings:
+        return GateRun(gate.id, Outcome.SKIPPED, INVALID_SETTINGS_NOTE)
+    try:
+        result = gate.run(dataclasses.replace(ctx, settings=checked.settings[gate.id]))
+    except Exception as exc:
+        return GateRun(gate.id, Outcome.FAILED, error=as_advisory_error(exc))
+    if result is None:
+        result = GateResult.passed()
+    if not isinstance(result, GateResult):
+        error = GateResultError(
+            f"gate {gate.id!r} returned {type(result).__name__}; run() returns a GateResult or None"
+        )
+        return GateRun(gate.id, Outcome.FAILED, error=error)
+    notices = tuple(n.with_level(Level.WARNING) if n.level is Level.ERROR else n for n in result.notices)
+    return GateRun(gate.id, result.outcome, result.note, notices=notices)
 
 
 @dataclass(frozen=True)

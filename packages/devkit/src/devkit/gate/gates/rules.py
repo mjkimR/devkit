@@ -16,7 +16,8 @@ snapshot that cannot be read (``RULES_SNAPSHOT_FAILED``), an invalid
 ``[rules]`` table (``RULES_CONFIG_INVALID``, or the core ``CONFIG_INVALID``),
 and a run that could not complete (``RULES_RUN_FAILED``, carrying every load,
 policy and execution problem). Only unfixed error violations are this gate's
-refusal (``GATE_RULES_VIOLATION``).
+refusal (``GATE_RULES_VIOLATION``); warning-severity violations pass and are
+counted in a ``GATE_RULES_WARNINGS`` notice.
 """
 
 from __future__ import annotations
@@ -25,7 +26,7 @@ from collections.abc import Iterable
 
 from devkit.gate.engine.base import BaseGate
 from devkit.gate.engine.models import GateContext, GateResult, Stage
-from devkit.gate.errors import GateRefusedError
+from devkit.gate.errors import GateRefusedError, RulesWarningsNotice
 from devkit.rules import git_snapshot, run_project_rules
 
 MAX_DETAIL_LINES = 40
@@ -61,13 +62,17 @@ class StagedRulesGate(BaseGate):
                 ),
                 target_files=sorted({v.file for v in errors}),
             )
-        warnings = sum(1 for v in run.result.violations if v.severity.value == "warning")
+        warnings = [v for v in run.result.violations if v.severity.value == "warning" and not v.fixed]
         note = f"{len(snapshot.changed)} changed file(s) checked"
         if snapshot.deleted:
             note += f", {len(snapshot.deleted)} deleted"
-        if warnings:
-            note += f", {warnings} warning(s)"
-        return GateResult.passed(note)
+        if not warnings:
+            return GateResult.passed(note)
+        notice = RulesWarningsNotice(
+            f"{len(warnings)} warning-severity rule violation(s) in the staged tree; the commit is not blocked",
+            target_files=sorted({v.file for v in warnings}),
+        )
+        return GateResult.passed(f"{note}, {len(warnings)} warning(s)", notices=[notice])
 
 
 def _cap(lines: Iterable[object]) -> list[str]:
