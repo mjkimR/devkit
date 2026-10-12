@@ -11,7 +11,7 @@ from devkit.distribution.installation.context import get_context
 from devkit.distribution.installation.discovery import InstalledBundle
 from devkit.distribution.installation.sync import sync_project
 
-INSTRUCTIONS = ["consumption", "in-repo-bundle", "resource-kinds"]
+INSTRUCTIONS = ["consumption", "devkit-run", "in-repo-bundle", "resource-kinds"]
 
 
 def _root() -> Path:

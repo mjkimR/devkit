@@ -201,7 +201,7 @@ files per agent or one host-neutral role contract that `devkit sync` renders per
 
 `devkit` ships one bundle of its own, named `devkit`, so that the guidance about devkit
 travels with the CLI version it describes. It contains no code assets: a constitution (`AGENTS.md`)
-with the consumption contracts and three instructions, delivered to agents through
+with the consumption contracts and four instructions, delivered to agents through
 `devkit get-context devkit`.
 
 | Asset | Read before |
@@ -209,6 +209,7 @@ with the consumption contracts and three instructions, delivered to agents throu
 | `consumption` | Using, changing or troubleshooting devkit-managed assets: context loading, playbooks, rules and gates, overrides, selection and the sync/receipt lifecycle. |
 | `resource-kinds` | Adding a rule, skill, subagent, instruction, playbook, workflow or gate: the decision tree and comparison of asset kinds. |
 | `in-repo-bundle` | Adding repository-specific assets: shipping them as a bundle installed from the same repository. |
+| `devkit-run` | Running tests, linters or type checks directly, or setting up recipes for them: `devkit run` and its output; see [devkit.compact](../compact/reference.md). |
 
 It is built in: selected by default (`auto_select`) with its preset `core` (the only one); `uv run devkit remove devkit`
 opts the project out. The sources live in `src/devkit/distribution/guide/bundle/` and are validated by the package tests.

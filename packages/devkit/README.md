@@ -15,7 +15,7 @@ uv run devkit sync            # deploys the auto-selected built-in bundles (devk
 uv run devkit add <bundle>    # selects any other bundle: built-in opt-in ones or another content package
 ```
 
-Every command takes `-w/--workspace-root`; the default is the enclosing project
+Every project command takes `-w/--workspace-root` (`devkit run` works in the current directory); the default is the enclosing project
 root (the nearest directory with `.devkit/`, else the Git top level, else the
 current directory); `devkit gate` always acts on the Git work tree's top level.
 Architecture and the documentation index:
@@ -31,18 +31,19 @@ Architecture and the documentation index:
 | `devkit.workflow` | Data-driven delivery workflow engine | `devkit workflow` | [docs/workflow](../../docs/workflow/reference.md) |
 | `devkit.gate` | Pluggable Git commit gates and managed hook wrappers | `devkit gate` | [docs/gate](../../docs/gate/reference.md) |
 | `devkit.distribution` | Bundle packaging and transactional synchronization, plus the built-in `devkit` guide bundle | `devkit sync`, `add`, `remove`, `list`, `status`, ... | [docs/distribution](../../docs/distribution/reference.md) |
+| `devkit.compact` | Verification commands with the full log on disk and a bounded view for agents | `devkit run` | [docs/compact](../../docs/compact/reference.md) |
 
 Layering: `advisory` imports no other module; `core` may import `advisory`;
 `rules` may import `core` and `advisory`; `workflow` and `gate` may import
-`core`, `advisory` and `rules`; `distribution` may import only `core` and
-`advisory`. `devkit.cli` assembles the command line. A test enforces this.
+`core`, `advisory` and `rules`; `distribution` and `compact` may import only
+`core` and `advisory`. `devkit.cli` assembles the command line. A test enforces this.
 
 Bundles shipped inside this package that declare `auto_select` (`devkit`,
 `advisory`) are selected with their default preset unless
 `.devkit/config.toml` opts out with `[presets] <bundle> = false`. The other
 built-in bundles are opt-in practices: `authoring` (skill and agent guide size
-rules with their playbooks, [docs/rules](../../docs/rules/reference.md#built-in-authoring-bundle))
-and `git-commits` (commit message conventions,
+rules with their playbooks, [docs/rules](../../docs/rules/reference.md#built-in-authoring-bundle)),
+`git-commits` (commit message conventions,
 [docs/gate](../../docs/gate/reference.md#built-in-git-commits-bundle)). They and
 bundles from other packages are deployed only after `devkit add`, which joins
 presets to those a bundle already deploys.

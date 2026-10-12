@@ -21,6 +21,7 @@ ALLOWED: dict[str, set[str]] = {
     "workflow": {"core", "advisory", "rules"},
     "gate": {"core", "advisory", "rules"},
     "distribution": {"core", "advisory"},
+    "compact": {"core", "advisory"},
 }
 
 

@@ -24,5 +24,11 @@ id = "in-repo-bundle"
 kind = "instruction"
 source = "instructions/in-repo-bundle.md"
 
+# Running tests, linters and type checks through `devkit run`, and wrapping recipes with it.
+[[assets]]
+id = "devkit-run"
+kind = "instruction"
+source = "instructions/devkit-run.md"
+
 [presets.core]
-assets = ["consumption", "resource-kinds", "in-repo-bundle"]
+assets = ["consumption", "resource-kinds", "in-repo-bundle", "devkit-run"]

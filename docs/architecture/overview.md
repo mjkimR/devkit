@@ -18,6 +18,8 @@ This document provides a high-level overview of the `devkit` monorepo architectu
    Running pluggable policy at Git's commit hooks through static wrappers, layered project and per-clone configuration, and gates distributed as bundle assets (`devkit gate`).
 5. **Agent Advisories (`devkit.advisory`)**:
    The Agent Advisory Protocol: every CLI reports errors, warnings and notices as advisories whose `[ACTION]` directive tells an agent whether to fix, wait, stop, or continue. The built-in `advisory` bundle teaches the protocol to agents in consumer repositories.
+6. **Compact Command Output (`devkit.compact`)**:
+   Running tests, linters and other verification commands with their complete output in a log file and a bounded view for the agent: outcome, recognized summaries and warnings, relayed advisories and, on failure, a head-and-tail excerpt (`devkit run`).
 
 All of them build on `devkit.core`, the SDD-agnostic shared foundation (frontmatter grammar, installation receipt, safe paths, Git runner, plugin loading, project discovery, CLI plumbing).
 
@@ -35,6 +37,8 @@ All of them build on `devkit.core`, the SDD-agnostic shared foundation (frontmat
 │ - playbook search    │ - Git snapshots     │ - handoff      │ - rules-   │
 │                      │                     │                │   staged   │
 ├──────────────────────┴─────────────────────┴────────────────┴────────────┤
+│       devkit.compact (devkit run: bounded command output for agents)     │
+├──────────────────────────────────────────────────────────────────────────┤
 │       devkit.advisory (advisory protocol)  ·  devkit.core (foundation)   │
 └──────────────────────────────────┬───────────────────────────────────────┘
                                    │ devkit sync writes; rules, workflow
@@ -50,7 +54,7 @@ All of them build on `devkit.core`, the SDD-agnostic shared foundation (frontmat
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-Layering inside the package: `advisory` imports no other module; `core` may import `advisory`; `rules` may import `core` and `advisory`; `workflow` and `gate` may import `core`, `advisory` and `rules`; `distribution` may import only `core` and `advisory`. `devkit.cli` assembles the command line. A test enforces this.
+Layering inside the package: `advisory` imports no other module; `core` may import `advisory`; `rules` may import `core` and `advisory`; `workflow` and `gate` may import `core`, `advisory` and `rules`; `distribution` and `compact` may import only `core` and `advisory`. `devkit.cli` assembles the command line. A test enforces this.
 
 ---
 
@@ -67,6 +71,7 @@ devkit/
 │   │       ├── workflow/      # Delivery workflow engine (`devkit workflow`)
 │   │       ├── gate/          # Commit gate system (`devkit gate`)
 │   │       ├── distribution/  # Bundle packaging and sync (`devkit sync`, ...) and the `devkit` guide bundle
+│   │       ├── compact/       # Compact command output (`devkit run`)
 │   │       └── cli.py         # The root `devkit` group: assembles every area's commands
 │   └── devkit-starter/        # Example external content package
 ├── examples/bundles/          # Example bundle delivery-workflow (the starter bundle lives in devkit-starter)
@@ -84,6 +89,7 @@ Inside each area, modules are grouped by concern; every area exposes its library
 | `workflow` | `definition/` (document model, validation, discovery, check registry, identifiers), `project/` (configuration, layout, roles, plugin checks), `unit/` (units, binding, frontmatter, decision records, envelopes), `evaluation/` (evaluator, primitives, results, requests, Git, lint), top-level `workspace.py`, `answers.py`, `handoff.py`, `render.py`, `errors.py`, and `cli/` |
 | `gate` | `engine/` (models, base class, configuration, registry, runner), `hooks/` (hook wrappers and Git queries), `gates/` (built-in gates), `errors.py`, `cli/`, `__main__.py` (`python -m devkit.gate`, which the hook wrappers exec) |
 | `distribution` | `content.py` (file content helpers shared by both sides), `bundles/` (authoring: manifest, kinds, packaging; no workspace knowledge), `installation/` (consumer workspace: sync, receipt, overrides, status, context), `cli/`, `guide/` (the `devkit` guide bundle), `errors.py` |
+| `compact` | `scan.py` (bounded view of an output), `execute.py` (`run_command`: log, process group, signals), `errors.py`, `cli.py` |
 
 The module maps with one line per file are in each module's documentation.
 
@@ -175,6 +181,10 @@ Each module's `reference.md` is the quick reference (CLI, configuration, library
 ### Commit Gates (`devkit.gate`)
 - [Gate Reference](../gate/reference.md): Install, configuration, and CLI quick reference.
 - [Commit Gate Overview](../gate/overview.md): Hook wrappers, built-in gates, gate contract, bundle distribution, configuration layers, and CLI.
+
+### Compact Command Output (`devkit.compact`)
+- [Compact Reference](../compact/reference.md): `devkit run` usage, output lines, exit codes, library, and agent guidance.
+- [Compact Command Output Overview](../compact/overview.md): Execution, logs, the bounded view and its budgets, output contract, and scope.
 
 ### Examples
 - [devkit-starter](../../packages/devkit-starter/README.md): An external content package whose `src/devkit_starter/bundle` is the starter example bundle.
