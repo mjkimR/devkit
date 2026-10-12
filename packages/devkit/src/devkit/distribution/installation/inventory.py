@@ -5,21 +5,23 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from devkit.core.receipt import AssetRecord, OverrideRecord, PackageRecord
-
-from ..bundles.guidance import prepend_context
-from ..bundles.manifest import Asset, Bundle, source_files
-from ..bundles.playbooks import playbook_entry
-from ..bundles.subagents import HOST_FILES, SUBAGENT_DIRS, projection_path, read_contract, render
-from ..bundles.workflows import workflow_entry
-from ..errors import BundleError, ConflictError, SelectionError
-from . import playbook_skill, workflow_skill
-from .discovery import InstalledBundle
-from .overrides import Drift, resolve_source, track
-from .workspace import MANAGED, Content, normal_mode
-
-BUNDLE_CONFLICT = "BUNDLE_CONFLICT"
-_DESELECT = "Which bundle to keep; deselect the other with `devkit remove <bundle>`"
+from devkit.core.receipt import MANAGED_PATH, AssetRecord, OverrideRecord, PackageRecord
+from devkit.distribution.bundles.guidance import prepend_context
+from devkit.distribution.bundles.manifest import Asset, Bundle, source_files
+from devkit.distribution.bundles.playbooks import playbook_entry
+from devkit.distribution.bundles.subagents import (
+    HOST_FILES,
+    SUBAGENT_DIRS,
+    projection_path,
+    read_contract,
+    render_projection,
+)
+from devkit.distribution.bundles.workflows import workflow_entry
+from devkit.distribution.content import Content, normal_mode
+from devkit.distribution.errors import BundleConflictError, BundleError, SelectionError
+from devkit.distribution.installation import playbook_skill, workflow_skill
+from devkit.distribution.installation.discovery import InstalledBundle
+from devkit.distribution.installation.overrides import Drift, resolve_source, track_override
 
 # Shared entry skills generated when at least one asset of the kind is synchronized.
 GENERATED_SKILLS = {"playbook": playbook_skill, "workflow": workflow_skill}
@@ -50,6 +52,9 @@ class Unprojected:
     asset: str
     agent: str
 
+    def to_dict(self) -> dict[str, str]:
+        return {"bundle": self.bundle, "asset": self.asset, "agent": self.agent}
+
 
 @dataclass
 class Inventory:
@@ -67,18 +72,16 @@ class Inventory:
         # Agents sharing a directory (Codex and Antigravity) project the same bytes twice.
         existing = self.files.get(destination)
         if existing is not None and existing != content:
-            raise ConflictError(
+            raise BundleConflictError(
                 f"destination collision: {destination}",
-                code=BUNDLE_CONFLICT,
                 target_files=[destination],
-                what_to_report=_DESELECT,
             )
         self.files[destination] = content
 
     def copy(self, destination: str, path: Path, context_bundle: str | None = None) -> None:
         data = path.read_bytes()
         if context_bundle is not None:
-            data = prepend_context(data, context_bundle)
+            data = prepend_context(data, context_bundle, destination)
         self.put(destination, Content(data, normal_mode(path.stat().st_mode)))
 
 
@@ -90,7 +93,7 @@ class _BundleInventory:
         self.bundle = bundle
         self.agents = agents
         self.root = root
-        self.prefix = f"{MANAGED}/{bundle.name}/"
+        self.prefix = f"{MANAGED_PATH}/{bundle.name}/"
         self.context_files: set[Path] = set()
 
     def add(self, presets: list[str], previous: dict[str, OverrideRecord]) -> None:
@@ -119,7 +122,7 @@ class _BundleInventory:
             self.inventory.assets.append(
                 AssetRecord(bundle.name, asset.id, asset.kind, tuple(sorted(paths)), self._entrypoints(asset))
             )
-            record, drift = track(self.root, bundle, asset, previous.get(asset.id))
+            record, drift = track_override(self.root, bundle, asset, previous.get(asset.id))
             if record is not None:
                 self.inventory.overrides.setdefault(bundle.name, {})[asset.id] = record
             if drift is not None:
@@ -137,11 +140,9 @@ class _BundleInventory:
         for path in source_files(self.bundle.root, source):
             dest = asset.target if origin.is_file() else f"{asset.target}/{path.relative_to(origin).as_posix()}"
             if dest in seeds:
-                raise ConflictError(
+                raise BundleConflictError(
                     f"seeded target collision: {dest} ({seeds[dest].bundle} and {self.bundle.name})",
-                    code=BUNDLE_CONFLICT,
                     target_files=[dest],
-                    what_to_report=_DESELECT,
                 )
             seeds[dest] = Seed(self.bundle.name, asset.id, Content(path.read_bytes(), normal_mode(path.stat().st_mode)))
             targets.append(dest)
@@ -191,7 +192,7 @@ class _BundleInventory:
         """A role contract: render the host projection from its declared block, citing the file it read."""
         read_from, cited = resolve_source(self.root, self.bundle, rel)
         contract = read_contract(read_from.read_bytes(), f"{self.bundle.name}/{asset.id}", asset.id)
-        rendered = render(agent, contract, cited)
+        rendered = render_projection(agent, contract, cited)
         if rendered is None:
             return set()
         dest = projection_path(agent, asset.id)
@@ -251,10 +252,8 @@ def desired_inventory(
                 inventory.put(f"{directory}/{relative}", Content(data, 0o644))
     for dest in inventory.seeds:
         if dest in inventory.files:
-            raise ConflictError(
+            raise BundleConflictError(
                 f"seeded target collides with a managed destination: {dest}",
-                code=BUNDLE_CONFLICT,
                 target_files=[dest],
-                what_to_report=_DESELECT,
             )
     return inventory

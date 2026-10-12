@@ -13,7 +13,7 @@ from devkit.gate import GateContext, Stage
 # A deployed gate file: refuses every commit unless its ``allow`` setting is on.
 GATE = """from dataclasses import dataclass
 
-from devkit.gate import BaseGate, GateContext, GateError, GateResult, Stage
+from devkit.gate import BaseGate, GateContext, GateRefusedError, GateResult, Stage
 
 
 @dataclass(frozen=True)
@@ -34,7 +34,7 @@ class {cls}(BaseGate):
     def run(self, ctx: GateContext) -> GateResult:
         if ctx.settings.allow:
             return GateResult.passed("allowed")
-        raise GateError.blocked("{gate_id} refused", code="TEST_REFUSED")
+        raise GateRefusedError("{gate_id} refused", code="TEST_REFUSED")
 """
 
 
@@ -60,7 +60,9 @@ def deploy_gate(
         if receipt.is_file()
         else {"schema": 1, "packages": [], "selection": {"agents": [], "presets": {}}, "assets": [], "files": {}}
     )
-    data["assets"].append({"bundle": "team", "id": path.stem.replace("_", "-"), "kind": "gate", "paths": [rel]})
+    data["assets"].append(
+        {"bundle": "team", "id": path.stem.strip("_").replace("_", "-"), "kind": "gate", "paths": [rel]}
+    )
     if record:
         data["files"][rel] = {"sha256": hashlib.sha256(source.encode()).hexdigest(), "mode": 420}
     receipt.write_text(json.dumps(data))

@@ -9,10 +9,10 @@ from types import SimpleNamespace
 
 import pytest
 from click.testing import CliRunner
+from devkit.advisory import AdvisoryError
 from devkit.core.errors import ConfigError, ReceiptError
-from devkit.core.receipt import ToolRecord
+from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH, ToolRecord
 from devkit.distribution.bundles import load_bundle
-from devkit.distribution.cli import cli
 from devkit.distribution.errors import ConflictError, OverrideDriftError
 from devkit.distribution.installation import discovery, hooks
 from devkit.distribution.installation import status as status_module
@@ -20,9 +20,10 @@ from devkit.distribution.installation import sync as sync_module
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.discovery import InstalledBundle
 from devkit.distribution.installation.override_commands import create_override
-from devkit.distribution.installation.status import project_status
+from devkit.distribution.installation.status import get_project_status
 from devkit.distribution.installation.sync import sync_project, tool_identity
-from devkit.distribution.installation.workspace import AGENTS_FILE, CONFIG, JOURNAL, RECEIPT
+from devkit.distribution.installation.workspace import AGENTS_FILE, JOURNAL
+from testsupport.distribution import cli
 
 
 @pytest.fixture
@@ -69,7 +70,7 @@ def target(tmp_path: Path) -> Path:
 
 
 def write_config(root: Path, extra: str = "", presets: str = 'team = "all"') -> None:
-    (root / CONFIG).write_text(f'schema = 1\nagents = ["codex"]\n{extra}\n[presets]\n{presets}\n')
+    (root / CONFIG_PATH).write_text(f'schema = 1\nagents = ["codex"]\n{extra}\n[presets]\n{presets}\n')
 
 
 @contextmanager
@@ -114,13 +115,18 @@ def test_post_sync_hooks_run_in_name_order_and_never_fail_the_sync(
     result = sync_project(target, installed)
     assert [name for name, _, _ in seen] == ["a", "c"]
     assert seen[0][1] == target.resolve()
-    assert RECEIPT in seen[0][2]
-    assert result["notices"] == [
-        "first says hi",
-        "post-sync hook b-broken failed: boom",
-        "post-sync hook d-wrong failed: returned str, expected list[str]",
+    assert RECEIPT_PATH in seen[0][2]
+    assert [(notice.code, notice.message) for notice in result.notices] == [
+        ("POST_SYNC_NOTICE", "first says hi"),
+        ("POST_SYNC_HOOK_FAILED", "post-sync hook b-broken failed: boom"),
+        (
+            "POST_SYNC_HOOK_FAILED",
+            "post-sync hook d-wrong failed: returned str, expected list[str | AdvisoryError]",
+        ),
     ]
-    assert (target / RECEIPT).is_file()
+    assert result.notices[0].details == ("hook: a-first",)
+    assert result.to_dict()["notices"][1]["advisory"]["mode"] == "MAINTENANCE"
+    assert (target / RECEIPT_PATH).is_file()
 
 
 def test_post_sync_hooks_do_not_run_on_dry_run_or_check(
@@ -129,7 +135,7 @@ def test_post_sync_hooks_do_not_run_on_dry_run_or_check(
     calls: list[str] = []
     entries = [_entry("hook", lambda root, result: calls.append("ran") or ["x"])]
     monkeypatch.setattr(hooks.metadata, "entry_points", lambda group: entries)
-    assert sync_project(target, installed, dry_run=True)["notices"] == []
+    assert sync_project(target, installed, dry_run=True).to_dict()["notices"] == []
     assert calls == []
     monkeypatch.setattr(discovery, "discover_bundles", lambda: fake_discovery(installed))
     monkeypatch.setattr("devkit.distribution.cli.discover_bundles", lambda: fake_discovery(installed))
@@ -138,7 +144,19 @@ def test_post_sync_hooks_do_not_run_on_dry_run_or_check(
     assert checked.exit_code == 1 and calls == []
     synced = runner.invoke(cli, ["sync", "--workspace-root", str(target)])
     assert synced.exit_code == 0, synced.output
-    assert calls == ["ran"] and "NOTICE: x" in synced.stderr
+    assert calls == ["ran"] and "[NOTICE: (POST_SYNC_NOTICE) x]" in synced.stderr
+
+
+def test_post_sync_hooks_may_return_coded_notices_and_reach_override_commands(
+    installed: list[InstalledBundle], target: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    coded = AdvisoryError("units need review", code="UNITS_STALE")
+    entries = [_entry("coded", lambda root, result: [coded, "plain"])]
+    monkeypatch.setattr(hooks.metadata, "entry_points", lambda group: entries if group == hooks.GROUP else [])
+    assert [notice.code for notice in sync_project(target, installed).notices] == ["UNITS_STALE", "POST_SYNC_NOTICE"]
+    change = create_override(target, installed, "team:guide")
+    assert change.notices[0] is coded
+    assert [notice["code"] for notice in change.to_dict()["notices"]] == ["UNITS_STALE", "POST_SYNC_NOTICE"]
 
 
 # --- override drift policy ---------------------------------------------------
@@ -152,7 +170,7 @@ def _drift(source: Path, installed: list[InstalledBundle], target: Path) -> None
 
 def test_override_drift_warns_by_default(source: Path, installed: list[InstalledBundle], target: Path) -> None:
     _drift(source, installed, target)
-    result = sync_project(target, installed)
+    result = sync_project(target, installed).to_dict()
     assert [d["asset"] for d in result["drift"]] == ["guide"]
 
 
@@ -161,12 +179,11 @@ def test_override_drift_block_aborts_before_writes(
 ) -> None:
     _drift(source, installed, target)
     write_config(target, extra='override_drift = "block"')
-    receipt = (target / RECEIPT).read_bytes()
-    with pytest.raises(
-        OverrideDriftError, match=r"override_drift = \"block\"\): team:guide; review with 'devkit override diff"
-    ):
+    receipt = (target / RECEIPT_PATH).read_bytes()
+    with pytest.raises(OverrideDriftError, match=r"override_drift = \"block\"\): team:guide$") as raised:
         sync_project(target, installed)
-    assert (target / RECEIPT).read_bytes() == receipt
+    assert raised.value.fix is not None and "`devkit override diff team:guide`" in raised.value.fix
+    assert (target / RECEIPT_PATH).read_bytes() == receipt
     assert not (target / JOURNAL).exists()
 
 
@@ -195,12 +212,15 @@ kind = "instruction"
 source = "guide.md"
 """)
     newer = [InstalledBundle("team-content", "0.2.0", load_bundle(source))]
-    result = sync_project(target, newer)
+    synced = sync_project(target, newer)
+    result = synced.to_dict()
     # Only the edited projection is left behind; the untouched managed copy is removed as usual.
-    assert result["orphans"] == [".agents/skills/review/SKILL.md"]
+    (orphan,) = synced.notices
+    assert (orphan.code, orphan.target_files) == ("ORPHAN_LEFT", (".agents/skills/review/SKILL.md",))
+    assert result["notices"][0]["advisory"]["mode"] == "INTERACTION"
     assert skill.read_text() == "# my review\n"
     assert not (target / ".devkit/managed/team/skills/review/SKILL.md").exists()
-    files = json.loads((target / RECEIPT).read_text())["files"]
+    files = json.loads((target / RECEIPT_PATH).read_text())["files"]
     assert not any(name.endswith("review/SKILL.md") for name in files)
     assert all(a["path"] != ".agents/skills/review/SKILL.md" for a in result["actions"])
     # Still desired and modified: abort, as before.
@@ -219,7 +239,7 @@ def test_orphan_alone_does_not_fail_check(
     runner = CliRunner()
     first = runner.invoke(cli, ["sync", "--workspace-root", str(target)])
     assert first.exit_code == 0, first.output
-    assert "NOTICE: left modified file in place: .devkit/managed/team/guide.md" in first.stderr
+    assert "[NOTICE: (ORPHAN_LEFT) left modified file in place: .devkit/managed/team/guide.md" in first.stderr
     # Nothing left to sync: the orphan is reported, not pending.
     check = runner.invoke(cli, ["sync", "--workspace-root", str(target), "--check"])
     assert check.exit_code == 0, check.output
@@ -234,27 +254,29 @@ def test_orphan_alone_does_not_fail_check(
 def test_tool_version_alone_is_no_change_and_is_recorded_with_the_next_write(
     installed: list[InstalledBundle], target: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    result = sync_project(target, installed)
-    receipt = json.loads((target / RECEIPT).read_text())
+    result = sync_project(target, installed).to_dict()
+    receipt = json.loads((target / RECEIPT_PATH).read_text())
     assert receipt["tool"] == {"package": "devkit", "version": tool_identity().version}
     assert result["notices"] == []
     monkeypatch.setattr(sync_module, "tool_identity", lambda: ToolRecord("devkit", "9.9.9"))
-    before = (target / RECEIPT).read_bytes()
-    result = sync_project(target, installed)
+    before = (target / RECEIPT_PATH).read_bytes()
+    result = sync_project(target, installed).to_dict()
     # A different devkit version alone is not drift: no write, no notice, ``--check`` stays clean.
     assert result["actions"] == [] and result["notices"] == []
-    assert (target / RECEIPT).read_bytes() == before
-    result = sync_project(target, installed, agents=[])
-    assert result["notices"] == [f"devkit {receipt['tool']['version']} -> 9.9.9"]
-    assert json.loads((target / RECEIPT).read_text())["tool"]["version"] == "9.9.9"
-    assert sync_project(target, installed, agents=[])["notices"] == []
+    assert (target / RECEIPT_PATH).read_bytes() == before
+    result = sync_project(target, installed, agents=[]).to_dict()
+    (notice,) = result["notices"]
+    assert notice["code"] == "TOOL_VERSION_CHANGED" and notice["exit_code"] == 0
+    assert notice["message"].startswith(f"devkit {receipt['tool']['version']} -> 9.9.9")
+    assert json.loads((target / RECEIPT_PATH).read_text())["tool"]["version"] == "9.9.9"
+    assert sync_project(target, installed, agents=[]).to_dict()["notices"] == []
 
 
 def test_receipt_tool_field_is_validated(installed: list[InstalledBundle], target: Path) -> None:
     sync_project(target, installed)
-    receipt = json.loads((target / RECEIPT).read_text())
+    receipt = json.loads((target / RECEIPT_PATH).read_text())
     receipt["tool"] = {"package": "devkit"}
-    (target / RECEIPT).write_text(json.dumps(receipt))
+    (target / RECEIPT_PATH).write_text(json.dumps(receipt))
     with pytest.raises(ReceiptError, match="tool: missing keys"):
         sync_project(target, installed)
 
@@ -263,12 +285,12 @@ def test_receipt_tool_field_is_validated(installed: list[InstalledBundle], targe
 
 
 def test_status_without_receipt(installed: list[InstalledBundle], target: Path) -> None:
-    result = project_status(target, installed)
+    result = get_project_status(target, installed).to_dict()
     assert result["receipt"] is False and result["schema"] is None
     assert result["opted_out"] == [] and result["selection"] == {"agents": [], "presets": {}}
     assert result["files"]["counts"] == {"ok": 0, "missing": 0, "modified": 0, "mode-mismatch": 0}
     assert result["guidance_block"] == "missing" and result["seeded"] == [] and result["override_drift"] == []
-    assert result["pending_journal"] is False
+    assert result["pending_journal"] is False and result["errors"] == []
     assert result["tool"] == {
         "running": {"package": "devkit", "version": tool_identity().version},
         "recorded": None,
@@ -280,7 +302,7 @@ def test_status_reports_every_dimension(
     source: Path, installed: list[InstalledBundle], target: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     sync_project(target, installed)
-    clean = project_status(target, installed)
+    clean = get_project_status(target, installed).to_dict()
     assert clean["receipt"] is True and clean["schema"] == 1
     assert clean["selection"]["presets"] == {"team": ["all"]}
     assert clean["files"]["counts"] == {
@@ -293,6 +315,9 @@ def test_status_reports_every_dimension(
     assert clean["override_drift"] == [] and clean["guidance_block"] == "ok"
     assert clean["seeded"] == [{"bundle": "team", "id": "scaffold", "path": "docs/scaffold.md", "present": True}]
     assert clean["pending_journal"] is False and clean["tool"]["match"] is True
+    assert clean["errors"] == []
+    monkeypatch.setattr("devkit.distribution.cli.discover_bundles", lambda: fake_discovery(installed))
+    assert CliRunner().invoke(cli, ["status", "-w", str(target)]).exit_code == 0
 
     (target / ".devkit/managed/team/guide.md").write_text("edited")
     (target / ".agents/skills/review/SKILL.md").unlink()
@@ -304,7 +329,7 @@ def test_status_reports_every_dimension(
     (target / JOURNAL).write_text("{}")
     monkeypatch.setattr(status_module, "tool_identity", lambda: ToolRecord("devkit", "9.9.9"))
 
-    dirty = project_status(target, installed)
+    dirty = get_project_status(target, installed).to_dict()
     assert dirty["files"]["counts"]["modified"] == 1 and dirty["files"]["modified"] == [".devkit/managed/team/guide.md"]
     assert dirty["files"]["missing"] == [".agents/skills/review/SKILL.md"]
     assert dirty["files"]["mode-mismatch"] == [".devkit/managed/team/bundle.toml"]
@@ -312,21 +337,35 @@ def test_status_reports_every_dimension(
     assert dirty["seeded"][0]["present"] is False
     assert dirty["pending_journal"] is True
     assert dirty["tool"]["match"] is False and dirty["tool"]["running"]["version"] == "9.9.9"
+    problems = [(error["code"], error["exit_code"], error["advisory"]["target_files"]) for error in dirty["errors"]]
+    assert problems == [
+        ("NOT_SYNCHRONIZED", 1, [".agents/skills/review/SKILL.md"]),
+        ("SYNC_CONFLICT", 1, [".devkit/managed/team/guide.md"]),
+        ("SYNC_CONFLICT", 1, [".devkit/managed/team/bundle.toml"]),
+        ("TRANSACTION_PENDING", 1, [".devkit/transient/sync-journal.json"]),
+    ]
+    result = CliRunner().invoke(cli, ["status", "-w", str(target)])
+    assert result.exit_code == 1 and json.loads(result.stdout)["pending_journal"] is True
+    assert "[ERROR]  (TRANSACTION_PENDING)" in result.stderr and "[FIX]    devkit sync" in result.stderr
 
 
 def test_status_reports_override_drift_disabled_block_and_cli(
     source: Path, installed: list[InstalledBundle], target: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _drift(source, installed, target)
-    assert project_status(target, installed)["override_drift"] == [{"bundle": "team", "asset": "guide"}]
+    assert get_project_status(target, installed).to_dict()["override_drift"] == [{"bundle": "team", "asset": "guide"}]
     write_config(target, extra="guidance_block = false")
     sync_project(target, installed)
-    assert project_status(target, installed)["guidance_block"] == "disabled"
+    assert get_project_status(target, installed).to_dict()["guidance_block"] == "disabled"
     write_config(target)
     (target / AGENTS_FILE).unlink(missing_ok=True)
-    assert project_status(target, installed)["guidance_block"] == "missing"
+    assert get_project_status(target, installed).to_dict()["guidance_block"] == "missing"
     monkeypatch.setattr("devkit.distribution.cli.discover_bundles", lambda: fake_discovery(installed))
     result = CliRunner().invoke(cli, ["status", "--workspace-root", str(target)])
-    assert result.exit_code == 0, result.output
-    assert json.loads(result.output)["guidance_block"] == "missing"
+    assert result.exit_code == 1, result.output  # override drift is a problem to act on
+    report = json.loads(result.stdout)
+    assert report["guidance_block"] == "missing"
+    (drift,) = report["errors"]
+    assert (drift["code"], drift["exit_code"], drift["advisory"]["mode"]) == ("OVERRIDE_DRIFT", 1, "INTERACTION")
+    assert "[ERROR]  (OVERRIDE_DRIFT) upstream changed behind overrides: team:guide" in result.stderr
     assert not (target / AGENTS_FILE).exists()  # status never writes

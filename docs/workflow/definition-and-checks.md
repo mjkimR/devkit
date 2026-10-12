@@ -194,7 +194,7 @@ class HasWord(BaseCheck):
         return ctx.passed() if ctx.args[1] in text else ctx.failed("word not found")
 ```
 
-`CheckContext` carries `workspace_root`, `unit_dir`, `anchor`, the reference as written (`ref`), `name`, `args` and the unit's loaded `envelopes`; `ctx.passed(detail)` and `ctx.failed(detail)` build results with the right name and class. A loaded check is listed by `devkit workflow checks` with class `plugin`, resolved by `validate` like a primitive (argument count must match `params`), and evaluated by `next`. A check that raises yields an unsatisfied, evaluated result whose detail starts with `check failed:`; a result the plugin builds with another name or class is normalized. Files whose name starts with `_` or `.` are skipped. Loading is atomic per file: a file that fails to import, defines a check with an invalid `name` or `params`, or defines a name an earlier file already defined contributes none of its checks. Any such file is `CHECK_LOAD_FAILED` (`MAINTENANCE`), never a silent skip. Receipt-listed files are verified first with `devkit.core.receipt.verified_asset_file`, the check rules and gates apply: a file that is missing, resolves outside the project or differs from the SHA-256 the receipt records is `CHECK_LOAD_FAILED` with the fix `devkit sync` or `devkit override create <bundle>:<asset>`, and a file without a record (a project override) loads as it is. A definition's declared `runner`/`human` check may not reuse a plugin's name.
+`CheckContext` carries `workspace_root`, `unit_dir`, `anchor`, the reference as written (`ref`), `name`, `args` and the unit's loaded `envelopes`; `ctx.passed(detail)` and `ctx.failed(detail)` build results with the right name and class. A loaded check is listed by `devkit workflow checks` with class `plugin`, resolved by `validate` like a primitive (argument count must match `params`), and evaluated by `next`. A check that raises yields an unsatisfied, evaluated result whose detail starts with `check failed:`; a result the plugin builds with another name or class is normalized. Files under `checks_dir` whose name starts with `_` or `.` are skipped; a receipt-listed file is loaded whatever its name. Loading is atomic per file: a file that fails to import, defines a check with an invalid `name` or `params`, or defines a name an earlier file already defined contributes none of its checks. Any such file is `WORKFLOW_CHECK_LOAD_FAILED` (`PluginError`, `MAINTENANCE`), never a silent skip. Receipt-listed files are found and verified first with `devkit.core.receipt.verified_asset_files`, as rules and gates are: a file that is missing, resolves outside the project or differs from the SHA-256 the receipt records is `WORKFLOW_CHECK_LOAD_FAILED` with the fix `devkit sync` or `devkit override create <bundle>:<asset>`, and a file without a record (a project override) loads as it is. A definition's declared `runner`/`human` check may not reuse a plugin's name.
 
 A bundle declares such files as `kind = "workflow-check"` assets in `bundle.toml`; `devkit sync` deploys them under `.devkit/managed/<bundle>/` and records their paths in the receipt, exactly as for `kind = "rule"`.
 
@@ -237,7 +237,7 @@ review: review-01.yaml       # reverify only: the review round it closes
 - A `reverify` envelope must name the `review-NN.yaml` it closes. The deciding review state is the latest review round, or the last reverify that references it.
 - `completed` with no findings is a valid pass. `needs_input` and `failed` never satisfy a check.
 - `assumptions` and `unverified_areas` are lists of strings; `checks` is a mapping; `findings` is a list of mappings with only the finding keys shown above. Other top-level keys are ignored.
-- Malformed envelopes are reported as `[ENVELOPE_ERROR: file "reason"]` and are not loaded; evaluation continues.
+- Malformed envelopes are reported as `[ENVELOPE_ERROR: file "reason"]` (in JSON, an `ENVELOPE_INVALID` entry of `errors` with its `file`) and are not loaded; evaluation continues.
 
 ### Authoring
 
@@ -252,12 +252,12 @@ review: review-01.yaml       # reverify only: the review round it closes
 | `--base REV`, `--head REV` | `diff_scope`; `--head` is what `revision-ancestor` compares and must be a hexadecimal commit id (`--head $(git rev-parse HEAD)`). |
 | `--findings-file PATH` (or `-` for stdin) | A YAML list of findings with `issue` and `evidence` (required) and optionally `failure_condition`, `suggested_action`, `resolution` (default `open`) and `waiver`; other keys are refused. A `review` records findings as found, so a resolution other than `open` is refused. |
 | `--from latest` (or a review/reverify file) | Carries the findings of the round being closed into a `reverify` and sets its `review`. `latest` is the deciding review state. Refused for `review`; required for `reverify`. |
-| `--resolve N` (repeatable) or `--resolve all` | Marks carried finding `N` (1-based) resolved; `all` resolves every open one. |
+| `--resolve N` (repeatable) or `--resolve all` | Marks carried finding `N` (1-based) resolved; `all` resolves every open one. A number outside the carried findings is `ENVELOPE_FLAG_INVALID`. |
 | `--waive N=REASON` (repeatable) | Marks carried finding `N` waived and records the reason as its `waiver`; `suggested_action` is kept. |
 
-Findings from `--findings-file` are appended after any carried findings. The written key order is `kind, stage, created_at, status, review, summary, findings, assumptions, unverified_areas, checks, diff_scope`, omitting empty optional keys. The sequence follows the highest `<kind>-NN` file present, malformed files included. The confirmation line is `[ENVELOPE: <file> kind=K seq=NN status=S open_findings=N]`; `--format json` emits `{"file", "kind", "seq", "status", "open_findings"}`.
+Findings from `--findings-file` are appended after any carried findings. The written key order is `kind, stage, created_at, status, review, summary, findings, assumptions, unverified_areas, checks, diff_scope`, omitting empty optional keys. The kind must match `[a-z][a-z0-9-]*` (`ENVELOPE_KIND_INVALID`). The sequence follows the highest `<kind>-NN` file present, malformed files included. The confirmation line is `[ENVELOPE: <file> kind=K seq=NN status=S open_findings=N]`; `--format json` emits `{"file", "kind", "seq", "status", "open_findings"}`.
 
-`devkit workflow envelope check --unit DIR` loads every file under `envelopes/`, prints one `[ENVELOPE: file kind seq status open_findings]` line per valid file and one `[ENVELOPE_ERROR: file "reason"]` per malformed one, then `[OK: N envelopes]` when nothing is malformed. Any malformed file raises `ENVELOPE_INVALID` (exit `1`) whose `[DETAIL]` lines repeat file and reason. `--format json` emits `{"envelopes": [...], "errors": [{"code": "ENVELOPE_INVALID", "file", "reason"}, ...]}` as the only stdout document, with the advisory on stderr.
+`devkit workflow envelope check --unit DIR` loads every file under `envelopes/`, prints one `[ENVELOPE: file kind seq status open_findings]` line per valid file and one `[ENVELOPE_ERROR: file "reason"]` per malformed one, then `[OK: N envelopes]` when nothing is malformed. Each malformed file is also reported on stderr as an `ENVELOPE_INVALID` advisory whose `[TARGET]` is the file, and the command exits `1`. `--format json` emits `{"envelopes": [...], "errors": [...]}` as the only stdout document, each error the `to_dict()` of the advisory (`code`, `message`, `exit_code`, `advisory`, `file`).
 
 ---
 
@@ -307,7 +307,7 @@ On `next` (the policy lives in the library: `Workspace.evaluate_unit`):
 - `[WAITING]` appears when the current stage's gate is asked (every exit check holds), or when every unmet check is `runner` or `human`. Its class is `human` when any unmet check is human.
 - `[GATE: <name> policy=P satisfied=yes|no source=S]` appears only for a gated current stage. `source` is `policy` (`auto`), `given` (`--given`), `decision:<file>` (an accepted record) or `-` while not satisfied.
 - `[DELEGATE: role=R isolation=I]` and `[RETURNS: <to> when="..."; ...]` describe the current stage; `[STALE_APPROVAL: <file> request=<id> stage=<stage> counts=yes void_with="devkit workflow return --unit <dir> --to <current stage>"]` lists approvals of later stages found while an earlier stage is current. It is a read-only notice: `next` writes nothing, and those approvals keep counting until `devkit workflow return` records a `return:<stage>` decision that voids them.
-- `[LINT_ERROR: "..."]` appears when `lint-clean` could not run; the command then also reports `LINT_FAILED`.
+- `[LINT_ERROR: "..."]` appears when `lint-clean` could not run; the command then also reports the `devkit.rules` error on stderr, unchanged (for example `RULES_RUN_FAILED`), and exits with its exit code.
 - `[DELEGATE]` carries `contract=<path>` when the role is in the project's vocabulary (receipt `subagent` asset or `roles_dir` file); otherwise the key is absent.
 
 When the workflow is complete and declares `next` candidates (and `approvals.handoff` is not `off`), the handoff block follows:
@@ -326,7 +326,7 @@ When the workflow is complete and declares `next` candidates (and `approvals.han
 - A recorded choice of the current segment (`decisions/NN-handoff.yaml`, see [Human Interaction Contract](human-interaction.md)) sets `chosen=` under either policy and adds `decision=<file>`. A recorded choice that is not an eligible candidate is ignored and reported as a `[DECISION_ERROR]`.
 - No `[HANDOFF]` line means the unit is finished.
 
-Whenever a person must act, one `[REQUEST: ...]` line per open request follows the stage block, with `[DECLINED: ...]` for a request that was refused and is still open, and `[DECISION_ERROR: file "reason"]` for a malformed or ignored record. The JSON object carries them as `requests` and `decision_errors`. Formats are in [Human Interaction Contract](human-interaction.md).
+Whenever a person must act, one `[REQUEST: ...]` line per open request follows the stage block, with `[DECLINED: ...]` for a request that was refused and is still open, and `[DECISION_ERROR: file "reason"]` for a malformed or ignored record. The JSON object carries them as `requests` and as entries of `errors`. Formats are in [Human Interaction Contract](human-interaction.md).
 
 `--format json` emits one object:
 
@@ -346,16 +346,14 @@ Whenever a person must act, one `[REQUEST: ...]` line per open request follows t
   "gate": null,
   "waiting": null,
   "complete": false,
-  "envelope_errors": [],
   "drift": null,
-  "lint_error": null,
   "handoff": null,
   "requests": [],
-  "decision_errors": [],
-  "stale_approvals": []
+  "stale_approvals": [],
+  "errors": []
 }
 ```
 
-`gate` is `null` for an ungated stage, else `{"name", "policy", "satisfied", "source", "decision"}` (`source` is `policy`, `given`, `decision` or `null`; `decision` names the record file). `handoff` is `null` until the workflow is complete; then it is `{"policy", "candidates": [{"workflow", "recommended", "eligible", "checks": [...]}], "eligible": [...], "recommended": [...], "chosen", "decision"}`. `stale_approvals` lists the files of approvals for stages after the current one; they still count until a `return` record voids them.
+`gate` is `null` for an ungated stage, else `{"name", "policy", "satisfied", "source", "decision"}` (`source` is `policy`, `given`, `decision` or `null`; `decision` names the record file). `handoff` is `null` until the workflow is complete; then it is `{"policy", "candidates": [{"workflow", "recommended", "eligible", "checks": [...]}], "eligible": [...], "recommended": [...], "chosen", "decision"}`. `stale_approvals` lists the files of approvals for stages after the current one; they still count until a `return` record voids them. `errors` holds every collected problem as the `to_dict()` of an advisory error: malformed envelopes (`ENVELOPE_INVALID`) and decision records (`DECISION_RECORD_INVALID`, `HANDOFF_CHOICE_IGNORED`) with their `file`, and the `devkit.rules` error that stopped `lint-clean`.
 
-`show --format json` emits the parsed document plus `hash`, `layout`, the effective `anchor`, `approvals` and `stages_off`; `show --unit <dir>` adds `binding` (`workflow`, `workflow_hash`, `workflow_history`, `drift`) and, in text, a `[BINDING: workflow=W hash=H drift=true|false]` line after the document. `checks --format json` emits the registry, plugin checks included. `list --format json` emits `[{"unit", "anchor", "status", "workflow", "workflow_hash", "history", "error"}]` across every layout in use; the text form is `[UNIT: <dir> status=S workflow=W anchor=A]`, with `error="..."` for a unit whose anchor cannot be read. `list --status <value>` keeps units whose anchor `status` equals a given value (repeatable) and `--exclude-status <value>` drops them; both are exact matches, so active units are `--exclude-status completed`. `handoff --format json` emits `{"unit", "from", "to", "workflow_hash", "policy", "decision", "history"}`. `requests --format json` emits the `requests` array alone; `answer --format json` and `return --format json` emit the written record with its `file`.
+`show --format json` emits the parsed document plus `hash`, `layout`, the effective `anchor`, `approvals`, `stages_off`, `ok` and `errors` (the definition's problems as advisory `to_dict()` entries with `where`; `show` exits `1` when there is one); `show --unit <dir>` adds `binding` (`workflow`, `workflow_hash`, `workflow_history`, `drift`) and, in text, a `[BINDING: workflow=W hash=H drift=true|false]` line after the document. `checks --format json` emits `{"checks": [...]}`, the registry, plugin checks included. `list --format json` emits `{"units": [{"unit", "anchor", "status", "workflow", "workflow_hash", "history", "error"}]}` across every layout in use; the text form is `[UNIT: <dir> status=S workflow=W anchor=A]`, with `error="..."` for a unit whose anchor cannot be read (in JSON, `error` is the `ANCHOR_INVALID` advisory `to_dict()`). `list --status <value>` keeps units whose anchor `status` equals a given value (repeatable) and `--exclude-status <value>` drops them; both are exact matches, so active units are `--exclude-status completed`. `handoff --format json` emits `{"unit", "from", "to", "workflow_hash", "policy", "decision", "history"}`. `requests --format json` emits `{"requests": [...]}`; `answer --format json` and `return --format json` emit the written record with its `file`.

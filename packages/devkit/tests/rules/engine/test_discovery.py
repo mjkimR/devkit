@@ -63,13 +63,31 @@ def test_resolve_managed_rules_reads_rule_assets_only(tmp_path: Path) -> None:
     assert sorted(r.id for r in discovered) == ["RULE-managed-a", "RULE-managed-b"]
 
 
+def test_receipt_listed_rule_files_load_whatever_their_name(tmp_path: Path) -> None:
+    rel = ".devkit/managed/team/rules/_private.py"
+    (tmp_path / rel).parent.mkdir(parents=True)
+    (tmp_path / rel).write_text(RULE.format(n="private"))
+    entry = ".devkit/managed/team/rules/entry.py"
+    (tmp_path / entry).write_text(RULE.format(n="entry"))
+    _receipt(
+        tmp_path,
+        [{"bundle": "team", "id": "rules", "kind": "rule", "entrypoints": [entry], "paths": [rel, entry]}],
+        {rel: _sha(RULE.format(n="private")), entry: _sha(RULE.format(n="entry"))},
+    )
+    managed = resolve_managed_rules(tmp_path)
+    assert managed.errors == ()
+    assert _rel(tmp_path, managed.paths) == [entry, rel]  # entrypoints first, no duplicates, no name filter
+    discovered = RuleRegistry().discover_from_files(managed.paths)
+    assert sorted(r.id for r in discovered) == ["RULE-managed-entry", "RULE-managed-private"]
+
+
 def test_resolve_managed_rules_reports_missing_file(tmp_path: Path) -> None:
     _receipt(tmp_path, [{"bundle": "team", "id": "rules", "kind": "rule", "paths": [".devkit/managed/team/r.py"]}])
     managed = resolve_managed_rules(tmp_path)
     assert managed.paths == ()
     assert len(managed.errors) == 1
     assert "synchronized rule .devkit/managed/team/r.py is missing" in str(managed.errors[0])
-    assert "devkit sync" in str(managed.errors[0])
+    assert "devkit sync" not in str(managed.errors[0])  # remediation lives in fix, not in the message
     assert managed.errors[0].code == "RULES_LOAD_FAILED"
     assert managed.errors[0].target_files == (".devkit/managed/team/r.py",) and managed.errors[0].fix
 
@@ -96,7 +114,7 @@ def test_resolve_managed_rules_reports_a_malformed_receipt(tmp_path: Path, conte
     assert managed.paths == ()
     assert len(managed.errors) == 1
     assert str(managed.errors[0]).startswith("invalid installation receipt: .devkit/installation.json")
-    assert problem in str(managed.errors[0]) and "devkit sync" in str(managed.errors[0])
+    assert problem in str(managed.errors[0]) and "devkit sync" not in str(managed.errors[0])
     assert managed.errors[0].target_files == (".devkit/installation.json",)
 
 
@@ -135,12 +153,12 @@ def test_resolve_managed_rules_falls_back_to_source_root_by_hash(tmp_path: Path)
     )
     managed = resolve_managed_rules(snapshot, source_root=source)
     assert managed.paths == (source / ".devkit/managed/team/rules/a.py", snapshot / ".devkit/overrides/team/rules/b.py")
-    assert [str(e).split(";")[0] for e in managed.errors] == [
+    assert [str(e) for e in managed.errors] == [
         "synchronized rule .devkit/managed/team/rules/drift.py differs from the hash in the receipt",
         "synchronized rule .devkit/managed/team/rules/gone.py is missing from the working tree",
         "synchronized rule .devkit/managed/team/rules/unhashed.py has no hash in the receipt",
     ]
-    assert all("devkit sync" in str(e) for e in managed.errors)
+    assert all(e.fix is not None and "devkit sync" in e.fix for e in managed.errors)
 
 
 def test_plain_check_verifies_managed_rules_against_the_receipt_hash(tmp_path: Path) -> None:
@@ -169,8 +187,9 @@ def test_plain_check_verifies_managed_rules_against_the_receipt_hash(tmp_path: P
 def test_plain_and_snapshot_runs_share_the_check_with_the_gate_registry() -> None:
     import inspect
 
-    from devkit.gate import registry
+    from devkit.gate.engine import registry
     from devkit.rules.engine import discovery
+    from devkit.workflow.project import plugins
 
-    for module in (discovery, registry):
-        assert "verified_asset_file(" in inspect.getsource(module)
+    for module in (discovery, registry, plugins):
+        assert "verified_asset_files(" in inspect.getsource(module)

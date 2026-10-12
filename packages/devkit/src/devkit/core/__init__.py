@@ -2,15 +2,18 @@
 
 One implementation of what several packages need to agree on: the frontmatter
 grammar, the installation receipt, safe workspace-relative paths, the Git
-runner, plugin file loading and project discovery. Free of import-time side
-effects; the only third-party dependency is PyYAML, and the only devkit module
-it imports is ``devkit.advisory`` (every core error is an ``AdvisoryError``).
+runner, plugin file loading, project discovery and configuration reading, and
+the command-line plumbing every command group uses (``devkit.core.cli``, the
+only module that imports click; it is not imported here). Free of import-time
+side effects; the only devkit module it imports is ``devkit.advisory`` (every
+core error is an ``AdvisoryError``).
 
 Frontmatter functions are used through their module
 (``devkit.core.frontmatter.parse`` / ``locate`` / ``load_header``).
 """
 
 from devkit.core.errors import (
+    ArgumentError,
     AssetFileError,
     ConfigError,
     DevkitCoreError,
@@ -23,9 +26,18 @@ from devkit.core.frontmatter import Frontmatter, FrontmatterBlock
 from devkit.core.git import run_git
 from devkit.core.paths import is_safe_relpath, normalize_relpath, resolve_within
 from devkit.core.plugins import LoadedPlugin, PluginFailure, PluginLoad, iter_plugin_files, load_subclasses
-from devkit.core.project import find_project_root, git_toplevel, read_project_config
+from devkit.core.project import (
+    config_table,
+    find_project_root,
+    git_toplevel,
+    read_project_config,
+    read_toml,
+    require_git_toplevel,
+)
 from devkit.core.receipt import (
     CONFIG_PATH,
+    MANAGED_PATH,
+    OVERRIDES_PATH,
     RECEIPT_PATH,
     AssetRecord,
     FileRecord,
@@ -38,11 +50,15 @@ from devkit.core.receipt import (
     load_receipt,
     parse_receipt,
     verified_asset_file,
+    verified_asset_files,
 )
 
 __all__ = [
     "CONFIG_PATH",
+    "MANAGED_PATH",
+    "OVERRIDES_PATH",
     "RECEIPT_PATH",
+    "ArgumentError",
     "AssetFileError",
     "AssetRecord",
     "ConfigError",
@@ -63,6 +79,7 @@ __all__ = [
     "Selection",
     "ToolRecord",
     "UnsafePathError",
+    "config_table",
     "find_project_root",
     "git_toplevel",
     "is_safe_relpath",
@@ -72,7 +89,10 @@ __all__ = [
     "normalize_relpath",
     "parse_receipt",
     "read_project_config",
+    "read_toml",
+    "require_git_toplevel",
     "resolve_within",
     "run_git",
     "verified_asset_file",
+    "verified_asset_files",
 ]

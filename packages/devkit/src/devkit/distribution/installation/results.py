@@ -1,119 +1,245 @@
-"""JSON-shaped results of distribution operations (what the CLI prints and library callers receive)."""
+"""Results of distribution operations: frozen dataclasses whose ``to_dict()`` is the JSON the CLI prints.
+
+Records shared with the receipt (``AssetRecord``, ``PackageRecord``,
+``Selection``, ...) are the ``devkit.core.receipt`` types themselves; the
+``*_json`` functions here are their one JSON form, used by the receipt writer
+and every result alike.
+"""
 
 from __future__ import annotations
 
-from typing import NotRequired, TypedDict
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+from typing import Any
 
-from devkit.core.receipt import AssetRecord, PackageRecord
+from devkit.advisory import AdvisoryError
+from devkit.core.receipt import AssetRecord, OverrideRecord, PackageRecord, SeededRecord, Selection, ToolRecord
+from devkit.distribution.installation.inventory import Unprojected
+from devkit.distribution.installation.overrides import Drift
 
 
-class ActionJSON(TypedDict):
+def asset_json(asset: AssetRecord) -> dict[str, Any]:
+    value: dict[str, Any] = {"bundle": asset.bundle, "id": asset.id, "kind": asset.kind, "paths": list(asset.paths)}
+    if asset.entrypoints:
+        value["entrypoints"] = list(asset.entrypoints)
+    if asset.seeded:
+        value["seeded"] = list(asset.seeded)
+    return value
+
+
+def package_json(package: PackageRecord) -> dict[str, str]:
+    return {
+        "package": package.package,
+        "package_version": package.package_version,
+        "bundle": package.bundle,
+        "bundle_version": package.bundle_version,
+    }
+
+
+def selection_json(selection: Selection) -> dict[str, Any]:
+    return {
+        "agents": list(selection.agents),
+        "presets": {name: list(values) for name, values in selection.presets.items()},
+    }
+
+
+def tool_json(tool: ToolRecord) -> dict[str, str]:
+    return {"package": tool.package, "version": tool.version}
+
+
+def seeded_json(seeded: tuple[SeededRecord, ...]) -> list[dict[str, str]]:
+    return [{"bundle": item.bundle, "id": item.id, "path": item.path} for item in seeded]
+
+
+def overrides_json(overrides: Mapping[str, Mapping[str, OverrideRecord]]) -> dict[str, dict[str, dict[str, str]]]:
+    return {
+        bundle: {
+            asset_id: {
+                "kind": record.kind,
+                "relative_path": record.relative_path,
+                "baseline_upstream_sha256": record.baseline_upstream_sha256,
+                "override_sha256": record.override_sha256,
+            }
+            for asset_id, record in assets.items()
+        }
+        for bundle, assets in overrides.items()
+    }
+
+
+@dataclass(frozen=True)
+class Action:
+    """One planned write of a synchronization."""
+
     path: str
     # ``create`` | ``update`` | ``remove`` | ``seed``
     action: str
 
-
-class PackageJSON(TypedDict):
-    package: str
-    package_version: str
-    bundle: str
-    bundle_version: str
+    def to_dict(self) -> dict[str, str]:
+        return {"path": self.path, "action": self.action}
 
 
-class AssetJSON(TypedDict):
-    bundle: str
-    id: str
-    kind: str
-    paths: list[str]
-    entrypoints: NotRequired[list[str]]
-    seeded: NotRequired[list[str]]
+@dataclass(frozen=True)
+class Unselected:
+    """An installed bundle the synchronization did not deploy."""
 
-
-class SelectionJSON(TypedDict):
-    agents: list[str]
-    presets: dict[str, list[str]]
-
-
-class DriftJSON(TypedDict):
-    bundle: str
-    asset: str
-    path: str
-    message: str
-
-
-class UnprojectedJSON(TypedDict):
-    bundle: str
-    asset: str
-    agent: str
-
-
-class UnselectedJSON(TypedDict):
     bundle: str
     package: str
     presets: list[str]
     default_preset: str | None
 
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "bundle": self.bundle,
+            "package": self.package,
+            "presets": list(self.presets),
+            "default_preset": self.default_preset,
+        }
 
-class SyncResult(TypedDict):
+
+@dataclass
+class SyncResult:
+    """What ``devkit sync`` (``add``, ``remove``) planned and, unless ``dry_run``, wrote.
+
+    ``notices`` are coded ``SyncNotice`` entries (an orphaned file, a tool
+    version change, post-sync hook output); they never fail the sync.
+    """
+
     dry_run: bool
-    selection: SelectionJSON
-    packages: list[PackageJSON]
-    assets: list[AssetJSON]
-    actions: list[ActionJSON]
-    drift: list[DriftJSON]
-    orphans: list[str]
+    selection: Selection
+    packages: list[PackageRecord]
+    assets: list[AssetRecord]
+    actions: list[Action]
+    drift: list[Drift]
     stray: list[str]
-    unprojected: list[UnprojectedJSON]
-    unselected: list[UnselectedJSON]
-    notices: list[str]
+    unprojected: list[Unprojected]
+    unselected: list[Unselected]
+    notices: list[AdvisoryError] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "dry_run": self.dry_run,
+            "selection": selection_json(self.selection),
+            "packages": [package_json(item) for item in self.packages],
+            "assets": [asset_json(asset) for asset in self.assets],
+            "actions": [item.to_dict() for item in self.actions],
+            "drift": [item.to_dict() for item in self.drift],
+            "stray": list(self.stray),
+            "unprojected": [item.to_dict() for item in self.unprojected],
+            "unselected": [item.to_dict() for item in self.unselected],
+            "notices": [notice.to_dict() for notice in self.notices],
+        }
 
 
-class InstructionJSON(TypedDict):
+@dataclass(frozen=True)
+class Instruction:
+    """An instruction of a bundle's context: its absolute path and raw YAML header (never the body)."""
+
     path: str
     header: str
 
+    def to_dict(self) -> dict[str, str]:
+        return {"path": self.path, "header": self.header}
 
-class ContextResult(TypedDict):
+
+@dataclass(frozen=True)
+class ContextResult:
+    """``devkit get-context``: a bundle's constitution and instruction catalog."""
+
     bundle: str
     constitution: str | None
-    instructions: list[InstructionJSON]
+    instructions: list[Instruction]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "bundle": self.bundle,
+            "constitution": self.constitution,
+            "instructions": [item.to_dict() for item in self.instructions],
+        }
 
 
-class PlaybookCandidate(TypedDict):
+@dataclass(frozen=True)
+class PlaybookCandidate:
+    """A playbook's searchable metadata and readable path; ``score`` is set once it is ranked."""
+
     bundle: str
     id: str
     name: str
     description: str
     aliases: list[str]
     path: str
-    score: NotRequired[float]
+    score: float | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        value: dict[str, Any] = {
+            "bundle": self.bundle,
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "aliases": list(self.aliases),
+            "path": self.path,
+        }
+        if self.score is not None:
+            value["score"] = self.score
+        return value
 
 
-class SearchResult(TypedDict):
+@dataclass(frozen=True)
+class SearchResult:
+    """``devkit playbook search``: ranked candidates within the byte budget; ``truncated`` when some were cut."""
+
     query: str
     results: list[PlaybookCandidate]
     truncated: bool
 
+    def to_dict(self) -> dict[str, Any]:
+        return {"query": self.query, "results": [item.to_dict() for item in self.results], "truncated": self.truncated}
 
-class OverrideStatus(TypedDict):
+
+@dataclass(frozen=True)
+class OverrideStatus:
+    """A tracked override; ``current_upstream_sha256`` is ``None`` when its bundle or asset is gone."""
+
     bundle: str
     asset: str
     kind: str
     relative_path: str
     baseline_upstream_sha256: str
     current_upstream_sha256: str | None
-    drift_detected: bool
+
+    @property
+    def drift_detected(self) -> bool:
+        return (
+            self.current_upstream_sha256 is not None and self.current_upstream_sha256 != self.baseline_upstream_sha256
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "bundle": self.bundle,
+            "asset": self.asset,
+            "kind": self.kind,
+            "relative_path": self.relative_path,
+            "baseline_upstream_sha256": self.baseline_upstream_sha256,
+            "current_upstream_sha256": self.current_upstream_sha256,
+            "drift_detected": self.drift_detected,
+        }
 
 
-class OverrideFileDiff(TypedDict):
+@dataclass(frozen=True)
+class OverrideFileDiff:
     path: str
     # Unified diff upstream -> override; ``None`` when this file is not overridden.
     diff: str | None
     # Unified diff baseline -> upstream; ``None`` without a baseline copy.
     upstream_diff: str | None
 
+    def to_dict(self) -> dict[str, Any]:
+        return {"path": self.path, "diff": self.diff, "upstream_diff": self.upstream_diff}
 
-class OverrideDiff(TypedDict):
+
+@dataclass(frozen=True)
+class OverrideDiff:
+    """``devkit override diff``: per file, upstream vs override and recorded baseline vs current upstream."""
+
     bundle: str
     asset: str
     relative_path: str
@@ -122,8 +248,26 @@ class OverrideDiff(TypedDict):
     current_upstream_sha256: str
     files: list[OverrideFileDiff]
 
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "bundle": self.bundle,
+            "asset": self.asset,
+            "relative_path": self.relative_path,
+            "drift_detected": self.drift_detected,
+            "baseline_upstream_sha256": self.baseline_upstream_sha256,
+            "current_upstream_sha256": self.current_upstream_sha256,
+            "files": [item.to_dict() for item in self.files],
+        }
 
-class OverrideChange(TypedDict):
+
+@dataclass(frozen=True)
+class OverrideChange:
+    """``devkit override create|remove|accept``: what changed under ``.devkit/overrides/``.
+
+    ``notices`` are those of the synchronization ``create`` and ``remove`` run
+    (post-sync hook output included); ``accept`` does not synchronize.
+    """
+
     bundle: str
     asset: str
     # ``created`` | ``removed`` | ``accepted``
@@ -131,22 +275,17 @@ class OverrideChange(TypedDict):
     # Workspace paths written (create) or deleted (remove).
     paths: list[str]
     # The new baseline digest (accept).
-    accepted_upstream_sha256: NotRequired[str]
+    accepted_upstream_sha256: str | None = None
+    notices: list[AdvisoryError] = field(default_factory=list)
 
-
-def asset_json(asset: AssetRecord) -> AssetJSON:
-    value: AssetJSON = {"bundle": asset.bundle, "id": asset.id, "kind": asset.kind, "paths": list(asset.paths)}
-    if asset.entrypoints:
-        value["entrypoints"] = list(asset.entrypoints)
-    if asset.seeded:
-        value["seeded"] = list(asset.seeded)
-    return value
-
-
-def package_json(package: PackageRecord) -> PackageJSON:
-    return {
-        "package": package.package,
-        "package_version": package.package_version,
-        "bundle": package.bundle,
-        "bundle_version": package.bundle_version,
-    }
+    def to_dict(self) -> dict[str, Any]:
+        value: dict[str, Any] = {
+            "bundle": self.bundle,
+            "asset": self.asset,
+            "status": self.status,
+            "paths": list(self.paths),
+        }
+        if self.accepted_upstream_sha256 is not None:
+            value["accepted_upstream_sha256"] = self.accepted_upstream_sha256
+        value["notices"] = [notice.to_dict() for notice in self.notices]
+        return value

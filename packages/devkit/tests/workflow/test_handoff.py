@@ -8,15 +8,15 @@ from devkit.workflow import (
     Binding,
     HistoryEntry,
     Options,
-    evaluate,
-    parse,
+    evaluate_definition,
+    parse_definition,
     read_binding,
-    render_result,
-    validate,
+    render_evaluation,
+    validate_definition,
     write_binding,
 )
-from devkit.workflow.checks import CheckClass
 from devkit.workflow.cli import cli
+from devkit.workflow.definition.checks import CheckClass
 from devkit.workflow.render import render_document
 from testsupport.workflow import WORKFLOW, write_config, write_unit
 
@@ -59,7 +59,7 @@ def _opts(root: Path, unit: Path, **kw: object) -> Options:
 
 
 def test_parse_and_validate_next_candidates() -> None:
-    doc = parse(FIRST)
+    doc = parse_definition(FIRST)
     assert [c.workflow for c in doc.next] == ["spec-driven", "hotfix", "direct-delivery"]
     assert doc.next[0].when == ("file-exists(spec.md)",) and doc.next[0].recommended is True
     assert doc.next[2].when == () and doc.next[2].recommended is False
@@ -68,9 +68,9 @@ def test_parse_and_validate_next_candidates() -> None:
         "when": ["frontmatter(task.md kind hotfix)"],
         "recommended": False,
     }
-    assert validate(doc, "task.md") == []
-    assert validate(doc, "task.md", known_ids={"triage", "spec-driven", "hotfix", "direct-delivery"}) == []
-    problems = {str(p) for p in validate(doc, "task.md", known_ids={"triage", "spec-driven"})}
+    assert validate_definition(doc, "task.md") == []
+    assert validate_definition(doc, "task.md", known_ids={"triage", "spec-driven", "hotfix", "direct-delivery"}) == []
+    problems = {str(p) for p in validate_definition(doc, "task.md", known_ids={"triage", "spec-driven"})}
     assert problems == {
         "next[1].workflow: unknown workflow 'hotfix'",
         "next[2].workflow: unknown workflow 'direct-delivery'",
@@ -93,7 +93,7 @@ next:
   - { workflow: b }
 ---
 """
-    problems = {str(p) for p in validate(parse(text), "task.md")}
+    problems = {str(p) for p in validate_definition(parse_definition(text), "task.md")}
     for fragment in [
         "s.human_gate: 'handoff' is reserved",
         "next[0].workflow: a workflow cannot hand off to itself",
@@ -107,7 +107,7 @@ next:
 def test_schema_hash_ignores_next() -> None:
     from devkit.workflow import schema_hash
 
-    assert schema_hash(parse(FIRST)) == schema_hash(parse(FIRST.split("next:")[0] + "---\n"))
+    assert schema_hash(parse_definition(FIRST)) == schema_hash(parse_definition(FIRST.split("next:")[0] + "---\n"))
 
 
 # --- binding history ---------------------------------------------------------------
@@ -140,7 +140,7 @@ def test_binding_history_round_trip(tmp_path: Path) -> None:
 
 def test_handoff_ask_lists_candidates_and_waits(tmp_path: Path) -> None:
     unit = write_unit(tmp_path, "work/a", extra="kind: hotfix\n")
-    res = evaluate(parse(FIRST), _opts(tmp_path, unit))
+    res = evaluate_definition(parse_definition(FIRST), _opts(tmp_path, unit))
     assert res.complete and res.handoff is not None
     h = res.handoff
     assert h.policy == "ask" and h.chosen is None
@@ -151,7 +151,7 @@ def test_handoff_ask_lists_candidates_and_waits(tmp_path: Path) -> None:
     ]
     assert h.eligible == ("hotfix", "direct-delivery") and h.recommended == ()
     assert res.waiting is not None and res.waiting.class_ == CheckClass.HUMAN and res.waiting.checks == ("handoff",)
-    text = render_result(res)
+    text = render_evaluation(res)
     assert "[STAGE: - complete=true]" in text
     assert (
         "[HANDOFF: policy=ask candidates=spec-driven hotfix direct-delivery eligible=hotfix direct-delivery recommended=- chosen=-]"
@@ -166,14 +166,14 @@ def test_handoff_ask_lists_candidates_and_waits(tmp_path: Path) -> None:
 def test_handoff_auto_picks_first_eligible_and_off_disables(tmp_path: Path) -> None:
     unit = write_unit(tmp_path, "work/a")
     (unit / "spec.md").write_text("---\nstatus: draft\n---\n")
-    res = evaluate(parse(FIRST), _opts(tmp_path, unit, approvals={"handoff": "auto"}))
+    res = evaluate_definition(parse_definition(FIRST), _opts(tmp_path, unit, approvals={"handoff": "auto"}))
     assert res.handoff is not None and res.handoff.chosen == "spec-driven" and res.waiting is None
     assert res.handoff.recommended == ("spec-driven",)
-    assert "chosen=spec-driven]" in render_result(res)
+    assert "chosen=spec-driven]" in render_evaluation(res)
 
-    res = evaluate(parse(FIRST), _opts(tmp_path, unit, approvals={"handoff": "off"}))
+    res = evaluate_definition(parse_definition(FIRST), _opts(tmp_path, unit, approvals={"handoff": "off"}))
     assert res.complete and res.handoff is None and res.waiting is None
-    assert "[HANDOFF" not in render_result(res)
+    assert "[HANDOFF" not in render_evaluation(res)
 
 
 def test_handoff_auto_without_eligible_candidate_waits(tmp_path: Path) -> None:
@@ -181,16 +181,16 @@ def test_handoff_auto_without_eligible_candidate_waits(tmp_path: Path) -> None:
         "  - { workflow: direct-delivery }\n", ""
     )
     unit = write_unit(tmp_path, "work/a")
-    res = evaluate(parse(only_spec), _opts(tmp_path, unit, approvals={"handoff": "auto"}))
+    res = evaluate_definition(parse_definition(only_spec), _opts(tmp_path, unit, approvals={"handoff": "auto"}))
     assert res.handoff is not None and res.handoff.chosen is None and res.handoff.policy == "auto"
     assert res.waiting is not None and res.waiting.checks == ("handoff",)
 
 
 def test_no_handoff_before_completion_or_without_candidates(tmp_path: Path) -> None:
     unit = write_unit(tmp_path, "work/a")
-    res = evaluate(parse(WORKFLOW), _opts(tmp_path, unit))
+    res = evaluate_definition(parse_definition(WORKFLOW), _opts(tmp_path, unit))
     assert not res.complete and res.handoff is None
-    res = evaluate(parse(SPEC_DRIVEN), _opts(tmp_path, unit))
+    res = evaluate_definition(parse_definition(SPEC_DRIVEN), _opts(tmp_path, unit))
     assert not res.complete and res.handoff is None
 
 
@@ -219,6 +219,7 @@ def test_cli_handoff_ask_flow(tmp_path: Path) -> None:
 
     undecided = _run("handoff", "-w", str(root), "--unit", unit, "--no-lint")
     assert undecided.exit_code == 2 and "(HANDOFF_CHOICE_REQUIRED)" in undecided.stderr
+    assert "[ACTION] INTERACTION" in undecided.stderr
     assert "[DETAIL] spec-driven: eligible=false recommended=true" in undecided.stderr
 
     bad = _run("handoff", "-w", str(root), "--unit", unit, "--no-lint", "--workflow", "nope")
@@ -242,7 +243,7 @@ def test_cli_handoff_ask_flow(tmp_path: Path) -> None:
     # The unit now follows spec-driven from its first stage; triage is history, not re-evaluated.
     nxt = _run("next", "-w", str(root), "--unit", unit, "--no-lint")
     assert "[WORKFLOW: spec-driven" in nxt.output and "[STAGE: specify" in nxt.output and "[HANDOFF" not in nxt.output
-    listed = json.loads(_run("list", "-w", str(root), "--format", "json").stdout)
+    listed = json.loads(_run("list", "-w", str(root), "--format", "json").stdout)["units"]
     assert listed[0]["workflow"] == "spec-driven" and listed[0]["history"] == "triage"
 
     # Completing spec-driven: no candidates, so no handoff and HANDOFF_NONE on request.

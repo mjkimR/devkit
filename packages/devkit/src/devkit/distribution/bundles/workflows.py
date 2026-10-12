@@ -10,11 +10,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from devkit.core import frontmatter
-from devkit.core.errors import FrontmatterError
-
-from ..errors import BundleError
-from .common import SLUG
+from devkit.distribution.bundles.common import SLUG, read_frontmatter
+from devkit.distribution.errors import BundleError
 
 
 @dataclass(frozen=True)
@@ -32,16 +29,7 @@ def workflow_entry(root: Path, source: str) -> Path:
 
 
 def read_workflow_header(data: bytes, context: str) -> WorkflowHeader:
-    try:
-        text = data.decode("utf-8")
-    except UnicodeError as exc:
-        raise BundleError(f"{context}: workflow must be UTF-8") from exc
-    try:
-        metadata = frontmatter.parse(text).data
-    except FrontmatterError as exc:
-        raise BundleError(f"{context}: {exc}") from exc
-    if metadata is None:
-        raise BundleError(f"{context}: workflow requires YAML frontmatter")
+    _, _, metadata = read_frontmatter(data, context, "workflow")
     workflow_id = metadata.get("id")
     if not isinstance(workflow_id, str) or not SLUG.fullmatch(workflow_id):
         raise BundleError(f"{context}: id must be a lowercase slug")

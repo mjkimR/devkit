@@ -7,17 +7,17 @@ from pathlib import Path
 import pytest
 import yaml
 from click.testing import CliRunner
+from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH
 from devkit.distribution.bundles import load_bundle
 from devkit.distribution.bundles.playbooks import read_playbook_header
-from devkit.distribution.cli import cli
 from devkit.distribution.errors import BundleError, ConflictError, NotSynchronizedError, PendingTransactionError
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.context import get_context
 from devkit.distribution.installation.playbook_search import bm25_scores, search_playbooks
 from devkit.distribution.installation.playbook_skill import MANAGED_ROOT
 from devkit.distribution.installation.sync import sync_project
-from devkit.distribution.installation.workspace import CONFIG, JOURNAL, RECEIPT
-from testsupport.distribution import make_bundle
+from devkit.distribution.installation.workspace import JOURNAL
+from testsupport.distribution import cli, make_bundle
 
 
 def select(target: Path, *bundles: str) -> None:
@@ -37,24 +37,24 @@ def test_search_aliases_across_bundles_without_body_disclosure(tmp_path: Path, t
     sync_project(target, installed)
     nested = target / "nested"
     nested.mkdir()
-    result = search_playbooks(nested, "POSTGRES standby repair")
+    result = search_playbooks(nested, "POSTGRES standby repair").to_dict()
     assert [entry["bundle"] for entry in result["results"]] == ["ops", "team"]
     assert all(entry["id"] == "recovery" for entry in result["results"])
     assert "BODY_ONLY_SECRET" not in json.dumps(result)
     assert "BODY_ONLY_SECRET" in Path(result["results"][0]["path"]).read_text()
-    assert search_playbooks(target, "bodyonlytoken")["results"] == []
-    assert search_playbooks(target, "unrelatednomatch")["results"] == []
+    assert search_playbooks(target, "bodyonlytoken").to_dict()["results"] == []
+    assert search_playbooks(target, "unrelatednomatch").to_dict()["results"] == []
     assert "restore-replica" not in str(get_context(target, "team"))
-    assert get_context(target, "team")["constitution"] == "# Shared contracts\n"
+    assert get_context(target, "team").to_dict()["constitution"] == "# Shared contracts\n"
 
 
 def test_search_caps_threshold_and_cli_budget(tmp_path: Path, target: Path) -> None:
     select(target, "team", "ops")
     sync_project(target, [make_bundle(tmp_path, "team"), make_bundle(tmp_path, "ops")])
-    limited = search_playbooks(target, "replica", limit=1)
+    limited = search_playbooks(target, "replica", limit=1).to_dict()
     assert len(limited["results"]) == 1
     assert limited["truncated"] is True
-    assert search_playbooks(target, "replica", min_score=100)["results"] == []
+    assert search_playbooks(target, "replica", min_score=100).to_dict()["results"] == []
     runner = CliRunner()
     result = runner.invoke(
         cli, ["playbook", "search", "replica", "--workspace-root", str(target), "--max-bytes", "1024"]
@@ -65,12 +65,11 @@ def test_search_caps_threshold_and_cli_budget(tmp_path: Path, target: Path) -> N
     for query in ["복제 복구", "!!!", "x" * 513]:
         assert runner.invoke(cli, ["playbook", "search", query, "--workspace-root", str(target)]).exit_code == 2
     for option, value in [("--limit", "0"), ("--min-score", "nan"), ("--max-bytes", "100")]:
-        assert (
-            runner.invoke(
-                cli, ["playbook", "search", "replica", "--workspace-root", str(target), option, value]
-            ).exit_code
-            != 0
-        )
+        bad = runner.invoke(cli, ["playbook", "search", "replica", "--workspace-root", str(target), option, value])
+        # A bound is a semantic check: one JSON error naming the option, not a click usage error.
+        assert bad.exit_code == 2
+        error = json.loads(bad.stdout)["error"]
+        assert error["code"] == "ARGUMENT_INVALID" and error["advisory"]["target_files"] == [option]
 
 
 def test_generated_skill_policies_and_sync_lifecycle(tmp_path: Path, target: Path) -> None:
@@ -87,15 +86,15 @@ def test_generated_skill_policies_and_sync_lifecycle(tmp_path: Path, target: Pat
     assert yaml.safe_load(frontmatter)["disable-model-invocation"] is True
     assert "restore-replica" not in (codex / "SKILL.md").read_text()
     assert not (target / ".agents/skills/recovery").exists()
-    receipt = (target / RECEIPT).read_bytes()
-    assert sync_project(target, installed)["actions"] == []
-    assert (target / RECEIPT).read_bytes() == receipt
+    receipt = (target / RECEIPT_PATH).read_bytes()
+    assert sync_project(target, installed).to_dict()["actions"] == []
+    assert (target / RECEIPT_PATH).read_bytes() == receipt
     sync_project(target, installed, presets={"team": ["guidance"]})
-    assert [item["bundle"] for item in search_playbooks(target, "replica")["results"]] == ["ops"]
+    assert [item["bundle"] for item in search_playbooks(target, "replica").to_dict()["results"]] == ["ops"]
     sync_project(target, installed, presets={"team": ["guidance"], "ops": ["guidance"]})
     assert not (codex / "SKILL.md").exists()
     assert not (target / MANAGED_ROOT / "SKILL.md").exists()
-    assert search_playbooks(target, "replica")["results"] == []
+    assert search_playbooks(target, "replica").to_dict()["results"] == []
     sync_project(target, installed, agents=[])
     assert (target / MANAGED_ROOT / "SKILL.md").exists()
     assert not (claude / "SKILL.md").exists()
@@ -119,7 +118,8 @@ def test_generated_skill_collision_and_user_edits_are_protected(tmp_path: Path, 
         sync_project(target, installed, agents=["codex"])
     # Deselecting leaves the edited generated file behind as an orphan instead of aborting.
     result = sync_project(target, [], deselect=["team"])
-    assert ".agents/skills/devkit-playbook/SKILL.md" in result["orphans"]
+    orphans = [name for notice in result.notices if notice.code == "ORPHAN_LEFT" for name in notice.target_files]
+    assert ".agents/skills/devkit-playbook/SKILL.md" in orphans
     assert skill.read_text() == "user edit"
 
 
@@ -179,7 +179,7 @@ def test_bm25_length_normalization_and_term_frequency() -> None:
 def test_search_adopts_playbooks_config_defaults(tmp_path: Path, target: Path) -> None:
     select(target, "team", "ops")
     sync_project(target, [make_bundle(tmp_path, "team"), make_bundle(tmp_path, "ops")])
-    config_file = target / CONFIG
+    config_file = target / CONFIG_PATH
     config_file.parent.mkdir(parents=True, exist_ok=True)
     config_file.write_text("""schema = 1
 
@@ -189,7 +189,7 @@ limit = 1
 max_bytes = 4096
 """)
     # With limit=1 from config, only 1 result is returned
-    res = search_playbooks(target, "replica")
+    res = search_playbooks(target, "replica").to_dict()
     assert len(res["results"]) == 1
     assert res["truncated"] is True
 
@@ -199,13 +199,13 @@ max_bytes = 4096
 [playbooks]
 min_score = 50.0
 """)
-    assert search_playbooks(target, "replica")["results"] == []
+    assert search_playbooks(target, "replica").to_dict()["results"] == []
 
 
 def test_cli_overrides_playbooks_config(tmp_path: Path, target: Path) -> None:
     select(target, "team", "ops")
     sync_project(target, [make_bundle(tmp_path, "team"), make_bundle(tmp_path, "ops")])
-    config_file = target / CONFIG
+    config_file = target / CONFIG_PATH
     config_file.parent.mkdir(parents=True, exist_ok=True)
     config_file.write_text("""schema = 1
 
@@ -255,6 +255,6 @@ def test_playbook_extension_keys_are_accepted_but_not_indexed(tmp_path: Path, ta
     select(target, "team")
     sync_project(target, [item], agents=["codex"])
     assert "x-trigger" in (target / ".devkit/managed/team/recovery.md").read_text()
-    assert search_playbooks(target, "zebra")["results"] == []
-    hit = search_playbooks(target, "replica")["results"][0]
+    assert search_playbooks(target, "zebra").to_dict()["results"] == []
+    hit = search_playbooks(target, "replica").to_dict()["results"][0]
     assert hit["name"] == "restore-replica" and "x-trigger" not in json.dumps(hit)

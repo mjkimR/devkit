@@ -7,7 +7,15 @@ from pathlib import Path
 
 import pytest
 from devkit.core.errors import GitError
-from devkit.workflow import BaseCheck, CheckContext, CheckResult, Options, evaluate, is_ancestor, parse
+from devkit.workflow import (
+    BaseCheck,
+    CheckContext,
+    CheckResult,
+    Options,
+    evaluate_definition,
+    is_ancestor,
+    parse_definition,
+)
 from testsupport.workflow import write_unit
 
 
@@ -61,15 +69,17 @@ def test_revision_ancestor_check_end_to_end(repo: tuple[Path, str, str]) -> None
     (unit / "envelopes/final-report-01.yaml").write_text(
         f"kind: final-report\nstatus: completed\ndiff_scope: {{head: {second}}}\n"
     )
-    doc = parse(
+    doc = parse_definition(
         "---\nid: c\nschema_version: 1\nstages:\n  - id: s\n    exit: [revision-ancestor(review final-report)]\n---\n"
     )
-    res = evaluate(doc, Options(workspace_root=root, unit_dir=unit, anchor="task.md", ancestor=is_ancestor))
+    res = evaluate_definition(doc, Options(workspace_root=root, unit_dir=unit, anchor="task.md", ancestor=is_ancestor))
     assert res.complete
-    reversed_doc = parse(
+    reversed_doc = parse_definition(
         "---\nid: c\nschema_version: 1\nstages:\n  - id: s\n    exit: [revision-ancestor(final-report review)]\n---\n"
     )
-    res = evaluate(reversed_doc, Options(workspace_root=root, unit_dir=unit, anchor="task.md", ancestor=is_ancestor))
+    res = evaluate_definition(
+        reversed_doc, Options(workspace_root=root, unit_dir=unit, anchor="task.md", ancestor=is_ancestor)
+    )
     assert res.unmet[0].evaluated and "ancestor=false" in res.unmet[0].detail
 
 
@@ -87,7 +97,7 @@ def test_disk_primitive_edge_cases(tmp_path: Path) -> None:
     (unit / "envelopes/final-report-01.yaml").write_text(
         "kind: final-report\nstatus: completed\ndiff_scope: {head: HEAD}\n"
     )
-    doc = parse(
+    doc = parse_definition(
         _stage(
             "frontmatter(broken.md status done)",
             "frontmatter(missing.md status done)",
@@ -100,7 +110,7 @@ def test_disk_primitive_edge_cases(tmp_path: Path) -> None:
             "revision-ancestor(nothing review)",
         )
     )
-    details = {u.name: u.detail for u in evaluate(doc, opts).unmet}
+    details = {u.name: u.detail for u in evaluate_definition(doc, opts).unmet}
     assert "invalid YAML frontmatter" in details["frontmatter(broken.md status done)"]
     assert details["frontmatter(missing.md status done)"] == "missing.md missing"
     assert details["tasks-checked(empty.md)"] == "no tasks"
@@ -124,5 +134,5 @@ def test_plugin_that_returns_no_result_is_unsatisfied(tmp_path: Path) -> None:
 
     unit = write_unit(tmp_path, "work/u")
     opts = Options(workspace_root=tmp_path, unit_dir=unit, anchor="task.md", plugins=(Sloppy(),))
-    res = evaluate(parse(_stage("sloppy")), opts)
+    res = evaluate_definition(parse_definition(_stage("sloppy")), opts)
     assert (res.unmet[0].evaluated, res.unmet[0].detail) == (True, "check returned no CheckResult")

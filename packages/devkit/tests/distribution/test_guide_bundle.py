@@ -36,7 +36,7 @@ def test_guide_bundle_context_delivers_constitution_and_headers(tmp_path: Path) 
     target.mkdir()
     update_config(target, presets={"devkit": ["core"]}, agents=[])
     sync_project(target, [InstalledBundle("devkit", "0.1.0", bundle)])
-    context = get_context(target, "devkit")
+    context = get_context(target, "devkit").to_dict()
     assert context["constitution"] and "devkit get-context <bundle>" in context["constitution"]
     headers = {entry["header"].split("\n", 1)[0] for entry in context["instructions"]}
     assert headers == {f"name: {name}" for name in INSTRUCTIONS}

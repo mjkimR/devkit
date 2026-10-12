@@ -15,19 +15,20 @@ from devkit.workflow import (
     Options,
     TemplateLayout,
     Workspace,
-    evaluate,
+    evaluate_definition,
     load_check_files,
     load_decisions,
     load_envelopes,
-    parse,
-    render_result,
+    parse_definition,
+    render_evaluation,
     schema_hash,
-    validate,
-    write_next,
+    validate_definition,
+    write_envelope,
 )
-from devkit.workflow import frontmatter as fm
 from devkit.workflow.cli import cli
-from devkit.workflow.envelope import AuthoringError, compose
+from devkit.workflow.errors import AuthoringError
+from devkit.workflow.unit import frontmatter as fm
+from devkit.workflow.unit.envelope import compose_envelope
 from testsupport.workflow import WORKFLOW, write_config, write_record, write_unit
 
 A = """---
@@ -204,12 +205,12 @@ def test_b2_stale_handoff_choice_is_not_reused(tmp_path: Path) -> None:
 def test_b3_no_gate_request_or_human_wait_while_exit_checks_are_unmet(tmp_path: Path) -> None:
     unit = write_unit(tmp_path, "work/u")
     opts = Options(workspace_root=tmp_path, unit_dir=unit, anchor="task.md", skip_lint=True)
-    res = evaluate(parse(A), opts)
+    res = evaluate_definition(parse_definition(A), opts)
     assert [u.name for u in res.unmet] == ["file-exists(done.txt)"]
     assert res.requests == [] and res.waiting is None
     assert res.gate is not None and not res.gate.satisfied
     (unit / "done.txt").write_text("x")
-    res = evaluate(parse(A), opts)
+    res = evaluate_definition(parse_definition(A), opts)
     assert [u.name for u in res.unmet] == ["gate:integration"] and [r.id for r in res.requests] == ["gate:integration"]
     assert res.waiting is not None and res.waiting.checks == ("gate:integration",)
 
@@ -286,13 +287,13 @@ def test_b8_records_are_validated_against_their_request(tmp_path: Path) -> None:
         unit, "04-gate-integration.yaml", request="gate:integration", kind="approve", stage="build", value="v", **common
     )
     decisions = load_decisions(unit)
-    reasons = {e.file: e.reason for e in decisions.errors}
+    reasons = {e.file: e.message for e in decisions.errors}
     assert "does not match request" in reasons["decisions/01-gate-integration.yaml"]
     assert "file name must be NN-gate-integration.yaml" in reasons["decisions/02-handoff.yaml"]
     assert "needs the stage" in reasons["decisions/03-gate-integration.yaml"]
     assert "takes no value" in reasons["decisions/04-gate-integration.yaml"]
     assert decisions.records == [] and decisions.next_sequence() == 5
-    res = evaluate(parse(A), Options(workspace_root=tmp_path, unit_dir=unit, anchor="task.md"))
+    res = evaluate_definition(parse_definition(A), Options(workspace_root=tmp_path, unit_dir=unit, anchor="task.md"))
     assert len(res.decision_errors) == 4
 
 
@@ -325,8 +326,9 @@ def test_b9_json_output_is_a_single_document_when_lint_fails(tmp_path: Path, mon
     assert _run("new", "-w", str(root), "u").exit_code == 0
     monkeypatch.setattr(devkit.rules, "run_project_rules", broken)
     result = _run("next", "-w", str(root), "--unit", UNIT, "--format", "json")
-    assert result.exit_code == 2 and "(LINT_FAILED)" in result.stderr
-    assert json.loads(result.stdout)["lint_error"] == "rule exploded"
+    assert result.exit_code == 2 and "(UNEXPECTED_ERROR) rule exploded" in result.stderr
+    [error] = json.loads(result.stdout)["errors"]
+    assert (error["code"], error["message"]) == ("UNEXPECTED_ERROR", "rule exploded")
     text = _run("next", "-w", str(root), "--unit", UNIT)
     assert '[LINT_ERROR: "rule exploded"]' in text.output
 
@@ -355,23 +357,23 @@ def test_b10_discovery_follows_slashes_in_date_specs(tmp_path: Path) -> None:
 @pytest.mark.parametrize("key", ["optional", "exception"])
 def test_b11_stage_flags_must_be_booleans(key: str) -> None:
     with pytest.raises(DefinitionError, match=rf"s\.{key}: expected true or false"):
-        parse(f"---\nid: c\nschema_version: 1\nstages:\n  - id: s\n    {key}: 'false'\n---\n")
+        parse_definition(f"---\nid: c\nschema_version: 1\nstages:\n  - id: s\n    {key}: 'false'\n---\n")
     with pytest.raises(DefinitionError, match=r"s\.role: expected a string"):
-        parse("---\nid: c\nschema_version: 1\nstages:\n  - id: s\n    role: 3\n---\n")
+        parse_definition("---\nid: c\nschema_version: 1\nstages:\n  - id: s\n    role: 3\n---\n")
 
 
 def test_b12_envelope_status_is_validated_on_load(tmp_path: Path) -> None:
     (tmp_path / "envelopes").mkdir()
     (tmp_path / "envelopes/review-01.yaml").write_text("kind: review\nstatus: complete\n")
     envelopes = load_envelopes(tmp_path)
-    assert envelopes.by_kind == {} and "status 'complete' not in" in envelopes.errors[0].reason
+    assert envelopes.by_kind == {} and "status 'complete' not in" in envelopes.errors[0].message
 
 
 def test_b13_envelope_sequences_past_99(tmp_path: Path) -> None:
     (tmp_path / "envelopes").mkdir()
     (tmp_path / "envelopes/review-99.yaml").write_text("kind: review\nstatus: completed\n")
     (tmp_path / "envelopes/review-07.yaml").write_text("not: [valid\n")  # malformed files still count
-    path, seq = write_next(tmp_path, "review", "kind: review\nstatus: completed\n")
+    path, seq = write_envelope(tmp_path, "review", "kind: review\nstatus: completed\n")
     assert (path.name, seq) == ("review-100.yaml", 100)
     envelopes = load_envelopes(tmp_path)
     latest = envelopes.latest("review")
@@ -395,41 +397,43 @@ def test_r3_invalid_anchor_is_an_error_in_the_library(tmp_path: Path) -> None:
     unit.mkdir(parents=True)
     (unit / "task.md").write_text("---\nstatus: [broken\n---\n")
     with pytest.raises(AnchorInvalidError) as raised:
-        evaluate(parse(A), Options(workspace_root=tmp_path, unit_dir=unit, anchor="task.md"))
+        evaluate_definition(parse_definition(A), Options(workspace_root=tmp_path, unit_dir=unit, anchor="task.md"))
     assert raised.value.code == "ANCHOR_INVALID"
 
 
 def test_r4_display_names_do_not_change_the_hash() -> None:
     renamed = WORKFLOW.replace("name: Intent", "name: Clarify intent")
-    assert schema_hash(parse(renamed)) == schema_hash(parse(WORKFLOW))
-    assert schema_hash(parse(WORKFLOW.replace("isolation: preferred", "isolation: required"))) != schema_hash(
-        parse(WORKFLOW)
-    )
+    assert schema_hash(parse_definition(renamed)) == schema_hash(parse_definition(WORKFLOW))
+    assert schema_hash(
+        parse_definition(WORKFLOW.replace("isolation: preferred", "isolation: required"))
+    ) != schema_hash(parse_definition(WORKFLOW))
 
 
 def test_r5_unknown_keys_gate_names_and_schema_version() -> None:
-    doc = parse(WORKFLOW.replace("status: active", "status: active\nnxt: []"))
-    assert "nxt: unknown document key" in {str(p) for p in validate(doc, "task.md")}
-    bad_gate = parse("---\nid: c\nschema_version: true\nstages:\n  - id: s\n    human_gate: Integration\n---\n")
-    problems = {str(p) for p in validate(bad_gate, "task.md")}
+    doc = parse_definition(WORKFLOW.replace("status: active", "status: active\nnxt: []"))
+    assert "nxt: unknown document key" in {str(p) for p in validate_definition(doc, "task.md")}
+    bad_gate = parse_definition(
+        "---\nid: c\nschema_version: true\nstages:\n  - id: s\n    human_gate: Integration\n---\n"
+    )
+    problems = {str(p) for p in validate_definition(bad_gate, "task.md")}
     assert "s.human_gate: gate name 'Integration' must match [a-z][a-z0-9-]*" in problems
     assert any(p.startswith("schema_version: unsupported schema_version 0") for p in problems)
     with pytest.raises(DefinitionError, match=r"returns\[0\]: unknown keys \['why'\]"):
-        parse("---\nid: c\nstages:\n  - id: s\n    returns: [{to: s, why: x}]\n---\n")
+        parse_definition("---\nid: c\nstages:\n  - id: s\n    returns: [{to: s, why: x}]\n---\n")
     with pytest.raises(DefinitionError, match=r"checks\[0\]: unknown keys \['kind'\]"):
-        parse("---\nid: c\nchecks: [{name: x, class: human, kind: y}]\nstages:\n  - id: s\n---\n")
-    clash = parse(
+        parse_definition("---\nid: c\nchecks: [{name: x, class: human, kind: y}]\nstages:\n  - id: s\n---\n")
+    clash = parse_definition(
         "---\nid: c\nschema_version: 1\nchecks: [{name: review, class: human}]\n"
         "stages:\n  - id: s\n    human_gate: review\n---\n"
     )
-    assert any("has the name of a gate" in str(p) for p in validate(clash, "task.md"))
+    assert any("has the name of a gate" in str(p) for p in validate_definition(clash, "task.md"))
 
 
 def test_r5_check_file_arguments_stay_inside_the_unit() -> None:
-    doc = parse(
+    doc = parse_definition(
         "---\nid: c\nschema_version: 1\nstages:\n  - id: s\n    exit: [file-exists(../x), file-exists(/etc/passwd)]\n---\n"
     )
-    problems = [str(p) for p in validate(doc, "task.md")]
+    problems = [str(p) for p in validate_definition(doc, "task.md")]
     assert len(problems) == 2 and all("must be a path inside the unit directory" in p for p in problems)
 
 
@@ -440,19 +444,21 @@ def test_r6_git_failure_is_not_a_definite_answer(tmp_path: Path) -> None:
     (unit / "envelopes/final-report-01.yaml").write_text(
         "kind: final-report\nstatus: completed\ndiff_scope: {head: def5678}\n"
     )
-    doc = parse(
+    doc = parse_definition(
         "---\nid: c\nschema_version: 1\nstages:\n  - id: s\n    exit: [revision-ancestor(review final-report)]\n---\n"
     )
 
     def unknown_revision(*_: object) -> bool:
         raise RuntimeError("bad object abc1234")
 
-    res = evaluate(doc, Options(workspace_root=tmp_path, unit_dir=unit, anchor="task.md", ancestor=unknown_revision))
+    res = evaluate_definition(
+        doc, Options(workspace_root=tmp_path, unit_dir=unit, anchor="task.md", ancestor=unknown_revision)
+    )
     assert (res.unmet[0].evaluated, res.unmet[0].detail) == (False, "git: bad object abc1234")
-    res = evaluate(doc, Options(workspace_root=tmp_path, unit_dir=unit, anchor="task.md"))
+    res = evaluate_definition(doc, Options(workspace_root=tmp_path, unit_dir=unit, anchor="task.md"))
     assert (res.unmet[0].evaluated, res.unmet[0].detail) == (False, "no git function configured")
     with pytest.raises(AuthoringError, match="hexadecimal commit id"):
-        compose(unit_dir=unit, envelopes=load_envelopes(unit), kind="review", head="HEAD")
+        compose_envelope(unit_dir=unit, envelopes=load_envelopes(unit), kind="review", head="HEAD")
 
 
 def test_r7_free_text_stays_on_one_line(tmp_path: Path) -> None:
@@ -468,7 +474,9 @@ def test_r7_free_text_stays_on_one_line(tmp_path: Path) -> None:
         stage="build",
         note='say "no"\n] [FAKE: x',
     )
-    text = render_result(evaluate(parse(A), Options(workspace_root=tmp_path, unit_dir=unit, anchor="task.md")))
+    text = render_evaluation(
+        evaluate_definition(parse_definition(A), Options(workspace_root=tmp_path, unit_dir=unit, anchor="task.md"))
+    )
     assert (
         '[DECLINED: id=gate:integration file=decisions/01-gate-integration.yaml note="say \\"no\\"\\n] [FAKE: x"]'
         in text
@@ -478,11 +486,11 @@ def test_r7_free_text_stays_on_one_line(tmp_path: Path) -> None:
 
 def test_r8_gate_reports_what_satisfied_it(tmp_path: Path) -> None:
     unit = write_unit(tmp_path, "work/u")
-    doc = parse(A)
+    doc = parse_definition(A)
     base = {"workspace_root": tmp_path, "unit_dir": unit, "anchor": "task.md"}
-    res = evaluate(doc, Options(**base, given=("integration",)))  # type: ignore[arg-type]
+    res = evaluate_definition(doc, Options(**base, given=("integration",)))  # type: ignore[arg-type]
     assert res.gate is not None and (res.gate.satisfied, res.gate.source) == (True, "given")
-    res = evaluate(doc, Options(**base, approvals={"integration": "auto"}))  # type: ignore[arg-type]
+    res = evaluate_definition(doc, Options(**base, approvals={"integration": "auto"}))  # type: ignore[arg-type]
     assert res.gate is not None and (res.gate.satisfied, res.gate.source) == (True, "policy")
     write_record(
         unit,
@@ -493,7 +501,7 @@ def test_r8_gate_reports_what_satisfied_it(tmp_path: Path) -> None:
         workflow="a",
         stage="build",
     )
-    res = evaluate(doc, Options(**base))  # type: ignore[arg-type]
+    res = evaluate_definition(doc, Options(**base))  # type: ignore[arg-type]
     assert res.gate is not None
     assert res.gate.to_dict() == {
         "name": "integration",
@@ -504,7 +512,7 @@ def test_r8_gate_reports_what_satisfied_it(tmp_path: Path) -> None:
     }
     assert (
         "[GATE: integration policy=ask satisfied=yes source=decision:decisions/01-gate-integration.yaml]"
-        in render_result(res)
+        in render_evaluation(res)
     )
 
 
@@ -548,7 +556,7 @@ def test_nit_feedback_value_requires_accept_and_list_reports_unreadable_anchors(
     broken = root / ".devkit/transient/work/broken"
     broken.mkdir()
     (broken / "task.md").write_text("---\nid: [x\n---\n")
-    rows = json.loads(_run("list", "-w", str(root), "--format", "json").stdout)
+    rows = json.loads(_run("list", "-w", str(root), "--format", "json").stdout)["units"]
     assert [(r["unit"], r["error"] is not None) for r in rows] == [
         (".devkit/transient/work/broken", True),
         (UNIT, False),

@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 from devkit.workflow import Binding, load_envelopes, read_binding, write_binding
-from devkit.workflow import frontmatter as fm
-from devkit.workflow.envelope import skeleton, write_next
+from devkit.workflow.unit import frontmatter as fm
+from devkit.workflow.unit.envelope import skeleton, write_envelope
 
 # --- frontmatter ------------------------------------------------------------------
 
@@ -73,7 +73,7 @@ def _write(unit: Path, name: str, body: str) -> None:
 def test_missing_envelopes_dir(tmp_path: Path) -> None:
     env = load_envelopes(tmp_path)
     assert env.by_kind == {} and env.errors == [] and env.latest("review") is None
-    assert write_next(tmp_path, "review", "kind: review\n") == (tmp_path / "envelopes/review-01.yaml", 1)
+    assert write_envelope(tmp_path, "review", "kind: review\n") == (tmp_path / "envelopes/review-01.yaml", 1)
 
 
 def test_load_sorts_by_sequence_and_computes_review_state(tmp_path: Path) -> None:
@@ -87,7 +87,7 @@ def test_load_sorts_by_sequence_and_computes_review_state(tmp_path: Path) -> Non
     assert decider is not None and decider.kind == "reverify" and decider.open_findings() == 0
     assert env.deciding("review") is decider
     assert env.errors == []
-    assert write_next(tmp_path, "review", "x")[1] == 3
+    assert write_envelope(tmp_path, "review", "x")[1] == 3
 
 
 def test_reverify_for_older_round_does_not_decide(tmp_path: Path) -> None:
@@ -116,7 +116,7 @@ def test_envelope_errors(tmp_path: Path, name: str, body: str, reason: str) -> N
     _write(tmp_path, name, body)
     env = load_envelopes(tmp_path)
     assert env.by_kind == {}
-    assert len(env.errors) == 1 and reason in env.errors[0].reason
+    assert len(env.errors) == 1 and reason in env.errors[0].message
 
 
 def test_checks_and_diff_scope(tmp_path: Path) -> None:

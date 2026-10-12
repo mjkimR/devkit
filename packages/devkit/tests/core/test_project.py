@@ -4,7 +4,15 @@ import os
 from pathlib import Path
 
 import pytest
-from devkit.core import ConfigError, find_project_root, git_toplevel, read_project_config
+from devkit.core import (
+    ConfigError,
+    config_table,
+    find_project_root,
+    git_toplevel,
+    read_project_config,
+    read_toml,
+    require_git_toplevel,
+)
 from devkit.core import project as project_module
 from devkit.core.errors import GitError
 
@@ -101,3 +109,36 @@ def test_unreadable_config(tmp_path: Path) -> None:
     (tmp_path / ".devkit/config.toml").mkdir(parents=True)
     with pytest.raises(ConfigError):
         read_project_config(tmp_path)
+
+
+def test_require_git_toplevel_names_the_workspace_root_option(repo: Path, tmp_path: Path) -> None:
+    (repo / "a/b").mkdir(parents=True)
+    assert require_git_toplevel(repo / "a/b") == repo
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    with pytest.raises(GitError, match="not inside a Git work tree") as caught:
+        require_git_toplevel(outside)
+    error = caught.value
+    assert (error.code, error.mode.value, error.target_files) == ("GIT_FAILED", "INPUT_ERROR", ("--workspace-root",))
+    assert error.fix and "--workspace-root" in error.fix
+
+
+def test_read_toml_reports_its_display_name(tmp_path: Path) -> None:
+    path = tmp_path / "local.config"
+    assert read_toml(path) is None
+    path.write_text("[gates]\nx = 1\n")
+    assert read_toml(path) == {"gates": {"x": 1}}
+    path.write_text("[gates\n")
+    with pytest.raises(ConfigError, match="invalid config local") as caught:
+        read_toml(path, "local")
+    assert caught.value.target_files == ("local",)
+
+
+class AreaConfigError(ConfigError):
+    code = "AREA_CONFIG_INVALID"
+
+
+def test_config_table_raises_the_area_error() -> None:
+    assert config_table({"a": 1}, "area", AreaConfigError) == {"a": 1}
+    with pytest.raises(AreaConfigError, match=r"config area\.x: expected a table"):
+        config_table(3, "area.x", AreaConfigError)

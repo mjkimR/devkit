@@ -33,10 +33,8 @@ def test_catalog_records_frontmatter_identity_verbatim(tmp_path: Path) -> None:
     catalog = DocumentCatalog()
     catalog.build(tmp_path, WorkspaceCache(tmp_path))
 
-    doc = catalog.get_doc("any-shape_42")
-    assert doc is not None
+    doc = catalog.documents_by_id["any-shape_42"]
     assert (doc.path, doc.title, doc.status) == ("docs/a.md", "A", "active")
-    assert catalog.has_id("any-shape_42")
     assert set(catalog.documents_by_path) == {"docs/a.md"}
     assert catalog.duplicate_ids == {}
 
@@ -48,8 +46,7 @@ def test_catalog_reports_duplicate_ids_in_path_order(tmp_path: Path) -> None:
     catalog = DocumentCatalog()
     catalog.build(tmp_path, WorkspaceCache(tmp_path))
 
-    doc = catalog.get_doc("dup")
-    assert doc is not None and doc.path == "docs/first.md"
+    assert catalog.documents_by_id["dup"].path == "docs/first.md"
     assert catalog.duplicate_ids == {"dup": ["docs/first.md", "docs/second.md"]}
 
 
@@ -62,6 +59,6 @@ def test_malformed_frontmatter_is_recorded_not_raised(tmp_path: Path) -> None:
     catalog.build(tmp_path, WorkspaceCache(tmp_path))
 
     assert catalog.find_paths_by_basename("broken.md") == ["docs/broken.md"]
-    assert catalog.has_id("ok")
+    assert set(catalog.documents_by_id) == {"ok"}
     assert set(catalog.frontmatter_errors) == {"docs/broken.md", "docs/unclosed.md"}
     assert "mapping" in catalog.frontmatter_errors["docs/broken.md"]

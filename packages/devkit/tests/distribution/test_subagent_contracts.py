@@ -6,13 +6,13 @@ from pathlib import Path
 
 import pytest
 import yaml
+from devkit.core.receipt import RECEIPT_PATH
 from devkit.distribution.bundles import load_bundle
-from devkit.distribution.bundles.subagents import projection_path, read_contract, render
+from devkit.distribution.bundles.subagents import projection_path, read_contract, render_projection
 from devkit.distribution.errors import BundleError
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.discovery import InstalledBundle
 from devkit.distribution.installation.sync import sync_project
-from devkit.distribution.installation.workspace import RECEIPT
 
 CONTRACT = """---
 role: reviewer
@@ -97,7 +97,7 @@ def test_read_contract_rejects_missing_hosts_and_empty_body() -> None:
 
 def test_render_claude_and_codex_projections() -> None:
     contract = read_contract(CONTRACT.encode(), "x")
-    claude = render("claude-code", contract, ".devkit/managed/team/subagents/reviewer.md")
+    claude = render_projection("claude-code", contract, ".devkit/managed/team/subagents/reviewer.md")
     assert claude is not None
     head, body = claude.decode().split("---\n")[1:]
     assert yaml.safe_load(head) == {
@@ -110,7 +110,7 @@ def test_render_claude_and_codex_projections() -> None:
     assert body.startswith("Role contract: `.devkit/managed/team/subagents/reviewer.md`. Procedure: skill `review`.")
     assert "Host projection: native." in body and "# Reviewer" in body
 
-    codex = render("codex", contract, ".devkit/managed/team/subagents/reviewer.md")
+    codex = render_projection("codex", contract, ".devkit/managed/team/subagents/reviewer.md")
     assert codex is not None
     data = tomllib.loads(codex.decode())
     assert data["name"] == "reviewer" and data["sandbox_mode"] == "read-only"
@@ -125,7 +125,7 @@ def test_render_antigravity_projection_carries_fixed_keys() -> None:
         '  antigravity:\n    status: native\n    tools: [view_file, grep_search]\n    commandExecutionPolicy: "off"\n  codex:\n',
     )
     contract = read_contract(body.encode(), "x")
-    rendered = render("antigravity", contract, ".devkit/managed/team/subagents/reviewer.md")
+    rendered = render_projection("antigravity", contract, ".devkit/managed/team/subagents/reviewer.md")
     assert rendered is not None
     head = rendered.decode().split("---\n")[1]
     assert yaml.safe_load(head) == {
@@ -141,14 +141,14 @@ def test_render_antigravity_projection_carries_fixed_keys() -> None:
 
 def test_render_unsupported_host_yields_no_file_and_missing_host_fails() -> None:
     contract = read_contract(CONTRACT.replace("status: emulated", "status: unsupported").encode(), "x")
-    assert render("codex", contract, "p") is None
+    assert render_projection("codex", contract, "p") is None
     only_codex = CONTRACT.replace(
         "  claude-code:\n    status: native\n    tools: [Read, Grep, Glob]\n    maxTurns: 20\n    background: false\n",
         "",
     )
     contract = read_contract(only_codex.encode(), "x")
     with pytest.raises(BundleError, match="no projection for claude-code"):
-        render("claude-code", contract, "p")
+        render_projection("claude-code", contract, "p")
 
 
 def test_manifest_validates_contract_source(tmp_path: Path) -> None:
@@ -177,11 +177,11 @@ def test_sync_projects_contract_per_agent(tmp_path: Path) -> None:
     assert (target / ".devkit/managed/team/subagents/reviewer.md").read_text() == CONTRACT
     claude = target / projection_path("claude-code", "reviewer")
     codex = target / projection_path("codex", "reviewer")
-    assert claude.read_bytes() == render(
+    assert claude.read_bytes() == render_projection(
         "claude-code", read_contract(CONTRACT.encode(), "x"), ".devkit/managed/team/subagents/reviewer.md"
     )
     assert tomllib.loads(codex.read_text())["name"] == "reviewer"
-    receipt = json.loads((target / RECEIPT).read_text())
+    receipt = json.loads((target / RECEIPT_PATH).read_text())
     record = next(a for a in receipt["assets"] if a["id"] == "reviewer")
     assert record["paths"] == sorted(
         [".devkit/managed/team/subagents/reviewer.md", ".claude/agents/reviewer.md", ".codex/agents/reviewer.toml"]
@@ -214,7 +214,7 @@ def test_override_of_contract_is_rendered_and_cited(tmp_path: Path) -> None:
     projected = (target / ".claude/agents/reviewer.md").read_text()
     assert "maxTurns: 5" in projected
     assert "Role contract: `.devkit/overrides/team/subagents/reviewer.md`." in projected
-    receipt = json.loads((target / RECEIPT).read_text())
+    receipt = json.loads((target / RECEIPT_PATH).read_text())
     assert receipt["overrides"]["team"]["reviewer"]["kind"] == "subagent"
 
 
@@ -228,7 +228,7 @@ def test_contract_extension_keys_are_kept_but_never_rendered(tmp_path: Path) -> 
         ("x-git-actions", ["commit"]),
     )
     for agent in ("claude-code", "codex"):
-        rendered = render(agent, parsed, ".devkit/managed/team/subagents/reviewer.md")
+        rendered = render_projection(agent, parsed, ".devkit/managed/team/subagents/reviewer.md")
         assert rendered is not None and b"x-" not in rendered and b"strong" not in rendered
     with pytest.raises(BundleError, match=r"unknown frontmatter keys \['model_profile'\] \(extensions use x-<name>\)"):
         read_contract(CONTRACT.replace("skill: review\n", "skill: review\nmodel_profile: strong\n").encode(), "x")

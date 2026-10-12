@@ -107,7 +107,7 @@ Playbooks can be Markdown files or directories containing `SKILL.md` and support
   limit = 5
   max_bytes = 8192
   ```
-- **Bounds**: `limit` (1–20), `min_score` ($\ge 0$), `max_bytes` (1024–65536). Query length is limited to 512 UTF-8 bytes.
+- **Bounds**: `limit` (1–20), `min_score` ($\ge 0$), `max_bytes` (1024–65536), defined once in `installation/config.py` and checked for `[playbooks]` and for the command's options alike. Query length is limited to 512 UTF-8 bytes. An out-of-range option or a query that is not English Latin text is `ARGUMENT_INVALID` (one `{"error": ...}` JSON document, exit `2`), naming the option in `target_files`.
 - **Budgeting**: Serialized JSON outputs stay within `max_bytes`. When candidates exceed the budget, whole records are omitted and the `truncated: true` flag is emitted.
 
 ---

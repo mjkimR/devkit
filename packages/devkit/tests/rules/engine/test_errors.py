@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 from devkit.advisory import ActionMode, AdvisoryError, ExitCode
 from devkit.rules import (
-    ConfigError,
     RuleLoadError,
+    RulesConfigError,
     RulesDirError,
     RulesRunError,
     SnapshotError,
@@ -22,7 +22,7 @@ from testsupport.rules import git, init_repo, write
 
 def test_invalid_rules_table_is_rules_config_invalid(tmp_path: Path) -> None:
     write(tmp_path, ".devkit/config.toml", "[rules]\nexclude = 3\n")
-    with pytest.raises(ConfigError) as info:
+    with pytest.raises(RulesConfigError) as info:
         load_rules_config(tmp_path)
     error = info.value
     assert isinstance(error, AdvisoryError) and not isinstance(error, ValueError)
@@ -61,12 +61,12 @@ def test_rules_dir_outside_the_snapshot_repository_is_rules_dir_invalid(tmp_path
 
 
 def test_lint_binding_raises_rules_run_failed_with_each_problem(tmp_path: Path) -> None:
-    from devkit.workflow.lint import rules_lint
+    from devkit.workflow.evaluation.lint import lint_with_rules
 
     write(tmp_path, ".devkit/installation.json", "{")
     write(tmp_path, "a.md", "# A\n")
     with pytest.raises(RulesRunError) as info:
-        rules_lint(tmp_path, ["a.md"])
+        lint_with_rules(tmp_path, ["a.md"])
     error = info.value
     assert error.code == "RULES_RUN_FAILED" and "invalid installation receipt" in str(error)
     assert [type(problem) for problem in error.problems] == [RuleLoadError]

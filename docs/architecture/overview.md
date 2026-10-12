@@ -64,12 +64,26 @@ devkit/
 │   │       ├── rules/         # Governance rule engine (`devkit rules`)
 │   │       ├── workflow/      # Delivery workflow engine (`devkit workflow`)
 │   │       ├── gate/          # Commit gate system (`devkit gate`)
-│   │       └── distribution/  # Bundle packaging and sync (`devkit sync`, ...) and the `devkit` guide bundle
+│   │       ├── distribution/  # Bundle packaging and sync (`devkit sync`, ...) and the `devkit` guide bundle
+│   │       └── cli.py         # The root `devkit` group: assembles every area's commands
 │   └── devkit-starter/        # Example external content package
 ├── examples/bundles/          # Example bundle delivery-workflow (the starter bundle lives in devkit-starter)
 ├── scripts/                   # Shared shell logic behind the justfile recipes
 └── docs/                      # Documentation per module (see the index below)
 ```
+
+Inside each area, modules are grouped by concern; every area exposes its library surface from its `__init__` (`from devkit.workflow import Workspace`, `from devkit.gate import run_hook`), and modules import each other by absolute path (`devkit.<area>....`), never relatively:
+
+| Area | Layout |
+| --- | --- |
+| `core` | `cli.py` (shared CLI plumbing), `errors.py`, `frontmatter.py`, `git.py`, `paths.py`, `plugins.py`, `project.py`, `receipt.py` |
+| `advisory` | `error.py`, `types.py` (`ExitCode`, `ActionMode`, ...), `advisory.py`, `bundle/` (the `advisory` guide bundle) |
+| `rules` | `engine/` (registry, evaluator, configuration, policy, phases, settings, discovery, errors), `workspace/` (cache, Markdown catalog, Git snapshots), `rules/` (built-in rules), `cli/` |
+| `workflow` | `definition/` (document model, validation, discovery, check registry, identifiers), `project/` (configuration, layout, roles, plugin checks), `unit/` (units, binding, frontmatter, decision records, envelopes), `evaluation/` (evaluator, primitives, results, requests, Git, lint), top-level `workspace.py`, `answers.py`, `handoff.py`, `render.py`, `errors.py`, and `cli/` |
+| `gate` | `engine/` (models, base class, configuration, registry, runner), `hooks/` (hook wrappers and Git queries), `gates/` (built-in gates), `errors.py`, `cli/`, `__main__.py` (`python -m devkit.gate`, which the hook wrappers exec) |
+| `distribution` | `content.py` (file content helpers shared by both sides), `bundles/` (authoring: manifest, kinds, packaging; no workspace knowledge), `installation/` (consumer workspace: sync, receipt, overrides, status, context), `cli/`, `guide/` (the `devkit` guide bundle), `errors.py` |
+
+The module maps with one line per file are in each module's documentation.
 
 ---
 
@@ -91,17 +105,25 @@ devkit/
 
 **Library errors.** Every expected failure a `devkit` library function raises is an `AdvisoryError` subclass from `devkit.advisory` with a stable `UPPER_SNAKE` code (`RECEIPT_INVALID`, `BUNDLE_INVALID`, `RULES_CONFIG_INVALID`, `UNIT_NOT_FOUND`, `GATE_CONFIG_INVALID`, ...) and the advisory fields that direct the caller's next step. An embedding caller branches on `error.code` or `error.mode` instead of matching messages; problems a function collects rather than raises (rule loading, policy and execution problems; workflow validation, file loading and shared-stage problems; envelope and decision record errors) are typed entries with a code too. Each module's reference lists its codes. Built-in exceptions remain only for programming errors, such as calling an API with arguments its contract forbids.
 
-**CLI boundary.** Every command group renders an uncaught `AdvisoryError` as an Agent Advisory Protocol block on stderr and exits with the error's `exit_code`; any other exception is reported as `UNEXPECTED_ERROR` (`MAINTENANCE`). When stdout is JSON (`--format json`, and every distribution command), a failed command that has no result of its own prints `{"error": {...}}` there (the `AdvisoryError.to_dict()` envelope), so stdout is always one JSON document.
+**CLI boundary.** Every command group is built on `devkit.core.cli`: the same `-w/--workspace-root` option (an explicit root must be an existing directory; the default is the devkit project containing the current directory, while `devkit gate` always works on the Git top level, found with `devkit.core.require_git_toplevel`), the same `--format text|json` option (case-insensitive) and the same error boundary. The boundary renders an uncaught `AdvisoryError` as an Agent Advisory Protocol block on stderr and exits with the error's `exit_code`; any other exception is reported as `UNEXPECTED_ERROR` (`MAINTENANCE`). `--version` exists only on the root `devkit` group.
+
+**JSON output.** When stdout is JSON (`--format json`, and every distribution command), it is exactly one object, never a bare array: a command's payload sits under a named key (`violations`, `rules`, `units`, `checks`, `requests`, `overrides`, ...), problems the command collected sit under `errors` as `AdvisoryError.to_dict()` objects, and a command that fails outright prints `{"error": {...}}` (the same envelope) while the advisory goes to stderr.
+
+**Text output.** Text-mode stdout is made of one-line `[KIND: ...]` sentinels that an agent can match without parsing prose: rules prints `[VIOLATION: ...]`, `[SUMMARY: errors=N warnings=N infos=N fixed=N]` and `[OK: ...]`; workflow prints `[STAGE: ...]`, `[GATE: ...]`, `[REQUEST: ...]` and similar; gate prints `[HOOK: ...]` and `[GATE: ...]`. Warnings and notices go to stderr as `[WARNING: (CODE) ...]` and `[NOTICE: ...]`. No emoji and no colour.
+
+**Arguments.** click only parses syntax (unknown options, missing arguments, a value outside a fixed choice); those usage errors print click's `Usage:` text and exit `2`. Every semantic check of an argument (conflicting flags, a malformed selector, a workspace root or path that does not exist, an unknown rule ID) raises `ArgumentError` (`ARGUMENT_INVALID`, `INPUT_ERROR`) through the boundary, so a JSON caller still receives one document.
+
+**Configuration errors.** `.devkit/config.toml` (and the gate's clone-local `devkit.config`) is read with `devkit.core.project.read_toml`/`read_project_config`: a file that cannot be read or parsed is the core `ConfigError` (`CONFIG_INVALID`), passed through unchanged by every area. A malformed table an area owns is that area's subclass of it: `RULES_CONFIG_INVALID`, `WORKFLOW_CONFIG_INVALID`, `GATE_CONFIG_INVALID`.
 
 **Exit codes.** Every `devkit` command follows the checker convention of `grep`, `diff` and `ruff` (`devkit.advisory.ExitCode`):
 
 | Code | `ExitCode` | Meaning | Examples |
 | --- | --- | --- | --- |
 | `0` | `OK` | Success; nothing found | `rules check` without violations; `workflow next` waiting for a human |
-| `1` | `FINDINGS` | The command ran and reports a negative result | rule violations remain; `sync --check` needs a sync; a gate refused the commit; `workflow validate` found invalid definitions |
-| `2` | `ERROR` | The command could not do its job | usage errors (click), unreadable configuration, receipt or definition, refused invalid input, unexpected errors |
+| `1` | `FINDINGS` | The command ran and reports a negative result | rule violations remain; `sync --check` needs a sync; a gate refused the commit; `workflow validate` found invalid definitions; `devkit status`, `gate status` or `workflow show` reports a problem |
+| `2` | `ERROR` | The command could not do its job | usage and argument errors, unreadable configuration, receipt or definition, a file that cannot be loaded, refused invalid input, unexpected errors |
 
-A workflow state that waits for a person or a delegated role is a result, not a failure, and exits `0`. The per-command details are in each module's reference.
+A command that does work and collects several problems instead of stopping at the first exits with the highest `exit_code` among them: configuration and loading problems give `2`, refusals and findings `1`. A status or show command (`devkit status`, `gate status`, `workflow show`) only reports, so it exits `1` when its report contains a problem, whatever the problem's own code (`devkit.core.cli.report_exit_code`), and `2` only when it cannot run; for `devkit status` that is a missing, modified or mode-mismatched file, a pending journal, or override drift. A workflow state that waits for a person or a delegated role is a result, not a failure, and exits `0`. The per-command details are in each module's reference.
 
 **Platforms.** `devkit` supports macOS and Linux only (POSIX): it relies on `fcntl` locks, POSIX file modes and `/bin/sh` hook wrappers. It writes LF line endings.
 

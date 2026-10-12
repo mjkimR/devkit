@@ -4,7 +4,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from devkit.rules import SnapshotError, git_snapshot, materialize
+from devkit.rules import SnapshotError, git_snapshot, materialize_snapshot
 
 
 def _git(root: Path, *args: str) -> str:
@@ -42,7 +42,7 @@ def test_staged_snapshot_ignores_unstaged_edits_and_untracked_files(repo: Path, 
     assert {name for name, _, _ in snapshot.files} == {"docs/a.md", "docs/new.md", "run.sh"}
 
     out = tmp_path / "out"
-    materialize(snapshot, out)
+    materialize_snapshot(snapshot, out)
     assert (out / "docs/a.md").read_text() == "# A staged\n"
     assert (out / "run.sh").stat().st_mode & 0o111
     assert not (out / "untracked.md").exists() and not (out / ".env").exists()
@@ -109,7 +109,7 @@ def test_materialize_symlinks_submodules_and_backslash_names(repo: Path, tmp_pat
     assert modes["docs/latest.md"] == "120000" and modes["vendor/sub"] == "160000"
 
     out = tmp_path / "out"
-    materialize(snapshot, out)
+    materialize_snapshot(snapshot, out)
     assert (out / "docs/latest.md").is_symlink() and (out / "docs/latest.md").read_text() == "# A\n"
     assert not (out / "docs/escape.md").exists() and not (out / "docs/escape.md").is_symlink()
     assert (out / "vendor/sub").is_dir()
@@ -141,7 +141,7 @@ def test_materialize_streams_large_and_many_blobs(repo: Path, tmp_path: Path, mo
     _git(repo, "add", ".")
 
     out = tmp_path / "out"
-    materialize(git_snapshot(repo, staged=True), out)
+    materialize_snapshot(git_snapshot(repo, staged=True), out)
     assert (out / "big.bin").read_bytes() == big
     assert (out / "empty.txt").read_bytes() == b""
     assert (out / "many/f2999.txt").read_text() == "2999\n"
@@ -154,7 +154,7 @@ def test_materialize_reports_a_missing_object(repo: Path, tmp_path: Path) -> Non
     snapshot = git_snapshot(repo, staged=True)
     bogus = dataclasses.replace(snapshot, files=(("ghost.md", "0" * 40, "100644"),))
     with pytest.raises(SnapshotError, match="missing") as info:
-        materialize(bogus, tmp_path / "out")
+        materialize_snapshot(bogus, tmp_path / "out")
     assert info.value.code == "RULES_SNAPSHOT_FAILED"
 
 

@@ -13,8 +13,6 @@ from __future__ import annotations
 import math
 import os
 import re
-import tempfile
-import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -23,11 +21,13 @@ import tomlkit
 from tomlkit.exceptions import TOMLKitError
 
 from devkit.core.errors import ConfigError
-
-from ..bundles.common import AGENT_NAMES, SLUG
-from ..errors import SelectionError
-from .discovery import InstalledBundle
-from .workspace import CONFIG
+from devkit.core.project import read_toml
+from devkit.core.receipt import CONFIG_PATH
+from devkit.distribution.bundles.common import AGENT_NAMES, SLUG
+from devkit.distribution.content import Content
+from devkit.distribution.errors import SelectionError
+from devkit.distribution.installation.discovery import InstalledBundle
+from devkit.distribution.installation.transaction import replace_file
 
 SCHEMA = 1
 # ``rules`` is owned by ``devkit.rules`` (phase overrides), ``workflow`` by
@@ -52,6 +52,13 @@ FIELDS = frozenset(
 OVERRIDE_DRIFT = ("warn", "block")
 TOOL_NAME = re.compile(r"[a-z][a-z0-9_-]*\Z")
 
+# ``devkit playbook search`` bounds: the ``[playbooks]`` table, the command's options and the library all check these.
+PLAYBOOK_LIMIT_MIN, PLAYBOOK_LIMIT_MAX = 1, 20
+PLAYBOOK_MAX_BYTES_MIN, PLAYBOOK_MAX_BYTES_MAX = 1024, 65536
+DEFAULT_PLAYBOOK_LIMIT = 5
+DEFAULT_PLAYBOOK_MIN_SCORE = 0.1
+DEFAULT_PLAYBOOK_MAX_BYTES = 8192
+
 
 def all_agents() -> list[str]:
     return sorted(AGENT_NAMES)
@@ -71,20 +78,16 @@ class ProjectConfig:
 
 def _config_path(root: Path) -> Path:
     """``root/.devkit/config.toml``; it is read and written in place, so it must be a regular file."""
-    path = root / CONFIG
+    path = root / CONFIG_PATH
     if path.is_symlink() or (path.exists() and not path.is_file()):
-        raise ConfigError(f"config must be a regular file: {CONFIG}")
+        raise ConfigError(f"config must be a regular file: {CONFIG_PATH}")
     return path
 
 
 def _load(root: Path) -> dict[str, Any] | None:
-    path = _config_path(root)
-    if not path.exists():
+    data = read_toml(_config_path(root), CONFIG_PATH)
+    if data is None:
         return None
-    try:
-        data = tomllib.loads(path.read_text("utf-8"))
-    except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
-        raise ConfigError(f"invalid config: {exc}") from exc
     if "schema" in data and (type(data["schema"]) is not int or data["schema"] != SCHEMA):
         raise ConfigError("unsupported config schema")
     unknown = set(data) - FIELDS
@@ -171,8 +174,10 @@ def validate_playbooks_config(playbooks: object) -> dict[str, int | float]:
     result: dict[str, int | float] = {}
     if "limit" in playbooks:
         val = playbooks["limit"]
-        if type(val) is not int or not 1 <= val <= 20:
-            raise ConfigError("config playbooks: limit must be an integer between 1 and 20")
+        if type(val) is not int or not PLAYBOOK_LIMIT_MIN <= val <= PLAYBOOK_LIMIT_MAX:
+            raise ConfigError(
+                f"config playbooks: limit must be an integer between {PLAYBOOK_LIMIT_MIN} and {PLAYBOOK_LIMIT_MAX}"
+            )
         result["limit"] = val
     if "min_score" in playbooks:
         val = playbooks["min_score"]
@@ -181,8 +186,11 @@ def validate_playbooks_config(playbooks: object) -> dict[str, int | float]:
         result["min_score"] = float(val)
     if "max_bytes" in playbooks:
         val = playbooks["max_bytes"]
-        if type(val) is not int or not 1024 <= val <= 65536:
-            raise ConfigError("config playbooks: max_bytes must be an integer between 1024 and 65536")
+        if type(val) is not int or not PLAYBOOK_MAX_BYTES_MIN <= val <= PLAYBOOK_MAX_BYTES_MAX:
+            raise ConfigError(
+                "config playbooks: max_bytes must be an integer between"
+                f" {PLAYBOOK_MAX_BYTES_MIN} and {PLAYBOOK_MAX_BYTES_MAX}"
+            )
         result["max_bytes"] = val
     return result
 
@@ -227,7 +235,8 @@ def resolve_selection(installed: list[InstalledBundle], requested: dict[str, lis
         if not presets:
             if bundle.default_preset is None:
                 raise SelectionError(
-                    f"{name}: no default preset; choose one of: {', '.join(f'{name}:{p}' for p in bundle.preset_names)}"
+                    f"{name}: the bundle declares no default preset",
+                    fix=f"Select one of: {', '.join(f'{name}:{p}' for p in bundle.preset_names)}",
                 )
             presets = [bundle.default_preset]
         bundle.select(presets)
@@ -252,26 +261,16 @@ def _check_writable(root: Path) -> None:
     path = _config_path(root)
     directory = next((parent for parent in (path.parent, root) if parent.exists()), root)
     if path.exists() and not os.access(path, os.R_OK):
-        raise ConfigError(f"config is not readable: {CONFIG}")
+        raise ConfigError(f"config is not readable: {CONFIG_PATH}")
     if not os.access(directory, os.W_OK | os.X_OK):
-        raise ConfigError(f"cannot write {CONFIG}: {directory} is not writable")
+        raise ConfigError(f"cannot write {CONFIG_PATH}: {directory} is not writable")
 
 
 def _write(root: Path, text: str) -> None:
+    """Replace the configuration atomically, keeping its permission bits."""
     path = _config_path(root)
-    path.parent.mkdir(parents=True, exist_ok=True)
     mode = path.stat().st_mode & 0o777 if path.exists() else 0o644
-    fd, temp = tempfile.mkstemp(prefix=".devkit-write-", dir=path.parent)
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as stream:
-            stream.write(text)
-            stream.flush()
-            os.fchmod(stream.fileno(), mode)
-            os.fsync(stream.fileno())
-        os.replace(temp, path)
-    except BaseException:
-        Path(temp).unlink(missing_ok=True)
-        raise
+    replace_file(path, Content(text.encode("utf-8"), mode))
 
 
 def _preset_value(presets: list[str]) -> str | list[str]:

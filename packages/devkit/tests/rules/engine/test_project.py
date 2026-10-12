@@ -6,14 +6,16 @@ from pathlib import Path
 
 import pytest
 from devkit.rules import (
-    ConfigError,
     Phase,
+    RulesConfigError,
     RulesDirError,
+    RulesRunError,
     TargetError,
     WorkspaceCache,
     build_project_registry,
     expand_targets,
     git_snapshot,
+    load_project_rules,
     run_project_rules,
 )
 from testsupport.rules import init_repo, write_receipt
@@ -53,7 +55,7 @@ def test_whole_workspace_run_applies_exclude(tmp_path: Path) -> None:
     _write(tmp_path, "vendor/b.md", BROKEN)
     run = run_project_rules(tmp_path)
     assert _files(run.result.violations) == ["docs/a.md", "vendor/b.md"]
-    assert run.failed and run.errors == [] and run.context is not None
+    assert not run.ok and run.errors == [] and run.context is not None
 
     _write(tmp_path, ".devkit/config.toml", '[rules]\nexclude = ["vendor/**"]\n')
     run = run_project_rules(tmp_path)
@@ -69,7 +71,7 @@ def test_explicit_targets_apply_exclude_and_expand_directories(tmp_path: Path) -
     _write(tmp_path, "vendor/b.md", BROKEN)
     _write(tmp_path, ".devkit/config.toml", '[rules]\nexclude = ["vendor/**"]\n')
     run = run_project_rules(tmp_path, targets=["vendor/b.md"])
-    assert run.result.violations == [] and not run.failed
+    assert run.result.violations == [] and run.ok
     run = run_project_rules(tmp_path, targets=["docs", tmp_path / "docs/a.md"])
     assert _files(run.result.violations) == ["docs/a.md", "docs/sub/c.md"]
 
@@ -79,7 +81,7 @@ def test_an_empty_selection_checks_nothing(tmp_path: Path) -> None:
     (tmp_path / "empty").mkdir()
     for targets in ([], ["empty"]):
         run = run_project_rules(tmp_path, targets=targets)
-        assert run.context is None and run.result.violations == [] and not run.failed
+        assert run.context is None and run.result.violations == [] and run.ok
 
 
 def test_invalid_targets(tmp_path: Path) -> None:
@@ -97,14 +99,14 @@ def test_expand_targets_deduplicates(tmp_path: Path) -> None:
 
 def test_invalid_policy_raises_config_error(tmp_path: Path) -> None:
     _write(tmp_path, ".devkit/config.toml", '[rules]\nexclude = "vendor"\n')
-    with pytest.raises(ConfigError):
+    with pytest.raises(RulesConfigError):
         run_project_rules(tmp_path)
 
 
 def test_policy_errors_are_returned_in_the_result(tmp_path: Path) -> None:
     _write(tmp_path, ".devkit/config.toml", '[rules.severity_overrides]\nRULE-nope = "warning"\n')
     run = run_project_rules(tmp_path)
-    assert [str(e) for e in run.errors] == ["severity override for unknown rule: RULE-nope"] and run.failed
+    assert [str(e) for e in run.errors] == ["severity override for unknown rule: RULE-nope"] and not run.ok
     assert run.errors[0].code == "RULES_POLICY_INVALID" and run.errors[0].rule_id == "RULE-nope"
 
 
@@ -115,7 +117,35 @@ def test_load_errors_skip_evaluation(tmp_path: Path) -> None:
     assert run.result.violations == [] and run.result.errors == []
     assert len(run.load_errors) == 1 and "invalid installation receipt" in str(run.load_errors[0])
     assert run.load_errors[0].code == "RULES_LOAD_FAILED"
-    assert run.errors == list(run.load_errors) and run.failed
+    assert run.errors == list(run.load_errors) and not run.ok
+    with pytest.raises(RulesRunError) as caught:
+        run.raise_for_problems()
+    assert caught.value.code == "RULES_RUN_FAILED" and caught.value.problems == tuple(run.load_errors)
+
+
+def test_blocking_violations_and_raise_for_problems_of_a_completed_run(tmp_path: Path) -> None:
+    _write(tmp_path, "docs/a.md", BROKEN)
+    run = run_project_rules(tmp_path)
+    run.raise_for_problems()  # findings are not problems
+    assert [v.file for v in run.blocking_violations] == ["docs/a.md"]
+    assert run.blocking_violations == run.result.blocking_violations
+
+
+def test_load_project_rules_collects_load_and_policy_errors(tmp_path: Path) -> None:
+    _write(tmp_path, "extra/extra.py", EXTRA_RULE)
+    _write(tmp_path, "extra/broken.py", "raise RuntimeError('broken')\n")
+    _write(
+        tmp_path,
+        ".devkit/config.toml",
+        '[rules.severity_overrides]\nRULE-nope = "warning"\n[rules.settings.RULE-file-length]\nmax_lines = 10\n',
+    )
+    project = load_project_rules(tmp_path, tmp_path / "extra")
+    assert project.rules_dir == (tmp_path / "extra").resolve()
+    assert "RULE-extra" in [rule.id for rule in project.rules]
+    assert [e.code for e in project.load_errors] == ["RULES_LOAD_FAILED"]
+    assert [e.rule_id for e in project.policy_errors] == ["RULE-nope"]
+    assert project.errors == [*project.load_errors, *project.policy_errors]
+    assert project.resolvers["RULE-file-length"].resolve().max_lines == 10
 
 
 def test_rules_dir_and_receipt_rules_are_loaded_after_builtins(tmp_path: Path) -> None:
@@ -164,7 +194,7 @@ def test_snapshot_without_changes_checks_nothing(tmp_path: Path) -> None:
     root.mkdir()
     _git(root, "init", "-q", "-b", "main")
     run = run_project_rules(root, snapshot=git_snapshot(root, staged=True))
-    assert run.context is None and not run.failed
+    assert run.context is None and run.ok
 
 
 def test_snapshot_argument_validation(tmp_path: Path) -> None:
@@ -238,7 +268,7 @@ def test_whole_workspace_runs_skip_git_ignored_and_devkit_files(tmp_path: Path) 
     _write(root, ".devkit/managed/team/guide.md", "[s](wrong/setup.md)\n")
     _write(root, "docs/setup.md", "x\n")
     run = run_project_rules(root, fix=True)
-    assert run.result.violations == [] and not run.failed
+    assert run.result.violations == [] and run.ok
     assert (root / ".devkit/managed/team/guide.md").read_text() == "[s](wrong/setup.md)\n"
 
 

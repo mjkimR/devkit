@@ -13,33 +13,41 @@ The CLI is a thin layer over the `devkit.workflow` library (see
 
 ```text
 src/devkit/workflow/
-├── workspace.py     # Workspace: configuration, definitions, roles, plugins, unit resolution, evaluate_unit (drift policy)
-├── units.py         # create_unit, list_units
-├── answers.py       # record_answer, validate_answer, return_to
-├── handoff.py       # candidate evaluation, plan_handoff, apply_handoff
-├── evaluate.py      # pure stage evaluation (Options -> Result)
-├── results.py       # Result, Gate, Delegate, Waiting, Drift, Skipped
-├── requests.py      # Request, Option, Target and how requests are built
-├── primitives.py    # evaluators of the disk primitives
-├── definition.py    # workflow document model, parsing and the schema hash
-├── validation.py    # validate, shared_stage_problems, validate_workspace
-├── discovery.py     # definitions_dir plus synchronized workflow assets; find, resolve
-├── checks.py        # check registry: syntax, classes, primitives, aliases, plugin registration
-├── plugins.py       # plugin checks from receipt workflow-check assets and checks_dir
-├── roles.py         # subagent role vocabulary from receipt subagent assets and roles_dir
-├── decisions.py     # decisions/NN-<request>.yaml records, scoped to a workflow segment
-├── envelope/        # model.py (envelopes/<kind>-NN.yaml, review state), authoring.py (envelope new)
-├── binding.py       # workflow / workflow_hash / workflow_history in the anchor file
-├── config.py        # [workflow], [workflow.approvals] and [workflow.stages]
-├── layout.py        # unit_path template, discovery, per-definition layout spec
-├── frontmatter.py   # anchor frontmatter on devkit.core.frontmatter; in-place key updates
-├── render.py        # sentinel text lines
-├── lint.py          # the lint-clean binding to devkit.rules
-├── git.py           # merge-base ancestry for revision checks
-├── ids.py           # the shared [a-z][a-z0-9-]* identifier grammar
-├── errors.py        # WorkflowError and its coded subclasses
-└── cli/             # app.py (group, options, error boundary), units.py, run.py, definitions.py, envelope.py
+├── workspace.py         # Workspace: cached sources, unit resolution, bind_unit, evaluate_unit (drift policy), describe
+├── answers.py           # record_answer, validate_answer, return_to
+├── handoff.py           # candidate evaluation, plan_handoff, apply_handoff
+├── render.py            # sentinel text lines (public render_* functions, used by the CLI)
+├── errors.py            # WorkflowError and one subclass per error code
+├── definition/
+│   ├── definition.py    # workflow document model (StageDefinition, ...), parse_definition, load_definition, schema hash
+│   ├── validation.py    # validate_definition, compare_shared_stages, validate_definitions
+│   ├── discovery.py     # definitions_dir plus synchronized workflow assets; discover_definitions, resolve_definition
+│   ├── checks.py        # check registry: syntax, classes, primitives, aliases, plugin registration
+│   └── ids.py           # the shared [a-z][a-z0-9-]* identifier grammar
+├── project/
+│   ├── config.py        # [workflow], [workflow.approvals] and [workflow.stages]
+│   ├── layout.py        # unit_path template, discovery, per-definition layout spec
+│   ├── roles.py         # subagent role vocabulary from receipt subagent assets and roles_dir
+│   └── plugins.py       # plugin checks from receipt workflow-check assets and checks_dir
+├── unit/
+│   ├── units.py         # create_unit, list_units
+│   ├── binding.py       # workflow / workflow_hash / workflow_history in the anchor file
+│   ├── frontmatter.py   # anchor frontmatter on devkit.core.frontmatter; in-place key updates
+│   ├── decisions.py     # decisions/NN-<request>.yaml records, scoped to a workflow segment
+│   ├── records.py       # helpers shared by the numbered decision and envelope files
+│   └── envelope/        # model.py (envelopes/<kind>-NN.yaml, review state, write_envelope), authoring.py (compose_envelope)
+├── evaluation/
+│   ├── evaluate.py      # pure stage evaluation: evaluate_definition (Options -> UnitEvaluation)
+│   ├── results.py       # UnitEvaluation, GateStatus, Delegate, Waiting, Drift, Skipped
+│   ├── requests.py      # Request, Option, Target and how requests are built
+│   ├── primitives.py    # evaluators of the disk primitives
+│   ├── git.py           # merge-base ancestry for revision checks
+│   └── lint.py          # the lint-clean binding to devkit.rules
+└── cli/                 # app.py (group, options, error boundary), units.py, run.py, definitions.py, envelope.py
 ```
+
+Everything public is exported from `devkit.workflow`; import from there
+rather than from the subpackages.
 
 ## CLI usage
 
@@ -83,13 +91,20 @@ Exit codes follow the devkit convention
 not do its job. `next` exits `0` whatever the stage, including a unit waiting
 for a person or a delegation. `1` comes from `validate` (invalid definitions),
 `show` (a definition with problems), `envelope check` (`ENVELOPE_INVALID`) and
-`next` refusing a drifted unit (`WORKFLOW_DRIFT`). Everything else that fails,
-from a usage error to `UNIT_NOT_FOUND`, `CONFIG_INVALID` or `RECEIPT_INVALID`,
-exits `2`. Errors are Agent Advisory Protocol blocks on stderr
+`next` refusing a drifted unit (`WORKFLOW_DRIFT`); `validate` and `envelope
+check` exit with the highest exit code among the problems they collect, while
+`show` only reports and exits `1` for any problem it lists. Everything else
+that fails, from a usage or argument error (`ARGUMENT_INVALID`, such as a `-w`
+or `validate` path that does not exist, or a malformed `--date`) to `UNIT_NOT_FOUND`, `CONFIG_INVALID`,
+`WORKFLOW_CONFIG_INVALID` or `RECEIPT_INVALID`, exits `2`, and so does
+`validate` when a definition file cannot be loaded at all. Errors are Agent Advisory Protocol blocks on stderr
 (`devkit.advisory`) with a stable code and an `[ACTION]` directive; the codes
 are listed in [Overview, section 5](overview.md#5-cli-surface). Under
-`--format json` stdout carries exactly one JSON document: the result, or
-`{"error": {...}}` when there is none.
+`--format json` stdout carries exactly one JSON object, never a bare array:
+the result (`list` as `{"units": [...]}`, `checks` as `{"checks": [...]}`,
+`requests` as `{"requests": [...]}`), or `{"error": {...}}` when there is none.
+Problems a result collects are listed under its `errors` key, each the
+`to_dict()` of an advisory error.
 
 ## Configuration
 
@@ -155,13 +170,16 @@ them, that a stage id used by several definitions is the same stage: equal
 `exit`, `human_gate`, `role`, `isolation`, `skills` and `artifacts`. A
 difference is reported as `[INVALID: shared stage '<id>' differs between <a>
 and <b>: <field>]`, because skills, runners and people recognize a stage by
-its id. `validate --format json` emits `{"valid", "roles_checked",
-"definitions": [{"id", "path", "valid", "hash", "problems"}], "errors",
-"shared"}`. Every problem is a coded entry: `problems` hold
-`{"code", "where", "message"}` (`code` is `DEFINITION_INVALID`,
-`CHECK_INVALID` or `ROLE_UNKNOWN`), and `errors` (files that could not be
-loaded) and `shared` (`SHARED_STAGE_MISMATCH`) hold `{"code", "message",
-"target", "fix"}`. `show --format json` reports its `problems` the same way.
+its id. `validate --format json` emits `{"ok", "roles_checked",
+"definitions": [{"id", "path", "ok", "hash", "errors"}], "errors"}`. Every
+problem is the `to_dict()` of an advisory error (`code`, `message`,
+`exit_code`, `advisory`): a definition's own `errors` add `where` (`code` is
+`WORKFLOW_DEFINITION_INVALID`, `WORKFLOW_CHECK_INVALID` or `ROLE_UNKNOWN`,
+exit `1`), and the top-level `errors` hold the files that could not be loaded
+(`WORKFLOW_DEFINITION_INVALID`, `WORKFLOW_ASSET_MISSING`, exit `2`) and the
+shared-stage differences (`SHARED_STAGE_MISMATCH`, exit `1`). In text each
+problem of a definition is a `[PROBLEM: <where>: <message>]` line.
+`show --format json` reports its problems the same way, under `errors`.
 
 ## Roles and plugin checks
 
@@ -171,7 +189,7 @@ the `role` its contract declares), or a project-authored `<roles_dir>/<role>.md`
 which shadows the receipt entry. `validate`, `show`, `next` and `bind` report
 `unknown role '<role>' (no subagent contract found)` otherwise. When neither
 the receipt nor `roles_dir` exists, the check is skipped and `validate` says so
-with a `[NOTE]`, so definitions can be authored before any bundle is synced.
+with a `[NOTICE]`, so definitions can be authored before any bundle is synced.
 `[DELEGATE: role=<role> isolation=<level> contract=<path>]` then cites the
 contract that defines the role.
 
@@ -196,11 +214,12 @@ Loaded checks appear in `devkit workflow checks` with class `plugin` and are
 referenced from definitions like primitives (`name` or `name(arg ...)` with the
 declared `params`). A name that collides with a built-in is an error. Loading
 is atomic per file: a file that fails to import, declares an invalid check or
-redefines a name contributes nothing and is `CHECK_LOAD_FAILED`. Every
-receipt-listed file is first checked with `devkit.core.receipt.verified_asset_file`,
-exactly as rules and gates are: a file that is missing, resolves outside the
-project or differs from the SHA-256 the receipt records is `CHECK_LOAD_FAILED`
-too, with the fix `devkit sync` (restore) or `devkit override create
+redefines a name contributes nothing and is `WORKFLOW_CHECK_LOAD_FAILED`. Every
+receipt-listed file (`entrypoints` then `paths`, whatever its name; only the
+`checks_dir` scan skips `_`/`.` names) is first checked with
+`devkit.core.receipt.verified_asset_files`, exactly as rules and gates are: a file that is missing, resolves outside the
+project or differs from the SHA-256 the receipt records is
+`WORKFLOW_CHECK_LOAD_FAILED` too, with the fix `devkit sync` (restore) or `devkit override create
 <bundle>:<asset>` (keep the edit); a file without a record (a project
 override) loads as it is. A check that raises is an unsatisfied,
 evaluated result with the exception in its detail. Plugin files are executable
@@ -223,18 +242,21 @@ the check table, the envelope contract and the output signals.
 ## Library
 
 `Workspace` is the entry point. It applies the same configuration, plugin
-checks, roles, lint binding and drift guard as the CLI. Every failure is an
-`AdvisoryError` with a stable `code`: a `WorkflowError` (or one of its
-subclasses such as `ConfigError`, `DefinitionError`, `LayoutError`,
-`CheckError` or `DriftError`), or a `devkit.core` error passed through
-unchanged (`RECEIPT_INVALID`, `GIT_FAILED`). Branch on `exc.code`, never on the
-message. Problems the library collects rather than raises are typed entries
-with a `code`: `EnvelopeError`, `DecisionError`, validation `Problem`s
-(`stage`, `field`, `message`, `code`) and `WorkflowProblem`s (`message`,
-`code`, `target`, `fix`) for definition and plugin check files that could not
-be loaded (`Workspace.discovery_errors`, `load_plugin_checks`,
-`ValidationReport.load_errors`) and for shared-stage differences
-(`shared_stage_problems`).
+checks, roles, lint binding and drift guard as the CLI, and loads the receipt,
+the discovered definitions, roles and plugin checks once for every call. Every
+failure is an `AdvisoryError` with a stable `code`, one class per code: a
+`WorkflowError` subclass (`WorkflowConfigError`, `DefinitionError`,
+`LayoutError`, `CheckError`, `DriftError`, `HandoffChoiceRequiredError`, ...),
+or a `devkit.core` or `devkit.rules` error passed through unchanged
+(`RECEIPT_INVALID`, `GIT_FAILED`, the error that stopped `lint-clean`). Branch
+on `exc.code` or the class, never on the message. Problems the library
+collects rather than raises are instances of the same classes:
+`EnvelopeFormatError` and `DecisionRecordError` (with the unit-relative
+`file`), validation's `DefinitionProblem`s (with `where`), and the
+`DefinitionError`, `WorkflowAssetMissingError`, `PluginError` and
+`SharedStageMismatchError` entries of `Workspace.discovery_errors`,
+`load_plugin_checks` and `ValidationReport`. Their `to_dict()` is the JSON
+form the CLI prints under `errors`.
 
 ```python
 from pathlib import Path
@@ -256,19 +278,20 @@ The main calls:
 
 | Call | Purpose |
 | --- | --- |
-| `Workspace(root=None, *, lint=rules_lint, ancestor=is_ancestor)` | Load `[workflow]` configuration; definitions, roles and plugins load lazily, once. |
+| `Workspace(root=None, *, lint=lint_with_rules, ancestor=is_ancestor)` | Load `[workflow]` configuration; the receipt, definitions, roles and plugins load lazily, once. |
 | `ws.resolve_unit(unit, workflow=None) -> UnitRef` | Unit directory, anchor, binding and the workflow to evaluate against. |
-| `ws.evaluate_unit(unit, *, given=(), lint=True, enforce_drift=True) -> Result` | Evaluate with the project's policies; raises `DriftError`; never writes a file. Approvals of later stages are listed in `Result.stale_approvals` and count until `record_return(unit, stage)` voids them. |
-| `ws.definition(ref=None, binding=None)`, `ws.load_definition(ref)` | A validated (or raw) definition by id or path relative to the root. |
-| `ws.validate_definitions(paths=()) -> ValidationReport` | What `validate` reports. |
-| `ws.describe(doc, binding=None) -> dict` | What `show --format json` emits. |
+| `ws.bind_unit(unit, workflow=None) -> UnitRef` | `bind`: record the workflow and its schema hash in the anchor, keeping the history. |
+| `ws.evaluate_unit(unit, *, given=(), lint=True, enforce_drift=True) -> UnitEvaluation` | Evaluate with the project's policies; raises `DriftError`; never writes a file. Approvals of later stages are listed in `UnitEvaluation.stale_approvals` and count until `return_to` voids them. |
+| `ws.definition(ref=None, binding=None)`, `ws.load_definition(ref)` | A validated (or raw) definition by id or path relative to the root, from the cached definitions. |
+| `ws.validate_definition(doc)`, `ws.validate_definitions(paths=()) -> ValidationReport` | One definition's problems; what `validate` reports. |
+| `ws.describe(doc, binding=None) -> DefinitionDescription` | What `show` reports (`to_dict()` is its JSON, `ok` its success). |
 | `create_unit(ws, slug, *, workflow=None, when=None, status="planned") -> UnitRef` | `new`. |
 | `list_units(ws, *, statuses=(), excluded=()) -> list[UnitInfo]` | `list`. |
 | `record_answer(ws, unit, request_id, action, values=(), *, note="", by="", lint=True) -> Decision` | `answer`. |
 | `return_to(ws, unit, stage, *, note="", by="", lint=True) -> Decision` | `return`. |
 | `plan_handoff(ws, unit, result, choice=None) -> HandoffPlan`, `apply_handoff(plan, *, when=None, by="", note="") -> HandoffOutcome` | `handoff`. |
-| `compose(...) -> Envelope`, `render_envelope(envelope, created_at)`, `write_next(unit_dir, kind, body)` | `envelope new`. |
-| `evaluate(doc, Options) -> Result` | Pure evaluation without policies or writes. |
+| `compose_envelope(...) -> Envelope`, `render_envelope(envelope, created_at)`, `write_envelope(unit_dir, kind, body)` | `envelope new`. |
+| `evaluate_definition(doc, Options) -> UnitEvaluation` | Pure evaluation without policies or writes. |
 
 ## Current limits
 

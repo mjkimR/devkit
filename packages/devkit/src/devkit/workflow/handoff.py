@@ -7,22 +7,25 @@ from dataclasses import dataclass
 from datetime import date
 from typing import TYPE_CHECKING, Any
 
-from devkit.workflow.binding import Binding, HistoryEntry, write_binding
-from devkit.workflow.checks import CheckResult
-from devkit.workflow.decisions import (
-    HANDOFF_REQUEST,
-    Decision,
-    DecisionError,
-    load_decisions,
-    new_decision,
-    write_decision,
+from devkit.workflow.definition.checks import CheckResult
+from devkit.workflow.definition.definition import HANDOFF_GATE, WorkflowDocument, schema_hash
+from devkit.workflow.errors import (
+    HandoffChoiceIgnoredError,
+    HandoffChoiceRequiredError,
+    HandoffIneligibleError,
+    HandoffInvalidError,
+    HandoffLayoutMismatchError,
+    HandoffNoneError,
+    HandoffNotReadyError,
+    HandoffOffError,
+    HandoffUndecidedError,
 )
-from devkit.workflow.definition import HANDOFF_GATE, WorkflowDocument, schema_hash
-from devkit.workflow.errors import input_error
-from devkit.workflow.requests import candidate_summary
+from devkit.workflow.evaluation.requests import candidate_summary
+from devkit.workflow.unit.binding import Binding, HistoryEntry, write_binding
+from devkit.workflow.unit.decisions import HANDOFF_REQUEST, Decision, load_decisions, new_decision, write_decision
 
 if TYPE_CHECKING:
-    from devkit.workflow.results import Result
+    from devkit.workflow.evaluation.results import UnitEvaluation
     from devkit.workflow.workspace import UnitRef, Workspace
 
 
@@ -80,12 +83,12 @@ def evaluate_handoff(
     eval_ref: Callable[[str], CheckResult],
     recorded: Decision | None,
     policy: str,
-) -> tuple[Handoff | None, DecisionError | None]:
+) -> tuple[Handoff | None, HandoffChoiceIgnoredError | None]:
     """Evaluate every ``next`` candidate and apply the handoff policy.
 
     ``recorded`` is the effective accepted ``handoff`` record of the current
     segment. A recorded choice that is not an eligible candidate is ignored
-    and returned as a ``DecisionError``.
+    and returned as a ``HandoffChoiceIgnoredError`` (``HANDOFF_CHOICE_IGNORED``).
     """
     if not doc.next or policy == "off":
         return None, None
@@ -94,14 +97,14 @@ def evaluate_handoff(
         checks = tuple(eval_ref(ref) for ref in cand.when)
         results.append(CandidateResult(cand.workflow, cand.recommended, all(c.satisfied for c in checks), checks))
     eligible = {c.workflow for c in results if c.eligible}
-    ignored: DecisionError | None = None
+    ignored: HandoffChoiceIgnoredError | None = None
     if recorded is not None:
         if isinstance(recorded.value, str) and recorded.value in eligible:
             return Handoff(policy, tuple(results), recorded.value, recorded), None
-        ignored = DecisionError(
-            recorded.file,
+        ignored = HandoffChoiceIgnoredError(
             f"handoff choice {recorded.value!r} is not an eligible candidate of {doc.id}; ignored",
-            code="HANDOFF_INVALID",
+            file=recorded.file,
+            fix="Record an eligible choice with `devkit workflow answer --request handoff --action accept --value <id>`",
         )
     chosen = next((c.workflow for c in results if c.eligible), None) if policy == "auto" else None
     return Handoff(policy, tuple(results), chosen), ignored
@@ -141,80 +144,83 @@ class HandoffOutcome:
         }
 
 
-def plan_handoff(ws: Workspace, unit: UnitRef, result: Result, choice: str | None = None) -> HandoffPlan:
+def _policy_target(handoff: Handoff, policy: str, doc: WorkflowDocument, unit: UnitRef) -> str:
+    """The target chosen without a caller choice: the recorded or automatic one, else why there is none."""
+    if handoff.chosen is not None:
+        return handoff.chosen
+    if policy == "auto":
+        raise HandoffUndecidedError(
+            f"no candidate of {doc.id} is eligible for automatic handoff",
+            *(f"{c.workflow}: {candidate_summary(c.checks) or '-'}" for c in handoff.candidates),
+            fix="Satisfy a candidate's `when` checks, or choose one explicitly with --workflow <id>",
+        )
+    raise HandoffChoiceRequiredError(
+        f"handoff from {doc.id} requires a choice (approvals.{HANDOFF_GATE}=ask)",
+        *(
+            f"{c.workflow}: eligible={str(c.eligible).lower()} recommended={str(c.recommended).lower()}"
+            for c in handoff.candidates
+        ),
+        what_to_report="The eligible and recommended candidates",
+        fix=(
+            f"Record the user's choice with `devkit workflow answer --unit {unit.rel} --request handoff "
+            f"--action accept --value <id>`, then run `devkit workflow handoff --unit {unit.rel}`"
+        ),
+    )
+
+
+def _chosen_target(handoff: Handoff, choice: str, doc: WorkflowDocument) -> str:
+    """``choice`` when it is an eligible candidate of ``doc``."""
+    by_id = {c.workflow: c for c in handoff.candidates}
+    candidate = by_id.get(choice)
+    if candidate is None:
+        raise HandoffInvalidError(
+            f"{choice!r} is not a next candidate of {doc.id}", fix=f"Choose one of: {', '.join(by_id)}"
+        )
+    if not candidate.eligible:
+        raise HandoffIneligibleError(
+            f"candidate {choice!r} is not eligible: its preconditions do not hold",
+            *(f"{k.name}={str(k.satisfied).lower()} {k.detail}".rstrip() for k in candidate.checks),
+            fix="Satisfy the candidate's `when` checks first, or choose another candidate",
+        )
+    return choice
+
+
+def plan_handoff(ws: Workspace, unit: UnitRef, result: UnitEvaluation, choice: str | None = None) -> HandoffPlan:
     """Decide the target of a handoff, or raise a ``WorkflowError`` saying why there is none.
 
     ``result`` is the evaluation of ``unit`` against its bound workflow;
     ``choice`` is a candidate named by the caller (``handoff --workflow``).
+    Under ``ask`` without a recorded choice it raises
+    ``HandoffChoiceRequiredError`` (``INTERACTION``): a person must choose.
     """
     doc = unit.doc
     if result.stage is not None:
-        raise input_error(
+        raise HandoffNotReadyError(
             f"unit {unit.rel} has not completed workflow {doc.id}: stage {result.stage.id} is current",
             *(f"unmet={u.name}" for u in result.unmet),
-            code="HANDOFF_NOT_READY",
             fix=f"Finish the current stage (`devkit workflow next --unit {unit.rel}`) before handing off",
         )
     if not doc.next:
-        raise input_error(
+        raise HandoffNoneError(
             f"workflow {doc.id} declares no next candidates",
-            code="HANDOFF_NONE",
             fix=f"Add a `next` list to {doc.id}, or start a new unit with `devkit workflow new`",
         )
     policy = ws.config.policy(HANDOFF_GATE)
     handoff = result.handoff
     if handoff is None or policy == "off":
-        raise input_error(
+        raise HandoffOffError(
             f"handoff is disabled by policy (approvals.{HANDOFF_GATE}=off)",
-            code="HANDOFF_OFF",
             fix=f"Set [workflow.approvals].{HANDOFF_GATE} to ask or auto in .devkit/config.toml",
         )
     if choice is None:
-        if handoff.chosen is None:
-            if policy == "auto":
-                raise input_error(
-                    f"no candidate of {doc.id} is eligible for automatic handoff",
-                    *(f"{c.workflow}: {candidate_summary(c.checks) or '-'}" for c in handoff.candidates),
-                    code="HANDOFF_UNDECIDED",
-                    fix="Satisfy a candidate's `when` checks, or choose one explicitly with --workflow <id>",
-                )
-            raise input_error(
-                f"handoff from {doc.id} requires a choice (approvals.{HANDOFF_GATE}=ask)",
-                *(
-                    f"{c.workflow}: eligible={str(c.eligible).lower()} recommended={str(c.recommended).lower()}"
-                    for c in handoff.candidates
-                ),
-                code="HANDOFF_CHOICE_REQUIRED",
-                fix=(
-                    "Present the candidates to the user, record their choice with "
-                    f"`devkit workflow answer --unit {unit.rel} --request handoff --action accept --value <id>` "
-                    "(or rerun with --workflow <id>), then run handoff again"
-                ),
-            )
-        target_id, decision, explicit = handoff.chosen, handoff.decision, False
+        target_id, decision, explicit = _policy_target(handoff, policy, doc, unit), handoff.decision, False
     else:
-        by_id = {c.workflow: c for c in handoff.candidates}
-        candidate = by_id.get(choice)
-        if candidate is None:
-            raise input_error(
-                f"{choice!r} is not a next candidate of {doc.id}",
-                code="HANDOFF_INVALID",
-                fix=f"Choose one of: {', '.join(by_id)}",
-            )
-        if not candidate.eligible:
-            raise input_error(
-                f"candidate {choice!r} is not eligible: its preconditions do not hold",
-                *(f"{k.name}={str(k.satisfied).lower()} {k.detail}".rstrip() for k in candidate.checks),
-                code="HANDOFF_INELIGIBLE",
-                fix="Satisfy the candidate's `when` checks first, or choose another candidate",
-            )
-        target_id, decision, explicit = choice, None, True
+        target_id, decision, explicit = _chosen_target(handoff, choice, doc), None, True
     target = ws.definition(target_id)
     target_anchor = ws.anchor_for(target)
     if target_anchor != unit.anchor:
-        raise input_error(
+        raise HandoffLayoutMismatchError(
             f"workflow {target.id} declares anchor {target_anchor}; unit {unit.rel} is identified by {unit.anchor}",
-            code="HANDOFF_LAYOUT_MISMATCH",
             fix=f"Relocate the unit into the layout of {target.id} (anchor {target_anchor}), then run `devkit workflow bind --unit <new dir> --workflow {target.id}`",
         )
     return HandoffPlan(unit, doc, target, policy, decision, explicit)

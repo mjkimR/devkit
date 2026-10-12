@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 from devkit.advisory import ActionMode, AdvisoryError, ExitCode
 from devkit.core import (
+    ArgumentError,
     ConfigError,
     DevkitCoreError,
     FrontmatterError,
@@ -25,6 +26,7 @@ from devkit.core import (
         (FrontmatterError, "FRONTMATTER_INVALID", ActionMode.INPUT_ERROR),
         (ReceiptError, "RECEIPT_INVALID", ActionMode.MAINTENANCE),
         (ConfigError, "CONFIG_INVALID", ActionMode.INPUT_ERROR),
+        (ArgumentError, "ARGUMENT_INVALID", ActionMode.INPUT_ERROR),
         (UnsafePathError, "PATH_UNSAFE", ActionMode.INPUT_ERROR),
         (GitError, "GIT_FAILED", ActionMode.MAINTENANCE),
     ],

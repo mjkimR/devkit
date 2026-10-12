@@ -59,7 +59,7 @@ class NeedsArgs(BaseRule):
 
 
 def test_same_id_replaces_a_builtin(tmp_path: Path) -> None:
-    from devkit.rules import default_registry
+    from devkit.rules import default_rule_registry
 
     (tmp_path / "links.py").write_text("""from devkit.rules.rules import BaseRule
 
@@ -69,7 +69,7 @@ class Links(BaseRule):
     def check(self, ctx):
         return []
 """)
-    registry = default_registry()
+    registry = default_rule_registry()
     registry.discover_from_dir(tmp_path)
     rule = registry.get("RULE-markdown-link")
     assert rule is not None and rule.name == "custom links"

@@ -1,6 +1,7 @@
 """Errors of ``devkit.rules``: ``AdvisoryError`` subclasses with stable codes.
 
-Raised errors stop a run before any rule is evaluated (``ConfigError``,
+Raised errors stop a run before any rule is evaluated (``RulesConfigError``,
+or the core ``ConfigError`` for an unreadable ``.devkit/config.toml``,
 ``TargetError``, ``RulesDirError``, ``SnapshotError``). Problems a run collects
 instead of raising (``RuleProblem`` and its subclasses) are returned in
 ``RuleRegistry.errors``, ``ProjectRun.load_errors`` and
@@ -14,8 +15,9 @@ from collections.abc import Sequence
 from typing import Any, Unpack
 
 from devkit.advisory import Actor, AdvisoryError, AdvisoryFields, Retry
+from devkit.core import errors as core_errors
+from devkit.core.receipt import CONFIG_PATH
 
-CONFIG_PATH = ".devkit/config.toml"
 SYNC_FIX = "Run `devkit sync` and commit the receipt"
 
 
@@ -26,8 +28,12 @@ class RulesError(AdvisoryError):
     retry = Retry.AFTER_FIX
 
 
-class ConfigError(RulesError):
-    """The ``[rules]`` table of ``.devkit/config.toml`` is malformed."""
+class RulesConfigError(RulesError, core_errors.ConfigError):
+    """The ``[rules]`` table of ``.devkit/config.toml`` is malformed.
+
+    A file that cannot be read or parsed at all is the core ``ConfigError``
+    (``CONFIG_INVALID``), raised unchanged by ``read_project_config``.
+    """
 
     code = "RULES_CONFIG_INVALID"
     input_error = True
@@ -118,7 +124,10 @@ class RuleDefinitionError(RulesError):
 
 
 class RulesRunError(RulesError):
-    """A project run could not complete; ``problems`` are the collected rule problems, also given as details."""
+    """A project run could not complete; ``problems`` are the collected rule problems, also given as details.
+
+    Raised by ``ProjectRun.raise_for_problems`` for callers that need one error for a failed run.
+    """
 
     code = "RULES_RUN_FAILED"
 

@@ -5,8 +5,8 @@ import json
 from pathlib import Path
 
 from click.testing import CliRunner
-from devkit.advisory import AdvisoryError
-from devkit.gate import GateContext, GatesConfig, Outcome, Stage, default_registry, run_stage
+from devkit.advisory import AdvisoryError, ExitCode
+from devkit.gate import GateContext, GatesConfig, Outcome, Stage, default_gate_registry, run_stage
 from devkit.gate.cli import cli
 from devkit.gate.gates import StagedRulesGate
 from testsupport.gate import gate_ctx, git
@@ -47,7 +47,7 @@ def _run(repo: Path) -> AdvisoryError | None:
 
 
 def test_gate_is_registered_and_enabled_by_default() -> None:
-    gate = default_registry().get("rules-staged")
+    gate = default_gate_registry().get("rules-staged")
     assert gate is not None
     assert gate.stage is Stage.PRE_COMMIT and gate.enabled_by_default and gate.settings is None
 
@@ -74,7 +74,11 @@ def test_staged_broken_link_refuses(repo: Path) -> None:
     assert error.code == "GATE_RULES_VIOLATION"
     assert "RULE-markdown-link docs/a.md:1" in error.details[0]
     assert error.target_files == ("docs/a.md",)
-    assert "devkit rules fix" in (error.fix or "") and "explain RULE-markdown-link" in (error.fix or "")
+    assert error.exit_code is ExitCode.FINDINGS and error.mode.value == "BLOCKED"
+    assert "`devkit rules fix`" in (error.fix or "") and "`devkit rules explain RULE-markdown-link`" in (
+        error.fix or ""
+    )
+    assert "uv run" not in (error.fix or "")
 
 
 def test_clean_index_passes_and_unstaged_breakage_is_invisible(repo: Path) -> None:
@@ -101,12 +105,12 @@ def test_warning_only_passes_and_policy_comes_from_the_snapshot(repo: Path) -> N
     assert result.outcome is Outcome.PASSED and "1 warning(s)" in result.note
 
 
-def test_invalid_rules_policy_refuses(repo: Path) -> None:
+def test_invalid_rules_policy_passes_through(repo: Path) -> None:
     _write(repo, "docs/a.md", "# fine\n")
     _write(repo, ".devkit/config.toml", '[rules.phase_overrides]\nRULE-markdown-link = "linter"\n')
     git(repo, "add", ".")
     error = _run(repo)
-    assert error is not None and error.code == "GATE_RULES_CONFIG_INVALID"
+    assert error is not None and error.code == "RULES_CONFIG_INVALID"  # the rule engine's error, not re-wrapped
     assert error.target_files == (".devkit/config.toml",)
 
 
@@ -132,8 +136,8 @@ def test_synchronized_rule_pinned_by_the_receipt_runs_and_drift_refuses(repo: Pa
 
     (repo / rule_path).write_text(NO_TODO_RULE + "\n# edited\n")
     error = _run(repo)
-    assert error is not None and error.code == "GATE_RULES_LOAD_FAILED"
-    assert "devkit sync" in (error.fix or "")
+    assert error is not None and error.code == "RULES_RUN_FAILED"
+    assert any("(RULES_LOAD_FAILED)" in detail for detail in error.details)
 
 
 def test_excluded_paths_are_not_checked(repo: Path) -> None:
@@ -168,15 +172,15 @@ def test_malformed_receipt_refuses(repo: Path) -> None:
     _write(repo, "docs/a.md", "# fine\n")
     git(repo, "add", ".")
     error = _run(repo)
-    assert error is not None and error.code == "GATE_RULES_LOAD_FAILED"
+    assert error is not None and error.code == "RULES_RUN_FAILED"
     assert any("invalid installation receipt" in detail for detail in error.details)
 
 
 def test_pre_commit_stage_reports_the_refusal(repo: Path) -> None:
     _write(repo, "docs/a.md", "[broken](missing.md)\n")
     git(repo, "add", "docs")
-    report = run_stage(_ctx(repo), default_registry(), GatesConfig())
-    assert report.failed
+    report = run_stage(_ctx(repo), default_gate_registry(), GatesConfig())
+    assert not report.ok
     run = next(r for r in report.runs if r.gate_id == "rules-staged")
     assert run.outcome is Outcome.FAILED and run.error is not None and run.error.code == "GATE_RULES_VIOLATION"
 

@@ -3,13 +3,14 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from devkit.core import errors as core_errors
 from devkit.rules import (
-    ConfigError,
     Phase,
     RuleContext,
+    RulesConfigError,
     Violation,
-    default_registry,
-    evaluate,
+    default_rule_registry,
+    evaluate_rules,
     load_rules_config,
     resolve_phases,
 )
@@ -55,7 +56,6 @@ def test_config_reads_phase_overrides(tmp_path: Path) -> None:
         ("[rules]\nphase_overrides = 1\n", "expected a table of rule ID"),
         ('[rules.phase_overrides]\nRULE-x = "linter"\n', "is not 'hygiene'"),
         ("[rules.phase_overrides]\nRULE-x = 1\n", "is not 'hygiene'"),
-        ("invalid toml [[\n", "invalid config"),
         ('[rules]\nexclude = "docs/**"\n', "expected an array of path patterns"),
         ('[rules]\nexclude = ["/abs/**"]\n', r"exclude\[0\].*workspace-relative"),
         ('[rules]\nexclude = ["a/**", "a/**"]\n', "duplicate pattern"),
@@ -64,8 +64,16 @@ def test_config_reads_phase_overrides(tmp_path: Path) -> None:
 )
 def test_invalid_rules_config(tmp_path: Path, body: str, match: str) -> None:
     _write_config(tmp_path, body)
-    with pytest.raises(ConfigError, match=match):
+    with pytest.raises(RulesConfigError, match=match) as caught:
         load_rules_config(tmp_path)
+    assert caught.value.code == "RULES_CONFIG_INVALID" and isinstance(caught.value, core_errors.ConfigError)
+
+
+def test_unreadable_config_is_the_core_config_error(tmp_path: Path) -> None:
+    _write_config(tmp_path, "invalid toml [[\n")
+    with pytest.raises(core_errors.ConfigError, match="invalid config") as caught:
+        load_rules_config(tmp_path)
+    assert type(caught.value) is core_errors.ConfigError and caught.value.code == "CONFIG_INVALID"
 
 
 def test_config_reads_exclude_patterns(tmp_path: Path) -> None:
@@ -75,7 +83,7 @@ def test_config_reads_exclude_patterns(tmp_path: Path) -> None:
 
 
 def test_parse_rules_config_rejects_non_table() -> None:
-    with pytest.raises(ConfigError, match="expected a table"):
+    with pytest.raises(RulesConfigError, match="expected a table"):
         parse_rules_config([])
 
 
@@ -154,18 +162,20 @@ def test_override_moves_linter_rule_out_of_linter_run(tmp_path: Path) -> None:
     rules = [_rule("RULE-a", Phase.LINTER)]
     overrides = {"RULE-a": Phase.HYGIENE}
 
-    linter = evaluate(RuleContext(workspace_root=tmp_path, phase=Phase.LINTER, phase_overrides=overrides), rules)
-    assert linter.violations == [] and not linter.has_errors
+    linter = evaluate_rules(RuleContext(workspace_root=tmp_path, phase=Phase.LINTER, phase_overrides=overrides), rules)
+    assert linter.violations == [] and linter.ok
 
-    hygiene = evaluate(RuleContext(workspace_root=tmp_path, phase=Phase.HYGIENE, phase_overrides=overrides), rules)
+    hygiene = evaluate_rules(
+        RuleContext(workspace_root=tmp_path, phase=Phase.HYGIENE, phase_overrides=overrides), rules
+    )
     assert [v.rule_id for v in hygiene.violations] == ["RULE-a"]
     # The violation reports the phase it ran in, not the rule's declared default.
     assert hygiene.violations[0].phase == Phase.HYGIENE
 
 
 def test_override_for_unknown_rule_is_an_evaluation_error(tmp_path: Path) -> None:
-    result = evaluate(RuleContext(workspace_root=tmp_path, phase_overrides={"RULE-nope": Phase.HYGIENE}), [])
-    assert result.has_errors
+    result = evaluate_rules(RuleContext(workspace_root=tmp_path, phase_overrides={"RULE-nope": Phase.HYGIENE}), [])
+    assert not result.ok
     assert result.violations == []
     assert "unknown rule: RULE-nope" in str(result.errors[0])
 
@@ -176,12 +186,12 @@ def test_builtin_override_end_to_end(tmp_path: Path) -> None:
     (docs / "a.md").write_text("[broken](missing.md)\n", encoding="utf-8")
     _write_config(tmp_path, '[rules.phase_overrides]\nRULE-markdown-link = "hygiene"\n')
     config = load_rules_config(tmp_path)
-    rules = default_registry().get_all()
+    rules = default_rule_registry().get_all()
 
-    linter = evaluate(RuleContext(workspace_root=tmp_path, phase_overrides=dict(config.phase_overrides)), rules)
+    linter = evaluate_rules(RuleContext(workspace_root=tmp_path, phase_overrides=dict(config.phase_overrides)), rules)
     assert not any(v.rule_id == "RULE-markdown-link" for v in linter.violations)
 
-    hygiene = evaluate(
+    hygiene = evaluate_rules(
         RuleContext(workspace_root=tmp_path, phase=Phase.HYGIENE, phase_overrides=dict(config.phase_overrides)),
         rules,
     )

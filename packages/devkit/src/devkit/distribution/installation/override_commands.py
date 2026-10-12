@@ -13,15 +13,17 @@ import difflib
 from pathlib import Path
 from types import MappingProxyType
 
-from devkit.core.receipt import OverrideRecord, Receipt
-
-from ..bundles.common import SLUG
-from ..bundles.manifest import Asset
-from ..errors import ArgumentError, ConflictError, SelectionError
-from .config import effective_selection, read_config
-from .discovery import InstalledBundle
-from .hooks import run_post_sync
-from .overrides import (
+from devkit.advisory import AdvisoryError
+from devkit.core.errors import ArgumentError
+from devkit.core.receipt import OVERRIDES_PATH, RECEIPT_PATH, OverrideRecord, Receipt
+from devkit.distribution.bundles.common import SLUG
+from devkit.distribution.bundles.manifest import Asset
+from devkit.distribution.content import Content, normal_mode
+from devkit.distribution.errors import ConflictError, SelectionError
+from devkit.distribution.installation.config import effective_selection, read_config
+from devkit.distribution.installation.discovery import InstalledBundle
+from devkit.distribution.installation.hooks import run_post_sync
+from devkit.distribution.installation.overrides import (
     asset_files,
     baseline_rel,
     has_override,
@@ -30,11 +32,26 @@ from .overrides import (
     primary_path,
     upstream_digest,
 )
-from .receipt import read_receipt, receipt_content
-from .results import OverrideChange, OverrideDiff, OverrideFileDiff, OverrideStatus, SyncResult
-from .sync import project_root, sync_locked
-from .transaction import apply_changes, project_lock, replace_file, require_no_journal
-from .workspace import OVERRIDES, RECEIPT, Content, checked_path, normal_mode
+from devkit.distribution.installation.receipt import read_receipt, receipt_content
+from devkit.distribution.installation.results import (
+    OverrideChange,
+    OverrideDiff,
+    OverrideFileDiff,
+    OverrideStatus,
+    SyncResult,
+)
+from devkit.distribution.installation.sync import require_project_dir, sync_locked
+from devkit.distribution.installation.transaction import (
+    apply_changes,
+    project_lock,
+    prune_empty_parents,
+    replace_file,
+    require_no_journal,
+)
+from devkit.distribution.installation.workspace import checked_path
+
+# Emptied directories are pruned up to here, ``.devkit/overrides/`` itself included.
+_PRUNE_STOP = OVERRIDES_PATH.rsplit("/", 1)[0]
 
 
 def _parse_selector(selector: str) -> tuple[str, str]:
@@ -76,47 +93,42 @@ class _Undo:
 
     def delete(self, name: str) -> None:
         replace_file(self._save(name), None)
-        _prune_overrides(self.root, name)
+        prune_empty_parents(self.root, name, stop=_PRUNE_STOP)
 
     def restore(self) -> None:
         for name, before in reversed(self.saved.items()):
             replace_file(checked_path(self.root, name), before)
             if before is None:
-                _prune_overrides(self.root, name)
-
-
-def _prune_overrides(root: Path, name: str) -> None:
-    """Remove directories left empty under ``.devkit/overrides/``, that directory included."""
-    stop = (root / OVERRIDES).parent
-    parent = (root / name).parent
-    while parent != stop and parent.is_relative_to(stop):
-        try:
-            parent.rmdir()
-        except OSError:
-            return
-        parent = parent.parent
+                prune_empty_parents(self.root, name, stop=_PRUNE_STOP)
 
 
 def _require_overridable(root: Path, installed: list[InstalledBundle], item: InstalledBundle, asset: Asset) -> None:
     name = item.bundle.name
     selection = effective_selection(installed, read_config(root))
     if name not in selection:
-        raise SelectionError(f"bundle is not selected: {name}; select it with 'devkit add {name}' first")
+        raise SelectionError(f"bundle is not selected: {name}", fix=f"Select it first with `devkit add {name}`")
     if asset.id not in item.bundle.select(selection[name]):
-        raise SelectionError(f"asset {name}:{asset.id} is not part of the selected presets {selection[name]}")
+        raise SelectionError(
+            f"asset {name}:{asset.id} is not part of the selected presets {selection[name]}",
+            fix=f"Select a preset that contains it with `devkit add {name}:<preset>`",
+        )
     if asset.seeded:
-        raise SelectionError(f"{name}:{asset.id} is a seeded asset; its files are project-owned, edit them directly")
+        raise SelectionError(
+            f"{name}:{asset.id} is a seeded asset: its files are project-owned",
+            fix="Edit the seeded files directly; they need no override",
+        )
 
 
-def _after_sync(root: Path, result: SyncResult) -> None:
-    result["notices"].extend(run_post_sync(root, dict(result)))
+def _after_sync(root: Path, result: SyncResult) -> list[AdvisoryError]:
+    """The sync's notices and the post-sync hooks' (run once the project lock is released)."""
+    return [*result.notices, *run_post_sync(root, result.to_dict())]
 
 
 def create_override(
     root: Path, installed: list[InstalledBundle], selector: str, *, force: bool = False
 ) -> OverrideChange:
     """Copy every upstream file of an asset into ``.devkit/overrides/`` (and its baseline), then synchronize."""
-    root = project_root(root)
+    root = require_project_dir(root)
     bundle_name, asset_id = _parse_selector(selector)
     with project_lock(root):
         require_no_journal(root)
@@ -130,7 +142,7 @@ def create_override(
                     f"override already exists: {override_rel(bundle_name, existing[0])}",
                     target_files=[override_rel(bundle_name, rel) for rel in existing],
                     what_to_report="Whether to replace the existing override files with the upstream copy",
-                    fix=f"devkit override create {selector} --force",
+                    fix=f"Replace them with `devkit override create {selector} --force`",
                 )
         undo = _Undo(root)
         try:
@@ -143,18 +155,18 @@ def create_override(
         except BaseException:
             undo.restore()
             raise
-    _after_sync(root, result)
-    return {
-        "bundle": bundle_name,
-        "asset": asset_id,
-        "status": "created",
-        "paths": [override_rel(bundle_name, rel) for rel in files],
-    }
+    return OverrideChange(
+        bundle_name,
+        asset_id,
+        "created",
+        [override_rel(bundle_name, rel) for rel in files],
+        notices=_after_sync(root, result),
+    )
 
 
 def remove_override(root: Path, installed: list[InstalledBundle], selector: str) -> OverrideChange:
     """Delete an asset's override and baseline files, then synchronize the pristine upstream files."""
-    root = project_root(root)
+    root = require_project_dir(root)
     bundle_name, asset_id = _parse_selector(selector)
     with project_lock(root):
         require_no_journal(root)
@@ -165,7 +177,7 @@ def remove_override(root: Path, installed: list[InstalledBundle], selector: str)
                 base = root / rel_of(bundle_name, source)
                 found = sorted(p for p in base.rglob("*") if p.is_file()) if base.is_dir() else [base]
                 names.extend(p.relative_to(root).as_posix() for p in found if p.is_file() or p.is_symlink())
-        if not any(name.startswith(f"{OVERRIDES}/{bundle_name}/") for name in names):
+        if not any(name.startswith(f"{OVERRIDES_PATH}/{bundle_name}/") for name in names):
             raise SelectionError(f"no override found for {selector}", fix="List overrides with `devkit override list`")
         undo = _Undo(root)
         try:
@@ -175,28 +187,28 @@ def remove_override(root: Path, installed: list[InstalledBundle], selector: str)
         except BaseException:
             undo.restore()
             raise
-    _after_sync(root, result)
-    return {
-        "bundle": bundle_name,
-        "asset": asset_id,
-        "status": "removed",
-        "paths": [name for name in names if not name.startswith(baseline_rel(bundle_name, ""))],
-    }
+    return OverrideChange(
+        bundle_name,
+        asset_id,
+        "removed",
+        [name for name in names if not name.startswith(baseline_rel(bundle_name, ""))],
+        notices=_after_sync(root, result),
+    )
 
 
 def _tracked(receipt: Receipt | None, bundle: str, asset: str, selector: str) -> OverrideRecord:
     record = receipt.overrides.get(bundle, {}).get(asset) if receipt is not None else None
     if record is None:
         raise SelectionError(
-            f"{selector} has no tracked override; create one with 'devkit override create {selector}'"
-            " (or run devkit sync if its files already exist)"
+            f"{selector} has no tracked override",
+            fix=f"Create one with `devkit override create {selector}`, or run `devkit sync` if its files already exist",
         )
     return record
 
 
 def accept_override(root: Path, installed: list[InstalledBundle], selector: str) -> OverrideChange:
     """Record the current upstream files as the override's baseline (after reviewing ``override diff``)."""
-    root = project_root(root)
+    root = require_project_dir(root)
     bundle_name, asset_id = _parse_selector(selector)
     with project_lock(root):
         require_no_journal(root)
@@ -216,17 +228,11 @@ def accept_override(root: Path, installed: list[InstalledBundle], selector: str)
             for rel in asset_files(item.bundle, asset):
                 path = item.bundle.root / rel
                 undo.write(baseline_rel(bundle_name, rel), Content(path.read_bytes(), normal_mode(path.stat().st_mode)))
-            apply_changes(root, {RECEIPT: receipt_content(updated)})
+            apply_changes(root, {RECEIPT_PATH: receipt_content(updated)})
         except BaseException:
             undo.restore()
             raise
-    return {
-        "bundle": bundle_name,
-        "asset": asset_id,
-        "status": "accepted",
-        "paths": [],
-        "accepted_upstream_sha256": current,
-    }
+    return OverrideChange(bundle_name, asset_id, "accepted", [], accepted_upstream_sha256=current)
 
 
 def _text(path: Path) -> list[str] | None:
@@ -247,7 +253,7 @@ def _diff(before: list[str] | None, after: list[str] | None, before_name: str, a
 
 def diff_override(root: Path, installed: list[InstalledBundle], selector: str) -> OverrideDiff:
     """Per file: upstream -> override, and the recorded baseline -> current upstream."""
-    root = project_root(root)
+    root = require_project_dir(root)
     bundle_name, asset_id = _parse_selector(selector)
     with project_lock(root, shared=True):
         require_no_journal(root)
@@ -270,16 +276,16 @@ def diff_override(root: Path, installed: list[InstalledBundle], selector: str) -
                 _text(root / baseline_rel(bundle_name, rel)), upstream, f"baseline/{rel}", f"upstream/{rel}"
             )
             if overridden or upstream_diff:
-                files.append({"path": rel, "diff": diff, "upstream_diff": upstream_diff})
-        return {
-            "bundle": bundle_name,
-            "asset": asset_id,
-            "relative_path": primary_path(item.bundle, asset),
-            "drift_detected": record is not None and record.baseline_upstream_sha256 != current,
-            "baseline_upstream_sha256": record.baseline_upstream_sha256 if record is not None else None,
-            "current_upstream_sha256": current,
-            "files": files,
-        }
+                files.append(OverrideFileDiff(rel, diff, upstream_diff))
+        return OverrideDiff(
+            bundle=bundle_name,
+            asset=asset_id,
+            relative_path=primary_path(item.bundle, asset),
+            drift_detected=record is not None and record.baseline_upstream_sha256 != current,
+            baseline_upstream_sha256=record.baseline_upstream_sha256 if record is not None else None,
+            current_upstream_sha256=current,
+            files=files,
+        )
 
 
 def override_statuses(installed: list[InstalledBundle], receipt: Receipt | None) -> list[OverrideStatus]:
@@ -292,20 +298,15 @@ def override_statuses(installed: list[InstalledBundle], receipt: Receipt | None)
             asset = bundle.asset(asset_id) if bundle is not None else None
             current = upstream_digest(bundle, asset) if bundle is not None and asset is not None else None
             results.append(
-                {
-                    "bundle": bundle_name,
-                    "asset": asset_id,
-                    "kind": record.kind,
-                    "relative_path": record.relative_path,
-                    "baseline_upstream_sha256": record.baseline_upstream_sha256,
-                    "current_upstream_sha256": current,
-                    "drift_detected": current is not None and current != record.baseline_upstream_sha256,
-                }
+                OverrideStatus(
+                    bundle_name, asset_id, record.kind, record.relative_path, record.baseline_upstream_sha256, current
+                )
             )
     return results
 
 
 def list_overrides(root: Path, installed: list[InstalledBundle]) -> list[OverrideStatus]:
-    root = project_root(root)
+    """Every tracked override of the project with its drift status."""
+    root = require_project_dir(root)
     with project_lock(root, shared=True):
         return override_statuses(installed, read_receipt(root))

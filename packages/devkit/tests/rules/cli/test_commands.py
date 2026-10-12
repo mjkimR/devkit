@@ -20,7 +20,9 @@ def test_cli_rules_check_clean(tmp_path: Path) -> None:
     runner = CliRunner()
     result = runner.invoke(cli, ["check", "--workspace-root", str(tmp_path)])
     assert result.exit_code == 0
-    assert "All governance checks passed cleanly" in result.output
+    assert (
+        result.output == "[SUMMARY: errors=0 warnings=0 infos=0 fixed=0]\n[OK: no error-severity violation remains]\n"
+    )
 
 
 def test_cli_rules_check_json_output(tmp_path: Path) -> None:
@@ -32,10 +34,10 @@ def test_cli_rules_check_json_output(tmp_path: Path) -> None:
     result = runner.invoke(cli, ["check", "--workspace-root", str(tmp_path), "--format", "json"])
     assert result.exit_code == 1  # Fails due to violation
 
-    data = json.loads(result.output)
-    assert isinstance(data, list)
-    assert len(data) >= 1
-    assert data[0]["rule_id"] == "RULE-markdown-link"
+    data = json.loads(result.stdout)
+    assert set(data) == {"violations", "errors"} and data["errors"] == []
+    assert len(data["violations"]) >= 1
+    assert data["violations"][0]["rule_id"] == "RULE-markdown-link"
 
 
 def _fixable_link_workspace(tmp_path: Path) -> Path:
@@ -53,7 +55,7 @@ def test_cli_rules_fix(tmp_path: Path) -> None:
     runner = CliRunner()
     result = runner.invoke(cli, ["fix", "--workspace-root", str(tmp_path)])
     assert result.exit_code == 0
-    assert "FIXED" in result.output
+    assert "status=fixed" in result.output and "[OK: " in result.output
     assert source.read_text(encoding="utf-8") == "[setup](guides/setup.md)\n"
 
 
@@ -63,9 +65,11 @@ def test_cli_plugin_failure_preserves_json_and_fails(tmp_path: Path) -> None:
     (rules / "broken.py").write_text('raise RuntimeError("broken plugin")\n')
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--rules-dir", str(rules), "--format", "json"])
     assert result.exit_code == 2
-    assert json.loads(result.stdout) == []
+    data = json.loads(result.stdout)  # one object: the (empty) findings and the load problem
+    assert data["violations"] == [] and [e["code"] for e in data["errors"]] == ["RULES_LOAD_FAILED"]
+    assert "broken plugin" in data["errors"][0]["message"]
     assert "broken plugin" in result.stderr
-    assert "passed cleanly" not in result.stdout
+    assert "[OK: " not in result.stdout
 
 
 def test_cli_malformed_frontmatter_elsewhere_neither_blocks_nor_gets_rewritten(tmp_path: Path) -> None:
@@ -85,7 +89,7 @@ def test_cli_dry_run_does_not_modify_file(tmp_path: Path) -> None:
     original = source.read_text(encoding="utf-8")
     result = CliRunner().invoke(cli, ["fix", "-w", str(tmp_path), "--dry-run"])
     assert result.exit_code == 1
-    assert "FIXABLE" in result.stdout
+    assert "status=fixable" in result.stdout and "[OK: " not in result.stdout
     assert source.read_text(encoding="utf-8") == original
 
 
@@ -108,7 +112,7 @@ def test_cli_phase_override_parks_rule_in_hygiene(tmp_path: Path) -> None:
 
     linter = runner.invoke(cli, ["check", "-w", str(tmp_path)])
     assert linter.exit_code == 0, linter.output
-    assert "RULE-markdown-link" not in linter.output.split("passed cleanly")[-1]
+    assert "RULE-markdown-link" not in linter.output and "[OK: " in linter.output
     assert "PHASE_OVERRIDE" not in linter.output
 
     hygiene = runner.invoke(cli, ["check", "-w", str(tmp_path), "--phase", "hygiene"])
@@ -130,8 +134,7 @@ def test_cli_json_output_stays_a_violation_list_with_effective_phase(tmp_path: P
     _broken_link_workspace(tmp_path)
     _write_config(tmp_path, '[rules.phase_overrides]\nRULE-markdown-link = "hygiene"\n')
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--phase", "hygiene", "--format", "json"])
-    data = json.loads(result.stdout)
-    assert isinstance(data, list)
+    data = json.loads(result.stdout)["violations"]
     links = [v for v in data if v["rule_id"] == "RULE-markdown-link"]
     assert links and all(v["phase"] == "hygiene" for v in links)
 
@@ -147,7 +150,9 @@ def test_cli_override_for_unknown_rule_fails(tmp_path: Path) -> None:
     _write_config(tmp_path, '[rules.phase_overrides]\nRULE-nope = "hygiene"\n')
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--format", "json"])
     assert result.exit_code == 2
-    assert json.loads(result.stdout) == []
+    data = json.loads(result.stdout)
+    assert data["violations"] == [] and [e["code"] for e in data["errors"]] == ["RULES_POLICY_INVALID"]
+    assert data["errors"][0]["exit_code"] == 2 and data["errors"][0]["rule_id"] == "RULE-nope"
     assert "unknown rule: RULE-nope" in result.stderr
 
 
@@ -195,10 +200,10 @@ def test_cli_phases_command_text_and_json(tmp_path: Path) -> None:
 
     text = runner.invoke(cli, ["phases", "-w", str(tmp_path)])
     assert text.exit_code == 0, text.output
-    assert "RULE-markdown-link" in text.output and "override -> linter" in text.output
+    assert "[PHASE: RULE-markdown-link default=linter effective=hygiene overridden=yes promote_to=-]" in text.output
 
     as_json = runner.invoke(cli, ["phases", "-w", str(tmp_path), "--format", "json"])
-    data = {e["rule_id"]: e for e in json.loads(as_json.stdout)}
+    data = {e["rule_id"]: e for e in json.loads(as_json.stdout)["rules"]}
     assert data["RULE-markdown-link"] == {
         "rule_id": "RULE-markdown-link",
         "default_phase": "linter",
@@ -236,15 +241,17 @@ def test_cli_settings_override_by_path_and_guide_line(tmp_path: Path) -> None:
     )
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--phase", "hygiene"])
     assert result.exit_code == 0, result.output
-    assert "docs/a.md:31" in result.output and "docs/research/b.md" not in result.output
-    assert "Guide: " in result.output and "file_length.md" in result.output
+    assert "docs/research/b.md" not in result.output
+    assert "[VIOLATION: RULE-file-length severity=warning file=docs/a.md line=31 status=open" in result.output
+    assert " guide=" in result.output and "file_length.md]" in result.output
 
 
 def test_cli_invalid_settings_fail_before_checks(tmp_path: Path) -> None:
     _write_config(tmp_path, "[rules.settings.RULE-file-length]\nmax_lines = 'many'\n")
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--format", "json"])
     assert result.exit_code == 2
-    assert json.loads(result.stdout) == []
+    data = json.loads(result.stdout)
+    assert data["violations"] == [] and [e["code"] for e in data["errors"]] == ["RULES_SETTINGS_INVALID"]
     assert "RULE-file-length: settings.max_lines: expected integer" in result.stderr
 
 
@@ -253,7 +260,7 @@ def test_cli_severity_override_turns_warning_into_error(tmp_path: Path) -> None:
     _write_config(tmp_path, '[rules.severity_overrides]\nRULE-file-length = "error"\n')
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--phase", "hygiene"])
     assert result.exit_code == 1
-    assert "[ERROR] RULE-file-length" in result.output
+    assert "[VIOLATION: RULE-file-length severity=error" in result.output
 
 
 def test_cli_explain_text_and_json(tmp_path: Path) -> None:
@@ -266,13 +273,15 @@ def test_cli_explain_text_and_json(tmp_path: Path) -> None:
     runner = CliRunner()
     text = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-file-length"])
     assert text.exit_code == 0, text.output
-    assert "Severity: warning (effective error)" in text.output
-    assert "max_lines = 300 (default 400)" in text.output
-    assert "[docs/**] max_lines = 800" in text.output
+    assert "severity=warning effective_severity=error" in text.output
+    assert "[SETTING: max_lines=300 default=400]" in text.output
+    assert "[SETTING_OVERRIDE: path=docs/** max_lines=800]" in text.output
     assert "# [RULE-file-length]" in text.output
 
     as_json = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-file-length", "--format", "json"])
-    data = json.loads(as_json.stdout)
+    payload = json.loads(as_json.stdout)
+    assert payload["errors"] == [] and payload["warnings"] == []
+    data = payload["rule"]
     assert data["effective_severity"] == "error" and data["settings"]["settings"]["max_lines"] == 300
     assert data["settings"]["overrides"] == [{"path": "docs/**", "max_lines": 800}]
 
@@ -280,7 +289,7 @@ def test_cli_explain_text_and_json(tmp_path: Path) -> None:
     assert unknown.exit_code == 2 and "unknown rule: RULE-nope" in unknown.stderr
 
     plain = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-markdown-link"])
-    assert plain.exit_code == 0 and "Settings: none" in plain.output
+    assert plain.exit_code == 0 and "[SETTINGS: none]" in plain.output
 
 
 # --- synchronized rule assets -----------------------------------------------
@@ -311,7 +320,7 @@ class NoTodoRule(BaseRule):
     (tmp_path / "notes.md").write_text("TODO\n")
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--format", "json"])
     assert result.exit_code == 1
-    assert [v["rule_id"] for v in json.loads(result.stdout)] == ["RULE-no-todo"]
+    assert [v["rule_id"] for v in json.loads(result.stdout)["violations"]] == ["RULE-no-todo"]
     phases = CliRunner().invoke(cli, ["phases", "-w", str(tmp_path)])
     assert "RULE-no-todo" in phases.output
 
@@ -348,12 +357,12 @@ def test_cli_staged_gate_sees_only_the_index(tmp_path: Path) -> None:
     result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged"])
     assert result.exit_code == 0, result.output
     assert "[SNAPSHOT: mode=staged" in result.output and "changed=1" in result.output
-    assert "passed cleanly" in result.output
+    assert "[OK: " in result.output
 
     _git(root, "add", "docs")
     result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "--format", "json"])
     assert result.exit_code == 1
-    assert [v["rule_id"] for v in json.loads(result.stdout)] == ["RULE-markdown-link"]
+    assert [v["rule_id"] for v in json.loads(result.stdout)["violations"]] == ["RULE-markdown-link"]
 
 
 def test_cli_staged_gate_runs_safety_rules_and_reads_snapshot_config(tmp_path: Path) -> None:
@@ -363,24 +372,27 @@ def test_cli_staged_gate_runs_safety_rules_and_reads_snapshot_config(tmp_path: P
     _git(root, "add", "-f", "secrets.txt", "app.db")
     result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "--format", "json"])
     assert result.exit_code == 1
-    assert sorted(v["rule_id"] for v in json.loads(result.stdout)) == ["RULE-clean-artifacts", "RULE-secret-leak"]
+    assert sorted(v["rule_id"] for v in json.loads(result.stdout)["violations"]) == [
+        "RULE-clean-artifacts",
+        "RULE-secret-leak",
+    ]
 
     # Policy comes from the snapshot: an unstaged config edit does not apply.
     _write_config(root, '[rules.severity_overrides]\nRULE-secret-leak = "warning"\n')
     result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "--format", "json"])
-    assert all(v["severity"] == "error" for v in json.loads(result.stdout))
+    assert all(v["severity"] == "error" for v in json.loads(result.stdout)["violations"])
     _git(root, "add", ".devkit")
     result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "--format", "json"])
-    secret = [v for v in json.loads(result.stdout) if v["rule_id"] == "RULE-secret-leak"]
+    secret = [v for v in json.loads(result.stdout)["violations"] if v["rule_id"] == "RULE-secret-leak"]
     assert secret and secret[0]["severity"] == "warning"
 
 
 def test_cli_staged_gate_with_nothing_staged(tmp_path: Path) -> None:
     root = _repo(tmp_path)
     result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged"])
-    assert result.exit_code == 0 and "nothing to check" in result.output
+    assert result.exit_code == 0 and "[OK: no changed files in the snapshot; nothing to check]" in result.output
     result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "--format", "json"])
-    assert result.exit_code == 0 and json.loads(result.stdout) == []
+    assert result.exit_code == 0 and json.loads(result.stdout) == {"violations": [], "errors": []}
 
 
 def test_cli_ci_gate_uses_base_ref(tmp_path: Path) -> None:
@@ -392,7 +404,7 @@ def test_cli_ci_gate_uses_base_ref(tmp_path: Path) -> None:
     _git(root, "commit", "-q", "-m", "feature")
     result = CliRunner().invoke(cli, ["check", "-w", str(root), "--ci", "--base", "main", "--format", "json"])
     assert result.exit_code == 1
-    assert [v["file"] for v in json.loads(result.stdout)] == ["docs/a.md"]
+    assert [v["file"] for v in json.loads(result.stdout)["violations"]] == ["docs/a.md"]
 
 
 def test_cli_snapshot_flag_validation(tmp_path: Path) -> None:
@@ -452,7 +464,7 @@ def test_cli_staged_gate_loads_ignored_managed_rules_pinned_by_the_receipt(tmp_p
     _git(root, "add", "notes.md")
     result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "--format", "json"])
     assert result.exit_code == 1, result.output
-    assert [v["rule_id"] for v in json.loads(result.stdout)] == ["RULE-no-todo"]
+    assert [v["rule_id"] for v in json.loads(result.stdout)["violations"]] == ["RULE-no-todo"]
 
 
 def test_cli_staged_gate_rejects_managed_rule_that_drifted_from_the_receipt(tmp_path: Path) -> None:
@@ -492,10 +504,10 @@ def test_cli_directory_target_expands_recursively(tmp_path: Path) -> None:
     (tmp_path / "docs/node_modules/ignored.md").write_text("[broken](missing.md)\n", encoding="utf-8")
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--format", "json", "docs"])
     assert result.exit_code == 1
-    assert sorted(v["file"] for v in json.loads(result.stdout)) == ["docs/a.md", "docs/research/b.md"]
+    assert sorted(v["file"] for v in json.loads(result.stdout)["violations"]) == ["docs/a.md", "docs/research/b.md"]
 
     mixed = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--format", "json", "docs/research", "README.md"])
-    assert sorted(v["file"] for v in json.loads(mixed.stdout)) == ["README.md", "docs/research/b.md"]
+    assert sorted(v["file"] for v in json.loads(mixed.stdout)["violations"]) == ["README.md", "docs/research/b.md"]
 
 
 def test_cli_invalid_target_fails_before_evaluation(tmp_path: Path) -> None:
@@ -517,7 +529,7 @@ def test_cli_target_directory_without_files_checks_nothing(tmp_path: Path) -> No
     _two_broken_docs(tmp_path)
     (tmp_path / "empty").mkdir()
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--format", "json", "empty"])
-    assert result.exit_code == 0 and json.loads(result.stdout) == []
+    assert result.exit_code == 0 and json.loads(result.stdout) == {"violations": [], "errors": []}
 
 
 def test_cli_exclude_patterns_drop_files_from_targets_and_scans(tmp_path: Path) -> None:
@@ -526,13 +538,13 @@ def test_cli_exclude_patterns_drop_files_from_targets_and_scans(tmp_path: Path) 
     runner = CliRunner()
 
     whole = runner.invoke(cli, ["check", "-w", str(tmp_path), "--format", "json"])
-    assert sorted(v["file"] for v in json.loads(whole.stdout)) == ["README.md", "docs/a.md"]
+    assert sorted(v["file"] for v in json.loads(whole.stdout)["violations"]) == ["README.md", "docs/a.md"]
 
     directory = runner.invoke(cli, ["check", "-w", str(tmp_path), "--format", "json", "docs"])
-    assert [v["file"] for v in json.loads(directory.stdout)] == ["docs/a.md"]
+    assert [v["file"] for v in json.loads(directory.stdout)["violations"]] == ["docs/a.md"]
 
     explicit = runner.invoke(cli, ["check", "-w", str(tmp_path), "--format", "json", "docs/research/b.md"])
-    assert explicit.exit_code == 0 and json.loads(explicit.stdout) == []
+    assert explicit.exit_code == 0 and json.loads(explicit.stdout) == {"violations": [], "errors": []}
 
 
 def test_cli_excluded_files_remain_link_repair_candidates(tmp_path: Path) -> None:
@@ -560,22 +572,22 @@ def test_cli_summary_only_prints_counts_not_findings(tmp_path: Path) -> None:
     runner = CliRunner()
     result = runner.invoke(cli, ["check", "-w", str(tmp_path), "--phase", "hygiene", "--summary-only"])
     assert result.exit_code == 1
-    assert "RULE-markdown-link: 3 error(s), 0 warning(s)" in result.output
-    assert "RULE-file-length: 0 error(s), 1 warning(s)" in result.output
-    assert "Summary: 3 error(s), 1 warning(s)" in result.output
-    assert "Message:" not in result.output and "docs/a.md" not in result.output
+    assert "[RULE_COUNTS: RULE-markdown-link errors=3 warnings=0 infos=0 fixed=0]" in result.output
+    assert "[RULE_COUNTS: RULE-file-length errors=0 warnings=1 infos=0 fixed=0]" in result.output
+    assert "[SUMMARY: errors=3 warnings=1 infos=0 fixed=0]" in result.output
+    assert "[VIOLATION:" not in result.output and "docs/a.md" not in result.output
 
     _fixable_link_workspace(tmp_path / "other")
     fixed = runner.invoke(cli, ["fix", "-w", str(tmp_path / "other"), "--summary-only"])
     assert fixed.exit_code == 0, fixed.output
-    assert "RULE-markdown-link: 0 error(s), 0 warning(s), 1 fixed" in fixed.output
-    assert "[FIXED]" not in fixed.output
+    assert "[RULE_COUNTS: RULE-markdown-link errors=0 warnings=0 infos=0 fixed=1]" in fixed.output
+    assert "status=fixed" not in fixed.output
 
     clean = runner.invoke(cli, ["check", "-w", str(tmp_path / "other"), "--summary-only"])
-    assert clean.exit_code == 0 and "passed cleanly" in clean.output
+    assert clean.exit_code == 0 and "[OK: " in clean.output
 
     as_json = runner.invoke(cli, ["check", "-w", str(tmp_path), "--summary-only", "--format", "json"])
-    assert len(json.loads(as_json.stdout)) == 3  # JSON ignores the flag
+    assert len(json.loads(as_json.stdout)["violations"]) == 3  # JSON ignores the flag
 
 
 def test_cli_summary_only_keeps_sentinel_lines(tmp_path: Path) -> None:
@@ -583,7 +595,7 @@ def test_cli_summary_only_keeps_sentinel_lines(tmp_path: Path) -> None:
     _write_config(tmp_path, '[rules.phase_overrides]\nRULE-markdown-link = "hygiene"\n')
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--phase", "hygiene", "--summary-only"])
     assert "[PHASE_OVERRIDE: RULE-markdown-link=hygiene" in result.output
-    assert "RULE-markdown-link: 1 error(s), 0 warning(s)" in result.output
+    assert "[RULE_COUNTS: RULE-markdown-link errors=1 warnings=0 infos=0 fixed=0]" in result.output
 
     (tmp_path / "repo-dir").mkdir()
     root = _repo(tmp_path / "repo-dir")
@@ -592,7 +604,7 @@ def test_cli_summary_only_keeps_sentinel_lines(tmp_path: Path) -> None:
     _git(root, "add", "docs")
     staged = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "--summary-only"])
     assert staged.exit_code == 1
-    assert "[SNAPSHOT: mode=staged" in staged.output and "Message:" not in staged.output
+    assert "[SNAPSHOT: mode=staged" in staged.output and "[VIOLATION:" not in staged.output
 
 
 def test_cli_exit_codes_distinguish_violations_from_failures(tmp_path: Path) -> None:
@@ -628,7 +640,7 @@ def test_cli_defaults_to_the_project_root_of_the_current_directory(
     monkeypatch.chdir(tmp_path / "docs/deep")
     result = CliRunner().invoke(cli, ["check", "--format", "json"])
     assert result.exit_code == 1
-    assert [v["file"] for v in json.loads(result.stdout)] == ["README.md"]
+    assert [v["file"] for v in json.loads(result.stdout)["violations"]] == ["README.md"]
 
 
 def test_cli_snapshot_requires_the_repository_top_level(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -642,7 +654,7 @@ def test_cli_snapshot_requires_the_repository_top_level(tmp_path: Path, monkeypa
     monkeypatch.chdir(root / "pkg")
     implicit = CliRunner().invoke(cli, ["check", "--staged", "--format", "json"])
     assert implicit.exit_code == 1
-    assert [v["file"] for v in json.loads(implicit.stdout)] == ["pkg/a.md"]
+    assert [v["file"] for v in json.loads(implicit.stdout)["violations"]] == ["pkg/a.md"]
 
 
 def test_cli_base_requires_ci(tmp_path: Path) -> None:
@@ -681,16 +693,17 @@ def test_cli_info_findings_are_counted(tmp_path: Path) -> None:
     _write_config(tmp_path, '[rules.severity_overrides]\nRULE-markdown-link = "info"\n')
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path)])
     assert result.exit_code == 0
-    assert "[INFO] RULE-markdown-link" in result.output and "Summary: 1 info(s)" in result.output
+    assert "[VIOLATION: RULE-markdown-link severity=info" in result.output
+    assert "[SUMMARY: errors=0 warnings=0 infos=1 fixed=0]" in result.output
     summary = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--summary-only"])
-    assert "RULE-markdown-link: 0 error(s), 0 warning(s), 1 info(s)" in summary.output
+    assert "[RULE_COUNTS: RULE-markdown-link errors=0 warnings=0 infos=1 fixed=0]" in summary.output
 
 
 def test_cli_errors_without_findings_print_no_empty_summary(tmp_path: Path) -> None:
     _write_config(tmp_path, '[rules.severity_overrides]\nRULE-nope = "warning"\n')
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path)])
     assert result.exit_code == 2
-    assert "Summary" not in result.output and "passed cleanly" not in result.output
+    assert result.stdout == ""
     assert "severity override for unknown rule: RULE-nope" in result.stderr
 
 
@@ -713,13 +726,16 @@ def test_cli_explain_reports_only_its_rules_problems_as_errors(tmp_path: Path) -
     runner = CliRunner()
     other = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-secret-leak"])
     assert other.exit_code == 0, other.output
-    assert "Warning: (RULES_POLICY_INVALID) severity override for RULE-file-length is redundant" in other.stderr
+    assert "[WARNING: (RULES_POLICY_INVALID) severity override for RULE-file-length is redundant" in other.stderr
     own = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-file-length"])
     assert own.exit_code == 2 and "[ERROR]  (RULES_POLICY_INVALID) severity override for RULE-file-length" in own.stderr
-    assert "Warning: (RULES_POLICY_INVALID) settings for RULE-markdown-link" in own.stderr
+    assert "[WARNING: (RULES_POLICY_INVALID) settings for RULE-markdown-link" in own.stderr
     as_json = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-file-length", "--format", "json"])
     assert as_json.exit_code == 2
-    assert json.loads(as_json.stdout)["error"]["code"] == "RULES_POLICY_INVALID"
+    data = json.loads(as_json.stdout)
+    assert data["rule"]["rule_id"] == "RULE-file-length"
+    assert [e["code"] for e in data["errors"]] == ["RULES_POLICY_INVALID"]
+    assert [w["rule_id"] for w in data["warnings"]] == ["RULE-markdown-link"]
 
 
 def test_cli_deletion_only_commit_rechecks_linking_files(tmp_path: Path) -> None:
@@ -732,7 +748,7 @@ def test_cli_deletion_only_commit_rechecks_linking_files(tmp_path: Path) -> None
     _git(root, "rm", "-q", "docs/target.md")
     result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "--format", "json"])
     assert result.exit_code == 1, result.output
-    assert [v["file"] for v in json.loads(result.stdout)] == ["docs/index.md"]
+    assert [v["file"] for v in json.loads(result.stdout)["violations"]] == ["docs/index.md"]
 
 
 # --- exit-code convention: 0 nothing found, 1 findings, 2 could not run -------
@@ -764,9 +780,42 @@ def test_json_check_that_cannot_run_prints_the_error_envelope(tmp_path: Path) ->
     assert (error["code"], error["advisory"]["mode"]) == ("RULES_TARGET_INVALID", "INPUT_ERROR")
 
 
+@pytest.mark.parametrize(
+    "args",
+    [
+        ("check", "--staged", "--ci"),
+        ("check", "--staged", "README.md"),
+        ("check", "--base", "x", "--staged"),
+        ("check", "--rules-dir", "missing"),
+        ("phases", "--rules-dir", "missing"),
+        ("explain", "RULE-nope"),
+    ],
+)
+def test_argument_errors_in_json_mode_print_one_document(tmp_path: Path, args: tuple[str, ...]) -> None:
+    result = CliRunner().invoke(cli, [*args, "-w", str(tmp_path), "--format", "json"])
+    assert result.exit_code == 2, result.output
+    error = json.loads(result.stdout)["error"]
+    assert (error["code"], error["advisory"]["mode"]) == ("ARGUMENT_INVALID", "INPUT_ERROR")
+
+
+def test_missing_workspace_root_is_an_argument_error(tmp_path: Path) -> None:
+    result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path / "nope"), "--format", "JSON"])
+    assert result.exit_code == 2
+    assert json.loads(result.stdout)["error"]["code"] == "ARGUMENT_INVALID"
+
+
+def test_unreadable_config_is_the_core_config_error(tmp_path: Path) -> None:
+    _write_config(tmp_path, "[rules\n")
+    result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--format", "json"])
+    assert result.exit_code == 2
+    assert json.loads(result.stdout)["error"]["code"] == "CONFIG_INVALID"
+
+
 def test_exit_codes_of_phases(tmp_path: Path) -> None:
     runner = CliRunner()
     assert runner.invoke(cli, ["phases", "-w", str(tmp_path)]).exit_code == 0
+    as_json = runner.invoke(cli, ["phases", "-w", str(tmp_path), "--format", "json"])
+    assert set(json.loads(as_json.stdout)) == {"rules", "errors"}
     _write_config(tmp_path, '[rules.phase_overrides]\nRULE-nope = "hygiene"\n')
     result = runner.invoke(cli, ["phases", "-w", str(tmp_path)])
     assert (
@@ -779,7 +828,7 @@ def test_exit_codes_of_explain(tmp_path: Path) -> None:
     assert runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-file-length"]).exit_code == 0
     unknown = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-nope", "--format", "json"])
     assert unknown.exit_code == 2 and "[ACTION] INPUT_ERROR" in unknown.stderr
-    assert json.loads(unknown.stdout)["error"]["code"] == "RULES_UNKNOWN_RULE"
+    assert json.loads(unknown.stdout)["error"]["code"] == "ARGUMENT_INVALID"
 
 
 def test_unexpected_errors_exit_2_as_advisories(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

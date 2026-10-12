@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from devkit.rules.engine.config import ConfigError, RulesConfig, load_rules_config
+from devkit.rules.engine.config import RulesConfig, load_rules_config
 from devkit.rules.engine.discovery import ManagedRules, resolve_managed_rules
 from devkit.rules.engine.errors import (
     PinnedWriteError,
@@ -9,10 +9,15 @@ from devkit.rules.engine.errors import (
     RuleExecutionError,
     RuleLoadError,
     RuleProblem,
+    RulesConfigError,
+    RulesDirError,
     RulesError,
     RulesRunError,
+    SettingsError,
+    SnapshotError,
+    TargetError,
 )
-from devkit.rules.engine.evaluator import EvaluationResult, evaluate
+from devkit.rules.engine.evaluator import EvaluationResult, evaluate_rules
 from devkit.rules.engine.models import (
     Autofixable,
     Phase,
@@ -24,23 +29,22 @@ from devkit.rules.engine.models import (
 from devkit.rules.engine.phases import PhaseEntry, resolve_phases
 from devkit.rules.engine.policy import validate_policy
 from devkit.rules.engine.project import (
+    ProjectRules,
     ProjectRun,
-    RulesDirError,
-    TargetError,
     build_project_registry,
     expand_targets,
+    load_project_rules,
     run_project_rules,
 )
-from devkit.rules.engine.registry import RuleRegistry, default_registry
-from devkit.rules.engine.settings import RawSettings, SettingsError, SettingsResolver, match_path
+from devkit.rules.engine.registry import RuleRegistry, default_rule_registry
+from devkit.rules.engine.settings import RawSettings, SettingsResolver, match_path
 from devkit.rules.workspace.cache import WorkspaceCache
 from devkit.rules.workspace.catalog import Document, DocumentCatalog
 from devkit.rules.workspace.markdown import MarkdownLink, count_tasks, extract_links
-from devkit.rules.workspace.snapshot import Snapshot, SnapshotError, git_snapshot, materialize
+from devkit.rules.workspace.snapshot import Snapshot, git_snapshot, materialize_snapshot
 
 __all__ = [
     "Autofixable",
-    "ConfigError",
     "Document",
     "DocumentCatalog",
     "EvaluationResult",
@@ -50,6 +54,7 @@ __all__ = [
     "PhaseEntry",
     "PinnedWriteError",
     "PolicyError",
+    "ProjectRules",
     "ProjectRun",
     "RawSettings",
     "Rule",
@@ -60,6 +65,7 @@ __all__ = [
     "RuleProblem",
     "RuleRegistry",
     "RulesConfig",
+    "RulesConfigError",
     "RulesDirError",
     "RulesError",
     "RulesRunError",
@@ -73,14 +79,15 @@ __all__ = [
     "WorkspaceCache",
     "build_project_registry",
     "count_tasks",
-    "default_registry",
-    "evaluate",
+    "default_rule_registry",
+    "evaluate_rules",
     "expand_targets",
     "extract_links",
     "git_snapshot",
+    "load_project_rules",
     "load_rules_config",
     "match_path",
-    "materialize",
+    "materialize_snapshot",
     "resolve_managed_rules",
     "resolve_phases",
     "run_project_rules",

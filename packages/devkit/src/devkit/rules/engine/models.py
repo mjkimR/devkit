@@ -72,7 +72,7 @@ class RuleContext:
     severity_overrides: dict[str, Severity]
     # Project values for rule settings (``[rules.settings.<id>]``), matched to rules by the evaluator.
     rule_settings: dict[str, RawSettings]
-    # Resolved settings per rule; populated by ``evaluate`` before any check runs.
+    # Resolved settings per rule; populated by ``evaluate_rules`` before any check runs.
     settings_resolvers: dict[str, SettingsResolver]
     # Project exclusions (``[rules] exclude``): workspace-relative ``**`` patterns no rule targets.
     exclude: tuple[str, ...]
@@ -142,13 +142,6 @@ class RuleContext:
     def _excluded(self, relative: str) -> bool:
         return any(match_path(p, relative) for p in self.exclude)
 
-    def is_excluded(self, path: str | Path) -> bool:
-        """Whether a workspace-relative (or absolute, inside the workspace) path is excluded by policy."""
-        if not self.exclude:
-            return False
-        relative = self._relative(path)
-        return relative is not None and self._excluded(relative)
-
     def is_file_targeted(self, path: str) -> bool:
         relative = self._relative(path)
         if relative is None or self._excluded(relative):
@@ -160,7 +153,7 @@ class RuleContext:
     def settings(self, rule: Rule, path: str | Path | None = None) -> Any:
         """Effective settings of ``rule`` for a workspace-relative ``path``.
 
-        Without a resolver (library callers that skip ``evaluate``) the rule's
+        Without a resolver (library callers that skip ``evaluate_rules``) the rule's
         declared defaults are returned.
         """
         resolver = self.settings_resolvers.get(rule.id)

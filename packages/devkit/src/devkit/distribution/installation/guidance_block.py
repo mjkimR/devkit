@@ -12,13 +12,11 @@ the block with LF line endings.
 
 from __future__ import annotations
 
-import hashlib
 import re
 
-from ..errors import DistributionError
-from .workspace import AGENTS_FILE
-
-GUIDANCE_BLOCK_INVALID = "GUIDANCE_BLOCK_INVALID"
+from devkit.distribution.content import sha256
+from devkit.distribution.errors import DistributionError, GuidanceBlockError
+from devkit.distribution.installation.workspace import AGENTS_FILE
 
 START = "<!-- DEVKIT:START -->"
 END = "<!-- DEVKIT:END -->"
@@ -76,7 +74,7 @@ def normalize(block: str) -> str:
 
 
 def digest(block: str) -> str:
-    return hashlib.sha256(normalize(block).encode("utf-8")).hexdigest()
+    return sha256(normalize(block).encode("utf-8"))
 
 
 def _locate(text: str) -> tuple[int, int] | None:
@@ -91,11 +89,9 @@ def _locate(text: str) -> tuple[int, int] | None:
         or text.count(END) != 1
         or ends[0].start() < starts[0].end()
     ):
-        raise DistributionError.invalid_input(
+        raise GuidanceBlockError(
             f"malformed guidance block in {AGENTS_FILE}: expected exactly one {START} line and one {END} line,"
-            " each on a line of its own",
-            code=GUIDANCE_BLOCK_INVALID,
-            target_files=[AGENTS_FILE],
+            " each on a line of its own"
         )
     end = ends[0].end()
     if text[end - 1 : end] == "\r":
@@ -109,9 +105,7 @@ def decode(data: bytes | None) -> str | None:
     try:
         return data.decode("utf-8")
     except UnicodeDecodeError as exc:
-        raise DistributionError.invalid_input(
-            f"{AGENTS_FILE} is not UTF-8", code=GUIDANCE_BLOCK_INVALID, target_files=[AGENTS_FILE]
-        ) from exc
+        raise GuidanceBlockError(f"{AGENTS_FILE} is not UTF-8") from exc
 
 
 def extract(text: str | None) -> str | None:

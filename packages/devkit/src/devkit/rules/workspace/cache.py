@@ -18,7 +18,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from devkit.core import GitError, run_git
+from devkit.core import MANAGED_PATH, OVERRIDES_PATH, GitError, run_git
 from devkit.core.frontmatter import parse as parse_frontmatter
 from devkit.rules.engine.errors import PinnedWriteError
 from devkit.rules.workspace.markdown import MarkdownLink, extract_links
@@ -26,10 +26,10 @@ from devkit.rules.workspace.markdown import MarkdownLink, extract_links
 if TYPE_CHECKING:
     from devkit.rules.workspace.catalog import DocumentCatalog
 
-__all__ = ["PINNED_DIRS", "MarkdownLink", "WorkspaceCache"]
+__all__ = ["WorkspaceCache"]
 
 # Workspace-relative directories holding copies whose hashes the installation receipt pins.
-PINNED_DIRS = (".devkit/managed", ".devkit/overrides")
+_PINNED_DIRS = (MANAGED_PATH, OVERRIDES_PATH)
 _IGNORED_DIRS = {".git", ".venv", ".pytest_cache", ".ruff_cache", "node_modules", "__pycache__"}
 
 
@@ -95,7 +95,7 @@ class WorkspaceCache:
         resolved = self._resolve_path(path)
         if self._pinned(resolved):
             raise PinnedWriteError(
-                f"refusing to write a receipt-pinned copy under {' or '.join(PINNED_DIRS)}: {resolved}",
+                f"refusing to write a receipt-pinned copy under {' or '.join(_PINNED_DIRS)}: {resolved}",
                 target_files=[str(resolved)],
             )
         key = resolved.as_posix()
@@ -170,7 +170,7 @@ class WorkspaceCache:
             self._files_cache.clear()
 
     def _pinned(self, path: Path) -> bool:
-        return any(path.is_relative_to(self.workspace_root / pinned) for pinned in PINNED_DIRS)
+        return any(path.is_relative_to(self.workspace_root / pinned) for pinned in _PINNED_DIRS)
 
     def find_files(self, root: Path, extensions: tuple[str, ...] | None = (".md",)) -> list[Path]:
         """Regular files under ``root`` (inside the workspace) with one of ``extensions``, sorted.

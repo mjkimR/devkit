@@ -75,9 +75,20 @@ def test_area_imports_only_lower_layers(area: str) -> None:
 
 def test_the_scanner_sees_absolute_relative_and_nested_imports() -> None:
     source = (
-        "from devkit.rules import x\nimport devkit.gate.hooks\nfrom devkit import workflow\n"
+        "from devkit.rules import x\nimport devkit.gate.hooks.hooks\nfrom devkit import workflow\n"
         "from . import sibling\nfrom .other import z\n"
         "def f():\n    from ..distribution import y\n"
     )
     found = {target for target, _ in _imported_areas(source, "devkit.core", "core")}
     assert found == {"rules", "gate", "workflow", "distribution"}
+
+
+def test_distribution_bundles_have_no_workspace_knowledge() -> None:
+    # Bundle authoring shares only the neutral ``devkit.distribution.content`` helpers with installation.
+    violations = [
+        f"{path.relative_to(SRC)}:{node.lineno}"
+        for path in sorted((SRC / "distribution/bundles").rglob("*.py"))
+        for node in ast.walk(ast.parse(path.read_text("utf-8")))
+        if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("devkit.distribution.installation")
+    ]
+    assert violations == []

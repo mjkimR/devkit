@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import click
 
-from devkit.distribution.cli import cli as distribution_cli
+from devkit.distribution.cli import register as register_distribution
 from devkit.gate.cli import cli as gate_cli
 from devkit.rules.cli import cli as rules_cli
 from devkit.workflow.cli import cli as workflow_cli
@@ -21,8 +21,7 @@ def cli() -> None:
     """Devkit: agent asset distribution, repository rules, delivery workflows and commit gates."""
 
 
-for _name, _command in distribution_cli.commands.items():
-    cli.add_command(_command, _name)
+register_distribution(cli)
 cli.add_command(rules_cli, "rules")
 cli.add_command(workflow_cli, "workflow")
 cli.add_command(gate_cli, "gate")

@@ -2,36 +2,60 @@
 
 from __future__ import annotations
 
-from typing import TypedDict
+from dataclasses import dataclass
+from typing import Any
 
-from ..bundles.common import ALL
-from ..bundles.manifest import Bundle
-from .discovery import InstalledBundle
-from .inventory import AGENTS, desired_inventory
-from .results import AssetJSON, asset_json
-from .workspace import sha256
+from devkit.core.receipt import AssetRecord
+from devkit.distribution.bundles.common import ALL
+from devkit.distribution.bundles.manifest import Bundle
+from devkit.distribution.content import sha256
+from devkit.distribution.installation.discovery import InstalledBundle
+from devkit.distribution.installation.inventory import AGENTS, desired_inventory
+from devkit.distribution.installation.results import asset_json
 
 
-class PlannedFile(TypedDict):
+@dataclass(frozen=True)
+class PlannedFile:
     destination: str
     sha256: str
     mode: int
 
+    def to_dict(self) -> dict[str, Any]:
+        return {"destination": self.destination, "sha256": self.sha256, "mode": self.mode}
 
-class PlannedSeed(TypedDict):
+
+@dataclass(frozen=True)
+class PlannedSeed:
     destination: str
     asset: str
     sha256: str
 
+    def to_dict(self) -> dict[str, Any]:
+        return {"destination": self.destination, "asset": self.asset, "sha256": self.sha256}
 
-class BundlePlan(TypedDict):
+
+@dataclass(frozen=True)
+class BundlePlan:
+    """Every destination a bundle source deploys for one preset and a set of agents."""
+
     bundle: str
     version: str
     preset: str
     agents: list[str]
-    assets: list[AssetJSON]
+    assets: list[AssetRecord]
     files: list[PlannedFile]
     seeded: list[PlannedSeed]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "bundle": self.bundle,
+            "version": self.version,
+            "preset": self.preset,
+            "agents": list(self.agents),
+            "assets": [asset_json(asset) for asset in self.assets],
+            "files": [item.to_dict() for item in self.files],
+            "seeded": [item.to_dict() for item in self.seeded],
+        }
 
 
 def plan_bundle(bundle: Bundle, preset: str | None = None, agents: list[str] | None = None) -> BundlePlan:
@@ -44,18 +68,16 @@ def plan_bundle(bundle: Bundle, preset: str | None = None, agents: list[str] | N
     targets = sorted(set(agents)) if agents is not None else sorted(AGENTS)
     item = InstalledBundle("(local source)", bundle.version, bundle)
     inventory = desired_inventory([item], {bundle.name: [preset]}, targets)
-    return {
-        "bundle": bundle.name,
-        "version": bundle.version,
-        "preset": preset,
-        "agents": targets,
-        "assets": [asset_json(asset) for asset in inventory.assets],
-        "files": [
-            {"destination": name, "sha256": sha256(content.data), "mode": content.mode}
-            for name, content in sorted(inventory.files.items())
+    return BundlePlan(
+        bundle=bundle.name,
+        version=bundle.version,
+        preset=preset,
+        agents=targets,
+        assets=list(inventory.assets),
+        files=[
+            PlannedFile(name, sha256(content.data), content.mode) for name, content in sorted(inventory.files.items())
         ],
-        "seeded": [
-            {"destination": dest, "asset": seed.asset, "sha256": sha256(seed.content.data)}
-            for dest, seed in sorted(inventory.seeds.items())
+        seeded=[
+            PlannedSeed(dest, seed.asset, sha256(seed.content.data)) for dest, seed in sorted(inventory.seeds.items())
         ],
-    }
+    )

@@ -9,8 +9,9 @@ from types import SimpleNamespace
 import pytest
 from click.testing import CliRunner
 from devkit.core.errors import ConfigError, ReceiptError
+from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH
 from devkit.distribution.bundles import load_bundle
-from devkit.distribution.cli import cli
+from devkit.distribution.content import Content
 from devkit.distribution.errors import (
     ConflictError,
     LockHeldError,
@@ -24,7 +25,8 @@ from devkit.distribution.installation import discovery, transaction
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.discovery import InstalledBundle, discover_bundles
 from devkit.distribution.installation.sync import recover_project, sync_project
-from devkit.distribution.installation.workspace import CONFIG, JOURNAL, RECEIPT, Content, snapshot
+from devkit.distribution.installation.workspace import JOURNAL, snapshot
+from testsupport.distribution import cli
 
 
 @pytest.fixture
@@ -75,29 +77,31 @@ def bare(tmp_path: Path) -> Path:
 
 
 def write_config(root: Path, content: str) -> None:
-    path = root / CONFIG
+    path = root / CONFIG_PATH
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content)
 
 
 def test_sync_noop_restore_and_package_removal(installed: list[InstalledBundle], target: Path) -> None:
     update_config(target, agents=["codex"])
-    first = sync_project(target, installed)
+    first = sync_project(target, installed).to_dict()
     assert first["actions"]
-    receipt = (target / RECEIPT).read_bytes()
+    receipt = (target / RECEIPT_PATH).read_bytes()
     native = target / ".codex/agents/reviewer.toml"
     assert native.read_bytes() == (installed[0].bundle.root / "reviewer.toml").read_bytes()
     script = target / ".agents/skills/review/scripts/check.py"
     assert script.stat().st_mode & 0o777 == 0o755
-    assert sync_project(target, installed)["actions"] == []
-    assert (target / RECEIPT).read_bytes() == receipt
+    assert sync_project(target, installed).to_dict()["actions"] == []
+    assert (target / RECEIPT_PATH).read_bytes() == receipt
     native.unlink()
-    assert sync_project(target, installed)["actions"] == [{"path": ".codex/agents/reviewer.toml", "action": "create"}]
-    assert (target / RECEIPT).read_bytes() == receipt
+    assert sync_project(target, installed).to_dict()["actions"] == [
+        {"path": ".codex/agents/reviewer.toml", "action": "create"}
+    ]
+    assert (target / RECEIPT_PATH).read_bytes() == receipt
     sync_project(target, [], deselect=["team"])
     assert not native.exists()
     assert not script.exists()
-    assert json.loads((target / RECEIPT).read_text())["files"] == {}
+    assert json.loads((target / RECEIPT_PATH).read_text())["files"] == {}
 
 
 def test_update_preset_and_reset(installed: list[InstalledBundle], target: Path) -> None:
@@ -109,10 +113,10 @@ def test_update_preset_and_reset(installed: list[InstalledBundle], target: Path)
     sync_project(target, newer)
     assert (target / ".devkit/managed/team/guide.md").read_text().endswith("updated\n")
     assert not (target / ".devkit/managed/team/skills/review/SKILL.md").exists()
-    assert sync_project(target, newer)["actions"] == []
+    assert sync_project(target, newer).to_dict()["actions"] == []
     sync_project(target, newer, presets={"team": ["all"]})
     assert (target / ".devkit/managed/team/skills/review/SKILL.md").exists()
-    assert json.loads((target / RECEIPT).read_text())["packages"][0]["package_version"] == "0.2.0"
+    assert json.loads((target / RECEIPT_PATH).read_text())["packages"][0]["package_version"] == "0.2.0"
 
 
 @pytest.mark.parametrize("removal", [False, True])
@@ -120,19 +124,20 @@ def test_user_edit_blocks_all_writes(installed: list[InstalledBundle], target: P
     sync_project(target, installed)
     guide = target / ".devkit/managed/team/guide.md"
     guide.write_text("user edit")
-    receipt = (target / RECEIPT).read_bytes()
+    receipt = (target / RECEIPT_PATH).read_bytes()
     if removal:
         # No longer desired: the edited file becomes an orphan, everything else proceeds.
         result = sync_project(target, [], deselect=["team"])
-        assert result["orphans"] == [".devkit/managed/team/guide.md"]
-        assert any("left modified file in place" in text for text in result["notices"])
+        (orphan,) = result.notices
+        assert (orphan.code, orphan.target_files) == ("ORPHAN_LEFT", (".devkit/managed/team/guide.md",))
+        assert "left modified file in place" in orphan.message
         assert guide.read_text() == "user edit"
-        assert ".devkit/managed/team/guide.md" not in json.loads((target / RECEIPT).read_text())["files"]
+        assert ".devkit/managed/team/guide.md" not in json.loads((target / RECEIPT_PATH).read_text())["files"]
         return
     with pytest.raises(ConflictError, match="user-modified"):
         sync_project(target, installed)
     assert guide.read_text() == "user edit"
-    assert (target / RECEIPT).read_bytes() == receipt
+    assert (target / RECEIPT_PATH).read_bytes() == receipt
 
 
 def test_mode_edit_is_protected(installed: list[InstalledBundle], target: Path) -> None:
@@ -149,7 +154,7 @@ def test_permission_noise_is_not_an_edit(installed: list[InstalledBundle], targe
     (target / ".devkit/managed/team/guide.md").chmod(mode)
     script = target / ".agents/skills/review/scripts/check.py"
     script.chmod(0o775)
-    assert sync_project(target, installed)["actions"] == []
+    assert sync_project(target, installed).to_dict()["actions"] == []
 
 
 def test_unowned_native_collision_preserves_other_tool(installed: list[InstalledBundle], target: Path) -> None:
@@ -159,13 +164,13 @@ def test_unowned_native_collision_preserves_other_tool(installed: list[Installed
     with pytest.raises(ConflictError, match="unowned"):
         sync_project(target, installed, agents=["codex"])
     assert agent.read_text() == "owned by another tool"
-    assert not (target / RECEIPT).exists()
+    assert not (target / RECEIPT_PATH).exists()
 
 
 def test_dry_run_is_read_only_and_missing_variant_is_reported(installed: list[InstalledBundle], target: Path) -> None:
-    assert sync_project(target, installed, dry_run=True)["actions"]
-    assert not (target / RECEIPT).exists()
-    result = sync_project(target, installed, agents=["claude-code"], dry_run=True)
+    assert sync_project(target, installed, dry_run=True).to_dict()["actions"]
+    assert not (target / RECEIPT_PATH).exists()
+    result = sync_project(target, installed, agents=["claude-code"], dry_run=True).to_dict()
     assert result["unprojected"] == [{"bundle": "team", "asset": "reviewer", "agent": "claude-code"}]
     assert not any(a["path"].startswith(".claude/agents/") for a in result["actions"])
     assert not (target / ".devkit/managed").exists()
@@ -179,7 +184,7 @@ def test_destination_symlink_rejected(installed: list[InstalledBundle], target: 
 
 def test_receipt_path_escape_rejected(installed: list[InstalledBundle], target: Path) -> None:
     sync_project(target, installed)
-    path = target / RECEIPT
+    path = target / RECEIPT_PATH
     receipt = json.loads(path.read_text())
     receipt["files"][".devkit/managed/../../outside"] = {"sha256": "a" * 64, "mode": 0o644}
     path.write_text(json.dumps(receipt))
@@ -212,9 +217,9 @@ def test_interruption_recovery_and_later_edit_protection(
     guide.write_bytes((installed[0].bundle.root / "guide.md").read_bytes())
     assert recover_project(target) > 0
     assert snapshot(target, JOURNAL) is None
-    assert snapshot(target, RECEIPT) is None
+    assert snapshot(target, RECEIPT_PATH) is None
     assert not guide.exists()
-    assert sync_project(target, installed)["actions"]
+    assert sync_project(target, installed).to_dict()["actions"]
 
 
 def test_failure_rolls_back(installed: list[InstalledBundle], target: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -223,7 +228,7 @@ def test_failure_rolls_back(installed: list[InstalledBundle], target: Path, monk
 
     def fail_once(root: Path, name: str, content: Content | None) -> None:
         nonlocal failed
-        if name == RECEIPT and not failed:
+        if name == RECEIPT_PATH and not failed:
             failed = True
             raise OSError("write failure")
         original(root, name, content)
@@ -231,7 +236,7 @@ def test_failure_rolls_back(installed: list[InstalledBundle], target: Path, monk
     monkeypatch.setattr(transaction, "atomic_write", fail_once)
     with pytest.raises(OSError, match="write failure"):
         sync_project(target, installed)
-    assert snapshot(target, RECEIPT) is None
+    assert snapshot(target, RECEIPT_PATH) is None
     assert snapshot(target, JOURNAL) is None
     assert not (target / ".devkit/managed/team/guide.md").exists()
 
@@ -246,14 +251,14 @@ def test_cli_check_and_catalog(installed: list[InstalledBundle], target: Path, m
     result = runner.invoke(cli, ["sync", "--workspace-root", str(target), "--check"])
     assert result.exit_code == 1
     assert json.loads(result.output)["dry_run"] is True
-    assert not (target / RECEIPT).exists()
+    assert not (target / RECEIPT_PATH).exists()
     assert runner.invoke(cli, ["sync", "--workspace-root", str(target)]).exit_code == 0
     assert runner.invoke(cli, ["sync", "--workspace-root", str(target), "--check"]).exit_code == 0
     result = runner.invoke(cli, ["list", "--workspace-root", str(target)])
     assert json.loads(result.output)["synchronized_assets"]
     assert runner.invoke(cli, ["sync", "--workspace-root", str(target), "--agent", "codex"]).exit_code == 0
     assert (target / ".codex/agents/reviewer.toml").exists()
-    assert 'agents = ["codex"]' in (target / CONFIG).read_text()
+    assert 'agents = ["codex"]' in (target / CONFIG_PATH).read_text()
     assert runner.invoke(cli, ["sync", "--workspace-root", str(target)]).exit_code == 0
     assert (target / ".codex/agents/reviewer.toml").exists()
     assert runner.invoke(cli, ["sync", "--workspace-root", str(target), "--no-agents"]).exit_code == 0
@@ -295,7 +300,7 @@ def test_native_name_collision_between_packages(installed: list[InstalledBundle]
     other = InstalledBundle("other-content", "0.1.0", replace(installed[0].bundle, name="other"))
     with pytest.raises(ConflictError, match="destination collision"):
         sync_project(target, [*installed, other], agents=["codex"], presets={"other": ["all"]})
-    assert not (target / RECEIPT).exists()
+    assert not (target / RECEIPT_PATH).exists()
 
 
 def test_sync_reads_project_config(installed: list[InstalledBundle], bare: Path) -> None:
@@ -313,20 +318,20 @@ team = "minimal"
     assert not (bare / ".devkit/managed/team/skills/review/SKILL.md").exists()
     # "reviewer" is not in the "minimal" preset, so its projection does not exist
     assert not (bare / ".codex/agents/reviewer.toml").exists()
-    receipt = json.loads((bare / RECEIPT).read_text())
+    receipt = json.loads((bare / RECEIPT_PATH).read_text())
     assert receipt["schema"] == 1
     assert receipt["selection"] == {"agents": ["codex"], "presets": {"team": ["minimal"]}}
 
 
 def test_unselected_bundles_are_not_deployed(installed: list[InstalledBundle], bare: Path) -> None:
-    result = sync_project(bare, installed)
+    result = sync_project(bare, installed).to_dict()
     assert not (bare / ".devkit/managed").exists()
     assert result["packages"] == []
     assert result["unselected"] == [
         {"bundle": "team", "package": "team-content", "presets": ["all", "minimal"], "default_preset": None}
     ]
     # Without an ``agents`` entry every supported agent is a projection target.
-    assert json.loads((bare / RECEIPT).read_text())["selection"] == {
+    assert json.loads((bare / RECEIPT_PATH).read_text())["selection"] == {
         "agents": ["antigravity", "claude-code", "codex"],
         "presets": {},
     }
@@ -338,7 +343,7 @@ def test_preset_union_and_one_run_selection(installed: list[InstalledBundle], ta
         stream.write('[presets.skills]\nassets = ["review"]\n')
     union = [InstalledBundle("team-content", "0.1.0", load_bundle(root))]
     update_config(target, presets={"team": ["minimal", "skills"]})
-    assert 'team = ["minimal", "skills"]' in (target / CONFIG).read_text()
+    assert 'team = ["minimal", "skills"]' in (target / CONFIG_PATH).read_text()
     sync_project(target, union)
     assert (target / ".devkit/managed/team/guide.md").exists()
     assert (target / ".devkit/managed/team/skills/review/SKILL.md").exists()
@@ -403,7 +408,7 @@ anything = true
 """,
     )
     sync_project(bare, installed)
-    receipt = json.loads((bare / RECEIPT).read_text())
+    receipt = json.loads((bare / RECEIPT_PATH).read_text())
     assert receipt["selection"]["presets"] == {"team": ["minimal"]}
     # The receipt's ``tool`` is the distributor's identity, never the config's [tool.*] tables.
     assert receipt["tool"]["package"] == "devkit"
@@ -426,7 +431,7 @@ max_bytes = 4096
 """,
     )
     sync_project(bare, installed)
-    receipt = json.loads((bare / RECEIPT).read_text())
+    receipt = json.loads((bare / RECEIPT_PATH).read_text())
     assert receipt["selection"] == {"agents": ["codex"], "presets": {"team": ["minimal"]}}
 
 
@@ -441,7 +446,7 @@ RULE-markdown-link = "hygiene"
 """,
     )
     sync_project(bare, installed)
-    receipt = json.loads((bare / RECEIPT).read_text())
+    receipt = json.loads((bare / RECEIPT_PATH).read_text())
     assert receipt["selection"]["agents"] == ["codex"]
 
 
@@ -459,7 +464,7 @@ integration = "ask"
 """,
     )
     sync_project(bare, installed)
-    receipt = json.loads((bare / RECEIPT).read_text())
+    receipt = json.loads((bare / RECEIPT_PATH).read_text())
     assert receipt["selection"]["agents"] == ["codex"]
 
 
@@ -486,7 +491,7 @@ enabled = true
 """,
     )
     sync_project(bare, [InstalledBundle("gate-content", "0.1.0", load_bundle(root))])
-    receipt = json.loads((bare / RECEIPT).read_text())
+    receipt = json.loads((bare / RECEIPT_PATH).read_text())
     assert {"bundle": "gates", "id": "block", "kind": "gate", "paths": [".devkit/managed/gates/gates/block.py"]} in (
         receipt["assets"]
     )
@@ -507,7 +512,7 @@ source = "checks/materials.py"
 """)
     write_config(bare, 'schema = 1\n[presets]\nsdd = "all"\n')
     sync_project(bare, [InstalledBundle("sdd-content", "0.1.0", load_bundle(root))])
-    receipt = json.loads((bare / RECEIPT).read_text())
+    receipt = json.loads((bare / RECEIPT_PATH).read_text())
     assert {
         "bundle": "sdd",
         "id": "materials-present",
@@ -519,9 +524,9 @@ source = "checks/materials.py"
 
 def test_receipt_cannot_own_config(installed: list[InstalledBundle], target: Path) -> None:
     sync_project(target, installed)
-    path = target / RECEIPT
+    path = target / RECEIPT_PATH
     receipt = json.loads(path.read_text())
-    receipt["files"][CONFIG] = {"sha256": "a" * 64, "mode": 0o644}
+    receipt["files"][CONFIG_PATH] = {"sha256": "a" * 64, "mode": 0o644}
     path.write_text(json.dumps(receipt))
     with pytest.raises(ReceiptError, match="receipt cannot own installation metadata"):
         sync_project(target, installed)
@@ -529,7 +534,7 @@ def test_receipt_cannot_own_config(installed: list[InstalledBundle], target: Pat
 
 def test_receipt_rejects_invalid_presets(installed: list[InstalledBundle], target: Path) -> None:
     sync_project(target, installed)
-    path = target / RECEIPT
+    path = target / RECEIPT_PATH
     receipt = json.loads(path.read_text())
     receipt["selection"]["presets"] = {"team": "minimal"}
     path.write_text(json.dumps(receipt))
@@ -573,17 +578,17 @@ def test_cli_add_resolves_default_preset_and_remove(
 ) -> None:
     all_installed = [*installed, make_extra_bundle(tmp_path, default_preset="core")]
     mock_discovery(monkeypatch, all_installed)
-    (target / CONFIG).write_text(
-        (target / CONFIG).read_text() + '\n# phase overrides\n[rules.phase_overrides]\nRULE-x = "hygiene"\n'
+    (target / CONFIG_PATH).write_text(
+        (target / CONFIG_PATH).read_text() + '\n# phase overrides\n[rules.phase_overrides]\nRULE-x = "hygiene"\n'
     )
     runner = CliRunner()
     result = runner.invoke(cli, ["sync", "--workspace-root", str(target)])
     assert result.exit_code == 0, result.output
-    assert "NOTICE: installed bundles not selected: extra" in result.stderr
+    assert "[NOTICE: installed bundles not selected: extra;" in result.stderr
 
     result = runner.invoke(cli, ["add", "extra", "--workspace-root", str(target)])
     assert result.exit_code == 0, result.output
-    config = (target / CONFIG).read_text()
+    config = (target / CONFIG_PATH).read_text()
     assert 'extra = "core"' in config
     assert "# phase overrides" in config and 'RULE-x = "hygiene"' in config
     assert (target / ".devkit/managed/extra/note.md").exists()
@@ -597,7 +602,7 @@ def test_cli_add_resolves_default_preset_and_remove(
 
     result = runner.invoke(cli, ["remove", "extra", "--workspace-root", str(target)])
     assert result.exit_code == 0, result.output
-    assert "extra" not in (target / CONFIG).read_text().split("[presets]")[1].split("[rules")[0]
+    assert "extra" not in (target / CONFIG_PATH).read_text().split("[presets]")[1].split("[rules")[0]
     assert not (target / ".devkit/managed/extra/note.md").exists()
 
     result = runner.invoke(cli, ["remove", "extra", "--workspace-root", str(target)])
@@ -612,16 +617,17 @@ def test_cli_add_requires_preset_without_default(
     runner = CliRunner()
     result = runner.invoke(cli, ["add", "team", "--workspace-root", str(bare)])
     assert result.exit_code != 0
-    assert "team: no default preset; choose one of: team:all, team:minimal" in result.output
-    assert not (bare / CONFIG).exists()
+    assert "team: the bundle declares no default preset" in result.output
+    assert "[FIX]    Select one of: team:all, team:minimal" in result.stderr
+    assert not (bare / CONFIG_PATH).exists()
     result = runner.invoke(cli, ["add", "team:minimal", "--workspace-root", str(bare), "--dry-run"])
     assert result.exit_code == 0, result.output
-    assert not (bare / CONFIG).exists()
-    assert not (bare / RECEIPT).exists()
+    assert not (bare / CONFIG_PATH).exists()
+    assert not (bare / RECEIPT_PATH).exists()
     result = runner.invoke(cli, ["add", "team:minimal", "team:all", "--workspace-root", str(bare)])
     assert result.exit_code == 0, result.output
-    assert 'team = ["minimal", "all"]' in (bare / CONFIG).read_text()
-    assert (bare / CONFIG).read_text().startswith("schema = 1\n")
+    assert 'team = ["minimal", "all"]' in (bare / CONFIG_PATH).read_text()
+    assert (bare / CONFIG_PATH).read_text().startswith("schema = 1\n")
 
 
 def test_cli_sync_preset_saves_unless_no_save(
@@ -631,11 +637,11 @@ def test_cli_sync_preset_saves_unless_no_save(
     runner = CliRunner()
     result = runner.invoke(cli, ["sync", "--workspace-root", str(target), "--preset", "team:minimal", "--no-save"])
     assert result.exit_code == 0, result.output
-    assert 'team = "all"' in (target / CONFIG).read_text()
+    assert 'team = "all"' in (target / CONFIG_PATH).read_text()
     assert not (target / ".devkit/managed/team/skills/review/SKILL.md").exists()
     result = runner.invoke(cli, ["sync", "--workspace-root", str(target), "--preset", "team:minimal"])
     assert result.exit_code == 0, result.output
-    assert 'team = "minimal"' in (target / CONFIG).read_text()
+    assert 'team = "minimal"' in (target / CONFIG_PATH).read_text()
     result = runner.invoke(cli, ["sync", "--workspace-root", str(target), "--preset", "team"])
     assert result.exit_code != 0
     assert "no default preset" in result.output
@@ -646,11 +652,11 @@ def test_cli_sync_preset_saves_unless_no_save(
 def test_stray_files_under_managed_root_are_reported_not_touched(
     installed: list[InstalledBundle], target: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert sync_project(target, installed)["stray"] == []
+    assert sync_project(target, installed).to_dict()["stray"] == []
     stray = target / ".devkit/managed/team/rules/local_rule.py"
     stray.parent.mkdir(parents=True)
     stray.write_text("# hand-placed\n")
-    result = sync_project(target, installed)
+    result = sync_project(target, installed).to_dict()
     assert result["stray"] == [".devkit/managed/team/rules/local_rule.py"]
     assert result["actions"] == []
     assert stray.exists()
@@ -662,14 +668,17 @@ def test_stray_files_under_managed_root_are_reported_not_touched(
     monkeypatch.setattr("devkit.distribution.cli.discover_bundles", found)
     out = CliRunner().invoke(cli, ["sync", "--workspace-root", str(target)])
     assert out.exit_code == 0
-    assert "WARNING: unmanaged files under .devkit/managed/: .devkit/managed/team/rules/local_rule.py" in out.output
+    assert (
+        "[WARNING: (MANAGED_FILE_STRAY) unmanaged files under .devkit/managed/: .devkit/managed/team/rules/local_rule.py"
+        in out.stderr
+    )
 
 
 def test_agents_default_to_every_host_and_empty_list_disables_projection(
     installed: list[InstalledBundle], bare: Path
 ) -> None:
     write_config(bare, 'schema = 1\n[presets]\nteam = "all"\n')
-    result = sync_project(bare, installed)
+    result = sync_project(bare, installed).to_dict()
     assert result["selection"]["agents"] == ["antigravity", "claude-code", "codex"]
     for path in [".agents/skills/review/SKILL.md", ".claude/skills/review/SKILL.md", ".codex/agents/reviewer.toml"]:
         assert (bare / path).exists(), path
@@ -678,18 +687,18 @@ def test_agents_default_to_every_host_and_empty_list_disables_projection(
     assert not (bare / ".agents/agents/reviewer.md").exists()
 
     write_config(bare, 'schema = 1\nagents = []\n[presets]\nteam = "all"\n')
-    result = sync_project(bare, installed)
+    result = sync_project(bare, installed).to_dict()
     assert result["selection"]["agents"] == [] and result["unprojected"] == []
     assert not (bare / ".agents/skills/review/SKILL.md").exists()
     assert (bare / ".devkit/managed/team/skills/review/SKILL.md").exists()
 
 
 def test_codex_and_antigravity_share_skill_projections(installed: list[InstalledBundle], target: Path) -> None:
-    result = sync_project(target, installed, agents=["codex", "antigravity"])
+    result = sync_project(target, installed, agents=["codex", "antigravity"]).to_dict()
     skill = target / ".agents/skills/review/SKILL.md"
     assert skill.exists()
     assert [a["path"] for a in result["actions"]].count(".agents/skills/review/SKILL.md") == 1
-    receipt = json.loads((target / RECEIPT).read_text())
+    receipt = json.loads((target / RECEIPT_PATH).read_text())
     review = next(a for a in receipt["assets"] if a["id"] == "reviewer")
     assert review["paths"] == [".codex/agents/reviewer.toml", ".devkit/managed/team/reviewer.toml"]
     # Dropping Antigravity keeps the shared projection because Codex still needs it.
@@ -708,6 +717,6 @@ def test_antigravity_native_variant_is_copied(installed: list[InstalledBundle], 
         .replace('codex = "reviewer.toml"', 'codex = "reviewer.toml"\nantigravity = "reviewer-ag.md"')
     )
     bundle = [InstalledBundle("team-content", "0.1.0", load_bundle(root))]
-    result = sync_project(target, bundle, agents=["antigravity"])
+    result = sync_project(target, bundle, agents=["antigravity"]).to_dict()
     assert result["unprojected"] == []
     assert (target / ".agents/agents/reviewer.md").read_text() == "---\nname: reviewer\nsubagent: true\n---\nnative\n"

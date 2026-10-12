@@ -1,15 +1,21 @@
-"""Errors raised by ``devkit.distribution``: ``AdvisoryError`` subclasses with stable codes.
+"""Errors and notices of ``devkit.distribution``: ``AdvisoryError`` subclasses with stable codes, one class per code.
 
 ``devkit.core`` errors pass through unchanged: an unreadable receipt is
 ``ReceiptError`` (``RECEIPT_INVALID``), an invalid ``.devkit/config.toml`` is
-``ConfigError`` (``CONFIG_INVALID``). Everything else a distribution operation
-refuses is one of the classes below, so a caller branches on ``error.code``
-and the CLI renders the error as it is.
+``ConfigError`` (``CONFIG_INVALID``), a malformed argument (a selector, a
+query, a bound, a path) is ``ArgumentError`` (``ARGUMENT_INVALID``).
+Everything else a distribution operation refuses is one of the
+``DistributionError`` classes below, so a caller branches on ``error.code`` and
+the CLI renders the error as it is.
+
+A ``SyncNotice`` is never raised: a synchronization collects it in
+``SyncResult.notices`` (exit code ``0``) for something the caller should know
+about although the sync succeeded.
 """
 
 from __future__ import annotations
 
-from devkit.advisory import Actor, AdvisoryError, Retry
+from devkit.advisory import Actor, AdvisoryError, ExitCode, Retry
 
 LOCK_RETRY_AFTER = "the running devkit command finishes"
 
@@ -36,13 +42,6 @@ class PackageError(BundleError):
     input_error = False
 
 
-class ArgumentError(DistributionError):
-    """A command argument or library parameter is malformed (a selector, a query, a bound, a path)."""
-
-    code = "ARGUMENT_INVALID"
-    input_error = True
-
-
 class SelectionError(DistributionError):
     """The named bundle, preset, asset or override does not exist in the current selection or installation."""
 
@@ -59,11 +58,26 @@ class NotSynchronizedError(DistributionError):
 
 
 class ConflictError(DistributionError):
-    """Writing would overwrite project-owned work: a hand-edited or unowned file, or two bundles claiming one path."""
+    """Writing would overwrite project-owned work: a hand-edited or unowned file."""
 
     code = "SYNC_CONFLICT"
     actor = Actor.USER
     what_to_report = "Which file to keep; devkit does not overwrite edits it does not own"
+
+
+class BundleConflictError(ConflictError):
+    """Two selected bundles, or a seeded file and a managed file, claim the same destination."""
+
+    code = "BUNDLE_CONFLICT"
+    what_to_report = "Which bundle to keep; deselect the other with `devkit remove <bundle>`"
+
+
+class GuidanceBlockError(DistributionError):
+    """The root ``AGENTS.md`` is not UTF-8, or its devkit block markers are malformed."""
+
+    code = "GUIDANCE_BLOCK_INVALID"
+    input_error = True
+    target_files = ("AGENTS.md",)
 
 
 class OverrideDriftError(DistributionError):
@@ -105,3 +119,39 @@ class RecoveryError(DistributionError):
     actor = Actor.NONE
     retry = Retry.UNSAFE
     what_to_report = "The interrupted synchronization and the files named here; recovery needs a person"
+
+
+class SyncNotice(DistributionError):
+    """Base class of what a successful synchronization reports in ``SyncResult.notices``; never raised."""
+
+    code = "SYNC_NOTICE"
+    exit_code = ExitCode.OK
+    actor = Actor.NONE
+    retry = Retry.SAFE
+
+
+class OrphanLeftNotice(SyncNotice):
+    """A managed file edited by hand is no longer desired: left on disk untouched and dropped from the receipt."""
+
+    code = "ORPHAN_LEFT"
+    actor = Actor.USER
+
+
+class ToolVersionChangedNotice(SyncNotice):
+    """The receipt was written by another devkit version; this sync recorded the running one."""
+
+    code = "TOOL_VERSION_CHANGED"
+
+
+class PostSyncNotice(SyncNotice):
+    """A line a ``devkit.post_sync`` hook returned; the hook's package owns its meaning."""
+
+    code = "POST_SYNC_NOTICE"
+
+
+class PostSyncHookFailedNotice(SyncNotice):
+    """A ``devkit.post_sync`` hook raised or returned something other than a list; the sync itself succeeded."""
+
+    code = "POST_SYNC_HOOK_FAILED"
+    actor = Actor.DEVELOPER
+    retry = Retry.AFTER_FIX

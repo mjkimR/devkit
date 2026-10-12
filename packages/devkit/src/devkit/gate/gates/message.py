@@ -10,8 +10,9 @@ Git, which aborts such a commit itself unless ``--allow-empty-message`` is given
 
 from __future__ import annotations
 
-from devkit.gate.base import BaseGate
-from devkit.gate.models import GateContext, GateError, GateResult, Stage
+from devkit.gate.engine.base import BaseGate
+from devkit.gate.engine.models import GateContext, GateResult, Stage
+from devkit.gate.errors import GateRefusedError
 
 # ``git commit -v`` appends the diff below this line (after the comment string); Git strips it from the message.
 SCISSORS = "------------------------ >8 ------------------------"
@@ -45,8 +46,6 @@ class NonEmptyMessageGate(BaseGate):
         text = ctx.message_file.read_text("utf-8", errors="replace")
         if message_body(text).strip():
             return GateResult.passed()
-        raise GateError.blocked(
-            "commit message is empty",
-            "Write a subject line describing the change.",
-            code="GATE_MESSAGE_EMPTY",
+        raise GateRefusedError(
+            "commit message is empty", code="GATE_MESSAGE_EMPTY", fix="Write a subject line describing the change"
         )

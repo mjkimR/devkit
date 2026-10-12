@@ -7,9 +7,11 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from devkit.gate import hooks
+from devkit.advisory import ExitCode
+from devkit.gate import load_gate_project, run_hook
 from devkit.gate.cli import cli
-from devkit.gate.models import Stage
+from devkit.gate.engine.models import Stage
+from devkit.gate.hooks import hooks
 from testsupport.gate import deploy_gate, gate_source, git
 
 PYTHON = Path(sys.executable).as_posix()
@@ -258,8 +260,8 @@ def test_linked_worktree_shares_hooks_and_clone_config(repo: Path, tmp_path: Pat
     assert (repo / ".git/hooks/pre-commit").is_file()
 
     source = gate_source("where").replace(
-        'raise GateError.blocked("where refused", code="TEST_REFUSED")',
-        'raise GateError.blocked(f"git_dir={ctx.git_dir} common={ctx.common_git_dir}", code="TEST_REFUSED")',
+        'raise GateRefusedError("where refused", code="TEST_REFUSED")',
+        'raise GateRefusedError(f"git_dir={ctx.git_dir} common={ctx.common_git_dir}", code="TEST_REFUSED")',
     )
     deploy_gate(worktree, source)
     code, output = _commit(worktree, "-m", "feat: in worktree")
@@ -281,18 +283,18 @@ def test_run_command_verbose_and_post_commit_never_blocks(repo: Path) -> None:
     (repo / ".git/devkit.config").write_text("[gates.settings.unknown]\nenabled = true\n")
     assert _invoke("run", "-w", str(repo), "post-commit")[0] == 0
     code, output = _invoke("run", "-w", str(repo), "pre-commit")
-    assert code == 1 and "not installed: ['unknown']" in output
+    assert code == 2 and "not installed: ['unknown']" in output  # a configuration problem
 
     (repo / ".git/devkit.config").write_text("[gates\n")
     code, output = _invoke("run", "-w", str(repo), "post-commit")
     assert code == 0 and "invalid config" in output
     code, output = _invoke("run", "-w", str(repo), "pre-commit")
-    assert code == 1 and "invalid config" in output
+    assert code == 2 and "invalid config" in output
 
 
 def test_status_reports_every_problem_that_fails_a_commit(repo: Path) -> None:
     (repo / ".git/devkit.config").write_text("[gates.settings.typo-gate]\nenabled = true\n")
-    data = _status(repo, 1)
+    data = _status(repo, 1)  # a report listing problems exits 1
     assert [e["code"] for e in data["errors"]] == ["GATE_CONFIG_INVALID"]
     assert "not installed: ['typo-gate']" in data["errors"][0]["message"]
 
@@ -302,8 +304,9 @@ def test_status_reports_every_problem_that_fails_a_commit(repo: Path) -> None:
     (repo / ".git/devkit.config").write_text("[gates\n")
     data = _status(repo, 1)
     assert "invalid config" in data["errors"][0]["message"] and data["gates"]
+    assert data["errors"][0]["code"] == "CONFIG_INVALID"  # the core error, not re-wrapped
     code, output = _invoke("status", "-w", str(repo))
-    assert code == 1 and "(GATE_CONFIG_INVALID)" in output
+    assert code == 1 and "(CONFIG_INVALID)" in output
 
     (repo / ".git/devkit.config").unlink()
     assert _status(repo)["errors"] == []
@@ -316,6 +319,20 @@ def test_outside_a_repository_is_an_input_error(tmp_path: Path) -> None:
     result = CliRunner().invoke(cli, ["status", "-w", str(tmp_path), "--format", "json"])
     assert result.exit_code == 2
     assert json.loads(result.stdout)["error"]["code"] == "GIT_FAILED"
+
+    missing = CliRunner().invoke(cli, ["status", "-w", str(tmp_path / "missing"), "--format", "JSON"])
+    assert missing.exit_code == 2
+    assert (
+        json.loads(missing.stdout)["error"]["code"] == "ARGUMENT_INVALID"
+    )  # one JSON document, not click's usage text
+
+
+def test_every_command_uses_the_git_top_level(repo: Path) -> None:
+    (repo / "sub").mkdir()
+    _install(repo / "sub")
+    data = _status(repo / "sub")
+    assert data["hooks_dir"] == str((repo / ".git/hooks").resolve())
+    assert {h["state"] for h in data["hooks"]} == {"managed"}
 
 
 def test_run_exit_codes(repo: Path, tmp_path: Path) -> None:
@@ -330,6 +347,41 @@ def test_run_exit_codes(repo: Path, tmp_path: Path) -> None:
     code, output = _invoke("run", "-w", str(outside), "post-commit")
     assert code == 0 and "(GIT_FAILED)" in output  # post-commit reports only
     assert _invoke("run", "-w", str(repo), "pre-commit-typo")[0] == 2  # usage error
+
+
+def test_run_exits_with_the_highest_problem_exit_code(repo: Path) -> None:
+    deploy_gate(repo, gate_source())
+    code, output = _invoke("run", "-w", str(repo), "pre-commit")
+    assert code == 1 and "(TEST_REFUSED)" in output  # a refusal alone
+    (repo / ".git/devkit.config").write_text("[gates.settings.typo]\nenabled = true\n")
+    code, output = _invoke("run", "-w", str(repo), "pre-commit")
+    assert code == 2 and "(TEST_REFUSED)" in output and "(GATE_CONFIG_INVALID)" in output
+
+
+def test_rule_engine_errors_pass_through_the_staged_gate(repo: Path) -> None:
+    (repo / ".devkit").mkdir()
+    (repo / ".devkit/config.toml").write_text("[rules]\nexclude = 3\n")
+    (repo / "a.md").write_text("# a\n")
+    git(repo, "add", ".")
+    code, output = _invoke("run", "-w", str(repo), "pre-commit")
+    assert code == 2 and "[GATE: rules-staged stage=pre-commit outcome=failed]" in output
+    assert "(RULES_CONFIG_INVALID)" in output and "GATE_RULES" not in output
+
+
+def test_library_entry_points(repo: Path) -> None:
+    (repo / "sub").mkdir()
+    project = load_gate_project(repo / "sub")
+    assert project.root == repo and project.common_git_dir == (repo / ".git").resolve()
+    assert project.validation.ok and project.config.sources == ()
+    assert [g.id for g in project.registry.get_all()] == ["rules-staged", "message-nonempty"]
+
+    (repo / "MSG").write_text("\n")
+    report = run_hook(repo, Stage.COMMIT_MSG, ["MSG"])
+    assert not report.ok and report.exit_code is ExitCode.FINDINGS
+    assert [e.code for e in report.problems] == ["GATE_MESSAGE_EMPTY"]
+
+    report = run_hook(repo, Stage.COMMIT_MSG)
+    assert [e.code for e in report.problems] == ["ARGUMENT_INVALID"] and report.exit_code is ExitCode.ERROR
 
 
 def test_install_refusals_exit_2(repo: Path, tmp_path: Path) -> None:

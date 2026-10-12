@@ -1,82 +1,112 @@
 """The delivery workflow engine as a library (``devkit workflow`` is a thin CLI over it).
 
 Start from ``Workspace``: it loads the project's configuration, definitions,
-roles and plugin checks, resolves a unit directory (``resolve_unit``) and
-evaluates it with the project's policies (``evaluate_unit``), including the
-drift guard. ``create_unit``, ``list_units``, ``record_answer``,
-``return_to``, ``plan_handoff``/``apply_handoff`` and the envelope helpers
-cover the commands; ``evaluate`` is the pure evaluation underneath. Errors are
-``AdvisoryError`` instances with a stable ``code``: ``WorkflowError`` and its
-subclasses, plus ``devkit.core`` errors (``RECEIPT_INVALID``, ...) passed through.
+roles and plugin checks once, resolves a unit directory (``resolve_unit``),
+binds it (``bind_unit``) and evaluates it with the project's policies
+(``evaluate_unit``), including the drift guard. ``create_unit``,
+``list_units``, ``record_answer``, ``return_to``,
+``plan_handoff``/``apply_handoff`` and the envelope helpers cover the
+commands; ``evaluate_definition`` is the pure evaluation underneath.
+
+Errors are ``AdvisoryError`` instances with a stable ``code``, one class per
+code: ``WorkflowError`` and its subclasses, plus ``devkit.core`` and
+``devkit.rules`` errors passed through unchanged. Problems that are collected
+rather than raised are instances of the same classes.
 """
 
 from devkit.workflow.answers import record_answer, return_to, validate_answer
-from devkit.workflow.binding import Binding, HistoryEntry, read_binding, write_binding
-from devkit.workflow.checks import Check, CheckClass, CheckError, CheckResult, Invocation, Registry, parse_check
-from devkit.workflow.config import ConfigError, WorkflowConfig, load_workflow_config
-from devkit.workflow.decisions import (
-    Decision,
-    DecisionError,
-    DecisionRecordError,
-    Decisions,
-    load_decisions,
-    new_decision,
-    write_decision,
-)
-from devkit.workflow.definition import (
+from devkit.workflow.definition.checks import Check, CheckClass, CheckResult, Invocation, Registry, parse_check
+from devkit.workflow.definition.definition import (
     Candidate,
-    DefinitionError,
-    Problem,
     Return,
-    Stage,
+    StageDefinition,
     WorkflowDocument,
-    load,
-    parse,
+    load_definition,
+    parse_definition,
     schema_hash,
 )
-from devkit.workflow.discovery import discover, find, load_all, resolve
-from devkit.workflow.envelope import (
-    AuthoringError,
-    Envelope,
-    EnvelopeError,
-    EnvelopeFormatError,
-    Envelopes,
-    Finding,
-    compose,
-    load_envelopes,
-    render_envelope,
-    write_next,
-)
-from devkit.workflow.errors import (
-    AnchorInvalidError,
-    DriftError,
-    LayoutError,
-    UnitNotFoundError,
-    WorkflowError,
-    WorkflowProblem,
-)
-from devkit.workflow.evaluate import LintFunc, Options, evaluate
-from devkit.workflow.git import is_ancestor
-from devkit.workflow.handoff import CandidateResult, Handoff, HandoffOutcome, HandoffPlan, apply_handoff, plan_handoff
-from devkit.workflow.layout import LayoutSpec, TemplateLayout, parse_layout_spec, validate_template
-from devkit.workflow.lint import rules_lint
-from devkit.workflow.plugins import BaseCheck, CheckContext, PluginError, load_check_files, load_plugin_checks
-from devkit.workflow.render import render_document, render_requests, render_result
-from devkit.workflow.requests import Option, Request, Target
-from devkit.workflow.results import Delegate, Drift, Gate, Result, Skipped, Waiting
-from devkit.workflow.roles import discover_roles
-from devkit.workflow.units import UnitInfo, create_unit, list_units
-from devkit.workflow.validation import (
+from devkit.workflow.definition.discovery import discover_definitions, load_definition_dir, resolve_definition
+from devkit.workflow.definition.validation import (
     DefinitionReport,
     ValidationReport,
-    shared_stage_problems,
-    validate,
-    validate_workspace,
+    compare_shared_stages,
+    validate_definition,
+    validate_definitions,
 )
-from devkit.workflow.workspace import UnitRef, Workspace, record_return
+from devkit.workflow.errors import (
+    AnchorAmbiguousError,
+    AnchorInvalidError,
+    AnchorMismatchError,
+    AuthoringError,
+    CheckError,
+    CheckReferenceProblem,
+    DecisionInvalidError,
+    DecisionRecordError,
+    DefinitionError,
+    DefinitionProblem,
+    DriftError,
+    EnvelopeFindingsError,
+    EnvelopeFlagError,
+    EnvelopeFormatError,
+    EnvelopeFromError,
+    EnvelopeKindError,
+    EnvelopeStatusError,
+    GivenInvalidError,
+    HandoffChoiceIgnoredError,
+    HandoffChoiceRequiredError,
+    HandoffIneligibleError,
+    HandoffInvalidError,
+    HandoffLayoutMismatchError,
+    HandoffNoneError,
+    HandoffNotReadyError,
+    HandoffOffError,
+    HandoffUndecidedError,
+    LayoutError,
+    PluginError,
+    RequestUnknownError,
+    ReturnInvalidError,
+    RoleUnknownProblem,
+    SharedStageMismatchError,
+    SlugError,
+    UnitExistsError,
+    UnitNotFoundError,
+    WorkflowAssetMissingError,
+    WorkflowConfigError,
+    WorkflowError,
+    WorkflowInvalidError,
+    WorkflowNotFoundError,
+    WorkflowNotSelectedError,
+)
+from devkit.workflow.evaluation.evaluate import LintFunc, Options, evaluate_definition
+from devkit.workflow.evaluation.git import is_ancestor
+from devkit.workflow.evaluation.lint import lint_with_rules
+from devkit.workflow.evaluation.requests import Option, Request, Target
+from devkit.workflow.evaluation.results import Delegate, Drift, GateStatus, Skipped, UnitEvaluation, Waiting
+from devkit.workflow.handoff import CandidateResult, Handoff, HandoffOutcome, HandoffPlan, apply_handoff, plan_handoff
+from devkit.workflow.project.config import WorkflowConfig, load_workflow_config
+from devkit.workflow.project.layout import LayoutSpec, TemplateLayout, parse_layout_spec, validate_template
+from devkit.workflow.project.plugins import BaseCheck, CheckContext, load_check_files, load_plugin_checks
+from devkit.workflow.project.roles import discover_roles
+from devkit.workflow.render import render_document, render_evaluation, render_requests
+from devkit.workflow.unit.binding import AnchorState, Binding, HistoryEntry, read_anchor, read_binding, write_binding
+from devkit.workflow.unit.decisions import Decision, Decisions, load_decisions, new_decision, write_decision
+from devkit.workflow.unit.envelope import (
+    Envelope,
+    Envelopes,
+    Finding,
+    compose_envelope,
+    load_envelopes,
+    render_envelope,
+    write_envelope,
+)
+from devkit.workflow.unit.units import UnitInfo, create_unit, list_units
+from devkit.workflow.workspace import DefinitionDescription, UnitRef, Workspace
 
 __all__ = [
+    "AnchorAmbiguousError",
     "AnchorInvalidError",
+    "AnchorMismatchError",
+    "AnchorState",
     "AuthoringError",
     "BaseCheck",
     "Binding",
@@ -86,26 +116,42 @@ __all__ = [
     "CheckClass",
     "CheckContext",
     "CheckError",
+    "CheckReferenceProblem",
     "CheckResult",
-    "ConfigError",
     "Decision",
-    "DecisionError",
+    "DecisionInvalidError",
     "DecisionRecordError",
     "Decisions",
+    "DefinitionDescription",
     "DefinitionError",
+    "DefinitionProblem",
     "DefinitionReport",
     "Delegate",
     "Drift",
     "DriftError",
     "Envelope",
-    "EnvelopeError",
+    "EnvelopeFindingsError",
+    "EnvelopeFlagError",
     "EnvelopeFormatError",
+    "EnvelopeFromError",
+    "EnvelopeKindError",
+    "EnvelopeStatusError",
     "Envelopes",
     "Finding",
-    "Gate",
+    "GateStatus",
+    "GivenInvalidError",
     "Handoff",
+    "HandoffChoiceIgnoredError",
+    "HandoffChoiceRequiredError",
+    "HandoffIneligibleError",
+    "HandoffInvalidError",
+    "HandoffLayoutMismatchError",
+    "HandoffNoneError",
+    "HandoffNotReadyError",
+    "HandoffOffError",
     "HandoffOutcome",
     "HandoffPlan",
+    "HandoffUndecidedError",
     "HistoryEntry",
     "Invocation",
     "LayoutError",
@@ -114,63 +160,71 @@ __all__ = [
     "Option",
     "Options",
     "PluginError",
-    "Problem",
     "Registry",
     "Request",
-    "Result",
+    "RequestUnknownError",
     "Return",
+    "ReturnInvalidError",
+    "RoleUnknownProblem",
+    "SharedStageMismatchError",
     "Skipped",
-    "Stage",
+    "SlugError",
+    "StageDefinition",
     "Target",
     "TemplateLayout",
+    "UnitEvaluation",
+    "UnitExistsError",
     "UnitInfo",
     "UnitNotFoundError",
     "UnitRef",
     "ValidationReport",
     "Waiting",
+    "WorkflowAssetMissingError",
     "WorkflowConfig",
+    "WorkflowConfigError",
     "WorkflowDocument",
     "WorkflowError",
-    "WorkflowProblem",
+    "WorkflowInvalidError",
+    "WorkflowNotFoundError",
+    "WorkflowNotSelectedError",
     "Workspace",
     "apply_handoff",
-    "compose",
+    "compare_shared_stages",
+    "compose_envelope",
     "create_unit",
-    "discover",
+    "discover_definitions",
     "discover_roles",
-    "evaluate",
-    "find",
+    "evaluate_definition",
     "is_ancestor",
+    "lint_with_rules",
     "list_units",
-    "load",
-    "load_all",
     "load_check_files",
     "load_decisions",
+    "load_definition",
+    "load_definition_dir",
     "load_envelopes",
     "load_plugin_checks",
     "load_workflow_config",
     "new_decision",
-    "parse",
     "parse_check",
+    "parse_definition",
     "parse_layout_spec",
     "plan_handoff",
+    "read_anchor",
     "read_binding",
     "record_answer",
-    "record_return",
     "render_document",
     "render_envelope",
+    "render_evaluation",
     "render_requests",
-    "render_result",
-    "resolve",
+    "resolve_definition",
     "return_to",
-    "rules_lint",
     "schema_hash",
-    "shared_stage_problems",
-    "validate",
     "validate_answer",
+    "validate_definition",
+    "validate_definitions",
     "validate_template",
-    "validate_workspace",
     "write_binding",
     "write_decision",
-    "write_next",
+    "write_envelope",
 ]

@@ -30,7 +30,7 @@ def test_help() -> None:
 def test_checks_text_and_json(tmp_path: Path) -> None:
     text = _run("checks", "-w", str(tmp_path))
     assert text.exit_code == 0 and "[CHECK: anchor-exists class=disk alias=file-exists(task.md)" in text.output
-    data = json.loads(_run("checks", "-w", str(tmp_path), "--format", "json").stdout)
+    data = json.loads(_run("checks", "-w", str(tmp_path), "--format", "json").stdout)["checks"]
     assert {c["name"] for c in data} >= {"file-exists", "lint-clean", "envelope-review-passed"}
 
 
@@ -86,7 +86,7 @@ def test_end_to_end_new_next_bind_envelope_list(workspace: Path) -> None:
     assert "[DONE: intent]" in nxt.output and "[STAGE: build-verify" in nxt.output
     assert "[NEXT_SKILL: wf-build]" in nxt.output
 
-    listed = json.loads(_run("list", "-w", str(workspace), "--format", "json").stdout)
+    listed = json.loads(_run("list", "-w", str(workspace), "--format", "json").stdout)["units"]
     assert listed[0]["unit"] == ".devkit/transient/work/login" and listed[0]["workflow"] == "direct-delivery"
 
     env = _run("envelope", "new", "-w", str(workspace), "--unit", str(unit), "--kind", "review", "--stage", "review")
@@ -98,7 +98,7 @@ def test_end_to_end_new_next_bind_envelope_list(workspace: Path) -> None:
     env = _run("envelope", "new", "-w", str(workspace), "--unit", str(unit), "--kind", "review")
     assert "seq=02" in env.output
     bad_kind = _run("envelope", "new", "-w", str(workspace), "--unit", str(unit), "--kind", "Bad")
-    assert bad_kind.exit_code == 2 and "(KIND_INVALID)" in bad_kind.stderr
+    assert bad_kind.exit_code == 2 and "(ENVELOPE_KIND_INVALID)" in bad_kind.stderr
 
     as_json = json.loads(
         _run("next", "-w", str(workspace), "--unit", str(unit), "--no-lint", "--format", "json").stdout
@@ -202,20 +202,20 @@ def test_lint_check_honors_rules_exclude(workspace: Path) -> None:
 
 
 def test_lint_function_reports_a_malformed_receipt(tmp_path: Path) -> None:
-    from devkit.workflow.lint import rules_lint
+    from devkit.workflow.evaluation.lint import lint_with_rules
 
     (tmp_path / "a.md").write_text("fine\n")
     (tmp_path / ".devkit").mkdir()
     (tmp_path / ".devkit/installation.json").write_text("{not json")
     with pytest.raises(AdvisoryError, match="installation"):
-        rules_lint(tmp_path, ["a.md"])
-    assert rules_lint(tmp_path, []) == []
+        lint_with_rules(tmp_path, ["a.md"])
+    assert lint_with_rules(tmp_path, []) == []
 
 
 def test_invalid_config_is_a_clean_error(tmp_path: Path) -> None:
     write_config(tmp_path, '[workflow.approvals]\nx = "maybe"\n')
     result = _run("checks", "-w", str(tmp_path))
-    assert result.exit_code == 2 and "(CONFIG_INVALID)" in result.stderr and "not one of" in result.stderr
+    assert result.exit_code == 2 and "(WORKFLOW_CONFIG_INVALID)" in result.stderr and "not one of" in result.stderr
     assert "[TARGET] .devkit/config.toml" in result.stderr
 
 
@@ -244,7 +244,7 @@ def test_cli_uses_synchronized_workflow_from_receipt(tmp_path: Path) -> None:
     write_config(tmp_path, CONFIG)
     validated = _run("validate", "-w", str(tmp_path))
     assert validated.exit_code == 0 and ".devkit/managed/team/flows/delivery.md id=direct-delivery" in validated.output
-    assert "[NOTE: role check skipped" not in validated.output
+    assert "[NOTICE: role check skipped" not in validated.output
     created = _run("new", "-w", str(tmp_path), "login")
     assert created.exit_code == 0, created.output
     nxt = _run("next", "-w", str(tmp_path), "--unit", ".devkit/transient/work/login", "--no-lint")

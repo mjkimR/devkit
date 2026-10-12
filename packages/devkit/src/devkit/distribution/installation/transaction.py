@@ -17,16 +17,13 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-from ..errors import LockHeldError, PendingTransactionError, RecoveryError, UnsafeWorkspaceError
-from .workspace import JOURNAL, LOCK, Content, checked_path, owned_prefix, project_path, snapshot
+from devkit.distribution.content import Content, json_content
+from devkit.distribution.errors import LockHeldError, PendingTransactionError, RecoveryError, UnsafeWorkspaceError
+from devkit.distribution.installation.workspace import JOURNAL, LOCK, checked_path, owned_prefix, project_path, snapshot
 
 # How long a reader waits for a writer to release the lock before giving up.
 READ_LOCK_TIMEOUT = 10.0
 _POLL = 0.05
-
-
-def json_content(value: object) -> Content:
-    return Content((json.dumps(value, sort_keys=True, indent=2) + "\n").encode(), 0o644)
 
 
 def read_json(root: Path, name: str) -> dict | None:
@@ -60,18 +57,22 @@ def _fsync_directory(path: Path) -> None:
         os.close(fd)
 
 
-def prune_empty_parents(root: Path, name: str) -> None:
-    """Remove directories left empty by deleting ``name``, up to (not including) its owned prefix.
+def prune_empty_parents(root: Path, name: str, *, stop: str | None = None) -> None:
+    """Remove directories left empty by deleting ``name``, up to (not including) ``stop``.
 
-    Only owned destinations are pruned (``.claude/skills/<id>/`` goes,
-    ``.claude/skills/`` stays); a seeded target's directories belong to the project.
+    ``stop`` is a workspace-relative directory; by default it is the owned
+    prefix of ``name``, so only owned destinations are pruned
+    (``.claude/skills/<id>/`` goes, ``.claude/skills/`` stays) and a seeded
+    target's directories, which belong to the project, are never touched.
     """
-    prefix = owned_prefix(name)
-    if prefix is None:
-        return
-    stop = root / prefix.rstrip("/")
+    if stop is None:
+        prefix = owned_prefix(name)
+        if prefix is None:
+            return
+        stop = prefix.rstrip("/")
+    boundary = root / stop
     parent = (root / name).parent
-    while parent != stop and parent.is_relative_to(stop):
+    while parent != boundary and parent.is_relative_to(boundary):
         try:
             parent.rmdir()
         except OSError:
@@ -159,7 +160,7 @@ def pending_journal(root: Path) -> bool:
 
 def require_no_journal(root: Path) -> None:
     if pending_journal(root):
-        raise PendingTransactionError("an interrupted synchronization left its journal; run devkit recover first")
+        raise PendingTransactionError("an interrupted synchronization left its journal")
 
 
 def recover_locked(root: Path) -> int:

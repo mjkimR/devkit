@@ -16,11 +16,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from devkit.core import frontmatter
-from devkit.core.errors import FrontmatterError
-
-from ..errors import BundleError
-from .common import SLUG
+from devkit.distribution.bundles.common import EXTENSION_KEY, SLUG, read_frontmatter
+from devkit.distribution.errors import BundleError
 
 STATUSES = ("native", "emulated", "unsupported", "unverified")
 ALLOWED_KEYS: dict[str, tuple[str, ...]] = {
@@ -45,8 +42,6 @@ HOST_FILES = {"claude-code": ".md", "codex": ".toml", "antigravity": ".md"}
 # Frontmatter every Antigravity subagent file carries in addition to the contract's keys.
 ANTIGRAVITY_FIXED: tuple[tuple[str, Any], ...] = (("subagent", True), ("mainAgent", False))
 FIELDS = {"role", "title", "description", "skill", "hosts"}
-# Extension keys: carried by the contract for other tools, never rendered or interpreted by devkit.
-EXTENSION_KEY = re.compile(r"x-[a-z][a-z0-9-]*\Z")
 
 
 @dataclass(frozen=True)
@@ -83,18 +78,8 @@ def _setting(value: Any) -> Any:
 
 
 def read_contract(data: bytes, context: str, asset_id: str | None = None) -> Contract:
-    try:
-        text = data.decode("utf-8")
-    except UnicodeError as exc:
-        raise BundleError(f"{context}: subagent contract must be UTF-8") from exc
-    try:
-        document = frontmatter.parse(text)
-    except FrontmatterError as exc:
-        raise BundleError(f"{context}: {exc}") from exc
-    if document.data is None:
-        raise BundleError(f"{context}: subagent contract requires YAML frontmatter")
-    metadata = document.data
-    body = document.body.replace("\r\n", "\n").strip("\n")
+    text, block, metadata = read_frontmatter(data, context, "subagent contract")
+    body = text[block.end :].replace("\r\n", "\n").strip("\n")
     if unknown := {key for key in metadata if key not in FIELDS and not EXTENSION_KEY.fullmatch(key)}:
         raise BundleError(f"{context}: unknown frontmatter keys {sorted(unknown)} (extensions use x-<name>)")
     extensions = tuple((key, value) for key, value in metadata.items() if key not in FIELDS)
@@ -153,7 +138,7 @@ def projection_path(agent: str, role: str) -> str:
     return f"{SUBAGENT_DIRS[agent]}/{role}{HOST_FILES[agent]}"
 
 
-def render(agent: str, contract: Contract, contract_path: str) -> bytes | None:
+def render_projection(agent: str, contract: Contract, contract_path: str) -> bytes | None:
     """Projection bytes for ``agent``; ``None`` when the host is unsupported for this role.
 
     ``contract_path`` is the workspace-relative location of the contract, cited in the prompt.

@@ -30,9 +30,6 @@ class RuleRegistry:
     def register(self, rule: Rule) -> None:
         self._rules[rule.id] = rule
 
-    def unregister(self, rule_id: str) -> None:
-        self._rules.pop(rule_id, None)
-
     def get(self, rule_id: str) -> Rule | None:
         return self._rules.get(rule_id)
 
@@ -42,21 +39,20 @@ class RuleRegistry:
     def discover_from_dir(self, rules_dir: Path) -> list[Rule]:
         """Load rules from every Python file under a directory, in sorted path order.
 
-        Files and directories whose name starts with ``_`` or ``.`` are skipped.
+        Files and directories whose name starts with ``_`` or ``.`` are skipped
+        (``devkit.core.plugins.iter_plugin_files``).
         """
         return self.discover_from_files(iter_plugin_files(rules_dir))
 
     def discover_from_files(self, files: Iterable[Path]) -> list[Rule]:
-        """Load the ``BaseRule`` subclasses defined in the given Python files, in definition order.
+        """Load the ``BaseRule`` subclasses defined in each of the given Python files, in order.
 
-        Files whose name starts with ``_`` or ``.`` or that are not ``.py``
-        files are skipped. Loading is atomic per file (``devkit.core.plugins``):
+        Every given file is loaded, whatever its name. Loading is atomic per file (``devkit.core.plugins``):
         a file that fails to import or whose classes cannot be instantiated
         contributes no rule, and the failure is recorded in ``errors`` as a
         ``RuleLoadError`` (``RULES_LOAD_FAILED``) naming the file.
         """
-        selected = [path for path in files if path.suffix == ".py" and not path.name.startswith(("_", "."))]
-        loaded = load_subclasses(selected, BaseRule, namespace=PLUGIN_NAMESPACE)
+        loaded = load_subclasses(files, BaseRule, namespace=PLUGIN_NAMESPACE)
         discovered: list[Rule] = []
         for instance in loaded.instances:
             self.register(instance)
@@ -70,7 +66,7 @@ class RuleRegistry:
         return discovered
 
 
-def default_registry() -> RuleRegistry:
+def default_rule_registry() -> RuleRegistry:
     """Return a registry populated with default built-in rules."""
     registry = RuleRegistry()
     registry.register(MarkdownLinkRule())

@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner, Result
 from devkit.advisory import ActionMode
+from devkit.core.plugins import iter_plugin_files
 from devkit.workflow import (
     BaseCheck,
     CheckClass,
@@ -15,16 +16,16 @@ from devkit.workflow import (
     Registry,
     WorkflowError,
     Workspace,
+    compare_shared_stages,
     discover_roles,
-    evaluate,
+    evaluate_definition,
     load_check_files,
     load_plugin_checks,
-    parse,
-    shared_stage_problems,
-    validate,
+    parse_definition,
+    validate_definition,
 )
-from devkit.workflow.checks import CheckError
 from devkit.workflow.cli import cli
+from devkit.workflow.errors import CheckError
 from testsupport.workflow import WORKFLOW, write_config, write_receipt, write_unit
 
 CONFIG = """schema = 1
@@ -102,16 +103,16 @@ def test_discover_roles_sources(tmp_path: Path) -> None:
 
 
 def test_validate_reports_unknown_role_only_when_vocabulary_is_known() -> None:
-    doc = parse(WORKFLOW)
-    assert validate(doc, "task.md", roles=None) == []
-    problems = validate(doc, "task.md", roles={})
+    doc = parse_definition(WORKFLOW)
+    assert validate_definition(doc, "task.md", roles=None) == []
+    problems = validate_definition(doc, "task.md", roles={})
     assert [str(p) for p in problems] == ["review.role: unknown role 'reviewer' (no subagent contract found)"]
-    assert validate(doc, "task.md", roles={"reviewer": ".devkit/roles/reviewer.md"}) == []
+    assert validate_definition(doc, "task.md", roles={"reviewer": ".devkit/roles/reviewer.md"}) == []
 
 
 def test_validate_cli_skips_or_enforces_roles(workspace: Path) -> None:
     skipped = _run("validate", "-w", str(workspace))
-    assert skipped.exit_code == 0 and "[NOTE: role check skipped: no installation receipt and no .devkit/roles]" in (
+    assert skipped.exit_code == 0 and "[NOTICE: role check skipped: no installation receipt and no .devkit/roles]" in (
         skipped.output
     )
     (workspace / ".devkit/roles").mkdir()
@@ -140,7 +141,7 @@ def test_delegate_without_vocabulary_has_no_contract(tmp_path: Path) -> None:
     opts = Options(
         workspace_root=tmp_path, unit_dir=unit, anchor="task.md", skip_lint=True, approvals={"direction": "auto"}
     )
-    res = evaluate(parse(WORKFLOW), opts)
+    res = evaluate_definition(parse_definition(WORKFLOW), opts)
     assert res.delegate is not None and res.delegate.contract is None
     assert res.delegate.to_dict() == {"role": "reviewer", "isolation": "preferred", "contract": None}
 
@@ -165,9 +166,9 @@ def test_show_unit_prints_binding_and_drift(workspace: Path) -> None:
     assert drifted.exit_code == 0 and "drift=true]" in drifted.output
 
     both = _run("show", "-w", str(workspace), "direct-delivery", "--unit", unit)
-    assert both.exit_code == 2 and "(WORKFLOW_NOT_SELECTED)" in both.stderr
-    neither = _run("show", "-w", str(workspace))
-    assert neither.exit_code == 2 and "(WORKFLOW_NOT_SELECTED)" in neither.stderr
+    assert both.exit_code == 2 and "(ARGUMENT_INVALID)" in both.stderr
+    neither = _run("show", "-w", str(workspace), "--format", "json")
+    assert neither.exit_code == 2 and json.loads(neither.stdout)["error"]["code"] == "ARGUMENT_INVALID"
 
 
 # --- list filters ---------------------------------------------------------------
@@ -178,15 +179,17 @@ def test_list_status_filters(workspace: Path) -> None:
     write_unit(workspace, ".devkit/transient/work/a", status="planned")
     write_unit(workspace, ".devkit/transient/work/b", status="completed")
     write_unit(workspace, ".devkit/transient/work/c", status="in-progress")
-    everything = json.loads(_run("list", "-w", str(workspace), "--format", "json").stdout)
+    everything = json.loads(_run("list", "-w", str(workspace), "--format", "json").stdout)["units"]
     assert [row["status"] for row in everything] == ["planned", "completed", "in-progress"]
-    active = json.loads(_run("list", "-w", str(workspace), "--exclude-status", "completed", "--format", "json").stdout)
+    active = json.loads(_run("list", "-w", str(workspace), "--exclude-status", "completed", "--format", "json").stdout)[
+        "units"
+    ]
     assert [row["unit"] for row in active] == [".devkit/transient/work/a", ".devkit/transient/work/c"]
     planned = _run("list", "-w", str(workspace), "--status", "planned")
     assert planned.output.strip() == "[UNIT: .devkit/transient/work/a status=planned workflow=- anchor=task.md]"
     several = json.loads(
         _run("list", "-w", str(workspace), "--status", "planned", "--status", "completed", "--format", "json").stdout
-    )
+    )["units"]
     assert [row["unit"] for row in several] == [".devkit/transient/work/a", ".devkit/transient/work/b"]
     none = _run("list", "-w", str(workspace), "--status", "nope")
     assert none.exit_code == 0 and "[UNITS: none under" in none.output
@@ -205,14 +208,18 @@ def test_load_check_files_validates_and_reports(tmp_path: Path) -> None:
     duplicate = tmp_path / "dup.py"
     duplicate.write_text(PLUGIN)
     (tmp_path / "_private.py").write_text("raise RuntimeError('never loaded')\n")
-    loaded, errors = load_check_files(sorted(tmp_path.glob("*.py")))
+    loaded, errors = load_check_files(iter_plugin_files(tmp_path))  # the directory scan skips _private.py
     assert [c.name for c in loaded] == ["explodes", "has-word"] or [c.name for c in loaded] == ["has-word", "explodes"]
-    assert len(errors) == 3 and {e.code for e in errors} == {"CHECK_LOAD_FAILED"}
+    assert len(errors) == 3 and {e.code for e in errors} == {"WORKFLOW_CHECK_LOAD_FAILED"}
     messages = [str(e) for e in errors]
     assert any("must match [a-z][a-z0-9-]*" in m for m in messages)
     assert any("cannot import" in m for m in messages)
     assert any("already defined" in m for m in messages)
-    assert {e.target for e in errors} == {bad_name.as_posix(), broken.as_posix(), good.as_posix()}  # dup.py loads first
+    assert {e.target_files[0] for e in errors} == {
+        bad_name.as_posix(),
+        broken.as_posix(),
+        good.as_posix(),
+    }  # dup.py loads first
 
 
 def test_registry_rejects_plugin_colliding_with_builtin() -> None:
@@ -237,7 +244,7 @@ def test_plugin_checks_from_checks_dir_are_listed_validated_and_evaluated(worksp
     assert "[CHECK: has-word(file word) class=plugin" in listed.output
     assert any(
         c["name"] == "explodes" and c["class"] == "plugin"
-        for c in json.loads(_run("checks", "-w", str(workspace), "--format", "json").stdout)
+        for c in json.loads(_run("checks", "-w", str(workspace), "--format", "json").stdout)["checks"]
     )
 
     definition = workspace / ".devkit/workflows/direct-delivery.md"
@@ -273,13 +280,15 @@ def test_plugin_checks_from_receipt_and_load_failures(workspace: Path) -> None:
 
     (managed / "words.py").unlink()
     missing = _run("checks", "-w", str(workspace))
-    assert missing.exit_code == 2 and "(CHECK_LOAD_FAILED)" in missing.stderr
+    assert missing.exit_code == 2 and "(WORKFLOW_CHECK_LOAD_FAILED)" in missing.stderr
     assert "synchronized check .devkit/managed/team/checks/words.py is missing" in missing.stderr
     assert "[ACTION]" in missing.stderr
 
     (managed / "words.py").write_text("raise RuntimeError('broken plugin')\n")
     broken = _run("validate", "-w", str(workspace))
-    assert broken.exit_code == 2 and "(CHECK_LOAD_FAILED)" in broken.stderr and "broken plugin" in broken.stderr
+    assert (
+        broken.exit_code == 2 and "(WORKFLOW_CHECK_LOAD_FAILED)" in broken.stderr and "broken plugin" in broken.stderr
+    )
 
 
 def test_receipt_listed_plugin_checks_are_verified_like_rules_and_gates(workspace: Path) -> None:
@@ -306,14 +315,30 @@ def test_receipt_listed_plugin_checks_are_verified_like_rules_and_gates(workspac
     with pytest.raises(WorkflowError) as info:
         Workspace(workspace).plugins()
     error = info.value
-    assert error.code == "CHECK_LOAD_FAILED" and error.mode is ActionMode.MAINTENANCE
+    assert error.code == "WORKFLOW_CHECK_LOAD_FAILED" and error.mode is ActionMode.MAINTENANCE
     assert "differs from the hash in the receipt" in error.render()
     assert error.fix is not None and "devkit sync" in error.fix and "devkit override create team:words" in error.fix
     assert error.target_files == (".devkit/managed/team/checks/words.py",)
     _, problems = load_plugin_checks(workspace, ".devkit/workflow-checks")
-    assert [(p.code, p.target) for p in problems] == [("CHECK_LOAD_FAILED", ".devkit/managed/team/checks/words.py")]
+    assert [(p.code, p.target_files) for p in problems] == [
+        ("WORKFLOW_CHECK_LOAD_FAILED", (".devkit/managed/team/checks/words.py",))
+    ]
     cli = _run("checks", "-w", str(workspace))
-    assert cli.exit_code == 2 and "(CHECK_LOAD_FAILED)" in cli.stderr
+    assert cli.exit_code == 2 and "(WORKFLOW_CHECK_LOAD_FAILED)" in cli.stderr
+
+
+def test_receipt_listed_plugin_checks_load_whatever_their_name(workspace: Path) -> None:
+    write_config(workspace, CONFIG)
+    private = workspace / ".devkit/managed/team/checks/_words.py"
+    private.parent.mkdir(parents=True)
+    private.write_text(PLUGIN)
+    write_receipt(
+        workspace,
+        [{"kind": "workflow-check", "id": "words", "entrypoints": [".devkit/managed/team/checks/_words.py"]}],
+        hashed=(".devkit/managed/team/checks/_words.py",),
+    )
+    loaded, problems = load_plugin_checks(workspace, ".devkit/workflow-checks")
+    assert problems == [] and {c.name for c in loaded} == {"has-word", "explodes"}
 
 
 def test_definition_declared_check_cannot_shadow_plugin(workspace: Path) -> None:
@@ -339,23 +364,23 @@ def test_plugin_result_class_is_normalized() -> None:
 
             return CheckResult("other-name", CheckClass.HUMAN, True, False, "ok")
 
-    doc = parse(WORKFLOW.replace("exit: [tasks-all-checked, lint-clean]", "exit: [weird]"))
-    assert validate(doc, "task.md", plugins=[Weird()]) == []
+    doc = parse_definition(WORKFLOW.replace("exit: [tasks-all-checked, lint-clean]", "exit: [weird]"))
+    assert validate_definition(doc, "task.md", plugins=[Weird()]) == []
 
 
 # --- shared stages --------------------------------------------------------------
 
 
 def test_shared_stage_problems() -> None:
-    a = parse(WORKFLOW)
-    same = parse(WORKFLOW.replace("id: direct-delivery", "id: bugfix"))
-    assert shared_stage_problems([a, same]) == []
-    different = parse(
+    a = parse_definition(WORKFLOW)
+    same = parse_definition(WORKFLOW.replace("id: direct-delivery", "id: bugfix"))
+    assert compare_shared_stages([a, same]) == []
+    different = parse_definition(
         WORKFLOW.replace("id: direct-delivery", "id: bugfix")
         .replace("exit: [envelope-review-passed]", "exit: [envelope-review-passed, ci-passed]")
         .replace("role: reviewer", "role: developer")
     )
-    problems = shared_stage_problems([a, different])
+    problems = compare_shared_stages([a, different])
     assert [str(p) for p in problems] == [
         "shared stage 'review' differs between direct-delivery and bugfix: exit",
         "shared stage 'review' differs between direct-delivery and bugfix: role",
@@ -383,21 +408,23 @@ def test_validation_problems_and_load_errors_are_coded_entries(workspace: Path) 
     (workspace / ".devkit/roles/other.md").write_text("# other\n")  # `reviewer` is not in the vocabulary
     (workspace / ".devkit/workflows/broken.md").write_text("---\nid: [\n---\n")
     result = _run("validate", "-w", str(workspace), "--format", "json")
-    assert result.exit_code == 1
+    assert result.exit_code == 2  # a definition that cannot be loaded is a load problem, not a finding
     data = json.loads(result.stdout)
     [definition] = data["definitions"]
     assert {"code": "ROLE_UNKNOWN", "where": "review.role"} in [
-        {k: p[k] for k in ("code", "where")} for p in definition["problems"]
+        {k: p[k] for k in ("code", "where")} for p in definition["errors"]
     ]
+    assert definition["ok"] is False and data["ok"] is False
     [load_error] = data["errors"]
-    assert load_error["code"] == "DEFINITION_INVALID"
-    assert load_error["target"].endswith("broken.md") and load_error["message"]
+    assert load_error["code"] == "WORKFLOW_DEFINITION_INVALID" and load_error["exit_code"] == 2
+    assert load_error["advisory"]["target_files"][0].endswith("broken.md") and load_error["message"]
     text = _run("validate", "-w", str(workspace))
     assert "[INVALID: " in text.output and "review.role: unknown role 'reviewer'" in text.output
 
     shown = _run("show", "-w", str(workspace), "direct-delivery", "--format", "json")
     assert shown.exit_code == 1
-    assert any(p["code"] == "ROLE_UNKNOWN" for p in json.loads(shown.stdout)["problems"])
+    shown_data = json.loads(shown.stdout)
+    assert shown_data["ok"] is False and any(p["code"] == "ROLE_UNKNOWN" for p in shown_data["errors"])
     assert (
         "[PROBLEM: review.role: unknown role 'reviewer'" in _run("show", "-w", str(workspace), "direct-delivery").output
     )

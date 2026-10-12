@@ -5,9 +5,9 @@ from pathlib import Path
 
 import yaml
 from click.testing import CliRunner, Result
-from devkit.workflow import Options, evaluate, load_decisions, parse, render_result
+from devkit.workflow import Options, evaluate_definition, load_decisions, parse_definition, render_evaluation
 from devkit.workflow.cli import cli
-from devkit.workflow.decisions import DecisionRecordError, Decisions, new_decision, parse_record, write_decision
+from devkit.workflow.unit.decisions import DecisionRecordError, Decisions, new_decision, parse_record, write_decision
 from testsupport.workflow import WORKFLOW, write_config, write_unit
 
 HUMAN_CHECK = """---
@@ -120,10 +120,10 @@ def test_malformed_records_are_reported_not_fatal(tmp_path: Path) -> None:
     decisions = load_decisions(unit)
     assert decisions.records == []
     assert [e.file for e in decisions.errors] == ["decisions/01-gate-x.yaml", "decisions/02-gate-x.yaml"]
-    assert "action must be one of" in decisions.errors[0].reason
-    res = evaluate(parse(WORKFLOW), _opts(tmp_path, unit))
+    assert "action must be one of" in decisions.errors[0].message
+    res = evaluate_definition(parse_definition(WORKFLOW), _opts(tmp_path, unit))
     assert [e.file for e in res.decision_errors] == ["decisions/01-gate-x.yaml", "decisions/02-gate-x.yaml"]
-    assert "[DECISION_ERROR: decisions/01-gate-x.yaml" in render_result(res)
+    assert "[DECISION_ERROR: decisions/01-gate-x.yaml" in render_evaluation(res)
 
 
 def test_parse_record_validation() -> None:
@@ -162,7 +162,7 @@ def test_parse_record_validation() -> None:
 
 def test_gate_request_and_recorded_approval(tmp_path: Path) -> None:
     unit = write_unit(tmp_path, "work/a")
-    res = evaluate(parse(WORKFLOW), _opts(tmp_path, unit))
+    res = evaluate_definition(parse_definition(WORKFLOW), _opts(tmp_path, unit))
     assert [r.id for r in res.requests] == ["gate:direction"]
     req = res.requests[0]
     assert (req.kind, req.title, req.target.to_dict()) == (
@@ -171,23 +171,24 @@ def test_gate_request_and_recorded_approval(tmp_path: Path) -> None:
         {"type": "gate", "name": "direction", "stage": "intent"},
     )
     assert req.declined is None and req.allow_note and not req.options
-    text = render_result(res)
+    text = render_evaluation(res)
     assert (
         '[REQUEST: id=gate:direction kind=approve title="Approve direction" target=gate:direction stage=intent note=allowed]'
         in text
     )
 
     _record(unit, "gate:direction", "decline", stage="intent", note="scope unclear")
-    res = evaluate(parse(WORKFLOW), _opts(tmp_path, unit))
+    res = evaluate_definition(parse_definition(WORKFLOW), _opts(tmp_path, unit))
     assert res.stage is not None and res.stage.id == "intent"
     assert res.requests[0].declined is not None and res.requests[0].declined.note == "scope unclear"
-    assert '[DECLINED: id=gate:direction file=decisions/01-gate-direction.yaml note="scope unclear"]' in render_result(
-        res
+    assert (
+        '[DECLINED: id=gate:direction file=decisions/01-gate-direction.yaml note="scope unclear"]'
+        in render_evaluation(res)
     )
     assert res.to_dict()["requests"][0]["declined"]["file"] == "decisions/01-gate-direction.yaml"
 
     _record(unit, "gate:direction", "accept", stage="intent")
-    res = evaluate(parse(WORKFLOW), _opts(tmp_path, unit))
+    res = evaluate_definition(parse_definition(WORKFLOW), _opts(tmp_path, unit))
     assert res.done == ["intent"] and res.stage is not None and res.stage.id == "build-verify"
     assert all(r.id != "gate:direction" for r in res.requests)
     assert res.gate is None or res.gate.name != "direction"
@@ -195,24 +196,24 @@ def test_gate_request_and_recorded_approval(tmp_path: Path) -> None:
 
 def test_human_check_request_and_approval(tmp_path: Path) -> None:
     unit = write_unit(tmp_path, "work/a")
-    res = evaluate(parse(HUMAN_CHECK), _opts(tmp_path, unit))
+    res = evaluate_definition(parse_definition(HUMAN_CHECK), _opts(tmp_path, unit))
     assert [r.id for r in res.requests] == ["check:design-signed"]
     assert res.requests[0].target.to_dict() == {"type": "check", "name": "design-signed", "stage": "design"}
     _record(unit, "check:design-signed", "accept", workflow="signoff", stage="design")
-    res = evaluate(parse(HUMAN_CHECK), _opts(tmp_path, unit))
+    res = evaluate_definition(parse_definition(HUMAN_CHECK), _opts(tmp_path, unit))
     assert res.complete
     assert "accepted by decisions/01-check-design-signed.yaml" in str(res.done) or res.done == ["design"]
 
 
 def test_given_still_satisfies_without_a_record(tmp_path: Path) -> None:
     unit = write_unit(tmp_path, "work/a")
-    res = evaluate(parse(WORKFLOW), _opts(tmp_path, unit, given=("direction",)))
+    res = evaluate_definition(parse_definition(WORKFLOW), _opts(tmp_path, unit, given=("direction",)))
     assert res.done == ["intent"] and load_decisions(unit).records == []
 
 
 def test_handoff_request_and_recorded_choice(tmp_path: Path) -> None:
     unit = write_unit(tmp_path, "work/a")
-    res = evaluate(parse(TRIAGE), _opts(tmp_path, unit))
+    res = evaluate_definition(parse_definition(TRIAGE), _opts(tmp_path, unit))
     assert res.complete and [r.id for r in res.requests] == ["handoff"]
     req = res.requests[0]
     assert req.kind == "choose"
@@ -223,36 +224,37 @@ def test_handoff_request_and_recorded_choice(tmp_path: Path) -> None:
     assert (
         '[REQUEST: id=handoff kind=choose title="Choose next workflow" options=spec-driven,direct-delivery '
         "eligible=direct-delivery recommended=-]"
-    ) in render_result(res)
+    ) in render_evaluation(res)
 
     # An ineligible recorded choice is ignored; an eligible one sets chosen and closes the request.
     _record(unit, "handoff", "accept", workflow="triage", value="spec-driven")
-    res = evaluate(parse(TRIAGE), _opts(tmp_path, unit))
+    res = evaluate_definition(parse_definition(TRIAGE), _opts(tmp_path, unit))
     assert res.handoff is not None and res.handoff.chosen is None and res.requests
     # B8: the ignored choice is reported, not silently dropped.
     assert [e.file for e in res.decision_errors] == ["decisions/01-handoff.yaml"]
-    assert "not an eligible candidate" in res.decision_errors[0].reason
+    assert "not an eligible candidate" in res.decision_errors[0].message
+    assert res.decision_errors[0].code == "HANDOFF_CHOICE_IGNORED"
     _record(unit, "handoff", "accept", workflow="triage", value="direct-delivery")
-    res = evaluate(parse(TRIAGE), _opts(tmp_path, unit))
+    res = evaluate_definition(parse_definition(TRIAGE), _opts(tmp_path, unit))
     assert res.handoff is not None and res.handoff.chosen == "direct-delivery"
     assert res.handoff.decision is not None and res.handoff.decision.file == "decisions/02-handoff.yaml"
     assert res.requests == [] and res.waiting is None
-    assert "chosen=direct-delivery decision=decisions/02-handoff.yaml]" in render_result(res)
+    assert "chosen=direct-delivery decision=decisions/02-handoff.yaml]" in render_evaluation(res)
 
     # Under auto, a recorded eligible choice beats the first-eligible pick.
     (unit / "spec.md").write_text("x\n")
-    res = evaluate(parse(TRIAGE), _opts(tmp_path, unit, approvals={"handoff": "auto"}))
+    res = evaluate_definition(parse_definition(TRIAGE), _opts(tmp_path, unit, approvals={"handoff": "auto"}))
     assert res.handoff is not None and res.handoff.chosen == "direct-delivery"
 
 
 def test_no_requests_under_auto_or_off(tmp_path: Path) -> None:
     unit = write_unit(tmp_path, "work/a")
-    res = evaluate(parse(WORKFLOW), _opts(tmp_path, unit, approvals={"direction": "auto"}))
+    res = evaluate_definition(parse_definition(WORKFLOW), _opts(tmp_path, unit, approvals={"direction": "auto"}))
     assert all(r.id != "gate:direction" for r in res.requests)
     (unit / "spec.md").write_text("x\n")
-    res = evaluate(parse(TRIAGE), _opts(tmp_path, unit, approvals={"handoff": "auto"}))
+    res = evaluate_definition(parse_definition(TRIAGE), _opts(tmp_path, unit, approvals={"handoff": "auto"}))
     assert res.requests == [] and res.handoff is not None and res.handoff.chosen == "spec-driven"
-    res = evaluate(parse(TRIAGE), _opts(tmp_path, unit, approvals={"handoff": "off"}))
+    res = evaluate_definition(parse_definition(TRIAGE), _opts(tmp_path, unit, approvals={"handoff": "off"}))
     assert res.requests == []
 
 
@@ -279,7 +281,7 @@ def test_cli_requests_answer_and_next(tmp_path: Path) -> None:
     listed = _run("requests", "-w", str(root), "--unit", unit, "--no-lint")
     assert listed.exit_code == 0 and listed.output.startswith("[REQUEST: id=gate:direction kind=approve")
     as_json = json.loads(_run("requests", "-w", str(root), "--unit", unit, "--no-lint", "--format", "json").stdout)
-    assert [r["id"] for r in as_json] == ["gate:direction"]
+    assert [r["id"] for r in as_json["requests"]] == ["gate:direction"]
 
     unknown = _run(
         "answer", "-w", str(root), "--unit", unit, "--no-lint", "--request", "gate:integration", "--action", "accept"
@@ -351,7 +353,7 @@ def test_cli_requests_answer_and_next(tmp_path: Path) -> None:
     assert record["action"] == "accept" and record["at"].endswith("Z") and "value" not in record
     nxt = _run("next", "-w", str(root), "--unit", unit, "--no-lint", "--format", "json")
     payload = json.loads(nxt.stdout)
-    assert payload["done"] == ["intent"] and payload["requests"] == [] and payload["decision_errors"] == []
+    assert payload["done"] == ["intent"] and payload["requests"] == [] and payload["errors"] == []
     assert _run("requests", "-w", str(root), "--unit", unit, "--no-lint").output.strip() == "[REQUESTS: none]"
 
     feedback = _run(

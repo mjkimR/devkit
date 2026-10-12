@@ -4,8 +4,18 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import click
 from devkit.distribution.bundles import load_bundle
+from devkit.distribution.cli import register
 from devkit.distribution.installation.discovery import InstalledBundle
+
+
+@click.group(name="devkit")
+def cli() -> None:
+    """The distribution commands alone, as ``register`` adds them to the root ``devkit`` group."""
+
+
+register(cli)
 
 
 def make_bundle(tmp_path: Path, bundle: str, *, directory: bool = False) -> InstalledBundle:

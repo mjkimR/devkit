@@ -1,9 +1,9 @@
+"""The context prerequisite devkit prepends to the skills of a bundle that has a context."""
+
 from __future__ import annotations
 
 from devkit.core import frontmatter
-from devkit.core.errors import FrontmatterError
-
-from ..errors import BundleError
+from devkit.distribution.bundles.common import locate_frontmatter
 
 CONTEXT_START = "<!-- DEVKIT:CONTEXT -->"
 CONTEXT_END = "<!-- /DEVKIT:CONTEXT -->"
@@ -26,16 +26,12 @@ def context_prerequisite(bundle: str) -> str:
     )
 
 
-def prepend_context(data: bytes, bundle: str) -> bytes:
-    """Insert the context prerequisite after the frontmatter; every other byte is kept."""
-    try:
-        text = data.decode("utf-8")
-    except UnicodeError as exc:
-        raise BundleError("skill must be UTF-8") from exc
-    try:
-        block = frontmatter.locate(text)
-    except FrontmatterError as exc:
-        raise BundleError("skill has unclosed YAML frontmatter") from exc
+def prepend_context(data: bytes, bundle: str, context: str) -> bytes:
+    """Insert the context prerequisite after the frontmatter; every other byte is kept.
+
+    ``context`` names the skill file in a ``BundleError``.
+    """
+    text, block = locate_frontmatter(data, context, "skill")
     if block is None:
         offset = 1 if text.startswith(frontmatter.BOM) else 0
         prefix = text[:offset]

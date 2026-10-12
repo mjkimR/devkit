@@ -6,9 +6,10 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
+from devkit.core.errors import ArgumentError
+from devkit.core.receipt import OVERRIDES_PATH
 from devkit.distribution.bundles import load_bundle
-from devkit.distribution.cli import cli
-from devkit.distribution.errors import ArgumentError, SelectionError
+from devkit.distribution.errors import SelectionError
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.context import get_context
 from devkit.distribution.installation.discovery import InstalledBundle
@@ -21,7 +22,7 @@ from devkit.distribution.installation.override_commands import (
 )
 from devkit.distribution.installation.receipt import read_receipt
 from devkit.distribution.installation.sync import sync_project
-from devkit.distribution.installation.workspace import OVERRIDES
+from testsupport.distribution import cli
 
 
 @pytest.fixture
@@ -70,20 +71,20 @@ def target(tmp_path: Path) -> Path:
 def test_override_create_and_sync_instruction(installed: list[InstalledBundle], target: Path) -> None:
     sync_project(target, installed)
     # Initially get-context shows upstream header
-    ctx = get_context(target, "team")
+    ctx = get_context(target, "team").to_dict()
     assert "upstream guide description" in ctx["instructions"][0]["header"]
 
     # Create override for guide
-    result = create_override(target, installed, "team:guide")
+    result = create_override(target, installed, "team:guide").to_dict()
     assert result["bundle"] == "team"
     assert result["asset"] == "guide"
-    override_file = target / OVERRIDES / "team/guide.md"
+    override_file = target / OVERRIDES_PATH / "team/guide.md"
     assert override_file.is_file()
 
     # Edit override
     override_file.write_text("---\nname: guide\ndescription: customized guide description\n---\n# Custom Guide\n")
     sync_result = sync_project(target, installed)
-    assert not sync_result.get("drift")
+    assert not sync_result.drift
 
     # Verify receipt tracks override
     receipt = read_receipt(target)
@@ -93,9 +94,9 @@ def test_override_create_and_sync_instruction(installed: list[InstalledBundle], 
     assert override_meta.relative_path == "guide.md"
 
     # get-context now returns the customized instruction
-    ctx_after = get_context(target, "team")
+    ctx_after = get_context(target, "team").to_dict()
     assert "customized guide description" in ctx_after["instructions"][0]["header"]
-    assert (target / OVERRIDES / "team/guide.md").as_posix() in ctx_after["instructions"][0]["path"]
+    assert (target / OVERRIDES_PATH / "team/guide.md").as_posix() in ctx_after["instructions"][0]["path"]
 
     # Managed pristine file remains upstream content
     assert "upstream guide description" in (target / ".devkit/managed/team/guide.md").read_text()
@@ -107,7 +108,7 @@ def test_override_native_subagent_projection(installed: list[InstalledBundle], t
     assert codex_agent.read_text() == 'system_prompt = "upstream prompt"\n'
 
     create_override(target, installed, "team:reviewer")
-    override_file = target / OVERRIDES / "team/reviewer.toml"
+    override_file = target / OVERRIDES_PATH / "team/reviewer.toml"
     assert override_file.is_file()
     override_file.write_text('system_prompt = "custom team prompt"\n')
 
@@ -121,7 +122,7 @@ def test_override_native_subagent_projection(installed: list[InstalledBundle], t
 def test_override_drift_diff_accept_and_remove(installed: list[InstalledBundle], target: Path) -> None:
     sync_project(target, installed)
     create_override(target, installed, "team:guide")
-    override_file = target / OVERRIDES / "team/guide.md"
+    override_file = target / OVERRIDES_PATH / "team/guide.md"
     override_file.write_text("---\nname: guide\ndescription: customized guide description\n---\n# Custom Guide\n")
     sync_project(target, installed)
 
@@ -134,13 +135,12 @@ def test_override_drift_diff_accept_and_remove(installed: list[InstalledBundle],
 
     # Sync detects upstream drift
     sync_res = sync_project(target, newer)
-    drift = sync_res.get("drift")
+    drift = sync_res.drift
     assert drift
-    assert drift[0]["bundle"] == "team"
-    assert drift[0]["asset"] == "guide"
+    assert (drift[0].bundle, drift[0].asset) == ("team", "guide")
 
     # Diff shows drift: upstream vs override, and baseline vs new upstream
-    diff_res = diff_override(target, newer, "team:guide")
+    diff_res = diff_override(target, newer, "team:guide").to_dict()
     assert diff_res["drift_detected"] is True
     (changed,) = diff_res["files"]
     assert changed["path"] == "guide.md"
@@ -150,15 +150,15 @@ def test_override_drift_diff_accept_and_remove(installed: list[InstalledBundle],
     # List overrides shows drift
     listed = list_overrides(target, newer)
     assert len(listed) == 1
-    assert listed[0]["drift_detected"] is True
+    assert listed[0].drift_detected is True
 
     # Accept updates the baseline digest
-    accept_res = accept_override(target, newer, "team:guide")
+    accept_res = accept_override(target, newer, "team:guide").to_dict()
     assert accept_res["status"] == "accepted"
 
     # Sync now has zero drift
     sync_after_accept = sync_project(target, newer)
-    assert not sync_after_accept.get("drift")
+    assert not sync_after_accept.drift
 
     # Remove override
     remove_override(target, newer, "team:guide")
@@ -168,7 +168,7 @@ def test_override_drift_diff_accept_and_remove(installed: list[InstalledBundle],
     assert "guide" not in receipt_after_remove.overrides.get("team", {})
 
     # get-context reverts to upstream content
-    ctx_reverted = get_context(target, "team")
+    ctx_reverted = get_context(target, "team").to_dict()
     assert "upstream v2 security update" in ctx_reverted["instructions"][0]["header"]
 
 
@@ -184,7 +184,7 @@ def test_override_cli_commands(installed: list[InstalledBundle], target: Path, m
     # CLI create
     res = runner.invoke(cli, ["override", "create", "team:guide", "--workspace-root", str(target)])
     assert res.exit_code == 0
-    assert (target / OVERRIDES / "team/guide.md").is_file()
+    assert (target / OVERRIDES_PATH / "team/guide.md").is_file()
 
     # CLI duplicate without force fails
     res_dup = runner.invoke(cli, ["override", "create", "team:guide", "--workspace-root", str(target)])
@@ -198,7 +198,7 @@ def test_override_cli_commands(installed: list[InstalledBundle], target: Path, m
     # CLI list
     res_list = runner.invoke(cli, ["override", "list", "--workspace-root", str(target)])
     assert res_list.exit_code == 0
-    data = json.loads(res_list.output)
+    data = json.loads(res_list.output)["overrides"]
     assert len(data) == 1
     assert data[0]["asset"] == "guide"
 
@@ -215,7 +215,7 @@ def test_override_cli_commands(installed: list[InstalledBundle], target: Path, m
     # CLI remove
     res_remove = runner.invoke(cli, ["override", "remove", "team:guide", "--workspace-root", str(target)])
     assert res_remove.exit_code == 0
-    assert not (target / OVERRIDES / "team/guide.md").exists()
+    assert not (target / OVERRIDES_PATH / "team/guide.md").exists()
 
 
 def test_override_validation_errors(installed: list[InstalledBundle], target: Path) -> None:

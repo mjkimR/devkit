@@ -34,10 +34,12 @@ A multi-stage delivery procedure (intent, specify, build, review, reconcile, int
 
 `devkit.workflow` is a library with a thin CLI on top. Layers, from the entry point down:
 
-- **Library entry points.** `workspace.py` (`Workspace`: configuration, definitions, roles, plugin checks, unit resolution, `evaluate_unit` with the drift policy), `units.py` (`create_unit`, `list_units`), `answers.py` (`record_answer`, `return_to`), `handoff.py` (`plan_handoff`, `apply_handoff`) and `envelope/` (`compose`, `write_next`).
-- **Evaluation.** `evaluate.py` (pure: `Options` in, `Result` out), `results.py`, `requests.py`, `primitives.py` (the disk checks), `checks.py` (the registry), `plugins.py`, `lint.py` (the `devkit.rules` binding) and `git.py`.
-- **Documents and records.** `definition.py`, `validation.py`, `discovery.py`, `decisions.py`, `binding.py`, `envelope/model.py`, `config.py`, `layout.py`, `roles.py`, `frontmatter.py` (built on `devkit.core.frontmatter`), `ids.py`, `errors.py`.
-- **CLI.** `cli/` (`app.py` with the error boundary, `units.py`, `run.py`, `definitions.py`, `envelope.py`).
+- **Library entry points** (top level). `workspace.py` (`Workspace`: configuration, definitions, roles and plugin checks loaded once and reused, unit resolution, `bind_unit`, `evaluate_unit` with the drift policy), `answers.py` (`record_answer`, `return_to`), `handoff.py` (`plan_handoff`, `apply_handoff`), `render.py` (the sentinel text lines; public library functions the CLI prints) and `errors.py` (one class per error code).
+- **`definition/`.** The workflow document: `definition.py`, `validation.py`, `discovery.py`, `checks.py` (the check registry) and `ids.py`.
+- **`project/`.** The project's setup: `config.py`, `layout.py`, `roles.py`, `plugins.py`.
+- **`unit/`.** A work unit on disk: `units.py` (`create_unit`, `list_units`), `binding.py`, `frontmatter.py` (built on `devkit.core.frontmatter`), `decisions.py`, `records.py` (shared helpers of the numbered decision and envelope files) and `envelope/` (`model.py`, `authoring.py` with `compose_envelope`, `write_envelope`).
+- **`evaluation/`.** `evaluate.py` (pure: `evaluate_definition`, `Options` in, `UnitEvaluation` out), `results.py`, `requests.py`, `primitives.py` (the disk checks), `git.py` and `lint.py` (the `devkit.rules` binding).
+- **`cli/`.** `app.py` (the group and shared options), `units.py`, `run.py`, `definitions.py`, `envelope.py`.
 
 The module map is in [the reference](reference.md#structure). The engine imports only `devkit.core`, `devkit.advisory` and `devkit.rules`.
 
@@ -173,45 +175,49 @@ devkit workflow envelope new --unit DIR --kind KIND [--status S] [--summary TEXT
 devkit workflow envelope check --unit DIR [--format text|json]   # every envelope file and any contract violation
 ```
 
-All commands accept `-w/--workspace-root`; it defaults to the devkit project containing the current directory. Exit codes follow the devkit convention ([Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)):
+All commands accept `-w/--workspace-root`; it defaults to the devkit project containing the current directory, and an explicit value that is not an existing directory is `ARGUMENT_INVALID`. Exit codes follow the devkit convention ([Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)):
 
 | Exit | When |
 | --- | --- |
 | `0` | The command did its job. `next` exits `0` whatever the stage, including a unit that waits for a person (`[WAITING]`, `[REQUEST]`), a delegation (`[DELEGATE]`) or a handoff choice. |
-| `1` | The command ran and reports a negative result: `validate` found invalid definitions or shared-stage differences, `show` found problems in the definition, `envelope check` found malformed envelope files (`ENVELOPE_INVALID`), or `next` refused a unit whose bound stage schema changed (`WORKFLOW_DRIFT`). |
-| `2` | The command could not do its job: a usage error from the command line parser, and every other error code below (unreadable configuration, receipt, definition or anchor, a refused input, a lint run that could not execute, an unexpected error). |
+| `1` | The command ran and reports a negative result: `validate` found invalid definitions or shared-stage differences (a definition file that cannot be loaded at all makes it exit `2`), `show` found problems in the definition, `envelope check` found malformed envelope files (`ENVELOPE_INVALID`), or `next` refused a unit whose bound stage schema changed (`WORKFLOW_DRIFT`). |
+| `2` | The command could not do its job: a usage error from the command line parser, an argument error (`ARGUMENT_INVALID`: a `-w` or `validate` path that does not exist, a malformed `--date`, `show` given both or neither of `REF` and `--unit`), and every other error code below (unreadable configuration, receipt, definition or anchor, a refused input, a lint run that could not execute, an unexpected error). |
 
-Errors are reported on stderr as Agent Advisory Protocol blocks from the `devkit.advisory` module, with a stable code and an `[ACTION]` directive, so an agent knows whether to fix input, stop for a person, or respect a guardrail. Under `--format json` stdout carries exactly one JSON document: the command's result, or `{"error": {...}}` when it has none. A `next` whose lint run failed prints its result (with `lint_error`) and reports `LINT_FAILED` on stderr only; `envelope check` does the same with `ENVELOPE_INVALID`. The library raises the same codes: `WorkflowError` and its subclasses (`ConfigError`, `DefinitionError`, `LayoutError`, `CheckError`, `PluginError`, `DriftError`, ...), plus the `devkit.core` errors it passes through unchanged (`RECEIPT_INVALID`, `GIT_FAILED`).
+A command that collects several problems (`validate`, `envelope check`) exits with the highest exit code among them. `show` only reports, so it exits `1` when its report lists any problem, whatever the problem's own code, and `2` only when it cannot run (an unknown workflow, an unreadable definition or configuration).
 
-| Code | Mode | Exit | Raised when |
-| --- | --- | --- | --- |
-| `CONFIG_INVALID` | `INPUT_ERROR` | `2` | `.devkit/config.toml` cannot be parsed or its `[workflow]` tables are malformed (`ConfigError`, also a `devkit.core` `ConfigError`) |
-| `WORKFLOW_NOT_SELECTED`, `WORKFLOW_NOT_FOUND`, `WORKFLOW_INVALID` | `INPUT_ERROR` | `2` | no definition chosen, none matches, or the chosen one fails validation (problems become `[DETAIL]` lines) |
-| `UNIT_NOT_FOUND`, `UNIT_EXISTS`, `ANCHOR_INVALID` | `INPUT_ERROR` | `2` | the unit directory has no anchor, already exists, or its frontmatter is unreadable |
-| `ANCHOR_AMBIGUOUS`, `ANCHOR_MISMATCH` | `INPUT_ERROR` | `2` | several candidate anchor files exist in the unit (pass `--workflow`); the selected workflow declares a different anchor than the file that identifies the unit |
-| `HANDOFF_LAYOUT_MISMATCH` | `INPUT_ERROR` | `2` | the chosen candidate's anchor differs from the unit's; relocate the unit, then `bind` |
-| `ENVELOPE_STATUS_INVALID`, `ENVELOPE_FLAG_INVALID`, `ENVELOPE_FROM_INVALID`, `ENVELOPE_FINDINGS_INVALID` | `INPUT_ERROR` | `2` | `envelope new` authoring flags that cannot produce a valid envelope (details name the flag) |
-| `ENVELOPE_INVALID` | `INPUT_ERROR` | `1` | `envelope check` found malformed envelope files; `[DETAIL]` lines carry file and reason, `[TARGET]` the files. The library's `EnvelopeFormatError` (a malformed finding or list) and every collected `EnvelopeError` entry carry the same code |
-| `SLUG_INVALID`, `DATE_INVALID`, `GIVEN_INVALID`, `KIND_INVALID` | `INPUT_ERROR` | `2` | a flag or argument is malformed |
-| `HANDOFF_NOT_READY`, `HANDOFF_NONE`, `HANDOFF_OFF` | `INPUT_ERROR` | `2` | the unit's workflow is not complete, declares no `next`, or handoff is disabled by policy |
-| `HANDOFF_CHOICE_REQUIRED`, `HANDOFF_UNDECIDED`, `HANDOFF_INVALID`, `HANDOFF_INELIGIBLE` | `INPUT_ERROR` | `2` | `ask` needs a recorded choice or `--workflow`; `auto` found no eligible candidate; the choice is not a candidate, or its `when` checks fail (details list the candidates) |
-| `REQUEST_UNKNOWN`, `DECISION_INVALID` | `INPUT_ERROR` | `2` | `answer` names a request that is not open, or an action/value that does not fit it (see [Human Interaction Contract](human-interaction.md)) |
-| `RETURN_INVALID` | `INPUT_ERROR` | `2` | `return --to` names no stage of the workflow, or one after the current stage |
-| `WORKFLOW_DRIFT` | `BLOCKED` | `1` | the bound schema hash changed under in-flight work; `[FIX]` names the `bind` command |
-| `LINT_FAILED` | `MAINTENANCE` | `2` | `devkit.rules` raised a rule loading or execution error during `lint-clean` |
-| `CHECK_LOAD_FAILED` | `MAINTENANCE` | `2` | a plugin check file failed to load, declares an invalid check (`PluginError`), or a receipt `workflow-check` file is missing, unsafe or differs from its recorded hash (`[FIX]`: `devkit sync`, or `devkit override create` to keep an edit) |
-| `RECEIPT_INVALID` | `MAINTENANCE` | `2` | `.devkit/installation.json` exists but does not match its schema (`devkit.core` `ReceiptError`); restore it from version control, then run `devkit sync` |
+Errors are reported on stderr as Agent Advisory Protocol blocks from the `devkit.advisory` module, with a stable code and an `[ACTION]` directive, so an agent knows whether to fix input, stop for a person, or respect a guardrail. Under `--format json` stdout carries exactly one JSON object, never a bare array: the command's result (`list` as `{"units": [...]}`, `checks` as `{"checks": [...]}`, `requests` as `{"requests": [...]}`), or `{"error": {...}}` when it has none. Problems a command collects rather than raises are listed in its result under `errors`, each the `to_dict()` of an advisory error (`code`, `message`, `exit_code`, `advisory`, plus `file` or `where` when the problem has one). A `next` whose lint run failed prints its result (the `devkit.rules` error among its `errors`) and reports that same error on stderr; `envelope check` reports each `ENVELOPE_INVALID` file the same way.
 
-Library calls that the CLI wraps with a more specific code raise these directly; their messages name the offending key or file:
+The library raises the same codes, one class per code. `WorkflowError` is the base: it sets the actor and retry once, and each subclass adds its code and mode. Errors of `devkit.core` (`CONFIG_INVALID`, `RECEIPT_INVALID`, `GIT_FAILED`, ...) and of `devkit.rules` (from `lint-clean`) pass through unchanged.
 
-| Code | Class | Raised when |
-| --- | --- | --- |
-| `DEFINITION_INVALID` | `DefinitionError` | a definition file cannot be read or parsed (`parse`, `load`); `resolve`/`find` name no or several definitions (the CLI reports `WORKFLOW_NOT_FOUND`) |
-| `LAYOUT_INVALID` | `LayoutError` | a layout template, slug, directory or anchor file name is malformed (`validate_template`, `parse_layout_spec`, `TemplateLayout.new_unit`); the CLI reports `SLUG_INVALID` or `CONFIG_INVALID` |
-| `CHECK_INVALID` | `CheckError` | a check reference is malformed, unregistered or collides (`parse_check`, `Registry`); validation reports it as a problem |
-| `ROLE_UNKNOWN`, `SHARED_STAGE_MISMATCH`, `WORKFLOW_ASSET_MISSING` | collected entries | validation `Problem` for a role outside the vocabulary; `WorkflowProblem` for stages that share an id but differ, and for a receipt-listed definition missing from disk |
-| `DECISION_RECORD_INVALID` | `DecisionRecordError` | a decision record file does not match the format (`parse_record`); `load_decisions` collects it as a `DecisionError` entry with this code |
-| `GIT_FAILED` | `devkit.core` `GitError` | `is_ancestor` cannot answer, or is given a non-hexadecimal revision (`INPUT_ERROR`) |
+| Code | Class | Mode | Exit | Raised when |
+| --- | --- | --- | --- | --- |
+| `CONFIG_INVALID` | `devkit.core` `ConfigError` | `INPUT_ERROR` | `2` | `.devkit/config.toml` cannot be read or parsed (passed through unchanged) |
+| `WORKFLOW_CONFIG_INVALID` | `WorkflowConfigError` | `INPUT_ERROR` | `2` | the `[workflow]`, `[workflow.approvals]` or `[workflow.stages]` table is malformed (a subclass of the `devkit.core` `ConfigError`) |
+| `ARGUMENT_INVALID` | `devkit.core` `ArgumentError` | `INPUT_ERROR` | `2` | `-w/--workspace-root` or a `validate` path does not exist, `--date` is not `YYYY-MM-DD`, or `show` is given both or neither of `REF` and `--unit` |
+| `WORKFLOW_NOT_SELECTED`, `WORKFLOW_NOT_FOUND`, `WORKFLOW_INVALID` | `WorkflowNotSelectedError`, `WorkflowNotFoundError`, `WorkflowInvalidError` | `INPUT_ERROR` | `2` | no definition chosen, no id or file matches, or the chosen one fails validation (problems become `[DETAIL]` lines) |
+| `WORKFLOW_DEFINITION_INVALID` | `DefinitionError` | `INPUT_ERROR` | `2` | a definition file cannot be read or parsed (`parse_definition`, `load_definition`), or an id is defined twice; `validate` collects it as a load error |
+| `WORKFLOW_DEFINITION_INVALID`, `WORKFLOW_CHECK_INVALID`, `ROLE_UNKNOWN` | `DefinitionProblem`, `CheckReferenceProblem`, `RoleUnknownProblem` | `INPUT_ERROR` | `1` | collected by validation with `where` (`<stage>.<field>`): a problem in a loaded definition, a check reference that does not resolve, a role outside the vocabulary |
+| `SHARED_STAGE_MISMATCH` | `SharedStageMismatchError` | `INPUT_ERROR` | `1` | collected by a whole-workspace `validate`: stages that share an id but differ |
+| `WORKFLOW_ASSET_MISSING` | `WorkflowAssetMissingError` | `AUTO` | `2` | collected by discovery: a receipt-listed definition is missing from disk; `[FIX]` is `devkit sync` |
+| `WORKFLOW_CHECK_INVALID` | `CheckError` | `INPUT_ERROR` | `2` | a check reference is malformed, unregistered or collides (`parse_check`, `Registry`) |
+| `WORKFLOW_CHECK_LOAD_FAILED` | `PluginError` | `MAINTENANCE` | `2` | a plugin check file failed to load, declares an invalid check, or a receipt `workflow-check` file is missing, unsafe or differs from its recorded hash (`[FIX]`: `devkit sync`, or `devkit override create` to keep an edit) |
+| `LAYOUT_INVALID`, `SLUG_INVALID` | `LayoutError`, `SlugError` | `INPUT_ERROR` | `2` | a layout template, directory or anchor file name is malformed (`validate_template`, `parse_layout_spec`; inside `[workflow]` it is `WORKFLOW_CONFIG_INVALID`); a unit slug does not match `[a-z0-9][a-z0-9-]*` |
+| `UNIT_NOT_FOUND`, `UNIT_EXISTS`, `ANCHOR_INVALID` | `UnitNotFoundError`, `UnitExistsError`, `AnchorInvalidError` | `INPUT_ERROR` | `2` | the unit directory has no anchor, already exists, or its frontmatter is unreadable (`list` reports the last one per unit under `error`) |
+| `ANCHOR_AMBIGUOUS`, `ANCHOR_MISMATCH` | `AnchorAmbiguousError`, `AnchorMismatchError` | `INPUT_ERROR` | `2` | several candidate anchor files exist in the unit (pass `--workflow`); the selected workflow declares a different anchor than the file that identifies the unit |
+| `GIVEN_INVALID` | `GivenInvalidError` | `INPUT_ERROR` | `2` | a `--given` name is neither a gate nor a registered runner or human check |
+| `WORKFLOW_DRIFT` | `DriftError` | `BLOCKED` | `1` | the bound schema hash changed under in-flight work; `[FIX]` names the `bind` command |
+| `REQUEST_UNKNOWN`, `DECISION_INVALID` | `RequestUnknownError`, `DecisionInvalidError` | `INPUT_ERROR` | `2` | `answer` names a request that is not open, or an action/value that does not fit it (see [Human Interaction Contract](human-interaction.md)) |
+| `DECISION_RECORD_INVALID`, `HANDOFF_CHOICE_IGNORED` | `DecisionRecordError`, `HandoffChoiceIgnoredError` | `INPUT_ERROR` | `2` | collected with `file`: a decision record does not match the format (`parse_record`, `load_decisions`); a recorded handoff choice is not an eligible candidate and is ignored |
+| `RETURN_INVALID` | `ReturnInvalidError` | `INPUT_ERROR` | `2` | `return --to` names no stage of the workflow, or one after the current stage |
+| `HANDOFF_NOT_READY`, `HANDOFF_NONE`, `HANDOFF_OFF` | `HandoffNotReadyError`, `HandoffNoneError`, `HandoffOffError` | `INPUT_ERROR` | `2` | the unit's workflow is not complete, declares no `next`, or handoff is disabled by policy |
+| `HANDOFF_CHOICE_REQUIRED` | `HandoffChoiceRequiredError` | `INTERACTION` | `2` | under `ask` a person must choose the next workflow; `[FIX]` is the `answer` command to run once they have (details list the candidates) |
+| `HANDOFF_UNDECIDED`, `HANDOFF_INVALID`, `HANDOFF_INELIGIBLE` | `HandoffUndecidedError`, `HandoffInvalidError`, `HandoffIneligibleError` | `INPUT_ERROR` | `2` | `auto` found no eligible candidate; the choice is not a candidate, or its `when` checks fail |
+| `HANDOFF_LAYOUT_MISMATCH` | `HandoffLayoutMismatchError` | `INPUT_ERROR` | `2` | the chosen candidate's anchor differs from the unit's; relocate the unit, then `bind` |
+| `ENVELOPE_STATUS_INVALID`, `ENVELOPE_FLAG_INVALID`, `ENVELOPE_FROM_INVALID`, `ENVELOPE_FINDINGS_INVALID` | `EnvelopeStatusError`, `EnvelopeFlagError`, `EnvelopeFromError`, `EnvelopeFindingsError` (base `AuthoringError`) | `INPUT_ERROR` | `2` | `envelope new` authoring flags that cannot produce a valid envelope; a `--resolve`/`--waive` number outside the carried findings is `ENVELOPE_FLAG_INVALID` |
+| `ENVELOPE_KIND_INVALID` | `EnvelopeKindError` | `INPUT_ERROR` | `2` | an envelope kind does not match `[a-z][a-z0-9-]*` (`write_envelope`) |
+| `ENVELOPE_INVALID` | `EnvelopeFormatError` | `INPUT_ERROR` | `1` | collected with `file` by `load_envelopes`: a malformed envelope file; `envelope check` reports each one with its `[TARGET]` |
+| `RECEIPT_INVALID` | `devkit.core` `ReceiptError` | `MAINTENANCE` | `2` | `.devkit/installation.json` exists but does not match its schema; restore it from version control, then run `devkit sync` |
+| `GIT_FAILED` | `devkit.core` `GitError` | `MAINTENANCE` | `2` | `is_ancestor` cannot answer, or is given a non-hexadecimal revision (`INPUT_ERROR`) |
 
 Output contracts are specified in [Workflow Definitions and Checks, section 5](definition-and-checks.md#5-output-signals); the request and decision formats in [Human Interaction Contract](human-interaction.md).
 
@@ -222,14 +228,14 @@ Output contracts are specified in [Workflow Definitions and Checks, section 5](d
 - **Lint check.** The `lint-clean` check runs `devkit.rules` in the `linter` phase on the files of the work unit, honoring the project's `[rules]` policy (phase and severity overrides, typed settings, `exclude`) through `run_project_rules`, the entry point `devkit rules check` uses, and loading the rules that `devkit sync` recorded in the installation receipt. Violations are reported in the check detail; a rule execution or loading error fails the command.
 - **Workflow definitions as assets.** A bundle declares `kind = "workflow"` assets (one Markdown definition each). `devkit sync` places them under `.devkit/managed/<bundle>/` and records their paths in the installation receipt under `entrypoints`. The engine discovers definitions from two sources: the project's `definitions_dir`, and every workflow asset in `.devkit/installation.json`. A project definition with the same `id` shadows the synchronized one, so a repository can adapt a distributed workflow without editing managed files. `devkit workflow validate` with no arguments covers both sources.
 - **Entry skill.** When at least one workflow asset is synchronized, `devkit sync` generates the shared `devkit-workflow` skill and projects it into every selected agent's skill directory, exactly as it does for `devkit-playbook`. The skill tells the agent to run `devkit workflow next --unit <dir>`, treat `[STAGE]` as the diagnosed stage, open the skill named by `[NEXT_SKILL]`, record an approval with `devkit workflow answer` only after the user's explicit answer, take a `[RETURNS]` path with `devkit workflow return`, and on `[HANDOFF]` present the candidates and run `handoff` only after the user's choice (or immediately under `policy=auto`). It is identical for every host; Codex gets `allow_implicit_invocation: true` because the agent should pick it up whenever a task follows a workflow. Repositories that use no workflow never see the skill.
-- **Subagent delegation.** `[DELEGATE: role=<role> isolation=<level> contract=<path>]` names a role and the contract that defines it. A bundle ships the role as a `kind = "subagent"` asset, either as native files per agent or as one host-neutral role contract that `devkit sync` renders for each selected agent (see [Agent Projections](../distribution/agent-projections.md)). The engine reads the receipt's `subagent` assets (asset id, plus the `role` a managed contract declares) and the project's `[workflow] roles_dir` (`<role>.md`, shadowing the receipt) as the role vocabulary: `validate` rejects a stage role outside it, and `[DELEGATE]` cites the managed or overridden contract, else the first projected file. With no receipt and no `roles_dir` the check is skipped with a `[NOTE]`.
+- **Subagent delegation.** `[DELEGATE: role=<role> isolation=<level> contract=<path>]` names a role and the contract that defines it. A bundle ships the role as a `kind = "subagent"` asset, either as native files per agent or as one host-neutral role contract that `devkit sync` renders for each selected agent (see [Agent Projections](../distribution/agent-projections.md)). The engine reads the receipt's `subagent` assets (asset id, plus the `role` a managed contract declares) and the project's `[workflow] roles_dir` (`<role>.md`, shadowing the receipt) as the role vocabulary: `validate` rejects a stage role outside it, and `[DELEGATE]` cites the managed or overridden contract, else the first projected file. With no receipt and no `roles_dir` the check is skipped with a `[NOTICE]`.
 - **Plugin checks.** A bundle may ship check evaluators as Python files under a `kind = "workflow-check"` asset. The project may also drop files under `[workflow] checks_dir`. Each file defines `BaseCheck` subclasses with `name`, `description`, `params` and `evaluate(ctx)`; they register with class `plugin` and are referenced from definitions like primitives. See [Workflow Definitions and Checks, Plugin Checks](definition-and-checks.md#plugin-checks).
 
 ---
 
 ## 7. Relationship to specrig
 
-The stage schema, check classes, evaluation loop, binding hash, envelope file contract and sentinel output are ported from `specrig`'s `cli/internal/workflow` package. specrig embeds the engine through the `devkit.workflow` library (`Workspace`, `evaluate_unit`, the structured `Result`) rather than parsing CLI output. These things were generalized:
+The stage schema, check classes, evaluation loop, binding hash, envelope file contract and sentinel output are ported from `specrig`'s `cli/internal/workflow` package. specrig embeds the engine through the `devkit.workflow` library (`Workspace`, `evaluate_unit`, the structured `UnitEvaluation`) rather than parsing CLI output. These things were generalized:
 
 | specrig | devkit |
 | --- | --- |

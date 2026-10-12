@@ -26,11 +26,15 @@ In this monorepo, run `uv sync --all-packages` first, then run `uv run --package
 
 Every distribution command takes `-w/--workspace-root <dir>`. Without it, the project root is the nearest
 directory (the current one first, then its parents, up to the Git top level) that contains `.devkit/`, else
-the Git top level, else the current directory. Commands print one JSON document on stdout: the result, or
-`{"error": {...}}` when the command fails, with the Agent Advisory Protocol block on stderr. Exit code `0` is
-success, `1` is returned only by `devkit sync --check` when a synchronization is needed, and `2` is any error
-(see [Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)).
-`devkit status` is a report, not a check: it exits `0` whatever drift it shows; use `sync --check` in CI.
+the Git top level, else the current directory; a `-w` that is not an existing directory is `ARGUMENT_INVALID`.
+Commands print exactly one JSON object on stdout: the result (`override list` wraps its entries as
+`{"overrides": [...]}`), or `{"error": {...}}` when the command fails, with the Agent Advisory Protocol block
+on stderr. Exit code `0` is success; `1` is returned by `devkit sync --check` when a synchronization is needed
+and by `devkit status` when its report shows a problem (a missing, modified or mode-mismatched file, a pending
+journal, or override drift); `2` is any error, including an invalid argument such as a malformed
+`bundle[:preset]` or `--agent` combined with `--no-agents` (see
+[Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)).
+`devkit status` reports; `sync --check` remains the check that says whether a sync is needed.
 
 The package also registers the `devkit` guide bundle (`devkit.distribution.guide`), an
 instruction-only bundle that tells agents in a consumer repository how devkit-managed assets are
@@ -46,7 +50,7 @@ consumed and authored. See [section 4](#4-the-devkit-guide-bundle).
 | `devkit add <bundle>[:<preset>]...` | Selection | Selects bundles in `.devkit/config.toml` (default preset when none is named) and synchronizes. |
 | `devkit remove <bundle>...` | Selection | Deselects bundles in `.devkit/config.toml` and synchronizes. |
 | `devkit list` | Inspection | Outputs JSON listing installed content packages, bundle metadata, presets, selection state, and asset paths. |
-| `devkit status` | Inspection | Read-only JSON: managed file counts (`ok`/`missing`/`modified`/`mode-mismatch`), override drift, guidance block state, seeded paths, pending journal, recorded vs running tool version, opted-out built-in bundles. Never writes project files. |
+| `devkit status` | Inspection | Read-only JSON: managed file counts (`ok`/`missing`/`modified`/`mode-mismatch`), override drift, guidance block state, seeded paths, pending journal, recorded vs running tool version, opted-out built-in bundles, and the problems to act on under `errors` (exit `1` when there are any). Never writes project files. |
 | `devkit recover` | Fault Tolerance | Uses the write-ahead journal in `.devkit/transient/` to safely roll back an interrupted transaction. |
 | `devkit get-context <bundle>` | Context | Returns bundle constitution and catalog of instruction headers for progressive loading. |
 | `devkit playbook search <query>` | Context | Runs lexical BM25 search over synchronized playbooks. |
@@ -114,36 +118,63 @@ A bundle can also scaffold project-owned files: a `document` asset with `seeded 
 yours. Sync never compares, updates or removes it, deselecting the bundle leaves it, and the receipt only notes which
 asset seeded which path (`devkit list` shows the `seeded` list). Commit seeded files like any project file.
 A managed file you edited by hand stops the sync while it is still part of the selection. Once it is no longer
-desired (deselected, or removed upstream), sync leaves it in place, forgets it in the receipt and prints
-`NOTICE: left modified file in place: <path>`; delete it yourself. The receipt also records the `devkit`
+desired (deselected, or removed upstream), sync leaves it in place, forgets it in the receipt and reports an
+`ORPHAN_LEFT` notice naming it; delete it yourself. The receipt also records the `devkit`
 version that wrote it. A different running version alone is not a change: the receipt is rewritten with the
-running version, and a `NOTICE` printed, the next time the sync writes anything; `devkit status` shows the mismatch.
-Packages built on devkit can register a `devkit.post_sync` entry point (`hook(root, result) -> list[str] | None`)
-to react after a successful sync; hooks run after the project lock is released, the strings they return are
-printed as notices and never fail the sync. The library surface (`sync_project`, `load_bundle`, `get_context`,
-`search_playbooks`, the override operations and their typed results) is exported from `devkit.distribution`.
+running version, and a `TOOL_VERSION_CHANGED` notice reported, the next time the sync writes anything;
+`devkit status` shows the mismatch. Packages built on devkit can register a `devkit.post_sync` entry point
+(`hook(root, result) -> list[str | AdvisoryError] | None`) to react after a successful sync; hooks run after the
+project lock is released, what they return becomes notices, and they never fail the sync. The library surface
+(`sync_project`, `load_bundle`, `get_context`, `search_playbooks`, `get_project_status`, `get_project_listing`, the
+override operations and their result dataclasses, each with `to_dict()`) is exported from `devkit.distribution`.
+
+### Sync output and notices
+
+`sync`, `add` and `remove` print the `SyncResult` object: `dry_run`, `selection`, `packages`, `assets`, `actions`,
+`drift`, `stray`, `unprojected`, `unselected` and `notices`. A notice is something a successful sync reports; it is
+a coded `SyncNotice` (exit code `0`), serialized like an error (`code`, `message`, `exit_code`, `advisory`) and
+printed on stderr as `[NOTICE: (CODE) message]`. `override create` and `override remove` carry the notices of the
+sync they run in their own `notices` list.
+
+| Class | Code | Mode | When |
+| --- | --- | --- | --- |
+| `OrphanLeftNotice` | `ORPHAN_LEFT` | `INTERACTION` | a hand-edited managed file is no longer desired: left in place (`target_files`), dropped from the receipt |
+| `ToolVersionChangedNotice` | `TOOL_VERSION_CHANGED` | `DEFER` | the receipt now records a different running `devkit` version |
+| `PostSyncNotice` | `POST_SYNC_NOTICE` | `DEFER` | a line a post-sync hook returned (the hook is named in `details`) |
+| `PostSyncHookFailedNotice` | `POST_SYNC_HOOK_FAILED` | `MAINTENANCE` | a post-sync hook raised or returned something other than a list |
+
+Override drift (`drift`) and unmanaged files under the managed root (`stray`) are also printed as
+`[WARNING: (OVERRIDE_DRIFT) ...]` and `[WARNING: (MANAGED_FILE_STRAY) ...]`; unprojected subagents and unselected
+installed bundles as `[NOTICE: ...]` lines.
+
+`devkit status` lists what needs acting on under `errors`, each an error object with exit code `1`, and renders
+each on stderr as an advisory block: missing managed files (`NOT_SYNCHRONIZED`, fix `devkit sync`), edited or
+mode-changed managed files (`SYNC_CONFLICT`), a pending journal (`TRANSACTION_PENDING`, fix `devkit recover`) and
+override drift (`OVERRIDE_DRIFT`, `INTERACTION`: review with `devkit override diff`, then `devkit override accept`).
 
 ### Error codes
 
 Every error the library raises is an `AdvisoryError`; the CLI renders it as it is. `devkit.core` errors pass
 through: an unreadable or invalid `.devkit/installation.json` (including paths devkit never writes) is
-`ReceiptError` (`RECEIPT_INVALID`), an invalid `.devkit/config.toml` is `ConfigError` (`CONFIG_INVALID`).
-The others are `DistributionError` subclasses from `devkit.distribution.errors`:
+`ReceiptError` (`RECEIPT_INVALID`), an invalid `.devkit/config.toml` is `ConfigError` (`CONFIG_INVALID`), and
+a malformed selector, query, search bound (`--limit`, `--min-score`, `--max-bytes`), workspace root, archive
+`--output` or flag combination is `ArgumentError` (`ARGUMENT_INVALID`, `INPUT_ERROR`). Remediation is in each
+error's `fix`, never in its message. The others are `DistributionError` subclasses from `devkit.distribution.errors`:
 
 | Class | Code | Mode | When |
 | --- | --- | --- | --- |
 | `BundleError` | `BUNDLE_INVALID` | `INPUT_ERROR` | `bundle.toml`, a declared source or an asset header is invalid |
 | `PackageError` | `BUNDLE_PACKAGE_INVALID` | `MAINTENANCE` | an installed content package registers an unusable or duplicate bundle |
-| `ArgumentError` | `ARGUMENT_INVALID` | `INPUT_ERROR` | a malformed selector, query, search bound, workspace root or archive `--output` |
 | `SelectionError` | `SELECTION_INVALID` | `INPUT_ERROR` | an unknown or unselected bundle, preset, asset or override |
 | `NotSynchronizedError` | `NOT_SYNCHRONIZED` | `AUTO` (`devkit sync`) | no receipt, or a context file no longer matches it |
-| `ConflictError` | `SYNC_CONFLICT`, `BUNDLE_CONFLICT` | `INTERACTION` | a hand-edited or unowned file, an existing override, or two bundles claiming one path |
+| `ConflictError` | `SYNC_CONFLICT` | `INTERACTION` | a hand-edited or unowned file, or an existing override |
+| `BundleConflictError` | `BUNDLE_CONFLICT` | `INTERACTION` | two selected bundles, or a seeded and a managed file, claim one path |
 | `OverrideDriftError` | `OVERRIDE_DRIFT` | `BLOCKED` | `override_drift = "block"` and an override hides upstream changes |
 | `UnsafeWorkspaceError` | `WORKSPACE_UNSAFE` | `BLOCKED` | a symlink or non-regular file where devkit reads or writes, or a reserved path |
 | `LockHeldError` | `LOCK_HELD` | `DEFER` | another devkit command holds the project lock |
 | `PendingTransactionError` | `TRANSACTION_PENDING` | `AUTO` (`devkit recover`) | an interrupted sync left its journal |
 | `RecoveryError` | `RECOVERY_BLOCKED` | `HALT` | the journal is unusable, or later edits block its rollback |
-| `DistributionError` | `GUIDANCE_BLOCK_INVALID` | `INPUT_ERROR` | the root `AGENTS.md` has malformed devkit markers or is not UTF-8 |
+| `GuidanceBlockError` | `GUIDANCE_BLOCK_INVALID` | `INPUT_ERROR` | the root `AGENTS.md` has malformed devkit markers or is not UTF-8 |
 
 The `[rules]`, `[workflow]` and `[gates]` tables are owned by `devkit.rules`, `devkit.workflow` and `devkit.gate`
 and are passed through untouched by `devkit sync`; see the [Rules Reference](../rules/reference.md#project-configuration),

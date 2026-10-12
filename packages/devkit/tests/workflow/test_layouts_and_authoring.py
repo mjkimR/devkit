@@ -8,11 +8,18 @@ from pathlib import Path
 import pytest
 import yaml
 from click.testing import CliRunner, Result
-from devkit.workflow import ConfigError, LayoutError, LayoutSpec, load_workflow_config, parse, parse_layout_spec
+from devkit.workflow import (
+    LayoutError,
+    LayoutSpec,
+    WorkflowConfigError,
+    load_workflow_config,
+    parse_definition,
+    parse_layout_spec,
+)
 from devkit.workflow.cli import cli
-from devkit.workflow.definition import DefinitionError
-from devkit.workflow.envelope import AuthoringError, compose, load_envelopes, render_envelope
-from devkit.workflow.validation import validate
+from devkit.workflow.definition.validation import validate_definition
+from devkit.workflow.errors import AuthoringError, DefinitionError
+from devkit.workflow.unit.envelope import compose_envelope, load_envelopes, render_envelope
 from testsupport.workflow import WORKFLOW, write_config, write_unit
 
 PROPOSAL = """---
@@ -74,21 +81,23 @@ def test_parse_layout_spec_partial_and_errors() -> None:
 
 
 def test_definition_layout_is_parsed_validated_and_hash_neutral() -> None:
-    doc = parse(PROPOSAL)
+    doc = parse_definition(PROPOSAL)
     assert doc.layout == LayoutSpec("docs/proposals", "{slug}", "proposal.md")
-    assert doc.anchor("task.md") == "proposal.md" and parse(WORKFLOW).anchor("task.md") == "task.md"
+    assert doc.anchor("task.md") == "proposal.md" and parse_definition(WORKFLOW).anchor("task.md") == "task.md"
     assert doc.to_dict()["layout"] == {"work_dir": "docs/proposals", "unit_path": "{slug}", "anchor": "proposal.md"}
     # aliases resolve against the declared anchor, so anchor-exists is valid without the project anchor
-    assert validate(doc, "task.md", known_ids={"incubate", "direct-delivery"}) == []
-    same = parse(PROPOSAL.replace("anchor: proposal.md", "anchor: other.md"))
+    assert validate_definition(doc, "task.md", known_ids={"incubate", "direct-delivery"}) == []
+    same = parse_definition(PROPOSAL.replace("anchor: proposal.md", "anchor: other.md"))
     assert same.to_dict()["hash"] == doc.to_dict()["hash"]
     with pytest.raises(DefinitionError, match=r"layout\.unit_path"):
-        parse(PROPOSAL.replace('unit_path: "{slug}"', 'unit_path: "{nope}"'))
+        parse_definition(PROPOSAL.replace('unit_path: "{slug}"', 'unit_path: "{nope}"'))
 
 
 def test_stage_id_grammar_is_validated() -> None:
-    doc = parse(WORKFLOW.replace("id: build-verify", "id: Build_Verify"))
-    assert any("must match" in str(p) and p.stage == "Build_Verify" for p in validate(doc, "task.md"))
+    doc = parse_definition(WORKFLOW.replace("id: build-verify", "id: Build_Verify"))
+    assert any("must match" in str(p) and p.where == "Build_Verify.id" for p in validate_definition(doc, "task.md"))
+    newline = parse_definition(WORKFLOW.replace("human_gate: integration", 'human_gate: "integration\\n"'))
+    assert any(p.where == "integrate.human_gate" for p in validate_definition(newline, "task.md"))
 
 
 # --- CLI across two layouts ------------------------------------------------------------
@@ -102,7 +111,7 @@ def test_new_list_next_bind_across_layouts(two_layouts: Path) -> None:
     assert prop.output.strip() == "[UNIT: docs/proposals/search workflow=incubate anchor=proposal.md]"
     assert (root / "docs/proposals/search/proposal.md").is_file()
 
-    listed = json.loads(_run("list", "-w", str(root), "--format", "json").stdout)
+    listed = json.loads(_run("list", "-w", str(root), "--format", "json").stdout)["units"]
     assert [(r["unit"], r["anchor"], r["workflow"]) for r in listed] == [
         ("docs/proposals/search", "proposal.md", "incubate"),
         ("specs/2026-10/20261012-login", "spec.md", "direct-delivery"),
@@ -169,7 +178,7 @@ def test_stages_table_parses_and_rejects_bad_entries(tmp_path: Path) -> None:
         ("[workflow]\nstages = 1\n", "expected a table"),
     ]:
         write_config(tmp_path, body)
-        with pytest.raises(ConfigError, match=match):
+        with pytest.raises(WorkflowConfigError, match=match):
             load_workflow_config(tmp_path)
 
 
@@ -196,7 +205,7 @@ def test_cli_skips_off_stage_and_completes(workspace: Path) -> None:
 
 
 def _draft(unit: Path, **kw: object) -> str:
-    draft = compose(unit_dir=unit, envelopes=load_envelopes(unit), **kw)  # type: ignore[arg-type]
+    draft = compose_envelope(unit_dir=unit, envelopes=load_envelopes(unit), **kw)  # type: ignore[arg-type]
     return render_envelope(draft, "2026-10-12T00:00:00Z")
 
 
@@ -291,7 +300,7 @@ def test_compose_review_and_reverify_round_trip(tmp_path: Path) -> None:
 def test_compose_rejections(tmp_path: Path, kw: dict[str, object], code: str, match: str) -> None:
     unit = write_unit(tmp_path, "work/a")
     with pytest.raises(AuthoringError, match=match) as info:
-        compose(unit_dir=unit, envelopes=load_envelopes(unit), **kw)  # type: ignore[arg-type]
+        compose_envelope(unit_dir=unit, envelopes=load_envelopes(unit), **kw)  # type: ignore[arg-type]
     assert info.value.code == code
 
 
@@ -301,12 +310,20 @@ def test_compose_out_of_range_numbers(tmp_path: Path) -> None:
     (unit / "envelopes/review-01.yaml").write_text(
         "kind: review\nstatus: completed\nfindings:\n  - {issue: a, evidence: b}\n"
     )
-    with pytest.raises(AuthoringError, match=r"1\.\.1"):
-        compose(unit_dir=unit, envelopes=load_envelopes(unit), kind="reverify", source="latest", resolve=["2"])
-    with pytest.raises(AuthoringError, match=r"1\.\.1"):
-        compose(unit_dir=unit, envelopes=load_envelopes(unit), kind="reverify", source="latest", waive=["3=x"])
-    with pytest.raises(AuthoringError, match="not an envelope file name"):
-        compose(unit_dir=unit, envelopes=load_envelopes(unit), kind="reverify", source="notes.yaml")
+    for resolve, waive in ((["2"], []), ([], ["3=x"])):
+        with pytest.raises(AuthoringError, match=r"1\.\.1") as caught:
+            compose_envelope(
+                unit_dir=unit,
+                envelopes=load_envelopes(unit),
+                kind="reverify",
+                source="latest",
+                resolve=resolve,
+                waive=waive,
+            )
+        assert caught.value.code == "ENVELOPE_FLAG_INVALID"
+    with pytest.raises(AuthoringError, match="file name must be") as caught:
+        compose_envelope(unit_dir=unit, envelopes=load_envelopes(unit), kind="reverify", source="notes.yaml")
+    assert caught.value.code == "ENVELOPE_FROM_INVALID"
 
 
 def test_cli_envelope_new_authoring_and_check(workspace: Path, tmp_path: Path) -> None:

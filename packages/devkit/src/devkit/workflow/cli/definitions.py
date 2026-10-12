@@ -7,23 +7,24 @@ from pathlib import Path
 
 import click
 
-from devkit.advisory import ExitCode
-from devkit.workflow.checks import Registry
-from devkit.workflow.cli.app import FORMAT, WORKSPACE, boundary, cli, echo_json, is_json, workspace
-from devkit.workflow.definition import schema_hash
+from devkit.core.cli import FORMAT_OPTION, boundary, echo_json, highest_exit_code, is_json
+from devkit.core.errors import ArgumentError
+from devkit.workflow.cli.app import WORKSPACE, cli, workspace
+from devkit.workflow.definition.checks import Registry
+from devkit.workflow.definition.definition import schema_hash
 from devkit.workflow.render import quote
 
 
 @cli.command(name="checks")
 @WORKSPACE
-@FORMAT
+@FORMAT_OPTION
 @boundary
 def checks_cmd(workspace_root: str | None, output_format: str) -> None:
     """List registered check names, classes and parameters."""
     ws = workspace(workspace_root)
     entries = Registry.build(ws.config.anchor, (), ws.plugins()).entries()
     if is_json(output_format):
-        echo_json([c.to_dict() for c in entries])
+        echo_json({"checks": [c.to_dict() for c in entries]})
         return
     for c in entries:
         params = f"({' '.join(c.params)})" if c.params else ""
@@ -33,39 +34,43 @@ def checks_cmd(workspace_root: str | None, output_format: str) -> None:
 
 @cli.command(name="validate")
 @WORKSPACE
-@click.argument("paths", nargs=-1, type=click.Path(exists=True, dir_okay=True, file_okay=True))
-@FORMAT
+@click.argument("paths", nargs=-1, type=str)
+@FORMAT_OPTION
 @boundary
 def validate_cmd(workspace_root: str | None, paths: tuple[str, ...], output_format: str) -> None:
-    """Validate workflow definitions (default: definitions_dir plus synchronized workflow assets)."""
+    """Validate workflow definitions (default: definitions_dir plus synchronized workflow assets).
+
+    Exits with the highest exit code among the problems: 1 when a definition
+    is invalid or definitions disagree on a shared stage, 2 when a definition
+    or plugin check file cannot be loaded.
+    """
     ws = workspace(workspace_root)
+    missing = [p for p in paths if not Path(p).exists()]
+    if missing:
+        raise ArgumentError(
+            f"PATHS: no such file or directory: {', '.join(missing)}",
+            target_files=missing,
+            fix="Pass existing definition files or directories",
+        )
     report = ws.validate_definitions([Path(p).resolve() for p in paths])
     if is_json(output_format):
-        echo_json(
-            {
-                "valid": report.ok,
-                "roles_checked": report.roles_checked,
-                "definitions": [r.to_dict(ws.root) for r in report.definitions],
-                "errors": [e.to_dict() for e in report.load_errors],
-                "shared": [p.to_dict() for p in report.shared],
-            }
-        )
+        echo_json(report.to_dict(ws.root))
     else:
         if not report.roles_checked:
-            click.echo(f"[NOTE: role check skipped: no installation receipt and no {ws.config.roles_dir}]")
+            click.echo(f"[NOTICE: role check skipped: no installation receipt and no {ws.config.roles_dir}]")
         for err in report.load_errors:
-            click.secho(f"[INVALID: {err}]", fg="red")
+            click.echo(f"[INVALID: {err}]")
         for r in report.definitions:
             where = ws.rel(r.doc.path) if r.doc.path else r.doc.id
             if r.ok:
-                click.secho(f"[VALID: {where} id={r.doc.id} hash={schema_hash(r.doc)}]", fg="green")
+                click.echo(f"[VALID: {where} id={r.doc.id} hash={schema_hash(r.doc)}]")
                 continue
-            click.secho(f"[INVALID: {where} id={r.doc.id} problems={len(r.problems)}]", fg="red")
-            for p in r.problems:
-                click.echo(f"  - {p}")
+            click.echo(f"[INVALID: {where} id={r.doc.id} problems={len(r.problems)}]")
+            for problem in r.problems:
+                click.echo(f"[PROBLEM: {problem}]")
         for problem in report.shared:
-            click.secho(f"[INVALID: {problem}]", fg="red")
+            click.echo(f"[INVALID: {problem}]")
         if not report.definitions and report.ok:
             click.echo(f"[VALID: no definitions under {ws.config.definitions_dir}]")
     if not report.ok:
-        sys.exit(int(ExitCode.FINDINGS))
+        sys.exit(highest_exit_code(report.errors))

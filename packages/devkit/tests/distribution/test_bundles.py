@@ -8,13 +8,14 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
+from devkit.core.errors import ArgumentError
 from devkit.distribution.bundles import build_bundle, load_bundle
-from devkit.distribution.cli import cli
-from devkit.distribution.errors import ArgumentError, BundleError, SelectionError
+from devkit.distribution.errors import BundleError, SelectionError
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.discovery import InstalledBundle
 from devkit.distribution.installation.plan import plan_bundle
 from devkit.distribution.installation.sync import sync_project
+from testsupport.distribution import cli
 
 
 @pytest.fixture
@@ -66,7 +67,7 @@ def test_archive_is_reproducible_and_preserves_native_bytes(source: Path, tmp_pa
 
 def test_plan_preset_is_read_only(source: Path) -> None:
     before = sorted(source.rglob("*"))
-    result = plan_bundle(load_bundle(source), "daily")
+    result = plan_bundle(load_bundle(source), "daily").to_dict()
     assert [asset["id"] for asset in result["assets"]] == ["review"]
     destinations = {file["destination"]: file["mode"] for file in result["files"]}
     # The plan is the sync inventory: managed copies plus every agent's native projection.
@@ -79,7 +80,7 @@ def test_plan_preset_is_read_only(source: Path) -> None:
         ".claude/skills/review/SKILL.md": 0o644,
         ".claude/skills/review/scripts/check.sh": 0o755,
     }
-    narrowed = plan_bundle(load_bundle(source), "all", ["codex"])
+    narrowed = plan_bundle(load_bundle(source), "all", ["codex"]).to_dict()
     assert {file["destination"] for file in narrowed["files"]} >= {".codex/agents/reviewer.toml"}
     assert not any(file["destination"].startswith(".claude/") for file in narrowed["files"])
     assert sorted(source.rglob("*")) == before
@@ -92,15 +93,15 @@ def test_default_preset_and_reserved_all(source: Path) -> None:
     assert bundle.default_preset is None
     assert bundle.preset_names == ["all", "daily"]
     assert bundle.select(["all"]) == {"review", "reviewer"}
-    assert [asset["id"] for asset in plan_bundle(bundle)["assets"]] == ["review", "reviewer"]
+    assert [asset["id"] for asset in plan_bundle(bundle).to_dict()["assets"]] == ["review", "reviewer"]
     manifest = source / "bundle.toml"
     manifest.write_text(
         manifest.read_text().replace('version = "0.1.0"', 'version = "0.1.0"\ndefault_preset = "daily"')
     )
     bundle = load_bundle(source)
     assert bundle.default_preset == "daily"
-    assert [asset["id"] for asset in plan_bundle(bundle)["assets"]] == ["review"]
-    assert [asset["id"] for asset in plan_bundle(bundle, "all")["assets"]] == ["review", "reviewer"]
+    assert [asset["id"] for asset in plan_bundle(bundle).to_dict()["assets"]] == ["review"]
+    assert [asset["id"] for asset in plan_bundle(bundle, "all").to_dict()["assets"]] == ["review", "reviewer"]
 
 
 @pytest.mark.parametrize(
@@ -166,7 +167,7 @@ def test_plan_matches_what_sync_deploys(source: Path, tmp_path: Path) -> None:
     update_config(target, presets={"sample": ["all"]}, agents=["codex", "claude-code"])
     sync_project(target, [InstalledBundle("sample-content", "0.1.0", bundle)])
     recorded = json.loads((target / ".devkit/installation.json").read_text())["files"]
-    planned = plan_bundle(bundle, "all", ["codex", "claude-code"])["files"]
+    planned = plan_bundle(bundle, "all", ["codex", "claude-code"]).to_dict()["files"]
     assert {item["destination"]: (item["sha256"], item["mode"]) for item in planned} == {
         name: (meta["sha256"], meta["mode"]) for name, meta in recorded.items()
     }

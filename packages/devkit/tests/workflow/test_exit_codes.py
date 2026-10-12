@@ -12,22 +12,22 @@ from devkit.core.errors import ConfigError as CoreConfigError
 from devkit.core.errors import GitError, ReceiptError
 from devkit.workflow import (
     CheckError,
-    ConfigError,
     DecisionRecordError,
     Decisions,
     DefinitionError,
     DriftError,
     LayoutError,
+    WorkflowConfigError,
     WorkflowError,
     Workspace,
     is_ancestor,
     load_decisions,
     load_envelopes,
     new_decision,
-    parse,
     parse_check,
+    parse_definition,
     parse_layout_spec,
-    write_next,
+    write_envelope,
 )
 from devkit.workflow.cli import cli
 from testsupport.workflow import WORKFLOW, write_config
@@ -108,6 +108,47 @@ def test_malformed_receipt_exits_two_with_the_core_fix(unit_ws: Path) -> None:
     assert "git checkout -- .devkit/installation.json" in result.stderr
 
 
+def test_unloadable_definition_makes_validate_exit_two(unit_ws: Path) -> None:
+    (unit_ws / ".devkit/workflows/broken.md").write_text("---\nid: [\n---\n")
+    result = _run("validate", "-w", str(unit_ws), "--format", "json")
+    assert result.exit_code == ExitCode.ERROR
+    assert [e["code"] for e in json.loads(result.stdout)["errors"]] == ["WORKFLOW_DEFINITION_INVALID"]
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        ("validate", "{root}/missing.md"),
+        ("list", "-w", "{root}/missing"),
+        ("next", "-w", "{root}/missing", "--unit", UNIT),
+    ],
+)
+def test_argument_errors_in_json_mode_print_one_document(unit_ws: Path, args: tuple[str, ...]) -> None:
+    argv = [arg.format(root=unit_ws) for arg in args]
+    if "-w" not in argv:
+        argv[1:1] = ["-w", str(unit_ws)]
+    result = _run(*argv, "--format", "json")
+    assert result.exit_code == ExitCode.ERROR, result.output
+    assert json.loads(result.stdout)["error"]["code"] == "ARGUMENT_INVALID"
+
+
+def test_every_json_command_prints_one_object(unit_ws: Path) -> None:
+    for args in (
+        ("list",),
+        ("checks",),
+        ("validate",),
+        ("requests", "--unit", UNIT, "--no-lint"),
+        ("next", "--unit", UNIT, "--no-lint"),
+        ("show", "direct-delivery"),
+        ("envelope", "check", "--unit", UNIT),
+    ):
+        result = _run(*args, "-w", str(unit_ws), "--format", "json")
+        assert result.exit_code == ExitCode.OK, (args, result.output)
+        assert isinstance(json.loads(result.stdout), dict), args
+    assert set(json.loads(_run("list", "-w", str(unit_ws), "--format", "json").stdout)) == {"units"}
+    assert set(json.loads(_run("checks", "-w", str(unit_ws), "--format", "json").stdout)) == {"checks"}
+
+
 def test_unexpected_exception_exits_two(unit_ws: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     def boom(*_: object, **__: object) -> None:
         raise RuntimeError("boom")
@@ -124,15 +165,21 @@ def test_library_errors_are_workflow_errors_with_codes(tmp_path: Path) -> None:
     with pytest.raises(LayoutError) as layout:
         parse_layout_spec({"anchor": "a/b.md"})
     with pytest.raises(DefinitionError) as definition:
-        parse("no frontmatter")
+        parse_definition("no frontmatter")
     with pytest.raises(CheckError) as check:
         parse_check("bad(")
     with pytest.raises(WorkflowError) as request:
         new_decision(Decisions(), "nope", "accept", workflow="w")
     with pytest.raises(WorkflowError) as kind:
-        write_next(tmp_path, "Bad", "x")
+        write_envelope(tmp_path, "Bad", "x")
     codes = [e.value.code for e in (layout, definition, check, request, kind)]
-    assert codes == ["LAYOUT_INVALID", "DEFINITION_INVALID", "CHECK_INVALID", "REQUEST_UNKNOWN", "KIND_INVALID"]
+    assert codes == [
+        "LAYOUT_INVALID",
+        "WORKFLOW_DEFINITION_INVALID",
+        "WORKFLOW_CHECK_INVALID",
+        "REQUEST_UNKNOWN",
+        "ENVELOPE_KIND_INVALID",
+    ]
     assert all(e.value.mode is ActionMode.INPUT_ERROR for e in (layout, definition, check, request, kind))
     assert DriftError("x").exit_code == ExitCode.FINDINGS and DriftError("x").mode is ActionMode.BLOCKED
     assert issubclass(DecisionRecordError, WorkflowError)
@@ -140,10 +187,10 @@ def test_library_errors_are_workflow_errors_with_codes(tmp_path: Path) -> None:
 
 def test_config_error_is_both_a_workflow_and_a_core_config_error(tmp_path: Path) -> None:
     write_config(tmp_path, '[workflow]\nanchor = "a/b"\n')
-    with pytest.raises(ConfigError) as info:
+    with pytest.raises(WorkflowConfigError) as info:
         Workspace(tmp_path)
     assert isinstance(info.value, WorkflowError) and isinstance(info.value, CoreConfigError)
-    assert info.value.code == "CONFIG_INVALID" and info.value.target_files == (".devkit/config.toml",)
+    assert info.value.code == "WORKFLOW_CONFIG_INVALID" and info.value.target_files == (".devkit/config.toml",)
 
 
 def test_core_errors_pass_through(tmp_path: Path) -> None:
@@ -163,3 +210,18 @@ def test_collected_entries_carry_codes(tmp_path: Path) -> None:
     (tmp_path / "decisions/01-gate-x.yaml").write_text("request: gate:x\n")
     assert load_envelopes(tmp_path).errors[0].to_dict()["code"] == "ENVELOPE_INVALID"
     assert load_decisions(tmp_path).errors[0].to_dict()["code"] == "DECISION_RECORD_INVALID"
+
+
+@pytest.mark.parametrize("output_format", ["text", "json"])
+def test_show_exits_one_even_when_a_problem_carries_exit_code_two(
+    unit_ws: Path, monkeypatch: pytest.MonkeyPatch, output_format: str
+) -> None:
+    # ``show`` produced its report, so it exits 1; 2 is only for a show that cannot run.
+    from devkit.workflow import DefinitionProblem
+
+    problem = DefinitionProblem("serious", where="review.role", exit_code=ExitCode.ERROR)
+    monkeypatch.setattr(Workspace, "validate_definition", lambda self, doc, known=None: [problem])
+    result = _run("show", "-w", str(unit_ws), "direct-delivery", "--format", output_format)
+    assert result.exit_code == ExitCode.FINDINGS
+    if output_format == "json":
+        assert json.loads(result.stdout)["errors"][0]["exit_code"] == int(ExitCode.ERROR)

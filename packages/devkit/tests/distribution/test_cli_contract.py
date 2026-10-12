@@ -9,12 +9,11 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 from devkit.advisory import ExitCode
-from devkit.distribution.cli import cli
+from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.discovery import InstalledBundle
 from devkit.distribution.installation.transaction import project_lock
-from devkit.distribution.installation.workspace import CONFIG, RECEIPT
-from testsupport.distribution import instruction, write_bundle
+from testsupport.distribution import cli, instruction, write_bundle
 
 MANIFEST = """schema = 1
 name = "team"
@@ -53,11 +52,11 @@ def _invoke(*args: str):
 def test_add_checks_the_configuration_before_syncing(item: InstalledBundle, target: Path, tmp_path: Path) -> None:
     shared = tmp_path / "shared.toml"
     shared.write_text("schema = 1\n")
-    (target / CONFIG).symlink_to(shared)
+    (target / CONFIG_PATH).symlink_to(shared)
     result = _invoke("add", "team", "-w", str(target))
     assert result.exit_code == 2
     assert "config must be a regular file" in result.output
-    assert not (target / RECEIPT).exists() and not (target / ".devkit/managed").exists()
+    assert not (target / RECEIPT_PATH).exists() and not (target / ".devkit/managed").exists()
     assert shared.read_text() == "schema = 1\n"
 
 
@@ -85,7 +84,7 @@ def test_an_error_is_one_json_document_on_stdout_and_an_advisory_on_stderr(item:
     error = json.loads(result.stdout)["error"]
     assert (error["code"], error["exit_code"], error["advisory"]["mode"]) == ("NOT_SYNCHRONIZED", 2, "AUTO")
     assert error["advisory"]["fix"] == "devkit sync"
-    assert result.stderr.startswith("[ERROR]  (NOT_SYNCHRONIZED) no synchronized project found")
+    assert result.stderr.startswith("[ERROR]  (NOT_SYNCHRONIZED) no synchronized project at")
     assert "[ACTION] AUTO" in result.stderr
 
 
@@ -106,10 +105,38 @@ def test_error_codes_reach_the_cli(
     assert (error["code"], error["advisory"]["mode"]) == (code, mode)
 
 
-def test_usage_errors_exit_2(item: InstalledBundle, target: Path) -> None:
-    assert _invoke("sync", "--agent", "codex", "--no-agents", "-w", str(target)).exit_code == 2
-    assert _invoke("add", "Bad Slug!", "-w", str(target)).exit_code == 2
-    assert _invoke("sync", "--no-such-flag").exit_code == 2
+@pytest.mark.parametrize(
+    "args",
+    [
+        ("sync", "--agent", "codex", "--no-agents", "-w", "{target}"),
+        ("add", "Bad Slug!", "-w", "{target}"),
+        ("sync", "--preset", "team:Bad", "-w", "{target}"),
+        ("status", "-w", "{target}/missing"),
+    ],
+)
+def test_argument_errors_are_one_json_document_and_exit_2(
+    item: InstalledBundle, target: Path, args: tuple[str, ...]
+) -> None:
+    result = _invoke(*(arg.format(target=target) for arg in args))
+    assert result.exit_code == int(ExitCode.ERROR), result.output
+    error = json.loads(result.stdout)["error"]  # exactly one JSON document on stdout
+    assert (error["code"], error["advisory"]["mode"]) == ("ARGUMENT_INVALID", "INPUT_ERROR")
+    assert result.stderr.startswith("[ERROR]  (ARGUMENT_INVALID)")
+
+
+def test_syntax_errors_stay_click_usage_errors(item: InstalledBundle) -> None:
+    result = _invoke("sync", "--no-such-flag")
+    assert result.exit_code == 2 and result.stdout == ""
+
+
+def test_every_json_command_prints_one_object(item: InstalledBundle, target: Path) -> None:
+    update_config(target, presets={"team": ["all"]}, agents=[])
+    assert _invoke("sync", "-w", str(target)).exit_code == 0
+    for args in (("list",), ("status",), ("override", "list"), ("get-context", "team"), ("recover",)):
+        result = _invoke(*args, "-w", str(target))
+        assert result.exit_code == 0, (args, result.output)
+        assert isinstance(json.loads(result.stdout), dict), args
+    assert json.loads(_invoke("override", "list", "-w", str(target)).stdout) == {"overrides": []}
 
 
 def test_a_held_lock_defers_and_exits_2(item: InstalledBundle, target: Path) -> None:
@@ -128,7 +155,7 @@ def test_unexpected_errors_are_maintenance_and_exit_2(
     def explode(*args: object, **kwargs: object) -> None:
         raise RuntimeError("boom")
 
-    monkeypatch.setattr("devkit.distribution.cli.project_status", explode)
+    monkeypatch.setattr("devkit.distribution.cli.get_project_status", explode)
     result = _invoke("status", "-w", str(target))
     assert result.exit_code == int(ExitCode.ERROR)
     assert json.loads(result.stdout)["error"]["code"] == "UNEXPECTED_ERROR"
@@ -143,7 +170,7 @@ def test_workspace_root_defaults_to_the_project_root(
     nested.mkdir(parents=True)
     monkeypatch.chdir(nested)
     assert _invoke("sync").exit_code == 0
-    assert (target / RECEIPT).is_file() and not (nested / ".devkit").exists()
+    assert (target / RECEIPT_PATH).is_file() and not (nested / ".devkit").exists()
     context = _invoke("get-context", "team")
     assert context.exit_code == 0, context.output
     assert json.loads(context.output)["instructions"][0]["path"] == str(
@@ -153,20 +180,38 @@ def test_workspace_root_defaults_to_the_project_root(
 
 def test_dry_run_validates_but_never_saves(item: InstalledBundle, target: Path) -> None:
     update_config(target, presets={"team": ["all"]}, agents=[])
-    before = (target / CONFIG).read_text()
+    before = (target / CONFIG_PATH).read_text()
     result = _invoke("remove", "team", "--dry-run", "-w", str(target))
     assert result.exit_code == 0, result.output
-    assert (target / CONFIG).read_text() == before
+    assert (target / CONFIG_PATH).read_text() == before
     assert _invoke("remove", "missing", "--dry-run", "-w", str(target)).exit_code == 2
 
 
 def test_selection_edits_preserve_inline_tables_and_comments(target: Path) -> None:
-    (target / CONFIG).write_text(
+    (target / CONFIG_PATH).write_text(
         'schema = 1\n# selected bundles\npresets = { team = "all", other = "core" }  # inline\n'
     )
     update_config(target, presets={"extra": ["a", "b"]}, deselect=["other"])
-    text = (target / CONFIG).read_text()
+    text = (target / CONFIG_PATH).read_text()
     assert "# selected bundles" in text and "# inline" in text
     assert 'team = "all"' in text and "other" not in text and 'extra = ["a", "b"]' in text
     update_config(target, deselect=["team", "extra"])
-    assert "team" not in (target / CONFIG).read_text()
+    assert "team" not in (target / CONFIG_PATH).read_text()
+
+
+def test_status_with_problems_exits_one_whatever_their_own_codes(
+    item: InstalledBundle, target: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A status report ran: its problems exit 1 even when a problem's own exit code is 2.
+    from types import SimpleNamespace
+
+    from devkit.core.errors import ConfigError
+
+    problem = ConfigError("broken config")
+    assert problem.exit_code == ExitCode.ERROR
+    report = SimpleNamespace(errors=(problem,), to_dict=lambda: {"errors": [problem.to_dict()]})
+    monkeypatch.setattr("devkit.distribution.cli.get_project_status", lambda *args, **kwargs: report)
+    result = _invoke("status", "-w", str(target))
+    assert result.exit_code == int(ExitCode.FINDINGS)
+    assert json.loads(result.stdout)["errors"][0]["code"] == "CONFIG_INVALID"
+    assert "(CONFIG_INVALID) broken config" in result.stderr

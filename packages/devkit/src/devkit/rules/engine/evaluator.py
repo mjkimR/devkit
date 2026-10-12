@@ -1,10 +1,12 @@
+"""One evaluation of a rule set: policy validation, phase filtering, checks, autofix and the convergence recheck."""
+
 from __future__ import annotations
 
 import inspect
 import logging
 from collections import Counter
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from devkit.rules.engine.errors import RuleExecutionError, RuleProblem, SettingsError
 from devkit.rules.engine.models import Autofixable, Rule, RuleContext, Severity, Violation
@@ -20,8 +22,14 @@ class EvaluationResult:
     errors: list[RuleProblem] = field(default_factory=list)
 
     @property
-    def has_errors(self) -> bool:
-        return bool(self.errors) or any(v.severity is Severity.ERROR and not v.fixed for v in self.violations)
+    def blocking_violations(self) -> list[Violation]:
+        """Unfixed error-severity violations: the findings that fail a run."""
+        return [v for v in self.violations if v.severity is Severity.ERROR and not v.fixed]
+
+    @property
+    def ok(self) -> bool:
+        """Whether the evaluation completed without problems and no blocking violation remains."""
+        return not self.errors and not self.blocking_violations
 
 
 def _finding_key(v: Violation) -> tuple[str, str, str]:
@@ -29,11 +37,16 @@ def _finding_key(v: Violation) -> tuple[str, str, str]:
     return v.rule_id, v.file, v.message
 
 
-def evaluate(ctx: RuleContext, rules: Sequence[Rule]) -> EvaluationResult:
-    """Evaluate rules sequentially using context and cache, applying autofix and convergence rechecks."""
-    result = EvaluationResult()
+def evaluate_rules(ctx: RuleContext, rules: Sequence[Rule]) -> EvaluationResult:
+    """Evaluate ``rules`` in order against ``ctx``, applying autofix and one convergence recheck when asked.
 
-    # 0. Project policy must name known rules, change something, and type-check against settings
+    The project policy in ``ctx`` is validated first; any policy problem is
+    returned without running a rule. Only rules active in ``ctx.phase`` (after
+    phase overrides) run. With ``ctx.fix`` (and not ``ctx.dry_run``) every
+    autofixable rule fixes, then every active rule checks again: a fixable
+    initial finding the recheck no longer reports is returned with ``fixed``
+    set, followed by the recheck's findings.
+    """
     resolvers, policy_errors = validate_policy(
         rules,
         phase_overrides=ctx.phase_overrides,
@@ -41,16 +54,30 @@ def evaluate(ctx: RuleContext, rules: Sequence[Rule]) -> EvaluationResult:
         settings=ctx.rule_settings,
     )
     if policy_errors:
-        result.errors.extend(policy_errors)
-        return result
+        return EvaluationResult(errors=list(policy_errors))
     ctx.settings_resolvers = resolvers
 
-    # 1. Phase filtering on the effective (overridden) phase
-    phases = {r.id: effective_phase(r, ctx.phase_overrides) for r in rules}
-    severities = {r.id: effective_severity(r, ctx.severity_overrides) for r in rules}
-    active_rules: list[Rule] = [r for r in rules if runs_in_phase(phases[r.id], ctx.phase)]
+    active = [r for r in rules if runs_in_phase(effective_phase(r, ctx.phase_overrides), ctx.phase)]
+    result = EvaluationResult()
+    initial = _check_rules(ctx, active, "execution", result.errors)
+    if not ctx.fix or ctx.dry_run or result.errors:
+        result.violations = initial
+        return result
 
-    def _check(rule: Rule, stage: str, errors: list[RuleProblem]) -> list[Violation]:
+    modified = _apply_fixes(ctx, active, result.errors)
+    if not modified and not result.errors:
+        result.violations = initial
+        return result
+
+    recheck = _check_rules(ctx, active, "recheck", result.errors)
+    result.violations = recheck if result.errors else _mark_fixed(initial, recheck)
+    return result
+
+
+def _check_rules(ctx: RuleContext, rules: Sequence[Rule], stage: str, errors: list[RuleProblem]) -> list[Violation]:
+    """Every rule's findings, with the effective phase and severity; a rule that raises adds to ``errors``."""
+    violations: list[Violation] = []
+    for rule in rules:
         try:
             found = rule.check(ctx)
         except SettingsError as exc:
@@ -62,64 +89,60 @@ def evaluate(ctx: RuleContext, rules: Sequence[Rule]) -> EvaluationResult:
                     target_files=exc.target_files,
                 )
             )
-            return []
+            continue
         except Exception as exc:
             errors.append(_execution_error(rule, f"Rule {stage} error ({rule.id}): {exc}"))
-            return []
+            continue
+        phase = effective_phase(rule, ctx.phase_overrides)
+        severity = effective_severity(rule, ctx.severity_overrides)
         for v in found:
-            v.phase = phases[rule.id]
-            v.severity = severities[rule.id]
-        return found
+            v.phase = phase
+            v.severity = severity
+        violations.extend(found)
+    return violations
 
-    # 2. Initial check
-    initial_violations: list[Violation] = []
-    for r in active_rules:
-        initial_violations.extend(_check(r, "execution", result.errors))
 
-    # If fix is not requested or dry_run, return initial findings
-    if not ctx.fix or ctx.dry_run or result.errors:
-        result.violations = initial_violations
-        return result
+def _apply_fixes(ctx: RuleContext, rules: Sequence[Rule], errors: list[RuleProblem]) -> set[str]:
+    """Run every autofixable rule's ``fix`` and return the modified files.
 
-    # 3. Autofix execution
-    modified_files: set[str] = set()
-    for r in active_rules:
-        if isinstance(r, Autofixable):
-            try:
-                changed = r.fix(ctx)
-                if changed:
-                    modified_files.update(changed)
-                    ctx.cache.invalidate_many(changed)
-            except Exception as exc:
-                result.errors.append(_execution_error(r, f"Rule fix error ({r.id}): {exc}"))
-                ctx.cache.invalidate_all()
-                break
+    Returned paths are invalidated in the cache after each fix, so the next
+    fixer reads fresh contents. A fixer that raises adds to ``errors``, clears
+    the whole cache (its partial writes are unknown) and stops the pass.
+    """
+    modified: set[str] = set()
+    for rule in rules:
+        if not isinstance(rule, Autofixable):
+            continue
+        try:
+            changed = rule.fix(ctx)
+        except Exception as exc:
+            errors.append(_execution_error(rule, f"Rule fix error ({rule.id}): {exc}"))
+            ctx.cache.invalidate_all()
+            break
+        if changed:
+            modified.update(changed)
+            ctx.cache.invalidate_many(changed)
+    return modified
 
-    if not modified_files and not result.errors:
-        result.violations = initial_violations
-        return result
 
-    # 4. Re-check for convergence
-    recheck_violations: list[Violation] = []
-    for r in active_rules:
-        recheck_violations.extend(_check(r, "recheck", result.errors))
+def _mark_fixed(initial: Sequence[Violation], recheck: Sequence[Violation]) -> list[Violation]:
+    """Fixed copies of the initial fixable findings the recheck no longer reports, then the recheck's findings.
 
-    # 5. A fixable finding is fixed when the recheck reports fewer findings with its identity
-    remaining = Counter(_finding_key(v) for v in recheck_violations)
-    final_violations: list[Violation] = []
-    for v in initial_violations:
-        if result.errors or not v.fixable:
+    A finding counts as fixed when the recheck reports fewer findings with its
+    identity (rule, file, message) than the initial check did; the line is not
+    compared, because a fix may move it. The inputs are not modified.
+    """
+    remaining = Counter(_finding_key(v) for v in recheck)
+    fixed: list[Violation] = []
+    for v in initial:
+        if not v.fixable:
             continue
         key = _finding_key(v)
         if remaining[key] > 0:
             remaining[key] -= 1
             continue
-        v.fixed = True
-        final_violations.append(v)
-
-    final_violations.extend(recheck_violations)
-    result.violations = final_violations
-    return result
+        fixed.append(replace(v, fixed=True))
+    return [*fixed, *recheck]
 
 
 def _execution_error(rule: Rule, message: str) -> RuleExecutionError:

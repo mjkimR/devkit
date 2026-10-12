@@ -60,7 +60,7 @@ class NoTodoRule(BaseRule):
 
 ### Optional `settings` and `validate_settings`
 
-`BaseRule.settings` holds a frozen dataclass instance with the rule's defaults. Its fields may be `int`, `float`, `str`, `bool` or `list[str]`; any other annotation is rejected when the rule is loaded. A project changes the values, globally or per path, in `[rules.settings.<RULE-id>]` of `.devkit/config.toml` (see [Evaluation Lifecycle, section 5](evaluation-lifecycle.md#5-project-policy-severity-overrides-and-typed-settings)). Rules read the effective instance with `ctx.settings(self, path)`; without a resolver (library callers that skip `evaluate`) the defaults are returned.
+`BaseRule.settings` holds a frozen dataclass instance with the rule's defaults. Its fields may be `int`, `float`, `str`, `bool` or `list[str]`, each optionally `| None` (the only fields that accept `null`); any other annotation is rejected when the rule is loaded. Gate settings use the same type checker (`devkit.rules.engine.settings.check_setting_value`). A project changes the values, globally or per path, in `[rules.settings.<RULE-id>]` of `.devkit/config.toml` (see [Evaluation Lifecycle, section 5](evaluation-lifecycle.md#5-project-policy-severity-overrides-and-typed-settings)). Rules read the effective instance with `ctx.settings(self, path)`; without a resolver (library callers that skip `evaluate_rules`) the defaults are returned.
 
 ```python
 from dataclasses import dataclass, field
@@ -184,7 +184,7 @@ Built-in rules are deliberately limited to invariants that hold for any reposito
 
 ```python
 from pathlib import Path
-from devkit.rules import RuleContext, RuleRegistry, evaluate, resolve_managed_rules
+from devkit.rules import RuleContext, RuleRegistry, evaluate_rules, resolve_managed_rules
 
 registry = RuleRegistry()
 registry.register(DocHeadingRule())
@@ -192,7 +192,7 @@ managed = resolve_managed_rules(Path("."))                   # rules synchronize
 registry.discover_from_files(managed.paths)                   # managed.errors: RuleLoadError per malformed receipt or missing entry
 
 ctx = RuleContext(workspace_root=Path("."))
-result = evaluate(ctx, registry.get_all())
+result = evaluate_rules(ctx, registry.get_all())
 
 print(f"Total findings: {len(result.violations)}")
 ```

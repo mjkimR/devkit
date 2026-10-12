@@ -5,8 +5,16 @@ from pathlib import Path, PurePosixPath
 
 import pytest
 from devkit.advisory import ActionMode
-from devkit.workflow import ConfigError, LayoutError, TemplateLayout, load_workflow_config, validate_template
-from devkit.workflow.config import parse_workflow_config
+from devkit.core.errors import ConfigError as CoreConfigError
+from devkit.workflow import (
+    LayoutError,
+    SlugError,
+    TemplateLayout,
+    WorkflowConfigError,
+    load_workflow_config,
+    validate_template,
+)
+from devkit.workflow.project.config import parse_workflow_config
 from testsupport.workflow import write_config, write_unit
 
 # --- template validation ------------------------------------------------------
@@ -46,8 +54,11 @@ def test_new_unit_renders_specrig_style_layout() -> None:
 
 def test_new_unit_rejects_bad_slug() -> None:
     layout = TemplateLayout("work", "{slug}", "task.md")
-    with pytest.raises(LayoutError, match="slug"):
+    with pytest.raises(SlugError, match="slug") as caught:
         layout.new_unit("Bad Slug", date(2026, 10, 12))
+    assert caught.value.code == "SLUG_INVALID"
+    with pytest.raises(SlugError):  # a trailing newline does not match the slug grammar
+        layout.new_unit("ok\n", date(2026, 10, 12))
 
 
 def test_discovery_glob_and_anchor_filter(tmp_path: Path) -> None:
@@ -114,15 +125,22 @@ feedback = "off"
         ('[workflow]\ndefault = ""\n', "workflow id"),
         ('[workflow.approvals]\nintegration = "maybe"\n', "not one of"),
         ('[workflow.approvals]\n"Bad Gate" = "ask"\n', "gate names"),
-        ("invalid [[\n", "invalid config"),
     ],
 )
 def test_invalid_config(tmp_path: Path, body: str, match: str) -> None:
     write_config(tmp_path, body)
-    with pytest.raises(ConfigError, match=match):
+    with pytest.raises(WorkflowConfigError, match=match) as caught:
         load_workflow_config(tmp_path)
+    assert caught.value.code == "WORKFLOW_CONFIG_INVALID"
+
+
+def test_unreadable_config_is_the_core_config_error(tmp_path: Path) -> None:
+    write_config(tmp_path, "invalid [[\n")
+    with pytest.raises(CoreConfigError, match="invalid config") as caught:
+        load_workflow_config(tmp_path)
+    assert type(caught.value) is CoreConfigError and caught.value.code == "CONFIG_INVALID"
 
 
 def test_parse_rejects_non_table() -> None:
-    with pytest.raises(ConfigError):
+    with pytest.raises(WorkflowConfigError):
         parse_workflow_config([])

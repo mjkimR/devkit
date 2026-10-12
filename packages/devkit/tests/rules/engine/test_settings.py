@@ -6,15 +6,15 @@ from pathlib import Path
 import pytest
 from devkit.advisory import ActionMode
 from devkit.rules import (
-    ConfigError,
     Phase,
     RuleContext,
+    RulesConfigError,
     SettingsError,
     SettingsResolver,
     Severity,
     Violation,
-    default_registry,
-    evaluate,
+    default_rule_registry,
+    evaluate_rules,
     load_rules_config,
     match_path,
 )
@@ -97,7 +97,7 @@ def test_parse_settings_table() -> None:
 )
 def test_invalid_settings_config(tmp_path: Path, body: str, match: str) -> None:
     _write_config(tmp_path, body)
-    with pytest.raises(ConfigError, match=match):
+    with pytest.raises(RulesConfigError, match=match):
         load_rules_config(tmp_path)
 
 
@@ -160,14 +160,26 @@ def test_resolver_validates_each_override_layer_and_custom_validation() -> None:
 def test_resolver_rejects_unsupported_field_types() -> None:
     @dataclass(frozen=True)
     class Bad:
-        value: int | None = None
+        value: tuple[str, ...] = ()
 
     with pytest.raises(SettingsError, match="unsupported settings field type"):
         SettingsResolver("RULE-bad", Bad())
 
 
+def test_optional_fields_accept_null_and_others_reject_it() -> None:
+    from devkit.rules.engine.settings import check_setting_value, describe_setting_type
+
+    assert describe_setting_type(int | None) == "integer or null"
+    assert check_setting_value(int | None, None) is None
+    assert check_setting_value(float | None, 2) == 2.0
+    with pytest.raises(ValueError, match="null is not allowed"):
+        check_setting_value(int, None)
+    with pytest.raises(ValueError, match="expected array of strings"):
+        check_setting_value(list[str] | None, ["a", 1])
+
+
 def test_build_resolvers_reports_unknown_and_settings_less_rules() -> None:
-    rules = default_registry().get_all()
+    rules = default_rule_registry().get_all()
     resolvers, errors = build_resolvers(
         rules, {"RULE-nope": RawSettings({"x": 1}), "RULE-markdown-link": RawSettings({"x": 1})}
     )
@@ -198,7 +210,7 @@ def test_file_length_settings_apply_per_path(tmp_path: Path) -> None:
     )
     config = load_rules_config(tmp_path)
     ctx = RuleContext(workspace_root=tmp_path, phase=Phase.HYGIENE, rule_settings=dict(config.settings))
-    result = evaluate(ctx, [FileLengthRule()])
+    result = evaluate_rules(ctx, [FileLengthRule()])
     assert not result.errors
     assert sorted(v.file for v in result.violations) == ["docs/a.md", "notes.txt"]
     assert ctx.settings(FileLengthRule(), "docs/research/x.md") == FileLengthSettings(100, [".md", ".txt"])
@@ -209,7 +221,7 @@ def test_file_length_default_settings_without_config(tmp_path: Path) -> None:
     _long_doc(tmp_path, "docs/a.md", 50)
     ctx = RuleContext(workspace_root=tmp_path, phase=Phase.HYGIENE)
     assert ctx.settings(rule) == FileLengthSettings(max_lines=30)
-    assert [v.file for v in evaluate(ctx, [rule]).violations] == ["docs/a.md"]
+    assert [v.file for v in evaluate_rules(ctx, [rule]).violations] == ["docs/a.md"]
 
 
 def test_evaluate_fails_before_checks_on_bad_settings(tmp_path: Path) -> None:
@@ -217,7 +229,7 @@ def test_evaluate_fails_before_checks_on_bad_settings(tmp_path: Path) -> None:
     ctx = RuleContext(
         workspace_root=tmp_path, phase=Phase.HYGIENE, rule_settings={"RULE-file-length": RawSettings({"max_lines": -1})}
     )
-    result = evaluate(ctx, [FileLengthRule()])
+    result = evaluate_rules(ctx, [FileLengthRule()])
     assert result.violations == []
     assert [str(e) for e in result.errors] == ["RULE-file-length: settings: max_lines must be a positive integer"]
     assert result.errors[0].code == "RULES_SETTINGS_INVALID" and result.errors[0].mode is ActionMode.INPUT_ERROR
@@ -228,18 +240,18 @@ def test_severity_override_changes_reported_severity(tmp_path: Path) -> None:
     ctx = RuleContext(
         workspace_root=tmp_path, phase=Phase.HYGIENE, severity_overrides={"RULE-file-length": Severity.ERROR}
     )
-    result = evaluate(ctx, [FileLengthRule()])
+    result = evaluate_rules(ctx, [FileLengthRule()])
     assert result.violations and all(v.severity == Severity.ERROR for v in result.violations)
-    assert result.has_errors
+    assert not result.ok
 
 
 def test_severity_override_validation(tmp_path: Path) -> None:
     ctx = RuleContext(workspace_root=tmp_path, severity_overrides={"RULE-nope": Severity.INFO})
-    assert [str(e) for e in evaluate(ctx, default_registry().get_all()).errors] == [
+    assert [str(e) for e in evaluate_rules(ctx, default_rule_registry().get_all()).errors] == [
         "severity override for unknown rule: RULE-nope"
     ]
     ctx = RuleContext(workspace_root=tmp_path, severity_overrides={"RULE-file-length": Severity.WARNING})
-    assert "redundant" in str(evaluate(ctx, default_registry().get_all()).errors[0])
+    assert "redundant" in str(evaluate_rules(ctx, default_rule_registry().get_all()).errors[0])
 
 
 def test_custom_rule_with_settings(tmp_path: Path) -> None:
@@ -266,7 +278,7 @@ def test_custom_rule_with_settings(tmp_path: Path) -> None:
         workspace_root=tmp_path,
         rule_settings={"RULE-banned": RawSettings({}, (Override("b.md", {"banned": ["FIXME"]}),))},
     )
-    assert sorted(v.file for v in evaluate(ctx, [BannedWords()]).violations) == ["a.md", "b.md"]
+    assert sorted(v.file for v in evaluate_rules(ctx, [BannedWords()]).violations) == ["a.md", "b.md"]
 
 
 @dataclass(frozen=True)
@@ -299,7 +311,7 @@ def test_overrides_that_conflict_only_together_are_reported_as_settings_errors(t
         resolver.for_file("docs/a.md")
 
     ctx = RuleContext(workspace_root=tmp_path, rule_settings={"RULE-range": raw})
-    result = evaluate(ctx, [RangeRule()])
+    result = evaluate_rules(ctx, [RangeRule()])
     assert len(result.errors) == 1 and str(result.errors[0]).startswith(
         "Invalid settings (RULE-range): RULE-range: docs/a.md"
     )

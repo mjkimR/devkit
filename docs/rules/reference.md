@@ -58,7 +58,7 @@ directory: the nearest directory with a `.devkit/` folder, else the Git work
 tree top level, else the current directory.
 
 `check` never writes files. `fix --dry-run` reports the initial findings,
-marking fixable ones `[FIXABLE]`, without running any fixer. `hygiene` includes linter rules as well as hygiene checks.
+marking fixable ones `status=fixable`, without running any fixer. `hygiene` includes linter rules as well as hygiene checks.
 `phases` prints each rule's default and effective phase without evaluating.
 `explain <RULE-id>` prints a rule's phase, severity, effective settings and its
 guide document.
@@ -68,15 +68,25 @@ Exit codes follow the devkit convention
 
 | Command | `0` | `1` | `2` |
 | --- | --- | --- | --- |
-| `check`, `fix` | no unresolved error-severity violation (warnings and infos alone do not fail; `fix` repaired every fixable finding) | unresolved error violations remain | the run could not evaluate: usage error, invalid `[rules]` table, rule loading, policy or execution problem, invalid target, Git snapshot failure; takes precedence over violations found in the same run |
-| `phases` | plan printed | - | usage error, invalid `[rules]` table, any loading or policy problem (printed after the plan) |
-| `explain` | rule described (problems of other rules are `Warning:` lines) | - | usage error, unknown rule ID (`RULES_UNKNOWN_RULE`), invalid `[rules]` table, a policy problem of the described rule |
+| `check`, `fix` | no unresolved error-severity violation (warnings and infos alone do not fail; `fix` repaired every fixable finding) | unresolved error violations remain | the run could not evaluate: usage or argument error, unreadable `.devkit/config.toml` (`CONFIG_INVALID`), invalid `[rules]` table, rule loading, policy or execution problem, invalid target, Git snapshot failure; takes precedence over violations found in the same run |
+| `phases` | plan printed | - | usage or argument error, unreadable config or invalid `[rules]` table, any loading or policy problem (printed after the plan) |
+| `explain` | rule described (problems of other rules are `[WARNING: ...]` lines on stderr) | - | usage or argument error (an unknown rule ID is `ARGUMENT_INVALID`), unreadable config or invalid `[rules]` table, a policy problem of the described rule |
+
+A command that collects loading, policy or execution problems exits with the
+highest `exit_code` among them (`2` for every such problem today). Argument
+checks beyond click's syntax (`--staged` with `--ci`, `--base` without `--ci`,
+file arguments or `--phase hygiene` with a snapshot, a `--rules-dir` or
+`--workspace-root` that is not an existing directory, an unknown rule ID) are
+`ARGUMENT_INVALID` (`INPUT_ERROR`).
 
 Every problem is printed on stderr as an Agent Advisory Protocol block with its
-code (see [Errors](#errors)). `--format json` emits an array of violations
-(`check`, `fix`) or phase entries (`phases`) to stdout and reports problems on
-stderr only; a command that fails before it has a result, and `explain` with
-errors, prints `{"error": {...}}` (the first problem's envelope) instead.
+code (see [Errors](#errors)). `--format json` prints exactly one object on
+stdout: `{"violations": [...], "errors": [...]}` (`check`, `fix`),
+`{"rules": [...], "errors": [...]}` with one phase entry per rule (`phases`),
+or `{"rule": {...}, "warnings": [...], "errors": [...]}` (`explain`); `errors`
+and `warnings` hold the collected problems as `to_dict()` objects (each with its
+`code`, `exit_code`, `rule_id` and advisory). A command that fails before it has
+a result prints `{"error": {...}}` instead.
 
 Targets are workspace-relative or absolute paths inside the workspace. A file
 is checked as is; a directory expands to every regular file under it, with the
@@ -92,10 +102,36 @@ file nor a directory inside the workspace fails with `RULES_TARGET_INVALID`
 before any rule runs. Link repair still indexes every Markdown file in the
 workspace, even when checking selected files.
 
-`--summary-only` (text output) replaces the per-finding listing with one line
-per rule (`RULE-id: N error(s), M warning(s)[, I info(s)][, K fixed]`), keeping the status
-lines (`[SNAPSHOT]`, `[PHASE_OVERRIDE]`, `[PROMOTION]`) and the final summary.
-Exit codes are unchanged; `--format json` ignores the flag.
+Text output is one `[KIND: ...]` sentinel line per fact, without colour or
+emoji; free text (messages, remediations, descriptions) is written as a JSON
+string so every line stays parseable:
+
+```text
+[SNAPSHOT: mode=staged tree=3f2a9c1d0b7e base=9e8d7c6b5a4f changed=2 deleted=0]
+[VIOLATION: RULE-markdown-link severity=error file=docs/a.md line=3 status=fixable message="Broken relative link: wrong/setup.md" remediation="..." guide=...]
+[SUMMARY: errors=1 warnings=0 infos=0 fixed=0]
+```
+
+`check` and `fix` print a `[VIOLATION: ...]` line per finding (`status` is
+`open`, `fixable` or `fixed`; `remediation` and `guide` appear when the rule
+gives them), then `[SUMMARY: errors=N warnings=N infos=N fixed=N]` counting the
+unfixed findings per severity and the fixed ones, then `[OK: ...]` when the
+command exits `0`. A run that could not evaluate and found nothing prints no
+summary; its problems are on stderr. A hygiene run adds the
+`[PHASE_OVERRIDE: ...]`/`[PROMOTION: ...]` lines described below and a
+`[NOTICE: ...]` when a transition is ready. `phases` prints one
+`[PHASE: RULE-id default=... effective=... overridden=yes|no promote_to=...]`
+line per rule. `explain` prints `[RULE: ...]`, `[DESCRIPTION: ...]`, one
+`[SETTING: key=value default=value]` per setting and one
+`[SETTING_OVERRIDE: path=... key=value ...]` per override (or
+`[SETTINGS: none]`), then the guide document as written. Problems that do not
+fail a command are `[WARNING: (CODE) message]` lines on stderr.
+
+`--summary-only` (text output) replaces the `[VIOLATION: ...]` lines with one
+`[RULE_COUNTS: RULE-id errors=N warnings=N infos=N fixed=N]` line per rule,
+keeping the other sentinel lines (`[SNAPSHOT]`, `[PHASE_OVERRIDE]`,
+`[PROMOTION]`, `[SUMMARY]`, `[OK]`). Exit codes are unchanged; `--format json`
+ignores the flag.
 
 ## Git snapshot gates
 
@@ -111,7 +147,7 @@ taken from the snapshot. Managed rule copies under `.devkit/managed/` are
 usually Git-ignored and therefore absent from the tree; the gate reads such a
 file from the working tree only when its SHA-256 matches the hash recorded in
 the snapshot's receipt. A rule file that is missing or differs from the receipt
-fails the gate with a message to run `devkit sync` and commit the receipt.
+fails the gate (`RULES_LOAD_FAILED`) with the fix to run `devkit sync` and commit the receipt.
 Snapshot gates refuse file arguments, `--phase hygiene` and `fix`; `--base`
 applies to `--ci` only. The workspace root must be the Git work tree top level
 (a subdirectory is refused, because Git reports tree paths from the top level).
@@ -181,18 +217,21 @@ cleared, then return it once `check --phase hygiene` reports `remaining=0`:
 
 `check --phase hygiene` prints a `[PHASE_OVERRIDE: ...]` or `[PROMOTION: ...]`
 line per pending transition with its remaining count. `devkit rules phases`
-lists the full plan, and `--format json` emits one object per rule. Details are
+lists the full plan, and `--format json` emits `{"rules": [...], "errors": [...]}`
+with one object per rule. Details are
 in [Evaluation Lifecycle](evaluation-lifecycle.md).
 
 ## Synchronized rules
 
 Rules shipped by a bundle (`kind = "rule"`) are recorded by `devkit sync` in
 `.devkit/installation.json`. `devkit rules` loads every `.py` file listed under
-such an asset (an override under `.devkit/overrides/` replaces the managed
-copy) after the built-in rules and before `--rules-dir`, so no flag is needed.
+such an asset's `entrypoints` and `paths`, whatever its name (an override under
+`.devkit/overrides/` replaces the managed copy), after the built-in rules and
+before `--rules-dir`, so no flag is needed. Only files found by scanning
+`--rules-dir` skip names starting with `_` or `.`.
 A rule with the same ID as an earlier one replaces it. Every listed file is
 verified the way the commit gate registry verifies gate files
-(`devkit.core.verified_asset_file`), in a plain run and in a Git snapshot
+(`devkit.core.verified_asset_files`), in a plain run and in a Git snapshot
 alike: a file with a `files` entry in the receipt must match its SHA-256, and a
 file without one (a project override under `.devkit/overrides/`) is loaded as
 it is. A listed file that does not exist, resolves outside the project, or
@@ -216,7 +255,10 @@ reads the `[rules]` policy (including `exclude`) and registers the built-in
 rules, the rules recorded in the installation receipt and the files under
 `rules_dir`. It then builds the full `RuleContext` and evaluates. The CLI, the
 `rules-staged` commit gate and the workflow engine's `lint-clean` check all
-call it, so they cannot disagree on policy.
+call it, so they cannot disagree on policy. `load_project_rules(root, rules_dir)`
+is the loading half on its own: it returns a `ProjectRules` with the `config`,
+the `registry`, the settings `resolvers`, `load_errors` and `policy_errors`,
+without evaluating (`devkit rules phases` and `explain` use it).
 
 ```python
 from pathlib import Path
@@ -230,20 +272,24 @@ for violation in run.result.violations:
     print(violation.rule_id, violation.file, violation.line)
 for problem in run.errors:  # load_errors, then policy/execution errors
     print(problem.code, problem.rule_id, problem)
-if run.errors:
-    raise RulesRunError(run.errors)  # RULES_RUN_FAILED, one detail per problem
+run.raise_for_problems()  # RulesRunError (RULES_RUN_FAILED), one detail per problem
+for violation in run.blocking_violations:  # unfixed error-severity findings
+    print(violation.file, violation.message)
 ```
 
 Keyword arguments are `targets`, `snapshot`, `phase`, `fix`, `dry_run` and
-`rules_dir`. An invalid `[rules]` table raises `ConfigError`. An invalid
+`rules_dir`. An invalid `[rules]` table raises `RulesConfigError`. An invalid
 explicit target raises `TargetError`, and a `rules_dir` that a snapshot run
 cannot read from the snapshot raises `RulesDirError`; a snapshot that cannot be
 read or materialized raises `SnapshotError`. Rule loading problems, such as a
 malformed receipt or a missing or drifted synchronized rule, are returned in
-`run.load_errors`, and no rule is evaluated. `run.failed` is true when there
-are errors or unfixed error-severity violations. `build_project_registry` and
-`expand_targets` expose the individual steps; `RuleContext`, `default_registry`
-and `evaluate` remain available for callers that assemble a run themselves;
+`run.load_errors`, and no rule is evaluated. `run.blocking_violations` (also
+on `EvaluationResult`) are the unfixed error-severity violations, `run.ok` is
+true when there are neither problems nor blocking violations, and
+`run.raise_for_problems()` raises `RulesRunError` when there are problems.
+`build_project_registry` and `expand_targets` expose the individual steps;
+`RuleContext`, `default_rule_registry` and `evaluate_rules` remain available
+for callers that assemble a run themselves;
 `validate_policy` checks a `[rules]` policy against loaded rules and returns
 `PolicyError` objects that carry the rule ID.
 
@@ -258,7 +304,7 @@ are returned in `RuleRegistry.errors`, `ProjectRun.load_errors` and
 
 | Class | Code | Mode | When |
 | --- | --- | --- | --- |
-| `ConfigError` | `RULES_CONFIG_INVALID` | `INPUT_ERROR` | `[rules]` in `.devkit/config.toml` is malformed (raised) |
+| `RulesConfigError` | `RULES_CONFIG_INVALID` | `INPUT_ERROR` | `[rules]` in `.devkit/config.toml` is malformed (raised; a subclass of the core `ConfigError`, which is raised unchanged as `CONFIG_INVALID` when the file itself cannot be read or parsed) |
 | `TargetError` | `RULES_TARGET_INVALID` | `INPUT_ERROR` | an explicit target is outside the workspace or does not exist (raised) |
 | `RulesDirError` | `RULES_DIR_INVALID` | `INPUT_ERROR` | a snapshot run cannot read `--rules-dir` from the snapshot (raised) |
 | `SnapshotError` | `RULES_SNAPSHOT_FAILED` | `INPUT_ERROR` (not a work tree top level, unknown `--base`) or `MAINTENANCE` (Git failure) | a Git snapshot cannot be taken or materialized (raised) |
@@ -268,7 +314,7 @@ are returned in `RuleRegistry.errors`, `ProjectRun.load_errors` and
 | `SettingsError` | `RULES_SETTINGS_INVALID` | `INPUT_ERROR`, or `MAINTENANCE` for a defect in the rule's settings declaration | settings do not type-check or `validate_settings` rejects them (collected; a `PolicyError`) |
 | `RuleLoadError` | `RULES_LOAD_FAILED` | `MAINTENANCE` | a rule file fails to load, or the receipt is malformed or lists a missing or drifted rule (collected; `fix` names `devkit sync`) |
 | `RuleExecutionError` | `RULES_EXECUTION_FAILED` | `MAINTENANCE` | a rule raised while checking or fixing; `[TARGET]` is the file defining it (collected) |
-| `RulesRunError` | `RULES_RUN_FAILED` | `MAINTENANCE` | raised by callers that need one error for a failed run, such as the workflow engine's `lint-clean`; `problems` keeps the collected problems |
+| `RulesRunError` | `RULES_RUN_FAILED` | `MAINTENANCE` | raised by `ProjectRun.raise_for_problems()` for callers that need one error for a failed run, such as the workflow engine's `lint-clean`; `problems` keeps the collected problems |
 
 `expand_targets`, `RuleContext` (targets outside the workspace) and
 `ctx.settings(rule, path)` raise `TargetError` too. Passing `targets` or

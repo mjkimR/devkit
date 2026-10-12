@@ -1,40 +1,55 @@
 """A workspace as the workflow engine sees it: configuration, definitions, roles, plugin checks and units.
 
 ``Workspace`` is the library entry point the CLI is built on. It loads each
-source once, resolves a unit directory to its anchor, binding and workflow,
-and evaluates units with the project's policies (approvals, stage switches,
-lint, Git, drift). Every failure is an ``AdvisoryError`` with a stable code: a
-``WorkflowError``, or a ``devkit.core`` error such as ``RECEIPT_INVALID``.
+source once (the receipt, the discovered definitions, roles and plugin checks
+are cached and reused by every call), resolves a unit directory to its anchor,
+binding and workflow, and evaluates units with the project's policies
+(approvals, stage switches, lint, Git, drift). Every failure is an
+``AdvisoryError`` with a stable code: a ``WorkflowError``, or a ``devkit.core``
+error such as ``RECEIPT_INVALID``.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
-from devkit.core.errors import FrontmatterError
 from devkit.core.project import find_project_root
 from devkit.core.receipt import Receipt, load_receipt
-from devkit.workflow.binding import Binding, read_binding
-from devkit.workflow.checks import DECLARABLE, Registry
-from devkit.workflow.config import WorkflowConfig, load_workflow_config
-from devkit.workflow.decisions import RETURN_PREFIX, Decision, load_decisions, new_decision, write_decision
-from devkit.workflow.definition import DefinitionError, Problem, WorkflowDocument, schema_hash
-from devkit.workflow.discovery import discover, load_all, load_problem, resolve
-from devkit.workflow.errors import DriftError, WorkflowProblem, input_error, maintenance_error
-from devkit.workflow.evaluate import LintFunc, Options, evaluate
-from devkit.workflow.git import is_ancestor
-from devkit.workflow.layout import TemplateLayout
-from devkit.workflow.lint import rules_lint
-from devkit.workflow.plugins import BaseCheck, load_plugin_checks
-from devkit.workflow.primitives import AncestorFunc
-from devkit.workflow.results import Result
-from devkit.workflow.roles import discover_roles
-from devkit.workflow.validation import ValidationReport, validate, validate_workspace
-
-UNIT_FIX = "Pass an existing unit directory (`devkit workflow list`) or create one with `devkit workflow new <slug>`"
+from devkit.workflow.definition.checks import DECLARABLE, Registry
+from devkit.workflow.definition.definition import WorkflowDocument, schema_hash
+from devkit.workflow.definition.discovery import (
+    definition_path,
+    discover_definitions,
+    load_definition_dir,
+    load_definition_file,
+    select_definition,
+)
+from devkit.workflow.definition.validation import ValidationReport, validate_definition, validate_definitions
+from devkit.workflow.errors import (
+    AnchorAmbiguousError,
+    AnchorMismatchError,
+    DefinitionProblem,
+    DriftError,
+    GivenInvalidError,
+    PluginError,
+    UnitNotFoundError,
+    WorkflowError,
+    WorkflowInvalidError,
+    WorkflowNotSelectedError,
+)
+from devkit.workflow.evaluation.evaluate import LintFunc, Options, evaluate_definition
+from devkit.workflow.evaluation.git import is_ancestor
+from devkit.workflow.evaluation.lint import lint_with_rules
+from devkit.workflow.evaluation.primitives import AncestorFunc
+from devkit.workflow.evaluation.results import UnitEvaluation
+from devkit.workflow.project.config import WorkflowConfig, load_workflow_config
+from devkit.workflow.project.layout import LayoutSpec, TemplateLayout
+from devkit.workflow.project.plugins import BaseCheck, load_plugin_checks
+from devkit.workflow.project.roles import discover_roles
+from devkit.workflow.unit.binding import Binding, read_anchor, write_binding
 
 
 @dataclass(frozen=True)
@@ -52,6 +67,41 @@ class UnitRef:
         return self.dir / self.anchor
 
 
+@dataclass(frozen=True)
+class DefinitionDescription:
+    """A definition with its problems, effective policies and anchor, and optionally a unit's binding (``show``)."""
+
+    doc: WorkflowDocument
+    errors: tuple[DefinitionProblem, ...]
+    approvals: dict[str, str]
+    stages_off: tuple[str, ...]
+    anchor: str
+    binding: Binding | None = None
+
+    @property
+    def ok(self) -> bool:
+        return not self.errors
+
+    @property
+    def drift(self) -> bool:
+        """Whether the binding names this definition with another schema hash."""
+        binding = self.binding
+        if binding is None or not binding.bound or binding.workflow != self.doc.id:
+            return False
+        return binding.hash != schema_hash(self.doc)
+
+    def to_dict(self) -> dict[str, Any]:
+        data = self.doc.to_dict()
+        data["approvals"] = dict(self.approvals)
+        data["stages_off"] = list(self.stages_off)
+        data["anchor"] = self.anchor
+        if self.binding is not None:
+            data["binding"] = {**self.binding.to_dict(), "drift": self.drift}
+        data["ok"] = self.ok
+        data["errors"] = [p.to_dict() for p in self.errors]
+        return data
+
+
 class Workspace:
     """The workflow view of one project root (default: the project containing the current directory)."""
 
@@ -59,7 +109,7 @@ class Workspace:
         self,
         root: Path | str | None = None,
         *,
-        lint: LintFunc | None = rules_lint,
+        lint: LintFunc | None = lint_with_rules,
         ancestor: AncestorFunc | None = is_ancestor,
     ) -> None:
         self.root = (Path(root) if root is not None else find_project_root(Path.cwd())).resolve()
@@ -69,10 +119,11 @@ class Workspace:
         self._receipt_loaded = False
         self._receipt: Receipt | None = None
         self._docs: list[WorkflowDocument] | None = None
-        self._discovery_errors: list[WorkflowProblem] = []
+        self._discovery_errors: list[WorkflowError] = []
         self._roles_loaded = False
         self._roles: dict[str, str] | None = None
         self._plugins: list[BaseCheck] | None = None
+        self._layouts: dict[LayoutSpec, TemplateLayout] = {}
 
     # -- paths ---------------------------------------------------------------
 
@@ -105,13 +156,14 @@ class Workspace:
         return self._receipt
 
     def definitions(self) -> list[WorkflowDocument]:
-        """Every discovered definition (project definitions shadow synchronized ones)."""
+        """Every discovered definition (project definitions shadow synchronized ones), loaded once."""
         if self._docs is None:
-            self._docs, self._discovery_errors = discover(self.root, self.definitions_dir, self.receipt)
+            self._docs, self._discovery_errors = discover_definitions(self.root, self.definitions_dir, self.receipt)
         return self._docs
 
     @property
-    def discovery_errors(self) -> list[WorkflowProblem]:
+    def discovery_errors(self) -> list[WorkflowError]:
+        """Definitions that could not be loaded (``DefinitionError``) or are missing (``WorkflowAssetMissingError``)."""
         self.definitions()
         return list(self._discovery_errors)
 
@@ -126,18 +178,22 @@ class Workspace:
         return self._roles
 
     def plugins(self) -> list[BaseCheck]:
-        """Plugin checks from receipt ``workflow-check`` assets and ``checks_dir``; a load failure is an error."""
+        """Plugin checks from receipt ``workflow-check`` assets and ``checks_dir``.
+
+        A file that cannot be loaded raises ``PluginError``
+        (``WORKFLOW_CHECK_LOAD_FAILED``); several are reported in one error.
+        """
         if self._plugins is None:
             loaded, errors = load_plugin_checks(self.root, self.config.checks_dir, self.receipt)
+            if len(errors) == 1:
+                raise errors[0]
             if errors:
                 fixes = list(dict.fromkeys(e.fix for e in errors if e.fix))
-                raise maintenance_error(
+                raise PluginError(
                     "plugin checks could not be loaded",
-                    *(str(e) for e in errors),
-                    code="CHECK_LOAD_FAILED",
-                    fix="; ".join(fixes)
-                    or f"Fix or remove the failing check file, or run `devkit sync` to restore a synchronized one ({self.config.checks_dir} holds project checks)",
-                    target_files=list(dict.fromkeys(e.target for e in errors if e.target)),
+                    *errors,
+                    fix="; ".join(fixes) or None,
+                    target_files=list(dict.fromkeys(t for e in errors for t in e.target_files)),
                 )
             self._plugins = loaded
         return self._plugins
@@ -148,44 +204,49 @@ class Workspace:
     # -- definitions -----------------------------------------------------------
 
     def layout_for(self, doc: WorkflowDocument) -> TemplateLayout:
-        """The project layout with the keys the definition overrides."""
-        return doc.layout.apply(self.layout) if doc.layout else self.layout
+        """The project layout with the keys the definition overrides (built once per distinct layout)."""
+        if doc.layout is None:
+            return self.layout
+        if doc.layout not in self._layouts:
+            self._layouts[doc.layout] = doc.layout.apply(self.layout)
+        return self._layouts[doc.layout]
 
     def anchor_for(self, doc: WorkflowDocument) -> str:
         return doc.anchor(self.config.anchor)
 
-    def validate(self, doc: WorkflowDocument, known: Iterable[str] | None = None) -> list[Problem]:
+    def validate_definition(self, doc: WorkflowDocument, known: Iterable[str] | None = None) -> list[DefinitionProblem]:
         """Validate against the project anchor, known ids, the role vocabulary and the loaded plugin checks."""
         ids = set(known) if known is not None else self.known_ids() | {doc.id}
-        return validate(doc, self.config.anchor, ids, self.roles(), self.plugins())
+        return validate_definition(doc, self.config.anchor, ids, self.roles(), self.plugins())
 
     def load_definition(self, ref: str) -> WorkflowDocument:
-        """The definition ``ref`` names (an id, or a path relative to the root), not validated."""
-        try:
-            return resolve(self.definitions_dir, ref, self.root)
-        except DefinitionError as exc:
-            raise input_error(
-                str(exc),
-                code="WORKFLOW_NOT_FOUND",
-                fix=f"Add a definition with id {ref!r} under {self.config.definitions_dir}, sync a bundle that ships it, or pass --workflow <path>",
-            ) from exc
+        """The definition ``ref`` names (an id, or a path relative to the root), not validated.
+
+        Ids are looked up in the cached discovered definitions. An unknown id
+        or a missing file raises ``WorkflowNotFoundError``; an unreadable file
+        or an id defined twice raises ``DefinitionError``.
+        """
+        fix = (
+            f"Add a definition with id {ref!r} under {self.config.definitions_dir}, "
+            "sync a bundle that ships it, or pass --workflow <path>"
+        )
+        path = definition_path(ref, self.root)
+        if path is not None:
+            return load_definition_file(path, ref, fix)
+        where = f"{self.config.definitions_dir} or the devkit installation receipt"
+        return select_definition(self.definitions(), ref, self.discovery_errors, where, fix)
 
     def definition(self, ref: str | None = None, binding: Binding | None = None) -> WorkflowDocument:
         """The validated workflow ``ref`` names, else the binding's, else the configured default."""
         chosen = ref or (binding.workflow if binding and binding.workflow else None) or self.config.default
         if not chosen:
-            raise input_error(
-                "no workflow selected",
-                code="WORKFLOW_NOT_SELECTED",
-                fix="Pass --workflow <id>, bind the unit, or set [workflow].default in .devkit/config.toml",
-            )
+            raise WorkflowNotSelectedError("no workflow selected")
         doc = self.load_definition(chosen)
-        problems = self.validate(doc)
+        problems = self.validate_definition(doc)
         if problems:
-            raise input_error(
+            raise WorkflowInvalidError(
                 f"workflow {doc.id} is invalid",
-                *(str(p) for p in problems),
-                code="WORKFLOW_INVALID",
+                *problems,
                 target_files=[self.rel(doc.path)] if doc.path else (),
                 fix=f"Run `devkit workflow validate` and fix every problem in {doc.id}",
             )
@@ -197,20 +258,20 @@ class Workspace:
         Only a whole-workspace run compares stages shared across definitions.
         """
         docs: list[WorkflowDocument] = []
-        errors: list[WorkflowProblem] = []
+        errors: list[WorkflowError] = []
         if not paths:
             docs, errors = list(self.definitions()), self.discovery_errors
         for target in paths:
             if target.is_dir():
-                loaded, load_errors = load_all(target)
+                loaded, load_errors = load_definition_dir(target)
                 docs.extend(loaded)
                 errors.extend(load_errors)
                 continue
             try:
-                docs.append(resolve(self.definitions_dir, str(target), self.root))
-            except DefinitionError as exc:
-                errors.append(load_problem(exc))
-        return validate_workspace(
+                docs.append(load_definition_file(target, self.rel(target)))
+            except WorkflowError as exc:
+                errors.append(exc)
+        return validate_definitions(
             docs,
             errors,
             anchor=self.config.anchor,
@@ -220,17 +281,16 @@ class Workspace:
             compare_shared=not paths,
         )
 
-    def describe(self, doc: WorkflowDocument, binding: Binding | None = None) -> dict[str, Any]:
-        """The definition as data with its problems, effective policies and anchor (``show --format json``)."""
-        data = doc.to_dict()
-        data["problems"] = [p.to_dict() for p in self.validate(doc)]
-        data["approvals"] = {s.gate: self.config.policy(s.gate) for s in doc.stages if s.gate}
-        data["stages_off"] = [s.id for s in doc.stages if self.config.stage_policy(s.id) == "off"]
-        data["anchor"] = self.anchor_for(doc)
-        if binding is not None:
-            drift = binding.bound and binding.workflow == doc.id and binding.hash != schema_hash(doc)
-            data["binding"] = {**binding.to_dict(), "drift": drift}
-        return data
+    def describe(self, doc: WorkflowDocument, binding: Binding | None = None) -> DefinitionDescription:
+        """The definition with its problems, effective policies and anchor (what ``show`` reports)."""
+        return DefinitionDescription(
+            doc=doc,
+            errors=tuple(self.validate_definition(doc)),
+            approvals={s.gate: self.config.policy(s.gate) for s in doc.stages if s.gate},
+            stages_off=tuple(s.id for s in doc.stages if self.config.stage_policy(s.id) == "off"),
+            anchor=self.anchor_for(doc),
+            binding=binding,
+        )
 
     # -- units ---------------------------------------------------------------
 
@@ -250,25 +310,11 @@ class Workspace:
             return present[0]
         if not present:
             tried = ", ".join(self.candidate_anchors())
-            raise input_error(
-                f"no anchor file ({tried}) found in {self.rel(unit_dir)}", code="UNIT_NOT_FOUND", fix=UNIT_FIX
-            )
-        raise input_error(
-            f"{self.rel(unit_dir)} contains several anchor files: {', '.join(present)}",
-            code="ANCHOR_AMBIGUOUS",
-            fix="Pass --workflow <id> to name the workflow (and so the anchor) to evaluate against",
-        )
+            raise UnitNotFoundError(f"no anchor file ({tried}) found in {self.rel(unit_dir)}")
+        raise AnchorAmbiguousError(f"{self.rel(unit_dir)} contains several anchor files: {', '.join(present)}")
 
-    def read_binding(self, unit_dir: Path, anchor: str) -> Binding:
-        try:
-            return read_binding(unit_dir / anchor)
-        except (FrontmatterError, OSError, UnicodeError) as exc:
-            raise input_error(
-                f"{anchor}: {exc}",
-                code="ANCHOR_INVALID",
-                target_files=[self.rel(unit_dir / anchor)],
-                fix="Repair the anchor's YAML frontmatter",
-            ) from exc
+    def _binding(self, unit_dir: Path, anchor: str) -> Binding:
+        return read_anchor(unit_dir / anchor, self.rel(unit_dir / anchor)).binding
 
     def resolve_unit(self, unit: str | Path, workflow: str | None = None) -> UnitRef:
         """The unit directory, its anchor file, its binding and the workflow to evaluate against.
@@ -282,20 +328,30 @@ class Workspace:
             doc = self.definition(workflow)
             anchor = self.anchor_for(doc)
             if not (unit_dir / anchor).is_file():
-                raise input_error(f"{anchor} not found in {self.rel(unit_dir)}", code="UNIT_NOT_FOUND", fix=UNIT_FIX)
-            return UnitRef(unit_dir, anchor, self.read_binding(unit_dir, anchor), doc, self.rel(unit_dir))
+                raise UnitNotFoundError(f"{anchor} not found in {self.rel(unit_dir)}")
+            return UnitRef(unit_dir, anchor, self._binding(unit_dir, anchor), doc, self.rel(unit_dir))
         anchor = self.locate_anchor(unit_dir)
-        binding = self.read_binding(unit_dir, anchor)
+        binding = self._binding(unit_dir, anchor)
         doc = self.definition(None, binding)
         expected = self.anchor_for(doc)
         if expected != anchor:
-            raise input_error(
+            raise AnchorMismatchError(
                 f"unit {self.rel(unit_dir)} is identified by {anchor} but workflow {doc.id} declares anchor {expected}",
-                code="ANCHOR_MISMATCH",
                 target_files=[self.rel(unit_dir / anchor)],
                 fix=f"Rename the anchor to {expected} (and move the unit into the workflow's layout) before binding, or pass --workflow for a definition whose anchor is {anchor}",
             )
         return UnitRef(unit_dir, anchor, binding, doc, self.rel(unit_dir))
+
+    def bind_unit(self, unit: str | Path, workflow: str | None = None) -> UnitRef:
+        """Record the workflow ``unit`` follows and the hash of its stage schema; returns the rebound unit.
+
+        ``workflow`` defaults to the current binding, else ``[workflow].default``.
+        The handoff history is kept.
+        """
+        ref = self.resolve_unit(unit, workflow)
+        binding = Binding(ref.doc.id, schema_hash(ref.doc), ref.binding.history)
+        write_binding(ref.anchor_path, Binding(binding.workflow, binding.hash))
+        return replace(ref, binding=binding)
 
     def check_given(self, doc: WorkflowDocument, given: Iterable[str]) -> None:
         """``--given`` names must be gates of ``doc`` or registered runner/human checks."""
@@ -304,9 +360,8 @@ class Workspace:
         for name in given:
             check = registry.lookup(name)
             if name not in gates and (check is None or check.class_ not in DECLARABLE):
-                raise input_error(
+                raise GivenInvalidError(
                     f"--given {name!r} is not a gate of {doc.id} nor a registered runner or human check",
-                    code="GIVEN_INVALID",
                     fix=f"Use a gate name ({', '.join(sorted(gates)) or 'none'}) or a runner/human check from `devkit workflow checks`",
                 )
 
@@ -332,17 +387,17 @@ class Workspace:
         given: Sequence[str] = (),
         lint: bool = True,
         enforce_drift: bool = True,
-    ) -> Result:
+    ) -> UnitEvaluation:
         """Evaluate ``unit`` with the project's policies; never writes a file.
 
         Raises ``DriftError`` (``WORKFLOW_DRIFT``) when the bound definition
         changed and a stage is still current, unless ``enforce_drift`` is off.
         Approvals for stages after the current one (the unit went back) are
-        listed in ``Result.stale_approvals`` and keep counting until an
-        explicit ``record_return`` voids them.
+        listed in ``UnitEvaluation.stale_approvals`` and keep counting until
+        ``return_to`` voids them.
         """
         self.check_given(unit.doc, given)
-        result = evaluate(unit.doc, self.options(unit, given=given, lint=lint))
+        result = evaluate_definition(unit.doc, self.options(unit, given=given, lint=lint))
         if enforce_drift and result.blocked_by_drift:
             assert result.drift is not None
             raise DriftError(
@@ -355,17 +410,4 @@ class Workspace:
         return result
 
 
-def record_return(unit: UnitRef, to: str, *, note: str = "", by: str = "") -> Decision:
-    """Record that ``unit`` went back to stage ``to``: approvals for that stage and later ones no longer count."""
-    if unit.doc.stage(to) is None:
-        raise input_error(
-            f"{to!r} is not a stage of {unit.doc.id}",
-            code="RETURN_INVALID",
-            fix=f"Use one of: {', '.join(s.id for s in unit.doc.stages)}",
-        )
-    decisions = load_decisions(unit.dir)
-    record = new_decision(decisions, RETURN_PREFIX + to, "accept", workflow=unit.doc.id, stage=to, note=note, by=by)
-    return write_decision(unit.dir, record)
-
-
-__all__ = ["UnitRef", "Workspace", "record_return"]
+__all__ = ["DefinitionDescription", "UnitRef", "Workspace"]

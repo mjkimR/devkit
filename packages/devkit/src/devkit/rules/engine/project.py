@@ -5,7 +5,9 @@ workflow engine's ``lint-clean`` check all evaluate a project through
 ``run_project_rules``, so project policy (``[rules]`` in ``.devkit/config.toml``,
 including ``exclude``), the synchronized rules recorded in the receipt and the
 Git snapshot handling cannot differ between them. Callers render the returned
-``ProjectRun`` and choose their own exit semantics.
+``ProjectRun`` and choose their own exit semantics. ``load_project_rules`` is
+the loading half on its own (policy, rules and policy validation, no
+evaluation), used by ``devkit rules phases``/``explain``.
 """
 
 from __future__ import annotations
@@ -18,15 +20,72 @@ from pathlib import Path, PurePosixPath
 
 from devkit.rules.engine.config import RulesConfig, load_rules_config
 from devkit.rules.engine.discovery import resolve_managed_rules
-from devkit.rules.engine.errors import RuleProblem, RulesDirError, TargetError
-from devkit.rules.engine.evaluator import EvaluationResult, evaluate
-from devkit.rules.engine.models import Phase, Rule, RuleContext
-from devkit.rules.engine.registry import RuleRegistry, default_registry
+from devkit.rules.engine.errors import PolicyError, RuleProblem, RulesDirError, RulesRunError, TargetError
+from devkit.rules.engine.evaluator import EvaluationResult, evaluate_rules
+from devkit.rules.engine.models import Phase, Rule, RuleContext, Violation
+from devkit.rules.engine.policy import validate_policy
+from devkit.rules.engine.registry import RuleRegistry, default_rule_registry
+from devkit.rules.engine.settings import SettingsResolver
 from devkit.rules.workspace.cache import WorkspaceCache
 from devkit.rules.workspace.markdown import local_target
-from devkit.rules.workspace.snapshot import Snapshot, materialize
+from devkit.rules.workspace.snapshot import Snapshot, materialize_snapshot
 
 SNAPSHOT_PREFIX = "devkit-rules-snapshot-"
+
+
+@dataclass(frozen=True)
+class ProjectRules:
+    """A project's ``[rules]`` policy and loaded rules, validated against each other.
+
+    ``load_errors`` are rule loading failures (an invalid receipt, a missing or
+    drifted synchronized rule, a rule file that fails to import);
+    ``policy_errors`` are ``[rules]`` entries that cannot apply to the loaded
+    rules. ``resolvers`` are the settings resolvers of the rules whose settings
+    type-check.
+    """
+
+    config: RulesConfig
+    registry: RuleRegistry
+    rules_dir: Path | None
+    load_errors: tuple[RuleProblem, ...]
+    policy_errors: tuple[PolicyError, ...]
+    resolvers: dict[str, SettingsResolver]
+
+    @property
+    def rules(self) -> list[Rule]:
+        return self.registry.get_all()
+
+    @property
+    def errors(self) -> list[RuleProblem]:
+        """Load errors followed by policy errors."""
+        return [*self.load_errors, *self.policy_errors]
+
+
+def load_project_rules(root: Path, rules_dir: Path | None = None, *, source_root: Path | None = None) -> ProjectRules:
+    """Read the ``[rules]`` policy of ``root``, load its rules and validate the policy against them.
+
+    The rules are those of ``build_project_registry``. Raises
+    ``RulesConfigError`` (``RULES_CONFIG_INVALID``) for an invalid ``[rules]``
+    table and the core ``ConfigError`` for an unreadable config file; loading
+    and policy problems are collected, not raised.
+    """
+    config = load_rules_config(root)
+    rules_path = rules_dir.resolve() if rules_dir is not None else None
+    registry = build_project_registry(root, rules_dir=rules_path, source_root=source_root)
+    resolvers, policy_errors = validate_policy(
+        registry.get_all(),
+        phase_overrides=config.phase_overrides,
+        severity_overrides=config.severity_overrides,
+        settings=config.settings,
+    )
+    return ProjectRules(
+        config=config,
+        registry=registry,
+        rules_dir=rules_path,
+        load_errors=tuple(registry.errors),
+        policy_errors=tuple(policy_errors),
+        resolvers=resolvers,
+    )
 
 
 @dataclass(frozen=True)
@@ -61,9 +120,19 @@ class ProjectRun:
         return [*self.load_errors, *self.result.errors]
 
     @property
-    def failed(self) -> bool:
-        """Whether the run has errors or unfixed error-severity violations."""
-        return bool(self.load_errors) or self.result.has_errors
+    def blocking_violations(self) -> list[Violation]:
+        """Unfixed error-severity violations: the findings that fail the run."""
+        return self.result.blocking_violations
+
+    @property
+    def ok(self) -> bool:
+        """Whether the run completed without problems and no blocking violation remains."""
+        return not self.load_errors and self.result.ok
+
+    def raise_for_problems(self) -> None:
+        """Raise ``RulesRunError`` (``RULES_RUN_FAILED``) carrying ``errors`` when the run could not complete."""
+        if self.errors:
+            raise RulesRunError(self.errors)
 
 
 def build_project_registry(
@@ -75,7 +144,7 @@ def build_project_registry(
     managed rule files are read from there when they match the receipt.
     Loading problems are collected in the registry's ``errors``.
     """
-    registry = default_registry()
+    registry = default_rule_registry()
     managed = resolve_managed_rules(workspace_root, source_root=source_root)
     registry.errors.extend(managed.errors)
     registry.discover_from_files(managed.paths)
@@ -133,10 +202,8 @@ def _run(
     source_root: Path | None,
 ) -> ProjectRun:
     cache = WorkspaceCache(workspace_root, git_filter=source_root is None)
-    config = load_rules_config(workspace_root)
-    rules_path = rules_dir.resolve() if rules_dir is not None else None
-    registry = build_project_registry(workspace_root, rules_dir=rules_path, source_root=source_root)
-    load_errors = tuple(registry.errors)
+    project = load_project_rules(workspace_root, rules_dir, source_root=source_root)
+    config = project.config
 
     # ``RuleContext`` reads an empty ``changed_files`` as "every file", so an
     # explicit selection that names no file must skip evaluation instead.
@@ -156,7 +223,7 @@ def _run(
             fix=fix,
             dry_run=dry_run,
             cache=cache,
-            rules_dir=rules_path,
+            rules_dir=project.rules_dir,
             phase_overrides=dict(config.phase_overrides),
             severity_overrides=dict(config.severity_overrides),
             rule_settings=dict(config.settings),
@@ -164,17 +231,17 @@ def _run(
         )
 
     result = EvaluationResult()
-    if context is not None and not load_errors:
-        result = evaluate(context, registry.get_all())
+    if context is not None and not project.load_errors:
+        result = evaluate_rules(context, project.rules)
     return ProjectRun(
         workspace_root=workspace_root,
         phase=phase,
         config=config,
-        registry=registry,
-        rules_dir=rules_path,
+        registry=project.registry,
+        rules_dir=project.rules_dir,
         context=context,
         result=result,
-        load_errors=load_errors,
+        load_errors=project.load_errors,
     )
 
 
@@ -211,7 +278,7 @@ def run_project_rules(
     run cannot take ``targets`` or ``fix``, and ``snapshot`` must come from
     ``root``; violating that contract is a programming error (``ValueError``).
 
-    Raises ``ConfigError`` (``RULES_CONFIG_INVALID``) for an invalid ``[rules]``
+    Raises ``RulesConfigError`` (``RULES_CONFIG_INVALID``) for an invalid ``[rules]``
     table, ``TargetError`` (``RULES_TARGET_INVALID``) for an invalid explicit
     target, ``RulesDirError`` (``RULES_DIR_INVALID``) and ``SnapshotError``
     (``RULES_SNAPSHOT_FAILED``) when the snapshot cannot be materialized. Rule
@@ -239,7 +306,7 @@ def run_project_rules(
     rules_rel = _snapshot_rules_dir(snapshot, rules_dir)
     with tempfile.TemporaryDirectory(prefix=SNAPSHOT_PREFIX) as directory:
         workspace = Path(directory).resolve()
-        materialize(snapshot, workspace)
+        materialize_snapshot(snapshot, workspace)
         snapshot_rules = None
         if rules_rel is not None:
             snapshot_rules = workspace / rules_rel

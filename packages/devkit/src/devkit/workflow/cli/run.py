@@ -4,24 +4,12 @@ from __future__ import annotations
 
 import click
 
+from devkit.core.cli import FORMAT_OPTION, Reported, boundary, echo_json, is_json
 from devkit.workflow.answers import record_answer, return_to
-from devkit.workflow.cli.app import (
-    FORMAT,
-    NO_LINT,
-    UNIT,
-    WORKSPACE,
-    Reported,
-    boundary,
-    cli,
-    echo_json,
-    is_json,
-    parse_date,
-    workspace,
-)
-from devkit.workflow.decisions import ACTIONS
-from devkit.workflow.errors import maintenance_error
+from devkit.workflow.cli.app import NO_LINT, UNIT, WORKSPACE, cli, parse_date, workspace
 from devkit.workflow.handoff import apply_handoff, plan_handoff
-from devkit.workflow.render import render_requests, render_result
+from devkit.workflow.render import render_evaluation, render_requests
+from devkit.workflow.unit.decisions import ACTIONS
 
 
 @cli.command(name="next")
@@ -30,7 +18,7 @@ from devkit.workflow.render import render_requests, render_result
 @click.option("--workflow", "workflow_ref", default=None, help="Evaluate against this workflow instead of the binding")
 @click.option("--given", multiple=True, help="Gate, runner or human check the executor holds (repeatable)")
 @NO_LINT
-@FORMAT
+@FORMAT_OPTION
 @boundary
 def next_cmd(
     workspace_root: str | None,
@@ -40,36 +28,34 @@ def next_cmd(
     no_lint: bool,
     output_format: str,
 ) -> None:
-    """Report the current stage of a unit, what is unmet and what to do next."""
+    """Report the current stage of a unit, what is unmet and what to do next.
+
+    When the rules behind lint-clean cannot run, their error is reported
+    unchanged after the result and sets the exit code.
+    """
     ws = workspace(workspace_root)
     ref = ws.resolve_unit(unit, workflow_ref)
     result = ws.evaluate_unit(ref, given=given, lint=not no_lint)
     if is_json(output_format):
         echo_json(result.to_dict())
     else:
-        click.echo(render_result(result), nl=False)
-    if result.lint_error:
-        raise Reported(
-            maintenance_error(
-                f"lint failed: {result.lint_error}",
-                code="LINT_FAILED",
-                fix="Fix the rule execution error reported by devkit.rules, or rerun with --no-lint to inspect the stage",
-            )
-        )
+        click.echo(render_evaluation(result), nl=False)
+    if result.lint_error is not None:
+        raise Reported(result.lint_error)
 
 
 @cli.command(name="requests")
 @WORKSPACE
 @UNIT
 @NO_LINT
-@FORMAT
+@FORMAT_OPTION
 @boundary
 def requests_cmd(workspace_root: str | None, unit: str, no_lint: bool, output_format: str) -> None:
     """List the open human requests of a unit (approvals and choices)."""
     ws = workspace(workspace_root)
     result = ws.evaluate_unit(ws.resolve_unit(unit), lint=not no_lint)
     if is_json(output_format):
-        echo_json([r.to_dict() for r in result.requests])
+        echo_json({"requests": [r.to_dict() for r in result.requests]})
         return
     lines = render_requests(result.requests)
     click.echo("\n".join(lines) if lines else "[REQUESTS: none]")
@@ -89,7 +75,7 @@ def requests_cmd(workspace_root: str | None, unit: str, no_lint: bool, output_fo
 @click.option("--note", default="", help="Free-text note, recommended on decline")
 @click.option("--by", "by", default="", help="Who answered (person or host)")
 @NO_LINT
-@FORMAT
+@FORMAT_OPTION
 @boundary
 def answer_cmd(
     workspace_root: str | None,
@@ -118,7 +104,7 @@ def answer_cmd(
 @click.option("--note", default="", help="Why the unit goes back")
 @click.option("--by", "by", default="", help="Who decided (person or host)")
 @NO_LINT
-@FORMAT
+@FORMAT_OPTION
 @boundary
 def return_cmd(
     workspace_root: str | None, unit: str, stage: str, note: str, by: str, no_lint: bool, output_format: str
@@ -146,7 +132,7 @@ def return_cmd(
 )
 @click.option("--by", "by", default="", help="Who chose the candidate given with --workflow")
 @NO_LINT
-@FORMAT
+@FORMAT_OPTION
 @boundary
 def handoff_cmd(
     workspace_root: str | None,
@@ -157,7 +143,7 @@ def handoff_cmd(
     no_lint: bool,
     output_format: str,
 ) -> None:
-    """Hand a completed unit to one of its workflow's ``next`` candidates and rebind it."""
+    """Hand a completed unit to one of its workflow's next candidates and rebind it."""
     ws = workspace(workspace_root)
     day = parse_date(when)
     ref = ws.resolve_unit(unit)

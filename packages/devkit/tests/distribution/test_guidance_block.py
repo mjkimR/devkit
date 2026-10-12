@@ -7,14 +7,16 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 from devkit.core.errors import ConfigError, ReceiptError
+from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH
 from devkit.distribution.bundles import load_bundle
-from devkit.distribution.cli import cli
+from devkit.distribution.content import Content
 from devkit.distribution.errors import ConflictError, DistributionError
 from devkit.distribution.installation import guidance_block, transaction
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.discovery import InstalledBundle
 from devkit.distribution.installation.sync import recover_project, sync_project
-from devkit.distribution.installation.workspace import AGENTS_FILE, CONFIG, JOURNAL, RECEIPT, Content
+from devkit.distribution.installation.workspace import AGENTS_FILE, JOURNAL
+from testsupport.distribution import cli
 
 START, END = guidance_block.START, guidance_block.END
 
@@ -51,7 +53,7 @@ def target(tmp_path: Path) -> Path:
 
 
 def write_config(root: Path, *, presets: str = 'team = "all"', extra: str = "") -> None:
-    (root / CONFIG).write_text(f'schema = 1\nagents = ["codex"]\n{extra}\n[presets]\n{presets}\n')
+    (root / CONFIG_PATH).write_text(f'schema = 1\nagents = ["codex"]\n{extra}\n[presets]\n{presets}\n')
 
 
 def block_of(root: Path) -> str | None:
@@ -60,7 +62,7 @@ def block_of(root: Path) -> str | None:
 
 
 def test_block_is_created_with_selection_and_entry_skills(installed: list[InstalledBundle], target: Path) -> None:
-    result = sync_project(target, installed)
+    result = sync_project(target, installed).to_dict()
     assert {"path": AGENTS_FILE, "action": "create"} in result["actions"]
     text = (target / AGENTS_FILE).read_text()
     assert text.startswith(START + "\n") and text.endswith(END + "\n")
@@ -68,25 +70,25 @@ def test_block_is_created_with_selection_and_entry_skills(installed: list[Instal
     assert "`devkit-playbook`" in text and "`devkit-workflow`" not in text
     assert "managed by `devkit sync`" in text
     assert len(text.encode()) < 1024
-    receipt = json.loads((target / RECEIPT).read_text())
+    receipt = json.loads((target / RECEIPT_PATH).read_text())
     assert receipt["guidance_block"] == guidance_block.digest(block_of(target) or "")
     assert AGENTS_FILE not in receipt["files"]
     # Deterministic: a second sync is a no-op and preserves the receipt bytes.
-    before = (target / RECEIPT).read_bytes()
-    assert sync_project(target, installed)["actions"] == []
-    assert (target / RECEIPT).read_bytes() == before
+    before = (target / RECEIPT_PATH).read_bytes()
+    assert sync_project(target, installed).to_dict()["actions"] == []
+    assert (target / RECEIPT_PATH).read_bytes() == before
 
 
 def test_block_follows_selection_changes(installed: list[InstalledBundle], target: Path) -> None:
     sync_project(target, installed)
     update_config(target, presets={"team": ["minimal"]})
-    result = sync_project(target, installed)
+    result = sync_project(target, installed).to_dict()
     assert {"path": AGENTS_FILE, "action": "update"} in result["actions"]
     assert "`devkit-playbook`" not in (target / AGENTS_FILE).read_text()
     sync_project(target, [], deselect=["team"])
     text = (target / AGENTS_FILE).read_text()
     assert "No bundle is selected" in text and "`team`" not in text
-    assert "guidance_block" in json.loads((target / RECEIPT).read_text())
+    assert "guidance_block" in json.loads((target / RECEIPT_PATH).read_text())
 
 
 def test_bytes_outside_markers_are_preserved(installed: list[InstalledBundle], target: Path) -> None:
@@ -109,30 +111,30 @@ def test_hand_edited_block_blocks_all_writes(installed: list[InstalledBundle], t
     agents = target / AGENTS_FILE
     edited = agents.read_text().replace("## devkit", "## devkit (edited)")
     agents.write_text(edited)
-    receipt = (target / RECEIPT).read_bytes()
+    receipt = (target / RECEIPT_PATH).read_bytes()
     update_config(target, presets={"team": ["minimal"]})
     with pytest.raises(ConflictError, match="user-modified guidance block"):
         sync_project(target, installed)
     assert agents.read_text() == edited
-    assert (target / RECEIPT).read_bytes() == receipt
+    assert (target / RECEIPT_PATH).read_bytes() == receipt
     assert (target / ".devkit/managed/team/playbooks/on-call.md").exists()
 
 
 def test_removed_block_is_written_again(installed: list[InstalledBundle], target: Path) -> None:
     sync_project(target, installed)
     (target / AGENTS_FILE).write_text("# Only mine\n")
-    result = sync_project(target, installed)
+    result = sync_project(target, installed).to_dict()
     assert {"path": AGENTS_FILE, "action": "update"} in result["actions"]
     assert (target / AGENTS_FILE).read_text().startswith("# Only mine\n\n" + START)
     (target / AGENTS_FILE).unlink()
-    assert {"path": AGENTS_FILE, "action": "create"} in sync_project(target, installed)["actions"]
+    assert {"path": AGENTS_FILE, "action": "create"} in sync_project(target, installed).to_dict()["actions"]
 
 
 def test_unowned_or_malformed_block_is_rejected(installed: list[InstalledBundle], target: Path) -> None:
     (target / AGENTS_FILE).write_text(f"{START}\nhand written\n{END}\n")
     with pytest.raises(ConflictError, match="unowned guidance block"):
         sync_project(target, installed)
-    assert not (target / RECEIPT).exists()
+    assert not (target / RECEIPT_PATH).exists()
     (target / AGENTS_FILE).write_text(f"{START}\n{END}\n{START}\n{END}\n")
     with pytest.raises(DistributionError, match="malformed guidance block"):
         sync_project(target, installed)
@@ -145,17 +147,17 @@ def test_opt_out_removes_block_and_stops_recording(installed: list[InstalledBund
     (target / AGENTS_FILE).write_text("# My project\n")
     sync_project(target, installed)
     write_config(target, extra="guidance_block = false")
-    result = sync_project(target, installed)
+    result = sync_project(target, installed).to_dict()
     assert {"path": AGENTS_FILE, "action": "update"} in result["actions"]
     assert (target / AGENTS_FILE).read_text() == "# My project\n"
-    assert "guidance_block" not in json.loads((target / RECEIPT).read_text())
-    assert sync_project(target, installed)["actions"] == []
+    assert "guidance_block" not in json.loads((target / RECEIPT_PATH).read_text())
+    assert sync_project(target, installed).to_dict()["actions"] == []
     # A file that held only the block is removed.
     write_config(target)
     (target / AGENTS_FILE).unlink()
     sync_project(target, installed)
     write_config(target, extra="guidance_block = false")
-    assert {"path": AGENTS_FILE, "action": "remove"} in sync_project(target, installed)["actions"]
+    assert {"path": AGENTS_FILE, "action": "remove"} in sync_project(target, installed).to_dict()["actions"]
     assert not (target / AGENTS_FILE).exists()
 
 
@@ -172,7 +174,7 @@ def test_opt_out_from_the_start_writes_nothing(installed: list[InstalledBundle],
     write_config(target, extra="guidance_block = false")
     sync_project(target, installed)
     assert not (target / AGENTS_FILE).exists()
-    assert "guidance_block" not in json.loads((target / RECEIPT).read_text())
+    assert "guidance_block" not in json.loads((target / RECEIPT_PATH).read_text())
 
 
 def test_invalid_config_and_receipt_values(installed: list[InstalledBundle], target: Path) -> None:
@@ -181,14 +183,14 @@ def test_invalid_config_and_receipt_values(installed: list[InstalledBundle], tar
         sync_project(target, installed)
     write_config(target)
     sync_project(target, installed)
-    receipt = json.loads((target / RECEIPT).read_text())
+    receipt = json.loads((target / RECEIPT_PATH).read_text())
     receipt["guidance_block"] = "short"
-    (target / RECEIPT).write_text(json.dumps(receipt))
+    (target / RECEIPT_PATH).write_text(json.dumps(receipt))
     with pytest.raises(ReceiptError, match="guidance_block: expected a lowercase hex SHA-256"):
         sync_project(target, installed)
     receipt["guidance_block"] = "a" * 64
     receipt["files"][AGENTS_FILE] = {"sha256": "a" * 64, "mode": 0o644}
-    (target / RECEIPT).write_text(json.dumps(receipt))
+    (target / RECEIPT_PATH).write_text(json.dumps(receipt))
     with pytest.raises(ReceiptError, match="receipt cannot own installation metadata"):
         sync_project(target, installed)
 
@@ -202,7 +204,7 @@ def test_block_write_is_journaled_and_rolled_back(
 
     def fail_once(root: Path, name: str, content: Content | None) -> None:
         nonlocal failed
-        if name == RECEIPT and not failed:
+        if name == RECEIPT_PATH and not failed:
             failed = True
             raise OSError("write failure")
         original(root, name, content)

@@ -1,4 +1,4 @@
-"""The consumer workspace as devkit sees it: well-known paths, file contents and path safety.
+"""The consumer workspace as devkit sees it: well-known paths, file snapshots and path safety.
 
 Every workspace-relative path devkit reads or writes goes through
 ``checked_path`` (canonical relative POSIX via ``devkit.core.paths``, no
@@ -9,32 +9,26 @@ backslash, no symlinked component, a regular file if it exists).
 
 from __future__ import annotations
 
-import hashlib
 import stat
-from dataclasses import dataclass
 from pathlib import Path
 
 from devkit.core.errors import UnsafePathError
 from devkit.core.paths import normalize_relpath
-from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH
+from devkit.core.receipt import CONFIG_PATH, MANAGED_PATH, OVERRIDES_PATH, RECEIPT_PATH
+from devkit.distribution.content import Content
+from devkit.distribution.errors import UnsafeWorkspaceError
 
-from ..errors import UnsafeWorkspaceError
-
-RECEIPT = RECEIPT_PATH
-CONFIG = CONFIG_PATH
 TRANSIENT = ".devkit/transient"
 JOURNAL = f"{TRANSIENT}/sync-journal.json"
 LOCK = f"{TRANSIENT}/lock"
-MANAGED = ".devkit/managed"
-OVERRIDES = ".devkit/overrides"
 # Pristine upstream copies taken when an override is created or accepted, for ``override diff``.
-BASELINE = f"{OVERRIDES}/.baseline"
+BASELINE = f"{OVERRIDES_PATH}/.baseline"
 # Root guidance file: only its marker block is managed (see ``guidance_block``).
 AGENTS_FILE = "AGENTS.md"
 
 # Destinations the receipt may own: devkit's managed cache and native agent projections.
 OWNED_PREFIXES = (
-    f"{MANAGED}/",
+    f"{MANAGED_PATH}/",
     ".agents/skills/",
     ".agents/agents/",
     ".claude/skills/",
@@ -42,28 +36,7 @@ OWNED_PREFIXES = (
     ".claude/agents/",
 )
 # Installation metadata the receipt can never own.
-METADATA = frozenset({RECEIPT, JOURNAL, LOCK, CONFIG, AGENTS_FILE})
-
-
-@dataclass(frozen=True)
-class Content:
-    data: bytes
-    mode: int
-
-
-def normal_mode(mode: int) -> int:
-    """The mode devkit records and compares: ``0o755`` when any execute bit is set, else ``0o644``.
-
-    Group-writable checkouts (umask ``002``) and other permission noise are not edits.
-    """
-    return 0o755 if mode & 0o111 else 0o644
-
-
-def same_content(left: Content | None, right: Content | None) -> bool:
-    """Equal bytes and equal normalized mode (``None`` means absent)."""
-    if left is None or right is None:
-        return left is right
-    return left.data == right.data and normal_mode(left.mode) == normal_mode(right.mode)
+METADATA = frozenset({RECEIPT_PATH, JOURNAL, LOCK, CONFIG_PATH, AGENTS_FILE})
 
 
 def checked_path(root: Path, name: str) -> Path:
@@ -95,8 +68,8 @@ def project_path(root: Path, name: str) -> Path:
     folded = name.casefold()
     if (
         folded.split("/", 1)[0] == ".git"
-        or folded == CONFIG.casefold()
-        or folded.startswith(OVERRIDES.casefold() + "/")
+        or folded == CONFIG_PATH.casefold()
+        or folded.startswith(OVERRIDES_PATH.casefold() + "/")
     ):
         raise UnsafeWorkspaceError(f"unsafe deployment path: {name}", target_files=[name])
     return checked_path(root, name)
@@ -118,12 +91,3 @@ def snapshot(root: Path, name: str) -> Content | None:
     if not path.exists():
         return None
     return Content(path.read_bytes(), stat.S_IMODE(path.stat().st_mode))
-
-
-def sha256(data: bytes) -> str:
-    return hashlib.sha256(data).hexdigest()
-
-
-def signature(content: Content) -> tuple[str, int]:
-    """``(sha256, normalized mode)``: what the receipt records for a file."""
-    return sha256(content.data), normal_mode(content.mode)

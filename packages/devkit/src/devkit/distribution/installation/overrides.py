@@ -11,15 +11,14 @@ commands that create, review, accept and remove overrides are in
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
-from devkit.core.receipt import OverrideRecord
-
-from ..bundles.manifest import Asset, Bundle, source_files
-from .workspace import BASELINE, MANAGED, OVERRIDES
+from devkit.core.receipt import MANAGED_PATH, OVERRIDES_PATH, OverrideRecord
+from devkit.distribution.bundles.manifest import Asset, Bundle, source_files
+from devkit.distribution.content import sha256
+from devkit.distribution.installation.workspace import BASELINE
 
 
 @dataclass(frozen=True)
@@ -32,10 +31,13 @@ class Drift:
     def message(self) -> str:
         return f"upstream drift detected for {self.bundle}:{self.asset}"
 
+    def to_dict(self) -> dict[str, str]:
+        return {"bundle": self.bundle, "asset": self.asset, "path": self.path, "message": self.message}
+
 
 def override_rel(bundle: str, rel: str) -> str:
     """Workspace-relative override path of a file at ``rel`` in ``bundle``."""
-    return f"{OVERRIDES}/{bundle}/{rel}"
+    return f"{OVERRIDES_PATH}/{bundle}/{rel}"
 
 
 def baseline_rel(bundle: str, rel: str) -> str:
@@ -54,7 +56,7 @@ def resolve_source(root: Path | None, bundle: Bundle, rel: str) -> tuple[Path, s
     if has_override(root, bundle.name, rel):
         assert root is not None
         return root / override_rel(bundle.name, rel), override_rel(bundle.name, rel)
-    return bundle.root / rel, f"{MANAGED}/{bundle.name}/{rel}"
+    return bundle.root / rel, f"{MANAGED_PATH}/{bundle.name}/{rel}"
 
 
 def asset_files(bundle: Bundle, asset: Asset) -> list[str]:
@@ -77,8 +79,8 @@ def primary_path(bundle: Bundle, asset: Asset) -> str:
 
 def asset_digest(files: Iterable[tuple[str, bytes]]) -> str:
     """SHA-256 over ``path NUL sha256`` lines of every file, sorted by path."""
-    lines = sorted(f"{rel}\0{hashlib.sha256(data).hexdigest()}\n" for rel, data in files)
-    return hashlib.sha256("".join(lines).encode()).hexdigest()
+    lines = sorted(f"{rel}\0{sha256(data)}\n" for rel, data in files)
+    return sha256("".join(lines).encode())
 
 
 def upstream_digest(bundle: Bundle, asset: Asset) -> str:
@@ -89,7 +91,7 @@ def overridden_files(root: Path | None, bundle: Bundle, asset: Asset) -> list[st
     return [rel for rel in asset_files(bundle, asset) if has_override(root, bundle.name, rel)]
 
 
-def track(
+def track_override(
     root: Path | None, bundle: Bundle, asset: Asset, previous: OverrideRecord | None
 ) -> tuple[OverrideRecord | None, Drift | None]:
     """The receipt record for an overridden asset (``None`` when nothing is overridden) and its drift.

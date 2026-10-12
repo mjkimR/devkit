@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from devkit.advisory import ActionMode
-from devkit.rules import Phase, RuleContext, WorkspaceCache, default_registry, evaluate
+from devkit.rules import Phase, RuleContext, Violation, WorkspaceCache, default_rule_registry, evaluate_rules
 
 
 def test_evaluator_autofix_convergence(temp_workspace: Path, workspace_cache: WorkspaceCache) -> None:
@@ -19,12 +19,12 @@ def test_evaluator_autofix_convergence(temp_workspace: Path, workspace_cache: Wo
         phase=Phase.LINTER,
         fix=True,
     )
-    registry = default_registry()
+    registry = default_rule_registry()
 
-    result = evaluate(ctx, registry.get_all())
+    result = evaluate_rules(ctx, registry.get_all())
     # The violation should be marked as fixed!
     assert any(v.rule_id == "RULE-markdown-link" and v.fixed for v in result.violations)
-    assert not result.has_errors
+    assert result.ok
 
     # Now verify the file on disk points at the existing target
     assert doc_path.read_text(encoding="utf-8") == "See [setup](guides/setup.md).\n"
@@ -35,7 +35,7 @@ def test_evaluator_phase_filtering(temp_workspace: Path, workspace_cache: Worksp
     doc_path.parent.mkdir(parents=True)
     doc_path.write_text("\n".join(f"Line {i}" for i in range(500)), encoding="utf-8")
 
-    registry = default_registry()
+    registry = default_rule_registry()
 
     # 1. In Linter phase, FileLengthRule (hygiene) should not run
     ctx_linter = RuleContext(
@@ -43,7 +43,7 @@ def test_evaluator_phase_filtering(temp_workspace: Path, workspace_cache: Worksp
         cache=workspace_cache,
         phase=Phase.LINTER,
     )
-    res_linter = evaluate(ctx_linter, registry.get_all())
+    res_linter = evaluate_rules(ctx_linter, registry.get_all())
     assert not any(v.rule_id == "RULE-file-length" for v in res_linter.violations)
 
     # 2. In Hygiene phase, FileLengthRule should run
@@ -52,12 +52,11 @@ def test_evaluator_phase_filtering(temp_workspace: Path, workspace_cache: Worksp
         cache=workspace_cache,
         phase=Phase.HYGIENE,
     )
-    res_hygiene = evaluate(ctx_hygiene, registry.get_all())
+    res_hygiene = evaluate_rules(ctx_hygiene, registry.get_all())
     assert any(v.rule_id == "RULE-file-length" for v in res_hygiene.violations)
 
 
 def test_fix_failure_rechecks_partial_changes(tmp_path: Path) -> None:
-    from devkit.rules import Violation
     from devkit.rules.rules import BaseRule
 
     class FailingFix(BaseRule):
@@ -73,8 +72,8 @@ def test_fix_failure_rechecks_partial_changes(tmp_path: Path) -> None:
 
     (tmp_path / "doc.md").write_text("before")
     ctx = RuleContext(workspace_root=tmp_path, fix=True)
-    result = evaluate(ctx, [FailingFix()])
-    assert result.has_errors
+    result = evaluate_rules(ctx, [FailingFix()])
+    assert not result.ok
     assert result.violations[0].message == "after"
     assert not result.violations[0].fixed
     assert ctx.cache.read_text("doc.md") == "after"
@@ -102,11 +101,10 @@ def test_each_fix_invalidates_cache_for_next_rule(tmp_path: Path) -> None:
 
     (tmp_path / "doc.md").write_text("original")
     ctx = RuleContext(workspace_root=tmp_path, fix=True)
-    assert not evaluate(ctx, [DirectWrite(), Reader()]).has_errors
+    assert evaluate_rules(ctx, [DirectWrite(), Reader()]).ok
 
 
 def test_fixed_status_survives_fixes_that_move_lines(tmp_path: Path) -> None:
-    from devkit.rules import Violation
     from devkit.rules.rules import BaseRule
 
     class Header(BaseRule):
@@ -126,7 +124,7 @@ def test_fixed_status_survives_fixes_that_move_lines(tmp_path: Path) -> None:
             return ["doc.md"]
 
     (tmp_path / "doc.md").write_text("bad\nbad\n")
-    result = evaluate(RuleContext(workspace_root=tmp_path, fix=True), [Header()])
+    result = evaluate_rules(RuleContext(workspace_root=tmp_path, fix=True), [Header()])
     # One finding was repaired and one moved to line 3; with line-keyed matching both looked fixed.
     assert sum(v.fixed for v in result.violations) == 1
     assert [v.line for v in result.violations if not v.fixed] == [3]
@@ -134,12 +132,11 @@ def test_fixed_status_survives_fixes_that_move_lines(tmp_path: Path) -> None:
 
 def test_fix_without_changes_returns_the_initial_findings(tmp_path: Path) -> None:
     (tmp_path / "a.md").write_text("[x](missing.md)\n")
-    result = evaluate(RuleContext(workspace_root=tmp_path, fix=True), default_registry().get_all())
+    result = evaluate_rules(RuleContext(workspace_root=tmp_path, fix=True), default_rule_registry().get_all())
     assert [(v.rule_id, v.fixable, v.fixed) for v in result.violations] == [("RULE-markdown-link", False, False)]
 
 
 def test_recheck_errors_are_reported(tmp_path: Path) -> None:
-    from devkit.rules import Violation
     from devkit.rules.rules import BaseRule
 
     class FlakyRecheck(BaseRule):
@@ -157,8 +154,47 @@ def test_recheck_errors_are_reported(tmp_path: Path) -> None:
             return ["doc.md"]
 
     (tmp_path / "doc.md").write_text("x")
-    result = evaluate(RuleContext(workspace_root=tmp_path, fix=True), [FlakyRecheck()])
+    result = evaluate_rules(RuleContext(workspace_root=tmp_path, fix=True), [FlakyRecheck()])
     assert [str(e) for e in result.errors] == ["Rule recheck error (RULE-flaky): boom"]
     assert result.errors[0].code == "RULES_EXECUTION_FAILED" and result.errors[0].rule_id == "RULE-flaky"
     assert result.errors[0].mode is ActionMode.MAINTENANCE and result.errors[0].target_files == (__file__,)
-    assert result.violations == [] and result.has_errors
+    assert result.violations == [] and not result.ok
+
+
+def _finding(line: int, message: str = "bad", *, fixable: bool = True) -> Violation:
+    return Violation("RULE-x", "doc.md", line, message, fixable=fixable)
+
+
+def test_mark_fixed_counts_findings_by_identity_and_leaves_inputs_alone() -> None:
+    from devkit.rules.engine.evaluator import _mark_fixed
+
+    initial = [_finding(1), _finding(2), _finding(3, "other"), _finding(4, "manual", fixable=False)]
+    recheck = [_finding(5), _finding(4, "manual", fixable=False)]
+    marked = _mark_fixed(initial, recheck)
+    # One of two "bad" findings remains (on a moved line), "other" is gone, the unfixable one stays as rechecked.
+    assert [(v.line, v.message, v.fixed) for v in marked] == [
+        (2, "bad", True),
+        (3, "other", True),
+        (5, "bad", False),
+        (4, "manual", False),
+    ]
+    assert not any(v.fixed for v in initial) and marked[2] is recheck[0]
+
+
+def test_mark_fixed_without_recheck_findings_marks_every_fixable_finding() -> None:
+    from devkit.rules.engine.evaluator import _mark_fixed
+
+    assert [v.fixed for v in _mark_fixed([_finding(1), _finding(2, fixable=False)], [])] == [True]
+    assert _mark_fixed([], []) == []
+
+
+def test_blocking_violations_are_unfixed_errors() -> None:
+    from devkit.rules import EvaluationResult, RuleExecutionError, Severity
+
+    error = _finding(1)
+    fixed = Violation("RULE-x", "a.md", 1, "fixed", fixed=True)
+    warning = Violation("RULE-x", "a.md", 2, "warn", severity=Severity.WARNING)
+    result = EvaluationResult(violations=[error, fixed, warning])
+    assert result.blocking_violations == [error] and not result.ok
+    assert EvaluationResult(violations=[fixed, warning]).ok
+    assert not EvaluationResult(errors=[RuleExecutionError("boom")]).ok

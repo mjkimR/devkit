@@ -7,12 +7,12 @@ from pathlib import Path
 
 import click
 
-from devkit.advisory import ExitCode
-from devkit.workflow.cli.app import FORMAT, UNIT, WORKSPACE, Reported, boundary, cli, echo_json, is_json, workspace
-from devkit.workflow.decisions import utc_timestamp
-from devkit.workflow.envelope import KIND, compose, load_envelopes, render_envelope, skeleton, write_next
-from devkit.workflow.errors import input_error
+from devkit.core.cli import FORMAT_OPTION, boundary, echo_json, exit_on_problems, is_json
+from devkit.workflow.cli.app import UNIT, WORKSPACE, cli, workspace
+from devkit.workflow.errors import EnvelopeFlagError
 from devkit.workflow.render import quote
+from devkit.workflow.unit.decisions import utc_timestamp
+from devkit.workflow.unit.envelope import compose_envelope, load_envelopes, render_envelope, skeleton, write_envelope
 
 
 @cli.group(name="envelope")
@@ -26,9 +26,9 @@ def _read_findings_file(path: str) -> str:
     try:
         return Path(path).read_text("utf-8")
     except (OSError, UnicodeError) as exc:
-        raise input_error(
+        raise EnvelopeFlagError(
             f"--findings-file: {exc}",
-            code="ENVELOPE_FLAG_INVALID",
+            target_files=[path],
             fix="Pass a readable YAML list of findings, or - for stdin",
         ) from exc
 
@@ -51,7 +51,7 @@ def _read_findings_file(path: str) -> str:
     "--resolve", "resolve", multiple=True, help="Mark a carried finding resolved: its number, or all (repeatable)"
 )
 @click.option("--waive", "waive", multiple=True, help="Mark a carried finding waived: <number>=<reason> (repeatable)")
-@FORMAT
+@FORMAT_OPTION
 @boundary
 def envelope_new_cmd(
     workspace_root: str | None,
@@ -79,12 +79,6 @@ def envelope_new_cmd(
     findings of the round it closes with --from latest.
     """
     ws = workspace(workspace_root)
-    if not KIND.match(kind):
-        raise input_error(
-            f"--kind {kind!r} must match [a-z][a-z0-9-]*",
-            code="KIND_INVALID",
-            fix="Use a lowercase kind such as review",
-        )
     unit_dir = ws.unit_path(unit)
     ws.locate_anchor(unit_dir)
     authoring = any((status is not None, summary is not None, assumptions, unverified, checks, base, head)) or any(
@@ -93,7 +87,7 @@ def envelope_new_cmd(
     created = utc_timestamp()
     if authoring:
         findings_yaml = _read_findings_file(findings_file) if findings_file is not None else None
-        draft = compose(
+        draft = compose_envelope(
             unit_dir=unit_dir,
             envelopes=load_envelopes(unit_dir),
             kind=kind,
@@ -115,7 +109,7 @@ def envelope_new_cmd(
     else:
         body = skeleton(kind, stage, created)
         written_status, open_findings = "needs_input", 0
-    path, seq = write_next(unit_dir, kind, body)
+    path, seq = write_envelope(unit_dir, kind, body)
     rel = ws.rel(path)
     if is_json(output_format):
         echo_json({"file": rel, "kind": kind, "seq": seq, "status": written_status, "open_findings": open_findings})
@@ -126,10 +120,10 @@ def envelope_new_cmd(
 @envelope_group.command(name="check")
 @WORKSPACE
 @UNIT
-@FORMAT
+@FORMAT_OPTION
 @boundary
 def envelope_check_cmd(workspace_root: str | None, unit: str, output_format: str) -> None:
-    """Report every envelope file of a unit and any contract violation."""
+    """Report every envelope file of a unit and any contract violation (exit 1 when a file is malformed)."""
     ws = workspace(workspace_root)
     unit_dir = ws.unit_path(unit)
     ws.locate_anchor(unit_dir)
@@ -144,17 +138,10 @@ def envelope_check_cmd(workspace_root: str | None, unit: str, output_format: str
                 f"[ENVELOPE: {e.file} kind={e.kind} seq={e.seq:02d} status={e.status} open_findings={e.open_findings()}]"
             )
         for err in errors:
-            click.echo(f"[ENVELOPE_ERROR: {err.file} {quote(err.reason)}]")
+            click.echo(f"[ENVELOPE_ERROR: {err.file} {quote(err.message)}]")
         if not errors:
             click.echo(f"[OK: {len(loaded)} envelopes]")
-    if errors:
-        unit_rel = ws.rel(unit_dir)
-        error = input_error(
-            f"{len(errors)} envelope file(s) of {unit_rel} are malformed",
-            *(f"{err.file}: {err.reason}" for err in errors),
-            code="ENVELOPE_INVALID",
-            exit_code=ExitCode.FINDINGS,
-            target_files=[f"{unit_rel}/{err.file}" for err in errors],
-            fix="Fix or remove the listed files; the contract is docs/workflow/definition-and-checks.md section 3",
-        )
-        raise Reported(error) if is_json(output_format) else error
+    unit_rel = ws.rel(unit_dir)
+    for err in errors:
+        err.target_files = (f"{unit_rel}/{err.file}",)
+    exit_on_problems(errors)

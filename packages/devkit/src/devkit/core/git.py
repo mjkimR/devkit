@@ -13,7 +13,7 @@ from pathlib import Path
 
 from devkit.core.errors import GitError
 
-DEFAULT_TIMEOUT = 60.0
+DEFAULT_TIMEOUT = 60.0  # seconds; the one Git timeout every devkit area uses
 
 
 def run_git(

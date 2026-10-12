@@ -6,23 +6,12 @@ import sys
 
 import click
 
-from devkit.advisory import ExitCode
-from devkit.workflow.binding import Binding, write_binding
-from devkit.workflow.cli.app import (
-    FORMAT,
-    UNIT,
-    WORKSPACE,
-    boundary,
-    cli,
-    echo_json,
-    is_json,
-    parse_date,
-    workspace,
-)
-from devkit.workflow.definition import schema_hash
-from devkit.workflow.errors import input_error
+from devkit.core.cli import FORMAT_OPTION, boundary, echo_json, is_json, report_exit_code
+from devkit.core.errors import ArgumentError
+from devkit.workflow.cli.app import UNIT, WORKSPACE, cli, parse_date, workspace
 from devkit.workflow.render import quote, render_document
-from devkit.workflow.units import create_unit, layouts_in_use, list_units
+from devkit.workflow.unit.binding import Binding
+from devkit.workflow.unit.units import create_unit, layouts_in_use, list_units
 
 
 @cli.command(name="new")
@@ -54,27 +43,28 @@ def new_cmd(workspace_root: str | None, slug: str, workflow_ref: str | None, whe
 def bind_cmd(workspace_root: str | None, unit: str, workflow_ref: str | None) -> None:
     """Record which workflow a unit follows and the hash of its stage schema."""
     ws = workspace(workspace_root)
-    ref = ws.resolve_unit(unit, workflow_ref)
-    binding = Binding(ref.doc.id, schema_hash(ref.doc))
-    write_binding(ref.anchor_path, binding)
-    click.echo(f"[BOUND: {ref.doc.id} hash={binding.hash}]")
+    ref = ws.bind_unit(unit, workflow_ref)
+    click.echo(f"[BOUND: {ref.doc.id} hash={ref.binding.hash}]")
 
 
 @cli.command(name="show")
 @WORKSPACE
 @click.argument("ref", type=str, required=False)
 @click.option("--unit", "-u", "unit", default=None, help="Show the workflow this unit is bound to instead of REF")
-@FORMAT
+@FORMAT_OPTION
 @boundary
 def show_cmd(workspace_root: str | None, ref: str | None, unit: str | None, output_format: str) -> None:
-    """Print a workflow definition's stages, gates and schema hash (by id/path, or a unit's binding)."""
-    ws = workspace(workspace_root)
+    """Print a workflow definition's stages, gates and schema hash (by id/path, or a unit's binding).
+
+    Exits 1 when the report lists problems (under "errors" in JSON), whatever their own codes.
+    """
     if (ref is None) == (unit is None):
-        raise input_error(
+        raise ArgumentError(
             "pass exactly one of REF or --unit",
-            code="WORKFLOW_NOT_SELECTED",
+            target_files=["REF", "--unit"],
             fix="Run `devkit workflow show <id|path>` or `devkit workflow show --unit <dir>`",
         )
+    ws = workspace(workspace_root)
     binding: Binding | None = None
     if unit is not None:
         unit_ref = ws.resolve_unit(unit)
@@ -82,19 +72,18 @@ def show_cmd(workspace_root: str | None, ref: str | None, unit: str | None, outp
     else:
         assert ref is not None
         doc = ws.load_definition(ref)
-    data = ws.describe(doc, binding)
-    problems: list[dict[str, str]] = data["problems"]
+    description = ws.describe(doc, binding)
     if is_json(output_format):
-        echo_json(data)
+        echo_json(description.to_dict())
     else:
         click.echo(render_document(doc, ws.config.approvals, ws.config.stages), nl=False)
         if binding is not None:
-            drift = str(data["binding"]["drift"]).lower()
+            drift = str(description.drift).lower()
             click.echo(f"[BINDING: workflow={binding.workflow or '-'} hash={binding.hash or '-'} drift={drift}]")
-        for p in problems:
-            click.secho(f"[PROBLEM: {p['where']}: {p['message']}]", fg="red")
-    if problems:
-        sys.exit(int(ExitCode.FINDINGS))
+        for problem in description.errors:
+            click.echo(f"[PROBLEM: {problem}]")
+    if not description.ok:
+        sys.exit(report_exit_code(description.errors))
 
 
 @cli.command(name="list")
@@ -103,7 +92,7 @@ def show_cmd(workspace_root: str | None, ref: str | None, unit: str | None, outp
 @click.option(
     "--exclude-status", "excluded", multiple=True, help="Drop units whose anchor status equals this (repeatable)"
 )
-@FORMAT
+@FORMAT_OPTION
 @boundary
 def list_cmd(
     workspace_root: str | None, statuses: tuple[str, ...], excluded: tuple[str, ...], output_format: str
@@ -112,14 +101,14 @@ def list_cmd(
     ws = workspace(workspace_root)
     rows = list_units(ws, statuses=statuses, excluded=excluded)
     if is_json(output_format):
-        echo_json([row.to_dict() for row in rows])
+        echo_json({"units": [row.to_dict() for row in rows]})
         return
     if not rows:
         dirs = ", ".join(dict.fromkeys(layout.work_dir for layout in layouts_in_use(ws)))
         click.echo(f"[UNITS: none under {dirs}]")
         return
     for row in rows:
-        error = f" error={quote(row.error)}" if row.error else ""
+        error = f" error={quote(row.error.message)}" if row.error is not None else ""
         click.echo(
             f"[UNIT: {row.unit} status={row.status or '-'} workflow={row.binding.workflow or '-'} anchor={row.anchor}{error}]"
         )

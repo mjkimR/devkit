@@ -1,12 +1,22 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import pytest
-from devkit.gate import BaseGate, GateConfigError, GateContext, GateResult, Stage, load_gates_config, resolve_settings
-from devkit.gate.config import merge
+from devkit.core import ConfigError
+from devkit.gate import (
+    BaseGate,
+    GateConfigError,
+    GateContext,
+    GateDefinitionError,
+    GateResult,
+    Stage,
+    load_gates_config,
+    resolve_settings,
+)
+from devkit.gate.engine.config import merge
 
 
 @dataclass(frozen=True)
@@ -14,8 +24,9 @@ class Settings:
     limit: int = 1
     ratio: float = 0.5
     name: str = "x"
-    paths: tuple[str, ...] = ()
+    paths: list[str] = field(default_factory=list)
     strict: bool = False
+    label: str | None = None
 
 
 class SettingsGate(BaseGate):
@@ -74,19 +85,24 @@ def test_missing_files_and_unset_enabled_keep_gate_default(tmp_path: Path) -> No
         ("[gates]\nverbose = true\n", "", "unknown fields: ['verbose']"),
         ("[gates.settings.g]\nenabled = 'yes'\n", "", "expected true or false"),
         ("", "[rules]\nx = 1\n", "unknown fields: ['rules']"),
-        ("[gates\n", "", "invalid config"),
+        ("[gates]\nsettings = 1\n", "", "gates.settings: expected a table"),
     ],
 )
-def test_invalid_config_is_rejected(tmp_path: Path, project: str, local: str, message: str) -> None:
+def test_invalid_gates_table_is_a_gate_config_error(tmp_path: Path, project: str, local: str, message: str) -> None:
     _write(tmp_path / ".devkit/config.toml", project)
     _write(tmp_path / ".git/devkit.config", local)
-    with pytest.raises(GateConfigError, match=re.escape(message)):
+    with pytest.raises(GateConfigError, match=re.escape(message)) as caught:
         load_gates_config(tmp_path, tmp_path / ".git")
+    assert caught.value.code == "GATE_CONFIG_INVALID" and isinstance(caught.value, ConfigError)
 
 
 def test_resolve_settings_applies_and_converts_values() -> None:
-    resolved = resolve_settings(SettingsGate(), {"limit": 4, "ratio": 2, "paths": ["a", "b"], "strict": True})
-    assert resolved == Settings(limit=4, ratio=2, name="x", paths=("a", "b"), strict=True)
+    resolved = resolve_settings(
+        SettingsGate(), {"limit": 4, "ratio": 2, "paths": ["a", "b"], "strict": True, "label": None}
+    )
+    assert resolved == Settings(limit=4, ratio=2.0, name="x", paths=["a", "b"], strict=True, label=None)
+    assert isinstance(resolved.ratio, float)
+    assert resolve_settings(SettingsGate(), {"label": "x"}).label == "x"
     assert resolve_settings(SettingsGate(), {}) == Settings()
 
 
@@ -94,10 +110,12 @@ def test_resolve_settings_applies_and_converts_values() -> None:
     ("values", "message"),
     [
         ({"nope": 1}, "unknown settings"),
-        ({"limit": True}, "expected int"),
-        ({"strict": 1}, "expected bool"),
-        ({"paths": "a"}, "expected tuple"),
-        ({"name": 3}, "expected str"),
+        ({"limit": True}, "limit: expected integer"),
+        ({"strict": 1}, "strict: expected boolean"),
+        ({"paths": "a"}, "paths: expected array of strings"),
+        ({"paths": ["a", 1]}, "paths: expected array of strings"),
+        ({"name": 3}, "name: expected string"),
+        ({"name": None}, "name: null is not allowed"),
     ],
 )
 def test_resolve_settings_rejects_bad_values(values: dict[str, object], message: str) -> None:
@@ -111,15 +129,34 @@ def test_base_gate_requires_run() -> None:
 
 
 def test_settings_must_be_a_dataclass_instance() -> None:
-    with pytest.raises(GateConfigError, match="settings must be a dataclass instance"):
+    with pytest.raises(GateDefinitionError, match="settings must be a dataclass instance"):
         resolve_settings(PlainGate({"limit": 1}), {})
 
 
-def test_unreadable_project_config_is_a_gate_config_error(tmp_path: Path) -> None:
-    _write(tmp_path / ".devkit/config.toml", "[gates\n")
-    with pytest.raises(GateConfigError) as caught:
+@pytest.mark.parametrize(
+    ("project", "local", "target"),
+    [("[gates\n", "", ".devkit/config.toml"), ("", "[gates\n", "devkit.config")],
+)
+def test_unreadable_config_files_are_the_core_config_error(
+    tmp_path: Path, project: str, local: str, target: str
+) -> None:
+    _write(tmp_path / ".devkit/config.toml", project)
+    _write(tmp_path / ".git/devkit.config", local)
+    with pytest.raises(ConfigError, match="invalid config") as caught:
         load_gates_config(tmp_path, tmp_path / ".git")
-    assert caught.value.target_files == (".devkit/config.toml",)
+    assert type(caught.value) is ConfigError and caught.value.code == "CONFIG_INVALID"
+    assert caught.value.target_files[0].endswith(target)
+
+
+@dataclass(frozen=True)
+class TupleSettings:
+    paths: tuple[str, ...] = ()
+
+
+def test_unsupported_settings_field_type_is_a_gate_defect() -> None:
+    with pytest.raises(GateDefinitionError, match="unsupported settings field type") as caught:
+        resolve_settings(PlainGate(TupleSettings()), {})
+    assert (caught.value.code, caught.value.mode.value) == ("GATE_DEFINITION_INVALID", "MAINTENANCE")
 
 
 def test_gate_without_settings_rejects_values() -> None:

@@ -111,11 +111,5 @@ class DocumentCatalog:
         self._build_identity()
         return self._frontmatter_errors
 
-    def has_id(self, doc_id: str) -> bool:
-        return doc_id in self.documents_by_id
-
-    def get_doc(self, doc_id: str) -> Document | None:
-        return self.documents_by_id.get(doc_id)
-
     def find_paths_by_basename(self, basename: str) -> list[str]:
         return self.files_by_basename.get(basename, [])

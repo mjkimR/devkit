@@ -10,14 +10,14 @@ from types import SimpleNamespace
 import pytest
 from click.testing import CliRunner
 from devkit.core.errors import ConfigError
+from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH
 from devkit.distribution.bundles import load_bundle
-from devkit.distribution.cli import cli
 from devkit.distribution.errors import PackageError
 from devkit.distribution.installation import discovery
 from devkit.distribution.installation.config import read_config, update_config
 from devkit.distribution.installation.discovery import InstalledBundle, discover_bundles
 from devkit.distribution.installation.sync import sync_project
-from devkit.distribution.installation.workspace import CONFIG, RECEIPT
+from testsupport.distribution import cli
 
 BUILTINS = {"advisory": ["core"], "devkit": ["core"]}
 
@@ -50,37 +50,37 @@ def target(tmp_path: Path) -> Path:
 
 
 def _selection(root: Path) -> dict[str, list[str]]:
-    return json.loads((root / RECEIPT).read_text())["selection"]["presets"]
+    return json.loads((root / RECEIPT_PATH).read_text())["selection"]["presets"]
 
 
 def _config(root: Path) -> dict:
-    return tomllib.loads((root / CONFIG).read_text())
+    return tomllib.loads((root / CONFIG_PATH).read_text())
 
 
 def test_empty_project_gets_builtins_but_not_external_bundles(bundles: list[InstalledBundle], target: Path) -> None:
-    result = sync_project(target, bundles)
+    result = sync_project(target, bundles).to_dict()
     assert _selection(target) == {"kit": ["core"]}
     assert [item["bundle"] for item in result["unselected"]] == ["other"]  # type: ignore[union-attr]
-    assert not (target / CONFIG).exists()
+    assert not (target / CONFIG_PATH).exists()
 
 
 def test_config_false_opts_out_and_a_named_preset_replaces_the_default(
     bundles: list[InstalledBundle], target: Path
 ) -> None:
     (target / ".devkit").mkdir()
-    (target / CONFIG).write_text("[presets]\nkit = false\n")
+    (target / CONFIG_PATH).write_text("[presets]\nkit = false\n")
     sync_project(target, bundles)
-    assert not (target / RECEIPT).exists() or _selection(target) == {}
+    assert not (target / RECEIPT_PATH).exists() or _selection(target) == {}
     assert read_config(target).opted_out == frozenset({"kit"})
 
-    (target / CONFIG).write_text('[presets]\nkit = "all"\nother = "core"\n')
+    (target / CONFIG_PATH).write_text('[presets]\nkit = "all"\nother = "core"\n')
     sync_project(target, bundles)
     assert _selection(target) == {"kit": ["all"], "other": ["core"]}
 
 
 def test_one_run_selection_overrides_an_opt_out(bundles: list[InstalledBundle], target: Path) -> None:
     (target / ".devkit").mkdir()
-    (target / CONFIG).write_text("[presets]\nkit = false\n")
+    (target / CONFIG_PATH).write_text("[presets]\nkit = false\n")
     sync_project(target, bundles, presets={"kit": ["core"]})
     assert _selection(target) == {"kit": ["core"]}
 
@@ -88,17 +88,17 @@ def test_one_run_selection_overrides_an_opt_out(bundles: list[InstalledBundle], 
 @pytest.mark.parametrize("value", ["true", "[]", '""'])
 def test_invalid_preset_values_are_rejected(target: Path, value: str) -> None:
     (target / ".devkit").mkdir()
-    (target / CONFIG).write_text(f"[presets]\nkit = {value}\n")
+    (target / CONFIG_PATH).write_text(f"[presets]\nkit = {value}\n")
     with pytest.raises(ConfigError, match="invalid presets"):
         read_config(target)
 
 
 def test_update_config_opt_out_and_reselect(target: Path) -> None:
     (target / ".devkit").mkdir()
-    (target / CONFIG).write_text('# keep\n[presets]\nother = "core"\n')
+    (target / CONFIG_PATH).write_text('# keep\n[presets]\nother = "core"\n')
     update_config(target, deselect=["other"], opt_out=["kit"])
     assert _config(target)["presets"] == {"kit": False}
-    assert "# keep" in (target / CONFIG).read_text()
+    assert "# keep" in (target / CONFIG_PATH).read_text()
     update_config(target, presets={"kit": ["core"]})
     assert _config(target)["presets"] == {"kit": "core"}
 

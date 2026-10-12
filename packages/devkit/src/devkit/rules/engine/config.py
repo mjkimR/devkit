@@ -8,16 +8,17 @@ file yields an empty config. Entries that need the loaded rules to validate
 
 from __future__ import annotations
 
-import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from devkit.rules.engine.errors import CONFIG_PATH, ConfigError
+from devkit.core.project import config_table, read_project_config
+from devkit.core.receipt import CONFIG_PATH
+from devkit.rules.engine.errors import RulesConfigError
 from devkit.rules.engine.models import Phase, Severity
 from devkit.rules.engine.settings import Override, RawSettings, validate_pattern
 
-__all__ = ["CONFIG_PATH", "ConfigError", "RulesConfig", "load_rules_config", "parse_rules_config"]
+__all__ = ["RulesConfig", "load_rules_config", "parse_rules_config"]
 
 RULES_TABLE = "rules"
 PHASE_OVERRIDES_KEY = "phase_overrides"
@@ -56,19 +57,17 @@ class RulesConfig:
 
 
 def _table(value: object, context: str) -> dict[str, Any]:
-    if not isinstance(value, dict):
-        raise ConfigError(f"config {context}: expected a table")
-    return value
+    return config_table(value, context, RulesConfigError)
 
 
 def _phase_overrides(raw: object) -> dict[str, Phase]:
     if not isinstance(raw, dict):
-        raise ConfigError(f"config {RULES_TABLE}.{PHASE_OVERRIDES_KEY}: expected a table of rule ID to phase")
+        raise RulesConfigError(f"config {RULES_TABLE}.{PHASE_OVERRIDES_KEY}: expected a table of rule ID to phase")
     overrides: dict[str, Phase] = {}
     for rule_id in sorted(raw):
         value = raw[rule_id]
         if not isinstance(value, str) or value.lower() != Phase.HYGIENE.value:
-            raise ConfigError(
+            raise RulesConfigError(
                 f"config {RULES_TABLE}.{PHASE_OVERRIDES_KEY}.{rule_id}: {value!r} is not 'hygiene'; "
                 "set it to 'hygiene' or remove the entry to keep the rule's default phase"
             )
@@ -83,7 +82,7 @@ def _severity_overrides(raw: object) -> dict[str, Severity]:
     for rule_id in sorted(table):
         value = table[rule_id]
         if not isinstance(value, str) or value.lower() not in allowed:
-            raise ConfigError(
+            raise RulesConfigError(
                 f"config {RULES_TABLE}.{SEVERITY_OVERRIDES_KEY}.{rule_id}: {value!r} is not one of {allowed}"
             )
         overrides[rule_id] = Severity(value.lower())
@@ -99,16 +98,16 @@ def _settings(raw: object) -> dict[str, RawSettings]:
         overrides: list[Override] = []
         raw_overrides = entry.pop(OVERRIDES_KEY, [])
         if not isinstance(raw_overrides, list):
-            raise ConfigError(f"config {context}.{OVERRIDES_KEY}: expected an array of tables")
+            raise RulesConfigError(f"config {context}.{OVERRIDES_KEY}: expected an array of tables")
         for index, item in enumerate(raw_overrides):
             values = dict(_table(item, f"{context}.{OVERRIDES_KEY}[{index}]"))
             pattern = values.pop(PATH_KEY, None)
             try:
                 validate_pattern(pattern)  # type: ignore[arg-type]
             except ValueError as exc:
-                raise ConfigError(f"config {context}.{OVERRIDES_KEY}[{index}].{PATH_KEY}: {exc}") from None
+                raise RulesConfigError(f"config {context}.{OVERRIDES_KEY}[{index}].{PATH_KEY}: {exc}") from None
             if not values:
-                raise ConfigError(f"config {context}.{OVERRIDES_KEY}[{index}]: no settings besides path")
+                raise RulesConfigError(f"config {context}.{OVERRIDES_KEY}[{index}]: no settings besides path")
             overrides.append(Override(str(pattern), values))
         result[rule_id] = RawSettings(entry, tuple(overrides))
     return result
@@ -117,15 +116,15 @@ def _settings(raw: object) -> dict[str, RawSettings]:
 def _exclude(raw: object) -> tuple[str, ...]:
     context = f"{RULES_TABLE}.{EXCLUDE_KEY}"
     if not isinstance(raw, list):
-        raise ConfigError(f"config {context}: expected an array of path patterns")
+        raise RulesConfigError(f"config {context}: expected an array of path patterns")
     patterns: list[str] = []
     for index, pattern in enumerate(raw):
         try:
             validate_pattern(pattern)  # type: ignore[arg-type]
         except ValueError as exc:
-            raise ConfigError(f"config {context}[{index}]: {exc}") from None
+            raise RulesConfigError(f"config {context}[{index}]: {exc}") from None
         if pattern in patterns:
-            raise ConfigError(f"config {context}[{index}]: duplicate pattern {pattern!r}")
+            raise RulesConfigError(f"config {context}[{index}]: duplicate pattern {pattern!r}")
         patterns.append(pattern)
     return tuple(patterns)
 
@@ -133,14 +132,14 @@ def _exclude(raw: object) -> tuple[str, ...]:
 def parse_rules_config(data: object, source: Path | None = None) -> RulesConfig:
     """Validate the ``[rules]`` table from an already parsed TOML document."""
     if not isinstance(data, dict):
-        raise ConfigError("config: expected a table")
+        raise RulesConfigError("config: expected a table")
     rules = data.get(RULES_TABLE)
     if rules is None:
         return RulesConfig(source=source)
     rules = _table(rules, RULES_TABLE)
     unknown = set(rules) - KNOWN_KEYS
     if unknown:
-        raise ConfigError(f"config {RULES_TABLE}: unknown fields: {sorted(unknown)}")
+        raise RulesConfigError(f"config {RULES_TABLE}: unknown fields: {sorted(unknown)}")
     return RulesConfig(
         phase_overrides=_phase_overrides(rules[PHASE_OVERRIDES_KEY]) if PHASE_OVERRIDES_KEY in rules else {},
         severity_overrides=_severity_overrides(rules[SEVERITY_OVERRIDES_KEY])
@@ -153,12 +152,12 @@ def parse_rules_config(data: object, source: Path | None = None) -> RulesConfig:
 
 
 def load_rules_config(workspace_root: Path) -> RulesConfig:
-    """Read ``.devkit/config.toml`` under ``workspace_root``; missing file means defaults."""
+    """Read ``.devkit/config.toml`` under ``workspace_root``; missing file means defaults.
+
+    An unreadable file raises the core ``ConfigError`` (``CONFIG_INVALID``)
+    unchanged; a malformed ``[rules]`` table raises ``RulesConfigError``
+    (``RULES_CONFIG_INVALID``).
+    """
+    data = read_project_config(workspace_root)
     path = workspace_root / CONFIG_PATH
-    if not path.is_file():
-        return RulesConfig()
-    try:
-        data = tomllib.loads(path.read_text("utf-8"))
-    except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
-        raise ConfigError(f"invalid config {CONFIG_PATH}: {exc}") from exc
-    return parse_rules_config(data, source=path)
+    return parse_rules_config(data, source=path if path.is_file() else None)

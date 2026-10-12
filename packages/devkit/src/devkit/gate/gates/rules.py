@@ -10,16 +10,23 @@ skipped only when the index changes nothing. ``.devkit/config.toml`` (including
 ``[rules] exclude``), the installation receipt and synchronized rules are all
 read from the snapshot (Git-ignored managed rule copies come from the working
 tree only when they match the receipt's hash).
+
+The rule engine's own errors pass through unchanged and fail the stage: a
+snapshot that cannot be read (``RULES_SNAPSHOT_FAILED``), an invalid
+``[rules]`` table (``RULES_CONFIG_INVALID``, or the core ``CONFIG_INVALID``),
+and a run that could not complete (``RULES_RUN_FAILED``, carrying every load,
+policy and execution problem). Only unfixed error violations are this gate's
+refusal (``GATE_RULES_VIOLATION``).
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable
 
-from devkit.advisory import Actor, Retry
-from devkit.gate.base import BaseGate
-from devkit.gate.models import GateConfigError, GateContext, GateError, GateResult, Stage
-from devkit.rules import ConfigError, RuleProblem, SnapshotError, git_snapshot, run_project_rules
+from devkit.gate.engine.base import BaseGate
+from devkit.gate.engine.models import GateContext, GateResult, Stage
+from devkit.gate.errors import GateRefusedError
+from devkit.rules import git_snapshot, run_project_rules
 
 MAX_DETAIL_LINES = 40
 
@@ -34,83 +41,33 @@ class StagedRulesGate(BaseGate):
         )
 
     def run(self, ctx: GateContext) -> GateResult:
-        try:
-            snapshot = git_snapshot(ctx.repo_root, staged=True)
-        except SnapshotError as exc:
-            raise GateError(
-                f"cannot read the staged tree: {exc}",
-                code="GATE_RULES_SNAPSHOT_FAILED",
-                actor=Actor.DEVELOPER,
-                retry=Retry.AFTER_FIX,
-            ) from exc
+        snapshot = git_snapshot(ctx.repo_root, staged=True)
         if not snapshot.changed and not snapshot.deleted:
             return GateResult.skipped("no changed files in the index")
 
-        try:
-            run = run_project_rules(snapshot.root, snapshot=snapshot)
-        except SnapshotError as exc:
-            raise GateError(
-                f"cannot materialize the staged tree: {exc}",
-                code="GATE_RULES_SNAPSHOT_FAILED",
-                actor=Actor.DEVELOPER,
-                retry=Retry.AFTER_FIX,
-            ) from exc
-        except ConfigError as exc:
-            raise GateConfigError(
-                f"invalid [rules] policy in the staged tree: {exc}",
-                code="GATE_RULES_CONFIG_INVALID",
-                target_files=[".devkit/config.toml"],
-                fix="Correct [rules] in .devkit/config.toml and stage the file",
-            ) from exc
+        run = run_project_rules(snapshot.root, snapshot=snapshot)
+        run.raise_for_problems()
 
-        if run.load_errors:
-            raise GateError(
-                "synchronized rules could not be loaded",
-                *_cap(_problem(problem) for problem in run.load_errors),
-                code="GATE_RULES_LOAD_FAILED",
-                actor=Actor.DEVELOPER,
-                retry=Retry.AFTER_FIX,
-                fix=(
-                    "devkit sync (restores managed rule files; restore a malformed receipt from version control first), "
-                    "or devkit override create <bundle>:<asset> to keep an edited rule; then stage the result"
-                ),
-            )
-
-        result = run.result
-        if result.errors:
-            raise GateError(
-                "rule evaluation failed on the staged tree",
-                *_cap(_problem(problem) for problem in result.errors),
-                code="GATE_RULES_FAILED",
-                actor=Actor.DEVELOPER,
-                retry=Retry.AFTER_FIX,
-                fix="Fix the rule execution or policy error reported by devkit.rules (`devkit rules check --staged`)",
-            )
-
-        errors = [v for v in result.violations if v.severity.value == "error" and not v.fixed]
-        warnings = sum(1 for v in result.violations if v.severity.value == "warning")
+        errors = run.blocking_violations
         if errors:
             rule_ids = sorted({v.rule_id for v in errors})
-            raise GateError.blocked(
+            raise GateRefusedError(
                 f"{len(errors)} rule violation(s) in the staged tree ({snapshot.describe()})",
                 *_cap(f"{v.rule_id} {v.file}:{v.line} {v.message}" for v in errors),
                 code="GATE_RULES_VIOLATION",
                 fix=(
-                    "uv run devkit rules fix  (repairs fixable findings; stage the result), "
-                    f"uv run devkit rules explain {rule_ids[0]}  (rule guide and effective settings)"
+                    "Run `devkit rules fix` to repair fixable findings and stage the result; "
+                    f"`devkit rules explain {rule_ids[0]}` shows the rule guide and effective settings"
                 ),
                 target_files=sorted({v.file for v in errors}),
             )
+        warnings = sum(1 for v in run.result.violations if v.severity.value == "warning")
         note = f"{len(snapshot.changed)} changed file(s) checked"
         if snapshot.deleted:
             note += f", {len(snapshot.deleted)} deleted"
         if warnings:
             note += f", {warnings} warning(s)"
         return GateResult.passed(note)
-
-
-def _problem(problem: RuleProblem) -> str:
-    return f"({problem.code}) {problem}"
 
 
 def _cap(lines: Iterable[object]) -> list[str]:

@@ -34,7 +34,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import IO
 
-from devkit.core import GitError, is_safe_relpath, run_git
+from devkit.core import GitError, is_safe_relpath, require_git_toplevel, run_git
 from devkit.core.git import DEFAULT_TIMEOUT
 from devkit.rules.engine.errors import SnapshotError
 
@@ -74,22 +74,15 @@ def _decode(name: bytes) -> str:
 
 def _require_toplevel(root: Path) -> None:
     try:
-        toplevel_raw = _git(root, "rev-parse", "--show-toplevel").rstrip(b"\n")
-    except SnapshotError as exc:
-        raise SnapshotError(
-            f"{root} is not inside a Git work tree ({exc})",
-            input_error=True,
-            target_files=["--workspace-root"],
-            fix="Run from inside the repository or pass --workspace-root <repository top level>",
-        ) from exc
-    toplevel = Path(os.fsdecode(toplevel_raw)).resolve()
+        toplevel = require_git_toplevel(root)
+    except GitError as exc:
+        raise SnapshotError(exc.message, input_error=True, target_files=exc.target_files, fix=exc.fix) from exc
     if toplevel != root:
         raise SnapshotError(
-            f"a Git snapshot must be taken at the work tree top level {toplevel}, not {root}; "
-            f"run from the repository root or pass --workspace-root {toplevel}",
+            f"a Git snapshot must be taken at the work tree top level {toplevel}, not {root}",
             input_error=True,
             target_files=["--workspace-root"],
-            fix=f"Pass --workspace-root {toplevel}",
+            fix=f"Run from the repository root or pass --workspace-root {toplevel}",
         )
 
 
@@ -290,7 +283,7 @@ class _BlobReader:
         self._stdout.close()
 
 
-def materialize(snapshot: Snapshot, directory: Path) -> None:
+def materialize_snapshot(snapshot: Snapshot, directory: Path) -> None:
     """Write the snapshot's files, in-tree symlinks and submodule placeholders under ``directory``.
 
     Blobs are streamed from one ``git cat-file --batch`` process and written

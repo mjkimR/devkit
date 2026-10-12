@@ -108,7 +108,7 @@ at: "2026-10-12T09:30:00Z"
 
 No other key is allowed. Records are never edited or deleted by the engine. Only records of the **current workflow segment** count: those whose `workflow` is the evaluated workflow and whose sequence is above the `last_decision` of the anchor's latest `workflow_history` entry. Within the segment, the **effective** decision for a request is its latest non-`cancel` record by sequence that no later `return` record voided (section 5). A new `accept` after a `decline` supersedes it; a `cancel` changes nothing.
 
-`devkit workflow answer --unit DIR --request ID --action ACTION [--value V] [--note TEXT] [--by NAME]` validates the answer against the open requests and writes the record with the next free sequence number. A host with its own UI may write the same file directly. The engine validates every record on read and reports a malformed record, or a handoff choice that is not an eligible candidate, as `[DECISION_ERROR: file "reason"]` without failing. In JSON (`decision_errors`) each entry is `{"code", "file", "reason"}`: `DECISION_RECORD_INVALID` for a malformed record, `HANDOFF_INVALID` for an ignored choice.
+`devkit workflow answer --unit DIR --request ID --action ACTION [--value V] [--note TEXT] [--by NAME]` validates the answer against the open requests and writes the record with the next free sequence number. A host with its own UI may write the same file directly. The engine validates every record on read and reports a malformed record, or a handoff choice that is not an eligible candidate, as `[DECISION_ERROR: file "reason"]` without failing. In JSON each one is an entry of the result's `errors` list, the `to_dict()` of an advisory error with `code`, `message` and `file`: `DECISION_RECORD_INVALID` (`DecisionRecordError`) for a malformed record, `HANDOFF_CHOICE_IGNORED` (`HandoffChoiceIgnoredError`) for an ignored choice.
 
 ---
 
@@ -142,3 +142,4 @@ These errors exit `2`; an open request or a recorded decline is a result and `ne
 | `REQUEST_UNKNOWN` | `INPUT_ERROR` | `--request` is not an open request of the unit (and not `feedback:*`); the details list the open ids |
 | `DECISION_INVALID` | `INPUT_ERROR` | the action or value does not fit the request: a value on `approve` or on an action other than `accept`, a missing, unknown or ineligible option, more than one value |
 | `RETURN_INVALID` | `INPUT_ERROR` | `return --to` names no stage of the workflow, or one after the current stage |
+| `HANDOFF_CHOICE_REQUIRED` | `INTERACTION` | `handoff` under `approvals.handoff = "ask"` without a recorded choice: stop and ask the user; `[FIX]` is the `answer` command to run with their choice |

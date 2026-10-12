@@ -37,13 +37,31 @@ class ReceiptError(DevkitCoreError):
 
 
 class ConfigError(DevkitCoreError):
-    """``.devkit/config.toml`` exists but cannot be read or parsed."""
+    """A TOML configuration file exists but cannot be read or parsed (``CONFIG_INVALID``).
+
+    The base of every configuration error: an area whose own table is malformed
+    raises a subclass with its own code (``RULES_CONFIG_INVALID``,
+    ``WORKFLOW_CONFIG_INVALID``, ``GATE_CONFIG_INVALID``).
+    """
 
     code = "CONFIG_INVALID"
     actor = Actor.DEVELOPER
     retry = Retry.AFTER_FIX
     input_error = True
     target_files = (".devkit/config.toml",)
+
+
+class ArgumentError(DevkitCoreError):
+    """A command argument or library parameter is malformed or names something that does not exist.
+
+    Command lines raise it for every semantic argument check (click only parses
+    syntax), so a JSON caller still receives one ``{"error": ...}`` document.
+    """
+
+    code = "ARGUMENT_INVALID"
+    actor = Actor.DEVELOPER
+    retry = Retry.AFTER_FIX
+    input_error = True
 
 
 class UnsafePathError(DevkitCoreError):

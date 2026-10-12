@@ -178,7 +178,7 @@ Rules in an in-repository bundle are deployed to `.devkit/managed/my-repo/rules/
 
 Git snapshot gates (`devkit rules check --staged`, `--ci`) evaluate a materialized Git tree, and `.devkit/managed/` is Git-ignored, so the managed rule copies are not in that tree. The gate reads such a file from the working tree only when its SHA-256 matches the `files` entry in the receipt committed to the snapshot. Consequences for an in-repository bundle:
 
-- After editing a rule, run `devkit sync` and stage the updated receipt alongside the rule source. A staged rule source with a stale receipt fails the gate: the working-tree managed copy no longer matches the receipt's hash, and the message says to run `devkit sync`.
+- After editing a rule, run `devkit sync` and stage the updated receipt alongside the rule source. A staged rule source with a stale receipt fails the gate: the working-tree managed copy no longer matches the receipt's hash, and the advisory's `[FIX]` says to run `devkit sync`.
 - A fresh clone must run `uv sync` and `uv run devkit sync` before the gate can run; otherwise the gate reports the managed rule as missing. This is identical to upstream bundles.
 - The committed receipt pins exactly which rule code a gate executed, which is the property the snapshot gates exist to provide.
 

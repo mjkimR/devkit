@@ -44,6 +44,7 @@ from devkit.core.paths import normalize_relpath, resolve_within
 
 RECEIPT_PATH = ".devkit/installation.json"
 CONFIG_PATH = ".devkit/config.toml"
+MANAGED_PATH = ".devkit/managed"
 OVERRIDES_PATH = ".devkit/overrides"
 SCHEMA = 1
 FILE_MODES = frozenset({0o644, 0o755})
@@ -420,3 +421,30 @@ def verified_asset_file(
             f"{item} differs from the hash in the receipt", target_files=[item], fix=_asset_file_fix(item, asset)
         )
     return path
+
+
+def verified_asset_files(
+    root: Path, receipt: Receipt, kind: str, suffix: str = ".py", *, source_root: Path | None = None
+) -> tuple[tuple[Path, ...], tuple[AssetFileError, ...]]:
+    """Every file of every ``kind`` asset ending in ``suffix``, verified, and the files that cannot be used.
+
+    Each asset contributes its ``entrypoints`` then its ``paths``
+    (``AssetRecord.files``), in receipt order and without duplicates, and each
+    file goes through ``verified_asset_file``. Every listed file is returned or
+    reported: none is skipped for its name, so a receipt-listed ``_helpers.py``
+    loads like any other file. This is how rules, gates and workflow plugin
+    checks find their synchronized files.
+    """
+    paths: list[Path] = []
+    errors: list[AssetFileError] = []
+    seen: set[str] = set()
+    for asset in receipt.assets(kind):
+        for item in asset.files(suffix):
+            if item in seen:
+                continue
+            seen.add(item)
+            try:
+                paths.append(verified_asset_file(root, item, receipt, asset, source_root=source_root))
+            except AssetFileError as exc:
+                errors.append(exc)
+    return tuple(paths), tuple(errors)

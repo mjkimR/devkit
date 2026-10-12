@@ -19,7 +19,7 @@
 1. **System in the core, policy in bundles.** The core ships only the gate system's own integrations as built-ins: the rule engine's staged check (`rules-staged`) and the non-empty message check (`message-nonempty`). Identity checks, timestamp handling, message conventions and similar rules belong to the content wheels that need them.
 2. **Static wrappers, runtime discovery.** The hook files never change after `devkit gate install`. Each commit discovers the gates from the installation receipt, so `devkit sync` alone changes what runs; it never writes into the hooks directory.
 3. **Explicit opt-in.** Installing a wheel makes its gates available; selecting a preset that contains them deploys them; a gate may additionally ship disabled and require `enabled = true` in configuration.
-4. **Fail closed where Git can still refuse.** `pre-commit` and `commit-msg` failures, configuration errors and missing or drifted gate files block the commit. `post-commit` runs after the commit exists, only reports, and always exits `0`.
+4. **Fail closed where Git can still refuse.** `pre-commit` and `commit-msg` failures, configuration errors and missing or drifted gate files block the commit (refusals exit `1`, everything that kept a check from running exits `2`). `post-commit` runs after the commit exists, only reports, and always exits `0`.
 5. **One error format.** Gate refusals and configuration problems are Agent Advisory Protocol errors (`devkit.advisory`), so an agent reads the same `[ACTION]` contract it gets from every other devkit CLI.
 
 ---
@@ -28,17 +28,35 @@
 
 ```text
 packages/devkit/src/devkit/gate/
-├── models.py      # Stage, Outcome, GateResult, GateContext, Gate protocol, GateError, GateConfigError
-├── base.py        # BaseGate: the abstract class deployed gate files subclass
-├── config.py      # Layered [gates] configuration and typed settings resolution
-├── registry.py    # Built-ins plus receipt-deployed gate files (devkit.core receipt and plugin loader)
-├── runner.py      # validate (registry, configuration, settings) and run_stage
-├── hooks.py       # Wrapper scripts: install, uninstall, status; the one hooks-directory resolver
-├── git.py         # Git queries on devkit.core.run_git: repo root, git dirs, config values
-├── gates/         # Built-in gates (rules-staged, message-nonempty)
-├── cli/           # devkit gate: install, uninstall, status, run
-└── __main__.py    # python -m devkit.gate: the gate CLI alone, which the wrappers exec
+├── errors.py       # GateError and its subclasses, one class per code (GateRefusedError, GateConfigError, ...)
+├── engine/
+│   ├── models.py   # Stage, Outcome, GateResult, GateContext, Gate protocol
+│   ├── base.py     # BaseGate: the abstract class deployed gate files subclass
+│   ├── config.py   # Layered [gates] configuration and typed settings resolution
+│   ├── registry.py # Built-ins plus receipt-deployed gate files (devkit.core receipt and plugin loader)
+│   └── runner.py   # validate_gates, run_stage, and the library entry points load_gate_project and run_hook
+├── hooks/
+│   ├── hooks.py    # Wrapper scripts: install, uninstall, status; the one hooks-directory resolver
+│   └── git.py      # Git queries on devkit.core.run_git: repo root, git dirs, config values
+├── gates/          # Built-in gates (rules-staged, message-nonempty)
+├── cli/            # devkit gate: install, uninstall, status, run (a thin layer over the library)
+└── __main__.py     # python -m devkit.gate: the gate CLI alone, which the wrappers exec
 ```
+
+### Library entry points
+
+```python
+from devkit.gate import Stage, load_gate_project, run_hook
+
+project = load_gate_project(root)  # any directory inside the work tree; project.root is its top level
+project.validation.errors          # every registry, configuration and settings problem (what `gate status` reports)
+
+report = run_hook(root, Stage.PRE_COMMIT)            # what `devkit gate run pre-commit` runs
+report = run_hook(root, Stage.COMMIT_MSG, ["MSG"])   # args are the hook arguments Git passes
+report.ok, report.problems, report.exit_code         # exit_code: the highest exit code among the problems
+```
+
+`load_gate_project` collects problems instead of raising them; only a failed Git query raises (`GitError`, `GIT_FAILED`). `run_hook` loads the project and runs the stage with `run_stage`, so the CLI and a library caller cannot diverge. The steps underneath are public too: `project_registry`, `load_gates_config`, `validate_gates` and `run_stage`.
 
 ---
 
@@ -55,13 +73,12 @@ packages/devkit/src/devkit/gate/
 | --- | --- | --- |
 | skipped | the index changes no files | — |
 | passed | no error violations (warnings are noted) | — |
-| refused | error violations remain | `GATE_RULES_VIOLATION` (BLOCKED): one `[DETAIL]` per violation as `<rule> <file>:<line> <message>`, `fix` names `devkit rules fix` and `devkit rules explain <rule>`, `[TARGET]` lists the files |
-| refused | `[rules]` in the staged `.devkit/config.toml` is invalid | `GATE_RULES_CONFIG_INVALID` |
-| refused | the staged receipt is malformed, or a receipt-listed rule is missing, drifted from its hash or fails to import | `GATE_RULES_LOAD_FAILED`, fix `devkit sync` (after restoring a malformed receipt from version control) or `devkit override create` to keep an edited rule |
-| refused | a rule raised during evaluation or policy validation failed | `GATE_RULES_FAILED` |
-| refused | the staged tree cannot be read or materialized | `GATE_RULES_SNAPSHOT_FAILED` |
+| refused | error violations remain | `GATE_RULES_VIOLATION` (`GateRefusedError`, BLOCKED, exit `1`): one `[DETAIL]` per violation as `<rule> <file>:<line> <message>`, `fix` names `devkit rules fix` and `devkit rules explain <rule>`, `[TARGET]` lists the files |
+| failed | `[rules]` in the staged `.devkit/config.toml` is invalid | the rule engine's `RULES_CONFIG_INVALID` (or the core `CONFIG_INVALID`), passed through |
+| failed | the staged receipt is malformed, a receipt-listed rule is missing, drifted from its hash or fails to import, the policy does not apply, or a rule raised | the rule engine's `RULES_RUN_FAILED` (`ProjectRun.raise_for_problems`), one `[DETAIL]` per problem with its own code (`RULES_LOAD_FAILED`, `RULES_POLICY_INVALID`, `RULES_EXECUTION_FAILED`, ...) |
+| failed | the staged tree cannot be read or materialized | the rule engine's `RULES_SNAPSHOT_FAILED`, passed through |
 
-A commit that only deletes files is not skipped: the policy and the rules are still loaded and evaluated, so a broken receipt or policy refuses it as well.
+Errors of the rule engine are never re-wrapped: they fail the gate as they are, exit `2` (the check could not run), and read the same as from `devkit rules check --staged`. A commit that only deletes files is not skipped: the policy and the rules are still loaded and evaluated, so a broken receipt or policy fails it as well.
 
 Disable it per project or per clone with `[gates.settings.rules-staged] enabled = false`, for example in a repository that runs `devkit rules check --ci` only in CI.
 
@@ -106,13 +123,13 @@ class Gate(Protocol):
     def run(self, ctx: GateContext) -> GateResult | None: ...
 ```
 
-- **Passing and skipping**: return `GateResult.passed(note)` or `GateResult.skipped(reason)`; `None` means passed. A `GateResult` cannot carry `FAILED` (constructing one raises `GateConfigError` with `GATE_RESULT_INVALID`, `MAINTENANCE`), and any other return value fails the gate with the same code.
-- **Refusing**: raise an `AdvisoryError`, normally `GateError.blocked(...)`; `GateError` exits `1` (`FINDINGS`), since a refusal is the negative result of a check that ran. Any other exception is wrapped as `UNEXPECTED_ERROR` and also fails the gate. Every failed gate therefore reports an advisory.
+- **Passing and skipping**: return `GateResult.passed(note)` or `GateResult.skipped(reason)`; `None` means passed. A `GateResult` cannot carry `FAILED` (constructing one raises `GateResultError`, `GATE_RESULT_INVALID`, `MAINTENANCE`), and any other return value fails the gate with the same code.
+- **Refusing**: raise `GateRefusedError(message, *details, code=..., fix=..., target_files=...)`: message first, remediation in `fix`, and the gate's own code (default `GATE_FAILED`). It is `BLOCKED` and exits `1` (`FINDINGS`), since a refusal is the negative result of a check that ran. Any other `AdvisoryError` fails the gate as it is (most exit `2`: the check could not run); any other exception is wrapped as `UNEXPECTED_ERROR` (exit `2`). Every failed gate therefore reports an advisory.
 - **Context**: `ctx.repo_root` (top level of the work tree), `ctx.git_dir` (this worktree's git dir, for `MERGE_HEAD`, rebase state and the like), `ctx.common_git_dir` (shared by every worktree), `ctx.stage`, `ctx.args` (hook arguments), `ctx.settings` (the gate's effective settings) and `ctx.message_file` for `commit-msg`.
 - **Ordering**: gates in a stage run by `(order, id)`. Message transforms use `order < 100`, checks default to `100`, and the built-in `message-nonempty` runs at `900` so it sees the transformed message. A `post-commit` gate that rewrites `HEAD` must take a low order so later gates observe the final commit.
 - **No short-circuit**: a failing gate does not stop later gates, so one commit attempt reports every refusal.
 
-Gate files are loaded like rule files, with `devkit.core.plugins.load_subclasses`: every concrete `BaseGate` subclass defined in the file is instantiated without arguments. `BaseGate` is abstract, so a shared base class that leaves `run` abstract is skipped. Loading is atomic per file: if any gate of a file fails to instantiate or has invalid metadata (`id`, `stage`, `order`; `GATE_INVALID`), the file contributes no gate and the failure is reported as `GATE_CONFIG_INVALID`. A gate file may import from any package installed in the same environment, which lets a content wheel keep its logic in a library module and ship only a thin gate file.
+Gate files are loaded like rule files, with `devkit.core.plugins.load_subclasses`: every concrete `BaseGate` subclass defined in the file is instantiated without arguments. `BaseGate` is abstract, so a shared base class that leaves `run` abstract is skipped. Loading is atomic per file: if any gate of a file fails to instantiate or has invalid metadata (`id`, `stage`, `order`; `GateDefinitionError`), the file contributes no gate and the failure is reported as `GATE_LOAD_FAILED`. A gate's `settings` dataclass fields may be `int`, `float`, `str`, `bool` or `list[str]`, each optionally `| None`: the same type vocabulary and checker as rule settings (`devkit.rules.engine.settings`). Any other annotation is a defect of the gate (`GATE_DEFINITION_INVALID`, `MAINTENANCE`). A gate file may import from any package installed in the same environment, which lets a content wheel keep its logic in a library module and ship only a thin gate file.
 
 ---
 
@@ -130,15 +147,15 @@ source = "gates/staged_file_limit.py"
 assets = ["staged-file-limit"]
 ```
 
-`devkit sync` copies the selected gate files to `.devkit/managed/<bundle>/` (or uses the project override under `.devkit/overrides/<bundle>/`) and records them in `.devkit/installation.json`. At commit time the registry reads the receipt with `devkit.core.receipt` (strict: a malformed receipt or an unsafe path is an error) and loads every `.py` path of every `kind = "gate"` asset. Each file is checked with `devkit.core.verified_asset_file`, the check `devkit rules` applies to rule files: a file with a `files` entry in the receipt must match its SHA-256; a file without one (a project override) is loaded as it is.
+`devkit sync` copies the selected gate files to `.devkit/managed/<bundle>/` (or uses the project override under `.devkit/overrides/<bundle>/`) and records them in `.devkit/installation.json`. At commit time the registry reads the receipt with `devkit.core.receipt` (strict: a malformed receipt or an unsafe path is an error) and loads every `.py` file of every `kind = "gate"` asset (`entrypoints` then `paths`), whatever its name. The files are found and checked with `devkit.core.verified_asset_files`, as `devkit rules` finds rule files and `devkit workflow` plugin checks: a file with a `files` entry in the receipt must match its SHA-256; a file without one (a project override) is loaded as it is.
 
 | State | Effect at commit time |
 | --- | --- |
 | Wheel installed, bundle not selected | Gate absent |
 | Bundle selected, synchronized | Gate loaded; runs if enabled |
-| Receipt lists a gate file the disk lacks, or the file differs from its recorded hash | Blocking stages fail with `GATE_CONFIG_INVALID`; fix `devkit sync`, or `devkit override create <bundle>:<asset>` to keep a deliberate edit |
+| Receipt lists a gate file the disk lacks, or the file differs from its recorded hash | Blocking stages fail with `ASSET_FILE_INVALID` (the core error, passed through); fix `devkit sync`, or `devkit override create <bundle>:<asset>` to keep a deliberate edit |
 | Receipt is malformed or lists a path outside the project | Blocking stages fail with `RECEIPT_INVALID` (restore the receipt from version control, then `devkit sync`) |
-| Gate file fails to import, or two gates share an id | Blocking stages fail |
+| Gate file fails to import, or two gates share an id | Blocking stages fail with `GATE_LOAD_FAILED` |
 
 ---
 
@@ -170,7 +187,8 @@ enabled = false
 ```
 
 - `enabled` is reserved in every gate table and overrides `enabled_by_default`.
-- Other keys must match the gate's settings dataclass fields. Settings are validated for every installed gate, whatever its stage and whether it is enabled; unknown keys and wrong types fail every blocking stage, and the gate itself is skipped.
+- Other keys must match the gate's settings dataclass fields and their annotations: an integer for `int`, a number for `float` (an integer becomes a float), a string, a boolean, an array of strings for `list[str]`; no other array or value type, and never `null` (TOML has none) unless the field is `| None`. Settings are validated for every installed gate, whatever its stage and whether it is enabled; unknown keys and wrong types fail every blocking stage, and the gate itself is skipped.
+- A file that cannot be read or parsed is the core `ConfigError` (`CONFIG_INVALID`), passed through unchanged; a malformed `[gates]` table or invalid settings are `GateConfigError` (`GATE_CONFIG_INVALID`), a subclass of it.
 - An entry for a gate that is not installed fails blocking stages, so a typo or a forgotten `devkit sync` cannot silently disable policy.
 - `devkit` passes `[gates]` through untouched, as it does `[rules]` and `[workflow]`.
 
@@ -182,32 +200,39 @@ enabled = false
 | --- | --- |
 | `devkit gate install [--force] [--python PATH]` | Write the managed wrappers. |
 | `devkit gate uninstall` | Remove managed wrappers; restore hooks moved aside by `install`. |
-| `devkit gate status [--format text\|json]` | Hooks directory and `core.hooksPath`, hook states, every gate with stage, order, effective enablement and source, configuration layers, and every problem that fails a commit (the same `validate` the stages run). |
-| `devkit gate run <stage> [hook args] [-v]` | Run one stage; what the wrappers call. `DEVKIT_GATES_VERBOSE=1` equals `-v`. |
+| `devkit gate status [--format text\|json]` | Hooks directory and `core.hooksPath`, hook states, every gate with stage, order, effective enablement and source, configuration layers, and every problem that fails a commit (`load_gate_project`, the same `validate_gates` the stages run). |
+| `devkit gate run <stage> [hook args] [-v]` | Run one stage (`run_hook`); what the wrappers call. `DEVKIT_GATES_VERBOSE=1` equals `-v`. |
 
-`-w/--workspace-root` may name any directory inside the repository; gates always run for the work tree's top level, as they do from a hook. Output uses sentinel lines (`[HOOKS: …]`, `[HOOK: …]`, `[GATE: <id> stage=<stage> outcome=<outcome>]`, `[CONFIG: sources=…]`) followed by advisory blocks for failures. `status --format json` returns `hooks_dir`, `hooks_path`, `hooks`, `gates`, `config_sources` and `errors` (each `{code, message, exit_code, advisory}`), or `{"error": {...}}` when the status cannot be read.
+`-w/--workspace-root` (default: the current directory) may name any existing directory inside the repository; every command, `install` and `uninstall` included, works on the work tree's top level (`devkit.core.require_git_toplevel`), as a hook does. A `-w` that is not an existing directory is `ARGUMENT_INVALID`; one outside a work tree is `GIT_FAILED` (`INPUT_ERROR`). Output uses sentinel lines (`[HOOKS: …]`, `[HOOK: …]`, `[GATE: <id> stage=<stage> outcome=<outcome>]`, `[CONFIG: sources=…]`) followed by advisory blocks for failures. `status --format json` prints one object with `hooks_dir`, `hooks_path`, `hooks`, `gates`, `config_sources` and `errors` (each `{code, message, exit_code, advisory}`), or `{"error": {...}}` when the status cannot be read.
 
-Exit codes follow the devkit convention ([Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)):
+Exit codes follow the devkit convention ([Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)). `status` is a report: it exits `1` when it lists any problem that would fail a commit and `2` only when it cannot run (outside a Git work tree). A blocking `run` collects several problems and exits with the highest `exit_code` among them: a refusal (`GateRefusedError`) gives `1`; a configuration, registry, load or settings problem, an error a gate raised that is not a refusal (such as a rule engine error), or an unexpected exception gives `2`.
 
 | Command | `0` | `1` | `2` |
 | --- | --- | --- | --- |
-| `install`, `uninstall` | done | — | refused or failed: `GATE_HOOKS_PATH_SET`, `GATE_FOREIGN_HOOK`, `GATE_BACKUP_EXISTS`, `GATE_PYTHON_INVALID`, `GIT_FAILED`, usage errors |
-| `status` | no problem would fail a commit | a reported problem would fail a commit (registry, configuration or settings errors) | the status cannot be read (not a Git work tree: `GIT_FAILED`), usage errors |
-| `run pre-commit`, `run commit-msg` | every gate passed or was skipped | a gate refused the commit, or the gate setup has a problem | the stage cannot run (not a Git work tree, an unexpected error), usage errors; the wrapper exits `2` when no interpreter is found |
+| `install`, `uninstall` | done | — | refused or failed: `GATE_HOOKS_PATH_SET`, `GATE_FOREIGN_HOOK`, `GATE_BACKUP_EXISTS`, `GATE_PYTHON_INVALID`, `GIT_FAILED`, `ARGUMENT_INVALID`, usage errors |
+| `status` | no problem would fail a commit | — | a reported problem would fail a commit (registry, configuration or settings errors are all configuration or load problems), or the status cannot be read (not a Git work tree: `GIT_FAILED`; `ARGUMENT_INVALID`), usage errors |
+| `run pre-commit`, `run commit-msg` | every gate passed or was skipped | gates refused the commit and nothing else went wrong | the gate setup has a problem, a gate failed with a non-refusal error, or the stage cannot run (not a Git work tree), usage errors; the wrapper exits `2` when no interpreter is found |
 | `run post-commit` | always, even when the stage cannot run (the commit already exists; problems are reported only) | — | usage errors |
 
 Any nonzero status of a blocking stage aborts the commit.
 
 ### Error codes
 
-| Code | Class | Mode | Meaning |
-| --- | --- | --- | --- |
-| `GATE_FAILED` | `GateError` | set by the gate (normally `BLOCKED`) | default code of a gate refusal; gates pass their own (`GATE_MESSAGE_EMPTY`, `GATE_RULES_VIOLATION`, ...) |
-| `GATE_CONFIG_INVALID` | `GateConfigError` | `INPUT_ERROR` | invalid `[gates]` table or settings, a configured gate that is not installed, a deployed gate file that is missing, drifted, unsafe or fails to load, a duplicate gate id |
-| `GATE_INVALID` | `GateConfigError` | `MAINTENANCE` | a gate class declares an unusable `id`, `stage` or `order` (reported inside its file's load failure) |
-| `GATE_RESULT_INVALID` | `GateConfigError` | `MAINTENANCE` | a gate built a `FAILED` `GateResult` or returned something other than a `GateResult` or `None` |
-| `GATE_PYTHON_INVALID` | `AdvisoryError` | `INPUT_ERROR` | `install --python` names an interpreter that cannot import `devkit.gate` |
-| `GATE_FOREIGN_HOOK`, `GATE_BACKUP_EXISTS`, `GATE_HOOKS_PATH_SET` | `AdvisoryError` | `INTERACTION` | `install` would move or bypass hooks it does not own |
-| `GIT_FAILED` | `devkit.core.GitError` | `INPUT_ERROR` outside a work tree, else `MAINTENANCE` | a Git query failed |
-| `RECEIPT_INVALID` | `devkit.core.ReceiptError` | `MAINTENANCE` | `.devkit/installation.json` is malformed or lists an unsafe path |
+Every gate error derives from `GateError` (`devkit.gate.errors`), which sets `actor = DEVELOPER` and `retry = AFTER_FIX` once; there is one class per code, constructed message first with keyword fields.
+
+| Code | Class | Mode | Exit | Meaning |
+| --- | --- | --- | --- | --- |
+| `GATE_FAILED` | `GateRefusedError` | `BLOCKED` | `1` | default code of a gate refusal; gates pass their own (`GATE_MESSAGE_EMPTY`, `GATE_RULES_VIOLATION`, ...) |
+| `GATE_CONFIG_INVALID` | `GateConfigError` (also a `devkit.core.ConfigError`) | `INPUT_ERROR` | `2` | invalid `[gates]` table or settings, a configured gate that is not installed |
+| `GATE_LOAD_FAILED` | `GateLoadError` | `MAINTENANCE` | `2` | a deployed gate file fails to import or to instantiate its gates, or two gates share an id |
+| `GATE_DEFINITION_INVALID` | `GateDefinitionError` | `MAINTENANCE` | `2` | a gate declares an unusable `id`, `stage`, `order` (reported inside its file's load failure) or settings declaration, or uses `ctx.message_file` outside `commit-msg` |
+| `GATE_RESULT_INVALID` | `GateResultError` | `MAINTENANCE` | `2` | a gate built a `FAILED` `GateResult` or returned something other than a `GateResult` or `None` |
+| `GATE_PYTHON_INVALID` | `GatePythonError` | `INPUT_ERROR` | `2` | `install --python` names an interpreter that cannot import `devkit.gate` |
+| `GATE_FOREIGN_HOOK`, `GATE_BACKUP_EXISTS`, `GATE_HOOKS_PATH_SET` | `ForeignHookError`, `HookBackupExistsError`, `HooksPathSetError` | `INTERACTION` | `2` | `install` would move or bypass hooks it does not own |
+| `CONFIG_INVALID` | `devkit.core.ConfigError` | `INPUT_ERROR` | `2` | `.devkit/config.toml` or `devkit.config` cannot be read or parsed |
+| `ASSET_FILE_INVALID` | `devkit.core.AssetFileError` | `MAINTENANCE` | `2` | a receipt-listed gate file is missing, unsafe or differs from its recorded hash |
+| `ARGUMENT_INVALID` | `devkit.core.ArgumentError` | `INPUT_ERROR` | `2` | `-w/--workspace-root` is not an existing directory; `run commit-msg` without the message file |
+| `GIT_FAILED` | `devkit.core.GitError` | `INPUT_ERROR` outside a work tree, else `MAINTENANCE` | `2` | a Git query failed |
+| `RECEIPT_INVALID` | `devkit.core.ReceiptError` | `MAINTENANCE` | `2` | `.devkit/installation.json` is malformed or lists an unsafe path |
+| `RULES_*` | `devkit.rules` errors | as raised | `2` | the `rules-staged` gate could not run the rule engine (passed through unchanged) |
 

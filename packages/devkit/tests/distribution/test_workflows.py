@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from devkit.core.receipt import RECEIPT_PATH
 from devkit.distribution.bundles import load_bundle
 from devkit.distribution.bundles.workflows import read_workflow_header
 from devkit.distribution.errors import BundleError
@@ -12,7 +13,6 @@ from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.discovery import InstalledBundle
 from devkit.distribution.installation.sync import sync_project
 from devkit.distribution.installation.workflow_skill import MANAGED_ROOT, NAME, skill_files
-from devkit.distribution.installation.workspace import RECEIPT
 
 WORKFLOW = """---
 id: direct-delivery
@@ -95,7 +95,7 @@ def test_sync_deploys_workflow_and_generated_entry_skill(tmp_path: Path, target:
 
     deployed = target / ".devkit/managed/team/flows/delivery.md"
     assert deployed.read_text() == WORKFLOW
-    receipt = json.loads((target / RECEIPT).read_text())
+    receipt = json.loads((target / RECEIPT_PATH).read_text())
     record = next(a for a in receipt["assets"] if a["kind"] == "workflow")
     assert record["id"] == "delivery" and record["entrypoints"] == [".devkit/managed/team/flows/delivery.md"]
 
@@ -114,7 +114,7 @@ def test_sync_deploys_workflow_and_generated_entry_skill(tmp_path: Path, target:
     assert not deployed.exists()
     assert not (target / MANAGED_ROOT / "SKILL.md").exists()
     assert not (codex / "SKILL.md").exists()
-    assert not any(a["kind"] == "workflow" for a in json.loads((target / RECEIPT).read_text())["assets"])
+    assert not any(a["kind"] == "workflow" for a in json.loads((target / RECEIPT_PATH).read_text())["assets"])
 
 
 def test_workflow_and_playbook_skills_coexist(tmp_path: Path, target: Path) -> None:
@@ -148,7 +148,7 @@ def test_generated_skills_are_shared_by_codex_and_antigravity(tmp_path: Path, ta
 
     installed = [make_bundle(tmp_path, "team"), make_playbook_bundle(tmp_path, "ops")]
     update_config(target, presets={"team": ["all"], "ops": ["all"]}, agents=["codex", "antigravity"])
-    result = sync_project(target, installed)
+    result = sync_project(target, installed).to_dict()
     paths = [a["path"] for a in result["actions"]]
     for name in ("devkit-workflow", "devkit-playbook"):
         assert paths.count(f".agents/skills/{name}/SKILL.md") == 1

@@ -9,9 +9,9 @@ from __future__ import annotations
 import json
 from collections.abc import Mapping
 
-from devkit.workflow.definition import WorkflowDocument, schema_hash
-from devkit.workflow.requests import Request, candidate_summary
-from devkit.workflow.results import Gate, Result
+from devkit.workflow.definition.definition import WorkflowDocument, schema_hash
+from devkit.workflow.evaluation.requests import Request, candidate_summary
+from devkit.workflow.evaluation.results import GateStatus, UnitEvaluation
 
 
 def quote(value: str) -> str:
@@ -27,13 +27,14 @@ def _yn(value: bool) -> str:
     return "yes" if value else "no"
 
 
-def _gate_source(gate: Gate) -> str:
+def _gate_source(gate: GateStatus) -> str:
     if gate.source == "decision" and gate.decision:
         return f"decision:{gate.decision}"
     return _dash(gate.source)
 
 
-def render_result(res: Result) -> str:
+def render_evaluation(res: UnitEvaluation) -> str:
+    """The sentinel lines of ``next``."""
     lines: list[str] = [
         f"[WORKFLOW: {res.workflow} unit={res.unit} status={_dash(res.status)} bound={_yn(res.binding.bound)}]"
     ]
@@ -87,11 +88,11 @@ def render_result(res: Result) -> str:
             lines.append(f"[STALE_APPROVAL: {d.file} request={d.request} stage={d.stage} counts=yes void_with={void}]")
     lines.extend(render_requests(res.requests))
     for e in res.envelope_errors:
-        lines.append(f"[ENVELOPE_ERROR: {e.file} {quote(e.reason)}]")
+        lines.append(f"[ENVELOPE_ERROR: {e.file} {quote(e.message)}]")
     for d in res.decision_errors:
-        lines.append(f"[DECISION_ERROR: {d.file} {quote(d.reason)}]")
-    if res.lint_error:
-        lines.append(f"[LINT_ERROR: {quote(res.lint_error)}]")
+        lines.append(f"[DECISION_ERROR: {d.file} {quote(d.message)}]")
+    if res.lint_error is not None:
+        lines.append(f"[LINT_ERROR: {quote(res.lint_error.message)}]")
     return "\n".join(lines) + "\n"
 
 

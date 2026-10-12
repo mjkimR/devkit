@@ -5,20 +5,21 @@ from pathlib import Path
 import pytest
 from devkit.core.errors import ReceiptError
 from devkit.core.receipt import load_receipt
+from devkit.rules import count_tasks
 from devkit.workflow import (
     CheckClass,
     CheckError,
     DefinitionError,
     Registry,
-    load,
-    parse,
+    WorkflowNotFoundError,
+    load_definition,
     parse_check,
-    resolve,
+    parse_definition,
+    resolve_definition,
     schema_hash,
-    validate,
+    validate_definition,
 )
-from devkit.workflow.checks import count_tasks
-from devkit.workflow.discovery import discover, find, managed_definition_paths
+from devkit.workflow.definition.discovery import discover_definitions, managed_definition_paths
 from testsupport.workflow import WORKFLOW, write_receipt
 
 # --- check syntax and registry ------------------------------------------------
@@ -72,25 +73,25 @@ def test_count_tasks() -> None:
 
 
 def test_parse_normalizes_human_gate_and_defaults() -> None:
-    doc = parse(WORKFLOW)
+    doc = parse_definition(WORKFLOW)
     assert [s.id for s in doc.stages] == ["intent", "build-verify", "review", "integrate"]
     assert doc.stage("intent").gate == "direction"  # type: ignore[union-attr]
     assert doc.stage("build-verify").gate is None  # type: ignore[union-attr]
     assert doc.declared_checks[0].name == "ci-passed"
-    assert validate(doc, "task.md") == []
+    assert validate_definition(doc, "task.md") == []
 
 
 def test_human_gate_true_names_gate_after_stage() -> None:
-    doc = parse(
+    doc = parse_definition(
         "---\nid: w\nschema_version: 1\nstages:\n  - id: g3\n    human_gate: true\n    exit: [anchor-exists]\n---\n"
     )
     assert doc.stages[0].gate == "g3"
 
 
 def test_schema_hash_ignores_title_and_body() -> None:
-    a = parse(WORKFLOW)
-    b = parse(WORKFLOW.replace('title: "Direct delivery"', 'title: "Other"') + "\nmore prose\n")
-    c = parse(WORKFLOW.replace("skills: [wf-intent]", "skills: [wf-start]"))
+    a = parse_definition(WORKFLOW)
+    b = parse_definition(WORKFLOW.replace('title: "Direct delivery"', 'title: "Other"') + "\nmore prose\n")
+    c = parse_definition(WORKFLOW.replace("skills: [wf-intent]", "skills: [wf-start]"))
     assert schema_hash(a) == schema_hash(b)
     assert schema_hash(a) != schema_hash(c)
     assert schema_hash(a).startswith("sha256:")
@@ -111,7 +112,7 @@ def test_schema_hash_ignores_title_and_body() -> None:
 )
 def test_parse_structural_errors(text: str, match: str) -> None:
     with pytest.raises(DefinitionError, match=match):
-        parse(text)
+        parse_definition(text)
 
 
 def test_validate_reports_every_problem() -> None:
@@ -129,7 +130,7 @@ stages:
   - id: a
 ---
 """
-    problems = {str(p) for p in validate(parse(text), "task.md")}
+    problems = {str(p) for p in validate_definition(parse_definition(text), "task.md")}
     expected_fragments = [
         "id: 'Bad_ID' must match",
         "schema_version: unsupported schema_version 2",
@@ -148,20 +149,23 @@ stages:
 
 def test_find_and_resolve(workspace: Path) -> None:
     defs = workspace / ".devkit" / "workflows"
-    assert find(defs, "direct-delivery").id == "direct-delivery"
-    assert resolve(defs, str(defs / "direct-delivery.md")).id == "direct-delivery"
-    with pytest.raises(DefinitionError, match="no workflow with id"):
-        find(defs, "missing")
+    assert resolve_definition(defs, "direct-delivery").id == "direct-delivery"
+    assert resolve_definition(defs, str(defs / "direct-delivery.md")).id == "direct-delivery"
+    with pytest.raises(WorkflowNotFoundError, match="no workflow with id"):
+        resolve_definition(defs, "missing")
+    with pytest.raises(WorkflowNotFoundError, match="no definition file"):
+        resolve_definition(defs, "missing.md")
     (defs / "dup.md").write_text(WORKFLOW)
-    with pytest.raises(DefinitionError, match="more than once"):
-        find(defs, "direct-delivery")
+    with pytest.raises(DefinitionError, match="more than once") as dup:
+        resolve_definition(defs, "direct-delivery")
+    assert dup.value.code == "WORKFLOW_DEFINITION_INVALID"
 
 
 def test_load_reports_path_in_errors(tmp_path: Path) -> None:
     bad = tmp_path / "bad.md"
     bad.write_text("---\nstages: []\n---\n")
     with pytest.raises(DefinitionError, match=r"bad\.md"):
-        load(bad)
+        load_definition(bad)
 
 
 def test_managed_definition_paths_from_receipt(tmp_path: Path) -> None:
@@ -186,7 +190,7 @@ def test_managed_definition_paths_from_receipt(tmp_path: Path) -> None:
 def test_malformed_receipt_is_an_error_not_an_empty_source(workspace: Path) -> None:
     (workspace / ".devkit/installation.json").write_text("not json")
     with pytest.raises(ReceiptError):
-        discover(workspace, workspace / ".devkit/workflows")
+        discover_definitions(workspace, workspace / ".devkit/workflows")
 
 
 def test_discover_merges_receipt_and_local_with_local_shadowing(workspace: Path) -> None:
@@ -203,18 +207,20 @@ def test_discover_merges_receipt_and_local_with_local_shadowing(workspace: Path)
         ],
     )
     defs = workspace / ".devkit/workflows"
-    docs, errors = discover(workspace, defs)
+    docs, errors = discover_definitions(workspace, defs)
     # A recorded definition missing from disk is reported, not silently skipped (R9).
-    assert [(str(e), e.code, e.target) for e in errors] == [
+    assert [(str(e), e.code, e.target_files, e.fix, e.mode.value) for e in errors] == [
         (
-            "synchronized workflow .devkit/managed/team/flows/missing.md is missing from the working tree (run devkit sync)",
+            "synchronized workflow .devkit/managed/team/flows/missing.md is missing from the working tree",
             "WORKFLOW_ASSET_MISSING",
-            ".devkit/managed/team/flows/missing.md",
+            (".devkit/managed/team/flows/missing.md",),
+            "devkit sync",
+            "AUTO",
         )
     ]
     by_id = {d.id: d for d in docs}
     assert set(by_id) == {"direct-delivery", "bugfix"}
     assert by_id["direct-delivery"].title == "Direct delivery"  # local shadows managed
-    assert find(defs, "bugfix", workspace).path == managed / "bugfix.md"
-    with pytest.raises(DefinitionError, match="installation receipt"):
-        find(defs, "nope", workspace)
+    assert resolve_definition(defs, "bugfix", workspace).path == managed / "bugfix.md"
+    with pytest.raises(WorkflowNotFoundError, match="installation receipt"):
+        resolve_definition(defs, "nope", workspace)

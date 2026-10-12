@@ -42,7 +42,7 @@ src/devkit/rules/
 │   ├── phases.py            # Effective phase resolution, overrides, promotions
 │   ├── policy.py            # validate_policy: phase, severity and settings policy in one pass
 │   ├── errors.py            # RulesError hierarchy: raised errors and collected RuleProblems with codes
-│   ├── registry.py          # RuleRegistry & default_registry (plugin files via devkit.core.plugins)
+│   ├── registry.py          # RuleRegistry & default_rule_registry (plugin files via devkit.core.plugins)
 │   └── evaluator.py         # Sequential rule evaluation, single autofix pass & convergence recheck
 ├── workspace/               # Shared file caching, Markdown file catalog and Git snapshots
 │   ├── cache.py             # WorkspaceCache (file discovery, bytes, text, frontmatter, links)

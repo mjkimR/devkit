@@ -17,7 +17,7 @@ from devkit.workflow import (
     plan_handoff,
     record_answer,
 )
-from devkit.workflow.envelope import parse_findings
+from devkit.workflow.unit.envelope import parse_findings
 from testsupport.workflow import WORKFLOW, write_config
 
 REPO = Path(__file__).resolve().parents[4]

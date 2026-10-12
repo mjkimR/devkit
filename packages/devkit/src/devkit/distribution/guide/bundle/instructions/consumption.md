@@ -22,8 +22,11 @@ Generated paths are rebuilt by `uv run devkit sync` from the installed packages
 and the configuration. Edit sources and configuration, never generated copies.
 `sync` halts when a managed file that is still selected was modified, or when an
 unmanaged file sits where it needs to write; it never deletes foreign files. A
-modified file that is no longer selected is left in place and reported as
-`NOTICE: left modified file in place: <path>`; remove it yourself.
+modified file that is no longer selected is left in place and reported as an
+`ORPHAN_LEFT` notice (`[NOTICE: (ORPHAN_LEFT) left modified file in place:
+<path> ...]` on stderr); ask the user before removing it. Notices never fail a
+sync; `[WARNING: (CODE) ...]` lines (override drift, stray files under
+`.devkit/managed/`) deserve a look.
 
 The block in the root `AGENTS.md` is the orientation index every session reads:
 installed bundles, the once-per-bundle `get-context` rule and the generated entry
@@ -92,7 +95,7 @@ edited. Gates work the same way through `devkit gate` and `[gates]`.
 
 Snapshot gates (`--staged`, `--ci`) evaluate the Git tree and trust the
 committed receipt. A managed rule that is missing or differs from the receipt's
-hash fails the gate with a message to run `devkit sync` and commit the receipt.
+hash fails the gate; its `[FIX]` says to run `devkit sync` and commit the receipt.
 
 ## Changing what is deployed
 
@@ -135,7 +138,10 @@ itself, edit the source bundle instead (see the `in-repo-bundle` instruction).
 compares with the receipt: managed files that are missing, modified or have a
 different execute bit, overrides whose upstream changed, the guidance block state, seeded
 files that no longer exist, a pending journal, and whether the `devkit`
-version that wrote the receipt is the one running. Use `uv run devkit sync
+version that wrote the receipt is the one running. Whatever needs acting on (a
+missing, modified or mode-mismatched file, a pending journal, or override drift)
+is listed under `errors` and rendered as an advisory block on stderr; follow its
+`[ACTION]` and `[FIX]`. It exits 1 when there is any and 0 otherwise. Use `uv run devkit sync
 --check` to learn whether a sync is needed (exit 1; exit 2 means an error such
 as a hand-edited managed file, reported as an advisory with its code on stderr
 and as `{"error": ...}` on stdout); use `status` to learn why. Every command takes

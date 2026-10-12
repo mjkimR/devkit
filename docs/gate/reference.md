@@ -22,13 +22,13 @@ uv run devkit sync                    # deploys the gate files and records them 
 
 `devkit gate run <stage> [hook args]` is what the wrappers call; run it by hand to test a stage. Set `DEVKIT_GATES_VERBOSE=1` (or pass `-v`) to also see passed and skipped gates. `git commit --no-verify` skips `pre-commit` and `commit-msg` as usual. Existing executable hooks are kept: `install --force` moves them to `<hook>.pre-gate` and the wrapper runs them before the gates. The wrapper prefers the work tree's `.venv` interpreter when `devkit` is installed there; see [Hook Wrappers](overview.md#3-hook-wrappers).
 
-Exit codes: `install`/`uninstall` exit `0` or `2`; `status` exits `1` when it reports a problem that would fail a commit and `2` outside a Git work tree; `run` on a blocking stage exits `1` when a gate refused the commit or the setup has a problem and `2` when the stage cannot run; `run post-commit` always exits `0`. Codes and the full table: [Commit Gate Overview, CLI](overview.md#7-cli).
+Exit codes: `install`/`uninstall` exit `0` or `2`; `status` is a report and exits `1` when it lists any problem that would fail a commit (`2` only when it cannot run, outside a Git work tree); `run` on a blocking stage exits with the highest exit code among the problems it reports: `1` when gates refused the commit, `2` for a configuration, registry, load or settings problem, a gate that failed with a non-refusal error, or a stage that cannot run (outside a Git work tree); `run post-commit` always exits `0`. Codes and the full table: [Commit Gate Overview, CLI](overview.md#7-cli).
 
 ## Built-in gates
 
 | Gate | Stage | Default | Behavior |
 | --- | --- | --- | --- |
-| `rules-staged` | `pre-commit` | on | Runs `devkit.rules`'s linter phase over the exact staged tree, as `devkit rules check --staged` does, and refuses on unresolved error violations, rule loading or execution errors, or an invalid `[rules]` policy. Warnings pass. |
+| `rules-staged` | `pre-commit` | on | Runs `devkit.rules`'s linter phase over the exact staged tree, as `devkit rules check --staged` does, and refuses on unresolved error violations (`GATE_RULES_VIOLATION`). Rule loading or execution errors and an invalid `[rules]` policy fail it with the rule engine's own error, unchanged. Warnings pass. |
 | `message-nonempty` | `commit-msg` | on | Refuses a message that is blank (whitespace only) above any scissors line. Messages that are empty only once comment lines are stripped are left to Git, which aborts them itself. |
 
 Built-ins are limited to the gate system's own integrations; anything that is
@@ -58,12 +58,24 @@ enabled = true
 some_setting = 3
 ```
 
+## Library
+
+`devkit gate` is a thin command line over two entry points:
+
+```python
+from devkit.gate import Stage, load_gate_project, run_hook
+
+project = load_gate_project(root)  # gates, layered configuration, every problem `gate status` reports
+report = run_hook(root, Stage.COMMIT_MSG, [".git/COMMIT_EDITMSG"])  # one stage, as the hook wrapper runs it
+report.ok, report.problems, report.exit_code
+```
+
 ## Writing a gate
 
 ```python
 from dataclasses import dataclass
 
-from devkit.gate import BaseGate, GateContext, GateError, GateResult, Stage
+from devkit.gate import BaseGate, GateContext, GateRefusedError, GateResult, Stage
 
 
 @dataclass(frozen=True)
@@ -83,7 +95,11 @@ class StagedFileLimitGate(BaseGate):  # BaseGate is abstract: implement run()
     def run(self, ctx: GateContext) -> GateResult:
         count = ...  # e.g. `git diff --cached --name-only` in ctx.repo_root
         if count > ctx.settings.max_files:
-            raise GateError.blocked(f"{count} files staged (limit {ctx.settings.max_files})")
+            raise GateRefusedError(
+                f"{count} files staged (limit {ctx.settings.max_files})",
+                code="GATE_STAGED_FILE_LIMIT",
+                fix="Split the change into smaller commits",
+            )
         return GateResult.passed()
 ```
 

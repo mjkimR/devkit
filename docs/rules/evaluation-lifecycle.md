@@ -99,11 +99,11 @@ Rules come from three sources, in order: the built-in registry, every `kind = "r
   - `hygiene`: Includes `linter` rules plus file size warnings, every bundle rule declared in this phase, and every rule parked there by a project phase override.
 - **Targets**: `TARGETS` are workspace-relative or absolute paths inside the workspace. A file is checked as is; a directory expands recursively to the regular files under it with the same discovery as workspace scans: dependency and cache directories (`.git`, `.venv`, `node_modules`, caches) and `.devkit/managed/` and `.devkit/overrides/` are skipped, symlinks resolving outside the workspace are skipped, and inside a Git work tree Git-ignored files are skipped unless named explicitly. No targets means the whole workspace; a directory without files checks nothing. A target that is neither an existing file nor a directory inside the workspace is a `RULES_TARGET_INVALID` failure before any rule runs. Snapshot gates refuse targets.
 - **Exclusions**: `exclude` under `[rules]` lists workspace-relative patterns (`**` grammar of settings overrides) that no rule targets. Excluded paths are removed from explicit, directory-expanded and snapshot targets and `ctx.is_file_targeted` is `False` for them; a run whose explicit targets are all excluded checks nothing rather than falling back to the whole workspace. They remain in the document catalog so link repair can still resolve to them. An invalid pattern is a policy error that fails the run before evaluation.
-- **`--summary-only`**: text output prints one line per rule (`RULE-id: N error(s), M warning(s)[, I info(s)][, K fixed]`) instead of individual findings, keeping `[SNAPSHOT]`, `[PHASE_OVERRIDE]` and `[PROMOTION]` lines and the final summary. JSON output ignores the flag.
+- **`--summary-only`**: text output prints one `[RULE_COUNTS: RULE-id errors=N warnings=N infos=N fixed=N]` line per rule instead of the `[VIOLATION: ...]` lines, keeping the `[SNAPSHOT]`, `[PHASE_OVERRIDE]`, `[PROMOTION]`, `[SUMMARY]` and `[OK]` lines. JSON output ignores the flag. The sentinel lines are listed in the [Rules Reference, CLI usage](reference.md#cli-usage).
 - **Exit Status** (the devkit convention of [Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)):
   - `0`: All checks passed cleanly, or all fixable findings were successfully repaired.
   - `1`: Unresolved error violations. The run evaluated and found errors.
-  - `2`: The run could not evaluate: rule loading failures, rule execution errors, invalid project policy, an invalid target, or a Git snapshot failure, each reported on stderr as an advisory with its code (see the [Rules Reference, Errors](reference.md#errors)). Execution errors take precedence over violations found in the same run. (`click` usage errors such as `--staged` with file arguments also exit `2`; they print a `Usage:` block.)
+  - `2`: The run could not evaluate: rule loading failures, rule execution errors, invalid project policy, an invalid target, or a Git snapshot failure, each reported on stderr as an advisory with its code (see the [Rules Reference, Errors](reference.md#errors)). Execution errors take precedence over violations found in the same run. (Argument errors such as `--staged` with file arguments also exit `2`, as `ARGUMENT_INVALID` advisories; only click's syntax errors print a `Usage:` block.)
 
 ---
 
@@ -150,11 +150,11 @@ super().__init__(id="RULE-no-todo", name="no-todo", description="...", phase=Pha
 
 ### Inspecting the Plan
 
-`devkit rules phases` lists every rule with its default phase, effective phase, and pending transition. `--format json` emits one object per rule with `rule_id`, `default_phase`, `effective_phase`, `overridden`, and `promote_to`, which is the stable surface for agents deciding whether an override can be retired.
+`devkit rules phases` lists every rule with its default phase, effective phase, and pending transition. `--format json` emits `{"rules": [...], "errors": [...]}`, one object per rule with `rule_id`, `default_phase`, `effective_phase`, `overridden`, and `promote_to`, which is the stable surface for agents deciding whether an override can be retired.
 
-`check --format json` remains a flat array of violations; count entries per `rule_id` to compute the same remaining totals.
+`check --format json` prints `{"violations": [...], "errors": [...]}`; count the `violations` entries per `rule_id` to compute the same remaining totals.
 
-`phases` and `explain` validate the whole `[rules]` policy (phase overrides, severity overrides and settings) as `check` does. `phases` prints the plan and exits `2` on any problem; `explain` exits `2` only for problems of the rule it describes (or an unknown rule ID) and prints the problems of other rules as warnings.
+`phases` and `explain` validate the whole `[rules]` policy (phase overrides, severity overrides and settings) as `check` does. `phases` prints the plan and exits `2` on any problem; `explain` exits `2` only for problems of the rule it describes (or an unknown rule ID, `ARGUMENT_INVALID`) and prints the problems of other rules as warnings.
 
 ---
 

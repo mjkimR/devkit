@@ -1,93 +1,59 @@
+"""``devkit gate`` commands: install and uninstall the hook wrappers, report the setup, run a stage.
+
+A thin command line over the library: ``status`` renders
+``devkit.gate.load_gate_project`` and ``run`` renders ``devkit.gate.run_hook``.
+Every command works on the top level of the Git work tree containing
+``--workspace-root`` (default: the current directory), resolved with
+``devkit.core.require_git_toplevel``. ``status --format json`` prints one
+object (``{"hooks_dir", "hooks_path", "hooks", "gates", "config_sources",
+"errors"}``) or ``{"error"}``. ``status`` is a report: it exits 1 when it lists
+any problem that would fail a commit and 2 only when it cannot run. A blocking
+``run`` exits with the highest ``exit_code`` among the problems it reports.
+"""
+
 from __future__ import annotations
 
-import functools
-import json
 import os
 import sys
-from collections.abc import Callable
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 import click
 
-from devkit.advisory import AdvisoryError, ExitCode, as_advisory_error
-from devkit.gate import git, hooks
-from devkit.gate.config import GatesConfig, load_gates_config
-from devkit.gate.models import GateConfigError, GateContext, Outcome, Stage
-from devkit.gate.registry import GateRegistry, project_registry
-from devkit.gate.runner import StageReport, Validation, run_stage, validate
+from devkit.advisory import as_advisory_error
+from devkit.core import require_git_toplevel
+from devkit.core.cli import (
+    FORMAT_OPTION,
+    boundary,
+    echo_json,
+    existing_directory,
+    is_json,
+    report_exit_code,
+    workspace_option,
+)
+from devkit.gate.engine.models import Outcome, Stage
+from devkit.gate.engine.registry import display_path
+from devkit.gate.engine.runner import StageReport, load_gate_project, run_hook
+from devkit.gate.hooks import hooks
 
 VERBOSE_ENV = "DEVKIT_GATES_VERBOSE"
 
-WORKSPACE = click.option(
-    "--workspace-root",
-    "-w",
-    default=".",
-    type=click.Path(exists=True, file_okay=False, dir_okay=True),
-    help="Any directory inside the repository (gates always run for the work tree's top level)",
-)
-FORMAT = click.option(
-    "--format", "output_format", type=click.Choice(["text", "json"]), default="text", help="Output format"
+WORKSPACE = workspace_option(
+    "Any directory inside the repository [default: the current directory]; "
+    "gates always run for the work tree's top level"
 )
 
 
-def _boundary(fn: Callable[..., None]) -> Callable[..., None]:
-    """Render any error as an advisory on stderr (and as ``{"error": ...}`` on stdout under --format json).
-
-    The process exits with the error's ``exit_code``: ``2`` (``ERROR``) unless the error says otherwise.
-    """
-
-    @functools.wraps(fn)
-    def wrapper(*args: Any, **kwargs: Any) -> None:
-        try:
-            fn(*args, **kwargs)
-        except (click.exceptions.Exit, click.ClickException, SystemExit):
-            raise
-        except Exception as exc:
-            error = as_advisory_error(exc)
-            if kwargs.get("output_format") == "json":
-                click.echo(json.dumps({"error": error.to_dict()}))
-            click.echo(error.render(), err=True)
-            sys.exit(int(error.exit_code))
-
-    return wrapper
+def _start(workspace_root: str | None) -> Path:
+    """``--workspace-root`` (an existing directory) or the current directory."""
+    return existing_directory(workspace_root) if workspace_root is not None else Path.cwd()
 
 
-def _rel(path: Path, root: Path) -> str:
-    return path.relative_to(root).as_posix() if path.is_relative_to(root) else str(path)
-
-
-@dataclass(frozen=True)
-class _Project:
-    """Everything ``status`` and ``run`` read: the repository, its gates and their validated configuration."""
-
-    root: Path
-    git_dir: Path
-    common_git_dir: Path
-    registry: GateRegistry
-    config: GatesConfig
-    validation: Validation  # includes a configuration file that cannot be loaded
-
-
-def _load(workspace_root: str) -> _Project:
-    cwd = Path(workspace_root)
-    root = git.repo_root(cwd)
-    common = git.common_git_dir(root)
-    registry = project_registry(root)
-    load_errors: list[AdvisoryError] = []
-    try:
-        config = load_gates_config(root, common)
-    except GateConfigError as exc:
-        config = GatesConfig()
-        load_errors.append(exc)
-    checked = validate(registry, config)
-    validation = Validation(checked.settings, (*load_errors, *checked.errors))
-    return _Project(root, git.git_dir(root), common, registry, config, validation)
+def _repo_root(workspace_root: str | None) -> Path:
+    """The Git top level containing ``--workspace-root`` (default: the current directory)."""
+    return require_git_toplevel(_start(workspace_root))
 
 
 @click.group(name="gate")
-@click.version_option(package_name="devkit")
 def cli() -> None:
     """Pluggable Git commit gates."""
 
@@ -105,33 +71,33 @@ def cli() -> None:
     default=None,
     help="Fallback interpreter the wrappers exec when the work tree's .venv has no devkit (default: this one)",
 )
-@_boundary
-def install_cmd(workspace_root: str, force: bool, python: str | None) -> None:
+@boundary
+def install_cmd(workspace_root: str | None, force: bool, python: str | None) -> None:
     """Install the pre-commit, commit-msg and post-commit wrappers."""
-    for action in hooks.install(Path(workspace_root), python or sys.executable, force=force):
+    for action in hooks.install(_repo_root(workspace_root), python or sys.executable, force=force):
         click.echo(f"[HOOK: {action}]")
 
 
 @cli.command(name="uninstall")
 @WORKSPACE
-@_boundary
-def uninstall_cmd(workspace_root: str) -> None:
+@boundary
+def uninstall_cmd(workspace_root: str | None) -> None:
     """Remove managed wrappers and restore hooks moved aside by install."""
-    actions = hooks.uninstall(Path(workspace_root))
+    actions = hooks.uninstall(_repo_root(workspace_root))
     for action in actions or ["no managed hooks"]:
         click.echo(f"[HOOK: {action}]")
 
 
 @cli.command(name="status")
 @WORKSPACE
-@FORMAT
-@_boundary
-def status_cmd(workspace_root: str, output_format: str) -> None:
+@FORMAT_OPTION
+@boundary
+def status_cmd(workspace_root: str | None, output_format: str) -> None:
     """Show hook wrappers, every known gate with its effective state, the configuration layers and every problem
     that would fail a commit.
 
-    Exits 1 when any such problem is reported, 2 when the status cannot be read (not a Git work tree)."""
-    project = _load(workspace_root)
+    Exits 1 when any problem is reported and 2 when the status cannot be read (not a Git work tree)."""
+    project = load_gate_project(_start(workspace_root))
     location = hooks.locate(project.root)
     hook_rows = [
         {
@@ -154,26 +120,24 @@ def status_cmd(workspace_root: str, output_format: str) -> None:
         }
         for gate in project.registry.get_all()
     ]
-    sources = [_rel(path, project.root) for path in project.config.sources]
+    sources = [display_path(path, project.root) for path in project.config.sources]
     errors = project.validation.errors
-    if output_format == "json":
-        click.echo(
-            json.dumps(
-                {
-                    "hooks_dir": str(location.directory),
-                    "hooks_path": location.hooks_path,
-                    "hooks": hook_rows,
-                    "gates": gate_rows,
-                    "config_sources": sources,
-                    "errors": [error.to_dict() for error in errors],
-                }
-            )
+    if is_json(output_format):
+        echo_json(
+            {
+                "hooks_dir": str(location.directory),
+                "hooks_path": location.hooks_path,
+                "hooks": hook_rows,
+                "gates": gate_rows,
+                "config_sources": sources,
+                "errors": [error.to_dict() for error in errors],
+            }
         )
         if errors:
-            sys.exit(int(ExitCode.FINDINGS))
+            sys.exit(report_exit_code(errors))
         return
     hooks_path = f" core.hooksPath={location.hooks_path} (wrappers do not run)" if location.hooks_path else ""
-    click.echo(f"[HOOKS: dir={_rel(location.directory, project.root)}{hooks_path}]")
+    click.echo(f"[HOOKS: dir={display_path(location.directory, project.root)}{hooks_path}]")
     for row in hook_rows:
         extra = f" python={row['python']} python_ok={str(row['python_ok']).lower()}" if row["python"] else ""
         click.echo(f"[HOOK: {row['stage']} state={row['state']}{extra}]")
@@ -186,7 +150,7 @@ def status_cmd(workspace_root: str, output_format: str) -> None:
     for error in errors:
         click.echo(error.render(), err=True)
     if errors:
-        sys.exit(int(ExitCode.FINDINGS))
+        sys.exit(report_exit_code(errors))
 
 
 def _report(report: StageReport, verbose: bool) -> None:
@@ -207,32 +171,21 @@ def _report(report: StageReport, verbose: bool) -> None:
 @click.option("--verbose", "-v", is_flag=True, help=f"Also report passed and skipped gates (or set {VERBOSE_ENV}=1)")
 @click.argument("stage", type=click.Choice([stage.value for stage in Stage]))
 @click.argument("hook_args", nargs=-1, type=click.UNPROCESSED)
-@_boundary
-def run_cmd(workspace_root: str, verbose: bool, stage: str, hook_args: tuple[str, ...]) -> None:
+@boundary
+def run_cmd(workspace_root: str | None, verbose: bool, stage: str, hook_args: tuple[str, ...]) -> None:
     """Run one stage's gates; this is what the hook wrappers call.
 
-    A blocking stage exits 1 when a gate refused the commit or the gate setup has problems, and 2 when the
-    stage cannot run at all (not a Git work tree, an unexpected error). post-commit always exits 0."""
+    A blocking stage exits with the highest exit code among its problems: 1 when gates refused the commit,
+    2 when the gate setup has a configuration, registry or load problem, a gate failed unexpectedly, or the
+    stage cannot run at all (not a Git work tree). post-commit always exits 0."""
     current = Stage(stage)
     try:
-        project = _load(workspace_root)
-        report = run_stage(
-            GateContext(
-                repo_root=project.root,
-                git_dir=project.git_dir,
-                common_git_dir=project.common_git_dir,
-                stage=current,
-                args=hook_args,
-            ),
-            project.registry,
-            project.config,
-            project.validation,
-        )
+        report = run_hook(_start(workspace_root), current, hook_args)
     except Exception as exc:
         if current.blocking:
             raise
         click.echo(as_advisory_error(exc).render(), err=True)  # the commit exists; report only
         return
     _report(report, verbose or os.environ.get(VERBOSE_ENV) == "1")
-    if report.failed and current.blocking:
-        sys.exit(int(ExitCode.FINDINGS))
+    if current.blocking and not report.ok:
+        sys.exit(int(report.exit_code))

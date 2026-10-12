@@ -84,28 +84,30 @@ The distribution tooling lives in `packages/devkit/src/devkit/distribution/`. It
 (frontmatter grammar, the typed receipt reader, safe relative paths, project root discovery) and may import
 only `devkit.core` and `devkit.advisory`. The library surface is exported from `devkit.distribution`
 (`sync_project`, `load_bundle`, `get_context`, `search_playbooks`, the override operations, `plan_bundle`,
-`project_status`, `project_listing` and their `TypedDict` results).
+`get_project_status`, `get_project_listing` and their results: frozen dataclasses whose `to_dict()` is the JSON the
+command prints). Modules import each other by absolute path (`devkit.distribution...`), never relatively.
 
-- `bundles/` (authoring side; no workspace knowledge):
-  - `common.py`: slug and version grammars, the reserved `all` preset, supported agent names.
+- `content.py`: the neutral file content helpers shared by both sides: `Content` (bytes plus mode), `normal_mode`, `same_content`, the one `sha256` digest helper, canonical JSON (`json_content`) and the receipt `signature`.
+- `bundles/` (authoring side; no workspace knowledge, imports nothing from `installation/`):
+  - `common.py`: slug, version and `x-<name>` extension key grammars, the reserved `all` preset, supported agent names, and `read_frontmatter`/`locate_frontmatter` (UTF-8 decoding and the shared frontmatter grammar, every failure a `BundleError`).
   - `manifest.py`: `bundle.toml` schema 1, source path rules (canonical relative POSIX, no backslash, no symlink), seeded targets, `source_files` (skips `.DS_Store`, `__pycache__/`, `*.pyc`), and kind-specific validation at load.
   - `instructions.py`, `playbooks.py`, `workflows.py`, `subagents.py`: headers of each kind on the shared frontmatter grammar; role contract rendering per agent.
   - `guidance.py`: the context-loading prerequisite inserted after a skill's frontmatter.
-  - `package.py`: deterministic ZIP archives with a hashed inventory.
+  - `package.py`: deterministic ZIP archives with a hashed inventory, built on `content.py`.
 - `installation/` (consumer workspace side):
-  - `workspace.py`: well-known paths (`.devkit/...`, root `AGENTS.md`), path safety for reads and writes, file content and mode normalization.
-  - `transaction.py`: the project lock (`.devkit/transient/lock`), the write-ahead journal, atomic replacement, recovery and directory pruning.
+  - `workspace.py`: well-known paths (`.devkit/...`, root `AGENTS.md`), path safety for reads and writes, and file snapshots.
+  - `transaction.py`: the project lock (`.devkit/transient/lock`), the write-ahead journal, atomic replacement (also used to save `.devkit/config.toml`), recovery and directory pruning (`prune_empty_parents`, up to an owned prefix or a given stop directory).
   - `receipt.py`: strict receipt reading (`devkit.core.receipt` plus ownership rules) and serialization.
   - `config.py`: `.devkit/config.toml` reading, selection resolution, and edits checked before a sync and saved after it.
   - `discovery.py`: installed bundles via the `devkit.bundles` entry-point group; built-in bundles.
   - `inventory.py`: the desired state (`Inventory`): managed copies, native projections per agent, role contract rendering, generated entry skills, seeds and override tracking.
   - `overrides.py`: which file a deployment reads (override or upstream) and whole-asset drift tracking.
   - `override_commands.py`: `override create|diff|accept|remove|list`.
-  - `sync.py`: `sync_project` (lock, `sync_locked`, then post-sync hooks) and recovery.
+  - `sync.py`: `sync_project` (lock, `sync_locked`, then post-sync hooks) and recovery. `sync_locked` resolves the selection, refuses override drift under `override_drift = "block"`, plans managed files (collecting orphans as notices), seeds and the guidance block, builds the receipt and assembles the `SyncResult`.
   - `guidance_block.py`: the root `AGENTS.md` block.
   - `context.py`, `playbook_search.py`, `reading.py`: agent-facing reads of receipt-recorded files under the shared lock.
-  - `status.py`, `plan.py`, `results.py`: `status` and `list` reports, `bundle plan`, and the JSON result types.
+  - `status.py`, `plan.py`, `results.py`: `status` (with its problems under `errors`) and `list` reports, `bundle plan`, and the result dataclasses with their JSON forms.
   - `playbook_skill.py`, `workflow_skill.py`: the generated `devkit-playbook` and `devkit-workflow` entry skills.
-  - `hooks.py`: the `devkit.post_sync` extension point.
-- `errors.py`: the `DistributionError` hierarchy (`BundleError`, `SelectionError`, `ConflictError`, `LockHeldError`, ...), each an `AdvisoryError` with a stable code; see the [reference](reference.md#error-codes).
-- `cli/`: the distribution commands of the `devkit` CLI: `sync`, `add`, `remove`, `list`, `status`, `recover`, `get-context`, `playbook search`, `override` (`create`, `diff`, `accept`, `remove`, `list`) and `bundle` (`validate`, `plan`, `build`). Every command takes `-w/--workspace-root`, prints one JSON document (the result, or `{"error": {...}}`), renders an error as an advisory on stderr and exits `2` on error (`1` only for `sync --check` when a sync is needed).
+  - `hooks.py`: the `devkit.post_sync` extension point; what a hook returns becomes coded notices.
+- `errors.py`: the `DistributionError` hierarchy (`BundleError`, `SelectionError`, `ConflictError`, `LockHeldError`, ...), each an `AdvisoryError` with a stable code, one class per code, and the `SyncNotice` classes a successful sync collects (`ORPHAN_LEFT`, `TOOL_VERSION_CHANGED`, `POST_SYNC_NOTICE`, `POST_SYNC_HOOK_FAILED`); see the [reference](reference.md#error-codes).
+- `cli/`: the distribution commands of the `devkit` CLI: `sync`, `add`, `remove`, `list`, `status`, `recover`, `get-context`, `playbook search`, `override` (`create`, `diff`, `accept`, `remove`, `list`) and `bundle` (`validate`, `plan`, `build`). `register(cli)` adds them to the root `devkit` group. Every command takes `-w/--workspace-root`, prints exactly one JSON object (the result, or `{"error": {...}}`), renders an error as an advisory on stderr and exits `2` on error (`1` for `sync --check` when a sync is needed and for `status` when its report shows a problem, listed under `errors`). Warnings and notices go to stderr as `[WARNING: (CODE) ...]` and `[NOTICE: ...]` lines.

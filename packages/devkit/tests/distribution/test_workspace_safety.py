@@ -8,8 +8,9 @@ from pathlib import Path
 
 import pytest
 from devkit.core.errors import ReceiptError
+from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH
 from devkit.distribution.bundles import build_bundle, load_bundle
-from devkit.distribution.bundles.subagents import read_contract, render
+from devkit.distribution.bundles.subagents import read_contract, render_projection
 from devkit.distribution.errors import BundleError, DistributionError, LockHeldError, UnsafeWorkspaceError
 from devkit.distribution.installation import hooks, transaction
 from devkit.distribution.installation.config import update_config
@@ -18,7 +19,7 @@ from devkit.distribution.installation.discovery import InstalledBundle
 from devkit.distribution.installation.guidance_block import START
 from devkit.distribution.installation.receipt import read_receipt
 from devkit.distribution.installation.sync import sync_project
-from devkit.distribution.installation.workspace import AGENTS_FILE, CONFIG, LOCK, RECEIPT, project_path
+from devkit.distribution.installation.workspace import AGENTS_FILE, LOCK, project_path
 from testsupport.distribution import instruction, write_bundle
 
 MANIFEST = """schema = 1
@@ -80,10 +81,11 @@ def test_transactions_never_write_reserved_paths_in_any_case(tmp_path: Path, nam
 def test_symlinked_agents_md_is_left_alone_when_the_block_is_off(item: InstalledBundle, target: Path) -> None:
     (target / "CLAUDE.md").write_text("# Project\n")
     (target / AGENTS_FILE).symlink_to("CLAUDE.md")
-    with pytest.raises(UnsafeWorkspaceError, match="guidance_block = false"):
+    with pytest.raises(UnsafeWorkspaceError, match="is a symlink") as raised:
         sync_project(target, [item])
-    (target / CONFIG).write_text("guidance_block = false\n" + (target / CONFIG).read_text())
-    assert sync_project(target, [item])["actions"]
+    assert "guidance_block = false" in (raised.value.fix or "")
+    (target / CONFIG_PATH).write_text("guidance_block = false\n" + (target / CONFIG_PATH).read_text())
+    assert sync_project(target, [item]).to_dict()["actions"]
     assert (target / AGENTS_FILE).is_symlink() and (target / "CLAUDE.md").read_text() == "# Project\n"
 
 
@@ -94,9 +96,9 @@ def test_crlf_agents_md_keeps_one_block_and_its_line_endings(item: InstalledBund
     assert data.count(START.encode()) == 1 and b"\n" not in data.replace(b"\r\n", b"")
     # A checkout that converts the file to LF (or back) is not an edit.
     (target / AGENTS_FILE).write_bytes(data.replace(b"\r\n", b"\n"))
-    assert sync_project(target, [item])["actions"] == []
+    assert sync_project(target, [item]).to_dict()["actions"] == []
     (target / AGENTS_FILE).write_bytes(data)
-    assert sync_project(target, [item])["actions"] == []
+    assert sync_project(target, [item]).to_dict()["actions"] == []
     assert (target / AGENTS_FILE).read_bytes().count(START.encode()) == 1
 
 
@@ -110,11 +112,11 @@ def test_receipt_paths_cannot_leave_the_project(item: InstalledBundle, target: P
     sync_project(target, [item])
     (target / ".devkit/overrides/team").mkdir(parents=True)
     (tmp_path / "secret.md").write_text(instruction("secret"))
-    receipt = json.loads((target / RECEIPT).read_text())
+    receipt = json.loads((target / RECEIPT_PATH).read_text())
     for asset in receipt["assets"]:
         if asset["id"] == "guide":
             asset["paths"] = [".devkit/overrides/team/../../../../secret.md"]
-    (target / RECEIPT).write_text(json.dumps(receipt))
+    (target / RECEIPT_PATH).write_text(json.dumps(receipt))
     with pytest.raises(ReceiptError, match=r"must not contain '\.\.'"):
         get_context(target, "team")
 
@@ -129,9 +131,9 @@ def test_receipt_paths_cannot_leave_the_project(item: InstalledBundle, target: P
 )
 def test_malformed_receipt_entries_are_receipt_errors(item: InstalledBundle, target: Path, mutate, match: str) -> None:
     sync_project(target, [item])
-    receipt = json.loads((target / RECEIPT).read_text())
+    receipt = json.loads((target / RECEIPT_PATH).read_text())
     mutate(receipt)
-    (target / RECEIPT).write_text(json.dumps(receipt))
+    (target / RECEIPT_PATH).write_text(json.dumps(receipt))
     with pytest.raises(ReceiptError, match=match) as raised:
         get_context(target, "team")
     assert raised.value.code == "RECEIPT_INVALID"
@@ -145,7 +147,7 @@ def test_readers_share_the_lock_and_writers_exclude_them(
     sync_project(target, [item])
     assert (target / LOCK).is_file()
     with transaction.project_lock(target, shared=True):
-        assert get_context(target, "team")["bundle"] == "team"
+        assert get_context(target, "team").to_dict()["bundle"] == "team"
         with pytest.raises(LockHeldError, match="project lock"):
             sync_project(target, [item])
     monkeypatch.setattr(transaction, "READ_LOCK_TIMEOUT", 0.05)
@@ -168,7 +170,7 @@ def test_reader_waits_for_a_writer(item: InstalledBundle, target: Path) -> None:
     try:
         timer = threading.Timer(0.2, released.set)
         timer.start()
-        assert get_context(target, "team")["bundle"] == "team"
+        assert get_context(target, "team").to_dict()["bundle"] == "team"
     finally:
         released.set()
         writer.join()
@@ -178,11 +180,11 @@ def test_post_sync_hooks_run_after_the_lock_is_released(
     item: InstalledBundle, target: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     def hook(root: Path, result: dict) -> list[str]:
-        return [f"hook read {get_context(root, 'team')['bundle']}"]
+        return [f"hook read {get_context(root, 'team').to_dict()['bundle']}"]
 
     entry = type("Entry", (), {"name": "reader", "value": "x:reader", "load": staticmethod(lambda: hook)})()
     monkeypatch.setattr(hooks.metadata, "entry_points", lambda group: [entry] if group == hooks.GROUP else [])
-    assert sync_project(target, [item])["notices"] == ["hook read team"]
+    assert [notice.message for notice in sync_project(target, [item]).notices] == ["hook read team"]
 
 
 def test_removed_projections_leave_no_empty_directories(item: InstalledBundle, target: Path) -> None:
@@ -215,9 +217,9 @@ def test_editing_byproducts_are_not_bundle_content(tmp_path: Path) -> None:
     target.mkdir()
     update_config(target, presets={"team": ["all"]}, agents=["claude-code"])
     sync_project(target, [item])
-    names = json.loads((target / RECEIPT).read_text())["files"]
+    names = json.loads((target / RECEIPT_PATH).read_text())["files"]
     assert not any(".DS_Store" in name or "pycache" in name or name.endswith(".pyc") for name in names)
-    result = build_bundle(load_bundle(root), tmp_path / "out.zip")
+    result = build_bundle(load_bundle(root), tmp_path / "out.zip").to_dict()
     assert result["files"] == 4  # bundle.toml, guide.md, SKILL.md, inventory.json
 
 
@@ -279,6 +281,6 @@ def test_rendered_description_keeps_line_breaks() -> None:
         b"  claude-code: native\n---\nPrompt.\n",
         "test",
     )
-    rendered = render("claude-code", contract, ".devkit/managed/b/r.md")
+    rendered = render_projection("claude-code", contract, ".devkit/managed/b/r.md")
     assert rendered is not None
     assert b'description: "Reviewer. First line.\\nSecond line."' in rendered

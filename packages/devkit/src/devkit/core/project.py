@@ -1,4 +1,4 @@
-"""Locate a devkit project and read its ``.devkit/config.toml``."""
+"""Locate a devkit project and read its configuration files."""
 
 from __future__ import annotations
 
@@ -12,17 +12,45 @@ from devkit.core.git import run_git
 from devkit.core.receipt import CONFIG_PATH
 
 DEVKIT_DIR = ".devkit"
-_GIT_TIMEOUT = 10.0
+TOPLEVEL_FIX = "Run from inside the repository, or pass --workspace-root/-w a directory inside it"
+
+
+def require_git_toplevel(start: Path) -> Path:
+    """The resolved top-level directory of the Git work tree containing ``start``.
+
+    Raises ``GitError`` (``GIT_FAILED``, an input error naming
+    ``--workspace-root``) when ``start`` is not inside a Git work tree or Git
+    cannot run.
+    """
+    try:
+        output = run_git(start, "rev-parse", "--show-toplevel")
+    except GitError as exc:
+        raise GitError(
+            f"{start} is not inside a Git work tree: {exc.message}",
+            command=exc.command,
+            returncode=exc.returncode,
+            stderr=exc.stderr,
+            input_error=True,
+            target_files=["--workspace-root"],
+            fix=TOPLEVEL_FIX,
+        ) from exc
+    text = os.fsdecode(output.rstrip(b"\n"))
+    if not text:
+        raise GitError(
+            f"{start} is not inside a Git work tree (a bare repository has none)",
+            input_error=True,
+            target_files=["--workspace-root"],
+            fix=TOPLEVEL_FIX,
+        )
+    return Path(text).resolve()
 
 
 def git_toplevel(start: Path) -> Path | None:
-    """The resolved top-level directory of the Git work tree containing ``start``, or ``None``."""
+    """``require_git_toplevel(start)``, or ``None`` when ``start`` is not inside a Git work tree."""
     try:
-        output = run_git(start, "rev-parse", "--show-toplevel", timeout=_GIT_TIMEOUT)
+        return require_git_toplevel(start)
     except GitError:
         return None
-    text = os.fsdecode(output.rstrip(b"\n"))
-    return Path(text).resolve() if text else None
 
 
 def find_project_root(start: Path) -> Path:
@@ -49,17 +77,34 @@ def find_project_root(start: Path) -> Path:
     return toplevel if toplevel is not None else origin
 
 
-def read_project_config(root: Path) -> dict[str, Any]:
-    """Parse ``root/.devkit/config.toml``; a missing file is ``{}``.
+def read_toml(path: Path, display: str | None = None) -> dict[str, Any] | None:
+    """Parse the TOML file at ``path``; ``None`` when it does not exist.
 
-    Raises ``ConfigError`` when the file exists but cannot be read, is not
-    UTF-8 or is not valid TOML. The tables are returned unvalidated; each
-    package validates the tables it owns.
+    Raises ``ConfigError`` (``CONFIG_INVALID``, targeting ``display``, default
+    ``str(path)``) when the file exists but cannot be read, is not UTF-8 or is
+    not valid TOML, including a dangling symlink or a directory in its place.
     """
-    path = root / CONFIG_PATH
     if not path.exists() and not path.is_symlink():
-        return {}
+        return None
+    name = display if display is not None else str(path)
     try:
         return tomllib.loads(path.read_text("utf-8"))
     except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
-        raise ConfigError(f"invalid config {CONFIG_PATH}: {exc}") from exc
+        raise ConfigError(f"invalid config {name}: {exc}", target_files=[name]) from exc
+
+
+def read_project_config(root: Path) -> dict[str, Any]:
+    """Parse ``root/.devkit/config.toml``; a missing file is ``{}``.
+
+    Raises ``ConfigError`` (``CONFIG_INVALID``) as ``read_toml`` does. The
+    tables are returned unvalidated; each area validates the tables it owns and
+    reports a malformed one with its own ``ConfigError`` subclass.
+    """
+    return read_toml(root / CONFIG_PATH, CONFIG_PATH) or {}
+
+
+def config_table[E: ConfigError](value: object, context: str, error: type[E]) -> dict[str, Any]:
+    """``value`` when it is a TOML table; otherwise raise ``error`` naming ``context`` (``config <context>: ...``)."""
+    if not isinstance(value, dict):
+        raise error(f"config {context}: expected a table")
+    return value

@@ -291,3 +291,51 @@ def test_verified_asset_file_checks_recorded_hashes_and_snapshot_fallback(tmp_pa
     (tmp_path / ".devkit/managed/team/link.py").symlink_to(tmp_path.parent / "elsewhere.py")
     with pytest.raises(AssetFileError, match="unsafe"):
         verified_asset_file(tmp_path, ".devkit/managed/team/link.py", receipt, asset)
+
+
+def test_verified_asset_files_lists_every_file_of_a_kind_whatever_its_name(tmp_path: Path) -> None:
+    from devkit.core import verified_asset_files
+
+    files = {
+        ".devkit/managed/team/_helpers.py": b"a = 1\n",
+        ".devkit/managed/team/entry.py": b"b = 2\n",
+        ".devkit/managed/team/notes.md": b"# notes\n",
+    }
+    for rel, data in files.items():
+        (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / rel).write_bytes(data)
+    receipt = parse_receipt(
+        json.dumps(
+            {
+                "schema": 1,
+                "packages": [],
+                "selection": {"agents": [], "presets": {}},
+                "assets": [
+                    {
+                        "bundle": "team",
+                        "id": "x",
+                        "kind": "rule",
+                        "entrypoints": [".devkit/managed/team/entry.py"],
+                        "paths": [
+                            ".devkit/managed/team/_helpers.py",
+                            ".devkit/managed/team/entry.py",
+                            ".devkit/managed/team/notes.md",
+                            ".devkit/managed/team/gone.py",
+                        ],
+                    },
+                    {"bundle": "team", "id": "g", "kind": "gate", "paths": [".devkit/managed/team/entry.py"]},
+                ],
+                "files": {
+                    rel: {"sha256": hashlib.sha256(data).hexdigest(), "mode": 420} for rel, data in files.items()
+                },
+            }
+        )
+    )
+    paths, errors = verified_asset_files(tmp_path, receipt, "rule")
+    assert [p.relative_to(tmp_path).as_posix() for p in paths] == [
+        ".devkit/managed/team/entry.py",  # entrypoints first, listed once
+        ".devkit/managed/team/_helpers.py",  # never skipped for its name
+    ]
+    assert [(e.code, e.target_files) for e in errors] == [("ASSET_FILE_INVALID", (".devkit/managed/team/gone.py",))]
+    markdown, _ = verified_asset_files(tmp_path, receipt, "rule", ".md")
+    assert [p.name for p in markdown] == ["notes.md"]

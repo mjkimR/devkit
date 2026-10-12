@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import dataclasses
 import fnmatch
+import types
 import typing
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -88,24 +89,50 @@ def match_path(pattern: str, file: str) -> bool:
 
 
 _SCALARS: dict[Any, str] = {int: "integer", float: "number", str: "string", bool: "boolean"}
+SUPPORTED_TYPES_HINT = "int, float, str, bool or list[str], optionally `| None`"
 
 
-def _describe(annotation: Any) -> str:
+def _optional_of(annotation: Any) -> Any | None:
+    """``X`` for an ``X | None`` (``Optional[X]``) annotation, else ``None``."""
+    if typing.get_origin(annotation) not in (typing.Union, types.UnionType):
+        return None
+    args = typing.get_args(annotation)
+    inner = [arg for arg in args if arg is not type(None)]
+    return inner[0] if len(args) == 2 and len(inner) == 1 else None
+
+
+def describe_setting_type(annotation: Any) -> str:
+    """How a supported settings field type reads in an error; raises ``TypeError`` for any other type.
+
+    The one type vocabulary of rule and gate settings (``devkit.gate`` reuses
+    it): ``int``, ``float``, ``str``, ``bool`` and ``list[str]``, each optionally
+    ``| None``.
+    """
+    inner = _optional_of(annotation)
+    if inner is not None:
+        return f"{describe_setting_type(inner)} or null"
     if annotation in _SCALARS:
         return _SCALARS[annotation]
     if typing.get_origin(annotation) is list and typing.get_args(annotation) == (str,):
         return "array of strings"
-    raise SettingsError(
-        f"unsupported settings field type {annotation!r}; use int, float, str, bool or list[str]",
-        input_error=False,
-        target_files=[],
-    )
+    raise TypeError(f"unsupported settings field type {annotation!r}; use {SUPPORTED_TYPES_HINT}")
 
 
-def _check_value(name: str, annotation: Any, value: Any) -> Any:
-    expected = _describe(annotation)
+def check_setting_value(annotation: Any, value: Any) -> Any:
+    """``value`` checked against a field's type and converted (an integer for a float becomes a float, a list is copied).
+
+    ``null`` is accepted only by an ``| None`` field. Raises ``ValueError``
+    (``expected <type>, got <value>``) for a value of the wrong type and
+    ``TypeError`` for an unsupported annotation.
+    """
+    expected = describe_setting_type(annotation)
+    inner = _optional_of(annotation)
+    if inner is not None:
+        if value is None:
+            return None
+        annotation = inner
     if value is None:
-        raise SettingsError(f"{name}: null is not allowed")
+        raise ValueError("null is not allowed")
     if annotation is bool:
         ok = isinstance(value, bool)
     elif annotation is int:
@@ -121,8 +148,23 @@ def _check_value(name: str, annotation: Any, value: Any) -> Any:
         if ok:
             value = list(value)
     if not ok:
-        raise SettingsError(f"{name}: expected {expected}, got {value!r}")
+        raise ValueError(f"expected {expected}, got {value!r}")
     return value
+
+
+def _describe(annotation: Any) -> str:
+    try:
+        return describe_setting_type(annotation)
+    except TypeError as exc:
+        raise SettingsError(str(exc), input_error=False, target_files=[]) from None
+
+
+def _check_value(name: str, annotation: Any, value: Any) -> Any:
+    _describe(annotation)
+    try:
+        return check_setting_value(annotation, value)
+    except ValueError as exc:
+        raise SettingsError(f"{name}: {exc}") from None
 
 
 def declared_settings(rule: Rule) -> Any | None:

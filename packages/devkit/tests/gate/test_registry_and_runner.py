@@ -11,16 +11,19 @@ from devkit.gate import (
     GateContext,
     GateEntry,
     GateError,
+    GateLoadError,
+    GateRefusedError,
     GateRegistry,
     GateResult,
+    GateResultError,
     GatesConfig,
     Outcome,
     Stage,
-    default_registry,
+    default_gate_registry,
     deployed_gate_paths,
     project_registry,
     run_stage,
-    validate,
+    validate_gates,
 )
 from testsupport.gate import deploy_gate, gate_ctx, gate_source
 
@@ -50,8 +53,15 @@ def test_deployed_gate_paths_reads_gate_assets_only(tmp_path: Path) -> None:
         ".devkit/managed/team/gates/block.py",
         ".devkit/overrides/team/gates/other.py",
     ]
-    assert [e.message for e in deployed.errors] == ["deployed gate file gone.py is missing"]
+    assert [(e.code, e.message) for e in deployed.errors] == [("ASSET_FILE_INVALID", "gone.py is missing")]
     assert deployed.errors[0].target_files == ("gone.py",) and deployed.errors[0].fix == "Run `devkit sync`"
+
+
+def test_receipt_listed_gate_files_load_whatever_their_name(tmp_path: Path) -> None:
+    deploy_gate(tmp_path, gate_source("private-gate"), ".devkit/managed/team/gates/_private.py", record=True)
+    deployed = deployed_gate_paths(tmp_path)
+    assert [p.name for p in deployed.paths] == ["_private.py"] and deployed.errors == ()
+    assert project_registry(tmp_path).get("private-gate") is not None
 
 
 def test_gate_files_are_checked_against_the_receipt_hash(tmp_path: Path) -> None:
@@ -100,6 +110,7 @@ def test_project_registry_loads_gates_and_reports_problems(tmp_path: Path) -> No
     messages = [e.message for e in registry.errors]
     assert any("failed to load gate file .devkit/managed/team/gates/broken.py: boom" in m for m in messages)
     assert any("duplicate gate id 'message-nonempty'" in m for m in messages)
+    assert all(isinstance(e, GateLoadError) and e.code == "GATE_LOAD_FAILED" for e in registry.errors)
 
 
 def test_a_gate_file_loads_atomically(tmp_path: Path) -> None:
@@ -174,18 +185,34 @@ def test_run_stage_orders_gates_and_runs_past_failures(tmp_path: Path) -> None:
         ("team-block", Outcome.FAILED),
         ("late", Outcome.PASSED),
     ]
-    assert report.failed and report.runs[2].error is not None and report.runs[2].error.code == "TEST_REFUSED"
+    assert not report.ok and report.runs[2].error is not None and report.runs[2].error.code == "TEST_REFUSED"
+    assert report.problems == (report.runs[2].error,) and report.exit_code is ExitCode.FINDINGS
 
 
 def test_gate_result_cannot_report_failure() -> None:
-    with pytest.raises(GateConfigError, match="refuse by raising GateError") as info:
+    with pytest.raises(GateResultError, match="refuse by raising GateRefusedError") as info:
         GateResult(Outcome.FAILED, "why")
     assert (info.value.code, info.value.mode) == ("GATE_RESULT_INVALID", ActionMode.MAINTENANCE)
 
 
 def test_gate_refusals_exit_findings_and_config_errors_exit_error() -> None:
-    assert GateError.blocked("refused").exit_code is ExitCode.FINDINGS
-    assert GateConfigError("bad").exit_code is ExitCode.ERROR
+    refused = GateRefusedError("refused", fix="Do it differently")
+    assert (refused.code, refused.exit_code, refused.mode) == ("GATE_FAILED", ExitCode.FINDINGS, ActionMode.BLOCKED)
+    config = GateConfigError("bad")
+    assert (config.code, config.exit_code, config.mode) == (
+        "GATE_CONFIG_INVALID",
+        ExitCode.ERROR,
+        ActionMode.INPUT_ERROR,
+    )
+    assert all(isinstance(error, GateError) for error in (refused, config))
+
+
+def test_stage_report_exits_with_the_highest_problem_exit_code(tmp_path: Path) -> None:
+    deploy_gate(tmp_path, gate_source())
+    config = GatesConfig({**_NO_RULES_GATE.gates, "typo": GateEntry(True)})
+    report = run_stage(gate_ctx(tmp_path), project_registry(tmp_path), config)
+    assert [e.code for e in report.problems] == ["GATE_CONFIG_INVALID", "TEST_REFUSED"]
+    assert report.exit_code is ExitCode.ERROR
 
 
 def test_every_failed_run_carries_an_error(tmp_path: Path) -> None:
@@ -202,7 +229,7 @@ def test_every_failed_run_carries_an_error(tmp_path: Path) -> None:
     report = run_stage(gate_ctx(tmp_path), registry, GatesConfig())
     assert [r.outcome for r in report.runs] == [Outcome.FAILED, Outcome.FAILED]
     assert all(r.error is not None for r in report.runs)
-    assert report.runs[0].error is not None and "refuse by raising GateError" in report.runs[0].error.message
+    assert report.runs[0].error is not None and "refuse by raising GateRefusedError" in report.runs[0].error.message
     assert report.runs[1].error is not None and report.runs[1].error.code == "GATE_RESULT_INVALID"
 
 
@@ -217,32 +244,33 @@ def test_run_stage_applies_enabled_and_settings(tmp_path: Path) -> None:
 
     config = GatesConfig({**_NO_RULES_GATE.gates, "team-block": GateEntry(True, {"allow": True})})
     report = run_stage(gate_ctx(tmp_path), registry, config)
-    assert not report.failed and report.runs[1].note == "allowed"
+    assert report.ok and report.runs[1].note == "allowed"
 
     config = GatesConfig({**_NO_RULES_GATE.gates, "team-block": GateEntry(True, {"allow": "yes"})})
     report = run_stage(gate_ctx(tmp_path), registry, config)
-    assert report.failed and report.runs[1].outcome is Outcome.SKIPPED and report.runs[1].note == "invalid settings"
+    assert not report.ok and report.runs[1].outcome is Outcome.SKIPPED and report.runs[1].note == "invalid settings"
     assert any("expected bool" in e.message for e in report.errors)
 
 
 def test_invalid_settings_of_a_disabled_gate_or_another_stage_are_reported(tmp_path: Path) -> None:
-    registry = default_registry()
+    registry = default_gate_registry()
     config = GatesConfig(
         {
             "rules-staged": GateEntry(False, {"bogus": 1}),
             "message-nonempty": GateEntry(True, {"bogus": 1}),
         }
     )
-    validation = validate(registry, config)
+    validation = validate_gates(registry, config)
     assert len(validation.errors) == 2 and all("gate has no settings" in e.message for e in validation.errors)
     report = run_stage(gate_ctx(tmp_path), registry, config)
-    assert report.failed and [r.note for r in report.runs] == ["disabled"]
+    assert not report.ok and [r.note for r in report.runs] == ["disabled"]
 
 
 def test_configured_gate_that_is_not_installed_fails_the_stage(tmp_path: Path) -> None:
     config = GatesConfig({"timeline": GateEntry(True)})
-    report = run_stage(gate_ctx(tmp_path), default_registry(), config)
-    assert report.failed and "not installed: ['timeline']" in report.errors[0].message
+    report = run_stage(gate_ctx(tmp_path), default_gate_registry(), config)
+    assert not report.ok and "not installed: ['timeline']" in report.errors[0].message
+    assert report.errors[0].fix is not None and "`devkit sync`" in report.errors[0].fix
 
 
 @pytest.mark.parametrize(
@@ -261,8 +289,10 @@ def test_configured_gate_that_is_not_installed_fails_the_stage(tmp_path: Path) -
 )
 def test_message_gate(tmp_path: Path, text: str, failed: bool) -> None:
     (tmp_path / "MSG").write_text(text)
-    report = run_stage(gate_ctx(tmp_path, Stage.COMMIT_MSG, "MSG"), default_registry(), GatesConfig())
-    assert report.failed is failed
+    report = run_stage(gate_ctx(tmp_path, Stage.COMMIT_MSG, "MSG"), default_gate_registry(), GatesConfig())
+    assert report.ok is not failed
+    if failed:
+        assert report.exit_code is ExitCode.FINDINGS and report.problems[0].fix
 
 
 def test_post_commit_without_gates(tmp_path: Path) -> None:
