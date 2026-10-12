@@ -16,7 +16,7 @@
 
 ### Core Principles
 
-1. **System in the core, policy in bundles.** The core ships only trivial built-in gates. Identity checks, timestamp handling, message conventions and similar rules belong to the content wheels that need them.
+1. **System in the core, policy in bundles.** The core ships only the gate system's own integrations as built-ins: the rule engine's staged check (`rules-staged`) and the non-empty message check (`message-nonempty`). Identity checks, timestamp handling, message conventions and similar rules belong to the content wheels that need them.
 2. **Static wrappers, runtime discovery.** The hook files never change after `commit-gate install`. Each commit discovers the gates from the installation receipt, so `devkit sync` alone changes what runs; it never writes into the hooks directory.
 3. **Explicit opt-in.** Installing a wheel makes its gates available; selecting a preset that contains them deploys them; a gate may additionally ship disabled and require `enabled = true` in configuration.
 4. **Fail closed where Git can still refuse.** `pre-commit` and `commit-msg` failures, configuration errors and missing gate files block the commit. `post-commit` runs after the commit exists and only reports.
@@ -35,9 +35,33 @@ packages/agent-commit-gate/src/agent_commit_gate/
 ├── runner.py      # run_stage: ordering, enablement, settings, outcome collection
 ├── hooks.py       # Wrapper scripts: install, uninstall, status
 ├── git.py         # repo root, common git dir, hooks dir
-├── gates/         # Built-in gates (message-nonempty)
+├── gates/         # Built-in gates (rules-staged, message-nonempty)
 └── cli/           # commit-gate: install, uninstall, status, run
 ```
+
+---
+
+## 2a. Built-in Gates
+
+| Gate | Stage | Order | Default | Behavior |
+| --- | --- | --- | --- | --- |
+| `rules-staged` | `pre-commit` | 100 | on | Evaluates `agent-rule-engine`'s linter phase over the exact Git index and refuses the commit on unresolved error violations, rule loading or execution errors, or an invalid `[rules]` policy. |
+| `message-nonempty` | `commit-msg` | 900 | on | Refuses a message that is empty once comment lines are removed. |
+
+`rules-staged` is the hook form of `agent-rules check --staged` and calls the rule engine as a library (`git_snapshot`, `materialize`, `evaluate`), so there is no separate commit command: the index Git hands the hook is what is evaluated. The staged tree is materialized into a temporary directory that becomes the workspace root; `.devkit/config.toml`, the installation receipt and synchronized rules are read from that snapshot, and Git-ignored managed rule copies are read from the working tree only when their hash matches the snapshot's receipt. Unstaged edits, untracked files and per-clone configuration therefore cannot change the result. The gate has no settings; the project tunes rules through `[rules]` (phase and severity overrides, typed settings) as everywhere else.
+
+| Outcome | Condition | Advisory |
+| --- | --- | --- |
+| skipped | the index changes no files | — |
+| passed | no error violations (warnings are noted) | — |
+| refused | error violations remain | `GATE_RULES_VIOLATION` (BLOCKED): one `[DETAIL]` per violation as `<rule> <file>:<line> <message>`, `fix` names `agent-rules fix` and `agent-rules explain <rule>`, `[TARGET]` lists the files |
+| refused | `[rules]` in the staged `.devkit/config.toml` is invalid | `GATE_RULES_CONFIG_INVALID` |
+| refused | a receipt-listed rule is missing, drifted from its hash or fails to import | `GATE_RULES_LOAD_FAILED`, fix `devkit sync` |
+| refused | a rule raised during evaluation or policy validation failed | `GATE_RULES_FAILED` |
+| refused | the staged tree cannot be read or materialized | `GATE_RULES_SNAPSHOT_FAILED` |
+| refused | `agent_rule_engine` is not importable from the hook's interpreter | `GATE_RULES_UNAVAILABLE`, fix `uv sync` (fails closed, never silently passes) |
+
+Disable it per project or per clone with `[gates.settings.rules-staged] enabled = false`, for example in a repository that runs `agent-rules check --ci` only in CI.
 
 ---
 
@@ -125,6 +149,9 @@ max_files = 50
 # .git/devkit.config
 [gates.settings.staged-file-limit]
 max_files = 200
+
+[gates.settings.rules-staged]
+enabled = false
 
 [gates.settings.message-nonempty]
 enabled = false

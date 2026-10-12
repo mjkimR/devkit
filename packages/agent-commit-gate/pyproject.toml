@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "agent-advisory",
+    "agent-rule-engine",
     "click>=8.1.7",
 ]
 
@@ -19,6 +20,7 @@ dev = [
 
 [tool.uv.sources]
 agent-advisory = { workspace = true }
+agent-rule-engine = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

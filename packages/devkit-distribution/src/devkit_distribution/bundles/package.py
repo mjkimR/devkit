@@ -68,10 +68,21 @@ def plan_bundle(bundle: Bundle, preset: str | None = None) -> dict[str, object]:
             data, mode = payload[name]
             payload[name] = (prepend_context(data, bundle.name), mode)
     assets = []
+    seeded: list[dict[str, str]] = []
     for asset in bundle.assets:
         if asset.id not in selected:
             continue
         assets.append({"id": asset.id, "kind": asset.kind, "variants": [target for target, _ in asset.sources]})
+        if asset.seeded:
+            ((_, source),) = asset.sources
+            origin = bundle.root / source
+            for path in source_files(bundle.root, source):
+                name = path.relative_to(bundle.root).as_posix()
+                dest = asset.target if origin.is_file() else f"{asset.target}/{path.relative_to(origin).as_posix()}"
+                seeded.append(
+                    {"source": name, "destination": str(dest), "sha256": hashlib.sha256(payload[name][0]).hexdigest()}
+                )
+            continue
         for _, source in asset.sources:
             files.update(path.relative_to(bundle.root).as_posix() for path in source_files(bundle.root, source))
     return {
@@ -89,4 +100,5 @@ def plan_bundle(bundle: Bundle, preset: str | None = None) -> dict[str, object]:
             }
             for name in sorted(files)
         ],
+        "seeded": sorted(seeded, key=lambda item: item["destination"]),
     }

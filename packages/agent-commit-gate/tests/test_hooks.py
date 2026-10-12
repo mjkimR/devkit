@@ -31,7 +31,7 @@ def test_install_status_uninstall(repo: Path) -> None:
     result = CliRunner().invoke(cli, ["status", "-w", str(repo), "--format", "json"])
     data = json.loads(result.output)
     assert [h["state"] for h in data["hooks"]] == ["managed"] * 3
-    assert data["gates"][0]["id"] == "message-nonempty" and data["config_sources"] == []
+    assert [g["id"] for g in data["gates"]] == ["rules-staged", "message-nonempty"] and data["config_sources"] == []
 
     _install(repo)  # reinstalling over managed wrappers needs no --force
     result = CliRunner().invoke(cli, ["uninstall", "-w", str(repo)])

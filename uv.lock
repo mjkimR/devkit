@@ -46,6 +46,7 @@ version = "0.1.0"
 source = { editable = "packages/agent-commit-gate" }
 dependencies = [
     { name = "agent-advisory" },
+    { name = "agent-rule-engine" },
     { name = "click" },
 ]
 
@@ -57,6 +58,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "agent-advisory", editable = "packages/agent-advisory" },
+    { name = "agent-rule-engine", editable = "packages/agent-rule-engine" },
     { name = "click", specifier = ">=8.1.7" },
 ]
 

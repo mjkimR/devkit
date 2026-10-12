@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any
 
 from agent_commit_gate.base import BaseGate
-from agent_commit_gate.gates import NonEmptyMessageGate
+from agent_commit_gate.gates import NonEmptyMessageGate, StagedRulesGate
 from agent_commit_gate.models import Gate, GateConfigError, Stage
 
 RECEIPT_PATH = ".devkit/installation.json"
@@ -109,6 +109,7 @@ class GateRegistry:
 
 def default_registry() -> GateRegistry:
     registry = GateRegistry()
+    registry.register(StagedRulesGate())
     registry.register(NonEmptyMessageGate())
     return registry
 

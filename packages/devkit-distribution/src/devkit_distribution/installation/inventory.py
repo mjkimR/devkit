@@ -33,6 +33,15 @@ class Content:
     mode: int
 
 
+@dataclass(frozen=True)
+class Seed:
+    """A file written once to a project-owned destination by a seeded ``document`` asset."""
+
+    bundle: str
+    asset: str
+    content: Content
+
+
 def desired_inventory(
     installed: list[InstalledBundle],
     presets: dict[str, list[str]],
@@ -47,8 +56,11 @@ def desired_inventory(
     dict[str, dict[str, dict[str, str]]],
     list[dict[str, str]],
     list[dict[str, str]],
+    dict[str, Seed],
 ]:
     files: dict[str, Content] = {}
+    # Seeded destinations (workspace-relative) -> origin; never part of ``files``.
+    seeds: dict[str, Seed] = {}
     assets: list[dict[str, object]] = []
     packages = []
     overrides_record: dict[str, dict[str, dict[str, str]]] = {}
@@ -106,6 +118,22 @@ def desired_inventory(
         }
         for asset in bundle.assets:
             if asset.id not in selected:
+                continue
+            if asset.seeded:
+                assert asset.target is not None
+                ((_, source),) = asset.sources
+                origin = bundle.root / source
+                targets = []
+                for path in source_files(bundle.root, source):
+                    dest = asset.target if origin.is_file() else f"{asset.target}/{path.relative_to(origin).as_posix()}"
+                    if dest in seeds:
+                        raise BundleError(f"seeded target collision: {dest} ({seeds[dest].bundle} and {bundle.name})")
+                    mode = 0o755 if path.stat().st_mode & 0o111 else 0o644
+                    seeds[dest] = Seed(bundle.name, asset.id, Content(path.read_bytes(), mode))
+                    targets.append(dest)
+                assets.append(
+                    {"bundle": bundle.name, "id": asset.id, "kind": asset.kind, "paths": [], "seeded": sorted(targets)}
+                )
                 continue
             paths: set[str] = set()
             asset_overridden = False
@@ -232,4 +260,7 @@ def desired_inventory(
         for directory, agent in projections:
             for relative, data in module.skill_files(agent).items():
                 add_bytes(f"{directory}/{relative}", data)
-    return files, assets, packages, overrides_record, drift_list, unprojected
+    for dest in seeds:
+        if dest in files:
+            raise BundleError(f"seeded target collides with a managed destination: {dest}")
+    return files, assets, packages, overrides_record, drift_list, unprojected, seeds

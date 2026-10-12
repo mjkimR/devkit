@@ -9,13 +9,14 @@ description: Read before using, changing or troubleshooting devkit-managed asset
 
 | Path | Tracked in Git | Role |
 | --- | --- | --- |
-| `.devkit/config.toml` | yes | Selected bundles and presets, target agents, `[rules]`, `[gates]`, `[playbooks]` settings |
+| `.devkit/config.toml` | yes | Selected bundles and presets, target agents, `[rules]`, `[gates]`, `[playbooks]` settings; `[tool.<name>]` tables belong to other tools and are passed through unread |
 | `.devkit/installation.json` | yes | Receipt: packages, bundle versions, deployed paths, SHA-256 and mode of every file |
 | `.devkit/overrides/<bundle>/` | yes | Project-owned replacements for single upstream asset files |
 | `.devkit/managed/<bundle>/` | no | Pristine copies extracted from installed bundles |
 | `.devkit/transient/` | no | Lock and write-ahead journal for an interrupted sync |
 | `.claude/`, `.agents/`, `.codex/` projections | usually no | Native copies of skills and subagents for each selected agent |
 | `AGENTS.md` (root) | yes | Project-owned; only the `<!-- DEVKIT:START -->` ... `<!-- DEVKIT:END -->` block in it is managed |
+| Seeded files (paths listed under `seeded` in the receipt) | yes | Project-owned; written once by a bundle's seeded `document` asset, never updated or removed by sync |
 
 Generated paths are rebuilt by `uv run devkit sync` from the installed packages
 and the configuration. Edit sources and configuration, never generated copies.
@@ -27,6 +28,12 @@ installed bundles, the once-per-bundle `get-context` rule and the generated entr
 skills. It is regenerated from the selection and hash-guarded like a managed
 file, so do not edit between the markers; write project guidance outside them.
 `guidance_block = false` in `.devkit/config.toml` turns the block off.
+
+Seeded files are scaffolding a bundle left behind on first sync (a docs tree,
+a glossary, a policy file). Edit them freely: sync never compares, updates or
+removes them, an upstream change to the bundle does not reach them, and
+deselecting the bundle keeps them. If one is deleted while its asset is still
+selected, the next sync seeds it again from the bundle.
 
 ## Loading bundle context
 

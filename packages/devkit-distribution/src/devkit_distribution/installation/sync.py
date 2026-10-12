@@ -4,12 +4,12 @@ import re
 from pathlib import Path
 
 from devkit_distribution.bundles import BundleError
-from devkit_distribution.bundles.manifest import SLUG
+from devkit_distribution.bundles.manifest import SLUG, seed_target
 
 from . import guidance_block
 from .config import parse_presets, read_config
 from .discovery import InstalledBundle
-from .inventory import AGENTS, GENERATED_SKILLS, Content, desired_inventory
+from .inventory import AGENTS, GENERATED_SKILLS, Content, Seed, desired_inventory
 from .transaction import (
     AGENTS_FILE,
     CONFIG,
@@ -17,8 +17,8 @@ from .transaction import (
     RECEIPT,
     apply_changes,
     json_content,
+    owned_path,
     project_lock,
-    project_path,
     read_json,
     recover_locked,
     signature,
@@ -54,7 +54,7 @@ def read_receipt(root: Path) -> dict:
         if snapshot(root, RECEIPT) is not None:
             raise BundleError("invalid empty installation receipt")
         return {}
-    valid_keys = {"schema", "packages", "selection", "assets", "files", "overrides", "guidance_block"}
+    valid_keys = {"schema", "packages", "selection", "assets", "files", "overrides", "guidance_block", "seeded"}
     if (
         not ({"schema", "packages", "selection", "assets", "files"} <= set(receipt) <= valid_keys)
         or type(receipt["schema"]) is not int
@@ -71,7 +71,7 @@ def read_receipt(root: Path) -> dict:
     for name, meta in files.items():
         if name in {RECEIPT, JOURNAL, CONFIG, AGENTS_FILE} or name.startswith(".devkit/overrides/"):
             raise BundleError("receipt cannot own installation metadata")
-        project_path(root, name)
+        owned_path(root, name)
         if (
             not isinstance(meta, dict)
             or set(meta) != {"sha256", "mode"}
@@ -92,6 +92,20 @@ def read_receipt(root: Path) -> dict:
     parse_presets(presets, "receipt")
     if not isinstance(receipt["packages"], list) or not isinstance(receipt["assets"], list):
         raise BundleError("invalid receipt catalog")
+    if "seeded" in receipt:
+        seeded = receipt["seeded"]
+        if not isinstance(seeded, list):
+            raise BundleError("invalid receipt seeded")
+        for entry in seeded:
+            if (
+                not isinstance(entry, dict)
+                or set(entry) != {"bundle", "id", "path"}
+                or not all(isinstance(v, str) for v in entry.values())
+                or not SLUG.fullmatch(entry["bundle"])
+                or not SLUG.fullmatch(entry["id"])
+            ):
+                raise BundleError("invalid receipt seeded")
+            seed_target(entry["path"], "receipt seeded")
     if "overrides" in receipt:
         overrides = receipt["overrides"]
         if not isinstance(overrides, dict):
@@ -163,6 +177,25 @@ def _plan_guidance_block(
     return guidance_block.digest(desired)
 
 
+def _plan_seeds(
+    root: Path,
+    seeds: dict[str, Seed],
+    changes: dict[str, Content | None],
+    actions: list[dict[str, str]],
+) -> list[dict[str, str]]:
+    """Add the seeded files that do not exist yet; return the receipt's ``seeded`` record.
+
+    A seeded file is written only when its destination is absent. Afterwards it
+    is project-owned: never compared, updated, removed or hash-checked. The
+    record is informational (which selected asset seeded which path).
+    """
+    for dest in sorted(seeds):
+        if snapshot(root, dest) is None:
+            changes[dest] = seeds[dest].content
+            actions.append({"path": dest, "action": "seed"})
+    return [{"bundle": seed.bundle, "id": seed.asset, "path": dest} for dest, seed in sorted(seeds.items())]
+
+
 def sync_project(
     root: Path,
     installed: list[InstalledBundle],
@@ -197,7 +230,7 @@ def sync_project(
             )
         active_presets = {name: sorted(set(values)) for name, values in sorted(active_presets.items())}
         selected = [item for item in installed if item.bundle.name in active_presets]
-        desired, assets, packages, overrides_record, drift_list, unprojected = desired_inventory(
+        desired, assets, packages, overrides_record, drift_list, unprojected, seeds = desired_inventory(
             selected,
             active_presets,
             active_agents,
@@ -229,6 +262,9 @@ def sync_project(
         }
         if overrides_record:
             receipt["overrides"] = overrides_record
+        seeded_record = _plan_seeds(root, seeds, changes, actions)
+        if seeded_record:
+            receipt["seeded"] = seeded_record
         block_hash = _plan_guidance_block(
             root,
             changes,

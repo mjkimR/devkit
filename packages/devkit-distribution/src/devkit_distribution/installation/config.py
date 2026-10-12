@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import math
 import os
+import re
 import tempfile
 import tomllib
 from dataclasses import dataclass, field
@@ -28,8 +29,11 @@ from .transaction import CONFIG
 SCHEMA = 1
 # ``rules`` is owned by ``agent-rule-engine`` (phase overrides), ``workflow`` by
 # ``agent-workflow-engine`` (layout, approvals) and ``gates`` by ``agent-commit-gate``
-# (gate settings); all are only passed through here.
-FIELDS = frozenset({"schema", "agents", "presets", "playbooks", "rules", "workflow", "gates", "guidance_block"})
+# (gate settings); all are only passed through here. ``[tool.<name>]`` tables belong
+# to whichever tool ``<name>`` is and are passed through unread, like ``[tool.*]`` in
+# ``pyproject.toml``; every other top-level key is rejected so typos are caught.
+FIELDS = frozenset({"schema", "agents", "presets", "playbooks", "rules", "workflow", "gates", "guidance_block", "tool"})
+TOOL_NAME = re.compile(r"[a-z][a-z0-9_-]*\Z")
 
 
 def all_agents() -> list[str]:
@@ -57,7 +61,21 @@ def _load(root: Path) -> dict[str, Any] | None:
     unknown = set(data) - FIELDS
     if unknown:
         raise BundleError(f"config: unknown fields: {sorted(unknown)}")
+    validate_tool_tables(data.get("tool"))
     return data
+
+
+def validate_tool_tables(tool: object) -> None:
+    """``[tool.<name>]`` must be a table of tables; their contents are never inspected."""
+    if tool is None:
+        return
+    if not isinstance(tool, dict):
+        raise BundleError("config tool: expected a table of [tool.<name>] tables")
+    for name, value in tool.items():
+        if not (isinstance(name, str) and TOOL_NAME.fullmatch(name)):
+            raise BundleError(f"config tool: invalid tool name: {name!r}")
+        if not isinstance(value, dict):
+            raise BundleError(f"config tool.{name}: expected a table")
 
 
 def _agents(value: object) -> list[str]:

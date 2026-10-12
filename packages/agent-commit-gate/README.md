@@ -26,15 +26,27 @@ uv run devkit sync                    # deploys the gate files and records them 
 
 | Gate | Stage | Default | Behavior |
 | --- | --- | --- | --- |
+| `rules-staged` | `pre-commit` | on | Runs `agent-rule-engine`'s linter phase over the exact staged tree, as `agent-rules check --staged` does, and refuses on unresolved error violations, rule loading or execution errors, or an invalid `[rules]` policy. Warnings pass. |
 | `message-nonempty` | `commit-msg` | on | Refuses a message that is empty once comment lines are removed. |
 
-Built-ins stay minimal on purpose; anything that is policy belongs in a bundle.
+Built-ins are limited to the gate system's own integrations; anything that is
+policy belongs in a bundle. `rules-staged` reads `.devkit/config.toml`, the
+installation receipt and the synchronized rules from the staged tree itself
+(Git-ignored managed rule copies are taken from the working tree only when they
+match the receipt's hash), so unstaged edits cannot change the result. With
+nothing staged it is skipped. Its refusal lists each violation as
+`<rule> <file>:<line> <message>` and points at `agent-rules fix` and
+`agent-rules explain <rule>`; when the rule engine is not importable from the
+hook's interpreter the gate fails closed (`GATE_RULES_UNAVAILABLE`, fix: `uv sync`).
 
 ## Configuration
 
 `.devkit/config.toml` (tracked) is overridden by `<common-git-dir>/devkit.config` (untracked, per clone):
 
 ```toml
+[gates.settings.rules-staged]
+enabled = false                 # e.g. a repository that runs agent-rules only in CI
+
 [gates.settings.message-nonempty]
 enabled = false
 

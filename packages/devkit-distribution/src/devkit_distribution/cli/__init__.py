@@ -269,6 +269,7 @@ def list_resources(target: Path) -> None:
                     for item in installed
                 ],
                 "synchronized_assets": receipt.get("assets", []),
+                "seeded": receipt.get("seeded", []),
                 "overrides": receipt.get("overrides", {}),
             }
     except (BundleError, OSError) as exc:

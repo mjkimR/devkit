@@ -343,6 +343,9 @@ def test_selected_bundle_must_be_installed(installed: list[InstalledBundle], tar
         ("exclude_bundles = ['team']\n", "config: unknown fields"),
         ("[selection]\nagents = []\n", "config: unknown fields"),
         ("[playbooks]\nunknown_subfield = true\n", "config playbooks: unknown fields"),
+        ("tool = 1\n", "config tool: expected a table"),
+        ("[tool]\nspecrig = 'on'\n", "config tool.specrig: expected a table"),
+        ("[tool.'Bad Name']\nx = 1\n", "config tool: invalid tool name"),
         ("[playbooks]\nlimit = 0\n", "config playbooks: limit must be an integer between 1 and 20"),
         ("[playbooks]\nmin_score = -1\n", "config playbooks: min_score must be a finite nonnegative number"),
         ("[playbooks]\nmax_bytes = 100\n", "config playbooks: max_bytes must be an integer between 1024 and 65536"),
@@ -353,6 +356,28 @@ def test_invalid_project_config(installed: list[InstalledBundle], bare: Path, co
     write_config(bare, content)
     with pytest.raises(BundleError, match=error_match):
         sync_project(bare, installed)
+
+
+def test_sync_passes_tool_tables_through_unread(installed: list[InstalledBundle], bare: Path) -> None:
+    write_config(
+        bare,
+        """schema = 1
+
+[presets]
+team = "minimal"
+
+[tool.specrig]
+worktree = "on"
+unknown_to_devkit = { nested = [1, 2] }
+
+[tool.my_other-tool]
+anything = true
+""",
+    )
+    sync_project(bare, installed)
+    receipt = json.loads((bare / RECEIPT).read_text())
+    assert receipt["selection"]["presets"] == {"team": ["minimal"]}
+    assert "tool" not in receipt
 
 
 def test_sync_accepts_playbooks_config(installed: list[InstalledBundle], bare: Path) -> None:

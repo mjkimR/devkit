@@ -47,7 +47,7 @@ src/package_b_playbooks/
 
 ## 2. Asset Kinds
 
-A bundle declares assets across seven supported kinds:
+A bundle declares assets across eight supported kinds:
 
 - `skill`: A directory containing `SKILL.md` along with supporting scripts, references, and assets. The entire directory tree is preserved, maintaining executable permissions (`0755`) for scripts.
 - `subagent`: A delegated agent persona. Either native files per agent (`variants`, copied verbatim) or one host-neutral role contract (`source`, a single Markdown file) whose frontmatter declares `role` (equal to the asset id), `title`, `description`, an optional `skill` and a `hosts` table with one block per agent (`claude-code`, `codex`, `antigravity`). Each block carries a `status` (`native`, `emulated`, `unsupported`, `unverified`) and only allowlisted host-native keys; `devkit sync` renders the projection for each selected agent from that block, writes no file for `unsupported`, and fails for an agent the contract does not mention. The body is the role's prompt. See [Agent Projections](agent-projections.md).
@@ -56,6 +56,7 @@ A bundle declares assets across seven supported kinds:
 - `rule`: Python-based governance rules evaluated by `agent-rule-engine`. The receipt lists every deployed file under the asset's `paths`, and `agent-rules` loads them from there; a consumer configures them in `[rules]` of `.devkit/config.toml` rather than editing the managed copy.
 - `workflow`: A single Markdown delivery workflow definition (frontmatter `id` and `stages`) evaluated by `agent-workflow-engine`. Distribution validates the header only; `agent-workflow validate` validates stage semantics. When at least one workflow asset is synchronized, `devkit sync` generates the shared `devkit-workflow` entry skill under `.devkit/managed/_devkit/skills/` and projects it into every selected agent's skill directory, and the receipt records the definition under `entrypoints` so `agent-workflow` discovers it without configuration.
 - `gate`: A Python commit gate run by `agent-commit-gate` at a Git hook stage. Like rules, deployed files are listed in the receipt under the asset's `paths` and loaded from there at commit time; a consumer configures them in `[gates]` of `.devkit/config.toml` or the per-clone `.git/devkit.config`. See [Commit Gate Overview](../commit-gate/overview.md).
+- `document`: Plain files with no engine semantics. Unseeded, a document is a managed copy under `.devkit/managed/<bundle>/` (reference material agents read by path). With `seeded = true` and a `target`, it is a **seeded** asset: written once to the workspace-relative `target` when that path does not exist, then owned by the project. A directory source seeds every file under it to `target/<relative path>`, preserving executable bits. Only `document` assets may be seeded; this is how a bundle scaffolds a documentation tree, a glossary or a policy file that the project is expected to edit. Seeded files are never catalogued by `get-context`, playbook search or projections. See [Workspace Ownership, section 2](workspace-ownership.md#2-ownership-categories-and-invariants).
 
 For full classification criteria, guidance placement rules, and naming standards, see the [Resource Taxonomy](../architecture/resource-taxonomy.md).
 
@@ -104,6 +105,13 @@ id = "direct-delivery"
 kind = "workflow"
 source = "workflows/direct-delivery.md"
 
+[[assets]]
+id = "docs-skeleton"
+kind = "document"
+seeded = true                          # written once to target, then project-owned
+source = "seed/docs"                   # a directory: every file lands under target/
+target = "docs"
+
 [presets.daily]
 assets = ["development", "review-flow", "review"]
 
@@ -132,6 +140,7 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
 - **Contract Integrity**: A `subagent` declared with `source` must be a single Markdown file whose frontmatter has `role` equal to the asset id, `title`, `description`, a nonempty `hosts` table with valid statuses and allowlisted keys, and a nonempty body.
 - **Preset Integrity**: Preset names are slugs and `all` is reserved. Preset asset lists must be nonempty, unique, and reference declared asset IDs. `default_preset` must name a declared preset or `all`.
 - **Verbatim Native Content**: Files declared under `variants` remain untouched during packaging and sync. The distributor does not parse, modify, or strip vendor-specific configuration keys.
+- **Seeded Assets**: `seeded` is a boolean (default `false`) allowed only on `document` assets declared with a single `source`. A seeded asset requires `target`, and `target` is rejected otherwise. `target` is a normalized relative POSIX path (no `..`, no leading `/`, no backslashes, no `.`) whose first segment is not `.devkit`, `.git`, `.agents`, `.claude` or `.codex`, and which is not `AGENTS.md`. Two selected bundles may not seed the same path.
 
 ---
 

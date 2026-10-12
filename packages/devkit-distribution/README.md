@@ -35,7 +35,7 @@ consumed and authored. See [section 4](#4-the-devkit-guide-bundle).
 
 | Command | Category | Description |
 | --- | --- | --- |
-| `devkit sync [options]` | Lifecycle | Synchronizes selected bundles into `.devkit/managed/`, projects native agent assets, maintains the `<!-- DEVKIT:START -->` block in the root `AGENTS.md`, and warns about stray files under the managed root. |
+| `devkit sync [options]` | Lifecycle | Synchronizes selected bundles into `.devkit/managed/`, projects native agent assets, writes seeded files that do not exist yet, maintains the `<!-- DEVKIT:START -->` block in the root `AGENTS.md`, and warns about stray files under the managed root. |
 | `devkit add <bundle>[:<preset>]...` | Selection | Selects bundles in `.devkit/config.toml` (default preset when none is named) and synchronizes. |
 | `devkit remove <bundle>...` | Selection | Deselects bundles in `.devkit/config.toml` and synchronizes. |
 | `devkit list [--target <dir>]` | Inspection | Outputs JSON listing installed content packages, bundle metadata, presets, selection state, and asset paths. |
@@ -79,9 +79,13 @@ RULE-file-length = "error"
 
 [rules.settings.RULE-file-length]
 max_lines = 300
+
+[tool.specrig]                        # [tool.<name>] is passed through unread for tools built on devkit
+worktree = "on"
 ```
 
 `devkit add`, `devkit remove`, and the `devkit sync` selection flags edit these entries for you (`--no-save` for a one-off run).
+Top-level keys outside this list are rejected, except `[tool.<name>]` tables, which devkit never inspects.
 Running `devkit sync` applies the configured agents and presets without repeated CLI flags, and lists installed but unselected bundles.
 
 Every sync also writes a short orientation block into the root `AGENTS.md` between `<!-- DEVKIT:START -->` and
@@ -89,6 +93,11 @@ Every sync also writes a short orientation block into the root `AGENTS.md` betwe
 skills. Text outside the markers is yours and is preserved; the block itself is hash-guarded like a managed file, so
 edit it only by changing the selection. Commit `AGENTS.md` with the receipt. See
 [Workspace Ownership](../../docs/distribution/workspace-ownership.md#2-ownership-categories-and-invariants).
+
+A bundle can also scaffold project-owned files: a `document` asset with `seeded = true` and a workspace `target`
+(for example a `docs/` skeleton or a glossary) is written once, only where the target does not exist, and is then
+yours. Sync never compares, updates or removes it, deselecting the bundle leaves it, and the receipt only notes which
+asset seeded which path (`devkit list` shows the `seeded` list). Commit seeded files like any project file.
 The `[rules]` table is owned by `agent-rule-engine` and is passed through untouched by `devkit sync`; see the
 [agent-rule-engine README](../agent-rule-engine/README.md#project-configuration). Rules shipped as `kind = "rule"`
 assets are recorded in the receipt and loaded by `agent-rules` without flags, and subagents may ship either native

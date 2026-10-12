@@ -23,20 +23,28 @@ OVERRIDES = ".devkit/overrides"
 AGENTS_FILE = "AGENTS.md"
 
 
+# Destinations the receipt may own: devkit's managed cache and native agent projections.
+OWNED_PREFIXES = (
+    ".devkit/managed/",
+    ".agents/skills/",
+    ".agents/agents/",
+    ".claude/skills/",
+    ".codex/agents/",
+    ".claude/agents/",
+)
+
+
 def project_path(root: Path, name: str) -> Path:
+    """A workspace-relative path devkit may read or write in a transaction.
+
+    Besides owned destinations this admits seeded targets anywhere in the
+    project except Git's own directory and devkit's project-authored files.
+    Receipt ownership is narrower; see ``owned_path``.
+    """
     rel = PurePosixPath(name)
-    allowed = name in {RECEIPT, JOURNAL, AGENTS_FILE} or any(
-        name.startswith(prefix)
-        for prefix in (
-            ".devkit/managed/",
-            ".agents/skills/",
-            ".agents/agents/",
-            ".claude/skills/",
-            ".codex/agents/",
-            ".claude/agents/",
-        )
-    )
-    if not allowed or rel.is_absolute() or ".." in rel.parts or "\\" in name or str(rel) != name:
+    if rel.is_absolute() or ".." in rel.parts or "\\" in name or str(rel) != name or name == ".":
+        raise BundleError(f"unsafe deployment path: {name}")
+    if rel.parts[0] == ".git" or name == CONFIG or name.startswith(OVERRIDES + "/"):
         raise BundleError(f"unsafe deployment path: {name}")
     path = root
     for part in rel.parts:
@@ -46,6 +54,13 @@ def project_path(root: Path, name: str) -> Path:
     if path.exists() and not path.is_file():
         raise BundleError(f"nonregular deployment path: {name}")
     return path
+
+
+def owned_path(root: Path, name: str) -> Path:
+    """A path the receipt's ``files`` map may own: managed cache or agent projection."""
+    if not (name in {RECEIPT, JOURNAL, AGENTS_FILE} or name.startswith(OWNED_PREFIXES)):
+        raise BundleError(f"unsafe deployment path: {name}")
+    return project_path(root, name)
 
 
 def snapshot(root: Path, name: str) -> Content | None:

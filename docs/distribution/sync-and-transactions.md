@@ -58,12 +58,16 @@ The receipt is the single source of truth for the installed state. It is committ
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     }
   },
-  "guidance_block": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+  "guidance_block": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+  "seeded": [
+    { "bundle": "starter", "id": "docs-skeleton", "path": "docs/README.md" }
+  ]
 }
 ```
 
 ### Receipt Properties
 - `guidance_block` is the SHA-256 of the managed block in the root `AGENTS.md` (markers included). It is absent when `guidance_block = false` is configured. The file itself is never listed under `files`, because only the block is owned ([Workspace Ownership, section 2](workspace-ownership.md#2-ownership-categories-and-invariants)).
+- `seeded` lists, for every selected seeded `document` asset, the workspace paths it seeds (bundle, asset id, path), sorted by path. It is present only while such an asset is selected and is informational: seeded files are project-owned, never appear under `files`, and the list is never read back as a selection input. A seeded asset's entry under `assets` has an empty `paths` and a `seeded` array of its targets.
 - Tracks exact package names, package versions, bundle names, and bundle versions of **selected** bundles only. Installed but unselected bundles are not recorded.
 - Records the effective agent and preset selection applied by the last sync. The recorded selection is an audit record: it is never read back as an input for later selections.
 - Stores active project overrides with their baseline upstream digests and local override hashes.
@@ -96,7 +100,8 @@ limit = 5
 max_bytes = 8192
 ```
 
-- **Allowed top-level fields**: `schema`, `agents`, `presets`, `playbooks`, `rules`, `workflow`, `gates`, `guidance_block`. Unknown fields are rejected. `guidance_block = false` stops `devkit sync` from managing the block in the root `AGENTS.md` (default `true`). `[rules]` is owned by `agent-rule-engine` (phase and severity overrides, typed settings), `[workflow]` by `agent-workflow-engine` and `[gates]` by `agent-commit-gate`; `devkit` passes them through untouched.
+- **Allowed top-level fields**: `schema`, `agents`, `presets`, `playbooks`, `rules`, `workflow`, `gates`, `guidance_block`, `tool`. Unknown fields are rejected. `guidance_block = false` stops `devkit sync` from managing the block in the root `AGENTS.md` (default `true`). `[rules]` is owned by `agent-rule-engine` (phase and severity overrides, typed settings), `[workflow]` by `agent-workflow-engine` and `[gates]` by `agent-commit-gate`; `devkit` passes them through untouched.
+- **`[tool.<name>]`** is the extension namespace, as in `pyproject.toml`: any tool built on devkit keeps its own policy in `[tool.<name>]` and reads it itself. `devkit` only checks that `<name>` matches `[a-z][a-z0-9_-]*` and that the value is a table; the contents are never inspected, so no registration is needed and devkit does not learn the tool's schema. Everything outside `[tool]` stays an explicit allowlist so a mistyped devkit key is still an error.
 - **`agents`** narrows native projection. Absent, every supported agent (`antigravity`, `claude-code`, `codex`) is a target; `agents = []` (written by `devkit sync --no-agents`) turns projection off while managed copies stay.
 - **`[presets]`** is the selection: a bundle is synchronized if and only if it has an entry. The value is a preset name or a nonempty array of unique preset names; an array selects the union of their assets. `all` is a reserved preset available in every bundle.
 - **Selected but not installed**: A selected bundle that no installed package provides is an error. Install the package or deselect the bundle with `devkit remove <bundle>`.
@@ -132,7 +137,7 @@ When installed bundles are not selected, `devkit sync` still succeeds and report
 
 All mutating operations enforce strict transactional safety:
 
-1. **Pre-Flight Validation**: Computes the complete desired file inventory and the root `AGENTS.md` guidance block, scans existing disk state, verifies file and block ownership, and checks for collisions before writing any bytes. The JSON result lists every planned write under `actions` (`create`, `update` or `remove` per path, `AGENTS.md` included).
+1. **Pre-Flight Validation**: Computes the complete desired file inventory, the seeded files whose targets do not exist yet, and the root `AGENTS.md` guidance block; scans existing disk state, verifies file and block ownership, and checks for collisions before writing any bytes. The JSON result lists every planned write under `actions` (`create`, `update` or `remove` per managed path, `seed` for a seeded file, `AGENTS.md` included).
 2. **Project Advisory Lock**: Acquires an exclusive, non-blocking file lock via `fcntl.flock` in `/tmp` keyed by SHA-256 hash of the target project directory path (`devkit-<uid>-<hash>.lock`). Concurrent operations fail immediately with an informative message.
 3. **Write-Ahead Journal**: Before modifying disk, pending operations (file additions, modifications, unlinks) and base64-encoded backups of existing file contents are flushed to `.devkit/transient/sync-journal.json`.
 4. **Atomic Replacement**: New and updated files are written to temporary sibling files (`.devkit-write-*`), permissions applied via `fchmod`, flushed with `fsync`, and atomically moved into place using `os.replace`. Directory entries are synced using directory `fsync`.
@@ -166,4 +171,4 @@ All mutating operations enforce strict transactional safety:
 - `--preset <bundle>[:<name>]`: Selects `<bundle>` with `<name>` (or its default preset), replacing that bundle's entry in `config.toml`. Repeat a bundle to select a union. Use `<bundle>:all` for every asset.
 - `--no-save`: Applies selection flags to this run only, without editing `config.toml`.
 - `--dry-run`: Computes inventory and returns planned actions without writing to disk or configuration.
-- `--check`: Read-only execution for CI pipelines. Exits with code `1` if workspace requires synchronization, a missing or stale `AGENTS.md` guidance block included.
+- `--check`: Read-only execution for CI pipelines. Exits with code `1` if workspace requires synchronization, a missing or stale `AGENTS.md` guidance block or a seeded file that was never written included. Seeded files that exist are never compared.

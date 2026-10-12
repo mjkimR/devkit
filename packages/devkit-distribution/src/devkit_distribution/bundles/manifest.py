@@ -6,7 +6,11 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-KINDS = {"skill", "subagent", "instruction", "playbook", "rule", "workflow", "gate"}
+KINDS = {"skill", "subagent", "instruction", "playbook", "rule", "workflow", "gate", "document"}
+# Workspace roots a seeded target may never enter: devkit's own state, Git, agent projections
+# and the root guidance file are owned by devkit, the host or the project in other ways.
+SEED_FORBIDDEN_ROOTS = {".devkit", ".git", ".agents", ".claude", ".codex"}
+SEED_FORBIDDEN_FILES = {"AGENTS.md"}
 SLUG = re.compile(r"[a-z][a-z0-9-]*\Z")
 VERSION = re.compile(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\Z")
 # Reserved preset available in every bundle; selects every declared asset.
@@ -22,6 +26,9 @@ class Asset:
     id: str
     kind: str
     sources: tuple[tuple[str, str], ...]
+    # ``seeded`` assets are written once to ``target`` (workspace-relative) and then project-owned.
+    seeded: bool = False
+    target: str | None = None
 
 
 @dataclass(frozen=True)
@@ -92,6 +99,18 @@ def safe_source(root: Path, value: Any) -> Path:
     return path
 
 
+def seed_target(value: Any, context: str) -> str:
+    """Validate a seeded asset's workspace-relative destination."""
+    if not isinstance(value, str) or not value:
+        raise BundleError(f"{context}: target: expected a relative POSIX path")
+    rel = PurePosixPath(value)
+    if rel.is_absolute() or ".." in rel.parts or "\\" in value or str(rel) != value or value == ".":
+        raise BundleError(f"{context}: unsafe target path: {value}")
+    if rel.parts[0] in SEED_FORBIDDEN_ROOTS or value in SEED_FORBIDDEN_FILES:
+        raise BundleError(f"{context}: target may not be under devkit, Git, agent or root guidance paths: {value}")
+    return value
+
+
 def source_files(root: Path, source: str) -> list[Path]:
     path = safe_source(root, source)
     files = []
@@ -132,7 +151,7 @@ def load_bundle(root: Path) -> Bundle:
     assets = []
     ids: set[str] = set()
     for raw in raw_assets:
-        item = _mapping(raw, {"id", "kind", "source", "variants"}, "asset")
+        item = _mapping(raw, {"id", "kind", "source", "variants", "seeded", "target"}, "asset")
         asset_id = _slug(item.get("id"), "asset.id")
         if asset_id in ids:
             raise BundleError(f"duplicate asset id: {asset_id}")
@@ -142,6 +161,16 @@ def load_bundle(root: Path) -> Bundle:
             raise BundleError(f"unknown asset kind: {kind}")
         if ("source" in item) == ("variants" in item):
             raise BundleError(f"{asset_id}: declare exactly one of source or variants")
+        seeded = item.get("seeded", False)
+        if type(seeded) is not bool:
+            raise BundleError(f"{asset_id}: seeded must be a boolean")
+        if seeded and kind != "document":
+            raise BundleError(f"{asset_id}: only document assets can be seeded")
+        if seeded and "variants" in item:
+            raise BundleError(f"{asset_id}: a seeded asset declares a single source")
+        if ("target" in item) != seeded:
+            raise BundleError(f"{asset_id}: target is required for seeded assets and not allowed otherwise")
+        target_path = seed_target(item["target"], asset_id) if seeded else None
         sources = []
         if "source" in item:
             pairs = {"common": item["source"]}
@@ -167,7 +196,7 @@ def load_bundle(root: Path) -> Bundle:
                 entry = subagent_entry(root, source)
                 read_contract(entry.read_bytes(), f"{asset_id}/{source}", asset_id)
             sources.append((target, source))
-        assets.append(Asset(asset_id, kind, tuple(sources)))
+        assets.append(Asset(asset_id, kind, tuple(sources), seeded, target_path))
     raw_presets = data.get("presets", {})
     if not isinstance(raw_presets, dict):
         raise BundleError("presets: expected a table")

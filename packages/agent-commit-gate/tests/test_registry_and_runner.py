@@ -23,6 +23,10 @@ def _ctx(root: Path, stage: Stage = Stage.PRE_COMMIT, *args: str) -> GateContext
     return GateContext(repo_root=root, git_dir=root / ".git", stage=stage, args=args)
 
 
+# These tests run outside a Git repository; the built-in staged rules gate is covered in test_rules_gate.py.
+_NO_RULES_GATE = GatesConfig({"rules-staged": GateEntry(False)})
+
+
 def test_deployed_gate_paths_reads_gate_assets_only(tmp_path: Path) -> None:
     deploy_gate(tmp_path, gate_source())
     deploy_gate(tmp_path, gate_source("other", cls="OtherGate"), ".devkit/overrides/team/gates/other.py")
@@ -49,7 +53,7 @@ def test_project_registry_loads_gates_and_reports_problems(tmp_path: Path) -> No
     deploy_gate(tmp_path, "raise RuntimeError('boom')\n", ".devkit/managed/team/gates/broken.py")
     deploy_gate(tmp_path, gate_source("message-nonempty", cls="Dup"), ".devkit/managed/team/gates/dup.py")
     registry = project_registry(tmp_path)
-    assert [g.id for g in registry.get_all()] == ["team-block", "message-nonempty"]
+    assert [g.id for g in registry.get_all()] == ["rules-staged", "team-block", "message-nonempty"]
     assert registry.sources["team-block"] == ".devkit/managed/team/gates/block.py"
     messages = [e.message for e in registry.errors]
     assert any("failed to load gate file .devkit/managed/team/gates/broken.py: boom" in m for m in messages)
@@ -80,29 +84,33 @@ def test_run_stage_orders_gates_and_runs_past_failures(tmp_path: Path) -> None:
     calls: list[str] = []
     registry.register(Recorder("late", 500, calls))
     registry.register(Recorder("early", 10, calls, GateResult.skipped("nothing staged")))
-    report = run_stage(_ctx(tmp_path), registry, GatesConfig())
+    report = run_stage(_ctx(tmp_path), registry, _NO_RULES_GATE)
     assert calls == ["early", "late"]
     assert [(r.gate_id, r.outcome) for r in report.runs] == [
         ("early", Outcome.SKIPPED),
+        ("rules-staged", Outcome.SKIPPED),
         ("team-block", Outcome.FAILED),
         ("late", Outcome.PASSED),
     ]
-    assert report.failed and report.runs[1].error is not None and report.runs[1].error.code == "TEST_REFUSED"
+    assert report.failed and report.runs[2].error is not None and report.runs[2].error.code == "TEST_REFUSED"
 
 
 def test_run_stage_applies_enabled_and_settings(tmp_path: Path) -> None:
     deploy_gate(tmp_path, gate_source(enabled=False))
     registry = project_registry(tmp_path)
-    report = run_stage(_ctx(tmp_path), registry, GatesConfig())
-    assert [(r.gate_id, r.outcome, r.note) for r in report.runs] == [("team-block", Outcome.SKIPPED, "disabled")]
+    report = run_stage(_ctx(tmp_path), registry, _NO_RULES_GATE)
+    assert [(r.gate_id, r.outcome, r.note) for r in report.runs] == [
+        ("rules-staged", Outcome.SKIPPED, "disabled"),
+        ("team-block", Outcome.SKIPPED, "disabled"),
+    ]
 
-    config = GatesConfig({"team-block": GateEntry(True, {"allow": True})})
+    config = GatesConfig({**_NO_RULES_GATE.gates, "team-block": GateEntry(True, {"allow": True})})
     report = run_stage(_ctx(tmp_path), registry, config)
-    assert not report.failed and report.runs[0].note == "allowed"
+    assert not report.failed and report.runs[1].note == "allowed"
 
-    config = GatesConfig({"team-block": GateEntry(True, {"allow": "yes"})})
+    config = GatesConfig({**_NO_RULES_GATE.gates, "team-block": GateEntry(True, {"allow": "yes"})})
     report = run_stage(_ctx(tmp_path), registry, config)
-    assert report.failed and report.runs[0].error is not None and "expected bool" in report.runs[0].error.message
+    assert report.failed and report.runs[1].error is not None and "expected bool" in report.runs[1].error.message
 
 
 def test_configured_gate_that_is_not_installed_fails_the_stage(tmp_path: Path) -> None:
