@@ -1,0 +1,28 @@
+"""The ``devkit`` command line: distribution commands at the top level, one group per engine.
+
+``devkit sync``, ``add``, ``remove``, ``list``, ``status`` and the other
+distribution commands sit at the top level; ``devkit rules``, ``devkit workflow``
+and ``devkit gate`` are the rule engine, workflow engine and commit gate groups.
+"""
+
+from __future__ import annotations
+
+import click
+
+from devkit.distribution.cli import cli as distribution_cli
+from devkit.gate.cli import cli as gate_cli
+from devkit.rules.cli import cli as rules_cli
+from devkit.workflow.cli import cli as workflow_cli
+
+
+@click.group(name="devkit")
+@click.version_option(package_name="devkit")
+def cli() -> None:
+    """Devkit: agent asset distribution, repository rules, delivery workflows and commit gates."""
+
+
+for _name, _command in distribution_cli.commands.items():
+    cli.add_command(_command, _name)
+cli.add_command(rules_cli, "rules")
+cli.add_command(workflow_cli, "workflow")
+cli.add_command(gate_cli, "gate")

@@ -1,10 +1,12 @@
 # Continuous integration for the devkit monorepo.
 #
-# Two jobs: the workspace checks every package (lint, types, tests, governance
-# rules) on Linux and macOS, and the consumer smoke builds the wheels and
-# installs them into a fresh project the way a consumer would. There is no
-# release or publish job yet: no package index exists for these wheels, so
-# consumers install from Git or from a built wheel (see scripts/smoke.sh).
+# Two jobs: the workspace checks every package (devkit, devkit-starter: lint,
+# types, tests, governance rules) on Linux and macOS, and the consumer smoke
+# builds the wheels, installs them into a fresh project the way a consumer would
+# and commits through the installed gate hooks (it needs git, which the runner
+# image provides). There is no release or publish job yet: no package index
+# exists for these wheels, so consumers install from Git or from a built wheel
+# (see scripts/smoke.sh).
 name: ci
 
 on:

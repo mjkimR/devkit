@@ -1,7 +1,7 @@
 # Transitive Dependencies and Python Packaging Integration
 
 **Status**: Architecture Specification & Reference Implementation  
-**Package**: `devkit-distribution`  
+**Package**: `devkit`  
 **Related Documents**:
 - [Distribution Overview](overview.md)
 - [Bundle Manifest Specification](manifest-spec.md)
@@ -16,7 +16,7 @@ Rather than establishing an external artifact registry or proprietary CLI resolv
 
 ```bash
 # Add distribution CLI and content packages to the project
-uv add --dev devkit-distribution devkit-starter
+uv add --dev devkit devkit-starter
 
 # Select the bundle (records it in .devkit/config.toml) and synchronize
 uv run devkit add starter
@@ -28,7 +28,7 @@ uv run devkit list
 
 ### Why Project-Level Dev Dependencies?
 
-Running `uv tool install --global devkit-distribution` installs the CLI into an isolated tool environment. In that isolated environment, `importlib.metadata` cannot discover content packages installed inside the consumer project's virtual environment. Using `uv run devkit sync` ensures the CLI executes within the project's dev environment, discovering all installed content wheels seamlessly.
+Running `uv tool install --global devkit` installs the CLI into an isolated tool environment. In that isolated environment, `importlib.metadata` cannot discover content packages installed inside the consumer project's virtual environment. Using `uv run devkit sync` ensures the CLI executes within the project's dev environment, discovering all installed content wheels seamlessly.
 
 ### Upgrades and Teardown
 - **Upgrade**: Run `uv lock --upgrade-package <package>`, then run `uv run devkit sync`.
@@ -44,7 +44,7 @@ Python content wheels naturally inherit `uv` and Python packaging dependency res
 ### 1. Layered / Meta Bundles (`dependencies = [...]`)
 - Declaring `packageA` in `[project.dependencies]` includes it in the built wheel's `Requires-Dist` metadata.
 - When consumer project `repo C` adds `packageB` as a dev dependency (`uv add --dev packageB`), `uv` transitively installs `packageA` into `repo C`'s virtual environment.
-- Because `devkit` discovers bundles via `importlib.metadata.entry_points(group="devkit_distribution.bundles")`, `packageA`'s bundle becomes **available** in `repo C`. It is deployed only after `repo C` selects it (`devkit add packageA`); until then `devkit sync` lists it under `unselected`.
+- Because `devkit` discovers bundles via `importlib.metadata.entry_points(group="devkit.bundles")`, `packageA`'s bundle becomes **available** in `repo C`. It is deployed only after `repo C` selects it (`devkit add packageA`); until then `devkit sync` lists it under `unselected`.
 - **Use Case**: Composing layered agent configurations (e.g., a domain bundle `team-backend` inheriting organization-wide base standards from `company-base`).
 
 ### 2. Isolated Tooling & Testing (`dependency-groups.dev = [...]`)
@@ -61,4 +61,4 @@ Python content wheels naturally inherit `uv` and Python packaging dependency res
   packageB = "default-preset-name"
   packageA = "all"
   ```
-- Because opt-in is the default, there is no opt-out list. See [Synchronization & Transactions](sync-and-transactions.md#2-asset-selection-model).
+- Because opt-in is the default for content packages, there is no opt-out list for them; `<bundle> = false` only matters for the built-in bundles of `devkit` itself. See [Synchronization & Transactions](sync-and-transactions.md#2-asset-selection-model).

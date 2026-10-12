@@ -29,9 +29,28 @@ acceptance criteria.
 
 ## Return
 
-A review envelope created with `agent-workflow envelope new --unit <dir>
---kind review`, with one finding per issue (`issue`, `evidence`, `severity`,
-`suggested_action`) and a `verdict` of `pass`, `fail` or `needs_input`.
+A review envelope written with `devkit workflow envelope new --unit <dir>
+--kind review --stage review`, never by editing YAML:
+
+- `--status completed` when the review ran (zero findings is a pass),
+  `needs_input` when it could not run without an answer, `failed` when it
+  could not run at all;
+- `--summary` with the one to three line judgment, `--check tests="PASS 14/14"`
+  for each check that was run, and `--head <commit id>` for the reviewed
+  revision;
+- `--findings-file` with one finding per issue. Each finding has `issue` and
+  `evidence`, and optionally `failure_condition` and `suggested_action`;
+  a review leaves `resolution` at `open`:
+
+```yaml
+- issue: "The login form accepts an empty password"
+  evidence: "src/login.py:42"
+  failure_condition: "password is the empty string"
+  suggested_action: "Reject empty passwords before hashing"
+```
+
+A later round that closes findings is a `reverify` written with
+`--from latest --resolve <n>` or `--waive "<n>=<reason>"`.
 
 ## Write boundaries
 

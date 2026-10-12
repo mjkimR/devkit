@@ -1,7 +1,8 @@
 # Hybrid Architecture & Native Binary Distribution Evaluation
 
-**Status**: Architectural Evaluation & Future Consideration  
-**Target Subsystems**: `devkit-distribution` (search, sync engine), `agent-rule-engine` (workspace scanner)  
+**Status**: Deferred. Evaluation record (2026-10-11); the hybrid model is not adopted  
+**Decision**: `devkit` stays pure Python until one of the triggers in [section 6](#6-adoption-criteria-and-recommended-roadmap) occurs  
+**Target Modules**: `devkit.distribution` (playbook search, sync engine), `devkit.rules` (workspace scanner)  
 **Related Documents**: [Resource Taxonomy](../resource-taxonomy.md), [Distribution Overview](../../distribution/overview.md)
 
 ---
@@ -10,12 +11,12 @@
 
 This document evaluates the feasibility, mechanics, and trade-offs of adopting a **hybrid runtime architecture** within the `devkit` monorepo. Specifically, it assesses bundling precompiled native binaries (such as standalone executables compiled from Go or Rust) alongside Python packages distributed and installed via `uv`.
 
-The baseline `devkit` architecture relies on pure Python standard library implementations (e.g., standard library BM25 lexical search, POSIX file transactions, PyYAML parsing) to maintain zero external C-dependencies, instant workspace installation, and cross-platform portability. However, as the repository scales and agent interaction patterns expand, certain subsystems may benefit significantly from compiled native acceleration.
+The baseline `devkit` architecture is pure Python (standard library BM25 lexical search, POSIX file transactions, and three pure-Python runtime dependencies: `click`, `pyyaml` and `tomlkit`), so it needs no compiled dependencies, installs instantly, and ships as one universal wheel. However, as the repository scales and agent interaction patterns expand, certain subsystems may benefit significantly from compiled native acceleration.
 
 ### Target Evaluation Areas
 1. **Hybrid Playbook & Asset Search Engine**: Combining lexical BM25 with lightweight semantic embeddings (e.g., Go-based Word2Vec or portion-based vector representation) without requiring heavy Python machine learning dependencies (such as PyTorch, Transformers, or full vector databases).
 2. **High-Performance Workspace Traversal & Hashing**: Parallel directory diffing, BLAKE3/SHA-256 digest computation, and ACID journal rollbacks during large-scale `devkit sync` operations.
-3. **High-Throughput Rule Evaluation**: Static Markdown link analysis, AST verification, and repository governance checks within `agent-rule-engine`.
+3. **High-Throughput Rule Evaluation**: Static Markdown link analysis, file scanning, and repository governance checks within `devkit.rules`.
 
 ---
 
@@ -85,7 +86,7 @@ def resolve_engine_binary() -> Path:
     arch = "amd64" if mach in ("x86_64", "amd64") else "arm64"
     
     bin_name = f"engine-{sys_name}-{arch}"
-    bin_path = Path(str(files("devkit_distribution").joinpath(f"bin/{bin_name}")))
+    bin_path = Path(str(files("devkit.distribution").joinpath(f"bin/{bin_name}")))
     if not bin_path.is_file():
         raise FileNotFoundError(f"Missing precompiled binary for {sys_name}-{arch}: {bin_path}")
     
@@ -123,18 +124,18 @@ If word embeddings (e.g., Word2Vec vectors) or large inverted indexes require wa
 ### 1. Hybrid Playbook & Asset Search Engine
 
 * **Current Implementation**:
-  - Pure Python standard library BM25 in [playbook_search.py](../../../packages/devkit-distribution/src/devkit_distribution/installation/playbook_search.py).
+  - Pure Python standard library BM25 in [playbook_search.py](../../../packages/devkit/src/devkit/distribution/installation/playbook_search.py).
   - Lexical-only index built from receipt-owned entry files on each invocation.
   - Strict limitation: No semantic vector expansion, requires explicit aliases in frontmatter for alternate search vocabulary.
 * **Go Hybrid Evaluation**:
   - **Engine**: Go standalone binary utilizing pure Go BM25 and a compact, quantized Word2Vec/portion model (or lightweight word-centroid embeddings).
   - **Benefit**: High-speed hybrid lexical + semantic matching capable of bridging vocabulary mismatch without introducing multi-hundred-megabyte Python neural dependencies (`torch`, `sentence-transformers`, `faiss`).
-  - **Delivery**: Binary bundled in `devkit-distribution` wheel; invoked transparently by `uv run devkit playbook search`.
+  - **Delivery**: Binary bundled in `devkit` wheel; invoked transparently by `uv run devkit playbook search`.
 
 ### 2. Workspace File Traversal and Transactional Engine
 
 * **Current Implementation**:
-  - Python-based atomic writes, advisory file lock, write-ahead journal (`sync-journal.json`), and SHA-256 calculation.
+  - Python-based atomic writes, advisory project lock (`.devkit/transient/lock`), write-ahead journal (`.devkit/transient/sync-journal.json`), and SHA-256 calculation.
 * **Go Hybrid Evaluation**:
   - Parallel directory crawling (`filepath.WalkDir` with worker goroutines) and SIMD-accelerated BLAKE3 hashing.
   - **Benefit**: Instant synchronization planning in repositories with tens of thousands of files.
@@ -145,7 +146,7 @@ If word embeddings (e.g., Word2Vec vectors) or large inverted indexes require wa
 
 | Dimension | Pure Python Baseline | Hybrid Go / Binary Model |
 | :--- | :--- | :--- |
-| **External Dependencies** | Zero (Python stdlib + PyYAML) | Go toolchain required only at build time; zero runtime deps |
+| **External Dependencies** | Pure Python only (`click`, `pyyaml`, `tomlkit`) | Go toolchain required only at build time; zero runtime deps |
 | **Installation Friction** | Native `uv add`, instant wheel unpack | Native `uv add`, instant wheel unpack (with ~15MB binary overhead) |
 | **Cross-Platform Portability** | Universal (`py3-none-any`) | Requires build matrix for `linux-amd64`, `linux-arm64`, `darwin-arm64` |
 | **Search Latency (10k docs)** | ~30–50 ms (lexical only) | ~1–3 ms (lexical + lightweight semantic) |
@@ -164,21 +165,23 @@ The repository should remain on the pure Python standard library implementation 
 2. **Catalog Scale**: The total volume of synchronized playbooks, rules, and instructions exceeds several thousand entries, causing Python startup and indexing latency to exceed 100 ms.
 3. **Large Monorepo Sync Bottleneck**: Full-tree workspace diffing during `devkit sync` takes longer than 200 ms.
 
-### Phase Plan for Hybrid Integration
+### Possible Adoption Path (Not Scheduled)
+
+Today only the baseline exists: pure Python BM25 in `devkit.distribution`. The later phases describe how adoption would proceed if a trigger occurs; none of them has started.
 
 ```text
-Phase A: Baseline Validation (Current)
-  └── Pure Python BM25 in devkit-distribution; verified contracts and limits.
+Phase A: Baseline
+  └── Pure Python BM25 in devkit.distribution; verified contracts and limits.
 
-Phase B: Experimental Prototype (Under Review)
-  ├── Standalone Go search engine under tools/search-engine/
+Phase B: Experimental Prototype
+  ├── Standalone Go search engine in a new tools/ workspace member
   ├── Benchmarking lexical BM25 vs Go-portion/Word2Vec scoring
   └── CLI proof-of-concept wrapper using subprocess and stdio JSON
 
 Phase C: Packaging & Wheel Pipeline Integration
   ├── Multi-arch compilation recipes in root justfile
-  ├── Hatchling force-include configuration in packages/devkit-distribution/pyproject.toml
-  └── Automated OS/architecture resolution in devkit_distribution.search
+  ├── Hatchling force-include configuration in packages/devkit/pyproject.toml
+  └── Automated OS/architecture resolution next to devkit.distribution.installation.playbook_search
 
 Phase D: Production Cutover & Optional Fallback
   └── Default to Go binary with graceful fallback to pure Python stdlib if binary execution is blocked.

@@ -1,0 +1,258 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+from devkit.gate import (
+    BaseGate,
+    GateContext,
+    GateEntry,
+    GateRegistry,
+    GateResult,
+    GatesConfig,
+    Outcome,
+    Stage,
+    default_registry,
+    deployed_gate_paths,
+    project_registry,
+    run_stage,
+    validate,
+)
+from testsupport.gate import deploy_gate, gate_ctx, gate_source
+
+# These tests run outside a Git repository; the built-in staged rules gate is covered in test_rules_gate.py.
+_NO_RULES_GATE = GatesConfig({"rules-staged": GateEntry(False)})
+
+
+def _receipt(root: Path) -> dict:
+    return json.loads((root / ".devkit/installation.json").read_text())
+
+
+def _save_receipt(root: Path, data: dict) -> None:
+    (root / ".devkit/installation.json").write_text(json.dumps(data))
+
+
+def test_deployed_gate_paths_reads_gate_assets_only(tmp_path: Path) -> None:
+    deploy_gate(tmp_path, gate_source())
+    deploy_gate(tmp_path, gate_source("other", cls="OtherGate"), ".devkit/overrides/team/gates/other.py")
+    data = _receipt(tmp_path)
+    data["assets"][:0] = [
+        {"bundle": "team", "id": "r", "kind": "rule", "paths": [".devkit/managed/team/rules/r.py"]},
+        {"bundle": "team", "id": "gone", "kind": "gate", "paths": ["gone.py", "README.md"]},
+    ]
+    _save_receipt(tmp_path, data)
+    deployed = deployed_gate_paths(tmp_path)
+    assert [p.relative_to(tmp_path).as_posix() for p in deployed.paths] == [
+        ".devkit/managed/team/gates/block.py",
+        ".devkit/overrides/team/gates/other.py",
+    ]
+    assert [e.message for e in deployed.errors] == ["deployed gate file is missing: gone.py"]
+    assert deployed.errors[0].target_files == ("gone.py",) and deployed.errors[0].fix == "devkit sync"
+
+
+def test_gate_files_are_checked_against_the_receipt_hash(tmp_path: Path) -> None:
+    deploy_gate(tmp_path, gate_source(), record=True)
+    assert len(deployed_gate_paths(tmp_path).paths) == 1
+
+    path = tmp_path / ".devkit/managed/team/gates/block.py"
+    path.write_text(gate_source() + "\n# edited by hand\n")
+    deployed = deployed_gate_paths(tmp_path)
+    assert deployed.paths == () and "differs from the hash in the receipt" in deployed.errors[0].message
+    registry = project_registry(tmp_path)
+    assert registry.get("team-block") is None and registry.errors
+
+
+@pytest.mark.parametrize("unsafe", ["../outside.py", "/abs/gate.py", "a/../b.py"])
+def test_unsafe_receipt_paths_are_rejected(tmp_path: Path, unsafe: str) -> None:
+    deploy_gate(tmp_path, gate_source())
+    data = _receipt(tmp_path)
+    data["assets"][0]["paths"] = [unsafe]
+    _save_receipt(tmp_path, data)
+    deployed = deployed_gate_paths(tmp_path)
+    assert deployed.paths == () and "invalid installation receipt" in deployed.errors[0].message
+
+
+def test_gate_file_symlinked_outside_the_project_is_rejected(tmp_path: Path) -> None:
+    outside = tmp_path / "outside.py"
+    outside.write_text(gate_source())
+    root = tmp_path / "project"
+    deploy_gate(root, gate_source())
+    link = root / ".devkit/managed/team/gates/block.py"
+    link.unlink()
+    link.symlink_to(outside)
+    deployed = deployed_gate_paths(root)
+    assert deployed.paths == () and "unsafe" in deployed.errors[0].message
+
+
+def test_project_registry_loads_gates_and_reports_problems(tmp_path: Path) -> None:
+    assert deployed_gate_paths(tmp_path).paths == ()
+    deploy_gate(tmp_path, gate_source())
+    deploy_gate(tmp_path, "raise RuntimeError('boom')\n", ".devkit/managed/team/gates/broken.py")
+    deploy_gate(tmp_path, gate_source("message-nonempty", cls="Dup"), ".devkit/managed/team/gates/dup.py")
+    registry = project_registry(tmp_path)
+    assert [g.id for g in registry.get_all()] == ["rules-staged", "team-block", "message-nonempty"]
+    assert registry.sources["team-block"] == ".devkit/managed/team/gates/block.py"
+    messages = [e.message for e in registry.errors]
+    assert any("failed to load gate file .devkit/managed/team/gates/broken.py: boom" in m for m in messages)
+    assert any("duplicate gate id 'message-nonempty'" in m for m in messages)
+
+
+def test_a_gate_file_loads_atomically(tmp_path: Path) -> None:
+    source = gate_source("first", cls="First") + (
+        "\n\nclass Second(BaseGate):\n"
+        "    def __init__(self) -> None:\n"
+        "        raise RuntimeError('second cannot start')\n"
+        "\n"
+        "    def run(self, ctx):\n"
+        "        return None\n"
+    )
+    deploy_gate(tmp_path, source)
+    registry = project_registry(tmp_path)
+    assert registry.get("first") is None
+    assert any("second cannot start" in e.message for e in registry.errors)
+
+
+def test_abstract_shared_bases_are_not_gates(tmp_path: Path) -> None:
+    source = (
+        "from devkit.gate import BaseGate, Stage\n\n\n"
+        "class Shared(BaseGate):\n"
+        "    def __init__(self, gate_id: str) -> None:\n"
+        "        super().__init__(id=gate_id, description='', stage=Stage.PRE_COMMIT)\n\n\n"
+        "class Concrete(Shared):\n"
+        "    def __init__(self) -> None:\n"
+        "        super().__init__('concrete')\n\n"
+        "    def run(self, ctx):\n"
+        "        return None\n"
+    )
+    deploy_gate(tmp_path, source)
+    registry = project_registry(tmp_path)
+    assert registry.errors == [] and registry.get("concrete") is not None
+
+
+def test_gates_with_invalid_metadata_are_rejected(tmp_path: Path) -> None:
+    deploy_gate(tmp_path, gate_source().replace("stage=Stage.PRE_COMMIT", 'stage="pre-commit"'))
+    registry = project_registry(tmp_path)
+    assert registry.get("team-block") is None
+    assert any("stage must be a devkit.gate.Stage" in e.message for e in registry.errors)
+
+
+def test_unreadable_receipt_is_a_registry_error(tmp_path: Path) -> None:
+    (tmp_path / ".devkit").mkdir()
+    (tmp_path / ".devkit/installation.json").write_text("{nope")
+    registry = project_registry(tmp_path)
+    assert registry.errors and "invalid installation receipt" in registry.errors[0].message
+
+
+class Recorder(BaseGate):
+    def __init__(self, gate_id: str, order: int, calls: list[str], result: object = None) -> None:
+        super().__init__(id=gate_id, description="", stage=Stage.PRE_COMMIT, order=order)
+        self.calls = calls
+        self.result = result
+
+    def run(self, ctx: GateContext) -> GateResult | None:
+        self.calls.append(self.id)
+        return self.result  # type: ignore[return-value]  # some tests return invalid values on purpose
+
+
+def test_run_stage_orders_gates_and_runs_past_failures(tmp_path: Path) -> None:
+    deploy_gate(tmp_path, gate_source())
+    registry = project_registry(tmp_path)
+    calls: list[str] = []
+    registry.register(Recorder("late", 500, calls))
+    registry.register(Recorder("early", 10, calls, GateResult.skipped("nothing staged")))
+    report = run_stage(gate_ctx(tmp_path), registry, _NO_RULES_GATE)
+    assert calls == ["early", "late"]
+    assert [(r.gate_id, r.outcome) for r in report.runs] == [
+        ("early", Outcome.SKIPPED),
+        ("rules-staged", Outcome.SKIPPED),
+        ("team-block", Outcome.FAILED),
+        ("late", Outcome.PASSED),
+    ]
+    assert report.failed and report.runs[2].error is not None and report.runs[2].error.code == "TEST_REFUSED"
+
+
+def test_gate_result_cannot_report_failure() -> None:
+    with pytest.raises(ValueError, match="refuse by raising GateError"):
+        GateResult(Outcome.FAILED, "why")
+
+
+def test_every_failed_run_carries_an_error(tmp_path: Path) -> None:
+    class SilentFailure(BaseGate):
+        def __init__(self) -> None:
+            super().__init__(id="silent", description="", stage=Stage.PRE_COMMIT)
+
+        def run(self, ctx: GateContext) -> GateResult:
+            return GateResult(Outcome.FAILED, "why")
+
+    registry = GateRegistry()
+    registry.register(SilentFailure())
+    registry.register(Recorder("wrong-type", 200, [], True))
+    report = run_stage(gate_ctx(tmp_path), registry, GatesConfig())
+    assert [r.outcome for r in report.runs] == [Outcome.FAILED, Outcome.FAILED]
+    assert all(r.error is not None for r in report.runs)
+    assert report.runs[0].error is not None and "refuse by raising GateError" in report.runs[0].error.message
+    assert report.runs[1].error is not None and report.runs[1].error.code == "GATE_RESULT_INVALID"
+
+
+def test_run_stage_applies_enabled_and_settings(tmp_path: Path) -> None:
+    deploy_gate(tmp_path, gate_source(enabled=False))
+    registry = project_registry(tmp_path)
+    report = run_stage(gate_ctx(tmp_path), registry, _NO_RULES_GATE)
+    assert [(r.gate_id, r.outcome, r.note) for r in report.runs] == [
+        ("rules-staged", Outcome.SKIPPED, "disabled"),
+        ("team-block", Outcome.SKIPPED, "disabled"),
+    ]
+
+    config = GatesConfig({**_NO_RULES_GATE.gates, "team-block": GateEntry(True, {"allow": True})})
+    report = run_stage(gate_ctx(tmp_path), registry, config)
+    assert not report.failed and report.runs[1].note == "allowed"
+
+    config = GatesConfig({**_NO_RULES_GATE.gates, "team-block": GateEntry(True, {"allow": "yes"})})
+    report = run_stage(gate_ctx(tmp_path), registry, config)
+    assert report.failed and report.runs[1].outcome is Outcome.SKIPPED and report.runs[1].note == "invalid settings"
+    assert any("expected bool" in e.message for e in report.errors)
+
+
+def test_invalid_settings_of_a_disabled_gate_or_another_stage_are_reported(tmp_path: Path) -> None:
+    registry = default_registry()
+    config = GatesConfig(
+        {
+            "rules-staged": GateEntry(False, {"bogus": 1}),
+            "message-nonempty": GateEntry(True, {"bogus": 1}),
+        }
+    )
+    validation = validate(registry, config)
+    assert len(validation.errors) == 2 and all("gate has no settings" in e.message for e in validation.errors)
+    report = run_stage(gate_ctx(tmp_path), registry, config)
+    assert report.failed and [r.note for r in report.runs] == ["disabled"]
+
+
+def test_configured_gate_that_is_not_installed_fails_the_stage(tmp_path: Path) -> None:
+    config = GatesConfig({"timeline": GateEntry(True)})
+    report = run_stage(gate_ctx(tmp_path), default_registry(), config)
+    assert report.failed and "not installed: ['timeline']" in report.errors[0].message
+
+
+@pytest.mark.parametrize(
+    ("text", "failed"),
+    [
+        ("feat: x\n", False),
+        ("#123 fix the parser\n", False),  # `git commit -m` keeps a leading '#'
+        ("# Heading\n\nbody\n", False),
+        ("; with core.commentChar=';'\n", False),
+        ("", True),
+        ("  \n\n\t\n", True),
+        ("\n# ------------------------ >8 ------------------------\ndiff\n", True),
+        ("\n; ------------------------ >8 ------------------------\ndiff\n", True),
+        ("fix: y\n# ------------------------ >8 ------------------------\n", False),
+    ],
+)
+def test_message_gate(tmp_path: Path, text: str, failed: bool) -> None:
+    (tmp_path / "MSG").write_text(text)
+    report = run_stage(gate_ctx(tmp_path, Stage.COMMIT_MSG, "MSG"), default_registry(), GatesConfig())
+    assert report.failed is failed
+
+
+def test_post_commit_without_gates(tmp_path: Path) -> None:
+    assert run_stage(gate_ctx(tmp_path, Stage.POST_COMMIT), GateRegistry(), GatesConfig()).runs == ()

@@ -1,0 +1,36 @@
+[project]
+name = "devkit"
+version = "0.1.0"
+description = "Agent asset distribution, repository rules, delivery workflows and commit gates in one CLI"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "click>=8.1.7",
+    "pyyaml>=6.0.1",
+    "tomlkit>=0.13",
+]
+
+[project.scripts]
+devkit = "devkit.cli:cli"
+
+[project.entry-points."devkit.bundles"]
+devkit = "devkit.distribution.guide"
+advisory = "devkit.advisory"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/devkit"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests"]
+addopts = ["--import-mode=importlib"]
+log_level = "INFO"

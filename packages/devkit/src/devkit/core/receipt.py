@@ -1,0 +1,369 @@
+"""Typed, strict reader for the installation receipt ``.devkit/installation.json``.
+
+``devkit sync`` (``devkit``) writes the receipt; every other
+package only reads it, through ``load_receipt``. A receipt that is absent means
+"nothing installed" (``None``). A receipt that is present but unusable is a
+``ReceiptError``, never an empty result: a consumer that silently skipped a
+corrupt receipt would run without the rules, gates or checks it records.
+
+Schema (``schema = 1``)::
+
+    {
+      "schema": 1,
+      "packages": [{"package", "package_version", "bundle", "bundle_version"}],
+      "selection": {"agents": [str], "presets": {bundle: [preset]}},
+      "assets": [{"bundle", "id", "kind", "paths": [path],
+                  "entrypoints"?: [path], "seeded"?: [path]}],
+      "files": {path: {"sha256": hex64, "mode": 0o644 | 0o755}},
+      "tool"?: {"package", "version"},
+      "overrides"?: {bundle: {asset: {"kind", "relative_path",
+                                      "baseline_upstream_sha256", "override_sha256"}}},
+      "seeded"?: [{"bundle", "id", "path"}],
+      "guidance_block"?: hex64
+    }
+
+Unknown or missing keys, wrong types, duplicate JSON keys and unsafe paths
+(see ``devkit.core.paths``; receipt paths must also be canonical) are errors.
+Policy that belongs to the writer (which destinations the receipt may own,
+which agents exist) is validated by ``devkit``.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+from pathlib import Path
+from types import MappingProxyType
+from typing import Any
+
+from devkit.core.errors import ReceiptError, UnsafePathError
+from devkit.core.paths import normalize_relpath
+
+RECEIPT_PATH = ".devkit/installation.json"
+CONFIG_PATH = ".devkit/config.toml"
+SCHEMA = 1
+FILE_MODES = frozenset({0o644, 0o755})
+
+_SHA256 = re.compile(r"[0-9a-f]{64}\Z")
+_SLUG = re.compile(r"[a-z][a-z0-9-]*\Z")
+_REQUIRED = frozenset({"schema", "packages", "selection", "assets", "files"})
+_OPTIONAL = frozenset({"tool", "overrides", "seeded", "guidance_block"})
+
+
+@dataclass(frozen=True)
+class PackageRecord:
+    package: str
+    package_version: str
+    bundle: str
+    bundle_version: str
+
+
+@dataclass(frozen=True)
+class Selection:
+    agents: tuple[str, ...]
+    presets: Mapping[str, tuple[str, ...]]
+
+
+@dataclass(frozen=True)
+class AssetRecord:
+    """One synchronized asset. ``paths`` are the deployed files (an override replaces its managed copy)."""
+
+    bundle: str
+    id: str
+    kind: str
+    paths: tuple[str, ...]
+    entrypoints: tuple[str, ...] = ()
+    seeded: tuple[str, ...] = ()
+
+    def files(self, suffix: str = "") -> tuple[str, ...]:
+        """``entrypoints`` then ``paths`` ending in ``suffix``, without duplicates."""
+        out: list[str] = []
+        for rel in (*self.entrypoints, *self.paths):
+            if rel.endswith(suffix) and rel not in out:
+                out.append(rel)
+        return tuple(out)
+
+
+@dataclass(frozen=True)
+class FileRecord:
+    sha256: str
+    mode: int
+
+    def matches(self, data: bytes) -> bool:
+        """Whether ``data`` has the recorded SHA-256."""
+        return hashlib.sha256(data).hexdigest() == self.sha256
+
+
+@dataclass(frozen=True)
+class ToolRecord:
+    package: str
+    version: str
+
+
+@dataclass(frozen=True)
+class OverrideRecord:
+    kind: str
+    relative_path: str
+    baseline_upstream_sha256: str
+    override_sha256: str
+
+
+@dataclass(frozen=True)
+class SeededRecord:
+    bundle: str
+    id: str
+    path: str
+
+
+@dataclass(frozen=True)
+class Receipt:
+    """A validated receipt. Mappings are read-only views."""
+
+    schema: int
+    packages: tuple[PackageRecord, ...]
+    selection: Selection
+    asset_records: tuple[AssetRecord, ...]
+    file_records: Mapping[str, FileRecord]
+    tool: ToolRecord | None = None
+    overrides: Mapping[str, Mapping[str, OverrideRecord]] = field(default_factory=lambda: MappingProxyType({}))
+    seeded: tuple[SeededRecord, ...] = ()
+    guidance_block: str | None = None
+
+    def assets(self, kind: str | None = None) -> tuple[AssetRecord, ...]:
+        """Asset records in receipt order, optionally only those of one ``kind``."""
+        if kind is None:
+            return self.asset_records
+        return tuple(asset for asset in self.asset_records if asset.kind == kind)
+
+    def file(self, path: str) -> FileRecord | None:
+        """The ``files`` entry of a workspace-relative path, if the receipt owns it."""
+        return self.file_records.get(path)
+
+    def file_hash(self, path: str) -> str | None:
+        """The recorded SHA-256 of a workspace-relative path, if the receipt owns it."""
+        record = self.file_records.get(path)
+        return record.sha256 if record is not None else None
+
+
+def _fail(where: str, problem: str) -> ReceiptError:
+    return ReceiptError(f"{RECEIPT_PATH}: {where}: {problem}")
+
+
+def _object(value: Any, where: str, required: set[str], optional: frozenset[str] | set[str] = frozenset()) -> dict:
+    if not isinstance(value, dict):
+        raise _fail(where, "expected an object")
+    missing = required - value.keys()
+    if missing:
+        raise _fail(where, f"missing keys {sorted(missing)}")
+    unknown = value.keys() - required - optional
+    if unknown:
+        raise _fail(where, f"unknown keys {sorted(unknown)}")
+    return value
+
+
+def _string(value: Any, where: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise _fail(where, "expected a nonempty string")
+    return value
+
+
+def _slug(value: Any, where: str) -> str:
+    if not isinstance(value, str) or not _SLUG.fullmatch(value):
+        raise _fail(where, "expected a lowercase slug")
+    return value
+
+
+def _sha256(value: Any, where: str) -> str:
+    if not isinstance(value, str) or not _SHA256.fullmatch(value):
+        raise _fail(where, "expected a lowercase hex SHA-256")
+    return value
+
+
+def _list(value: Any, where: str) -> list:
+    if not isinstance(value, list):
+        raise _fail(where, "expected an array")
+    return value
+
+
+def _strings(value: Any, where: str) -> tuple[str, ...]:
+    return tuple(_string(item, f"{where}[{index}]") for index, item in enumerate(_list(value, where)))
+
+
+def _path(value: Any, where: str) -> str:
+    if not isinstance(value, str):
+        raise _fail(where, "expected a path string")
+    try:
+        normalize_relpath(value, canonical=True)
+    except UnsafePathError as exc:
+        raise _fail(where, f"unsafe path: {exc}") from exc
+    return value
+
+
+def _paths(value: Any, where: str) -> tuple[str, ...]:
+    return tuple(_path(item, f"{where}[{index}]") for index, item in enumerate(_list(value, where)))
+
+
+def _packages(value: Any) -> tuple[PackageRecord, ...]:
+    records = []
+    for index, item in enumerate(_list(value, "packages")):
+        where = f"packages[{index}]"
+        item = _object(item, where, {"package", "package_version", "bundle", "bundle_version"})
+        records.append(
+            PackageRecord(
+                package=_string(item["package"], f"{where}.package"),
+                package_version=_string(item["package_version"], f"{where}.package_version"),
+                bundle=_slug(item["bundle"], f"{where}.bundle"),
+                bundle_version=_string(item["bundle_version"], f"{where}.bundle_version"),
+            )
+        )
+    return tuple(records)
+
+
+def _selection(value: Any) -> Selection:
+    value = _object(value, "selection", {"agents", "presets"})
+    presets = value["presets"]
+    if not isinstance(presets, dict):
+        raise _fail("selection.presets", "expected an object")
+    return Selection(
+        agents=_strings(value["agents"], "selection.agents"),
+        presets=MappingProxyType(
+            {
+                _slug(bundle, "selection.presets"): _strings(names, f"selection.presets.{bundle}")
+                for bundle, names in presets.items()
+            }
+        ),
+    )
+
+
+def _assets(value: Any) -> tuple[AssetRecord, ...]:
+    records = []
+    for index, item in enumerate(_list(value, "assets")):
+        where = f"assets[{index}]"
+        item = _object(item, where, {"bundle", "id", "kind", "paths"}, {"entrypoints", "seeded"})
+        records.append(
+            AssetRecord(
+                bundle=_slug(item["bundle"], f"{where}.bundle"),
+                id=_slug(item["id"], f"{where}.id"),
+                kind=_slug(item["kind"], f"{where}.kind"),
+                paths=_paths(item["paths"], f"{where}.paths"),
+                entrypoints=_paths(item.get("entrypoints", []), f"{where}.entrypoints"),
+                seeded=_paths(item.get("seeded", []), f"{where}.seeded"),
+            )
+        )
+    return tuple(records)
+
+
+def _files(value: Any) -> Mapping[str, FileRecord]:
+    if not isinstance(value, dict):
+        raise _fail("files", "expected an object")
+    records: dict[str, FileRecord] = {}
+    for name, meta in value.items():
+        where = f"files.{name}"
+        _path(name, "files")
+        meta = _object(meta, where, {"sha256", "mode"})
+        mode = meta["mode"]
+        if type(mode) is not int or mode not in FILE_MODES:
+            raise _fail(f"{where}.mode", "expected 420 (0o644) or 493 (0o755)")
+        records[name] = FileRecord(_sha256(meta["sha256"], f"{where}.sha256"), mode)
+    return MappingProxyType(records)
+
+
+def _tool(value: Any) -> ToolRecord:
+    value = _object(value, "tool", {"package", "version"})
+    return ToolRecord(_string(value["package"], "tool.package"), _string(value["version"], "tool.version"))
+
+
+def _overrides(value: Any) -> Mapping[str, Mapping[str, OverrideRecord]]:
+    if not isinstance(value, dict):
+        raise _fail("overrides", "expected an object")
+    result: dict[str, Mapping[str, OverrideRecord]] = {}
+    for bundle, assets in value.items():
+        _slug(bundle, "overrides")
+        if not isinstance(assets, dict):
+            raise _fail(f"overrides.{bundle}", "expected an object")
+        records: dict[str, OverrideRecord] = {}
+        for asset_id, meta in assets.items():
+            where = f"overrides.{bundle}.{asset_id}"
+            _slug(asset_id, f"overrides.{bundle}")
+            meta = _object(meta, where, {"kind", "relative_path", "baseline_upstream_sha256", "override_sha256"})
+            records[asset_id] = OverrideRecord(
+                kind=_slug(meta["kind"], f"{where}.kind"),
+                relative_path=_path(meta["relative_path"], f"{where}.relative_path"),
+                baseline_upstream_sha256=_sha256(meta["baseline_upstream_sha256"], f"{where}.baseline_upstream_sha256"),
+                override_sha256=_sha256(meta["override_sha256"], f"{where}.override_sha256"),
+            )
+        result[bundle] = MappingProxyType(records)
+    return MappingProxyType(result)
+
+
+def _seeded(value: Any) -> tuple[SeededRecord, ...]:
+    records = []
+    for index, item in enumerate(_list(value, "seeded")):
+        where = f"seeded[{index}]"
+        item = _object(item, where, {"bundle", "id", "path"})
+        records.append(
+            SeededRecord(
+                bundle=_slug(item["bundle"], f"{where}.bundle"),
+                id=_slug(item["id"], f"{where}.id"),
+                path=_path(item["path"], f"{where}.path"),
+            )
+        )
+    return tuple(records)
+
+
+def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ReceiptError(f"{RECEIPT_PATH}: duplicate JSON key {key!r}")
+        result[key] = value
+    return result
+
+
+def _reject_constant(name: str) -> Any:
+    raise ReceiptError(f"{RECEIPT_PATH}: {name} is not valid JSON")
+
+
+def parse_receipt(raw: bytes | str) -> Receipt:
+    """Validate receipt content (the file's bytes or text) and return the typed receipt."""
+    try:
+        text = raw.decode("utf-8") if isinstance(raw, bytes) else raw
+        data = json.loads(text, object_pairs_hook=_unique_object, parse_constant=_reject_constant)
+    except UnicodeDecodeError as exc:
+        raise ReceiptError(f"{RECEIPT_PATH}: not UTF-8: {exc}") from exc
+    except json.JSONDecodeError as exc:
+        raise ReceiptError(f"{RECEIPT_PATH}: invalid JSON: {exc}") from exc
+    data = _object(data, "receipt", set(_REQUIRED), _OPTIONAL)
+    schema = data["schema"]
+    if type(schema) is not int or schema != SCHEMA:
+        raise _fail("schema", f"unsupported receipt schema {schema!r}; expected {SCHEMA}")
+    return Receipt(
+        schema=schema,
+        packages=_packages(data["packages"]),
+        selection=_selection(data["selection"]),
+        asset_records=_assets(data["assets"]),
+        file_records=_files(data["files"]),
+        tool=_tool(data["tool"]) if "tool" in data else None,
+        overrides=_overrides(data["overrides"]) if "overrides" in data else MappingProxyType({}),
+        seeded=_seeded(data["seeded"]) if "seeded" in data else (),
+        guidance_block=_sha256(data["guidance_block"], "guidance_block") if "guidance_block" in data else None,
+    )
+
+
+def load_receipt(root: Path) -> Receipt | None:
+    """Read ``root/.devkit/installation.json``; ``None`` only when it does not exist.
+
+    Raises ``ReceiptError`` when the file exists but cannot be read or does not
+    match the schema (including a dangling symlink or a directory in its place).
+    """
+    path = root / RECEIPT_PATH
+    if not path.exists() and not path.is_symlink():
+        return None
+    try:
+        raw = path.read_bytes()
+    except OSError as exc:
+        raise ReceiptError(f"{RECEIPT_PATH}: cannot be read: {exc}") from exc
+    return parse_receipt(raw)

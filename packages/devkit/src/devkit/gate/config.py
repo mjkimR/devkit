@@ -1,0 +1,152 @@
+"""Layered ``[gates]`` configuration.
+
+Two files contribute, later layers overriding earlier ones:
+
+1. ``.devkit/config.toml`` (Git-tracked, shared by the team). Only ``[gates]`` is
+   read; other tables belong to ``devkit`` and the other engines.
+2. ``<common-git-dir>/devkit.config`` (untracked, per clone, shared by every
+   worktree). It uses the same TOML shape and currently accepts only ``[gates]``.
+
+Layers are deep-merged table by table; a scalar or array in a later layer
+replaces the earlier value as a whole. The merged table looks like::
+
+    [gates.settings.message-nonempty]
+    enabled = false
+
+    [gates.settings.some-gate]
+    enabled = true
+    threshold = 3
+
+``enabled`` is reserved in every gate table; the other keys are matched to the
+gate's declared settings by ``resolve_settings``.
+"""
+
+from __future__ import annotations
+
+import dataclasses
+import tomllib
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+
+from devkit.core import CONFIG_PATH, ConfigError, read_project_config
+from devkit.gate.models import Gate, GateConfigError
+
+PROJECT_CONFIG = CONFIG_PATH
+LOCAL_CONFIG = "devkit.config"
+GATES_TABLE = "gates"
+SETTINGS_KEY = "settings"
+ENABLED_KEY = "enabled"
+
+
+@dataclass(frozen=True)
+class GateEntry:
+    enabled: bool | None = None  # ``None`` keeps the gate's ``enabled_by_default``
+    values: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class GatesConfig:
+    gates: dict[str, GateEntry] = field(default_factory=dict)
+    sources: tuple[Path, ...] = ()  # files that contributed, lowest precedence first
+
+    def enabled(self, gate: Gate) -> bool:
+        entry = self.gates.get(gate.id)
+        return gate.enabled_by_default if entry is None or entry.enabled is None else entry.enabled
+
+
+def _read(path: Path) -> dict[str, Any] | None:
+    if not path.exists() and not path.is_symlink():
+        return None
+    try:
+        return tomllib.loads(path.read_text("utf-8"))
+    except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+        raise GateConfigError(f"invalid config {path}: {exc}", target_files=[str(path)]) from exc
+
+
+def merge(base: dict[str, Any], top: dict[str, Any]) -> dict[str, Any]:
+    """Deep-merge ``top`` over ``base``: tables merge, everything else is replaced."""
+    merged = dict(base)
+    for key, value in top.items():
+        current = merged.get(key)
+        merged[key] = merge(current, value) if isinstance(current, dict) and isinstance(value, dict) else value
+    return merged
+
+
+def _table(value: object, context: str) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise GateConfigError(f"config {context}: expected a table")
+    return value
+
+
+def parse_gates(table: dict[str, Any], sources: tuple[Path, ...] = ()) -> GatesConfig:
+    unknown = set(table) - {SETTINGS_KEY}
+    if unknown:
+        raise GateConfigError(f"config {GATES_TABLE}: unknown fields: {sorted(unknown)}")
+    gates: dict[str, GateEntry] = {}
+    settings = _table(table.get(SETTINGS_KEY, {}), f"{GATES_TABLE}.{SETTINGS_KEY}")
+    for gate_id in sorted(settings):
+        context = f"{GATES_TABLE}.{SETTINGS_KEY}.{gate_id}"
+        values = dict(_table(settings[gate_id], context))
+        enabled = values.pop(ENABLED_KEY, None)
+        if enabled is not None and not isinstance(enabled, bool):
+            raise GateConfigError(f"config {context}.{ENABLED_KEY}: expected true or false, got {enabled!r}")
+        gates[gate_id] = GateEntry(enabled, values)
+    return GatesConfig(gates, sources)
+
+
+def load_gates_config(repo_root: Path, common_git_dir: Path) -> GatesConfig:
+    """Merge ``[gates]`` from the project config and the clone-local ``<common-git-dir>/devkit.config``."""
+    merged: dict[str, Any] = {}
+    sources: list[Path] = []
+    project_path = repo_root / PROJECT_CONFIG
+    try:
+        project = read_project_config(repo_root)
+    except ConfigError as exc:
+        raise GateConfigError(str(exc), target_files=[PROJECT_CONFIG]) from exc
+    if GATES_TABLE in project:
+        merged = merge(merged, _table(project[GATES_TABLE], f"{project_path}: {GATES_TABLE}"))
+        sources.append(project_path)
+    local_path = common_git_dir / LOCAL_CONFIG
+    local = _read(local_path)
+    if local is not None:
+        unknown = set(local) - {GATES_TABLE}
+        if unknown:
+            raise GateConfigError(f"config {local_path}: unknown fields: {sorted(unknown)}")
+        if GATES_TABLE in local:
+            merged = merge(merged, _table(local[GATES_TABLE], f"{local_path}: {GATES_TABLE}"))
+            sources.append(local_path)
+    return parse_gates(merged, tuple(sources))
+
+
+def _accepts(default: object, value: object) -> bool:
+    if isinstance(default, bool) or isinstance(value, bool):
+        return isinstance(default, bool) and isinstance(value, bool)
+    if isinstance(default, float):
+        return isinstance(value, int | float)
+    if isinstance(default, list | tuple):
+        return isinstance(value, list)
+    return default is None or isinstance(value, type(default))
+
+
+def resolve_settings(gate: Gate, values: dict[str, Any]) -> Any:
+    """Apply configured values over the gate's default settings dataclass."""
+    defaults = gate.settings
+    context = f"{GATES_TABLE}.{SETTINGS_KEY}.{gate.id}"
+    if defaults is None:
+        if values:
+            raise GateConfigError(f"config {context}: gate has no settings, got {sorted(values)}")
+        return None
+    if not dataclasses.is_dataclass(defaults) or isinstance(defaults, type):
+        raise GateConfigError(f"gate {gate.id!r}: settings must be a dataclass instance or None", input_error=False)
+    names = {f.name for f in dataclasses.fields(defaults)}
+    unknown = set(values) - names
+    if unknown:
+        raise GateConfigError(f"config {context}: unknown settings {sorted(unknown)} (known: {sorted(names)})")
+    resolved: dict[str, Any] = {}
+    for key, value in values.items():
+        default = getattr(defaults, key)
+        if not _accepts(default, value):
+            raise GateConfigError(f"config {context}.{key}: expected {type(default).__name__}, got {value!r}")
+        resolved[key] = tuple(value) if isinstance(default, tuple) else value
+    return dataclasses.replace(defaults, **resolved)

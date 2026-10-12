@@ -1,7 +1,7 @@
 # Context Loading and Playbook Discovery
 
 **Status**: Architecture Specification & Reference Implementation  
-**Package**: `devkit-distribution`  
+**Package**: `devkit`  
 **Related Documents**:
 - [Distribution Overview](overview.md)
 - [Resource Taxonomy](../architecture/resource-taxonomy.md)
@@ -47,10 +47,10 @@ description: Python formatting, typing, and naming standards.
 ```bash
 uv run devkit get-context <bundle>
 ```
-- **Execution**: Run from the synchronized consumer project or a subdirectory (or specify `--target <dir>`).
+- **Execution**: Run from the synchronized consumer project or a subdirectory (or specify `-w/--workspace-root <dir>`). The command takes the shared project lock, so parallel agents can load context at the same time; while a sync is writing it waits up to ten seconds.
 - **Response**: Returns JSON containing:
   - `constitution`: Full markdown string of the bundle's `AGENTS.md` (or `null` when absent).
-  - `instructions`: Catalog array of YAML `header` strings and absolute file `path` values for synchronized instructions selected by presets.
+  - `instructions`: Catalog array of YAML `header` strings and absolute file `path` values for synchronized instructions selected by presets. An overridden instruction is read from `.devkit/overrides/<bundle>/...`; every other file must still match its receipt hash.
 - **On-Demand Body Loading**: Instruction bodies are never returned by `get-context`. The agent inspects headers to identify relevant policies and reads those files on demand.
 
 ### Skill Body Prerequisite Injection
@@ -95,7 +95,7 @@ Playbooks can be Markdown files or directories containing `SKILL.md` and support
 
 ## 4. Embedded BM25 Search Engine
 
-`devkit-distribution` contains an embedded lexical search engine based on BM25:
+`devkit` contains an embedded lexical search engine based on BM25:
 - **Zero C-Dependencies**: Implemented purely using the Python standard library.
 - **Dynamic In-Memory Index**: Rebuilt from receipt-owned files for each search, avoiding stale persistent caches.
 - **Indexed Fields**: Indexes only `name`, `description`, and `aliases` with parameters $k_1=1.5$, $b=0.75$, positive IDF, and unique query terms. Playbook bodies are never indexed.
@@ -118,24 +118,25 @@ Playbooks can be Markdown files or directories containing `SKILL.md` and support
 ```bash
 uv run devkit playbook search "replica recovery" --limit 3 --min-score 0.2 --max-bytes 4096
 ```
-The search returns matching candidates containing bundle name, asset ID, absolute file path, relevance score, and frontmatter metadata:
+The search returns the query and the matching candidates (bundle, asset id, frontmatter `name`, `description` and `aliases`, absolute file path and score), best first:
 ```json
 {
-  "matches": [
+  "query": "replica recovery",
+  "results": [
     {
       "bundle": "starter",
-      "asset": "review-flow",
+      "id": "review-flow",
+      "name": "review-flow",
+      "description": "Pull request review checklist",
+      "aliases": [],
       "path": "/abs/path/.devkit/managed/starter/playbooks/review.md",
-      "score": 0.85,
-      "metadata": {
-        "name": "review-flow",
-        "description": "Pull request review checklist"
-      }
+      "score": 0.85
     }
   ],
   "truncated": false
 }
 ```
+An overridden playbook is searched and returned from its override (`/abs/path/.devkit/overrides/<bundle>/...`).
 
 ### 2. On-Demand Procedure Reading
 Once a matching candidate is identified, the agent loads its procedure body directly from the returned absolute file path. If the playbook belongs to a bundle whose context has not yet been loaded in the current session, the agent calls `devkit get-context <bundle>` first.

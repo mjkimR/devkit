@@ -57,6 +57,6 @@ stages:
 
 ## Stage notes
 
-- `build-verify` is done when every task in `tasks.md` is checked and `agent-rules check` passes on the unit's files.
+- `build-verify` is done when every task in `tasks.md` is checked and `devkit rules check` passes on the unit's files.
 - `review` is performed by a review skill when the consumer ships one (swap it into `skills`), preferably as a delegated reviewer; the result is written to `envelopes/review-NN.yaml` and a `reverify` envelope closes a round with findings.
-- `integrate` requires the anchor status to be `completed` and CI to be green (`--given ci-passed` after the run).
+- `integrate` requires the anchor status to be `completed` and CI to be green (`--given ci-passed` after the run); the `integration` approval is asked once both hold.
