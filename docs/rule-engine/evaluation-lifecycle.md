@@ -91,7 +91,7 @@ agent-rules explain RULE-ID [-w DIRECTORY] [--rules-dir DIRECTORY] [--format tex
 Rules come from three sources, in order: the built-in registry, every `kind = "rule"` asset recorded by `devkit sync` in `.devkit/installation.json`, and `--rules-dir`. A later rule with the same ID replaces an earlier one.
 
 - **Phases**:
-  - `linter`: Structural specifications, frontmatter invariants, document references, and Markdown relative link validity. This is the gate for pre-commit hooks and CI.
+  - `linter`: Markdown relative link validity, safety checks on explicit targets, and every bundle-distributed rule declared in this phase (frontmatter schemas, identifiers, document references). This is the gate for pre-commit hooks and CI.
   - `hygiene`: Includes `linter` rules plus file size warnings and formatting guidelines, and every rule parked there by a project phase override.
 - **Exit Status**:
   - `0`: All checks passed cleanly, or all fixable findings were successfully repaired.

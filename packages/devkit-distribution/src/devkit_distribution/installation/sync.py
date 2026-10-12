@@ -6,10 +6,12 @@ from pathlib import Path
 from devkit_distribution.bundles import BundleError
 from devkit_distribution.bundles.manifest import SLUG
 
+from . import guidance_block
 from .config import parse_presets, read_config
 from .discovery import InstalledBundle
-from .inventory import AGENTS, Content, desired_inventory
+from .inventory import AGENTS, GENERATED_SKILLS, Content, desired_inventory
 from .transaction import (
+    AGENTS_FILE,
     CONFIG,
     JOURNAL,
     RECEIPT,
@@ -52,18 +54,22 @@ def read_receipt(root: Path) -> dict:
         if snapshot(root, RECEIPT) is not None:
             raise BundleError("invalid empty installation receipt")
         return {}
-    valid_keys = {"schema", "packages", "selection", "assets", "files", "overrides"}
+    valid_keys = {"schema", "packages", "selection", "assets", "files", "overrides", "guidance_block"}
     if (
         not ({"schema", "packages", "selection", "assets", "files"} <= set(receipt) <= valid_keys)
         or type(receipt["schema"]) is not int
         or receipt["schema"] != 1
     ):
         raise BundleError("unsupported installation receipt")
+    if "guidance_block" in receipt and not (
+        isinstance(receipt["guidance_block"], str) and re.fullmatch(r"[0-9a-f]{64}", receipt["guidance_block"])
+    ):
+        raise BundleError("invalid receipt guidance_block")
     files = receipt["files"]
     if not isinstance(files, dict):
         raise BundleError("invalid receipt files")
     for name, meta in files.items():
-        if name in {RECEIPT, JOURNAL, CONFIG} or name.startswith(".devkit/overrides/"):
+        if name in {RECEIPT, JOURNAL, CONFIG, AGENTS_FILE} or name.startswith(".devkit/overrides/"):
             raise BundleError("receipt cannot own installation metadata")
         project_path(root, name)
         if (
@@ -111,6 +117,50 @@ def read_receipt(root: Path) -> dict:
                 ):
                     raise BundleError("invalid receipt overrides")
     return receipt
+
+
+def _plan_guidance_block(
+    root: Path,
+    changes: dict[str, Content | None],
+    actions: list[dict[str, str]],
+    recorded: str | None,
+    *,
+    enabled: bool,
+    bundles: list[str],
+    entry_skills: list[str],
+) -> str | None:
+    """Add the root ``AGENTS.md`` change for the managed block; return the hash to record.
+
+    The block is owned like a managed file: a hand edit (digest differs from
+    the receipt) stops the sync before any write, a removed block is written
+    again, and the bytes outside the markers are never touched. With
+    ``enabled`` off, a block whose digest still matches the receipt is removed
+    and the receipt stops recording it.
+    """
+    current = snapshot(root, AGENTS_FILE)
+    text = guidance_block.decode(current.data if current else None)
+    existing = guidance_block.extract(text)
+    if existing is not None:
+        if recorded is None:
+            raise BundleError(f"unowned guidance block already exists: {AGENTS_FILE}")
+        if guidance_block.digest(existing) != recorded:
+            raise BundleError(
+                f"user-modified guidance block: {AGENTS_FILE}; restore the block between the markers"
+                f" (for example 'git checkout -- {AGENTS_FILE}'), keep project text outside them,"
+                " and rerun devkit sync"
+            )
+    mode = current.mode if current else 0o644
+    if not enabled:
+        if existing is not None and text is not None:
+            remainder = guidance_block.strip(text)
+            changes[AGENTS_FILE] = None if remainder is None else Content(remainder.encode("utf-8"), mode)
+            actions.append({"path": AGENTS_FILE, "action": "remove" if remainder is None else "update"})
+        return None
+    desired = guidance_block.render(bundles, entry_skills)
+    if existing != desired:
+        changes[AGENTS_FILE] = Content(guidance_block.compose(text, desired).encode("utf-8"), mode)
+        actions.append({"path": AGENTS_FILE, "action": "create" if current is None else "update"})
+    return guidance_block.digest(desired)
 
 
 def sync_project(
@@ -179,6 +229,17 @@ def sync_project(
         }
         if overrides_record:
             receipt["overrides"] = overrides_record
+        block_hash = _plan_guidance_block(
+            root,
+            changes,
+            actions,
+            previous.get("guidance_block"),
+            enabled=config.guidance_block,
+            bundles=sorted(active_presets),
+            entry_skills=[kind for kind in GENERATED_SKILLS if any(asset["kind"] == kind for asset in assets)],
+        )
+        if block_hash is not None:
+            receipt["guidance_block"] = block_hash
         # Preserve exact receipt bytes on a no-op (including a fresh checkout restore).
         if receipt != previous:
             changes[RECEIPT] = json_content(receipt)

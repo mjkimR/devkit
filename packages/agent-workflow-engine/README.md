@@ -12,12 +12,12 @@ Requires Python 3.12 or later; runtime dependencies are `agent-advisory`,
 
 ```text
 src/agent_workflow_engine/
-├── config.py        # [workflow] and [workflow.approvals] from .devkit/config.toml
-├── layout.py        # Work unit layout: unit_path template, discovery
+├── config.py        # [workflow], [workflow.approvals] and [workflow.stages] from .devkit/config.toml
+├── layout.py        # Work unit layout: unit_path template, discovery, per-definition layout spec
 ├── frontmatter.py   # Frontmatter read/update preserving other bytes
 ├── definition.py    # Workflow document parsing, validation, schema hash
 ├── checks.py        # Check registry: syntax, classes, primitives, aliases
-├── envelope.py      # envelopes/<kind>-NN.yaml loading and review state
+├── envelope.py      # envelopes/<kind>-NN.yaml loading, review state and authoring
 ├── evaluate.py      # Stage evaluation, gates, --given, delegate, waiting
 ├── binding.py       # workflow / workflow_hash / workflow_history in the anchor file
 ├── decisions.py     # decisions/NN-<request>.yaml records answering human requests
@@ -41,8 +41,11 @@ just workflow requests --unit <dir>                   # open human requests (app
 just workflow answer --unit <dir> --request gate:integration --action accept
 just workflow handoff --unit <dir>                    # continue a completed unit with the recorded or auto choice
 just workflow show direct-delivery
-just workflow list
-just workflow envelope new --unit <dir> --kind review
+just workflow list                                    # units across every layout in use
+just workflow envelope new --unit <dir> --kind review # needs_input skeleton to fill in
+just workflow envelope new --unit <dir> --kind review --summary "..." --findings-file findings.yaml --check tests="PASS 3/3"
+just workflow envelope new --unit <dir> --kind reverify --from latest --resolve 1 --waive "2=accepted cost"
+just workflow envelope check --unit <dir>             # every envelope file and any contract violation
 ```
 
 To install directly in another project:
@@ -74,6 +77,9 @@ default = "direct-delivery"           # used by `new` and by unbound units
 direction = "auto"                    # ask (default) | auto | off
 integration = "ask"
 handoff = "ask"                       # reserved: who picks the next workflow of a completed unit
+
+[workflow.stages]
+collect-feedback = "off"              # on (default) | off: skip this stage id in every workflow
 ```
 
 `ask` keeps a gated stage current and emits an `approve` request; the answer is
@@ -83,6 +89,11 @@ assertion. `auto` passes the gate by policy and records it in the output.
 `off` skips the stage. Lowering or raising a gate later is a change to this
 table only. The request and record formats are the
 [Human Interaction Contract](../../docs/workflow/human-interaction.md).
+
+`[workflow.stages]` turns a stage off by id whether or not it has a gate.
+`next` reports it as `[SKIPPED: <id> reason=stages.<id>=off]` and the stage
+never blocks completion or handoff. Ids that no selected workflow uses are
+allowed, since stage ids are shared across definitions.
 
 Workflows chain. A definition's `next` list names candidate workflows with
 `when` preconditions (check syntax) and a `recommended` flag. Once a unit
@@ -104,8 +115,11 @@ with the same id. Bundles that ship a workflow also get the generated
 
 A definition declares `id`, `schema_version: 1`, optional `checks` (runner or
 human checks it introduces), ordered `stages`, each with `exit` checks,
-`skills`, `role`, `isolation`, `human_gate` and `returns`, and an optional
-`next` list of handoff candidates. Checks are
+`skills`, `role`, `isolation`, `human_gate` and `returns`, an optional
+`next` list of handoff candidates, and an optional `layout` that overrides
+`work_dir`, `unit_path` or `anchor` for the units of that workflow, so one
+repository can keep, for example, proposal bundles under `docs/proposals/`
+and spec bundles under `specs/` as units of different workflows. Checks are
 `name` or `name(arg ...)` from `agent-workflow checks`; aliases such as
 `anchor-exists`, `tasks-all-checked` and `envelope-review-passed` resolve
 against the configured anchor. `lint-clean` runs `agent-rule-engine` on the
@@ -126,9 +140,12 @@ print(result.stage.id if result.stage else "complete")
 ## Current limits
 
 Only `TemplateLayout` exists; a plugin layout fits behind the `Layout`
-protocol but is not loaded from a directory yet. Subagent delegation names a
-role and isolation level only; the host projection of that role belongs to
-`devkit-distribution`. `entry` checks are reported, not evaluated.
+protocol but is not loaded from a directory yet. A handoff to a workflow
+whose anchor differs from the unit's is refused (`HANDOFF_LAYOUT_MISMATCH`);
+moving a unit between layouts is the caller's job, followed by `bind`.
+Subagent delegation names a role and isolation level only; the host
+projection of that role belongs to `devkit-distribution`. `entry` checks are
+reported, not evaluated.
 
 ## Architectural Specifications & Deep-Dives
 

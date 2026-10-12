@@ -33,7 +33,15 @@ from agent_workflow_engine.definition import (
     schema_hash,
     validate,
 )
-from agent_workflow_engine.envelope import ENVELOPES_DIR, KIND, load_envelopes, skeleton
+from agent_workflow_engine.envelope import (
+    ENVELOPES_DIR,
+    KIND,
+    AuthoringError,
+    compose,
+    load_envelopes,
+    render_draft,
+    skeleton,
+)
 from agent_workflow_engine.evaluate import Options, UnitNotFoundError, evaluate, is_completed
 from agent_workflow_engine.git import is_ancestor
 from agent_workflow_engine.layout import TemplateLayout
@@ -96,6 +104,7 @@ class _Env:
                 fix="Correct the [workflow] table in .devkit/config.toml",
             ) from exc
         self.layout = TemplateLayout(self.config.work_dir, self.config.unit_path, self.config.anchor)
+        self._docs: list[WorkflowDocument] | None = None
 
     @property
     def definitions_dir(self) -> Path:
@@ -112,30 +121,75 @@ class _Env:
         path = path if path.is_absolute() else self.root / path
         return path.resolve()
 
-    def require_unit(self, unit: str) -> Path:
-        unit_dir = self.unit_path(unit)
-        if not (unit_dir / self.config.anchor).is_file():
+    # -- layouts -----------------------------------------------------------------
+
+    def layout_for(self, doc: WorkflowDocument) -> TemplateLayout:
+        """The project layout with the keys the definition overrides."""
+        spec = doc.layout
+        if spec is None:
+            return self.layout
+        return TemplateLayout(
+            spec.work_dir or self.config.work_dir,
+            spec.unit_path or self.config.unit_path,
+            spec.anchor or self.config.anchor,
+        )
+
+    def anchor_for(self, doc: WorkflowDocument) -> str:
+        return doc.anchor(self.config.anchor)
+
+    def discovered(self) -> list[WorkflowDocument]:
+        if self._docs is None:
+            self._docs, _ = discover(self.root, self.definitions_dir)
+        return self._docs
+
+    def known_ids(self) -> set[str]:
+        return {d.id for d in self.discovered()}
+
+    def candidate_anchors(self) -> list[str]:
+        """The project anchor first, then every distinct anchor a discovered definition declares."""
+        anchors = [self.config.anchor]
+        for doc in self.discovered():
+            anchor = self.anchor_for(doc)
+            if anchor not in anchors:
+                anchors.append(anchor)
+        return anchors
+
+    def locate_anchor(self, unit_dir: Path) -> str:
+        """Which candidate anchor file identifies ``unit_dir``; exactly one must exist."""
+        present = [a for a in self.candidate_anchors() if (unit_dir / a).is_file()]
+        if len(present) == 1:
+            return present[0]
+        if not present:
+            tried = ", ".join(self.candidate_anchors())
             raise WorkflowError.invalid_input(
-                f"{self.config.anchor} not found in {self.rel(unit_dir)}",
+                f"no anchor file ({tried}) found in {self.rel(unit_dir)}",
                 code="UNIT_NOT_FOUND",
                 fix="Pass an existing unit directory (`agent-workflow list`) or create one with `agent-workflow new <slug>`",
             )
-        return unit_dir
+        raise WorkflowError.invalid_input(
+            f"{self.rel(unit_dir)} contains several anchor files: {', '.join(present)}",
+            code="ANCHOR_AMBIGUOUS",
+            fix="Pass --workflow <id> to name the workflow (and so the anchor) to evaluate against",
+        )
 
-    def binding(self, unit_dir: Path) -> Binding:
+    def require_anchor(self, unit_dir: Path, anchor: str) -> None:
+        if not (unit_dir / anchor).is_file():
+            raise WorkflowError.invalid_input(
+                f"{anchor} not found in {self.rel(unit_dir)}",
+                code="UNIT_NOT_FOUND",
+                fix="Pass an existing unit directory (`agent-workflow list`) or create one with `agent-workflow new <slug>`",
+            )
+
+    def binding(self, unit_dir: Path, anchor: str) -> Binding:
         try:
-            return read_binding(unit_dir / self.config.anchor)
+            return read_binding(unit_dir / anchor)
         except frontmatter.FrontmatterError as exc:
             raise WorkflowError.invalid_input(
-                f"{self.config.anchor}: {exc}",
+                f"{anchor}: {exc}",
                 code="ANCHOR_INVALID",
-                target_files=[self.rel(unit_dir / self.config.anchor)],
+                target_files=[self.rel(unit_dir / anchor)],
                 fix="Repair the anchor's YAML frontmatter",
             ) from exc
-
-    def known_ids(self) -> set[str]:
-        docs, _ = discover(self.root, self.definitions_dir)
-        return {d.id for d in docs}
 
     def definition(self, ref: str | None, binding: Binding | None = None) -> WorkflowDocument:
         chosen = ref or (binding.workflow if binding and binding.workflow else None) or self.config.default
@@ -163,6 +217,32 @@ class _Env:
                 fix=f"Run `agent-workflow validate` and fix every problem in {doc.id}",
             )
         return doc
+
+    def resolve_unit(self, unit: str, workflow_ref: str | None) -> tuple[Path, str, Binding, WorkflowDocument]:
+        """The unit directory, its anchor file, its binding and the workflow to evaluate against.
+
+        With ``--workflow`` the named definition decides the anchor; otherwise
+        the anchor present in the directory is found first and the binding (or
+        the project default) selects the workflow, whose anchor must match.
+        """
+        unit_dir = self.unit_path(unit)
+        if workflow_ref is not None:
+            doc = self.definition(workflow_ref)
+            anchor = self.anchor_for(doc)
+            self.require_anchor(unit_dir, anchor)
+            return unit_dir, anchor, self.binding(unit_dir, anchor), doc
+        anchor = self.locate_anchor(unit_dir)
+        binding = self.binding(unit_dir, anchor)
+        doc = self.definition(None, binding)
+        expected = self.anchor_for(doc)
+        if expected != anchor:
+            raise WorkflowError.invalid_input(
+                f"unit {self.rel(unit_dir)} is identified by {anchor} but workflow {doc.id} declares anchor {expected}",
+                code="ANCHOR_MISMATCH",
+                target_files=[self.rel(unit_dir / anchor)],
+                fix=f"Rename the anchor to {expected} (and move the unit into the workflow's layout) before binding, or pass --workflow for a definition whose anchor is {anchor}",
+            )
+        return unit_dir, anchor, binding, doc
 
 
 def _lint_func(root: Path, files: list[str]) -> list[str]:
@@ -202,13 +282,16 @@ def _echo_json(data: object) -> None:
     click.echo(json.dumps(data, indent=2))
 
 
-def _evaluate_unit(env: _Env, doc: WorkflowDocument, unit_dir: Path, given: tuple[str, ...], no_lint: bool) -> Any:
+def _evaluate_unit(
+    env: _Env, doc: WorkflowDocument, unit_dir: Path, anchor: str, given: tuple[str, ...], no_lint: bool
+) -> Any:
     """Evaluate ``unit_dir`` against ``doc``; refuse drift under in-flight work."""
     opts = Options(
         workspace_root=env.root,
         unit_dir=unit_dir,
-        anchor=env.config.anchor,
+        anchor=anchor,
         approvals=dict(env.config.approvals),
+        stages=dict(env.config.stages),
         given=tuple(given),
         lint=_lint_func,
         skip_lint=no_lint,
@@ -225,7 +308,7 @@ def _evaluate_unit(env: _Env, doc: WorkflowDocument, unit_dir: Path, given: tupl
             f"recorded={result.drift.recorded}",
             f"current={result.drift.current}",
             code="WORKFLOW_DRIFT",
-            target_files=[env.rel(unit_dir / env.config.anchor)],
+            target_files=[env.rel(unit_dir / anchor)],
             fix=f"Review the change to {doc.id}, then run `agent-workflow bind --unit {env.rel(unit_dir)}` to accept it",
         )
     return result
@@ -254,14 +337,16 @@ def new_cmd(workspace_root: str, slug: str, workflow_ref: str | None, when: str 
         day = date.fromisoformat(when) if when else date.today()
     except ValueError as exc:
         raise WorkflowError.invalid_input(f"--date: {exc}", code="DATE_INVALID", fix="Pass --date YYYY-MM-DD") from exc
+    layout = env.layout_for(doc)
+    anchor = env.anchor_for(doc)
     try:
-        rel = env.layout.new_unit(slug, day)
+        rel = layout.new_unit(slug, day)
     except ValueError as exc:
         raise WorkflowError.invalid_input(
             str(exc), code="SLUG_INVALID", fix="Use lowercase letters, digits and hyphens"
         ) from exc
     unit_dir = env.root / rel
-    anchor_path = unit_dir / env.config.anchor
+    anchor_path = unit_dir / anchor
     if anchor_path.exists():
         raise WorkflowError.invalid_input(
             f"unit already exists: {rel.as_posix()}",
@@ -272,7 +357,7 @@ def new_cmd(workspace_root: str, slug: str, workflow_ref: str | None, when: str 
     (unit_dir / ENVELOPES_DIR).mkdir(exist_ok=True)
     data = {"id": slug, "status": status, "created": day, "workflow": doc.id, "workflow_hash": schema_hash(doc)}
     anchor_path.write_text(frontmatter.render(data, f"# {slug}\n"), "utf-8")
-    click.echo(f"[UNIT: {rel.as_posix()} workflow={doc.id} anchor={env.config.anchor}]")
+    click.echo(f"[UNIT: {rel.as_posix()} workflow={doc.id} anchor={anchor}]")
 
 
 @cli.command(name="bind")
@@ -288,11 +373,9 @@ def new_cmd(workspace_root: str, slug: str, workflow_ref: str | None, when: str 
 def bind_cmd(workspace_root: str, unit: str, workflow_ref: str | None) -> None:
     """Record which workflow a unit follows and the hash of its stage schema."""
     env = _Env(workspace_root)
-    unit_dir = env.require_unit(unit)
-    current = env.binding(unit_dir)
-    doc = env.definition(workflow_ref, current)
+    unit_dir, anchor, _, doc = env.resolve_unit(unit, workflow_ref)
     binding = Binding(doc.id, schema_hash(doc))
-    write_binding(unit_dir / env.config.anchor, binding)
+    write_binding(unit_dir / anchor, binding)
     click.echo(f"[BOUND: {doc.id} hash={binding.hash}]")
 
 
@@ -314,11 +397,9 @@ def next_cmd(
 ) -> None:
     """Report the current stage of a unit, what is unmet and what to do next."""
     env = _Env(workspace_root)
-    unit_dir = env.require_unit(unit)
-    binding = env.binding(unit_dir)
-    doc = env.definition(workflow_ref, binding)
+    unit_dir, anchor, _, doc = env.resolve_unit(unit, workflow_ref)
 
-    registry = Registry.build(env.config.anchor, doc.declared_checks)
+    registry = Registry.build(anchor, doc.declared_checks)
     gates = {s.gate for s in doc.stages if s.gate}
     for name in given:
         check = registry.lookup(name)
@@ -329,7 +410,7 @@ def next_cmd(
                 fix=f"Use a gate name ({', '.join(sorted(gates)) or 'none'}) or a runner/human check from `agent-workflow checks`",
             )
 
-    result = _evaluate_unit(env, doc, unit_dir, given, no_lint)
+    result = _evaluate_unit(env, doc, unit_dir, anchor, given, no_lint)
 
     if output_format.lower() == "json":
         _echo_json(result.to_dict())
@@ -365,15 +446,13 @@ def handoff_cmd(
 ) -> None:
     """Hand a completed unit to one of its workflow's ``next`` candidates and rebind it."""
     env = _Env(workspace_root)
-    unit_dir = env.require_unit(unit)
-    binding = env.binding(unit_dir)
-    doc = env.definition(None, binding)
+    unit_dir, anchor, binding, doc = env.resolve_unit(unit, None)
     try:
         day = date.fromisoformat(when) if when else date.today()
     except ValueError as exc:
         raise WorkflowError.invalid_input(f"--date: {exc}", code="DATE_INVALID", fix="Pass --date YYYY-MM-DD") from exc
 
-    result = _evaluate_unit(env, doc, unit_dir, (), no_lint)
+    result = _evaluate_unit(env, doc, unit_dir, anchor, (), no_lint)
     unit_rel = env.rel(unit_dir)
     if not result.complete:
         raise WorkflowError.invalid_input(
@@ -441,9 +520,16 @@ def handoff_cmd(
         chosen = workflow_ref
 
     target = env.definition(chosen)
+    target_anchor = env.anchor_for(target)
+    if target_anchor != anchor:
+        raise WorkflowError.invalid_input(
+            f"workflow {target.id} declares anchor {target_anchor}; unit {unit_rel} is identified by {anchor}",
+            code="HANDOFF_LAYOUT_MISMATCH",
+            fix=f"Relocate the unit into the layout of {target.id} (anchor {target_anchor}), then run `agent-workflow bind --unit <new dir> --workflow {target.id}`",
+        )
     history = (*binding.history, HistoryEntry(doc.id, binding.hash or schema_hash(doc), day.isoformat()))
     new_binding = Binding(target.id, schema_hash(target), history)
-    write_binding(unit_dir / env.config.anchor, new_binding)
+    write_binding(unit_dir / anchor, new_binding)
     decision_file = handoff.decision.file if handoff.decision and workflow_ref is None else None
     payload = {
         "unit": unit_rel,
@@ -471,9 +557,8 @@ def handoff_cmd(
 def requests_cmd(workspace_root: str, unit: str, no_lint: bool, output_format: str) -> None:
     """List the open human requests of a unit (approvals and choices)."""
     env = _Env(workspace_root)
-    unit_dir = env.require_unit(unit)
-    doc = env.definition(None, env.binding(unit_dir))
-    result = _evaluate_unit(env, doc, unit_dir, (), no_lint)
+    unit_dir, anchor, _, doc = env.resolve_unit(unit, None)
+    result = _evaluate_unit(env, doc, unit_dir, anchor, (), no_lint)
     if output_format.lower() == "json":
         _echo_json([r.to_dict() for r in result.requests])
         return
@@ -512,7 +597,8 @@ def answer_cmd(
 ) -> None:
     """Record a decision for an open request as <unit>/decisions/NN-<request>.yaml."""
     env = _Env(workspace_root)
-    unit_dir = env.require_unit(unit)
+    unit_dir = env.unit_path(unit)
+    env.locate_anchor(unit_dir)
     if not REQUEST_ID.match(request_id):
         raise WorkflowError.invalid_input(
             f"--request {request_id!r} is not a request id",
@@ -531,8 +617,8 @@ def answer_cmd(
                 )
             value = values[0]
     else:
-        doc = env.definition(None, env.binding(unit_dir))
-        result = _evaluate_unit(env, doc, unit_dir, (), no_lint)
+        unit_dir, anchor, _, doc = env.resolve_unit(unit, None)
+        result = _evaluate_unit(env, doc, unit_dir, anchor, (), no_lint)
         open_requests = {r.id: r for r in result.requests}
         request = open_requests.get(request_id)
         if request is None:
@@ -615,9 +701,11 @@ def show_cmd(workspace_root: str, ref: str, output_format: str) -> None:
         data = doc.to_dict()
         data["problems"] = [str(p) for p in problems]
         data["approvals"] = {s.gate: env.config.policy(s.gate) for s in doc.stages if s.gate}
+        data["stages_off"] = [s.id for s in doc.stages if env.config.stage_policy(s.id) == "off"]
+        data["anchor"] = env.anchor_for(doc)
         _echo_json(data)
     else:
-        click.echo(render_document(doc, env.config.approvals), nl=False)
+        click.echo(render_document(doc, env.config.approvals, env.config.stages), nl=False)
         for p in problems:
             click.secho(f"[PROBLEM: {p}]", fg="red")
     if problems:
@@ -689,33 +777,45 @@ def validate_cmd(workspace_root: str, paths: tuple[str, ...]) -> None:
 @FORMAT
 @_boundary
 def list_cmd(workspace_root: str, output_format: str) -> None:
-    """List discovered work units with their status and binding."""
+    """List discovered work units with their status and binding, across every layout in use."""
     env = _Env(workspace_root)
-    rows: list[dict[str, str | None]] = []
-    for rel in env.layout.discover(env.root):
-        anchor_path = env.root / rel / env.config.anchor
-        try:
-            data = frontmatter.read(anchor_path)
-            binding = read_binding(anchor_path)
-        except frontmatter.FrontmatterError:
-            data, binding = {}, Binding()
-        rows.append(
-            {
+    layouts: list[TemplateLayout] = [env.layout]
+    for doc in env.discovered():
+        layout = env.layout_for(doc)
+        if layout not in layouts:
+            layouts.append(layout)
+    rows: dict[tuple[str, str], dict[str, str | None]] = {}
+    for layout in layouts:
+        for rel in layout.discover(env.root):
+            key = (rel.as_posix(), layout.anchor)
+            if key in rows:
+                continue
+            anchor_path = env.root / rel / layout.anchor
+            try:
+                data = frontmatter.read(anchor_path)
+                binding = read_binding(anchor_path)
+            except frontmatter.FrontmatterError:
+                data, binding = {}, Binding()
+            rows[key] = {
                 "unit": rel.as_posix(),
+                "anchor": layout.anchor,
                 "status": frontmatter.field(data, "status") or None,
                 "workflow": binding.workflow or None,
                 "workflow_hash": binding.hash or None,
                 "history": " ".join(h.workflow for h in binding.history) or None,
             }
-        )
+    ordered = [rows[k] for k in sorted(rows)]
     if output_format.lower() == "json":
-        _echo_json(rows)
+        _echo_json(ordered)
         return
-    if not rows:
-        click.echo(f"[UNITS: none under {env.config.work_dir}]")
+    if not ordered:
+        dirs = ", ".join(dict.fromkeys(layout.work_dir for layout in layouts))
+        click.echo(f"[UNITS: none under {dirs}]")
         return
-    for row in rows:
-        click.echo(f"[UNIT: {row['unit']} status={row['status'] or '-'} workflow={row['workflow'] or '-'}]")
+    for row in ordered:
+        click.echo(
+            f"[UNIT: {row['unit']} status={row['status'] or '-'} workflow={row['workflow'] or '-'} anchor={row['anchor']}]"
+        )
 
 
 @cli.group(name="envelope")
@@ -723,14 +823,62 @@ def envelope_group() -> None:
     """Envelope files under <unit>/envelopes/."""
 
 
+def _read_findings_file(path: str) -> str:
+    if path == "-":
+        return sys.stdin.read()
+    try:
+        return Path(path).read_text("utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise WorkflowError.invalid_input(
+            f"--findings-file: {exc}",
+            code="ENVELOPE_FLAG_INVALID",
+            fix="Pass a readable YAML list of findings, or - for stdin",
+        ) from exc
+
+
 @envelope_group.command(name="new")
 @WORKSPACE
 @UNIT
 @click.option("--kind", required=True, help="Envelope kind, e.g. review, reverify, final-report")
 @click.option("--stage", default="", help="Stage the envelope belongs to")
+@click.option("--status", default=None, help="completed (default when authoring) | needs_input | failed")
+@click.option("--summary", default=None, help="1-3 line judgment")
+@click.option("--assume", "assumptions", multiple=True, help="An assumption the judgment rests on (repeatable)")
+@click.option("--unverified", "unverified", multiple=True, help="An area that was not verified (repeatable)")
+@click.option("--check", "checks", multiple=True, help="Check result name=PASS|FAIL|SKIP[ detail] (repeatable)")
+@click.option("--base", default="", help="diff_scope base revision")
+@click.option("--head", default="", help="diff_scope head revision (required for revision-ancestor)")
+@click.option("--findings-file", default=None, help="YAML list of findings to record (path, or - for stdin)")
+@click.option("--from", "source", default=None, help="Carry findings forward: latest, or a review/reverify file")
+@click.option(
+    "--resolve", "resolve", multiple=True, help="Mark a carried finding resolved: its number, or all (repeatable)"
+)
+@click.option("--waive", "waive", multiple=True, help="Mark a carried finding waived: <number>=<reason> (repeatable)")
 @_boundary
-def envelope_new_cmd(workspace_root: str, unit: str, kind: str, stage: str) -> None:
-    """Write the next <kind>-NN.yaml skeleton; existing files are never overwritten."""
+def envelope_new_cmd(
+    workspace_root: str,
+    unit: str,
+    kind: str,
+    stage: str,
+    status: str | None,
+    summary: str | None,
+    assumptions: tuple[str, ...],
+    unverified: tuple[str, ...],
+    checks: tuple[str, ...],
+    base: str,
+    head: str,
+    findings_file: str | None,
+    source: str | None,
+    resolve: tuple[str, ...],
+    waive: tuple[str, ...],
+) -> None:
+    """Write the next <kind>-NN.yaml; existing files are never overwritten.
+
+    With only --kind (and --stage) a needs_input skeleton is written for the
+    author to fill in. Any other flag switches to authoring: the envelope is
+    written complete, status defaults to completed, and reverify carries the
+    findings of the round it closes with --from latest.
+    """
     env = _Env(workspace_root)
     if not KIND.match(kind):
         raise WorkflowError.invalid_input(
@@ -738,8 +886,52 @@ def envelope_new_cmd(workspace_root: str, unit: str, kind: str, stage: str) -> N
             code="KIND_INVALID",
             fix="Use a lowercase kind such as review",
         )
-    unit_dir = env.require_unit(unit)
+    unit_dir = env.unit_path(unit)
+    env.locate_anchor(unit_dir)
     envelopes = load_envelopes(unit_dir)
+    authoring = any(
+        [
+            status is not None,
+            summary is not None,
+            assumptions,
+            unverified,
+            checks,
+            base,
+            head,
+            findings_file,
+            source,
+            resolve,
+            waive,
+        ]
+    )
+    created = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    if authoring:
+        findings_yaml = _read_findings_file(findings_file) if findings_file is not None else None
+        try:
+            draft = compose(
+                unit_dir=unit_dir,
+                envelopes=envelopes,
+                kind=kind,
+                stage=stage,
+                status=status,
+                summary=summary or "",
+                assumptions=assumptions,
+                unverified=unverified,
+                checks=checks,
+                base=base,
+                head=head,
+                findings_yaml=findings_yaml,
+                source=source,
+                resolve=resolve,
+                waive=waive,
+            )
+        except AuthoringError as exc:
+            raise WorkflowError.invalid_input(str(exc), code=exc.code, fix=exc.fix) from exc
+        body = render_draft(draft, created)
+        written_status, open_findings = draft.status, draft.open_findings()
+    else:
+        body = skeleton(kind, stage, created)
+        written_status, open_findings = "needs_input", 0
     seq = envelopes.next_sequence(kind)
     directory = unit_dir / ENVELOPES_DIR
     directory.mkdir(exist_ok=True)
@@ -747,9 +939,45 @@ def envelope_new_cmd(workspace_root: str, unit: str, kind: str, stage: str) -> N
     while path.exists():
         seq += 1
         path = directory / f"{kind}-{seq:02d}.yaml"
-    created = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-    path.write_text(skeleton(kind, stage, created), "utf-8")
-    click.echo(f"[ENVELOPE: {env.rel(path)} kind={kind} seq={seq:02d}]")
+    path.write_text(body, "utf-8")
+    click.echo(
+        f"[ENVELOPE: {env.rel(path)} kind={kind} seq={seq:02d} status={written_status} open_findings={open_findings}]"
+    )
+
+
+@envelope_group.command(name="check")
+@WORKSPACE
+@UNIT
+@FORMAT
+@_boundary
+def envelope_check_cmd(workspace_root: str, unit: str, output_format: str) -> None:
+    """Report every envelope file of a unit and any contract violation."""
+    env = _Env(workspace_root)
+    unit_dir = env.unit_path(unit)
+    env.locate_anchor(unit_dir)
+    envelopes = load_envelopes(unit_dir)
+    loaded = sorted((e for items in envelopes.by_kind.values() for e in items), key=lambda e: e.file)
+    errors = sorted(envelopes.errors, key=lambda e: e.file)
+    if output_format.lower() == "json":
+        _echo_json({"envelopes": [e.to_dict() for e in loaded], "errors": [e.to_dict() for e in errors]})
+    else:
+        for e in loaded:
+            click.echo(
+                f"[ENVELOPE: {e.file} kind={e.kind} seq={e.seq:02d} status={e.status} open_findings={e.open_findings()}]"
+            )
+        for err in errors:
+            click.echo(f"[ENVELOPE_ERROR: {err.file} {err.reason}]")
+        if not errors:
+            click.echo(f"[OK: {len(loaded)} envelopes]")
+    if errors:
+        unit_rel = env.rel(unit_dir)
+        raise WorkflowError.invalid_input(
+            f"{len(errors)} envelope file(s) of {unit_rel} are malformed",
+            *(f"{err.file}: {err.reason}" for err in errors),
+            code="ENVELOPE_INVALID",
+            target_files=[f"{unit_rel}/{err.file}" for err in errors],
+            fix="Fix or remove the listed files; the contract is docs/workflow/definition-and-checks.md section 3",
+        )
 
 
 if __name__ == "__main__":

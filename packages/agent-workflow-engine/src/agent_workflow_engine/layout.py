@@ -16,6 +16,7 @@ from typing import Protocol
 
 ALLOWED_FIELDS = {"slug", "date"}
 SLUG = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+LAYOUT_KEYS = ("work_dir", "unit_path", "anchor")
 
 
 class Layout(Protocol):
@@ -60,6 +61,64 @@ def validate_slug(slug: str) -> str:
     if not SLUG.match(slug):
         raise ValueError(f"slug {slug!r} must match [a-z0-9][a-z0-9-]*")
     return slug
+
+
+def validate_relative_dir(value: object) -> str:
+    """A nonempty workspace-relative POSIX path without ``..``, normalized."""
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError("expected a nonempty string")
+    rel = PurePosixPath(value)
+    if rel.is_absolute() or "\\" in value or ".." in rel.parts:
+        raise ValueError("must be a workspace-relative path without '..'")
+    return rel.as_posix()
+
+
+def validate_file_name(value: object) -> str:
+    """A bare file name: no directory separators, not ``.`` or ``..``."""
+    if not isinstance(value, str) or not value.strip() or "/" in value or "\\" in value or value in {".", ".."}:
+        raise ValueError("expected a bare file name")
+    return value
+
+
+@dataclass(frozen=True)
+class LayoutSpec:
+    """The layout keys a workflow definition may declare; ``None`` means "use the project default"."""
+
+    work_dir: str | None = None
+    unit_path: str | None = None
+    anchor: str | None = None
+
+    def to_dict(self) -> dict[str, str | None]:
+        return {"work_dir": self.work_dir, "unit_path": self.unit_path, "anchor": self.anchor}
+
+
+def parse_layout_spec(raw: object, where: str = "layout") -> LayoutSpec:
+    """Validate a ``layout`` mapping; every key is optional. Raises ``ValueError`` naming the key."""
+    if not isinstance(raw, dict):
+        raise ValueError(f"{where}: expected a mapping with work_dir, unit_path, anchor")
+    unknown = set(raw) - set(LAYOUT_KEYS)
+    if unknown:
+        raise ValueError(f"{where}: unknown keys {sorted(unknown)}")
+    work_dir = unit_path = anchor = None
+    try:
+        if raw.get("work_dir") is not None:
+            work_dir = validate_relative_dir(raw["work_dir"])
+    except ValueError as exc:
+        raise ValueError(f"{where}.work_dir: {exc}") from exc
+    if raw.get("unit_path") is not None:
+        if not isinstance(raw["unit_path"], str):
+            raise ValueError(f"{where}.unit_path: expected a string")
+        try:
+            validate_template(raw["unit_path"])
+        except ValueError as exc:
+            raise ValueError(f"{where}.unit_path: {exc}") from exc
+        unit_path = raw["unit_path"]
+    try:
+        if raw.get("anchor") is not None:
+            anchor = validate_file_name(raw["anchor"])
+    except ValueError as exc:
+        raise ValueError(f"{where}.anchor: {exc}") from exc
+    return LayoutSpec(work_dir, unit_path, anchor)
 
 
 @dataclass(frozen=True)

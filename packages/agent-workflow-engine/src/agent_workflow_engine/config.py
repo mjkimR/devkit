@@ -1,15 +1,18 @@
-"""``[workflow]`` and ``[workflow.approvals]`` from ``.devkit/config.toml``."""
+"""``[workflow]``, ``[workflow.approvals]`` and ``[workflow.stages]`` from ``.devkit/config.toml``."""
 
 from __future__ import annotations
 
 import re
 import tomllib
 from dataclasses import dataclass, field
-from pathlib import Path, PurePosixPath
+from pathlib import Path
+
+from agent_workflow_engine.layout import validate_file_name, validate_relative_dir, validate_template
 
 CONFIG_PATH = ".devkit/config.toml"
 WORKFLOW_TABLE = "workflow"
 APPROVALS_KEY = "approvals"
+STAGES_KEY = "stages"
 
 DEFAULT_WORK_DIR = ".devkit/transient/work"
 DEFAULT_UNIT_PATH = "{slug}"
@@ -17,7 +20,9 @@ DEFAULT_ANCHOR = "task.md"
 DEFAULT_DEFINITIONS_DIR = ".devkit/workflows"
 
 POLICIES = ("ask", "auto", "off")
+STAGE_POLICIES = ("on", "off")
 GATE_NAME = re.compile(r"^[a-z][a-z0-9-]*$")
+STAGE_NAME = re.compile(r"^[a-z][a-z0-9-]*$")
 
 
 class ConfigError(ValueError):
@@ -32,25 +37,28 @@ class WorkflowConfig:
     definitions_dir: str = DEFAULT_DEFINITIONS_DIR
     default: str | None = None
     approvals: dict[str, str] = field(default_factory=dict)
+    stages: dict[str, str] = field(default_factory=dict)
     source: Path | None = None
 
     def policy(self, gate: str) -> str:
         return self.approvals.get(gate, "ask")
 
+    def stage_policy(self, stage_id: str) -> str:
+        return self.stages.get(stage_id, "on")
+
 
 def _relative_dir(value: object, key: str) -> str:
-    if not isinstance(value, str) or not value.strip():
-        raise ConfigError(f"config {WORKFLOW_TABLE}.{key}: expected a nonempty string")
-    rel = PurePosixPath(value)
-    if rel.is_absolute() or "\\" in value or ".." in rel.parts:
-        raise ConfigError(f"config {WORKFLOW_TABLE}.{key}: must be a workspace-relative path without '..'")
-    return rel.as_posix()
+    try:
+        return validate_relative_dir(value)
+    except ValueError as exc:
+        raise ConfigError(f"config {WORKFLOW_TABLE}.{key}: {exc}") from exc
 
 
 def _file_name(value: object, key: str) -> str:
-    if not isinstance(value, str) or not value.strip() or "/" in value or "\\" in value or value in {".", ".."}:
-        raise ConfigError(f"config {WORKFLOW_TABLE}.{key}: expected a bare file name")
-    return value
+    try:
+        return validate_file_name(value)
+    except ValueError as exc:
+        raise ConfigError(f"config {WORKFLOW_TABLE}.{key}: {exc}") from exc
 
 
 def parse_workflow_config(data: object, source: Path | None = None) -> WorkflowConfig:
@@ -61,12 +69,10 @@ def parse_workflow_config(data: object, source: Path | None = None) -> WorkflowC
         return WorkflowConfig(source=source)
     if not isinstance(section, dict):
         raise ConfigError(f"config {WORKFLOW_TABLE}: expected a table")
-    allowed = {"work_dir", "unit_path", "anchor", "definitions_dir", "default", APPROVALS_KEY}
+    allowed = {"work_dir", "unit_path", "anchor", "definitions_dir", "default", APPROVALS_KEY, STAGES_KEY}
     unknown = set(section) - allowed
     if unknown:
         raise ConfigError(f"config {WORKFLOW_TABLE}: unknown fields: {sorted(unknown)}")
-
-    from agent_workflow_engine.layout import validate_template  # local import: layout imports nothing from here
 
     work_dir = _relative_dir(section.get("work_dir", DEFAULT_WORK_DIR), "work_dir")
     unit_path = section.get("unit_path", DEFAULT_UNIT_PATH)
@@ -98,6 +104,21 @@ def parse_workflow_config(data: object, source: Path | None = None) -> WorkflowC
                 )
             approvals[gate] = value
 
+    stages: dict[str, str] = {}
+    raw_stages = section.get(STAGES_KEY)
+    if raw_stages is not None:
+        if not isinstance(raw_stages, dict):
+            raise ConfigError(f"config {WORKFLOW_TABLE}.{STAGES_KEY}: expected a table of stage id to on|off")
+        for stage_id in sorted(raw_stages):
+            if not STAGE_NAME.match(stage_id):
+                raise ConfigError(f"config {WORKFLOW_TABLE}.{STAGES_KEY}.{stage_id}: stage ids match [a-z][a-z0-9-]*")
+            value = raw_stages[stage_id]
+            if not isinstance(value, str) or value not in STAGE_POLICIES:
+                raise ConfigError(
+                    f"config {WORKFLOW_TABLE}.{STAGES_KEY}.{stage_id}: {value!r} is not one of {'|'.join(STAGE_POLICIES)}"
+                )
+            stages[stage_id] = value
+
     return WorkflowConfig(
         work_dir=work_dir,
         unit_path=unit_path,
@@ -105,6 +126,7 @@ def parse_workflow_config(data: object, source: Path | None = None) -> WorkflowC
         definitions_dir=definitions_dir,
         default=default,
         approvals=approvals,
+        stages=stages,
         source=source,
     )
 

@@ -23,7 +23,7 @@ def render_result(res: Result) -> str:
         lines.append(f"[DRIFT: recorded={res.drift.recorded} current={res.drift.current}]")
     lines.append(f"[DONE: {_dash(' '.join(res.done))}]")
     for s in res.skipped:
-        lines.append(f"[SKIPPED: {s.id} policy={s.policy}]")
+        lines.append(f"[SKIPPED: {s.id} reason={s.reason}]")
     stage = res.stage
     if stage is None:
         lines.append("[STAGE: - complete=true]")
@@ -89,11 +89,19 @@ def render_requests(requests: list[Request]) -> list[str]:
     return lines
 
 
-def render_document(doc: WorkflowDocument, approvals: dict[str, str] | None = None) -> str:
+def render_document(
+    doc: WorkflowDocument, approvals: dict[str, str] | None = None, stages: dict[str, str] | None = None
+) -> str:
     approvals = approvals or {}
+    stages = stages or {}
     lines = [
         f'[WORKFLOW: {doc.id} title="{doc.title}" status={_dash(doc.status)} stages={len(doc.stages)} hash={schema_hash(doc)}]'
     ]
+    if doc.layout:
+        lay = doc.layout
+        lines.append(
+            f"[LAYOUT: work_dir={_dash(lay.work_dir or '')} unit_path={_dash(lay.unit_path or '')} anchor={_dash(lay.anchor or '')}]"
+        )
     for c in doc.declared_checks:
         lines.append(f'[DECLARED_CHECK: {c.name} class={c.class_.value} description="{c.description}"]')
     for s in doc.stages:
@@ -101,6 +109,8 @@ def render_document(doc: WorkflowDocument, approvals: dict[str, str] | None = No
             f'[STAGE: {s.id} name="{s.name}" human_gate={_dash(s.gate or "")} role={_dash(s.role)} '
             f"isolation={_dash(s.isolation)} optional={_yn(s.optional)} exception={_yn(s.exception)}]"
         )
+        if stages.get(s.id) == "off":
+            lines.append(f"[SKIP: {s.id} reason=stages.{s.id}=off]")
         if s.gate:
             lines.append(f"[GATE: {s.gate} policy={approvals.get(s.gate, 'ask')}]")
         lines.append(f"[ENTRY: {_dash(' '.join(s.entry))}]")

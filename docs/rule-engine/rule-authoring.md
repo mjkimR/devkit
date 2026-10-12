@@ -114,7 +114,7 @@ Rules inspect files using `ctx.cache` rather than direct disk I/O to maximize pe
 - `ctx.cache.get_lines(path)`: Returns lines of text with newline characters preserved.
 - `ctx.cache.get_frontmatter(path)`: Parses and caches YAML frontmatter dictionaries.
 - `ctx.cache.get_markdown_links(path)`: Extracts and returns parsed Markdown relative links.
-- `ctx.cache.catalog`: Accesses indexed specification document IDs and cross-references.
+- `ctx.cache.get_catalog(root)`: Returns the `DocumentCatalog`: every Markdown path, a basename index for link repair, and the frontmatter `id`, `title` and `status` of each file recorded verbatim (with duplicate `id`s listed). It applies no identifier grammar and extracts no references; a rule that needs those parses the body itself.
 
 ---
 
@@ -169,10 +169,11 @@ The built-in rules reside in `agent_rule_engine.rules`:
 
 | Module | Rules | Phase | Description |
 | --- | --- | --- | --- |
-| `rules.specification` | `RULE-spec-format`, `RULE-id-convention`, `RULE-document-reference` | linter | Verifies YAML frontmatter metadata, document ID conventions, and valid document cross-references. |
 | `rules.markdown` | `RULE-markdown-link` | linter | Verifies that relative links in Markdown point to existing files and fixes broken relative links. |
 | `rules.hygiene` | `RULE-file-length` | hygiene | Warns on excessive line counts; `max_lines` and `extensions` are typed settings. |
 | `rules.safety` | `RULE-secret-leak`, `RULE-clean-artifacts` | linter | Flags credentials and generated artifacts among explicit targets, chiefly in `check --staged` / `--ci` gates. |
+
+Built-in rules are deliberately limited to invariants that hold for any repository. Rules about a particular documentation model (frontmatter schemas, identifier grammars, directory layouts, cross-references between documents) are authored in the bundle that owns that model and distributed as `kind = "rule"` assets, as described in the next section.
 
 ---
 

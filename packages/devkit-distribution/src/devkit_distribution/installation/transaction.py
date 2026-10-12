@@ -19,11 +19,13 @@ RECEIPT = ".devkit/installation.json"
 JOURNAL = ".devkit/transient/sync-journal.json"
 CONFIG = ".devkit/config.toml"
 OVERRIDES = ".devkit/overrides"
+# Root guidance file: only its marker block is managed (see ``guidance_block``).
+AGENTS_FILE = "AGENTS.md"
 
 
 def project_path(root: Path, name: str) -> Path:
     rel = PurePosixPath(name)
-    allowed = name in {RECEIPT, JOURNAL} or any(
+    allowed = name in {RECEIPT, JOURNAL, AGENTS_FILE} or any(
         name.startswith(prefix)
         for prefix in (
             ".devkit/managed/",

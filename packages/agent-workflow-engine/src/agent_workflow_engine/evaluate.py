@@ -50,6 +50,7 @@ class Options:
     unit_dir: Path  # absolute
     anchor: str
     approvals: dict[str, str] = field(default_factory=dict)
+    stages: dict[str, str] = field(default_factory=dict)  # stage id -> on|off ([workflow.stages])
     given: tuple[str, ...] = ()
     lint: LintFunc | None = None
     skip_lint: bool = False
@@ -77,10 +78,10 @@ class CheckResult:
 @dataclass(frozen=True)
 class Skipped:
     id: str
-    policy: str
+    reason: str  # the policy entry that skipped the stage, e.g. approvals.<gate>=off or stages.<id>=off
 
     def to_dict(self) -> dict[str, str]:
-        return {"id": self.id, "policy": self.policy}
+        return {"id": self.id, "reason": self.reason}
 
 
 @dataclass(frozen=True)
@@ -563,6 +564,9 @@ def evaluate(doc: WorkflowDocument, opts: Options) -> Result:
 
     for stage in doc.stages:
         if stage.exception:
+            continue
+        if opts.stages.get(stage.id) == "off":
+            res.skipped.append(Skipped(stage.id, f"stages.{stage.id}=off"))
             continue
         policy = opts.approvals.get(stage.gate, "ask") if stage.gate else None
         if stage.gate and policy == "off":

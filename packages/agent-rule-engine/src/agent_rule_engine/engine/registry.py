@@ -12,12 +12,9 @@ from agent_rule_engine.engine.models import Rule
 from agent_rule_engine.rules import (
     BaseRule,
     CleanArtifactsRule,
-    DocumentReferenceRule,
     FileLengthRule,
-    IdConventionRule,
     MarkdownLinkRule,
     SecretLeakRule,
-    SpecFormatRule,
 )
 
 
@@ -87,9 +84,6 @@ class RuleRegistry:
 def default_registry() -> RuleRegistry:
     """Return a registry populated with default built-in rules."""
     registry = RuleRegistry()
-    registry.register(SpecFormatRule())
-    registry.register(IdConventionRule())
-    registry.register(DocumentReferenceRule())
     registry.register(MarkdownLinkRule())
     registry.register(FileLengthRule())
     registry.register(SecretLeakRule())

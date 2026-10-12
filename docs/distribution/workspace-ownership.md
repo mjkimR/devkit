@@ -23,6 +23,7 @@ Consuming projects integrate bundles under a dedicated root directory: `.devkit/
   transient/              # Transaction lock and recovery journal (Git-ignored)
     sync-journal.json     # Active write-ahead journal
 <agent native paths>      # Projected native assets (e.g., .agents/, .codex/, .claude/)
+AGENTS.md                 # Project-owned; only the DEVKIT:START/END block inside it is managed (Git-tracked)
 ```
 
 ---
@@ -49,8 +50,14 @@ Consuming projects integrate bundles under a dedicated root directory: `.devkit/
    - If a deployed file's disk content or mode differs from its recorded receipt signature, it is treated as a user modification.
    - Sync aborts immediately across the entire project before making any disk changes.
    - Package removal, bundle deselection, or preset narrowing will only delete files that remain byte-for-byte identical to their recorded receipt signature. Modified files are never deleted.
-6. **Git & Ignore Policy**:
-   - The project configuration (`.devkit/config.toml`), overrides (`.devkit/overrides/`), and receipt (`.devkit/installation.json`) must be committed to version control.
+6. **Host Guidance Block (root `AGENTS.md`)**:
+   - `devkit sync` maintains one block between `<!-- DEVKIT:START -->` and `<!-- DEVKIT:END -->` in the root `AGENTS.md`: the `host-guidance-block` of the [Resource Taxonomy](../architecture/resource-taxonomy.md#1-host-guidance-block). It is generated from the current selection (installed bundle names, the once-per-bundle `devkit get-context` rule, the generated entry skills) and is deterministic for the same selection.
+   - The file is created when absent, the block is appended when the file has no markers, and it is replaced in place otherwise. Every byte outside the markers is project-owned and preserved.
+   - The receipt records the block's SHA-256 under `guidance_block`. A block whose digest differs from the receipt is a user modification: sync aborts before any write, exactly as for a managed file. A block that was deleted is written again. A file that contains markers the receipt does not know is an unowned collision.
+   - `guidance_block = false` in `.devkit/config.toml` turns the block off. On that transition the block is removed (the file too, when nothing else is in it) provided its digest still matches the receipt; the receipt then stops recording it.
+   - `CLAUDE.md` is never written; point it at `AGENTS.md` with the project's own symlink or include line.
+7. **Git & Ignore Policy**:
+   - The project configuration (`.devkit/config.toml`), overrides (`.devkit/overrides/`), receipt (`.devkit/installation.json`) and the root `AGENTS.md` must be committed to version control.
    - Generated resources (`.devkit/managed/`), transient transaction files (`.devkit/transient/`), and generated native copies should be ignored according to the consumer repository's own `.gitignore` policy.
    - `devkit` never automatically modifies `.gitignore` or the Git index.
 

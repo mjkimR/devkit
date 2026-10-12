@@ -5,7 +5,7 @@ from agent_rule_engine import RuleRegistry
 
 def test_discovery_loads_dataclass_and_ignores_imported_rules(tmp_path: Path) -> None:
     (tmp_path / "check.py").write_text("""from dataclasses import dataclass
-from agent_rule_engine.rules import BaseRule, SpecFormatRule
+from agent_rule_engine.rules import BaseRule, MarkdownLinkRule
 
 @dataclass
 class CustomRule(BaseRule):

@@ -12,14 +12,15 @@
 
 ## 1. Overview and Objectives
 
-`agent-rule-engine` is a fast, deterministic governance and specification verification engine designed for AI-collaborative codebases. It automates repository-level consistency checks, Markdown relative link validation, specification metadata invariants, and code hygiene.
+`agent-rule-engine` is a fast, deterministic governance verification engine designed for AI-collaborative codebases. It automates repository-level consistency checks, Markdown relative link validation, and code hygiene, and it executes the rules that bundles distribute for their own document models.
 
 ### Core Principles
 
-1. **Deterministic Verification over LLM Hallucinations**: Enforce repository invariants (e.g., relative links, frontmatter syntax, document references, file sizes) using AST and deterministic parsing rather than unreliable natural language prompts.
-2. **Session Caching & Fast Iteration**: Maintain an in-memory session cache of file lists, bytes, text, frontmatter metadata, and lightweight link structures to keep verification times sub-second.
-3. **Safe, Convergent Autofixes**: Provide automated repairs that run in a single pass followed by a convergence recheck, ensuring fixes never enter infinite repair loops or leave partial broken states uninspected.
-4. **Decoupled CLI & Library Integration**: Available both as a standalone command-line tool (`agent-rules`) and as an importable Python library with custom rule registries.
+1. **Deterministic Verification over LLM Hallucinations**: Enforce repository invariants (e.g., relative links, frontmatter syntax, file sizes) using AST and deterministic parsing rather than unreliable natural language prompts.
+2. **No Built-in Document Model**: The engine does not know what a specification, a story or a decision record is. Identifier grammars, frontmatter schemas, target directories and cross-reference semantics belong to the bundle that defines those documents and arrive as `kind = "rule"` assets; the engine provides the cache, the Markdown file catalog, policy and execution.
+3. **Session Caching & Fast Iteration**: Maintain an in-memory session cache of file lists, bytes, text, frontmatter metadata, and lightweight link structures to keep verification times sub-second.
+4. **Safe, Convergent Autofixes**: Provide automated repairs that run in a single pass followed by a convergence recheck, ensuring fixes never enter infinite repair loops or leave partial broken states uninspected.
+5. **Decoupled CLI & Library Integration**: Available both as a standalone command-line tool (`agent-rules`) and as an importable Python library with custom rule registries.
 
 ---
 
@@ -37,13 +38,12 @@ src/agent_rule_engine/
 │   ├── phases.py            # Effective phase resolution, overrides, promotions
 │   ├── registry.py          # RuleRegistry & default_registry
 │   └── evaluator.py         # Policy validation, sequential rule evaluation & convergence recheck
-├── workspace/               # Shared file caching, document catalog and Git snapshots
+├── workspace/               # Shared file caching, Markdown file catalog and Git snapshots
 │   ├── cache.py             # WorkspaceCache (bytes, text, YAML frontmatter, links)
-│   ├── catalog.py           # WorkspaceCatalog (specs & docs indexes, references)
+│   ├── catalog.py           # DocumentCatalog (paths, basenames, frontmatter id/title/status)
 │   └── snapshot.py          # Staged / CI Git trees materialized for gate evaluation
-├── rules/                   # Built-in governance rules
+├── rules/                   # Built-in governance rules (repository-generic only)
 │   ├── base.py              # Base rule helper class (settings, guide, promote_to)
-│   ├── specification/       # Metadata, document IDs, and reference checks
 │   ├── markdown/            # Relative link validation & repair
 │   ├── hygiene/             # File length checks (typed settings, guide)
 │   └── safety/              # Secret leak and generated artifact checks for snapshot gates

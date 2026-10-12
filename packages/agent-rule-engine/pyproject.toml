@@ -1,7 +1,7 @@
 [project]
 name = "agent-rule-engine"
 version = "0.1.0"
-description = "Agent-managed rule engine for specifications and governance"
+description = "Agent-managed rule engine for repository governance"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

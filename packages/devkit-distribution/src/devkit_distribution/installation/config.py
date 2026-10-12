@@ -29,7 +29,7 @@ SCHEMA = 1
 # ``rules`` is owned by ``agent-rule-engine`` (phase overrides), ``workflow`` by
 # ``agent-workflow-engine`` (layout, approvals) and ``gates`` by ``agent-commit-gate``
 # (gate settings); all are only passed through here.
-FIELDS = frozenset({"schema", "agents", "presets", "playbooks", "rules", "workflow", "gates"})
+FIELDS = frozenset({"schema", "agents", "presets", "playbooks", "rules", "workflow", "gates", "guidance_block"})
 
 
 def all_agents() -> list[str]:
@@ -40,6 +40,8 @@ def all_agents() -> list[str]:
 class ProjectConfig:
     agents: list[str] = field(default_factory=all_agents)
     presets: dict[str, list[str]] = field(default_factory=dict)
+    # ``guidance_block = false`` stops ``devkit sync`` from managing the block in root AGENTS.md.
+    guidance_block: bool = True
 
 
 def _load(root: Path) -> dict[str, Any] | None:
@@ -120,9 +122,13 @@ def read_config(root: Path) -> ProjectConfig:
     if data is None:
         return ProjectConfig()
     validate_playbooks_config(data.get("playbooks"))
+    guidance_block = data.get("guidance_block", True)
+    if type(guidance_block) is not bool:
+        raise BundleError("config: guidance_block must be a boolean")
     return ProjectConfig(
         agents=_agents(data["agents"]) if "agents" in data else all_agents(),
         presets=parse_presets(data.get("presets", {})),
+        guidance_block=guidance_block,
     )
 
 

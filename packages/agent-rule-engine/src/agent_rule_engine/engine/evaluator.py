@@ -64,9 +64,6 @@ def evaluate(ctx: RuleContext, rules: list[Rule]) -> EvaluationResult:
     severities = {r.id: effective_severity(r, ctx.severity_overrides) for r in rules}
     active_rules: list[Rule] = [r for r in rules if runs_in_phase(phases[r.id], ctx.phase)]
 
-    # 2. Prerequisite ordering: format rules run before relationship checks
-    active_rules.sort(key=lambda r: 0 if r.id == "RULE-spec-format" else 1)
-
     def _check(rule: Rule) -> list[Violation]:
         found = rule.check(ctx)
         for v in found:
@@ -74,7 +71,7 @@ def evaluate(ctx: RuleContext, rules: list[Rule]) -> EvaluationResult:
             v.severity = severities[rule.id]
         return found
 
-    # 3. Initial check
+    # 2. Initial check
     initial_violations: list[Violation] = []
     for r in active_rules:
         try:

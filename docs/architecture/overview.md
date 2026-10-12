@@ -11,7 +11,7 @@ This document provides a high-level overview of the `devkit` monorepo architectu
 1. **Asset Distribution & Guidance Delivery (`devkit-distribution`)**:
    Packaging, versioning, selecting, and synchronizing agent guidance, instructions, operational playbooks, native skills, and configurations across developer repositories.
 2. **Repository Governance & Deterministic Verification (`agent-rule-engine`)**:
-   Evaluating static invariants, specification document integrity, cross-references, and code hygiene with automated repairs and convergence rechecks.
+   Evaluating static invariants, Markdown link integrity, and code hygiene with automated repairs and convergence rechecks, and executing the document-model rules that bundles distribute.
 3. **Delivery Workflow Orchestration (`agent-workflow-engine`)**:
    Declaring multi-stage delivery procedures as data, computing the current stage of a work unit from its files, enforcing approval gates by project policy, and detecting procedure drift, so every agent host follows the same procedure from the same state.
 4. **Commit Gates (`agent-commit-gate`)**:
@@ -24,7 +24,7 @@ This document provides a high-level overview of the `devkit` monorepo architectu
 │       devkit-distribution         │         agent-rule-engine          │
 │  - Python content wheels (uv)     │  - Fast AST & Markdown scanner     │
 │  - Manifest schema (bundle.toml)  │  - Deterministic invariants        │
-│  - ACID transactional sync engine │  - Specification checks & fixes    │
+│  - ACID transactional sync engine │  - Bundle-distributed rules & fixes│
 │  - Multi-agent projection         │  - Convergence recheck engine      │
 │  - Playbook progressive search    │  - CLI (agent-rules) & library     │
 └─────────────────┬─────────────────┴──────────────────┬─────────────────┘
@@ -74,7 +74,7 @@ The subsystems are decoupled yet operate synergistically:
    When a consumer project runs `devkit sync`, `devkit-distribution` discovers the installed content wheels via standard Python entry points, verifies bundle integrity, and projects managed assets into `.devkit/managed/<bundle>/` and agent-specific directories (`.agents/`, `.codex/`, `.claude/`).
 3. **Execution & Verification**:
    - Agent prompts discover playbooks and contextual guidance progressively using `devkit playbook search` or `devkit read`.
-   - The repository governance pipeline runs `agent-rules check` (or `just rules-check`) to verify specification links and repo hygiene before committing.
+   - The repository governance pipeline runs `agent-rules check` (or `just rules-check`) to verify Markdown links, bundle-distributed document rules and repo hygiene before committing.
 
 ---
 

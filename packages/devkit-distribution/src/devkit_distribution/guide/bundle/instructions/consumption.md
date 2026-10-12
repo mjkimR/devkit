@@ -15,11 +15,18 @@ description: Read before using, changing or troubleshooting devkit-managed asset
 | `.devkit/managed/<bundle>/` | no | Pristine copies extracted from installed bundles |
 | `.devkit/transient/` | no | Lock and write-ahead journal for an interrupted sync |
 | `.claude/`, `.agents/`, `.codex/` projections | usually no | Native copies of skills and subagents for each selected agent |
+| `AGENTS.md` (root) | yes | Project-owned; only the `<!-- DEVKIT:START -->` ... `<!-- DEVKIT:END -->` block in it is managed |
 
 Generated paths are rebuilt by `uv run devkit sync` from the installed packages
 and the configuration. Edit sources and configuration, never generated copies.
 `sync` halts when a managed file was modified or when an unmanaged file sits
 where it needs to write; it never deletes foreign files.
+
+The block in the root `AGENTS.md` is the orientation index every session reads:
+installed bundles, the once-per-bundle `get-context` rule and the generated entry
+skills. It is regenerated from the selection and hash-guarded like a managed
+file, so do not edit between the markers; write project guidance outside them.
+`guidance_block = false` in `.devkit/config.toml` turns the block off.
 
 ## Loading bundle context
 

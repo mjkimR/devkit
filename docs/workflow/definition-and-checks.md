@@ -81,12 +81,13 @@ Prose for humans and agents. Not parsed.
 | `checks` | no | Extra `runner` or `human` checks the workflow declares. Each has `name`, `class`, `description`. Names must not collide with built-in checks. |
 | `stages` | yes | Ordered stage list, at least one. |
 | `next` | no | Workflows this one may hand a completed unit to. See [Handoff Candidates](#handoff-candidates). |
+| `layout` | no | Mapping with any of `work_dir`, `unit_path`, `anchor`; each overrides the `[workflow]` default for this workflow's units. Validated like the configuration keys. See [Overview, Per-Definition Layout](overview.md#per-definition-layout). |
 
 ### Stage Fields
 
 | Field | Type | Meaning |
 | --- | --- | --- |
-| `id` | string | Unique within the document. |
+| `id` | string | Unique within the document; matches `[a-z][a-z0-9-]*`. |
 | `name` | string | Display name. |
 | `human_gate` | `false`, `true` or string | `true` names the gate after the stage id; a string names a shared gate. See [Overview, section 4](overview.md#4-approval-gates). |
 | `optional` | bool | When unmet, the stage is passed over instead of becoming current. |
@@ -99,7 +100,7 @@ Prose for humans and agents. Not parsed.
 | `isolation` | string | `none`, `preferred`, `required`. A non-developer role with isolation other than `none` yields `[DELEGATE]`. |
 | `returns` | list of `{to, when}` | Stages this stage may return to and why. `to` must name a stage in the same document. |
 
-Unknown stage keys, duplicate ids, unregistered checks, malformed check invocations, unknown `returns.to` targets and invalid `isolation` values are validation errors. `agent-workflow validate` reports every problem with the stage id and field.
+Unknown stage keys, malformed or duplicate ids, unregistered checks, malformed check invocations, unknown `returns.to` targets and invalid `isolation` values are validation errors. `agent-workflow validate` reports every problem with the stage id and field. A malformed `layout` mapping is a structural error reported with the file.
 
 ### Handoff Candidates
 
@@ -122,7 +123,7 @@ Eligibility is computed from checks so that an automatic handoff is deterministi
 
 ### Schema Hash
 
-`sha256:<hex>` of the canonical JSON (`sort_keys=True`, compact separators) of the `stages` list after normalization. Title, status, body, comments, the `checks` declaration and the `next` list do not affect it. `show` prints it; `bind` records it in the anchor.
+`sha256:<hex>` of the canonical JSON (`sort_keys=True`, compact separators) of the `stages` list after normalization. Title, status, body, comments, the `checks` declaration, the `next` list and the `layout` mapping do not affect it. `show` prints it; `bind` records it in the anchor.
 
 ---
 
@@ -156,7 +157,7 @@ A check reference is `name` or `name(arg1 arg2 ...)`. Arguments are whitespace-s
 
 ### Aliases
 
-Aliases are resolved against the configured anchor name at evaluation time.
+Aliases are resolved against the anchor name in force for the workflow (its own `layout.anchor`, else the configured one), both in validation and at evaluation time.
 
 | Alias | Expands to |
 | --- | --- |
@@ -171,6 +172,10 @@ Aliases are resolved against the configured anchor name at evaluation time.
 ### Implicit Gate Check
 
 A stage with `human_gate` carries an implicit `human` check named `gate:<gate>`. It is listed under `[UNMET]` like any other check, satisfied by `--given <gate>` or by the `auto` policy, and the whole stage is skipped under `off`.
+
+### Stage Policy
+
+`[workflow.stages] <id> = "off"` skips a stage by id, gated or not, before any check or gate is evaluated. The skip is reported as `[SKIPPED: <id> reason=stages.<id>=off]` and never blocks completion. See [Overview, Stage Policy](overview.md#stage-policy).
 
 ---
 
@@ -190,6 +195,8 @@ findings:
     failure_condition: "Under which input it fails"
     suggested_action: "Recommended next step"
     resolution: open         # open | resolved | waived (default open)
+assumptions: ["what the judgment rests on"]        # optional
+unverified_areas: ["what was not checked"]        # optional
 checks:                      # free-form keys; a value starting with PASS satisfies envelope-check-pass
   tests: "PASS 14/14"
 diff_scope: { base: "main", head: "<sha>" }
@@ -199,7 +206,28 @@ review: review-01.yaml       # reverify only: the review round it closes
 - `kind` and `status` are required; `kind` must match the file name.
 - A `reverify` envelope must name the `review-NN.yaml` it closes. The deciding review state is the latest review round, or the last reverify that references it.
 - `completed` with no findings is a valid pass. `needs_input` and `failed` never satisfy a check.
+- `assumptions` and `unverified_areas` are lists of strings; `checks` is a mapping; `findings` is a list of mappings. Other keys are ignored.
 - Malformed envelopes are reported as `[ENVELOPE_ERROR: file reason]` and are not loaded; evaluation continues.
+
+### Authoring
+
+`agent-workflow envelope new --unit DIR --kind KIND [--stage ID]` with no other flag writes a `needs_input` skeleton for the author to fill in. Any further flag switches to authoring, where the file is written complete so that no agent edits YAML by hand:
+
+| Flag | Effect |
+| --- | --- |
+| `--status` | `completed` (default when authoring), `needs_input` or `failed`. |
+| `--summary TEXT` | The judgment. |
+| `--assume TEXT`, `--unverified TEXT` | Repeatable; fill `assumptions` and `unverified_areas`. |
+| `--check NAME=VERDICT[ detail]` | Repeatable; `VERDICT` is `PASS`, `FAIL` or `SKIP` and may carry a detail such as `PASS 14/14`. |
+| `--base REV`, `--head REV` | `diff_scope`; `--head` is what `revision-ancestor` compares. |
+| `--findings-file PATH` (or `-` for stdin) | A YAML list of findings; `issue` and `evidence` are required, `resolution` defaults to `open`. A `review` records findings as found, so a resolution other than `open` is refused. |
+| `--from latest` (or a review/reverify file) | Carries the findings of the round being closed into a `reverify` and sets its `review`. `latest` is the deciding review state. Refused for `review`; required for `reverify`. |
+| `--resolve N` (repeatable) or `--resolve all` | Marks carried finding `N` (1-based) resolved; `all` resolves every open one. |
+| `--waive N=REASON` (repeatable) | Marks carried finding `N` waived, recording the reason in `suggested_action` as `waived: REASON`. |
+
+Findings from `--findings-file` are appended after any carried findings. The written key order is `kind, stage, created_at, status, review, summary, findings, assumptions, unverified_areas, checks, diff_scope`, omitting empty optional keys. The confirmation line is `[ENVELOPE: <file> kind=K seq=NN status=S open_findings=N]`.
+
+`agent-workflow envelope check --unit DIR` loads every file under `envelopes/`, prints one `[ENVELOPE: file kind seq status open_findings]` line per valid file and one `[ENVELOPE_ERROR: file reason]` per malformed one, then `[OK: N envelopes]` when nothing is malformed. Any malformed file raises `ENVELOPE_INVALID` (exit `1`) whose `[DETAIL]` lines repeat file and reason. `--format json` emits `{"envelopes": [...], "errors": [...]}`.
 
 ---
 
@@ -231,7 +259,7 @@ On `next`:
 ```text
 [WORKFLOW: direct-delivery unit=.devkit/transient/work/login status=in-progress bound=yes]
 [DONE: intent specify]
-[SKIPPED: collect-feedback policy=approvals.feedback=off]
+[SKIPPED: collect-feedback reason=stages.collect-feedback=off]
 [STAGE: review human_gate=no role=reviewer isolation=preferred]
 [UNMET: envelope-review-passed]
 [CHECK: envelope-review-passed class=disk evaluated=true detail="no review envelope"]
@@ -244,6 +272,7 @@ On `next`:
 ```
 
 - `[STAGE: - complete=true]` when every stage is done or skipped.
+- `[SKIPPED: <id> reason=...]` names the policy entry that skipped the stage: `stages.<id>=off` or `approvals.<gate>=off`.
 - `[WAITING]` appears when the current stage is gated, or when every unmet check is `runner` or `human`. Its class is `human` when any unmet check is human.
 - `[GATE]` appears only for a gated current stage.
 
@@ -274,7 +303,7 @@ Whenever a person must act, one `[REQUEST: ...]` line per open request follows t
   "status": "in-progress",
   "bound": true,
   "done": ["intent", "specify"],
-  "skipped": [{"id": "collect-feedback", "policy": "approvals.feedback=off"}],
+  "skipped": [{"id": "collect-feedback", "reason": "stages.collect-feedback=off"}],
   "stage": {"id": "review", "name": "Review loop", "human_gate": null, "role": "reviewer", "isolation": "preferred", "skills": ["wf-review"], "entry": [], "exit": [], "artifacts": [], "returns": []},
   "unmet": [{"name": "envelope-review-passed", "class": "disk", "satisfied": false, "evaluated": true, "detail": "no review envelope"}],
   "next_skill": "wf-review",
@@ -292,4 +321,4 @@ Whenever a person must act, one `[REQUEST: ...]` line per open request follows t
 
 `handoff` is `null` until the workflow is complete; then it is `{"policy", "candidates": [{"workflow", "recommended", "eligible", "checks": [...]}], "eligible": [...], "recommended": [...], "chosen"}`.
 
-`show --format json` emits the parsed document plus `hash`. `checks --format json` emits the registry. `list --format json` emits `[{"unit", "status", "workflow", "workflow_hash", "history"}]`. `handoff --format json` emits `{"unit", "from", "to", "workflow_hash", "policy", "history"}`. `requests --format json` emits the `requests` array alone; `answer --format json` emits the written record with its `file`.
+`show --format json` emits the parsed document plus `hash`, `layout`, the effective `anchor`, `approvals` and `stages_off`. `checks --format json` emits the registry. `list --format json` emits `[{"unit", "anchor", "status", "workflow", "workflow_hash", "history"}]` across every layout in use; the text form is `[UNIT: <dir> status=S workflow=W anchor=A]`. `handoff --format json` emits `{"unit", "from", "to", "workflow_hash", "policy", "history"}`. `requests --format json` emits the `requests` array alone; `answer --format json` emits the written record with its `file`.

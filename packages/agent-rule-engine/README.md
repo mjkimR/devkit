@@ -1,6 +1,10 @@
 # agent-rule-engine
 
-A sequential Python rule engine for specification documents and repository governance.
+A sequential Python rule engine for repository governance: deterministic checks
+over a workspace, with autofix, project policy and Git snapshot gates. The engine
+carries no document model of its own; rules that define identifier grammars,
+frontmatter schemas or cross-reference semantics ship in bundles (`kind = "rule"`)
+and load through the installation receipt.
 Requires Python 3.12 or later; runtime dependencies are `click` and `pyyaml`.
 
 ## Structure
@@ -10,11 +14,10 @@ src/agent_rule_engine/
 ├── engine/                  # Rule contracts, registry, config, settings, phases, evaluation and autofix recheck
 │   ├── discovery.py         # Rule assets recorded by devkit sync in .devkit/installation.json
 │   └── settings.py          # Typed per-rule settings with path-scoped overrides
-├── workspace/               # Shared file cache, parsing, document catalog and Git snapshots
+├── workspace/               # Shared file cache, parsing, Markdown file catalog and Git snapshots
 ├── cli/                     # Click commands and output formatting
 └── rules/
     ├── base.py              # Common rule implementation (settings, guide, promote_to)
-    ├── specification/       # Frontmatter, identifiers and document references
     ├── markdown/            # Relative link validation and repair
     ├── hygiene/             # File length checks
     └── safety/              # Secrets and generated artifacts in the files under check
@@ -31,7 +34,7 @@ From this monorepo, run `just init`, then:
 ```bash
 just rules-check
 just rules-check --format json
-just rules-check docs/stories/US-login.md
+just rules-check docs/guides/setup.md
 just rules-check --staged                      # the exact staged tree (pre-commit gate)
 just rules-check --ci --base origin/main       # HEAD against its merge base (CI gate)
 just rules-fix --dry-run
@@ -59,8 +62,8 @@ violations to stdout; execution and loading errors are reported separately to
 stderr.
 
 File arguments are exact workspace-relative paths or absolute paths inside the
-workspace. An empty list checks the whole workspace. Relationship checks still
-build the full `docs/` and `specs/` catalog, even when checking selected files.
+workspace. An empty list checks the whole workspace. Link repair still indexes
+every Markdown file in the workspace, even when checking selected files.
 
 ## Git snapshot gates
 
@@ -134,6 +137,14 @@ copy) after the built-in rules and before `--rules-dir`, so no flag is needed.
 A rule with the same ID as an earlier one replaces it. A listed file that does
 not exist on disk is a loading error (exit code 1), not a silent skip: run
 `devkit sync` to restore the managed copies.
+
+This is also where document-model rules live. The built-in rules are limited to
+what holds for any repository (relative links, file length, secrets and build
+artifacts). A bundle that defines a documentation layout, an identifier grammar
+or document relationships ships the rules that enforce them, together with the
+guides and templates those rules cite. The engine's `DocumentCatalog` only
+indexes Markdown paths, basenames and the frontmatter `id`, `title` and
+`status` fields verbatim; it does not validate identifiers or extract references.
 
 ## Library and custom rules
 
@@ -215,7 +226,7 @@ size. Phase overrides can only move a rule to `hygiene`; promoting a rule to
 
 Detailed technical designs and protocols are documented in `docs/rule-engine/`:
 
-- [Rule Engine Architecture Overview](../../docs/rule-engine/overview.md): Core subsystems, workspace cache, and document catalog.
+- [Rule Engine Architecture Overview](../../docs/rule-engine/overview.md): Core subsystems, workspace cache, and Markdown file catalog.
 - [Evaluation Lifecycle & Convergence](../../docs/rule-engine/evaluation-lifecycle.md): Phased checks, project policy, snapshot gates, single-pass autofix, and convergence verification.
 - [Rule Authoring Guide](../../docs/rule-engine/rule-authoring.md): Protocols, settings, guides, finding models, cache APIs, and custom rule implementation.
 - [Resource Taxonomy](../../docs/architecture/resource-taxonomy.md): Governance rules within the multi-tier agent asset taxonomy.

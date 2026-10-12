@@ -23,8 +23,12 @@ never derive it from files yourself.
    stage, producing the artifacts the definition names. `[DELEGATE]` asks for a
    subagent with that role and isolation; delegate when the host supports it,
    otherwise perform the stage yourself and say so. Write review and report
-   envelopes with `uv run agent-workflow envelope new --unit <dir> --kind <kind>`
-   and fill them in; never overwrite an existing envelope.
+   envelopes with `uv run agent-workflow envelope new --unit <dir> --kind <kind>`,
+   passing the result as flags (`--status`, `--summary`, `--check <name>=PASS|FAIL|SKIP`,
+   `--findings-file`, and for a reverify `--from latest` with `--resolve`/`--waive`)
+   rather than editing YAML by hand; with only `--kind` it writes a skeleton to
+   fill in. Validate with `uv run agent-workflow envelope check --unit <dir>`;
+   never overwrite an existing envelope.
 4. Respect gates. `[GATE: <name> policy=ask]` with `[WAITING: human ...]` means
    a person must approve; the matching `[REQUEST: id=gate:<name> ...]` line is
    the question. Present the result and ask. Only after the user's explicit

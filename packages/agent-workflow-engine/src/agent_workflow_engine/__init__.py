@@ -16,7 +16,15 @@ from agent_workflow_engine.definition import (
     schema_hash,
     validate,
 )
-from agent_workflow_engine.envelope import Envelope, Envelopes, load_envelopes
+from agent_workflow_engine.envelope import (
+    AuthoringError,
+    Draft,
+    Envelope,
+    Envelopes,
+    compose,
+    load_envelopes,
+    render_draft,
+)
 from agent_workflow_engine.evaluate import (
     CheckResult,
     Handoff,
@@ -26,10 +34,11 @@ from agent_workflow_engine.evaluate import (
     UnitNotFoundError,
     evaluate,
 )
-from agent_workflow_engine.layout import Layout, TemplateLayout, validate_template
+from agent_workflow_engine.layout import Layout, LayoutSpec, TemplateLayout, parse_layout_spec, validate_template
 from agent_workflow_engine.render import render_document, render_result
 
 __all__ = [
+    "AuthoringError",
     "Binding",
     "Check",
     "CheckClass",
@@ -39,12 +48,14 @@ __all__ = [
     "Decision",
     "Decisions",
     "DefinitionError",
+    "Draft",
     "Envelope",
     "Envelopes",
     "Handoff",
     "HistoryEntry",
     "Invocation",
     "Layout",
+    "LayoutSpec",
     "Options",
     "Problem",
     "Registry",
@@ -55,6 +66,7 @@ __all__ = [
     "UnitNotFoundError",
     "WorkflowConfig",
     "WorkflowDocument",
+    "compose",
     "discover",
     "evaluate",
     "load",
@@ -63,8 +75,10 @@ __all__ = [
     "load_workflow_config",
     "parse",
     "parse_check",
+    "parse_layout_spec",
     "read_binding",
     "render_document",
+    "render_draft",
     "render_result",
     "resolve",
     "schema_hash",

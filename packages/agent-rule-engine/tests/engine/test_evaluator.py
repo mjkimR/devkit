@@ -6,11 +6,11 @@ from agent_rule_engine import Phase, RuleContext, WorkspaceCache, default_regist
 
 
 def test_evaluator_autofix_convergence(temp_workspace: Path, workspace_cache: WorkspaceCache) -> None:
-    # Setup a story without frontmatter
-    stories_dir = temp_workspace / "docs" / "stories"
-    stories_dir.mkdir(parents=True)
-    doc_path = stories_dir / "US-agent-workflow.md"
-    doc_path.write_text("# Agent Workflow\n\nAgent workflow documentation.", encoding="utf-8")
+    # A broken relative link whose target basename exists exactly once elsewhere
+    (temp_workspace / "docs" / "guides").mkdir(parents=True)
+    (temp_workspace / "docs" / "guides" / "setup.md").write_text("# Setup\n", encoding="utf-8")
+    doc_path = temp_workspace / "docs" / "index.md"
+    doc_path.write_text("See [setup](wrong/setup.md).\n", encoding="utf-8")
 
     ctx = RuleContext(
         workspace_root=temp_workspace,
@@ -22,13 +22,11 @@ def test_evaluator_autofix_convergence(temp_workspace: Path, workspace_cache: Wo
 
     result = evaluate(ctx, registry.get_all())
     # The violation should be marked as fixed!
-    assert any(v.rule_id == "RULE-spec-format" and v.fixed for v in result.violations)
+    assert any(v.rule_id == "RULE-markdown-link" and v.fixed for v in result.violations)
     assert not result.has_errors
 
-    # Now verify the file on disk has valid frontmatter
-    content = doc_path.read_text(encoding="utf-8")
-    assert content.startswith("---\n")
-    assert "id: US-agent-workflow" in content
+    # Now verify the file on disk points at the existing target
+    assert doc_path.read_text(encoding="utf-8") == "See [setup](guides/setup.md).\n"
 
 
 def test_evaluator_phase_filtering(temp_workspace: Path, workspace_cache: WorkspaceCache) -> None:

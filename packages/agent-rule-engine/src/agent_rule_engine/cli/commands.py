@@ -228,7 +228,7 @@ def _run_on_snapshot(
 @click.group(name="agent-rules")
 @click.version_option(package_name="agent-rule-engine")
 def cli() -> None:
-    """Agent-managed rule engine for specifications and governance."""
+    """Agent-managed rule engine for repository governance."""
 
 
 _workspace_option = click.option(

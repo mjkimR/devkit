@@ -22,10 +22,9 @@ def test_cli_rules_check_clean(tmp_path: Path) -> None:
 
 
 def test_cli_rules_check_json_output(tmp_path: Path) -> None:
-    stories_dir = tmp_path / "docs" / "stories"
-    stories_dir.mkdir(parents=True)
-    doc = stories_dir / "US-sample.md"
-    doc.write_text("# Sample Story\n\nNo frontmatter here.", encoding="utf-8")
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    (docs / "index.md").write_text("[missing](nowhere.md)\n", encoding="utf-8")
 
     runner = CliRunner()
     result = runner.invoke(cli, ["check", "--workspace-root", str(tmp_path), "--format", "json"])
@@ -34,19 +33,26 @@ def test_cli_rules_check_json_output(tmp_path: Path) -> None:
     data = json.loads(result.output)
     assert isinstance(data, list)
     assert len(data) >= 1
-    assert data[0]["rule_id"] == "RULE-spec-format"
+    assert data[0]["rule_id"] == "RULE-markdown-link"
+
+
+def _fixable_link_workspace(tmp_path: Path) -> Path:
+    docs = tmp_path / "docs"
+    (docs / "guides").mkdir(parents=True)
+    (docs / "guides" / "setup.md").write_text("# Setup\n", encoding="utf-8")
+    source = docs / "index.md"
+    source.write_text("[setup](wrong/setup.md)\n", encoding="utf-8")
+    return source
 
 
 def test_cli_rules_fix(tmp_path: Path) -> None:
-    stories_dir = tmp_path / "docs" / "stories"
-    stories_dir.mkdir(parents=True)
-    doc = stories_dir / "US-fixable.md"
-    doc.write_text("# Fixable Story\n\nContent.", encoding="utf-8")
+    source = _fixable_link_workspace(tmp_path)
 
     runner = CliRunner()
     result = runner.invoke(cli, ["fix", "--workspace-root", str(tmp_path)])
     assert result.exit_code == 0
     assert "FIXED" in result.output
+    assert source.read_text(encoding="utf-8") == "[setup](guides/setup.md)\n"
 
 
 def test_cli_plugin_failure_preserves_json_and_fails(tmp_path: Path) -> None:
@@ -61,9 +67,8 @@ def test_cli_plugin_failure_preserves_json_and_fails(tmp_path: Path) -> None:
 
 
 def test_cli_malformed_frontmatter_is_not_overwritten(tmp_path: Path) -> None:
-    docs = tmp_path / "docs/stories"
-    docs.mkdir(parents=True)
-    doc = docs / "US-invalid.md"
+    source = _fixable_link_workspace(tmp_path)
+    doc = tmp_path / "docs" / "invalid.md"
     original = "---\nid: [invalid\n---\n# Keep this content\n"
     doc.write_text(original)
     result = CliRunner().invoke(cli, ["fix", "-w", str(tmp_path)])
@@ -71,18 +76,16 @@ def test_cli_malformed_frontmatter_is_not_overwritten(tmp_path: Path) -> None:
     assert "Invalid YAML frontmatter" in result.stderr
     assert "passed cleanly" not in result.stdout
     assert doc.read_text() == original
+    assert source.read_text(encoding="utf-8") == "[setup](wrong/setup.md)\n"
 
 
 def test_cli_dry_run_does_not_modify_file(tmp_path: Path) -> None:
-    docs = tmp_path / "specs"
-    docs.mkdir()
-    doc = docs / "SPEC-example.md"
-    original = "# Example\n"
-    doc.write_text(original)
+    source = _fixable_link_workspace(tmp_path)
+    original = source.read_text(encoding="utf-8")
     result = CliRunner().invoke(cli, ["fix", "-w", str(tmp_path), "--dry-run"])
     assert result.exit_code == 1
     assert "FIXABLE" in result.stdout
-    assert doc.read_text() == original
+    assert source.read_text(encoding="utf-8") == original
 
 
 def _write_config(root: Path, body: str) -> None:

@@ -90,7 +90,8 @@ def test_end_to_end_new_next_bind_envelope_list(workspace: Path) -> None:
     env = _run("envelope", "new", "-w", str(workspace), "--unit", str(unit), "--kind", "review", "--stage", "review")
     assert (
         env.exit_code == 0
-        and env.output.strip() == "[ENVELOPE: .devkit/transient/work/login/envelopes/review-01.yaml kind=review seq=01]"
+        and env.output.strip()
+        == "[ENVELOPE: .devkit/transient/work/login/envelopes/review-01.yaml kind=review seq=01 status=needs_input open_findings=0]"
     )
     env = _run("envelope", "new", "-w", str(workspace), "--unit", str(unit), "--kind", "review")
     assert "seq=02" in env.output
@@ -152,7 +153,7 @@ def test_given_validation_and_gate_flow(workspace: Path) -> None:
 def test_next_unknown_unit_exits_2(workspace: Path) -> None:
     write_config(workspace, CONFIG)
     result = _run("next", "-w", str(workspace), "--unit", "nowhere")
-    assert result.exit_code == 1 and "(UNIT_NOT_FOUND) task.md not found in nowhere" in result.stderr
+    assert result.exit_code == 1 and "(UNIT_NOT_FOUND) no anchor file (task.md) found in nowhere" in result.stderr
 
 
 def test_specrig_style_layout_from_config(workspace: Path) -> None:
@@ -168,7 +169,9 @@ default = "direct-delivery"
     created = _run("new", "-w", str(workspace), "login", "--date", "2026-10-12")
     assert created.output.strip() == "[UNIT: specs/2026-10/20261012-login workflow=direct-delivery anchor=spec.md]"
     listed = _run("list", "-w", str(workspace))
-    assert "[UNIT: specs/2026-10/20261012-login status=planned workflow=direct-delivery]" in listed.output
+    assert (
+        "[UNIT: specs/2026-10/20261012-login status=planned workflow=direct-delivery anchor=spec.md]" in listed.output
+    )
 
 
 def test_lint_check_runs_rule_engine(workspace: Path) -> None:

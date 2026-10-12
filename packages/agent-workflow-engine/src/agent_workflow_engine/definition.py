@@ -12,9 +12,11 @@ from typing import Any
 
 from agent_workflow_engine import frontmatter
 from agent_workflow_engine.checks import DECLARABLE, Check, CheckClass, CheckError, Registry
+from agent_workflow_engine.layout import LayoutSpec, parse_layout_spec
 
 SCHEMA_VERSION = 1
 WORKFLOW_ID = re.compile(r"^[a-z][a-z0-9-]*$")
+STAGE_ID = re.compile(r"^[a-z][a-z0-9-]*$")
 ISOLATIONS = ("none", "preferred", "required")
 STAGE_KEYS = {
     "id",
@@ -98,6 +100,7 @@ class WorkflowDocument:
     declared_checks: tuple[Check, ...] = ()
     stages: tuple[Stage, ...] = ()
     next: tuple[Candidate, ...] = ()
+    layout: LayoutSpec | None = None  # keys the definition overrides in the project layout
     path: Path | None = None
     # Unknown keys per stage, aligned with ``stages`` by index.
     unknown_keys: tuple[tuple[str, ...], ...] = field(default=(), compare=False)
@@ -115,8 +118,13 @@ class WorkflowDocument:
             "checks": [c.to_dict() for c in self.declared_checks],
             "stages": [s.to_dict() for s in self.stages],
             "next": [c.to_dict() for c in self.next],
+            "layout": self.layout.to_dict() if self.layout else None,
             "hash": schema_hash(self),
         }
+
+    def anchor(self, default: str) -> str:
+        """The anchor file name for this workflow's units: declared, or the project default."""
+        return self.layout.anchor if self.layout and self.layout.anchor else default
 
 
 @dataclass(frozen=True)
@@ -242,6 +250,12 @@ def parse(text: str, path: Path | None = None) -> WorkflowDocument:
     stages = tuple(_stage(raw, i) for i, raw in enumerate(stages_raw))
     unknown_keys = tuple(tuple(sorted(set(raw) - STAGE_KEYS)) for raw in stages_raw)
     version = data.get("schema_version")
+    layout: LayoutSpec | None = None
+    if data.get("layout") is not None:
+        try:
+            layout = parse_layout_spec(data["layout"])
+        except ValueError as exc:
+            raise DefinitionError(str(exc)) from exc
     return WorkflowDocument(
         id=doc_id,
         title=str(data.get("title") or ""),
@@ -250,6 +264,7 @@ def parse(text: str, path: Path | None = None) -> WorkflowDocument:
         declared_checks=_declared(data.get("checks")),
         stages=stages,
         next=_candidates(data.get("next")),
+        layout=layout,
         path=path,
         unknown_keys=unknown_keys,
     )
@@ -272,10 +287,13 @@ HANDOFF_GATE = "handoff"
 def validate(doc: WorkflowDocument, anchor: str, known_ids: Iterable[str] | None = None) -> list[Problem]:
     """Every problem in the document; an empty list means it is usable.
 
-    ``known_ids`` are the workflow ids that exist in the workspace; when given,
-    a ``next`` candidate naming another id is reported.
+    ``anchor`` is the project default; a definition that declares its own
+    anchor is validated against that one. ``known_ids`` are the workflow ids
+    that exist in the workspace; when given, a ``next`` candidate naming
+    another id is reported.
     """
     problems: list[Problem] = []
+    anchor = doc.anchor(anchor)
     if not WORKFLOW_ID.match(doc.id):
         problems.append(Problem("", "id", f"{doc.id!r} must match [a-z][a-z0-9-]*"))
     if doc.schema_version != SCHEMA_VERSION:
@@ -289,6 +307,8 @@ def validate(doc: WorkflowDocument, anchor: str, known_ids: Iterable[str] | None
     ids = [s.id for s in doc.stages]
     seen: set[str] = set()
     for index, s in enumerate(doc.stages):
+        if not STAGE_ID.match(s.id):
+            problems.append(Problem(s.id, "id", f"{s.id!r} must match [a-z][a-z0-9-]*"))
         if s.id in seen:
             problems.append(Problem(s.id, "id", "duplicate stage id"))
         seen.add(s.id)

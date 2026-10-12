@@ -35,7 +35,7 @@ consumed and authored. See [section 4](#4-the-devkit-guide-bundle).
 
 | Command | Category | Description |
 | --- | --- | --- |
-| `devkit sync [options]` | Lifecycle | Synchronizes selected bundles into `.devkit/managed/`, projects native agent assets, and warns about stray files under the managed root. |
+| `devkit sync [options]` | Lifecycle | Synchronizes selected bundles into `.devkit/managed/`, projects native agent assets, maintains the `<!-- DEVKIT:START -->` block in the root `AGENTS.md`, and warns about stray files under the managed root. |
 | `devkit add <bundle>[:<preset>]...` | Selection | Selects bundles in `.devkit/config.toml` (default preset when none is named) and synchronizes. |
 | `devkit remove <bundle>...` | Selection | Deselects bundles in `.devkit/config.toml` and synchronizes. |
 | `devkit list [--target <dir>]` | Inspection | Outputs JSON listing installed content packages, bundle metadata, presets, selection state, and asset paths. |
@@ -61,6 +61,7 @@ Installing a content wheel only makes its bundle available; a bundle is deployed
 ```toml
 schema = 1
 agents = ["codex", "claude-code"]     # optional; absent means every supported agent, [] means none
+guidance_block = true                 # optional; false stops sync from managing the block in root AGENTS.md
 
 [presets]
 starter = "daily"                     # a preset name, "all", or an array of presets (union)
@@ -82,6 +83,12 @@ max_lines = 300
 
 `devkit add`, `devkit remove`, and the `devkit sync` selection flags edit these entries for you (`--no-save` for a one-off run).
 Running `devkit sync` applies the configured agents and presets without repeated CLI flags, and lists installed but unselected bundles.
+
+Every sync also writes a short orientation block into the root `AGENTS.md` between `<!-- DEVKIT:START -->` and
+`<!-- DEVKIT:END -->`: the installed bundles, the once-per-bundle `devkit get-context` rule and the generated entry
+skills. Text outside the markers is yours and is preserved; the block itself is hash-guarded like a managed file, so
+edit it only by changing the selection. Commit `AGENTS.md` with the receipt. See
+[Workspace Ownership](../../docs/distribution/workspace-ownership.md#2-ownership-categories-and-invariants).
 The `[rules]` table is owned by `agent-rule-engine` and is passed through untouched by `devkit sync`; see the
 [agent-rule-engine README](../agent-rule-engine/README.md#project-configuration). Rules shipped as `kind = "rule"`
 assets are recorded in the receipt and loaded by `agent-rules` without flags, and subagents may ship either native

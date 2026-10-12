@@ -47,8 +47,29 @@ def test_gate_auto_passes_and_off_skips(tmp_path: Path) -> None:
     res = evaluate(DOC, _opts(tmp_path, unit, approvals={"direction": "auto"}))
     assert res.done == ["intent"]
     res = evaluate(DOC, _opts(tmp_path, unit, approvals={"direction": "off"}))
-    assert res.done == [] and [(s.id, s.policy) for s in res.skipped] == [("intent", "approvals.direction=off")]
-    assert "[SKIPPED: intent policy=approvals.direction=off]" in render_result(res)
+    assert res.done == [] and [(s.id, s.reason) for s in res.skipped] == [("intent", "approvals.direction=off")]
+    assert "[SKIPPED: intent reason=approvals.direction=off]" in render_result(res)
+
+
+def test_stage_policy_off_skips_ungated_stage(tmp_path: Path) -> None:
+    unit = write_unit(tmp_path, "work/a")
+    (unit / "tasks.md").write_text("- [ ] one\n")
+    res = evaluate(DOC, _opts(tmp_path, unit, approvals={"direction": "auto"}, stages={"build-verify": "off"}))
+    assert res.done == ["intent"] and res.stage is not None and res.stage.id == "review"
+    assert [(s.id, s.reason) for s in res.skipped] == [("build-verify", "stages.build-verify=off")]
+    assert "[SKIPPED: build-verify reason=stages.build-verify=off]" in render_result(res)
+    assert res.to_dict()["skipped"] == [{"id": "build-verify", "reason": "stages.build-verify=off"}]
+    # a stage policy wins over a gate policy and never blocks completion
+    res = evaluate(
+        DOC,
+        _opts(
+            tmp_path,
+            unit,
+            approvals={"direction": "ask"},
+            stages={"intent": "off", "build-verify": "off", "review": "off", "integrate": "off"},
+        ),
+    )
+    assert res.complete and res.done == [] and len(res.skipped) == 4
 
 
 def test_full_progression_to_complete(tmp_path: Path) -> None:
