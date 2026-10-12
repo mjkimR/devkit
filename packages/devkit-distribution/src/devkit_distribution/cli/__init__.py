@@ -145,6 +145,16 @@ def _report(result: dict[str, object]) -> None:
             "devkit does not deploy or remove them; move project-owned files out of the managed root.",
             err=True,
         )
+    unprojected = result.get("unprojected")
+    if isinstance(unprojected, list) and unprojected:
+        items = ", ".join(
+            f"{item['bundle']}:{item['asset']} ({item['agent']})" for item in unprojected if isinstance(item, dict)
+        )
+        click.echo(
+            f"NOTICE: subagents without a native variant for a selected agent were not projected: {items}. "
+            "Add the variant, ship a role contract, or narrow 'agents' in .devkit/config.toml.",
+            err=True,
+        )
     unselected = result.get("unselected")
     if isinstance(unselected, list) and unselected:
         names = ", ".join(str(item["bundle"]) for item in unselected if isinstance(item, dict))

@@ -25,7 +25,14 @@ def project_path(root: Path, name: str) -> Path:
     rel = PurePosixPath(name)
     allowed = name in {RECEIPT, JOURNAL} or any(
         name.startswith(prefix)
-        for prefix in (".devkit/managed/", ".agents/skills/", ".claude/skills/", ".codex/agents/", ".claude/agents/")
+        for prefix in (
+            ".devkit/managed/",
+            ".agents/skills/",
+            ".agents/agents/",
+            ".claude/skills/",
+            ".codex/agents/",
+            ".claude/agents/",
+        )
     )
     if not allowed or rel.is_absolute() or ".." in rel.parts or "\\" in name or str(rel) != name:
         raise BundleError(f"unsafe deployment path: {name}")

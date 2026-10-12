@@ -8,7 +8,7 @@ from devkit_distribution.bundles import BundleError
 from devkit_distribution.bundles.guidance import prepend_context
 from devkit_distribution.bundles.manifest import source_files
 from devkit_distribution.bundles.playbooks import playbook_entry
-from devkit_distribution.bundles.subagents import projection_path, read_contract, render
+from devkit_distribution.bundles.subagents import HOST_FILES, SUBAGENT_DIRS, projection_path, read_contract, render
 from devkit_distribution.bundles.workflows import workflow_entry
 
 from . import playbook_skill, workflow_skill
@@ -18,7 +18,13 @@ from .discovery import InstalledBundle
 GENERATED_SKILLS = {"playbook": playbook_skill, "workflow": workflow_skill}
 
 OVERRIDES = ".devkit/overrides"
-AGENTS = {"codex": (".agents/skills", ".codex/agents"), "claude-code": (".claude/skills", ".claude/agents")}
+# Agent name -> (skill directory, subagent directory). Codex and Antigravity share the
+# ``.agents/skills`` standard, so identical skill projections are written once.
+AGENTS = {
+    "codex": (".agents/skills", SUBAGENT_DIRS["codex"]),
+    "claude-code": (".claude/skills", SUBAGENT_DIRS["claude-code"]),
+    "antigravity": (".agents/skills", SUBAGENT_DIRS["antigravity"]),
+}
 
 
 @dataclass(frozen=True)
@@ -40,30 +46,36 @@ def desired_inventory(
     list[dict[str, str]],
     dict[str, dict[str, dict[str, str]]],
     list[dict[str, str]],
+    list[dict[str, str]],
 ]:
     files: dict[str, Content] = {}
     assets: list[dict[str, object]] = []
     packages = []
     overrides_record: dict[str, dict[str, dict[str, str]]] = {}
     drift_list: list[dict[str, str]] = []
+    # Subagents declared with ``variants`` that have no file for a selected agent.
+    unprojected: list[dict[str, str]] = []
     # Every bundle passed in is deployed, so each needs an explicit preset selection.
     if set(presets) != {item.bundle.name for item in installed}:
         raise BundleError("inventory requires exactly one preset selection per bundle")
     if set(agents) - AGENTS.keys():
         raise BundleError("unsupported agent selection")
 
-    def add(destination: str, path: Path, context_bundle: str | None = None) -> None:
-        if destination in files:
+    def put(destination: str, content: Content) -> None:
+        # Agents sharing a directory (Codex and Antigravity) project the same bytes twice.
+        existing = files.get(destination)
+        if existing is not None and existing != content:
             raise BundleError(f"destination collision: {destination}")
+        files[destination] = content
+
+    def add(destination: str, path: Path, context_bundle: str | None = None) -> None:
         data = path.read_bytes()
         if context_bundle is not None:
             data = prepend_context(data, context_bundle)
-        files[destination] = Content(data, 0o755 if path.stat().st_mode & 0o111 else 0o644)
+        put(destination, Content(data, 0o755 if path.stat().st_mode & 0o111 else 0o644))
 
     def add_bytes(destination: str, data: bytes) -> None:
-        if destination in files:
-            raise BundleError(f"destination collision: {destination}")
-        files[destination] = Content(data, 0o644)
+        put(destination, Content(data, 0o644))
 
     for item in installed:
         bundle = item.bundle
@@ -132,7 +144,9 @@ def desired_inventory(
                     continue
                 source = sources.get(agent, sources.get("common") if asset.kind == "skill" else None)
                 if source is None:
-                    raise BundleError(f"{bundle.name}/{asset.id}: missing native variant for {agent}")
+                    # Never converted from another host's file: the agent simply gets no projection.
+                    unprojected.append({"bundle": bundle.name, "asset": asset.id, "agent": agent})
+                    continue
                 origin = bundle.root / source
                 skill_dir, subagent_dir = AGENTS[agent]
                 for path in source_files(bundle.root, source):
@@ -146,7 +160,7 @@ def desired_inventory(
                     if asset.kind == "skill":
                         dest = f"{skill_dir}/{asset.id}/{path.relative_to(origin).as_posix()}"
                     else:
-                        suffix = ".toml" if agent == "codex" else ".md"
+                        suffix = HOST_FILES[agent]
                         if not origin.is_file() or origin.suffix != suffix:
                             raise BundleError(f"{asset.id}: {agent} subagent must be one {suffix} file")
                         dest = f"{subagent_dir}/{asset.id}{suffix}"
@@ -217,8 +231,5 @@ def desired_inventory(
         projections = [(module.MANAGED_ROOT, None), *((f"{AGENTS[agent][0]}/{module.NAME}", agent) for agent in agents)]
         for directory, agent in projections:
             for relative, data in module.skill_files(agent).items():
-                destination = f"{directory}/{relative}"
-                if destination in files:
-                    raise BundleError(f"destination collision: {destination}")
-                files[destination] = Content(data, 0o644)
-    return files, assets, packages, overrides_record, drift_list
+                add_bytes(f"{directory}/{relative}", data)
+    return files, assets, packages, overrides_record, drift_list, unprojected

@@ -2,7 +2,8 @@
 
 A ``subagent`` asset may ship native files per agent (``variants``) or one
 Markdown contract (``source``) whose frontmatter declares the role, its
-description and a ``hosts`` table with one block per agent. Each block carries
+description and a ``hosts`` table with one block per agent (``claude-code``,
+``codex``, ``antigravity``). Each block carries
 a ``status`` and only host-native keys from an allowlist; projection is a
 deterministic rendering of that block, never a heuristic conversion. A host
 with ``status: unsupported`` gets no file. The body is the role's prompt.
@@ -36,8 +37,11 @@ ALLOWED_KEYS: dict[str, tuple[str, ...]] = {
         "color",
     ),
     "codex": ("model", "model_reasoning_effort", "sandbox_mode"),
+    "antigravity": ("tools", "model", "commandExecutionPolicy", "skills", "plugins"),
 }
-HOST_FILES = {"claude-code": ".md", "codex": ".toml"}
+HOST_FILES = {"claude-code": ".md", "codex": ".toml", "antigravity": ".md"}
+# Frontmatter every Antigravity subagent file carries in addition to the contract's keys.
+ANTIGRAVITY_FIXED: tuple[tuple[str, Any], ...] = (("subagent", True), ("mainAgent", False))
 FIELDS = {"role", "title", "description", "skill", "hosts"}
 
 
@@ -145,9 +149,11 @@ def read_contract(data: bytes, context: str, asset_id: str | None = None) -> Con
     return Contract(role, title.strip(), description.strip(), skill, hosts, body)
 
 
+SUBAGENT_DIRS = {"claude-code": ".claude/agents", "codex": ".codex/agents", "antigravity": ".agents/agents"}
+
+
 def projection_path(agent: str, role: str) -> str:
-    directory = {"claude-code": ".claude/agents", "codex": ".codex/agents"}[agent]
-    return f"{directory}/{role}{HOST_FILES[agent]}"
+    return f"{SUBAGENT_DIRS[agent]}/{role}{HOST_FILES[agent]}"
 
 
 def render(agent: str, contract: Contract, contract_path: str) -> bytes | None:
@@ -172,12 +178,15 @@ def render(agent: str, contract: Contract, contract_path: str) -> bytes | None:
     prompt = " ".join(header) + "\n\n" + contract.body.rstrip("\n") + "\n"
     if agent == "codex":
         return _render_codex(contract, block, description, prompt)
-    return _render_markdown(contract, block, description, prompt)
+    fixed = ANTIGRAVITY_FIXED if agent == "antigravity" else ()
+    return _render_markdown(contract, block, description, prompt, fixed)
 
 
-def _render_markdown(contract: Contract, block: HostBlock, description: str, prompt: str) -> bytes:
+def _render_markdown(
+    contract: Contract, block: HostBlock, description: str, prompt: str, fixed: tuple[tuple[str, Any], ...] = ()
+) -> bytes:
     lines = ["---", f"name: {contract.role}", f"description: {_yaml_quote(description)}"]
-    lines.extend(f"{key}: {_yaml_value(value)}" for key, value in block.settings)
+    lines.extend(f"{key}: {_yaml_value(value)}" for key, value in (*fixed, *block.settings))
     lines.append("---")
     return ("\n".join(lines) + "\n" + prompt).encode()
 

@@ -20,5 +20,6 @@ The review stage names the `reviewer` role with `isolation: preferred`. The
 bundle ships that role as a host-neutral contract
 (`subagents/reviewer.md`, a `kind = "subagent"` asset): `devkit sync` renders
 `.claude/agents/reviewer.md` from its `hosts.claude-code` block and
-`.codex/agents/reviewer.toml` from `hosts.codex`, so `[DELEGATE: role=reviewer]`
-resolves to a real subagent on each host.
+`.codex/agents/reviewer.toml` from `hosts.codex` and `.agents/agents/reviewer.md`
+from `hosts.antigravity`, so `[DELEGATE: role=reviewer]` resolves to a real
+subagent on each host.

@@ -50,7 +50,7 @@ src/package_b_playbooks/
 A bundle declares assets across seven supported kinds:
 
 - `skill`: A directory containing `SKILL.md` along with supporting scripts, references, and assets. The entire directory tree is preserved, maintaining executable permissions (`0755`) for scripts.
-- `subagent`: A delegated agent persona. Either native files per agent (`variants`, copied verbatim) or one host-neutral role contract (`source`, a single Markdown file) whose frontmatter declares `role` (equal to the asset id), `title`, `description`, an optional `skill` and a `hosts` table with one block per agent (`claude-code`, `codex`). Each block carries a `status` (`native`, `emulated`, `unsupported`, `unverified`) and only allowlisted host-native keys; `devkit sync` renders the projection for each selected agent from that block, writes no file for `unsupported`, and fails for an agent the contract does not mention. The body is the role's prompt. See [Agent Projections](agent-projections.md).
+- `subagent`: A delegated agent persona. Either native files per agent (`variants`, copied verbatim) or one host-neutral role contract (`source`, a single Markdown file) whose frontmatter declares `role` (equal to the asset id), `title`, `description`, an optional `skill` and a `hosts` table with one block per agent (`claude-code`, `codex`, `antigravity`). Each block carries a `status` (`native`, `emulated`, `unsupported`, `unverified`) and only allowlisted host-native keys; `devkit sync` renders the projection for each selected agent from that block, writes no file for `unsupported`, and fails for an agent the contract does not mention. The body is the role's prompt. See [Agent Projections](agent-projections.md).
 - `instruction`: Contextual guidance and prompt markdown documents linked to agent startup instructions.
 - `playbook`: Operational workflows, checklists, and procedural guides.
 - `rule`: Python-based governance rules evaluated by `agent-rule-engine`. The receipt lists every deployed file under the asset's `paths`, and `agent-rules` loads them from there; a consumer configures them in `[rules]` of `.devkit/config.toml` rather than editing the managed copy.
@@ -82,6 +82,7 @@ kind = "subagent"
 [assets.variants]
 codex = "native/codex/reviewer.toml"
 claude-code = "native/claude-code/reviewer.md"
+antigravity = "native/antigravity/reviewer.md"
 
 [[assets]]
 id = "challenger"
@@ -126,7 +127,7 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
 - **Slug Validation**: Bundle names and asset IDs must match lowercase slug regex `^[a-z][a-z0-9-]*$`.
 - **Semantic Versioning**: Bundle versions must strictly follow `MAJOR.MINOR.PATCH` format.
 - **Relative Path Sanitization**: Source paths must be relative POSIX paths. Paths containing traversal segments (`..`), backslashes (`\`), symlinks, or special device files are strictly rejected.
-- **Source vs. Variants**: An asset must declare either a single `source` or a `variants` mapping matching supported agent names, never both.
+- **Source vs. Variants**: An asset must declare either a single `source` or a `variants` mapping matching supported agent names (`codex`, `claude-code`, `antigravity`), never both.
 - **Skills Integrity**: A `skill` source must point to a directory containing a valid `SKILL.md` file.
 - **Contract Integrity**: A `subagent` declared with `source` must be a single Markdown file whose frontmatter has `role` equal to the asset id, `title`, `description`, a nonempty `hosts` table with valid statuses and allowlisted keys, and a nonempty body.
 - **Preset Integrity**: Preset names are slugs and `all` is reserved. Preset asset lists must be nonempty, unique, and reference declared asset IDs. `default_preset` must name a declared preset or `all`.

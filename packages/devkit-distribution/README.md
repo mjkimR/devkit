@@ -15,7 +15,7 @@ uv add --dev devkit-distribution devkit-starter
 # Select a bundle (recorded in .devkit/config.toml) and synchronize it
 uv run devkit add starter
 
-# Project native agent configurations
+# Native projections go to Codex, Claude Code and Antigravity by default; narrow them if needed
 uv run devkit sync --agent codex --agent claude-code
 
 # Inspect synchronized assets and bundles
@@ -55,7 +55,7 @@ Installing a content wheel only makes its bundle available; a bundle is deployed
 
 ```toml
 schema = 1
-agents = ["codex", "claude-code"]
+agents = ["codex", "claude-code"]     # optional; absent means every supported agent, [] means none
 
 [presets]
 starter = "daily"                     # a preset name, "all", or an array of presets (union)

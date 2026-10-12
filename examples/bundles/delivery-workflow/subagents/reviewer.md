@@ -10,6 +10,9 @@ hosts:
   codex:
     status: emulated
     sandbox_mode: read-only
+  antigravity:
+    status: native
+    tools: [view_file, grep_search, run_command]
 ---
 # Reviewer
 

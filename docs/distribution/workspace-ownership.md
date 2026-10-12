@@ -38,7 +38,7 @@ Consuming projects integrate bundles under a dedicated root directory: `.devkit/
    - Read-only cache. Always regenerated deterministically by `devkit sync`.
    - Preserves original relative paths for instructions, playbooks, and rules.
 3. **Project Native Projections**:
-   - Copied projections placed into agent-specific directories (such as `.agents/skills/`, `.claude/skills/`, `.codex/agents/`, `.claude/agents/`).
+   - Copied or rendered projections placed into agent-specific directories (`.agents/skills/` and `.agents/agents/` for Codex and Antigravity, `.claude/skills/` and `.claude/agents/` for Claude Code, `.codex/agents/` for Codex).
    - Tracked explicitly by file path, SHA-256 hash, and POSIX mode in `installation.json`.
 4. **Foreign File Protection**:
    - The distributor strictly manages only files recorded in `installation.json`.

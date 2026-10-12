@@ -64,4 +64,4 @@ uv run devkit list
 
 For a local workspace smoke test, use an existing temporary project directory:
 `uv run --package devkit-distribution devkit sync --target /tmp/my-project`.
-Select native skill/subagent copies with `--agent codex` or `--agent claude-code`.
+Native skill/subagent copies go to Codex, Claude Code and Antigravity by default; narrow them with `--agent codex` or `--agent claude-code`.

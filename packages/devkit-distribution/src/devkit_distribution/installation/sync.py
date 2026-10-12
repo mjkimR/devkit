@@ -147,7 +147,7 @@ def sync_project(
             )
         active_presets = {name: sorted(set(values)) for name, values in sorted(active_presets.items())}
         selected = [item for item in installed if item.bundle.name in active_presets]
-        desired, assets, packages, overrides_record, drift_list = desired_inventory(
+        desired, assets, packages, overrides_record, drift_list, unprojected = desired_inventory(
             selected,
             active_presets,
             active_agents,
@@ -193,6 +193,7 @@ def sync_project(
             "assets": assets,
             "actions": actions,
             "drift": drift_list,
+            "unprojected": unprojected,
             "unselected": [
                 {
                     "bundle": item.bundle.name,

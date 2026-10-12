@@ -241,7 +241,7 @@ synchronized files; preserve receipt ownership, hash checks, and transaction che
 #### 7. `agent-subagent`
 - **Role**: Standalone agent persona definition configuring system prompts, permissions, and tool access for delegated subagent tasks.
 - **Consumption**: Read by agent runtimes when spawning child tasks.
-- **Format Requirements**: Either vendor-native files per agent (`.toml` for Codex in `.codex/agents/<name>.toml`, `.md` for Claude Code in `.claude/agents/<name>.md`), or one host-neutral role contract (Markdown with a `hosts` table of allowlisted per-agent keys and a status) that `devkit sync` renders into those native files.
+- **Format Requirements**: Either vendor-native files per agent (`.toml` for Codex in `.codex/agents/<name>.toml`, `.md` for Claude Code in `.claude/agents/<name>.md`, `.md` for Antigravity in `.agents/agents/<name>.md`), or one host-neutral role contract (Markdown with a `hosts` table of allowlisted per-agent keys and a status) that `devkit sync` renders into those native files.
 - **Target Location**: Native agent persona directories; a contract itself stays under `.devkit/managed/<bundle>/`.
 
 #### 8. `commit-gate`

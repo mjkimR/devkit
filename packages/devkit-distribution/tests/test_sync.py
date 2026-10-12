@@ -53,7 +53,7 @@ assets = ["guide"]
 def target(tmp_path: Path) -> Path:
     root = tmp_path / "consumer"
     root.mkdir()
-    update_config(root, presets={"team": ["all"]})
+    update_config(root, presets={"team": ["all"]}, agents=["codex"])
     return root
 
 
@@ -134,11 +134,12 @@ def test_unowned_native_collision_preserves_other_tool(installed: list[Installed
     assert not (target / RECEIPT).exists()
 
 
-def test_dry_run_and_invalid_variant_are_read_only(installed: list[InstalledBundle], target: Path) -> None:
+def test_dry_run_is_read_only_and_missing_variant_is_reported(installed: list[InstalledBundle], target: Path) -> None:
     assert sync_project(target, installed, dry_run=True)["actions"]
     assert not (target / RECEIPT).exists()
-    with pytest.raises(BundleError, match="missing native variant"):
-        sync_project(target, installed, agents=["claude-code"])
+    result = sync_project(target, installed, agents=["claude-code"], dry_run=True)
+    assert result["unprojected"] == [{"bundle": "team", "asset": "reviewer", "agent": "claude-code"}]
+    assert not any(a["path"].startswith(".claude/agents/") for a in result["actions"])
     assert not (target / ".devkit/managed").exists()
 
 
@@ -296,7 +297,11 @@ def test_unselected_bundles_are_not_deployed(installed: list[InstalledBundle], b
     assert result["unselected"] == [
         {"bundle": "team", "package": "team-content", "presets": ["all", "minimal"], "default_preset": None}
     ]
-    assert json.loads((bare / RECEIPT).read_text())["selection"] == {"agents": [], "presets": {}}
+    # Without an ``agents`` entry every supported agent is a projection target.
+    assert json.loads((bare / RECEIPT).read_text())["selection"] == {
+        "agents": ["antigravity", "claude-code", "codex"],
+        "presets": {},
+    }
 
 
 def test_preset_union_and_one_run_selection(installed: list[InstalledBundle], target: Path, tmp_path: Path) -> None:
@@ -579,3 +584,51 @@ def test_stray_files_under_managed_root_are_reported_not_touched(
     out = CliRunner().invoke(cli, ["sync", "--target", str(target)])
     assert out.exit_code == 0
     assert "WARNING: unmanaged files under .devkit/managed/: .devkit/managed/team/rules/local_rule.py" in out.output
+
+
+def test_agents_default_to_every_host_and_empty_list_disables_projection(
+    installed: list[InstalledBundle], bare: Path
+) -> None:
+    write_config(bare, 'schema = 1\n[presets]\nteam = "all"\n')
+    result = sync_project(bare, installed)
+    assert result["selection"]["agents"] == ["antigravity", "claude-code", "codex"]
+    for path in [".agents/skills/review/SKILL.md", ".claude/skills/review/SKILL.md", ".codex/agents/reviewer.toml"]:
+        assert (bare / path).exists(), path
+    # The only-codex variant is skipped, not converted, for the other two hosts.
+    assert {(u["agent"]) for u in result["unprojected"]} == {"antigravity", "claude-code"}
+    assert not (bare / ".agents/agents/reviewer.md").exists()
+
+    write_config(bare, 'schema = 1\nagents = []\n[presets]\nteam = "all"\n')
+    result = sync_project(bare, installed)
+    assert result["selection"]["agents"] == [] and result["unprojected"] == []
+    assert not (bare / ".agents/skills/review/SKILL.md").exists()
+    assert (bare / ".devkit/managed/team/skills/review/SKILL.md").exists()
+
+
+def test_codex_and_antigravity_share_skill_projections(installed: list[InstalledBundle], target: Path) -> None:
+    result = sync_project(target, installed, agents=["codex", "antigravity"])
+    skill = target / ".agents/skills/review/SKILL.md"
+    assert skill.exists()
+    assert [a["path"] for a in result["actions"]].count(".agents/skills/review/SKILL.md") == 1
+    receipt = json.loads((target / RECEIPT).read_text())
+    review = next(a for a in receipt["assets"] if a["id"] == "reviewer")
+    assert review["paths"] == [".codex/agents/reviewer.toml", ".devkit/managed/team/reviewer.toml"]
+    # Dropping Antigravity keeps the shared projection because Codex still needs it.
+    sync_project(target, installed, agents=["codex"])
+    assert skill.exists()
+    sync_project(target, installed, agents=["antigravity"])
+    assert skill.exists() and not (target / ".codex/agents/reviewer.toml").exists()
+
+
+def test_antigravity_native_variant_is_copied(installed: list[InstalledBundle], target: Path) -> None:
+    root = installed[0].bundle.root
+    (root / "reviewer-ag.md").write_text("---\nname: reviewer\nsubagent: true\n---\nnative\n")
+    (root / "bundle.toml").write_text(
+        (root / "bundle.toml")
+        .read_text()
+        .replace('codex = "reviewer.toml"', 'codex = "reviewer.toml"\nantigravity = "reviewer-ag.md"')
+    )
+    bundle = [InstalledBundle("team-content", "0.1.0", load_bundle(root))]
+    result = sync_project(target, bundle, agents=["antigravity"])
+    assert result["unprojected"] == []
+    assert (target / ".agents/agents/reviewer.md").read_text() == "---\nname: reviewer\nsubagent: true\n---\nnative\n"

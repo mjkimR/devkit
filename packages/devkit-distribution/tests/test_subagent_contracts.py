@@ -71,7 +71,7 @@ def test_read_contract() -> None:
         (("role: reviewer", "role: other"), "must equal the asset id"),
         (("title: Reviewer", "title: ''"), "title is required"),
         (("skill: review", "skill: Bad Skill"), "skill must be a lowercase slug"),
-        (("  codex:", "  antigravity:"), "unknown host"),
+        (("  codex:", "  gemini:"), "unknown host"),
         (("status: native", "status: maybe"), "status must be one of"),
         (("    tools: [Read, Grep, Glob]", "    rocket: true"), "not allowed"),
         (("    maxTurns: 20", "    maxTurns: [1, 2]"), "must be a string, integer, boolean or list"),
@@ -118,6 +118,26 @@ def test_render_claude_and_codex_projections() -> None:
     assert 'Return "findings" with evidence.' in data["developer_instructions"]
 
 
+def test_render_antigravity_projection_carries_fixed_keys() -> None:
+    body = CONTRACT.replace(
+        "  codex:\n",
+        '  antigravity:\n    status: native\n    tools: [view_file, grep_search]\n    commandExecutionPolicy: "off"\n  codex:\n',
+    )
+    contract = read_contract(body.encode(), "x")
+    rendered = render("antigravity", contract, ".devkit/managed/team/subagents/reviewer.md")
+    assert rendered is not None
+    head = rendered.decode().split("---\n")[1]
+    assert yaml.safe_load(head) == {
+        "name": "reviewer",
+        "description": "Reviewer. Reviews a change against its specification and returns findings with evidence.",
+        "subagent": True,
+        "mainAgent": False,
+        "tools": ["view_file", "grep_search"],
+        "commandExecutionPolicy": "off",
+    }
+    assert projection_path("antigravity", "reviewer") == ".agents/agents/reviewer.md"
+
+
 def test_render_unsupported_host_yields_no_file_and_missing_host_fails() -> None:
     contract = read_contract(CONTRACT.replace("status: emulated", "status: unsupported").encode(), "x")
     assert render("codex", contract, "p") is None
@@ -147,7 +167,10 @@ def test_sync_projects_contract_per_agent(tmp_path: Path) -> None:
     target = tmp_path / "consumer"
     target.mkdir()
     installed = [make_bundle(tmp_path, "team")]
-    update_config(target, presets={"team": ["all"]}, agents=["codex", "claude-code"])
+    update_config(target, presets={"team": ["all"]})
+    with pytest.raises(BundleError, match="no projection for antigravity"):
+        sync_project(target, installed)  # every host is a target by default; the contract must name each
+    update_config(target, agents=["codex", "claude-code"])
     sync_project(target, installed)
 
     assert (target / ".devkit/managed/team/subagents/reviewer.md").read_text() == CONTRACT

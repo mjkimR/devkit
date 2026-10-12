@@ -95,6 +95,7 @@ max_bytes = 8192
 ```
 
 - **Allowed top-level fields**: `schema`, `agents`, `presets`, `playbooks`, `rules`, `workflow`, `gates`. Unknown fields are rejected. `[rules]` is owned by `agent-rule-engine` (phase and severity overrides, typed settings), `[workflow]` by `agent-workflow-engine` and `[gates]` by `agent-commit-gate`; `devkit` passes them through untouched.
+- **`agents`** narrows native projection. Absent, every supported agent (`antigravity`, `claude-code`, `codex`) is a target; `agents = []` (written by `devkit sync --no-agents`) turns projection off while managed copies stay.
 - **`[presets]`** is the selection: a bundle is synchronized if and only if it has an entry. The value is a preset name or a nonempty array of unique preset names; an array selects the union of their assets. `all` is a reserved preset available in every bundle.
 - **Selected but not installed**: A selected bundle that no installed package provides is an error. Install the package or deselect the bundle with `devkit remove <bundle>`.
 - **`schema`**: Optional; `1` is the only supported version. `devkit add` writes it when it creates the file.
@@ -158,7 +159,7 @@ All mutating operations enforce strict transactional safety:
 | `devkit bundle build <source> --output <zip>` | Packaging | Produces a deterministic ZIP archive with inventory hashes and normalized file permissions. |
 
 ### Sync Options and Modes
-- `--agent <name>`: Sets the agent targets (recorded as `agents` in `config.toml`). Repeatable.
+- `--agent <name>`: Narrows the agent targets (recorded as `agents` in `config.toml`). Repeatable; without any `agents` entry every supported agent is a target.
 - `--no-agents`: Clears agent targets and unlinks unchanged native projections.
 - `--preset <bundle>[:<name>]`: Selects `<bundle>` with `<name>` (or its default preset), replacing that bundle's entry in `config.toml`. Repeat a bundle to select a union. Use `<bundle>:all` for every asset.
 - `--no-save`: Applies selection flags to this run only, without editing `config.toml`.

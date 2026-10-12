@@ -1,6 +1,8 @@
 """Project configuration (``.devkit/config.toml``): explicit bundle selection.
 
-A bundle is deployed only when ``[presets]`` names it.
+A bundle is deployed only when ``[presets]`` names it. Native projections go to
+every supported agent unless ``agents`` narrows the list; ``agents = []`` turns
+projection off.
 """
 
 from __future__ import annotations
@@ -30,9 +32,13 @@ SCHEMA = 1
 FIELDS = frozenset({"schema", "agents", "presets", "playbooks", "rules", "workflow", "gates"})
 
 
+def all_agents() -> list[str]:
+    return sorted(AGENTS)
+
+
 @dataclass(frozen=True)
 class ProjectConfig:
-    agents: list[str] = field(default_factory=list)
+    agents: list[str] = field(default_factory=all_agents)
     presets: dict[str, list[str]] = field(default_factory=dict)
 
 
@@ -115,7 +121,7 @@ def read_config(root: Path) -> ProjectConfig:
         return ProjectConfig()
     validate_playbooks_config(data.get("playbooks"))
     return ProjectConfig(
-        agents=_agents(data["agents"]) if "agents" in data else [],
+        agents=_agents(data["agents"]) if "agents" in data else all_agents(),
         presets=parse_presets(data.get("presets", {})),
     )
 
