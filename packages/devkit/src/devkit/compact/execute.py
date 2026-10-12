@@ -17,16 +17,17 @@ import os
 import re
 import shlex
 import signal
+import stat
 import subprocess
 import tempfile
 import threading
 import time
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError
-from devkit.compact.errors import CommandNotStartedError, SlowCommandNotice
+from devkit.compact.errors import CommandNotStartedError, LogDirectoryError, SlowCommandNotice
 from devkit.compact.scan import Scan, scan
 from devkit.core.project import find_project_root
 
@@ -57,10 +58,32 @@ class CommandRun:
         return shlex.join(self.argv)
 
 
+def log_root() -> Path:
+    """``<tmp>/devkit-run-<uid>``: private to the user, since ``/tmp`` may be shared."""
+    return Path(tempfile.gettempdir()) / f"{LOG_ROOT}-{os.getuid()}"
+
+
 def default_log_dir(cwd: Path) -> Path:
-    """``<tmp>/devkit-run/<hash>``: one directory per project, outside the work tree."""
+    """``<tmp>/devkit-run-<uid>/<hash>``: one directory per project, outside the work tree."""
     key = hashlib.sha256(str(find_project_root(cwd)).encode()).hexdigest()[:12]
-    return Path(tempfile.gettempdir()) / LOG_ROOT / key
+    return log_root() / key
+
+
+def _ensure_private(root: Path) -> None:
+    """Create ``root`` as ``0700``; refuse it when it is a symlink or another user owns it."""
+    try:
+        root.mkdir(mode=0o700, exist_ok=True)
+        info = os.lstat(root)
+    except OSError as error:
+        raise LogDirectoryError(
+            f"cannot create the log directory {root}: {error.strerror or error}", target_files=[str(root)]
+        ) from error
+    if stat.S_ISLNK(info.st_mode) or not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid():
+        raise LogDirectoryError(
+            f"the log directory {root} is not a directory owned by the current user",
+            target_files=[str(root)],
+            fix=f"rm -rf {shlex.quote(str(root))}  (after the user agrees)",
+        )
 
 
 def run_command(
@@ -89,6 +112,8 @@ def run_command(
         raise _directory_error(argv, os.environ.get("PWD", "."), "the current directory no longer exists") from error
     if not directory.is_dir():
         raise _directory_error(argv, str(directory), "not an existing directory")
+    if log_dir is None:
+        _ensure_private(log_root())
     logs = log_dir or default_log_dir(directory)
     logs.mkdir(parents=True, exist_ok=True)
     _prune(logs, KEEP_LOGS - 1)
@@ -96,25 +121,26 @@ def run_command(
     with tempfile.NamedTemporaryFile(mode="w+b", prefix=prefix, suffix=".log", dir=logs, delete=False) as log:
         path = Path(log.name)
         started = time.monotonic()
-        try:
-            process = subprocess.Popen(
-                argv,
-                cwd=directory,
-                env=None if env is None else dict(env),
-                stdin=subprocess.DEVNULL,
-                stdout=log,
-                stderr=subprocess.STDOUT,
-                start_new_session=True,
-            )
-        except OSError as error:
-            log.close()
-            path.unlink(missing_ok=True)
-            reason = error.strerror or str(error)
-            # The child reports a failed chdir with the directory as filename, a failed exec with the command.
-            if error.filename is not None and Path(error.filename) == directory:
-                raise _directory_error(argv, str(directory), reason) from error
-            raise CommandNotStartedError(f"cannot start {argv[0]!r}: {reason}", target_files=[argv[0]]) from error
+        # Handlers first: a signal right after the start must still stop the command's process group.
         with _signals_exit():
+            try:
+                process = subprocess.Popen(
+                    argv,
+                    cwd=directory,
+                    env=None if env is None else dict(env),
+                    stdin=subprocess.DEVNULL,
+                    stdout=log,
+                    stderr=subprocess.STDOUT,
+                    start_new_session=True,
+                )
+            except OSError as error:
+                log.close()
+                path.unlink(missing_ok=True)
+                reason = error.strerror or str(error)
+                # The child reports a failed chdir with the directory as filename, a failed exec with the command.
+                if error.filename is not None and Path(error.filename) == directory:
+                    raise _directory_error(argv, str(directory), reason) from error
+                raise CommandNotStartedError(f"cannot start {argv[0]!r}: {reason}", target_files=[argv[0]]) from error
             try:
                 code = process.wait()
             except BaseException:
@@ -169,33 +195,39 @@ def _prune(directory: Path, keep: int) -> None:
 
 
 @contextlib.contextmanager
-def _signals_exit() -> Iterator[None]:
-    """Turn ``SIGTERM`` and ``SIGHUP`` into ``SystemExit(128 + N)`` while waiting, so cleanup runs.
-
-    Signal handlers can only be set from the main thread; elsewhere the defaults stay.
-    """
+def _signals(handler: Callable[[int, object], None] | int, *signums: int) -> Iterator[None]:
+    """Install ``handler`` for ``signums`` while the block runs; only the main thread can, elsewhere nothing changes."""
     if threading.current_thread() is not threading.main_thread():
         yield
         return
-
-    def exit_on(signum: int, _frame: object) -> None:
-        raise SystemExit(128 + signum)
-
-    previous = {sig: signal.signal(sig, exit_on) for sig in (signal.SIGTERM, signal.SIGHUP)}
+    previous = {signum: signal.signal(signum, handler) for signum in signums}
     try:
         yield
     finally:
-        for sig, handler in previous.items():
-            signal.signal(sig, handler if handler is not None else signal.SIG_DFL)
+        for signum, old in previous.items():
+            signal.signal(signum, old if old is not None else signal.SIG_DFL)
+
+
+def _exit_on(signum: int, _frame: object) -> None:
+    raise SystemExit(128 + signum)
+
+
+def _signals_exit() -> contextlib.AbstractContextManager[None]:
+    """Turn ``SIGTERM`` and ``SIGHUP`` into ``SystemExit(128 + N)``, so cleanup runs."""
+    return _signals(_exit_on, signal.SIGTERM, signal.SIGHUP)
 
 
 def _stop(process: subprocess.Popen[bytes]) -> None:
-    """Terminate the command's process group, then kill it after ``STOP_GRACE`` seconds."""
-    with contextlib.suppress(ProcessLookupError):
-        os.killpg(process.pid, signal.SIGTERM)
-    try:
-        process.wait(timeout=STOP_GRACE)
-    except subprocess.TimeoutExpired:
+    """Terminate the command's process group, then kill it after ``STOP_GRACE`` seconds.
+
+    Further interrupts are ignored meanwhile, so a second Ctrl-C cannot skip the kill.
+    """
+    with _signals(signal.SIG_IGN, signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
         with contextlib.suppress(ProcessLookupError):
-            os.killpg(process.pid, signal.SIGKILL)
-        process.wait()
+            os.killpg(process.pid, signal.SIGTERM)
+        try:
+            process.wait(timeout=STOP_GRACE)
+        except subprocess.TimeoutExpired:
+            with contextlib.suppress(ProcessLookupError):
+                os.killpg(process.pid, signal.SIGKILL)
+            process.wait()

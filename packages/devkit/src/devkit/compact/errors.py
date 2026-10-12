@@ -25,6 +25,15 @@ class CommandNotStartedError(CompactError):
     fix = "Check the command name and the current directory; pass the command after `--`, as on a shell"
 
 
+class LogDirectoryError(CompactError):
+    """The per-user log directory is not a directory this user owns (``INTERACTION``): it is a symlink,
+    belongs to someone else, or cannot be created."""
+
+    code = "RUN_LOG_DIR_INVALID"
+    actor = Actor.USER
+    what_to_report = "devkit run keeps its logs in a private directory that another user or a link now occupies"
+
+
 class SlowCommandNotice(CompactError):
     """The command ran longer than ``--slow-after`` (``NOTE``); returned with the result, never raised."""
 

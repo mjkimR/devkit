@@ -31,13 +31,14 @@ from pathlib import Path
 from typing import TextIO
 
 from devkit.advisory import Level
+from devkit.advisory.advisory import CONTINUATION, FIELDS, HEADLINE
 
 ANSI = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
 MAX_LINE = 1_000
 SUMMARY_BUDGET = 2_000
 WARNING_BUDGET = 2_000
 WARNING_MESSAGE = 500
-ADVISORY_BUDGET = 4_000
+ADVISORY_BUDGET = 4_000  # for errors, and again for warnings and notices: errors are never crowded out
 # Failures usually end with the most useful part (pytest's short test summary,
 # a linter's last findings and counts), so the tail gets the larger share.
 HEAD = 3_000
@@ -90,8 +91,9 @@ _PERCENT = r"\[\s*\d+(?:%|/\d+)\]"
 _PROGRESS = tuple(
     re.compile(pattern)
     for pattern in (
-        # pytest: an optional test file, one character per test, then [ 45%] (or [ 12/130]).
-        rf"(?:\S+ )?[.sxXfFER]+\s*{_PERCENT}",
+        # pytest: an optional test file, one character per test, then [ 45%] (or [ 12/130]). A line with
+        # F or E records which file failed, for a run that ends without its failures section: it stays.
+        rf"(?:\S+ )?[.sxXR]+\s*{_PERCENT}",
         # pytest -v: a test that passed, was skipped or xfailed; FAILED and ERROR lines stay.
         rf"\S+::\S.* (?:PASSED|SKIPPED|XFAIL|XPASS)(?: \(.*\))?\s*{_PERCENT}",
         # pytest-xdist -v, and the passed tests pytest -rA lists in its short summary.
@@ -124,9 +126,12 @@ _SECTION_END = "-- Docs: "
 _FILTERED_BANNERS = {"test session starts", "warnings summary"}
 _FILTERED_SECTIONS = {"warnings summary"}
 
-# The Agent Advisory Protocol block grammar (docs/advisory/protocol.md, section 3).
-_HEADLINES = {"[ERROR]  ": Level.ERROR, "[WARN]   ": Level.WARNING, "[NOTICE] ": Level.NOTICE}
-_FIELDS = ("[ACTION] ", "[WHEN]   ", "[TARGET] ", "[FIX]    ", "[REPORT] ", "[DETAIL] ", " " * 9)
+_FILTERS = (*_PROGRESS, *_NOISE)
+
+# The Agent Advisory Protocol block grammar (docs/advisory/protocol.md, section 3). A continued value
+# that contains an empty line renders that line empty, so an empty line inside a block continues it.
+_HEADLINES = {sentinel: level for level, sentinel in HEADLINE.items()}
+_FIELDS = (*FIELDS, CONTINUATION)
 
 
 @dataclass(frozen=True)
@@ -229,7 +234,7 @@ def is_filtered(line: str) -> bool:
     """Whether ``line`` (one visible line) only reports progress or a passing item, or carries nothing an
     agent acts on; pytest's filtered sections are decided by the scan, which follows the banners."""
     clean = line.strip()
-    return bool(clean) and any(pattern.fullmatch(clean) for pattern in (*_PROGRESS, *_NOISE))
+    return bool(clean) and any(pattern.fullmatch(clean) for pattern in _FILTERS)
 
 
 class _Excerpt:
@@ -241,7 +246,8 @@ class _Excerpt:
         self.head_open = True
         self.tail: deque[str] = deque()
         self.tail_size = 0
-        self.dropped = 0
+        self.dropped = 0  # between head and tail, where the marker line goes
+        self.inline = 0  # inside over-long lines, marked where they were cut
 
     def add(self, piece: str) -> None:
         if self.head_open:
@@ -276,7 +282,7 @@ class _Scanner:
         self.warning_budget = WARNING_BUDGET
         self.seen_warnings: set[str] = set()
         self.advisories: list[RelayedAdvisory] = []
-        self.advisory_budget = ADVISORY_BUDGET
+        self.advisory_budget = {True: ADVISORY_BUDGET, False: ADVISORY_BUDGET}  # keyed by "is an error"
         self.block: list[str] = []
         self.excerpt = _Excerpt()
         self.omitted = {"summaries": 0, "warnings": 0, "advisories": 0}
@@ -294,11 +300,11 @@ class _Scanner:
             overwritten += line.cut_returns
         self.filtered += overwritten
         complete = not cut and len(text) <= MAX_LINE
-        if complete and text[:9] in _HEADLINES:
+        if not cut and text[:9] in _HEADLINES:
             self.close_block()
             self.block = [text]
             return
-        if self.block and complete and text.startswith(_FIELDS):
+        if self.block and not cut and (text.startswith(_FIELDS) or not text):
             self.block.append(text)
             return
         self.close_block()
@@ -324,8 +330,13 @@ class _Scanner:
             self.filtered += 1
             return
         self.last_blank = blank
-        if not overwritten:  # what a carriage return overwrote is progress, not omitted output
-            self.excerpt.dropped += cut
+        if cut and not overwritten:
+            # Too long to keep: its start (where a tool puts what it means) and its end, marked in between.
+            start = _visible(line.head)[0]
+            end = text[-MAX_LINE:]
+            hidden = cut + len(text) - len(start) - len(end)
+            self.excerpt.inline += hidden
+            text = f"{start}\n[... {hidden} characters of this line omitted ...]\n{end}"
         chunks = [text[start : start + MAX_LINE] for start in range(0, len(text), MAX_LINE)] or [""]
         chunks[-1] += "\n"
         for chunk in chunks:
@@ -334,17 +345,19 @@ class _Scanner:
     def close_block(self) -> None:
         if not self.block:
             return
+        while self.block and not self.block[-1]:  # empty lines after a block are not part of it
+            self.block.pop()
         level = _HEADLINES[self.block[0][:9]]
         text = "\n".join(self.block)
         self.block = []
         if level is Level.NOTICE and not self.notices:
             return
-        if len(text) + 1 > self.advisory_budget:
+        error = level is Level.ERROR
+        if len(text) + 1 > self.advisory_budget[error]:
             self.omitted["advisories"] += 1
-            self.advisory_budget = 0
             return
         self.advisories.append(RelayedAdvisory(level, text))
-        self.advisory_budget -= len(text) + 1
+        self.advisory_budget[error] -= len(text) + 1
 
     def classify(self, text: str, *, oversized: bool) -> bool:
         """Record ``text`` as a warning or a summary; return whether it is a summary line."""
@@ -393,7 +406,7 @@ class _Scanner:
             warnings=tuple(self.warnings),
             advisories=tuple(self.advisories),
             output=self.excerpt.text(),
-            omitted=Omitted(**self.omitted, output=self.excerpt.dropped),
+            omitted=Omitted(**self.omitted, output=self.excerpt.dropped + self.excerpt.inline),
             filtered=self.filtered,
         )
 

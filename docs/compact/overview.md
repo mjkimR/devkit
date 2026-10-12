@@ -32,7 +32,7 @@ Test runners, linters and type checkers print for people: progress dots, passed 
 
 - stdout and stderr go to one log file, in the order they were written;
 - stdin is closed (`/dev/null`), so a command that waits for input ends instead of hanging the agent;
-- the command runs in a session and process group of its own. When the runner is interrupted (Ctrl-C) or terminated (`SIGTERM`, `SIGHUP`, as an agent host does on a timeout), it stops the whole group (`SIGTERM`, then `SIGKILL` after 5 seconds) before the signal propagates, so no test or build process outlives the run;
+- the command runs in a session and process group of its own. When the runner is interrupted (Ctrl-C) or terminated (`SIGTERM`, `SIGHUP`, as an agent host does on a timeout), it stops the whole group (`SIGTERM`, then `SIGKILL` after 5 seconds) before the signal propagates, so no test or build process outlives the run. The handlers are in place before the command starts, and further interrupts are ignored while the group is being stopped;
 - the runner's output options reach the command as `DEVKIT_QUIET`, `DEVKIT_VERBOSE` and `DEVKIT_STRICT`, each `1` or `0` from the resolved settings, so nested `devkit` commands apply the same options (and a flag on the runner wins over the environment there too);
 - the command's exit code is reported as is; a command ended by signal `N` reports `128 + N`.
 
@@ -42,19 +42,21 @@ The runner itself exits `0` when the command succeeded, `1` when it failed, and 
 
 ## 3. Logs
 
-Logs live outside the work tree, under `<tmp>/devkit-run/<project>/`, where `<tmp>` is the system temporary directory and `<project>` a hash of the devkit project root containing the current directory (the root `devkit` commands resolve by default). Each run writes `<YYYYMMDD-HHMMSS>-<command>-<random>.log`; the 20 newest logs of a project are kept and older ones are deleted when a new run starts. The scan reads the log back through the file the command wrote, so a concurrent run that prunes it first does not lose this run's view.
+Logs live outside the work tree, under `<tmp>/devkit-run-<uid>/<project>/`, where `<tmp>` is the system temporary directory, `<uid>` the user's ID and `<project>` a hash of the devkit project root containing the current directory (the root `devkit` commands resolve by default). Each run writes `<YYYYMMDD-HHMMSS>-<command>-<random>.log`; the 20 newest logs of a project are kept and older ones are deleted when a new run starts. The scan reads the log back through the file the command wrote, so a concurrent run that prunes it first does not lose this run's view.
+
+The `devkit-run-<uid>` directory is created `0700`, since `/tmp` may be shared between users. When it is a symlink or belongs to another user, the run stops with `RUN_LOG_DIR_INVALID` before the command starts.
 
 ---
 
 ## 4. The Bounded View
 
-One pass over the log (`devkit.compact.scan`) produces every part of the view. Each line is first reduced to what a terminal would show: ANSI escape sequences are removed, and a carriage return starts the line over, so a progress bar leaves only its last non-blank state. Only the last 64,000 characters of a line are kept (its first 1,000 as well, for recognition); a line longer than 1,000 characters is recognized by its start only.
+One pass over the log (`devkit.compact.scan`) produces every part of the view. Each line is first reduced to what a terminal would show: ANSI escape sequences are removed, and a carriage return starts the line over, so a progress bar leaves only its last non-blank state. Only the last 64,000 characters of a line are kept (its first 1,000 as well); a line longer than 1,000 characters is recognized by its start only. A line longer than 64,000 characters appears in the excerpt as its first and last 1,000 characters with a `[... N characters of this line omitted ...]` line between them, unless a carriage return overwrote it.
 
 | Part | Content | Budget |
 | --- | --- | --- |
 | Summaries | Lines that match a known summary format exactly (below) | 2,000 characters |
 | Warnings | One-line warnings with the first location they name, each message once, cut at 500 characters | 2,000 characters |
-| Advisories | Agent Advisory Protocol blocks of nested `devkit` commands, whole | 4,000 characters |
+| Advisories | Agent Advisory Protocol blocks of nested `devkit` commands, whole | 4,000 characters for errors and 4,000 for warnings and notices, so errors are never crowded out; a block that does not fit is counted and the next one is tried |
 | Excerpt | The output without the relayed blocks and filtered lines: its first 3,000 and last 5,000 characters, with a `[... N characters omitted ...]` line between them | 8,000 characters |
 
 When an item does not fit its budget, it and every later item of that part are counted in `[RUN_OMITTED]` instead. The tail gets the larger share of the excerpt because failures usually end with the most useful lines: pytest's short test summary, a linter's last findings and its counts. The head keeps the first failure in full. Measured on ordinary output, 8,000 characters hold about ten short pytest failures or thirty ruff findings with their code frames; output beyond that is usually one cause repeated, and the log has the rest.
@@ -65,16 +67,16 @@ When an item does not fit its budget, it and every later item of that part are c
 
 **Filtered** out of the excerpt, each line counted in `filtered=`:
 
-- *Progress*: pytest's progress lines (`tests/test_a.py ..F.s [ 45%]`, the continuation lines of status characters, and the `[ 12/130]` count style), `-v` lines of tests that passed, were skipped or xfailed, pytest-xdist's `[gw0] [ 12%] PASSED ...` lines, the `PASSED <test>` lines `-rA` adds to the short summary, Vitest's and Playwright's `✓` (and skipped `↓`) item lines, Jest's `PASS <file>` lines and Playwright's dot reporter lines of `·` only; plus every state a carriage return overwrote.
+- *Progress*: pytest's progress lines without a failure (`tests/test_a.py ....s [ 45%]`, the continuation lines of status characters, and the `[ 12/130]` count style; a line with `F` or `E` stays, since it records which file failed), `-v` lines of tests that passed, were skipped or xfailed, pytest-xdist's `[gw0] [ 12%] PASSED ...` lines, the `PASSED <test>` lines `-rA` adds to the short summary, Vitest's and Playwright's `✓` (and skipped `↓`) item lines, Jest's `PASS <file>` lines and Playwright's dot reporter lines of `·` only; plus every state a carriage return overwrote.
 - *Noise*: pytest's session header (the `test session starts` banner and the `platform`, `rootdir`, `configfile`, `inifile`, `cachedir`, `testpaths` and `plugins` lines; `collected N items` stays), and uv's success messages (`Resolved`/`Prepared`/`Installed`/`Uninstalled`/`Audited`/`Downloaded N packages in ...`, `Building`/`Built <package> @ <source>`, `Downloading <package> (<size>)`, and the ` + pkg==1.2` / ` - pkg==1.2` / ` ~ pkg==1.2 (from ...)` lines). uv's `error:` and `× No solution found` lines stay.
 - *Repeated sections*: pytest's `warnings summary`, from its banner up to its closing `-- Docs:` line, the next banner or a summary line, whichever comes first (under `-q` the final summary has no banner, and a command a recipe runs after pytest must not be filtered with the section). Its warnings are read before the section is filtered, so they reach `[RUN_WARNING]`.
 - *Blank runs*: a blank line that follows another blank line of the excerpt, so the blank lines around a filtered line collapse as well.
 
-A `FAILED` or `ERROR` line, `SKIPPED [n] <reason>` in the short summary, any line with a failure marker other than pytest's status characters, and a diff line that does not name a pinned package stay. The log keeps everything: when a run stops without a summary (a crash, a hang the host killed), its last progress line there shows where.
+A `FAILED` or `ERROR` line, `SKIPPED [n] <reason>` in the short summary, a pytest progress line with `F` or `E`, any other line with a failure marker, and a diff line that does not name a pinned package stay. The log keeps everything: when a run stops without a summary (a crash, a hang the host killed), its last progress line there shows where.
 
 Warning locations under the working directory are shown relative to it (`tests/test_x.py:12`, not the absolute path pytest prints in its warnings summary). The excerpt is never rewritten this way: an assertion that compares paths must show them as they are.
 
-**Advisory blocks** are recognized by the protocol's grammar ([block format](../advisory/protocol.md#3-block-format)): a headline line starting `[ERROR]  `, `[WARN]   ` or `[NOTICE] `, followed by field lines (`[ACTION] `, `[WHEN]   `, `[TARGET] `, `[FIX]    `, `[REPORT] `, `[DETAIL] `) and continuation lines indented 9 spaces. Under `-q`, relayed `[NOTICE]` blocks are dropped (the nested command also receives `DEVKIT_QUIET=1`).
+**Advisory blocks** are recognized by the protocol's grammar ([block format](../advisory/protocol.md#3-block-format)): a headline line starting `[ERROR]  `, `[WARN]   ` or `[NOTICE] `, followed by field lines (`[ACTION] `, `[WHEN]   `, `[TARGET] `, `[FIX]    `, `[REPORT] `, `[DETAIL] `), continuation lines indented 9 spaces, and empty lines (a continued value with an empty line renders it empty); empty lines at a block's end are not part of it. The sentinels come from `devkit.advisory` (`HEADLINE`, `FIELDS`, `CONTINUATION`), so the scan follows the protocol's renderer. Under `-q`, relayed `[NOTICE]` blocks are dropped (the nested command also receives `DEVKIT_QUIET=1`).
 
 ---
 
@@ -93,7 +95,7 @@ Text stdout, in this order:
 
 `output` in `[RUN_OMITTED]` counts excerpt characters only when the excerpt is shown, that is when the command failed. The command, summaries and warning messages are JSON strings; `log` and `location` are bare unless they contain spaces, quotes or brackets. `output` and `shown` count characters, `filtered` lines.
 
-stderr, after the result: the relayed `[WARN]` and `[NOTICE]` blocks in output order, then the runner's own notices (`RUN_SLOW_COMMAND`), then the relayed `[ERROR]` blocks, so the decisive block ends the output. The runner's run time and log path are an `[INFO]` line under `-v`.
+stderr, after the result: the relayed `[WARN]` and `[NOTICE]` blocks in output order, then the runner's own notices (`RUN_SLOW_COMMAND`), then the relayed `[ERROR]` blocks, so the decisive block ends the output. Under `--strict` a relayed `[WARN]` block makes a run that passed exit `1`: the nested command receives `DEVKIT_STRICT=1` and fails on its own, but a wrapper (`|| true`, an npm script) may hide that, and the runner reported the warning either way. The runner's run time and log path are an `[INFO]` line under `-v`.
 
 `--format json` prints one object with the same content: `command` (the argument list), `outcome`, `exit_code`, `log`, `summaries`, `warnings` (`message`, `location`), `advisories` (`level`, `text`), `omitted` (`summaries`, `warnings`, `advisories`, `output`), `output` (the excerpt, `null` when the command passed), `filtered` (`0` when the command passed) and `notices`.
 
@@ -108,6 +110,7 @@ stderr, after the result: the relayed `[WARN]` and `[NOTICE]` blocks in output o
 | Code | Level | Class | Condition |
 | --- | --- | --- | --- |
 | `RUN_COMMAND_NOT_STARTED` | `ERROR` (`INPUT_ERROR`, exit `2`) | `CommandNotStartedError` | The command does not exist or is not executable, or the working directory does not exist (also when the shell's current directory was removed) or cannot be entered; `[TARGET]` names the command or the directory. |
+| `RUN_LOG_DIR_INVALID` | `ERROR` (`INTERACTION`, exit `2`) | `LogDirectoryError` | The per-user log directory is a symlink, belongs to another user, or cannot be created. |
 | `RUN_SLOW_COMMAND` | `NOTICE` | `SlowCommandNotice` | The command ran at least `--slow-after` seconds. |
 | `ARGUMENT_INVALID` | `ERROR` (exit `2`) | `devkit.core.ArgumentError` | `--slow-after` is negative or not finite. |
 

@@ -160,3 +160,6 @@ def run_cmd(slow_after: float, output_format: str, command: tuple[str, ...]) -> 
     if not run.passed:
         sys.exit(int(ExitCode.FINDINGS))
     exit_on_warnings(run.notices)
+    # A relayed warning was reported by this run too, even when a wrapper hid the nested command's exit code.
+    if settings.strict and any(a.level is Level.WARNING for a in advisories):
+        sys.exit(int(ExitCode.FINDINGS))

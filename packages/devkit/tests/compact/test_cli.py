@@ -46,9 +46,13 @@ def test_progress_is_filtered_out_of_the_excerpt_and_counted() -> None:
     )
     result = _python(code)
     lines = result.stdout.splitlines()
-    assert lines[2].endswith(" filtered=2]")
-    assert lines[3:] == ["FAILED tests/test_a.py::test_x - assert 1 == 2", "1 failed, 13 passed in 0.1s"]
-    assert json.loads(_python(code, "--format", "json").stdout)["filtered"] == 2
+    assert lines[2].endswith(" filtered=1]")
+    assert lines[3:] == [
+        "tests/test_a.py ....F.. [ 50%]",
+        "FAILED tests/test_a.py::test_x - assert 1 == 2",
+        "1 failed, 13 passed in 0.1s",
+    ]
+    assert json.loads(_python(code, "--format", "json").stdout)["filtered"] == 1
 
 
 def test_omissions_are_reported() -> None:
@@ -75,6 +79,14 @@ def test_relayed_advisories_go_to_stderr_warnings_first_errors_last() -> None:
     assert result.stdout.splitlines()[1:] == ["[RUN_OUTPUT: shown=0 omitted=0 filtered=0]"]
     quiet = _python(code, "-q")
     assert quiet.stderr == f"{warning}\n{error}\n"
+
+
+def test_strict_counts_a_relayed_warning_even_when_the_command_passed() -> None:
+    warning = AdvisoryError("drift", code="OVERRIDE_DRIFT", level=Level.WARNING).render()
+    code = f"print({warning!r})"
+    assert _python(code).exit_code == 0
+    strict = _python(code, "--strict")
+    assert strict.exit_code == 1 and strict.stderr == f"{warning}\n"
 
 
 def test_the_output_options_reach_the_command_as_environment() -> None:

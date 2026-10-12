@@ -308,3 +308,19 @@ def test_a_raised_notice_is_a_defect() -> None:
     wrapped = as_advisory_error(VersionNotice("devkit 1 -> 2"))
     assert (wrapped.code, wrapped.level, wrapped.mode) == (UNEXPECTED_CODE, Level.ERROR, ActionMode.MAINTENANCE)
     assert "NOTICE advisory was raised" in wrapped.message
+
+
+def test_every_rendered_line_starts_with_a_published_sentinel() -> None:
+    # devkit.compact recognizes blocks by these constants; a new field must be added to them.
+    from devkit.advisory.advisory import CONTINUATION, FIELDS, HEADLINE
+
+    error = AdvisoryError(
+        "message\n\nsecond",
+        "detail\n\nmore",
+        retry_after="later",
+        target_files=["a"],
+        fix="fix\nmore",
+        what_to_report="report",
+    )
+    for line in error.lines():
+        assert line == "" or line.startswith((*HEADLINE.values(), *FIELDS, CONTINUATION)), line

@@ -51,14 +51,17 @@ ACTION_TEXT: dict[ActionMode, str] = {
 
 HEADLINE: dict[Level, str] = {Level.ERROR: "[ERROR]  ", Level.WARNING: "[WARN]   ", Level.NOTICE: "[NOTICE] "}
 
+# The sentinels a block's lines start with after its headline, and the indentation of a continued value.
+FIELDS = ("[ACTION] ", "[WHEN]   ", "[TARGET] ", "[FIX]    ", "[REPORT] ", "[DETAIL] ")
+CONTINUATION = " " * len("[ACTION] ")
+
 DEFAULT_CODE = "GENERAL_ERROR"
-_CONTINUATION = " " * len("[ACTION] ")
 
 
 def _field(sentinel: str, value: str) -> list[str]:
     """``value`` behind its sentinel; further lines are indented under it."""
     head, *rest = str(value).splitlines() or [""]
-    return [f"{sentinel}{head}".rstrip(), *(f"{_CONTINUATION}{line}".rstrip() for line in rest)]
+    return [f"{sentinel}{head}".rstrip(), *(f"{CONTINUATION}{line}".rstrip() for line in rest)]
 
 
 @dataclass(frozen=True)

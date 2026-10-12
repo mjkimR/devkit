@@ -8,8 +8,8 @@ import tempfile
 from pathlib import Path
 
 import pytest
-from devkit.compact.errors import CommandNotStartedError
-from devkit.compact.execute import KEEP_LOGS, default_log_dir, run_command
+from devkit.compact.errors import CommandNotStartedError, LogDirectoryError
+from devkit.compact.execute import KEEP_LOGS, default_log_dir, log_root, run_command
 
 PY = sys.executable
 
@@ -89,9 +89,19 @@ def test_logs_live_under_the_temporary_directory_one_directory_per_project(tmp_p
     first, second = tmp_path / "a", tmp_path / "b"
     first.mkdir()
     second.mkdir()
-    assert default_log_dir(first).parent == Path(tempfile.gettempdir()) / "devkit-run"
+    assert default_log_dir(first).parent == log_root() == Path(tempfile.gettempdir()) / f"devkit-run-{os.getuid()}"
     assert default_log_dir(first) != default_log_dir(second)
     assert run_command(["true"], cwd=first).log.parent == default_log_dir(first)
+
+
+def test_the_log_root_is_private_and_a_link_in_its_place_is_refused(tmp_path: Path) -> None:
+    run_command(["true"])
+    assert log_root().stat().st_mode & 0o777 == 0o700
+    log_root().rename(tmp_path / "moved")
+    log_root().symlink_to(tmp_path / "moved")
+    with pytest.raises(LogDirectoryError) as caught:
+        run_command(["true"])
+    assert caught.value.code == "RUN_LOG_DIR_INVALID" and caught.value.target_files == (str(log_root()),)
 
 
 def test_warning_locations_are_relative_to_the_working_directory(tmp_path: Path) -> None:

@@ -190,9 +190,9 @@ def test_lines_that_only_look_like_continuations_stay_in_the_excerpt() -> None:
     "line",
     [
         "tests/test_mix.py ............................................................ [ 45%]",
-        ".................F....................................................sx [100%]",
+        "....................................................................sx [100%]",
         "........................................................................ [ 54%]",
-        "tests/test_mix.py ..E.. [ 12/130]",
+        "tests/test_mix.py ..s.. [ 12/130]",
         "tests/test_mix.py::test_many[0] PASSED                                         [  0%]",
         "tests/test_mix.py::test_param[a b] SKIPPED (no db)                             [ 50%]",
         "tests/test_mix.py::test_xf XFAIL                                               [ 99%]",
@@ -225,6 +225,8 @@ def test_progress_lines_are_filtered_and_counted(line: str) -> None:
         "FAIL src/b.test.js",
         "SKIPPED [1] tests/test_mix.py:4: needs a database",
         "··F··",
+        "tests/test_mix.py ..F.. [ 45%]",
+        "..E..sx [100%]",
     ],
 )
 def test_lines_that_name_a_failure_or_carry_content_are_kept(line: str) -> None:
@@ -357,3 +359,27 @@ def test_only_an_unindented_complete_line_ends_the_warnings_summary() -> None:
 def test_warning_locations_outside_the_base_stay_absolute() -> None:
     result = _scan("/elsewhere/lib.py:3: UserWarning: x\n/work/app.py:1: UserWarning: y\n", base=["/work/"])
     assert [w.location for w in result.warnings] == ["/elsewhere/lib.py:3", "app.py:1"]
+
+
+def test_an_empty_line_inside_an_advisory_value_keeps_the_block_whole() -> None:
+    block = AdvisoryError("broken", "Traceback:\n\n  File x", code="X_FAILED").render()
+    result = _scan(f"{block}\n\nafter\n")
+    assert [a.text for a in result.advisories] == [block]
+    assert result.output == "after\n"
+
+
+def test_errors_have_a_budget_of_their_own() -> None:
+    notice = _block(Level.NOTICE, "BUNDLE_UNSELECTED", "n" * 900)
+    error = _block(Level.ERROR, "CONFIG_INVALID", "decisive")
+    result = _scan(f"{notice}\n" * 5 + f"{error}\n" + f"{notice}\n")
+    assert [a.level for a in result.advisories][-1] is Level.ERROR
+    assert result.omitted.advisories == 6 - sum(a.level is Level.NOTICE for a in result.advisories)
+
+
+def test_an_over_long_line_keeps_its_start_and_end_and_marks_the_cut() -> None:
+    result = _scan("Error: the real cause " + "y" * 200_000 + " the end\n")
+    first, marker, last = result.output.splitlines()
+    assert first.startswith("Error: the real cause") and len(first) == MAX_LINE
+    assert last.endswith(" the end") and len(last) == MAX_LINE
+    assert marker == f"[... {result.omitted.output} characters of this line omitted ...]"
+    assert len(first) + result.omitted.output + len(last) == len("Error: the real cause ") + 200_000 + len(" the end")
