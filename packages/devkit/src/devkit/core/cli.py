@@ -193,10 +193,18 @@ def output_options[F: Callable[..., Any]](fn: F) -> F:
     )(fn)
 
 
+_LEVEL_ORDER = {Level.ERROR: 0, Level.WARNING: 1, Level.NOTICE: 2}
+
+
 def echo_notices(notices: Iterable[AdvisoryError]) -> None:
-    """Render the warnings and notices a command returned on stderr, after its result; ``--quiet`` skips notices."""
+    """Render the warnings and notices a command returned on stderr, after its result.
+
+    Warnings come first, then notices, each in the order the command collected
+    them, so what the user must hear about is never buried; ``--quiet`` skips
+    the notices. JSON keeps the collected order.
+    """
     quiet = output_settings().quiet
-    for notice in notices:
+    for notice in sorted(notices, key=lambda notice: _LEVEL_ORDER[notice.level]):
         if quiet and notice.level is Level.NOTICE:
             continue
         click.echo(notice.render(), err=True)
@@ -209,11 +217,16 @@ def exit_on_warnings(notices: Iterable[AdvisoryError]) -> None:
 
 
 class _InfoFormatter(logging.Formatter):
-    """A log record as an ``[INFO]`` line, its further lines (a traceback) indented as continuation lines."""
+    """A log record as ``[INFO]   <module>: <message>``, its further lines (a traceback) as continuation lines.
+
+    ``<module>`` is the logger name without the ``devkit.`` prefix (``gate.engine.runner``), so an agent
+    reading ``-v`` output knows which part of devkit spoke.
+    """
 
     def format(self, record: logging.LogRecord) -> str:
         head, *rest = super().format(record).splitlines() or [""]
-        return "\n".join([f"[INFO]   {head}".rstrip(), *(f"{_CONTINUATION}{line}".rstrip() for line in rest)])
+        source = record.name.removeprefix(f"{LOGGER}.")
+        return "\n".join([f"[INFO]   {source}: {head}".rstrip(), *(f"{_CONTINUATION}{line}".rstrip() for line in rest)])
 
 
 @contextlib.contextmanager

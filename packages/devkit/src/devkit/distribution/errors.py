@@ -157,14 +157,15 @@ class PostSyncHookFailedNotice(SyncNotice):
 
 
 class SubagentUnprojectedNotice(SyncNotice):
-    """A subagent has no native variant for a selected agent and was not projected for it."""
+    """A subagent has no native variant for a selected agent and was not projected for it (``brief``)."""
 
     code = "SUBAGENT_UNPROJECTED"
-    what_to_report = "Add the variant, ship a role contract, or narrow `agents` in .devkit/config.toml"
+    brief = True
+    target_files = (".devkit/config.toml",)
 
 
 class BundleUnselectedNotice(SyncNotice):
-    """Installed bundles that the synchronization did not deploy."""
+    """Installed bundles the project neither selected nor opted out of, announced once per clone when they appear."""
 
     code = "BUNDLE_UNSELECTED"
 
@@ -177,6 +178,7 @@ class ToolVersionChangedNotice(SyncNotice):
 
 
 class PostSyncNotice(SyncNotice):
-    """A line a ``devkit.post_sync`` hook returned; the hook's package owns its meaning."""
+    """A line a ``devkit.post_sync`` hook returned; the hook's package owns its meaning (``brief``)."""
 
     code = "POST_SYNC_NOTICE"
+    brief = True

@@ -123,9 +123,16 @@ def remaining_by_rule(violations: Sequence[Violation]) -> dict[str, int]:
 
 
 def promotion_notices(
-    entries: Sequence[PhaseEntry], active: Phase, violations: Sequence[Violation]
+    entries: Sequence[PhaseEntry],
+    active: Phase,
+    violations: Sequence[Violation],
+    sources: Mapping[str, str] | None = None,
 ) -> list[AdvisoryError]:
-    """One ``RULES_PROMOTION_READY`` notice naming every pending transition with no unfixed violation left."""
+    """One ``RULES_PROMOTION_READY`` notice naming every pending transition with no unfixed violation left.
+
+    ``[TARGET]`` names the files to edit: ``.devkit/config.toml`` for a phase
+    override, the file defining the rule (``sources``, by rule ID) for a promotion.
+    """
     remaining = remaining_by_rule(violations)
     ready = [e for e in transition_entries(entries, active) if remaining.get(e.rule_id, 0) == 0]
     if not ready:
@@ -137,10 +144,11 @@ def promotion_notices(
         for e in ready
     ]
     ids = [e.rule_id for e in ready]
+    files = [CONFIG_PATH if e.overridden else (sources or {}).get(e.rule_id) for e in ready]
     return [
         PromotionReadyNotice(
             f"phase transitions are ready (remaining=0): {', '.join(ids)}",
-            target_files=ids,
+            target_files=list(dict.fromkeys(path for path in files if path)),
             fix="; ".join(edits),
         )
     ]

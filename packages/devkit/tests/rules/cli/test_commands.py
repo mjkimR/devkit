@@ -131,6 +131,7 @@ def test_cli_phase_override_reports_remaining_zero(tmp_path: Path) -> None:
     assert "[NOTICE] (RULES_PROMOTION_READY) phase transitions are ready (remaining=0): RULE-markdown-link" in (
         result.stderr
     )
+    assert "[TARGET] .devkit/config.toml\n" in result.stderr
     assert "[FIX]    drop RULE-markdown-link from [rules.phase_overrides] in .devkit/config.toml" in result.stderr
     as_json = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--phase", "hygiene", "--format", "json"])
     assert [n["code"] for n in json.loads(as_json.stdout)["notices"]] == ["RULES_PROMOTION_READY"]
@@ -200,6 +201,12 @@ class NoTodoRule(BaseRule):
     hygiene = runner.invoke(cli, ["check", "-w", str(tmp_path), "--rules-dir", str(rules), "--phase", "hygiene"])
     assert hygiene.exit_code == 0  # warnings do not fail
     assert "[PROMOTION: RULE-no-todo=hygiene promote_to=linter remaining=1]" in hygiene.output
+    assert "RULES_PROMOTION_READY" not in hygiene.stderr
+
+    (tmp_path / "notes.md").write_text("done\n")
+    ready = runner.invoke(cli, ["check", "-w", str(tmp_path), "--rules-dir", str(rules), "--phase", "hygiene"])
+    assert "[NOTICE] (RULES_PROMOTION_READY) phase transitions are ready (remaining=0): RULE-no-todo" in ready.stderr
+    assert "[TARGET] rules/todo.py\n" in ready.stderr  # the file that declares the rule, not its ID
 
 
 def test_cli_phases_command_text_and_json(tmp_path: Path) -> None:

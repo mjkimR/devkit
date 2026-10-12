@@ -32,7 +32,7 @@ Choosing a level:
 
 1. The command could not do its job, or a check it ran found a negative result (violations, a refused commit, a needed sync): **`ERROR`**. A refusal is never a warning.
 2. The command did its job, and the user must learn about something or decide something afterwards (a hand-edited file left behind, an override hiding upstream changes, a hook that failed after the files were written): **`WARNING`**.
-3. The command did its job, and the agent may want to know why the result looks as it does or what it could do next (a bundle installed but not selected, a check skipped because its input does not exist yet, a tracked file rewritten with a new tool version): **`NOTICE`**.
+3. The command did its job, and the agent may want to know why the result looks as it does or what it could do next (a newly installed bundle not selected yet, a check skipped because its input does not exist yet, a tracked file rewritten with a new tool version): **`NOTICE`**.
 4. Nobody needs to act and nothing needs explaining: no advisory; log it at most.
 
 The same condition can sit at different levels in different commands: override drift is an `ERROR` in `devkit status` (a report that lists problems) and a `WARNING` after `devkit sync` (which succeeded). The code stays the same; only the level changes.
@@ -92,10 +92,11 @@ A warning:
 A notice, with and without its directive:
 
 ```text
-[NOTICE] (BUNDLE_UNSELECTED) installed bundles not selected: starter
+[NOTICE] (BUNDLE_UNSELECTED) installed bundles not selected yet: starter
 [ACTION] NOTE — For awareness only; nothing needs doing now. Continue. Mention it
          when it bears on the task; run [FIX] only when the user asks for it.
 [FIX]    devkit add starter
+[DETAIL] devkit add starter  (package devkit-starter; presets daily; default daily)
 [NOTICE] (TOOL_VERSION_CHANGED) devkit 0.4.0 -> 0.5.0
 ```
 
@@ -238,7 +239,7 @@ CONTINUE — The operation succeeded; this does not block it. Do not retry
 #### `NOTE`: the operation succeeded; worth knowing
 
 - **Use for**: every `NOTICE`: an available but unused option, a check skipped because its input does not exist yet, a tracked file rewritten for a benign reason, a phase transition that is ready.
-- **Set**: `level = NOTICE`; `fix` when there is an obvious follow-up; `brief = true` for a self-explanatory notice without `fix`.
+- **Set**: `level = NOTICE`; `fix` when there is an obvious follow-up. A notice without `fix` should be `brief = true`: it asks for nothing, so the repeated directive only costs context.
 
 ```text
 NOTE — For awareness only; nothing needs doing now. Continue. Mention it
@@ -265,6 +266,10 @@ To prevent blind retries and destructive side-quests without paralyzing the agen
 - **Same code, different level.** A condition that is an error in one command and a warning in another keeps its code; the implementation copies the error at the lower level (`with_level` in Python) rather than defining a second code.
 - **Extension points.** When a tool collects advisories from third-party code that must not fail the operation (for example post-sync hooks), an `ERROR` it receives is lowered to `WARNING`.
 - **One advisory per condition.** Report a condition once per run, naming all affected items in `[TARGET]` or the message, rather than one block per file.
+- **Lasting conditions.** A condition that persists across runs is reported by what it asks for. One the user must act on is a `WARNING` and is reported on every run until it is resolved (a stray file, an override behind upstream). One that asks for nothing is a `NOTICE` reported when it appears or changes, not on every run that finds it unchanged (a bundle that became available); afterwards it stays visible as data (a JSON field, a list command). A condition the user decided on (an opted-out bundle) is never announced again.
+- **Warnings first.** On stderr, warnings precede notices, each in the order they were collected, and errors come last; JSON keeps the collected order.
+- **Targets are files.** `[TARGET]` names what the agent would open: a file path, a flag, or a `path:line:col` location. Identifiers such as rule IDs or `bundle:asset` labels belong in the message or `[DETAIL]`.
+- **Fixes are runnable.** `[FIX]` is an exact command or edit, never a template with placeholders such as `<bundle>`. When there are several candidates, `[FIX]` names a command that lists them (or the command for the single one), and `[DETAIL]` gives one exact command per candidate.
 - **Quiet runs.** `-q` hides notices on stderr but never warnings or errors; JSON always carries every advisory.
 
 ---

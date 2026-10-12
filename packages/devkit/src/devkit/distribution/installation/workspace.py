@@ -21,6 +21,8 @@ from devkit.distribution.errors import UnsafeWorkspaceError
 TRANSIENT = ".devkit/transient"
 JOURNAL = f"{TRANSIENT}/sync-journal.json"
 LOCK = f"{TRANSIENT}/lock"
+# The installed bundles this clone has already been told about (``BUNDLE_UNSELECTED`` reports each once).
+SEEN_BUNDLES = f"{TRANSIENT}/seen-bundles.json"
 # Pristine upstream copies taken when an override is created or accepted, for ``override diff``.
 BASELINE = f"{OVERRIDES_PATH}/.baseline"
 
@@ -34,7 +36,7 @@ OWNED_PREFIXES = (
     ".claude/agents/",
 )
 # Installation metadata the receipt can never own.
-METADATA = frozenset({RECEIPT_PATH, JOURNAL, LOCK, CONFIG_PATH, AGENTS_FILE})
+METADATA = frozenset({RECEIPT_PATH, JOURNAL, LOCK, SEEN_BUNDLES, CONFIG_PATH, AGENTS_FILE})
 
 
 def checked_path(root: Path, name: str) -> Path:

@@ -278,14 +278,19 @@ def test_run_command_verbose_and_post_commit_never_blocks(repo: Path) -> None:
     message = repo / "MSG"
     message.write_text("fix: y\n")
     code, output = _invoke("run", "-w", str(repo), "-v", "commit-msg", "MSG")
-    assert code == 0 and "[INFO]   gate message-nonempty stage=commit-msg outcome=passed" in output
+    assert code == 0 and "[INFO]   gate.engine.runner: gate message-nonempty stage=commit-msg outcome=passed" in output
     code, output = _invoke("run", "-w", str(repo), "commit-msg", "MSG")
     assert code == 0 and output == ""  # silent when every gate passes
 
     (repo / ".git/devkit.config").write_text("[gates.settings.unknown]\nenabled = true\n")
-    assert _invoke("run", "-w", str(repo), "post-commit")[0] == 0
+    code, output = _invoke("run", "-w", str(repo), "post-commit")
+    # The commit exists: the same problem is a warning, never an [ERROR] telling the agent to stop.
+    assert code == 0 and output.startswith("[WARN]   (GATE_CONFIG_INVALID) configured gates are not installed")
+    assert "[ACTION] CONTINUE — " in output and "[ERROR]" not in output
+    assert _invoke("run", "-w", str(repo), "--strict", "post-commit")[0] == 0  # post-commit always exits 0
     code, output = _invoke("run", "-w", str(repo), "pre-commit")
-    assert code == 2 and "not installed: ['unknown']" in output  # a configuration problem
+    assert code == 2 and output.startswith("[ERROR]  (GATE_CONFIG_INVALID)")  # a configuration problem
+    assert "not installed: ['unknown']" in output
 
     (repo / ".git/devkit.config").write_text("[gates\n")
     code, output = _invoke("run", "-w", str(repo), "post-commit")
@@ -347,7 +352,7 @@ def test_run_exit_codes(repo: Path, tmp_path: Path) -> None:
     code, output = _invoke("run", "-w", str(outside), "pre-commit")
     assert code == 2 and "(GIT_FAILED)" in output  # the stage could not run, and still blocks
     code, output = _invoke("run", "-w", str(outside), "post-commit")
-    assert code == 0 and "(GIT_FAILED)" in output  # post-commit reports only
+    assert code == 0 and output.startswith("[WARN]   (GIT_FAILED)")  # post-commit reports only
     assert _invoke("run", "-w", str(repo), "pre-commit-typo")[0] == 2  # usage error
 
 

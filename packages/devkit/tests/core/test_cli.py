@@ -57,8 +57,8 @@ def probe(workspace_root: str | None, output_format: str, mode: str) -> None:
         raise RuntimeError("boom")
     if mode == "notices":
         notices = [
-            AdvisoryError("left behind", code="TEST_WARNING", level=Level.WARNING),
             AdvisoryError("fyi", code="TEST_NOTICE", level=Level.NOTICE),
+            AdvisoryError("left behind", code="TEST_WARNING", level=Level.WARNING),
         ]
         echo_json({"notices": [n.to_dict() for n in notices]})
         echo_notices(notices)
@@ -161,7 +161,9 @@ def test_every_command_has_the_output_options() -> None:
 def test_notices_follow_the_result_and_respect_quiet_and_strict(tmp_path: Path) -> None:
     result = _invoke("-w", str(tmp_path), "--mode", "notices")
     assert result.exit_code == 0 and len(json.loads(result.stdout)["notices"]) == 2
+    # Collected as notice, warning: stderr puts the warning first, JSON keeps the collected order.
     assert result.stderr.startswith("[WARN]   (TEST_WARNING) left behind\n[ACTION] CONTINUE — ")
+    assert [n["code"] for n in json.loads(result.stdout)["notices"]] == ["TEST_NOTICE", "TEST_WARNING"]
     assert "[NOTICE] (TEST_NOTICE) fyi\n[ACTION] NOTE — " in result.stderr
     quiet = _invoke("-w", str(tmp_path), "--mode", "notices", "-q")
     assert quiet.exit_code == 0 and "TEST_WARNING" in quiet.stderr and "TEST_NOTICE" not in quiet.stderr
@@ -189,13 +191,13 @@ def test_logs_are_silent_by_default_and_info_lines_under_verbose(tmp_path: Path)
     assert quiet.exit_code == 0 and quiet.stderr == ""  # the NullHandler keeps logger.exception off stderr
     verbose = _invoke("-w", str(tmp_path), "--mode", "log", "-v")
     lines = verbose.stderr.splitlines()
-    assert lines[:2] == ["[INFO]   checked 3 files", "[INFO]   a rule raised"]
+    assert lines[:2] == ["[INFO]   probe: checked 3 files", "[INFO]   probe: a rule raised"]
     assert lines[2] == "         Traceback (most recent call last):"
     assert all(line.startswith(("[INFO]   ", " " * 9)) for line in lines)
     assert not logging.getLogger("devkit").handlers[1:]  # the stderr handler is removed after the command
     crash = _invoke("-w", str(tmp_path), "--mode", "crash", "-v")
-    assert "[INFO]   unexpected error" in crash.stderr and "RuntimeError: boom" in crash.stderr
-    assert crash.stderr.index("[INFO]   unexpected error") < crash.stderr.index("[ERROR]  (UNEXPECTED_ERROR) boom")
+    assert "[INFO]   core.cli: unexpected error" in crash.stderr and "RuntimeError: boom" in crash.stderr
+    assert crash.stderr.index("[INFO]   core.cli:") < crash.stderr.index("[ERROR]  (UNEXPECTED_ERROR) boom")
 
 
 def test_stdout_never_uses_an_advisory_sentinel_as_a_kind() -> None:

@@ -356,7 +356,7 @@ Warnings and notices are returned, never raised, at level `WARNING` or
 
 | Code | Level | When |
 | --- | --- | --- |
-| `RULES_PROMOTION_READY` | `NOTICE` | a `hygiene` run finds a phase override or promotion with `remaining=0`; `target_files` names the rules, `fix` the edit (drop the `[rules.phase_overrides]` entry, or switch the declared phase to its `promote_to`) |
+| `RULES_PROMOTION_READY` | `NOTICE` | a `hygiene` run finds a phase override or promotion with `remaining=0`; `target_files` names the files to edit (`.devkit/config.toml` for an override, the file declaring the rule for a promotion), `fix` the edit (drop the `[rules.phase_overrides]` entry, or switch the declared phase to its `promote_to`) |
 | any collected problem's code | `WARNING` | `explain` reports a loading or policy problem that does not concern the described rule (`with_level`; the code is unchanged) |
 
 Rule violations of severity `warning` or `info` are findings, not advisories:

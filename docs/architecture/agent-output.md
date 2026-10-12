@@ -12,7 +12,7 @@ This document is the canonical specification of that contract for every `devkit`
 2. **Match, do not parse.** Text output is one fact per line, each behind a sentinel an agent can match with a fixed string. JSON output is exactly one object. Neither needs prose understanding.
 3. **Codes, not prose.** Every condition worth reporting has a stable `UPPER_SNAKE` code. Messages explain; codes identify. Callers and tests branch on codes, never on message text.
 4. **Directives, not narration.** A condition the agent must act on carries an `[ACTION]` directive that says what to do and what not to do. Nothing relies on the agent inferring intent from a description.
-5. **Context budget.** The default output carries only what changes the agent's next step or must reach the user. Progress, timing, passed checks and diagnostics are logs, shown only under `-v`.
+5. **Context budget.** The default output carries only what changes the agent's next step or must reach the user. Progress, timing, passed checks and diagnostics are logs, shown only under `-v`. A lasting condition that asks for nothing is announced once, when it appears, and stays visible as data afterwards ([protocol, section 8](../advisory/protocol.md#8-warnings-and-notices-in-practice)).
 6. **Deterministic.** The same state gives the same bytes: no colour, no emoji, no box drawing, no progress bars, no alignment tables, no output that changes with the terminal (TTY detection, width, locale).
 7. **Libraries never print.** Library functions return results and collected advisories, and raise `AdvisoryError`; only the CLI layer writes to stdout or stderr. An embedding caller (another tool, an MCP server, a test) gets the same information as data.
 
@@ -73,7 +73,7 @@ Under `--format json` (and for every distribution command, which is JSON-only), 
 Every error, warning and notice is an Agent Advisory Protocol block ([format](../advisory/protocol.md#3-block-format)). Their order on stderr is fixed:
 
 1. `[INFO]` log lines (only under `-v`), as they occur;
-2. warnings and notices, after the result has been printed, in the order the command collected them;
+2. warnings and notices, after the result has been printed: warnings first, then notices, each in the order the command collected them (JSON keeps the collected order);
 3. errors, last, so the decisive block ends the output.
 
 A command prints each block once. A command whose JSON result already carries an error (`Reported`) still renders that error on stderr, so the text channel stays complete.
@@ -116,7 +116,7 @@ Exit codes follow the checker convention (`0` success, `1` the command ran and r
 Diagnostics that neither change the agent's next step nor need to reach the user are logs, written with the standard library's `logging` under the `devkit` logger hierarchy (`logging.getLogger(__name__)`).
 
 - `devkit` installs a `NullHandler` on the `devkit` logger, so log records never reach the interpreter's last-resort handler and never leak onto stderr, in the CLI or in an embedding program.
-- Under `-v`, the CLI boundary attaches a stderr handler for the run that prints every `devkit` record as `[INFO]   <message>`, with a traceback and further lines indented 9 spaces as continuation lines. The sentinel is `[INFO]` whatever the record's level: a log line is never a directive.
+- Under `-v`, the CLI boundary attaches a stderr handler for the run that prints every `devkit` record as `[INFO]   <module>: <message>` (`<module>` is the logger name without `devkit.`, such as `gate.engine.runner`), with a traceback and further lines indented 9 spaces as continuation lines. The sentinel is `[INFO]` whatever the record's level: a log line is never a directive.
 - What to log: passed and skipped checks, timing, cache hits, why a candidate was or was not selected, the traceback behind an error the run already reports as an advisory.
 - What never to log: anything the agent must act on or the user must learn. That is a warning or notice, returned with the result. Library code does not log at `WARNING` or above to communicate; `logger.exception` is used only to keep the traceback of an error that is also reported as an advisory.
 
@@ -147,7 +147,7 @@ Diagnostics that neither change the agent's next step nor need to reach the user
 
 ## 11. Example
 
-`devkit sync` in a project where an override hides upstream changes and an installed bundle is not selected (JSON abridged):
+`devkit sync` in a project where an override hides upstream changes and a newly installed bundle is not selected yet (JSON abridged):
 
 stdout:
 
@@ -156,10 +156,10 @@ stdout:
   "dry_run": false,
   "actions": [{"action": "update", "path": ".devkit/managed/devkit/guide.md"}],
   "drift": [{"bundle": "starter", "asset": "development"}],
-  "unselected": [{"bundle": "extras"}],
+  "unselected": [{"bundle": "extras", "opted_out": false}],
   "notices": [
     {"code": "OVERRIDE_DRIFT", "level": "WARNING", "message": "upstream drift behind the override of starter:development", "exit_code": 0, "advisory": {"mode": "CONTINUE", "...": "..."}},
-    {"code": "BUNDLE_UNSELECTED", "level": "NOTICE", "message": "installed bundles not selected: extras", "exit_code": 0, "advisory": {"mode": "NOTE", "...": "..."}}
+    {"code": "BUNDLE_UNSELECTED", "level": "NOTICE", "message": "installed bundles not selected yet: extras", "exit_code": 0, "advisory": {"mode": "NOTE", "...": "..."}}
   ]
 }
 ```
@@ -174,10 +174,11 @@ stderr:
 [TARGET] .devkit/overrides/starter/development.md
 [FIX]    devkit override diff starter:development
 [REPORT] Upstream changed an asset this project overrides; review the diff, then accept it or keep the override
-[NOTICE] (BUNDLE_UNSELECTED) installed bundles not selected: extras
+[NOTICE] (BUNDLE_UNSELECTED) installed bundles not selected yet: extras
 [ACTION] NOTE — For awareness only; nothing needs doing now. Continue. Mention it
          when it bears on the task; run [FIX] only when the user asks for it.
 [FIX]    devkit add extras
+[DETAIL] devkit add extras  (package extras-content; presets core; default core)
 ```
 
-Exit code `0` (`1` with `--strict`). With `-q`, the `[NOTICE]` block is not printed; the JSON is unchanged.
+Exit code `0` (`1` with `--strict`). With `-q`, the `[NOTICE]` block is not printed; the JSON is unchanged. The next `devkit sync` in this clone repeats the warning (the override still needs a decision) but not the notice; `extras` stays listed under `unselected`.

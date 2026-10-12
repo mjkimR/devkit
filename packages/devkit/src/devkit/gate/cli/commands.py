@@ -18,7 +18,7 @@ from pathlib import Path
 
 import click
 
-from devkit.advisory import as_advisory_error
+from devkit.advisory import AdvisoryError, Level, as_advisory_error
 from devkit.core import require_git_toplevel
 from devkit.core.cli import (
     FORMAT_OPTION,
@@ -152,15 +152,38 @@ def status_cmd(workspace_root: str | None, output_format: str) -> None:
         sys.exit(report_exit_code(errors))
 
 
+def _block(error: AdvisoryError, level: Level | None, *first_details: str) -> str:
+    """``error`` rendered at ``level`` (as raised when ``None``), ``first_details`` leading its ``[DETAIL]`` lines.
+
+    A failed gate's own details can be long (one per violation), so the line
+    naming the gate comes before them rather than at the end of the block.
+    """
+    shown = error.with_level(level) if level is not None else error
+    lines = shown.lines()
+    at = next((i for i, line in enumerate(lines) if line.startswith("[DETAIL] ")), len(lines))
+    return "\n".join([*lines[:at], *(f"[DETAIL] {detail}" for detail in first_details), *lines[at:]])
+
+
 def _report(report: StageReport) -> None:
-    """Notices first, then the setup problems, then one block per failed gate, its last ``[DETAIL]`` naming it."""
-    echo_notices(report.notices)
-    for error in report.errors:
-        click.echo(error.render(), err=True)
-    for run in report.runs:
-        if run.outcome is Outcome.FAILED and run.error is not None:
-            lines = [*run.error.lines(), f"[DETAIL] gate={run.gate_id} stage={report.stage}"]
-            click.echo("\n".join(lines), err=True)
+    """Render the stage's problems (setup problems, then one block per failed gate, naming it first) and its notices.
+
+    A blocking stage refused or could not check the commit: its notices come
+    first and its problems last, as errors. After ``post-commit`` the commit
+    exists, so its problems are warnings (``CONTINUE``), printed before the notices.
+    """
+    level = None if report.stage.blocking else Level.WARNING
+    blocks = [_block(error, level) for error in report.errors]
+    blocks += [
+        _block(run.error, level, f"gate={run.gate_id} stage={report.stage}")
+        for run in report.runs
+        if run.outcome is Outcome.FAILED and run.error is not None
+    ]
+    if level is None:
+        echo_notices(report.notices)
+    for block in blocks:
+        click.echo(block, err=True)
+    if level is not None:
+        echo_notices(report.notices)
 
 
 @cli.command(name="run", context_settings={"ignore_unknown_options": True})
@@ -173,7 +196,8 @@ def run_cmd(workspace_root: str | None, stage: str, hook_args: tuple[str, ...]) 
 
     Prints nothing on stdout. A blocking stage exits with the highest exit code among its problems: 1 when
     gates refused the commit, 2 when the gate setup has a configuration, registry or load problem, a gate
-    failed unexpectedly, or the stage cannot run at all (not a Git work tree). post-commit always exits 0.
+    failed unexpectedly, or the stage cannot run at all (not a Git work tree). post-commit always exits 0
+    and reports its problems as warnings: the commit already exists.
     Options go before STAGE; hooks set DEVKIT_QUIET, DEVKIT_VERBOSE or DEVKIT_STRICT instead."""
     current = Stage(stage)
     try:
@@ -181,7 +205,7 @@ def run_cmd(workspace_root: str | None, stage: str, hook_args: tuple[str, ...]) 
     except Exception as exc:
         if current.blocking:
             raise
-        click.echo(as_advisory_error(exc).render(), err=True)  # the commit exists; report only
+        click.echo(_block(as_advisory_error(exc), Level.WARNING), err=True)  # the commit exists; report only
         return
     _report(report)
     if current.blocking and not report.ok:

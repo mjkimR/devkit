@@ -24,6 +24,7 @@ Consuming projects integrate bundles under a dedicated root directory: `.devkit/
   transient/              # Git-ignored
     lock                  # Project lock (fcntl.flock): exclusive for writers, shared for readers
     sync-journal.json     # Write-ahead journal of an unfinished transaction
+    seen-bundles.json     # Installed bundles this clone was told about (BUNDLE_UNSELECTED is announced once)
 <agent native paths>      # Projected native assets (e.g., .agents/, .codex/, .claude/)
 AGENTS.md                 # Project-owned; only the DEVKIT:START/END block inside it is managed (Git-tracked)
 <seeded targets>          # Files a seeded document asset wrote once (e.g. docs/README.md); project-owned (Git-tracked)

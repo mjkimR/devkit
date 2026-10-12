@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from importlib import metadata
 from pathlib import Path
 from types import MappingProxyType
@@ -39,8 +40,14 @@ from devkit.distribution.installation.inventory import GENERATED_SKILLS, Invento
 from devkit.distribution.installation.overrides import Drift
 from devkit.distribution.installation.receipt import read_receipt, receipt_content, receipt_json
 from devkit.distribution.installation.results import Action, SyncResult, Unselected
-from devkit.distribution.installation.transaction import apply_changes, project_lock, recover_locked, require_no_journal
-from devkit.distribution.installation.workspace import AGENTS_FILE, snapshot
+from devkit.distribution.installation.transaction import (
+    apply_changes,
+    atomic_write,
+    project_lock,
+    recover_locked,
+    require_no_journal,
+)
+from devkit.distribution.installation.workspace import AGENTS_FILE, SEEN_BUNDLES, checked_path, snapshot
 
 TOOL_PACKAGE = "devkit"
 EDITED_FILE_FIX = (
@@ -342,11 +349,19 @@ def _sync_result(
     actions: list[Action],
     notices: list[AdvisoryError],
     *,
+    opted_out: frozenset[str],
+    seen: frozenset[str],
     dry_run: bool,
 ) -> SyncResult:
     stray = stray_managed_files(root, owned)
     unselected = [
-        Unselected(item.bundle.name, item.package, item.bundle.preset_names, item.bundle.default_preset)
+        Unselected(
+            item.bundle.name,
+            item.package,
+            item.bundle.preset_names,
+            item.bundle.default_preset,
+            opted_out=item.bundle.name in opted_out,
+        )
         for item in installed
         if item.bundle.name not in selection.presets
     ]
@@ -360,7 +375,11 @@ def _sync_result(
         stray=stray,
         unprojected=list(inventory.unprojected),
         unselected=unselected,
-        notices=[*_state_notices(list(inventory.drift), stray), *notices, *_selection_notices(inventory, unselected)],
+        notices=[
+            *_state_notices(list(inventory.drift), stray),
+            *notices,
+            *_selection_notices(inventory, [item for item in unselected if item.bundle not in seen]),
+        ],
     )
 
 
@@ -376,26 +395,56 @@ def _state_notices(drift: list[Drift], stray: list[str]) -> list[AdvisoryError]:
     return notices
 
 
-def _selection_notices(inventory: Inventory, unselected: list[Unselected]) -> list[AdvisoryError]:
-    """Notices about what the selection left out: subagents without a native variant, installed bundles not selected."""
+def _selection_notices(inventory: Inventory, new: list[Unselected]) -> list[AdvisoryError]:
+    """Notices about what the selection left out: subagents without a native variant, and installed bundles the
+    project has not decided about (neither selected nor opted out) that this clone has not been told about yet."""
     notices: list[AdvisoryError] = []
     if inventory.unprojected:
         items = [f"{item.bundle}:{item.asset} ({item.agent})" for item in inventory.unprojected]
         notices.append(
             SubagentUnprojectedNotice(
                 f"subagents without a native variant for a selected agent were not projected: {', '.join(items)}",
-                target_files=items,
+                "the bundle can add the variant or ship a role contract; "
+                "the project can narrow `agents` in .devkit/config.toml",
             )
         )
-    if unselected:
-        names = [item.bundle for item in unselected]
+    undecided = [item for item in new if not item.opted_out]
+    if undecided:
+        names = [item.bundle for item in undecided]
         notices.append(
             BundleUnselectedNotice(
-                f"installed bundles not selected: {', '.join(names)}",
-                fix=f"devkit add {names[0]}" if len(names) == 1 else "devkit add <bundle>[:<preset>]",
+                f"installed bundles not selected yet: {', '.join(names)}",
+                *(_add_command(item) for item in undecided),
+                fix=f"devkit add {names[0]}" if len(names) == 1 else "devkit list",
             )
         )
     return notices
+
+
+def _add_command(item: Unselected) -> str:
+    presets = ", ".join(item.presets) or "-"
+    return (
+        f"devkit add {item.bundle}  (package {item.package}; presets {presets}; default {item.default_preset or '-'})"
+    )
+
+
+def _read_seen_bundles(root: Path) -> frozenset[str]:
+    """The installed bundles this clone was already told about; a missing or unreadable record means none."""
+    path = checked_path(root, SEEN_BUNDLES)
+    try:
+        data = json.loads(path.read_text("utf-8"))
+    except (OSError, ValueError):
+        return frozenset()
+    names = data.get("bundles") if isinstance(data, dict) else None
+    return frozenset(name for name in names if isinstance(name, str)) if isinstance(names, list) else frozenset()
+
+
+def _record_seen_bundles(root: Path, installed: list[InstalledBundle], seen: frozenset[str]) -> None:
+    """Remember the installed bundles, so ``BUNDLE_UNSELECTED`` reports a bundle once, when it appears."""
+    names = sorted({item.bundle.name for item in installed})
+    if set(names) != seen:
+        data = json.dumps({"bundles": names}, indent=2) + "\n"
+        atomic_write(root, SEEN_BUNDLES, Content(data.encode("utf-8"), 0o644))
 
 
 def sync_project(
@@ -462,10 +511,23 @@ def sync_locked(
     overrides = {**_carried_overrides(root, previous, set(selection.presets)), **inventory.overrides}
     receipt = _build_receipt(selection, inventory, overrides, seeded, block_hash)
     notices.extend(_plan_receipt(previous, receipt, changes, actions))
+    seen = _read_seen_bundles(root)
     if not dry_run:
         apply_changes(root, changes)
+        _record_seen_bundles(root, installed, seen)
     owned = old_files.keys() | inventory.files.keys()
-    return _sync_result(root, installed, selection, inventory, owned, actions, notices, dry_run=dry_run)
+    return _sync_result(
+        root,
+        installed,
+        selection,
+        inventory,
+        owned,
+        actions,
+        notices,
+        opted_out=config.opted_out,
+        seen=seen,
+        dry_run=dry_run,
+    )
 
 
 def recover_project(root: Path) -> int:

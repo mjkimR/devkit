@@ -25,7 +25,7 @@ from devkit.distribution.installation import discovery, transaction
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.discovery import InstalledBundle, discover_bundles
 from devkit.distribution.installation.sync import recover_project, sync_project
-from devkit.distribution.installation.workspace import JOURNAL, snapshot
+from devkit.distribution.installation.workspace import JOURNAL, SEEN_BUNDLES, snapshot
 from testsupport.distribution import cli
 
 
@@ -170,8 +170,18 @@ def test_unowned_native_collision_preserves_other_tool(installed: list[Installed
 def test_dry_run_is_read_only_and_missing_variant_is_reported(installed: list[InstalledBundle], target: Path) -> None:
     assert sync_project(target, installed, dry_run=True).to_dict()["actions"]
     assert not (target / RECEIPT_PATH).exists()
-    result = sync_project(target, installed, agents=["claude-code"], dry_run=True).to_dict()
+    synced = sync_project(target, installed, agents=["claude-code"], dry_run=True)
+    result = synced.to_dict()
     assert result["unprojected"] == [{"bundle": "team", "asset": "reviewer", "agent": "claude-code"}]
+    (notice,) = [n for n in synced.notices if n.code == "SUBAGENT_UNPROJECTED"]
+    assert notice.target_files == (".devkit/config.toml",)  # the file the project can edit, not an asset label
+    assert notice.lines() == [
+        "[NOTICE] (SUBAGENT_UNPROJECTED) subagents without a native variant for a selected agent were not projected:"
+        " team:reviewer (claude-code)",
+        "[TARGET] .devkit/config.toml",
+        "[DETAIL] the bundle can add the variant or ship a role contract; the project can narrow `agents` in"
+        " .devkit/config.toml",
+    ]  # brief: a notice without a fix carries no [ACTION]
     assert not any(a["path"].startswith(".claude/agents/") for a in result["actions"])
     assert not (target / ".devkit/managed").exists()
 
@@ -324,12 +334,34 @@ team = "minimal"
 
 
 def test_unselected_bundles_are_not_deployed(installed: list[InstalledBundle], bare: Path) -> None:
-    result = sync_project(bare, installed).to_dict()
+    first = sync_project(bare, installed)
+    result = first.to_dict()
     assert not (bare / ".devkit/managed").exists()
     assert result["packages"] == []
     assert result["unselected"] == [
-        {"bundle": "team", "package": "team-content", "presets": ["all", "minimal"], "default_preset": None}
+        {
+            "bundle": "team",
+            "package": "team-content",
+            "presets": ["all", "minimal"],
+            "default_preset": None,
+            "opted_out": False,
+        }
     ]
+    (notice,) = first.notices
+    assert (notice.code, notice.message, notice.fix) == (
+        "BUNDLE_UNSELECTED",
+        "installed bundles not selected yet: team",
+        "devkit add team",
+    )
+    assert notice.details == ("devkit add team  (package team-content; presets all, minimal; default -)",)
+    # Reported once per clone: the bundle stays listed under ``unselected``, the notice does not repeat.
+    again = sync_project(bare, installed)
+    assert again.notices == [] and [item.bundle for item in again.unselected] == ["team"]
+    # A bundle the project opted out of is never announced, even to a clone that has not seen it.
+    (bare / SEEN_BUNDLES).unlink()
+    update_config(bare, opt_out=["team"])
+    opted = sync_project(bare, installed)
+    assert opted.notices == [] and opted.to_dict()["unselected"][0]["opted_out"] is True
     # Without an ``agents`` entry every supported agent is a projection target.
     assert json.loads((bare / RECEIPT_PATH).read_text())["selection"] == {
         "agents": ["antigravity", "claude-code", "codex"],
@@ -582,15 +614,17 @@ def test_cli_add_resolves_default_preset_and_remove(
         (target / CONFIG_PATH).read_text() + '\n# phase overrides\n[rules.phase_overrides]\nRULE-x = "hygiene"\n'
     )
     runner = CliRunner()
-    result = runner.invoke(cli, ["sync", "--workspace-root", str(target)])
-    assert result.exit_code == 0, result.output
-    assert "[NOTICE] (BUNDLE_UNSELECTED) installed bundles not selected: extra" in result.stderr
-    assert "[FIX]    devkit add extra" in result.stderr
-    assert [n["code"] for n in json.loads(result.stdout)["notices"]] == ["BUNDLE_UNSELECTED"]
+    check = runner.invoke(cli, ["sync", "--dry-run", "--strict", "--workspace-root", str(target)])
+    assert check.exit_code == 0, check.output  # a notice never fails, even under --strict
+    assert "[NOTICE] (BUNDLE_UNSELECTED) installed bundles not selected yet: extra" in check.stderr
+    assert "[FIX]    devkit add extra" in check.stderr
     quiet = runner.invoke(cli, ["sync", "-q", "--workspace-root", str(target)])
     assert quiet.exit_code == 0 and quiet.stderr == ""  # -q hides notices; JSON keeps them
     assert [n["code"] for n in json.loads(quiet.stdout)["notices"]] == ["BUNDLE_UNSELECTED"]
-    assert runner.invoke(cli, ["sync", "--strict", "--workspace-root", str(target)]).exit_code == 0
+    result = runner.invoke(cli, ["sync", "--workspace-root", str(target)])
+    assert result.exit_code == 0 and result.stderr == ""  # the clone was told once (--dry-run records nothing)
+    assert json.loads(result.stdout)["notices"] == []
+    assert [item["bundle"] for item in json.loads(result.stdout)["unselected"]] == ["extra"]
 
     result = runner.invoke(cli, ["add", "extra", "--workspace-root", str(target)])
     assert result.exit_code == 0, result.output

@@ -80,12 +80,13 @@ class Action:
 
 @dataclass(frozen=True)
 class Unselected:
-    """An installed bundle the synchronization did not deploy."""
+    """An installed bundle the synchronization did not deploy; ``opted_out`` when ``[presets]`` sets it to ``false``."""
 
     bundle: str
     package: str
     presets: list[str]
     default_preset: str | None
+    opted_out: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -93,6 +94,7 @@ class Unselected:
             "package": self.package,
             "presets": list(self.presets),
             "default_preset": self.default_preset,
+            "opted_out": self.opted_out,
         }
 
 

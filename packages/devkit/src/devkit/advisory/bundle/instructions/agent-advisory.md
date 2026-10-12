@@ -185,7 +185,7 @@ CONTINUE — The operation succeeded; this does not block it. Do not retry
 ### `NOTE`: a notice; the operation succeeded and this is worth knowing
 
 - **Use for**: an available but unused option, a check skipped because its input does not exist yet, a tracked file rewritten for a benign reason, a transition that is ready.
-- **Set**: `level = NOTICE`; `fix` when there is an obvious follow-up; `brief = true` for a self-explanatory notice without `fix`.
+- **Set**: `level = NOTICE`; `fix` when there is an obvious follow-up. A notice without `fix` should be `brief = true`: it asks for nothing, so the repeated directive only costs context.
 
 ```text
 NOTE — For awareness only; nothing needs doing now. Continue. Mention it
@@ -196,6 +196,10 @@ NOTE — For awareness only; nothing needs doing now. Continue. Mention it
 
 - **Never raised.** A warning or notice describes an operation that succeeded: collect it and return it with the result (under `notices`); the command prints the result first and the notices after it. A raised warning or notice is a defect and is reported as `UNEXPECTED_ERROR`.
 - **One advisory per condition.** Name all affected items in one advisory rather than one block per file.
+- **Lasting conditions.** A condition the user must act on is a warning on every run until resolved; one that asks for nothing is a notice reported when it appears or changes, then left to data (a JSON field, a list command). A condition the user decided on is never announced again.
+- **Warnings first.** On stderr, warnings precede notices and errors come last; JSON keeps the collected order.
+- **Targets are files.** `[TARGET]` names a file, a flag or a `path:line:col` location; identifiers such as rule IDs belong in the message or `[DETAIL]`.
+- **Fixes are runnable.** `[FIX]` is never a template with placeholders; for several candidates, name a listing command and give one exact command per candidate in `[DETAIL]`.
 - **Extension points.** An `ERROR` received from third-party code that must not fail the operation (a post-operation hook) is lowered to `WARNING`.
 - **Quiet output.** A quiet mode hides notices, never warnings or errors; JSON always carries every advisory.
 

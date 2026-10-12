@@ -12,6 +12,7 @@ evaluation), used by ``devkit rules phases``/``explain``.
 
 from __future__ import annotations
 
+import inspect
 import os
 import tempfile
 from collections.abc import Sequence
@@ -90,6 +91,15 @@ def load_project_rules(root: Path, rules_dir: Path | None = None, *, source_root
     )
 
 
+def _source(rule: Rule, root: Path) -> str | None:
+    """The file defining ``rule``: workspace-relative when it lies inside ``root``, else absolute."""
+    try:
+        path = Path(inspect.getfile(type(rule))).resolve()
+    except (TypeError, OSError):
+        return None
+    return path.relative_to(root.resolve()).as_posix() if path.is_relative_to(root.resolve()) else str(path)
+
+
 @dataclass(frozen=True)
 class ProjectRun:
     """Everything one evaluation produced.
@@ -132,7 +142,8 @@ class ProjectRun:
         if self.errors:
             return []
         entries = resolve_phases(self.rules, self.config.phase_overrides)
-        return promotion_notices(entries, self.phase, self.result.violations)
+        sources = {rule.id: path for rule in self.rules if (path := _source(rule, self.workspace_root))}
+        return promotion_notices(entries, self.phase, self.result.violations, sources)
 
     @property
     def ok(self) -> bool:

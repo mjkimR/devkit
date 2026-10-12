@@ -145,7 +145,7 @@ def test_post_sync_hooks_do_not_run_on_dry_run_or_check(
     assert checked.exit_code == 1 and calls == []
     synced = runner.invoke(cli, ["sync", "--workspace-root", str(target)])
     assert synced.exit_code == 0, synced.output
-    assert calls == ["ran"] and "[NOTICE] (POST_SYNC_NOTICE) x\n[ACTION] NOTE — " in synced.stderr
+    assert calls == ["ran"] and "[NOTICE] (POST_SYNC_NOTICE) x\n[DETAIL] hook: hook\n" in synced.stderr  # brief
 
 
 def test_post_sync_hooks_may_return_coded_notices_and_reach_override_commands(

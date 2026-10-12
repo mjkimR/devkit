@@ -196,12 +196,15 @@ def test_pre_commit_stage_reports_the_refusal(repo: Path) -> None:
 
     result = CliRunner().invoke(cli, ["run", "-w", str(repo), "pre-commit"])
     assert result.exit_code == 1
-    assert result.output.rstrip().endswith("[DETAIL] gate=rules-staged stage=pre-commit")
+    details = [line for line in result.output.splitlines() if line.startswith("[DETAIL] ")]
+    assert details[0] == "[DETAIL] gate=rules-staged stage=pre-commit"  # before the violation lines
+    assert details[1].startswith("[DETAIL] RULE-markdown-link docs/a.md:1")
     assert "GATE_RULES_VIOLATION" in result.output and "RULE-markdown-link docs/a.md:1" in result.output
 
     (repo / ".git/devkit.config").write_text("[gates.settings.rules-staged]\nenabled = false\n")
     result = CliRunner().invoke(cli, ["run", "-w", str(repo), "-v", "pre-commit"])
     assert (
         result.exit_code == 0
-        and "[INFO]   gate rules-staged stage=pre-commit outcome=skipped note=disabled" in result.output
+        and "[INFO]   gate.engine.runner: gate rules-staged stage=pre-commit outcome=skipped note=disabled"
+        in result.output
     )

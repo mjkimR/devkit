@@ -150,10 +150,10 @@ they run in their own `notices` list.
 | `OVERRIDE_DRIFT` | `WARNING` | `OverrideDriftError.with_level` | an override hides upstream changes (`override_drift = "warn"`) | `target_files`: the overrides; `fix`: `devkit override diff <bundle>:<asset>` |
 | `MANAGED_FILE_STRAY` | `WARNING` | `StrayFilesNotice` | files under `.devkit/managed/` that neither the receipt nor the inventory owns | `target_files`: the files; `what_to_report`: move project-owned files out of the managed root |
 | `POST_SYNC_HOOK_FAILED` | `WARNING` | `PostSyncHookFailedNotice` | a post-sync hook raised or returned something other than a list | `details`: the hook; `what_to_report`: the failure |
-| `SUBAGENT_UNPROJECTED` | `NOTICE` | `SubagentUnprojectedNotice` | a subagent has no native variant for a selected agent and was not projected | `target_files`: `<bundle>:<asset> (<agent>)`; what to change in `what_to_report` |
-| `BUNDLE_UNSELECTED` | `NOTICE` | `BundleUnselectedNotice` | installed bundles are not selected | `fix`: `devkit add <bundle>` |
+| `SUBAGENT_UNPROJECTED` | `NOTICE` (brief) | `SubagentUnprojectedNotice` | a subagent has no native variant for a selected agent and was not projected | message: each `<bundle>:<asset> (<agent>)`; `target_files`: `.devkit/config.toml` (where the project narrows `agents`); `[DETAIL]`: the remedies |
+| `BUNDLE_UNSELECTED` | `NOTICE` | `BundleUnselectedNotice` | installed bundles the project neither selected nor opted out of, reported once per clone when they appear (recorded in `.devkit/transient/seen-bundles.json`) | `fix`: `devkit add <bundle>` for one bundle, else `devkit list`; one `[DETAIL]` per bundle with its exact `devkit add` command and presets |
 | `TOOL_VERSION_CHANGED` | `NOTICE` (brief) | `ToolVersionChangedNotice` | the receipt now records a different running `devkit` version (`devkit <recorded> -> <running>`) | — |
-| `POST_SYNC_NOTICE` | `NOTICE` | `PostSyncNotice` | a line a post-sync hook returned | `details`: the hook |
+| `POST_SYNC_NOTICE` | `NOTICE` (brief) | `PostSyncNotice` | a line a post-sync hook returned | `details`: the hook |
 
 A hook may also return `AdvisoryError` objects with codes of its own; they are kept at their level, except that an
 `ERROR` is lowered to `WARNING`, because a hook cannot fail a sync that already wrote its files.

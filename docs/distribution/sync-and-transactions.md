@@ -136,7 +136,7 @@ devkit remove starter             # deselects; unchanged deployed files are remo
 
 ### Unselected Bundle Notice
 
-When installed bundles are not selected, `devkit sync` still succeeds and reports them in the JSON result under `unselected` (bundle, package, available presets, default preset). A `BUNDLE_UNSELECTED` notice (`[NOTICE]` block on stderr, in `notices` in the JSON) names them, with `devkit add <bundle>` as its `fix`. `devkit list` shows the selection state of every installed bundle.
+When installed bundles are not selected, `devkit sync` still succeeds and lists them in the JSON result under `unselected` (bundle, package, available presets, default preset, and `opted_out` when `[presets]` sets the bundle to `false`) on every run. The `BUNDLE_UNSELECTED` notice (`[NOTICE]` block on stderr, in `notices` in the JSON) is a one-time announcement: it names only the bundles the project has neither selected nor opted out of that this clone has not been told about yet, with `devkit add <bundle>` (one bundle) or `devkit list` (several) as its `fix` and one exact `devkit add` command per bundle in `[DETAIL]`. A sync that writes (not `--dry-run` or `--check`) records the installed bundle names in the Git-ignored `.devkit/transient/seen-bundles.json`; a missing or unreadable record only means the announcement is repeated. An opted-out bundle is never announced. `devkit list` shows the selection state of every installed bundle.
 
 ---
 
