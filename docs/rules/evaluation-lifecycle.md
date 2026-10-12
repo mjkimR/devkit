@@ -128,7 +128,7 @@ RULE-markdown-link = "hygiene"
   [PHASE_OVERRIDE: RULE-markdown-link=hygiene default=linter source=.devkit/config.toml remaining=3]
   ```
 
-- `remaining=0` is the signal to delete the entry and return the rule to its default phase.
+- `remaining=0` is the signal to delete the entry and return the rule to its default phase; the run then also reports a `RULES_PROMOTION_READY` notice on stderr whose `fix` names that edit.
 - Violations report the phase the rule ran in (`phase: "hygiene"`), not the rule's declared default.
 
 ### Rule Promotions (`promote_to`)
@@ -146,7 +146,7 @@ super().__init__(id="RULE-no-todo", name="no-todo", description="...", phase=Pha
   [PROMOTION: RULE-no-todo=hygiene promote_to=linter remaining=12]
   ```
 
-- When the count reaches zero, flip the rule's declared `phase` to `linter` and drop `promote_to`.
+- When the count reaches zero, flip the rule's declared `phase` to `linter` and drop `promote_to`; the `RULES_PROMOTION_READY` notice says so.
 
 ### Inspecting the Plan
 

@@ -14,12 +14,13 @@ from __future__ import annotations
 
 import re
 
+from devkit.core.receipt import GUIDANCE_END, GUIDANCE_START
 from devkit.distribution.content import sha256
 from devkit.distribution.errors import DistributionError, GuidanceBlockError
 from devkit.distribution.installation.workspace import AGENTS_FILE
 
-START = "<!-- DEVKIT:START -->"
-END = "<!-- DEVKIT:END -->"
+START = GUIDANCE_START
+END = GUIDANCE_END
 
 # One line per generated entry skill, keyed by the asset kind that triggers it.
 ENTRY_SKILLS = {
@@ -31,8 +32,12 @@ _START_LINE = re.compile(rf"^{re.escape(START)}[ \t]*\r?$", re.MULTILINE)
 _END_LINE = re.compile(rf"^{re.escape(END)}[ \t]*\r?$", re.MULTILINE)
 
 
-def render(bundles: list[str], entry_skills: list[str]) -> str:
-    """Return the block text (markers included, no trailing newline) for a selection."""
+def render(bundles: list[str], entry_skills: list[str], fragments: list[str] | tuple[str, ...] = ()) -> str:
+    """Return the block text (markers included, no trailing newline) for a selection.
+
+    ``fragments`` are the selection's rendered ``guidance`` assets, placed after
+    devkit's own lines in the order the caller fixes (bundle, then asset ID).
+    """
     lines = [
         START,
         "## devkit",
@@ -60,6 +65,7 @@ def render(bundles: list[str], entry_skills: list[str]) -> str:
         [
             "- Never edit `.devkit/managed/` or projected agent files; change the source bundle"
             " or use `devkit override`.",
+            *fragments,
             "",
             "This block is managed by `devkit sync`; edit outside the markers only.",
             END,

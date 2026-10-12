@@ -18,6 +18,7 @@ src/devkit/rules/
 │   └── settings.py          # Typed per-rule settings with path-scoped overrides
 ├── workspace/               # File cache, Markdown links and fences, file catalog, task counter and Git snapshots
 ├── cli/                     # Click commands (commands.py) and rendering (output.py)
+├── authoring/bundle/        # The opt-in `authoring` bundle (size rules and playbooks; see below)
 └── rules/
     ├── base.py              # Common rule implementation (settings, guide, promote_to)
     ├── markdown/            # Relative link validation and repair
@@ -70,7 +71,7 @@ Exit codes follow the devkit convention
 | --- | --- | --- | --- |
 | `check`, `fix` | no unresolved error-severity violation (warnings and infos alone do not fail; `fix` repaired every fixable finding) | unresolved error violations remain | the run could not evaluate: usage or argument error, unreadable `.devkit/config.toml` (`CONFIG_INVALID`), invalid `[rules]` table, rule loading, policy or execution problem, invalid target, Git snapshot failure; takes precedence over violations found in the same run |
 | `phases` | plan printed | - | usage or argument error, unreadable config or invalid `[rules]` table, any loading or policy problem (printed after the plan) |
-| `explain` | rule described (problems of other rules are `[WARNING: ...]` lines on stderr) | - | usage or argument error (an unknown rule ID is `ARGUMENT_INVALID`), unreadable config or invalid `[rules]` table, a policy problem of the described rule |
+| `explain` | rule described (loading and policy problems of other rules are reported as warnings) | - | usage or argument error (an unknown rule ID is `ARGUMENT_INVALID`), unreadable config or invalid `[rules]` table, a policy problem of the described rule |
 
 A command that collects loading, policy or execution problems exits with the
 highest `exit_code` among them (`2` for every such problem today). Argument
@@ -81,11 +82,12 @@ file arguments or `--phase hygiene` with a snapshot, a `--rules-dir` or
 
 Every problem is printed on stderr as an Agent Advisory Protocol block with its
 code (see [Errors](#errors)). `--format json` prints exactly one object on
-stdout: `{"violations": [...], "errors": [...]}` (`check`, `fix`),
+stdout: `{"violations": [...], "errors": [...], "notices": [...]}` (`check`, `fix`),
 `{"rules": [...], "errors": [...]}` with one phase entry per rule (`phases`),
-or `{"rule": {...}, "warnings": [...], "errors": [...]}` (`explain`); `errors`
-and `warnings` hold the collected problems as `to_dict()` objects (each with its
-`code`, `exit_code`, `rule_id` and advisory). A command that fails before it has
+or `{"rule": {...}, "notices": [...], "errors": [...]}` (`explain`); `errors`
+holds the collected problems and `notices` the warnings and notices, as
+`to_dict()` objects (each with its `code`, `level`, `exit_code`, `rule_id` and
+advisory). A command that fails before it has
 a result prints `{"error": {...}}` instead.
 
 Targets are workspace-relative or absolute paths inside the workspace. A file
@@ -118,14 +120,15 @@ gives them), then `[SUMMARY: errors=N warnings=N infos=N fixed=N]` counting the
 unfixed findings per severity and the fixed ones, then `[OK: ...]` when the
 command exits `0`. A run that could not evaluate and found nothing prints no
 summary; its problems are on stderr. A hygiene run adds the
-`[PHASE_OVERRIDE: ...]`/`[PROMOTION: ...]` lines described below and a
-`[NOTICE: ...]` when a transition is ready. `phases` prints one
+`[PHASE_OVERRIDE: ...]`/`[PROMOTION: ...]` lines described below, and reports
+a `RULES_PROMOTION_READY` notice on stderr when a transition has `remaining=0`. `phases` prints one
 `[PHASE: RULE-id default=... effective=... overridden=yes|no promote_to=...]`
 line per rule. `explain` prints `[RULE: ...]`, `[DESCRIPTION: ...]`, one
 `[SETTING: key=value default=value]` per setting and one
 `[SETTING_OVERRIDE: path=... key=value ...]` per override (or
 `[SETTINGS: none]`), then the guide document as written. Problems that do not
-fail a command are `[WARNING: (CODE) message]` lines on stderr.
+fail a command are `[WARN]` blocks on stderr, after the result
+([Agent-First Output](../architecture/agent-output.md)).
 
 `--summary-only` (text output) replaces the `[VIOLATION: ...]` lines with one
 `[RULE_COUNTS: RULE-id errors=N warnings=N infos=N fixed=N]` line per rule,
@@ -216,7 +219,8 @@ cleared, then return it once `check --phase hygiene` reports `remaining=0`:
   to record that it becomes a linter rule once clean.
 
 `check --phase hygiene` prints a `[PHASE_OVERRIDE: ...]` or `[PROMOTION: ...]`
-line per pending transition with its remaining count. `devkit rules phases`
+line per pending transition with its remaining count, and a `RULES_PROMOTION_READY`
+notice names the transitions whose count reached zero. `devkit rules phases`
 lists the full plan, and `--format json` emits `{"rules": [...], "errors": [...]}`
 with one object per rule. Details are
 in [Evaluation Lifecycle](evaluation-lifecycle.md).
@@ -247,6 +251,37 @@ or document relationships ships the rules that enforce them, together with the
 guides and templates those rules cite. The engine's `DocumentCatalog` only
 indexes Markdown paths, basenames and the frontmatter `id`, `title` and
 `status` fields verbatim; it does not validate identifiers or extract references.
+
+## Built-in authoring bundle
+
+The package ships the opt-in bundle `authoring` (sources in
+`src/devkit/rules/authoring/bundle/`). It is not deployed until a project
+selects it, and both of its rules run in the `hygiene` phase only, so they never
+block a commit or a CI linter run:
+
+```bash
+uv run devkit add authoring                          # both presets (default preset `all`)
+uv run devkit add authoring:agent-guide-authoring    # one of them
+uv run devkit rules check --phase hygiene
+```
+
+| Preset | Rule (warning, hygiene) | Playbook |
+| --- | --- | --- |
+| `skill-authoring` | `RULE-skill-document-size`: a skill or playbook Markdown file above `max_bytes` (8192) | `skill-authoring`: router structure for new skills, the four restructuring steps, helper-script rules |
+| `agent-guide-authoring` | `RULE-agent-guide-size`: an `AGENTS.md` or `CLAUDE.md` above `max_bytes` (8192), reporting the devkit guidance block's share | `agent-guide-authoring`: what stays in an always-loaded guide, where the rest moves, per-host loading |
+
+Sizes are UTF-8 bytes, which follow token cost better than lines.
+`RULE-skill-document-size` checks `.md` files under `paths` (project skills in
+`.agents/skills/` and `.claude/skills/`, and `**/bundle/skills/**` and
+`**/bundle/playbooks/**` of bundle sources) and skips files the receipt owns,
+such as agent projections of bundle skills. `RULE-agent-guide-size` checks
+`**/AGENTS.md` and `**/CLAUDE.md` except `exclude` (`**/bundle/AGENTS.md`,
+bundle constitutions); a symlinked guide is measured once, through its target.
+Both remediations name the playbook search (`uv run devkit playbook search
+"..."`). Settings and exceptions use `[rules.settings.<RULE-id>]` and its path
+overrides; `devkit rules explain <RULE-id>` prints the full guide. The rule
+files are bundle assets loaded from the receipt, never imported from the
+package.
 
 ## Library and custom rules
 
@@ -315,6 +350,17 @@ are returned in `RuleRegistry.errors`, `ProjectRun.load_errors` and
 | `RuleLoadError` | `RULES_LOAD_FAILED` | `MAINTENANCE` | a rule file fails to load, or the receipt is malformed or lists a missing or drifted rule (collected; `fix` names `devkit sync`) |
 | `RuleExecutionError` | `RULES_EXECUTION_FAILED` | `MAINTENANCE` | a rule raised while checking or fixing; `[TARGET]` is the file defining it (collected) |
 | `RulesRunError` | `RULES_RUN_FAILED` | `MAINTENANCE` | raised by `ProjectRun.raise_for_problems()` for callers that need one error for a failed run, such as the workflow engine's `lint-clean`; `problems` keeps the collected problems |
+
+Warnings and notices are returned, never raised, at level `WARNING` or
+`NOTICE` ([Agent Advisory Protocol](../advisory/protocol.md#2-levels)):
+
+| Code | Level | When |
+| --- | --- | --- |
+| `RULES_PROMOTION_READY` | `NOTICE` | a `hygiene` run finds a phase override or promotion with `remaining=0`; `target_files` names the rules, `fix` the edit (drop the `[rules.phase_overrides]` entry, or switch the declared phase to its `promote_to`) |
+| any collected problem's code | `WARNING` | `explain` reports a loading or policy problem that does not concern the described rule (`with_level`; the code is unchanged) |
+
+Rule violations of severity `warning` or `info` are findings, not advisories:
+they are results on stdout and never affect `--strict`.
 
 `expand_targets`, `RuleContext` (targets outside the workspace) and
 `ctx.settings(rule, path)` raise `TargetError` too. Passing `targets` or

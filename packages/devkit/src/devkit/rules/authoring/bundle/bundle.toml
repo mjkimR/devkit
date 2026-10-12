@@ -1,0 +1,35 @@
+schema = 1
+name = "authoring"
+version = "0.1.0"
+# Built in but opt-in (no auto_select): `devkit add authoring[:<preset>]` deploys it.
+default_preset = "all"
+
+# Creating and restructuring agent skills and playbooks.
+[[assets]]
+id = "skill-authoring"
+kind = "playbook"
+source = "playbooks/skill-authoring"
+
+# Hygiene warning when a skill or playbook Markdown file exceeds its byte budget.
+[[assets]]
+id = "skill-document-size"
+kind = "rule"
+source = "rules/skill_document_size"
+
+# Writing and curating always-loaded agent guides (AGENTS.md, CLAUDE.md).
+[[assets]]
+id = "agent-guide-authoring"
+kind = "playbook"
+source = "playbooks/agent-guide-authoring"
+
+# Hygiene warning when an agent guide exceeds its byte budget.
+[[assets]]
+id = "agent-guide-size"
+kind = "rule"
+source = "rules/agent_guide_size"
+
+[presets.skill-authoring]
+assets = ["skill-authoring", "skill-document-size"]
+
+[presets.agent-guide-authoring]
+assets = ["agent-guide-authoring", "agent-guide-size"]

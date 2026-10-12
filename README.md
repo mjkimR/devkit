@@ -12,7 +12,7 @@ devkit/
 │   ├── devkit/                # The devkit package and its single `devkit` CLI
 │   │   └── src/devkit/
 │   │       ├── core/          # Shared foundation: frontmatter, receipt, paths, Git, plugins, project root
-│   │       ├── advisory/      # Agent Advisory Protocol errors and the `advisory` guide bundle
+│   │       ├── advisory/      # Agent Advisory Protocol (errors, warnings, notices) and the `advisory` guide bundle
 │   │       ├── rules/         # Repository rule engine (`devkit rules`)
 │   │       ├── workflow/      # Delivery workflow engine (`devkit workflow`)
 │   │       ├── gate/          # Pluggable Git commit gates (`devkit gate`)
@@ -57,8 +57,9 @@ uv build --package devkit-starter --wheel --out-dir dist
 # In the consumer project
 uv add --dev /path/to/devkit/dist/devkit-0.1.0-py3-none-any.whl \
   /path/to/devkit/dist/devkit_starter-0.1.0-py3-none-any.whl
-uv run devkit sync          # deploys the bundles built into devkit (devkit, advisory)
+uv run devkit sync          # deploys the auto-selected bundles built into devkit (devkit, advisory)
 uv run devkit add starter   # selects a bundle from another package and synchronizes
+uv run devkit add git-commits authoring   # opt-in practice bundles built into devkit
 uv run devkit list
 uv run devkit rules check
 ```

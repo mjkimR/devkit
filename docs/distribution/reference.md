@@ -12,7 +12,7 @@ Install the distribution CLI and content packages together into your project dev
 # Add devkit and content packages
 uv add --dev devkit devkit-starter
 
-# The bundles built into devkit (devkit, advisory) are selected by default; select a content bundle
+# devkit and advisory are deployed by default; every other bundle is selected with devkit add
 uv run devkit add starter
 
 # Native projections go to Codex, Claude Code and Antigravity by default; narrow them if needed
@@ -38,7 +38,7 @@ journal, or override drift); `2` is any error, including an invalid argument suc
 
 The package also registers the `devkit` guide bundle (`devkit.distribution.guide`), an
 instruction-only bundle that tells agents in a consumer repository how devkit-managed assets are
-consumed and authored. See [section 4](#4-the-devkit-guide-bundle).
+consumed and authored, and opt-in practice bundles. See [section 4](#4-bundles-shipped-with-devkit).
 
 ---
 
@@ -47,7 +47,7 @@ consumed and authored. See [section 4](#4-the-devkit-guide-bundle).
 | Command | Category | Description |
 | --- | --- | --- |
 | `devkit sync [options]` | Lifecycle | Synchronizes selected bundles into `.devkit/managed/`, projects native agent assets, writes seeded files that do not exist yet, maintains the `<!-- DEVKIT:START -->` block in the root `AGENTS.md`, and warns about stray files under the managed root. |
-| `devkit add <bundle>[:<preset>]...` | Selection | Selects bundles in `.devkit/config.toml` (default preset when none is named) and synchronizes. |
+| `devkit add <bundle>[:<preset>]...` | Selection | Adds bundles or presets to the selection in `.devkit/config.toml` (default preset when none is named; presets join those the bundle already deploys) and synchronizes. |
 | `devkit remove <bundle>...` | Selection | Deselects bundles in `.devkit/config.toml` and synchronizes. |
 | `devkit list` | Inspection | Outputs JSON listing installed content packages, bundle metadata, presets, selection state, and asset paths. |
 | `devkit status` | Inspection | Read-only JSON: managed file counts (`ok`/`missing`/`modified`/`mode-mismatch`), override drift, guidance block state, seeded paths, pending journal, recorded vs running tool version, opted-out built-in bundles, and the problems to act on under `errors` (exit `1` when there are any). Never writes project files. |
@@ -68,7 +68,7 @@ consumed and authored. See [section 4](#4-the-devkit-guide-bundle).
 ## 3. Project Configuration (`.devkit/config.toml`)
 
 Consumer repositories declare which installed bundles to deploy in a Git-tracked `.devkit/config.toml`.
-Installing a content wheel only makes its bundle available; such a bundle is deployed only when it has a `[presets]` entry. The bundles built into `devkit` (`devkit`, `advisory`) are deployed with their default preset unless `[presets]` names them or opts out with `<bundle> = false` (`devkit remove` writes it for a built-in bundle; `devkit add` replaces it). `devkit list` marks built-in bundles (`builtin`) and opt-outs (`opted_out`); `devkit status` lists the opt-outs.
+Installing a content wheel only makes its bundle available; such a bundle is deployed only when it has a `[presets]` entry. The bundles built into `devkit` that declare `auto_select` (`devkit`, `advisory`) are deployed with their default preset unless `[presets]` names them or opts out with `<bundle> = false` (`devkit remove` writes it for such a bundle; `devkit add` replaces it). The other built-in bundles (`authoring`, `git-commits`) are opt-in like content bundles. `devkit list` marks built-in bundles (`builtin`), auto-selected ones (`auto_select`) and opt-outs (`opted_out`); `devkit status` lists the opt-outs.
 
 ```toml
 schema = 1
@@ -104,13 +104,16 @@ option = "on"
 ```
 
 `devkit add`, `devkit remove`, and the `devkit sync` selection flags edit these entries for you (`--no-save` for a one-off run).
+`devkit add <bundle>:<preset>` joins the preset to those the bundle already deploys (`devkit add advisory:python`
+records `advisory = ["core", "python"]`); `devkit sync --preset` replaces a bundle's presets.
 Top-level keys outside this list are rejected, except `[tool.<name>]` tables, which devkit never inspects.
 Running `devkit sync` applies the configured agents and presets without repeated CLI flags, and lists installed but unselected bundles.
 
 Every sync also writes a short orientation block into the root `AGENTS.md` between `<!-- DEVKIT:START -->` and
-`<!-- DEVKIT:END -->`: the installed bundles, the once-per-bundle `devkit get-context` rule and the generated entry
-skills. Text outside the markers is yours and is preserved; the block itself is hash-guarded like a managed file, so
-edit it only by changing the selection. Commit `AGENTS.md` with the receipt. See
+`<!-- DEVKIT:END -->`: the installed bundles, the once-per-bundle `devkit get-context` rule, the generated entry
+skills and the `guidance` fragments of the selected bundles, ordered by bundle and asset id (for example the
+`git-commits` pointer to the commit conventions). Text outside the markers is yours and is preserved; the block itself
+is hash-guarded like a managed file, so edit it only by changing the selection or by overriding a fragment. Commit `AGENTS.md` with the receipt. See
 [Workspace Ownership](workspace-ownership.md#2-ownership-categories-and-invariants).
 
 A bundle can also scaffold project-owned files: a `document` asset with `seeded = true` and a workspace `target`
@@ -119,33 +122,41 @@ yours. Sync never compares, updates or removes it, deselecting the bundle leaves
 asset seeded which path (`devkit list` shows the `seeded` list). Commit seeded files like any project file.
 A managed file you edited by hand stops the sync while it is still part of the selection. Once it is no longer
 desired (deselected, or removed upstream), sync leaves it in place, forgets it in the receipt and reports an
-`ORPHAN_LEFT` notice naming it; delete it yourself. The receipt also records the `devkit`
+`ORPHAN_LEFT` warning naming it; delete it yourself. The receipt also records the `devkit`
 version that wrote it. A different running version alone is not a change: the receipt is rewritten with the
 running version, and a `TOOL_VERSION_CHANGED` notice reported, the next time the sync writes anything;
 `devkit status` shows the mismatch. Packages built on devkit can register a `devkit.post_sync` entry point
 (`hook(root, result) -> list[str | AdvisoryError] | None`) to react after a successful sync; hooks run after the
-project lock is released, what they return becomes notices, and they never fail the sync. The library surface
+project lock is released, what they return becomes notices (an `ERROR`-level item is lowered to `WARNING`), and they
+never fail the sync. The library surface
 (`sync_project`, `load_bundle`, `get_context`, `search_playbooks`, `get_project_status`, `get_project_listing`, the
 override operations and their result dataclasses, each with `to_dict()`) is exported from `devkit.distribution`.
 
 ### Sync output and notices
 
 `sync`, `add` and `remove` print the `SyncResult` object: `dry_run`, `selection`, `packages`, `assets`, `actions`,
-`drift`, `stray`, `unprojected`, `unselected` and `notices`. A notice is something a successful sync reports; it is
-a coded `SyncNotice` (exit code `0`), serialized like an error (`code`, `message`, `exit_code`, `advisory`) and
-printed on stderr as `[NOTICE: (CODE) message]`. `override create` and `override remove` carry the notices of the
-sync they run in their own `notices` list.
+`drift`, `stray`, `unprojected`, `unselected` and `notices`. `drift`, `stray`, `unprojected` and `unselected` are
+facts for programs; `notices` holds what the agent must know about them and about the rest of the sync, as
+`AdvisoryError` objects at level `WARNING` or `NOTICE` (serialized as `code`, `level`, `message`, `exit_code` `0`,
+`advisory`). The library builds every notice, so an embedding caller receives the same list. The CLI prints the
+result, then each notice on stderr as a `[WARN]` or `[NOTICE]` block
+([Agent Advisory Protocol](../advisory/protocol.md#3-block-format)); `-q` hides the notices, never the warnings, and
+`--strict` exits `1` when there is a warning. `override create` and `override remove` carry the notices of the sync
+they run in their own `notices` list.
 
-| Class | Code | Mode | When |
-| --- | --- | --- | --- |
-| `OrphanLeftNotice` | `ORPHAN_LEFT` | `INTERACTION` | a hand-edited managed file is no longer desired: left in place (`target_files`), dropped from the receipt |
-| `ToolVersionChangedNotice` | `TOOL_VERSION_CHANGED` | `DEFER` | the receipt now records a different running `devkit` version |
-| `PostSyncNotice` | `POST_SYNC_NOTICE` | `DEFER` | a line a post-sync hook returned (the hook is named in `details`) |
-| `PostSyncHookFailedNotice` | `POST_SYNC_HOOK_FAILED` | `MAINTENANCE` | a post-sync hook raised or returned something other than a list |
+| Code | Level | Class | When | Fields |
+| --- | --- | --- | --- | --- |
+| `ORPHAN_LEFT` | `WARNING` | `OrphanLeftNotice` | a hand-edited managed file is no longer desired: left in place, dropped from the receipt | `target_files`: the files; `what_to_report`: delete or move them |
+| `OVERRIDE_DRIFT` | `WARNING` | `OverrideDriftError.with_level` | an override hides upstream changes (`override_drift = "warn"`) | `target_files`: the overrides; `fix`: `devkit override diff <bundle>:<asset>` |
+| `MANAGED_FILE_STRAY` | `WARNING` | `StrayFilesNotice` | files under `.devkit/managed/` that neither the receipt nor the inventory owns | `target_files`: the files; `what_to_report`: move project-owned files out of the managed root |
+| `POST_SYNC_HOOK_FAILED` | `WARNING` | `PostSyncHookFailedNotice` | a post-sync hook raised or returned something other than a list | `details`: the hook; `what_to_report`: the failure |
+| `SUBAGENT_UNPROJECTED` | `NOTICE` | `SubagentUnprojectedNotice` | a subagent has no native variant for a selected agent and was not projected | `target_files`: `<bundle>:<asset> (<agent>)`; what to change in `what_to_report` |
+| `BUNDLE_UNSELECTED` | `NOTICE` | `BundleUnselectedNotice` | installed bundles are not selected | `fix`: `devkit add <bundle>` |
+| `TOOL_VERSION_CHANGED` | `NOTICE` (brief) | `ToolVersionChangedNotice` | the receipt now records a different running `devkit` version (`devkit <recorded> -> <running>`) | — |
+| `POST_SYNC_NOTICE` | `NOTICE` | `PostSyncNotice` | a line a post-sync hook returned | `details`: the hook |
 
-Override drift (`drift`) and unmanaged files under the managed root (`stray`) are also printed as
-`[WARNING: (OVERRIDE_DRIFT) ...]` and `[WARNING: (MANAGED_FILE_STRAY) ...]`; unprojected subagents and unselected
-installed bundles as `[NOTICE: ...]` lines.
+A hook may also return `AdvisoryError` objects with codes of its own; they are kept at their level, except that an
+`ERROR` is lowered to `WARNING`, because a hook cannot fail a sync that already wrote its files.
 
 `devkit status` lists what needs acting on under `errors`, each an error object with exit code `1`, and renders
 each on stderr as an advisory block: missing managed files (`NOT_SYNCHRONIZED`, fix `devkit sync`), edited or
@@ -186,7 +197,7 @@ files per agent or one host-neutral role contract that `devkit sync` renders per
 
 ---
 
-## 4. The `devkit` Guide Bundle
+## 4. Bundles Shipped With devkit
 
 `devkit` ships one bundle of its own, named `devkit`, so that the guidance about devkit
 travels with the CLI version it describes. It contains no code assets: a constitution (`AGENTS.md`)
@@ -199,8 +210,16 @@ with the consumption contracts and three instructions, delivered to agents throu
 | `resource-kinds` | Adding a rule, skill, subagent, instruction, playbook, workflow or gate: the decision tree and comparison of asset kinds. |
 | `in-repo-bundle` | Adding repository-specific assets: shipping them as a bundle installed from the same repository. |
 
-It is built in: selected by default with its preset `core` (the only one); `uv run devkit remove devkit`
+It is built in: selected by default (`auto_select`) with its preset `core` (the only one); `uv run devkit remove devkit`
 opts the project out. The sources live in `src/devkit/distribution/guide/bundle/` and are validated by the package tests.
+
+The other bundles in the package belong to the module whose engine they use:
+
+| Bundle | Selection | Contents |
+| --- | --- | --- |
+| `advisory` | Auto-selected (`core`) | Agent Advisory Protocol guides; see [devkit.advisory](../advisory/reference.md). |
+| `authoring` | Opt-in: `devkit add authoring` (`all`), or one of the presets `skill-authoring`, `agent-guide-authoring` | Size rules and restructuring playbooks for skills and agent guides; see [devkit.rules](../rules/reference.md#built-in-authoring-bundle). |
+| `git-commits` | Opt-in: `devkit add git-commits` | Commit message conventions and their `AGENTS.md` pointer; see [devkit.gate](../gate/reference.md#built-in-git-commits-bundle). |
 
 ---
 

@@ -16,10 +16,12 @@ This document provides a high-level overview of the `devkit` monorepo architectu
    Declaring multi-stage delivery procedures as data, computing the current stage of a work unit from its files, enforcing approval gates by project policy, recording human decisions, and detecting procedure drift, so every agent host follows the same procedure from the same state (`devkit workflow`).
 4. **Commit Gates (`devkit.gate`)**:
    Running pluggable policy at Git's commit hooks through static wrappers, layered project and per-clone configuration, and gates distributed as bundle assets (`devkit gate`).
-5. **Structured Errors (`devkit.advisory`)**:
-   The Agent Advisory Protocol: every CLI reports failures as advisories whose `[ACTION]` directive tells an agent whether to fix, wait, or stop. The built-in `advisory` bundle teaches the protocol to agents in consumer repositories.
+5. **Agent Advisories (`devkit.advisory`)**:
+   The Agent Advisory Protocol: every CLI reports errors, warnings and notices as advisories whose `[ACTION]` directive tells an agent whether to fix, wait, stop, or continue. The built-in `advisory` bundle teaches the protocol to agents in consumer repositories.
 
-All of them build on `devkit.core`, the SDD-agnostic shared foundation (frontmatter grammar, installation receipt, safe paths, Git runner, plugin loading, project discovery).
+All of them build on `devkit.core`, the SDD-agnostic shared foundation (frontmatter grammar, installation receipt, safe paths, Git runner, plugin loading, project discovery, CLI plumbing).
+
+**Agent-first.** The primary consumer of every `devkit` command is an AI coding agent; people read the same output, but nothing is shaped for them at the agent's expense. Results are matchable sentinel lines or one JSON object on stdout, everything an agent must act on is a coded advisory with a deterministic directive on stderr, and diagnostics stay out of the default output to protect the agent's context window. See [Agent-First Output](agent-output.md).
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────┐
@@ -33,7 +35,7 @@ All of them build on `devkit.core`, the SDD-agnostic shared foundation (frontmat
 │ - playbook search    │ - Git snapshots     │ - handoff      │ - rules-   │
 │                      │                     │                │   staged   │
 ├──────────────────────┴─────────────────────┴────────────────┴────────────┤
-│         devkit.advisory (error protocol)  ·  devkit.core (foundation)    │
+│       devkit.advisory (advisory protocol)  ·  devkit.core (foundation)   │
 └──────────────────────────────────┬───────────────────────────────────────┘
                                    │ devkit sync writes; rules, workflow
                                    │ and gate read the receipt
@@ -60,7 +62,7 @@ devkit/
 │   ├── devkit/                # The devkit package: one `devkit` CLI over the modules below
 │   │   └── src/devkit/
 │   │       ├── core/          # Shared foundation (frontmatter, receipt, paths, Git, plugins, project root)
-│   │       ├── advisory/      # Agent Advisory Protocol errors and the `advisory` guide bundle
+│   │       ├── advisory/      # Agent Advisory Protocol (errors, warnings, notices) and the `advisory` guide bundle
 │   │       ├── rules/         # Governance rule engine (`devkit rules`)
 │   │       ├── workflow/      # Delivery workflow engine (`devkit workflow`)
 │   │       ├── gate/          # Commit gate system (`devkit gate`)
@@ -77,7 +79,7 @@ Inside each area, modules are grouped by concern; every area exposes its library
 | Area | Layout |
 | --- | --- |
 | `core` | `cli.py` (shared CLI plumbing), `errors.py`, `frontmatter.py`, `git.py`, `paths.py`, `plugins.py`, `project.py`, `receipt.py` |
-| `advisory` | `error.py`, `types.py` (`ExitCode`, `ActionMode`, ...), `advisory.py`, `bundle/` (the `advisory` guide bundle) |
+| `advisory` | `error.py`, `types.py` (`ExitCode`, `Level`, `ActionMode`, ...), `advisory.py`, `bundle/` (the `advisory` guide bundle) |
 | `rules` | `engine/` (registry, evaluator, configuration, policy, phases, settings, discovery, errors), `workspace/` (cache, Markdown catalog, Git snapshots), `rules/` (built-in rules), `cli/` |
 | `workflow` | `definition/` (document model, validation, discovery, check registry, identifiers), `project/` (configuration, layout, roles, plugin checks), `unit/` (units, binding, frontmatter, decision records, envelopes), `evaluation/` (evaluator, primitives, results, requests, Git, lint), top-level `workspace.py`, `answers.py`, `handoff.py`, `render.py`, `errors.py`, and `cli/` |
 | `gate` | `engine/` (models, base class, configuration, registry, runner), `hooks/` (hook wrappers and Git queries), `gates/` (built-in gates), `errors.py`, `cli/`, `__main__.py` (`python -m devkit.gate`, which the hook wrappers exec) |
@@ -90,9 +92,9 @@ The module maps with one line per file are in each module's documentation.
 ## 3. Module Interaction Model
 
 1. **Content packaging**:
-   Assets (instructions, skills, playbooks, rules, workflows, workflow checks, subagent roles, gates, documents) are declared in a `bundle.toml` inside a Python package and registered under the `devkit.bundles` entry-point group. The `devkit` package registers its own `devkit` and `advisory` bundles; external packages such as `devkit-starter` register theirs. A repository's own assets ship as an in-repository bundle.
+   Assets (instructions, skills, playbooks, rules, workflows, workflow checks, subagent roles, gates, documents, guidance fragments) are declared in a `bundle.toml` inside a Python package and registered under the `devkit.bundles` entry-point group. The `devkit` package registers its own `devkit`, `advisory`, `authoring` and `git-commits` bundles; external packages such as `devkit-starter` register theirs. A repository's own assets ship as an in-repository bundle.
 2. **Selection and synchronization**:
-   Built-in bundles are selected with their default preset unless `.devkit/config.toml` opts out (`[presets] <bundle> = false`); external bundles are selected with `devkit add`. `devkit sync` verifies the bundles, writes managed copies under `.devkit/managed/<bundle>/`, projects native skills and subagents into `.agents/`, `.codex/` and `.claude/`, maintains the managed block in the root `AGENTS.md`, seeds project files once, and records every file in `.devkit/installation.json` in one transaction.
+   Built-in bundles that declare `auto_select` (`devkit`, `advisory`) are selected with their default preset unless `.devkit/config.toml` opts out (`[presets] <bundle> = false`); every other bundle, including the opt-in built-ins `authoring` and `git-commits`, is selected with `devkit add`. `devkit sync` verifies the bundles, writes managed copies under `.devkit/managed/<bundle>/`, projects native skills and subagents into `.agents/`, `.codex/` and `.claude/`, maintains the managed block in the root `AGENTS.md` (with the selected bundles' guidance fragments), seeds project files once, and records every file in `.devkit/installation.json` in one transaction.
 3. **Consumption by the other modules**:
    - Agents load bundle guidance on demand with `devkit get-context <bundle>`, and occasional procedures with `devkit playbook search` after an explicit `devkit-playbook` invocation.
    - `devkit rules check` loads the rule assets recorded in the receipt in addition to the built-in rules; `devkit rules check --staged` and `--ci` evaluate exact Git trees.
@@ -105,11 +107,15 @@ The module maps with one line per file are in each module's documentation.
 
 **Library errors.** Every expected failure a `devkit` library function raises is an `AdvisoryError` subclass from `devkit.advisory` with a stable `UPPER_SNAKE` code (`RECEIPT_INVALID`, `BUNDLE_INVALID`, `RULES_CONFIG_INVALID`, `UNIT_NOT_FOUND`, `GATE_CONFIG_INVALID`, ...) and the advisory fields that direct the caller's next step. An embedding caller branches on `error.code` or `error.mode` instead of matching messages; problems a function collects rather than raises (rule loading, policy and execution problems; workflow validation, file loading and shared-stage problems; envelope and decision record errors) are typed entries with a code too. Each module's reference lists its codes. Built-in exceptions remain only for programming errors, such as calling an API with arguments its contract forbids.
 
-**CLI boundary.** Every command group is built on `devkit.core.cli`: the same `-w/--workspace-root` option (an explicit root must be an existing directory; the default is the devkit project containing the current directory, while `devkit gate` always works on the Git top level, found with `devkit.core.require_git_toplevel`), the same `--format text|json` option (case-insensitive) and the same error boundary. The boundary renders an uncaught `AdvisoryError` as an Agent Advisory Protocol block on stderr and exits with the error's `exit_code`; any other exception is reported as `UNEXPECTED_ERROR` (`MAINTENANCE`). `--version` exists only on the root `devkit` group.
+**Warnings and notices.** Something a successful operation must tell its caller is an `AdvisoryError` at level `WARNING` (the user must learn or decide something: `ORPHAN_LEFT`, `OVERRIDE_DRIFT` after a sync) or `NOTICE` (worth knowing: `BUNDLE_UNSELECTED`, `TOOL_VERSION_CHANGED`). It is never raised: the function returns it with its result, under `notices`, and the CLI renders it after the result as a `[WARN]` or `[NOTICE]` block. Libraries never print and never use logging to communicate; see the [Agent Advisory Protocol](../advisory/protocol.md#8-warnings-and-notices-in-practice).
 
-**JSON output.** When stdout is JSON (`--format json`, and every distribution command), it is exactly one object, never a bare array: a command's payload sits under a named key (`violations`, `rules`, `units`, `checks`, `requests`, `overrides`, ...), problems the command collected sit under `errors` as `AdvisoryError.to_dict()` objects, and a command that fails outright prints `{"error": {...}}` (the same envelope) while the advisory goes to stderr.
+**CLI boundary.** Every command group is built on `devkit.core.cli`: the same `-w/--workspace-root` option (an explicit root must be an existing directory; the default is the devkit project containing the current directory, while `devkit gate` always works on the Git top level, found with `devkit.core.require_git_toplevel`), the same `--format text|json` option (case-insensitive), the same output options (`-q/--quiet`, `-v/--verbose`, `--strict`, or `DEVKIT_QUIET`, `DEVKIT_VERBOSE`, `DEVKIT_STRICT`; see [Agent-First Output, section 6](agent-output.md#6-verbosity-and-strictness)) and the same error boundary. The boundary renders an uncaught `AdvisoryError` as an Agent Advisory Protocol block on stderr and exits with the error's `exit_code`; any other exception is reported as `UNEXPECTED_ERROR` (`MAINTENANCE`). `--version` exists only on the root `devkit` group.
 
-**Text output.** Text-mode stdout is made of one-line `[KIND: ...]` sentinels that an agent can match without parsing prose: rules prints `[VIOLATION: ...]`, `[SUMMARY: errors=N warnings=N infos=N fixed=N]` and `[OK: ...]`; workflow prints `[STAGE: ...]`, `[GATE: ...]`, `[REQUEST: ...]` and similar; gate prints `[HOOK: ...]` and `[GATE: ...]`. Warnings and notices go to stderr as `[WARNING: (CODE) ...]` and `[NOTICE: ...]`. No emoji and no colour.
+**Output channels.** stdout carries the result, stderr carries advisories; the full contract is [Agent-First Output](agent-output.md).
+
+- **JSON output.** When stdout is JSON (`--format json`, and every distribution command), it is exactly one object, never a bare array: a command's payload sits under a named key (`violations`, `rules`, `units`, `checks`, `requests`, `overrides`, ...), problems the command collected sit under `errors` and its warnings and notices under `notices`, as `AdvisoryError.to_dict()` objects, and a command that fails outright prints `{"error": {...}}` (the same envelope) while the advisory goes to stderr.
+- **Text output.** Text-mode stdout is made of one-line `[KIND: ...]` sentinels that an agent can match without parsing prose: rules prints `[VIOLATION: ...]`, `[SUMMARY: errors=N warnings=N infos=N fixed=N]` and `[OK: ...]`; workflow prints `[STAGE: ...]`, `[GATE: ...]`, `[REQUEST: ...]` and similar; gate prints `[HOOK: ...]` and `[GATE: ...]`. Advisory sentinel names (`ERROR`, `WARN`, `WARNING`, `NOTICE`, `INFO`, ...) are never used as a kind. No emoji and no colour.
+- **stderr.** Advisory blocks only: `[WARN]` and `[NOTICE]` blocks after the result, `[ERROR]` blocks last; `[INFO]` log lines only under `-v`. `-q` hides notices, never warnings or errors.
 
 **Arguments.** click only parses syntax (unknown options, missing arguments, a value outside a fixed choice); those usage errors print click's `Usage:` text and exit `2`. Every semantic check of an argument (conflicting flags, a malformed selector, a workspace root or path that does not exist, an unknown rule ID) raises `ArgumentError` (`ARGUMENT_INVALID`, `INPUT_ERROR`) through the boundary, so a JSON caller still receives one document.
 
@@ -123,7 +129,7 @@ The module maps with one line per file are in each module's documentation.
 | `1` | `FINDINGS` | The command ran and reports a negative result | rule violations remain; `sync --check` needs a sync; a gate refused the commit; `workflow validate` found invalid definitions; `devkit status`, `gate status` or `workflow show` reports a problem |
 | `2` | `ERROR` | The command could not do its job | usage and argument errors, unreadable configuration, receipt or definition, a file that cannot be loaded, refused invalid input, unexpected errors |
 
-A command that does work and collects several problems instead of stopping at the first exits with the highest `exit_code` among them: configuration and loading problems give `2`, refusals and findings `1`. A status or show command (`devkit status`, `gate status`, `workflow show`) only reports, so it exits `1` when its report contains a problem, whatever the problem's own code (`devkit.core.cli.report_exit_code`), and `2` only when it cannot run; for `devkit status` that is a missing, modified or mode-mismatched file, a pending journal, or override drift. A workflow state that waits for a person or a delegated role is a result, not a failure, and exits `0`. The per-command details are in each module's reference.
+Warnings and notices never change the exit code; `--strict` turns a run that would exit `0` into `1` when it reported a warning. A command that does work and collects several problems instead of stopping at the first exits with the highest `exit_code` among them: configuration and loading problems give `2`, refusals and findings `1`. A status or show command (`devkit status`, `gate status`, `workflow show`) only reports, so it exits `1` when its report contains a problem, whatever the problem's own code (`devkit.core.cli.report_exit_code`), and `2` only when it cannot run; for `devkit status` that is a missing, modified or mode-mismatched file, a pending journal, or override drift. A workflow state that waits for a person or a delegated role is a result, not a failure, and exits `0`. The per-command details are in each module's reference.
 
 **Platforms.** `devkit` supports macOS and Linux only (POSIX): it relies on `fcntl` locks, POSIX file modes and `/bin/sh` hook wrappers. It writes LF line endings.
 
@@ -134,12 +140,14 @@ A command that does work and collects several problems instead of stopping at th
 Each module's `reference.md` is the quick reference (CLI, configuration, library); the other documents in its directory are canonical for semantics.
 
 ### Cross-Cutting Architecture
+- [Agent-First Output](agent-output.md): The output contract of every command: stdout and stderr, text sentinels, JSON envelope, verbosity, logs.
 - [Resource Taxonomy](resource-taxonomy.md): Three-tier classification and naming standards for agent assets.
 - [Hybrid Binary Distribution Evaluation](evaluations/hybrid-binaries.md): Deferred evaluation record on bundling compiled binaries with `uv` wheels (not adopted).
 
 ### Shared Foundation (`devkit.core`, `devkit.advisory`)
-- [Core Reference](../core/reference.md): Frontmatter grammar, receipt reader, safe paths, Git runner, plugin loading, project discovery.
-- [Advisory Reference](../advisory/reference.md): Agent Advisory Protocol errors and the `advisory` guide bundle.
+- [Core Reference](../core/reference.md): Frontmatter grammar, receipt reader, safe paths, Git runner, plugin loading, project discovery, CLI plumbing.
+- [Agent Advisory Protocol](../advisory/protocol.md): Levels, block format, fields, mode derivation and canonical `[ACTION]` directives.
+- [Advisory Reference](../advisory/reference.md): The `devkit.advisory` library and the `advisory` guide bundle.
 
 ### Asset Distribution (`devkit.distribution`)
 - [Distribution Reference](../distribution/reference.md): CLI commands, configuration, and library surface.

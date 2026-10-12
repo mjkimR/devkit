@@ -20,10 +20,11 @@ the Git-tracked selection in `.devkit/config.toml`; the receipt in
    file. Change the source bundle, or create an override with
    `devkit override create <bundle>:<asset>`.
 3. **Selection lives in `.devkit/config.toml`.** Installing a package only makes
-   its bundle available. `devkit add <bundle>[:<preset>]` selects it and syncs;
-   `devkit remove <bundle>` deselects. The bundles built into devkit (`devkit`,
-   `advisory`) are selected by default; `<bundle> = false` under `[presets]`
-   opts out. A plain `devkit sync` converges the workspace to the selection.
+   its bundle available. `devkit add <bundle>[:<preset>]` selects it, or adds a
+   preset to it, and syncs; `devkit remove <bundle>` deselects. The bundles
+   `devkit` and `advisory` are selected by default; `<bundle> = false` under
+   `[presets]` opts out. A plain `devkit sync` converges the workspace to the
+   selection.
 4. **Playbooks are explicit.** Ordinary tasks never search playbooks. Use the
    `devkit-playbook` skill only when the user invokes it for the current task.
 5. **Rules and gates run as code.** `devkit rules check` loads synchronized

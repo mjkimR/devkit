@@ -72,7 +72,7 @@ report.ok, report.problems, report.exit_code         # exit_code: the highest ex
 | Outcome | Condition | Advisory |
 | --- | --- | --- |
 | skipped | the index changes no files | — |
-| passed | no error violations (warnings are noted) | — |
+| passed | no error violations | none; when warning-severity violations remain, a `GATE_RULES_WARNINGS` notice counts them and its `fix` names `devkit rules check --staged` |
 | refused | error violations remain | `GATE_RULES_VIOLATION` (`GateRefusedError`, BLOCKED, exit `1`): one `[DETAIL]` per violation as `<rule> <file>:<line> <message>`, `fix` names `devkit rules fix` and `devkit rules explain <rule>`, `[TARGET]` lists the files |
 | failed | `[rules]` in the staged `.devkit/config.toml` is invalid | the rule engine's `RULES_CONFIG_INVALID` (or the core `CONFIG_INVALID`), passed through |
 | failed | the staged receipt is malformed, a receipt-listed rule is missing, drifted from its hash or fails to import, the policy does not apply, or a rule raised | the rule engine's `RULES_RUN_FAILED` (`ProjectRun.raise_for_problems`), one `[DETAIL]` per problem with its own code (`RULES_LOAD_FAILED`, `RULES_POLICY_INVALID`, `RULES_EXECUTION_FAILED`, ...) |
@@ -201,9 +201,9 @@ enabled = false
 | `devkit gate install [--force] [--python PATH]` | Write the managed wrappers. |
 | `devkit gate uninstall` | Remove managed wrappers; restore hooks moved aside by `install`. |
 | `devkit gate status [--format text\|json]` | Hooks directory and `core.hooksPath`, hook states, every gate with stage, order, effective enablement and source, configuration layers, and every problem that fails a commit (`load_gate_project`, the same `validate_gates` the stages run). |
-| `devkit gate run <stage> [hook args] [-v]` | Run one stage (`run_hook`); what the wrappers call. `DEVKIT_GATES_VERBOSE=1` equals `-v`. |
+| `devkit gate run [-q\|-v] [--strict] <stage> [hook args]` | Run one stage (`run_hook`); what the wrappers call. Options go before `<stage>`; hooks set `DEVKIT_QUIET`, `DEVKIT_VERBOSE` or `DEVKIT_STRICT` instead. |
 
-`-w/--workspace-root` (default: the current directory) may name any existing directory inside the repository; every command, `install` and `uninstall` included, works on the work tree's top level (`devkit.core.require_git_toplevel`), as a hook does. A `-w` that is not an existing directory is `ARGUMENT_INVALID`; one outside a work tree is `GIT_FAILED` (`INPUT_ERROR`). Output uses sentinel lines (`[HOOKS: …]`, `[HOOK: …]`, `[GATE: <id> stage=<stage> outcome=<outcome>]`, `[CONFIG: sources=…]`) followed by advisory blocks for failures. `status --format json` prints one object with `hooks_dir`, `hooks_path`, `hooks`, `gates`, `config_sources` and `errors` (each `{code, message, exit_code, advisory}`), or `{"error": {...}}` when the status cannot be read.
+`-w/--workspace-root` (default: the current directory) may name any existing directory inside the repository; every command, `install` and `uninstall` included, works on the work tree's top level (`devkit.core.require_git_toplevel`), as a hook does. A `-w` that is not an existing directory is `ARGUMENT_INVALID`; one outside a work tree is `GIT_FAILED` (`INPUT_ERROR`). Output follows [Agent-First Output](../architecture/agent-output.md): `install`, `uninstall` and `status` print sentinel lines on stdout (`[HOOKS: …]`, `[HOOK: …]`, `[GATE: <id> stage=<stage> …]`, `[CONFIG: sources=…]`) and their problems as advisory blocks on stderr. `run` prints nothing on stdout, so the hook stays silent when every gate passes: a refusal or failure is one advisory block per gate on stderr whose `[DETAIL]` names the gate and stage, a configuration problem is its own advisory block, notices such as `GATE_RULES_WARNINGS` follow as `[NOTICE]` blocks, and passed and skipped gates appear only under `-v`, as `[INFO]` lines. `status --format json` prints one object with `hooks_dir`, `hooks_path`, `hooks`, `gates`, `config_sources` and `errors` (each `{code, message, exit_code, advisory}`), or `{"error": {...}}` when the status cannot be read.
 
 Exit codes follow the devkit convention ([Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)). `status` is a report: it exits `1` when it lists any problem that would fail a commit and `2` only when it cannot run (outside a Git work tree). A blocking `run` collects several problems and exits with the highest `exit_code` among them: a refusal (`GateRefusedError`) gives `1`; a configuration, registry, load or settings problem, an error a gate raised that is not a refusal (such as a rule engine error), or an unexpected exception gives `2`.
 
@@ -235,4 +235,5 @@ Every gate error derives from `GateError` (`devkit.gate.errors`), which sets `ac
 | `GIT_FAILED` | `devkit.core.GitError` | `INPUT_ERROR` outside a work tree, else `MAINTENANCE` | `2` | a Git query failed |
 | `RECEIPT_INVALID` | `devkit.core.ReceiptError` | `MAINTENANCE` | `2` | `.devkit/installation.json` is malformed or lists an unsafe path |
 | `RULES_*` | `devkit.rules` errors | as raised | `2` | the `rules-staged` gate could not run the rule engine (passed through unchanged) |
+| `GATE_RULES_WARNINGS` | `RulesWarningsNotice` | `NOTE` (level `NOTICE`) | `0` | returned, never raised: `rules-staged` passed while warning-severity violations remain in the staged tree |
 

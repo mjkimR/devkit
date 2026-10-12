@@ -12,6 +12,18 @@ Personal developer tools monorepo.
 - Write all documentation, architecture specifications, and guide materials in English.
 - Do not commit `.env`, log secrets/PII, or commit/push without explicit instructions.
 
+## Agent-First Design
+
+`devkit`'s primary consumer is an AI coding agent that runs it through a shell or tool call and acts on what comes back. People read the same output, but nothing is shaped for them at the agent's expense. Apply this to every command, library API and guide:
+
+- **stdout is the result**: one-line `[KIND: ...]` sentinels, or exactly one JSON object under `--format json`. No colour, emoji, tables, progress output or anything that depends on the terminal.
+- **stderr is for advisories**: Agent Advisory Protocol blocks (`[ERROR]`, `[WARN]`, `[NOTICE]`), plus `[INFO]` log lines only under `-v`. Advisory sentinel names are never stdout kinds.
+- **Codes and directives**: everything an agent must act on has a stable `UPPER_SNAKE` code and a deterministic `[ACTION]` directive. Branch and test on codes, never on message text; never write hedged directives ("likely", "might").
+- **Levels**: a failure or refusal is raised as an `AdvisoryError`; something a successful operation must report is returned with its result under `notices` at `WARNING` or `NOTICE`, never raised and never logged. Warnings and notices do not change exit codes (`0` success, `1` negative result, `2` could not run), except under `--strict`.
+- **Context budget**: default output carries only what changes the agent's next step or must reach the user. Diagnostics are `logging` calls, visible under `-v`.
+- **Libraries never print**: commands write output only through `devkit.core.cli` (`boundary`, `echo_json`, `echo_notices`, `output_options`).
+- Specifications: [Agent-First Output](docs/architecture/agent-output.md) and [Agent Advisory Protocol](docs/advisory/protocol.md).
+
 ## Compatibility
 
 - No external consumers exist yet. Breaking changes to schemas (`bundle.toml`, `.devkit/config.toml`, `.devkit/installation.json`), CLI commands, and APIs may be made in place: do not bump schema versions or add migration paths, deprecation shims, or legacy readers.
@@ -21,7 +33,7 @@ Personal developer tools monorepo.
 
 Keep package descriptions in this guide to a high-level summary of their purpose. Do not add package-specific configurations or detailed architectural explanations here; refer to the package README and `docs/<area>/` when deeper details are needed:
 
-- `devkit`: The single devkit package with one CLI (`devkit`): agent asset distribution, repository rules, delivery workflows, commit gates and structured agent errors, built on an SDD-agnostic shared core. See [packages/devkit/README.md](packages/devkit/README.md) for its modules and layering.
+- `devkit`: The single devkit package with one CLI (`devkit`): agent asset distribution, repository rules, delivery workflows, commit gates and structured agent advisories, built on an SDD-agnostic shared core. See [packages/devkit/README.md](packages/devkit/README.md) for its modules and layering.
 - `devkit-starter`: Example external content package demonstrating bundle packaging and distribution. See [packages/devkit-starter/README.md](packages/devkit-starter/README.md).
 
 ## Verification

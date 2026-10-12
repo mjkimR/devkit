@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from devkit.core.receipt import MANAGED_PATH, AssetRecord, OverrideRecord, PackageRecord
+from devkit.distribution.bundles.fragments import read_fragment, references, render_fragment
 from devkit.distribution.bundles.guidance import prepend_context
 from devkit.distribution.bundles.manifest import Asset, Bundle, source_files
 from devkit.distribution.bundles.playbooks import playbook_entry
@@ -56,6 +57,15 @@ class Unprojected:
         return {"bundle": self.bundle, "asset": self.asset, "agent": self.agent}
 
 
+@dataclass(frozen=True)
+class Fragment:
+    """A selected ``guidance`` asset, rendered for the root ``AGENTS.md`` block."""
+
+    bundle: str
+    asset: str
+    text: str
+
+
 @dataclass
 class Inventory:
     # Workspace-relative destination -> content; what the receipt's ``files`` will own.
@@ -67,6 +77,11 @@ class Inventory:
     unprojected: list[Unprojected] = field(default_factory=list)
     # Seeded destinations -> origin; never part of ``files``.
     seeds: dict[str, Seed] = field(default_factory=dict)
+    guidance: list[Fragment] = field(default_factory=list)
+
+    def fragments(self) -> list[str]:
+        """Rendered guidance in the block's stable order: by bundle, then asset ID."""
+        return [item.text for item in sorted(self.guidance, key=lambda item: (item.bundle, item.asset))]
 
     def put(self, destination: str, content: Content) -> None:
         # Agents sharing a directory (Codex and Antigravity) project the same bytes twice.
@@ -95,6 +110,7 @@ class _BundleInventory:
         self.root = root
         self.prefix = f"{MANAGED_PATH}/{bundle.name}/"
         self.context_files: set[Path] = set()
+        self.selected: set[str] = set()
 
     def add(self, presets: list[str], previous: dict[str, OverrideRecord]) -> None:
         bundle = self.bundle
@@ -103,6 +119,7 @@ class _BundleInventory:
         constitution = bundle.constitution
         if constitution is not None:
             self.inventory.copy(self.prefix + "AGENTS.md", constitution)
+        self.selected = selected
         chosen = [asset for asset in bundle.assets if asset.id in selected]
         # A bundle with a context (constitution or instructions) prefixes its skills with the load prerequisite.
         if constitution is not None or any(asset.kind == "instruction" for asset in chosen):
@@ -117,6 +134,8 @@ class _BundleInventory:
                 self._seed(asset)
                 continue
             paths = self._managed(asset)
+            if asset.kind == "guidance":
+                self._fragment(asset)
             for agent in self.agents:
                 paths |= self._project(asset, agent)
             self.inventory.assets.append(
@@ -159,6 +178,21 @@ class _BundleInventory:
                 self.inventory.copy(self.prefix + rel, path, self._context(path))
                 paths.add(resolve_source(self.root, self.bundle, rel)[1])
         return paths
+
+    def _fragment(self, asset: Asset) -> None:
+        """Render a guidance asset (the project override, if any) with its placeholders resolved."""
+        ((_, source),) = asset.sources
+        read_from, cited = resolve_source(self.root, self.bundle, source)
+        text = read_fragment(read_from.read_bytes(), cited)
+        paths = {}
+        for ref in references(text):
+            target = self.bundle.single_file_source(ref)
+            if target is None or ref not in self.selected:
+                raise BundleError(
+                    f"{cited}: {{path:{ref}}} must name a selected single-file, non-guidance asset of {self.bundle.name}"
+                )
+            paths[ref] = resolve_source(self.root, self.bundle, target)[1]
+        self.inventory.guidance.append(Fragment(self.bundle.name, asset.id, render_fragment(text, paths)))
 
     def _project(self, asset: Asset, agent: str) -> set[str]:
         """Native projections of a skill or subagent for ``agent``."""

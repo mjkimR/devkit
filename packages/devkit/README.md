@@ -11,8 +11,8 @@ No package index hosts the wheel yet; install a built wheel by path (see the
 
 ```bash
 uv add --dev /path/to/devkit-0.1.0-py3-none-any.whl
-uv run devkit sync            # deploys the built-in bundles (devkit, advisory)
-uv run devkit add <bundle>    # selects a bundle from another installed content package
+uv run devkit sync            # deploys the auto-selected built-in bundles (devkit, advisory)
+uv run devkit add <bundle>    # selects any other bundle: built-in opt-in ones or another content package
 ```
 
 Every command takes `-w/--workspace-root`; the default is the enclosing project
@@ -26,7 +26,7 @@ Architecture and the documentation index:
 | Module | Purpose | CLI | Reference |
 | --- | --- | --- | --- |
 | `devkit.core` | Shared foundation: frontmatter grammar, installation receipt, safe paths, Git runner, plugin loading, project discovery | none | [docs/core](../../docs/core/reference.md) |
-| `devkit.advisory` | Agent Advisory Protocol errors, plus the built-in `advisory` guide bundle | none | [docs/advisory](../../docs/advisory/reference.md) |
+| `devkit.advisory` | Agent Advisory Protocol (errors, warnings, notices), plus the built-in `advisory` guide bundle | none | [docs/advisory](../../docs/advisory/reference.md) |
 | `devkit.rules` | Repository rule engine with autofix, project policy and Git snapshot gates | `devkit rules` | [docs/rules](../../docs/rules/reference.md) |
 | `devkit.workflow` | Data-driven delivery workflow engine | `devkit workflow` | [docs/workflow](../../docs/workflow/reference.md) |
 | `devkit.gate` | Pluggable Git commit gates and managed hook wrappers | `devkit gate` | [docs/gate](../../docs/gate/reference.md) |
@@ -37,7 +37,12 @@ Layering: `advisory` imports no other module; `core` may import `advisory`;
 `core`, `advisory` and `rules`; `distribution` may import only `core` and
 `advisory`. `devkit.cli` assembles the command line. A test enforces this.
 
-Bundles shipped inside this package (`devkit`, `advisory`) are selected with
-their default preset unless `.devkit/config.toml` opts out with
-`[presets] <bundle> = false`. Bundles from other packages are deployed only
-after `devkit add`.
+Bundles shipped inside this package that declare `auto_select` (`devkit`,
+`advisory`) are selected with their default preset unless
+`.devkit/config.toml` opts out with `[presets] <bundle> = false`. The other
+built-in bundles are opt-in practices: `authoring` (skill and agent guide size
+rules with their playbooks, [docs/rules](../../docs/rules/reference.md#built-in-authoring-bundle))
+and `git-commits` (commit message conventions,
+[docs/gate](../../docs/gate/reference.md#built-in-git-commits-bundle)). They and
+bundles from other packages are deployed only after `devkit add`, which joins
+presets to those a bundle already deploys.

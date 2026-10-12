@@ -61,4 +61,4 @@ Python content wheels naturally inherit `uv` and Python packaging dependency res
   packageB = "default-preset-name"
   packageA = "all"
   ```
-- Because opt-in is the default for content packages, there is no opt-out list for them; `<bundle> = false` only matters for the built-in bundles of `devkit` itself. See [Synchronization & Transactions](sync-and-transactions.md#2-asset-selection-model).
+- Because opt-in is the default for content packages, there is no opt-out list for them; `<bundle> = false` only matters for the auto-selected built-in bundles of `devkit` itself (`devkit`, `advisory`); `auto_select` is rejected in any other package. See [Synchronization & Transactions](sync-and-transactions.md#2-asset-selection-model).

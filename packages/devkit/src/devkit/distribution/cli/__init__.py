@@ -40,6 +40,7 @@ from devkit.distribution.installation.config import (
     PLAYBOOK_MAX_BYTES_MAX,
     PLAYBOOK_MAX_BYTES_MIN,
     effective_selection,
+    merge_selection,
     prepare_config_update,
     read_config,
     resolve_selection,
@@ -237,12 +238,18 @@ def _sync_and_save(
     save: ConfigEdit | None,
     agents: list[str] | None = None,
     presets: dict[str, list[str]] | None = None,
+    merge: bool = False,
     deselect: tuple[str, ...] = (),
     dry_run: bool = False,
 ) -> SyncResult:
-    """Synchronize; ``save`` builds a configuration edit, checked before the sync and written after it."""
+    """Synchronize; ``save`` builds a configuration edit, checked before the sync and written after it.
+
+    ``merge`` joins ``presets`` with what each bundle already deploys instead of replacing it.
+    """
     with discover_bundles() as installed:
         selected = resolve_selection(installed, presets or {})
+        if merge:
+            selected = merge_selection(installed, read_config(root), selected)
         edit = save(installed, selected) if save is not None else None
         update = prepare_config_update(root, **edit) if edit is not None and not dry_run else None
         result = sync_project(root, installed, agents=agents, presets=selected, deselect=deselect, dry_run=dry_run)
@@ -302,9 +309,11 @@ def sync(
 @click.option("--dry-run", is_flag=True, help="Preview without editing configuration or files.")
 @_json_command
 def add(selections: tuple[str, ...], workspace_root: str | None, dry_run: bool) -> None:
-    """Select bundle[:preset] in .devkit/config.toml and synchronize.
+    """Add bundle[:preset] to the selection in .devkit/config.toml and synchronize.
 
-    Without a preset, the bundle's default preset is recorded by name.
+    Presets join those the bundle already deploys; `sync --preset` replaces a
+    bundle's presets instead. Without a preset, the bundle's default preset is
+    recorded by name.
     """
     requested = _parse_selections(selections, "SELECTIONS")
     _report(
@@ -312,6 +321,7 @@ def add(selections: tuple[str, ...], workspace_root: str | None, dry_run: bool) 
             resolve_root(workspace_root),
             save=lambda _installed, selected: {"presets": selected},
             presets=requested,
+            merge=True,
             dry_run=dry_run,
         )
     )
@@ -325,8 +335,8 @@ def add(selections: tuple[str, ...], workspace_root: str | None, dry_run: bool) 
 def remove(bundles: tuple[str, ...], workspace_root: str | None, dry_run: bool) -> None:
     """Deselect bundles in .devkit/config.toml and synchronize.
 
-    A built-in bundle is recorded as `<bundle> = false` so it is not selected
-    by default again; `devkit add` selects it again.
+    An auto-selected built-in bundle is recorded as `<bundle> = false` so it is
+    not selected by default again; `devkit add` selects it again.
     """
     root = resolve_root(workspace_root)
 
@@ -334,10 +344,10 @@ def remove(bundles: tuple[str, ...], workspace_root: str | None, dry_run: bool) 
         missing = sorted(set(bundles) - set(effective_selection(installed, read_config(root))))
         if missing:
             raise SelectionError(f"bundle is not selected: {missing}", fix="List selected bundles with `devkit list`")
-        builtin = {item.bundle.name for item in installed if item.builtin}
+        automatic = {item.bundle.name for item in installed if item.auto_selected}
         return {
-            "deselect": [name for name in bundles if name not in builtin],
-            "opt_out": [name for name in bundles if name in builtin],
+            "deselect": [name for name in bundles if name not in automatic],
+            "opt_out": [name for name in bundles if name in automatic],
         }
 
     _report(_sync_and_save(root, save=save, deselect=bundles, dry_run=dry_run))

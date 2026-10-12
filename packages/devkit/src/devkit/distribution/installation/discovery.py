@@ -9,7 +9,9 @@ from devkit.distribution.bundles import Bundle, load_bundle
 from devkit.distribution.errors import BundleError, PackageError
 
 GROUP = "devkit.bundles"
-# Bundles registered by this distribution are built in: selected by default (see ``config``).
+# Bundles registered by this distribution are built in; those declaring ``auto_select`` are selected
+# by default (see ``config``). Other distributions can arrive as transitive dependencies, so their
+# bundles are never selected without ``devkit add``.
 BUILTIN_DISTRIBUTION = "devkit"
 
 
@@ -18,8 +20,13 @@ class InstalledBundle:
     package: str
     package_version: str
     bundle: Bundle
-    # Shipped by the ``devkit`` distribution itself; selected with its default preset unless opted out.
+    # Shipped by the ``devkit`` distribution itself.
     builtin: bool = False
+
+    @property
+    def auto_selected(self) -> bool:
+        """Selected with its default preset unless ``[presets]`` names it or opts out."""
+        return self.builtin and self.bundle.auto_select
 
 
 @contextmanager
@@ -43,7 +50,9 @@ def discover_bundles() -> Iterator[list[InstalledBundle]]:
             names.add(bundle.name)
             package = entry.dist.metadata["Name"]
             builtin = package == BUILTIN_DISTRIBUTION
-            if builtin and bundle.default_preset is None:
-                raise PackageError(f"{entry.name}: a built-in bundle must declare default_preset")
+            if bundle.auto_select and not builtin:
+                raise PackageError(
+                    f"{entry.name}: auto_select is reserved for bundles of the {BUILTIN_DISTRIBUTION} distribution"
+                )
             found.append(InstalledBundle(package, entry.dist.version, bundle, builtin))
         yield sorted(found, key=lambda item: item.bundle.name)

@@ -1,6 +1,6 @@
 ---
 name: resource-kinds
-description: Read before adding a rule, skill, subagent, instruction, playbook, workflow or commit gate to a repository. Decision tree and comparison of devkit asset kinds, how each is consumed, and what each costs in agent context.
+description: Read before adding a rule, skill, subagent, instruction, playbook, workflow, guidance fragment or commit gate to a repository. Decision tree and comparison of devkit asset kinds, how each is consumed, and what each costs in agent context.
 ---
 
 # Choosing an asset kind
@@ -28,10 +28,12 @@ Can a program verify the invariant with certainty?
             yes -> the bundle's AGENTS.md (constitution)
             no  -> instruction (default for policies, standards, judgment criteria)
 
-Two kinds sit outside the tree: `workflow-check` (a Python check a workflow
-definition names, run by `devkit workflow`) and `document` (reference
+Three kinds sit outside the tree: `workflow-check` (a Python check a workflow
+definition names, run by `devkit workflow`), `document` (reference
 material read by path, or with `seeded = true` a scaffold such as a docs tree
-that the project owns and edits after the first sync).
+that the project owns and edits after the first sync) and `guidance` (a short
+line in the root AGENTS.md block that sends every session to an instruction at
+a moment no skill marks, such as "before writing a commit message").
 ```
 
 ## Comparison
@@ -48,6 +50,7 @@ that the project owns and edits after the first sync).
 | `instruction` | `instructions/<slug>.md` with `name` and `description` frontmatter | Header returned by `get-context`; body read when relevant | header always, body on demand |
 | `workflow-check` | Python files (`BaseCheck` subclasses) | `devkit workflow` adds them to its check registry; loaded from the receipt | none |
 | `document` | any files | Unseeded: a managed copy agents read by path. `seeded = true` with a `target`: written once into the project, then project-owned | only when read |
+| `guidance` | one Markdown file of list items, at most 300 bytes; `{path:<asset-id>}` names another asset's file | Rendered into the root `AGENTS.md` block by `devkit sync`, read by every session | every turn: keep it to a pointer with its read condition |
 
 ## Boundaries that are easy to get wrong
 

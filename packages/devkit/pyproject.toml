@@ -16,6 +16,8 @@ devkit = "devkit.cli:cli"
 [project.entry-points."devkit.bundles"]
 devkit = "devkit.distribution.guide"
 advisory = "devkit.advisory"
+authoring = "devkit.rules.authoring"
+git-commits = "devkit.gate.commits"
 
 [dependency-groups]
 dev = [

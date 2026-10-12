@@ -35,7 +35,10 @@ from devkit.core.project import (
     require_git_toplevel,
 )
 from devkit.core.receipt import (
+    AGENTS_FILE,
     CONFIG_PATH,
+    GUIDANCE_END,
+    GUIDANCE_START,
     MANAGED_PATH,
     OVERRIDES_PATH,
     RECEIPT_PATH,
@@ -54,7 +57,10 @@ from devkit.core.receipt import (
 )
 
 __all__ = [
+    "AGENTS_FILE",
     "CONFIG_PATH",
+    "GUIDANCE_END",
+    "GUIDANCE_START",
     "MANAGED_PATH",
     "OVERRIDES_PATH",
     "RECEIPT_PATH",

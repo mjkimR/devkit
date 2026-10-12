@@ -14,7 +14,7 @@ from pathlib import Path
 
 from devkit.core.errors import UnsafePathError
 from devkit.core.paths import normalize_relpath
-from devkit.core.receipt import CONFIG_PATH, MANAGED_PATH, OVERRIDES_PATH, RECEIPT_PATH
+from devkit.core.receipt import AGENTS_FILE, CONFIG_PATH, MANAGED_PATH, OVERRIDES_PATH, RECEIPT_PATH
 from devkit.distribution.content import Content
 from devkit.distribution.errors import UnsafeWorkspaceError
 
@@ -23,8 +23,6 @@ JOURNAL = f"{TRANSIENT}/sync-journal.json"
 LOCK = f"{TRANSIENT}/lock"
 # Pristine upstream copies taken when an override is created or accepted, for ``override diff``.
 BASELINE = f"{OVERRIDES_PATH}/.baseline"
-# Root guidance file: only its marker block is managed (see ``guidance_block``).
-AGENTS_FILE = "AGENTS.md"
 
 # Destinations the receipt may own: devkit's managed cache and native agent projections.
 OWNED_PREFIXES = (

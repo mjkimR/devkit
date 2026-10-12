@@ -171,7 +171,7 @@ them, that a stage id used by several definitions is the same stage: equal
 difference is reported as `[INVALID: shared stage '<id>' differs between <a>
 and <b>: <field>]`, because skills, runners and people recognize a stage by
 its id. `validate --format json` emits `{"ok", "roles_checked",
-"definitions": [{"id", "path", "ok", "hash", "errors"}], "errors"}`. Every
+"definitions": [{"id", "path", "ok", "hash", "errors"}], "errors", "notices"}`. Every
 problem is the `to_dict()` of an advisory error (`code`, `message`,
 `exit_code`, `advisory`): a definition's own `errors` add `where` (`code` is
 `WORKFLOW_DEFINITION_INVALID`, `WORKFLOW_CHECK_INVALID` or `ROLE_UNKNOWN`,
@@ -189,7 +189,9 @@ the `role` its contract declares), or a project-authored `<roles_dir>/<role>.md`
 which shadows the receipt entry. `validate`, `show`, `next` and `bind` report
 `unknown role '<role>' (no subagent contract found)` otherwise. When neither
 the receipt nor `roles_dir` exists, the check is skipped and `validate` says so
-with a `[NOTICE]`, so definitions can be authored before any bundle is synced.
+with a `WORKFLOW_ROLES_UNCHECKED` notice (a `[NOTICE]` block on stderr, `notices`
+in JSON, `roles_checked: false`), so definitions can be authored before any
+bundle is synced.
 `[DELEGATE: role=<role> isolation=<level> contract=<path>]` then cites the
 contract that defines the role.
 

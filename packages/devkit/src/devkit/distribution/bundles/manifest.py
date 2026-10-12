@@ -10,6 +10,7 @@ from typing import Any
 from devkit.core.errors import UnsafePathError
 from devkit.core.paths import normalize_relpath
 from devkit.distribution.bundles.common import AGENT_NAMES, ALL, SLUG, VERSION
+from devkit.distribution.bundles.fragments import read_fragment, references
 from devkit.distribution.bundles.instructions import read_instruction_header
 from devkit.distribution.bundles.playbooks import playbook_entry, read_playbook_header
 from devkit.distribution.bundles.subagents import read_contract, subagent_entry
@@ -17,7 +18,18 @@ from devkit.distribution.bundles.workflows import read_workflow_header, workflow
 from devkit.distribution.errors import BundleError, SelectionError
 
 KINDS = frozenset(
-    {"skill", "subagent", "instruction", "playbook", "rule", "workflow", "workflow-check", "gate", "document"}
+    {
+        "skill",
+        "subagent",
+        "instruction",
+        "playbook",
+        "rule",
+        "workflow",
+        "workflow-check",
+        "gate",
+        "document",
+        "guidance",
+    }
 )
 # Workspace roots a seeded target may never enter: devkit's own state, Git, agent projections
 # and the root guidance file are owned by devkit, the host or the project in other ways.
@@ -47,6 +59,8 @@ class Bundle:
     assets: tuple[Asset, ...]
     presets: dict[str, tuple[str, ...]]
     default_preset: str | None = None
+    # Selected without ``devkit add`` (with ``default_preset``); honored only for bundles of the ``devkit`` distribution.
+    auto_select: bool = False
 
     @property
     def preset_names(self) -> list[str]:
@@ -54,6 +68,14 @@ class Bundle:
 
     def asset(self, asset_id: str) -> Asset | None:
         return next((asset for asset in self.assets if asset.id == asset_id), None)
+
+    def single_file_source(self, asset_id: str) -> str | None:
+        """The one source file of a deployed, non-guidance asset: what a ``{path:<asset-id>}`` placeholder may name."""
+        asset = self.asset(asset_id)
+        if asset is None or asset.kind == "guidance" or asset.seeded or len(asset.sources) != 1:
+            return None
+        ((variant, source),) = asset.sources
+        return source if variant == "common" and (self.root / source).is_file() else None
 
     def select(self, presets: list[str] | tuple[str, ...]) -> set[str]:
         """Return the union of asset IDs selected by ``presets``."""
@@ -172,6 +194,10 @@ def _check_source(root: Path, asset_id: str, kind: str, variant: str, source: st
         read_playbook_header(playbook_entry(root, source).read_bytes(), f"{asset_id}/{source}")
     if kind == "workflow":
         read_workflow_header(workflow_entry(root, source).read_bytes(), f"{asset_id}/{source}")
+    if kind == "guidance":
+        if not path.is_file():
+            raise BundleError(f"{asset_id}: guidance source must be one file")
+        read_fragment(path.read_bytes(), f"{asset_id}/{source}")
     if kind == "subagent" and variant == "common":
         read_contract(subagent_entry(root, source).read_bytes(), f"{asset_id}/{source}", asset_id)
 
@@ -191,6 +217,8 @@ def _asset(root: Path, raw: Any) -> Asset:
         raise BundleError(f"{asset_id}: only document assets can be seeded")
     if seeded and "variants" in item:
         raise BundleError(f"{asset_id}: a seeded asset declares a single source")
+    if kind == "guidance" and "variants" in item:
+        raise BundleError(f"{asset_id}: a guidance asset declares a single source")
     if ("target" in item) != seeded:
         raise BundleError(f"{asset_id}: target is required for seeded assets and not allowed otherwise")
     target_path = seed_target(item["target"], asset_id) if seeded else None
@@ -209,13 +237,30 @@ def _asset(root: Path, raw: Any) -> Asset:
     return Asset(asset_id, kind, tuple(sources), seeded, target_path)
 
 
+def _check_fragment_references(bundle: Bundle) -> None:
+    """Every ``{path:<asset-id>}`` names a single-file asset that each preset selecting the fragment selects too."""
+    for asset in bundle.assets:
+        if asset.kind != "guidance":
+            continue
+        ((_, source),) = asset.sources
+        named = references(read_fragment((bundle.root / source).read_bytes(), f"{asset.id}/{source}"))
+        for ref in named:
+            if bundle.single_file_source(ref) is None:
+                raise BundleError(
+                    f"{asset.id}: {{path:{ref}}} must name a single-file, non-guidance asset of the bundle"
+                )
+        for preset, selected in bundle.presets.items():
+            if asset.id in selected and (missing := [ref for ref in named if ref not in selected]):
+                raise BundleError(f"{preset}: selects guidance {asset.id} without the assets it names: {missing}")
+
+
 def load_bundle(root: Path) -> Bundle:
     root = root.resolve()
     manifest = safe_source(root, "bundle.toml")
     try:
         data = _mapping(
             tomllib.loads(manifest.read_text("utf-8")),
-            {"schema", "name", "version", "assets", "presets", "default_preset"},
+            {"schema", "name", "version", "assets", "presets", "default_preset", "auto_select"},
             "bundle",
         )
     except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
@@ -254,7 +299,13 @@ def load_bundle(root: Path) -> Bundle:
     default_preset = data.get("default_preset")
     if default_preset is not None and (not isinstance(default_preset, str) or default_preset not in {ALL, *presets}):
         raise BundleError(f"default_preset: expected {ALL} or a declared preset")
-    bundle = Bundle(root, name, version, tuple(assets), presets, default_preset)
+    auto_select = data.get("auto_select", False)
+    if type(auto_select) is not bool:
+        raise BundleError("auto_select must be a boolean")
+    if auto_select and default_preset is None:
+        raise BundleError("auto_select requires default_preset")
+    bundle = Bundle(root, name, version, tuple(assets), presets, default_preset, auto_select)
+    _check_fragment_references(bundle)
     if bundle.constitution is not None:
         try:
             bundle.constitution.read_text(encoding="utf-8")

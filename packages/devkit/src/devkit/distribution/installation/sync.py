@@ -184,6 +184,7 @@ def _plan_guidance_block(
     enabled: bool,
     bundles: list[str],
     entry_skills: list[str],
+    fragments: list[str],
 ) -> str | None:
     """Add the root ``AGENTS.md`` change for the managed block; return the hash to record.
 
@@ -230,7 +231,7 @@ def _plan_guidance_block(
             changes[AGENTS_FILE] = None if remainder is None else Content(remainder.encode("utf-8"), mode)
             actions.append(Action(AGENTS_FILE, "remove" if remainder is None else "update"))
         return None
-    desired = guidance_block.render(bundles, entry_skills)
+    desired = guidance_block.render(bundles, entry_skills, fragments)
     if existing is None or guidance_block.normalize(existing) != desired:
         changes[AGENTS_FILE] = Content(guidance_block.compose(text, desired).encode("utf-8"), mode)
         actions.append(Action(AGENTS_FILE, "create" if current is None else "update"))
@@ -408,6 +409,7 @@ def sync_locked(
         enabled=config.guidance_block,
         bundles=list(selection.presets),
         entry_skills=[kind for kind in GENERATED_SKILLS if any(asset.kind == kind for asset in inventory.assets)],
+        fragments=inventory.fragments(),
     )
     overrides = {**_carried_overrides(root, previous, set(selection.presets)), **inventory.overrides}
     receipt = _build_receipt(selection, inventory, overrides, seeded, block_hash)

@@ -2,6 +2,8 @@ schema = 1
 name = "devkit"
 version = "0.1.0"
 default_preset = "core"
+# Deployed without `devkit add`; `devkit remove` opts a project out.
+auto_select = true
 
 # How a repository consumes devkit-managed assets: context loading, playbooks,
 # rules, gates, overrides and the sync lifecycle.

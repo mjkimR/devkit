@@ -46,6 +46,10 @@ RECEIPT_PATH = ".devkit/installation.json"
 CONFIG_PATH = ".devkit/config.toml"
 MANAGED_PATH = ".devkit/managed"
 OVERRIDES_PATH = ".devkit/overrides"
+# The guidance block ``devkit sync`` manages in the root ``AGENTS.md`` (its digest is ``guidance_block``).
+AGENTS_FILE = "AGENTS.md"
+GUIDANCE_START = "<!-- DEVKIT:START -->"
+GUIDANCE_END = "<!-- DEVKIT:END -->"
 SCHEMA = 1
 FILE_MODES = frozenset({0o644, 0o755})
 

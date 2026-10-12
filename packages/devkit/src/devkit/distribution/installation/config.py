@@ -1,9 +1,9 @@
 """Project configuration (``.devkit/config.toml``): bundle selection.
 
-A bundle from another distribution is deployed only when ``[presets]`` names it.
-A built-in bundle (shipped by the ``devkit`` distribution itself) is deployed
-with its default preset unless ``[presets]`` names it, which selects other
-presets, or sets it to ``false``, which opts the project out. Native
+A bundle is deployed when ``[presets]`` names it. A built-in bundle (shipped by
+the ``devkit`` distribution itself) that declares ``auto_select`` is also
+deployed with its default preset unless ``[presets]`` names it, which selects
+other presets, or sets it to ``false``, which opts the project out. Native
 projections go to every supported agent unless ``agents`` narrows the list;
 ``agents = []`` turns projection off.
 """
@@ -147,11 +147,11 @@ def parse_selection(value: object) -> tuple[dict[str, list[str]], frozenset[str]
 
 
 def default_selection(installed: list[InstalledBundle], config: ProjectConfig) -> dict[str, list[str]]:
-    """Built-in bundles the configuration neither names nor opts out of, with their default preset."""
+    """Auto-selected built-in bundles the configuration neither names nor opts out of, with their default preset."""
     return {
         item.bundle.name: [item.bundle.default_preset]
         for item in installed
-        if item.builtin
+        if item.auto_selected
         and item.bundle.default_preset is not None
         and item.bundle.name not in config.presets
         and item.bundle.name not in config.opted_out
@@ -161,6 +161,14 @@ def default_selection(installed: list[InstalledBundle], config: ProjectConfig) -
 def effective_selection(installed: list[InstalledBundle], config: ProjectConfig) -> dict[str, list[str]]:
     """What ``devkit sync`` deploys without command-line selections: defaults, then ``[presets]``."""
     return {**default_selection(installed, config), **config.presets}
+
+
+def merge_selection(
+    installed: list[InstalledBundle], config: ProjectConfig, requested: dict[str, list[str]]
+) -> dict[str, list[str]]:
+    """``requested`` joined with the presets each bundle already deploys, existing presets first."""
+    current = effective_selection(installed, config)
+    return {name: list(dict.fromkeys([*current.get(name, []), *presets])) for name, presets in requested.items()}
 
 
 def validate_playbooks_config(playbooks: object) -> dict[str, int | float]:

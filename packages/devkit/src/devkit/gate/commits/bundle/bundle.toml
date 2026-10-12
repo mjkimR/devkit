@@ -1,0 +1,20 @@
+schema = 1
+name = "git-commits"
+version = "0.1.0"
+# Built in but opt-in (no auto_select): `devkit add git-commits` deploys it.
+default_preset = "core"
+
+# Commit message conventions: types, optional scope, subject, body, footers and output format.
+[[assets]]
+id = "git-commits"
+kind = "instruction"
+source = "instructions/git-commits.md"
+
+# The AGENTS.md line that sends agents to the conventions before they write a commit message.
+[[assets]]
+id = "commit-pointer"
+kind = "guidance"
+source = "guidance/commit-pointer.md"
+
+[presets.core]
+assets = ["git-commits", "commit-pointer"]

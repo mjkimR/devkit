@@ -246,6 +246,7 @@ class InstalledEntry:
             "presets": bundle.preset_names,
             "default_preset": bundle.default_preset,
             "builtin": self.item.builtin,
+            "auto_select": self.item.auto_selected,
             "selected": self.selected,
             "opted_out": self.opted_out,
             "assets": [{"id": asset.id, "kind": asset.kind} for asset in bundle.assets],

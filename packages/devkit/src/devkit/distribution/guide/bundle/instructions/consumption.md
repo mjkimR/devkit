@@ -101,8 +101,9 @@ hash fails the gate; its `[FIX]` says to run `devkit sync` and commit the receip
 
 ```bash
 uv run devkit add <bundle>            # select with the bundle's default preset, then sync
-uv run devkit add <bundle>:<preset>   # select a specific preset
-uv run devkit remove <bundle>         # deselect (a built-in bundle is recorded as false), then sync
+uv run devkit add <bundle>:<preset>   # add a preset to those the bundle already deploys
+uv run devkit remove <bundle>         # deselect (devkit and advisory are recorded as false), then sync
+uv run devkit sync --preset <bundle>:<preset>   # replace a bundle's presets
 uv run devkit sync                    # converge to .devkit/config.toml
 uv run devkit sync --no-save --agent claude-code --agent codex   # narrow projections for one run only
 ```

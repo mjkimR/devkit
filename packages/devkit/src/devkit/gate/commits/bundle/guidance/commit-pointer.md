@@ -1,0 +1,1 @@
+- Before drafting or creating a commit message, read `{path:git-commits}` and follow it.
