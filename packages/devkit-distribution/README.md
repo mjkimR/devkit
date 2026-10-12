@@ -30,7 +30,7 @@ In this monorepo, run `uv sync --all-packages` first, then run `uv run --package
 
 | Command | Category | Description |
 | --- | --- | --- |
-| `devkit sync [options]` | Lifecycle | Synchronizes selected bundles into `.devkit/managed/` and projects native agent assets. |
+| `devkit sync [options]` | Lifecycle | Synchronizes selected bundles into `.devkit/managed/`, projects native agent assets, and warns about stray files under the managed root. |
 | `devkit add <bundle>[:<preset>]...` | Selection | Selects bundles in `.devkit/config.toml` (default preset when none is named) and synchronizes. |
 | `devkit remove <bundle>...` | Selection | Deselects bundles in `.devkit/config.toml` and synchronizes. |
 | `devkit list [--target <dir>]` | Inspection | Outputs JSON listing installed content packages, bundle metadata, presets, selection state, and asset paths. |
@@ -67,12 +67,21 @@ max_bytes = 8192
 
 [rules.phase_overrides]
 RULE-markdown-link = "hygiene"
+
+[rules.severity_overrides]
+RULE-file-length = "error"
+
+[rules.settings.RULE-file-length]
+max_lines = 300
 ```
 
 `devkit add`, `devkit remove`, and the `devkit sync` selection flags edit these entries for you (`--no-save` for a one-off run).
 Running `devkit sync` applies the configured agents and presets without repeated CLI flags, and lists installed but unselected bundles.
 The `[rules]` table is owned by `agent-rule-engine` and is passed through untouched by `devkit sync`; see the
-[agent-rule-engine README](../agent-rule-engine/README.md#phase-overrides-and-promotions).
+[agent-rule-engine README](../agent-rule-engine/README.md#project-configuration). Rules shipped as `kind = "rule"`
+assets are recorded in the receipt and loaded by `agent-rules` without flags, and subagents may ship either native
+files per agent or one host-neutral role contract that `devkit sync` renders per agent; see
+[Native Agent Projections](../../docs/distribution/agent-projections.md).
 
 ---
 

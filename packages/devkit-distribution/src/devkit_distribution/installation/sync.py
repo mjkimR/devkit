@@ -23,6 +23,28 @@ from .transaction import (
     snapshot,
 )
 
+MANAGED = ".devkit/managed"
+
+
+def stray_managed_files(root: Path, owned: set[str]) -> list[str]:
+    """Files under the managed root that neither the receipt nor the desired inventory owns.
+
+    The managed root is a regenerated cache; a file placed there by hand is
+    never deployed, never removed, and may be picked up by consumers that scan
+    the directory (such as rule loading). It is reported, not deleted.
+    """
+    managed = root / MANAGED
+    if not managed.is_dir():
+        return []
+    stray = []
+    for path in sorted(managed.rglob("*")):
+        if path.is_symlink() or not path.is_file():
+            continue
+        rel = path.relative_to(root).as_posix()
+        if rel not in owned:
+            stray.append(rel)
+    return stray
+
 
 def read_receipt(root: Path) -> dict:
     receipt = read_json(root, RECEIPT)
@@ -165,6 +187,7 @@ def sync_project(
             apply_changes(root, changes)
         return {
             "dry_run": dry_run,
+            "stray": stray_managed_files(root, old_files.keys() | desired.keys()),
             "selection": receipt["selection"],
             "packages": packages,
             "assets": assets,

@@ -1,7 +1,9 @@
 """Project-level rule engine configuration read from ``.devkit/config.toml``.
 
 Only the ``[rules]`` table is interpreted here; other tables belong to
-``devkit-distribution`` and are ignored. A missing file yields an empty config.
+``devkit-distribution`` and ``agent-workflow-engine`` and are ignored. A missing
+file yields an empty config. Entries that need the loaded rules to validate
+(unknown rule IDs, settings keys) are checked by the evaluator.
 """
 
 from __future__ import annotations
@@ -9,12 +11,19 @@ from __future__ import annotations
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
-from agent_rule_engine.engine.models import Phase
+from agent_rule_engine.engine.models import Phase, Severity
+from agent_rule_engine.engine.settings import Override, RawSettings, validate_pattern
 
 CONFIG_PATH = ".devkit/config.toml"
 RULES_TABLE = "rules"
 PHASE_OVERRIDES_KEY = "phase_overrides"
+SEVERITY_OVERRIDES_KEY = "severity_overrides"
+SETTINGS_KEY = "settings"
+OVERRIDES_KEY = "overrides"
+PATH_KEY = "path"
+KNOWN_KEYS = {PHASE_OVERRIDES_KEY, SEVERITY_OVERRIDES_KEY, SETTINGS_KEY}
 
 
 class ConfigError(ValueError):
@@ -29,10 +38,75 @@ class RulesConfig:
     to. Only ``hygiene`` is accepted: an override parks a linter rule while its
     existing violations are cleared, and is removed once ``check --phase hygiene``
     reports ``remaining=0`` for that rule.
+
+    ``severity_overrides`` maps a rule ID to the severity its violations report
+    in this project. ``settings`` holds each configured rule's values and path
+    overrides; they are matched to the rule's declared settings at evaluation.
     """
 
     phase_overrides: dict[str, Phase] = field(default_factory=dict)
+    severity_overrides: dict[str, Severity] = field(default_factory=dict)
+    settings: dict[str, RawSettings] = field(default_factory=dict)
     source: Path | None = None
+
+
+def _table(value: object, context: str) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise ConfigError(f"config {context}: expected a table")
+    return value
+
+
+def _phase_overrides(raw: object) -> dict[str, Phase]:
+    if not isinstance(raw, dict):
+        raise ConfigError(f"config {RULES_TABLE}.{PHASE_OVERRIDES_KEY}: expected a table of rule ID to phase")
+    overrides: dict[str, Phase] = {}
+    for rule_id in sorted(raw):
+        value = raw[rule_id]
+        if not isinstance(value, str) or value.lower() != Phase.HYGIENE.value:
+            raise ConfigError(
+                f"config {RULES_TABLE}.{PHASE_OVERRIDES_KEY}.{rule_id}: {value!r} is not 'hygiene'; "
+                "set it to 'hygiene' or remove the entry to keep the rule's default phase"
+            )
+        overrides[rule_id] = Phase.HYGIENE
+    return overrides
+
+
+def _severity_overrides(raw: object) -> dict[str, Severity]:
+    overrides: dict[str, Severity] = {}
+    table = _table(raw, f"{RULES_TABLE}.{SEVERITY_OVERRIDES_KEY}")
+    allowed = [s.value for s in Severity]
+    for rule_id in sorted(table):
+        value = table[rule_id]
+        if not isinstance(value, str) or value.lower() not in allowed:
+            raise ConfigError(
+                f"config {RULES_TABLE}.{SEVERITY_OVERRIDES_KEY}.{rule_id}: {value!r} is not one of {allowed}"
+            )
+        overrides[rule_id] = Severity(value.lower())
+    return overrides
+
+
+def _settings(raw: object) -> dict[str, RawSettings]:
+    result: dict[str, RawSettings] = {}
+    table = _table(raw, f"{RULES_TABLE}.{SETTINGS_KEY}")
+    for rule_id in sorted(table):
+        context = f"{RULES_TABLE}.{SETTINGS_KEY}.{rule_id}"
+        entry = dict(_table(table[rule_id], context))
+        overrides: list[Override] = []
+        raw_overrides = entry.pop(OVERRIDES_KEY, [])
+        if not isinstance(raw_overrides, list):
+            raise ConfigError(f"config {context}.{OVERRIDES_KEY}: expected an array of tables")
+        for index, item in enumerate(raw_overrides):
+            values = dict(_table(item, f"{context}.{OVERRIDES_KEY}[{index}]"))
+            pattern = values.pop(PATH_KEY, None)
+            try:
+                validate_pattern(pattern)  # type: ignore[arg-type]
+            except ValueError as exc:
+                raise ConfigError(f"config {context}.{OVERRIDES_KEY}[{index}].{PATH_KEY}: {exc}") from None
+            if not values:
+                raise ConfigError(f"config {context}.{OVERRIDES_KEY}[{index}]: no settings besides path")
+            overrides.append(Override(str(pattern), values))
+        result[rule_id] = RawSettings(entry, tuple(overrides))
+    return result
 
 
 def parse_rules_config(data: object, source: Path | None = None) -> RulesConfig:
@@ -42,26 +116,18 @@ def parse_rules_config(data: object, source: Path | None = None) -> RulesConfig:
     rules = data.get(RULES_TABLE)
     if rules is None:
         return RulesConfig(source=source)
-    if not isinstance(rules, dict):
-        raise ConfigError(f"config {RULES_TABLE}: expected a table")
-    unknown = set(rules) - {PHASE_OVERRIDES_KEY}
+    rules = _table(rules, RULES_TABLE)
+    unknown = set(rules) - KNOWN_KEYS
     if unknown:
         raise ConfigError(f"config {RULES_TABLE}: unknown fields: {sorted(unknown)}")
-
-    overrides: dict[str, Phase] = {}
-    raw = rules.get(PHASE_OVERRIDES_KEY)
-    if raw is not None:
-        if not isinstance(raw, dict):
-            raise ConfigError(f"config {RULES_TABLE}.{PHASE_OVERRIDES_KEY}: expected a table of rule ID to phase")
-        for rule_id in sorted(raw):
-            value = raw[rule_id]
-            if not isinstance(value, str) or value.lower() != Phase.HYGIENE.value:
-                raise ConfigError(
-                    f"config {RULES_TABLE}.{PHASE_OVERRIDES_KEY}.{rule_id}: {value!r} is not 'hygiene'; "
-                    "set it to 'hygiene' or remove the entry to keep the rule's default phase"
-                )
-            overrides[rule_id] = Phase.HYGIENE
-    return RulesConfig(phase_overrides=overrides, source=source)
+    return RulesConfig(
+        phase_overrides=_phase_overrides(rules[PHASE_OVERRIDES_KEY]) if PHASE_OVERRIDES_KEY in rules else {},
+        severity_overrides=_severity_overrides(rules[SEVERITY_OVERRIDES_KEY])
+        if SEVERITY_OVERRIDES_KEY in rules
+        else {},
+        settings=_settings(rules[SETTINGS_KEY]) if SETTINGS_KEY in rules else {},
+        source=source,
+    )
 
 
 def load_rules_config(workspace_root: Path) -> RulesConfig:

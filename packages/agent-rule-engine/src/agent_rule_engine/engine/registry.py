@@ -4,16 +4,19 @@ import hashlib
 import importlib.util
 import inspect
 import sys
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
 from agent_rule_engine.engine.models import Rule
 from agent_rule_engine.rules import (
     BaseRule,
+    CleanArtifactsRule,
     DocumentReferenceRule,
     FileLengthRule,
     IdConventionRule,
     MarkdownLinkRule,
+    SecretLeakRule,
     SpecFormatRule,
 )
 
@@ -38,13 +41,20 @@ class RuleRegistry:
         return list(self._rules.values())
 
     def discover_from_dir(self, rules_dir: Path) -> list[Rule]:
-        """Dynamically load rules from a directory containing python files."""
-        discovered: list[Rule] = []
+        """Dynamically load rules from every Python file under a directory, in sorted order."""
         if not rules_dir.exists() or not rules_dir.is_dir():
-            return discovered
+            return []
+        return self.discover_from_files(sorted(rules_dir.rglob("*.py")))
 
-        for py_file in sorted(rules_dir.rglob("*.py")):
-            if py_file.name.startswith(("_", ".")):
+    def discover_from_files(self, files: Iterable[Path]) -> list[Rule]:
+        """Load ``BaseRule`` subclasses defined in the given Python files.
+
+        Files whose name starts with ``_`` or ``.`` are skipped. A loading
+        failure is recorded in ``errors`` and does not stop the other files.
+        """
+        discovered: list[Rule] = []
+        for py_file in files:
+            if py_file.name.startswith(("_", ".")) or py_file.suffix != ".py":
                 continue
 
             digest = hashlib.sha256(str(py_file.resolve()).encode()).hexdigest()[:16]
@@ -82,4 +92,6 @@ def default_registry() -> RuleRegistry:
     registry.register(DocumentReferenceRule())
     registry.register(MarkdownLinkRule())
     registry.register(FileLengthRule())
+    registry.register(SecretLeakRule())
+    registry.register(CleanArtifactsRule())
     return registry

@@ -15,3 +15,10 @@ uv run agent-workflow validate examples/bundles/delivery-workflow/workflows/dire
 The definition declares four stages (intent, build-verify, review, integrate)
 with two approval gates, `direction` and `integration`, whose policies a
 consumer sets in `.devkit/config.toml` under `[workflow.approvals]`.
+
+The review stage names the `reviewer` role with `isolation: preferred`. The
+bundle ships that role as a host-neutral contract
+(`subagents/reviewer.md`, a `kind = "subagent"` asset): `devkit sync` renders
+`.claude/agents/reviewer.md` from its `hosts.claude-code` block and
+`.codex/agents/reviewer.toml` from `hosts.codex`, so `[DELEGATE: role=reviewer]`
+resolves to a real subagent on each host.

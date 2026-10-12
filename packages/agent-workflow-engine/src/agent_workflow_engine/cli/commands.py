@@ -154,15 +154,26 @@ class _Env:
 
 def _lint_func(root: Path, files: list[str]) -> list[str]:
     """Run agent-rule-engine's linter phase over ``files`` and describe each violation."""
-    from agent_rule_engine import Phase, RuleContext, default_registry
+    from agent_rule_engine import Phase, RuleContext, default_registry, managed_rule_paths
     from agent_rule_engine import evaluate as rules_evaluate
     from agent_rule_engine.engine.config import load_rules_config
 
     if not files:
         return []
-    overrides = dict(load_rules_config(root).phase_overrides)
-    ctx = RuleContext(workspace_root=root, changed_files=files, phase=Phase.LINTER, phase_overrides=overrides)
-    result = rules_evaluate(ctx, default_registry().get_all())
+    config = load_rules_config(root)
+    ctx = RuleContext(
+        workspace_root=root,
+        changed_files=files,
+        phase=Phase.LINTER,
+        phase_overrides=dict(config.phase_overrides),
+        severity_overrides=dict(config.severity_overrides),
+        rule_settings=dict(config.settings),
+    )
+    registry = default_registry()
+    registry.discover_from_files(managed_rule_paths(root))
+    result = rules_evaluate(ctx, registry.get_all())
+    if registry.errors or result.errors:
+        raise RuntimeError("; ".join([*registry.errors, *result.errors]))
     if result.errors:
         raise RuntimeError("; ".join(result.errors))
     return [

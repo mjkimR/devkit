@@ -30,8 +30,10 @@ just check
 # Run tests
 just test
 
-# Run governance rules check
+# Run governance rules check (working tree, staged tree, or CI diff)
 just rules-check
+just rules-check --staged
+just rules-check --ci --base origin/main
 ```
 
 Python 3.12+, `uv`, and `just` are required. Module commands discover projects

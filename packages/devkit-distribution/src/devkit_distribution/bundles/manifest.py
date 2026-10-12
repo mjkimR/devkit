@@ -107,6 +107,7 @@ def source_files(root: Path, source: str) -> list[Path]:
 
 def load_bundle(root: Path) -> Bundle:
     from .playbooks import playbook_entry, read_playbook_header
+    from .subagents import read_contract, subagent_entry
     from .workflows import read_workflow_header, workflow_entry
 
     root = root.resolve()
@@ -162,6 +163,9 @@ def load_bundle(root: Path) -> Bundle:
             if kind == "workflow":
                 entry = workflow_entry(root, source)
                 read_workflow_header(entry.read_bytes(), f"{asset_id}/{source}")
+            if kind == "subagent" and target == "common":
+                entry = subagent_entry(root, source)
+                read_contract(entry.read_bytes(), f"{asset_id}/{source}", asset_id)
             sources.append((target, source))
         assets.append(Asset(asset_id, kind, tuple(sources)))
     raw_presets = data.get("presets", {})

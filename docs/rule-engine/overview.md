@@ -31,20 +31,24 @@ The rule engine is implemented in `packages/agent-rule-engine/src/agent_rule_eng
 src/agent_rule_engine/
 ├── engine/                  # Core evaluation engine & contracts
 │   ├── models.py            # Violation, RuleContext, Rule, Autofixable protocols
-│   ├── config.py            # [rules] section of .devkit/config.toml (phase overrides)
+│   ├── config.py            # [rules] section of .devkit/config.toml (phase/severity overrides, settings)
+│   ├── settings.py          # Typed per-rule settings, path-scoped overrides, resolver
+│   ├── discovery.py         # Rule assets recorded by devkit sync in the installation receipt
 │   ├── phases.py            # Effective phase resolution, overrides, promotions
 │   ├── registry.py          # RuleRegistry & default_registry
-│   └── evaluator.py         # Sequential rule evaluation & convergence recheck
-├── workspace/               # Shared file caching & document catalog
+│   └── evaluator.py         # Policy validation, sequential rule evaluation & convergence recheck
+├── workspace/               # Shared file caching, document catalog and Git snapshots
 │   ├── cache.py             # WorkspaceCache (bytes, text, YAML frontmatter, links)
-│   └── catalog.py           # WorkspaceCatalog (specs & docs indexes, references)
+│   ├── catalog.py           # WorkspaceCatalog (specs & docs indexes, references)
+│   └── snapshot.py          # Staged / CI Git trees materialized for gate evaluation
 ├── rules/                   # Built-in governance rules
-│   ├── base.py              # Base rule helper class
+│   ├── base.py              # Base rule helper class (settings, guide, promote_to)
 │   ├── specification/       # Metadata, document IDs, and reference checks
 │   ├── markdown/            # Relative link validation & repair
-│   └── hygiene/             # File length & formatting checks
+│   ├── hygiene/             # File length checks (typed settings, guide)
+│   └── safety/              # Secret leak and generated artifact checks for snapshot gates
 └── cli/                     # CLI entry point
-    └── commands.py          # Click commands: check, fix and phases
+    └── commands.py          # Click commands: check, fix, phases and explain
 ```
 
 ---
@@ -52,5 +56,6 @@ src/agent_rule_engine/
 ## 3. Integration with Content Wheels and devkit-distribution
 
 `agent-rule-engine` works hand-in-hand with `devkit-distribution`:
-- **Content Wheels**: Rule packages can be bundled into Python content wheels and installed via `uv`.
-- **Pre-commit & CI**: Workspaces run `just rules-check` or `just rules-fix` in CI pipelines and pre-commit hooks to guarantee repository integrity before merges.
+- **Content Wheels**: Rule packages can be bundled into Python content wheels (`kind = "rule"` assets) and installed via `uv`. `devkit sync` records each deployed rule file in `.devkit/installation.json`, and `agent-rules` loads them from the receipt without any flag.
+- **Project Policy**: A consumer changes a distributed rule's phase, severity or settings only through `[rules]` in `.devkit/config.toml`; managed rule files are hash-checked and never edited in place.
+- **Pre-commit & CI**: Workspaces run `agent-rules check --staged` in pre-commit hooks and `agent-rules check --ci --base <ref>` in CI pipelines. Both evaluate the exact Git tree, not the working directory, so the gate result cannot depend on unstaged or ignored files.

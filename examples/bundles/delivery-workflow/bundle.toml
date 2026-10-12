@@ -8,5 +8,10 @@ id = "direct-delivery"
 kind = "workflow"
 source = "workflows/direct-delivery.md"
 
+[[assets]]
+id = "reviewer"
+kind = "subagent"
+source = "subagents/reviewer.md"
+
 [presets.delivery]
-assets = ["direct-delivery"]
+assets = ["direct-delivery", "reviewer"]

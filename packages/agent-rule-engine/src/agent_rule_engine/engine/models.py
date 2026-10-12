@@ -5,6 +5,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
+from agent_rule_engine.engine.settings import RawSettings, SettingsResolver
 from agent_rule_engine.workspace.cache import WorkspaceCache
 
 
@@ -57,9 +58,14 @@ class RuleContext:
     fix: bool = False
     dry_run: bool = False
     cache: WorkspaceCache = field(default=None)  # type: ignore[assignment]
-    options: dict[str, Any] = field(default_factory=dict)
     # Project policy moving rules out of their declared phase (``[rules.phase_overrides]``).
     phase_overrides: dict[str, Phase] = field(default_factory=dict)
+    # Project policy changing the severity a rule reports (``[rules.severity_overrides]``).
+    severity_overrides: dict[str, Severity] = field(default_factory=dict)
+    # Project values for rule settings (``[rules.settings.<id>]``), matched to rules by the evaluator.
+    rule_settings: dict[str, RawSettings] = field(default_factory=dict)
+    # Resolved settings per rule; populated by ``evaluate`` before any check runs.
+    settings_resolvers: dict[str, SettingsResolver] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         self.workspace_root = self.workspace_root.resolve()
@@ -87,6 +93,22 @@ class RuleContext:
         except ValueError:
             return False
         return relative in self.changed_files
+
+    def settings(self, rule: Rule, path: str | Path | None = None) -> Any:
+        """Effective settings of ``rule`` for a workspace-relative ``path``.
+
+        Without a resolver (library callers that skip ``evaluate``) the rule's
+        declared defaults are returned.
+        """
+        resolver = self.settings_resolvers.get(rule.id)
+        if resolver is None:
+            return getattr(rule, "settings", None)
+        if path is None:
+            return resolver.resolve()
+        rel = Path(path)
+        if rel.is_absolute():
+            rel = rel.resolve().relative_to(self.workspace_root)
+        return resolver.for_file(rel.as_posix())
 
 
 @runtime_checkable

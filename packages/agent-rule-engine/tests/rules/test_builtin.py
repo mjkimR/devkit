@@ -119,7 +119,7 @@ def test_file_length_rule(temp_workspace: Path, workspace_cache: WorkspaceCache)
     doc_path.parent.mkdir(parents=True)
     doc_path.write_text("\n".join(f"Line {i}" for i in range(50)), encoding="utf-8")
 
-    ctx = RuleContext(workspace_root=temp_workspace, cache=workspace_cache, options={"max_lines": 30})
+    ctx = RuleContext(workspace_root=temp_workspace, cache=workspace_cache)
     rule = FileLengthRule(max_lines=30)
 
     violations = rule.check(ctx)

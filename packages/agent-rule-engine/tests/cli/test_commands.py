@@ -211,3 +211,202 @@ def test_cli_phases_command_flags_unknown_override(tmp_path: Path) -> None:
     result = CliRunner().invoke(cli, ["phases", "-w", str(tmp_path)])
     assert result.exit_code == 1
     assert "unknown rule: RULE-nope" in result.stderr
+
+
+# --- settings, severity overrides, guides, explain --------------------------
+
+
+def _long_doc(root: Path, rel: str, lines: int) -> None:
+    path = root / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(f"line {i}" for i in range(lines)) + "\n", encoding="utf-8")
+
+
+def test_cli_settings_override_by_path_and_guide_line(tmp_path: Path) -> None:
+    _long_doc(tmp_path, "docs/a.md", 50)
+    _long_doc(tmp_path, "docs/research/b.md", 50)
+    _write_config(
+        tmp_path,
+        "[rules.settings.RULE-file-length]\nmax_lines = 30\n"
+        "[[rules.settings.RULE-file-length.overrides]]\npath = 'docs/research/**'\nmax_lines = 100\n",
+    )
+    result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--phase", "hygiene"])
+    assert result.exit_code == 0, result.output
+    assert "docs/a.md:31" in result.output and "docs/research/b.md" not in result.output
+    assert "Guide: " in result.output and "file_length.md" in result.output
+
+
+def test_cli_invalid_settings_fail_before_checks(tmp_path: Path) -> None:
+    _write_config(tmp_path, "[rules.settings.RULE-file-length]\nmax_lines = 'many'\n")
+    result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--format", "json"])
+    assert result.exit_code == 1
+    assert json.loads(result.stdout) == []
+    assert "RULE-file-length: settings.max_lines: expected integer" in result.stderr
+
+
+def test_cli_severity_override_turns_warning_into_error(tmp_path: Path) -> None:
+    _long_doc(tmp_path, "docs/a.md", 500)
+    _write_config(tmp_path, '[rules.severity_overrides]\nRULE-file-length = "error"\n')
+    result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--phase", "hygiene"])
+    assert result.exit_code == 1
+    assert "[ERROR] RULE-file-length" in result.output
+
+
+def test_cli_explain_text_and_json(tmp_path: Path) -> None:
+    _write_config(
+        tmp_path,
+        '[rules.severity_overrides]\nRULE-file-length = "error"\n'
+        "[rules.settings.RULE-file-length]\nmax_lines = 300\n"
+        "[[rules.settings.RULE-file-length.overrides]]\npath = 'docs/**'\nmax_lines = 800\n",
+    )
+    runner = CliRunner()
+    text = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-file-length"])
+    assert text.exit_code == 0, text.output
+    assert "Severity: warning (effective error)" in text.output
+    assert "max_lines = 300 (default 400)" in text.output
+    assert "[docs/**] max_lines = 800" in text.output
+    assert "# [RULE-file-length]" in text.output
+
+    as_json = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-file-length", "--format", "json"])
+    data = json.loads(as_json.stdout)
+    assert data["effective_severity"] == "error" and data["settings"]["settings"]["max_lines"] == 300
+    assert data["settings"]["overrides"] == [{"path": "docs/**", "max_lines": 800}]
+
+    unknown = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-nope"])
+    assert unknown.exit_code == 1 and "unknown rule: RULE-nope" in unknown.stderr
+
+    plain = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-markdown-link"])
+    assert plain.exit_code == 0 and "Settings: none" in plain.output
+
+
+# --- synchronized rule assets -----------------------------------------------
+
+
+def test_cli_loads_rules_recorded_in_installation_receipt(tmp_path: Path) -> None:
+    rules_dir = tmp_path / ".devkit/managed/team/rules"
+    rules_dir.mkdir(parents=True)
+    (rules_dir / "no_todo.py").write_text("""from agent_rule_engine import RuleContext, Violation
+from agent_rule_engine.rules import BaseRule
+
+
+class NoTodoRule(BaseRule):
+    def __init__(self) -> None:
+        super().__init__(id="RULE-no-todo", name="no-todo", description="no TODO")
+
+    def check(self, ctx: RuleContext) -> list[Violation]:
+        out = []
+        for p in ctx.cache.find_files(ctx.workspace_root, extensions=(".md",)):
+            if "TODO" in ctx.cache.read_text(p):
+                out.append(Violation(self.id, p.relative_to(ctx.workspace_root).as_posix(), 1, "TODO found"))
+        return out
+""")
+    (tmp_path / ".devkit/installation.json").write_text(
+        json.dumps(
+            {
+                "schema": 1,
+                "assets": [
+                    {
+                        "bundle": "team",
+                        "id": "rules",
+                        "kind": "rule",
+                        "paths": [".devkit/managed/team/rules/no_todo.py"],
+                    }
+                ],
+            }
+        )
+    )
+    (tmp_path / "notes.md").write_text("TODO\n")
+    result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--format", "json"])
+    assert result.exit_code == 1
+    assert [v["rule_id"] for v in json.loads(result.stdout)] == ["RULE-no-todo"]
+    phases = CliRunner().invoke(cli, ["phases", "-w", str(tmp_path)])
+    assert "RULE-no-todo" in phases.output
+
+
+# --- git snapshot gates -----------------------------------------------------
+
+
+def _git(root: Path, *args: str) -> str:
+    import subprocess
+
+    return subprocess.run(["git", "-C", str(root), *args], check=True, capture_output=True, text=True).stdout.strip()
+
+
+def _repo(tmp_path: Path) -> Path:
+    root = tmp_path / "repo"
+    root.mkdir()
+    _git(root, "init", "-q", "-b", "main")
+    _git(root, "config", "user.email", "t@example.com")
+    _git(root, "config", "user.name", "t")
+    (root / "README.md").write_text("# Repo\n")
+    _git(root, "add", ".")
+    _git(root, "commit", "-q", "-m", "init")
+    return root
+
+
+def test_cli_staged_gate_sees_only_the_index(tmp_path: Path) -> None:
+    root = _repo(tmp_path)
+    (root / "docs").mkdir()
+    (root / "docs/a.md").write_text("[ok](../README.md)\n")
+    _git(root, "add", "docs")
+    (root / "docs/a.md").write_text("[broken](missing.md)\n")  # unstaged breakage is invisible
+    (root / ".env").write_text("SECRET=1\n")  # untracked, never in the snapshot
+
+    result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged"])
+    assert result.exit_code == 0, result.output
+    assert "[SNAPSHOT: mode=staged" in result.output and "changed=1" in result.output
+    assert "passed cleanly" in result.output
+
+    _git(root, "add", "docs")
+    result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "--format", "json"])
+    assert result.exit_code == 1
+    assert [v["rule_id"] for v in json.loads(result.stdout)] == ["RULE-markdown-link"]
+
+
+def test_cli_staged_gate_runs_safety_rules_and_reads_snapshot_config(tmp_path: Path) -> None:
+    root = _repo(tmp_path)
+    (root / "secrets.txt").write_text("-----BEGIN RSA PRIVATE KEY-----\n")
+    (root / "app.db").write_bytes(b"x")
+    _git(root, "add", "-f", "secrets.txt", "app.db")
+    result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "--format", "json"])
+    assert result.exit_code == 1
+    assert sorted(v["rule_id"] for v in json.loads(result.stdout)) == ["RULE-clean-artifacts", "RULE-secret-leak"]
+
+    # Policy comes from the snapshot: an unstaged config edit does not apply.
+    _write_config(root, '[rules.severity_overrides]\nRULE-secret-leak = "warning"\n')
+    result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "--format", "json"])
+    assert all(v["severity"] == "error" for v in json.loads(result.stdout))
+    _git(root, "add", ".devkit")
+    result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "--format", "json"])
+    secret = [v for v in json.loads(result.stdout) if v["rule_id"] == "RULE-secret-leak"]
+    assert secret and secret[0]["severity"] == "warning"
+
+
+def test_cli_staged_gate_with_nothing_staged(tmp_path: Path) -> None:
+    root = _repo(tmp_path)
+    result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged"])
+    assert result.exit_code == 0 and "nothing to check" in result.output
+    result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "--format", "json"])
+    assert result.exit_code == 0 and json.loads(result.stdout) == []
+
+
+def test_cli_ci_gate_uses_base_ref(tmp_path: Path) -> None:
+    root = _repo(tmp_path)
+    _git(root, "checkout", "-q", "-b", "feature")
+    (root / "docs").mkdir()
+    (root / "docs/a.md").write_text("[broken](missing.md)\n")
+    _git(root, "add", ".")
+    _git(root, "commit", "-q", "-m", "feature")
+    result = CliRunner().invoke(cli, ["check", "-w", str(root), "--ci", "--base", "main", "--format", "json"])
+    assert result.exit_code == 1
+    assert [v["file"] for v in json.loads(result.stdout)] == ["docs/a.md"]
+
+
+def test_cli_snapshot_flag_validation(tmp_path: Path) -> None:
+    root = _repo(tmp_path)
+    runner = CliRunner()
+    assert runner.invoke(cli, ["check", "-w", str(root), "--staged", "--ci"]).exit_code == 2
+    assert runner.invoke(cli, ["check", "-w", str(root), "--staged", "README.md"]).exit_code == 2
+    assert runner.invoke(cli, ["check", "-w", str(root), "--staged", "--phase", "hygiene"]).exit_code == 2
+    outside = runner.invoke(cli, ["check", "-w", str(tmp_path), "--staged"])
+    assert outside.exit_code == 1 and "git write-tree failed" in outside.output

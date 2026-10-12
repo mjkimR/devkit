@@ -55,6 +55,41 @@ class NoTodoRule(BaseRule):
 
 `promote_to` is only valid as `Phase.LINTER` on a `Phase.HYGIENE` rule; any other combination raises `ValueError` at construction. `agent-rules check --phase hygiene` reports the remaining violation count for every rule declaring a promotion, and `agent-rules phases` lists the pending transition.
 
+### Optional `settings` and `validate_settings`
+
+`BaseRule.settings` holds a frozen dataclass instance with the rule's defaults. Its fields may be `int`, `float`, `str`, `bool` or `list[str]`; any other annotation is rejected when the rule is loaded. A project changes the values, globally or per path, in `[rules.settings.<RULE-id>]` of `.devkit/config.toml` (see [Evaluation Lifecycle, section 5](evaluation-lifecycle.md#5-project-policy-severity-overrides-and-typed-settings)). Rules read the effective instance with `ctx.settings(self, path)`; without a resolver (library callers that skip `evaluate`) the defaults are returned.
+
+```python
+from dataclasses import dataclass, field
+
+@dataclass(frozen=True)
+class FileLengthSettings:
+    max_lines: int = 400
+    extensions: list[str] = field(default_factory=lambda: [".md"])
+
+class FileLengthRule(BaseRule):
+    def __init__(self) -> None:
+        super().__init__(id="RULE-file-length", name="file-length-check", description="...",
+                         phase=Phase.HYGIENE, severity=Severity.WARNING,
+                         settings=FileLengthSettings(), guide="file_length.md")
+
+    def validate_settings(self, settings: FileLengthSettings) -> None:
+        if settings.max_lines <= 0:
+            raise ValueError("max_lines must be a positive integer")
+
+    def check(self, ctx: RuleContext) -> list[Violation]:
+        for path in ctx.cache.find_files(ctx.workspace_root, extensions=None):
+            rel = path.relative_to(ctx.workspace_root).as_posix()
+            settings = ctx.settings(self, rel)
+            ...
+```
+
+`validate_settings` runs on the defaults, the configured values and every override layer before any rule executes; raise `ValueError` for values the field types cannot express. The evaluator reports the failure with the rule ID and stops.
+
+### Optional `guide`
+
+`guide` names a Markdown file relative to the module that defines the rule class. `agent-rules explain <RULE-id>` prints it and violation output cites its path, so an agent can read the full remediation without the rule carrying it in every message. Built-in guides live next to their rules (for example `rules/hygiene/file_length.md`).
+
 ### The `Autofixable` Protocol
 
 Rules that support automated deterministic repairs implement `Autofixable`:
@@ -132,11 +167,12 @@ class DocHeadingRule:
 
 The built-in rules reside in `agent_rule_engine.rules`:
 
-| Module | Rule ID Prefix | Description |
-| --- | --- | --- |
-| `rules.specification` | `SPEC-*` | Verifies YAML frontmatter metadata, unique document IDs, and valid document cross-references. |
-| `rules.markdown` | `MD-*` | Verifies that relative links in Markdown point to valid target files/anchors and fixes broken relative links. |
-| `rules.hygiene` | `HYG-*` | Warns on excessive file line counts or unstructured scratch files. |
+| Module | Rules | Phase | Description |
+| --- | --- | --- | --- |
+| `rules.specification` | `RULE-spec-format`, `RULE-id-convention`, `RULE-document-reference` | linter | Verifies YAML frontmatter metadata, document ID conventions, and valid document cross-references. |
+| `rules.markdown` | `RULE-markdown-link` | linter | Verifies that relative links in Markdown point to existing files and fixes broken relative links. |
+| `rules.hygiene` | `RULE-file-length` | hygiene | Warns on excessive line counts; `max_lines` and `extensions` are typed settings. |
+| `rules.safety` | `RULE-secret-leak`, `RULE-clean-artifacts` | linter | Flags credentials and generated artifacts among explicit targets, chiefly in `check --staged` / `--ci` gates. |
 
 ---
 
@@ -144,13 +180,16 @@ The built-in rules reside in `agent_rule_engine.rules`:
 
 ```python
 from pathlib import Path
-from agent_rule_engine import RuleContext, RuleRegistry, evaluate
+from agent_rule_engine import RuleContext, RuleRegistry, evaluate, managed_rule_paths
 
 registry = RuleRegistry()
 registry.register(DocHeadingRule())
+registry.discover_from_files(managed_rule_paths(Path(".")))   # rules synchronized by devkit
 
 ctx = RuleContext(workspace_root=Path("."))
-result = evaluate(ctx, registry=registry)
+result = evaluate(ctx, registry.get_all())
 
 print(f"Total findings: {len(result.violations)}")
 ```
+
+Rules distributed in a bundle (`kind = "rule"`) are plain Python files like the one above. `devkit sync` deploys them under `.devkit/managed/<bundle>/` and lists each file in the installation receipt; `agent-rules` loads them from there, and a project configures them through `[rules]` in `.devkit/config.toml` rather than by editing the managed copy.

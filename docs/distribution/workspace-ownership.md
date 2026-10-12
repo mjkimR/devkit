@@ -44,6 +44,7 @@ Consuming projects integrate bundles under a dedicated root directory: `.devkit/
    - The distributor strictly manages only files recorded in `installation.json`.
    - Files created manually or by other tools in native agent directories are preserved.
    - If a synchronization step targets a file that already exists but is not recorded in the receipt, it is treated as an unmanaged collision and sync aborts immediately with `CollisionError`.
+   - Files under `.devkit/managed/` that neither the receipt nor the current inventory owns are reported by `devkit sync` as `stray` (a `WARNING` on stderr) and left untouched. The managed root is a regenerated cache; a hand-placed file there is never deployed or removed, yet consumers that scan the directory could pick it up. Project-owned content belongs outside the managed root (for example custom rules under a `--rules-dir`, or an override under `.devkit/overrides/`).
 5. **User Modification Detection**:
    - If a deployed file's disk content or mode differs from its recorded receipt signature, it is treated as a user modification.
    - Sync aborts immediately across the entire project before making any disk changes.

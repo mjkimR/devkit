@@ -38,6 +38,10 @@ rules-fix +args="":
 rules-phases +args="":
     uv run --no-active --package agent-rule-engine agent-rules phases {{ args }}
 
+# Describe one rule: phase, severity, effective settings and guide
+rules-explain +args="":
+    uv run --no-active --package agent-rule-engine agent-rules explain {{ args }}
+
 # Run the workflow engine CLI (new, bind, next, show, checks, validate, list, envelope)
 workflow +args="":
     uv run --no-active --package agent-workflow-engine agent-workflow {{ args }}

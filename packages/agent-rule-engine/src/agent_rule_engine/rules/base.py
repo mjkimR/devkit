@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import inspect
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from agent_rule_engine.engine.models import Phase, Rule, Severity
 
@@ -16,6 +18,11 @@ class BaseRule(Rule):
     # Declared on a ``hygiene`` rule that is meant to become a ``linter`` rule once
     # the codebase is clean. The CLI reports remaining violations for such rules.
     promote_to: Phase | None = None
+    # Default settings as a dataclass instance; ``[rules.settings.<id>]`` may change
+    # its fields per project and per path. ``None`` means the rule has no settings.
+    settings: Any = None
+    # Markdown guide for this rule, relative to the module defining the rule class.
+    guide: str | None = None
 
     def __post_init__(self) -> None:
         if self.promote_to is None:
@@ -26,6 +33,9 @@ class BaseRule(Rule):
                 f"(got phase={self.phase.value}, promote_to={self.promote_to.value})"
             )
 
+    def validate_settings(self, settings: Any) -> None:
+        """Reject settings values the field types alone cannot express; raise ``ValueError``."""
+
     def normalize_rel_path(self, workspace_root: Path, path: str | Path) -> str:
         p = Path(path)
         if p.is_absolute():
@@ -34,3 +44,16 @@ class BaseRule(Rule):
             except ValueError:
                 return p.as_posix()
         return p.as_posix()
+
+
+def guide_path(rule: Rule) -> Path | None:
+    """Absolute path of the rule's guide document, if it declares one and the file exists."""
+    name = getattr(rule, "guide", None)
+    if not isinstance(name, str) or not name:
+        return None
+    try:
+        module_file = Path(inspect.getfile(type(rule)))
+    except (TypeError, OSError):
+        return None
+    path = (module_file.parent / name).resolve()
+    return path if path.is_file() else None

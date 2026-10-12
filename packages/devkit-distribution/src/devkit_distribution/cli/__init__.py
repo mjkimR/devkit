@@ -137,6 +137,14 @@ def _report(result: dict[str, object]) -> None:
                     f"Run 'devkit override diff {bundle_name}:{asset_id}' to review.",
                     err=True,
                 )
+    stray = result.get("stray")
+    if isinstance(stray, list) and stray:
+        listed = ", ".join(str(item) for item in stray)
+        click.echo(
+            f"WARNING: unmanaged files under .devkit/managed/: {listed}. "
+            "devkit does not deploy or remove them; move project-owned files out of the managed root.",
+            err=True,
+        )
     unselected = result.get("unselected")
     if isinstance(unselected, list) and unselected:
         names = ", ".join(str(item["bundle"]) for item in unselected if isinstance(item, dict))

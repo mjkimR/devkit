@@ -8,6 +8,7 @@ from devkit_distribution.bundles import BundleError
 from devkit_distribution.bundles.guidance import prepend_context
 from devkit_distribution.bundles.manifest import source_files
 from devkit_distribution.bundles.playbooks import playbook_entry
+from devkit_distribution.bundles.subagents import projection_path, read_contract, render
 from devkit_distribution.bundles.workflows import workflow_entry
 
 from . import playbook_skill, workflow_skill
@@ -59,6 +60,11 @@ def desired_inventory(
             data = prepend_context(data, context_bundle)
         files[destination] = Content(data, 0o755 if path.stat().st_mode & 0o111 else 0o644)
 
+    def add_bytes(destination: str, data: bytes) -> None:
+        if destination in files:
+            raise BundleError(f"destination collision: {destination}")
+        files[destination] = Content(data, 0o644)
+
     for item in installed:
         bundle = item.bundle
         packages.append(
@@ -108,6 +114,22 @@ def desired_inventory(
                 if asset.kind not in {"skill", "subagent"}:
                     continue
                 sources = dict(asset.sources)
+                if asset.kind == "subagent" and "common" in sources:
+                    # A role contract: render the host projection from its declared block.
+                    rel = sources["common"]
+                    override_file = root / OVERRIDES / bundle.name / rel if root else None
+                    if override_file is not None and override_file.is_file():
+                        asset_overridden = True
+                        contract_source, cited = override_file, f"{OVERRIDES}/{bundle.name}/{rel}"
+                    else:
+                        contract_source, cited = bundle.root / rel, prefix + rel
+                    contract = read_contract(contract_source.read_bytes(), f"{bundle.name}/{asset.id}", asset.id)
+                    rendered = render(agent, contract, cited)
+                    if rendered is not None:
+                        dest = projection_path(agent, asset.id)
+                        add_bytes(dest, rendered)
+                        paths.add(dest)
+                    continue
                 source = sources.get(agent, sources.get("common") if asset.kind == "skill" else None)
                 if source is None:
                     raise BundleError(f"{bundle.name}/{asset.id}: missing native variant for {agent}")

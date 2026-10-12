@@ -20,22 +20,47 @@ AI coding agents use distinct directory structures, file formats, and subagent s
 | Agent | Target Kind | Destination Path in Project | Source Contract |
 | --- | --- | --- | --- |
 | `codex` | `skill` | `.agents/skills/<asset-id>/` | Common `source` or `variants.codex` directory |
-| `codex` | `subagent` | `.codex/agents/<asset-id>.toml` | `variants.codex` single `.toml` file |
+| `codex` | `subagent` | `.codex/agents/<asset-id>.toml` | `variants.codex` single `.toml` file, or rendered from the `source` contract's `hosts.codex` block |
 | `claude-code` | `skill` | `.claude/skills/<asset-id>/` | Common `source` or `variants.claude-code` directory |
-| `claude-code` | `subagent` | `.claude/agents/<asset-id>.md` | `variants.claude-code` single `.md` file |
+| `claude-code` | `subagent` | `.claude/agents/<asset-id>.md` | `variants.claude-code` single `.md` file, or rendered from the `source` contract's `hosts.claude-code` block |
 
 ---
 
 ## 3. Multi-Agent Projection Semantics
 
 - **Shared Skills**: Skills are directory-based assets. The entire source directory (including supporting references and executable scripts) is projected into `.agents/skills/<asset-id>/` for Codex and `.claude/skills/<asset-id>/` for Claude Code. Executable permissions (`0755`) are preserved.
-- **Native Subagents**: Subagents require an explicit native file for each target agent. Codex requires a `.toml` configuration file; Claude Code requires a `.md` markdown definition.
+- **Native Subagents**: A subagent declared with `variants` requires an explicit native file for each target agent. Codex requires a `.toml` configuration file; Claude Code requires a `.md` markdown definition.
 - **No Lossy Downgrades**: If a selected agent does not have a native variant defined for a subagent, synchronization fails immediately with an explicit error. The distributor never attempts heuristic conversions or parameter stripping.
+- **Role Contracts**: A subagent declared with a single `source` file is a host-neutral role contract. Its `hosts` table holds one explicit block per agent; projection renders that block deterministically (frontmatter keys for Claude Code, TOML keys plus `developer_instructions` for Codex) and prefixes the prompt with the contract's managed path, its procedure skill and the host status. This is not a conversion: only keys from the host's allowlist are accepted, a host with `status: unsupported` gets no file, and an agent the contract does not mention fails synchronization. `emulated` and `unverified` projections carry a sentence telling the agent that the host does not enforce the boundaries itself.
+
 - **Target Selection**:
   - `devkit sync --agent codex`: Projects assets for Codex.
   - `devkit sync --agent codex --agent claude-code`: Projects assets for both agents simultaneously.
   - `devkit sync --no-agents`: Clears native agent selections and safely unlinks unchanged native projections while keeping managed resources intact.
   - `--agent` and `--no-agents` record the selection as `agents` in `.devkit/config.toml` (unless `--no-save`). Running `devkit sync` without them uses `.devkit/config.toml`; with no configured agents, nothing is projected.
+
+### Role Contract Format
+
+```markdown
+---
+role: reviewer                      # equals the asset id and the projected file name
+title: Reviewer
+description: Reviews a change against its specification and returns findings with evidence.
+skill: review                       # optional: the procedure the role executes
+hosts:
+  claude-code:
+    status: native                  # native | emulated | unsupported | unverified
+    tools: [Read, Grep, Glob]       # allowed: tools, disallowedTools, model, permissionMode, maxTurns,
+                                    #   skills, memory, background, omitClaudeMd, effort, isolation, color
+  codex:
+    status: emulated
+    sandbox_mode: read-only         # allowed: model, model_reasoning_effort, sandbox_mode
+---
+# Reviewer
+... the prompt, verbatim ...
+```
+
+Values are strings, integers, booleans or lists of strings. The contract stays under `.devkit/managed/<bundle>/` and may be overridden like any asset; the projection then cites the override path.
 
 ---
 

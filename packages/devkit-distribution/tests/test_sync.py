@@ -527,3 +527,25 @@ def test_cli_sync_preset_saves_unless_no_save(
     assert "no default preset" in result.output
     result = runner.invoke(cli, ["sync", "--target", str(target), "--preset", "Bad!"])
     assert result.exit_code != 0
+
+
+def test_stray_files_under_managed_root_are_reported_not_touched(
+    installed: list[InstalledBundle], target: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert sync_project(target, installed)["stray"] == []
+    stray = target / ".devkit/managed/team/rules/local_rule.py"
+    stray.parent.mkdir(parents=True)
+    stray.write_text("# hand-placed\n")
+    result = sync_project(target, installed)
+    assert result["stray"] == [".devkit/managed/team/rules/local_rule.py"]
+    assert result["actions"] == []
+    assert stray.exists()
+
+    @contextmanager
+    def found():
+        yield installed
+
+    monkeypatch.setattr("devkit_distribution.cli.discover_bundles", found)
+    out = CliRunner().invoke(cli, ["sync", "--target", str(target)])
+    assert out.exit_code == 0
+    assert "WARNING: unmanaged files under .devkit/managed/: .devkit/managed/team/rules/local_rule.py" in out.output

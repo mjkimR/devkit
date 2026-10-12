@@ -228,8 +228,8 @@ synchronized files; preserve receipt ownership, hash checks, and transaction che
 
 #### 5. `governance-rule`
 - **Role**: Invariants that **can and must be 100% mechanically verified** via AST parsing, regex, or static analysis without LLM hallucinations.
-- **Consumption**: Evaluated out-of-band by `agent-rule-engine` during `just rules-check`, `agent-rules check`, or CI gates.
-- **Token Budget**: Zero LLM context consumption unless violations are reported.
+- **Consumption**: Evaluated out-of-band by `agent-rule-engine` during `just rules-check`, `agent-rules check`, pre-commit (`check --staged`) or CI gates (`check --ci`). `devkit sync` records every deployed rule file in the installation receipt and `agent-rules` loads them from there; a consumer tunes a rule's phase, severity and typed settings in `[rules]` of `.devkit/config.toml`, never by editing the managed file.
+- **Token Budget**: Zero LLM context consumption unless violations are reported. A rule may ship a Markdown guide that `agent-rules explain` prints on demand.
 - **Target Location**: `.devkit/managed/<bundle>/rules/<category>/<rule>.py`.
 
 #### 6. `agent-skill`
@@ -240,8 +240,8 @@ synchronized files; preserve receipt ownership, hash checks, and transaction che
 #### 7. `agent-subagent`
 - **Role**: Standalone agent persona definition configuring system prompts, permissions, and tool access for delegated subagent tasks.
 - **Consumption**: Read by agent runtimes when spawning child tasks.
-- **Format Requirements**: Vendor-native format (`.toml` for Codex in `.codex/agents/<name>.toml`, `.md` for Claude Code in `.claude/agents/<name>.md`).
-- **Target Location**: Native agent persona directories.
+- **Format Requirements**: Either vendor-native files per agent (`.toml` for Codex in `.codex/agents/<name>.toml`, `.md` for Claude Code in `.claude/agents/<name>.md`), or one host-neutral role contract (Markdown with a `hosts` table of allowlisted per-agent keys and a status) that `devkit sync` renders into those native files.
+- **Target Location**: Native agent persona directories; a contract itself stays under `.devkit/managed/<bundle>/`.
 
 ---
 
@@ -377,4 +377,4 @@ The installation receipt records the applied selection for audit and ownership t
 | **`package-playbook`** | Guidance | Metadata and checklist (`playbooks/<slug>/SKILL.md`) | Explicit `devkit-playbook` invocation OR rule-triggered remediation, then search and selection | Bounded candidate headers; selected body only | `.devkit/managed/<bundle>/playbooks/` |
 | **`governance-rule`** | Mechanized | Python (`rules/*.py`) | Linters / `just rules-check` | **0 tokens** (pure code) | `.devkit/managed/<bundle>/rules/` |
 | **`agent-skill`** | Mechanized | Directory (`skills/<slug>/`) | Tool/function invocation | Tool registry metadata | Projected (`.agents/skills/`, etc.) |
-| **`agent-subagent`** | Mechanized | Config (`agents/<slug>.{toml,md}`) | Subagent delegation | Persona config on load | Projected (`.codex/agents/`, etc.) |
+| **`agent-subagent`** | Mechanized | Native config (`agents/<slug>.{toml,md}`) or role contract (`subagents/<slug>.md`) | Subagent delegation | Persona config on load | Projected (`.codex/agents/`, etc.) |

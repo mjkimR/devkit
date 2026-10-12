@@ -36,7 +36,7 @@ class WorkspaceCache:
         self._frontmatter_cache: dict[str, tuple[dict[str, Any] | None, str, int]] = {}
         self._links_cache: dict[str, list[MarkdownLink]] = {}
         self._catalog: DocumentCatalog | None = None
-        self._files_cache: dict[tuple[Path, tuple[str, ...], tuple[str, ...] | None], list[Path]] = {}
+        self._files_cache: dict[tuple[Path, tuple[str, ...] | None, tuple[str, ...] | None], list[Path]] = {}
 
     def _resolve_path(self, path: str | Path) -> Path:
         p = Path(path)
@@ -155,10 +155,13 @@ class WorkspaceCache:
     def find_files(
         self,
         root: Path,
-        extensions: tuple[str, ...] = (".md",),
+        extensions: tuple[str, ...] | None = (".md",),
         subdirs: tuple[str, ...] | None = None,
     ) -> list[Path]:
-        """Recursively scan files matching extensions under subdirs, skipping ignored directories."""
+        """Recursively scan files matching extensions under subdirs, skipping ignored directories.
+
+        ``extensions=None`` lists every regular file.
+        """
         root = root.resolve()
         key = (root, extensions, subdirs)
         if key not in self._files_cache:
@@ -171,7 +174,7 @@ class WorkspaceCache:
                     dirs[:] = sorted(d for d in dirs if d not in _IGNORED_DIRS)
                     for name in files:
                         path = Path(directory) / name
-                        if path.suffix in extensions and path.is_file():
+                        if (extensions is None or path.suffix in extensions) and path.is_file():
                             results.add(path)
             self._files_cache[key] = sorted(results)
         return list(self._files_cache[key])

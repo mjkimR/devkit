@@ -3,8 +3,9 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 
-from agent_rule_engine.engine.models import Autofixable, Rule, RuleContext, Violation
+from agent_rule_engine.engine.models import Autofixable, Rule, RuleContext, Severity, Violation
 from agent_rule_engine.engine.phases import effective_phase, runs_in_phase, validate_phase_overrides
+from agent_rule_engine.engine.settings import build_resolvers
 
 logger = logging.getLogger(__name__)
 
@@ -19,18 +20,48 @@ class EvaluationResult:
         return bool(self.errors) or any(v.severity.value == "error" and not v.fixed for v in self.violations)
 
 
+def validate_severity_overrides(rules: list[Rule], overrides: dict[str, Severity]) -> list[str]:
+    """Return human-readable problems for severity overrides that cannot apply to ``rules``."""
+    by_id = {r.id: r for r in rules}
+    errors: list[str] = []
+    for rule_id in sorted(overrides):
+        rule = by_id.get(rule_id)
+        if rule is None:
+            errors.append(f"severity override for unknown rule: {rule_id}")
+        elif rule.severity == overrides[rule_id]:
+            errors.append(
+                f"severity override for {rule_id} is redundant: the rule already reports "
+                f"{rule.severity.value}; remove the entry"
+            )
+    return errors
+
+
+def effective_severity(rule: Rule, overrides: dict[str, Severity] | None = None) -> Severity:
+    """Severity a rule reports once project overrides are applied."""
+    if overrides and rule.id in overrides:
+        return overrides[rule.id]
+    return rule.severity
+
+
 def evaluate(ctx: RuleContext, rules: list[Rule]) -> EvaluationResult:
     """Evaluate rules sequentially using context and cache, applying autofix and convergence rechecks."""
     result = EvaluationResult()
 
-    # 0. Project phase overrides must name known rules and change something
-    override_errors = validate_phase_overrides(rules, ctx.phase_overrides)
-    if override_errors:
-        result.errors.extend(override_errors)
+    # 0. Project policy must name known rules, change something, and type-check against settings
+    resolvers, settings_errors = build_resolvers(rules, ctx.rule_settings)
+    policy_errors = [
+        *validate_phase_overrides(rules, ctx.phase_overrides),
+        *validate_severity_overrides(rules, ctx.severity_overrides),
+        *settings_errors,
+    ]
+    if policy_errors:
+        result.errors.extend(policy_errors)
         return result
+    ctx.settings_resolvers = resolvers
 
     # 1. Phase filtering on the effective (overridden) phase
     phases = {r.id: effective_phase(r, ctx.phase_overrides) for r in rules}
+    severities = {r.id: effective_severity(r, ctx.severity_overrides) for r in rules}
     active_rules: list[Rule] = [r for r in rules if runs_in_phase(phases[r.id], ctx.phase)]
 
     # 2. Prerequisite ordering: format rules run before relationship checks
@@ -40,6 +71,7 @@ def evaluate(ctx: RuleContext, rules: list[Rule]) -> EvaluationResult:
         found = rule.check(ctx)
         for v in found:
             v.phase = phases[rule.id]
+            v.severity = severities[rule.id]
         return found
 
     # 3. Initial check
