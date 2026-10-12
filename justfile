@@ -5,7 +5,6 @@ default:
 # Initialize workspace or a specific module
 init module="all":
     bash scripts/module.sh init "{{ module }}"
-    just hooks-install
 
 # Run ruff format and lint with automatic fixes
 lint module="all":
@@ -26,14 +25,6 @@ test module="all" +args="":
 # Run pytest with test coverage report
 test-cov module="all" +args="":
     bash scripts/module.sh test-cov "{{ module }}" {{ args }}
-
-# Install pre-commit git hooks
-hooks-install:
-    uv run --no-active pre-commit install
-
-# Run pre-commit hooks on all files
-hooks-run:
-    uv run --no-active pre-commit run --all-files
 
 # Run rule engine linting checks
 rules-check +args="":
