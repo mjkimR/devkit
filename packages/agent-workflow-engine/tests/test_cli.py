@@ -200,3 +200,29 @@ def test_invalid_bound_workflow_reports_problems_as_details(workspace: Path) -> 
     assert result.exit_code == 1 and "(WORKFLOW_INVALID)" in result.stderr
     assert "[DETAIL] intent.exit: unregistered check 'nope'" in result.stderr
     assert "[TARGET] .devkit/workflows/direct-delivery.md" in result.stderr
+
+
+def test_cli_uses_synchronized_workflow_from_receipt(tmp_path: Path) -> None:
+    managed = tmp_path / ".devkit/managed/team/flows"
+    managed.mkdir(parents=True)
+    (managed / "delivery.md").write_text(WORKFLOW)
+    (tmp_path / ".devkit/installation.json").write_text(
+        json.dumps(
+            {
+                "schema": 1,
+                "packages": [],
+                "selection": {},
+                "assets": [
+                    {"kind": "workflow", "id": "delivery", "entrypoints": [".devkit/managed/team/flows/delivery.md"]}
+                ],
+                "files": {},
+            }
+        )
+    )
+    write_config(tmp_path, CONFIG)
+    validated = _run("validate", "-w", str(tmp_path))
+    assert validated.exit_code == 0 and ".devkit/managed/team/flows/delivery.md id=direct-delivery" in validated.output
+    created = _run("new", "-w", str(tmp_path), "login")
+    assert created.exit_code == 0, created.output
+    nxt = _run("next", "-w", str(tmp_path), "--unit", ".devkit/transient/work/login", "--no-lint")
+    assert nxt.exit_code == 0 and "[WORKFLOW: direct-delivery" in nxt.output

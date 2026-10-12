@@ -78,6 +78,12 @@ this table only.
 
 ## Workflow definitions
 
+Definitions are discovered from the project's `definitions_dir` and from every
+`kind = "workflow"` asset that `devkit sync` recorded in
+`.devkit/installation.json`; a project definition shadows a synchronized one
+with the same id. Bundles that ship a workflow also get the generated
+`devkit-workflow` entry skill, so an agent knows to run `next`.
+
 A definition declares `id`, `schema_version: 1`, optional `checks` (runner or
 human checks it introduces) and ordered `stages`, each with `exit` checks,
 `skills`, `role`, `isolation`, `human_gate` and `returns`. Checks are
@@ -101,11 +107,9 @@ print(result.stage.id if result.stage else "complete")
 ## Current limits
 
 Only `TemplateLayout` exists; a plugin layout fits behind the `Layout`
-protocol but is not loaded from a directory yet. Workflow definitions are read
-from `definitions_dir`; shipping them as a distributed bundle asset kind is
-planned. Subagent delegation names a role and isolation level only; the host
-projection of that role belongs to `devkit-distribution`. `entry` checks are
-reported, not evaluated.
+protocol but is not loaded from a directory yet. Subagent delegation names a
+role and isolation level only; the host projection of that role belongs to
+`devkit-distribution`. `entry` checks are reported, not evaluated.
 
 ## Architectural Specifications & Deep-Dives
 

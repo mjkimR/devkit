@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-KINDS = {"skill", "subagent", "instruction", "playbook", "rule"}
+KINDS = {"skill", "subagent", "instruction", "playbook", "rule", "workflow"}
 SLUG = re.compile(r"[a-z][a-z0-9-]*\Z")
 VERSION = re.compile(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\Z")
 # Reserved preset available in every bundle; selects every declared asset.
@@ -107,6 +107,7 @@ def source_files(root: Path, source: str) -> list[Path]:
 
 def load_bundle(root: Path) -> Bundle:
     from .playbooks import playbook_entry, read_playbook_header
+    from .workflows import read_workflow_header, workflow_entry
 
     root = root.resolve()
     manifest = safe_source(root, "bundle.toml")
@@ -158,6 +159,9 @@ def load_bundle(root: Path) -> Bundle:
             if kind == "playbook":
                 entry = playbook_entry(root, source)
                 read_playbook_header(entry.read_bytes(), f"{asset_id}/{source}")
+            if kind == "workflow":
+                entry = workflow_entry(root, source)
+                read_workflow_header(entry.read_bytes(), f"{asset_id}/{source}")
             sources.append((target, source))
         assets.append(Asset(asset_id, kind, tuple(sources)))
     raw_presets = data.get("presets", {})

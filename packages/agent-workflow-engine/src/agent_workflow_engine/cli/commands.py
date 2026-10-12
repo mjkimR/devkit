@@ -18,6 +18,7 @@ from agent_workflow_engine.config import CONFIG_PATH, ConfigError, WorkflowConfi
 from agent_workflow_engine.definition import (
     DefinitionError,
     WorkflowDocument,
+    discover,
     load_all,
     resolve,
     schema_hash,
@@ -132,12 +133,12 @@ class _Env:
                 fix="Pass --workflow <id>, bind the unit, or set [workflow].default in .devkit/config.toml",
             )
         try:
-            doc = resolve(self.definitions_dir, chosen)
+            doc = resolve(self.definitions_dir, chosen, self.root)
         except DefinitionError as exc:
             raise WorkflowError.invalid_input(
                 str(exc),
                 code="WORKFLOW_NOT_FOUND",
-                fix=f"Add a definition with id {chosen!r} under {self.config.definitions_dir} or pass --workflow <path>",
+                fix=f"Add a definition with id {chosen!r} under {self.config.definitions_dir}, sync a bundle that ships it, or pass --workflow <path>",
             ) from exc
         problems = validate(doc, self.config.anchor)
         if problems:
@@ -321,7 +322,7 @@ def show_cmd(workspace_root: str, ref: str, output_format: str) -> None:
     """Print a workflow definition's stages, gates and schema hash."""
     env = _Env(workspace_root)
     try:
-        doc = resolve(env.definitions_dir, ref)
+        doc = resolve(env.definitions_dir, ref, env.root)
     except DefinitionError as exc:
         raise WorkflowError.invalid_input(str(exc), code="WORKFLOW_NOT_FOUND") from exc
     problems = validate(doc, env.config.anchor)
@@ -360,19 +361,23 @@ def checks_cmd(workspace_root: str, output_format: str) -> None:
 @click.argument("paths", nargs=-1, type=click.Path(exists=True, dir_okay=True, file_okay=True))
 @_boundary
 def validate_cmd(workspace_root: str, paths: tuple[str, ...]) -> None:
-    """Validate workflow definitions (default: every file in definitions_dir)."""
+    """Validate workflow definitions (default: definitions_dir plus synchronized workflow assets)."""
     env = _Env(workspace_root)
-    targets = [Path(p) for p in paths] or [env.definitions_dir]
+    targets = [Path(p) for p in paths]
     failed = False
     seen = 0
+    batches: list[tuple[list[WorkflowDocument], list[str]]] = []
+    if not targets:
+        batches.append(discover(env.root, env.definitions_dir))
     for target in targets:
-        if target.is_dir() or not target.exists():
-            docs, errors = load_all(target)
+        if target.is_dir():
+            batches.append(load_all(target))
         else:
             try:
-                docs, errors = [resolve(env.definitions_dir, str(target))], []
+                batches.append(([resolve(env.definitions_dir, str(target), env.root)], []))
             except DefinitionError as exc:
-                docs, errors = [], [str(exc)]
+                batches.append(([], [str(exc)]))
+    for docs, errors in batches:
         for err in errors:
             failed = True
             click.secho(f"[INVALID: {err}]", fg="red")

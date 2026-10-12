@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -16,7 +17,7 @@ from agent_workflow_engine import (
     validate,
 )
 from agent_workflow_engine.checks import count_tasks
-from agent_workflow_engine.definition import find
+from agent_workflow_engine.definition import discover, find, managed_definition_paths
 from conftest import WORKFLOW
 
 # --- check syntax and registry ------------------------------------------------
@@ -157,3 +158,50 @@ def test_load_reports_path_in_errors(tmp_path: Path) -> None:
     bad.write_text("---\nstages: []\n---\n")
     with pytest.raises(DefinitionError, match=r"bad\.md"):
         load(bad)
+
+
+def _write_receipt(root: Path, entries: list[dict[str, object]]) -> None:
+    receipt = root / ".devkit" / "installation.json"
+    receipt.parent.mkdir(parents=True, exist_ok=True)
+    receipt.write_text(json.dumps({"schema": 1, "packages": [], "selection": {}, "assets": entries, "files": {}}))
+
+
+def test_managed_definition_paths_from_receipt(tmp_path: Path) -> None:
+    assert managed_definition_paths(tmp_path) == []
+    _write_receipt(
+        tmp_path,
+        [
+            {"kind": "workflow", "id": "a", "entrypoints": [".devkit/managed/team/flows/a.md"]},
+            {"kind": "playbook", "id": "p", "entrypoints": [".devkit/managed/team/p.md"]},
+            {"kind": "workflow", "id": "b", "paths": [".devkit/managed/team/b.md", ".devkit/managed/team/b.png"]},
+        ],
+    )
+    assert managed_definition_paths(tmp_path) == sorted(
+        [tmp_path / ".devkit/managed/team/flows/a.md", tmp_path / ".devkit/managed/team/b.md"]
+    )
+    (tmp_path / ".devkit/installation.json").write_text("not json")
+    assert managed_definition_paths(tmp_path) == []
+
+
+def test_discover_merges_receipt_and_local_with_local_shadowing(workspace: Path) -> None:
+    managed = workspace / ".devkit/managed/team/flows"
+    managed.mkdir(parents=True)
+    (managed / "delivery.md").write_text(WORKFLOW.replace('title: "Direct delivery"', 'title: "Managed"'))
+    (managed / "bugfix.md").write_text(WORKFLOW.replace("id: direct-delivery", "id: bugfix"))
+    _write_receipt(
+        workspace,
+        [
+            {"kind": "workflow", "id": "delivery", "entrypoints": [".devkit/managed/team/flows/delivery.md"]},
+            {"kind": "workflow", "id": "bugfix", "entrypoints": [".devkit/managed/team/flows/bugfix.md"]},
+            {"kind": "workflow", "id": "gone", "entrypoints": [".devkit/managed/team/flows/missing.md"]},
+        ],
+    )
+    defs = workspace / ".devkit/workflows"
+    docs, errors = discover(workspace, defs)
+    assert errors == []
+    by_id = {d.id: d for d in docs}
+    assert set(by_id) == {"direct-delivery", "bugfix"}
+    assert by_id["direct-delivery"].title == "Direct delivery"  # local shadows managed
+    assert find(defs, "bugfix", workspace).path == managed / "bugfix.md"
+    with pytest.raises(DefinitionError, match="installation receipt"):
+        find(defs, "nope", workspace)

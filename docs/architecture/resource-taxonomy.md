@@ -90,6 +90,11 @@ Resources are classified along three dimensions: **Guidance & Context Layer** (n
 - **Format Requirements**: English YAML frontmatter with required `name` and `description`, plus an optional `aliases` string array. The body contains explicit `Prerequisites`, numbered `Step N` actions, and unambiguous completion conditions.
 - **Target Location**: `.devkit/managed/<bundle>/playbooks/<slug>/SKILL.md`.
 
+#### 5. `package-workflow`
+- **Role**: A declarative multi-stage delivery procedure (`agent-workflow-engine` definition) that every agent host follows from the same computed stage. Explicit, recurring execution flows belong here rather than in playbooks.
+- **Consumption**: The generated `devkit-workflow` entry skill (present only when a workflow asset is synchronized) runs `agent-workflow next`, and stage skills named by the definition perform the work. Definitions are discovered through the installation receipt; a project-local definition with the same id shadows the distributed one.
+- **Target Location**: `.devkit/managed/<bundle>/<source path>` with the path recorded in the receipt's `entrypoints`.
+
 #### Instruction and playbook consumption boundaries
 
 | Concern | `package-instruction` | `package-playbook` |

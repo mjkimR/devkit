@@ -8,10 +8,13 @@ from devkit_distribution.bundles import BundleError
 from devkit_distribution.bundles.guidance import prepend_context
 from devkit_distribution.bundles.manifest import source_files
 from devkit_distribution.bundles.playbooks import playbook_entry
+from devkit_distribution.bundles.workflows import workflow_entry
 
+from . import playbook_skill, workflow_skill
 from .discovery import InstalledBundle
-from .playbook_skill import MANAGED_ROOT, NAME
-from .playbook_skill import skill_files as generated_skill_files
+
+# Shared entry skills generated when at least one asset of the kind is synchronized.
+GENERATED_SKILLS = {"playbook": playbook_skill, "workflow": workflow_skill}
 
 OVERRIDES = ".devkit/overrides"
 AGENTS = {"codex": (".agents/skills", ".codex/agents"), "claude-code": (".claude/skills", ".claude/agents")}
@@ -133,10 +136,14 @@ def desired_inventory(
                 "kind": asset.kind,
                 "paths": sorted(paths),
             }
-            if asset.kind == "playbook":
+            if asset.kind in {"playbook", "workflow"}:
                 entrypoints = set()
                 for _, source in asset.sources:
-                    entry = playbook_entry(bundle.root, source)
+                    entry = (
+                        playbook_entry(bundle.root, source)
+                        if asset.kind == "playbook"
+                        else workflow_entry(bundle.root, source)
+                    )
                     rel = entry.relative_to(bundle.root).as_posix()
                     override_entry = root / OVERRIDES / bundle.name / rel if root else None
                     if override_entry is not None and override_entry.is_file():
@@ -182,10 +189,12 @@ def desired_inventory(
                         "override_sha256": cur_override_sha,
                     }
 
-    if any(asset["kind"] == "playbook" for asset in assets):
-        projections = [(MANAGED_ROOT, None), *((f"{AGENTS[agent][0]}/{NAME}", agent) for agent in agents)]
+    for kind, module in GENERATED_SKILLS.items():
+        if not any(asset["kind"] == kind for asset in assets):
+            continue
+        projections = [(module.MANAGED_ROOT, None), *((f"{AGENTS[agent][0]}/{module.NAME}", agent) for agent in agents)]
         for directory, agent in projections:
-            for relative, data in generated_skill_files(agent).items():
+            for relative, data in module.skill_files(agent).items():
                 destination = f"{directory}/{relative}"
                 if destination in files:
                     raise BundleError(f"destination collision: {destination}")

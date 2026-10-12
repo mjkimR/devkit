@@ -1,0 +1,12 @@
+schema = 1
+name = "delivery-workflow"
+version = "0.1.0"
+default_preset = "delivery"
+
+[[assets]]
+id = "direct-delivery"
+kind = "workflow"
+source = "workflows/direct-delivery.md"
+
+[presets.delivery]
+assets = ["direct-delivery"]

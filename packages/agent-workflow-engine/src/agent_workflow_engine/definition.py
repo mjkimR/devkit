@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -269,13 +270,13 @@ def validate(doc: WorkflowDocument, anchor: str) -> list[Problem]:
     return problems
 
 
-def load_all(definitions_dir: Path) -> tuple[list[WorkflowDocument], list[str]]:
-    """Load every ``*.md`` definition; unreadable files are returned as error strings."""
+RECEIPT_PATH = ".devkit/installation.json"
+
+
+def _load_paths(paths: Iterable[Path]) -> tuple[list[WorkflowDocument], list[str]]:
     docs: list[WorkflowDocument] = []
     errors: list[str] = []
-    if not definitions_dir.is_dir():
-        return docs, errors
-    for path in sorted(definitions_dir.glob("*.md")):
+    for path in paths:
         try:
             docs.append(load(path))
         except DefinitionError as exc:
@@ -283,22 +284,63 @@ def load_all(definitions_dir: Path) -> tuple[list[WorkflowDocument], list[str]]:
     return docs, errors
 
 
-def find(definitions_dir: Path, workflow_id: str) -> WorkflowDocument:
+def load_all(definitions_dir: Path) -> tuple[list[WorkflowDocument], list[str]]:
+    """Load every ``*.md`` definition in a directory; unreadable files are returned as error strings."""
+    if not definitions_dir.is_dir():
+        return [], []
+    return _load_paths(sorted(definitions_dir.glob("*.md")))
+
+
+def managed_definition_paths(workspace_root: Path) -> list[Path]:
+    """Workflow assets recorded in the devkit installation receipt, if any."""
+    receipt = workspace_root / RECEIPT_PATH
+    if not receipt.is_file():
+        return []
+    try:
+        data = json.loads(receipt.read_text("utf-8"))
+    except (OSError, UnicodeError, ValueError):
+        return []
+    assets = data.get("assets") if isinstance(data, dict) else None
+    paths: list[Path] = []
+    for asset in assets or []:
+        if not isinstance(asset, dict) or asset.get("kind") != "workflow":
+            continue
+        for rel in asset.get("entrypoints") or asset.get("paths") or []:
+            if isinstance(rel, str) and rel.endswith(".md"):
+                paths.append(workspace_root / rel)
+    return sorted(set(paths))
+
+
+def discover(workspace_root: Path, definitions_dir: Path) -> tuple[list[WorkflowDocument], list[str]]:
+    """Project definitions plus workflow assets synchronized by devkit.
+
+    A project definition shadows a synchronized one with the same id, so a
+    repository can adapt a distributed workflow without editing managed files.
+    """
+    local, errors = load_all(definitions_dir)
+    managed, managed_errors = _load_paths(p for p in managed_definition_paths(workspace_root) if p.is_file())
+    local_ids = {d.id for d in local}
+    docs = local + [d for d in managed if d.id not in local_ids]
+    return docs, errors + managed_errors
+
+
+def find(definitions_dir: Path, workflow_id: str, workspace_root: Path | None = None) -> WorkflowDocument:
     """The single definition whose id matches; zero or several matches are errors."""
-    docs, errors = load_all(definitions_dir)
+    docs, errors = discover(workspace_root, definitions_dir) if workspace_root else load_all(definitions_dir)
     matches = [d for d in docs if d.id == workflow_id]
     if len(matches) == 1:
         return matches[0]
     if not matches:
         hint = f" ({'; '.join(errors)})" if errors else ""
-        raise DefinitionError(f"no workflow with id {workflow_id!r} under {definitions_dir.as_posix()}{hint}")
+        where = definitions_dir.as_posix() + (" or the devkit installation receipt" if workspace_root else "")
+        raise DefinitionError(f"no workflow with id {workflow_id!r} under {where}{hint}")
     paths = ", ".join(d.path.as_posix() for d in matches if d.path)
     raise DefinitionError(f"workflow id {workflow_id!r} is defined more than once: {paths}")
 
 
-def resolve(definitions_dir: Path, ref: str) -> WorkflowDocument:
+def resolve(definitions_dir: Path, ref: str, workspace_root: Path | None = None) -> WorkflowDocument:
     """``ref`` is a workflow id, or a path to a definition file."""
     candidate = Path(ref)
     if candidate.suffix == ".md" and candidate.is_file():
         return load(candidate)
-    return find(definitions_dir, ref)
+    return find(definitions_dir, ref, workspace_root)

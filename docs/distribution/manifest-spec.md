@@ -47,13 +47,14 @@ src/package_b_playbooks/
 
 ## 2. Asset Kinds
 
-A bundle declares assets across five supported kinds:
+A bundle declares assets across six supported kinds:
 
 - `skill`: A directory containing `SKILL.md` along with supporting scripts, references, and assets. The entire directory tree is preserved, maintaining executable permissions (`0755`) for scripts.
 - `subagent`: Native agent persona definitions or configuration files.
 - `instruction`: Contextual guidance and prompt markdown documents linked to agent startup instructions.
 - `playbook`: Operational workflows, checklists, and procedural guides.
 - `rule`: Python-based governance rules evaluated by `agent-rule-engine`.
+- `workflow`: A single Markdown delivery workflow definition (frontmatter `id` and `stages`) evaluated by `agent-workflow-engine`. Distribution validates the header only; `agent-workflow validate` validates stage semantics. When at least one workflow asset is synchronized, `devkit sync` generates the shared `devkit-workflow` entry skill under `.devkit/managed/_devkit/skills/` and projects it into every selected agent's skill directory, and the receipt records the definition under `entrypoints` so `agent-workflow` discovers it without configuration.
 
 For full classification criteria, guidance placement rules, and naming standards, see the [Resource Taxonomy](../architecture/resource-taxonomy.md).
 
@@ -91,8 +92,16 @@ id = "review-flow"
 kind = "playbook"
 source = "playbooks/review.md"
 
+[[assets]]
+id = "direct-delivery"
+kind = "workflow"
+source = "workflows/direct-delivery.md"
+
 [presets.daily]
 assets = ["development", "review-flow", "review"]
+
+[presets.delivery]
+assets = ["development", "review-flow", "review", "direct-delivery"]
 ```
 
 ### Presets and the Default Preset
