@@ -50,7 +50,7 @@ Hooks run with Git's environment, where the project's `.venv/bin` is usually not
 - A nested `devkit` command that could not do its job (exit `2` with an error block of its own: rules that cannot load, a worktree or checkout that needs `devkit sync`) did not judge the commit, so the gate raises `GATE_VERIFY_NOT_RUN` (exit `2`) with the same details instead of the `BLOCKED` refusal. It is `AUTO` with the relayed fix when every relayed error is `AUTO` with the same one (managed files missing: `devkit sync`, then commit again), else `MAINTENANCE`.
 - The commands see the working tree, not the index. When tracked files have unstaged changes or untracked files exist, the gate adds a `GATE_VERIFY_UNSTAGED` notice (in a refusal, a final `note:` detail) listing up to 10 of them, and does not refuse for it. A check that must match the commit exactly evaluates the index itself, as `devkit rules check --staged` does: it materializes the staged tree, reads `.devkit/config.toml`, the receipt and the synchronized rules from it, and so cannot depend on unstaged edits, untracked files or per-clone configuration ([Evaluation Lifecycle](../rules/evaluation-lifecycle.md#6-git-snapshot-gates)).
 - The hook's `GIT_DIR`, `GIT_INDEX_FILE`, `GIT_WORK_TREE` and `GIT_PREFIX` are removed from the commands' environment, so a test suite that runs Git in its own repositories is not pointed at this commit's index. The index is passed as `DEVKIT_GIT_INDEX_FILE` instead; devkit's staged snapshot uses it for this repository only (`devkit.core.git.commit_index`), so `devkit rules check --staged` evaluates exactly what `git commit -a` or `git commit <paths>` commits, a temporary index.
-- Keep the list to what is quick enough for every commit; slower suites belong in CI. Interrupting a command (Ctrl-C) aborts the commit.
+- Keep the list to what is quick enough for every commit; slower suites belong in CI. Interrupting a command (Ctrl-C, `SIGTERM`, `SIGHUP`) stops it, skips the remaining commands and gates, and aborts the commit: `devkit gate run` exits `128 + N` (`130` for Ctrl-C), as `devkit run` does.
 
 `message-nonempty` sees the message before Git's cleanup. Whether Git strips comment lines depends on how the commit was made (`git commit -m "#123 fix"` keeps the `#` line; the editor template strips it; `core.commentChar` changes the character), so the gate refuses only a message that is blank above the scissors line. A message that is empty only once comments are stripped is left to Git, which aborts such a commit itself unless `--allow-empty-message` is given.
 
@@ -85,7 +85,7 @@ class Gate(Protocol):
 ```
 
 - **Passing and skipping**: return `GateResult.passed(note)` or `GateResult.skipped(reason)`; `None` means passed. `GateResult.passed(note, notices=[...])` also returns warnings and notices (`AdvisoryError` at level `WARNING` or `NOTICE`; an `ERROR` is lowered to `WARNING`), which `devkit gate run` prints without blocking the commit, unless `DEVKIT_STRICT=1` and one is a warning. Each outcome is logged and shows as an `[INFO]` line under `-v`. A `GateResult` cannot carry `FAILED` (constructing one raises `GateResultError`, `GATE_RESULT_INVALID`, `MAINTENANCE`), and any other return value fails the gate with the same code.
-- **Refusing**: raise `GateRefusedError(message, *details, code=..., fix=..., target_files=...)`: message first, remediation in `fix`, and the gate's own code (default `GATE_FAILED`). It is `BLOCKED` and exits `1` (`FINDINGS`): the negative result of a check that ran. Any other `AdvisoryError` fails the gate as it is (most exit `2`: the check could not run); any other exception, and `SystemExit` from a gate that calls `sys.exit()`, is wrapped as `UNEXPECTED_ERROR` (exit `2`), and the stage's later gates still run. Every failed gate therefore reports an advisory. `KeyboardInterrupt` is not caught: it aborts the run, and a blocking stage exits nonzero.
+- **Refusing**: raise `GateRefusedError(message, *details, code=..., fix=..., target_files=...)`: message first, remediation in `fix`, and the gate's own code (default `GATE_FAILED`). It is `BLOCKED` and exits `1` (`FINDINGS`): the negative result of a check that ran. Any other `AdvisoryError` fails the gate as it is (most exit `2`: the check could not run); any other exception, and `SystemExit` from a gate that calls `sys.exit()`, is wrapped as `UNEXPECTED_ERROR` (exit `2`), and the stage's later gates still run. Every failed gate therefore reports an advisory. `KeyboardInterrupt` is not caught: it aborts the run, and a blocking stage exits nonzero. Neither is `devkit.compact.CommandInterrupted`, though it is a `SystemExit`: a gate whose `run_command` is interrupted aborts the run the same way, exiting `128 + N` for signal `N`.
 - **Context**: `ctx.repo_root` (top level of the work tree), `ctx.git_dir` (this worktree's git dir, for `MERGE_HEAD`, rebase state and the like), `ctx.common_git_dir` (shared by every worktree), `ctx.stage`, `ctx.args` (hook arguments), `ctx.settings` (the gate's effective settings) and `ctx.message_file` for `commit-msg`.
 - **Ordering**: gates in a stage run by `(order, id)`. Message transforms use `order < 100`, checks default to `100`, and the built-in `message-nonempty` runs at `900` so it sees the transformed message. A `post-commit` gate that rewrites `HEAD` must take a low order so later gates observe the final commit.
 - **No short-circuit**: a failing gate does not stop later gates, so one commit attempt reports every refusal.
@@ -149,24 +149,37 @@ enabled = false
 ## 6a. Settings Template
 
 `devkit gate install` makes `<common-git-dir>/devkit.config` list every installed gate as a commented table, so a
-per-clone setting is changed by uncommenting lines in place:
+per-clone setting is changed by uncommenting lines in place: the table header and only the keys that change. An
+uncommented key replaces the `.devkit/config.toml` value as a whole (an array too); a key left commented keeps it.
 
 ```toml
 ## pre-commit gate, on by default: Refuses a commit that stages too many files.
 # [gates.settings.staged-file-limit]
 #   enabled = true
 #   max_files = 50  # integer; Most files one commit may stage
+
+## pre-commit gate, on by default: Run the project's verification commands (format, lint, type check, tests) before a commit.
+# [gates.settings.verify-commands]
+#   enabled = true
+##   commands: set in .devkit/config.toml; adding commands = <value> here replaces it  # array of strings; Shell commands run in order from the repository root; empty skips the gate
 ```
 
 - **Layout**: prose is commented twice (`##`), the table header and keys once (`#`), with the keys indented under
   their header. Uncommenting a whole table in an editor (which removes one `#`) leaves the prose a comment and yields
   valid TOML. A key uncommented without its header belongs to whatever table precedes it, so the header is
-  uncommented with its keys; the file's own header says so.
+  uncommented with the keys; the file's own header says so.
 - **Content**: per gate (in stage and order), its stage, default state and description, its header, `enabled` at its
   default, then each settings field at its default with its type and the field's `metadata["help"]` when the gate
   declares one (`field(default=50, metadata={"help": "..."})`). A field whose default is `None` shows a placeholder
   of its type and `unset by default`; TOML has no null, so uncomment it only with a value. Gates that fail to load
   are left out (`devkit gate status` reports them).
+- **Project keys**: a key (`enabled` included) that `.devkit/config.toml` sets for the gate when its table is written
+  is not offered at its default, since uncommenting it would replace the team's value (an empty `commands` skips
+  `verify-commands`, and every commit would pass unverified). It is a `##` line naming it as set by
+  `.devkit/config.toml`, without the value, so uncommenting the whole table keeps the project's value and nothing
+  copied goes stale. A key the project starts setting after its table was written still shows its default, since no
+  line is rewritten; uncommenting only the keys that change, as the file's header says, keeps it in effect. A
+  `.devkit/config.toml` whose `[gates]` cannot be read skips the refresh (below).
 - **Append-only**: a missing file is created with a header and every table. An existing file only gets the tables of
   gates whose `[gates.settings.<id>]` header it does not mention yet, commented or not; no existing line is changed
   or removed, so uncommented values stay where the developer put them. A table of a gate that is later removed
@@ -176,5 +189,6 @@ per-clone setting is changed by uncommenting lines in place:
   wrappers are installed, so a gate that `devkit add` or an upgrade brings in appears without another `install`. The
   hook imports the receipt's gate files to read their settings, as every commit already does, and reports nothing
   unless it skips.
-- **Skipped**: a `devkit.config` that is a symbolic link, not a regular file or not UTF-8 is never written; `install`
+- **Skipped**: a `devkit.config` that is a symbolic link, not a regular file or not UTF-8 is never written; nor is
+  one whose tables would need a `.devkit/config.toml` with a `[gates]` table that cannot be read or parsed. `install`
   and the hook report `GATE_CONFIG_TEMPLATE_SKIPPED` (`GateTemplateNotice`, a warning) and succeed.

@@ -5,21 +5,28 @@ from __future__ import annotations
 import shutil
 import subprocess
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
 from devkit.advisory import ActionMode
 from devkit.core.errors import ArgumentError
 from devkit.worktree import (
+    BaseBehindError,
+    BaseDetachedError,
     BaseDirtyError,
+    BranchDeleteFailedError,
     BranchExistsError,
+    BranchUnpushedError,
     ConflictError,
     DirtyError,
     FinishResult,
+    LockedError,
     MergeNotFastForwardError,
     NestedError,
     NotFoundError,
     PullRequestPolicyError,
+    RemoveFailedError,
     RunFromBaseError,
     UnmergedError,
     UnsupportedLayoutError,
@@ -99,6 +106,15 @@ def test_start_guards(repo: Path) -> None:
             start(locate(repo), bad)
 
 
+def test_start_refuses_a_registered_worktree_whose_directory_is_missing(repo: Path) -> None:
+    gone = start(locate(repo), "gone")
+    shutil.rmtree(gone.path)
+    with pytest.raises(ConflictError, match="directory is missing") as raised:
+        start(locate(repo), "gone")
+    assert raised.value.mode is ActionMode.INTERACTION
+    assert raised.value.fix == f"git -C {repo} worktree prune"
+
+
 def test_setup_runs_once_in_a_new_worktree_without_the_callers_virtualenv(
     repo: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -133,6 +149,96 @@ def test_finish_refuses_from_the_worktree_under_the_pr_policy_and_before_the_mer
     assert unmerged.value.result is None and created.path.is_dir()
     with pytest.raises(NotFoundError):
         finish(locate(repo), "nothing")
+
+
+def test_finish_refuses_a_worktree_that_is_not_on_the_slugs_branch(repo: Path) -> None:
+    detached = start(locate(repo), "detached")
+    git(detached.path, "checkout", "-q", "--detach")
+    commit(detached.path, "lost.txt")  # on no branch: the branch "detached" is still merged
+    moved = start(locate(repo), "moved")
+    git(moved.path, "switch", "-q", "-c", "elsewhere")
+    commit(moved.path, "work.txt")
+    head = git(repo, "rev-parse", "HEAD")
+    rows = {item.path: item for item in status(locate(repo)).worktrees}
+    for slug, path in (("detached", detached.path), ("moved", moved.path)):
+        assert rows[path].merged is False  # status and finish judge the same commits
+        for merge in (False, True):
+            with pytest.raises(ConflictError, match=f"not {slug};") as raised:
+                finish(locate(repo), slug, merge=merge, pull_request=False)
+            assert raised.value.result is None and raised.value.mode is ActionMode.INTERACTION
+        assert path.is_dir() and git(repo, "branch", "--list", slug)
+    for merge in (False, True):
+        with pytest.raises(ConflictError, match="the base checkout's branch"):
+            finish(locate(repo), "main", merge=merge, pull_request=False)
+    assert git(repo, "rev-parse", "HEAD") == head and git(repo, "branch", "--list", "main")
+
+
+def test_finish_refuses_a_locked_worktree_before_the_merge(repo: Path) -> None:
+    created = start(locate(repo), "demo")
+    commit(created.path, "work.txt")
+    git(repo, "worktree", "lock", "--reason", "in use", str(created.path))
+    head = git(repo, "rev-parse", "HEAD")
+    with pytest.raises(LockedError) as raised:
+        finish(locate(repo), "demo", merge=True, pull_request=False)
+    assert raised.value.code == "WORKTREE_LOCKED" and raised.value.result is None
+    assert raised.value.fix == f"git -C {repo} worktree unlock {created.path}"
+    assert git(repo, "rev-parse", "HEAD") == head and created.path.is_dir()
+    git(repo, "worktree", "unlock", str(created.path))
+    assert finish(locate(repo), "demo", merge=True, pull_request=False).branch_deleted
+
+
+def test_finish_merge_refuses_a_detached_base(repo: Path) -> None:
+    created = start(locate(repo), "demo")
+    commit(created.path, "work.txt")
+    git(repo, "checkout", "-q", "--detach")
+    head = git(repo, "rev-parse", "HEAD")
+    with pytest.raises(BaseDetachedError) as raised:
+        finish(locate(repo), "demo", merge=True, pull_request=False)
+    assert raised.value.code == "WORKTREE_BASE_DETACHED" and raised.value.mode is ActionMode.INTERACTION
+    assert raised.value.result is None and git(repo, "rev-parse", "HEAD") == head
+    assert created.path.is_dir() and git(repo, "branch", "--list", "demo")
+
+
+def test_a_failed_branch_deletion_carries_the_result_and_a_rerun_deletes_the_branch(
+    repo: Path, refuse_deleting: Callable[[Path, str], Path]
+) -> None:
+    created = start(locate(repo), "demo")
+    commit(created.path, "work.txt")
+    hook = refuse_deleting(repo, "demo")
+    with pytest.raises(BranchDeleteFailedError) as raised:
+        finish(locate(repo), "demo", merge=True, pull_request=False)
+    partial = raised.value.result
+    assert isinstance(partial, FinishResult) and raised.value.mode is ActionMode.INTERACTION
+    assert (partial.merged, partial.removed, partial.branch_deleted) == (True, True, False)
+    assert not created.path.exists() and git(repo, "branch", "--list", "demo")
+    hook.unlink()
+    done = finish(locate(repo), "demo")  # no worktree left, the merged branch remains: only the deletion runs
+    assert (done.merged, done.removed, done.branch_deleted) == (False, True, True)
+    assert git(repo, "branch", "--list", "demo") == ""
+    with pytest.raises(NotFoundError):
+        finish(locate(repo), "demo")
+    git(repo, "checkout", "-q", "-b", "spike")
+    commit(repo, "spike.txt")
+    git(repo, "checkout", "-q", "main")
+    with pytest.raises(NotFoundError, match="not merged"):
+        finish(locate(repo), "spike")
+    assert git(repo, "branch", "--list", "spike")
+
+
+def test_a_failed_removal_carries_the_result_and_a_rerun_resumes(repo: Path) -> None:
+    created = start(locate(repo), "demo")
+    commit(created.path, "sub/work.txt")
+    (created.path / "sub").chmod(0o555)  # Git cannot delete the file inside it
+    try:
+        with pytest.raises(RemoveFailedError) as raised:
+            finish(locate(repo), "demo", merge=True, pull_request=False)
+    finally:
+        (created.path / "sub").chmod(0o755)
+    partial = raised.value.result
+    assert isinstance(partial, FinishResult) and raised.value.code == "WORKTREE_REMOVE_FAILED"
+    assert (partial.merged, partial.removed, partial.branch_deleted) == (True, False, False)
+    done = finish(locate(repo), "demo")
+    assert done.removed and done.branch_deleted and git(repo, "branch", "--list", "demo") == ""
 
 
 def test_finish_merges_resumes_after_a_dirty_worktree_and_cleans_up(repo: Path) -> None:
@@ -204,6 +310,61 @@ def test_a_failed_push_warns_and_the_cleanup_continues(repo: Path, tmp_path: Pat
     assert warning.fix == f"git -C {repo} push origin refs/heads/main:refs/heads/main"
 
 
+def moved_on(remote: Path, tmp_path: Path) -> None:
+    """Push a commit to ``remote``'s ``main`` from another clone."""
+    other = tmp_path / "other"
+    git(tmp_path, "clone", "-q", "-b", "main", str(remote), str(other))
+    git(other, "config", "user.email", "t@example.com")
+    git(other, "config", "user.name", "t")
+    commit(other, "theirs.txt")
+    git(other, "push", "-q", "origin", "main")
+
+
+def test_finish_refuses_to_merge_when_the_upstream_moved_on(repo: Path, tmp_path: Path) -> None:
+    remote = _with_remote(repo, tmp_path)
+    moved_on(remote, tmp_path)
+    created = start(locate(repo), "demo")
+    commit(created.path, "work.txt")
+    head = git(repo, "rev-parse", "HEAD")
+    with pytest.raises(BaseBehindError) as raised:
+        finish(locate(repo), "demo", merge=True, pull_request=False)
+    assert raised.value.code == "WORKTREE_BASE_BEHIND" and raised.value.result is None
+    assert raised.value.fix == f"git -C {repo} pull --ff-only origin refs/heads/main"
+    assert git(repo, "rev-parse", "HEAD") == head and created.path.is_dir()
+
+
+def test_a_push_rejected_by_a_moved_upstream_has_its_own_code(repo: Path, tmp_path: Path) -> None:
+    remote = _with_remote(repo, tmp_path)
+    moved_on(remote, tmp_path)
+    git(repo, "remote", "set-url", "origin", str(tmp_path / "gone.git"))  # the fetch fails: the check is skipped
+    git(repo, "remote", "set-url", "--push", "origin", str(remote))
+    created = start(locate(repo), "demo")
+    commit(created.path, "work.txt")
+    result = finish(locate(repo), "demo", merge=True, pull_request=False)
+    assert (result.merged, result.push, result.removed, result.branch_deleted) == (True, "rejected", True, True)
+    [warning] = result.notices
+    assert warning.code == "WORKTREE_PUSH_REJECTED" and warning.mode is ActionMode.CONTINUE
+    push = f"git -C {repo} push origin refs/heads/main:refs/heads/main"
+    assert warning.fix == f"git -C {repo} pull --rebase origin refs/heads/main && {push}"
+
+
+def test_finish_refuses_before_the_merge_when_the_branch_upstream_lacks_its_commits(repo: Path, tmp_path: Path) -> None:
+    _with_remote(repo, tmp_path)
+    created = start(locate(repo), "demo")
+    commit(created.path, "one.txt")
+    git(created.path, "push", "-q", "-u", "origin", "demo")
+    commit(created.path, "two.txt")
+    head = git(repo, "rev-parse", "HEAD")
+    with pytest.raises(BranchUnpushedError) as raised:
+        finish(locate(repo), "demo", merge=True, pull_request=False)
+    assert raised.value.code == "WORKTREE_BRANCH_UNPUSHED" and raised.value.result is None
+    assert raised.value.fix == f"git -C {repo} push origin refs/heads/demo:refs/heads/demo"
+    assert git(repo, "rev-parse", "HEAD") == head and created.path.is_dir()
+    git(repo, "push", "-q", "origin", "refs/heads/demo:refs/heads/demo")
+    done = finish(locate(repo), "demo", merge=True, pull_request=False)
+    assert (done.push, done.removed, done.branch_deleted) == ("pushed", True, True)
+
+
 def test_status_reports_worktrees_and_unmerged_branches_without_changing_anything(repo: Path) -> None:
     merged = start(locate(repo), "merged")
     open_ = start(locate(repo), "open")
@@ -247,7 +408,7 @@ def test_start_restores_the_managed_files_a_fresh_checkout_lacks(repo: Path) -> 
     assert git(result.path, "status", "--porcelain") == ""  # sync wrote ignored files only
 
 
-def test_sync_prefers_the_worktree_environment_and_skips_without_a_receipt(repo: Path, tmp_path: Path) -> None:
+def test_sync_uses_the_worktree_environment_with_devkit_and_skips_without_a_receipt(repo: Path, tmp_path: Path) -> None:
     assert start(locate(repo), "plain", project=Path(".")).synced is None
     write(repo, ".gitignore", ".venv/\n")  # as in any Python project, so the reused worktree is clean
     synchronized(repo)
@@ -256,6 +417,9 @@ def test_sync_prefers_the_worktree_environment_and_skips_without_a_receipt(repo:
     script.write_text(f'#!/bin/sh\necho used > {marker}\nexec {sys.executable} "$@"\n')
     script.chmod(0o755)
     setup = f"mkdir -p .venv/bin && cp {script} .venv/bin/python"
+    without = start(locate(repo), "without", setup=setup, project=Path("."))
+    assert without.synced is True and not marker.exists()  # no devkit in that environment: this interpreter ran
+    setup += " && mkdir -p .venv/lib/python3.12/site-packages/devkit-0.0.0.dist-info"
     result = start(locate(repo), "demo", setup=setup, project=Path("."))
     assert result.synced is True and marker.read_text() == "used\n"
     assert start(locate(repo), "demo", project=Path(".")).synced is None  # reused: nothing runs

@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
+from devkit.advisory import ActionMode
 from devkit.cli import cli
 from devkit.worktree import WorktreeConfig, WorktreeConfigError, read_worktree_config
 from testsupport.rules import git, init_repo, write
@@ -101,6 +103,33 @@ def test_a_refused_finish_in_json_carries_the_partial_result_and_the_error(repo:
     assert [error["code"] for error in document["errors"]] == ["WORKTREE_DIRTY"]
 
 
+def test_a_git_failure_after_the_merge_reports_progress_and_the_push_warning_then_resumes(
+    repo: Path, tmp_path: Path, refuse_deleting: Callable[[Path, str], Path]
+) -> None:
+    configure(repo, "pull_request = false\n")
+    git(repo, "add", ".")
+    git(repo, "commit", "-q", "-m", "config")
+    git(repo, "remote", "add", "origin", str(tmp_path / "gone.git"))  # unreachable: the push fails
+    git(repo, "config", "branch.main.remote", "origin")
+    git(repo, "config", "branch.main.merge", "refs/heads/main")
+    invoke("start", "demo", "-w", str(repo))
+    path = repo.parent / "repo-wt-demo"
+    write(path, "work.txt", "x\n")
+    git(path, "add", ".")
+    git(path, "commit", "-q", "-m", "work")
+    hook = refuse_deleting(repo, "demo")
+    refused = invoke("finish", "demo", "--merge", "-w", str(repo))
+    assert refused.exit_code == 2
+    assert refused.stdout == (
+        f"[WORKTREE_FINISHED: demo path={path} merged=yes push=failed removed=yes branch_deleted=no]\n"
+    )
+    assert "(WORKTREE_PUSH_FAILED)" in refused.stderr and "(WORKTREE_BRANCH_DELETE_FAILED)" in refused.stderr
+    hook.unlink()
+    done = invoke("finish", "demo", "-w", str(repo))
+    assert done.exit_code == 0, done.output
+    assert done.stdout == f"[WORKTREE_FINISHED: demo path={path} merged=no push=- removed=yes branch_deleted=yes]\n"
+
+
 def test_merge_is_refused_under_the_default_pull_request_policy(repo: Path) -> None:
     invoke("start", "demo", "-w", str(repo))
     refused = invoke("finish", "demo", "--merge", "-w", str(repo), "--format", "json")
@@ -149,7 +178,7 @@ def test_worktree_config_defaults_and_validation(repo: Path) -> None:
         configure(repo, table)
         with pytest.raises(WorktreeConfigError, match=message) as raised:
             read_worktree_config(repo)
-        assert raised.value.code == "WORKTREE_CONFIG_INVALID"
+        assert raised.value.code == "WORKTREE_CONFIG_INVALID" and raised.value.mode is ActionMode.INPUT_ERROR
     write(repo, ".devkit/config.toml", "schema = 1\nworktree = 1\n")
     with pytest.raises(WorktreeConfigError, match="expected a table"):
         read_worktree_config(repo)

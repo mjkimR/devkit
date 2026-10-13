@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+import signal
 from pathlib import Path
 
 import pytest
 from devkit.advisory import ActionMode, AdvisoryError, ExitCode, Level
+from devkit.compact import CommandInterrupted, run_command
 from devkit.gate import (
     BaseGate,
     GateConfigError,
@@ -268,6 +270,28 @@ def test_keyboard_interrupt_aborts_the_stage(tmp_path: Path) -> None:
     registry.register(Recorder("late", 100, calls))
     with pytest.raises(KeyboardInterrupt):
         run_stage(gate_ctx(tmp_path), registry, GatesConfig())
+    assert calls == []
+
+
+class RunsCommand(BaseGate):
+    def __init__(self, gate_id: str, order: int, command: str) -> None:
+        super().__init__(id=gate_id, description="", stage=Stage.PRE_COMMIT, order=order)
+        self.command = command
+
+    def run(self, ctx: GateContext) -> GateResult:
+        run_command(["sh", "-c", self.command], cwd=ctx.repo_root, log_dir=ctx.repo_root / "logs")
+        return GateResult.passed()
+
+
+def test_an_interrupted_run_command_aborts_the_stage(tmp_path: Path) -> None:
+    # CommandInterrupted is a SystemExit, which a gate calling sys.exit() turns into a failure: not this one.
+    calls: list[str] = []
+    registry = GateRegistry()
+    registry.register(RunsCommand("interrupted", 10, "kill -INT $PPID; sleep 30"))  # Ctrl-C while it runs
+    registry.register(Recorder("late", 100, calls))
+    with pytest.raises(CommandInterrupted) as caught:
+        run_stage(gate_ctx(tmp_path), registry, GatesConfig())
+    assert caught.value.code == 128 + signal.SIGINT and caught.value.run.interrupted == signal.SIGINT
     assert calls == []
 
 

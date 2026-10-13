@@ -56,7 +56,7 @@ Every gate error derives from `GateError` (`devkit.gate.errors`), which sets `ac
 | `GATE_VERIFY_FAILED` | `GateRefusedError` | `BLOCKED` | `1` | a `verify-commands` command exited nonzero; one `command: ... exit=... log=...` detail per failed command, then its summaries, failed tests or last lines and relayed `devkit` error blocks (`  > `) |
 | `GATE_VERIFY_NOT_RUN` | `VerifyNotRunError` | `MAINTENANCE`, or `AUTO` | `2` | a nested `devkit` command could not run (exit `2` with its own error block, such as `RULES_LOAD_FAILED`); same details; `AUTO` with the relayed fix when every relayed error is `AUTO` with that one fix (`devkit sync` for missing managed files) |
 | `GATE_VERIFY_UNSTAGED` | `VerifyUnstagedNotice` | `NOTE` (level `NOTICE`) | `0` | returned, never raised: `verify-commands` ran on a working tree with unstaged or untracked files |
-| `GATE_CONFIG_TEMPLATE_SKIPPED` | `GateTemplateNotice` | `CONTINUE` (level `WARNING`) | `0` | returned, never raised: `devkit.config` is a symbolic link, not a regular file or not UTF-8, so `install` or the post-sync refresh left it alone |
+| `GATE_CONFIG_TEMPLATE_SKIPPED` | `GateTemplateNotice` | `CONTINUE` (level `WARNING`) | `0` | returned, never raised: `devkit.config` is a symbolic link, not a regular file or not UTF-8, or the `[gates]` table of `.devkit/config.toml` cannot be read, so `install` or the post-sync refresh left it alone |
 | `GATE_FOREIGN_HOOK`, `GATE_BACKUP_EXISTS`, `GATE_HOOKS_PATH_SET` | `ForeignHookError`, `HookBackupExistsError`, `HooksPathSetError` | `INTERACTION` | `2` | `install` would move or bypass hooks it does not own |
 | `CONFIG_INVALID` | `devkit.core.ConfigError` | `INPUT_ERROR` | `2` | `.devkit/config.toml` or `devkit.config` cannot be read or parsed |
 | `ASSET_FILE_INVALID` | `devkit.core.AssetFileError` | `MAINTENANCE`; `AUTO` when missing | `2` | a receipt-listed gate file is unsafe or differs from its recorded hash; a missing one (a fresh clone or worktree) is `AUTO` with the fix `devkit sync` |
@@ -84,7 +84,7 @@ It ships no gate: messages are not validated. Adapt the conventions (scope names
 
 ## Configuration
 
-`.devkit/config.toml` (tracked) is overridden by `<common-git-dir>/devkit.config` (untracked, per clone); see [Configuration Layers](overview.md#6-configuration-layers).
+`.devkit/config.toml` (tracked) is overridden by `<common-git-dir>/devkit.config` (untracked, per clone); see [Configuration Layers](overview.md#6-configuration-layers). A key in `devkit.config` replaces the project's value as a whole (an array too): in its commented template, uncomment a table's header and only the keys you change ([Settings Template](overview.md#6a-settings-template)).
 
 ```toml
 [gates.settings.verify-commands]

@@ -114,6 +114,31 @@ def test_unstaged_and_untracked_files_are_noted(repo: Path) -> None:
     assert info.value.details[-1].startswith("note: the commands checked the working tree")
 
 
+def test_staged_renames_and_copies_are_not_unstaged(repo: Path) -> None:
+    src = repo / "src"
+    src.mkdir()
+    for name in ("old name.py", "moved.py", "original.py"):
+        (src / name).write_text("".join(f"{name} {i}\n" for i in range(40)))
+    _commit_all(repo)
+    git(repo, "add", "src")
+    git(repo, "commit", "-q", "-m", "init")
+    git(repo, "config", "status.renames", "copies")
+    git(repo, "mv", "src/old name.py", "src/new\nname.py")  # "R ": staged only
+    git(repo, "mv", "src/moved.py", "src/renamed.py")
+    (src / "renamed.py").write_text((src / "renamed.py").read_text() + "edited\n")  # "RM": unstaged edit
+    (src / "copy.py").write_text((src / "original.py").read_text())
+    (src / "original.py").write_text((src / "original.py").read_text() + "edited\n")
+    git(repo, "add", "src/copy.py", "src/original.py")  # "C ": staged only
+    (repo / "a.txt").write_text("changed\n")
+    (repo / "new file.txt").write_text("new\n")
+    status = git(repo, "status", "--porcelain=v1", "-z").stdout.split("\0")
+    assert {entry[:2] for entry in status if len(entry) > 3} >= {"R ", "RM", "C ", " M", "??"}
+
+    result = _run(repo, "true")
+    assert [notice.code for notice in result.notices] == ["GATE_VERIFY_UNSTAGED"]
+    assert sorted(result.notices[0].details) == ["a.txt", "new file.txt", "src/renamed.py"]
+
+
 def test_hook_git_variables_do_not_reach_the_commands(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _commit_all(repo)
     monkeypatch.setenv("GIT_INDEX_FILE", str(repo / ".git/index"))

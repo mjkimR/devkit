@@ -147,3 +147,43 @@ def test_uncommenting_a_whole_table_keeps_prose_commented_and_yields_valid_toml(
     assert project.validation.errors == ()
     assert project.config.gates["team-block"].values == {"allow": False}
     assert tomllib.loads(_uncomment_once(local_config.HEADER)) == {}  # the file header stays prose too
+
+
+def test_uncommenting_a_table_keeps_the_settings_of_the_project_config(repo: Path) -> None:
+    deploy_gate(repo, gate_source())
+    (repo / ".devkit/config.toml").write_text(
+        '[gates.settings.verify-commands]\ncommands = ["just check"]\n\n[gates.settings.team-block]\nenabled = false\n'
+    )
+    _install(repo)
+    path = _config(repo)
+    text = path.read_text()
+    assert (
+        "# [gates.settings.verify-commands]\n"
+        "#   enabled = true\n"
+        "##   commands: set in .devkit/config.toml; adding commands = <value> here replaces it  # array of strings; "
+    ) in text
+    assert "# [gates.settings.team-block]\n##   enabled: set in .devkit/config.toml;" in text
+    assert "#   allow = false  # boolean\n" in text
+
+    # As the header says: the table header and only the key that changes; the whole table is just as safe.
+    edited = text.replace(
+        "# [gates.settings.verify-commands]\n#   enabled = true", "[gates.settings.verify-commands]\n  enabled = false"
+    )
+    table = next(block for block in edited.split("\n\n") if "[gates.settings.team-block]" in block)
+    path.write_text(edited.replace(table, _uncomment_once(table)))
+
+    project = load_gate_project(repo)
+    assert project.validation.errors == ()
+    assert project.config.gates["verify-commands"].enabled is False
+    assert project.validation.settings["verify-commands"].commands == ["just check"]
+    assert project.config.gates["team-block"].enabled is False
+    assert project.config.gates["team-block"].values == {"allow": False}
+
+
+def test_an_unreadable_project_gates_table_skips_the_template(repo: Path) -> None:
+    (repo / ".devkit").mkdir()
+    (repo / ".devkit/config.toml").write_text("[gates]\nsettings = 1\n")
+    result = local_config.refresh_project_template(repo)
+    assert result.state is local_config.TemplateState.SKIPPED and not _config(repo).exists()
+    assert result.notice is not None and result.notice.code == "GATE_CONFIG_TEMPLATE_SKIPPED"
+    assert result.notice.target_files == (".devkit/config.toml",)

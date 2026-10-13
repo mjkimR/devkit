@@ -5,7 +5,7 @@ run in order with ``sh -c`` from the top level of the work tree, each through
 ``devkit.compact.run_command``: the full output goes to a log file and the
 refusal carries only the compact view (summaries, failed tests or the last
 lines, and the log path). Every command runs, so one commit attempt reports
-every failure. The error blocks of nested ``devkit`` commands are relayed in the
+every failure; an interrupted one (``CommandInterrupted``) aborts the stage. The error blocks of nested ``devkit`` commands are relayed in the
 details. When a failed command is a ``devkit`` command that could not run (exit
 ``2`` with an error block of its own: rules that cannot load, a project that needs
 ``devkit sync``) the gate raises ``GATE_VERIFY_NOT_RUN`` instead of the
@@ -32,7 +32,7 @@ import os
 from dataclasses import dataclass, field
 
 from devkit.advisory import Actor, AdvisoryError, ExitCode, Level
-from devkit.compact import CommandInterrupted, CommandRun, run_command
+from devkit.compact import CommandRun, run_command
 from devkit.core.git import COMMIT_INDEX_VARIABLE, run_git
 from devkit.gate.engine.base import BaseGate
 from devkit.gate.engine.models import GateContext, GateResult, Stage
@@ -52,11 +52,19 @@ class VerifyCommandsSettings:
 
 
 def _unstaged(ctx: GateContext) -> list[str]:
-    """Tracked files with unstaged changes and untracked files, as Git reports them for this commit's index."""
-    entries = run_git(ctx.repo_root, "status", "--porcelain=v1", "-z", "--untracked-files=normal").split(b"\0")
+    """Tracked files with unstaged changes and untracked files, as Git reports them for this commit's index.
+
+    Each ``-z`` record is ``XY <path>``; a rename or copy (``R`` or ``C`` in
+    either column) is followed by one more field, its source path, which is
+    not a record of its own.
+    """
+    fields = iter(run_git(ctx.repo_root, "status", "--porcelain=v1", "-z", "--untracked-files=normal").split(b"\0"))
     paths = []
-    for entry in entries:
-        if len(entry) > 3 and (entry[:2] == b"??" or entry[1:2] not in (b" ", b"")):
+    for entry in fields:
+        status = entry[:2]
+        if b"R" in status or b"C" in status:
+            next(fields, None)
+        if len(entry) > 3 and status[1:2] != b" ":  # Y is the work tree's column; "??" is untracked
             paths.append(os.fsdecode(entry[3:]))
     return paths
 
@@ -116,10 +124,8 @@ class VerifyCommandsGate(BaseGate):
         failed: list[tuple[str, CommandRun]] = []
         notices: list[AdvisoryError] = []
         for command in settings.commands:
-            try:
-                run = run_command(["sh", "-c", command], cwd=ctx.repo_root, env=env)
-            except CommandInterrupted:
-                raise KeyboardInterrupt from None
+            # An interrupted command raises CommandInterrupted, which the runner lets abort the stage.
+            run = run_command(["sh", "-c", command], cwd=ctx.repo_root, env=env)
             notices.extend(run.notices)
             if not run.passed:
                 failed.append((command, run))

@@ -17,6 +17,7 @@ from types import MappingProxyType
 from typing import Any
 
 from devkit.advisory import AdvisoryError, ExitCode, Level, as_advisory_error
+from devkit.compact import CommandInterrupted
 from devkit.core import ConfigError, require_git_toplevel
 from devkit.gate.engine.config import GatesConfig, load_gates_config, resolve_settings
 from devkit.gate.engine.models import Gate, GateContext, GateResult, Outcome, Stage
@@ -145,6 +146,8 @@ def _run_gate(gate: Gate, ctx: GateContext, config: GatesConfig, checked: Valida
         return GateRun(gate.id, Outcome.SKIPPED, INVALID_SETTINGS_NOTE)
     try:
         result = gate.run(dataclasses.replace(ctx, settings=checked.settings[gate.id]))
+    except CommandInterrupted:  # a signal stopped a gate's `run_command`: abort like Ctrl-C, exiting 128 + N
+        raise
     except (Exception, SystemExit) as exc:  # a gate calling sys.exit() must not end the stage; Ctrl-C still aborts it
         return GateRun(gate.id, Outcome.FAILED, error=as_advisory_error(exc))
     if result is None:

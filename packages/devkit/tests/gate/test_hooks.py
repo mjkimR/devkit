@@ -3,7 +3,9 @@ from __future__ import annotations
 import json
 import os
 import shlex
+import signal
 import sys
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -230,6 +232,17 @@ def test_deployed_gates_read_the_project_and_clone_config(repo: Path) -> None:
     (repo / ".git/devkit.config").write_text("[gates.settings.team-block]\nallow = false\n")
     code, output = _invoke("run", "-w", str(repo), "pre-commit")
     assert code == 1 and "TEST_REFUSED" in output
+
+
+def test_ctrl_c_during_verify_commands_aborts_with_130(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(tempfile, "tempdir", str(repo.parent))  # where the command's log goes
+    (repo / ".devkit").mkdir()
+    (repo / ".devkit/config.toml").write_text(
+        '[gates.settings.verify-commands]\ncommands = ["kill -INT $PPID; sleep 30", "true"]\n'
+    )
+    code, output = _invoke("run", "-w", str(repo), "pre-commit")
+    assert code == 128 + signal.SIGINT, output  # as `devkit run` exits, not UNEXPECTED_ERROR (2)
+    assert "UNEXPECTED_ERROR" not in output
 
 
 def test_repository_modules_do_not_shadow_the_hook(repo: Path) -> None:

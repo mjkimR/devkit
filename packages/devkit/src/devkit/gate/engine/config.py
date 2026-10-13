@@ -91,15 +91,28 @@ def parse_gates(table: dict[str, Any], sources: tuple[Path, ...] = ()) -> GatesC
     return GatesConfig(gates, sources)
 
 
+def _project_layer(repo_root: Path) -> dict[str, Any] | None:
+    """The ``[gates]`` table of ``.devkit/config.toml``, unparsed; ``None`` when the file has none."""
+    project = read_project_config(repo_root)
+    if GATES_TABLE not in project:
+        return None
+    return _table(project[GATES_TABLE], f"{repo_root / CONFIG_PATH}: {GATES_TABLE}")
+
+
+def load_project_gates_config(repo_root: Path) -> GatesConfig:
+    """``[gates]`` of ``.devkit/config.toml`` alone, without the clone-local layer: what ``devkit.config`` overrides."""
+    table = _project_layer(repo_root)
+    return parse_gates(table or {}, () if table is None else (repo_root / CONFIG_PATH,))
+
+
 def load_gates_config(repo_root: Path, common_git_dir: Path) -> GatesConfig:
     """Merge ``[gates]`` from the project config and the clone-local ``<common-git-dir>/devkit.config``."""
     merged: dict[str, Any] = {}
     sources: list[Path] = []
-    project_path = repo_root / CONFIG_PATH
-    project = read_project_config(repo_root)
-    if GATES_TABLE in project:
-        merged = merge(merged, _table(project[GATES_TABLE], f"{project_path}: {GATES_TABLE}"))
-        sources.append(project_path)
+    project = _project_layer(repo_root)
+    if project is not None:
+        merged = merge(merged, project)
+        sources.append(repo_root / CONFIG_PATH)
     local_path = common_git_dir / LOCAL_CONFIG
     local = read_toml(local_path)
     if local is not None:

@@ -5,7 +5,8 @@ branch ``<slug>``, created from the base checkout's HEAD; the base working tree
 is never touched by ``start``. ``finish`` runs in the base: it fast-forwards the
 base onto the branch and pushes it (``merge=True``) or verifies the branch is
 merged, removes the worktree and deletes the branch. Every step refuses
-instead of forcing, and rerunning resumes. ``status`` changes nothing.
+instead of forcing, the checks of the worktree's branch, the base and the
+upstreams run before the first change, and rerunning resumes. ``status`` changes nothing.
 """
 
 from __future__ import annotations
@@ -28,15 +29,22 @@ from devkit.core.git import run_git
 from devkit.core.project import require_git_toplevel
 from devkit.core.receipt import RECEIPT_PATH
 from devkit.worktree.errors import (
+    BaseBehindError,
+    BaseDetachedError,
     BaseDirtyError,
+    BranchDeleteFailedError,
     BranchExistsError,
+    BranchUnpushedError,
     ConflictError,
     DirtyError,
+    LockedError,
     MergeNotFastForwardError,
     NestedError,
     NotFoundError,
     PullRequestPolicyError,
     PushFailedWarning,
+    PushRejectedWarning,
+    RemoveFailedError,
     RunFromBaseError,
     SetupFailedWarning,
     SyncFailedWarning,
@@ -49,6 +57,7 @@ _log = logging.getLogger(__name__)
 
 SLUG = re.compile(r"[a-z0-9][a-z0-9_-]{0,63}")
 PUSH_TIMEOUT = 120.0  # seconds; a slow or stuck push must not hold the cleanup
+FETCH_TIMEOUT = 120.0  # seconds for the upstream fetch before the merge
 SETUP_TIMEOUT = 900.0  # seconds for the `setup` command (dependency installs)
 SYNC_TIMEOUT = 300.0  # seconds for `devkit sync` in a new worktree
 
@@ -89,7 +98,8 @@ class StartResult:
 
 @dataclass
 class FinishResult:
-    """How far ``finish`` got; ``push`` is ``pushed``, ``failed`` or ``no-upstream``, ``None`` without a merge."""
+    """How far ``finish`` got; ``push`` is ``pushed``, ``rejected``, ``failed`` or ``no-upstream``, ``None`` without
+    a merge. ``removed`` is also ``True`` when the worktree was already gone (a rerun after it was removed)."""
 
     slug: str
     path: Path
@@ -153,6 +163,7 @@ class _Entry:
     branch: str | None = None
     head: str | None = None
     prunable: bool = False
+    locked: bool = False
 
 
 def _git(cwd: Path, *args: str) -> str:
@@ -171,6 +182,16 @@ def _query(cwd: Path, *args: str) -> str | None:
 
 def _succeeds(cwd: Path, *args: str) -> bool:
     return _query(cwd, *args) is not None
+
+
+def _head(base: Path) -> str | None:
+    """The base HEAD's commit id; ``None`` before its first commit."""
+    return _query(base, "rev-parse", "--verify", "--quiet", "HEAD")
+
+
+def _merged(base: Path, rev: str | None, head: str | None) -> bool:
+    """Whether the commit ``head`` (the base HEAD) contains ``rev``; ``status`` and ``finish`` share this test."""
+    return rev is not None and head is not None and _succeeds(base, "merge-base", "--is-ancestor", rev, head)
 
 
 def _resolve(path: str) -> Path:
@@ -222,6 +243,8 @@ def _entries(base: Path) -> list[_Entry]:
             current.head = head if head.strip("0") else None  # Git prints a zero id before the first commit
         elif line == "prunable" or line.startswith("prunable "):
             current.prunable = True
+        elif line == "locked" or line.startswith("locked "):
+            current.locked = True
     return entries
 
 
@@ -237,8 +260,9 @@ def start(position: Position, slug: str, *, setup: str | None = None, project: P
     1. ``setup`` runs in the worktree through ``/bin/sh -c`` (without the caller's ``VIRTUAL_ENV``), for the
        environment the project needs (``uv sync``);
     2. when ``project`` (a directory relative to the checkout's top level) is a synchronized devkit project,
-       ``devkit sync`` runs there with the worktree's ``.venv`` interpreter, else this one, and restores the
-       managed copies under ``.devkit/managed/`` that the commit gates, rules and context commands read.
+       ``devkit sync`` runs there with the worktree's ``.venv`` interpreter when devkit is installed in it, else
+       this one, and restores the managed copies under ``.devkit/managed/`` that the commit gates, rules and
+       context commands read.
 
     A failure of either is a warning (``WORKTREE_SETUP_FAILED``, ``WORKTREE_SYNC_FAILED``) whose ``[FIX]``
     reruns it; the worktree stays. A reused worktree runs neither.
@@ -252,6 +276,11 @@ def start(position: Position, slug: str, *, setup: str | None = None, project: P
     path, branch = path_for(position, slug), slug
     for entry in _entries(position.base):
         if entry.path == path:
+            if entry.prunable:
+                raise ConflictError(
+                    f"{path} is a registered worktree whose directory is missing",
+                    fix=f"git -C {shlex.quote(str(position.base))} worktree prune",
+                )
             if entry.branch != branch:
                 raise ConflictError(f"{path} is a worktree on {entry.branch or 'a detached HEAD'}, not {branch}")
             if not _clean(path):
@@ -273,14 +302,24 @@ def start(position: Position, slug: str, *, setup: str | None = None, project: P
     synced = None
     target = path / project if project is not None else None
     if target is not None and (target / RECEIPT_PATH).is_file():
-        python = path / ".venv/bin/python"
-        interpreter = str(python) if python.is_file() else sys.executable
+        interpreter = _interpreter(path)
         failure = _run([interpreter, "-m", "devkit", "sync", "-w", str(target)], target, "devkit sync", SYNC_TIMEOUT)
         synced = failure is None
         if failure is not None:
             fix = f"cd {shlex.quote(str(target))} && {shlex.quote(interpreter)} -m devkit sync"
             notices.append(SyncFailedWarning(failure, fix=fix))
     return StartResult(slug, path, branch, position.base, True, setup, synced, notices)
+
+
+def _interpreter(checkout: Path) -> str:
+    """The checkout's ``.venv`` interpreter when devkit is installed in it (as the commit gate hooks decide), else
+    the one running this process."""
+    python = checkout / ".venv/bin/python"
+    if python.is_file() and any(
+        info.is_dir() for info in checkout.glob(".venv/lib/python*/site-packages/devkit-*.dist-info")
+    ):
+        return str(python)
+    return sys.executable
 
 
 def _run(argv: list[str], cwd: Path, label: str, timeout: float) -> str | None:
@@ -298,13 +337,49 @@ def _run(argv: list[str], cwd: Path, label: str, timeout: float) -> str | None:
     return f"{label} exited {completed.returncode}" + (":\n" + "\n".join(tail) if tail else "")
 
 
+def _find(position: Position, slug: str) -> _Entry | None:
+    """The slug's worktree (by its path, else its branch), checked for ``finish``; ``None`` when there is none.
+
+    Only a linked worktree on the branch ``slug`` qualifies: ``finish`` judges the merge by that branch, so removing
+    a worktree that is detached or on another branch would drop commits the branch does not hold
+    (``WORKTREE_CONFLICT``), as would treating the base checkout as the task. A locked worktree is
+    ``WORKTREE_LOCKED``.
+    """
+    base, path = position.base, path_for(position, slug)
+    entries = _entries(base)
+    entry = next((item for item in entries if item.path == path), None)
+    entry = entry or next((item for item in entries if item.branch == slug), None)
+    if entry is None:
+        return None
+    if entry.path == base:
+        raise ConflictError(
+            f"{slug} is the base checkout's branch; finish integrates a task branch into the base and never removes it",
+            fix="Pass the slug of a linked worktree (`devkit worktree status` lists them)",
+        )
+    if entry.branch != slug:
+        raise ConflictError(
+            f"{entry.path} is on {entry.branch or 'a detached HEAD'}, not {slug}; removing it would drop commits"
+            f" the branch {slug} does not hold; nothing was changed",
+            fix=f"Check out {slug} in {entry.path} with the worktree's commits on it, then rerun",
+        )
+    if entry.locked:
+        raise LockedError(
+            f"{entry.path} is locked; nothing was changed",
+            fix=f"git -C {shlex.quote(str(base))} worktree unlock {shlex.quote(str(entry.path))}",
+        )
+    return entry
+
+
 def find(position: Position, slug: str) -> Path:
-    """The path of the slug's worktree (by its path or its branch); ``WORKTREE_NOT_FOUND`` when there is none."""
-    path = path_for(position, slug)
-    for entry in _entries(position.base):
-        if entry.path == path or entry.branch == slug:
-            return entry.path
-    raise NotFoundError(f"no worktree at {path} or on branch {slug}")
+    """The path of the slug's linked worktree on the branch ``slug``, found by its path or its branch.
+
+    ``WORKTREE_NOT_FOUND`` when there is none; ``WORKTREE_CONFLICT`` or ``WORKTREE_LOCKED`` when ``finish`` would
+    refuse to remove it.
+    """
+    entry = _find(position, slug)
+    if entry is None:
+        raise NotFoundError(f"no worktree at {path_for(position, slug)} or on branch {slug}")
+    return entry.path
 
 
 def finish(
@@ -318,11 +393,15 @@ def finish(
 ) -> FinishResult:
     """Integrate the slug's branch into the base, then remove its worktree and branch.
 
-    ``merge`` fast-forwards the base onto the branch (it must be clean) and pushes the base branch to its
-    configured upstream; a failed push is a ``WORKTREE_PUSH_FAILED`` warning and does not stop the cleanup.
-    Without ``merge`` the branch must already be merged into the base HEAD. ``before_remove`` runs once the
-    merge is confirmed and before the worktree is removed (a caller's own cleanup). A refusal after the merge
-    carries the partial result as ``error.result``.
+    ``merge`` fast-forwards the base onto the branch (it must be clean and on a branch, and contain the tip of its
+    upstream when one is configured and reachable) and pushes the base branch to that upstream; a failed push is a
+    ``WORKTREE_PUSH_FAILED`` or ``WORKTREE_PUSH_REJECTED`` warning and does not stop the cleanup. Without ``merge``
+    the branch must already be merged into the base HEAD. The checks of the worktree's branch and lock, the base
+    and the upstreams (including whether ``git branch -d`` will accept the branch) run before the first change;
+    uncommitted changes in the worktree surface when it is removed (``WORKTREE_DIRTY``). ``before_remove`` runs
+    once the merge is confirmed and before the worktree is removed (a caller's own cleanup; it runs again on a
+    rerun). A refusal after that carries the partial result as ``error.result``. A slug whose worktree is already
+    gone and whose branch is merged into the base HEAD (what a stopped run leaves) resumes with deleting the branch.
     """
     check_slug(slug)
     if position.linked:
@@ -333,35 +412,52 @@ def finish(
         raise PullRequestPolicyError(
             "[worktree] pull_request = true integrates through a pull request; --merge would merge locally"
         )
-    base = position.base
-    result = FinishResult(slug, find(position, slug), slug)
+    base, ref = position.base, f"refs/heads/{slug}"
+    entry = _find(position, slug)
+    if entry is None:
+        exists = _succeeds(base, "rev-parse", "--verify", "--quiet", ref)
+        if not exists or not _merged(base, ref, _head(base)):
+            unmerged = f", and branch {slug} is not merged into the base HEAD" if exists else ""
+            raise NotFoundError(f"no worktree at {path_for(position, slug)} or on branch {slug}{unmerged}")
+        _log.info("the worktree of %s is gone; resuming with the branch deletion", slug)
+        result = FinishResult(slug, path_for(position, slug), slug, removed=True)
+    else:
+        result = FinishResult(slug, entry.path, slug)
     if merge:
+        if position.branch is None:
+            raise BaseDetachedError(
+                f"{base} is on a detached HEAD; the merge would move no branch and nothing would be pushed",
+                target_files=[str(base)],
+            )
         if not _clean(base):
             raise BaseDirtyError(f"{base} has uncommitted changes", target_files=[str(base)])
+    elif not _merged(base, ref, _head(base)):
+        raise UnmergedError(f"{slug} is not merged into the base HEAD; nothing was changed")
+    if delete_branch:
+        _check_deletable(base, slug)
+    if merge:
+        _check_upstream(position)
         try:
-            run_git(base, "merge", "--ff-only", "--quiet", result.branch)
+            run_git(base, "merge", "--ff-only", "--quiet", ref)
         except GitError as exc:
             if exc.returncode is None:
                 raise
-            raise MergeNotFastForwardError(
-                f"{result.branch} cannot be fast-forwarded onto the base: {exc.stderr}"
-            ) from exc
+            raise MergeNotFastForwardError(f"{slug} cannot be fast-forwarded onto the base: {exc.stderr}") from exc
         result.merged = True
         _push(position, result)
-    elif not _succeeds(base, "merge-base", "--is-ancestor", f"refs/heads/{result.branch}", "HEAD"):
-        raise UnmergedError(f"{result.branch} is not merged into the base HEAD; nothing was changed")
     try:
         if before_remove is not None:
             before_remove(result)
-        try:
-            run_git(base, "worktree", "remove", str(result.path))
-        except GitError as exc:
-            if "modified or untracked" in exc.stderr or "--force" in exc.stderr:
-                raise DirtyError(f"{result.path} has uncommitted changes: {exc.stderr}") from exc
-            raise
-        result.removed = True
+        if not result.removed:
+            _remove(base, result.path)
+            result.removed = True
         if delete_branch:
-            run_git(base, "branch", "-d", result.branch)
+            try:
+                run_git(base, "branch", "-d", slug)
+            except GitError as exc:
+                raise BranchDeleteFailedError(
+                    f"the worktree is removed, but git branch -d {slug} failed: {exc.stderr or exc.message}"
+                ) from exc
             result.branch_deleted = True
     except WorktreeError as error:
         error.result = result
@@ -369,25 +465,108 @@ def finish(
     return result
 
 
-def _push(position: Position, result: FinishResult) -> None:
-    """Push the base branch to its configured upstream with an explicit refspec; never prompts, never forces."""
-    result.push = "no-upstream"
-    if position.branch is None:
+def _remove(base: Path, path: Path) -> None:
+    try:
+        run_git(base, "worktree", "remove", str(path))
+    except GitError as exc:
+        if "modified or untracked" in exc.stderr or "--force" in exc.stderr:
+            raise DirtyError(f"{path} has uncommitted changes: {exc.stderr}") from exc
+        raise RemoveFailedError(f"git worktree remove {path} failed: {exc.stderr or exc.message}") from exc
+
+
+def _check_deletable(base: Path, branch: str) -> None:
+    """Refuse before any change when ``git branch -d`` would refuse ``branch`` once it is merged into the base.
+
+    A branch whose upstream exists is deleted only when that upstream contains it (Git checks HEAD otherwise, which
+    the merge or the merged check guarantees): a task branch pushed with ``-u`` and committed to since.
+    """
+    upstream = _git(base, "for-each-ref", "--format=%(upstream)", f"refs/heads/{branch}")
+    if not upstream or not _succeeds(base, "rev-parse", "--verify", "--quiet", upstream):
         return
+    if _succeeds(base, "merge-base", "--is-ancestor", f"refs/heads/{branch}", upstream):
+        return
+    remote = _config(base, f"branch.{branch}.remote")
+    merge_ref = _config(base, f"branch.{branch}.merge")
+    quoted = shlex.quote(str(base))
+    if remote and remote != "." and merge_ref:
+        fix = f"git -C {quoted} push {shlex.quote(remote)} refs/heads/{branch}:{merge_ref}"
+    else:
+        fix = f"git -C {quoted} branch --unset-upstream {branch}"
+    raise BranchUnpushedError(
+        f"{upstream}, the upstream of {branch}, lacks its commits, so git branch -d would refuse the branch after"
+        " the merge; nothing was changed",
+        fix=fix,
+    )
+
+
+def _upstream(position: Position) -> tuple[str, str] | None:
+    """The base branch's configured remote and remote ref; ``None`` on a detached HEAD or without an upstream."""
+    if position.branch is None:
+        return None
     remote = _config(position.base, f"branch.{position.branch}.remote")
     merge_ref = _config(position.base, f"branch.{position.branch}.merge")
     if not remote or remote == "." or not merge_ref:
+        return None
+    return remote, merge_ref
+
+
+def _check_upstream(position: Position) -> None:
+    """Refuse before the merge when the base branch's upstream has commits the base lacks: the push would fail.
+
+    The upstream ref is fetched (no prompts, within ``FETCH_TIMEOUT``). A fetch that fails (offline, an
+    unreachable remote, a remote ref that does not exist yet) skips the check: the merge stays local until the
+    push, which reports what remains.
+    """
+    upstream = _upstream(position)
+    if upstream is None:
         return
+    remote, merge_ref = upstream
+    base = position.base
+    try:
+        run_git(base, "fetch", "--quiet", "--no-tags", remote, merge_ref, timeout=FETCH_TIMEOUT)
+    except GitError as exc:
+        _log.info("could not fetch %s %s; the base is not checked against it: %s", remote, merge_ref, exc.message)
+        return
+    tip = _query(base, "rev-parse", "--verify", "--quiet", "FETCH_HEAD^{commit}")
+    if tip is None or _succeeds(base, "merge-base", "--is-ancestor", tip, "HEAD"):
+        return
+    raise BaseBehindError(
+        f"{remote} {merge_ref} has commits the base branch {position.branch} lacks, so the push after the merge"
+        " would be rejected; nothing was changed",
+        fix=f"git -C {shlex.quote(str(base))} pull --ff-only {shlex.quote(remote)} {merge_ref}",
+        target_files=[str(base)],
+    )
+
+
+def _push(position: Position, result: FinishResult) -> None:
+    """Push the base branch to its configured upstream with an explicit refspec; never prompts, never forces."""
+    result.push = "no-upstream"
+    upstream = _upstream(position)
+    if upstream is None or position.branch is None:
+        return
+    remote, merge_ref = upstream
+    base = shlex.quote(str(position.base))
     refspec = f"refs/heads/{position.branch}:{merge_ref}"
+    push = f"git -C {base} push {shlex.quote(remote)} {refspec}"
     try:
         run_git(position.base, "push", "--quiet", remote, refspec, timeout=PUSH_TIMEOUT)
     except GitError as exc:
+        reason = exc.stderr or exc.message
+        if "[rejected]" in exc.stderr:  # the upstream moved on: pushing again fails identically
+            result.push = "rejected"
+            result.notices.append(
+                PushRejectedWarning(
+                    f"the base was merged and the worktree is being cleaned up, but {remote} rejected the push"
+                    f" because it has commits the base lacks: {reason}",
+                    fix=f"git -C {base} pull --rebase {shlex.quote(remote)} {merge_ref} && {push}",
+                )
+            )
+            return
         result.push = "failed"
         result.notices.append(
             PushFailedWarning(
-                f"the base was merged and the worktree is being cleaned up, but the push to {remote} failed: "
-                f"{exc.stderr or exc.message}",
-                fix=f"git -C {shlex.quote(str(position.base))} push {remote} {refspec}",
+                f"the base was merged and the worktree is being cleaned up, but the push to {remote} failed: {reason}",
+                fix=push,
             )
         )
         return
@@ -403,12 +582,10 @@ def status(position: Position) -> StatusResult:
     base = position.base
     entries = _entries(base)
     base_branch = _query(base, "symbolic-ref", "--quiet", "--short", "HEAD")
-    base_head = _query(base, "rev-parse", "--verify", "--quiet", "HEAD")
+    base_head = _head(base)
 
     def merged(rev: str | None) -> bool:
-        return (
-            rev is not None and base_head is not None and _succeeds(base, "merge-base", "--is-ancestor", rev, base_head)
-        )
+        return _merged(base, rev, base_head)
 
     worktrees: list[WorktreeStatus] = []
     for entry in entries:

@@ -3,9 +3,11 @@
 Every refusal leaves the repository as it was before the refused step; the
 earlier steps of ``finish`` stay done, so rerunning the same command resumes.
 A refusal raised after ``finish`` changed something carries the partial
-``FinishResult`` as ``result``. ``devkit.core`` errors pass through unchanged:
-a failed Git command is ``GitError`` (``GIT_FAILED``), an unreadable
-``.devkit/config.toml`` ``ConfigError`` (``CONFIG_INVALID``).
+``FinishResult`` as ``result``; a Git failure there is one of its own codes
+(``WORKTREE_REMOVE_FAILED``, ``WORKTREE_BRANCH_DELETE_FAILED``). Before that,
+``devkit.core`` errors pass through unchanged: a failed Git command is
+``GitError`` (``GIT_FAILED``), an unreadable ``.devkit/config.toml``
+``ConfigError`` (``CONFIG_INVALID``).
 """
 
 from __future__ import annotations
@@ -61,7 +63,12 @@ class UnsupportedLayoutError(_Guardrail):
 
 
 class ConflictError(_Interaction):
-    """The slug's worktree path holds another branch, has uncommitted changes or is not a worktree (``INTERACTION``)."""
+    """The slug's path or branch is not a task worktree ``start`` can reuse or ``finish`` can remove (``INTERACTION``).
+
+    ``start``: the path is a worktree on another branch, with uncommitted changes or with its directory missing, or
+    it exists and is not a worktree. ``finish``: the worktree is detached or on another branch, or the slug's branch
+    is the base checkout's. The ``[FIX]`` names the step for each.
+    """
 
     code = "WORKTREE_CONFLICT"
     fix = "Finish or clean up that worktree, or choose another slug"
@@ -79,6 +86,44 @@ class NotFoundError(_Interaction):
 
     code = "WORKTREE_NOT_FOUND"
     fix = "Check `devkit worktree status` or `git worktree list` for the slug"
+
+
+class LockedError(_Interaction):
+    """``finish`` found the slug's worktree locked (``git worktree lock``, ``INTERACTION``); nothing changed."""
+
+    code = "WORKTREE_LOCKED"
+    fix = "Unlock the worktree (git worktree unlock <path>) once the user agrees, then rerun"
+
+
+class BaseDetachedError(_Interaction):
+    """``finish --merge`` found the base checkout on a detached HEAD (``INTERACTION``); nothing changed.
+
+    A fast-forward would move no branch and the push would be skipped, leaving the task's commits on no branch
+    once the slug's branch is deleted.
+    """
+
+    code = "WORKTREE_BASE_DETACHED"
+    fix = "Check out the branch the task integrates into in the base checkout (git switch <branch>), then rerun"
+
+
+class BaseBehindError(_Interaction):
+    """``finish --merge`` fetched the base branch's upstream and it has commits the base lacks (``INTERACTION``).
+
+    The push after the merge would be rejected; nothing changed. The ``[FIX]`` brings the base up to date.
+    """
+
+    code = "WORKTREE_BASE_BEHIND"
+    fix = "Fast-forward the base onto its upstream (git pull --ff-only), integrate the base into the branch, then rerun"
+
+
+class BranchUnpushedError(_Interaction):
+    """The slug's branch has an upstream that lacks its commits, so ``git branch -d`` would refuse it (``INTERACTION``).
+
+    Raised before any change; the ``[FIX]`` pushes the branch to that upstream.
+    """
+
+    code = "WORKTREE_BRANCH_UNPUSHED"
+    fix = "Push the branch to its upstream, then rerun"
 
 
 class BaseDirtyError(_Interaction):
@@ -112,8 +157,29 @@ class DirtyError(_Interaction):
     fix = "Commit or discard the changes in the worktree, then rerun"
 
 
+class RemoveFailedError(_Interaction):
+    """``git worktree remove`` failed for a reason other than uncommitted changes (``INTERACTION``).
+
+    Raised with the partial ``result`` (after the merge, under ``--merge``); rerunning the same command resumes.
+    """
+
+    code = "WORKTREE_REMOVE_FAILED"
+    fix = "Resolve the cause Git reports, then rerun the same command; the steps already done are skipped"
+
+
+class BranchDeleteFailedError(_Interaction):
+    """``git branch -d`` refused the slug's branch after the worktree was removed (``INTERACTION``).
+
+    Raised with the partial ``result``; rerunning the same command finds the merged branch without its worktree
+    and deletes it.
+    """
+
+    code = "WORKTREE_BRANCH_DELETE_FAILED"
+    fix = "Resolve the cause Git reports, then rerun the same command; the steps already done are skipped"
+
+
 class WorktreeConfigError(WorktreeError, ConfigError):
-    """The ``[worktree]`` table of ``.devkit/config.toml`` is malformed (``MAINTENANCE``)."""
+    """The ``[worktree]`` table of ``.devkit/config.toml`` is malformed (``INPUT_ERROR``, as ``CONFIG_INVALID``)."""
 
     code = "WORKTREE_CONFIG_INVALID"
     target_files = ()
@@ -124,6 +190,16 @@ class PushFailedWarning(WorktreeError):
     """``finish --merge`` merged and cleaned up, but the base branch did not reach its upstream (``WARNING``)."""
 
     code = "WORKTREE_PUSH_FAILED"
+    level = Level.WARNING
+
+
+class PushRejectedWarning(WorktreeError):
+    """``finish --merge`` merged and cleaned up, but the upstream moved on and rejected the push (``WARNING``).
+
+    The ``[FIX]`` integrates the upstream into the base, then pushes; rerunning the push alone fails identically.
+    """
+
+    code = "WORKTREE_PUSH_REJECTED"
     level = Level.WARNING
 
 

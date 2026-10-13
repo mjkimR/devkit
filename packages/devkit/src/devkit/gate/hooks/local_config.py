@@ -6,6 +6,16 @@ the file names every installed gate: one commented ``[gates.settings.<id>]``
 table per gate, with ``enabled`` and each settings field at its default, its
 type and the field's ``metadata["help"]`` when the gate declares one.
 
+An uncommented key replaces the value ``.devkit/config.toml`` gives it, arrays
+as a whole, so the header tells the developer to uncomment a table's header and
+only the keys they change. A key the project config sets when the table is
+written is not offered at its default (uncommenting it would drop the team's
+value, such as the ``verify-commands`` commands, and silently weaken the gate):
+it is a prose line naming it as set by ``.devkit/config.toml``. Its value is
+not copied, since the table is never rewritten and a copy would go stale. A
+key the project config only starts setting later still shows its default; the
+instruction to uncomment only what changes is what keeps it in effect.
+
 Prose is commented twice (``##``) and settings once (``#``), so uncommenting a
 whole table in an editor leaves the prose a comment and yields valid TOML; the
 keys are indented under their header, which must be uncommented with them.
@@ -14,7 +24,8 @@ The file belongs to the developer. A missing file is created; an existing one
 only gets tables appended for gates it does not mention yet (commented or
 not), so uncommenting a line in place is the way to change a setting and no
 line is ever rewritten. A file devkit cannot safely append to (a symbolic link,
-not a regular file, not UTF-8) is left alone and reported as
+not a regular file, not UTF-8), or tables it cannot render because the
+project's ``[gates]`` cannot be read, are left alone and reported as
 ``GateTemplateNotice`` (``GATE_CONFIG_TEMPLATE_SKIPPED``, a warning).
 """
 
@@ -32,20 +43,21 @@ from typing import Any
 import tomlkit
 
 from devkit.advisory import AdvisoryError
-from devkit.core import require_git_toplevel
+from devkit.core import CONFIG_PATH, ConfigError, require_git_toplevel
 from devkit.core.errors import GitError
-from devkit.gate.engine.config import LOCAL_CONFIG
+from devkit.gate.engine.config import ENABLED_KEY, LOCAL_CONFIG, GateEntry, GatesConfig, load_project_gates_config
 from devkit.gate.engine.models import Gate
 from devkit.gate.engine.registry import project_registry
 from devkit.gate.errors import GateTemplateNotice
 from devkit.gate.hooks import git, hooks
 from devkit.rules.engine.settings import describe_setting_type
 
-HEADER = """\
+HEADER = f"""\
 ## Clone-local settings of devkit commit gates: not tracked by Git, shared by every worktree of this clone.
-## [gates] here overrides the same keys in .devkit/config.toml.
-## To change a setting, uncomment its table header together with the keys below it (lines starting with a single #);
-## a key uncommented without its header belongs to the table above it. Lines starting with ## stay comments.
+## A key uncommented here replaces its value from {CONFIG_PATH} as a whole (an array too); a key left commented
+## keeps that value. To change a setting, uncomment its table header and only the keys you change (lines starting
+## with a single #); a key uncommented without its header belongs to the table above it.
+## A key {CONFIG_PATH} set when its table was written is a ## line saying so. Lines starting with ## stay comments.
 ## `devkit gate install` and `devkit sync` append a commented table for each new gate; existing lines are never changed.
 """
 _MENTION = re.compile(r"^\s*#?\s*\[\s*gates\s*\.\s*settings\s*\.\s*\"?([^\]\"\s]+)\"?\s*\]", re.MULTILINE)
@@ -71,7 +83,20 @@ def _toml(value: Any) -> str:
     return tomlkit.item(value).as_string()
 
 
-def _setting_lines(gate: Gate) -> list[str]:
+def _project_line(name: str, note: str = "") -> str:
+    """A key the project config sets, as prose: uncommenting the table around it keeps the project's value."""
+    return f"##   {name}: set in {CONFIG_PATH}; adding {name} = <value> here replaces it" + (
+        f"  # {note}" if note else ""
+    )
+
+
+def _project_keys(entry: GateEntry | None) -> set[str]:
+    if entry is None:
+        return set()
+    return set(entry.values) | ({ENABLED_KEY} if entry.enabled is not None else set())
+
+
+def _setting_lines(gate: Gate, project: set[str]) -> list[str]:
     defaults = gate.settings
     if defaults is None or not dataclasses.is_dataclass(defaults) or isinstance(defaults, type):
         return []
@@ -92,19 +117,25 @@ def _setting_lines(gate: Gate) -> list[str]:
         help_text = item.metadata.get("help")
         if isinstance(help_text, str) and help_text.strip():
             note = f"{note}; {' '.join(help_text.split())}"
-        lines.append(f"#   {item.name} = {shown}  # {note}")
+        lines.append(_project_line(item.name, note) if item.name in project else f"#   {item.name} = {shown}  # {note}")
     return lines
 
 
-def render_table(gate: Gate) -> str:
-    """The commented ``[gates.settings.<id>]`` table of one gate."""
+def render_table(gate: Gate, project: GatesConfig | None = None) -> str:
+    """The commented ``[gates.settings.<id>]`` table of one gate.
+
+    Keys that ``project`` (the ``.devkit/config.toml`` layer) sets for the gate
+    are prose lines rather than commented defaults.
+    """
+    keys = _project_keys(project.gates.get(gate.id) if project is not None else None)
     state = "on" if gate.enabled_by_default else "off"
     description = " ".join(str(gate.description).split())
+    enabled = f"#   {ENABLED_KEY} = {_toml(gate.enabled_by_default)}"
     lines = [
         f"## {gate.stage.value} gate, {state} by default" + (f": {description}" if description else ""),
         f"# [gates.settings.{gate.id}]",
-        f"#   enabled = {_toml(gate.enabled_by_default)}",
-        *_setting_lines(gate),
+        _project_line(ENABLED_KEY) if ENABLED_KEY in keys else enabled,
+        *_setting_lines(gate, keys),
     ]
     return "\n".join(lines) + "\n"
 
@@ -114,11 +145,11 @@ def mentioned_gates(text: str) -> set[str]:
     return set(_MENTION.findall(text))
 
 
-def _skipped(path: Path, problem: str) -> TemplateResult:
+def _skipped(path: Path, problem: str, fix: str | None = None, target: str | None = None) -> TemplateResult:
     notice = GateTemplateNotice(
         f"gate settings template not written to {path}: {problem}",
-        target_files=[str(path)],
-        fix=f"Make {path} a regular UTF-8 file, or delete it, then run `devkit gate install`",
+        target_files=[target or str(path)],
+        fix=fix or f"Make {path} a regular UTF-8 file, or delete it, then run `devkit gate install`",
     )
     return TemplateResult(path, TemplateState.SKIPPED, notice)
 
@@ -135,13 +166,17 @@ def _write(path: Path, text: str, mode: int) -> None:
             temporary.unlink()
 
 
-def refresh_template(common_git_dir: Path, gates: list[Gate]) -> TemplateResult:
-    """Create ``<common_git_dir>/devkit.config`` with every gate's table, or append the tables it lacks."""
+def refresh_template(common_git_dir: Path, gates: list[Gate], project: GatesConfig | None = None) -> TemplateResult:
+    """Create ``<common_git_dir>/devkit.config`` with every gate's table, or append the tables it lacks.
+
+    ``project`` is the ``.devkit/config.toml`` layer (``load_project_gates_config``);
+    the keys it sets are rendered as prose (``render_table``).
+    """
     path = common_git_dir / LOCAL_CONFIG
     if path.is_symlink() or (path.exists() and not path.is_file()):
         return _skipped(path, "not a regular file")
     if not path.exists():
-        _write(path, HEADER + "".join(f"\n{render_table(gate)}" for gate in gates), 0o644)
+        _write(path, HEADER + "".join(f"\n{render_table(gate, project)}" for gate in gates), 0o644)
         return TemplateResult(path, TemplateState.CREATED)
     try:
         text = path.read_bytes().decode("utf-8")
@@ -153,16 +188,28 @@ def refresh_template(common_git_dir: Path, gates: list[Gate]) -> TemplateResult:
         return TemplateResult(path, TemplateState.UNCHANGED)
     if text and not text.endswith("\n"):
         text += "\n"
-    _write(path, text + "".join(f"\n{render_table(gate)}" for gate in missing), path.stat().st_mode & 0o777)
+    _write(path, text + "".join(f"\n{render_table(gate, project)}" for gate in missing), path.stat().st_mode & 0o777)
     return TemplateResult(path, TemplateState.UPDATED)
 
 
 def refresh_project_template(repo_root: Path) -> TemplateResult:
     """``refresh_template`` for the work tree at ``repo_root``, with the gates its registry loads.
 
-    Gates that fail to load are left out; `devkit gate status` reports them.
+    Gates that fail to load are left out; `devkit gate status` reports them. A
+    ``.devkit/config.toml`` whose ``[gates]`` cannot be read skips the refresh:
+    without it, a table would offer the project's keys at their defaults.
     """
-    return refresh_template(git.common_git_dir(repo_root), project_registry(repo_root).get_all())
+    common = git.common_git_dir(repo_root)
+    try:
+        project = load_project_gates_config(repo_root)
+    except ConfigError as exc:
+        return _skipped(
+            common / LOCAL_CONFIG,
+            f"{CONFIG_PATH} cannot be read: {exc.message}",
+            fix=f"Correct {CONFIG_PATH} (`devkit gate status` reports the problem), then run `devkit gate install`",
+            target=CONFIG_PATH,
+        )
+    return refresh_template(common, project_registry(repo_root).get_all(), project)
 
 
 def post_sync(root: Path, result: dict[str, Any]) -> list[AdvisoryError] | None:

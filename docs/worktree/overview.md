@@ -13,12 +13,12 @@ The module is SDD-agnostic: it does not decide which tasks use a worktree, and i
 ## 2. start
 
 1. Refuse inside a linked worktree (`WORKTREE_NESTED`): worktrees are not nested.
-2. If the slug's path is already a worktree on the slug's branch and clean, reuse it (`created=no`). On another branch, or with uncommitted changes, it is `WORKTREE_CONFLICT`.
+2. If the slug's path is already a worktree on the slug's branch and clean, reuse it (`created=no`). On another branch, or with uncommitted changes, it is `WORKTREE_CONFLICT`; so is a registered worktree whose directory was deleted (`prunable`), with `git worktree prune` as its `[FIX]`.
 3. A branch named after the slug that is checked out elsewhere, or that already exists, is `WORKTREE_BRANCH_EXISTS`; a path that exists but is not a worktree is `WORKTREE_CONFLICT`.
 4. Otherwise `git worktree add -b <slug> <path>` from the base HEAD. Uncommitted changes in the base stay in the base.
 5. A new worktree is a fresh checkout without the base's ignored files: no `.venv`, no build output, and no `.devkit/managed/`, the synchronized copies that `.devkit/.gitignore` keeps out of Git. Two steps restore what work and commits need:
    1. **setup**: the `[worktree] setup` command, if configured, runs through `/bin/sh -c` in the worktree, without the caller's `VIRTUAL_ENV`, within 900 seconds. Set it to the project's environment step, for example `uv sync` or `just init`.
-   2. **sync**: when the devkit project the command runs in has a receipt (`.devkit/installation.json`), `devkit sync` runs in the same project directory of the worktree, within 300 seconds, with the worktree's `.venv/bin/python` when setup created one, else the interpreter running `start`. It writes the ignored managed copies only: the receipt, `AGENTS.md` and the projected skills are tracked and already match. Without it, every devkit command that reads managed files fails in the worktree: bundle rules (and so a `devkit rules check --staged` commit gate, which then stops with `GATE_VERIFY_NOT_RUN` directing `devkit sync`), bundle gates, `get-context`, `playbook search`, workflow assets.
+   2. **sync**: when the devkit project the command runs in has a receipt (`.devkit/installation.json`), `devkit sync` runs in the same project directory of the worktree, within 300 seconds, with the worktree's `.venv/bin/python` when setup created one with devkit installed in it (a `devkit-*.dist-info` in its `site-packages`, the test the commit gate hooks apply), else the interpreter running `start`. It writes the ignored managed copies only: the receipt, `AGENTS.md` and the projected skills are tracked and already match. Without it, every devkit command that reads managed files fails in the worktree: bundle rules (and so a `devkit rules check --staged` commit gate, which then stops with `GATE_VERIFY_NOT_RUN` directing `devkit sync`), bundle gates, `get-context`, `playbook search`, workflow assets.
 
    Their output is discarded unless they fail; a failure or timeout is a `WORKTREE_SETUP_FAILED` or `WORKTREE_SYNC_FAILED` warning whose `[FIX]` reruns the step, and the worktree stays. A reused worktree runs neither.
 
@@ -28,16 +28,30 @@ The command ends with `[NEXT_CMD: cd <path>]`: the task continues in the worktre
 
 ## 3. finish
 
-`finish` runs in the base checkout (`WORKTREE_RUN_FROM_BASE` otherwise) and finds the worktree by its path or its branch (`WORKTREE_NOT_FOUND`).
+`finish` runs in the base checkout (`WORKTREE_RUN_FROM_BASE` otherwise) and finds the worktree by its path, else its branch. It removes only a linked worktree on the slug's branch, because it judges the merge by that branch alone:
+
+- a worktree at the slug's path that is detached or on another branch would take commits the branch does not hold with it: `WORKTREE_CONFLICT`, whose `[FIX]` is to check out the slug's branch there with those commits on it;
+- a slug whose branch is the base checkout's own (`finish main` in a base on `main`): `WORKTREE_CONFLICT`;
+- a locked worktree (`git worktree lock`): `WORKTREE_LOCKED`, whose `[FIX]` is `git worktree unlock <path>` once the user agrees;
+- neither a worktree nor a branch merged into the base HEAD: `WORKTREE_NOT_FOUND`.
+
+These checks, and those of step 1, run before the first change, so each of their refusals leaves the repository as it was; only uncommitted changes in the worktree surface later, at step 3:
 
 1. **Integrate.**
-   - With `--merge`: refused under `[worktree] pull_request = true` (`WORKTREE_PR_POLICY`, the default). The base must be clean (`WORKTREE_BASE_DIRTY`); `git merge --ff-only <slug>` fast-forwards it (`WORKTREE_MERGE_NOT_FF` when the base moved on: integrate the base into the branch first). The base branch is then pushed to its configured upstream (`branch.<base>.remote` and `.merge`, an explicit refspec, never forced, never prompting, within 120 seconds). A base branch without an upstream, or on a detached HEAD, is not pushed (`push=no-upstream`). A failed push is a `WORKTREE_PUSH_FAILED` warning whose `[FIX]` is the push to rerun; the cleanup continues.
-   - Without `--merge`: the branch must already be an ancestor of the base HEAD (`WORKTREE_UNMERGED` otherwise, with nothing changed). A pull request merged by squash or rebase leaves the branch unmerged in this sense; remove that worktree and branch only with the user's authorization.
-2. **Caller cleanup.** The library's `before_remove(result)` hook runs here, once the merge is confirmed and while the worktree still exists.
-3. **Remove** the worktree with `git worktree remove`. A worktree with uncommitted or untracked changes is `WORKTREE_DIRTY`: it is never removed by force.
-4. **Delete the branch** with `git branch -d` (never `-D`) when `[worktree] delete_branch = true` (the default).
+   - With `--merge`: refused under `[worktree] pull_request = true` (`WORKTREE_PR_POLICY`, the default). The base must be on a branch (`WORKTREE_BASE_DETACHED`: a fast-forward of a detached HEAD moves no branch and pushes nothing, so the task's commits would end up on no branch) and clean (`WORKTREE_BASE_DIRTY`). When the base branch has a configured upstream (`branch.<base>.remote` and `.merge`), its remote ref is fetched first (never prompting, within 120 seconds); a fetched tip the base does not contain is `WORKTREE_BASE_BEHIND`, whose `[FIX]` is `git pull --ff-only` of it. A fetch that fails (offline, an unreachable remote, a remote ref that does not exist yet) skips this check: the push below reports what remains. `git merge --ff-only <slug>` then fast-forwards the base (`WORKTREE_MERGE_NOT_FF` when the base moved on: integrate the base into the branch first), and the base branch is pushed to that upstream (an explicit refspec, never forced, never prompting, within 120 seconds). A base branch without an upstream is not pushed (`push=no-upstream`). A push the upstream rejects because it moved on since the fetch is a `WORKTREE_PUSH_REJECTED` warning (`push=rejected`) whose `[FIX]` integrates the upstream into the base (`git pull --rebase`) and then pushes; any other failed push is a `WORKTREE_PUSH_FAILED` warning (`push=failed`) whose `[FIX]` is the push to rerun. Either way the cleanup continues.
+   - Without `--merge`: the branch must already be an ancestor of the base HEAD (`WORKTREE_UNMERGED` otherwise, with nothing changed), the same test `status` reports as `merged`. A pull request merged by squash or rebase leaves the branch unmerged in this sense; remove that worktree and branch only with the user's authorization.
 
-A refusal raised after step 1 changed something carries the partial result: the command prints its `[WORKTREE_FINISHED: ...]` line (or, under `--format json`, the result with the error under `errors`) before the error, so the caller sees what is already done. Rerunning resumes: an already merged branch passes step 1 without `--merge`.
+   Before either, when the branch will be deleted (step 4), its upstream, if it has one that exists locally, must contain it: `git branch -d` checks a branch against its upstream rather than the base, so a task branch pushed with `-u` and committed to since would be refused after the merge. That is `WORKTREE_BRANCH_UNPUSHED`, whose `[FIX]` pushes the branch to its upstream.
+2. **Caller cleanup.** The library's `before_remove(result)` hook runs here, once the merge is confirmed and while the worktree still exists (it runs again on a rerun, so it must be idempotent).
+3. **Remove** the worktree with `git worktree remove`. A worktree with uncommitted or untracked changes is `WORKTREE_DIRTY`: it is never removed by force. Any other failure is `WORKTREE_REMOVE_FAILED`.
+4. **Delete the branch** with `git branch -d` (never `-D`) when `[worktree] delete_branch = true` (the default). A failure is `WORKTREE_BRANCH_DELETE_FAILED`.
+
+A refusal raised after step 1 carries the partial result: the command prints its `[WORKTREE_FINISHED: ...]` line (or, under `--format json`, the result with the error under `errors`) and the warnings collected so far (`WORKTREE_PUSH_FAILED`, `WORKTREE_PUSH_REJECTED`) before the error, so the caller sees what is already done.
+
+Rerunning the same command resumes once the cause is resolved:
+
+- an already merged branch passes step 1 without `--merge` (with `--merge` the fast-forward is a no-op and the push runs again);
+- when the worktree is already gone and the slug's branch remains merged into the base HEAD (what a stopped run leaves, or a worktree removed by hand), `finish` skips step 3, reports `removed=yes` and deletes the branch. A slug whose branch is merged and has no worktree is therefore finished by deleting the branch.
 
 ## 4. status
 
