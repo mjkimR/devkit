@@ -80,6 +80,8 @@ kind = "playbook"
 source = "playbooks/on-call.md"
 ```
 
+The entry point name (`my-repo`) is the bundle name
+([Content Packages](content-packages.md#1-content-wheel-contract)).
 The manifest follows the [Manifest Specification](manifest-spec.md) without exception; `devkit bundle validate` and
 `devkit bundle plan` work on `tools/my-repo-devkit/src/my_repo_devkit/bundle` before it is installed.
 

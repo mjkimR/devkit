@@ -1,8 +1,8 @@
 """``devkit override``: create, review, accept, remove and list project overrides.
 
 ``create`` and ``remove`` change files under ``.devkit/overrides/`` and then
-synchronize, under one project lock: when the synchronization fails, the
-override files are put back as they were. ``accept`` advances the recorded
+synchronize, under one project lock: when the synchronization fails before
+it commits, the override files are put back as they were. ``accept`` advances the recorded
 baseline through the journal.
 """
 
@@ -21,7 +21,7 @@ from devkit.distribution.bundles.manifest import Asset
 from devkit.distribution.content import Content, normal_mode
 from devkit.distribution.errors import ConflictError, SelectionError
 from devkit.distribution.installation.config import effective_selection, read_config
-from devkit.distribution.installation.discovery import InstalledBundle
+from devkit.distribution.installation.discovery import InstalledBundle, unusable_bundles
 from devkit.distribution.installation.hooks import run_post_sync
 from devkit.distribution.installation.overrides import (
     asset_files,
@@ -40,7 +40,7 @@ from devkit.distribution.installation.results import (
     OverrideStatus,
     SyncResult,
 )
-from devkit.distribution.installation.sync import require_project_dir, sync_locked
+from devkit.distribution.installation.sync import commit_locked, require_project_dir
 from devkit.distribution.installation.transaction import (
     apply_changes,
     project_lock,
@@ -68,6 +68,9 @@ def _parse_selector(selector: str) -> tuple[str, str]:
 def _find(installed: list[InstalledBundle], bundle_name: str, asset_id: str) -> tuple[InstalledBundle, Asset]:
     item = next((b for b in installed if b.bundle.name == bundle_name), None)
     if item is None:
+        unusable = unusable_bundles(installed)
+        if bundle_name in unusable:
+            raise unusable[bundle_name]
         raise SelectionError(f"bundle is not installed: {bundle_name}", fix="List installed bundles with `devkit list`")
     asset = item.bundle.asset(asset_id)
     if asset is None:
@@ -127,7 +130,10 @@ def _after_sync(root: Path, result: SyncResult) -> list[AdvisoryError]:
 def create_override(
     root: Path, installed: list[InstalledBundle], selector: str, *, force: bool = False
 ) -> OverrideChange:
-    """Copy every upstream file of an asset into ``.devkit/overrides/`` (and its baseline), then synchronize."""
+    """Copy every upstream file of an asset into ``.devkit/overrides/`` (and its baseline), then synchronize.
+
+    The current upstream becomes the recorded baseline, also when ``force`` replaces an existing override.
+    """
     root = require_project_dir(root)
     bundle_name, asset_id = _parse_selector(selector)
     with project_lock(root):
@@ -151,10 +157,11 @@ def create_override(
                 content = Content(path.read_bytes(), normal_mode(path.stat().st_mode))
                 undo.write(override_rel(bundle_name, rel), content)
                 undo.write(baseline_rel(bundle_name, rel), content)
-            result = sync_locked(root, installed)
+            finish = commit_locked(root, installed, rebaseline=(bundle_name, asset_id))
         except BaseException:
             undo.restore()
             raise
+        result = finish()
     return OverrideChange(
         bundle_name,
         asset_id,
@@ -183,10 +190,11 @@ def remove_override(root: Path, installed: list[InstalledBundle], selector: str)
         try:
             for name in names:
                 undo.delete(name)
-            result = sync_locked(root, installed)
+            finish = commit_locked(root, installed)
         except BaseException:
             undo.restore()
             raise
+        result = finish()
     return OverrideChange(
         bundle_name,
         asset_id,

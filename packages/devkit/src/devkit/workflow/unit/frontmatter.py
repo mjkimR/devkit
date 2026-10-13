@@ -17,7 +17,7 @@ import yaml
 from devkit.core import frontmatter as core
 from devkit.core.errors import FrontmatterError
 
-__all__ = ["field", "parse", "read", "render", "update"]
+__all__ = ["FrontmatterError", "field", "parse", "read", "render", "update"]
 
 
 def parse(text: str) -> dict[str, Any]:
@@ -76,11 +76,18 @@ def update(text: str, updates: Mapping[str, str]) -> str:
     A replaced key loses its whole value, including the indented or sequence
     lines of a block value; nested keys with the same name are untouched. New
     keys are appended at the end of the header. Values are written verbatim and
-    must already be valid YAML scalars or flow collections.
+    must already be valid YAML scalars or flow collections. A document without
+    a block gets one, inserted before its first line, holding ``updates``.
+
+    Raises ``FrontmatterError`` when the text opens a block that never closes.
     """
     block = core.locate(text)
     if block is None:
-        raise FrontmatterError("document has no frontmatter block")
+        start = 1 if text.startswith(core.BOM) else 0
+        first = text[start:].split("\n", 1)[0]
+        newline = "\r\n" if first.endswith("\r") else "\n"
+        header = "".join(f"{key}: {value}{newline}" for key, value in updates.items())
+        return f"{text[:start]}{core.OPENER}{newline}{header}{core.OPENER}{newline}{text[start:]}"
     newline = block.newline or "\n"
     header = block.header
     lines = header[:-1].split("\n") if header else []

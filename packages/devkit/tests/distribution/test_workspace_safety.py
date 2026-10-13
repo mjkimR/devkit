@@ -278,7 +278,7 @@ claude = "reviewer.md"
 def test_rendered_description_keeps_line_breaks() -> None:
     contract = read_contract(
         b"---\nrole: r\ntitle: Reviewer\ndescription: |\n  First line.\n  Second line.\nhosts:\n"
-        b"  claude-code: native\n---\nPrompt.\n",
+        b"  claude-code: native\n  codex: unsupported\n  antigravity: unsupported\n---\nPrompt.\n",
         "test",
     )
     rendered = render_projection("claude-code", contract, ".devkit/managed/b/r.md")

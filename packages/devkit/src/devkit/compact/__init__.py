@@ -7,10 +7,11 @@ fixed budget. See ``docs/compact/overview.md``.
 """
 
 from devkit.compact.errors import CommandNotStartedError, CompactError, LogDirectoryError, SlowCommandNotice
-from devkit.compact.execute import CommandRun, default_log_dir, log_root, run_command
+from devkit.compact.execute import CommandInterrupted, CommandRun, default_log_dir, log_root, run_command
 from devkit.compact.scan import Failure, Omitted, RelayedAdvisory, Scan, ToolWarning, scan
 
 __all__ = [
+    "CommandInterrupted",
     "CommandNotStartedError",
     "CommandRun",
     "CompactError",

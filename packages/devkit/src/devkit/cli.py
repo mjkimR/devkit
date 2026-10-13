@@ -3,10 +3,13 @@
 ``devkit sync``, ``add``, ``remove``, ``list``, ``status`` and the other
 distribution commands sit at the top level, as does ``devkit run`` (compact
 command output); ``devkit rules``, ``devkit workflow`` and ``devkit gate`` are
-the rule engine, workflow engine and commit gate groups.
+the rule engine, workflow engine and commit gate groups. ``devkit --version``
+prints one ``[VERSION: devkit <version>]`` line.
 """
 
 from __future__ import annotations
+
+from importlib.metadata import version
 
 import click
 
@@ -17,8 +20,22 @@ from devkit.rules.cli import cli as rules_cli
 from devkit.workflow.cli import cli as workflow_cli
 
 
+def _print_version(ctx: click.Context, _param: click.Parameter, value: bool) -> None:
+    if not value or ctx.resilient_parsing:
+        return
+    click.echo(f"[VERSION: devkit {version('devkit')}]")
+    ctx.exit()
+
+
 @click.group(name="devkit")
-@click.version_option(package_name="devkit")
+@click.option(
+    "--version",
+    is_flag=True,
+    expose_value=False,
+    is_eager=True,
+    callback=_print_version,
+    help="Print a [VERSION: devkit <version>] line and exit",
+)
 def cli() -> None:
     """Devkit: agent asset distribution, repository rules, delivery workflows, commit gates and compact command output."""
 

@@ -20,6 +20,13 @@ WORKSPACE = workspace_option()
 UNIT = click.option(
     "--unit", "-u", required=True, type=str, help="Work unit directory (workspace-relative or absolute)"
 )
+ANCHOR = click.option(
+    "--anchor",
+    "anchor",
+    default=None,
+    type=str,
+    help="Anchor file that identifies the unit, when its directory holds several (ANCHOR_AMBIGUOUS)",
+)
 NO_LINT = click.option("--no-lint", is_flag=True, help="Skip lint-class checks")
 
 

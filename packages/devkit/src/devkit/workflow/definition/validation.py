@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from devkit.workflow.definition.checks import Registry
+from devkit.workflow.definition.checks import DECLARABLE, Check, Registry
 from devkit.workflow.definition.definition import (
     HANDOFF_GATE,
     ISOLATIONS,
@@ -54,15 +54,25 @@ def _check_problem(stage: str, field: str, exc: CheckError) -> CheckReferencePro
 def _registry(
     anchor: str, doc: WorkflowDocument, plugins: tuple[BaseCheck, ...]
 ) -> tuple[Registry, list[DefinitionProblem]]:
-    """The definition's registry; a declared check that collides falls back to the registry without it."""
+    """The definition's registry; each declared check that is rejected is reported and left out, the rest kept."""
     try:
         return Registry.build(anchor, doc.declared_checks, plugins), []
     except CheckError as exc:
         problems: list[DefinitionProblem] = [_check_problem("", "checks", exc)]
     try:
-        return Registry.build(anchor, (), plugins), problems
+        Registry.build(anchor, (), plugins)
     except CheckError:
-        return Registry.build(anchor), problems
+        plugins = ()  # the colliding plugin is the problem already reported
+    kept: list[Check] = []
+    for check in doc.declared_checks:
+        try:
+            Registry.build(anchor, (*kept, check), plugins)
+        except CheckError as exc:
+            if all(p.message != exc.message for p in problems):
+                problems.append(_check_problem("", "checks", exc))
+            continue
+        kept.append(check)
+    return Registry.build(anchor, tuple(kept), plugins), problems
 
 
 def validate_definition(
@@ -131,9 +141,19 @@ def _candidate_problems(
         seen.add(c.workflow)
         for ref in c.when:
             try:
-                registry.resolve_name(ref)
+                _, check = registry.resolve_name(ref)
             except CheckError as exc:
                 problems.append(_check_problem("", f"{where}.when", exc))
+                continue
+            # Nothing can satisfy a runner or human check while a handoff is chosen.
+            if check.class_ in DECLARABLE:
+                problems.append(
+                    CheckReferenceProblem(
+                        f"{check.class_.value} check {ref!r} cannot decide a handoff; "
+                        "`when` takes checks the engine evaluates",
+                        where=_where("", f"{where}.when"),
+                    )
+                )
     return problems
 
 

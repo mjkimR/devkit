@@ -45,7 +45,38 @@ def validate_template(template: str) -> list[tuple[str, str]]:
         fields.append((name, spec or ""))
     if not any(name == "slug" for name, _ in fields):
         raise LayoutError("template must contain {slug}")
+    # A {date} spec renders verbatim, so a spec such as "/abs/%Y" or "%Y/.." escapes
+    # the work directory; check a sample rendering and the discovery pattern too.
+    try:
+        rendered = template.format(slug="x", date=_SAMPLE_DATE)
+    except (ValueError, KeyError, IndexError) as exc:
+        raise LayoutError(f"invalid format syntax: {exc}") from exc
+    _relative(rendered)
+    _relative(_glob(template))
     return fields
+
+
+_SAMPLE_DATE = date_type(2000, 1, 1)
+
+
+def _relative(value: str) -> PurePosixPath:
+    """``value`` as a normalized relative path; ``LayoutError`` when it is absolute or contains ``..``."""
+    try:
+        return normalize_relpath(value)
+    except UnsafePathError as exc:
+        raise LayoutError(f"template must render a relative path without '..': {exc.message}") from exc
+
+
+def _glob(template: str) -> str:
+    """The template with every placeholder replaced by ``*`` (see ``TemplateLayout.discovery_glob``)."""
+    out: list[str] = []
+    for literal, name, spec, _ in Formatter().parse(template):
+        out.append(literal)
+        if name is not None:
+            out.append("/".join("*" for _ in range((spec or "").count("/") + 1)))
+    pattern = "".join(out)
+    # Collapse runs of stars produced by adjacent placeholders.
+    return re.sub(r"\*{2,}", "*", pattern)
 
 
 def validate_slug(slug: str) -> str:
@@ -141,12 +172,20 @@ class TemplateLayout:
         validate_template(self.unit_path)
 
     def new_unit(self, slug: str, when: date_type) -> PurePosixPath:
+        """The workspace-relative unit directory for ``slug`` and ``when``.
+
+        Raises ``LayoutError`` when the rendering is absolute or contains ``..``
+        (it would leave ``work_dir``).
+        """
         validate_slug(slug)
-        rendered = self.unit_path.format(slug=slug, date=when)
-        rel = PurePosixPath(self.work_dir) / rendered
-        if ".." in rel.parts:
-            raise LayoutError("rendered unit path escapes the work directory")
-        return rel
+        try:
+            rendered = _relative(self.unit_path.format(slug=slug, date=when))
+        except LayoutError as exc:
+            raise LayoutError(
+                f"unit path {self.unit_path!r} escapes the work directory {self.work_dir}",
+                fix="Change unit_path so it renders a relative path without '..'",
+            ) from exc
+        return PurePosixPath(self.work_dir) / rendered
 
     def discovery_glob(self) -> str:
         """The template with every placeholder replaced by ``*``.
@@ -154,14 +193,7 @@ class TemplateLayout:
         A ``/`` inside a ``{date}`` format spec (``{date:%Y/%m}``) renders as a
         directory separator, so it becomes ``*/*`` to match the same depth.
         """
-        out: list[str] = []
-        for literal, name, spec, _ in Formatter().parse(self.unit_path):
-            out.append(literal)
-            if name is not None:
-                out.append("/".join("*" for _ in range((spec or "").count("/") + 1)))
-        pattern = "".join(out)
-        # Collapse runs of stars produced by adjacent placeholders.
-        return re.sub(r"\*{2,}", "*", pattern)
+        return _glob(self.unit_path)
 
     def discover(self, workspace_root: Path) -> list[PurePosixPath]:
         base = workspace_root / self.work_dir

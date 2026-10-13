@@ -304,52 +304,108 @@ class Workspace:
                 anchors.append(anchor)
         return anchors
 
-    def locate_anchor(self, unit_dir: Path) -> str:
-        """Which candidate anchor file identifies ``unit_dir``; exactly one must exist."""
+    def present_anchors(self, unit_dir: Path) -> list[str]:
+        """The candidate anchor files present in ``unit_dir``; ``UnitNotFoundError`` when there is none."""
         present = [a for a in self.candidate_anchors() if (unit_dir / a).is_file()]
-        if len(present) == 1:
-            return present[0]
         if not present:
             tried = ", ".join(self.candidate_anchors())
             raise UnitNotFoundError(f"no anchor file ({tried}) found in {self.rel(unit_dir)}")
-        raise AnchorAmbiguousError(f"{self.rel(unit_dir)} contains several anchor files: {', '.join(present)}")
+        return present
+
+    def locate_anchor(self, unit_dir: Path, anchor: str | None = None) -> str:
+        """Which candidate anchor file identifies ``unit_dir``.
+
+        ``anchor`` names it (``--anchor``) and must be a candidate present in
+        the directory; otherwise exactly one candidate must be present, and
+        several are ``AnchorAmbiguousError`` (``ANCHOR_AMBIGUOUS``).
+        """
+        candidates = self.candidate_anchors()
+        if anchor is not None:
+            if anchor not in candidates:
+                raise UnitNotFoundError(
+                    f"{anchor} is not the anchor of the project or of any workflow",
+                    fix=f"Pass --anchor with one of: {', '.join(candidates)}",
+                )
+            if not (unit_dir / anchor).is_file():
+                raise UnitNotFoundError(f"{anchor} not found in {self.rel(unit_dir)}")
+            return anchor
+        present = self.present_anchors(unit_dir)
+        if len(present) > 1:
+            raise AnchorAmbiguousError(
+                f"{self.rel(unit_dir)} contains several anchor files: {', '.join(present)}",
+                fix=f"Pass --anchor <file> with one of {', '.join(present)} to name the file that identifies the unit",
+            )
+        return present[0]
 
     def _binding(self, unit_dir: Path, anchor: str) -> Binding:
         return read_anchor(unit_dir / anchor, self.rel(unit_dir / anchor)).binding
 
-    def resolve_unit(self, unit: str | Path, workflow: str | None = None) -> UnitRef:
+    def resolve_unit(self, unit: str | Path, workflow: str | None = None, *, anchor: str | None = None) -> UnitRef:
         """The unit directory, its anchor file, its binding and the workflow to evaluate against.
 
-        With ``workflow`` the named definition decides the anchor; otherwise
-        the anchor present in the directory is found first and the binding (or
-        the project default) selects the workflow, whose anchor must match.
+        With ``workflow`` the named definition decides the anchor (``anchor``,
+        when given, must be the same file); otherwise the anchor is located
+        first (``locate_anchor``) and the binding (or the project default)
+        selects the workflow, whose anchor must match.
         """
         unit_dir = self.unit_path(unit)
         if workflow is not None:
             doc = self.definition(workflow)
-            anchor = self.anchor_for(doc)
-            if not (unit_dir / anchor).is_file():
-                raise UnitNotFoundError(f"{anchor} not found in {self.rel(unit_dir)}")
-            return UnitRef(unit_dir, anchor, self._binding(unit_dir, anchor), doc, self.rel(unit_dir))
-        anchor = self.locate_anchor(unit_dir)
-        binding = self._binding(unit_dir, anchor)
+            expected = self.anchor_for(doc)
+            if anchor is not None and anchor != expected:
+                raise AnchorMismatchError(
+                    f"--anchor {anchor} names another file than workflow {doc.id}'s anchor {expected}",
+                    fix="Drop --anchor: --workflow selects the anchor",
+                )
+            if not (unit_dir / expected).is_file():
+                raise UnitNotFoundError(f"{expected} not found in {self.rel(unit_dir)}")
+            return UnitRef(unit_dir, expected, self._binding(unit_dir, expected), doc, self.rel(unit_dir))
+        found = self.locate_anchor(unit_dir, anchor)
+        binding = self._binding(unit_dir, found)
+        self._require_selection(unit_dir, binding)
         doc = self.definition(None, binding)
         expected = self.anchor_for(doc)
-        if expected != anchor:
+        if expected != found:
+            unit_rel = self.rel(unit_dir)
             raise AnchorMismatchError(
-                f"unit {self.rel(unit_dir)} is identified by {anchor} but workflow {doc.id} declares anchor {expected}",
-                target_files=[self.rel(unit_dir / anchor)],
-                fix=f"Rename the anchor to {expected} (and move the unit into the workflow's layout) before binding, or pass --workflow for a definition whose anchor is {anchor}",
+                f"unit {unit_rel} is identified by {found} but workflow {doc.id} declares anchor {expected}",
+                target_files=[self.rel(unit_dir / found)],
+                fix=(
+                    f"Rename the anchor to {expected} (and move the unit into the workflow's layout), or rebind it "
+                    f"with `devkit workflow bind --unit {unit_rel} --workflow <id>` naming a workflow whose anchor is {found}"
+                ),
             )
-        return UnitRef(unit_dir, anchor, binding, doc, self.rel(unit_dir))
+        return UnitRef(unit_dir, found, binding, doc, self.rel(unit_dir))
 
-    def bind_unit(self, unit: str | Path, workflow: str | None = None) -> UnitRef:
+    def _require_selection(self, unit_dir: Path, binding: Binding) -> None:
+        """Raise ``WorkflowNotSelectedError`` for an unbound unit when ``[workflow].default`` is unset."""
+        if not binding.workflow and not self.config.default:
+            raise WorkflowNotSelectedError(
+                f"unit {self.rel(unit_dir)} is not bound and [workflow].default is unset",
+                fix=(
+                    f"Bind the unit with `devkit workflow bind --unit {self.rel(unit_dir)} --workflow <id>`, "
+                    "or set [workflow].default in .devkit/config.toml"
+                ),
+            )
+
+    def describe_unit(self, unit: str | Path, *, anchor: str | None = None) -> DefinitionDescription:
+        """What ``show --unit`` reports: the definition the unit is bound to (else the default) with its binding.
+
+        The definition is loaded unvalidated, so its problems are reported
+        under ``errors`` instead of raised.
+        """
+        unit_dir = self.unit_path(unit)
+        binding = self._binding(unit_dir, self.locate_anchor(unit_dir, anchor))
+        self._require_selection(unit_dir, binding)
+        return self.describe(self.load_definition(binding.workflow or self.config.default or ""), binding)
+
+    def bind_unit(self, unit: str | Path, workflow: str | None = None, *, anchor: str | None = None) -> UnitRef:
         """Record the workflow ``unit`` follows and the hash of its stage schema; returns the rebound unit.
 
-        ``workflow`` defaults to the current binding, else ``[workflow].default``.
-        The handoff history is kept.
+        ``workflow`` defaults to the current binding, else ``[workflow].default``;
+        ``anchor`` is as for ``resolve_unit``. The handoff history is kept.
         """
-        ref = self.resolve_unit(unit, workflow)
+        ref = self.resolve_unit(unit, workflow, anchor=anchor)
         binding = Binding(ref.doc.id, schema_hash(ref.doc), ref.binding.history)
         write_binding(ref.anchor_path, Binding(binding.workflow, binding.hash))
         return replace(ref, binding=binding)

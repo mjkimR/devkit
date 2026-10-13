@@ -156,10 +156,10 @@ class PostSyncHookFailedNotice(SyncNotice):
     level = Level.WARNING
 
 
-class SubagentUnprojectedNotice(SyncNotice):
-    """A subagent has no native variant for a selected agent and was not projected for it (``brief``)."""
+class UnprojectedNotice(SyncNotice):
+    """A skill or subagent has no variant for a selected agent and was not projected for it (``brief``)."""
 
-    code = "SUBAGENT_UNPROJECTED"
+    code = "ASSET_UNPROJECTED"
     brief = True
     target_files = (".devkit/config.toml",)
 

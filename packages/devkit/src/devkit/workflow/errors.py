@@ -170,7 +170,7 @@ class WorkflowNotSelectedError(WorkflowError):
 
     code = "WORKFLOW_NOT_SELECTED"
     input_error = True
-    fix = "Pass --workflow <id>, bind the unit, or set [workflow].default in .devkit/config.toml"
+    fix = "Pass --workflow <id>, or set [workflow].default in .devkit/config.toml"
 
 
 class WorkflowInvalidError(WorkflowError):
@@ -211,7 +211,7 @@ class AnchorAmbiguousError(WorkflowError):
 
     code = "ANCHOR_AMBIGUOUS"
     input_error = True
-    fix = "Pass --workflow <id> to name the workflow (and so the anchor) to evaluate against"
+    fix = "Pass --anchor <file> to name the anchor file that identifies the unit"
 
 
 class AnchorMismatchError(WorkflowError):

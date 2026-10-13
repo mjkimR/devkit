@@ -3,13 +3,17 @@
 ``run_command`` never prints: it returns a ``CommandRun`` (exit code, log path,
 ``Scan``, notices) and the CLI renders it. The command runs in a session of its
 own with stdin closed; when the caller is interrupted or terminated (Ctrl-C,
-``SIGTERM``, ``SIGHUP``), the whole process group is stopped before the signal
-propagates, so no test or build process outlives the run.
+``SIGTERM``, ``SIGHUP``), the whole process group is stopped before
+``CommandInterrupted`` propagates, so no test or build process outlives the run.
+Processes the command leaves running in the background when it exits are not
+stopped; what they write later is appended to the log, after the part the view
+was made from.
 """
 
 from __future__ import annotations
 
 import contextlib
+import errno
 import hashlib
 import io
 import logging
@@ -17,7 +21,6 @@ import os
 import re
 import shlex
 import signal
-import stat
 import subprocess
 import tempfile
 import threading
@@ -34,13 +37,18 @@ from devkit.core.project import find_project_root
 KEEP_LOGS = 20
 STOP_GRACE = 5.0
 LOG_ROOT = "devkit-run"
+INTERRUPTS = (signal.SIGINT, signal.SIGTERM, signal.SIGHUP)
 
 _log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
 class CommandRun:
-    """One finished command: its exit code (``128 + N`` when signal ``N`` ended it), log and bounded output."""
+    """One finished command: its exit code (``128 + N`` when signal ``N`` ended it), log and bounded output.
+
+    ``interrupted`` is the signal that interrupted the run (``0`` when it ran to the end); an interrupted run
+    has an empty ``scan``.
+    """
 
     argv: tuple[str, ...]
     exit_code: int
@@ -48,14 +56,29 @@ class CommandRun:
     duration: float
     scan: Scan
     notices: tuple[AdvisoryError, ...] = ()
+    interrupted: int = 0
 
     @property
     def passed(self) -> bool:
-        return self.exit_code == 0
+        return self.exit_code == 0 and not self.interrupted
 
     @property
     def command(self) -> str:
         return shlex.join(self.argv)
+
+
+class CommandInterrupted(SystemExit):
+    """The run was interrupted (Ctrl-C) or terminated (``SIGTERM``, ``SIGHUP``) after the command started.
+
+    Raised once the command's process group has been stopped. ``run`` is the
+    interrupted run (its ``log`` holds the output up to the interruption,
+    ``interrupted`` the signal); left uncaught it exits ``128 + N``, as the
+    signal would have.
+    """
+
+    def __init__(self, run: CommandRun) -> None:
+        super().__init__(128 + run.interrupted)
+        self.run = run
 
 
 def log_root() -> Path:
@@ -69,21 +92,43 @@ def default_log_dir(cwd: Path) -> Path:
     return log_root() / key
 
 
-def _ensure_private(root: Path) -> None:
-    """Create ``root`` as ``0700``; refuse it when it is a symlink or another user owns it."""
+def _ensure_private(directory: Path) -> None:
+    """Create ``directory`` as ``0700``; refuse it when it is a symlink, not a directory or another user's, and
+    take away any access a group or others have to it."""
     try:
-        root.mkdir(mode=0o700, exist_ok=True)
-        info = os.lstat(root)
+        directory.mkdir(mode=0o700, exist_ok=True)
+        # Checked and changed through a descriptor that never follows a link, so what is checked is what changes.
+        descriptor = os.open(directory, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
     except OSError as error:
-        raise LogDirectoryError(
-            f"cannot create the log directory {root}: {error.strerror or error}", target_files=[str(root)]
-        ) from error
-    if stat.S_ISLNK(info.st_mode) or not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid():
-        raise LogDirectoryError(
-            f"the log directory {root} is not a directory owned by the current user",
-            target_files=[str(root)],
-            fix=f"rm -rf {shlex.quote(str(root))}  (after the user agrees)",
-        )
+        if error.errno in (errno.EEXIST, errno.ENOTDIR, errno.ELOOP):
+            raise _not_private(directory) from error
+        raise _unusable(directory, error) from error
+    try:
+        info = os.fstat(descriptor)
+        if info.st_uid != os.getuid():
+            raise _not_private(directory)
+        if info.st_mode & 0o077:
+            os.fchmod(descriptor, 0o700)
+    except OSError as error:
+        raise _unusable(directory, error) from error
+    finally:
+        os.close(descriptor)
+
+
+def _not_private(directory: Path) -> LogDirectoryError:
+    return LogDirectoryError(
+        f"the log directory {directory} is not a directory owned by the current user",
+        target_files=[str(directory)],
+        fix=f"rm -rf {shlex.quote(str(directory))}  (after the user agrees)",
+    )
+
+
+def _unusable(directory: Path, error: OSError) -> LogDirectoryError:
+    return LogDirectoryError(
+        f"cannot write logs to {directory}: {error.strerror or error}",
+        target_files=[str(directory)],
+        what_to_report="devkit run cannot write its log to its log directory",
+    )
 
 
 def run_command(
@@ -101,35 +146,52 @@ def run_command(
     ``notices=False`` drops relayed ``[NOTICE]`` blocks. The newest
     ``KEEP_LOGS`` logs of ``log_dir`` (default ``default_log_dir``) are kept.
     Raises ``CommandNotStartedError`` when there is no command, the command
-    cannot be started, or the working directory cannot be entered.
+    cannot be started, or the working directory cannot be entered;
+    ``LogDirectoryError`` when the log cannot be written; and
+    ``CommandInterrupted`` when the run is interrupted after the command
+    started.
     """
     argv = tuple(argv)
     if not argv:
         raise CommandNotStartedError("no command to start", fix="Pass the command and its arguments")
     try:
-        directory = (cwd or Path.cwd()).resolve()
+        given = cwd or Path.cwd()
+        directory = given.resolve()
     except FileNotFoundError as error:  # the shell's current directory was removed
         raise _directory_error(argv, os.environ.get("PWD", "."), "the current directory no longer exists") from error
     if not directory.is_dir():
         raise _directory_error(argv, str(directory), "not an existing directory")
+    # Warning locations are made relative to the directory as given and as resolved; the command may remove it.
+    base = (directory, given)
+    logs = log_dir or default_log_dir(directory)
     if log_dir is None:
         _ensure_private(log_root())
-    logs = log_dir or default_log_dir(directory)
-    logs.mkdir(parents=True, exist_ok=True)
-    _prune(logs, KEEP_LOGS - 1)
+        _ensure_private(logs)
     prefix = f"{time.strftime('%Y%m%d-%H%M%S')}-{_slug(argv)}-"
-    with tempfile.NamedTemporaryFile(mode="w+b", prefix=prefix, suffix=".log", dir=logs, delete=False) as log:
-        path = Path(log.name)
+    with contextlib.ExitStack() as opened:
+        try:
+            logs.mkdir(parents=True, exist_ok=True)
+            _prune(logs, KEEP_LOGS - 1)
+            log = opened.enter_context(
+                tempfile.NamedTemporaryFile(mode="rb", prefix=prefix, suffix=".log", dir=logs, delete=False)
+            )
+            path = Path(log.name)
+            # The command writes through a descriptor of its own, appending: a process that outlives it then
+            # cannot write where the scan reads, which a shared file offset would make it do.
+            output = os.open(path, os.O_WRONLY | os.O_APPEND | os.O_NOFOLLOW | os.O_CLOEXEC)
+        except OSError as error:
+            raise _unusable(logs, error) from error
         started = time.monotonic()
+        interrupts = _Interrupts()
         # Handlers first: a signal right after the start must still stop the command's process group.
-        with _signals_exit():
+        with _signals(interrupts.handle, *INTERRUPTS):
             try:
                 process = subprocess.Popen(
                     argv,
                     cwd=directory,
                     env=None if env is None else dict(env),
                     stdin=subprocess.DEVNULL,
-                    stdout=log,
+                    stdout=output,
                     stderr=subprocess.STDOUT,
                     start_new_session=True,
                 )
@@ -141,22 +203,29 @@ def run_command(
                 if error.filename is not None and Path(error.filename) == directory:
                     raise _directory_error(argv, str(directory), reason) from error
                 raise CommandNotStartedError(f"cannot start {argv[0]!r}: {reason}", target_files=[argv[0]]) from error
+            finally:
+                os.close(output)
             try:
-                code = process.wait()
+                interrupts.started()
+                code = _exit_code(process.wait())
+                duration = time.monotonic() - started
+                # What the command wrote until it exited; the open file is read, since a concurrent run may
+                # already have pruned the path.
+                size = os.fstat(log.fileno()).st_size
+                # Only "\n" ends a line: a carriage return redraws it, and the scan keeps what is left visible.
+                with io.TextIOWrapper(
+                    io.BufferedReader(_LogReader(log.fileno(), size)), encoding="utf-8", errors="replace", newline="\n"
+                ) as reader:
+                    result = scan(reader, notices=notices, base=base)
+            except _Signalled as signalled:
+                _stop(process)
+                code = _exit_code(process.returncode)
+                run = CommandRun(argv, code, path, time.monotonic() - started, Scan(), interrupted=signalled.signum)
+                _log.info("%s interrupted by signal %d; log %s", shlex.join(argv), signalled.signum, path)
+                raise CommandInterrupted(run) from None
             except BaseException:
                 _stop(process)
                 raise
-        duration = time.monotonic() - started
-        if code < 0:
-            code = 128 - code
-        # Read back through the open file: a concurrent run may already have pruned the path.
-        log.seek(0)
-        # Only "\n" ends a line: a carriage return redraws it, and the scan keeps what is left visible.
-        reader = io.TextIOWrapper(log.file, encoding="utf-8", errors="replace", newline="\n")  # pyright: ignore[reportArgumentType]
-        try:
-            result = scan(reader, notices=notices, base=(directory, cwd or Path.cwd()))
-        finally:
-            reader.detach()
     _log.info("%s exited %d after %.1fs in %s; log %s", shlex.join(argv), code, duration, directory, path)
     found: list[AdvisoryError] = []
     if slow_after and duration >= slow_after:
@@ -168,6 +237,29 @@ def run_command(
             )
         )
     return CommandRun(argv, code, path, duration, result, tuple(found))
+
+
+def _exit_code(returncode: int) -> int:
+    return 128 - returncode if returncode < 0 else returncode
+
+
+class _LogReader(io.RawIOBase):
+    """The log's first ``size`` bytes, read with ``pread``: no other descriptor's offset moves the reads."""
+
+    def __init__(self, descriptor: int, size: int) -> None:
+        super().__init__()
+        self.descriptor = descriptor
+        self.size = size
+        self.offset = 0
+
+    def readable(self) -> bool:
+        return True
+
+    def readinto(self, buffer: memoryview) -> int:  # pyright: ignore[reportIncompatibleMethodOverride]
+        data = os.pread(self.descriptor, min(len(buffer), self.size - self.offset), self.offset)
+        buffer[: len(data)] = data
+        self.offset += len(data)
+        return len(data)
 
 
 def _directory_error(argv: Sequence[str], directory: str, reason: str) -> CommandNotStartedError:
@@ -194,6 +286,38 @@ def _prune(directory: Path, keep: int) -> None:
             path.unlink()
 
 
+class _Signalled(BaseException):
+    """An interrupting signal arrived while the command ran."""
+
+    def __init__(self, signum: int) -> None:
+        super().__init__(signum)
+        self.signum = signum
+
+
+class _Interrupts:
+    """Turn ``INTERRUPTS`` into ``_Signalled`` once the command has started, so its group is stopped first.
+
+    While ``Popen`` starts it, a signal is held back and raised by ``started``:
+    raised inside ``Popen``, it would leave the new session running with nothing
+    to stop it.
+    """
+
+    def __init__(self) -> None:
+        self.starting = True
+        self.held = 0
+
+    def handle(self, signum: int, _frame: object) -> None:
+        if self.starting:
+            self.held = self.held or signum
+            return
+        raise _Signalled(signum)
+
+    def started(self) -> None:
+        self.starting = False
+        if self.held:
+            raise _Signalled(self.held)
+
+
 @contextlib.contextmanager
 def _signals(handler: Callable[[int, object], None] | int, *signums: int) -> Iterator[None]:
     """Install ``handler`` for ``signums`` while the block runs; only the main thread can, elsewhere nothing changes."""
@@ -208,21 +332,12 @@ def _signals(handler: Callable[[int, object], None] | int, *signums: int) -> Ite
             signal.signal(signum, old if old is not None else signal.SIG_DFL)
 
 
-def _exit_on(signum: int, _frame: object) -> None:
-    raise SystemExit(128 + signum)
-
-
-def _signals_exit() -> contextlib.AbstractContextManager[None]:
-    """Turn ``SIGTERM`` and ``SIGHUP`` into ``SystemExit(128 + N)``, so cleanup runs."""
-    return _signals(_exit_on, signal.SIGTERM, signal.SIGHUP)
-
-
 def _stop(process: subprocess.Popen[bytes]) -> None:
     """Terminate the command's process group, then kill it after ``STOP_GRACE`` seconds.
 
     Further interrupts are ignored meanwhile, so a second Ctrl-C cannot skip the kill.
     """
-    with _signals(signal.SIG_IGN, signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
+    with _signals(signal.SIG_IGN, *INTERRUPTS):
         with contextlib.suppress(ProcessLookupError):
             os.killpg(process.pid, signal.SIGTERM)
         try:

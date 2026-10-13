@@ -1,11 +1,19 @@
-"""``devkit run``: result lines, the excerpt on failure, relayed advisories, output options and exit codes."""
+"""``devkit run``: result lines, the excerpt on failure, relayed advisories, output options, interruptions and exit
+codes."""
 
 from __future__ import annotations
 
 import json
+import os
 import re
+import signal
+import subprocess
 import sys
+import tempfile
+import time
+from pathlib import Path
 
+import pytest
 from click.testing import CliRunner, Result
 from devkit.advisory import AdvisoryError, Level
 from devkit.cli import cli
@@ -167,3 +175,33 @@ def test_verbose_reports_how_much_of_the_output_the_view_shows() -> None:
     assert "[RUN_LAST_LINE: " in result.stdout
     assert re.search(r"^\[INFO\] .*showed \d+ characters for 1000 of output \(\d+%\)$", result.stderr, re.MULTILINE)
     assert "showed" not in _python("print('x' * 999)").stderr
+
+
+@pytest.mark.parametrize("signum", [signal.SIGINT, signal.SIGTERM, signal.SIGHUP])
+def test_an_interrupted_run_reports_its_log_and_exits_128_plus_the_signal(tmp_path: Path, signum: int) -> None:
+    started = tmp_path / "started"
+    entry = "from devkit.compact.cli import run_cmd; run_cmd()"
+    command = ["sh", "-c", f'echo partial; echo $$ > "{started}"; exec sleep 60']
+    runner = subprocess.Popen(
+        [PY, "-c", entry, "--", *command],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        cwd=tmp_path,
+        env={**os.environ, "TMPDIR": tempfile.gettempdir()},  # the test's own, as for the runs in this process
+    )
+    try:
+        deadline = time.monotonic() + 30
+        while not started.exists() or not started.read_text().strip():
+            assert time.monotonic() < deadline and runner.poll() is None, "the command did not start"
+            time.sleep(0.01)
+        runner.send_signal(signum)
+        stdout, stderr = runner.communicate(timeout=30)
+    finally:
+        runner.kill()
+    assert runner.returncode == 128 + signum, stderr
+    (line,) = stdout.splitlines()
+    match = re.fullmatch(r'\[RUN: ".*" outcome=interrupted exit=143 log=(\S+)\]', line)
+    assert match and Path(match[1]).read_text() == "partial\n"
+    with pytest.raises(ProcessLookupError):  # the command was stopped with the run
+        os.kill(int(started.read_text()), 0)

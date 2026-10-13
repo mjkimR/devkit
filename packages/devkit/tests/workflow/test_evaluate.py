@@ -175,7 +175,7 @@ def test_lint_check_uses_callback_and_reports_errors(tmp_path: Path) -> None:
         raise RuntimeError("rule crashed")
 
     res = evaluate_definition(doc, _opts(tmp_path, unit, skip_lint=False, lint=failing))
-    assert res.lint_error is not None and res.lint_error.message == "rule crashed"
+    assert res.lint_error is not None and res.lint_error.message == "RuntimeError: rule crashed"
     assert res.lint_error.code == "UNEXPECTED_ERROR" and "lint failed" in res.unmet[0].detail
     assert res.to_dict()["errors"][-1]["code"] == "UNEXPECTED_ERROR"
 

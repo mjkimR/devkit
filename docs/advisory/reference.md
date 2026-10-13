@@ -25,9 +25,9 @@ This module implements the Agent Advisory Protocol and nothing else.
 
 | Name | What it is |
 | --- | --- |
-| `AdvisoryError` | Exception carrying an advisory: `message`, `*details`, and the keyword fields `code`, `level`, `actor`, `retry`, `guardrail`, `input_error`, `retry_after`, `fix`, `what_to_report`, `target_files`, `brief`, `exit_code`. Each can be a class-level default on a subclass; a keyword other than `None` overrides it per instance. Positional details are converted to `str`, so `to_dict()` and `to_problem_details()` are always JSON-serializable. |
-| `AdvisoryError.with_level(level, *, brief=None)` | A copy of the error at another level (same class, code and fields; `exit_code` `OK` below `ERROR`): an error reported as a warning or notice where it does not fail the command. |
-| Factories | `invalid_input` (`INPUT_ERROR`), `blocked` (`BLOCKED`), `auto_fix` (`AUTO`), `interaction` (`INTERACTION`): classmethods, so `MyError.blocked(...)` returns `MyError`; they keep the subclass's defaults for the fields they do not set. |
+| `AdvisoryError` | Exception carrying an advisory: `message`, `*details`, and the keyword fields `code`, `level`, `actor`, `retry`, `guardrail`, `input_error`, `retry_after`, `fix`, `what_to_report`, `target_files`, `brief`, `exit_code`. Each can be a class-level default on a subclass; a keyword other than `None` overrides it per instance. Positional details are converted to `str`, so `to_dict()` and `to_problem_details()` are always JSON-serializable. An empty `code` becomes `GENERAL_ERROR`; a `target_files` string is one target. An `ERROR` with `exit_code` `OK`, or whose mode is `AUTO` without `fix`, raises `ValueError`. Instances pickle and copy without calling `__init__`, so subclasses with required constructor arguments do too. |
+| `AdvisoryError.with_level(level, *, brief=None)` | A copy of the error at another level (same class, code and fields; `exit_code` `OK` below `ERROR`, kept for an `ERROR` copy of an error, the class default for an `ERROR` copy of a warning or notice): an error reported as a warning or notice where it does not fail the command. |
+| Factories | `invalid_input` (`INPUT_ERROR`), `blocked` (`BLOCKED`), `auto_fix` (`AUTO`), `interaction` (`INTERACTION`): classmethods, so `MyError.blocked(...)` returns `MyError`. They set every field that decides the mode (`level` `ERROR`, `actor`, `retry`, `guardrail`, `input_error`) and keep the subclass's defaults for the others. |
 | `AdvisoryFields` | `TypedDict` of the keyword fields, for subclasses that add constructor arguments (`**fields: Unpack[AdvisoryFields]`). |
 | `Advisory` | Frozen dataclass of the fields with the derived `mode`, `lines(message)` and `to_dict()`. |
 | `Level` | `ERROR`, `WARNING`, `NOTICE`. |
@@ -35,7 +35,7 @@ This module implements the Agent Advisory Protocol and nothing else.
 | `Actor`, `Retry` | Error fields: `TOOL`/`USER`/`DEVELOPER`/`NONE`; `SAFE`/`AFTER_FIX`/`UNSAFE`. |
 | `ExitCode` | `OK = 0`, `FINDINGS = 1`, `ERROR = 2`. |
 | `ACTION_TEXT` | The canonical directive text per `ActionMode`. |
-| `as_advisory_error(exc)`, `render_error(exc)` | Pass an `ERROR`-level `AdvisoryError` through; adapt anything else, a warning or notice that was raised included, to `UNEXPECTED_ERROR` (`MAINTENANCE`). |
+| `as_advisory_error(exc)`, `render_error(exc)` | Pass an `ERROR`-level `AdvisoryError` through; adapt anything else, a warning or notice that was raised included, to `UNEXPECTED_ERROR` (`MAINTENANCE`). A foreign exception's message is `<ExceptionType>: <text>` (the type alone when the text is empty). |
 
 Rendering and serialization:
 

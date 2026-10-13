@@ -31,13 +31,16 @@ AGENTS.md                 # Project-owned; only the DEVKIT:START/END block insid
    ([Agent Projections](agent-projections.md)), tracked by path, SHA-256 and mode in the receipt.
 4. **Foreign files**: devkit manages only files recorded in the receipt and preserves every other file. A planned
    write onto an existing file the receipt does not record aborts the sync before any write
-   (`unowned destination already exists: <path>`, `SYNC_CONFLICT`). Files under `.devkit/managed/` that neither the
+   (`unowned destinations already exist: <paths>`, `SYNC_CONFLICT`), unless the file is identical to the desired
+   content (bytes and execute bit): such a file (for example a Git-ignored projection left on disk when the receipt
+   was reset) is adopted into the receipt without a write. One `SYNC_CONFLICT` names every conflicting path of the
+   sync: unowned files, user-modified files and the guidance block. Files under `.devkit/managed/` that neither the
    receipt nor the inventory owns are left untouched and reported as `stray` (`MANAGED_FILE_STRAY`): they are never
    deployed or removed, but consumers scanning the directory could pick them up. Project-owned content belongs
    outside the managed root (custom rules under a `--rules-dir`, overrides under `.devkit/overrides/`).
 5. **User modifications**: a deployed file whose content or execute bit differs from its receipt signature is a
    user modification; other permission bits (`0664` under umask `002`, `0600`) are not.
-   - Still desired: the sync aborts before any write.
+   - Still desired: the sync aborts before any write (`SYNC_CONFLICT`, naming every such file).
    - No longer desired (package removal, deselection, preset narrowing, an asset removed or renamed upstream): the
      file is an **orphan**. It stays on disk, is dropped from the receipt's `files`, and the sync continues with an
      `ORPHAN_LEFT` warning naming it; the user deletes or moves it. From the next sync on, an orphan under
@@ -57,12 +60,14 @@ AGENTS.md                 # Project-owned; only the DEVKIT:START/END block insid
      is not an edit.
    - Ownership: the receipt records the block's SHA-256 under `guidance_block`. A block whose digest differs is a
      user modification and aborts the sync before any write; a deleted block is written again; markers the receipt
-     does not know are an unowned collision.
+     does not know are an unowned collision, unless the block between them is exactly the one sync writes, which is
+     adopted without a write.
    - `AGENTS.md` must be a regular file while the block is managed; a symlink stops the sync (`WORKSPACE_UNSAFE`:
      make `AGENTS.md` the file and point other names at it, or set `guidance_block = false`).
-   - `guidance_block = false`: on that transition the block is removed (the file too, when nothing else is in it)
-     if its digest still matches, and the receipt stops recording it. With no recorded block, sync never reads
-     `AGENTS.md`.
+   - `guidance_block = false`: on that transition the receipt stops recording the block. A block whose digest still
+     matches is removed (the file too, when nothing else is in it), and only the blank line sync added goes with it:
+     project text on both sides stays a paragraph apart. An edited block is left in place with an `ORPHAN_LEFT`
+     warning. With no recorded block, sync never reads `AGENTS.md`.
    - `CLAUDE.md` is never written; the project points it at `AGENTS.md` with its own symlink or include line.
 7. **Seeded files (write-once scaffolding)**: the `target` of a seeded `document` asset
    ([Manifest Specification](manifest-spec.md#2-asset-kinds)).
@@ -89,12 +94,16 @@ and upstream line shifts cannot make them fail to apply.
 
 `devkit override create <bundle>:<asset>` copies every upstream file of the asset (all files of a skill or directory
 source) to `.devkit/overrides/<bundle>/...` and to `.devkit/overrides/.baseline/<bundle>/...` as ordinary
-`0644`/`0755` files, then synchronizes, all under one project lock; when the sync fails, the override files are put
-back as they were. The bundle must be selected and the asset part of its selected presets; seeded assets cannot be
-overridden. `--force` overwrites existing override files.
+`0644`/`0755` files, then synchronizes, all under one project lock; when the sync fails before it commits, the
+override files are put back as they were (a failure after the commit leaves them, since the receipt cites them). The
+bundle must be selected and the asset part of its selected presets; seeded assets cannot be overridden. The current
+upstream digest becomes the recorded baseline. `--force` overwrites existing override files, and with them the
+baseline, so drift recorded against the old one is gone.
 
 An override replaces individual files: files missing from the override directory are read from upstream, and extra
 files are ignored. Projections, `get-context` and playbook search read the override in place of the upstream file.
+A symlink anywhere on an override path (`.devkit/overrides` itself, a bundle directory, a file) stops the sync
+before any write (`WORKSPACE_UNSAFE`): override content never comes from outside the project.
 
 ### Drift Detection
 
@@ -120,7 +129,9 @@ skill's script is drift even when only its `SKILL.md` is overridden. On drift th
   `bundle:asset`, with the `devkit override diff` / `devkit override accept` commands as its `fix`. Choose it where
   an override shadows governance content (rules, gates, workflows); `warn` keeps prose upgrades flowing.
 
-`devkit status` reports drift under `errors` and exits `1` under either policy.
+`devkit status` reports drift under `errors` and exits `1` under either policy. Both report drift only for deployed
+assets: the record of an asset that is not deployed (its bundle deselected, its preset narrowed) is kept while its
+override files remain, and its drift is reported once it is selected again.
 
 ### Reconciliation
 

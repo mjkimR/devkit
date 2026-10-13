@@ -50,22 +50,31 @@ def build_bundle(bundle: Bundle, output: Path) -> BuildResult:
             target_files=["--output"],
             fix="Pass an --output path outside the bundle directory",
         )
-    payload = _payload(bundle)
+    try:
+        payload = _payload(bundle)
+    except OSError as exc:
+        raise BundleError(f"cannot read bundle source: {exc}", target_files=[str(bundle.root)]) from exc
     if INVENTORY in payload:
         raise BundleError(f"{INVENTORY} is reserved for archive metadata")
     inventory = {
         name: {"sha256": sha256(content.data), "mode": content.mode} for name, content in sorted(payload.items())
     }
     payload[INVENTORY] = json_content(inventory)
-    output.parent.mkdir(parents=True, exist_ok=True)
     # Exclusive creation protects existing artifacts from accidental replacement.
     try:
+        output.parent.mkdir(parents=True, exist_ok=True)
         stream = output.open("xb")
-    except FileExistsError as exc:
+    except OSError as exc:
+        if isinstance(exc, FileExistsError) and output.parent.is_dir():
+            raise ArgumentError(
+                f"archive already exists: {output}",
+                target_files=["--output"],
+                fix="Pass a new --output path; devkit never replaces an existing archive",
+            ) from exc
         raise ArgumentError(
-            f"archive already exists: {output}",
+            f"cannot create the archive: {exc}",
             target_files=["--output"],
-            fix="Pass a new --output path; devkit never replaces an existing archive",
+            fix="Pass an --output path whose directory can be created and written",
         ) from exc
     try:
         with stream, zipfile.ZipFile(stream, "w", compression=zipfile.ZIP_STORED) as archive:

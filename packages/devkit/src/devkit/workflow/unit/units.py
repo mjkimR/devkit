@@ -5,9 +5,12 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date
+from pathlib import Path, PurePosixPath
 
+from devkit.core.errors import UnsafePathError
+from devkit.core.paths import resolve_within
 from devkit.workflow.definition.definition import schema_hash
-from devkit.workflow.errors import AnchorInvalidError, UnitExistsError
+from devkit.workflow.errors import AnchorInvalidError, LayoutError, UnitExistsError
 from devkit.workflow.project.layout import TemplateLayout
 from devkit.workflow.unit import frontmatter
 from devkit.workflow.unit.binding import Binding, read_anchor
@@ -27,13 +30,15 @@ def create_unit(
 
     Raises ``SlugError`` (``SLUG_INVALID``) for a malformed slug and
     ``UnitExistsError`` (``UNIT_EXISTS``) when the unit already has an anchor.
+    A unit directory that resolves outside the layout's ``work_dir`` (through
+    a symbolic link) is a ``LayoutError`` (``LAYOUT_INVALID``).
     """
     doc = ws.definition(workflow)
     day = when or date.today()
     layout = ws.layout_for(doc)
     anchor = ws.anchor_for(doc)
     rel = layout.new_unit(slug, day)
-    unit_dir = ws.root / rel
+    unit_dir = _unit_dir(ws, layout, rel)
     if any((unit_dir / name).is_file() for name in {anchor, *ws.candidate_anchors()}):
         raise UnitExistsError(
             f"unit already exists: {rel.as_posix()}",
@@ -44,7 +49,22 @@ def create_unit(
     binding = Binding(doc.id, schema_hash(doc))
     data = {"id": slug, "status": status, "created": day, "workflow": binding.workflow, "workflow_hash": binding.hash}
     (unit_dir / anchor).write_text(frontmatter.render(data, f"# {slug}\n"), "utf-8")
-    return UnitRef(unit_dir.resolve(), anchor, binding, doc, rel.as_posix())
+    return UnitRef(unit_dir, anchor, binding, doc, rel.as_posix())
+
+
+def _unit_dir(ws: Workspace, layout: TemplateLayout, rel: PurePosixPath) -> Path:
+    """``rel`` under the workspace root, refused unless it resolves inside the layout's ``work_dir``."""
+    fix = (
+        f"Replace the symbolic link on the path {rel.as_posix()} that leads outside {layout.work_dir} with a directory"
+    )
+    try:
+        work_dir = resolve_within(ws.root, layout.work_dir)
+        unit_dir = resolve_within(ws.root, rel)
+    except UnsafePathError as exc:
+        raise LayoutError(f"unit directory {rel.as_posix()}: {exc.message}", fix=fix) from exc
+    if unit_dir == work_dir or not unit_dir.is_relative_to(work_dir):
+        raise LayoutError(f"unit directory {rel.as_posix()} resolves outside {layout.work_dir}", fix=fix)
+    return unit_dir
 
 
 @dataclass(frozen=True)

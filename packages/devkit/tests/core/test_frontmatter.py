@@ -132,3 +132,14 @@ def test_only_newline_ends_a_line() -> None:
     # A form feed or a lone carriage return does not split lines.
     assert locate("---\x0ca: 1\n---\n") is None
     assert locate("---\ra: 1\n---\n") is None
+
+
+@pytest.mark.parametrize("header", ["created: 2024-02-30\n", "created: 2024-13-01\n", "at: 2024-01-01 25:00:00\n"])
+def test_an_impossible_date_is_a_frontmatter_error(header: str) -> None:
+    with pytest.raises(FrontmatterError, match="invalid YAML frontmatter"):
+        parse(f"---\n{header}---\nbody\n")
+
+
+def test_deeply_nested_yaml_is_a_frontmatter_error() -> None:
+    with pytest.raises(FrontmatterError, match="nested too deeply"):
+        parse("---\nk: " + "[" * 10_000 + "]" * 10_000 + "\n---\n")

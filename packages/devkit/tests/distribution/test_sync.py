@@ -173,14 +173,14 @@ def test_dry_run_is_read_only_and_missing_variant_is_reported(installed: list[In
     synced = sync_project(target, installed, agents=["claude-code"], dry_run=True)
     result = synced.to_dict()
     assert result["unprojected"] == [{"bundle": "team", "asset": "reviewer", "agent": "claude-code"}]
-    (notice,) = [n for n in synced.notices if n.code == "SUBAGENT_UNPROJECTED"]
+    (notice,) = [n for n in synced.notices if n.code == "ASSET_UNPROJECTED"]
     assert notice.target_files == (".devkit/config.toml",)  # the file the project can edit, not an asset label
     assert notice.lines() == [
-        "[NOTICE] (SUBAGENT_UNPROJECTED) subagents without a native variant for a selected agent were not projected:"
-        " team:reviewer (claude-code)",
+        "[NOTICE] (ASSET_UNPROJECTED) skills and subagents without a variant for a selected agent were not"
+        " projected: team:reviewer (claude-code)",
         "[TARGET] .devkit/config.toml",
-        "[DETAIL] the bundle can add the variant or ship a role contract; the project can narrow `agents` in"
-        " .devkit/config.toml",
+        "[DETAIL] the bundle can add the variant (or, for a subagent, ship a role contract); the project can narrow"
+        " `agents` in .devkit/config.toml",
     ]  # brief: a notice without a fix carries no [ACTION]
     assert not any(a["path"].startswith(".claude/agents/") for a in result["actions"])
     assert not (target / ".devkit/managed").exists()

@@ -78,7 +78,7 @@ class _Evaluator:
         ]
         self.primitives = PrimitiveContext(opts.workspace_root, self.unit_dir, self.envelopes, opts.ancestor)
         self.given = set(opts.given)
-        self.cache: dict[str, CheckResult] = {}
+        self.cache: dict[tuple[str, str], CheckResult] = {}
         self.lint_done = False
         self.lint_violations: list[str] = []
         self.lint_error: AdvisoryError | None = None
@@ -92,18 +92,27 @@ class _Evaluator:
         index = self.doc.stage_index(record.stage)
         return index >= 0 and any(seq > record.seq and 0 <= target <= index for seq, target in self.returns)
 
-    def effective(self, request_id: str) -> Decision | None:
+    def effective(self, request_id: str, stage: str = "") -> Decision | None:
+        """The latest record answering ``request_id`` for ``stage`` (``""``: the handoff, which has none).
+
+        A gate or human check used by several stages is answered for each of them separately.
+        """
         for record in reversed(self.decisions.records):
-            if record.request == request_id and record.action != "cancel" and not self.voided(record):
+            if (
+                record.request == request_id
+                and record.stage == stage
+                and record.action != "cancel"
+                and not self.voided(record)
+            ):
                 return record
         return None
 
-    def accepted(self, request_id: str) -> Decision | None:
-        decision = self.effective(request_id)
+    def accepted(self, request_id: str, stage: str = "") -> Decision | None:
+        decision = self.effective(request_id, stage)
         return decision if decision is not None and decision.action == "accept" else None
 
-    def declined(self, request_id: str) -> Decision | None:
-        decision = self.effective(request_id)
+    def declined(self, request_id: str, stage: str = "") -> Decision | None:
+        decision = self.effective(request_id, stage)
         return decision if decision is not None and decision.action == "decline" else None
 
     def approvals_after(self, index: int) -> list[Decision]:
@@ -114,26 +123,25 @@ class _Evaluator:
                 record.kind == "approve"
                 and record.action == "accept"
                 and self.doc.stage_index(record.stage) > index
-                and self.effective(record.request) is record
+                and self.effective(record.request, record.stage) is record
             ):
                 stale.append(record)
         return stale
 
     # -- check evaluation ------------------------------------------------------
 
-    def eval_ref(self, ref: str) -> CheckResult:
-        if ref in self.cache:
-            return self.cache[ref]
+    def eval_ref(self, ref: str, stage: str = "") -> CheckResult:
+        """Evaluate ``ref`` as a check of ``stage``; a human check's answer belongs to its stage."""
         try:
             inv, check = self.registry.resolve_name(ref)
         except CheckError as exc:
-            result = CheckResult(ref, CheckClass.DISK, False, False, str(exc))
-        else:
-            result = self._eval(ref, inv, check)
-        self.cache[ref] = result
-        return result
+            return CheckResult(ref, CheckClass.DISK, False, False, str(exc))
+        key = (ref, stage if check.class_ == CheckClass.HUMAN else "")
+        if key not in self.cache:
+            self.cache[key] = self._eval(ref, inv, check, stage)
+        return self.cache[key]
 
-    def _eval(self, ref: str, inv: Invocation, check: Check) -> CheckResult:
+    def _eval(self, ref: str, inv: Invocation, check: Check, stage: str) -> CheckResult:
         if check.class_ == CheckClass.DISK:
             outcome = evaluate_primitive(self.primitives, inv.name, inv.args)
             return CheckResult(ref, check.class_, outcome.satisfied, outcome.evaluated, outcome.detail)
@@ -145,7 +153,7 @@ class _Evaluator:
         if ref in self.given:
             return CheckResult(ref, check.class_, True, False, "given by executor")
         if check.class_ == CheckClass.HUMAN:
-            accepted = self.accepted(CHECK_PREFIX + ref)
+            accepted = self.accepted(CHECK_PREFIX + ref, stage)
             if accepted is not None:
                 return CheckResult(ref, check.class_, True, False, f"accepted by {accepted.file}")
         return CheckResult(ref, check.class_, False, False, f"declared for {check.class_.value}; not evaluated")
@@ -170,12 +178,12 @@ class _Evaluator:
             return CheckResult(ref, CheckClass.PLUGIN, False, True, "check returned no CheckResult")
         return CheckResult(ref, CheckClass.PLUGIN, result.satisfied, result.evaluated, result.detail)
 
-    def gate(self, gate: str, policy: str) -> GateStatus:
+    def gate(self, gate: str, policy: str, stage: str) -> GateStatus:
         if policy == "auto":
             return GateStatus(gate, policy, True, "policy")
         if gate in self.given:
             return GateStatus(gate, policy, True, "given")
-        accepted = self.accepted(GATE_PREFIX + gate)
+        accepted = self.accepted(GATE_PREFIX + gate, stage)
         if accepted is not None:
             return GateStatus(gate, policy, True, "decision", accepted.file)
         return GateStatus(gate, policy, False)
@@ -262,8 +270,8 @@ def evaluate_definition(doc: WorkflowDocument, opts: Options) -> UnitEvaluation:
         if stage.gate and policy == "off":
             res.skipped.append(Skipped(stage.id, f"approvals.{stage.gate}=off"))
             continue
-        unmet = [r for r in (ev.eval_ref(ref) for ref in stage.exit) if not r.satisfied]
-        gate = ev.gate(stage.gate, policy) if stage.gate and policy else None
+        unmet = [r for r in (ev.eval_ref(ref, stage.id) for ref in stage.exit) if not r.satisfied]
+        gate = ev.gate(stage.gate, policy, stage.id) if stage.gate and policy else None
         # The gate is asked only once the stage's own work is done.
         if gate is not None and not gate.satisfied and not unmet:
             unmet.append(_gate_result(gate))
@@ -279,7 +287,7 @@ def evaluate_definition(doc: WorkflowDocument, opts: Options) -> UnitEvaluation:
             res.delegate = Delegate(stage.role, stage.isolation, opts.roles.get(stage.role))
         res.gate = gate
         res.waiting = _waiting_for(stage, unmet)
-        res.requests = stage_requests(doc, stage, unmet, ev.declined)
+        res.requests = stage_requests(doc, stage, unmet, lambda rid, sid=stage.id: ev.declined(rid, sid))
         res.stale_approvals = ev.approvals_after(index)
         break
 

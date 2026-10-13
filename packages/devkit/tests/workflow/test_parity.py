@@ -276,7 +276,8 @@ def test_plugin_checks_from_receipt_and_load_failures(workspace: Path) -> None:
     managed = workspace / ".devkit/managed/team/checks"
     managed.mkdir(parents=True)
     (managed / "words.py").write_text(PLUGIN)
-    _receipt(workspace, [{"kind": "workflow-check", "id": "words", "paths": [".devkit/managed/team/checks/words.py"]}])
+    assets = [{"kind": "workflow-check", "id": "words", "paths": [".devkit/managed/team/checks/words.py"]}]
+    write_receipt(workspace, assets, hashed=(".devkit/managed/team/checks/words.py",))
     (workspace / ".devkit/roles").mkdir()
     (workspace / ".devkit/roles/reviewer.md").write_text("# reviewer\n")
     assert "class=plugin" in _run("checks", "-w", str(workspace)).output
@@ -288,6 +289,7 @@ def test_plugin_checks_from_receipt_and_load_failures(workspace: Path) -> None:
     assert "[ACTION]" in missing.stderr
 
     (managed / "words.py").write_text("raise RuntimeError('broken plugin')\n")
+    write_receipt(workspace, assets, hashed=(".devkit/managed/team/checks/words.py",))
     broken = _run("validate", "-w", str(workspace))
     assert (
         broken.exit_code == 2 and "(WORKFLOW_CHECK_LOAD_FAILED)" in broken.stderr and "broken plugin" in broken.stderr

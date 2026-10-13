@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from importlib import metadata, resources
 
+from devkit.advisory import AdvisoryError, Level
 from devkit.distribution.bundles import Bundle, load_bundle
 from devkit.distribution.errors import BundleError, PackageError
 
@@ -29,30 +30,79 @@ class InstalledBundle:
         return self.builtin and self.bundle.auto_select
 
 
+class Discovered(list[InstalledBundle]):
+    """The usable installed bundles, sorted by name, and ``unusable``: the load error of every other one.
+
+    An entry point's name is its bundle's name, so a package that cannot be
+    loaded is still known by the bundle it registers.
+    """
+
+    def __init__(self, bundles: list[InstalledBundle], unusable: dict[str, PackageError]) -> None:
+        super().__init__(bundles)
+        self.unusable = unusable
+
+
+def unusable_bundles(installed: list[InstalledBundle]) -> dict[str, PackageError]:
+    """Bundle name -> load error of the installed bundles that could not be loaded (none for a plain list)."""
+    return dict(installed.unusable) if isinstance(installed, Discovered) else {}
+
+
+def unusable_notices(installed: list[InstalledBundle], selected: Iterable[str]) -> list[AdvisoryError]:
+    """Raise the load error of a selected bundle; return every other one as a warning.
+
+    A package whose bundle the project does not deploy never stops a command,
+    so the project can still deselect it or run ``devkit remove`` while the
+    package is upgraded or uninstalled.
+    """
+    unusable = unusable_bundles(installed)
+    for name in sorted(set(selected) & unusable.keys()):
+        raise unusable[name]
+    return [error.with_level(Level.WARNING) for _, error in sorted(unusable.items())]
+
+
+def _load(stack: ExitStack, entry: metadata.EntryPoint) -> InstalledBundle:
+    if entry.attr is not None or entry.extras or entry.dist is None:
+        raise PackageError(f"{entry.name}: bundle entry point must reference a resource module")
+    package = entry.dist.metadata["Name"]
+    fix = f"Upgrade or uninstall the package {package} (`uv remove {package}`)"
+    try:
+        root = stack.enter_context(resources.as_file(resources.files(entry.module).joinpath("bundle")))
+        bundle = load_bundle(root)
+    except BundleError as exc:
+        raise PackageError(f"{entry.name}: installed bundle is invalid: {exc.message}", *exc.details, fix=fix) from exc
+    except Exception as exc:
+        # Importing the resource module runs its ``__init__``: any failure there is the package's defect, not devkit's.
+        raise PackageError(
+            f"{entry.name}: cannot read content resources: {type(exc).__name__}: {exc}", fix=fix
+        ) from exc
+    if bundle.name != entry.name:
+        raise PackageError(
+            f"{entry.name}: the entry point registers bundle {bundle.name}; its name must be the bundle name", fix=fix
+        )
+    builtin = package == BUILTIN_DISTRIBUTION
+    if bundle.auto_select and not builtin:
+        raise PackageError(
+            f"{entry.name}: auto_select is reserved for bundles of the {BUILTIN_DISTRIBUTION} distribution", fix=fix
+        )
+    return InstalledBundle(package, entry.dist.version, bundle, builtin)
+
+
 @contextmanager
-def discover_bundles() -> Iterator[list[InstalledBundle]]:
-    """Keep resource materializations alive for the whole sync operation."""
-    found = []
-    names: set[str] = set()
+def discover_bundles() -> Iterator[Discovered]:
+    """Load every installed bundle; keep resource materializations alive for the whole operation.
+
+    A package that cannot be loaded is recorded under ``unusable`` instead of
+    stopping discovery (``unusable_notices`` decides per command); two entry
+    points with one name are ambiguous and always an error.
+    """
+    found: list[InstalledBundle] = []
+    unusable: dict[str, PackageError] = {}
     with ExitStack() as stack:
         for entry in sorted(metadata.entry_points(group=GROUP), key=lambda item: (item.name, item.value)):
-            if entry.attr is not None or entry.extras or entry.dist is None:
-                raise PackageError(f"{entry.name}: bundle entry point must reference a resource module")
+            if entry.name in unusable or any(item.bundle.name == entry.name for item in found):
+                raise PackageError(f"duplicate installed bundle: {entry.name}")
             try:
-                root = stack.enter_context(resources.as_file(resources.files(entry.module).joinpath("bundle")))
-                bundle = load_bundle(root)
-            except (ImportError, OSError, TypeError) as exc:
-                raise PackageError(f"{entry.name}: cannot read content resources: {exc}") from exc
-            except BundleError as exc:
-                raise PackageError(f"{entry.name}: installed bundle is invalid: {exc.message}", *exc.details) from exc
-            if bundle.name in names:
-                raise PackageError(f"duplicate installed bundle: {bundle.name}")
-            names.add(bundle.name)
-            package = entry.dist.metadata["Name"]
-            builtin = package == BUILTIN_DISTRIBUTION
-            if bundle.auto_select and not builtin:
-                raise PackageError(
-                    f"{entry.name}: auto_select is reserved for bundles of the {BUILTIN_DISTRIBUTION} distribution"
-                )
-            found.append(InstalledBundle(package, entry.dist.version, bundle, builtin))
-        yield sorted(found, key=lambda item: item.bundle.name)
+                found.append(_load(stack, entry))
+            except PackageError as exc:
+                unusable[entry.name] = exc
+        yield Discovered(sorted(found, key=lambda item: item.bundle.name), unusable)

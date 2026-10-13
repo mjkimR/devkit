@@ -37,11 +37,14 @@ class AdvisoryError(Exception):
     ``retry_after``, ``fix``, ``what_to_report``, ``target_files``, ``brief``,
     ``exit_code``); a keyword argument other than ``None`` overrides it per
     instance. Positional arguments after the message become ``[DETAIL]`` lines
-    and are converted to ``str``.
+    and are converted to ``str``; an empty ``code`` is ``GENERAL_ERROR``, and a
+    ``target_files`` given as one string is one target.
 
     An instance whose ``level`` is ``WARNING`` or ``NOTICE`` reports something
     an operation that succeeded must tell its caller: it is returned with the
     result (under ``notices``), never raised, and its ``exit_code`` is ``OK``.
+    An ``ERROR`` whose ``exit_code`` is ``OK``, or whose mode is ``AUTO``
+    without a ``fix``, raises ``ValueError``.
     """
 
     exit_code: ExitCode = ExitCode.ERROR
@@ -97,28 +100,50 @@ class AdvisoryError(Exception):
         if what_to_report is not None:
             self.what_to_report = what_to_report
         if target_files is not None:
-            self.target_files = tuple(target_files)
+            self.target_files = (target_files,) if isinstance(target_files, str) else tuple(target_files)
         if brief is not None:
             self.brief = brief
+        if not self.code:
+            self.code = DEFAULT_CODE
         if self.level is not Level.ERROR:
             self.exit_code = ExitCode.OK
         self.details: tuple[str, ...] = tuple(str(detail) for detail in details)
+        self._check()
+
+    def _check(self) -> None:
+        """Refuse an error that would exit ``0`` or tell the agent to run a ``[FIX]`` it does not have."""
+        if self.level is not Level.ERROR:
+            return
+        if self.exit_code is ExitCode.OK:
+            raise ValueError(f"{self.code}: an ERROR advisory exits {int(ExitCode.FINDINGS)} or {int(ExitCode.ERROR)}")
+        # Derived from the fields alone: a subclass's ``advisory`` may read state its __init__ has not set yet.
+        fields = Advisory(actor=self.actor, retry=self.retry, guardrail=self.guardrail, input_error=self.input_error)
+        if fields.mode is ActionMode.AUTO and not self.fix:
+            raise ValueError(f"{self.code}: an AUTO error needs the fix command it directs the agent to run")
+
+    def __reduce__(self) -> tuple[Any, ...]:
+        # Rebuilt without __init__, as with_level copies: subclasses may require their own arguments.
+        return _rebuild, (type(self), self.args, self.__dict__)
 
     def with_level(self, level: Level, *, brief: bool | None = None) -> Self:
         """A copy at ``level``: the same class, code and fields.
 
-        ``exit_code`` is ``OK`` below ``ERROR``, and the class default when the copy is an ``ERROR``.
+        ``exit_code`` is ``OK`` below ``ERROR``; an ``ERROR`` copy keeps this error's
+        ``exit_code``, or takes the class default when this is a warning or notice.
 
         For a condition that is an error in one command and a warning or notice
         in another (override drift after ``devkit sync``, another rule's policy
         problem in ``devkit rules explain``).
         """
-        copy = type(self).__new__(type(self), *self.args)  # no __init__: subclasses may require their own arguments
-        copy.__dict__.update(self.__dict__)
+        copy = _rebuild(type(self), self.args, self.__dict__)
         copy.level = level
         if brief is not None:
             copy.brief = brief
-        copy.exit_code = type(self).exit_code if level is Level.ERROR else ExitCode.OK
+        if level is not Level.ERROR:
+            copy.exit_code = ExitCode.OK
+        elif self.level is not Level.ERROR:
+            copy.exit_code = type(self).exit_code
+        copy._check()
         return copy
 
     @classmethod
@@ -135,9 +160,11 @@ class AdvisoryError(Exception):
             message,
             *details,
             code=code,
+            level=Level.ERROR,
             actor=Actor.DEVELOPER,
             retry=Retry.AFTER_FIX,
             guardrail=True,
+            input_error=False,
             fix=fix,
             target_files=target_files,
         )
@@ -156,8 +183,11 @@ class AdvisoryError(Exception):
             message,
             *details,
             code=code,
+            level=Level.ERROR,
             actor=Actor.USER,
             retry=Retry.AFTER_FIX,
+            guardrail=False,
+            input_error=False,
             what_to_report=what_to_report,
             fix=fix,
         )
@@ -176,8 +206,11 @@ class AdvisoryError(Exception):
             message,
             *details,
             code=code,
+            level=Level.ERROR,
             actor=Actor.TOOL,
             retry=Retry.AFTER_FIX,
+            guardrail=False,
+            input_error=False,
             fix=fix,
             target_files=target_files,
         )
@@ -196,8 +229,10 @@ class AdvisoryError(Exception):
             message,
             *details,
             code=code,
+            level=Level.ERROR,
             actor=Actor.DEVELOPER,
             retry=Retry.AFTER_FIX,
+            guardrail=False,
             input_error=True,
             fix=fix,
             target_files=target_files,
@@ -270,6 +305,13 @@ class AdvisoryError(Exception):
         return f"{type(self).__name__}(code={self.code!r}, message={self.message!r})"
 
 
+def _rebuild[E: AdvisoryError](cls: type[E], args: tuple[Any, ...], state: dict[str, Any]) -> E:
+    """Unpickle or copy an ``AdvisoryError`` without calling its ``__init__``."""
+    error = cls.__new__(cls, *args)
+    error.__dict__.update(state)
+    return error
+
+
 def as_advisory_error(error: BaseException) -> AdvisoryError:
     """Return an ``ERROR``-level ``error`` itself; wrap anything else as an ``UNEXPECTED_ERROR`` (``MAINTENANCE``).
 
@@ -284,7 +326,7 @@ def as_advisory_error(error: BaseException) -> AdvisoryError:
             actor=Actor.DEVELOPER,
             retry=Retry.UNSAFE,
         )
-    message = str(error) or type(error).__name__
+    message = f"{type(error).__name__}: {error}" if str(error) else type(error).__name__
     return AdvisoryError(message, code=UNEXPECTED_CODE, actor=Actor.DEVELOPER, retry=Retry.UNSAFE)
 
 

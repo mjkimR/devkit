@@ -8,9 +8,9 @@ run.
 
 Each wrapper is static. On every commit it:
 
-1. runs ``<hook>.pre-gate`` first when that file exists and is executable (the
-   hook ``install --force`` moved aside), and stops when a blocking stage's
-   hook fails;
+1. runs ``<hook>.pre-gate`` first when it is an executable file (the hook
+   ``install --force`` moved aside; a directory moved aside is not run), and
+   stops when a blocking stage's hook fails;
 2. picks the interpreter: the work tree's ``.venv/bin/python`` when ``devkit``
    is installed in it, otherwise the absolute interpreter recorded at install
    time, and exits ``2`` on a blocking stage when neither exists;
@@ -72,6 +72,7 @@ class HookStatus:
 class HooksLocation:
     directory: Path  # ``<common-git-dir>/hooks``
     hooks_path: str | None = None  # ``core.hooksPath`` when it sends Git to another directory
+    hooks_path_scope: str | None = None  # the configuration scope that sets ``hooks_path``
 
 
 def _present(path: Path) -> bool:
@@ -93,7 +94,7 @@ def locate(cwd: Path) -> HooksLocation:
             candidate = require_git_toplevel(cwd) / candidate
         if candidate.resolve() == directory.resolve():
             custom = None
-    return HooksLocation(directory, custom)
+    return HooksLocation(directory, custom, git.config_scope(cwd, HOOKS_PATH_KEY) if custom else None)
 
 
 def wrapper_script(stage: Stage, python: str) -> str:
@@ -105,7 +106,7 @@ def wrapper_script(stage: Stage, python: str) -> str:
     return f"""#!/bin/sh
 {MARKER}
 {PYTHON_LINE}{shlex.quote(python)}
-if [ -x "$0{BACKUP_SUFFIX}" ]; then
+if [ -f "$0{BACKUP_SUFFIX}" ] && [ -x "$0{BACKUP_SUFFIX}" ]; then
     {chained}
 fi
 top=$(git rev-parse --show-toplevel 2>/dev/null)
@@ -195,12 +196,27 @@ def _write(path: Path, text: str) -> None:
             temporary.unlink()
 
 
+def _hooks_path_fix(location: HooksLocation) -> str:
+    """The step that stops ``core.hooksPath`` bypassing the managed directory, by the scope that sets it."""
+    scope = location.hooks_path_scope
+    if scope == "local":
+        step = f"run `git config --unset {HOOKS_PATH_KEY}`"
+    elif scope == "worktree":
+        step = f"run `git config --worktree --unset {HOOKS_PATH_KEY}`"
+    elif scope == "command":
+        step = f"remove {HOOKS_PATH_KEY} from the `git -c` options or GIT_CONFIG_* environment variables"
+    else:  # global or system: override it for this repository only, leaving other repositories untouched
+        step = f"run `git config {HOOKS_PATH_KEY} {shlex.quote(location.directory.as_posix())}`"
+    return f"Once the user agrees, {step}, then `devkit gate install`"
+
+
 def _refuse_hooks_path(location: HooksLocation) -> None:
     if location.hooks_path:
+        scope = f" ({location.hooks_path_scope} config)" if location.hooks_path_scope else ""
         raise HooksPathSetError(
-            f"{HOOKS_PATH_KEY} is set to {location.hooks_path!r}; managed hooks are only installed into "
+            f"{HOOKS_PATH_KEY} is set to {location.hooks_path!r}{scope}; managed hooks are only installed into "
             f"{location.directory}, which Git would not run",
-            fix=f"Once the user agrees, run `git config --unset {HOOKS_PATH_KEY}`, then `devkit gate install`",
+            fix=_hooks_path_fix(location),
         )
 
 

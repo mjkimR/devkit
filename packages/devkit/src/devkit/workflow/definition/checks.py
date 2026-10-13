@@ -202,9 +202,13 @@ class Registry:
                 raise CheckError(f"plugin check {plugin.name!r} collides with a built-in check")
             reg.checks[plugin.name] = plugin.to_check()
             reg.plugins[plugin.name] = plugin
+        names: set[str] = set()
         for c in declared:
             if c.class_ not in DECLARABLE:
                 raise CheckError(f"declared check {c.name!r} must be runner or human")
+            if c.name in names:
+                raise CheckError(f"duplicate declared check {c.name!r}")
+            names.add(c.name)
             if c.name in reg.checks:
                 raise CheckError(f"declared check {c.name!r} collides with a built-in or plugin check")
             reg.checks[c.name] = c

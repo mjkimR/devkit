@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
+from devkit.advisory import Level
 from devkit.core.errors import ConfigError, ReceiptError
 from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH
 from devkit.distribution.bundles import load_bundle
@@ -161,13 +162,19 @@ def test_opt_out_removes_block_and_stops_recording(installed: list[InstalledBund
     assert not (target / AGENTS_FILE).exists()
 
 
-def test_opt_out_refuses_to_remove_edited_block(installed: list[InstalledBundle], target: Path) -> None:
+def test_opt_out_leaves_an_edited_block_with_a_warning(installed: list[InstalledBundle], target: Path) -> None:
     sync_project(target, installed)
     agents = target / AGENTS_FILE
-    agents.write_text(agents.read_text().replace("## devkit", "## mine"))
+    edited = agents.read_text().replace("## devkit", "## mine")
+    agents.write_text(edited)
     write_config(target, extra="guidance_block = false")
-    with pytest.raises(ConflictError, match="user-modified guidance block"):
-        sync_project(target, installed)
+    result = sync_project(target, installed)
+    (notice,) = result.notices
+    assert (notice.code, notice.level, notice.target_files) == ("ORPHAN_LEFT", Level.WARNING, (AGENTS_FILE,))
+    assert agents.read_text() == edited
+    assert all(action.path != AGENTS_FILE for action in result.actions)
+    assert "guidance_block" not in json.loads((target / RECEIPT_PATH).read_text())
+    assert sync_project(target, installed).to_dict()["notices"] == []
 
 
 def test_opt_out_from_the_start_writes_nothing(installed: list[InstalledBundle], target: Path) -> None:

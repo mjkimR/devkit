@@ -30,7 +30,7 @@ raise ConfigInvalidError(
 )
 ```
 
-For one-off errors, use the factories. They set the field combination for each mode:
+For one-off errors, use the factories. They set every field that decides the mode (`level = ERROR`, `actor`, `retry`, `guardrail`, `input_error`), so a subclass default never changes the mode a factory names:
 
 | Factory | Mode | Fields set |
 | --- | --- | --- |
@@ -39,7 +39,7 @@ For one-off errors, use the factories. They set the field combination for each m
 | `AdvisoryError.auto_fix(msg, *details, fix=, code=, target_files=)` | `AUTO` | `TOOL`, `AFTER_FIX` |
 | `AdvisoryError.interaction(msg, *details, code=, what_to_report=, fix=)` | `INTERACTION` | `USER`, `AFTER_FIX` |
 
-`exit_code` defaults to `ExitCode.ERROR` (`2`, the command could not do its job). An error that reports a negative result of a check that did run, such as a guardrail refusing a commit, sets `exit_code = ExitCode.FINDINGS` (`1`); `ExitCode.OK` is `0`.
+`exit_code` defaults to `ExitCode.ERROR` (`2`, the command could not do its job). An error that reports a negative result of a check that did run, such as a guardrail refusing a commit, sets `exit_code = ExitCode.FINDINGS` (`1`). An error never exits `ExitCode.OK` (`0`): constructing one, or an `AUTO` error without `fix`, raises `ValueError`. `target_files` given as one string is one target.
 
 A subclass that takes constructor arguments of its own forwards the advisory keywords typed with `AdvisoryFields`:
 
@@ -115,7 +115,7 @@ def main() -> int:
 - `error.to_dict(include_advisory=True)`: JSON payload `{code, level, message, exit_code, advisory}`.
 - Print the result before its warnings and notices, and errors last; a quiet mode may skip notices, never warnings or errors.
 - `error.to_problem_details(status=404, type_base="https://docs.example.com/errors")`: RFC 7807 body. `status` is the HTTP status chosen by the web layer; the library never maps codes to statuses.
-- `as_advisory_error(exc)` / `render_error(exc)`: pass through an `ERROR`-level `AdvisoryError`, adapt anything else to `UNEXPECTED_ERROR` (`MAINTENANCE`).
+- `as_advisory_error(exc)` / `render_error(exc)`: pass through an `ERROR`-level `AdvisoryError`, adapt anything else to `UNEXPECTED_ERROR` (`MAINTENANCE`) with the message `<ExceptionType>: <text>`.
 
 ## Boundary rules
 

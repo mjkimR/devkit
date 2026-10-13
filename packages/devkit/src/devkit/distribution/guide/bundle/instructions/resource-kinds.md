@@ -81,6 +81,9 @@ a moment no skill marks, such as "before writing a commit message").
   checks it); playbooks need `name`, `description` and optional `aliases`.
 - A `description` says *when to read* the document, not what it contains.
   The agent decides from the header alone whether to open the body.
+- Only skills and subagents take per-agent `variants`. A subagent role
+  contract names all three agents under `hosts` (`status: unsupported` for an
+  agent that gets no file); `devkit bundle validate` checks both.
 - Slugs are lowercase with hyphens. Asset ids are unique within a bundle, and
   rule ids are unique across all bundles a repository installs; a later rule
   with the same id replaces an earlier one.

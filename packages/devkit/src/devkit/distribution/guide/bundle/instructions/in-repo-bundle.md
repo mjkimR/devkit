@@ -65,7 +65,7 @@ source = "rules"
 
 The bundle name is the identifier used in `devkit add`, `get-context` and
 `.devkit/config.toml`; it must be unique among the bundles the repository
-installs. Validate before installing:
+installs, and the entry point name must be the same name. Validate before installing:
 
 ```bash
 uv run devkit bundle validate tools/<repo>-devkit/src/<repo>_devkit/bundle

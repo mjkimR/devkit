@@ -140,7 +140,7 @@ def test_anchor_ambiguous_and_mismatch(two_layouts: Path) -> None:
     unit = write_unit(root, "docs/proposals/dup", anchor="proposal.md", extra="workflow: incubate\n")
     (unit / "spec.md").write_text("---\nid: dup\nstatus: planned\n---\n")
     ambiguous = _run("next", "-w", str(root), "--unit", "docs/proposals/dup", "--no-lint")
-    assert ambiguous.exit_code == 2 and "(ANCHOR_AMBIGUOUS)" in ambiguous.stderr and "--workflow" in ambiguous.stderr
+    assert ambiguous.exit_code == 2 and "(ANCHOR_AMBIGUOUS)" in ambiguous.stderr and "--anchor" in ambiguous.stderr
     explicit = _run("next", "-w", str(root), "--unit", "docs/proposals/dup", "--no-lint", "--workflow", "incubate")
     assert explicit.exit_code == 0 and "[WORKFLOW: incubate" in explicit.output
 

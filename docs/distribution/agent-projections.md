@@ -21,20 +21,25 @@ and are reached through `get-context`, playbook search or their paths.
 
 ## 2. Projection Rules
 
-- **Skills**: the whole directory, supporting files and executable bits (`0755`) included.
+- **Skills**: the whole directory, supporting files and executable bits (`0755`) included. A skill with `variants`
+  and no `source` gets no projection for an agent it has no variant for, reported like a subagent below
+  (`ASSET_UNPROJECTED`). One skill directory has one owner: two bundles shipping a skill of the same id are a
+  `BUNDLE_CONFLICT` even when their files agree.
 - **Shared directory**: Codex and Antigravity both read `.agents/skills/`. Identical projections for both
   (including the generated `devkit-playbook` and `devkit-workflow` skills) are written once and stay while either
-  agent is selected; differing bytes for one path are a collision error.
+  agent is selected; differing bytes for one path are a collision error, so `codex` and `antigravity` skill
+  variants of one asset must be identical (checked by `devkit bundle validate`).
 - **Native subagents** (`variants`): one native file per supported agent, copied verbatim (`.toml` for Codex, `.md`
   for Claude Code and Antigravity). No conversion or key stripping: an agent without a variant gets no projection,
-  and `devkit sync` reports it under `unprojected` and as a `SUBAGENT_UNPROJECTED` notice (remedies: add the
+  and `devkit sync` reports it under `unprojected` and as an `ASSET_UNPROJECTED` notice (remedies: add the
   variant, ship a role contract, or narrow `agents`).
 - **Role contracts** (`source`): one host-neutral Markdown file whose `hosts` table holds an explicit block per
   agent. The projection is rendered deterministically from that block (frontmatter keys for Claude Code and
   Antigravity, TOML keys plus `developer_instructions` for Codex), and the prompt is prefixed with the contract's
   managed path, its procedure skill and the host status. Only the host's allowlisted keys are accepted, a host with
-  `status: unsupported` gets no file, and an agent the contract does not mention fails the sync. `emulated` and
-  `unverified` projections tell the agent that the host does not enforce the boundaries itself.
+  `status: unsupported` gets no file, and a contract that does not name every agent is invalid (`BUNDLE_INVALID`
+  from `devkit bundle validate` and discovery). `emulated` and `unverified` projections tell the agent that the host
+  does not enforce the boundaries itself.
 - **No host mutation**: devkit never touches host settings, credentials, trust configuration or user-level
   instruction files. Outside `.devkit/` and the agent directories it writes only the guidance block of the root
   `AGENTS.md` and seeded files ([Workspace Ownership](workspace-ownership.md#2-ownership-categories-and-invariants));
@@ -67,7 +72,7 @@ hosts:
 
 Values are strings, integers, booleans or lists of strings. The rendered `description` (`<title>. <description>`)
 is a quoted scalar whose line breaks are escaped, never folded. Because every supported agent is a target by
-default, a contract should name all three hosts (`status: unsupported` for a host that gets no file). The contract
+default, a contract names all three hosts (`status: unsupported` for a host that gets no file). The contract
 stays under `.devkit/managed/<bundle>/` and may be overridden like any asset; the projection then cites the override
 path.
 

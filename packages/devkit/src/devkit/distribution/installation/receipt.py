@@ -36,12 +36,13 @@ def asset_path_allowed(bundle: str, name: str) -> bool:
     )
 
 
-def read_receipt(root: Path) -> Receipt | None:
+def read_receipt(root: Path, *, check_disk: bool = True) -> Receipt | None:
     """The validated receipt of ``root``; ``None`` when there is none.
 
     A malformed receipt, or one that claims paths devkit never writes, is
     ``ReceiptError`` (``RECEIPT_INVALID``); a symlink or non-regular file at a
-    recorded path is ``UnsafeWorkspaceError``.
+    recorded path is ``UnsafeWorkspaceError``, unless ``check_disk`` is off for
+    a reader that checks each path itself (``devkit status`` reports them).
     """
     content = snapshot(root, RECEIPT_PATH)
     if content is None:
@@ -52,7 +53,8 @@ def read_receipt(root: Path) -> Receipt | None:
             raise ReceiptError(f"{RECEIPT_PATH}: receipt cannot own installation metadata: {name}")
         if not name.startswith(OWNED_PREFIXES):
             raise ReceiptError(f"{RECEIPT_PATH}: files: path outside what devkit owns: {name}")
-        owned_path(root, name)
+        if check_disk:
+            owned_path(root, name)
     if not set(receipt.selection.agents) <= set(AGENT_NAMES):
         raise ReceiptError(f"{RECEIPT_PATH}: selection.agents: unsupported agent")
     try:
@@ -65,7 +67,8 @@ def read_receipt(root: Path) -> Receipt | None:
         for name in (*asset.paths, *asset.entrypoints):
             if not asset_path_allowed(asset.bundle, name):
                 raise ReceiptError(f"{RECEIPT_PATH}: invalid asset path: {name}")
-            checked_path(root, name)
+            if check_disk:
+                checked_path(root, name)
     return receipt
 
 

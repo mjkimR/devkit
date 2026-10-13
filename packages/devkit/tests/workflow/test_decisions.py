@@ -205,6 +205,73 @@ def test_human_check_request_and_approval(tmp_path: Path) -> None:
     assert "accepted by decisions/01-check-design-signed.yaml" in str(res.done) or res.done == ["design"]
 
 
+SHARED_GATE = """---
+id: shared
+schema_version: 1
+checks:
+  - { name: owner-ok, class: human, description: "the owner agreed" }
+stages:
+  - id: intent
+    human_gate: signoff
+    exit: [file-exists(a.txt), owner-ok]
+  - id: build
+    exit: [file-exists(b.txt)]
+  - id: integrate
+    human_gate: signoff
+    exit: [file-exists(c.txt), owner-ok]
+---
+"""
+
+
+def test_shared_gate_and_human_check_are_answered_per_stage(tmp_path: Path) -> None:
+    doc = parse_definition(SHARED_GATE)
+    unit = write_unit(tmp_path, "work/a")
+    for name in ("a.txt", "b.txt", "c.txt"):
+        (unit / name).write_text("x\n")
+    _record(unit, "check:owner-ok", "accept", workflow="shared", stage="intent")
+    _record(unit, "gate:signoff", "accept", workflow="shared", stage="intent")
+    res = evaluate_definition(doc, _opts(tmp_path, unit))
+    # The approvals given at intent do not answer the same gate and check at integrate.
+    assert res.done == ["intent", "build"] and res.stage is not None and res.stage.id == "integrate"
+    assert [u.name for u in res.unmet] == ["owner-ok"]
+    assert [(r.id, r.target.stage) for r in res.requests] == [("check:owner-ok", "integrate")]
+
+    # A decline at integrate is shown there and leaves the intent approval alone.
+    _record(unit, "check:owner-ok", "decline", workflow="shared", stage="integrate", note="not yet")
+    res = evaluate_definition(doc, _opts(tmp_path, unit))
+    assert res.done == ["intent", "build"] and res.requests[0].declined is not None
+
+    _record(unit, "check:owner-ok", "accept", workflow="shared", stage="integrate")
+    res = evaluate_definition(doc, _opts(tmp_path, unit))
+    assert [(r.id, r.target.stage) for r in res.requests] == [("gate:signoff", "integrate")]
+    _record(unit, "gate:signoff", "accept", workflow="shared", stage="integrate")
+    res = evaluate_definition(doc, _opts(tmp_path, unit))
+    assert res.complete
+
+    # A return to integrate voids only the integrate approvals; the intent ones still count.
+    _record(unit, "return:integrate", "accept", workflow="shared", stage="integrate")
+    res = evaluate_definition(doc, _opts(tmp_path, unit))
+    assert res.done == ["intent", "build"] and [r.id for r in res.requests] == ["check:owner-ok"]
+    assert res.stale_approvals == []
+
+
+def test_stale_approval_is_matched_to_its_own_stage(tmp_path: Path) -> None:
+    doc = parse_definition(SHARED_GATE)
+    unit = write_unit(tmp_path, "work/a")
+    for name in ("a.txt", "b.txt", "c.txt"):
+        (unit / name).write_text("x\n")
+    for stage in ("intent", "integrate"):
+        _record(unit, "check:owner-ok", "accept", workflow="shared", stage=stage)
+        _record(unit, "gate:signoff", "accept", workflow="shared", stage=stage)
+    (unit / "b.txt").unlink()
+    res = evaluate_definition(doc, _opts(tmp_path, unit))
+    assert res.stage is not None and res.stage.id == "build"
+    assert sorted((r.request, r.stage) for r in res.stale_approvals) == [
+        ("check:owner-ok", "integrate"),
+        ("gate:signoff", "integrate"),
+    ]
+
+
 def test_given_still_satisfies_without_a_record(tmp_path: Path) -> None:
     unit = write_unit(tmp_path, "work/a")
     res = evaluate_definition(parse_definition(WORKFLOW), _opts(tmp_path, unit, given=("direction",)))

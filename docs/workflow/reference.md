@@ -141,12 +141,12 @@ The main calls:
 | Call | Purpose |
 | --- | --- |
 | `Workspace(root=None, *, lint=lint_with_rules, ancestor=is_ancestor)` | Load `[workflow]` configuration; the receipt, definitions, roles and plugins load lazily, once. |
-| `ws.resolve_unit(unit, workflow=None) -> UnitRef` | Unit directory, anchor, binding and the workflow to evaluate against. |
-| `ws.bind_unit(unit, workflow=None) -> UnitRef` | `bind`: record the workflow and its schema hash in the anchor, keeping the history. |
+| `ws.resolve_unit(unit, workflow=None, *, anchor=None) -> UnitRef` | Unit directory, anchor, binding and the workflow to evaluate against; `anchor` resolves `ANCHOR_AMBIGUOUS`. |
+| `ws.bind_unit(unit, workflow=None, *, anchor=None) -> UnitRef` | `bind`: record the workflow and its schema hash in the anchor, keeping the history. |
 | `ws.evaluate_unit(unit, *, given=(), lint=True, enforce_drift=True) -> UnitEvaluation` | Evaluate with the project's policies; raises `DriftError`; never writes a file. Approvals of later stages are listed in `UnitEvaluation.stale_approvals` and count until `return_to` voids them. |
 | `ws.definition(ref=None, binding=None)`, `ws.load_definition(ref)` | A validated (or raw) definition by id or path relative to the root, from the cached definitions. |
 | `ws.validate_definition(doc)`, `ws.validate_definitions(paths=()) -> ValidationReport` | One definition's problems; what `validate` reports. |
-| `ws.describe(doc, binding=None) -> DefinitionDescription` | What `show` reports (`to_dict()` is its JSON, `ok` its success). |
+| `ws.describe(doc, binding=None) -> DefinitionDescription`, `ws.describe_unit(unit, *, anchor=None)` | What `show` and `show --unit` report (`to_dict()` is its JSON, `ok` its success). |
 | `create_unit(ws, slug, *, workflow=None, when=None, status="planned") -> UnitRef` | `new`. |
 | `list_units(ws, *, statuses=(), excluded=()) -> list[UnitInfo]` | `list`. |
 | `record_answer(ws, unit, request_id, action, values=(), *, note="", by="", lint=True) -> Decision` | `answer`. |

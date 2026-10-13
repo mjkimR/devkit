@@ -23,7 +23,7 @@ Every asset is identified by `(bundle, kind, id)`; ids are unique within a bundl
 standards are in the [Resource Taxonomy](../architecture/resource-taxonomy.md).
 
 - `skill`: a directory containing `SKILL.md` and supporting files; the whole tree is deployed, executable bits
-  (`0755`) preserved.
+  (`0755`) preserved. One `source` serves every agent; `variants` ship a directory per agent.
 - `subagent`: a delegated agent persona: native files per agent (`variants`, copied verbatim) or one host-neutral
   role contract (`source`) rendered per selected agent. See [Agent Projections](agent-projections.md).
 - `instruction`: Markdown whose YAML frontmatter declares a nonempty `name` and `description`, the header
@@ -135,24 +135,33 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
   on every platform.
 - **Editing by-products**: inside a directory source, `.DS_Store`, `__pycache__/` and `*.pyc` are not bundle content:
   never validated, deployed, hashed or archived.
-- **Source vs. variants**: an asset declares either one `source` or a `variants` mapping, never both; `variants` keys
-  must be supported agent names (`antigravity`, `claude-code`, `codex`).
-- **Skills**: a `skill` source is a directory containing a valid `SKILL.md`.
+- **Source vs. variants**: an asset declares either one `source` or a `variants` mapping, never both. Only `skill`
+  and `subagent` assets, the kinds projected per agent ([Agent Projections](agent-projections.md#1-projection-matrix)),
+  may declare `variants`; its keys must be supported agent names (`antigravity`, `claude-code`, `codex`).
+- **Skills**: a `skill` source or variant is a directory containing a `SKILL.md` that is UTF-8 and, when it opens a
+  frontmatter block, closes it (sync inserts the context prerequisite after it). `codex` and `antigravity` variants
+  project to the same `.agents/skills/<asset-id>/` and must be identical (same files, bytes and modes). The ids
+  `devkit-playbook` and `devkit-workflow` are reserved for the entry skills `devkit sync` generates.
+- **Native subagents**: each `subagent` variant is one file with the agent's native suffix: `.toml` for `codex`,
+  `.md` for `claude-code` and `antigravity`.
 - **Headers**: instruction, playbook and workflow headers and role contracts follow the frontmatter grammar of
   `devkit.core.frontmatter` (a `---` opener, a `---` or `...` closer, a YAML mapping without duplicate keys).
 - **Role contracts**: a `subagent` declared with `source` is a single Markdown file whose frontmatter has `role` equal
-  to the asset id, `title`, `description`, a nonempty `hosts` table with valid statuses and allowlisted keys, and a
-  nonempty body ([format](agent-projections.md#role-contract-format)).
+  to the asset id, `title`, `description`, a `hosts` table with a block for every supported agent (valid statuses,
+  allowlisted keys), and a nonempty body ([format](agent-projections.md#role-contract-format)).
+- **Workflows**: two `workflow` assets of one bundle may not declare the same header `id`.
 - **Presets**: asset lists are nonempty, unique and reference declared ids.
-- **Verbatim native content**: files under `variants` are never parsed, modified or stripped.
+- **Verbatim native content**: `subagent` variant files are never parsed, modified or stripped. Skill variants are
+  deployed like a skill `source`, context prerequisite included
+  ([Context Loading](context-and-playbooks.md#skill-prerequisite)).
 - **Guidance fragments**: a single `source` file (no `variants`, never `seeded`) meeting the fragment rules above.
   Each `{path:<asset-id>}` names an asset of the bundle with exactly one file `source` that is neither `guidance` nor
   seeded, and every preset that selects the fragment selects the named assets too.
 - **Seeded assets**: `seeded` (boolean, default `false`) is allowed only on a `document` with a single `source`, and
   requires `target`; `target` is rejected otherwise. `target` is a normalized relative POSIX path (no `..`, leading
-  `/`, backslash or `.` segment) whose first segment is not `.devkit`, `.git`, `.agents`, `.claude` or `.codex`, and
-  which is not `AGENTS.md`, all compared case-insensitively (macOS file systems usually are). Two selected bundles
-  may not seed the same path.
+  `/`, backslash or `.` segment) whose first segment is not `.devkit`, `.agents`, `.claude` or `.codex`, which has
+  no `.git` segment at any depth, and which is not `AGENTS.md`, all compared case-insensitively (macOS file systems
+  usually are). Two selected bundles may not seed the same path.
 
 ## 5. Deterministic Local Archive Build
 

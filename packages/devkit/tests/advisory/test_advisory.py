@@ -157,7 +157,10 @@ def test_unexpected_errors_are_maintenance() -> None:
     wrapped = as_advisory_error(KeyError("missing"))
     assert (wrapped.code, wrapped.mode) == (UNEXPECTED_CODE, ActionMode.MAINTENANCE)
     assert as_advisory_error(RuntimeError()).message == "RuntimeError"
-    assert render_error(ValueError("boom")).startswith("[ERROR]  (UNEXPECTED_ERROR) boom\n[ACTION] MAINTENANCE")
+    assert wrapped.message == "KeyError: 'missing'"
+    rendered = render_error(ValueError("boom"))
+    assert rendered.startswith("[ERROR]  (UNEXPECTED_ERROR) ValueError: boom\n[ACTION] MAINTENANCE")
+    assert "[TARGET], when present, names the affected files." in rendered and "\n[TARGET] " not in rendered
 
 
 def test_multi_line_values_continue_under_their_sentinel() -> None:
@@ -173,7 +176,7 @@ def test_multi_line_values_continue_under_their_sentinel() -> None:
     assert lines[1] == "         fatal: bad object"
     assert "[FIX]    run this" in lines and "         then that" in lines
     assert lines[-2:] == ["[DETAIL] first", "         second"]
-    assert "" in lines  # the blank line of what_to_report keeps its place, without trailing spaces
+    assert "" not in lines and "[REPORT] line one\n         line three" in error.render()  # blank lines are dropped
     sentinels = ("[ERROR]", "[ACTION]", "[WHEN]", "[TARGET]", "[FIX]", "[REPORT]", "[DETAIL]")
     assert all(line.startswith((*sentinels, " " * 9)) or line == "" for line in lines)
 
@@ -314,13 +317,137 @@ def test_every_rendered_line_starts_with_a_published_sentinel() -> None:
     # devkit.compact recognizes blocks by these constants; a new field must be added to them.
     from devkit.advisory.advisory import CONTINUATION, FIELDS, HEADLINE
 
-    error = AdvisoryError(
-        "message\n\nsecond",
-        "detail\n\nmore",
-        retry_after="later",
-        target_files=["a"],
-        fix="fix\nmore",
-        what_to_report="report",
-    )
-    for line in error.lines():
-        assert line == "" or line.startswith((*HEADLINE.values(), *FIELDS, CONTINUATION)), line
+    errors = [
+        AdvisoryError(
+            "message\n\nsecond",
+            "detail\n\nmore",
+            retry_after="later",
+            target_files=["a"],
+            fix="fix\nmore",
+            what_to_report="report",
+        ),
+        AdvisoryError("m", "", "  \n", fix="\nrun x", what_to_report="\n\nask", target_files=[""]),
+        AdvisoryError("\nm", "\n  indented"),
+    ]
+    for error in errors:
+        for line in error.lines():
+            assert line.startswith((*HEADLINE.values(), *FIELDS, CONTINUATION)), line
+            assert line == line.rstrip() and line.strip() not in {s.strip() for s in (*FIELDS, *HEADLINE.values())}, (
+                line
+            )
+
+
+def test_blank_values_render_no_line_and_leading_blank_lines_are_skipped() -> None:
+    error = AdvisoryError("m", "", "real", fix="\nrun x", target_files=["", "a", " "], actor=Actor.DEVELOPER)
+    assert error.lines()[-3:] == ["[TARGET] a", "[FIX]    run x", "[DETAIL] real"]
+    assert AdvisoryError("m", target_files=[""]).lines() == AdvisoryError("m").lines()
+    assert AdvisoryError("\n\nfirst\n\nsecond").lines()[:2] == ["[ERROR]  (GENERAL_ERROR) first", "         second"]
+
+
+def test_the_headline_is_always_rendered_with_the_code() -> None:
+    assert AdvisoryError("", code="X").lines()[0] == "[ERROR]  (X)"
+    assert AdvisoryError("", code="X", level=Level.NOTICE, brief=True).lines() == ["[NOTICE] (X)"]
+
+
+def test_an_empty_code_is_the_default_code_everywhere() -> None:
+    class Blank(AdvisoryError):
+        code = ""
+
+    for error in (AdvisoryError("m", code=""), Blank("m")):
+        assert error.code == "GENERAL_ERROR" and error.lines()[0] == "[ERROR]  (GENERAL_ERROR) m"
+        assert error.to_dict()["code"] == error.to_dict()["advisory"]["code"] == "GENERAL_ERROR"
+        assert error.to_problem_details()["title"] == "GENERAL_ERROR"
+    assert Advisory(code="").code == "GENERAL_ERROR"
+
+
+def test_a_string_target_is_one_target() -> None:
+    assert AdvisoryError("m", target_files="config.toml").target_files == ("config.toml",)
+    assert AdvisoryError.invalid_input("m", target_files="config.toml").lines()[-1] == "[TARGET] config.toml"
+
+
+class InputDefaultError(AdvisoryError):
+    code = "INPUT_DEFAULT"
+    actor = Actor.DEVELOPER
+    retry = Retry.AFTER_FIX
+    input_error = True
+
+
+class GuardDefaultError(AdvisoryError):
+    code = "GUARD_DEFAULT"
+    guardrail = True
+    exit_code = ExitCode.FINDINGS
+
+
+class NoticeDefault(AdvisoryError):
+    code = "NOTICE_DEFAULT"
+    level = Level.NOTICE
+
+
+@pytest.mark.parametrize("cls", [InputDefaultError, GuardDefaultError, NoticeDefault])
+def test_factories_derive_their_mode_whatever_the_subclass_defaults(cls: type[AdvisoryError]) -> None:
+    assert cls.blocked("x").mode is ActionMode.BLOCKED
+    assert cls.interaction("x").mode is ActionMode.INTERACTION
+    assert cls.auto_fix("x", fix="y").mode is ActionMode.AUTO
+    assert cls.invalid_input("x").mode is ActionMode.INPUT_ERROR
+    assert cls.blocked("x").exit_code != ExitCode.OK
+
+
+def test_an_error_never_exits_ok() -> None:
+    with pytest.raises(ValueError, match="ERROR advisory exits 1 or 2"):
+        AdvisoryError("m", exit_code=ExitCode.OK)
+
+    class OkWarning(AdvisoryError):
+        level = Level.WARNING
+        exit_code = ExitCode.OK
+
+    warning = OkWarning("m")
+    with pytest.raises(ValueError, match="ERROR advisory exits 1 or 2"):
+        warning.with_level(Level.ERROR)
+    assert AdvisoryError("m", level=Level.NOTICE, exit_code=ExitCode.FINDINGS).exit_code == ExitCode.OK
+
+
+def test_an_auto_error_needs_its_fix() -> None:
+    with pytest.raises(ValueError, match="AUTO error needs the fix"):
+        AdvisoryError("m", actor=Actor.TOOL, retry=Retry.AFTER_FIX)
+    with pytest.raises(ValueError, match="AUTO error needs the fix"):
+        AdvisoryError.auto_fix("m", fix="")
+
+    class ToolNotice(AdvisoryError):
+        level = Level.NOTICE
+        actor = Actor.TOOL
+        retry = Retry.AFTER_FIX
+
+    notice = ToolNotice("m")  # mode NOTE: no directive to run [FIX]
+    with pytest.raises(ValueError, match="AUTO error needs the fix"):
+        notice.with_level(Level.ERROR)
+
+
+def test_with_level_error_keeps_the_instance_exit_code() -> None:
+    findings = AdvisoryError("m", exit_code=ExitCode.FINDINGS)
+    assert findings.with_level(Level.ERROR).exit_code == ExitCode.FINDINGS
+    assert findings.with_level(Level.WARNING).exit_code == ExitCode.OK
+
+
+class SelectorError(AdvisoryError):
+    code = "SELECTOR"
+
+    def __init__(self, message: str, *, selectors: list[str]) -> None:
+        super().__init__(message, "detail", target_files=selectors)
+        self.selectors = selectors
+
+
+def test_subclasses_with_required_arguments_pickle_and_copy() -> None:
+    import copy
+    import pickle
+
+    error = SelectorError("m", selectors=["a:b"]).with_level(Level.ERROR)
+    error.exit_code = ExitCode.FINDINGS
+    for clone in (pickle.loads(pickle.dumps(error)), copy.copy(error), copy.deepcopy(error)):
+        assert type(clone) is SelectorError and clone is not error
+        assert (clone.selectors, clone.details, clone.exit_code, clone.args) == (
+            ["a:b"],
+            ("detail",),
+            ExitCode.FINDINGS,
+            ("m",),
+        )
+        assert clone.render() == error.render()

@@ -47,10 +47,8 @@ def git(repo: Path, *args: str, check: bool = True) -> subprocess.CompletedProce
     return subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True, check=check, env=env)
 
 
-def deploy_gate(
-    repo: Path, source: str, rel: str = ".devkit/managed/team/gates/block.py", *, record: bool = False
-) -> None:
-    """Write a gate file and list it in the receipt; ``record`` also records its hash under ``files``."""
+def deploy_gate(repo: Path, source: str, rel: str = ".devkit/managed/team/gates/block.py") -> None:
+    """Write a gate file and list it in the receipt, with its hash under ``files`` unless it is a project override."""
     path = repo / rel
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(source)
@@ -63,7 +61,7 @@ def deploy_gate(
     data["assets"].append(
         {"bundle": "team", "id": path.stem.strip("_").replace("_", "-"), "kind": "gate", "paths": [rel]}
     )
-    if record:
+    if not rel.startswith(".devkit/overrides/"):
         data["files"][rel] = {"sha256": hashlib.sha256(source.encode()).hexdigest(), "mode": 420}
     receipt.write_text(json.dumps(data))
 

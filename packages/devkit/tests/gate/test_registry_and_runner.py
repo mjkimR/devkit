@@ -58,14 +58,14 @@ def test_deployed_gate_paths_reads_gate_assets_only(tmp_path: Path) -> None:
 
 
 def test_receipt_listed_gate_files_load_whatever_their_name(tmp_path: Path) -> None:
-    deploy_gate(tmp_path, gate_source("private-gate"), ".devkit/managed/team/gates/_private.py", record=True)
+    deploy_gate(tmp_path, gate_source("private-gate"), ".devkit/managed/team/gates/_private.py")
     deployed = deployed_gate_paths(tmp_path)
     assert [p.name for p in deployed.paths] == ["_private.py"] and deployed.errors == ()
     assert project_registry(tmp_path).get("private-gate") is not None
 
 
 def test_gate_files_are_checked_against_the_receipt_hash(tmp_path: Path) -> None:
-    deploy_gate(tmp_path, gate_source(), record=True)
+    deploy_gate(tmp_path, gate_source())
     assert len(deployed_gate_paths(tmp_path).paths) == 1
 
     path = tmp_path / ".devkit/managed/team/gates/block.py"
@@ -231,6 +231,43 @@ def test_every_failed_run_carries_an_error(tmp_path: Path) -> None:
     assert all(r.error is not None for r in report.runs)
     assert report.runs[0].error is not None and "refuse by raising GateRefusedError" in report.runs[0].error.message
     assert report.runs[1].error is not None and report.runs[1].error.code == "GATE_RESULT_INVALID"
+
+
+class Raises(BaseGate):
+    def __init__(self, gate_id: str, order: int, exc: BaseException) -> None:
+        super().__init__(id=gate_id, description="", stage=Stage.PRE_COMMIT, order=order)
+        self.exc = exc
+
+    def run(self, ctx: GateContext) -> GateResult:
+        raise self.exc
+
+
+@pytest.mark.parametrize("code", [0, 1, None])
+def test_a_gate_calling_sys_exit_fails_and_later_gates_still_run(tmp_path: Path, code: int | None) -> None:
+    calls: list[str] = []
+    registry = GateRegistry()
+    registry.register(Raises("exits", 10, SystemExit(code)))
+    registry.register(Raises("refuses", 20, GateRefusedError("no", code="TEST_REFUSED")))
+    registry.register(Recorder("late", 100, calls))
+    report = run_stage(gate_ctx(tmp_path), registry, GatesConfig())
+    assert [(r.gate_id, r.outcome) for r in report.runs] == [
+        ("exits", Outcome.FAILED),
+        ("refuses", Outcome.FAILED),
+        ("late", Outcome.PASSED),
+    ]
+    assert calls == ["late"] and report.runs[0].error is not None
+    assert report.runs[0].error.code == "UNEXPECTED_ERROR" and "SystemExit" in report.runs[0].error.message
+    assert report.exit_code is ExitCode.ERROR
+
+
+def test_keyboard_interrupt_aborts_the_stage(tmp_path: Path) -> None:
+    calls: list[str] = []
+    registry = GateRegistry()
+    registry.register(Raises("interrupted", 10, KeyboardInterrupt()))
+    registry.register(Recorder("late", 100, calls))
+    with pytest.raises(KeyboardInterrupt):
+        run_stage(gate_ctx(tmp_path), registry, GatesConfig())
+    assert calls == []
 
 
 def test_gate_notices_never_fail_the_stage_and_errors_are_lowered(tmp_path: Path) -> None:

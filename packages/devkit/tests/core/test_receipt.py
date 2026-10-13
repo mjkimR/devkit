@@ -4,6 +4,7 @@ import copy
 import hashlib
 import json
 import os
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -339,3 +340,76 @@ def test_verified_asset_files_lists_every_file_of_a_kind_whatever_its_name(tmp_p
     assert [(e.code, e.target_files) for e in errors] == [("ASSET_FILE_INVALID", (".devkit/managed/team/gone.py",))]
     markdown, _ = verified_asset_files(tmp_path, receipt, "rule", ".md")
     assert [p.name for p in markdown] == ["notes.md"]
+
+
+def test_deeply_nested_json_is_a_receipt_error() -> None:
+    with pytest.raises(ReceiptError, match="nested too deeply"):
+        parse_receipt("[" * 100_000 + "]" * 100_000)
+
+
+def test_an_unsearchable_devkit_directory_is_a_receipt_error(tmp_path: Path, lock: Callable[[Path], None]) -> None:
+    write(tmp_path, full_receipt())
+    lock(tmp_path / ".devkit")
+    with pytest.raises(ReceiptError, match="cannot be read"):
+        load_receipt(tmp_path)
+
+
+def _hashed_receipt(files: dict[str, bytes]) -> Receipt:
+    return parse_receipt(
+        json.dumps(
+            {
+                "schema": 1,
+                "packages": [],
+                "selection": {"agents": [], "presets": {}},
+                "assets": [],
+                "files": {k: {"sha256": hashlib.sha256(v).hexdigest(), "mode": 420} for k, v in files.items()},
+            }
+        )
+    )
+
+
+def test_only_a_project_override_loads_without_a_recorded_hash(tmp_path: Path) -> None:
+    from devkit.core import AssetFileError, AssetRecord, verified_asset_file
+
+    asset = AssetRecord("team", "rules", "rule", ())
+    managed, override = ".devkit/managed/team/r.py", ".devkit/overrides/team/o.py"
+    for rel in (managed, override):
+        (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / rel).write_bytes(b"x = 1\n")
+    receipt = _hashed_receipt({})
+    assert verified_asset_file(tmp_path, override, receipt, asset) == tmp_path / override
+    with pytest.raises(AssetFileError, match=r"r\.py has no hash in the receipt") as info:
+        verified_asset_file(tmp_path, managed, receipt, asset)
+    assert info.value.target_files == (managed,)
+
+
+def test_an_unreadable_asset_file_is_reported_per_file(tmp_path: Path, lock: Callable[[Path], None]) -> None:
+    from devkit.core import verified_asset_files
+
+    good, locked = ".devkit/managed/team/good.py", ".devkit/managed/team/locked.py"
+    for rel in (good, locked):
+        (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / rel).write_bytes(b"x = 1\n")
+    data = full_receipt()
+    data["assets"] = [{"bundle": "team", "id": "r", "kind": "rule", "paths": [locked, good]}]
+    data["files"] = {rel: {"sha256": hashlib.sha256(b"x = 1\n").hexdigest(), "mode": 420} for rel in (good, locked)}
+    data.pop("overrides", None)
+    data.pop("seeded", None)
+    lock(tmp_path / locked)
+    paths, errors = verified_asset_files(tmp_path, parse_receipt(json.dumps(data)), "rule")
+    assert paths == (tmp_path / good,)
+    assert [(e.code, e.target_files) for e in errors] == [("ASSET_FILE_INVALID", (locked,))]
+    assert "locked.py cannot be read" in errors[0].message
+
+
+def test_a_symlink_loop_in_an_asset_path_is_reported_per_file(tmp_path: Path) -> None:
+    from devkit.core import AssetFileError, AssetRecord, verified_asset_file
+
+    team = tmp_path / ".devkit/managed/team"
+    team.mkdir(parents=True)
+    (team / "loop").symlink_to(team / "loop2")
+    (team / "loop2").symlink_to(team / "loop")
+    item = ".devkit/managed/team/loop/x.py"
+    with pytest.raises(AssetFileError, match="is unsafe: path cannot be resolved") as info:
+        verified_asset_file(tmp_path, item, _hashed_receipt({item: b""}), AssetRecord("team", "r", "rule", ()))
+    assert info.value.target_files == (item,)

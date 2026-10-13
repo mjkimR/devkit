@@ -6,7 +6,7 @@ import click
 
 from devkit.core.cli import FORMAT_OPTION, Reported, boundary, echo_json, is_json
 from devkit.workflow.answers import record_answer, return_to
-from devkit.workflow.cli.app import NO_LINT, UNIT, WORKSPACE, cli, parse_date, workspace
+from devkit.workflow.cli.app import ANCHOR, NO_LINT, UNIT, WORKSPACE, cli, parse_date, workspace
 from devkit.workflow.handoff import apply_handoff, plan_handoff
 from devkit.workflow.render import render_evaluation, render_requests
 from devkit.workflow.unit.decisions import ACTIONS
@@ -15,6 +15,7 @@ from devkit.workflow.unit.decisions import ACTIONS
 @cli.command(name="next")
 @WORKSPACE
 @UNIT
+@ANCHOR
 @click.option("--workflow", "workflow_ref", default=None, help="Evaluate against this workflow instead of the binding")
 @click.option("--given", multiple=True, help="Gate, runner or human check the executor holds (repeatable)")
 @NO_LINT
@@ -23,6 +24,7 @@ from devkit.workflow.unit.decisions import ACTIONS
 def next_cmd(
     workspace_root: str | None,
     unit: str,
+    anchor: str | None,
     workflow_ref: str | None,
     given: tuple[str, ...],
     no_lint: bool,
@@ -34,7 +36,7 @@ def next_cmd(
     unchanged after the result and sets the exit code.
     """
     ws = workspace(workspace_root)
-    ref = ws.resolve_unit(unit, workflow_ref)
+    ref = ws.resolve_unit(unit, workflow_ref, anchor=anchor)
     result = ws.evaluate_unit(ref, given=given, lint=not no_lint)
     if is_json(output_format):
         echo_json(result.to_dict())
@@ -47,13 +49,14 @@ def next_cmd(
 @cli.command(name="requests")
 @WORKSPACE
 @UNIT
+@ANCHOR
 @NO_LINT
 @FORMAT_OPTION
 @boundary
-def requests_cmd(workspace_root: str | None, unit: str, no_lint: bool, output_format: str) -> None:
+def requests_cmd(workspace_root: str | None, unit: str, anchor: str | None, no_lint: bool, output_format: str) -> None:
     """List the open human requests of a unit (approvals and choices)."""
     ws = workspace(workspace_root)
-    result = ws.evaluate_unit(ws.resolve_unit(unit), lint=not no_lint)
+    result = ws.evaluate_unit(ws.resolve_unit(unit, anchor=anchor), lint=not no_lint)
     if is_json(output_format):
         echo_json({"requests": [r.to_dict() for r in result.requests]})
         return
@@ -64,6 +67,7 @@ def requests_cmd(workspace_root: str | None, unit: str, no_lint: bool, output_fo
 @cli.command(name="answer")
 @WORKSPACE
 @UNIT
+@ANCHOR
 @click.option(
     "--request",
     "request_id",
@@ -80,6 +84,7 @@ def requests_cmd(workspace_root: str | None, unit: str, no_lint: bool, output_fo
 def answer_cmd(
     workspace_root: str | None,
     unit: str,
+    anchor: str | None,
     request_id: str,
     action: str,
     values: tuple[str, ...],
@@ -90,7 +95,9 @@ def answer_cmd(
 ) -> None:
     """Record a decision for an open request as <unit>/decisions/NN-<request>.yaml."""
     ws = workspace(workspace_root)
-    decision = record_answer(ws, unit, request_id, action, values, note=note, by=by, lint=not no_lint)
+    decision = record_answer(
+        ws, ws.resolve_unit(unit, anchor=anchor), request_id, action, values, note=note, by=by, lint=not no_lint
+    )
     if is_json(output_format):
         echo_json(decision.to_dict())
     else:
@@ -100,6 +107,7 @@ def answer_cmd(
 @cli.command(name="return")
 @WORKSPACE
 @UNIT
+@ANCHOR
 @click.option("--to", "stage", required=True, help="Stage the unit goes back to (the current one or an earlier one)")
 @click.option("--note", default="", help="Why the unit goes back")
 @click.option("--by", "by", default="", help="Who decided (person or host)")
@@ -107,11 +115,18 @@ def answer_cmd(
 @FORMAT_OPTION
 @boundary
 def return_cmd(
-    workspace_root: str | None, unit: str, stage: str, note: str, by: str, no_lint: bool, output_format: str
+    workspace_root: str | None,
+    unit: str,
+    anchor: str | None,
+    stage: str,
+    note: str,
+    by: str,
+    no_lint: bool,
+    output_format: str,
 ) -> None:
     """Take a unit back to a stage; approvals for it and later stages must be given again."""
     ws = workspace(workspace_root)
-    decision = return_to(ws, unit, stage, note=note, by=by, lint=not no_lint)
+    decision = return_to(ws, ws.resolve_unit(unit, anchor=anchor), stage, note=note, by=by, lint=not no_lint)
     if is_json(output_format):
         echo_json(decision.to_dict())
     else:
@@ -121,6 +136,7 @@ def return_cmd(
 @cli.command(name="handoff")
 @WORKSPACE
 @UNIT
+@ANCHOR
 @click.option(
     "--workflow",
     "workflow_ref",
@@ -137,6 +153,7 @@ def return_cmd(
 def handoff_cmd(
     workspace_root: str | None,
     unit: str,
+    anchor: str | None,
     workflow_ref: str | None,
     when: str | None,
     by: str,
@@ -146,7 +163,7 @@ def handoff_cmd(
     """Hand a completed unit to one of its workflow's next candidates and rebind it."""
     ws = workspace(workspace_root)
     day = parse_date(when)
-    ref = ws.resolve_unit(unit)
+    ref = ws.resolve_unit(unit, anchor=anchor)
     result = ws.evaluate_unit(ref, lint=not no_lint)
     outcome = apply_handoff(plan_handoff(ws, ref, result, workflow_ref), when=day, by=by)
     if is_json(output_format):

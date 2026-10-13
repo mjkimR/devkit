@@ -17,8 +17,8 @@ uv run devkit list
 In this monorepo, run `uv sync --all-packages` first, then `uv run --package devkit devkit sync -w <target-directory>`.
 
 Every distribution command takes `-w/--workspace-root <dir>`. Without it, the project root is the nearest
-directory (the current one first, then its parents, up to the Git top level) that contains `.devkit/`, else
-the Git top level, else the current directory; a `-w` that is not an existing directory is `ARGUMENT_INVALID`.
+directory (the current one first, then its parents, up to the Git top level; outside a Git work tree, never the
+home directory or above it) that contains `.devkit/`, else the Git top level, else the current directory; a `-w` that is not an existing directory is `ARGUMENT_INVALID`.
 Commands print exactly one JSON object on stdout: the result (`override list` wraps its entries as
 `{"overrides": [...]}`), or `{"error": {...}}` when the command fails, with the Agent Advisory Protocol block
 on stderr. Exit code `0` is success; `1` is returned by `devkit sync --check` when a synchronization is needed
@@ -37,17 +37,17 @@ malformed `bundle[:preset]` or `--agent` combined with `--no-agents` (see
 | `devkit remove <bundle>...` | Deselects bundles in `.devkit/config.toml` (`false` for an auto-selected built-in bundle), then synchronizes. |
 | `devkit list` | Installed content packages, bundle metadata, available and default presets, selection state (`builtin`, `auto_select`, `opted_out`), synchronized asset paths and the `seeded` list. |
 | `devkit status` | Read-only report of the installed state against the receipt; see [below](#devkit-status). |
-| `devkit recover` | Rolls back an interrupted transaction from the journal in `.devkit/transient/` without overwriting newer edits. |
+| `devkit recover` | Rolls back an interrupted transaction from the journal in `.devkit/transient/` without overwriting newer edits. Prints `recovered_files`: the number of files restored. |
 | `devkit get-context <bundle>` | The bundle constitution and the header catalog of its instructions ([Context Loading](context-and-playbooks.md#2-bundle-context-devkit-get-context)). |
 | `devkit playbook search <query>` | Lexical BM25 search over synchronized playbook headers ([Playbook Search](context-and-playbooks.md#3-playbook-discovery-and-search-devkit-playbook)). |
 | `devkit override list` | Tracked project overrides and their drift status. |
-| `devkit override create <bundle>:<asset> [--force]` | Copies every upstream file of a selected, non-seeded asset to `.devkit/overrides/` (plus a baseline copy) and synchronizes; `--force` overwrites existing override files. |
+| `devkit override create <bundle>:<asset> [--force]` | Copies every upstream file of a selected, non-seeded asset to `.devkit/overrides/` (plus a baseline copy), records the current upstream as its baseline and synchronizes; `--force` overwrites existing override files and the baseline. |
 | `devkit override diff <bundle>:<asset>` | Per file: what upstream changed since the baseline, and what the override changed. |
 | `devkit override accept <bundle>:<asset>` | Records the current upstream as the override's baseline after review. |
 | `devkit override remove <bundle>:<asset>` | Deletes the override and its baseline, then synchronizes the pristine upstream files. |
-| `devkit bundle validate <source>` | Verifies `bundle.toml`, the declared sources and the kind-specific headers (instructions, playbooks, workflows, role contracts). |
-| `devkit bundle plan <source> [--preset <name>] [--agent <name>]...` | Previews every destination a local bundle deploys (managed copies, native projections, generated entry skills, seeded files), computed by the same inventory as `sync`, without a consumer project. Defaults: the default preset (else `all`) and every supported agent. |
-| `devkit bundle build <source> --output <zip>` | Builds a deterministic ZIP archive ([Manifest Specification, section 5](manifest-spec.md#5-deterministic-local-archive-build)). |
+| `devkit bundle validate <source>` | Verifies `bundle.toml`, the declared sources, the kind-specific headers (instructions, playbooks, workflows, role contracts) and every per-agent rule a sync applies ([Manifest Specification, section 4](manifest-spec.md#4-validation)). `<source>` is the bundle directory. Prints `name`, `version` and `assets` (the number of declared assets). |
+| `devkit bundle plan <source> [--preset <name>] [--agent <name>]...` | Previews every destination a local bundle deploys (managed copies, native projections, generated entry skills, seeded files), computed by the same inventory as `sync`, without a consumer project. Defaults: the default preset (else `all`) and every supported agent. Prints `bundle`, `version`, `preset`, `agents`, `assets` (as in the sync result), `files` (`destination`, `sha256`, `mode`) and `seeded` (`destination`, `asset`, `sha256`). |
+| `devkit bundle build <source> --output <zip>` | Builds a deterministic ZIP archive ([Manifest Specification, section 5](manifest-spec.md#5-deterministic-local-archive-build)). Prints `path`, `sha256` (of the archive) and `files` (the number of archived files, `inventory.json` included). |
 
 Override semantics are specified in [Workspace Ownership, section 3](workspace-ownership.md#3-project-overrides-and-drift-review).
 
@@ -119,11 +119,11 @@ they run in their own `notices` list.
 
 | Code | Level | Class | When | Fields |
 | --- | --- | --- | --- | --- |
-| `ORPHAN_LEFT` | `WARNING` | `OrphanLeftNotice` | a hand-edited managed file is no longer desired: left in place, dropped from the receipt | `target_files`: the files; `what_to_report`: delete or move them |
+| `ORPHAN_LEFT` | `WARNING` | `OrphanLeftNotice` | a hand-edited managed file is no longer desired, or a hand-edited guidance block under `guidance_block = false`: left in place, dropped from the receipt | `target_files`: the files; `what_to_report`: delete or move them |
 | `OVERRIDE_DRIFT` | `WARNING` | `OverrideDriftError.with_level` | an override hides upstream changes (`override_drift = "warn"`) | `target_files`: the overrides; `fix`: `devkit override diff <bundle>:<asset>` |
 | `MANAGED_FILE_STRAY` | `WARNING` | `StrayFilesNotice` | files under `.devkit/managed/` that neither the receipt nor the inventory owns | `target_files`: the files; `what_to_report`: move project-owned files out of the managed root |
 | `POST_SYNC_HOOK_FAILED` | `WARNING` | `PostSyncHookFailedNotice` | a post-sync hook raised or returned something other than a list | `details`: the hook; `what_to_report`: the failure |
-| `SUBAGENT_UNPROJECTED` | `NOTICE` (brief) | `SubagentUnprojectedNotice` | a subagent has no native variant for a selected agent and was not projected | message: each `<bundle>:<asset> (<agent>)`; `target_files`: `.devkit/config.toml` (where the project narrows `agents`); `[DETAIL]`: the remedies |
+| `ASSET_UNPROJECTED` | `NOTICE` (brief) | `UnprojectedNotice` | a skill or subagent has no variant for a selected agent and was not projected | message: each `<bundle>:<asset> (<agent>)`; `target_files`: `.devkit/config.toml` (where the project narrows `agents`); `[DETAIL]`: the remedies |
 | `BUNDLE_UNSELECTED` | `NOTICE` | `BundleUnselectedNotice` | installed bundles the project neither selected nor opted out of, reported once per clone when they appear (recorded in `.devkit/transient/seen-bundles.json`) | `fix`: `devkit add <bundle>` for one bundle, else `devkit list`; one `[DETAIL]` per bundle with its exact `devkit add` command and presets |
 | `TOOL_VERSION_CHANGED` | `NOTICE` (brief) | `ToolVersionChangedNotice` | the receipt now records a different running `devkit` version (`devkit <recorded> -> <running>`) | — |
 | `POST_SYNC_NOTICE` | `NOTICE` (brief) | `PostSyncNotice` | a line a post-sync hook returned | `details`: the hook |
@@ -134,15 +134,20 @@ A post-sync hook may also return `AdvisoryError` objects with codes of its own; 
 ### `devkit status`
 
 `devkit status` never writes project files. It reports the selection, opted-out built-in bundles, managed file
-counts (`ok`, `missing`, `modified`, `mode-mismatch`) with the offending paths, override drift, the guidance block
-state (`ok`, `missing`, `modified`, `unowned`, `disabled`), seeded paths and whether each exists, a pending journal,
+counts (`ok`, `missing`, `modified`, `mode-mismatch`, `unsafe`) with the offending paths, override drift of deployed
+assets, the guidance block state (`ok`, `missing`, `modified`, `unowned`, `disabled`, `invalid`), seeded paths and whether each exists, a pending journal,
 and the recorded versus running tool version; without a receipt every entry describes an empty installation. What
 needs acting on is listed under `errors`, each an error object with exit code `1`, and rendered on stderr as an
 advisory block: missing managed files (`NOT_SYNCHRONIZED`, fix `devkit sync`), edited or mode-changed managed files
-(`SYNC_CONFLICT`), a pending journal (`TRANSACTION_PENDING`, fix `devkit recover`) and override drift
-(`OVERRIDE_DRIFT`, `INTERACTION`: review with `devkit override diff`, then `devkit override accept`). It exits `1`
+(`SYNC_CONFLICT`), recorded paths that became symlinks or non-regular files (`WORKSPACE_UNSAFE`), a root
+`AGENTS.md` that is a symlink, malformed or not UTF-8 while the block is managed (`WORKSPACE_UNSAFE`,
+`GUIDANCE_BLOCK_INVALID`; state `invalid`), a selected bundle whose package cannot be used
+(`BUNDLE_PACKAGE_INVALID`), a pending journal (`TRANSACTION_PENDING`, fix `devkit recover`) and
+override drift (`OVERRIDE_DRIFT`, `INTERACTION`: review with `devkit override diff`, then `devkit override accept`). It exits `1`
 when `errors` is nonempty, whatever their own codes, and `2` only when it cannot run (for example an unreadable
-receipt or configuration). `sync --check` remains the check that says whether a sync is needed.
+receipt or configuration). An installed package the project does not deploy that cannot be used is a
+`BUNDLE_PACKAGE_INVALID` warning under `notices` (also in `devkit list`), which changes no exit code except under
+`--strict`. `sync --check` remains the check that says whether a sync is needed.
 
 ### Error codes
 
@@ -155,12 +160,12 @@ error's `fix`, never in its message. The others are `DistributionError` subclass
 
 | Class | Code | Mode | When |
 | --- | --- | --- | --- |
-| `BundleError` | `BUNDLE_INVALID` | `INPUT_ERROR` | `bundle.toml`, a declared source or an asset header is invalid |
-| `PackageError` | `BUNDLE_PACKAGE_INVALID` | `MAINTENANCE` | an installed content package registers an unusable or duplicate bundle |
+| `BundleError` | `BUNDLE_INVALID` | `INPUT_ERROR` | `bundle.toml`, a declared source or an asset header is invalid or unreadable; from `bundle validate`, `plan` and `build`, `target_files` names the bundle directory |
+| `PackageError` | `BUNDLE_PACKAGE_INVALID` | `MAINTENANCE` | an installed content package registers an unusable, misnamed or duplicate bundle, or its resource module fails to import or load; `fix` names the package to upgrade or uninstall. Only a selected bundle's package (or a duplicate) is an error; any other is a `WARNING` under `notices` ([Content Packages](content-packages.md#1-content-wheel-contract)) |
 | `SelectionError` | `SELECTION_INVALID` | `INPUT_ERROR` | an unknown or unselected bundle, preset, asset or override |
 | `NotSynchronizedError` | `NOT_SYNCHRONIZED` | `AUTO` (`devkit sync`) | no receipt, or a context file no longer matches it |
-| `ConflictError` | `SYNC_CONFLICT` | `INTERACTION` | a hand-edited or unowned file, or an existing override |
-| `BundleConflictError` | `BUNDLE_CONFLICT` | `INTERACTION` | two selected bundles, or a seeded and a managed file, claim one path |
+| `ConflictError` | `SYNC_CONFLICT` | `INTERACTION` | hand-edited or unowned files (one error names every conflicting path of a sync), or an existing override |
+| `BundleConflictError` | `BUNDLE_CONFLICT` | `INTERACTION` | two selected bundles claim one path or one projected skill directory or subagent file, or a seeded and a managed file claim one path |
 | `OverrideDriftError` | `OVERRIDE_DRIFT` | `BLOCKED` | `override_drift = "block"` and an override hides upstream changes |
 | `UnsafeWorkspaceError` | `WORKSPACE_UNSAFE` | `BLOCKED` | a symlink or non-regular file where devkit reads or writes, or a reserved path |
 | `LockHeldError` | `LOCK_HELD` | `DEFER` | another devkit command holds the project lock |

@@ -10,8 +10,10 @@ blocks on stderr (``--strict`` exits 1 on a warning); ``devkit
 status`` renders each problem of its ``errors`` as an advisory block. Exit
 codes follow ``devkit.advisory.ExitCode``: ``0`` success; ``1`` from
 ``devkit sync --check`` when a synchronization is needed and from
-``devkit status`` when the report shows a problem (a missing, modified or
-mode-mismatched file, a pending journal, override drift); ``2`` for any error
+``devkit status`` when the report shows a problem (a missing, modified,
+mode-mismatched, symlinked or non-regular managed file, a symlinked or
+malformed root ``AGENTS.md``, a selected bundle whose package fails to load,
+a pending journal, override drift); ``2`` for any error
 (an invalid argument, a conflict, a held lock, an unreadable receipt or
 configuration).
 """
@@ -44,6 +46,7 @@ from devkit.distribution.installation.config import (
     DEFAULT_PLAYBOOK_LIMIT,
     DEFAULT_PLAYBOOK_MAX_BYTES,
     DEFAULT_PLAYBOOK_MIN_SCORE,
+    DEFAULT_PRESET,
     PLAYBOOK_LIMIT_MAX,
     PLAYBOOK_LIMIT_MIN,
     PLAYBOOK_MAX_BYTES_MAX,
@@ -68,8 +71,6 @@ from devkit.distribution.installation.playbook_search import search_playbooks
 from devkit.distribution.installation.results import OverrideChange, SyncResult
 from devkit.distribution.installation.status import get_project_listing, get_project_status
 from devkit.distribution.installation.sync import recover_project, sync_project
-
-# Code of the stderr warning for files under the managed root that nothing owns.
 
 
 class _Result(Protocol):
@@ -177,7 +178,10 @@ def build(source: Path, output: Path) -> object:
 
 
 def _parse_selections(values: tuple[str, ...], param_hint: str) -> dict[str, list[str]]:
-    """Parse ``bundle[:preset]`` values; repeating a bundle selects a union, a bare bundle its default preset."""
+    """Parse ``bundle[:preset]`` values; repeating a bundle selects a union, a bare bundle its default preset.
+
+    A bare bundle is recorded as ``DEFAULT_PRESET``, so ``starter starter:extra`` keeps the default preset.
+    """
     selected: dict[str, list[str]] = {}
     for value in values:
         name, separator, preset = value.partition(":")
@@ -188,8 +192,9 @@ def _parse_selections(values: tuple[str, ...], param_hint: str) -> dict[str, lis
                 fix="Pass lowercase bundle slugs, optionally with :<preset>",
             )
         presets = selected.setdefault(name, [])
-        if preset and preset not in presets:
-            presets.append(preset)
+        entry = preset if separator else DEFAULT_PRESET
+        if entry not in presets:
+            presets.append(entry)
     return selected
 
 
@@ -226,20 +231,26 @@ def _sync_and_save(
     deselect: tuple[str, ...] = (),
     dry_run: bool = False,
 ) -> SyncResult:
-    """Synchronize; ``save`` builds a configuration edit, checked before the sync and written after it.
+    """Synchronize; ``save`` builds a configuration edit that the sync renders and writes under the project lock.
 
-    ``merge`` joins ``presets`` with what each bundle already deploys instead of replacing it.
+    ``merge`` joins ``presets`` with what each bundle already deploys, read
+    from the configuration when the edit is rendered, instead of replacing it.
+    Without ``save``, or on ``dry_run``, the selection applies to this run only.
     """
     with discover_bundles() as installed:
-        selected = resolve_selection(installed, presets or {})
-        if merge:
-            selected = merge_selection(installed, read_config(root), selected)
-        edit = save(installed, selected) if save is not None else None
-        update = prepare_config_update(root, **edit) if edit is not None and not dry_run else None
-        result = sync_project(root, installed, agents=agents, presets=selected, deselect=deselect, dry_run=dry_run)
-    if update is not None:
-        update.apply()
-    return result
+        requested = resolve_selection(installed, presets or {})
+
+        def selected() -> dict[str, list[str]]:
+            return merge_selection(installed, read_config(root), requested) if merge else requested
+
+        if save is not None and not dry_run:
+            return sync_project(
+                root, installed, save=lambda: prepare_config_update(root, **save(installed, selected()))
+            )
+        selection = selected()
+        if save is not None:
+            save(installed, selection)  # a preview refuses what the command would refuse
+        return sync_project(root, installed, agents=agents, presets=selection, deselect=deselect, dry_run=dry_run)
 
 
 @click.command()
@@ -338,10 +349,16 @@ def remove(bundles: tuple[str, ...], workspace_root: str | None, dry_run: bool) 
 @click.command(name="list")
 @WORKSPACE
 @_json_command
-def list_resources(workspace_root: str | None) -> object:
-    """List installed bundles, their selection state, and the project's synchronized asset paths."""
+def list_resources(workspace_root: str | None) -> None:
+    """List installed bundles, their selection state, and the project's synchronized asset paths.
+
+    An installed package the project does not deploy that fails to load is a warning on stderr.
+    """
     with discover_bundles() as installed:
-        return get_project_listing(resolve_root(workspace_root), installed)
+        listing = get_project_listing(resolve_root(workspace_root), installed)
+    echo_json(listing.to_dict())
+    echo_notices(listing.notices)
+    exit_on_warnings(listing.notices)
 
 
 @click.command()
@@ -350,13 +367,18 @@ def list_resources(workspace_root: str | None) -> object:
 def status(workspace_root: str | None) -> None:
     """Report the installed state against the receipt without writing anything.
 
-    Problems (a missing, modified or mode-mismatched file, a pending journal,
-    override drift) are listed under errors and rendered on stderr; any exits 1.
+    Problems (a missing, modified, mode-mismatched, symlinked or non-regular
+    managed file, a symlinked or malformed root AGENTS.md, a selected bundle
+    whose package fails to load, a pending journal, override drift) are listed
+    under errors and rendered on stderr; any exits 1. A package the project
+    does not deploy that fails to load is a warning under notices.
     """
     with discover_bundles() as installed:
         report = get_project_status(resolve_root(workspace_root), installed)
     echo_json(report.to_dict())
+    echo_notices(report.notices)
     exit_on_problems(report.errors, report=True)
+    exit_on_warnings(report.notices)
 
 
 @click.command()

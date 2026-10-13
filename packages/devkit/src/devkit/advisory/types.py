@@ -41,7 +41,7 @@ class ActionMode(StrEnum):
 
     AUTO = "AUTO"  # Run the fix command once, then retry once
     INTERACTION = "INTERACTION"  # Stop and ask the user; do not improvise workarounds
-    DEFER = "DEFER"  # Non-error condition; wait or schedule later
+    DEFER = "DEFER"  # Error mode: nothing is broken, but the operation did not happen; retry later
     BLOCKED = "BLOCKED"  # Deliberate guardrail refused; do not bypass
     HALT = "HALT"  # Unsafe failure; stop immediately and report
     MAINTENANCE = "MAINTENANCE"  # Codebase or tool defect; needs code repair

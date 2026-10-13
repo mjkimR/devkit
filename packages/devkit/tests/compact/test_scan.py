@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import importlib
 import io
 import re
+import time
 
 import pytest
 from devkit.advisory import AdvisoryError, Level
@@ -23,6 +25,8 @@ from devkit.compact.scan import (
     ToolWarning,
     scan,
 )
+
+scan_module = importlib.import_module("devkit.compact.scan")  # the package exports the function under this name
 
 
 def _scan(text: str, *, notices: bool = True, base: list[str] | None = None) -> Scan:
@@ -413,9 +417,34 @@ def test_warning_locations_outside_the_base_stay_absolute() -> None:
 
 def test_an_empty_line_inside_an_advisory_value_keeps_the_block_whole() -> None:
     block = AdvisoryError("broken", "Traceback:\n\n  File x", code="X_FAILED").render()
-    result = _scan(f"{block}\n\nafter\n")
+    result = _scan(f"{block}\nafter\n")
     assert [a.text for a in result.advisories] == [block]
     assert result.output == "after\n"
+
+
+def test_an_empty_line_ends_an_advisory_block() -> None:
+    # A rendered block has no empty lines: indented tool output after one is not part of the block.
+    block = _block(Level.ERROR, "X_FAILED", "nested failed")
+    indented = "         line of a deeply indented traceback\n"
+    result = _scan(f"{block}\n\n{indented}tests/x.py:3: AssertionError\n")
+    assert [a.text for a in result.advisories] == [block]
+    assert result.output == f"\n{indented}tests/x.py:3: AssertionError\n"
+
+
+def test_a_block_longer_than_its_budget_stays_in_the_excerpt_and_is_counted() -> None:
+    lines = "".join(f"         code {i}\n" for i in range(300))  # 5,400 characters: over the budget, not the excerpt's
+    result = _scan(f"[WARN]   (X_DRIFT) w\n{lines}FAILED tests/x.py::t - boom\n")
+    assert result.advisories == () and result.omitted.advisories == 1
+    assert result.output.startswith("[WARN]   (X_DRIFT) w\n         code 0\n")
+    assert result.output.endswith("         code 299\nFAILED tests/x.py::t - boom\n")
+    assert result.omitted.output == 0
+
+
+def test_a_block_that_does_not_fit_what_is_left_of_the_budget_stays_in_the_excerpt() -> None:
+    block = _block(Level.WARNING, "ORPHAN_LEFT", "z" * 1_500)
+    result = _scan(f"{block}\n" * 3)
+    assert [a.text for a in result.advisories] == [block, block] and result.omitted.advisories == 1
+    assert result.output == f"{block}\n"
 
 
 def test_errors_have_a_budget_of_their_own() -> None:
@@ -576,3 +605,76 @@ def test_only_consecutive_lines_of_the_excerpt_collapse() -> None:
 def test_read_counts_every_character_of_the_output() -> None:
     text = "a\r\nb\x1b[31mred\x1b[0m\n" + "z" * 200_000 + "\n"
     assert _scan(text).read == len(text)
+
+
+@pytest.mark.parametrize(
+    "line",
+    ["FAILED x.py" + "::a" * 40 + " !", "x.py" + "::a" * 40 + " FAILED oops", "x.py" + "::a" * 40 + "  "],
+)
+def test_a_long_run_of_node_id_separators_is_scanned_in_linear_time(line: str) -> None:
+    # Each "::" once split two ways, so 40 of them took longer than any run; now it is milliseconds.
+    started = time.monotonic()
+    _scan(f"{line}\n" * 20)
+    assert time.monotonic() - started < 5
+
+
+def test_a_warnings_summary_without_its_closing_line_ends_at_output_that_is_not_part_of_it() -> None:
+    result = _scan(
+        "============================= warnings summary =============================\n"
+        "tests/test_a.py::test_x\n"
+        "tests/test_a.py: 12 warnings\n"
+        "../lib/compat.py:41\n"
+        "  /abs/tests/test_a.py:5: UserWarning: boom\n"
+        "    warnings.warn('boom')\n"
+        "\n"
+        "FAILED tests/test_a.py::test_y - assert 1 == 2\n"
+        "error: Recipe `test` failed on line 3 with exit code 1\n"
+    )
+    assert (
+        result.output
+        == "FAILED tests/test_a.py::test_y - assert 1 == 2\nerror: Recipe `test` failed on line 3 with exit code 1\n"
+    )
+    assert result.warnings == (ToolWarning("UserWarning: boom", "/abs/tests/test_a.py:5"),)
+
+
+def test_a_line_that_names_a_failure_is_never_filtered_inside_the_warnings_summary() -> None:
+    result = _scan(
+        "============================= warnings summary =============================\n"
+        "tests/test_a.py::test_x\n"
+        "  FAILED tests/test_a.py::test_y - assert 1 == 2\n"
+        "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"
+    )
+    assert result.output == "  FAILED tests/test_a.py::test_y - assert 1 == 2\n"
+
+
+def test_a_repeat_marker_cut_from_the_excerpt_names_every_line_it_stood_for() -> None:
+    # The head ends just before the marker, which is the first piece the tail drops.
+    lines = ["a" * 999, "b" * 999, "c" * 940, *["r" * 30] * 6, *(f"t{i:03d} {'z' * 50}" for i in range(200))]
+    result = _scan("".join(f"{line}\n" for line in lines))
+    assert re.search(r"\[\.\.\. \d+ characters omitted, log lines 5-\d+ \.\.\.\]", result.output)
+
+
+def test_failed_tests_past_those_remembered_are_counted_once_and_not_when_shown(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(scan_module, "FAILURES_KEPT", 3)
+    tests = [f"tests/test_a.py::test_{i:02d}" for i in range(10)]
+    verbose = "".join(f"{test} FAILED [ 50%]\n" for test in tests)
+    summary = "".join(f"FAILED {test} - AssertionError\n" for test in tests[:8])
+    result = _scan(_cut_out(verbose + summary) + "".join(f"FAILED {test} - AssertionError\n" for test in tests[8:]))
+    shown = {test for test in tests if f"{test} " in result.output}
+    assert shown == set(tests[8:])
+    assert len(result.failures) == 3 and result.omitted.failures == 5
+
+
+def test_last_lines_are_never_a_marker_line() -> None:
+    line = "x" * 80
+    assert _scan(f"done\n{line}\n{line}\n{line}\n").last_lines == ("done", line)
+    assert _scan(f"done\n{line}\n{line}\n{line}\nlast\n").last_lines == ("done", line, "last")
+
+
+def test_hyperlinks_and_charset_selections_are_not_output() -> None:
+    link = "\x1b]8;;file:///work/a.py\x1b\\a.py\x1b]8;;\x1b\\"
+    result = _scan(f"\x1b(B{link}:3: UserWarning: old\n\x1b]0;title\x07Found 1 error.\n")
+    assert result.warnings == (ToolWarning("UserWarning: old", "a.py:3"),)
+    assert result.summaries == ("Found 1 error.",)

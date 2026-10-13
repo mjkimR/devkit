@@ -23,7 +23,7 @@ When the project's recipe already wraps the command (a `just` recipe that calls
 
 | Line | Meaning |
 | --- | --- |
-| `[RUN: "<command>" outcome=passed\|failed exit=<code> log=<path>]` | The result; `exit` is the command's own code. |
+| `[RUN: "<command>" outcome=passed\|failed\|interrupted exit=<code> log=<path>]` | The result; `exit` is the command's own code. |
 | `[RUN_SUMMARY: "..."]` | A summary line the tool printed (`3 passed in 0.5s`). |
 | `[RUN_LAST_LINE: "..."]` | Passed without a recognized summary: the last lines of the output, usually the tool's verdict. |
 | `[RUN_FAILURE: "<test>" kind=... message=...]` | Failure only: a failed test the excerpt cuts out; rerun it by its node ID. |
@@ -44,7 +44,9 @@ line above it.
 `devkit run` exits `0` when the command passed, `1` when it failed, and `2` when
 the command could not be started (`RUN_COMMAND_NOT_STARTED`: `[TARGET]` names
 the command that does not exist, or the working directory that cannot be
-entered).
+entered), and `128 + N` when it was interrupted by signal `N` (`130` Ctrl-C,
+`143` SIGTERM): it prints only the `[RUN]` line, whose `log=` shows where the
+command stopped.
 
 ## Setting up recipes
 

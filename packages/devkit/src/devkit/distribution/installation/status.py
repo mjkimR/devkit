@@ -12,13 +12,19 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from devkit.advisory import Actor, AdvisoryError, ExitCode
+from devkit.advisory import Actor, AdvisoryError, ExitCode, Level
 from devkit.core.receipt import AssetRecord, FileRecord, OverrideRecord, Receipt, SeededRecord, Selection, ToolRecord
 from devkit.distribution.content import signature
-from devkit.distribution.errors import NotSynchronizedError, OverrideDriftError, PendingTransactionError
+from devkit.distribution.errors import (
+    GuidanceBlockError,
+    NotSynchronizedError,
+    OverrideDriftError,
+    PendingTransactionError,
+    UnsafeWorkspaceError,
+)
 from devkit.distribution.installation import guidance_block
 from devkit.distribution.installation.config import effective_selection, read_config
-from devkit.distribution.installation.discovery import InstalledBundle
+from devkit.distribution.installation.discovery import InstalledBundle, unusable_bundles, unusable_notices
 from devkit.distribution.installation.override_commands import override_statuses
 from devkit.distribution.installation.receipt import read_receipt
 from devkit.distribution.installation.results import (
@@ -37,12 +43,17 @@ _EMPTY_SELECTION = Selection((), {})
 
 @dataclass(frozen=True)
 class FilesStatus:
-    """Receipt-owned files compared with the disk; ``mode_mismatch``: same bytes, different execute bit."""
+    """Receipt-owned files compared with the disk.
+
+    ``mode_mismatch``: same bytes, different execute bit; ``unsafe``: a symlink
+    or non-regular file where the receipt records a file.
+    """
 
     ok: int = 0
     missing: list[str] = field(default_factory=list)
     modified: list[str] = field(default_factory=list)
     mode_mismatch: list[str] = field(default_factory=list)
+    unsafe: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -51,10 +62,12 @@ class FilesStatus:
                 "missing": len(self.missing),
                 "modified": len(self.modified),
                 "mode-mismatch": len(self.mode_mismatch),
+                "unsafe": len(self.unsafe),
             },
             "missing": list(self.missing),
             "modified": list(self.modified),
             "mode-mismatch": list(self.mode_mismatch),
+            "unsafe": list(self.unsafe),
         }
 
 
@@ -87,7 +100,10 @@ class ToolStatus:
 
 @dataclass(frozen=True)
 class ProjectStatus:
-    """``devkit status``. ``errors`` are the problems to act on; ``ok`` when there are none."""
+    """``devkit status``. ``errors`` are the problems to act on; ``ok`` when there are none.
+
+    ``notices``: warnings that change no exit code (an installed package the project does not deploy failed to load).
+    """
 
     # Whether a receipt exists; without one every other entry describes an empty installation.
     receipt: bool
@@ -98,12 +114,13 @@ class ProjectStatus:
     files: FilesStatus
     # ``(bundle, asset)`` of every override whose upstream changed since its baseline.
     override_drift: list[tuple[str, str]]
-    # ``ok`` | ``missing`` | ``modified`` | ``unowned`` | ``disabled``
+    # ``ok`` | ``missing`` | ``modified`` | ``unowned`` | ``disabled`` | ``invalid``
     guidance_block: str
     seeded: list[SeededStatus]
     pending_journal: bool
     tool: ToolStatus
     errors: list[AdvisoryError] = field(default_factory=list)
+    notices: list[AdvisoryError] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
@@ -122,7 +139,24 @@ class ProjectStatus:
             "pending_journal": self.pending_journal,
             "tool": self.tool.to_dict(),
             "errors": [error.to_dict() for error in self.errors],
+            "notices": [notice.to_dict() for notice in self.notices],
         }
+
+
+def _unusable_packages(
+    installed: list[InstalledBundle], selected: dict[str, list[str]]
+) -> tuple[list[AdvisoryError], list[AdvisoryError]]:
+    """Load errors of installed packages: a problem when the project selects the bundle, else a warning."""
+    problems: list[AdvisoryError] = []
+    warnings: list[AdvisoryError] = []
+    for name, error in sorted(unusable_bundles(installed).items()):
+        if name in selected:
+            problem = error.with_level(Level.ERROR)
+            problem.exit_code = ExitCode.FINDINGS
+            problems.append(problem)
+        else:
+            warnings.append(error.with_level(Level.WARNING))
+    return problems, warnings
 
 
 def _files_status(root: Path, files: dict[str, FileRecord]) -> FilesStatus:
@@ -130,8 +164,13 @@ def _files_status(root: Path, files: dict[str, FileRecord]) -> FilesStatus:
     missing: list[str] = []
     modified: list[str] = []
     mode_mismatch: list[str] = []
+    unsafe: list[str] = []
     for name, recorded in sorted(files.items()):
-        current = snapshot(root, name)
+        try:
+            current = snapshot(root, name)
+        except UnsafeWorkspaceError:
+            unsafe.append(name)
+            continue
         if current is None:
             missing.append(name)
             continue
@@ -142,23 +181,31 @@ def _files_status(root: Path, files: dict[str, FileRecord]) -> FilesStatus:
             mode_mismatch.append(name)
         else:
             ok += 1
-    return FilesStatus(ok, missing, modified, mode_mismatch)
+    return FilesStatus(ok, missing, modified, mode_mismatch, unsafe)
 
 
-def _block_state(root: Path, recorded: str | None, enabled: bool) -> str:
+def _block_state(root: Path, recorded: str | None, enabled: bool) -> tuple[str, AdvisoryError | None]:
+    """The guidance block state; ``invalid`` with its error when ``AGENTS.md`` cannot be read safely."""
     if not enabled:
-        return "disabled"
-    current = snapshot(root, AGENTS_FILE)
-    existing = guidance_block.extract(guidance_block.decode(current.data if current else None))
+        return "disabled", None
+    try:
+        current = snapshot(root, AGENTS_FILE)
+        existing = guidance_block.extract(guidance_block.decode(current.data if current else None))
+    except (UnsafeWorkspaceError, GuidanceBlockError) as exc:
+        exc.exit_code = ExitCode.FINDINGS
+        return "invalid", exc
     if existing is None:
-        return "missing"
+        return "missing", None
     if recorded is None:
-        return "unowned"
-    return "ok" if guidance_block.digest(existing) == recorded else "modified"
+        return "unowned", None
+    return ("ok" if guidance_block.digest(existing) == recorded else "modified"), None
 
 
-def _problems(files: FilesStatus, journal: bool, drift: list[tuple[str, str]]) -> list[AdvisoryError]:
-    """What ``devkit status`` exits 1 for: missing, modified or mode-mismatched files, a journal, override drift."""
+def _problems(
+    files: FilesStatus, journal: bool, drift: list[tuple[str, str]], block_error: AdvisoryError | None
+) -> list[AdvisoryError]:
+    """What ``devkit status`` exits 1 for: missing, modified, mode-mismatched or unsafe files, a journal, override
+    drift, a root ``AGENTS.md`` that cannot be read safely."""
     findings = ExitCode.FINDINGS
     problems: list[AdvisoryError] = []
     if files.missing:
@@ -183,6 +230,18 @@ def _problems(files: FilesStatus, journal: bool, drift: list[tuple[str, str]]) -
                 exit_code=findings,
             )
         )
+    if files.unsafe:
+        problems.append(
+            UnsafeWorkspaceError(
+                f"managed paths are symlinks or not regular files: {', '.join(files.unsafe)}",
+                target_files=files.unsafe,
+                what_to_report="Whether to replace these paths with the files devkit deploys;"
+                " devkit never reads or writes through a symlink",
+                exit_code=findings,
+            )
+        )
+    if block_error is not None:
+        problems.append(block_error)
     if journal:
         problems.append(PendingTransactionError("an interrupted synchronization left its journal", exit_code=findings))
     if drift:
@@ -205,11 +264,20 @@ def get_project_status(root: Path, installed: list[InstalledBundle]) -> ProjectS
     """``devkit status``: the installed state against the receipt, without writing anything."""
     root = require_project_dir(root)
     with project_lock(root, shared=True):
-        receipt = read_receipt(root)
+        receipt = read_receipt(root, check_disk=False)
         config = read_config(root)
         files = _files_status(root, dict(receipt.file_records) if receipt else {})
-        drift = [(item.bundle, item.asset) for item in override_statuses(installed, receipt) if item.drift_detected]
+        # Drift of deployed assets only, as ``devkit sync`` reports it; records kept for assets that are not
+        # deployed (a deselected bundle, a narrowed preset) are reported when the asset is selected again.
+        deployed = {(asset.bundle, asset.id) for asset in receipt.asset_records} if receipt else set()
+        drift = [
+            (item.bundle, item.asset)
+            for item in override_statuses(installed, receipt)
+            if item.drift_detected and (item.bundle, item.asset) in deployed
+        ]
+        block, block_error = _block_state(root, receipt.guidance_block if receipt else None, config.guidance_block)
         journal = pending_journal(root)
+        packages, warnings = _unusable_packages(installed, effective_selection(installed, config))
         return ProjectStatus(
             receipt=receipt is not None,
             schema=receipt.schema if receipt is not None else None,
@@ -217,14 +285,15 @@ def get_project_status(root: Path, installed: list[InstalledBundle]) -> ProjectS
             selection=receipt.selection if receipt is not None else _EMPTY_SELECTION,
             files=files,
             override_drift=drift,
-            guidance_block=_block_state(root, receipt.guidance_block if receipt else None, config.guidance_block),
+            guidance_block=block,
             seeded=[
                 SeededStatus(entry, snapshot(root, entry.path) is not None)
                 for entry in (receipt.seeded if receipt else ())
             ],
             pending_journal=journal,
             tool=ToolStatus(tool_identity(), receipt.tool if receipt is not None else None),
-            errors=_problems(files, journal, drift),
+            errors=[*packages, *_problems(files, journal, drift, block_error)],
+            notices=warnings,
         )
 
 
@@ -255,12 +324,16 @@ class InstalledEntry:
 
 @dataclass(frozen=True)
 class ProjectListing:
-    """``devkit list``: installed bundles, and what the receipt records as synchronized."""
+    """``devkit list``: installed bundles, and what the receipt records as synchronized.
+
+    ``notices``: a warning per installed package the project does not deploy that failed to load.
+    """
 
     installed: list[InstalledEntry]
     synchronized_assets: tuple[AssetRecord, ...] = ()
     seeded: tuple[SeededRecord, ...] = ()
     overrides: dict[str, dict[str, OverrideRecord]] = field(default_factory=dict)
+    notices: list[AdvisoryError] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -268,6 +341,7 @@ class ProjectListing:
             "synchronized_assets": [asset_json(asset) for asset in self.synchronized_assets],
             "seeded": seeded_json(self.seeded),
             "overrides": overrides_json(self.overrides),
+            "notices": [notice.to_dict() for notice in self.notices],
         }
 
 
@@ -278,12 +352,13 @@ def get_project_listing(root: Path, installed: list[InstalledBundle]) -> Project
         receipt = read_receipt(root)
         config = read_config(root)
     selected = effective_selection(installed, config)
+    notices = unusable_notices(installed, selected)
     entries = [
         InstalledEntry(item, selected.get(item.bundle.name), item.bundle.name in config.opted_out) for item in installed
     ]
     if receipt is None:
-        return ProjectListing(entries)
-    return ProjectListing(entries, receipt.asset_records, receipt.seeded, _plain_overrides(receipt))
+        return ProjectListing(entries, notices=notices)
+    return ProjectListing(entries, receipt.asset_records, receipt.seeded, _plain_overrides(receipt), notices)
 
 
 def _plain_overrides(receipt: Receipt) -> dict[str, dict[str, OverrideRecord]]:

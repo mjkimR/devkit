@@ -78,10 +78,23 @@ class Inventory:
     # Seeded destinations -> origin; never part of ``files``.
     seeds: dict[str, Seed] = field(default_factory=dict)
     guidance: list[Fragment] = field(default_factory=list)
+    # Projected skill directory or subagent file -> its owner (``bundle:asset``, or a generated entry skill).
+    projections: dict[str, str] = field(default_factory=dict)
 
     def fragments(self) -> list[str]:
         """Rendered guidance in the block's stable order: by bundle, then asset ID."""
         return [item.text for item in sorted(self.guidance, key=lambda item: (item.bundle, item.asset))]
+
+    def claim(self, unit: str, owner: str) -> None:
+        """Give a projected skill directory or subagent file to one owner.
+
+        A second owner is a ``BUNDLE_CONFLICT`` even where the bytes agree, so
+        two bundles never merge their files into one skill directory. The same
+        owner may claim a unit again: Codex and Antigravity share ``.agents/skills``.
+        """
+        existing = self.projections.setdefault(unit, owner)
+        if existing != owner:
+            raise BundleConflictError(f"destination collision: {unit} ({existing} and {owner})", target_files=[unit])
 
     def put(self, destination: str, content: Content) -> None:
         # Agents sharing a directory (Codex and Antigravity) project the same bytes twice.
@@ -208,6 +221,9 @@ class _BundleInventory:
             return set()
         origin = self.bundle.root / source
         skill_dir, subagent_dir = AGENTS[agent]
+        owner = f"{self.bundle.name}:{asset.id}"
+        if asset.kind == "skill":
+            self.inventory.claim(f"{skill_dir}/{asset.id}", owner)
         paths = set()
         for path in source_files(self.bundle.root, source):
             read_from, _ = resolve_source(self.root, self.bundle, path.relative_to(self.bundle.root).as_posix())
@@ -218,6 +234,7 @@ class _BundleInventory:
                 if not origin.is_file() or origin.suffix != suffix:
                     raise BundleError(f"{asset.id}: {agent} subagent must be one {suffix} file")
                 dest = f"{subagent_dir}/{asset.id}{suffix}"
+                self.inventory.claim(dest, owner)
             self.inventory.copy(dest, read_from, self._context(path))
             paths.add(dest)
         return paths
@@ -230,6 +247,7 @@ class _BundleInventory:
         if rendered is None:
             return set()
         dest = projection_path(agent, asset.id)
+        self.inventory.claim(dest, f"{self.bundle.name}:{asset.id}")
         self.inventory.put(dest, Content(rendered, 0o644))
         return {dest}
 
@@ -282,6 +300,8 @@ def desired_inventory(
             continue
         projections = [(module.MANAGED_ROOT, None), *((f"{AGENTS[agent][0]}/{module.NAME}", agent) for agent in agents)]
         for directory, agent in projections:
+            if agent is not None:
+                inventory.claim(directory, f"generated skill {module.NAME}")
             for relative, data in module.skill_files(agent).items():
                 inventory.put(f"{directory}/{relative}", Content(data, 0o644))
     for dest in inventory.seeds:

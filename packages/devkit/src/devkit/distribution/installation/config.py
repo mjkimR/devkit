@@ -26,7 +26,7 @@ from devkit.core.receipt import CONFIG_PATH
 from devkit.distribution.bundles.common import AGENT_NAMES, SLUG
 from devkit.distribution.content import Content
 from devkit.distribution.errors import SelectionError
-from devkit.distribution.installation.discovery import InstalledBundle
+from devkit.distribution.installation.discovery import InstalledBundle, unusable_bundles
 from devkit.distribution.installation.transaction import replace_file
 
 SCHEMA = 1
@@ -58,6 +58,8 @@ PLAYBOOK_MAX_BYTES_MIN, PLAYBOOK_MAX_BYTES_MAX = 1024, 65536
 DEFAULT_PLAYBOOK_LIMIT = 5
 DEFAULT_PLAYBOOK_MIN_SCORE = 0.1
 DEFAULT_PLAYBOOK_MAX_BYTES = 8192
+# A requested preset that stands for the bundle's ``default_preset`` (a bare ``bundle`` on the command line).
+DEFAULT_PRESET = ""
 
 
 def all_agents() -> list[str]:
@@ -230,23 +232,27 @@ def read_config(root: Path) -> ProjectConfig:
 
 
 def resolve_selection(installed: list[InstalledBundle], requested: dict[str, list[str]]) -> dict[str, list[str]]:
-    """Resolve CLI selections; an empty preset list means the bundle's ``default_preset``."""
+    """Resolve CLI selections; ``DEFAULT_PRESET``, or an empty preset list, means the bundle's ``default_preset``."""
     bundles = {item.bundle.name: item.bundle for item in installed}
     result = {}
     for name, presets in requested.items():
         bundle = bundles.get(name)
         if bundle is None:
+            unusable = unusable_bundles(installed)
+            if name in unusable:
+                raise unusable[name]
             raise SelectionError(
                 f"bundle is not installed: {name}",
                 fix="Install the content package that ships it, or run `devkit list`",
             )
-        if not presets:
-            if bundle.default_preset is None:
+        if not presets or DEFAULT_PRESET in presets:
+            default = bundle.default_preset
+            if default is None:
                 raise SelectionError(
                     f"{name}: the bundle declares no default preset",
                     fix=f"Select one of: {', '.join(f'{name}:{p}' for p in bundle.preset_names)}",
                 )
-            presets = [bundle.default_preset]
+            presets = [default if preset == DEFAULT_PRESET else preset for preset in presets] or [default]
         bundle.select(presets)
         result[name] = list(dict.fromkeys(presets))
     return result
@@ -287,14 +293,20 @@ def _preset_value(presets: list[str]) -> str | list[str]:
 
 @dataclass(frozen=True)
 class ConfigUpdate:
-    """A selection edit rendered and checked before a sync, saved with ``apply`` after it."""
+    """A rendered and checked selection edit: ``apply`` saves it, ``revert`` puts the file back as it was."""
 
     root: Path
     text: str | None
+    # The file before the edit; ``None`` when it did not exist.
+    before: Content | None = None
 
     def apply(self) -> None:
         if self.text is not None:
             _write(self.root, self.text)
+
+    def revert(self) -> None:
+        if self.text is not None:
+            replace_file(_config_path(self.root), self.before)
 
 
 def prepare_config_update(
@@ -331,7 +343,9 @@ def prepare_config_update(
         for name in opt_out:
             table[name] = False
     _check_writable(root)
-    return ConfigUpdate(root, tomlkit.dumps(doc))
+    path = _config_path(root)
+    before = Content(path.read_bytes(), path.stat().st_mode & 0o777) if path.exists() else None
+    return ConfigUpdate(root, tomlkit.dumps(doc), before)
 
 
 def update_config(

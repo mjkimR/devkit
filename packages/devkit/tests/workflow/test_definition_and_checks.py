@@ -59,6 +59,8 @@ def test_registry_declared_checks_must_be_runner_or_human() -> None:
         Registry.build("task.md", (Check("x", CheckClass.DISK, ""),))
     with pytest.raises(CheckError, match="collides"):
         Registry.build("task.md", (Check("file-exists", CheckClass.HUMAN, ""),))
+    with pytest.raises(CheckError, match="duplicate declared check 'ci-passed'"):
+        Registry.build("task.md", (Check("ci-passed", CheckClass.RUNNER, ""), Check("ci-passed", CheckClass.HUMAN, "")))
 
 
 def test_count_tasks() -> None:
@@ -145,6 +147,55 @@ stages:
     ]
     for fragment in expected_fragments:
         assert any(fragment in p for p in problems), fragment
+
+
+def test_validate_duplicate_declared_check_keeps_the_others() -> None:
+    text = """---
+id: dup
+schema_version: 1
+checks:
+  - { name: ci-passed, class: runner, description: ci }
+  - { name: ci-passed, class: runner, description: ci again }
+  - { name: po-ok, class: human, description: po }
+  - { name: file-exists, class: human, description: clash }
+stages:
+  - id: build
+    exit: [ci-passed, po-ok]
+---
+"""
+    problems = [str(p) for p in validate_definition(parse_definition(text), "task.md")]
+    assert problems == [
+        "checks: duplicate declared check 'ci-passed'",
+        "checks: declared check 'file-exists' collides with a built-in or plugin check",
+    ]
+
+
+def test_validate_rejects_runner_and_human_checks_in_handoff_when() -> None:
+    text = """---
+id: a
+schema_version: 1
+checks:
+  - { name: ci-passed, class: runner, description: ci }
+  - { name: po-ok, class: human, description: po }
+stages:
+  - id: build
+    exit: [anchor-exists]
+next:
+  - { workflow: b, when: [ci-passed] }
+  - { workflow: c, when: [po-ok, file-exists(spec.md)] }
+---
+"""
+    problems = validate_definition(parse_definition(text), "task.md")
+    assert [(p.code, str(p)) for p in problems] == [
+        (
+            "WORKFLOW_CHECK_INVALID",
+            "next[0].when: runner check 'ci-passed' cannot decide a handoff; `when` takes checks the engine evaluates",
+        ),
+        (
+            "WORKFLOW_CHECK_INVALID",
+            "next[1].when: human check 'po-ok' cannot decide a handoff; `when` takes checks the engine evaluates",
+        ),
+    ]
 
 
 def test_find_and_resolve(workspace: Path) -> None:

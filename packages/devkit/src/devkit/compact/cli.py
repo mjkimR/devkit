@@ -8,11 +8,13 @@ exceeded and, only when the command failed, ``[RUN_OUTPUT: ...]`` (with the
 number of lines filtered out) followed by the excerpt. stderr carries the advisory blocks of nested ``devkit`` commands
 (warnings and notices, then the runner's own notices, then errors). The
 command inherits the resolved ``-q``/``-v``/``--strict`` as ``DEVKIT_QUIET``,
-``DEVKIT_VERBOSE`` and ``DEVKIT_STRICT``.
+``DEVKIT_VERBOSE`` and ``DEVKIT_STRICT``. A run interrupted (Ctrl-C) or
+terminated (``SIGTERM``, ``SIGHUP``) prints only its ``[RUN: ...
+outcome=interrupted ...]`` line, with the log that holds the output so far.
 
 Exit codes: ``0`` the command succeeded, ``1`` it failed (its own code is
 ``exit=`` on the ``[RUN]`` line), ``2`` it could not be started or the
-arguments are invalid.
+arguments are invalid, ``128 + N`` the run was interrupted by signal ``N``.
 """
 
 from __future__ import annotations
@@ -28,7 +30,7 @@ import sys
 import click
 
 from devkit.advisory import ExitCode, Level
-from devkit.compact.execute import CommandRun, run_command
+from devkit.compact.execute import CommandInterrupted, CommandRun, run_command
 from devkit.compact.scan import Failure, Omitted, RelayedAdvisory
 from devkit.core.cli import (
     FORMAT_OPTION,
@@ -61,7 +63,14 @@ def _value(value: str) -> str:
 
 
 def _outcome(run: CommandRun) -> str:
+    if run.interrupted:
+        return "interrupted"
     return "passed" if run.passed else "failed"
+
+
+def _failed(run: CommandRun) -> bool:
+    """Whether the command ran to the end and failed: only then is the excerpt shown."""
+    return not run.passed and not run.interrupted
 
 
 def _omitted(run: CommandRun) -> Omitted:
@@ -97,7 +106,7 @@ def _text(run: CommandRun) -> str:
             f"advisories={omitted.advisories} output={omitted.output}]"
         )
     text = "\n".join(lines) + "\n"
-    if not run.passed:
+    if _failed(run):
         text += f"[RUN_OUTPUT: shown={len(found.output)} omitted={omitted.output} filtered={found.filtered}]\n"
         if found.output:
             text += found.output if found.output.endswith("\n") else found.output + "\n"
@@ -124,10 +133,21 @@ def _json(run: CommandRun) -> dict[str, object]:
             "advisories": omitted.advisories,
             "output": omitted.output,
         },
-        "output": None if run.passed else found.output,
-        "filtered": 0 if run.passed else found.filtered,
+        "output": found.output if _failed(run) else None,
+        "filtered": found.filtered if _failed(run) else 0,
         "notices": [notice.to_dict() for notice in run.notices],
     }
+
+
+def _echo(run: CommandRun, output_format: str) -> int:
+    """Print the result on stdout; return how many characters it took."""
+    if is_json(output_format):
+        data = _json(run)
+        echo_json(data)
+        return len(json.dumps(data, indent=2, ensure_ascii=False)) + 1  # as echo_json prints it
+    text = _text(run)
+    click.echo(text, nl=False)
+    return len(text)
 
 
 def _echo_advisories(advisories: tuple[RelayedAdvisory, ...]) -> None:
@@ -170,15 +190,13 @@ def run_cmd(slow_after: float, output_format: str, command: tuple[str, ...]) -> 
         VERBOSE_ENV: "1" if settings.verbose else "0",
         STRICT_ENV: "1" if settings.strict else "0",
     }
-    run = run_command(command, env=env, slow_after=slow_after, notices=not settings.quiet)
-    if is_json(output_format):
-        data = _json(run)
-        echo_json(data)
-        shown = len(json.dumps(data, indent=2, ensure_ascii=False)) + 1  # as echo_json prints it
-    else:
-        text = _text(run)
-        click.echo(text, nl=False)
-        shown = len(text)
+    try:
+        run = run_command(command, env=env, slow_after=slow_after, notices=not settings.quiet)
+    except CommandInterrupted as interrupted:
+        # The command's group is stopped; the log shows where it stopped.
+        _echo(interrupted.run, output_format)
+        sys.exit(128 + interrupted.run.interrupted)
+    shown = _echo(run, output_format)
     advisories = run.scan.advisories
     shown += sum(len(a.text) + 1 for a in advisories)
     read = run.scan.read

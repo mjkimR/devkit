@@ -155,7 +155,7 @@ def test_unexpected_exception_exits_two(unit_ws: Path, monkeypatch: pytest.Monke
 
     monkeypatch.setattr(Workspace, "evaluate_unit", boom)
     result = _run("next", "-w", str(unit_ws), "--unit", UNIT, "--no-lint")
-    assert result.exit_code == ExitCode.ERROR and "(UNEXPECTED_ERROR) boom" in result.stderr
+    assert result.exit_code == ExitCode.ERROR and "(UNEXPECTED_ERROR) RuntimeError: boom" in result.stderr
 
 
 # --- library errors carry codes -------------------------------------------------------------------

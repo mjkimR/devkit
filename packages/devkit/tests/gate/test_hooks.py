@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import shlex
 import sys
 from pathlib import Path
 
@@ -152,6 +153,50 @@ def test_core_hooks_path_is_refused_and_reported(repo: Path) -> None:
     assert "core.hooksPath=.husky (wrappers do not run)" in output
     code, output = _invoke("uninstall", "-w", str(repo))
     assert code == 0 and "pre-commit: removed" in output and not (repo / ".git/hooks/pre-commit").exists()
+
+
+def _fix_command(output: str) -> list[str]:
+    fix = next(line for line in output.splitlines() if line.startswith("[FIX] "))
+    return shlex.split(fix.split("`")[1])
+
+
+def test_hooks_path_fix_names_the_scope_that_sets_it(
+    repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    git(repo, "config", "core.hooksPath", ".husky")
+    code, output = _invoke("install", "-w", str(repo), "--python", sys.executable)
+    assert code != 0 and "(local config)" in output
+    assert _fix_command(output) == ["git", "config", "--unset", "core.hooksPath"]
+    git(repo, "config", "--unset", "core.hooksPath")
+
+    # A global value cannot be unset with a local `--unset`; the fix overrides it for this repository only.
+    global_config = tmp_path / "global.gitconfig"
+    global_config.write_text("[core]\n\thooksPath = /shared/hooks\n")
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(global_config))
+    code, output = _invoke("install", "-w", str(repo), "--python", sys.executable)
+    assert code != 0 and "GATE_HOOKS_PATH_SET" in output and "(global config)" in output
+    command = _fix_command(output)
+    assert command == ["git", "config", "core.hooksPath", (repo / ".git/hooks").as_posix()]
+    git(repo, *command[1:])
+    _install(repo)
+    assert "/shared/hooks" in global_config.read_text()
+
+    monkeypatch.setenv("GIT_CONFIG_COUNT", "1")
+    monkeypatch.setenv("GIT_CONFIG_KEY_0", "core.hooksPath")
+    monkeypatch.setenv("GIT_CONFIG_VALUE_0", ".husky")
+    code, output = _invoke("install", "-w", str(repo), "--python", sys.executable)
+    assert code != 0 and "(command config)" in output and "GIT_CONFIG_* environment variables" in output
+
+
+def test_a_directory_moved_aside_does_not_break_commits(repo: Path) -> None:
+    (repo / ".git/hooks/pre-commit").mkdir()
+    assert hooks.status(repo)[0].state is hooks.HookState.FOREIGN
+    _install(repo, "--force")
+    assert (repo / ".git/hooks/pre-commit.pre-gate").is_dir()
+    code, output = _commit(repo, "-m", "feat: x")
+    assert code == 0, output
+    _invoke("uninstall", "-w", str(repo))
+    assert (repo / ".git/hooks/pre-commit").is_dir()
 
 
 def test_hooks_path_naming_the_default_directory_is_not_a_conflict(repo: Path) -> None:

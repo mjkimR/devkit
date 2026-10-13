@@ -54,6 +54,7 @@ def test_resolve_managed_rules_reads_rule_assets_only(tmp_path: Path) -> None:
             },
             {"bundle": "team", "id": "flow", "kind": "workflow", "paths": [".devkit/managed/team/flow.py"]},
         ],
+        {".devkit/managed/team/rules/a.py": _sha(RULE.format(n="a"))},
     )
     managed = resolve_managed_rules(tmp_path)
     assert managed.errors == ()

@@ -7,14 +7,14 @@
 
 ```bash
 devkit workflow new <slug> [--workflow ID] [--date YYYY-MM-DD] [--status S]   # create a unit from the layout template and bind it
-devkit workflow bind --unit DIR [--workflow ID]                  # record or refresh the binding (accepts drift)
-devkit workflow next --unit DIR [--workflow ID] [--given NAME]... [--no-lint] [--format text|json]
-devkit workflow handoff --unit DIR [--workflow ID] [--date YYYY-MM-DD] [--by NAME] [--no-lint] [--format text|json]
-devkit workflow requests --unit DIR [--no-lint] [--format text|json]   # open human requests of a unit
-devkit workflow answer --unit DIR --request ID --action accept|decline|cancel [--value V] [--note TEXT] [--by NAME] [--no-lint] [--format text|json]
-devkit workflow return --unit DIR --to STAGE [--note TEXT] [--by NAME] [--no-lint] [--format text|json]  # go back; later approvals are asked again
+devkit workflow bind --unit DIR [--anchor FILE] [--workflow ID]  # record or refresh the binding (accepts drift)
+devkit workflow next --unit DIR [--anchor FILE] [--workflow ID] [--given NAME]... [--no-lint] [--format text|json]
+devkit workflow handoff --unit DIR [--anchor FILE] [--workflow ID] [--date YYYY-MM-DD] [--by NAME] [--no-lint] [--format text|json]
+devkit workflow requests --unit DIR [--anchor FILE] [--no-lint] [--format text|json]   # open human requests of a unit
+devkit workflow answer --unit DIR [--anchor FILE] --request ID --action accept|decline|cancel [--value V] [--note TEXT] [--by NAME] [--no-lint] [--format text|json]
+devkit workflow return --unit DIR [--anchor FILE] --to STAGE [--note TEXT] [--by NAME] [--no-lint] [--format text|json]  # go back; later approvals are asked again
 devkit workflow show <ID|PATH> [--format text|json]              # a definition's stages, hash and next candidates
-devkit workflow show --unit DIR [--format text|json]             # the unit's bound definition plus [BINDING: ... drift=bool]
+devkit workflow show --unit DIR [--anchor FILE] [--format text|json]  # the unit's bound definition plus [BINDING: ... drift=bool]
 devkit workflow checks [--format text|json]                      # registered check names, classes and parameters (plugins included)
 devkit workflow validate [PATH]... [--format text|json]          # validate definitions (default: both sources, plus roles and shared stages)
 devkit workflow list [--status S]... [--exclude-status S]... [--format text|json]  # discovered units across every layout
@@ -24,6 +24,8 @@ devkit workflow envelope new --unit DIR --kind KIND [--status S] [--summary TEXT
                             [--from latest|FILE] [--resolve N|all]... [--waive N=REASON]...   # write it complete
 devkit workflow envelope check --unit DIR [--format text|json]   # every envelope file and any contract violation
 ```
+
+`--anchor FILE` names the anchor file that identifies the unit when its directory holds several candidate anchors (`ANCHOR_AMBIGUOUS`); see [Per-Definition Layout](overview.md#per-definition-layout).
 
 All commands accept `-w/--workspace-root`. It defaults to the devkit project containing the current directory (the nearest directory with a `.devkit/` folder, else the Git work tree's top level); an explicit value that is not an existing directory is `ARGUMENT_INVALID`.
 
@@ -35,7 +37,7 @@ Exit codes follow the devkit convention ([Errors, Exit Codes and Platforms](../a
 | --- | --- |
 | `0` | The command did its job. `next` exits `0` whatever the stage, including a unit that waits for a person (`[WAITING]`, `[REQUEST]`, a recorded decline), a delegation (`[DELEGATE]`) or a handoff choice. |
 | `1` | The command ran and reports a negative result: `validate` found invalid definitions or shared-stage differences (a definition file that cannot be loaded at all makes it exit `2`), `show` found problems in the definition, `envelope check` found malformed envelope files (`ENVELOPE_INVALID`), or `next` refused a unit whose bound stage schema changed (`WORKFLOW_DRIFT`). |
-| `2` | The command could not do its job: a usage error from the command line parser, an argument error (`ARGUMENT_INVALID`: a `-w` or `validate` path that does not exist, a malformed `--date`, `show` given both or neither of `REF` and `--unit`), and every other error code below (unreadable configuration, receipt, definition or anchor, a refused input, a lint run that could not execute, an unexpected error). |
+| `2` | The command could not do its job: a usage error from the command line parser, an argument error (`ARGUMENT_INVALID`: a `-w` or `validate` path that does not exist, a malformed `--date`, `show` given both or neither of `REF` and `--unit`, or `--anchor` without `--unit`), and every other error code below (unreadable configuration, receipt, definition or anchor, a refused input, a lint run that could not execute, an unexpected error). |
 
 A command that collects several problems (`validate`, `envelope check`) exits with the highest exit code among them. `show` only reports, so it exits `1` when its report lists any problem, whatever the problem's own code, and `2` only when it cannot run (an unknown workflow, an unreadable definition or configuration).
 
@@ -48,16 +50,16 @@ The library raises the same codes, one class per code. `WorkflowError` is the ba
 | `CONFIG_INVALID` | `devkit.core` `ConfigError` | `INPUT_ERROR` | `2` | `.devkit/config.toml` cannot be read or parsed (passed through unchanged) |
 | `WORKFLOW_CONFIG_INVALID` | `WorkflowConfigError` | `INPUT_ERROR` | `2` | the `[workflow]`, `[workflow.approvals]` or `[workflow.stages]` table is malformed (a subclass of the `devkit.core` `ConfigError`) |
 | `ARGUMENT_INVALID` | `devkit.core` `ArgumentError` | `INPUT_ERROR` | `2` | `-w/--workspace-root` or a `validate` path does not exist, `--date` is not `YYYY-MM-DD`, or `show` is given both or neither of `REF` and `--unit` |
-| `WORKFLOW_NOT_SELECTED`, `WORKFLOW_NOT_FOUND`, `WORKFLOW_INVALID` | `WorkflowNotSelectedError`, `WorkflowNotFoundError`, `WorkflowInvalidError` | `INPUT_ERROR` | `2` | no definition chosen, no id or file matches, or the chosen one fails validation (problems become `[DETAIL]` lines) |
+| `WORKFLOW_NOT_SELECTED`, `WORKFLOW_NOT_FOUND`, `WORKFLOW_INVALID` | `WorkflowNotSelectedError`, `WorkflowNotFoundError`, `WorkflowInvalidError` | `INPUT_ERROR` | `2` | no definition chosen (`new` without `--workflow` or `[workflow].default`; for a unit command, an unbound unit without a default, whose fix is `bind --unit <dir> --workflow <id>`), no id or file matches, or the chosen one fails validation (problems become `[DETAIL]` lines) |
 | `WORKFLOW_DEFINITION_INVALID` | `DefinitionError` | `INPUT_ERROR` | `2` | a definition file cannot be read or parsed (`parse_definition`, `load_definition`), or an id is defined twice; `validate` collects it as a load error |
 | `WORKFLOW_DEFINITION_INVALID`, `WORKFLOW_CHECK_INVALID`, `ROLE_UNKNOWN` | `DefinitionProblem`, `CheckReferenceProblem`, `RoleUnknownProblem` | `INPUT_ERROR` | `1` | collected by validation with `where` (`<stage>.<field>`): a problem in a loaded definition, a check reference that does not resolve, a role outside the vocabulary |
 | `SHARED_STAGE_MISMATCH` | `SharedStageMismatchError` | `INPUT_ERROR` | `1` | collected by a whole-workspace `validate`: stages that share an id but differ |
 | `WORKFLOW_ASSET_MISSING` | `WorkflowAssetMissingError` | `AUTO` | `2` | collected by discovery: a receipt-listed definition is missing from disk; `[FIX]` is `devkit sync` |
-| `WORKFLOW_CHECK_INVALID` | `CheckError` | `INPUT_ERROR` | `2` | a check reference is malformed, unregistered or collides (`parse_check`, `Registry`) |
+| `WORKFLOW_CHECK_INVALID` | `CheckError` | `INPUT_ERROR` | `2` | a check reference is malformed, unregistered, a duplicate or colliding declaration, or a `runner`/`human` check in `next[].when` (`parse_check`, `Registry`, `validate`) |
 | `WORKFLOW_CHECK_LOAD_FAILED` | `PluginError` | `MAINTENANCE` | `2` | a plugin check file failed to load, declares an invalid check, or a receipt `workflow-check` file is missing, unsafe or differs from its recorded hash (`[FIX]`: `devkit sync`, or `devkit override create` to keep an edit) |
 | `LAYOUT_INVALID`, `SLUG_INVALID` | `LayoutError`, `SlugError` | `INPUT_ERROR` | `2` | a layout template, directory or anchor file name is malformed (`validate_template`, `parse_layout_spec`; inside `[workflow]` it is `WORKFLOW_CONFIG_INVALID`); a unit slug does not match `[a-z0-9][a-z0-9-]*` |
 | `UNIT_NOT_FOUND`, `UNIT_EXISTS`, `ANCHOR_INVALID` | `UnitNotFoundError`, `UnitExistsError`, `AnchorInvalidError` | `INPUT_ERROR` | `2` | the unit directory has no anchor, already exists, or its frontmatter is unreadable (`list` reports the last one per unit under `error`) |
-| `ANCHOR_AMBIGUOUS`, `ANCHOR_MISMATCH` | `AnchorAmbiguousError`, `AnchorMismatchError` | `INPUT_ERROR` | `2` | several candidate anchor files exist in the unit (pass `--workflow`); the selected workflow declares a different anchor than the file that identifies the unit |
+| `ANCHOR_AMBIGUOUS`, `ANCHOR_MISMATCH` | `AnchorAmbiguousError`, `AnchorMismatchError` | `INPUT_ERROR` | `2` | several candidate anchor files exist in the unit (pass `--anchor FILE`); the selected workflow declares a different anchor than the file that identifies the unit, or than `--anchor` names |
 | `GIVEN_INVALID` | `GivenInvalidError` | `INPUT_ERROR` | `2` | a `--given` name is neither a gate nor a registered runner or human check |
 | `WORKFLOW_DRIFT` | `DriftError` | `BLOCKED` | `1` | the bound schema hash changed under in-flight work; `[FIX]` names the `bind` command |
 | `REQUEST_UNKNOWN` | `RequestUnknownError` | `INPUT_ERROR` | `2` | `answer --request` is not an open request of the unit (and not `feedback:*`); the details list the open ids |
@@ -154,7 +156,7 @@ When the workflow is complete and declares `next` candidates (and `approvals.han
 
 The other commands:
 
-- `show --format json`: the parsed document plus `hash`, `layout`, the effective `anchor`, `approvals`, `stages_off`, `ok` and `errors` (the definition's problems, with `where`). `show --unit <dir>` adds `binding` (`workflow`, `workflow_hash`, `workflow_history`, `drift`) and, in text, a `[BINDING: workflow=W hash=H drift=true|false]` line after the document.
+- `show --format json`: the parsed document plus `hash`, `layout`, the effective `anchor`, `approvals`, `stages_off`, `ok` and `errors` (the definition's problems, with `where`). `show --unit <dir>` describes the definition the unit is bound to (else `[workflow].default`), loaded unvalidated like `show <ref>` so its problems are reported, not raised, and adds `binding` (`workflow`, `workflow_hash`, `workflow_history`, `drift`) and, in text, a `[BINDING: workflow=W hash=H drift=true|false]` line after the document.
 - `validate --format json`: `{"ok", "roles_checked", "definitions": [{"id", "path", "ok", "hash", "errors"}], "errors", "notices"}`. A definition's own `errors` carry `where` (`WORKFLOW_DEFINITION_INVALID`, `WORKFLOW_CHECK_INVALID` or `ROLE_UNKNOWN`, exit `1`); the top-level `errors` hold the files that could not be loaded (`WORKFLOW_DEFINITION_INVALID`, `WORKFLOW_ASSET_MISSING`, exit `2`) and the shared-stage differences (`SHARED_STAGE_MISMATCH`, exit `1`). In text, each problem of a definition is a `[PROBLEM: <where>: <message>]` line and a shared-stage difference is `[INVALID: shared stage '<id>' differs between <a> and <b>: <field>]`.
 - `checks --format json`: `{"checks": [...]}`, the registry, plugin checks included.
 - `list --format json`: `{"units": [{"unit", "anchor", "status", "workflow", "workflow_hash", "history", "error"}]}` across every layout in use; the text form is `[UNIT: <dir> status=S workflow=W anchor=A]`, with `error="..."` for a unit whose anchor cannot be read (in JSON, the `ANCHOR_INVALID` advisory `to_dict()`). `--status <value>` keeps units whose anchor `status` equals a given value (repeatable) and `--exclude-status <value>` drops them; both are exact matches and nothing is excluded by default, so active units are `--exclude-status completed`.

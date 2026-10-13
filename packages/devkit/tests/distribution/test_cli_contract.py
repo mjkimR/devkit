@@ -209,7 +209,7 @@ def test_status_with_problems_exits_one_whatever_their_own_codes(
 
     problem = ConfigError("broken config")
     assert problem.exit_code == ExitCode.ERROR
-    report = SimpleNamespace(errors=(problem,), to_dict=lambda: {"errors": [problem.to_dict()]})
+    report = SimpleNamespace(errors=(problem,), notices=(), to_dict=lambda: {"errors": [problem.to_dict()]})
     monkeypatch.setattr("devkit.distribution.cli.get_project_status", lambda *args, **kwargs: report)
     result = _invoke("status", "-w", str(target))
     assert result.exit_code == int(ExitCode.FINDINGS)

@@ -9,7 +9,7 @@ The primary consumer of every `devkit` command is an AI coding agent that runs i
 3. **Codes, not prose.** Every condition worth reporting has a stable `UPPER_SNAKE` code. Messages explain; codes identify. Callers and tests branch on codes, never on message text.
 4. **Directives, not narration.** A condition the agent must act on carries an `[ACTION]` directive that says what to do and what not to do. Nothing relies on the agent inferring intent from a description.
 5. **Context budget.** The default output carries only what changes the agent's next step or must reach the user. Progress, timing, passed checks and diagnostics are logs, shown only under `-v`. A lasting condition that asks for nothing is announced once, when it appears, and stays visible as data afterwards ([protocol, section 8](../advisory/protocol.md#8-warnings-and-notices-in-practice)).
-6. **Deterministic.** The same state gives the same bytes: no colour, no emoji, no box drawing, no progress bars, no alignment tables, no output that changes with the terminal (TTY detection, width, locale).
+6. **Deterministic.** The same state gives the same bytes: no colour, no emoji, no box drawing, no progress bars, no alignment tables, no output that changes with the terminal (TTY detection, width, locale). stdout and stderr are always UTF-8 (a character UTF-8 cannot encode is written as its `\uXXXX` escape), and JSON is ASCII-only, with `\uXXXX` escapes.
 7. **Libraries never print.** Library functions return results and collected advisories, and raise `AdvisoryError`; only the CLI layer writes to stdout or stderr. An embedding caller (another tool, an MCP server, a test) gets the same information as data.
 
 ## 2. Channels
@@ -84,7 +84,7 @@ Every command takes the same three output options (`devkit.core.cli.output_optio
 
 ## 7. Exit Codes
 
-`0` success, `1` the command ran and reports a negative result, `2` it could not do its job; the full rules are in [Architecture Overview, section 4](overview.md#4-errors-exit-codes-and-platforms). Warnings and notices never change the exit code, except under `--strict` (section 6).
+`0` success, `1` the command ran and reports a negative result, `2` it could not do its job; the full rules are in [Architecture Overview, section 4](overview.md#4-errors-exit-codes-and-platforms). Warnings and notices never change the exit code, except under `--strict` (section 6). A command whose reader closes stdout early (`devkit ... | head`) stops writing and exits `2` without an advisory: its result was not delivered.
 
 ## 8. Logs (`INFO`)
 

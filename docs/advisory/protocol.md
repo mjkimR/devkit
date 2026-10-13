@@ -18,7 +18,7 @@ Every advisory has a **level**. The level decides whether the operation failed; 
 
 | Level | Headline | The operation | Exit code | `[ACTION]` |
 | --- | --- | --- | --- | --- |
-| `ERROR` | `[ERROR]` | did not do its job, or refused | the error's `exit_code` (`1` or `2`) | always; mode derived from the fields |
+| `ERROR` | `[ERROR]` | did not do its job, or refused | the error's `exit_code` (`1` or `2`, never `0`) | always; mode derived from the fields |
 | `WARNING` | `[WARN]` | succeeded, but something needs the user's attention | unchanged (`--strict` raises `0` to `1`) | always; mode `CONTINUE` |
 | `NOTICE` | `[NOTICE]` | succeeded; something is worth knowing | unchanged | recommended; mode `NOTE`; may be omitted (`brief`) |
 
@@ -58,7 +58,8 @@ Rules:
 
 - The headline is always present and always carries the code.
 - `[ACTION]` is always present for `ERROR` and `WARNING`. For `NOTICE` it is present unless the notice is `brief` **and** has no `fix`: a `[FIX]` line without a directive would read as an instruction to run it.
-- Every other line is omitted when its field is empty, and appears in the order above.
+- Every other line is omitted when its field is empty or blank, and appears in the order above.
+- Blank lines inside a value are dropped: a block never contains a blank line, and a value's first line is its first non-blank one.
 - Blocks follow each other without blank lines; the next headline starts the next block.
 - No colour, no emoji, no Markdown.
 
@@ -98,7 +99,7 @@ A notice, with and without its directive:
 
 | Field | Levels | Meaning |
 | --- | --- | --- |
-| `code` | all | Stable identifier (`UPPER_SNAKE_CASE`) that names the condition without string matching. Default `GENERAL_ERROR`. |
+| `code` | all | Stable identifier (`UPPER_SNAKE_CASE`) that names the condition without string matching. Default `GENERAL_ERROR`, which an empty code also becomes. |
 | `level` | all | `ERROR` (default), `WARNING` or `NOTICE`. |
 | `actor` | `ERROR` | Who takes the next step: `TOOL` (the agent itself runs the fix), `USER` (a human decides), `DEVELOPER` (code or input must be edited), `NONE` (nobody right now). |
 | `retry` | `ERROR` | `SAFE` (retry unchanged is safe), `AFTER_FIX` (safe only after the fix), `UNSAFE` (retry risks corruption or duplicate effects). |
@@ -170,7 +171,7 @@ BLOCKED — A deliberate guardrail refused this. Report it and stop.
 #### `AUTO`: deterministic machine fix available
 
 - **Use for**: a safe, idempotent remediation command exists (formatter, cache rebuild, regenerate lock, `devkit recover`).
-- **Set**: `actor = TOOL`, `retry = AFTER_FIX` (or `SAFE`), and `fix` with the exact command.
+- **Set**: `actor = TOOL`, `retry = AFTER_FIX` (or `SAFE`), and `fix` with the exact command. `fix` is required: the directive runs it, so an `AUTO` error without one is refused as a programming error.
 
 ```text
 AUTO — Run the [FIX] command once, then retry the operation once.
@@ -196,7 +197,7 @@ INTERACTION — Stop and ask the user. Do not retry, and do not
 ```text
 MAINTENANCE — A codebase defect or tool failure occurred.
               Report it and stop; repairing the code/tool is a separate task.
-              [TARGET] names the affected files.
+              [TARGET], when present, names the affected files.
 ```
 
 #### `DEFER`: not an error; retry later

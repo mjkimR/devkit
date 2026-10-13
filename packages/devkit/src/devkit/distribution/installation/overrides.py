@@ -18,7 +18,7 @@ from pathlib import Path
 from devkit.core.receipt import MANAGED_PATH, OVERRIDES_PATH, OverrideRecord
 from devkit.distribution.bundles.manifest import Asset, Bundle, source_files
 from devkit.distribution.content import sha256
-from devkit.distribution.installation.workspace import BASELINE
+from devkit.distribution.installation.workspace import BASELINE, checked_path
 
 
 @dataclass(frozen=True)
@@ -45,10 +45,15 @@ def baseline_rel(bundle: str, rel: str) -> str:
 
 
 def has_override(root: Path | None, bundle: str, rel: str) -> bool:
+    """Whether the project overrides ``rel`` of ``bundle``.
+
+    A symlink anywhere on the override path (``.devkit/overrides`` itself, the
+    bundle directory, the file) is ``UnsafeWorkspaceError``: an override is
+    project content and is never read from outside the project.
+    """
     if root is None:
         return False
-    path = root / override_rel(bundle, rel)
-    return path.is_file() and not path.is_symlink()
+    return checked_path(root, override_rel(bundle, rel)).is_file()
 
 
 def resolve_source(root: Path | None, bundle: Bundle, rel: str) -> tuple[Path, str]:

@@ -41,3 +41,15 @@ def config_value(cwd: Path, key: str) -> str | None:
         raise
     value = os.fsdecode(output).strip()
     return value or None
+
+
+def config_scope(cwd: Path, key: str) -> str | None:
+    """The scope (``local``, ``worktree``, ``global``, ``system``, ``command``) of a key's effective value."""
+    try:
+        output = run_git(cwd, "config", "--show-scope", "--get", key)
+    except GitError as exc:
+        if exc.returncode == 1:  # the key is not set
+            return None
+        raise
+    scope, _, _ = os.fsdecode(output).partition("\t")
+    return scope or None

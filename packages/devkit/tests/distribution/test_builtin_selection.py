@@ -149,8 +149,10 @@ def test_auto_select_is_reserved_for_the_devkit_distribution(tmp_path: Path, mon
     with discover_bundles() as found:
         assert found[0].builtin and found[0].auto_selected
     entry.dist.metadata["Name"] = "kit-content"
-    with pytest.raises(PackageError, match="auto_select is reserved"), discover_bundles():
-        pass
+    with discover_bundles() as found:
+        assert list(found) == []
+        assert isinstance(found.unusable["kit"], PackageError)
+        assert "auto_select is reserved" in found.unusable["kit"].message
 
 
 # --- the real installed distribution -------------------------------------------------

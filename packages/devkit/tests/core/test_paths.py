@@ -107,3 +107,10 @@ def test_resolve_within_with_symlinked_root(tmp_path: Path) -> None:
     link = tmp_path / "link"
     os.symlink(real, link)
     assert resolve_within(link, "a.txt") == real.resolve() / "a.txt"
+
+
+def test_a_symlink_loop_cannot_be_resolved(tmp_path: Path) -> None:
+    (tmp_path / "a").symlink_to(tmp_path / "b")
+    (tmp_path / "b").symlink_to(tmp_path / "a")
+    with pytest.raises(UnsafePathError, match=r"path cannot be resolved: a/x\.py"):
+        resolve_within(tmp_path, "a/x.py")

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import subprocess
@@ -21,6 +22,11 @@ def write_receipt(root: Path, assets: list[dict[str, object]], files: dict[str, 
     }
     path.write_text(json.dumps(data))
     return path
+
+
+def digests(root: Path, *rels: str) -> dict[str, str]:
+    """The SHA-256 of each ``root/rel``, keyed by ``rel``: the ``files`` argument of ``write_receipt``."""
+    return {rel: hashlib.sha256((root / rel).read_bytes()).hexdigest() for rel in rels}
 
 
 def git(root: Path, *args: str) -> str:

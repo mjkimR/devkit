@@ -15,8 +15,8 @@ from __future__ import annotations
 import inspect
 import os
 import tempfile
-from collections.abc import Sequence
-from dataclasses import dataclass
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 
 from devkit.advisory import AdvisoryError
@@ -25,10 +25,11 @@ from devkit.rules.engine.discovery import resolve_managed_rules
 from devkit.rules.engine.errors import PolicyError, RuleProblem, RulesDirError, RulesRunError, TargetError
 from devkit.rules.engine.evaluator import EvaluationResult, evaluate_rules
 from devkit.rules.engine.models import Phase, Rule, RuleContext, Violation
-from devkit.rules.engine.phases import promotion_notices, resolve_phases
+from devkit.rules.engine.phases import PhaseEntry, promotion_notices, resolve_phases
 from devkit.rules.engine.policy import validate_policy
 from devkit.rules.engine.registry import RuleRegistry, default_rule_registry
 from devkit.rules.engine.settings import SettingsResolver
+from devkit.rules.rules.base import guide_path
 from devkit.rules.workspace.cache import WorkspaceCache
 from devkit.rules.workspace.markdown import local_target
 from devkit.rules.workspace.snapshot import Snapshot, materialize_snapshot
@@ -111,6 +112,9 @@ class ProjectRun:
     rule, a rule file that fails to import); when there are any, no rule is
     evaluated. ``result.errors`` are policy and rule execution errors.
     ``context`` is ``None`` when there was nothing to evaluate (empty targets).
+    ``whole_workspace`` is ``False`` when explicit or snapshot targets limited
+    the run. ``guides`` maps rule IDs to their guide documents, resolved while
+    the workspace existed.
     """
 
     workspace_root: Path
@@ -121,6 +125,8 @@ class ProjectRun:
     context: RuleContext | None
     result: EvaluationResult
     load_errors: tuple[RuleProblem, ...] = ()
+    whole_workspace: bool = True
+    guides: Mapping[str, Path] = field(default_factory=dict)
 
     @property
     def rules(self) -> list[Rule]:
@@ -137,11 +143,23 @@ class ProjectRun:
         return self.result.blocking_violations
 
     @property
-    def notices(self) -> list[AdvisoryError]:
-        """Notices of a completed run (``RULES_PROMOTION_READY``); none when the run could not complete."""
-        if self.errors:
+    def transitions(self) -> list[PhaseEntry]:
+        """Phase entries whose remaining counts this run measured.
+
+        Empty when the run could not complete or did not cover the whole
+        workspace: violations counted over selected files say nothing about
+        the rest, so ``remaining=0`` would wrongly report a transition as ready.
+        """
+        if self.errors or not self.whole_workspace:
             return []
-        entries = resolve_phases(self.rules, self.config.phase_overrides)
+        return resolve_phases(self.rules, self.config.phase_overrides)
+
+    @property
+    def notices(self) -> list[AdvisoryError]:
+        """Notices of a completed whole-workspace run (``RULES_PROMOTION_READY``); see ``transitions``."""
+        entries = self.transitions
+        if not entries:
+            return []
         sources = {rule.id: path for rule in self.rules if (path := _source(rule, self.workspace_root))}
         return promotion_notices(entries, self.phase, self.result.violations, sources)
 
@@ -180,7 +198,8 @@ def expand_targets(workspace_root: Path, cache: WorkspaceCache, targets: Sequenc
     Expansion lists what ``WorkspaceCache.find_files`` lists (regular files,
     skipping ignored directories). Relative targets are taken from
     ``workspace_root``. Anything that is not an existing file or directory
-    inside the workspace raises ``TargetError``.
+    inside the workspace, including a symlink that resolves outside it,
+    raises ``TargetError``.
     """
     files: list[str] = []
     for target in targets:
@@ -190,17 +209,17 @@ def expand_targets(workspace_root: Path, cache: WorkspaceCache, targets: Sequenc
             absolute = absolute.resolve()
         if not absolute.is_relative_to(workspace_root):
             raise TargetError(f"{target} is outside the workspace {workspace_root}", target_files=[str(target)])
+        if (absolute.is_dir() or absolute.is_file()) and not absolute.resolve().is_relative_to(workspace_root):
+            raise TargetError(
+                f"{target} is a symlink that resolves outside the workspace {workspace_root}",
+                target_files=[str(target)],
+            )
         if absolute.is_dir():
             for found in cache.find_files(absolute, extensions=None):
                 rel = found.relative_to(workspace_root).as_posix()
                 if rel not in files:
                     files.append(rel)
         elif absolute.is_file():
-            if not absolute.resolve().is_relative_to(workspace_root):
-                raise TargetError(
-                    f"{target} is a symlink that resolves outside the workspace {workspace_root}",
-                    target_files=[str(target)],
-                )
             relative = absolute.relative_to(workspace_root).as_posix()
             if relative not in files:
                 files.append(relative)
@@ -263,6 +282,8 @@ def _run(
         context=context,
         result=result,
         load_errors=project.load_errors,
+        whole_workspace=targets is None,
+        guides={rule.id: path for rule in project.rules if (path := guide_path(rule)) is not None},
     )
 
 

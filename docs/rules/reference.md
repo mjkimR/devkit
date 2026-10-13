@@ -82,7 +82,7 @@ parseable:
 - `check` and `fix`: a `[SNAPSHOT: ...]` line first in a snapshot gate; one
   `[VIOLATION: ...]` per finding (`status` is `open`, `fixable` or `fixed`;
   `remediation` and `guide` appear when the rule gives them); a hygiene run's
-  `[PHASE_OVERRIDE: ...]`/`[PROMOTION: ...]` lines
+  `[PHASE_OVERRIDE: ...]`/`[PROMOTION: ...]` lines (whole-workspace runs only)
   ([Evaluation Lifecycle, section 4](evaluation-lifecycle.md#4-phase-transitions-overrides-and-promotions))
   and a `RULES_PROMOTION_READY` notice on stderr when one has `remaining=0`;
   then `[SUMMARY: errors=N warnings=N infos=N fixed=N]` counting unfixed
@@ -271,7 +271,7 @@ are returned in `RuleRegistry.errors`, `ProjectRun.load_errors` and
 | Class | Code | Mode | When |
 | --- | --- | --- | --- |
 | `RulesConfigError` | `RULES_CONFIG_INVALID` | `INPUT_ERROR` | `[rules]` in `.devkit/config.toml` is malformed (raised; a subclass of the core `ConfigError`, which is raised unchanged as `CONFIG_INVALID` when the file itself cannot be read or parsed) |
-| `TargetError` | `RULES_TARGET_INVALID` | `INPUT_ERROR` | an explicit target is outside the workspace or does not exist (raised) |
+| `TargetError` | `RULES_TARGET_INVALID` | `INPUT_ERROR` | an explicit target is outside the workspace (directly or through a symlink) or does not exist (raised) |
 | `RulesDirError` | `RULES_DIR_INVALID` | `INPUT_ERROR` | a snapshot run cannot read `--rules-dir` from the snapshot: outside the repository or not in the snapshot (raised) |
 | `SnapshotError` | `RULES_SNAPSHOT_FAILED` | `INPUT_ERROR` (not a work tree top level, unknown `--base`) or `MAINTENANCE` (Git failure) | a Git snapshot cannot be taken or materialized (raised) |
 | `PinnedWriteError` | `RULES_PINNED_WRITE_REFUSED` | `BLOCKED` | a fixer tried to write a receipt-pinned copy under `.devkit/managed/` or `.devkit/overrides/` |
@@ -293,7 +293,7 @@ Warnings and notices are returned, never raised, at level `WARNING` or
 
 | Code | Level | When |
 | --- | --- | --- |
-| `RULES_PROMOTION_READY` | `NOTICE` | a `hygiene` run finds a phase override or promotion with `remaining=0`; `target_files` names the files to edit (`.devkit/config.toml` for an override, the file declaring the rule for a promotion), `fix` the edit (drop the `[rules.phase_overrides]` entry, or switch the declared phase to its `promote_to`) |
+| `RULES_PROMOTION_READY` | `NOTICE` | a whole-workspace `hygiene` run finds a phase override or promotion with `remaining=0`; `target_files` names the files to edit (`.devkit/config.toml` for an override, the file declaring the rule for a promotion), `fix` the edit (drop the `[rules.phase_overrides]` entry, or switch the declared phase to its `promote_to`) |
 | any collected problem's code | `WARNING` | `explain` reports a loading or policy problem that does not concern the described rule (`with_level`; the code is unchanged) |
 
 Rule violations of severity `warning` or `info` are findings, not advisories:
@@ -306,7 +306,9 @@ they are results on stdout and never affect `--strict`.
   destinations, titles, balanced parentheses, escapes, code spans and fences);
   reference-style links and autolinks are not checked, and links spanning
   several lines are not recognized. A destination is decoded (percent-encoding,
-  escapes) and its `?query` and `#fragment` are ignored when resolving the file.
+  escapes) and its `?query` and `#fragment` are ignored when resolving the file;
+  a repaired destination percent-encodes `%`, `\`, `#`, `?`, `<` and `>` so it
+  decodes back to the candidate's path.
 - Settings fields are scalars and string lists; nested tables are not supported.
 - Snapshot gates materialize the whole tree, so time and disk use grow with
   repository size; blobs are streamed from one `git cat-file --batch` process

@@ -21,9 +21,11 @@ description: Read before using, changing or troubleshooting devkit-managed asset
 `uv run devkit sync` rebuilds the generated paths from the installed packages
 and the configuration; edit sources and configuration, never generated copies.
 `sync` halts when a managed file that is still selected was modified, or when an
-unmanaged file sits where it must write; it never deletes foreign files. A
-modified file that is no longer selected is left in place and reported as an
-`ORPHAN_LEFT` warning; ask the user before removing it. Warnings (`[WARN]`
+unmanaged file with other content sits where it must write, naming every such
+file in one `SYNC_CONFLICT`; an unmanaged file identical to what it would write
+is adopted as it is. It never deletes foreign files. A modified file that is no
+longer selected is left in place and reported as an `ORPHAN_LEFT` warning; ask
+the user before removing it. Warnings (`[WARN]`
 blocks on stderr: orphans, override drift, stray files under `.devkit/managed/`)
 and notices (`[NOTICE]`) never fail a sync, but tell the user about warnings.
 
@@ -31,7 +33,8 @@ The root `AGENTS.md` block is the orientation every session reads: installed
 bundles, the once-per-bundle `get-context` rule, the generated entry skills and
 the bundles' guidance lines. It is regenerated from the selection and
 hash-guarded like a managed file: write project guidance outside the markers.
-`guidance_block = false` in `.devkit/config.toml` turns it off.
+`guidance_block = false` in `.devkit/config.toml` turns it off; a block edited
+by hand is then left in place with an `ORPHAN_LEFT` warning.
 
 Seeded files are scaffolding a bundle wrote on first sync (a docs tree, a
 glossary, a policy file). Edit them freely: sync never compares, updates or
@@ -118,15 +121,18 @@ uv run devkit override remove <bundle>:<asset>   # back to the pristine upstream
 `create` copies every file of the asset (all files of a skill directory). Each
 override file replaces its upstream file in projections, `get-context` and
 playbook search; unchanged copies still follow upstream only through `accept`.
-Drift is reported when any upstream file of the asset changes. Only assets of
+Drift is reported when any upstream file of the asset changes; `create --force`
+replaces the override with the current upstream and makes that the baseline.
+An asset that is deselected keeps its tracked override while the override files
+remain, so drift is still reported once it is selected again. Only assets of
 selected bundles can be overridden; seeded files are edited in place, and the
 repository's own assets in their source bundle (see `in-repo-bundle`).
 
 ## Checking the installed state
 
 `uv run devkit status` reports, without changing anything, how the workspace
-compares with the receipt: missing, modified or execute-bit-changed managed
-files, override drift, the guidance block state, seeded files that no longer
+compares with the receipt: missing, modified, execute-bit-changed or symlinked
+managed files, override drift of deployed assets, the guidance block state, seeded files that no longer
 exist, a pending journal, and whether the running `devkit` version wrote the
 receipt. Whatever needs acting on is listed under `errors` and rendered as an
 advisory block on stderr; follow its `[ACTION]` and `[FIX]`. It exits 1 when

@@ -110,8 +110,14 @@ def project_lock(root: Path, *, shared: bool = False) -> Iterator[None]:
 
     Writers take it exclusively and fail at once when it is held. Readers
     (``shared=True``) share it with each other and wait up to
-    ``READ_LOCK_TIMEOUT`` seconds for a writer to finish.
+    ``READ_LOCK_TIMEOUT`` seconds for a writer to finish. A reader of a
+    project without ``.devkit/`` takes no lock: there is nothing to read yet,
+    and taking it would create the directory.
     """
+    devkit_dir = root / LOCK.split("/", 1)[0]
+    if shared and not devkit_dir.exists() and not devkit_dir.is_symlink():
+        yield
+        return
     path = checked_path(root, LOCK)
     path.parent.mkdir(parents=True, exist_ok=True)
     try:

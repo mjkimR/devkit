@@ -18,7 +18,7 @@ from devkit.rules import (
     load_project_rules,
     run_project_rules,
 )
-from testsupport.rules import init_repo, write_receipt
+from testsupport.rules import digests, init_repo, write_receipt
 
 BROKEN = "[broken](missing.md)\n"
 
@@ -154,6 +154,7 @@ def test_rules_dir_and_receipt_rules_are_loaded_after_builtins(tmp_path: Path) -
     write_receipt(
         tmp_path,
         [{"bundle": "team", "id": "rules", "kind": "rule", "paths": [".devkit/managed/team/rules/managed.py"]}],
+        digests(tmp_path, ".devkit/managed/team/rules/managed.py"),
     )
     run = run_project_rules(tmp_path, rules_dir=tmp_path / "extra")
     ids = [rule.id for rule in run.rules]
@@ -259,6 +260,17 @@ def test_directory_targets_skip_symlinks_that_leave_the_workspace(tmp_path: Path
     assert _files(run.result.violations) == ["docs/a.md"]
     with pytest.raises(TargetError, match="symlink that resolves outside"):
         run_project_rules(root, targets=["docs/out.md"])
+
+
+def test_directory_symlink_targets_resolving_outside_are_refused(tmp_path: Path) -> None:
+    root = (tmp_path / "ws").resolve()
+    _write(root, "README.md", "x\n")
+    _write(tmp_path, "out/a.md", BROKEN)
+    (root / "linkdir").symlink_to("../out")
+    for target in ["linkdir", str(root / "linkdir")]:
+        with pytest.raises(TargetError, match="symlink that resolves outside") as refused:
+            run_project_rules(root, targets=[target])
+        assert refused.value.code == "RULES_TARGET_INVALID"
 
 
 def test_whole_workspace_runs_skip_git_ignored_and_devkit_files(tmp_path: Path) -> None:

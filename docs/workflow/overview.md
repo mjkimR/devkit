@@ -30,7 +30,7 @@ definitions_dir = ".devkit/workflows" # where workflow definition files live
 default = "direct-delivery"           # workflow id used by `new` when --workflow is omitted, and for unbound units
 ```
 
-- `unit_path` is a Python `str.format` template with the placeholders `{slug}` and `{date}`; `{date}` accepts a `strftime` spec such as `{date:%Y%m%d}`, and a `/` inside the spec (`{date:%Y/%m}`) creates directory levels. `{slug}` is mandatory. Absolute paths, `..` and backslashes are rejected.
+- `unit_path` is a Python `str.format` template with the placeholders `{slug}` and `{date}`; `{date}` accepts a `strftime` spec such as `{date:%Y%m%d}`, and a `/` inside the spec (`{date:%Y/%m}`) creates directory levels. `{slug}` is mandatory. Absolute paths, `..` and backslashes are rejected, also when a `{date}` spec would render them (`{date:/abs/%Y}`); `new` refuses a unit directory that resolves outside `work_dir` through a symbolic link (`LAYOUT_INVALID`).
 - Discovery replaces each placeholder with `*` (one per directory level it renders), globs under `work_dir` and keeps directories that contain the anchor file. Nothing is parsed back out of a path; identity lives in the anchor's frontmatter.
 - specrig's layout, for example, is `work_dir = "specs"`, `unit_path = "{date:%Y-%m}/{date:%Y%m%d}-{slug}"`, `anchor = "spec.md"`.
 - The default `work_dir` is under `.devkit/transient/`, which consumer repositories are expected to ignore in Git. Choose a tracked path when review envelopes and approval evidence must travel with pull requests and across machines.
@@ -51,7 +51,7 @@ layout:
 
 - `new --workflow incubate` creates the unit under the definition's layout and writes its anchor; `[UNIT: ...]` names the anchor.
 - `list` discovers units under every distinct layout in use (the project default plus each discovered definition's) and prints the anchor per row.
-- `next`, `bind`, `handoff`, `requests`, `answer`, `return` and `envelope` take a unit directory. With `--workflow`, that definition's anchor must exist there. Without it, the engine looks for the project anchor and then every anchor a discovered definition declares: exactly one must be present. None is `UNIT_NOT_FOUND`; more than one is `ANCHOR_AMBIGUOUS`, resolved by passing `--workflow`. The binding (or the configured default) then selects the workflow, whose anchor must be the file that was found; otherwise `ANCHOR_MISMATCH` names both.
+- `next`, `bind`, `handoff`, `requests`, `answer`, `return`, `show --unit` and `envelope` take a unit directory. With `--workflow` (`next`, `bind`), that definition's anchor must exist there. Without it, the engine looks for the project anchor and then every anchor a discovered definition declares: exactly one must be present. None is `UNIT_NOT_FOUND`; more than one is `ANCHOR_AMBIGUOUS`, resolved by passing `--anchor FILE` (every command above except `envelope`, which only needs some anchor to be present). The binding (or the configured default) then selects the workflow, whose anchor must be the file that was found; otherwise `ANCHOR_MISMATCH` names both, and its fix is renaming the anchor or `bind --workflow <id>` with a workflow whose anchor is the found file.
 - Aliases such as `anchor-exists` resolve against the definition's own anchor, in validation and in evaluation. Changing a layout never causes drift.
 - `handoff` refuses a candidate whose anchor differs from the unit's (`HANDOFF_LAYOUT_MISMATCH`). Moving a unit into another layout and renaming its anchor is the caller's job (a methodology layer such as specrig's proposal handoff); `bind --workflow <id>` then records the new binding.
 
@@ -88,7 +88,7 @@ integration = "ask"
 | `auto` | The gate is satisfied by policy. The stage passes once its other exit checks hold; while it is current, `[GATE: <gate> policy=auto satisfied=yes source=policy]` makes the delegation visible. |
 | `off` | The stage is skipped and reported as `[SKIPPED: <id> reason=approvals.<gate>=off]`. |
 
-Under `ask` the answer is a decision record under `<unit>/decisions/`, written by `devkit workflow answer` or by a host UI; `--given` is an assertion for the current invocation and is not stored. The CLI never infers approval from conversation. An approval belongs to the workflow segment it was given in, and a `return` to an earlier stage voids the approvals of that stage and later ones ([Human Interaction Contract](human-interaction.md#5-how-the-engine-applies-answers)). Raising or lowering a gate is a change to this table only; the workflow definition does not change.
+Under `ask` the answer is a decision record under `<unit>/decisions/`, written by `devkit workflow answer` or by a host UI; `--given` is an assertion for the current invocation and is not stored. The CLI never infers approval from conversation. An approval belongs to the workflow segment and the stage it was given in (a gate shared by two stages is asked in each), and a `return` to an earlier stage voids the approvals of that stage and later ones ([Human Interaction Contract](human-interaction.md#5-how-the-engine-applies-answers)). Raising or lowering a gate is a change to this table only; the workflow definition does not change.
 
 ### Stage Policy
 

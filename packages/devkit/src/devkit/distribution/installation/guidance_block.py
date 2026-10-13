@@ -143,7 +143,12 @@ def compose(text: str | None, block: str) -> str:
 
 
 def strip(text: str) -> str | None:
-    """Remove the block; ``None`` means nothing but the block was in the file."""
+    """Remove the block; ``None`` means nothing but the block was in the file.
+
+    Only the separator ``compose`` adds goes with it: text on both sides stays
+    apart by a blank line when one stood next to the block, so paragraphs
+    around it never merge.
+    """
     span = _locate(text)
     if span is None:
         return text
@@ -151,8 +156,12 @@ def strip(text: str) -> str | None:
     before, after = text[: span[0]], text[span[1] :]
     if after.startswith(newline):
         after = after[len(newline) :]
-    head = before.rstrip("\r\n")
-    remainder = head + (newline if head else "") + after.lstrip("\r\n")
+    head, tail = before.rstrip("\r\n"), after.lstrip("\r\n")
+    if head and tail:
+        blank = before.endswith(newline * 2) or after.startswith(newline)
+        remainder = head + newline * (2 if blank else 1) + tail
+    else:
+        remainder = head + newline if head else tail
     if remainder.strip() == "":
         return None
     if not remainder.endswith("\n"):

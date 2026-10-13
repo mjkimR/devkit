@@ -71,11 +71,15 @@ def resolve_within(root: Path, rel: str | PurePosixPath) -> Path:
     ``rel`` is validated with ``normalize_relpath`` first. The returned path is
     fully resolved (symlinks followed; components that do not exist yet are
     kept as given). Raises ``UnsafePathError`` when the resolved path is not
-    ``root`` itself or inside it, as when a symlink points elsewhere.
+    ``root`` itself or inside it, as when a symlink points elsewhere, or when
+    it cannot be resolved (a symlink loop, an unreadable directory).
     """
     relative = normalize_relpath(rel if isinstance(rel, str) else rel.as_posix())
-    base = root.resolve()
-    resolved = base.joinpath(*relative.parts).resolve()
+    try:
+        base = root.resolve()
+        resolved = base.joinpath(*relative.parts).resolve()
+    except (RuntimeError, OSError) as exc:  # Python 3.12 raises RuntimeError for a symlink loop
+        raise UnsafePathError(f"path cannot be resolved: {relative}: {exc}") from exc
     if not resolved.is_relative_to(base):
         raise UnsafePathError(f"path resolves outside {base}: {relative}")
     return resolved

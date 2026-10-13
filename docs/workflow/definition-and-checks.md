@@ -73,7 +73,7 @@ Prose for humans and agents. Not parsed.
 | `title` | no | Display title. |
 | `status` | no | `active` or `draft`; informational. |
 | `schema_version` | yes | Must be the integer `1`. |
-| `checks` | no | Extra `runner` or `human` checks the workflow declares. Each has `name` (`[a-z][a-z0-9-]*`), `class` and `description`, and nothing else. Names must not collide with built-in or plugin checks, nor with a gate of the workflow (so `--given` stays unambiguous). |
+| `checks` | no | Extra `runner` or `human` checks the workflow declares. Each has `name` (`[a-z][a-z0-9-]*`), `class` and `description`, and nothing else. Names must be unique, and must not collide with built-in or plugin checks, nor with a gate of the workflow (so `--given` stays unambiguous). |
 | `stages` | yes | Ordered stage list, at least one. |
 | `next` | no | Workflows this one may hand a completed unit to. See [Handoff Candidates](#handoff-candidates). |
 | `layout` | no | Mapping with any of `work_dir`, `unit_path`, `anchor`; each overrides the `[workflow]` default for this workflow's units and is validated like the configuration key. See [Per-Definition Layout](overview.md#per-definition-layout). |
@@ -95,7 +95,7 @@ Prose for humans and agents. Not parsed.
 | `isolation` | string | `none`, `preferred`, `required`. A non-developer role with isolation other than `none` yields `[DELEGATE]`. |
 | `returns` | list of `{to, when}` | Stages this stage may return to and why. `to` must name a stage in the same document. Taking a return is `devkit workflow return --to <stage>` ([How the Engine Applies Answers](human-interaction.md#5-how-the-engine-applies-answers)). |
 
-Unknown document or stage keys, malformed or duplicate ids, malformed gate names, unregistered checks, malformed check invocations, a `file` argument outside the unit directory (absolute or with `..`), unknown `returns.to` targets, invalid `isolation` values and unknown roles are validation problems, which `devkit workflow validate` reports with the stage id and field. A value of the wrong type (`optional: "false"`, `role: 3`), an unknown key inside a `returns`, `checks` or `next` item, and a malformed `layout` mapping are structural errors reported with the file.
+Unknown document or stage keys, malformed or duplicate ids, malformed gate names, duplicate or colliding declared checks (each reported once; the other declared checks stay usable), unregistered checks, `runner` or `human` checks in a `next` candidate's `when`, malformed check invocations, a `file` argument outside the unit directory (absolute or with `..`), unknown `returns.to` targets, invalid `isolation` values and unknown roles are validation problems, which `devkit workflow validate` reports with the stage id and field. A value of the wrong type (`optional: "false"`, `role: 3`), an unknown key inside a `returns`, `checks` or `next` item, and a malformed `layout` mapping are structural errors reported with the file.
 
 ### Shared Stages
 
@@ -115,7 +115,7 @@ next:
 | Field | Type | Meaning |
 | --- | --- | --- |
 | `workflow` | string | Id of the candidate definition. Must not be this workflow; must exist in the workspace (`validate` and `show` report an unknown id). |
-| `when` | list of checks | Preconditions evaluated against the unit, in the same syntax as `exit`. A candidate is *eligible* when every check holds; an empty list is always eligible. |
+| `when` | list of checks | Preconditions evaluated against the unit, in the same syntax as `exit`. A candidate is *eligible* when every check holds; an empty list is always eligible. Only checks the engine evaluates (`disk`, `lint`, `plugin`) are allowed: a `runner` or `human` check is a validation problem, since nothing can satisfy it while a handoff is chosen. |
 | `recommended` | bool | Shown to the person choosing; informational. |
 
 Eligibility is computed from checks so that an automatic handoff is deterministic; whether a person or the engine chooses is the [`handoff` gate](overview.md#the-handoff-gate) policy. The candidate's own first stage then evaluates the unit's existing files, so a candidate whose entry checks require earlier artifacts is naturally filtered by `when`.
@@ -133,7 +133,7 @@ A check reference is `name` or `name(arg1 arg2 ...)`. Arguments are whitespace-s
 | `disk` | the engine, from files in the unit directory and Git | the primitive holds |
 | `lint` | the engine, by running `devkit.rules` | no violation in the unit's files |
 | `runner` | an external runner (CI); declared only | named in `--given` |
-| `human` | a person; declared only | an accepted `check:<name>` decision record of the current segment, or named in `--given` |
+| `human` | a person; declared only | an accepted `check:<name>` decision record of the current segment for the stage being evaluated, or named in `--given` |
 | `plugin` | the engine, by calling a loaded plugin check | the plugin's `evaluate` returns a satisfied result |
 
 ### Primitives
@@ -187,7 +187,7 @@ class HasWord(BaseCheck):
 - A loaded check is listed by `checks` with class `plugin`, resolved by `validate` like a primitive (argument count must match `params`), and evaluated by `next`. A check that raises yields an unsatisfied, evaluated result whose detail starts with `check failed:`; a result built with another name or class is normalized.
 - Files under `checks_dir` whose name starts with `_` or `.` are skipped; a receipt-listed file is loaded whatever its name.
 - Loading is atomic per file: a file that fails to import, defines a check with an invalid `name` or `params`, or defines a name an earlier file already defined contributes none of its checks and is `WORKFLOW_CHECK_LOAD_FAILED` (`PluginError`, `MAINTENANCE`), never a silent skip.
-- Receipt-listed files are found and verified first with `devkit.core.receipt.verified_asset_files`, as rules and gates are: a file that is missing, resolves outside the project or differs from the SHA-256 the receipt records is `WORKFLOW_CHECK_LOAD_FAILED` with the fix `devkit sync` (restore) or `devkit override create <bundle>:<asset>` (keep the edit); a file without a record (a project override) loads as it is.
+- Receipt-listed files are found and verified first with `devkit.core.receipt.verified_asset_files`, as rules and gates are: a file that is missing, resolves outside the project or differs from the SHA-256 the receipt records is `WORKFLOW_CHECK_LOAD_FAILED` with the fix `devkit sync` (restore) or `devkit override create <bundle>:<asset>` (keep the edit); only a project override under `.devkit/overrides/` may lack a record and then loads as it is; any other file without one is refused the same way.
 - A definition's declared `runner`/`human` check may not reuse a plugin's name.
 
 ### Implicit Gate Check
@@ -204,7 +204,7 @@ workflow_hash: sha256:74bc...
 workflow_history: [{workflow: triage, hash: 'sha256:a017...', completed: '2026-10-13', last_decision: 2}]
 ```
 
-Binding updates replace the whole value of the keys they write, including every line of a block-style value, and keep every other frontmatter line and the body. `last_decision` is the highest decision sequence number when the segment ended; decision records up to it belong to finished segments. After a handoff, `next` evaluates the new workflow from its first stage against the unit's files; finished segments are never re-evaluated, and drift applies to the current binding only.
+Binding updates replace the whole value of the keys they write, including every line of a block-style value, and keep every other frontmatter line and the body. An anchor without frontmatter (read as unbound) gets a block holding the binding. The anchor is replaced atomically (a temporary file in its directory, with its permission bits), so a failed write leaves it intact; a `handoff` whose anchor cannot be rewritten removes the decision record it wrote for `--workflow`. `last_decision` is the highest decision sequence number when the segment ended; decision records up to it belong to finished segments. After a handoff, `next` evaluates the new workflow from its first stage against the unit's files; finished segments are never re-evaluated, and drift applies to the current binding only.
 
 On `next` (the policy lives in the library, `Workspace.evaluate_unit`):
 

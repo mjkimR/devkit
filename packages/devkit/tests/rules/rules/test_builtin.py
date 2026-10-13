@@ -151,3 +151,19 @@ def test_guide_path_for_classes_without_a_source_file() -> None:
     floating = type("Floating", (FileLengthRule,), {"__module__": "not_loaded_anywhere"})
     assert guide_path(FileLengthRule()) is not None
     assert guide_path(floating()) is None
+
+
+def test_fix_encodes_candidate_names_that_link_syntax_would_alter(tmp_path: Path) -> None:
+    encoded = {
+        "c#sharp.md": "c%23sharp.md",
+        "50%off.md": "50%25off.md",
+        "why?.md": "why%3F.md",
+        "back\\slash.md": "back%5Cslash.md",
+        "a<b>.md": "a%3Cb%3E.md",
+    }
+    for name in encoded:
+        write(tmp_path, f"docs/{name}", "x\n")
+    source = write(tmp_path, "a.md", "".join(f"[x](old/{link})\n" for link in encoded.values()))
+    assert MarkdownLinkRule().fix(RuleContext(workspace_root=tmp_path)) == ["a.md"]
+    assert source.read_text() == "".join(f"[x](docs/{link})\n" for link in encoded.values())
+    assert MarkdownLinkRule().check(RuleContext(workspace_root=tmp_path)) == []

@@ -80,7 +80,7 @@ def envelope_new_cmd(
     """
     ws = workspace(workspace_root)
     unit_dir = ws.unit_path(unit)
-    ws.locate_anchor(unit_dir)
+    ws.present_anchors(unit_dir)
     authoring = any((status is not None, summary is not None, assumptions, unverified, checks, base, head)) or any(
         (findings_file, source, resolve, waive)
     )
@@ -126,7 +126,7 @@ def envelope_check_cmd(workspace_root: str | None, unit: str, output_format: str
     """Report every envelope file of a unit and any contract violation (exit 1 when a file is malformed)."""
     ws = workspace(workspace_root)
     unit_dir = ws.unit_path(unit)
-    ws.locate_anchor(unit_dir)
+    ws.present_anchors(unit_dir)
     envelopes = load_envelopes(unit_dir)
     loaded = envelopes.all()
     errors = sorted(envelopes.errors, key=lambda e: e.file)

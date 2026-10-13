@@ -2,8 +2,8 @@
 
 A ``subagent`` asset may ship native files per agent (``variants``) or one
 Markdown contract (``source``) whose frontmatter declares the role, its
-description and a ``hosts`` table with one block per agent (``claude-code``,
-``codex``, ``antigravity``). Each block carries
+description and a ``hosts`` table with one block for every agent
+(``claude-code``, ``codex``, ``antigravity``). Each block carries
 a ``status`` and only host-native keys from an allowlist; projection is a
 deterministic rendering of that block, never a heuristic conversion. A host
 with ``status: unsupported`` gets no file. The body is the role's prompt.
@@ -126,6 +126,11 @@ def read_contract(data: bytes, context: str, asset_id: str | None = None) -> Con
                     f"{context}: hosts.{name}.{key} must be a string, integer, boolean or list of strings"
                 ) from None
         hosts[name] = HostBlock(status, tuple(settings))
+    if missing := sorted(ALLOWED_KEYS.keys() - hosts.keys()):
+        raise BundleError(
+            f"{context}: hosts must name every agent; missing {missing}",
+            fix="Add a hosts block for each missing agent; `status: unsupported` gives a host no file",
+        )
     if not body.strip():
         raise BundleError(f"{context}: subagent contract body (the prompt) is empty")
     return Contract(role, title.strip(), description.strip(), skill, hosts, body, extensions)
@@ -167,7 +172,7 @@ def render_projection(agent: str, contract: Contract, contract_path: str) -> byt
 def _render_markdown(
     contract: Contract, block: HostBlock, description: str, prompt: str, fixed: tuple[tuple[str, Any], ...] = ()
 ) -> bytes:
-    lines = ["---", f"name: {contract.role}", f"description: {_yaml_quote(description)}"]
+    lines = ["---", f"name: {_yaml_scalar(contract.role)}", f"description: {_yaml_quote(description)}"]
     lines.extend(f"{key}: {_yaml_value(value)}" for key, value in (*fixed, *block.settings))
     lines.append("---")
     return ("\n".join(lines) + "\n" + prompt).encode()

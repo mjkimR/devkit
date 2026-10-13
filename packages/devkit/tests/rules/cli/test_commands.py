@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 from devkit.rules.cli import cli
-from testsupport.rules import write_receipt
+from testsupport.rules import digests, write_receipt
 
 
 def test_cli_help() -> None:
@@ -137,6 +137,17 @@ def test_cli_phase_override_reports_remaining_zero(tmp_path: Path) -> None:
     assert [n["code"] for n in json.loads(as_json.stdout)["notices"]] == ["RULES_PROMOTION_READY"]
     quiet = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--phase", "hygiene", "-q"])
     assert quiet.exit_code == 0 and quiet.stderr == ""
+
+
+def test_cli_targeted_hygiene_run_reports_no_transition(tmp_path: Path) -> None:
+    _broken_link_workspace(tmp_path)
+    (tmp_path / "b.md").write_text("# fine\n", encoding="utf-8")
+    _write_config(tmp_path, '[rules.phase_overrides]\nRULE-markdown-link = "hygiene"\n')
+    targeted = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--phase", "hygiene", "b.md"])
+    assert targeted.exit_code == 0, targeted.output
+    assert "PHASE_OVERRIDE" not in targeted.stdout and "RULES_PROMOTION_READY" not in targeted.stderr
+    as_json = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--phase", "hygiene", "b.md", "--format", "json"])
+    assert json.loads(as_json.stdout)["notices"] == []
 
 
 def test_cli_json_output_stays_a_violation_list_with_effective_phase(tmp_path: Path) -> None:
@@ -331,6 +342,7 @@ class NoTodoRule(BaseRule):
     write_receipt(
         tmp_path,
         [{"bundle": "team", "id": "rules", "kind": "rule", "paths": [".devkit/managed/team/rules/no_todo.py"]}],
+        digests(tmp_path, ".devkit/managed/team/rules/no_todo.py"),
     )
     (tmp_path / "notes.md").write_text("TODO\n")
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--format", "json"])
@@ -480,6 +492,20 @@ def test_cli_staged_gate_loads_ignored_managed_rules_pinned_by_the_receipt(tmp_p
     result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "--format", "json"])
     assert result.exit_code == 1, result.output
     assert [v["rule_id"] for v in json.loads(result.stdout)["violations"]] == ["RULE-no-todo"]
+
+
+def test_cli_staged_gate_keeps_guides_of_snapshot_rules(tmp_path: Path) -> None:
+    root = _repo(tmp_path)
+    (root / "rules").mkdir()
+    (root / "rules/todo.py").write_text(
+        NO_TODO_RULE.replace('description="no TODO")', 'description="no TODO", guide="todo_guide.md")')
+    )
+    (root / "rules/todo_guide.md").write_text("# Guide\n")
+    (root / "notes.md").write_text("TODO\n")
+    _git(root, "add", ".")
+    result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "--rules-dir", str(root / "rules")])
+    assert result.exit_code == 1, result.output
+    assert "[VIOLATION: RULE-no-todo " in result.output and " guide=rules/todo_guide.md]" in result.output
 
 
 def test_cli_staged_gate_rejects_managed_rule_that_drifted_from_the_receipt(tmp_path: Path) -> None:
@@ -857,7 +883,10 @@ def test_unexpected_errors_exit_2_as_advisories(tmp_path: Path, monkeypatch: pyt
     monkeypatch.setattr("devkit.rules.cli.commands.run_project_rules", explode)
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path)])
     assert result.exit_code == 2
-    assert "[ERROR]  (UNEXPECTED_ERROR) disk on fire" in result.stderr and "[ACTION] MAINTENANCE" in result.stderr
+    assert (
+        "[ERROR]  (UNEXPECTED_ERROR) RuntimeError: disk on fire" in result.stderr
+        and "[ACTION] MAINTENANCE" in result.stderr
+    )
 
 
 def test_check_refuses_a_hand_edited_managed_rule(tmp_path: Path) -> None:

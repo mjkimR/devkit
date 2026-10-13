@@ -26,12 +26,13 @@ class CommandNotStartedError(CompactError):
 
 
 class LogDirectoryError(CompactError):
-    """The per-user log directory is not a directory this user owns (``INTERACTION``): it is a symlink,
-    belongs to someone else, or cannot be created."""
+    """The log cannot be written (``INTERACTION``): the per-user log directory or the project's directory in it
+    is a symlink, not a directory, or someone else's, or the log directory cannot be created or written (no
+    permission, disk full)."""
 
     code = "RUN_LOG_DIR_INVALID"
     actor = Actor.USER
-    what_to_report = "devkit run keeps its logs in a private directory that another user or a link now occupies"
+    what_to_report = "devkit run keeps its logs in a private directory that another user, a link or a file now occupies"
 
 
 class SlowCommandNotice(CompactError):

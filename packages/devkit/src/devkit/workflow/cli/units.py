@@ -8,9 +8,8 @@ import click
 
 from devkit.core.cli import FORMAT_OPTION, boundary, echo_json, is_json, report_exit_code
 from devkit.core.errors import ArgumentError
-from devkit.workflow.cli.app import UNIT, WORKSPACE, cli, parse_date, workspace
+from devkit.workflow.cli.app import ANCHOR, UNIT, WORKSPACE, cli, parse_date, workspace
 from devkit.workflow.render import quote, render_document
-from devkit.workflow.unit.binding import Binding
 from devkit.workflow.unit.units import create_unit, layouts_in_use, list_units
 
 
@@ -33,6 +32,7 @@ def new_cmd(workspace_root: str | None, slug: str, workflow_ref: str | None, whe
 @cli.command(name="bind")
 @WORKSPACE
 @UNIT
+@ANCHOR
 @click.option(
     "--workflow",
     "workflow_ref",
@@ -40,10 +40,10 @@ def new_cmd(workspace_root: str | None, slug: str, workflow_ref: str | None, whe
     help="Workflow id or definition path (default: current binding or [workflow].default)",
 )
 @boundary
-def bind_cmd(workspace_root: str | None, unit: str, workflow_ref: str | None) -> None:
+def bind_cmd(workspace_root: str | None, unit: str, anchor: str | None, workflow_ref: str | None) -> None:
     """Record which workflow a unit follows and the hash of its stage schema."""
     ws = workspace(workspace_root)
-    ref = ws.bind_unit(unit, workflow_ref)
+    ref = ws.bind_unit(unit, workflow_ref, anchor=anchor)
     click.echo(f"[BOUND: {ref.doc.id} hash={ref.binding.hash}]")
 
 
@@ -51,9 +51,12 @@ def bind_cmd(workspace_root: str | None, unit: str, workflow_ref: str | None) ->
 @WORKSPACE
 @click.argument("ref", type=str, required=False)
 @click.option("--unit", "-u", "unit", default=None, help="Show the workflow this unit is bound to instead of REF")
+@ANCHOR
 @FORMAT_OPTION
 @boundary
-def show_cmd(workspace_root: str | None, ref: str | None, unit: str | None, output_format: str) -> None:
+def show_cmd(
+    workspace_root: str | None, ref: str | None, unit: str | None, anchor: str | None, output_format: str
+) -> None:
     """Print a workflow definition's stages, gates and schema hash (by id/path, or a unit's binding).
 
     Exits 1 when the report lists problems (under "errors" in JSON), whatever their own codes.
@@ -64,15 +67,19 @@ def show_cmd(workspace_root: str | None, ref: str | None, unit: str | None, outp
             target_files=["REF", "--unit"],
             fix="Run `devkit workflow show <id|path>` or `devkit workflow show --unit <dir>`",
         )
+    if anchor is not None and unit is None:
+        raise ArgumentError(
+            "--anchor applies only with --unit",
+            target_files=["--anchor"],
+            fix="Drop --anchor, or run `devkit workflow show --unit <dir> --anchor <file>`",
+        )
     ws = workspace(workspace_root)
-    binding: Binding | None = None
     if unit is not None:
-        unit_ref = ws.resolve_unit(unit)
-        doc, binding = unit_ref.doc, unit_ref.binding
+        description = ws.describe_unit(unit, anchor=anchor)
     else:
         assert ref is not None
-        doc = ws.load_definition(ref)
-    description = ws.describe(doc, binding)
+        description = ws.describe(ws.load_definition(ref))
+    doc, binding = description.doc, description.binding
     if is_json(output_format):
         echo_json(description.to_dict())
     else:

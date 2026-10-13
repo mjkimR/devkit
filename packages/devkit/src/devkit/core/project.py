@@ -7,7 +7,7 @@ import tomllib
 from pathlib import Path
 from typing import Any
 
-from devkit.core.errors import ConfigError, GitError
+from devkit.core.errors import ConfigError, GitError, UnsafePathError
 from devkit.core.git import run_git
 from devkit.core.receipt import CONFIG_PATH
 
@@ -19,12 +19,16 @@ def require_git_toplevel(start: Path) -> Path:
     """The resolved top-level directory of the Git work tree containing ``start``.
 
     Raises ``GitError`` (``GIT_FAILED``, an input error naming
-    ``--workspace-root``) when ``start`` is not inside a Git work tree or Git
-    cannot run.
+    ``--workspace-root``, with Git's standard error in the message) when Git
+    ran and refused ``start``: not inside a work tree, or a repository Git
+    will not use (``safe.directory``). When Git produced no exit status (not
+    installed, timed out) ``run_git``'s ``GitError`` passes through unchanged.
     """
     try:
         output = run_git(start, "rev-parse", "--show-toplevel")
     except GitError as exc:
+        if exc.returncode is None:
+            raise
         raise GitError(
             f"{start} is not inside a Git work tree: {exc.message}",
             command=exc.command,
@@ -53,6 +57,13 @@ def git_toplevel(start: Path) -> Path | None:
         return None
 
 
+def _home() -> Path | None:
+    try:
+        return Path.home().resolve()
+    except (RuntimeError, KeyError, OSError):  # no HOME and no password entry
+        return None
+
+
 def find_project_root(start: Path) -> Path:
     """The devkit project root for ``start`` (a directory, or a file whose directory is used).
 
@@ -61,15 +72,27 @@ def find_project_root(start: Path) -> Path:
     1. The nearest directory, ``start`` itself first and then each parent,
        that contains a ``.devkit`` directory. Inside a Git work tree the walk
        stops at the work tree's top level, so a ``.devkit`` directory outside
-       the repository is never picked up.
+       the repository is never picked up. Outside a Git work tree (or without
+       Git) the walk stops below the user's home directory: the home
+       directory and the directories above it are never searched, so a stray
+       ``~/.devkit`` does not claim every directory under it (``start``
+       itself is always considered).
     2. Otherwise the top level of the Git work tree containing ``start``.
     3. Otherwise ``start`` itself.
+
+    Raises ``UnsafePathError`` when ``start`` cannot be resolved (a symlink loop).
     """
-    origin = start.resolve()
+    try:
+        origin = start.resolve()
+    except (RuntimeError, OSError) as exc:  # Python 3.12 raises RuntimeError for a symlink loop
+        raise UnsafePathError(f"path cannot be resolved: {start}: {exc}") from exc
     if not origin.is_dir():
         origin = origin.parent
     toplevel = git_toplevel(origin)
+    home = _home() if toplevel is None else None
     for candidate in (origin, *origin.parents):
+        if home is not None and candidate != origin and home.is_relative_to(candidate):
+            break
         if (candidate / DEVKIT_DIR).is_dir():
             return candidate
         if candidate == toplevel:
@@ -84,10 +107,10 @@ def read_toml(path: Path, display: str | None = None) -> dict[str, Any] | None:
     ``str(path)``) when the file exists but cannot be read, is not UTF-8 or is
     not valid TOML, including a dangling symlink or a directory in its place.
     """
-    if not path.exists() and not path.is_symlink():
-        return None
     name = display if display is not None else str(path)
     try:
+        if not path.exists() and not path.is_symlink():
+            return None
         return tomllib.loads(path.read_text("utf-8"))
     except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
         raise ConfigError(f"invalid config {name}: {exc}", target_files=[name]) from exc

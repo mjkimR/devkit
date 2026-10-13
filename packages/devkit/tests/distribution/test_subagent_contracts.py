@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import tomllib
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -28,6 +29,7 @@ hosts:
   codex:
     status: emulated
     sandbox_mode: read-only
+  antigravity: unsupported
 ---
 # Reviewer
 
@@ -77,6 +79,7 @@ def test_read_contract() -> None:
         (("    tools: [Read, Grep, Glob]", "    rocket: true"), "not allowed"),
         (("    maxTurns: 20", "    maxTurns: [1, 2]"), "must be a string, integer, boolean or list"),
         (("hosts:", "extra: 1\nhosts:"), "unknown frontmatter keys"),
+        (("  antigravity: unsupported\n", ""), r"hosts must name every agent; missing \['antigravity'\]"),
     ],
 )
 def test_read_contract_rejects(replacement: tuple[str, str], match: str) -> None:
@@ -90,7 +93,7 @@ def test_read_contract_rejects_missing_hosts_and_empty_body() -> None:
     with pytest.raises(BundleError, match="hosts must be a nonempty mapping"):
         read_contract(b"---\nrole: r\ntitle: T\ndescription: D\n---\nbody\n", "x")
     with pytest.raises(BundleError, match=r"body .* is empty"):
-        read_contract(b"---\nrole: r\ntitle: T\ndescription: D\nhosts:\n  codex: native\n---\n", "x")
+        read_contract(CONTRACT.split("# Reviewer")[0].encode(), "x")
     with pytest.raises(BundleError, match="requires YAML frontmatter"):
         read_contract(b"plain\n", "x")
 
@@ -121,8 +124,8 @@ def test_render_claude_and_codex_projections() -> None:
 
 def test_render_antigravity_projection_carries_fixed_keys() -> None:
     body = CONTRACT.replace(
-        "  codex:\n",
-        '  antigravity:\n    status: native\n    tools: [view_file, grep_search]\n    commandExecutionPolicy: "off"\n  codex:\n',
+        "  antigravity: unsupported\n",
+        '  antigravity:\n    status: native\n    tools: [view_file, grep_search]\n    commandExecutionPolicy: "off"\n',
     )
     contract = read_contract(body.encode(), "x")
     rendered = render_projection("antigravity", contract, ".devkit/managed/team/subagents/reviewer.md")
@@ -142,13 +145,10 @@ def test_render_antigravity_projection_carries_fixed_keys() -> None:
 def test_render_unsupported_host_yields_no_file_and_missing_host_fails() -> None:
     contract = read_contract(CONTRACT.replace("status: emulated", "status: unsupported").encode(), "x")
     assert render_projection("codex", contract, "p") is None
-    only_codex = CONTRACT.replace(
-        "  claude-code:\n    status: native\n    tools: [Read, Grep, Glob]\n    maxTurns: 20\n    background: false\n",
-        "",
-    )
-    contract = read_contract(only_codex.encode(), "x")
+    # A parsed contract names every host; one built in code may not.
+    only_codex = replace(contract, hosts={"codex": contract.hosts["codex"]})
     with pytest.raises(BundleError, match="no projection for claude-code"):
-        render_projection("claude-code", contract, "p")
+        render_projection("claude-code", only_codex, "p")
 
 
 def test_manifest_validates_contract_source(tmp_path: Path) -> None:
@@ -169,10 +169,8 @@ def test_sync_projects_contract_per_agent(tmp_path: Path) -> None:
     target.mkdir()
     installed = [make_bundle(tmp_path, "team")]
     update_config(target, presets={"team": ["all"]})
-    with pytest.raises(BundleError, match="no projection for antigravity"):
-        sync_project(target, installed)  # every host is a target by default; the contract must name each
-    update_config(target, agents=["codex", "claude-code"])
-    sync_project(target, installed)
+    sync_project(target, installed)  # every host is a target by default; antigravity is unsupported
+    assert not (target / projection_path("antigravity", "reviewer")).exists()
 
     assert (target / ".devkit/managed/team/subagents/reviewer.md").read_text() == CONTRACT
     claude = target / projection_path("claude-code", "reviewer")
@@ -193,12 +191,12 @@ def test_sync_projects_contract_per_agent(tmp_path: Path) -> None:
     sync_project(target, [InstalledBundle("team-content", "0.1.1", load_bundle(root))])
     assert not codex.exists() and claude.exists()
 
-    # A host the contract does not mention is an explicit error, never a silent skip.
+    # A host the contract does not mention is an invalid bundle, never a silent skip.
     (root / "subagents/reviewer.md").write_text(
         CONTRACT.replace("  codex:\n    status: emulated\n    sandbox_mode: read-only\n", "")
     )
-    with pytest.raises(BundleError, match="no projection for codex"):
-        sync_project(target, [InstalledBundle("team-content", "0.1.2", load_bundle(root))])
+    with pytest.raises(BundleError, match=r"hosts must name every agent; missing \['codex'\]"):
+        load_bundle(root)
 
 
 def test_override_of_contract_is_rendered_and_cited(tmp_path: Path) -> None:

@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import os
+import stat
+import tempfile
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -120,17 +123,42 @@ def read_binding(anchor_path: Path) -> Binding:
     return read_anchor(anchor_path).binding
 
 
-def write_binding(anchor_path: Path, binding: Binding) -> None:
-    """Record the binding, replacing existing keys and preserving every other byte.
+def render_binding(text: str, binding: Binding) -> str:
+    """``text`` (an anchor) with the binding recorded, preserving every other byte.
 
     The history is written as a single flow-style YAML line so the anchor keeps
     one top-level line per key. An empty history leaves an existing one untouched.
+    An anchor without frontmatter gets a block holding the binding.
     """
-    text = anchor_path.read_text("utf-8")
     updates = {WORKFLOW_KEY: binding.workflow, HASH_KEY: binding.hash}
     if binding.history:
         flow = yaml.safe_dump(
             [h.to_dict() for h in binding.history], default_flow_style=True, sort_keys=False, width=10**6
         ).strip()
         updates[HISTORY_KEY] = flow
-    anchor_path.write_text(frontmatter.update(text, updates), "utf-8")
+    return frontmatter.update(text, updates)
+
+
+def replace_text(path: Path, text: str) -> None:
+    """Replace the file at ``path`` (or the file a link there points to) with ``text`` atomically.
+
+    The text goes to a temporary file in the same directory, which takes the
+    original's permission bits and then replaces it, so an interrupted or
+    failed write leaves the original intact.
+    """
+    target = path.resolve()
+    mode = stat.S_IMODE(target.stat().st_mode)
+    fd, temporary = tempfile.mkstemp(prefix=f".{target.name}.", suffix=".tmp", dir=target.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="") as handle:
+            handle.write(text)
+        os.chmod(temporary, mode)
+        os.replace(temporary, target)
+    except BaseException:
+        Path(temporary).unlink(missing_ok=True)
+        raise
+
+
+def write_binding(anchor_path: Path, binding: Binding) -> None:
+    """Record the binding in the anchor (``render_binding``), replacing the file atomically (``replace_text``)."""
+    replace_text(anchor_path, render_binding(anchor_path.read_text("utf-8"), binding))

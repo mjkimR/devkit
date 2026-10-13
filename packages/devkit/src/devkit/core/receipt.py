@@ -342,6 +342,8 @@ def parse_receipt(raw: bytes | str) -> Receipt:
         raise ReceiptError(f"{RECEIPT_PATH}: not UTF-8: {exc}") from exc
     except json.JSONDecodeError as exc:
         raise ReceiptError(f"{RECEIPT_PATH}: invalid JSON: {exc}") from exc
+    except RecursionError as exc:
+        raise ReceiptError(f"{RECEIPT_PATH}: invalid JSON: nested too deeply") from exc
     data = _object(data, "receipt", set(_REQUIRED), _OPTIONAL)
     schema = data["schema"]
     if type(schema) is not int or schema != SCHEMA:
@@ -366,9 +368,9 @@ def load_receipt(root: Path) -> Receipt | None:
     match the schema (including a dangling symlink or a directory in its place).
     """
     path = root / RECEIPT_PATH
-    if not path.exists() and not path.is_symlink():
-        return None
     try:
+        if not path.exists() and not path.is_symlink():
+            return None
         raw = path.read_bytes()
     except OSError as exc:
         raise ReceiptError(f"{RECEIPT_PATH}: cannot be read: {exc}") from exc
@@ -393,14 +395,16 @@ def verified_asset_file(
     applies before importing a synchronized file:
 
     - ``item`` must stay inside ``root`` once symlinks are resolved;
-    - a file with a ``files`` entry must match its SHA-256; a file without one
-      (a project override under ``.devkit/overrides/``) is used as it is;
+    - a file with a ``files`` entry must match its SHA-256; only a project
+      override (under ``.devkit/overrides/``) may lack one and is then used as
+      it is; any other file without one is refused;
     - ``source_root`` is the working tree a Git snapshot at ``root`` was taken
       from: a file absent from ``root`` (a Git-ignored managed copy) is read
       from there, and only when the receipt records a hash it matches.
 
     Returns ``root / item`` or ``source_root / item``. Raises ``AssetFileError``
-    (message ``"<item> <problem>"``) when the file cannot be used.
+    (message ``"<item> <problem>"``) when the file cannot be used, including
+    when it cannot be read.
     """
     try:
         resolve_within(root, item)
@@ -408,22 +412,27 @@ def verified_asset_file(
         raise AssetFileError(f"{item} is unsafe: {exc}", target_files=[item]) from exc
     record = receipt.file(item)
     path = root / item
-    if not path.is_file():
-        if source_root is None:
-            raise AssetFileError(f"{item} is missing", target_files=[item])
-        try:
-            resolve_within(source_root, item)
-        except UnsafePathError as exc:
-            raise AssetFileError(f"{item} is unsafe in the working tree: {exc}", target_files=[item]) from exc
-        path = source_root / item
+    try:
         if not path.is_file():
-            raise AssetFileError(f"{item} is missing from the working tree", target_files=[item])
-        if record is None:
+            if source_root is None:
+                raise AssetFileError(f"{item} is missing", target_files=[item])
+            try:
+                resolve_within(source_root, item)
+            except UnsafePathError as exc:
+                raise AssetFileError(f"{item} is unsafe in the working tree: {exc}", target_files=[item]) from exc
+            path = source_root / item
+            if not path.is_file():
+                raise AssetFileError(f"{item} is missing from the working tree", target_files=[item])
+            if record is None:
+                raise AssetFileError(f"{item} has no hash in the receipt", target_files=[item])
+        if record is None and not item.startswith(f"{OVERRIDES_PATH}/"):
             raise AssetFileError(f"{item} has no hash in the receipt", target_files=[item])
-    if record is not None and not record.matches(path.read_bytes()):
-        raise AssetFileError(
-            f"{item} differs from the hash in the receipt", target_files=[item], fix=_asset_file_fix(item, asset)
-        )
+        if record is not None and not record.matches(path.read_bytes()):
+            raise AssetFileError(
+                f"{item} differs from the hash in the receipt", target_files=[item], fix=_asset_file_fix(item, asset)
+            )
+    except OSError as exc:
+        raise AssetFileError(f"{item} cannot be read: {exc}", target_files=[item]) from exc
     return path
 
 

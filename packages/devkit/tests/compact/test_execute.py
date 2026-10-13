@@ -1,15 +1,22 @@
-"""``devkit.compact.execute``: the log file, exit codes, start failures, notices and log retention."""
+"""``devkit.compact.execute``: the log file, exit codes, start failures, interruptions, notices and log retention."""
 
 from __future__ import annotations
 
+import importlib
 import os
+import signal
+import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
+from typing import Any
 
 import pytest
 from devkit.compact.errors import CommandNotStartedError, LogDirectoryError
-from devkit.compact.execute import KEEP_LOGS, default_log_dir, log_root, run_command
+from devkit.compact.execute import KEEP_LOGS, CommandInterrupted, default_log_dir, log_root, run_command
+
+execute = importlib.import_module("devkit.compact.execute")
 
 PY = sys.executable
 
@@ -108,3 +115,100 @@ def test_warning_locations_are_relative_to_the_working_directory(tmp_path: Path)
     code = "import os; print(os.path.join(os.getcwd(), 'pkg', 'mod.py') + ':7: UserWarning: careful')"
     run = run_command([PY, "-c", code], cwd=tmp_path)
     assert [w.location for w in run.scan.warnings] == ["pkg/mod.py:7"]
+
+
+def _wait_for(path: Path, timeout: float = 30.0) -> None:
+    deadline = time.monotonic() + timeout
+    while not path.exists():
+        assert time.monotonic() < deadline, f"{path} did not appear"
+        time.sleep(0.01)
+
+
+def test_a_process_that_outlives_the_command_appends_to_the_log_and_never_moves_the_scan(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    go, done = tmp_path / "go", tmp_path / "done"
+    real_scan = execute.scan
+
+    def scan_after_late_output(stream, **options):
+        go.touch()  # the background process writes now, while the log is being read
+        _wait_for(done)
+        return real_scan(stream, **options)
+
+    monkeypatch.setattr(execute, "scan", scan_after_late_output)
+    script = f"seq 1 5000; (while [ ! -e {go} ]; do sleep 0.01; done; seq 1 1000 | sed s/^/LATE/; touch {done}) &"
+    run = run_command(["sh", "-c", script], log_dir=tmp_path / "logs")
+    assert run.scan.last_lines == ("4996", "4997", "4998", "4999", "5000")
+    assert run.log.read_text().splitlines() == [str(i) for i in range(1, 5001)] + [f"LATE{i}" for i in range(1, 1001)]
+
+
+def test_a_command_that_removes_its_working_directory_is_still_reported(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    gone = tmp_path / "gone"
+    gone.mkdir()
+    monkeypatch.chdir(gone)
+    run = run_command(["sh", "-c", f"cd / && rmdir {gone} && echo removed"], log_dir=tmp_path / "logs")
+    assert run.passed and run.scan.last_lines == ("removed",)
+
+
+def test_a_signal_while_the_command_starts_still_stops_it(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    started: list[subprocess.Popen[Any]] = []
+    popen = subprocess.Popen
+
+    def popen_then_terminated(*args, **kwargs):
+        started.append(popen(*args, **kwargs))
+        os.kill(os.getpid(), signal.SIGTERM)  # handled before Popen returns, while nothing could stop the command
+        return started[0]
+
+    monkeypatch.setattr(execute.subprocess, "Popen", popen_then_terminated)
+    with pytest.raises(CommandInterrupted) as caught:
+        run_command(["sleep", "60"], log_dir=tmp_path / "logs")
+    assert caught.value.code == 128 + signal.SIGTERM
+    assert caught.value.run.interrupted == signal.SIGTERM and caught.value.run.exit_code == 128 + signal.SIGTERM
+    assert caught.value.run.log.exists() and started[0].returncode is not None
+
+
+def test_a_log_root_others_can_enter_is_made_private(tmp_path: Path) -> None:
+    log_root().mkdir(mode=0o700)
+    log_root().chmod(0o777)
+    run_command(["true"])
+    assert log_root().stat().st_mode & 0o777 == 0o700
+    assert default_log_dir(Path.cwd()).stat().st_mode & 0o777 == 0o700
+
+
+def test_a_project_log_directory_that_is_a_link_is_refused_and_its_target_left_alone(tmp_path: Path) -> None:
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    planted = [elsewhere / f"{i}.log" for i in range(KEEP_LOGS + 5)]
+    for path in planted:
+        path.write_text("keep")
+    log_root().mkdir(mode=0o700)
+    default_log_dir(Path.cwd()).symlink_to(elsewhere)
+    with pytest.raises(LogDirectoryError) as caught:
+        run_command(["true"])
+    assert caught.value.target_files == (str(default_log_dir(Path.cwd())),)
+    assert all(path.exists() for path in planted) and len(list(elsewhere.iterdir())) == len(planted)
+
+
+def test_a_project_log_directory_that_is_a_file_is_refused() -> None:
+    log_root().mkdir(mode=0o700)
+    default_log_dir(Path.cwd()).write_text("")
+    with pytest.raises(LogDirectoryError) as caught:
+        run_command(["true"])
+    assert caught.value.code == "RUN_LOG_DIR_INVALID" and int(caught.value.exit_code) == 2
+
+
+@pytest.mark.skipif(os.geteuid() == 0, reason="root can write to any directory")
+def test_a_log_directory_that_cannot_be_written_is_a_log_directory_error(tmp_path: Path) -> None:
+    logs = tmp_path / "logs"
+    logs.mkdir(mode=0o500)
+    try:
+        with pytest.raises(LogDirectoryError) as caught:
+            run_command(["true"], log_dir=logs)
+    finally:
+        logs.chmod(0o700)
+    assert caught.value.code == "RUN_LOG_DIR_INVALID" and caught.value.target_files == (str(logs),)
+    (tmp_path / "file").write_text("")
+    with pytest.raises(LogDirectoryError):
+        run_command(["true"], log_dir=tmp_path / "file" / "logs")

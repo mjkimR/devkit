@@ -145,7 +145,7 @@ def _run_gate(gate: Gate, ctx: GateContext, config: GatesConfig, checked: Valida
         return GateRun(gate.id, Outcome.SKIPPED, INVALID_SETTINGS_NOTE)
     try:
         result = gate.run(dataclasses.replace(ctx, settings=checked.settings[gate.id]))
-    except Exception as exc:
+    except (Exception, SystemExit) as exc:  # a gate calling sys.exit() must not end the stage; Ctrl-C still aborts it
         return GateRun(gate.id, Outcome.FAILED, error=as_advisory_error(exc))
     if result is None:
         result = GateResult.passed()

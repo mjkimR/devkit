@@ -11,7 +11,16 @@ from devkit.rules.rules.base import BaseRule
 from devkit.rules.workspace.markdown import LocalTarget, MarkdownLink, local_target, split_lines
 
 # Characters that force an angle-bracket destination when a repaired path contains them.
-_NEEDS_ANGLE = re.compile(r"[\s()<>]")
+_NEEDS_ANGLE = re.compile(r"[\s()]")
+# Characters percent-encoded in a repaired path, so ``local_target`` reads it back unchanged:
+# ``%`` and ``\`` would be decoded or unescaped, ``#`` and ``?`` would start a fragment or query,
+# and ``<``/``>`` cannot appear inside an angle-bracket destination.
+_ENCODE = {char: f"%{ord(char):02X}" for char in "%\\#?<>"}
+
+
+def _encode(path: str) -> str:
+    """``path`` as a link destination that ``local_target`` decodes back to ``path``."""
+    return "".join(_ENCODE.get(char, char) for char in path)
 
 
 def _exists(path: Path) -> bool:
@@ -108,7 +117,7 @@ class MarkdownLinkRule(BaseRule, Autofixable):
             for broken in sorted(items, key=lambda b: (b.link.line, b.link.target_start), reverse=True):
                 link = broken.link
                 assert broken.candidate is not None
-                new_path = Path(os.path.relpath(ctx.workspace_root / broken.candidate, path.parent)).as_posix()
+                new_path = _encode(Path(os.path.relpath(ctx.workspace_root / broken.candidate, path.parent)).as_posix())
                 destination = f"{new_path}{broken.target.suffix}"
                 if not link.angle and _NEEDS_ANGLE.search(new_path):
                     destination = f"<{destination}>"

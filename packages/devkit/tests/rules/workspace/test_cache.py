@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import unicodedata
 from pathlib import Path
 
 import pytest
@@ -105,6 +106,18 @@ def test_scans_skip_symlinks_resolving_outside(tmp_path: Path) -> None:
     (root / "docs/in.md").symlink_to("real.md")
     cache = WorkspaceCache(root)
     assert [p.name for p in cache.find_files(root)] == ["in.md", "real.md"]
+    (root / "linkdir").symlink_to(tmp_path)
+    assert cache.find_files(root / "linkdir") == []
+    git_cache = WorkspaceCache(init_repo(tmp_path / "repo"))
+    assert git_cache.find_files(tmp_path / "repo" / ".." / "ws") == []
+
+
+def test_scans_match_git_names_in_any_unicode_normalization(tmp_path: Path) -> None:
+    root = init_repo(tmp_path / "repo")
+    nfd = unicodedata.normalize("NFD", "café.md")
+    write(root, nfd, "x\n")
+    cache = WorkspaceCache(root)
+    assert [unicodedata.normalize("NFC", p.name) for p in cache.find_files(root)] == ["README.md", "café.md"]
 
 
 def test_write_text_is_exact_and_never_under_devkit(temp_workspace: Path, workspace_cache: WorkspaceCache) -> None:

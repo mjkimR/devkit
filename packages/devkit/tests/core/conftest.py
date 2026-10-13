@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+from collections.abc import Callable, Iterator
 from pathlib import Path
 
 import pytest
@@ -30,3 +31,19 @@ def repo(tmp_path: Path) -> Path:
     git(root, "config", "user.name", "Dev")
     git(root, "config", "commit.gpgsign", "false")
     return root
+
+
+@pytest.fixture
+def lock() -> Iterator[Callable[[Path], None]]:
+    """``lock(path)`` removes every permission from ``path`` until the test ends (skipped when run as root)."""
+    if os.geteuid() == 0:
+        pytest.skip("root ignores file permissions")
+    locked: list[tuple[Path, int]] = []
+
+    def apply(path: Path) -> None:
+        locked.append((path, path.stat().st_mode))
+        path.chmod(0)
+
+    yield apply
+    for path, mode in reversed(locked):
+        path.chmod(mode)

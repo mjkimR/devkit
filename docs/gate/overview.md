@@ -54,7 +54,7 @@ Rule engine errors are never re-wrapped: they fail the gate as they are, exit `2
 
 `devkit gate install` writes `pre-commit`, `commit-msg` and `post-commit` into `<common-git-dir>/hooks`, the hooks directory shared by every worktree; `install`, `status` and `uninstall` all resolve this one directory. Each wrapper:
 
-1. runs `<hook>.pre-gate` first when it exists and is executable (a hook `install` moved aside) and, in a blocking stage, stops with its exit status when it fails;
+1. runs `<hook>.pre-gate` first when it is an executable file (a hook `install` moved aside) and, in a blocking stage, stops with its exit status when it fails;
 2. picks the interpreter: `<work tree>/.venv/bin/python` when `devkit` is installed in that environment, otherwise the interpreter recorded at install time;
 3. runs `exec "$python" -P -m devkit.gate run <stage> "$@"`.
 
@@ -63,7 +63,7 @@ Rule engine errors are never re-wrapped: they fail the gate as they are, exit `2
 - **Missing environment**: when neither interpreter is usable, a blocking stage exits `2` with a `run 'uv sync'` hint; `post-commit` exits `0`.
 - **Existing hooks**: hooks without the managed marker are never overwritten silently. An executable hook, a symbolic link (even a dangling one) or anything that is not a regular file is foreign: `install` refuses (`GATE_FOREIGN_HOOK`), and `install --force` moves it to `<hook>.pre-gate`, where the wrapper keeps running it first. A non-executable regular file, which Git ignores, is inert and is moved aside without `--force`. `uninstall` restores what was moved. An existing backup is never overwritten (`GATE_BACKUP_EXISTS`).
 - **Writing**: wrappers are LF-only files with POSIX paths, written to a temporary file and renamed into place, so a symbolic link at the hook path is never written through.
-- **`core.hooksPath`**: when it points anywhere other than `<common-git-dir>/hooks`, Git would not run the wrappers: `install` refuses (`GATE_HOOKS_PATH_SET`), `status` reports the setting, and `uninstall` still cleans the common hooks directory.
+- **`core.hooksPath`**: when its effective value (any configuration scope) points anywhere other than `<common-git-dir>/hooks`, Git would not run the wrappers: `install` refuses (`GATE_HOOKS_PATH_SET`), `status` reports the setting, and `uninstall` still cleans the common hooks directory. The `[FIX]` depends on the scope that sets it (`git config --show-scope`): a `local` value is unset (`git config --unset core.hooksPath`), a `worktree` value is unset with `--worktree`, a `global` or `system` value is overridden for this repository only (`git config core.hooksPath <common-git-dir>/hooks`, which `install` accepts), and a `command` value (`git -c` or `GIT_CONFIG_*` variables) is removed from the environment.
 - **Bypass**: `git commit --no-verify` skips `pre-commit` and `commit-msg` as Git defines; the gate system adds no bypass of its own.
 
 ## 4. Gate Contract
@@ -81,7 +81,7 @@ class Gate(Protocol):
 ```
 
 - **Passing and skipping**: return `GateResult.passed(note)` or `GateResult.skipped(reason)`; `None` means passed. `GateResult.passed(note, notices=[...])` also returns warnings and notices (`AdvisoryError` at level `WARNING` or `NOTICE`; an `ERROR` is lowered to `WARNING`), which `devkit gate run` prints without blocking the commit, unless `DEVKIT_STRICT=1` and one is a warning. Each outcome is logged and shows as an `[INFO]` line under `-v`. A `GateResult` cannot carry `FAILED` (constructing one raises `GateResultError`, `GATE_RESULT_INVALID`, `MAINTENANCE`), and any other return value fails the gate with the same code.
-- **Refusing**: raise `GateRefusedError(message, *details, code=..., fix=..., target_files=...)`: message first, remediation in `fix`, and the gate's own code (default `GATE_FAILED`). It is `BLOCKED` and exits `1` (`FINDINGS`): the negative result of a check that ran. Any other `AdvisoryError` fails the gate as it is (most exit `2`: the check could not run); any other exception is wrapped as `UNEXPECTED_ERROR` (exit `2`). Every failed gate therefore reports an advisory.
+- **Refusing**: raise `GateRefusedError(message, *details, code=..., fix=..., target_files=...)`: message first, remediation in `fix`, and the gate's own code (default `GATE_FAILED`). It is `BLOCKED` and exits `1` (`FINDINGS`): the negative result of a check that ran. Any other `AdvisoryError` fails the gate as it is (most exit `2`: the check could not run); any other exception, and `SystemExit` from a gate that calls `sys.exit()`, is wrapped as `UNEXPECTED_ERROR` (exit `2`), and the stage's later gates still run. Every failed gate therefore reports an advisory. `KeyboardInterrupt` is not caught: it aborts the run, and a blocking stage exits nonzero.
 - **Context**: `ctx.repo_root` (top level of the work tree), `ctx.git_dir` (this worktree's git dir, for `MERGE_HEAD`, rebase state and the like), `ctx.common_git_dir` (shared by every worktree), `ctx.stage`, `ctx.args` (hook arguments), `ctx.settings` (the gate's effective settings) and `ctx.message_file` for `commit-msg`.
 - **Ordering**: gates in a stage run by `(order, id)`. Message transforms use `order < 100`, checks default to `100`, and the built-in `message-nonempty` runs at `900` so it sees the transformed message. A `post-commit` gate that rewrites `HEAD` must take a low order so later gates observe the final commit.
 - **No short-circuit**: a failing gate does not stop later gates, so one commit attempt reports every refusal.
@@ -102,7 +102,7 @@ source = "gates/staged_file_limit.py"
 assets = ["staged-file-limit"]
 ```
 
-`devkit sync` copies the selected gate files to `.devkit/managed/<bundle>/` (or uses the project override under `.devkit/overrides/<bundle>/`) and records them in `.devkit/installation.json`. At commit time the registry reads the receipt with `devkit.core.receipt` (strict: a malformed receipt or an unsafe path is an error) and loads every `.py` file of every `kind = "gate"` asset (`entrypoints` then `paths`), whatever its name. Files are found and checked with `devkit.core.verified_asset_files`, as for rule files and workflow plugin checks: a file with a `files` entry in the receipt must match its SHA-256; a file without one (a project override) is loaded as it is.
+`devkit sync` copies the selected gate files to `.devkit/managed/<bundle>/` (or uses the project override under `.devkit/overrides/<bundle>/`) and records them in `.devkit/installation.json`. At commit time the registry reads the receipt with `devkit.core.receipt` (strict: a malformed receipt or an unsafe path is an error) and loads every `.py` file of every `kind = "gate"` asset (`entrypoints` then `paths`), whatever its name. Files are found and checked with `devkit.core.verified_asset_files`, as for rule files and workflow plugin checks: a file with a `files` entry in the receipt must match its SHA-256; only a project override under `.devkit/overrides/` may lack one and is then loaded as it is; any other file without one is refused.
 
 | State | Effect at commit time |
 | --- | --- |

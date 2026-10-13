@@ -32,7 +32,7 @@ ACTION_TEXT: dict[ActionMode, str] = {
     ActionMode.MAINTENANCE: (
         "MAINTENANCE — A codebase defect or tool failure occurred.\n"
         "Report it and stop; repairing the code/tool is a separate task.\n"
-        "[TARGET] names the affected files."
+        "[TARGET], when present, names the affected files."
     ),
     ActionMode.INPUT_ERROR: (
         "INPUT_ERROR — Do not retry with identical input. Retrying unchanged will\n"
@@ -59,9 +59,12 @@ DEFAULT_CODE = "GENERAL_ERROR"
 
 
 def _field(sentinel: str, value: str) -> list[str]:
-    """``value`` behind its sentinel; further lines are indented under it."""
-    head, *rest = str(value).splitlines() or [""]
-    return [f"{sentinel}{head}".rstrip(), *(f"{CONTINUATION}{line}".rstrip() for line in rest)]
+    """``value`` behind its sentinel; further lines are indented under it.
+
+    Blank lines are dropped, so a block never contains one, and a blank value renders no line at all.
+    """
+    lines = [line.rstrip() for line in str(value).splitlines() if line.strip()]
+    return [f"{CONTINUATION if index else sentinel}{line}" for index, line in enumerate(lines)]
 
 
 @dataclass(frozen=True)
@@ -80,6 +83,10 @@ class Advisory:
     target_files: tuple[str, ...] = ()
     details: tuple[str, ...] = ()
     brief: bool = False
+
+    def __post_init__(self) -> None:
+        if not self.code:
+            object.__setattr__(self, "code", DEFAULT_CODE)
 
     @property
     def mode(self) -> ActionMode:
@@ -108,20 +115,22 @@ class Advisory:
         """Render the advisory block as sentinel lines for stderr.
 
         The headline (``[ERROR]``, ``[WARN]`` or ``[NOTICE]`` by level) comes
-        first when a message is given. ``[ACTION]`` is left out only for a
-        ``brief`` notice without ``fix``. A value that spans several lines
-        continues on lines indented like the ``[ACTION]`` continuation, so every
-        line either starts with a sentinel or belongs to the sentinel above it.
+        first when a message is given, even an empty one: it always carries the
+        code. ``[ACTION]`` is left out only for a ``brief`` notice without
+        ``fix``; any other line is left out when its value is blank. A value
+        that spans several lines continues on lines indented like the
+        ``[ACTION]`` continuation, without blank lines, so every line either
+        starts with a sentinel or belongs to the sentinel above it.
         """
         rendered: list[str] = []
-        if message:
-            rendered.extend(_field(HEADLINE[self.level], f"({self.code or DEFAULT_CODE}) {message}"))
+        if message is not None:
+            rendered.extend(_field(HEADLINE[self.level], f"({self.code}) {message.lstrip()}"))
         if not (self.level is Level.NOTICE and self.brief and not self.fix):
             rendered.extend(_field("[ACTION] ", ACTION_TEXT[self.mode]))
         if self.level is Level.ERROR and self.retry_after:
             rendered.extend(_field("[WHEN]   ", f"Not before: {self.retry_after}"))
         if self.target_files:
-            rendered.extend(_field("[TARGET] ", ", ".join(self.target_files)))
+            rendered.extend(_field("[TARGET] ", ", ".join(target for target in self.target_files if target.strip())))
         if self.fix:
             rendered.extend(_field("[FIX]    ", self.fix))
         if self.what_to_report:

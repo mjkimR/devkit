@@ -8,12 +8,16 @@ further restricted to the files Git does not ignore
 environment or build output that ``.gitignore`` covers is never scanned; files
 named as explicit targets (``add_explicit``) are listed even when ignored. A
 materialized snapshot passes ``git_filter=False``: its tree already holds
-tracked files only.
+tracked files only. Git and the file system may spell a non-ASCII name in
+different Unicode normalization forms (macOS Git reports NFC with
+``core.precomposeunicode`` while the disk may hold NFD), so names are
+compared in NFC.
 """
 
 from __future__ import annotations
 
 import os
+import unicodedata
 from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -31,6 +35,11 @@ __all__ = ["WorkspaceCache"]
 # Workspace-relative directories holding copies whose hashes the installation receipt pins.
 _PINNED_DIRS = (MANAGED_PATH, OVERRIDES_PATH)
 _IGNORED_DIRS = {".git", ".venv", ".pytest_cache", ".ruff_cache", "node_modules", "__pycache__"}
+
+
+def _nfc(name: str) -> str:
+    """``name`` in Unicode normalization form C, the form file names are compared in."""
+    return unicodedata.normalize("NFC", name)
 
 
 class WorkspaceCache:
@@ -158,13 +167,13 @@ class WorkspaceCache:
                 self._git_files = None
             else:
                 self._git_files = {
-                    part.decode("utf-8", errors="surrogateescape") for part in output.split(b"\0") if part
+                    _nfc(part.decode("utf-8", errors="surrogateescape")) for part in output.split(b"\0") if part
                 }
         return self._git_files
 
     def add_explicit(self, paths: Iterable[str]) -> None:
         """Workspace-relative files a run names explicitly; Git ignore rules never hide them from scans."""
-        added = set(paths) - self._explicit
+        added = {_nfc(path) for path in paths} - self._explicit
         if added:
             self._explicit |= added
             self._files_cache.clear()
@@ -178,14 +187,15 @@ class WorkspaceCache:
         ``extensions=None`` lists every regular file. Dependency and cache
         directories, ``.devkit/managed/`` and ``.devkit/overrides/``, symlinks
         that resolve outside the workspace and, inside a Git work tree,
-        Git-ignored files that are not explicit targets are skipped.
+        Git-ignored files that are not explicit targets are skipped. A ``root``
+        that resolves outside the workspace lists nothing.
         """
         root = root.resolve()
         key = (root, extensions)
         if key not in self._files_cache:
             visible = self._visible_files()
             results: list[Path] = []
-            if root.is_dir() and not self._pinned(root):
+            if root.is_dir() and root.is_relative_to(self.workspace_root) and not self._pinned(root):
                 for directory, dirs, files in os.walk(root):
                     here = Path(directory)
                     dirs[:] = sorted(d for d in dirs if d not in _IGNORED_DIRS and not self._pinned(here / d))
@@ -204,7 +214,8 @@ class WorkspaceCache:
         try:
             relative = path.relative_to(self.workspace_root).as_posix()
         except ValueError:
-            return True
+            return False
+        relative = _nfc(relative)
         return relative in visible or relative in self._explicit
 
     def _stays_inside(self, path: Path) -> bool:

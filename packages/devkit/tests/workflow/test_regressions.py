@@ -326,11 +326,11 @@ def test_b9_json_output_is_a_single_document_when_lint_fails(tmp_path: Path, mon
     assert _run("new", "-w", str(root), "u").exit_code == 0
     monkeypatch.setattr(devkit.rules, "run_project_rules", broken)
     result = _run("next", "-w", str(root), "--unit", UNIT, "--format", "json")
-    assert result.exit_code == 2 and "(UNEXPECTED_ERROR) rule exploded" in result.stderr
+    assert result.exit_code == 2 and "(UNEXPECTED_ERROR) RuntimeError: rule exploded" in result.stderr
     [error] = json.loads(result.stdout)["errors"]
-    assert (error["code"], error["message"]) == ("UNEXPECTED_ERROR", "rule exploded")
+    assert (error["code"], error["message"]) == ("UNEXPECTED_ERROR", "RuntimeError: rule exploded")
     text = _run("next", "-w", str(root), "--unit", UNIT)
-    assert '[LINT_ERROR: "rule exploded"]' in text.output
+    assert '[LINT_ERROR: "RuntimeError: rule exploded"]' in text.output
 
 
 def test_b9_envelope_check_json_is_a_single_document(tmp_path: Path) -> None:

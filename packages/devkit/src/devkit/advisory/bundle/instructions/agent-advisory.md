@@ -47,13 +47,13 @@ Render advisories as sentinel lines on standard error (or as the text of a tool 
 [DETAIL] <Diagnostic context; one line per detail>
 ```
 
-The headline is `[ERROR]  `, `[WARN]   ` or `[NOTICE] ` (each sentinel is padded to 9 characters) and always carries the code. `[ACTION]` is always present for errors and warnings; a notice may omit it only when it is `brief` and has no `[FIX]`, since a fix without a directive reads as an instruction to run it. Omit any other line whose field is empty. A value that spans several lines continues on lines indented 9 spaces under its sentinel, so every line either starts with a sentinel or belongs to the one above it. No colour, emoji or Markdown.
+The headline is `[ERROR]  `, `[WARN]   ` or `[NOTICE] ` (each sentinel is padded to 9 characters) and always carries the code, even when the message is empty. `[ACTION]` is always present for errors and warnings; a notice may omit it only when it is `brief` and has no `[FIX]`, since a fix without a directive reads as an instruction to run it. Omit any other line whose field is empty or blank. A value that spans several lines continues on lines indented 9 spaces under its sentinel, so every line either starts with a sentinel or belongs to the one above it. Drop blank lines inside a value: a block never contains a blank line. No colour, emoji or Markdown.
 
 ## Fields
 
 | Field | Levels | Meaning |
 | --- | --- | --- |
-| `code` | all | Stable identifier (`UPPER_SNAKE_CASE`). Default `GENERAL_ERROR`. |
+| `code` | all | Stable identifier (`UPPER_SNAKE_CASE`). Default `GENERAL_ERROR`, which an empty code also becomes. |
 | `level` | all | `ERROR` (default), `WARNING` or `NOTICE`. |
 | `actor` | error | Who takes the next step: `TOOL` (the agent itself runs the fix), `USER` (a human decides), `DEVELOPER` (code or input must be edited), `NONE` (nobody right now). |
 | `retry` | error | `SAFE` (retry unchanged is safe), `AFTER_FIX` (safe only after the fix), `UNSAFE` (retry risks corruption or duplicate effects). |
@@ -66,7 +66,7 @@ The headline is `[ERROR]  `, `[WARN]   ` or `[NOTICE] ` (each sentinel is padded
 | `details` | all | Diagnostic lines. |
 | `brief` | notice | `true` omits `[ACTION]` when there is no `fix`. |
 
-Process exit codes follow the checker convention of `grep`, `diff` and `ruff`: `0` success, `1` the command ran and reports a negative result (violations, a failed check, a refused change), `2` the command could not do its job (usage error, unreadable or invalid input, unexpected failure; the default for an error). A state that waits for a person or for later work is a result, not a failure, and exits `0`. Warnings and notices never change the exit code, except under an explicit strict mode.
+Process exit codes follow the checker convention of `grep`, `diff` and `ruff`: `0` success, `1` the command ran and reports a negative result (violations, a failed check, a refused change), `2` the command could not do its job (usage error, unreadable or invalid input, unexpected failure; the default for an error). An error never exits `0`, including the `DEFER` and `INTERACTION` modes: the operation did not happen. A command whose job is to report a state (for example a workflow waiting for a person) reports that state as its result and exits `0`. Warnings and notices never change the exit code, except under an explicit strict mode.
 
 ## Mode derivation
 
@@ -132,7 +132,7 @@ BLOCKED — A deliberate guardrail refused this. Report it and stop.
 ### `AUTO`: deterministic machine fix available
 
 - **Use for**: a safe, idempotent remediation command exists (formatter, cache rebuild, regenerate lock).
-- **Set**: `actor = TOOL`, `retry = AFTER_FIX` (or `SAFE`), and `fix` with the exact command.
+- **Set**: `actor = TOOL`, `retry = AFTER_FIX` (or `SAFE`), and `fix` with the exact command. `fix` is required: the directive runs it.
 
 ```text
 AUTO — Run the [FIX] command once, then retry the operation once.
@@ -158,7 +158,7 @@ INTERACTION — Stop and ask the user. Do not retry, and do not
 ```text
 MAINTENANCE — A codebase defect or tool failure occurred.
               Report it and stop; repairing the code/tool is a separate task.
-              [TARGET] names the affected files.
+              [TARGET], when present, names the affected files.
 ```
 
 ### `DEFER`: not an error; retry later
@@ -218,9 +218,10 @@ A consumer never executes `fix` automatically outside `AUTO` (and `INTERACTION` 
 When writing an advisory in any language or rule format:
 
 - [ ] **Level**: Did the operation fail or refuse (`ERROR`), succeed with something the user must learn (`WARNING`), or succeed with something worth knowing (`NOTICE`)? Would a log line do?
-- [ ] **Headline**: Does `code` uniquely identify the condition without string matching?
+- [ ] **Headline**: Does `code` uniquely identify the condition without string matching? Is the message one concise sentence?
 - [ ] **`[ACTION]`**: For an error, does the derived mode match the intended directive and distinguish a blind retry from a corrected rerun?
 - [ ] **`[TARGET]`**: Does it point to the exact file path, flag name, or line?
 - [ ] **`[FIX]`**: If remediation is possible, is it exact and copy-pasteable?
 - [ ] **`[REPORT]`**: If the user must decide or learn something, is the question or summary clear?
+- [ ] **Brief**: Is a notice without `[ACTION]` self-explanatory and free of `fix`?
 - [ ] **Wording**: Is every directive deterministic, with no "likely" or "might"?

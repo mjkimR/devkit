@@ -21,7 +21,7 @@ from devkit.workflow.errors import (
     HandoffUndecidedError,
 )
 from devkit.workflow.evaluation.requests import candidate_summary
-from devkit.workflow.unit.binding import Binding, HistoryEntry, write_binding
+from devkit.workflow.unit.binding import Binding, HistoryEntry, render_binding, replace_text
 from devkit.workflow.unit.decisions import HANDOFF_REQUEST, Decision, load_decisions, new_decision, write_decision
 
 if TYPE_CHECKING:
@@ -231,23 +231,31 @@ def apply_handoff(plan: HandoffPlan, *, when: date | None = None, by: str = "", 
 
     An explicit choice is first recorded as an accepted ``handoff`` decision so
     the audit trail names it; the history entry closes the segment at the
-    highest decision sequence.
+    highest decision sequence. When the anchor cannot be rewritten, that
+    record is removed again, so a failed handoff leaves the unit as it was.
     """
     unit = plan.unit
     decision = plan.decision
+    text = unit.anchor_path.read_text("utf-8")
+    written: Decision | None = None
     if plan.explicit:
         decisions = load_decisions(unit.dir)
         record = new_decision(
             decisions, HANDOFF_REQUEST, "accept", workflow=plan.source.id, value=plan.target.id, note=note, by=by
         )
-        decision = write_decision(unit.dir, record)
-    last = load_decisions(unit.dir).max_seq
-    day = (when or date.today()).isoformat()
-    binding = unit.binding
-    entry = HistoryEntry(plan.source.id, binding.hash or schema_hash(plan.source), day, last)
-    history = (*binding.history, entry)
-    new_binding = Binding(plan.target.id, schema_hash(plan.target), history)
-    write_binding(unit.anchor_path, new_binding)
+        decision = written = write_decision(unit.dir, record)
+    try:
+        last = load_decisions(unit.dir).max_seq
+        day = (when or date.today()).isoformat()
+        binding = unit.binding
+        entry = HistoryEntry(plan.source.id, binding.hash or schema_hash(plan.source), day, last)
+        history = (*binding.history, entry)
+        new_binding = Binding(plan.target.id, schema_hash(plan.target), history)
+        replace_text(unit.anchor_path, render_binding(text, new_binding))
+    except BaseException:
+        if written is not None:
+            (unit.dir / written.file).unlink(missing_ok=True)
+        raise
     return HandoffOutcome(
         unit=unit.rel,
         source=plan.source.id,

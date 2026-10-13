@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
+from dataclasses import dataclass, field
 from importlib import metadata
 from pathlib import Path
 from types import MappingProxyType
@@ -28,16 +30,16 @@ from devkit.distribution.errors import (
     OverrideDriftError,
     SelectionError,
     StrayFilesNotice,
-    SubagentUnprojectedNotice,
     ToolVersionChangedNotice,
+    UnprojectedNotice,
     UnsafeWorkspaceError,
 )
 from devkit.distribution.installation import guidance_block
-from devkit.distribution.installation.config import ProjectConfig, effective_selection, read_config
-from devkit.distribution.installation.discovery import InstalledBundle
+from devkit.distribution.installation.config import ConfigUpdate, ProjectConfig, effective_selection, read_config
+from devkit.distribution.installation.discovery import InstalledBundle, unusable_notices
 from devkit.distribution.installation.hooks import run_post_sync
 from devkit.distribution.installation.inventory import GENERATED_SKILLS, Inventory, Seed, desired_inventory
-from devkit.distribution.installation.overrides import Drift
+from devkit.distribution.installation.overrides import Drift, overridden_files
 from devkit.distribution.installation.receipt import read_receipt, receipt_content, receipt_json
 from devkit.distribution.installation.results import Action, SyncResult, Unselected
 from devkit.distribution.installation.transaction import (
@@ -54,6 +56,7 @@ EDITED_FILE_FIX = (
     "Keep the edit: copy it aside, run `devkit override create <bundle>:<asset>` and reapply it there;"
     " discard it: `git checkout -- <path>`"
 )
+UNOWNED_FILE_FIX = "Move each unowned file out of the way (or delete it), then run `devkit sync`"
 
 Changes = dict[str, Content | None]
 
@@ -121,6 +124,7 @@ def _resolve_selection(
     active = {**effective_selection(installed, config), **(presets or {})}
     for name in deselect:
         active.pop(name, None)
+    unusable_notices(installed, active)  # a selected bundle that failed to load stops the sync
     missing = sorted(set(active) - {item.bundle.name for item in installed})
     if missing:
         raise SelectionError(
@@ -154,15 +158,79 @@ def _refuse_override_drift(drift: list[Drift]) -> None:
         raise _override_drift(drift, blocked=True)
 
 
+@dataclass
+class _Conflicts:
+    """Everything a sync would overwrite without owning it, raised together as one ``SYNC_CONFLICT``."""
+
+    edited: list[str] = field(default_factory=list)
+    unowned: list[str] = field(default_factory=list)
+    # ``"modified"`` or ``"unowned"`` when the root ``AGENTS.md`` block is in conflict.
+    block: str | None = None
+
+    def check(self) -> None:
+        """Raise the ``ConflictError`` naming every conflicting path; nothing to do without one."""
+        parts: list[tuple[str, str, str]] = []  # (message, fix, what to report)
+        if self.edited:
+            names = ", ".join(self.edited)
+            parts.append(
+                (
+                    f"user-modified deployment files: {names}",
+                    EDITED_FILE_FIX,
+                    f"Whether to keep the edits to {names} (as project overrides) or discard them",
+                )
+            )
+        if self.unowned:
+            names = ", ".join(self.unowned)
+            parts.append(
+                (
+                    f"unowned destinations already exist: {names}",
+                    UNOWNED_FILE_FIX,
+                    f"Whether {names} may be replaced by the bundle's files; devkit does not overwrite files it"
+                    " does not own",
+                )
+            )
+        if self.block == "modified":
+            parts.append(
+                (
+                    f"user-modified guidance block: {AGENTS_FILE}",
+                    f"Restore the block between the markers (for example `git checkout -- {AGENTS_FILE}`),"
+                    " keep project text outside them, then run `devkit sync`",
+                    "Whether to discard the edit inside the devkit block markers",
+                )
+            )
+        elif self.block == "unowned":
+            parts.append(
+                (
+                    f"unowned guidance block already exists: {AGENTS_FILE}",
+                    f"Remove the devkit block markers from {AGENTS_FILE}, then run `devkit sync`",
+                    f"Whether to remove the devkit block markers that {AGENTS_FILE} already has,"
+                    " so sync can write its own",
+                )
+            )
+        if parts:
+            raise ConflictError(
+                "; ".join(message for message, _, _ in parts),
+                target_files=[*self.edited, *self.unowned, *([AGENTS_FILE] if self.block else [])],
+                fix="; ".join(fix for _, fix, _ in parts),
+                what_to_report="; ".join(report for _, _, report in parts),
+            )
+
+
 def _plan_managed_files(
-    root: Path, old_files: dict[str, FileRecord], desired: dict[str, Content], changes: Changes, actions: list[Action]
+    root: Path,
+    old_files: dict[str, FileRecord],
+    desired: dict[str, Content],
+    changes: Changes,
+    actions: list[Action],
+    conflicts: _Conflicts,
 ) -> list[AdvisoryError]:
     """Add every managed-file change; return an ``ORPHAN_LEFT`` notice per orphan.
 
-    A managed file edited by hand that is still desired aborts the sync. One
+    A managed file edited by hand that is still desired is a conflict. One
     that is no longer desired is an orphan: left on disk, dropped from the
     receipt, reported. A file that exists without being owned is never
-    overwritten.
+    overwritten: one identical to the desired content (bytes and execute bit)
+    is adopted into the receipt without a write, any other is a conflict.
     """
     orphans: list[AdvisoryError] = []
     for name in sorted(old_files.keys() | desired.keys()):
@@ -180,13 +248,11 @@ def _plan_managed_files(
                         )
                     )
                     continue
-                raise edited_files_error(f"user-modified deployment file: {name}", [name])
-        elif current is not None:
-            raise ConflictError(
-                f"unowned destination already exists: {name}",
-                target_files=[name],
-                what_to_report=f"Whether {name} may be replaced by the bundle's file; devkit does not overwrite files it does not own",
-            )
+                conflicts.edited.append(name)
+                continue
+        elif current is not None and not same_content(current, after):
+            conflicts.unowned.append(name)
+            continue
         if not same_content(current, after):
             changes[name] = after
             action = "remove" if after is None else ("create" if current is None else "update")
@@ -198,27 +264,30 @@ def _plan_guidance_block(
     root: Path,
     changes: Changes,
     actions: list[Action],
+    conflicts: _Conflicts,
     recorded: str | None,
     *,
     enabled: bool,
     bundles: list[str],
     entry_skills: list[str],
     fragments: list[str],
-) -> str | None:
-    """Add the root ``AGENTS.md`` change for the managed block; return the hash to record.
+) -> tuple[str | None, list[AdvisoryError]]:
+    """Add the root ``AGENTS.md`` change for the managed block; return the hash to record and any notice.
 
     The block is owned like a managed file: a hand edit (digest differs from
-    the receipt) stops the sync before any write, a removed block is written
-    again, and the bytes outside the markers are never touched. With
-    ``enabled`` off, a block whose digest still matches the receipt is removed
-    and the receipt stops recording it; a project that never had the block is
-    not read at all.
+    the receipt) is a conflict, a removed block is written again, and the bytes
+    outside the markers are never touched. Markers the receipt does not know
+    are a conflict, unless the block is exactly the one sync writes: that one
+    is adopted. With ``enabled`` off the receipt stops recording the block: one
+    whose digest still matches is removed, an edited one is left in place with
+    an ``ORPHAN_LEFT`` warning; a project that never had the block is not read
+    at all.
     """
     if not enabled and recorded is None:
-        return None
+        return None, []
     if (root / AGENTS_FILE).is_symlink():
         if not enabled:
-            return None
+            return None, []
         raise UnsafeWorkspaceError(
             f"{AGENTS_FILE} is a symlink; devkit writes its guidance block only into a regular root {AGENTS_FILE}",
             target_files=[AGENTS_FILE],
@@ -228,33 +297,33 @@ def _plan_guidance_block(
     current = snapshot(root, AGENTS_FILE)
     text = guidance_block.decode(current.data if current else None)
     existing = guidance_block.extract(text)
-    if existing is not None:
-        if recorded is None:
-            raise ConflictError(
-                f"unowned guidance block already exists: {AGENTS_FILE}",
-                target_files=[AGENTS_FILE],
-                what_to_report=f"Whether to remove the devkit block markers that {AGENTS_FILE} already has, so sync can write its own",
-            )
-        if guidance_block.digest(existing) != recorded:
-            raise ConflictError(
-                f"user-modified guidance block: {AGENTS_FILE}",
-                target_files=[AGENTS_FILE],
-                what_to_report="Whether to discard the edit inside the devkit block markers",
-                fix=f"Restore the block between the markers (for example `git checkout -- {AGENTS_FILE}`),"
-                " keep project text outside them, then run `devkit sync`",
-            )
     mode = current.mode if current else 0o644
     if not enabled:
-        if existing is not None and text is not None:
-            remainder = guidance_block.strip(text)
-            changes[AGENTS_FILE] = None if remainder is None else Content(remainder.encode("utf-8"), mode)
-            actions.append(Action(AGENTS_FILE, "remove" if remainder is None else "update"))
-        return None
+        if existing is None or text is None:
+            return None, []
+        if guidance_block.digest(existing) != recorded:
+            return None, [
+                OrphanLeftNotice(
+                    f"left modified guidance block in place: {AGENTS_FILE} (guidance_block = false)",
+                    target_files=[AGENTS_FILE],
+                    what_to_report=f"Whether to delete the devkit block from {AGENTS_FILE};"
+                    " devkit never removes an edited block",
+                )
+            ]
+        remainder = guidance_block.strip(text)
+        changes[AGENTS_FILE] = None if remainder is None else Content(remainder.encode("utf-8"), mode)
+        actions.append(Action(AGENTS_FILE, "remove" if remainder is None else "update"))
+        return None, []
     desired = guidance_block.render(bundles, entry_skills, fragments)
+    if existing is not None:
+        if recorded is None and guidance_block.normalize(existing) != desired:
+            conflicts.block = "unowned"
+        elif recorded is not None and guidance_block.digest(existing) != recorded:
+            conflicts.block = "modified"
     if existing is None or guidance_block.normalize(existing) != desired:
         changes[AGENTS_FILE] = Content(guidance_block.compose(text, desired).encode("utf-8"), mode)
         actions.append(Action(AGENTS_FILE, "create" if current is None else "update"))
-    return guidance_block.digest(desired)
+    return guidance_block.digest(desired), []
 
 
 def _plan_seeds(
@@ -274,20 +343,35 @@ def _plan_seeds(
 
 
 def _carried_overrides(
-    root: Path, previous: Receipt | None, selected: set[str]
+    root: Path,
+    installed: list[InstalledBundle],
+    previous: Receipt | None,
+    tracked: dict[str, dict[str, OverrideRecord]],
 ) -> dict[str, dict[str, OverrideRecord]]:
-    """Override records of deselected bundles whose override files are still in the project.
+    """``tracked`` plus the previous records of assets this sync does not deploy whose override files remain.
 
-    Keeping the baseline means drift that happens while a bundle is deselected
-    is still reported when it is selected again.
+    Keeping the baseline means drift that happens while an asset is not
+    deployed (its bundle deselected, its preset narrowed) is still reported
+    when it is selected again. A bundle that is no longer installed keeps its
+    records while it has override files at all.
     """
+    overrides = {bundle: dict(records) for bundle, records in tracked.items()}
     if previous is None:
-        return {}
-    return {
-        bundle: dict(records)
-        for bundle, records in previous.overrides.items()
-        if bundle not in selected and (root / OVERRIDES_PATH / bundle).is_dir()
-    }
+        return overrides
+    bundles = {item.bundle.name: item.bundle for item in installed}
+    for name, records in previous.overrides.items():
+        bundle = bundles.get(name)
+        for asset_id, record in records.items():
+            if asset_id in tracked.get(name, {}):
+                continue
+            asset = bundle.asset(asset_id) if bundle is not None else None
+            if bundle is not None and asset is not None:
+                present = bool(overridden_files(root, bundle, asset))
+            else:
+                present = (root / OVERRIDES_PATH / name).is_dir()
+            if present:
+                overrides.setdefault(name, {})[asset_id] = record
+    return overrides
 
 
 def _build_receipt(
@@ -318,9 +402,14 @@ def _build_receipt(
 def _plan_receipt(
     previous: Receipt | None, receipt: Receipt, changes: Changes, actions: list[Action]
 ) -> list[AdvisoryError]:
-    """Add the receipt write when anything but the writing tool changed; notice a tool version change it records."""
-    if previous is not None and _without_tool(receipt) == _without_tool(previous):
-        # The writing tool's version alone is not a change: a no-op keeps the exact receipt bytes.
+    """Add the receipt write when anything else changes; notice a tool version change it records."""
+    if (
+        previous is not None
+        and _without_tool(receipt) == _without_tool(previous)
+        and (not changes or receipt.tool == previous.tool)
+    ):
+        # The writing tool's version alone is not a change: a no-op keeps the exact receipt bytes;
+        # a sync that writes anything else records the running version.
         return []
     changes[RECEIPT_PATH] = receipt_content(receipt)
     actions.append(Action(RECEIPT_PATH, "update" if previous else "create"))
@@ -396,15 +485,16 @@ def _state_notices(drift: list[Drift], stray: list[str]) -> list[AdvisoryError]:
 
 
 def _selection_notices(inventory: Inventory, new: list[Unselected]) -> list[AdvisoryError]:
-    """Notices about what the selection left out: subagents without a native variant, and installed bundles the
+    """Notices about what the selection left out: skills and subagents without a variant for a selected agent, and
+    installed bundles the
     project has not decided about (neither selected nor opted out) that this clone has not been told about yet."""
     notices: list[AdvisoryError] = []
     if inventory.unprojected:
         items = [f"{item.bundle}:{item.asset} ({item.agent})" for item in inventory.unprojected]
         notices.append(
-            SubagentUnprojectedNotice(
-                f"subagents without a native variant for a selected agent were not projected: {', '.join(items)}",
-                "the bundle can add the variant or ship a role contract; "
+            UnprojectedNotice(
+                f"skills and subagents without a variant for a selected agent were not projected: {', '.join(items)}",
+                "the bundle can add the variant (or, for a subagent, ship a role contract); "
                 "the project can narrow `agents` in .devkit/config.toml",
             )
         )
@@ -455,22 +545,37 @@ def sync_project(
     presets: dict[str, list[str]] | None = None,
     deselect: list[str] | tuple[str, ...] = (),
     dry_run: bool = False,
+    save: Callable[[], ConfigUpdate] | None = None,
 ) -> SyncResult:
     """Deploy the bundles selected in ``config.toml`` and the built-in bundles it does not opt out of.
 
     ``agents``, ``presets`` (per-bundle replacements) and ``deselect`` layer
-    one-run selections over the configuration; callers persist them separately.
-    Post-sync hooks run after the project lock is released.
+    one-run selections over the configuration. ``save`` persists a selection
+    instead: it renders the configuration edit under the project lock, from the
+    configuration as it is then, so concurrent selection commands never lose
+    an edit; the edit is written before the sync reads the configuration and
+    put back when the sync fails, and post-sync hooks see it. ``save`` is never
+    called on ``dry_run``. Post-sync hooks run after the project lock is
+    released.
     """
     root = require_project_dir(root)
     with project_lock(root):
-        result = sync_locked(root, installed, agents=agents, presets=presets, deselect=deselect, dry_run=dry_run)
+        update = save() if save is not None and not dry_run else None
+        if update is not None:
+            update.apply()
+        try:
+            finish = commit_locked(root, installed, agents=agents, presets=presets, deselect=deselect, dry_run=dry_run)
+        except BaseException:
+            if update is not None:
+                update.revert()
+            raise
+        result = finish()
     if not dry_run:
         result.notices.extend(run_post_sync(root, result.to_dict()))
     return result
 
 
-def sync_locked(
+def commit_locked(
     root: Path,
     installed: list[InstalledBundle],
     *,
@@ -478,56 +583,77 @@ def sync_locked(
     presets: dict[str, list[str]] | None = None,
     deselect: list[str] | tuple[str, ...] = (),
     dry_run: bool = False,
-) -> SyncResult:
-    """``sync_project`` for a caller that already holds the project lock; runs no hooks."""
+    rebaseline: tuple[str, str] | None = None,
+) -> Callable[[], SyncResult]:
+    """Plan a sync and, unless ``dry_run``, commit it; the caller holds the project lock. Runs no hooks.
+
+    Returns the step that follows the commit (recording the installed bundles,
+    scanning for stray files, building the result). A failure there leaves the
+    committed files in place, so a caller that undoes its own writes when the
+    sync fails calls it outside that scope. ``rebaseline`` (``bundle, asset``)
+    takes the current upstream as the baseline of that asset's override, for
+    ``devkit override create``, which has just written the baseline copies.
+    """
     require_no_journal(root)
     config = read_config(root)
     previous = read_receipt(root)
     selection = _resolve_selection(installed, config, agents, presets, deselect)
+    previous_overrides = {b: dict(r) for b, r in previous.overrides.items()} if previous else {}
+    if rebaseline is not None:
+        previous_overrides.get(rebaseline[0], {}).pop(rebaseline[1], None)
     inventory = desired_inventory(
         [item for item in installed if item.bundle.name in selection.presets],
         {name: list(values) for name, values in selection.presets.items()},
         list(selection.agents),
         root=root,
-        previous_overrides={b: dict(r) for b, r in previous.overrides.items()} if previous else None,
+        previous_overrides=previous_overrides,
     )
     if config.override_drift == "block":
         _refuse_override_drift(inventory.drift)
     old_files = dict(previous.file_records) if previous else {}
     changes: Changes = {}
     actions: list[Action] = []
-    notices = _plan_managed_files(root, old_files, inventory.files, changes, actions)
+    conflicts = _Conflicts()
+    notices = unusable_notices(installed, selection.presets)
+    notices.extend(_plan_managed_files(root, old_files, inventory.files, changes, actions, conflicts))
     seeded = _plan_seeds(root, inventory.seeds, changes, actions)
-    block_hash = _plan_guidance_block(
+    block_hash, block_notices = _plan_guidance_block(
         root,
         changes,
         actions,
+        conflicts,
         previous.guidance_block if previous else None,
         enabled=config.guidance_block,
         bundles=list(selection.presets),
         entry_skills=[kind for kind in GENERATED_SKILLS if any(asset.kind == kind for asset in inventory.assets)],
         fragments=inventory.fragments(),
     )
-    overrides = {**_carried_overrides(root, previous, set(selection.presets)), **inventory.overrides}
+    conflicts.check()
+    notices.extend(block_notices)
+    overrides = _carried_overrides(root, installed, previous, inventory.overrides)
     receipt = _build_receipt(selection, inventory, overrides, seeded, block_hash)
     notices.extend(_plan_receipt(previous, receipt, changes, actions))
     seen = _read_seen_bundles(root)
     if not dry_run:
         apply_changes(root, changes)
-        _record_seen_bundles(root, installed, seen)
-    owned = old_files.keys() | inventory.files.keys()
-    return _sync_result(
-        root,
-        installed,
-        selection,
-        inventory,
-        owned,
-        actions,
-        notices,
-        opted_out=config.opted_out,
-        seen=seen,
-        dry_run=dry_run,
-    )
+
+    def finish() -> SyncResult:
+        if not dry_run:
+            _record_seen_bundles(root, installed, seen)
+        return _sync_result(
+            root,
+            installed,
+            selection,
+            inventory,
+            old_files.keys() | inventory.files.keys(),
+            actions,
+            notices,
+            opted_out=config.opted_out,
+            seen=seen,
+            dry_run=dry_run,
+        )
+
+    return finish
 
 
 def recover_project(root: Path) -> int:

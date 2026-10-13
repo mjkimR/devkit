@@ -9,12 +9,13 @@ from typing import Any
 
 from devkit.core.errors import UnsafePathError
 from devkit.core.paths import normalize_relpath
-from devkit.distribution.bundles.common import AGENT_NAMES, ALL, SLUG, VERSION
+from devkit.distribution.bundles.common import AGENT_NAMES, ALL, SLUG, VERSION, locate_frontmatter
 from devkit.distribution.bundles.fragments import read_fragment, references
 from devkit.distribution.bundles.instructions import read_instruction_header
 from devkit.distribution.bundles.playbooks import playbook_entry, read_playbook_header
-from devkit.distribution.bundles.subagents import read_contract, subagent_entry
+from devkit.distribution.bundles.subagents import HOST_FILES, read_contract, subagent_entry
 from devkit.distribution.bundles.workflows import read_workflow_header, workflow_entry
+from devkit.distribution.content import normal_mode
 from devkit.distribution.errors import BundleError, SelectionError
 
 KINDS = frozenset(
@@ -31,6 +32,12 @@ KINDS = frozenset(
         "guidance",
     }
 )
+# The kinds projected into agent directories (agent-projections.md); only they may ship per-agent ``variants``.
+VARIANT_KINDS = frozenset({"skill", "subagent"})
+# Agents reading one shared skill directory (``.agents/skills``): their skill variants must be identical.
+SHARED_SKILL_AGENTS = ("codex", "antigravity")
+# The entry skills ``devkit sync`` generates next to synchronized playbooks and workflows.
+RESERVED_SKILL_IDS = frozenset({"devkit-playbook", "devkit-workflow"})
 # Workspace roots a seeded target may never enter: devkit's own state, Git, agent projections
 # and the root guidance file are owned by devkit, the host or the project in other ways.
 # Compared case-insensitively: on a case-insensitive file system ``.GIT`` is ``.git``.
@@ -155,7 +162,12 @@ def seed_target(value: Any, context: str) -> str:
     if not isinstance(value, str) or not value:
         raise BundleError(f"{context}: target: expected a relative POSIX path")
     rel = _authoring_path(value, f"{context}: unsafe target path: {value}")
-    if rel.parts[0].casefold() in SEED_FORBIDDEN_ROOTS or value.casefold() in SEED_FORBIDDEN_FILES:
+    if (
+        rel.parts[0].casefold() in SEED_FORBIDDEN_ROOTS
+        or value.casefold() in SEED_FORBIDDEN_FILES
+        # A nested repository's ``.git`` (hooks, config) is as much Git's as the workspace's own.
+        or any(part.casefold() == ".git" for part in rel.parts)
+    ):
         raise BundleError(f"{context}: target may not be under devkit, Git, agent or root guidance paths: {value}")
     return value
 
@@ -182,11 +194,14 @@ def source_files(root: Path, source: str) -> list[Path]:
 
 
 def _check_source(root: Path, asset_id: str, kind: str, variant: str, source: str) -> None:
-    """Validate the kind-specific content of one source."""
+    """Validate the kind-specific content of one source, as every agent projection will read it."""
     path = safe_source(root, source)
     files = source_files(root, source)
-    if kind == "skill" and (not path.is_dir() or not (path / "SKILL.md").is_file()):
-        raise BundleError(f"{asset_id}: skill source must contain SKILL.md")
+    if kind == "skill":
+        if not path.is_dir() or not (path / "SKILL.md").is_file():
+            raise BundleError(f"{asset_id}: skill source must contain SKILL.md")
+        # Sync inserts the context prerequisite after the frontmatter, which must therefore be well-formed.
+        locate_frontmatter((path / "SKILL.md").read_bytes(), f"{asset_id}/{source}/SKILL.md", "skill")
     if kind == "instruction":
         for file in files:
             read_instruction_header(file.read_bytes(), f"{asset_id}/{file.relative_to(root).as_posix()}")
@@ -200,6 +215,17 @@ def _check_source(root: Path, asset_id: str, kind: str, variant: str, source: st
         read_fragment(path.read_bytes(), f"{asset_id}/{source}")
     if kind == "subagent" and variant == "common":
         read_contract(subagent_entry(root, source).read_bytes(), f"{asset_id}/{source}", asset_id)
+    elif kind == "subagent" and (not path.is_file() or path.suffix != HOST_FILES[variant]):
+        raise BundleError(f"{asset_id}/{source}: the {variant} subagent variant must be one {HOST_FILES[variant]} file")
+
+
+def _tree(root: Path, source: str) -> list[tuple[str, bytes, int]]:
+    """Each file of a source by relative path, with its bytes and normalized mode."""
+    base = root / source
+    return [
+        (path.relative_to(base).as_posix(), path.read_bytes(), normal_mode(path.stat().st_mode))
+        for path in source_files(root, source)
+    ]
 
 
 def _asset(root: Path, raw: Any) -> Asset:
@@ -210,15 +236,17 @@ def _asset(root: Path, raw: Any) -> Asset:
         raise BundleError(f"unknown asset kind: {kind}")
     if ("source" in item) == ("variants" in item):
         raise BundleError(f"{asset_id}: declare exactly one of source or variants")
+    if kind == "skill" and asset_id in RESERVED_SKILL_IDS:
+        raise BundleError(f"{asset_id}: skill id is reserved for the entry skill devkit sync generates")
     seeded = item.get("seeded", False)
     if type(seeded) is not bool:
         raise BundleError(f"{asset_id}: seeded must be a boolean")
     if seeded and kind != "document":
         raise BundleError(f"{asset_id}: only document assets can be seeded")
-    if seeded and "variants" in item:
-        raise BundleError(f"{asset_id}: a seeded asset declares a single source")
-    if kind == "guidance" and "variants" in item:
-        raise BundleError(f"{asset_id}: a guidance asset declares a single source")
+    if "variants" in item and kind not in VARIANT_KINDS:
+        raise BundleError(
+            f"{asset_id}: only skill and subagent assets declare variants; a {kind} asset declares a single source"
+        )
     if ("target" in item) != seeded:
         raise BundleError(f"{asset_id}: target is required for seeded assets and not allowed otherwise")
     target_path = seed_target(item["target"], asset_id) if seeded else None
@@ -232,8 +260,17 @@ def _asset(root: Path, raw: Any) -> Asset:
             raise BundleError(f"{asset_id}: unknown variants {unknown}; expected agents {list(AGENT_NAMES)}")
     sources = []
     for variant, source in sorted(pairs.items()):
-        _check_source(root, asset_id, kind, variant, source)
+        try:
+            _check_source(root, asset_id, kind, variant, source)
+        except OSError as exc:
+            raise BundleError(f"{asset_id}: cannot read source {source}: {exc}") from exc
         sources.append((variant, source))
+    shared = [pairs[agent] for agent in SHARED_SKILL_AGENTS if agent in pairs]
+    if kind == "skill" and len(shared) == 2 and _tree(root, shared[0]) != _tree(root, shared[1]):
+        raise BundleError(
+            f"{asset_id}: codex and antigravity skill variants project to the same .agents/skills directory"
+            " and must be identical"
+        )
     return Asset(asset_id, kind, tuple(sources), seeded, target_path)
 
 
@@ -254,8 +291,38 @@ def _check_fragment_references(bundle: Bundle) -> None:
                 raise BundleError(f"{preset}: selects guidance {asset.id} without the assets it names: {missing}")
 
 
+def _check_workflow_ids(bundle: Bundle) -> None:
+    """Workflow definitions are found by their header ``id``: two assets of one bundle may not share it."""
+    seen: dict[str, str] = {}
+    for asset in bundle.assets:
+        if asset.kind != "workflow":
+            continue
+        ((_, source),) = asset.sources
+        header = read_workflow_header(workflow_entry(bundle.root, source).read_bytes(), f"{asset.id}/{source}")
+        if header.id in seen:
+            raise BundleError(f"{asset.id}: workflow id {header.id!r} is already declared by asset {seen[header.id]}")
+        seen[header.id] = asset.id
+
+
 def load_bundle(root: Path) -> Bundle:
+    """Load and validate the bundle source directory ``root``.
+
+    Every ``BundleError`` names the bundle directory under ``target_files``.
+    """
     root = root.resolve()
+    try:
+        return _load(root)
+    except OSError as exc:
+        raise BundleError(f"cannot read bundle source: {exc}", target_files=[str(root)]) from exc
+    except BundleError as exc:
+        if not exc.target_files:
+            exc.target_files = (str(root),)
+        raise
+
+
+def _load(root: Path) -> Bundle:
+    if not root.is_dir():
+        raise BundleError(f"bundle source must be a directory containing bundle.toml: {root}")
     manifest = safe_source(root, "bundle.toml")
     try:
         data = _mapping(
@@ -263,7 +330,7 @@ def load_bundle(root: Path) -> Bundle:
             {"schema", "name", "version", "assets", "presets", "default_preset", "auto_select"},
             "bundle",
         )
-    except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+    except (OSError, UnicodeError, RecursionError, tomllib.TOMLDecodeError) as exc:
         raise BundleError(f"cannot read bundle.toml: {exc}") from exc
     if type(data.get("schema")) is not int or data["schema"] != 1:
         raise BundleError("unsupported schema; expected 1")
@@ -306,6 +373,7 @@ def load_bundle(root: Path) -> Bundle:
         raise BundleError("auto_select requires default_preset")
     bundle = Bundle(root, name, version, tuple(assets), presets, default_preset, auto_select)
     _check_fragment_references(bundle)
+    _check_workflow_ids(bundle)
     if bundle.constitution is not None:
         try:
             bundle.constitution.read_text(encoding="utf-8")

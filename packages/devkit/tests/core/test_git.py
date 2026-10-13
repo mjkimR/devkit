@@ -81,3 +81,35 @@ def test_real_timeout_kills_a_waiting_git(repo: Path) -> None:
 def test_no_arguments(repo: Path) -> None:
     with pytest.raises(GitError, match="git failed"):
         run_git(repo)
+
+
+def test_git_runs_unprompted_in_the_c_locale(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[dict[str, object]] = []
+    real_run = subprocess.run
+
+    def spy(command: list[str], **kwargs: object) -> object:
+        calls.append(kwargs)
+        return real_run(command, **kwargs)  # type: ignore[call-overload]
+
+    monkeypatch.setenv("GIT_INDEX_FILE", str(repo / ".git/index"))
+    monkeypatch.setenv("LC_ALL", "ko_KR.UTF-8")
+    monkeypatch.setattr(subprocess, "run", spy)
+    run_git(repo, "status")
+    run_git(repo, "hash-object", "--stdin", input=b"x")
+    env = calls[0]["env"]
+    assert isinstance(env, dict)
+    assert (env["LC_ALL"], env["GIT_TERMINAL_PROMPT"], env["GIT_INDEX_FILE"]) == ("C", "0", str(repo / ".git/index"))
+    assert calls[0]["stdin"] is subprocess.DEVNULL and calls[1]["stdin"] is None
+
+
+def test_without_input_git_reads_nothing(repo: Path) -> None:
+    empty_blob = b"e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    assert run_git(repo, "hash-object", "--stdin").strip() == empty_blob
+
+
+def test_git_messages_are_not_localized(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LANG", "ko_KR.UTF-8")
+    monkeypatch.setenv("LC_ALL", "ko_KR.UTF-8")
+    with pytest.raises(GitError) as info:
+        run_git(tmp_path, "rev-parse", "--show-toplevel")
+    assert "not a git repository" in info.value.stderr

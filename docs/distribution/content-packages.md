@@ -23,10 +23,17 @@ src/package_b_playbooks/
 ```
 
 - The entry point value names an importable module, not a callable; the bundle lives in its `bundle/` directory.
+- The entry point name is the bundle name (`team` above registers the bundle `name = "team"`); a mismatch makes the
+  package unusable (`BUNDLE_PACKAGE_INVALID`). The name identifies the bundle even when the package cannot be loaded.
 - Loading the module runs ordinary module initialization, so `__init__.py` must have no runtime side effects.
 - A sync reads files only through `importlib.resources.as_file`; it never executes or imports rule code.
 - Bundle names are unique across the installed packages; two packages declaring the same name are an error
-  (`BUNDLE_PACKAGE_INVALID`).
+  (`BUNDLE_PACKAGE_INVALID`) for every command.
+- An installed package that cannot be used (its module fails to import, its bundle is invalid, its entry point is
+  malformed or misnamed) stops only what needs it: when the project selects its bundle, `sync`, `add`, `list` and the
+  override commands fail with `BUNDLE_PACKAGE_INVALID` and `devkit status` reports it under `errors`; otherwise each
+  of them reports it as a `BUNDLE_PACKAGE_INVALID` warning and continues, so `devkit remove <bundle>` can still
+  deselect it while the package is upgraded or uninstalled.
 - A repository without Python code (a prompt collection, a Go tool) can map its own layout into a content wheel at
   build time with Hatch `force-include`.
 

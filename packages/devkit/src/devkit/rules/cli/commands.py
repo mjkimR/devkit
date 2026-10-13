@@ -97,12 +97,11 @@ def _execute(request: RunRequest) -> None:
             }
         )
     else:
-        entries = resolve_phases(run.rules, run.config.phase_overrides) if not errors else []
-        output.print_transitions(entries, run.phase, violations)
+        output.print_transitions(run.transitions, run.phase, violations)
         output.print_violations(
             violations,
             errors,
-            {r.id: r for r in run.rules},
+            run.guides,
             run.workspace_root,
             summary_only=request.summary_only,
         )

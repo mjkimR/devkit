@@ -142,12 +142,15 @@ class _StrictLoader(yaml.SafeLoader):
 def load_header(header: str) -> dict[str, Any]:
     """Parse a frontmatter header (the YAML between the delimiters) into a mapping.
 
-    Raises ``FrontmatterError`` for invalid YAML, duplicate keys, a value that
-    is not a mapping, or a top-level key that is not a string.
+    Raises ``FrontmatterError`` for invalid YAML (including an impossible date
+    such as ``2024-02-30`` and nesting too deep to parse), duplicate keys, a
+    value that is not a mapping, or a top-level key that is not a string.
     """
     try:
         data = yaml.load(header, Loader=_StrictLoader)
-    except yaml.YAMLError as exc:
+    except RecursionError as exc:
+        raise FrontmatterError("invalid YAML frontmatter: nested too deeply") from exc
+    except (yaml.YAMLError, ValueError) as exc:  # SafeLoader raises ValueError for an impossible date
         raise FrontmatterError(f"invalid YAML frontmatter: {exc}") from exc
     if data is None:
         return {}

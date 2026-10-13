@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
+import subprocess
+import sys
+import textwrap
 from pathlib import Path
 
 import click
@@ -75,6 +79,13 @@ def probe(workspace_root: str | None, output_format: str, mode: str) -> None:
     if mode == "settings":
         echo_json(vars(output_settings()))
         return
+    if mode == "surrogate":  # a Git path decoded with surrogateescape
+        name = b"bad\xffname.md".decode("utf-8", errors="surrogateescape")
+        if output_format == "json":
+            echo_json({"files": [name, "ü"]})
+        else:
+            click.echo(f"[FILE: {name} ü]")
+        return
     echo_json({"root": str(root), "text": "ü"})
 
 
@@ -82,11 +93,68 @@ def _invoke(*args: str):
     return CliRunner().invoke(probe, list(args))
 
 
-def test_success_prints_one_object_without_escaping(tmp_path: Path) -> None:
+def test_success_prints_one_ascii_object(tmp_path: Path) -> None:
     result = _invoke("-w", str(tmp_path), "--format", "JSON")
     assert result.exit_code == 0
     assert json.loads(result.stdout) == {"root": str(tmp_path.resolve()), "text": "ü"}
-    assert '"ü"' in result.stdout
+    assert '"\\u00fc"' in result.stdout and result.stdout_bytes.isascii()
+
+
+def test_surrogate_escaped_paths_print_deterministically(tmp_path: Path) -> None:
+    as_json = _invoke("-w", str(tmp_path), "--format", "json", "--mode", "surrogate")
+    assert as_json.exit_code == 0, as_json.stderr
+    assert as_json.stdout_bytes.isascii() and '"bad\\udcffname.md"' in as_json.stdout
+    as_text = _invoke("-w", str(tmp_path), "--mode", "surrogate")
+    assert as_text.exit_code == 0, as_text.stderr
+    assert as_text.stdout_bytes == "[FILE: bad\\udcffname.md ü]\n".encode()
+
+
+def _run_python(code: str, **env: str) -> subprocess.CompletedProcess[bytes]:
+    """Run ``code`` in a fresh interpreter with the given environment additions."""
+    return subprocess.run([sys.executable, "-c", code], capture_output=True, env={**os.environ, **env}, timeout=60)
+
+
+_PROBE = textwrap.dedent("""
+    import click
+    from devkit.core.cli import FORMAT_OPTION, boundary, echo_json
+
+    @click.command()
+    @FORMAT_OPTION
+    @click.option("--mode")
+    @boundary
+    def cmd(output_format, mode):
+        if mode == "advisory":
+            raise RuntimeError("caf\u00e9")
+        if mode == "lines":
+            for i in range(200_000):
+                click.echo(f"[LINE: {i}]")
+        if mode == "json":
+            echo_json({"x": ["y" * 100] * 100_000})
+""")
+
+
+def test_output_is_utf8_whatever_the_locale() -> None:
+    script = _PROBE + "cmd(['--mode', 'advisory', '--format', 'json'])\n"
+    result = _run_python(script, LC_ALL="C", PYTHONIOENCODING="latin-1", PYTHONUTF8="0")
+    assert result.returncode == 2
+    assert json.loads(result.stdout)["error"]["message"] == "RuntimeError: café"
+    assert result.stderr.decode("utf-8").startswith("[ERROR]  (UNEXPECTED_ERROR) RuntimeError: café\n[ACTION] ")
+    assert "— " in result.stderr.decode("utf-8")  # the ACTION text's em dash, in UTF-8
+
+
+@pytest.mark.parametrize("mode", ["lines", "json"])
+def test_a_closed_stdout_ends_the_command_quietly(mode: str) -> None:
+    process = subprocess.Popen(
+        [sys.executable, "-c", _PROBE + f"cmd(['--mode', '{mode}'])\n"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    assert process.stdout is not None and process.stderr is not None
+    process.stdout.readline()
+    process.stdout.close()  # the reader goes away, as `devkit ... | head -1` does
+    stderr = process.stderr.read()
+    assert process.wait(timeout=60) == int(ExitCode.ERROR)
+    assert stderr == b""  # no advisory, no "Exception ignored" noise
 
 
 @pytest.mark.parametrize(("output_format", "on_stdout"), [("json", True), ("text", False)])
@@ -107,6 +175,22 @@ def test_unexpected_errors_and_a_missing_workspace_root(tmp_path: Path) -> None:
     error = json.loads(missing.stdout)["error"]
     assert (error["code"], error["advisory"]["mode"]) == ("ARGUMENT_INVALID", "INPUT_ERROR")
     assert missing.stderr.startswith("[ERROR]  (ARGUMENT_INVALID) --workspace-root")
+
+
+@pytest.mark.parametrize("value", ["", "  "])
+def test_an_empty_workspace_root_is_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, value: str) -> None:
+    monkeypatch.chdir(tmp_path)
+    result = _invoke("-w", value, "--format", "json")
+    assert result.exit_code == 2 and json.loads(result.stdout)["error"]["code"] == "ARGUMENT_INVALID"
+    assert result.stderr.startswith("[ERROR]  (ARGUMENT_INVALID) --workspace-root is empty")
+
+
+def test_a_looping_workspace_root_is_an_argument_error(tmp_path: Path) -> None:
+    (tmp_path / "a").symlink_to(tmp_path / "b")
+    (tmp_path / "b").symlink_to(tmp_path / "a")
+    result = _invoke("-w", str(tmp_path / "a"), "--format", "json")
+    assert result.exit_code == 2 and json.loads(result.stdout)["error"]["code"] == "ARGUMENT_INVALID"
+    assert "cannot be resolved" in json.loads(result.stdout)["error"]["message"]
 
 
 def test_a_reported_error_keeps_stdout_to_the_result(tmp_path: Path) -> None:
@@ -134,7 +218,8 @@ def test_status_reports_with_problems_exit_one_whatever_their_codes(tmp_path: Pa
 
 def test_version_lives_only_on_the_root_group() -> None:
     runner = CliRunner()
-    assert runner.invoke(root_cli, ["--version"]).exit_code == 0
+    version = runner.invoke(root_cli, ["--version"])
+    assert version.exit_code == 0 and re.fullmatch(r"\[VERSION: devkit \S+\]\n", version.stdout)
     for group in ("rules", "workflow", "gate"):
         result = runner.invoke(root_cli, [group, "--version"])
         assert result.exit_code == 2 and "No such option" in result.output
@@ -197,7 +282,9 @@ def test_logs_are_silent_by_default_and_info_lines_under_verbose(tmp_path: Path)
     assert not logging.getLogger("devkit").handlers[1:]  # the stderr handler is removed after the command
     crash = _invoke("-w", str(tmp_path), "--mode", "crash", "-v")
     assert "[INFO]   core.cli: unexpected error" in crash.stderr and "RuntimeError: boom" in crash.stderr
-    assert crash.stderr.index("[INFO]   core.cli:") < crash.stderr.index("[ERROR]  (UNEXPECTED_ERROR) boom")
+    assert crash.stderr.index("[INFO]   core.cli:") < crash.stderr.index(
+        "[ERROR]  (UNEXPECTED_ERROR) RuntimeError: boom"
+    )
 
 
 def test_stdout_never_uses_an_advisory_sentinel_as_a_kind() -> None:

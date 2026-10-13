@@ -9,7 +9,7 @@ Commands, configuration and codes are in the [reference](reference.md); its
 
 1. **Native config fidelity**: native subagent definitions and tool configurations are copied verbatim, never
    converted between hosts. An agent without a native variant gets no projection and the sync reports it
-   (`unprojected`); a role contract that does not mention a selected agent fails the sync. Nothing is silently
+   (`unprojected`); a role contract must name every agent, so a missing host fails validation. Nothing is silently
    stripped or degraded.
 2. **Standard Python packaging**: content ships as wheels installed with `uv` as dev dependencies and discovered
    through `importlib.metadata`; versions are pinned by `uv.lock`. There is no custom resolver, downloader or cache.
@@ -90,7 +90,7 @@ is the JSON the command prints.
   - `inventory.py`: the desired state (`Inventory`): managed copies, projections, rendered role contracts,
     generated entry skills, rendered fragments, seeds, override tracking.
   - `overrides.py`, `override_commands.py`: which file a deployment reads, drift tracking, `override ...` commands.
-  - `sync.py`: `sync_project` (lock, `sync_locked`, then post-sync hooks) and recovery.
+  - `sync.py`: `sync_project` (lock, a saved selection, `commit_locked`, then post-sync hooks) and recovery.
   - `guidance_block.py`: the root `AGENTS.md` block; its markers come from `devkit.core`.
   - `context.py`, `playbook_search.py`, `reading.py`: agent-facing reads under the shared lock.
   - `status.py`, `plan.py`, `results.py`: `status`, `list`, `bundle plan` and the result dataclasses.

@@ -64,8 +64,9 @@ The receipt is the single record of the installed state, committed to Git, `sche
   targets.
 - `files`: SHA-256 and mode (`0644` or `0755`) of every deployed file. Modes are compared by their execute bit only.
 - `overrides`: tracked overrides per asset, with the digests defined in
-  [Workspace Ownership, section 3](workspace-ownership.md#drift-detection). An override of a bundle that is later
-  deselected keeps its record while its files remain, so drift is still reported when the bundle is selected again.
+  [Workspace Ownership, section 3](workspace-ownership.md#drift-detection). An override of an asset that is later
+  not deployed (its bundle deselected, its preset narrowed) keeps its record while its files remain, so drift is still
+  reported when the asset is selected again.
 - `guidance_block`: the SHA-256 of the root `AGENTS.md` block (markers included, LF line endings); absent under
   `guidance_block = false`. `AGENTS.md` itself is never listed under `files`.
 - `seeded`: for every selected seeded asset, the paths it seeds (bundle, asset id, path), sorted by path; present
@@ -148,8 +149,10 @@ devkit remove starter             # deselects; unchanged deployed files are remo
 - `devkit remove` deletes a content bundle's entry and writes `false` for an auto-selected bundle.
 - The **resolved** preset name is written, never a symbolic default, so upstream releases cannot change what a
   consumer deploys.
-- Selection commands check that `config.toml` can be rewritten (a regular file, not a symlink, in a writable
-  directory) before synchronizing, and save it after the sync succeeded.
+- Selection commands render their edit under the project lock, from `config.toml` as it is then (so concurrent
+  selection commands never lose an edit), check that the file can be rewritten (a regular file, not a symlink, in a
+  writable directory), write it, and synchronize from it; when the sync fails before it commits, the previous file is
+  put back. Post-sync hooks therefore see the saved selection.
 
 ### Unselected Bundles
 
@@ -171,7 +174,7 @@ Every mutating command follows these steps:
 2. **Project lock**: `fcntl.flock` on `.devkit/transient/lock` (POSIX only). Writers (`sync`, `add`, `remove`,
    `recover`, `override create|accept|remove`) take it exclusively and fail at once when it is held (`LOCK_HELD`,
    `DEFER`). Readers (`get-context`, `playbook search`, `status`, `list`, `override list|diff`) share it and wait
-   up to ten seconds for a writer.
+   up to ten seconds for a writer; in a project without `.devkit/` they take no lock, so reading never creates it.
 3. **Write-ahead journal**: pending operations and base64 backups of the files they replace are flushed to
    `.devkit/transient/sync-journal.json` before the disk changes.
 4. **Atomic replacement**: each file is written to a temporary sibling (`.devkit-write-*`), `fchmod`ed, `fsync`ed and
@@ -185,7 +188,8 @@ Every mutating command follows these steps:
 
 ### Post-Sync Hooks
 
-After the transaction committed and the lock is released (never on `--dry-run` or `--check`), `devkit sync` (and
+After the transaction committed (with the configuration a selection command saved) and the lock is released (never
+on `--dry-run` or `--check`), `devkit sync` (and
 `devkit override create|remove`, which synchronize) calls every callable registered under the `devkit.post_sync`
 entry-point group, in sorted entry-point name order, as
 `hook(root: Path, result: dict) -> list[str | AdvisoryError] | None`, where `result` is `SyncResult.to_dict()`.

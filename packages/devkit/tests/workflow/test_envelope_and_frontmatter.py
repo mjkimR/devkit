@@ -35,8 +35,8 @@ def test_update_preserves_other_lines_and_nested_keys() -> None:
 def test_update_handles_crlf_and_missing_block() -> None:
     out = fm.update("---\r\nid: x\r\n---\r\nbody", {"k": "v"})
     assert out == "---\r\nid: x\r\nk: v\r\n---\r\nbody"
-    with pytest.raises(fm.FrontmatterError):
-        fm.update("plain", {"k": "v"})
+    assert fm.update("plain", {"k": "v"}) == "---\nk: v\n---\nplain"
+    assert fm.update("# t\r\nbody", {"k": "v"}) == "---\r\nk: v\r\n---\r\n# t\r\nbody"
 
 
 def test_render_roundtrip() -> None:

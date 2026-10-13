@@ -10,7 +10,7 @@ distribution commands must agree on:
 - ``boundary``: renders any error as an Agent Advisory Protocol block on
   stderr and, when stdout is JSON, as ``{"error": {...}}`` on stdout, then
   exits with the error's ``exit_code``;
-- ``echo_json``: stdout JSON is always exactly one object;
+- ``echo_json``: stdout JSON is always exactly one object, ASCII-only;
 - ``exit_on_problems``: a command that does work and collected problems
   exits with the highest ``exit_code`` among them;
 - ``report_exit_code``: a status or show command (``devkit status``,
@@ -22,7 +22,10 @@ distribution commands must agree on:
   ``DEVKIT_VERBOSE`` and ``DEVKIT_STRICT``; ``echo_notices`` prints the
   warnings and notices a command returned after its result, and
   ``exit_on_warnings`` applies ``--strict``. Under ``--verbose`` every
-  ``devkit`` log record is printed on stderr as an ``[INFO]`` line.
+  ``devkit`` log record is printed on stderr as an ``[INFO]`` line;
+- output bytes never depend on the locale: ``boundary`` makes stdout and
+  stderr UTF-8 with ``backslashreplace``, and a reader that closes stdout
+  early (``devkit ... | head``) ends the command quietly with exit ``2``.
 
 The output contract is ``docs/architecture/agent-output.md``.
 
@@ -36,6 +39,7 @@ from __future__ import annotations
 import contextlib
 import contextvars
 import functools
+import io
 import json
 import logging
 import os
@@ -43,7 +47,7 @@ import sys
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, NoReturn
 
 import click
 
@@ -81,19 +85,30 @@ def is_json(output_format: object) -> bool:
 
 
 def echo_json(data: Mapping[str, object]) -> None:
-    """Print one JSON object on stdout."""
-    click.echo(json.dumps(data, indent=2, ensure_ascii=False))
+    """Print one JSON object on stdout.
+
+    Non-ASCII characters are written as ``\\uXXXX`` escapes, so the bytes never
+    depend on the locale and a ``surrogateescape``-decoded path (a lone
+    surrogate) still yields valid JSON.
+    """
+    click.echo(json.dumps(data, indent=2, ensure_ascii=True))
 
 
 def existing_directory(value: str | Path, param: str = "--workspace-root") -> Path:
-    """``value`` resolved; raises ``ArgumentError`` naming ``param`` unless it is an existing directory."""
-    path = Path(value).resolve()
-    if not path.is_dir():
-        raise ArgumentError(
-            f"{param} {value}: not an existing directory",
-            target_files=[param],
-            fix=f"Pass an existing directory to {param}",
-        )
+    """``value`` resolved; raises ``ArgumentError`` naming ``param`` unless it is an existing directory.
+
+    An empty or whitespace-only value is refused rather than read as the current directory.
+    """
+    fix = f"Pass an existing directory to {param}"
+    if isinstance(value, str) and not value.strip():
+        raise ArgumentError(f"{param} is empty", target_files=[param], fix=fix)
+    try:
+        path = Path(value).resolve()
+        is_dir = path.is_dir()
+    except (RuntimeError, OSError) as exc:  # Python 3.12 raises RuntimeError for a symlink loop
+        raise ArgumentError(f"{param} {value}: cannot be resolved: {exc}", target_files=[param], fix=fix) from exc
+    if not is_dir:
+        raise ArgumentError(f"{param} {value}: not an existing directory", target_files=[param], fix=fix)
     return path
 
 
@@ -248,6 +263,31 @@ def _logs_on_stderr(enabled: bool) -> Iterator[None]:
         logger.setLevel(previous)
 
 
+def _utf8_output() -> None:
+    """Make stdout and stderr UTF-8 with ``backslashreplace``, so no output depends on the locale.
+
+    A character UTF-8 cannot encode (a lone surrogate from a ``surrogateescape``-decoded path) is
+    written as its ``\\uXXXX`` escape instead of failing the command.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        if isinstance(stream, io.TextIOWrapper):
+            with contextlib.suppress(OSError, ValueError):  # a closed or already-read stream keeps its settings
+                stream.reconfigure(encoding="utf-8", errors="backslashreplace")
+
+
+def _stdout_closed() -> NoReturn:
+    """The reader of stdout went away (``devkit ... | head``): exit ``2`` without an advisory.
+
+    Nobody reads the result any more, so nothing more is written: stdout is pointed at the null device
+    (the interpreter's final flush must not fail again) and no advisory is rendered.
+    """
+    with contextlib.suppress(AttributeError, OSError, ValueError):
+        devnull = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(devnull, sys.stdout.fileno())
+        os.close(devnull)
+    sys.exit(int(ExitCode.ERROR))
+
+
 def boundary(fn: Callable[..., Any] | None = None, *, json_only: bool = False) -> Any:
     """Decorate a click command so every error leaves through the Agent Advisory Protocol.
 
@@ -258,12 +298,21 @@ def boundary(fn: Callable[..., Any] | None = None, *, json_only: bool = False) -
     printed there too, unless the error is ``Reported`` (its result is already
     there). The process exits with the error's ``exit_code``; any other
     exception is ``UNEXPECTED_ERROR``, its traceback logged for ``--verbose``.
-    click's own exits and usage errors pass through.
+    click's own exits and usage errors pass through. A ``BrokenPipeError``
+    (the reader closed stdout) exits ``2`` without output. stdout and stderr
+    are made UTF-8 with ``backslashreplace`` first (``_utf8_output``).
     """
 
     def decorate(func: Callable[..., Any]) -> Callable[..., Any]:
         @functools.wraps(func)
         def wrapper(*args: Any, quiet: bool = False, verbose: bool = False, strict: bool = False, **kwargs: Any) -> Any:
+            _utf8_output()
+            try:
+                return guarded(*args, quiet=quiet, verbose=verbose, strict=strict, **kwargs)
+            except BrokenPipeError:  # also raised while rendering an error below
+                _stdout_closed()
+
+        def guarded(*args: Any, quiet: bool, verbose: bool, strict: bool, **kwargs: Any) -> Any:
             token: contextvars.Token[OutputSettings | None] | None = None
             try:
                 settings = resolve_output(quiet, verbose, strict)
@@ -273,10 +322,10 @@ def boundary(fn: Callable[..., Any] | None = None, *, json_only: bool = False) -
                         return func(*args, **kwargs)
                     except Exception as exc:
                         expected = isinstance(exc, AdvisoryError) and exc.level is Level.ERROR
-                        if not (expected or isinstance(exc, (click.ClickException, Reported))):
+                        if not (expected or isinstance(exc, (click.ClickException, Reported, BrokenPipeError))):
                             _log.debug("unexpected error", exc_info=exc)  # a raised notice included
                         raise
-            except (click.exceptions.Exit, click.ClickException, click.exceptions.Abort, SystemExit):
+            except (click.exceptions.Exit, click.ClickException, click.exceptions.Abort, SystemExit, BrokenPipeError):
                 raise
             except Reported as reported:
                 click.echo(reported.error.render(), err=True)

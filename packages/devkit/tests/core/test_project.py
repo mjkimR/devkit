@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -14,7 +15,7 @@ from devkit.core import (
     require_git_toplevel,
 )
 from devkit.core import project as project_module
-from devkit.core.errors import GitError
+from devkit.core.errors import GitError, UnsafePathError
 
 
 def test_nearest_devkit_directory_wins(repo: Path) -> None:
@@ -53,7 +54,7 @@ def test_walk_stops_at_the_repository_boundary(tmp_path: Path, repo: Path) -> No
     assert find_project_root(repo / "x") == repo
 
 
-def test_outside_git_walks_to_the_filesystem_root(tmp_path: Path) -> None:
+def test_outside_git_walks_up_the_parents(tmp_path: Path) -> None:
     project = tmp_path / "plain"
     (project / ".devkit").mkdir(parents=True)
     (project / "a/b").mkdir(parents=True)
@@ -121,6 +122,22 @@ def test_require_git_toplevel_names_the_workspace_root_option(repo: Path, tmp_pa
     error = caught.value
     assert (error.code, error.mode.value, error.target_files) == ("GIT_FAILED", "INPUT_ERROR", ("--workspace-root",))
     assert error.fix and "--workspace-root" in error.fix
+    assert "not a git repository" in error.message  # Git's own diagnostic is kept
+
+
+def test_require_git_toplevel_passes_through_a_git_that_did_not_run(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    original = GitError("git is not available: [Errno 2] No such file", command=("git",))
+
+    def missing(*args: object, **kwargs: object) -> bytes:
+        raise original
+
+    monkeypatch.setattr(project_module, "run_git", missing)
+    with pytest.raises(GitError) as caught:
+        require_git_toplevel(tmp_path)
+    assert caught.value is original and caught.value.mode.value == "MAINTENANCE"
+    assert git_toplevel(tmp_path) is None
 
 
 def test_read_toml_reports_its_display_name(tmp_path: Path) -> None:
@@ -142,3 +159,31 @@ def test_config_table_raises_the_area_error() -> None:
     assert config_table({"a": 1}, "area", AreaConfigError) == {"a": 1}
     with pytest.raises(AreaConfigError, match=r"config area\.x: expected a table"):
         config_table(3, "area.x", AreaConfigError)
+
+
+def test_outside_git_the_walk_stops_below_the_home_directory(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    home = (tmp_path / "home").resolve()
+    (home / ".devkit").mkdir(parents=True)  # a stray ~/.devkit
+    (home / "scratch/a").mkdir(parents=True)
+    (home / "proj/.devkit").mkdir(parents=True)
+    (home / "proj/sub").mkdir()
+    (tmp_path / ".devkit").mkdir()  # above the home directory
+    monkeypatch.setenv("HOME", str(home))
+    assert find_project_root(home / "scratch/a") == home / "scratch/a"
+    assert find_project_root(home / "proj/sub") == home / "proj"
+    assert find_project_root(home) == home
+
+
+def test_a_looping_start_is_unsafe(tmp_path: Path) -> None:
+    (tmp_path / "a").symlink_to(tmp_path / "b")
+    (tmp_path / "b").symlink_to(tmp_path / "a")
+    with pytest.raises(UnsafePathError, match="cannot be resolved"):
+        find_project_root(tmp_path / "a")
+
+
+def test_an_unsearchable_devkit_directory_is_a_config_error(tmp_path: Path, lock: Callable[[Path], None]) -> None:
+    (tmp_path / ".devkit").mkdir()
+    (tmp_path / ".devkit/config.toml").write_text("a = 1\n")
+    lock(tmp_path / ".devkit")
+    with pytest.raises(ConfigError, match=r"invalid config \.devkit/config\.toml"):
+        read_project_config(tmp_path)

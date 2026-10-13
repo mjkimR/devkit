@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import json
 from collections import Counter
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -51,7 +51,11 @@ def echo_ok(text: str = OK_TEXT) -> None:
 
 
 def guide_display(rule: Rule | None, workspace_root: Path) -> str | None:
-    path = guide_path(rule) if rule is not None else None
+    return _display_path(guide_path(rule) if rule is not None else None, workspace_root)
+
+
+def _display_path(path: Path | None, workspace_root: Path) -> str | None:
+    """``path`` relative to the workspace when it lies inside it, else absolute."""
     if path is None:
         return None
     try:
@@ -102,14 +106,14 @@ def _status(v: Violation) -> str:
     return "fixable" if v.fixable else "open"
 
 
-def _violation_line(v: Violation, rules_by_id: dict[str, Rule], workspace_root: Path) -> str:
+def _violation_line(v: Violation, guides: Mapping[str, Path], workspace_root: Path) -> str:
     line = (
         f"[VIOLATION: {v.rule_id} severity={v.severity.value} file={v.file} line={v.line} "
         f"status={_status(v)} message={_quote(v.message)}"
     )
     if v.remediation:
         line += f" remediation={_quote(v.remediation)}"
-    guide = guide_display(rules_by_id.get(v.rule_id), workspace_root)
+    guide = _display_path(guides.get(v.rule_id), workspace_root)
     if guide:
         line += f" guide={guide}"
     return line + "]"
@@ -118,12 +122,15 @@ def _violation_line(v: Violation, rules_by_id: dict[str, Rule], workspace_root: 
 def print_violations(
     violations: Sequence[Violation],
     errors: Sequence[object],
-    rules_by_id: dict[str, Rule],
+    guides: Mapping[str, Path],
     workspace_root: Path,
     *,
     summary_only: bool = False,
 ) -> None:
-    """Findings (or per-rule counts) and one summary line; a run with problems and no findings prints nothing."""
+    """Findings (or per-rule counts) and one summary line; a run with problems and no findings prints nothing.
+
+    ``guides`` maps rule IDs to guide documents (``ProjectRun.guides``).
+    """
     if errors and not violations:
         return
     if summary_only:
@@ -134,7 +141,7 @@ def print_violations(
             click.echo(f"[RULE_COUNTS: {rule_id} {_count_fields(_counts(by_rule[rule_id]))}]")
     else:
         for v in violations:
-            click.echo(_violation_line(v, rules_by_id, workspace_root))
+            click.echo(_violation_line(v, guides, workspace_root))
     click.echo(f"[SUMMARY: {_count_fields(_counts(violations))}]")
 
 

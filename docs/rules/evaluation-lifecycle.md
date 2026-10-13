@@ -28,7 +28,7 @@ Command synopsis, output and exit codes: [Rules Reference, CLI usage](reference.
 - **Phases**:
   - `linter`: relative Markdown links, the safety checks on explicit targets, and every rule declared in this phase. The Git snapshot gates evaluate this phase: `check --staged` (also run by the `rules-staged` pre-commit gate of [`devkit gate`](../gate/overview.md#2a-built-in-gates)) and `check --ci`.
   - `hygiene`: the `linter` rules plus file length warnings, every rule declared in this phase, and every rule parked there by a project phase override.
-- **Targets**: workspace-relative or absolute paths inside the workspace. A file is checked as is, even when Git ignores it (for example a workflow unit under `.devkit/transient/`). A directory expands recursively to its regular files with the same discovery as a whole-workspace scan: dependency and cache directories (`.git`, `.venv`, `node_modules`, ...), `.devkit/managed/` and `.devkit/overrides/`, and symlinks resolving outside the workspace are skipped, and inside a Git work tree only files Git does not ignore are listed (tracked plus untracked). No targets means the whole workspace; a directory without files checks nothing. A target that is neither an existing file nor a directory inside the workspace fails with `RULES_TARGET_INVALID` before any rule runs. Link repair still indexes every Markdown file in the workspace when checking selected files.
+- **Targets**: workspace-relative or absolute paths inside the workspace. A file is checked as is, even when Git ignores it (for example a workflow unit under `.devkit/transient/`). A directory expands recursively to its regular files with the same discovery as a whole-workspace scan: dependency and cache directories (`.git`, `.venv`, `node_modules`, ...), `.devkit/managed/` and `.devkit/overrides/`, and symlinks resolving outside the workspace are skipped, and inside a Git work tree only files Git does not ignore are listed (tracked plus untracked; names are compared in Unicode NFC, so a file whose on-disk name is decomposed, as macOS may store it, still matches Git's precomposed name). No targets means the whole workspace; a directory without files checks nothing. A target that is neither an existing file nor a directory inside the workspace, including a file or directory symlink that resolves outside it, fails with `RULES_TARGET_INVALID` before any rule runs. Link repair still indexes every Markdown file in the workspace when checking selected files.
 - **Exclusions**: `exclude` under `[rules]` lists workspace-relative patterns (the `**` grammar of settings overrides, section 5) that no rule targets. Excluded paths are removed from explicit, directory-expanded and snapshot targets, and `ctx.is_file_targeted` is `False` for them; a run whose explicit targets are all excluded checks nothing rather than falling back to the whole workspace. They stay in the document catalog, so link repair can still resolve to them. An invalid pattern is a policy error.
 
 ## 4. Phase Transitions: Overrides and Promotions
@@ -45,18 +45,19 @@ RULE-markdown-link = "hygiene"
 ```
 
 - Only `"hygiene"` is accepted. An override for an unknown rule, or for a rule that already runs in `hygiene`, is a policy error.
-- `linter` runs skip the rule. `hygiene` runs include it and print its remaining violation count:
+- `linter` runs skip the rule. Whole-workspace `hygiene` runs include it and print its remaining violation count:
 
   ```text
   [PHASE_OVERRIDE: RULE-markdown-link=hygiene default=linter source=.devkit/config.toml remaining=3]
   ```
 
 - At `remaining=0` the run also reports a `RULES_PROMOTION_READY` notice on stderr whose `fix` is to delete the entry, returning the rule to its default phase.
+- A `hygiene` run limited to explicit targets still evaluates the rule but prints no count and no notice: violations in the selected files say nothing about the rest of the workspace.
 - Violations report the phase the rule ran in (`phase: "hygiene"`), not its declared default.
 
 ### Rule Promotions (`promote_to`)
 
-A new rule meeting many existing violations is declared `phase=Phase.HYGIENE` with `promote_to=Phase.LINTER` ([declaration](rule-authoring.md#optional-promote_to)) instead of blocking every session at once. `hygiene` runs print its remaining count:
+A new rule meeting many existing violations is declared `phase=Phase.HYGIENE` with `promote_to=Phase.LINTER` ([declaration](rule-authoring.md#optional-promote_to)) instead of blocking every session at once. Whole-workspace `hygiene` runs print its remaining count:
 
 ```text
 [PROMOTION: RULE-no-todo=hygiene promote_to=linter remaining=12]
