@@ -98,6 +98,6 @@ is the JSON the command prints.
   - `hooks.py`: the `devkit.post_sync` extension point.
 - `errors.py`: the `DistributionError` hierarchy, one class per code, and the sync notice classes
   ([codes](reference.md#error-codes), [notices](reference.md#sync-output-and-notices)).
-- `cli/`: the distribution commands; `register(cli)` adds them to the root `devkit` group. Output and exit codes
+- `cli/`: the distribution commands, listed in `COMMANDS`; the root `devkit` group loads each one lazily by name. Output and exit codes
   follow [Agent-First Output](../architecture/agent-output.md) and the
   [reference conventions](reference.md#1-quick-start).

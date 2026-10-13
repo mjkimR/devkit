@@ -1,6 +1,6 @@
 """The distribution commands of ``devkit`` (``sync``, ``add``, ``remove``, ``list``, ``status``, ...).
 
-``register`` adds them to the root ``devkit`` group. ``sync``, ``add`` and
+``COMMANDS`` lists them; the root ``devkit`` group loads each one by name. ``sync``, ``add`` and
 ``remove`` print text by default: one ``[SYNC: ...]`` line counting the writes,
 one ``[CHANGE: <action> <path>]`` line per write, and ``[OK: ...]`` when there
 was nothing to write; their warnings and notices follow on stderr as
@@ -493,9 +493,3 @@ COMMANDS: tuple[click.Command, ...] = (
     recover,
     override,
 )
-
-
-def register(group: click.Group) -> None:
-    """Add every distribution command to ``group`` (the root ``devkit`` group)."""
-    for command in COMMANDS:
-        group.add_command(command)

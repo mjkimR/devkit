@@ -259,12 +259,16 @@ def test_version_lives_only_on_the_root_group() -> None:
     for group in ("rules", "workflow", "gate"):
         result = runner.invoke(root_cli, [group, "--version"])
         assert result.exit_code == 2 and "No such option" in result.output
-    assert {"sync", "status", "list", "override", "bundle", "rules", "workflow", "gate"} <= set(root_cli.commands)
+    names = set(root_cli.list_commands(click.Context(root_cli)))
+    assert {"sync", "status", "list", "override", "bundle", "rules", "workflow", "gate"} <= names
 
 
 def _leaf_commands(command: click.Command, path: str = "devkit"):
     if isinstance(command, click.Group):
-        for name, sub in command.commands.items():
+        ctx = click.Context(command)
+        for name in command.list_commands(ctx):
+            sub = command.get_command(ctx, name)
+            assert sub is not None, f"{path} {name}"
             yield from _leaf_commands(sub, f"{path} {name}")
     else:
         yield path, command

@@ -46,7 +46,7 @@ Every command is agent-first: its primary consumer is an AI coding agent, and it
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Layering.** `advisory` imports no other module; `core` may import `advisory`; `rules` may import `core` and `advisory`; `workflow` and `gate` may import `core`, `advisory` and `rules`; `distribution` and `compact` may import only `core` and `advisory`. `devkit.cli` assembles the command line. A test enforces this.
+**Layering.** `advisory` imports no other module; `core` may import `advisory`; `rules` may import `core` and `advisory`; `workflow` and `gate` may import `core`, `advisory` and `rules`; `distribution` and `compact` may import only `core` and `advisory`. `devkit.cli` assembles the command line. A test enforces this. The root group maps each command name to a `module:attribute` reference and imports the module only when that command runs, so a command imports only its own area and the layers below it; a test enforces this too.
 
 ## 2. Monorepo Structure
 
