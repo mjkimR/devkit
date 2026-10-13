@@ -35,7 +35,7 @@ from devkit.distribution.installation.receipt import read_receipt
 from devkit.distribution.installation.status import get_project_listing, get_project_status
 from devkit.distribution.installation.sync import sync_project
 from devkit.distribution.installation.transaction import project_lock
-from devkit.distribution.installation.workspace import AGENTS_FILE
+from devkit.distribution.installation.workspace import AGENTS_FILE, DEPLOYED
 from testsupport.distribution import cli, instruction, reload, write_bundle
 
 MANIFEST = """schema = 1
@@ -197,6 +197,7 @@ def test_every_conflicting_path_is_reported_at_once(item: InstalledBundle, targe
         )
     )
     (target / ".devkit/managed/team/bundle.toml").write_text("foreign\n")
+    (target / DEPLOYED).unlink()  # a clone whose own syncs never wrote bundle.toml
     agents = target / AGENTS_FILE
     agents.write_text(agents.read_text().replace("## devkit", "## devkit (edited)"))
     with pytest.raises(ConflictError) as raised:

@@ -24,6 +24,7 @@ from devkit.distribution.errors import (
 from devkit.distribution.installation import discovery, transaction
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.discovery import InstalledBundle, discover_bundles
+from devkit.distribution.installation.status import get_project_status
 from devkit.distribution.installation.sync import recover_project, sync_project
 from devkit.distribution.installation.workspace import JOURNAL, SEEN_BUNDLES, snapshot
 from testsupport.distribution import cli
@@ -771,3 +772,79 @@ def test_antigravity_native_variant_is_copied(installed: list[InstalledBundle], 
     result = sync_project(target, bundle, agents=["antigravity"]).to_dict()
     assert result["unprojected"] == []
     assert (target / ".agents/agents/reviewer.md").read_text() == "---\nname: reviewer\nsubagent: true\n---\nnative\n"
+
+
+def _pulled(tmp_path: Path, installed: list[InstalledBundle], target: Path) -> list[InstalledBundle]:
+    """``target`` synced with ``installed``, then a pull brings the receipt (and configuration) another clone
+    committed after syncing a newer bundle; the Git-ignored files of ``target`` stay as its own sync left them."""
+    sync_project(target, installed)
+    source = tmp_path / "source-v2"
+    shutil.copytree(installed[0].bundle.root, source)
+    (source / "guide.md").write_text("---\nname: guide\ndescription: Team guide.\n---\nupdated\n")
+    newer = [InstalledBundle("team-content", "0.2.0", load_bundle(source))]
+    other = tmp_path / "other"
+    (other / ".devkit").mkdir(parents=True)
+    shutil.copy(target / CONFIG_PATH, other / CONFIG_PATH)
+    sync_project(other, newer)
+    shutil.copy(other / RECEIPT_PATH, target / RECEIPT_PATH)
+    return newer
+
+
+def test_files_behind_a_pulled_receipt_are_updated_not_conflicts(
+    tmp_path: Path, installed: list[InstalledBundle], target: Path
+) -> None:
+    newer = _pulled(tmp_path, installed, target)
+    guide = ".devkit/managed/team/guide.md"
+    status = get_project_status(target, newer)
+    assert status.files.stale == [guide] and status.files.modified == []
+    assert [error.code for error in status.errors] == ["NOT_SYNCHRONIZED"]
+    result = sync_project(target, newer)
+    assert {"path": guide, "action": "update"} in result.to_dict()["actions"]
+    assert (target / guide).read_text().endswith("updated\n")
+    assert get_project_status(target, newer).errors == []
+
+
+def test_a_hand_edit_behind_a_pulled_receipt_still_conflicts(
+    tmp_path: Path, installed: list[InstalledBundle], target: Path
+) -> None:
+    newer = _pulled(tmp_path, installed, target)
+    guide = target / ".devkit/managed/team/guide.md"
+    guide.write_text("user edit")
+    assert get_project_status(target, newer).files.modified == [".devkit/managed/team/guide.md"]
+    with pytest.raises(ConflictError, match="user-modified"):
+        sync_project(target, newer)
+    assert guide.read_text() == "user edit"
+
+
+def test_a_file_already_at_the_desired_content_is_never_a_conflict(
+    tmp_path: Path, installed: list[InstalledBundle], target: Path
+) -> None:
+    sync_project(target, installed)
+    source = tmp_path / "source-v2"
+    shutil.copytree(installed[0].bundle.root, source)
+    (source / "guide.md").write_text("---\nname: guide\ndescription: Team guide.\n---\nupdated\n")
+    newer = [InstalledBundle("team-content", "0.2.0", load_bundle(source))]
+    guide = target / ".devkit/managed/team/guide.md"
+    guide.write_bytes((source / "guide.md").read_bytes())  # differs from the receipt, equals the new content
+    result = sync_project(target, newer)
+    assert ".devkit/managed/team/guide.md" not in [action["path"] for action in result.to_dict()["actions"]]
+
+
+def test_a_file_the_pulled_receipt_dropped_is_removed_while_unchanged(
+    tmp_path: Path, installed: list[InstalledBundle], target: Path
+) -> None:
+    sync_project(target, installed)
+    other = tmp_path / "other"
+    other.mkdir()
+    update_config(other, presets={"team": ["minimal"]}, agents=["codex"])
+    sync_project(other, installed)
+    shutil.copy(other / RECEIPT_PATH, target / RECEIPT_PATH)
+    shutil.copy(other / CONFIG_PATH, target / CONFIG_PATH)
+    skill = target / ".devkit/managed/team/skills/review/SKILL.md"
+    edited = target / ".agents/skills/review/scripts/check.py"
+    edited.write_text("edited\n")
+    assert skill.exists()
+    result = sync_project(target, installed)
+    assert not skill.exists()
+    assert {"path": ".devkit/managed/team/skills/review/SKILL.md", "action": "remove"} in result.to_dict()["actions"]
+    assert edited.read_text() == "edited\n"  # an edited file only the local record knows is left alone

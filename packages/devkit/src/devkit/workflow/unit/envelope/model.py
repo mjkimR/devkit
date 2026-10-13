@@ -51,6 +51,7 @@ class Envelope:
     file: str = ""  # unit-relative, e.g. envelopes/review-01.yaml
     seq: int = 0
     stage: str = ""
+    created_at: str = ""  # ISO 8601 UTC, as `envelope new` writes it; empty when the file has none
     summary: str = ""
     review: str = ""  # reverify: the review-NN.yaml it closes
     findings: tuple[Finding, ...] = ()
@@ -184,6 +185,7 @@ def _parse_envelope(rel: str, seq: int, name_kind: str, data: Any) -> Envelope:
         file=rel,
         seq=seq,
         stage=as_text(data.get("stage")),
+        created_at=as_text(data.get("created_at")),
         summary=as_text(data.get("summary")),
         review=review,
         findings=findings,

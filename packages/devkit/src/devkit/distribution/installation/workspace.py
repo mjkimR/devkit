@@ -23,6 +23,10 @@ JOURNAL = f"{TRANSIENT}/sync-journal.json"
 LOCK = f"{TRANSIENT}/lock"
 # The installed bundles this clone has already been told about (``BUNDLE_UNSELECTED`` reports each once).
 SEEN_BUNDLES = f"{TRANSIENT}/seen-bundles.json"
+# The signature of every file this clone's last sync left in place. The receipt is committed but the files it records
+# are Git-ignored, so after a pull that moves the receipt an untouched file differs from it; this local record tells
+# such a stale file from a hand edit.
+DEPLOYED = f"{TRANSIENT}/deployed.json"
 # Ignores the generated parts of ``.devkit/``; written by a sync when absent, then project-owned.
 DEVKIT_GITIGNORE = ".devkit/.gitignore"
 DEVKIT_GITIGNORE_TEXT = """\
@@ -44,7 +48,7 @@ OWNED_PREFIXES = (
     ".claude/agents/",
 )
 # Installation metadata the receipt can never own.
-METADATA = frozenset({RECEIPT_PATH, JOURNAL, LOCK, SEEN_BUNDLES, CONFIG_PATH, AGENTS_FILE, DEVKIT_GITIGNORE})
+METADATA = frozenset({RECEIPT_PATH, JOURNAL, LOCK, SEEN_BUNDLES, DEPLOYED, CONFIG_PATH, AGENTS_FILE, DEVKIT_GITIGNORE})
 
 
 def checked_path(root: Path, name: str) -> Path:

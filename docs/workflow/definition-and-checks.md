@@ -147,7 +147,7 @@ A check reference is `name` or `name(arg1 arg2 ...)`. Arguments are whitespace-s
 | `envelope-completed` | `kind` | the deciding `envelopes/<kind>-NN.yaml` ([Review Envelopes](envelopes.md)) has `status: completed` and no open finding |
 | `envelope-check-pass` | `kind key` | the deciding envelope is completed and `checks.<key>` starts with `PASS` |
 | `revision-ancestor` | `ancestor-kind descendant-kind` | `diff_scope.head` of the latest ancestor-kind envelope is a Git ancestor of, or equal to, that of the latest descendant-kind envelope; both must be hexadecimal commit ids. When Git cannot answer (not a repository, an unknown commit as in a shallow clone, a timeout) the check is unsatisfied and `evaluated=false`, with Git's error in the detail |
-| `lint-clean` | none | `devkit.rules` reports no violation for files under the unit directory ([Integration](overview.md#4-integration-with-the-rule-engine-and-distribution)) |
+| `lint-clean` | none | `devkit.rules` reports no violation for files under the unit directory ([Integration](overview.md#4-integration-with-the-rule-engine-and-distribution)); the detail quotes the first three violations and counts the rest, naming `devkit rules check <unit>` |
 
 ### Aliases
 

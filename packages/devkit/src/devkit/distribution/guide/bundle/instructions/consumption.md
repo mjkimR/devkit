@@ -24,7 +24,9 @@ and the configuration; edit sources and configuration, never generated copies.
 `sync` halts when a managed file that is still selected was modified, or when an
 unmanaged file with other content sits where it must write, naming every such
 file in one `SYNC_CONFLICT`; an unmanaged file identical to what it would write
-is adopted as it is. It never deletes foreign files. A modified file that is no
+is adopted as it is. A file left as this clone's last sync wrote it is not a
+modification: after a pull that moves the committed receipt, `sync` updates it.
+It never deletes foreign files. A modified file that is no
 longer selected is left in place and reported as an `ORPHAN_LEFT` warning; ask
 the user before removing it. Warnings (`[WARN]`
 blocks on stderr: orphans, override drift, stray files under `.devkit/managed/`)

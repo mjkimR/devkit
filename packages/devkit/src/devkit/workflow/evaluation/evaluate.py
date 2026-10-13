@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError, as_advisory_error
@@ -38,12 +39,14 @@ from devkit.workflow.unit.decisions import (
     Decisions,
     load_decisions,
 )
-from devkit.workflow.unit.envelope import Envelopes, load_envelopes
+from devkit.workflow.unit.envelope import Envelope, Envelopes, load_envelopes
 
 __all__ = ["LintFunc", "Options", "evaluate_definition"]
 
 # Returns one description per blocking violation, or raises (an ``AdvisoryError``) when the rules cannot run.
 LintFunc = Callable[[Path, list[str]], list[str]]
+# Violations a ``lint-clean`` detail quotes; the rest are counted, with the command that lists them all.
+LINT_DETAIL_SHOWN = 3
 
 
 @dataclass(frozen=True)
@@ -67,15 +70,16 @@ class _Evaluator:
         self.registry = registry
         self.opts = opts
         self.unit_dir = opts.unit_dir
-        self.envelopes: Envelopes = load_envelopes(self.unit_dir)
         self.all_decisions: Decisions = load_decisions(self.unit_dir)
         # Only records of this workflow written after the last handoff count.
         self.decisions = self.all_decisions.segment(doc.id, binding.segment_start)
-        self.returns = [
-            (r.seq, doc.stage_index(r.request[len(RETURN_PREFIX) :]))
-            for r in self.decisions.records
-            if r.kind == "return" and r.action == "accept"
-        ]
+        returns = [r for r in self.decisions.records if r.kind == "return" and r.action == "accept"]
+        self.returns = [(r.seq, doc.stage_index(r.request[len(RETURN_PREFIX) :])) for r in returns]
+        self.envelopes: Envelopes = _after_returns(
+            load_envelopes(self.unit_dir),
+            [(_instant(r.at), doc.stage_index(r.request[len(RETURN_PREFIX) :])) for r in returns],
+            doc,
+        )
         self.primitives = PrimitiveContext(opts.workspace_root, self.unit_dir, self.envelopes, opts.ancestor)
         self.given = set(opts.given)
         self.cache: dict[tuple[str, str], CheckResult] = {}
@@ -205,8 +209,45 @@ class _Evaluator:
         if self.lint_error is not None:
             return True, False, f"lint failed: {self.lint_error.message}"
         if self.lint_violations:
-            return True, False, f"{len(self.lint_violations)} violation(s): {'; '.join(self.lint_violations)}"
+            shown = "; ".join(self.lint_violations[:LINT_DETAIL_SHOWN])
+            more = len(self.lint_violations) - LINT_DETAIL_SHOWN
+            if more > 0:
+                unit = self.unit_dir.relative_to(self.opts.workspace_root).as_posix()
+                shown += f"; {more} more (devkit rules check {unit})"
+            return True, False, f"{len(self.lint_violations)} violation(s): {shown}"
         return True, True, ""
+
+
+def _instant(text: str) -> datetime | None:
+    """An ISO 8601 timestamp of a record (``Z`` or an offset); ``None`` when it is missing or malformed."""
+    try:
+        moment = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    return moment if moment.tzinfo is not None else None
+
+
+def _after_returns(
+    envelopes: Envelopes, returns: list[tuple[datetime | None, int]], doc: WorkflowDocument
+) -> Envelopes:
+    """The envelopes no later return re-opened.
+
+    A return to a stage voids, besides the approvals, every envelope recorded for that stage or a later one before
+    the return: going back means doing that work again, so an earlier review or report no longer satisfies the stage.
+    An envelope without a stage of the definition or a ``created_at``, or a return without a time, voids nothing.
+    """
+    timed = [(at, target) for at, target in returns if at is not None and target >= 0]
+    if not timed:
+        return envelopes
+
+    def current(envelope: Envelope) -> bool:
+        written, index = _instant(envelope.created_at), doc.stage_index(envelope.stage)
+        if written is None or index < 0:
+            return True
+        return not any(written < at and target <= index for at, target in timed)
+
+    kept = {kind: [e for e in items if current(e)] for kind, items in envelopes.by_kind.items()}
+    return Envelopes({kind: items for kind, items in kept.items() if items}, list(envelopes.errors))
 
 
 def _gate_result(gate: GateStatus) -> CheckResult:

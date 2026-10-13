@@ -15,6 +15,7 @@
     lock                  # Project lock (fcntl.flock): exclusive for writers, shared for readers
     sync-journal.json     # Write-ahead journal of an unfinished transaction
     seen-bundles.json     # Installed bundles this clone was told about (BUNDLE_UNSELECTED is announced once)
+    deployed.json         # Signatures of the files this clone's last sync left (tells stale files from edits)
 <agent native paths>      # Projected native assets (.agents/, .codex/, .claude/)
 AGENTS.md                 # Project-owned; only the DEVKIT:START/END block inside it is managed (Git-tracked)
 <seeded targets>          # Files a seeded document asset wrote once; project-owned (Git-tracked)
@@ -40,7 +41,12 @@ AGENTS.md                 # Project-owned; only the DEVKIT:START/END block insid
    deployed or removed, but consumers scanning the directory could pick them up. Project-owned content belongs
    outside the managed root (custom rules under a `--rules-dir`, overrides under `.devkit/overrides/`).
 5. **User modifications**: a deployed file whose content or execute bit differs from its receipt signature is a
-   user modification; other permission bits (`0664` under umask `002`, `0600`) are not.
+   user modification, unless it is identical to the desired content (nothing to write) or to the signature this
+   clone's last sync left in `.devkit/transient/deployed.json`. The receipt is committed but the files it records are
+   Git-ignored: a pull that moves the receipt leaves each untouched file as the clone's last sync wrote it, and such a
+   **stale** file is updated (or removed, when nothing desires it any more) like any other owned file. Other
+   permission bits (`0664` under umask `002`, `0600`) are never part of a signature. A clone without the local record
+   (a fresh clone, or one that never synced) judges by the receipt alone.
    - Still desired: the sync aborts before any write (`SYNC_CONFLICT`, naming every such file).
    - No longer desired (package removal, deselection, preset narrowing, an asset removed or renamed upstream): the
      file is an **orphan**. It stays on disk, is dropped from the receipt's `files`, and the sync continues with an

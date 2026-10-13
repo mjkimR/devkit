@@ -302,7 +302,14 @@ def test_status_without_receipt(installed: list[InstalledBundle], target: Path) 
     result = get_project_status(target, installed).to_dict()
     assert result["receipt"] is False and result["schema"] is None
     assert result["opted_out"] == [] and result["selection"] == {"agents": [], "presets": {}}
-    assert result["files"]["counts"] == {"ok": 0, "missing": 0, "modified": 0, "mode-mismatch": 0, "unsafe": 0}
+    assert result["files"]["counts"] == {
+        "ok": 0,
+        "missing": 0,
+        "stale": 0,
+        "modified": 0,
+        "mode-mismatch": 0,
+        "unsafe": 0,
+    }
     assert result["guidance_block"] == "missing" and result["seeded"] == [] and result["override_drift"] == []
     assert result["pending_journal"] is False and result["errors"] == []
     assert result["tool"] == {
@@ -322,6 +329,7 @@ def test_status_reports_every_dimension(
     assert clean["files"]["counts"] == {
         "ok": clean["files"]["counts"]["ok"],
         "missing": 0,
+        "stale": 0,
         "modified": 0,
         "mode-mismatch": 0,
         "unsafe": 0,

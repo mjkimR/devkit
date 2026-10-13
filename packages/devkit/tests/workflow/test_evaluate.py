@@ -13,7 +13,7 @@ from devkit.workflow import (
     schema_hash,
 )
 from devkit.workflow.definition.checks import CheckClass
-from testsupport.workflow import WORKFLOW, write_unit
+from testsupport.workflow import WORKFLOW, write_record, write_unit
 
 DOC = parse_definition(WORKFLOW)
 
@@ -171,6 +171,13 @@ def test_lint_check_uses_callback_and_reports_errors(tmp_path: Path) -> None:
     assert seen == [["work/a/task.md"]]
     assert res.unmet[0].detail == "1 violation(s): work/a/task.md:1 RULE-x boom"
 
+    many = [f"work/a/task.md:{n} RULE-x boom" for n in range(1, 6)]
+    res = evaluate_definition(doc, _opts(tmp_path, unit, skip_lint=False, lint=lambda root, files: many))
+    assert res.unmet[0].detail == (
+        "5 violation(s): work/a/task.md:1 RULE-x boom; work/a/task.md:2 RULE-x boom; work/a/task.md:3 RULE-x boom;"
+        " 2 more (devkit rules check work/a)"
+    )
+
     def failing(root: Path, files: list[str]) -> list[str]:
         raise RuntimeError("rule crashed")
 
@@ -242,3 +249,51 @@ def test_envelope_errors_are_surfaced_not_fatal(tmp_path: Path) -> None:
     assert '[ENVELOPE_ERROR: envelopes/review-01.yaml "missing required key kind"]' in render_evaluation(res)
     [error] = res.to_dict()["errors"]
     assert (error["code"], error["file"]) == ("ENVELOPE_INVALID", "envelopes/review-01.yaml")
+
+
+REVIEWED = parse_definition("""---
+id: reviewed
+schema_version: 1
+stages:
+  - id: build
+    exit: [file-exists(built.txt)]
+  - id: review
+    exit: [envelope-review-passed]
+  - id: report
+    exit: [file-exists(reported.txt)]
+---
+""")
+PASSED_REVIEW = "kind: review\nstatus: completed\nstage: review\ncreated_at: '{at}'\n"
+
+
+def test_a_return_voids_envelopes_recorded_before_it(tmp_path: Path) -> None:
+    unit = write_unit(tmp_path, "work/a")
+    (unit / "built.txt").write_text("x")
+    _write_env(unit, "review-01.yaml", PASSED_REVIEW.format(at="2026-10-12T09:00:00Z"))
+    assert evaluate_definition(REVIEWED, _opts(tmp_path, unit)).stage.id == "report"  # type: ignore[union-attr]
+
+    returned = {"kind": "return", "action": "accept", "workflow": "reviewed", "stage": "build"}
+    write_record(unit, "01-return-build.yaml", request="return:build", at="2026-10-12T09:30:00Z", **returned)
+    res = evaluate_definition(REVIEWED, _opts(tmp_path, unit))
+    assert res.stage is not None and res.stage.id == "review"
+    assert [u.name for u in res.unmet] == ["envelope-review-passed"]
+
+    # A review recorded after the return counts again.
+    _write_env(unit, "review-02.yaml", PASSED_REVIEW.format(at="2026-10-12T10:00:00Z"))
+    assert evaluate_definition(REVIEWED, _opts(tmp_path, unit)).stage.id == "report"  # type: ignore[union-attr]
+
+
+def test_a_return_to_a_later_stage_or_an_unplaced_envelope_voids_nothing(tmp_path: Path) -> None:
+    unit = write_unit(tmp_path, "work/a")
+    (unit / "built.txt").write_text("x")
+    # Without a stage the envelope cannot be placed in the definition, so no return voids it.
+    _write_env(unit, "review-01.yaml", "kind: review\nstatus: completed\ncreated_at: '2026-10-12T09:00:00Z'\n")
+    returned = {"kind": "return", "action": "accept", "workflow": "reviewed", "stage": "build"}
+    write_record(unit, "01-return-build.yaml", request="return:build", at="2026-10-12T09:30:00Z", **returned)
+    assert evaluate_definition(REVIEWED, _opts(tmp_path, unit)).stage.id == "report"  # type: ignore[union-attr]
+    # A review placed at its stage survives a return to a later stage.
+    _write_env(unit, "review-01.yaml", PASSED_REVIEW.format(at="2026-10-12T09:00:00Z"))
+    (unit / "decisions" / "01-return-build.yaml").unlink()
+    later = {"kind": "return", "action": "accept", "workflow": "reviewed", "stage": "report"}
+    write_record(unit, "01-return-report.yaml", request="return:report", at="2026-10-12T09:30:00Z", **later)
+    assert evaluate_definition(REVIEWED, _opts(tmp_path, unit)).stage.id == "report"  # type: ignore[union-attr]

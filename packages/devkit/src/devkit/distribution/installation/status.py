@@ -39,7 +39,12 @@ from devkit.distribution.installation.results import (
     selection_json,
     tool_json,
 )
-from devkit.distribution.installation.sync import edited_files_error, require_project_dir, tool_identity
+from devkit.distribution.installation.sync import (
+    edited_files_error,
+    read_deployed,
+    require_project_dir,
+    tool_identity,
+)
 from devkit.distribution.installation.transaction import pending_journal, project_lock
 from devkit.distribution.installation.workspace import AGENTS_FILE, snapshot
 
@@ -50,8 +55,9 @@ _EMPTY_SELECTION = Selection((), {})
 class FilesStatus:
     """Receipt-owned files compared with the disk.
 
-    ``mode_mismatch``: same bytes, different execute bit; ``unsafe``: a symlink
-    or non-regular file where the receipt records a file.
+    ``stale``: differs from the receipt but is as this clone's last sync left it (the receipt moved, for example
+    with a pull; ``devkit sync`` brings it up to date); ``mode_mismatch``: same bytes, different execute bit;
+    ``unsafe``: a symlink or non-regular file where the receipt records a file.
     """
 
     ok: int = 0
@@ -59,17 +65,20 @@ class FilesStatus:
     modified: list[str] = field(default_factory=list)
     mode_mismatch: list[str] = field(default_factory=list)
     unsafe: list[str] = field(default_factory=list)
+    stale: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "counts": {
                 "ok": self.ok,
                 "missing": len(self.missing),
+                "stale": len(self.stale),
                 "modified": len(self.modified),
                 "mode-mismatch": len(self.mode_mismatch),
                 "unsafe": len(self.unsafe),
             },
             "missing": list(self.missing),
+            "stale": list(self.stale),
             "modified": list(self.modified),
             "mode-mismatch": list(self.mode_mismatch),
             "unsafe": list(self.unsafe),
@@ -179,8 +188,10 @@ def _missing_packages(
 
 
 def _files_status(root: Path, files: dict[str, FileRecord]) -> FilesStatus:
+    deployed = read_deployed(root)
     ok = 0
     missing: list[str] = []
+    stale: list[str] = []
     modified: list[str] = []
     mode_mismatch: list[str] = []
     unsafe: list[str] = []
@@ -194,13 +205,24 @@ def _files_status(root: Path, files: dict[str, FileRecord]) -> FilesStatus:
             missing.append(name)
             continue
         sha, mode = signature(current)
-        if sha != recorded.sha256:
+        left = deployed.get(name)
+        if (
+            (sha, mode) != (recorded.sha256, recorded.mode)
+            and left is not None
+            and (sha, mode)
+            == (
+                left.sha256,
+                left.mode,
+            )
+        ):
+            stale.append(name)
+        elif sha != recorded.sha256:
             modified.append(name)
         elif mode != recorded.mode:
             mode_mismatch.append(name)
         else:
             ok += 1
-    return FilesStatus(ok, missing, modified, mode_mismatch, unsafe)
+    return FilesStatus(ok, missing, modified, mode_mismatch, unsafe, stale)
 
 
 def _block_state(root: Path, recorded: str | None, enabled: bool) -> tuple[str, AdvisoryError | None]:
@@ -223,7 +245,7 @@ def _block_state(root: Path, recorded: str | None, enabled: bool) -> tuple[str, 
 def _problems(
     files: FilesStatus, journal: bool, drift: list[tuple[str, str]], block_error: AdvisoryError | None
 ) -> list[AdvisoryError]:
-    """What ``devkit status`` exits 1 for: missing, modified, mode-mismatched or unsafe files, a journal, override
+    """What ``devkit status`` exits 1 for: missing, stale, modified, mode-mismatched or unsafe files, a journal, override
     drift, a root ``AGENTS.md`` that cannot be read safely."""
     findings = ExitCode.FINDINGS
     problems: list[AdvisoryError] = []
@@ -232,6 +254,14 @@ def _problems(
             NotSynchronizedError(
                 f"managed files are missing: {', '.join(files.missing)}",
                 target_files=files.missing,
+                exit_code=findings,
+            )
+        )
+    if files.stale:
+        problems.append(
+            NotSynchronizedError(
+                f"managed files are behind the receipt: {', '.join(files.stale)}",
+                target_files=files.stale,
                 exit_code=findings,
             )
         )

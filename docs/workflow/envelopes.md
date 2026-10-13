@@ -29,7 +29,7 @@ review: review-01.yaml       # reverify only: the review round it closes
 ```
 
 - `kind` and `status` are required; `kind` must match the file name and `status` must be `completed`, `needs_input` or `failed`.
-- A `reverify` envelope must name the `review-NN.yaml` it closes. The deciding review state is the latest review round, or the last reverify that references it.
+- A `reverify` envelope must name the `review-NN.yaml` it closes. The deciding review state is the latest review round, or the last reverify that references it. Envelopes a later `devkit workflow return` re-opened are left out first ([Returns](human-interaction.md)).
 - `completed` with no findings is a valid pass. `needs_input` and `failed` never satisfy a check.
 - `assumptions` and `unverified_areas` are lists of strings; `checks` is a mapping; `findings` is a list of mappings with only the finding keys shown above. Other top-level keys are ignored.
 - Malformed envelopes are reported as `[ENVELOPE_ERROR: file "reason"]` (in JSON, an `ENVELOPE_INVALID` entry of `errors` with its `file`) and are not loaded; evaluation continues.

@@ -164,10 +164,10 @@ Each class above derives from `SyncNotice` (`SYNC_NOTICE`), which is never repor
 ### `devkit status`
 
 `devkit status` never writes project files. It reports the selection, opted-out built-in bundles, managed file
-counts (`ok`, `missing`, `modified`, `mode-mismatch`, `unsafe`) with the offending paths, override drift of deployed
+counts (`ok`, `missing`, `stale`, `modified`, `mode-mismatch`, `unsafe`) with the offending paths, override drift of deployed
 assets, the guidance block state (`ok`, `missing`, `modified`, `unowned`, `disabled`, `invalid`), seeded paths and whether each exists, a pending journal,
 and the recorded versus running tool version; without a receipt every entry describes an empty installation. What
-needs acting on is listed under `errors`, each an error object with exit code `1`: missing managed files (`NOT_SYNCHRONIZED`, fix `devkit sync`), edited or mode-changed managed files
+needs acting on is listed under `errors`, each an error object with exit code `1`: missing managed files and stale ones, as this clone's last sync left them behind a receipt that moved (`NOT_SYNCHRONIZED`, fix `devkit sync`), edited or mode-changed managed files
 (`SYNC_CONFLICT`), recorded paths that became symlinks or non-regular files (`WORKSPACE_UNSAFE`), a root
 `AGENTS.md` that is a symlink, malformed or not UTF-8 while the block is managed (`WORKSPACE_UNSAFE`,
 `GUIDANCE_BLOCK_INVALID`; state `invalid`), a selected bundle whose package cannot be used

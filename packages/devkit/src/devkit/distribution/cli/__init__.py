@@ -13,7 +13,7 @@ stderr in JSON mode. Exit
 codes follow ``devkit.advisory.ExitCode``: ``0`` success; ``1`` from
 ``devkit sync --check`` when a synchronization is needed, from ``devkit sync --locked``
 when it refuses to change committed files (the ``RECEIPT_STALE`` error), and from
-``devkit status`` when the report shows a problem (a missing, modified,
+``devkit status`` when the report shows a problem (a missing, stale, modified,
 mode-mismatched, symlinked or non-regular managed file, a symlinked or
 malformed root ``AGENTS.md``, a selected bundle whose package fails to load or is not installed,
 a pending journal, override drift); ``2`` for any error
@@ -485,8 +485,8 @@ def list_resources(workspace_root: str | None) -> None:
 def status(workspace_root: str | None) -> None:
     """Report the installed state against the receipt without writing anything.
 
-    Problems (a missing, modified, mode-mismatched, symlinked or non-regular
-    managed file, a symlinked or malformed root AGENTS.md, a selected bundle
+    Problems (a missing, stale, modified, mode-mismatched, symlinked or
+    non-regular managed file, a symlinked or malformed root AGENTS.md, a selected bundle
     whose package fails to load, a pending journal, override drift) are listed
     under errors and rendered on stderr; any exits 1. A package the project
     does not deploy that fails to load is a warning under notices.

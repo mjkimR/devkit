@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from importlib import metadata
 from pathlib import Path
@@ -22,7 +22,7 @@ from devkit.core.receipt import (
     Selection,
     ToolRecord,
 )
-from devkit.distribution.content import Content, same_content, signature
+from devkit.distribution.content import Content, json_content, same_content, signature
 from devkit.distribution.errors import (
     BundleAutoSelectedNotice,
     BundleUnselectedNotice,
@@ -59,17 +59,20 @@ from devkit.distribution.installation.transaction import (
 )
 from devkit.distribution.installation.workspace import (
     AGENTS_FILE,
+    DEPLOYED,
     DEVKIT_GITIGNORE,
     DEVKIT_GITIGNORE_TEXT,
+    METADATA,
     SEEN_BUNDLES,
     checked_path,
+    owned_prefix,
     snapshot,
 )
 
 TOOL_PACKAGE = "devkit"
 EDITED_FILE_FIX = (
     "Keep the edit: copy it aside, run `devkit override create <bundle>:<asset>` and reapply it there;"
-    " discard it: `git checkout -- <path>`"
+    " discard it: delete the file and run `devkit sync`"
 )
 UNOWNED_FILE_FIX = "Move each unowned file out of the way (or delete it), then run `devkit sync`"
 
@@ -236,6 +239,7 @@ class _Conflicts:
 def _plan_managed_files(
     root: Path,
     old_files: dict[str, FileRecord],
+    deployed: dict[str, FileRecord],
     desired: dict[str, Content],
     changes: Changes,
     actions: list[Action],
@@ -243,20 +247,31 @@ def _plan_managed_files(
 ) -> list[AdvisoryError]:
     """Add every managed-file change; return an ``ORPHAN_LEFT`` notice per orphan.
 
-    A managed file edited by hand that is still desired is a conflict. One
-    that is no longer desired is an orphan: left on disk, dropped from the
-    receipt, reported. A file that exists without being owned is never
-    overwritten: one identical to the desired content (bytes and execute bit)
-    is adopted into the receipt without a write, any other is a conflict.
+    A file is devkit's own when it matches its receipt signature or the one
+    this clone's last sync left (``deployed``): a pull can move the committed
+    receipt while the Git-ignored file stays as that sync wrote it. A file
+    already identical to the desired content (bytes and execute bit) needs no
+    write and is never a conflict. Any other recorded file was edited by hand:
+    a conflict while it is still desired, an orphan (left on disk, dropped from
+    the receipt, reported) once it is not. A file that exists without being
+    owned is never overwritten: one identical to the desired content is adopted
+    into the receipt without a write, any other is a conflict. A file only the
+    local record knows and nothing desires any more is removed while it is
+    unchanged.
     """
     orphans: list[AdvisoryError] = []
-    for name in sorted(old_files.keys() | desired.keys()):
+    for name in sorted(old_files.keys() | desired.keys() | deployed.keys()):
         current = snapshot(root, name)
         after = desired.get(name)
-        if name in old_files:
-            record = old_files[name]
-            if current is not None and signature(current) != (record.sha256, record.mode):
-                if after is None:
+        if current is not None and not same_content(current, after):
+            records = [record for record in (old_files.get(name), deployed.get(name)) if record is not None]
+            if not records:
+                conflicts.unowned.append(name)
+                continue
+            if all(signature(current) != (record.sha256, record.mode) for record in records):
+                if after is not None:
+                    conflicts.edited.append(name)
+                elif name in old_files:
                     orphans.append(
                         OrphanLeftNotice(
                             f"left modified file in place: {name} (no longer managed)",
@@ -264,12 +279,7 @@ def _plan_managed_files(
                             what_to_report=f"Whether to delete {name}; devkit never deletes an edited file",
                         )
                     )
-                    continue
-                conflicts.edited.append(name)
                 continue
-        elif current is not None and not same_content(current, after):
-            conflicts.unowned.append(name)
-            continue
         if not same_content(current, after):
             changes[name] = after
             action = "remove" if after is None else ("create" if current is None else "update")
@@ -653,6 +663,36 @@ def _record_seen_bundles(root: Path, installed: list[InstalledBundle], seen: fro
         atomic_write(root, SEEN_BUNDLES, Content(data.encode("utf-8"), 0o644))
 
 
+def read_deployed(root: Path) -> dict[str, FileRecord]:
+    """The signatures this clone's last sync left (``DEPLOYED``); a missing or unreadable record means none.
+
+    Only paths the receipt may own are taken, so the record can never name a file outside devkit's destinations.
+    """
+    path = checked_path(root, DEPLOYED)
+    try:
+        data = json.loads(path.read_text("utf-8"))
+    except (OSError, ValueError):
+        return {}
+    files = data.get("files") if isinstance(data, dict) else None
+    if not isinstance(files, dict):
+        return {}
+    deployed: dict[str, FileRecord] = {}
+    for name, record in files.items():
+        if not isinstance(name, str) or not isinstance(record, dict) or owned_prefix(name) is None or name in METADATA:
+            continue
+        sha, mode = record.get("sha256"), record.get("mode")
+        if isinstance(sha, str) and isinstance(mode, int) and not isinstance(mode, bool):
+            deployed[name] = FileRecord(sha, mode)
+    return deployed
+
+
+def _record_deployed(root: Path, files: Mapping[str, FileRecord], recorded: dict[str, FileRecord]) -> None:
+    """Remember the signatures the sync left: after a commit every file the receipt records matches it."""
+    if dict(files) != recorded:
+        data = {"files": {name: {"sha256": r.sha256, "mode": r.mode} for name, r in sorted(files.items())}}
+        atomic_write(root, DEPLOYED, json_content(data))
+
+
 def sync_project(
     root: Path,
     installed: list[InstalledBundle],
@@ -741,7 +781,8 @@ def commit_locked(
     actions: list[Action] = []
     conflicts = _Conflicts()
     notices = unusable_notices(installed, selection.presets)
-    notices.extend(_plan_managed_files(root, old_files, inventory.files, changes, actions, conflicts))
+    deployed = read_deployed(root)
+    notices.extend(_plan_managed_files(root, old_files, deployed, inventory.files, changes, actions, conflicts))
     seeded = _plan_seeds(root, inventory.seeds, changes, actions)
     _plan_devkit_gitignore(root, changes, actions)
     block_hash, block_notices = _plan_guidance_block(
@@ -771,6 +812,7 @@ def commit_locked(
     def finish() -> SyncResult:
         if not dry_run:
             _record_seen_bundles(root, installed, seen)
+            _record_deployed(root, receipt.file_records, deployed)
         return _sync_result(
             root,
             installed,
