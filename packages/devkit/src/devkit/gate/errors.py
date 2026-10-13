@@ -65,6 +65,16 @@ class GateConfigError(GateError, ConfigError):
     fix = "Correct the [gates] table in .devkit/config.toml or in the clone-local <common-git-dir>/devkit.config"
 
 
+class GateTemplateNotice(GateError):
+    """The commented settings template could not be written to ``devkit.config`` (a warning, never raised).
+
+    Returned by ``devkit gate install`` and the post-sync refresh; the hooks and the sync themselves succeeded.
+    """
+
+    code = "GATE_CONFIG_TEMPLATE_SKIPPED"
+    level = Level.WARNING
+
+
 class GateLoadError(GateError):
     """A deployed gate file fails to import or to instantiate its gates, or two gates share an ``id``."""
 

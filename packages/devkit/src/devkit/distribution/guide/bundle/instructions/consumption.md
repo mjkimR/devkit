@@ -12,6 +12,7 @@ description: Read before using, changing or troubleshooting devkit-managed asset
 | `.devkit/config.toml` | yes | Selected bundles and presets, target agents, `guidance_block`, `override_drift`, `[playbooks]`, `[rules]`, `[workflow]`, `[gates]`; `[tool.<name>]` tables belong to other tools and are passed through unread |
 | `.devkit/installation.json` | yes | Receipt: packages, bundle versions, deployed paths, SHA-256 and mode of every file |
 | `.devkit/overrides/<bundle>/` | yes | Project-owned replacements for upstream asset files (baseline copies under `.devkit/overrides/.baseline/`) |
+| `.devkit/.gitignore` | yes | Ignores `managed/` and `transient/`; seeded by sync when absent, then project-owned |
 | `.devkit/managed/<bundle>/` | no | Pristine copies extracted from installed bundles |
 | `.devkit/transient/` | no | The project lock and the journal of an interrupted sync |
 | `.claude/`, `.agents/`, `.codex/` projections | usually no | Native copies of skills and subagents for each selected agent |
@@ -87,7 +88,9 @@ uv run devkit rules explain <RULE-id>
 
 Configure a rule's severity, phase or settings in `[rules]` of
 `.devkit/config.toml`; the managed rule file is hash-checked. Gates work the
-same way through `devkit gate` and `[gates]`. Snapshot gates (`--staged`,
+same way through `devkit gate` and `[gates]`; per-clone gate settings go in
+`.git/devkit.config`, which lists every installed gate as a commented table
+(uncomment lines in place; devkit only appends tables for new gates). Snapshot gates (`--staged`,
 `--ci`) evaluate the Git tree and trust the committed receipt: a managed rule
 that is missing or differs from the receipt's hash fails the gate, and its
 `[FIX]` says to run `devkit sync` and commit the receipt.
@@ -158,7 +161,8 @@ it and never delete the lock.
 ## Commit discipline
 
 Commit `.devkit/config.toml`, `.devkit/installation.json`, `.devkit/overrides/`,
-the root `AGENTS.md` and newly seeded files with the change that required
-them. Keep `.devkit/managed/`, `.devkit/transient/` and the native projections
-ignored according to the repository's `.gitignore`; devkit never edits
-`.gitignore` or the Git index.
+`.devkit/.gitignore`, the root `AGENTS.md` and newly seeded files with the
+change that required them. `.devkit/.gitignore` (seeded by sync when absent,
+then project-owned) keeps `.devkit/managed/` and `.devkit/transient/` out of
+Git. Keep the native projections ignored according to the repository's
+`.gitignore`; devkit never edits it or the Git index.

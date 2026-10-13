@@ -155,7 +155,13 @@ def test_manifest_accepts_seeded_document(installed: list[InstalledBundle]) -> N
 def test_seeded_files_are_written_once_and_then_project_owned(installed: list[InstalledBundle], target: Path) -> None:
     first = sync_project(target, installed).to_dict()
     seeds = {a["path"] for a in first["actions"] if a["action"] == "seed"}
-    assert seeds == {"docs/README.md", "docs/spec/check.sh", "docs/spec/glossary.md", "docs/spec/stories/README.md"}
+    assert seeds == {
+        ".devkit/.gitignore",
+        "docs/README.md",
+        "docs/spec/check.sh",
+        "docs/spec/glossary.md",
+        "docs/spec/stories/README.md",
+    }
     assert (target / "docs/README.md").read_text() == "# Docs\n"
     assert (target / "docs/spec/check.sh").stat().st_mode & 0o777 == 0o755
     receipt = json.loads((target / RECEIPT_PATH).read_text())
@@ -313,3 +319,29 @@ def test_receipt_rejects_invalid_seeded_records(installed: list[InstalledBundle]
     (target / RECEIPT_PATH).write_text(json.dumps(receipt))
     with pytest.raises(ReceiptError, match=r"seeded|may not"):
         read_receipt(target)
+
+
+def _gitignore_actions(result: dict) -> list[str]:
+    return [item["action"] for item in result["actions"] if item["path"] == ".devkit/.gitignore"]
+
+
+def test_devkit_gitignore_is_seeded_and_then_project_owned(tmp_path: Path) -> None:
+    gitignore = tmp_path / ".devkit/.gitignore"
+    assert _gitignore_actions(sync_project(tmp_path, [], dry_run=True).to_dict()) == ["seed"]
+    assert not gitignore.exists()
+
+    sync_project(tmp_path, [])
+    assert [line for line in gitignore.read_text().splitlines() if not line.startswith("#")] == [
+        "/managed/",
+        "/transient/",
+    ]
+    receipt = read_receipt(tmp_path)
+    assert receipt is None or ".devkit/.gitignore" not in receipt.file_records
+    assert sync_project(tmp_path, []).to_dict()["actions"] == []
+
+    gitignore.write_text("/transient/\n")  # a project edit is kept
+    assert sync_project(tmp_path, []).to_dict()["actions"] == []
+    assert gitignore.read_text() == "/transient/\n"
+
+    gitignore.unlink()  # a deleted one is seeded again
+    assert sync_project(tmp_path, []).to_dict()["actions"] == [{"path": ".devkit/.gitignore", "action": "seed"}]

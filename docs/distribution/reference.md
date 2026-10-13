@@ -64,7 +64,7 @@ Override semantics are specified in [Workspace Ownership, section 3](workspace-o
 - `--format text|json` (also on `add` and `remove`): the `[SYNC]`/`[CHANGE]` lines (default) or the whole
   `SyncResult` object ([Sync output and notices](#sync-output-and-notices)).
 - `--check`: read-only, for CI. Exits `1` when the workspace needs a synchronization (a missing or stale guidance
-  block and a seeded file not written yet included) and `2` on any error (for example a hand-edited managed file,
+  block, a seeded file not written yet and a missing `.devkit/.gitignore` included) and `2` on any error (for example a hand-edited managed file,
   `SYNC_CONFLICT`). Existing seeded files are never compared. An orphan alone does not fail `--check`: it is no
   longer managed, so it appears as an `ORPHAN_LEFT` warning on that run and as a `stray` file afterwards if it sits
   under the managed root.

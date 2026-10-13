@@ -56,7 +56,14 @@ from devkit.distribution.installation.transaction import (
     recover_locked,
     require_no_journal,
 )
-from devkit.distribution.installation.workspace import AGENTS_FILE, SEEN_BUNDLES, checked_path, snapshot
+from devkit.distribution.installation.workspace import (
+    AGENTS_FILE,
+    DEVKIT_GITIGNORE,
+    DEVKIT_GITIGNORE_TEXT,
+    SEEN_BUNDLES,
+    checked_path,
+    snapshot,
+)
 
 TOOL_PACKAGE = "devkit"
 EDITED_FILE_FIX = (
@@ -349,6 +356,16 @@ def _plan_seeds(
             changes[dest] = seeds[dest].content
             actions.append(Action(dest, "seed"))
     return tuple(SeededRecord(seed.bundle, seed.asset, dest) for dest, seed in sorted(seeds.items()))
+
+
+def _plan_devkit_gitignore(root: Path, changes: Changes, actions: list[Action]) -> None:
+    """Seed ``.devkit/.gitignore`` (managed copies, transient state) when it is absent; never touch an existing one.
+
+    A bundle that seeds the same path takes precedence.
+    """
+    if DEVKIT_GITIGNORE not in changes and snapshot(root, DEVKIT_GITIGNORE) is None:
+        changes[DEVKIT_GITIGNORE] = Content(DEVKIT_GITIGNORE_TEXT.encode("utf-8"), 0o644)
+        actions.append(Action(DEVKIT_GITIGNORE, "seed"))
 
 
 def _carried_overrides(
@@ -664,6 +681,7 @@ def commit_locked(
     notices = unusable_notices(installed, selection.presets)
     notices.extend(_plan_managed_files(root, old_files, inventory.files, changes, actions, conflicts))
     seeded = _plan_seeds(root, inventory.seeds, changes, actions)
+    _plan_devkit_gitignore(root, changes, actions)
     block_hash, block_notices = _plan_guidance_block(
         root,
         changes,

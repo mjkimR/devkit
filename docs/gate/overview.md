@@ -8,7 +8,7 @@
 `devkit.gate` runs policy at Git's commit hooks. It owns the **system**: hook wrappers, configuration layering, gate discovery and the stage runner. It owns almost no **policy**: gates that encode a team's or a person's commit rules ship in content wheels as `kind = "gate"` bundle assets, so installing a wheel, selecting its bundle and running `devkit sync` adds them, exactly as rules are added to `devkit.rules`.
 
 1. **System in the core, policy in bundles.** The only built-ins are the gate system's own integrations: the rule engine's staged check (`rules-staged`) and the non-empty message check (`message-nonempty`). Identity checks, timestamp handling, message conventions and similar rules belong to the content wheels that need them.
-2. **Static wrappers, runtime discovery.** The hook files never change after `devkit gate install`. Each commit discovers the gates from the installation receipt, so `devkit sync` alone changes what runs; it never writes into the hooks directory.
+2. **Static wrappers, runtime discovery.** The hook files never change after `devkit gate install`. Each commit discovers the gates from the installation receipt, so `devkit sync` alone changes what runs; it never writes into the hooks directory. It only appends the commented tables of new gates to `devkit.config` ([Settings Template](#6a-settings-template)).
 3. **Deployed with their preset.** Installing a wheel makes its gates available; a preset that contains them deploys them once it is selected, by `devkit add` or, for a bundle that declares `auto_select`, by default; a gate may additionally ship disabled and require `enabled = true` in configuration.
 4. **Fail closed where Git can still refuse.** In `pre-commit` and `commit-msg`, refusals, configuration errors and missing or drifted gate files block the commit. `post-commit` runs after the commit exists, only reports, and always exits `0`; its problems are rendered as warnings (`[WARN]`, `CONTINUE`), never as errors, so an agent does not mistake a reported problem for a failed commit.
 5. **One error format.** Gate refusals and configuration problems are Agent Advisory Protocol errors (`devkit.advisory`).
@@ -141,3 +141,32 @@ enabled = false
 - A file that cannot be read or parsed is the core `ConfigError` (`CONFIG_INVALID`), passed through unchanged; a malformed `[gates]` table or invalid settings are `GateConfigError` (`GATE_CONFIG_INVALID`), a subclass of it.
 - An entry for a gate that is not installed fails blocking stages, so a typo or a forgotten `devkit sync` cannot silently disable policy.
 - `devkit` passes `[gates]` through untouched, as it does `[rules]` and `[workflow]`.
+
+## 6a. Settings Template
+
+`devkit gate install` makes `<common-git-dir>/devkit.config` list every installed gate as a commented table, so a
+per-clone setting is changed by uncommenting lines in place:
+
+```toml
+# [gates.settings.staged-file-limit]
+# pre-commit gate, on by default: Refuses a commit that stages too many files.
+# enabled = true
+# max_files = 50  # integer; Most files one commit may stage
+```
+
+- **Content**: per gate (in stage and order), its header, stage, default state and description, `enabled` at its
+  default, then each settings field at its default with its type and the field's `metadata["help"]` when the gate
+  declares one (`field(default=50, metadata={"help": "..."})`). A field whose default is `None` shows a placeholder
+  of its type and `unset by default`; TOML has no null, so uncomment it only with a value. Gates that fail to load
+  are left out (`devkit gate status` reports them).
+- **Append-only**: a missing file is created with a header and every table. An existing file only gets the tables of
+  gates whose `[gates.settings.<id>]` header it does not mention yet, commented or not; no existing line is changed
+  or removed, so uncommented values stay where the developer put them. A table of a gate that is later removed
+  stays; once uncommented, it fails blocking stages like any entry for a gate that is not installed.
+- **Refresh**: `install` (safe to re-run) prints `[CONFIG: template=<created|updated|unchanged|skipped> path=<path>]`.
+  After every writing sync, the `devkit.post_sync` hook `gate-config-template` does the same for a repository whose
+  wrappers are installed, so a gate that `devkit add` or an upgrade brings in appears without another `install`. The
+  hook imports the receipt's gate files to read their settings, as every commit already does, and reports nothing
+  unless it skips.
+- **Skipped**: a `devkit.config` that is a symbolic link, not a regular file or not UTF-8 is never written; `install`
+  and the hook report `GATE_CONFIG_TEMPLATE_SKIPPED` (`GateTemplateNotice`, a warning) and succeed.

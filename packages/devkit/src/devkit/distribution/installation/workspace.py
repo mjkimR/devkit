@@ -23,6 +23,14 @@ JOURNAL = f"{TRANSIENT}/sync-journal.json"
 LOCK = f"{TRANSIENT}/lock"
 # The installed bundles this clone has already been told about (``BUNDLE_UNSELECTED`` reports each once).
 SEEN_BUNDLES = f"{TRANSIENT}/seen-bundles.json"
+# Ignores the generated parts of ``.devkit/``; written by a sync when absent, then project-owned.
+DEVKIT_GITIGNORE = ".devkit/.gitignore"
+DEVKIT_GITIGNORE_TEXT = """\
+# Written by devkit sync when missing; edit freely, devkit never changes it.
+# Generated content: `devkit sync` rebuilds it from the installed packages.
+/managed/
+/transient/
+"""
 # Pristine upstream copies taken when an override is created or accepted, for ``override diff``.
 BASELINE = f"{OVERRIDES_PATH}/.baseline"
 
@@ -36,7 +44,7 @@ OWNED_PREFIXES = (
     ".claude/agents/",
 )
 # Installation metadata the receipt can never own.
-METADATA = frozenset({RECEIPT_PATH, JOURNAL, LOCK, SEEN_BUNDLES, CONFIG_PATH, AGENTS_FILE})
+METADATA = frozenset({RECEIPT_PATH, JOURNAL, LOCK, SEEN_BUNDLES, CONFIG_PATH, AGENTS_FILE, DEVKIT_GITIGNORE})
 
 
 def checked_path(root: Path, name: str) -> Path:

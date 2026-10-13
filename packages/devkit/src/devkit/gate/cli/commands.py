@@ -34,7 +34,7 @@ from devkit.core.cli import (
 from devkit.gate.engine.models import Outcome, Stage
 from devkit.gate.engine.registry import display_path
 from devkit.gate.engine.runner import StageReport, load_gate_project, run_hook
-from devkit.gate.hooks import hooks
+from devkit.gate.hooks import hooks, local_config
 
 WORKSPACE = workspace_option(
     "Any directory inside the repository [default: the current directory]; "
@@ -72,9 +72,18 @@ def cli() -> None:
 )
 @boundary
 def install_cmd(workspace_root: str | None, force: bool, python: str | None) -> None:
-    """Install the pre-commit, commit-msg and post-commit wrappers."""
-    for action in hooks.install(_repo_root(workspace_root), python or sys.executable, force=force):
+    """Install the pre-commit, commit-msg and post-commit wrappers, and the commented settings template.
+
+    The template in <common-git-dir>/devkit.config gets a commented table for every installed gate it does not
+    mention yet; existing lines are never changed.
+    """
+    root = _repo_root(workspace_root)
+    for action in hooks.install(root, python or sys.executable, force=force):
         click.echo(f"[HOOK: {action}]")
+    template = local_config.refresh_project_template(root)
+    click.echo(f"[CONFIG: template={template.state} path={template.path}]")
+    if template.notice is not None:
+        echo_notices([template.notice])
 
 
 @cli.command(name="uninstall")

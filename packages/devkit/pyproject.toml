@@ -19,6 +19,9 @@ advisory = "devkit.advisory"
 authoring = "devkit.rules.authoring"
 git-commits = "devkit.gate.commits"
 
+[project.entry-points."devkit.post_sync"]
+gate-config-template = "devkit.gate.hooks.local_config:post_sync"
+
 [dependency-groups]
 dev = [
     "pytest>=8.0.0",

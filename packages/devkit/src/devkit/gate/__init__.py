@@ -34,6 +34,7 @@ from devkit.gate.errors import (
     GatePythonError,
     GateRefusedError,
     GateResultError,
+    GateTemplateNotice,
     HookBackupExistsError,
     HooksPathSetError,
 )
@@ -56,6 +57,7 @@ __all__ = [
     "GateResult",
     "GateResultError",
     "GateRun",
+    "GateTemplateNotice",
     "GatesConfig",
     "HookBackupExistsError",
     "HooksPathSetError",
