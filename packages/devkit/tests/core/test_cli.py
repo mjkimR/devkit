@@ -117,9 +117,12 @@ def test_surrogate_escaped_paths_print_deterministically(tmp_path: Path) -> None
 
 def _run_python(code: str, **env: str) -> subprocess.CompletedProcess[bytes]:
     """Run ``code`` in a fresh interpreter with the given environment additions."""
+    assert code.isascii(), "a C locale on Linux cannot pass non-ASCII -c code (macOS can, so check here)"
     return subprocess.run([sys.executable, "-c", code], capture_output=True, env={**os.environ, **env}, timeout=60)
 
 
+# ASCII only, non-ASCII text as escapes: under a C locale on Linux, CPython decodes ``-c`` with ASCII and refuses
+# any other byte before the probe runs.
 _PROBE = textwrap.dedent("""
     import click
     from devkit.core.cli import FORMAT_OPTION, boundary, echo_json
@@ -130,14 +133,14 @@ _PROBE = textwrap.dedent("""
     @boundary
     def cmd(output_format, mode):
         if mode == "advisory":
-            raise RuntimeError("caf\u00e9")
+            raise RuntimeError("caf\\u00e9")
         if mode == "lines":
             for i in range(200_000):
                 click.echo(f"[LINE: {i}]")
         if mode == "json":
             echo_json({"x": ["y" * 100] * 100_000})
         if mode == "surrogate":
-            echo_json({"files": [b"bad\\xffname.md".decode("utf-8", errors="surrogateescape"), "café"]})
+            echo_json({"files": [b"bad\\xffname.md".decode("utf-8", errors="surrogateescape"), "caf\\u00e9"]})
 """)
 
 
