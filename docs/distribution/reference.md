@@ -42,7 +42,7 @@ malformed `bundle[:preset]` or `--agent` combined with `--no-agents` (see
 | `devkit remove <bundle>...` | Deselects bundles in `.devkit/config.toml` (`false` for an auto-selected bundle), then synchronizes. |
 | `devkit list` | Installed content packages, bundle metadata, available and default presets, selection state (`builtin`, `auto_select`, `opted_out`), synchronized asset paths and the `seeded` list. |
 | `devkit status` | Read-only report of the installed state against the receipt; see [below](#devkit-status). |
-| `devkit config template` | Writes the commented template into `.devkit/config.toml`: devkit's top-level keys and the `[tool.<name>]` tables of the installed tools, each at its default, only the parts the file lacks ([Commented Template](sync-and-transactions.md#commented-template)). Prints `path`, `state` (`created`, `updated`, `unchanged`), `added` (the key and table names written) and `notices`; an invalid file is `CONFIG_INVALID` and is left alone. |
+| `devkit config template` | Writes the commented template into `.devkit/config.toml`: devkit's top-level keys, common workflow and worktree tables, and the `[tool.<name>]` tables of the installed tools, at defaults or with marked examples when unset, only the parts the file lacks ([Commented Template](sync-and-transactions.md#commented-template)). Prints `path`, `state` (`created`, `updated`, `unchanged`), `added` (the key and table names written) and `notices`; an invalid file is `CONFIG_INVALID` and is left alone. |
 | `devkit recover` | Rolls back an interrupted transaction from the journal in `.devkit/transient/` without overwriting newer edits. Prints `recovered_files`: the number of files restored. |
 | `devkit get-context <bundle>` | The bundle constitution and the header catalog of its instructions ([Context Loading](context-and-playbooks.md#2-bundle-context-devkit-get-context)). |
 | `devkit playbook search <query>` | Search over synchronized playbook headers: hybrid with the `devkit-agt[search]` extra, else lexical BM25; `--mode`, `--min-score`, `--min-similarity`, `--limit`, `--max-bytes` ([Playbook Search](context-and-playbooks.md#3-playbook-discovery-and-search-devkit-playbook)). |
@@ -120,8 +120,9 @@ enabled = true
 option = "on"
 ```
 
-A selection command that creates the file, and `devkit config template`, write every key it accepts as a comment at
-its default, with the `[tool.<name>]` tables of the installed tools
+A selection command that creates the file, and `devkit config template`, write commented managed-scope and update-policy keys,
+common workflow and worktree settings, and the registered `[tool.<name>]` tables of installed tools. Values show
+defaults, or marked examples when unset by default
 ([Commented Template](sync-and-transactions.md#commented-template)). A template extension that fails is left out
 with a `CONFIG_TEMPLATE_EXTENSION_FAILED` warning (`ConfigTemplateExtensionFailedNotice`: it failed to load, raised,
 has a name that is not a `[tool.<name>]` name, or returned no valid tables; `what_to_report` names the entry point),

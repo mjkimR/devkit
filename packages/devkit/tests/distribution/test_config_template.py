@@ -24,7 +24,12 @@ from devkit.distribution.installation.config import (
 )
 from devkit.distribution.installation.discovery import InstalledBundle
 from devkit.distribution.installation.sync import sync_project
+from devkit.workflow.project.config import WorkflowConfig, parse_workflow_config
+from devkit.worktree.config import WorktreeConfig, read_worktree_config
 from testsupport.distribution import cli, make_bundle
+
+COMMON_TABLES = ["workflow.approvals", "workflow.stages", "worktree"]
+DEVKIT_PARTS = ["agents", "guidance_block", "override_drift", *COMMON_TABLES]
 
 DEMO = [
     TemplateTable((TemplateKey("enabled", True, "turn demo on"),)),
@@ -71,7 +76,7 @@ def test_creates_the_file_with_devkit_keys_at_their_defaults(tmp_path: Path, too
     assert result.to_dict() == {
         "path": CONFIG_PATH,
         "state": "created",
-        "added": ["agents", "guidance_block", "override_drift"],
+        "added": DEVKIT_PARTS,
         "notices": [],
     }
     text = _text(tmp_path)
@@ -85,6 +90,11 @@ def test_creates_the_file_with_devkit_keys_at_their_defaults(tmp_path: Path, too
         "agents": ["antigravity", "claude-code", "codex"],
         "guidance_block": True,
         "override_drift": "warn",
+        "workflow": {
+            "approvals": {"intent": "ask", "direction": "ask", "integration": "ask"},
+            "stages": {"collect-feedback": "on"},
+        },
+        "worktree": {"pull_request": False, "delete_branch": True, "setup": "uv sync"},
     }
     assert read_config(uncommented) == ProjectConfig()  # every commented value is the default
     assert not (tmp_path / ".devkit/transient").exists()  # no lock file in a project without .devkit/
@@ -96,13 +106,13 @@ def test_adds_devkit_keys_after_the_last_top_level_key_and_keeps_every_line(
     before = '# team notes\nschema = 1\nagents = ["codex"]  # ours\n\n[presets]\nteam = "all"\n'
     _write(project, before)
     result = refresh_config_template(project)
-    assert (result.state, result.added) == ("updated", ["guidance_block", "override_drift"])
+    assert (result.state, result.added) == ("updated", ["guidance_block", "override_drift", *COMMON_TABLES])
     text = _text(project)
     head, tail = text.split("\n[presets]\n")
     assert head.startswith('# team notes\nschema = 1\nagents = ["codex"]  # ours\n\n## devkit project configuration')
     assert "# agents =" not in text  # set by the project
     assert "# guidance_block = true" in head and '# override_drift = "warn"' in head
-    assert tail == 'team = "all"\n'
+    assert tail.startswith('team = "all"\n\n## Workflow approval gates')
     assert tomllib.loads(text) == tomllib.loads(before)
     assert refresh_config_template(project).to_dict()["state"] == "unchanged"
     assert _text(project) == text
@@ -110,7 +120,7 @@ def test_adds_devkit_keys_after_the_last_top_level_key_and_keeps_every_line(
 
 def test_a_key_mentioned_in_a_comment_is_not_added_again(project: Path, tools: list[SimpleNamespace]) -> None:
     _write(project, 'schema = 1\n# override_drift = "block"  # we tried\n')
-    assert refresh_config_template(project).added == ["agents", "guidance_block"]
+    assert refresh_config_template(project).added == ["agents", "guidance_block", *COMMON_TABLES]
     assert _text(project).count("override_drift") == 1
 
 
@@ -118,17 +128,57 @@ def test_a_file_without_top_level_keys_gets_devkit_keys_first(project: Path, too
     _write(project, '[presets]\nteam = "all"\n')
     refresh_config_template(project)
     text = _text(project)
-    assert text.startswith("## devkit project configuration") and text.endswith('\n[presets]\nteam = "all"\n')
+    assert text.startswith("## devkit project configuration") and '\n[presets]\nteam = "all"\n' in text
     assert tomllib.loads(text) == {"presets": {"team": "all"}}
+
+
+def test_common_tables_read_back_with_default_policies(tmp_path: Path, tools: list[SimpleNamespace]) -> None:
+    refresh_config_template(tmp_path)
+    assert parse_workflow_config(tomllib.loads(_text(tmp_path))) == WorkflowConfig()
+    assert read_worktree_config(tmp_path) == WorktreeConfig()
+    expanded = uncomment(_text(tmp_path))
+    workflow = parse_workflow_config(tomllib.loads(expanded))
+    for gate in ("intent", "direction", "integration", "custom-gate"):
+        assert workflow.policy(gate) == WorkflowConfig().policy(gate)
+    assert workflow.stage_policy("collect-feedback") == WorkflowConfig().stage_policy("collect-feedback")
+    assert '#   setup = "uv sync"  # example;' in _text(tmp_path)
+    _write(tmp_path, expanded)
+    assert read_worktree_config(tmp_path) == WorktreeConfig(setup="uv sync")
+
+
+@pytest.mark.parametrize(
+    "existing",
+    [
+        '[workflow.approvals]\nintent = "auto"\n',
+        '#[ workflow . "approvals" ]\n# intent = "auto"\n',
+        'workflow.approvals.intent = "auto"\n',
+    ],
+)
+def test_existing_common_tables_are_preserved(project: Path, tools: list[SimpleNamespace], existing: str) -> None:
+    before = "schema = 1\n" + existing
+    _write(project, before)
+    result = refresh_config_template(project)
+    assert result.added == ["agents", "guidance_block", "override_drift", "workflow.stages", "worktree"]
+    assert existing in _text(project)
+    assert "# [workflow.approvals]" not in _text(project)
+    assert tomllib.loads(_text(project)) == tomllib.loads(before)
+    assert refresh_config_template(project).state == "unchanged"
+
+
+def test_deleted_common_table_is_added_again(project: Path, tools: list[SimpleNamespace]) -> None:
+    refresh_config_template(project)
+    before = _text(project)
+    _write(project, before[: before.index("## Git worktree behavior")])
+    assert refresh_config_template(project).added == ["worktree"]
+    assert _text(project) == before
 
 
 def test_adds_tool_tables_at_the_end(project: Path, tools: list[SimpleNamespace]) -> None:
     tools.append(_entry("demo", lambda: DEMO))
     _write(project, 'schema = 1\n\n[presets]\nteam = "all"\n')
     result = refresh_config_template(project)
-    assert result.added == ["agents", "guidance_block", "override_drift", "tool.demo", "tool.demo.limits"]
+    assert result.added == [*DEVKIT_PARTS, "tool.demo", "tool.demo.limits"]
     assert _text(project).endswith(
-        '\n[presets]\nteam = "all"\n\n'
         "## [tool.demo]: the settings of demo-tool; devkit passes [tool.*] tables through unread.\n"
         "# [tool.demo]\n"
         "#   enabled = true  # boolean; turn demo on\n"
@@ -143,7 +193,7 @@ def test_adds_tool_tables_at_the_end(project: Path, tools: list[SimpleNamespace]
 def test_a_tool_table_the_file_mentions_or_defines_is_left_out(project: Path, tools: list[SimpleNamespace]) -> None:
     tools.append(_entry("demo", lambda: DEMO))
     _write(project, 'schema = 1\n\n[tool.demo.limits]\ntimeout = 5\n\n#[ tool . "demo" ]\n')
-    assert refresh_config_template(project).added == ["agents", "guidance_block", "override_drift"]
+    assert refresh_config_template(project).added == DEVKIT_PARTS
     _write(project, "schema = 1\ntool.demo.enabled = false\n")
     assert refresh_config_template(project).added[-1:] == ["tool.demo.limits"]
     assert tomllib.loads(uncomment(_text(project).split("## Limits.")[1]))["tool"]["demo"]["limits"] == {"timeout": 10}
@@ -227,7 +277,7 @@ def test_cli_prints_the_result_as_json(project: Path, tools: list[SimpleNamespac
     result = runner.invoke(cli, ["config", "template", "--workspace-root", str(project)])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.stdout)
-    assert (payload["state"], payload["added"]) == ("created", ["agents", "guidance_block", "override_drift"])
+    assert (payload["state"], payload["added"]) == ("created", DEVKIT_PARTS)
     assert [notice["code"] for notice in payload["notices"]] == ["CONFIG_TEMPLATE_EXTENSION_FAILED"]
     assert result.stderr == ""
     strict = runner.invoke(cli, ["config", "template", "--workspace-root", str(project), "--strict"])

@@ -122,9 +122,10 @@ explicit: a deployed bundle whose package is not installed is a sync error
 deletes committed files. Run `uv sync` when the package belongs in the
 environment; run `devkit remove <bundle>` when the user removed the package.
 
-`uv run devkit config template` writes every key `.devkit/config.toml` accepts
-as a comment at its default: devkit's own keys and the `[tool.<name>]` tables
-of installed tools. Read those comments to learn what a setting does and what
+`uv run devkit config template` writes commented managed-scope and update-policy
+keys, common workflow and worktree settings, and registered `[tool.<name>]`
+tables of installed tools. Values show defaults, or marked examples when unset
+by default. Read those comments to learn what a setting does and what
 applies while it is unset; uncomment a key to change it. The command only adds
 what the file lacks and never changes a line.
 

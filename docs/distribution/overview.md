@@ -86,7 +86,7 @@ is the JSON the command prints.
     `.devkit/config.toml`), recovery, `prune_empty_parents`.
   - `receipt.py`: strict receipt reading (`devkit.core.receipt` plus ownership rules) and serialization.
   - `config.py`: `.devkit/config.toml` reading, selection resolution, edits checked before a sync and saved after it,
-    devkit's keys in the commented template and `refresh_config_template` (`devkit config template`).
+    devkit's keys and common workflow/worktree tables in the commented template and `refresh_config_template` (`devkit config template`).
   - `config_template.py`: the commented template's text: devkit's keys after the last top-level key, the
     `devkit.config_template` extension point for `[tool.<name>]` tables at the end, append-only.
   - `discovery.py`: installed bundles via `devkit.bundles`; built-in and auto-selected bundles.

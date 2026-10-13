@@ -10,7 +10,7 @@ projections go to every supported agent unless ``agents`` narrows the list;
 A selection command that creates the file writes the commented template with
 it, and ``refresh_config_template`` adds what an existing file lacks
 (``installation.config_template``): devkit's top-level keys in
-``TEMPLATE_SECTIONS`` and the ``[tool.<name>]`` tables of the installed tools,
+``TEMPLATE_SECTIONS``, common tables in ``TEMPLATE_TABLES`` and the ``[tool.<name>]`` tables of installed tools,
 each at its default.
 """
 
@@ -28,7 +28,7 @@ import tomlkit
 from tomlkit.exceptions import TOMLKitError
 
 from devkit.advisory import AdvisoryError
-from devkit.core.config_template import TemplateKey
+from devkit.core.config_template import TemplateKey, TemplateTable
 from devkit.core.errors import ConfigError
 from devkit.core.project import read_toml
 from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH, Receipt
@@ -120,6 +120,49 @@ TEMPLATE_SECTIONS = (
                 kind=" or ".join(f'"{value}"' for value in OVERRIDE_DRIFT),
             ),
         ),
+    ),
+)
+
+# Common module settings live here so distribution does not import higher layers.
+# Gate names and stage ids are workflow-defined; these are representative names,
+# with the policies the workflow reader applies to every name by default.
+TEMPLATE_TABLES = (
+    TemplateTable(
+        (
+            TemplateKey(
+                "intent", "ask", "confirm user requirements, scope and verification (G1)", kind='"ask" | "auto" | "off"'
+            ),
+            TemplateKey(
+                "direction", "ask", "approve implementation direction and design (G2)", kind='"ask" | "auto" | "off"'
+            ),
+            TemplateKey(
+                "integration", "ask", "approve integration and PR creation (G3)", kind='"ask" | "auto" | "off"'
+            ),
+        ),
+        path=("workflow", "approvals"),
+        help="Workflow approval gates: ask waits for approval, auto satisfies the gate, off skips its stage."
+        " Names come from workflow definitions; the delivery gates below are examples. Unset gates use ask.",
+    ),
+    TemplateTable(
+        (TemplateKey("collect-feedback", "on", "set off to skip feedback collection", kind='"on" | "off"'),),
+        path=("workflow", "stages"),
+        help="Workflow stages: policies apply by stage id across workflows. The id below is an example;"
+        " unset stages use on. Stage off takes precedence over approval policy.",
+    ),
+    TemplateTable(
+        (
+            TemplateKey(
+                "pull_request", False, "integrate through a pull request; true refuses worktree finish --merge"
+            ),
+            TemplateKey("delete_branch", True, "worktree finish deletes the merged branch with git branch -d"),
+            TemplateKey(
+                "setup",
+                help="shell command run in a newly created worktree; unset: no setup command",
+                example="uv sync",
+            ),
+        ),
+        path=("worktree",),
+        help="Git worktree behavior: integration policy, branch cleanup and setup for new worktrees.",
     ),
 )
 
@@ -466,7 +509,7 @@ def prepare_config_update(
     if before is not None:
         return ConfigUpdate(root, text, before)
     tools, notices = load_tool_templates()
-    text, _ = add_template(text, TEMPLATE_HEADER, TEMPLATE_SECTIONS, tools)
+    text, _ = add_template(text, TEMPLATE_HEADER, TEMPLATE_SECTIONS, tools, devkit_tables=TEMPLATE_TABLES)
     return ConfigUpdate(root, text, None, tuple(notices))
 
 
@@ -519,7 +562,11 @@ def refresh_config_template(root: Path) -> ConfigTemplateResult:
         before = path.read_text("utf-8") if path.exists() else None
         tools, notices = load_tool_templates()
         text, added = add_template(
-            before if before is not None else f"schema = {SCHEMA}\n", TEMPLATE_HEADER, TEMPLATE_SECTIONS, tools
+            before if before is not None else f"schema = {SCHEMA}\n",
+            TEMPLATE_HEADER,
+            TEMPLATE_SECTIONS,
+            tools,
+            devkit_tables=TEMPLATE_TABLES,
         )
         if text == before:
             return ConfigTemplateResult(TemplateState.UNCHANGED, notices=notices)

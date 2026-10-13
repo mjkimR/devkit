@@ -1,8 +1,9 @@
 """The commented template in ``.devkit/config.toml``: what a project can set, each key at its default.
 
-Two parts, both comments a developer uncomments in place. devkit's own top-level keys go right after the file's
+Three parts, all comments a developer uncomments in place. devkit's own top-level keys go right after the file's
 last top-level key, grouped in ``TemplateSection`` values that ``installation.config`` defines (top-level keys must
-precede the first table header). The ``[tool.<name>]`` tables of the installed tools go at the end: each callable
+precede the first table header). devkit's common tables follow the project's tables, then the
+``[tool.<name>]`` tables of the installed tools: each callable
 registered under the ``devkit.config_template`` entry-point group, named ``<name>``, returns the tables of
 ``[tool.<name>]`` as ``devkit.core.TemplateTable`` values, and devkit renders them (``devkit.core.config_template``),
 so a tool never writes outside its own table. Extensions run in sorted entry-point name order, are called with no
@@ -154,7 +155,12 @@ def _insert_top_level(text: str, lines: list[str]) -> str:
 
 
 def add_template(
-    text: str, header: str, sections: Sequence[TemplateSection], tools: Sequence[ToolTemplate]
+    text: str,
+    header: str,
+    sections: Sequence[TemplateSection],
+    tools: Sequence[ToolTemplate],
+    *,
+    devkit_tables: Sequence[TemplateTable] = (),
 ) -> tuple[str, list[str]]:
     """``text`` (valid TOML) with the template parts it lacks, and the names of the keys and tables added.
 
@@ -168,6 +174,13 @@ def add_template(
         text = _insert_top_level(text, block)
     mentioned = _mentioned_tables(text)
     chunks: list[str] = []
+    for table in devkit_tables:
+        name = table_name((), table)
+        if name in mentioned or _defined(data, table.path):
+            continue
+        mentioned.add(name)
+        added.append(name)
+        chunks.append(render_table((), table))
     for tool in tools:
         tables: list[str] = []
         for table in tool.tables:

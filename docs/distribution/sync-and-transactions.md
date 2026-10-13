@@ -128,8 +128,8 @@ devkit = false                          # opt out of an auto-selected bundle
 
 ### Commented Template
 
-A selection command that creates `config.toml`, and `devkit config template` for an existing one, write every key the
-file accepts as a comment at its default, so the file shows what a project can set and what it runs with:
+A selection command that creates `config.toml`, and `devkit config template` for an existing one, write commented managed-scope and update-policy keys, common workflow and worktree settings, and the
+registered tables of installed tools. Values show defaults; settings unset by default show marked examples:
 
 ```toml
 schema = 1
@@ -146,6 +146,22 @@ schema = 1
 
 [presets]
 spec = "core"
+
+## Workflow approval gates: names come from workflow definitions; these delivery gates are examples.
+# [workflow.approvals]
+#   intent = "ask"       # ask | auto | off; confirm requirements, scope and verification (G1)
+#   direction = "ask"    # ask | auto | off; approve implementation direction and design (G2)
+#   integration = "ask"  # ask | auto | off; approve integration and PR creation (G3)
+
+## Workflow stages: policies apply by stage id; unset stages use on.
+# [workflow.stages]
+#   collect-feedback = "on"  # on | off; set off to skip feedback collection
+
+## Git worktree behavior.
+# [worktree]
+#   pull_request = false  # boolean; true refuses worktree finish --merge
+#   delete_branch = true  # boolean; delete the merged branch with git branch -d
+#   setup = "uv sync"     # example; string; unset: no setup command
 
 ## [tool.spec]: the settings of devkit-spec; devkit passes [tool.*] tables through unread.
 # [tool.spec]
@@ -166,6 +182,12 @@ spec = "core"
   TOML reads a key below a table header as part of that table; a file without top-level keys gets them first. A
   commented `agents` lists the agents devkit supports now; leaving it unset also projects for those a later devkit
   adds.
+- **Common tables**: `[workflow.approvals]`, `[workflow.stages]` and `[worktree]` follow the project's tables,
+  before tool tables. Approval names and stage ids come from workflow definitions: the template shows delivery
+  gate names (`intent`, `direction`, `integration`) at `ask`, and `collect-feedback` at `on`. These are representative
+  names, not a fixed schema. Worktree defaults are `pull_request = false`, `delete_branch = true`, and no setup
+  command; `setup = "uv sync"` is marked as an example. See [Workflow](../workflow/overview.md#3-approval-gates)
+  and [Worktree](../worktree/overview.md#5-configuration) for their behavior.
 - **Tool tables**: a package registers a callable under the `devkit.config_template` entry-point group, named after
   its `[tool.<name>]` table. Called with no argument, it returns `list[devkit.core.TemplateTable]`
   ([Core Reference](../core/reference.md#modules)); devkit renders the headers from the entry-point name, so a tool
