@@ -52,6 +52,7 @@ COMMANDS: dict[str, str] = {
     "remove": f"{_DISTRIBUTION}:remove",
     "list": f"{_DISTRIBUTION}:list_resources",
     "status": f"{_DISTRIBUTION}:status",
+    "config": f"{_DISTRIBUTION}:config",
     "recover": f"{_DISTRIBUTION}:recover",
     "override": f"{_DISTRIBUTION}:override",
     "run": "devkit.compact.cli:run_cmd",

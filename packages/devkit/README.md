@@ -10,8 +10,8 @@ separately so other repositories can depend on it at runtime alone; same version
 ## Install
 
 No package index hosts the wheel; install it by URL from a GitHub Release (or a
-built wheel by path), with the `devkit-advisory` wheel next to it and `devkit-embed` for the `search` extra (see
-the [root README](../../README.md#using-devkit-in-another-project)):
+built wheel by path), with the `devkit-advisory` wheel next to it and `devkit-embed` for the `search` extra, or
+from Git, which brings both itself (see the [root README](../../README.md#using-devkit-in-another-project)):
 
 ```bash
 uv add --dev "devkit @ https://github.com/mjkimR/devkit/releases/download/v0.1.0/devkit-0.1.0-py3-none-any.whl" \

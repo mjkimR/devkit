@@ -38,7 +38,9 @@ dev = [
 
 [tool.uv.sources]
 devkit-advisory = { workspace = true }
-devkit-embed = { workspace = true }
+# The model wheel is built by hand and attached to the release that first ships its version (models/devkit-embed),
+# so every install of devkit[search], from this workspace or from Git, gets the model files.
+devkit-embed = { url = "https://github.com/mjkimR/devkit/releases/download/v0.1.0/devkit_embed-0.1.0-py3-none-any.whl" }
 
 [build-system]
 requires = ["hatchling"]

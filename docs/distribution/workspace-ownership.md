@@ -25,8 +25,10 @@ AGENTS.md                 # Project-owned; only the DEVKIT:START/END block insid
 
 1. **Project configuration (`.devkit/config.toml`)**: owned by the developer. `devkit sync` never edits it on its
    own; only the selection commands (`devkit add`, `devkit remove`, and `devkit sync` selection flags without
-   `--no-save`) edit `agents` and `[presets]`, preserving unrelated tables, comments and formatting. The receipt
-   cannot claim it.
+   `--no-save`) edit `agents` and `[presets]`, preserving unrelated tables, comments and formatting. A selection
+   command that creates the file writes the commented template with it, and `devkit config template` adds the parts
+   of the template the file lacks, never changing a line
+   ([Commented Template](sync-and-transactions.md#commented-template)). The receipt cannot claim it.
 2. **Managed assets (`.devkit/managed/<bundle>/`)**: a read-only cache of the upstream bundle files at their
    original relative paths, regenerated deterministically by `devkit sync`.
 3. **Native projections**: copied or rendered files in agent directories

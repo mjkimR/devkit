@@ -4,8 +4,8 @@
 # Checks that the tag is vX.Y.Z and names the devkit package's version, builds a
 # wheel of every workspace package into dist/release/, writes SHA256SUMS there
 # and the release notes (install commands for this tag) to dist/release-notes.md.
-# The embedding model files must be fetched first (`just model-fetch`): the
-# devkit-embed wheel refuses to build without them.
+# The devkit-embed model wheel is not rebuilt: the notes point at the release
+# that ships it, pinned in the devkit package's [tool.uv.sources].
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 source ./scripts/_lib.sh
@@ -26,6 +26,7 @@ out=dist/release
 rm -rf "$out"
 mkdir -p "$out"
 modules=$(list_modules)
+model_url=$(model_wheel_url)
 for module in $modules; do
     uv build --package "$module" --wheel --out-dir "$out" >/dev/null
 done
@@ -35,7 +36,6 @@ repository=${GITHUB_REPOSITORY:-$(git remote get-url origin | sed -E 's#^(git@gi
 base="https://github.com/$repository/releases/download/$tag"
 devkit_wheel=$(basename "$out"/devkit-*.whl)
 advisory_wheel=$(basename "$out"/devkit_advisory-*.whl)
-embed_wheel=$(basename "$out"/devkit_embed-*.whl)
 cat > dist/release-notes.md <<EOF
 ## Install
 
@@ -44,7 +44,7 @@ cat > dist/release-notes.md <<EOF
 uv add --dev "devkit @ $base/$devkit_wheel" "devkit-advisory @ $base/$advisory_wheel"
 
 # devkit with dense and hybrid search (adds numpy, tokenizers and the 15 MB embedding model)
-uv add --dev "devkit[search] @ $base/$devkit_wheel" "devkit-advisory @ $base/$advisory_wheel" "devkit-embed @ $base/$embed_wheel"
+uv add --dev "devkit[search] @ $base/$devkit_wheel" "devkit-advisory @ $base/$advisory_wheel" "devkit-embed @ $model_url"
 
 # devkit.advisory alone, as a runtime dependency of a library or service (standard library only)
 uv add "devkit-advisory @ $base/$advisory_wheel"

@@ -17,7 +17,7 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/devkit_embed"]
-# The weights and tokenizer are fetched (`just model-fetch`), not committed; the hook refuses a wheel without them.
+# The weights and tokenizer are fetched (`just model-build`), not committed; the hook refuses a wheel without them.
 artifacts = [
     "src/devkit_embed/model.safetensors",
     "src/devkit_embed/tokenizer.json",

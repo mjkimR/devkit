@@ -731,6 +731,8 @@ def sync_project(
                 update.revert()
             raise
         result = finish()
+    if update is not None:
+        result.notices.extend(update.notices)
     if not dry_run:
         result.notices.extend(run_post_sync(root, result.to_dict()))
     return result

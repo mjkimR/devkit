@@ -9,9 +9,12 @@ side effects; the only devkit module it imports is ``devkit.advisory`` (every
 core error is an ``AdvisoryError``).
 
 Frontmatter functions are used through their module
-(``devkit.core.frontmatter.parse`` / ``locate`` / ``load_header``).
+(``devkit.core.frontmatter.parse`` / ``locate`` / ``load_header``), as are the
+config template's (``devkit.core.config_template.render_tool_template`` /
+``uncomment``).
 """
 
+from devkit.core.config_template import TemplateKey, TemplateTable
 from devkit.core.errors import (
     ArgumentError,
     AssetFileError,
@@ -93,6 +96,8 @@ __all__ = [
     "ReceiptError",
     "SeededRecord",
     "Selection",
+    "TemplateKey",
+    "TemplateTable",
     "ToolRecord",
     "UnsafePathError",
     "config_table",

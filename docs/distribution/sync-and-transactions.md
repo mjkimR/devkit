@@ -126,6 +126,63 @@ devkit = false                          # opt out of an auto-selected bundle
   there and reads it itself; devkit only checks that `<name>` matches `[a-z][a-z0-9_-]*` and the value is a table,
   so a mistyped devkit key elsewhere is still an error.
 
+### Commented Template
+
+A selection command that creates `config.toml`, and `devkit config template` for an existing one, write every key the
+file accepts as a comment at its default, so the file shows what a project can set and what it runs with:
+
+```toml
+schema = 1
+
+## devkit project configuration, tracked by Git. A commented key shows its default: uncomment it to change it. ...
+
+## Managed scope: what devkit sync deploys, and for which agents.
+## [presets] selects bundles: <bundle> = "<preset>", an array of presets, or "all"; ...
+# agents = ["antigravity", "claude-code", "codex"]  # array of agent names; agents that skills and subagents ...
+# guidance_block = true  # boolean; devkit sync manages the DEVKIT block of the root AGENTS.md
+
+## Update policy: how devkit sync takes upstream changes.
+# override_drift = "warn"  # "warn" or "block"; upstream changed a file a project override replaces: ...
+
+[presets]
+spec = "core"
+
+## [tool.spec]: the settings of devkit-spec; devkit passes [tool.*] tables through unread.
+# [tool.spec]
+#   worktree = true  # boolean; route 2 and above (formal specs, proposals) run in a task worktree
+
+## The work-scope registry of `devkit spec scope`.
+# [tool.spec.scope]
+#   namespace = "team"  # example; string of letters, ...; unset: a hash of the Git common directory
+#   timeout = 10  # integer from 1 to 300; seconds one registry command may wait
+```
+
+- **Layout**: as in the [gate settings template](../gate/overview.md#6a-settings-template), prose is commented twice
+  (`##`), keys and table headers once (`#`), so uncommenting a whole table yields valid TOML and leaves the prose a
+  comment. A key unset by default shows an example marked `example;`; an array of tables (`[[...]]`) shows example
+  values.
+- **devkit's keys**: `agents` and `guidance_block` (managed scope, with a note on `[presets]`) and `override_drift`
+  (update policy), at the defaults `read_config` applies. They go right after the file's last top-level key, because
+  TOML reads a key below a table header as part of that table; a file without top-level keys gets them first. A
+  commented `agents` lists the agents devkit supports now; leaving it unset also projects for those a later devkit
+  adds.
+- **Tool tables**: a package registers a callable under the `devkit.config_template` entry-point group, named after
+  its `[tool.<name>]` table. Called with no argument, it returns `list[devkit.core.TemplateTable]`
+  ([Core Reference](../core/reference.md#modules)); devkit renders the headers from the entry-point name, so a tool
+  never writes outside its own table, and the template is the same for every project. The tables go at the end of
+  the file in entry-point name order, after one intro line per tool naming its package.
+- **Append-only**: a key whose name the file mentions (set, or in any comment) and a table whose header the file
+  mentions (commented or not) or defines (dotted keys included) are left out, so no line is changed or removed and
+  an uncommented line stays where the developer put it. A part deleted from the file is added again by the next
+  `devkit config template`. A file that cannot be read or does not validate (`CONFIG_INVALID`) is never written.
+- **Selection edits**: a new `agents` or `[presets]` entry goes right after the last key-value entry of its table,
+  not after the comments that follow it, so a commented tool table never takes the entry as its own once
+  uncommented.
+- **Failures**: an extension that fails to load, raises, is not named like a `[tool.<name>]` table, or returns
+  anything but valid tables is left out with a `CONFIG_TEMPLATE_EXTENSION_FAILED` warning, and the command
+  succeeds; when a selection command created the file, the warning joins the sync result's `notices`.
+- `devkit sync` never adds to the template; after installing a tool, `devkit config template` adds its tables.
+
 ### Resolution Order
 
 1. **CLI selection**: `--agent`, `--no-agents` and `--preset` on `devkit sync`, and `devkit add` / `devkit remove`,

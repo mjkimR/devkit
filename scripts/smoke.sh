@@ -5,12 +5,13 @@
 # starter bundle, verify the workspace converges, exercise every CLI group, run
 # deployed and built-in rule tests, and make real commits through the installed
 # gate hooks in a fresh Git repository;
+# add the released model wheel and run a dense search;
 # then install the devkit-advisory wheel alone, as a runtime dependency, and
 # verify it brings devkit.advisory and nothing else of devkit.
 # The wheels are installed by path, so a same-named package on an index can never
 # be picked instead. Runs locally via `just smoke` and in CI; needs `uv` and `git`
 # on PATH and network access for third-party dependencies (click, pyyaml, tomlkit)
-# unless the uv cache is warm.
+# and the model wheel unless the uv cache is warm.
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 source ./scripts/_lib.sh
@@ -23,8 +24,7 @@ mkdir -p "$dist" "$project"
 
 # Assigned before the loop so a discovery failure aborts under `set -e`.
 modules=$(list_modules)
-echo "==> fetching the embedding model files (the model wheel refuses to build without them)"
-uv run --no-active python scripts/fetch_model.py packages/devkit-embed/src/devkit_embed
+model_url=$(model_wheel_url)
 echo "==> building wheels into $dist"
 for module in $modules; do
     uv build --package "$module" --wheel --out-dir "$dist" >/dev/null
@@ -41,7 +41,6 @@ wheel() {
 devkit_wheel=$(wheel devkit)
 advisory_wheel=$(wheel devkit_advisory)
 starter_wheel=$(wheel devkit_starter)
-model_wheel=$(wheel devkit_embed)
 
 echo "==> creating a fresh consumer project"
 (
@@ -137,8 +136,8 @@ TOML
     grep -q 'RULE_TEST: RULE-markdown-link tests=.*/site-packages/devkit/rules/rules/markdown_link/tests result=passed' <<<"$tested"
     grep -q 'SUMMARY: rules=3 passed=3 failed=0 no_tests=0' <<<"$tested"
     test -z "$(find .devkit -name __pycache__ -o -name .pytest_cache)"
-    echo "--- dense search with the model wheel (numpy and tokenizers from the index)"
-    uv add --dev "$model_wheel" numpy tokenizers >/dev/null
+    echo "--- dense search with the released model wheel (numpy and tokenizers from the index)"
+    uv add --dev "devkit-embed @ $model_url" numpy tokenizers >/dev/null
     uv run python -c "
 from devkit.search import SearchDocument, SearchIndex, SearchMode, load_embedder
 assert load_embedder().dimensions == 256

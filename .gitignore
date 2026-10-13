@@ -47,6 +47,6 @@ Thumbs.db
 /scratch/
 /tmp/
 
-# devkit-embed: weights and tokenizer, fetched by `just model-fetch`
-packages/devkit-embed/src/devkit_embed/model.safetensors
-packages/devkit-embed/src/devkit_embed/tokenizer.json
+# devkit-embed: weights and tokenizer, fetched by `just model-build`
+models/devkit-embed/src/devkit_embed/model.safetensors
+models/devkit-embed/src/devkit_embed/tokenizer.json

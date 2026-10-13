@@ -172,6 +172,17 @@ class PostSyncExtensionFailedNotice(SyncNotice):
     level = Level.WARNING
 
 
+class ConfigTemplateExtensionFailedNotice(DistributionError):
+    """A ``devkit.config_template`` extension failed to load, raised, or returned no valid tables; never raised.
+
+    Its tables are left out of the template and the command that renders it succeeds.
+    """
+
+    code = "CONFIG_TEMPLATE_EXTENSION_FAILED"
+    level = Level.WARNING
+    target_files = (".devkit/config.toml",)
+
+
 class UnprojectedNotice(SyncNotice):
     """A skill or subagent has no variant for a selected agent and was not projected for it (``brief``)."""
 

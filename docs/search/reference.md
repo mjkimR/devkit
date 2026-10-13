@@ -10,7 +10,7 @@ Lexical search is part of `devkit`, and the default `auto` mode uses it when not
 uv add 'devkit[search]'
 ```
 
-In this repository `just init` installs it, and `just model-fetch` downloads the model files once.
+From Git or in this repository, the extra installs the model wheel from the release that `packages/devkit/pyproject.toml` pins; from a release wheel, add `devkit-embed` by its URL ([README](../../README.md#using-devkit-in-another-project)).
 
 ## Library
 

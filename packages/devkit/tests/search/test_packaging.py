@@ -10,12 +10,11 @@ import sys
 from pathlib import Path
 
 import numpy as np
-import pytest
 from devkit.search import DEFAULT_MODEL, SearchDocument, SearchIndex, SearchMode, load_embedder
 from testsupport.search import write_safetensors
 
 REPO = Path(__file__).resolve().parents[4]
-PACKAGE = REPO / "packages/devkit-embed/src/devkit_embed"
+PACKAGE = REPO / "models/devkit-embed/src/devkit_embed"
 
 
 def test_lexical_search_never_imports_the_dense_dependencies() -> None:
@@ -63,7 +62,6 @@ def test_the_model_package_pins_its_source_and_outputs() -> None:
     assert spec["files"]["tokenizer.json"] == spec["source"]["files"]["tokenizer.json"]  # copied unchanged
 
 
-@pytest.mark.skipif(not (PACKAGE / "model.safetensors").is_file(), reason="model files not fetched (just model-fetch)")
 def test_the_default_model_is_installed_and_ranks_by_meaning() -> None:
     embedder = load_embedder()
     assert (embedder.name, embedder.dimensions, embedder.max_tokens) == (DEFAULT_MODEL, 256, 512)

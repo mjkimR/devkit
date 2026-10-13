@@ -6,28 +6,44 @@ with its default preset unless ``[presets]`` names it, which selects other
 presets, or sets it to ``false``, which opts the project out. Native
 projections go to every supported agent unless ``agents`` narrows the list;
 ``agents = []`` turns projection off.
+
+A selection command that creates the file writes the commented template with
+it, and ``refresh_config_template`` adds what an existing file lacks
+(``installation.config_template``): devkit's top-level keys in
+``TEMPLATE_SECTIONS`` and the ``[tool.<name>]`` tables of the installed tools,
+each at its default.
 """
 
 from __future__ import annotations
 
 import math
 import os
-import re
+from contextlib import nullcontext
 from dataclasses import dataclass, field
+from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
 import tomlkit
 from tomlkit.exceptions import TOMLKitError
 
+from devkit.advisory import AdvisoryError
+from devkit.core.config_template import TemplateKey
 from devkit.core.errors import ConfigError
 from devkit.core.project import read_toml
 from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH, Receipt
 from devkit.distribution.bundles.common import AGENT_NAMES, SLUG
 from devkit.distribution.content import Content
 from devkit.distribution.errors import SelectionError
+from devkit.distribution.installation.config_template import (
+    TOOL_NAME,
+    TemplateSection,
+    add_template,
+    load_tool_templates,
+    set_entry,
+)
 from devkit.distribution.installation.discovery import InstalledBundle, unusable_bundles
-from devkit.distribution.installation.transaction import replace_file
+from devkit.distribution.installation.transaction import project_lock, replace_file
 from devkit.search import SearchMode
 
 SCHEMA = 1
@@ -52,7 +68,6 @@ FIELDS = frozenset(
     }
 )
 OVERRIDE_DRIFT = ("warn", "block")
-TOOL_NAME = re.compile(r"[a-z][a-z0-9_-]*\Z")
 
 # ``devkit playbook search`` bounds: the ``[playbooks]`` table, the command's options and the library all check these.
 PLAYBOOK_LIMIT_MIN, PLAYBOOK_LIMIT_MAX = 1, 20
@@ -69,6 +84,44 @@ DEFAULT_PRESET = ""
 
 def all_agents() -> list[str]:
     return sorted(AGENT_NAMES)
+
+
+TEMPLATE_HEADER = (
+    "devkit project configuration, tracked by Git. A commented key shows its default: uncomment it to change it."
+    " Lines starting with ## stay comments; to use a commented table, uncomment its header and the keys you change."
+    " `devkit config template` adds the keys and tables that newly installed tools accept; it never changes a line."
+)
+# devkit's top-level keys in the template, at the defaults ``read_config`` applies.
+TEMPLATE_SECTIONS = (
+    TemplateSection(
+        "Managed scope: what devkit sync deploys, and for which agents.",
+        (
+            TemplateKey(
+                "agents",
+                all_agents(),
+                "agents that skills and subagents are projected for; unset: every supported agent, also ones added"
+                " later; []: none, the managed copies stay",
+                kind="array of agent names",
+            ),
+            TemplateKey("guidance_block", True, "devkit sync manages the DEVKIT block of the root AGENTS.md"),
+        ),
+        '[presets] selects bundles: <bundle> = "<preset>", an array of presets, or "all"; `devkit add` and'
+        " `devkit remove` edit it. A bundle that declares auto_select deploys its default preset without an entry;"
+        " <bundle> = false opts it out. `devkit list` shows every installed bundle, its presets and its selection.",
+    ),
+    TemplateSection(
+        "Update policy: how devkit sync takes upstream changes.",
+        (
+            TemplateKey(
+                "override_drift",
+                OVERRIDE_DRIFT[0],
+                'upstream changed a file a project override replaces: "warn" reports it, "block" stops syncs until'
+                " `devkit override accept`",
+                kind=" or ".join(f'"{value}"' for value in OVERRIDE_DRIFT),
+            ),
+        ),
+    ),
+)
 
 
 @dataclass(frozen=True)
@@ -358,6 +411,8 @@ class ConfigUpdate:
     text: str | None
     # The file before the edit; ``None`` when it did not exist.
     before: Content | None = None
+    # What rendering the edit reports although it succeeded (a config template extension that failed).
+    notices: tuple[AdvisoryError, ...] = ()
 
     def apply(self) -> None:
         if self.text is not None:
@@ -380,31 +435,39 @@ def prepare_config_update(
 
     ``deselect`` deletes a bundle's entry; ``opt_out`` records ``<bundle> = false``
     so a built-in bundle stays unselected. Selecting a bundle replaces either.
-    Unrelated tables, comments and formatting are preserved. Nothing to change
-    yields an update whose ``apply`` does nothing.
+    Unrelated tables, comments and formatting are preserved; a new key goes after
+    the last entry of its table, never below a commented template table. A file
+    the edit creates gets the commented template too, and the update carries the
+    warnings of the template extensions that failed. Nothing to change yields an
+    update whose ``apply`` does nothing.
     """
     read_config(root)
     if agents is None and not (presets or deselect or opt_out):
         return ConfigUpdate(root, None)
     doc = _document(root)
     if agents is not None:
-        doc["agents"] = sorted(set(agents))
+        set_entry(doc, "agents", sorted(set(agents)))
     if presets or deselect or opt_out:
         table = doc.get("presets")
         if table is None:
             table = tomlkit.table()
             doc["presets"] = table
         for name, values in (presets or {}).items():
-            table[name] = _preset_value(values)
+            set_entry(table, name, _preset_value(values))
         for name in deselect:
             if name in table:
                 del table[name]
         for name in opt_out:
-            table[name] = False
+            set_entry(table, name, False)
     _check_writable(root)
     path = _config_path(root)
     before = Content(path.read_bytes(), path.stat().st_mode & 0o777) if path.exists() else None
-    return ConfigUpdate(root, tomlkit.dumps(doc), before)
+    text = tomlkit.dumps(doc)
+    if before is not None:
+        return ConfigUpdate(root, text, before)
+    tools, notices = load_tool_templates()
+    text, _ = add_template(text, TEMPLATE_HEADER, TEMPLATE_SECTIONS, tools)
+    return ConfigUpdate(root, text, None, tuple(notices))
 
 
 def update_config(
@@ -417,3 +480,49 @@ def update_config(
 ) -> None:
     """Edit selection entries in place (``prepare_config_update`` then ``apply``)."""
     prepare_config_update(root, agents=agents, presets=presets, deselect=deselect, opt_out=opt_out).apply()
+
+
+class TemplateState(StrEnum):
+    CREATED = "created"
+    UPDATED = "updated"
+    UNCHANGED = "unchanged"
+
+
+@dataclass(frozen=True)
+class ConfigTemplateResult:
+    """What ``refresh_config_template`` did: ``added`` names the keys and tables it wrote, in file order."""
+
+    state: TemplateState
+    added: list[str] = field(default_factory=list)
+    notices: list[AdvisoryError] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "path": CONFIG_PATH,
+            "state": self.state.value,
+            "added": list(self.added),
+            "notices": [notice.to_dict() for notice in self.notices],
+        }
+
+
+def refresh_config_template(root: Path) -> ConfigTemplateResult:
+    """Create ``.devkit/config.toml`` with the commented template, or add the parts of it the file lacks.
+
+    The file is validated first (``read_config``); an invalid one is a ``ConfigError`` and is left alone. Lines
+    already in the file are never changed (``installation.config_template``). Under the project lock when
+    ``.devkit/`` exists; a project without it gets the directory and the file, and no lock file.
+    """
+    exists = (root / CONFIG_PATH).parent.is_dir()
+    with project_lock(root) if exists else nullcontext():
+        read_config(root)
+        path = _config_path(root)
+        before = path.read_text("utf-8") if path.exists() else None
+        tools, notices = load_tool_templates()
+        text, added = add_template(
+            before if before is not None else f"schema = {SCHEMA}\n", TEMPLATE_HEADER, TEMPLATE_SECTIONS, tools
+        )
+        if text == before:
+            return ConfigTemplateResult(TemplateState.UNCHANGED, notices=notices)
+        _check_writable(root)
+        _write(root, text)
+    return ConfigTemplateResult(TemplateState.CREATED if before is None else TemplateState.UPDATED, added, notices)

@@ -1,11 +1,12 @@
 # Release on a pushed vX.Y.Z tag.
 #
 # The full CI (ci.yml) runs first against the tagged commit. The release job
-# then checks that the commit is on main, fetches the embedding model files,
-# builds every workspace package's wheel with scripts/release.sh (which also
-# checks the tag against the devkit version) and publishes a GitHub Release with
-# the wheels, SHA256SUMS and install commands for the tag. Consumers install the
-# wheels by URL; there is no package index.
+# then checks that the commit is on main, builds every workspace package's wheel
+# with scripts/release.sh (which also checks the tag against the devkit version)
+# and publishes a GitHub Release with the wheels, SHA256SUMS and install commands
+# for the tag. Consumers install the wheels by URL; there is no package index.
+# The devkit-embed model wheel is built by hand when the model changes and
+# attached to a release (README, Releasing).
 name: release
 
 on:
@@ -39,13 +40,6 @@ jobs:
           enable-cache: true
       - uses: extractions/setup-just@v2
       - run: uv python install 3.12
-      - uses: actions/cache@v4
-        with:
-          path: |
-            packages/devkit-embed/src/devkit_embed/model.safetensors
-            packages/devkit-embed/src/devkit_embed/tokenizer.json
-          key: model-${{ hashFiles('packages/devkit-embed/src/devkit_embed/model.json') }}
-      - run: just model-fetch
       - run: just release-build "$GITHUB_REF_NAME"
       - name: Publish the release
         env:

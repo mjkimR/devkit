@@ -61,10 +61,12 @@ gate *args:
 smoke:
     bash scripts/smoke.sh
 
-# Download, verify and convert the embedding model files of devkit-embed
-model-fetch:
-    uv run --no-active python scripts/fetch_model.py packages/devkit-embed/src/devkit_embed
+# Fetch, verify and convert the embedding model files, then build the devkit-embed wheel into dist/model
+# (only when the model changes; see README, Releasing)
+model-build:
+    uv run --no-active python scripts/fetch_model.py models/devkit-embed/src/devkit_embed
+    uv build --wheel models/devkit-embed --out-dir dist/model
 
-# Build the release wheels, SHA256SUMS and notes for a vX.Y.Z tag into dist/ (run model-fetch first)
+# Build the release wheels, SHA256SUMS and notes for a vX.Y.Z tag into dist/
 release-build tag:
     bash scripts/release.sh "$1"

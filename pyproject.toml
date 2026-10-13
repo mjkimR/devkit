@@ -38,8 +38,7 @@ extraPaths = [
 
 [dependency-groups]
 dev = [
-    "devkit[search]",  # numpy, tokenizers and the model package for the dense search tests and `just model-fetch`
-    "hatchling>=1.25",  # type-checks the model package's build hook
+    "devkit[search]",  # numpy, tokenizers and the model wheel for the dense search tests and `just model-build`
     "pyright>=1.1.390",
     "pytest>=8.0.0",
     "pytest-cov>=5.0.0",

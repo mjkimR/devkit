@@ -57,8 +57,8 @@ devkit/
 ├── packages/
 │   ├── devkit/                # The devkit package: src/devkit/<module>/ per module above, cli.py the root `devkit` group
 │   ├── devkit-advisory/       # devkit.advisory on its own (src/devkit/advisory/), devkit's lowest layer
-│   ├── devkit-embed/          # The default embedding model of devkit.search (data only)
 │   └── devkit-starter/        # Example external content package
+├── models/devkit-embed/       # The default embedding model of devkit.search (data only), released by hand
 ├── examples/bundles/          # Example bundle delivery-workflow (the starter bundle lives in devkit-starter)
 ├── scripts/                   # Shared shell logic behind the justfile recipes
 └── docs/                      # docs/<module>/ per module (index in section 5)

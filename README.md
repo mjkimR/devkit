@@ -8,8 +8,8 @@ workflows, commit gates, agent advisories and compact command output.
 
 `packages/devkit` is the package, `packages/devkit-advisory` its
 `devkit.advisory` library shipped on its own for other repositories' runtime,
-`packages/devkit-embed` the embedding model of its `devkit[search]` extra, `packages/devkit-starter` an example content
-package, `examples/bundles/` further example bundles, `scripts/` the shell logic
+`packages/devkit-starter` an example content package, `models/devkit-embed` the embedding model of the
+`devkit[search]` extra (built by hand, outside the workspace), `examples/bundles/` further example bundles, `scripts/` the shell logic
 behind the justfile recipes, and `docs/` the documentation per module; see
 [Architecture Overview, section 2](docs/architecture/overview.md#2-monorepo-structure).
 
@@ -18,8 +18,7 @@ behind the justfile recipes, and `docs/` the documentation per module; see
 Supported platforms: macOS and Linux only (POSIX). Python 3.12+, `uv`, and `just` are required (`git` too for `just smoke`).
 
 ```bash
-just init                  # create the virtualenv with every workspace package
-just model-fetch           # download the embedding model files once (dense search tests, wheel build, smoke)
+just init                  # create the virtualenv with every workspace package and the released model wheel
 just lint                  # ruff fix + format (just lint-check verifies only, as CI does)
 just check                 # pyright
 just test                  # pytest; just test-cov adds coverage
@@ -61,11 +60,13 @@ at runtime depends on `devkit-advisory` alone (standard library only, no CLI, no
 bundles); its development tooling adds `devkit`. The import is `devkit.advisory`
 either way: `devkit` is a namespace package that both wheels share.
 
-A wheel built here works the same way by path (`just model-fetch`, then
-`uv build --all-packages --wheel --out-dir dist`). Installing from Git
-(`[tool.uv.sources]` with `subdirectory = "packages/devkit"`, and
-`"packages/devkit-advisory"` at the same `rev`) works without the `search` extra
-only: the embedding model is not in the repository. The example content
+A wheel built here works the same way by path
+(`uv build --all-packages --wheel --out-dir dist`). Installing from Git
+(`[tool.uv.sources]` with `subdirectory = "packages/devkit"`) brings
+`devkit-advisory` from the same commit and, with the `search` extra, the model
+wheel from the release `packages/devkit/pyproject.toml` pins: uv applies a Git
+dependency's own sources. Declare neither again with another source, or uv
+reports conflicting URLs. The example content
 package `devkit-starter` is in each release too: add its wheel the same way, then
 `uv run devkit add starter`.
 
@@ -80,11 +81,18 @@ Set the new version in `packages/devkit/pyproject.toml`, merge to `main`, then
 push a matching tag: `git tag v0.2.0 && git push origin v0.2.0`. The release
 workflow runs the full CI on the tagged commit, refuses a tag that is not on
 `main` or does not match the devkit version, builds the wheels with
-`just release-build <tag>` (try it locally after `just model-fetch`) and
+`just release-build <tag>` (try it locally) and
 publishes the release. `devkit-advisory` has the devkit version and is bumped
-with it (devkit pins it exactly; a test checks both). `devkit-embed` and
-`devkit-starter` keep their own versions; bump `devkit-embed` only when its model changes, together with the
-`devkit[search]` requirement on it.
+with it (devkit pins it exactly; a test checks both). `devkit-starter` keeps its own version.
+
+`devkit-embed` keeps its own version too and is not rebuilt by releases: devkit
+installs it, in this workspace and from Git, from the release URL in the
+`[tool.uv.sources]` of `packages/devkit/pyproject.toml`. When the model changes,
+bump its version in `models/devkit-embed/pyproject.toml` and the `devkit[search]`
+requirement on it, run `just model-build` (fetches and verifies the files, builds
+`dist/model/`), attach the wheel to a release
+(`gh release upload <tag> dist/model/*.whl`), then point the URL at it and
+run `uv lock`.
 
 ## Documentation
 

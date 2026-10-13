@@ -1,4 +1,4 @@
-"""The distribution commands of ``devkit`` (``sync``, ``add``, ``remove``, ``list``, ``status``, ...).
+"""The distribution commands of ``devkit`` (``sync``, ``add``, ``remove``, ``list``, ``status``, ``config``, ...).
 
 ``COMMANDS`` lists them; the root ``devkit`` group loads each one by name. ``sync``, ``add`` and
 ``remove`` print text by default: one ``[SYNC: ...]`` line counting the writes,
@@ -64,6 +64,7 @@ from devkit.distribution.installation.config import (
     merge_selection,
     prepare_config_update,
     read_config,
+    refresh_config_template,
     resolve_selection,
 )
 from devkit.distribution.installation.context import get_context
@@ -499,6 +500,27 @@ def status(workspace_root: str | None) -> None:
     exit_on_warnings(report.notices)
 
 
+@click.group()
+def config() -> None:
+    """Maintain the project configuration, .devkit/config.toml."""
+
+
+@config.command(name="template")
+@WORKSPACE
+@_json_command
+def config_template(workspace_root: str | None) -> None:
+    """Add the commented template to .devkit/config.toml: every key it lacks, at its default.
+
+    devkit's top-level keys go after the file's last top-level key, the [tool.<name>] tables of installed tools
+    (the devkit.config_template entry points) at the end. Existing lines are never changed. Prints path, state
+    (created, updated or unchanged) and added; a tool whose template fails is a warning under notices.
+    """
+    result = refresh_config_template(resolve_root(workspace_root))
+    echo_json(result.to_dict())
+    echo_notices(result.notices)
+    exit_on_warnings(result.notices)
+
+
 @click.command()
 @WORKSPACE
 @_json_command
@@ -573,6 +595,7 @@ COMMANDS: tuple[click.Command, ...] = (
     remove,
     list_resources,
     status,
+    config,
     recover,
     override,
 )

@@ -1,0 +1,237 @@
+"""The commented template in ``.devkit/config.toml``: devkit's keys and the ``[tool.<name>]`` tables of installed tools."""
+
+from __future__ import annotations
+
+import json
+import tomllib
+from collections.abc import Callable
+from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
+from click.testing import CliRunner
+from devkit.core import TemplateKey, TemplateTable
+from devkit.core.config_template import uncomment
+from devkit.core.receipt import CONFIG_PATH
+from devkit.distribution.installation import config_template
+from devkit.distribution.installation.config import (
+    TEMPLATE_HEADER,
+    ProjectConfig,
+    prepare_config_update,
+    read_config,
+    refresh_config_template,
+    update_config,
+)
+from devkit.distribution.installation.discovery import InstalledBundle
+from devkit.distribution.installation.sync import sync_project
+from testsupport.distribution import cli, make_bundle
+
+DEMO = [
+    TemplateTable((TemplateKey("enabled", True, "turn demo on"),)),
+    TemplateTable((TemplateKey("timeout", 10, "seconds per call"),), path=("limits",), help="Limits."),
+]
+
+
+def _entry(name: str, extension: Callable[[], object], package: str | None = "demo-tool") -> SimpleNamespace:
+    """A ``devkit.config_template`` entry point whose ``load()`` returns ``extension``."""
+    return SimpleNamespace(
+        name=name, value=f"pkg:{name}", load=lambda: extension, dist=SimpleNamespace(name=package) if package else None
+    )
+
+
+@pytest.fixture
+def tools(monkeypatch: pytest.MonkeyPatch) -> list[SimpleNamespace]:
+    """The ``devkit.config_template`` entry points the test registers; none unless it appends one."""
+    entries: list[SimpleNamespace] = []
+    monkeypatch.setattr(
+        config_template.metadata,
+        "entry_points",
+        lambda group: list(entries) if group == config_template.GROUP else [],
+    )
+    return entries
+
+
+@pytest.fixture
+def project(tmp_path: Path) -> Path:
+    root = tmp_path / "project"
+    (root / ".devkit").mkdir(parents=True)
+    return root
+
+
+def _write(root: Path, text: str) -> None:
+    (root / CONFIG_PATH).write_text(text)
+
+
+def _text(root: Path) -> str:
+    return (root / CONFIG_PATH).read_text()
+
+
+def test_creates_the_file_with_devkit_keys_at_their_defaults(tmp_path: Path, tools: list[SimpleNamespace]) -> None:
+    result = refresh_config_template(tmp_path)
+    assert result.to_dict() == {
+        "path": CONFIG_PATH,
+        "state": "created",
+        "added": ["agents", "guidance_block", "override_drift"],
+        "notices": [],
+    }
+    text = _text(tmp_path)
+    assert text.startswith(f"schema = 1\n\n## {TEMPLATE_HEADER.split()[0]} ")
+    assert read_config(tmp_path) == ProjectConfig()
+    uncommented = tmp_path / "uncommented"
+    (uncommented / ".devkit").mkdir(parents=True)
+    _write(uncommented, uncomment(text))
+    assert tomllib.loads(uncomment(text)) == {
+        "schema": 1,
+        "agents": ["antigravity", "claude-code", "codex"],
+        "guidance_block": True,
+        "override_drift": "warn",
+    }
+    assert read_config(uncommented) == ProjectConfig()  # every commented value is the default
+    assert not (tmp_path / ".devkit/transient").exists()  # no lock file in a project without .devkit/
+
+
+def test_adds_devkit_keys_after_the_last_top_level_key_and_keeps_every_line(
+    project: Path, tools: list[SimpleNamespace]
+) -> None:
+    before = '# team notes\nschema = 1\nagents = ["codex"]  # ours\n\n[presets]\nteam = "all"\n'
+    _write(project, before)
+    result = refresh_config_template(project)
+    assert (result.state, result.added) == ("updated", ["guidance_block", "override_drift"])
+    text = _text(project)
+    head, tail = text.split("\n[presets]\n")
+    assert head.startswith('# team notes\nschema = 1\nagents = ["codex"]  # ours\n\n## devkit project configuration')
+    assert "# agents =" not in text  # set by the project
+    assert "# guidance_block = true" in head and '# override_drift = "warn"' in head
+    assert tail == 'team = "all"\n'
+    assert tomllib.loads(text) == tomllib.loads(before)
+    assert refresh_config_template(project).to_dict()["state"] == "unchanged"
+    assert _text(project) == text
+
+
+def test_a_key_mentioned_in_a_comment_is_not_added_again(project: Path, tools: list[SimpleNamespace]) -> None:
+    _write(project, 'schema = 1\n# override_drift = "block"  # we tried\n')
+    assert refresh_config_template(project).added == ["agents", "guidance_block"]
+    assert _text(project).count("override_drift") == 1
+
+
+def test_a_file_without_top_level_keys_gets_devkit_keys_first(project: Path, tools: list[SimpleNamespace]) -> None:
+    _write(project, '[presets]\nteam = "all"\n')
+    refresh_config_template(project)
+    text = _text(project)
+    assert text.startswith("## devkit project configuration") and text.endswith('\n[presets]\nteam = "all"\n')
+    assert tomllib.loads(text) == {"presets": {"team": "all"}}
+
+
+def test_adds_tool_tables_at_the_end(project: Path, tools: list[SimpleNamespace]) -> None:
+    tools.append(_entry("demo", lambda: DEMO))
+    _write(project, 'schema = 1\n\n[presets]\nteam = "all"\n')
+    result = refresh_config_template(project)
+    assert result.added == ["agents", "guidance_block", "override_drift", "tool.demo", "tool.demo.limits"]
+    assert _text(project).endswith(
+        '\n[presets]\nteam = "all"\n\n'
+        "## [tool.demo]: the settings of demo-tool; devkit passes [tool.*] tables through unread.\n"
+        "# [tool.demo]\n"
+        "#   enabled = true  # boolean; turn demo on\n"
+        "\n"
+        "## Limits.\n"
+        "# [tool.demo.limits]\n"
+        "#   timeout = 10  # integer; seconds per call\n"
+    )
+    assert tomllib.loads(uncomment(_text(project)))["tool"] == {"demo": {"enabled": True, "limits": {"timeout": 10}}}
+
+
+def test_a_tool_table_the_file_mentions_or_defines_is_left_out(project: Path, tools: list[SimpleNamespace]) -> None:
+    tools.append(_entry("demo", lambda: DEMO))
+    _write(project, 'schema = 1\n\n[tool.demo.limits]\ntimeout = 5\n\n#[ tool . "demo" ]\n')
+    assert refresh_config_template(project).added == ["agents", "guidance_block", "override_drift"]
+    _write(project, "schema = 1\ntool.demo.enabled = false\n")
+    assert refresh_config_template(project).added[-1:] == ["tool.demo.limits"]
+    assert tomllib.loads(uncomment(_text(project).split("## Limits.")[1]))["tool"]["demo"]["limits"] == {"timeout": 10}
+
+
+def test_a_new_table_of_an_installed_tool_is_added_later(project: Path, tools: list[SimpleNamespace]) -> None:
+    tools.append(_entry("demo", lambda: DEMO[:1]))
+    refresh_config_template(project)
+    tools[0] = _entry("demo", lambda: DEMO)
+    assert refresh_config_template(project).added == ["tool.demo.limits"]
+    assert _text(project).count("[tool.demo]") == 2  # one intro line, one header
+
+
+@pytest.mark.parametrize(
+    ("entry", "problem"),
+    [
+        (_entry("Demo", lambda: DEMO), "the entry-point name is not a [tool.<name>] name"),
+        (_entry("demo", lambda: "tables"), "returned str, expected a list of TemplateTable"),
+        (_entry("demo", lambda: [TemplateTable(())]), "expected one TemplateKey or more"),
+        (_entry("demo", lambda: 1 / 0), "division by zero"),
+    ],
+)
+def test_a_failing_extension_is_a_warning_and_its_tables_are_left_out(
+    project: Path, tools: list[SimpleNamespace], entry: SimpleNamespace, problem: str
+) -> None:
+    tools.extend([entry, _entry("other", lambda: DEMO[:1], package=None)])
+    result = refresh_config_template(project)
+    assert result.state == "created"
+    assert [notice.code for notice in result.notices] == ["CONFIG_TEMPLATE_EXTENSION_FAILED"]
+    assert problem in result.notices[0].message
+    assert result.notices[0].to_dict()["level"] == "WARNING"
+    assert "[tool.demo]" not in _text(project) and "# [tool.other]" in _text(project)
+    assert "## [tool.other]: the settings; devkit passes" in _text(project)
+
+
+def test_an_invalid_config_is_left_alone(project: Path, tools: list[SimpleNamespace]) -> None:
+    _write(project, "schema = 1\nunknown = true\n")
+    with pytest.raises(Exception, match="unknown fields") as raised:
+        refresh_config_template(project)
+    assert getattr(raised.value, "code", None) == "CONFIG_INVALID"
+    assert _text(project) == "schema = 1\nunknown = true\n"
+
+
+def test_selection_edits_never_land_below_a_commented_tool_table(project: Path, tools: list[SimpleNamespace]) -> None:
+    tools.append(_entry("demo", lambda: DEMO))
+    _write(project, 'schema = 1\n\n[presets]\nteam = "all"\n')
+    refresh_config_template(project)
+    update_config(project, agents=["codex"], presets={"other": ["core"]}, opt_out=["devkit"])
+    text = _text(project)
+    assert text.index('agents = ["codex"]') < text.index("## devkit project configuration")
+    assert tomllib.loads(text)["presets"] == {"team": "all", "other": "core", "devkit": False}
+    tool_part = text[text.index("## [tool.demo]") :]
+    assert tomllib.loads(uncomment(tool_part)) == {"tool": {"demo": {"enabled": True, "limits": {"timeout": 10}}}}
+
+
+def test_a_selection_command_creates_the_file_with_the_template(tmp_path: Path, tools: list[SimpleNamespace]) -> None:
+    tools.append(_entry("demo", lambda: DEMO))
+    update_config(tmp_path, presets={"team": ["all"]})
+    text = _text(tmp_path)
+    assert text.startswith("schema = 1\n\n## devkit project configuration")
+    assert text.index('[presets]\nteam = "all"') < text.index("# [tool.demo]")
+    assert tomllib.loads(text) == {"schema": 1, "presets": {"team": "all"}}
+    assert refresh_config_template(tmp_path).state == "unchanged"
+
+
+def test_a_sync_that_creates_the_file_reports_failed_extensions(tmp_path: Path, tools: list[SimpleNamespace]) -> None:
+    tools.append(_entry("demo", lambda: 1 / 0))
+    installed: list[InstalledBundle] = [make_bundle(tmp_path, "team")]
+    target = tmp_path / "target"
+    target.mkdir()
+    result = sync_project(target, installed, save=lambda: prepare_config_update(target, presets={"team": ["guidance"]}))
+    assert "CONFIG_TEMPLATE_EXTENSION_FAILED" in [notice.code for notice in result.notices]
+    assert 'team = "guidance"' in _text(target)
+    again = sync_project(target, installed, save=lambda: prepare_config_update(target, agents=["codex"]))
+    assert "CONFIG_TEMPLATE_EXTENSION_FAILED" not in [notice.code for notice in again.notices]  # only on creation
+
+
+def test_cli_prints_the_result_as_json(project: Path, tools: list[SimpleNamespace]) -> None:
+    tools.append(_entry("demo", lambda: 1 / 0))
+    runner = CliRunner()
+    result = runner.invoke(cli, ["config", "template", "--workspace-root", str(project)])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert (payload["state"], payload["added"]) == ("created", ["agents", "guidance_block", "override_drift"])
+    assert [notice["code"] for notice in payload["notices"]] == ["CONFIG_TEMPLATE_EXTENSION_FAILED"]
+    assert result.stderr == ""
+    strict = runner.invoke(cli, ["config", "template", "--workspace-root", str(project), "--strict"])
+    assert strict.exit_code == 1 and json.loads(strict.stdout)["state"] == "unchanged"
+    _write(project, "schema = 2\n")
+    refused = runner.invoke(cli, ["config", "template", "--workspace-root", str(project)])
+    assert refused.exit_code == 2 and json.loads(refused.stdout)["error"]["code"] == "CONFIG_INVALID"
