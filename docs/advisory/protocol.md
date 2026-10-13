@@ -247,7 +247,7 @@ To prevent blind retries and destructive side-quests without paralyzing the agen
 ## 8. Warnings and Notices in Practice
 
 - **Never raised.** A warning or notice describes an operation that succeeded, so it is never raised as an exception. A function collects it and returns it with its result (in `notices`); the command prints the result first and the notices after it. A notice that reaches a CLI boundary as an exception is a programming error and is reported as `UNEXPECTED_ERROR`.
-- **Extension points.** When a tool collects advisories from third-party code that must not fail the operation (for example post-sync hooks), an `ERROR` it receives is lowered to `WARNING`.
+- **Extension points.** When a tool collects advisories from third-party code that must not fail the operation (for example post-sync extensions), an `ERROR` it receives is lowered to `WARNING`.
 - **One advisory per condition.** Report a condition once per run, naming all affected items in `[TARGET]` or the message, rather than one block per file.
 - **Lasting conditions.** A condition that persists across runs is reported by what it asks for. One the user must act on is a `WARNING` and is reported on every run until it is resolved (a stray file, an override behind upstream). One that asks for nothing is a `NOTICE` reported when it appears or changes, not on every run that finds it unchanged (a bundle that became available); afterwards it stays visible as data (a JSON field, a list command). A condition the user decided on (an opted-out bundle) is never announced again.
 - **Targets are files.** `[TARGET]` names what the agent would open: a file path, a flag, or a `path:line:col` location. Identifiers such as rule IDs or `bundle:asset` labels belong in the message or `[DETAIL]`.

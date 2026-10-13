@@ -31,6 +31,7 @@ from devkit.core.cli import (
 from devkit.core.project import find_project_root
 from devkit.worktree.config import WorktreeConfig, read_worktree_config
 from devkit.worktree.errors import WorktreeError
+from devkit.worktree.extensions import run_post_finish
 from devkit.worktree.lifecycle import FinishResult, Position, finish, locate, start, status
 
 WORKSPACE = workspace_option("Any directory inside the checkout [default: the current directory]")
@@ -127,6 +128,7 @@ def finish_cmd(slug: str, workspace_root: str | None, merge: bool, output_format
             click.echo(_finished(partial))
         echo_notices(partial.notices)
         raise Reported(error) from error
+    result.notices.extend(run_post_finish(position.base, result.to_dict()))
     if is_json(output_format):
         echo_json(result.to_dict())
     else:

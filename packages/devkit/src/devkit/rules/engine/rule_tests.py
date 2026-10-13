@@ -31,10 +31,12 @@ from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from devkit.advisory import AdvisoryError
 from devkit.core.plugins import TESTS_DIRECTORY
 from devkit.rules.engine.errors import RulesTestUnavailableError
 from devkit.rules.engine.models import Rule
 from devkit.rules.engine.registry import PLUGIN_NAMESPACE
+from devkit.rules.rules.base import managed_counterpart
 
 if TYPE_CHECKING:
     from devkit.compact import CommandRun
@@ -47,6 +49,7 @@ class RuleTestResult(StrEnum):
     PASSED = "passed"
     FAILED = "failed"
     NO_TESTS = "no-tests"
+    INTERRUPTED = "interrupted"
 
 
 @dataclass(frozen=True)
@@ -73,6 +76,15 @@ class RuleTestRun:
         return self.result is RuleTestResult.FAILED
 
 
+class RuleTestsInterrupted(SystemExit):
+    """A run was interrupted (Ctrl-C, ``SIGTERM``, ``SIGHUP``): ``results`` holds the rules run so far, the last
+    one ``interrupted``. Left uncaught it exits ``128 + N``, as the signal would have."""
+
+    def __init__(self, results: list[RuleTestRun], code: int) -> None:
+        super().__init__(code)
+        self.results = results
+
+
 def rule_folder(rule: Rule) -> Path | None:
     """The directory a rule lives in, or ``None`` when its class has no source file.
 
@@ -97,9 +109,18 @@ def rule_folder(rule: Rule) -> Path | None:
 
 
 def tests_directory(rule: Rule) -> Path | None:
-    """``<rule folder>/tests``, whether or not it exists; ``None`` when the rule has no folder."""
+    """``<rule folder>/tests``, whether or not it exists; ``None`` when the rule has no folder.
+
+    For a rule whose module a project override replaced, an override without ``tests/`` uses the managed copy's.
+    """
     folder = rule_folder(rule)
-    return folder / TESTS_DIRECTORY if folder is not None else None
+    if folder is None:
+        return None
+    tests = folder / TESTS_DIRECTORY
+    managed = managed_counterpart(folder)
+    if not tests.is_dir() and managed is not None and (managed / TESTS_DIRECTORY).is_dir():
+        return managed / TESTS_DIRECTORY
+    return tests
 
 
 def pytest_available() -> bool:
@@ -119,14 +140,15 @@ def run_rule_tests(root: Path, rules: Sequence[Rule], pytest_args: Sequence[str]
     exit code 5), is ``no-tests``; any other nonzero exit code is ``failed``.
     Raises ``RulesTestUnavailableError`` (``RULES_TEST_UNAVAILABLE``) when
     pytest is not importable, the compact errors when a run cannot start or
-    log, and ``CommandInterrupted`` when a run is interrupted.
+    log, and ``RuleTestsInterrupted`` with the results so far when a run is
+    interrupted.
     """
     if not pytest_available():
         raise RulesTestUnavailableError(
             f"pytest is not importable by {sys.executable}, which runs devkit; rule tests need it",
             target_files=["pyproject.toml"],
         )
-    from devkit.compact import run_command
+    from devkit.compact import CommandInterrupted, run_command
 
     env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
     runs: dict[Path, CommandRun] = {}
@@ -140,7 +162,11 @@ def run_rule_tests(root: Path, rules: Sequence[Rule], pytest_args: Sequence[str]
             folder = str(tests.parent)
             isolation = ("-c", os.devnull, "--rootdir", folder, "--confcutdir", folder)
             argv = [sys.executable, "-m", "pytest", str(tests), *PYTEST_OPTIONS, *isolation, *pytest_args]
-            runs[tests] = run_command(argv, cwd=root, env=env, slow_after=0)
+            try:
+                runs[tests] = run_command(argv, cwd=root, env=env, slow_after=0)
+            except CommandInterrupted as stopped:
+                results.append(RuleTestRun(rule.id, tests, RuleTestResult.INTERRUPTED, stopped.run))
+                raise RuleTestsInterrupted(results, stopped.code if isinstance(stopped.code, int) else 130) from stopped
         run = runs[tests]
         if run.exit_code == 0:
             result = RuleTestResult.PASSED
@@ -152,11 +178,23 @@ def run_rule_tests(root: Path, rules: Sequence[Rule], pytest_args: Sequence[str]
     return results
 
 
+def run_notices(results: Sequence[RuleTestRun]) -> list[AdvisoryError]:
+    """The advisories of the pytest runs (compact's), once per run shared by several rules."""
+    seen: set[int] = set()
+    notices: list[AdvisoryError] = []
+    for item in results:
+        if item.run is not None and id(item.run) not in seen:
+            seen.add(id(item.run))
+            notices.extend(item.run.notices)
+    return notices
+
+
 def summary(results: Sequence[RuleTestRun]) -> dict[str, Any]:
-    """Counts per result: ``rules``, ``passed``, ``failed``, ``no_tests``."""
+    """Counts per result: ``rules``, ``passed``, ``failed``, ``no_tests``, ``interrupted``."""
     return {
         "rules": len(results),
         "passed": sum(r.result is RuleTestResult.PASSED for r in results),
         "failed": sum(r.result is RuleTestResult.FAILED for r in results),
         "no_tests": sum(r.result is RuleTestResult.NO_TESTS for r in results),
+        "interrupted": sum(r.result is RuleTestResult.INTERRUPTED for r in results),
     }

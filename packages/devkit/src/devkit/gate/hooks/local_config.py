@@ -1,7 +1,7 @@
 """The commented settings template in the clone-local ``<common-git-dir>/devkit.config``.
 
 ``devkit gate install`` and, once the managed wrappers are installed, every
-``devkit sync`` (through the ``devkit.post_sync`` hook ``post_sync``) make sure
+``devkit sync`` (through the ``devkit.post_sync`` extension ``post_sync``) make sure
 the file names every installed gate: one commented ``[gates.settings.<id>]``
 table per gate, with ``enabled`` and each settings field at its default, its
 type and the field's ``metadata["help"]`` when the gate declares one.
@@ -213,7 +213,7 @@ def refresh_project_template(repo_root: Path) -> TemplateResult:
 
 
 def post_sync(root: Path, result: dict[str, Any]) -> list[AdvisoryError] | None:
-    """``devkit.post_sync`` hook: refresh the template when this repository runs the managed wrappers.
+    """``devkit.post_sync`` extension: refresh the template when this repository runs the managed wrappers.
 
     A sync never installs hooks, so a repository without them is left alone, as
     is a directory outside a Git work tree.

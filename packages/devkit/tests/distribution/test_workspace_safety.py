@@ -7,12 +7,13 @@ import threading
 from pathlib import Path
 
 import pytest
+from devkit.core import extensions as core_extensions
 from devkit.core.errors import ReceiptError
 from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH
 from devkit.distribution.bundles import build_bundle, load_bundle
 from devkit.distribution.bundles.subagents import read_contract, render_projection
 from devkit.distribution.errors import BundleError, DistributionError, LockHeldError, UnsafeWorkspaceError
-from devkit.distribution.installation import hooks, transaction
+from devkit.distribution.installation import extensions, transaction
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.context import get_context
 from devkit.distribution.installation.discovery import InstalledBundle
@@ -176,14 +177,16 @@ def test_reader_waits_for_a_writer(item: InstalledBundle, target: Path) -> None:
         writer.join()
 
 
-def test_post_sync_hooks_run_after_the_lock_is_released(
+def test_post_sync_extensions_run_after_the_lock_is_released(
     item: InstalledBundle, target: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     def hook(root: Path, result: dict) -> list[str]:
         return [f"hook read {get_context(root, 'team').to_dict()['bundle']}"]
 
     entry = type("Entry", (), {"name": "reader", "value": "x:reader", "load": staticmethod(lambda: hook)})()
-    monkeypatch.setattr(hooks.metadata, "entry_points", lambda group: [entry] if group == hooks.GROUP else [])
+    monkeypatch.setattr(
+        core_extensions.metadata, "entry_points", lambda group: [entry] if group == extensions.GROUP else []
+    )
     assert [notice.message for notice in sync_project(target, [item]).notices] == ["hook read team"]
 
 

@@ -43,7 +43,7 @@ from devkit.rules.engine.models import Phase, Rule
 from devkit.rules.engine.phases import resolve_phases
 from devkit.rules.engine.project import ProjectRules, load_project_rules, run_project_rules
 from devkit.rules.engine.related import resolve_related
-from devkit.rules.engine.rule_tests import run_rule_tests, summary
+from devkit.rules.engine.rule_tests import RuleTestsInterrupted, run_notices, run_rule_tests, summary
 from devkit.rules.workspace.snapshot import Snapshot, git_snapshot
 
 
@@ -358,11 +358,15 @@ def test_cmd(
             selected.append(rule)
     else:
         selected = sorted(project.rules, key=lambda r: r.id)
+    interrupted: RuleTestsInterrupted | None = None
     try:
         results = run_rule_tests(root, selected, ctx.meta.get(PYTEST_ARGS, ()))
     except AdvisoryError:
         echo_notices(warnings)
         raise
+    except RuleTestsInterrupted as stopped:
+        interrupted, results = stopped, stopped.results
+    warnings.extend(run_notices(results))
     counts = summary(results)
     if is_json(output_format):
         echo_json(
@@ -375,6 +379,8 @@ def test_cmd(
     else:
         output.print_rule_tests(results, root, counts)
     echo_notices(warnings)
+    if interrupted is not None:
+        raise SystemExit(interrupted.code)
     if counts["failed"]:
         raise SystemExit(int(ExitCode.FINDINGS))
     exit_on_warnings(warnings)

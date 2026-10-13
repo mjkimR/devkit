@@ -73,7 +73,7 @@ Override semantics are specified in [Workspace Ownership, section 3](workspace-o
   recorded, and never the receipt, the root `AGENTS.md` block, seeded files or `.devkit/.gitignore`. When the sync
   would change any of them (the installed bundles no longer match the receipt, or there is no receipt), it writes
   nothing and fails with `RECEIPT_STALE` (`INTERACTION`, exit `1`: a negative result, as for `--check`); every other
-  error exits `2` as in a plain sync (a missing package is `SELECTION_INVALID`). It runs post-sync hooks only when it committed, and
+  error exits `2` as in a plain sync (a missing package is `SELECTION_INVALID`). It runs post-sync extensions only when it committed, and
   takes no other selection or mode flag ([Synchronization & Transactions](sync-and-transactions.md#locked-synchronization)).
 
 ---
@@ -151,15 +151,15 @@ they run in their own `notices` list.
 | `ORPHAN_LEFT` | `WARNING` | `OrphanLeftNotice` | a hand-edited managed file is no longer desired, or a hand-edited guidance block under `guidance_block = false`: left in place, dropped from the receipt | `target_files`: the files; `what_to_report`: delete or move them |
 | `OVERRIDE_DRIFT` | `WARNING` | `OverrideDriftError.with_level` | an override hides upstream changes (`override_drift = "warn"`) | `target_files`: the overrides; `fix`: `devkit override diff <bundle>:<asset>` |
 | `MANAGED_FILE_STRAY` | `WARNING` | `StrayFilesNotice` | files under `.devkit/managed/` that neither the receipt nor the inventory owns | `target_files`: the files; `what_to_report`: move project-owned files out of the managed root |
-| `POST_SYNC_HOOK_FAILED` | `WARNING` | `PostSyncHookFailedNotice` | a post-sync hook raised or returned something other than a list | `details`: the hook; `what_to_report`: the failure |
+| `POST_SYNC_EXTENSION_FAILED` | `WARNING` | `PostSyncExtensionFailedNotice` | a post-sync extension raised or returned something other than a list | `details`: the hook; `what_to_report`: the failure |
 | `ASSET_UNPROJECTED` | `NOTICE` (brief) | `UnprojectedNotice` | a skill or subagent has no variant for a selected agent and was not projected | message: each `<bundle>:<asset> (<agent>)`; `target_files`: `.devkit/config.toml` (where the project narrows `agents`); `[DETAIL]`: the remedies |
 | `BUNDLE_UNSELECTED` | `NOTICE` | `BundleUnselectedNotice` | installed bundles the project neither selected nor opted out of, reported once per clone when they appear (recorded in `.devkit/transient/seen-bundles.json`) | `fix`: `devkit add <bundle>` for one bundle, else `devkit list`; one `[DETAIL]` per bundle with its exact `devkit add` command and presets |
 | `BUNDLE_AUTO_SELECTED` | `NOTICE` | `BundleAutoSelectedNotice` | auto-selected bundles of packages other than `devkit` that the sync deploys with their default preset and the previous receipt does not record | `fix`: `devkit remove <bundle>` (opts out) for one bundle, else `devkit list`; one `[DETAIL]` per bundle with its package and preset; `what_to_report`: the bundles now deployed |
 | `TOOL_VERSION_CHANGED` | `NOTICE` (brief) | `ToolVersionChangedNotice` | the receipt now records a different running `devkit` version (`devkit <recorded> -> <running>`) | — |
-| `POST_SYNC_NOTICE` | `NOTICE` (brief) | `PostSyncNotice` | a line a post-sync hook returned | `details`: the hook |
+| `POST_SYNC_NOTICE` | `NOTICE` (brief) | `PostSyncNotice` | a line a post-sync extension returned | `details`: the extension |
 
-Each class above derives from `SyncNotice` (`SYNC_NOTICE`), which is never reported on its own. A post-sync hook may also return `AdvisoryError` objects with codes of its own; they keep their level, except that an
-`ERROR` is lowered to `WARNING` ([hooks](sync-and-transactions.md#post-sync-hooks)).
+Each class above derives from `SyncNotice` (`SYNC_NOTICE`), which is never reported on its own. A post-sync extension may also return `AdvisoryError` objects with codes of its own; they keep their level, except that an
+`ERROR` is lowered to `WARNING` ([extensions](sync-and-transactions.md#post-sync-extensions)).
 
 ### `devkit status`
 
@@ -240,7 +240,7 @@ The other built-in bundles belong to the module whose engine they use:
 - [Bundle Manifest Specification](manifest-spec.md): `bundle.toml` schema 1, asset kinds, presets, validation and archive builds.
 - [Content Packages](content-packages.md): the content wheel contract, installation, upgrades and dependency boundaries.
 - [Workspace Ownership & Overrides](workspace-ownership.md): workspace layout, ownership categories, the guidance block, seeded files and override drift.
-- [Synchronization & Transactions](sync-and-transactions.md): the receipt, the selection model, and the transaction engine (lock, journal, recovery, post-sync hooks).
+- [Synchronization & Transactions](sync-and-transactions.md): the receipt, the selection model, and the transaction engine (lock, journal, recovery, post-sync extensions).
 - [Native Agent Projections](agent-projections.md): projection matrix and role contracts for Codex, Claude Code and Antigravity.
 - [Context Loading & Playbooks](context-and-playbooks.md): `get-context`, the skill prerequisite, and playbook search.
 - [In-Repository Bundles](in-repo-bundles.md): repository-owned assets as a content package installed from the same repository.

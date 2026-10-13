@@ -45,7 +45,7 @@ from devkit.distribution.installation.config import (
     read_config,
 )
 from devkit.distribution.installation.discovery import InstalledBundle, unusable_notices
-from devkit.distribution.installation.hooks import run_post_sync
+from devkit.distribution.installation.extensions import run_post_sync
 from devkit.distribution.installation.inventory import GENERATED_SKILLS, Inventory, Seed, desired_inventory
 from devkit.distribution.installation.overrides import Drift, overridden_files
 from devkit.distribution.installation.receipt import read_receipt, receipt_content, receipt_json
@@ -711,10 +711,10 @@ def sync_project(
     instead: it renders the configuration edit under the project lock, from the
     configuration as it is then, so concurrent selection commands never lose
     an edit; the edit is written before the sync reads the configuration and
-    put back when the sync fails, and post-sync hooks see it. ``save`` is never
+    put back when the sync fails, and post-sync extensions see it. ``save`` is never
     called on ``dry_run``. ``locked`` keeps the committed state: the sync only
     restores files the receipt records, or raises ``ReceiptStaleError``
-    (``RECEIPT_STALE``) without writing anything. Post-sync hooks run after
+    (``RECEIPT_STALE``) without writing anything. Post-sync extensions run after
     the project lock is released, except on a dry run.
     """
     root = require_project_dir(root)
@@ -747,7 +747,7 @@ def commit_locked(
     locked: bool = False,
     rebaseline: tuple[str, str] | None = None,
 ) -> Callable[[], SyncResult]:
-    """Plan a sync and, unless ``dry_run``, commit it; the caller holds the project lock. Runs no hooks.
+    """Plan a sync and, unless ``dry_run``, commit it; the caller holds the project lock. Runs no post-sync extension.
 
     Returns the step that follows the commit (recording the installed bundles,
     scanning for stray files, building the result). A failure there leaves the

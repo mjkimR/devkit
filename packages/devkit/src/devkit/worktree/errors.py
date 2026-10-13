@@ -216,3 +216,19 @@ class SyncFailedWarning(WorktreeError):
 
     code = "WORKTREE_SYNC_FAILED"
     level = Level.WARNING
+
+
+class PostFinishNotice(WorktreeError):
+    """A line a ``devkit.post_finish`` extension returned; its package owns its meaning (``NOTICE``, ``brief``)."""
+
+    code = "POST_FINISH_NOTICE"
+    level = Level.NOTICE
+    brief = True
+
+
+class PostFinishExtensionFailedNotice(WorktreeError):
+    """A ``devkit.post_finish`` extension raised or returned something other than a list; the finish itself succeeded
+    (``WARNING``)."""
+
+    code = "POST_FINISH_EXTENSION_FAILED"
+    level = Level.WARNING

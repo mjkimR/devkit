@@ -1,4 +1,4 @@
-"""Post-sync hooks, override drift policy, orphans, ``devkit status`` and tool identity."""
+"""Post-sync extensions, override drift policy, orphans, ``devkit status`` and tool identity."""
 
 from __future__ import annotations
 
@@ -10,11 +10,12 @@ from types import SimpleNamespace
 import pytest
 from click.testing import CliRunner
 from devkit.advisory import ActionMode, AdvisoryError, ExitCode, Level
+from devkit.core import extensions as core_extensions
 from devkit.core.errors import ConfigError, ReceiptError
 from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH, ToolRecord
 from devkit.distribution.bundles import load_bundle
 from devkit.distribution.errors import ConflictError, OverrideDriftError
-from devkit.distribution.installation import discovery, hooks
+from devkit.distribution.installation import discovery, extensions
 from devkit.distribution.installation import status as status_module
 from devkit.distribution.installation import sync as sync_module
 from devkit.distribution.installation.config import update_config
@@ -82,10 +83,10 @@ def _entry(name: str, hook: object) -> SimpleNamespace:
     return SimpleNamespace(name=name, value=f"fake:{name}", load=lambda: hook)
 
 
-# --- post-sync hooks ---------------------------------------------------------
+# --- post-sync extensions ----------------------------------------------------
 
 
-def test_post_sync_hooks_run_in_name_order_and_never_fail_the_sync(
+def test_post_sync_extensions_run_in_name_order_and_never_fail_the_sync(
     installed: list[InstalledBundle], target: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     seen: list[tuple[str, Path, list[str]]] = []
@@ -110,7 +111,9 @@ def test_post_sync_hooks_run_in_name_order_and_never_fail_the_sync(
         _entry("a-first", first),
         _entry("d-wrong", wrong),
     ]
-    monkeypatch.setattr(hooks.metadata, "entry_points", lambda group: entries if group == hooks.GROUP else [])
+    monkeypatch.setattr(
+        core_extensions.metadata, "entry_points", lambda group: entries if group == extensions.GROUP else []
+    )
 
     result = sync_project(target, installed)
     assert [name for name, _, _ in seen] == ["a", "c"]
@@ -118,24 +121,24 @@ def test_post_sync_hooks_run_in_name_order_and_never_fail_the_sync(
     assert RECEIPT_PATH in seen[0][2]
     assert [(notice.code, notice.message) for notice in result.notices] == [
         ("POST_SYNC_NOTICE", "first says hi"),
-        ("POST_SYNC_HOOK_FAILED", "post-sync hook b-broken failed: boom"),
+        ("POST_SYNC_EXTENSION_FAILED", "post-sync extension b-broken failed: boom"),
         (
-            "POST_SYNC_HOOK_FAILED",
-            "post-sync hook d-wrong failed: returned str, expected list[str | AdvisoryError]",
+            "POST_SYNC_EXTENSION_FAILED",
+            "post-sync extension d-wrong failed: returned str, expected list[str | AdvisoryError]",
         ),
     ]
-    assert result.notices[0].details == ("hook: a-first",)
+    assert result.notices[0].details == ("extension: a-first",)
     assert [notice["level"] for notice in result.to_dict()["notices"]] == ["NOTICE", "WARNING", "WARNING"]
     assert result.to_dict()["notices"][1]["advisory"]["mode"] == "CONTINUE"
     assert (target / RECEIPT_PATH).is_file()
 
 
-def test_post_sync_hooks_do_not_run_on_dry_run_or_check(
+def test_post_sync_extensions_do_not_run_on_dry_run_or_check(
     installed: list[InstalledBundle], target: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     calls: list[str] = []
     entries = [_entry("hook", lambda root, result: calls.append("ran") or ["x"])]
-    monkeypatch.setattr(hooks.metadata, "entry_points", lambda group: entries)
+    monkeypatch.setattr(core_extensions.metadata, "entry_points", lambda group: entries)
     assert sync_project(target, installed, dry_run=True).to_dict()["notices"] == []
     assert calls == []
     monkeypatch.setattr(discovery, "discover_bundles", lambda: fake_discovery(installed))
@@ -147,16 +150,18 @@ def test_post_sync_hooks_do_not_run_on_dry_run_or_check(
     assert refused.exit_code == 1 and calls == []
     synced = runner.invoke(cli, ["sync", "--workspace-root", str(target)])
     assert synced.exit_code == 0, synced.output
-    assert calls == ["ran"] and "[NOTICE] (POST_SYNC_NOTICE) x\n[DETAIL] hook: hook\n" in synced.stderr  # brief
+    assert calls == ["ran"] and "[NOTICE] (POST_SYNC_NOTICE) x\n[DETAIL] extension: hook\n" in synced.stderr  # brief
 
 
-def test_post_sync_hooks_may_return_coded_notices_and_reach_override_commands(
+def test_post_sync_extensions_may_return_coded_notices_and_reach_override_commands(
     installed: list[InstalledBundle], target: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     coded = AdvisoryError("units need review", code="UNITS_STALE")  # an ERROR: a hook cannot fail the sync
     kept = AdvisoryError("units checked", code="UNITS_CHECKED", level=Level.NOTICE)
     entries = [_entry("coded", lambda root, result: [coded, kept, "plain"])]
-    monkeypatch.setattr(hooks.metadata, "entry_points", lambda group: entries if group == hooks.GROUP else [])
+    monkeypatch.setattr(
+        core_extensions.metadata, "entry_points", lambda group: entries if group == extensions.GROUP else []
+    )
     notices = sync_project(target, installed).notices
     assert [(notice.code, notice.level) for notice in notices] == [
         ("UNITS_STALE", Level.WARNING),

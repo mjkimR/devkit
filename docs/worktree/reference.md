@@ -57,6 +57,8 @@ Every command takes `-w/--workspace-root` (any directory in the checkout; defaul
 | `WORKTREE_BRANCH_DELETE_FAILED` | `ERROR` (`INTERACTION`) | `BranchDeleteFailedError` | `git branch -d` failed after the removal; carries the partial result, a rerun deletes the branch. |
 | `WORKTREE_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `WorktreeConfigError` | A malformed `[worktree]` table. |
 | `WORKTREE_PUSH_REJECTED` | `WARNING` | `PushRejectedWarning` | The upstream moved on and rejected the push of the merged base; `[FIX]` integrates it (`git pull --rebase`), then pushes. |
+| `POST_FINISH_EXTENSION_FAILED` | `WARNING` | `PostFinishExtensionFailedNotice` | A `devkit.post_finish` extension raised or returned something other than a list; the finish succeeded. |
+| `POST_FINISH_NOTICE` | `NOTICE` | `PostFinishNotice` | A line a `devkit.post_finish` extension returned (`brief`). |
 | `WORKTREE_PUSH_FAILED` | `WARNING` | `PushFailedWarning` | The merged base branch did not reach its upstream for another reason; `[FIX]` is the push. |
 | `WORKTREE_SETUP_FAILED` | `WARNING` | `SetupFailedWarning` | The `setup` command failed or timed out; `[FIX]` reruns it. |
 | `WORKTREE_SYNC_FAILED` | `WARNING` | `SyncFailedWarning` | `devkit sync --locked` failed or timed out in the new worktree. The message names the sync's own error code and message; `[TARGET]`, `[DETAIL]` and `[FIX]` are that error's (its fix prefixed with the worktree path), or the rerun command when the output was not an error object. |

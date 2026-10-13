@@ -3,9 +3,10 @@ from __future__ import annotations
 import inspect
 import re
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
+from devkit.core.receipt import MANAGED_PATH, OVERRIDES_PATH
 from devkit.rules.engine.errors import RuleDefinitionError
 from devkit.rules.engine.models import Phase, Rule, Severity
 
@@ -58,5 +59,22 @@ def guide_path(rule: Rule) -> Path | None:
         module_file = Path(inspect.getfile(type(rule)))
     except (TypeError, OSError):
         return None
-    path = (module_file.parent / name).resolve()
-    return path if path.is_file() else None
+    for directory in (module_file.parent, managed_counterpart(module_file.parent)):
+        if directory is not None and (path := (directory / name).resolve()).is_file():
+            return path
+    return None
+
+
+def managed_counterpart(path: Path) -> Path | None:
+    """The managed copy of a path inside a project override (``.devkit/overrides/<bundle>/...`` becomes
+    ``.devkit/managed/<bundle>/...``), else ``None``.
+
+    An override replaces files one by one: the files of an asset it does not hold (a rule's guide, its tests) are
+    the managed copies, so a file looked up beside an overridden module is looked up there too.
+    """
+    parts = path.parts
+    marker = tuple(PurePosixPath(OVERRIDES_PATH).parts)
+    for index in range(len(parts) - len(marker) + 1):
+        if parts[index : index + len(marker)] == marker:
+            return Path(*parts[:index], *PurePosixPath(MANAGED_PATH).parts, *parts[index + len(marker) :])
+    return None

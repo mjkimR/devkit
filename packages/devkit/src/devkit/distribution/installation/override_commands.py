@@ -22,7 +22,7 @@ from devkit.distribution.content import Content, normal_mode
 from devkit.distribution.errors import ConflictError, SelectionError
 from devkit.distribution.installation.config import effective_selection, read_config
 from devkit.distribution.installation.discovery import InstalledBundle, unusable_bundles
-from devkit.distribution.installation.hooks import run_post_sync
+from devkit.distribution.installation.extensions import run_post_sync
 from devkit.distribution.installation.overrides import (
     asset_files,
     baseline_rel,
@@ -123,7 +123,7 @@ def _require_overridable(root: Path, installed: list[InstalledBundle], item: Ins
 
 
 def _after_sync(root: Path, result: SyncResult) -> list[AdvisoryError]:
-    """The sync's notices and the post-sync hooks' (run once the project lock is released)."""
+    """The sync's notices and the post-sync extensions' (run once the project lock is released)."""
     return [*result.notices, *run_post_sync(root, result.to_dict())]
 
 

@@ -90,12 +90,12 @@ is the JSON the command prints.
   - `inventory.py`: the desired state (`Inventory`): managed copies, projections, rendered role contracts,
     generated entry skills, rendered fragments, seeds, override tracking.
   - `overrides.py`, `override_commands.py`: which file a deployment reads, drift tracking, `override ...` commands.
-  - `sync.py`: `sync_project` (lock, a saved selection, `commit_locked`, then post-sync hooks) and recovery.
+  - `sync.py`: `sync_project` (lock, a saved selection, `commit_locked`, then post-sync extensions) and recovery.
   - `guidance_block.py`: the root `AGENTS.md` block; its markers come from `devkit.core`.
   - `context.py`, `playbook_search.py`, `reading.py`: agent-facing reads under the shared lock.
   - `status.py`, `plan.py`, `results.py`: `status`, `list`, `bundle plan` and the result dataclasses.
   - `playbook_skill.py`, `workflow_skill.py`: the generated `devkit-playbook` and `devkit-workflow` entry skills.
-  - `hooks.py`: the `devkit.post_sync` extension point.
+  - `extensions.py`: the `devkit.post_sync` extension point.
 - `errors.py`: the `DistributionError` hierarchy, one class per code, and the sync notice classes
   ([codes](reference.md#error-codes), [notices](reference.md#sync-output-and-notices)).
 - `cli/`: the distribution commands, listed in `COMMANDS`; the root `devkit` group loads each one lazily by name. Output and exit codes

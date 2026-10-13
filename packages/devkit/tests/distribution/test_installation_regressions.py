@@ -11,6 +11,7 @@ from types import SimpleNamespace
 import pytest
 from click.testing import CliRunner
 from devkit.advisory import ExitCode, Level
+from devkit.core import extensions as core_extensions
 from devkit.core.receipt import CONFIG_PATH, OVERRIDES_PATH, RECEIPT_PATH, ToolRecord
 from devkit.distribution.errors import (
     BundleConflictError,
@@ -21,7 +22,7 @@ from devkit.distribution.errors import (
     SelectionError,
     UnsafeWorkspaceError,
 )
-from devkit.distribution.installation import discovery, guidance_block, hooks
+from devkit.distribution.installation import discovery, extensions, guidance_block
 from devkit.distribution.installation import sync as sync_module
 from devkit.distribution.installation.config import (
     DEFAULT_PRESET,
@@ -330,7 +331,7 @@ def test_saved_selection_is_rendered_under_the_lock_and_put_back_on_failure(
     assert (target / CONFIG_PATH).read_bytes() == before
 
 
-def test_post_sync_hooks_see_the_saved_selection(
+def test_post_sync_extensions_see_the_saved_selection(
     item: InstalledBundle, target: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     other = _skill_bundle(tmp_path, "other", "o.py", skill="lint")
@@ -340,7 +341,9 @@ def test_post_sync_hooks_see_the_saved_selection(
         seen.append((root / CONFIG_PATH).read_text())
 
     entry = SimpleNamespace(name="probe", value="fake:probe", load=lambda: hook)
-    monkeypatch.setattr(hooks.metadata, "entry_points", lambda group: [entry] if group == hooks.GROUP else [])
+    monkeypatch.setattr(
+        core_extensions.metadata, "entry_points", lambda group: [entry] if group == extensions.GROUP else []
+    )
 
     @contextmanager
     def found():

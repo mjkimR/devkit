@@ -122,7 +122,7 @@ parseable:
   `[SETTING: key=value default=value]` per setting and one
   `[SETTING_OVERRIDE: path=... key=value ...]` per override (or
   `[SETTINGS: none]`), then the guide document as written.
-- `test`: one `[RULE_TEST: RULE-id tests=<dir> result=passed|failed|no-tests exit=<n> log=<path>]`
+- `test`: one `[RULE_TEST: RULE-id tests=<dir> result=passed|failed|no-tests|interrupted exit=<n> log=<path>]`
   per rule, in the order named (sorted by ID when none is named); `tests` is
   workspace-relative when inside the workspace, else absolute, and `exit` and
   `log` are `-` when there is no tests directory (`exit=5`, pytest's "no tests
@@ -133,7 +133,10 @@ parseable:
   `[RULE_TEST_OUTPUT: RULE-id shown=N omitted=N filtered=N]` followed by the
   head-and-tail excerpt (pytest's short test summary names every failed test).
   Rules defined in one package share one run, shown once. Last,
-  `[SUMMARY: rules=N passed=N failed=N no_tests=N]`.
+  `[SUMMARY: rules=N passed=N failed=N no_tests=N interrupted=N]`. An interrupted run (Ctrl-C, `SIGTERM`,
+  `SIGHUP`) ends the command: the rules run so far are printed, the interrupted one `result=interrupted` with the
+  log up to the interruption, and the command exits `128 + N`. The advisories of the pytest runs (compact's) are
+  reported with the warnings.
 
 ```text
 [RULE_TEST: RULE-markdown-link tests=packages/devkit/src/devkit/rules/rules/markdown_link/tests result=passed exit=0 log=/tmp/devkit-run-501/a8ae3cd8d8a1/20261013-135346-python3-m-uysb0n32.log]
@@ -143,7 +146,7 @@ parseable:
 ...
 FAILED rules/doc_heading/tests/test_rule.py::test_fails - AssertionError: expected a ...
 ========================= 1 failed, 1 passed in 0.04s ==========================
-[SUMMARY: rules=2 passed=1 failed=1 no_tests=0]
+[SUMMARY: rules=2 passed=1 failed=1 no_tests=0 interrupted=0]
 ```
 
 `--format json` prints exactly one object on stdout:
@@ -158,7 +161,7 @@ the rule gives them, as the `[VIOLATION: ...]` line does),
 and `log`, `null` without a run, and for a failed run `summaries`, `failures`
 (`test`, `kind`, `message`), `output` (the excerpt) and `omitted`
 (`failures`, `output`), otherwise empty or `null`; `summary` has `rules`,
-`passed`, `failed` and `no_tests`). `errors` holds the collected problems and `notices` the warnings
+`passed`, `failed`, `no_tests` and `interrupted`). `errors` holds the collected problems and `notices` the warnings
 and notices, as `to_dict()` objects (each with its `code`, `level`,
 `exit_code`, `rule_id` and advisory). A command that fails before it has a
 result prints `{"error": {...}}` instead.

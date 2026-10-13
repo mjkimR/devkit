@@ -165,10 +165,10 @@ class StrayFilesNotice(SyncNotice):
     )
 
 
-class PostSyncHookFailedNotice(SyncNotice):
-    """A ``devkit.post_sync`` hook raised or returned something other than a list; the sync itself succeeded."""
+class PostSyncExtensionFailedNotice(SyncNotice):
+    """A ``devkit.post_sync`` extension raised or returned something other than a list; the sync itself succeeded."""
 
-    code = "POST_SYNC_HOOK_FAILED"
+    code = "POST_SYNC_EXTENSION_FAILED"
     level = Level.WARNING
 
 
@@ -201,7 +201,7 @@ class ToolVersionChangedNotice(SyncNotice):
 
 
 class PostSyncNotice(SyncNotice):
-    """A line a ``devkit.post_sync`` hook returned; the hook's package owns its meaning (``brief``)."""
+    """A line a ``devkit.post_sync`` extension returned; its package owns its meaning (``brief``)."""
 
     code = "POST_SYNC_NOTICE"
     brief = True

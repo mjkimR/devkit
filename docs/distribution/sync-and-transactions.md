@@ -158,7 +158,7 @@ devkit remove starter             # deselects; unchanged deployed files are remo
 - Selection commands render their edit under the project lock, from `config.toml` as it is then (so concurrent
   selection commands never lose an edit), check that the file can be rewritten (a regular file, not a symlink, in a
   writable directory), write it, and synchronize from it; when the sync fails before it commits, the previous file is
-  put back. Post-sync hooks therefore see the saved selection.
+  put back. Post-sync extensions therefore see the saved selection.
 
 ### Unselected and Auto-Selected Bundles
 
@@ -205,19 +205,19 @@ Every mutating command follows these steps:
    `devkit recover` restores every recorded file whose content has not changed since; a later edit stops it with
    `RECOVERY_BLOCKED` (`HALT`).
 
-### Post-Sync Hooks
+### Post-Sync Extensions
 
 After the transaction committed (with the configuration a selection command saved) and the lock is released (never
 on `--dry-run` or `--check`), `devkit sync` (and
 `devkit override create|remove`, which synchronize) calls every callable registered under the `devkit.post_sync`
 entry-point group, in sorted entry-point name order, as
-`hook(root: Path, result: dict) -> list[str | AdvisoryError] | None`, where `result` is `SyncResult.to_dict()`.
-Each returned string becomes a `POST_SYNC_NOTICE` (its `details` name the hook); each returned `AdvisoryError`
+`extension(root: Path, result: dict) -> list[str | AdvisoryError] | None`, where `result` is `SyncResult.to_dict()`.
+Each returned string becomes a `POST_SYNC_NOTICE` (its `details` name the extension); each returned `AdvisoryError`
 keeps its code and level, except that an `ERROR` is lowered to `WARNING`. Both join the result's `notices` (for
-`override create|remove`, the change's `notices`). A hook that raises or returns anything else becomes a
-`POST_SYNC_HOOK_FAILED` warning; a hook can never fail or roll back the sync, because the files are already on disk.
+`override create|remove`, the change's `notices`). An extension that raises or returns anything else becomes a
+`POST_SYNC_EXTENSION_FAILED` warning; an extension can never fail or roll back the sync, because the files are already on disk.
 This is how a package built on devkit reacts to a changed workspace without devkit knowing it; since the lock is
-released, a hook may call devkit reads such as `get_context`. `devkit` registers one itself,
+released, an extension may call devkit reads such as `get_context`. `devkit` registers one itself,
 `gate-config-template`, which keeps the commented gate settings template current
 ([Commit Gate Overview](../gate/overview.md#6a-settings-template)).
 

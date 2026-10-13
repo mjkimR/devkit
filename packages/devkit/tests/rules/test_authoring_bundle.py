@@ -102,7 +102,7 @@ def test_rules_test_runs_the_deployed_copy_without_writing_into_it(consumer: Pat
         "[RULE_TEST: RULE-skill-document-size tests=.devkit/managed/authoring/rules/skill_document_size/tests "
         "result=passed exit=0 log="
     )
-    assert lines[-1] == "[SUMMARY: rules=2 passed=2 failed=0 no_tests=0]"
+    assert lines[-1] == "[SUMMARY: rules=2 passed=2 failed=0 no_tests=0 interrupted=0]"
     written = [p for p in (consumer / ".devkit").rglob("*") if p.name in {"__pycache__", ".pytest_cache"}]
     assert written == []
     assert _run("sync", "--check", "--workspace-root", str(consumer)) is not None

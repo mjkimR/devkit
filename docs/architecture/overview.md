@@ -134,7 +134,7 @@ Each module's `reference.md` is the quick reference (CLI, configuration, library
 - [Bundle Manifest Specification](../distribution/manifest-spec.md): `bundle.toml` layout, asset kinds, presets, validation and archive builds.
 - [Content Packages](../distribution/content-packages.md): Content wheel contract, installation and upgrades, and dependency boundaries.
 - [Workspace Ownership & Overrides](../distribution/workspace-ownership.md): Workspace layout, ownership categories, guidance block, seeded files, overrides and drift review.
-- [Synchronization & Transactions](../distribution/sync-and-transactions.md): Receipt, selection model, transaction engine, recovery and post-sync hooks.
+- [Synchronization & Transactions](../distribution/sync-and-transactions.md): Receipt, selection model, transaction engine, recovery and post-sync extensions.
 - [Native Agent Projections](../distribution/agent-projections.md): Projection matrix and role contracts for Codex, Claude Code and Antigravity.
 - [Context Loading & Playbooks](../distribution/context-and-playbooks.md): `get-context`, the skill prerequisite and playbook search.
 - [In-Repository Bundles](../distribution/in-repo-bundles.md): Repository-owned assets as a self-consumed content package.

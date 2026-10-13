@@ -2,7 +2,7 @@
 
 `devkit.worktree` gives each task its own Git worktree and turns the end of the task into one deterministic command. A task named by a slug runs in `<parent of base>/<base name>-wt-<slug>` on branch `<slug>`; `finish` integrates the branch into the base checkout, removes the worktree and deletes the branch. Every step refuses instead of forcing, and rerunning the same command resumes where it stopped. Quick reference: [reference.md](reference.md).
 
-The module is SDD-agnostic: it does not decide which tasks use a worktree, and it knows no document layout. A methodology layer (specrig) decides when a task gets a worktree, adds its own cleanup through the library's `before_remove` hook, and keeps any scope registry of its own.
+The module is SDD-agnostic: it does not decide which tasks use a worktree, and it knows no document layout. A methodology layer (devkit-spec) decides when a task gets a worktree, adds its own cleanup through a `devkit.post_finish` extension (or the library's `before_remove` callback), and keeps any scope registry of its own.
 
 ## 1. Checkouts and Paths
 
@@ -42,11 +42,20 @@ These checks, and those of step 1, run before the first change, so each of their
    - Without `--merge`: the branch must already be an ancestor of the base HEAD (`WORKTREE_UNMERGED` otherwise, with nothing changed), the same test `status` reports as `merged`. A pull request merged by squash or rebase leaves the branch unmerged in this sense; remove that worktree and branch only with the user's authorization.
 
    Before either, when the branch will be deleted (step 4), its upstream, if it has one that exists locally, must contain it: `git branch -d` checks a branch against its upstream rather than the base, so a task branch pushed with `-u` and committed to since would be refused after the merge. That is `WORKTREE_BRANCH_UNPUSHED`, whose `[FIX]` pushes the branch to its upstream.
-2. **Caller cleanup.** The library's `before_remove(result)` hook runs here, once the merge is confirmed and while the worktree still exists (it runs again on a rerun, so it must be idempotent).
+2. **Caller cleanup.** The library's `before_remove(result)` callback runs here, once the merge is confirmed and while the worktree still exists (it runs again on a rerun, so it must be idempotent).
 3. **Remove** the worktree with `git worktree remove`. A worktree with uncommitted or untracked changes is `WORKTREE_DIRTY`: it is never removed by force. Any other failure is `WORKTREE_REMOVE_FAILED`.
 4. **Delete the branch** with `git branch -d` (never `-D`) when `[worktree] delete_branch = true` (the default). A failure is `WORKTREE_BRANCH_DELETE_FAILED`.
 
 A refusal raised after step 1 carries the partial result: the command prints its `[WORKTREE_FINISHED: ...]` line (or, under `--format json`, the result with the error under `errors`) and the warnings collected so far (`WORKTREE_PUSH_FAILED`, `WORKTREE_PUSH_REJECTED`) before the error, so the caller sees what is already done.
+
+**Post-finish extensions.** After a successful `finish` (never after a refusal), the command calls every `devkit.post_finish`
+entry point of the installed packages, in sorted name order, as `extension(base, result)`: the base checkout's root and the
+result as its JSON object (`slug`, `path`, `branch`, `merged`, `push`, `removed`, `branch_deleted`). A package cleans
+up what it keeps per task there (`devkit spec` prunes the handed-off proposal's directories and the task's scope
+record). An extension returns `None` or a list: a string becomes a `POST_FINISH_NOTICE` notice, an advisory keeps its code
+(an `ERROR` lowered to `WARNING`). It cannot fail the finish: an exception or a malformed return value is a
+`POST_FINISH_EXTENSION_FAILED` warning. The extensions run in the CLI; the library's `finish` runs none (`before_remove` is
+its callback). The rules are those of the `devkit.post_sync` extensions (`devkit.core.extensions`).
 
 Rerunning the same command resumes once the cause is resolved:
 
@@ -75,9 +84,10 @@ The table is read from the devkit project containing the directory a command run
 
 `devkit.worktree` imports only `devkit.core` and `devkit.advisory`; Git runs through `devkit.core.git.run_git`.
 
+- `extensions.py`: the `devkit.post_finish` extension point (`run_post_finish`), on `devkit.core.extensions`.
 - `lifecycle.py`: `locate`, `path_for`, `start`, `find`, `finish`, `status` and their results. `start` runs `devkit sync --locked` as a subprocess (`python -m devkit sync --locked`), so the module still imports no other area.
 - `config.py`: `WorktreeConfig`, `read_worktree_config`.
 - `errors.py`: one class per code ([reference](reference.md#error-codes)).
 - `cli.py`: `devkit worktree start|finish|status`.
 
-The lifecycle was ported from specrig's `worktree` package. specrig's scope registry, its journal and the proposal-directory cleanup stay in specrig, attached through `before_remove`; its `git.worktree` policy (which tasks run in a worktree) is methodology and stays there too.
+The lifecycle was ported from specrig's `worktree` package. the scope registry, its journal and the proposal-directory cleanup are methodology and live in devkit-spec, attached through the `devkit.post_finish` extension point; its `git.worktree` policy (which tasks run in a worktree) is methodology and stays there too.

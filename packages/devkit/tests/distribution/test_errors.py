@@ -36,7 +36,7 @@ def test_error_classes_carry_code_and_mode(cls: type[errors.DistributionError], 
     [
         (errors.OrphanLeftNotice, "ORPHAN_LEFT", Level.WARNING),
         (errors.StrayFilesNotice, "MANAGED_FILE_STRAY", Level.WARNING),
-        (errors.PostSyncHookFailedNotice, "POST_SYNC_HOOK_FAILED", Level.WARNING),
+        (errors.PostSyncExtensionFailedNotice, "POST_SYNC_EXTENSION_FAILED", Level.WARNING),
         (errors.UnprojectedNotice, "ASSET_UNPROJECTED", Level.NOTICE),
         (errors.BundleUnselectedNotice, "BUNDLE_UNSELECTED", Level.NOTICE),
         (errors.ToolVersionChangedNotice, "TOOL_VERSION_CHANGED", Level.NOTICE),

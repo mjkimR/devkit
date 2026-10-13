@@ -183,3 +183,43 @@ def test_worktree_config_defaults_and_validation(repo: Path) -> None:
     write(repo, ".devkit/config.toml", "schema = 1\nworktree = 1\n")
     with pytest.raises(WorktreeConfigError, match="expected a table"):
         read_worktree_config(repo)
+
+
+def test_post_finish_extensions_run_after_a_successful_finish_only(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from types import SimpleNamespace
+
+    from devkit.core import extensions as core_extensions
+    from devkit.worktree import extensions
+
+    seen: list[tuple[Path, dict]] = []
+
+    def cleanup(base: Path, result: dict) -> list[str]:
+        seen.append((base, result))
+        return [f"cleaned {result['slug']}"]
+
+    def broken(base: Path, result: dict) -> None:
+        raise RuntimeError("boom")
+
+    entries = [
+        SimpleNamespace(name="b-broken", value="fake:b", load=lambda: broken),
+        SimpleNamespace(name="a-cleanup", value="fake:a", load=lambda: cleanup),
+    ]
+    monkeypatch.setattr(
+        core_extensions.metadata, "entry_points", lambda group: entries if group == extensions.GROUP else []
+    )
+    assert invoke("start", "demo", "-w", str(repo)).exit_code == 0
+    path = repo.parent / "repo-wt-demo"
+    write(path, "work.txt", "x\n")
+    git(path, "add", ".")
+    git(path, "commit", "-q", "-m", "work")
+    write(path, "wip.txt", "x\n")
+    refused = invoke("finish", "demo", "--merge", "-w", str(repo))
+    assert refused.exit_code == 2 and seen == []  # a refusal runs no extension
+
+    (path / "wip.txt").unlink()
+    done = invoke("finish", "demo", "-w", str(repo))
+    assert done.exit_code == 0, done.output
+    assert [(base, result["slug"], result["removed"]) for base, result in seen] == [(repo, "demo", True)]
+    assert "(POST_FINISH_NOTICE) cleaned demo" in done.stderr
+    assert "(POST_FINISH_EXTENSION_FAILED) post-finish extension b-broken failed: boom" in done.stderr
+    assert invoke("finish", "demo", "-w", str(repo), "--format", "json").exit_code == 2  # nothing left to finish

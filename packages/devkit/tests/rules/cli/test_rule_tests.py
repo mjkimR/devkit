@@ -75,7 +75,7 @@ def test_passing_failing_and_missing_tests(workspace: Path) -> None:
     assert any(line.startswith("[RULE_TEST_OUTPUT: RULE-bad shown=") for line in lines)
     assert "test_fails" in out and "deliberate" in out
     assert "[RULE_TEST: RULE-bare tests=rules/bare/tests result=no-tests exit=- log=-]" in lines
-    assert lines[-1] == "[SUMMARY: rules=3 passed=1 failed=1 no_tests=1]"
+    assert lines[-1] == "[SUMMARY: rules=3 passed=1 failed=1 no_tests=1 interrupted=0]"
     log = Path(lines[0].rsplit("log=", 1)[1].rstrip("]"))
     assert log.is_file() and "1 passed" in log.read_text()
     found = [p for p in workspace.rglob("*") if p.name in {"__pycache__", ".pytest_cache"}]
@@ -87,7 +87,7 @@ def test_json_output(workspace: Path) -> None:
     assert code == 1
     data = json.loads(out)
     assert set(data) == {"results", "summary", "notices"}
-    assert data["summary"] == {"rules": 1, "passed": 0, "failed": 1, "no_tests": 0}
+    assert data["summary"] == {"rules": 1, "passed": 0, "failed": 1, "no_tests": 0, "interrupted": 0}
     (entry,) = data["results"]
     assert (entry["rule_id"], entry["tests"], entry["result"], entry["exit_code"]) == (
         "RULE-bad",
@@ -164,3 +164,45 @@ def test_runs_are_isolated_from_the_project_pytest_setup(workspace: Path) -> Non
     code, out, _ = _invoke(workspace, "--rules-dir", str(workspace / "rules"), "RULE-good")
     assert code == 0, out
     assert out.splitlines()[0].startswith("[RULE_TEST: RULE-good tests=rules/good/tests result=passed exit=0")
+
+
+def test_an_override_of_the_module_alone_keeps_the_managed_guide_and_tests(tmp_path: Path) -> None:
+    from devkit.rules.engine.rule_tests import tests_directory
+    from devkit.rules.rules.base import guide_path
+
+    managed = tmp_path / ".devkit/managed/team/rules/good"
+    override = tmp_path / ".devkit/overrides/team/rules/good"
+    _rule(managed.parent, "good", "RULE-good", {"test_rule.py": PASSING})
+    write(managed, "guide.md", "# [RULE-good] Good\n")
+    # The override holds the module alone; the guide and the tests stay in the managed copy.
+    module = RULE.format(name="Good", rule_id="RULE-good")
+    write(override, "rule.py", module.replace('description="test rule")', 'description="test rule", guide="guide.md")'))
+    registry = RuleRegistry()
+    registry.discover_from_dir(override.parent)
+    (rule,) = registry.get_all()
+    assert guide_path(rule) == (managed / "guide.md").resolve()
+    assert tests_directory(rule) == (managed / "tests").resolve()
+
+
+def test_an_interrupted_run_prints_the_results_so_far(workspace: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import dataclasses
+
+    from devkit import compact
+
+    real = compact.run_command
+    calls: list[int] = []
+
+    def interrupt_second(*args: object, **kwargs: object) -> object:
+        run = real(*args, **kwargs)  # type: ignore[arg-type]
+        calls.append(1)
+        if len(calls) == 2:
+            raise compact.CommandInterrupted(dataclasses.replace(run, interrupted=2, exit_code=130))
+        return run
+
+    monkeypatch.setattr(compact, "run_command", interrupt_second)
+    code, out, _ = _invoke(workspace, "--rules-dir", str(workspace / "rules"), "RULE-good", "RULE-bad", "RULE-bare")
+    lines = out.splitlines()
+    assert code == 130
+    assert lines[0].startswith("[RULE_TEST: RULE-good tests=rules/good/tests result=passed exit=0 ")
+    assert lines[1].startswith("[RULE_TEST: RULE-bad tests=rules/bad/tests result=interrupted exit=130 ")
+    assert lines[-1] == "[SUMMARY: rules=2 passed=1 failed=0 no_tests=0 interrupted=1]"

@@ -103,7 +103,7 @@ class SyncResult:
     """What ``devkit sync`` (``add``, ``remove``) planned and, unless ``dry_run``, wrote.
 
     ``notices`` are coded ``SyncNotice`` entries (an orphaned file, a tool
-    version change, post-sync hook output); they never fail the sync.
+    version change, post-sync extension output); they never fail the sync.
     """
 
     dry_run: bool
@@ -276,7 +276,7 @@ class OverrideChange:
     """``devkit override create|remove|accept``: what changed under ``.devkit/overrides/``.
 
     ``notices`` are those of the synchronization ``create`` and ``remove`` run
-    (post-sync hook output included); ``accept`` does not synchronize.
+    (post-sync extension output included); ``accept`` does not synchronize.
     """
 
     bundle: str

@@ -285,5 +285,5 @@ def print_rule_tests(results: Sequence[RuleTestRun], workspace_root: Path, summa
             click.echo(found.output, nl=not found.output.endswith("\n"))
     click.echo(
         f"[SUMMARY: rules={summary['rules']} passed={summary['passed']} failed={summary['failed']} "
-        f"no_tests={summary['no_tests']}]"
+        f"no_tests={summary['no_tests']} interrupted={summary['interrupted']}]"
     )
