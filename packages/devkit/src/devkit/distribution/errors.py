@@ -184,6 +184,16 @@ class ToolVersionChangedNotice(SyncNotice):
     brief = True
 
 
+class ReceiptStaleNotice(SyncNotice):
+    """``devkit sync --locked`` would change the committed state (receipt, ``AGENTS.md``, seeded files), so it
+    wrote nothing and exits ``1``."""
+
+    code = "RECEIPT_STALE"
+    level = Level.WARNING
+    fix = "Run `devkit sync` and commit the files it changes"
+    what_to_report = "The committed devkit state does not match the installed bundles"
+
+
 class PostSyncNotice(SyncNotice):
     """A line a ``devkit.post_sync`` hook returned; the hook's package owns its meaning (``brief``)."""
 

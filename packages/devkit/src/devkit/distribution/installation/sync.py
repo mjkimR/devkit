@@ -29,6 +29,7 @@ from devkit.distribution.errors import (
     ConflictError,
     OrphanLeftNotice,
     OverrideDriftError,
+    ReceiptStaleNotice,
     SelectionError,
     StrayFilesNotice,
     ToolVersionChangedNotice,
@@ -144,9 +145,12 @@ def _resolve_selection(
     unusable_notices(installed, active)
     missing = sorted(set(active) - {item.bundle.name for item in installed})
     if missing:
+        # A bundle selected only by the receipt is deployed, so a sync would delete its committed files.
+        deployed = [name for name in missing if name not in config.presets and name not in (presets or {})]
         raise SelectionError(
-            f"selected bundle is not installed: {missing}",
-            fix="Install the content package that ships it, or deselect it with `devkit remove <bundle>`",
+            f"selected bundle is not installed: {missing}"
+            + (f" (deployed per {RECEIPT_PATH}: {deployed})" if deployed else ""),
+            fix="Install the package that ships it (`uv sync`), or deselect it with `devkit remove <bundle>`",
         )
     return Selection(
         tuple(sorted(set(agents)) if agents is not None else config.agents),
@@ -456,6 +460,20 @@ def _without_tool(receipt: Receipt) -> dict[str, object]:
     return value
 
 
+def _restores_only(previous: Receipt | None, receipt: Receipt, actions: list[Action]) -> bool:
+    """Whether the sync only creates missing files exactly as the committed receipt records them (``--locked``).
+
+    The receipt must be unchanged (the writing tool's version aside), so each
+    created file has the recorded signature; anything else (an update, a
+    removal, a seed, the guidance block, a new receipt) changes committed state.
+    """
+    return (
+        previous is not None
+        and _without_tool(receipt) == _without_tool(previous)
+        and all(item.action == "create" and item.path in previous.file_records for item in actions)
+    )
+
+
 def _sync_result(
     root: Path,
     installed: list[InstalledBundle],
@@ -609,6 +627,7 @@ def sync_project(
     presets: dict[str, list[str]] | None = None,
     deselect: list[str] | tuple[str, ...] = (),
     dry_run: bool = False,
+    locked: bool = False,
     save: Callable[[], ConfigUpdate] | None = None,
 ) -> SyncResult:
     """Deploy the bundles selected in ``config.toml`` and the built-in bundles it does not opt out of.
@@ -619,8 +638,10 @@ def sync_project(
     configuration as it is then, so concurrent selection commands never lose
     an edit; the edit is written before the sync reads the configuration and
     put back when the sync fails, and post-sync hooks see it. ``save`` is never
-    called on ``dry_run``. Post-sync hooks run after the project lock is
-    released.
+    called on ``dry_run``. ``locked`` keeps the committed state: the sync only
+    restores files the receipt records, or writes nothing and returns a dry
+    run with a ``RECEIPT_STALE`` warning. Post-sync hooks run after the project
+    lock is released, except on a dry run (a refused ``locked`` sync included).
     """
     root = require_project_dir(root)
     with project_lock(root):
@@ -628,13 +649,15 @@ def sync_project(
         if update is not None:
             update.apply()
         try:
-            finish = commit_locked(root, installed, agents=agents, presets=presets, deselect=deselect, dry_run=dry_run)
+            finish = commit_locked(
+                root, installed, agents=agents, presets=presets, deselect=deselect, dry_run=dry_run, locked=locked
+            )
         except BaseException:
             if update is not None:
                 update.revert()
             raise
         result = finish()
-    if not dry_run:
+    if not result.dry_run:
         result.notices.extend(run_post_sync(root, result.to_dict()))
     return result
 
@@ -647,6 +670,7 @@ def commit_locked(
     presets: dict[str, list[str]] | None = None,
     deselect: list[str] | tuple[str, ...] = (),
     dry_run: bool = False,
+    locked: bool = False,
     rebaseline: tuple[str, str] | None = None,
 ) -> Callable[[], SyncResult]:
     """Plan a sync and, unless ``dry_run``, commit it; the caller holds the project lock. Runs no hooks.
@@ -657,6 +681,9 @@ def commit_locked(
     sync fails calls it outside that scope. ``rebaseline`` (``bundle, asset``)
     takes the current upstream as the baseline of that asset's override, for
     ``devkit override create``, which has just written the baseline copies.
+    ``locked`` commits only when the sync restores files exactly as the receipt
+    records them (``_restores_only``), without writing the receipt; otherwise
+    it plans as a dry run and adds ``RECEIPT_STALE``.
     """
     require_no_journal(root)
     config = read_config(root)
@@ -698,7 +725,15 @@ def commit_locked(
     notices.extend(block_notices)
     overrides = _carried_overrides(root, installed, previous, inventory.overrides)
     receipt = _build_receipt(selection, inventory, overrides, seeded, block_hash)
-    notices.extend(_plan_receipt(previous, receipt, changes, actions))
+    stale = locked and not _restores_only(previous, receipt, actions)
+    if not locked or stale:
+        notices.extend(_plan_receipt(previous, receipt, changes, actions))
+    if stale:
+        recorded = previous.file_records if previous is not None else {}
+        changed = [item.path for item in actions if item.action != "create" or item.path not in recorded]
+        message = f"--locked wrote nothing: the sync would change {', '.join(changed)}"
+        notices.append(ReceiptStaleNotice(message, target_files=changed))
+        dry_run = True
     seen = _read_seen_bundles(root)
     if not dry_run:
         apply_changes(root, changes)

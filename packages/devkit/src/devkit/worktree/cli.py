@@ -70,8 +70,8 @@ def cli() -> None:
 def start_cmd(slug: str, workspace_root: str | None, output_format: str) -> None:
     """Create (or reuse) <parent>/<repo>-wt-<SLUG> on branch SLUG from the base HEAD.
 
-    A new worktree runs the [worktree] setup command, then `devkit sync` to restore the managed files a fresh
-    checkout lacks; continue the task in the printed directory.
+    A new worktree runs the [worktree] setup command, then `devkit sync --locked` to restore the managed files a
+    fresh checkout lacks; continue the task in the printed directory.
     """
     position, config, project = _position(workspace_root)
     result = start(position, slug, setup=config.setup, project=project)

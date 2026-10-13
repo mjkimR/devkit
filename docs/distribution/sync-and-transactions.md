@@ -114,7 +114,8 @@ devkit = false                          # opt out of an auto-selected bundle
   nonempty array of unique preset names (the union of their assets); `all` is reserved in every bundle. `false`
   opts an auto-selected bundle out, and is allowed for a bundle that is not installed (it then takes effect if the
   package arrives later). A bundle selected by an entry that no installed package provides is an error: install it
-  or `devkit remove` it.
+  or `devkit remove` it. So is a bundle the receipt records as deployed without an entry, once its package is no
+  longer installed ([below](#unselected-and-auto-selected-bundles)).
 - **`guidance_block`**: `false` stops `devkit sync` from managing the root `AGENTS.md` block (default `true`).
 - **`override_drift`**: `"warn"` (default) or `"block"`; see
   [Workspace Ownership, section 3](workspace-ownership.md#drift-detection).
@@ -149,7 +150,8 @@ devkit remove starter             # deselects; unchanged deployed files are remo
   explicit preset. `devkit add` replaces a `false` entry.
 - `devkit sync --preset <bundle>:<preset>` replaces the bundle's presets.
 - `devkit remove` deletes the entry of a bundle that is not auto-selected and writes `false` for an auto-selected
-  one.
+  one. A bundle the receipt keeps deployed without an installed package gets neither: the sync drops it from the
+  receipt, and a later install of the package selects it again like any new one.
 - The **resolved** preset name is written, never a symbolic default, so an upstream change to `default_preset`
   does not change an explicit selection. An auto-selected bundle without an entry follows its current
   `default_preset`; `devkit add <bundle>` pins it.
@@ -171,9 +173,13 @@ deploys with their `default_preset` while the previous receipt does not record t
 installed, or one whose new release declares `auto_select`. Its `[FIX]` names `devkit remove <bundle>`, which opts
 out. Since the receipt is Git-tracked, a clone that receives the updated receipt is not told again.
 
-A package that cannot be loaded cannot be read for `auto_select`. When the receipt records its bundle as deployed,
-`devkit sync` treats it as selected and fails with `BUNDLE_PACKAGE_INVALID`, so a broken upgrade never removes the
-bundle's files; otherwise it is the usual warning.
+A package that cannot be loaded, or is not installed, cannot be read for `auto_select`. When the receipt records its
+bundle as deployed and `config.toml` neither names it nor opts it out, it stays selected with its recorded presets:
+`devkit sync` (and every command that synchronizes, except `devkit remove` of that bundle) fails with
+`BUNDLE_PACKAGE_INVALID` (cannot be loaded) or `SELECTION_INVALID` (not installed), so neither a broken upgrade nor a partial environment
+(`uv sync --package`, `--no-dev`, `--only-group`) removes committed files. Removal is explicit: `devkit remove
+<bundle>`, before or after the package leaves the lock. A package that cannot be loaded and is not deployed is the
+usual warning.
 
 ## 3. Transaction Safety Guarantees
 
@@ -217,3 +223,19 @@ released, a hook may call devkit reads such as `get_context`. `devkit` registers
 
 The result fields and every notice code are listed in the
 [reference](reference.md#sync-output-and-notices); warnings and notices never fail a sync except under `--strict`.
+
+### Locked Synchronization
+
+The receipt, the root `AGENTS.md` block and seeded files are Git-tracked state that every clone shares; the managed
+copies under `.devkit/managed/` (and native projections a repository ignores) are rebuilt per clone. `devkit sync
+--locked` rebuilds only the latter: it plans a plain sync, and commits it only when every planned action creates a
+file the committed receipt records and the receipt it would write is the committed one (the `tool` version aside,
+which it leaves as committed). Since the receipt is unchanged, each created file carries its recorded SHA-256 and
+mode. Any other plan (an update, a removal, a seed, the guidance block, `.devkit/.gitignore`, a new or changed
+receipt) writes nothing: the result is a dry run with a `RECEIPT_STALE` warning, and the CLI exits `1`.
+
+A fresh clone (`just init`), `devkit worktree start` and CI run it; whoever changes a bundle source, the lock or
+the selection runs a plain `devkit sync` and commits what it changes. In CI, `devkit sync --locked` after the
+environment is installed both restores the managed copies the later steps read and fails when a bundle source or
+an upgraded package no longer matches the committed receipt. `sync --check` stays the read-only check for a
+workspace that is already synchronized.

@@ -23,8 +23,8 @@ home directory or above it) that contains `.devkit/`, else the Git top level, el
 take `--format json`. Every other command prints exactly one JSON object on stdout: the result (`override list`
 wraps its entries as `{"overrides": [...]}`), or `{"error": {...}}` when the command fails. A JSON result carries
 its errors, warnings and notices, so nothing is rendered on stderr in JSON mode; in text mode they are Agent
-Advisory Protocol blocks on stderr. Exit code `0` is success; `1` is returned by `devkit sync --check` when a synchronization is needed
-and by `devkit status` when its report shows a problem; `2` is any error, including an invalid argument such as a
+Advisory Protocol blocks on stderr. Exit code `0` is success; `1` is returned by `devkit sync --check` when a synchronization is needed,
+by `devkit sync --locked` when it would change committed files, and by `devkit status` when its report shows a problem; `2` is any error, including an invalid argument such as a
 malformed `bundle[:preset]` or `--agent` combined with `--no-agents` (see
 [Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)).
 
@@ -68,6 +68,13 @@ Override semantics are specified in [Workspace Ownership, section 3](workspace-o
   `SYNC_CONFLICT`). Existing seeded files are never compared. An orphan alone does not fail `--check`: it is no
   longer managed, so it appears as an `ORPHAN_LEFT` warning on that run and as a `stray` file afterwards if it sits
   under the managed root.
+- `--locked`: for a fresh clone, a new worktree and CI. Writes only files the committed receipt records that are
+  missing on disk (the Git-ignored managed copies, and native projections a repository ignores), exactly as
+  recorded, and never the receipt, the root `AGENTS.md` block, seeded files or `.devkit/.gitignore`. When the sync
+  would change any of them (the installed bundles no longer match the receipt, or there is no receipt), it writes
+  nothing, prints the planned actions as a dry run with a `RECEIPT_STALE` warning and exits `1`; errors exit `2` as
+  in a plain sync (a missing package is `SELECTION_INVALID`). It runs post-sync hooks only when it committed, and
+  takes no other selection or mode flag ([Synchronization & Transactions](sync-and-transactions.md#locked-synchronization)).
 
 ---
 
@@ -148,6 +155,7 @@ they run in their own `notices` list.
 | `ASSET_UNPROJECTED` | `NOTICE` (brief) | `UnprojectedNotice` | a skill or subagent has no variant for a selected agent and was not projected | message: each `<bundle>:<asset> (<agent>)`; `target_files`: `.devkit/config.toml` (where the project narrows `agents`); `[DETAIL]`: the remedies |
 | `BUNDLE_UNSELECTED` | `NOTICE` | `BundleUnselectedNotice` | installed bundles the project neither selected nor opted out of, reported once per clone when they appear (recorded in `.devkit/transient/seen-bundles.json`) | `fix`: `devkit add <bundle>` for one bundle, else `devkit list`; one `[DETAIL]` per bundle with its exact `devkit add` command and presets |
 | `BUNDLE_AUTO_SELECTED` | `NOTICE` | `BundleAutoSelectedNotice` | auto-selected bundles of packages other than `devkit` that the sync deploys with their default preset and the previous receipt does not record | `fix`: `devkit remove <bundle>` (opts out) for one bundle, else `devkit list`; one `[DETAIL]` per bundle with its package and preset; `what_to_report`: the bundles now deployed |
+| `RECEIPT_STALE` | `WARNING` | `ReceiptStaleNotice` | `devkit sync --locked` would change committed files, so it wrote nothing (the run is a dry run and exits `1`) | `target_files`: the committed paths that would change; `fix`: `devkit sync`, then commit the files it changes |
 | `TOOL_VERSION_CHANGED` | `NOTICE` (brief) | `ToolVersionChangedNotice` | the receipt now records a different running `devkit` version (`devkit <recorded> -> <running>`) | — |
 | `POST_SYNC_NOTICE` | `NOTICE` (brief) | `PostSyncNotice` | a line a post-sync hook returned | `details`: the hook |
 
@@ -185,7 +193,7 @@ error's `fix`, never in its message. The others are `DistributionError` subclass
 | `DistributionError` | `DISTRIBUTION_FAILED` | `MAINTENANCE` | the base class, raised as it is only for an internal defect of `devkit.distribution` |
 | `BundleError` | `BUNDLE_INVALID` | `INPUT_ERROR` | `bundle.toml`, a declared source or an asset header is invalid or unreadable; from `bundle validate`, `plan` and `build`, `target_files` names the bundle directory |
 | `PackageError` | `BUNDLE_PACKAGE_INVALID` | `MAINTENANCE` | an installed content package registers an unusable, misnamed or duplicate bundle, or its resource module fails to import or load; `fix` names the package to upgrade or uninstall. Only a selected bundle's package (or a duplicate) is an error; any other is a `WARNING` under `notices` ([Content Packages](content-packages.md#1-content-wheel-contract)) |
-| `SelectionError` | `SELECTION_INVALID` | `INPUT_ERROR` | an unknown or unselected bundle, preset, asset or override |
+| `SelectionError` | `SELECTION_INVALID` | `INPUT_ERROR` | an unknown or unselected bundle, preset, asset or override, or a selected bundle (by `config.toml`, or deployed per the receipt) whose package is not installed; `fix`: install it (`uv sync`) or `devkit remove <bundle>` |
 | `NotSynchronizedError` | `NOT_SYNCHRONIZED` | `AUTO` (`devkit sync`) | no receipt, or a context file no longer matches it |
 | `ConflictError` | `SYNC_CONFLICT` | `INTERACTION` | hand-edited or unowned files (one error names every conflicting path of a sync), or an existing override |
 | `BundleConflictError` | `BUNDLE_CONFLICT` | `INTERACTION` | two selected bundles claim one path or one projected skill directory or subagent file, or a seeded and a managed file claim one path |

@@ -126,7 +126,9 @@ their SHA-256 matches the committed receipt. Therefore:
 
 - Stage the updated receipt with every rule change; a stale receipt fails the
   gate and names `devkit sync` as the fix.
-- A fresh clone runs `uv sync` and `uv run devkit sync` before gates can pass.
+- A fresh clone runs `uv sync` and `uv run devkit sync --locked` before gates
+  can pass; CI runs the same, and it fails (`RECEIPT_STALE`) when a bundle
+  source was committed without its receipt.
 - Prefer rule ids prefixed with the repository name
   (`RULE-<repo>-<topic>`) unless the intent is to shadow an upstream rule.
 

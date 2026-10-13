@@ -229,6 +229,15 @@ What remains configuration-driven: an explicit selection records the resolved pr
 preset's assets but not which presets a project chose; selections passed on the CLI are saved to `config.toml`, never
 kept only in the receipt.
 
+Availability follows dependency resolution for **adding** a bundle, never for removing one. The receipt and the root
+`AGENTS.md` block are Git-tracked and shared, while the environment a sync runs in is not: a monorepo member synced
+with `uv sync --package`, a `--no-dev` or `--only-group` CI job, or a production environment that carries devkit as a
+runtime dependency of a package built on it can each lack a content package the lock still provides. So a bundle the
+receipt records as deployed stays selected while its package is missing or cannot be loaded, and the sync fails
+(`SELECTION_INVALID`, `BUNDLE_PACKAGE_INVALID`) until the package is installed again or `devkit remove <bundle>`
+drops it. The cost is accepted: a package upgrade that drops a transitive content package stops `devkit sync` until
+someone runs `devkit remove` and commits the result.
+
 Alternatives considered:
 
 - **Explicit opt-in for every content bundle** (the previous model): made each installed package a no-op until a

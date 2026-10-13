@@ -224,3 +224,55 @@ def test_status_with_problems_exits_one_whatever_their_own_codes(
     assert result.exit_code == int(ExitCode.FINDINGS)
     assert json.loads(result.stdout)["errors"][0]["code"] == "CONFIG_INVALID"
     assert result.stderr == ""
+
+
+def test_sync_locked_restores_recorded_files_and_never_changes_committed_ones(
+    item: InstalledBundle, target: Path
+) -> None:
+    update_config(target, presets={"team": ["all"]}, agents=[])
+    fresh = _invoke("sync", "--locked", "-w", str(target))  # no receipt yet: nothing to restore from
+    assert fresh.exit_code == int(ExitCode.FINDINGS) and "dry_run=yes" in fresh.stdout
+    assert "(RECEIPT_STALE)" in fresh.stderr and not (target / RECEIPT_PATH).exists()
+    assert _invoke("sync", "-w", str(target)).exit_code == 0
+
+    # A fresh clone: the ignored managed copy is missing; the receipt (from another devkit version) is kept as is.
+    receipt = target / RECEIPT_PATH
+    data = json.loads(receipt.read_text())
+    data["tool"]["version"] = "0.0.0-other"
+    receipt.write_text(json.dumps(data, indent=2) + "\n")
+    committed = receipt.read_bytes()
+    managed = target / ".devkit/managed/team/guide.md"
+    managed.unlink()
+    restored = _invoke("sync", "--locked", "-w", str(target))
+    assert restored.exit_code == 0, restored.output
+    assert restored.stdout == (
+        "[SYNC: create=1 update=0 remove=0 seed=0 dry_run=no]\n[CHANGE: create .devkit/managed/team/guide.md]\n"
+    )
+    assert managed.is_file() and receipt.read_bytes() == committed
+    assert _invoke("sync", "--locked", "-w", str(target)).stdout.endswith("[OK: the workspace matches the selection]\n")
+
+    # The bundle changed upstream: the committed receipt is stale, so nothing is written.
+    (item.bundle.root / "guide.md").write_text(instruction("guide", "Body v2.\n"))
+    managed.unlink()
+    stale = _invoke("sync", "--locked", "--format", "json", "-w", str(target))
+    assert stale.exit_code == int(ExitCode.FINDINGS)
+    result = json.loads(stale.stdout)
+    assert result["dry_run"] is True
+    [notice] = [notice for notice in result["notices"] if notice["code"] == "RECEIPT_STALE"]
+    assert notice["message"] == f"--locked wrote nothing: the sync would change {RECEIPT_PATH}"
+    assert not managed.exists() and receipt.read_bytes() == committed
+
+    # The guidance block is committed state too.
+    (item.bundle.root / "guide.md").write_text(instruction("guide"))
+    assert _invoke("sync", "-w", str(target)).exit_code == 0
+    (target / "AGENTS.md").unlink()
+    block = _invoke("sync", "--locked", "-w", str(target))
+    assert block.exit_code == int(ExitCode.FINDINGS) and "[CHANGE: create AGENTS.md]" in block.stdout
+    assert not (target / "AGENTS.md").exists()
+
+
+@pytest.mark.parametrize("flag", ["--check", "--dry-run", "--no-save", "--no-agents", "--preset=team"])
+def test_sync_locked_takes_no_other_mode_or_selection(item: InstalledBundle, target: Path, flag: str) -> None:
+    result = _invoke("sync", "--locked", flag, "-w", str(target))
+    assert result.exit_code == 2 and "--locked cannot be combined with" in result.output
+    assert not (target / RECEIPT_PATH).exists()

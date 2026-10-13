@@ -168,19 +168,21 @@ def default_selection(installed: list[InstalledBundle], config: ProjectConfig) -
 def retained_selection(
     installed: list[InstalledBundle], config: ProjectConfig, receipt: Receipt | None
 ) -> dict[str, list[str]]:
-    """Deployed bundles whose package cannot be loaded and that the configuration neither names nor opts out of.
+    """Deployed bundles without a usable package that the configuration neither names nor opts out of.
 
-    Such a package cannot be read for ``auto_select``, so the bundle the receipt
-    records as deployed stays selected with its recorded presets: the load error
-    then stops the command instead of a broken upgrade removing the bundle's files.
+    A package that cannot be loaded, or is not installed, cannot be read for
+    ``auto_select``, so the bundle the receipt records as deployed stays
+    selected with its recorded presets: the load error, or the missing package,
+    then stops the command instead of a broken upgrade or a partial environment
+    removing the bundle's files. Only ``devkit remove`` deselects it.
     """
     if receipt is None:
         return {}
-    unusable = unusable_bundles(installed)
+    usable = {item.bundle.name for item in installed}
     return {
         name: list(presets)
         for name, presets in receipt.selection.presets.items()
-        if name in unusable and name not in config.presets and name not in config.opted_out
+        if name not in usable and name not in config.presets and name not in config.opted_out
     }
 
 
@@ -189,7 +191,7 @@ def effective_selection(
 ) -> dict[str, list[str]]:
     """What ``devkit sync`` deploys without command-line selections: defaults, then ``[presets]``.
 
-    With the ``receipt``, deployed bundles whose package cannot be loaded are kept (``retained_selection``).
+    With the ``receipt``, deployed bundles without a usable package are kept (``retained_selection``).
     """
     return {
         **default_selection(installed, config),

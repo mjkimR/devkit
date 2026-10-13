@@ -67,6 +67,11 @@ echo "==> creating a fresh consumer project"
     uv run devkit remove starter >/dev/null
     uv run devkit sync --check >/dev/null
     test -d .devkit/managed/devkit
+    echo "--- fresh clone: devkit sync --locked restores the ignored managed copies"
+    rm -rf .devkit/managed
+    uv run devkit sync --locked >/dev/null
+    test -d .devkit/managed/devkit
+    uv run devkit sync --check >/dev/null
     echo "--- devkit rules check"
     uv run devkit rules check
     echo "--- exit codes: a usage error is 2"

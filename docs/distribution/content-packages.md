@@ -52,11 +52,13 @@ Run `devkit` through `uv run` from the project's environment. A globally install
 packages of the project.
 
 - **Upgrade**: `uv lock --upgrade-package <package>`, then `uv run devkit sync`.
-- **Teardown**: `uv run devkit remove <bundle>`, then `uv remove --dev <package>`. Deselect first: a bundle still
-  selected by an entry but no longer installed is a sync error. An auto-selected bundle without an entry needs only
-  `uv remove --dev <package>` and `uv run devkit sync`.
-- **Clean checkout**: `uv sync`, then `uv run devkit sync`, which rebuilds ignored managed and native files from the
-  installed wheels.
+- **Teardown**: `uv run devkit remove <bundle>`, then `uv remove --dev <package>`. Removal is always explicit: a
+  deployed bundle whose package is no longer installed is a sync error (`SELECTION_INVALID`), whether an entry or
+  `auto_select` selected it, so a partial environment never deletes committed files. `devkit remove <bundle>` also
+  works after the package is gone; for a bundle without an entry it then writes no `false`.
+- **Clean checkout**: `uv sync`, then `uv run devkit sync --locked`, which rebuilds ignored managed and native files
+  from the installed wheels and fails (exit `1`, `RECEIPT_STALE`) instead of changing the committed receipt
+  ([Locked Synchronization](sync-and-transactions.md#locked-synchronization)).
 
 ## 3. Dependency Boundaries
 

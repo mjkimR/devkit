@@ -211,7 +211,8 @@ class SetupFailedWarning(WorktreeError):
 
 
 class SyncFailedWarning(WorktreeError):
-    """``start`` created the worktree, but ``devkit sync`` could not restore its managed files (``WARNING``)."""
+    """``start`` created the worktree, but ``devkit sync --locked`` could not restore its managed files
+    (``WARNING``)."""
 
     code = "WORKTREE_SYNC_FAILED"
     level = Level.WARNING

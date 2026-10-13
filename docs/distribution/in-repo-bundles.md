@@ -141,8 +141,9 @@ the receipt committed to the snapshot
 
 - After editing a rule, run `devkit sync` and stage the receipt with the rule source; a stale receipt fails the gate,
   whose `[FIX]` says to run `devkit sync`.
-- A fresh clone runs `uv sync` and `uv run devkit sync` before the gate can run; otherwise it reports the managed
-  rule as missing, as for upstream bundles.
+- A fresh clone runs `uv sync` and `uv run devkit sync --locked` before the gate can run; otherwise it reports the
+  managed rule as missing, as for upstream bundles. Run the same in CI: it fails (`RECEIPT_STALE`) when a bundle
+  source was committed without the receipt it produces.
 - The committed receipt pins exactly which rule code a gate executed.
 
 `devkit rules` loads built-in rules, then rule assets in receipt order (bundle name order), then `--rules-dir`; a

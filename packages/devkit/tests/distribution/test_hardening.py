@@ -143,6 +143,8 @@ def test_post_sync_hooks_do_not_run_on_dry_run_or_check(
     runner = CliRunner()
     checked = runner.invoke(cli, ["sync", "--workspace-root", str(target), "--check"])
     assert checked.exit_code == 1 and calls == []
+    refused = runner.invoke(cli, ["sync", "--workspace-root", str(target), "--locked"])  # no receipt to restore
+    assert refused.exit_code == 1 and calls == []
     synced = runner.invoke(cli, ["sync", "--workspace-root", str(target)])
     assert synced.exit_code == 0, synced.output
     assert calls == ["ran"] and "[NOTICE] (POST_SYNC_NOTICE) x\n[DETAIL] hook: hook\n" in synced.stderr  # brief

@@ -59,7 +59,7 @@ SLUG = re.compile(r"[a-z0-9][a-z0-9_-]{0,63}")
 PUSH_TIMEOUT = 120.0  # seconds; a slow or stuck push must not hold the cleanup
 FETCH_TIMEOUT = 120.0  # seconds for the upstream fetch before the merge
 SETUP_TIMEOUT = 900.0  # seconds for the `setup` command (dependency installs)
-SYNC_TIMEOUT = 300.0  # seconds for `devkit sync` in a new worktree
+SYNC_TIMEOUT = 300.0  # seconds for `devkit sync --locked` in a new worktree
 
 
 @dataclass(frozen=True)
@@ -80,7 +80,7 @@ class StartResult:
     base: Path
     created: bool  # False when the existing worktree was reused
     setup: str | None = None  # the setup command that ran, if any
-    synced: bool | None = None  # whether `devkit sync` restored the project; None when it did not run
+    synced: bool | None = None  # whether `devkit sync --locked` restored the project; None when it did not run
     notices: list[AdvisoryError] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
@@ -260,9 +260,9 @@ def start(position: Position, slug: str, *, setup: str | None = None, project: P
     1. ``setup`` runs in the worktree through ``/bin/sh -c`` (without the caller's ``VIRTUAL_ENV``), for the
        environment the project needs (``uv sync``);
     2. when ``project`` (a directory relative to the checkout's top level) is a synchronized devkit project,
-       ``devkit sync`` runs there with the worktree's ``.venv`` interpreter when devkit is installed in it, else
-       this one, and restores the managed copies under ``.devkit/managed/`` that the commit gates, rules and
-       context commands read.
+       ``devkit sync --locked`` runs there with the worktree's ``.venv`` interpreter when devkit is installed in
+       it, else this one, and restores the managed copies under ``.devkit/managed/`` that the commit gates, rules
+       and context commands read, never changing the committed receipt, ``AGENTS.md`` or seeded files.
 
     A failure of either is a warning (``WORKTREE_SETUP_FAILED``, ``WORKTREE_SYNC_FAILED``) whose ``[FIX]``
     reruns it; the worktree stays. A reused worktree runs neither.
@@ -303,10 +303,11 @@ def start(position: Position, slug: str, *, setup: str | None = None, project: P
     target = path / project if project is not None else None
     if target is not None and (target / RECEIPT_PATH).is_file():
         interpreter = _interpreter(path)
-        failure = _run([interpreter, "-m", "devkit", "sync", "-w", str(target)], target, "devkit sync", SYNC_TIMEOUT)
+        argv = [interpreter, "-m", "devkit", "sync", "--locked", "-w", str(target)]
+        failure = _run(argv, target, "devkit sync --locked", SYNC_TIMEOUT)
         synced = failure is None
         if failure is not None:
-            fix = f"cd {shlex.quote(str(target))} && {shlex.quote(interpreter)} -m devkit sync"
+            fix = f"cd {shlex.quote(str(target))} && {shlex.quote(interpreter)} -m devkit sync --locked"
             notices.append(SyncFailedWarning(failure, fix=fix))
     return StartResult(slug, path, branch, position.base, True, setup, synced, notices)
 

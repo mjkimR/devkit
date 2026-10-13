@@ -433,5 +433,5 @@ def test_a_failed_sync_is_a_warning_and_keeps_the_worktree(repo: Path) -> None:
     [warning] = result.notices
     assert result.synced is False and result.path.is_dir()
     assert warning.code == "WORKTREE_SYNC_FAILED" and warning.mode is ActionMode.CONTINUE
-    assert "devkit sync exited 2" in warning.message
-    assert warning.fix == f"cd {result.path} && {sys.executable} -m devkit sync"
+    assert "devkit sync --locked exited 2" in warning.message
+    assert warning.fix == f"cd {result.path} && {sys.executable} -m devkit sync --locked"

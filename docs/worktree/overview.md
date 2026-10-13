@@ -18,7 +18,7 @@ The module is SDD-agnostic: it does not decide which tasks use a worktree, and i
 4. Otherwise `git worktree add -b <slug> <path>` from the base HEAD. Uncommitted changes in the base stay in the base.
 5. A new worktree is a fresh checkout without the base's ignored files: no `.venv`, no build output, and no `.devkit/managed/`, the synchronized copies that `.devkit/.gitignore` keeps out of Git. Two steps restore what work and commits need:
    1. **setup**: the `[worktree] setup` command, if configured, runs through `/bin/sh -c` in the worktree, without the caller's `VIRTUAL_ENV`, within 900 seconds. Set it to the project's environment step, for example `uv sync` or `just init`.
-   2. **sync**: when the devkit project the command runs in has a receipt (`.devkit/installation.json`), `devkit sync` runs in the same project directory of the worktree, within 300 seconds, with the worktree's `.venv/bin/python` when setup created one with devkit installed in it (a `devkit-*.dist-info` in its `site-packages`, the test the commit gate hooks apply), else the interpreter running `start`. It writes the ignored managed copies only: the receipt, `AGENTS.md` and the projected skills are tracked and already match. Without it, every devkit command that reads managed files fails in the worktree: bundle rules (and so a `devkit rules check --staged` commit gate, which then stops with `GATE_VERIFY_NOT_RUN` directing `devkit sync`), bundle gates, `get-context`, `playbook search`, workflow assets.
+   2. **sync**: when the devkit project the command runs in has a receipt (`.devkit/installation.json`), `devkit sync --locked` runs in the same project directory of the worktree, within 300 seconds, with the worktree's `.venv/bin/python` when setup created one with devkit installed in it (a `devkit-*.dist-info` in its `site-packages`, the test the commit gate hooks apply), else the interpreter running `start`. It writes the ignored managed copies only and never changes the tracked receipt, `AGENTS.md` or seeded files; when the worktree's environment no longer matches the committed receipt (a `RECEIPT_STALE` exit `1`) or lacks a deployed bundle's package, it fails and `start` reports `WORKTREE_SYNC_FAILED`. Without it, every devkit command that reads managed files fails in the worktree: bundle rules (and so a `devkit rules check --staged` commit gate, which then stops with `GATE_VERIFY_NOT_RUN` directing `devkit sync`), bundle gates, `get-context`, `playbook search`, workflow assets.
 
    Their output is discarded unless they fail; a failure or timeout is a `WORKTREE_SETUP_FAILED` or `WORKTREE_SYNC_FAILED` warning whose `[FIX]` reruns the step, and the worktree stays. A reused worktree runs neither.
 
@@ -75,7 +75,7 @@ The table is read from the devkit project containing the directory a command run
 
 `devkit.worktree` imports only `devkit.core` and `devkit.advisory`; Git runs through `devkit.core.git.run_git`.
 
-- `lifecycle.py`: `locate`, `path_for`, `start`, `find`, `finish`, `status` and their results. `start` runs `devkit sync` as a subprocess (`python -m devkit sync`), so the module still imports no other area.
+- `lifecycle.py`: `locate`, `path_for`, `start`, `find`, `finish`, `status` and their results. `start` runs `devkit sync --locked` as a subprocess (`python -m devkit sync --locked`), so the module still imports no other area.
 - `config.py`: `WorktreeConfig`, `read_worktree_config`.
 - `errors.py`: one class per code ([reference](reference.md#error-codes)).
 - `cli.py`: `devkit worktree start|finish|status`.

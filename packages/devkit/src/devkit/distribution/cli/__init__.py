@@ -11,7 +11,8 @@ result's ``to_dict()`` (``override list`` wraps its entries as
 result carries its errors, warnings and notices, so nothing is rendered on
 stderr in JSON mode. Exit
 codes follow ``devkit.advisory.ExitCode``: ``0`` success; ``1`` from
-``devkit sync --check`` when a synchronization is needed and from
+``devkit sync --check`` when a synchronization is needed, from ``devkit sync --locked``
+when it would change committed files (``RECEIPT_STALE``), and from
 ``devkit status`` when the report shows a problem (a missing, modified,
 mode-mismatched, symlinked or non-regular managed file, a symlinked or
 malformed root ``AGENTS.md``, a selected bundle whose package fails to load,
@@ -66,7 +67,7 @@ from devkit.distribution.installation.config import (
     resolve_selection,
 )
 from devkit.distribution.installation.context import get_context
-from devkit.distribution.installation.discovery import InstalledBundle, discover_bundles
+from devkit.distribution.installation.discovery import InstalledBundle, discover_bundles, unusable_bundles
 from devkit.distribution.installation.override_commands import (
     accept_override,
     create_override,
@@ -292,12 +293,16 @@ def _sync_and_save(
     merge: bool = False,
     deselect: tuple[str, ...] = (),
     dry_run: bool = False,
+    locked: bool = False,
 ) -> SyncResult:
     """Synchronize; ``save`` builds a configuration edit that the sync renders and writes under the project lock.
 
     ``merge`` joins ``presets`` with what each bundle already deploys, read
     from the configuration when the edit is rendered, instead of replacing it.
     Without ``save``, or on ``dry_run``, the selection applies to this run only.
+    ``deselect`` applies to the run in either case, so a bundle the edit cannot
+    name (one the receipt keeps deployed without an installed package) leaves
+    the receipt.
     """
     with discover_bundles() as installed:
         requested = resolve_selection(installed, presets or {})
@@ -307,12 +312,17 @@ def _sync_and_save(
 
         if save is not None and not dry_run:
             return sync_project(
-                root, installed, save=lambda: prepare_config_update(root, **save(installed, selected()))
+                root,
+                installed,
+                deselect=deselect,
+                save=lambda: prepare_config_update(root, **save(installed, selected())),
             )
         selection = selected()
         if save is not None:
             save(installed, selection)  # a preview refuses what the command would refuse
-        return sync_project(root, installed, agents=agents, presets=selection, deselect=deselect, dry_run=dry_run)
+        return sync_project(
+            root, installed, agents=agents, presets=selection, deselect=deselect, dry_run=dry_run, locked=locked
+        )
 
 
 @click.command()
@@ -328,6 +338,11 @@ def _sync_and_save(
 @click.option("--no-save", is_flag=True, help="Apply selection flags to this run without editing .devkit/config.toml.")
 @click.option("--dry-run", is_flag=True, help="Report planned actions without writing files or configuration.")
 @click.option("--check", is_flag=True, help="Read-only check; exit 1 when synchronization is needed, 2 on error.")
+@click.option(
+    "--locked",
+    is_flag=True,
+    help="Only restore files the receipt records; write nothing and exit 1 when committed files would change.",
+)
 @FORMAT_OPTION
 @boundary
 def sync(
@@ -338,15 +353,40 @@ def sync(
     no_save: bool,
     dry_run: bool,
     check: bool,
+    locked: bool,
     output_format: str,
 ) -> None:
-    """Synchronize the bundles selected in .devkit/config.toml into a project."""
+    """Synchronize the bundles selected in .devkit/config.toml into a project.
+
+    `--locked` is for a fresh clone, a new worktree and CI: it restores the
+    Git-ignored copies the committed receipt records and never changes the
+    receipt, the root AGENTS.md block or seeded files.
+    """
     if agents and no_agents:
         raise ArgumentError(
             "--agent and --no-agents cannot be combined",
             target_files=["--agent", "--no-agents"],
             fix="Pass --agent to set agent targets or --no-agents to clear them, not both",
         )
+    if locked:
+        combined = [
+            flag
+            for flag, value in (
+                ("--agent", agents),
+                ("--no-agents", no_agents),
+                ("--preset", presets),
+                ("--no-save", no_save),
+                ("--dry-run", dry_run),
+                ("--check", check),
+            )
+            if value
+        ]
+        if combined:
+            raise ArgumentError(
+                f"--locked cannot be combined with {', '.join(combined)}",
+                target_files=["--locked", *combined],
+                fix="Run `devkit sync --locked` alone; `devkit sync --check` previews without writing",
+            )
     requested = _parse_selections(presets, "--preset")
     active_agents = [] if no_agents else (list(agents) if agents else None)
     persist = not no_save and (bool(requested) or active_agents is not None)
@@ -356,8 +396,9 @@ def sync(
         agents=active_agents,
         presets=requested,
         dry_run=dry_run or check,
+        locked=locked,
     )
-    _report(result, output_format, check=check)
+    _report(result, output_format, check=check or (locked and result.dry_run))
 
 
 @click.command()
@@ -396,7 +437,8 @@ def remove(bundles: tuple[str, ...], workspace_root: str | None, dry_run: bool, 
     """Deselect bundles in .devkit/config.toml and synchronize.
 
     An auto-selected bundle is recorded as `<bundle> = false` so it is not
-    selected by default again; `devkit add` selects it again.
+    selected by default again; `devkit add` selects it again. A deployed bundle
+    whose package is no longer installed only leaves the receipt.
     """
     root = resolve_root(workspace_root)
 
@@ -407,12 +449,15 @@ def remove(bundles: tuple[str, ...], workspace_root: str | None, dry_run: bool, 
         if missing:
             raise SelectionError(f"bundle is not selected: {missing}", fix="List selected bundles with `devkit list`")
         # Deleting an entry would not deselect a bundle selected without one (auto-selected, or kept deployed
-        # because its package no longer loads), so those are opted out.
+        # because its package no longer loads), so those are opted out. One kept deployed without an installed
+        # package needs no entry: the run's deselection drops it from the receipt, and nothing selects it again.
+        absent = set(selected) - set(config.presets) - {item.bundle.name for item in installed}
+        absent -= unusable_bundles(installed).keys()
         automatic = {item.bundle.name for item in installed if item.auto_selected} | (
-            set(selected) - set(config.presets)
+            set(selected) - set(config.presets) - absent
         )
         return {
-            "deselect": [name for name in bundles if name not in automatic],
+            "deselect": [name for name in bundles if name not in automatic | absent],
             "opt_out": [name for name in bundles if name in automatic],
         }
 

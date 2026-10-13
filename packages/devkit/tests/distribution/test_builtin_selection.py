@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import tomllib
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -12,7 +14,7 @@ from click.testing import CliRunner
 from devkit.core.errors import ConfigError
 from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH
 from devkit.distribution.bundles import load_bundle
-from devkit.distribution.errors import BundleError, PackageError
+from devkit.distribution.errors import BundleError, PackageError, SelectionError
 from devkit.distribution.installation import discovery
 from devkit.distribution.installation.config import merge_selection, read_config, update_config
 from devkit.distribution.installation.discovery import Discovered, InstalledBundle, discover_bundles
@@ -229,18 +231,45 @@ def test_deployed_auto_selected_bundle_whose_package_breaks_is_kept_selected(
     assert not any(path.exists() for path in deployed)
 
 
-def test_uninstalled_auto_selected_bundle_is_removed_and_false_entry_tolerated(
+def test_uninstalled_deployed_bundle_is_kept_until_devkit_remove(
+    bundles: list[InstalledBundle], external: InstalledBundle, target: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    sync_project(target, [*bundles, external])
+    receipt = (target / RECEIPT_PATH).read_bytes()
+    deployed = sorted(path for path in (target / ".devkit/managed/ext").rglob("*") if path.is_file())
+
+    # A partial environment (the package is not installed) never deletes the committed state.
+    with pytest.raises(SelectionError, match=r"not installed: \['ext'\] \(deployed per \.devkit/installation\.json"):
+        sync_project(target, bundles)
+    assert (target / RECEIPT_PATH).read_bytes() == receipt
+    assert deployed and all(path.is_file() for path in deployed)
+
+    # `devkit remove` drops it from the receipt without an opt-out entry, so a later install selects it again.
+    monkeypatch.setattr("devkit.distribution.cli.discover_bundles", lambda: _found(bundles))
+    removed = CliRunner().invoke(cli, ["remove", "ext", "--workspace-root", str(target)])
+    assert removed.exit_code == 0, removed.output
+    assert "ext" not in _selection(target) and not (target / CONFIG_PATH).exists()
+    assert not any(path.exists() for path in deployed)
+    sync_project(target, bundles)
+    result = sync_project(target, [*bundles, external]).to_dict()
+    assert _selection(target)["ext"] == ["core"] and "BUNDLE_AUTO_SELECTED" in _codes(result)
+
+
+def test_false_entry_for_an_uninstalled_bundle_is_tolerated(
     bundles: list[InstalledBundle], external: InstalledBundle, target: Path
 ) -> None:
     sync_project(target, [*bundles, external])
+    update_config(target, opt_out=["ext"])
     sync_project(target, bundles)
     assert "ext" not in _selection(target)
     assert not (target / ".devkit/managed/ext").exists()
-
-    (target / ".devkit" / "config.toml").write_text("[presets]\next = false\n")
-    sync_project(target, bundles)
     result = sync_project(target, [*bundles, external]).to_dict()
     assert "ext" not in _selection(target) and "BUNDLE_AUTO_SELECTED" not in _codes(result)
+
+
+@contextmanager
+def _found(installed: list[InstalledBundle]) -> Iterator[list[InstalledBundle]]:
+    yield installed
 
 
 # --- the real installed distribution -------------------------------------------------

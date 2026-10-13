@@ -90,7 +90,7 @@ Inside each module, files are grouped by concern; each module's documentation ha
 | Code | `ExitCode` | Meaning | Examples |
 | --- | --- | --- | --- |
 | `0` | `OK` | Success; nothing found | `rules check` without violations; `workflow next` waiting for a human |
-| `1` | `FINDINGS` | The command ran and reports a negative result | rule violations remain; `sync --check` needs a sync; a gate refused the commit; `workflow validate` found invalid definitions; `devkit status`, `gate status` or `workflow show` reports a problem |
+| `1` | `FINDINGS` | The command ran and reports a negative result | rule violations remain; `sync --check` needs a sync; `sync --locked` would change committed files; a gate refused the commit; `workflow validate` found invalid definitions; `devkit status`, `gate status` or `workflow show` reports a problem |
 | `2` | `ERROR` | The command could not do its job | usage and argument errors, unreadable configuration, receipt or definition, a file that cannot be loaded, refused invalid input, unexpected errors, a reader that closed stdout before the result was written |
 
 - Warnings and notices never change the exit code; `--strict` turns a run that would exit `0` into `1` when it reported a warning.

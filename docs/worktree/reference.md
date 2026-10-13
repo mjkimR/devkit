@@ -26,7 +26,7 @@ Every command takes `-w/--workspace-root` (any directory in the checkout; defaul
 [SUMMARY: base=/src/app base_branch=main worktrees=1 unmerged=1 dirty=1 branches=1]
 ```
 
-`synced` is `yes` when `devkit sync` restored the project's managed files in the new worktree, `no` when it failed and `-` when it did not run (no receipt, or a reused worktree). `push` is `pushed`, `rejected` (the upstream moved on), `failed`, `no-upstream`, or `-` without `--merge`. `removed` is `yes` also when a rerun found the worktree already gone. JSON keys: `start`: `slug`, `path`, `branch`, `base`, `created`, `setup`, `synced`, `notices`; `finish`: `slug`, `path`, `branch`, `merged`, `push`, `removed`, `branch_deleted`, `notices`, plus `errors` when a refusal stopped it after a change; `status`: `base`, `base_branch`, `worktrees` (`path`, `branch`, `head`, `role`, `merged`, `dirty`, `prunable`), `branches` (`name`, `head`).
+`synced` is `yes` when `devkit sync --locked` restored the project's managed files in the new worktree, `no` when it failed and `-` when it did not run (no receipt, or a reused worktree). `push` is `pushed`, `rejected` (the upstream moved on), `failed`, `no-upstream`, or `-` without `--merge`. `removed` is `yes` also when a rerun found the worktree already gone. JSON keys: `start`: `slug`, `path`, `branch`, `base`, `created`, `setup`, `synced`, `notices`; `finish`: `slug`, `path`, `branch`, `merged`, `push`, `removed`, `branch_deleted`, `notices`, plus `errors` when a refusal stopped it after a change; `status`: `base`, `base_branch`, `worktrees` (`path`, `branch`, `head`, `role`, `merged`, `dirty`, `prunable`), `branches` (`name`, `head`).
 
 ## Configuration
 
@@ -59,7 +59,7 @@ Every command takes `-w/--workspace-root` (any directory in the checkout; defaul
 | `WORKTREE_PUSH_REJECTED` | `WARNING` | `PushRejectedWarning` | The upstream moved on and rejected the push of the merged base; `[FIX]` integrates it (`git pull --rebase`), then pushes. |
 | `WORKTREE_PUSH_FAILED` | `WARNING` | `PushFailedWarning` | The merged base branch did not reach its upstream for another reason; `[FIX]` is the push. |
 | `WORKTREE_SETUP_FAILED` | `WARNING` | `SetupFailedWarning` | The `setup` command failed or timed out; `[FIX]` reruns it. |
-| `WORKTREE_SYNC_FAILED` | `WARNING` | `SyncFailedWarning` | `devkit sync` failed or timed out in the new worktree; `[FIX]` reruns it. |
+| `WORKTREE_SYNC_FAILED` | `WARNING` | `SyncFailedWarning` | `devkit sync --locked` failed or timed out in the new worktree; `[FIX]` reruns it. |
 | `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit.core.ArgumentError` | An invalid slug. |
 | `GIT_FAILED` | `ERROR` | `devkit.core.GitError` | Not in a Git work tree, or another Git command failed. |
 

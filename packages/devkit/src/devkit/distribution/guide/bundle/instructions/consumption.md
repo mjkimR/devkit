@@ -102,6 +102,7 @@ that is missing or differs from the receipt's hash fails the gate, and its
 uv run devkit add <bundle>            # select with the bundle's default preset, then sync
 uv run devkit add <bundle>:<preset>   # add a preset to those the bundle already deploys
 uv run devkit remove <bundle>         # deselect (an auto-selected bundle is recorded as false), then sync
+uv run devkit sync --locked           # fresh clone, CI: restore ignored copies, never change committed files
 uv run devkit sync --preset <bundle>:<preset>   # replace a bundle's presets
 uv run devkit sync                    # converge to .devkit/config.toml
 uv run devkit sync --no-save --agent claude-code --agent codex   # narrow projections for one run only
@@ -112,8 +113,16 @@ projections. A bundle must be installed (`uv add --dev <package>`) before it
 can be selected. A bundle that declares `auto_select` is deployed with its
 default preset as soon as its package is installed, without an entry;
 `BUNDLE_AUTO_SELECTED` names it when it is first deployed, so tell the user,
-and opt it out with `devkit remove <bundle>` only when they ask. Deselect before uninstalling: a
-bundle selected by an entry that is no longer installed is a sync error.
+and opt it out with `devkit remove <bundle>` only when they ask. Removal is
+explicit: a deployed bundle whose package is not installed is a sync error
+(`SELECTION_INVALID`), auto-selected or not, so a partial environment never
+deletes committed files. Run `uv sync` when the package belongs in the
+environment; run `devkit remove <bundle>` when the user removed the package.
+
+`devkit sync --locked` rebuilds only what the committed receipt records
+(Git-ignored managed copies) and never writes the receipt, the `AGENTS.md`
+block or seeded files. When those would change it writes nothing and exits 1
+with `RECEIPT_STALE`: run a plain `devkit sync` and commit what it changes.
 
 ## Customizing an upstream asset
 
