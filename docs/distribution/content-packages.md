@@ -43,7 +43,7 @@ src/package_b_playbooks/
 
 ```bash
 base=https://github.com/mjkimR/devkit/releases/download/v0.1.0
-uv add --dev "agt-devkit @ $base/agt_devkit-0.1.0-py3-none-any.whl" \
+uv add --dev "devkit-agt @ $base/devkit_agt-0.1.0-py3-none-any.whl" \
   "devkit-advisory @ $base/devkit_advisory-0.1.0-py3-none-any.whl" \
   "devkit-starter @ $base/devkit_starter-0.1.0-py3-none-any.whl"
 uv run devkit sync               # deploys auto-selected bundles with their default preset

@@ -315,7 +315,7 @@ def _interpreter(checkout: Path) -> str:
     the one running this process."""
     python = checkout / ".venv/bin/python"
     if python.is_file() and any(
-        info.is_dir() for info in checkout.glob(".venv/lib/python*/site-packages/agt_devkit-*.dist-info")
+        info.is_dir() for info in checkout.glob(".venv/lib/python*/site-packages/devkit_agt-*.dist-info")
     ):
         return str(python)
     return sys.executable

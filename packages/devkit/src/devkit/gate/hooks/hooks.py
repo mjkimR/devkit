@@ -154,7 +154,7 @@ top=$(git rev-parse --show-toplevel 2>/dev/null)
 if [ -n "$top" ]; then
     candidate="$top/.venv/bin/python"
     if [ -x "$candidate" ]; then
-        for info in "$top"/.venv/lib/python*/site-packages/agt_devkit-*.dist-info; do
+        for info in "$top"/.venv/lib/python*/site-packages/devkit_agt-*.dist-info; do
             if [ -d "$info" ]; then
                 python=$candidate
                 break

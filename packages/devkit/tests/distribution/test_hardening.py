@@ -275,9 +275,9 @@ def test_tool_version_alone_is_no_change_and_is_recorded_with_the_next_write(
 ) -> None:
     result = sync_project(target, installed).to_dict()
     receipt = json.loads((target / RECEIPT_PATH).read_text())
-    assert receipt["tool"] == {"package": "agt-devkit", "version": tool_identity().version}
+    assert receipt["tool"] == {"package": "devkit-agt", "version": tool_identity().version}
     assert result["notices"] == []
-    monkeypatch.setattr(sync_module, "tool_identity", lambda: ToolRecord("agt-devkit", "9.9.9"))
+    monkeypatch.setattr(sync_module, "tool_identity", lambda: ToolRecord("devkit-agt", "9.9.9"))
     before = (target / RECEIPT_PATH).read_bytes()
     result = sync_project(target, installed).to_dict()
     # A different devkit version alone is not drift: no write, no notice, ``--check`` stays clean.
@@ -286,7 +286,7 @@ def test_tool_version_alone_is_no_change_and_is_recorded_with_the_next_write(
     result = sync_project(target, installed, agents=[]).to_dict()
     (notice,) = result["notices"]
     assert notice["code"] == "TOOL_VERSION_CHANGED" and notice["exit_code"] == 0
-    assert notice["message"].startswith(f"agt-devkit {receipt['tool']['version']} -> 9.9.9")
+    assert notice["message"].startswith(f"devkit-agt {receipt['tool']['version']} -> 9.9.9")
     assert json.loads((target / RECEIPT_PATH).read_text())["tool"]["version"] == "9.9.9"
     assert sync_project(target, installed, agents=[]).to_dict()["notices"] == []
 
@@ -294,7 +294,7 @@ def test_tool_version_alone_is_no_change_and_is_recorded_with_the_next_write(
 def test_receipt_tool_field_is_validated(installed: list[InstalledBundle], target: Path) -> None:
     sync_project(target, installed)
     receipt = json.loads((target / RECEIPT_PATH).read_text())
-    receipt["tool"] = {"package": "agt-devkit"}
+    receipt["tool"] = {"package": "devkit-agt"}
     (target / RECEIPT_PATH).write_text(json.dumps(receipt))
     with pytest.raises(ReceiptError, match="tool: missing keys"):
         sync_project(target, installed)
@@ -318,7 +318,7 @@ def test_status_without_receipt(installed: list[InstalledBundle], target: Path) 
     assert result["guidance_block"] == "missing" and result["seeded"] == [] and result["override_drift"] == []
     assert result["pending_journal"] is False and result["errors"] == []
     assert result["tool"] == {
-        "running": {"package": "agt-devkit", "version": tool_identity().version},
+        "running": {"package": "devkit-agt", "version": tool_identity().version},
         "recorded": None,
         "match": None,
     }
@@ -355,7 +355,7 @@ def test_status_reports_every_dimension(
     (target / AGENTS_FILE).write_text(text.replace("## devkit", "## devkit (edited)"))
     (target / JOURNAL).parent.mkdir(parents=True, exist_ok=True)
     (target / JOURNAL).write_text("{}")
-    monkeypatch.setattr(status_module, "tool_identity", lambda: ToolRecord("agt-devkit", "9.9.9"))
+    monkeypatch.setattr(status_module, "tool_identity", lambda: ToolRecord("devkit-agt", "9.9.9"))
 
     dirty = get_project_status(target, installed).to_dict()
     assert dirty["files"]["counts"]["modified"] == 1 and dirty["files"]["modified"] == [".devkit/managed/team/guide.md"]

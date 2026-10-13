@@ -284,7 +284,7 @@ def test_wrapper_prefers_the_work_tree_venv_when_it_has_devkit(repo: Path, tmp_p
     code, output = _commit(repo, "-m", "feat: venv without devkit")
     assert code == 0 and not marker.exists(), output
 
-    (venv / "lib/python3.12/site-packages/agt_devkit-0.1.0.dist-info").mkdir(parents=True)
+    (venv / "lib/python3.12/site-packages/devkit_agt-0.1.0.dist-info").mkdir(parents=True)
     code, output = _commit(repo, "-m", "feat: venv with devkit")
     assert code == 0 and marker.exists(), output
 

@@ -5,7 +5,7 @@ errors, warnings and notices with stable codes and deterministic `[ACTION]` dire
 later and nothing else: standard library only, no entry points, no CLI.
 
 It is the one part of devkit that other repositories import at runtime, so it ships on its own: a service or
-library depends on `devkit-advisory`, and its development tooling on `agt-devkit`, which depends on the same version
+library depends on `devkit-advisory`, and its development tooling on `devkit-agt`, which depends on the same version
 of this package. `devkit` is a namespace package shared by both distributions, so the import is
 `from devkit.advisory import AdvisoryError` either way.
 

@@ -1,5 +1,5 @@
 [project]
-name = "agt-devkit"
+name = "devkit-agt"
 version = "0.1.0"
 description = "Agent asset distribution, repository rules, delivery workflows and commit gates in one CLI"
 readme = "README.md"
@@ -39,7 +39,7 @@ dev = [
 [tool.uv.sources]
 devkit-advisory = { workspace = true }
 # The model wheel is built by hand and attached to the release that first ships its version (models/devkit-embed),
-# so every install of agt-devkit[search], from this workspace or from Git, gets the model files.
+# so every install of devkit-agt[search], from this workspace or from Git, gets the model files.
 devkit-embed = { url = "https://github.com/mjkimR/devkit/releases/download/v0.1.0/devkit_embed-0.1.0-py3-none-any.whl" }
 
 [build-system]

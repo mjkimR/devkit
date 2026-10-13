@@ -10,10 +10,10 @@ dependencies = []
 starter = "devkit_starter"
 
 [dependency-groups]
-dev = ["agt-devkit"]  # the tests load the bundle with devkit's manifest reader
+dev = ["devkit-agt"]  # the tests load the bundle with devkit's manifest reader
 
 [tool.uv.sources]
-agt-devkit = { workspace = true }
+devkit-agt = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

@@ -4,14 +4,14 @@ requires-python = ">=3.12"
 
 [manifest]
 members = [
-    "agt-devkit",
+    "devkit-agt",
     "devkit-advisory",
     "devkit-starter",
 ]
 
 [manifest.dependency-groups]
 dev = [
-    { name = "agt-devkit", extras = ["search"], editable = "packages/devkit" },
+    { name = "devkit-agt", extras = ["search"], editable = "packages/devkit" },
     { name = "pyright", specifier = ">=1.1.390" },
     { name = "pytest", specifier = ">=8.0.0" },
     { name = "pytest-cov", specifier = ">=5.0.0" },
@@ -20,7 +20,7 @@ dev = [
 ]
 
 [[package]]
-name = "agt-devkit"
+name = "devkit-agt"
 version = "0.1.0"
 source = { editable = "packages/devkit" }
 dependencies = [
@@ -207,13 +207,13 @@ source = { editable = "packages/devkit-starter" }
 
 [package.dev-dependencies]
 dev = [
-    { name = "agt-devkit" },
+    { name = "devkit-agt" },
 ]
 
 [package.metadata]
 
 [package.metadata.requires-dev]
-dev = [{ name = "agt-devkit", editable = "packages/devkit" }]
+dev = [{ name = "devkit-agt", editable = "packages/devkit" }]
 
 [[package]]
 name = "execnet"

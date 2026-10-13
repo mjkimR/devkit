@@ -70,7 +70,7 @@ just workflow envelope check --unit <dir>             # every envelope file and 
 Every command takes `-w/--workspace-root` (default: the devkit project containing the current directory). To install directly in another project:
 
 ```bash
-uv add "agt-devkit @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
+uv add "devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
 uv run devkit workflow next --unit <dir>
 ```
 

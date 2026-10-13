@@ -152,7 +152,7 @@ def playbook() -> None:
     "--mode",
     default=None,
     type=click.Choice([mode.value for mode in SearchMode], case_sensitive=False),
-    help="Ranking: auto (hybrid with the agt-devkit[search] extra, else lexical), lexical, dense or hybrid"
+    help="Ranking: auto (hybrid with the devkit-agt[search] extra, else lexical), lexical, dense or hybrid"
     f" (default: [playbooks] mode, else {DEFAULT_PLAYBOOK_MODE}).",
 )
 @click.option(

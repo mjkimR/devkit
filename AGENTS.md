@@ -34,8 +34,8 @@ Personal developer tools monorepo.
 
 Keep package descriptions in this guide to a high-level summary of their purpose. Do not add package-specific configurations or detailed architectural explanations here; refer to the package README and `docs/<area>/` when deeper details are needed:
 
-- `agt-devkit`: The single devkit distribution with one CLI (`devkit`): agent asset distribution, repository rules, delivery workflows, commit gates and structured agent advisories, built on an SDD-agnostic shared core. See [packages/devkit/README.md](packages/devkit/README.md) for its modules and layering.
-- `devkit-advisory`: The Agent Advisory Protocol library (`devkit.advisory`) on its own, for other repositories' runtime; `agt-devkit` depends on the same version. See [packages/devkit-advisory/README.md](packages/devkit-advisory/README.md).
+- `devkit-agt`: The single devkit distribution with one CLI (`devkit`): agent asset distribution, repository rules, delivery workflows, commit gates and structured agent advisories, built on an SDD-agnostic shared core. See [packages/devkit/README.md](packages/devkit/README.md) for its modules and layering.
+- `devkit-advisory`: The Agent Advisory Protocol library (`devkit.advisory`) on its own, for other repositories' runtime; `devkit-agt` depends on the same version. See [packages/devkit-advisory/README.md](packages/devkit-advisory/README.md).
 - `devkit-starter`: Example external content package demonstrating bundle packaging and distribution. See [packages/devkit-starter/README.md](packages/devkit-starter/README.md).
 
 ## Verification

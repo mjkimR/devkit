@@ -95,10 +95,10 @@ In a **uv workspace**, add the package to the members and the dev group:
 members = ["packages/*", "tools/*"]
 
 [dependency-groups]
-dev = ["agt-devkit", "my-repo-devkit"]
+dev = ["devkit-agt", "my-repo-devkit"]
 
 [tool.uv.sources]
-agt-devkit = { git = "https://github.com/mjkimR/devkit.git", subdirectory = "packages/devkit" }
+devkit-agt = { git = "https://github.com/mjkimR/devkit.git", subdirectory = "packages/devkit" }
 my-repo-devkit = { workspace = true }
 ```
 

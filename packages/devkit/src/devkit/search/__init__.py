@@ -2,7 +2,7 @@
 
 Lexical search (BM25) uses the standard library only. Dense and hybrid search
 embed document metadata with a static embedding model and need the
-``agt-devkit[search]`` extra (numpy, tokenizers and the ``potion-base-8m`` model
+``devkit-agt[search]`` extra (numpy, tokenizers and the ``potion-base-8m`` model
 package); those imports happen on the first dense search, never on import.
 Semantics: ``docs/search/overview.md``.
 """

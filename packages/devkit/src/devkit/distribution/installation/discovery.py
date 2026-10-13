@@ -12,7 +12,7 @@ from devkit.distribution.errors import BundleError, PackageError
 GROUP = "devkit.bundles"
 # Bundles registered by this distribution are built in. Any bundle declaring ``auto_select``, built in
 # or not, is selected by default (see ``config``).
-BUILTIN_DISTRIBUTION = "agt-devkit"
+BUILTIN_DISTRIBUTION = "devkit-agt"
 
 
 @dataclass(frozen=True)
@@ -20,7 +20,7 @@ class InstalledBundle:
     package: str
     package_version: str
     bundle: Bundle
-    # Shipped by the ``agt-devkit`` distribution itself.
+    # Shipped by the ``devkit-agt`` distribution itself.
     builtin: bool = False
 
     @property

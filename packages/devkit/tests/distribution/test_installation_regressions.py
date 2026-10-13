@@ -266,7 +266,7 @@ def test_a_writing_sync_records_the_running_version(
     item: InstalledBundle, target: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     sync_project(target, [item])
-    monkeypatch.setattr(sync_module, "tool_identity", lambda: ToolRecord("agt-devkit", "9.9.9"))
+    monkeypatch.setattr(sync_module, "tool_identity", lambda: ToolRecord("devkit-agt", "9.9.9"))
     (target / ".claude/skills/review/SKILL.md").unlink()
     result = sync_project(target, [item])
     assert [action.path for action in result.actions] == [".claude/skills/review/SKILL.md", RECEIPT_PATH]

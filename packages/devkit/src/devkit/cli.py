@@ -158,7 +158,7 @@ def _print_version(ctx: click.Context, _param: click.Parameter, value: bool) -> 
         return
     from importlib.metadata import version
 
-    click.echo(f"[VERSION: devkit {version('agt-devkit')}]")
+    click.echo(f"[VERSION: devkit {version('devkit-agt')}]")
     ctx.exit()
 
 

@@ -38,7 +38,7 @@ wheel() {
     fi
     echo "${matches[0]}"
 }
-devkit_wheel=$(wheel agt_devkit)
+devkit_wheel=$(wheel devkit_agt)
 advisory_wheel=$(wheel devkit_advisory)
 starter_wheel=$(wheel devkit_starter)
 
@@ -54,8 +54,8 @@ echo "==> creating a fresh consumer project"
 from importlib.metadata import PackageNotFoundError, version
 from devkit.distribution.installation.discovery import discover_bundles
 from devkit.distribution.installation.sync import tool_identity
-assert tool_identity().package == 'agt-devkit'
-assert tool_identity().version == version('agt-devkit')
+assert tool_identity().package == 'devkit-agt'
+assert tool_identity().version == version('devkit-agt')
 try:
     version('devkit')
 except PackageNotFoundError:
@@ -64,7 +64,7 @@ else:
     raise AssertionError('the unrelated devkit distribution must not be installed')
 with discover_bundles() as bundles:
     assert {item.bundle.name for item in bundles if item.builtin} == {'devkit', 'advisory', 'authoring', 'git-commits'}
-    assert all(item.package == 'agt-devkit' for item in bundles if item.builtin)
+    assert all(item.package == 'devkit-agt' for item in bundles if item.builtin)
 "
     echo "--- devkit sync (built-in bundles are selected by default)"
     uv run devkit sync >/dev/null

@@ -4,7 +4,7 @@ A sequential Python rule engine for repository governance: deterministic checks
 over a workspace, with autofix, project policy and Git snapshot gates. The engine
 carries no document model of its own; rules for identifier grammars, frontmatter
 schemas or cross-references ship in bundles (`kind = "rule"`) and load through
-the installation receipt. Part of the `agt-devkit` distribution (`devkit rules` CLI);
+the installation receipt. Part of the `devkit-agt` distribution (`devkit rules` CLI);
 requires Python 3.12 or later.
 
 Semantics: [Rule Engine Overview](overview.md) (architecture, layout),
@@ -24,7 +24,7 @@ devkit rules explain RULE-ID [-w DIR] [--rules-dir DIR] [--format text|json]
 devkit rules test [RULE-ID]... [-w DIR] [--rules-dir DIR] [--format text|json] [-- PYTEST-ARGS...]
 ```
 
-In another project: `uv add "agt-devkit @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"`,
+In another project: `uv add "devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"`,
 then `uv run devkit rules check`. In this monorepo, `just rules-check`,
 `just rules-fix`, `just rules-phases`, `just rules-explain` and `just rules-test`
 pass their arguments through.

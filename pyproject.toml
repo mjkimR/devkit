@@ -6,7 +6,7 @@ members = [
 
 [tool.ruff]
 exclude = [".git", ".venv", "build", "dist"]
-# `devkit` is a namespace package shared by agt-devkit and devkit-advisory; without an __init__.py ruff would no
+# `devkit` is a namespace package shared by devkit-agt and devkit-advisory; without an __init__.py ruff would no
 # longer see packages/*/src as the package root and would sort devkit imports as third-party.
 namespace-packages = ["packages/devkit/src/devkit", "packages/devkit-advisory/src/devkit"]
 line-length = 120
@@ -38,7 +38,7 @@ extraPaths = [
 
 [dependency-groups]
 dev = [
-    "agt-devkit[search]",  # numpy, tokenizers and the model wheel for the dense search tests and `just model-build`
+    "devkit-agt[search]",  # numpy, tokenizers and the model wheel for the dense search tests and `just model-build`
     "pyright>=1.1.390",
     "pytest>=8.0.0",
     "pytest-cov>=5.0.0",
@@ -47,7 +47,7 @@ dev = [
 ]
 
 [tool.uv.sources]
-agt-devkit = { workspace = true }
+devkit-agt = { workspace = true }
 devkit-advisory = { workspace = true }
 
 [tool.pytest.ini_options]

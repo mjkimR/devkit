@@ -11,7 +11,7 @@ This module implements the Agent Advisory Protocol and nothing else.
 
 ## Contents
 
-- **Runtime**: `devkit.advisory` in the `devkit-advisory` distribution (`packages/devkit-advisory/`): standard library only, no entry points, and the lowest layer of `devkit` (it imports no other devkit module; tests in both packages enforce this). `agt-devkit` depends on the same version, so the module is present wherever `devkit` is. `error.py` (`AdvisoryError`), `types.py` (`ExitCode`, `Level`, `ActionMode`, `Actor`, `Retry`), `advisory.py` (`Advisory`, mode derivation, `ACTION_TEXT`, the block sentinels `HEADLINE`, `FIELDS` and `CONTINUATION`, rendering). Every other devkit module raises `AdvisoryError` subclasses and returns warnings and notices as `AdvisoryError` instances at a lower level ([Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)).
+- **Runtime**: `devkit.advisory` in the `devkit-advisory` distribution (`packages/devkit-advisory/`): standard library only, no entry points, and the lowest layer of `devkit` (it imports no other devkit module; tests in both packages enforce this). `devkit-agt` depends on the same version, so the module is present wherever `devkit` is. `error.py` (`AdvisoryError`), `types.py` (`ExitCode`, `Level`, `ActionMode`, `Actor`, `Retry`), `advisory.py` (`Advisory`, mode derivation, `ACTION_TEXT`, the block sentinels `HEADLINE`, `FIELDS` and `CONTINUATION`, rendering). Every other devkit module raises `AdvisoryError` subclasses and returns warnings and notices as `AdvisoryError` instances at a lower level ([Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)).
 - **Bundle** `advisory` (`devkit.advisory_guide`, `bundle/`, `default_preset = "core"`), built into `devkit` (not `devkit-advisory`, so a runtime environment carries no agent content) with `auto_select = true` and therefore selected by default:
 
 | Preset | Assets | For |
@@ -54,7 +54,7 @@ development tooling adds `devkit` and selects the Python preset of the guide:
 # Runtime: devkit.advisory, standard library only
 uv add "devkit-advisory @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-advisory"
 # Tooling (instead of the runtime-only install): requires the same advisory version
-uv add --dev "agt-devkit @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
+uv add --dev "devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
 uv run devkit add advisory:python
 ```
 

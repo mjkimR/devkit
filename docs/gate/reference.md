@@ -5,7 +5,7 @@ Pluggable Git commit gates (`devkit gate` CLI): managed hook wrappers, layered c
 ## Usage
 
 ```bash
-uv add --dev "agt-devkit @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
+uv add --dev "devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
 uv run devkit gate install      # prepares dispatchers and active 20-devkit entries (sync also installs them)
                                 # and a commented table per gate into <common-git-dir>/devkit.config
 uv run devkit gate status       # hooks, gates with effective state, configuration layers, problems that fail a commit

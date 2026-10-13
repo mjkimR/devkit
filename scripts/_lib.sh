@@ -47,7 +47,7 @@ list_modules() {
 
 resolve_module() {
     case "$1" in
-        devkit) echo "agt-devkit" ;;
+        devkit) echo "devkit-agt" ;;
         starter) echo "devkit-starter" ;;
         *) echo "$1" ;;
     esac
