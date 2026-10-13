@@ -130,7 +130,8 @@ def test_a_git_failure_after_the_merge_reports_progress_and_the_push_warning_the
     assert done.stdout == f"[WORKTREE_FINISHED: demo path={path} merged=no push=- removed=yes branch_deleted=yes]\n"
 
 
-def test_merge_is_refused_under_the_default_pull_request_policy(repo: Path) -> None:
+def test_merge_is_refused_under_the_pull_request_policy(repo: Path) -> None:
+    configure(repo, "pull_request = true\n")
     invoke("start", "demo", "-w", str(repo))
     refused = invoke("finish", "demo", "--merge", "-w", str(repo), "--format", "json")
     assert refused.exit_code == 2 and json.loads(refused.stdout)["error"]["code"] == "WORKTREE_PR_POLICY"
@@ -166,9 +167,9 @@ def test_outside_a_repository_every_command_fails_cleanly(tmp_path: Path) -> Non
 
 
 def test_worktree_config_defaults_and_validation(repo: Path) -> None:
-    assert read_worktree_config(repo) == WorktreeConfig(pull_request=True, delete_branch=True, setup=None)
-    configure(repo, 'pull_request = false\ndelete_branch = false\nsetup = "uv sync"\n')
-    assert read_worktree_config(repo) == WorktreeConfig(False, False, "uv sync")
+    assert read_worktree_config(repo) == WorktreeConfig(pull_request=False, delete_branch=True, setup=None)
+    configure(repo, 'pull_request = true\ndelete_branch = false\nsetup = "uv sync"\n')
+    assert read_worktree_config(repo) == WorktreeConfig(True, False, "uv sync")
     for table, message in [
         ("bogus = 1\n", "unknown fields"),
         ('pull_request = "no"\n', "pull_request must be true or false"),

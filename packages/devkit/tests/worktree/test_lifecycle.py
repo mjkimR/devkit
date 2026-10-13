@@ -142,7 +142,7 @@ def test_finish_refuses_from_the_worktree_under_the_pr_policy_and_before_the_mer
     with pytest.raises(RunFromBaseError):
         finish(locate(created.path), "demo")
     with pytest.raises(PullRequestPolicyError) as policy:
-        finish(locate(repo), "demo", merge=True)
+        finish(locate(repo), "demo", merge=True, pull_request=True)
     assert policy.value.mode is ActionMode.BLOCKED
     with pytest.raises(UnmergedError) as unmerged:
         finish(locate(repo), "demo")

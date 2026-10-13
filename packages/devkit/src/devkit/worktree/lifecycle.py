@@ -443,7 +443,7 @@ def finish(
     slug: str,
     *,
     merge: bool = False,
-    pull_request: bool = True,
+    pull_request: bool = False,
     delete_branch: bool = True,
     before_remove: Callable[[FinishResult], None] | None = None,
 ) -> FinishResult:

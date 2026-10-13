@@ -8,7 +8,7 @@ One Git worktree per task, integrated and removed by one command. Semantics: [Ta
 uv run devkit worktree start fix-login          # in the base checkout: create ../<repo>-wt-fix-login on branch fix-login
 cd ../<repo>-wt-fix-login                        # work and commit there
 uv run devkit worktree finish fix-login          # in the base, after the pull request merged
-uv run devkit worktree finish fix-login --merge  # or merge locally ([worktree] pull_request = false)
+uv run devkit worktree finish fix-login --merge  # or merge locally (refused under [worktree] pull_request = true)
 uv run devkit worktree status                    # leftovers: unmerged or dirty worktrees, stray branches
 ```
 
@@ -30,7 +30,7 @@ Every command takes `-w/--workspace-root` (any directory in the checkout; defaul
 
 ## Configuration
 
-`[worktree]` in `.devkit/config.toml`: `pull_request` (default `true`), `delete_branch` (default `true`), `setup` (a shell command, default none). See [Overview, section 5](overview.md#5-configuration).
+`[worktree]` in `.devkit/config.toml`: `pull_request` (default `false`), `delete_branch` (default `true`), `setup` (a shell command, default none). See [Overview, section 5](overview.md#5-configuration).
 
 ## Error codes
 

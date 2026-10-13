@@ -102,7 +102,7 @@ def _finished(result: FinishResult) -> str:
 @click.option(
     "--merge",
     is_flag=True,
-    help="Fast-forward the base onto the branch and push it to its upstream first ([worktree] pull_request = false)",
+    help="Fast-forward the base onto the branch and push it to its upstream first (refused under [worktree] pull_request = true)",
 )
 @FORMAT_OPTION
 @boundary

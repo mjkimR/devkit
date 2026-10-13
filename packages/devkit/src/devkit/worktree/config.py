@@ -2,7 +2,7 @@
 
 ```toml
 [worktree]
-pull_request = true     # finish integrates through a pull request; `finish --merge` is refused
+pull_request = false    # finish --merge integrates locally; true integrates through a pull request (`--merge` refused)
 delete_branch = true    # finish deletes the merged branch (`git branch -d`, never -D)
 setup = "uv sync"       # shell command run in a newly created worktree (default: none)
 ```
@@ -19,7 +19,7 @@ from devkit.worktree.errors import WorktreeConfigError
 
 @dataclass(frozen=True)
 class WorktreeConfig:
-    pull_request: bool = True
+    pull_request: bool = False
     delete_branch: bool = True
     setup: str | None = None
 
@@ -39,4 +39,4 @@ def read_worktree_config(root: Path) -> WorktreeConfig:
     setup = table.get("setup")
     if setup is not None and (not isinstance(setup, str) or not setup.strip()):
         raise WorktreeConfigError("config worktree: setup must be a non-empty shell command")
-    return WorktreeConfig(table.get("pull_request", True), table.get("delete_branch", True), setup)
+    return WorktreeConfig(table.get("pull_request", False), table.get("delete_branch", True), setup)
