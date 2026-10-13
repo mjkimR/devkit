@@ -294,52 +294,122 @@ def test_verified_asset_file_checks_recorded_hashes_and_snapshot_fallback(tmp_pa
         verified_asset_file(tmp_path, ".devkit/managed/team/link.py", receipt, asset)
 
 
-def test_verified_asset_files_lists_every_file_of_a_kind_whatever_its_name(tmp_path: Path) -> None:
-    from devkit.core import verified_asset_files
-
-    files = {
-        ".devkit/managed/team/_helpers.py": b"a = 1\n",
-        ".devkit/managed/team/entry.py": b"b = 2\n",
-        ".devkit/managed/team/notes.md": b"# notes\n",
-    }
-    for rel, data in files.items():
-        (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
-        (tmp_path / rel).write_bytes(data)
-    receipt = parse_receipt(
+def _plugin_receipt(assets: list[dict[str, Any]], files: dict[str, bytes]) -> Receipt:
+    return parse_receipt(
         json.dumps(
             {
                 "schema": 1,
                 "packages": [],
                 "selection": {"agents": [], "presets": {}},
-                "assets": [
-                    {
-                        "bundle": "team",
-                        "id": "x",
-                        "kind": "rule",
-                        "entrypoints": [".devkit/managed/team/entry.py"],
-                        "paths": [
-                            ".devkit/managed/team/_helpers.py",
-                            ".devkit/managed/team/entry.py",
-                            ".devkit/managed/team/notes.md",
-                            ".devkit/managed/team/gone.py",
-                        ],
-                    },
-                    {"bundle": "team", "id": "g", "kind": "gate", "paths": [".devkit/managed/team/entry.py"]},
-                ],
+                "assets": assets,
                 "files": {
                     rel: {"sha256": hashlib.sha256(data).hexdigest(), "mode": 420} for rel, data in files.items()
                 },
             }
         )
     )
-    paths, errors = verified_asset_files(tmp_path, receipt, "rule")
-    assert [p.relative_to(tmp_path).as_posix() for p in paths] == [
-        ".devkit/managed/team/entry.py",  # entrypoints first, listed once
-        ".devkit/managed/team/_helpers.py",  # never skipped for its name
-    ]
-    assert [(e.code, e.target_files) for e in errors] == [("ASSET_FILE_INVALID", (".devkit/managed/team/gone.py",))]
-    markdown, _ = verified_asset_files(tmp_path, receipt, "rule", ".md")
-    assert [p.name for p in markdown] == ["notes.md"]
+
+
+def _place(root: Path, files: dict[str, bytes]) -> None:
+    for rel, data in files.items():
+        (root / rel).parent.mkdir(parents=True, exist_ok=True)
+        (root / rel).write_bytes(data)
+
+
+def test_verified_asset_packages_maps_every_module_of_an_asset_whatever_its_name(tmp_path: Path) -> None:
+    from devkit.core import verified_asset_packages
+
+    base = ".devkit/managed/team/rules/x"
+    files = {
+        f"{base}/_helpers.py": b"a = 1\n",
+        f"{base}/entry.py": b"b = 2\n",
+        f"{base}/sub/__init__.py": b"",
+        f"{base}/sub/deep.py": b"",
+        f"{base}/notes.md": b"# notes\n",
+        f"{base}/tests/test_entry.py": b"",
+        f"{base}/test_entry.py": b"",
+    }
+    _place(tmp_path, files)
+    receipt = _plugin_receipt(
+        [
+            {"bundle": "team", "id": "x", "kind": "rule", "paths": sorted(files)},
+            {"bundle": "team", "id": "g", "kind": "gate", "paths": [f"{base}/entry.py"]},
+        ],
+        files,
+    )
+    packages, errors = verified_asset_packages(tmp_path, receipt, "rule")
+    assert errors == ()
+    (package,) = packages
+    assert package.root == tmp_path / base
+    assert package.key == f"{(tmp_path / '.devkit/managed/team').as_posix()}:x"
+    assert {name: path.relative_to(tmp_path / base).as_posix() for name, path in package.modules.items()} == {
+        "_helpers": "_helpers.py",  # never skipped for its name
+        "entry": "entry.py",
+        "sub": "sub/__init__.py",
+        "sub.deep": "sub/deep.py",
+    }  # test files are never modules, so they are not verified either
+    gates, _ = verified_asset_packages(tmp_path, receipt, "gate")
+    assert list(gates[0].modules) == ["entry"]
+
+
+def test_verified_asset_packages_mixes_overrides_managed_and_snapshot_sources(tmp_path: Path) -> None:
+    from devkit.core import verified_asset_packages
+
+    managed = {
+        ".devkit/managed/team/rules/x/rule.py": b"r = 1\n",
+        ".devkit/managed/team/rules/x/helpers.py": b"h = 1\n",
+    }
+    override = ".devkit/overrides/team/rules/x/helpers.py"
+    _place(tmp_path, {**managed, override: b"h = 2\n"})
+    receipt = _plugin_receipt(
+        [{"bundle": "team", "id": "x", "kind": "rule", "paths": [override, ".devkit/managed/team/rules/x/rule.py"]}],
+        managed,
+    )
+    (package,), errors = verified_asset_packages(tmp_path, receipt, "rule")
+    assert errors == ()
+    assert dict(package.modules) == {
+        "helpers": tmp_path / override,
+        "rule": tmp_path / ".devkit/managed/team/rules/x/rule.py",
+    }
+
+    snapshot = tmp_path / "snapshot"
+    _place(snapshot, {override: b"h = 2\n"})  # managed copies are Git-ignored: only the override is in the snapshot
+    (package,), errors = verified_asset_packages(snapshot, receipt, "rule", source_root=tmp_path)
+    assert errors == ()
+    assert dict(package.modules) == {
+        "helpers": snapshot / override,
+        "rule": tmp_path / ".devkit/managed/team/rules/x/rule.py",
+    }
+    assert package.root == snapshot / ".devkit/managed/team/rules/x"
+
+
+def test_verified_asset_packages_drops_a_package_with_an_unusable_file(tmp_path: Path) -> None:
+    from devkit.core import verified_asset_packages
+
+    a, b = ".devkit/managed/team/a/ok.py", ".devkit/managed/team/b/ok.py"
+    files = {a: b"", b: b""}
+    _place(tmp_path, files)
+    receipt = _plugin_receipt(
+        [
+            {"bundle": "team", "id": "a", "kind": "rule", "paths": [a]},
+            {"bundle": "team", "id": "b", "kind": "rule", "paths": [b, ".devkit/managed/team/b/gone.py"]},
+        ],
+        files,
+    )
+    packages, errors = verified_asset_packages(tmp_path, receipt, "rule")
+    assert [p.root for p in packages] == [tmp_path / ".devkit/managed/team/a"]
+    assert [(e.code, e.target_files) for e in errors] == [("ASSET_FILE_INVALID", (".devkit/managed/team/b/gone.py",))]
+
+
+def test_verified_asset_packages_reports_two_files_for_one_module(tmp_path: Path) -> None:
+    from devkit.core import verified_asset_packages
+
+    files = {".devkit/managed/team/x/a.py": b"", ".devkit/managed/team/x/a/__init__.py": b""}
+    _place(tmp_path, files)
+    receipt = _plugin_receipt([{"bundle": "team", "id": "x", "kind": "rule", "paths": sorted(files)}], files)
+    packages, errors = verified_asset_packages(tmp_path, receipt, "rule")
+    assert packages == ()
+    assert "both define module a" in errors[0].message and errors[0].code == "ASSET_FILE_INVALID"
 
 
 def test_deeply_nested_json_is_a_receipt_error() -> None:
@@ -384,7 +454,7 @@ def test_only_a_project_override_loads_without_a_recorded_hash(tmp_path: Path) -
 
 
 def test_an_unreadable_asset_file_is_reported_per_file(tmp_path: Path, lock: Callable[[Path], None]) -> None:
-    from devkit.core import verified_asset_files
+    from devkit.core import verified_asset_packages
 
     good, locked = ".devkit/managed/team/good.py", ".devkit/managed/team/locked.py"
     for rel in (good, locked):
@@ -396,8 +466,8 @@ def test_an_unreadable_asset_file_is_reported_per_file(tmp_path: Path, lock: Cal
     data.pop("overrides", None)
     data.pop("seeded", None)
     lock(tmp_path / locked)
-    paths, errors = verified_asset_files(tmp_path, parse_receipt(json.dumps(data)), "rule")
-    assert paths == (tmp_path / good,)
+    packages, errors = verified_asset_packages(tmp_path, parse_receipt(json.dumps(data)), "rule")
+    assert packages == ()  # a package with an unusable file is not loaded
     assert [(e.code, e.target_files) for e in errors] == [("ASSET_FILE_INVALID", (locked,))]
     assert "locked.py cannot be read" in errors[0].message
 

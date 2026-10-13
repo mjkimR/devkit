@@ -9,6 +9,7 @@ from typing import Any
 
 from devkit.core.errors import UnsafePathError
 from devkit.core.paths import normalize_relpath
+from devkit.core.plugins import PluginPackage, check_plugin_modules
 from devkit.distribution.bundles.common import AGENT_NAMES, ALL, SLUG, VERSION, locate_frontmatter
 from devkit.distribution.bundles.fragments import read_fragment, references
 from devkit.distribution.bundles.instructions import read_instruction_header
@@ -32,6 +33,8 @@ KINDS = frozenset(
         "guidance",
     }
 )
+# The kinds whose source is a plugin package directory of Python modules (``devkit.core.plugins``).
+PLUGIN_KINDS = frozenset({"rule", "gate", "workflow-check"})
 # The kinds projected into agent directories (agent-projections.md); only they may ship per-agent ``variants``.
 VARIANT_KINDS = frozenset({"skill", "subagent"})
 # Agents reading one shared skill directory (``.agents/skills``): their skill variants must be identical.
@@ -193,6 +196,23 @@ def source_files(root: Path, source: str) -> list[Path]:
     return files
 
 
+def _check_plugin_package(asset_id: str, kind: str, source: str, path: Path) -> None:
+    """A rule, gate or workflow check is a directory whose modules import by their dotted names."""
+    if not path.is_dir():
+        raise BundleError(
+            f"{asset_id}: a {kind} asset's source must be a plugin package directory, not a file: {source}",
+            fix=f"Move {source} into a directory (for example {PurePosixPath(source).with_suffix('')}/) "
+            "and set source to that directory",
+        )
+    try:
+        package = PluginPackage.from_directory(path)
+        check_plugin_modules(package.modules)
+    except ValueError as exc:
+        raise BundleError(f"{asset_id}: invalid plugin package {source}: {exc}") from exc
+    if not package.modules:
+        raise BundleError(f"{asset_id}: plugin package {source} contains no Python module")
+
+
 def _check_source(root: Path, asset_id: str, kind: str, variant: str, source: str) -> None:
     """Validate the kind-specific content of one source, as every agent projection will read it."""
     path = safe_source(root, source)
@@ -202,6 +222,8 @@ def _check_source(root: Path, asset_id: str, kind: str, variant: str, source: st
             raise BundleError(f"{asset_id}: skill source must contain SKILL.md")
         # Sync inserts the context prerequisite after the frontmatter, which must therefore be well-formed.
         locate_frontmatter((path / "SKILL.md").read_bytes(), f"{asset_id}/{source}/SKILL.md", "skill")
+    if kind in PLUGIN_KINDS:
+        _check_plugin_package(asset_id, kind, source, path)
     if kind == "instruction":
         for file in files:
             read_instruction_header(file.read_bytes(), f"{asset_id}/{file.relative_to(root).as_posix()}")

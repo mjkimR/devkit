@@ -30,17 +30,19 @@ standards are in the [Resource Taxonomy](../architecture/resource-taxonomy.md).
   `devkit get-context` catalogs. Every file of the source, including each file of a directory source, carries one.
 - `playbook`: a procedure for an occasional task, found through playbook search; header rules are in
   [Context Loading & Playbooks, section 3](context-and-playbooks.md#3-playbook-discovery-and-search-devkit-playbook).
-- `rule`: Python governance rules run by `devkit.rules`. The receipt lists every deployed file under the asset's
-  `paths` and `devkit rules` loads them from there; a consumer configures them in `[rules]` of `.devkit/config.toml`.
+- `rule`: Python governance rules run by `devkit.rules`, shipped as one plugin package directory per asset (see
+  **Plugin packages** below). The receipt lists every deployed file under the asset's `paths` and `devkit rules`
+  loads the package from there; a consumer configures the rules in `[rules]` of `.devkit/config.toml`.
 - `workflow`: one Markdown delivery workflow definition (frontmatter `id` and `stages`) run by `devkit.workflow`.
   Distribution validates the header only (`devkit workflow validate` checks stage semantics). When at least one
   workflow is synchronized, `devkit sync` generates the `devkit-workflow` entry skill under
   `.devkit/managed/_devkit/skills/`, projects it into every selected agent, and records the definition under
   `entrypoints` in the receipt so `devkit workflow` finds it without configuration.
-- `workflow-check`: Python check evaluators (`BaseCheck` subclasses) that `devkit.workflow` loads from the receipt
-  into its check registry; see [Workflow Definitions and Checks](../workflow/definition-and-checks.md).
-- `gate`: a Python commit gate run by `devkit.gate` at a Git hook stage, loaded from the receipt's `paths` and
-  configured in `[gates]` of `.devkit/config.toml` or the per-clone `.git/devkit.config`; see the
+- `workflow-check`: Python check evaluators (`BaseCheck` subclasses) in one plugin package directory per asset, which
+  `devkit.workflow` loads from the receipt into its check registry; see
+  [Workflow Definitions and Checks](../workflow/definition-and-checks.md).
+- `gate`: Python commit gates in one plugin package directory per asset, run by `devkit.gate` at a Git hook stage,
+  loaded from the receipt's `paths` and configured in `[gates]` of `.devkit/config.toml` or the per-clone `.git/devkit.config`; see the
   [Commit Gate Overview](../gate/overview.md).
 - `document`: plain files with no engine semantics. Unseeded, a managed copy agents read by path. With
   `seeded = true` and a `target`, a **seeded** asset: written once to the workspace-relative `target` (a directory
@@ -144,6 +146,13 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
   frontmatter block, closes it (sync inserts the context prerequisite after it). `codex` and `antigravity` variants
   project to the same `.agents/skills/<asset-id>/` and must be identical (same files, bytes and modes). The ids
   `devkit-playbook` and `devkit-workflow` are reserved for the entry skills `devkit sync` generates.
+- **Plugin packages**: the `source` of a `rule`, `gate` or `workflow-check` asset is a directory (a file is
+  `BUNDLE_INVALID` with a fix naming the directory to move it into). Every `.py` file in it, recursively, is a module
+  of one package, except files under a `tests` directory, `test_*.py`, `*_test.py`, `__pycache__` and hidden
+  entries; `__init__.py` is optional. The directory must contain at least one module, every directory and file name
+  of a module must be a Python identifier, and no module may have two files (`a.py` beside `a/__init__.py` or
+  beside a package directory `a/`). Modules import each other relatively; the loading model is
+  [`devkit.core.plugins`](../core/reference.md). Guides, resources and tests ship in the same directory.
 - **Native subagents**: each `subagent` variant is one file with the agent's native suffix: `.toml` for `codex`,
   `.md` for `claude-code` and `antigravity`.
 - **Headers**: instruction, playbook and workflow headers and role contracts follow the frontmatter grammar of

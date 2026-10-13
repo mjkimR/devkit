@@ -40,15 +40,15 @@ a moment no skill marks, such as "before writing a commit message").
 
 | Kind | File form | Who consumes it, when | Context cost |
 | --- | --- | --- | --- |
-| `rule` | `rules/*.py` | `devkit rules check`, hooks, CI; loaded from the receipt | none |
-| `gate` | `gates/*.py` | `devkit gate` at a Git hook stage | none |
+| `rule` | `rules/<slug>/`: a plugin package directory of `.py` modules, guide and tests | `devkit rules check`, hooks, CI; loaded from the receipt | none |
+| `gate` | `gates/<slug>/`: a plugin package directory | `devkit gate` at a Git hook stage | none |
 | `skill` | `skills/<slug>/SKILL.md` and support files | The agent host lists it and invokes it as a tool; the body opens with the bundle context prerequisite | name and description always; body on invocation |
 | `subagent` | native file per agent or `subagents/<slug>.md` contract | The host loads it when delegating | persona on load |
 | `workflow` | one Markdown definition with `id` and `stages` | `devkit-workflow` entry skill and `devkit workflow next` | stage output only |
 | `playbook` | `playbooks/<slug>.md` or directory with `SKILL.md` | Only on explicit `devkit-playbook` invocation or rule remediation | selected headers, then one body |
 | constitution | `AGENTS.md` at the bundle root | Returned whole by `get-context`, once per bundle | about 50 to 100 lines |
 | `instruction` | `instructions/<slug>.md` with `name` and `description` frontmatter | Header returned by `get-context`; body read when relevant | header always, body on demand |
-| `workflow-check` | Python files (`BaseCheck` subclasses) | `devkit workflow` adds them to its check registry; loaded from the receipt | none |
+| `workflow-check` | `checks/<slug>/`: a plugin package directory (`BaseCheck` subclasses) | `devkit workflow` adds them to its check registry; loaded from the receipt | none |
 | `document` | any files | Unseeded: a managed copy agents read by path. `seeded = true` with a `target`: written once into the project, then project-owned | only when read |
 | `guidance` | one Markdown file of list items, at most 300 bytes; `{path:<asset-id>}` names another asset's file | Rendered into the root `AGENTS.md` block by `devkit sync`, read by every session | every turn: keep it to a pointer with its read condition |
 
@@ -87,5 +87,9 @@ a moment no skill marks, such as "before writing a commit message").
 - Slugs are lowercase with hyphens. Asset ids are unique within a bundle, and
   rule ids are unique across all bundles a repository installs; a later rule
   with the same id replaces an earlier one.
-- Rules and gates are plain Python files that import only their engine's
-  public API; the bundle package never imports them.
+- Rules, gates and workflow checks are plugin package directories: every
+  `.py` file in one is a module (tests under `tests/` or named `test_*.py`
+  are never imported), `__init__.py` is optional, and modules import each
+  other relatively (`from .helpers import parse`). They import only their
+  engine's public API and installed packages; the bundle package never
+  imports them.

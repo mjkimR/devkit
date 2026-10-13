@@ -1,25 +1,26 @@
-"""Gate registry: built-in gates plus gate files deployed by ``devkit sync``.
+"""Gate registry: built-in gates plus gate packages deployed by ``devkit sync``.
 
-Bundles ship gates as ``kind = "gate"`` assets. ``devkit sync`` copies the
-selected ones under ``.devkit/managed/<bundle>/`` (or uses the project override
-under ``.devkit/overrides/``) and records each file in the asset's ``paths`` in
-``.devkit/installation.json``. The registry loads every ``.py`` file listed
-there, as ``devkit.rules`` loads ``kind = "rule"`` assets:
+Bundles ship gates as ``kind = "gate"`` assets, each a plugin package
+directory. ``devkit sync`` copies the selected ones under
+``.devkit/managed/<bundle>/`` (or uses the project override under
+``.devkit/overrides/``) and records each file in the asset's ``paths`` in
+``.devkit/installation.json``. The registry loads each asset as one package,
+as ``devkit.rules`` loads ``kind = "rule"`` assets:
 
 - the receipt is read with ``devkit.core.receipt`` (strict: a receipt that
   exists but is malformed, or lists an unsafe path, is an error);
-- every listed ``.py`` file (``entrypoints`` then ``paths``) is found and
-  checked with ``devkit.core.verified_asset_files``, as ``devkit.rules`` and
-  ``devkit.workflow`` find rule and plugin check files: a file that is missing,
-  resolves outside the project, or differs from the SHA-256 the receipt
-  records for it is reported as that ``AssetFileError`` (``ASSET_FILE_INVALID``),
-  never a silent skip, and no file is skipped for its name;
-- files are imported with ``devkit.core.plugins.load_subclasses``, atomically
-  per file.
+- every listed module file is found and checked with
+  ``devkit.core.verified_asset_packages``, as ``devkit.rules`` and
+  ``devkit.workflow`` find rule and plugin check packages: a file that is
+  missing, resolves outside the project, or differs from the SHA-256 the
+  receipt records for it is reported as that ``AssetFileError``
+  (``ASSET_FILE_INVALID``), never a silent skip, and its package is not loaded;
+- packages are imported with ``devkit.core.plugins.load_subclasses``,
+  atomically per package.
 
-A gate file may import from any package installed in the same environment,
+A gate package may import from any package installed in the same environment,
 which is how a content wheel ships its gate logic as a library and its gate as
-a thin file.
+a thin package.
 """
 
 from __future__ import annotations
@@ -29,7 +30,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError
-from devkit.core import ReceiptError, load_receipt, load_subclasses, verified_asset_files
+from devkit.core import PluginPackage, ReceiptError, load_receipt, load_subclasses, verified_asset_packages
 from devkit.gate.engine.base import BaseGate
 from devkit.gate.engine.models import Gate, Stage
 from devkit.gate.errors import GateDefinitionError, GateLoadError
@@ -42,14 +43,14 @@ PLUGIN_NAMESPACE = "devkit_gate"
 
 @dataclass(frozen=True)
 class DeployedGates:
-    """Gate files to load, in receipt order, and the receipt entries that cannot be loaded."""
+    """Gate packages to load, in receipt order, and the receipt entries that cannot be loaded."""
 
-    paths: tuple[Path, ...] = ()
+    packages: tuple[PluginPackage, ...] = ()
     errors: tuple[AdvisoryError, ...] = ()  # ``RECEIPT_INVALID`` or ``ASSET_FILE_INVALID``
 
 
-def deployed_gate_paths(repo_root: Path) -> DeployedGates:
-    """Every ``.py`` file of every ``kind = "gate"`` asset in the receipt, checked against its recorded hash.
+def deployed_gate_packages(repo_root: Path) -> DeployedGates:
+    """The plugin package of every ``kind = "gate"`` asset in the receipt, its files checked against their hashes.
 
     A file without a ``files`` entry in the receipt (a project override) is
     loaded as it is; a file with one must match it. A malformed receipt is
@@ -61,8 +62,8 @@ def deployed_gate_paths(repo_root: Path) -> DeployedGates:
         return DeployedGates(errors=(exc,))
     if receipt is None:
         return DeployedGates()
-    paths, errors = verified_asset_files(repo_root, receipt, GATE_KIND)
-    return DeployedGates(paths, errors)
+    packages, errors = verified_asset_packages(repo_root, receipt, GATE_KIND)
+    return DeployedGates(packages, errors)
 
 
 def display_path(path: Path, root: Path | None) -> str:
@@ -105,18 +106,19 @@ class GateRegistry:
     def for_stage(self, stage: Stage) -> list[Gate]:
         return [gate for gate in self.get_all() if gate.stage is stage]
 
-    def load_files(self, files: Iterable[Path], root: Path | None = None) -> list[Gate]:
-        """Register every concrete ``BaseGate`` subclass defined in the given files.
+    def load_packages(self, packages: Iterable[PluginPackage], root: Path | None = None) -> list[Gate]:
+        """Register every concrete ``BaseGate`` subclass defined in the given plugin packages.
 
-        A file that fails to import, or any of whose gates fails to instantiate
-        or validate, contributes no gate at all and is reported in ``errors``
-        as a ``GateLoadError`` (``GATE_LOAD_FAILED``).
+        A package that fails to import, or any of whose gates fails to
+        instantiate or validate, contributes no gate at all and is reported in
+        ``errors`` as a ``GateLoadError`` (``GATE_LOAD_FAILED``) naming the
+        package. A gate's source is the module file defining it.
         """
-        load = load_subclasses(files, BaseGate, namespace=PLUGIN_NAMESPACE, validate=_validate)
+        load = load_subclasses(packages, BaseGate, namespace=PLUGIN_NAMESPACE, validate=_validate)
         for failure in load.errors:
             name = display_path(failure.path, root)
             self.errors.append(
-                GateLoadError(f"failed to load gate file {name}: {failure.message}", target_files=[name])
+                GateLoadError(f"failed to load gate package {name}: {failure.message}", target_files=[name])
             )
         loaded: list[Gate] = []
         for plugin in load.plugins:
@@ -136,7 +138,7 @@ def default_gate_registry() -> GateRegistry:
 def project_registry(repo_root: Path) -> GateRegistry:
     """Built-in gates plus every gate the receipt records as deployed."""
     registry = default_gate_registry()
-    deployed = deployed_gate_paths(repo_root)
+    deployed = deployed_gate_packages(repo_root)
     registry.errors.extend(deployed.errors)
-    registry.load_files(deployed.paths, repo_root)
+    registry.load_packages(deployed.packages, repo_root)
     return registry

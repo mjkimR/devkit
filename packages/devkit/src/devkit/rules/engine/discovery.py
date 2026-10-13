@@ -1,13 +1,15 @@
-"""Rule files recorded by ``devkit sync`` in ``.devkit/installation.json``.
+"""Rule packages recorded by ``devkit sync`` in ``.devkit/installation.json``.
 
-Bundles ship rules as ``kind = "rule"`` assets. The receipt lists each
-deployed file under the asset's ``entrypoints`` and ``paths`` (an override
-under ``.devkit/overrides/`` replaces the managed copy there), so the CLI loads
-them without a ``--rules-dir`` flag. Every listed ``.py`` file is loaded,
-whatever its name; any other file under the asset is ignored.
+Bundles ship rules as ``kind = "rule"`` assets, each a plugin package
+directory. The receipt lists each deployed file under the asset's ``paths``
+(an override under ``.devkit/overrides/`` replaces the managed copy there), so
+the CLI loads them without a ``--rules-dir`` flag. Each asset is one package:
+every listed ``.py`` file is one of its modules, whatever its name, except test
+files; any other file under the asset is ignored.
 
-Files are found and checked with ``devkit.core.verified_asset_files``, as the
-commit gate registry and workflow plugin checks find theirs:
+Packages are found and their files checked with
+``devkit.core.verified_asset_packages``, as the commit gate registry and
+workflow plugin checks find theirs:
 
 - a file the receipt records under ``files`` must match its SHA-256, so a
   managed rule edited by hand is a load error (``devkit sync`` restores it,
@@ -32,7 +34,14 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from devkit.advisory import Actor
-from devkit.core import RECEIPT_PATH, AssetFileError, ReceiptError, load_receipt, verified_asset_files
+from devkit.core import (
+    RECEIPT_PATH,
+    AssetFileError,
+    PluginPackage,
+    ReceiptError,
+    load_receipt,
+    verified_asset_packages,
+)
 from devkit.rules.engine.errors import SYNC_FIX, RuleLoadError
 
 RULE_KIND = "rule"
@@ -40,9 +49,9 @@ RULE_KIND = "rule"
 
 @dataclass(frozen=True)
 class ManagedRules:
-    """Rule files to load, in receipt order, and the receipt entries that could not be resolved."""
+    """Rule packages to load, in receipt order, and the receipt entries that could not be resolved."""
 
-    paths: tuple[Path, ...] = ()
+    packages: tuple[PluginPackage, ...] = ()
     errors: tuple[RuleLoadError, ...] = ()
 
 
@@ -57,7 +66,7 @@ def _unusable(error: AssetFileError) -> RuleLoadError:
 
 
 def resolve_managed_rules(workspace_root: Path, *, source_root: Path | None = None) -> ManagedRules:
-    """Python files of every synchronized rule asset, in receipt order.
+    """The plugin package of every synchronized rule asset, in receipt order.
 
     ``source_root`` is the working tree a Git snapshot was taken from. Files
     absent from ``workspace_root`` are read from there when their content
@@ -74,5 +83,5 @@ def resolve_managed_rules(workspace_root: Path, *, source_root: Path | None = No
         )
     if receipt is None:
         return ManagedRules()
-    paths, errors = verified_asset_files(workspace_root, receipt, RULE_KIND, source_root=source_root)
-    return ManagedRules(paths, tuple(_unusable(error) for error in errors))
+    packages, errors = verified_asset_packages(workspace_root, receipt, RULE_KIND, source_root=source_root)
+    return ManagedRules(packages, tuple(_unusable(error) for error in errors))

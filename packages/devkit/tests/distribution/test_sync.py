@@ -507,15 +507,15 @@ integration = "ask"
 
 def test_sync_deploys_gate_assets_and_ignores_gates_table(tmp_path: Path, bare: Path) -> None:
     root = tmp_path / "gate_source"
-    (root / "gates").mkdir(parents=True)
-    (root / "gates/block.py").write_text("raise RuntimeError('must not run at sync')\n")
+    (root / "gates/block").mkdir(parents=True)
+    (root / "gates/block/gate.py").write_text("raise RuntimeError('must not run at sync')\n")
     (root / "bundle.toml").write_text("""schema = 1
 name = "gates"
 version = "0.1.0"
 [[assets]]
 id = "block"
 kind = "gate"
-source = "gates/block.py"
+source = "gates/block"
 """)
     write_config(
         bare,
@@ -529,23 +529,22 @@ enabled = true
     )
     sync_project(bare, [InstalledBundle("gate-content", "0.1.0", load_bundle(root))])
     receipt = json.loads((bare / RECEIPT_PATH).read_text())
-    assert {"bundle": "gates", "id": "block", "kind": "gate", "paths": [".devkit/managed/gates/gates/block.py"]} in (
-        receipt["assets"]
-    )
-    assert (bare / ".devkit/managed/gates/gates/block.py").is_file()
+    managed = ".devkit/managed/gates/gates/block/gate.py"
+    assert {"bundle": "gates", "id": "block", "kind": "gate", "paths": [managed]} in receipt["assets"]
+    assert (bare / managed).is_file()
 
 
 def test_sync_records_workflow_check_assets_like_rules(tmp_path: Path, bare: Path) -> None:
     root = tmp_path / "checks-source"
-    (root / "checks").mkdir(parents=True)
-    (root / "checks/materials.py").write_text("raise RuntimeError('must not run at sync')\n")
+    (root / "checks/materials").mkdir(parents=True)
+    (root / "checks/materials/materials.py").write_text("raise RuntimeError('must not run at sync')\n")
     (root / "bundle.toml").write_text("""schema = 1
 name = "sdd"
 version = "0.1.0"
 [[assets]]
 id = "materials-present"
 kind = "workflow-check"
-source = "checks/materials.py"
+source = "checks/materials"
 """)
     write_config(bare, 'schema = 1\n[presets]\nsdd = "all"\n')
     sync_project(bare, [InstalledBundle("sdd-content", "0.1.0", load_bundle(root))])
@@ -554,9 +553,9 @@ source = "checks/materials.py"
         "bundle": "sdd",
         "id": "materials-present",
         "kind": "workflow-check",
-        "paths": [".devkit/managed/sdd/checks/materials.py"],
+        "paths": [".devkit/managed/sdd/checks/materials/materials.py"],
     } in receipt["assets"]
-    assert (bare / ".devkit/managed/sdd/checks/materials.py").is_file()
+    assert (bare / ".devkit/managed/sdd/checks/materials/materials.py").is_file()
 
 
 def test_receipt_cannot_own_config(installed: list[InstalledBundle], target: Path) -> None:

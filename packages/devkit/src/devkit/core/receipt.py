@@ -35,13 +35,14 @@ import json
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from types import MappingProxyType
 from typing import Any
 
 from devkit.advisory import Actor
 from devkit.core.errors import AssetFileError, ReceiptError, UnsafePathError
 from devkit.core.paths import normalize_relpath, resolve_within
+from devkit.core.plugins import PluginPackage, plugin_module_name, plugin_modules
 
 RECEIPT_PATH = ".devkit/installation.json"
 SYNC_COMMAND = "devkit sync"  # restores missing managed copies (the fix of a missing asset file)
@@ -442,28 +443,77 @@ def verified_asset_file(
     return path
 
 
-def verified_asset_files(
-    root: Path, receipt: Receipt, kind: str, suffix: str = ".py", *, source_root: Path | None = None
-) -> tuple[tuple[Path, ...], tuple[AssetFileError, ...]]:
-    """Every file of every ``kind`` asset ending in ``suffix``, verified, and the files that cannot be used.
+def _asset_source_path(asset: AssetRecord, item: str) -> str:
+    """``item`` relative to its bundle: without the ``.devkit/managed/<bundle>/`` or ``.devkit/overrides/<bundle>/`` prefix."""
+    for prefix in (f"{MANAGED_PATH}/{asset.bundle}/", f"{OVERRIDES_PATH}/{asset.bundle}/"):
+        if item.startswith(prefix):
+            return item[len(prefix) :]
+    return item
 
-    Each asset contributes its ``entrypoints`` then its ``paths``
-    (``AssetRecord.files``), in receipt order and without duplicates, and each
-    file goes through ``verified_asset_file``. Every listed file is returned or
-    reported: none is skipped for its name, so a receipt-listed ``_helpers.py``
-    loads like any other file. This is how rules, gates and workflow plugin
-    checks find their synchronized files.
+
+def _common_directory(paths: list[str]) -> tuple[str, ...]:
+    """The deepest directory (as parts) containing every one of ``paths``."""
+    parents = [PurePosixPath(path).parent.parts for path in paths]
+    common = parents[0] if parents else ()
+    for parts in parents[1:]:
+        length = 0
+        while length < min(len(common), len(parts)) and common[length] == parts[length]:
+            length += 1
+        common = common[:length]
+    return common
+
+
+def verified_asset_packages(
+    root: Path, receipt: Receipt, kind: str, *, source_root: Path | None = None
+) -> tuple[tuple[PluginPackage, ...], tuple[AssetFileError, ...]]:
+    """One plugin package per ``kind`` asset, every module file verified, and the files that cannot be used.
+
+    This is how rules, gates and workflow plugin checks find their
+    synchronized code. Each asset's files (``entrypoints`` then ``paths``,
+    ``AssetRecord.files``) are taken relative to the asset's source directory:
+    the ``.devkit/managed/<bundle>/`` or ``.devkit/overrides/<bundle>/`` prefix
+    is removed, then the directory common to all of the asset's paths. Every
+    file that is a module there (``devkit.core.plugins.plugin_module_name``:
+    not a test file) goes through ``verified_asset_file``, so one package may
+    mix project overrides, managed copies and, in a Git snapshot, working-tree
+    copies; none is skipped for its name (a ``_helpers.py`` is a module like
+    any other). An asset with any unusable module file yields no package, and
+    each such file is reported. The package's ``root`` is the asset's
+    directory under the managed root, and its ``key`` names the workspace,
+    bundle and asset.
     """
-    paths: list[Path] = []
+    packages: list[PluginPackage] = []
     errors: list[AssetFileError] = []
-    seen: set[str] = set()
     for asset in receipt.assets(kind):
-        for item in asset.files(suffix):
-            if item in seen:
+        items = asset.files()
+        sources = {item: _asset_source_path(asset, item) for item in items}
+        common = _common_directory(list(sources.values()))
+        modules: list[tuple[str, Path]] = []
+        failed = False
+        for item in items:
+            dotted = plugin_module_name(PurePosixPath(*PurePosixPath(sources[item]).parts[len(common) :]).as_posix())
+            if dotted is None:
                 continue
-            seen.add(item)
             try:
-                paths.append(verified_asset_file(root, item, receipt, asset, source_root=source_root))
+                modules.append((dotted, verified_asset_file(root, item, receipt, asset, source_root=source_root)))
             except AssetFileError as exc:
                 errors.append(exc)
-    return tuple(paths), tuple(errors)
+                failed = True
+        if failed:
+            continue
+        directory = root / MANAGED_PATH / asset.bundle / PurePosixPath(*common)
+        try:
+            mapping = plugin_modules(modules)
+        except ValueError as exc:
+            errors.append(
+                AssetFileError(
+                    f"{asset.bundle}:{asset.id} {exc}",
+                    target_files=list(items),
+                    fix=f"Rename the files of {asset.bundle}:{asset.id} so each module has one file",
+                )
+            )
+            continue
+        packages.append(
+            PluginPackage(f"{(root / MANAGED_PATH / asset.bundle).as_posix()}:{asset.id}", directory, mapping)
+        )
+    return tuple(packages), tuple(errors)

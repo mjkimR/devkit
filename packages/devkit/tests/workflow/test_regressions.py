@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner, Result
+from devkit.core import PluginPackage
 from devkit.workflow import (
     AnchorInvalidError,
     DefinitionError,
@@ -16,7 +17,7 @@ from devkit.workflow import (
     TemplateLayout,
     Workspace,
     evaluate_definition,
-    load_check_files,
+    load_check_packages,
     load_decisions,
     load_envelopes,
     parse_definition,
@@ -540,15 +541,21 @@ class Bad(BaseCheck):
 """
 
 
-def test_r10_plugin_files_load_atomically(tmp_path: Path) -> None:
-    (tmp_path / "mixed.py").write_text(GOOD_AND_BAD)
-    (tmp_path / "first.py").write_text(GOOD_AND_BAD.split("class Bad")[0])
-    (tmp_path / "second.py").write_text(GOOD_AND_BAD.split("class Bad")[0])
-    loaded, errors = load_check_files([tmp_path / "mixed.py", tmp_path / "first.py", tmp_path / "second.py"])
-    assert [c.name for c in loaded] == ["good"]  # only first.py
+def test_r10_plugin_packages_load_atomically(tmp_path: Path) -> None:
+    sources = {
+        "mixed": {"good.py": GOOD_AND_BAD.split("class Bad")[0], "bad.py": GOOD_AND_BAD.replace("Good", "Fine")},
+        "first": {"first.py": GOOD_AND_BAD.split("class Bad")[0]},
+        "second": {"second.py": GOOD_AND_BAD.split("class Bad")[0]},
+    }
+    for name, files in sources.items():
+        (tmp_path / name).mkdir()
+        for file, text in files.items():
+            (tmp_path / name / file).write_text(text)
+    loaded, errors = load_check_packages([PluginPackage.from_directory(tmp_path / name) for name in sources])
+    assert [c.name for c in loaded] == ["good"]  # only first/
     assert len(errors) == 2
-    assert "mixed.py" in str(errors[0]) and "must match" in str(errors[0])
-    assert "second.py" in str(errors[1]) and "already defined" in str(errors[1])
+    assert "mixed" in str(errors[0]) and "must match" in str(errors[0])
+    assert "second" in str(errors[1]) and "already defined" in str(errors[1])
 
 
 def test_nit_feedback_value_requires_accept_and_list_reports_unreadable_anchors(tmp_path: Path) -> None:

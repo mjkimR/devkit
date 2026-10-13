@@ -25,7 +25,7 @@ the assets by hand.
       bundle/
         bundle.toml
         AGENTS.md                     # optional constitution
-        rules/<slug>.py
+        rules/<slug>/<slug>.py        # one directory per rule: modules, guide, tests
         skills/<slug>/SKILL.md
         playbooks/<slug>.md
         instructions/<slug>.md
@@ -58,9 +58,9 @@ version = "0.1.0"
 default_preset = "all"
 
 [[assets]]
-id = "conventions"
+id = "<slug>"
 kind = "rule"
-source = "rules"
+source = "rules/<slug>"                # a directory; a file source is refused
 ```
 
 The bundle name is the identifier used in `devkit add`, `get-context` and

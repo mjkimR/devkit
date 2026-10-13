@@ -32,7 +32,7 @@ my-repo/
       __init__.py                     # empty; no runtime side effects
       bundle/
         bundle.toml
-        rules/no_todo.py
+        rules/no_todo/no_todo.py      # one plugin package per rule: module(s), guide, tests
         skills/release/SKILL.md
         playbooks/on-call.md
 ```
@@ -65,9 +65,9 @@ version = "0.1.0"
 default_preset = "all"
 
 [[assets]]
-id = "conventions"
+id = "no-todo"
 kind = "rule"
-source = "rules"
+source = "rules/no_todo"
 
 [[assets]]
 id = "release"

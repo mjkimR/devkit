@@ -62,7 +62,8 @@ def test_cli_rules_fix(tmp_path: Path) -> None:
 def test_cli_plugin_failure_preserves_json_and_fails(tmp_path: Path) -> None:
     rules = tmp_path / "rules"
     rules.mkdir()
-    (rules / "broken.py").write_text('raise RuntimeError("broken plugin")\n')
+    (rules / "broken").mkdir()
+    (rules / "broken/broken.py").write_text('raise RuntimeError("broken plugin")\n')
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--rules-dir", str(rules), "--format", "json"])
     assert result.exit_code == 2
     data = json.loads(result.stdout)  # one object: the (empty) findings and the load problem
@@ -180,8 +181,8 @@ def test_cli_override_for_unknown_rule_fails(tmp_path: Path) -> None:
 
 def test_cli_promotion_reported_for_custom_hygiene_rule(tmp_path: Path) -> None:
     rules = tmp_path / "rules"
-    rules.mkdir()
-    (rules / "todo.py").write_text("""from devkit.rules import Phase, RuleContext, Severity, Violation
+    (rules / "todo").mkdir(parents=True)
+    (rules / "todo/todo.py").write_text("""from devkit.rules import Phase, RuleContext, Severity, Violation
 from devkit.rules.rules import BaseRule
 
 
@@ -219,7 +220,7 @@ class NoTodoRule(BaseRule):
     (tmp_path / "notes.md").write_text("done\n")
     ready = runner.invoke(cli, ["check", "-w", str(tmp_path), "--rules-dir", str(rules), "--phase", "hygiene"])
     assert "[NOTICE] (RULES_PROMOTION_READY) phase transitions are ready (remaining=0): RULE-no-todo" in ready.stderr
-    assert "[TARGET] rules/todo.py\n" in ready.stderr  # the file that declares the rule, not its ID
+    assert "[TARGET] rules/todo/todo.py\n" in ready.stderr  # the file that declares the rule, not its ID
 
 
 def test_cli_phases_command_text_and_json(tmp_path: Path) -> None:
@@ -498,16 +499,16 @@ def test_cli_staged_gate_loads_ignored_managed_rules_pinned_by_the_receipt(tmp_p
 
 def test_cli_staged_gate_keeps_guides_of_snapshot_rules(tmp_path: Path) -> None:
     root = _repo(tmp_path)
-    (root / "rules").mkdir()
-    (root / "rules/todo.py").write_text(
+    (root / "rules/todo").mkdir(parents=True)
+    (root / "rules/todo/todo.py").write_text(
         NO_TODO_RULE.replace('description="no TODO")', 'description="no TODO", guide="todo_guide.md")')
     )
-    (root / "rules/todo_guide.md").write_text("# Guide\n")
+    (root / "rules/todo/todo_guide.md").write_text("# Guide\n")
     (root / "notes.md").write_text("TODO\n")
     _git(root, "add", ".")
     result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "--rules-dir", str(root / "rules")])
     assert result.exit_code == 1, result.output
-    assert "[VIOLATION: RULE-no-todo " in result.output and " guide=rules/todo_guide.md]" in result.output
+    assert "[VIOLATION: RULE-no-todo " in result.output and " guide=rules/todo/todo_guide.md]" in result.output
 
 
 def test_cli_staged_gate_rejects_managed_rule_that_drifted_from_the_receipt(tmp_path: Path) -> None:
@@ -655,8 +656,8 @@ def test_cli_exit_codes_distinguish_violations_from_failures(tmp_path: Path) -> 
     runner = CliRunner()
     assert runner.invoke(cli, ["check", "-w", str(tmp_path)]).exit_code == 1  # unresolved violations
     rules = tmp_path / "rules"
-    rules.mkdir()
-    (rules / "boom.py").write_text("""from devkit.rules.rules import BaseRule
+    (rules / "boom").mkdir(parents=True)
+    (rules / "boom/boom.py").write_text("""from devkit.rules.rules import BaseRule
 
 
 class Boom(BaseRule):

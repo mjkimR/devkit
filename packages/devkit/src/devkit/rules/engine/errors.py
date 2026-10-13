@@ -108,7 +108,7 @@ class SettingsError(PolicyError):
 
 
 class RuleLoadError(RuleProblem):
-    """A rule file could not be loaded, or the receipt lists a synchronized rule that cannot be used."""
+    """A rule package could not be loaded, or the receipt lists a synchronized rule that cannot be used."""
 
     code = "RULES_LOAD_FAILED"
 

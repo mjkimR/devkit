@@ -81,7 +81,7 @@ class GateTemplateNotice(GateError):
 
 
 class GateLoadError(GateError):
-    """A deployed gate file fails to import or to instantiate its gates, or two gates share an ``id``."""
+    """A deployed gate package fails to import or to instantiate its gates, or two gates share an ``id``."""
 
     code = "GATE_LOAD_FAILED"
 

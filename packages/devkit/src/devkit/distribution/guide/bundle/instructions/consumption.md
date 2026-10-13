@@ -75,8 +75,8 @@ work. Follow the entry skill rather than inferring the stage yourself.
 
 ## Rules and commit gates
 
-Synchronized rules are Python files listed in the receipt and load
-automatically:
+Synchronized rules are plugin packages whose files the receipt lists, and they
+load automatically:
 
 ```bash
 uv run devkit rules check                     # working tree, linter phase
@@ -87,7 +87,7 @@ uv run devkit rules explain <RULE-id>
 ```
 
 Configure a rule's severity, phase or settings in `[rules]` of
-`.devkit/config.toml`; the managed rule file is hash-checked. Gates work the
+`.devkit/config.toml`; the managed rule files are hash-checked. Gates work the
 same way through `devkit gate` and `[gates]`; per-clone gate settings go in
 `.git/devkit.config`, which lists every installed gate as a commented table
 (uncomment a table's header and only the keys you change: an uncommented key replaces

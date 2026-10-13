@@ -171,14 +171,15 @@ uv run devkit rules check --phase hygiene
 | `agent-guide-authoring` | `RULE-agent-guide-size`: an `AGENTS.md` or `CLAUDE.md` above `max_bytes` (8192 UTF-8 bytes), reporting the devkit guidance block's share ([guide](../../packages/devkit/src/devkit/rules/authoring/bundle/rules/agent_guide_size/agent_guide_size.md)) | `agent-guide-authoring`: what stays in an always-loaded guide (no structure trees; module specifics only as links), where the rest moves, per-host loading |
 
 Both remediations name the playbook and its `uv run devkit playbook search`
-query. The rule files are bundle assets loaded from the receipt, never imported
-from the package; their guides define the checked paths and settings.
+query. The rules are bundle assets (one plugin package directory each) loaded
+from the receipt, never imported from the package; their guides define the
+checked paths and settings.
 
 ## Library
 
 `run_project_rules` evaluates a project exactly as `devkit rules check` does: it
 reads the `[rules]` policy, registers the built-in rules, the receipt's rules and
-the files under `rules_dir`, builds the full `RuleContext` and evaluates.
+the plugin packages under `rules_dir`, builds the full `RuleContext` and evaluates.
 `load_project_rules(root, rules_dir)` is the loading half on its own: it returns
 a `ProjectRules` with the `config`, the `registry`, the settings `resolvers`,
 `load_errors` and `policy_errors`, without evaluating (`phases` and `explain`
@@ -217,9 +218,16 @@ themselves ([Rule Authoring Guide, section 5](rule-authoring.md#5-rule-sources-a
 
 ### Custom rules
 
-`--rules-dir path/to/rules` (`rules_dir`) loads the `BaseRule` subclasses
-defined in the Python files under it; loading order, skipped names and failure
-handling are in [Rule sources](rule-authoring.md#5-rule-sources-and-registration),
+`--rules-dir path/to/rules` (`rules_dir`) loads each immediate subdirectory
+as one plugin package: a directory holding the rule module, optional
+`__init__.py`, helper modules imported relatively, the guide, resources and
+tests, for example `rules/banned_words/banned_words.py` with
+`rules/banned_words/banned_words.md` beside it. A `.py` file directly in the
+directory is a `RULES_LOAD_FAILED` loading error whose fix moves it into
+`<rules-dir>/<name>/`. The package layout is in
+[Implementing a Custom Rule](rule-authoring.md#3-implementing-a-custom-rule-example);
+loading order, skipped names and failure handling are in
+[Rule sources](rule-authoring.md#5-rule-sources-and-registration),
 and the rule contract (settings, `guide`, autofix) in the
 [Rule Authoring Guide](rule-authoring.md#1-rule-protocols-and-contracts).
 
@@ -280,7 +288,7 @@ are returned in `RuleRegistry.errors`, `ProjectRun.load_errors` and
 | `RuleDefinitionError` | `RULES_DEFINITION_INVALID` | `MAINTENANCE` | a rule class declares an invalid `promote_to` (raised at construction) |
 | `PolicyError` | `RULES_POLICY_INVALID` | `INPUT_ERROR` | a phase or severity override or settings entry names an unknown rule or changes nothing (collected) |
 | `SettingsError` | `RULES_SETTINGS_INVALID` | `INPUT_ERROR`, or `MAINTENANCE` for a defect in the rule's settings declaration | settings do not type-check or `validate_settings` rejects them (collected; a `PolicyError`) |
-| `RuleLoadError` | `RULES_LOAD_FAILED` | `MAINTENANCE`; `AUTO` when missing | a rule file fails to load, or the receipt is malformed or lists a missing or drifted rule (collected; `fix` names `devkit sync`); a missing rule file (a fresh clone or worktree lacks the ignored managed copies) is `AUTO` with the fix `devkit sync` |
+| `RuleLoadError` | `RULES_LOAD_FAILED` | `MAINTENANCE`; `AUTO` when missing | a rule package fails to load (or a `.py` file sits directly in `--rules-dir`), or the receipt is malformed or lists a missing or drifted rule (collected; `fix` names `devkit sync`); a missing rule file (a fresh clone or worktree lacks the ignored managed copies) is `AUTO` with the fix `devkit sync` |
 | `RuleExecutionError` | `RULES_EXECUTION_FAILED` | `MAINTENANCE` | a rule raised while checking or fixing; `[TARGET]` is the file defining it (collected) |
 | `RulesRunError` | `RULES_RUN_FAILED` | `MAINTENANCE` | raised by `ProjectRun.raise_for_problems()` for callers that need one error for a failed run, such as the workflow engine's `lint-clean`; `problems` keeps the collected problems |
 

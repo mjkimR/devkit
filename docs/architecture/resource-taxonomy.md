@@ -128,9 +128,10 @@ An explicit invocation applies to the requested task, not to all future tasks in
 
 #### 7. `governance-rule`
 - **Role**: Invariants that can and must be 100% mechanically verified via parsing, regex, or static analysis.
-- **Consumption**: Evaluated out-of-band by `devkit.rules` during `just rules-check`, `devkit rules check`, `check --staged` from the `verify-commands` commit gate, or CI (`check --ci`). `devkit sync` records every deployed rule file in the installation receipt and `devkit rules` loads them from there; a consumer tunes a rule's phase, severity and typed settings in `[rules]` of `.devkit/config.toml`, never by editing the managed file.
+- **Consumption**: Evaluated out-of-band by `devkit.rules` during `just rules-check`, `devkit rules check`, `check --staged` from the `verify-commands` commit gate, or CI (`check --ci`). `devkit sync` records every deployed rule file in the installation receipt and `devkit rules` loads each asset from there as one plugin package; a consumer tunes a rule's phase, severity and typed settings in `[rules]` of `.devkit/config.toml`, never by editing the managed files.
+- **Format Requirements**: A plugin package directory: the rule module, optional `__init__.py`, helper modules imported relatively, the guide, resources and tests ([Rule Authoring](../rules/rule-authoring.md#3-implementing-a-custom-rule-example)).
 - **Token Budget**: Zero LLM context unless violations are reported. A rule may ship a Markdown guide that `devkit rules explain` prints on demand.
-- **Target Location**: `.devkit/managed/<bundle>/<source path>` (for example `rules/<category>/<rule>.py`).
+- **Target Location**: `.devkit/managed/<bundle>/<source path>` (for example `rules/<rule>/`).
 
 #### 8. `agent-skill`
 - **Role**: Reusable capability packaged as a tool directory containing a `SKILL.md` manifest, executable scripts (`0755`), references, and templates.
@@ -144,8 +145,8 @@ An explicit invocation applies to the requested task, not to all future tasks in
 - **Target Location**: Native agent persona directories; a contract itself stays under `.devkit/managed/<bundle>/`.
 
 #### 10. `workflow-check`
-- **Role**: A check evaluator for `devkit.workflow`: Python files defining `BaseCheck` subclasses that workflow definitions reference by name, like the built-in primitives.
-- **Consumption**: Loaded by `devkit workflow` from the receipt's `workflow-check` assets (and from the project's `[workflow] checks_dir`). See [Workflow Definitions and Checks](../workflow/definition-and-checks.md#plugin-checks).
+- **Role**: A check evaluator for `devkit.workflow`: a plugin package directory whose modules define `BaseCheck` subclasses that workflow definitions reference by name, like the built-in primitives.
+- **Consumption**: Loaded by `devkit workflow` from the receipt's `workflow-check` assets (and from the package directories under the project's `[workflow] checks_dir`). See [Workflow Definitions and Checks](../workflow/definition-and-checks.md#plugin-checks).
 - **Token Budget**: Zero LLM context; results appear as `[CHECK]` lines of `devkit workflow next`.
 - **Target Location**: `.devkit/managed/<bundle>/<source path>`.
 
@@ -153,7 +154,8 @@ An explicit invocation applies to the requested task, not to all future tasks in
 - **Role**: Policy enforced at Git's `pre-commit`, `commit-msg` or `post-commit` hook: what may be committed, how the message must look, and what happens after the commit exists.
 - **Consumption**: Run by `devkit.gate` through static hook wrappers that discover deployed gates from the installation receipt on every commit. Configured in `[gates]` of `.devkit/config.toml`, overridden per clone by `.git/devkit.config`. See [Commit Gate Overview](../gate/overview.md).
 - **Token Budget**: Zero LLM context; refusals are Agent Advisory Protocol errors.
-- **Target Location**: `.devkit/managed/<bundle>/<source path>` (for example `gates/<gate>.py`); manifest `kind = "gate"`.
+- **Format Requirements**: A plugin package directory whose modules define `BaseGate` subclasses.
+- **Target Location**: `.devkit/managed/<bundle>/<source path>` (for example `gates/<gate>/`); manifest `kind = "gate"`.
 
 ## 4. Placement Decision Matrix
 
@@ -258,8 +260,8 @@ Alternatives considered:
 | **`package-playbook`** | Guidance | Metadata and checklist (`playbooks/<slug>.md` or `playbooks/<slug>/SKILL.md`) | Explicit `devkit-playbook` invocation OR rule-triggered remediation, then search and selection | Bounded candidate headers; selected body only | `.devkit/managed/<bundle>/playbooks/` |
 | **`package-workflow`** | Guidance | Markdown definition with `stages` frontmatter | `devkit workflow next` via the `devkit-workflow` entry skill | Tagged CLI output per stage | `.devkit/managed/<bundle>/` (receipt `entrypoints`) |
 | **`package-document`** | Guidance | Any file or directory | Read by path; seeded once when `seeded = true` | Only when read | `.devkit/managed/<bundle>/`, or the seed `target` |
-| **`governance-rule`** | Mechanized | Python (`rules/*.py`) | Linters / `just rules-check` | **0 tokens** (pure code) | `.devkit/managed/<bundle>/rules/` |
+| **`governance-rule`** | Mechanized | Python package dir (`rules/<rule>/`) | Linters / `just rules-check` | **0 tokens** (pure code) | `.devkit/managed/<bundle>/rules/` |
 | **`agent-skill`** | Mechanized | Directory (`skills/<slug>/`) | Tool/function invocation | Tool registry metadata | Projected (`.agents/skills/`, etc.) |
 | **`agent-subagent`** | Mechanized | Native config (`agents/<slug>.{toml,md}`) or role contract (`subagents/<slug>.md`) | Subagent delegation | Persona config on load | Projected (`.codex/agents/`, `.claude/agents/`, `.agents/agents/`) |
-| **`workflow-check`** | Mechanized | Python (`BaseCheck` subclasses) | `devkit workflow` check evaluation | **0 tokens** (pure code) | `.devkit/managed/<bundle>/` |
-| **`git-commit-gate`** | Mechanized | Python (`gates/*.py`) | Git commit hooks | **0 tokens** (pure code) | `.devkit/managed/<bundle>/gates/` |
+| **`workflow-check`** | Mechanized | Python package dir (`BaseCheck` subclasses) | `devkit workflow` check evaluation | **0 tokens** (pure code) | `.devkit/managed/<bundle>/` |
+| **`git-commit-gate`** | Mechanized | Python package dir (`gates/<gate>/`) | Git commit hooks | **0 tokens** (pure code) | `.devkit/managed/<bundle>/gates/` |

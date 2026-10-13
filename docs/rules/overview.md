@@ -25,7 +25,7 @@ src/devkit/rules/
 │   ├── phases.py            # Effective phase resolution, overrides, promotions
 │   ├── policy.py            # validate_policy: phase, severity and settings policy in one pass
 │   ├── errors.py            # RulesError hierarchy: raised errors and collected RuleProblems with codes
-│   ├── registry.py          # RuleRegistry & default_rule_registry (plugin files via devkit.core.plugins)
+│   ├── registry.py          # RuleRegistry & default_rule_registry (plugin packages via devkit.core.plugins)
 │   └── evaluator.py         # Sequential rule evaluation, single autofix pass & convergence recheck
 ├── workspace/               # Shared file caching, Markdown file catalog and Git snapshots
 │   ├── cache.py             # WorkspaceCache (file discovery, bytes, text, frontmatter, links)
@@ -51,4 +51,4 @@ Library callers import the public API from `devkit.rules`; built-in rule classes
 
 ## 4. Shared Foundation
 
-`devkit.rules` builds on `devkit.core` and never re-implements it: frontmatter is parsed with `devkit.core.frontmatter` (the grammar the workflow engine reads), the installation receipt with `devkit.core.receipt`, Git commands run through `devkit.core.git.run_git`, snapshot paths are validated with `devkit.core.paths`, and rule files are loaded with `devkit.core.plugins` (atomic per file, classes in definition order). The CLI's default workspace root is `devkit.core.find_project_root` of the current directory.
+`devkit.rules` builds on `devkit.core` and never re-implements it: frontmatter is parsed with `devkit.core.frontmatter` (the grammar the workflow engine reads), the installation receipt with `devkit.core.receipt`, Git commands run through `devkit.core.git.run_git`, snapshot paths are validated with `devkit.core.paths`, and rule packages are loaded with `devkit.core.plugins` (atomic per package, classes in module then definition order). The CLI's default workspace root is `devkit.core.find_project_root` of the current directory.

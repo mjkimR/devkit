@@ -9,12 +9,12 @@ from devkit.gate.engine.models import GateContext, GateResult, Stage
 
 @dataclass
 class BaseGate(ABC):
-    """Base class for gates; deployed gate files are scanned for its concrete subclasses.
+    """Base class for gates; deployed gate packages are scanned for its concrete subclasses.
 
     Subclasses take no constructor arguments, pass their metadata to
     ``super().__init__`` (as ``devkit.rules.rules.BaseRule`` subclasses do) and
     implement ``run``. A class that leaves ``run`` abstract is a shared base,
-    not a gate, and is skipped when a gate file is loaded.
+    not a gate, and is skipped when a gate package is loaded.
     """
 
     id: str

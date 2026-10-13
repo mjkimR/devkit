@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from pathlib import Path
 
-from devkit.core import iter_plugin_files, load_subclasses
+from devkit.core import PluginFailure, PluginPackage, iter_plugin_packages, load_subclasses
 from devkit.rules.engine.errors import RuleLoadError, RuleProblem
 from devkit.rules.engine.models import Rule
 from devkit.rules.rules import (
@@ -37,33 +37,42 @@ class RuleRegistry:
         return list(self._rules.values())
 
     def discover_from_dir(self, rules_dir: Path) -> list[Rule]:
-        """Load rules from every Python file under a directory, in sorted path order.
+        """Load rules from every plugin package under a directory, in sorted order.
 
-        Files and directories whose name starts with ``_`` or ``.`` are skipped
-        (``devkit.core.plugins.iter_plugin_files``).
+        Each immediate subdirectory not starting with ``_`` or ``.`` is one
+        package; a ``.py`` file directly in ``rules_dir`` is a ``RuleLoadError``
+        telling to move it into a package directory
+        (``devkit.core.plugins.iter_plugin_packages``).
         """
-        return self.discover_from_files(iter_plugin_files(rules_dir))
+        packages, failures = iter_plugin_packages(rules_dir)
+        self._record(failures)
+        return self.discover_from_packages(packages)
 
-    def discover_from_files(self, files: Iterable[Path]) -> list[Rule]:
-        """Load the ``BaseRule`` subclasses defined in each of the given Python files, in order.
+    def discover_from_packages(self, packages: Iterable[PluginPackage]) -> list[Rule]:
+        """Load the ``BaseRule`` subclasses defined in each plugin package, in order.
 
-        Every given file is loaded, whatever its name. Loading is atomic per file (``devkit.core.plugins``):
-        a file that fails to import or whose classes cannot be instantiated
+        Loading is atomic per package (``devkit.core.plugins``): a package
+        that fails to import or whose classes cannot be instantiated
         contributes no rule, and the failure is recorded in ``errors`` as a
-        ``RuleLoadError`` (``RULES_LOAD_FAILED``) naming the file.
+        ``RuleLoadError`` (``RULES_LOAD_FAILED``) naming the package.
         """
-        loaded = load_subclasses(files, BaseRule, namespace=PLUGIN_NAMESPACE)
+        loaded = load_subclasses(packages, BaseRule, namespace=PLUGIN_NAMESPACE)
         discovered: list[Rule] = []
         for instance in loaded.instances:
             self.register(instance)
             discovered.append(instance)
+        self._record(loaded.errors)
+        return discovered
+
+    def _record(self, failures: Iterable[PluginFailure]) -> None:
         self.errors.extend(
             RuleLoadError(
-                f"Failed to load rule from {failure.path}: {failure.message}", target_files=[str(failure.path)]
+                f"Failed to load rule package {failure.path}: {failure.message}",
+                target_files=[str(failure.path)],
+                fix=failure.fix,
             )
-            for failure in loaded.errors
+            for failure in failures
         )
-        return discovered
 
 
 def default_rule_registry() -> RuleRegistry:

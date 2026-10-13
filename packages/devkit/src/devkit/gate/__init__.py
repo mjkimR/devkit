@@ -12,7 +12,7 @@ from devkit.gate.engine.registry import (
     DeployedGates,
     GateRegistry,
     default_gate_registry,
-    deployed_gate_paths,
+    deployed_gate_packages,
     project_registry,
 )
 from devkit.gate.engine.runner import (
@@ -66,7 +66,7 @@ __all__ = [
     "StageReport",
     "Validation",
     "default_gate_registry",
-    "deployed_gate_paths",
+    "deployed_gate_packages",
     "load_gate_project",
     "load_gates_config",
     "project_registry",

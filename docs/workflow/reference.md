@@ -87,7 +87,7 @@ unit_path = "{slug}"                  # str.format template; {slug} and {date:<s
 anchor = "task.md"                    # file that identifies a unit and carries the binding
 definitions_dir = ".devkit/workflows" # workflow definition files
 roles_dir = ".devkit/roles"           # project-authored subagent contracts, <role>.md
-checks_dir = ".devkit/workflow-checks" # project-authored plugin checks, *.py
+checks_dir = ".devkit/workflow-checks" # project-authored plugin checks, one package directory each
 default = "direct-delivery"           # used by `new` and by unbound units
 
 [workflow.approvals]

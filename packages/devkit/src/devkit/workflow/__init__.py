@@ -85,7 +85,7 @@ from devkit.workflow.evaluation.results import Delegate, Drift, GateStatus, Skip
 from devkit.workflow.handoff import CandidateResult, Handoff, HandoffOutcome, HandoffPlan, apply_handoff, plan_handoff
 from devkit.workflow.project.config import WorkflowConfig, load_workflow_config
 from devkit.workflow.project.layout import LayoutSpec, TemplateLayout, parse_layout_spec, validate_template
-from devkit.workflow.project.plugins import BaseCheck, CheckContext, load_check_files, load_plugin_checks
+from devkit.workflow.project.plugins import BaseCheck, CheckContext, load_check_packages, load_plugin_checks
 from devkit.workflow.project.roles import discover_roles
 from devkit.workflow.render import render_document, render_evaluation, render_requests
 from devkit.workflow.unit.binding import AnchorState, Binding, HistoryEntry, read_anchor, read_binding, write_binding
@@ -198,7 +198,7 @@ __all__ = [
     "is_ancestor",
     "lint_with_rules",
     "list_units",
-    "load_check_files",
+    "load_check_packages",
     "load_decisions",
     "load_definition",
     "load_definition_dir",

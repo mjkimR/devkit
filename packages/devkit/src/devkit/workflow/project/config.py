@@ -48,7 +48,7 @@ class WorkflowConfig:
     anchor: str = DEFAULT_ANCHOR
     definitions_dir: str = DEFAULT_DEFINITIONS_DIR
     roles_dir: str = DEFAULT_ROLES_DIR  # project-authored subagent contracts, <role>.md
-    checks_dir: str = DEFAULT_CHECKS_DIR  # project-authored plugin checks, *.py
+    checks_dir: str = DEFAULT_CHECKS_DIR  # project-authored plugin checks, one package directory each
     default: str | None = None
     approvals: dict[str, str] = field(default_factory=dict)
     stages: dict[str, str] = field(default_factory=dict)

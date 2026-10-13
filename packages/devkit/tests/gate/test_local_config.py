@@ -58,7 +58,9 @@ def test_post_sync_appends_only_new_gates(repo: Path) -> None:
     path = _config(repo)
     before = path.read_text().rstrip("\n")  # a file without a final newline still gets a separated table
     path.write_text(before)
-    deploy_gate(repo, gate_source("second-gate", enabled=False, cls="SecondGate"), ".devkit/managed/team/gates/two.py")
+    deploy_gate(
+        repo, gate_source("second-gate", enabled=False, cls="SecondGate"), ".devkit/managed/team/gates/two/gate.py"
+    )
 
     assert local_config.post_sync(repo, {}) is None
     text = path.read_text()

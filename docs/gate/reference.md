@@ -12,7 +12,7 @@ uv run devkit gate status       # hooks, gates with effective state, configurati
 
 uv add --dev <content-wheel>          # adding gates from a content wheel
 uv run devkit add <bundle>:<preset>   # a preset that includes the bundle's gate assets (not needed when the default preset of an auto-selected bundle has them)
-uv run devkit sync                    # deploys the gate files and records them in the receipt
+uv run devkit sync                    # deploys the gate packages and records their files in the receipt
 ```
 
 Existing executable hooks are kept: `install --force` moves them to `<hook>.pre-gate` and the wrapper runs them before the gates; `git commit --no-verify` skips `pre-commit` and `commit-msg`. See [Hook Wrappers](overview.md#3-hook-wrappers).
@@ -49,7 +49,7 @@ Every gate error derives from `GateError` (`devkit.gate.errors`), which sets `ac
 | --- | --- | --- | --- | --- |
 | `GATE_FAILED` | `GateRefusedError` | `BLOCKED` | `1` | default code of a gate refusal; gates pass their own (`GATE_MESSAGE_EMPTY`, `GATE_VERIFY_FAILED`, ...) |
 | `GATE_CONFIG_INVALID` | `GateConfigError` (also a `devkit.core.ConfigError`) | `INPUT_ERROR` | `2` | invalid `[gates]` table or settings, a configured gate that is not installed |
-| `GATE_LOAD_FAILED` | `GateLoadError` | `MAINTENANCE` | `2` | a deployed gate file fails to import or to instantiate its gates, or two gates share an id |
+| `GATE_LOAD_FAILED` | `GateLoadError` | `MAINTENANCE` | `2` | a deployed gate package fails to import or to instantiate its gates, or two gates share an id |
 | `GATE_DEFINITION_INVALID` | `GateDefinitionError` | `MAINTENANCE` | `2` | a gate declares an unusable `id`, `stage`, `order` (reported inside its file's load failure) or settings declaration, or uses `ctx.message_file` outside `commit-msg` |
 | `GATE_RESULT_INVALID` | `GateResultError` | `MAINTENANCE` | `2` | a gate built a `FAILED` `GateResult` or returned something other than a `GateResult` or `None` |
 | `GATE_PYTHON_INVALID` | `GatePythonError` | `INPUT_ERROR` | `2` | `install --python` names an interpreter that cannot import `devkit.gate` |

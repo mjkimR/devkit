@@ -51,7 +51,7 @@ class NoTodoRule(BaseRule):
         )
 ```
 
-`promote_to` is only valid as `Phase.LINTER` on a `Phase.HYGIENE` rule; any other combination raises `RuleDefinitionError` (`RULES_DEFINITION_INVALID`) at construction, which makes the rule file a loading error. How the pending promotion is reported: [Evaluation Lifecycle, section 4](evaluation-lifecycle.md#rule-promotions-promote_to).
+`promote_to` is only valid as `Phase.LINTER` on a `Phase.HYGIENE` rule; any other combination raises `RuleDefinitionError` (`RULES_DEFINITION_INVALID`) at construction, which makes the rule package a loading error. How the pending promotion is reported: [Evaluation Lifecycle, section 4](evaluation-lifecycle.md#rule-promotions-promote_to).
 
 ### Optional `settings` and `validate_settings`
 
@@ -86,7 +86,7 @@ class FileLengthRule(BaseRule):
 
 ### Optional `guide`
 
-`guide` names a Markdown file relative to the module that defines the rule class. `devkit rules explain <RULE-id>` prints it and violation output cites its path, so the full remediation need not travel in every message. Built-in guides live next to their rules (for example `rules/hygiene/file_length.md`).
+`guide` names a Markdown file relative to the module that defines the rule class. `devkit rules explain <RULE-id>` prints it and violation output cites its path, so the full remediation need not travel in every message. Built-in guides live next to their rules (for example `rules/hygiene/file_length.md`); a plugin rule's guide lives in its package directory, next to the module defining the class.
 
 ### The `Autofixable` Protocol
 
@@ -117,11 +117,37 @@ Rules read files through `ctx.cache`, not direct disk I/O:
 
 ## 3. Implementing a Custom Rule Example
 
-This rule requires Markdown files under `docs/` to begin with a level 1 heading. As a `BaseRule` subclass it works both with `--rules-dir` and as a bundle's `kind = "rule"` asset:
+A custom rule is a **plugin package**: a directory holding the rule module, any helper modules, the rule's guide, resources and tests. The same directory works with `--rules-dir` and as a bundle's `kind = "rule"` asset:
+
+```text
+rules/
+  doc_heading/
+    __init__.py          # optional: runs first as the package module when present
+    doc_heading.py       # the rule class
+    headings.py          # helper module, imported relatively
+    doc_heading.md       # the guide (guide="doc_heading.md")
+    tests/
+      test_headings.py   # tests beside the code; never imported by devkit
+```
+
+Every `.py` file of the directory, recursively, is a module of one package, except files under a `tests` directory, `test_*.py` and `*_test.py` files, `__pycache__` and hidden entries. Modules import each other relatively (`from .headings import starts_with_h1`, `from .sub import x`), also lazily inside functions at run time; they cannot import a file that is not part of the package. Any other installed package (such as `devkit` itself) is imported absolutely.
+
+This rule requires Markdown files under `docs/` to begin with a level 1 heading. The helper module `headings.py`:
+
+```python
+def starts_with_h1(text: str) -> bool:
+    """Whether the first non-blank line of ``text`` is a level 1 heading."""
+    lines = text.strip().splitlines()
+    return bool(lines) and lines[0].startswith("# ")
+```
+
+The rule module `doc_heading.py`:
 
 ```python
 from devkit.rules import Phase, RuleContext, Severity, Violation
 from devkit.rules.rules import BaseRule
+
+from .headings import starts_with_h1
 
 
 class DocHeadingRule(BaseRule):
@@ -132,6 +158,7 @@ class DocHeadingRule(BaseRule):
             description="Markdown files under docs/ must begin with an H1 heading.",
             phase=Phase.LINTER,
             severity=Severity.ERROR,
+            guide="doc_heading.md",
         )
 
     def check(self, ctx: RuleContext) -> list[Violation]:
@@ -140,8 +167,7 @@ class DocHeadingRule(BaseRule):
             rel = path.relative_to(ctx.workspace_root).as_posix()
             if not ctx.is_file_targeted(rel):
                 continue
-            lines = ctx.cache.read_text(path).strip().splitlines()
-            if not lines or not lines[0].startswith("# "):
+            if not starts_with_h1(ctx.cache.read_text(path)):
                 violations.append(
                     Violation(
                         rule_id=self.id,
@@ -154,7 +180,7 @@ class DocHeadingRule(BaseRule):
         return violations
 ```
 
-Saved as `rules/doc_heading.py`, it runs with `devkit rules check --rules-dir rules`.
+Saved as `rules/doc_heading/`, it runs with `devkit rules check --rules-dir rules`. Tests under `rules/doc_heading/tests/` import the modules by whatever means the project's test runner provides; devkit never imports them.
 
 ## 4. Built-in Rules
 
@@ -165,10 +191,10 @@ Built-in rules (`devkit.rules.rules`, catalog in the [Rules Reference](reference
 `devkit rules` and `run_project_rules` load rules from three sources, in order; a rule with the same ID as an earlier one replaces it:
 
 1. The built-in registry.
-2. Every `.py` file listed under the `entrypoints` and `paths` of a `kind = "rule"` asset recorded by `devkit sync` in `.devkit/installation.json`, whatever its name; `devkit sync` deploys them under `.devkit/managed/<bundle>/`, and an override under `.devkit/overrides/` replaces the managed copy. Each file is verified as commit gate files are (`devkit.core.verified_asset_files`), in a plain run and in a Git snapshot alike: a file with a `files` entry in the receipt must match its SHA-256, and only a project override under `.devkit/overrides/` may lack one and is then loaded as it is. A listed file that does not exist, cannot be read, resolves outside the project, has no recorded hash outside `.devkit/overrides/` or differs from its hash is a loading error (`RULES_LOAD_FAILED`, exit code 2), not a silent skip: `devkit sync` restores the managed copy, and `devkit override create <bundle>:<asset>` keeps a deliberate edit as a project override. A project configures these rules only through `[rules]` in `.devkit/config.toml`.
-3. `--rules-dir` (`rules_dir`): the Python files under it, in sorted path order; files and directories whose name starts with `_` or `.` are skipped (only this scan skips them).
+2. Every `kind = "rule"` asset recorded by `devkit sync` in `.devkit/installation.json`, each one plugin package. A bundle declares the asset's `source` as the package directory (`BUNDLE_INVALID` for a file); `devkit sync` deploys it under `.devkit/managed/<bundle>/`, and a project override under `.devkit/overrides/<bundle>/` replaces the managed copy of each file it overrides, so one package may mix overridden and managed modules. Every module file listed under the asset's `paths` (whatever its name, test files excepted) is verified as commit gate files are (`devkit.core.verified_asset_packages`), in a plain run and in a Git snapshot alike: a file with a `files` entry in the receipt must match its SHA-256, and only a project override under `.devkit/overrides/` may lack one and is then loaded as it is. A listed file that does not exist, cannot be read, resolves outside the project, has no recorded hash outside `.devkit/overrides/` or differs from its hash is a loading error (`RULES_LOAD_FAILED`, exit code 2), not a silent skip, and its package is not loaded: `devkit sync` restores the managed copy, and `devkit override create <bundle>:<asset>` keeps a deliberate edit as a project override. A project configures these rules only through `[rules]` in `.devkit/config.toml`.
+3. `--rules-dir` (`rules_dir`): each immediate subdirectory is one plugin package, in sorted order; subdirectories whose name starts with `_` or `.`, and a `tests` directory, are skipped. A `.py` file directly in the directory is a loading error (`RULES_LOAD_FAILED`) whose fix moves it into `<rules-dir>/<name>/`.
 
-Rule files are loaded with `devkit.core.plugins`: classes in definition order, imported classes ignored, every `BaseRule` subclass instantiated without arguments. A file that fails to import, or whose rule classes cannot be instantiated, contributes no rule and is a loading error. Rule files are executable Python and should come from a trusted source.
+Rule packages are loaded with `devkit.core.plugins`: every module of the package is imported (the package module first, then its submodules in sorted order), and every concrete `BaseRule` subclass defined in one of them is instantiated without arguments, in module then definition order; classes imported from elsewhere are ignored and a class re-exported by another module of the package counts once. Loading is atomic per package: a package any module of which fails to import, or whose rule classes cannot be instantiated, contributes no rule and is one loading error naming the package. Rule packages are executable Python and should come from a trusted source.
 
 Registering and evaluating by hand:
 
@@ -177,9 +203,9 @@ from pathlib import Path
 from devkit.rules import RuleContext, RuleRegistry, evaluate_rules, resolve_managed_rules
 
 registry = RuleRegistry()
-registry.register(DocHeadingRule())
-managed = resolve_managed_rules(Path("."))                   # rules synchronized by devkit
-registry.discover_from_files(managed.paths)                   # managed.errors: RuleLoadError per malformed receipt or missing entry
+managed = resolve_managed_rules(Path("."))                    # rules synchronized by devkit
+registry.discover_from_packages(managed.packages)              # managed.errors: RuleLoadError per malformed receipt or unusable file
+registry.discover_from_dir(Path("rules"))                      # registry.errors: RuleLoadError per package that fails to load
 
 ctx = RuleContext(workspace_root=Path("."))
 result = evaluate_rules(ctx, registry.get_all())

@@ -22,7 +22,7 @@ from devkit.gate import (
     Outcome,
     Stage,
     default_gate_registry,
-    deployed_gate_paths,
+    deployed_gate_packages,
     project_registry,
     run_stage,
     validate_gates,
@@ -40,19 +40,19 @@ def _save_receipt(root: Path, data: dict) -> None:
     (root / ".devkit/installation.json").write_text(json.dumps(data))
 
 
-def test_deployed_gate_paths_reads_gate_assets_only(tmp_path: Path) -> None:
+def test_deployed_gate_packages_reads_gate_assets_only(tmp_path: Path) -> None:
     deploy_gate(tmp_path, gate_source())
-    deploy_gate(tmp_path, gate_source("other", cls="OtherGate"), ".devkit/overrides/team/gates/other.py")
+    deploy_gate(tmp_path, gate_source("other", cls="OtherGate"), ".devkit/overrides/team/gates/other/gate.py")
     data = _receipt(tmp_path)
     data["assets"][:0] = [
         {"bundle": "team", "id": "r", "kind": "rule", "paths": [".devkit/managed/team/rules/r.py"]},
         {"bundle": "team", "id": "gone", "kind": "gate", "paths": ["gone.py", "README.md"]},
     ]
     _save_receipt(tmp_path, data)
-    deployed = deployed_gate_paths(tmp_path)
-    assert [p.relative_to(tmp_path).as_posix() for p in deployed.paths] == [
-        ".devkit/managed/team/gates/block.py",
-        ".devkit/overrides/team/gates/other.py",
+    deployed = deployed_gate_packages(tmp_path)
+    assert [{n: p.relative_to(tmp_path).as_posix() for n, p in pkg.modules.items()} for pkg in deployed.packages] == [
+        {"gate": ".devkit/managed/team/gates/block/gate.py"},
+        {"gate": ".devkit/overrides/team/gates/other/gate.py"},
     ]
     assert [(e.code, e.message) for e in deployed.errors] == [("ASSET_FILE_INVALID", "gone.py is missing")]
     # A missing file is restored by a sync (a fresh clone or worktree lacks the ignored managed copies): AUTO.
@@ -61,20 +61,35 @@ def test_deployed_gate_paths_reads_gate_assets_only(tmp_path: Path) -> None:
 
 
 def test_receipt_listed_gate_files_load_whatever_their_name(tmp_path: Path) -> None:
-    deploy_gate(tmp_path, gate_source("private-gate"), ".devkit/managed/team/gates/_private.py")
-    deployed = deployed_gate_paths(tmp_path)
-    assert [p.name for p in deployed.paths] == ["_private.py"] and deployed.errors == ()
+    deploy_gate(tmp_path, gate_source("private-gate"), ".devkit/managed/team/gates/private/_private.py")
+    deployed = deployed_gate_packages(tmp_path)
+    assert [list(p.modules) for p in deployed.packages] == [["_private"]] and deployed.errors == ()
     assert project_registry(tmp_path).get("private-gate") is not None
+
+
+def test_a_gate_package_imports_its_own_modules_relatively(tmp_path: Path) -> None:
+    deploy_gate(tmp_path, "GATE_ID = 'split-gate'\n", ".devkit/managed/team/gates/split/ids.py")
+    source = gate_source("placeholder").replace('id="placeholder"', "id=GATE_ID")
+    deploy_gate(tmp_path, "from .ids import GATE_ID\n" + source, ".devkit/managed/team/gates/split/gate.py")
+    data = _receipt(tmp_path)  # deploy_gate records one asset per call: merge them into the package's one asset
+    first, second = data["assets"]
+    data["assets"] = [{**first, "paths": first["paths"] + second["paths"]}]
+    _save_receipt(tmp_path, data)
+    deployed = deployed_gate_packages(tmp_path)
+    assert [sorted(p.modules) for p in deployed.packages] == [["gate", "ids"]]
+    registry = project_registry(tmp_path)
+    assert registry.get("split-gate") is not None and registry.errors == []
+    assert registry.sources["split-gate"] == ".devkit/managed/team/gates/split/gate.py"
 
 
 def test_gate_files_are_checked_against_the_receipt_hash(tmp_path: Path) -> None:
     deploy_gate(tmp_path, gate_source())
-    assert len(deployed_gate_paths(tmp_path).paths) == 1
+    assert len(deployed_gate_packages(tmp_path).packages) == 1
 
-    path = tmp_path / ".devkit/managed/team/gates/block.py"
+    path = tmp_path / ".devkit/managed/team/gates/block/gate.py"
     path.write_text(gate_source() + "\n# edited by hand\n")
-    deployed = deployed_gate_paths(tmp_path)
-    assert deployed.paths == () and "differs from the hash in the receipt" in deployed.errors[0].message
+    deployed = deployed_gate_packages(tmp_path)
+    assert deployed.packages == () and "differs from the hash in the receipt" in deployed.errors[0].message
     assert deployed.errors[0].fix is not None and "devkit override create team:block" in deployed.errors[0].fix
     registry = project_registry(tmp_path)
     assert registry.get("team-block") is None and registry.errors
@@ -86,8 +101,8 @@ def test_unsafe_receipt_paths_are_rejected(tmp_path: Path, unsafe: str) -> None:
     data = _receipt(tmp_path)
     data["assets"][0]["paths"] = [unsafe]
     _save_receipt(tmp_path, data)
-    deployed = deployed_gate_paths(tmp_path)
-    assert deployed.paths == () and deployed.errors[0].code == "RECEIPT_INVALID"
+    deployed = deployed_gate_packages(tmp_path)
+    assert deployed.packages == () and deployed.errors[0].code == "RECEIPT_INVALID"
 
 
 def test_gate_file_symlinked_outside_the_project_is_rejected(tmp_path: Path) -> None:
@@ -95,23 +110,23 @@ def test_gate_file_symlinked_outside_the_project_is_rejected(tmp_path: Path) -> 
     outside.write_text(gate_source())
     root = tmp_path / "project"
     deploy_gate(root, gate_source())
-    link = root / ".devkit/managed/team/gates/block.py"
+    link = root / ".devkit/managed/team/gates/block/gate.py"
     link.unlink()
     link.symlink_to(outside)
-    deployed = deployed_gate_paths(root)
-    assert deployed.paths == () and "unsafe" in deployed.errors[0].message
+    deployed = deployed_gate_packages(root)
+    assert deployed.packages == () and "unsafe" in deployed.errors[0].message
 
 
 def test_project_registry_loads_gates_and_reports_problems(tmp_path: Path) -> None:
-    assert deployed_gate_paths(tmp_path).paths == ()
+    assert deployed_gate_packages(tmp_path).packages == ()
     deploy_gate(tmp_path, gate_source())
-    deploy_gate(tmp_path, "raise RuntimeError('boom')\n", ".devkit/managed/team/gates/broken.py")
-    deploy_gate(tmp_path, gate_source("message-nonempty", cls="Dup"), ".devkit/managed/team/gates/dup.py")
+    deploy_gate(tmp_path, "raise RuntimeError('boom')\n", ".devkit/managed/team/gates/broken/gate.py")
+    deploy_gate(tmp_path, gate_source("message-nonempty", cls="Dup"), ".devkit/managed/team/gates/dup/gate.py")
     registry = project_registry(tmp_path)
     assert [g.id for g in registry.get_all()] == ["team-block", "verify-commands", "message-nonempty"]
-    assert registry.sources["team-block"] == ".devkit/managed/team/gates/block.py"
+    assert registry.sources["team-block"] == ".devkit/managed/team/gates/block/gate.py"
     messages = [e.message for e in registry.errors]
-    assert any("failed to load gate file .devkit/managed/team/gates/broken.py: boom" in m for m in messages)
+    assert any("failed to load gate package .devkit/managed/team/gates/broken: boom" in m for m in messages)
     assert any("duplicate gate id 'message-nonempty'" in m for m in messages)
     assert all(isinstance(e, GateLoadError) and e.code == "GATE_LOAD_FAILED" for e in registry.errors)
 

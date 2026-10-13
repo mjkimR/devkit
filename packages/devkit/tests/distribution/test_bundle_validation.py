@@ -225,3 +225,33 @@ def test_unwritable_output_directory_is_an_argument_error(small: Bundle, tmp_pat
             build_bundle(small, locked / "a.zip")
     finally:
         locked.chmod(0o700)
+
+
+@pytest.mark.parametrize("kind", ["rule", "gate", "workflow-check"])
+def test_plugin_assets_must_be_package_directories(tmp_path: Path, kind: str) -> None:
+    manifest = f'[[assets]]\nid = "p"\nkind = "{kind}"\nsource = "plugins/p.py"\n'
+    with pytest.raises(BundleError, match=f"a {kind} asset's source must be a plugin package directory") as info:
+        load(tmp_path / "file", manifest, {"plugins/p.py": "X = 1\n"})
+    assert info.value.fix is not None and "plugins/p/" in info.value.fix
+
+    package = f'[[assets]]\nid = "p"\nkind = "{kind}"\nsource = "plugins/p"\n'
+    bundle = load(
+        tmp_path / "dir",
+        package,
+        {"plugins/p/main.py": "from .helpers import X\n", "plugins/p/helpers.py": "X = 1\n", "plugins/p/p.md": "# P\n"},
+    )
+    assert dict(bundle.assets[0].sources) == {"common": "plugins/p"}
+
+
+@pytest.mark.parametrize(
+    ("files", "problem"),
+    [
+        ({"p/guide.md": "# only a guide\n", "p/tests/test_x.py": ""}, "contains no Python module"),
+        ({"p/my-helper.py": ""}, "not an importable module name"),
+        ({"p/a.py": "", "p/a/__init__.py": ""}, "both define module a"),
+        ({"p/a.py": "", "p/a/b.py": ""}, "both define module a"),
+    ],
+)
+def test_plugin_package_modules_must_be_importable(tmp_path: Path, files: dict[str, str], problem: str) -> None:
+    with pytest.raises(BundleError, match=problem):
+        load(tmp_path / "b", '[[assets]]\nid = "p"\nkind = "rule"\nsource = "p"\n', files)

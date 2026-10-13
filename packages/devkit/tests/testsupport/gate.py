@@ -10,7 +10,7 @@ from pathlib import Path
 
 from devkit.gate import GateContext, Stage
 
-# A deployed gate file: refuses every commit unless its ``allow`` setting is on.
+# A deployed gate package's module: refuses every commit unless its ``allow`` setting is on.
 GATE = """from dataclasses import dataclass
 
 from devkit.gate import BaseGate, GateContext, GateRefusedError, GateResult, Stage
@@ -47,8 +47,11 @@ def git(repo: Path, *args: str, check: bool = True) -> subprocess.CompletedProce
     return subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True, check=check, env=env)
 
 
-def deploy_gate(repo: Path, source: str, rel: str = ".devkit/managed/team/gates/block.py") -> None:
-    """Write a gate file and list it in the receipt, with its hash under ``files`` unless it is a project override."""
+def deploy_gate(repo: Path, source: str, rel: str = ".devkit/managed/team/gates/block/gate.py") -> None:
+    """Write a gate package's one module and list it in the receipt as an asset named after its directory.
+
+    The file's hash is recorded under ``files`` unless it is a project override.
+    """
     path = repo / rel
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(source)
@@ -59,7 +62,7 @@ def deploy_gate(repo: Path, source: str, rel: str = ".devkit/managed/team/gates/
         else {"schema": 1, "packages": [], "selection": {"agents": [], "presets": {}}, "assets": [], "files": {}}
     )
     data["assets"].append(
-        {"bundle": "team", "id": path.stem.strip("_").replace("_", "-"), "kind": "gate", "paths": [rel]}
+        {"bundle": "team", "id": path.parent.name.strip("_").replace("_", "-"), "kind": "gate", "paths": [rel]}
     )
     if not rel.startswith(".devkit/overrides/"):
         data["files"][rel] = {"sha256": hashlib.sha256(source.encode()).hexdigest(), "mode": 420}

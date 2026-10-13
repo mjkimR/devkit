@@ -90,7 +90,17 @@ class Gate(Protocol):
 - **Ordering**: gates in a stage run by `(order, id)`. Message transforms use `order < 100`, checks default to `100`, and the built-in `message-nonempty` runs at `900` so it sees the transformed message. A `post-commit` gate that rewrites `HEAD` must take a low order so later gates observe the final commit.
 - **No short-circuit**: a failing gate does not stop later gates, so one commit attempt reports every refusal.
 
-Gate files are loaded like rule files, with `devkit.core.plugins.load_subclasses`: every concrete `BaseGate` subclass defined in the file is instantiated without arguments. `BaseGate` is abstract, so a shared base class that leaves `run` abstract is skipped. Loading is atomic per file: if any gate of a file fails to instantiate or has invalid metadata (`id`, `stage`, `order`; `GateDefinitionError`), the file contributes no gate and the failure is reported as `GATE_LOAD_FAILED`. A gate's `settings` dataclass fields may be `int`, `float`, `str`, `bool` or `list[str]`, each optionally `| None`: the type vocabulary and checker of rule settings (`devkit.rules.engine.settings`). Any other annotation is a defect of the gate (`GATE_DEFINITION_INVALID`, `MAINTENANCE`). A gate file may import from any package installed in the same environment, so a content wheel can keep its logic in a library module and ship only a thin gate file.
+A gate is written as a **plugin package**, a directory like a rule package ([Rule Authoring](../rules/rule-authoring.md#3-implementing-a-custom-rule-example)): every `.py` file in it is a module of one package (files under `tests/`, `test_*.py` and `*_test.py` excepted, so tests live beside the code), `__init__.py` is optional, and modules import each other relatively (`from .limits import max_files`). For example:
+
+```text
+gates/
+  staged_file_limit/
+    gate.py              # class StagedFileLimitGate(BaseGate)
+    limits.py            # helpers, imported as `from .limits import ...`
+    tests/test_limits.py # never imported by devkit
+```
+
+Gate packages are loaded like rule packages, with `devkit.core.plugins.load_subclasses`: every module of the package is imported and every concrete `BaseGate` subclass defined in one of them is instantiated without arguments, in module then definition order. `BaseGate` is abstract, so a shared base class that leaves `run` abstract is skipped. Loading is atomic per package: if any module fails to import, or any gate of the package fails to instantiate or has invalid metadata (`id`, `stage`, `order`; `GateDefinitionError`), the package contributes no gate and the failure is reported as `GATE_LOAD_FAILED` naming the package. A gate's `settings` dataclass fields may be `int`, `float`, `str`, `bool` or `list[str]`, each optionally `| None`: the type vocabulary and checker of rule settings (`devkit.rules.engine.settings`). Any other annotation is a defect of the gate (`GATE_DEFINITION_INVALID`, `MAINTENANCE`). A gate package may import from any package installed in the same environment, so a content wheel can keep its logic in a library module and ship only a thin gate package.
 
 ## 5. Distribution
 
@@ -100,13 +110,13 @@ A bundle declares a gate as an asset:
 [[assets]]
 id = "staged-file-limit"
 kind = "gate"
-source = "gates/staged_file_limit.py"
+source = "gates/staged_file_limit"     # a plugin package directory; a file is BUNDLE_INVALID
 
 [presets.commit]
 assets = ["staged-file-limit"]
 ```
 
-`devkit sync` copies the selected gate files to `.devkit/managed/<bundle>/` (or uses the project override under `.devkit/overrides/<bundle>/`) and records them in `.devkit/installation.json`. At commit time the registry reads the receipt with `devkit.core.receipt` (strict: a malformed receipt or an unsafe path is an error) and loads every `.py` file of every `kind = "gate"` asset (`entrypoints` then `paths`), whatever its name. Files are found and checked with `devkit.core.verified_asset_files`, as for rule files and workflow plugin checks: a file with a `files` entry in the receipt must match its SHA-256; only a project override under `.devkit/overrides/` may lack one and is then loaded as it is; any other file without one is refused.
+`devkit sync` copies the selected gate packages to `.devkit/managed/<bundle>/` (a project override under `.devkit/overrides/<bundle>/` replaces the managed copy of each file it overrides) and records their files in `.devkit/installation.json`. At commit time the registry reads the receipt with `devkit.core.receipt` (strict: a malformed receipt or an unsafe path is an error) and loads every `kind = "gate"` asset as one package whose modules are its listed `.py` files, whatever their names (test files excepted). Packages are found and their files checked with `devkit.core.verified_asset_packages`, as for rule packages and workflow plugin checks: a file with a `files` entry in the receipt must match its SHA-256; only a project override under `.devkit/overrides/` may lack one and is then loaded as it is; any other file without one is refused, and a package with a refused file is not loaded.
 
 | State | Effect at commit time |
 | --- | --- |
@@ -114,7 +124,7 @@ assets = ["staged-file-limit"]
 | Bundle selected, synchronized | Gate loaded; runs if enabled |
 | Receipt lists a gate file the disk lacks, or the file differs from its recorded hash | Blocking stages fail with `ASSET_FILE_INVALID` (the core error, passed through); fix `devkit sync`, or `devkit override create <bundle>:<asset>` to keep a deliberate edit |
 | Receipt is malformed or lists a path outside the project | Blocking stages fail with `RECEIPT_INVALID` (restore the receipt from version control, then `devkit sync`) |
-| Gate file fails to import, or two gates share an id | Blocking stages fail with `GATE_LOAD_FAILED` |
+| Gate package fails to import, or two gates share an id | Blocking stages fail with `GATE_LOAD_FAILED` |
 
 ## 6. Configuration Layers
 
@@ -187,7 +197,7 @@ uncommented key replaces the `.devkit/config.toml` value as a whole (an array to
 - **Refresh**: `install` (safe to re-run) prints `[CONFIG: template=<created|updated|unchanged|skipped> path=<path>]`.
   After every writing sync, the `devkit.post_sync` hook `gate-config-template` does the same for a repository whose
   wrappers are installed, so a gate that `devkit add` or an upgrade brings in appears without another `install`. The
-  hook imports the receipt's gate files to read their settings, as every commit already does, and reports nothing
+  hook imports the receipt's gate packages to read their settings, as every commit already does, and reports nothing
   unless it skips.
 - **Skipped**: a `devkit.config` that is a symbolic link, not a regular file or not UTF-8 is never written; nor is
   one whose tables would need a `.devkit/config.toml` with a `[gates]` table that cannot be read or parsed. `install`

@@ -1,16 +1,17 @@
-"""Plugin checks: evaluators loaded from Python files a bundle or the project provides.
+"""Plugin checks: evaluators loaded from plugin packages a bundle or the project provides.
 
-A plugin check is a ``BaseCheck`` subclass defined in a ``.py`` file that is
-either recorded in the installation receipt under a ``kind = "workflow-check"``
-asset (synchronized by ``devkit sync``) or placed under the project's
-``[workflow] checks_dir``. Loaded checks join the registry with class
-``plugin`` and are referenced from definitions like any primitive:
-``name`` or ``name(arg ...)`` with the parameters the check declares.
+A plugin check is a ``BaseCheck`` subclass defined in a module of a plugin
+package (``devkit.core.plugins``): a directory that is either recorded in the
+installation receipt as a ``kind = "workflow-check"`` asset (synchronized by
+``devkit sync``) or an immediate subdirectory of the project's ``[workflow]
+checks_dir``. Loaded checks join the registry with class ``plugin`` and are
+referenced from definitions like any primitive: ``name`` or ``name(arg ...)``
+with the parameters the check declares.
 
-Loading is atomic per file (``devkit.core.plugins.load_subclasses``): a file
-that fails to import, declares an invalid check or redefines a name already
-loaded contributes nothing. Plugin files are executable Python and must come
-from a trusted source, exactly like custom rules of ``devkit.rules``.
+Loading is atomic per package (``devkit.core.plugins.load_subclasses``): a
+package that fails to import, declares an invalid check or redefines a name
+already loaded contributes nothing. Plugin packages are executable Python and
+must come from a trusted source, exactly like custom rules of ``devkit.rules``.
 """
 
 from __future__ import annotations
@@ -19,8 +20,8 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
-from devkit.core.plugins import iter_plugin_files, load_subclasses
-from devkit.core.receipt import Receipt, load_receipt, verified_asset_files
+from devkit.core.plugins import PluginFailure, PluginPackage, iter_plugin_packages, load_subclasses
+from devkit.core.receipt import Receipt, load_receipt, verified_asset_packages
 from devkit.workflow.definition.checks import Check, CheckClass, CheckResult
 from devkit.workflow.definition.ids import IDENT_HINT, is_ident
 from devkit.workflow.errors import PluginError
@@ -80,65 +81,74 @@ def _validate(plugin: BaseCheck) -> None:
         raise PluginError(f"{plugin.name}: params must be a tuple of names matching {IDENT_HINT}")
 
 
-def load_check_files(files: Iterable[Path]) -> tuple[list[BaseCheck], list[PluginError]]:
-    """Instantiate every ``BaseCheck`` subclass defined in each of the files, in order, whatever its name.
+def _failure(failure: PluginFailure) -> PluginError:
+    return PluginError(str(failure), target_files=[failure.path.as_posix()], fix=failure.fix)
 
-    A file that fails contributes nothing and is reported as a ``PluginError``
-    (``WORKFLOW_CHECK_LOAD_FAILED``); so is a file that defines a check name an
-    earlier file already defined.
+
+def load_check_packages(packages: Iterable[PluginPackage]) -> tuple[list[BaseCheck], list[PluginError]]:
+    """Instantiate every ``BaseCheck`` subclass defined in each plugin package, in order.
+
+    A package that fails contributes nothing and is reported as a
+    ``PluginError`` (``WORKFLOW_CHECK_LOAD_FAILED``) naming the package; so is
+    a package that defines a check name an earlier package (or another of its
+    own classes) already defined.
     """
-    load = load_subclasses(files, BaseCheck, namespace=NAMESPACE, validate=_validate)
-    errors = [PluginError(str(failure), target_files=[failure.path.as_posix()]) for failure in load.errors]
-    by_file: dict[Path, list[BaseCheck]] = {}
+    load = load_subclasses(packages, BaseCheck, namespace=NAMESPACE, validate=_validate)
+    errors = [_failure(failure) for failure in load.errors]
+    by_package: dict[str, tuple[PluginPackage, list[BaseCheck]]] = {}
     for plugin in load.plugins:
-        by_file.setdefault(plugin.path, []).append(plugin.instance)
+        by_package.setdefault(plugin.package.key, (plugin.package, []))[1].append(plugin.instance)
     loaded: list[BaseCheck] = []
     seen: dict[str, Path] = {}
-    for path, checks in by_file.items():
+    for package, checks in by_package.values():
+        where_now = package.location
         names = [c.name for c in checks]
         clash = next((n for n in names if n in seen), None) or next(
             (n for i, n in enumerate(names) if n in names[:i]), None
         )
         if clash is not None:
-            where = seen.get(clash, path)
+            where = seen.get(clash, where_now)
             errors.append(
-                PluginError(f"{path}: check {clash!r} is already defined in {where}", target_files=[path.as_posix()])
+                PluginError(
+                    f"{where_now}: check {clash!r} is already defined in {where}", target_files=[where_now.as_posix()]
+                )
             )
             continue
         for check in checks:
-            seen[check.name] = path
+            seen[check.name] = where_now
         loaded.extend(checks)
     return loaded, errors
 
 
-def plugin_check_paths(
+def plugin_check_packages(
     workspace_root: Path, checks_dir: str, receipt: Receipt | None = None
-) -> tuple[list[Path], list[PluginError]]:
-    """Plugin files in load order: receipt ``workflow-check`` assets, then ``checks_dir``.
+) -> tuple[list[PluginPackage], list[PluginError]]:
+    """Plugin packages in load order: receipt ``workflow-check`` assets, then the packages of ``checks_dir``.
 
-    Receipt files are found and checked with ``devkit.core.receipt.verified_asset_files``,
-    as rules and gates are: a file that is missing, resolves outside the project
-    or differs from the SHA-256 the receipt records is a ``WORKFLOW_CHECK_LOAD_FAILED``
-    problem (``devkit sync`` restores it, ``devkit override create`` keeps an
-    edit), never a silent skip; a file without a record (a project override) is
-    loaded as it is, and no receipt file is skipped for its name. Files under
-    ``checks_dir`` whose name starts with ``_`` or ``.`` are private helpers and
-    are not loaded (``devkit.core.plugins.iter_plugin_files``).
+    Receipt packages are found and their files checked with
+    ``devkit.core.receipt.verified_asset_packages``, as rules and gates are: a
+    file that is missing, resolves outside the project or differs from the
+    SHA-256 the receipt records is a ``WORKFLOW_CHECK_LOAD_FAILED`` problem
+    (``devkit sync`` restores it, ``devkit override create`` keeps an edit) and
+    its package is not loaded, never a silent skip; a file without a record (a
+    project override) is loaded as it is. Under ``checks_dir`` each immediate
+    subdirectory not starting with ``_`` or ``.`` is one package; a ``.py``
+    file directly in it is a problem telling to move it into a package
+    directory (``devkit.core.plugins.iter_plugin_packages``).
     """
-    paths: list[Path] = []
+    packages: list[PluginPackage] = []
     errors: list[PluginError] = []
     if receipt is not None:
-        verified, failures = verified_asset_files(workspace_root, receipt, PLUGIN_KIND)
-        paths.extend(verified)
+        verified, failures = verified_asset_packages(workspace_root, receipt, PLUGIN_KIND)
+        packages.extend(verified)
         errors.extend(
             PluginError(f"synchronized check {exc.message}", target_files=exc.target_files, fix=exc.fix)
             for exc in failures
         )
-    directory = workspace_root / checks_dir
-    for path in iter_plugin_files(directory):
-        if path.parent == directory and path not in paths:
-            paths.append(path)
-    return paths, errors
+    found, misplaced = iter_plugin_packages(workspace_root / checks_dir)
+    packages.extend(found)
+    errors.extend(_failure(failure) for failure in misplaced)
+    return packages, errors
 
 
 def load_plugin_checks(
@@ -151,6 +161,6 @@ def load_plugin_checks(
     """
     if receipt is None:
         receipt = load_receipt(workspace_root)
-    paths, errors = plugin_check_paths(workspace_root, checks_dir, receipt)
-    loaded, load_errors = load_check_files(paths)
+    packages, errors = plugin_check_packages(workspace_root, checks_dir, receipt)
+    loaded, load_errors = load_check_packages(packages)
     return loaded, errors + load_errors

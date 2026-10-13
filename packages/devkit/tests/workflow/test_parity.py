@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner, Result
 from devkit.advisory import ActionMode
-from devkit.core.plugins import iter_plugin_files
+from devkit.core.plugins import iter_plugin_packages
 from devkit.workflow import (
     BaseCheck,
     CheckClass,
@@ -19,7 +19,7 @@ from devkit.workflow import (
     compare_shared_stages,
     discover_roles,
     evaluate_definition,
-    load_check_files,
+    load_check_packages,
     load_plugin_checks,
     parse_definition,
     validate_definition,
@@ -201,28 +201,44 @@ def test_list_status_filters(workspace: Path) -> None:
 # --- plugin checks --------------------------------------------------------------
 
 
-def test_load_check_files_validates_and_reports(tmp_path: Path) -> None:
-    good = tmp_path / "good.py"
-    good.write_text(PLUGIN)
-    bad_name = tmp_path / "bad_name.py"
-    bad_name.write_text("from devkit.workflow import BaseCheck\n\nclass X(BaseCheck):\n    name = 'Bad Name'\n")
-    broken = tmp_path / "broken.py"
-    broken.write_text("raise RuntimeError('cannot import')\n")
-    duplicate = tmp_path / "dup.py"
-    duplicate.write_text(PLUGIN)
-    (tmp_path / "_private.py").write_text("raise RuntimeError('never loaded')\n")
-    loaded, errors = load_check_files(iter_plugin_files(tmp_path))  # the directory scan skips _private.py
-    assert [c.name for c in loaded] == ["explodes", "has-word"] or [c.name for c in loaded] == ["has-word", "explodes"]
+def test_load_check_packages_validates_and_reports(tmp_path: Path) -> None:
+    files = {
+        "good/good.py": PLUGIN,
+        "bad_name/x.py": "from devkit.workflow import BaseCheck\n\nclass X(BaseCheck):\n    name = 'Bad Name'\n",
+        "broken/broken.py": "raise RuntimeError('cannot import')\n",
+        "dup/dup.py": PLUGIN,
+        "_private/x.py": "raise RuntimeError('never loaded')\n",
+        "_loose.py": "raise RuntimeError('never loaded')\n",
+    }
+    for rel, text in files.items():
+        (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / rel).write_text(text)
+    packages, misplaced = iter_plugin_packages(tmp_path)  # the directory scan skips _private/ and _loose.py
+    assert misplaced == ()
+    loaded, errors = load_check_packages(packages)
+    assert sorted(c.name for c in loaded) == ["explodes", "has-word"]
     assert len(errors) == 3 and {e.code for e in errors} == {"WORKFLOW_CHECK_LOAD_FAILED"}
     messages = [str(e) for e in errors]
     assert any("must match [a-z][a-z0-9-]*" in m for m in messages)
     assert any("cannot import" in m for m in messages)
     assert any("already defined" in m for m in messages)
     assert {e.target_files[0] for e in errors} == {
-        bad_name.as_posix(),
-        broken.as_posix(),
-        good.as_posix(),
-    }  # dup.py loads first
+        (tmp_path / "bad_name").as_posix(),
+        (tmp_path / "broken").as_posix(),
+        (tmp_path / "good").as_posix(),
+    }  # dup/ loads first
+
+
+def test_plugin_check_files_directly_in_checks_dir_are_reported(workspace: Path) -> None:
+    write_config(workspace, CONFIG)
+    checks_dir = workspace / ".devkit/workflow-checks"
+    checks_dir.mkdir()
+    (checks_dir / "words.py").write_text(PLUGIN)
+    loaded, problems = load_plugin_checks(workspace, ".devkit/workflow-checks")
+    assert loaded == []
+    (problem,) = problems
+    assert problem.code == "WORKFLOW_CHECK_LOAD_FAILED" and "not a plugin package" in str(problem)
+    assert problem.fix == f"Move {(checks_dir / 'words.py').as_posix()} into {checks_dir.as_posix()}/words/"
 
 
 def test_registry_rejects_plugin_colliding_with_builtin() -> None:
@@ -241,8 +257,9 @@ def test_registry_rejects_plugin_colliding_with_builtin() -> None:
 def test_plugin_checks_from_checks_dir_are_listed_validated_and_evaluated(workspace: Path) -> None:
     write_config(workspace, CONFIG)
     checks_dir = workspace / ".devkit/workflow-checks"
-    checks_dir.mkdir()
-    (checks_dir / "words.py").write_text(PLUGIN)
+    (checks_dir / "words").mkdir(parents=True)
+    (checks_dir / "words/__init__.py").write_text("from .check import HasWord\n")
+    (checks_dir / "words/check.py").write_text(PLUGIN)
     listed = _run("checks", "-w", str(workspace))
     assert "[CHECK: has-word(file word) class=plugin" in listed.output
     assert any(
@@ -349,8 +366,8 @@ def test_receipt_listed_plugin_checks_load_whatever_their_name(workspace: Path) 
 def test_definition_declared_check_cannot_shadow_plugin(workspace: Path) -> None:
     write_config(workspace, CONFIG)
     checks_dir = workspace / ".devkit/workflow-checks"
-    checks_dir.mkdir()
-    (checks_dir / "words.py").write_text(PLUGIN)
+    (checks_dir / "words").mkdir(parents=True)
+    (checks_dir / "words/words.py").write_text(PLUGIN)
     definition = workspace / ".devkit/workflows/direct-delivery.md"
     definition.write_text(
         definition.read_text().replace("{ name: ci-passed, class: runner", "{ name: has-word, class: runner")

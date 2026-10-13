@@ -132,8 +132,8 @@ def test_blocking_violations_and_raise_for_problems_of_a_completed_run(tmp_path:
 
 
 def test_load_project_rules_collects_load_and_policy_errors(tmp_path: Path) -> None:
-    _write(tmp_path, "extra/extra.py", EXTRA_RULE)
-    _write(tmp_path, "extra/broken.py", "raise RuntimeError('broken')\n")
+    _write(tmp_path, "extra/extra/extra.py", EXTRA_RULE)
+    _write(tmp_path, "extra/broken/broken.py", "raise RuntimeError('broken')\n")
     _write(
         tmp_path,
         ".devkit/config.toml",
@@ -149,12 +149,11 @@ def test_load_project_rules_collects_load_and_policy_errors(tmp_path: Path) -> N
 
 
 def test_rules_dir_and_receipt_rules_are_loaded_after_builtins(tmp_path: Path) -> None:
-    _write(tmp_path, "extra/extra.py", EXTRA_RULE)
-    _write(tmp_path, ".devkit/managed/team/rules/managed.py", EXTRA_RULE.replace("RULE-extra", "RULE-managed"))
+    _write(tmp_path, "extra/extra/extra.py", EXTRA_RULE)
+    managed = ".devkit/managed/team/rules/managed/managed.py"
+    _write(tmp_path, managed, EXTRA_RULE.replace("RULE-extra", "RULE-managed"))
     write_receipt(
-        tmp_path,
-        [{"bundle": "team", "id": "rules", "kind": "rule", "paths": [".devkit/managed/team/rules/managed.py"]}],
-        digests(tmp_path, ".devkit/managed/team/rules/managed.py"),
+        tmp_path, [{"bundle": "team", "id": "rules", "kind": "rule", "paths": [managed]}], digests(tmp_path, managed)
     )
     run = run_project_rules(tmp_path, rules_dir=tmp_path / "extra")
     ids = [rule.id for rule in run.rules]
@@ -226,14 +225,14 @@ class TodoRule(BaseRule):
 
 def test_snapshot_rules_dir_is_read_from_the_snapshot(tmp_path: Path) -> None:
     root = init_repo(tmp_path / "repo").resolve()
-    _write(root, "rules/todo.py", TODO_RULE)
+    _write(root, "rules/todo/todo.py", TODO_RULE)
     _write(root, "notes.md", "TODO\n")
     _git(root, "add", ".")
     run = run_project_rules(root, snapshot=git_snapshot(root, staged=True), rules_dir=root / "rules")
     assert [v.rule_id for v in run.result.violations] == ["RULE-todo"]
 
     # An unstaged edit of the rule does not change the gate.
-    _write(root, "rules/todo.py", TODO_RULE.replace('if "TODO" in', 'if "never" in'))
+    _write(root, "rules/todo/todo.py", TODO_RULE.replace('if "TODO" in', 'if "never" in'))
     run = run_project_rules(root, snapshot=git_snapshot(root, staged=True), rules_dir=root / "rules")
     assert [v.rule_id for v in run.result.violations] == ["RULE-todo"]
 
@@ -241,8 +240,8 @@ def test_snapshot_rules_dir_is_read_from_the_snapshot(tmp_path: Path) -> None:
 def test_snapshot_rules_dir_outside_the_repository_or_untracked_is_refused(tmp_path: Path) -> None:
     root = init_repo(tmp_path / "repo").resolve()
     _write(root, "notes.md", "x\n")
-    _write(root, "local-rules/todo.py", TODO_RULE)
-    _write(tmp_path, "outside/todo.py", TODO_RULE)
+    _write(root, "local-rules/todo/todo.py", TODO_RULE)
+    _write(tmp_path, "outside/todo/todo.py", TODO_RULE)
     _git(root, "add", "notes.md")
     snapshot = git_snapshot(root, staged=True)
     with pytest.raises(RulesDirError, match="outside the repository"):

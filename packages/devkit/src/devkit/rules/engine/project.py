@@ -42,7 +42,7 @@ class ProjectRules:
     """A project's ``[rules]`` policy and loaded rules, validated against each other.
 
     ``load_errors`` are rule loading failures (an invalid receipt, a missing or
-    drifted synchronized rule, a rule file that fails to import);
+    drifted synchronized rule, a rule package that fails to import);
     ``policy_errors`` are ``[rules]`` entries that cannot apply to the loaded
     rules. ``resolvers`` are the settings resolvers of the rules whose settings
     type-check.
@@ -109,7 +109,7 @@ class ProjectRun:
     snapshot that is the temporary directory the tree was materialized into,
     which no longer exists when the run is returned. ``load_errors`` are rule
     loading failures (an invalid receipt, a missing or drifted synchronized
-    rule, a rule file that fails to import); when there are any, no rule is
+    rule, a rule package that fails to import); when there are any, no rule is
     evaluated. ``result.errors`` are policy and rule execution errors.
     ``context`` is ``None`` when there was nothing to evaluate (empty targets).
     ``whole_workspace`` is ``False`` when explicit or snapshot targets limited
@@ -186,7 +186,7 @@ def build_project_registry(
     registry = default_rule_registry()
     managed = resolve_managed_rules(workspace_root, source_root=source_root)
     registry.errors.extend(managed.errors)
-    registry.discover_from_files(managed.paths)
+    registry.discover_from_packages(managed.packages)
     if rules_dir is not None:
         registry.discover_from_dir(rules_dir)
     return registry
@@ -303,7 +303,7 @@ def run_project_rules(
 
     ``root`` is the project working tree. The ``[rules]`` policy comes from
     ``root/.devkit/config.toml`` and the rules are the built-ins, then the
-    rule assets recorded in the installation receipt, then the Python files
+    rule assets recorded in the installation receipt, then the plugin packages
     under ``rules_dir``.
 
     ``targets`` selects what is checked: ``None`` checks the whole workspace;

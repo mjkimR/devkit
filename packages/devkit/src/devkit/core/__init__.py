@@ -2,7 +2,7 @@
 
 One implementation of what several packages need to agree on: the frontmatter
 grammar, the installation receipt, safe workspace-relative paths, the Git
-runner, plugin file loading, project discovery and configuration reading, and
+runner, plugin package loading, project discovery and configuration reading, and
 the command-line plumbing every command group uses (``devkit.core.cli``, the
 only module that imports click; it is not imported here). Free of import-time
 side effects; the only devkit module it imports is ``devkit.advisory`` (every
@@ -26,7 +26,14 @@ from devkit.core.errors import (
 from devkit.core.frontmatter import Frontmatter, FrontmatterBlock
 from devkit.core.git import run_git
 from devkit.core.paths import is_safe_relpath, normalize_relpath, resolve_within
-from devkit.core.plugins import LoadedPlugin, PluginFailure, PluginLoad, iter_plugin_files, load_subclasses
+from devkit.core.plugins import (
+    LoadedPlugin,
+    PluginFailure,
+    PluginLoad,
+    PluginPackage,
+    iter_plugin_packages,
+    load_subclasses,
+)
 from devkit.core.project import (
     config_table,
     find_project_root,
@@ -54,7 +61,7 @@ from devkit.core.receipt import (
     load_receipt,
     parse_receipt,
     verified_asset_file,
-    verified_asset_files,
+    verified_asset_packages,
 )
 
 __all__ = [
@@ -81,6 +88,7 @@ __all__ = [
     "PackageRecord",
     "PluginFailure",
     "PluginLoad",
+    "PluginPackage",
     "Receipt",
     "ReceiptError",
     "SeededRecord",
@@ -91,7 +99,7 @@ __all__ = [
     "find_project_root",
     "git_toplevel",
     "is_safe_relpath",
-    "iter_plugin_files",
+    "iter_plugin_packages",
     "load_receipt",
     "load_subclasses",
     "normalize_relpath",
@@ -102,5 +110,5 @@ __all__ = [
     "resolve_within",
     "run_git",
     "verified_asset_file",
-    "verified_asset_files",
+    "verified_asset_packages",
 ]

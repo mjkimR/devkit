@@ -139,7 +139,7 @@ _rules_dir_option = click.option(
     "--rules-dir",
     type=str,
     default=None,
-    help="Custom rules directory, loaded after rules synchronized by devkit",
+    help="Custom rules directory (one plugin package per subdirectory), loaded after rules synchronized by devkit",
 )
 _format_option = FORMAT_OPTION
 _phase_option = click.option(
