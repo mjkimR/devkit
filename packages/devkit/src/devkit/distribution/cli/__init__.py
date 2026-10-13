@@ -52,6 +52,8 @@ from devkit.distribution.installation.config import (
     DEFAULT_PLAYBOOK_LIMIT,
     DEFAULT_PLAYBOOK_MAX_BYTES,
     DEFAULT_PLAYBOOK_MIN_SCORE,
+    DEFAULT_PLAYBOOK_MIN_SIMILARITY,
+    DEFAULT_PLAYBOOK_MODE,
     DEFAULT_PRESET,
     PLAYBOOK_LIMIT_MAX,
     PLAYBOOK_LIMIT_MIN,
@@ -78,6 +80,7 @@ from devkit.distribution.installation.receipt import read_receipt
 from devkit.distribution.installation.results import OverrideChange, SyncResult
 from devkit.distribution.installation.status import get_project_listing, get_project_status
 from devkit.distribution.installation.sync import recover_project, sync_project
+from devkit.search import SearchMode
 
 
 class _Result(Protocol):
@@ -134,7 +137,21 @@ def playbook() -> None:
     "--min-score",
     default=None,
     type=float,
-    help=f"Minimum nonnegative score (default: [playbooks] min_score, else {DEFAULT_PLAYBOOK_MIN_SCORE}).",
+    help=f"Minimum nonnegative lexical (BM25) score (default: [playbooks] min_score, else {DEFAULT_PLAYBOOK_MIN_SCORE}).",
+)
+@click.option(
+    "--min-similarity",
+    default=None,
+    type=float,
+    help="Minimum cosine similarity, 0..1, for the dense ranking"
+    f" (default: [playbooks] min_similarity, else {DEFAULT_PLAYBOOK_MIN_SIMILARITY}).",
+)
+@click.option(
+    "--mode",
+    default=None,
+    type=click.Choice([mode.value for mode in SearchMode], case_sensitive=False),
+    help="Ranking: auto (hybrid with the devkit[search] extra, else lexical), lexical, dense or hybrid"
+    f" (default: [playbooks] mode, else {DEFAULT_PLAYBOOK_MODE}).",
 )
 @click.option(
     "--max-bytes",
@@ -145,10 +162,24 @@ def playbook() -> None:
 )
 @_json_command
 def search(
-    query: str, workspace_root: str | None, limit: int | None, min_score: float | None, max_bytes: int | None
+    query: str,
+    workspace_root: str | None,
+    limit: int | None,
+    min_score: float | None,
+    min_similarity: float | None,
+    mode: str | None,
+    max_bytes: int | None,
 ) -> object:
     """Search synchronized playbook metadata with an English query; return headers only."""
-    return search_playbooks(resolve_root(workspace_root), query, limit=limit, min_score=min_score, max_bytes=max_bytes)
+    return search_playbooks(
+        resolve_root(workspace_root),
+        query,
+        limit=limit,
+        min_score=min_score,
+        min_similarity=min_similarity,
+        max_bytes=max_bytes,
+        mode=mode,
+    )
 
 
 @click.group()

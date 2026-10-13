@@ -56,3 +56,11 @@ gate *args:
 # Build all wheels and exercise them from a fresh consumer project (needs git)
 smoke:
     bash scripts/smoke.sh
+
+# Download, verify and convert the embedding model files of devkit-embed
+model-fetch:
+    uv run --no-active python scripts/fetch_model.py packages/devkit-embed/src/devkit_embed
+
+# Build the release wheels, SHA256SUMS and notes for a vX.Y.Z tag into dist/ (run model-fetch first)
+release-build tag:
+    bash scripts/release.sh "$1"

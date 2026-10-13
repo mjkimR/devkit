@@ -6,6 +6,10 @@ the file names every installed gate: one commented ``[gates.settings.<id>]``
 table per gate, with ``enabled`` and each settings field at its default, its
 type and the field's ``metadata["help"]`` when the gate declares one.
 
+Prose is commented twice (``##``) and settings once (``#``), so uncommenting a
+whole table in an editor leaves the prose a comment and yields valid TOML; the
+keys are indented under their header, which must be uncommented with them.
+
 The file belongs to the developer. A missing file is created; an existing one
 only gets tables appended for gates it does not mention yet (commented or
 not), so uncommenting a line in place is the way to change a setting and no
@@ -38,9 +42,11 @@ from devkit.gate.hooks import git, hooks
 from devkit.rules.engine.settings import describe_setting_type
 
 HEADER = """\
-# Clone-local settings of devkit commit gates: not tracked by Git, shared by every worktree of this clone.
-# [gates] here overrides the same keys in .devkit/config.toml. Uncomment a table header and the keys to change.
-# `devkit gate install` and `devkit sync` append a commented table for each new gate; existing lines are never changed.
+## Clone-local settings of devkit commit gates: not tracked by Git, shared by every worktree of this clone.
+## [gates] here overrides the same keys in .devkit/config.toml.
+## To change a setting, uncomment its table header together with the keys below it (lines starting with a single #);
+## a key uncommented without its header belongs to the table above it. Lines starting with ## stay comments.
+## `devkit gate install` and `devkit sync` append a commented table for each new gate; existing lines are never changed.
 """
 _MENTION = re.compile(r"^\s*#?\s*\[\s*gates\s*\.\s*settings\s*\.\s*\"?([^\]\"\s]+)\"?\s*\]", re.MULTILINE)
 # A value to show for a field whose default is ``None`` (TOML has no null), by the field's inner type.
@@ -86,7 +92,7 @@ def _setting_lines(gate: Gate) -> list[str]:
         help_text = item.metadata.get("help")
         if isinstance(help_text, str) and help_text.strip():
             note = f"{note}; {' '.join(help_text.split())}"
-        lines.append(f"# {item.name} = {shown}  # {note}")
+        lines.append(f"#   {item.name} = {shown}  # {note}")
     return lines
 
 
@@ -95,9 +101,9 @@ def render_table(gate: Gate) -> str:
     state = "on" if gate.enabled_by_default else "off"
     description = " ".join(str(gate.description).split())
     lines = [
+        f"## {gate.stage.value} gate, {state} by default" + (f": {description}" if description else ""),
         f"# [gates.settings.{gate.id}]",
-        f"# {gate.stage.value} gate, {state} by default" + (f": {description}" if description else ""),
-        f"# enabled = {_toml(gate.enabled_by_default)}",
+        f"#   enabled = {_toml(gate.enabled_by_default)}",
         *_setting_lines(gate),
     ]
     return "\n".join(lines) + "\n"

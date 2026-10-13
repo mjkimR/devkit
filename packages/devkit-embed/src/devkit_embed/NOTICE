@@ -1,0 +1,10 @@
+devkit-embed redistributes, converted to float16, the potion-base-8M
+static embedding model by Minish Lab:
+
+- Model: https://huggingface.co/minishlab/potion-base-8M (license: MIT), revision
+  bf8b056651a2c21b8d2565580b8569da283cab23. It is a Model2Vec distillation of
+  https://huggingface.co/BAAI/bge-base-en-v1.5 (license: MIT), whose tokenizer it uses.
+- Model2Vec: https://github.com/MinishLab/model2vec (MIT, Copyright (c) 2024 Thomas van Dongen).
+
+LICENSE is the MIT license of Model2Vec. The only change is the conversion of the
+embeddings tensor from float32 to float16 (scripts/fetch_model.py in the devkit repository).

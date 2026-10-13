@@ -1,13 +1,15 @@
-"""``devkit playbook search``: BM25 over synchronized playbook metadata; never returns procedure bodies."""
+"""``devkit playbook search``: lexical, dense or hybrid search over synchronized playbook metadata.
+
+Never returns procedure bodies. The ranking is ``devkit.search``'s over each
+playbook's name, description and aliases; ``auto`` (the default) is hybrid when
+the ``devkit[search]`` extra is installed and lexical otherwise.
+"""
 
 from __future__ import annotations
 
 import dataclasses
 import json
 import math
-import re
-import unicodedata
-from collections import Counter
 from pathlib import Path
 
 from devkit.core.errors import ArgumentError, ReceiptError
@@ -17,6 +19,8 @@ from devkit.distribution.installation.config import (
     DEFAULT_PLAYBOOK_LIMIT,
     DEFAULT_PLAYBOOK_MAX_BYTES,
     DEFAULT_PLAYBOOK_MIN_SCORE,
+    DEFAULT_PLAYBOOK_MIN_SIMILARITY,
+    DEFAULT_PLAYBOOK_MODE,
     PLAYBOOK_LIMIT_MAX,
     PLAYBOOK_LIMIT_MIN,
     PLAYBOOK_MAX_BYTES_MAX,
@@ -27,37 +31,18 @@ from devkit.distribution.installation.overrides import override_rel
 from devkit.distribution.installation.reading import read_owned, read_synchronized, synchronized_project_root
 from devkit.distribution.installation.results import PlaybookCandidate, SearchResult
 from devkit.distribution.installation.transaction import project_lock
+from devkit.search import SearchDocument, SearchIndex, SearchMode, tokenize
 
 MAX_QUERY_BYTES = 512
 
 
-def tokenize(text: str) -> list[str]:
-    normalized = unicodedata.normalize("NFKD", text.casefold())
-    normalized = "".join(char for char in normalized if not unicodedata.combining(char))
-    return re.findall(r"[a-z0-9]+", normalized)
-
-
-def bm25_scores(documents: list[str], query: str) -> list[float]:
-    """BM25 with positive IDF, k1=1.5, b=0.75 and unique query terms."""
-    terms = sorted(set(tokenize(query)))
-    frequencies = [Counter(tokenize(document)) for document in documents]
-    lengths = [sum(frequency.values()) for frequency in frequencies]
-    average = sum(lengths) / len(lengths) if lengths else 0
-    if not average:
-        return [0.0] * len(documents)
-    idf = {
-        term: math.log1p((len(documents) - count + 0.5) / (count + 0.5))
-        for term in terms
-        for count in [sum(term in frequency for frequency in frequencies)]
-    }
-    return [
-        sum(
-            idf[term] * frequency[term] * 2.5 / (frequency[term] + 1.5 * (0.25 + 0.75 * length / average))
-            for term in terms
-            if frequency[term]
-        )
-        for frequency, length in zip(frequencies, lengths, strict=True)
-    ]
+@dataclasses.dataclass(frozen=True)
+class _Bounds:
+    limit: int
+    min_score: float
+    min_similarity: float
+    max_bytes: int
+    mode: SearchMode
 
 
 def _encoded_size(result: SearchResult) -> int:
@@ -65,12 +50,22 @@ def _encoded_size(result: SearchResult) -> int:
     return len(json.dumps(result.to_dict(), indent=2, ensure_ascii=False).encode()) + 1
 
 
-def _bounds(root: Path, limit: int | None, min_score: float | None, max_bytes: int | None) -> tuple[int, float, int]:
+def _bounds(
+    root: Path,
+    limit: int | None,
+    min_score: float | None,
+    min_similarity: float | None,
+    max_bytes: int | None,
+    mode: str | None,
+) -> _Bounds:
     """The effective bounds: each argument, else ``[playbooks]`` of the configuration, else the default."""
     config = read_playbook_config(root)
     limit = limit if limit is not None else int(config.get("limit", DEFAULT_PLAYBOOK_LIMIT))
     min_score = min_score if min_score is not None else float(config.get("min_score", DEFAULT_PLAYBOOK_MIN_SCORE))
+    if min_similarity is None:
+        min_similarity = float(config.get("min_similarity", DEFAULT_PLAYBOOK_MIN_SIMILARITY))
     max_bytes = max_bytes if max_bytes is not None else int(config.get("max_bytes", DEFAULT_PLAYBOOK_MAX_BYTES))
+    mode = (mode if mode is not None else str(config.get("mode", DEFAULT_PLAYBOOK_MODE))).lower()
     if not PLAYBOOK_LIMIT_MIN <= limit <= PLAYBOOK_LIMIT_MAX:
         raise ArgumentError(
             f"--limit {limit}: expected {PLAYBOOK_LIMIT_MIN}..{PLAYBOOK_LIMIT_MAX}", target_files=["--limit"]
@@ -79,12 +74,19 @@ def _bounds(root: Path, limit: int | None, min_score: float | None, max_bytes: i
         raise ArgumentError(
             f"--min-score {min_score}: expected a finite nonnegative number", target_files=["--min-score"]
         )
+    if not 0 <= min_similarity <= 1:
+        raise ArgumentError(
+            f"--min-similarity {min_similarity}: expected a number between 0 and 1", target_files=["--min-similarity"]
+        )
     if not PLAYBOOK_MAX_BYTES_MIN <= max_bytes <= PLAYBOOK_MAX_BYTES_MAX:
         raise ArgumentError(
             f"--max-bytes {max_bytes}: expected {PLAYBOOK_MAX_BYTES_MIN}..{PLAYBOOK_MAX_BYTES_MAX}",
             target_files=["--max-bytes"],
         )
-    return limit, min_score, max_bytes
+    modes = [item.value for item in SearchMode]
+    if mode not in modes:
+        raise ArgumentError(f"--mode {mode}: expected one of {', '.join(modes)}", target_files=["--mode"])
+    return _Bounds(limit, min_score, min_similarity, max_bytes, SearchMode(mode))
 
 
 def search_playbooks(
@@ -93,11 +95,17 @@ def search_playbooks(
     *,
     limit: int | None = None,
     min_score: float | None = None,
+    min_similarity: float | None = None,
     max_bytes: int | None = None,
+    mode: str | None = None,
 ) -> SearchResult:
     """Rank the synchronized playbooks of the project containing ``start`` against an English ``query``.
 
-    Unset bounds come from ``[playbooks]`` in ``.devkit/config.toml``, else the defaults.
+    Unset bounds and the mode come from ``[playbooks]`` in ``.devkit/config.toml``, else the defaults.
+    ``min_score`` bounds the lexical (BM25) ranking and ``min_similarity`` the dense one; a hybrid
+    candidate's ``score`` is its fused value. ``auto`` resolves to ``hybrid`` or ``lexical``, and the
+    result reports the mode that ran. An explicit ``dense`` or ``hybrid`` without the ``devkit[search]``
+    extra raises ``SEARCH_EXTRA_MISSING``.
     """
     if not is_latin_text(query):
         raise ArgumentError(
@@ -109,15 +117,15 @@ def search_playbooks(
             target_files=["QUERY"],
         )
     root = synchronized_project_root(start)
-    limit, min_score, max_bytes = _bounds(root, limit, min_score, max_bytes)
-    if _encoded_size(SearchResult(query, [], False)) > max_bytes:
+    bounds = _bounds(root, limit, min_score, min_similarity, max_bytes, mode)
+    # "lexical" is the longest mode name a result can report, so this holds whichever mode runs.
+    if _encoded_size(SearchResult(query, SearchMode.LEXICAL, [], False)) > bounds.max_bytes:
         raise ArgumentError(
             "search query exceeds the result output budget",
             target_files=["QUERY", "--max-bytes"],
             fix="Shorten the query or raise --max-bytes",
         )
-    candidates: list[PlaybookCandidate] = []
-    documents: list[str] = []
+    candidates: list[tuple[PlaybookCandidate, str]] = []
     with project_lock(root, shared=True):
         receipt = read_synchronized(root)
         for asset in receipt.assets("playbook"):
@@ -127,27 +135,33 @@ def search_playbooks(
                 if not name.startswith(allowed) or name not in asset.paths:
                     raise ReceiptError(f"{RECEIPT_PATH}: invalid playbook entrypoint: {name}")
                 metadata = read_playbook_header(read_owned(root, receipt, name), name)
-                documents.append(" ".join((metadata.name, metadata.description, *metadata.aliases)))
-                candidates.append(
-                    PlaybookCandidate(
-                        asset.bundle,
-                        asset.id,
-                        metadata.name,
-                        metadata.description,
-                        list(metadata.aliases),
-                        str(root / name),
-                    )
+                candidate = PlaybookCandidate(
+                    asset.bundle,
+                    asset.id,
+                    metadata.name,
+                    metadata.description,
+                    list(metadata.aliases),
+                    str(root / name),
                 )
-    ranked = [
-        (score, candidate)
-        for score, candidate in zip(bm25_scores(documents, query), candidates, strict=True)
-        if score > 0 and score >= min_score
-    ]
+                candidates.append((candidate, " ".join((metadata.name, metadata.description, *metadata.aliases))))
+    # Indexed in (bundle, id, path) order with fixed-width ids, so ties inside each ranking, and so the
+    # fused scores of a hybrid search, follow the same order as ties in the final ranking.
+    candidates.sort(key=lambda pair: (pair[0].bundle, pair[0].id, pair[0].path))
+    documents = [SearchDocument(f"{number:06d}", text) for number, (_, text) in enumerate(candidates)]
+    index = SearchIndex(documents)
+    resolved = index.resolve_mode(bounds.mode) if documents else _without_documents(bounds.mode)
+    hits = index.search(query, mode=resolved, min_score=bounds.min_score, min_similarity=bounds.min_similarity)
+    ranked = [(hit.score, candidates[int(hit.id)][0]) for hit in hits]
     ranked.sort(key=lambda pair: (-pair[0], pair[1].bundle, pair[1].id, pair[1].path))
     results: list[PlaybookCandidate] = []
-    for score, candidate in ranked[:limit]:
+    for score, candidate in ranked[: bounds.limit]:
         results.append(dataclasses.replace(candidate, score=round(score, 6)))
-        if _encoded_size(SearchResult(query, results, len(results) < len(ranked))) > max_bytes:
+        if _encoded_size(SearchResult(query, resolved, results, len(results) < len(ranked))) > bounds.max_bytes:
             results.pop()
             break
-    return SearchResult(query, results, len(results) < len(ranked))
+    return SearchResult(query, resolved, results, len(results) < len(ranked))
+
+
+def _without_documents(mode: SearchMode) -> SearchMode:
+    """With no playbook to rank, ``auto`` reports ``lexical`` without loading the model."""
+    return SearchMode.LEXICAL if mode is SearchMode.AUTO else mode

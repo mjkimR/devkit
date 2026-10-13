@@ -414,6 +414,9 @@ def test_selected_bundle_must_be_installed(installed: list[InstalledBundle], tar
         ("[playbooks]\nlimit = 0\n", "config playbooks: limit must be an integer between 1 and 20"),
         ("[playbooks]\nmin_score = -1\n", "config playbooks: min_score must be a finite nonnegative number"),
         ("[playbooks]\nmax_bytes = 100\n", "config playbooks: max_bytes must be an integer between 1024 and 65536"),
+        ("[playbooks]\nmode = 'semantic'\n", "config playbooks: mode must be one of auto, lexical, dense, hybrid"),
+        ("[playbooks]\nmin_similarity = 1.5\n", "config playbooks: min_similarity must be a number between 0 and 1"),
+        ("[playbooks]\nmin_similarity = true\n", "config playbooks: min_similarity must be a number between 0 and 1"),
         ("invalid toml [[\n", "invalid config"),
     ],
 )
@@ -460,6 +463,8 @@ team = "minimal"
 min_score = 0.2
 limit = 3
 max_bytes = 4096
+mode = "Hybrid"
+min_similarity = 0.5
 """,
     )
     sync_project(bare, installed)

@@ -10,6 +10,14 @@ dependencies = [
     "tomlkit>=0.13",
 ]
 
+[project.optional-dependencies]
+# Dense and hybrid devkit.search: numpy, tokenizers and the default embedding model.
+search = [
+    "numpy>=2.0",
+    "tokenizers>=0.20",
+    "devkit-embed>=0.1,<0.2",
+]
+
 [project.scripts]
 devkit = "devkit.cli:cli"
 
@@ -26,6 +34,9 @@ gate-config-template = "devkit.gate.hooks.local_config:post_sync"
 dev = [
     "pytest>=8.0.0",
 ]
+
+[tool.uv.sources]
+devkit-embed = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

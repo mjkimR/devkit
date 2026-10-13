@@ -7,7 +7,7 @@
 
 `devkit.gate` runs policy at Git's commit hooks. It owns the **system**: hook wrappers, configuration layering, gate discovery and the stage runner. It owns almost no **policy**: gates that encode a team's or a person's commit rules ship in content wheels as `kind = "gate"` bundle assets, so installing a wheel, selecting its bundle and running `devkit sync` adds them, exactly as rules are added to `devkit.rules`.
 
-1. **System in the core, policy in bundles.** The only built-ins are the gate system's own integrations: the rule engine's staged check (`rules-staged`) and the non-empty message check (`message-nonempty`). Identity checks, timestamp handling, message conventions and similar rules belong to the content wheels that need them.
+1. **System in the core, policy in bundles.** The only built-ins are the gate system's own integrations: the runner of the project's own verification commands (`verify-commands`, policy-free: the project supplies the commands) and the non-empty message check (`message-nonempty`). The rule engine runs at commit time as one of those commands (`uv run devkit rules check --staged`). Identity checks, timestamp handling, message conventions and similar rules belong to the content wheels that need them.
 2. **Static wrappers, runtime discovery.** The hook files never change after `devkit gate install`. Each commit discovers the gates from the installation receipt, so `devkit sync` alone changes what runs; it never writes into the hooks directory. It only appends the commented tables of new gates to `devkit.config` ([Settings Template](#6a-settings-template)).
 3. **Deployed with their preset.** Installing a wheel makes its gates available; a preset that contains them deploys them once it is selected, by `devkit add` or, for a bundle that declares `auto_select`, by default; a gate may additionally ship disabled and require `enabled = true` in configuration.
 4. **Fail closed where Git can still refuse.** In `pre-commit` and `commit-msg`, refusals, configuration errors and missing or drifted gate files block the commit. `post-commit` runs after the commit exists, only reports, and always exits `0`; its problems are rendered as warnings (`[WARN]`, `CONTINUE`), never as errors, so an agent does not mistake a reported problem for a failed commit.
@@ -32,21 +32,24 @@ report.ok, report.problems, report.exit_code         # exit_code: the highest ex
 
 | Gate | Stage | Order | Default | Behavior |
 | --- | --- | --- | --- | --- |
-| `rules-staged` | `pre-commit` | 100 | on | Evaluates `devkit.rules`'s linter phase over the exact Git index and refuses the commit on unresolved error violations, rule loading or execution errors, or an invalid `[rules]` policy. |
+| `verify-commands` | `pre-commit` | 200 | on (skipped while `commands` is empty) | Runs the project's verification commands and refuses the commit when any fails. |
 | `message-nonempty` | `commit-msg` | 900 | on | Refuses a message that is blank (whitespace only) above any scissors line. |
 
-`rules-staged` is the hook form of `devkit rules check --staged` and calls the rule engine as a library (`git_snapshot`, then `run_project_rules`, the CLI's entry point), so there is no separate commit command. The staged tree is materialized into a temporary directory that becomes the workspace root; `.devkit/config.toml`, the installation receipt and synchronized rules are read from that snapshot, and Git-ignored managed rule copies are read from the working tree only when their hash matches the snapshot's receipt. Unstaged edits, untracked files and per-clone configuration therefore cannot change the result. The gate has no settings; the project tunes rules through `[rules]` (phase and severity overrides, typed settings, `exclude`) as everywhere else.
+`verify-commands` runs the repository's own checks (formatter, linter, type checker, fast tests) as the final verification before a commit:
 
-| Outcome | Condition | Advisory |
-| --- | --- | --- |
-| skipped | the index changes no files | — |
-| passed | no error violations | none; when warning-severity violations remain, a `GATE_RULES_WARNINGS` notice counts them and its `fix` names `devkit rules check --staged` |
-| refused | error violations remain | `GATE_RULES_VIOLATION` (`GateRefusedError`, BLOCKED, exit `1`): one `[DETAIL]` per violation as `<rule> <file>:<line> <message>`, `fix` names `devkit rules fix` and `devkit rules explain <rule>`, `[TARGET]` lists the files |
-| failed | `[rules]` in the staged `.devkit/config.toml` is invalid | the rule engine's `RULES_CONFIG_INVALID` (or the core `CONFIG_INVALID`) |
-| failed | the staged receipt is malformed, a receipt-listed rule is missing, drifted from its hash or fails to import, the policy does not apply, or a rule raised | the rule engine's `RULES_RUN_FAILED` (`ProjectRun.raise_for_problems`), one `[DETAIL]` per problem with its own code (`RULES_LOAD_FAILED`, `RULES_POLICY_INVALID`, `RULES_EXECUTION_FAILED`, ...) |
-| failed | the staged tree cannot be read or materialized | the rule engine's `RULES_SNAPSHOT_FAILED` |
+```toml
+# .devkit/config.toml: the team's commands; a clone overrides them in .git/devkit.config
+[gates.settings.verify-commands]
+commands = ["just lint-check", "just check", "uv run devkit rules check --staged"]
+```
 
-Rule engine errors are never re-wrapped: they fail the gate as they are, exit `2`, and read the same as from `devkit rules check --staged`. A commit that only deletes files is not skipped: the policy and the rules are still loaded and evaluated, so a broken receipt or policy fails it as well. Disable the gate per project or per clone with `[gates.settings.rules-staged] enabled = false`, for example in a repository that runs `devkit rules check --ci` only in CI.
+Hooks run with Git's environment, where the project's `.venv/bin` is usually not on `PATH`: call project tools through `uv run` or a recipe runner (`just`), never as bare `devkit`, `pytest` or `ruff`.
+
+- Each command line runs with `sh -c` from the top level of the work tree, in order, through `devkit.compact.run_command`: the full output goes to a log file and the refusal carries only the compact view. Every command runs, so one attempt reports every failure.
+- A failure is `GATE_VERIFY_FAILED` (`BLOCKED`, exit `1`) naming the failed commands, with per command a `[DETAIL]` `command: <line>  exit=<n>  log=<path>`, then its recognized summaries, its failed tests and its last 10 output lines (summaries left out). `RUN_SLOW_COMMAND` notices of the runs are returned as they are.
+- The commands see the working tree, not the index. When tracked files have unstaged changes or untracked files exist, the gate adds a `GATE_VERIFY_UNSTAGED` notice (in a refusal, a final `note:` detail) listing up to 10 of them, and does not refuse for it. A check that must match the commit exactly evaluates the index itself, as `devkit rules check --staged` does: it materializes the staged tree, reads `.devkit/config.toml`, the receipt and the synchronized rules from it, and so cannot depend on unstaged edits, untracked files or per-clone configuration ([Evaluation Lifecycle](../rules/evaluation-lifecycle.md#6-git-snapshot-gates)).
+- The hook's `GIT_DIR`, `GIT_INDEX_FILE`, `GIT_WORK_TREE` and `GIT_PREFIX` are removed from the commands' environment, so a test suite that runs Git in its own repositories is not pointed at this commit's index. The index is passed as `DEVKIT_GIT_INDEX_FILE` instead; devkit's staged snapshot uses it for this repository only (`devkit.core.git.commit_index`), so `devkit rules check --staged` evaluates exactly what `git commit -a` or `git commit <paths>` commits, a temporary index.
+- Keep the list to what is quick enough for every commit; slower suites belong in CI. Interrupting a command (Ctrl-C) aborts the commit.
 
 `message-nonempty` sees the message before Git's cleanup. Whether Git strips comment lines depends on how the commit was made (`git commit -m "#123 fix"` keeps the `#` line; the editor template strips it; `core.commentChar` changes the character), so the gate refuses only a message that is blank above the scissors line. A message that is empty only once comments are stripped is left to Git, which aborts such a commit itself unless `--allow-empty-message` is given.
 
@@ -148,13 +151,17 @@ enabled = false
 per-clone setting is changed by uncommenting lines in place:
 
 ```toml
+## pre-commit gate, on by default: Refuses a commit that stages too many files.
 # [gates.settings.staged-file-limit]
-# pre-commit gate, on by default: Refuses a commit that stages too many files.
-# enabled = true
-# max_files = 50  # integer; Most files one commit may stage
+#   enabled = true
+#   max_files = 50  # integer; Most files one commit may stage
 ```
 
-- **Content**: per gate (in stage and order), its header, stage, default state and description, `enabled` at its
+- **Layout**: prose is commented twice (`##`), the table header and keys once (`#`), with the keys indented under
+  their header. Uncommenting a whole table in an editor (which removes one `#`) leaves the prose a comment and yields
+  valid TOML. A key uncommented without its header belongs to whatever table precedes it, so the header is
+  uncommented with its keys; the file's own header says so.
+- **Content**: per gate (in stage and order), its stage, default state and description, its header, `enabled` at its
   default, then each settings field at its default with its type and the field's `metadata["help"]` when the gate
   declares one (`field(default=50, metadata={"help": "..."})`). A field whose default is `None` shows a placeholder
   of its type and `unset by default`; TOML has no null, so uncomment it only with a value. Gates that fail to load

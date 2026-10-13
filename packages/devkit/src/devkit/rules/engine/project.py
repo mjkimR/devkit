@@ -1,7 +1,7 @@
 """Run a project's rules the way every caller must: one assembly of config, registry and context.
 
-``devkit rules check``/``fix``, the ``rules-staged`` commit gate and the
-workflow engine's ``lint-clean`` check all evaluate a project through
+``devkit rules check``/``fix`` (also at commit time, from the ``verify-commands``
+gate) and the workflow engine's ``lint-clean`` check both evaluate a project through
 ``run_project_rules``, so project policy (``[rules]`` in ``.devkit/config.toml``,
 including ``exclude``), the synchronized rules recorded in the receipt and the
 Git snapshot handling cannot differ between them. Callers render the returned

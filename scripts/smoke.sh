@@ -20,6 +20,8 @@ mkdir -p "$dist" "$project"
 
 # Assigned before the loop so a discovery failure aborts under `set -e`.
 modules=$(list_modules)
+echo "==> fetching the embedding model files (the model wheel refuses to build without them)"
+uv run --no-active python scripts/fetch_model.py packages/devkit-embed/src/devkit_embed
 echo "==> building wheels into $dist"
 for module in $modules; do
     uv build --package "$module" --wheel --out-dir "$dist" >/dev/null
@@ -35,6 +37,7 @@ wheel() {
 }
 devkit_wheel=$(wheel devkit)
 starter_wheel=$(wheel devkit_starter)
+model_wheel=$(wheel devkit_embed)
 
 echo "==> creating a fresh consumer project"
 (
@@ -89,5 +92,13 @@ echo "==> creating a fresh consumer project"
     fi
     uv run devkit gate uninstall >/dev/null
     test ! -e .git/hooks/pre-commit
+    echo "--- dense search with the model wheel (numpy and tokenizers from the index)"
+    uv add --dev "$model_wheel" numpy tokenizers >/dev/null
+    uv run python -c "
+from devkit.search import SearchDocument, SearchIndex, SearchMode, load_embedder
+assert load_embedder().dimensions == 256
+index = SearchIndex([SearchDocument('secrets', 'Secrets must not enter the repository'), SearchDocument('length', 'File length warning')])
+assert index.search('leaked credentials', mode=SearchMode.HYBRID)[0].id == 'secrets'
+"
 )
 echo "==> smoke passed"

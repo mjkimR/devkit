@@ -15,6 +15,9 @@ from pathlib import Path
 from devkit.core.errors import GitError
 
 DEFAULT_TIMEOUT = 60.0  # seconds; the one Git timeout every devkit area uses
+# The index of the commit being made, which the ``verify-commands`` gate passes to the commands it runs after
+# removing Git's own ``GIT_INDEX_FILE`` from their environment (see ``commit_index``).
+COMMIT_INDEX_VARIABLE = "DEVKIT_GIT_INDEX_FILE"
 
 
 def run_git(
@@ -22,6 +25,7 @@ def run_git(
     *args: str,
     input: bytes | None = None,
     timeout: float | None = DEFAULT_TIMEOUT,
+    index: str | None = None,
 ) -> bytes:
     """Run ``git -C <cwd> <args...>`` and return its standard output.
 
@@ -36,10 +40,13 @@ def run_git(
     Raises ``GitError`` when Git cannot be started, does not finish within
     ``timeout``, or exits nonzero; the error carries the command, the exit
     status (``None`` if there is none) and Git's decoded standard error.
+    ``index`` sets ``GIT_INDEX_FILE`` for this call.
     """
     command = ("git", "-C", str(cwd), *args)
     label = f"git {args[0]}" if args else "git"
     env = {**os.environ, "LC_ALL": "C", "GIT_TERMINAL_PROMPT": "0"}
+    if index is not None:
+        env["GIT_INDEX_FILE"] = index
     stdin = subprocess.DEVNULL if input is None else None
     try:
         completed = subprocess.run(
@@ -59,3 +66,22 @@ def run_git(
             stderr=stderr,
         )
     return completed.stdout
+
+
+def commit_index(root: Path) -> str | None:
+    """The index of the commit a hook is making when a devkit command runs from the ``verify-commands`` gate.
+
+    The gate removes Git's ``GIT_INDEX_FILE`` from its commands' environment (so a test suite running Git in its
+    own repositories is not pointed at it) and passes it as ``DEVKIT_GIT_INDEX_FILE`` instead. It applies only
+    while ``GIT_INDEX_FILE`` is unset and only to the repository whose Git directory holds that index, so
+    ``git commit -a`` and ``git commit <paths>``, which commit a temporary index, are evaluated as committed.
+    ``None`` otherwise: Git's own ``GIT_INDEX_FILE``, or the default index, applies.
+    """
+    value = os.environ.get(COMMIT_INDEX_VARIABLE)
+    if not value or "GIT_INDEX_FILE" in os.environ:
+        return None
+    index = Path(value)
+    if not index.is_absolute():
+        return None
+    git_dir = Path(os.fsdecode(run_git(root, "rev-parse", "--absolute-git-dir").rstrip(b"\n")))
+    return value if index.parent.resolve() == git_dir.resolve() else None

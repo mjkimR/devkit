@@ -28,6 +28,7 @@ from devkit.distribution.content import Content
 from devkit.distribution.errors import SelectionError
 from devkit.distribution.installation.discovery import InstalledBundle, unusable_bundles
 from devkit.distribution.installation.transaction import replace_file
+from devkit.search import SearchMode
 
 SCHEMA = 1
 # ``rules`` is owned by ``devkit.rules`` (phase overrides), ``workflow`` by
@@ -58,6 +59,9 @@ PLAYBOOK_MAX_BYTES_MIN, PLAYBOOK_MAX_BYTES_MAX = 1024, 65536
 DEFAULT_PLAYBOOK_LIMIT = 5
 DEFAULT_PLAYBOOK_MIN_SCORE = 0.1
 DEFAULT_PLAYBOOK_MAX_BYTES = 8192
+DEFAULT_PLAYBOOK_MODE = SearchMode.AUTO
+# Measured on English metadata: keeps most matches while dropping the long tail of weak cosine similarities.
+DEFAULT_PLAYBOOK_MIN_SIMILARITY = 0.35
 # A requested preset that stands for the bundle's ``default_preset`` (a bare ``bundle`` on the command line).
 DEFAULT_PRESET = ""
 
@@ -201,15 +205,15 @@ def merge_selection(
     return {name: list(dict.fromkeys([*current.get(name, []), *presets])) for name, presets in requested.items()}
 
 
-def validate_playbooks_config(playbooks: object) -> dict[str, int | float]:
+def validate_playbooks_config(playbooks: object) -> dict[str, int | float | str]:
     if playbooks is None:
         return {}
     if not isinstance(playbooks, dict):
         raise ConfigError("config playbooks: expected a table")
-    unknown = set(playbooks) - {"min_score", "limit", "max_bytes"}
+    unknown = set(playbooks) - {"min_score", "limit", "max_bytes", "mode", "min_similarity"}
     if unknown:
         raise ConfigError(f"config playbooks: unknown fields: {sorted(unknown)}")
-    result: dict[str, int | float] = {}
+    result: dict[str, int | float | str] = {}
     if "limit" in playbooks:
         val = playbooks["limit"]
         if type(val) is not int or not PLAYBOOK_LIMIT_MIN <= val <= PLAYBOOK_LIMIT_MAX:
@@ -230,10 +234,21 @@ def validate_playbooks_config(playbooks: object) -> dict[str, int | float]:
                 f" {PLAYBOOK_MAX_BYTES_MIN} and {PLAYBOOK_MAX_BYTES_MAX}"
             )
         result["max_bytes"] = val
+    if "mode" in playbooks:
+        val = playbooks["mode"]
+        modes = [mode.value for mode in SearchMode]
+        if not isinstance(val, str) or val.lower() not in modes:
+            raise ConfigError(f"config playbooks: mode must be one of {', '.join(modes)}")
+        result["mode"] = val.lower()
+    if "min_similarity" in playbooks:
+        val = playbooks["min_similarity"]
+        if not isinstance(val, (int, float)) or isinstance(val, bool) or not 0 <= val <= 1:
+            raise ConfigError("config playbooks: min_similarity must be a number between 0 and 1")
+        result["min_similarity"] = float(val)
     return result
 
 
-def read_playbook_config(root: Path) -> dict[str, int | float]:
+def read_playbook_config(root: Path) -> dict[str, int | float | str]:
     data = _load(root)
     return validate_playbooks_config(data.get("playbooks")) if data else {}
 

@@ -41,7 +41,7 @@ malformed `bundle[:preset]` or `--agent` combined with `--no-agents` (see
 | `devkit status` | Read-only report of the installed state against the receipt; see [below](#devkit-status). |
 | `devkit recover` | Rolls back an interrupted transaction from the journal in `.devkit/transient/` without overwriting newer edits. Prints `recovered_files`: the number of files restored. |
 | `devkit get-context <bundle>` | The bundle constitution and the header catalog of its instructions ([Context Loading](context-and-playbooks.md#2-bundle-context-devkit-get-context)). |
-| `devkit playbook search <query>` | Lexical BM25 search over synchronized playbook headers ([Playbook Search](context-and-playbooks.md#3-playbook-discovery-and-search-devkit-playbook)). |
+| `devkit playbook search <query>` | Search over synchronized playbook headers: hybrid with the `devkit[search]` extra, else lexical BM25; `--mode`, `--min-score`, `--min-similarity`, `--limit`, `--max-bytes` ([Playbook Search](context-and-playbooks.md#3-playbook-discovery-and-search-devkit-playbook)). |
 | `devkit override list` | Tracked project overrides and their drift status. |
 | `devkit override create <bundle>:<asset> [--force]` | Copies every upstream file of a selected, non-seeded asset to `.devkit/overrides/` (plus a baseline copy), records the current upstream as its baseline and synchronizes; `--force` overwrites existing override files and the baseline. |
 | `devkit override diff <bundle>:<asset>` | Per file: what upstream changed since the baseline, and what the override changed. |
@@ -87,7 +87,9 @@ starter = "daily"                     # a preset name, "all", or an array of pre
 devkit = false                        # opt out of an auto-selected bundle
 
 [playbooks]
-min_score = 0.1
+mode = "auto"                         # auto, lexical, dense or hybrid
+min_score = 0.1                       # BM25 floor
+min_similarity = 0.35                 # cosine floor of dense and hybrid
 limit = 5
 max_bytes = 8192
 
@@ -228,6 +230,6 @@ The other built-in bundles belong to the module whose engine they use:
 - [Workspace Ownership & Overrides](workspace-ownership.md): workspace layout, ownership categories, the guidance block, seeded files and override drift.
 - [Synchronization & Transactions](sync-and-transactions.md): the receipt, the selection model, and the transaction engine (lock, journal, recovery, post-sync hooks).
 - [Native Agent Projections](agent-projections.md): projection matrix and role contracts for Codex, Claude Code and Antigravity.
-- [Context Loading & Playbooks](context-and-playbooks.md): `get-context`, the skill prerequisite, and BM25 playbook search.
+- [Context Loading & Playbooks](context-and-playbooks.md): `get-context`, the skill prerequisite, and playbook search.
 - [In-Repository Bundles](in-repo-bundles.md): repository-owned assets as a content package installed from the same repository.
 - [Resource Taxonomy](../architecture/resource-taxonomy.md): guidance taxonomy and naming standards.

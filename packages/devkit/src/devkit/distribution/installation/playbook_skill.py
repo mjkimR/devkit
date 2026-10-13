@@ -14,8 +14,8 @@ activate playbook search for future tasks in the conversation.
    technical names. Run from the synchronized consumer project:
    `uv run devkit playbook search "<English query>"`.
    Search indexes name, description, and aliases only. Results include candidate
-   metadata, scores, and readable paths, never procedure bodies. A score is a
-   lexical match, not confidence that a procedure is applicable.
+   metadata, scores, and readable paths, never procedure bodies. A score ranks
+   candidates against each other; it is not confidence that a procedure applies.
 2. Select a relevant candidate from the returned metadata. Do not scan or load
    the complete playbook catalog. If needed, refine the English query. If none
    fits, perform the requested task using the applicable project guidance.

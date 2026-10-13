@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import math
 from pathlib import Path
 
 import pytest
@@ -13,11 +12,13 @@ from devkit.distribution.bundles.playbooks import read_playbook_header
 from devkit.distribution.errors import BundleError, ConflictError, NotSynchronizedError, PendingTransactionError
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.context import get_context
-from devkit.distribution.installation.playbook_search import bm25_scores, search_playbooks
+from devkit.distribution.installation.playbook_search import search_playbooks
 from devkit.distribution.installation.playbook_skill import MANAGED_ROOT
 from devkit.distribution.installation.sync import sync_project
 from devkit.distribution.installation.workspace import JOURNAL
+from devkit.search import Embedder
 from testsupport.distribution import cli, make_bundle, write_bundle
+from testsupport.search import write_model
 
 
 def select(target: Path, *bundles: str) -> None:
@@ -165,17 +166,6 @@ def test_multiline_description_and_optional_aliases() -> None:
     assert header.aliases == ()
 
 
-def test_bm25_length_normalization_and_term_frequency() -> None:
-    short, verbose = bm25_scores(["recovery replica", "recovery replica " + "other " * 50], "recovery")
-    assert short > verbose > 0
-    scores = bm25_scores(["replica replica", "replica other", "unrelated words"], "replica")
-    assert scores[0] > scores[1] > scores[2] == 0
-    assert bm25_scores(["replica"], "replica replica") == bm25_scores(["replica"], "replica")
-    assert bm25_scores([], "replica") == []
-    assert bm25_scores([""], "replica") == [0]
-    assert all(math.isfinite(score) for score in scores)
-
-
 def test_cli_budget_counts_the_printed_bytes_of_accented_headers(tmp_path: Path, target: Path) -> None:
     # Accented Latin text is several bytes per character; the budget must hold for the bytes printed.
     # The query term is in half of the headers, so it has a positive IDF.
@@ -292,3 +282,77 @@ def test_playbook_extension_keys_are_accepted_but_not_indexed(tmp_path: Path, ta
     assert search_playbooks(target, "zebra").to_dict()["results"] == []
     hit = search_playbooks(target, "replica").to_dict()["results"][0]
     assert hit["name"] == "restore-replica" and "x-trigger" not in json.dumps(hit)
+
+
+# "database" and "broken" never occur in the playbook headers, so only the dense ranking can find recovery.
+VECTORS = {
+    "database": [1.0, 0.0],
+    "broken": [1.0, 0.1],
+    "postgresql": [1.0, 0.0],
+    "replica": [0.9, 0.1],
+    "publish": [0.0, 1.0],
+    "software": [0.1, 0.9],
+}
+
+
+@pytest.fixture
+def model(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    """Install a tiny embedding model; the returned list records each model load."""
+    embedder = Embedder.from_directory(write_model(tmp_path / "model", VECTORS))
+    loads: list[str] = []
+    monkeypatch.setattr("devkit.search.index.load_embedder", lambda name: loads.append(name) or embedder)
+    return loads
+
+
+def test_auto_search_is_hybrid_with_a_model_and_finds_other_wording(
+    tmp_path: Path, target: Path, model: list[str]
+) -> None:
+    select(target, "team", "ops")
+    sync_project(target, [make_bundle(tmp_path, "team"), make_bundle(tmp_path, "ops")])
+    hybrid = search_playbooks(target, "database broken").to_dict()
+    assert hybrid["mode"] == "hybrid" and model == ["potion-base-8m"]
+    assert [(entry["bundle"], entry["id"]) for entry in hybrid["results"]] == [
+        ("ops", "recovery"),
+        ("team", "recovery"),
+    ]
+    assert hybrid["results"][0]["score"] == pytest.approx(1 / 61, abs=1e-6)  # fused: ranked first by dense alone
+    lexical = search_playbooks(target, "database broken", mode="lexical").to_dict()
+    assert lexical == {"query": "database broken", "mode": "lexical", "results": [], "truncated": False}
+    # The dense floor applies before fusion: nothing is similar enough, and nothing matches lexically.
+    assert search_playbooks(target, "database broken", min_similarity=1.0).to_dict()["results"] == []
+    dense = search_playbooks(target, "publish software", mode="DENSE").to_dict()
+    assert dense["mode"] == "dense" and {entry["id"] for entry in dense["results"]} == {"release"}
+
+
+def test_auto_search_is_lexical_without_a_model(tmp_path: Path, target: Path) -> None:
+    select(target, "team")
+    sync_project(target, [make_bundle(tmp_path, "team")])
+    result = search_playbooks(target, "replica").to_dict()
+    assert result["mode"] == "lexical" and [entry["id"] for entry in result["results"]] == ["recovery"]
+    runner = CliRunner()
+    for mode in ("hybrid", "dense"):
+        # An explicit dense ranking is an error without the model, never a silent lexical result.
+        explicit = runner.invoke(cli, ["playbook", "search", "replica", "-w", str(target), "--mode", mode])
+        assert explicit.exit_code == 2
+        assert json.loads(explicit.stdout)["error"]["code"] == "SEARCH_MODEL_NOT_FOUND"
+
+
+def test_search_without_playbooks_never_loads_the_model(tmp_path: Path, target: Path, model: list[str]) -> None:
+    update_config(target, presets={"team": ["guidance"]})
+    sync_project(target, [make_bundle(tmp_path, "team")])
+    assert search_playbooks(target, "replica").to_dict()["mode"] == "lexical" and model == []
+
+
+def test_mode_and_min_similarity_come_from_config_and_options(tmp_path: Path, target: Path, model: list[str]) -> None:
+    select(target, "team")
+    sync_project(target, [make_bundle(tmp_path, "team")])
+    (target / CONFIG_PATH).write_text((target / CONFIG_PATH).read_text() + '\n[playbooks]\nmode = "lexical"\n')
+    assert search_playbooks(target, "database broken").to_dict()["mode"] == "lexical"
+    runner = CliRunner()
+    hybrid = runner.invoke(cli, ["playbook", "search", "database broken", "-w", str(target), "--mode", "HYBRID"])
+    assert hybrid.exit_code == 0 and json.loads(hybrid.stdout)["mode"] == "hybrid"
+    bad = runner.invoke(cli, ["playbook", "search", "replica", "-w", str(target), "--min-similarity", "1.5"])
+    assert bad.exit_code == 2
+    error = json.loads(bad.stdout)["error"]
+    assert error["code"] == "ARGUMENT_INVALID" and error["advisory"]["target_files"] == ["--min-similarity"]
+    assert runner.invoke(cli, ["playbook", "search", "replica", "-w", str(target), "--mode", "semantic"]).exit_code == 2

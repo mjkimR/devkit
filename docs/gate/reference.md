@@ -28,7 +28,7 @@ Existing executable hooks are kept: `install --force` moves them to `<hook>.pre-
 
 `-w/--workspace-root` (default: the current directory) may name any existing directory inside the repository; every command, `install` and `uninstall` included, works on the work tree's top level (`devkit.core.require_git_toplevel`), as a hook does. A `-w` that is not an existing directory is `ARGUMENT_INVALID`; one outside a work tree is `GIT_FAILED` (`INPUT_ERROR`).
 
-Output follows [Agent-First Output](../architecture/agent-output.md). `install`, `uninstall` and `status` print sentinel lines on stdout (`[HOOKS: …]`, `[HOOK: …]`, `[GATE: <id> stage=<stage> …]`, `[CONFIG: sources=…]`, and from `install` `[CONFIG: template=<state> path=<path>]`). `status --format json` prints one object with `hooks_dir`, `hooks_path`, `hooks`, `gates`, `config_sources` and `errors` (each `{code, message, exit_code, advisory}`), or `{"error": {...}}` when the status cannot be read. `run` prints nothing on stdout, so the hook stays silent when every gate passes: a refusal or failure is one advisory block per gate on stderr whose first `[DETAIL]` is `gate=<id> stage=<stage>` (before the gate's own details), a configuration problem is its own block, and passed and skipped gates appear only under `-v`, as `[INFO]` lines. Notices such as `GATE_RULES_WARNINGS` are `[NOTICE]` blocks: in `pre-commit` and `commit-msg` they come before the refusal and failure blocks, so errors are last; in `post-commit`, whose problems are `[WARN]` blocks (the commit already exists), they come after those.
+Output follows [Agent-First Output](../architecture/agent-output.md). `install`, `uninstall` and `status` print sentinel lines on stdout (`[HOOKS: …]`, `[HOOK: …]`, `[GATE: <id> stage=<stage> …]`, `[CONFIG: sources=…]`, and from `install` `[CONFIG: template=<state> path=<path>]`). `status --format json` prints one object with `hooks_dir`, `hooks_path`, `hooks`, `gates`, `config_sources` and `errors` (each `{code, message, exit_code, advisory}`), or `{"error": {...}}` when the status cannot be read. `run` prints nothing on stdout, so the hook stays silent when every gate passes: a refusal or failure is one advisory block per gate on stderr whose first `[DETAIL]` is `gate=<id> stage=<stage>` (before the gate's own details), a configuration problem is its own block, and passed and skipped gates appear only under `-v`, as `[INFO]` lines. Notices such as `GATE_VERIFY_UNSTAGED` are `[NOTICE]` blocks: in `pre-commit` and `commit-msg` they come before the refusal and failure blocks, so errors are last; in `post-commit`, whose problems are `[WARN]` blocks (the commit already exists), they come after those.
 
 ## Exit codes
 
@@ -47,12 +47,14 @@ Every gate error derives from `GateError` (`devkit.gate.errors`), which sets `ac
 
 | Code | Class | Mode | Exit | Meaning |
 | --- | --- | --- | --- | --- |
-| `GATE_FAILED` | `GateRefusedError` | `BLOCKED` | `1` | default code of a gate refusal; gates pass their own (`GATE_MESSAGE_EMPTY`, `GATE_RULES_VIOLATION`, ...) |
+| `GATE_FAILED` | `GateRefusedError` | `BLOCKED` | `1` | default code of a gate refusal; gates pass their own (`GATE_MESSAGE_EMPTY`, `GATE_VERIFY_FAILED`, ...) |
 | `GATE_CONFIG_INVALID` | `GateConfigError` (also a `devkit.core.ConfigError`) | `INPUT_ERROR` | `2` | invalid `[gates]` table or settings, a configured gate that is not installed |
 | `GATE_LOAD_FAILED` | `GateLoadError` | `MAINTENANCE` | `2` | a deployed gate file fails to import or to instantiate its gates, or two gates share an id |
 | `GATE_DEFINITION_INVALID` | `GateDefinitionError` | `MAINTENANCE` | `2` | a gate declares an unusable `id`, `stage`, `order` (reported inside its file's load failure) or settings declaration, or uses `ctx.message_file` outside `commit-msg` |
 | `GATE_RESULT_INVALID` | `GateResultError` | `MAINTENANCE` | `2` | a gate built a `FAILED` `GateResult` or returned something other than a `GateResult` or `None` |
 | `GATE_PYTHON_INVALID` | `GatePythonError` | `INPUT_ERROR` | `2` | `install --python` names an interpreter that cannot import `devkit.gate` |
+| `GATE_VERIFY_FAILED` | `GateRefusedError` | `BLOCKED` | `1` | a `verify-commands` command exited nonzero; one `command: ... exit=... log=...` detail per failed command, then its summaries, failed tests or last lines |
+| `GATE_VERIFY_UNSTAGED` | `VerifyUnstagedNotice` | `NOTE` (level `NOTICE`) | `0` | returned, never raised: `verify-commands` ran on a working tree with unstaged or untracked files |
 | `GATE_CONFIG_TEMPLATE_SKIPPED` | `GateTemplateNotice` | `CONTINUE` (level `WARNING`) | `0` | returned, never raised: `devkit.config` is a symbolic link, not a regular file or not UTF-8, so `install` or the post-sync refresh left it alone |
 | `GATE_FOREIGN_HOOK`, `GATE_BACKUP_EXISTS`, `GATE_HOOKS_PATH_SET` | `ForeignHookError`, `HookBackupExistsError`, `HooksPathSetError` | `INTERACTION` | `2` | `install` would move or bypass hooks it does not own |
 | `CONFIG_INVALID` | `devkit.core.ConfigError` | `INPUT_ERROR` | `2` | `.devkit/config.toml` or `devkit.config` cannot be read or parsed |
@@ -60,14 +62,12 @@ Every gate error derives from `GateError` (`devkit.gate.errors`), which sets `ac
 | `ARGUMENT_INVALID` | `devkit.core.ArgumentError` | `INPUT_ERROR` | `2` | `-w/--workspace-root` is not an existing directory; `run commit-msg` without the message file |
 | `GIT_FAILED` | `devkit.core.GitError` | `INPUT_ERROR` outside a work tree, else `MAINTENANCE` | `2` | a Git query failed |
 | `RECEIPT_INVALID` | `devkit.core.ReceiptError` | `MAINTENANCE` | `2` | `.devkit/installation.json` is malformed or lists an unsafe path |
-| `RULES_*` | `devkit.rules` errors | as raised | `2` | the `rules-staged` gate could not run the rule engine (passed through unchanged) |
-| `GATE_RULES_WARNINGS` | `RulesWarningsNotice` | `NOTE` (level `NOTICE`) | `0` | returned, never raised: `rules-staged` passed while warning-severity violations remain in the staged tree |
 
 ## Built-in gates
 
 | Gate | Stage | Default | Behavior |
 | --- | --- | --- | --- |
-| `rules-staged` | `pre-commit` | on | `devkit rules check --staged` as a gate: evaluates the linter phase over the exact staged tree (receipt, rules and `[rules]` policy included) and refuses on unresolved error violations (`GATE_RULES_VIOLATION`); counts remaining warnings in a `GATE_RULES_WARNINGS` notice. |
+| `verify-commands` | `pre-commit` | on, skipped while `commands` is empty | Runs `[gates.settings.verify-commands] commands` (shell lines, in order, from the work tree's top level, through `devkit.compact`) and refuses when any fails (`GATE_VERIFY_FAILED`); notes a working tree that differs from the commit (`GATE_VERIFY_UNSTAGED`). |
 | `message-nonempty` | `commit-msg` | on | Refuses a message that is blank (whitespace only) above any scissors line. |
 
 Outcomes and failure codes: [Built-in Gates](overview.md#2a-built-in-gates).
@@ -86,8 +86,8 @@ It ships no gate: messages are not validated. Adapt the conventions (scope names
 `.devkit/config.toml` (tracked) is overridden by `<common-git-dir>/devkit.config` (untracked, per clone); see [Configuration Layers](overview.md#6-configuration-layers).
 
 ```toml
-[gates.settings.rules-staged]
-enabled = false                 # e.g. a repository that runs devkit rules only in CI
+[gates.settings.verify-commands]
+commands = ["just lint-check", "uv run devkit rules check --staged"]
 
 [gates.settings.<gate-id>]
 enabled = true
@@ -101,7 +101,7 @@ packages/devkit/src/devkit/gate/
 ├── errors.py       # GateError and its subclasses, one class per code
 ├── engine/         # models (Stage, GateResult, GateContext), BaseGate, layered config, registry, runner
 ├── hooks/          # wrapper scripts (install, uninstall, status) and Git queries
-├── gates/          # built-in gates (rules-staged, message-nonempty)
+├── gates/          # built-in gates (verify-commands, message-nonempty)
 ├── commits/        # the git-commits guide bundle
 ├── cli/            # devkit gate (a thin layer over the library)
 └── __main__.py     # python -m devkit.gate: the gate CLI alone, which the wrappers exec

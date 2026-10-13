@@ -12,6 +12,7 @@ The `devkit` modules, their boundaries and interaction, the conventions every mo
 4. **Commit Gates (`devkit.gate`)**: pluggable policy at Git's commit hooks through static wrappers, layered project and per-clone configuration, and gates distributed as bundle assets (`devkit gate`).
 5. **Agent Advisories (`devkit.advisory`)**: the Agent Advisory Protocol, through which every command reports errors, warnings and notices with an `[ACTION]` directive; the built-in `advisory` bundle teaches it to agents in consumer repositories.
 6. **Compact Command Output (`devkit.compact`)**: verification commands run with their complete output in a log file and a bounded view for the agent (`devkit run`).
+7. **Document Search (`devkit.search`)**: lexical (BM25), dense (static embeddings) and hybrid ranking over a caller's documents, a library without a CLI; dense search comes with the `devkit[search]` extra.
 
 All of them build on `devkit.core`, the SDD-agnostic shared foundation (frontmatter grammar, installation receipt, safe paths, Git runner, plugin loading, project discovery, CLI plumbing).
 
@@ -46,7 +47,7 @@ Every command is agent-first: its primary consumer is an AI coding agent, and it
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Layering.** `advisory` imports no other module; `core` may import `advisory`; `rules` may import `core` and `advisory`; `workflow` and `gate` may import `core`, `advisory` and `rules`; `distribution` and `compact` may import only `core` and `advisory`. `devkit.cli` assembles the command line. A test enforces this. The root group maps each command name to a `module:attribute` reference and imports the module only when that command runs, so a command imports only its own area and the layers below it; a test enforces this too.
+**Layering.** `advisory` imports no other module; `core` may import `advisory`; `rules` may import `core` and `advisory`; `workflow` may import `core`, `advisory` and `rules`; `gate` may import those and `compact` (the `verify-commands` gate runs commands through it); `search` and `compact` may import only `core` and `advisory`; `distribution` may import `core`, `advisory` and `search`. `devkit.cli` assembles the command line. A test enforces this. The root group maps each command name to a `module:attribute` reference and imports the module only when that command runs, so a command imports only its own area and the layers below it; a test enforces this too.
 
 ## 2. Monorepo Structure
 
@@ -54,6 +55,7 @@ Every command is agent-first: its primary consumer is an AI coding agent, and it
 devkit/
 ├── packages/
 │   ├── devkit/                # The devkit package: src/devkit/<module>/ per module above, cli.py the root `devkit` group
+│   ├── devkit-embed/          # The default embedding model of devkit.search (data only)
 │   └── devkit-starter/        # Example external content package
 ├── examples/bundles/          # Example bundle delivery-workflow (the starter bundle lives in devkit-starter)
 ├── scripts/                   # Shared shell logic behind the justfile recipes
@@ -70,7 +72,7 @@ Inside each module, files are grouped by concern; each module's documentation ha
    - Agents load bundle guidance on demand with `devkit get-context <bundle>`, and occasional procedures with `devkit playbook search` after an explicit `devkit-playbook` invocation.
    - `devkit rules check` loads the rule assets recorded in the receipt in addition to the built-in rules; `devkit rules check --staged` and `--ci` evaluate exact Git trees.
    - `devkit workflow` discovers workflow definitions, workflow checks and subagent roles from the receipt; the generated `devkit-workflow` entry skill routes agents to `devkit workflow next`.
-   - `devkit gate install` writes hook wrappers that run `devkit.gate`; gates come from the package (`message-nonempty`, `rules-staged`) and from `kind = "gate"` assets in the receipt.
+   - `devkit gate install` writes hook wrappers that run `devkit.gate`; gates come from the package (`verify-commands`, `message-nonempty`) and from `kind = "gate"` assets in the receipt.
 
 ## 4. Errors, Exit Codes and Platforms
 
@@ -106,12 +108,16 @@ Each module's `reference.md` is the quick reference (CLI, configuration, library
 ### Cross-Cutting Architecture
 - [Agent-First Output](agent-output.md): The output contract of every command: stdout and stderr, text sentinels, JSON envelope, verbosity, exit codes, logs.
 - [Resource Taxonomy](resource-taxonomy.md): Three-tier classification and naming standards for agent assets.
-- [Hybrid Binary Distribution Evaluation](evaluations/hybrid-binaries.md): Deferred evaluation record on bundling compiled binaries with `uv` wheels (not adopted).
+- [Hybrid Binary Distribution Evaluation](evaluations/hybrid-binaries.md): Evaluation record on bundling compiled binaries with `uv` wheels (not adopted; semantic search landed in pure Python as `devkit.search`).
 
 ### Shared Foundation (`devkit.core`, `devkit.advisory`)
 - [Core Reference](../core/reference.md): Frontmatter grammar, receipt reader, safe paths, Git runner, plugin loading, project discovery, CLI plumbing.
 - [Agent Advisory Protocol](../advisory/protocol.md): Levels, block format, fields, mode derivation and canonical `[ACTION]` directives.
 - [Advisory Reference](../advisory/reference.md): The `devkit.advisory` library and the `advisory` guide bundle.
+
+### Document Search (`devkit.search`)
+- [Search Reference](../search/reference.md): Library surface, the `devkit[search]` extra and error codes.
+- [Search Overview](../search/overview.md): Document model, modes, BM25 and tokenizer, the embedding model and its package, measurements.
 
 ### Asset Distribution (`devkit.distribution`)
 - [Distribution Reference](../distribution/reference.md): CLI commands and sync options, configuration, notices and error codes, library surface.
@@ -121,7 +127,7 @@ Each module's `reference.md` is the quick reference (CLI, configuration, library
 - [Workspace Ownership & Overrides](../distribution/workspace-ownership.md): Workspace layout, ownership categories, guidance block, seeded files, overrides and drift review.
 - [Synchronization & Transactions](../distribution/sync-and-transactions.md): Receipt, selection model, transaction engine, recovery and post-sync hooks.
 - [Native Agent Projections](../distribution/agent-projections.md): Projection matrix and role contracts for Codex, Claude Code and Antigravity.
-- [Context Loading & Playbooks](../distribution/context-and-playbooks.md): `get-context`, the skill prerequisite and BM25 playbook search.
+- [Context Loading & Playbooks](../distribution/context-and-playbooks.md): `get-context`, the skill prerequisite and playbook search.
 - [In-Repository Bundles](../distribution/in-repo-bundles.md): Repository-owned assets as a self-consumed content package.
 
 ### Governance Engine (`devkit.rules`)

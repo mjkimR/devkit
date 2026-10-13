@@ -35,7 +35,7 @@ from pathlib import Path, PurePosixPath
 from typing import IO
 
 from devkit.core import GitError, is_safe_relpath, require_git_toplevel, run_git
-from devkit.core.git import DEFAULT_TIMEOUT
+from devkit.core.git import DEFAULT_TIMEOUT, commit_index
 from devkit.rules.engine.errors import SnapshotError
 
 REGULAR_MODES = {"100644", "100755"}
@@ -61,9 +61,9 @@ class Snapshot:
         )
 
 
-def _git(root: Path, *args: str, stdin: bytes | None = None) -> bytes:
+def _git(root: Path, *args: str, stdin: bytes | None = None, index: str | None = None) -> bytes:
     try:
-        return run_git(root, *args, input=stdin)
+        return run_git(root, *args, input=stdin, index=index)
     except GitError as exc:
         raise SnapshotError(str(exc)) from exc
 
@@ -108,7 +108,7 @@ def git_snapshot(root: Path, *, staged: bool, base: str = "origin/main") -> Snap
     root = root.resolve()
     _require_toplevel(root)
     if staged:
-        tree = _git(root, "write-tree").decode().strip()
+        tree = _git(root, "write-tree", index=commit_index(root)).decode().strip()
         try:
             prior = _git(root, "rev-parse", "--verify", "--quiet", "HEAD^{tree}").decode().strip()
         except SnapshotError:

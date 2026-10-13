@@ -51,7 +51,7 @@ def test_install_status_uninstall(repo: Path) -> None:
 
     data = _status(repo)
     assert [h["state"] for h in data["hooks"]] == ["managed"] * 3
-    assert [g["id"] for g in data["gates"]] == ["rules-staged", "message-nonempty"] and data["config_sources"] == []
+    assert [g["id"] for g in data["gates"]] == ["verify-commands", "message-nonempty"] and data["config_sources"] == []
     assert data["hooks_dir"] == str((repo / ".git/hooks").resolve()) and data["hooks_path"] is None
     assert data["errors"] == []
 
@@ -275,18 +275,24 @@ def test_wrapper_prefers_the_work_tree_venv_when_it_has_devkit(repo: Path, tmp_p
     assert code == 0 and marker.exists(), output
 
 
-def test_commit_all_and_partial_commits_check_what_is_committed(repo: Path) -> None:
+def test_staged_rules_in_verify_commands_check_what_is_committed(
+    repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("TMPDIR", str(tmp_path))  # the commands' logs
     (repo / "README.md").write_text("# Repo\n")
     (repo / "a.md").write_text("[ok](README.md)\n")
     git(repo, "add", ".")
     git(repo, "commit", "-m", "init")
     _install(repo)
+    command = f"{shlex.quote(PYTHON)} -m devkit rules check --staged"
+    (repo / ".git/devkit.config").write_text(f"[gates.settings.verify-commands]\ncommands = [{json.dumps(command)}]\n")
 
+    # `commit -a` and `commit <paths>` commit a temporary index, which the staged check reads.
     (repo / "a.md").write_text("[bad](missing.md)\n")
     result = git(repo, "commit", "-am", "feat: all", check=False)
-    assert result.returncode != 0 and "GATE_RULES_VIOLATION" in result.stderr
+    assert result.returncode != 0 and "GATE_VERIFY_FAILED" in result.stderr and "missing.md" in result.stderr
     result = git(repo, "commit", "-m", "feat: partial", "a.md", check=False)
-    assert result.returncode != 0 and "GATE_RULES_VIOLATION" in result.stderr
+    assert result.returncode != 0 and "GATE_VERIFY_FAILED" in result.stderr
 
     # A broken file that is staged but left out of a partial commit is not checked.
     git(repo, "checkout", "a.md")
@@ -413,22 +419,12 @@ def test_run_exits_with_the_highest_problem_exit_code(repo: Path) -> None:
     assert code == 2 and "(TEST_REFUSED)" in output and "(GATE_CONFIG_INVALID)" in output
 
 
-def test_rule_engine_errors_pass_through_the_staged_gate(repo: Path) -> None:
-    (repo / ".devkit").mkdir()
-    (repo / ".devkit/config.toml").write_text("[rules]\nexclude = 3\n")
-    (repo / "a.md").write_text("# a\n")
-    git(repo, "add", ".")
-    code, output = _invoke("run", "-w", str(repo), "pre-commit")
-    assert code == 2 and "[DETAIL] gate=rules-staged stage=pre-commit" in output
-    assert "(RULES_CONFIG_INVALID)" in output and "GATE_RULES" not in output
-
-
 def test_library_entry_points(repo: Path) -> None:
     (repo / "sub").mkdir()
     project = load_gate_project(repo / "sub")
     assert project.root == repo and project.common_git_dir == (repo / ".git").resolve()
     assert project.validation.ok and project.config.sources == ()
-    assert [g.id for g in project.registry.get_all()] == ["rules-staged", "message-nonempty"]
+    assert [g.id for g in project.registry.get_all()] == ["verify-commands", "message-nonempty"]
 
     (repo / "MSG").write_text("\n")
     report = run_hook(repo, Stage.COMMIT_MSG, ["MSG"])

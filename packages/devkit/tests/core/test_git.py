@@ -113,3 +113,25 @@ def test_git_messages_are_not_localized(tmp_path: Path, monkeypatch: pytest.Monk
     with pytest.raises(GitError) as info:
         run_git(tmp_path, "rev-parse", "--show-toplevel")
     assert "not a git repository" in info.value.stderr
+
+
+def test_commit_index_applies_only_to_its_own_repository(
+    repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from devkit.core.git import COMMIT_INDEX_VARIABLE, commit_index
+
+    monkeypatch.delenv("GIT_INDEX_FILE", raising=False)
+    monkeypatch.delenv(COMMIT_INDEX_VARIABLE, raising=False)
+    assert commit_index(repo) is None
+
+    index = str((repo / ".git/index.lock").resolve())
+    monkeypatch.setenv(COMMIT_INDEX_VARIABLE, index)
+    assert commit_index(repo) == index
+
+    other = tmp_path / "other"
+    other.mkdir()
+    subprocess.run(["git", "init", "-q", str(other)], check=True)
+    assert commit_index(other) is None  # a test suite's own repository keeps its default index
+
+    monkeypatch.setenv("GIT_INDEX_FILE", index)
+    assert commit_index(repo) is None  # Git's own variable already applies

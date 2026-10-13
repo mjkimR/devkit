@@ -9,7 +9,6 @@ Every class derives from ``GateError``, which sets the area's ``actor`` and
 (``CONFIG_INVALID``), a malformed receipt ``ReceiptError``
 (``RECEIPT_INVALID``), a missing or drifted gate file ``AssetFileError``
 (``ASSET_FILE_INVALID``), a failed Git query ``GitError`` (``GIT_FAILED``).
-So do the rule engine's errors raised inside the ``rules-staged`` gate.
 """
 
 from __future__ import annotations
@@ -42,17 +41,6 @@ class GateRefusedError(GateError):
     exit_code = ExitCode.FINDINGS
 
 
-class RulesWarningsNotice(GateError):
-    """``rules-staged`` passed while warning-severity violations remain in the staged tree (``NOTICE``).
-
-    Returned in the gate's ``GateResult.notices``, never raised: warnings do not block a commit.
-    """
-
-    code = "GATE_RULES_WARNINGS"
-    level = Level.NOTICE
-    fix = "devkit rules check --staged"
-
-
 class GateConfigError(GateError, ConfigError):
     """The ``[gates]`` table or a gate's configured settings are invalid, or a configured gate is not installed.
 
@@ -63,6 +51,14 @@ class GateConfigError(GateError, ConfigError):
     code = "GATE_CONFIG_INVALID"
     target_files = ()
     fix = "Correct the [gates] table in .devkit/config.toml or in the clone-local <common-git-dir>/devkit.config"
+
+
+class VerifyUnstagedNotice(GateError):
+    """``verify-commands`` ran on a working tree that differs from the commit (``NOTICE``); never raised."""
+
+    code = "GATE_VERIFY_UNSTAGED"
+    level = Level.NOTICE
+    what_to_report = "The verification ran on files that are not part of this commit; its result may not match it"
 
 
 class GateTemplateNotice(GateError):

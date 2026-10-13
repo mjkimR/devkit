@@ -6,7 +6,8 @@ workflows, commit gates, agent advisories and compact command output.
 
 ## Structure
 
-`packages/devkit` is the package, `packages/devkit-starter` an example content
+`packages/devkit` is the package, `packages/devkit-embed` the
+embedding model of its `devkit[search]` extra, `packages/devkit-starter` an example content
 package, `examples/bundles/` further example bundles, `scripts/` the shell logic
 behind the justfile recipes, and `docs/` the documentation per module; see
 [Architecture Overview, section 2](docs/architecture/overview.md#2-monorepo-structure).
@@ -17,6 +18,7 @@ Supported platforms: macOS and Linux only (POSIX). Python 3.12+, `uv`, and `just
 
 ```bash
 just init                  # create the virtualenv with every workspace package
+just model-fetch           # download the embedding model files once (dense search tests, wheel build, smoke)
 just lint                  # ruff fix + format (just lint-check verifies only, as CI does)
 just check                 # pyright
 just test                  # pytest; just test-cov adds coverage
@@ -34,28 +36,44 @@ Module commands discover projects from `packages/*/pyproject.toml` and
 
 ## Using devkit in another project
 
-No package index hosts these wheels yet. Build them here and install them by
-path (or install from Git with `uv add --dev "devkit @ git+<repository URL>#subdirectory=packages/devkit"`):
+No package index hosts these wheels. Each `vX.Y.Z` tag publishes a GitHub Release
+with every package's wheel, `SHA256SUMS` and the install commands; install by URL:
 
 ```bash
-# In this repository
-uv build --package devkit --wheel --out-dir dist
-uv build --package devkit-starter --wheel --out-dir dist
+base=https://github.com/mjkimR/devkit/releases/download/v0.1.0
+uv add --dev "devkit @ $base/devkit-0.1.0-py3-none-any.whl"
+# or, with dense and hybrid search (numpy, tokenizers and the 15 MB embedding model):
+uv add --dev "devkit[search] @ $base/devkit-0.1.0-py3-none-any.whl" \
+  "devkit-embed @ $base/devkit_embed-0.1.0-py3-none-any.whl"
 
-# In the consumer project
-uv add --dev /path/to/devkit/dist/devkit-0.1.0-py3-none-any.whl \
-  /path/to/devkit/dist/devkit_starter-0.1.0-py3-none-any.whl
 uv run devkit sync          # deploys auto-selected bundles (built in: devkit, advisory)
-uv run devkit add starter   # selects a bundle without auto_select and synchronizes
 uv run devkit add git-commits authoring   # opt-in practice bundles built into devkit
 uv run devkit list
 uv run devkit rules check
 ```
 
+A wheel built here works the same way by path (`just model-fetch`, then
+`uv build --all-packages --wheel --out-dir dist`). Installing from Git
+(`git+<repository URL>#subdirectory=packages/devkit`) works without the `search`
+extra only: the embedding model is not in the repository. The example content
+package `devkit-starter` is in each release too: add its wheel the same way, then
+`uv run devkit add starter`.
+
 Native skill and subagent copies go to Codex, Claude Code and Antigravity by
 default; narrow them with `devkit sync --agent codex` (repeatable). To try a sync
 without a consumer project, point `-w` at an existing empty directory:
 `uv run --package devkit devkit sync -w /tmp/my-project`.
+
+## Releasing
+
+Set the new version in `packages/devkit/pyproject.toml`, merge to `main`, then
+push a matching tag: `git tag v0.2.0 && git push origin v0.2.0`. The release
+workflow runs the full CI on the tagged commit, refuses a tag that is not on
+`main` or does not match the devkit version, builds the wheels with
+`just release-build <tag>` (try it locally after `just model-fetch`) and
+publishes the release. `devkit-embed` and `devkit-starter` keep their own
+versions; bump `devkit-embed` only when its model changes, together with the
+`devkit[search]` requirement on it.
 
 ## Documentation
 

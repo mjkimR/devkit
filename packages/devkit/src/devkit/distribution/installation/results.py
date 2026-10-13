@@ -187,14 +187,23 @@ class PlaybookCandidate:
 
 @dataclass(frozen=True)
 class SearchResult:
-    """``devkit playbook search``: ranked candidates within the byte budget; ``truncated`` when some were cut."""
+    """``devkit playbook search``: ranked candidates within the byte budget; ``truncated`` when some were cut.
+
+    ``mode`` is the ranking that ran (``lexical``, ``dense`` or ``hybrid``; ``auto`` resolves to one of them).
+    """
 
     query: str
+    mode: str
     results: list[PlaybookCandidate]
     truncated: bool
 
     def to_dict(self) -> dict[str, Any]:
-        return {"query": self.query, "results": [item.to_dict() for item in self.results], "truncated": self.truncated}
+        return {
+            "query": self.query,
+            "mode": str(self.mode),
+            "results": [item.to_dict() for item in self.results],
+            "truncated": self.truncated,
+        }
 
 
 @dataclass(frozen=True)

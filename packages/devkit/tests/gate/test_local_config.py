@@ -30,10 +30,10 @@ def test_install_writes_a_commented_table_per_gate(repo: Path) -> None:
     assert f"[CONFIG: template=created path={_config(repo)}]" in output
     text = _config(repo).read_text()
     assert tomllib.loads(text) == {}  # every line is a comment until the developer uncomments one
-    assert local_config.mentioned_gates(text) == {"rules-staged", "message-nonempty", "team-block"}
-    assert "# [gates.settings.team-block]\n# pre-commit gate, on by default: test gate\n" in text
-    assert "# enabled = true\n# allow = false  # boolean\n" in text
-    assert "# [gates.settings.message-nonempty]\n# commit-msg gate, on by default:" in text
+    assert local_config.mentioned_gates(text) == {"verify-commands", "message-nonempty", "team-block"}
+    assert "## pre-commit gate, on by default: test gate\n# [gates.settings.team-block]\n" in text
+    assert "#   enabled = true\n#   allow = false  # boolean\n" in text
+    assert "## commit-msg gate, on by default: Refuse" in text
 
     assert "[CONFIG: template=unchanged" in _install(repo)
 
@@ -43,7 +43,7 @@ def test_uncommented_lines_are_kept_and_take_effect(repo: Path) -> None:
     _install(repo)
     path = _config(repo)
     edited = path.read_text().replace("# [gates.settings.team-block]", "[gates.settings.team-block]")
-    edited = edited.replace("# allow = false", "allow = true")
+    edited = edited.replace("#   allow = false", "  allow = true")
     path.write_text(edited)
 
     assert "[CONFIG: template=unchanged" in _install(repo)
@@ -62,9 +62,11 @@ def test_post_sync_appends_only_new_gates(repo: Path) -> None:
 
     assert local_config.post_sync(repo, {}) is None
     text = path.read_text()
-    assert text.startswith(before + "\n\n# [gates.settings.second-gate]\n")
-    assert "# pre-commit gate, off by default: test gate\n# enabled = false\n" in text
-    assert text.count("[gates.settings.rules-staged]") == 1
+    assert text.startswith(
+        before + "\n\n## pre-commit gate, off by default: test gate\n# [gates.settings.second-gate]\n"
+    )
+    assert "# [gates.settings.second-gate]\n#   enabled = false\n" in text
+    assert text.count("[gates.settings.verify-commands]") == 1
 
 
 def test_post_sync_leaves_repositories_without_managed_hooks_alone(repo: Path, tmp_path: Path) -> None:
@@ -112,10 +114,36 @@ class _Gate(BaseGate):
 
 def test_render_table_shows_types_defaults_and_help() -> None:
     assert local_config.render_table(_Gate()) == (
+        "## commit-msg gate, off by default: Checks things.\n"
         "# [gates.settings.sample]\n"
-        "# commit-msg gate, off by default: Checks things.\n"
-        "# enabled = false\n"
-        "# limit = 0  # integer or null; unset by default\n"
-        '# paths = ["src"]  # array of strings; Directories to check.\n'
-        '# label = ""  # string or null; unset by default; Shown in the refusal.\n'
+        "#   enabled = false\n"
+        "#   limit = 0  # integer or null; unset by default\n"
+        '#   paths = ["src"]  # array of strings; Directories to check.\n'
+        '#   label = ""  # string or null; unset by default; Shown in the refusal.\n'
     )
+
+
+def _uncomment_once(block: str) -> str:
+    """What an editor's toggle-comment does to a selection: drop one ``#`` and the space after it."""
+    return "".join(
+        line[2:] if line.startswith("# ") else line[1:] if line.startswith("#") else line
+        for line in block.splitlines(keepends=True)
+    )
+
+
+def test_uncommenting_a_whole_table_keeps_prose_commented_and_yields_valid_toml(repo: Path) -> None:
+    deploy_gate(repo, gate_source())
+    _install(repo)
+    path = _config(repo)
+    text = path.read_text()
+    table = local_config.render_table(
+        next(g for g in load_gate_project(repo).registry.get_all() if g.id == "team-block")
+    )
+    assert table in text
+    path.write_text(text.replace(table, _uncomment_once(table)))
+
+    assert tomllib.loads(path.read_text()) == {"gates": {"settings": {"team-block": {"enabled": True, "allow": False}}}}
+    project = load_gate_project(repo)
+    assert project.validation.errors == ()
+    assert project.config.gates["team-block"].values == {"allow": False}
+    assert tomllib.loads(_uncomment_once(local_config.HEADER)) == {}  # the file header stays prose too

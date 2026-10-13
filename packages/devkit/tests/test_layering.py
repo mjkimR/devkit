@@ -19,8 +19,9 @@ ALLOWED: dict[str, set[str]] = {
     "core": {"advisory"},
     "rules": {"core", "advisory"},
     "workflow": {"core", "advisory", "rules"},
-    "gate": {"core", "advisory", "rules"},
-    "distribution": {"core", "advisory"},
+    "gate": {"core", "advisory", "rules", "compact"},
+    "search": {"core", "advisory"},
+    "distribution": {"core", "advisory", "search"},
     "compact": {"core", "advisory"},
 }
 

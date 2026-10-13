@@ -6,13 +6,15 @@
 # and commits through the installed gate hooks (it needs git, which the runner
 # image provides). There is no release or publish job yet: no package index
 # exists for these wheels, so consumers install from Git or from a built wheel
-# (see scripts/smoke.sh).
+# (see scripts/smoke.sh). Both jobs restore the embedding model files of
+# devkit-embed from the cache keyed by its model.json, else fetch them.
 name: ci
 
 on:
   push:
     branches: [main]
   pull_request:
+  workflow_call:  # release.yml runs the full CI before publishing
 
 permissions:
   contents: read
@@ -31,7 +33,14 @@ jobs:
           enable-cache: true
       - uses: extractions/setup-just@v2
       - run: uv python install 3.12
+      - uses: actions/cache@v4
+        with:
+          path: |
+            packages/devkit-embed/src/devkit_embed/model.safetensors
+            packages/devkit-embed/src/devkit_embed/tokenizer.json
+          key: model-${{ hashFiles('packages/devkit-embed/src/devkit_embed/model.json') }}
       - run: just init
+      - run: just model-fetch
       - run: just lint-check
       - run: just check
       - run: just test
@@ -46,4 +55,10 @@ jobs:
           enable-cache: true
       - uses: extractions/setup-just@v2
       - run: uv python install 3.12
+      - uses: actions/cache@v4
+        with:
+          path: |
+            packages/devkit-embed/src/devkit_embed/model.safetensors
+            packages/devkit-embed/src/devkit_embed/tokenizer.json
+          key: model-${{ hashFiles('packages/devkit-embed/src/devkit_embed/model.json') }}
       - run: just smoke

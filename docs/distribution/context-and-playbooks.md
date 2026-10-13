@@ -73,14 +73,23 @@ aliases: [postgres standby repair, replication failure]
 
 ### Search Engine
 
-`devkit playbook search <query>` runs BM25 over an in-memory index rebuilt from receipt-owned files on every call
-(standard library only, no persistent cache). Only `name`, `description` and `aliases` are indexed ($k_1=1.5$,
-$b=0.75$, positive IDF, unique query terms); bodies never are. Case and Latin accents are normalized and punctuation
-separates terms.
+`devkit playbook search <query>` ranks an in-memory index rebuilt from receipt-owned files on every call (no
+persistent cache) with [`devkit.search`](../search/overview.md). Only `name`, `description` and `aliases` are indexed;
+bodies never are.
 
-- **Bounds**: `limit` 1–20 (default 5), `min_score` $\ge 0$ (default 0.1), `max_bytes` 1024–65536 (default 8192),
+- **Mode**: `auto` (default) is `hybrid` when the `devkit[search]` extra is installed and `lexical` otherwise;
+  `lexical`, `dense` and `hybrid` select one ranking explicitly. `lexical` is BM25 ($k_1=1.5$, $b=0.75$, positive
+  IDF, unique query terms; case and Latin accents are normalized and punctuation separates terms), `dense` the cosine
+  similarity of the query and header embeddings, and `hybrid` their Reciprocal Rank Fusion
+  ([Search Overview](../search/overview.md#2-modes)). An explicit `dense` or `hybrid` without the extra fails with
+  `SEARCH_EXTRA_MISSING` or `SEARCH_MODEL_NOT_FOUND` (exit `2`); only `auto` falls back. The result's `mode` names
+  the ranking that ran, and each `score` is that ranking's: BM25, cosine similarity or the fused value.
+
+- **Bounds**: `limit` 1–20 (default 5), `min_score` $\ge 0$ (default 0.1, the BM25 floor), `min_similarity` 0–1
+  (default 0.35, the cosine floor of `dense` and `hybrid`), `max_bytes` 1024–65536 (default 8192), and `mode`,
   defined once in `installation/config.py` and applied to `[playbooks]` in `.devkit/config.toml` and to the command
-  options alike. A query is at most 512 UTF-8 bytes. An out-of-range option or a query that is not English Latin
+  options alike. In `hybrid` each floor applies to its own ranking before the fusion. The default similarity floor
+  was measured on English metadata: it drops the long tail of weak similarities and keeps the gain of hybrid ranking. A query is at most 512 UTF-8 bytes. An out-of-range option or a query that is not English Latin
   text is `ARGUMENT_INVALID` (exit `2`), naming the option in `target_files`.
 - **Budget**: the JSON output stays within `max_bytes`; whole records that do not fit are omitted and
   `truncated: true` is set.
@@ -92,6 +101,7 @@ uv run devkit playbook search "replica recovery" --limit 3 --min-score 0.2 --max
 ```json
 {
   "query": "replica recovery",
+  "mode": "hybrid",
   "results": [
     {
       "bundle": "starter",
@@ -100,7 +110,7 @@ uv run devkit playbook search "replica recovery" --limit 3 --min-score 0.2 --max
       "description": "Pull request review checklist",
       "aliases": [],
       "path": "/abs/path/.devkit/managed/starter/playbooks/review.md",
-      "score": 0.85
+      "score": 0.032787
     }
   ],
   "truncated": false

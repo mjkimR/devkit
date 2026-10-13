@@ -7,7 +7,7 @@ Personal developer tools monorepo.
 - Python monorepo managed with `uv` workspaces and `just`.
 - Python sources live in `packages/<package>/src/` or `tools/<tool>/src/`; tests belong in each package's `tests/`, never under `src/`.
 - Keep `justfile` recipes thin; shared shell logic belongs in `scripts/`.
-- Inside `packages/devkit`, lower modules never import higher ones (`advisory` < `core` < `rules` < `workflow`/`gate`; `distribution` and `compact` use only `core` and `advisory`); a test enforces the layering.
+- Inside `packages/devkit`, lower modules never import higher ones (`advisory` < `core` < `rules` < `workflow`/`gate`; `search` and `compact` use only `core` and `advisory`, `distribution` also `search`); a test enforces the layering.
 - `docs/<area>/` is canonical for each module's semantics; `docs/<area>/reference.md` and package READMEs stay quick references that link there, and the bundled guide instructions are consumer-facing mirrors kept in step.
 - Write all documentation, architecture specifications, and guide materials in English.
 - Do not commit `.env`, log secrets/PII, or commit/push without explicit instructions.

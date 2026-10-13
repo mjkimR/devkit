@@ -33,7 +33,7 @@ from devkit.core import ReceiptError, load_receipt, load_subclasses, verified_as
 from devkit.gate.engine.base import BaseGate
 from devkit.gate.engine.models import Gate, Stage
 from devkit.gate.errors import GateDefinitionError, GateLoadError
-from devkit.gate.gates import NonEmptyMessageGate, StagedRulesGate
+from devkit.gate.gates import NonEmptyMessageGate, VerifyCommandsGate
 
 GATE_KIND = "gate"
 BUILTIN = "builtin"
@@ -128,8 +128,8 @@ class GateRegistry:
 def default_gate_registry() -> GateRegistry:
     """A registry holding the built-in gates."""
     registry = GateRegistry()
-    registry.register(StagedRulesGate())
     registry.register(NonEmptyMessageGate())
+    registry.register(VerifyCommandsGate())
     return registry
 
 

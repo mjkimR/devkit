@@ -34,8 +34,8 @@ tree top level, else the current directory.
 
 - `check` never writes files. Targets, exclusions and phases:
   [Evaluation Lifecycle, section 3](evaluation-lifecycle.md#3-cli-execution-and-phases).
-- `check --staged` evaluates the Git index (what the `rules-staged` commit gate
-  runs); `check --ci --base <ref>` evaluates `HEAD` against its merge base with
+- `check --staged` evaluates the Git index (list it in the `verify-commands`
+  commit gate to run it before every commit); `check --ci --base <ref>` evaluates `HEAD` against its merge base with
   `<ref>`. Both run the linter phase over the changed files of a materialized
   tree and refuse file arguments, `--phase hygiene` and `fix`
   ([Evaluation Lifecycle, section 6](evaluation-lifecycle.md#6-git-snapshot-gates)).
