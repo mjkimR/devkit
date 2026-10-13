@@ -17,7 +17,7 @@ from devkit.distribution.installation.playbook_search import bm25_scores, search
 from devkit.distribution.installation.playbook_skill import MANAGED_ROOT
 from devkit.distribution.installation.sync import sync_project
 from devkit.distribution.installation.workspace import JOURNAL
-from testsupport.distribution import cli, make_bundle
+from testsupport.distribution import cli, make_bundle, write_bundle
 
 
 def select(target: Path, *bundles: str) -> None:
@@ -174,6 +174,40 @@ def test_bm25_length_normalization_and_term_frequency() -> None:
     assert bm25_scores([], "replica") == []
     assert bm25_scores([""], "replica") == [0]
     assert all(math.isfinite(score) for score in scores)
+
+
+def test_cli_budget_counts_the_printed_bytes_of_accented_headers(tmp_path: Path, target: Path) -> None:
+    # Accented Latin text is several bytes per character; the budget must hold for the bytes printed.
+    # The query term is in half of the headers, so it has a positive IDF.
+    accented = "Récupérer la réplique après échec, étape par étape. " * 4
+    files = {
+        f"playbooks/p{n:02d}.md": f"---\nname: playbook-{n:02d}\ndescription: {accented if n % 2 else 'Other.'}\n---\nBody.\n"
+        for n in range(20)
+    }
+    assets = "".join(
+        f'[[assets]]\nid = "p{n:02d}"\nkind = "playbook"\nsource = "playbooks/p{n:02d}.md"\n' for n in range(20)
+    )
+    installed = write_bundle(tmp_path / "accents", f'schema = 1\nname = "accents"\nversion = "0.1.0"\n{assets}', files)
+    select(target, "accents")
+    sync_project(target, [installed])
+    for max_bytes in ("1024", "2048", "4096"):
+        result = CliRunner().invoke(
+            cli,
+            [
+                "playbook",
+                "search",
+                "replique",
+                "--workspace-root",
+                str(target),
+                "--limit",
+                "20",
+                "--max-bytes",
+                max_bytes,
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        assert json.loads(result.stdout)["truncated"] is True
+        assert len(result.stdout_bytes) <= int(max_bytes)
 
 
 def test_search_adopts_playbooks_config_defaults(tmp_path: Path, target: Path) -> None:

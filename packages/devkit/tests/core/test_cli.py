@@ -93,17 +93,20 @@ def _invoke(*args: str):
     return CliRunner().invoke(probe, list(args))
 
 
-def test_success_prints_one_ascii_object(tmp_path: Path) -> None:
+def test_success_prints_one_utf8_object(tmp_path: Path) -> None:
     result = _invoke("-w", str(tmp_path), "--format", "JSON")
     assert result.exit_code == 0
     assert json.loads(result.stdout) == {"root": str(tmp_path.resolve()), "text": "ü"}
-    assert '"\\u00fc"' in result.stdout and result.stdout_bytes.isascii()
+    # Text stays as written: an escaped "ü" costs the agent context and has to be decoded back.
+    assert '"text": "ü"' in result.stdout and "\\u00fc" not in result.stdout
 
 
 def test_surrogate_escaped_paths_print_deterministically(tmp_path: Path) -> None:
     as_json = _invoke("-w", str(tmp_path), "--format", "json", "--mode", "surrogate")
     assert as_json.exit_code == 0, as_json.stderr
-    assert as_json.stdout_bytes.isascii() and '"bad\\udcffname.md"' in as_json.stdout
+    # The lone surrogate becomes a \udcff escape, which is valid JSON; other text stays UTF-8.
+    assert json.loads(as_json.stdout) == {"files": ["bad\udcffname.md", "ü"]}
+    assert as_json.stdout_bytes == '{\n  "files": [\n    "bad\\udcffname.md",\n    "ü"\n  ]\n}\n'.encode()
     as_text = _invoke("-w", str(tmp_path), "--mode", "surrogate")
     assert as_text.exit_code == 0, as_text.stderr
     assert as_text.stdout_bytes == "[FILE: bad\\udcffname.md ü]\n".encode()
@@ -130,6 +133,8 @@ _PROBE = textwrap.dedent("""
                 click.echo(f"[LINE: {i}]")
         if mode == "json":
             echo_json({"x": ["y" * 100] * 100_000})
+        if mode == "surrogate":
+            echo_json({"files": [b"bad\\xffname.md".decode("utf-8", errors="surrogateescape"), "café"]})
 """)
 
 
@@ -138,8 +143,17 @@ def test_output_is_utf8_whatever_the_locale() -> None:
     result = _run_python(script, LC_ALL="C", PYTHONIOENCODING="latin-1", PYTHONUTF8="0")
     assert result.returncode == 2
     assert json.loads(result.stdout)["error"]["message"] == "RuntimeError: café"
+    assert '"RuntimeError: café"'.encode() in result.stdout  # JSON text in UTF-8, not é
     assert result.stderr.decode("utf-8").startswith("[ERROR]  (UNEXPECTED_ERROR) RuntimeError: café\n[ACTION] ")
     assert "— " in result.stderr.decode("utf-8")  # the ACTION text's em dash, in UTF-8
+
+
+def test_json_with_a_lone_surrogate_stays_valid_whatever_the_locale() -> None:
+    script = _PROBE + "cmd(['--mode', 'surrogate', '--format', 'json'])\n"
+    result = _run_python(script, LC_ALL="C", PYTHONIOENCODING="latin-1", PYTHONUTF8="0")
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout) == {"files": ["bad\udcffname.md", "café"]}
+    assert b'"bad\\udcffname.md"' in result.stdout and '"café"'.encode() in result.stdout
 
 
 @pytest.mark.parametrize("mode", ["lines", "json"])

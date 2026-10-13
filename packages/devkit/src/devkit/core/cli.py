@@ -10,7 +10,7 @@ distribution commands must agree on:
 - ``boundary``: renders any error as an Agent Advisory Protocol block on
   stderr and, when stdout is JSON, as ``{"error": {...}}`` on stdout, then
   exits with the error's ``exit_code``;
-- ``echo_json``: stdout JSON is always exactly one object, ASCII-only;
+- ``echo_json``: stdout JSON is always exactly one object, in UTF-8;
 - ``exit_on_problems``: a command that does work and collected problems
   exits with the highest ``exit_code`` among them;
 - ``report_exit_code``: a status or show command (``devkit status``,
@@ -87,11 +87,14 @@ def is_json(output_format: object) -> bool:
 def echo_json(data: Mapping[str, object]) -> None:
     """Print one JSON object on stdout.
 
-    Non-ASCII characters are written as ``\\uXXXX`` escapes, so the bytes never
-    depend on the locale and a ``surrogateescape``-decoded path (a lone
-    surrogate) still yields valid JSON.
+    Text is written as UTF-8, not ``\\uXXXX`` escapes, so a non-English path or
+    message reaches the agent as it is and costs no extra context. ``boundary``
+    makes stdout UTF-8 with ``backslashreplace``, so the bytes never depend on
+    the locale and a ``surrogateescape``-decoded path (a lone surrogate) is
+    written as its ``\\uXXXX`` escape, which is still valid JSON. Size budgets
+    (``playbook search --max-bytes``) measure this same serialization.
     """
-    click.echo(json.dumps(data, indent=2, ensure_ascii=True))
+    click.echo(json.dumps(data, indent=2, ensure_ascii=False))
 
 
 def existing_directory(value: str | Path, param: str = "--workspace-root") -> Path:
