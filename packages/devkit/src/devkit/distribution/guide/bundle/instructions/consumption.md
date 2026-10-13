@@ -84,6 +84,7 @@ uv run devkit rules check --staged            # exactly what a commit would cont
 uv run devkit rules check --ci --base origin/main
 uv run devkit rules fix --dry-run
 uv run devkit rules explain <RULE-id>
+uv run devkit rules test [<RULE-id>]            # the tests in each rule's folder (needs pytest)
 ```
 
 Configure a rule's severity, phase or settings in `[rules]` of

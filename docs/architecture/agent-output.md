@@ -36,7 +36,7 @@ Text-mode stdout is made of one-line sentinels:
 - A value without spaces is written bare; free text (messages, titles, remediations, descriptions) is written as a JSON string, so quotes, backslashes and newlines are escaped and the fact stays on one line.
 - An empty value is `-`; a boolean is `yes` or `no`; a list is space- or comma-separated as the command documents it.
 - A command that succeeds with nothing to report prints an `[OK: ...]` line, so an empty stdout never has to be interpreted.
-- A document a command is asked to print (`devkit rules explain`'s guide, `devkit workflow show`'s rendering) follows its sentinel lines as written.
+- A document a command is asked to print (`devkit rules explain`'s guide, `devkit workflow show`'s rendering) follows its sentinel lines as written, and so does the bounded excerpt of a failed command after its `[RUN_OUTPUT: ...]` (`devkit run`) or `[RULE_TEST_OUTPUT: ...]` (`devkit rules test`) line.
 
 **Reserved names.** `ERROR`, `WARN`, `WARNING`, `NOTICE`, `INFO`, `DEBUG`, `ACTION`, `WHEN`, `TARGET`, `FIX`, `REPORT` and `DETAIL` are stderr sentinels and are never used as a stdout `KIND`. Something that would read as `[NOTICE: ...]` on stdout is a notice and goes to stderr; a fact that merely mentions a notice-like state gets its own kind (for example `[STALE_APPROVAL: ...]`).
 

@@ -3,7 +3,8 @@
 Text output is one ``[KIND: ...]`` sentinel line per fact, without colour:
 ``[VIOLATION: ...]`` per finding (``[RULE_COUNTS: ...]`` per rule with
 ``--summary-only``), then ``[SUMMARY: errors=N warnings=N infos=N fixed=N]``
-and ``[OK: ...]`` when the run passes. Free text (messages, remediations,
+and ``[OK: ...]`` when the run passes; ``test`` prints ``[RULE_TEST: ...]`` per
+rule (with the failure view of a failed run) and ``[SUMMARY: rules=N ...]``. Free text (messages, remediations,
 descriptions) is written as a JSON string, so every fact stays on one line.
 Warnings and notices are advisory blocks on stderr (``devkit.core.cli.echo_notices``).
 """
@@ -11,6 +12,7 @@ Warnings and notices are advisory blocks on stderr (``devkit.core.cli.echo_notic
 from __future__ import annotations
 
 import json
+import re
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -29,6 +31,7 @@ from devkit.rules.engine.phases import (
     transition_entries,
 )
 from devkit.rules.engine.policy import effective_severity
+from devkit.rules.engine.rule_tests import RuleTestRun
 from devkit.rules.engine.settings import SettingsResolver
 from devkit.rules.rules.base import guide_path
 
@@ -44,6 +47,16 @@ def _quote(value: str) -> str:
 def _value(value: object) -> str:
     """A setting value as one-line JSON (``null`` for ``None``)."""
     return json.dumps(value, ensure_ascii=False)
+
+
+_BARE = re.compile(r'[^\s"\]]+')
+
+
+def _bare(value: str | None) -> str:
+    """``-`` for none, bare without spaces, quotes or brackets, else a JSON string."""
+    if not value:
+        return "-"
+    return value if _BARE.fullmatch(value) else _quote(value)
 
 
 def echo_ok(text: str = OK_TEXT) -> None:
@@ -196,3 +209,71 @@ def print_explain(rule: Rule, entry: dict[str, Any], resolver: SettingsResolver 
     if guide is not None:
         click.echo()
         click.echo(guide.read_text("utf-8").rstrip())
+
+
+def _shows_failure(item: RuleTestRun) -> bool:
+    """Whether a run's failure view belongs to this result: a failed run that ran to the end."""
+    return item.failed and item.run is not None and not item.run.interrupted
+
+
+def rule_test_entry(item: RuleTestRun, workspace_root: Path, *, details: bool = True) -> dict[str, Any]:
+    """One rule's result as JSON; ``details`` adds the failure view (summaries, failed tests, excerpt)."""
+    run = item.run
+    entry: dict[str, Any] = {
+        "rule_id": item.rule_id,
+        "tests": _display_path(item.tests, workspace_root),
+        "result": item.result.value,
+        "exit_code": item.exit_code,
+        "log": str(run.log) if run is not None else None,
+        "summaries": [],
+        "failures": [],
+        "output": None,
+        "omitted": None,
+    }
+    if details and run is not None and _shows_failure(item):
+        found = run.scan
+        entry["summaries"] = list(found.summaries)
+        entry["failures"] = [{"test": f.test, "kind": f.kind, "message": f.message} for f in found.failures]
+        entry["output"] = found.output
+        entry["omitted"] = {"failures": found.omitted.failures, "output": found.omitted.output}
+    return entry
+
+
+def print_rule_tests(results: Sequence[RuleTestRun], workspace_root: Path, summary: Mapping[str, int]) -> None:
+    """One ``[RULE_TEST: ...]`` line per rule, the failure view after a failed run, then ``[SUMMARY: ...]``.
+
+    The failure view is compact's (``devkit run``): the run's summary lines, the
+    failed tests the excerpt cuts out, then the excerpt. Rules sharing a run
+    show it once.
+    """
+    shown: set[Path] = set()
+    for item in results:
+        run = item.run
+        exit_code = "-" if item.exit_code is None else str(item.exit_code)
+        tests = _display_path(item.tests, workspace_root)
+        click.echo(
+            f"[RULE_TEST: {item.rule_id} tests={_bare(tests)} result={item.result.value} exit={exit_code} "
+            f"log={_bare(str(run.log) if run is not None else None)}]"
+        )
+        if run is None or not _shows_failure(item) or run.log in shown:
+            continue
+        shown.add(run.log)
+        found = run.scan
+        for line in found.summaries:
+            click.echo(f"[RULE_TEST_SUMMARY: {item.rule_id} {_quote(line)}]")
+        for failure in found.failures:
+            click.echo(
+                f"[RULE_TEST_FAILURE: {item.rule_id} {_quote(failure.test)} kind={failure.kind} "
+                f"message={_bare(failure.message)}]"
+            )
+        omitted = found.omitted
+        click.echo(
+            f"[RULE_TEST_OUTPUT: {item.rule_id} shown={len(found.output)} omitted={omitted.output} "
+            f"filtered={found.filtered}]"
+        )
+        if found.output:
+            click.echo(found.output, nl=not found.output.endswith("\n"))
+    click.echo(
+        f"[SUMMARY: rules={summary['rules']} passed={summary['passed']} failed={summary['failed']} "
+        f"no_tests={summary['no_tests']}]"
+    )

@@ -10,8 +10,9 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 from devkit.cli import cli
-from devkit.core import GUIDANCE_END, GUIDANCE_START
+from devkit.core import load_receipt
 from devkit.distribution.bundles import load_bundle
+from devkit.rules import resolve_managed_rules
 from testsupport.rules import write
 
 PACKAGE = Path(__file__).parents[2]
@@ -70,62 +71,38 @@ def test_add_deploys_both_presets_and_the_playbooks_are_searchable(consumer: Pat
         assert found["results"][0]["name"] == name
 
 
-def test_skill_document_size_checks_project_and_bundle_sources(consumer: Path) -> None:
-    write(consumer, ".agents/skills/demo/SKILL.md", "x" * 8192)
-    write(consumer, ".claude/skills/demo/references/guide.md", "x" * 8193)
-    write(consumer, "tools/kit/src/kit/bundle/playbooks/ops.md", "x" * 9000)
-    write(consumer, "tools/kit/src/kit/bundle/skills/demo/scripts/tool.py", "x" * 9000)
-    write(consumer, "docs/large.md", "x" * 9000)
-    # A projection the receipt owns is fixed in its bundle, never reported in the project.
-    write(consumer, ".claude/skills/devkit-playbook/SKILL.md", "x" * 9000)
-    found = _violations(consumer)["RULE-skill-document-size"]
-    assert [item["file"] for item in found] == [
-        ".claude/skills/demo/references/guide.md",
-        "tools/kit/src/kit/bundle/playbooks/ops.md",
-    ]
-    assert found[0]["message"] == "File has 8193 bytes; effective max_bytes is 8192"
-    assert "skill-authoring playbook" in str(found[0]["remediation"])
-
-
-def test_skill_document_size_settings_and_exceptions(consumer: Path) -> None:
-    write(consumer, ".agents/skills/demo/SKILL.md", "x" * 9000)
-    write(consumer, "agents/custom/SKILL.md", "x" * 9000)
-    (consumer / ".devkit/config.toml").write_text(
-        (consumer / ".devkit/config.toml").read_text()
-        + '\n[rules.settings.RULE-skill-document-size]\npaths = ["agents/**"]\n'
-        + "\n# Read as one procedure.\n[[rules.settings.RULE-skill-document-size.overrides]]\n"
-        + 'path = "agents/custom/SKILL.md"\nmax_bytes = 12288\n'
-    )
-    assert "RULE-skill-document-size" not in _violations(consumer)
-    (consumer / ".devkit/config.toml").write_text(
-        (consumer / ".devkit/config.toml").read_text() + "\n[rules.settings.RULE-agent-guide-size]\nmax_bytes = 0\n"
-    )
-    result = CliRunner().invoke(cli, ["rules", "check", "-w", str(consumer), "--phase", "hygiene"])
-    assert result.exit_code == 2 and "max_bytes must be a positive integer" in result.output
-
-
-def test_agent_guide_size_reports_the_devkit_block_share(consumer: Path) -> None:
-    guide = consumer / "AGENTS.md"
-    text = guide.read_text()
-    block = text[text.index(GUIDANCE_START) : text.index(GUIDANCE_END) + len(GUIDANCE_END)]
-    guide.write_text("# Project\n\n" + "x" * 8192 + "\n\n" + text)
-    write(consumer, "packages/app/AGENTS.md", "x" * 9000)
-    write(consumer, "tools/kit/src/kit/bundle/AGENTS.md", "x" * 9000)  # a bundle constitution
-    write(consumer, "docs/AGENTS-notes.md", "x" * 9000)
-    (consumer / "CLAUDE.md").symlink_to("AGENTS.md")
-    found = _violations(consumer)["RULE-agent-guide-size"]
-    assert [item["file"] for item in found] == ["AGENTS.md", "packages/app/AGENTS.md"]
-    size = guide.stat().st_size
-    share = len(block.encode())
-    assert found[0]["message"] == (
-        f"Guide has {size} bytes, including {share} bytes of the devkit guidance block; effective max_bytes is 8192"
-    )
-    assert found[1]["message"] == "Guide has 9000 bytes; effective max_bytes is 8192"
-
-
-def test_rules_follow_changed_file_targets(consumer: Path) -> None:
+def test_deployed_rules_run_from_the_receipt(consumer: Path) -> None:
+    # Each rule's behaviour is tested in its folder (rules/<name>/tests/); this checks the deployed copies load.
     write(consumer, ".agents/skills/demo/SKILL.md", "x" * 9000)
     write(consumer, "packages/app/AGENTS.md", "x" * 9000)
-    found = _violations(consumer, "packages/app/AGENTS.md")
-    assert "RULE-skill-document-size" not in found
+    found = _violations(consumer)
+    assert [item["file"] for item in found["RULE-skill-document-size"]] == [".agents/skills/demo/SKILL.md"]
     assert [item["file"] for item in found["RULE-agent-guide-size"]] == ["packages/app/AGENTS.md"]
+
+
+def test_rule_tests_ship_with_the_rules_and_are_never_loaded(consumer: Path) -> None:
+    assert _run("bundle", "validate", str(BUNDLE))
+    receipt = load_receipt(consumer)
+    assert receipt is not None
+    for name in ("skill_document_size", "agent_guide_size"):
+        test = f".devkit/managed/authoring/rules/{name}/tests/test_rule.py"
+        assert (consumer / test).is_file()
+        assert test in receipt.file_records
+    packages = resolve_managed_rules(consumer).packages
+    assert sorted(dotted for package in packages for dotted in package.modules) == ["rule", "rule"]
+
+
+def test_rules_test_runs_the_deployed_copy_without_writing_into_it(consumer: Path) -> None:
+    result = CliRunner().invoke(
+        cli, ["rules", "test", "-w", str(consumer), "RULE-skill-document-size", "RULE-agent-guide-size"]
+    )
+    assert result.exit_code == 0, result.output
+    lines = result.stdout.splitlines()
+    assert lines[0].startswith(
+        "[RULE_TEST: RULE-skill-document-size tests=.devkit/managed/authoring/rules/skill_document_size/tests "
+        "result=passed exit=0 log="
+    )
+    assert lines[-1] == "[SUMMARY: rules=2 passed=2 failed=0 no_tests=0]"
+    written = [p for p in (consumer / ".devkit").rglob("*") if p.name in {"__pycache__", ".pytest_cache"}]
+    assert written == []
+    assert _run("sync", "--check", "--workspace-root", str(consumer)) is not None

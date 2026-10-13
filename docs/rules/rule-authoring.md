@@ -1,6 +1,6 @@
 # Rule Authoring Guide and Rule Protocol
 
-Rule contracts, the workspace API rules read through, and where rules load from.
+Rule contracts, the workspace API rules read through, where rules load from, and how a rule is tested.
 Related: [Rule Engine Overview](overview.md), [Evaluation Lifecycle](evaluation-lifecycle.md),
 [Rules Reference](reference.md).
 
@@ -86,7 +86,22 @@ class FileLengthRule(BaseRule):
 
 ### Optional `guide`
 
-`guide` names a Markdown file relative to the module that defines the rule class. `devkit rules explain <RULE-id>` prints it and violation output cites its path, so the full remediation need not travel in every message. Every rule, built in or distributed, is one directory: `rule.py` defines the class and `guide.md` beside it is the guide (`guide="guide.md"`), for example `devkit/rules/rules/file_length/`; a plugin rule's guide lives in its package directory, next to the module defining the class.
+`guide` names a Markdown file relative to the module that defines the rule class. `devkit rules explain <RULE-id>` prints it and violation output cites its path, so the full remediation need not travel in every message. Every rule, built in or distributed, is one directory: `rule.py` defines the class, `guide.md` beside it is the guide (`guide="guide.md"`) and `tests/` holds its tests (section 6), for example `devkit/rules/rules/file_length/`; a plugin rule's guide lives in its package directory, next to the module defining the class.
+
+### Optional `related`
+
+A guide explains a violation; the judgment or procedure behind the rule usually lives elsewhere: an instruction (the
+policy the rule checks part of) or a playbook (the procedure that resolves its violations). `related` names them as
+`<bundle>:<asset-id>`, and `devkit rules explain` prints each as
+`[RELATED: <ref> kind=instruction|playbook path=<file>]`, the path being the file agents read (the project override,
+else the managed copy, from the installation receipt). An entry that is not deployed or is another kind is printed with
+`kind=- path=-` and a `RULES_RELATED_UNRESOLVED` notice; a malformed entry is `RULES_DEFINITION_INVALID` when the rule
+loads. The guide then says when to read them instead of repeating them, and the instruction names the rule by ID
+without repeating its checks.
+
+```python
+super().__init__(id="RULE-skill-document-size", ..., guide="guide.md", related=("authoring:skill-authoring",))
+```
 
 ### Guide Format
 
@@ -98,7 +113,7 @@ reads it to decide what to do. Every guide, built in or distributed, uses the sa
 
 ## 1. Overview          what the rule guarantees and why; phase and severity; which files it checks and which not
 ## 2. Cause of Violation each condition reported, with its message
-## 3. Remediation       the autofix, if any, and what to do by hand
+## 3. Remediation       the autofix, if any, what to do by hand, and when to read the `related` assets
 ## 4. Configuration     settings (type, default, meaning), path overrides; "no settings" when there are none
 ## 5. Exceptions        how a justified exception is recorded (path overrides, `[rules] exclude`, severity overrides)
 ## 6. Examples          optional
@@ -145,7 +160,7 @@ rules/
     headings.py          # helper module, imported relatively
     doc_heading.md       # the guide (guide="doc_heading.md")
     tests/
-      test_headings.py   # tests beside the code; never imported by devkit
+      test_rule.py       # tests beside the code; never imported by devkit's loaders (section 6)
 ```
 
 Every `.py` file of the directory, recursively, is a module of one package, except files under a `tests` directory, `test_*.py` and `*_test.py` files, `__pycache__` and hidden entries. Modules import each other relatively (`from .headings import starts_with_h1`, `from .sub import x`), also lazily inside functions at run time; they cannot import a file that is not part of the package. Any other installed package (such as `devkit` itself) is imported absolutely.
@@ -198,7 +213,7 @@ class DocHeadingRule(BaseRule):
         return violations
 ```
 
-Saved as `rules/doc_heading/`, it runs with `devkit rules check --rules-dir rules`. Tests under `rules/doc_heading/tests/` import the modules by whatever means the project's test runner provides; devkit never imports them.
+Saved as `rules/doc_heading/`, it runs with `devkit rules check --rules-dir rules`, and its tests with `devkit rules test RULE-doc-heading --rules-dir rules` (section 6).
 
 ## 4. Built-in Rules
 
@@ -232,3 +247,48 @@ print(f"Total findings: {len(result.violations)}")
 ```
 
 `RuleContext` takes every argument by keyword; only `workspace_root` is required. Pass `cache=WorkspaceCache(root)` to share one cache across several evaluations; without it the context creates its own. A cache built for another root is refused. To run a project as `devkit rules check` does (policy, receipt rules and `rules_dir` together), call `run_project_rules` instead ([Rules Reference, Library](reference.md#library)).
+
+## 6. Testing a Rule
+
+A rule's tests live in its folder, `<rule folder>/tests/`, so they travel with the rule: a bundle's `kind = "rule"`
+asset deploys them with the code (`devkit sync` records them in the receipt), and the plugin loader never imports
+anything under `tests/` or named `test_*.py`/`*_test.py`. Leave `tests/` without an `__init__.py`; pytest imports the
+files by path (`--import-mode=importlib`). The built-in rules follow the same layout
+(`devkit/rules/rules/<name>/tests/test_rule.py`), as do the `authoring` bundle's rules.
+
+`devkit.rules.testing` loads and evaluates a rule as devkit does ([Rules Reference, Rule tests](reference.md#rule-tests)):
+
+- `load_rule(__file__)` loads the folder above `tests/` as a plugin package, exactly as a deployed copy is loaded, and
+  returns its rule (`load_rule(__file__, "RULE-x")` when the package defines several). The tests of a deployed copy
+  therefore test that copy. A built-in rule is an importable module: its tests construct it directly.
+- `check(rule, root, files, ...)` writes `files` under `root` (pytest's `tmp_path`), evaluates the rule alone with
+  `evaluate_rules` and returns its violations; `targets`, `fix`, `dry_run`, `phase`, `settings` (the
+  `[rules.settings.<RULE-id>]` values, path overrides under `"overrides"`) and `exclude` (`[rules] exclude`)
+  match a project run. A run that reports
+  problems (settings that do not type-check, a rule that raises) raises `RulesRunError` with them; `evaluate` returns
+  the whole `EvaluationResult` instead, to assert on those problems.
+
+```python
+# rules/doc_heading/tests/test_rule.py
+from devkit.rules.testing import check, load_rule
+
+RULE = load_rule(__file__)
+
+
+def test_a_document_without_a_heading_is_reported(tmp_path):
+    found = check(RULE, tmp_path, {"docs/a.md": "text\n", "docs/b.md": "# B\n", "README.md": "text\n"})
+    assert [(v.file, v.line) for v in found] == [("docs/a.md", 1)]
+
+
+def test_only_targets_are_checked(tmp_path):
+    files = {"docs/a.md": "text\n", "docs/c.md": "text\n"}
+    assert [v.file for v in check(RULE, tmp_path, files, targets=["docs/c.md"])] == ["docs/c.md"]
+```
+
+`devkit rules test [RULE-id]...` runs the tests of the named rules (every rule when none is named), resolved as for
+`devkit rules explain`: built in, synchronized (the managed copy, or a project override's copy when the rule class is
+defined there) and `--rules-dir`. Each tests directory runs in a pytest subprocess from the workspace root, writing
+neither bytecode nor a pytest cache next to the tests; arguments after `--` go to pytest
+(`devkit rules test RULE-doc-heading --rules-dir rules -- -k heading -x`). pytest must be importable by the interpreter
+running devkit (`RULES_TEST_UNAVAILABLE` otherwise: `uv add --dev pytest`). Output and exit codes:
+[Rules Reference](reference.md#cli-usage).

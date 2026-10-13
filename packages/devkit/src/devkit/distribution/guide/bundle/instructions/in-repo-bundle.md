@@ -25,7 +25,7 @@ the assets by hand.
       bundle/
         bundle.toml
         AGENTS.md                     # optional constitution
-        rules/<slug>/<slug>.py        # one directory per rule: modules, guide, tests
+        rules/<slug>/<slug>.py        # one directory per rule: modules, guide, tests/
         skills/<slug>/SKILL.md
         playbooks/<slug>.md
         instructions/<slug>.md

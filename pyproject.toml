@@ -52,7 +52,13 @@ devkit = { workspace = true }
 devkit-advisory = { workspace = true }
 
 [tool.pytest.ini_options]
-testpaths = ["packages/devkit/tests", "packages/devkit-advisory/tests", "packages/devkit-starter/tests"]
+# Rule tests live in each rule's folder under src (`<rule>/tests/`), so devkit's sources are collected too.
+testpaths = [
+    "packages/devkit/tests",
+    "packages/devkit/src",
+    "packages/devkit-advisory/tests",
+    "packages/devkit-starter/tests",
+]
 pythonpath = ["packages/devkit/tests"]
 addopts = ["--import-mode=importlib"]
 log_level = "INFO"

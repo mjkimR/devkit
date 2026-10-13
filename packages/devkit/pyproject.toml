@@ -49,7 +49,7 @@ build-backend = "hatchling.build"
 packages = ["src/devkit"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "src"]  # rule tests live in each rule's folder (`<rule>/tests/`)
 pythonpath = ["tests"]
 addopts = ["--import-mode=importlib"]
 log_level = "INFO"

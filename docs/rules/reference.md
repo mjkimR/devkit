@@ -21,12 +21,13 @@ devkit rules check --ci [--base REF] [-w DIR] [--rules-dir DIR] [--format text|j
 devkit rules fix [-w DIR] [-p linter|hygiene] [--rules-dir DIR] [--dry-run] [--format text|json] [--summary-only] [TARGETS]...
 devkit rules phases [-w DIR] [--rules-dir DIR] [--format text|json]
 devkit rules explain RULE-ID [-w DIR] [--rules-dir DIR] [--format text|json]
+devkit rules test [RULE-ID]... [-w DIR] [--rules-dir DIR] [--format text|json] [-- PYTEST-ARGS...]
 ```
 
 In another project: `uv add "git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"`,
 then `uv run devkit rules check`. In this monorepo, `just rules-check`,
-`just rules-fix`, `just rules-phases` and `just rules-explain` pass their
-arguments through.
+`just rules-fix`, `just rules-phases`, `just rules-explain` and `just rules-test`
+pass their arguments through.
 
 Without `-w`/`--workspace-root` the commands use the project root of the current
 directory: the nearest directory with a `.devkit/` folder, else the Git work
@@ -42,8 +43,27 @@ tree top level, else the current directory.
 - `fix --dry-run` reports the initial findings, marking fixable ones
   `status=fixable`, without running any fixer.
 - `phases` prints each rule's default and effective phase without evaluating.
-- `explain <RULE-id>` prints a rule's phase, severity, effective settings and
-  its guide document.
+- `explain <RULE-id>` prints a rule's phase, severity, effective settings, the
+  instructions and playbooks it names as `related` (resolved to the file agents
+  read) and its guide document.
+- `test [RULE-id]...` runs the tests in each rule's folder (`<rule folder>/tests/`;
+  every rule when none is named), with rules resolved as for `explain`
+  (built-in, synchronized, `--rules-dir`). The rule folder is the directory of
+  the module defining the rule class, or for a plugin package its root in the
+  tree that module came from (a project override's copy when the class is
+  defined there). Each tests directory runs once as
+  `python -m pytest <tests> --import-mode=importlib -p no:cacheprovider -c <null> --rootdir <rule folder> --confcutdir <rule folder> [PYTEST-ARGS]`
+  in a subprocess of the interpreter running devkit, from the workspace root but
+  isolated from the project: no pytest configuration file is read and no
+  `conftest.py` above the rule folder applies, so a rule's tests depend on its
+  folder alone (a project's `addopts` or `filterwarnings = error` cannot break
+  them), with
+  `PYTHONDONTWRITEBYTECODE=1`: nothing is written next to the tests, so a run
+  leaves `.devkit/managed/` untouched. The full output goes to a log file, as
+  with `devkit run` ([Compact Reference](../compact/reference.md)). Arguments
+  after `--` are passed to pytest. Loading and policy problems are reported as
+  warnings; a rule that fails to load is not available to test. Writing the
+  tests: [Rule Authoring Guide, section 6](rule-authoring.md#6-testing-a-rule).
 
 ### Exit codes
 
@@ -54,6 +74,7 @@ The devkit convention ([Errors, Exit Codes and Platforms](../architecture/overvi
 | `check`, `fix` | no unresolved error-severity violation (warnings and infos alone do not fail; `fix` repaired every fixable finding) | unresolved error violations remain | the run could not evaluate: usage or argument error, unreadable `.devkit/config.toml` (`CONFIG_INVALID`), invalid `[rules]` table, rule loading, policy or execution problem, invalid target, Git snapshot failure; takes precedence over violations found in the same run |
 | `phases` | plan printed | - | usage or argument error, unreadable config or invalid `[rules]` table, any loading or policy problem (printed after the plan) |
 | `explain` | rule described (loading and policy problems of other rules are reported as warnings) | - | usage or argument error (an unknown rule ID is `ARGUMENT_INVALID`), unreadable config or invalid `[rules]` table, a policy problem of the described rule |
+| `test` | no selected rule's tests failed (`no-tests` is not a failure; loading and policy problems are warnings) | a selected rule's tests failed (any pytest exit code other than `0` and `5`) | usage or argument error (an unknown rule ID is `ARGUMENT_INVALID`), unreadable config or invalid `[rules]` table, pytest not importable (`RULES_TEST_UNAVAILABLE`); a run interrupted by signal `N` exits `128 + N` |
 
 A command that collects loading, policy or execution problems exits with the
 highest `exit_code` among them (`2` for every such problem today). Argument
@@ -96,16 +117,46 @@ parseable:
   the flag.
 - `phases`: one `[PHASE: RULE-id default=... effective=... overridden=yes|no promote_to=...]` line per rule.
 - `explain`: `[RULE: ...]`, `[DESCRIPTION: ...]`, one
+  `[RELATED: <bundle>:<asset-id> kind=instruction|playbook path=<file>]` per related
+  asset (`kind=- path=-` when it is not deployed), one
   `[SETTING: key=value default=value]` per setting and one
   `[SETTING_OVERRIDE: path=... key=value ...]` per override (or
   `[SETTINGS: none]`), then the guide document as written.
+- `test`: one `[RULE_TEST: RULE-id tests=<dir> result=passed|failed|no-tests exit=<n> log=<path>]`
+  per rule, in the order named (sorted by ID when none is named); `tests` is
+  workspace-relative when inside the workspace, else absolute, and `exit` and
+  `log` are `-` when there is no tests directory (`exit=5`, pytest's "no tests
+  collected", is also `no-tests`). After a failed run comes compact's failure
+  view: `[RULE_TEST_SUMMARY: RULE-id "<pytest summary>"]` lines,
+  `[RULE_TEST_FAILURE: RULE-id "<test id>" kind=failed|error message=...]` for
+  the failed tests the excerpt cuts out, and
+  `[RULE_TEST_OUTPUT: RULE-id shown=N omitted=N filtered=N]` followed by the
+  head-and-tail excerpt (pytest's short test summary names every failed test).
+  Rules defined in one package share one run, shown once. Last,
+  `[SUMMARY: rules=N passed=N failed=N no_tests=N]`.
+
+```text
+[RULE_TEST: RULE-markdown-link tests=packages/devkit/src/devkit/rules/rules/markdown_link/tests result=passed exit=0 log=/tmp/devkit-run-501/a8ae3cd8d8a1/20261013-135346-python3-m-uysb0n32.log]
+[RULE_TEST: RULE-doc-heading tests=rules/doc_heading/tests result=failed exit=1 log=/tmp/devkit-run-501/a8ae3cd8d8a1/20261013-135346-python3-m-8k9ofwgf.log]
+[RULE_TEST_SUMMARY: RULE-doc-heading "1 failed, 1 passed in 0.04s"]
+[RULE_TEST_OUTPUT: RULE-doc-heading shown=1188 omitted=0 filtered=4]
+...
+FAILED rules/doc_heading/tests/test_rule.py::test_fails - AssertionError: expected a ...
+========================= 1 failed, 1 passed in 0.04s ==========================
+[SUMMARY: rules=2 passed=1 failed=1 no_tests=0]
+```
 
 `--format json` prints exactly one object on stdout:
 `{"violations": [...], "errors": [...], "notices": [...]}` (`check`, `fix`),
 `{"rules": [...], "errors": [...]}` with one object per rule carrying
 `rule_id`, `default_phase`, `effective_phase`, `overridden` and `promote_to`
-(`phases`), or `{"rule": {...}, "notices": [...], "errors": [...]}`
-(`explain`). `errors` holds the collected problems and `notices` the warnings
+(`phases`), `{"rule": {...}, "notices": [...], "errors": [...]}`
+(`explain`), or `{"results": [...], "summary": {...}, "notices": [...]}`
+(`test`: one result per rule with `rule_id`, `tests`, `result`, `exit_code`
+and `log`, `null` without a run, and for a failed run `summaries`, `failures`
+(`test`, `kind`, `message`), `output` (the excerpt) and `omitted`
+(`failures`, `output`), otherwise empty or `null`; `summary` has `rules`,
+`passed`, `failed` and `no_tests`). `errors` holds the collected problems and `notices` the warnings
 and notices, as `to_dict()` objects (each with its `code`, `level`,
 `exit_code`, `rule_id` and advisory). A command that fails before it has a
 result prints `{"error": {...}}` instead.
@@ -216,6 +267,39 @@ themselves ([Rule Authoring Guide, section 5](rule-authoring.md#5-rule-sources-a
 `validate_policy` checks a `[rules]` policy against loaded rules and returns
 `PolicyError` objects that carry the rule ID.
 
+### Rule tests
+
+`devkit.rules.testing` is what the tests in a rule's folder use
+([Rule Authoring Guide, section 6](rule-authoring.md#6-testing-a-rule)):
+
+- `load_rule(anchor, rule_id=None) -> Rule`: `anchor` is a test file
+  (`__file__`) under `<rule folder>/tests/`, or the rule folder itself; the
+  folder is loaded as a plugin package, as devkit loads a deployed rule, and
+  the rule with `rule_id` (or the only one) is returned. Raises `RuleLoadError`
+  (`RULES_LOAD_FAILED`) when the folder fails to load, defines no rule, several
+  without `rule_id`, or none with it.
+- `check(rule, root, files=None, *, targets=(), fix=False, dry_run=False, settings=None, phase=None) -> list[Violation]`:
+  writes `files` (workspace-relative path to `str` or `bytes`) under `root`,
+  evaluates the one rule with `evaluate_rules` (phase defaults to the rule's
+  declared phase; `targets` are files or directories, none means the whole
+  workspace) and returns its violations with their effective phase and
+  severity; raises `RulesRunError` (`RULES_RUN_FAILED`) carrying the problems
+  when the evaluation reports any. `settings` is the
+  `[rules.settings.<RULE-id>]` table as values, path overrides under
+  `"overrides"`; it goes through the configuration parser (`RulesConfigError`
+  for a malformed shape) and the `SettingsResolver` of a project run.
+- `evaluate(...)`: the same arguments, returning the whole `EvaluationResult`
+  without raising for its problems; `write_files(root, files)` and
+  `rule_directory(anchor)` are the steps on their own.
+
+`devkit.rules.engine.rule_tests` is the command's library half:
+`rule_folder(rule)` and `tests_directory(rule)` locate a rule's folder and
+`tests/`, and `run_rule_tests(root, rules, pytest_args=())` returns one
+`RuleTestRun` per rule (`rule_id`, `tests`, `result` as `RuleTestResult`,
+`run` as the `devkit.compact.CommandRun`, `exit_code`), raising
+`RulesTestUnavailableError` when pytest is not importable; it never prints.
+`devkit.compact` is imported only when tests run.
+
 ### Custom rules
 
 `--rules-dir path/to/rules` (`rules_dir`) loads each immediate subdirectory
@@ -290,6 +374,7 @@ are returned in `RuleRegistry.errors`, `ProjectRun.load_errors` and
 | `SettingsError` | `RULES_SETTINGS_INVALID` | `INPUT_ERROR`, or `MAINTENANCE` for a defect in the rule's settings declaration | settings do not type-check or `validate_settings` rejects them (collected; a `PolicyError`) |
 | `RuleLoadError` | `RULES_LOAD_FAILED` | `MAINTENANCE`; `AUTO` when missing | a rule package fails to load (or a `.py` file sits directly in `--rules-dir`), or the receipt is malformed or lists a missing or drifted rule (collected; `fix` names `devkit sync`); a missing rule file (a fresh clone or worktree lacks the ignored managed copies) is `AUTO` with the fix `devkit sync` |
 | `RuleExecutionError` | `RULES_EXECUTION_FAILED` | `MAINTENANCE` | a rule raised while checking or fixing; `[TARGET]` is the file defining it (collected) |
+| `RulesTestUnavailableError` | `RULES_TEST_UNAVAILABLE` | `MAINTENANCE` | `devkit rules test` (or `run_rule_tests`) cannot import pytest in the interpreter running devkit; `fix`: `uv add --dev pytest` (raised before any test runs) |
 | `RulesRunError` | `RULES_RUN_FAILED` | `MAINTENANCE` | raised by `ProjectRun.raise_for_problems()` for callers that need one error for a failed run, such as the workflow engine's `lint-clean`; `problems` keeps the collected problems |
 
 `expand_targets`, `RuleContext` (targets outside the workspace) and
@@ -304,7 +389,8 @@ Warnings and notices are returned, never raised, at level `WARNING` or
 | Code | Level | When |
 | --- | --- | --- |
 | `RULES_PROMOTION_READY` | `NOTICE` | a whole-workspace `hygiene` run finds a phase override or promotion with `remaining=0`; `target_files` names the files to edit (`.devkit/config.toml` for an override, the file declaring the rule for a promotion), `fix` the edit (drop the `[rules.phase_overrides]` entry, or switch the declared phase to its `promote_to`) |
-| any collected problem's code | `WARNING` | `explain` reports a loading or policy problem that does not concern the described rule (`with_level`; the code is unchanged) |
+| `RULES_RELATED_UNRESOLVED` | `NOTICE` | `explain` of a rule whose `related` entry names an asset that is not deployed (`fix`: `devkit add <bundle>`) or is neither an instruction nor a playbook; the entry is printed with `kind=- path=-` |
+| any collected problem's code | `WARNING` | `explain` reports a loading or policy problem that does not concern the described rule, `test` any loading or policy problem (`with_level`; the code is unchanged) |
 
 Rule violations of severity `warning` or `info` are findings, not advisories:
 they are results on stdout and never affect `--strict`.

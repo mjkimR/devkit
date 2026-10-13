@@ -2,15 +2,16 @@
 
 ``--format json`` prints one object: ``{"violations", "errors", "notices"}``
 (``check``, ``fix``), ``{"rules", "errors"}`` (``phases``), ``{"rule",
-"notices", "errors"}`` (``explain``), or ``{"error"}`` when the command fails
-outright. Text output is ``[KIND: ...]`` sentinel lines (``cli.output``);
+"notices", "errors"}`` (``explain``), ``{"results", "summary", "notices"}``
+(``test``), or ``{"error"}`` when the command fails outright. Text output is ``[KIND: ...]`` sentinel lines (``cli.output``);
 warnings and notices follow the result on stderr as advisory blocks.
 
 Exit codes (``devkit.advisory.ExitCode``): ``0`` no error-severity violation
-remains; ``1`` violations remain (``check``/``fix``); ``2`` the command could
+remains (``test``: no rule's tests failed); ``1`` violations remain
+(``check``/``fix``) or a rule's tests failed (``test``); ``2`` the command could
 not do its job: an invalid argument (``ARGUMENT_INVALID``, including an
 unknown rule), an unreadable configuration or an invalid ``[rules]`` table, a
-bad target or snapshot. Collected loading, policy and execution problems exit
+bad target or snapshot, pytest not importable (``RULES_TEST_UNAVAILABLE``). Collected loading, policy and execution problems exit
 with the highest ``exit_code`` among them (``2`` for each of them today).
 """
 
@@ -40,8 +41,9 @@ from devkit.rules.cli import output
 from devkit.rules.engine.errors import RuleProblem
 from devkit.rules.engine.models import Phase, Rule
 from devkit.rules.engine.phases import resolve_phases
-from devkit.rules.engine.project import load_project_rules, run_project_rules
+from devkit.rules.engine.project import ProjectRules, load_project_rules, run_project_rules
 from devkit.rules.engine.related import resolve_related
+from devkit.rules.engine.rule_tests import run_rule_tests, summary
 from devkit.rules.workspace.snapshot import Snapshot, git_snapshot
 
 
@@ -257,6 +259,15 @@ def phases_cmd(workspace_root: str | None, rules_dir: str | None, output_format:
     exit_on_problems(errors)
 
 
+def _unknown_rule(project: ProjectRules, rule_id: str) -> ArgumentError:
+    available = ", ".join(sorted(r.id for r in project.rules))
+    return ArgumentError(
+        f"unknown rule: {rule_id}; available: {available}",
+        target_files=["RULE_ID"],
+        fix="Pass a rule ID listed by `devkit rules phases`",
+    )
+
+
 def _concerns(problem: RuleProblem, rule: Rule | None) -> bool:
     """Whether a loading or policy problem is about ``rule`` (unattributed problems concern every rule)."""
     return rule is None or problem.rule_id is None or problem.rule_id == rule.id
@@ -282,12 +293,7 @@ def explain_cmd(workspace_root: str | None, rules_dir: str | None, output_format
     warnings = [p.with_level(Level.WARNING) for p in project.errors if p not in errors]
     if rule is None:
         echo_notices(warnings)
-        available = ", ".join(sorted(r.id for r in project.rules))
-        raise ArgumentError(
-            f"unknown rule: {rule_id}; available: {available}",
-            target_files=["RULE_ID"],
-            fix="Pass a rule ID listed by `devkit rules phases`",
-        )
+        raise _unknown_rule(project, rule_id)
     resolver = project.resolvers.get(rule.id)
     entry = output.explain_entry(rule, project.config, resolver, root)
     related, unresolved = resolve_related(root, rule)
@@ -305,4 +311,70 @@ def explain_cmd(workspace_root: str | None, rules_dir: str | None, output_format
         output.print_explain(rule, entry, resolver)
     echo_notices(warnings)
     exit_on_problems(errors)
+    exit_on_warnings(warnings)
+
+
+PYTEST_ARGS = "devkit.rules.pytest_args"
+
+
+class _PytestArgsCommand(click.Command):
+    """Arguments after the first ``--`` are pytest's: kept in ``ctx.meta``, apart from the rule IDs."""
+
+    def parse_args(self, ctx: click.Context, args: list[str]) -> list[str]:
+        if "--" in args:
+            index = args.index("--")
+            ctx.meta[PYTEST_ARGS] = tuple(args[index + 1 :])
+            args = args[:index]
+        return super().parse_args(ctx, args)
+
+
+@cli.command(name="test", cls=_PytestArgsCommand)
+@_workspace_option
+@_rules_dir_option
+@_format_option
+@click.argument("rule_ids", nargs=-1, type=str, metavar="[RULE-ID]... [-- PYTEST-ARGS...]")
+@click.pass_context
+@boundary
+def test_cmd(
+    ctx: click.Context, workspace_root: str | None, rules_dir: str | None, output_format: str, rule_ids: tuple[str, ...]
+) -> None:
+    """Run the tests in each rule's folder (<rule folder>/tests/) with pytest; all rules when no RULE-ID is given.
+
+    Rules resolve as for `explain` (built-in, synchronized, --rules-dir). Each
+    tests directory runs once in a pytest subprocess from the workspace root,
+    with its full output in a log file. Arguments after `--` go to pytest.
+    Loading and policy problems are reported as warnings.
+    """
+    root = resolve_root(workspace_root)
+    project = load_project_rules(root, _rules_path(rules_dir))
+    warnings: list[AdvisoryError] = [p.with_level(Level.WARNING) for p in project.errors]
+    if rule_ids:
+        selected: list[Rule] = []
+        for rule_id in dict.fromkeys(rule_ids):
+            rule = project.registry.get(rule_id)
+            if rule is None:
+                echo_notices(warnings)
+                raise _unknown_rule(project, rule_id)
+            selected.append(rule)
+    else:
+        selected = sorted(project.rules, key=lambda r: r.id)
+    try:
+        results = run_rule_tests(root, selected, ctx.meta.get(PYTEST_ARGS, ()))
+    except AdvisoryError:
+        echo_notices(warnings)
+        raise
+    counts = summary(results)
+    if is_json(output_format):
+        echo_json(
+            {
+                "results": [output.rule_test_entry(item, root) for item in results],
+                "summary": counts,
+                "notices": [w.to_dict() for w in warnings],
+            }
+        )
+    else:
+        output.print_rule_tests(results, root, counts)
+    echo_notices(warnings)
+    if counts["failed"]:
+        raise SystemExit(int(ExitCode.FINDINGS))
     exit_on_warnings(warnings)

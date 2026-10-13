@@ -14,6 +14,7 @@ from devkit.rules.engine.errors import (
     RulesDirError,
     RulesError,
     RulesRunError,
+    RulesTestUnavailableError,
     SettingsError,
     SnapshotError,
     TargetError,
@@ -37,8 +38,8 @@ from devkit.rules.engine.project import (
     load_project_rules,
     run_project_rules,
 )
-from devkit.rules.engine.related import RelatedAsset, resolve_related
 from devkit.rules.engine.registry import RuleRegistry, default_rule_registry
+from devkit.rules.engine.related import RelatedAsset, resolve_related
 from devkit.rules.engine.settings import RawSettings, SettingsResolver, match_path
 from devkit.rules.workspace.cache import WorkspaceCache
 from devkit.rules.workspace.catalog import Document, DocumentCatalog
@@ -73,6 +74,7 @@ __all__ = [
     "RulesDirError",
     "RulesError",
     "RulesRunError",
+    "RulesTestUnavailableError",
     "SettingsError",
     "SettingsResolver",
     "Severity",
@@ -94,7 +96,7 @@ __all__ = [
     "materialize_snapshot",
     "resolve_managed_rules",
     "resolve_phases",
-    "run_project_rules",
     "resolve_related",
+    "run_project_rules",
     "validate_policy",
 ]

@@ -119,6 +119,13 @@ class RuleExecutionError(RuleProblem):
     code = "RULES_EXECUTION_FAILED"
 
 
+class RulesTestUnavailableError(RulesError):
+    """``devkit rules test`` cannot run: pytest is not importable by the interpreter running devkit."""
+
+    code = "RULES_TEST_UNAVAILABLE"
+    fix = "uv add --dev pytest"
+
+
 class RuleDefinitionError(RulesError):
     """A rule class declares an invalid combination of attributes (for example ``promote_to``)."""
 

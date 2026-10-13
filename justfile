@@ -45,6 +45,10 @@ rules-phases *args:
 rules-explain *args:
     uv run --no-active --package devkit devkit rules explain "$@"
 
+# Run the tests in each rule's folder (devkit rules test [RULE-ID...] [-- PYTEST-ARGS...])
+rules-test *args:
+    uv run --no-active --package devkit devkit rules test "$@"
+
 # Run the workflow engine CLI (new, bind, next, show, checks, validate, list, requests, answer, return, handoff, envelope)
 workflow *args:
     uv run --no-active --package devkit devkit workflow "$@"

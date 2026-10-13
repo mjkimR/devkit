@@ -92,4 +92,6 @@ a moment no skill marks, such as "before writing a commit message").
   are never imported), `__init__.py` is optional, and modules import each
   other relatively (`from .helpers import parse`). They import only their
   engine's public API and installed packages; the bundle package never
-  imports them.
+  imports them. A rule's tests go in its `tests/` folder, load the rule with
+  `devkit.rules.testing.load_rule(__file__)` and run with
+  `devkit rules test <RULE-id>`.

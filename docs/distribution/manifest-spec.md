@@ -152,7 +152,8 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
   entries; `__init__.py` is optional. The directory must contain at least one module, every directory and file name
   of a module must be a Python identifier, and no module may have two files (`a.py` beside `a/__init__.py` or
   beside a package directory `a/`). Modules import each other relatively; the loading model is
-  [`devkit.core.plugins`](../core/reference.md). Guides, resources and tests ship in the same directory.
+  [`devkit.core.plugins`](../core/reference.md). Guides, resources and tests ship in the same directory; a rule's
+  tests in its `tests/` folder run with `devkit rules test` ([Testing a Rule](../rules/rule-authoring.md#6-testing-a-rule)).
 - **Native subagents**: each `subagent` variant is one file with the agent's native suffix: `.toml` for `codex`,
   `.md` for `claude-code` and `antigravity`.
 - **Headers**: instruction, playbook and workflow headers and role contracts follow the frontmatter grammar of

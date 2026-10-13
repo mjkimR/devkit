@@ -2,7 +2,9 @@
 
 Lower layers never import higher ones, so a module can be understood, tested
 and eventually split out without the modules above it. ``devkit.cli`` and
-``devkit.__main__`` assemble the command line and may import anything.
+``devkit.__main__`` assemble the command line and may import anything. Test
+files under ``src`` (each rule's ``tests/`` folder) are not production modules
+and are not scanned.
 """
 
 from __future__ import annotations
@@ -19,7 +21,7 @@ SRC = Path(__file__).parents[1] / "src/devkit"
 ALLOWED: dict[str, set[str]] = {
     "advisory_guide": set(),
     "core": {"advisory"},
-    "rules": {"core", "advisory"},
+    "rules": {"core", "advisory", "compact"},
     "workflow": {"core", "advisory", "rules"},
     "gate": {"core", "advisory", "rules", "compact"},
     "search": {"core", "advisory"},
@@ -27,6 +29,11 @@ ALLOWED: dict[str, set[str]] = {
     "compact": {"core", "advisory"},
     "worktree": {"core", "advisory"},
 }
+
+
+def _modules(area: str) -> list[Path]:
+    """The production modules of an area: every ``.py`` file except those under a ``tests`` directory."""
+    return [path for path in sorted((SRC / area).rglob("*.py")) if "tests" not in path.relative_to(SRC).parts]
 
 
 def _package(path: Path) -> str:
@@ -71,11 +78,17 @@ def test_every_area_is_declared() -> None:
 def test_area_imports_only_lower_layers(area: str) -> None:
     violations = [
         f"{path.relative_to(SRC)}:{line} imports devkit.{target}"
-        for path in sorted((SRC / area).rglob("*.py"))
+        for path in _modules(area)
         for target, line in sorted(_imported_areas(path.read_text("utf-8"), _package(path), area))
         if target not in ALLOWED[area]
     ]
     assert violations == []
+
+
+def test_test_folders_are_not_scanned() -> None:
+    scanned = {path.relative_to(SRC).as_posix() for path in _modules("rules")}
+    assert "rules/rules/markdown_link/rule.py" in scanned
+    assert not any("/tests/" in name for name in scanned)
 
 
 def test_the_scanner_sees_absolute_relative_and_nested_imports() -> None:

@@ -26,19 +26,20 @@ src/devkit/rules/
 │   ├── policy.py            # validate_policy: phase, severity and settings policy in one pass
 │   ├── errors.py            # RulesError hierarchy: raised errors and collected RuleProblems with codes
 │   ├── registry.py          # RuleRegistry & default_rule_registry (plugin packages via devkit.core.plugins)
-│   └── evaluator.py         # Sequential rule evaluation, single autofix pass & convergence recheck
+│   ├── evaluator.py         # Sequential rule evaluation, single autofix pass & convergence recheck
+│   └── rule_tests.py        # rule_folder and run_rule_tests: each rule's tests/ in a pytest subprocess
+├── testing.py               # load_rule, check, evaluate: helpers for the tests in a rule's folder
 ├── workspace/               # Shared file caching, Markdown file catalog and Git snapshots
 │   ├── cache.py             # WorkspaceCache (file discovery, bytes, text, frontmatter, links)
 │   ├── catalog.py           # DocumentCatalog (paths, basenames, frontmatter id/title/status)
 │   ├── markdown.py          # Fences, inline links, count_tasks (the checklist counter shared with devkit.workflow)
 │   └── snapshot.py          # Staged / CI Git trees materialized for gate evaluation
 ├── rules/                   # Built-in governance rules (repository-generic only)
-│   ├── base.py              # Base rule helper class (settings, guide, promote_to)
-│   ├── markdown/            # Relative link validation & repair
-│   ├── hygiene/             # File length checks
-│   └── safety/              # Secret leak and generated artifact checks for snapshot gates
-├── authoring/bundle/        # The opt-in `authoring` bundle (size rules and playbooks)
-└── cli/                     # commands.py (check, fix, phases, explain) and output.py (text and JSON rendering)
+│   ├── base.py              # Base rule helper class (settings, guide, related, promote_to)
+│   └── <name>/              # one folder per rule: rule.py, guide.md, tests/ (markdown_link, file_length,
+│                            # secret_leak, clean_artifacts)
+├── authoring/bundle/        # The opt-in `authoring` bundle (size rules with their tests, and playbooks)
+└── cli/                     # commands.py (check, fix, phases, explain, test) and output.py (text and JSON rendering)
 ```
 
 Library callers import the public API from `devkit.rules`; built-in rule classes are exported by `devkit.rules.rules`.
@@ -51,4 +52,4 @@ Library callers import the public API from `devkit.rules`; built-in rule classes
 
 ## 4. Shared Foundation
 
-`devkit.rules` builds on `devkit.core` and never re-implements it: frontmatter is parsed with `devkit.core.frontmatter` (the grammar the workflow engine reads), the installation receipt with `devkit.core.receipt`, Git commands run through `devkit.core.git.run_git`, snapshot paths are validated with `devkit.core.paths`, and rule packages are loaded with `devkit.core.plugins` (atomic per package, classes in module then definition order). The CLI's default workspace root is `devkit.core.find_project_root` of the current directory.
+`devkit.rules` builds on `devkit.core` and never re-implements it: frontmatter is parsed with `devkit.core.frontmatter` (the grammar the workflow engine reads), the installation receipt with `devkit.core.receipt`, Git commands run through `devkit.core.git.run_git`, snapshot paths are validated with `devkit.core.paths`, and rule packages are loaded with `devkit.core.plugins` (atomic per package, classes in module then definition order). `devkit rules test` runs each rule's tests through `devkit.compact.run_command` (full log on disk, bounded view in the result), imported only when tests run. The CLI's default workspace root is `devkit.core.find_project_root` of the current directory.

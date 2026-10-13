@@ -2,8 +2,9 @@
 # Consumer smoke test: build every workspace package into wheels, install the
 # devkit wheel (with the devkit-advisory wheel it requires) and the starter
 # content wheel into a fresh project the way a consumer would, verify the built-in bundles are deployed by default, select the
-# starter bundle, verify the workspace converges, exercise every CLI group, and
-# make real commits through the installed gate hooks in a fresh Git repository;
+# starter bundle, verify the workspace converges, exercise every CLI group, run
+# deployed and built-in rule tests, and make real commits through the installed
+# gate hooks in a fresh Git repository;
 # then install the devkit-advisory wheel alone, as a runtime dependency, and
 # verify it brings devkit.advisory and nothing else of devkit.
 # The wheels are installed by path, so a same-named package on an index can never
@@ -126,6 +127,16 @@ TOML
     test ! -e "$task" && test -f task.md
     uv run devkit gate uninstall >/dev/null
     test ! -e .git/hooks/pre-commit
+    echo "--- devkit rules test: without pytest RULES_TEST_UNAVAILABLE (exit 2); with it the deployed and built-in tests pass"
+    status=0
+    uv run devkit rules test RULE-markdown-link >/dev/null 2>"$work/rules-test.err" || status=$?
+    test "$status" -eq 2 && grep -q RULES_TEST_UNAVAILABLE "$work/rules-test.err"
+    uv add --dev pytest >/dev/null
+    tested=$(uv run devkit rules test RULE-skill-document-size RULE-agent-guide-size RULE-markdown-link)
+    grep -q 'RULE_TEST: RULE-skill-document-size tests=.devkit/managed/authoring/rules/skill_document_size/tests result=passed' <<<"$tested"
+    grep -q 'RULE_TEST: RULE-markdown-link tests=.*/site-packages/devkit/rules/rules/markdown_link/tests result=passed' <<<"$tested"
+    grep -q 'SUMMARY: rules=3 passed=3 failed=0 no_tests=0' <<<"$tested"
+    test -z "$(find .devkit -name __pycache__ -o -name .pytest_cache)"
     echo "--- dense search with the model wheel (numpy and tokenizers from the index)"
     uv add --dev "$model_wheel" numpy tokenizers >/dev/null
     uv run python -c "

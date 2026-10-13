@@ -129,7 +129,7 @@ An explicit invocation applies to the requested task, not to all future tasks in
 #### 7. `governance-rule`
 - **Role**: Invariants that can and must be 100% mechanically verified via parsing, regex, or static analysis.
 - **Consumption**: Evaluated out-of-band by `devkit.rules` during `just rules-check`, `devkit rules check`, `check --staged` from the `verify-commands` commit gate, or CI (`check --ci`). `devkit sync` records every deployed rule file in the installation receipt and `devkit rules` loads each asset from there as one plugin package; a consumer tunes a rule's phase, severity and typed settings in `[rules]` of `.devkit/config.toml`, never by editing the managed files.
-- **Format Requirements**: A plugin package directory: the rule module, optional `__init__.py`, helper modules imported relatively, the guide, resources and tests ([Rule Authoring](../rules/rule-authoring.md#3-implementing-a-custom-rule-example)).
+- **Format Requirements**: A plugin package directory: the rule module, optional `__init__.py`, helper modules imported relatively, the guide, resources and the rule's tests in `tests/` ([Rule Authoring](../rules/rule-authoring.md#3-implementing-a-custom-rule-example); run with `devkit rules test`, [Testing a Rule](../rules/rule-authoring.md#6-testing-a-rule)).
 - **Token Budget**: Zero LLM context unless violations are reported. A rule may ship a Markdown guide that `devkit rules explain` prints on demand.
 - **Target Location**: `.devkit/managed/<bundle>/<source path>` (for example `rules/<rule>/`).
 

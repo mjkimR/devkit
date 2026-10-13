@@ -46,6 +46,11 @@ fi
 for module in $modules; do
     should_run "$target" "$module" || continue
     path=$(resolve_module_path "$module")
+    # Tests may also live beside the code (each rule's `tests/` folder under src), so src is collected too.
+    test_paths=("$path/tests")
+    if [ -d "$path/src" ]; then
+        test_paths+=("$path/src")
+    fi
     case "$action" in
         lint)
             uv run --no-active ruff check --fix "$path"
@@ -56,10 +61,10 @@ for module in $modules; do
             uv run --no-active ruff format --check "$path"
             ;;
         check) uv run --no-active pyright "$path" ;;
-        test) uv run --no-active pytest "${xdist[@]}" "$path/tests" "$@" ;;
+        test) uv run --no-active pytest "${xdist[@]}" "${test_paths[@]}" "$@" ;;
         test-cov)
             COVERAGE_FILE=".coverage.$module" \
-                uv run --no-active pytest "${xdist[@]}" --cov="$path/src" --cov-config=pyproject.toml "$path/tests" "$@"
+                uv run --no-active pytest "${xdist[@]}" --cov="$path/src" --cov-config=pyproject.toml "${test_paths[@]}" "$@"
             ;;
         *) echo "Unknown action: $action" >&2; exit 1 ;;
     esac

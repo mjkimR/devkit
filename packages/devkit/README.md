@@ -40,8 +40,8 @@ and `git-commits` (commit message conventions,
 | `devkit.compact` | Verification commands with the full log on disk and a bounded view for agents | `devkit run` | [docs/compact](../../docs/compact/reference.md) |
 
 Layering (`advisory` < `core` < `rules` < `workflow`/`gate`; `search`, `compact`
-and `worktree` use only `core` and `advisory`, `distribution` also `search`, `gate`
-also `compact`; enforced by a test), the shared CLI
+and `worktree` use only `core` and `advisory`, `distribution` also `search`, `rules`
+and `gate` also `compact`; enforced by a test), the shared CLI
 conventions (`-w/--workspace-root`, `--format`, exit codes) and the documentation
 index are in the [Architecture Overview](../../docs/architecture/overview.md).
 
