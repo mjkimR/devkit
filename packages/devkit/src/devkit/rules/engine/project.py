@@ -240,6 +240,7 @@ def _run(
     dry_run: bool,
     rules_dir: Path | None,
     source_root: Path | None,
+    snapshot: Snapshot | None = None,
 ) -> ProjectRun:
     cache = WorkspaceCache(workspace_root, git_filter=source_root is None)
     project = load_project_rules(workspace_root, rules_dir, source_root=source_root)
@@ -268,6 +269,7 @@ def _run(
             severity_overrides=dict(config.severity_overrides),
             rule_settings=dict(config.settings),
             exclude=config.exclude,
+            snapshot=snapshot,
         )
 
     result = EvaluationResult()
@@ -368,6 +370,7 @@ def run_project_rules(
             dry_run=False,
             rules_dir=snapshot_rules,
             source_root=snapshot.root,
+            snapshot=snapshot,
         )
 
 

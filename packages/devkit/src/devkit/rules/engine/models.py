@@ -4,11 +4,14 @@ import os
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 from devkit.rules.engine.errors import TargetError
 from devkit.rules.engine.settings import RawSettings, SettingsResolver, match_path
 from devkit.rules.workspace.cache import WorkspaceCache
+
+if TYPE_CHECKING:
+    from devkit.rules.workspace.snapshot import Snapshot
 
 
 class Phase(StrEnum):
@@ -78,6 +81,9 @@ class RuleContext:
     exclude: tuple[str, ...]
     # Whether the run named explicit targets (before exclusions were applied).
     has_targets: bool
+    # The Git snapshot a ``check --staged`` or ``--ci`` run evaluates (``mode``, ``base``, ``changed``, ``deleted``);
+    # ``None`` for a working-tree run. Rules about diff evidence read it.
+    snapshot: Snapshot | None
 
     def __init__(
         self,
@@ -93,8 +99,10 @@ class RuleContext:
         rule_settings: dict[str, RawSettings] | None = None,
         settings_resolvers: dict[str, SettingsResolver] | None = None,
         exclude: tuple[str, ...] = (),
+        snapshot: Snapshot | None = None,
     ) -> None:
         self.workspace_root = workspace_root.resolve()
+        self.snapshot = snapshot
         if cache is None:
             cache = WorkspaceCache(self.workspace_root)
         elif cache.workspace_root != self.workspace_root:

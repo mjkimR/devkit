@@ -232,7 +232,9 @@ copies under `.devkit/managed/` (and native projections a repository ignores) ar
 file the committed receipt records and the receipt it would write is the committed one (the `tool` version aside,
 which it leaves as committed). Since the receipt is unchanged, each created file carries its recorded SHA-256 and
 mode. Any other plan (an update, a removal, a seed, the guidance block, `.devkit/.gitignore`, a new or changed
-receipt) writes nothing: the result is a dry run with a `RECEIPT_STALE` warning, and the CLI exits `1`.
+receipt) writes nothing and raises `ReceiptStaleError` (`RECEIPT_STALE`): an `INTERACTION` error with exit code `1`,
+since updating committed files is the user's decision and an agent must not retry it away with a plain sync. Its
+`[TARGET]` names the committed paths that would change and its `[DETAIL]` lines the planned writes.
 
 A fresh clone (`just init`), `devkit worktree start` and CI run it; whoever changes a bundle source, the lock or
 the selection runs a plain `devkit sync` and commits what it changes. In CI, `devkit sync --locked` after the

@@ -12,7 +12,7 @@ result carries its errors, warnings and notices, so nothing is rendered on
 stderr in JSON mode. Exit
 codes follow ``devkit.advisory.ExitCode``: ``0`` success; ``1`` from
 ``devkit sync --check`` when a synchronization is needed, from ``devkit sync --locked``
-when it would change committed files (``RECEIPT_STALE``), and from
+when it refuses to change committed files (the ``RECEIPT_STALE`` error), and from
 ``devkit status`` when the report shows a problem (a missing, modified,
 mode-mismatched, symlinked or non-regular managed file, a symlinked or
 malformed root ``AGENTS.md``, a selected bundle whose package fails to load,
@@ -398,7 +398,7 @@ def sync(
         dry_run=dry_run or check,
         locked=locked,
     )
-    _report(result, output_format, check=check or (locked and result.dry_run))
+    _report(result, output_format, check=check)
 
 
 @click.command()

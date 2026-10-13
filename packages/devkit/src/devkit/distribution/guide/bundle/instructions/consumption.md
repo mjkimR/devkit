@@ -121,8 +121,10 @@ environment; run `devkit remove <bundle>` when the user removed the package.
 
 `devkit sync --locked` rebuilds only what the committed receipt records
 (Git-ignored managed copies) and never writes the receipt, the `AGENTS.md`
-block or seeded files. When those would change it writes nothing and exits 1
-with `RECEIPT_STALE`: run a plain `devkit sync` and commit what it changes.
+block or seeded files. When those would change it writes nothing and fails
+with `RECEIPT_STALE` (exit 1, `INTERACTION`): a bundle source, the lock or the
+selection changed without its receipt. Ask the user before running a plain
+`devkit sync` and committing what it changes.
 
 ## Customizing an upstream asset
 

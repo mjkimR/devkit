@@ -29,7 +29,7 @@ from devkit.distribution.errors import (
     ConflictError,
     OrphanLeftNotice,
     OverrideDriftError,
-    ReceiptStaleNotice,
+    ReceiptStaleError,
     SelectionError,
     StrayFilesNotice,
     ToolVersionChangedNotice,
@@ -474,6 +474,38 @@ def _restores_only(previous: Receipt | None, receipt: Receipt, actions: list[Act
     )
 
 
+STALE_DETAILS = 20  # planned writes listed in a RECEIPT_STALE refusal
+
+
+def _receipt_stale(previous: Receipt | None, receipt: Receipt, actions: list[Action]) -> ReceiptStaleError:
+    """The ``--locked`` refusal: why the committed state is out of date, and what a plain sync would write.
+
+    ``target_files`` names only committed state: the receipt when it would change, and the planned paths that no
+    receipt records as a managed or projected file (the root ``AGENTS.md``, seeded files, ``.devkit/.gitignore``).
+    Managed and projected files are listed in the details with the other planned writes.
+    """
+    recorded = previous.file_records if previous is not None else {}
+    unrecorded = [item.path for item in actions if item.path not in recorded and item.path not in receipt.file_records]
+    if previous is None:
+        reason, targets = "there is no committed receipt to restore from", [RECEIPT_PATH, *unrecorded]
+    elif _without_tool(receipt) != _without_tool(previous):
+        reason, targets = "the installed bundles no longer match the committed receipt", [RECEIPT_PATH, *unrecorded]
+    else:
+        reason, targets = "committed files no longer match the receipt", unrecorded
+    planned = [f"would {item.action} {item.path}" for item in actions[:STALE_DETAILS]]
+    if len(actions) > STALE_DETAILS:
+        planned.append(f"and {len(actions) - STALE_DETAILS} more (`devkit sync --dry-run` lists them all)")
+    return ReceiptStaleError(
+        f"{reason}; devkit sync --locked only restores what the receipt records, so it wrote nothing",
+        *planned,
+        target_files=targets,
+        what_to_report=(
+            f"Whether to run `devkit sync` and commit what it changes: {reason}"
+            " (a bundle source, the lock or the selection changed without the receipt it produces)"
+        ),
+    )
+
+
 def _sync_result(
     root: Path,
     installed: list[InstalledBundle],
@@ -639,9 +671,9 @@ def sync_project(
     an edit; the edit is written before the sync reads the configuration and
     put back when the sync fails, and post-sync hooks see it. ``save`` is never
     called on ``dry_run``. ``locked`` keeps the committed state: the sync only
-    restores files the receipt records, or writes nothing and returns a dry
-    run with a ``RECEIPT_STALE`` warning. Post-sync hooks run after the project
-    lock is released, except on a dry run (a refused ``locked`` sync included).
+    restores files the receipt records, or raises ``ReceiptStaleError``
+    (``RECEIPT_STALE``) without writing anything. Post-sync hooks run after
+    the project lock is released, except on a dry run.
     """
     root = require_project_dir(root)
     with project_lock(root):
@@ -657,7 +689,7 @@ def sync_project(
                 update.revert()
             raise
         result = finish()
-    if not result.dry_run:
+    if not dry_run:
         result.notices.extend(run_post_sync(root, result.to_dict()))
     return result
 
@@ -683,7 +715,7 @@ def commit_locked(
     ``devkit override create``, which has just written the baseline copies.
     ``locked`` commits only when the sync restores files exactly as the receipt
     records them (``_restores_only``), without writing the receipt; otherwise
-    it plans as a dry run and adds ``RECEIPT_STALE``.
+    it raises ``ReceiptStaleError`` before any write.
     """
     require_no_journal(root)
     config = read_config(root)
@@ -725,15 +757,11 @@ def commit_locked(
     notices.extend(block_notices)
     overrides = _carried_overrides(root, installed, previous, inventory.overrides)
     receipt = _build_receipt(selection, inventory, overrides, seeded, block_hash)
-    stale = locked and not _restores_only(previous, receipt, actions)
-    if not locked or stale:
+    if locked:
+        if not _restores_only(previous, receipt, actions):
+            raise _receipt_stale(previous, receipt, actions)
+    else:
         notices.extend(_plan_receipt(previous, receipt, changes, actions))
-    if stale:
-        recorded = previous.file_records if previous is not None else {}
-        changed = [item.path for item in actions if item.action != "create" or item.path not in recorded]
-        message = f"--locked wrote nothing: the sync would change {', '.join(changed)}"
-        notices.append(ReceiptStaleNotice(message, target_files=changed))
-        dry_run = True
     seen = _read_seen_bundles(root)
     if not dry_run:
         apply_changes(root, changes)

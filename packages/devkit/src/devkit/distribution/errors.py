@@ -18,7 +18,7 @@ or decide something) or ``NOTICE`` (worth knowing). Override drift under
 
 from __future__ import annotations
 
-from devkit.advisory import Actor, AdvisoryError, Level, Retry
+from devkit.advisory import Actor, AdvisoryError, ExitCode, Level, Retry
 
 LOCK_RETRY_AFTER = "the running devkit command finishes"
 
@@ -58,6 +58,22 @@ class NotSynchronizedError(DistributionError):
     code = "NOT_SYNCHRONIZED"
     actor = Actor.TOOL
     fix = "devkit sync"
+
+
+class ReceiptStaleError(DistributionError):
+    """``devkit sync --locked`` refused: the committed state (receipt, ``AGENTS.md`` block, seeded files) no longer
+    matches the installed bundles, so restoring would mean changing it. Nothing was written.
+
+    ``INTERACTION`` with exit code ``1``: a negative result, as for ``sync --check``. Updating committed files is
+    the user's decision (a bundle source, the lock or the selection changed without its receipt), never an
+    automatic retry.
+    """
+
+    code = "RECEIPT_STALE"
+    actor = Actor.USER
+    retry = Retry.AFTER_FIX
+    exit_code = ExitCode.FINDINGS
+    fix = "devkit sync, then commit the files it changes"
 
 
 class ConflictError(DistributionError):
@@ -182,16 +198,6 @@ class ToolVersionChangedNotice(SyncNotice):
 
     code = "TOOL_VERSION_CHANGED"
     brief = True
-
-
-class ReceiptStaleNotice(SyncNotice):
-    """``devkit sync --locked`` would change the committed state (receipt, ``AGENTS.md``, seeded files), so it
-    wrote nothing and exits ``1``."""
-
-    code = "RECEIPT_STALE"
-    level = Level.WARNING
-    fix = "Run `devkit sync` and commit the files it changes"
-    what_to_report = "The committed devkit state does not match the installed bundles"
 
 
 class PostSyncNotice(SyncNotice):

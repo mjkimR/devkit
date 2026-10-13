@@ -231,8 +231,11 @@ def test_sync_locked_restores_recorded_files_and_never_changes_committed_ones(
 ) -> None:
     update_config(target, presets={"team": ["all"]}, agents=[])
     fresh = _invoke("sync", "--locked", "-w", str(target))  # no receipt yet: nothing to restore from
-    assert fresh.exit_code == int(ExitCode.FINDINGS) and "dry_run=yes" in fresh.stdout
-    assert "(RECEIPT_STALE)" in fresh.stderr and not (target / RECEIPT_PATH).exists()
+    assert fresh.exit_code == int(ExitCode.FINDINGS) and fresh.stdout == ""  # a refusal: the error is the output
+    assert fresh.stderr.startswith("[ERROR]  (RECEIPT_STALE) there is no committed receipt to restore from;")
+    assert "[ACTION] INTERACTION" in fresh.stderr and "[FIX]    devkit sync, then commit" in fresh.stderr
+    assert "[DETAIL] would create .devkit/managed/team/guide.md" in fresh.stderr
+    assert not (target / RECEIPT_PATH).exists() and not (target / ".devkit/managed").exists()
     assert _invoke("sync", "-w", str(target)).exit_code == 0
 
     # A fresh clone: the ignored managed copy is missing; the receipt (from another devkit version) is kept as is.
@@ -256,10 +259,12 @@ def test_sync_locked_restores_recorded_files_and_never_changes_committed_ones(
     managed.unlink()
     stale = _invoke("sync", "--locked", "--format", "json", "-w", str(target))
     assert stale.exit_code == int(ExitCode.FINDINGS)
-    result = json.loads(stale.stdout)
-    assert result["dry_run"] is True
-    [notice] = [notice for notice in result["notices"] if notice["code"] == "RECEIPT_STALE"]
-    assert notice["message"] == f"--locked wrote nothing: the sync would change {RECEIPT_PATH}"
+    error = json.loads(stale.stdout)["error"]
+    assert (error["code"], error["level"], error["exit_code"]) == ("RECEIPT_STALE", "ERROR", 1)
+    assert error["message"].startswith("the installed bundles no longer match the committed receipt;")
+    # Only committed state is a target; the ignored managed copy is a planned write in the details.
+    assert error["advisory"]["target_files"] == [RECEIPT_PATH]
+    assert error["advisory"]["details"] == ["would create .devkit/managed/team/guide.md"]
     assert not managed.exists() and receipt.read_bytes() == committed
 
     # The guidance block is committed state too.
@@ -267,7 +272,9 @@ def test_sync_locked_restores_recorded_files_and_never_changes_committed_ones(
     assert _invoke("sync", "-w", str(target)).exit_code == 0
     (target / "AGENTS.md").unlink()
     block = _invoke("sync", "--locked", "-w", str(target))
-    assert block.exit_code == int(ExitCode.FINDINGS) and "[CHANGE: create AGENTS.md]" in block.stdout
+    assert block.exit_code == int(ExitCode.FINDINGS)
+    assert block.stderr.startswith("[ERROR]  (RECEIPT_STALE) committed files no longer match the receipt;")
+    assert "[TARGET] AGENTS.md" in block.stderr and "[DETAIL] would create AGENTS.md" in block.stderr
     assert not (target / "AGENTS.md").exists()
 
 
@@ -276,3 +283,16 @@ def test_sync_locked_takes_no_other_mode_or_selection(item: InstalledBundle, tar
     result = _invoke("sync", "--locked", flag, "-w", str(target))
     assert result.exit_code == 2 and "--locked cannot be combined with" in result.output
     assert not (target / RECEIPT_PATH).exists()
+
+
+def test_a_receipt_stale_refusal_lists_at_most_twenty_planned_writes() -> None:
+    from types import SimpleNamespace
+
+    from devkit.distribution.installation.results import Action
+    from devkit.distribution.installation.sync import _receipt_stale
+
+    actions = [Action(f".devkit/managed/team/{index:02}.md", "create") for index in range(23)]
+    error = _receipt_stale(None, SimpleNamespace(file_records={}), actions)  # type: ignore[arg-type]
+    assert error.code == "RECEIPT_STALE" and error.exit_code == ExitCode.FINDINGS
+    assert len(error.details) == 21 and error.details[-1].startswith("and 3 more")
+    assert error.target_files[0] == RECEIPT_PATH

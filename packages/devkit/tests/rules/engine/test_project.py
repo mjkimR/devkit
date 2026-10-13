@@ -298,3 +298,19 @@ def test_snapshot_deletions_recheck_files_linking_to_them(tmp_path: Path) -> Non
     run = run_project_rules(root, snapshot=snapshot)
     assert run.context is not None and sorted(run.context.changed_files) == ["docs/index.md", "guide.md"]
     assert [(v.rule_id, v.file) for v in run.result.violations] == [("RULE-markdown-link", "docs/index.md")]
+
+
+def test_rules_see_the_snapshot_they_evaluate(tmp_path: Path) -> None:
+    root = init_repo(tmp_path / "repo").resolve()
+    _write(root, "a.md", "a\n")
+    _write(root, "gone.md", "x\n")
+    _git(root, "add", ".")
+    _git(root, "commit", "-q", "-m", "base")
+    _write(root, "a.md", "changed\n")
+    _git(root, "rm", "-q", "gone.md")
+    _git(root, "add", "a.md")
+    snapshot = git_snapshot(root, staged=True)
+    run = run_project_rules(root, snapshot=snapshot)
+    assert run.context is not None and run.context.snapshot is snapshot
+    assert snapshot.mode == "staged" and snapshot.changed == ("a.md",) and snapshot.deleted == ("gone.md",)
+    assert run_project_rules(root).context.snapshot is None  # type: ignore[union-attr]
