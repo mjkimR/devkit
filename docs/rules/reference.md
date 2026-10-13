@@ -147,7 +147,9 @@ FAILED rules/doc_heading/tests/test_rule.py::test_fails - AssertionError: expect
 ```
 
 `--format json` prints exactly one object on stdout:
-`{"violations": [...], "errors": [...], "notices": [...]}` (`check`, `fix`),
+`{"violations": [...], "errors": [...], "notices": [...]}` (`check`, `fix`; each violation carries `rule_id`,
+`file`, `line`, `column`, `message`, `fixable`, `fixed`, `severity`, `phase`, and `remediation` and `guide` when
+the rule gives them, as the `[VIOLATION: ...]` line does),
 `{"rules": [...], "errors": [...]}` with one object per rule carrying
 `rule_id`, `default_phase`, `effective_phase`, `overridden` and `promote_to`
 (`phases`), `{"rule": {...}, "notices": [...], "errors": [...]}`
@@ -305,8 +307,8 @@ themselves ([Rule Authoring Guide, section 5](rule-authoring.md#5-rule-sources-a
 `--rules-dir path/to/rules` (`rules_dir`) loads each immediate subdirectory
 as one plugin package: a directory holding the rule module, optional
 `__init__.py`, helper modules imported relatively, the guide, resources and
-tests, for example `rules/banned_words/banned_words.py` with
-`rules/banned_words/banned_words.md` beside it. A `.py` file directly in the
+tests, for example `rules/banned_words/rule.py` with `rules/banned_words/guide.md`
+and `rules/banned_words/tests/` beside it. A `.py` file directly in the
 directory is a `RULES_LOAD_FAILED` loading error whose fix moves it into
 `<rules-dir>/<name>/`. The package layout is in
 [Implementing a Custom Rule](rule-authoring.md#3-implementing-a-custom-rule-example);
@@ -334,7 +336,7 @@ class BannedWordsRule(BaseRule):
             name="banned-words",
             description="Banned markers in documentation",
             settings=BannedWordsSettings(),
-            guide="banned_words.md",
+            guide="guide.md",
         )
 
     def validate_settings(self, settings: BannedWordsSettings) -> None:

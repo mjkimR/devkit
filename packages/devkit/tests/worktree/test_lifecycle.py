@@ -433,5 +433,37 @@ def test_a_failed_sync_is_a_warning_and_keeps_the_worktree(repo: Path) -> None:
     [warning] = result.notices
     assert result.synced is False and result.path.is_dir()
     assert warning.code == "WORKTREE_SYNC_FAILED" and warning.mode is ActionMode.CONTINUE
-    assert "devkit sync --locked exited 2" in warning.message
-    assert warning.fix == f"cd {result.path} && {sys.executable} -m devkit sync --locked"
+    # The sync's own error is passed on: its code and message, and its fix (rerunning would fail the same way).
+    assert warning.message.startswith(f"devkit sync --locked exited 2 in {result.path}: (RECEIPT_INVALID) ")
+    assert warning.fix is not None and warning.fix.startswith(f"In {result.path}: Restore .devkit/installation.json")
+
+
+def test_a_stale_receipt_names_the_committed_file_and_its_fix(repo: Path) -> None:
+    synchronized(repo)
+    (repo / "AGENTS.md").unlink()  # committed state the receipt no longer matches
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "drop the guidance block")
+    result = start(locate(repo), "demo", project=Path("."))
+    [warning] = result.notices
+    assert result.synced is False
+    assert warning.message.startswith(f"devkit sync --locked exited 1 in {result.path}: (RECEIPT_STALE) ")
+    assert warning.target_files == (str(result.path / "AGENTS.md"),)
+    # The committed change comes first, ahead of the managed copies --locked would have restored.
+    assert warning.details[0] == "would create AGENTS.md" and warning.details[-1].startswith("and ")
+    assert warning.fix == f"In {result.path}: devkit sync, then commit the files it changes"
+    assert not (result.path / "AGENTS.md").exists()  # --locked wrote nothing
+
+
+def test_output_that_is_not_an_error_object_keeps_its_headline(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    from devkit.worktree import lifecycle
+
+    block = "[ERROR]  (SOMETHING_FAILED) the reason\n" + "".join(f"[DETAIL] line {n}\n" for n in range(8))
+    failed = subprocess.CompletedProcess(["python"], 3, b"not json", block.encode())
+    monkeypatch.setattr(lifecycle, "_execute", lambda *args: failed)
+    warning = lifecycle._sync("python", tmp_path)
+    assert warning is not None and warning.fix == f"cd {tmp_path} && python -m devkit sync --locked"
+    assert warning.message.splitlines()[:2] == [
+        "devkit sync --locked exited 3:",
+        "[ERROR]  (SOMETHING_FAILED) the reason",
+    ]
+    assert warning.message.splitlines()[-1] == "[DETAIL] line 7"

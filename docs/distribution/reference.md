@@ -171,7 +171,8 @@ needs acting on is listed under `errors`, each an error object with exit code `1
 (`SYNC_CONFLICT`), recorded paths that became symlinks or non-regular files (`WORKSPACE_UNSAFE`), a root
 `AGENTS.md` that is a symlink, malformed or not UTF-8 while the block is managed (`WORKSPACE_UNSAFE`,
 `GUIDANCE_BLOCK_INVALID`; state `invalid`), a selected bundle whose package cannot be used
-(`BUNDLE_PACKAGE_INVALID`), a pending journal (`TRANSACTION_PENDING`, fix `devkit recover`) and
+(`BUNDLE_PACKAGE_INVALID`) or is not installed (`SELECTION_INVALID`, as `devkit sync` raises it, for an entry of
+`config.toml` or a bundle the receipt keeps deployed), a pending journal (`TRANSACTION_PENDING`, fix `devkit recover`) and
 override drift (`OVERRIDE_DRIFT`, `INTERACTION`: review with `devkit override diff`, then `devkit override accept`). It exits `1`
 when `errors` is nonempty, whatever their own codes, and `2` only when it cannot run (for example an unreadable
 receipt or configuration). An installed package the project does not deploy that cannot be used is a

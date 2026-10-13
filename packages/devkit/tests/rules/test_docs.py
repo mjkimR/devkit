@@ -26,8 +26,8 @@ def test_rule_authoring_example_package_and_registration_run(tmp_path: Path, mon
     (helper,) = _blocks("rule-authoring.md", "def starts_with_h1(")
     (rule_source,) = _blocks("rule-authoring.md", "class DocHeadingRule(BaseRule)")
     (package / "headings.py").write_text(helper)
-    (package / "doc_heading.py").write_text(rule_source)
-    (package / "doc_heading.md").write_text("# RULE-doc-heading\n")
+    (package / "rule.py").write_text(rule_source)
+    (package / "guide.md").write_text("# RULE-doc-heading\n")
     (package / "tests/test_headings.py").write_text("raise RuntimeError('devkit never imports tests')\n")
 
     namespace: dict[str, Any] = {}
@@ -44,7 +44,7 @@ def test_rule_authoring_example_package_and_registration_run(tmp_path: Path, mon
     assert run.errors == []
     assert [v.file for v in run.result.violations if v.rule_id == "RULE-doc-heading"] == ["docs/untitled.md"]
     (rule,) = [rule for rule in run.rules if rule.id == "RULE-doc-heading"]
-    assert guide_path(rule) == (package / "doc_heading.md").resolve()
+    assert guide_path(rule) == (package / "guide.md").resolve()
 
 
 def test_reference_settings_example_runs(tmp_path: Path) -> None:
@@ -57,7 +57,7 @@ def test_reference_settings_example_runs(tmp_path: Path) -> None:
     rules = tmp_path / "rules"
     (rules / "banned_words").mkdir(parents=True)
     (source,) = _blocks("reference.md", "class BannedWordsRule(BaseRule)")
-    (rules / "banned_words/banned_words.py").write_text(source)
+    (rules / "banned_words/rule.py").write_text(source)
     from devkit.rules import run_project_rules
 
     run = run_project_rules(workspace, rules_dir=rules)

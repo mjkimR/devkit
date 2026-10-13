@@ -23,7 +23,12 @@ from devkit.distribution.errors import (
     UnsafeWorkspaceError,
 )
 from devkit.distribution.installation import guidance_block
-from devkit.distribution.installation.config import effective_selection, read_config
+from devkit.distribution.installation.config import (
+    ProjectConfig,
+    effective_selection,
+    missing_selection_error,
+    read_config,
+)
 from devkit.distribution.installation.discovery import InstalledBundle, unusable_bundles, unusable_notices
 from devkit.distribution.installation.override_commands import override_statuses
 from devkit.distribution.installation.receipt import read_receipt
@@ -159,6 +164,20 @@ def _unusable_packages(
     return problems, warnings
 
 
+def _missing_packages(
+    installed: list[InstalledBundle], selected: dict[str, list[str]], config: ProjectConfig
+) -> list[AdvisoryError]:
+    """``SELECTION_INVALID`` (exit ``1``) for selected bundles that no installed package provides, as ``devkit sync``
+    raises it: an entry of ``config.toml``, or a bundle the receipt records deployed (``retained_selection``)."""
+    known = {item.bundle.name for item in installed} | unusable_bundles(installed).keys()
+    missing = sorted(set(selected) - known)
+    if not missing:
+        return []
+    problem = missing_selection_error(missing, [name for name in missing if name not in config.presets])
+    problem.exit_code = ExitCode.FINDINGS
+    return [problem]
+
+
 def _files_status(root: Path, files: dict[str, FileRecord]) -> FilesStatus:
     ok = 0
     missing: list[str] = []
@@ -277,7 +296,9 @@ def get_project_status(root: Path, installed: list[InstalledBundle]) -> ProjectS
         ]
         block, block_error = _block_state(root, receipt.guidance_block if receipt else None, config.guidance_block)
         journal = pending_journal(root)
-        packages, warnings = _unusable_packages(installed, effective_selection(installed, config, receipt))
+        selected = effective_selection(installed, config, receipt)
+        packages, warnings = _unusable_packages(installed, selected)
+        packages.extend(_missing_packages(installed, selected, config))
         return ProjectStatus(
             receipt=receipt is not None,
             schema=receipt.schema if receipt is not None else None,

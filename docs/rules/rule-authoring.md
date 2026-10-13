@@ -156,9 +156,9 @@ A custom rule is a **plugin package**: a directory holding the rule module, any 
 rules/
   doc_heading/
     __init__.py          # optional: runs first as the package module when present
-    doc_heading.py       # the rule class
+    rule.py              # the rule class
     headings.py          # helper module, imported relatively
-    doc_heading.md       # the guide (guide="doc_heading.md")
+    guide.md             # the guide (guide="guide.md")
     tests/
       test_rule.py       # tests beside the code; never imported by devkit's loaders (section 6)
 ```
@@ -174,7 +174,7 @@ def starts_with_h1(text: str) -> bool:
     return bool(lines) and lines[0].startswith("# ")
 ```
 
-The rule module `doc_heading.py`:
+The rule module `rule.py`:
 
 ```python
 from devkit.rules import Phase, RuleContext, Severity, Violation
@@ -191,7 +191,7 @@ class DocHeadingRule(BaseRule):
             description="Markdown files under docs/ must begin with an H1 heading.",
             phase=Phase.LINTER,
             severity=Severity.ERROR,
-            guide="doc_heading.md",
+            guide="guide.md",
         )
 
     def check(self, ctx: RuleContext) -> list[Violation]:

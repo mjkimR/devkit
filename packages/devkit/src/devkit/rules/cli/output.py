@@ -132,6 +132,16 @@ def _violation_line(v: Violation, guides: Mapping[str, Path], workspace_root: Pa
     return line + "]"
 
 
+def violation_json(v: Violation, guides: Mapping[str, Path], workspace_root: Path) -> dict[str, Any]:
+    """A finding under ``--format json``: ``Violation.to_dict()`` plus ``guide`` when the rule has one, as the
+    ``[VIOLATION: ...]`` line carries it."""
+    data = v.to_dict()
+    guide = _display_path(guides.get(v.rule_id), workspace_root)
+    if guide:
+        data["guide"] = guide
+    return data
+
+
 def print_violations(
     violations: Sequence[Violation],
     errors: Sequence[object],

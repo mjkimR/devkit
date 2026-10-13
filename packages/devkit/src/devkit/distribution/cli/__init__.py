@@ -15,7 +15,7 @@ codes follow ``devkit.advisory.ExitCode``: ``0`` success; ``1`` from
 when it refuses to change committed files (the ``RECEIPT_STALE`` error), and from
 ``devkit status`` when the report shows a problem (a missing, modified,
 mode-mismatched, symlinked or non-regular managed file, a symlinked or
-malformed root ``AGENTS.md``, a selected bundle whose package fails to load,
+malformed root ``AGENTS.md``, a selected bundle whose package fails to load or is not installed,
 a pending journal, override drift); ``2`` for any error
 (an invalid argument, a conflict, a held lock, an unreadable receipt or
 configuration).

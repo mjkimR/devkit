@@ -22,7 +22,7 @@ from tomlkit.exceptions import TOMLKitError
 
 from devkit.core.errors import ConfigError
 from devkit.core.project import read_toml
-from devkit.core.receipt import CONFIG_PATH, Receipt
+from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH, Receipt
 from devkit.distribution.bundles.common import AGENT_NAMES, SLUG
 from devkit.distribution.content import Content
 from devkit.distribution.errors import SelectionError
@@ -184,6 +184,19 @@ def retained_selection(
         for name, presets in receipt.selection.presets.items()
         if name not in usable and name not in config.presets and name not in config.opted_out
     }
+
+
+def missing_selection_error(missing: list[str], deployed: list[str]) -> SelectionError:
+    """``SELECTION_INVALID`` for selected bundles that no installed package provides.
+
+    ``deployed`` names those selected only because the receipt records them deployed (no ``config.toml`` entry),
+    for which a sync would otherwise delete committed files.
+    """
+    return SelectionError(
+        f"selected bundle is not installed: {missing}"
+        + (f" (deployed per {RECEIPT_PATH}: {deployed})" if deployed else ""),
+        fix="Install the package that ships it (`uv sync`), or deselect it with `devkit remove <bundle>`",
+    )
 
 
 def effective_selection(

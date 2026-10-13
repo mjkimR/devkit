@@ -38,6 +38,10 @@ def test_cli_rules_check_json_output(tmp_path: Path) -> None:
     assert set(data) == {"violations", "errors", "notices"} and data["errors"] == [] and data["notices"] == []
     assert len(data["violations"]) >= 1
     assert data["violations"][0]["rule_id"] == "RULE-markdown-link"
+    # The guide the [VIOLATION: ...] line cites travels in JSON too.
+    assert data["violations"][0]["guide"].endswith("rules/rules/markdown_link/guide.md")
+    text = runner.invoke(cli, ["check", "--workspace-root", str(tmp_path)]).stdout
+    assert f"guide={data['violations'][0]['guide']}]" in text
 
 
 def _fixable_link_workspace(tmp_path: Path) -> Path:

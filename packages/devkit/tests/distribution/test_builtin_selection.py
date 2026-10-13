@@ -11,6 +11,7 @@ from types import SimpleNamespace
 
 import pytest
 from click.testing import CliRunner
+from devkit.advisory import ExitCode
 from devkit.core.errors import ConfigError
 from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH
 from devkit.distribution.bundles import load_bundle
@@ -253,6 +254,24 @@ def test_uninstalled_deployed_bundle_is_kept_until_devkit_remove(
     sync_project(target, bundles)
     result = sync_project(target, [*bundles, external]).to_dict()
     assert _selection(target)["ext"] == ["core"] and "BUNDLE_AUTO_SELECTED" in _codes(result)
+
+
+def test_status_reports_a_selected_bundle_whose_package_is_not_installed(
+    bundles: list[InstalledBundle], external: InstalledBundle, target: Path
+) -> None:
+    sync_project(target, [*bundles, external])
+    status = get_project_status(target, bundles)  # the package left the environment: sync would refuse
+    [error] = status.errors
+    assert (error.code, error.exit_code) == ("SELECTION_INVALID", ExitCode.FINDINGS)
+    assert (
+        error.message == "selected bundle is not installed: ['ext'] (deployed per .devkit/installation.json: ['ext'])"
+    )
+    assert error.fix is not None and "devkit remove <bundle>" in error.fix
+
+    update_config(target, presets={"ext": ["core"]})  # selected by an entry: no receipt note
+    [error] = get_project_status(target, bundles).errors
+    assert error.message == "selected bundle is not installed: ['ext']"
+    assert get_project_status(target, [*bundles, external]).errors == []
 
 
 def test_false_entry_for_an_uninstalled_bundle_is_tolerated(

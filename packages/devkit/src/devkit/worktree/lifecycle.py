@@ -12,6 +12,7 @@ upstreams run before the first change, and rerunning resumes. ``status`` changes
 from __future__ import annotations
 
 import dataclasses
+import json
 import os
 import re
 import shlex
@@ -302,13 +303,10 @@ def start(position: Position, slug: str, *, setup: str | None = None, project: P
     synced = None
     target = path / project if project is not None else None
     if target is not None and (target / RECEIPT_PATH).is_file():
-        interpreter = _interpreter(path)
-        argv = [interpreter, "-m", "devkit", "sync", "--locked", "-w", str(target)]
-        failure = _run(argv, target, "devkit sync --locked", SYNC_TIMEOUT)
-        synced = failure is None
-        if failure is not None:
-            fix = f"cd {shlex.quote(str(target))} && {shlex.quote(interpreter)} -m devkit sync --locked"
-            notices.append(SyncFailedWarning(failure, fix=fix))
+        warning = _sync(_interpreter(path), target)
+        synced = warning is None
+        if warning is not None:
+            notices.append(warning)
     return StartResult(slug, path, branch, position.base, True, setup, synced, notices)
 
 
@@ -323,19 +321,76 @@ def _interpreter(checkout: Path) -> str:
     return sys.executable
 
 
-def _run(argv: list[str], cwd: Path, label: str, timeout: float) -> str | None:
-    """Run ``argv`` in ``cwd`` with its output captured; ``None`` on success, else why it failed (its last lines)."""
+def _sync(interpreter: str, target: Path) -> SyncFailedWarning | None:
+    """Run ``devkit sync --locked`` in ``target``; ``None`` on success, else the warning that reports why.
+
+    The sync runs with ``--format json``, so a refusal arrives as one error object: the warning carries its code,
+    message, targets and fix. Rerunning cures neither a stale receipt (``RECEIPT_STALE``) nor a missing package
+    (``SELECTION_INVALID``), so rerunning is the fix only when the error names none, or the output is not an error
+    object (a timeout, a crash, a devkit without ``--locked``).
+    """
+    label = "devkit sync --locked"
+    rerun = f"cd {shlex.quote(str(target))} && {shlex.quote(interpreter)} -m devkit sync --locked"
+    argv = [interpreter, "-m", "devkit", "sync", "--locked", "--format", "json", "-w", str(target)]
+    completed = _execute(argv, target, label, SYNC_TIMEOUT)
+    if isinstance(completed, str):
+        return SyncFailedWarning(completed, fix=rerun)
+    if completed.returncode == 0:
+        return None
+    error = _error_object(completed.stdout)
+    if error is None:
+        return SyncFailedWarning(_failure(label, completed), fix=rerun)
+    raw = error.get("advisory")
+    advisory: dict[str, Any] = raw if isinstance(raw, dict) else {}
+    fix = advisory.get("fix")
+    targets = advisory.get("target_files") or []
+    return SyncFailedWarning(
+        f"{label} exited {completed.returncode} in {target}: ({error.get('code')}) {error.get('message')}",
+        *(str(detail) for detail in advisory.get("details") or []),
+        target_files=[str(target / name) for name in targets if isinstance(name, str)],
+        fix=f"In {target}: {fix}" if isinstance(fix, str) and fix else rerun,
+        what_to_report=advisory.get("what_to_report") if isinstance(advisory.get("what_to_report"), str) else None,
+    )
+
+
+def _error_object(stdout: bytes) -> dict[str, Any] | None:
+    """The ``{"error": {...}}`` a devkit command prints under ``--format json`` when it fails, else ``None``."""
+    try:
+        document = json.loads(os.fsdecode(stdout))
+    except ValueError:
+        return None
+    error = document.get("error") if isinstance(document, dict) else None
+    return error if isinstance(error, dict) and isinstance(error.get("code"), str) else None
+
+
+def _execute(argv: list[str], cwd: Path, label: str, timeout: float) -> subprocess.CompletedProcess[bytes] | str:
+    """Run ``argv`` in ``cwd`` with its output captured, without the caller's ``VIRTUAL_ENV``; why it could not
+    run when it timed out or did not start."""
     env = {key: value for key, value in os.environ.items() if key != "VIRTUAL_ENV"}
     try:
-        completed = subprocess.run(argv, cwd=cwd, env=env, capture_output=True, timeout=timeout, check=False)
+        return subprocess.run(argv, cwd=cwd, env=env, capture_output=True, timeout=timeout, check=False)
     except subprocess.TimeoutExpired:
         return f"{label} did not finish within {timeout:.0f}s"
     except OSError as exc:
         return f"{label} could not start: {exc}"
-    if completed.returncode == 0:
-        return None
-    tail = os.fsdecode(completed.stderr or completed.stdout).strip().splitlines()[-5:]
-    return f"{label} exited {completed.returncode}" + (":\n" + "\n".join(tail) if tail else "")
+
+
+def _failure(label: str, completed: subprocess.CompletedProcess[bytes]) -> str:
+    """Why a command failed: its exit code, its advisory headlines (the code and message of each block) and the last
+    lines of its output, so a long advisory block never pushes its headline out."""
+    lines = os.fsdecode(completed.stderr or completed.stdout).strip().splitlines()
+    headlines = [line for line in lines if line.startswith(("[ERROR]", "[WARN]"))]
+    tail = [line for line in lines[-5:] if line not in headlines]
+    shown = [*headlines, *tail]
+    return f"{label} exited {completed.returncode}" + (":\n" + "\n".join(shown) if shown else "")
+
+
+def _run(argv: list[str], cwd: Path, label: str, timeout: float) -> str | None:
+    """Run ``argv`` in ``cwd`` with its output captured; ``None`` on success, else why it failed."""
+    completed = _execute(argv, cwd, label, timeout)
+    if isinstance(completed, str):
+        return completed
+    return None if completed.returncode == 0 else _failure(label, completed)
 
 
 def _find(position: Position, slug: str) -> _Entry | None:

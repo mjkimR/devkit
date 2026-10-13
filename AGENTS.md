@@ -5,7 +5,7 @@ Personal developer tools monorepo.
 ## Architecture and Boundaries
 
 - Python monorepo managed with `uv` workspaces and `just`.
-- Python sources live in `packages/<package>/src/` or `tools/<tool>/src/`; tests belong in each package's `tests/`, never under `src/`.
+- Python sources live in `packages/<package>/src/` or `tools/<tool>/src/`; tests belong in each package's `tests/`, never under `src/`, except a rule's own tests, which travel with it in its folder (`<rule>/tests/`, [Rule Authoring, section 6](docs/rules/rule-authoring.md#6-testing-a-rule)).
 - Keep `justfile` recipes thin; shared shell logic belongs in `scripts/`.
 - Inside `packages/devkit`, lower modules never import higher ones (`advisory` < `core` < `rules` < `workflow`/`gate`; `search`, `compact` and `worktree` use only `core` and `advisory`, `distribution` also `search`, `rules` and `gate` also `compact`); a test enforces the layering. `devkit.advisory` ships as the separate `devkit-advisory` distribution (standard library only, no entry points), and `devkit` is a namespace package both share: never add `src/devkit/__init__.py`.
 - `docs/<area>/` is canonical for each module's semantics; `docs/<area>/reference.md` and package READMEs stay quick references that link there, and the bundled guide instructions are consumer-facing mirrors kept in step.

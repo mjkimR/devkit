@@ -30,7 +30,6 @@ from devkit.distribution.errors import (
     OrphanLeftNotice,
     OverrideDriftError,
     ReceiptStaleError,
-    SelectionError,
     StrayFilesNotice,
     ToolVersionChangedNotice,
     UnprojectedNotice,
@@ -42,6 +41,7 @@ from devkit.distribution.installation.config import (
     ProjectConfig,
     default_selection,
     effective_selection,
+    missing_selection_error,
     read_config,
 )
 from devkit.distribution.installation.discovery import InstalledBundle, unusable_notices
@@ -147,11 +147,7 @@ def _resolve_selection(
     if missing:
         # A bundle selected only by the receipt is deployed, so a sync would delete its committed files.
         deployed = [name for name in missing if name not in config.presets and name not in (presets or {})]
-        raise SelectionError(
-            f"selected bundle is not installed: {missing}"
-            + (f" (deployed per {RECEIPT_PATH}: {deployed})" if deployed else ""),
-            fix="Install the package that ships it (`uv sync`), or deselect it with `devkit remove <bundle>`",
-        )
+        raise missing_selection_error(missing, deployed)
     return Selection(
         tuple(sorted(set(agents)) if agents is not None else config.agents),
         MappingProxyType({name: tuple(sorted(set(values))) for name, values in sorted(active.items())}),
@@ -482,7 +478,8 @@ def _receipt_stale(previous: Receipt | None, receipt: Receipt, actions: list[Act
 
     ``target_files`` names only committed state: the receipt when it would change, and the planned paths that no
     receipt records as a managed or projected file (the root ``AGENTS.md``, seeded files, ``.devkit/.gitignore``).
-    Managed and projected files are listed in the details with the other planned writes.
+    Managed and projected files are listed in the details with the other planned writes: committed state first,
+    then the other changes, then the restores ``--locked`` would have made, so the cap never hides the reason.
     """
     recorded = previous.file_records if previous is not None else {}
     unrecorded = [item.path for item in actions if item.path not in recorded and item.path not in receipt.file_records]
@@ -492,7 +489,12 @@ def _receipt_stale(previous: Receipt | None, receipt: Receipt, actions: list[Act
         reason, targets = "the installed bundles no longer match the committed receipt", [RECEIPT_PATH, *unrecorded]
     else:
         reason, targets = "committed files no longer match the receipt", unrecorded
-    planned = [f"would {item.action} {item.path}" for item in actions[:STALE_DETAILS]]
+    committed = set(unrecorded)
+    ordered = sorted(
+        actions,
+        key=lambda item: 0 if item.path in committed else 2 if item.action == "create" and item.path in recorded else 1,
+    )
+    planned = [f"would {item.action} {item.path}" for item in ordered[:STALE_DETAILS]]
     if len(actions) > STALE_DETAILS:
         planned.append(f"and {len(actions) - STALE_DETAILS} more (`devkit sync --dry-run` lists them all)")
     return ReceiptStaleError(

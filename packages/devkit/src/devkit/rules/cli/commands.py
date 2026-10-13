@@ -94,7 +94,7 @@ def _execute(request: RunRequest) -> None:
     if request.json:
         echo_json(
             {
-                "violations": [v.to_dict() for v in violations],
+                "violations": [output.violation_json(v, run.guides, run.workspace_root) for v in violations],
                 "errors": [e.to_dict() for e in errors],
                 "notices": [n.to_dict() for n in notices],
             }
