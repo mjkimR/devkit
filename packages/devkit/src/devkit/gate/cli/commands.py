@@ -62,7 +62,7 @@ def cli() -> None:
 @click.option(
     "--force",
     is_flag=True,
-    help=f"Move existing unmanaged hooks to <hook>{hooks.BACKUP_SUFFIX}; the wrappers keep running them first",
+    help=f"Also preserve symbolic links and non-regular hooks at <hook>{hooks.BACKUP_SUFFIX}",
 )
 @click.option(
     "--python",
@@ -78,12 +78,14 @@ def install_cmd(workspace_root: str | None, force: bool, python: str | None) -> 
     mention yet; existing lines are never changed.
     """
     root = _repo_root(workspace_root)
-    for action in hooks.install(root, python or sys.executable, force=force):
+    installed = hooks.install(root, python or sys.executable, force=force)
+    for action in installed.actions:
         click.echo(f"[HOOK: {action}]")
     template = local_config.refresh_project_template(root)
     click.echo(f"[CONFIG: template={template.state} path={template.path}]")
-    if template.notice is not None:
-        echo_notices([template.notice])
+    notices = installed.notices + ([template.notice] if template.notice is not None else [])
+    echo_notices(notices)
+    exit_on_warnings(notices)
 
 
 @cli.command(name="uninstall")
@@ -112,8 +114,9 @@ def status_cmd(workspace_root: str | None, output_format: str) -> None:
             "stage": item.stage.value,
             "state": item.state.value,
             "python": item.python,
-            "python_ok": item.python_ok if item.state is hooks.HookState.MANAGED else None,
+            "python_ok": item.python_ok if item.python is not None else None,
             "backup": item.backup,
+            "scripts": list(item.scripts),
         }
         for item in hooks.status(project.root, location)
     ]
@@ -148,7 +151,7 @@ def status_cmd(workspace_root: str | None, output_format: str) -> None:
     click.echo(f"[HOOKS: dir={display_path(location.directory, project.root)}{hooks_path}]")
     for row in hook_rows:
         extra = f" python={row['python']} python_ok={str(row['python_ok']).lower()}" if row["python"] else ""
-        click.echo(f"[HOOK: {row['stage']} state={row['state']}{extra}]")
+        click.echo(f"[HOOK: {row['stage']} state={row['state']}{extra} scripts={','.join(row['scripts']) or 'none'}]")
     for row in gate_rows:
         click.echo(
             f"[GATE: {row['id']} stage={row['stage']} order={row['order']} "

@@ -100,13 +100,15 @@ with discover_bundles() as bundles:
     echo "--- devkit workflow --help / devkit gate --help"
     uv run devkit workflow --help >/dev/null
     uv run devkit gate --help >/dev/null
-    echo "--- devkit gate install, then commits through the hooks"
+    echo "--- devkit sync installs hooks, then commits through them"
     git init -q -b main .
     git config user.email smoke@example.com
     git config user.name "devkit smoke"
     git config commit.gpgsign false
     printf '.venv/\n' > .gitignore
-    uv run devkit gate install
+    uv run devkit sync
+    test -x .git/hooks/pre-commit.d/20-devkit
+    test -d .git/hooks/post-commit.d && test ! -e .git/hooks/post-commit.d/20-devkit
     # Output is captured before grep: `cmd | grep -q` closes the pipe at the first match, and devkit exits 2
     # without output when its stdout is closed (BrokenPipeError), which pipefail turns into a failure.
     gate_status=$(uv run devkit gate status --format json)

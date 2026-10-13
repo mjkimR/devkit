@@ -275,7 +275,7 @@ keeps its code and level, except that an `ERROR` is lowered to `WARNING`. Both j
 `POST_SYNC_EXTENSION_FAILED` warning; an extension can never fail or roll back the sync, because the files are already on disk.
 This is how a package built on devkit reacts to a changed workspace without devkit knowing it; since the lock is
 released, an extension may call devkit reads such as `get_context`. `devkit` registers one itself,
-`gate-config-template`, which keeps the commented gate settings template current
+`gate-hooks`, which installs shared Git hook dispatchers and active gate entries and keeps the commented gate settings template current
 ([Commit Gate Overview](../gate/overview.md#6a-settings-template)).
 
 The result fields and every notice code are listed in the

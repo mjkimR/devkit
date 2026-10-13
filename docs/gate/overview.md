@@ -8,7 +8,7 @@
 `devkit.gate` runs policy at Git's commit hooks. It owns the **system**: hook wrappers, configuration layering, gate discovery and the stage runner. It owns almost no **policy**: gates that encode a team's or a person's commit rules ship in content wheels as `kind = "gate"` bundle assets, so installing a wheel, selecting its bundle and running `devkit sync` adds them, exactly as rules are added to `devkit.rules`.
 
 1. **System in the core, policy in bundles.** The only built-ins are the gate system's own integrations: the runner of the project's own verification commands (`verify-commands`, policy-free: the project supplies the commands) and the non-empty message check (`message-nonempty`). The rule engine runs at commit time as one of those commands (`uv run devkit rules check --staged`). Identity checks, timestamp handling, message conventions and similar rules belong to the content wheels that need them.
-2. **Static wrappers, runtime discovery.** The hook files never change after `devkit gate install`. Each commit discovers the gates from the installation receipt, so `devkit sync` alone changes what runs; it never writes into the hooks directory. It only appends the commented tables of new gates to `devkit.config` ([Settings Template](#6a-settings-template)).
+2. **Shared dispatchers, runtime discovery.** Writing syncs install POSIX dispatchers and a separate `20-devkit` script for each stage with enabled gates. Each commit discovers gates from the installation receipt; sync also appends the commented tables of new gates to `devkit.config` ([Settings Template](#6a-settings-template)).
 3. **Deployed with their preset.** Installing a wheel makes its gates available; a preset that contains them deploys them once it is selected, by `devkit add` or, for a bundle that declares `auto_select`, by default; a gate may additionally ship disabled and require `enabled = true` in configuration.
 4. **Fail closed where Git can still refuse.** In `pre-commit` and `commit-msg`, refusals, configuration errors and missing or drifted gate files block the commit. `post-commit` runs after the commit exists, only reports, and always exits `0`; its problems are rendered as warnings (`[WARN]`, `CONTINUE`), never as errors, so an agent does not mistake a reported problem for a failed commit.
 5. **One error format.** Gate refusals and configuration problems are Agent Advisory Protocol errors (`devkit.advisory`).
@@ -56,19 +56,62 @@ Hooks run with Git's environment, where the project's `.venv/bin` is usually not
 
 ## 3. Hook Wrappers
 
-`devkit gate install` writes `pre-commit`, `commit-msg` and `post-commit` into `<common-git-dir>/hooks`, the hooks directory shared by every worktree; `install`, `status` and `uninstall` all resolve this one directory. Each wrapper:
+`devkit sync` and `devkit gate install` prepare `pre-commit`, `commit-msg` and `post-commit` dispatchers in
+`<common-git-dir>/hooks`, shared by every worktree. `install`, `status` and `uninstall` resolve this directory.
+Each dispatcher runs executable regular files (including links to regular files) directly under `<hook>.d/`
+in bytewise filename order. Hidden files, non-executable files and directories are ignored; no recursion or
+shell sourcing occurs. Scripts may use any interpreter through their shebang. Git's arguments, working directory,
+environment and stdin are inherited. Only these three commit stages are supported; adding stages with stdin
+payloads such as `pre-push` requires a replay contract so every child receives the full input.
 
-1. runs `<hook>.pre-gate` first when it is an executable file (a hook `install` moved aside) and, in a blocking stage, stops with its exit status when it fails;
-2. picks the interpreter: `<work tree>/.venv/bin/python` when `devkit` is installed in that environment, otherwise the interpreter recorded at install time;
-3. runs `exec "$python" -P -m devkit.gate run <stage> "$@"`.
+```text
+<common-git-dir>/hooks/
+├── pre-commit                  # managed POSIX dispatcher
+├── pre-commit.legacy           # preserved existing hook, when present
+└── pre-commit.d/
+    ├── 00-legacy               # managed adapter invoking ../pre-commit.legacy
+    ├── 10-custom-check         # optional user script before devkit
+    ├── 20-devkit               # managed gate entry, when the stage has enabled gates
+    └── 30-custom-check         # optional user script after devkit
+```
 
-- **`-P`**: keeps the current directory (the repository, for a hook) off `sys.path`, so a `json.py` or `devkit.py` at the repository root cannot shadow a module the wrapper imports. `-m devkit.gate` imports only the gate area and what it depends on.
-- **Interpreter**: the work tree's `.venv` comes first, so every worktree uses its own environment even though the hooks directory is shared. The recorded fallback is `sys.executable` of the installing process, or `--python`; `install` stores it as an absolute path and refuses (`GATE_PYTHON_INVALID`) an interpreter that cannot import `devkit.gate`. Wrappers do not depend on `PATH`, so Git GUIs and agent shells behave like a terminal.
-- **Missing environment**: when neither interpreter is usable, a blocking stage exits `2` with a `run 'uv sync'` hint; `post-commit` exits `0`.
-- **Existing hooks**: hooks without the managed marker are never overwritten silently. An executable hook, a symbolic link (even a dangling one) or anything that is not a regular file is foreign: `install` refuses (`GATE_FOREIGN_HOOK`), and `install --force` moves it to `<hook>.pre-gate`, where the wrapper keeps running it first. A non-executable regular file, which Git ignores, is inert and is moved aside without `--force`. `uninstall` restores what was moved. An existing backup is never overwritten (`GATE_BACKUP_EXISTS`).
-- **Writing**: wrappers are LF-only files with POSIX paths, written to a temporary file and renamed into place, so a symbolic link at the hook path is never written through.
-- **`core.hooksPath`**: when its effective value (any configuration scope) points anywhere other than `<common-git-dir>/hooks`, Git would not run the wrappers: `install` refuses (`GATE_HOOKS_PATH_SET`), `status` reports the setting, and `uninstall` still cleans the common hooks directory. The `[FIX]` depends on the scope that sets it (`git config --show-scope`): a `local` value is unset (`git config --unset core.hooksPath`), a `worktree` value is unset with `--worktree`, a `global` or `system` value is overridden for this repository only (`git config core.hooksPath <common-git-dir>/hooks`, which `install` accepts), and a `command` value (`git -c` or `GIT_CONFIG_*` variables) is removed from the environment.
-- **Bypass**: `git commit --no-verify` skips `pre-commit` and `commit-msg` as Git defines; the gate system adds no bypass of its own.
+- **Order and failure**: `pre-commit` and `commit-msg` stop at the first failed script and preserve its exit code.
+  `post-commit` reports each failed script as `GATE_HOOK_SCRIPT_FAILED` on stderr, continues with the remaining
+  scripts and exits `0`; the commit already exists.
+- **Empty stages**: sync and install always prepare dispatchers and `.d` directories, but add `20-devkit` only
+  for stages with at least one enabled gate. Registry or configuration errors install the entry for all stages
+  so commit-time validation reports the problem. Enabled gates that skip at runtime still count: for example,
+  `verify-commands` stays enabled even without commands. With defaults, `pre-commit` and `commit-msg` have
+  entries and `post-commit` does not. An existing managed entry is retained even if this worktree has no enabled
+  gates, since another worktree shares it. Run sync after enabling a gate in a stage that has no entry yet.
+- **Gate entry**: `20-devkit` selects the worktree's `.venv/bin/python` when devkit is installed there,
+  otherwise the absolute fallback recorded by install (`sys.executable` or `--python`), then runs
+  `<python> -P -m devkit.gate run <stage>`. `-P` prevents repository modules from shadowing imports.
+  The fallback must import `devkit.gate` (`GATE_PYTHON_INVALID`); it does not depend on `PATH`.
+  A missing interpreter exits `2` in a blocking stage and `0` in `post-commit`.
+- **Existing hooks**: regular files are automatically renamed to `<hook>.legacy`, retaining their executable
+  mode, and chained through `00-legacy`. `GATE_HOOK_PRESERVED` is returned as a warning only when a hook moves.
+  Keeping the backup beside the original reduces directory-relative breakage, but scripts depending on their
+  original filename still need review. Non-executable hooks stay inactive. Symlinks and non-regular hooks
+  require explicit `install --force` (`GATE_FOREIGN_HOOK`); automatic sync skips installation instead.
+  Existing backups are never overwritten (`GATE_BACKUP_EXISTS`). `00-legacy` and `20-devkit` are reserved;
+  foreign files there, or symlinked script directories, are refused (`GATE_HOOK_LAYOUT_INVALID`).
+- **Writing**: mutations are serialized by a clone-wide `devkit-hooks.lock`. Scripts are LF-only executable
+  files, replaced atomically without writing through symlinks. Identical scripts are left untouched.
+  All stages are checked for conflicts before writing. If dispatcher replacement fails after a hook moves,
+  the original hook is restored.
+- **Automatic installation**: the `devkit.post_sync` extension `gate-hooks` runs after writing syncs, including
+  `--locked`; it does not run on `--dry-run` or `--check`, or install outside a Git worktree. Unsafe layouts,
+  custom `core.hooksPath` and installation failures produce `GATE_HOOK_INSTALL_SKIPPED` warnings with the
+  reason code and remediation. The sync succeeds unless warnings trigger `--strict`.
+- **Removal**: uninstall removes owned `20-devkit` entries. If user entries remain, it keeps the dispatcher,
+  `00-legacy` and the preserved hook. Otherwise it removes the dispatcher and managed adapter and restores
+  `<hook>.legacy`. It never deletes user entries, including non-executable files or directories.
+- **`core.hooksPath`**: a value pointing elsewhere is left unchanged. Explicit install refuses
+  (`GATE_HOOKS_PATH_SET`), sync reports a skipped-install warning, and status reports the setting. Uninstall
+  still cleans the common hooks directory. Remediation depends on scope: unset a local or worktree value in
+  that scope, override global/system values for this clone, or remove command-scope options/environment.
+- **Bypass**: `git commit --no-verify` skips `pre-commit` and `commit-msg` as Git defines.
 
 ## 4. Gate Contract
 
@@ -195,8 +238,7 @@ uncommented key replaces the `.devkit/config.toml` value as a whole (an array to
   or removed, so uncommented values stay where the developer put them. A table of a gate that is later removed
   stays; once uncommented, it fails blocking stages like any entry for a gate that is not installed.
 - **Refresh**: `install` (safe to re-run) prints `[CONFIG: template=<created|updated|unchanged|skipped> path=<path>]`.
-  After every writing sync, the `devkit.post_sync` hook `gate-config-template` does the same for a repository whose
-  wrappers are installed, so a gate that `devkit add` or an upgrade brings in appears without another `install`. The
+  After every writing sync, the `devkit.post_sync` extension `gate-hooks` installs hooks and refreshes the template in Git worktrees, so a gate that `devkit add` or an upgrade brings in appears without another `install`. The
   hook imports the receipt's gate packages to read their settings, as every commit already does, and reports nothing
   unless it skips.
 - **Skipped**: a `devkit.config` that is a symbolic link, not a regular file or not UTF-8 is never written; nor is

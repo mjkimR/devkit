@@ -6,7 +6,7 @@ Pluggable Git commit gates (`devkit gate` CLI): managed hook wrappers, layered c
 
 ```bash
 uv add --dev "agt-devkit @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
-uv run devkit gate install      # writes pre-commit, commit-msg and post-commit wrappers into <common-git-dir>/hooks
+uv run devkit gate install      # prepares dispatchers and active 20-devkit entries (sync also installs them)
                                 # and a commented table per gate into <common-git-dir>/devkit.config
 uv run devkit gate status       # hooks, gates with effective state, configuration layers, problems that fail a commit
 
@@ -15,15 +15,15 @@ uv run devkit add <bundle>:<preset>   # a preset that includes the bundle's gate
 uv run devkit sync                    # deploys the gate packages and records their files in the receipt
 ```
 
-Existing executable hooks are kept: `install --force` moves them to `<hook>.pre-gate` and the wrapper runs them before the gates; `git commit --no-verify` skips `pre-commit` and `commit-msg`. See [Hook Wrappers](overview.md#3-hook-wrappers).
+Writing syncs install dispatchers automatically. Existing regular hooks are moved to `<hook>.legacy` with a warning and run through `<hook>.d/00-legacy`; `<hook>.d/20-devkit` is added only for stages with enabled gates. Add executable scripts beside it in filename order. Symlinks and non-regular hooks need `install --force`; `git commit --no-verify` skips `pre-commit` and `commit-msg`. See [Hook Wrappers](overview.md#3-hook-wrappers).
 
 ## Commands
 
 | Command | Purpose |
 | --- | --- |
-| `devkit gate install [--force] [--python PATH]` | Write the managed wrappers, and append the commented table of every gate `<common-git-dir>/devkit.config` does not mention yet ([Settings Template](overview.md#6a-settings-template)). |
-| `devkit gate uninstall` | Remove managed wrappers; restore hooks moved aside by `install`. |
-| `devkit gate status [--format text\|json]` | Hooks directory and `core.hooksPath`, hook states, every gate with stage, order, effective enablement and source, configuration layers, and every problem that fails a commit (`load_gate_project`, the same `validate_gates` the stages run). |
+| `devkit gate install [--force] [--python PATH]` | Prepare dispatchers and active `20-devkit` entries, and append the commented table of every gate `<common-git-dir>/devkit.config` does not mention yet ([Settings Template](overview.md#6a-settings-template)). |
+| `devkit gate uninstall` | Remove owned devkit entries; keep dispatchers for user scripts, otherwise restore preserved hooks. |
+| `devkit gate status [--format text\|json]` | Hooks directory and `core.hooksPath`, hook states and script filenames, every gate with stage, order, effective enablement and source, configuration layers, and every problem that fails a commit (`load_gate_project`, the same `validate_gates` the stages run). |
 | `devkit gate run [-q\|-v] [--strict] <stage> [hook args]` | Run one stage (`run_hook`); what the wrappers call, and how to test a stage by hand. Options go before `<stage>`; hooks set `DEVKIT_QUIET`, `DEVKIT_VERBOSE` or `DEVKIT_STRICT` instead, since Git passes no flags ([Agent-First Output](../architecture/agent-output.md#6-verbosity-and-strictness)). |
 
 `-w/--workspace-root` (default: the current directory) may name any existing directory inside the repository; every command, `install` and `uninstall` included, works on the work tree's top level (`devkit.core.require_git_toplevel`), as a hook does. A `-w` that is not an existing directory is `ARGUMENT_INVALID`; one outside a work tree is `GIT_FAILED` (`INPUT_ERROR`).
@@ -58,6 +58,10 @@ Every gate error derives from `GateError` (`devkit.gate.errors`), which sets `ac
 | `GATE_VERIFY_UNSTAGED` | `VerifyUnstagedNotice` | `NOTE` (level `NOTICE`) | `0` | returned, never raised: `verify-commands` ran on a working tree with unstaged or untracked files |
 | `GATE_CONFIG_TEMPLATE_SKIPPED` | `GateTemplateNotice` | `CONTINUE` (level `WARNING`) | `0` | returned, never raised: `devkit.config` is a symbolic link, not a regular file or not UTF-8, or the `[gates]` table of `.devkit/config.toml` cannot be read, so `install` or the post-sync refresh left it alone |
 | `GATE_FOREIGN_HOOK`, `GATE_BACKUP_EXISTS`, `GATE_HOOKS_PATH_SET` | `ForeignHookError`, `HookBackupExistsError`, `HooksPathSetError` | `INTERACTION` | `2` | `install` would move or bypass hooks it does not own |
+| `GATE_HOOK_LAYOUT_INVALID` | `HookLayoutError` | `MAINTENANCE` | `2` | Reserved entry collision or unsafe hook directory |
+| `GATE_HOOK_PRESERVED` | `HookPreservedNotice` | `CONTINUE` | `0` | Existing hook preserved and chained; warning returned once when moved |
+| `GATE_HOOK_INSTALL_SKIPPED` | `HookInstallSkippedNotice` | `CONTINUE` | `0` | Automatic installation skipped; reason code and remediation included |
+| `GATE_HOOK_SCRIPT_FAILED` | POSIX dispatcher | `CONTINUE` | `0` | A post-commit script failed; later scripts still run |
 | `CONFIG_INVALID` | `devkit.core.ConfigError` | `INPUT_ERROR` | `2` | `.devkit/config.toml` or `devkit.config` cannot be read or parsed |
 | `ASSET_FILE_INVALID` | `devkit.core.AssetFileError` | `MAINTENANCE`; `AUTO` when missing | `2` | a receipt-listed gate file is unsafe or differs from its recorded hash; a missing one (a fresh clone or worktree) is `AUTO` with the fix `devkit sync` |
 | `ARGUMENT_INVALID` | `devkit.core.ArgumentError` | `INPUT_ERROR` | `2` | `-w/--workspace-root` is not an existing directory; `run commit-msg` without the message file |
@@ -101,7 +105,7 @@ some_setting = 3
 packages/devkit/src/devkit/gate/
 ├── errors.py       # GateError and its subclasses, one class per code
 ├── engine/         # models (Stage, GateResult, GateContext), BaseGate, layered config, registry, runner
-├── hooks/          # wrapper scripts (install, uninstall, status) and Git queries
+├── hooks/          # dispatchers, gate scripts, installation, local template and Git queries
 ├── gates/          # built-in gates (verify-commands, message-nonempty)
 ├── commits/        # the git-commits guide bundle
 ├── cli/            # devkit gate (a thin layer over the library)

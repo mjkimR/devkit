@@ -848,3 +848,20 @@ def test_a_file_the_pulled_receipt_dropped_is_removed_while_unchanged(
     assert not skill.exists()
     assert {"path": ".devkit/managed/team/skills/review/SKILL.md", "action": "remove"} in result.to_dict()["actions"]
     assert edited.read_text() == "edited\n"  # an edited file only the local record knows is left alone
+
+
+def test_sync_installs_hooks_only_after_writing(target: Path, installed: list[InstalledBundle]) -> None:
+    from testsupport.gate import git
+
+    git(target, "init", "-q")
+    sync_project(target, installed, dry_run=True)
+    assert not (target / ".git/hooks/pre-commit").exists()
+    result = sync_project(target, installed)
+    assert not result.notices
+    entry = target / ".git/hooks/pre-commit.d/20-devkit"
+    assert entry.is_file()
+    assert (target / ".git/hooks/post-commit.d").is_dir()
+    assert not (target / ".git/hooks/post-commit.d/20-devkit").exists()
+    before = entry.stat().st_mtime_ns
+    sync_project(target, installed, locked=True)
+    assert entry.stat().st_mtime_ns == before

@@ -1,45 +1,38 @@
-"""Managed hook wrappers in the repository's hooks directory.
-
-The hooks directory is always ``<common-git-dir>/hooks``, shared by every
-worktree; ``install``, ``status`` and ``uninstall`` all use it. When
-``core.hooksPath`` points Git elsewhere, ``install`` refuses and ``status``
-reports the setting, because wrappers in the common hooks directory would not
-run.
-
-Each wrapper is static. On every commit it:
-
-1. runs ``<hook>.pre-gate`` first when it is an executable file (the hook
-   ``install --force`` moved aside; a directory moved aside is not run), and
-   stops when a blocking stage's hook fails;
-2. picks the interpreter: the work tree's ``.venv/bin/python`` when ``devkit``
-   is installed in it, otherwise the absolute interpreter recorded at install
-   time, and exits ``2`` on a blocking stage when neither exists;
-3. execs ``<python> -P -m devkit.gate run <stage>`` (``-P`` keeps repository
-   files from shadowing standard library modules).
-
-The runner discovers gates at commit time, so selecting a gate bundle and
-running ``devkit sync`` changes what runs without touching the hooks directory.
-Symbolic links are never written through: a hook that is a link (even a
-dangling one) is foreign, and wrappers replace files atomically.
-"""
+"""Shared POSIX hook dispatchers and independently managed devkit entries."""
 
 from __future__ import annotations
 
+import fcntl
 import os
 import shlex
 import subprocess
-from dataclasses import dataclass
+import tempfile
+from collections.abc import Iterator
+from contextlib import contextmanager
+from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
 
-from devkit.advisory import ExitCode
+from devkit.advisory import AdvisoryError, ExitCode
 from devkit.core import require_git_toplevel
 from devkit.gate.engine.models import Stage
-from devkit.gate.errors import ForeignHookError, GatePythonError, HookBackupExistsError, HooksPathSetError
+from devkit.gate.engine.runner import load_gate_project
+from devkit.gate.errors import (
+    ForeignHookError,
+    GatePythonError,
+    HookBackupExistsError,
+    HookLayoutError,
+    HookPreservedNotice,
+    HooksPathSetError,
+)
 from devkit.gate.hooks import git
 
-MARKER = "# Managed by devkit gate"
-BACKUP_SUFFIX = ".pre-gate"
+MARKER = "# Managed by devkit hook dispatcher"
+GATE_MARKER = "# Managed by devkit gate"
+LEGACY_MARKER = "# Managed by devkit legacy adapter"
+BACKUP_SUFFIX = ".legacy"
+DEVKIT_ENTRY = "20-devkit"
+LEGACY_ENTRY = "00-legacy"
 PYTHON_LINE = "python="
 HOOKS_PATH_KEY = "core.hooksPath"
 _PYTHON_CHECK_TIMEOUT = 60.0
@@ -57,8 +50,9 @@ class HookStatus:
     stage: Stage
     path: Path
     state: HookState
-    python: str | None = None  # interpreter a managed wrapper records
+    python: str | None = None  # fallback recorded by the managed 20-devkit entry, absent on empty stages
     backup: bool = False
+    scripts: tuple[str, ...] = ()
 
     @property
     def python_ok(self) -> bool:
@@ -97,18 +91,65 @@ def locate(cwd: Path) -> HooksLocation:
     return HooksLocation(directory, custom, git.config_scope(cwd, HOOKS_PATH_KEY) if custom else None)
 
 
-def wrapper_script(stage: Stage, python: str) -> str:
-    """The wrapper for one stage. ``python`` is the absolute fallback interpreter (POSIX separators)."""
-    # Blocking stages fail closed with ERROR (the gates could not run) when no interpreter is found;
-    # post-commit cannot undo the commit anyway.
-    missing_exit = int(ExitCode.ERROR) if stage.blocking else int(ExitCode.OK)
-    chained = f'"$0{BACKUP_SUFFIX}" "$@"' + (" || exit $?" if stage.blocking else "")
+def dispatcher_script(stage: Stage) -> str:
+    """Run executable direct children in bytewise filename order, without changing the Git environment."""
+    failure = 'exit "$code"' if stage.blocking else 'report_failure "$script" "$code"'
+    # A function keeps the original hook arguments separate from the script path.
     return f"""#!/bin/sh
 {MARKER}
-{PYTHON_LINE}{shlex.quote(python)}
-if [ -f "$0{BACKUP_SUFFIX}" ] && [ -x "$0{BACKUP_SUFFIX}" ]; then
-    {chained}
+run_script() {{
+    script=$1
+    shift
+    [ -f "$script" ] && [ -x "$script" ] || return 0
+    "$script" "$@"
+    code=$?
+    if [ "$code" -ne 0 ]; then
+        {failure}
+    fi
+}}
+report_failure() {{
+    echo "[WARN] (GATE_HOOK_SCRIPT_FAILED) hook script failed" >&2
+    echo "[ACTION] CONTINUE — Report the failed hook script to the user" >&2
+    echo "[DETAIL] stage={stage} script=$1 exit=$2" >&2
+}}
+if [ "${{LC_ALL+x}}" = x ]; then
+    saved_lc_all=$LC_ALL
+    had_lc_all=yes
+else
+    had_lc_all=no
 fi
+LC_ALL=C
+export LC_ALL
+for entry in "$0.d"/*; do
+    if [ "$had_lc_all" = yes ]; then
+        LC_ALL=$saved_lc_all
+        export LC_ALL
+    else
+        unset LC_ALL
+    fi
+    run_script "$entry" "$@"
+done
+exit 0
+"""
+
+
+def legacy_script(stage: Stage) -> str:
+    return f"""#!/bin/sh
+{LEGACY_MARKER}
+legacy="$(dirname "$0")/../{stage}{BACKUP_SUFFIX}"
+if [ -f "$legacy" ] && [ -x "$legacy" ]; then
+    exec "$legacy" "$@"
+fi
+exit 0
+"""
+
+
+def wrapper_script(stage: Stage, python: str) -> str:
+    """The ``20-devkit`` entry, with an absolute fallback interpreter."""
+    missing_exit = int(ExitCode.ERROR) if stage.blocking else int(ExitCode.OK)
+    return f"""#!/bin/sh
+{GATE_MARKER}
+{PYTHON_LINE}{shlex.quote(python)}
 top=$(git rev-parse --show-toplevel 2>/dev/null)
 if [ -n "$top" ]; then
     candidate="$top/.venv/bin/python"
@@ -146,7 +187,7 @@ def _state(path: Path) -> tuple[HookState, str | None]:
         text = path.read_text("utf-8", errors="replace")
     except OSError:
         return HookState.FOREIGN, None
-    if MARKER in text:
+    if MARKER in text.splitlines():
         return HookState.MANAGED, _read_python(text)
     if not os.access(path, os.X_OK):
         return HookState.INERT, None
@@ -159,7 +200,12 @@ def status(cwd: Path, location: HooksLocation | None = None) -> list[HookStatus]
     for stage in Stage:
         path = directory / stage.value
         state, python = _state(path)
-        result.append(HookStatus(stage, path, state, python, _present(_backup(path))))
+        entries = path.with_name(path.name + ".d")
+        scripts = tuple(sorted(child.name for child in entries.iterdir())) if entries.is_dir() else ()
+        entry = entries / DEVKIT_ENTRY
+        if state is HookState.MANAGED:
+            python = _read_python(entry.read_text("utf-8", errors="replace")) if entry.is_file() else None
+        result.append(HookStatus(stage, path, state, python, _present(_backup(path)), scripts))
     return result
 
 
@@ -186,14 +232,18 @@ def check_python(python: str) -> str:
 
 def _write(path: Path, text: str) -> None:
     """Replace ``path`` with an executable LF-only file without following a link at ``path``."""
-    temporary = path.with_name(f".{path.name}.devkit-{os.getpid()}")
+    data = text.encode("utf-8")
+    if path.is_file() and not path.is_symlink() and path.read_bytes() == data and os.access(path, os.X_OK):
+        return
+    fd, name = tempfile.mkstemp(prefix=f".{path.name}.devkit-", dir=path.parent)
+    temporary = Path(name)
     try:
-        temporary.write_bytes(text.encode("utf-8"))
-        temporary.chmod(0o755)
+        with os.fdopen(fd, "wb") as stream:
+            stream.write(data)
+            os.fchmod(stream.fileno(), 0o755)
         os.replace(temporary, path)
     finally:
-        if _present(temporary):
-            temporary.unlink()
+        temporary.unlink(missing_ok=True)
 
 
 def _hooks_path_fix(location: HooksLocation) -> str:
@@ -220,58 +270,134 @@ def _refuse_hooks_path(location: HooksLocation) -> None:
         )
 
 
-def install(cwd: Path, python: str, *, force: bool = False) -> list[str]:
-    """Write a wrapper for every stage.
+@dataclass
+class InstallResult:
+    actions: list[str] = field(default_factory=list)
+    notices: list[AdvisoryError] = field(default_factory=list)
 
-    Foreign hooks are refused unless ``force`` moves them to ``<hook>.pre-gate``,
-    where the wrapper keeps running them first. Inert (non-executable) hooks,
-    which Git ignores, are moved aside without ``force``. ``python`` is checked
-    and recorded as an absolute path.
+
+@contextmanager
+def _lock(directory: Path) -> Iterator[None]:
+    """Serialize hook mutations across projects and linked worktrees of the same clone."""
+    fd = os.open(directory.parent / "devkit-hooks.lock", os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(fd, "w") as stream:
+        fcntl.flock(stream, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(stream, fcntl.LOCK_UN)
+
+
+def _owned(path: Path, marker: str) -> bool:
+    return path.is_file() and not path.is_symlink() and marker in path.read_text("utf-8", errors="replace").splitlines()
+
+
+def _entries(path: Path) -> Path:
+    return path.with_name(path.name + ".d")
+
+
+def install(cwd: Path, python: str, *, force: bool = False) -> InstallResult:
+    """Install dispatchers and ``20-devkit`` entries, preserving regular foreign hooks automatically.
+
+    ``force`` also permits moving symlinks or non-regular hooks. Preflight all stages before writing;
+    reserved entry collisions, existing backups and custom ``core.hooksPath`` are always refused.
     """
     location = locate(cwd)
     _refuse_hooks_path(location)
     recorded = check_python(python)
-    current = status(cwd, location)
-    foreign = [item for item in current if item.state is HookState.FOREIGN]
-    if foreign and not force:
-        raise ForeignHookError(
-            f"hooks not managed by devkit gate exist: {', '.join(item.stage.value for item in foreign)}",
-            *(str(item.path) for item in foreign),
-            fix=f"Once the user agrees, run `devkit gate install --force`, which moves them to <hook>{BACKUP_SUFFIX}",
-        )
-    moving = [item for item in current if item.state in (HookState.FOREIGN, HookState.INERT)]
-    blocked = [item for item in moving if item.backup]
-    if blocked:
-        raise HookBackupExistsError(
-            f"backup already exists for: {', '.join(item.stage.value for item in blocked)}",
-            *(str(_backup(item.path)) for item in blocked),
-        )
-    location.directory.mkdir(parents=True, exist_ok=True)
-    actions: list[str] = []
-    for item in current:
-        if item in moving:
-            os.rename(item.path, _backup(item.path))
-            kind = "inert (non-executable) hook" if item.state is HookState.INERT else "existing hook"
-            actions.append(f"{item.stage}: moved {kind} to {item.path.name}{BACKUP_SUFFIX}")
-        _write(item.path, wrapper_script(item.stage, recorded))
-        actions.append(f"{item.stage}: installed")
-    return actions
+    project = load_gate_project(cwd)
+    # Invalid configuration must still be reported by the hooks, rather than silently bypassed.
+    stages = (
+        set(Stage)
+        if not project.validation.ok
+        else {gate.stage for gate in project.registry.get_all() if project.config.enabled(gate)}
+    )
+    with _lock(location.directory):
+        current = status(cwd, location)
+        moving = [item for item in current if item.state in (HookState.FOREIGN, HookState.INERT)]
+        special = [item for item in moving if item.path.is_symlink() or not item.path.is_file()]
+        if special and not force:
+            raise ForeignHookError(
+                "hooks are symbolic links or non-regular files",
+                *(str(item.path) for item in special),
+                fix="Inspect the existing hooks, then run `devkit gate install --force` to preserve and chain them",
+            )
+        blocked = [item for item in moving if item.backup]
+        if blocked:
+            raise HookBackupExistsError(
+                "legacy hook backup already exists",
+                *(str(_backup(item.path)) for item in blocked),
+                fix="Move the conflicting legacy backups to another path, then run `devkit sync`",
+            )
+        if location.directory.is_symlink():
+            raise HookLayoutError("hooks directory is a symbolic link", str(location.directory))
+        for item in current:
+            entries = _entries(item.path)
+            if entries.is_symlink() or (_present(entries) and not entries.is_dir()):
+                raise HookLayoutError("hook script directory is not a regular directory", str(entries))
+            for name, marker in ((DEVKIT_ENTRY, GATE_MARKER), (LEGACY_ENTRY, LEGACY_MARKER)):
+                entry = entries / name
+                if _present(entry) and not _owned(entry, marker):
+                    raise HookLayoutError("reserved hook entry is not managed by devkit", str(entry))
+        location.directory.mkdir(parents=True, exist_ok=True)
+        result = InstallResult()
+        for item in current:
+            entries = _entries(item.path)
+            entries.mkdir(exist_ok=True)
+            if item in moving or _present(_backup(item.path)):
+                _write(entries / LEGACY_ENTRY, legacy_script(item.stage))
+            if item.stage in stages:
+                _write(entries / DEVKIT_ENTRY, wrapper_script(item.stage, recorded))
+            if item in moving:
+                os.rename(item.path, _backup(item.path))
+            try:
+                _write(item.path, dispatcher_script(item.stage))
+            except OSError:
+                if item in moving:
+                    os.rename(_backup(item.path), item.path)
+                raise
+            if item in moving:
+                kind = "inert (non-executable) hook" if item.state is HookState.INERT else "existing hook"
+                result.actions.append(f"{item.stage}: moved {kind} to {item.path.name}{BACKUP_SUFFIX}")
+                result.notices.append(
+                    HookPreservedNotice(
+                        f"existing {item.stage} hook preserved at {_backup(item.path)}",
+                        f"The preserved hook runs first through {entries / LEGACY_ENTRY}; its executable mode is unchanged",
+                        target_files=[str(_backup(item.path))],
+                    )
+                )
+            result.actions.append(f"{item.stage}: installed")
+        return result
 
 
 def uninstall(cwd: Path) -> list[str]:
-    """Remove managed wrappers and restore any hook ``install`` moved aside.
-
-    Works on the common hooks directory even when ``core.hooksPath`` is set.
-    """
+    """Remove owned devkit entries; retain the dispatcher and legacy adapter while user entries remain."""
     location = locate(cwd)
     actions: list[str] = []
-    for item in status(cwd, location):
-        if item.state is not HookState.MANAGED:
-            continue
-        item.path.unlink()
-        actions.append(f"{item.stage}: removed")
-        backup = _backup(item.path)
-        if _present(backup):
-            os.rename(backup, item.path)
-            actions.append(f"{item.stage}: restored {backup.name}")
+    with _lock(location.directory):
+        for item in status(cwd, location):
+            if item.state is not HookState.MANAGED:
+                continue
+            entries = _entries(item.path)
+            if entries.is_symlink() or (_present(entries) and not entries.is_dir()):
+                raise HookLayoutError("hook script directory is not a regular directory", str(entries))
+            entry = entries / DEVKIT_ENTRY
+            if _owned(entry, GATE_MARKER):
+                entry.unlink()
+                actions.append(f"{item.stage}: removed {DEVKIT_ENTRY}")
+            legacy = entries / LEGACY_ENTRY
+            remaining = list(entries.iterdir()) if entries.exists() else []
+            if any(child != legacy or not _owned(legacy, LEGACY_MARKER) for child in remaining):
+                actions.append(f"{item.stage}: retained dispatcher for user scripts")
+                continue
+            if _owned(legacy, LEGACY_MARKER):
+                legacy.unlink()
+            if entries.exists():
+                entries.rmdir()
+            item.path.unlink()
+            actions.append(f"{item.stage}: removed")
+            backup = _backup(item.path)
+            if _present(backup):
+                os.rename(backup, item.path)
+                actions.append(f"{item.stage}: restored {backup.name}")
     return actions

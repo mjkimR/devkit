@@ -71,9 +71,12 @@ def test_post_sync_appends_only_new_gates(repo: Path) -> None:
     assert text.count("[gates.settings.verify-commands]") == 1
 
 
-def test_post_sync_leaves_repositories_without_managed_hooks_alone(repo: Path, tmp_path: Path) -> None:
+def test_post_sync_installs_hooks_and_skips_non_repositories(repo: Path, tmp_path: Path) -> None:
     assert local_config.post_sync(repo, {}) is None
-    assert not _config(repo).exists()
+    assert _config(repo).exists()
+    assert (repo / ".git/hooks/pre-commit.d/20-devkit").is_file()
+    assert (repo / ".git/hooks/post-commit.d").is_dir()
+    assert not (repo / ".git/hooks/post-commit.d/20-devkit").exists()
     outside = tmp_path / "outside"
     outside.mkdir()
     assert local_config.post_sync(outside, {}) is None
@@ -189,3 +192,39 @@ def test_an_unreadable_project_gates_table_skips_the_template(repo: Path) -> Non
     assert result.state is local_config.TemplateState.SKIPPED and not _config(repo).exists()
     assert result.notice is not None and result.notice.code == "GATE_CONFIG_TEMPLATE_SKIPPED"
     assert result.notice.target_files == (".devkit/config.toml",)
+
+
+def test_post_sync_preserves_hooks_and_reports_the_move_once(repo: Path) -> None:
+    hook = repo / ".git/hooks/pre-commit"
+    hook.write_text("#!/bin/sh\nexit 0\n")
+    hook.chmod(0o755)
+    notices = local_config.post_sync(repo, {})
+    assert notices is not None and [notice.code for notice in notices] == ["GATE_HOOK_PRESERVED"]
+    assert local_config.post_sync(repo, {}) is None
+    assert (repo / ".git/hooks/pre-commit.legacy").read_text() == "#!/bin/sh\nexit 0\n"
+
+
+def test_post_sync_skips_custom_hooks_path_with_a_coded_warning(repo: Path) -> None:
+    from testsupport.gate import git
+
+    git(repo, "config", "core.hooksPath", ".husky")
+    notices = local_config.post_sync(repo, {})
+    assert notices is not None and [notice.code for notice in notices] == ["GATE_HOOK_INSTALL_SKIPPED"]
+    assert "GATE_HOOKS_PATH_SET" in notices[0].details[0]
+    assert git(repo, "config", "core.hooksPath").stdout.strip() == ".husky"
+    assert not (repo / ".git/hooks/pre-commit").exists()
+
+
+def test_post_sync_leaves_symbolic_hooks_and_reserved_entries_untouched(repo: Path) -> None:
+    hook = repo / ".git/hooks/pre-commit"
+    hook.symlink_to("missing-hook")
+    notices = local_config.post_sync(repo, {})
+    assert notices is not None and notices[0].code == "GATE_HOOK_INSTALL_SKIPPED"
+    assert "GATE_FOREIGN_HOOK" in notices[0].details[0] and hook.is_symlink()
+    hook.unlink()
+    entry = repo / ".git/hooks/pre-commit.d/20-devkit"
+    entry.parent.mkdir()
+    entry.write_text("mine\n")
+    notices = local_config.post_sync(repo, {})
+    assert notices is not None and "GATE_HOOK_LAYOUT_INVALID" in notices[0].details[0]
+    assert entry.read_text() == "mine\n" and not hook.exists()

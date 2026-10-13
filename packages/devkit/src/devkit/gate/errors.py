@@ -73,7 +73,7 @@ class VerifyUnstagedNotice(GateError):
 class GateTemplateNotice(GateError):
     """The commented settings template could not be written to ``devkit.config`` (a warning, never raised).
 
-    Returned by ``devkit gate install`` and the post-sync refresh; the hooks and the sync themselves succeeded.
+    Returned by ``devkit gate install`` and the post-sync refresh; the command itself succeeded.
     """
 
     code = "GATE_CONFIG_TEMPLATE_SKIPPED"
@@ -117,7 +117,7 @@ class HooksPathSetError(GateError):
 
 
 class ForeignHookError(GateError):
-    """``install`` would move hooks devkit does not manage (``INTERACTION``)."""
+    """``install`` would move symbolic links or non-regular hooks (``INTERACTION``)."""
 
     code = "GATE_FOREIGN_HOOK"
     actor = Actor.USER
@@ -133,3 +133,28 @@ class HookBackupExistsError(GateError):
     code = "GATE_BACKUP_EXISTS"
     actor = Actor.USER
     what_to_report = "An earlier backup would be overwritten. Ask the user how to resolve it."
+
+
+class HookLayoutError(GateError):
+    """A reserved script path cannot safely be replaced."""
+
+    code = "GATE_HOOK_LAYOUT_INVALID"
+    fix = "Move the conflicting hook paths to another location, then run `devkit sync`"
+
+
+class HookPreservedNotice(GateError):
+    """An existing hook was preserved and chained; returned once when moved."""
+
+    code = "GATE_HOOK_PRESERVED"
+    level = Level.WARNING
+    what_to_report = (
+        "An existing Git hook was renamed and still runs first; check scripts that depend on their filename"
+    )
+
+
+class HookInstallSkippedNotice(GateError):
+    """Automatic hook installation could not safely run; the sync succeeded."""
+
+    code = "GATE_HOOK_INSTALL_SKIPPED"
+    level = Level.WARNING
+    what_to_report = "Git hook installation was skipped; report the reason and remediation to the user"

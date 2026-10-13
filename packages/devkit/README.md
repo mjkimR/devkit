@@ -33,7 +33,7 @@ and `git-commits` (commit message conventions,
 | `devkit.advisory` | Agent Advisory Protocol (errors, warnings, notices), from the `devkit-advisory` distribution; the built-in `advisory` guide bundle is `devkit.advisory_guide` | none | [docs/advisory](../../docs/advisory/reference.md) |
 | `devkit.rules` | Repository rule engine with autofix, project policy and Git snapshot gates | `devkit rules` | [docs/rules](../../docs/rules/reference.md) |
 | `devkit.workflow` | Data-driven delivery workflow engine | `devkit workflow` | [docs/workflow](../../docs/workflow/reference.md) |
-| `devkit.gate` | Pluggable Git commit gates and managed hook wrappers | `devkit gate` | [docs/gate](../../docs/gate/reference.md) |
+| `devkit.gate` | Pluggable Git commit gates and extensible hook dispatchers installed by sync | `devkit gate` | [docs/gate](../../docs/gate/reference.md) |
 | `devkit.distribution` | Bundle packaging and transactional synchronization, plus the built-in `devkit` guide bundle | `devkit sync`, `add`, `remove`, `list`, `status`, ... | [docs/distribution](../../docs/distribution/reference.md) |
 | `devkit.worktree` | One Git worktree per task: start, finish (integrate, remove, delete the branch), status | `devkit worktree` | [docs/worktree](../../docs/worktree/reference.md) |
 | `devkit.search` | Lexical, dense and hybrid document search; dense needs the `agt-devkit[search]` extra | none | [docs/search](../../docs/search/reference.md) |

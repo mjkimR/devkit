@@ -4,6 +4,7 @@ import json
 import os
 import shlex
 import signal
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -47,9 +48,12 @@ def _commit(repo: Path, *args: str, name: str = "file.txt") -> tuple[int, str]:
 def test_install_status_uninstall(repo: Path) -> None:
     _install(repo)
     states = {s.stage: s for s in hooks.status(repo)}
-    assert all(s.state is hooks.HookState.MANAGED and s.python_ok for s in states.values())
+    assert all(s.state is hooks.HookState.MANAGED for s in states.values())
+    assert states[Stage.PRE_COMMIT].python_ok and states[Stage.COMMIT_MSG].python_ok
+    assert states[Stage.POST_COMMIT].python is None
     script = (repo / ".git/hooks/pre-commit").read_text()
-    assert hooks.MARKER in script and "-P -m devkit.gate run pre-commit" in script
+    assert hooks.MARKER in script
+    assert "-P -m devkit.gate run pre-commit" in (repo / ".git/hooks/pre-commit.d/20-devkit").read_text()
 
     data = _status(repo)
     assert [h["state"] for h in data["hooks"]] == ["managed"] * 3
@@ -69,11 +73,11 @@ def test_wrappers_are_lf_only_and_record_an_absolute_interpreter(
     relative = os.path.relpath(sys.executable, tmp_path)
     code, output = _invoke("install", "-w", str(repo), "--python", relative)
     assert code == 0, output
-    data = (repo / ".git/hooks/pre-commit").read_bytes()
+    data = (repo / ".git/hooks/pre-commit.d/20-devkit").read_bytes()
     assert b"\r" not in data
     # Absolute, with the venv's interpreter symlink kept rather than resolved.
     assert hooks._read_python(data.decode()) == Path(os.path.abspath(sys.executable)).as_posix()
-    assert all(item.python_ok for item in hooks.status(repo))
+    assert all(item.python_ok for item in hooks.status(repo) if item.stage.blocking)
 
 
 def test_install_refuses_an_interpreter_without_devkit(repo: Path, tmp_path: Path) -> None:
@@ -88,21 +92,18 @@ def test_install_refuses_an_interpreter_without_devkit(repo: Path, tmp_path: Pat
     assert not (repo / ".git/hooks/pre-commit").exists()
 
 
-def test_foreign_hooks_need_force_keep_running_and_are_restored(repo: Path) -> None:
+def test_foreign_hooks_are_preserved_automatically_and_restored(repo: Path) -> None:
     foreign = repo / ".git/hooks/pre-commit"
     foreign.write_text("#!/bin/sh\necho previous-hook-ran\nexit 0\n")
     foreign.chmod(0o755)
     code, output = _invoke("install", "-w", str(repo), "--python", sys.executable)
-    assert code != 0 and "GATE_FOREIGN_HOOK" in output
-    assert "previous-hook-ran" in foreign.read_text()
-
-    _install(repo, "--force")
-    assert "previous-hook-ran" in (repo / ".git/hooks/pre-commit.pre-gate").read_text()
+    assert code == 0 and "GATE_HOOK_PRESERVED" in output
+    assert "previous-hook-ran" in (repo / ".git/hooks/pre-commit.legacy").read_text()
     code, output = _commit(repo, "-m", "feat: chained")
     assert code == 0 and "previous-hook-ran" in output, output
 
     _invoke("uninstall", "-w", str(repo))
-    assert "previous-hook-ran" in foreign.read_text() and not (repo / ".git/hooks/pre-commit.pre-gate").exists()
+    assert "previous-hook-ran" in foreign.read_text() and not (repo / ".git/hooks/pre-commit.legacy").exists()
 
 
 def test_a_failing_moved_aside_hook_still_blocks_the_commit(repo: Path) -> None:
@@ -194,7 +195,7 @@ def test_a_directory_moved_aside_does_not_break_commits(repo: Path) -> None:
     (repo / ".git/hooks/pre-commit").mkdir()
     assert hooks.status(repo)[0].state is hooks.HookState.FOREIGN
     _install(repo, "--force")
-    assert (repo / ".git/hooks/pre-commit.pre-gate").is_dir()
+    assert (repo / ".git/hooks/pre-commit.legacy").is_dir()
     code, output = _commit(repo, "-m", "feat: x")
     assert code == 0, output
     _invoke("uninstall", "-w", str(repo))
@@ -461,3 +462,143 @@ def test_wrapper_script_quotes_interpreter(stage: Stage) -> None:
     script = hooks.wrapper_script(stage, "/path with space/python")
     assert "python='/path with space/python'" in script
     assert hooks._read_python(script) == "/path with space/python"
+
+
+def _script(path: Path, body: str) -> None:
+    path.write_text("#!/bin/sh\n" + body)
+    path.chmod(0o755)
+
+
+def test_dispatcher_order_arguments_environment_and_direct_children(repo: Path) -> None:
+    _install(repo)
+    entries = repo / ".git/hooks/commit-msg.d"
+    # Put a non-shell executable between checks, with spaces in its filename and arguments.
+    before = entries / "10 before"
+    _script(before, 'printf "before:%s:%s:%s\\n" "$1" "$LC_ALL" "$GIT_INDEX_FILE" >> order\n')
+    python = entries / "30-python"
+    python.write_text(f"#!{PYTHON}\nfrom pathlib import Path\nPath('order').open('a').write('after\\n')\n")
+    python.chmod(0o755)
+    _script(entries / "40-inert", "exit 9\n")
+    (entries / "40-inert").chmod(0o644)
+    (entries / "50-directory").mkdir()
+    _script(entries / "50-directory/nested", "exit 9\n")
+    (repo / "message with spaces").write_text("subject\n")
+    env = {**os.environ, "LC_ALL": "C.UTF-8", "GIT_INDEX_FILE": str(repo / ".git/index")}
+    result = subprocess.run(
+        [str(repo / ".git/hooks/commit-msg"), "message with spaces"],
+        cwd=repo,
+        env=env,
+        capture_output=True,
+    )
+    assert result.returncode == 0, result.stderr
+    assert (repo / "order").read_text().splitlines() == [
+        f"before:message with spaces:C.UTF-8:{repo / '.git/index'}",
+        "after",
+    ]
+
+
+def test_custom_script_failure_blocks_with_original_code_and_post_commit_continues(repo: Path) -> None:
+    _install(repo)
+    for stage in (Stage.PRE_COMMIT, Stage.POST_COMMIT):
+        entries = repo / f".git/hooks/{stage}.d"
+        _script(entries / "10-fail", "exit 7\n")
+        _script(entries / "30-after", f"touch {stage}-after\n")
+        result = subprocess.run([str(repo / f".git/hooks/{stage}")], cwd=repo, capture_output=True, text=True)
+        assert result.returncode == (7 if stage.blocking else 0)
+        assert (repo / f"{stage}-after").exists() is not stage.blocking
+        if not stage.blocking:
+            assert "GATE_HOOK_SCRIPT_FAILED" in result.stderr and "[ACTION] CONTINUE" in result.stderr
+
+
+def test_uninstall_keeps_user_scripts_and_the_legacy_hook(repo: Path) -> None:
+    _script(repo / ".git/hooks/pre-commit", "echo legacy >> ran\n")
+    _install(repo)
+    custom = repo / ".git/hooks/pre-commit.d/30-custom"
+    _script(custom, "echo custom >> ran\n")
+    assert _invoke("uninstall", "-w", str(repo))[0] == 0
+    assert custom.exists() and not (custom.parent / "20-devkit").exists()
+    result = subprocess.run([str(repo / ".git/hooks/pre-commit")], cwd=repo, capture_output=True)
+    assert result.returncode == 0 and (repo / "ran").read_text() == "legacy\ncustom\n"
+    custom.unlink()
+    assert _invoke("uninstall", "-w", str(repo))[0] == 0
+    assert not custom.parent.exists()
+    assert (repo / ".git/hooks/pre-commit").read_text().endswith("echo legacy >> ran\n")
+
+
+def test_install_is_idempotent_and_retains_custom_scripts(repo: Path) -> None:
+    _script(repo / ".git/hooks/pre-commit", "exit 0\n")
+    assert "GATE_HOOK_PRESERVED" in _install(repo)
+    custom = repo / ".git/hooks/pre-commit.d/30-custom"
+    _script(custom, "exit 0\n")
+    paths = [custom, custom.parent / "20-devkit", custom.parent / "00-legacy", repo / ".git/hooks/pre-commit"]
+    before = {path: (path.read_bytes(), path.stat().st_mtime_ns) for path in paths}
+    assert "GATE_HOOK_PRESERVED" not in _install(repo)
+    assert before == {path: (path.read_bytes(), path.stat().st_mtime_ns) for path in paths}
+
+
+@pytest.mark.parametrize(
+    "conflict", ["pre-commit.legacy", "commit-msg.d/20-devkit", "commit-msg.d/00-legacy", "commit-msg.d"]
+)
+def test_conflicting_paths_are_not_overwritten_and_preflight_all_stages(repo: Path, conflict: str) -> None:
+    original = repo / ".git/hooks/pre-commit"
+    _script(original, "exit 0\n")
+    path = repo / ".git/hooks" / conflict
+    path.parent.mkdir(exist_ok=True)
+    path.write_text("keep me\n")
+    code, output = _invoke("install", "-w", str(repo))
+    assert code == 2 and ("GATE_BACKUP_EXISTS" in output or "GATE_HOOK_LAYOUT_INVALID" in output)
+    assert original.read_text() == "#!/bin/sh\nexit 0\n" and path.read_text() == "keep me\n"
+    assert not (repo / ".git/hooks/post-commit.d").exists()
+
+
+def test_empty_stages_only_get_dispatchers_and_directories(repo: Path) -> None:
+    (repo / ".devkit").mkdir()
+    (repo / ".devkit/config.toml").write_text(
+        "[gates.settings.verify-commands]\nenabled = false\n[gates.settings.message-nonempty]\nenabled = false\n"
+    )
+    _install(repo)
+    assert all(item.state is hooks.HookState.MANAGED and item.python is None for item in hooks.status(repo))
+    for stage in Stage:
+        assert list((repo / f".git/hooks/{stage}.d").iterdir()) == []
+    (repo / ".devkit/config.toml").write_text("")
+    _install(repo)
+    assert (repo / ".git/hooks/pre-commit.d/20-devkit").exists()
+    # Do not remove an entry installed for another worktree when this worktree disables it.
+    (repo / ".devkit/config.toml").write_text("[gates.settings.verify-commands]\nenabled = false\n")
+    _install(repo)
+    assert (repo / ".git/hooks/pre-commit.d/20-devkit").exists()
+
+
+def test_failed_dispatcher_write_restores_the_existing_hook(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    hook = repo / ".git/hooks/pre-commit"
+    _script(hook, "exit 0\n")
+    original = hook.read_bytes()
+    write = hooks._write
+
+    def fail_dispatcher(path: Path, text: str) -> None:
+        if path == hook:
+            raise OSError("write failed")
+        write(path, text)
+
+    monkeypatch.setattr(hooks, "_write", fail_dispatcher)
+    with pytest.raises(OSError, match="write failed"):
+        hooks.install(repo, sys.executable)
+    assert hook.read_bytes() == original and not (repo / ".git/hooks/pre-commit.legacy").exists()
+
+
+def test_symlinked_script_directory_is_not_written_through(repo: Path, tmp_path: Path) -> None:
+    target = tmp_path / "user-hooks"
+    target.mkdir()
+    (repo / ".git/hooks/pre-commit.d").symlink_to(target, target_is_directory=True)
+    code, output = _invoke("install", "-w", str(repo), "--force")
+    assert code == 2 and "GATE_HOOK_LAYOUT_INVALID" in output
+    assert list(target.iterdir()) == [] and not (repo / ".git/hooks/pre-commit").exists()
+
+
+def test_preserved_hook_keeps_directory_relative_resources(repo: Path) -> None:
+    hook = repo / ".git/hooks/pre-commit"
+    (hook.parent / "resource").write_text("kept\n")
+    _script(hook, 'cat "$(dirname "$0")/resource" > legacy-result\n')
+    _install(repo)
+    code, output = _commit(repo, "-m", "feat: preserve hook resources")
+    assert code == 0 and (repo / "legacy-result").read_text() == "kept\n", output

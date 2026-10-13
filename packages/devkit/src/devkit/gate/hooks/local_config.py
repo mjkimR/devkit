@@ -1,6 +1,6 @@
 """The commented settings template in the clone-local ``<common-git-dir>/devkit.config``.
 
-``devkit gate install`` and, once the managed wrappers are installed, every
+``devkit gate install`` and every
 ``devkit sync`` (through the ``devkit.post_sync`` extension ``post_sync``) make sure
 the file names every installed gate: one commented ``[gates.settings.<id>]``
 table per gate, with ``enabled`` and each settings field at its default, its
@@ -34,6 +34,7 @@ from __future__ import annotations
 import dataclasses
 import os
 import re
+import sys
 import typing
 from dataclasses import dataclass
 from enum import StrEnum
@@ -48,7 +49,7 @@ from devkit.core.errors import GitError
 from devkit.gate.engine.config import ENABLED_KEY, LOCAL_CONFIG, GateEntry, GatesConfig, load_project_gates_config
 from devkit.gate.engine.models import Gate
 from devkit.gate.engine.registry import project_registry
-from devkit.gate.errors import GateTemplateNotice
+from devkit.gate.errors import GateTemplateNotice, HookInstallSkippedNotice
 from devkit.gate.hooks import git, hooks
 from devkit.rules.engine.settings import describe_setting_type
 
@@ -213,17 +214,34 @@ def refresh_project_template(repo_root: Path) -> TemplateResult:
 
 
 def post_sync(root: Path, result: dict[str, Any]) -> list[AdvisoryError] | None:
-    """``devkit.post_sync`` extension: refresh the template when this repository runs the managed wrappers.
-
-    A sync never installs hooks, so a repository without them is left alone, as
-    is a directory outside a Git work tree.
-    """
+    """Install hook dispatchers and active devkit entries, then refresh the clone-local template."""
     del result
     try:
         top = require_git_toplevel(root)
-        if not any(item.state is hooks.HookState.MANAGED for item in hooks.status(top)):
-            return None
-        refreshed = refresh_project_template(top)
     except GitError:
         return None
-    return [refreshed.notice] if refreshed.notice is not None else None
+    notices: list[AdvisoryError] = []
+    try:
+        installed = hooks.install(top, sys.executable)
+    except (AdvisoryError, OSError) as exc:
+        if isinstance(exc, AdvisoryError):
+            notice = HookInstallSkippedNotice(
+                "automatic Git hook installation skipped",
+                f"reason={exc.code}: {exc.message}",
+                *exc.details,
+                fix=exc.fix,
+                target_files=exc.target_files,
+            )
+        else:
+            notice = HookInstallSkippedNotice(
+                "automatic Git hook installation skipped",
+                str(exc),
+                fix="Correct the hook directory permissions, then run `devkit sync`",
+            )
+        notices.append(notice)
+    else:
+        notices.extend(installed.notices)
+    refreshed = refresh_project_template(top)
+    if refreshed.notice is not None:
+        notices.append(refreshed.notice)
+    return notices or None
