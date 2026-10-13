@@ -696,6 +696,9 @@ def test_stray_files_under_managed_root_are_reported_not_touched(
     stray = target / ".devkit/managed/team/rules/local_rule.py"
     stray.parent.mkdir(parents=True)
     stray.write_text("# hand-placed\n")
+    cache = target / ".devkit/managed/team/rules/__pycache__/local_rule.cpython-312.pyc"
+    cache.parent.mkdir()
+    cache.write_bytes(b"\0")  # a bytecode cache is never content, so it is not reported
     result = sync_project(target, installed).to_dict()
     assert result["stray"] == [".devkit/managed/team/rules/local_rule.py"]
     assert result["actions"] == []

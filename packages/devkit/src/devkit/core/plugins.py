@@ -10,11 +10,16 @@ classes or validating any instance fails, nothing from that file is returned,
 the failure is recorded with the file's path, and ``sys.modules`` is restored
 to what it was before the file was loaded. Plugin files run arbitrary code;
 load them only from trusted sources.
+
+No bytecode cache is written next to a plugin file: plugins live in devkit's
+managed root and in project overrides, where a ``__pycache__`` directory would
+be an unowned file.
 """
 
 from __future__ import annotations
 
 import hashlib
+import importlib.machinery
 import importlib.util
 import inspect
 import sys
@@ -24,6 +29,13 @@ from pathlib import Path
 from types import ModuleType
 
 PLUGIN_SUFFIX = ".py"
+
+
+class _SourceOnlyLoader(importlib.machinery.SourceFileLoader):
+    """A source loader that never writes ``__pycache__`` next to the file it loads."""
+
+    def set_data(self, path: str, data: bytes, *, _mode: int = 0o666) -> None:
+        return None
 
 
 @dataclass(frozen=True)
@@ -102,6 +114,8 @@ def _load_file[T](
 ) -> list[LoadedPlugin[T]]:
     name = module_name(path, namespace)
     spec = importlib.util.spec_from_file_location(name, path)
+    if spec is not None and type(spec.loader) is importlib.machinery.SourceFileLoader:
+        spec = importlib.util.spec_from_file_location(name, path, loader=_SourceOnlyLoader(name, str(path)))
     if spec is None or spec.loader is None:
         raise ImportError("cannot be loaded as a Python module")
     module = importlib.util.module_from_spec(spec)

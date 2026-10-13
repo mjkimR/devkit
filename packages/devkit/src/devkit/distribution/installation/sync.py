@@ -113,13 +113,14 @@ def stray_managed_files(root: Path, owned: set[str]) -> list[str]:
     The managed root is a regenerated cache; a file placed there by hand is
     never deployed, never removed, and may be picked up by consumers that scan
     the directory (such as rule loading). It is reported, not deleted.
+    Python bytecode caches (``__pycache__``) are not reported: nothing reads them as content.
     """
     managed = root / MANAGED_PATH
     if not managed.is_dir():
         return []
     stray = []
     for path in sorted(managed.rglob("*")):
-        if path.is_symlink() or not path.is_file():
+        if path.is_symlink() or not path.is_file() or "__pycache__" in path.relative_to(managed).parts:
             continue
         rel = path.relative_to(root).as_posix()
         if rel not in owned:

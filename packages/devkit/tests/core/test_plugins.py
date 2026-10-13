@@ -175,3 +175,14 @@ def test_file_without_plugins_loads_nothing(tmp_path: Path) -> None:
     result = load_subclasses([path], Base, namespace="test_plugin", validate=lambda instance: None)
     assert result.instances == () and result.errors == ()
     sys.modules.pop(module_name(path, "test_plugin"))
+
+
+def test_loading_writes_no_bytecode_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(sys, "dont_write_bytecode", False)
+    monkeypatch.delenv("PYTHONPYCACHEPREFIX", raising=False)
+    monkeypatch.setattr(sys, "pycache_prefix", None)
+    path = plugin(tmp_path / "managed", "cached.py", "class Cached(Base):\n    name = 'cached'\n")
+    result = load_subclasses([path], Base, namespace="test_plugin")
+    assert [p.name for p in result.instances] == ["cached"]
+    assert not (path.parent / "__pycache__").exists()
+    sys.modules.pop(module_name(path, "test_plugin"))
