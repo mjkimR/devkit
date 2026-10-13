@@ -1,9 +1,9 @@
 """Project configuration (``.devkit/config.toml``): bundle selection.
 
-A bundle is deployed when ``[presets]`` names it. A built-in bundle (shipped by
-the ``devkit`` distribution itself) that declares ``auto_select`` is also
-deployed with its default preset unless ``[presets]`` names it, which selects
-other presets, or sets it to ``false``, which opts the project out. Native
+A bundle is deployed when ``[presets]`` names it. An installed bundle that
+declares ``auto_select``, built in or from any other package, is also deployed
+with its default preset unless ``[presets]`` names it, which selects other
+presets, or sets it to ``false``, which opts the project out. Native
 projections go to every supported agent unless ``agents`` narrows the list;
 ``agents = []`` turns projection off.
 """
@@ -22,7 +22,7 @@ from tomlkit.exceptions import TOMLKitError
 
 from devkit.core.errors import ConfigError
 from devkit.core.project import read_toml
-from devkit.core.receipt import CONFIG_PATH
+from devkit.core.receipt import CONFIG_PATH, Receipt
 from devkit.distribution.bundles.common import AGENT_NAMES, SLUG
 from devkit.distribution.content import Content
 from devkit.distribution.errors import SelectionError
@@ -149,7 +149,7 @@ def parse_selection(value: object) -> tuple[dict[str, list[str]], frozenset[str]
 
 
 def default_selection(installed: list[InstalledBundle], config: ProjectConfig) -> dict[str, list[str]]:
-    """Auto-selected built-in bundles the configuration neither names nor opts out of, with their default preset."""
+    """Auto-selected bundles the configuration neither names nor opts out of, with their default preset."""
     return {
         item.bundle.name: [item.bundle.default_preset]
         for item in installed
@@ -160,9 +160,37 @@ def default_selection(installed: list[InstalledBundle], config: ProjectConfig) -
     }
 
 
-def effective_selection(installed: list[InstalledBundle], config: ProjectConfig) -> dict[str, list[str]]:
-    """What ``devkit sync`` deploys without command-line selections: defaults, then ``[presets]``."""
-    return {**default_selection(installed, config), **config.presets}
+def retained_selection(
+    installed: list[InstalledBundle], config: ProjectConfig, receipt: Receipt | None
+) -> dict[str, list[str]]:
+    """Deployed bundles whose package cannot be loaded and that the configuration neither names nor opts out of.
+
+    Such a package cannot be read for ``auto_select``, so the bundle the receipt
+    records as deployed stays selected with its recorded presets: the load error
+    then stops the command instead of a broken upgrade removing the bundle's files.
+    """
+    if receipt is None:
+        return {}
+    unusable = unusable_bundles(installed)
+    return {
+        name: list(presets)
+        for name, presets in receipt.selection.presets.items()
+        if name in unusable and name not in config.presets and name not in config.opted_out
+    }
+
+
+def effective_selection(
+    installed: list[InstalledBundle], config: ProjectConfig, receipt: Receipt | None = None
+) -> dict[str, list[str]]:
+    """What ``devkit sync`` deploys without command-line selections: defaults, then ``[presets]``.
+
+    With the ``receipt``, deployed bundles whose package cannot be loaded are kept (``retained_selection``).
+    """
+    return {
+        **default_selection(installed, config),
+        **retained_selection(installed, config, receipt),
+        **config.presets,
+    }
 
 
 def merge_selection(

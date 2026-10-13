@@ -10,7 +10,7 @@ uv run devkit gate install      # writes pre-commit, commit-msg and post-commit 
 uv run devkit gate status       # hooks, gates with effective state, configuration layers, problems that fail a commit
 
 uv add --dev <content-wheel>          # adding gates from a content wheel
-uv run devkit add <bundle>:<preset>   # a preset that includes the bundle's gate assets
+uv run devkit add <bundle>:<preset>   # a preset that includes the bundle's gate assets (not needed when the default preset of an auto-selected bundle has them)
 uv run devkit sync                    # deploys the gate files and records them in the receipt
 ```
 

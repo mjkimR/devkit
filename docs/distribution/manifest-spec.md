@@ -116,14 +116,16 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
 - `[presets.<slug>]` names a purpose-specific asset subset. Every bundle also has the reserved preset `all`
   (every declared asset); `[presets.all]` cannot be declared.
 - `default_preset` (optional) is the preset a consumer receives when selecting the bundle without naming one (for
-  example `devkit add starter-workflow`); it must be a declared preset or `all`. It applies only at selection time:
-  the consumer configuration records the resolved preset name, so a later upstream change to `default_preset`
-  never changes an existing selection. A bundle without it must be selected with an explicit preset.
+  example `devkit add starter-workflow`); it must be a declared preset or `all`. `devkit add` records the resolved
+  preset name, so a later upstream change to `default_preset` never changes an explicit selection. A bundle without
+  it must be selected with an explicit preset.
 - `auto_select` (optional boolean, default `false`) deploys the bundle with its `default_preset`, which is then
-  required, without `devkit add`; a project opts out with `[presets] <bundle> = false`. Only bundles shipped inside
-  the `devkit` distribution may set it (`devkit` and `advisory` do); discovery rejects it in any other package,
-  because content packages can arrive as transitive dependencies. See the
-  [selection model](sync-and-transactions.md#2-asset-selection-model).
+  required, as soon as its package is installed, without `devkit add`; a project opts out with
+  `[presets] <bundle> = false`. Any package may set it, and it applies to a package installed as a runtime dependency
+  of another one as well. Set it when the default preset is what nearly every project installing the package wants;
+  leave it off for content a project adds deliberately (the built-in `devkit` and `advisory` bundles set it,
+  `authoring` and `git-commits` do not). Until a project selects presets explicitly, upgrades follow the current
+  `default_preset`. See the [selection model](sync-and-transactions.md#2-asset-selection-model).
 
 ## 4. Validation
 

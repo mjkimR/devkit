@@ -277,7 +277,7 @@ def get_project_status(root: Path, installed: list[InstalledBundle]) -> ProjectS
         ]
         block, block_error = _block_state(root, receipt.guidance_block if receipt else None, config.guidance_block)
         journal = pending_journal(root)
-        packages, warnings = _unusable_packages(installed, effective_selection(installed, config))
+        packages, warnings = _unusable_packages(installed, effective_selection(installed, config, receipt))
         return ProjectStatus(
             receipt=receipt is not None,
             schema=receipt.schema if receipt is not None else None,
@@ -351,7 +351,7 @@ def get_project_listing(root: Path, installed: list[InstalledBundle]) -> Project
     with project_lock(root, shared=True):
         receipt = read_receipt(root)
         config = read_config(root)
-    selected = effective_selection(installed, config)
+    selected = effective_selection(installed, config, receipt)
     notices = unusable_notices(installed, selected)
     entries = [
         InstalledEntry(item, selected.get(item.bundle.name), item.bundle.name in config.opted_out) for item in installed

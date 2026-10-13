@@ -41,7 +41,8 @@ src/package_b_playbooks/
 
 ```bash
 uv add --dev devkit devkit-starter
-uv run devkit add starter        # records the selection in .devkit/config.toml and synchronizes
+uv run devkit sync               # deploys auto-selected bundles with their default preset
+uv run devkit add starter        # a bundle without auto_select: records the selection and synchronizes
 ```
 
 Run `devkit` through `uv run` from the project's environment. A globally installed tool
@@ -50,21 +51,23 @@ packages of the project.
 
 - **Upgrade**: `uv lock --upgrade-package <package>`, then `uv run devkit sync`.
 - **Teardown**: `uv run devkit remove <bundle>`, then `uv remove --dev <package>`. Deselect first: a bundle still
-  selected but no longer installed is a sync error.
+  selected by an entry but no longer installed is a sync error. An auto-selected bundle without an entry needs only
+  `uv remove --dev <package>` and `uv run devkit sync`.
 - **Clean checkout**: `uv sync`, then `uv run devkit sync`, which rebuilds ignored managed and native files from the
   installed wheels.
 
 ## 3. Dependency Boundaries
 
-Availability follows Python dependency resolution; deployment follows the consumer's `.devkit/config.toml`. When a
-content package `packageB` depends on `packageA`:
+Availability follows Python dependency resolution; deployment follows the bundle's `auto_select` and the consumer's
+`.devkit/config.toml` ([selection model](sync-and-transactions.md#2-asset-selection-model)). When a content package
+`packageB` depends on `packageA`:
 
 - **`[project.dependencies]`** puts `packageA` in the wheel's `Requires-Dist`. A consumer that adds `packageB` gets
-  `packageA` installed transitively, so its bundle becomes **available**, never selected: `devkit sync` lists it
-  under `unselected` until the consumer runs `devkit add <bundle>`. Use this to layer bundles (a `team-backend`
-  bundle on top of a `company-base` bundle).
+  `packageA` installed as well, and its bundle is treated as if the consumer had added it: deployed with its default
+  preset when it declares `auto_select`, otherwise listed under `unselected` until `devkit add <bundle>`. Use this to
+  layer bundles (a `team-backend` bundle on top of a `company-base` bundle).
 - **`[dependency-groups].dev`** is omitted from the built wheel, so `packageA` is neither installed nor discovered
   downstream. Use this for tooling and tests local to the authoring repository.
 
-There is no opt-out list for content packages, since opt-in is their default; `<bundle> = false` applies only to the
-auto-selected built-in bundles ([selection model](sync-and-transactions.md#2-asset-selection-model)).
+A consumer that does not want an auto-selected bundle opts it out with `[presets] <bundle> = false`
+(`devkit remove <bundle>` writes it).

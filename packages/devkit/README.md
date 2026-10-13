@@ -12,7 +12,7 @@ No package index hosts the wheel yet; install a built wheel by path (see the
 
 ```bash
 uv add --dev /path/to/devkit-0.1.0-py3-none-any.whl
-uv run devkit sync            # deploys the auto-selected built-in bundles (devkit, advisory)
+uv run devkit sync            # deploys every installed bundle that declares auto_select (built in: devkit, advisory)
 uv run devkit add <bundle>    # selects any other bundle: built-in opt-in ones or another content package
 ```
 

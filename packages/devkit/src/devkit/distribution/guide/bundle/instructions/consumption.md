@@ -97,7 +97,7 @@ that is missing or differs from the receipt's hash fails the gate, and its
 ```bash
 uv run devkit add <bundle>            # select with the bundle's default preset, then sync
 uv run devkit add <bundle>:<preset>   # add a preset to those the bundle already deploys
-uv run devkit remove <bundle>         # deselect (devkit and advisory are recorded as false), then sync
+uv run devkit remove <bundle>         # deselect (an auto-selected bundle is recorded as false), then sync
 uv run devkit sync --preset <bundle>:<preset>   # replace a bundle's presets
 uv run devkit sync                    # converge to .devkit/config.toml
 uv run devkit sync --no-save --agent claude-code --agent codex   # narrow projections for one run only
@@ -105,8 +105,11 @@ uv run devkit sync --no-save --agent claude-code --agent codex   # narrow projec
 
 Without `agents` in `.devkit/config.toml`, every supported agent gets
 projections. A bundle must be installed (`uv add --dev <package>`) before it
-can be selected. Deselect before uninstalling: a selected bundle that is no
-longer installed is a sync error.
+can be selected. A bundle that declares `auto_select` is deployed with its
+default preset as soon as its package is installed, without an entry;
+`BUNDLE_AUTO_SELECTED` names it when it is first deployed, so tell the user,
+and opt it out with `devkit remove <bundle>` only when they ask. Deselect before uninstalling: a
+bundle selected by an entry that is no longer installed is a sync error.
 
 ## Customizing an upstream asset
 

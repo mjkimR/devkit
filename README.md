@@ -45,8 +45,8 @@ uv build --package devkit-starter --wheel --out-dir dist
 # In the consumer project
 uv add --dev /path/to/devkit/dist/devkit-0.1.0-py3-none-any.whl \
   /path/to/devkit/dist/devkit_starter-0.1.0-py3-none-any.whl
-uv run devkit sync          # deploys the auto-selected bundles built into devkit (devkit, advisory)
-uv run devkit add starter   # selects a bundle from another package and synchronizes
+uv run devkit sync          # deploys auto-selected bundles (built in: devkit, advisory)
+uv run devkit add starter   # selects a bundle without auto_select and synchronizes
 uv run devkit add git-commits authoring   # opt-in practice bundles built into devkit
 uv run devkit list
 uv run devkit rules check

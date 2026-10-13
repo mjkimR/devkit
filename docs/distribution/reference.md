@@ -36,7 +36,7 @@ malformed `bundle[:preset]` or `--agent` combined with `--no-agents` (see
 | --- | --- |
 | `devkit sync [options]` | Synchronizes the selection: managed copies under `.devkit/managed/`, native projections, seeded files that do not exist yet and the root `AGENTS.md` guidance block, in one transaction ([Synchronization & Transactions](sync-and-transactions.md#3-transaction-safety-guarantees)). |
 | `devkit add <bundle>[:<preset>]...` | Joins bundles or presets to the selection in `.devkit/config.toml` (default preset when none is named), then synchronizes. |
-| `devkit remove <bundle>...` | Deselects bundles in `.devkit/config.toml` (`false` for an auto-selected built-in bundle), then synchronizes. |
+| `devkit remove <bundle>...` | Deselects bundles in `.devkit/config.toml` (`false` for an auto-selected bundle), then synchronizes. |
 | `devkit list` | Installed content packages, bundle metadata, available and default presets, selection state (`builtin`, `auto_select`, `opted_out`), synchronized asset paths and the `seeded` list. |
 | `devkit status` | Read-only report of the installed state against the receipt; see [below](#devkit-status). |
 | `devkit recover` | Rolls back an interrupted transaction from the journal in `.devkit/transient/` without overwriting newer edits. Prints `recovered_files`: the number of files restored. |
@@ -84,7 +84,7 @@ override_drift = "warn"               # optional; "block" aborts sync while an o
 
 [presets]
 starter = "daily"                     # a preset name, "all", or an array of presets (union)
-devkit = false                        # opt out of an auto-selected built-in bundle
+devkit = false                        # opt out of an auto-selected bundle
 
 [playbooks]
 min_score = 0.1
@@ -142,6 +142,7 @@ they run in their own `notices` list.
 | `POST_SYNC_HOOK_FAILED` | `WARNING` | `PostSyncHookFailedNotice` | a post-sync hook raised or returned something other than a list | `details`: the hook; `what_to_report`: the failure |
 | `ASSET_UNPROJECTED` | `NOTICE` (brief) | `UnprojectedNotice` | a skill or subagent has no variant for a selected agent and was not projected | message: each `<bundle>:<asset> (<agent>)`; `target_files`: `.devkit/config.toml` (where the project narrows `agents`); `[DETAIL]`: the remedies |
 | `BUNDLE_UNSELECTED` | `NOTICE` | `BundleUnselectedNotice` | installed bundles the project neither selected nor opted out of, reported once per clone when they appear (recorded in `.devkit/transient/seen-bundles.json`) | `fix`: `devkit add <bundle>` for one bundle, else `devkit list`; one `[DETAIL]` per bundle with its exact `devkit add` command and presets |
+| `BUNDLE_AUTO_SELECTED` | `NOTICE` | `BundleAutoSelectedNotice` | auto-selected bundles of packages other than `devkit` that the sync deploys with their default preset and the previous receipt does not record | `fix`: `devkit remove <bundle>` (opts out) for one bundle, else `devkit list`; one `[DETAIL]` per bundle with its package and preset; `what_to_report`: the bundles now deployed |
 | `TOOL_VERSION_CHANGED` | `NOTICE` (brief) | `ToolVersionChangedNotice` | the receipt now records a different running `devkit` version (`devkit <recorded> -> <running>`) | — |
 | `POST_SYNC_NOTICE` | `NOTICE` (brief) | `PostSyncNotice` | a line a post-sync hook returned | `details`: the hook |
 

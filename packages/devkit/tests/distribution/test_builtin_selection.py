@@ -1,4 +1,4 @@
-"""Auto-selected built-in bundles are deployed by default; every other bundle needs ``devkit add``."""
+"""Bundles declaring ``auto_select`` are deployed by default, from any package; every other bundle needs ``devkit add``."""
 
 from __future__ import annotations
 
@@ -15,7 +15,8 @@ from devkit.distribution.bundles import load_bundle
 from devkit.distribution.errors import BundleError, PackageError
 from devkit.distribution.installation import discovery
 from devkit.distribution.installation.config import merge_selection, read_config, update_config
-from devkit.distribution.installation.discovery import InstalledBundle, discover_bundles
+from devkit.distribution.installation.discovery import Discovered, InstalledBundle, discover_bundles
+from devkit.distribution.installation.status import get_project_status
 from devkit.distribution.installation.sync import sync_project
 from testsupport.distribution import cli
 
@@ -133,7 +134,7 @@ def test_auto_select_requires_a_boolean_and_a_default_preset(tmp_path: Path) -> 
         load_bundle(root)
 
 
-def test_auto_select_is_reserved_for_the_devkit_distribution(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_auto_select_is_allowed_in_any_distribution(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     module = tmp_path / "module"
     _bundle(module / "bundle", "kit", auto_select=True)
     entry = SimpleNamespace(
@@ -150,9 +151,96 @@ def test_auto_select_is_reserved_for_the_devkit_distribution(tmp_path: Path, mon
         assert found[0].builtin and found[0].auto_selected
     entry.dist.metadata["Name"] = "kit-content"
     with discover_bundles() as found:
-        assert list(found) == []
-        assert isinstance(found.unusable["kit"], PackageError)
-        assert "auto_select is reserved" in found.unusable["kit"].message
+        assert not found[0].builtin and found[0].auto_selected
+        assert found.unusable == {}
+
+
+# --- auto-selected bundles of other packages ------------------------------------------
+
+
+@pytest.fixture
+def external(tmp_path: Path) -> InstalledBundle:
+    return InstalledBundle("ext-content", "0.1.0", load_bundle(_bundle(tmp_path / "ext", "ext", auto_select=True)))
+
+
+def _codes(result: dict) -> list[str]:
+    return [notice["code"] for notice in result["notices"]]
+
+
+def test_external_auto_selected_bundle_is_deployed_and_announced_once(
+    bundles: list[InstalledBundle], external: InstalledBundle, target: Path
+) -> None:
+    result = sync_project(target, [*bundles, external]).to_dict()
+    assert _selection(target) == {"ext": ["core"], "kit": ["core"]}
+    notice = next(item for item in result["notices"] if item["code"] == "BUNDLE_AUTO_SELECTED")
+    assert notice["message"] == "installed bundles deployed with their default preset: ext"  # not the built-in kit
+    assert notice["advisory"]["fix"] == "devkit remove ext"
+    assert not (target / CONFIG_PATH).exists()
+
+    assert "BUNDLE_AUTO_SELECTED" not in _codes(sync_project(target, [*bundles, external]).to_dict())
+
+
+def test_auto_selected_bundle_already_in_the_receipt_is_not_announced(
+    bundles: list[InstalledBundle], external: InstalledBundle, target: Path
+) -> None:
+    (target / ".devkit").mkdir()
+    (target / CONFIG_PATH).write_text('[presets]\next = "more"\n')
+    sync_project(target, [*bundles, external])
+    (target / CONFIG_PATH).write_text("")
+    result = sync_project(target, [*bundles, external]).to_dict()
+    assert _selection(target)["ext"] == ["core"]
+    assert "BUNDLE_AUTO_SELECTED" not in _codes(result)
+
+
+def test_external_auto_selected_bundle_opt_out_and_one_run_selection(
+    bundles: list[InstalledBundle], external: InstalledBundle, target: Path
+) -> None:
+    (target / ".devkit").mkdir()
+    (target / CONFIG_PATH).write_text("[presets]\next = false\n")
+    result = sync_project(target, [*bundles, external]).to_dict()
+    assert "ext" not in _selection(target)
+    assert "BUNDLE_AUTO_SELECTED" not in _codes(result)
+    unselected = next(item for item in result["notices"] if item["code"] == "BUNDLE_UNSELECTED")
+    assert unselected["message"] == "installed bundles not selected yet: opt, other"  # an opted-out bundle is not
+
+    (target / CONFIG_PATH).write_text("")
+    result = sync_project(target, [*bundles, external], presets={"ext": ["more"]}).to_dict()
+    assert _selection(target)["ext"] == ["more"]
+    assert "BUNDLE_AUTO_SELECTED" not in _codes(result)
+
+
+def test_deployed_auto_selected_bundle_whose_package_breaks_is_kept_selected(
+    bundles: list[InstalledBundle], external: InstalledBundle, target: Path
+) -> None:
+    sync_project(target, [*bundles, external])
+    deployed = sorted(path for path in (target / ".devkit/managed/ext").rglob("*") if path.is_file())
+    broken = Discovered(list(bundles), {"ext": PackageError("ext: cannot read content resources")})
+
+    with pytest.raises(PackageError, match="ext: cannot read content resources"):
+        sync_project(target, broken)
+    assert _selection(target)["ext"] == ["core"]
+    assert deployed and all(path.is_file() for path in deployed)
+    status = get_project_status(target, broken)
+    assert [error.code for error in status.errors] == ["BUNDLE_PACKAGE_INVALID"]
+
+    update_config(target, opt_out=["ext"])
+    sync_project(target, broken)
+    assert "ext" not in _selection(target)
+    assert not any(path.exists() for path in deployed)
+
+
+def test_uninstalled_auto_selected_bundle_is_removed_and_false_entry_tolerated(
+    bundles: list[InstalledBundle], external: InstalledBundle, target: Path
+) -> None:
+    sync_project(target, [*bundles, external])
+    sync_project(target, bundles)
+    assert "ext" not in _selection(target)
+    assert not (target / ".devkit/managed/ext").exists()
+
+    (target / ".devkit" / "config.toml").write_text("[presets]\next = false\n")
+    sync_project(target, bundles)
+    result = sync_project(target, [*bundles, external]).to_dict()
+    assert "ext" not in _selection(target) and "BUNDLE_AUTO_SELECTED" not in _codes(result)
 
 
 # --- the real installed distribution -------------------------------------------------

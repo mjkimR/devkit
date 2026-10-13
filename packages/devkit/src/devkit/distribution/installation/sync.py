@@ -24,6 +24,7 @@ from devkit.core.receipt import (
 )
 from devkit.distribution.content import Content, same_content, signature
 from devkit.distribution.errors import (
+    BundleAutoSelectedNotice,
     BundleUnselectedNotice,
     ConflictError,
     OrphanLeftNotice,
@@ -35,7 +36,13 @@ from devkit.distribution.errors import (
     UnsafeWorkspaceError,
 )
 from devkit.distribution.installation import guidance_block
-from devkit.distribution.installation.config import ConfigUpdate, ProjectConfig, effective_selection, read_config
+from devkit.distribution.installation.config import (
+    ConfigUpdate,
+    ProjectConfig,
+    default_selection,
+    effective_selection,
+    read_config,
+)
 from devkit.distribution.installation.discovery import InstalledBundle, unusable_notices
 from devkit.distribution.installation.hooks import run_post_sync
 from devkit.distribution.installation.inventory import GENERATED_SKILLS, Inventory, Seed, desired_inventory
@@ -116,15 +123,17 @@ def stray_managed_files(root: Path, owned: set[str]) -> list[str]:
 def _resolve_selection(
     installed: list[InstalledBundle],
     config: ProjectConfig,
+    previous: Receipt | None,
     agents: list[str] | None,
     presets: dict[str, list[str]] | None,
     deselect: list[str] | tuple[str, ...],
 ) -> Selection:
     """The configuration's selection with the one-run ``agents``, ``presets`` and ``deselect`` layered over it."""
-    active = {**effective_selection(installed, config), **(presets or {})}
+    active = {**effective_selection(installed, config, previous), **(presets or {})}
     for name in deselect:
         active.pop(name, None)
-    unusable_notices(installed, active)  # a selected bundle that failed to load stops the sync
+    # A selected bundle that failed to load stops the sync, as does a deployed one whose package no longer loads.
+    unusable_notices(installed, active)
     missing = sorted(set(active) - {item.bundle.name for item in installed})
     if missing:
         raise SelectionError(
@@ -440,6 +449,7 @@ def _sync_result(
     *,
     opted_out: frozenset[str],
     seen: frozenset[str],
+    auto_selected: list[InstalledBundle],
     dry_run: bool,
 ) -> SyncResult:
     stray = stray_managed_files(root, owned)
@@ -467,7 +477,7 @@ def _sync_result(
         notices=[
             *_state_notices(list(inventory.drift), stray),
             *notices,
-            *_selection_notices(inventory, [item for item in unselected if item.bundle not in seen]),
+            *_selection_notices(inventory, [item for item in unselected if item.bundle not in seen], auto_selected),
         ],
     )
 
@@ -484,10 +494,33 @@ def _state_notices(drift: list[Drift], stray: list[str]) -> list[AdvisoryError]:
     return notices
 
 
-def _selection_notices(inventory: Inventory, new: list[Unselected]) -> list[AdvisoryError]:
-    """Notices about what the selection left out: skills and subagents without a variant for a selected agent, and
-    installed bundles the
-    project has not decided about (neither selected nor opted out) that this clone has not been told about yet."""
+def _new_auto_selected(
+    installed: list[InstalledBundle],
+    config: ProjectConfig,
+    previous: Receipt | None,
+    selection: Selection,
+    presets: dict[str, list[str]],
+) -> list[InstalledBundle]:
+    """Auto-selected bundles of packages other than devkit that this sync deploys by default and the receipt lacks."""
+    defaults = default_selection(installed, config)
+    recorded = previous.selection.presets if previous is not None else {}
+    return [
+        item
+        for item in installed
+        if not item.builtin
+        and item.bundle.name in defaults
+        and item.bundle.name in selection.presets
+        and item.bundle.name not in presets
+        and item.bundle.name not in recorded
+    ]
+
+
+def _selection_notices(
+    inventory: Inventory, new: list[Unselected], auto_selected: list[InstalledBundle]
+) -> list[AdvisoryError]:
+    """Notices about the selection: skills and subagents without a variant for a selected agent, bundles of other
+    packages deployed by default for the first time, and installed bundles the project has not decided about (neither
+    selected nor opted out) that this clone has not been told about yet."""
     notices: list[AdvisoryError] = []
     if inventory.unprojected:
         items = [f"{item.bundle}:{item.asset} ({item.agent})" for item in inventory.unprojected]
@@ -496,6 +529,19 @@ def _selection_notices(inventory: Inventory, new: list[Unselected]) -> list[Advi
                 f"skills and subagents without a variant for a selected agent were not projected: {', '.join(items)}",
                 "the bundle can add the variant (or, for a subagent, ship a role contract); "
                 "the project can narrow `agents` in .devkit/config.toml",
+            )
+        )
+    if auto_selected:
+        names = [item.bundle.name for item in auto_selected]
+        notices.append(
+            BundleAutoSelectedNotice(
+                f"installed bundles deployed with their default preset: {', '.join(names)}",
+                *(
+                    f"{item.bundle.name}  (package {item.package}; preset {item.bundle.default_preset}; "
+                    f"opt out: devkit remove {item.bundle.name})"
+                    for item in auto_selected
+                ),
+                fix=f"devkit remove {names[0]}" if len(names) == 1 else "devkit list",
             )
         )
     undecided = [item for item in new if not item.opted_out]
@@ -597,7 +643,8 @@ def commit_locked(
     require_no_journal(root)
     config = read_config(root)
     previous = read_receipt(root)
-    selection = _resolve_selection(installed, config, agents, presets, deselect)
+    selection = _resolve_selection(installed, config, previous, agents, presets, deselect)
+    auto_selected = _new_auto_selected(installed, config, previous, selection, presets or {})
     previous_overrides = {b: dict(r) for b, r in previous.overrides.items()} if previous else {}
     if rebaseline is not None:
         previous_overrides.get(rebaseline[0], {}).pop(rebaseline[1], None)
@@ -650,6 +697,7 @@ def commit_locked(
             notices,
             opted_out=config.opted_out,
             seen=seen,
+            auto_selected=auto_selected,
             dry_run=dry_run,
         )
 

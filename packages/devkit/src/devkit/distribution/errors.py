@@ -170,6 +170,13 @@ class BundleUnselectedNotice(SyncNotice):
     code = "BUNDLE_UNSELECTED"
 
 
+class BundleAutoSelectedNotice(SyncNotice):
+    """Auto-selected bundles of other packages that this sync adds to the receipt with their default preset."""
+
+    code = "BUNDLE_AUTO_SELECTED"
+    what_to_report = "These bundles are now deployed because their packages are installed and declare auto_select"
+
+
 class ToolVersionChangedNotice(SyncNotice):
     """The receipt was written by another devkit version; this sync recorded the running one."""
 

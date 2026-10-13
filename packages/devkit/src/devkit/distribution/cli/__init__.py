@@ -74,6 +74,7 @@ from devkit.distribution.installation.override_commands import (
 )
 from devkit.distribution.installation.plan import plan_bundle
 from devkit.distribution.installation.playbook_search import search_playbooks
+from devkit.distribution.installation.receipt import read_receipt
 from devkit.distribution.installation.results import OverrideChange, SyncResult
 from devkit.distribution.installation.status import get_project_listing, get_project_status
 from devkit.distribution.installation.sync import recover_project, sync_project
@@ -363,16 +364,22 @@ def add(selections: tuple[str, ...], workspace_root: str | None, dry_run: bool, 
 def remove(bundles: tuple[str, ...], workspace_root: str | None, dry_run: bool, output_format: str) -> None:
     """Deselect bundles in .devkit/config.toml and synchronize.
 
-    An auto-selected built-in bundle is recorded as `<bundle> = false` so it is
-    not selected by default again; `devkit add` selects it again.
+    An auto-selected bundle is recorded as `<bundle> = false` so it is not
+    selected by default again; `devkit add` selects it again.
     """
     root = resolve_root(workspace_root)
 
     def save(installed: list[InstalledBundle], _selected: dict[str, list[str]]) -> dict[str, Any]:
-        missing = sorted(set(bundles) - set(effective_selection(installed, read_config(root))))
+        config = read_config(root)
+        selected = effective_selection(installed, config, read_receipt(root))
+        missing = sorted(set(bundles) - set(selected))
         if missing:
             raise SelectionError(f"bundle is not selected: {missing}", fix="List selected bundles with `devkit list`")
-        automatic = {item.bundle.name for item in installed if item.auto_selected}
+        # Deleting an entry would not deselect a bundle selected without one (auto-selected, or kept deployed
+        # because its package no longer loads), so those are opted out.
+        automatic = {item.bundle.name for item in installed if item.auto_selected} | (
+            set(selected) - set(config.presets)
+        )
         return {
             "deselect": [name for name in bundles if name not in automatic],
             "opt_out": [name for name in bundles if name in automatic],

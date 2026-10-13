@@ -194,7 +194,7 @@ Q7: Is it a high-level package constitution loaded before the first bundle skill
 
 ## 5. Selection and Packaging Mechanics
 
-Asset filtering is governed by bundle-level manifest presets (`[presets.<name>]`, the reserved `all`, and the author's `default_preset`; see the [Manifest Specification](../distribution/manifest-spec.md)) and the Git-tracked `[presets]` table of `.devkit/config.toml`. `devkit add <bundle>` writes the entry (resolving `default_preset`) and synchronizes; afterwards a plain `devkit sync` converges the workspace to the declared configuration. The selection model, its precedence and the built-in defaults are normative in [Synchronization & Transactions](../distribution/sync-and-transactions.md#2-asset-selection-model).
+Asset filtering is governed by bundle-level manifest presets (`[presets.<name>]`, the reserved `all`, and the author's `default_preset`; see the [Manifest Specification](../distribution/manifest-spec.md)) and the Git-tracked `[presets]` table of `.devkit/config.toml`. A bundle that declares `auto_select` is deployed with its `default_preset` without an entry; `devkit add <bundle>` writes an entry (resolving `default_preset`) and synchronizes; afterwards a plain `devkit sync` converges the workspace to the declared configuration. The selection model, its precedence and the built-in defaults are normative in [Synchronization & Transactions](../distribution/sync-and-transactions.md#2-asset-selection-model).
 
 ### Architecture Decision: No Python Package Extras
 
@@ -204,18 +204,40 @@ Package extras (`[project.optional-dependencies]`) were rejected for asset selec
 2. **No runtime introspection**: `importlib.metadata` does not expose which extras the consumer requested, so resolving them would mean ad-hoc parsing of the consumer's `pyproject.toml` or `uv.lock`.
 3. **Micro-package explosion**: selective installation through extras would split cohesive bundles into micro-wheels (`pkg-core`, `pkg-git-commits`, ...), multiplying authoring, CI and version-synchronization cost.
 
-### Architecture Decision: Explicit Opt-In over Install-Implies-Deploy
+### Architecture Decision: Author-Declared Auto-Selection
 
-Installing a content wheel makes its bundle available; only a configuration entry deploys it. The rejected alternative (deploy every asset of every installed bundle unless narrowed, falling back to receipt-recorded selections) has three defects:
+Installing a content wheel makes its bundle available. Whether that alone deploys it is the bundle author's call: a
+bundle that declares `auto_select` is deployed with its `default_preset` as soon as its package is installed, and a
+project opts it out with `[presets] <bundle> = false`; any other bundle is deployed only once `.devkit/config.toml`
+selects it (`devkit add`). The bundles built into `devkit` follow the same rule (`devkit` and `advisory` declare
+`auto_select`; `authoring` and `git-commits` do not).
 
-1. **Transitive leakage**: bundles arriving through runtime dependencies would be injected into every downstream workspace.
-2. **Upstream-controlled scope**: whatever an upstream release adds to a bundle would appear on upgrade without a consumer-side change to review.
-3. **Hidden state**: selections passed once on the CLI would live only in the receipt, not in Git-tracked configuration.
+A project that installs a package built on devkit installed it to use it, so its default content should arrive
+without a second step. Dependency resolution already decides what reaches the environment:
 
-The bundles built into `devkit` that declare `auto_select` (`devkit`, `advisory`) are the one exception: they are part of the tool itself, so they are selected by default and opted out explicitly. Alternatives considered:
+1. **Dev dependencies do not travel**: `[dependency-groups]` are left out of the built wheel, so a content
+   package's own tooling never reaches its consumers.
+2. **Runtime dependencies are intended**: a package that lists another content package in
+   `[project.dependencies]` layers on it (a `team-backend` bundle on top of `company-base`), so deploying that
+   bundle's default preset too is the expected result, not a leak. Installing a package already trusts its code; an
+   auto-selected bundle adds no new trust.
+3. **The change stays reviewable**: a new or upgraded package shows in the `uv.lock` diff, what it deploys shows in
+   the Git-tracked `.devkit/installation.json` and root `AGENTS.md` diffs, and `BUNDLE_AUTO_SELECTED` tells the agent
+   once per clone so it can report it to the user.
 
-- **Author default preset applied automatically**: narrows the blast radius but keeps transitive leakage and upstream-controlled scope. Adopted only in its selection-time form (`default_preset` resolved by `devkit add` and recorded by name).
-- **Automatic for direct dependencies, opt-in for transitive ones**: rejected because `importlib.metadata` cannot tell which packages the consumer requested directly, and the CLI may run in a tool environment (`uvx --with ...`) with no consumer `pyproject.toml` at all.
+What remains configuration-driven: an explicit selection records the resolved preset name, so upstream can change a
+preset's assets but not which presets a project chose; selections passed on the CLI are saved to `config.toml`, never
+kept only in the receipt.
+
+Alternatives considered:
+
+- **Explicit opt-in for every content bundle** (the previous model): made each installed package a no-op until a
+  second `devkit add`, to guard against transitive installs that dependency resolution already makes intentional.
+- **Deploy every asset of every installed bundle**: rejected; a bundle's full asset set (`all`) is rarely what a
+  project wants, so auto-selection deploys only the preset the author names as the default.
+- **Automatic for direct dependencies only**: rejected because `importlib.metadata` cannot tell which packages the
+  consumer requested directly, and the CLI may run in a tool environment (`uvx --with ...`) with no consumer
+  `pyproject.toml` at all.
 
 ## 6. Summary Comparison Table
 
