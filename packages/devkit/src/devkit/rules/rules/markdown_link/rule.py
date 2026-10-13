@@ -49,6 +49,7 @@ class MarkdownLinkRule(BaseRule, Autofixable):
             description="Validates relative markdown link targets and automatically corrects broken relative paths.",
             phase=Phase.LINTER,
             severity=Severity.ERROR,
+            guide="guide.md",
         )
 
     def _broken_links(self, ctx: RuleContext) -> Iterator[BrokenLink]:

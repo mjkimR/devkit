@@ -29,7 +29,7 @@ class CleanArtifactsRule(BaseRule):
             description="Generated binaries, databases and oversized logs must not be committed.",
             phase=Phase.LINTER,
             severity=Severity.ERROR,
-            guide="artifacts.md",
+            guide="guide.md",
         )
 
     def check(self, ctx: RuleContext) -> list[Violation]:

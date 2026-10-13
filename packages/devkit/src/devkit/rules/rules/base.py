@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import inspect
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from devkit.rules.engine.errors import RuleDefinitionError
 from devkit.rules.engine.models import Phase, Rule, Severity
+
+RELATED_REF = re.compile(r"[a-z][a-z0-9-]*:[a-z][a-z0-9-]*")
 
 
 @dataclass
@@ -24,8 +27,16 @@ class BaseRule(Rule):
     settings: Any = None
     # Markdown guide for this rule, relative to the module defining the rule class.
     guide: str | None = None
+    # Instructions and playbooks that hold the judgment or procedure behind the rule, as ``<bundle>:<asset-id>``;
+    # ``devkit rules explain`` resolves each to the file agents read (the project override, else the managed copy).
+    related: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
+        for ref in self.related:
+            if not RELATED_REF.fullmatch(ref):
+                raise RuleDefinitionError(
+                    f"{self.id}: related entry {ref!r} must be <bundle>:<asset-id> (lowercase slugs)"
+                )
         if self.promote_to is None:
             return
         if self.phase != Phase.HYGIENE or self.promote_to != Phase.LINTER:

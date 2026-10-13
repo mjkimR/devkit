@@ -23,7 +23,7 @@ class FileLengthRule(BaseRule):
             phase=Phase.HYGIENE,
             severity=Severity.WARNING,
             settings=FileLengthSettings(max_lines=max_lines),
-            guide="file_length.md",
+            guide="guide.md",
         )
 
     def validate_settings(self, settings: FileLengthSettings) -> None:

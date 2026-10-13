@@ -54,7 +54,8 @@ class AgentGuideSizeRule(BaseRule):
             phase=Phase.HYGIENE,
             severity=Severity.WARNING,
             settings=AgentGuideSizeSettings(),
-            guide="agent_guide_size.md",
+            guide="guide.md",
+            related=("authoring:agent-guide-authoring",),
         )
 
     def validate_settings(self, settings: AgentGuideSizeSettings) -> None:

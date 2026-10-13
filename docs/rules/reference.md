@@ -144,10 +144,10 @@ executes, with the rule ID in the message.
 
 | Rule | Module | Phase, severity | Checks | Guide |
 | --- | --- | --- | --- | --- |
-| `RULE-markdown-link` | `rules.markdown` | linter, error | relative Markdown links point at existing files; autofix rewrites a broken link when exactly one Markdown file has its basename | - |
-| `RULE-file-length` | `rules.hygiene` | hygiene, warning | files above `max_lines` (settings `max_lines`, `extensions`) | [file_length.md](../../packages/devkit/src/devkit/rules/rules/hygiene/file_length.md) |
-| `RULE-secret-leak` | `rules.safety` | linter, error | credential file names and private key or token patterns in explicit targets | [secrets.md](../../packages/devkit/src/devkit/rules/rules/safety/secrets.md) |
-| `RULE-clean-artifacts` | `rules.safety` | linter, error | compiled binaries, database files and logs above 1 MiB in explicit targets | [artifacts.md](../../packages/devkit/src/devkit/rules/rules/safety/artifacts.md) |
+| `RULE-markdown-link` | `rules.markdown_link` | linter, error | relative Markdown links point at existing files; autofix rewrites a broken link when exactly one Markdown file has its basename | [guide.md](../../packages/devkit/src/devkit/rules/rules/markdown_link/guide.md) |
+| `RULE-file-length` | `rules.file_length` | hygiene, warning | files above `max_lines` (settings `max_lines`, `extensions`) | [guide.md](../../packages/devkit/src/devkit/rules/rules/file_length/guide.md) |
+| `RULE-secret-leak` | `rules.secret_leak` | linter, error | credential file names and private key or token patterns in explicit targets | [guide.md](../../packages/devkit/src/devkit/rules/rules/secret_leak/guide.md) |
+| `RULE-clean-artifacts` | `rules.clean_artifacts` | linter, error | compiled binaries, database files and logs above 1 MiB in explicit targets | [guide.md](../../packages/devkit/src/devkit/rules/rules/clean_artifacts/guide.md) |
 
 The guide of each rule is canonical for its behavior; `devkit rules explain
 <RULE-id>` prints it. The safety rules report nothing for a run without
@@ -167,8 +167,8 @@ uv run devkit rules check --phase hygiene
 
 | Preset | Rule (warning, hygiene) | Playbook |
 | --- | --- | --- |
-| `skill-authoring` | `RULE-skill-document-size`: a skill or playbook Markdown file above `max_bytes` (8192 UTF-8 bytes) ([guide](../../packages/devkit/src/devkit/rules/authoring/bundle/rules/skill_document_size/skill_document_size.md)) | `skill-authoring`: router structure for new skills, the four restructuring steps, helper-script rules |
-| `agent-guide-authoring` | `RULE-agent-guide-size`: an `AGENTS.md` or `CLAUDE.md` above `max_bytes` (8192 UTF-8 bytes), reporting the devkit guidance block's share ([guide](../../packages/devkit/src/devkit/rules/authoring/bundle/rules/agent_guide_size/agent_guide_size.md)) | `agent-guide-authoring`: what stays in an always-loaded guide (no structure trees; module specifics only as links), where the rest moves, per-host loading |
+| `skill-authoring` | `RULE-skill-document-size`: a skill or playbook Markdown file above `max_bytes` (8192 UTF-8 bytes) ([guide](../../packages/devkit/src/devkit/rules/authoring/bundle/rules/skill_document_size/guide.md)) | `skill-authoring`: router structure for new skills, the four restructuring steps, helper-script rules |
+| `agent-guide-authoring` | `RULE-agent-guide-size`: an `AGENTS.md` or `CLAUDE.md` above `max_bytes` (8192 UTF-8 bytes), reporting the devkit guidance block's share ([guide](../../packages/devkit/src/devkit/rules/authoring/bundle/rules/agent_guide_size/guide.md)) | `agent-guide-authoring`: what stays in an always-loaded guide (no structure trees; module specifics only as links), where the rest moves, per-host loading |
 
 Both remediations name the playbook and its `uv run devkit playbook search`
 query. The rules are bundle assets (one plugin package directory each) loaded

@@ -181,6 +181,8 @@ def print_explain(rule: Rule, entry: dict[str, Any], resolver: SettingsResolver 
         f"guide={entry['guide'] or '-'}]"
     )
     click.echo(f"[DESCRIPTION: {_quote(rule.description)}]")
+    for item in entry.get("related", []):
+        click.echo(f"[RELATED: {item['ref']} kind={item['kind'] or '-'} path={item['path'] or '-'}]")
     if resolver is None:
         click.echo("[SETTINGS: none]")
     else:

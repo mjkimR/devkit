@@ -41,6 +41,7 @@ from devkit.rules.engine.errors import RuleProblem
 from devkit.rules.engine.models import Phase, Rule
 from devkit.rules.engine.phases import resolve_phases
 from devkit.rules.engine.project import load_project_rules, run_project_rules
+from devkit.rules.engine.related import resolve_related
 from devkit.rules.workspace.snapshot import Snapshot, git_snapshot
 
 
@@ -268,7 +269,7 @@ def _concerns(problem: RuleProblem, rule: Rule | None) -> bool:
 @click.argument("rule_id", type=str)
 @boundary
 def explain_cmd(workspace_root: str | None, rules_dir: str | None, output_format: str, rule_id: str) -> None:
-    """Describe one rule: phase, severity, effective settings and its guide.
+    """Describe one rule: phase, severity, effective settings, related instructions and playbooks, and its guide.
 
     Loading problems and policy problems of other rules are reported as
     warnings (with ``--strict``, exit status 1); policy problems of this rule
@@ -289,6 +290,9 @@ def explain_cmd(workspace_root: str | None, rules_dir: str | None, output_format
         )
     resolver = project.resolvers.get(rule.id)
     entry = output.explain_entry(rule, project.config, resolver, root)
+    related, unresolved = resolve_related(root, rule)
+    entry["related"] = [item.to_dict() for item in related]
+    warnings = [*warnings, *unresolved]
     if is_json(output_format):
         echo_json(
             {

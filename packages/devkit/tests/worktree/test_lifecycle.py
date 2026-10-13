@@ -400,7 +400,7 @@ def synchronized(repo: Path) -> Path:
 
 def test_start_restores_the_managed_files_a_fresh_checkout_lacks(repo: Path) -> None:
     synchronized(repo)
-    managed = Path(".devkit/managed/authoring/rules/skill_document_size/skill_document_size.py")
+    managed = Path(".devkit/managed/authoring/rules/skill_document_size/rule.py")
     assert (repo / managed).is_file() and git(repo, "check-ignore", str(managed))
     result = start(locate(repo), "demo", project=Path("."))
     assert result.synced is True and result.notices == []

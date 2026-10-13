@@ -272,7 +272,7 @@ def test_cli_settings_override_by_path_and_guide_line(tmp_path: Path) -> None:
     assert result.exit_code == 0, result.output
     assert "docs/research/b.md" not in result.output
     assert "[VIOLATION: RULE-file-length severity=warning file=docs/a.md line=31 status=open" in result.output
-    assert " guide=" in result.output and "file_length.md]" in result.output
+    assert " guide=" in result.output and "file_length/guide.md]" in result.output
 
 
 def test_cli_invalid_settings_fail_before_checks(tmp_path: Path) -> None:

@@ -69,7 +69,7 @@ class FileLengthRule(BaseRule):
     def __init__(self) -> None:
         super().__init__(id="RULE-file-length", name="file-length-check", description="...",
                          phase=Phase.HYGIENE, severity=Severity.WARNING,
-                         settings=FileLengthSettings(), guide="file_length.md")
+                         settings=FileLengthSettings(), guide="guide.md")
 
     def validate_settings(self, settings: FileLengthSettings) -> None:
         if settings.max_lines <= 0:
@@ -86,7 +86,25 @@ class FileLengthRule(BaseRule):
 
 ### Optional `guide`
 
-`guide` names a Markdown file relative to the module that defines the rule class. `devkit rules explain <RULE-id>` prints it and violation output cites its path, so the full remediation need not travel in every message. Built-in guides live next to their rules (for example `rules/hygiene/file_length.md`); a plugin rule's guide lives in its package directory, next to the module defining the class.
+`guide` names a Markdown file relative to the module that defines the rule class. `devkit rules explain <RULE-id>` prints it and violation output cites its path, so the full remediation need not travel in every message. Every rule, built in or distributed, is one directory: `rule.py` defines the class and `guide.md` beside it is the guide (`guide="guide.md"`), for example `devkit/rules/rules/file_length/`; a plugin rule's guide lives in its package directory, next to the module defining the class.
+
+### Guide Format
+
+A guide is what `devkit rules explain <RULE-id>` prints and what a violation cites, so an agent that hits a violation
+reads it to decide what to do. Every guide, built in or distributed, uses the same sections:
+
+```markdown
+# [RULE-<id>] <Title>
+
+## 1. Overview          what the rule guarantees and why; phase and severity; which files it checks and which not
+## 2. Cause of Violation each condition reported, with its message
+## 3. Remediation       the autofix, if any, and what to do by hand
+## 4. Configuration     settings (type, default, meaning), path overrides; "no settings" when there are none
+## 5. Exceptions        how a justified exception is recorded (path overrides, `[rules] exclude`, severity overrides)
+## 6. Examples          optional
+```
+
+The built-in guides (`devkit/rules/rules/*/guide.md`) follow it.
 
 ### The `Autofixable` Protocol
 

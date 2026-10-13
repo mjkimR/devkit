@@ -132,6 +132,13 @@ class PromotionReadyNotice(RulesError):
     level = Level.NOTICE
 
 
+class RelatedUnresolvedNotice(RulesError):
+    """A rule names a related instruction or playbook that is not deployed in the project (``NOTE``)."""
+
+    code = "RULES_RELATED_UNRESOLVED"
+    level = Level.NOTICE
+
+
 class RulesRunError(RulesError):
     """A project run could not complete; ``problems`` are the collected rule problems, also given as details.
 

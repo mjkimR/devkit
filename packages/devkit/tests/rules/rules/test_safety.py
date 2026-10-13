@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from devkit.rules import RuleContext
 from devkit.rules.rules import CleanArtifactsRule, SecretLeakRule
-from devkit.rules.rules.safety.secrets import credential_file
+from devkit.rules.rules.secret_leak.rule import credential_file
 
 
 def _write(root: Path, rel: str, data: bytes) -> None:

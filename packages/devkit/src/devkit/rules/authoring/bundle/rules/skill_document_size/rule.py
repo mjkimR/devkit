@@ -43,7 +43,8 @@ class SkillDocumentSizeRule(BaseRule):
             phase=Phase.HYGIENE,
             severity=Severity.WARNING,
             settings=SkillDocumentSizeSettings(),
-            guide="skill_document_size.md",
+            guide="guide.md",
+            related=("authoring:skill-authoring",),
         )
 
     def validate_settings(self, settings: SkillDocumentSizeSettings) -> None:

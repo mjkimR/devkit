@@ -5,6 +5,7 @@ from devkit.rules.engine.discovery import ManagedRules, resolve_managed_rules
 from devkit.rules.engine.errors import (
     PinnedWriteError,
     PolicyError,
+    RelatedUnresolvedNotice,
     RuleDefinitionError,
     RuleExecutionError,
     RuleLoadError,
@@ -36,6 +37,7 @@ from devkit.rules.engine.project import (
     load_project_rules,
     run_project_rules,
 )
+from devkit.rules.engine.related import RelatedAsset, resolve_related
 from devkit.rules.engine.registry import RuleRegistry, default_rule_registry
 from devkit.rules.engine.settings import RawSettings, SettingsResolver, match_path
 from devkit.rules.workspace.cache import WorkspaceCache
@@ -57,6 +59,8 @@ __all__ = [
     "ProjectRules",
     "ProjectRun",
     "RawSettings",
+    "RelatedAsset",
+    "RelatedUnresolvedNotice",
     "Rule",
     "RuleContext",
     "RuleDefinitionError",
@@ -91,5 +95,6 @@ __all__ = [
     "resolve_managed_rules",
     "resolve_phases",
     "run_project_rules",
+    "resolve_related",
     "validate_policy",
 ]

@@ -49,7 +49,7 @@ class SecretLeakRule(BaseRule):
             description="Private keys, API tokens and .env files must not enter the repository.",
             phase=Phase.LINTER,
             severity=Severity.ERROR,
-            guide="secrets.md",
+            guide="guide.md",
         )
 
     def _violation(self, rel: str, line: int, message: str) -> Violation:
