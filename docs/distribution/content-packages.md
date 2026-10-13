@@ -36,6 +36,8 @@ src/package_b_playbooks/
   deselect it while the package is upgraded or uninstalled.
 - A repository without Python code (a prompt collection, a Go tool) can map its own layout into a content wheel at
   build time with Hatch `force-include`.
+- The same wheel may also mount commands under `devkit` through the `devkit.commands` entry-point group
+  ([Command Plugins](../architecture/command-plugins.md)).
 
 ## 2. Installation and Lifecycle
 

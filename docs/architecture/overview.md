@@ -48,7 +48,7 @@ Every command is agent-first: its primary consumer is an AI coding agent, and it
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Layering.** `advisory` imports no other module; `core` may import `advisory`; `rules` may import `core` and `advisory`; `workflow` may import `core`, `advisory` and `rules`; `gate` may import those and `compact` (the `verify-commands` gate runs commands through it); `search`, `compact` and `worktree` may import only `core` and `advisory`; `distribution` may import `core`, `advisory` and `search`. `devkit.cli` assembles the command line. A test enforces this. The root group maps each command name to a `module:attribute` reference and imports the module only when that command runs, so a command imports only its own area and the layers below it; a test enforces this too.
+**Layering.** `advisory` imports no other module; `core` may import `advisory`; `rules` may import `core` and `advisory`; `workflow` may import `core`, `advisory` and `rules`; `gate` may import those and `compact` (the `verify-commands` gate runs commands through it); `search`, `compact` and `worktree` may import only `core` and `advisory`; `distribution` may import `core`, `advisory` and `search`. `devkit.cli` assembles the command line. A test enforces this. The root group maps each command name to a `module:attribute` reference and imports the module only when that command runs, so a command imports only its own area and the layers below it; a test enforces this too. Installed packages mount further top-level commands through the `devkit.commands` entry-point group ([Command Plugins](command-plugins.md)).
 
 ## 2. Monorepo Structure
 
@@ -109,6 +109,7 @@ Each module's `reference.md` is the quick reference (CLI, configuration, library
 ### Cross-Cutting Architecture
 - [Agent-First Output](agent-output.md): The output contract of every command: stdout and stderr, text sentinels, JSON envelope, verbosity, exit codes, logs.
 - [Resource Taxonomy](resource-taxonomy.md): Three-tier classification and naming standards for agent assets.
+- [Command Plugins](command-plugins.md): Top-level commands that installed packages mount through `devkit.commands`, their loading and their output contract.
 - [Hybrid Binary Distribution Evaluation](evaluations/hybrid-binaries.md): Evaluation record on bundling compiled binaries with `uv` wheels (not adopted; semantic search landed in pure Python as `devkit.search`).
 
 ### Shared Foundation (`devkit.core`, `devkit.advisory`)

@@ -15,6 +15,7 @@ Frontmatter functions are used through their module
 from devkit.core.errors import (
     ArgumentError,
     AssetFileError,
+    CommandPluginError,
     ConfigError,
     DevkitCoreError,
     FrontmatterError,
@@ -67,6 +68,7 @@ __all__ = [
     "ArgumentError",
     "AssetFileError",
     "AssetRecord",
+    "CommandPluginError",
     "ConfigError",
     "DevkitCoreError",
     "FileRecord",

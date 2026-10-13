@@ -42,3 +42,7 @@ and `worktree` use only `core` and `advisory`, `distribution` also `search`, `ga
 also `compact`; enforced by a test), the shared CLI
 conventions (`-w/--workspace-root`, `--format`, exit codes) and the documentation
 index are in the [Architecture Overview](../../docs/architecture/overview.md).
+
+Other installed packages can mount their own command groups under `devkit`
+through the `devkit.commands` entry-point group
+([Command Plugins](../../docs/architecture/command-plugins.md)).

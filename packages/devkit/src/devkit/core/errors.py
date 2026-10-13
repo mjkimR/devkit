@@ -64,6 +64,19 @@ class ArgumentError(DevkitCoreError):
     input_error = True
 
 
+class CommandPluginError(DevkitCoreError):
+    """An installed package's ``devkit.commands`` entry point cannot be used (``MAINTENANCE``).
+
+    Its module fails to import, its target is not a click command, or two
+    packages declare the same command name. Only that command fails.
+    """
+
+    code = "COMMAND_PLUGIN_INVALID"
+    actor = Actor.DEVELOPER
+    retry = Retry.AFTER_FIX
+    fix = "Reinstall or upgrade the package that declares the command (uv sync), or remove the duplicate"
+
+
 class UnsafePathError(DevkitCoreError):
     """A workspace-relative path is absolute, escapes its root, or is otherwise unusable."""
 
