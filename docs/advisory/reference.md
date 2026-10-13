@@ -29,7 +29,7 @@ This module implements the Agent Advisory Protocol and nothing else.
 | `AdvisoryError.with_level(level, *, brief=None)` | A copy of the error at another level (same class, code and fields; `exit_code` `OK` below `ERROR`, kept for an `ERROR` copy of an error, the class default for an `ERROR` copy of a warning or notice): an error reported as a warning or notice where it does not fail the command. |
 | Factories | `invalid_input` (`INPUT_ERROR`), `blocked` (`BLOCKED`), `auto_fix` (`AUTO`), `interaction` (`INTERACTION`): classmethods, so `MyError.blocked(...)` returns `MyError`. They set every field that decides the mode (`level` `ERROR`, `actor`, `retry`, `guardrail`, `input_error`) and keep the subclass's defaults for the others. |
 | `AdvisoryFields` | `TypedDict` of the keyword fields, for subclasses that add constructor arguments (`**fields: Unpack[AdvisoryFields]`). |
-| `Advisory` | Frozen dataclass of the fields with the derived `mode`, `lines(message)` and `to_dict()`. |
+| `Advisory` | Frozen dataclass of the fields with the derived `mode`, `shows_action` (whether the block carries `[ACTION]`), `lines(message)` and `to_dict()`. |
 | `Level` | `ERROR`, `WARNING`, `NOTICE`. |
 | `ActionMode` | `AUTO`, `INTERACTION`, `DEFER`, `BLOCKED`, `HALT`, `MAINTENANCE`, `INPUT_ERROR`, `CONTINUE`, `NOTE`. |
 | `Actor`, `Retry` | Error fields: `TOOL`/`USER`/`DEVELOPER`/`NONE`; `SAFE`/`AFTER_FIX`/`UNSAFE`. |
@@ -40,7 +40,7 @@ This module implements the Agent Advisory Protocol and nothing else.
 Rendering and serialization:
 
 - `error.lines()` / `error.render()`: the sentinel block (`[ERROR]`, `[WARN]` or `[NOTICE]` headline by level) for stderr or an MCP tool result.
-- `error.to_dict(include_advisory=True)`: `{code, level, message, exit_code, advisory}`.
+- `error.to_dict(include_advisory=True)`: `{code, level, message, exit_code, advisory}`; `advisory` holds what the block shows, the `[ACTION]` text as `action` included, and omits empty fields ([protocol, section 9](protocol.md#9-structured-output)).
 - `error.to_problem_details(status=..., type_base=...)`: RFC 7807 body, for errors. `status` is the HTTP status chosen by the caller; the library never maps codes or exit codes to statuses.
 
 A warning or notice is an `AdvisoryError` whose `level` is `WARNING` or `NOTICE`, declared on a subclass (`level = Level.NOTICE`) or produced with `with_level`; it is collected and returned, never raised. Field semantics per level (ignored failure fields, `brief`) are in [protocol, section 4](protocol.md#4-fields).

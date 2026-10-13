@@ -124,23 +124,28 @@ def test_serialization_and_problem_details() -> None:
         "exit_code": 2,
     }
     advisory = error.to_dict()["advisory"]
-    assert advisory["mode"] == "INTERACTION"
-    assert advisory["input_error"] is False
-    assert set(advisory) == {
-        "code",
-        "level",
-        "mode",
-        "actor",
-        "retry",
-        "guardrail",
-        "input_error",
-        "retry_after",
-        "fix",
-        "what_to_report",
-        "target_files",
-        "details",
-        "brief",
+    # JSON carries what the block shows, the directive text included, and no empty fields.
+    assert advisory == {
+        "code": "AUTH_FAILED",
+        "level": "ERROR",
+        "mode": "INTERACTION",
+        "action": " ".join(ACTION_TEXT[ActionMode.INTERACTION].split("\n")),
+        "actor": "USER",
+        "retry": "AFTER_FIX",
+        "guardrail": False,
+        "input_error": False,
+        "what_to_report": "Log in again",
     }
+    full = AdvisoryError(
+        "busy", "d", code="LOCKED", retry=Retry.SAFE, retry_after="30s", fix="x", target_files=["a", " "]
+    ).to_dict()["advisory"]
+    assert (full["retry_after"], full["fix"], full["target_files"], full["details"]) == ("30s", "x", ["a"], ["d"])
+    # The failure fields describe an error only; a brief notice without fix shows no directive.
+    warning = error.with_level(Level.WARNING).to_dict()["advisory"]
+    assert set(warning) == {"code", "level", "mode", "action", "what_to_report"}
+    assert warning["action"].startswith("CONTINUE — ")
+    brief = AdvisoryError("fyi", code="FYI", level=Level.NOTICE, brief=True).to_dict()["advisory"]
+    assert brief == {"code": "FYI", "level": "NOTICE", "mode": "NOTE"}
 
     problem = error.to_problem_details(status=401, type_base="https://docs.example.com/errors/")
     assert problem["type"] == "https://docs.example.com/errors/AUTH_FAILED"

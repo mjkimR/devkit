@@ -19,9 +19,11 @@ In this monorepo, run `uv sync --all-packages` first, then `uv run --package dev
 Every distribution command takes `-w/--workspace-root <dir>`. Without it, the project root is the nearest
 directory (the current one first, then its parents, up to the Git top level; outside a Git work tree, never the
 home directory or above it) that contains `.devkit/`, else the Git top level, else the current directory; a `-w` that is not an existing directory is `ARGUMENT_INVALID`.
-Commands print exactly one JSON object on stdout: the result (`override list` wraps its entries as
-`{"overrides": [...]}`), or `{"error": {...}}` when the command fails, with the Agent Advisory Protocol block
-on stderr. Exit code `0` is success; `1` is returned by `devkit sync --check` when a synchronization is needed
+`sync`, `add` and `remove` print text by default (see [Sync output and notices](#sync-output-and-notices)) and
+take `--format json`. Every other command prints exactly one JSON object on stdout: the result (`override list`
+wraps its entries as `{"overrides": [...]}`), or `{"error": {...}}` when the command fails. A JSON result carries
+its errors, warnings and notices, so nothing is rendered on stderr in JSON mode; in text mode they are Agent
+Advisory Protocol blocks on stderr. Exit code `0` is success; `1` is returned by `devkit sync --check` when a synchronization is needed
 and by `devkit status` when its report shows a problem; `2` is any error, including an invalid argument such as a
 malformed `bundle[:preset]` or `--agent` combined with `--no-agents` (see
 [Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)).
@@ -59,6 +61,8 @@ Override semantics are specified in [Workspace Ownership, section 3](workspace-o
   entry. Repeat a bundle to select a union; `<bundle>:all` selects every asset.
 - `--no-save`: applies the selection flags to this run only, without editing `.devkit/config.toml`.
 - `--dry-run`: computes the inventory and returns the planned `actions` without writing files or configuration.
+- `--format text|json` (also on `add` and `remove`): the `[SYNC]`/`[CHANGE]` lines (default) or the whole
+  `SyncResult` object ([Sync output and notices](#sync-output-and-notices)).
 - `--check`: read-only, for CI. Exits `1` when the workspace needs a synchronization (a missing or stale guidance
   block and a seeded file not written yet included) and `2` on any error (for example a hand-edited managed file,
   `SYNC_CONFLICT`). Existing seeded files are never compared. An orphan alone does not fail `--check`: it is no
@@ -107,14 +111,27 @@ option = "on"
 
 ### Sync output and notices
 
-`sync`, `add` and `remove` print the `SyncResult` object: `dry_run`, `selection`, `packages`, `assets`, `actions`,
-`drift`, `stray`, `unprojected`, `unselected` and `notices`. `drift`, `stray`, `unprojected` and `unselected` are
-facts for programs; `notices` holds what the agent must know about them and about the rest of the sync, as
-`AdvisoryError` objects at level `WARNING` or `NOTICE` (serialized as `code`, `level`, `message`, `exit_code` `0`,
-`advisory`). The library builds every notice, so an embedding caller receives the same list. The CLI prints the
-result, then each notice on stderr as a `[WARN]` or `[NOTICE]` block
+`sync`, `add` and `remove` print what the synchronization wrote, or would write under `--dry-run` and `--check`,
+never the deployed state it kept, which is the same on every run:
+
+```text
+[SYNC: create=1 update=1 remove=0 seed=0 dry_run=no]
+[CHANGE: create .claude/skills/review/SKILL.md]
+[CHANGE: update .devkit/installation.json]
+```
+
+One `[CHANGE: <create|update|remove|seed> <path>]` line follows per write (a path with spaces, quotes or brackets
+is a JSON string), and `[OK: the workspace matches the selection]` when there is nothing to write. The warnings
+and notices follow on stderr as `[WARN]` and `[NOTICE]` blocks
 ([Agent Advisory Protocol](../advisory/protocol.md#3-block-format)); `-q` hides the notices, never the warnings, and
-`--strict` exits `1` when there is a warning. `override create` and `override remove` carry the notices of the sync
+`--strict` exits `1` when there is a warning.
+
+`--format json` prints the whole `SyncResult` object instead: `dry_run`, `selection`, `packages`, `assets`,
+`actions`, `drift`, `stray`, `unprojected`, `unselected` and `notices`, with nothing on stderr. `drift`, `stray`,
+`unprojected` and `unselected` are facts for programs; `notices` holds what the agent must know about them and
+about the rest of the sync, as `AdvisoryError` objects at level `WARNING` or `NOTICE` (serialized as `code`,
+`level`, `message`, `exit_code` `0`, `advisory`). The library builds every notice, so an embedding caller receives
+the same list. `override create` and `override remove` carry the notices of the sync
 they run in their own `notices` list.
 
 | Code | Level | Class | When | Fields |
@@ -128,7 +145,7 @@ they run in their own `notices` list.
 | `TOOL_VERSION_CHANGED` | `NOTICE` (brief) | `ToolVersionChangedNotice` | the receipt now records a different running `devkit` version (`devkit <recorded> -> <running>`) | — |
 | `POST_SYNC_NOTICE` | `NOTICE` (brief) | `PostSyncNotice` | a line a post-sync hook returned | `details`: the hook |
 
-A post-sync hook may also return `AdvisoryError` objects with codes of its own; they keep their level, except that an
+Each class above derives from `SyncNotice` (`SYNC_NOTICE`), which is never reported on its own. A post-sync hook may also return `AdvisoryError` objects with codes of its own; they keep their level, except that an
 `ERROR` is lowered to `WARNING` ([hooks](sync-and-transactions.md#post-sync-hooks)).
 
 ### `devkit status`
@@ -137,8 +154,7 @@ A post-sync hook may also return `AdvisoryError` objects with codes of its own; 
 counts (`ok`, `missing`, `modified`, `mode-mismatch`, `unsafe`) with the offending paths, override drift of deployed
 assets, the guidance block state (`ok`, `missing`, `modified`, `unowned`, `disabled`, `invalid`), seeded paths and whether each exists, a pending journal,
 and the recorded versus running tool version; without a receipt every entry describes an empty installation. What
-needs acting on is listed under `errors`, each an error object with exit code `1`, and rendered on stderr as an
-advisory block: missing managed files (`NOT_SYNCHRONIZED`, fix `devkit sync`), edited or mode-changed managed files
+needs acting on is listed under `errors`, each an error object with exit code `1`: missing managed files (`NOT_SYNCHRONIZED`, fix `devkit sync`), edited or mode-changed managed files
 (`SYNC_CONFLICT`), recorded paths that became symlinks or non-regular files (`WORKSPACE_UNSAFE`), a root
 `AGENTS.md` that is a symlink, malformed or not UTF-8 while the block is managed (`WORKSPACE_UNSAFE`,
 `GUIDANCE_BLOCK_INVALID`; state `invalid`), a selected bundle whose package cannot be used
@@ -160,6 +176,7 @@ error's `fix`, never in its message. The others are `DistributionError` subclass
 
 | Class | Code | Mode | When |
 | --- | --- | --- | --- |
+| `DistributionError` | `DISTRIBUTION_FAILED` | `MAINTENANCE` | the base class, raised as it is only for an internal defect of `devkit.distribution` |
 | `BundleError` | `BUNDLE_INVALID` | `INPUT_ERROR` | `bundle.toml`, a declared source or an asset header is invalid or unreadable; from `bundle validate`, `plan` and `build`, `target_files` names the bundle directory |
 | `PackageError` | `BUNDLE_PACKAGE_INVALID` | `MAINTENANCE` | an installed content package registers an unusable, misnamed or duplicate bundle, or its resource module fails to import or load; `fix` names the package to upgrade or uninstall. Only a selected bundle's package (or a duplicate) is an error; any other is a `WARNING` under `notices` ([Content Packages](content-packages.md#1-content-wheel-contract)) |
 | `SelectionError` | `SELECTION_INVALID` | `INPUT_ERROR` | an unknown or unselected bundle, preset, asset or override |
@@ -179,8 +196,10 @@ error's `fix`, never in its message. The others are `DistributionError` subclass
 
 `devkit` ships a bundle named `devkit` so that the guidance about devkit travels with the CLI version it describes:
 a constitution (`AGENTS.md`) with the consumption contracts and four instructions, delivered through
-`devkit get-context devkit`. It is auto-selected with its only preset, `core`; `uv run devkit remove devkit` opts
-out. The sources live in `src/devkit/distribution/guide/bundle/` and are the consumer-facing mirror of these
+`devkit get-context devkit`. It is auto-selected with its default preset, `core`, which adds nothing to `AGENTS.md`;
+`uv run devkit remove devkit` opts out. The opt-in preset `run` (`uv run devkit add devkit:run`) adds the guidance
+fragment `run-pointer`, one `AGENTS.md` line that sends agents to `devkit run` for tests, linters and type checks
+and to the `devkit-run` instruction. The sources live in `src/devkit/distribution/guide/bundle/` and are the consumer-facing mirror of these
 documents; keep them in step.
 
 | Asset | Read before |

@@ -8,8 +8,10 @@ distribution commands must agree on:
 - ``resolve_root``: the explicit workspace root, else the project root found
   from the current directory;
 - ``boundary``: renders any error as an Agent Advisory Protocol block on
-  stderr and, when stdout is JSON, as ``{"error": {...}}`` on stdout, then
-  exits with the error's ``exit_code``;
+  stderr or, when stdout is JSON, as ``{"error": {...}}`` on stdout only, then
+  exits with the error's ``exit_code``. A JSON result carries every advisory
+  (with its ``[ACTION]`` directive), so JSON mode renders none on stderr: an
+  agent host that merges the two channels would read each one twice;
 - ``echo_json``: stdout JSON is always exactly one object, in UTF-8;
 - ``exit_on_problems``: a command that does work and collected problems
   exits with the highest ``exit_code`` among them;
@@ -45,7 +47,7 @@ import logging
 import os
 import sys
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, NoReturn
 
@@ -149,25 +151,30 @@ def exit_on_problems(problems: Sequence[AdvisoryError], *, report: bool = False)
 
     The exit code is the highest ``exit_code`` among ``problems``, or
     ``report_exit_code`` (always ``1``) when ``report`` marks a status or show command.
+    In JSON mode nothing is rendered: the command's JSON result lists the problems.
     """
     if not problems:
         return
-    for problem in problems:
-        click.echo(problem.render(), err=True)
+    if not output_settings().json:
+        for problem in problems:
+            click.echo(problem.render(), err=True)
     sys.exit(report_exit_code(problems) if report else highest_exit_code(problems))
 
 
 @dataclass(frozen=True)
 class OutputSettings:
     """The output options of the running command: ``quiet`` hides notices, ``verbose`` shows logs, ``strict``
-    makes a warning exit ``1``."""
+    makes a warning exit ``1``; ``json`` is set by ``boundary`` when stdout is JSON, so advisories stay off stderr."""
 
     quiet: bool = False
     verbose: bool = False
     strict: bool = False
+    json: bool = False
 
 
 _settings: contextvars.ContextVar[OutputSettings | None] = contextvars.ContextVar("devkit_output", default=None)
+# Warnings and notices a JSON-mode command passed to ``echo_notices``: an error document printed afterwards carries them.
+_unprinted: contextvars.ContextVar[list[AdvisoryError] | None] = contextvars.ContextVar("devkit_notices", default=None)
 
 
 def output_settings() -> OutputSettings:
@@ -219,9 +226,17 @@ def echo_notices(notices: Iterable[AdvisoryError]) -> None:
 
     Warnings come first, then notices, each in the order the command collected
     them, so what the user must hear about is never buried; ``--quiet`` skips
-    the notices. JSON keeps the collected order.
+    the notices. In JSON mode nothing is rendered: the JSON result lists them in
+    the collected order, and an error document printed instead of a result
+    carries them under ``notices``.
     """
-    quiet = output_settings().quiet
+    settings = output_settings()
+    if settings.json:
+        pending = _unprinted.get()
+        if pending is not None:
+            pending.extend(notices)
+        return
+    quiet = settings.quiet
     for notice in sorted(notices, key=lambda notice: _LEVEL_ORDER[notice.level]):
         if quiet and notice.level is Level.NOTICE:
             continue
@@ -297,9 +312,10 @@ def boundary(fn: Callable[..., Any] | None = None, *, json_only: bool = False) -
     Use as ``@boundary`` or ``@boundary(json_only=True)``. It adds the output
     options (``output_options``) and applies them while the command runs. An
     error is rendered on stderr; when stdout is JSON (``json_only``, or the
-    command's ``output_format`` parameter is ``json``) ``{"error": {...}}`` is
-    printed there too, unless the error is ``Reported`` (its result is already
-    there). The process exits with the error's ``exit_code``; any other
+    command's ``output_format`` parameter is ``json``) it is printed there
+    instead, as ``{"error": {...}}`` with the warnings and notices passed to
+    ``echo_notices`` before it under ``notices``, or not at all when the error
+    is ``Reported`` (its result is already there). The process exits with the error's ``exit_code``; any other
     exception is ``UNEXPECTED_ERROR``, its traceback logged for ``--verbose``.
     click's own exits and usage errors pass through. A ``BrokenPipeError``
     (the reader closed stdout) exits ``2`` without output. stdout and stderr
@@ -317,8 +333,11 @@ def boundary(fn: Callable[..., Any] | None = None, *, json_only: bool = False) -
 
         def guarded(*args: Any, quiet: bool, verbose: bool, strict: bool, **kwargs: Any) -> Any:
             token: contextvars.Token[OutputSettings | None] | None = None
+            pending: list[AdvisoryError] = []
+            pending_token = _unprinted.set(pending)
+            json_out = json_only or is_json(kwargs.get("output_format"))
             try:
-                settings = resolve_output(quiet, verbose, strict)
+                settings = replace(resolve_output(quiet, verbose, strict), json=json_out)
                 token = _settings.set(settings)
                 with _logs_on_stderr(settings.verbose):
                     try:
@@ -331,15 +350,21 @@ def boundary(fn: Callable[..., Any] | None = None, *, json_only: bool = False) -
             except (click.exceptions.Exit, click.ClickException, click.exceptions.Abort, SystemExit, BrokenPipeError):
                 raise
             except Reported as reported:
-                click.echo(reported.error.render(), err=True)
+                if not json_out:
+                    click.echo(reported.error.render(), err=True)
                 sys.exit(int(reported.error.exit_code))
             except Exception as exc:
                 error = as_advisory_error(exc)
-                if json_only or is_json(kwargs.get("output_format")):
-                    echo_json({"error": error.to_dict()})
-                click.echo(error.render(), err=True)
+                if json_out:
+                    document: dict[str, object] = {"error": error.to_dict()}
+                    if pending:
+                        document["notices"] = [notice.to_dict() for notice in pending]
+                    echo_json(document)
+                else:
+                    click.echo(error.render(), err=True)
                 sys.exit(int(error.exit_code))
             finally:
+                _unprinted.reset(pending_token)
                 if token is not None:
                     _settings.reset(token)
 

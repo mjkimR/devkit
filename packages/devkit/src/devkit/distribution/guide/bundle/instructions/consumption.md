@@ -134,12 +134,15 @@ repository's own assets in their source bundle (see `in-repo-bundle`).
 compares with the receipt: missing, modified, execute-bit-changed or symlinked
 managed files, override drift of deployed assets, the guidance block state, seeded files that no longer
 exist, a pending journal, and whether the running `devkit` version wrote the
-receipt. Whatever needs acting on is listed under `errors` and rendered as an
-advisory block on stderr; follow its `[ACTION]` and `[FIX]`. It exits 1 when
-there is any, else 0. `uv run devkit sync --check` says whether a sync is
-needed (exit 1); exit 2 means an error, such as a hand-edited managed file,
-reported as an advisory on stderr and `{"error": ...}` on stdout. Every command
-takes `-w <dir>` for a project other than the current directory's.
+receipt. Whatever needs acting on is listed under `errors`, each with its
+`advisory` (`action`, `fix`); follow them. It exits 1 when there is any, else 0.
+`uv run devkit sync --check` says whether a sync is needed (exit 1, one
+`[CHANGE: ...]` line per pending write); exit 2 means an error, such as a
+hand-edited managed file, reported as an advisory block on stderr. `sync`,
+`add` and `remove` print `[SYNC]`/`[CHANGE]` lines (`--format json` for the
+whole result); the other commands print one JSON object that carries their
+advisories, with nothing on stderr. Every command takes `-w <dir>` for a
+project other than the current directory's.
 
 ## Recovering an interrupted sync
 

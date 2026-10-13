@@ -30,5 +30,16 @@ id = "devkit-run"
 kind = "instruction"
 source = "instructions/devkit-run.md"
 
+# The AGENTS.md line that sends agents to `devkit run` for verification commands.
+# Opt-in (`devkit add devkit:run`): a project that runs every check through recipes
+# wrapping `devkit run` does not need it in every session.
+[[assets]]
+id = "run-pointer"
+kind = "guidance"
+source = "guidance/run-pointer.md"
+
 [presets.core]
 assets = ["consumption", "resource-kinds", "in-repo-bundle", "devkit-run"]
+
+[presets.run]
+assets = ["devkit-run", "run-pointer"]

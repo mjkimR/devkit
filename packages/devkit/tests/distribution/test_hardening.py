@@ -253,7 +253,7 @@ def test_orphan_alone_does_not_fail_check(
     assert first.exit_code == 0, first.output
     assert "[WARN]   (ORPHAN_LEFT) left modified file in place: .devkit/managed/team/guide.md" in first.stderr
     # Nothing left to sync: the orphan is reported, not pending.
-    check = runner.invoke(cli, ["sync", "--workspace-root", str(target), "--check"])
+    check = runner.invoke(cli, ["sync", "--workspace-root", str(target), "--check", "--format", "json"])
     assert check.exit_code == 0, check.output
     assert json.loads(check.stdout)["actions"] == []
     # It is now an unmanaged file under the managed root.
@@ -359,7 +359,9 @@ def test_status_reports_every_dimension(
     ]
     result = CliRunner().invoke(cli, ["status", "-w", str(target)])
     assert result.exit_code == 1 and json.loads(result.stdout)["pending_journal"] is True
-    assert "[ERROR]  (TRANSACTION_PENDING)" in result.stderr and "[FIX]    devkit sync" in result.stderr
+    fixes = {error["code"]: error["advisory"].get("fix") for error in json.loads(result.stdout)["errors"]}
+    assert fixes["TRANSACTION_PENDING"] == "devkit recover" and fixes["NOT_SYNCHRONIZED"] == "devkit sync"
+    assert result.stderr == ""
 
 
 def test_status_reports_override_drift_disabled_block_and_cli(
@@ -384,5 +386,5 @@ def test_status_reports_override_drift_disabled_block_and_cli(
     assert report["guidance_block"] == "missing"
     (drift,) = report["errors"]
     assert (drift["code"], drift["exit_code"], drift["advisory"]["mode"]) == ("OVERRIDE_DRIFT", 1, "INTERACTION")
-    assert "[ERROR]  (OVERRIDE_DRIFT) upstream changed behind overrides: team:guide" in result.stderr
+    assert drift["message"] == "upstream changed behind overrides: team:guide" and result.stderr == ""
     assert not (target / AGENTS_FILE).exists()  # status never writes

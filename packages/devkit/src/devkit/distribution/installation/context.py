@@ -27,9 +27,13 @@ def get_context(start: Path, bundle: str) -> ContextResult:
         receipt = read_synchronized(root)
         prefix = f"{MANAGED_PATH}/{bundle}/"
         if receipt.file(prefix + "bundle.toml") is None:
+            # The name may be a typo or an unselected bundle: name the command that tells which, and the
+            # bundles this project does have, rather than guessing `devkit add` for a name that may not exist.
+            synchronized = sorted({package.bundle for package in receipt.packages})
             raise SelectionError(
                 f"bundle is not synchronized: {bundle}",
-                fix=f"Select it with `devkit add {bundle}`, or list synchronized bundles with `devkit list`",
+                f"synchronized bundles: {', '.join(synchronized) or 'none'}",
+                fix="devkit list",
             )
         constitution_path = prefix + "AGENTS.md"
         constitution = None

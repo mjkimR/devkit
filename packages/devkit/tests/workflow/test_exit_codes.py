@@ -91,7 +91,7 @@ def test_usage_error_exits_two(unit_ws: Path) -> None:
 
 def test_unknown_unit_exits_two_with_a_json_error(unit_ws: Path) -> None:
     result = _run("next", "-w", str(unit_ws), "--unit", "nowhere", "--format", "json")
-    assert result.exit_code == ExitCode.ERROR and "(UNIT_NOT_FOUND)" in result.stderr
+    assert result.exit_code == ExitCode.ERROR and result.stderr == ""
     assert json.loads(result.stdout)["error"]["code"] == "UNIT_NOT_FOUND"
 
 

@@ -4,7 +4,7 @@ The primary consumer of every `devkit` command is an AI coding agent that runs i
 
 ## 1. Principles
 
-1. **Two channels, two purposes.** stdout carries facts: the result of the command. stderr carries directives: what the agent must do or know about that result. An agent can take either channel alone and lose nothing the other one owns.
+1. **Each advisory reaches the agent once.** In text mode stdout carries facts, the result of the command, and stderr carries directives: what the agent must do or know about that result. In JSON mode the one JSON object carries both, every advisory with its directive text, and stderr carries no advisory. Agent hosts usually merge the two channels into one tool result, so an advisory printed on both would be read, and paid for, twice.
 2. **Match, do not parse.** Text output is one fact per line, each behind a sentinel an agent can match with a fixed string. JSON output is exactly one object. Neither needs prose understanding.
 3. **Codes, not prose.** Every condition worth reporting has a stable `UPPER_SNAKE` code. Messages explain; codes identify. Callers and tests branch on codes, never on message text.
 4. **Directives, not narration.** A condition the agent must act on carries an `[ACTION]` directive that says what to do and what not to do. Nothing relies on the agent inferring intent from a description.
@@ -18,7 +18,8 @@ The primary consumer of every `devkit` command is an AI coding agent that runs i
 | --- | --- | --- |
 | stdout, text mode | `[KIND: ...]` result lines; documents a command was asked to print (a guide, a rendered work unit) | advisories, logs |
 | stdout, JSON mode | exactly one JSON object: the result with its `errors` and `notices`, or `{"error": {...}}` | anything else (no second document, no stray text) |
-| stderr | advisory blocks (`[ERROR]`, `[WARN]`, `[NOTICE]`); `[INFO]` log lines under `-v` | results; free text; click's own `Usage:` text is the only exception (usage errors, exit `2`) |
+| stderr, text mode | advisory blocks (`[ERROR]`, `[WARN]`, `[NOTICE]`); `[INFO]` log lines under `-v` | results; free text; click's own `Usage:` text is the only exception (usage errors, exit `2`) |
+| stderr, JSON mode | `[INFO]` log lines under `-v`; click's `Usage:` text | advisories: the JSON object carries them |
 | exit code | `0` success, `1` negative result, `2` could not do its job | anything finer; the code says which, the advisories say why |
 
 Every stderr line is either a sentinel line or a continuation line indented 9 spaces under the sentinel above it.
@@ -41,7 +42,7 @@ Text-mode stdout is made of one-line sentinels:
 
 ## 4. stdout: JSON
 
-Under `--format json` (and for every distribution command, which is JSON-only), stdout is exactly one JSON object, never a bare array:
+Under `--format json` (and for the distribution commands other than `sync`, `add` and `remove`, which are JSON-only), stdout is exactly one JSON object, never a bare array:
 
 ```json
 {
@@ -52,19 +53,19 @@ Under `--format json` (and for every distribution command, which is JSON-only), 
 ```
 
 - The command's payload sits under named keys (`violations`, `rules`, `units`, `checks`, `requests`, `overrides`, ...), or is the object itself for a single result (`SyncResult`).
-- `errors` lists problems the command collected instead of raising, `notices` lists its warnings and notices; each entry is an advisory's `to_dict()`: `{"code", "level", "message", "exit_code", "advisory": {...}}`, plus fields a module adds (`rule_id`, `file`, `where`). A command that can collect neither omits the key.
-- A command that fails outright prints `{"error": {...}}` (the same envelope) instead of a result. Warnings and notices collected before the failure then appear on stderr only.
+- `errors` lists problems the command collected instead of raising, `notices` lists its warnings and notices; each entry is an advisory's `to_dict()`: `{"code", "level", "message", "exit_code", "advisory": {...}}`, plus fields a module adds (`rule_id`, `file`, `where`). `advisory` holds what the block would show: `mode`, the `[ACTION]` directive as `action`, and each other field only when it has a value ([protocol, section 9](../advisory/protocol.md#9-structured-output)). A command that can collect neither omits the key.
+- A command that fails outright prints `{"error": {...}}` (the same envelope) instead of a result, with the warnings and notices it collected before the failure under `notices`.
 - JSON is never filtered by `-q` or `-v`: it always carries every error and notice.
 
 ## 5. stderr: Advisories
 
-Every error, warning and notice is an Agent Advisory Protocol block ([format](../advisory/protocol.md#3-block-format)). Their order on stderr is fixed:
+In text mode every error, warning and notice is an Agent Advisory Protocol block ([format](../advisory/protocol.md#3-block-format)) on stderr; in JSON mode none is (section 4 carries them). Their order on stderr is fixed:
 
 1. `[INFO]` log lines (only under `-v`), as they occur;
 2. warnings and notices, after the result has been printed: warnings first, then notices, each in the order the command collected them (JSON keeps the collected order);
 3. errors, last, so the decisive block ends the output.
 
-A command prints each block once. A command whose JSON result already carries an error (`Reported`) still renders that error on stderr, so the text channel stays complete.
+A command prints each block once. A text-mode command whose result was printed before an error stopped it (`Reported`) renders that error after the result.
 
 ## 6. Verbosity and Strictness
 
@@ -116,21 +117,13 @@ Diagnostics that neither change the agent's next step nor need to reach the user
 
 ## 11. Example
 
-`devkit sync` in a project where an override hides upstream changes and a newly installed bundle is not selected yet (JSON abridged):
+`devkit sync` in a project where an override hides upstream changes and a newly installed bundle is not selected yet.
 
 stdout:
 
-```json
-{
-  "dry_run": false,
-  "actions": [{"action": "update", "path": ".devkit/managed/devkit/guide.md"}],
-  "drift": [{"bundle": "starter", "asset": "development"}],
-  "unselected": [{"bundle": "extras", "opted_out": false}],
-  "notices": [
-    {"code": "OVERRIDE_DRIFT", "level": "WARNING", "message": "upstream drift behind the override of starter:development", "exit_code": 0, "advisory": {"mode": "CONTINUE", "...": "..."}},
-    {"code": "BUNDLE_UNSELECTED", "level": "NOTICE", "message": "installed bundles not selected yet: extras", "exit_code": 0, "advisory": {"mode": "NOTE", "...": "..."}}
-  ]
-}
+```text
+[SYNC: create=0 update=1 remove=0 seed=0 dry_run=no]
+[CHANGE: update .devkit/managed/devkit/guide.md]
 ```
 
 stderr:
@@ -150,4 +143,23 @@ stderr:
 [DETAIL] devkit add extras  (package extras-content; presets core; default core)
 ```
 
-Exit code `0` (`1` with `--strict`). With `-q`, the `[NOTICE]` block is not printed; the JSON is unchanged. The next `devkit sync` in this clone repeats the warning (the override still needs a decision) but not the notice; `extras` stays listed under `unselected`.
+Exit code `0` (`1` with `--strict`). With `-q`, the `[NOTICE]` block is not printed. The next `devkit sync` in this clone repeats the warning (the override still needs a decision) but not the notice. A run with nothing to write prints `[SYNC: create=0 update=0 remove=0 seed=0 dry_run=no]` and `[OK: the workspace matches the selection]`: the deployed state is the same on every run, so text mode never repeats it.
+
+`devkit sync --format json` prints the same advisories inside the one object and nothing on stderr (abridged):
+
+```json
+{
+  "dry_run": false,
+  "actions": [{"path": ".devkit/managed/devkit/guide.md", "action": "update"}],
+  "drift": [{"bundle": "starter", "asset": "development"}],
+  "unselected": [{"bundle": "extras", "opted_out": false}],
+  "notices": [
+    {"code": "OVERRIDE_DRIFT", "level": "WARNING", "message": "upstream drift behind the override of starter:development", "exit_code": 0,
+     "advisory": {"code": "OVERRIDE_DRIFT", "level": "WARNING", "mode": "CONTINUE", "action": "CONTINUE — The operation succeeded; ...", "fix": "devkit override diff starter:development", "...": "..."}},
+    {"code": "BUNDLE_UNSELECTED", "level": "NOTICE", "message": "installed bundles not selected yet: extras", "exit_code": 0,
+     "advisory": {"code": "BUNDLE_UNSELECTED", "level": "NOTICE", "mode": "NOTE", "action": "NOTE — For awareness only; ...", "fix": "devkit add extras", "...": "..."}}
+  ]
+}
+```
+
+JSON is never filtered by `-q`, and `extras` stays listed under `unselected` on later runs.

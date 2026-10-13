@@ -1,13 +1,15 @@
 """The distribution commands of ``devkit`` (``sync``, ``add``, ``remove``, ``list``, ``status``, ...).
 
-``register`` adds them to the root ``devkit`` group. Every command prints
-exactly one JSON object on stdout: its result's ``to_dict()`` (``override
-list`` wraps its entries as ``{"overrides": [...]}``), or ``{"error": {...}}``
-when it fails. A failure is also rendered as an Agent Advisory Protocol block
-on stderr. Synchronizing commands list their warnings and notices under
-``notices`` and render them after the result as ``[WARN]`` and ``[NOTICE]``
-blocks on stderr (``--strict`` exits 1 on a warning); ``devkit
-status`` renders each problem of its ``errors`` as an advisory block. Exit
+``register`` adds them to the root ``devkit`` group. ``sync``, ``add`` and
+``remove`` print text by default: one ``[SYNC: ...]`` line counting the writes,
+one ``[CHANGE: <action> <path>]`` line per write, and ``[OK: ...]`` when there
+was nothing to write; their warnings and notices follow on stderr as
+advisory blocks (``--strict`` exits 1 on a warning). Their ``--format json``,
+and every other command, prints exactly one JSON object on stdout: the
+result's ``to_dict()`` (``override list`` wraps its entries as
+``{"overrides": [...]}``), or ``{"error": {...}}`` when it fails. A JSON
+result carries its errors, warnings and notices, so nothing is rendered on
+stderr in JSON mode. Exit
 codes follow ``devkit.advisory.ExitCode``: ``0`` success; ``1`` from
 ``devkit sync --check`` when a synchronization is needed and from
 ``devkit status`` when the report shows a problem (a missing, modified,
@@ -21,7 +23,9 @@ configuration).
 from __future__ import annotations
 
 import functools
+import json
 import sys
+from collections import Counter
 from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any, Protocol
@@ -30,11 +34,13 @@ import click
 
 from devkit.advisory import ExitCode
 from devkit.core.cli import (
+    FORMAT_OPTION,
     boundary,
     echo_json,
     echo_notices,
     exit_on_problems,
     exit_on_warnings,
+    is_json,
     resolve_root,
     workspace_option,
 )
@@ -198,12 +204,36 @@ def _parse_selections(values: tuple[str, ...], param_hint: str) -> dict[str, lis
     return selected
 
 
-def _report(result: SyncResult, *, check: bool = False) -> None:
+def _text_value(value: str) -> str:
+    """``value`` bare, or as a JSON string when it would not stay one token of a sentinel line."""
+    return json.dumps(value, ensure_ascii=False) if not value or any(c in value for c in ' "[]\\\n') else value
+
+
+def _echo_sync_text(result: SyncResult) -> None:
+    """The text form of a synchronization: what it wrote (or would write), never the deployed state it kept.
+
+    The state (selection, packages, assets) is the same on every run, so it is left to
+    ``--format json`` and ``devkit list``; drift, stray files, unprojected subagents and
+    unselected bundles reach the agent as the advisories ``echo_notices`` prints.
+    """
+    counts = Counter(item.action for item in result.actions)
+    fields = " ".join(f"{name}={counts[name]}" for name in ("create", "update", "remove", "seed"))
+    click.echo(f"[SYNC: {fields} dry_run={'yes' if result.dry_run else 'no'}]")
+    for item in result.actions:
+        click.echo(f"[CHANGE: {item.action} {_text_value(item.path)}]")
+    if not result.actions:
+        click.echo("[OK: the workspace matches the selection]")
+
+
+def _report(result: SyncResult, output_format: str, *, check: bool = False) -> None:
     """Print the result, then its warnings and notices on stderr.
 
     Exits 1 when ``check`` finds a synchronization needed, or under ``--strict`` when there is a warning.
     """
-    echo_json(result.to_dict())
+    if is_json(output_format):
+        echo_json(result.to_dict())
+    else:
+        _echo_sync_text(result)
     echo_notices(result.notices)
     if check and result.actions:
         sys.exit(int(ExitCode.FINDINGS))
@@ -266,7 +296,8 @@ def _sync_and_save(
 @click.option("--no-save", is_flag=True, help="Apply selection flags to this run without editing .devkit/config.toml.")
 @click.option("--dry-run", is_flag=True, help="Report planned actions without writing files or configuration.")
 @click.option("--check", is_flag=True, help="Read-only check; exit 1 when synchronization is needed, 2 on error.")
-@_json_command
+@FORMAT_OPTION
+@boundary
 def sync(
     workspace_root: str | None,
     agents: tuple[str, ...],
@@ -275,6 +306,7 @@ def sync(
     no_save: bool,
     dry_run: bool,
     check: bool,
+    output_format: str,
 ) -> None:
     """Synchronize the bundles selected in .devkit/config.toml into a project."""
     if agents and no_agents:
@@ -293,15 +325,16 @@ def sync(
         presets=requested,
         dry_run=dry_run or check,
     )
-    _report(result, check=check)
+    _report(result, output_format, check=check)
 
 
 @click.command()
 @click.argument("selections", nargs=-1, required=True)
 @WORKSPACE
 @click.option("--dry-run", is_flag=True, help="Preview without editing configuration or files.")
-@_json_command
-def add(selections: tuple[str, ...], workspace_root: str | None, dry_run: bool) -> None:
+@FORMAT_OPTION
+@boundary
+def add(selections: tuple[str, ...], workspace_root: str | None, dry_run: bool, output_format: str) -> None:
     """Add bundle[:preset] to the selection in .devkit/config.toml and synchronize.
 
     Presets join those the bundle already deploys; `sync --preset` replaces a
@@ -316,7 +349,8 @@ def add(selections: tuple[str, ...], workspace_root: str | None, dry_run: bool) 
             presets=requested,
             merge=True,
             dry_run=dry_run,
-        )
+        ),
+        output_format,
     )
 
 
@@ -324,8 +358,9 @@ def add(selections: tuple[str, ...], workspace_root: str | None, dry_run: bool) 
 @click.argument("bundles", nargs=-1, required=True)
 @WORKSPACE
 @click.option("--dry-run", is_flag=True, help="Preview without editing configuration or files.")
-@_json_command
-def remove(bundles: tuple[str, ...], workspace_root: str | None, dry_run: bool) -> None:
+@FORMAT_OPTION
+@boundary
+def remove(bundles: tuple[str, ...], workspace_root: str | None, dry_run: bool, output_format: str) -> None:
     """Deselect bundles in .devkit/config.toml and synchronize.
 
     An auto-selected built-in bundle is recorded as `<bundle> = false` so it is
@@ -343,7 +378,7 @@ def remove(bundles: tuple[str, ...], workspace_root: str | None, dry_run: bool) 
             "opt_out": [name for name in bundles if name in automatic],
         }
 
-    _report(_sync_and_save(root, save=save, deselect=bundles, dry_run=dry_run))
+    _report(_sync_and_save(root, save=save, deselect=bundles, dry_run=dry_run), output_format)
 
 
 @click.command(name="list")

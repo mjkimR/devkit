@@ -151,6 +151,9 @@ def _echo(run: CommandRun, output_format: str) -> int:
 
 
 def _echo_advisories(advisories: tuple[RelayedAdvisory, ...]) -> None:
+    """Relay nested blocks on stderr; in JSON mode the result's ``advisories`` already carries them."""
+    if output_settings().json:
+        return
     for advisory in advisories:
         click.echo(advisory.text, err=True)
 

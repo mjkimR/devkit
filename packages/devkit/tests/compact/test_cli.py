@@ -100,6 +100,14 @@ def test_relayed_advisories_go_to_stderr_warnings_first_errors_last() -> None:
     assert result.stdout.splitlines()[1:] == ["[RUN_OUTPUT: shown=0 omitted=0 filtered=0]"]
     quiet = _python(code, "-q")
     assert quiet.stderr == f"{warning}\n{error}\n"
+    # In JSON mode the result's advisories carry the blocks, so stderr stays empty.
+    as_json = _python(code, "--format", "json")
+    assert as_json.exit_code == 1 and as_json.stderr == ""
+    assert [a["level"] for a in json.loads(as_json.stdout)["advisories"]] == [
+        "ERROR",
+        "NOTICE",
+        "WARNING",
+    ]  # output order
 
 
 def test_strict_counts_a_relayed_warning_even_when_the_command_passed() -> None:

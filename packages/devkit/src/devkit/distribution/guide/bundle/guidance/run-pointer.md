@@ -1,0 +1,1 @@
+- Run tests, linters and type checks as `uv run devkit run -- <command>`, which keeps the full log on disk and prints a bounded view; read `{path:devkit-run}` before reading its output or wrapping recipes.

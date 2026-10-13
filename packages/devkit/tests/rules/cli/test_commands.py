@@ -68,7 +68,9 @@ def test_cli_plugin_failure_preserves_json_and_fails(tmp_path: Path) -> None:
     data = json.loads(result.stdout)  # one object: the (empty) findings and the load problem
     assert data["violations"] == [] and [e["code"] for e in data["errors"]] == ["RULES_LOAD_FAILED"]
     assert "broken plugin" in data["errors"][0]["message"]
-    assert "broken plugin" in result.stderr
+    assert result.stderr == ""  # the JSON result carries the problem
+    as_text = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--rules-dir", str(rules)])
+    assert as_text.exit_code == 2 and "(RULES_LOAD_FAILED)" in as_text.stderr and "broken plugin" in as_text.stderr
     assert "[OK: " not in result.stdout
 
 
@@ -173,7 +175,7 @@ def test_cli_override_for_unknown_rule_fails(tmp_path: Path) -> None:
     data = json.loads(result.stdout)
     assert data["violations"] == [] and [e["code"] for e in data["errors"]] == ["RULES_POLICY_INVALID"]
     assert data["errors"][0]["exit_code"] == 2 and data["errors"][0]["rule_id"] == "RULE-nope"
-    assert "unknown rule: RULE-nope" in result.stderr
+    assert "unknown rule: RULE-nope" in data["errors"][0]["message"] and result.stderr == ""
 
 
 def test_cli_promotion_reported_for_custom_hygiene_rule(tmp_path: Path) -> None:
@@ -278,7 +280,7 @@ def test_cli_invalid_settings_fail_before_checks(tmp_path: Path) -> None:
     assert result.exit_code == 2
     data = json.loads(result.stdout)
     assert data["violations"] == [] and [e["code"] for e in data["errors"]] == ["RULES_SETTINGS_INVALID"]
-    assert "RULE-file-length: settings.max_lines: expected integer" in result.stderr
+    assert "RULE-file-length: settings.max_lines: expected integer" in data["errors"][0]["message"]
 
 
 def test_cli_severity_override_turns_warning_into_error(tmp_path: Path) -> None:
@@ -603,7 +605,7 @@ def test_cli_invalid_exclude_pattern_fails_before_rules(tmp_path: Path) -> None:
     _write_config(tmp_path, '[rules]\nexclude = ["/docs/**"]\n')
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--format", "json"])
     assert result.exit_code == 2
-    assert "exclude[0]" in result.stderr
+    assert "exclude[0]" in json.loads(result.stdout)["error"]["message"]
     assert "broken" not in result.stdout
 
 
@@ -872,8 +874,10 @@ def test_exit_codes_of_explain(tmp_path: Path) -> None:
     runner = CliRunner()
     assert runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-file-length"]).exit_code == 0
     unknown = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-nope", "--format", "json"])
-    assert unknown.exit_code == 2 and "[ACTION] INPUT_ERROR" in unknown.stderr
+    assert unknown.exit_code == 2 and unknown.stderr == ""
     assert json.loads(unknown.stdout)["error"]["code"] == "ARGUMENT_INVALID"
+    as_text = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-nope"])
+    assert as_text.exit_code == 2 and "[ACTION] INPUT_ERROR" in as_text.stderr
 
 
 def test_unexpected_errors_exit_2_as_advisories(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

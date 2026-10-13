@@ -238,6 +238,8 @@ def test_cli_check_reports_stale_block(
     assert runner.invoke(cli, ["sync", "--workspace-root", str(target), "--check"]).exit_code == 0
     (target / AGENTS_FILE).unlink()
     result = runner.invoke(cli, ["sync", "--workspace-root", str(target), "--check"])
+    assert result.exit_code == 1 and f"[CHANGE: create {AGENTS_FILE}]" in result.stdout
+    result = runner.invoke(cli, ["sync", "--workspace-root", str(target), "--check", "--format", "json"])
     assert result.exit_code == 1
     assert {"path": AGENTS_FILE, "action": "create"} in json.loads(result.output)["actions"]
     assert not (target / AGENTS_FILE).exists()

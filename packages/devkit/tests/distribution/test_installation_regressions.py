@@ -435,7 +435,7 @@ def test_unusable_unselected_package_is_a_warning_and_a_selected_one_an_error(
     assert removed.exit_code == 0, removed.output
     assert "broken" not in (target / CONFIG_PATH).read_text()
     assert "[WARN]   (BUNDLE_PACKAGE_INVALID)" in removed.stderr
-    added = CliRunner().invoke(cli, ["add", "broken", "--workspace-root", str(target)])
+    added = CliRunner().invoke(cli, ["add", "broken", "--workspace-root", str(target), "--format", "json"])
     assert added.exit_code == 2 and json.loads(added.stdout)["error"]["code"] == "BUNDLE_PACKAGE_INVALID"
 
 

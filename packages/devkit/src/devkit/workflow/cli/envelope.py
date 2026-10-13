@@ -130,6 +130,9 @@ def envelope_check_cmd(workspace_root: str | None, unit: str, output_format: str
     envelopes = load_envelopes(unit_dir)
     loaded = envelopes.all()
     errors = sorted(envelopes.errors, key=lambda e: e.file)
+    unit_rel = ws.rel(unit_dir)
+    for err in errors:
+        err.target_files = (f"{unit_rel}/{err.file}",)
     if is_json(output_format):
         echo_json({"envelopes": [e.to_dict() for e in loaded], "errors": [e.to_dict() for e in errors]})
     else:
@@ -141,7 +144,4 @@ def envelope_check_cmd(workspace_root: str | None, unit: str, output_format: str
             click.echo(f"[ENVELOPE_ERROR: {err.file} {quote(err.message)}]")
         if not errors:
             click.echo(f"[OK: {len(loaded)} envelopes]")
-    unit_rel = ws.rel(unit_dir)
-    for err in errors:
-        err.target_files = (f"{unit_rel}/{err.file}",)
     exit_on_problems(errors)

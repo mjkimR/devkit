@@ -258,7 +258,7 @@ def test_cli_check_and_catalog(installed: list[InstalledBundle], target: Path, m
 
     monkeypatch.setattr("devkit.distribution.cli.discover_bundles", found)
     runner = CliRunner()
-    result = runner.invoke(cli, ["sync", "--workspace-root", str(target), "--check"])
+    result = runner.invoke(cli, ["sync", "--workspace-root", str(target), "--check", "--format", "json"])
     assert result.exit_code == 1
     assert json.loads(result.output)["dry_run"] is True
     assert not (target / RECEIPT_PATH).exists()
@@ -618,10 +618,10 @@ def test_cli_add_resolves_default_preset_and_remove(
     assert check.exit_code == 0, check.output  # a notice never fails, even under --strict
     assert "[NOTICE] (BUNDLE_UNSELECTED) installed bundles not selected yet: extra" in check.stderr
     assert "[FIX]    devkit add extra" in check.stderr
-    quiet = runner.invoke(cli, ["sync", "-q", "--workspace-root", str(target)])
-    assert quiet.exit_code == 0 and quiet.stderr == ""  # -q hides notices; JSON keeps them
+    quiet = runner.invoke(cli, ["sync", "-q", "--workspace-root", str(target), "--format", "json"])
+    assert quiet.exit_code == 0 and quiet.stderr == ""  # JSON carries the notice; stderr stays empty
     assert [n["code"] for n in json.loads(quiet.stdout)["notices"]] == ["BUNDLE_UNSELECTED"]
-    result = runner.invoke(cli, ["sync", "--workspace-root", str(target)])
+    result = runner.invoke(cli, ["sync", "--workspace-root", str(target), "--format", "json"])
     assert result.exit_code == 0 and result.stderr == ""  # the clone was told once (--dry-run records nothing)
     assert json.loads(result.stdout)["notices"] == []
     assert [item["bundle"] for item in json.loads(result.stdout)["unselected"]] == ["extra"]
@@ -656,8 +656,8 @@ def test_cli_add_requires_preset_without_default(
     mock_discovery(monkeypatch, installed)
     runner = CliRunner()
     result = runner.invoke(cli, ["add", "team", "--workspace-root", str(bare)])
-    assert result.exit_code != 0
-    assert "team: the bundle declares no default preset" in result.output
+    assert result.exit_code != 0 and result.stdout == ""
+    assert "team: the bundle declares no default preset" in result.stderr
     assert "[FIX]    Select one of: team:all, team:minimal" in result.stderr
     assert not (bare / CONFIG_PATH).exists()
     result = runner.invoke(cli, ["add", "team:minimal", "--workspace-root", str(bare), "--dry-run"])

@@ -125,7 +125,7 @@ class Advisory:
         rendered: list[str] = []
         if message is not None:
             rendered.extend(_field(HEADLINE[self.level], f"({self.code}) {message.lstrip()}"))
-        if not (self.level is Level.NOTICE and self.brief and not self.fix):
+        if self.shows_action:
             rendered.extend(_field("[ACTION] ", ACTION_TEXT[self.mode]))
         if self.level is Level.ERROR and self.retry_after:
             rendered.extend(_field("[WHEN]   ", f"Not before: {self.retry_after}"))
@@ -139,20 +139,40 @@ class Advisory:
             rendered.extend(_field("[DETAIL] ", detail))
         return rendered
 
+    @property
+    def shows_action(self) -> bool:
+        """Whether the advisory carries its ``[ACTION]`` directive: always, except a ``brief`` notice without ``fix``."""
+        return not (self.level is Level.NOTICE and self.brief and not self.fix)
+
     def to_dict(self) -> dict[str, Any]:
-        """Serialize advisory metadata, including the derived mode."""
-        return {
-            "code": self.code,
-            "level": self.level.value,
-            "mode": self.mode.value,
-            "actor": self.actor.value,
-            "retry": self.retry.value,
-            "guardrail": self.guardrail,
-            "input_error": self.input_error,
-            "retry_after": self.retry_after,
-            "fix": self.fix,
-            "what_to_report": self.what_to_report,
-            "target_files": list(self.target_files),
-            "details": list(self.details),
-            "brief": self.brief,
-        }
+        """Serialize the advisory as JSON carries it: everything the block shows, and no more.
+
+        ``action`` is the ``[ACTION]`` directive on one line, present exactly when
+        the block shows it, so a JSON reader needs no second channel. The failure
+        fields (``actor``, ``retry``, ``guardrail``, ``input_error``, and
+        ``retry_after`` when set) appear for an ``ERROR`` only; ``fix``,
+        ``what_to_report``, ``target_files`` and ``details`` only when they have
+        a value. Every key that is absent means "none".
+        """
+        data: dict[str, Any] = {"code": self.code, "level": self.level.value, "mode": self.mode.value}
+        if self.shows_action:
+            data["action"] = " ".join(ACTION_TEXT[self.mode].split("\n"))
+        if self.level is Level.ERROR:
+            data |= {
+                "actor": self.actor.value,
+                "retry": self.retry.value,
+                "guardrail": self.guardrail,
+                "input_error": self.input_error,
+            }
+            if self.retry_after:
+                data["retry_after"] = self.retry_after
+        if self.fix:
+            data["fix"] = self.fix
+        if self.what_to_report:
+            data["what_to_report"] = self.what_to_report
+        targets = [target for target in self.target_files if target.strip()]
+        if targets:
+            data["target_files"] = targets
+        if self.details:
+            data["details"] = list(self.details)
+        return data

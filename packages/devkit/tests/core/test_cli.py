@@ -59,6 +59,9 @@ def probe(workspace_root: str | None, output_format: str, mode: str) -> None:
         exit_on_problems([Finding("one"), AdvisoryError("two")], report=True)
     if mode == "crash":
         raise RuntimeError("boom")
+    if mode == "notices-then-fail":  # warnings collected before the command fails
+        echo_notices([AdvisoryError("left behind", code="TEST_WARNING", level=Level.WARNING)])
+        raise Finding("refused")
     if mode == "notices":
         notices = [
             AdvisoryError("fyi", code="TEST_NOTICE", level=Level.NOTICE),
@@ -143,9 +146,11 @@ def test_output_is_utf8_whatever_the_locale() -> None:
     result = _run_python(script, LC_ALL="C", PYTHONIOENCODING="latin-1", PYTHONUTF8="0")
     assert result.returncode == 2
     assert json.loads(result.stdout)["error"]["message"] == "RuntimeError: café"
-    assert '"RuntimeError: café"'.encode() in result.stdout  # JSON text in UTF-8, not é
-    assert result.stderr.decode("utf-8").startswith("[ERROR]  (UNEXPECTED_ERROR) RuntimeError: café\n[ACTION] ")
-    assert "— " in result.stderr.decode("utf-8")  # the ACTION text's em dash, in UTF-8
+    assert '"RuntimeError: café"'.encode() in result.stdout  # JSON text in UTF-8, not an escape
+    assert result.stderr == b""  # the JSON document is the whole report
+    text = _run_python(_PROBE + "cmd(['--mode', 'advisory'])\n", LC_ALL="C", PYTHONIOENCODING="latin-1", PYTHONUTF8="0")
+    assert text.stderr.decode("utf-8").startswith("[ERROR]  (UNEXPECTED_ERROR) RuntimeError: café\n[ACTION] ")
+    assert "— " in text.stderr.decode("utf-8")  # the ACTION text's em dash, in UTF-8
 
 
 def test_json_with_a_lone_surrogate_stays_valid_whatever_the_locale() -> None:
@@ -171,14 +176,27 @@ def test_a_closed_stdout_ends_the_command_quietly(mode: str) -> None:
     assert stderr == b""  # no advisory, no "Exception ignored" noise
 
 
-@pytest.mark.parametrize(("output_format", "on_stdout"), [("json", True), ("text", False)])
-def test_errors_exit_with_their_code_and_print_json_only_in_json_mode(
-    tmp_path: Path, output_format: str, on_stdout: bool
-) -> None:
-    result = _invoke("-w", str(tmp_path), "--format", output_format, "--mode", "fail")
-    assert result.exit_code == int(ExitCode.FINDINGS)
-    assert result.stderr.startswith("[ERROR]  (TEST_FINDING) refused")
-    assert (json.loads(result.stdout)["error"]["code"] == "TEST_FINDING") if on_stdout else result.stdout == ""
+def test_errors_go_to_exactly_one_channel(tmp_path: Path) -> None:
+    # A host that merges stdout and stderr must read each advisory once: JSON on stdout, or the block on stderr.
+    as_json = _invoke("-w", str(tmp_path), "--format", "json", "--mode", "fail")
+    assert as_json.exit_code == int(ExitCode.FINDINGS) and as_json.stderr == ""
+    error = json.loads(as_json.stdout)["error"]
+    assert error["code"] == "TEST_FINDING" and error["advisory"]["action"].startswith("HALT — ")
+    as_text = _invoke("-w", str(tmp_path), "--format", "text", "--mode", "fail")
+    assert as_text.exit_code == int(ExitCode.FINDINGS) and as_text.stdout == ""
+    assert as_text.stderr.startswith("[ERROR]  (TEST_FINDING) refused\n[ACTION] HALT — ")
+
+
+def test_notices_collected_before_a_json_failure_are_in_the_error_document(tmp_path: Path) -> None:
+    result = _invoke("-w", str(tmp_path), "--format", "json", "--mode", "notices-then-fail")
+    assert result.exit_code == int(ExitCode.FINDINGS) and result.stderr == ""
+    document = json.loads(result.stdout)
+    assert document["error"]["code"] == "TEST_FINDING"
+    assert [notice["code"] for notice in document["notices"]] == ["TEST_WARNING"]
+    as_text = _invoke("-w", str(tmp_path), "--mode", "notices-then-fail")
+    assert (
+        as_text.stderr.startswith("[WARN]   (TEST_WARNING) left behind") and "[ERROR]  (TEST_FINDING)" in as_text.stderr
+    )
 
 
 def test_unexpected_errors_and_a_missing_workspace_root(tmp_path: Path) -> None:
@@ -188,7 +206,7 @@ def test_unexpected_errors_and_a_missing_workspace_root(tmp_path: Path) -> None:
     assert missing.exit_code == 2
     error = json.loads(missing.stdout)["error"]
     assert (error["code"], error["advisory"]["mode"]) == ("ARGUMENT_INVALID", "INPUT_ERROR")
-    assert missing.stderr.startswith("[ERROR]  (ARGUMENT_INVALID) --workspace-root")
+    assert error["message"].startswith("--workspace-root") and missing.stderr == ""
 
 
 @pytest.mark.parametrize("value", ["", "  "])
@@ -196,7 +214,7 @@ def test_an_empty_workspace_root_is_refused(tmp_path: Path, monkeypatch: pytest.
     monkeypatch.chdir(tmp_path)
     result = _invoke("-w", value, "--format", "json")
     assert result.exit_code == 2 and json.loads(result.stdout)["error"]["code"] == "ARGUMENT_INVALID"
-    assert result.stderr.startswith("[ERROR]  (ARGUMENT_INVALID) --workspace-root is empty")
+    assert json.loads(result.stdout)["error"]["message"] == "--workspace-root is empty"
 
 
 def test_a_looping_workspace_root_is_an_argument_error(tmp_path: Path) -> None:
@@ -210,13 +228,16 @@ def test_a_looping_workspace_root_is_an_argument_error(tmp_path: Path) -> None:
 def test_a_reported_error_keeps_stdout_to_the_result(tmp_path: Path) -> None:
     result = _invoke("-w", str(tmp_path), "--format", "json", "--mode", "reported")
     assert result.exit_code == 2 and json.loads(result.stdout) == {"result": "partial"}
-    assert "after the result" in result.stderr
+    assert result.stderr == ""  # the JSON result carries the error; text mode renders it
+    as_text = _invoke("-w", str(tmp_path), "--mode", "reported")
+    assert as_text.exit_code == 2 and "(GENERAL_ERROR) after the result" in as_text.stderr
 
 
 def test_collected_problems_exit_with_the_highest_code(tmp_path: Path) -> None:
     result = _invoke("-w", str(tmp_path), "--format", "json", "--mode", "problems")
-    assert result.exit_code == 2 and json.loads(result.stdout) == {"errors": []}
-    assert "(TEST_FINDING) one" in result.stderr and "(GENERAL_ERROR) two" in result.stderr
+    assert result.exit_code == 2 and json.loads(result.stdout) == {"errors": []} and result.stderr == ""
+    as_text = _invoke("-w", str(tmp_path), "--mode", "problems")
+    assert "(TEST_FINDING) one" in as_text.stderr and "(GENERAL_ERROR) two" in as_text.stderr
     assert highest_exit_code([]) == 0
     assert highest_exit_code([Finding("x")]) == 1
     assert highest_exit_code([Finding("x"), ArgumentError("y")]) == 2
@@ -224,8 +245,9 @@ def test_collected_problems_exit_with_the_highest_code(tmp_path: Path) -> None:
 
 def test_status_reports_with_problems_exit_one_whatever_their_codes(tmp_path: Path) -> None:
     result = _invoke("-w", str(tmp_path), "--format", "json", "--mode", "report")
-    assert result.exit_code == 1 and json.loads(result.stdout) == {"errors": []}
-    assert "(GENERAL_ERROR) two" in result.stderr
+    assert result.exit_code == 1 and json.loads(result.stdout) == {"errors": []} and result.stderr == ""
+    as_text = _invoke("-w", str(tmp_path), "--mode", "report")
+    assert as_text.exit_code == 1 and "(GENERAL_ERROR) two" in as_text.stderr
     assert report_exit_code([]) == 0
     assert report_exit_code([ArgumentError("y")]) == 1
 
@@ -274,14 +296,15 @@ def test_notices_follow_the_result_and_respect_quiet_and_strict(tmp_path: Path) 
 def test_quiet_and_verbose_conflict_and_flags_win_over_the_environment(tmp_path: Path) -> None:
     both = _invoke("-w", str(tmp_path), "--format", "json", "-q", "-v")
     assert both.exit_code == 2 and json.loads(both.stdout)["error"]["code"] == "ARGUMENT_INVALID"
-    assert both.stderr.startswith("[ERROR]  (ARGUMENT_INVALID) --quiet and --verbose cannot be combined")
+    assert json.loads(both.stdout)["error"]["message"] == "--quiet and --verbose cannot be combined"
     env = {"DEVKIT_QUIET": "1", "DEVKIT_VERBOSE": "1"}
     from_env = CliRunner().invoke(probe, ["--mode", "settings"], env=env)
     assert from_env.exit_code == 2 and "DEVKIT_QUIET=1 and DEVKIT_VERBOSE=1 cannot be combined" in from_env.stderr
     flag = CliRunner().invoke(probe, ["--mode", "settings", "-q"], env=env)
-    assert json.loads(flag.stdout) == {"quiet": True, "verbose": False, "strict": False}
+    assert json.loads(flag.stdout) == {"quiet": True, "verbose": False, "strict": False, "json": False}
     off = CliRunner().invoke(probe, ["--mode", "settings"], env={"DEVKIT_VERBOSE": "true"})
-    assert json.loads(off.stdout) == {"quiet": False, "verbose": False, "strict": False}  # only "1" turns it on
+    # Only "1" turns an option on.
+    assert json.loads(off.stdout) == {"quiet": False, "verbose": False, "strict": False, "json": False}
     assert output_settings() == OutputSettings()  # reset after the command
 
 

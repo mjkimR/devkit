@@ -13,7 +13,7 @@ Apply these conventions when authoring CLI commands, deterministic rules, valida
 - **Deterministic wording.** Directives never hedge ("likely", "might").
 - **Stable codes.** Every advisory has an `UPPER_SNAKE_CASE` code; callers branch on the code, never on message text.
 - **Context budget.** Emit an advisory only when it changes the agent's next step or must reach the user. Diagnostics that do neither are logs, hidden unless the user asks for verbose output.
-- **Channels.** The result goes to stdout (one-line sentinels or one JSON object); advisories go to stderr. Never mix them.
+- **Channels.** In text mode the result goes to stdout as one-line sentinels and advisories go to stderr. In JSON mode the one JSON object on stdout carries the result and every advisory, and nothing goes to stderr. Each advisory is printed once: agent hosts usually merge the two channels.
 
 ## Levels
 
@@ -207,7 +207,7 @@ NOTE — For awareness only; nothing needs doing now. Continue. Mention it
 
 Machine channels carry the same envelope as data:
 
-- **JSON**: `{"code", "level", "message", "exit_code", "advisory": {code, level, mode, actor, retry, guardrail, input_error, retry_after, fix, what_to_report, target_files, details, brief}}`. A result lists collected errors under `errors` and warnings and notices under `notices`; a command that fails outright prints `{"error": {...}}`.
+- **JSON**: `{"code", "level", "message", "exit_code", "advisory": {...}}`. `advisory` carries what the block shows: always `code`, `level` and `mode`; the `[ACTION]` text on one line as `action`, exactly when the block shows it; for an error only `actor`, `retry`, `guardrail`, `input_error` (and `retry_after` when set); `fix`, `what_to_report`, `target_files` and `details` only when they have a value. A result lists collected errors under `errors` and warnings and notices under `notices`; a command that fails outright prints `{"error": {...}}`. Nothing goes to stderr in JSON mode.
 - **HTTP (RFC 7807)**: errors only: `{"type", "title": <code>, "status": <HTTP status>, "detail": <message>, "code", "advisory"}`. `type` is `<documentation base URI>/<code>` or `about:blank`. The server decides whether to expose `advisory` (for example, only on authenticated or internal APIs); request headers never enable it. Warnings and notices travel in the successful response body.
 - **MCP tools**: a failed call returns the rendered error block as the error result text; a successful call appends its rendered warning and notice blocks after the result text.
 

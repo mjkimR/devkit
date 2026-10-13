@@ -32,15 +32,3 @@ the Git-tracked selection in `.devkit/config.toml`; the receipt
    `.devkit/installation.json` with the change that required it. Snapshot gates
    (`devkit rules check --staged`, `--ci`) trust the committed receipt and fail
    when a managed rule no longer matches it.
-
-## Instructions in this bundle
-
-- `consumption`: these contracts in full, with the commands.
-- `resource-kinds`: which asset kind to author for a given need.
-- `in-repo-bundle`: shipping this repository's own assets as a bundle it
-  installs from itself.
-- `devkit-run`: running tests, linters and type checks through `devkit run`,
-  and wrapping recipes with it.
-
-Read `resource-kinds` and `in-repo-bundle` before adding a rule, skill,
-playbook, instruction, subagent, workflow or gate to this repository.

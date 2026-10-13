@@ -258,7 +258,13 @@ To prevent blind retries and destructive side-quests without paralyzing the agen
 
 Machine channels carry the same envelope as data:
 
-- **JSON**: `{"code", "level", "message", "exit_code", "advisory": {code, level, mode, actor, retry, guardrail, input_error, retry_after, fix, what_to_report, target_files, details, brief}}`. A warning or notice has `exit_code` `0`. A result lists collected errors under `errors` and warnings and notices under `notices`; a command that fails outright prints `{"error": {...}}` ([Agent-First Output, section 4](../architecture/agent-output.md#4-stdout-json)).
+- **JSON**: `{"code", "level", "message", "exit_code", "advisory": {...}}`. A warning or notice has `exit_code` `0`. `advisory` carries what the block shows and no more, so a JSON reader needs no second channel:
+  - always `code`, `level` and `mode`;
+  - `action`: the canonical `[ACTION]` text on one line, present exactly when the block shows `[ACTION]` (absent for a `brief` notice without `fix`);
+  - for an `ERROR` only: `actor`, `retry`, `guardrail`, `input_error`, and `retry_after` when set;
+  - `fix`, `what_to_report`, `target_files` and `details` only when they have a value.
+
+  An absent key means "none". A result lists collected errors under `errors` and warnings and notices under `notices`; a command that fails outright prints `{"error": {...}}` ([Agent-First Output, section 4](../architecture/agent-output.md#4-stdout-json)). A JSON command renders no block on stderr: an agent host that merges the channels would read each advisory twice.
 - **HTTP (RFC 7807)**: errors only: `{"type", "title": <code>, "status": <HTTP status>, "detail": <message>, "code", "advisory"}`. `type` is `<documentation base URI>/<code>` or `about:blank`. The server decides whether to expose `advisory` (for example, only on authenticated or internal APIs); request headers never enable it. Warnings and notices travel inside the successful response body, in its `notices`.
 - **MCP tools**: a failed call returns the rendered error block as the error result text; a successful call appends its rendered warning and notice blocks after the result text.
 

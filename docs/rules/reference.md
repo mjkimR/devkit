@@ -65,9 +65,11 @@ file arguments or `--phase hygiene` with a snapshot, a `--rules-dir` or
 
 ### Output
 
-Every problem is printed on stderr as an Agent Advisory Protocol block with its
-code ([Errors](#errors)); problems that do not fail a command are `[WARN]`
-blocks after the result ([Agent-First Output](../architecture/agent-output.md)).
+In text mode every problem is printed on stderr as an Agent Advisory Protocol
+block with its code ([Errors](#errors)); problems that do not fail a command are
+`[WARN]` blocks after the result. Under `--format json` the JSON object carries
+them and nothing is printed on stderr
+([Agent-First Output](../architecture/agent-output.md)).
 
 Text output is one `[KIND: ...]` sentinel line per fact; free text (messages,
 remediations, descriptions) is written as a JSON string so every line stays
