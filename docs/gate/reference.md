@@ -53,12 +53,13 @@ Every gate error derives from `GateError` (`devkit.gate.errors`), which sets `ac
 | `GATE_DEFINITION_INVALID` | `GateDefinitionError` | `MAINTENANCE` | `2` | a gate declares an unusable `id`, `stage`, `order` (reported inside its file's load failure) or settings declaration, or uses `ctx.message_file` outside `commit-msg` |
 | `GATE_RESULT_INVALID` | `GateResultError` | `MAINTENANCE` | `2` | a gate built a `FAILED` `GateResult` or returned something other than a `GateResult` or `None` |
 | `GATE_PYTHON_INVALID` | `GatePythonError` | `INPUT_ERROR` | `2` | `install --python` names an interpreter that cannot import `devkit.gate` |
-| `GATE_VERIFY_FAILED` | `GateRefusedError` | `BLOCKED` | `1` | a `verify-commands` command exited nonzero; one `command: ... exit=... log=...` detail per failed command, then its summaries, failed tests or last lines |
+| `GATE_VERIFY_FAILED` | `GateRefusedError` | `BLOCKED` | `1` | a `verify-commands` command exited nonzero; one `command: ... exit=... log=...` detail per failed command, then its summaries, failed tests or last lines and relayed `devkit` error blocks (`  > `) |
+| `GATE_VERIFY_NOT_RUN` | `VerifyNotRunError` | `MAINTENANCE`, or `AUTO` | `2` | a nested `devkit` command could not run (exit `2` with its own error block, such as `RULES_LOAD_FAILED`); same details; `AUTO` with the relayed fix when every relayed error is `AUTO` with that one fix (`devkit sync` for missing managed files) |
 | `GATE_VERIFY_UNSTAGED` | `VerifyUnstagedNotice` | `NOTE` (level `NOTICE`) | `0` | returned, never raised: `verify-commands` ran on a working tree with unstaged or untracked files |
 | `GATE_CONFIG_TEMPLATE_SKIPPED` | `GateTemplateNotice` | `CONTINUE` (level `WARNING`) | `0` | returned, never raised: `devkit.config` is a symbolic link, not a regular file or not UTF-8, so `install` or the post-sync refresh left it alone |
 | `GATE_FOREIGN_HOOK`, `GATE_BACKUP_EXISTS`, `GATE_HOOKS_PATH_SET` | `ForeignHookError`, `HookBackupExistsError`, `HooksPathSetError` | `INTERACTION` | `2` | `install` would move or bypass hooks it does not own |
 | `CONFIG_INVALID` | `devkit.core.ConfigError` | `INPUT_ERROR` | `2` | `.devkit/config.toml` or `devkit.config` cannot be read or parsed |
-| `ASSET_FILE_INVALID` | `devkit.core.AssetFileError` | `MAINTENANCE` | `2` | a receipt-listed gate file is missing, unsafe or differs from its recorded hash |
+| `ASSET_FILE_INVALID` | `devkit.core.AssetFileError` | `MAINTENANCE`; `AUTO` when missing | `2` | a receipt-listed gate file is unsafe or differs from its recorded hash; a missing one (a fresh clone or worktree) is `AUTO` with the fix `devkit sync` |
 | `ARGUMENT_INVALID` | `devkit.core.ArgumentError` | `INPUT_ERROR` | `2` | `-w/--workspace-root` is not an existing directory; `run commit-msg` without the message file |
 | `GIT_FAILED` | `devkit.core.GitError` | `INPUT_ERROR` outside a work tree, else `MAINTENANCE` | `2` | a Git query failed |
 | `RECEIPT_INVALID` | `devkit.core.ReceiptError` | `MAINTENANCE` | `2` | `.devkit/installation.json` is malformed or lists an unsafe path |
@@ -67,7 +68,7 @@ Every gate error derives from `GateError` (`devkit.gate.errors`), which sets `ac
 
 | Gate | Stage | Default | Behavior |
 | --- | --- | --- | --- |
-| `verify-commands` | `pre-commit` | on, skipped while `commands` is empty | Runs `[gates.settings.verify-commands] commands` (shell lines, in order, from the work tree's top level, through `devkit.compact`) and refuses when any fails (`GATE_VERIFY_FAILED`); notes a working tree that differs from the commit (`GATE_VERIFY_UNSTAGED`). |
+| `verify-commands` | `pre-commit` | on, skipped while `commands` is empty | Runs `[gates.settings.verify-commands] commands` (shell lines, in order, from the work tree's top level, through `devkit.compact`) and refuses when any fails (`GATE_VERIFY_FAILED`, or `GATE_VERIFY_NOT_RUN` when a nested `devkit` command could not run); notes a working tree that differs from the commit (`GATE_VERIFY_UNSTAGED`). |
 | `message-nonempty` | `commit-msg` | on | Refuses a message that is blank (whitespace only) above any scissors line. |
 
 Outcomes and failure codes: [Built-in Gates](overview.md#2a-built-in-gates).

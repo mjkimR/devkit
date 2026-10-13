@@ -99,6 +99,9 @@ RULE-file-length = "error"
 [workflow]                            # owned by devkit.workflow
 default = "direct-delivery"
 
+[worktree]                            # owned by devkit.worktree
+pull_request = true
+
 [gates.settings.message-nonempty]     # owned by devkit.gate
 enabled = true
 

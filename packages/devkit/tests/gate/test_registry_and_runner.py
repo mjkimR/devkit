@@ -53,7 +53,9 @@ def test_deployed_gate_paths_reads_gate_assets_only(tmp_path: Path) -> None:
         ".devkit/overrides/team/gates/other.py",
     ]
     assert [(e.code, e.message) for e in deployed.errors] == [("ASSET_FILE_INVALID", "gone.py is missing")]
-    assert deployed.errors[0].target_files == ("gone.py",) and deployed.errors[0].fix == "Run `devkit sync`"
+    # A missing file is restored by a sync (a fresh clone or worktree lacks the ignored managed copies): AUTO.
+    assert deployed.errors[0].target_files == ("gone.py",) and deployed.errors[0].fix == "devkit sync"
+    assert deployed.errors[0].mode is ActionMode.AUTO
 
 
 def test_receipt_listed_gate_files_load_whatever_their_name(tmp_path: Path) -> None:

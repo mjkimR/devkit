@@ -39,10 +39,12 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
+from devkit.advisory import Actor
 from devkit.core.errors import AssetFileError, ReceiptError, UnsafePathError
 from devkit.core.paths import normalize_relpath, resolve_within
 
 RECEIPT_PATH = ".devkit/installation.json"
+SYNC_COMMAND = "devkit sync"  # restores missing managed copies (the fix of a missing asset file)
 CONFIG_PATH = ".devkit/config.toml"
 MANAGED_PATH = ".devkit/managed"
 OVERRIDES_PATH = ".devkit/overrides"
@@ -404,7 +406,9 @@ def verified_asset_file(
 
     Returns ``root / item`` or ``source_root / item``. Raises ``AssetFileError``
     (message ``"<item> <problem>"``) when the file cannot be used, including
-    when it cannot be read.
+    when it cannot be read. A missing file is ``AUTO`` with the fix
+    ``devkit sync``, which restores it (a fresh clone or worktree has no
+    Git-ignored managed copies); every other problem is ``MAINTENANCE``.
     """
     try:
         resolve_within(root, item)
@@ -415,14 +419,16 @@ def verified_asset_file(
     try:
         if not path.is_file():
             if source_root is None:
-                raise AssetFileError(f"{item} is missing", target_files=[item])
+                raise AssetFileError(f"{item} is missing", target_files=[item], actor=Actor.TOOL, fix=SYNC_COMMAND)
             try:
                 resolve_within(source_root, item)
             except UnsafePathError as exc:
                 raise AssetFileError(f"{item} is unsafe in the working tree: {exc}", target_files=[item]) from exc
             path = source_root / item
             if not path.is_file():
-                raise AssetFileError(f"{item} is missing from the working tree", target_files=[item])
+                raise AssetFileError(
+                    f"{item} is missing from the working tree", target_files=[item], actor=Actor.TOOL, fix=SYNC_COMMAND
+                )
             if record is None:
                 raise AssetFileError(f"{item} has no hash in the receipt", target_files=[item])
         if record is None and not item.startswith(f"{OVERRIDES_PATH}/"):

@@ -90,6 +90,27 @@ echo "==> creating a fresh consumer project"
         echo "error: the commit-msg gate accepted an empty message" >&2
         exit 1
     fi
+    echo "--- devkit worktree: start sets up and syncs a fresh checkout, its commits pass the gates, finish merges"
+    uv run devkit add authoring >/dev/null
+    cat >> .devkit/config.toml <<'TOML'
+
+[gates.settings.verify-commands]
+commands = ["uv run devkit rules check --staged"]
+
+[worktree]
+pull_request = false
+setup = "uv sync --quiet"
+TOML
+    git add -A
+    git commit -q -m "chore: verify commits with devkit rules"
+    uv run devkit worktree start smoke-task | grep -q 'created=yes setup="uv sync --quiet" synced=yes'
+    task="../$(basename "$PWD")-wt-smoke-task"
+    test -d "$task/.devkit/managed/authoring" && test -x "$task/.venv/bin/python"
+    printf 'task\n' > "$task/task.md"
+    git -C "$task" add task.md
+    git -C "$task" commit -q -m "docs: smoke task in a worktree"
+    uv run devkit worktree finish smoke-task --merge | grep -q 'merged=yes push=no-upstream removed=yes branch_deleted=yes'
+    test ! -e "$task" && test -f task.md
     uv run devkit gate uninstall >/dev/null
     test ! -e .git/hooks/pre-commit
     echo "--- dense search with the model wheel (numpy and tokenizers from the index)"

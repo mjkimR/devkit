@@ -32,8 +32,8 @@ from devkit.search import SearchMode
 
 SCHEMA = 1
 # ``rules`` is owned by ``devkit.rules`` (phase overrides), ``workflow`` by
-# ``devkit.workflow`` (layout, approvals) and ``gates`` by ``devkit.gate``
-# (gate settings); all are only passed through here. ``[tool.<name>]`` tables belong
+# ``devkit.workflow`` (layout, approvals), ``gates`` by ``devkit.gate`` (gate
+# settings) and ``worktree`` by ``devkit.worktree``; all are only passed through here. ``[tool.<name>]`` tables belong
 # to whichever tool ``<name>`` is and are passed through unread, like ``[tool.*]`` in
 # ``pyproject.toml``; every other top-level key is rejected so typos are caught.
 FIELDS = frozenset(
@@ -45,6 +45,7 @@ FIELDS = frozenset(
         "rules",
         "workflow",
         "gates",
+        "worktree",
         "guidance_block",
         "override_drift",
         "tool",

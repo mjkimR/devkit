@@ -6,7 +6,9 @@ import tempfile
 from pathlib import Path
 
 import pytest
+from devkit.advisory import ActionMode, Actor, AdvisoryError, Retry
 from devkit.gate import GateRefusedError, Stage
+from devkit.gate.errors import VerifyNotRunError
 from devkit.gate.gates.commands import VerifyCommandsGate, VerifyCommandsSettings
 from testsupport.gate import gate_ctx, git
 
@@ -51,6 +53,51 @@ def test_every_failed_command_is_reported_with_its_log(repo: Path) -> None:
     assert "  | first broke" in details and "  | second broke" in details
     log = Path(details[0].rsplit("log=", 1)[1])
     assert log.is_file() and "first broke" in log.read_text()
+
+
+def _block_command(
+    tmp_path: Path, exit_code: int, actor: Actor = Actor.DEVELOPER, fix: str = "Run `devkit sync`"
+) -> str:
+    """A command that prints a nested devkit error block on stderr, as `devkit rules check` does, and exits."""
+    block = tmp_path / f"block-{actor}-{exit_code}.txt"
+    error = AdvisoryError(
+        "synchronized rule .devkit/managed/x.py is missing",
+        code="RULES_LOAD_FAILED",
+        actor=actor,
+        retry=Retry.AFTER_FIX,
+        fix=fix,
+    )
+    block.write_text(error.render() + "\n")
+    return f"cat {block} >&2; exit {exit_code}"
+
+
+def test_a_devkit_command_that_could_not_run_is_not_a_refusal(repo: Path, tmp_path: Path) -> None:
+    _commit_all(repo)
+    with pytest.raises(VerifyNotRunError) as info:
+        _run(repo, _block_command(tmp_path, 2), "false")
+    error = info.value
+    assert error.code == "GATE_VERIFY_NOT_RUN" and error.mode is ActionMode.MAINTENANCE and error.exit_code == 2
+    assert "  > [ERROR]  (RULES_LOAD_FAILED) synchronized rule .devkit/managed/x.py is missing" in error.details
+    assert "  > [FIX]    Run `devkit sync`" in error.details
+
+
+def test_a_missing_sync_relayed_as_auto_makes_the_gate_auto(repo: Path, tmp_path: Path) -> None:
+    _commit_all(repo)
+    auto = _block_command(tmp_path, 2, Actor.TOOL, "devkit sync")
+    with pytest.raises(VerifyNotRunError) as info:
+        _run(repo, auto, auto)
+    assert info.value.mode is ActionMode.AUTO and info.value.fix == "devkit sync"
+    with pytest.raises(VerifyNotRunError) as mixed:
+        _run(repo, auto, _block_command(tmp_path, 2))
+    assert mixed.value.mode is ActionMode.MAINTENANCE
+
+
+def test_relayed_errors_of_a_command_with_findings_stay_a_refusal(repo: Path, tmp_path: Path) -> None:
+    _commit_all(repo)
+    with pytest.raises(GateRefusedError) as info:
+        _run(repo, _block_command(tmp_path, 1))
+    assert info.value.code == "GATE_VERIFY_FAILED" and info.value.mode is ActionMode.BLOCKED
+    assert any(line.startswith("  > [ERROR]  (RULES_LOAD_FAILED)") for line in info.value.details)
 
 
 def test_unstaged_and_untracked_files_are_noted(repo: Path) -> None:

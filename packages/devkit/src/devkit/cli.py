@@ -2,9 +2,10 @@
 
 ``devkit sync``, ``add``, ``remove``, ``list``, ``status`` and the other
 distribution commands sit at the top level, as does ``devkit run`` (compact
-command output); ``devkit rules``, ``devkit workflow`` and ``devkit gate`` are
-the rule engine, workflow engine and commit gate groups. ``devkit --version``
-prints one ``[VERSION: devkit <version>]`` line.
+command output); ``devkit rules``, ``devkit workflow``, ``devkit gate`` and
+``devkit worktree`` are the rule engine, workflow engine, commit gate and task
+worktree groups. ``devkit --version`` prints one ``[VERSION: devkit <version>]``
+line.
 
 Commands load lazily: the root group knows each command only as a
 ``module:attribute`` reference and imports the module when the command is
@@ -36,6 +37,7 @@ COMMANDS: dict[str, str] = {
     "rules": "devkit.rules.cli:cli",
     "workflow": "devkit.workflow.cli:cli",
     "gate": "devkit.gate.cli:cli",
+    "worktree": "devkit.worktree.cli:cli",
 }
 
 

@@ -1,0 +1,77 @@
+"""devkit.worktree: the task worktree lifecycle (``devkit worktree start|finish|status``).
+
+A task runs in ``<parent of base>/<base name>-wt-<slug>`` on branch ``<slug>``;
+``finish`` integrates it into the base checkout and removes it, refusing
+instead of forcing at every step. SDD-agnostic: a methodology layer decides
+which tasks use a worktree and adds its own cleanup through ``before_remove``.
+See ``docs/worktree/overview.md``.
+"""
+
+from devkit.worktree.config import WorktreeConfig, read_worktree_config
+from devkit.worktree.errors import (
+    BaseDirtyError,
+    BranchExistsError,
+    ConflictError,
+    DirtyError,
+    MergeNotFastForwardError,
+    NestedError,
+    NotFoundError,
+    PullRequestPolicyError,
+    PushFailedWarning,
+    RunFromBaseError,
+    SetupFailedWarning,
+    SyncFailedWarning,
+    UnmergedError,
+    UnsupportedLayoutError,
+    WorktreeConfigError,
+    WorktreeError,
+)
+from devkit.worktree.lifecycle import (
+    BranchStatus,
+    FinishResult,
+    Position,
+    StartResult,
+    StatusResult,
+    WorktreeStatus,
+    check_slug,
+    find,
+    finish,
+    locate,
+    path_for,
+    start,
+    status,
+)
+
+__all__ = [
+    "BaseDirtyError",
+    "BranchExistsError",
+    "BranchStatus",
+    "ConflictError",
+    "DirtyError",
+    "FinishResult",
+    "MergeNotFastForwardError",
+    "NestedError",
+    "NotFoundError",
+    "Position",
+    "PullRequestPolicyError",
+    "PushFailedWarning",
+    "RunFromBaseError",
+    "SetupFailedWarning",
+    "StartResult",
+    "StatusResult",
+    "SyncFailedWarning",
+    "UnmergedError",
+    "UnsupportedLayoutError",
+    "WorktreeConfig",
+    "WorktreeConfigError",
+    "WorktreeError",
+    "WorktreeStatus",
+    "check_slug",
+    "find",
+    "finish",
+    "locate",
+    "path_for",
+    "read_worktree_config",
+    "start",
+    "status",
+]

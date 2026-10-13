@@ -53,6 +53,15 @@ class GateConfigError(GateError, ConfigError):
     fix = "Correct the [gates] table in .devkit/config.toml or in the clone-local <common-git-dir>/devkit.config"
 
 
+class VerifyNotRunError(GateError):
+    """A ``verify-commands`` command could not do its job: a nested ``devkit`` command exited ``2`` with an error
+    of its own, such as rules that cannot load. Not a refusal of the commit's content, so not ``BLOCKED``:
+    ``MAINTENANCE``, or ``AUTO`` with the relayed fix when every relayed error is ``AUTO`` with that one fix."""
+
+    code = "GATE_VERIFY_NOT_RUN"
+    fix = "Resolve the errors the commands relayed (each has its own [FIX]; the log has the full output), then commit again"
+
+
 class VerifyUnstagedNotice(GateError):
     """``verify-commands`` ran on a working tree that differs from the commit (``NOTICE``); never raised."""
 

@@ -31,6 +31,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from devkit.advisory import Actor
 from devkit.core import RECEIPT_PATH, AssetFileError, ReceiptError, load_receipt, verified_asset_files
 from devkit.rules.engine.errors import SYNC_FIX, RuleLoadError
 
@@ -46,6 +47,11 @@ class ManagedRules:
 
 
 def _unusable(error: AssetFileError) -> RuleLoadError:
+    """The rule-level problem for an unusable rule file; a missing file keeps its ``AUTO`` ``devkit sync`` fix."""
+    if error.actor is Actor.TOOL:
+        return RuleLoadError(
+            f"synchronized rule {error.message}", target_files=error.target_files, actor=Actor.TOOL, fix=error.fix
+        )
     fix = SYNC_FIX if error.fix == AssetFileError.fix else error.fix
     return RuleLoadError(f"synchronized rule {error.message}", target_files=error.target_files, fix=fix)
 

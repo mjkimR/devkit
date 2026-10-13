@@ -13,6 +13,7 @@ The `devkit` modules, their boundaries and interaction, the conventions every mo
 5. **Agent Advisories (`devkit.advisory`)**: the Agent Advisory Protocol, through which every command reports errors, warnings and notices with an `[ACTION]` directive; the built-in `advisory` bundle teaches it to agents in consumer repositories.
 6. **Compact Command Output (`devkit.compact`)**: verification commands run with their complete output in a log file and a bounded view for the agent (`devkit run`).
 7. **Document Search (`devkit.search`)**: lexical (BM25), dense (static embeddings) and hybrid ranking over a caller's documents, a library without a CLI; dense search comes with the `devkit[search]` extra.
+8. **Task Worktrees (`devkit.worktree`)**: one Git worktree per task, created from the base checkout and integrated, removed and reported by deterministic commands that refuse instead of forcing (`devkit worktree`).
 
 All of them build on `devkit.core`, the SDD-agnostic shared foundation (frontmatter grammar, installation receipt, safe paths, Git runner, plugin loading, project discovery, CLI plumbing).
 
@@ -47,7 +48,7 @@ Every command is agent-first: its primary consumer is an AI coding agent, and it
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Layering.** `advisory` imports no other module; `core` may import `advisory`; `rules` may import `core` and `advisory`; `workflow` may import `core`, `advisory` and `rules`; `gate` may import those and `compact` (the `verify-commands` gate runs commands through it); `search` and `compact` may import only `core` and `advisory`; `distribution` may import `core`, `advisory` and `search`. `devkit.cli` assembles the command line. A test enforces this. The root group maps each command name to a `module:attribute` reference and imports the module only when that command runs, so a command imports only its own area and the layers below it; a test enforces this too.
+**Layering.** `advisory` imports no other module; `core` may import `advisory`; `rules` may import `core` and `advisory`; `workflow` may import `core`, `advisory` and `rules`; `gate` may import those and `compact` (the `verify-commands` gate runs commands through it); `search`, `compact` and `worktree` may import only `core` and `advisory`; `distribution` may import `core`, `advisory` and `search`. `devkit.cli` assembles the command line. A test enforces this. The root group maps each command name to a `module:attribute` reference and imports the module only when that command runs, so a command imports only its own area and the layers below it; a test enforces this too.
 
 ## 2. Monorepo Structure
 
@@ -114,6 +115,10 @@ Each module's `reference.md` is the quick reference (CLI, configuration, library
 - [Core Reference](../core/reference.md): Frontmatter grammar, receipt reader, safe paths, Git runner, plugin loading, project discovery, CLI plumbing.
 - [Agent Advisory Protocol](../advisory/protocol.md): Levels, block format, fields, mode derivation and canonical `[ACTION]` directives.
 - [Advisory Reference](../advisory/reference.md): The `devkit.advisory` library and the `advisory` guide bundle.
+
+### Task Worktrees (`devkit.worktree`)
+- [Worktree Reference](../worktree/reference.md): `devkit worktree start|finish|status`, output, configuration, error codes, library.
+- [Worktree Overview](../worktree/overview.md): Paths, the start and finish steps, refusals and resumption, status, the setup command.
 
 ### Document Search (`devkit.search`)
 - [Search Reference](../search/reference.md): Library surface, the `devkit[search]` extra and error codes.

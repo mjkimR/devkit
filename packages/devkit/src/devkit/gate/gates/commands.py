@@ -5,7 +5,13 @@ run in order with ``sh -c`` from the top level of the work tree, each through
 ``devkit.compact.run_command``: the full output goes to a log file and the
 refusal carries only the compact view (summaries, failed tests or the last
 lines, and the log path). Every command runs, so one commit attempt reports
-every failure.
+every failure. The error blocks of nested ``devkit`` commands are relayed in the
+details. When a failed command is a ``devkit`` command that could not run (exit
+``2`` with an error block of its own: rules that cannot load, a project that needs
+``devkit sync``) the gate raises ``GATE_VERIFY_NOT_RUN`` instead of the
+``GATE_VERIFY_FAILED`` refusal, since nothing judged the commit's content: ``AUTO``
+with their fix when every relayed error is ``AUTO`` with the same one (a missing
+``devkit sync``), else ``MAINTENANCE``.
 
 The commands see the working tree, not the index: unstaged edits to tracked
 files and untracked files can make the result differ from what is committed.
@@ -25,12 +31,12 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 
-from devkit.advisory import AdvisoryError
+from devkit.advisory import Actor, AdvisoryError, ExitCode, Level
 from devkit.compact import CommandInterrupted, CommandRun, run_command
 from devkit.core.git import COMMIT_INDEX_VARIABLE, run_git
 from devkit.gate.engine.base import BaseGate
 from devkit.gate.engine.models import GateContext, GateResult, Stage
-from devkit.gate.errors import GateRefusedError, VerifyUnstagedNotice
+from devkit.gate.errors import GateRefusedError, VerifyNotRunError, VerifyUnstagedNotice
 
 HOOK_GIT_VARIABLES = ("GIT_DIR", "GIT_INDEX_FILE", "GIT_WORK_TREE", "GIT_PREFIX")
 # Last output lines shown for a failed command, beside its summaries and failed tests.
@@ -63,7 +69,30 @@ def _failure_details(command: str, run: CommandRun) -> list[str]:
     shown = set(found.summaries)
     tail = [line for line in found.output.splitlines() if line.strip() and line not in shown][-TAIL_LINES:]
     lines += [f"  | {line}" for line in tail]
+    lines += [
+        f"  > {line}" for item in found.advisories if item.level is Level.ERROR for line in item.text.splitlines()
+    ]
     return lines
+
+
+def _not_run(run: CommandRun) -> bool:
+    """A nested ``devkit`` command that could not do its job: exit ``2`` with an error block of its own."""
+    return run.exit_code == ExitCode.ERROR and any(item.level is Level.ERROR for item in run.scan.advisories)
+
+
+def _auto_fix(runs: list[CommandRun]) -> str | None:
+    """The one ``[FIX]`` that every relayed error of ``runs`` directs the agent to run (``AUTO``), if there is one."""
+    modes: set[str] = set()
+    fixes: set[str] = set()
+    for run in runs:
+        for item in run.scan.advisories:
+            if item.level is not Level.ERROR:
+                continue
+            lines = item.text.splitlines()
+            action = next((line for line in lines if line.startswith("[ACTION] ")), "")
+            modes.add(action.removeprefix("[ACTION] ").split(" ", 1)[0])
+            fixes.update(line.removeprefix("[FIX]").strip() for line in lines if line.startswith("[FIX]"))
+    return next(iter(fixes)) if modes == {"AUTO"} and len(fixes) == 1 else None
 
 
 class VerifyCommandsGate(BaseGate):
@@ -104,10 +133,18 @@ class VerifyCommandsGate(BaseGate):
             )
         if failed:
             details = [line for command, run in failed for line in _failure_details(command, run)]
+            notes = [f"note: {notice.message}" for notice in notices if isinstance(notice, VerifyUnstagedNotice)]
+            commands = ", ".join(command for command, _ in failed)
+            not_run = [run for _, run in failed if _not_run(run)]
+            if not_run:
+                # When every nested error is AUTO with one fix (a missing sync), so is this one: run it, commit again.
+                fix = _auto_fix(not_run)
+                auto = {"actor": Actor.TOOL, "fix": fix} if fix else {}
+                raise VerifyNotRunError(f"verification could not run: {commands}", *details, *notes, **auto)
             raise GateRefusedError(
-                f"verification failed: {', '.join(command for command, _ in failed)}",
+                f"verification failed: {commands}",
                 *details,
-                *(f"note: {notice.message}" for notice in notices if isinstance(notice, VerifyUnstagedNotice)),
+                *notes,
                 code="GATE_VERIFY_FAILED",
                 fix="Fix what the failed commands report (each log has the full output), then commit again",
             )

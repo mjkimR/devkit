@@ -33,10 +33,12 @@ and `git-commits` (commit message conventions,
 | `devkit.workflow` | Data-driven delivery workflow engine | `devkit workflow` | [docs/workflow](../../docs/workflow/reference.md) |
 | `devkit.gate` | Pluggable Git commit gates and managed hook wrappers | `devkit gate` | [docs/gate](../../docs/gate/reference.md) |
 | `devkit.distribution` | Bundle packaging and transactional synchronization, plus the built-in `devkit` guide bundle | `devkit sync`, `add`, `remove`, `list`, `status`, ... | [docs/distribution](../../docs/distribution/reference.md) |
+| `devkit.worktree` | One Git worktree per task: start, finish (integrate, remove, delete the branch), status | `devkit worktree` | [docs/worktree](../../docs/worktree/reference.md) |
 | `devkit.search` | Lexical, dense and hybrid document search; dense needs the `devkit[search]` extra | none | [docs/search](../../docs/search/reference.md) |
 | `devkit.compact` | Verification commands with the full log on disk and a bounded view for agents | `devkit run` | [docs/compact](../../docs/compact/reference.md) |
 
-Layering (`advisory` < `core` < `rules` < `workflow`/`gate`; `search` and
-`compact` use only `core` and `advisory`, `distribution` also `search`, `gate` also `compact`; enforced by a test), the shared CLI
+Layering (`advisory` < `core` < `rules` < `workflow`/`gate`; `search`, `compact`
+and `worktree` use only `core` and `advisory`, `distribution` also `search`, `gate`
+also `compact`; enforced by a test), the shared CLI
 conventions (`-w/--workspace-root`, `--format`, exit codes) and the documentation
 index are in the [Architecture Overview](../../docs/architecture/overview.md).
