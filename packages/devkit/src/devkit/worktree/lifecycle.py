@@ -12,7 +12,6 @@ upstreams run before the first change, and rerunning resumes. ``status`` changes
 from __future__ import annotations
 
 import dataclasses
-import logging
 import os
 import re
 import shlex
@@ -26,6 +25,7 @@ from typing import Any
 from devkit.advisory import AdvisoryError
 from devkit.core.errors import ArgumentError, GitError
 from devkit.core.git import run_git
+from devkit.core.logs import get_logger
 from devkit.core.project import require_git_toplevel
 from devkit.core.receipt import RECEIPT_PATH
 from devkit.worktree.errors import (
@@ -53,7 +53,7 @@ from devkit.worktree.errors import (
     WorktreeError,
 )
 
-_log = logging.getLogger(__name__)
+_log = get_logger(__name__)
 
 SLUG = re.compile(r"[a-z0-9][a-z0-9_-]{0,63}")
 PUSH_TIMEOUT = 120.0  # seconds; a slow or stuck push must not hold the cleanup

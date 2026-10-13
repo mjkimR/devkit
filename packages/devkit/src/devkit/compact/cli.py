@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import dataclasses
 import json
-import logging
 import math
 import os
 import re
@@ -45,10 +44,11 @@ from devkit.core.cli import (
     output_settings,
 )
 from devkit.core.errors import ArgumentError
+from devkit.core.logs import get_logger
 
 _BARE = re.compile(r'[^\s"\]]+')
 
-_log = logging.getLogger(__name__)
+_log = get_logger(__name__)
 
 
 def _quote(value: str) -> str:

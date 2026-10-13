@@ -11,16 +11,17 @@ import re
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SOURCE = REPO / "packages/devkit/src/devkit"
+SOURCES = (REPO / "packages/devkit/src/devkit", REPO / "packages/devkit-advisory/src/devkit")
 DOCS = REPO / "docs"
 CODE = re.compile(r"""(?:\bcode\s*(?::\s*str\s*)?=|\b[A-Z_]+_CODE\s*=)\s*["']([A-Z][A-Z0-9_]+)["']""")
 
 
 def _defined_codes() -> dict[str, set[str]]:
     codes: dict[str, set[str]] = {}
-    for path in SOURCE.rglob("*.py"):
-        for match in CODE.finditer(path.read_text(encoding="utf-8")):
-            codes.setdefault(match.group(1), set()).add(str(path.relative_to(SOURCE)))
+    for source in SOURCES:
+        for path in source.rglob("*.py"):
+            for match in CODE.finditer(path.read_text(encoding="utf-8")):
+                codes.setdefault(match.group(1), set()).add(str(path.relative_to(source)))
     return codes
 
 

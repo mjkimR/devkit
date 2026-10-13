@@ -55,6 +55,7 @@ import click
 
 from devkit.advisory import AdvisoryError, ExitCode, Level, as_advisory_error
 from devkit.core.errors import ArgumentError
+from devkit.core.logs import ROOT, get_logger
 from devkit.core.project import find_project_root
 
 WORKSPACE_HELP = "Workspace root directory [default: the devkit project containing the current directory]"
@@ -63,9 +64,9 @@ QUIET_ENV = "DEVKIT_QUIET"
 VERBOSE_ENV = "DEVKIT_VERBOSE"
 STRICT_ENV = "DEVKIT_STRICT"
 
-LOGGER = "devkit"
+LOGGER = ROOT
 _CONTINUATION = " " * len("[INFO]   ")
-_log = logging.getLogger(__name__)
+_log = get_logger(__name__)
 
 FORMAT_OPTION = click.option(
     "--format",

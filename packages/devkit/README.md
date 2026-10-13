@@ -3,17 +3,19 @@
 Agent asset distribution, repository rules, delivery workflows, commit gates,
 agent advisories and compact command output in one Python package with one CLI
 (`devkit`). Requires Python 3.12 or later; runtime dependencies are `click`,
-`pyyaml` and `tomlkit`. The `search` extra (`devkit[search]`) adds `numpy`,
+`pyyaml`, `tomlkit` and `devkit-advisory` (the `devkit.advisory` library, published
+separately so other repositories can depend on it at runtime alone; same version). The `search` extra (`devkit[search]`) adds `numpy`,
 `tokenizers` and the embedding model package for dense and hybrid search.
 
 ## Install
 
 No package index hosts the wheel; install it by URL from a GitHub Release (or a
-built wheel by path), with `devkit-embed` next to it for the `search` extra (see
+built wheel by path), with the `devkit-advisory` wheel next to it and `devkit-embed` for the `search` extra (see
 the [root README](../../README.md#using-devkit-in-another-project)):
 
 ```bash
-uv add --dev "devkit @ https://github.com/mjkimR/devkit/releases/download/v0.1.0/devkit-0.1.0-py3-none-any.whl"
+uv add --dev "devkit @ https://github.com/mjkimR/devkit/releases/download/v0.1.0/devkit-0.1.0-py3-none-any.whl" \
+  "devkit-advisory @ https://github.com/mjkimR/devkit/releases/download/v0.1.0/devkit_advisory-0.1.0-py3-none-any.whl"
 uv run devkit sync            # deploys every installed bundle that declares auto_select (built in: devkit, advisory)
 uv run devkit add <bundle>    # selects any other bundle: built-in opt-in ones or another content package
 ```
@@ -28,7 +30,7 @@ and `git-commits` (commit message conventions,
 | Module | Purpose | CLI | Reference |
 | --- | --- | --- | --- |
 | `devkit.core` | Shared foundation: frontmatter grammar, installation receipt, safe paths, Git runner, plugin loading, project discovery, CLI plumbing | none | [docs/core](../../docs/core/reference.md) |
-| `devkit.advisory` | Agent Advisory Protocol (errors, warnings, notices), plus the built-in `advisory` guide bundle | none | [docs/advisory](../../docs/advisory/reference.md) |
+| `devkit.advisory` | Agent Advisory Protocol (errors, warnings, notices), from the `devkit-advisory` distribution; the built-in `advisory` guide bundle is `devkit.advisory_guide` | none | [docs/advisory](../../docs/advisory/reference.md) |
 | `devkit.rules` | Repository rule engine with autofix, project policy and Git snapshot gates | `devkit rules` | [docs/rules](../../docs/rules/reference.md) |
 | `devkit.workflow` | Data-driven delivery workflow engine | `devkit workflow` | [docs/workflow](../../docs/workflow/reference.md) |
 | `devkit.gate` | Pluggable Git commit gates and managed hook wrappers | `devkit gate` | [docs/gate](../../docs/gate/reference.md) |

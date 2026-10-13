@@ -6,7 +6,7 @@ from pathlib import Path
 from devkit.advisory import ACTION_TEXT
 from devkit.distribution.bundles import load_bundle
 
-BUNDLE = Path(__file__).parents[2] / "src/devkit/advisory/bundle"
+BUNDLE = Path(__file__).parents[2] / "src/devkit/advisory_guide/bundle"
 
 
 def test_bundle_presets_split_core_and_python() -> None:

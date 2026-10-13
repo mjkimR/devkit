@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # Consumer smoke test: build every workspace package into wheels, install the
-# devkit wheel and the starter content wheel into a fresh project the way a
-# consumer would, verify the built-in bundles are deployed by default, select the
+# devkit wheel (with the devkit-advisory wheel it requires) and the starter
+# content wheel into a fresh project the way a consumer would, verify the built-in bundles are deployed by default, select the
 # starter bundle, verify the workspace converges, exercise every CLI group, and
-# make real commits through the installed gate hooks in a fresh Git repository.
+# make real commits through the installed gate hooks in a fresh Git repository;
+# then install the devkit-advisory wheel alone, as a runtime dependency, and
+# verify it brings devkit.advisory and nothing else of devkit.
 # The wheels are installed by path, so a same-named package on an index can never
 # be picked instead. Runs locally via `just smoke` and in CI; needs `uv` and `git`
 # on PATH and network access for third-party dependencies (click, pyyaml, tomlkit)
@@ -36,6 +38,7 @@ wheel() {
     echo "${matches[0]}"
 }
 devkit_wheel=$(wheel devkit)
+advisory_wheel=$(wheel devkit_advisory)
 starter_wheel=$(wheel devkit_starter)
 model_wheel=$(wheel devkit_embed)
 
@@ -44,7 +47,7 @@ echo "==> creating a fresh consumer project"
     cd "$project"
     unset VIRTUAL_ENV
     uv init --bare --name smoke-consumer --no-workspace >/dev/null
-    uv add --dev "$devkit_wheel" "$starter_wheel" >/dev/null
+    uv add --dev "$devkit_wheel" "$advisory_wheel" "$starter_wheel" >/dev/null
     echo "--- devkit --version"
     uv run devkit --version
     echo "--- devkit sync (built-in bundles are selected by default)"
@@ -88,7 +91,10 @@ echo "==> creating a fresh consumer project"
     git config commit.gpgsign false
     printf '.venv/\n' > .gitignore
     uv run devkit gate install
-    uv run devkit gate status --format json | grep -q '"state": "managed"'
+    # Output is captured before grep: `cmd | grep -q` closes the pipe at the first match, and devkit exits 2
+    # without output when its stdout is closed (BrokenPipeError), which pipefail turns into a failure.
+    gate_status=$(uv run devkit gate status --format json)
+    grep -q '"state": "managed"' <<<"$gate_status"
     git add -A
     git commit -q -m "chore: smoke commit through devkit gate"
     if git commit -q --allow-empty --allow-empty-message -m "" 2>/dev/null; then
@@ -108,13 +114,15 @@ setup = "uv sync --quiet"
 TOML
     git add -A
     git commit -q -m "chore: verify commits with devkit rules"
-    uv run devkit worktree start smoke-task | grep -q 'created=yes setup="uv sync --quiet" synced=yes'
+    started=$(uv run devkit worktree start smoke-task)
+    grep -q 'created=yes setup="uv sync --quiet" synced=yes' <<<"$started"
     task="../$(basename "$PWD")-wt-smoke-task"
     test -d "$task/.devkit/managed/authoring" && test -x "$task/.venv/bin/python"
     printf 'task\n' > "$task/task.md"
     git -C "$task" add task.md
     git -C "$task" commit -q -m "docs: smoke task in a worktree"
-    uv run devkit worktree finish smoke-task --merge | grep -q 'merged=yes push=no-upstream removed=yes branch_deleted=yes'
+    finished=$(uv run devkit worktree finish smoke-task --merge)
+    grep -q 'merged=yes push=no-upstream removed=yes branch_deleted=yes' <<<"$finished"
     test ! -e "$task" && test -f task.md
     uv run devkit gate uninstall >/dev/null
     test ! -e .git/hooks/pre-commit
@@ -126,5 +134,22 @@ assert load_embedder().dimensions == 256
 index = SearchIndex([SearchDocument('secrets', 'Secrets must not enter the repository'), SearchDocument('length', 'File length warning')])
 assert index.search('leaked credentials', mode=SearchMode.HYBRID)[0].id == 'secrets'
 "
+)
+
+echo "==> runtime-only consumer: the devkit-advisory wheel alone"
+runtime="$work/runtime"
+mkdir -p "$runtime"
+(
+    cd "$runtime"
+    unset VIRTUAL_ENV
+    uv init --bare --name smoke-runtime --no-workspace >/dev/null
+    uv add "$advisory_wheel" >/dev/null
+    uv run python -c "
+import importlib.util
+from devkit.advisory import AdvisoryError, Level
+assert AdvisoryError('x', code='SMOKE').to_dict()['code'] == 'SMOKE' and Level.NOTICE
+assert importlib.util.find_spec('devkit.cli') is None and importlib.util.find_spec('devkit.core') is None
+"
+    test ! -e .venv/bin/devkit
 )
 echo "==> smoke passed"

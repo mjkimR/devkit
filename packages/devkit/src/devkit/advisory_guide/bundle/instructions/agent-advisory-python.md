@@ -5,7 +5,7 @@ description: Read before raising, returning, rendering, or serializing errors, w
 
 # Agent Advisory Protocol in Python (`devkit.advisory`)
 
-The `devkit.advisory` module implements the protocol defined in the `agent-advisory` instruction. It is standard-library only. Read `agent-advisory` first for level and mode semantics; this guide covers the Python API.
+The `devkit.advisory` module implements the protocol defined in the `agent-advisory` instruction. It is standard-library only and ships as the `devkit-advisory` distribution: library and service code that uses it at runtime depends on `devkit-advisory`, never on `devkit` (the development tooling, which depends on the same version). Read `agent-advisory` first for level and mode semantics; this guide covers the Python API.
 
 ## Raising errors
 

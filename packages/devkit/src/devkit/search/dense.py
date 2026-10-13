@@ -16,18 +16,18 @@ model is loaded.
 from __future__ import annotations
 
 import json
-import logging
 from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from devkit.core.logs import get_logger
 from devkit.search.errors import ModelInvalidError, ModelNotFoundError, SearchExtraMissingError
 
 if TYPE_CHECKING:
     import numpy as np
     from tokenizers import Tokenizer
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 MODEL_GROUP = "devkit.embedding_models"
 DEFAULT_MODEL = "potion-base-8m"

@@ -16,7 +16,6 @@ import contextlib
 import errno
 import hashlib
 import io
-import logging
 import os
 import re
 import shlex
@@ -32,6 +31,7 @@ from pathlib import Path
 from devkit.advisory import AdvisoryError
 from devkit.compact.errors import CommandNotStartedError, LogDirectoryError, SlowCommandNotice
 from devkit.compact.scan import Scan, scan
+from devkit.core.logs import get_logger
 from devkit.core.project import find_project_root
 
 KEEP_LOGS = 20
@@ -39,7 +39,7 @@ STOP_GRACE = 5.0
 LOG_ROOT = "devkit-run"
 INTERRUPTS = (signal.SIGINT, signal.SIGTERM, signal.SIGHUP)
 
-_log = logging.getLogger(__name__)
+_log = get_logger(__name__)
 
 
 @dataclass(frozen=True)

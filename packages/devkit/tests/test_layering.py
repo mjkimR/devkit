@@ -14,8 +14,10 @@ import pytest
 
 SRC = Path(__file__).parents[1] / "src/devkit"
 
+# ``advisory`` is the separate devkit-advisory distribution (``test_advisory_is_standard_library_only`` there),
+# below every area; ``advisory_guide`` holds its bundle's content and no code.
 ALLOWED: dict[str, set[str]] = {
-    "advisory": set(),
+    "advisory_guide": set(),
     "core": {"advisory"},
     "rules": {"core", "advisory"},
     "workflow": {"core", "advisory", "rules"},

@@ -9,7 +9,6 @@ reports), ``run_hook`` runs one stage the way the hook wrappers do.
 from __future__ import annotations
 
 import dataclasses
-import logging
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -19,6 +18,7 @@ from typing import Any
 from devkit.advisory import AdvisoryError, ExitCode, Level, as_advisory_error
 from devkit.compact import CommandInterrupted
 from devkit.core import ConfigError, require_git_toplevel
+from devkit.core.logs import get_logger
 from devkit.gate.engine.config import GatesConfig, load_gates_config, resolve_settings
 from devkit.gate.engine.models import Gate, GateContext, GateResult, Outcome, Stage
 from devkit.gate.engine.registry import GateRegistry, project_registry
@@ -28,7 +28,7 @@ from devkit.gate.hooks import git
 INVALID_SETTINGS_NOTE = "invalid settings"
 NOT_INSTALLED_FIX = "Select the bundle that ships them and run `devkit sync`, or remove their [gates.settings] entries"
 
-_log = logging.getLogger(__name__)
+_log = get_logger(__name__)
 
 
 def _highest_exit_code(problems: Sequence[AdvisoryError]) -> ExitCode:

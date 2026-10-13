@@ -34,16 +34,20 @@ done
 repository=${GITHUB_REPOSITORY:-$(git remote get-url origin | sed -E 's#^(git@github\.com:|https://github\.com/)##; s#\.git$##')}
 base="https://github.com/$repository/releases/download/$tag"
 devkit_wheel=$(basename "$out"/devkit-*.whl)
+advisory_wheel=$(basename "$out"/devkit_advisory-*.whl)
 embed_wheel=$(basename "$out"/devkit_embed-*.whl)
 cat > dist/release-notes.md <<EOF
 ## Install
 
 \`\`\`bash
-# devkit
-uv add --dev "devkit @ $base/$devkit_wheel"
+# devkit (requires devkit-advisory of the same version)
+uv add --dev "devkit @ $base/$devkit_wheel" "devkit-advisory @ $base/$advisory_wheel"
 
 # devkit with dense and hybrid search (adds numpy, tokenizers and the 15 MB embedding model)
-uv add --dev "devkit[search] @ $base/$devkit_wheel" "devkit-embed @ $base/$embed_wheel"
+uv add --dev "devkit[search] @ $base/$devkit_wheel" "devkit-advisory @ $base/$advisory_wheel" "devkit-embed @ $base/$embed_wheel"
+
+# devkit.advisory alone, as a runtime dependency of a library or service (standard library only)
+uv add "devkit-advisory @ $base/$advisory_wheel"
 \`\`\`
 
 Checksums: \`SHA256SUMS\`.

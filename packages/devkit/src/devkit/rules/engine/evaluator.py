@@ -3,17 +3,17 @@
 from __future__ import annotations
 
 import inspect
-import logging
 from collections import Counter
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
 
+from devkit.core.logs import get_logger
 from devkit.rules.engine.errors import RuleExecutionError, RuleProblem, SettingsError
 from devkit.rules.engine.models import Autofixable, Rule, RuleContext, Severity, Violation
 from devkit.rules.engine.phases import effective_phase, runs_in_phase
 from devkit.rules.engine.policy import effective_severity, validate_policy
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @dataclass

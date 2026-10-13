@@ -1,6 +1,6 @@
 # devkit.advisory
 
-Python implementation of the [Agent Advisory Protocol](protocol.md) plus the built-in `advisory` bundle that installs its guide in consumer repositories. Where advisories sit in a command's output is specified in [Agent-First Output](../architecture/agent-output.md).
+Python implementation of the [Agent Advisory Protocol](protocol.md), shipped as the `devkit-advisory` distribution, plus the built-in `advisory` bundle of `devkit` that installs its guide in consumer repositories. Where advisories sit in a command's output is specified in [Agent-First Output](../architecture/agent-output.md).
 
 ## Scope
 
@@ -11,8 +11,8 @@ This module implements the Agent Advisory Protocol and nothing else.
 
 ## Contents
 
-- **Runtime**: `devkit.advisory`, standard library only and the lowest layer of `devkit` (it imports no other devkit module). `error.py` (`AdvisoryError`), `types.py` (`ExitCode`, `Level`, `ActionMode`, `Actor`, `Retry`), `advisory.py` (`Advisory`, mode derivation, `ACTION_TEXT`, the block sentinels `HEADLINE`, `FIELDS` and `CONTINUATION`, rendering). Every other devkit module raises `AdvisoryError` subclasses and returns warnings and notices as `AdvisoryError` instances at a lower level ([Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)).
-- **Bundle** `advisory` (`bundle/`, `default_preset = "core"`), built into `devkit` with `auto_select = true` and therefore selected by default:
+- **Runtime**: `devkit.advisory` in the `devkit-advisory` distribution (`packages/devkit-advisory/`): standard library only, no entry points, and the lowest layer of `devkit` (it imports no other devkit module; tests in both packages enforce this). `devkit` depends on the same version, so the module is present wherever `devkit` is. `error.py` (`AdvisoryError`), `types.py` (`ExitCode`, `Level`, `ActionMode`, `Actor`, `Retry`), `advisory.py` (`Advisory`, mode derivation, `ACTION_TEXT`, the block sentinels `HEADLINE`, `FIELDS` and `CONTINUATION`, rendering). Every other devkit module raises `AdvisoryError` subclasses and returns warnings and notices as `AdvisoryError` instances at a lower level ([Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)).
+- **Bundle** `advisory` (`devkit.advisory_guide`, `bundle/`, `default_preset = "core"`), built into `devkit` (not `devkit-advisory`, so a runtime environment carries no agent content) with `auto_select = true` and therefore selected by default:
 
 | Preset | Assets | For |
 | --- | --- | --- |
@@ -45,14 +45,20 @@ Rendering and serialization:
 
 A warning or notice is an `AdvisoryError` whose `level` is `WARNING` or `NOTICE`, declared on a subclass (`level = Level.NOTICE`) or produced with `with_level`; it is collected and returned, never raised. Field semantics per level (ignored failure fields, `brief`) are in [protocol, section 4](protocol.md#4-fields).
 
-## Installing the guide
+## Installing
 
-Python repositories use the library at runtime and select the Python preset:
+A library or service that raises and renders advisories at runtime depends on `devkit-advisory` alone; its
+development tooling adds `devkit` and selects the Python preset of the guide:
 
 ```bash
-uv add devkit
+uv add devkit-advisory               # runtime: devkit.advisory, standard library only
+uv add --dev devkit                  # tooling: requires the same devkit-advisory version
 uv run devkit add advisory:python
 ```
+
+Neither is on a package index: name both wheels by URL, or both Git sources at the same `rev`
+(`subdirectory = "packages/devkit"` and `"packages/devkit-advisory"`); see the
+[root README](../../README.md#using-devkit-in-another-project).
 
 Other repositories need only the guide, which `devkit sync` deploys with the `core` preset by default:
 
@@ -61,3 +67,10 @@ uvx --from devkit devkit sync
 ```
 
 Opt out with `[presets] advisory = false` in `.devkit/config.toml` (or `devkit remove advisory`). The runtime module is inert unless imported.
+
+## Compatibility
+
+`devkit-advisory` is the one devkit API other repositories run in production, so it is a versioned contract: within
+`0.x` a breaking change to a name in the [library table](#library), a field, a mode derivation, an `[ACTION]` text or
+the `to_dict` and RFC 7807 shapes needs a minor version bump, released in lockstep with `devkit` (devkit pins the
+exact version). Adding a field or a name is not breaking.

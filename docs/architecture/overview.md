@@ -4,13 +4,13 @@ The `devkit` modules, their boundaries and interaction, the conventions every mo
 
 ## 1. System Mission & Core Modules
 
-`devkit` is a developer tooling suite for engineering teams collaborating with AI coding agents (such as Codex, Claude Code, and Antigravity). It ships as one Python package, `devkit`, with one CLI (`devkit`):
+`devkit` is a developer tooling suite for engineering teams collaborating with AI coding agents (such as Codex, Claude Code, and Antigravity). It ships as one Python package, `devkit`, with one CLI (`devkit`); its `devkit.advisory` library is also published on its own as `devkit-advisory`, the standard-library-only runtime dependency of repositories that report advisories from their own code:
 
 1. **Asset Distribution & Guidance Delivery (`devkit.distribution`)**: packaging, versioning, selecting and synchronizing agent guidance, instructions, playbooks, native skills, subagent roles and other bundle assets across repositories (`devkit sync`, `add`, `remove`, `list`, `status`, ...).
 2. **Repository Governance & Deterministic Verification (`devkit.rules`)**: static invariants, Markdown link integrity and code hygiene with automated repairs and convergence rechecks, including the rules bundles distribute; the engine carries no document model (`devkit rules`).
 3. **Delivery Workflow Orchestration (`devkit.workflow`)**: multi-stage delivery procedures declared as data; the current stage of a work unit is computed from its files, approval gates follow project policy, human decisions are recorded and procedure drift is detected, so every agent host follows the same procedure from the same state (`devkit workflow`).
 4. **Commit Gates (`devkit.gate`)**: pluggable policy at Git's commit hooks through static wrappers, layered project and per-clone configuration, and gates distributed as bundle assets (`devkit gate`).
-5. **Agent Advisories (`devkit.advisory`)**: the Agent Advisory Protocol, through which every command reports errors, warnings and notices with an `[ACTION]` directive; the built-in `advisory` bundle teaches it to agents in consumer repositories.
+5. **Agent Advisories (`devkit.advisory`, distribution `devkit-advisory`)**: the Agent Advisory Protocol, through which every command reports errors, warnings and notices with an `[ACTION]` directive; the built-in `advisory` bundle (`devkit.advisory_guide`) teaches it to agents in consumer repositories.
 6. **Compact Command Output (`devkit.compact`)**: verification commands run with their complete output in a log file and a bounded view for the agent (`devkit run`).
 7. **Document Search (`devkit.search`)**: lexical (BM25), dense (static embeddings) and hybrid ranking over a caller's documents, a library without a CLI; dense search comes with the `devkit[search]` extra.
 8. **Task Worktrees (`devkit.worktree`)**: one Git worktree per task, created from the base checkout and integrated, removed and reported by deterministic commands that refuse instead of forcing (`devkit worktree`).
@@ -56,12 +56,15 @@ Every command is agent-first: its primary consumer is an AI coding agent, and it
 devkit/
 ├── packages/
 │   ├── devkit/                # The devkit package: src/devkit/<module>/ per module above, cli.py the root `devkit` group
+│   ├── devkit-advisory/       # devkit.advisory on its own (src/devkit/advisory/), devkit's lowest layer
 │   ├── devkit-embed/          # The default embedding model of devkit.search (data only)
 │   └── devkit-starter/        # Example external content package
 ├── examples/bundles/          # Example bundle delivery-workflow (the starter bundle lives in devkit-starter)
 ├── scripts/                   # Shared shell logic behind the justfile recipes
 └── docs/                      # docs/<module>/ per module (index in section 5)
 ```
+
+`devkit` is a namespace package: `packages/devkit/src/devkit/` and `packages/devkit-advisory/src/devkit/` have no `__init__.py`, so both distributions install into it and `devkit.advisory` imports the same way from either. Splitting follows the consumer's environment, not the module: only code another repository imports at runtime, that depends on nothing but the standard library and imports no other devkit module, ships on its own; everything else (rules, gates, bundles, the CLI) stays in `devkit`.
 
 Inside each module, files are grouped by concern; each module's documentation has its file map. Every module exposes its library surface from its `__init__` (`from devkit.workflow import Workspace`, `from devkit.gate import run_hook`), and modules import each other by absolute path (`devkit.<module>....`), never relatively.
 
