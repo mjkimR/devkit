@@ -21,7 +21,7 @@ spec = "devkit_spec.cli:cli"
 - The root group reads the entry points only for a name that is not built in, or for the root `--help`, so a built-in command never pays for the scan.
 - One target declared twice (one package visible through two paths) counts once.
 - A plugin that cannot be used fails only its own command, with `COMMAND_PLUGIN_INVALID` (`MAINTENANCE`, exit `2`): its module fails to import, its attribute is missing or is not a click command, or two packages declare the same name with different targets. The error names each target and the package that declares it. Every other command keeps working, `devkit --help` lists the plugin as `Unusable plugin command (COMMAND_PLUGIN_INVALID)`, and `--format json` among the arguments returns the error as `{"error": {...}}` on stdout.
-- Plugins run in the project environment like every devkit command: `uv run devkit <name>`. A tool installed in its own environment (`uv tool install devkit`) sees only the plugins installed there.
+- Plugins run in the project environment like every devkit command: `uv run devkit <name>`. A tool installed in its own environment (`uv tool install <wheel-path>`) sees only the plugins installed there.
 
 ## 3. Contract for Plugin Commands
 

@@ -53,7 +53,7 @@ The receipt is the single record of the installed state, committed to Git, `sche
   "seeded": [
     { "bundle": "starter", "id": "docs-skeleton", "path": "docs/README.md" }
   ],
-  "tool": { "package": "devkit", "version": "0.1.0" }
+  "tool": { "package": "agt-devkit", "version": "0.1.0" }
 }
 ```
 
@@ -225,7 +225,7 @@ bundles neither selected nor opted out of that this clone has not been told abou
 or `--check`) records the installed names in the Git-ignored `.devkit/transient/seen-bundles.json`, and a missing or
 unreadable record only repeats the announcement. An opted-out bundle is never announced.
 
-The `BUNDLE_AUTO_SELECTED` notice names the auto-selected bundles of packages other than `devkit` that a sync
+The `BUNDLE_AUTO_SELECTED` notice names the auto-selected bundles of packages other than `agt-devkit` that a sync
 deploys with their `default_preset` while the previous receipt does not record them: a package that was just
 installed, or one whose new release declares `auto_select`. Its `[FIX]` names `devkit remove <bundle>`, which opts
 out. Since the receipt is Git-tracked, a clone that receives the updated receipt is not told again.

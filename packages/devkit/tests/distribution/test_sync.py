@@ -447,7 +447,7 @@ anything = true
     receipt = json.loads((bare / RECEIPT_PATH).read_text())
     assert receipt["selection"]["presets"] == {"team": ["minimal"]}
     # The receipt's ``tool`` is the distributor's identity, never the config's [tool.*] tables.
-    assert receipt["tool"]["package"] == "devkit"
+    assert receipt["tool"]["package"] == "agt-devkit"
     assert "specrig" not in json.dumps(receipt)
 
 

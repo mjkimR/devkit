@@ -4,20 +4,58 @@ requires-python = ">=3.12"
 
 [manifest]
 members = [
-    "devkit",
+    "agt-devkit",
     "devkit-advisory",
     "devkit-starter",
 ]
 
 [manifest.dependency-groups]
 dev = [
-    { name = "devkit", extras = ["search"], editable = "packages/devkit" },
+    { name = "agt-devkit", extras = ["search"], editable = "packages/devkit" },
     { name = "pyright", specifier = ">=1.1.390" },
     { name = "pytest", specifier = ">=8.0.0" },
     { name = "pytest-cov", specifier = ">=5.0.0" },
     { name = "pytest-xdist", specifier = ">=3.6.0" },
     { name = "ruff", specifier = ">=0.9.0" },
 ]
+
+[[package]]
+name = "agt-devkit"
+version = "0.1.0"
+source = { editable = "packages/devkit" }
+dependencies = [
+    { name = "click" },
+    { name = "devkit-advisory" },
+    { name = "pyyaml" },
+    { name = "tomlkit" },
+]
+
+[package.optional-dependencies]
+search = [
+    { name = "devkit-embed" },
+    { name = "numpy" },
+    { name = "tokenizers" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "click", specifier = ">=8.1.7" },
+    { name = "devkit-advisory", editable = "packages/devkit-advisory" },
+    { name = "devkit-embed", marker = "extra == 'search'", url = "https://github.com/mjkimR/devkit/releases/download/v0.1.0/devkit_embed-0.1.0-py3-none-any.whl" },
+    { name = "numpy", marker = "extra == 'search'", specifier = ">=2.0" },
+    { name = "pyyaml", specifier = ">=6.0.1" },
+    { name = "tokenizers", marker = "extra == 'search'", specifier = ">=0.20" },
+    { name = "tomlkit", specifier = ">=0.13" },
+]
+provides-extras = ["search"]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=8.0.0" }]
 
 [[package]]
 name = "anyio"
@@ -150,44 +188,6 @@ wheels = [
 ]
 
 [[package]]
-name = "devkit"
-version = "0.1.0"
-source = { editable = "packages/devkit" }
-dependencies = [
-    { name = "click" },
-    { name = "devkit-advisory" },
-    { name = "pyyaml" },
-    { name = "tomlkit" },
-]
-
-[package.optional-dependencies]
-search = [
-    { name = "devkit-embed" },
-    { name = "numpy" },
-    { name = "tokenizers" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "pytest" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "click", specifier = ">=8.1.7" },
-    { name = "devkit-advisory", editable = "packages/devkit-advisory" },
-    { name = "devkit-embed", marker = "extra == 'search'", url = "https://github.com/mjkimR/devkit/releases/download/v0.1.0/devkit_embed-0.1.0-py3-none-any.whl" },
-    { name = "numpy", marker = "extra == 'search'", specifier = ">=2.0" },
-    { name = "pyyaml", specifier = ">=6.0.1" },
-    { name = "tokenizers", marker = "extra == 'search'", specifier = ">=0.20" },
-    { name = "tomlkit", specifier = ">=0.13" },
-]
-provides-extras = ["search"]
-
-[package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=8.0.0" }]
-
-[[package]]
 name = "devkit-advisory"
 version = "0.1.0"
 source = { editable = "packages/devkit-advisory" }
@@ -207,13 +207,13 @@ source = { editable = "packages/devkit-starter" }
 
 [package.dev-dependencies]
 dev = [
-    { name = "devkit" },
+    { name = "agt-devkit" },
 ]
 
 [package.metadata]
 
 [package.metadata.requires-dev]
-dev = [{ name = "devkit", editable = "packages/devkit" }]
+dev = [{ name = "agt-devkit", editable = "packages/devkit" }]
 
 [[package]]
 name = "execnet"

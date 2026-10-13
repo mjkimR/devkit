@@ -1,10 +1,10 @@
-# devkit
+# agt-devkit
 
 Agent asset distribution, repository rules, delivery workflows, commit gates,
 agent advisories and compact command output in one Python package with one CLI
-(`devkit`). Requires Python 3.12 or later; runtime dependencies are `click`,
+(`devkit`). The distribution name is `agt-devkit`; imports remain `devkit.*`. Requires Python 3.12 or later; runtime dependencies are `click`,
 `pyyaml`, `tomlkit` and `devkit-advisory` (the `devkit.advisory` library, published
-separately so other repositories can depend on it at runtime alone; same version). The `search` extra (`devkit[search]`) adds `numpy`,
+separately so other repositories can depend on it at runtime alone; same version). The `search` extra (`agt-devkit[search]`) adds `numpy`,
 `tokenizers` and the embedding model package for dense and hybrid search.
 
 ## Install
@@ -14,7 +14,7 @@ built wheel by path), with the `devkit-advisory` wheel next to it and `devkit-em
 from Git, which brings both itself (see the [root README](../../README.md#using-devkit-in-another-project)):
 
 ```bash
-uv add --dev "devkit @ https://github.com/mjkimR/devkit/releases/download/v0.1.0/devkit-0.1.0-py3-none-any.whl" \
+uv add --dev "agt-devkit @ https://github.com/mjkimR/devkit/releases/download/v0.1.0/agt_devkit-0.1.0-py3-none-any.whl" \
   "devkit-advisory @ https://github.com/mjkimR/devkit/releases/download/v0.1.0/devkit_advisory-0.1.0-py3-none-any.whl"
 uv run devkit sync            # deploys every installed bundle that declares auto_select (built in: devkit, advisory)
 uv run devkit add <bundle>    # selects any other bundle: built-in opt-in ones or another content package
@@ -36,7 +36,7 @@ and `git-commits` (commit message conventions,
 | `devkit.gate` | Pluggable Git commit gates and managed hook wrappers | `devkit gate` | [docs/gate](../../docs/gate/reference.md) |
 | `devkit.distribution` | Bundle packaging and transactional synchronization, plus the built-in `devkit` guide bundle | `devkit sync`, `add`, `remove`, `list`, `status`, ... | [docs/distribution](../../docs/distribution/reference.md) |
 | `devkit.worktree` | One Git worktree per task: start, finish (integrate, remove, delete the branch), status | `devkit worktree` | [docs/worktree](../../docs/worktree/reference.md) |
-| `devkit.search` | Lexical, dense and hybrid document search; dense needs the `devkit[search]` extra | none | [docs/search](../../docs/search/reference.md) |
+| `devkit.search` | Lexical, dense and hybrid document search; dense needs the `agt-devkit[search]` extra | none | [docs/search](../../docs/search/reference.md) |
 | `devkit.compact` | Verification commands with the full log on disk and a bounded view for agents | `devkit run` | [docs/compact](../../docs/compact/reference.md) |
 
 Layering (`advisory` < `core` < `rules` < `workflow`/`gate`; `search`, `compact`

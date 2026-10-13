@@ -18,8 +18,8 @@ The embedding model is English-only, so dense ranking reads only `metadata`. A r
 | --- | --- | --- |
 | `auto` (default) | `hybrid` when the dense dependencies are installed, else `lexical` | Nothing |
 | `lexical` | BM25 over `metadata` and `body` | Standard library only |
-| `dense` | Cosine similarity of the query vector and each document's `metadata` vector | `devkit[search]` |
-| `hybrid` | Reciprocal Rank Fusion (`k = 60`) of the lexical and the dense ranking | `devkit[search]` |
+| `dense` | Cosine similarity of the query vector and each document's `metadata` vector | `agt-devkit[search]` |
+| `hybrid` | Reciprocal Rank Fusion (`k = 60`) of the lexical and the dense ranking | `agt-devkit[search]` |
 
 The lexical ranking keeps documents whose BM25 score is positive and at least `min_score`, the dense ranking those whose cosine similarity is positive and at least `min_similarity` (both `0` by default); a hybrid hit appears in at least one of the two, and its score is the fused value, `sum(1 / (60 + rank))`. Results are ordered by score, then id. A static model gives most unrelated texts a positive similarity, so a caller that shows hybrid results should set `min_similarity`; `devkit playbook search` uses `0.35`, which on the corpus below kept the hybrid gain while dropping the long tail.
 
@@ -47,13 +47,13 @@ Dense ranking does not replace BM25. On devkit's and specrig's English documents
 | `tokenizer.json` | A Hugging Face `tokenizers` file |
 | `model.safetensors` | One tensor, `embeddings`, of shape `[vocabulary, dimensions]`, `F16` or `F32`; memory-mapped read-only |
 
-`devkit-embed` provides `potion-base-8m` and is installed by the `devkit[search]` extra together with `numpy` and `tokenizers`. Another model needs only another package registering another name; `SearchIndex(..., model="<name>")` selects it. A name registered by two packages is `SEARCH_MODEL_INVALID`.
+`devkit-embed` provides `potion-base-8m` and is installed by the `agt-devkit[search]` extra together with `numpy` and `tokenizers`. Another model needs only another package registering another name; `SearchIndex(..., model="<name>")` selects it. A name registered by two packages is `SEARCH_MODEL_INVALID`.
 
 **Cost.** numpy and tokenizers are imported on the first dense, hybrid or `auto` search, never on `import devkit.search` or a `lexical` search (a test enforces this). On an Apple Silicon laptop the first dense search costs about 25 ms of imports and 25 ms to load the model; embedding 150 metadata texts takes a few milliseconds. An index embeds its documents once, on its first dense or hybrid search. There is no vector cache across processes.
 
 ## 5. Building the Model Package
 
-The package lives in `models/devkit-embed`, outside the uv workspace, and is built only when the model changes; devkit's `[tool.uv.sources]` installs the released wheel, so the workspace and Git installs of `devkit[search]` get the files without fetching them. The weights and tokenizer are not committed. `just model-build` runs `scripts/fetch_model.py`, which downloads each file from the pinned Hugging Face revision, checks its source SHA-256, rounds the float32 embeddings to float16 (round to nearest even, deterministic) with an 8-byte aligned canonical header, checks the output SHA-256 against `model.json` and moves the file into place (files that already match are left alone), then builds the wheel into `dist/model/`. The package's Hatch build hook refuses to build a wheel whose files are missing or do not match `model.json`; an editable install builds without them, and a dense search then reports `SEARCH_MODEL_INVALID`. The build is reproducible: a rebuild from the same `model.json` matches the released wheel byte for byte.
+The package lives in `models/devkit-embed`, outside the uv workspace, and is built only when the model changes; devkit's `[tool.uv.sources]` installs the released wheel, so the workspace and Git installs of `agt-devkit[search]` get the files without fetching them. The weights and tokenizer are not committed. `just model-build` runs `scripts/fetch_model.py`, which downloads each file from the pinned Hugging Face revision, checks its source SHA-256, rounds the float32 embeddings to float16 (round to nearest even, deterministic) with an 8-byte aligned canonical header, checks the output SHA-256 against `model.json` and moves the file into place (files that already match are left alone), then builds the wheel into `dist/model/`. The package's Hatch build hook refuses to build a wheel whose files are missing or do not match `model.json`; an editable install builds without them, and a dense search then reports `SEARCH_MODEL_INVALID`. The build is reproducible: a rebuild from the same `model.json` matches the released wheel byte for byte.
 
 Licensing: potion-base-8M and bge-base-en-v1.5 are MIT licensed; the package ships the MIT license of Model2Vec as `LICENSE` and the provenance in `NOTICE`.
 

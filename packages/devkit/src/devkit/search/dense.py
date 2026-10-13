@@ -8,7 +8,7 @@ limit), ``tokenizer.json`` (a Hugging Face tokenizer) and ``model.safetensors``
 ``max_tokens`` tokens (unknown tokens left out), scaled to unit length; a text
 without tokens gets the zero vector.
 
-numpy and tokenizers come from the ``devkit[search]`` extra and are imported
+numpy and tokenizers come from the ``agt-devkit[search]`` extra and are imported
 inside the functions here, so importing this module costs nothing until a
 model is loaded.
 """

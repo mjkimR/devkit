@@ -4,7 +4,7 @@ The `devkit` modules, their boundaries and interaction, the conventions every mo
 
 ## 1. System Mission & Core Modules
 
-`devkit` is a developer tooling suite for engineering teams collaborating with AI coding agents (such as Codex, Claude Code, and Antigravity). It ships as one Python package, `devkit`, with one CLI (`devkit`); its `devkit.advisory` library is also published on its own as `devkit-advisory`, the standard-library-only runtime dependency of repositories that report advisories from their own code:
+`devkit` is a developer tooling suite for engineering teams collaborating with AI coding agents (such as Codex, Claude Code, and Antigravity). It ships as one Python distribution, `agt-devkit`, with one CLI (`devkit`); its `devkit.advisory` library is also published on its own as `devkit-advisory`, the standard-library-only runtime dependency of repositories that report advisories from their own code:
 
 1. **Asset Distribution & Guidance Delivery (`devkit.distribution`)**: packaging, versioning, selecting and synchronizing agent guidance, instructions, playbooks, native skills, subagent roles and other bundle assets across repositories (`devkit sync`, `add`, `remove`, `list`, `status`, ...).
 2. **Repository Governance & Deterministic Verification (`devkit.rules`)**: static invariants, Markdown link integrity and code hygiene with automated repairs and convergence rechecks, including the rules bundles distribute; the engine carries no document model (`devkit rules`).
@@ -12,7 +12,7 @@ The `devkit` modules, their boundaries and interaction, the conventions every mo
 4. **Commit Gates (`devkit.gate`)**: pluggable policy at Git's commit hooks through static wrappers, layered project and per-clone configuration, and gates distributed as bundle assets (`devkit gate`).
 5. **Agent Advisories (`devkit.advisory`, distribution `devkit-advisory`)**: the Agent Advisory Protocol, through which every command reports errors, warnings and notices with an `[ACTION]` directive; the built-in `advisory` bundle (`devkit.advisory_guide`) teaches it to agents in consumer repositories.
 6. **Compact Command Output (`devkit.compact`)**: verification commands run with their complete output in a log file and a bounded view for the agent (`devkit run`).
-7. **Document Search (`devkit.search`)**: lexical (BM25), dense (static embeddings) and hybrid ranking over a caller's documents, a library without a CLI; dense search comes with the `devkit[search]` extra.
+7. **Document Search (`devkit.search`)**: lexical (BM25), dense (static embeddings) and hybrid ranking over a caller's documents, a library without a CLI; dense search comes with the `agt-devkit[search]` extra.
 8. **Task Worktrees (`devkit.worktree`)**: one Git worktree per task, created from the base checkout and integrated, removed and reported by deterministic commands that refuse instead of forcing (`devkit worktree`).
 
 All of them build on `devkit.core`, the SDD-agnostic shared foundation (frontmatter grammar, installation receipt, safe paths, Git runner, plugin loading, project discovery, CLI plumbing).
@@ -70,7 +70,7 @@ Inside each module, files are grouped by concern; each module's documentation ha
 
 ## 3. Module Interaction Model
 
-1. **Content packaging**: assets (instructions, skills, playbooks, rules, workflows, workflow checks, subagent roles, gates, documents, guidance fragments) are declared in a `bundle.toml` inside a Python package and registered under the `devkit.bundles` entry-point group. The `devkit` package registers its own `devkit`, `advisory`, `authoring` and `git-commits` bundles; external packages such as `devkit-starter` register theirs. A repository's own assets ship as an in-repository bundle.
+1. **Content packaging**: assets (instructions, skills, playbooks, rules, workflows, workflow checks, subagent roles, gates, documents, guidance fragments) are declared in a `bundle.toml` inside a Python package and registered under the `devkit.bundles` entry-point group. The `agt-devkit` distribution registers its own `devkit`, `advisory`, `authoring` and `git-commits` bundles; external packages such as `devkit-starter` register theirs. A repository's own assets ship as an in-repository bundle.
 2. **Selection and synchronization**: installed bundles that declare `auto_select` (built in: `devkit`, `advisory`) are selected with their default preset unless `.devkit/config.toml` opts out (`[presets] <bundle> = false`); every other bundle, including the opt-in built-ins `authoring` and `git-commits`, is selected with `devkit add`. `devkit sync` verifies the bundles, writes managed copies under `.devkit/managed/<bundle>/`, projects native skills and subagents into `.agents/`, `.codex/` and `.claude/`, maintains the managed block in the root `AGENTS.md` (with the selected bundles' guidance fragments), seeds project files once, and records every file in `.devkit/installation.json` in one transaction.
 3. **Consumption by the other modules**:
    - Agents load bundle guidance on demand with `devkit get-context <bundle>`, and occasional procedures with `devkit playbook search` after an explicit `devkit-playbook` invocation.
@@ -125,7 +125,7 @@ Each module's `reference.md` is the quick reference (CLI, configuration, library
 - [Worktree Overview](../worktree/overview.md): Paths, the start and finish steps, refusals and resumption, status, the setup command.
 
 ### Document Search (`devkit.search`)
-- [Search Reference](../search/reference.md): Library surface, the `devkit[search]` extra and error codes.
+- [Search Reference](../search/reference.md): Library surface, the `agt-devkit[search]` extra and error codes.
 - [Search Overview](../search/overview.md): Document model, modes, BM25 and tokenizer, the embedding model and its package, measurements.
 
 ### Asset Distribution (`devkit.distribution`)

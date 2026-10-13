@@ -7,7 +7,7 @@ Lexical, dense and hybrid search over a caller's documents. Semantics, measureme
 Lexical search is part of `devkit`, and the default `auto` mode uses it when nothing more is installed. Dense and hybrid search need the extra, which adds `numpy`, `tokenizers` and the `devkit-embed` model package (15 MB):
 
 ```bash
-uv add 'devkit[search]'
+uv add 'agt-devkit[search] @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit'
 ```
 
 From Git or in this repository, the extra installs the model wheel from the release that `packages/devkit/pyproject.toml` pins; from a release wheel, add `devkit-embed` by its URL ([README](../../README.md#using-devkit-in-another-project)).
@@ -21,7 +21,7 @@ index = SearchIndex([
     SearchDocument("restore-replica", "Restore a PostgreSQL replica after failure", body="..."),
     SearchDocument("publish-release", "Publish a software release"),
 ])
-index.resolve_mode(SearchMode.AUTO)  # SearchMode.HYBRID with devkit[search], else SearchMode.LEXICAL
+index.resolve_mode(SearchMode.AUTO)  # SearchMode.HYBRID with agt-devkit[search], else SearchMode.LEXICAL
 index.search("standby database is broken", limit=5, min_similarity=0.35)
 # [SearchHit(id="restore-replica", score=0.0328), ...]; hit.to_dict() == {"id": ..., "score": ...}
 ```
@@ -43,6 +43,6 @@ Only dense and hybrid search raise them; `auto` resolves to lexical instead of r
 
 | Code | Level | Class | Condition |
 | --- | --- | --- | --- |
-| `SEARCH_EXTRA_MISSING` | `ERROR` (`INTERACTION`) | `SearchExtraMissingError` | `numpy` or `tokenizers` cannot be imported; `[FIX]` installs `devkit[search]`. |
+| `SEARCH_EXTRA_MISSING` | `ERROR` (`INTERACTION`) | `SearchExtraMissingError` | `numpy` or `tokenizers` cannot be imported; `[FIX]` installs `agt-devkit[search]`. |
 | `SEARCH_MODEL_NOT_FOUND` | `ERROR` (`INTERACTION`) | `ModelNotFoundError` | No installed package registers the requested model name. |
 | `SEARCH_MODEL_INVALID` | `ERROR` (`MAINTENANCE`) | `ModelInvalidError` | The model package's files are missing or malformed, it cannot be imported, or two packages register the same name. |

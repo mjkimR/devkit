@@ -77,7 +77,7 @@ aliases: [postgres standby repair, replication failure]
 persistent cache) with [`devkit.search`](../search/overview.md). Only `name`, `description` and `aliases` are indexed;
 bodies never are.
 
-- **Mode**: `auto` (default) is `hybrid` when the `devkit[search]` extra is installed and `lexical` otherwise;
+- **Mode**: `auto` (default) is `hybrid` when the `agt-devkit[search]` extra is installed and `lexical` otherwise;
   `lexical`, `dense` and `hybrid` select one ranking explicitly. `lexical` is BM25 ($k_1=1.5$, $b=0.75$, positive
   IDF, unique query terms; case and Latin accents are normalized and punctuation separates terms), `dense` the cosine
   similarity of the query and header embeddings, and `hybrid` their Reciprocal Rank Fusion

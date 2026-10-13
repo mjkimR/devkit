@@ -6,7 +6,10 @@ package is the starter example bundle's only copy:
 [`src/devkit_starter/bundle`](src/devkit_starter/bundle).
 
 ```bash
-uv add --dev devkit devkit-starter
+base=https://github.com/mjkimR/devkit/releases/download/v0.1.0
+uv add --dev "agt-devkit @ $base/agt_devkit-0.1.0-py3-none-any.whl" \
+  "devkit-advisory @ $base/devkit_advisory-0.1.0-py3-none-any.whl" \
+  "devkit-starter @ $base/devkit_starter-0.1.0-py3-none-any.whl"
 uv run devkit add starter   # records starter = "daily" (the default preset)
 ```
 

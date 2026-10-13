@@ -2,7 +2,7 @@
 
 Never returns procedure bodies. The ranking is ``devkit.search``'s over each
 playbook's name, description and aliases; ``auto`` (the default) is hybrid when
-the ``devkit[search]`` extra is installed and lexical otherwise.
+the ``agt-devkit[search]`` extra is installed and lexical otherwise.
 """
 
 from __future__ import annotations
@@ -104,7 +104,7 @@ def search_playbooks(
     Unset bounds and the mode come from ``[playbooks]`` in ``.devkit/config.toml``, else the defaults.
     ``min_score`` bounds the lexical (BM25) ranking and ``min_similarity`` the dense one; a hybrid
     candidate's ``score`` is its fused value. ``auto`` resolves to ``hybrid`` or ``lexical``, and the
-    result reports the mode that ran. An explicit ``dense`` or ``hybrid`` without the ``devkit[search]``
+    result reports the mode that ran. An explicit ``dense`` or ``hybrid`` without the ``agt-devkit[search]``
     extra raises ``SEARCH_EXTRA_MISSING``.
     """
     if not is_latin_text(query):

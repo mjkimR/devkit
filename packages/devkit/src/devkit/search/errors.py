@@ -17,12 +17,14 @@ class SearchError(AdvisoryError):
 
 
 class SearchExtraMissingError(SearchError):
-    """numpy or tokenizers cannot be imported (``INTERACTION``): the ``devkit[search]`` extra is not installed."""
+    """numpy or tokenizers cannot be imported (``INTERACTION``): the ``agt-devkit[search]`` extra is not installed."""
 
     code = "SEARCH_EXTRA_MISSING"
     actor = Actor.USER
-    fix = "Install the search extra in the project: uv add 'devkit[search]'"
-    what_to_report = "dense and hybrid search need the devkit[search] extra (numpy, tokenizers and the embedding model)"
+    fix = "Install the search extra in the project: uv add 'agt-devkit[search] @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit'"
+    what_to_report = (
+        "dense and hybrid search need the agt-devkit[search] extra (numpy, tokenizers and the embedding model)"
+    )
 
 
 class ModelNotFoundError(SearchError):
@@ -30,7 +32,7 @@ class ModelNotFoundError(SearchError):
 
     code = "SEARCH_MODEL_NOT_FOUND"
     actor = Actor.USER
-    fix = "Install the package that provides the model; the default model comes with: uv add 'devkit[search]'"
+    fix = "Install the package that provides the model; the default model comes with: uv add 'agt-devkit[search] @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit'"
     what_to_report = "the embedding model this search needs is not installed"
 
 

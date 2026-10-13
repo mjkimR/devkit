@@ -77,7 +77,7 @@ def test_without_the_extra_dense_search_asks_for_it(tmp_path: Path, monkeypatch:
         with pytest.raises(SearchExtraMissingError) as raised:
             call()
         assert raised.value.code == "SEARCH_EXTRA_MISSING" and raised.value.mode is ActionMode.INTERACTION
-        assert "devkit[search]" in (raised.value.fix or "")
+        assert "agt-devkit[search]" in (raised.value.fix or "")
 
 
 def _register(monkeypatch: pytest.MonkeyPatch, *values: str) -> None:

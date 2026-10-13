@@ -1,6 +1,6 @@
 # devkit
 
-Personal developer tools monorepo. Its main product is `devkit`: one Python
+Personal developer tools monorepo. Its main product is the `agt-devkit` distribution: one Python
 package with one CLI for agent asset distribution, repository rules, delivery
 workflows, commit gates, agent advisories and compact command output.
 
@@ -9,7 +9,7 @@ workflows, commit gates, agent advisories and compact command output.
 `packages/devkit` is the package, `packages/devkit-advisory` its
 `devkit.advisory` library shipped on its own for other repositories' runtime,
 `packages/devkit-starter` an example content package, `models/devkit-embed` the embedding model of the
-`devkit[search]` extra (built by hand, outside the workspace), `examples/bundles/` further example bundles, `scripts/` the shell logic
+`agt-devkit[search]` extra (built by hand, outside the workspace), `examples/bundles/` further example bundles, `scripts/` the shell logic
 behind the justfile recipes, and `docs/` the documentation per module; see
 [Architecture Overview, section 2](docs/architecture/overview.md#2-monorepo-structure).
 
@@ -30,9 +30,14 @@ just --list                # every recipe (rules-fix, rules-phases, rules-explai
 ```
 
 Module commands discover projects from `packages/*/pyproject.toml` and
-`tools/*/pyproject.toml`; pass a project name (`devkit`, `devkit-advisory` or
-`devkit-starter`) or `all`. Extra pytest arguments follow the module: `just test devkit -k cache`.
+`tools/*/pyproject.toml`; pass a project name (`agt-devkit`, `devkit-advisory` or
+`devkit-starter`) or `all`. `devkit` remains a module-command alias for `agt-devkit`. Extra pytest arguments follow the module: `just test devkit -k cache`.
 `uv run pytest` from the repository root runs every test.
+
+The repository, CLI (`devkit`), Python namespace (`devkit.*`), bundle names and
+entry-point groups retain their names. The distribution is `agt-devkit` to avoid
+confusion with the unrelated `devkit` project on PyPI. It is not published to PyPI;
+install it from Git or an explicit wheel URL/path.
 
 ## Using devkit in another project
 
@@ -41,10 +46,10 @@ with every package's wheel, `SHA256SUMS` and the install commands; install by UR
 
 ```bash
 base=https://github.com/mjkimR/devkit/releases/download/v0.1.0
-uv add --dev "devkit @ $base/devkit-0.1.0-py3-none-any.whl" \
+uv add --dev "agt-devkit @ $base/agt_devkit-0.1.0-py3-none-any.whl" \
   "devkit-advisory @ $base/devkit_advisory-0.1.0-py3-none-any.whl"
 # or, with dense and hybrid search (numpy, tokenizers and the 15 MB embedding model):
-uv add --dev "devkit[search] @ $base/devkit-0.1.0-py3-none-any.whl" \
+uv add --dev "agt-devkit[search] @ $base/agt_devkit-0.1.0-py3-none-any.whl" \
   "devkit-advisory @ $base/devkit_advisory-0.1.0-py3-none-any.whl" \
   "devkit-embed @ $base/devkit_embed-0.1.0-py3-none-any.whl"
 
@@ -54,10 +59,10 @@ uv run devkit list
 uv run devkit rules check
 ```
 
-`devkit` requires `devkit-advisory` of the same version, and no index serves it, so
+`agt-devkit` requires `devkit-advisory` of the same version, and no index serves it, so
 both wheels are named. A library or service that only raises and renders advisories
 at runtime depends on `devkit-advisory` alone (standard library only, no CLI, no
-bundles); its development tooling adds `devkit`. The import is `devkit.advisory`
+bundles); its development tooling adds `agt-devkit`. The import is `devkit.advisory`
 either way: `devkit` is a namespace package that both wheels share.
 
 A wheel built here works the same way by path
@@ -70,10 +75,19 @@ reports conflicting URLs. The example content
 package `devkit-starter` is in each release too: add its wheel the same way, then
 `uv run devkit add starter`.
 
+```bash
+uv add --dev "agt-devkit @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
+```
+
+Consumers with a pinned Git source must adopt a pushed commit containing this
+rename before changing their dependency to `agt-devkit`; older commits and
+release wheels still declare `devkit`. Wheel URLs above require a release built
+from the renamed distribution.
+
 Native skill and subagent copies go to Codex, Claude Code and Antigravity by
 default; narrow them with `devkit sync --agent codex` (repeatable). To try a sync
 without a consumer project, point `-w` at an existing empty directory:
-`uv run --package devkit devkit sync -w /tmp/my-project`.
+`uv run --package agt-devkit devkit sync -w /tmp/my-project`.
 
 ## Releasing
 
@@ -88,7 +102,7 @@ with it (devkit pins it exactly; a test checks both). `devkit-starter` keeps its
 `devkit-embed` keeps its own version too and is not rebuilt by releases: devkit
 installs it, in this workspace and from Git, from the release URL in the
 `[tool.uv.sources]` of `packages/devkit/pyproject.toml`. When the model changes,
-bump its version in `models/devkit-embed/pyproject.toml` and the `devkit[search]`
+bump its version in `models/devkit-embed/pyproject.toml` and the `agt-devkit[search]`
 requirement on it, run `just model-build` (fetches and verifies the files, builds
 `dist/model/`), attach the wheel to a release
 (`gh release upload <tag> dist/model/*.whl`), then point the URL at it and

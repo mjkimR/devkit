@@ -27,10 +27,10 @@ if TYPE_CHECKING:
 
 
 class SearchMode(StrEnum):
-    AUTO = "auto"  # hybrid when devkit[search] is installed, else lexical
+    AUTO = "auto"  # hybrid when agt-devkit[search] is installed, else lexical
     LEXICAL = "lexical"  # BM25 over metadata and body; standard library only
-    DENSE = "dense"  # cosine similarity of metadata embeddings; needs devkit[search]
-    HYBRID = "hybrid"  # Reciprocal Rank Fusion of the lexical and dense rankings; needs devkit[search]
+    DENSE = "dense"  # cosine similarity of metadata embeddings; needs agt-devkit[search]
+    HYBRID = "hybrid"  # Reciprocal Rank Fusion of the lexical and dense rankings; needs agt-devkit[search]
 
 
 @dataclasses.dataclass(frozen=True)

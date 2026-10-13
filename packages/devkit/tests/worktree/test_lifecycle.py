@@ -419,7 +419,7 @@ def test_sync_uses_the_worktree_environment_with_devkit_and_skips_without_a_rece
     setup = f"mkdir -p .venv/bin && cp {script} .venv/bin/python"
     without = start(locate(repo), "without", setup=setup, project=Path("."))
     assert without.synced is True and not marker.exists()  # no devkit in that environment: this interpreter ran
-    setup += " && mkdir -p .venv/lib/python3.12/site-packages/devkit-0.0.0.dist-info"
+    setup += " && mkdir -p .venv/lib/python3.12/site-packages/agt_devkit-0.0.0.dist-info"
     result = start(locate(repo), "demo", setup=setup, project=Path("."))
     assert result.synced is True and marker.read_text() == "used\n"
     assert start(locate(repo), "demo", project=Path(".")).synced is None  # reused: nothing runs

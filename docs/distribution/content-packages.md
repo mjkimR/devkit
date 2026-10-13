@@ -42,13 +42,16 @@ src/package_b_playbooks/
 ## 2. Installation and Lifecycle
 
 ```bash
-uv add --dev devkit devkit-starter
+base=https://github.com/mjkimR/devkit/releases/download/v0.1.0
+uv add --dev "agt-devkit @ $base/agt_devkit-0.1.0-py3-none-any.whl" \
+  "devkit-advisory @ $base/devkit_advisory-0.1.0-py3-none-any.whl" \
+  "devkit-starter @ $base/devkit_starter-0.1.0-py3-none-any.whl"
 uv run devkit sync               # deploys auto-selected bundles with their default preset
 uv run devkit add starter        # a bundle without auto_select: records the selection and synchronizes
 ```
 
 Run `devkit` through `uv run` from the project's environment. A globally installed tool
-(`uv tool install devkit`) runs in an isolated environment where `importlib.metadata` cannot see the content
+(`uv tool install <wheel-path>`) runs in an isolated environment where `importlib.metadata` cannot see the content
 packages of the project.
 
 - **Upgrade**: `uv lock --upgrade-package <package>`, then `uv run devkit sync`.

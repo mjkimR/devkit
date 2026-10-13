@@ -69,7 +69,7 @@ from devkit.distribution.installation.workspace import (
     snapshot,
 )
 
-TOOL_PACKAGE = "devkit"
+TOOL_PACKAGE = "agt-devkit"
 EDITED_FILE_FIX = (
     "Keep the edit: copy it aside, run `devkit override create <bundle>:<asset>` and reapply it there;"
     " discard it: delete the file and run `devkit sync`"

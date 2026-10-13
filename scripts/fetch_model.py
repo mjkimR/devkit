@@ -7,7 +7,7 @@ SHA-256 of each source file) and the SHA-256 of each file this script writes.
 Files that already match are left alone, so the script is cheap to rerun. The
 float32 embeddings tensor is rounded to float16 (round to nearest even), which
 is deterministic, so the output hash is fixed by the source hash. Needs numpy
-(the devkit[search] extra, installed by `just init`).
+(the agt-devkit[search] extra, installed by `just init`).
 """
 
 from __future__ import annotations

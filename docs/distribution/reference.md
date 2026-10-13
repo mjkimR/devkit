@@ -8,13 +8,16 @@ specifications are listed in [section 5](#5-specifications).
 ## 1. Quick Start
 
 ```bash
-uv add --dev devkit devkit-starter                     # the CLI and a content package
+base=https://github.com/mjkimR/devkit/releases/download/v0.1.0
+uv add --dev "agt-devkit @ $base/agt_devkit-0.1.0-py3-none-any.whl" \
+  "devkit-advisory @ $base/devkit_advisory-0.1.0-py3-none-any.whl" \
+  "devkit-starter @ $base/devkit_starter-0.1.0-py3-none-any.whl"                     # the CLI and a content package
 uv run devkit add starter                              # devkit and advisory are deployed by default; select the rest
 uv run devkit sync --agent codex --agent claude-code   # projections go to every supported agent unless narrowed
 uv run devkit list
 ```
 
-In this monorepo, run `uv sync --all-packages` first, then `uv run --package devkit devkit sync -w <target-directory>`.
+In this monorepo, run `uv sync --all-packages` first, then `uv run --package agt-devkit devkit sync -w <target-directory>`.
 
 Every distribution command takes `-w/--workspace-root <dir>`. Without it, the project root is the nearest
 directory (the current one first, then its parents, up to the Git top level; outside a Git work tree, never the
@@ -42,7 +45,7 @@ malformed `bundle[:preset]` or `--agent` combined with `--no-agents` (see
 | `devkit config template` | Writes the commented template into `.devkit/config.toml`: devkit's top-level keys and the `[tool.<name>]` tables of the installed tools, each at its default, only the parts the file lacks ([Commented Template](sync-and-transactions.md#commented-template)). Prints `path`, `state` (`created`, `updated`, `unchanged`), `added` (the key and table names written) and `notices`; an invalid file is `CONFIG_INVALID` and is left alone. |
 | `devkit recover` | Rolls back an interrupted transaction from the journal in `.devkit/transient/` without overwriting newer edits. Prints `recovered_files`: the number of files restored. |
 | `devkit get-context <bundle>` | The bundle constitution and the header catalog of its instructions ([Context Loading](context-and-playbooks.md#2-bundle-context-devkit-get-context)). |
-| `devkit playbook search <query>` | Search over synchronized playbook headers: hybrid with the `devkit[search]` extra, else lexical BM25; `--mode`, `--min-score`, `--min-similarity`, `--limit`, `--max-bytes` ([Playbook Search](context-and-playbooks.md#3-playbook-discovery-and-search-devkit-playbook)). |
+| `devkit playbook search <query>` | Search over synchronized playbook headers: hybrid with the `agt-devkit[search]` extra, else lexical BM25; `--mode`, `--min-score`, `--min-similarity`, `--limit`, `--max-bytes` ([Playbook Search](context-and-playbooks.md#3-playbook-discovery-and-search-devkit-playbook)). |
 | `devkit override list` | Tracked project overrides and their drift status. |
 | `devkit override create <bundle>:<asset> [--force]` | Copies every upstream file of a selected, non-seeded asset to `.devkit/overrides/` (plus a baseline copy), records the current upstream as its baseline and synchronizes; `--force` overwrites existing override files and the baseline. |
 | `devkit override diff <bundle>:<asset>` | Per file: what upstream changed since the baseline, and what the override changed. |

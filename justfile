@@ -31,31 +31,31 @@ test-cov module="all" *args:
 
 # Run the rule engine check (devkit rules check)
 rules-check *args:
-    uv run --no-active --package devkit devkit rules check "$@"
+    uv run --no-active --package agt-devkit devkit rules check "$@"
 
 # Run rule engine autofix (devkit rules fix)
 rules-fix *args:
-    uv run --no-active --package devkit devkit rules fix "$@"
+    uv run --no-active --package agt-devkit devkit rules fix "$@"
 
 # Show each rule's default/effective phase, project overrides, and pending promotions
 rules-phases *args:
-    uv run --no-active --package devkit devkit rules phases "$@"
+    uv run --no-active --package agt-devkit devkit rules phases "$@"
 
 # Describe one rule: phase, severity, effective settings and guide
 rules-explain *args:
-    uv run --no-active --package devkit devkit rules explain "$@"
+    uv run --no-active --package agt-devkit devkit rules explain "$@"
 
 # Run the tests in each rule's folder (devkit rules test [RULE-ID...] [-- PYTEST-ARGS...])
 rules-test *args:
-    uv run --no-active --package devkit devkit rules test "$@"
+    uv run --no-active --package agt-devkit devkit rules test "$@"
 
 # Run the workflow engine CLI (new, bind, next, show, checks, validate, list, requests, answer, return, handoff, envelope)
 workflow *args:
-    uv run --no-active --package devkit devkit workflow "$@"
+    uv run --no-active --package agt-devkit devkit workflow "$@"
 
 # Run the commit gate CLI (install, uninstall, status, run)
 gate *args:
-    uv run --no-active --package devkit devkit gate "$@"
+    uv run --no-active --package agt-devkit devkit gate "$@"
 
 # Build all wheels and exercise them from a fresh consumer project (needs git)
 smoke:

@@ -50,7 +50,7 @@ def full_receipt() -> dict[str, Any]:
             ".devkit/managed/team/rules/a.py": {"sha256": SHA_A, "mode": 0o644},
             ".claude/skills/x/run.sh": {"sha256": SHA_B, "mode": 0o755},
         },
-        "tool": {"package": "devkit", "version": "0.1.0"},
+        "tool": {"package": "agt-devkit", "version": "0.1.0"},
         "overrides": {
             "team": {
                 "check": {
@@ -107,7 +107,7 @@ def test_full_receipt_round_trip(tmp_path: Path) -> None:
     assert record == FileRecord(SHA_B, 0o755)
     assert record is not None and record.matches(b"b") and not record.matches(b"a")
     assert receipt.file("nope") is None
-    assert receipt.tool is not None and receipt.tool.package == "devkit"
+    assert receipt.tool is not None and receipt.tool.package == "agt-devkit"
     override = receipt.overrides["team"]["check"]
     assert override.relative_path == "checks/c.py" and override.override_sha256 == SHA_B
     assert receipt.seeded[0].path == "docs/README.md"
