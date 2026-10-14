@@ -102,8 +102,8 @@ payloads such as `pre-push` requires a replay contract so every child receives t
   Existing backups are never overwritten (`GATE_BACKUP_EXISTS`). `00-legacy` and `20-devkit` are reserved;
   foreign files there, or symlinked script directories, are refused (`GATE_HOOK_LAYOUT_INVALID`).
 - **Writing**: mutations, and the settings template refresh in `devkit.config`, are serialized by a clone-wide
-  `devkit-hooks.lock`. Scripts are LF-only executable
-  files, replaced atomically without writing through symlinks. Identical scripts are left untouched.
+  `devkit-hooks.lock` (an exclusive `devkit.core.file_lock`, waited for without a bound). Scripts are LF-only
+  executable files, replaced atomically without writing through symlinks. Identical scripts are left untouched.
   All stages are checked for conflicts before writing. If dispatcher replacement fails after a hook moves,
   the original hook is restored.
 - **Automatic installation**: the `devkit.post_sync` extension `gate-hooks` runs after writing syncs, including

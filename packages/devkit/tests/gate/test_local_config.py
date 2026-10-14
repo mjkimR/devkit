@@ -291,3 +291,12 @@ def test_the_template_refresh_waits_for_the_clone_lock(repo: Path) -> None:
         assert worker.is_alive() and not _config(repo).exists()
     worker.join(10)
     assert [result.state for result in results] == [local_config.TemplateState.CREATED]
+
+
+def test_a_symlinked_clone_lock_skips_the_template(repo: Path, tmp_path: Path) -> None:
+    elsewhere = tmp_path / "elsewhere"
+    (repo / ".git" / hooks.LOCK_FILE).symlink_to(elsewhere)
+    result = local_config.refresh_template(repo / ".git", load_gate_project(repo).registry.get_all())
+    assert result.state is local_config.TemplateState.SKIPPED and not _config(repo).exists()
+    assert result.notice is not None and result.notice.code == "GATE_CONFIG_TEMPLATE_SKIPPED"
+    assert not elsewhere.exists()

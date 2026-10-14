@@ -16,7 +16,7 @@ The `devkit` modules, their boundaries and interaction, the conventions every mo
 8. **Task Worktrees (`devkit.worktree`)**: one Git worktree per task, created from the base checkout and integrated, removed and reported by deterministic commands that refuse instead of forcing (`devkit worktree`).
 9. **Generated Files (`devkit.generated`)**: tracked files a command generates (lockfiles, the installation receipt) registered with that command, so merge conflicts in them are settled by regenerating and stale ones are caught in CI (`devkit generated`).
 
-All of them build on `devkit.core`, the SDD-agnostic shared foundation (frontmatter grammar, installation receipt, safe paths, Git runner, plugin loading, project discovery, CLI plumbing).
+All of them build on `devkit.core`, the SDD-agnostic shared foundation (frontmatter grammar, installation receipt, safe paths, atomic writes, Git runner, deadlines, file locks, plugin loading, project discovery, CLI plumbing).
 
 Every command is agent-first: its primary consumer is an AI coding agent, and its output is a contract specified in [Agent-First Output](agent-output.md).
 
@@ -119,7 +119,7 @@ Each module's `reference.md` is the quick reference (CLI, configuration, library
 - [Hybrid Binary Distribution Evaluation](evaluations/hybrid-binaries.md): Evaluation record on bundling compiled binaries with `uv` wheels (not adopted; semantic search landed in pure Python as `devkit.search`).
 
 ### Shared Foundation (`devkit.core`, `devkit.advisory`)
-- [Core Reference](../core/reference.md): Frontmatter grammar, receipt reader, safe paths, Git runner, plugin loading, project discovery, CLI plumbing.
+- [Core Reference](../core/reference.md): Frontmatter grammar, receipt reader, safe paths, atomic writes, Git runner, deadlines, file locks, plugin loading, project discovery, CLI plumbing.
 - [Agent Advisory Protocol](../advisory/protocol.md): Levels, block format, fields, mode derivation and canonical `[ACTION]` directives.
 - [Advisory Reference](../advisory/reference.md): The `devkit.advisory` library and the `advisory` guide bundle.
 

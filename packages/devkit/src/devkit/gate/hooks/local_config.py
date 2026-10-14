@@ -52,7 +52,7 @@ from typing import Any
 import tomlkit
 
 from devkit.advisory import AdvisoryError, as_advisory_error
-from devkit.core import CONFIG_PATH, ConfigError, require_git_toplevel
+from devkit.core import CONFIG_PATH, ConfigError, UnsafePathError, require_git_toplevel
 from devkit.core.errors import GitError
 from devkit.core.logs import get_logger
 from devkit.gate.engine.config import ENABLED_KEY, LOCAL_CONFIG, GateEntry, GatesConfig, load_project_gates_config
@@ -197,7 +197,7 @@ def refresh_template(common_git_dir: Path, gates: list[Gate], project: GatesConf
     try:
         with hooks.clone_lock(common_git_dir):
             return _refresh(path, gates, project)
-    except OSError as exc:
+    except (OSError, UnsafePathError) as exc:  # UnsafePathError: the clone lock file is not a regular file
         writable = f"Make {path.parent} writable and {path} a regular UTF-8 file, {_INSTALL_FIX}"
         return _skipped(path, f"cannot be written: {exc}", fix=writable)
 

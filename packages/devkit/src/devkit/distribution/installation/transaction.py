@@ -1,29 +1,26 @@
 """Workspace transactions: the project lock, the write-ahead journal and atomic file replacement.
 
-POSIX only (``fcntl.flock``, directory ``fsync``).
+POSIX only (``fcntl.flock`` through ``devkit.core.file_lock``, directory ``fsync``).
 """
 
 from __future__ import annotations
 
 import base64
-import errno
-import fcntl
 import json
 import os
-import stat
 import tempfile
-import time
 from collections.abc import Iterable, Iterator
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
 
+from devkit.core import LockHeldError as CoreLockHeldError
+from devkit.core import UnsafePathError, file_lock
 from devkit.distribution.content import Content, json_content
 from devkit.distribution.errors import LockHeldError, PendingTransactionError, RecoveryError, UnsafeWorkspaceError
 from devkit.distribution.installation.workspace import JOURNAL, LOCK, checked_path, owned_prefix, project_path, snapshot
 
 # How long a reader waits for a writer to release the lock before giving up.
 READ_LOCK_TIMEOUT = 10.0
-_POLL = 0.05
 
 
 def read_json(root: Path, name: str) -> dict | None:
@@ -160,7 +157,7 @@ def atomic_write(root: Path, name: str, content: Content | None) -> None:
 
 @contextmanager
 def project_lock(root: Path, *, shared: bool = False) -> Iterator[None]:
-    """Hold the project lock at ``.devkit/transient/lock``.
+    """Hold the project lock at ``.devkit/transient/lock`` (``devkit.core.file_lock``).
 
     Writers take it exclusively and fail at once when it is held. Readers
     (``shared=True``) share it with each other and wait up to
@@ -174,27 +171,14 @@ def project_lock(root: Path, *, shared: bool = False) -> Iterator[None]:
         return
     path = checked_path(root, LOCK)
     path.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        fd = os.open(path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
-    except OSError as exc:
-        if exc.errno == errno.ELOOP:
+    with ExitStack() as stack:
+        try:
+            stack.enter_context(file_lock(path, shared=shared, timeout=READ_LOCK_TIMEOUT if shared else 0.0))
+        except UnsafePathError as exc:
             raise UnsafeWorkspaceError(f"unsafe lock file: {LOCK}", target_files=[LOCK]) from exc
-        raise
-    try:
-        if not stat.S_ISREG(os.fstat(fd).st_mode):
-            raise UnsafeWorkspaceError(f"unsafe lock file: {LOCK}", target_files=[LOCK])
-        deadline = time.monotonic() + (READ_LOCK_TIMEOUT if shared else 0.0)
-        while True:
-            try:
-                fcntl.flock(fd, (fcntl.LOCK_SH if shared else fcntl.LOCK_EX) | fcntl.LOCK_NB)
-                break
-            except BlockingIOError as exc:
-                if time.monotonic() >= deadline:
-                    raise LockHeldError("another devkit operation holds the project lock", target_files=[LOCK]) from exc
-                time.sleep(_POLL)
+        except CoreLockHeldError as exc:
+            raise LockHeldError("another devkit operation holds the project lock", target_files=[LOCK]) from exc
         yield
-    finally:
-        os.close(fd)
 
 
 def _encode(content: Content | None) -> dict | None:

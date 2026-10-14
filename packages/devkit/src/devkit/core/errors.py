@@ -120,3 +120,42 @@ class GitError(DevkitCoreError):
         self.command = command
         self.returncode = returncode
         self.stderr = stderr
+
+
+class DeadlineExceededError(DevkitCoreError):
+    """An operation bounded by a ``Deadline`` ran out of time (``DEFER``): something else kept it busy.
+
+    ``what`` names the step that ran out (``git fetch``, ``waiting for the lock on <path>``) and
+    ``seconds`` the deadline's length. A caller with a code of its own catches it and re-raises, or gives
+    its ``Deadline`` an ``error`` factory so the deadline raises the caller's error directly.
+    """
+
+    code = "DEADLINE_EXCEEDED"
+    actor = Actor.NONE
+    retry = Retry.SAFE
+
+    def __init__(
+        self,
+        message: str,
+        *details: object,
+        what: str = "",
+        seconds: float = 0.0,
+        **fields: Unpack[AdvisoryFields],
+    ) -> None:
+        super().__init__(message, *details, **fields)
+        self.what = what
+        self.seconds = seconds
+
+
+class LockHeldError(DeadlineExceededError):
+    """Another process held a file lock past the wait the caller allowed (``DEFER``); ``seconds`` is that wait."""
+
+    code = "LOCK_HELD"
+
+
+class LockUnsupportedError(DevkitCoreError):
+    """The platform has no ``fcntl.flock``, which every devkit file lock uses (``BLOCKED``)."""
+
+    code = "LOCK_UNSUPPORTED"
+    guardrail = True
+    fix = "Run the command on Linux or macOS"

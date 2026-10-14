@@ -7,9 +7,12 @@ from devkit.advisory import ActionMode, AdvisoryError, ExitCode
 from devkit.core import (
     ArgumentError,
     ConfigError,
+    DeadlineExceededError,
     DevkitCoreError,
     FrontmatterError,
     GitError,
+    LockHeldError,
+    LockUnsupportedError,
     ReceiptError,
     UnsafePathError,
     frontmatter,
@@ -29,6 +32,9 @@ from devkit.core import (
         (ArgumentError, "ARGUMENT_INVALID", ActionMode.INPUT_ERROR),
         (UnsafePathError, "PATH_UNSAFE", ActionMode.INPUT_ERROR),
         (GitError, "GIT_FAILED", ActionMode.MAINTENANCE),
+        (DeadlineExceededError, "DEADLINE_EXCEEDED", ActionMode.DEFER),
+        (LockHeldError, "LOCK_HELD", ActionMode.DEFER),
+        (LockUnsupportedError, "LOCK_UNSUPPORTED", ActionMode.BLOCKED),
     ],
 )
 def test_core_errors_are_advisories_with_stable_codes(cls: type[DevkitCoreError], code: str, mode: ActionMode) -> None:

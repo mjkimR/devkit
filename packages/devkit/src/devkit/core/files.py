@@ -1,4 +1,4 @@
-"""Atomic file replacement: a reader sees the old content or the new, never a partial write.
+"""Atomic file replacement (a reader sees the old content or the new, never a partial write) and empty-tree removal.
 
 POSIX only (directory ``fsync``). The data goes to a temporary file in the
 target's directory, is flushed to disk, takes its permission bits, and then
@@ -57,3 +57,29 @@ def atomic_write_bytes(path: Path, data: bytes, *, mode: int | None = None) -> N
 def atomic_write_text(path: Path, text: str, *, mode: int | None = None) -> None:
     """``atomic_write_bytes`` of ``text`` encoded as UTF-8, exactly (no newline translation)."""
     atomic_write_bytes(path, text.encode("utf-8"), mode=mode)
+
+
+def _raise(error: OSError) -> None:
+    raise error
+
+
+def remove_empty_tree(path: Path) -> list[Path]:
+    """Remove the directory ``path`` when it and every directory beneath it hold no file; return what went.
+
+    All or nothing: any file at any depth keeps the whole tree, and a symbolic link counts as a file (it is
+    never followed, never removed). The removed directories are returned deepest first, ``path`` last; the
+    list is empty when ``path`` is missing, a symbolic link, not a directory, or holds a file. A directory
+    that cannot be listed raises ``OSError`` before anything is removed; one that cannot be removed (a file
+    appeared meanwhile) raises ``OSError`` too, leaving its parents in place.
+    """
+    if path.is_symlink() or not path.is_dir():
+        return []
+    for current, dirnames, filenames in os.walk(path, onerror=_raise):
+        here = Path(current)
+        if filenames or any((here / name).is_symlink() for name in dirnames):
+            return []
+    removed: list[Path] = []
+    for current, _dirnames, _filenames in os.walk(path, topdown=False, onerror=_raise):
+        Path(current).rmdir()
+        removed.append(Path(current))
+    return removed

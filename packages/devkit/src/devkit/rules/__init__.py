@@ -44,6 +44,14 @@ from devkit.rules.engine.settings import RawSettings, SettingsResolver, match_pa
 from devkit.rules.workspace.cache import WorkspaceCache
 from devkit.rules.workspace.catalog import Document, DocumentCatalog
 from devkit.rules.workspace.markdown import MarkdownLink, count_tasks, extract_links
+from devkit.rules.workspace.relocation import (
+    LinkRelocation,
+    LinkRelocationReport,
+    RelocatedLink,
+    UnresolvedLink,
+    UnresolvedReason,
+    relocate_links,
+)
 from devkit.rules.workspace.snapshot import Snapshot, git_snapshot, materialize_snapshot
 
 __all__ = [
@@ -51,6 +59,8 @@ __all__ = [
     "Document",
     "DocumentCatalog",
     "EvaluationResult",
+    "LinkRelocation",
+    "LinkRelocationReport",
     "ManagedRules",
     "MarkdownLink",
     "Phase",
@@ -62,6 +72,7 @@ __all__ = [
     "RawSettings",
     "RelatedAsset",
     "RelatedUnresolvedNotice",
+    "RelocatedLink",
     "Rule",
     "RuleContext",
     "RuleDefinitionError",
@@ -81,6 +92,8 @@ __all__ = [
     "Snapshot",
     "SnapshotError",
     "TargetError",
+    "UnresolvedLink",
+    "UnresolvedReason",
     "Violation",
     "WorkspaceCache",
     "build_project_registry",
@@ -94,6 +107,7 @@ __all__ = [
     "load_rules_config",
     "match_path",
     "materialize_snapshot",
+    "relocate_links",
     "resolve_managed_rules",
     "resolve_phases",
     "resolve_related",

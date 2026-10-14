@@ -283,6 +283,30 @@ with `validate_pattern`, which raises `ValueError` for an empty or absolute
 pattern, a backslash or `:`, an empty, `.` or `..` segment, or a partial `**`,
 and matches workspace-relative paths with `match_path`.
 
+### Link relocation
+
+`relocate_links(root, files, relocation) -> LinkRelocationReport` rewrites the
+relative inline links (`extract_links`) of `files` after paths moved, for any
+caller that moves Markdown files. `LinkRelocation` says where things went:
+`files` (old path to new path, exactly; a directory linked to as a whole too),
+`directories` (old to new directory, for every path strictly beneath it; the
+deepest key wins), `removed` (old paths that are gone), `file_origins` (new
+file to the old file it was written as) and `directory_origins` (new directory
+to the old one its files were written for). Paths are absolute or relative to
+`root`. A link into a moved-away path goes to its new location; a link of a
+file written for another location is rewritten to reach the same target from
+where the file is now. URLs, root-relative and fragment- or query-only
+destinations are left alone, `#fragment` and `?query` are kept, and a
+destination that still names its target keeps the author's spelling.
+Destinations are compared as written (no percent-decoding or escape removal).
+Changed files are replaced with `atomic_write_text`; nothing is raised for a
+file. The report lists the rewritten `files`, each `RelocatedLink` (`path`,
+`line`, `old`, `new`; `to_dict` keys `from` and `to`) and each
+`UnresolvedLink` (`path`, `line`, `target`, `reason`), whose
+`UnresolvedReason` is `unmapped` (a link into a moved-away path no mapping
+covers, left as written), `unreadable` or `unwritable` (a whole file: `line`
+`0`, empty `target`).
+
 ### Rule tests
 
 `devkit.rules.testing` is what the tests in a rule's folder use

@@ -23,7 +23,10 @@ def as_text(value: Any) -> str:
 
 @contextmanager
 def _locked(directory: Path) -> Iterator[None]:
-    """Hold an exclusive ``flock`` on ``directory`` itself; the lock dies with the process, so none goes stale."""
+    """Hold an exclusive ``flock`` on ``directory`` itself; the lock dies with the process, so none goes stale.
+
+    Not ``devkit.core.file_lock``, which locks a regular lock file: a lock file would sit among the records.
+    """
     fd = os.open(directory, os.O_RDONLY)
     try:
         fcntl.flock(fd, fcntl.LOCK_EX)

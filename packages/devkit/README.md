@@ -29,7 +29,7 @@ and `git-commits` (commit message conventions,
 
 | Module | Purpose | CLI | Reference |
 | --- | --- | --- | --- |
-| `devkit.core` | Shared foundation: frontmatter grammar, installation receipt, safe paths, Git runner, plugin loading, project discovery, CLI plumbing | none | [docs/core](../../docs/core/reference.md) |
+| `devkit.core` | Shared foundation: frontmatter grammar, installation receipt, safe paths, atomic writes, Git runner, deadlines, file locks, plugin loading, project discovery, CLI plumbing | none | [docs/core](../../docs/core/reference.md) |
 | `devkit.advisory` | Agent Advisory Protocol (errors, warnings, notices), from the `devkit-advisory` distribution; the built-in `advisory` guide bundle is `devkit.advisory_guide` (`authoring` and `git-commits` are likewise the data-only `devkit.authoring_guide` and `devkit.commits_guide`) | none | [docs/advisory](../../docs/advisory/reference.md) |
 | `devkit.rules` | Repository rule engine with autofix, project policy and Git snapshot gates | `devkit rules` | [docs/rules](../../docs/rules/reference.md) |
 | `devkit.workflow` | Data-driven delivery workflow engine | `devkit workflow` | [docs/workflow](../../docs/workflow/reference.md) |

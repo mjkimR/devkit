@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import fcntl
 import os
 import shlex
 import subprocess
@@ -14,7 +13,7 @@ from enum import StrEnum
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError, Level
-from devkit.core import require_git_toplevel
+from devkit.core import file_lock, require_git_toplevel
 from devkit.gate.engine.models import Stage
 from devkit.gate.engine.runner import GateProject, load_gate_project
 from devkit.gate.errors import (
@@ -361,15 +360,12 @@ class InstallResult:
 def clone_lock(common_git_dir: Path) -> Iterator[None]:
     """Serialize hook and ``devkit.config`` template mutations across linked worktrees of the same clone.
 
-    An exclusive ``flock`` on ``<common_git_dir>/devkit-hooks.lock``, held until the block ends.
+    An exclusive ``devkit.core.file_lock`` on ``<common_git_dir>/devkit-hooks.lock``, waited for without
+    a bound and held until the block ends. A lock file that is a symlink or not a regular file is
+    ``UnsafePathError`` (``PATH_UNSAFE``).
     """
-    fd = os.open(common_git_dir / LOCK_FILE, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
-    with os.fdopen(fd, "w") as stream:
-        fcntl.flock(stream, fcntl.LOCK_EX)
-        try:
-            yield
-        finally:
-            fcntl.flock(stream, fcntl.LOCK_UN)
+    with file_lock(common_git_dir / LOCK_FILE):
+        yield
 
 
 def _owned(path: Path, marker: str) -> bool:

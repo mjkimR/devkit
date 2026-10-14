@@ -310,3 +310,18 @@ def test_rendered_description_keeps_line_breaks() -> None:
     rendered = render_projection("claude-code", contract, ".devkit/managed/b/r.md")
     assert rendered is not None
     assert b'description: "Reviewer. First line.\\nSecond line."' in rendered
+
+
+@pytest.mark.parametrize("kind", ["symlink", "directory"])
+def test_a_lock_file_that_is_not_a_regular_file_is_unsafe(target: Path, tmp_path: Path, kind: str) -> None:
+    lock = target / LOCK
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    elsewhere = tmp_path / "elsewhere"
+    if kind == "symlink":
+        lock.symlink_to(elsewhere)
+    else:
+        lock.mkdir()
+    with pytest.raises(UnsafeWorkspaceError) as raised, transaction.project_lock(target):
+        pass
+    assert raised.value.code == "WORKSPACE_UNSAFE" and raised.value.target_files == (LOCK,)
+    assert not elsewhere.exists()

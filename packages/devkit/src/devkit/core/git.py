@@ -12,6 +12,7 @@ import os
 import subprocess
 from pathlib import Path
 
+from devkit.core.deadline import Deadline
 from devkit.core.errors import GitError
 
 DEFAULT_TIMEOUT = 60.0  # seconds; the one Git timeout every devkit area uses
@@ -26,6 +27,7 @@ def run_git(
     input: bytes | None = None,
     timeout: float | None = DEFAULT_TIMEOUT,
     index: str | None = None,
+    deadline: Deadline | None = None,
 ) -> bytes:
     """Run ``git -C <cwd> <args...>`` and return its standard output.
 
@@ -41,9 +43,17 @@ def run_git(
     ``timeout``, or exits nonzero; the error carries the command, the exit
     status (``None`` if there is none) and Git's decoded standard error.
     ``index`` sets ``GIT_INDEX_FILE`` for this call.
+
+    ``deadline`` bounds the call by a shared ``Deadline`` instead of ``timeout``: an expired deadline
+    starts no Git, Git gets the time left on it, and a Git still running when it runs out is killed.
+    Both raise ``deadline.exceeded("git <subcommand>")`` (``DeadlineExceededError`` unless the deadline
+    has an error factory); every other failure is still ``GitError``.
     """
     command = ("git", "-C", str(cwd), *args)
     label = f"git {args[0]}" if args else "git"
+    if deadline is not None:
+        deadline.check(label)
+        timeout = max(deadline.remaining(), 0.001)
     env = {**os.environ, "LC_ALL": "C", "GIT_TERMINAL_PROMPT": "0"}
     if index is not None:
         env["GIT_INDEX_FILE"] = index
@@ -53,6 +63,8 @@ def run_git(
             command, input=input, stdin=stdin, capture_output=True, check=False, timeout=timeout, env=env
         )
     except subprocess.TimeoutExpired as exc:
+        if deadline is not None:
+            raise deadline.exceeded(label) from exc
         stderr = (exc.stderr or b"").decode("utf-8", errors="replace").strip()
         raise GitError(f"{label} timed out after {timeout}s in {cwd}", command=command, stderr=stderr) from exc
     except OSError as exc:

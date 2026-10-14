@@ -2,7 +2,8 @@
 
 One implementation of what several packages need to agree on: the frontmatter
 grammar, the installation receipt, safe workspace-relative paths, atomic file
-replacement, the Git runner, plugin package loading, project discovery and configuration reading, and
+replacement and empty-tree removal, the Git runner, deadlines, file locks, plugin package loading,
+project discovery and configuration reading, and
 the command-line plumbing every command group uses (``devkit.core.cli``, the
 only module that imports click; it is not imported here). Free of import-time
 side effects; the only devkit module it imports is ``devkit.advisory`` (every
@@ -15,20 +16,25 @@ config template's (``devkit.core.config_template.render_tool_template`` /
 """
 
 from devkit.core.config_template import TemplateKey, TemplateTable
+from devkit.core.deadline import Deadline
 from devkit.core.errors import (
     ArgumentError,
     AssetFileError,
     CommandPluginError,
     ConfigError,
+    DeadlineExceededError,
     DevkitCoreError,
     FrontmatterError,
     GitError,
+    LockHeldError,
+    LockUnsupportedError,
     ReceiptError,
     UnsafePathError,
 )
-from devkit.core.files import atomic_write_bytes, atomic_write_text
+from devkit.core.files import atomic_write_bytes, atomic_write_text, remove_empty_tree
 from devkit.core.frontmatter import Frontmatter, FrontmatterBlock
 from devkit.core.git import run_git
+from devkit.core.locks import file_lock
 from devkit.core.paths import is_safe_relpath, normalize_relpath, resolve_within
 from devkit.core.plugins import (
     LoadedPlugin,
@@ -82,6 +88,8 @@ __all__ = [
     "AssetRecord",
     "CommandPluginError",
     "ConfigError",
+    "Deadline",
+    "DeadlineExceededError",
     "DevkitCoreError",
     "FileRecord",
     "Frontmatter",
@@ -89,6 +97,8 @@ __all__ = [
     "FrontmatterError",
     "GitError",
     "LoadedPlugin",
+    "LockHeldError",
+    "LockUnsupportedError",
     "OverrideRecord",
     "PackageRecord",
     "PluginFailure",
@@ -105,6 +115,7 @@ __all__ = [
     "atomic_write_bytes",
     "atomic_write_text",
     "config_table",
+    "file_lock",
     "find_project_root",
     "git_toplevel",
     "is_safe_relpath",
@@ -115,6 +126,7 @@ __all__ = [
     "parse_receipt",
     "read_project_config",
     "read_toml",
+    "remove_empty_tree",
     "require_devkit_root",
     "require_git_toplevel",
     "resolve_within",
