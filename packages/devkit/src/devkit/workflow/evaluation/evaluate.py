@@ -13,6 +13,7 @@ from datetime import datetime
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError, as_advisory_error
+from devkit.core.errors import UnsafePathError
 from devkit.workflow.definition.checks import (
     GATE_PREFIX,
     Check,
@@ -199,11 +200,20 @@ class _Evaluator:
             return False, True, "no lint function configured"
         if not self.lint_done:
             self.lint_done = True
-            files = sorted(
-                p.relative_to(self.opts.workspace_root).as_posix() for p in self.unit_dir.rglob("*") if p.is_file()
-            )
+            root = self.opts.workspace_root
             try:
-                self.lint_violations = self.opts.lint(self.opts.workspace_root, files)
+                if not self.unit_dir.is_relative_to(root):
+                    raise UnsafePathError(
+                        f"unit {self.unit_dir.as_posix()} resolves outside the workspace root {root.as_posix()}; "
+                        "lint-clean lints only files of the workspace",
+                        target_files=[self.unit_dir.as_posix()],
+                        fix=(
+                            "Pass a unit directory inside the workspace (replace a symbolic link that leads out of it), "
+                            "or run the command with -w <the unit's project root>"
+                        ),
+                    )
+                files = sorted(_rel(p, root) for p in self.unit_dir.rglob("*") if p.is_file())
+                self.lint_violations = self.opts.lint(root, files)
             except Exception as exc:
                 self.lint_error = as_advisory_error(exc)
         if self.lint_error is not None:
@@ -212,19 +222,27 @@ class _Evaluator:
             shown = "; ".join(self.lint_violations[:LINT_DETAIL_SHOWN])
             more = len(self.lint_violations) - LINT_DETAIL_SHOWN
             if more > 0:
-                unit = self.unit_dir.relative_to(self.opts.workspace_root).as_posix()
+                unit = _rel(self.unit_dir, self.opts.workspace_root)
                 shown += f"; {more} more (devkit rules check {unit})"
             return True, False, f"{len(self.lint_violations)} violation(s): {shown}"
         return True, True, ""
 
 
+def _rel(path: Path, root: Path) -> str:
+    """``path`` relative to ``root`` when inside it, else as given (``Workspace.rel``)."""
+    try:
+        return path.relative_to(root).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
 def _instant(text: str) -> datetime | None:
-    """An ISO 8601 timestamp of a record (``Z`` or an offset); ``None`` when it is missing or malformed."""
+    """An ISO 8601 timestamp of a record (``Z`` or an offset) truncated to the second; ``None`` when missing or malformed."""
     try:
         moment = datetime.fromisoformat(text)
     except ValueError:
         return None
-    return moment if moment.tzinfo is not None else None
+    return moment.replace(microsecond=0) if moment.tzinfo is not None else None
 
 
 def _after_returns(
@@ -232,8 +250,10 @@ def _after_returns(
 ) -> Envelopes:
     """The envelopes no later return re-opened.
 
-    A return to a stage voids, besides the approvals, every envelope recorded for that stage or a later one before
-    the return: going back means doing that work again, so an earlier review or report no longer satisfies the stage.
+    A return to a stage voids, besides the approvals, every envelope recorded for that stage or a later one at or
+    before the return: going back means doing that work again, so an earlier review or report no longer satisfies the
+    stage. Times compare at whole seconds, the precision of the records, and an envelope from the same second as the
+    return is void: its order is unknown, and asking for it again is safer than letting stale evidence count.
     An envelope without a stage of the definition or a ``created_at``, or a return without a time, voids nothing.
     """
     timed = [(at, target) for at, target in returns if at is not None and target >= 0]
@@ -244,7 +264,7 @@ def _after_returns(
         written, index = _instant(envelope.created_at), doc.stage_index(envelope.stage)
         if written is None or index < 0:
             return True
-        return not any(written < at and target <= index for at, target in timed)
+        return not any(written <= at and target <= index for at, target in timed)
 
     kept = {kind: [e for e in items if current(e)] for kind, items in envelopes.by_kind.items()}
     return Envelopes({kind: items for kind, items in kept.items() if items}, list(envelopes.errors))
@@ -285,10 +305,7 @@ def evaluate_definition(doc: WorkflowDocument, opts: Options) -> UnitEvaluation:
     Raises ``UnitNotFoundError`` when the anchor is missing and
     ``AnchorInvalidError`` when its frontmatter cannot be read.
     """
-    try:
-        unit_rel = opts.unit_dir.relative_to(opts.workspace_root).as_posix()
-    except ValueError:
-        unit_rel = opts.unit_dir.as_posix()
+    unit_rel = _rel(opts.unit_dir, opts.workspace_root)
     state = _read_anchor(opts, unit_rel)
     binding = state.binding
     registry = Registry.build(opts.anchor, doc.declared_checks, opts.plugins)

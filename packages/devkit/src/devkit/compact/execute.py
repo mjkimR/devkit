@@ -36,6 +36,7 @@ from devkit.core.project import find_project_root
 
 KEEP_LOGS = 20
 STOP_GRACE = 5.0
+_STOP_POLL = 0.05
 LOG_ROOT = "devkit-run"
 INTERRUPTS = (signal.SIGINT, signal.SIGTERM, signal.SIGHUP)
 
@@ -332,17 +333,31 @@ def _signals(handler: Callable[[int, object], None] | int, *signums: int) -> Ite
             signal.signal(signum, old if old is not None else signal.SIG_DFL)
 
 
-def _stop(process: subprocess.Popen[bytes]) -> None:
-    """Terminate the command's process group, then kill it after ``STOP_GRACE`` seconds.
+def _group_alive(pgid: int) -> bool:
+    """Whether the process group ``pgid`` still has a running member."""
+    try:
+        os.killpg(pgid, 0)
+    except (ProcessLookupError, PermissionError):  # PermissionError: on macOS, when only zombies are left
+        return False
+    return True
 
-    Further interrupts are ignored meanwhile, so a second Ctrl-C cannot skip the kill.
+
+def _stop(process: subprocess.Popen[bytes]) -> None:
+    """Terminate the command's process group, then kill what is left of it after ``STOP_GRACE`` seconds.
+
+    The leader exiting is not enough: a member that ignores ``SIGTERM`` is killed once the grace ends,
+    so nothing in the group outlives the run. Further interrupts are ignored meanwhile, so a second
+    Ctrl-C cannot skip the kill.
     """
     with _signals(signal.SIG_IGN, *INTERRUPTS):
+        deadline = time.monotonic() + STOP_GRACE
         with contextlib.suppress(ProcessLookupError):
             os.killpg(process.pid, signal.SIGTERM)
-        try:
+        with contextlib.suppress(subprocess.TimeoutExpired):
             process.wait(timeout=STOP_GRACE)
-        except subprocess.TimeoutExpired:
-            with contextlib.suppress(ProcessLookupError):
+        while _group_alive(process.pid) and time.monotonic() < deadline:
+            time.sleep(_STOP_POLL)
+        if _group_alive(process.pid):
+            with contextlib.suppress(ProcessLookupError, PermissionError):
                 os.killpg(process.pid, signal.SIGKILL)
-            process.wait()
+        process.wait()

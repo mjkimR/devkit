@@ -271,7 +271,8 @@ Every mutating command follows these steps:
    `AGENTS.md` included).
 2. **Project lock**: `fcntl.flock` on `.devkit/transient/lock` (POSIX only). Writers (`sync`, `add`, `remove`,
    `recover`, `override create|accept|remove`) take it exclusively and fail at once when it is held (`LOCK_HELD`,
-   `DEFER`). Readers (`get-context`, `playbook search`, `status`, `list`, `override list|diff`) share it and wait
+   `DEFER`). Readers (`get-context`, `playbook search`, `status`, `list`, `override list|diff`, and `sync`, `add`
+   and `remove` under `--dry-run` or `--check`, which write nothing) share it and wait
    up to ten seconds for a writer; in a project without `.devkit/` they take no lock, so reading never creates it.
 3. **Write-ahead journal**: pending operations and base64 backups of the files they replace are flushed to
    `.devkit/transient/sync-journal.json` before the disk changes.
@@ -293,7 +294,8 @@ entry-point group, in sorted entry-point name order, as
 `extension(root: Path, result: dict) -> list[str | AdvisoryError] | None`, where `result` is `SyncResult.to_dict()`.
 Each returned string becomes a `POST_SYNC_NOTICE` (its `details` name the extension); each returned `AdvisoryError`
 keeps its code and level, except that an `ERROR` is lowered to `WARNING`. Both join the result's `notices` (for
-`override create|remove`, the change's `notices`). An extension that raises or returns anything else becomes a
+`override create|remove`, the change's `notices`). An `AdvisoryError` an extension raises is kept the same way, with an
+`extension: <name>` detail; any other exception, or a return value of another type, becomes a
 `POST_SYNC_EXTENSION_FAILED` warning; an extension can never fail or roll back the sync, because the files are already on disk.
 This is how a package built on devkit reacts to a changed workspace without devkit knowing it; since the lock is
 released, an extension may call devkit reads such as `get_context`. `devkit` registers one itself,
@@ -307,10 +309,14 @@ The result fields and every notice code are listed in the
 
 The receipt, the root `AGENTS.md` block and seeded files are Git-tracked state that every clone shares; the managed
 copies under `.devkit/managed/` (and native projections a repository ignores) are rebuilt per clone. `devkit sync
---locked` rebuilds only the latter: it plans a plain sync, and commits it only when every planned action creates a
-file the committed receipt records and the receipt it would write is the committed one (the `tool` version aside,
-which it leaves as committed). Since the receipt is unchanged, each created file carries its recorded SHA-256 and
-mode. Any other plan (an update, a removal, a seed, the guidance block, `.devkit/.gitignore`, a new or changed
+--locked` rebuilds only the latter: it plans a plain sync, and commits it only when the receipt it would write is the
+committed one (the `tool` version aside, which it leaves as committed) and every planned action restores an ignored
+copy to it: a `create` of a missing file the receipt records, an `update` of a recorded file still as this clone's
+last sync left it (`.devkit/transient/deployed.json`), or a `remove` of such an unchanged file the receipt no longer
+records. The last two are a clone whose committed receipt moved under it (a pull of another clone's sync). Since the
+receipt is unchanged, each written file carries its recorded SHA-256 and mode; a hand-edited copy is a
+`SYNC_CONFLICT` as in a plain sync. A seeded file the receipt records but the project deleted is left missing (a plain
+sync seeds it again). Any other plan (a seed, the guidance block, `.devkit/.gitignore`, a new or changed
 receipt) writes nothing and raises `ReceiptStaleError` (`RECEIPT_STALE`): an `INTERACTION` error with exit code `1`,
 since updating committed files is the user's decision and an agent must not retry it away with a plain sync. Its
 `[TARGET]` names the committed paths that would change and its `[DETAIL]` lines the planned writes.

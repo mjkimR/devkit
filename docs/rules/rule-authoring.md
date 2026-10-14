@@ -82,7 +82,7 @@ class FileLengthRule(BaseRule):
             ...
 ```
 
-`validate_settings` raises `ValueError` for values the field types cannot express. It runs on the defaults, the configured values and every override layer (each applied to the configured values) before any rule executes. Several overrides matching one file are combined when `ctx.settings` is first called for it, and a rejected combination raises `SettingsError` (`RULES_SETTINGS_INVALID`). Results are memoized per combination of matching overrides.
+`validate_settings` (or the settings dataclass's `__post_init__`) raises `ValueError` for values the field types cannot express; every field must be an `init` field. Rejected project values are `RULES_SETTINGS_INVALID` as an `INPUT_ERROR`; rejected defaults, unresolvable field annotations and any other exception are the same code as `MAINTENANCE`, attributed to the rule. Validation runs on the defaults, the configured values and every override layer (each applied to the configured values) before any rule executes. Several overrides matching one file are combined when `ctx.settings` is first called for it, and a rejected combination raises `SettingsError` (`RULES_SETTINGS_INVALID`). Results are memoized per combination of matching overrides.
 
 ### Optional `guide`
 

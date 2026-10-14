@@ -53,7 +53,7 @@ def test_install_status_uninstall(repo: Path) -> None:
     assert states[Stage.POST_COMMIT].python is None
     script = (repo / ".git/hooks/pre-commit").read_text()
     assert hooks.MARKER in script
-    assert "-P -m devkit.gate run pre-commit" in (repo / ".git/hooks/pre-commit.d/20-devkit").read_text()
+    assert '-P -c "$bootstrap" pre-commit' in (repo / ".git/hooks/pre-commit.d/20-devkit").read_text()
 
     data = _status(repo)
     assert [h["state"] for h in data["hooks"]] == ["managed"] * 3
@@ -253,21 +253,72 @@ def test_repository_modules_do_not_shadow_the_hook(repo: Path) -> None:
     assert code == 0, output
 
 
-def test_wrapper_without_interpreter(repo: Path, tmp_path: Path) -> None:
+def _run_entry(repo: Path, stage: Stage, python: str) -> subprocess.CompletedProcess[str]:
+    entry = repo / ".git/hooks" / f"{stage.value}.d" / hooks.DEVKIT_ENTRY
+    entry.parent.mkdir(parents=True, exist_ok=True)
+    entry.write_text(hooks.wrapper_script(stage, python))
+    entry.chmod(0o755)
+    return subprocess.run([str(entry)], cwd=repo, capture_output=True, text=True, check=False)
+
+
+def _venv_without_devkit(tmp_path: Path) -> Path:
+    venv = tmp_path / "bare-venv"
+    subprocess.run([sys.executable, "-m", "venv", "--without-pip", str(venv)], check=True)
+    return venv
+
+
+def _assert_unavailable(result: subprocess.CompletedProcess[str], stage: Stage, reason: str) -> None:
+    # Exit 2 (could not run) in a blocking stage, never 1 (gates refused); post-commit only warns.
+    blocking = stage.blocking
+    assert result.returncode == (2 if blocking else 0), result.stderr
+    assert "Traceback" not in result.stderr
+    lines = result.stderr.splitlines()
+    headline = "[ERROR]  " if blocking else "[WARN]   "
+    assert (
+        lines[0]
+        == f"{headline}(GATE_INTERPRETER_UNAVAILABLE) {stage.value}: no interpreter can import devkit.gate; the gates did not run"
+    )
+    assert lines[1].startswith("[ACTION] MAINTENANCE" if blocking else "[ACTION] CONTINUE")
+    assert any(line.startswith("[FIX]    Run `uv sync`") for line in lines)
+    assert lines[-2].startswith("[DETAIL] python=") and lines[-1].startswith(f"[DETAIL] {reason}")
+
+
+@pytest.mark.parametrize("stage", list(Stage))
+def test_wrapper_without_interpreter(repo: Path, tmp_path: Path, stage: Stage) -> None:
+    result = _run_entry(repo, stage, (tmp_path / "gone/python").as_posix())
+    _assert_unavailable(result, stage, "not an executable file")
+    assert f"[DETAIL] python={(tmp_path / 'gone/python').as_posix()}" in result.stderr
+
+
+@pytest.mark.parametrize("stage", list(Stage))
+def test_wrapper_with_interpreter_without_devkit(repo: Path, tmp_path: Path, stage: Stage) -> None:
+    python = _venv_without_devkit(tmp_path) / "bin/python"
+    _assert_unavailable(_run_entry(repo, stage, python.as_posix()), stage, "ModuleNotFoundError: ")
+
+
+def test_wrapper_with_interpreter_whose_devkit_is_broken(repo: Path, tmp_path: Path) -> None:
+    venv = _venv_without_devkit(tmp_path)
+    site = next((venv / "lib").glob("python*/site-packages"))
+    (site / "devkit/gate").mkdir(parents=True)
+    (site / "devkit/gate/__init__.py").write_text("raise RuntimeError('incompatible devkit\\nsecond line')\n")
+    result = _run_entry(repo, Stage.PRE_COMMIT, (venv / "bin/python").as_posix())
+    _assert_unavailable(result, Stage.PRE_COMMIT, "RuntimeError: incompatible devkit")
+    assert "second line" not in result.stderr
+
+
+def test_commit_aborts_without_interpreter(repo: Path, tmp_path: Path) -> None:
     directory = repo / ".git/hooks"
     for stage in Stage:
         (directory / stage.value).write_text(hooks.wrapper_script(stage, (tmp_path / "gone/python").as_posix()))
         (directory / stage.value).chmod(0o755)
     code, output = _commit(repo, "-m", "feat: x")
-    assert code != 0 and "no interpreter with devkit found" in output
-    # Blocking stages exit 2 (the gates could not run); post-commit is not blocking and exits 0.
-    assert "    exit 2\n" in (directory / "pre-commit").read_text()
-    assert "    exit 0\n" in (directory / "post-commit").read_text()
+    assert code != 0 and "(GATE_INTERPRETER_UNAVAILABLE) pre-commit" in output
 
 
 def test_wrapper_probes_only_the_posix_venv_layout() -> None:
     script = hooks.wrapper_script(Stage.PRE_COMMIT, PYTHON)
-    assert "Scripts" not in script and ".exe" not in script and "/Lib/" not in script
+    shell = script.replace("sys.executable", "")
+    assert "Scripts" not in shell and ".exe" not in shell and "/Lib/" not in shell
     assert '"$top/.venv/bin/python"' in script
 
 

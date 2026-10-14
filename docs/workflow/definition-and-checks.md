@@ -147,7 +147,7 @@ A check reference is `name` or `name(arg1 arg2 ...)`. Arguments are whitespace-s
 | `envelope-completed` | `kind` | the deciding `envelopes/<kind>-NN.yaml` ([Review Envelopes](envelopes.md)) has `status: completed` and no open finding |
 | `envelope-check-pass` | `kind key` | the deciding envelope is completed and `checks.<key>` starts with `PASS` |
 | `revision-ancestor` | `ancestor-kind descendant-kind` | `diff_scope.head` of the latest ancestor-kind envelope is a Git ancestor of, or equal to, that of the latest descendant-kind envelope; both must be hexadecimal commit ids. When Git cannot answer (not a repository, an unknown commit as in a shallow clone, a timeout) the check is unsatisfied and `evaluated=false`, with Git's error in the detail |
-| `lint-clean` | none | `devkit.rules` reports no violation for files under the unit directory ([Integration](overview.md#4-integration-with-the-rule-engine-and-distribution)); the detail quotes the first three violations and counts the rest, naming `devkit rules check <unit>` |
+| `lint-clean` | none | `devkit.rules` reports no violation for files under the unit directory ([Integration](overview.md#4-integration-with-the-rule-engine-and-distribution)); the detail quotes the first three violations and counts the rest, naming `devkit rules check <unit>`. A unit directory that resolves outside the workspace root (an absolute `--unit`, or a symbolic link leaving the root) cannot be linted: the check fails with a `PATH_UNSAFE` lint error |
 
 ### Aliases
 
@@ -196,7 +196,7 @@ A stage with `human_gate` carries an implicit `human` check named `gate:<gate>`.
 
 ## 3. Binding and Drift
 
-`new` and `bind` write `workflow: <id>` and `workflow_hash: <hash>` into the anchor's frontmatter. `handoff` rebinds the unit to the chosen candidate and appends the finished segment to `workflow_history`, one flow-style line:
+`new` and `bind` write `workflow: <id>` and `workflow_hash: <hash>` into the anchor's frontmatter. The binding records only the id, which every unit command looks up among the discovered definitions, so `--workflow <path>` binds only the file discovered for its id (for example `.devkit/workflows/<id>.md`); any other definition file is refused with `WORKFLOW_NOT_BINDABLE` before anything is written. `next --workflow <path>` still evaluates a unit against such a file without binding it. `handoff` rebinds the unit to the chosen candidate and appends the finished segment to `workflow_history`, one flow-style line:
 
 ```yaml
 workflow: spec-driven

@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import contextlib
 import importlib
 import os
 import signal
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 from pathlib import Path
 from typing import Any
@@ -167,6 +169,45 @@ def test_a_signal_while_the_command_starts_still_stops_it(tmp_path: Path, monkey
     assert caught.value.code == 128 + signal.SIGTERM
     assert caught.value.run.interrupted == signal.SIGTERM and caught.value.run.exit_code == 128 + signal.SIGTERM
     assert caught.value.run.log.exists() and started[0].returncode is not None
+
+
+def _gone(pid: int, timeout: float = 5.0) -> bool:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            return True
+        time.sleep(0.02)
+    return False
+
+
+def test_an_interrupt_kills_a_group_member_that_ignores_sigterm_after_the_leader_exits(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(execute, "STOP_GRACE", 0.5)
+    pidfile = tmp_path / "member.pid"
+    # The leader exits on SIGTERM at once; its background member ignores it (and so do the sleeps it starts).
+    script = f"(trap '' TERM; while :; do sleep 0.05; done) & echo $! > {pidfile}.tmp; mv {pidfile}.tmp {pidfile}; wait"
+
+    def interrupt() -> None:
+        _wait_for(pidfile)
+        os.kill(os.getpid(), signal.SIGTERM)
+
+    timer = threading.Thread(target=interrupt)
+    timer.start()
+    try:
+        with pytest.raises(CommandInterrupted) as caught:
+            run_command(["sh", "-c", script], log_dir=tmp_path / "logs")
+    finally:
+        timer.join()
+    assert caught.value.run.interrupted == signal.SIGTERM
+    member = int(pidfile.read_text())
+    try:
+        assert _gone(member), "a group member that ignores SIGTERM outlived the run"
+    finally:
+        with contextlib.suppress(ProcessLookupError):
+            os.kill(member, signal.SIGKILL)
 
 
 def test_a_log_root_others_can_enter_is_made_private(tmp_path: Path) -> None:

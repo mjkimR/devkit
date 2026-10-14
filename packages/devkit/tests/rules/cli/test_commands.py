@@ -705,10 +705,14 @@ def test_cli_snapshot_requires_the_repository_top_level(tmp_path: Path, monkeypa
     assert [v["file"] for v in json.loads(implicit.stdout)["violations"]] == ["pkg/a.md"]
 
 
-def test_cli_base_requires_ci(tmp_path: Path) -> None:
+@pytest.mark.parametrize("mode", [["--staged"], []])
+def test_cli_base_requires_ci(tmp_path: Path, mode: list[str]) -> None:
     root = _repo(tmp_path)
-    result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "--base", "main"])
-    assert result.exit_code == 2 and "--base applies to --ci only" in result.stderr
+    (root / "a.md").write_text("[broken](missing.md)\n")
+    result = CliRunner().invoke(cli, ["check", "-w", str(root), *mode, "--base", "main", "--format", "json"])
+    assert result.exit_code == 2
+    error = json.loads(result.stdout)["error"]
+    assert error["code"] == "ARGUMENT_INVALID" and "--base applies to --ci only" in error["message"]
 
 
 def test_cli_staged_gate_resolves_links_to_tracked_symlinks(tmp_path: Path) -> None:

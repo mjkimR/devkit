@@ -38,7 +38,7 @@ The devkit convention ([Errors, Exit Codes and Platforms](../architecture/overvi
 | --- | --- | --- | --- |
 | `install`, `uninstall` | done | — | refused or failed: `GATE_HOOKS_PATH_SET`, `GATE_FOREIGN_HOOK`, `GATE_BACKUP_EXISTS`, `GATE_PYTHON_INVALID`, `GIT_FAILED`, `ARGUMENT_INVALID`, usage errors |
 | `status` | no problem would fail a commit | a reported problem would fail a commit (registry, configuration, load or settings errors) | the status cannot be read (not a Git work tree: `GIT_FAILED`; `ARGUMENT_INVALID`), usage errors |
-| `run pre-commit`, `run commit-msg` | every gate passed or was skipped | gates refused the commit and nothing else went wrong | the gate setup has a problem, a gate failed with a non-refusal error, or the stage cannot run (not a Git work tree), usage errors; the wrapper exits `2` when no interpreter is found |
+| `run pre-commit`, `run commit-msg` | every gate passed or was skipped | gates refused the commit and nothing else went wrong | the gate setup has a problem, a gate failed with a non-refusal error, or the stage cannot run (not a Git work tree), usage errors; the wrapper exits `2` with `GATE_INTERPRETER_UNAVAILABLE` when no interpreter can import `devkit.gate` |
 | `run post-commit` | always, even when the stage cannot run (the commit already exists; problems are reported as `[WARN]` blocks) | — | usage errors |
 
 ## Error codes
@@ -53,6 +53,7 @@ Every gate error derives from `GateError` (`devkit.gate.errors`), which sets `ac
 | `GATE_DEFINITION_INVALID` | `GateDefinitionError` | `MAINTENANCE` | `2` | a gate declares an unusable `id`, `stage`, `order` (reported inside its file's load failure) or settings declaration, or uses `ctx.message_file` outside `commit-msg` |
 | `GATE_RESULT_INVALID` | `GateResultError` | `MAINTENANCE` | `2` | a gate built a `FAILED` `GateResult` or returned something other than a `GateResult` or `None` |
 | `GATE_PYTHON_INVALID` | `GatePythonError` | `INPUT_ERROR` | `2` | `install --python` names an interpreter that cannot import `devkit.gate` |
+| `GATE_INTERPRETER_UNAVAILABLE` | `GateInterpreterError` (printed by the `20-devkit` entry) | `MAINTENANCE`; `CONTINUE` (level `WARNING`) in `post-commit` | `2`; `0` in `post-commit` | at commit time the entry's interpreter is missing or cannot import `devkit.gate`, so the stage's gates did not run; `[DETAIL] python=<path>` and the reason (`not an executable file`, or the import error's first line) |
 | `GATE_VERIFY_FAILED` | `GateRefusedError` | `BLOCKED` | `1` | a `verify-commands` command exited nonzero; one `command: ... exit=... log=...` detail per failed command, then its summaries, failed tests or last lines and relayed `devkit` error blocks (`  > `) |
 | `GATE_VERIFY_NOT_RUN` | `VerifyNotRunError` | `MAINTENANCE`, or `AUTO` | `2` | a nested `devkit` command could not run (exit `2` with its own error block, such as `RULES_LOAD_FAILED`); same details; `AUTO` with the relayed fix when every relayed error is `AUTO` with that one fix (`devkit sync` for missing managed files) |
 | `GATE_VERIFY_UNSTAGED` | `VerifyUnstagedNotice` | `NOTE` (level `NOTICE`) | `0` | returned, never raised: `verify-commands` ran on a working tree with unstaged or untracked files |
@@ -109,7 +110,7 @@ packages/devkit/src/devkit/gate/
 ├── gates/          # built-in gates (verify-commands, message-nonempty)
 ├── commits/        # the git-commits guide bundle
 ├── cli/            # devkit gate (a thin layer over the library)
-└── __main__.py     # python -m devkit.gate: the gate CLI alone, which the wrappers exec
+└── __main__.py     # python -m devkit.gate: the gate CLI alone, which the wrappers run
 ```
 
 `devkit gate` is a thin command line over `load_gate_project(root)` (gates, layered configuration, every problem `gate status` reports) and `run_hook(root, stage, args)` (one stage, as the hook wrapper runs it; `report.ok`, `report.problems`, `report.exit_code`). See [Library](overview.md#2-library).

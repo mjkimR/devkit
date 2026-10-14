@@ -167,6 +167,18 @@ class RemoveFailedError(_Interaction):
     fix = "Resolve the cause Git reports, then rerun the same command; the steps already done are skipped"
 
 
+class AddFailedError(_Interaction):
+    """``git worktree add`` failed or timed out in ``start`` (``INTERACTION``).
+
+    ``start`` removes what the failed call created (the registered worktree and its directory, and the branch); the
+    ``[FIX]`` names what it could not remove, so a rerun does not stop at ``WORKTREE_CONFLICT`` or
+    ``WORKTREE_BRANCH_EXISTS``.
+    """
+
+    code = "WORKTREE_ADD_FAILED"
+    fix = "Resolve the cause Git reports, then rerun the same command; nothing of the failed attempt remains"
+
+
 class BranchDeleteFailedError(_Interaction):
     """``git branch -d`` refused the slug's branch after the worktree was removed (``INTERACTION``).
 

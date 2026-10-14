@@ -43,6 +43,7 @@ from devkit.core.project import (
     git_toplevel,
     read_project_config,
     read_toml,
+    require_devkit_root,
     require_git_toplevel,
 )
 from devkit.core.receipt import (
@@ -111,6 +112,7 @@ __all__ = [
     "parse_receipt",
     "read_project_config",
     "read_toml",
+    "require_devkit_root",
     "require_git_toplevel",
     "resolve_within",
     "run_git",

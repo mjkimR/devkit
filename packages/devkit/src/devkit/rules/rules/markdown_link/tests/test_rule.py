@@ -121,6 +121,20 @@ def test_link_to_symlink_and_percent_encoded_nul_are_handled(tmp_path: Path) -> 
     assert [m for _, m in _messages(tmp_path)] == ["Broken relative markdown link 'bad%00.md'"]
 
 
+def test_a_symlinked_document_is_checked_only_at_its_target(tmp_path: Path) -> None:
+    write_files(tmp_path, {"a/real.md": "[x](x.md) [y](wrong/y.md)\n", "a/x.md": "x\n", "a/y.md": "y\n"})
+    (tmp_path / "b/c").mkdir(parents=True)
+    (tmp_path / "b/c/link.md").symlink_to("../../a/real.md")
+
+    found = check(MarkdownLinkRule(), tmp_path, fix=True)
+    assert [(v.file, v.message, v.fixed) for v in found] == [
+        ("a/real.md", "Broken relative markdown link 'wrong/y.md'", True)
+    ]
+    assert (tmp_path / "a/real.md").read_text() == "[x](x.md) [y](y.md)\n"
+    assert (tmp_path / "b/c/link.md").is_symlink()
+    assert check(MarkdownLinkRule(), tmp_path) == []
+
+
 def test_fix_encodes_candidate_names_that_link_syntax_would_alter(tmp_path: Path) -> None:
     encoded = {
         "c#sharp.md": "c%23sharp.md",

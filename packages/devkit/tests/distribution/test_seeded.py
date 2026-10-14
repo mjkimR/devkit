@@ -269,6 +269,41 @@ def test_seeded_target_blocked_by_directory_or_symlink(installed: list[Installed
     assert not (target / RECEIPT_PATH).exists()
 
 
+def test_a_seeded_path_the_project_replaced_is_left_alone(installed: list[InstalledBundle], target: Path) -> None:
+    from devkit.distribution.installation.status import get_project_status
+
+    sync_project(target, installed)
+    receipt = (target / RECEIPT_PATH).read_bytes()
+    (target / "shared.md").write_text("# Shared\n")
+    (target / "docs/README.md").unlink()
+    (target / "docs/README.md").symlink_to(target / "shared.md")
+    (target / "docs/spec/glossary.md").unlink()
+    (target / "docs/spec/glossary.md").mkdir()
+    (target / "docs/spec/check.sh").unlink()
+    (target / "docs/spec/check.sh").symlink_to(target / "missing.sh")  # dangling
+
+    assert sync_project(target, installed).actions == []
+    assert sync_project(target, installed, locked=True).actions == []
+    assert (target / "docs/README.md").is_symlink() and (target / "docs/spec/glossary.md").is_dir()
+    assert (target / RECEIPT_PATH).read_bytes() == receipt
+    status = get_project_status(target, installed)
+    assert status.errors == [] and all(entry.present for entry in status.seeded)
+
+
+def test_sync_locked_never_writes_a_deleted_seeded_file(installed: list[InstalledBundle], target: Path) -> None:
+    sync_project(target, installed)
+    receipt = (target / RECEIPT_PATH).read_bytes()
+    (target / "docs/spec/glossary.md").unlink()
+    (target / ".devkit/managed/sdd/reference.md").unlink()
+    restored = sync_project(target, installed, locked=True)
+    assert [(item.path, item.action) for item in restored.actions] == [(".devkit/managed/sdd/reference.md", "create")]
+    assert not (target / "docs/spec/glossary.md").exists() and (target / RECEIPT_PATH).read_bytes() == receipt
+    # A plain sync still seeds it again while its asset is selected.
+    assert [(item.path, item.action) for item in sync_project(target, installed).actions] == [
+        ("docs/spec/glossary.md", "seed")
+    ]
+
+
 def test_seed_writes_are_journaled_and_rolled_back(
     installed: list[InstalledBundle], target: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

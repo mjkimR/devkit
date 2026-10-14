@@ -520,9 +520,17 @@ def update_config(
     presets: dict[str, list[str]] | None = None,
     deselect: list[str] | tuple[str, ...] = (),
     opt_out: list[str] | tuple[str, ...] = (),
-) -> None:
-    """Edit selection entries in place (``prepare_config_update`` then ``apply``)."""
-    prepare_config_update(root, agents=agents, presets=presets, deselect=deselect, opt_out=opt_out).apply()
+) -> list[AdvisoryError]:
+    """Edit selection entries in place (``prepare_config_update`` then ``apply``); return the update's notices.
+
+    The notices are the warnings of the config template extensions that failed when the edit created the file.
+    Under the project lock when ``.devkit/`` exists, as ``refresh_config_template``.
+    """
+    exists = (root / CONFIG_PATH).parent.is_dir()
+    with project_lock(root) if exists else nullcontext():
+        update = prepare_config_update(root, agents=agents, presets=presets, deselect=deselect, opt_out=opt_out)
+        update.apply()
+    return list(update.notices)
 
 
 class TemplateState(StrEnum):

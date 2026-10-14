@@ -9,6 +9,7 @@ See ``docs/worktree/overview.md``.
 
 from devkit.worktree.config import WorktreeConfig, read_worktree_config
 from devkit.worktree.errors import (
+    AddFailedError,
     BaseBehindError,
     BaseDetachedError,
     BaseDirtyError,
@@ -50,6 +51,7 @@ from devkit.worktree.lifecycle import (
 )
 
 __all__ = [
+    "AddFailedError",
     "BaseBehindError",
     "BaseDetachedError",
     "BaseDirtyError",

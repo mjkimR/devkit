@@ -74,6 +74,7 @@ from devkit.workflow.errors import (
     WorkflowConfigError,
     WorkflowError,
     WorkflowInvalidError,
+    WorkflowNotBindableError,
     WorkflowNotFoundError,
     WorkflowNotSelectedError,
 )
@@ -185,6 +186,7 @@ __all__ = [
     "WorkflowDocument",
     "WorkflowError",
     "WorkflowInvalidError",
+    "WorkflowNotBindableError",
     "WorkflowNotFoundError",
     "WorkflowNotSelectedError",
     "Workspace",

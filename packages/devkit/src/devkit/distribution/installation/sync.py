@@ -11,6 +11,7 @@ from types import MappingProxyType
 
 from devkit.advisory import AdvisoryError, ExitCode, Level
 from devkit.core.errors import ArgumentError
+from devkit.core.project import require_devkit_root
 from devkit.core.receipt import (
     MANAGED_PATH,
     OVERRIDES_PATH,
@@ -65,6 +66,7 @@ from devkit.distribution.installation.workspace import (
     METADATA,
     SEEN_BUNDLES,
     checked_path,
+    occupied,
     owned_prefix,
     snapshot,
 )
@@ -89,7 +91,8 @@ def tool_identity() -> ToolRecord:
 
 
 def require_project_dir(root: Path) -> Path:
-    """``root`` resolved; ``ArgumentError`` unless it is an existing directory."""
+    """``root`` resolved; ``ArgumentError`` unless it is an existing directory that can be a devkit root
+    (``require_devkit_root``)."""
     root = root.resolve()
     if not root.is_dir():
         raise ArgumentError(
@@ -97,7 +100,7 @@ def require_project_dir(root: Path) -> Path:
             target_files=["--workspace-root"],
             fix="Pass an existing project directory",
         )
-    return root
+    return require_devkit_root(root)
 
 
 def edited_files_error(message: str, names: list[str], *, exit_code: ExitCode | None = None) -> ConflictError:
@@ -354,15 +357,28 @@ def _plan_guidance_block(
 
 
 def _plan_seeds(
-    root: Path, seeds: dict[str, Seed], changes: Changes, actions: list[Action]
+    root: Path,
+    seeds: dict[str, Seed],
+    recorded: frozenset[str],
+    changes: Changes,
+    actions: list[Action],
+    *,
+    locked: bool,
 ) -> tuple[SeededRecord, ...]:
     """Add the seeded files that do not exist yet; return the receipt's ``seeded`` record.
 
     A seeded file is written only when its destination is absent. Afterwards it
     is project-owned: never compared, updated, removed or hash-checked. The
-    record is informational (which selected asset seeded which path).
+    record is informational (which selected asset seeded which path). A path the
+    previous receipt records as seeded (``recorded``) is only tested for
+    presence, so whatever the project put there (a symlink, a directory) is
+    left alone; one the project deleted is seeded again, except under
+    ``locked``, which never writes a seeded file and leaves a missing one
+    missing. A path seeded for the first time must be absent or a regular file.
     """
     for dest in sorted(seeds):
+        if dest in recorded and (locked or occupied(root, dest)):
+            continue
         if snapshot(root, dest) is None:
             changes[dest] = seeds[dest].content
             actions.append(Action(dest, "seed"))
@@ -466,33 +482,60 @@ def _without_tool(receipt: Receipt) -> dict[str, object]:
     return value
 
 
-def _restores_only(previous: Receipt | None, receipt: Receipt, actions: list[Action]) -> bool:
-    """Whether the sync only creates missing files exactly as the committed receipt records them (``--locked``).
+def _restores(item: Action, recorded: Mapping[str, FileRecord], deployed: Mapping[str, FileRecord]) -> bool:
+    """Whether a planned write only brings a Git-ignored copy back to the committed receipt (``recorded``).
+
+    With the receipt unchanged, a ``create`` of a recorded path writes the
+    missing file as recorded, and an ``update`` of one replaces the copy this
+    clone's last sync left (``deployed``) after a pull moved the receipt: any
+    other content there is a conflict before this point. A ``remove`` of a path
+    only ``deployed`` knows deletes such an unchanged copy of a file the
+    receipt no longer records.
+    """
+    if item.action == "create":
+        return item.path in recorded
+    if item.action == "update":
+        return item.path in recorded and item.path in deployed
+    return item.action == "remove" and item.path not in recorded and item.path in deployed
+
+
+def _restores_only(
+    previous: Receipt | None, receipt: Receipt, actions: list[Action], deployed: Mapping[str, FileRecord]
+) -> bool:
+    """Whether the sync only restores files to what the committed receipt records (``--locked``).
 
     The receipt must be unchanged (the writing tool's version aside), so each
-    created file has the recorded signature; anything else (an update, a
-    removal, a seed, the guidance block, a new receipt) changes committed state.
+    written file gets the recorded signature, and every action must be a
+    restore (``_restores``); anything else (a seed, the guidance block,
+    ``.devkit/.gitignore``, a new receipt) changes committed state.
     """
     return (
         previous is not None
         and _without_tool(receipt) == _without_tool(previous)
-        and all(item.action == "create" and item.path in previous.file_records for item in actions)
+        and all(_restores(item, previous.file_records, deployed) for item in actions)
     )
 
 
 STALE_DETAILS = 20  # planned writes listed in a RECEIPT_STALE refusal
 
 
-def _receipt_stale(previous: Receipt | None, receipt: Receipt, actions: list[Action]) -> ReceiptStaleError:
+def _receipt_stale(
+    previous: Receipt | None, receipt: Receipt, actions: list[Action], deployed: Mapping[str, FileRecord]
+) -> ReceiptStaleError:
     """The ``--locked`` refusal: why the committed state is out of date, and what a plain sync would write.
 
-    ``target_files`` names only committed state: the receipt when it would change, and the planned paths that no
-    receipt records as a managed or projected file (the root ``AGENTS.md``, seeded files, ``.devkit/.gitignore``).
-    Managed and projected files are listed in the details with the other planned writes: committed state first,
-    then the other changes, then the restores ``--locked`` would have made, so the cap never hides the reason.
+    ``target_files`` names only committed state: the receipt when it would change, and the planned paths that
+    neither receipt nor this clone's ``deployed`` record knows as a managed or projected file (the root
+    ``AGENTS.md``, seeded files, ``.devkit/.gitignore``). Managed and projected files are listed in the details
+    with the other planned writes: committed state first, then the other changes, then the restores ``--locked``
+    would have made, so the cap never hides the reason.
     """
     recorded = previous.file_records if previous is not None else {}
-    unrecorded = [item.path for item in actions if item.path not in recorded and item.path not in receipt.file_records]
+    unrecorded = [
+        item.path
+        for item in actions
+        if item.path not in recorded and item.path not in receipt.file_records and item.path not in deployed
+    ]
     if previous is None:
         reason, targets = "there is no committed receipt to restore from", [RECEIPT_PATH, *unrecorded]
     elif _without_tool(receipt) != _without_tool(previous):
@@ -502,7 +545,7 @@ def _receipt_stale(previous: Receipt | None, receipt: Receipt, actions: list[Act
     committed = set(unrecorded)
     ordered = sorted(
         actions,
-        key=lambda item: 0 if item.path in committed else 2 if item.action == "create" and item.path in recorded else 1,
+        key=lambda item: 0 if item.path in committed else 2 if _restores(item, recorded, deployed) else 1,
     )
     planned = [f"would {item.action} {item.path}" for item in ordered[:STALE_DETAILS]]
     if len(actions) > STALE_DETAILS:
@@ -713,12 +756,13 @@ def sync_project(
     an edit; the edit is written before the sync reads the configuration and
     put back when the sync fails, and post-sync extensions see it. ``save`` is never
     called on ``dry_run``. ``locked`` keeps the committed state: the sync only
-    restores files the receipt records, or raises ``ReceiptStaleError``
+    restores the Git-ignored files to what the receipt records, or raises ``ReceiptStaleError``
     (``RECEIPT_STALE``) without writing anything. Post-sync extensions run after
     the project lock is released, except on a dry run.
     """
     root = require_project_dir(root)
-    with project_lock(root):
+    # A dry run (``--dry-run``, ``--check``) writes nothing, so it reads under the shared lock like any reader.
+    with project_lock(root, shared=dry_run):
         update = save() if save is not None and not dry_run else None
         if update is not None:
             update.apply()
@@ -758,8 +802,9 @@ def commit_locked(
     takes the current upstream as the baseline of that asset's override, for
     ``devkit override create``, which has just written the baseline copies.
     ``locked`` commits only when the sync restores files exactly as the receipt
-    records them (``_restores_only``), without writing the receipt; otherwise
-    it raises ``ReceiptStaleError`` before any write.
+    records them (``_restores_only``), without writing the receipt or a
+    seeded file; otherwise it raises ``ReceiptStaleError`` before any write.
+    A ``dry_run`` writes nothing, so the caller may hold the shared lock.
     """
     require_no_journal(root)
     config = read_config(root)
@@ -785,7 +830,8 @@ def commit_locked(
     notices = unusable_notices(installed, selection.presets)
     deployed = read_deployed(root)
     notices.extend(_plan_managed_files(root, old_files, deployed, inventory.files, changes, actions, conflicts))
-    seeded = _plan_seeds(root, inventory.seeds, changes, actions)
+    recorded_seeds = frozenset(entry.path for entry in previous.seeded) if previous else frozenset()
+    seeded = _plan_seeds(root, inventory.seeds, recorded_seeds, changes, actions, locked=locked)
     _plan_devkit_gitignore(root, changes, actions)
     block_hash, block_notices = _plan_guidance_block(
         root,
@@ -803,8 +849,8 @@ def commit_locked(
     overrides = _carried_overrides(root, installed, previous, inventory.overrides)
     receipt = _build_receipt(selection, inventory, overrides, seeded, block_hash)
     if locked:
-        if not _restores_only(previous, receipt, actions):
-            raise _receipt_stale(previous, receipt, actions)
+        if not _restores_only(previous, receipt, actions, deployed):
+            raise _receipt_stale(previous, receipt, actions, deployed)
     else:
         notices.extend(_plan_receipt(previous, receipt, changes, actions))
     seen = _read_seen_bundles(root)

@@ -180,6 +180,13 @@ class WorkflowInvalidError(WorkflowError):
     input_error = True
 
 
+class WorkflowNotBindableError(WorkflowError):
+    """A definition named by path is not the discovered definition of its id, so a binding (an id) cannot name it."""
+
+    code = "WORKFLOW_NOT_BINDABLE"
+    input_error = True
+
+
 # -- units ---------------------------------------------------------------------------
 
 

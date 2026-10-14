@@ -82,12 +82,14 @@ AGENTS.md                 # Project-owned; only the DEVKIT:START/END block insid
 7. **Seeded files (write-once scaffolding)**: the `target` of a seeded `document` asset
    ([Manifest Specification](manifest-spec.md#2-asset-kinds)).
    - Written only when the destination does not exist, as a `seed` action through the same journal as every other
-     write. An existing file there is not a collision; it is left alone. A directory or symlink at the target, two
-     selected bundles seeding one path, or a seeded path equal to a managed or projected destination stop the sync
-     before any write.
-   - Once written, the file is project-owned: never compared, updated, removed or hash-checked, not even by
-     `sync --check`; deselecting the bundle leaves it. One deleted while its asset is still selected is seeded again
-     by the next sync (until then `sync --check` exits `1`).
+     write. An existing file there is not a collision; it is left alone. Before the first seed (while the receipt
+     does not record the path under `seeded`), a directory or symlink at the target, two selected bundles seeding
+     one path, or a seeded path equal to a managed or projected destination stop the sync before any write.
+   - Once recorded, the path is project-owned: never compared, updated, removed or hash-checked, not even by
+     `sync --check`, and only tested for presence, so whatever the project puts there (an edit, a symlink, a
+     directory) never fails `sync` or `status`; deselecting the bundle leaves it. One deleted while its asset is
+     still selected is seeded again by the next plain sync (until then `sync --check` exits `1`); `sync --locked`
+     never writes it and does not fail for it.
    - The receipt records which asset seeded which path under `seeded`, never under `files`; the record is
      informational. Seeded files are not bundle context.
 8. **Git policy**: commit `.devkit/config.toml`, `.devkit/generated.toml`, `.devkit/overrides/`,

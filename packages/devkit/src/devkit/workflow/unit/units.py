@@ -31,9 +31,12 @@ def create_unit(
     Raises ``SlugError`` (``SLUG_INVALID``) for a malformed slug and
     ``UnitExistsError`` (``UNIT_EXISTS``) when the unit already has an anchor.
     A unit directory that resolves outside the layout's ``work_dir`` (through
-    a symbolic link) is a ``LayoutError`` (``LAYOUT_INVALID``).
+    a symbolic link) is a ``LayoutError`` (``LAYOUT_INVALID``). A ``workflow``
+    path outside the discovered definitions is a ``WorkflowNotBindableError``
+    (``WORKFLOW_NOT_BINDABLE``), since the binding records only the id.
     """
     doc = ws.definition(workflow)
+    ws.require_bindable(doc, workflow)
     day = when or date.today()
     layout = ws.layout_for(doc)
     anchor = ws.anchor_for(doc)

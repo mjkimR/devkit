@@ -11,11 +11,13 @@ upstreams run before the first change, and rerunning resumes. ``status`` changes
 
 from __future__ import annotations
 
+import contextlib
 import dataclasses
 import json
 import os
 import re
 import shlex
+import signal
 import subprocess
 import sys
 from collections.abc import Callable
@@ -30,6 +32,7 @@ from devkit.core.logs import get_logger
 from devkit.core.project import require_git_toplevel
 from devkit.core.receipt import RECEIPT_PATH
 from devkit.worktree.errors import (
+    AddFailedError,
     BaseBehindError,
     BaseDetachedError,
     BaseDirtyError,
@@ -61,6 +64,7 @@ PUSH_TIMEOUT = 120.0  # seconds; a slow or stuck push must not hold the cleanup
 FETCH_TIMEOUT = 120.0  # seconds for the upstream fetch before the merge
 SETUP_TIMEOUT = 900.0  # seconds for the `setup` command (dependency installs)
 SYNC_TIMEOUT = 300.0  # seconds for `devkit sync --locked` in a new worktree
+CHECKOUT_TIMEOUT = 1800.0  # seconds for `git worktree add` and `remove`: a large checkout (LFS, slow hooks) takes long
 
 
 @dataclass(frozen=True)
@@ -191,8 +195,18 @@ def _head(base: Path) -> str | None:
 
 
 def _merged(base: Path, rev: str | None, head: str | None) -> bool:
-    """Whether the commit ``head`` (the base HEAD) contains ``rev``; ``status`` and ``finish`` share this test."""
-    return rev is not None and head is not None and _succeeds(base, "merge-base", "--is-ancestor", rev, head)
+    """Whether the commit ``head`` (the base HEAD) contains ``rev``; ``status`` and ``finish`` share this test.
+
+    A ``rev`` that names no commit (an unborn branch, made by ``git switch --orphan``) is not merged.
+    """
+    if rev is None or head is None:
+        return False
+    try:
+        return _succeeds(base, "merge-base", "--is-ancestor", rev, head)
+    except GitError:
+        if _query(base, "rev-parse", "--verify", "--quiet", f"{rev}^{{commit}}") is None:
+            return False
+        raise
 
 
 def _resolve(path: str) -> Path:
@@ -266,7 +280,8 @@ def start(position: Position, slug: str, *, setup: str | None = None, project: P
        and context commands read, never changing the committed receipt, ``AGENTS.md`` or seeded files.
 
     A failure of either is a warning (``WORKTREE_SETUP_FAILED``, ``WORKTREE_SYNC_FAILED``) whose ``[FIX]``
-    reruns it; the worktree stays. A reused worktree runs neither.
+    reruns it; the worktree stays. A reused worktree runs neither. A failed ``git worktree add`` leaves nothing
+    behind (``WORKTREE_ADD_FAILED``).
     """
     check_slug(slug)
     if position.linked:
@@ -293,7 +308,7 @@ def start(position: Position, slug: str, *, setup: str | None = None, project: P
         raise ConflictError(f"{path} exists and is not a worktree of this repository")
     if _succeeds(position.base, "rev-parse", "--verify", "--quiet", f"refs/heads/{branch}"):
         raise BranchExistsError(f"branch {branch} already exists")
-    run_git(position.base, "worktree", "add", "-b", branch, str(path))
+    _add(position.base, path, branch)
     _log.info("created worktree %s on %s", path, branch)
     notices: list[AdvisoryError] = []
     if setup is not None:
@@ -308,6 +323,68 @@ def start(position: Position, slug: str, *, setup: str | None = None, project: P
         if warning is not None:
             notices.append(warning)
     return StartResult(slug, path, branch, position.base, True, setup, synced, notices)
+
+
+def _add(base: Path, path: Path, branch: str) -> None:
+    """``git worktree add -b branch path``; on failure, remove what it created before raising ``WORKTREE_ADD_FAILED``.
+
+    ``start`` checked that neither ``path`` nor ``branch`` existed, so whatever a failed or timed-out call leaves (a
+    registered, possibly half-checked-out worktree, which Git locks while it initializes it, and the new branch) is
+    its own: the worktree is removed with ``--force --force``, the branch with ``git branch -d``, which keeps it if a
+    hook committed to it. What cannot be removed is named with the command that removes it.
+    """
+    try:
+        run_git(base, "worktree", "add", "-b", branch, str(path), timeout=CHECKOUT_TIMEOUT)
+    except GitError as exc:
+        reason = exc.stderr or exc.message
+        if _timed_out(exc):
+            reason = f"{exc.message}: {exc.stderr}" if exc.stderr else exc.message
+        left = _undo_add(base, path, branch)
+        message = f"git worktree add {path} failed: {reason}"
+        if not left:
+            raise AddFailedError(f"{message}; the partial worktree and branch were removed") from exc
+        raise AddFailedError(
+            f"{message}; what it created could not all be removed",
+            *(f"left: {item}" for item, _ in left),
+            fix="Once the user agrees, "
+            + " && ".join(command for _, command in left)
+            + ", then rerun the same command",
+        ) from exc
+
+
+def _timed_out(error: GitError) -> bool:
+    return isinstance(error.__cause__, subprocess.TimeoutExpired)
+
+
+def _undo_add(base: Path, path: Path, branch: str) -> list[tuple[str, str]]:
+    """Remove what a failed ``git worktree add`` created; ``(what, the command that removes it)`` for each leftover."""
+    quoted = shlex.quote(str(base))
+    left: list[tuple[str, str]] = []
+    try:
+        registered = any(entry.path == path for entry in _entries(base))
+    except GitError:
+        registered = True
+    if registered:
+        try:
+            run_git(base, "worktree", "remove", "--force", "--force", str(path), timeout=CHECKOUT_TIMEOUT)
+        except GitError as exc:
+            _log.info("could not remove the partial worktree %s: %s", path, exc.message)
+            left.append(
+                (f"worktree {path}", f"git -C {quoted} worktree remove --force --force {shlex.quote(str(path))}")
+            )
+    if not registered and (path.exists() or path.is_symlink()):
+        left.append((f"directory {path}", f"rm -rf {shlex.quote(str(path))}"))
+    try:
+        exists = _succeeds(base, "rev-parse", "--verify", "--quiet", f"refs/heads/{branch}")
+        if exists and not left:
+            run_git(base, "branch", "-d", branch)
+            exists = False
+    except GitError as exc:
+        _log.info("could not delete the branch %s: %s", branch, exc.message)
+        exists = True
+    if exists:
+        left.append((f"branch {branch}", f"git -C {quoted} branch -D {branch}"))
+    return left
 
 
 def _interpreter(checkout: Path) -> str:
@@ -368,11 +445,35 @@ def _execute(argv: list[str], cwd: Path, label: str, timeout: float) -> subproce
     run when it timed out or did not start."""
     env = {key: value for key, value in os.environ.items() if key != "VIRTUAL_ENV"}
     try:
-        return subprocess.run(argv, cwd=cwd, env=env, capture_output=True, timeout=timeout, check=False)
-    except subprocess.TimeoutExpired:
-        return f"{label} did not finish within {timeout:.0f}s"
+        # A session of its own, so a timeout stops the whole command (``uv sync`` under the shell), not the shell alone.
+        process = subprocess.Popen(
+            argv,
+            cwd=cwd,
+            env=env,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            start_new_session=True,
+        )
     except OSError as exc:
         return f"{label} could not start: {exc}"
+    with process:
+        try:
+            stdout, stderr = process.communicate(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            _kill_group(process)
+            return f"{label} did not finish within {timeout:.0f}s"
+        except BaseException:
+            _kill_group(process)
+            raise
+    return subprocess.CompletedProcess(argv, process.returncode, stdout, stderr)
+
+
+def _kill_group(process: subprocess.Popen[bytes]) -> None:
+    """Kill the process group ``process`` leads and reap it; its pipes are left unread."""
+    with contextlib.suppress(ProcessLookupError, PermissionError):
+        os.killpg(process.pid, signal.SIGKILL)
+    process.wait()
 
 
 def _failure(label: str, completed: subprocess.CompletedProcess[bytes]) -> str:
@@ -523,8 +624,15 @@ def finish(
 
 def _remove(base: Path, path: Path) -> None:
     try:
-        run_git(base, "worktree", "remove", str(path))
+        run_git(base, "worktree", "remove", str(path), timeout=CHECKOUT_TIMEOUT)
     except GitError as exc:
+        if _timed_out(exc):  # the directory may be partly deleted while still registered
+            raise RemoveFailedError(
+                f"{exc.message}; {path} may be partly deleted and is still a registered worktree, so a rerun would"
+                " report its deleted files as uncommitted changes",
+                fix=f"Once the user agrees, git -C {shlex.quote(str(base))} worktree remove --force"
+                f" {shlex.quote(str(path))}, then rerun the same command",
+            ) from exc
         if "modified or untracked" in exc.stderr or "--force" in exc.stderr:
             raise DirtyError(f"{path} has uncommitted changes: {exc.stderr}") from exc
         raise RemoveFailedError(f"git worktree remove {path} failed: {exc.stderr or exc.message}") from exc

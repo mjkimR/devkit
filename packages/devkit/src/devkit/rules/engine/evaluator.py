@@ -7,6 +7,7 @@ from collections import Counter
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
 
+from devkit.advisory import AdvisoryError, Level
 from devkit.core.logs import get_logger
 from devkit.rules.engine.errors import RuleExecutionError, RuleProblem, SettingsError
 from devkit.rules.engine.models import Autofixable, Rule, RuleContext, Severity, Violation
@@ -91,7 +92,7 @@ def _check_rules(ctx: RuleContext, rules: Sequence[Rule], stage: str, errors: li
             )
             continue
         except Exception as exc:
-            errors.append(_execution_error(rule, f"Rule {stage} error ({rule.id}): {exc}"))
+            errors.append(_execution_error(rule, f"Rule {stage} error ({rule.id}): {exc}", exc))
             continue
         phase = effective_phase(rule, ctx.phase_overrides)
         severity = effective_severity(rule, ctx.severity_overrides)
@@ -116,7 +117,7 @@ def _apply_fixes(ctx: RuleContext, rules: Sequence[Rule], errors: list[RuleProbl
         try:
             changed = rule.fix(ctx)
         except Exception as exc:
-            errors.append(_execution_error(rule, f"Rule fix error ({rule.id}): {exc}"))
+            errors.append(_execution_error(rule, f"Rule fix error ({rule.id}): {exc}", exc))
             ctx.cache.invalidate_all()
             break
         if changed:
@@ -145,8 +146,30 @@ def _mark_fixed(initial: Sequence[Violation], recheck: Sequence[Violation]) -> l
     return [*fixed, *recheck]
 
 
-def _execution_error(rule: Rule, message: str) -> RuleExecutionError:
-    """A rule that raised: logged with its traceback, reported with the file defining the rule."""
+def _execution_error(rule: Rule, message: str, exc: Exception) -> RuleExecutionError:
+    """A rule that raised, attributed to the rule.
+
+    An ``ERROR`` advisory the rule raised (a pinned write, a malformed configuration the rule reads) keeps its own
+    code, mode, fix and targets, so the caller can act on it. Anything else is logged with its traceback and reported
+    with the file defining the rule.
+    """
+    if isinstance(exc, AdvisoryError) and exc.level is Level.ERROR:
+        logger.info(message)
+        return RuleExecutionError(
+            message,
+            *exc.details,
+            rule_id=rule.id,
+            code=exc.code,
+            actor=exc.actor,
+            retry=exc.retry,
+            guardrail=exc.guardrail,
+            input_error=exc.input_error,
+            retry_after=exc.retry_after,
+            fix=exc.fix,
+            what_to_report=exc.what_to_report,
+            target_files=exc.target_files,
+            exit_code=exc.exit_code,
+        )
     logger.exception(message)
     try:
         source = [inspect.getfile(type(rule))]

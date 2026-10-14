@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from devkit.advisory import ActionMode
+from devkit.advisory import ActionMode, AdvisoryError
 from devkit.rules import Phase, RuleContext, Violation, WorkspaceCache, default_rule_registry, evaluate_rules
 
 
@@ -159,6 +159,34 @@ def test_recheck_errors_are_reported(tmp_path: Path) -> None:
     assert result.errors[0].code == "RULES_EXECUTION_FAILED" and result.errors[0].rule_id == "RULE-flaky"
     assert result.errors[0].mode is ActionMode.MAINTENANCE and result.errors[0].target_files == (__file__,)
     assert result.violations == [] and not result.ok
+
+
+def test_an_advisory_a_rule_raises_keeps_its_code(tmp_path: Path) -> None:
+    from devkit.rules.rules import BaseRule
+
+    class Refusing(BaseRule):
+        def __init__(self) -> None:
+            super().__init__(id="RULE-refusing", name="refusing", description="refusing")
+
+        def check(self, ctx: RuleContext) -> list[Violation]:
+            return [Violation(self.id, "doc.md", 1, "x", fixable=True)]
+
+        def fix(self, ctx: RuleContext) -> list[str]:
+            raise AdvisoryError(
+                "pinned", "detail", code="PINNED_WRITE_REFUSED", guardrail=True, fix="Override it", target_files=["a"]
+            )
+
+    (tmp_path / "doc.md").write_text("x")
+    result = evaluate_rules(RuleContext(workspace_root=tmp_path, fix=True), [Refusing()])
+    [error] = result.errors
+    assert (error.code, error.rule_id, error.mode, error.fix) == (
+        "PINNED_WRITE_REFUSED",
+        "RULE-refusing",
+        ActionMode.BLOCKED,
+        "Override it",
+    )
+    assert error.target_files == ("a",) and error.details == ("detail",)
+    assert str(error) == "Rule fix error (RULE-refusing): pinned"
 
 
 def _finding(line: int, message: str = "bad", *, fixable: bool = True) -> Violation:

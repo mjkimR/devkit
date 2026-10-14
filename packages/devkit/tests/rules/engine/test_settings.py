@@ -337,3 +337,106 @@ def test_non_dataclass_settings_with_config_is_a_policy_error() -> None:
     assert [str(e) for e in errors] == ["RULE-dict: settings must be a dataclass instance carrying the defaults"]
     assert errors[0].rule_id == "RULE-dict"
     assert errors[0].code == "RULES_SETTINGS_INVALID" and errors[0].mode is ActionMode.MAINTENANCE
+
+
+# --- settings classes that raise ---------------------------------------------
+
+
+@dataclass(frozen=True)
+class NonNegative:
+    n: int = 0
+
+    def __post_init__(self) -> None:
+        if self.n < 0:
+            raise ValueError("n must be >= 0")
+
+
+class NonNegativeRule(BaseRule):
+    def __init__(self, settings: object) -> None:
+        super().__init__(id="RULE-nonneg", name="nonneg", description="nonneg", settings=settings)
+
+    def check(self, ctx: RuleContext) -> list[Violation]:
+        return []
+
+
+def test_post_init_value_error_on_project_values_is_an_input_error(tmp_path: Path) -> None:
+    resolvers, errors = build_resolvers([NonNegativeRule(NonNegative())], {"RULE-nonneg": RawSettings({"n": -1})})
+    assert resolvers == {}
+    assert [str(e) for e in errors] == ["RULE-nonneg: settings: n must be >= 0"]
+    assert errors[0].rule_id == "RULE-nonneg"
+    assert errors[0].code == "RULES_SETTINGS_INVALID" and errors[0].mode is ActionMode.INPUT_ERROR
+
+    ctx = RuleContext(workspace_root=tmp_path, rule_settings={"RULE-nonneg": RawSettings({"n": -1})})
+    result = evaluate_rules(ctx, [NonNegativeRule(NonNegative())])
+    assert [e.code for e in result.errors] == ["RULES_SETTINGS_INVALID"]
+
+
+def test_post_init_value_error_on_an_override_is_an_input_error() -> None:
+    raw = RawSettings({}, (Override("docs/**", {"n": -1}),))
+    with pytest.raises(SettingsError, match=r"overrides\[0\]: n must be >= 0") as info:
+        SettingsResolver("RULE-nonneg", NonNegative(), raw)
+    assert info.value.mode is ActionMode.INPUT_ERROR
+
+
+def test_defaults_rejected_by_validate_settings_are_a_declaration_defect() -> None:
+    class StrictRule(NonNegativeRule):
+        def validate_settings(self, settings: NonNegative) -> None:
+            if settings.n == 0:
+                raise ValueError("n must not be 0")
+
+    _, errors = build_resolvers([StrictRule(NonNegative())], {})
+    assert [str(e) for e in errors] == ["RULE-nonneg: defaults: n must not be 0"]
+    assert errors[0].code == "RULES_SETTINGS_INVALID" and errors[0].mode is ActionMode.MAINTENANCE
+
+
+@dataclass(frozen=True)
+class Unresolvable:
+    n: MissingType = 0  # type: ignore[name-defined]  # noqa: F821
+
+
+@dataclass(frozen=True)
+class NotInit:
+    n: int = 0
+    derived: int = field(default=0, init=False)
+
+
+@dataclass(frozen=True)
+class RaisesTypeError:
+    n: int = 0
+
+    def __post_init__(self) -> None:
+        if self.n == 7:
+            raise TypeError("seven is unlucky")
+
+
+@pytest.mark.parametrize(
+    ("settings", "raw", "match"),
+    [
+        (Unresolvable(), None, r"cannot resolve the field types of Unresolvable: NameError"),
+        (NotInit(), None, r"settings fields must be init fields; init=False: \['derived'\]"),
+        (RaisesTypeError(), RawSettings({"n": 7}), r"settings: TypeError: seven is unlucky"),
+    ],
+)
+def test_declaration_defects_are_maintenance_errors_for_the_rule(
+    tmp_path: Path, settings: object, raw: RawSettings | None, match: str
+) -> None:
+    configured = {"RULE-nonneg": raw} if raw is not None else {}
+    resolvers, errors = build_resolvers([NonNegativeRule(settings)], configured)
+    assert resolvers == {} and len(errors) == 1
+    assert errors[0].rule_id == "RULE-nonneg" and str(errors[0]).startswith("RULE-nonneg: ")
+    assert errors[0].code == "RULES_SETTINGS_INVALID" and errors[0].mode is ActionMode.MAINTENANCE
+    with pytest.raises(SettingsError, match=match):
+        SettingsResolver("RULE-nonneg", settings, raw)
+
+    ctx = RuleContext(workspace_root=tmp_path, rule_settings=configured)
+    result = evaluate_rules(ctx, [NonNegativeRule(settings)])
+    assert [e.code for e in result.errors] == ["RULES_SETTINGS_INVALID"]
+
+
+def test_validate_settings_raising_other_than_value_error_is_a_declaration_defect() -> None:
+    def validate(settings: NonNegative) -> None:
+        raise KeyError("oops")
+
+    with pytest.raises(SettingsError, match=r"defaults: KeyError") as info:
+        SettingsResolver("RULE-nonneg", NonNegative(), None, validate)
+    assert info.value.mode is ActionMode.MAINTENANCE

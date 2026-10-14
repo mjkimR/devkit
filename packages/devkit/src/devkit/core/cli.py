@@ -5,8 +5,8 @@ distribution commands must agree on:
 
 - ``workspace_option`` (``-w/--workspace-root``) and ``FORMAT_OPTION``
   (``--format text|json``, case-insensitive);
-- ``resolve_root``: the explicit workspace root, else the project root found
-  from the current directory;
+- ``resolve_root``: the explicit workspace root, else the devkit root found
+  from the current directory (``devkit.core.project``);
 - ``boundary``: renders any error as an Agent Advisory Protocol block on
   stderr or, when stdout is JSON, as ``{"error": {...}}`` on stdout only, then
   exits with the error's ``exit_code``. A JSON result carries every advisory
@@ -56,7 +56,7 @@ import click
 from devkit.advisory import AdvisoryError, ExitCode, Level, as_advisory_error
 from devkit.core.errors import ArgumentError
 from devkit.core.logs import ROOT, get_logger
-from devkit.core.project import find_project_root
+from devkit.core.project import find_project_root, require_devkit_root
 
 WORKSPACE_HELP = "Workspace root directory [default: the devkit project containing the current directory]"
 
@@ -119,9 +119,10 @@ def existing_directory(value: str | Path, param: str = "--workspace-root") -> Pa
 
 
 def resolve_root(value: str | Path | None) -> Path:
-    """``--workspace-root`` when given (it must be an existing directory), else the project root of the cwd."""
+    """``--workspace-root`` when given (an existing directory that can be a devkit root: outside Git, or the top
+    level of its Git work tree), else the devkit root of the cwd."""
     if value is not None:
-        return existing_directory(value)
+        return require_devkit_root(existing_directory(value))
     return find_project_root(Path.cwd())
 
 

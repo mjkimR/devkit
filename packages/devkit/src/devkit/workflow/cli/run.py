@@ -8,7 +8,7 @@ from devkit.core.cli import FORMAT_OPTION, Reported, boundary, echo_json, is_jso
 from devkit.workflow.answers import record_answer, return_to
 from devkit.workflow.cli.app import ANCHOR, NO_LINT, UNIT, WORKSPACE, cli, parse_date, workspace
 from devkit.workflow.handoff import apply_handoff, plan_handoff
-from devkit.workflow.render import render_evaluation, render_requests
+from devkit.workflow.render import quote, render_evaluation, render_requests
 from devkit.workflow.unit.decisions import ACTIONS
 
 
@@ -54,14 +54,24 @@ def next_cmd(
 @FORMAT_OPTION
 @boundary
 def requests_cmd(workspace_root: str | None, unit: str, anchor: str | None, no_lint: bool, output_format: str) -> None:
-    """List the open human requests of a unit (approvals and choices)."""
+    """List the open human requests of a unit (approvals and choices).
+
+    When the rules behind lint-clean cannot run, their error is reported
+    unchanged after the result and sets the exit code, as for ``next``.
+    """
     ws = workspace(workspace_root)
     result = ws.evaluate_unit(ws.resolve_unit(unit, anchor=anchor), lint=not no_lint)
+    lint_error = result.lint_error
     if is_json(output_format):
-        echo_json({"requests": [r.to_dict() for r in result.requests]})
-        return
-    lines = render_requests(result.requests)
-    click.echo("\n".join(lines) if lines else "[REQUESTS: none]")
+        errors = [lint_error.to_dict()] if lint_error is not None else []
+        echo_json({"requests": [r.to_dict() for r in result.requests], "errors": errors})
+    else:
+        lines = render_requests(result.requests) or ["[REQUESTS: none]"]
+        if lint_error is not None:
+            lines.append(f"[LINT_ERROR: {quote(lint_error.message)}]")
+        click.echo("\n".join(lines))
+    if lint_error is not None:
+        raise Reported(lint_error)
 
 
 @cli.command(name="answer")

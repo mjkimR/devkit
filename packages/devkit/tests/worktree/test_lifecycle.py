@@ -2,16 +2,21 @@
 
 from __future__ import annotations
 
+import os
 import shutil
+import signal
 import subprocess
 import sys
+import time
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import pytest
 from devkit.advisory import ActionMode
-from devkit.core.errors import ArgumentError
+from devkit.core.errors import ArgumentError, GitError
 from devkit.worktree import (
+    AddFailedError,
     BaseBehindError,
     BaseDetachedError,
     BaseDirtyError,
@@ -31,6 +36,7 @@ from devkit.worktree import (
     UnmergedError,
     UnsupportedLayoutError,
     finish,
+    lifecycle,
     locate,
     path_for,
     start,
@@ -134,6 +140,110 @@ def test_a_failed_setup_is_a_warning_and_keeps_the_worktree(repo: Path) -> None:
     assert "exited 3" in warning.message and "broken" in warning.message
     assert warning.fix is not None and warning.fix.endswith("&& echo broken >&2; exit 3")
     assert result.created and result.path.is_dir()
+
+
+def _hook(repo: Path, name: str, body: str) -> None:
+    hook = repo / ".git/hooks" / name
+    hook.write_text("#!/bin/sh\n" + body)
+    hook.chmod(0o755)
+
+
+def _only_the_base(repo: Path, slug: str) -> None:
+    assert [entry.path for entry in status(locate(repo)).worktrees] == [repo]
+    assert not (repo.parent / f"repo-wt-{slug}").exists() and git(repo, "branch", "--list", slug) == ""
+
+
+def test_a_failed_worktree_add_removes_what_it_created_and_a_rerun_starts_afresh(repo: Path) -> None:
+    _hook(repo, "post-checkout", "echo checkout hook broke >&2; exit 1\n")
+    with pytest.raises(AddFailedError) as raised:
+        start(locate(repo), "demo")
+    assert raised.value.code == "WORKTREE_ADD_FAILED" and raised.value.mode is ActionMode.INTERACTION
+    assert "checkout hook broke" in raised.value.message and "were removed" in raised.value.message
+    _only_the_base(repo, "demo")
+    (repo / ".git/hooks/post-checkout").unlink()
+    assert start(locate(repo), "demo").created
+
+
+def test_a_timed_out_worktree_add_removes_what_it_created(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(lifecycle, "CHECKOUT_TIMEOUT", 1.0)
+    _hook(repo, "post-checkout", "sleep 5\n")
+    with pytest.raises(AddFailedError, match=r"timed out after 1\.0s"):
+        start(locate(repo), "demo")
+    _only_the_base(repo, "demo")
+
+
+def test_what_a_failed_worktree_add_cannot_remove_is_named_with_its_command(
+    repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _hook(repo, "post-checkout", "exit 1\n")
+    run_git = lifecycle.run_git
+
+    def no_removal(cwd: Path, *args: str, **options: Any) -> bytes:
+        if args[:2] == ("worktree", "remove"):
+            raise GitError("git worktree failed", returncode=128, stderr="fatal: cannot remove")
+        return run_git(cwd, *args, **options)
+
+    monkeypatch.setattr(lifecycle, "run_git", no_removal)
+    with pytest.raises(AddFailedError) as raised:
+        start(locate(repo), "demo")
+    path = repo.parent / "repo-wt-demo"
+    assert raised.value.details == (f"left: worktree {path}", "left: branch demo")
+    assert raised.value.fix == (
+        f"Once the user agrees, git -C {repo} worktree remove --force --force {path} && git -C {repo} branch -D demo,"
+        " then rerun the same command"
+    )
+    monkeypatch.undo()
+    git(repo, "worktree", "remove", "--force", "--force", str(path))
+    git(repo, "branch", "-D", "demo")
+
+
+def test_a_timed_out_removal_names_the_half_removed_worktree(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    created = start(locate(repo), "demo")
+    git(repo, "merge", "-q", "--ff-only", "demo")
+    run_git = lifecycle.run_git
+
+    def timing_out(cwd: Path, *args: str, **options: Any) -> bytes:
+        if args[:2] == ("worktree", "remove"):
+            assert options["timeout"] == lifecycle.CHECKOUT_TIMEOUT
+            raise GitError("git worktree timed out after 1800.0s in somewhere") from subprocess.TimeoutExpired(
+                ["git"], 1800.0
+            )
+        return run_git(cwd, *args, **options)
+
+    monkeypatch.setattr(lifecycle, "run_git", timing_out)
+    with pytest.raises(RemoveFailedError, match="may be partly deleted") as raised:
+        finish(locate(repo), "demo")
+    assert raised.value.fix == (
+        f"Once the user agrees, git -C {repo} worktree remove --force {created.path}, then rerun the same command"
+    )
+
+
+def test_a_setup_that_times_out_is_stopped_with_its_children(
+    repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(lifecycle, "SETUP_TIMEOUT", 0.5)
+    pidfile = tmp_path / "child.pid"
+    result = start(locate(repo), "demo", setup=f"sleep 30 & echo $! > {pidfile}; wait")
+    [warning] = result.notices
+    assert warning.code == "WORKTREE_SETUP_FAILED" and "did not finish within" in warning.message
+    child = int(pidfile.read_text())
+    deadline = time.monotonic() + 5
+    while time.monotonic() < deadline:
+        try:
+            os.kill(child, 0)
+        except ProcessLookupError:
+            break
+        time.sleep(0.02)
+    else:
+        os.kill(child, signal.SIGKILL)
+        pytest.fail("the setup's child outlived its timeout")
+
+
+def test_status_treats_a_worktree_on_an_unborn_branch_as_unmerged(repo: Path) -> None:
+    created = start(locate(repo), "demo")
+    git(created.path, "switch", "-q", "--orphan", "fresh")
+    rows = {item.path: item for item in status(locate(repo)).worktrees}
+    assert (rows[created.path].branch, rows[created.path].head, rows[created.path].merged) == ("fresh", None, False)
 
 
 def test_finish_refuses_from_the_worktree_under_the_pr_policy_and_before_the_merge(repo: Path) -> None:
@@ -455,7 +565,6 @@ def test_a_stale_receipt_names_the_committed_file_and_its_fix(repo: Path) -> Non
 
 
 def test_output_that_is_not_an_error_object_keeps_its_headline(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    from devkit.worktree import lifecycle
 
     block = "[ERROR]  (SOMETHING_FAILED) the reason\n" + "".join(f"[DETAIL] line {n}\n" for n in range(8))
     failed = subprocess.CompletedProcess(["python"], 3, b"not json", block.encode())

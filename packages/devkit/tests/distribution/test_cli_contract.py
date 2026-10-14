@@ -10,9 +10,12 @@ import pytest
 from click.testing import CliRunner
 from devkit.advisory import ExitCode
 from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH
+from devkit.distribution.errors import ConflictError
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.discovery import InstalledBundle
+from devkit.distribution.installation.sync import sync_project
 from devkit.distribution.installation.transaction import project_lock
+from devkit.distribution.installation.workspace import DEPLOYED
 from testsupport.distribution import cli, instruction, write_bundle
 
 MANIFEST = """schema = 1
@@ -278,6 +281,55 @@ def test_sync_locked_restores_recorded_files_and_never_changes_committed_ones(
     assert not (target / "AGENTS.md").exists()
 
 
+def test_sync_locked_brings_stale_ignored_copies_to_a_pulled_receipt(tmp_path: Path, target: Path) -> None:
+    # Another clone committed the receipt for v2; this clone's ignored copies are still v1, as its last sync left them.
+    two_assets = MANIFEST + '[[assets]]\nid = "extra"\nkind = "instruction"\nsource = "extra.md"\n'
+    source = tmp_path / "source"
+    v1 = write_bundle(source, two_assets, {"guide.md": instruction("guide"), "extra.md": instruction("extra")})
+    update_config(target, presets={"team": ["all"]}, agents=[])
+    sync_project(target, [v1])
+    guide, extra = target / ".devkit/managed/team/guide.md", target / ".devkit/managed/team/extra.md"
+    local = {path: path.read_bytes() for path in (guide, extra, target / DEPLOYED)}
+    v2 = write_bundle(source, MANIFEST, {"guide.md": instruction("guide", "Body v2.\n")})
+    sync_project(target, [v2])
+    committed = (target / RECEIPT_PATH).read_bytes()
+    for path, data in local.items():
+        path.write_bytes(data)
+
+    result = sync_project(target, [v2], locked=True)
+    assert [(item.path, item.action) for item in result.actions] == [
+        (".devkit/managed/team/extra.md", "remove"),
+        (".devkit/managed/team/guide.md", "update"),
+    ]
+    assert guide.read_text() == instruction("guide", "Body v2.\n") and not extra.exists()
+    assert (target / RECEIPT_PATH).read_bytes() == committed
+    assert sync_project(target, [v2], dry_run=True).actions == []
+
+    # A hand edit of a stale copy is still a conflict, never overwritten.
+    for path, data in local.items():
+        path.write_bytes(data)
+    guide.write_text("edited")
+    with pytest.raises(ConflictError):
+        sync_project(target, [v2], locked=True)
+    assert guide.read_text() == "edited" and (target / RECEIPT_PATH).read_bytes() == committed
+
+
+def test_sync_dry_run_and_check_take_the_shared_lock(item: InstalledBundle, target: Path, tmp_path: Path) -> None:
+    bare = tmp_path / "bare"
+    bare.mkdir()
+    assert _invoke("sync", "--check", "-w", str(bare)).exit_code in (0, 1)
+    assert _invoke("sync", "--dry-run", "-w", str(bare)).exit_code == 0
+    assert not (bare / ".devkit").exists()  # a read-only check never creates devkit state
+
+    update_config(target, presets={"team": ["all"]}, agents=[])
+    assert _invoke("sync", "-w", str(target)).exit_code == 0
+    with project_lock(target, shared=True):  # another reader: concurrent checks never fail with LOCK_HELD
+        assert _invoke("sync", "--check", "-w", str(target)).exit_code == 0
+        assert _invoke("add", "team", "--dry-run", "-w", str(target)).exit_code == 0
+        written = _invoke("sync", "-w", str(target))
+        assert written.exit_code == 2 and "LOCK_HELD" in written.output
+
+
 @pytest.mark.parametrize("flag", ["--check", "--dry-run", "--no-save", "--no-agents", "--preset=team"])
 def test_sync_locked_takes_no_other_mode_or_selection(item: InstalledBundle, target: Path, flag: str) -> None:
     result = _invoke("sync", "--locked", flag, "-w", str(target))
@@ -292,7 +344,7 @@ def test_a_receipt_stale_refusal_lists_at_most_twenty_planned_writes() -> None:
     from devkit.distribution.installation.sync import _receipt_stale
 
     actions = [Action(f".devkit/managed/team/{index:02}.md", "create") for index in range(23)]
-    error = _receipt_stale(None, SimpleNamespace(file_records={}), actions)  # type: ignore[arg-type]
+    error = _receipt_stale(None, SimpleNamespace(file_records={}), actions, {})  # type: ignore[arg-type]
     assert error.code == "RECEIPT_STALE" and error.exit_code == ExitCode.FINDINGS
     assert len(error.details) == 21 and error.details[-1].startswith("and 3 more")
     assert error.target_files[0] == RECEIPT_PATH

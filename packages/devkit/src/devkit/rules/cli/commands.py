@@ -119,12 +119,10 @@ def _execute(request: RunRequest) -> None:
 
 
 def _snapshot_request(
-    root: Path, *, phase: str, targets: tuple[str, ...], staged: bool, ci: bool, base_given: bool, base: str
+    root: Path, *, phase: str, targets: tuple[str, ...], staged: bool, ci: bool, base: str
 ) -> Snapshot:
     if staged and ci:
         raise ArgumentError("--staged and --ci are mutually exclusive", target_files=["--staged", "--ci"])
-    if staged and base_given:
-        raise ArgumentError("--base applies to --ci only", target_files=["--base"])
     if targets or phase.lower() != Phase.LINTER.value:
         raise ArgumentError(
             "Git snapshot gates run the linter phase without file arguments", target_files=["--phase", "FILES"]
@@ -184,13 +182,16 @@ def check_cmd(
     files: tuple[str, ...],
 ) -> None:
     """Check repository files or directories against rules without modifying files."""
+    if not ci and ctx.get_parameter_source("base") is not ParameterSource.DEFAULT:
+        raise ArgumentError(
+            "--base applies to --ci only",
+            target_files=["--base"],
+            fix="Add --ci to check HEAD against its merge base with --base, or drop --base",
+        )
     root = resolve_root(workspace_root)
     snapshot = None
     if staged or ci:
-        base_given = ctx.get_parameter_source("base") is not ParameterSource.DEFAULT
-        snapshot = _snapshot_request(
-            root, phase=phase, targets=files, staged=staged, ci=ci, base_given=base_given, base=base
-        )
+        snapshot = _snapshot_request(root, phase=phase, targets=files, staged=staged, ci=ci, base=base)
         root = snapshot.root
     _execute(
         RunRequest(

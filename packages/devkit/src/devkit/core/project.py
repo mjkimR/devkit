@@ -1,4 +1,14 @@
-"""Locate a devkit project and read its configuration files."""
+"""Locate a devkit project and read its configuration files.
+
+Two roots, kept apart by name:
+
+- the repository root: the top level of the Git work tree (``require_git_toplevel``), which Git operations use;
+- the devkit root: the directory holding ``.devkit/`` (``find_project_root``), which configuration, the receipt and
+  managed files are read from.
+
+Inside a Git work tree the two are the same directory: a ``.devkit/`` below the top level is not a project of its
+own. Outside Git the devkit root is the nearest directory with ``.devkit/``.
+"""
 
 from __future__ import annotations
 
@@ -7,7 +17,7 @@ import tomllib
 from pathlib import Path
 from typing import Any
 
-from devkit.core.errors import ConfigError, GitError, UnsafePathError
+from devkit.core.errors import ArgumentError, ConfigError, GitError, UnsafePathError
 from devkit.core.git import run_git
 from devkit.core.receipt import CONFIG_PATH
 
@@ -65,19 +75,16 @@ def _home() -> Path | None:
 
 
 def find_project_root(start: Path) -> Path:
-    """The devkit project root for ``start`` (a directory, or a file whose directory is used).
+    """The devkit root for ``start`` (a directory, or a file whose directory is used).
 
     Resolution, on the resolved ``start``:
 
-    1. The nearest directory, ``start`` itself first and then each parent,
-       that contains a ``.devkit`` directory. Inside a Git work tree the walk
-       stops at the work tree's top level, so a ``.devkit`` directory outside
-       the repository is never picked up. Outside a Git work tree (or without
-       Git) the walk stops below the user's home directory: the home
-       directory and the directories above it are never searched, so a stray
-       ``~/.devkit`` does not claim every directory under it (``start``
-       itself is always considered).
-    2. Otherwise the top level of the Git work tree containing ``start``.
+    1. Inside a Git work tree, its top level: the repository root is the devkit root, and a ``.devkit`` directory
+       below it is not a project of its own.
+    2. Outside a Git work tree (or without Git), the nearest directory, ``start`` itself first and then each
+       parent, that contains a ``.devkit`` directory. The walk stops below the user's home directory: the home
+       directory and the directories above it are never searched, so a stray ``~/.devkit`` does not claim every
+       directory under it (``start`` itself is always considered).
     3. Otherwise ``start`` itself.
 
     Raises ``UnsafePathError`` when ``start`` cannot be resolved (a symlink loop).
@@ -89,15 +96,32 @@ def find_project_root(start: Path) -> Path:
     if not origin.is_dir():
         origin = origin.parent
     toplevel = git_toplevel(origin)
-    home = _home() if toplevel is None else None
+    if toplevel is not None:
+        return toplevel
+    home = _home()
     for candidate in (origin, *origin.parents):
         if home is not None and candidate != origin and home.is_relative_to(candidate):
             break
         if (candidate / DEVKIT_DIR).is_dir():
             return candidate
-        if candidate == toplevel:
-            break
-    return toplevel if toplevel is not None else origin
+    return origin
+
+
+def require_devkit_root(root: Path, param: str = "--workspace-root") -> Path:
+    """``root`` resolved, when it can be a devkit root: outside Git, or the top level of its Git work tree.
+
+    Raises ``ArgumentError`` naming ``param`` for a directory below the top level of a Git work tree, since the
+    repository root is the devkit root there.
+    """
+    root = root.resolve()
+    toplevel = git_toplevel(root)
+    if toplevel is not None and toplevel != root:
+        raise ArgumentError(
+            f"{param} {root} is inside the Git work tree {toplevel}; the devkit root is the repository's top level",
+            target_files=[param],
+            fix=f"Pass {param} {toplevel}, or omit it to use the repository of the current directory",
+        )
+    return root
 
 
 def read_toml(path: Path, display: str | None = None) -> dict[str, Any] | None:

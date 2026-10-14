@@ -58,12 +58,17 @@ class MarkdownLinkRule(BaseRule, Autofixable):
         A broken link is repairable when its destination stays inside the
         workspace and exactly one Markdown file in the workspace has the same
         basename.
+
+        A symlinked Markdown file is an alias of its target, which is checked
+        (and repaired) at its own path: resolving the alias's links from the
+        symlink's directory would report valid links as broken, and a repair
+        written through the symlink would break the target.
         """
         root = ctx.workspace_root
         catalog = ctx.cache.get_catalog(root)
         for path in ctx.cache.find_files(root, extensions=(".md",)):
             rel = path.relative_to(root).as_posix()
-            if not ctx.is_file_targeted(rel):
+            if path.is_symlink() or not ctx.is_file_targeted(rel):
                 continue
             for link in ctx.cache.get_links(path):
                 target = local_target(link.target)

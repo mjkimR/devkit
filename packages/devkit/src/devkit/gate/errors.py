@@ -108,6 +108,22 @@ class GatePythonError(GateError):
     fix = PYTHON_FIX
 
 
+class GateInterpreterError(GateError):
+    """A hook entry found no interpreter that can import ``devkit.gate``, so the stage's gates did not run.
+
+    Rendered into the ``20-devkit`` entry when it is written: the shell prints it when the interpreter is
+    missing, a small bootstrap when the interpreter cannot import ``devkit.gate``. ``MAINTENANCE`` exiting
+    ``2`` in a blocking stage; a ``WARNING`` exiting ``0`` in ``post-commit``, after the commit exists.
+    """
+
+    code = "GATE_INTERPRETER_UNAVAILABLE"
+    fix = (
+        "Run `uv sync` in this repository so its .venv provides devkit, or rerun `devkit gate install` "
+        "from an environment where devkit is installed"
+    )
+    what_to_report = "The devkit commit gates did not run: no interpreter can import devkit.gate"
+
+
 class HooksPathSetError(GateError):
     """``core.hooksPath`` sends Git to another hooks directory, so managed wrappers would not run (``INTERACTION``)."""
 

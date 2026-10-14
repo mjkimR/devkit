@@ -46,7 +46,7 @@ from devkit.distribution.installation.sync import (
     tool_identity,
 )
 from devkit.distribution.installation.transaction import pending_journal, project_lock
-from devkit.distribution.installation.workspace import AGENTS_FILE, snapshot
+from devkit.distribution.installation.workspace import AGENTS_FILE, occupied, snapshot
 
 _EMPTY_SELECTION = Selection((), {})
 
@@ -337,10 +337,7 @@ def get_project_status(root: Path, installed: list[InstalledBundle]) -> ProjectS
             files=files,
             override_drift=drift,
             guidance_block=block,
-            seeded=[
-                SeededStatus(entry, snapshot(root, entry.path) is not None)
-                for entry in (receipt.seeded if receipt else ())
-            ],
+            seeded=[SeededStatus(entry, occupied(root, entry.path)) for entry in (receipt.seeded if receipt else ())],
             pending_journal=journal,
             tool=ToolStatus(tool_identity(), receipt.tool if receipt is not None else None),
             errors=[*packages, *_problems(files, journal, drift, block_error)],

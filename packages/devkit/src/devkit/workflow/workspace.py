@@ -38,6 +38,8 @@ from devkit.workflow.errors import (
     UnitNotFoundError,
     WorkflowError,
     WorkflowInvalidError,
+    WorkflowNotBindableError,
+    WorkflowNotFoundError,
     WorkflowNotSelectedError,
 )
 from devkit.workflow.evaluation.evaluate import LintFunc, Options, evaluate_definition
@@ -252,6 +254,34 @@ class Workspace:
             )
         return doc
 
+    def require_bindable(self, doc: WorkflowDocument, ref: str | None) -> None:
+        """Refuse to bind ``doc`` when ``ref`` names it by a path later lookups by id would not find.
+
+        A binding records only the definition's id, and every unit command
+        looks the id up among the discovered definitions. A ``ref`` that is a
+        path (``definition_path``) must therefore be the file discovered for
+        that id; any other file raises ``WorkflowNotBindableError``
+        (``WORKFLOW_NOT_BINDABLE``). An id ``ref``, or none, always passes.
+        """
+        if ref is None or definition_path(ref, self.root) is None:
+            return
+        try:
+            found = select_definition(self.definitions(), doc.id, (), "").path
+        except WorkflowNotFoundError:
+            found = None
+        if found is not None and doc.path is not None and found.resolve() == doc.path.resolve():
+            return
+        where = self.config.definitions_dir
+        if found is None:
+            raise WorkflowNotBindableError(
+                f"{ref} defines workflow {doc.id}, which is not a discovered definition; a binding records only the id",
+                fix=f"Move {ref} into {where} (or sync the bundle that ships it), then pass --workflow {doc.id}",
+            )
+        raise WorkflowNotBindableError(
+            f"{ref} defines workflow {doc.id}, but that id resolves to {self.rel(found)}; a binding records only the id",
+            fix=f"Pass --workflow {doc.id} to bind {self.rel(found)}, or give {ref} its own id and move it into {where}",
+        )
+
     def validate_definitions(self, paths: Sequence[Path] = ()) -> ValidationReport:
         """Validate the given definition files or directories; none means every discovered definition.
 
@@ -403,9 +433,12 @@ class Workspace:
         """Record the workflow ``unit`` follows and the hash of its stage schema; returns the rebound unit.
 
         ``workflow`` defaults to the current binding, else ``[workflow].default``;
-        ``anchor`` is as for ``resolve_unit``. The handoff history is kept.
+        ``anchor`` is as for ``resolve_unit``. The handoff history is kept. A
+        definition path outside the discovered definitions is refused
+        (``require_bindable``) before anything is written.
         """
         ref = self.resolve_unit(unit, workflow, anchor=anchor)
+        self.require_bindable(ref.doc, workflow)
         binding = Binding(ref.doc.id, schema_hash(ref.doc), ref.binding.history)
         write_binding(ref.anchor_path, Binding(binding.workflow, binding.hash))
         return replace(ref, binding=binding)

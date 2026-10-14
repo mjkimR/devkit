@@ -4,7 +4,8 @@ A group (``devkit.post_sync``, ``devkit.post_finish``) holds callables, called e
 sorted entry-point name order once its command's work is done. An extension returns ``None`` or a list whose items
 become notices: a string through the group's ``notice`` factory, an ``AdvisoryError`` kept with its own code and
 level, except that an ``ERROR`` is lowered to ``WARNING``. An extension cannot fail the command, whose work is
-already done: an exception or a malformed return value becomes the group's ``failed`` advisory (a warning).
+already done: an ``AdvisoryError`` it raises is kept the same way, with an ``extension: <name>`` detail, and any other
+exception or a malformed return value becomes the group's ``failed`` advisory (a warning).
 """
 
 from __future__ import annotations
@@ -34,6 +35,11 @@ def run_extensions(
     for entry in sorted(metadata.entry_points(group=group), key=lambda item: (item.name, item.value)):
         try:
             returned = invoke(entry.load())
+        except AdvisoryError as exc:
+            raised = exc.with_level(Level.WARNING if exc.level is Level.ERROR else exc.level)
+            raised.details = (*raised.details, f"extension: {entry.name}")
+            notices.append(raised)
+            continue
         except Exception as exc:
             notices.append(failed(entry.name, str(exc) or type(exc).__name__))
             continue

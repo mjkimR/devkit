@@ -13,12 +13,13 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
 
-from devkit.advisory import AdvisoryError, ExitCode
+from devkit.advisory import AdvisoryError, Level
 from devkit.core import require_git_toplevel
 from devkit.gate.engine.models import Stage
 from devkit.gate.engine.runner import load_gate_project
 from devkit.gate.errors import (
     ForeignHookError,
+    GateInterpreterError,
     GatePythonError,
     HookBackupExistsError,
     HookLayoutError,
@@ -144,9 +145,43 @@ exit 0
 """
 
 
+_ADVISORY_DELIMITER = "DEVKIT_ADVISORY"
+
+
+def _unavailable(stage: Stage) -> GateInterpreterError:
+    """The advisory a ``20-devkit`` entry prints when no interpreter can import ``devkit.gate``."""
+    error = GateInterpreterError(f"{stage}: no interpreter can import devkit.gate; the gates did not run")
+    return error if stage.blocking else error.with_level(Level.WARNING)
+
+
+def _bootstrap(block: str, code: int) -> str:
+    """``python -m devkit.gate`` in the same process, reporting a failed import as the advisory ``block``.
+
+    One interpreter start-up per hook: the import is checked where the stage runs, rather than in a
+    second process first. Without it, an interpreter that cannot import devkit exits ``1`` with a
+    traceback, which reads as gates refusing the commit.
+    """
+    return f"""import runpy, sys
+try:
+    import devkit.gate.cli
+except Exception as exc:
+    reason = (str(exc).splitlines() or [""])[0]
+    sys.stderr.write({block!r} + "[DETAIL] python=" + sys.executable + "\\n[DETAIL] " + type(exc).__name__ + ": " + reason + "\\n")
+    sys.exit({code})
+sys.argv[1:1] = ["run"]
+runpy.run_module("devkit.gate", run_name="__main__", alter_sys=True)
+"""
+
+
 def wrapper_script(stage: Stage, python: str) -> str:
-    """The ``20-devkit`` entry, with an absolute fallback interpreter."""
-    missing_exit = int(ExitCode.ERROR) if stage.blocking else int(ExitCode.OK)
+    """The ``20-devkit`` entry, with an absolute fallback interpreter.
+
+    When the selected interpreter is missing or cannot import ``devkit.gate``, the entry prints
+    ``GATE_INTERPRETER_UNAVAILABLE`` and exits ``2`` in a blocking stage, ``0`` in ``post-commit``.
+    """
+    unavailable = _unavailable(stage)
+    code = int(unavailable.exit_code)
+    block = "".join(f"{line}\n" for line in unavailable.lines())
     return f"""#!/bin/sh
 {GATE_MARKER}
 {PYTHON_LINE}{shlex.quote(python)}
@@ -163,10 +198,13 @@ if [ -n "$top" ]; then
     fi
 fi
 if [ ! -x "$python" ]; then
-    echo "[devkit gate] {stage}: no interpreter with devkit found ($python); run 'uv sync' in this repository" >&2
-    exit {missing_exit}
+    cat >&2 <<'{_ADVISORY_DELIMITER}'
+{block}{_ADVISORY_DELIMITER}
+    printf '[DETAIL] python=%s\\n[DETAIL] not an executable file\\n' "$python" >&2
+    exit {code}
 fi
-exec "$python" -P -m devkit.gate run {stage} "$@"
+bootstrap={shlex.quote(_bootstrap(block, code))}
+exec "$python" -P -c "$bootstrap" {stage} "$@"
 """
 
 

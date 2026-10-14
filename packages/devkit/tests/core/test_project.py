@@ -12,20 +12,32 @@ from devkit.core import (
     git_toplevel,
     read_project_config,
     read_toml,
+    require_devkit_root,
     require_git_toplevel,
 )
 from devkit.core import project as project_module
-from devkit.core.errors import GitError, UnsafePathError
+from devkit.core.errors import ArgumentError, GitError, UnsafePathError
 
 
-def test_nearest_devkit_directory_wins(repo: Path) -> None:
+def test_inside_git_the_repository_root_is_the_devkit_root(repo: Path) -> None:
     (repo / ".devkit").mkdir()
     nested = repo / "packages/app"
     (nested / ".devkit").mkdir(parents=True)
     (nested / "src/deep").mkdir(parents=True)
-    assert find_project_root(nested / "src/deep") == nested
-    assert find_project_root(nested) == nested
+    assert find_project_root(nested / "src/deep") == repo
+    assert find_project_root(nested) == repo
     assert find_project_root(repo / "packages") == repo
+
+
+def test_require_devkit_root_refuses_a_directory_below_the_top_level(repo: Path, tmp_path: Path) -> None:
+    (repo / "sub").mkdir()
+    assert require_devkit_root(repo) == repo
+    with pytest.raises(ArgumentError) as raised:
+        require_devkit_root(repo / "sub")
+    assert raised.value.code == "ARGUMENT_INVALID" and str(repo) in (raised.value.fix or "")
+    plain = tmp_path / "plain/sub"
+    plain.mkdir(parents=True)
+    assert require_devkit_root(plain) == plain.resolve()
 
 
 def test_a_file_start_uses_its_directory(repo: Path) -> None:

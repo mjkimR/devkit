@@ -259,6 +259,22 @@ def test_a_selection_command_creates_the_file_with_the_template(tmp_path: Path, 
     assert refresh_config_template(tmp_path).state == "unchanged"
 
 
+def test_update_config_returns_failed_extensions_and_takes_the_lock(
+    tmp_path: Path, tools: list[SimpleNamespace]
+) -> None:
+    from devkit.distribution.errors import LockHeldError
+    from devkit.distribution.installation.transaction import project_lock
+
+    tools.append(_entry("demo", lambda: 1 / 0))
+    notices = update_config(tmp_path, presets={"team": ["all"]})
+    assert [notice.code for notice in notices] == ["CONFIG_TEMPLATE_EXTENSION_FAILED"]
+    assert not (tmp_path / ".devkit/transient").exists()  # a project without .devkit/ gets no lock file
+    assert update_config(tmp_path, agents=["codex"]) == []  # only on creation
+    with project_lock(tmp_path), pytest.raises(LockHeldError):
+        update_config(tmp_path, agents=["claude-code"])
+    assert 'agents = ["codex"]' in _text(tmp_path)
+
+
 def test_a_sync_that_creates_the_file_reports_failed_extensions(tmp_path: Path, tools: list[SimpleNamespace]) -> None:
     tools.append(_entry("demo", lambda: 1 / 0))
     installed: list[InstalledBundle] = [make_bundle(tmp_path, "team")]

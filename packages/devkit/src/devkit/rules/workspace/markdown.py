@@ -4,7 +4,8 @@ Two scanners live here so every reader agrees on them:
 
 - ``prose_lines`` yields the lines outside fenced code blocks (CommonMark
   fences: a run of three or more backticks or tildes, closed only by a run of
-  the same character at least as long with nothing after it). Link extraction
+  the same character at least as long with nothing after it; a backtick run
+  with another backtick later on its line is not a fence). Link extraction
   and the checklist counter both use it; ``fenced_lines`` yields the lines
   inside, and ``code_spans`` the inline code of a prose line.
 - ``count_tasks`` is the single checklist counter: a rule that reasons about
@@ -29,13 +30,20 @@ _CHECKLIST_ITEM = re.compile(r"^[ \t]*[-*+][ \t]+\[([ xX])\][ \t]+")
 
 
 def _fence_run(stripped: str) -> str:
-    """The leading run of three or more backticks or tildes, or an empty string."""
+    """The leading run of three or more backticks or tildes, or an empty string.
+
+    A backtick run followed by another backtick on the line is no fence: the
+    info string of a backtick fence cannot contain one, so a line such as
+    ````` ```js``` is inline ````` opens an inline code span instead.
+    """
     if not stripped.startswith(("```", "~~~")):
         return ""
     char = stripped[0]
     n = 0
     while n < len(stripped) and stripped[n] == char:
         n += 1
+    if char == "`" and "`" in stripped[n:]:
+        return ""
     return stripped[:n]
 
 

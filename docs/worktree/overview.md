@@ -15,12 +15,12 @@ The module is SDD-agnostic: it does not decide which tasks use a worktree, and i
 1. Refuse inside a linked worktree (`WORKTREE_NESTED`): worktrees are not nested.
 2. If the slug's path is already a worktree on the slug's branch and clean, reuse it (`created=no`). On another branch, or with uncommitted changes, it is `WORKTREE_CONFLICT`; so is a registered worktree whose directory was deleted (`prunable`), with `git worktree prune` as its `[FIX]`.
 3. A branch named after the slug that is checked out elsewhere, or that already exists, is `WORKTREE_BRANCH_EXISTS`; a path that exists but is not a worktree is `WORKTREE_CONFLICT`.
-4. Otherwise `git worktree add -b <slug> <path>` from the base HEAD. Uncommitted changes in the base stay in the base.
+4. Otherwise `git worktree add -b <slug> <path>` from the base HEAD, within 1800 seconds (a large checkout, LFS or slow hooks take long). Uncommitted changes in the base stay in the base. When it fails or times out (a failing `post-checkout` hook fails it too), `start` removes what it created, the registered worktree (with `--force --force`: Git locks a worktree while it checks it out) and the branch (with `git branch -d`), and raises `WORKTREE_ADD_FAILED` with Git's reason, so the rerun starts afresh; whatever it could not remove is listed as `left:` details, with the commands that remove it as the `[FIX]`.
 5. A new worktree is a fresh checkout without the base's ignored files: no `.venv`, no build output, and no `.devkit/managed/`, the synchronized copies that `.devkit/.gitignore` keeps out of Git. Two steps restore what work and commits need:
    1. **setup**: the `[worktree] setup` command, if configured, runs through `/bin/sh -c` in the worktree, without the caller's `VIRTUAL_ENV`, within 900 seconds. Set it to the project's environment step, for example `uv sync` or `just init`.
    2. **sync**: when the devkit project the command runs in has a receipt (`.devkit/installation.json`), `devkit sync --locked` runs in the same project directory of the worktree, within 300 seconds, with the worktree's `.venv/bin/python` when setup created one with devkit installed in it (a `devkit_agt-*.dist-info` in its `site-packages`, the test the commit gate hooks apply), else the interpreter running `start`. It writes the ignored managed copies only and never changes the tracked receipt, `AGENTS.md` or seeded files; when the worktree's environment no longer matches the committed receipt (a `RECEIPT_STALE` exit `1`) or lacks a deployed bundle's package, it fails and `start` reports `WORKTREE_SYNC_FAILED`. Without it, every devkit command that reads managed files fails in the worktree: bundle rules (and so a `devkit rules check --staged` commit gate, which then stops with `GATE_VERIFY_NOT_RUN` directing `devkit sync`), bundle gates, `get-context`, `playbook search`, workflow assets.
 
-   Their output is discarded unless they fail; a failure or timeout is a `WORKTREE_SETUP_FAILED` or `WORKTREE_SYNC_FAILED` warning, and the worktree stays. The setup warning's `[FIX]` reruns the command. The sync runs with `--format json`, so its warning carries the sync's own error: the code and message (`RECEIPT_STALE`, `SELECTION_INVALID`, ...), its targets under the worktree, its `[DETAIL]` lines and its `[FIX]`, prefixed with the worktree path, since rerunning does not cure a stale receipt or a missing package; only an output that is not an error object (a timeout, a crash) gets the rerun command, with the advisory headlines kept ahead of the last lines. A reused worktree runs neither.
+   Both run with stdin closed, in a session of their own: a timeout kills the whole process group (the shell and what it started, such as `uv sync`). Their output is discarded unless they fail; a failure or timeout is a `WORKTREE_SETUP_FAILED` or `WORKTREE_SYNC_FAILED` warning, and the worktree stays. The setup warning's `[FIX]` reruns the command. The sync runs with `--format json`, so its warning carries the sync's own error: the code and message (`RECEIPT_STALE`, `SELECTION_INVALID`, ...), its targets under the worktree, its `[DETAIL]` lines and its `[FIX]`, prefixed with the worktree path, since rerunning does not cure a stale receipt or a missing package; only an output that is not an error object (a timeout, a crash) gets the rerun command, with the advisory headlines kept ahead of the last lines. A reused worktree runs neither.
 
 The commit gates of `devkit gate` are shared by every worktree and run with the worktree's own `.venv` first ([Commit Gate Overview](../gate/overview.md)), so a worktree without one falls back to the interpreter recorded at installation.
 
@@ -43,18 +43,18 @@ These checks, and those of step 1, run before the first change, so each of their
 
    Before either, when the branch will be deleted (step 4), its upstream, if it has one that exists locally, must contain it: `git branch -d` checks a branch against its upstream rather than the base, so a task branch pushed with `-u` and committed to since would be refused after the merge. That is `WORKTREE_BRANCH_UNPUSHED`, whose `[FIX]` pushes the branch to its upstream.
 2. **Caller cleanup.** The library's `before_remove(result)` callback runs here, once the merge is confirmed and while the worktree still exists (it runs again on a rerun, so it must be idempotent).
-3. **Remove** the worktree with `git worktree remove`. A worktree with uncommitted or untracked changes is `WORKTREE_DIRTY`: it is never removed by force. Any other failure is `WORKTREE_REMOVE_FAILED`.
+3. **Remove** the worktree with `git worktree remove`, within 1800 seconds. A worktree with uncommitted or untracked changes is `WORKTREE_DIRTY`: it is never removed by force. Any other failure is `WORKTREE_REMOVE_FAILED`; after a timeout the directory may be partly deleted while still registered (a rerun would report the deleted files as uncommitted changes), so its `[FIX]` is `git worktree remove --force <path>` once the user agrees.
 4. **Delete the branch** with `git branch -d` (never `-D`) when `[worktree] delete_branch = true` (the default). A failure is `WORKTREE_BRANCH_DELETE_FAILED`.
 
 A refusal raised after step 1 carries the partial result: the command prints its `[WORKTREE_FINISHED: ...]` line (or, under `--format json`, the result with the error under `errors`) and the warnings collected so far (`WORKTREE_PUSH_FAILED`, `WORKTREE_PUSH_REJECTED`) before the error, so the caller sees what is already done.
 
 **Post-finish extensions.** After a successful `finish` (never after a refusal), the command calls every `devkit.post_finish`
-entry point of the installed packages, in sorted name order, as `extension(base, result)`: the base checkout's root and the
+entry point of the installed packages, in sorted name order, as `extension(base, result)`: the base checkout's root (its repository root, which is also its devkit root) and the
 result as its JSON object (`slug`, `path`, `branch`, `merged`, `push`, `removed`, `branch_deleted`). A package cleans
 up what it keeps per task there (`devkit spec` prunes the handed-off proposal's directories and the task's scope
 record). An extension returns `None` or a list: a string becomes a `POST_FINISH_NOTICE` notice, an advisory keeps its code
-(an `ERROR` lowered to `WARNING`). It cannot fail the finish: an exception or a malformed return value is a
-`POST_FINISH_EXTENSION_FAILED` warning. The extensions run in the CLI; the library's `finish` runs none (`before_remove` is
+(an `ERROR` lowered to `WARNING`). It cannot fail the finish: an advisory it raises keeps its code the same way, with an
+`extension: <name>` detail; any other exception or a malformed return value is a `POST_FINISH_EXTENSION_FAILED` warning. The extensions run in the CLI; the library's `finish` runs none (`before_remove` is
 its callback). The rules are those of the `devkit.post_sync` extensions (`devkit.core.extensions`).
 
 Rerunning the same command resumes once the cause is resolved:
@@ -64,7 +64,7 @@ Rerunning the same command resumes once the cause is resolved:
 
 ## 4. status
 
-`status` lists every worktree (path, branch, short HEAD, base or linked, merged into the base HEAD, dirty, prunable) and every local branch that no worktree checks out and the base HEAD does not contain. It changes nothing and exits `0`: unmerged and dirty worktrees are ordinary while tasks run.
+`status` lists every worktree (path, branch, short HEAD, base or linked, merged into the base HEAD, dirty, prunable) and every local branch that no worktree checks out and the base HEAD does not contain. It changes nothing and exits `0`: unmerged and dirty worktrees are ordinary while tasks run. A worktree on a branch without commits yet (`git switch --orphan`) is `merged=no`.
 
 - A linked worktree with `merged=yes dirty=no` is cleaned up by `devkit worktree finish <slug>`.
 - `merged=no`, `dirty=yes`, `dirty=-` (unreadable), `prunable=yes` (its directory was deleted; `git worktree prune` forgets it) and `[BRANCH: ...]` lines are removed only with the user's authorization.

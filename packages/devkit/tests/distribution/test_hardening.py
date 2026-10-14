@@ -105,11 +105,15 @@ def test_post_sync_extensions_run_in_name_order_and_never_fail_the_sync(
     def wrong(root: Path, result: dict) -> object:
         return "not a list"
 
+    def refusing(root: Path, result: dict) -> list[str]:
+        raise AdvisoryError("its table is malformed", code="EXT_CONFIG_INVALID", input_error=True, fix="Fix the table")
+
     entries = [
         _entry("c-silent", silent),
         _entry("b-broken", broken),
         _entry("a-first", first),
         _entry("d-wrong", wrong),
+        _entry("e-refusing", refusing),
     ]
     monkeypatch.setattr(
         core_extensions.metadata, "entry_points", lambda group: entries if group == extensions.GROUP else []
@@ -126,9 +130,11 @@ def test_post_sync_extensions_run_in_name_order_and_never_fail_the_sync(
             "POST_SYNC_EXTENSION_FAILED",
             "post-sync extension d-wrong failed: returned str, expected list[str | AdvisoryError]",
         ),
+        ("EXT_CONFIG_INVALID", "its table is malformed"),
     ]
     assert result.notices[0].details == ("extension: a-first",)
-    assert [notice["level"] for notice in result.to_dict()["notices"]] == ["NOTICE", "WARNING", "WARNING"]
+    assert result.notices[3].details == ("extension: e-refusing",) and result.notices[3].fix == "Fix the table"
+    assert [notice["level"] for notice in result.to_dict()["notices"]] == ["NOTICE", "WARNING", "WARNING", "WARNING"]
     assert result.to_dict()["notices"][1]["advisory"]["mode"] == "CONTINUE"
     assert (target / RECEIPT_PATH).is_file()
 

@@ -86,9 +86,13 @@ payloads such as `pre-push` requires a replay contract so every child receives t
   gates, since another worktree shares it. Run sync after enabling a gate in a stage that has no entry yet.
 - **Gate entry**: `20-devkit` selects the worktree's `.venv/bin/python` when devkit is installed there,
   otherwise the absolute fallback recorded by install (`sys.executable` or `--python`), then runs
-  `<python> -P -m devkit.gate run <stage>`. `-P` prevents repository modules from shadowing imports.
-  The fallback must import `devkit.gate` (`GATE_PYTHON_INVALID`); it does not depend on `PATH`.
-  A missing interpreter exits `2` in a blocking stage and `0` in `post-commit`.
+  `python -m devkit.gate run <stage>` through a small `<python> -P -c` bootstrap in the same process.
+  `-P` prevents repository modules from shadowing imports. The fallback must import `devkit.gate` at
+  install time (`GATE_PYTHON_INVALID`); it does not depend on `PATH`. When at commit time the interpreter
+  is missing or cannot import `devkit.gate` (removed, or a broken or incompatible devkit), the entry prints
+  `GATE_INTERPRETER_UNAVAILABLE` with `[DETAIL] python=<path>` and the reason, never a traceback, and exits
+  `2` in a blocking stage (an `[ERROR]`: the gates could not run, not a refusal) and `0` in `post-commit`
+  (a `[WARN]`).
 - **Existing hooks**: regular files are automatically renamed to `<hook>.legacy`, retaining their executable
   mode, and chained through `00-legacy`. `GATE_HOOK_PRESERVED` is returned as a warning only when a hook moves.
   Keeping the backup beside the original reduces directory-relative breakage, but scripts depending on their

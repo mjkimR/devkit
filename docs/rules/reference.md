@@ -29,9 +29,11 @@ then `uv run devkit rules check`. In this monorepo, `just rules-check`,
 `just rules-fix`, `just rules-phases`, `just rules-explain` and `just rules-test`
 pass their arguments through.
 
-Without `-w`/`--workspace-root` the commands use the project root of the current
-directory: the nearest directory with a `.devkit/` folder, else the Git work
-tree top level, else the current directory.
+Without `-w`/`--workspace-root` the commands use the devkit root of the current
+directory: the Git work tree's top level, or outside Git the nearest directory
+with a `.devkit/` folder, else the current directory
+([core reference](../core/reference.md)). An explicit `-w` below the top level of
+a Git work tree is `ARGUMENT_INVALID`.
 
 - `check` never writes files. Targets, exclusions and phases:
   [Evaluation Lifecycle, section 3](evaluation-lifecycle.md#3-cli-execution-and-phases).
@@ -377,9 +379,9 @@ are returned in `RuleRegistry.errors`, `ProjectRun.load_errors` and
 | `PinnedWriteError` | `RULES_PINNED_WRITE_REFUSED` | `BLOCKED` | a fixer tried to write a receipt-pinned copy under `.devkit/managed/` or `.devkit/overrides/` |
 | `RuleDefinitionError` | `RULES_DEFINITION_INVALID` | `MAINTENANCE` | a rule class declares an invalid `promote_to` (raised at construction) |
 | `PolicyError` | `RULES_POLICY_INVALID` | `INPUT_ERROR` | a phase or severity override or settings entry names an unknown rule or changes nothing (collected) |
-| `SettingsError` | `RULES_SETTINGS_INVALID` | `INPUT_ERROR`, or `MAINTENANCE` for a defect in the rule's settings declaration | settings do not type-check or `validate_settings` rejects them (collected; a `PolicyError`) |
+| `SettingsError` | `RULES_SETTINGS_INVALID` | `INPUT_ERROR`, or `MAINTENANCE` for a defect in the rule's settings declaration | settings do not type-check, or the settings class's `__post_init__` or `validate_settings` rejects them (collected; a `PolicyError`). `MAINTENANCE` covers rejected defaults, an unsupported or unresolvable field type, an `init=False` field, and any exception other than `ValueError` from the class or `validate_settings` |
 | `RuleLoadError` | `RULES_LOAD_FAILED` | `MAINTENANCE`; `AUTO` when missing | a rule package fails to load (or a `.py` file sits directly in `--rules-dir`), or the receipt is malformed or lists a missing or drifted rule (collected; `fix` names `devkit sync`); a missing rule file (a fresh clone or worktree lacks the ignored managed copies) is `AUTO` with the fix `devkit sync` |
-| `RuleExecutionError` | `RULES_EXECUTION_FAILED` | `MAINTENANCE` | a rule raised while checking or fixing; `[TARGET]` is the file defining it (collected) |
+| `RuleExecutionError` | `RULES_EXECUTION_FAILED` | `MAINTENANCE` | a rule raised while checking or fixing; `[TARGET]` is the file defining it (collected). An `ERROR` advisory the rule raised keeps its own code, mode, fix, targets and details, with `rule_id` set (a `RULES_PINNED_WRITE_REFUSED` from a fixer stays one) |
 | `RulesTestUnavailableError` | `RULES_TEST_UNAVAILABLE` | `MAINTENANCE` | `devkit rules test` (or `run_rule_tests`) cannot import pytest in the interpreter running devkit; `fix`: `uv add --dev pytest` (raised before any test runs) |
 | `RulesRunError` | `RULES_RUN_FAILED` | `MAINTENANCE` | raised by `ProjectRun.raise_for_problems()` for callers that need one error for a failed run, such as the workflow engine's `lint-clean`; `problems` keeps the collected problems |
 
@@ -387,7 +389,8 @@ are returned in `RuleRegistry.errors`, `ProjectRun.load_errors` and
 `ctx.settings(rule, path)` raise `TargetError` too. Passing `targets` or
 `fix=True` together with a snapshot, or a snapshot taken from another root, is
 a programming error and raises `ValueError`. A rule's `validate_settings`
-raises `ValueError`, which the engine reports as `SettingsError`.
+or its settings class's `__post_init__` raises `ValueError`, which the engine
+reports as `SettingsError`.
 
 Warnings and notices are returned, never raised, at level `WARNING` or
 `NOTICE` ([Agent Advisory Protocol](../advisory/protocol.md#2-levels)):

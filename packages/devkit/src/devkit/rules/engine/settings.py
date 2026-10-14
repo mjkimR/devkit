@@ -152,11 +152,32 @@ def check_setting_value(annotation: Any, value: Any) -> Any:
     return value
 
 
+def _declaration_defect(message: str) -> SettingsError:
+    """A defect of the rule's own settings declaration (``MAINTENANCE``), not of the project's values."""
+    return SettingsError(message, input_error=False, target_files=[])
+
+
 def _describe(annotation: Any) -> str:
     try:
         return describe_setting_type(annotation)
     except TypeError as exc:
-        raise SettingsError(str(exc), input_error=False, target_files=[]) from None
+        raise _declaration_defect(str(exc)) from None
+
+
+def _field_types(cls: type, fields: Mapping[str, dataclasses.Field[Any]]) -> dict[str, Any]:
+    """Each field's resolved, supported type; unresolvable annotations and ``init=False`` fields are declaration defects."""
+    try:
+        hints = typing.get_type_hints(cls)
+    except Exception as exc:
+        raise _declaration_defect(
+            f"cannot resolve the field types of {cls.__name__}: {type(exc).__name__}: {exc}"
+        ) from None
+    not_init = sorted(name for name, field in fields.items() if not field.init)
+    if not_init:
+        raise _declaration_defect(f"settings fields must be init fields; init=False: {not_init}")
+    for name in fields:
+        _describe(hints[name])
+    return {name: hints[name] for name in fields}
 
 
 def _check_value(name: str, annotation: Any, value: Any) -> Any:
@@ -190,15 +211,12 @@ class SettingsResolver:
         self.default = default
         self._cls = type(default)
         self._fields = {f.name: f for f in dataclasses.fields(default)}
-        self._hints = typing.get_type_hints(self._cls)
         self._validate = validate
-        for name, hint in self._hints.items():
-            if name in self._fields:
-                _describe(hint)
-        self.base: dict[str, Any] = {f.name: getattr(default, f.name) for f in dataclasses.fields(default)}
         self.overrides: list[Override] = []
         self._by_match: dict[tuple[int, ...], Any] = {}
         try:
+            self._hints = _field_types(self._cls, self._fields)
+            self.base: dict[str, Any] = {name: getattr(default, name) for name in self._fields}
             self._decode(self.base, "defaults")
             if raw is not None:
                 self.base = self._merge(self.base, raw.values, "settings")
@@ -223,12 +241,22 @@ class SettingsResolver:
         return merged
 
     def _decode(self, values: dict[str, Any], context: str) -> Any:
-        instance = self._cls(**values)
-        if self._validate is not None:
-            try:
+        """The settings instance for ``values``, checked by ``__post_init__`` and ``validate_settings``.
+
+        A ``ValueError`` rejects configured values (``INPUT_ERROR``); one raised
+        for the defaults, and any other exception, is a defect of the rule's
+        declaration (``MAINTENANCE``).
+        """
+        try:
+            instance = self._cls(**values)
+            if self._validate is not None:
                 self._validate(instance)
-            except ValueError as exc:
-                raise SettingsError(f"{context}: {exc}") from None
+        except ValueError as exc:
+            if context == "defaults":
+                raise _declaration_defect(f"{context}: {exc}") from None
+            raise SettingsError(f"{context}: {exc}") from None
+        except Exception as exc:
+            raise _declaration_defect(f"{context}: {type(exc).__name__}: {exc}") from None
         return instance
 
     def resolve(self) -> Any:

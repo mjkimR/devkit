@@ -78,7 +78,9 @@ def record_answer(
     """Validate an answer against the unit's open requests and write its decision record.
 
     ``feedback:<target>`` is accepted at any time with exactly one ``--value``
-    on accept. Every other id must be an open request of the unit.
+    on accept. Every other id must be an open request of the unit. An
+    ``action`` outside ``ACTIONS`` raises ``DecisionInvalidError``
+    (``DECISION_INVALID``) for every request.
     """
     ref = unit if isinstance(unit, UnitRef) else ws.resolve_unit(unit)
     if not is_request_id(request_id):
@@ -88,6 +90,8 @@ def record_answer(
         )
     stage = ""
     if request_id.startswith(FEEDBACK_PREFIX):
+        if action not in ACTIONS:
+            raise DecisionInvalidError(f"--action {action!r} is not one of {'|'.join(ACTIONS)}")
         if action == "accept":
             if len(values) != 1 or not values[0].strip():
                 raise DecisionInvalidError(

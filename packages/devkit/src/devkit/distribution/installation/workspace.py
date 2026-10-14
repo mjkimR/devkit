@@ -9,6 +9,7 @@ backslash, no symlinked component, a regular file if it exists).
 
 from __future__ import annotations
 
+import os
 import stat
 from pathlib import Path
 
@@ -103,3 +104,11 @@ def snapshot(root: Path, name: str) -> Content | None:
     if not path.exists():
         return None
     return Content(path.read_bytes(), stat.S_IMODE(path.stat().st_mode))
+
+
+def occupied(root: Path, name: str) -> bool:
+    """Whether anything is at ``name``: a file, a directory or a symlink (dangling too), never read or checked.
+
+    For project-owned paths devkit only needs to know are there, such as a seeded file after its first write.
+    """
+    return os.path.lexists(root / name)
