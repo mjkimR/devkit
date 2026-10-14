@@ -351,6 +351,55 @@ def _group_alive(pgid: int) -> bool:
     return True
 
 
+def _leader_exited(pid: int) -> bool:
+    """Whether the group leader ``pid`` (a child of this process) has exited, without reaping it (``WNOWAIT``).
+
+    ``False`` where ``os.waitid`` is unavailable (macOS before Python 3.13).
+    """
+    waitid = getattr(os, "waitid", None)
+    if waitid is None:
+        return False
+    try:
+        return waitid(os.P_PID, pid, os.WEXITED | os.WNOHANG | os.WNOWAIT) is not None
+    except ChildProcessError:  # already reaped
+        return True
+
+
+def _live_members(pgid: int) -> bool | None:
+    """Whether the process group ``pgid`` has a member that is not a zombie, read from ``/proc/<pid>/stat``.
+
+    ``None`` where ``/proc`` is unavailable (macOS).
+    """
+    try:
+        entries = os.listdir("/proc")
+    except OSError:
+        return None
+    if not os.path.exists("/proc/self/stat"):
+        return None
+    for entry in entries:
+        if not entry.isdigit():
+            continue
+        try:
+            with open(f"/proc/{entry}/stat", "rb") as stream:
+                stat = stream.read()
+        except OSError:  # the process exited meanwhile
+            continue
+        # ``pid (comm) state ppid pgrp ...``: ``comm`` may hold spaces and parentheses, so split after the last ``)``.
+        fields = stat[stat.rfind(b")") + 1 :].split()
+        if len(fields) > 2 and fields[2] == str(pgid).encode() and fields[0] != b"Z":
+            return True
+    return False
+
+
+def _only_zombies_left(pid: int) -> bool:
+    """Whether the group led by ``pid`` holds nothing but zombies, its exited (unreaped) leader among them.
+
+    Linux counts a zombie as a group member, so ``_group_alive`` cannot tell; ``False`` where ``/proc`` or
+    ``os.waitid`` is unavailable.
+    """
+    return _leader_exited(pid) and _live_members(pid) is False
+
+
 def _stop(process: subprocess.Popen[bytes]) -> None:
     """Terminate the command's process group, then kill what is left of it after ``STOP_GRACE`` seconds.
 
@@ -363,8 +412,12 @@ def _stop(process: subprocess.Popen[bytes]) -> None:
     this run has already reaped (the command had exited) is not signalled at all, since its group ID
     may name another group by now; what it left in the background is not stopped, as when the run
     ends normally. On macOS a group left with zombies only refuses even signal ``0`` (``EPERM``), which
-    ends the wait at once; on Linux a zombie still counts as a member, so the unreaped leader keeps the
-    group alive and an interrupted run waits the full ``STOP_GRACE`` before the ``SIGKILL``.
+    ends the wait at once. On Linux a zombie still counts as a member, so the unreaped leader keeps the
+    group alive; the wait ends early instead once the leader has exited (``os.waitid`` with ``WNOWAIT``,
+    which does not reap it) and ``/proc`` shows no member of the group that is not a zombie. Where
+    neither applies, an interrupted run waits the full ``STOP_GRACE`` before the ``SIGKILL``. Either
+    way the ``SIGKILL`` goes to a group that ``_group_alive`` still reports, so a member the ``/proc``
+    scan missed while it started is killed too.
     """
     if process.returncode is not None:
         return
@@ -372,7 +425,7 @@ def _stop(process: subprocess.Popen[bytes]) -> None:
         deadline = time.monotonic() + STOP_GRACE
         with contextlib.suppress(ProcessLookupError, PermissionError):  # PermissionError: zombies only (macOS)
             os.killpg(process.pid, signal.SIGTERM)
-        while _group_alive(process.pid) and time.monotonic() < deadline:
+        while _group_alive(process.pid) and not _only_zombies_left(process.pid) and time.monotonic() < deadline:
             time.sleep(_STOP_POLL)
         if _group_alive(process.pid):
             with contextlib.suppress(ProcessLookupError, PermissionError):

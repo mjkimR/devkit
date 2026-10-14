@@ -27,7 +27,7 @@ from devkit.distribution.installation.context import get_context
 from devkit.distribution.installation.discovery import InstalledBundle
 from devkit.distribution.installation.guidance_block import START
 from devkit.distribution.installation.receipt import read_receipt
-from devkit.distribution.installation.sync import sync_project
+from devkit.distribution.installation.sync import recover_project, sync_project
 from devkit.distribution.installation.workspace import AGENTS_FILE, LOCK, project_path
 from testsupport.distribution import instruction, write_bundle
 
@@ -263,6 +263,86 @@ def test_a_rolled_back_file_to_directory_transition_restores_the_file(
     assert not (target / ".devkit/transient/sync-journal.json").exists()
 
 
+def test_a_managed_directory_that_becomes_a_file_upstream_is_replaced(tmp_path: Path, target: Path) -> None:
+    sync_project(target, [write_bundle(tmp_path / "v1", NOTES, {"notes/SKILL.md": "directory\n"})])
+    assert (target / NOTES_FILE / "SKILL.md").is_file()
+    upgraded = write_bundle(tmp_path / "v2", NOTES, {"notes": "file\n"})
+    planned = sync_project(target, [upgraded], dry_run=True).actions  # `--check` plans the same way
+    assert [(item.path, item.action) for item in planned][:2] == [
+        (NOTES_FILE, "create"),
+        (f"{NOTES_FILE}/SKILL.md", "remove"),
+    ]
+    assert (target / NOTES_FILE / "SKILL.md").read_text() == "directory\n"  # the dry run wrote nothing
+    sync_project(target, [upgraded])
+    assert (target / NOTES_FILE).read_text() == "file\n"
+    assert sync_project(target, [upgraded]).actions == []
+
+
+def test_a_managed_directory_holding_an_unowned_file_is_never_replaced_by_a_file(tmp_path: Path, target: Path) -> None:
+    sync_project(target, [write_bundle(tmp_path / "v1", NOTES, {"notes/SKILL.md": "directory\n"})])
+    (target / NOTES_FILE / "mine.md").write_text("a project file\n")
+    upgraded = write_bundle(tmp_path / "v2", NOTES, {"notes": "file\n"})
+    for dry_run in (True, False):
+        with pytest.raises(UnsafeWorkspaceError, match="holds files devkit does not remove") as raised:
+            sync_project(target, [upgraded], dry_run=dry_run)
+        assert raised.value.code == "WORKSPACE_UNSAFE" and raised.value.target_files == (NOTES_FILE,)
+    assert (target / NOTES_FILE / "mine.md").read_text() == "a project file\n"
+    assert (target / NOTES_FILE / "SKILL.md").read_text() == "directory\n"
+    assert not (target / ".devkit/transient/sync-journal.json").exists()
+
+
+@pytest.mark.parametrize("stop", ["deleted", "emptied", "written"])
+def test_an_interrupted_directory_to_file_transition_is_recovered(
+    tmp_path: Path, target: Path, monkeypatch: pytest.MonkeyPatch, stop: str
+) -> None:
+    sync_project(target, [write_bundle(tmp_path / "v1", NOTES, {"notes/SKILL.md": "directory\n"})])
+    upgraded = write_bundle(tmp_path / "v2", NOTES, {"notes": "file\n"})
+    write, remove = transaction.atomic_write, transaction._remove_emptied
+
+    def interrupt_write(root: Path, name: str, content: Content | None) -> None:
+        write(root, name, content)
+        if (stop, name) in {("deleted", f"{NOTES_FILE}/SKILL.md"), ("written", NOTES_FILE)}:
+            raise SystemExit("simulated process interruption")
+
+    def interrupt_removal(root: Path, name: str) -> None:
+        remove(root, name)
+        if stop == "emptied":
+            raise SystemExit("simulated process interruption")
+
+    monkeypatch.setattr(transaction, "atomic_write", interrupt_write)
+    monkeypatch.setattr(transaction, "_remove_emptied", interrupt_removal)
+    with pytest.raises(SystemExit):
+        sync_project(target, [upgraded])
+    monkeypatch.undo()
+    assert recover_project(target) > 0
+    assert (target / NOTES_FILE / "SKILL.md").read_text() == "directory\n"
+    assert not (target / ".devkit/transient/sync-journal.json").exists()
+    sync_project(target, [upgraded])
+    assert (target / NOTES_FILE).read_text() == "file\n"
+
+
+def test_a_rolled_back_directory_to_file_transition_restores_the_directory(
+    tmp_path: Path, target: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    sync_project(target, [write_bundle(tmp_path / "v1", NOTES, {"notes/SKILL.md": "directory\n"})])
+    upgraded = write_bundle(tmp_path / "v2", NOTES, {"notes": "file\n"})
+    write = transaction.atomic_write
+    failed: list[str] = []
+
+    def fail_on_receipt(root: Path, name: str, content: Content | None) -> None:
+        if name == RECEIPT_PATH and not failed:
+            failed.append(name)  # the commit's receipt write fails; the rollback's goes through
+            raise OSError("disk full")
+        write(root, name, content)
+
+    monkeypatch.setattr(transaction, "atomic_write", fail_on_receipt)
+    with pytest.raises(OSError, match="disk full"):
+        sync_project(target, [upgraded])
+    monkeypatch.undo()
+    assert (target / NOTES_FILE / "SKILL.md").read_text() == "directory\n"
+    assert not (target / ".devkit/transient/sync-journal.json").exists()
+
+
 def test_a_project_file_deleted_in_the_same_change_set_still_blocks_a_directory(tmp_path: Path) -> None:
     (tmp_path / "docs").write_text("a project file\n")
     with pytest.raises(UnsafeWorkspaceError, match="docs is not a directory"):
@@ -279,6 +359,8 @@ def test_a_journal_from_an_earlier_devkit_is_refused_with_a_manual_rollback(targ
     error = raised.value
     assert error.code == "RECOVERY_BLOCKED" and "earlier devkit" in error.message
     assert error.fix == transaction.LEGACY_JOURNAL_FIX and "devkit recover" in transaction.LEGACY_JOURNAL_FIX
+    # The manual rollback is what recovery does: every unedited file goes back to its `before`.
+    assert "equals its base64 `before` or `after` content, write back the `before`" in transaction.LEGACY_JOURNAL_FIX
     assert journal.exists()
 
 

@@ -107,8 +107,9 @@ def status_cmd(workspace_root: str | None, output_format: str) -> None:
     """Show hook wrappers, every known gate with its effective state, the configuration layers and every problem
     that would fail a commit.
 
-    Warns (GATE_HOOK_ENTRY_MISSING) about enabled gates whose stage has no installed hook entry, so they do not run.
-    Exits 1 when any problem is reported and 2 when the status cannot be read (not a Git work tree)."""
+    Warns (GATE_HOOK_ENTRY_MISSING) about enabled gates whose stage has no installed hook entry, so they do not run;
+    when core.hooksPath sends Git to another hooks directory, warns once (GATE_HOOKS_PATH_SET) instead, naming every
+    enabled gate. Exits 1 when any problem is reported and 2 when the status cannot be read (not a Git work tree)."""
     project = load_gate_project(_start(workspace_root))
     location = hooks.locate(project.root)
     statuses = hooks.status(project.root, location)

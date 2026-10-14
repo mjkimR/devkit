@@ -588,3 +588,13 @@ def test_workspace_root_defaults_to_the_enclosing_project(tmp_path: Path, monkey
     monkeypatch.chdir(root / UNIT)
     result = _run("next", "--unit", str(root / UNIT), "--no-lint")
     assert result.exit_code == 0 and "[WORKFLOW: direct-delivery unit=.devkit/transient/work/u " in result.output
+
+
+def test_an_unbound_unit_scopes_its_envelopes_by_the_id_of_a_default_given_as_a_path(tmp_path: Path) -> None:
+    root = _workspace(tmp_path, {"d": D}, ".devkit/workflows/d.md")
+    write_unit(root, UNIT)  # unbound: it follows the default
+    assert Workspace(root).unit_scope(UNIT).workflow == "d"  # the id evaluation scopes by, never the path
+    result = _run("envelope", "new", "-w", str(root), "--unit", UNIT, "--kind", "review", "--summary", "ok")
+    assert result.exit_code == 0, result.stderr
+    envelopes = load_envelopes(root / UNIT)
+    assert [e.file for e in envelopes.scoped("d", 0).all()] == ["envelopes/review-01.yaml"]

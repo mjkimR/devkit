@@ -71,7 +71,7 @@ class UnitRef:
 
 @dataclass(frozen=True)
 class UnitScope:
-    """A unit's anchor, binding and the id of the workflow it follows, read without loading that definition."""
+    """A unit's anchor, binding and the id of the workflow it follows, read without validating that definition."""
 
     dir: Path  # absolute
     anchor: str
@@ -424,13 +424,18 @@ class Workspace:
         Enough to scope what is recorded in the unit (``envelope new``), so a
         missing or invalid definition or a broken plugin check does not stop
         it. An unbound unit follows ``[workflow].default``; without one it is
-        ``WorkflowNotSelectedError``.
+        ``WorkflowNotSelectedError``. A default that is a definition path is
+        read (unvalidated, as ``load_definition`` does) for its id, the scope
+        evaluation counts envelopes in; a missing or unreadable file raises
+        as ``load_definition`` does.
         """
         unit_dir = self.unit_path(unit)
         found = self.locate_anchor(unit_dir, anchor)
         binding = self._binding(unit_dir, found)
         self._require_selection(unit_dir, binding)
         workflow = binding.workflow or self.config.default or ""
+        if not binding.workflow and definition_path(workflow, self.root) is not None:
+            workflow = self.load_definition(workflow).id
         return UnitScope(unit_dir, found, binding, workflow, self.rel(unit_dir))
 
     def _require_selection(self, unit_dir: Path, binding: Binding) -> None:

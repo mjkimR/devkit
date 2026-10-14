@@ -431,16 +431,36 @@ def test_finish_without_a_worktree_never_deletes_a_branch_start_did_not_create(r
     assert (done.removed, done.branch_deleted) == (True, True) and git(repo, "branch", "--list", "demo") == ""
 
 
-def test_finish_keeping_the_branch_reruns_without_a_worktree_whatever_its_marker(repo: Path) -> None:
+def test_finish_keeping_the_branch_never_resumes_a_branch_start_did_not_create(repo: Path) -> None:
+    git(repo, "branch", "old")  # merged into the base HEAD, no worktree, no marker
+    seen: list[FinishResult] = []
+    with pytest.raises(NotFoundError, match=r"no branch\.old\.devkitWorktree marker") as raised:
+        finish(locate(repo), "old", delete_branch=False, before_remove=seen.append)
+    assert raised.value.code == "WORKTREE_NOT_FOUND" and raised.value.result is None
+    assert raised.value.fix is not None and "branch -d" not in raised.value.fix  # the configuration keeps branches
+    assert seen == [] and git(repo, "branch", "--list", "old").strip() == "old"
+
+
+def test_finish_keeping_the_branch_resumes_after_a_removed_worktree_until_it_completes(repo: Path) -> None:
+    created = start(locate(repo), "demo")
+    git(repo, "worktree", "remove", str(created.path))  # what a stopped run leaves: the marked branch resumes
+    seen: list[bool] = []
+    done = finish(locate(repo), "demo", delete_branch=False, before_remove=lambda r: seen.append(r.removed))
+    assert seen == [True] and (done.removed, done.branch_deleted) == (True, False)
+    assert git(repo, "branch", "--list", "demo").strip() == "demo" and marker(repo, "demo") == ""
+    with pytest.raises(NotFoundError):
+        finish(locate(repo), "demo", delete_branch=False, before_remove=lambda r: seen.append(r.removed))
+    assert seen == [True]  # the completed finish removed the marker: nothing runs again
+
+
+def test_finish_keeping_a_branch_from_before_the_marker_completes_with_its_worktree(repo: Path) -> None:
     created = start(locate(repo), "demo")
     git(repo, "config", "--local", "--unset", "branch.demo.devkitWorktree")  # a branch from before the marker
     first = finish(locate(repo), "demo", delete_branch=False)
     assert (first.removed, first.branch_deleted) == (True, False) and not created.path.exists()
-    rerun = finish(locate(repo), "demo", delete_branch=False)  # nothing left to remove: done again
-    assert (rerun.removed, rerun.branch_deleted) == (True, False)
     assert git(repo, "branch", "--list", "demo").strip() == "demo"
     with pytest.raises(NotFoundError, match="not resumed automatically"):
-        finish(locate(repo), "demo")  # deleting it still needs the marker
+        finish(locate(repo), "demo", delete_branch=False)  # without a worktree only the marker resumes
 
 
 def test_finish_with_a_worktree_needs_no_marker(repo: Path) -> None:
@@ -495,7 +515,7 @@ def test_finish_without_branch_deletion_and_with_a_caller_cleanup(repo: Path) ->
         locate(repo), "demo", delete_branch=False, before_remove=lambda r: seen.append((r.removed, r.path.is_dir()))
     )
     assert seen == [(False, True)] and result.removed and not result.branch_deleted
-    assert git(repo, "branch", "--list", "demo").strip() == "demo"
+    assert git(repo, "branch", "--list", "demo").strip() == "demo" and marker(repo, "demo") == ""
     assert not created.path.exists()
 
 

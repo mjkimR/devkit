@@ -4,7 +4,9 @@ Every refusal leaves the repository as it was before the refused step; the
 earlier steps of ``finish`` stay done, so rerunning the same command resumes.
 A refusal raised after ``finish`` changed something carries the partial
 ``FinishResult`` as ``result``; a Git failure there is one of its own codes
-(``WORKTREE_REMOVE_FAILED``, ``WORKTREE_BRANCH_DELETE_FAILED``). Before that,
+(``WORKTREE_REMOVE_FAILED``, ``WORKTREE_BRANCH_DELETE_FAILED``), except that
+unsetting the marker of a kept branch is ``GIT_FAILED`` (the rerun resumes
+and unsets it). Before that,
 ``devkit.core`` errors pass through unchanged: a failed Git command is
 ``GitError`` (``GIT_FAILED``), an unreadable ``.devkit/config.toml``
 ``ConfigError`` (``CONFIG_INVALID``).
@@ -84,8 +86,9 @@ class BranchExistsError(_Interaction):
 class NotFoundError(_Interaction):
     """No worktree has the slug's path or branch (``INTERACTION``).
 
-    For ``finish``, also when the slug's merged branch lacks the marker ``start`` records: that branch is never
-    deleted, and the ``[FIX]`` deletes it only once the user agrees.
+    For ``finish``, also when the slug's merged branch lacks the marker ``start`` records (or a finish already
+    completed for it): nothing runs, merges, pushes or is deleted for that branch, and with ``delete_branch`` the
+    ``[FIX]`` deletes it only once the user agrees.
     """
 
     code = "WORKTREE_NOT_FOUND"

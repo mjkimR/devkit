@@ -67,6 +67,7 @@ from devkit.distribution.installation.workspace import (
     METADATA,
     SEEN_BUNDLES,
     checked_path,
+    directory_at,
     occupied,
     owned_prefix,
     snapshot,
@@ -272,8 +273,9 @@ def _plan_managed_files(
     """
     orphans: list[AdvisoryError] = []
     for name in sorted(old_files.keys() | desired.keys() | deployed.keys()):
-        current = snapshot(root, name)
         after = desired.get(name)
+        # A directory where a file goes reads as absent: ``require_writable`` admits it only when this sync empties it.
+        current = None if after is not None and directory_at(root, name) else snapshot(root, name)
         if current is not None and not same_content(current, after):
             records = [record for record in (old_files.get(name), deployed.get(name)) if record is not None]
             if not records:

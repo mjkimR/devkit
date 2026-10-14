@@ -242,6 +242,55 @@ def test_an_interrupt_kills_a_group_member_that_ignores_sigterm_after_the_leader
             os.kill(member, signal.SIGKILL)
 
 
+LINUX_PROC = pytest.mark.skipif(
+    not Path("/proc/self/stat").exists() or not hasattr(os, "waitid"), reason="needs /proc and os.waitid (Linux)"
+)
+
+
+def _exited(process: subprocess.Popen[Any], timeout: float = 5.0) -> None:
+    """Wait until ``process`` has exited, leaving it unreaped (a zombie)."""
+    deadline = time.monotonic() + timeout
+    while not execute._leader_exited(process.pid):
+        assert time.monotonic() < deadline, "the leader did not exit"
+        time.sleep(0.02)
+
+
+@LINUX_PROC
+def test_the_stop_ends_its_wait_once_only_the_unreaped_leader_is_left() -> None:
+    process = subprocess.Popen(["sleep", "60"], start_new_session=True)  # sleep exits at once on SIGTERM
+    started = time.monotonic()
+    execute._stop(process)
+    assert time.monotonic() - started < execute.STOP_GRACE / 2, "the zombie leader held the wait to STOP_GRACE"
+    assert process.returncode == -signal.SIGTERM  # still unreaped when the wait ended: it was SIGTERM, not SIGKILL
+
+
+@LINUX_PROC
+def test_a_live_member_keeps_the_group_of_an_exited_leader_running() -> None:
+    process = subprocess.Popen(["sh", "-c", "sleep 60 & exit 0"], start_new_session=True)
+    try:
+        _exited(process)
+        assert execute._live_members(process.pid) is True and not execute._only_zombies_left(process.pid)
+        assert process.returncode is None  # checking did not reap the leader
+    finally:
+        with contextlib.suppress(ProcessLookupError, PermissionError):
+            os.killpg(process.pid, signal.SIGKILL)
+        process.wait()
+
+
+def test_without_proc_the_group_never_counts_as_done(monkeypatch: pytest.MonkeyPatch) -> None:
+    def no_proc(path: str) -> list[str]:
+        raise FileNotFoundError(path)
+
+    process = subprocess.Popen(["true"], start_new_session=True)
+    try:
+        if hasattr(os, "waitid"):
+            _exited(process)
+        monkeypatch.setattr(execute.os, "listdir", no_proc)  # macOS: the wait keeps relying on signal 0
+        assert execute._live_members(process.pid) is None and not execute._only_zombies_left(process.pid)
+    finally:
+        process.wait()
+
+
 def test_a_log_root_others_can_enter_is_made_private(tmp_path: Path) -> None:
     log_root().mkdir(mode=0o700)
     log_root().chmod(0o777)

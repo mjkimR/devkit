@@ -52,8 +52,8 @@ OWNED_PREFIXES = (
 METADATA = frozenset({RECEIPT_PATH, JOURNAL, LOCK, SEEN_BUNDLES, DEPLOYED, CONFIG_PATH, AGENTS_FILE, DEVKIT_GITIGNORE})
 
 
-def checked_path(root: Path, name: str) -> Path:
-    """``root / name`` for a canonical relative path without backslashes or symlinked components."""
+def _unlinked_path(root: Path, name: str) -> Path:
+    """``root / name`` for a canonical relative path without backslashes or symlinked components, of any type."""
     try:
         rel = normalize_relpath(name, canonical=True)
     except UnsafePathError as exc:
@@ -65,9 +65,21 @@ def checked_path(root: Path, name: str) -> Path:
         path /= part
         if path.is_symlink():
             raise UnsafeWorkspaceError(f"deployment symlink: {name}", target_files=[name])
+    return path
+
+
+def checked_path(root: Path, name: str) -> Path:
+    """``root / name`` for a canonical relative path without backslashes or symlinked components."""
+    path = _unlinked_path(root, name)
     if path.exists() and not path.is_file():
         raise UnsafeWorkspaceError(f"nonregular deployment path: {name}", target_files=[name])
     return path
+
+
+def directory_at(root: Path, name: str) -> bool:
+    """Whether an owned destination ``name`` (no symlinked component) is a directory, which a file written there
+    replaces only once the same transaction has emptied it (``transaction.require_writable``)."""
+    return owned_prefix(name) is not None and _unlinked_path(root, name).is_dir()
 
 
 def project_path(root: Path, name: str) -> Path:

@@ -274,13 +274,17 @@ Every mutating command follows these steps:
    `DEFER`). Readers (`get-context`, `playbook search`, `status`, `list`, `override list|diff`, and `sync`, `add`
    and `remove` under `--dry-run` or `--check`, which write nothing) share it and wait
    up to ten seconds for a writer; in a project without `.devkit/` they take no lock, so reading never creates it.
-3. **Write-ahead journal**: pending operations, base64 backups of the files they replace and the directories the
-   writes will create are flushed to `.devkit/transient/sync-journal.json` before the disk changes. A file standing
-   where a destination's directory must be (a project file `.claude/skills/review` when a skill `review` is
-   deployed) is `WORKSPACE_UNSAFE` before any write, already in the pre-flight (`--dry-run` included); its `[FIX]`
-   moves that file out of the way. A managed or projected file the same sync deletes is no obstacle (an upstream
-   asset whose file became a directory): deletions are journaled and applied before writes, and a rollback restores
-   the file in place of the directory.
+3. **Write-ahead journal**: pending operations, base64 backups of the files they replace, the directories the
+   writes will create and those a written file replaces are flushed to `.devkit/transient/sync-journal.json` before
+   the disk changes. A file standing where a destination's directory must be (a project file `.claude/skills/review`
+   when a skill `review` is deployed) is `WORKSPACE_UNSAFE` before any write, already in the pre-flight (`--dry-run`
+   and `--check` included); its `[FIX]` moves that file out of the way. A managed or projected file the same sync
+   deletes is no obstacle (an upstream asset whose file became a directory): deletions are journaled and applied
+   before writes, and a rollback restores the file in place of the directory. The reverse holds too (an upstream
+   asset whose directory became a file, `notes/SKILL.md` to `notes`): a managed or projected directory whose files
+   the same sync all deletes is removed once they are, just before the file is written in its place, and a rollback
+   restores its files in place of the file. Such a directory that holds anything else (a file devkit does not own or
+   does not delete, a symlink) is `WORKSPACE_UNSAFE` in the pre-flight, whose `[FIX]` moves it out of the way.
 4. **Atomic replacement**: each file is written with `devkit.core.atomic_write_bytes` (a temporary sibling,
    `fchmod`ed, `fsync`ed and moved into place with `os.replace`); directory entries are `fsync`ed, deletions' too.
 5. **Directory pruning**: removing a managed or projected file removes the directories it leaves empty, up to its
@@ -292,8 +296,9 @@ Every mutating command follows these steps:
    `devkit recover` restores every recorded file whose content has not changed since; a later edit stops it with
    `RECOVERY_BLOCKED` (`HALT`). The journal format is not versioned across devkit releases: a journal an earlier
    devkit wrote (without `directories`) is `RECOVERY_BLOCKED` too, and its `[FIX]` says to run `devkit recover` with
-   the version that wrote it, or to roll back by hand (keep each listed file that equals its base64 `after`, write
-   back its `before` otherwise, deleting the file when `before` is null), delete the journal and run `devkit sync`.
+   the version that wrote it, or to roll back by hand (write back the `before` of each listed file that equals its
+   base64 `before` or `after`, deleting the file when `before` is null; a file that equals neither was edited after
+   the sync, so decide which content to keep), delete the journal and run `devkit sync`.
 
 ### Post-Sync Extensions
 

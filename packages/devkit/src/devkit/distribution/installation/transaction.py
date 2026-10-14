@@ -16,7 +16,15 @@ from devkit.core import LockHeldError as CoreLockHeldError
 from devkit.core import UnsafePathError, atomic_write_bytes, file_lock
 from devkit.distribution.content import Content, json_content
 from devkit.distribution.errors import LockHeldError, PendingTransactionError, RecoveryError, UnsafeWorkspaceError
-from devkit.distribution.installation.workspace import JOURNAL, LOCK, checked_path, owned_prefix, project_path, snapshot
+from devkit.distribution.installation.workspace import (
+    JOURNAL,
+    LOCK,
+    checked_path,
+    directory_at,
+    owned_prefix,
+    project_path,
+    snapshot,
+)
 
 # How long a reader waits for a writer to release the lock before giving up.
 READ_LOCK_TIMEOUT = 10.0
@@ -122,21 +130,58 @@ def _removed_owned(changes: dict[str, Content | None]) -> frozenset[str]:
 
 
 def _ordered(changes: dict[str, Content | None]) -> list[tuple[str, Content | None]]:
-    """``changes`` with the deletions first, so a deleted file frees its path for a directory written in its place."""
+    """``changes`` with the deletions first, so a deleted file frees its path for a directory written in its place,
+    and the files of a deleted directory free its path for a file."""
     return sorted(changes.items(), key=lambda item: item[1] is not None)
 
 
-def require_writable(root: Path, changes: dict[str, Content | None]) -> None:
-    """``UnsafeWorkspaceError`` when a file stands where a directory of a path to write must be.
+def _emptied(root: Path, name: str, removed: frozenset[str]) -> bool:
+    """Whether every file under the directory ``name`` is in ``removed`` and it holds nothing else (no symlink)."""
+    for current, directories, files in os.walk(root / name):
+        relative = Path(current).relative_to(root).as_posix()
+        if any((Path(current) / entry).is_symlink() for entry in directories):
+            return False
+        if any(f"{relative}/{entry}" not in removed for entry in files):
+            return False
+    return True
+
+
+def require_writable(root: Path, changes: dict[str, Content | None]) -> list[str]:
+    """``UnsafeWorkspaceError`` when a file stands where a directory of a path to write must be, or a directory where
+    a file is written; otherwise the directories the written files replace.
 
     A managed or projected file that the same ``changes`` delete is no obstacle (an upstream asset whose file became
-    a directory): the transaction deletes it before it writes. Any other file, a project file above all, is.
+    a directory): the transaction deletes it before it writes. Any other file, a project file above all, is. Likewise
+    an owned directory whose files the same ``changes`` all delete (an upstream asset whose directory became a file)
+    is removed once they are; one that holds anything else is never replaced.
     """
     removed = _removed_owned(changes)
+    replaced = []
     for name, content in changes.items():
-        parent = None if content is None else blocked_parent(root, name, removed)
+        if content is None:
+            continue
+        parent = blocked_parent(root, name, removed)
         if parent is not None:
             raise blocked_parent_error(name, parent)
+        if directory_at(root, name):
+            if not _emptied(root, name, removed):
+                raise UnsafeWorkspaceError(
+                    f"{name} is a directory that holds files devkit does not remove, so devkit cannot write the file"
+                    f" {name}",
+                    target_files=[name],
+                    what_to_report=f"Whether {name} may be moved so devkit can write the file; devkit never removes"
+                    " a file it does not own",
+                    fix=f"Move {name} out of the way (or delete it), then run the command again",
+                )
+            replaced.append(name)
+    return replaced
+
+
+def _remove_emptied(root: Path, name: str) -> None:
+    """Remove the directory ``name`` that a file replaces, its deletions applied: only empty directories are left."""
+    for current, _, _ in os.walk(root / name, topdown=False):
+        os.rmdir(current)
+    _fsync_directory((root / name).parent)
 
 
 def _prune_created(root: Path, directories: list[str]) -> None:
@@ -225,16 +270,18 @@ def require_no_journal(root: Path) -> None:
         raise PendingTransactionError("an interrupted synchronization left its journal")
 
 
-def _replaced_by_directory(root: Path, name: str, after: Content | None, directories: list[str]) -> bool:
-    """Whether the transaction deleted the file ``name`` and created a directory in its place (its ``after``)."""
+def _swapped_directory(root: Path, name: str, directories: list[str]) -> bool:
+    """Whether ``name`` is a directory the transaction swaps with a file: one it created where it deleted the file
+    ``name`` (its ``after``), or one it is replacing with the file ``name`` (its ``before``, emptied or not yet)."""
     path = root / name
-    return after is None and name in directories and path.is_dir() and not path.is_symlink()
+    return name in directories and path.is_dir() and not path.is_symlink()
 
 
 LEGACY_JOURNAL_FIX = (
     f"Run `devkit recover` with the devkit version that wrote {JOURNAL}; without it, restore by hand: for each path"
-    " under `changes`, keep the file when it equals the base64 `after` content, write back the `before` content"
-    f" (delete the file when `before` is null) otherwise, then delete {JOURNAL} and run `devkit sync`"
+    " under `changes` whose file equals its base64 `before` or `after` content, write back the `before` content"
+    " (delete the file when `before` is null); a file that equals neither was edited after the sync, so decide"
+    f" which content to keep; then delete {JOURNAL} and run `devkit sync`"
 )
 
 
@@ -264,15 +311,17 @@ def recover_locked(root: Path) -> int:
         raise RecoveryError("invalid recovery journal", target_files=[JOURNAL])
     directories = journal["directories"]
     for directory in directories:
-        # Only an ancestor of a journaled path: recovery never removes anything else.
-        if not isinstance(directory, str) or not any(name.startswith(f"{directory}/") for name in journal["changes"]):
+        # Only a journaled path or its ancestor: recovery never removes anything else.
+        if not isinstance(directory, str) or not any(
+            name == directory or name.startswith(f"{directory}/") for name in journal["changes"]
+        ):
             raise RecoveryError("invalid recovery directory", target_files=[JOURNAL])
     changes = {}
     for name, values in journal["changes"].items():
         if name == JOURNAL or not isinstance(values, dict) or set(values) != {"before", "after"}:
             raise RecoveryError("invalid recovery entry", target_files=[JOURNAL])
         before, after = _decode(values["before"]), _decode(values["after"])
-        if not _replaced_by_directory(root, name, after, directories) and snapshot(root, name) not in (before, after):
+        if not _swapped_directory(root, name, directories) and snapshot(root, name) not in (before, after):
             raise RecoveryError(
                 f"recovery blocked by subsequent edit: {name}",
                 target_files=[name, JOURNAL],
@@ -280,7 +329,11 @@ def recover_locked(root: Path) -> int:
                 f"then delete {JOURNAL}",
             )
         changes[name] = before
-    for name, before in reversed(list(changes.items())):
+    # What the transaction created goes before anything is restored: the journal's keys are sorted, and either can
+    # free the path the other needs (a file and a directory that swapped places).
+    for name, before in sorted(reversed(list(changes.items())), key=lambda item: item[1] is not None):
+        if before is None and _swapped_directory(root, name, directories):
+            continue  # the directory a file was to replace: its files are restored into it below
         atomic_write(root, name, before)
         if before is None:
             prune_empty_parents(root, name)
@@ -293,26 +346,34 @@ def recover_locked(root: Path) -> int:
 def apply_changes(root: Path, changes: dict[str, Content | None]) -> None:
     """Write ``changes`` (``None`` deletes) all or nothing, through the journal.
 
-    The journal also records the directories the writes create, so a rollback removes them again once empty.
-    A file standing where a directory must be is ``UnsafeWorkspaceError``, before anything is written.
+    The journal also records the directories the writes create, so a rollback removes them again once empty, and
+    those a written file replaces, so a rollback restores their files in place of it. A file standing where a
+    directory must be, or a directory holding anything else where a file goes, is ``UnsafeWorkspaceError``, before
+    anything is written.
     """
     if not changes:
         return
-    require_writable(root, changes)
-    # Deletions first, in the journal too: a rollback undoes the writes in reverse, before it restores those files.
+    replaced = require_writable(root, changes)
+    # Deletions first: a deleted file frees its path for a directory, a directory's deleted files free it for a file.
     ordered = _ordered(changes)
     journal = {
         "schema": 1,
         "changes": {
-            name: {"before": _encode(snapshot(root, name)), "after": _encode(content)} for name, content in ordered
+            name: {"before": _encode(None if name in replaced else snapshot(root, name)), "after": _encode(content)}
+            for name, content in ordered
         },
-        "directories": missing_directories(
-            root, [name for name, content in ordered if content is not None], _removed_owned(changes)
-        ),
+        "directories": [
+            *missing_directories(
+                root, [name for name, content in ordered if content is not None], _removed_owned(changes)
+            ),
+            *replaced,
+        ],
     }
     atomic_write(root, JOURNAL, Content(json_content(journal).data, 0o600))
     try:
         for name, content in ordered:
+            if name in replaced:
+                _remove_emptied(root, name)
             atomic_write(root, name, content)
     except Exception:
         recover_locked(root)

@@ -88,9 +88,11 @@ def envelope_new_cmd(
 
     The envelope records the workflow the unit is bound to and the segment
     (finished handoffs) it is in; checks count it only in that segment. The
-    definition itself is not loaded, so a review can be recorded while it is
-    missing or invalid. created_at is stamped after the segment's latest
-    return, so a return never voids an envelope written after it.
+    definition itself is not loaded (only read for its id when the default is
+    a .md path), so a review can be recorded while it is invalid, or missing
+    when it is named by id.
+    created_at is stamped after the segment's latest return, so a return never
+    voids an envelope written after it.
     """
     ws = workspace(workspace_root)
     scope = ws.unit_scope(unit, anchor=anchor)
