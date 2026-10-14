@@ -117,6 +117,7 @@ Each module's `reference.md` is the quick reference (CLI, configuration, library
 - [Resource Taxonomy](resource-taxonomy.md): Three-tier classification and naming standards for agent assets.
 - [Command Plugins](command-plugins.md): Top-level commands that installed packages mount through `devkit.commands`, their loading and their output contract.
 - [Hybrid Binary Distribution Evaluation](evaluations/hybrid-binaries.md): Evaluation record on bundling compiled binaries with `uv` wheels (not adopted; semantic search landed in pure Python as `devkit.search`).
+- [Agent Runtime Hooks Evaluation](evaluations/agent-hooks.md): Evaluation record on pre-action agent hooks (Codex and Claude Code `PreToolUse`) for path-scoped hints (not adopted; supportable when a consumer needs it).
 
 ### Shared Foundation (`devkit.core`, `devkit.advisory`)
 - [Core Reference](../core/reference.md): Frontmatter grammar, receipt reader, safe paths, atomic writes, Git runner, deadlines, file locks, plugin loading, project discovery, CLI plumbing.
