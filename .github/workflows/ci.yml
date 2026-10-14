@@ -4,16 +4,16 @@
 # devkit-catalog: lint, types, tests, governance rules) on Linux and macOS, and the consumer smoke
 # builds the wheels, installs them into a fresh project the way a consumer would
 # and commits through the installed gate hooks (it needs git, which the runner
-# image provides). There is no release or publish job yet: no package index
-# exists for these wheels, so consumers install from Git or from a built wheel
-# (see scripts/smoke.sh). Both install the devkit-embed model wheel from the
-# release pinned in packages/devkit/pyproject.toml; nothing builds it here.
+# image provides). Both install the devkit-embed model wheel from the release
+# pinned in packages/devkit/pyproject.toml; nothing builds it here.
+#
+# It does not run on push or pull request: the same checks run locally, and
+# release.yml runs this workflow on the tagged commit before publishing. Run it
+# by hand (gh workflow run ci) to check Linux before tagging.
 name: ci
 
 on:
-  push:
-    branches: [main]
-  pull_request:
+  workflow_dispatch:
   workflow_call:  # release.yml runs the full CI before publishing
 
 permissions:
