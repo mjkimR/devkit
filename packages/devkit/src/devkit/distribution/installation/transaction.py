@@ -13,7 +13,7 @@ import os
 import stat
 import tempfile
 import time
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -78,6 +78,60 @@ def prune_empty_parents(root: Path, name: str, *, stop: str | None = None) -> No
         except OSError:
             return
         parent = parent.parent
+
+
+def missing_directories(root: Path, names: Iterable[str]) -> list[str]:
+    """The workspace-relative directories that writing ``names`` would create, parents first."""
+    missing: dict[str, None] = {}
+    for name in names:
+        parts = name.split("/")[:-1]
+        for depth in range(1, len(parts) + 1):
+            directory = "/".join(parts[:depth])
+            if directory not in missing and not os.path.lexists(root / directory):
+                missing[directory] = None
+    return list(missing)
+
+
+def blocked_parent(root: Path, name: str) -> str | None:
+    """The first existing ancestor of ``name`` that is not a directory (a file stands where a directory must be)."""
+    parts = name.split("/")[:-1]
+    for depth in range(1, len(parts) + 1):
+        directory = "/".join(parts[:depth])
+        path = root / directory
+        if not os.path.lexists(path):
+            return None
+        if not path.is_dir():
+            return directory
+    return None
+
+
+def blocked_parent_error(name: str, parent: str) -> UnsafeWorkspaceError:
+    return UnsafeWorkspaceError(
+        f"{parent} is not a directory, so devkit cannot write {name}",
+        target_files=[parent, name],
+        what_to_report=f"Whether {parent} may be moved so devkit can write {name}; devkit never replaces a project file",
+        fix=f"Move {parent} out of the way (or delete it), then run the command again",
+    )
+
+
+def require_writable(root: Path, changes: dict[str, Content | None]) -> None:
+    """``UnsafeWorkspaceError`` when a file stands where a directory of a path to write must be."""
+    for name, content in changes.items():
+        parent = None if content is None else blocked_parent(root, name)
+        if parent is not None:
+            raise blocked_parent_error(name, parent)
+
+
+def _prune_created(root: Path, directories: list[str]) -> None:
+    """Remove the directories a rolled-back transaction created, deepest first, while they are empty."""
+    for directory in sorted(directories, key=lambda name: name.count("/"), reverse=True):
+        parts = directory.split("/")
+        if any(root.joinpath(*parts[:depth]).is_symlink() for depth in range(1, len(parts) + 1)):
+            continue
+        try:
+            root.joinpath(*parts).rmdir()
+        except OSError:
+            continue
 
 
 def replace_file(path: Path, content: Content | None) -> None:
@@ -174,12 +228,18 @@ def recover_locked(root: Path) -> int:
     if journal is None:
         return 0
     if (
-        set(journal) != {"schema", "changes"}
+        set(journal) != {"schema", "changes", "directories"}
         or type(journal["schema"]) is not int
         or journal["schema"] != 1
         or not isinstance(journal["changes"], dict)
+        or not isinstance(journal["directories"], list)
     ):
         raise RecoveryError("invalid recovery journal", target_files=[JOURNAL])
+    directories = journal["directories"]
+    for directory in directories:
+        # Only an ancestor of a journaled path: recovery never removes anything else.
+        if not isinstance(directory, str) or not any(name.startswith(f"{directory}/") for name in journal["changes"]):
+            raise RecoveryError("invalid recovery directory", target_files=[JOURNAL])
     changes = {}
     for name, values in journal["changes"].items():
         if name == JOURNAL or not isinstance(values, dict) or set(values) != {"before", "after"}:
@@ -197,20 +257,28 @@ def recover_locked(root: Path) -> int:
         atomic_write(root, name, before)
         if before is None:
             prune_empty_parents(root, name)
+    # Directories the transaction created (a seeded target's too) go once they are empty again.
+    _prune_created(root, directories)
     atomic_write(root, JOURNAL, None)
     return len(changes)
 
 
 def apply_changes(root: Path, changes: dict[str, Content | None]) -> None:
-    """Write ``changes`` (``None`` deletes) all or nothing, through the journal."""
+    """Write ``changes`` (``None`` deletes) all or nothing, through the journal.
+
+    The journal also records the directories the writes create, so a rollback removes them again once empty.
+    A file standing where a directory must be is ``UnsafeWorkspaceError``, before anything is written.
+    """
     if not changes:
         return
+    require_writable(root, changes)
     journal = {
         "schema": 1,
         "changes": {
             name: {"before": _encode(snapshot(root, name)), "after": _encode(content)}
             for name, content in changes.items()
         },
+        "directories": missing_directories(root, [name for name, content in changes.items() if content is not None]),
     }
     atomic_write(root, JOURNAL, Content(json_content(journal).data, 0o600))
     try:

@@ -281,7 +281,7 @@ def test_retry_after_is_an_error_field() -> None:
 
 
 def test_sentinels_are_nine_characters_wide() -> None:
-    from devkit.advisory.advisory import HEADLINE
+    from devkit.advisory import HEADLINE
 
     assert {len(sentinel) for sentinel in HEADLINE.values()} == {9}
 
@@ -320,7 +320,7 @@ def test_a_raised_notice_is_a_defect() -> None:
 
 def test_every_rendered_line_starts_with_a_published_sentinel() -> None:
     # devkit.compact recognizes blocks by these constants; a new field must be added to them.
-    from devkit.advisory.advisory import CONTINUATION, FIELDS, HEADLINE
+    from devkit.advisory import CONTINUATION, FIELDS, HEADLINE
 
     errors = [
         AdvisoryError(

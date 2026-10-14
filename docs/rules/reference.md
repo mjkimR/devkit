@@ -120,7 +120,8 @@ parseable:
 - `phases`: one `[PHASE: RULE-id default=... effective=... overridden=yes|no promote_to=...]` line per rule.
 - `explain`: `[RULE: ...]`, `[DESCRIPTION: ...]`, one
   `[RELATED: <bundle>:<asset-id> kind=instruction|playbook path=<file>]` per related
-  asset (`kind=- path=-` when it is not deployed), one
+  asset (`kind=- path=-` when it is not deployed or the receipt cannot be read, `path=-`
+  when it is another kind or has no Markdown file), one
   `[SETTING: key=value default=value]` per setting and one
   `[SETTING_OVERRIDE: path=... key=value ...]` per override (or
   `[SETTINGS: none]`), then the guide document as written.
@@ -214,7 +215,7 @@ explicit targets.
 
 ### Built-in authoring bundle
 
-The opt-in bundle `authoring` (sources in `src/devkit/rules/authoring/bundle/`)
+The opt-in bundle `authoring` (sources in `src/devkit/authoring_guide/bundle/`, the data-only module `devkit.authoring_guide`)
 is deployed only when a project selects it. Both rules run in the `hygiene`
 phase only, so they never block a commit or a CI linter run:
 
@@ -226,8 +227,8 @@ uv run devkit rules check --phase hygiene
 
 | Preset | Rule (warning, hygiene) | Playbook |
 | --- | --- | --- |
-| `skill-authoring` | `RULE-skill-document-size`: a skill or playbook Markdown file above `max_bytes` (8192 UTF-8 bytes) ([guide](../../packages/devkit/src/devkit/rules/authoring/bundle/rules/skill_document_size/guide.md)) | `skill-authoring`: router structure for new skills, the four restructuring steps, helper-script rules |
-| `agent-guide-authoring` | `RULE-agent-guide-size`: an `AGENTS.md` or `CLAUDE.md` above `max_bytes` (8192 UTF-8 bytes), reporting the devkit guidance block's share ([guide](../../packages/devkit/src/devkit/rules/authoring/bundle/rules/agent_guide_size/guide.md)) | `agent-guide-authoring`: what stays in an always-loaded guide (no structure trees; module specifics only as links), where the rest moves, per-host loading |
+| `skill-authoring` | `RULE-skill-document-size`: a skill or playbook Markdown file above `max_bytes` (8192 UTF-8 bytes) ([guide](../../packages/devkit/src/devkit/authoring_guide/bundle/rules/skill_document_size/guide.md)) | `skill-authoring`: router structure for new skills, the four restructuring steps, helper-script rules |
+| `agent-guide-authoring` | `RULE-agent-guide-size`: an `AGENTS.md` or `CLAUDE.md` above `max_bytes` (8192 UTF-8 bytes), reporting the devkit guidance block's share ([guide](../../packages/devkit/src/devkit/authoring_guide/bundle/rules/agent_guide_size/guide.md)) | `agent-guide-authoring`: what stays in an always-loaded guide (no structure trees; module specifics only as links), where the rest moves, per-host loading |
 
 Both remediations name the playbook and its `uv run devkit playbook search`
 query. The rules are bundle assets (one plugin package directory each) loaded
@@ -274,6 +275,13 @@ neither problems nor blocking violations, and `run.raise_for_problems()` raises
 themselves ([Rule Authoring Guide, section 5](rule-authoring.md#5-rule-sources-and-registration));
 `validate_policy` checks a `[rules]` policy against loaded rules and returns
 `PolicyError` objects that carry the rule ID.
+`match_path(pattern, file)` and `validate_pattern(pattern)` are the path
+pattern grammar of settings overrides (`path`): `**` is a whole segment matching
+zero or more segments, and `*`, `?` and character classes match within one.
+A rule whose settings take path patterns checks each in `validate_settings`
+with `validate_pattern`, which raises `ValueError` for an empty or absolute
+pattern, a backslash or `:`, an empty, `.` or `..` segment, or a partial `**`,
+and matches workspace-relative paths with `match_path`.
 
 ### Rule tests
 
@@ -282,8 +290,10 @@ themselves ([Rule Authoring Guide, section 5](rule-authoring.md#5-rule-sources-a
 
 - `load_rule(anchor, rule_id=None) -> Rule`: `anchor` is a test file
   (`__file__`) under `<rule folder>/tests/`, or the rule folder itself; the
-  folder is loaded as a plugin package, as devkit loads a deployed rule, and
-  the rule with `rule_id` (or the only one) is returned. Raises `RuleLoadError`
+  folder is loaded as a plugin package, as devkit loads a deployed rule (for a
+  managed copy or its project override: the managed modules, each replaced by
+  the override's file when it holds one), and the rule with `rule_id` (or the
+  only one) is returned. Raises `RuleLoadError`
   (`RULES_LOAD_FAILED`) when the folder fails to load, defines no rule, several
   without `rule_id`, or none with it.
 - `check(rule, root, files=None, *, targets=(), fix=False, dry_run=False, settings=None, phase=None) -> list[Violation]`:
@@ -302,7 +312,8 @@ themselves ([Rule Authoring Guide, section 5](rule-authoring.md#5-rule-sources-a
 
 `devkit.rules.engine.rule_tests` is the command's library half:
 `rule_folder(rule)` and `tests_directory(rule)` locate a rule's folder and
-`tests/`, and `run_rule_tests(root, rules, pytest_args=())` returns one
+`tests/` (an override without `tests/` uses the managed copy's, which `load_rule`
+runs against the overridden modules), and `run_rule_tests(root, rules, pytest_args=())` returns one
 `RuleTestRun` per rule (`rule_id`, `tests`, `result` as `RuleTestResult`,
 `run` as the `devkit.compact.CommandRun`, `exit_code`), raising
 `RulesTestUnavailableError` when pytest is not importable; it never prints.
@@ -373,7 +384,7 @@ are returned in `RuleRegistry.errors`, `ProjectRun.load_errors` and
 | Class | Code | Mode | When |
 | --- | --- | --- | --- |
 | `RulesConfigError` | `RULES_CONFIG_INVALID` | `INPUT_ERROR` | `[rules]` in `.devkit/config.toml` is malformed (raised; a subclass of the core `ConfigError`, which is raised unchanged as `CONFIG_INVALID` when the file itself cannot be read or parsed) |
-| `TargetError` | `RULES_TARGET_INVALID` | `INPUT_ERROR` | an explicit target is outside the workspace (directly or through a symlink) or does not exist (raised) |
+| `TargetError` | `RULES_TARGET_INVALID` | `INPUT_ERROR` | an explicit target is outside the workspace (directly or through a symlink), does not exist, or lies inside `.devkit/managed/` or `.devkit/overrides/` (raised) |
 | `RulesDirError` | `RULES_DIR_INVALID` | `INPUT_ERROR` | a snapshot run cannot read `--rules-dir` from the snapshot: outside the repository or not in the snapshot (raised) |
 | `SnapshotError` | `RULES_SNAPSHOT_FAILED` | `INPUT_ERROR` (not a work tree top level, unknown `--base`) or `MAINTENANCE` (Git failure) | a Git snapshot cannot be taken or materialized (raised) |
 | `PinnedWriteError` | `RULES_PINNED_WRITE_REFUSED` | `BLOCKED` | a fixer tried to write a receipt-pinned copy under `.devkit/managed/` or `.devkit/overrides/` |
@@ -398,7 +409,7 @@ Warnings and notices are returned, never raised, at level `WARNING` or
 | Code | Level | When |
 | --- | --- | --- |
 | `RULES_PROMOTION_READY` | `NOTICE` | a whole-workspace `hygiene` run finds a phase override or promotion with `remaining=0`; `target_files` names the files to edit (`.devkit/config.toml` for an override, the file declaring the rule for a promotion), `fix` the edit (drop the `[rules.phase_overrides]` entry, or switch the declared phase to its `promote_to`) |
-| `RULES_RELATED_UNRESOLVED` | `NOTICE` | `explain` of a rule whose `related` entry names an asset that is not deployed (`fix`: `devkit add <bundle>`) or is neither an instruction nor a playbook; the entry is printed with `kind=- path=-` |
+| `RULES_RELATED_UNRESOLVED` | `NOTICE` | `explain` of a rule whose `related` entry names an asset that is not deployed (`fix`: `devkit add <bundle>`), is neither an instruction nor a playbook, or is one without a Markdown file (`fix`: add it to the bundle, then `devkit sync`); the entry is printed with `path=-`. A receipt that cannot be read is one notice for all entries carrying the receipt's code (`RECEIPT_INVALID`), target and fix |
 | any collected problem's code | `WARNING` | `explain` reports a loading or policy problem that does not concern the described rule, `test` any loading or policy problem (`with_level`; the code is unchanged) |
 
 Rule violations of severity `warning` or `info` are findings, not advisories:
@@ -417,6 +428,8 @@ they are results on stdout and never affect `--strict`.
 - Settings fields are scalars and string lists; nested tables are not supported.
 - Snapshot gates materialize the whole tree, so time and disk use grow with
   repository size; blobs are streamed from one `git cat-file --batch` process
-  and written as they arrive.
+  and written as they arrive. Git is stopped (`RULES_SNAPSHOT_FAILED`) only when
+  it produces no output for the Git timeout (60 seconds) or materializing takes
+  more than 30 minutes in all, so a large tree is not cut off by the 60 seconds.
 - Phase overrides can only move a rule to `hygiene`; promoting a rule to
   `linter` is done by editing its declared phase.

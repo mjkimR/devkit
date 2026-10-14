@@ -15,13 +15,13 @@ from devkit.core.errors import ConfigError, ReceiptError
 from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH, ToolRecord
 from devkit.distribution.bundles import load_bundle
 from devkit.distribution.errors import ConflictError, OverrideDriftError
-from devkit.distribution.installation import discovery, extensions
+from devkit.distribution.installation import discovery, extensions, guidance_block
 from devkit.distribution.installation import status as status_module
 from devkit.distribution.installation import sync as sync_module
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.discovery import InstalledBundle
 from devkit.distribution.installation.override_commands import create_override
-from devkit.distribution.installation.status import get_project_status
+from devkit.distribution.installation.status import get_project_listing, get_project_status
 from devkit.distribution.installation.sync import sync_project, tool_identity
 from devkit.distribution.installation.workspace import AGENTS_FILE, JOURNAL
 from testsupport.distribution import cli
@@ -376,6 +376,7 @@ def test_status_reports_every_dimension(
         ("NOT_SYNCHRONIZED", 1, [".agents/skills/review/SKILL.md"]),
         ("SYNC_CONFLICT", 1, [".devkit/managed/team/guide.md"]),
         ("SYNC_CONFLICT", 1, [".devkit/managed/team/bundle.toml"]),
+        ("SYNC_CONFLICT", 1, [AGENTS_FILE]),
         ("TRANSACTION_PENDING", 1, [".devkit/transient/sync-journal.json"]),
     ]
     result = CliRunner().invoke(cli, ["status", "-w", str(target)])
@@ -383,6 +384,36 @@ def test_status_reports_every_dimension(
     fixes = {error["code"]: error["advisory"].get("fix") for error in json.loads(result.stdout)["errors"]}
     assert fixes["TRANSACTION_PENDING"] == "devkit recover" and fixes["NOT_SYNCHRONIZED"] == "devkit sync"
     assert result.stderr == ""
+
+
+def test_status_reports_an_unowned_guidance_block_as_the_conflict_sync_raises(
+    installed: list[InstalledBundle], target: Path
+) -> None:
+    (target / AGENTS_FILE).write_text(f"# Project\n\n{guidance_block.START}\nours\n{guidance_block.END}\n")
+    status = get_project_status(target, installed)
+    assert status.guidance_block == "unowned"
+    assert [(error.code, error.exit_code, error.target_files) for error in status.errors] == [
+        ("SYNC_CONFLICT", ExitCode.FINDINGS, (AGENTS_FILE,))
+    ]
+    with pytest.raises(ConflictError) as raised:
+        sync_project(target, installed)
+    assert raised.value.fix == status.errors[0].fix
+
+
+def test_list_does_not_fail_on_a_symlinked_managed_file(
+    installed: list[InstalledBundle], target: Path, tmp_path: Path
+) -> None:
+    sync_project(target, installed)
+    managed = target / ".devkit/managed/team/guide.md"
+    elsewhere = tmp_path / "elsewhere.md"
+    elsewhere.write_bytes(managed.read_bytes())
+    managed.unlink()
+    managed.symlink_to(elsewhere)
+    listing = get_project_listing(target, installed)
+    assert sorted(asset.id for asset in listing.synchronized_assets) == ["guide", "review", "scaffold"]
+    status = get_project_status(target, installed)
+    assert status.files.unsafe == [".devkit/managed/team/guide.md"]
+    assert [error.code for error in status.errors] == ["WORKSPACE_UNSAFE"]
 
 
 def test_status_reports_override_drift_disabled_block_and_cli(

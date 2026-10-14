@@ -159,6 +159,7 @@ override files remain, and its drift is reported once it is selected again.
   digests. An agent merges the upstream changes into the override files.
 - `devkit override accept <bundle>:<asset>` then records the current upstream digest as the baseline (through the
   journal) and refreshes the baseline copies; it fails for an asset without a tracked override.
-- `devkit override remove <bundle>:<asset>` deletes the override and baseline files, prunes empty directories and
-  synchronizes the pristine upstream files, under one lock with the same rollback as `create`; the receipt entry
-  disappears with that sync.
+- `devkit override remove <bundle>:<asset>` deletes the override files of the asset's upstream files and the
+  baseline files, prunes empty directories and synchronizes the pristine upstream files, under one lock with the same
+  rollback as `create`; the receipt entry disappears with that sync. Any other project file under the asset's override
+  paths stays and is reported as an `ORPHAN_LEFT` warning.

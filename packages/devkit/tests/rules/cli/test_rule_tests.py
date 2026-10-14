@@ -184,6 +184,32 @@ def test_an_override_of_the_module_alone_keeps_the_managed_guide_and_tests(tmp_p
     assert tests_directory(rule) == (managed / "tests").resolve()
 
 
+def test_managed_tests_kept_by_an_override_run_against_the_overridden_module(tmp_path: Path) -> None:
+    import inspect
+
+    from devkit.core.plugins import PluginPackage, plugin_modules
+    from devkit.rules.testing import load_rule
+
+    managed = tmp_path / ".devkit/managed/team/rules/good"
+    override = tmp_path / ".devkit/overrides/team/rules/good"
+    _rule(managed.parent, "good", "RULE-good", {"test_rule.py": PASSING})
+    write(managed, "helpers.py", "LABEL = 'managed'\n")
+    # The override replaces the module alone, breaking it; its helper and its tests stay managed.
+    broken = RULE.format(name="Good", rule_id="RULE-good").replace(
+        'return [Violation(self.id, rel, 1, "found") for rel in ctx.changed_files]', "return []"
+    )
+    write(override, "rule.py", "from .helpers import LABEL\n" + broken)
+    for anchor in (managed / "tests/test_rule.py", override):
+        assert Path(inspect.getfile(type(load_rule(anchor)))).resolve() == (override / "rule.py").resolve()
+    # As devkit loads the deployed asset: the override's module beside the managed helper.
+    modules = plugin_modules([("helpers", managed / "helpers.py"), ("rule", override / "rule.py")])
+    registry = RuleRegistry()
+    (rule,) = registry.discover_from_packages([PluginPackage("team:good", managed, modules)])
+    (result,) = rule_tests.run_rule_tests(tmp_path, [rule])
+    assert result.tests == (managed / "tests").resolve()
+    assert result.result is rule_tests.RuleTestResult.FAILED  # the managed tests caught the broken override
+
+
 def test_an_interrupted_run_prints_the_results_so_far(workspace: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     import dataclasses
 

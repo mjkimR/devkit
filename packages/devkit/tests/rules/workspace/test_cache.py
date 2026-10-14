@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 from devkit.advisory import ActionMode
-from devkit.core import FrontmatterError
+from devkit.core import FrontmatterError, UnsafePathError
 from devkit.rules import PinnedWriteError, WorkspaceCache
 from testsupport.rules import init_repo, write
 
@@ -127,6 +127,44 @@ def test_write_text_is_exact_and_never_under_devkit(temp_workspace: Path, worksp
         workspace_cache.write_text(".devkit/managed/x.md", "x")
     assert refused.value.code == "RULES_PINNED_WRITE_REFUSED" and refused.value.mode is ActionMode.BLOCKED
     assert not (temp_workspace / ".devkit").exists()
+
+
+def test_write_text_replaces_atomically_and_keeps_the_mode(
+    temp_workspace: Path, workspace_cache: WorkspaceCache, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import os
+    import stat
+
+    target = temp_workspace / "doc.md"
+    target.write_bytes(b"old\n")
+    target.chmod(0o640)
+    workspace_cache.write_text("doc.md", "new\n")
+    assert target.read_bytes() == b"new\n" and stat.S_IMODE(target.stat().st_mode) == 0o640
+
+    def fail(src: object, dst: object) -> None:
+        raise OSError("replace failed")
+
+    monkeypatch.setattr(os, "replace", fail)
+    with pytest.raises(OSError):
+        workspace_cache.write_text("doc.md", "partial\n")
+    assert target.read_bytes() == b"new\n"
+    assert sorted(p.name for p in temp_workspace.iterdir() if p.name.startswith(".doc.md")) == []
+
+
+def test_write_text_refuses_a_path_that_resolves_outside_the_workspace(tmp_path: Path) -> None:
+    root = tmp_path / "ws"
+    outside = tmp_path / "outside.md"
+    outside.write_text("keep\n", encoding="utf-8")
+    write(root, "x.md", "x\n")
+    (root / "link.md").symlink_to(outside)
+    (root / "out").symlink_to(tmp_path)
+    cache = WorkspaceCache(root)
+    for path in ("link.md", "out/new.md", "../escape.md", outside):
+        with pytest.raises(UnsafePathError) as refused:
+            cache.write_text(path, "changed\n")
+        assert refused.value.code == "PATH_UNSAFE"
+    assert outside.read_text(encoding="utf-8") == "keep\n"
+    assert not (tmp_path / "new.md").exists() and not (tmp_path / "escape.md").exists()
 
 
 def test_read_text_strict(temp_workspace: Path, workspace_cache: WorkspaceCache) -> None:

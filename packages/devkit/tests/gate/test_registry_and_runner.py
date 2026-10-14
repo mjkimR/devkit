@@ -324,6 +324,40 @@ def test_gate_notices_never_fail_the_stage_and_errors_are_lowered(tmp_path: Path
     assert warning.level is Level.ERROR  # the gate's own object is not changed
 
 
+class BadNotices(BaseGate):
+    def __init__(self, gate_id: str, order: int, *, bypass: bool = False) -> None:
+        super().__init__(id=gate_id, description="", stage=Stage.PRE_COMMIT, order=order)
+        self.bypass = bypass
+
+    def run(self, ctx: GateContext) -> GateResult:
+        if self.bypass:  # past __post_init__, as a subclass or object.__setattr__ could be
+            result = GateResult.passed()
+            object.__setattr__(result, "notices", ("plain text",))
+            return result
+        return GateResult.passed(notices=["plain text"])  # type: ignore[list-item]
+
+
+@pytest.mark.parametrize("bypass", [False, True])
+def test_a_notice_that_is_not_an_advisory_fails_only_its_gate(tmp_path: Path, bypass: bool) -> None:
+    calls: list[str] = []
+    registry = GateRegistry()
+    registry.register(BadNotices("bad-notices", 10, bypass=bypass))
+    registry.register(Recorder("late", 100, calls))
+    report = run_stage(gate_ctx(tmp_path), registry, GatesConfig())
+    assert [(r.gate_id, r.outcome) for r in report.runs] == [("bad-notices", Outcome.FAILED), ("late", Outcome.PASSED)]
+    error = report.runs[0].error
+    assert error is not None and (error.code, error.mode) == ("GATE_RESULT_INVALID", ActionMode.MAINTENANCE)
+    assert "a GateResult notice is a str, not an AdvisoryError" in error.message
+    assert calls == ["late"] and report.exit_code is ExitCode.ERROR
+
+
+def test_gate_result_notices_are_checked_and_kept_as_a_tuple() -> None:
+    warning = AdvisoryError("w", level=Level.WARNING)
+    assert GateResult(notices=[warning]).notices == (warning,)  # type: ignore[arg-type]
+    with pytest.raises(GateResultError, match="not a sequence of AdvisoryError"):
+        GateResult(notices=1)  # type: ignore[arg-type]
+
+
 def test_run_stage_applies_enabled_and_settings(tmp_path: Path) -> None:
     deploy_gate(tmp_path, gate_source(enabled=False))
     registry = project_registry(tmp_path)

@@ -178,3 +178,31 @@ def test_materialize_reports_a_git_failure_and_a_timeout(repo: Path, tmp_path: P
     with pytest.raises(SnapshotError, match="timed out"):
         slow.finish()
     slow.close()
+
+
+def test_the_blob_reader_timeout_counts_idle_time_and_the_limit_bounds_the_whole_run(repo: Path) -> None:
+    import time
+
+    from devkit.rules.workspace.snapshot import _BlobReader
+
+    snapshot = git_snapshot(repo, staged=True)
+    blobs = [(name, sha) for name, sha, _ in snapshot.files] * 4
+    # Reading steadily for longer than the idle timeout in all succeeds: every read resets it.
+    steady = _BlobReader(repo, [sha for _, sha in blobs], timeout=0.5)
+    try:
+        started = time.monotonic()
+        for name, sha in blobs:
+            time.sleep(0.1)
+            steady.read(name, steady.header(name, sha))
+        assert time.monotonic() - started > 0.5
+        steady.finish()
+    finally:
+        steady.close()
+
+    bounded = _BlobReader(repo, [sha for _, sha in blobs], timeout=60.0, limit=0.0)
+    deadline = time.monotonic() + 10
+    while not bounded._timed_out and time.monotonic() < deadline:
+        time.sleep(0.01)
+    with pytest.raises(SnapshotError, match=r"timed out \(not finished after 0.0s\)"):
+        bounded.finish()
+    bounded.close()

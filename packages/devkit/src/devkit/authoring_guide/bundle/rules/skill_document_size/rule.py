@@ -11,9 +11,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from devkit.core import load_receipt
-from devkit.rules.engine.models import Phase, RuleContext, Severity, Violation
-from devkit.rules.engine.settings import match_path, validate_pattern
-from devkit.rules.rules.base import BaseRule
+from devkit.rules import Phase, RuleContext, Severity, Violation, match_path, validate_pattern
+from devkit.rules.rules import BaseRule
 
 # Project-native skills, and skill and playbook sources of bundles (in-repository bundles included).
 DEFAULT_PATHS = (".agents/skills/**", ".claude/skills/**", "**/bundle/skills/**", "**/bundle/playbooks/**")

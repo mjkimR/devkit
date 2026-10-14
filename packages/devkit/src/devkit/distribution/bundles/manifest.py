@@ -70,7 +70,8 @@ class Bundle:
     assets: tuple[Asset, ...]
     presets: dict[str, tuple[str, ...]]
     default_preset: str | None = None
-    # Selected without ``devkit add`` (with ``default_preset``); honored only for bundles of the ``devkit`` distribution.
+    # Selected without ``devkit add`` (with ``default_preset``) once its package is installed, for any package;
+    # ``<bundle> = false`` in ``.devkit/config.toml`` opts out.
     auto_select: bool = False
 
     @property

@@ -5,8 +5,10 @@ copies ``devkit sync`` owns (``.devkit/managed/`` and ``.devkit/overrides/``),
 which are never rule input and never written. Inside a Git work tree it is
 further restricted to the files Git does not ignore
 (``git ls-files --cached --others --exclude-standard``), so a virtual
-environment or build output that ``.gitignore`` covers is never scanned; files
-named as explicit targets (``add_explicit``) are listed even when ignored. A
+environment or build output that ``.gitignore`` covers is never scanned. Files
+named as explicit targets (``add_explicit``) are listed even when Git ignores
+them or they sit in a dependency or cache directory: an explicit target is
+checked as is. Pinned copies are never listed, not even as targets. A
 materialized snapshot passes ``git_filter=False``: its tree already holds
 tracked files only. Git and the file system may spell a non-ASCII name in
 different Unicode normalization forms (macOS Git reports NFC with
@@ -22,7 +24,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from devkit.core import MANAGED_PATH, OVERRIDES_PATH, GitError, run_git
+from devkit.core import MANAGED_PATH, OVERRIDES_PATH, GitError, UnsafePathError, atomic_write_bytes, run_git
 from devkit.core.frontmatter import parse as parse_frontmatter
 from devkit.rules.engine.errors import PinnedWriteError
 from devkit.rules.workspace.markdown import MarkdownLink, extract_links
@@ -97,11 +99,20 @@ class WorkspaceCache:
     def write_text(self, path: str | Path, content: str, dry_run: bool = False) -> None:
         """Write ``content`` as UTF-8 bytes, exactly (no newline translation), and refresh the cache.
 
-        Files under ``.devkit/managed/`` and ``.devkit/overrides/`` are never
-        written: the installation receipt pins their hashes, so writing one
-        raises ``PinnedWriteError`` (``RULES_PINNED_WRITE_REFUSED``, ``BLOCKED``).
+        The path is resolved (symlinks followed) and the file replaced
+        atomically, keeping its permission bits (``devkit.core.atomic_write_bytes``).
+        A path that resolves outside the workspace root raises
+        ``devkit.core.UnsafePathError`` (``PATH_UNSAFE``). Files under
+        ``.devkit/managed/`` and ``.devkit/overrides/`` are never written: the
+        installation receipt pins their hashes, so writing one raises
+        ``PinnedWriteError`` (``RULES_PINNED_WRITE_REFUSED``, ``BLOCKED``).
         """
         resolved = self._resolve_path(path)
+        if not resolved.is_relative_to(self.workspace_root):
+            raise UnsafePathError(
+                f"refusing to write outside the workspace root {self.workspace_root}: {path} resolves to {resolved}",
+                target_files=[str(path)],
+            )
         if self._pinned(resolved):
             raise PinnedWriteError(
                 f"refusing to write a receipt-pinned copy under {' or '.join(_PINNED_DIRS)}: {resolved}",
@@ -110,8 +121,7 @@ class WorkspaceCache:
         key = resolved.as_posix()
         data = content.encode("utf-8")
         if not dry_run:
-            resolved.parent.mkdir(parents=True, exist_ok=True)
-            resolved.write_bytes(data)
+            atomic_write_bytes(resolved, data)
         self.invalidate(path)
         self._text_cache[key] = content
         self._bytes_cache[key] = data
@@ -187,8 +197,10 @@ class WorkspaceCache:
         ``extensions=None`` lists every regular file. Dependency and cache
         directories, ``.devkit/managed/`` and ``.devkit/overrides/``, symlinks
         that resolve outside the workspace and, inside a Git work tree,
-        Git-ignored files that are not explicit targets are skipped. A ``root``
-        that resolves outside the workspace lists nothing.
+        Git-ignored files are skipped; an explicit target (``add_explicit``)
+        under ``root`` is listed even in a dependency or cache directory or
+        when Git ignores it, but never under the pinned directories. A
+        ``root`` that resolves outside the workspace lists nothing.
         """
         root = root.resolve()
         key = (root, extensions)
@@ -207,6 +219,18 @@ class WorkspaceCache:
                             continue
                         if path.is_file() and self._stays_inside(path):
                             results.append(path)
+                listed = set(results)
+                for relative in self._explicit:
+                    path = self.workspace_root / relative
+                    if (
+                        path not in listed
+                        and path.is_relative_to(root)
+                        and (extensions is None or path.suffix in extensions)
+                        and not self._pinned(path)
+                        and path.is_file()
+                        and path.resolve().is_relative_to(self.workspace_root)
+                    ):
+                        results.append(path)
             self._files_cache[key] = sorted(results)
         return list(self._files_cache[key])
 

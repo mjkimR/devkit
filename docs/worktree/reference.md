@@ -44,7 +44,7 @@ Every command takes `-w/--workspace-root` (any directory in the checkout; defaul
 | `WORKTREE_UNSUPPORTED_LAYOUT` | `ERROR` (`BLOCKED`) | `UnsupportedLayoutError` | A Git directory outside its work tree. |
 | `WORKTREE_CONFLICT` | `ERROR` (`INTERACTION`) | `ConflictError` | `start`: the slug's path is a worktree on another branch, has uncommitted changes or a missing directory (`[FIX]` `git worktree prune`), or exists and is not a worktree. `finish`: the worktree is detached or on another branch, or the slug's branch is the base checkout's. |
 | `WORKTREE_BRANCH_EXISTS` | `ERROR` (`INTERACTION`) | `BranchExistsError` | The slug's branch exists or is checked out elsewhere. |
-| `WORKTREE_NOT_FOUND` | `ERROR` (`INTERACTION`) | `NotFoundError` | No worktree has the slug's path or branch, and (for `finish`) no branch of the slug is merged into the base HEAD. |
+| `WORKTREE_NOT_FOUND` | `ERROR` (`INTERACTION`) | `NotFoundError` | No worktree has the slug's path or branch, and (for `finish`) no branch of the slug that `start` created (its `branch.<slug>.devkitWorktree` marker) is merged into the base HEAD. A merged branch without the marker is never deleted: `[FIX]` is `git branch -d <slug>` once the user agrees. Nothing changed. |
 | `WORKTREE_LOCKED` | `ERROR` (`INTERACTION`) | `LockedError` | `finish` found the worktree locked; `[FIX]` unlocks it. Nothing changed. |
 | `WORKTREE_BASE_DETACHED` | `ERROR` (`INTERACTION`) | `BaseDetachedError` | `--merge` with the base on a detached HEAD. Nothing changed. |
 | `WORKTREE_BASE_DIRTY` | `ERROR` (`INTERACTION`) | `BaseDirtyError` | `--merge` with uncommitted changes in the base. |
@@ -53,7 +53,7 @@ Every command takes `-w/--workspace-root` (any directory in the checkout; defaul
 | `WORKTREE_MERGE_NOT_FF` | `ERROR` (`INTERACTION`) | `MergeNotFastForwardError` | The base cannot be fast-forwarded onto the branch. |
 | `WORKTREE_UNMERGED` | `ERROR` (`INTERACTION`) | `UnmergedError` | Without `--merge`, the branch is not merged into the base HEAD. |
 | `WORKTREE_DIRTY` | `ERROR` (`INTERACTION`) | `DirtyError` | The worktree has uncommitted or untracked changes. |
-| `WORKTREE_ADD_FAILED` | `ERROR` (`INTERACTION`) | `AddFailedError` | `start`: `git worktree add` failed or timed out (1800 seconds); what it created was removed, or is listed as `left:` details with the removing commands as `[FIX]`. |
+| `WORKTREE_ADD_FAILED` | `ERROR` (`INTERACTION`) | `AddFailedError` | `start`: `git worktree add` failed or timed out (1800 seconds), or recording the branch's marker failed; what it created was removed, or is listed as `left:` details with the removing commands as `[FIX]`. |
 | `WORKTREE_REMOVE_FAILED` | `ERROR` (`INTERACTION`) | `RemoveFailedError` | `git worktree remove` failed for another reason or timed out (1800 seconds; `[FIX]` removes the partly deleted worktree); carries the partial result, a rerun resumes. |
 | `WORKTREE_BRANCH_DELETE_FAILED` | `ERROR` (`INTERACTION`) | `BranchDeleteFailedError` | `git branch -d` failed after the removal; carries the partial result, a rerun deletes the branch. |
 | `WORKTREE_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `WorktreeConfigError` | A malformed `[worktree]` table. |
@@ -79,4 +79,4 @@ done = finish(position, "fix-login", merge=False, pull_request=config.pull_reque
 report = status(position)                                             # StatusResult(worktrees, branches)
 ```
 
-A refusal raised after `finish` changed something has the partial `FinishResult` as `error.result`; rerunning `finish` resumes, also when only the merged branch is left ([Overview, section 3](overview.md#3-finish)).
+A refusal raised after `finish` changed something has the partial `FinishResult` as `error.result`, also an `AdvisoryError` that `before_remove` raises (unless it defines a `result` of its own); rerunning `finish` resumes, also when only the merged branch is left and carries the `branch.<slug>.devkitWorktree` marker `start` records ([Overview, section 3](overview.md#3-finish)).

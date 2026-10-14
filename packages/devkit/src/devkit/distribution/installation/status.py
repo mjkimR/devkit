@@ -40,7 +40,9 @@ from devkit.distribution.installation.results import (
     tool_json,
 )
 from devkit.distribution.installation.sync import (
+    BLOCK_CONFLICTS,
     edited_files_error,
+    guidance_block_error,
     read_deployed,
     require_project_dir,
     tool_identity,
@@ -243,10 +245,11 @@ def _block_state(root: Path, recorded: str | None, enabled: bool) -> tuple[str, 
 
 
 def _problems(
-    files: FilesStatus, journal: bool, drift: list[tuple[str, str]], block_error: AdvisoryError | None
+    files: FilesStatus, journal: bool, drift: list[tuple[str, str]], block: str, block_error: AdvisoryError | None
 ) -> list[AdvisoryError]:
     """What ``devkit status`` exits 1 for: missing, stale, modified, mode-mismatched or unsafe files, a journal, override
-    drift, a root ``AGENTS.md`` that cannot be read safely."""
+    drift, a root ``AGENTS.md`` that cannot be read safely, and a guidance block that is ``modified`` or ``unowned``
+    (the ``SYNC_CONFLICT`` a sync raises for it, as for an edited managed file)."""
     findings = ExitCode.FINDINGS
     problems: list[AdvisoryError] = []
     if files.missing:
@@ -291,6 +294,8 @@ def _problems(
         )
     if block_error is not None:
         problems.append(block_error)
+    if block in BLOCK_CONFLICTS:
+        problems.append(guidance_block_error(block, exit_code=findings))
     if journal:
         problems.append(PendingTransactionError("an interrupted synchronization left its journal", exit_code=findings))
     if drift:
@@ -340,7 +345,7 @@ def get_project_status(root: Path, installed: list[InstalledBundle]) -> ProjectS
             seeded=[SeededStatus(entry, occupied(root, entry.path)) for entry in (receipt.seeded if receipt else ())],
             pending_journal=journal,
             tool=ToolStatus(tool_identity(), receipt.tool if receipt is not None else None),
-            errors=[*packages, *_problems(files, journal, drift, block_error)],
+            errors=[*packages, *_problems(files, journal, drift, block, block_error)],
             notices=warnings,
         )
 
@@ -397,7 +402,9 @@ def get_project_listing(root: Path, installed: list[InstalledBundle]) -> Project
     """``devkit list``: installed bundles with their selection state, and what the receipt records."""
     root = require_project_dir(root)
     with project_lock(root, shared=True):
-        receipt = read_receipt(root)
+        # Like ``devkit status``, a listing does not check the recorded paths on disk: a symlinked managed file is
+        # reported by ``devkit status`` and refused by ``devkit sync``, never a reason to fail a read-only listing.
+        receipt = read_receipt(root, check_disk=False)
         config = read_config(root)
     selected = effective_selection(installed, config, receipt)
     notices = unusable_notices(installed, selected)

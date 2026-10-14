@@ -7,7 +7,7 @@ import os
 import shlex
 import subprocess
 import tempfile
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -16,14 +16,16 @@ from pathlib import Path
 from devkit.advisory import AdvisoryError, Level
 from devkit.core import require_git_toplevel
 from devkit.gate.engine.models import Stage
-from devkit.gate.engine.runner import load_gate_project
+from devkit.gate.engine.runner import GateProject, load_gate_project
 from devkit.gate.errors import (
     ForeignHookError,
     GateInterpreterError,
     GatePythonError,
     HookBackupExistsError,
+    HookEntryMissingNotice,
     HookLayoutError,
     HookPreservedNotice,
+    HookScriptFailedNotice,
     HooksPathSetError,
 )
 from devkit.gate.hooks import git
@@ -36,7 +38,10 @@ DEVKIT_ENTRY = "20-devkit"
 LEGACY_ENTRY = "00-legacy"
 PYTHON_LINE = "python="
 HOOKS_PATH_KEY = "core.hooksPath"
+LOCK_FILE = "devkit-hooks.lock"
 _PYTHON_CHECK_TIMEOUT = 60.0
+# Ends the quoted here-document a generated script prints an advisory block with.
+_ADVISORY_DELIMITER = "DEVKIT_ADVISORY"
 
 
 class HookState(StrEnum):
@@ -92,9 +97,19 @@ def locate(cwd: Path) -> HooksLocation:
     return HooksLocation(directory, custom, git.config_scope(cwd, HOOKS_PATH_KEY) if custom else None)
 
 
+def _advisory_block(error: AdvisoryError) -> str:
+    """``error``'s sentinel block, as a generated script prints it, one ``\\n``-terminated line each."""
+    return "".join(f"{line}\n" for line in error.lines())
+
+
 def dispatcher_script(stage: Stage) -> str:
-    """Run executable direct children in bytewise filename order, without changing the Git environment."""
+    """Run executable direct children in bytewise filename order, without changing the Git environment.
+
+    ``post-commit`` reports a failed script as ``GATE_HOOK_SCRIPT_FAILED``, rendered here by the advisory
+    library; the script path and exit status follow as ``[DETAIL]`` lines at run time.
+    """
     failure = 'exit "$code"' if stage.blocking else 'report_failure "$script" "$code"'
+    failed = _advisory_block(HookScriptFailedNotice("hook script failed"))
     # A function keeps the original hook arguments separate from the script path.
     return f"""#!/bin/sh
 {MARKER}
@@ -109,9 +124,9 @@ run_script() {{
     fi
 }}
 report_failure() {{
-    echo "[WARN] (GATE_HOOK_SCRIPT_FAILED) hook script failed" >&2
-    echo "[ACTION] CONTINUE — Report the failed hook script to the user" >&2
-    echo "[DETAIL] stage={stage} script=$1 exit=$2" >&2
+    cat >&2 <<'{_ADVISORY_DELIMITER}'
+{failed}{_ADVISORY_DELIMITER}
+    printf '[DETAIL] stage={stage} script=%s exit=%s\\n' "$1" "$2" >&2
 }}
 if [ "${{LC_ALL+x}}" = x ]; then
     saved_lc_all=$LC_ALL
@@ -143,9 +158,6 @@ if [ -f "$legacy" ] && [ -x "$legacy" ]; then
 fi
 exit 0
 """
-
-
-_ADVISORY_DELIMITER = "DEVKIT_ADVISORY"
 
 
 def _unavailable(stage: Stage) -> GateInterpreterError:
@@ -181,7 +193,7 @@ def wrapper_script(stage: Stage, python: str) -> str:
     """
     unavailable = _unavailable(stage)
     code = int(unavailable.exit_code)
-    block = "".join(f"{line}\n" for line in unavailable.lines())
+    block = _advisory_block(unavailable)
     return f"""#!/bin/sh
 {GATE_MARKER}
 {PYTHON_LINE}{shlex.quote(python)}
@@ -245,6 +257,37 @@ def status(cwd: Path, location: HooksLocation | None = None) -> list[HookStatus]
             python = _read_python(entry.read_text("utf-8", errors="replace")) if entry.is_file() else None
         result.append(HookStatus(stage, path, state, python, _present(_backup(path)), scripts))
     return result
+
+
+def missing_entry_notices(project: GateProject, statuses: Sequence[HookStatus]) -> list[AdvisoryError]:
+    """One ``GATE_HOOK_ENTRY_MISSING`` warning per stage whose enabled gates have no hook entry to run them.
+
+    A stage's gates run only through its managed dispatcher and that dispatcher's ``20-devkit`` entry,
+    which ``install`` writes for the stages with enabled gates when it runs. A gate of another stage
+    enabled later in the configuration does not run until the next install or sync.
+    """
+    by_stage = {item.stage: item for item in statuses}
+    notices: list[AdvisoryError] = []
+    for stage in Stage:
+        gates = [gate.id for gate in project.registry.for_stage(stage) if project.config.enabled(gate)]
+        item = by_stage.get(stage)
+        if not gates or item is None:
+            continue
+        entry = _entries(item.path) / DEVKIT_ENTRY
+        if item.state is not HookState.MANAGED:
+            problem = f"the {stage} hook is not a devkit dispatcher ({item.state})"
+        elif not (_owned(entry, GATE_MARKER) and os.access(entry, os.X_OK)):
+            problem = f"{entry.parent.name}/{DEVKIT_ENTRY} is not installed"
+        else:
+            continue
+        notices.append(
+            HookEntryMissingNotice(
+                f"{stage}: enabled gates do not run: {problem}",
+                f"gates={','.join(gates)}",
+                target_files=[str(entry)],
+            )
+        )
+    return notices
 
 
 def check_python(python: str) -> str:
@@ -315,9 +358,12 @@ class InstallResult:
 
 
 @contextmanager
-def _lock(directory: Path) -> Iterator[None]:
-    """Serialize hook mutations across projects and linked worktrees of the same clone."""
-    fd = os.open(directory.parent / "devkit-hooks.lock", os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+def clone_lock(common_git_dir: Path) -> Iterator[None]:
+    """Serialize hook and ``devkit.config`` template mutations across linked worktrees of the same clone.
+
+    An exclusive ``flock`` on ``<common_git_dir>/devkit-hooks.lock``, held until the block ends.
+    """
+    fd = os.open(common_git_dir / LOCK_FILE, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
     with os.fdopen(fd, "w") as stream:
         fcntl.flock(stream, fcntl.LOCK_EX)
         try:
@@ -350,7 +396,7 @@ def install(cwd: Path, python: str, *, force: bool = False) -> InstallResult:
         if not project.validation.ok
         else {gate.stage for gate in project.registry.get_all() if project.config.enabled(gate)}
     )
-    with _lock(location.directory):
+    with clone_lock(location.directory.parent):
         current = status(cwd, location)
         moving = [item for item in current if item.state in (HookState.FOREIGN, HookState.INERT)]
         special = [item for item in moving if item.path.is_symlink() or not item.path.is_file()]
@@ -412,7 +458,7 @@ def uninstall(cwd: Path) -> list[str]:
     """Remove owned devkit entries; retain the dispatcher and legacy adapter while user entries remain."""
     location = locate(cwd)
     actions: list[str] = []
-    with _lock(location.directory):
+    with clone_lock(location.directory.parent):
         for item in status(cwd, location):
             if item.state is not HookState.MANAGED:
                 continue

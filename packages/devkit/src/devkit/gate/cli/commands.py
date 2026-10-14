@@ -6,8 +6,9 @@ Every command works on the top level of the Git work tree containing
 ``--workspace-root`` (default: the current directory), resolved with
 ``devkit.core.require_git_toplevel``. ``status --format json`` prints one
 object (``{"hooks_dir", "hooks_path", "hooks", "gates", "config_sources",
-"errors"}``) or ``{"error"}``. ``status`` is a report: it exits 1 when it lists
-any problem that would fail a commit and 2 only when it cannot run. A blocking
+"errors", "notices"}``) or ``{"error"}``. ``status`` is a report: it exits 1 when it lists
+any problem that would fail a commit and 2 only when it cannot run; its warnings
+(``GATE_HOOK_ENTRY_MISSING``) change the exit code only under ``--strict``. A blocking
 ``run`` exits with the highest ``exit_code`` among the problems it reports.
 """
 
@@ -106,9 +107,11 @@ def status_cmd(workspace_root: str | None, output_format: str) -> None:
     """Show hook wrappers, every known gate with its effective state, the configuration layers and every problem
     that would fail a commit.
 
+    Warns (GATE_HOOK_ENTRY_MISSING) about enabled gates whose stage has no installed hook entry, so they do not run.
     Exits 1 when any problem is reported and 2 when the status cannot be read (not a Git work tree)."""
     project = load_gate_project(_start(workspace_root))
     location = hooks.locate(project.root)
+    statuses = hooks.status(project.root, location)
     hook_rows = [
         {
             "stage": item.stage.value,
@@ -118,7 +121,7 @@ def status_cmd(workspace_root: str | None, output_format: str) -> None:
             "backup": item.backup,
             "scripts": list(item.scripts),
         }
-        for item in hooks.status(project.root, location)
+        for item in statuses
     ]
     gate_rows = [
         {
@@ -133,6 +136,7 @@ def status_cmd(workspace_root: str | None, output_format: str) -> None:
     ]
     sources = [display_path(path, project.root) for path in project.config.sources]
     errors = project.validation.errors
+    notices = hooks.missing_entry_notices(project, statuses)
     if is_json(output_format):
         echo_json(
             {
@@ -142,10 +146,12 @@ def status_cmd(workspace_root: str | None, output_format: str) -> None:
                 "gates": gate_rows,
                 "config_sources": sources,
                 "errors": [error.to_dict() for error in errors],
+                "notices": [notice.to_dict() for notice in notices],
             }
         )
         if errors:
             sys.exit(report_exit_code(errors))
+        exit_on_warnings(notices)
         return
     hooks_path = f" core.hooksPath={location.hooks_path} (wrappers do not run)" if location.hooks_path else ""
     click.echo(f"[HOOKS: dir={display_path(location.directory, project.root)}{hooks_path}]")
@@ -158,10 +164,12 @@ def status_cmd(workspace_root: str | None, output_format: str) -> None:
             f"enabled={str(row['enabled']).lower()} source={row['source']}]"
         )
     click.echo(f"[CONFIG: sources={','.join(sources) or 'none'}]")
+    echo_notices(notices)  # before the problems, so errors are last
     for error in errors:
         click.echo(error.render(), err=True)
     if errors:
         sys.exit(report_exit_code(errors))
+    exit_on_warnings(notices)
 
 
 def _block(error: AdvisoryError, level: Level | None, *first_details: str) -> str:

@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 import sys
+import threading
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import pytest
 from click.testing import CliRunner
 from devkit.gate import BaseGate, GateContext, GateResult, Stage, load_gate_project
 from devkit.gate.cli import cli
-from devkit.gate.hooks import local_config
+from devkit.gate.hooks import hooks, local_config
 from testsupport.gate import deploy_gate, gate_source
 
 
@@ -228,3 +230,64 @@ def test_post_sync_leaves_symbolic_hooks_and_reserved_entries_untouched(repo: Pa
     notices = local_config.post_sync(repo, {})
     assert notices is not None and "GATE_HOOK_LAYOUT_INVALID" in notices[0].details[0]
     assert entry.read_text() == "mine\n" and not hook.exists()
+
+
+def _fail_template_write(monkeypatch: pytest.MonkeyPatch) -> None:
+    def fail(path: Path, text: str, mode: int) -> None:
+        raise PermissionError(13, "Permission denied", str(path))
+
+    monkeypatch.setattr(local_config, "_write", fail)
+
+
+def test_a_template_that_cannot_be_written_keeps_the_hook_notices(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    hook = repo / ".git/hooks/pre-commit"
+    hook.write_text("#!/bin/sh\nexit 0\n")
+    hook.chmod(0o755)
+    _fail_template_write(monkeypatch)
+    result = CliRunner().invoke(cli, ["install", "-w", str(repo), "--python", sys.executable])
+    assert result.exit_code == 0, result.output
+    assert f"[CONFIG: template=skipped path={_config(repo)}]" in result.stdout
+    assert "(GATE_HOOK_PRESERVED)" in result.stderr and "(GATE_CONFIG_TEMPLATE_SKIPPED)" in result.stderr
+    assert "cannot be written" in result.stderr and "UNEXPECTED_ERROR" not in result.output
+
+
+def test_post_sync_reports_the_hook_move_beside_a_failed_template(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    hook = repo / ".git/hooks/pre-commit"
+    hook.write_text("#!/bin/sh\nexit 0\n")
+    hook.chmod(0o755)
+    monkeypatch.setattr(local_config, "project_registry", lambda root: (_ for _ in ()).throw(RuntimeError("boom")))
+    notices = local_config.post_sync(repo, {})
+    assert notices is not None
+    assert [notice.code for notice in notices] == ["GATE_HOOK_PRESERVED", "GATE_CONFIG_TEMPLATE_SKIPPED"]
+    assert "refresh failed: UNEXPECTED_ERROR: RuntimeError: boom" in notices[1].message
+
+
+@dataclass(frozen=True)
+class _Unrepresentable:
+    paths: list[str] = field(default_factory=lambda: [object()])  # type: ignore[list-item]
+    limit: int = 3
+
+
+class _UnrepresentableGate(_Gate):
+    def __init__(self) -> None:
+        super().__init__()
+        self.settings = _Unrepresentable()
+
+
+def test_a_default_toml_cannot_represent_is_left_out_of_the_table(repo: Path) -> None:
+    table = local_config.render_table(_UnrepresentableGate())
+    assert "#   limit = 3  # integer\n" in table and "paths" not in table
+    result = local_config.refresh_template(repo / ".git", [_UnrepresentableGate()])
+    assert result.state is local_config.TemplateState.CREATED and table in _config(repo).read_text()
+
+
+def test_the_template_refresh_waits_for_the_clone_lock(repo: Path) -> None:
+    results: list[local_config.TemplateResult] = []
+    gates = load_gate_project(repo).registry.get_all()
+    worker = threading.Thread(target=lambda: results.append(local_config.refresh_template(repo / ".git", gates)))
+    with hooks.clone_lock(repo / ".git"):  # another worktree's install or sync holding it
+        worker.start()
+        worker.join(0.5)
+        assert worker.is_alive() and not _config(repo).exists()
+    worker.join(10)
+    assert [result.state for result in results] == [local_config.TemplateState.CREATED]

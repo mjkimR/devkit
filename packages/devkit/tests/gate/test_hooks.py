@@ -653,3 +653,46 @@ def test_preserved_hook_keeps_directory_relative_resources(repo: Path) -> None:
     _install(repo)
     code, output = _commit(repo, "-m", "feat: preserve hook resources")
     assert code == 0 and (repo / "legacy-result").read_text() == "kept\n", output
+
+
+_POST_COMMIT_GATE = gate_source("after-commit", enabled=False, cls="AfterGate").replace(
+    "stage=Stage.PRE_COMMIT", "stage=Stage.POST_COMMIT"
+)
+
+
+def test_status_warns_when_an_enabled_gate_has_no_hook_entry(repo: Path) -> None:
+    deploy_gate(repo, _POST_COMMIT_GATE, ".devkit/managed/team/gates/after/gate.py")
+    _install(repo)  # off by default: post-commit gets no 20-devkit entry
+    assert _status(repo)["notices"] == []
+
+    (repo / ".git/devkit.config").write_text("[gates.settings.after-commit]\nenabled = true\n")
+    data = _status(repo)  # a warning: the report still exits 0
+    assert [g["enabled"] for g in data["gates"] if g["id"] == "after-commit"] == [True]
+    assert [(n["code"], n["level"]) for n in data["notices"]] == [("GATE_HOOK_ENTRY_MISSING", "WARNING")]
+    assert "post-commit: enabled gates do not run" in data["notices"][0]["message"]
+    assert data["notices"][0]["advisory"]["details"] == ["gates=after-commit"]
+    result = CliRunner().invoke(cli, ["status", "-w", str(repo)])
+    assert result.exit_code == 0 and "[WARN]   (GATE_HOOK_ENTRY_MISSING)" in result.stderr
+    assert "devkit gate install" in result.stderr
+    assert _invoke("status", "-w", str(repo), "--strict")[0] == 1
+
+    _install(repo)
+    assert (repo / ".git/hooks/post-commit.d/20-devkit").is_file() and _status(repo)["notices"] == []
+
+
+def test_status_warns_for_every_stage_with_gates_before_install(repo: Path) -> None:
+    notices = _status(repo)["notices"]
+    assert [n["code"] for n in notices] == ["GATE_HOOK_ENTRY_MISSING"] * 2
+    assert ["is not a devkit dispatcher (missing)" in n["message"] for n in notices] == [True, True]
+
+
+def test_post_commit_script_failure_is_rendered_by_the_advisory_library(repo: Path) -> None:
+    from devkit.gate.errors import HookScriptFailedNotice
+
+    _install(repo)
+    script = repo / ".git/hooks/post-commit.d/10 fail"
+    _script(script, "exit 3\n")
+    result = subprocess.run([str(repo / ".git/hooks/post-commit")], cwd=repo, capture_output=True, text=True)
+    assert result.returncode == 0
+    expected = HookScriptFailedNotice("hook script failed").render()
+    assert result.stderr == f"{expected}\n[DETAIL] stage=post-commit script={script} exit=3\n"

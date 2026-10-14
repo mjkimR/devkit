@@ -76,8 +76,9 @@ class _Evaluator:
         self.decisions = self.all_decisions.segment(doc.id, binding.segment_start)
         returns = [r for r in self.decisions.records if r.kind == "return" and r.action == "accept"]
         self.returns = [(r.seq, doc.stage_index(r.request[len(RETURN_PREFIX) :])) for r in returns]
+        # Envelopes scoped to another workflow or segment do not count either; unscoped ones count everywhere.
         self.envelopes: Envelopes = _after_returns(
-            load_envelopes(self.unit_dir),
+            load_envelopes(self.unit_dir).scoped(doc.id, binding.segment),
             [(_instant(r.at), doc.stage_index(r.request[len(RETURN_PREFIX) :])) for r in returns],
             doc,
         )

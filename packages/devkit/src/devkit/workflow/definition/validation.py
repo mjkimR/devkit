@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from devkit.workflow.definition.checks import DECLARABLE, Check, Registry
+from devkit.workflow.definition.checks import DECLARABLE, Check, CheckClass, Registry
 from devkit.workflow.definition.definition import (
     HANDOFF_GATE,
     ISOLATIONS,
@@ -37,6 +37,11 @@ if TYPE_CHECKING:
     from devkit.workflow.project.plugins import BaseCheck
 
 SHARED_STAGE_FIELDS = ("exit", "gate", "role", "isolation", "skills", "artifacts")
+# An unmet optional stage is passed over and never becomes current, so nothing asks for its approvals.
+_UNANSWERABLE = (
+    "an optional stage cannot have a {what}: it is never current, so its request is never asked; "
+    "drop optional or move the approval to a stage that is not optional"
+)
 
 
 def _where(stage: str, field: str) -> str:
@@ -177,12 +182,17 @@ def _stage_problems(
         problems.append(_problem(s.id, "human_gate", f"{HANDOFF_GATE!r} is reserved for workflow handoff"))
     elif s.gate is not None and not is_ident(s.gate):
         problems.append(_problem(s.id, "human_gate", f"gate name {s.gate!r} must match {IDENT_HINT}"))
+    if s.optional and s.gate is not None:
+        problems.append(_problem(s.id, "human_gate", _UNANSWERABLE.format(what=f"gate {s.gate!r}")))
     for fld in ("entry", "exit"):
         for ref in getattr(s, fld):
             try:
-                registry.resolve_name(ref)
+                _, check = registry.resolve_name(ref)
             except CheckError as exc:
                 problems.append(_check_problem(s.id, fld, exc))
+                continue
+            if fld == "exit" and s.optional and check.class_ == CheckClass.HUMAN:
+                problems.append(_problem(s.id, fld, _UNANSWERABLE.format(what=f"human check {ref!r}")))
     for i, r in enumerate(s.returns):
         if not r.to:
             problems.append(_problem(s.id, f"returns[{i}].to", "missing target stage"))

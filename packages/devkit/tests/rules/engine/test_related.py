@@ -62,3 +62,37 @@ def test_explain_resolves_related_playbooks(tmp_path: Path) -> None:
             "path": ".devkit/managed/authoring/playbooks/skill-authoring/SKILL.md",
         }
     ]
+
+
+def _receipt(root: Path, assets: list[dict[str, object]]) -> None:
+    (root / ".devkit").mkdir(parents=True, exist_ok=True)
+    data = {"schema": 1, "packages": [], "selection": {"agents": [], "presets": {}}, "assets": assets, "files": {}}
+    (root / ".devkit/installation.json").write_text(json.dumps(data), encoding="utf-8")
+
+
+def test_an_instruction_without_a_markdown_file_is_reported_as_such(tmp_path: Path) -> None:
+    _receipt(
+        tmp_path,
+        [
+            {"bundle": "team", "id": "guide", "kind": "instruction", "paths": [".devkit/managed/team/guide.txt"]},
+            {"bundle": "team", "id": "check", "kind": "rule", "paths": [".devkit/managed/team/check/rule.py"]},
+        ],
+    )
+    related, notices = resolve_related(tmp_path, _Rule("team:guide", "team:check"))
+    assert related == [RelatedAsset("team:guide", "instruction", None), RelatedAsset("team:check", "rule", None)]
+    assert [n.message for n in notices] == [
+        "RULE-x: related team:guide is an instruction asset without a Markdown file",
+        "RULE-x: related team:check is a rule asset, not an instruction or playbook",
+    ]
+    assert notices[0].fix is not None and "devkit sync" in notices[0].fix
+
+
+def test_a_malformed_receipt_is_reported_instead_of_not_deployed(tmp_path: Path) -> None:
+    (tmp_path / ".devkit").mkdir()
+    (tmp_path / ".devkit/installation.json").write_text("{not json", encoding="utf-8")
+    related, notices = resolve_related(tmp_path, _Rule("team:a", "team:b"))
+    assert related == [RelatedAsset("team:a", None, None), RelatedAsset("team:b", None, None)]
+    (notice,) = notices
+    assert notice.code == "RULES_RELATED_UNRESOLVED" and "(RECEIPT_INVALID)" in notice.message
+    assert "not deployed" not in notice.message and notice.fix is not None and "devkit add" not in notice.fix
+    assert notice.target_files == (".devkit/installation.json",)

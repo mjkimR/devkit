@@ -42,3 +42,32 @@ def test_the_distribution_registers_and_requires_nothing() -> None:
     assert "entry-points" not in project and "scripts" not in project
     # `devkit` stays a namespace package: an __init__.py here would shadow the devkit distribution's modules.
     assert not (ROOT / "src/devkit/__init__.py").exists()
+
+
+def test_the_public_names_are_pinned() -> None:
+    # The semver surface: removing or renaming a name here is breaking (a minor bump within 0.x); adding one is not.
+    import devkit.advisory as advisory
+    from devkit.advisory import CONTINUATION, FIELDS, HEADLINE, Level
+
+    assert set(advisory.__all__) == {
+        "ACTION_TEXT",
+        "CONTINUATION",
+        "FIELDS",
+        "HEADLINE",
+        "UNEXPECTED_CODE",
+        "ActionMode",
+        "Actor",
+        "Advisory",
+        "AdvisoryError",
+        "AdvisoryFields",
+        "ExitCode",
+        "Level",
+        "Retry",
+        "as_advisory_error",
+        "render_error",
+    }
+    assert all(hasattr(advisory, name) for name in advisory.__all__)
+    # The block grammar parsers such as devkit.compact recognize: protocol, section 3.
+    assert HEADLINE == {Level.ERROR: "[ERROR]  ", Level.WARNING: "[WARN]   ", Level.NOTICE: "[NOTICE] "}
+    assert FIELDS == ("[ACTION] ", "[WHEN]   ", "[TARGET] ", "[FIX]    ", "[REPORT] ", "[DETAIL] ")
+    assert CONTINUATION == " " * 9

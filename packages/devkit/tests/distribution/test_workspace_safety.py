@@ -12,6 +12,7 @@ from devkit.core.errors import ReceiptError
 from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH
 from devkit.distribution.bundles import build_bundle, load_bundle
 from devkit.distribution.bundles.subagents import read_contract, render_projection
+from devkit.distribution.content import Content
 from devkit.distribution.errors import BundleError, DistributionError, LockHeldError, UnsafeWorkspaceError
 from devkit.distribution.installation import extensions, transaction
 from devkit.distribution.installation.config import update_config
@@ -188,6 +189,28 @@ def test_post_sync_extensions_run_after_the_lock_is_released(
         core_extensions.metadata, "entry_points", lambda group: [entry] if group == extensions.GROUP else []
     )
     assert [notice.message for notice in sync_project(target, [item]).notices] == ["hook read team"]
+
+
+def test_a_file_where_a_destination_directory_must_be_is_unsafe(item: InstalledBundle, target: Path) -> None:
+    blocker = target / ".claude/skills/review"
+    blocker.parent.mkdir(parents=True)
+    blocker.write_text("a project file\n")
+    for dry_run in (True, False):
+        with pytest.raises(UnsafeWorkspaceError) as raised:
+            sync_project(target, [item], dry_run=dry_run)
+        error = raised.value
+        assert error.code == "WORKSPACE_UNSAFE"
+        assert error.target_files == (".claude/skills/review", ".claude/skills/review/SKILL.md")
+        assert error.fix is not None and ".claude/skills/review" in error.fix
+    assert blocker.read_text() == "a project file\n"
+    assert read_receipt(target) is None and not (target / ".devkit/managed").exists()
+
+
+def test_a_transaction_refuses_a_file_where_a_directory_must_be(tmp_path: Path) -> None:
+    (tmp_path / "docs").write_text("a project file\n")
+    with pytest.raises(UnsafeWorkspaceError, match="docs is not a directory"):
+        transaction.apply_changes(tmp_path, {"docs/guide.md": Content(b"x", 0o644)})
+    assert not (tmp_path / ".devkit").exists()
 
 
 def test_removed_projections_leave_no_empty_directories(item: InstalledBundle, target: Path) -> None:

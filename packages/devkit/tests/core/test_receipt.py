@@ -483,3 +483,18 @@ def test_a_symlink_loop_in_an_asset_path_is_reported_per_file(tmp_path: Path) ->
     with pytest.raises(AssetFileError, match="is unsafe: path cannot be resolved") as info:
         verified_asset_file(tmp_path, item, _hashed_receipt({item: b""}), AssetRecord("team", "r", "rule", ()))
     assert info.value.target_files == (item,)
+
+
+def test_verified_asset_packages_carry_the_verified_bytes_as_sources(tmp_path: Path) -> None:
+    from devkit.core import verified_asset_packages
+
+    base = ".devkit/managed/team/rules/x"
+    files = {f"{base}/rule.py": b"r = 1\n", f"{base}/sub/__init__.py": b"", f"{base}/guide.md": b"# g\n"}
+    override = ".devkit/overrides/team/rules/x/helpers.py"
+    _place(tmp_path, {**files, override: b"h = 1\n"})
+    receipt = _plugin_receipt(
+        [{"bundle": "team", "id": "x", "kind": "rule", "paths": [*sorted(files), override]}], files
+    )
+    (package,), errors = verified_asset_packages(tmp_path, receipt, "rule")
+    assert errors == ()
+    assert dict(package.sources) == {"rule": b"r = 1\n", "sub": b"", "helpers": b"h = 1\n"}

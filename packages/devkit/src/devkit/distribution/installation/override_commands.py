@@ -19,7 +19,7 @@ from devkit.core.receipt import OVERRIDES_PATH, RECEIPT_PATH, OverrideRecord, Re
 from devkit.distribution.bundles.common import SLUG
 from devkit.distribution.bundles.manifest import Asset
 from devkit.distribution.content import Content, normal_mode
-from devkit.distribution.errors import ConflictError, SelectionError
+from devkit.distribution.errors import ConflictError, OrphanLeftNotice, SelectionError
 from devkit.distribution.installation.config import effective_selection, read_config
 from devkit.distribution.installation.discovery import InstalledBundle, unusable_bundles
 from devkit.distribution.installation.extensions import run_post_sync
@@ -171,37 +171,57 @@ def create_override(
     )
 
 
+def _files_under(root: Path, name: str) -> list[str]:
+    """Workspace paths of the file (or symlink) at ``name``, or of every file under the directory there."""
+    base = root / name
+    found = sorted(p for p in base.rglob("*") if p.is_file() or p.is_symlink()) if base.is_dir() else [base]
+    return [p.relative_to(root).as_posix() for p in found if p.is_file() or p.is_symlink()]
+
+
 def remove_override(root: Path, installed: list[InstalledBundle], selector: str) -> OverrideChange:
-    """Delete an asset's override and baseline files, then synchronize the pristine upstream files."""
+    """Delete an asset's override and baseline files, then synchronize the pristine upstream files.
+
+    Only the override files of the asset's upstream files are deleted (with every baseline copy, which devkit
+    writes): any other project file under the asset's override paths stays and is reported as ``ORPHAN_LEFT``.
+    """
     root = require_project_dir(root)
     bundle_name, asset_id = _parse_selector(selector)
     with project_lock(root):
         require_no_journal(root)
-        _, asset = _find(installed, bundle_name, asset_id)
-        names: list[str] = []
-        for _, source in asset.sources:
-            for rel_of in (override_rel, baseline_rel):
-                base = root / rel_of(bundle_name, source)
-                found = sorted(p for p in base.rglob("*") if p.is_file()) if base.is_dir() else [base]
-                names.extend(p.relative_to(root).as_posix() for p in found if p.is_file() or p.is_symlink())
-        if not any(name.startswith(f"{OVERRIDES_PATH}/{bundle_name}/") for name in names):
+        item, asset = _find(installed, bundle_name, asset_id)
+        tracked = {override_rel(bundle_name, rel) for rel in asset_files(item.bundle, asset)}
+        under = sorted(
+            {name for _, source in asset.sources for name in _files_under(root, override_rel(bundle_name, source))}
+        )
+        overrides = [name for name in under if name in tracked]
+        if not overrides:
             raise SelectionError(f"no override found for {selector}", fix="List overrides with `devkit override list`")
+        extra = [name for name in under if name not in tracked]
+        baselines = sorted(
+            {name for _, source in asset.sources for name in _files_under(root, baseline_rel(bundle_name, source))}
+        )
         undo = _Undo(root)
         try:
-            for name in names:
+            for name in [*overrides, *baselines]:
                 undo.delete(name)
             finish = commit_locked(root, installed)
         except BaseException:
             undo.restore()
             raise
         result = finish()
-    return OverrideChange(
-        bundle_name,
-        asset_id,
-        "removed",
-        [name for name in names if not name.startswith(baseline_rel(bundle_name, ""))],
-        notices=_after_sync(root, result),
-    )
+    notices = _after_sync(root, result)
+    if extra:
+        notices.insert(
+            0,
+            OrphanLeftNotice(
+                f"left project files in place under the override of {selector}: {', '.join(extra)}"
+                " (no upstream file of the asset has these paths)",
+                target_files=extra,
+                what_to_report=f"Whether to delete {', '.join(extra)}; devkit deletes only the override files of"
+                " the asset's upstream files",
+            ),
+        )
+    return OverrideChange(bundle_name, asset_id, "removed", overrides, notices=notices)
 
 
 def _tracked(receipt: Receipt | None, bundle: str, asset: str, selector: str) -> OverrideRecord:

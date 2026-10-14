@@ -365,3 +365,41 @@ def test_loading_writes_no_bytecode_cache(tmp_path: Path, monkeypatch: pytest.Mo
     result = load_subclasses([pkg], Base, namespace=NAMESPACE)
     assert [p.name for p in result.instances] == ["cached"]
     assert not list((tmp_path / "managed").rglob("__pycache__"))
+
+
+def test_loading_never_reads_a_planted_bytecode_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import importlib.util
+    import py_compile
+
+    monkeypatch.delenv("PYTHONPYCACHEPREFIX", raising=False)
+    monkeypatch.setattr(sys, "pycache_prefix", None)
+    root = write(tmp_path / "managed", {"rule.py": "class Planted(Base):\n    name = 'planted'\n"})
+    source = root / "rule.py"
+    cache = importlib.util.cache_from_source(str(source))
+    # An unchecked-hash pyc is used without comparing it to its source by a standard loader.
+    py_compile.compile(str(source), cfile=cache, invalidation_mode=py_compile.PycInvalidationMode.UNCHECKED_HASH)
+    write(root, {"rule.py": "class Source(Base):\n    name = 'source'\n"})
+    assert Path(cache).is_file()
+    result = load_subclasses([PluginPackage.from_directory(root)], Base, namespace=NAMESPACE)
+    assert [p.name for p in result.instances] == ["source"] and result.errors == ()
+
+
+def test_loading_compiles_the_given_sources_instead_of_the_files(tmp_path: Path) -> None:
+    root = write(
+        tmp_path / "p",
+        {"rule.py": "class Changed(Base):\n    name = 'changed'\n", "helpers.py": "VALUE = 'file'\n"},
+    )
+    verified = (
+        f"from {BASE_MODULE} import Base\nfrom .helpers import VALUE\n\nclass Verified(Base):\n    name = VALUE\n"
+    )
+    pkg = PluginPackage(
+        "verified",
+        root,
+        plugin_modules([("helpers", root / "helpers.py"), ("rule", root / "rule.py")]),
+        {"rule": verified.encode("utf-8")},
+    )
+    result = load_subclasses([pkg], Base, namespace=NAMESPACE)
+    assert [p.name for p in result.instances] == ["file"] and result.errors == ()
+    module = sys.modules[f"{name_of(pkg)}.rule"]
+    assert module.__file__ == str(root / "rule.py")
+    assert module.__loader__.get_source(module.__name__) == verified  # type: ignore[union-attr]

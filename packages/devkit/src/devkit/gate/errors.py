@@ -73,7 +73,8 @@ class VerifyUnstagedNotice(GateError):
 class GateTemplateNotice(GateError):
     """The commented settings template could not be written to ``devkit.config`` (a warning, never raised).
 
-    Returned by ``devkit gate install`` and the post-sync refresh; the command itself succeeded.
+    Returned by ``devkit gate install`` and the post-sync refresh; the command itself succeeded, and the hook
+    notices it returns (``GATE_HOOK_PRESERVED``) are still reported.
     """
 
     code = "GATE_CONFIG_TEMPLATE_SKIPPED"
@@ -166,6 +167,30 @@ class HookPreservedNotice(GateError):
     what_to_report = (
         "An existing Git hook was renamed and still runs first; check scripts that depend on their filename"
     )
+
+
+class HookScriptFailedNotice(GateError):
+    """A ``post-commit`` hook script exited nonzero (a warning, printed by the dispatcher; never raised).
+
+    Rendered into the dispatcher when it is written; the dispatcher appends the stage, script and exit status.
+    """
+
+    code = "GATE_HOOK_SCRIPT_FAILED"
+    level = Level.WARNING
+    what_to_report = "A post-commit hook script failed after the commit was made; the remaining scripts still ran"
+
+
+class HookEntryMissingNotice(GateError):
+    """Enabled gates of a stage do not run: the stage has no managed dispatcher with a ``20-devkit`` entry.
+
+    Returned by ``devkit gate status`` (a warning, never raised), for example after a gate of a stage that had
+    no enabled gate when the hooks were installed is enabled in the configuration.
+    """
+
+    code = "GATE_HOOK_ENTRY_MISSING"
+    level = Level.WARNING
+    fix = "Run `devkit gate install` (or `devkit sync`) to install the hook entry of every stage with enabled gates"
+    what_to_report = "Enabled commit gates do not run at commit time until their hook entry is installed"
 
 
 class HookInstallSkippedNotice(GateError):

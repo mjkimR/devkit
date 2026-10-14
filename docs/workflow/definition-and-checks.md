@@ -85,7 +85,7 @@ Prose for humans and agents. Not parsed.
 | `id` | string | Unique within the document; matches `[a-z][a-z0-9-]*`. Shared across definitions (see [Shared Stages](#shared-stages)). |
 | `name` | string | Display name. Changing it never causes drift. |
 | `human_gate` | `false`, `true` or string | `true` names the gate after the stage id; a string names a shared gate (`[a-z][a-z0-9-]*`, so `[workflow.approvals]` can name it). `handoff` is reserved. See [Approval Gates](overview.md#3-approval-gates). |
-| `optional` | `true` or `false` | When unmet, the stage is passed over instead of becoming current. |
+| `optional` | `true` or `false` | When unmet, the stage is passed over instead of becoming current. Since it never becomes current, nothing asks for its approvals: an optional stage with a `human_gate` or a `human` exit check is a validation problem. |
 | `exception` | `true` or `false` | Never evaluated; documents an out-of-band path. |
 | `entry` | list of checks | Preconditions. Informational: listed by `show` and in the JSON `stage` object, never evaluated. |
 | `exit` | list of checks | The stage is done when every exit check is satisfied. |
@@ -95,7 +95,7 @@ Prose for humans and agents. Not parsed.
 | `isolation` | string | `none`, `preferred`, `required`. A non-developer role with isolation other than `none` yields `[DELEGATE]`. |
 | `returns` | list of `{to, when}` | Stages this stage may return to and why. `to` must name a stage in the same document. Taking a return is `devkit workflow return --to <stage>` ([How the Engine Applies Answers](human-interaction.md#5-how-the-engine-applies-answers)). |
 
-Unknown document or stage keys, malformed or duplicate ids, malformed gate names, duplicate or colliding declared checks (each reported once; the other declared checks stay usable), unregistered checks, `runner` or `human` checks in a `next` candidate's `when`, malformed check invocations, a `file` argument outside the unit directory (absolute or with `..`), unknown `returns.to` targets, invalid `isolation` values and unknown roles are validation problems, which `devkit workflow validate` reports with the stage id and field. A value of the wrong type (`optional: "false"`, `role: 3`), an unknown key inside a `returns`, `checks` or `next` item, and a malformed `layout` mapping are structural errors reported with the file.
+Unknown document or stage keys, malformed or duplicate ids, malformed gate names, duplicate or colliding declared checks (each reported once; the other declared checks stay usable), unregistered checks, `runner` or `human` checks in a `next` candidate's `when`, malformed check invocations, a `file` argument outside the unit directory (absolute or with `..`), unknown `returns.to` targets, an `optional` stage with a `human_gate` or a `human` exit check, invalid `isolation` values and unknown roles are validation problems, which `devkit workflow validate` reports with the stage id and field. A value of the wrong type (`optional: "false"`, `role: 3`), an unknown key inside a `returns`, `checks` or `next` item, and a malformed `layout` mapping are structural errors reported with the file.
 
 ### Shared Stages
 
@@ -144,7 +144,7 @@ A check reference is `name` or `name(arg1 arg2 ...)`. Arguments are whitespace-s
 | `frontmatter` | `file field value` | the file's top-level frontmatter field equals the value |
 | `tasks-checked` | `file` | the file has at least one `- [ ]`/`- [x]` task and none unchecked; items inside YAML frontmatter or fenced code are not tasks (the counter is `devkit.rules.count_tasks`, shared with rules) |
 | `not-skeleton` | `file` | the file is missing or has no line equal to `<!-- devkit:skeleton -->` |
-| `envelope-completed` | `kind` | the deciding `envelopes/<kind>-NN.yaml` ([Review Envelopes](envelopes.md)) has `status: completed` and no open finding |
+| `envelope-completed` | `kind` | the deciding `envelopes/<kind>-NN.yaml` of the current segment ([Review Envelopes](envelopes.md)) has `status: completed` and no open finding |
 | `envelope-check-pass` | `kind key` | the deciding envelope is completed and `checks.<key>` starts with `PASS` |
 | `revision-ancestor` | `ancestor-kind descendant-kind` | `diff_scope.head` of the latest ancestor-kind envelope is a Git ancestor of, or equal to, that of the latest descendant-kind envelope; both must be hexadecimal commit ids. When Git cannot answer (not a repository, an unknown commit as in a shallow clone, a timeout) the check is unsatisfied and `evaluated=false`, with Git's error in the detail |
 | `lint-clean` | none | `devkit.rules` reports no violation for files under the unit directory ([Integration](overview.md#4-integration-with-the-rule-engine-and-distribution)); the detail quotes the first three violations and counts the rest, naming `devkit rules check <unit>`. A unit directory that resolves outside the workspace root (an absolute `--unit`, or a symbolic link leaving the root) cannot be linted: the check fails with a `PATH_UNSAFE` lint error |

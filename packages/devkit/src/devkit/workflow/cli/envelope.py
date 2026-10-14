@@ -8,7 +8,7 @@ from pathlib import Path
 import click
 
 from devkit.core.cli import FORMAT_OPTION, boundary, echo_json, exit_on_problems, is_json
-from devkit.workflow.cli.app import UNIT, WORKSPACE, cli, workspace
+from devkit.workflow.cli.app import ANCHOR, UNIT, WORKSPACE, cli, workspace
 from devkit.workflow.errors import EnvelopeFlagError
 from devkit.workflow.render import quote
 from devkit.workflow.unit.decisions import utc_timestamp
@@ -36,6 +36,7 @@ def _read_findings_file(path: str) -> str:
 @envelope_group.command(name="new")
 @WORKSPACE
 @UNIT
+@ANCHOR
 @click.option("--kind", required=True, help="Envelope kind, e.g. review, reverify, final-report")
 @click.option("--stage", default="", help="Stage the envelope belongs to")
 @click.option("--status", default=None, help="completed (default when authoring) | needs_input | failed")
@@ -56,6 +57,7 @@ def _read_findings_file(path: str) -> str:
 def envelope_new_cmd(
     workspace_root: str | None,
     unit: str,
+    anchor: str | None,
     kind: str,
     stage: str,
     status: str | None,
@@ -77,10 +79,13 @@ def envelope_new_cmd(
     author to fill in. Any other flag switches to authoring: the envelope is
     written complete, status defaults to completed, and reverify carries the
     findings of the round it closes with --from latest.
+
+    The envelope records the workflow the unit is bound to and the segment
+    (finished handoffs) it is in; checks count it only in that segment.
     """
     ws = workspace(workspace_root)
-    unit_dir = ws.unit_path(unit)
-    ws.present_anchors(unit_dir)
+    ref = ws.resolve_unit(unit, anchor=anchor)
+    unit_dir, workflow, segment = ref.dir, ref.doc.id, ref.binding.segment
     authoring = any((status is not None, summary is not None, assumptions, unverified, checks, base, head)) or any(
         (findings_file, source, resolve, waive)
     )
@@ -89,9 +94,11 @@ def envelope_new_cmd(
         findings_yaml = _read_findings_file(findings_file) if findings_file is not None else None
         draft = compose_envelope(
             unit_dir=unit_dir,
-            envelopes=load_envelopes(unit_dir),
+            envelopes=load_envelopes(unit_dir).scoped(workflow, segment),
             kind=kind,
             stage=stage,
+            workflow=workflow,
+            segment=segment,
             status=status,
             summary=summary or "",
             assumptions=assumptions,
@@ -107,7 +114,7 @@ def envelope_new_cmd(
         body = render_envelope(draft, created)
         written_status, open_findings = draft.status, draft.open_findings()
     else:
-        body = skeleton(kind, stage, created)
+        body = skeleton(kind, stage, created, workflow, segment)
         written_status, open_findings = "needs_input", 0
     path, seq = write_envelope(unit_dir, kind, body)
     rel = ws.rel(path)

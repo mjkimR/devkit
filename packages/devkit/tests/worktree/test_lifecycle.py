@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from devkit.advisory import ActionMode
+from devkit.advisory import ActionMode, AdvisoryError
 from devkit.core.errors import ArgumentError, GitError
 from devkit.worktree import (
     AddFailedError,
@@ -56,6 +56,11 @@ def commit(root: Path, rel: str, text: str = "x\n") -> None:
     git(root, "commit", "-q", "-m", f"add {rel}")
 
 
+def marker(repo: Path, branch: str) -> str:
+    """The ``branch.<branch>.devkitWorktree`` value in the common configuration; ``""`` when unset."""
+    return git(repo, "config", "--local", "--default", "", "--get", f"branch.{branch}.devkitWorktree")
+
+
 def test_locate_and_the_worktree_path(repo: Path) -> None:
     base = locate(repo)
     assert (base.root, base.base, base.branch, base.linked) == (repo, repo, "main", False)
@@ -82,6 +87,8 @@ def test_start_creates_from_base_head_and_reuses_a_clean_worktree(repo: Path) ->
     assert result.created and result.path == repo.parent / "repo-wt-demo" and result.branch == "demo"
     assert git(result.path, "rev-parse", "HEAD") == git(repo, "rev-parse", "HEAD")
     assert not (result.path / "uncommitted.txt").exists() and (repo / "uncommitted.txt").exists()
+    assert marker(repo, "demo") == str(result.path)
+    assert git(result.path, "config", "--get", "branch.demo.devkitWorktree") == str(result.path)  # common config
     again = start(locate(repo), "demo")
     assert not again.created and again.path == result.path
 
@@ -162,6 +169,20 @@ def test_a_failed_worktree_add_removes_what_it_created_and_a_rerun_starts_afresh
     _only_the_base(repo, "demo")
     (repo / ".git/hooks/post-checkout").unlink()
     assert start(locate(repo), "demo").created
+
+
+def test_a_failed_marker_write_removes_the_new_worktree_and_branch(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    run_git = lifecycle.run_git
+
+    def no_config(cwd: Path, *args: str, **options: Any) -> bytes:
+        if args[:2] == ("config", "--local"):
+            raise GitError("git config failed", returncode=4, stderr="error: could not lock config file")
+        return run_git(cwd, *args, **options)
+
+    monkeypatch.setattr(lifecycle, "run_git", no_config)
+    with pytest.raises(AddFailedError, match=r"git config branch\.demo\.devkitWorktree failed: error: could not lock"):
+        start(locate(repo), "demo")
+    _only_the_base(repo, "demo")
 
 
 def test_a_timed_out_worktree_add_removes_what_it_created(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -321,10 +342,11 @@ def test_a_failed_branch_deletion_carries_the_result_and_a_rerun_deletes_the_bra
     assert isinstance(partial, FinishResult) and raised.value.mode is ActionMode.INTERACTION
     assert (partial.merged, partial.removed, partial.branch_deleted) == (True, True, False)
     assert not created.path.exists() and git(repo, "branch", "--list", "demo")
+    assert marker(repo, "demo") == str(created.path)
     hook.unlink()
     done = finish(locate(repo), "demo")  # no worktree left, the merged branch remains: only the deletion runs
     assert (done.merged, done.removed, done.branch_deleted) == (False, True, True)
-    assert git(repo, "branch", "--list", "demo") == ""
+    assert git(repo, "branch", "--list", "demo") == "" and marker(repo, "demo") == ""  # branch -d drops it
     with pytest.raises(NotFoundError):
         finish(locate(repo), "demo")
     git(repo, "checkout", "-q", "-b", "spike")
@@ -333,6 +355,28 @@ def test_a_failed_branch_deletion_carries_the_result_and_a_rerun_deletes_the_bra
     with pytest.raises(NotFoundError, match="not merged"):
         finish(locate(repo), "spike")
     assert git(repo, "branch", "--list", "spike")
+
+
+def test_finish_without_a_worktree_never_deletes_a_branch_start_did_not_create(repo: Path) -> None:
+    git(repo, "branch", "release")  # merged into the base HEAD, no worktree, no marker
+    with pytest.raises(NotFoundError, match=r"no branch\.release\.devkitWorktree marker") as raised:
+        finish(locate(repo), "release")
+    assert raised.value.result is None and raised.value.mode is ActionMode.INTERACTION
+    assert raised.value.fix == f"Once the user agrees, git -C {repo} branch -d release"
+    assert git(repo, "branch", "--list", "release")
+    created = start(locate(repo), "demo")
+    git(repo, "worktree", "remove", str(created.path))  # removed by hand: the marked branch resumes
+    done = finish(locate(repo), "demo")
+    assert (done.removed, done.branch_deleted) == (True, True) and git(repo, "branch", "--list", "demo") == ""
+
+
+def test_finish_with_a_worktree_needs_no_marker(repo: Path) -> None:
+    created = start(locate(repo), "demo")
+    commit(created.path, "work.txt")
+    git(repo, "config", "--local", "--unset", "branch.demo.devkitWorktree")  # a branch from before the marker
+    done = finish(locate(repo), "demo", merge=True, pull_request=False)
+    assert (done.merged, done.removed, done.branch_deleted) == (True, True, True)
+    assert not created.path.exists() and git(repo, "branch", "--list", "demo") == ""
 
 
 def test_a_failed_removal_carries_the_result_and_a_rerun_resumes(repo: Path) -> None:
@@ -380,6 +424,31 @@ def test_finish_without_branch_deletion_and_with_a_caller_cleanup(repo: Path) ->
     assert seen == [(False, True)] and result.removed and not result.branch_deleted
     assert git(repo, "branch", "--list", "demo").strip() == "demo"
     assert not created.path.exists()
+
+
+def test_an_advisory_the_caller_cleanup_raises_carries_the_partial_result(repo: Path) -> None:
+    created = start(locate(repo), "demo")
+    commit(created.path, "work.txt")
+
+    class CleanupError(AdvisoryError):
+        code = "CALLER_CLEANUP_FAILED"
+
+    def cleanup(result: FinishResult) -> None:
+        raise CleanupError("the caller's cleanup failed")
+
+    with pytest.raises(CleanupError) as raised:
+        finish(locate(repo), "demo", merge=True, pull_request=False, before_remove=cleanup)
+    partial = getattr(raised.value, "result", None)
+    assert isinstance(partial, FinishResult)
+    assert (partial.merged, partial.push, partial.removed, partial.branch_deleted) == (
+        True,
+        "no-upstream",
+        False,
+        False,
+    )
+    assert created.path.is_dir() and (repo / "work.txt").exists()
+    done = finish(locate(repo), "demo")  # the merge stays done: the rerun resumes with the removal
+    assert done.removed and done.branch_deleted
 
 
 def test_finish_refuses_a_merge_that_is_not_a_fast_forward(repo: Path) -> None:

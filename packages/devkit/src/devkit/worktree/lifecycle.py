@@ -2,7 +2,9 @@
 
 A slug's worktree is always ``<parent of base>/<base name>-wt-<slug>`` on the
 branch ``<slug>``, created from the base checkout's HEAD; the base working tree
-is never touched by ``start``. ``finish`` runs in the base: it fast-forwards the
+is never touched by ``start``. A branch ``start`` creates carries the marker
+``branch.<slug>.devkitWorktree`` (the worktree path) in the common Git
+configuration; ``git branch -d`` removes it with the branch. ``finish`` runs in the base: it fast-forwards the
 base onto the branch and pushes it (``merge=True``) or verifies the branch is
 merged, removes the worktree and deletes the branch. Every step refuses
 instead of forcing, the checks of the worktree's branch, the base and the
@@ -60,6 +62,9 @@ from devkit.worktree.errors import (
 _log = get_logger(__name__)
 
 SLUG = re.compile(r"[a-z0-9][a-z0-9_-]{0,63}")
+# Recorded in the common configuration on every branch ``start`` creates; only a marked branch is deleted without its
+# worktree, so ``finish`` never deletes an ordinary branch that happens to share a slug's name.
+MARKER = "devkitWorktree"
 PUSH_TIMEOUT = 120.0  # seconds; a slow or stuck push must not hold the cleanup
 FETCH_TIMEOUT = 120.0  # seconds for the upstream fetch before the merge
 SETUP_TIMEOUT = 900.0  # seconds for the `setup` command (dependency installs)
@@ -263,6 +268,16 @@ def _entries(base: Path) -> list[_Entry]:
     return entries
 
 
+def _marker(branch: str) -> str:
+    """The configuration key marking ``branch`` as created by ``start``."""
+    return f"branch.{branch}.{MARKER}"
+
+
+def _created(base: Path, branch: str) -> bool:
+    """Whether ``start`` created ``branch`` (it carries the marker in the common configuration)."""
+    return _query(base, "config", "--local", "--get", _marker(branch)) is not None
+
+
 def _clean(checkout: Path) -> bool:
     return not _git(checkout, "status", "--porcelain", "--untracked-files=normal")
 
@@ -326,21 +341,26 @@ def start(position: Position, slug: str, *, setup: str | None = None, project: P
 
 
 def _add(base: Path, path: Path, branch: str) -> None:
-    """``git worktree add -b branch path``; on failure, remove what it created before raising ``WORKTREE_ADD_FAILED``.
+    """``git worktree add -b branch path`` and the branch's marker; on failure, remove what was created before raising
+    ``WORKTREE_ADD_FAILED``.
 
-    ``start`` checked that neither ``path`` nor ``branch`` existed, so whatever a failed or timed-out call leaves (a
+    The marker (``branch.<branch>.devkitWorktree = <path>``) is written to the common configuration (``--local`` in the
+    base checkout), so ``finish`` can tell the branch from one devkit did not create. ``start`` checked that neither ``path`` nor ``branch`` existed, so whatever a failed or timed-out call leaves (a
     registered, possibly half-checked-out worktree, which Git locks while it initializes it, and the new branch) is
     its own: the worktree is removed with ``--force --force``, the branch with ``git branch -d``, which keeps it if a
     hook committed to it. What cannot be removed is named with the command that removes it.
     """
+    step = f"git worktree add {path}"
     try:
         run_git(base, "worktree", "add", "-b", branch, str(path), timeout=CHECKOUT_TIMEOUT)
+        step = f"git config {_marker(branch)}"
+        run_git(base, "config", "--local", _marker(branch), str(path))
     except GitError as exc:
         reason = exc.stderr or exc.message
         if _timed_out(exc):
             reason = f"{exc.message}: {exc.stderr}" if exc.stderr else exc.message
         left = _undo_add(base, path, branch)
-        message = f"git worktree add {path} failed: {reason}"
+        message = f"{step} failed: {reason}"
         if not left:
             raise AddFailedError(f"{message}; the partial worktree and branch were removed") from exc
         raise AddFailedError(
@@ -557,8 +577,12 @@ def finish(
     and the upstreams (including whether ``git branch -d`` will accept the branch) run before the first change;
     uncommitted changes in the worktree surface when it is removed (``WORKTREE_DIRTY``). ``before_remove`` runs
     once the merge is confirmed and before the worktree is removed (a caller's own cleanup; it runs again on a
-    rerun). A refusal after that carries the partial result as ``error.result``. A slug whose worktree is already
-    gone and whose branch is merged into the base HEAD (what a stopped run leaves) resumes with deleting the branch.
+    rerun). A refusal after that carries the partial result as ``error.result``, also an ``AdvisoryError`` that
+    ``before_remove`` raises. A slug whose worktree is already
+    gone and whose branch is merged into the base HEAD (what a stopped run leaves) resumes with deleting the branch,
+    but only when ``start`` created that branch (its ``branch.<slug>.devkitWorktree`` marker); any other merged branch
+    of that name is ``WORKTREE_NOT_FOUND`` and is never deleted. The marker gates only this path: a slug whose worktree
+    exists finishes whether or not its branch carries it.
     """
     check_slug(slug)
     if position.linked:
@@ -576,6 +600,13 @@ def finish(
         if not exists or not _merged(base, ref, _head(base)):
             unmerged = f", and branch {slug} is not merged into the base HEAD" if exists else ""
             raise NotFoundError(f"no worktree at {path_for(position, slug)} or on branch {slug}{unmerged}")
+        if not _created(base, slug):
+            raise NotFoundError(
+                f"no worktree at {path_for(position, slug)} or on branch {slug}; the branch {slug} is merged into the"
+                f" base HEAD but has no {_marker(slug)} marker, so devkit worktree start did not create it and finish"
+                " does not delete it; nothing was changed",
+                fix=f"Once the user agrees, git -C {shlex.quote(str(base))} branch -d {slug}",
+            )
         _log.info("the worktree of %s is gone; resuming with the branch deletion", slug)
         result = FinishResult(slug, path_for(position, slug), slug, removed=True)
     else:
@@ -616,8 +647,11 @@ def finish(
                     f"the worktree is removed, but git branch -d {slug} failed: {exc.stderr or exc.message}"
                 ) from exc
             result.branch_deleted = True
-    except WorktreeError as error:
-        error.result = result
+    except AdvisoryError as error:
+        # Every refusal from here on carries the partial result, an advisory ``before_remove`` raises included
+        # (unless that caller's error defines a ``result`` of its own).
+        if isinstance(error, WorktreeError) or not hasattr(error, "result"):
+            vars(error)["result"] = result
         raise
     return result
 

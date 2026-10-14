@@ -23,12 +23,12 @@ Writing syncs install dispatchers automatically. Existing regular hooks are move
 | --- | --- |
 | `devkit gate install [--force] [--python PATH]` | Prepare dispatchers and active `20-devkit` entries, and append the commented table of every gate `<common-git-dir>/devkit.config` does not mention yet ([Settings Template](overview.md#6a-settings-template)). |
 | `devkit gate uninstall` | Remove owned devkit entries; keep dispatchers for user scripts, otherwise restore preserved hooks. |
-| `devkit gate status [--format text\|json]` | Hooks directory and `core.hooksPath`, hook states and script filenames, every gate with stage, order, effective enablement and source, configuration layers, and every problem that fails a commit (`load_gate_project`, the same `validate_gates` the stages run). |
+| `devkit gate status [--format text\|json]` | Hooks directory and `core.hooksPath`, hook states and script filenames, every gate with stage, order, effective enablement and source, configuration layers, and every problem that fails a commit (`load_gate_project`, the same `validate_gates` the stages run). Warns with `GATE_HOOK_ENTRY_MISSING` when a stage has enabled gates but no installed `20-devkit` entry, so they would not run. |
 | `devkit gate run [-q\|-v] [--strict] <stage> [hook args]` | Run one stage (`run_hook`); what the wrappers call, and how to test a stage by hand. Options go before `<stage>`; hooks set `DEVKIT_QUIET`, `DEVKIT_VERBOSE` or `DEVKIT_STRICT` instead, since Git passes no flags ([Agent-First Output](../architecture/agent-output.md#6-verbosity-and-strictness)). |
 
 `-w/--workspace-root` (default: the current directory) may name any existing directory inside the repository; every command, `install` and `uninstall` included, works on the work tree's top level (`devkit.core.require_git_toplevel`), as a hook does. A `-w` that is not an existing directory is `ARGUMENT_INVALID`; one outside a work tree is `GIT_FAILED` (`INPUT_ERROR`).
 
-Output follows [Agent-First Output](../architecture/agent-output.md). `install`, `uninstall` and `status` print sentinel lines on stdout (`[HOOKS: …]`, `[HOOK: …]`, `[GATE: <id> stage=<stage> …]`, `[CONFIG: sources=…]`, and from `install` `[CONFIG: template=<state> path=<path>]`). `status --format json` prints one object with `hooks_dir`, `hooks_path`, `hooks`, `gates`, `config_sources` and `errors` (each `{code, message, exit_code, advisory}`), or `{"error": {...}}` when the status cannot be read. `run` prints nothing on stdout, so the hook stays silent when every gate passes: a refusal or failure is one advisory block per gate on stderr whose first `[DETAIL]` is `gate=<id> stage=<stage>` (before the gate's own details), a configuration problem is its own block, and passed and skipped gates appear only under `-v`, as `[INFO]` lines. Notices such as `GATE_VERIFY_UNSTAGED` are `[NOTICE]` blocks: in `pre-commit` and `commit-msg` they come before the refusal and failure blocks, so errors are last; in `post-commit`, whose problems are `[WARN]` blocks (the commit already exists), they come after those.
+Output follows [Agent-First Output](../architecture/agent-output.md). `install`, `uninstall` and `status` print sentinel lines on stdout (`[HOOKS: …]`, `[HOOK: …]`, `[GATE: <id> stage=<stage> …]`, `[CONFIG: sources=…]`, and from `install` `[CONFIG: template=<state> path=<path>]`). `status --format json` prints one object with `hooks_dir`, `hooks_path`, `hooks`, `gates`, `config_sources`, `errors` (each `{code, message, exit_code, advisory}`) and `notices` (its warnings, the same shape), or `{"error": {...}}` when the status cannot be read. `run` prints nothing on stdout, so the hook stays silent when every gate passes: a refusal or failure is one advisory block per gate on stderr whose first `[DETAIL]` is `gate=<id> stage=<stage>` (before the gate's own details), a configuration problem is its own block, and passed and skipped gates appear only under `-v`, as `[INFO]` lines. Notices such as `GATE_VERIFY_UNSTAGED` are `[NOTICE]` blocks: in `pre-commit` and `commit-msg` they come before the refusal and failure blocks, so errors are last; in `post-commit`, whose problems are `[WARN]` blocks (the commit already exists), they come after those.
 
 ## Exit codes
 
@@ -51,18 +51,19 @@ Every gate error derives from `GateError` (`devkit.gate.errors`), which sets `ac
 | `GATE_CONFIG_INVALID` | `GateConfigError` (also a `devkit.core.ConfigError`) | `INPUT_ERROR` | `2` | invalid `[gates]` table or settings, a configured gate that is not installed |
 | `GATE_LOAD_FAILED` | `GateLoadError` | `MAINTENANCE` | `2` | a deployed gate package fails to import or to instantiate its gates, or two gates share an id |
 | `GATE_DEFINITION_INVALID` | `GateDefinitionError` | `MAINTENANCE` | `2` | a gate declares an unusable `id`, `stage`, `order` (reported inside its file's load failure) or settings declaration, or uses `ctx.message_file` outside `commit-msg` |
-| `GATE_RESULT_INVALID` | `GateResultError` | `MAINTENANCE` | `2` | a gate built a `FAILED` `GateResult` or returned something other than a `GateResult` or `None` |
+| `GATE_RESULT_INVALID` | `GateResultError` | `MAINTENANCE` | `2` | a gate built a `FAILED` `GateResult`, gave a `GateResult` a notice that is not an `AdvisoryError`, or returned something other than a `GateResult` or `None`; the stage's other gates still run |
 | `GATE_PYTHON_INVALID` | `GatePythonError` | `INPUT_ERROR` | `2` | `install --python` names an interpreter that cannot import `devkit.gate` |
 | `GATE_INTERPRETER_UNAVAILABLE` | `GateInterpreterError` (printed by the `20-devkit` entry) | `MAINTENANCE`; `CONTINUE` (level `WARNING`) in `post-commit` | `2`; `0` in `post-commit` | at commit time the entry's interpreter is missing or cannot import `devkit.gate`, so the stage's gates did not run; `[DETAIL] python=<path>` and the reason (`not an executable file`, or the import error's first line) |
 | `GATE_VERIFY_FAILED` | `GateRefusedError` | `BLOCKED` | `1` | a `verify-commands` command exited nonzero; one `command: ... exit=... log=...` detail per failed command, then its summaries, failed tests or last lines and relayed `devkit` error blocks (`  > `) |
 | `GATE_VERIFY_NOT_RUN` | `VerifyNotRunError` | `MAINTENANCE`, or `AUTO` | `2` | a nested `devkit` command could not run (exit `2` with its own error block, such as `RULES_LOAD_FAILED`); same details; `AUTO` with the relayed fix when every relayed error is `AUTO` with that one fix (`devkit sync` for missing managed files) |
 | `GATE_VERIFY_UNSTAGED` | `VerifyUnstagedNotice` | `NOTE` (level `NOTICE`) | `0` | returned, never raised: `verify-commands` ran on a working tree with unstaged or untracked files |
-| `GATE_CONFIG_TEMPLATE_SKIPPED` | `GateTemplateNotice` | `CONTINUE` (level `WARNING`) | `0` | returned, never raised: `devkit.config` is a symbolic link, not a regular file or not UTF-8, or the `[gates]` table of `.devkit/config.toml` cannot be read, so `install` or the post-sync refresh left it alone |
+| `GATE_CONFIG_TEMPLATE_SKIPPED` | `GateTemplateNotice` | `CONTINUE` (level `WARNING`) | `0` | returned, never raised: `devkit.config` is a symbolic link, not a regular file, not UTF-8 or cannot be written, the `[gates]` table of `.devkit/config.toml` cannot be read, or the refresh failed otherwise (the message names the error's code), so `install` or the post-sync refresh left it alone; the hook notices of the same run are still reported |
 | `GATE_FOREIGN_HOOK`, `GATE_BACKUP_EXISTS`, `GATE_HOOKS_PATH_SET` | `ForeignHookError`, `HookBackupExistsError`, `HooksPathSetError` | `INTERACTION` | `2` | `install` would move or bypass hooks it does not own |
 | `GATE_HOOK_LAYOUT_INVALID` | `HookLayoutError` | `MAINTENANCE` | `2` | Reserved entry collision or unsafe hook directory |
 | `GATE_HOOK_PRESERVED` | `HookPreservedNotice` | `CONTINUE` | `0` | Existing hook preserved and chained; warning returned once when moved |
 | `GATE_HOOK_INSTALL_SKIPPED` | `HookInstallSkippedNotice` | `CONTINUE` | `0` | Automatic installation skipped; reason code and remediation included |
-| `GATE_HOOK_SCRIPT_FAILED` | POSIX dispatcher | `CONTINUE` | `0` | A post-commit script failed; later scripts still run |
+| `GATE_HOOK_SCRIPT_FAILED` | `HookScriptFailedNotice` (printed by the POSIX dispatcher) | `CONTINUE` | `0` | A post-commit script failed; later scripts still run. `[DETAIL] stage=<stage> script=<path> exit=<status>` |
+| `GATE_HOOK_ENTRY_MISSING` | `HookEntryMissingNotice` | `CONTINUE` (level `WARNING`) | `0` | returned by `status`, never raised: a stage has enabled gates but no managed dispatcher with a `20-devkit` entry, so they do not run (`[DETAIL] gates=<ids>`); fix `devkit gate install` or `devkit sync` |
 | `CONFIG_INVALID` | `devkit.core.ConfigError` | `INPUT_ERROR` | `2` | `.devkit/config.toml` or `devkit.config` cannot be read or parsed |
 | `ASSET_FILE_INVALID` | `devkit.core.AssetFileError` | `MAINTENANCE`; `AUTO` when missing | `2` | a receipt-listed gate file is unsafe or differs from its recorded hash; a missing one (a fresh clone or worktree) is `AUTO` with the fix `devkit sync` |
 | `ARGUMENT_INVALID` | `devkit.core.ArgumentError` | `INPUT_ERROR` | `2` | `-w/--workspace-root` is not an existing directory; `run commit-msg` without the message file |
@@ -80,7 +81,7 @@ Outcomes and failure codes: [Built-in Gates](overview.md#2a-built-in-gates).
 
 ## Built-in git-commits bundle
 
-Commit message policy is a bundle, not a gate: the package ships the opt-in bundle `git-commits` (sources in `src/devkit/gate/commits/bundle/`), deployed after `uv run devkit add git-commits`. Its preset `core` holds:
+Commit message policy is a bundle, not a gate: the package ships the opt-in bundle `git-commits` (sources in `src/devkit/commits_guide/bundle/`, the data-only module `devkit.commits_guide`), deployed after `uv run devkit add git-commits`. Its preset `core` holds:
 
 - the instruction `git-commits`: Conventional Commits types, optional scope, imperative subject, body and footer formatting, breaking changes and clean message output; listed by `devkit get-context git-commits`;
 - the `guidance` fragment `commit-pointer`, which adds one line to the root `AGENTS.md` block: "Before drafting or creating a commit message, read `<path>` and follow it." The path is the managed copy, or the project override after `devkit override create git-commits:git-commits`.
@@ -108,10 +109,11 @@ packages/devkit/src/devkit/gate/
 ├── engine/         # models (Stage, GateResult, GateContext), BaseGate, layered config, registry, runner
 ├── hooks/          # dispatchers, gate scripts, installation, local template and Git queries
 ├── gates/          # built-in gates (verify-commands, message-nonempty)
-├── commits/        # the git-commits guide bundle
 ├── cli/            # devkit gate (a thin layer over the library)
 └── __main__.py     # python -m devkit.gate: the gate CLI alone, which the wrappers run
 ```
+
+The opt-in `git-commits` bundle is not part of this module: it lives in the data-only `devkit.commits_guide` ([Built-in git-commits bundle](#built-in-git-commits-bundle)).
 
 `devkit gate` is a thin command line over `load_gate_project(root)` (gates, layered configuration, every problem `gate status` reports) and `run_hook(root, stage, args)` (one stage, as the hook wrapper runs it; `report.ok`, `report.problems`, `report.exit_code`). See [Library](overview.md#2-library).
 

@@ -1,8 +1,8 @@
 """Shared foundation for devkit packages.
 
 One implementation of what several packages need to agree on: the frontmatter
-grammar, the installation receipt, safe workspace-relative paths, the Git
-runner, plugin package loading, project discovery and configuration reading, and
+grammar, the installation receipt, safe workspace-relative paths, atomic file
+replacement, the Git runner, plugin package loading, project discovery and configuration reading, and
 the command-line plumbing every command group uses (``devkit.core.cli``, the
 only module that imports click; it is not imported here). Free of import-time
 side effects; the only devkit module it imports is ``devkit.advisory`` (every
@@ -26,6 +26,7 @@ from devkit.core.errors import (
     ReceiptError,
     UnsafePathError,
 )
+from devkit.core.files import atomic_write_bytes, atomic_write_text
 from devkit.core.frontmatter import Frontmatter, FrontmatterBlock
 from devkit.core.git import run_git
 from devkit.core.paths import is_safe_relpath, normalize_relpath, resolve_within
@@ -101,6 +102,8 @@ __all__ = [
     "TemplateTable",
     "ToolRecord",
     "UnsafePathError",
+    "atomic_write_bytes",
+    "atomic_write_text",
     "config_table",
     "find_project_root",
     "git_toplevel",

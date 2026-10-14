@@ -93,6 +93,26 @@ def test_citations_come_from_code_spans_and_fenced_lines_only() -> None:
     ]
 
 
+def test_a_continuation_never_joins_the_next_fenced_block() -> None:
+    text = (
+        "```bash\n"
+        "devkit scope compare \\\n"
+        "```\n"
+        "Then:\n"
+        "```bash\n"
+        "devkit rules check\n"
+        "```\n"
+        "```\n"
+        "devkit rules test \\\n"
+        "```\n"
+    )
+    assert [(c.line, c.args) for c in extract_citations(text)] == [
+        (2, ("scope", "compare")),
+        (6, ("rules", "check")),
+        (9, ("rules", "test")),
+    ]
+
+
 def test_option_names_of_usage_tokens() -> None:
     assert list(iter_option_names("[--staged|--ci]")) == ["--staged", "--ci"]
     assert list(iter_option_names("[--title/-t")) == ["--title", "-t"]

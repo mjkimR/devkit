@@ -40,7 +40,7 @@ from devkit.rules.engine.project import (
 )
 from devkit.rules.engine.registry import RuleRegistry, default_rule_registry
 from devkit.rules.engine.related import RelatedAsset, resolve_related
-from devkit.rules.engine.settings import RawSettings, SettingsResolver, match_path
+from devkit.rules.engine.settings import RawSettings, SettingsResolver, match_path, validate_pattern
 from devkit.rules.workspace.cache import WorkspaceCache
 from devkit.rules.workspace.catalog import Document, DocumentCatalog
 from devkit.rules.workspace.markdown import MarkdownLink, count_tasks, extract_links
@@ -98,5 +98,6 @@ __all__ = [
     "resolve_phases",
     "resolve_related",
     "run_project_rules",
+    "validate_pattern",
     "validate_policy",
 ]

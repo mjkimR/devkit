@@ -29,9 +29,13 @@ package was loaded. A package that loads stays importable (its finder stays
 installed) so lazy relative imports keep working. Plugin packages run
 arbitrary code; load them only from trusted sources.
 
-No bytecode cache is written next to a plugin file: plugins live in devkit's
-managed root and in project overrides, where a ``__pycache__`` directory would
-be an unowned file.
+Plugin code always runs from source, never from bytecode: a ``__pycache__``
+``.pyc`` next to a plugin file is never read, and none is written (plugins live
+in devkit's managed root and in project overrides, where a ``__pycache__``
+directory would be an unowned file). When a package carries ``sources`` (the
+bytes ``devkit.core.verified_asset_packages`` checked against the installation
+receipt), a module is compiled from exactly those bytes, so a file changed
+between verification and import never runs.
 """
 
 from __future__ import annotations
@@ -46,14 +50,27 @@ import sys
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
-from types import MappingProxyType, ModuleType
+from types import CodeType, MappingProxyType, ModuleType
 
 PLUGIN_SUFFIX = ".py"
 TESTS_DIRECTORY = "tests"
 
 
 class _SourceOnlyLoader(importlib.machinery.SourceFileLoader):
-    """A source loader that never writes ``__pycache__`` next to the file it loads."""
+    """A loader that compiles source (``source`` when given, else the file) and never reads or writes bytecode."""
+
+    def __init__(self, fullname: str, path: str, source: bytes | None = None) -> None:
+        super().__init__(fullname, path)
+        self._source = source
+
+    def _source_bytes(self) -> bytes:
+        return self._source if self._source is not None else self.get_data(self.path)
+
+    def get_source(self, fullname: str) -> str:
+        return importlib.util.decode_source(self._source_bytes())
+
+    def get_code(self, fullname: str) -> CodeType:
+        return self.source_to_code(self._source_bytes(), self.path)
 
     def set_data(self, path: str, data: bytes, *, _mode: int = 0o666) -> None:
         return None
@@ -77,12 +94,16 @@ class PluginPackage:
     for ``__init__.py``, ``"sub.helpers"`` for ``sub/helpers.py``) to the exact
     file to execute. ``key`` names the package uniquely (its module name is
     derived from it); ``root`` is the directory failures are reported with
-    (``key`` when ``None``).
+    (``key`` when ``None``). ``sources`` maps a dotted name to the source
+    bytes to compile in place of reading its file (the file still names the
+    module: ``__file__``, tracebacks); a module without an entry is read from
+    its file when imported.
     """
 
     key: str
     root: Path | None
     modules: Mapping[str, Path] = field(default_factory=lambda: MappingProxyType({}))
+    sources: Mapping[str, bytes] = field(default_factory=lambda: MappingProxyType({}))
 
     @property
     def location(self) -> Path:
@@ -212,9 +233,10 @@ def iter_plugin_packages(directory: Path) -> tuple[tuple[PluginPackage, ...], tu
 class _PackageFinder(importlib.abc.MetaPathFinder):
     """Resolves ``<name>`` and ``<name>.<dotted>`` to the files of one plugin package, and nothing else."""
 
-    def __init__(self, name: str, modules: Mapping[str, Path]) -> None:
+    def __init__(self, name: str, modules: Mapping[str, Path], sources: Mapping[str, bytes] | None = None) -> None:
         self.name = name
         self.modules = dict(modules)
+        self.sources = dict(sources or {})
         self.packages = {""} | {
             ".".join(parts[:index])
             for dotted in modules
@@ -241,7 +263,7 @@ class _PackageFinder(importlib.abc.MetaPathFinder):
         return importlib.util.spec_from_file_location(
             fullname,
             file,
-            loader=_SourceOnlyLoader(fullname, str(file)),
+            loader=_SourceOnlyLoader(fullname, str(file), self.sources.get(relative)),
             submodule_search_locations=[] if is_package else None,
         )
 
@@ -304,7 +326,7 @@ def _load_package[T](
     previous_finders = _finders(name)
     for finder in previous_finders:
         sys.meta_path.remove(finder)
-    finder = _PackageFinder(name, package.modules)
+    finder = _PackageFinder(name, package.modules, package.sources)
     sys.meta_path.insert(0, finder)
     try:
         check_plugin_modules(package.modules)

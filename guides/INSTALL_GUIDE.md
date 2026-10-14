@@ -110,6 +110,7 @@ Ask whether to commit. Do not commit on your own.
 | `GUIDANCE_BLOCK_INVALID` | `AGENTS.md` has broken or duplicate `DEVKIT` markers | Show the markers to the user and fix them together. |
 | `WORKSPACE_UNSAFE` | `AGENTS.md` is a symlink | Ask the user: make `AGENTS.md` the real file, or set `guidance_block = false`. |
 | `GATE_HOOK_INSTALL_SKIPPED` | Hooks were not installed (custom `core.hooksPath`, foreign hook layout) | Report it; the installation is otherwise complete. See the existing-repository route. |
+| `GATE_HOOK_ENTRY_MISSING` from `devkit gate status` | An enabled gate's stage has no installed devkit hook entry, so its gates do not run | Run `uv run devkit gate install` (or `uv run devkit sync`), then `uv run devkit gate status` again. If hooks were skipped (`GATE_HOOK_INSTALL_SKIPPED`), report that instead. |
 | `SELECTION_INVALID` | A selected bundle's package is not installed | Run `uv sync`, or remove the bundle with `uv run devkit remove <bundle>`. |
 | `RECEIPT_STALE` from `devkit sync --locked` | The committed receipt does not match the installed packages | Run a plain `uv run devkit sync` and include its changes in the commit. |
 | uv reports `requires-python` incompatible | The project allows Python below 3.12 | Stop and ask the user (see the route document). |

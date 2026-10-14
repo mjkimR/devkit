@@ -97,6 +97,27 @@ def test_expand_targets_deduplicates(tmp_path: Path) -> None:
     assert expand_targets(root, WorkspaceCache(root), ["docs/a.md", "docs", "docs/a.md"]) == ["docs/a.md"]
 
 
+def test_an_explicit_file_in_an_ignored_directory_is_checked_as_is(tmp_path: Path) -> None:
+    for root in (tmp_path / "plain", init_repo(tmp_path / "repo")):
+        _write(root, "node_modules/pkg/a.md", BROKEN)
+        _write(root, ".venv/notes.md", BROKEN)
+        _write(root, "docs/ok.md", "x\n")
+        # Directory expansion still skips dependency directories; a file named directly is checked by every rule.
+        assert run_project_rules(root, targets=["."]).result.violations == []
+        run = run_project_rules(root, targets=["node_modules/pkg/a.md", ".venv/notes.md"])
+        assert sorted(v.file for v in run.result.violations) == [".venv/notes.md", "node_modules/pkg/a.md"]
+
+
+def test_explicit_targets_under_the_pinned_directories_are_refused(tmp_path: Path) -> None:
+    _write(tmp_path, ".devkit/managed/team/guide.md", "x\n")
+    _write(tmp_path, ".devkit/overrides/team/guide.md", "x\n")
+    (tmp_path / "link").symlink_to(tmp_path / ".devkit/managed/team")
+    for target in (".devkit/managed/team/guide.md", ".devkit/overrides/team", ".devkit/overrides", "link/guide.md"):
+        with pytest.raises(TargetError, match="receipt-pinned copy") as refused:
+            run_project_rules(tmp_path, targets=[target])
+        assert refused.value.code == "RULES_TARGET_INVALID" and refused.value.target_files == (target,)
+
+
 def test_invalid_policy_raises_config_error(tmp_path: Path) -> None:
     _write(tmp_path, ".devkit/config.toml", '[rules]\nexclude = "vendor"\n')
     with pytest.raises(RulesConfigError):

@@ -205,6 +205,13 @@ class UnitExistsError(WorkflowError):
     input_error = True
 
 
+class UnitDirNotEmptyError(WorkflowError):
+    """``new`` would create a unit in an existing, non-empty directory that has no anchor."""
+
+    code = "UNIT_DIR_NOT_EMPTY"
+    input_error = True
+
+
 class AnchorInvalidError(WorkflowError):
     """The anchor file's frontmatter cannot be read."""
 

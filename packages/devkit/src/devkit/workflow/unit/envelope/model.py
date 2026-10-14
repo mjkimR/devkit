@@ -51,6 +51,8 @@ class Envelope:
     file: str = ""  # unit-relative, e.g. envelopes/review-01.yaml
     seq: int = 0
     stage: str = ""
+    workflow: str = ""  # the workflow the unit was bound to when written; empty: counts in every segment
+    segment: int | None = None  # finished segments (workflow_history entries) when written; None: any segment
     created_at: str = ""  # ISO 8601 UTC, as `envelope new` writes it; empty when the file has none
     summary: str = ""
     review: str = ""  # reverify: the review-NN.yaml it closes
@@ -67,6 +69,15 @@ class Envelope:
     def check_pass(self, key: str) -> bool:
         return self.checks.get(key, "").startswith("PASS")
 
+    def in_segment(self, workflow: str, segment: int) -> bool:
+        """Whether the envelope counts in the segment ``segment`` (its index in the history) of ``workflow``.
+
+        An envelope without ``workflow`` counts everywhere; one without ``segment`` in every segment of its workflow.
+        """
+        if not self.workflow:
+            return True
+        return self.workflow == workflow and (self.segment is None or self.segment == segment)
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "file": self.file,
@@ -74,6 +85,8 @@ class Envelope:
             "kind": self.kind,
             "status": self.status,
             "stage": self.stage,
+            "workflow": self.workflow or None,
+            "segment": self.segment,
             "summary": self.summary,
             "review": self.review or None,
             "open_findings": self.open_findings(),
@@ -110,6 +123,11 @@ class Envelopes:
 
     def deciding(self, kind: str) -> Envelope | None:
         return self.review_state() if kind == "review" else self.latest(kind)
+
+    def scoped(self, workflow: str, segment: int) -> Envelopes:
+        """The envelopes that count in segment ``segment`` of ``workflow`` (``Envelope.in_segment``)."""
+        kept = {kind: [e for e in items if e.in_segment(workflow, segment)] for kind, items in self.by_kind.items()}
+        return Envelopes({kind: items for kind, items in kept.items() if items}, list(self.errors))
 
     def all(self) -> list[Envelope]:
         """Every loaded envelope, ordered by file name."""
@@ -176,6 +194,12 @@ def _parse_envelope(rel: str, seq: int, name_kind: str, data: Any) -> Envelope:
     raw_checks = data.get("checks") or {}
     if not isinstance(raw_checks, dict):
         raise EnvelopeFormatError("checks: expected a mapping")
+    workflow = as_text(data.get("workflow"))
+    if workflow and not is_ident(workflow):
+        raise EnvelopeFormatError(f"workflow {workflow!r} must be a workflow id ({IDENT_HINT})")
+    segment = data.get("segment")
+    if segment is not None and (not isinstance(segment, int) or isinstance(segment, bool) or segment < 0):
+        raise EnvelopeFormatError("segment: expected a non-negative integer")
     scope = data.get("diff_scope") or {}
     if not isinstance(scope, dict):
         raise EnvelopeFormatError("diff_scope: expected a mapping with base and head")
@@ -185,6 +209,8 @@ def _parse_envelope(rel: str, seq: int, name_kind: str, data: Any) -> Envelope:
         file=rel,
         seq=seq,
         stage=as_text(data.get("stage")),
+        workflow=workflow,
+        segment=segment,
         created_at=as_text(data.get("created_at")),
         summary=as_text(data.get("summary")),
         review=review,
@@ -240,10 +266,9 @@ def write_envelope(unit_dir: Path, kind: str, body: str) -> tuple[Path, int]:
     """
     if not is_ident(kind):
         raise EnvelopeKindError(f"kind {kind!r} must match {IDENT_HINT}")
-    directory = unit_dir / ENVELOPES_DIR
-    taken = (
-        [int(m.group(2)) for e in directory.iterdir() if (m := FILE.fullmatch(e.name)) and m.group(1) == kind]
-        if directory.is_dir()
-        else []
-    )
-    return write_numbered(directory, max(taken, default=0) + 1, lambda n: f"{kind}-{n:02d}.yaml", body)
+
+    def sequence_of(name: str) -> int | None:
+        match = FILE.fullmatch(name)
+        return int(match.group(2)) if match and match.group(1) == kind else None
+
+    return write_numbered(unit_dir / ENVELOPES_DIR, 1, lambda n: f"{kind}-{n:02d}.yaml", sequence_of, body)

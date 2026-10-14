@@ -28,9 +28,9 @@ class Citation:
 def extract_citations(text: str) -> list[Citation]:
     """The citations of a Markdown document in line order.
 
-    A citation is an inline code span, or a line of a fenced code block (joined with the following lines while it
-    ends in ``\\``), that invokes the program: ``devkit ...``, optionally after ``$ `` and a launcher such as
-    ``uv run``. Arguments stop at ``--``, at shell syntax and at a ``#`` comment.
+    A citation is an inline code span, or a line of a fenced code block (joined with the following lines of the
+    same block while it ends in ``\\``), that invokes the program: ``devkit ...``, optionally after ``$ `` and a
+    launcher such as ``uv run``. Arguments stop at ``--``, at shell syntax and at a ``#`` comment.
     """
     found: list[Citation] = []
     for number, line in prose_lines(text):
@@ -38,8 +38,14 @@ def extract_citations(text: str) -> list[Citation]:
             if (args := _invocation(content)) is not None:
                 found.append(Citation(number, column, content, args))
     pending: tuple[int, str] | None = None
+    previous = 0
     for number, line in fenced_lines(text):
         body = line.strip()
+        if pending is not None and number != previous + 1:
+            # A fence ended: its last line's continuation does not reach into the next block.
+            _add_fenced(found, *pending)
+            pending = None
+        previous = number
         if pending is not None:
             start, joined = pending
             body, pending = f"{joined} {body}", None
@@ -48,11 +54,15 @@ def extract_citations(text: str) -> list[Citation]:
         if body.endswith("\\"):
             pending = (start, body[:-1].rstrip())
             continue
-        if (args := _invocation(body)) is not None:
-            found.append(Citation(start, 1, body, args))
-    if pending is not None and (args := _invocation(pending[1])) is not None:
-        found.append(Citation(pending[0], 1, pending[1], args))
+        _add_fenced(found, start, body)
+    if pending is not None:
+        _add_fenced(found, *pending)
     return sorted(found, key=lambda citation: (citation.line, citation.column))
+
+
+def _add_fenced(found: list[Citation], line: int, body: str) -> None:
+    if (args := _invocation(body)) is not None:
+        found.append(Citation(line, 1, body, args))
 
 
 def _invocation(code: str) -> tuple[str, ...] | None:

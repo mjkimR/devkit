@@ -72,9 +72,19 @@ def managed_counterpart(path: Path) -> Path | None:
     An override replaces files one by one: the files of an asset it does not hold (a rule's guide, its tests) are
     the managed copies, so a file looked up beside an overridden module is looked up there too.
     """
+    return _counterpart(path, OVERRIDES_PATH, MANAGED_PATH)
+
+
+def override_counterpart(path: Path) -> Path | None:
+    """The project override location of a path inside the managed root (``.devkit/managed/<bundle>/...`` becomes
+    ``.devkit/overrides/<bundle>/...``), else ``None``; ``managed_counterpart`` the other way round."""
+    return _counterpart(path, MANAGED_PATH, OVERRIDES_PATH)
+
+
+def _counterpart(path: Path, source: str, target: str) -> Path | None:
     parts = path.parts
-    marker = tuple(PurePosixPath(OVERRIDES_PATH).parts)
+    marker = tuple(PurePosixPath(source).parts)
     for index in range(len(parts) - len(marker) + 1):
         if parts[index : index + len(marker)] == marker:
-            return Path(*parts[:index], *PurePosixPath(MANAGED_PATH).parts, *parts[index + len(marker) :])
+            return Path(*parts[:index], *PurePosixPath(target).parts, *parts[index + len(marker) :])
     return None

@@ -83,7 +83,8 @@ payloads such as `pre-push` requires a replay contract so every child receives t
   so commit-time validation reports the problem. Enabled gates that skip at runtime still count: for example,
   `verify-commands` stays enabled even without commands. With defaults, `pre-commit` and `commit-msg` have
   entries and `post-commit` does not. An existing managed entry is retained even if this worktree has no enabled
-  gates, since another worktree shares it. Run sync after enabling a gate in a stage that has no entry yet.
+  gates, since another worktree shares it. Run sync after enabling a gate in a stage that has no entry yet;
+  until then `devkit gate status` warns with `GATE_HOOK_ENTRY_MISSING` naming the stage and its gates.
 - **Gate entry**: `20-devkit` selects the worktree's `.venv/bin/python` when devkit is installed there,
   otherwise the absolute fallback recorded by install (`sys.executable` or `--python`), then runs
   `python -m devkit.gate run <stage>` through a small `<python> -P -c` bootstrap in the same process.
@@ -100,7 +101,8 @@ payloads such as `pre-push` requires a replay contract so every child receives t
   require explicit `install --force` (`GATE_FOREIGN_HOOK`); automatic sync skips installation instead.
   Existing backups are never overwritten (`GATE_BACKUP_EXISTS`). `00-legacy` and `20-devkit` are reserved;
   foreign files there, or symlinked script directories, are refused (`GATE_HOOK_LAYOUT_INVALID`).
-- **Writing**: mutations are serialized by a clone-wide `devkit-hooks.lock`. Scripts are LF-only executable
+- **Writing**: mutations, and the settings template refresh in `devkit.config`, are serialized by a clone-wide
+  `devkit-hooks.lock`. Scripts are LF-only executable
   files, replaced atomically without writing through symlinks. Identical scripts are left untouched.
   All stages are checked for conflicts before writing. If dispatcher replacement fails after a hook moves,
   the original hook is restored.
@@ -131,7 +133,7 @@ class Gate(Protocol):
     def run(self, ctx: GateContext) -> GateResult | None: ...
 ```
 
-- **Passing and skipping**: return `GateResult.passed(note)` or `GateResult.skipped(reason)`; `None` means passed. `GateResult.passed(note, notices=[...])` also returns warnings and notices (`AdvisoryError` at level `WARNING` or `NOTICE`; an `ERROR` is lowered to `WARNING`), which `devkit gate run` prints without blocking the commit, unless `DEVKIT_STRICT=1` and one is a warning. Each outcome is logged and shows as an `[INFO]` line under `-v`. A `GateResult` cannot carry `FAILED` (constructing one raises `GateResultError`, `GATE_RESULT_INVALID`, `MAINTENANCE`), and any other return value fails the gate with the same code.
+- **Passing and skipping**: return `GateResult.passed(note)` or `GateResult.skipped(reason)`; `None` means passed. `GateResult.passed(note, notices=[...])` also returns warnings and notices (`AdvisoryError` at level `WARNING` or `NOTICE`; an `ERROR` is lowered to `WARNING`), which `devkit gate run` prints without blocking the commit, unless `DEVKIT_STRICT=1` and one is a warning. A notice that is not an `AdvisoryError` fails the gate with `GATE_RESULT_INVALID`. Each outcome is logged and shows as an `[INFO]` line under `-v`. A `GateResult` cannot carry `FAILED` (constructing one raises `GateResultError`, `GATE_RESULT_INVALID`, `MAINTENANCE`), and any other return value fails the gate with the same code.
 - **Refusing**: raise `GateRefusedError(message, *details, code=..., fix=..., target_files=...)`: message first, remediation in `fix`, and the gate's own code (default `GATE_FAILED`). It is `BLOCKED` and exits `1` (`FINDINGS`): the negative result of a check that ran. Any other `AdvisoryError` fails the gate as it is (most exit `2`: the check could not run); any other exception, and `SystemExit` from a gate that calls `sys.exit()`, is wrapped as `UNEXPECTED_ERROR` (exit `2`), and the stage's later gates still run. Every failed gate therefore reports an advisory. `KeyboardInterrupt` is not caught: it aborts the run, and a blocking stage exits nonzero. Neither is `devkit.compact.CommandInterrupted`, though it is a `SystemExit`: a gate whose `run_command` is interrupted aborts the run the same way, exiting `128 + N` for signal `N`.
 - **Context**: `ctx.repo_root` (top level of the work tree), `ctx.git_dir` (this worktree's git dir, for `MERGE_HEAD`, rebase state and the like), `ctx.common_git_dir` (shared by every worktree), `ctx.stage`, `ctx.args` (hook arguments), `ctx.settings` (the gate's effective settings) and `ctx.message_file` for `commit-msg`.
 - **Ordering**: gates in a stage run by `(order, id)`. Message transforms use `order < 100`, checks default to `100`, and the built-in `message-nonempty` runs at `900` so it sees the transformed message. A `post-commit` gate that rewrites `HEAD` must take a low order so later gates observe the final commit.
@@ -247,4 +249,6 @@ uncommented key replaces the `.devkit/config.toml` value as a whole (an array to
   unless it skips.
 - **Skipped**: a `devkit.config` that is a symbolic link, not a regular file or not UTF-8 is never written; nor is
   one whose tables would need a `.devkit/config.toml` with a `[gates]` table that cannot be read or parsed. `install`
-  and the hook report `GATE_CONFIG_TEMPLATE_SKIPPED` (`GateTemplateNotice`, a warning) and succeed.
+  and the hook report `GATE_CONFIG_TEMPLATE_SKIPPED` (`GateTemplateNotice`, a warning) and succeed. A file that
+  cannot be written, or any other failure of the refresh, is reported the same way, so the hook notices of the same
+  run (`GATE_HOOK_PRESERVED`) are never lost to it; a settings default TOML cannot represent is left out of its table.

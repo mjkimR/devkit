@@ -44,7 +44,7 @@ class RulesConfigError(RulesError, core_errors.ConfigError):
 
 
 class TargetError(RulesError):
-    """An explicit target is outside the workspace or is not an existing file or directory."""
+    """An explicit target is outside the workspace, not an existing file or directory, or a receipt-pinned copy."""
 
     code = "RULES_TARGET_INVALID"
     input_error = True

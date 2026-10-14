@@ -111,7 +111,8 @@ def rule_folder(rule: Rule) -> Path | None:
 def tests_directory(rule: Rule) -> Path | None:
     """``<rule folder>/tests``, whether or not it exists; ``None`` when the rule has no folder.
 
-    For a rule whose module a project override replaced, an override without ``tests/`` uses the managed copy's.
+    For a rule whose module a project override replaced, an override without ``tests/`` uses the managed copy's;
+    their ``load_rule`` applies the override (``devkit.rules.testing``), so they test the overridden modules.
     """
     folder = rule_folder(rule)
     if folder is None:

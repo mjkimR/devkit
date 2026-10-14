@@ -23,10 +23,18 @@ keys are indented under their header, which must be uncommented with them.
 The file belongs to the developer. A missing file is created; an existing one
 only gets tables appended for gates it does not mention yet (commented or
 not), so uncommenting a line in place is the way to change a setting and no
-line is ever rewritten. A file devkit cannot safely append to (a symbolic link,
-not a regular file, not UTF-8), or tables it cannot render because the
+line is ever rewritten. The read and the write happen under the clone-wide
+``devkit-hooks.lock`` (``hooks.clone_lock``), so syncs in linked worktrees of
+one clone never append the same table twice or lose each other's tables.
+
+A file devkit cannot safely append to (a symbolic link, not a regular file,
+not UTF-8, cannot be written), or tables it cannot render because the
 project's ``[gates]`` cannot be read, are left alone and reported as
-``GateTemplateNotice`` (``GATE_CONFIG_TEMPLATE_SKIPPED``, a warning).
+``GateTemplateNotice`` (``GATE_CONFIG_TEMPLATE_SKIPPED``, a warning). The
+template is never worth failing an install for: any other error refreshing it
+is reported the same way, so the hook notices returned beside it (such as
+``GATE_HOOK_PRESERVED``) always reach the user. A settings default that TOML
+cannot represent is left out of its gate's table.
 """
 
 from __future__ import annotations
@@ -43,9 +51,10 @@ from typing import Any
 
 import tomlkit
 
-from devkit.advisory import AdvisoryError
+from devkit.advisory import AdvisoryError, as_advisory_error
 from devkit.core import CONFIG_PATH, ConfigError, require_git_toplevel
 from devkit.core.errors import GitError
+from devkit.core.logs import get_logger
 from devkit.gate.engine.config import ENABLED_KEY, LOCAL_CONFIG, GateEntry, GatesConfig, load_project_gates_config
 from devkit.gate.engine.models import Gate
 from devkit.gate.engine.registry import project_registry
@@ -64,6 +73,9 @@ HEADER = f"""\
 _MENTION = re.compile(r"^\s*#?\s*\[\s*gates\s*\.\s*settings\s*\.\s*\"?([^\]\"\s]+)\"?\s*\]", re.MULTILINE)
 # A value to show for a field whose default is ``None`` (TOML has no null), by the field's inner type.
 _PLACEHOLDERS: dict[str, Any] = {"integer": 0, "number": 0.0, "string": "", "boolean": False}
+_INSTALL_FIX = "then run `devkit gate install`"
+
+_log = get_logger(__name__)
 
 
 class TemplateState(StrEnum):
@@ -97,28 +109,34 @@ def _project_keys(entry: GateEntry | None) -> set[str]:
     return set(entry.values) | ({ENABLED_KEY} if entry.enabled is not None else set())
 
 
+def _setting_line(item: dataclasses.Field[Any], kind: str, value: Any, project: set[str]) -> str:
+    if value is None:
+        inner = kind.removesuffix(" or null")
+        shown, note = _toml(_PLACEHOLDERS.get(inner, [])), f"{kind}; unset by default"
+    else:
+        shown, note = _toml(value), kind
+    help_text = item.metadata.get("help")
+    if isinstance(help_text, str) and help_text.strip():
+        note = f"{note}; {' '.join(help_text.split())}"
+    return _project_line(item.name, note) if item.name in project else f"#   {item.name} = {shown}  # {note}"
+
+
 def _setting_lines(gate: Gate, project: set[str]) -> list[str]:
     defaults = gate.settings
     if defaults is None or not dataclasses.is_dataclass(defaults) or isinstance(defaults, type):
         return []
     try:
         hints = typing.get_type_hints(type(defaults))
-        kinds = {item.name: describe_setting_type(hints[item.name]) for item in dataclasses.fields(defaults)}
+        fields = dataclasses.fields(defaults)
+        kinds = {item.name: describe_setting_type(hints[item.name]) for item in fields}
     except Exception:  # an invalid declaration is reported by `devkit gate status`; show no settings for it
         return []
     lines = []
-    for item in dataclasses.fields(defaults):
-        kind = kinds[item.name]
-        value = getattr(defaults, item.name)
-        if value is None:
-            inner = kind.removesuffix(" or null")
-            shown, note = _toml(_PLACEHOLDERS.get(inner, [])), f"{kind}; unset by default"
-        else:
-            shown, note = _toml(value), kind
-        help_text = item.metadata.get("help")
-        if isinstance(help_text, str) and help_text.strip():
-            note = f"{note}; {' '.join(help_text.split())}"
-        lines.append(_project_line(item.name, note) if item.name in project else f"#   {item.name} = {shown}  # {note}")
+    for item in fields:
+        try:
+            lines.append(_setting_line(item, kinds[item.name], getattr(defaults, item.name), project))
+        except Exception as exc:  # a default TOML cannot represent: leave the key out rather than the whole template
+            _log.info("gate %s: setting %s not shown in the template: %s", gate.id, item.name, exc)
     return lines
 
 
@@ -150,7 +168,7 @@ def _skipped(path: Path, problem: str, fix: str | None = None, target: str | Non
     notice = GateTemplateNotice(
         f"gate settings template not written to {path}: {problem}",
         target_files=[target or str(path)],
-        fix=fix or f"Make {path} a regular UTF-8 file, or delete it, then run `devkit gate install`",
+        fix=fix or f"Make {path} a regular UTF-8 file, or delete it, {_INSTALL_FIX}",
     )
     return TemplateResult(path, TemplateState.SKIPPED, notice)
 
@@ -171,9 +189,20 @@ def refresh_template(common_git_dir: Path, gates: list[Gate], project: GatesConf
     """Create ``<common_git_dir>/devkit.config`` with every gate's table, or append the tables it lacks.
 
     ``project`` is the ``.devkit/config.toml`` layer (``load_project_gates_config``);
-    the keys it sets are rendered as prose (``render_table``).
+    the keys it sets are rendered as prose (``render_table``). Holds the clone-wide
+    ``hooks.clone_lock`` from the read to the write. A file that cannot be read or
+    written is ``SKIPPED`` with a ``GATE_CONFIG_TEMPLATE_SKIPPED`` notice.
     """
     path = common_git_dir / LOCAL_CONFIG
+    try:
+        with hooks.clone_lock(common_git_dir):
+            return _refresh(path, gates, project)
+    except OSError as exc:
+        writable = f"Make {path.parent} writable and {path} a regular UTF-8 file, {_INSTALL_FIX}"
+        return _skipped(path, f"cannot be written: {exc}", fix=writable)
+
+
+def _refresh(path: Path, gates: list[Gate], project: GatesConfig | None) -> TemplateResult:
     if path.is_symlink() or (path.exists() and not path.is_file()):
         return _skipped(path, "not a regular file")
     if not path.exists():
@@ -198,7 +227,9 @@ def refresh_project_template(repo_root: Path) -> TemplateResult:
 
     Gates that fail to load are left out; `devkit gate status` reports them. A
     ``.devkit/config.toml`` whose ``[gates]`` cannot be read skips the refresh:
-    without it, a table would offer the project's keys at their defaults.
+    without it, a table would offer the project's keys at their defaults. Never
+    raises once the common Git directory is found: any other failure is a
+    ``SKIPPED`` result, so the caller still reports what it did before.
     """
     common = git.common_git_dir(repo_root)
     try:
@@ -207,10 +238,20 @@ def refresh_project_template(repo_root: Path) -> TemplateResult:
         return _skipped(
             common / LOCAL_CONFIG,
             f"{CONFIG_PATH} cannot be read: {exc.message}",
-            fix=f"Correct {CONFIG_PATH} (`devkit gate status` reports the problem), then run `devkit gate install`",
+            fix=f"Correct {CONFIG_PATH} (`devkit gate status` reports the problem), {_INSTALL_FIX}",
             target=CONFIG_PATH,
         )
-    return refresh_template(common, project_registry(repo_root).get_all(), project)
+    try:
+        return refresh_template(common, project_registry(repo_root).get_all(), project)
+    except Exception as exc:  # the template is secondary: never lose the install's own result over it
+        error = as_advisory_error(exc)
+        path = common / LOCAL_CONFIG
+        return _skipped(
+            path,
+            f"refresh failed: {error.code}: {error.message}",
+            fix=error.fix or f"Correct the cause, {_INSTALL_FIX}",
+            target=next(iter(error.target_files), None),
+        )
 
 
 def post_sync(root: Path, result: dict[str, Any]) -> list[AdvisoryError] | None:

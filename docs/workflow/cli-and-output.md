@@ -18,7 +18,7 @@ devkit workflow show --unit DIR [--anchor FILE] [--format text|json]  # the unit
 devkit workflow checks [--format text|json]                      # registered check names, classes and parameters (plugins included)
 devkit workflow validate [PATH]... [--format text|json]          # validate definitions (default: both sources, plus roles and shared stages)
 devkit workflow list [--status S]... [--exclude-status S]... [--format text|json]  # discovered units across every layout
-devkit workflow envelope new --unit DIR --kind KIND [--stage ID] [--format text|json]  # write the next envelopes/<kind>-NN.yaml skeleton
+devkit workflow envelope new --unit DIR [--anchor FILE] --kind KIND [--stage ID] [--format text|json]  # write the next envelopes/<kind>-NN.yaml skeleton
 devkit workflow envelope new --unit DIR --kind KIND [--status S] [--summary TEXT] [--assume TEXT]... [--unverified TEXT]...
                             [--check NAME=PASS|FAIL|SKIP[ detail]]... [--base REV] [--head REV] [--findings-file PATH|-]
                             [--from latest|FILE] [--resolve N|all]... [--waive N=REASON]...   # write it complete
@@ -59,7 +59,8 @@ The library raises the same codes, one class per code. `WorkflowError` is the ba
 | `WORKFLOW_CHECK_INVALID` | `CheckError` | `INPUT_ERROR` | `2` | a check reference is malformed, unregistered, a duplicate or colliding declaration, or a `runner`/`human` check in `next[].when` (`parse_check`, `Registry`, `validate`) |
 | `WORKFLOW_CHECK_LOAD_FAILED` | `PluginError` | `MAINTENANCE` | `2` | a plugin check package failed to load or declares an invalid check, a `.py` file sits directly in `checks_dir`, or a receipt `workflow-check` file is missing, unsafe or differs from its recorded hash (`[FIX]`: `devkit sync`, or `devkit override create` to keep an edit) |
 | `LAYOUT_INVALID`, `SLUG_INVALID` | `LayoutError`, `SlugError` | `INPUT_ERROR` | `2` | a layout template, directory or anchor file name is malformed (`validate_template`, `parse_layout_spec`; inside `[workflow]` it is `WORKFLOW_CONFIG_INVALID`); a unit slug does not match `[a-z0-9][a-z0-9-]*` |
-| `UNIT_NOT_FOUND`, `UNIT_EXISTS`, `ANCHOR_INVALID` | `UnitNotFoundError`, `UnitExistsError`, `AnchorInvalidError` | `INPUT_ERROR` | `2` | the unit directory has no anchor, already exists, or its frontmatter is unreadable (`list` reports the last one per unit under `error`) |
+| `UNIT_NOT_FOUND`, `UNIT_EXISTS`, `ANCHOR_INVALID` | `UnitNotFoundError`, `UnitExistsError`, `AnchorInvalidError` | `INPUT_ERROR` | `2` | the unit directory has no anchor, already exists (also when a concurrent `new` created the anchor first: `new` creates it exclusively), or its frontmatter is unreadable (`list` reports the last one per unit under `error`) |
+| `UNIT_DIR_NOT_EMPTY` | `UnitDirNotEmptyError` | `INPUT_ERROR` | `2` | `new` found the unit directory existing and not empty but without an anchor; leftover `decisions/` or `envelopes/` files would count in the new unit, so it is refused (fix: another slug, or move the files out) |
 | `ANCHOR_AMBIGUOUS`, `ANCHOR_MISMATCH` | `AnchorAmbiguousError`, `AnchorMismatchError` | `INPUT_ERROR` | `2` | several candidate anchor files exist in the unit (pass `--anchor FILE`); the selected workflow declares a different anchor than the file that identifies the unit, or than `--anchor` names |
 | `GIVEN_INVALID` | `GivenInvalidError` | `INPUT_ERROR` | `2` | a `--given` name is neither a gate nor a registered runner or human check |
 | `WORKFLOW_DRIFT` | `DriftError` | `BLOCKED` | `1` | the bound schema hash changed under in-flight work; `[FIX]` names the `bind` command |

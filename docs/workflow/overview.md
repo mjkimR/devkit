@@ -51,7 +51,7 @@ layout:
 
 - `new --workflow incubate` creates the unit under the definition's layout and writes its anchor; `[UNIT: ...]` names the anchor.
 - `list` discovers units under every distinct layout in use (the project default plus each discovered definition's) and prints the anchor per row.
-- `next`, `bind`, `handoff`, `requests`, `answer`, `return`, `show --unit` and `envelope` take a unit directory. With `--workflow` (`next`, `bind`), that definition's anchor must exist there. Without it, the engine looks for the project anchor and then every anchor a discovered definition declares: exactly one must be present. None is `UNIT_NOT_FOUND`; more than one is `ANCHOR_AMBIGUOUS`, resolved by passing `--anchor FILE` (every command above except `envelope`, which only needs some anchor to be present). The binding (or the configured default) then selects the workflow, whose anchor must be the file that was found; otherwise `ANCHOR_MISMATCH` names both, and its fix is renaming the anchor or `bind --workflow <id>` with a workflow whose anchor is the found file.
+- `next`, `bind`, `handoff`, `requests`, `answer`, `return`, `show --unit` and `envelope` take a unit directory. With `--workflow` (`next`, `bind`), that definition's anchor must exist there. Without it, the engine looks for the project anchor and then every anchor a discovered definition declares: exactly one must be present. None is `UNIT_NOT_FOUND`; more than one is `ANCHOR_AMBIGUOUS`, resolved by passing `--anchor FILE` (every command above except `envelope check`, which only needs some anchor to be present). The binding (or the configured default) then selects the workflow, whose anchor must be the file that was found; otherwise `ANCHOR_MISMATCH` names both, and its fix is renaming the anchor or `bind --workflow <id>` with a workflow whose anchor is the found file.
 - Aliases such as `anchor-exists` resolve against the definition's own anchor, in validation and in evaluation. Changing a layout never causes drift.
 - `handoff` refuses a candidate whose anchor differs from the unit's (`HANDOFF_LAYOUT_MISMATCH`). Moving a unit into another layout and renaming its anchor is the caller's job (a methodology layer such as specrig's proposal handoff); `bind --workflow <id>` then records the new binding.
 
@@ -111,7 +111,7 @@ Workflows are segments: a definition's `next` list names the workflows that may 
 | `auto` | The first candidate whose `when` checks all hold is `chosen=`; `handoff --unit DIR` rebinds to it without a choice. With no eligible candidate the engine waits for a person, and `handoff` without `--workflow` fails with `HANDOFF_UNDECIDED`. |
 | `off` | No handoff is offered; the unit is finished when its workflow completes. |
 
-`handoff` records the finished segment in the anchor's `workflow_history` and binds the unit to the chosen workflow, whose stages are then evaluated from the start against the same unit directory. Decision records of finished segments never count again.
+`handoff` records the finished segment in the anchor's `workflow_history` and binds the unit to the chosen workflow, whose stages are then evaluated from the start against the same unit directory. Decision records and envelopes of finished segments never count again.
 
 ## 4. Integration with the Rule Engine and Distribution
 

@@ -13,7 +13,7 @@ from devkit.distribution.bundles import load_bundle
 from devkit.distribution.installation import guidance_block
 
 PACKAGE = Path(__file__).parents[2]
-BUNDLE = PACKAGE / "src/devkit/gate/commits/bundle"
+BUNDLE = PACKAGE / "src/devkit/commits_guide/bundle"
 POINTER = "- Before drafting or creating a commit message, read `{path}` and follow it."
 
 

@@ -20,7 +20,7 @@ from devkit.compact import CommandInterrupted
 from devkit.core import ConfigError, require_git_toplevel
 from devkit.core.logs import get_logger
 from devkit.gate.engine.config import GatesConfig, load_gates_config, resolve_settings
-from devkit.gate.engine.models import Gate, GateContext, GateResult, Outcome, Stage
+from devkit.gate.engine.models import Gate, GateContext, GateResult, Outcome, Stage, checked_notices
 from devkit.gate.engine.registry import GateRegistry, project_registry
 from devkit.gate.errors import GateConfigError, GateResultError
 from devkit.gate.hooks import git
@@ -157,7 +157,11 @@ def _run_gate(gate: Gate, ctx: GateContext, config: GatesConfig, checked: Valida
             f"gate {gate.id!r} returned {type(result).__name__}; run() returns a GateResult or None"
         )
         return GateRun(gate.id, Outcome.FAILED, error=error)
-    notices = tuple(n.with_level(Level.WARNING) if n.level is Level.ERROR else n for n in result.notices)
+    try:  # checked again here: a result can bypass ``GateResult.__post_init__`` (a subclass, ``object.__setattr__``)
+        valid = checked_notices(result.notices)
+    except GateResultError as exc:
+        return GateRun(gate.id, Outcome.FAILED, error=exc)
+    notices = tuple(n.with_level(Level.WARNING) if n.level is Level.ERROR else n for n in valid)
     return GateRun(gate.id, result.outcome, result.note, notices=notices)
 
 

@@ -5,8 +5,10 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from devkit.core.receipt import CONFIG_PATH, OVERRIDES_PATH
+from devkit.core.receipt import CONFIG_PATH, OVERRIDES_PATH, RECEIPT_PATH
+from devkit.distribution.content import Content
 from devkit.distribution.errors import ConflictError, OverrideDriftError, SelectionError
+from devkit.distribution.installation import transaction
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.discovery import InstalledBundle
 from devkit.distribution.installation.override_commands import (
@@ -19,6 +21,7 @@ from devkit.distribution.installation.override_commands import (
 from devkit.distribution.installation.playbook_search import search_playbooks
 from devkit.distribution.installation.receipt import read_receipt
 from devkit.distribution.installation.sync import sync_project
+from devkit.distribution.installation.workspace import JOURNAL
 from testsupport.distribution import instruction, reload, write_bundle
 
 MANIFEST = """schema = 1
@@ -184,6 +187,57 @@ def test_remove_prunes_override_directories(item: InstalledBundle, target: Path)
     assert not (target / OVERRIDES_PATH).exists()
     with pytest.raises(SelectionError, match="no override found"):
         remove_override(target, [item], "team:review")
+
+
+def test_remove_keeps_project_files_the_override_does_not_track(item: InstalledBundle, target: Path) -> None:
+    sync_project(target, [item])
+    create_override(target, [item], "team:review")
+    notes = target / OVERRIDES_PATH / "team/skills/review/notes/ours.md"
+    notes.parent.mkdir()
+    notes.write_text("project notes\n")
+    result = remove_override(target, [item], "team:review")
+    assert result.paths == [
+        f"{OVERRIDES_PATH}/team/skills/review/SKILL.md",
+        f"{OVERRIDES_PATH}/team/skills/review/reference.md",
+    ]
+    assert notes.read_text() == "project notes\n"
+    assert not (target / OVERRIDES_PATH / "team/skills/review/SKILL.md").exists()
+    assert not (target / OVERRIDES_PATH / ".baseline").exists()
+    (left,) = [notice for notice in result.notices if notice.code == "ORPHAN_LEFT"]
+    assert left.target_files == (f"{OVERRIDES_PATH}/team/skills/review/notes/ours.md",)
+    receipt = read_receipt(target)
+    assert receipt is not None and "review" not in receipt.overrides.get("team", {})
+    with pytest.raises(SelectionError, match="no override found"):
+        remove_override(target, [item], "team:review")
+
+
+def test_accept_rolls_back_the_baseline_when_the_receipt_write_fails(
+    item: InstalledBundle, target: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    sync_project(target, [item])
+    create_override(target, [item], "team:guide")
+    (item.bundle.root / "guide.md").write_text(instruction("guide", "Upstream v2.\n"))
+    item = reload(item)
+    baseline = target / OVERRIDES_PATH / ".baseline/team/guide.md"
+    receipt_path = target / RECEIPT_PATH
+    before = (baseline.read_bytes(), receipt_path.read_bytes())
+    original = transaction.atomic_write
+    failed = False
+
+    def fail_receipt(root: Path, name: str, content: Content | None) -> None:
+        nonlocal failed
+        if name == RECEIPT_PATH and not failed:
+            failed = True
+            raise OSError("receipt write failure")
+        original(root, name, content)
+
+    monkeypatch.setattr(transaction, "atomic_write", fail_receipt)
+    with pytest.raises(OSError, match="receipt write failure"):
+        accept_override(target, [item], "team:guide")
+    monkeypatch.setattr(transaction, "atomic_write", original)
+    assert (baseline.read_bytes(), receipt_path.read_bytes()) == before
+    assert not (target / JOURNAL).exists()
+    assert [entry.drift_detected for entry in list_overrides(target, [item])] == [True]
 
 
 def test_override_files_are_writable_copies(item: InstalledBundle, target: Path) -> None:

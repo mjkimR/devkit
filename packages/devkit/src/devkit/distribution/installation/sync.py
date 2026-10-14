@@ -57,6 +57,7 @@ from devkit.distribution.installation.transaction import (
     project_lock,
     recover_locked,
     require_no_journal,
+    require_writable,
 )
 from devkit.distribution.installation.workspace import (
     AGENTS_FILE,
@@ -79,6 +80,23 @@ EDITED_FILE_FIX = (
 UNOWNED_FILE_FIX = "Move each unowned file out of the way (or delete it), then run `devkit sync`"
 
 Changes = dict[str, Content | None]
+
+# Per guidance block conflict state (``modified``, ``unowned``): the message, fix and what to report.
+BLOCK_CONFLICTS: Mapping[str, tuple[str, str, str]] = MappingProxyType(
+    {
+        "modified": (
+            f"user-modified guidance block: {AGENTS_FILE}",
+            f"Restore the block between the markers (for example `git checkout -- {AGENTS_FILE}`),"
+            " keep project text outside them, then run `devkit sync`",
+            "Whether to discard the edit inside the devkit block markers",
+        ),
+        "unowned": (
+            f"unowned guidance block already exists: {AGENTS_FILE}",
+            f"Remove the devkit block markers from {AGENTS_FILE}, then run `devkit sync`",
+            f"Whether to remove the devkit block markers that {AGENTS_FILE} already has, so sync can write its own",
+        ),
+    }
+)
 
 
 def tool_identity() -> ToolRecord:
@@ -112,6 +130,12 @@ def edited_files_error(message: str, names: list[str], *, exit_code: ExitCode | 
         fix=EDITED_FILE_FIX,
         exit_code=exit_code,
     )
+
+
+def guidance_block_error(state: str, *, exit_code: ExitCode | None = None) -> ConflictError:
+    """The ``SYNC_CONFLICT`` a sync raises for a ``modified`` or ``unowned`` root ``AGENTS.md`` block."""
+    message, fix, report = BLOCK_CONFLICTS[state]
+    return ConflictError(message, target_files=[AGENTS_FILE], fix=fix, what_to_report=report, exit_code=exit_code)
 
 
 def stray_managed_files(root: Path, owned: set[str]) -> list[str]:
@@ -212,24 +236,8 @@ class _Conflicts:
                     " does not own",
                 )
             )
-        if self.block == "modified":
-            parts.append(
-                (
-                    f"user-modified guidance block: {AGENTS_FILE}",
-                    f"Restore the block between the markers (for example `git checkout -- {AGENTS_FILE}`),"
-                    " keep project text outside them, then run `devkit sync`",
-                    "Whether to discard the edit inside the devkit block markers",
-                )
-            )
-        elif self.block == "unowned":
-            parts.append(
-                (
-                    f"unowned guidance block already exists: {AGENTS_FILE}",
-                    f"Remove the devkit block markers from {AGENTS_FILE}, then run `devkit sync`",
-                    f"Whether to remove the devkit block markers that {AGENTS_FILE} already has,"
-                    " so sync can write its own",
-                )
-            )
+        if self.block is not None:
+            parts.append(BLOCK_CONFLICTS[self.block])
         if parts:
             raise ConflictError(
                 "; ".join(message for message, _, _ in parts),
@@ -386,11 +394,8 @@ def _plan_seeds(
 
 
 def _plan_devkit_gitignore(root: Path, changes: Changes, actions: list[Action]) -> None:
-    """Seed ``.devkit/.gitignore`` (managed copies, transient state) when it is absent; never touch an existing one.
-
-    A bundle that seeds the same path takes precedence.
-    """
-    if DEVKIT_GITIGNORE not in changes and snapshot(root, DEVKIT_GITIGNORE) is None:
+    """Seed ``.devkit/.gitignore`` (managed copies, transient state) when it is absent; never touch an existing one."""
+    if snapshot(root, DEVKIT_GITIGNORE) is None:
         changes[DEVKIT_GITIGNORE] = Content(DEVKIT_GITIGNORE_TEXT.encode("utf-8"), 0o644)
         actions.append(Action(DEVKIT_GITIGNORE, "seed"))
 
@@ -845,6 +850,8 @@ def commit_locked(
         fragments=inventory.fragments(),
     )
     conflicts.check()
+    # A file where a destination's directory must be stops the sync in planning, ``--dry-run`` included.
+    require_writable(root, changes)
     notices.extend(block_notices)
     overrides = _carried_overrides(root, installed, previous, inventory.overrides)
     receipt = _build_receipt(selection, inventory, overrides, seeded, block_hash)

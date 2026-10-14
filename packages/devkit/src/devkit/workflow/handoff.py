@@ -231,20 +231,26 @@ def apply_handoff(plan: HandoffPlan, *, when: date | None = None, by: str = "", 
 
     An explicit choice is first recorded as an accepted ``handoff`` decision so
     the audit trail names it; the history entry closes the segment at the
-    highest decision sequence. When the anchor cannot be rewritten, that
-    record is removed again, so a failed handoff leaves the unit as it was.
+    highest decision sequence. The record is written whole or not at all, and
+    when the anchor cannot be rewritten it is removed again, so a failed or
+    interrupted handoff leaves the unit as it was.
     """
     unit = plan.unit
     decision = plan.decision
     text = unit.anchor_path.read_text("utf-8")
     written: Decision | None = None
-    if plan.explicit:
-        decisions = load_decisions(unit.dir)
-        record = new_decision(
-            decisions, HANDOFF_REQUEST, "accept", workflow=plan.source.id, value=plan.target.id, note=note, by=by
-        )
-        decision = written = write_decision(unit.dir, record)
     try:
+        if plan.explicit:
+            record = new_decision(
+                load_decisions(unit.dir),
+                HANDOFF_REQUEST,
+                "accept",
+                workflow=plan.source.id,
+                value=plan.target.id,
+                note=note,
+                by=by,
+            )
+            decision = written = write_decision(unit.dir, record)
         last = load_decisions(unit.dir).max_seq
         day = (when or date.today()).isoformat()
         binding = unit.binding

@@ -29,6 +29,7 @@ import os
 import posixpath
 import subprocess
 import threading
+import time
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
@@ -42,6 +43,9 @@ REGULAR_MODES = {"100644", "100755"}
 SYMLINK_MODE = "120000"
 GITLINK_MODE = "160000"
 _CHUNK = 1 << 20
+# Upper bound on materializing one snapshot, however steadily Git streams it; the idle timeout
+# (``DEFAULT_TIMEOUT`` without output) catches a stalled Git long before.
+SNAPSHOT_LIMIT = 30 * 60.0
 
 
 @dataclass(frozen=True)
@@ -178,11 +182,19 @@ class _BlobReader:
     the caller reads, so neither pipe can fill up and block the other side.
     Each object is read as its ``<sha> <type> <size>`` header followed by
     exactly ``size`` bytes and a newline; memory never holds more than one
-    chunk of a regular file or one symlink target. The process is killed after
-    ``timeout`` seconds.
+    chunk of a regular file or one symlink target. The process is killed when
+    ``timeout`` seconds pass without output (each header and chunk read resets
+    it, so the time a large tree takes scales with its size) or after ``limit``
+    seconds in all; ``timeout=None`` never kills it.
     """
 
-    def __init__(self, root: Path, shas: list[str], timeout: float | None = DEFAULT_TIMEOUT) -> None:
+    def __init__(
+        self,
+        root: Path,
+        shas: list[str],
+        timeout: float | None = DEFAULT_TIMEOUT,
+        limit: float = SNAPSHOT_LIMIT,
+    ) -> None:
         self._command = ("git", "-C", str(root), "cat-file", "--batch")
         try:
             self._process = subprocess.Popen(
@@ -191,19 +203,20 @@ class _BlobReader:
         except OSError as exc:
             raise SnapshotError(f"git is not available: {exc}") from exc
         self._stderr = bytearray()
-        self._timed_out = False
+        self._timed_out: str | None = None
+        self._timeout = timeout
+        self._limit = limit
+        self._started = self._progress = time.monotonic()
+        self._stopped = threading.Event()
         request = "".join(f"{sha}\n" for sha in shas).encode()
         self._threads = [
             threading.Thread(target=self._write, args=(request,), daemon=True),
             threading.Thread(target=self._drain_stderr, daemon=True),
         ]
+        if timeout is not None:
+            self._threads.append(threading.Thread(target=self._watch, daemon=True))
         for thread in self._threads:
             thread.start()
-        self._timer = threading.Timer(timeout, self._kill) if timeout is not None else None
-        if self._timer is not None:
-            self._timer.daemon = True
-            self._timer.start()
-        self._timeout = timeout
 
     @property
     def _stdout(self) -> IO[bytes]:
@@ -222,20 +235,33 @@ class _BlobReader:
         assert self._process.stderr is not None
         self._stderr.extend(self._process.stderr.read())
 
-    def _kill(self) -> None:
-        self._timed_out = True
-        self._process.kill()
+    def _watch(self) -> None:
+        """Kill Git once ``timeout`` seconds pass without output, or ``limit`` seconds in all."""
+        assert self._timeout is not None
+        while True:
+            now = time.monotonic()
+            idle = self._progress + self._timeout - now
+            total = self._started + self._limit - now
+            if idle <= 0 or total <= 0:
+                self._timed_out = (
+                    f"no output for {self._timeout}s" if idle <= 0 else f"not finished after {self._limit}s"
+                )
+                self._process.kill()
+                return
+            if self._stopped.wait(min(idle, total)):
+                return
 
     def _failure(self, problem: str) -> SnapshotError:
         self.close()
         if self._timed_out:
-            return SnapshotError(f"git cat-file timed out after {self._timeout}s in {self._command[2]}")
+            return SnapshotError(f"git cat-file timed out ({self._timed_out}) in {self._command[2]}")
         stderr = self._stderr.decode("utf-8", errors="replace").strip()
         return SnapshotError(f"git cat-file failed in {self._command[2]}: {stderr or problem}")
 
     def header(self, name: str, sha: str) -> int:
         """Read the next object's header and return its size; it must be the blob ``sha``."""
         line = self._stdout.readline()
+        self._progress = time.monotonic()
         if not line.endswith(b"\n"):
             raise self._failure(f"output ended before {name}")
         parts = line.decode("utf-8", errors="replace").split()
@@ -250,6 +276,7 @@ class _BlobReader:
         remaining = size
         while remaining:
             chunk = self._stdout.read(min(remaining, _CHUNK))
+            self._progress = time.monotonic()
             if not chunk:
                 raise self._failure(f"output ended inside {name}")
             remaining -= len(chunk)
@@ -264,17 +291,15 @@ class _BlobReader:
         """Wait for Git to exit; a nonzero status is an error even after every object was read."""
         self._stdout.close()
         returncode = self._process.wait()
+        self._stopped.set()
         for thread in self._threads:
             thread.join()
-        if self._timer is not None:
-            self._timer.cancel()
         if self._timed_out or returncode != 0:
             raise self._failure(f"exit status {returncode}")
 
     def close(self) -> None:
         """Stop the process and its helper threads (idempotent)."""
-        if self._timer is not None:
-            self._timer.cancel()
+        self._stopped.set()
         if self._process.poll() is None:
             self._process.kill()
         self._process.wait()

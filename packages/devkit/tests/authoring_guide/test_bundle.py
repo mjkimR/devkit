@@ -16,7 +16,7 @@ from devkit.rules import resolve_managed_rules
 from testsupport.rules import write
 
 PACKAGE = Path(__file__).parents[2]
-BUNDLE = PACKAGE / "src/devkit/rules/authoring/bundle"
+BUNDLE = PACKAGE / "src/devkit/authoring_guide/bundle"
 
 
 def test_presets_pair_each_playbook_with_its_rule() -> None:

@@ -149,10 +149,13 @@ def test_anchor_must_be_a_present_candidate_and_agree_with_workflow(ambiguous: P
     assert show.exit_code == 2 and "(ARGUMENT_INVALID)" in show.stderr
 
 
-def test_envelope_commands_need_only_some_anchor(ambiguous: Path) -> None:
+def test_envelope_check_needs_only_some_anchor_and_new_resolves_the_unit(ambiguous: Path) -> None:
     unit = ["-w", str(ambiguous), "--unit", "docs/proposals/dup"]
     assert _run("envelope", "check", *unit).exit_code == 0
-    assert _run("envelope", "new", *unit, "--kind", "review").exit_code == 0
+    # `new` records the bound workflow and segment, so it resolves the unit like every unit command.
+    refused = _run("envelope", "new", *unit, "--kind", "review")
+    assert refused.exit_code == 2 and "(ANCHOR_AMBIGUOUS)" in refused.stderr
+    assert _run("envelope", "new", *unit, "--anchor", "proposal.md", "--kind", "review").exit_code == 0
     missing = _run("envelope", "check", "-w", str(ambiguous), "--unit", "docs/proposals")
     assert missing.exit_code == 2 and "(UNIT_NOT_FOUND)" in missing.stderr
 

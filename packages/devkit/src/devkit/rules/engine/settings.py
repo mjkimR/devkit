@@ -52,7 +52,11 @@ class RawSettings:
 
 
 def validate_pattern(pattern: str) -> None:
-    """Accept workspace-relative ``/`` patterns; ``**`` must be a whole segment."""
+    """Accept a workspace-relative ``/`` pattern for ``match_path``; raise ``ValueError`` otherwise.
+
+    Rejected: an empty value, a leading ``/``, a backslash or ``:``, an empty,
+    ``.`` or ``..`` segment, and ``**`` that is not a whole segment.
+    """
     if not isinstance(pattern, str) or not pattern:
         raise ValueError("expected a nonempty workspace-relative path pattern")
     if pattern.startswith("/") or "\\" in pattern or ":" in pattern:

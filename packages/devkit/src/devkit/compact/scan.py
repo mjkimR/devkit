@@ -41,8 +41,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TextIO
 
-from devkit.advisory import Level
-from devkit.advisory.advisory import CONTINUATION, FIELDS, HEADLINE
+from devkit.advisory import CONTINUATION, FIELDS, HEADLINE, Level
 
 # Escape sequences a terminal does not show: CSI (colour, cursor), OSC (hyperlinks, titles), charset selection.
 ANSI = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)|\x1b[()][0-9A-B]")

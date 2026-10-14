@@ -9,12 +9,13 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+from pathlib import Path
 
 import click
 import pytest
 from devkit.cli import COMMANDS, cli
 from devkit.distribution.cli import COMMANDS as DISTRIBUTION_COMMANDS
-from test_layering import ALLOWED
+from test_layering import ALLOWED, DATA_AREAS
 
 _PROBE = """
 import contextlib, io, json, sys
@@ -62,3 +63,9 @@ def test_a_command_imports_only_its_area_and_lower_layers(name: str) -> None:
     area = _area(name)
     loaded = _loaded_areas(name, "--help")
     assert area in loaded and loaded <= {area, *ALLOWED[area]}
+
+
+def test_bundle_discovery_loads_only_data_areas(tmp_path: Path) -> None:
+    # Locating each built-in bundle imports its resource module: a data area, never the gate or rules engine.
+    loaded = _loaded_areas("list", "--workspace-root", str(tmp_path))
+    assert DATA_AREAS <= loaded <= {"distribution", *ALLOWED["distribution"], *DATA_AREAS}

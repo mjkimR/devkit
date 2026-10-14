@@ -32,6 +32,23 @@ class Outcome(StrEnum):
     FAILED = "failed"
 
 
+def checked_notices(notices: object) -> tuple[AdvisoryError, ...]:
+    """``notices`` as a tuple; raises ``GateResultError`` unless it is an iterable of ``AdvisoryError``."""
+    try:
+        items = tuple(notices)  # type: ignore[call-overload]  # checked here, whatever a gate passed
+    except TypeError:
+        raise GateResultError(
+            f"GateResult notices is a {type(notices).__name__}, not a sequence of AdvisoryError"
+        ) from None
+    wrong = next((item for item in items if not isinstance(item, AdvisoryError)), None)
+    if wrong is not None:
+        raise GateResultError(
+            f"a GateResult notice is a {type(wrong).__name__}, not an AdvisoryError; "
+            "report a warning or notice as an AdvisoryError at level WARNING or NOTICE"
+        )
+    return items
+
+
 @dataclass(frozen=True)
 class GateResult:
     """What a gate reports when it does not refuse: passed or skipped.
@@ -40,7 +57,8 @@ class GateResult:
     ``run``, so every failure carries an advisory; a ``FAILED`` result is
     rejected with ``GateResultError``. ``notices`` are warnings and notices the
     commit should not be blocked for (``AdvisoryError`` at level ``WARNING`` or
-    ``NOTICE``; the runner lowers an ``ERROR`` to ``WARNING``).
+    ``NOTICE``; the runner lowers an ``ERROR`` to ``WARNING``); anything else
+    among them is rejected with ``GateResultError`` too.
     """
 
     outcome: Outcome = Outcome.PASSED
@@ -52,6 +70,7 @@ class GateResult:
             raise GateResultError(
                 f"a GateResult is passed or skipped, not {self.outcome!r}; refuse by raising GateRefusedError"
             )
+        object.__setattr__(self, "notices", checked_notices(self.notices))
 
     @classmethod
     def passed(cls, note: str = "", notices: Sequence[AdvisoryError] = ()) -> GateResult:

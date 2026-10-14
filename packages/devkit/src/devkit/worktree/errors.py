@@ -82,7 +82,11 @@ class BranchExistsError(_Interaction):
 
 
 class NotFoundError(_Interaction):
-    """No worktree has the slug's path or branch (``INTERACTION``)."""
+    """No worktree has the slug's path or branch (``INTERACTION``).
+
+    For ``finish``, also when the slug's merged branch lacks the marker ``start`` records: that branch is never
+    deleted, and the ``[FIX]`` deletes it only once the user agrees.
+    """
 
     code = "WORKTREE_NOT_FOUND"
     fix = "Check `devkit worktree status` or `git worktree list` for the slug"
@@ -168,7 +172,7 @@ class RemoveFailedError(_Interaction):
 
 
 class AddFailedError(_Interaction):
-    """``git worktree add`` failed or timed out in ``start`` (``INTERACTION``).
+    """``git worktree add`` or the branch marker failed, or the add timed out, in ``start`` (``INTERACTION``).
 
     ``start`` removes what the failed call created (the registered worktree and its directory, and the branch); the
     ``[FIX]`` names what it could not remove, so a rerun does not stop at ``WORKTREE_CONFLICT`` or

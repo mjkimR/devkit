@@ -148,7 +148,8 @@ class SyncNotice(DistributionError):
 
 
 class OrphanLeftNotice(SyncNotice):
-    """A managed file edited by hand is no longer desired: left on disk untouched and dropped from the receipt."""
+    """Files devkit no longer uses, left on disk untouched: a hand-edited managed file (or guidance block) that is no
+    longer desired, dropped from the receipt; or a project file under an override that ``override remove`` keeps."""
 
     code = "ORPHAN_LEFT"
     level = Level.WARNING

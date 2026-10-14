@@ -274,13 +274,18 @@ Every mutating command follows these steps:
    `DEFER`). Readers (`get-context`, `playbook search`, `status`, `list`, `override list|diff`, and `sync`, `add`
    and `remove` under `--dry-run` or `--check`, which write nothing) share it and wait
    up to ten seconds for a writer; in a project without `.devkit/` they take no lock, so reading never creates it.
-3. **Write-ahead journal**: pending operations and base64 backups of the files they replace are flushed to
-   `.devkit/transient/sync-journal.json` before the disk changes.
+3. **Write-ahead journal**: pending operations, base64 backups of the files they replace and the directories the
+   writes will create are flushed to `.devkit/transient/sync-journal.json` before the disk changes. A file standing
+   where a destination's directory must be (a project file `.claude/skills/review` when a skill `review` is
+   deployed) is `WORKSPACE_UNSAFE` before any write, already in the pre-flight (`--dry-run` included); its `[FIX]`
+   moves that file out of the way.
 4. **Atomic replacement**: each file is written to a temporary sibling (`.devkit-write-*`), `fchmod`ed, `fsync`ed and
    moved into place with `os.replace`; directory entries are `fsync`ed.
 5. **Directory pruning**: removing a managed or projected file removes the directories it leaves empty, up to its
    owned prefix (`.claude/skills/<id>/` goes, `.claude/skills/` stays). Seeded targets' directories are never
-   pruned.
+   pruned by a committed sync. A rolled-back transaction (a failed write, or `devkit recover`) also removes the
+   directories it created, seeded targets' included, once they are empty again; a directory that existed before
+   it, or that holds anything else, stays.
 6. **Recovery**: a later `sync` that finds the journal stops with `TRANSACTION_PENDING` (fix: `devkit recover`).
    `devkit recover` restores every recorded file whose content has not changed since; a later edit stops it with
    `RECOVERY_BLOCKED` (`HALT`).

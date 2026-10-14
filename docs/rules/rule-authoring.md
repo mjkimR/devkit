@@ -94,8 +94,10 @@ A guide explains a violation; the judgment or procedure behind the rule usually 
 policy the rule checks part of) or a playbook (the procedure that resolves its violations). `related` names them as
 `<bundle>:<asset-id>`, and `devkit rules explain` prints each as
 `[RELATED: <ref> kind=instruction|playbook path=<file>]`, the path being the file agents read (the project override,
-else the managed copy, from the installation receipt). An entry that is not deployed or is another kind is printed with
-`kind=- path=-` and a `RULES_RELATED_UNRESOLVED` notice; a malformed entry is `RULES_DEFINITION_INVALID` when the rule
+else the managed copy, from the installation receipt). An entry that is not deployed is printed with `kind=- path=-`,
+one of another kind or without a Markdown file with its `kind` and `path=-`, each with a `RULES_RELATED_UNRESOLVED`
+notice; a receipt that cannot be read leaves every entry `kind=- path=-` with one such notice naming the receipt's
+problem and fix. A malformed entry is `RULES_DEFINITION_INVALID` when the rule
 loads. The guide then says when to read them instead of repeating them, and the instruction names the rule by ID
 without repeating its checks.
 
@@ -141,7 +143,7 @@ Rules read files through `ctx.cache`, not direct disk I/O:
 - `ctx.snapshot`: the Git snapshot a `check --staged` or `--ci` run evaluates (`devkit.rules.Snapshot`: `mode` `staged` or `ci`, `base`, `changed` and `deleted` paths, the repository `root`), `None` for a working-tree run. Rules about diff evidence read it: a record that claims a file changed can be checked against `changed`, and a declaration naming a deleted path against `deleted`, even when the declaring file itself is not in the diff.
 - `ctx.cache.find_files(root, extensions=(".md",))`: Sorted absolute paths of the regular files under `root` with one of `extensions` (`None` lists every file), with the target discovery of [Evaluation Lifecycle, section 3](evaluation-lifecycle.md#3-cli-execution-and-phases) (cached).
 - `ctx.cache.read_text(path)` / `ctx.cache.read_bytes(path)`: Contents of a workspace-relative or absolute path (cached). `read_text` replaces undecodable bytes with U+FFFD; `read_text_strict(path)` returns `None` for a file that is not valid UTF-8, which a fixer must then leave alone.
-- `ctx.cache.write_text(path, content)`: Writes exact UTF-8 bytes (no newline translation) and refreshes the cache; paths under `.devkit/managed/` and `.devkit/overrides/` are refused with `PinnedWriteError` (`RULES_PINNED_WRITE_REFUSED`).
+- `ctx.cache.write_text(path, content)`: Writes exact UTF-8 bytes (no newline translation), replacing the file atomically with its permission bits kept, and refreshes the cache; a path that resolves (symlinks followed) outside the workspace root is refused with `UnsafePathError` (`PATH_UNSAFE`), and paths under `.devkit/managed/` and `.devkit/overrides/` with `PinnedWriteError` (`RULES_PINNED_WRITE_REFUSED`).
 - `ctx.cache.get_frontmatter(path)`: The YAML frontmatter mapping (`devkit.core.frontmatter` grammar) or `None`; raises `devkit.core.FrontmatterError` (`FRONTMATTER_INVALID`) for a malformed block.
 - `ctx.cache.get_links(path)`: Inline Markdown links (`MarkdownLink`: `text`, `target` as written, `line`, `start`/`end` of the link and `target_start`/`target_end` of the destination on its line), skipping fenced code and code spans. `devkit.rules.extract_links(text)` does the same for a string.
 - `ctx.cache.get_catalog(root)`: The `DocumentCatalog`: every Markdown path, a basename index for link repair, and the frontmatter `id`, `title` and `status` of each file recorded verbatim (with duplicate `id`s listed). A file whose frontmatter cannot be parsed is listed in `frontmatter_errors` instead of failing the run. It applies no identifier grammar and extracts no references; a rule that needs those parses the body itself.
@@ -260,7 +262,10 @@ files by path (`--import-mode=importlib`). The built-in rules follow the same la
 
 - `load_rule(__file__)` loads the folder above `tests/` as a plugin package, exactly as a deployed copy is loaded, and
   returns its rule (`load_rule(__file__, "RULE-x")` when the package defines several). The tests of a deployed copy
-  therefore test that copy. A built-in rule is an importable module: its tests construct it directly.
+  therefore test the rule devkit runs: the managed copy with each module file of a project override
+  (`.devkit/overrides/<bundle>/...`) in place of the managed one, whether the tests sit in the managed copy or in the
+  override. An override that holds no `tests/` keeps the managed copy's, and they run against the overridden modules.
+  A built-in rule is an importable module: its tests construct it directly.
 - `check(rule, root, files, ...)` writes `files` under `root` (pytest's `tmp_path`), evaluates the rule alone with
   `evaluate_rules` and returns its violations; `targets`, `fix`, `dry_run`, `phase`, `settings` (the
   `[rules.settings.<RULE-id>]` values, path overrides under `"overrides"`) and `exclude` (`[rules] exclude`)

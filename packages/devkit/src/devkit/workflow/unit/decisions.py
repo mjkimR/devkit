@@ -245,7 +245,11 @@ def new_decision(
 
 
 def write_decision(unit_dir: Path, decision: Decision) -> Decision:
-    """Write ``decision``; an existing file moves it to the next free sequence. Returns what was written."""
+    """Write ``decision`` whole under a sequence no other record holds, whatever its request. Returns what was written.
+
+    The sequence is ``decision.seq``, or the next one above every record file
+    present when a concurrent writer took it (``write_numbered``).
+    """
     data: dict[str, Any] = {
         "request": decision.request,
         "kind": decision.kind,
@@ -263,5 +267,13 @@ def write_decision(unit_dir: Path, decision: Decision) -> Decision:
     data["at"] = decision.at
     body = yaml.safe_dump(data, sort_keys=False, allow_unicode=True)
     slug = request_slug(decision.request)
-    path, seq = write_numbered(unit_dir / DECISIONS_DIR, decision.seq, lambda n: f"{n:02d}-{slug}.yaml", body)
+    path, seq = write_numbered(
+        unit_dir / DECISIONS_DIR, decision.seq, lambda n: f"{n:02d}-{slug}.yaml", _sequence_of, body
+    )
     return replace(decision, seq=seq, file=f"{DECISIONS_DIR}/{path.name}")
+
+
+def _sequence_of(name: str) -> int | None:
+    """The sequence a ``decisions/`` file name holds, whatever request it answers."""
+    match = FILE.fullmatch(name)
+    return int(match.group(1)) if match else None

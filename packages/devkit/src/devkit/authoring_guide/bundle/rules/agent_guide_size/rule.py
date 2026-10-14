@@ -12,9 +12,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from devkit.core import GUIDANCE_END, GUIDANCE_START
-from devkit.rules.engine.models import Phase, RuleContext, Severity, Violation
-from devkit.rules.engine.settings import match_path, validate_pattern
-from devkit.rules.rules.base import BaseRule
+from devkit.rules import Phase, RuleContext, Severity, Violation, match_path, validate_pattern
+from devkit.rules.rules import BaseRule
 
 REMEDIATION = (
     "Keep the guide to orientation, boundaries, invariants and verification commands. Drop project"

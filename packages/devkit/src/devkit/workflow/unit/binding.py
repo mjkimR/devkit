@@ -54,6 +54,11 @@ class Binding:
         return bool(self.workflow and self.hash)
 
     @property
+    def segment(self) -> int:
+        """The index of the current segment: the number of finished segments in the history."""
+        return len(self.history)
+
+    @property
     def segment_start(self) -> int:
         """Decision records with a sequence above this belong to the current segment."""
         return self.history[-1].last_decision if self.history else 0

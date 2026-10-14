@@ -31,11 +31,14 @@ CHECK_VERDICTS = ("PASS", "FAIL", "SKIP")
 FROM_LATEST = "latest"
 
 
-def skeleton(kind: str, stage: str, created_at: str) -> str:
-    """A new envelope body that no check accepts until it is filled in."""
-    lines = [
-        f"kind: {kind}",
-        f"stage: {stage or '-'}",
+def skeleton(kind: str, stage: str, created_at: str, workflow: str = "", segment: int | None = None) -> str:
+    """A new envelope body that no check accepts until it is filled in; ``workflow``/``segment`` scope it."""
+    lines = [f"kind: {kind}", f"stage: {stage or repr('-')}"]  # a bare `-` would start a YAML sequence
+    if workflow:
+        lines.append(f"workflow: {workflow}")
+    if segment is not None:
+        lines.append(f"segment: {segment}")
+    lines += [
         f"created_at: {created_at}",
         "status: needs_input            # completed | needs_input | failed",
         'summary: ""',
@@ -223,6 +226,8 @@ def compose_envelope(
     envelopes: Envelopes,
     kind: str,
     stage: str = "",
+    workflow: str = "",
+    segment: int | None = None,
     status: str | None = None,
     summary: str = "",
     assumptions: Iterable[str] = (),
@@ -236,6 +241,9 @@ def compose_envelope(
     waive: Iterable[str] = (),
 ) -> Envelope:
     """Validate the authoring flags of ``envelope new`` and build the envelope to write.
+
+    ``envelopes`` are those of the current segment (``--from latest`` reads
+    them); ``workflow`` and ``segment`` scope the new envelope to it.
 
     Raises an ``AuthoringError`` subclass: ``EnvelopeStatusError``,
     ``EnvelopeFlagError``, ``EnvelopeFromError`` or ``EnvelopeFindingsError``.
@@ -261,6 +269,8 @@ def compose_envelope(
         kind=kind,
         status=status,
         stage=stage,
+        workflow=workflow,
+        segment=segment,
         summary=summary,
         review=review,
         findings=findings,
@@ -274,12 +284,13 @@ def compose_envelope(
 
 def render_envelope(draft: Envelope, created_at: str) -> str:
     """The YAML body of an envelope to write, in a fixed key order; empty optional keys are omitted."""
-    data: dict[str, Any] = {
-        "kind": draft.kind,
-        "stage": draft.stage or "-",
-        "created_at": created_at,
-        "status": draft.status,
-    }
+    data: dict[str, Any] = {"kind": draft.kind, "stage": draft.stage or "-"}
+    if draft.workflow:
+        data["workflow"] = draft.workflow
+    if draft.segment is not None:
+        data["segment"] = draft.segment
+    data["created_at"] = created_at
+    data["status"] = draft.status
     if draft.review:
         data["review"] = draft.review
     data["summary"] = draft.summary

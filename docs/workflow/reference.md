@@ -27,7 +27,7 @@ src/devkit/workflow/
 │   ├── binding.py       # workflow / workflow_hash / workflow_history in the anchor file
 │   ├── frontmatter.py   # anchor frontmatter on devkit.core.frontmatter; in-place key updates
 │   ├── decisions.py     # decisions/NN-<request>.yaml records, scoped to a workflow segment
-│   ├── records.py       # helpers shared by the numbered decision and envelope files
+│   ├── records.py       # numbered decision and envelope files: unique sequences, whole, never replaced
 │   └── envelope/        # model.py (envelopes/<kind>-NN.yaml, review state, write_envelope), authoring.py (compose_envelope)
 ├── evaluation/
 │   ├── evaluate.py      # pure stage evaluation: evaluate_definition (Options -> UnitEvaluation)
@@ -147,12 +147,12 @@ The main calls:
 | `ws.definition(ref=None, binding=None)`, `ws.load_definition(ref)` | A validated (or raw) definition by id or path relative to the root, from the cached definitions. |
 | `ws.validate_definition(doc)`, `ws.validate_definitions(paths=()) -> ValidationReport` | One definition's problems; what `validate` reports. |
 | `ws.describe(doc, binding=None) -> DefinitionDescription`, `ws.describe_unit(unit, *, anchor=None)` | What `show` and `show --unit` report (`to_dict()` is its JSON, `ok` its success). |
-| `create_unit(ws, slug, *, workflow=None, when=None, status="planned") -> UnitRef` | `new`. |
+| `create_unit(ws, slug, *, workflow=None, when=None, status="planned") -> UnitRef` | `new`: creates the anchor exclusively (`UnitExistsError`); refuses a non-empty directory without one (`UnitDirNotEmptyError`). |
 | `list_units(ws, *, statuses=(), excluded=()) -> list[UnitInfo]` | `list`. |
 | `record_answer(ws, unit, request_id, action, values=(), *, note="", by="", lint=True) -> Decision` | `answer`. |
 | `return_to(ws, unit, stage, *, note="", by="", lint=True) -> Decision` | `return`. |
 | `plan_handoff(ws, unit, result, choice=None) -> HandoffPlan`, `apply_handoff(plan, *, when=None, by="", note="") -> HandoffOutcome` | `handoff`. |
-| `compose_envelope(...) -> Envelope`, `render_envelope(envelope, created_at)`, `write_envelope(unit_dir, kind, body)` | `envelope new`. |
+| `compose_envelope(...) -> Envelope`, `render_envelope(envelope, created_at)`, `write_envelope(unit_dir, kind, body)` | `envelope new`; pass `workflow=unit.doc.id, segment=unit.binding.segment` to scope the envelope, and `load_envelopes(dir).scoped(workflow, segment)` as `envelopes`. |
 | `evaluate_definition(doc, Options) -> UnitEvaluation` | Pure evaluation without policies or writes. |
 
 ## Specifications

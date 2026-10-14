@@ -160,7 +160,8 @@ repository's own assets in their source bundle (see `in-repo-bundle`).
 
 `uv run devkit status` reports, without changing anything, how the workspace
 compares with the receipt: missing, modified, execute-bit-changed or symlinked
-managed files, override drift of deployed assets, the guidance block state, seeded files that no longer
+managed files, override drift of deployed assets, the guidance block state (an
+edited or unrecorded block is an error), seeded files that no longer
 exist, a selected bundle whose package is missing or broken, a pending journal, and whether the running `devkit` version wrote the
 receipt. Whatever needs acting on is listed under `errors`, each with its
 `advisory` (`action`, `fix`); follow them. It exits 1 when there is any, else 0.

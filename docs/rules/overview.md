@@ -38,11 +38,10 @@ src/devkit/rules/
 │   ├── base.py              # Base rule helper class (settings, guide, related, promote_to)
 │   └── <name>/              # one folder per rule: rule.py, guide.md, tests/ (markdown_link, file_length,
 │                            # secret_leak, clean_artifacts)
-├── authoring/bundle/        # The opt-in `authoring` bundle (size rules with their tests, and playbooks)
 └── cli/                     # commands.py (check, fix, phases, explain, test) and output.py (text and JSON rendering)
 ```
 
-Library callers import the public API from `devkit.rules`; built-in rule classes are exported by `devkit.rules.rules`.
+Library callers import the public API from `devkit.rules`; built-in rule classes are exported by `devkit.rules.rules`. The opt-in `authoring` bundle (size rules with their tests, and playbooks) lives outside this module, in the data-only `devkit.authoring_guide` (`src/devkit/authoring_guide/bundle/`): its rules use only the public API and are loaded from the synchronized copies like any bundle rule, and discovering the bundle never imports the engine.
 
 ## 3. Integration with Content Wheels and devkit
 

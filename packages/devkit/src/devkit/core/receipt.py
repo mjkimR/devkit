@@ -405,12 +405,21 @@ def verified_asset_file(
       from: a file absent from ``root`` (a Git-ignored managed copy) is read
       from there, and only when the receipt records a hash it matches.
 
-    Returns ``root / item`` or ``source_root / item``. Raises ``AssetFileError``
+    Returns ``root / item`` or ``source_root / item``. A loader must run the
+    bytes that were checked, not re-read the file: ``verified_asset_packages``
+    passes them on as the package's ``sources``. Raises ``AssetFileError``
     (message ``"<item> <problem>"``) when the file cannot be used, including
     when it cannot be read. A missing file is ``AUTO`` with the fix
     ``devkit sync``, which restores it (a fresh clone or worktree has no
     Git-ignored managed copies); every other problem is ``MAINTENANCE``.
     """
+    return _verified_asset_source(root, item, receipt, asset, source_root)[0]
+
+
+def _verified_asset_source(
+    root: Path, item: str, receipt: Receipt, asset: AssetRecord, source_root: Path | None
+) -> tuple[Path, bytes]:
+    """``verified_asset_file``'s path and the bytes it verified, read once."""
     try:
         resolve_within(root, item)
     except UnsafePathError as exc:
@@ -434,13 +443,14 @@ def verified_asset_file(
                 raise AssetFileError(f"{item} has no hash in the receipt", target_files=[item])
         if record is None and not item.startswith(f"{OVERRIDES_PATH}/"):
             raise AssetFileError(f"{item} has no hash in the receipt", target_files=[item])
-        if record is not None and not record.matches(path.read_bytes()):
+        data = path.read_bytes()
+        if record is not None and not record.matches(data):
             raise AssetFileError(
                 f"{item} differs from the hash in the receipt", target_files=[item], fix=_asset_file_fix(item, asset)
             )
     except OSError as exc:
         raise AssetFileError(f"{item} cannot be read: {exc}", target_files=[item]) from exc
-    return path
+    return path, data
 
 
 def _asset_source_path(asset: AssetRecord, item: str) -> str:
@@ -478,7 +488,9 @@ def verified_asset_packages(
     mix project overrides, managed copies and, in a Git snapshot, working-tree
     copies; none is skipped for its name (a ``_helpers.py`` is a module like
     any other). An asset with any unusable module file yields no package, and
-    each such file is reported. The package's ``root`` is the asset's
+    each such file is reported. The package's ``sources`` hold the verified
+    bytes, so loading it compiles exactly what was checked, never a file
+    changed since or a bytecode cache. The package's ``root`` is the asset's
     directory under the managed root, and its ``key`` names the workspace,
     bundle and asset.
     """
@@ -486,16 +498,19 @@ def verified_asset_packages(
     errors: list[AssetFileError] = []
     for asset in receipt.assets(kind):
         items = asset.files()
-        sources = {item: _asset_source_path(asset, item) for item in items}
-        common = _common_directory(list(sources.values()))
+        relative = {item: _asset_source_path(asset, item) for item in items}
+        common = _common_directory(list(relative.values()))
         modules: list[tuple[str, Path]] = []
+        sources: dict[str, bytes] = {}
         failed = False
         for item in items:
-            dotted = plugin_module_name(PurePosixPath(*PurePosixPath(sources[item]).parts[len(common) :]).as_posix())
+            dotted = plugin_module_name(PurePosixPath(*PurePosixPath(relative[item]).parts[len(common) :]).as_posix())
             if dotted is None:
                 continue
             try:
-                modules.append((dotted, verified_asset_file(root, item, receipt, asset, source_root=source_root)))
+                path, data = _verified_asset_source(root, item, receipt, asset, source_root)
+                modules.append((dotted, path))
+                sources[dotted] = data
             except AssetFileError as exc:
                 errors.append(exc)
                 failed = True
@@ -514,6 +529,11 @@ def verified_asset_packages(
             )
             continue
         packages.append(
-            PluginPackage(f"{(root / MANAGED_PATH / asset.bundle).as_posix()}:{asset.id}", directory, mapping)
+            PluginPackage(
+                f"{(root / MANAGED_PATH / asset.bundle).as_posix()}:{asset.id}",
+                directory,
+                mapping,
+                MappingProxyType(sources),
+            )
         )
     return tuple(packages), tuple(errors)

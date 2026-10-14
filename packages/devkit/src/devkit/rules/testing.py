@@ -33,13 +33,14 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from devkit.core.plugins import TESTS_DIRECTORY, PluginPackage
+from devkit.core.plugins import TESTS_DIRECTORY, PluginPackage, plugin_modules
 from devkit.rules.engine.config import parse_rules_config
 from devkit.rules.engine.errors import RuleLoadError, RulesRunError
 from devkit.rules.engine.evaluator import EvaluationResult, evaluate_rules
 from devkit.rules.engine.models import Phase, Rule, RuleContext, Violation
 from devkit.rules.engine.project import expand_targets
 from devkit.rules.engine.registry import RuleRegistry
+from devkit.rules.rules.base import managed_counterpart, override_counterpart
 from devkit.rules.workspace.cache import WorkspaceCache
 
 __all__ = ["check", "evaluate", "load_rule", "rule_directory", "write_files"]
@@ -60,20 +61,42 @@ def rule_directory(anchor: str | Path) -> Path:
     return path
 
 
+def _rule_package(folder: Path) -> PluginPackage:
+    """The plugin package of a rule folder, with a project override applied as devkit applies it.
+
+    A deployed rule is the managed copy (``.devkit/managed/<bundle>/...``) with
+    each module file the project override (``.devkit/overrides/<bundle>/...``)
+    holds replacing the managed one, so the tests of either copy test the rule
+    devkit runs: a managed copy's tests, which an override without its own
+    ``tests/`` keeps, run against the overridden modules. Any other folder is
+    loaded as it is. Raises ``ValueError`` when one module has two files.
+    """
+    managed = managed_counterpart(folder)
+    base = managed if managed is not None and managed.is_dir() else folder
+    override = override_counterpart(base)
+    if override is None or not override.is_dir():
+        return PluginPackage.from_directory(base)
+    modules = {**PluginPackage.from_directory(base).modules, **PluginPackage.from_directory(override).modules}
+    return PluginPackage(str(base.resolve()), folder, plugin_modules(modules.items()))
+
+
 def load_rule(anchor: str | Path, rule_id: str | None = None) -> Rule:
     """Load the rule folder of ``anchor`` as a plugin package, as devkit loads a deployed rule, and return one rule.
 
-    ``rule_id`` selects among the rules the package defines; without it the
-    package must define exactly one. Raises ``RuleLoadError``
-    (``RULES_LOAD_FAILED``) when the folder does not exist, fails to load,
-    defines no rule, several without a ``rule_id``, or none with ``rule_id``.
+    The folder of a deployed copy is loaded with the project override applied:
+    the managed modules, each replaced by the override's file when it holds one,
+    whichever of the two folders ``anchor`` is in. ``rule_id`` selects among the
+    rules the package defines; without it the package must define exactly one.
+    Raises ``RuleLoadError`` (``RULES_LOAD_FAILED``) when the folder does not
+    exist, fails to load, defines no rule, several without a ``rule_id``, or
+    none with ``rule_id``.
     """
     folder = rule_directory(anchor)
     if not folder.is_dir():
         raise RuleLoadError(f"rule folder {folder} does not exist", target_files=[str(folder)], rule_id=rule_id)
     registry = RuleRegistry()
     try:
-        package = PluginPackage.from_directory(folder)
+        package = _rule_package(folder)
     except ValueError as exc:
         raise RuleLoadError(f"cannot load rule folder {folder}: {exc}", target_files=[str(folder)]) from None
     rules = registry.discover_from_packages([package])

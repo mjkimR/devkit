@@ -25,8 +25,8 @@ devkit = "devkit.cli:cli"
 [project.entry-points."devkit.bundles"]
 devkit = "devkit.distribution.guide"
 advisory = "devkit.advisory_guide"
-authoring = "devkit.rules.authoring"
-git-commits = "devkit.gate.commits"
+authoring = "devkit.authoring_guide"
+git-commits = "devkit.commits_guide"
 
 [project.entry-points."devkit.post_sync"]
 gate-hooks = "devkit.gate.hooks.local_config:post_sync"

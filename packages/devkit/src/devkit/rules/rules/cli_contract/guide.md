@@ -11,9 +11,9 @@ included, and reports the ones it does not have.
   CI (`check --ci`).
 - **What is checked**: in the Markdown files the run targets, every inline code span and every line of a fenced code
   block that invokes `devkit`, optionally after `$ ` and a launcher (`uv run [options]`, `uvx`, `python -m`). A fenced
-  line ending in `\` continues on the next line. Words of the command path must be subcommands of the group before
-  them; options (`--name`, `-x`, also written `--name=value`, `[--a|--b]` or `--name/-n`) must belong to the command
-  they follow, the help option included. An option that takes a value consumes the next word.
+  line ending in `\` continues on the next line of the same block. Words of the command path must be subcommands of
+  the group before them; options (`--name`, `-x`, also written `--name=value`, `[--a|--b]` or `--name/-n`) must
+  belong to the command they follow, the help option included. An option that takes a value consumes the next word.
 - **What is not**: prose (`devkit` outside code), names such as `devkit.rules` or `devkit-agt`, anything after `--`,
   a pipe, a list operator, a redirection or a `#` comment, option values, arguments and placeholders. A placeholder
   where a subcommand belongs (`devkit spec <command>`) ends the check of that citation, and a command that passes

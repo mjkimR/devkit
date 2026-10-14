@@ -329,6 +329,44 @@ def test_seed_writes_are_journaled_and_rolled_back(
     assert (target / "docs/README.md").exists()
 
 
+def test_rollback_removes_the_directories_a_failed_transaction_created(
+    installed: list[InstalledBundle], target: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (target / "docs").mkdir()
+    (target / "docs/ours.md").write_text("project file\n")
+    original = transaction.atomic_write
+
+    def interrupt(root: Path, name: str, content: Content | None) -> None:
+        original(root, name, content)
+        if name == "docs/spec/stories/README.md":
+            raise SystemExit("simulated process interruption")
+
+    monkeypatch.setattr(transaction, "atomic_write", interrupt)
+    with pytest.raises(SystemExit):
+        sync_project(target, installed)
+    monkeypatch.setattr(transaction, "atomic_write", original)
+    assert (target / "docs/spec/stories/README.md").exists() and (target / JOURNAL).exists()
+    assert recover_project(target) > 0
+    # The project's own docs/ stays; docs/spec/ and .devkit/managed/, created by the transaction, are gone.
+    assert sorted(path.name for path in (target / "docs").iterdir()) == ["ours.md"]
+    assert not (target / ".devkit/managed").exists()
+
+    failed = False
+
+    def fail_once(root: Path, name: str, content: Content | None) -> None:
+        nonlocal failed
+        if name == RECEIPT_PATH and not failed:
+            failed = True
+            raise OSError("write failure")
+        original(root, name, content)
+
+    monkeypatch.setattr(transaction, "atomic_write", fail_once)
+    with pytest.raises(OSError, match="write failure"):
+        sync_project(target, installed)
+    assert sorted(path.name for path in (target / "docs").iterdir()) == ["ours.md"]
+    assert not (target / JOURNAL).exists()
+
+
 def test_seeded_document_is_not_bundle_context(installed: list[InstalledBundle], target: Path) -> None:
     from devkit.distribution.installation.context import get_context
 
