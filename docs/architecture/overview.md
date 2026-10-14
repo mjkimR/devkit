@@ -14,6 +14,7 @@ The `devkit` modules, their boundaries and interaction, the conventions every mo
 6. **Compact Command Output (`devkit.compact`)**: verification commands run with their complete output in a log file and a bounded view for the agent (`devkit run`).
 7. **Document Search (`devkit.search`)**: lexical (BM25), dense (static embeddings) and hybrid ranking over a caller's documents, a library without a CLI; dense search comes with the `devkit-agt[search]` extra.
 8. **Task Worktrees (`devkit.worktree`)**: one Git worktree per task, created from the base checkout and integrated, removed and reported by deterministic commands that refuse instead of forcing (`devkit worktree`).
+9. **Generated Files (`devkit.generated`)**: tracked files a command generates (lockfiles, the installation receipt) registered with that command, so merge conflicts in them are settled by regenerating and stale ones are caught in CI (`devkit generated`).
 
 All of them build on `devkit.core`, the SDD-agnostic shared foundation (frontmatter grammar, installation receipt, safe paths, Git runner, plugin loading, project discovery, CLI plumbing).
 
@@ -48,7 +49,7 @@ Every command is agent-first: its primary consumer is an AI coding agent, and it
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Layering.** `advisory` imports no other module; `core` may import `advisory`; `rules` may import `core`, `advisory` and `compact` (`devkit rules test` runs each rule's tests through it); `workflow` may import `core`, `advisory` and `rules`; `gate` may import those and `compact` (the `verify-commands` gate runs commands through it); `search`, `compact` and `worktree` may import only `core` and `advisory`; `distribution` may import `core`, `advisory` and `search`. `devkit.cli` assembles the command line. A test enforces this. The root group maps each command name to a `module:attribute` reference and imports the module only when that command runs, so a command imports only its own area and the layers below it; a test enforces this too. Installed packages mount further top-level commands through the `devkit.commands` entry-point group ([Command Plugins](command-plugins.md)).
+**Layering.** `advisory` imports no other module; `core` may import `advisory`; `rules` may import `core`, `advisory` and `compact` (`devkit rules test` runs each rule's tests through it); `workflow` may import `core`, `advisory` and `rules`; `gate` may import those and `compact` (the `verify-commands` gate runs commands through it); `search`, `compact` and `worktree` may import only `core` and `advisory`; `generated` may import `core`, `advisory` and `compact` (its commands run through it); `distribution` may import `core`, `advisory` and `search`. `devkit.cli` assembles the command line. A test enforces this. The root group maps each command name to a `module:attribute` reference and imports the module only when that command runs, so a command imports only its own area and the layers below it; a test enforces this too. Installed packages mount further top-level commands through the `devkit.commands` entry-point group ([Command Plugins](command-plugins.md)).
 
 ## 2. Monorepo Structure
 
@@ -125,6 +126,10 @@ Each module's `reference.md` is the quick reference (CLI, configuration, library
 ### Task Worktrees (`devkit.worktree`)
 - [Worktree Reference](../worktree/reference.md): `devkit worktree start|finish|status`, output, configuration, error codes, library.
 - [Worktree Overview](../worktree/overview.md): Paths, the start and finish steps, refusals and resumption, status, the setup command.
+
+### Generated Files (`devkit.generated`)
+- [Generated Reference](../generated/reference.md): `devkit generated list|check|regen|resolve`, output, configuration, error codes, library.
+- [Generated Overview](../generated/overview.md): Artifacts and built-in entries, the resolve steps, undeclared writes, check, integration points.
 
 ### Document Search (`devkit.search`)
 - [Search Reference](../search/reference.md): Library surface, the `devkit-agt[search]` extra and error codes.

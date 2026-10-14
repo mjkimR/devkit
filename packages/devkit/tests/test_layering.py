@@ -28,6 +28,7 @@ ALLOWED: dict[str, set[str]] = {
     "distribution": {"core", "advisory", "search"},
     "compact": {"core", "advisory"},
     "worktree": {"core", "advisory"},
+    "generated": {"core", "advisory", "compact"},
 }
 
 

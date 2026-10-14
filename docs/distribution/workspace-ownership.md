@@ -6,6 +6,7 @@
 .devkit/
   .gitignore              # Ignores managed/ and transient/; seeded by sync when absent, then project-owned (Git-tracked)
   config.toml             # Project configuration: selection, agents, module tables (Git-tracked)
+  generated.toml          # Optional generated-file registry of `devkit generated` (Git-tracked)
   installation.json       # Receipt: packages, selection, file hashes & modes (Git-tracked)
   managed/<bundle>/       # Pristine copies of upstream bundle files (generated)
   overrides/
@@ -89,8 +90,8 @@ AGENTS.md                 # Project-owned; only the DEVKIT:START/END block insid
      by the next sync (until then `sync --check` exits `1`).
    - The receipt records which asset seeded which path under `seeded`, never under `files`; the record is
      informational. Seeded files are not bundle context.
-8. **Git policy**: commit `.devkit/config.toml`, `.devkit/overrides/`, `.devkit/installation.json`,
-   `.devkit/.gitignore`, the root `AGENTS.md` and seeded files.
+8. **Git policy**: commit `.devkit/config.toml`, `.devkit/generated.toml`, `.devkit/overrides/`,
+   `.devkit/installation.json`, `.devkit/.gitignore`, the root `AGENTS.md` and seeded files.
    - `.devkit/managed/` and `.devkit/transient/` are ignored by `.devkit/.gitignore`. A writing sync seeds it when
      it is absent (a `seed` action, so `sync --check` exits `1` until then) and never compares or updates it
      afterwards: a project may edit it, and one deleted is seeded again (empty it instead to stop ignoring). A bundle

@@ -1,0 +1,58 @@
+"""devkit.generated: tracked generated files (``devkit generated list|check|regen|resolve``).
+
+A project registers the files a command generates (lockfiles, receipts, generated clients) with the command that
+regenerates them; devkit's own receipt is registered by default. ``resolve`` settles a merge, rebase or
+cherry-pick conflict in those files by regenerating them instead of merging their text, ``check`` reports files
+that differ from what their command produces, and ``regen`` rewrites them. SDD-agnostic and trigger-agnostic: a
+merge driver, a hook or a CI job calls the same commands. See ``docs/generated/overview.md``.
+"""
+
+from devkit.generated.engine import (
+    ArtifactRun,
+    Checkout,
+    ResolveResult,
+    RunResult,
+    check,
+    open_checkout,
+    operation,
+    regenerate,
+    resolve,
+    unmerged,
+)
+from devkit.generated.errors import (
+    CommandFailedError,
+    ConflictsRemainWarning,
+    GeneratedConfigError,
+    GeneratedError,
+    InputsConflictedError,
+    OutputUndeclaredError,
+    StaleError,
+    UnmergedError,
+)
+from devkit.generated.registry import Artifact, Registry, builtin_artifacts, load_registry, matches
+
+__all__ = [
+    "Artifact",
+    "ArtifactRun",
+    "Checkout",
+    "CommandFailedError",
+    "ConflictsRemainWarning",
+    "GeneratedConfigError",
+    "GeneratedError",
+    "InputsConflictedError",
+    "OutputUndeclaredError",
+    "Registry",
+    "ResolveResult",
+    "RunResult",
+    "StaleError",
+    "UnmergedError",
+    "builtin_artifacts",
+    "check",
+    "load_registry",
+    "matches",
+    "open_checkout",
+    "operation",
+    "regenerate",
+    "resolve",
+    "unmerged",
+]

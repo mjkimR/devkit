@@ -1,0 +1,13 @@
+# devkit's built-in generated artifacts, registered in every project. A project changes a field with an
+# [artifacts.<id>] table of the same id in .devkit/generated.toml, and drops one with `enabled = false`.
+
+# The installation receipt: `devkit sync` writes it from the selection in .devkit/config.toml, the project overrides
+# and the installed packages; beside it, it rewrites the DEVKIT block of the root AGENTS.md and seeds
+# .devkit/.gitignore when it is missing.
+[artifacts.devkit-receipt]
+paths = [".devkit/installation.json"]
+inputs = [".devkit/config.toml", ".devkit/overrides/**", "AGENTS.md"]
+updates = ["AGENTS.md", ".devkit/.gitignore"]
+command = "{devkit} sync"
+seed = "ours"
+optional = true
