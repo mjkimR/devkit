@@ -23,7 +23,8 @@ Every distribution command takes `-w/--workspace-root <dir>`. Without it, the de
 of the current directory; outside a Git work tree it is the nearest directory (the current one first, then its
 parents, never the home directory or above it) that contains `.devkit/`, else the current directory. A `-w` that is
 not an existing directory, or one below the top level of a Git work tree, is `ARGUMENT_INVALID`: inside a
-repository `.devkit/` lives at the top level only.
+repository `.devkit/` lives at the top level only. A `.devkit/` below the top level of a work tree whose top level
+has none is `DEVKIT_ROOT_NESTED` ([core reference](../core/reference.md)).
 `sync`, `add` and `remove` print text by default (see [Sync output and notices](#sync-output-and-notices)) and
 take `--format json`. Every other command prints exactly one JSON object on stdout: the result (`override list`
 wraps its entries as `{"overrides": [...]}`), or `{"error": {...}}` when the command fails. A JSON result carries
@@ -189,8 +190,10 @@ needs acting on is listed under `errors`, each an error object with exit code `1
 (`SYNC_CONFLICT`), recorded paths that became symlinks or non-regular files (`WORKSPACE_UNSAFE`), a root
 `AGENTS.md` that is a symlink, malformed or not UTF-8 while the block is managed (`WORKSPACE_UNSAFE`,
 `GUIDANCE_BLOCK_INVALID`; state `invalid`), a guidance block edited by hand (state `modified`) or not recorded by
-the receipt (state `unowned`), with the `SYNC_CONFLICT` and fix `devkit sync` raises for it (a sync adopts an
-unowned block only when it is exactly the block it writes), a selected bundle whose package cannot be used
+the receipt and different from the block a plain `devkit sync` would write (state `unowned`), with the
+`SYNC_CONFLICT` and fix `devkit sync` raises for it; an `unowned` block identical to the one sync writes is no
+error, since the next sync adopts it without a write (nor is an `unowned` block while that sync cannot be planned:
+the sync stops on the planning error first), a selected bundle whose package cannot be used
 (`BUNDLE_PACKAGE_INVALID`) or is not installed (`SELECTION_INVALID`, as `devkit sync` raises it, for an entry of
 `config.toml` or a bundle the receipt keeps deployed), a pending journal (`TRANSACTION_PENDING`, fix `devkit recover`) and
 override drift (`OVERRIDE_DRIFT`, `INTERACTION`: review with `devkit override diff`, then `devkit override accept`). It exits `1`
@@ -220,9 +223,9 @@ error's `fix`, never in its message. The others are `DistributionError` subclass
 | `BundleConflictError` | `BUNDLE_CONFLICT` | `INTERACTION` | two selected bundles claim one path or one projected skill directory or subagent file, or a seeded and a managed file claim one path |
 | `OverrideDriftError` | `OVERRIDE_DRIFT` | `BLOCKED` | `override_drift = "block"` and an override hides upstream changes |
 | `UnsafeWorkspaceError` | `WORKSPACE_UNSAFE` | `BLOCKED` | a symlink or non-regular file where devkit reads or writes, a file where a destination's directory must be, or a reserved path |
-| `LockHeldError` | `LOCK_HELD` | `DEFER` | another devkit command holds the project lock |
+| `LockHeldError` | `LOCK_HELD` | `DEFER` | another devkit command holds the project lock; also a `devkit.core.LockHeldError`, so catching either class catches it |
 | `PendingTransactionError` | `TRANSACTION_PENDING` | `AUTO` (`devkit recover`) | an interrupted sync left its journal |
-| `RecoveryError` | `RECOVERY_BLOCKED` | `HALT` | the journal is unusable, or later edits block its rollback |
+| `RecoveryError` | `RECOVERY_BLOCKED` | `HALT` | the journal is unusable (one an earlier devkit wrote, without a `directories` entry, is refused with a `fix` to roll back with that version or by hand), or later edits block its rollback |
 | `GuidanceBlockError` | `GUIDANCE_BLOCK_INVALID` | `INPUT_ERROR` | the root `AGENTS.md` has malformed devkit markers or is not UTF-8 |
 
 ---

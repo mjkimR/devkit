@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 import stat
-import tempfile
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,6 +14,7 @@ import yaml
 from devkit.core.errors import FrontmatterError
 from devkit.workflow.errors import AnchorInvalidError
 from devkit.workflow.unit import frontmatter
+from devkit.workflow.unit.records import temporary_path
 
 WORKFLOW_KEY = "workflow"
 HASH_KEY = "workflow_hash"
@@ -147,20 +147,22 @@ def render_binding(text: str, binding: Binding) -> str:
 def replace_text(path: Path, text: str) -> None:
     """Replace the file at ``path`` (or the file a link there points to) with ``text`` atomically.
 
-    The text goes to a temporary file in the same directory, which takes the
-    original's permission bits and then replaces it, so an interrupted or
-    failed write leaves the original intact.
+    The text goes to a temporary file in the same directory (``temporary_path``,
+    which loaders and ``lint-clean`` skip), which takes the original's
+    permission bits and then replaces it, so an interrupted or failed write
+    leaves the original intact.
     """
     target = path.resolve()
     mode = stat.S_IMODE(target.stat().st_mode)
-    fd, temporary = tempfile.mkstemp(prefix=f".{target.name}.", suffix=".tmp", dir=target.parent)
+    temporary = temporary_path(target)
+    fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     try:
         with os.fdopen(fd, "w", encoding="utf-8", newline="") as handle:
             handle.write(text)
         os.chmod(temporary, mode)
         os.replace(temporary, target)
     except BaseException:
-        Path(temporary).unlink(missing_ok=True)
+        temporary.unlink(missing_ok=True)
         raise
 
 

@@ -1,26 +1,15 @@
 from __future__ import annotations
 
 import os
-import re
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
+from devkit.core import MANAGED_PATH, OVERRIDES_PATH
 from devkit.rules.engine.models import Autofixable, Phase, RuleContext, Severity, Violation
+from devkit.rules.engine.settings import match_path
 from devkit.rules.rules.base import BaseRule
-from devkit.rules.workspace.markdown import LocalTarget, MarkdownLink, local_target, split_lines
-
-# Characters that force an angle-bracket destination when a repaired path contains them.
-_NEEDS_ANGLE = re.compile(r"[\s()]")
-# Characters percent-encoded in a repaired path, so ``local_target`` reads it back unchanged:
-# ``%`` and ``\`` would be decoded or unescaped, ``#`` and ``?`` would start a fragment or query,
-# and ``<``/``>`` cannot appear inside an angle-bracket destination.
-_ENCODE = {char: f"%{ord(char):02X}" for char in "%\\#?<>"}
-
-
-def _encode(path: str) -> str:
-    """``path`` as a link destination that ``local_target`` decodes back to ``path``."""
-    return "".join(_ENCODE.get(char, char) for char in path)
+from devkit.rules.workspace.markdown import LocalTarget, MarkdownLink, encode_destination, local_target, split_lines
 
 
 def _exists(path: Path) -> bool:
@@ -62,14 +51,24 @@ class MarkdownLinkRule(BaseRule, Autofixable):
         A symlinked Markdown file is an alias of its target, which is checked
         (and repaired) at its own path: resolving the alias's links from the
         symlink's directory would report valid links as broken, and a repair
-        written through the symlink would break the target.
+        written through the symlink would break the target. A symlink named
+        as an explicit target checks its target instead (once, and only when
+        the run does not target it already), so ``check docs/alias.md`` never
+        passes without checking anything.
         """
         root = ctx.workspace_root
         catalog = ctx.cache.get_catalog(root)
+        aliased: set[Path] = set()
         for path in ctx.cache.find_files(root, extensions=(".md",)):
             rel = path.relative_to(root).as_posix()
-            if path.is_symlink() or not ctx.is_file_targeted(rel):
+            if not ctx.is_file_targeted(rel):
                 continue
+            if path.is_symlink():
+                target = self._alias_target(ctx, path)
+                if target is None or target in aliased:
+                    continue
+                aliased.add(target)
+                path, rel = target, target.relative_to(root).as_posix()
             for link in ctx.cache.get_links(path):
                 target = local_target(link.target)
                 if target is None:
@@ -82,6 +81,29 @@ class MarkdownLinkRule(BaseRule, Autofixable):
                     candidates = catalog.find_paths_by_basename(lexical.name)
                     candidate = candidates[0] if len(candidates) == 1 else None
                 yield BrokenLink(path, rel, link, target, candidate)
+
+    @staticmethod
+    def _alias_target(ctx: RuleContext, alias: Path) -> Path | None:
+        """The Markdown file an explicitly targeted symlink stands for, when the run would not check it otherwise.
+
+        ``None`` in a whole-workspace run (the target is listed on its own), and for a target outside the
+        workspace, not a regular ``.md`` file, receipt-pinned, excluded or already targeted.
+        """
+        if not ctx.has_targets:
+            return None
+        root = ctx.workspace_root
+        try:
+            target = alias.resolve(strict=True)
+        except (OSError, RuntimeError):
+            return None
+        if not target.is_relative_to(root) or target.suffix != ".md" or not target.is_file():
+            return None
+        rel = target.relative_to(root).as_posix()
+        if any(target.is_relative_to(root / pinned) for pinned in (MANAGED_PATH, OVERRIDES_PATH)):
+            return None
+        if any(match_path(pattern, rel) for pattern in ctx.exclude) or ctx.is_file_targeted(rel):
+            return None
+        return target
 
     def check(self, ctx: RuleContext) -> list[Violation]:
         return [
@@ -123,10 +145,8 @@ class MarkdownLinkRule(BaseRule, Autofixable):
             for broken in sorted(items, key=lambda b: (b.link.line, b.link.target_start), reverse=True):
                 link = broken.link
                 assert broken.candidate is not None
-                new_path = _encode(Path(os.path.relpath(ctx.workspace_root / broken.candidate, path.parent)).as_posix())
-                destination = f"{new_path}{broken.target.suffix}"
-                if not link.angle and _NEEDS_ANGLE.search(new_path):
-                    destination = f"<{destination}>"
+                new_path = Path(os.path.relpath(ctx.workspace_root / broken.candidate, path.parent)).as_posix()
+                destination = encode_destination(new_path, broken.target.suffix, angle=link.angle)
                 line = lines[link.line - 1]
                 lines[link.line - 1] = line[: link.target_start] + destination + line[link.target_end :]
             ctx.cache.write_text(path, "\n".join(lines), dry_run=ctx.dry_run)

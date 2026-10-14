@@ -40,7 +40,6 @@ cannot represent is left out of its gate's table.
 from __future__ import annotations
 
 import dataclasses
-import os
 import re
 import sys
 import typing
@@ -52,7 +51,7 @@ from typing import Any
 import tomlkit
 
 from devkit.advisory import AdvisoryError, as_advisory_error
-from devkit.core import CONFIG_PATH, ConfigError, UnsafePathError, require_git_toplevel
+from devkit.core import CONFIG_PATH, ConfigError, UnsafePathError, atomic_write_text, require_git_toplevel
 from devkit.core.errors import GitError
 from devkit.core.logs import get_logger
 from devkit.gate.engine.config import ENABLED_KEY, LOCAL_CONFIG, GateEntry, GatesConfig, load_project_gates_config
@@ -173,18 +172,6 @@ def _skipped(path: Path, problem: str, fix: str | None = None, target: str | Non
     return TemplateResult(path, TemplateState.SKIPPED, notice)
 
 
-def _write(path: Path, text: str, mode: int) -> None:
-    """Replace ``path`` atomically with ``text``, never writing through a link at ``path``."""
-    temporary = path.with_name(f".{path.name}.devkit-{os.getpid()}")
-    try:
-        temporary.write_bytes(text.encode("utf-8"))
-        temporary.chmod(mode)
-        os.replace(temporary, path)
-    finally:
-        if temporary.is_symlink() or temporary.exists():
-            temporary.unlink()
-
-
 def refresh_template(common_git_dir: Path, gates: list[Gate], project: GatesConfig | None = None) -> TemplateResult:
     """Create ``<common_git_dir>/devkit.config`` with every gate's table, or append the tables it lacks.
 
@@ -206,7 +193,7 @@ def _refresh(path: Path, gates: list[Gate], project: GatesConfig | None) -> Temp
     if path.is_symlink() or (path.exists() and not path.is_file()):
         return _skipped(path, "not a regular file")
     if not path.exists():
-        _write(path, HEADER + "".join(f"\n{render_table(gate, project)}" for gate in gates), 0o644)
+        atomic_write_text(path, HEADER + "".join(f"\n{render_table(gate, project)}" for gate in gates), mode=0o644)
         return TemplateResult(path, TemplateState.CREATED)
     try:
         text = path.read_bytes().decode("utf-8")
@@ -218,7 +205,9 @@ def _refresh(path: Path, gates: list[Gate], project: GatesConfig | None) -> Temp
         return TemplateResult(path, TemplateState.UNCHANGED)
     if text and not text.endswith("\n"):
         text += "\n"
-    _write(path, text + "".join(f"\n{render_table(gate, project)}" for gate in missing), path.stat().st_mode & 0o777)
+    atomic_write_text(
+        path, text + "".join(f"\n{render_table(gate, project)}" for gate in missing), mode=path.stat().st_mode & 0o777
+    )
     return TemplateResult(path, TemplateState.UPDATED)
 
 

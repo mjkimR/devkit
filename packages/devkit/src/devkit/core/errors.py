@@ -64,6 +64,20 @@ class ArgumentError(DevkitCoreError):
     input_error = True
 
 
+class DevkitRootNestedError(DevkitCoreError):
+    """A ``.devkit/`` directory sits below the top level of a Git work tree whose top level has none.
+
+    Inside a Git work tree the repository's top level is the devkit root, so such a ``.devkit/`` belongs to no
+    project: resolving to the top level would read no configuration, receipt or managed rules (and a check would
+    pass vacuously). The message names both directories.
+    """
+
+    code = "DEVKIT_ROOT_NESTED"
+    actor = Actor.DEVELOPER
+    retry = Retry.AFTER_FIX
+    input_error = True
+
+
 class CommandPluginError(DevkitCoreError):
     """An installed package's ``devkit.commands`` entry point cannot be used (``MAINTENANCE``).
 

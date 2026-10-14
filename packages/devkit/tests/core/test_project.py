@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import subprocess
 from collections.abc import Callable
 from pathlib import Path
 
@@ -16,7 +17,7 @@ from devkit.core import (
     require_git_toplevel,
 )
 from devkit.core import project as project_module
-from devkit.core.errors import ArgumentError, GitError, UnsafePathError
+from devkit.core.errors import ArgumentError, DevkitRootNestedError, GitError, UnsafePathError
 
 
 def test_inside_git_the_repository_root_is_the_devkit_root(repo: Path) -> None:
@@ -29,15 +30,74 @@ def test_inside_git_the_repository_root_is_the_devkit_root(repo: Path) -> None:
     assert find_project_root(repo / "packages") == repo
 
 
-def test_require_devkit_root_refuses_a_directory_below_the_top_level(repo: Path, tmp_path: Path) -> None:
+@pytest.fixture
+def plain(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """A directory outside every Git work tree (Git discovery stops above ``tmp_path``), even when the temporary
+    directory itself lies inside one."""
+    monkeypatch.setenv(
+        "GIT_CEILING_DIRECTORIES", os.pathsep.join({str(tmp_path.parent), str(tmp_path.resolve().parent)})
+    )
+    directory = (tmp_path / "plain").resolve()
+    directory.mkdir()
+    if git_toplevel(directory) is not None:
+        pytest.skip("the temporary directory is inside a Git work tree")
+    return directory
+
+
+def test_require_devkit_root_refuses_a_directory_below_the_top_level(repo: Path, plain: Path) -> None:
+    (repo / ".devkit").mkdir()
     (repo / "sub").mkdir()
     assert require_devkit_root(repo) == repo
     with pytest.raises(ArgumentError) as raised:
         require_devkit_root(repo / "sub")
-    assert raised.value.code == "ARGUMENT_INVALID" and str(repo) in (raised.value.fix or "")
-    plain = tmp_path / "plain/sub"
-    plain.mkdir(parents=True)
-    assert require_devkit_root(plain) == plain.resolve()
+    assert raised.value.code == "ARGUMENT_INVALID" and f"--workspace-root {repo}" in (raised.value.fix or "")
+    (plain / "sub").mkdir()
+    assert require_devkit_root(plain / "sub") == plain / "sub"
+
+
+def test_require_devkit_root_without_a_devkit_top_level_does_not_steer_to_it(repo: Path) -> None:
+    (repo / "notes").mkdir()
+    with pytest.raises(ArgumentError) as raised:
+        require_devkit_root(repo / "notes")
+    assert raised.value.code == "ARGUMENT_INVALID"
+    assert f"--workspace-root {repo}" not in (raised.value.fix or "") and "git init" in (raised.value.fix or "")
+
+
+def test_a_devkit_below_a_top_level_without_one_is_refused(repo: Path) -> None:
+    # A legacy monorepo: packages/app/.devkit while the repository's top level has no .devkit.
+    app = repo / "packages/app"
+    (app / ".devkit").mkdir(parents=True)
+    (app / "src").mkdir()
+    for start in (app, app / "src"):
+        with pytest.raises(DevkitRootNestedError) as raised:
+            find_project_root(start)
+        error = raised.value
+        assert (error.code, error.mode.value) == ("DEVKIT_ROOT_NESTED", "INPUT_ERROR")
+        assert str(app) in error.message and str(repo) in error.message
+        assert error.fix and "git init" in error.fix and f"--workspace-root {repo}" not in error.fix
+    for explicit in (app, app / "src"):
+        with pytest.raises(DevkitRootNestedError):
+            require_devkit_root(explicit)
+    assert find_project_root(repo / "packages") == repo  # not below the nested project
+    (repo / ".devkit").mkdir()
+    assert find_project_root(app / "src") == repo  # the top level is the project again
+
+
+def test_a_project_inside_a_dotfiles_home_is_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    home = (tmp_path / "home").resolve()
+    home.mkdir()
+    subprocess.run(["git", "init", "-q", "-b", "main", str(home)], check=True, capture_output=True)
+    notes = home / "notes"
+    (notes / ".devkit").mkdir(parents=True)
+    (notes / "daily").mkdir()
+    monkeypatch.setenv("HOME", str(home))
+    with pytest.raises(DevkitRootNestedError) as raised:
+        find_project_root(notes / "daily")
+    assert str(notes) in raised.value.message and str(home) in raised.value.message
+    with pytest.raises(DevkitRootNestedError) as raised:
+        require_devkit_root(notes)
+    assert f"--workspace-root {home}" not in (raised.value.fix or "")
+    assert find_project_root(home / "notes/..") == home  # the home repository itself has no nested project
 
 
 def test_a_file_start_uses_its_directory(repo: Path) -> None:
@@ -66,25 +126,25 @@ def test_walk_stops_at_the_repository_boundary(tmp_path: Path, repo: Path) -> No
     assert find_project_root(repo / "x") == repo
 
 
-def test_outside_git_walks_up_the_parents(tmp_path: Path) -> None:
-    project = tmp_path / "plain"
+def test_outside_git_walks_up_the_parents(plain: Path) -> None:
+    project = plain / "project"
     (project / ".devkit").mkdir(parents=True)
     (project / "a/b").mkdir(parents=True)
     assert git_toplevel(project) is None
     assert find_project_root(project / "a/b") == project.resolve()
 
 
-def test_outside_git_without_marker_returns_start(tmp_path: Path) -> None:
-    start = tmp_path / "lonely"
+def test_outside_git_without_marker_returns_start(plain: Path) -> None:
+    start = plain / "lonely"
     start.mkdir()
     assert find_project_root(start) == start.resolve()
 
 
-def test_symlinked_start_is_resolved(tmp_path: Path) -> None:
-    real = tmp_path / "real"
+def test_symlinked_start_is_resolved(plain: Path) -> None:
+    real = plain / "real"
     (real / ".devkit").mkdir(parents=True)
-    os.symlink(real, tmp_path / "link")
-    assert find_project_root(tmp_path / "link") == real.resolve()
+    os.symlink(real, plain / "link")
+    assert find_project_root(plain / "link") == real.resolve()
 
 
 def test_git_toplevel_tolerates_git_failures(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -173,7 +233,8 @@ def test_config_table_raises_the_area_error() -> None:
         config_table(3, "area.x", AreaConfigError)
 
 
-def test_outside_git_the_walk_stops_below_the_home_directory(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_outside_git_the_walk_stops_below_the_home_directory(plain: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    tmp_path = plain
     home = (tmp_path / "home").resolve()
     (home / ".devkit").mkdir(parents=True)  # a stray ~/.devkit
     (home / "scratch/a").mkdir(parents=True)

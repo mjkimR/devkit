@@ -8,7 +8,7 @@ Every command works on the top level of the Git work tree containing
 object (``{"hooks_dir", "hooks_path", "hooks", "gates", "config_sources",
 "errors", "notices"}``) or ``{"error"}``. ``status`` is a report: it exits 1 when it lists
 any problem that would fail a commit and 2 only when it cannot run; its warnings
-(``GATE_HOOK_ENTRY_MISSING``) change the exit code only under ``--strict``. A blocking
+(``GATE_HOOK_ENTRY_MISSING``, ``GATE_HOOKS_PATH_SET``) change the exit code only under ``--strict``. A blocking
 ``run`` exits with the highest ``exit_code`` among the problems it reports.
 """
 
@@ -136,7 +136,7 @@ def status_cmd(workspace_root: str | None, output_format: str) -> None:
     ]
     sources = [display_path(path, project.root) for path in project.config.sources]
     errors = project.validation.errors
-    notices = hooks.missing_entry_notices(project, statuses)
+    notices = hooks.missing_entry_notices(project, statuses, location)
     if is_json(output_format):
         echo_json(
             {

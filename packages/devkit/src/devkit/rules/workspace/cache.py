@@ -6,14 +6,15 @@ which are never rule input and never written. Inside a Git work tree it is
 further restricted to the files Git does not ignore
 (``git ls-files --cached --others --exclude-standard``), so a virtual
 environment or build output that ``.gitignore`` covers is never scanned. Files
-named as explicit targets (``add_explicit``) are listed even when Git ignores
-them or they sit in a dependency or cache directory: an explicit target is
-checked as is. Pinned copies are never listed, not even as targets. A
+named as explicit targets on the command line (``add_explicit``; ``RuleContext``
+adds them for a working-tree run, never for a snapshot's changed files) are
+listed even when Git ignores them or they sit in a dependency or cache
+directory: an explicit target is checked as is. Pinned copies are never listed, not even as targets. A
 materialized snapshot passes ``git_filter=False``: its tree already holds
 tracked files only. Git and the file system may spell a non-ASCII name in
 different Unicode normalization forms (macOS Git reports NFC with
 ``core.precomposeunicode`` while the disk may hold NFD), so names are
-compared in NFC.
+compared in NFC, and a file reached under both spellings is listed once.
 """
 
 from __future__ import annotations
@@ -219,11 +220,11 @@ class WorkspaceCache:
                             continue
                         if path.is_file() and self._stays_inside(path):
                             results.append(path)
-                listed = set(results)
+                listed = {self._name(path) for path in results}
                 for relative in self._explicit:
                     path = self.workspace_root / relative
                     if (
-                        path not in listed
+                        relative not in listed
                         and path.is_relative_to(root)
                         and (extensions is None or path.suffix in extensions)
                         and not self._pinned(path)
@@ -233,6 +234,10 @@ class WorkspaceCache:
                         results.append(path)
             self._files_cache[key] = sorted(results)
         return list(self._files_cache[key])
+
+    def _name(self, path: Path) -> str:
+        """``path`` relative to the workspace, POSIX and NFC: the form explicit targets are kept in."""
+        return _nfc(path.relative_to(self.workspace_root).as_posix())
 
     def _visible(self, path: Path, visible: set[str]) -> bool:
         try:

@@ -78,7 +78,7 @@ def test_links_into_a_moved_bundle_follow_it(tmp_path: Path) -> None:
     assert f"[blueprint](../../../{SPEC}/target-docs.md)" in got
     assert "[padr](../../decisions/2026-10/20261014-pick-engine.md)" in got
     assert "[mat](../../materials/2026-10/20261014-linked/survey.md)" in got
-    assert f"[dir](../../../{SPEC})" in got
+    assert f"[dir](../../../{SPEC}/)" in got  # the trailing slash is kept
     assert "[decisions](../PROP-linked/decisions/)" in got
     # A link beneath a moved directory follows it, whether or not the file exists.
     assert "[missing](../../materials/2026-10/20261014-linked/absent/x.md)" in got
@@ -126,7 +126,7 @@ def test_moved_files_keep_their_targets_from_the_new_location(tmp_path: Path) ->
     assert f"[back](../../../../{SPEC}/spec.md)" in material
     assert "[padr](../../../decisions/2026-10/20261014-pick-engine.md#sec)" in material
     assert "[cap](../../../capabilities/lifecycle/CAP-X.md)" in material  # the same target, the same spelling
-    assert f"[dirlink](../../../../{SPEC})" in material
+    assert f"[dirlink](../../../../{SPEC}/)" in material
     assert "[sibling](./notes.md)" in material  # the author's spelling is kept
     assert spec.read_text(encoding="utf-8") == (
         "Intro [CAP-X](../../../docs/capabilities/lifecycle/CAP-X.md). "
@@ -227,7 +227,7 @@ def test_a_link_to_a_moved_directory_itself_needs_an_exact_entry(tmp_path: Path)
     assert page.read_text(encoding="utf-8") == "[dir](old/) [file](new/a.md)\n"
     assert [(u.target, u.reason) for u in report.unresolved] == [("old/", UnresolvedReason.UNMAPPED)]
     report = relocate_links(tmp_path, [page], LinkRelocation(files={"old": "new"}, directories={"old": "new"}))
-    assert page.read_text(encoding="utf-8") == "[dir](new) [file](new/a.md)\n" and report.unresolved == []
+    assert page.read_text(encoding="utf-8") == "[dir](new/) [file](new/a.md)\n" and report.unresolved == []
 
 
 def test_bytes_line_endings_and_link_syntax_are_kept(tmp_path: Path) -> None:
@@ -238,13 +238,61 @@ def test_bytes_line_endings_and_link_syntax_are_kept(tmp_path: Path) -> None:
     assert page.stat().st_mode & 0o777 == 0o640
 
 
-def test_a_symlinked_file_is_written_through(tmp_path: Path) -> None:
-    real = _write(tmp_path, "real.md", "[a](old/a.md)\n")
+def test_a_symlinked_file_is_skipped_and_its_target_relocated_at_its_own_path(tmp_path: Path) -> None:
+    real = _write(tmp_path, "docs/real.md", "[a](../old/a.md)\n")
     link = tmp_path / "link.md"
     link.symlink_to(real)
     report = relocate_links(tmp_path, [link], LinkRelocation(directories={"old": "new"}))
-    assert link.is_symlink() and real.read_text(encoding="utf-8") == "[a](new/a.md)\n"
-    assert report.files == ["link.md"]
+    assert link.is_symlink() and real.read_text(encoding="utf-8") == "[a](../old/a.md)\n"
+    assert report.files == [] and report.rewritten == []
+    assert report.unresolved == [UnresolvedLink("link.md", 0, "", UnresolvedReason.SYMLINK)]
+    assert report.unresolved[0].to_dict()["reason"] == "symlink"
+    report = relocate_links(tmp_path, [link, real], LinkRelocation(directories={"old": "new"}))
+    assert real.read_text(encoding="utf-8") == "[a](../new/a.md)\n" and report.files == ["docs/real.md"]
+
+
+def test_files_outside_the_root_or_pinned_by_the_receipt_are_never_written(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    managed = _write(root, ".devkit/managed/rules/x/guide.md", "[a](../../../../old/a.md)\n")
+    override = _write(root, ".devkit/overrides/x.md", "[a](../../old/a.md)\n")
+    outside = _write(tmp_path, "elsewhere/page.md", "[a](old/a.md)\n")
+    (root / "linked").symlink_to(tmp_path / "elsewhere", target_is_directory=True)
+    report = relocate_links(
+        root,
+        [managed, override, outside, root / "linked/page.md"],
+        LinkRelocation(directories={"old": "new"}),
+    )
+    assert [(item.path, item.reason) for item in report.unresolved] == [
+        (".devkit/managed/rules/x/guide.md", UnresolvedReason.PROTECTED),
+        (".devkit/overrides/x.md", UnresolvedReason.PROTECTED),
+        ("../elsewhere/page.md", UnresolvedReason.PROTECTED),
+        ("linked/page.md", UnresolvedReason.PROTECTED),
+    ]
+    assert report.files == [] and outside.read_text(encoding="utf-8") == "[a](old/a.md)\n"
+    assert managed.read_text(encoding="utf-8") == "[a](../../../../old/a.md)\n"
+
+
+def test_new_destinations_are_encoded_so_they_read_back(tmp_path: Path) -> None:
+    page = _write(
+        tmp_path,
+        "page.md",
+        "[s](old/a.md) [h](old/b.md#top) [l](old/c.md) [w](<old/d.md>) [e](old/f%20g.md) [k](new%20dir/x.md)\n",
+    )
+    relocation = LinkRelocation(
+        files={
+            "old/a.md": "new dir/a (1).md",
+            "old/b.md": "new/a#b.md",
+            "old/c.md": "new/<c>.md",
+            "old/d.md": "new/d e.md",
+            "old/f g.md": "new/f g%.md",
+        }
+    )
+    report = relocate_links(tmp_path, [page], relocation)
+    assert page.read_text(encoding="utf-8") == (
+        "[s](<new dir/a (1).md>) [h](new/a%23b.md#top) [l](new/%3Cc%3E.md) [w](<new/d e.md>) "
+        "[e](<new/f g%25.md>) [k](new%20dir/x.md)\n"
+    )
+    assert (report.rewritten[0].old, report.rewritten[0].new) == ("old/a.md", "<new dir/a (1).md>")
 
 
 def test_unreadable_and_unwritable_files_are_reported(tmp_path: Path) -> None:

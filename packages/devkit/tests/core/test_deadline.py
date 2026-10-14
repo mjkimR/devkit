@@ -59,8 +59,14 @@ def test_run_git_takes_the_time_left(repo: Path, monkeypatch: pytest.MonkeyPatch
         return real(command, **kwargs)  # type: ignore[call-overload]
 
     monkeypatch.setattr(subprocess, "run", spy)
-    assert run_git(repo, "rev-parse", "--is-inside-work-tree", timeout=None, deadline=Deadline(30)) == b"true\n"
+    assert run_git(repo, "rev-parse", "--is-inside-work-tree", deadline=Deadline(30)) == b"true\n"
     assert 0 < seen[0] <= 30
+
+
+@pytest.mark.parametrize("timeout", [None, 5.0])
+def test_run_git_refuses_a_timeout_and_a_deadline_together(repo: Path, timeout: float | None) -> None:
+    with pytest.raises(ValueError, match="not both"):
+        run_git(repo, "status", timeout=timeout, deadline=Deadline(30))
 
 
 def test_run_git_with_an_expired_deadline_starts_no_git(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:

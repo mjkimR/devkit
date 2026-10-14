@@ -19,6 +19,7 @@ from devkit.rules import (
     match_path,
 )
 from devkit.rules.engine.config import parse_rules_config
+from devkit.rules.engine.errors import PolicyError
 from devkit.rules.engine.settings import Override, RawSettings, build_resolvers, validate_pattern
 from devkit.rules.rules import BaseRule, FileLengthRule, FileLengthSettings
 
@@ -337,6 +338,7 @@ def test_non_dataclass_settings_with_config_is_a_policy_error() -> None:
     assert [str(e) for e in errors] == ["RULE-dict: settings must be a dataclass instance carrying the defaults"]
     assert errors[0].rule_id == "RULE-dict"
     assert errors[0].code == "RULES_SETTINGS_INVALID" and errors[0].mode is ActionMode.MAINTENANCE
+    assert errors[0].fix is not None and "config.toml" not in errors[0].fix and "DictSettings" in errors[0].fix
 
 
 # --- settings classes that raise ---------------------------------------------
@@ -378,6 +380,18 @@ def test_post_init_value_error_on_an_override_is_an_input_error() -> None:
     assert info.value.mode is ActionMode.INPUT_ERROR
 
 
+def _assert_declaration_fix(error: PolicyError, owner: str) -> None:
+    """A declaration defect points at the rule's declaration, never at the project's config table."""
+    assert error.fix is not None and "config.toml" not in error.fix
+    assert error.fix.startswith(f"Fix the settings declaration of RULE-nonneg ({owner} in ")
+    assert __file__ in error.fix and error.fix.endswith("or report it to the rule's author")
+
+
+def test_project_value_errors_keep_the_config_fix() -> None:
+    _, errors = build_resolvers([NonNegativeRule(NonNegative())], {"RULE-nonneg": RawSettings({"n": -1})})
+    assert errors[0].fix is not None and ".devkit/config.toml" in errors[0].fix
+
+
 def test_defaults_rejected_by_validate_settings_are_a_declaration_defect() -> None:
     class StrictRule(NonNegativeRule):
         def validate_settings(self, settings: NonNegative) -> None:
@@ -387,6 +401,7 @@ def test_defaults_rejected_by_validate_settings_are_a_declaration_defect() -> No
     _, errors = build_resolvers([StrictRule(NonNegative())], {})
     assert [str(e) for e in errors] == ["RULE-nonneg: defaults: n must not be 0"]
     assert errors[0].code == "RULES_SETTINGS_INVALID" and errors[0].mode is ActionMode.MAINTENANCE
+    _assert_declaration_fix(errors[0], "NonNegative")
 
 
 @dataclass(frozen=True)
@@ -425,8 +440,10 @@ def test_declaration_defects_are_maintenance_errors_for_the_rule(
     assert resolvers == {} and len(errors) == 1
     assert errors[0].rule_id == "RULE-nonneg" and str(errors[0]).startswith("RULE-nonneg: ")
     assert errors[0].code == "RULES_SETTINGS_INVALID" and errors[0].mode is ActionMode.MAINTENANCE
-    with pytest.raises(SettingsError, match=match):
+    _assert_declaration_fix(errors[0], type(settings).__qualname__)
+    with pytest.raises(SettingsError, match=match) as info:
         SettingsResolver("RULE-nonneg", settings, raw)
+    _assert_declaration_fix(info.value, type(settings).__qualname__)
 
     ctx = RuleContext(workspace_root=tmp_path, rule_settings=configured)
     result = evaluate_rules(ctx, [NonNegativeRule(settings)])

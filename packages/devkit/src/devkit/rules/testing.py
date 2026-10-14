@@ -34,7 +34,9 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from devkit.core.plugins import TESTS_DIRECTORY, PluginPackage, plugin_modules
+from devkit.core.receipt import MANAGED_PATH, RECEIPT_PATH
 from devkit.rules.engine.config import parse_rules_config
+from devkit.rules.engine.discovery import resolve_managed_rules
 from devkit.rules.engine.errors import RuleLoadError, RulesRunError
 from devkit.rules.engine.evaluator import EvaluationResult, evaluate_rules
 from devkit.rules.engine.models import Phase, Rule, RuleContext, Violation
@@ -61,6 +63,45 @@ def rule_directory(anchor: str | Path) -> Path:
     return path
 
 
+def _workspace_of(managed: Path) -> Path | None:
+    """The workspace root a path under ``.devkit/managed/`` belongs to, else ``None``."""
+    marker = PurePosixPath(MANAGED_PATH).parts
+    parts = managed.parts
+    for index in range(len(parts) - len(marker) + 1):
+        if parts[index : index + len(marker)] == marker:
+            return Path(*parts[:index])
+    return None
+
+
+def _receipt_package(workspace: Path, managed: Path, folder: Path) -> PluginPackage:
+    """The package devkit builds from the receipt for the deployed rule at ``managed``: only the files the
+    receipt lists, each verified against its hash, an override's file replacing the managed one.
+
+    Raises ``RuleLoadError`` as devkit would report the rule: a listed file that is missing or drifted, or a
+    folder the receipt does not list as a rule asset.
+    """
+    found = resolve_managed_rules(workspace)
+    target = managed.resolve()
+    owners = [
+        (directory, package)
+        for package in found.packages
+        if package.root is not None and target.is_relative_to(directory := package.root.resolve())
+    ]
+    if owners:
+        return max(owners, key=lambda owner: len(owner[0].parts))[1]
+    for error in found.errors:
+        listed = [workspace / item for item in error.target_files]
+        if error.target_files == (RECEIPT_PATH,) or any(
+            (managed_counterpart(path) or path).resolve().is_relative_to(target) for path in listed
+        ):
+            raise RuleLoadError(str(error), target_files=list(error.target_files), actor=error.actor, fix=error.fix)
+    raise RuleLoadError(
+        f"{folder} is not a rule asset the installation receipt {workspace / RECEIPT_PATH} lists",
+        target_files=[str(folder)],
+        fix="Run `devkit sync`, or test the rule in its source folder",
+    )
+
+
 def _rule_package(folder: Path) -> PluginPackage:
     """The plugin package of a rule folder, with a project override applied as devkit applies it.
 
@@ -68,11 +109,19 @@ def _rule_package(folder: Path) -> PluginPackage:
     each module file the project override (``.devkit/overrides/<bundle>/...``)
     holds replacing the managed one, so the tests of either copy test the rule
     devkit runs: a managed copy's tests, which an override without its own
-    ``tests/`` keeps, run against the overridden modules. Any other folder is
-    loaded as it is. Raises ``ValueError`` when one module has two files.
+    ``tests/`` keeps, run against the overridden modules. When the project has
+    an installation receipt, the package is the one devkit builds from it: only
+    the module files the receipt lists for the rule, verified against their
+    hashes (``_receipt_package``); without one the two folders are merged
+    file by file. Any other folder is loaded as it is. Raises ``ValueError``
+    when one module has two files.
     """
     managed = managed_counterpart(folder)
     base = managed if managed is not None and managed.is_dir() else folder
+    deployed = managed if managed is not None else base
+    workspace = _workspace_of(deployed)
+    if workspace is not None and (workspace / RECEIPT_PATH).exists():
+        return _receipt_package(workspace, deployed, folder)
     override = override_counterpart(base)
     if override is None or not override.is_dir():
         return PluginPackage.from_directory(base)
@@ -85,10 +134,13 @@ def load_rule(anchor: str | Path, rule_id: str | None = None) -> Rule:
 
     The folder of a deployed copy is loaded with the project override applied:
     the managed modules, each replaced by the override's file when it holds one,
-    whichever of the two folders ``anchor`` is in. ``rule_id`` selects among the
+    whichever of the two folders ``anchor`` is in. With an installation receipt
+    only the files it lists for the rule are loaded, verified as ``devkit rules
+    check`` verifies them, so the tests run what devkit runs. ``rule_id`` selects among the
     rules the package defines; without it the package must define exactly one.
     Raises ``RuleLoadError`` (``RULES_LOAD_FAILED``) when the folder does not
-    exist, fails to load, defines no rule, several without a ``rule_id``, or
+    exist, is a deployed copy the receipt does not list or lists with a missing
+    or drifted file, fails to load, defines no rule, several without a ``rule_id``, or
     none with ``rule_id``.
     """
     folder = rule_directory(anchor)

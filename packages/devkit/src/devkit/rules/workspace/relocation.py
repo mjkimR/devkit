@@ -5,27 +5,25 @@ the new locations and reports every change. It never raises for a link or a file
 path with no new location, and a file that cannot be read or written, become ``UnresolvedLink`` entries.
 
 All paths are absolute, or relative to the ``root`` passed to ``relocate_links``; they are compared after
-``os.path.normpath``, never resolved through symbolic links. A destination is taken as written (no
-percent-decoding or escape removal), so it is relocated only when its spelling names the moved path.
+``os.path.normpath``, never resolved through symbolic links. A destination is read as ``markdown_link`` reads
+it (``local_target``: escapes removed, percent-encoding decoded), and a new one is written so that it reads
+back the same way (``encode_destination``).
 """
 
 from __future__ import annotations
 
 import os
 import posixpath
-import re
 from collections.abc import Collection, Iterable, Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
-from devkit.core import atomic_write_text
-from devkit.rules.workspace.markdown import extract_links
+from devkit.core import MANAGED_PATH, OVERRIDES_PATH, atomic_write_text
+from devkit.rules.workspace.markdown import encode_destination, extract_links, local_target
 
 StrPath = str | os.PathLike[str]
-
-_SCHEME = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
 
 
 class UnresolvedReason(StrEnum):
@@ -34,6 +32,9 @@ class UnresolvedReason(StrEnum):
     UNMAPPED = "unmapped"  # the link points into a moved-away path that no mapping covers
     UNREADABLE = "unreadable"  # the file cannot be read as UTF-8 (``line`` 0, empty ``target``)
     UNWRITABLE = "unwritable"  # the rewritten file cannot be written (``line`` 0, empty ``target``)
+    SYMLINK = "symlink"  # the file is a symbolic link, an alias of its target (``line`` 0, empty ``target``)
+    PROTECTED = "protected"  # the file resolves outside ``root`` or under ``.devkit/managed`` or
+    # ``.devkit/overrides``, which are never written (``line`` 0, empty ``target``)
 
 
 @dataclass(frozen=True)
@@ -140,6 +141,14 @@ class _Plan:
         return match[1] + here[len(match[0]) :] if match else here
 
 
+def _protected(file: str, real_root: str) -> bool:
+    """Whether ``file`` resolves outside ``real_root`` or into a receipt-pinned directory beneath it."""
+    real = os.path.realpath(file)
+    if not _under(real, real_root):
+        return True
+    return any(_under(real, os.path.join(real_root, pinned)) for pinned in (MANAGED_PATH, OVERRIDES_PATH))
+
+
 def _read(path: str) -> str:
     with open(path, encoding="utf-8", newline="") as handle:
         return handle.read()
@@ -151,20 +160,33 @@ def relocate_links[K: StrPath](
     """Rewrite the relative inline Markdown links of ``files`` (``extract_links``) for ``relocation``.
 
     A destination with a scheme (``https:``, ``mailto:``), a root-relative one (``/x``) and a fragment- or
-    query-only one are left alone. The rest resolve against the file's directory, or against its origin
+    query-only one are left alone; the rest are read as ``local_target`` reads them (escapes removed,
+    percent-encoding decoded). The rest resolve against the file's directory, or against its origin
     (``file_origins``, ``directory_origins``). A link into a moved-away path goes to its new location; a
     link of a file written for another location is rewritten to reach the same target from where the file
     is now. The ``#fragment`` and ``?query`` are kept, and a destination that already names the target
-    from the file's directory keeps the author's spelling (``./a.md`` stays). A link into a moved-away
-    path with no new location is ``unmapped`` and stays as written.
+    from the file's directory keeps the author's spelling (``./a.md`` stays). A new destination is
+    written with ``encode_destination`` (percent-encoding ``%``, ``\\``, ``#``, ``?``, ``<``, ``>``; wrapped in
+    ``<...>`` for whitespace or parentheses), and a trailing ``/`` is kept. A link into a moved-away path
+    with no new location is ``unmapped`` and stays as written.
 
-    Changed files are replaced with ``atomic_write_text`` (a symbolic link is written through to its
-    target); line endings and every other byte are kept. Returns the report; nothing is raised for a file.
+    A file that is a symbolic link is skipped (``symlink``): it is an alias of its target, whose links
+    resolve from the target's directory, so the target is relocated at its own path. A file that resolves
+    outside ``root`` or under ``.devkit/managed`` or ``.devkit/overrides`` is never read or written
+    (``protected``). Changed files are replaced with ``atomic_write_text``; line endings and every other
+    byte are kept. Returns the report; nothing is raised for a file.
     """
     plan = _Plan(root, relocation)
     report = LinkRelocationReport()
+    real_root = os.path.realpath(root)
     for file in map(plan.norm, files):
         display = Path(os.path.relpath(file, root)).as_posix()
+        if os.path.islink(file):
+            report.unresolved.append(UnresolvedLink(display, 0, "", UnresolvedReason.SYMLINK))
+            continue
+        if _protected(file, real_root):
+            report.unresolved.append(UnresolvedLink(display, 0, "", UnresolvedReason.PROTECTED))
+            continue
         try:
             text = _read(file)
         except (OSError, UnicodeDecodeError):
@@ -176,10 +198,10 @@ def relocate_links[K: StrPath](
         rewritten: list[RelocatedLink] = []
         for link in extract_links(text):
             target = link.target
-            cut = min((i for i in (target.find("#"), target.find("?")) if i >= 0), default=len(target))
-            path_part, suffix = target[:cut], target[cut:]
-            if not path_part or path_part.startswith("/") or _SCHEME.match(path_part):
+            local = local_target(target)
+            if local is None or "\0" in local.path:
                 continue
+            path_part, suffix = local.path, local.suffix
             resolved = os.path.normpath(os.path.join(base, path_part))
             gone = plan.gone(resolved)
             if not gone and base == here:
@@ -191,15 +213,18 @@ def relocate_links[K: StrPath](
             new_rel = Path(os.path.relpath(new_abs, here)).as_posix()
             if new_rel == posixpath.normpath(path_part):
                 continue  # the same target from the file's directory: keep the author's spelling
-            edits.append((link.line - 1, link.target_start, link.target_end, new_rel + suffix))
-            rewritten.append(RelocatedLink(display, link.line, target, new_rel + suffix))
+            if path_part.endswith("/") and not new_rel.endswith("/"):
+                new_rel += "/"
+            destination = encode_destination(new_rel, suffix, angle=link.angle)
+            edits.append((link.line - 1, link.target_start, link.target_end, destination))
+            rewritten.append(RelocatedLink(display, link.line, target, destination))
         if not edits:
             continue
         lines = text.split("\n")
         for index, start, end, replacement in sorted(edits, reverse=True):
             lines[index] = lines[index][:start] + replacement + lines[index][end:]
         try:
-            atomic_write_text(Path(os.path.realpath(file)), "\n".join(lines))
+            atomic_write_text(Path(file), "\n".join(lines))
         except OSError:
             report.unresolved.append(UnresolvedLink(display, 0, "", UnresolvedReason.UNWRITABLE))
             continue

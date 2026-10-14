@@ -7,7 +7,15 @@ from pathlib import Path
 
 import click
 
-from devkit.core.cli import FORMAT_OPTION, boundary, echo_json, echo_notices, highest_exit_code, is_json
+from devkit.core.cli import (
+    FORMAT_OPTION,
+    boundary,
+    echo_json,
+    echo_notices,
+    exit_on_warnings,
+    highest_exit_code,
+    is_json,
+)
 from devkit.core.errors import ArgumentError
 from devkit.workflow.cli.app import WORKSPACE, cli, workspace
 from devkit.workflow.definition.checks import Registry
@@ -42,7 +50,9 @@ def validate_cmd(workspace_root: str | None, paths: tuple[str, ...], output_form
 
     Exits with the highest exit code among the problems: 1 when a definition
     is invalid or definitions disagree on a shared stage, 2 when a definition
-    or plugin check file cannot be loaded.
+    or plugin check file cannot be loaded. Warnings (an optional stage whose
+    approval is never requested) leave a definition valid; under --strict
+    they exit 1.
     """
     ws = workspace(workspace_root)
     missing = [p for p in paths if not Path(p).exists()]
@@ -73,3 +83,4 @@ def validate_cmd(workspace_root: str | None, paths: tuple[str, ...], output_form
     echo_notices(report.notices)
     if not report.ok:
         sys.exit(highest_exit_code(report.errors))
+    exit_on_warnings(report.notices)

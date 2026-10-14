@@ -26,6 +26,7 @@ from devkit.workflow.errors import (
     CheckError,
     CheckReferenceProblem,
     DefinitionProblem,
+    OptionalStageWarning,
     RolesUncheckedNotice,
     RoleUnknownProblem,
     SharedStageMismatchError,
@@ -38,9 +39,9 @@ if TYPE_CHECKING:
 
 SHARED_STAGE_FIELDS = ("exit", "gate", "role", "isolation", "skills", "artifacts")
 # An unmet optional stage is passed over and never becomes current, so nothing asks for its approvals.
-_UNANSWERABLE = (
-    "an optional stage cannot have a {what}: it is never current, so its request is never asked; "
-    "drop optional or move the approval to a stage that is not optional"
+_UNASKED = (
+    "workflow {workflow}: optional stage {stage!r} has {what}, which is never requested because the stage never "
+    "becomes current; only {satisfied} satisfy it"
 )
 
 
@@ -127,6 +128,37 @@ def validate_definition(
     return problems
 
 
+def definition_warnings(
+    doc: WorkflowDocument, anchor: str, plugins: Iterable[BaseCheck] = ()
+) -> list[OptionalStageWarning]:
+    """What makes the document harder to use without making it invalid: ``OptionalStageWarning`` for each gate or
+    ``human`` exit check of an optional stage, which nothing requests. Unresolvable checks are left to
+    ``validate_definition``.
+    """
+    registry, _ = _registry(doc.anchor(anchor), doc, tuple(plugins))
+    warnings: list[OptionalStageWarning] = []
+
+    def warn(stage: StageDefinition, field: str, what: str, satisfied: str) -> None:
+        message = _UNASKED.format(workflow=doc.id, stage=stage.id, what=what, satisfied=satisfied)
+        fix = f"Drop optional from stage {stage.id!r}, or move the approval to a stage that is not optional"
+        warnings.append(OptionalStageWarning(message, where=_where(stage.id, field), fix=fix))
+
+    for s in doc.stages:
+        if not s.optional:
+            continue
+        if s.gate is not None:
+            satisfied = f"approvals.{s.gate}=auto, --given {s.gate} or a decision record written by a host"
+            warn(s, "human_gate", f"gate {s.gate!r}", satisfied)
+        for ref in s.exit:
+            try:
+                _, check = registry.resolve_name(ref)
+            except CheckError:
+                continue
+            if check.class_ == CheckClass.HUMAN:
+                warn(s, "exit", f"human check {ref!r}", f"--given {ref} or a decision record written by a host")
+    return warnings
+
+
 def _candidate_problems(
     doc: WorkflowDocument, registry: Registry, known_ids: Iterable[str] | None
 ) -> list[DefinitionProblem]:
@@ -182,17 +214,12 @@ def _stage_problems(
         problems.append(_problem(s.id, "human_gate", f"{HANDOFF_GATE!r} is reserved for workflow handoff"))
     elif s.gate is not None and not is_ident(s.gate):
         problems.append(_problem(s.id, "human_gate", f"gate name {s.gate!r} must match {IDENT_HINT}"))
-    if s.optional and s.gate is not None:
-        problems.append(_problem(s.id, "human_gate", _UNANSWERABLE.format(what=f"gate {s.gate!r}")))
     for fld in ("entry", "exit"):
         for ref in getattr(s, fld):
             try:
-                _, check = registry.resolve_name(ref)
+                registry.resolve_name(ref)
             except CheckError as exc:
                 problems.append(_check_problem(s.id, fld, exc))
-                continue
-            if fld == "exit" and s.optional and check.class_ == CheckClass.HUMAN:
-                problems.append(_problem(s.id, fld, _UNANSWERABLE.format(what=f"human check {ref!r}")))
     for i, r in enumerate(s.returns):
         if not r.to:
             problems.append(_problem(s.id, f"returns[{i}].to", "missing target stage"))
@@ -245,6 +272,7 @@ class DefinitionReport:
 
     doc: WorkflowDocument
     problems: tuple[DefinitionProblem, ...]
+    warnings: tuple[OptionalStageWarning, ...] = ()  # reported as notices; they never make it invalid
 
     @property
     def ok(self) -> bool:
@@ -280,12 +308,18 @@ class ValidationReport:
         return not self.errors
 
     @property
-    def notices(self) -> tuple[RolesUncheckedNotice, ...]:
-        """``WORKFLOW_ROLES_UNCHECKED`` when stage roles could not be checked; notices never fail validation."""
+    def notices(self) -> tuple[WorkflowError, ...]:
+        """Each definition's warnings (``WORKFLOW_OPTIONAL_STAGE_UNASKED``), then ``WORKFLOW_ROLES_UNCHECKED`` when
+        stage roles could not be checked; warnings and notices never fail validation (except a warning under
+        ``--strict``)."""
+        warnings = tuple(w for r in self.definitions for w in r.warnings)
         if self.roles_checked:
-            return ()
+            return warnings
         missing = self.roles_dir or "[workflow] roles_dir directory"
-        return (RolesUncheckedNotice(f"stage roles were not checked: no installation receipt and no {missing}"),)
+        return (
+            *warnings,
+            RolesUncheckedNotice(f"stage roles were not checked: no installation receipt and no {missing}"),
+        )
 
     def to_dict(self, root: Path | None = None) -> dict[str, Any]:
         """``validate --format json``: definitions with their own ``errors``, load and shared-stage ``errors``,
@@ -312,6 +346,13 @@ def validate_definitions(
     """Validate ``docs`` together: each one, and (with ``compare_shared``) their shared stages."""
     known = set(known_ids) | {d.id for d in docs}
     plugins = tuple(plugins)
-    reports = tuple(DefinitionReport(d, tuple(validate_definition(d, anchor, known, roles, plugins))) for d in docs)
+    reports = tuple(
+        DefinitionReport(
+            d,
+            tuple(validate_definition(d, anchor, known, roles, plugins)),
+            tuple(definition_warnings(d, anchor, plugins)),
+        )
+        for d in docs
+    )
     shared = tuple(compare_shared_stages(docs)) if compare_shared else ()
     return ValidationReport(reports, tuple(load_errors), shared, roles is not None)

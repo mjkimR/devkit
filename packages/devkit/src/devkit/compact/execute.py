@@ -31,8 +31,9 @@ from pathlib import Path
 from devkit.advisory import AdvisoryError
 from devkit.compact.errors import CommandNotStartedError, LogDirectoryError, SlowCommandNotice
 from devkit.compact.scan import Scan, scan
+from devkit.core.errors import DevkitRootNestedError
 from devkit.core.logs import get_logger
-from devkit.core.project import find_project_root
+from devkit.core.project import find_project_root, git_toplevel
 
 KEEP_LOGS = 20
 STOP_GRACE = 5.0
@@ -88,8 +89,16 @@ def log_root() -> Path:
 
 
 def default_log_dir(cwd: Path) -> Path:
-    """``<tmp>/devkit-run-<uid>/<hash>``: one directory per project, outside the work tree."""
-    key = hashlib.sha256(str(find_project_root(cwd)).encode()).hexdigest()[:12]
+    """``<tmp>/devkit-run-<uid>/<hash>``: one directory per project, outside the work tree.
+
+    The key only groups logs: a nested ``.devkit/`` (``DEVKIT_ROOT_NESTED``) does not stop a run, whose logs then go
+    with the repository's top level.
+    """
+    try:
+        root = find_project_root(cwd)
+    except DevkitRootNestedError:
+        root = git_toplevel(cwd) or cwd.resolve()
+    key = hashlib.sha256(str(root).encode()).hexdigest()[:12]
     return log_root() / key
 
 
@@ -348,13 +357,21 @@ def _stop(process: subprocess.Popen[bytes]) -> None:
     The leader exiting is not enough: a member that ignores ``SIGTERM`` is killed once the grace ends,
     so nothing in the group outlives the run. Further interrupts are ignored meanwhile, so a second
     Ctrl-C cannot skip the kill.
+
+    The leader is reaped only once the group is done with: while it is an unreaped zombie its PID,
+    which is the group ID, cannot be reused, so no signal can reach another process group. A leader
+    this run has already reaped (the command had exited) is not signalled at all, since its group ID
+    may name another group by now; what it left in the background is not stopped, as when the run
+    ends normally. On macOS a group left with zombies only refuses even signal ``0`` (``EPERM``), which
+    ends the wait at once; on Linux a zombie still counts as a member, so the unreaped leader keeps the
+    group alive and an interrupted run waits the full ``STOP_GRACE`` before the ``SIGKILL``.
     """
+    if process.returncode is not None:
+        return
     with _signals(signal.SIG_IGN, *INTERRUPTS):
         deadline = time.monotonic() + STOP_GRACE
-        with contextlib.suppress(ProcessLookupError):
+        with contextlib.suppress(ProcessLookupError, PermissionError):  # PermissionError: zombies only (macOS)
             os.killpg(process.pid, signal.SIGTERM)
-        with contextlib.suppress(subprocess.TimeoutExpired):
-            process.wait(timeout=STOP_GRACE)
         while _group_alive(process.pid) and time.monotonic() < deadline:
             time.sleep(_STOP_POLL)
         if _group_alive(process.pid):

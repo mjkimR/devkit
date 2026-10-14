@@ -5,7 +5,6 @@ from __future__ import annotations
 import os
 import shlex
 import subprocess
-import tempfile
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
@@ -13,7 +12,7 @@ from enum import StrEnum
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError, Level
-from devkit.core import file_lock, require_git_toplevel
+from devkit.core import atomic_write_bytes, file_lock, require_git_toplevel
 from devkit.gate.engine.models import Stage
 from devkit.gate.engine.runner import GateProject, load_gate_project
 from devkit.gate.errors import (
@@ -258,17 +257,32 @@ def status(cwd: Path, location: HooksLocation | None = None) -> list[HookStatus]
     return result
 
 
-def missing_entry_notices(project: GateProject, statuses: Sequence[HookStatus]) -> list[AdvisoryError]:
-    """One ``GATE_HOOK_ENTRY_MISSING`` warning per stage whose enabled gates have no hook entry to run them.
+def _enabled_gates(project: GateProject, stage: Stage) -> list[str]:
+    return [gate.id for gate in project.registry.for_stage(stage) if project.config.enabled(gate)]
+
+
+def missing_entry_notices(
+    project: GateProject, statuses: Sequence[HookStatus], location: HooksLocation | None = None
+) -> list[AdvisoryError]:
+    """Warnings for enabled gates that do not run at commit time.
 
     A stage's gates run only through its managed dispatcher and that dispatcher's ``20-devkit`` entry,
-    which ``install`` writes for the stages with enabled gates when it runs. A gate of another stage
-    enabled later in the configuration does not run until the next install or sync.
+    which ``install`` writes for the stages with enabled gates when it runs: one ``GATE_HOOK_ENTRY_MISSING``
+    per stage without them (a gate of another stage enabled later in the configuration does not run until
+    the next install or sync). When ``location`` has a ``core.hooksPath`` that sends Git elsewhere, no
+    managed hook runs at all, and ``install`` refuses: one ``GATE_HOOKS_PATH_SET`` warning names every
+    enabled gate instead, with the fix that clears the setting.
     """
+    if location is not None and location.hooks_path:
+        gates = [gate for stage in Stage for gate in _enabled_gates(project, stage)]
+        if not gates:
+            return []
+        notice = _hooks_path_error(location, f"gates={','.join(gates)}", prefix="enabled gates do not run: ")
+        return [notice.with_level(Level.WARNING)]
     by_stage = {item.stage: item for item in statuses}
     notices: list[AdvisoryError] = []
     for stage in Stage:
-        gates = [gate.id for gate in project.registry.for_stage(stage) if project.config.enabled(gate)]
+        gates = _enabled_gates(project, stage)
         item = by_stage.get(stage)
         if not gates or item is None:
             continue
@@ -311,19 +325,11 @@ def check_python(python: str) -> str:
 
 
 def _write(path: Path, text: str) -> None:
-    """Replace ``path`` with an executable LF-only file without following a link at ``path``."""
+    """Replace ``path`` with an executable (``0o755``) LF-only file without following a link at ``path``."""
     data = text.encode("utf-8")
     if path.is_file() and not path.is_symlink() and path.read_bytes() == data and os.access(path, os.X_OK):
         return
-    fd, name = tempfile.mkstemp(prefix=f".{path.name}.devkit-", dir=path.parent)
-    temporary = Path(name)
-    try:
-        with os.fdopen(fd, "wb") as stream:
-            stream.write(data)
-            os.fchmod(stream.fileno(), 0o755)
-        os.replace(temporary, path)
-    finally:
-        temporary.unlink(missing_ok=True)
+    atomic_write_bytes(path, data, mode=0o755)
 
 
 def _hooks_path_fix(location: HooksLocation) -> str:
@@ -340,14 +346,20 @@ def _hooks_path_fix(location: HooksLocation) -> str:
     return f"Once the user agrees, {step}, then `devkit gate install`"
 
 
+def _hooks_path_error(location: HooksLocation, *details: str, prefix: str = "") -> HooksPathSetError:
+    """``GATE_HOOKS_PATH_SET`` for the ``core.hooksPath`` of ``location``, its message after ``prefix``."""
+    scope = f" ({location.hooks_path_scope} config)" if location.hooks_path_scope else ""
+    return HooksPathSetError(
+        f"{prefix}{HOOKS_PATH_KEY} is set to {location.hooks_path!r}{scope}; managed hooks are only installed into "
+        f"{location.directory}, which Git would not run",
+        *details,
+        fix=_hooks_path_fix(location),
+    )
+
+
 def _refuse_hooks_path(location: HooksLocation) -> None:
     if location.hooks_path:
-        scope = f" ({location.hooks_path_scope} config)" if location.hooks_path_scope else ""
-        raise HooksPathSetError(
-            f"{HOOKS_PATH_KEY} is set to {location.hooks_path!r}{scope}; managed hooks are only installed into "
-            f"{location.directory}, which Git would not run",
-            fix=_hooks_path_fix(location),
-        )
+        raise _hooks_path_error(location)
 
 
 @dataclass

@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import dataclasses
 import fnmatch
+import sys
 import types
 import typing
 from collections.abc import Mapping, Sequence
@@ -156,9 +157,25 @@ def check_setting_value(annotation: Any, value: Any) -> Any:
     return value
 
 
+DECLARATION_FIX = (
+    "Fix the rule's settings declaration (its settings dataclass and validate_settings), "
+    "or report the defect to the rule's author"
+)
+
+
 def _declaration_defect(message: str) -> SettingsError:
-    """A defect of the rule's own settings declaration (``MAINTENANCE``), not of the project's values."""
-    return SettingsError(message, input_error=False, target_files=[])
+    """A defect of the rule's own settings declaration (``MAINTENANCE``), not of the project's values.
+
+    Its fix points at the declaration, not at ``.devkit/config.toml``; ``_for_rule`` names the rule and file.
+    """
+    return SettingsError(message, input_error=False, target_files=[], fix=DECLARATION_FIX)
+
+
+def _declaration_fix(rule_id: str, owner: type) -> str:
+    """The fix of a declaration defect of ``rule_id``, naming ``owner`` (the settings or rule class) and its file."""
+    source = getattr(sys.modules.get(owner.__module__), "__file__", None)
+    where = f" in {source}" if source else ""
+    return f"Fix the settings declaration of {rule_id} ({owner.__qualname__}{where}), or report it to the rule's author"
 
 
 def _describe(annotation: Any) -> str:
@@ -203,6 +220,7 @@ def declared_settings(rule: Rule) -> Any | None:
             rule_id=rule.id,
             input_error=False,
             target_files=[],
+            fix=_declaration_fix(rule.id, type(rule)),
         )
     return value
 
@@ -234,7 +252,7 @@ class SettingsResolver:
                     self._decode(candidate, f"overrides[{index}]")
                     self.overrides.append(Override(override.path, dict(override.values)))
         except SettingsError as exc:
-            raise _for_rule(rule_id, f"{rule_id}: {exc}", exc) from None
+            raise _for_rule(rule_id, f"{rule_id}: {exc}", exc, self._cls) from None
 
     def _merge(self, base: dict[str, Any], values: dict[str, Any], context: str) -> dict[str, Any]:
         merged = dict(base)
@@ -290,6 +308,7 @@ class SettingsResolver:
                     f"{self.rule_id}: {file}: the overrides matching this file ({paths}) combine to invalid settings: "
                     f"{exc}",
                     exc,
+                    self._cls,
                 ) from None
         return self._by_match[matched]
 
@@ -332,6 +351,12 @@ def build_resolvers(
     return resolvers, errors
 
 
-def _for_rule(rule_id: str, message: str, cause: SettingsError) -> SettingsError:
-    """``cause`` attributed to ``rule_id`` with a new message, keeping whether it is an input or a declaration defect."""
-    return SettingsError(message, rule_id=rule_id, input_error=cause.input_error, target_files=cause.target_files)
+def _for_rule(rule_id: str, message: str, cause: SettingsError, owner: type | None = None) -> SettingsError:
+    """``cause`` attributed to ``rule_id`` with a new message, keeping whether it is an input or a declaration defect.
+
+    A declaration defect's fix names ``owner`` (the settings class) and its file when it is given.
+    """
+    fix = _declaration_fix(rule_id, owner) if owner is not None and not cause.input_error else cause.fix
+    return SettingsError(
+        message, rule_id=rule_id, input_error=cause.input_error, target_files=cause.target_files, fix=fix
+    )

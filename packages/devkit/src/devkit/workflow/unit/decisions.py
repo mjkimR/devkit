@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field, replace
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -20,7 +20,7 @@ import yaml
 
 from devkit.workflow.definition.ids import IDENT_PATTERN, is_ident
 from devkit.workflow.errors import DecisionRecordError, RequestUnknownError
-from devkit.workflow.unit.records import as_text, write_numbered
+from devkit.workflow.unit.records import as_text, is_temporary, write_numbered
 
 DECISIONS_DIR = "decisions"
 FILE = re.compile(r"(\d{2,})-(.+)\.yaml")
@@ -58,10 +58,48 @@ def expected_kind(request_id: str) -> str | None:
     return None
 
 
-def utc_timestamp(now: datetime | None = None) -> str:
-    """``YYYY-MM-DDTHH:MM:SSZ`` for ``now`` (default: the current time)."""
-    moment = (now or datetime.now(UTC)).astimezone(UTC).replace(microsecond=0)
+# The time of day in an ISO 8601 timestamp: hours and minutes, optionally seconds and a fraction.
+_TIME_OF_DAY = re.compile(r"[T ]\d{2}:\d{2}(?P<seconds>:\d{2}(?:[.,](?P<fraction>\d+))?)?")
+
+
+def utc_timestamp(now: datetime | None = None, *, after: datetime | None = None) -> str:
+    """``YYYY-MM-DDTHH:MM:SS[.ffffff]Z`` for ``now`` (default: the current time), or ``after`` when ``now`` is earlier.
+
+    The fraction is written to the microsecond and omitted when it is zero, which reads back as a whole second.
+    """
+    moment = (now or datetime.now(UTC)).astimezone(UTC)
+    if after is not None and moment < after:
+        moment = after.astimezone(UTC)
     return moment.isoformat().replace("+00:00", "Z")
+
+
+@dataclass(frozen=True)
+class Instant:
+    """When a record was written, as precisely as its timestamp tells: at or after ``start`` and before ``end``.
+
+    ``2026-10-12T09:30:00Z`` spans that whole second; ``2026-10-12T09:30:00.250000Z`` one microsecond.
+    """
+
+    start: datetime
+    end: datetime
+
+
+def record_instant(text: str) -> Instant | None:
+    """The ``Instant`` an ISO 8601 timestamp with ``Z`` or an offset names; ``None`` when missing or malformed."""
+    try:
+        moment = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if moment.tzinfo is None:
+        return None
+    match = _TIME_OF_DAY.search(text)
+    if match is not None and match["seconds"] is None:
+        width = timedelta(minutes=1)
+    elif match is not None and match["fraction"] is not None:
+        width = timedelta(microseconds=10 ** max(0, 6 - len(match["fraction"])))
+    else:
+        width = timedelta(seconds=1)
+    return Instant(moment, moment + width)
 
 
 @dataclass(frozen=True)
@@ -113,6 +151,18 @@ class Decisions:
 
     def next_sequence(self) -> int:
         return self.max_seq + 1
+
+    def returns_end(self) -> datetime | None:
+        """The end of the latest accepted ``return`` record's ``Instant``; ``None`` without one.
+
+        Anything stamped at or after it was written after every return of these records.
+        """
+        ends = [
+            instant.end
+            for r in self.records
+            if r.kind == "return" and r.action == "accept" and (instant := record_instant(r.at)) is not None
+        ]
+        return max(ends, default=None)
 
 
 def _timestamp(value: Any) -> str:
@@ -192,8 +242,8 @@ def load_decisions(unit_dir: Path) -> Decisions:
         return out
     entries: list[tuple[int, str, Path]] = []
     for path in directory.iterdir():
-        match = FILE.fullmatch(path.name)
-        if path.is_file() and match:
+        match = None if is_temporary(path.name) else FILE.fullmatch(path.name)
+        if match and path.is_file():
             entries.append((int(match.group(1)), path.name, path))
     for seq, name, path in sorted(entries):
         out.max_seq = max(out.max_seq, seq)

@@ -150,10 +150,20 @@ def test_core_hooks_path_is_refused_and_reported(repo: Path) -> None:
     git(repo, "config", "--unset", "core.hooksPath")
     _install(repo)
     git(repo, "config", "core.hooksPath", ".husky")
-    data = _status(repo)
+    data = _status(repo)  # a warning: the report still exits 0
     assert data["hooks_path"] == ".husky" and [h["state"] for h in data["hooks"]] == ["managed"] * 3
+    assert [(n["code"], n["level"]) for n in data["notices"]] == [("GATE_HOOKS_PATH_SET", "WARNING")]
+    notice = data["notices"][0]
+    assert notice["message"].startswith("enabled gates do not run: core.hooksPath is set to '.husky'")
+    assert notice["advisory"]["details"] == ["gates=verify-commands,message-nonempty"]
+    assert (
+        notice["advisory"]["fix"]
+        == "Once the user agrees, run `git config --unset core.hooksPath`, then `devkit gate install`"
+    )
     code, output = _invoke("status", "-w", str(repo))
-    assert "core.hooksPath=.husky (wrappers do not run)" in output
+    assert code == 0 and "core.hooksPath=.husky (wrappers do not run)" in output
+    assert "GATE_HOOK_ENTRY_MISSING" not in output
+    assert _invoke("status", "-w", str(repo), "--strict")[0] == 1
     code, output = _invoke("uninstall", "-w", str(repo))
     assert code == 0 and "pre-commit: removed" in output and not (repo / ".git/hooks/pre-commit").exists()
 
@@ -684,6 +694,14 @@ def test_status_warns_for_every_stage_with_gates_before_install(repo: Path) -> N
     notices = _status(repo)["notices"]
     assert [n["code"] for n in notices] == ["GATE_HOOK_ENTRY_MISSING"] * 2
     assert ["is not a devkit dispatcher (missing)" in n["message"] for n in notices] == [True, True]
+
+
+def test_status_with_core_hooks_path_warns_with_its_fix_instead_of_install(repo: Path) -> None:
+    git(repo, "config", "core.hooksPath", ".husky")  # nothing installed: install would refuse
+    notices = _status(repo)["notices"]
+    assert [n["code"] for n in notices] == ["GATE_HOOKS_PATH_SET"]
+    assert "git config --unset core.hooksPath" in notices[0]["advisory"]["fix"]
+    assert _invoke("install", "-w", str(repo), "--python", sys.executable)[0] != 0
 
 
 def test_post_commit_script_failure_is_rendered_by_the_advisory_library(repo: Path) -> None:

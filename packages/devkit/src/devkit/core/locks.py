@@ -17,7 +17,7 @@ from pathlib import Path
 from types import ModuleType
 
 from devkit.core.deadline import Deadline
-from devkit.core.errors import ArgumentError, LockHeldError, LockUnsupportedError, UnsafePathError
+from devkit.core.errors import LockHeldError, LockUnsupportedError, UnsafePathError
 
 LOCK_FILE_MODE = 0o600
 POLL_INTERVAL = 0.01  # seconds between attempts while a bounded wait lasts
@@ -49,7 +49,7 @@ def _open(path: Path) -> int:
 
 def _bound(timeout: float | None, deadline: Deadline | None) -> Deadline | None:
     if timeout is not None and deadline is not None:
-        raise ArgumentError("file_lock takes a timeout or a deadline, not both")
+        raise ValueError("file_lock takes a timeout or a deadline, not both")
     return Deadline(timeout) if timeout is not None else deadline
 
 
@@ -68,7 +68,8 @@ def file_lock(
     ``O_NOFOLLOW``: a symbolic link, or anything else that is not a regular file, is ``UnsafePathError``
     (``PATH_UNSAFE``) and is never locked through. Other file system failures raise ``OSError``.
 
-    The wait for another holder is bounded by ``timeout`` seconds or by a shared ``deadline`` (not both):
+    The wait for another holder is bounded by ``timeout`` seconds or by a shared ``deadline``; passing both is
+    a programming error (``ValueError``), as it is for ``run_git``:
     the lock is polled every ``POLL_INTERVAL`` seconds, at least once even when no time is left (``timeout=0``
     tries once and never waits). When the wait runs out it raises ``deadline.exceeded(what)`` if the
     deadline has an error factory, else ``LockHeldError`` (``LOCK_HELD``, a ``DeadlineExceededError``).

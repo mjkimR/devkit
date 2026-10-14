@@ -400,6 +400,21 @@ def test_status_reports_an_unowned_guidance_block_as_the_conflict_sync_raises(
     assert raised.value.fix == status.errors[0].fix
 
 
+def test_status_does_not_report_an_unowned_guidance_block_that_sync_adopts(
+    installed: list[InstalledBundle], target: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("devkit.distribution.cli.discover_bundles", lambda: fake_discovery(installed))
+    sync_project(target, installed)
+    (target / RECEIPT_PATH).unlink()  # the block stays exactly as the sync writes it
+    status = get_project_status(target, installed)
+    assert status.guidance_block == "unowned"
+    assert status.errors == []
+    result = CliRunner().invoke(cli, ["status", "-w", str(target)])
+    assert result.exit_code == 0, result.output
+    sync_project(target, installed)  # adopted without a conflict
+    assert get_project_status(target, installed).guidance_block == "ok"
+
+
 def test_list_does_not_fail_on_a_symlinked_managed_file(
     installed: list[InstalledBundle], target: Path, tmp_path: Path
 ) -> None:

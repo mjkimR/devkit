@@ -264,7 +264,9 @@ files by path (`--import-mode=importlib`). The built-in rules follow the same la
   returns its rule (`load_rule(__file__, "RULE-x")` when the package defines several). The tests of a deployed copy
   therefore test the rule devkit runs: the managed copy with each module file of a project override
   (`.devkit/overrides/<bundle>/...`) in place of the managed one, whether the tests sit in the managed copy or in the
-  override. An override that holds no `tests/` keeps the managed copy's, and they run against the overridden modules.
+  override. With an installation receipt only the module files it lists for the rule are loaded, verified against
+  their hashes as `devkit rules check` verifies them, so a stray file in either folder is never imported and a
+  drifted managed copy fails to load (`RULES_LOAD_FAILED`, fix: `devkit sync`). An override that holds no `tests/` keeps the managed copy's, and they run against the overridden modules.
   A built-in rule is an importable module: its tests construct it directly.
 - `check(rule, root, files, ...)` writes `files` under `root` (pytest's `tmp_path`), evaluates the rule alone with
   `evaluate_rules` and returns its violations; `targets`, `fix`, `dry_run`, `phase`, `settings` (the

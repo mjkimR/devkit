@@ -1,12 +1,12 @@
 [project]
 name = "devkit-agt"
-version = "0.1.0"
+version = "0.1.1"
 description = "Agent asset distribution, repository rules, delivery workflows and commit gates in one CLI"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "click>=8.1.7",
-    "devkit-advisory==0.1.0",  # released in lockstep with devkit, from the same tag
+    "devkit-advisory==0.1.1",  # released in lockstep with devkit, from the same tag
     "pyyaml>=6.0.1",
     "tomlkit>=0.13",
 ]

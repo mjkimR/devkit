@@ -171,6 +171,38 @@ def test_a_signal_while_the_command_starts_still_stops_it(tmp_path: Path, monkey
     assert caught.value.run.log.exists() and started[0].returncode is not None
 
 
+def test_a_refused_sigterm_still_ends_in_command_interrupted(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    started: list[subprocess.Popen[Any]] = []
+    popen = subprocess.Popen
+    killpg = os.killpg
+
+    def popen_then_terminated(*args, **kwargs):
+        started.append(popen(*args, **kwargs))
+        os.kill(os.getpid(), signal.SIGTERM)
+        return started[0]
+
+    def refuse_sigterm(pgid: int, signum: int) -> None:
+        killpg(pgid, signum)
+        if signum == signal.SIGTERM:
+            raise PermissionError(1, "Operation not permitted")  # macOS, for a group left with zombies only
+
+    monkeypatch.setattr(execute.subprocess, "Popen", popen_then_terminated)
+    monkeypatch.setattr(execute.os, "killpg", refuse_sigterm)
+    with pytest.raises(CommandInterrupted) as caught:
+        run_command(["sleep", "60"], log_dir=tmp_path / "logs")
+    assert caught.value.run.interrupted == signal.SIGTERM
+    assert started[0].returncode is not None  # the leader was reaped
+
+
+def test_a_reaped_leader_s_group_is_never_signalled(monkeypatch: pytest.MonkeyPatch) -> None:
+    process = subprocess.Popen(["true"], start_new_session=True)
+    process.wait()  # its group ID may name another group by now
+    sent: list[int] = []
+    monkeypatch.setattr(execute.os, "killpg", lambda pgid, signum: sent.append(signum))
+    execute._stop(process)
+    assert sent == []
+
+
 def _gone(pid: int, timeout: float = 5.0) -> bool:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
@@ -253,3 +285,12 @@ def test_a_log_directory_that_cannot_be_written_is_a_log_directory_error(tmp_pat
     (tmp_path / "file").write_text("")
     with pytest.raises(LogDirectoryError):
         run_command(["true"], log_dir=tmp_path / "file" / "logs")
+
+
+def test_a_nested_devkit_root_does_not_stop_a_run(tmp_path: Path) -> None:
+    from devkit.compact.execute import default_log_dir
+
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    nested = tmp_path / "pkg"
+    (nested / ".devkit").mkdir(parents=True)
+    assert default_log_dir(nested) == default_log_dir(tmp_path)

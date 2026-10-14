@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -20,7 +21,8 @@ from devkit.workflow import (
     validate_definition,
 )
 from devkit.workflow.definition.discovery import discover_definitions, managed_definition_paths
-from testsupport.workflow import WORKFLOW, write_receipt
+from devkit.workflow.definition.validation import definition_warnings
+from testsupport.workflow import SIMPLE_UNIT, WORKFLOW, run_cli, simple_workspace, write_config, write_receipt
 
 # --- check syntax and registry ------------------------------------------------
 
@@ -275,3 +277,64 @@ def test_discover_merges_receipt_and_local_with_local_shadowing(workspace: Path)
     assert resolve_definition(defs, "bugfix", workspace).path == managed / "bugfix.md"
     with pytest.raises(WorkflowNotFoundError, match="installation receipt"):
         resolve_definition(defs, "nope", workspace)
+
+
+# --- optional stages --------------------------------------------------------------------------
+
+OPTIONAL = """---
+id: w
+schema_version: 1
+checks:
+  - {{ name: signed-off, class: human, description: "a person signed off" }}
+  - {{ name: ci, class: runner, description: "CI is green" }}
+stages:
+  - id: spike
+    optional: true
+    human_gate: {gate}
+    exit: [{exit}]
+  - id: build
+    exit: [anchor-exists]
+---
+"""
+
+
+def test_an_optional_stage_with_an_approval_is_valid_with_a_warning() -> None:
+    gated = parse_definition(OPTIONAL.format(gate="spike-ok", exit="anchor-exists"))
+    assert validate_definition(gated, "task.md") == []
+    [warning] = definition_warnings(gated, "task.md")
+    assert (warning.code, warning.level.value, warning.where) == (
+        "WORKFLOW_OPTIONAL_STAGE_UNASKED",
+        "WARNING",
+        "spike.human_gate",
+    )
+    assert "approvals.spike-ok=auto, --given spike-ok or a decision record written by a host" in warning.message
+    checked = parse_definition(OPTIONAL.format(gate="false", exit="signed-off"))
+    assert validate_definition(checked, "task.md") == []
+    [warning] = definition_warnings(checked, "task.md")
+    assert warning.where == "spike.exit" and "human check 'signed-off'" in warning.message
+    # Checks the engine evaluates, or a runner passes with --given, are no concern.
+    for exit_ in ("anchor-exists", "ci"):
+        assert definition_warnings(parse_definition(OPTIONAL.format(gate="false", exit=exit_)), "task.md") == []
+
+
+def test_validate_warns_about_an_optional_gated_stage(tmp_path: Path) -> None:
+    root = simple_workspace(tmp_path)
+    (root / ".devkit/workflows/w.md").write_text(OPTIONAL.format(gate="spike-ok", exit="anchor-exists"))
+    result = run_cli("validate", "-w", str(root), "--format", "json")
+    assert result.exit_code == 0, result.output
+    document = json.loads(result.stdout)
+    assert document["ok"] is True and document["definitions"][0]["errors"] == []
+    assert [n["code"] for n in document["notices"]] == ["WORKFLOW_OPTIONAL_STAGE_UNASKED", "WORKFLOW_ROLES_UNCHECKED"]
+    text = run_cli("validate", "-w", str(root))
+    assert text.exit_code == 0 and text.stdout.startswith("[VALID: .devkit/workflows/w.md id=w ")
+    assert "[WARN]" in text.stderr and "(WORKFLOW_OPTIONAL_STAGE_UNASKED)" in text.stderr
+    assert run_cli("validate", "-w", str(root), "--strict").exit_code == 1
+
+
+def test_a_unit_of_an_optional_gated_stage_can_satisfy_it(tmp_path: Path) -> None:
+    root = simple_workspace(tmp_path)
+    (root / ".devkit/workflows/w.md").write_text(OPTIONAL.format(gate="spike-ok", exit="anchor-exists"))
+    write_config(root, '[workflow]\ndefault = "w"\n[workflow.approvals]\nspike-ok = "auto"\n')
+    assert run_cli("new", "-w", str(root), "u").exit_code == 0
+    result = json.loads(run_cli("next", "-w", str(root), "--unit", SIMPLE_UNIT, "--no-lint", "--format", "json").stdout)
+    assert result["stage"] is None and result["done"] == ["spike", "build"]

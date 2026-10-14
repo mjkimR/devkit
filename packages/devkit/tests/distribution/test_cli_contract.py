@@ -317,7 +317,10 @@ def test_sync_locked_brings_stale_ignored_copies_to_a_pulled_receipt(tmp_path: P
 def test_sync_dry_run_and_check_take_the_shared_lock(item: InstalledBundle, target: Path, tmp_path: Path) -> None:
     bare = tmp_path / "bare"
     bare.mkdir()
-    assert _invoke("sync", "--check", "-w", str(bare)).exit_code in (0, 1)
+    checked = _invoke("sync", "--check", "-w", str(bare))
+    # A project never synced needs a sync: the check exits 1 and names the receipt it would create.
+    assert checked.exit_code == 1, checked.output
+    assert "[CHANGE: create .devkit/installation.json]" in checked.stdout
     assert _invoke("sync", "--dry-run", "-w", str(bare)).exit_code == 0
     assert not (bare / ".devkit").exists()  # a read-only check never creates devkit state
 

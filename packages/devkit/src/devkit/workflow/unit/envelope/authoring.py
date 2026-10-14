@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from dataclasses import replace
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +18,7 @@ from devkit.workflow.errors import (
     EnvelopeStatusError,
 )
 from devkit.workflow.evaluation.git import is_revision
+from devkit.workflow.unit.decisions import load_decisions, utc_timestamp
 from devkit.workflow.unit.envelope.model import (
     FINDING_KEYS,
     STATUSES,
@@ -29,6 +31,17 @@ from devkit.workflow.unit.envelope.model import (
 
 CHECK_VERDICTS = ("PASS", "FAIL", "SKIP")
 FROM_LATEST = "latest"
+
+
+def envelope_timestamp(unit_dir: Path, workflow: str, segment_start: int, now: datetime | None = None) -> str:
+    """The ``created_at`` of an envelope written now in the segment of ``workflow`` after decision ``segment_start``.
+
+    It is the current time (``utc_timestamp``), or the end of the segment's
+    latest accepted return (``Decisions.returns_end``) when the clock has not
+    passed it yet, so a return written just before never voids the envelope.
+    """
+    returns_end = load_decisions(unit_dir).segment(workflow, segment_start).returns_end()
+    return utc_timestamp(now, after=returns_end)
 
 
 def skeleton(kind: str, stage: str, created_at: str, workflow: str = "", segment: int | None = None) -> str:

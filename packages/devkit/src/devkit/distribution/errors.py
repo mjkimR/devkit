@@ -19,6 +19,7 @@ or decide something) or ``NOTICE`` (worth knowing). Override drift under
 from __future__ import annotations
 
 from devkit.advisory import Actor, AdvisoryError, ExitCode, Level, Retry
+from devkit.core.errors import LockHeldError as CoreLockHeldError
 
 LOCK_RETRY_AFTER = "the running devkit command finishes"
 
@@ -113,8 +114,11 @@ class UnsafeWorkspaceError(DistributionError):
     guardrail = True
 
 
-class LockHeldError(DistributionError):
-    """Another devkit command holds the project lock."""
+class LockHeldError(DistributionError, CoreLockHeldError):
+    """Another devkit command holds the project lock.
+
+    Also a ``devkit.core.LockHeldError`` (the same ``LOCK_HELD`` code), so catching either class catches it.
+    """
 
     code = "LOCK_HELD"
     actor = Actor.NONE

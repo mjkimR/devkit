@@ -3,16 +3,40 @@
 from __future__ import annotations
 
 import os
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 from pathlib import Path
 
+import devkit.workflow.unit.units as units_module
 import pytest
 from click.testing import CliRunner, Result
-from devkit.workflow import LayoutError, TemplateLayout, Workspace, parse_layout_spec, read_binding, validate_template
+from devkit.workflow import (
+    LayoutError,
+    TemplateLayout,
+    UnitDirNotEmptyError,
+    UnitExistsError,
+    WorkflowNotBindableError,
+    Workspace,
+    create_unit,
+    parse_layout_spec,
+    read_binding,
+    validate_template,
+)
 from devkit.workflow.cli import cli
 from devkit.workflow.unit import binding as binding_module
+from devkit.workflow.unit import records
 from devkit.workflow.unit.binding import Binding, write_binding
-from testsupport.workflow import WORKFLOW, write_config, write_unit
+from testsupport.workflow import (
+    SIMPLE,
+    SIMPLE_UNIT,
+    WORKFLOW,
+    run_cli,
+    simple_workspace,
+    write_config,
+    write_record,
+    write_unit,
+)
 
 PROPOSAL = """---
 id: incubate
@@ -284,3 +308,130 @@ def test_new_without_default_names_workflow_option(workspace: Path) -> None:
     result = _run("new", "-w", str(workspace), "login")
     assert result.exit_code == 2 and "(WORKFLOW_NOT_SELECTED)" in result.stderr
     assert "[FIX]    Pass --workflow <id>, or set [workflow].default" in result.stderr
+
+
+# --- binding by definition path ---------------------------------------------------------------
+
+
+def test_bind_and_new_refuse_a_definition_path_outside_discovery(tmp_path: Path) -> None:
+    root = simple_workspace(tmp_path)
+    (root / "elsewhere").mkdir()
+    (root / "elsewhere/x.md").write_text(SIMPLE.format(id="x", check="anchor-exists"))
+    assert run_cli("new", "-w", str(root), "u").exit_code == 0
+    anchor = (root / SIMPLE_UNIT / "task.md").read_text()
+
+    bound = run_cli("bind", "-w", str(root), "--unit", SIMPLE_UNIT, "--workflow", "elsewhere/x.md")
+    assert bound.exit_code == 2 and "(WORKFLOW_NOT_BINDABLE)" in bound.stderr and bound.stdout == ""
+    assert (root / SIMPLE_UNIT / "task.md").read_text() == anchor  # nothing written
+
+    created = run_cli("new", "-w", str(root), "v", "--workflow", "elsewhere/x.md")
+    assert created.exit_code == 2 and "(WORKFLOW_NOT_BINDABLE)" in created.stderr
+    assert not (root / ".devkit/transient/work/v").exists()
+    with pytest.raises(WorkflowNotBindableError):
+        create_unit(Workspace(root), "v", workflow="elsewhere/x.md")
+
+    # Evaluating against the file without binding stays possible.
+    assert run_cli("next", "-w", str(root), "--unit", SIMPLE_UNIT, "--workflow", "elsewhere/x.md").exit_code == 0
+
+
+def test_a_path_whose_id_resolves_to_another_file_is_refused(tmp_path: Path) -> None:
+    root = simple_workspace(tmp_path)
+    (root / "elsewhere").mkdir()
+    (root / "elsewhere/w.md").write_text(SIMPLE.format(id="w", check="file-exists(other.txt)"))
+    assert run_cli("new", "-w", str(root), "u").exit_code == 0
+    result = run_cli("bind", "-w", str(root), "--unit", SIMPLE_UNIT, "--workflow", "elsewhere/w.md")
+    assert result.exit_code == 2 and "(WORKFLOW_NOT_BINDABLE)" in result.stderr
+    assert "that id resolves to .devkit/workflows/w.md" in result.stderr
+
+
+def test_a_path_to_the_discovered_definition_binds_and_resolves_later(tmp_path: Path) -> None:
+    root = simple_workspace(tmp_path)
+    assert run_cli("new", "-w", str(root), "u", "--workflow", ".devkit/workflows/w.md").exit_code == 0
+    bound = run_cli("bind", "-w", str(root), "--unit", SIMPLE_UNIT, "--workflow", str(root / ".devkit/workflows/w.md"))
+    assert bound.exit_code == 0 and bound.stdout.startswith("[BOUND: w ")
+    for args in (("next",), ("requests",), ("show",)):
+        result = run_cli(*args, "-w", str(root), "--unit", SIMPLE_UNIT)
+        assert result.exit_code == 0, (args, result.stderr)
+
+
+# --- creating a unit --------------------------------------------------------------------------
+
+
+def _leftovers(directory: Path) -> list[str]:
+    return sorted(p.name for p in directory.iterdir() if records.is_temporary(p.name))
+
+
+def test_new_refuses_a_directory_without_an_anchor_holding_records(tmp_path: Path) -> None:
+    root = simple_workspace(tmp_path)
+    (root / SIMPLE_UNIT / "decisions").mkdir(parents=True)
+    write_record(
+        root / SIMPLE_UNIT, "01-gate-g.yaml", request="gate:g", kind="approve", action="accept", workflow="w", stage="s"
+    )
+    with pytest.raises(UnitDirNotEmptyError) as raised:
+        create_unit(Workspace(root), "u")
+    assert raised.value.code == "UNIT_DIR_NOT_EMPTY"
+    assert raised.value.target_files == (f"{SIMPLE_UNIT}/decisions/01-gate-g.yaml",)
+    assert not (root / SIMPLE_UNIT / "task.md").exists()
+    result = run_cli("new", "-w", str(root), "u")
+    assert result.exit_code == 2 and "(UNIT_DIR_NOT_EMPTY)" in result.stderr and "[FIX]" in result.stderr
+
+    (root / SIMPLE_UNIT / "decisions/01-gate-g.yaml").unlink()
+    (root / SIMPLE_UNIT / "envelopes").mkdir()
+    (root / SIMPLE_UNIT / "envelopes/review-01.yml").write_text("kind: review\nstatus: completed\n")
+    with pytest.raises(UnitDirNotEmptyError) as raised:
+        create_unit(Workspace(root), "u")
+    assert raised.value.target_files == (f"{SIMPLE_UNIT}/envelopes/review-01.yml",)
+
+
+def test_new_uses_an_existing_directory_without_records(tmp_path: Path) -> None:
+    root = simple_workspace(tmp_path)
+    unit_dir = root / SIMPLE_UNIT
+    (unit_dir / "decisions").mkdir(parents=True)
+    (unit_dir / "envelopes").mkdir()
+    for name in (".DS_Store", ".gitkeep", "notes.md", "decisions/README.md", "decisions/.01-x.yaml.0123456789ab.tmp"):
+        (unit_dir / name).write_text("kept")
+    unit = create_unit(Workspace(root), "u")
+    assert unit.anchor_path.is_file() and (unit.dir / "envelopes").is_dir()
+    assert (unit_dir / "notes.md").read_text() == "kept" and (unit_dir / ".gitkeep").is_file()
+
+
+def test_concurrent_new_calls_create_one_unit(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    root = simple_workspace(tmp_path)
+    calls = 8
+    # Every call passes the existence checks before any of them writes: only the exclusive write tells them apart.
+    barrier = threading.Barrier(calls, timeout=10)
+    write = units_module.write_new_file
+
+    def write_together(path: Path, body: str) -> bool:
+        barrier.wait()
+        return write(path, body)
+
+    monkeypatch.setattr(units_module, "write_new_file", write_together)
+
+    def create(_: int) -> str:
+        try:
+            create_unit(Workspace(root), "u")
+        except (UnitExistsError, UnitDirNotEmptyError) as exc:
+            return exc.code
+        return "created"
+
+    with ThreadPoolExecutor(max_workers=calls) as pool:
+        outcomes = list(pool.map(create, range(calls)))
+    assert outcomes.count("created") == 1
+    assert set(outcomes) == {"created", "UNIT_EXISTS"}
+    assert _leftovers(root / SIMPLE_UNIT) == []
+
+
+def test_new_never_overwrites_an_anchor_that_appears_meanwhile(tmp_path: Path) -> None:
+    anchor = tmp_path / "task.md"
+    anchor.write_text("first")
+    assert records.write_new_file(anchor, "second") is False
+    assert anchor.read_text() == "first" and _leftovers(tmp_path) == []
+    assert records.write_new_file(tmp_path / "other.md", "x") is True
+    assert os.stat(tmp_path / "other.md").st_mode & 0o777 == 0o666 & ~_umask()
+
+
+def _umask() -> int:
+    current = os.umask(0)
+    os.umask(current)
+    return current

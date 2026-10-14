@@ -344,23 +344,38 @@ def _add(base: Path, path: Path, branch: str) -> None:
     """``git worktree add -b branch path`` and the branch's marker; on failure, remove what was created before raising
     ``WORKTREE_ADD_FAILED``.
 
-    The marker (``branch.<branch>.devkitWorktree = <path>``) is written to the common configuration (``--local`` in the
-    base checkout), so ``finish`` can tell the branch from one devkit did not create. ``start`` checked that neither ``path`` nor ``branch`` existed, so whatever a failed or timed-out call leaves (a
-    registered, possibly half-checked-out worktree, which Git locks while it initializes it, and the new branch) is
-    its own: the worktree is removed with ``--force --force``, the branch with ``git branch -d``, which keeps it if a
-    hook committed to it. What cannot be removed is named with the command that removes it.
+    The marker (``branch.<branch>.devkitWorktree = <path>``) is written to the common configuration (``--local`` in
+    the base checkout), so ``finish`` can tell the branch from one devkit did not create. ``start`` checked that
+    neither ``path`` nor ``branch`` existed, but another process may create either before Git does: Git then
+    refuses with "already exists" and nothing of that is removed (``WORKTREE_BRANCH_EXISTS`` for the branch, which
+    Git checks first; ``WORKTREE_CONFLICT`` for the path, once the branch Git created for it is removed). Otherwise
+    a failed or timed-out call leaves its own registered, possibly half-checked-out worktree (which Git locks while
+    it initializes it), removed with ``--force --force``, and its new branch, deleted with ``git branch -d`` only
+    while its tip is still the base HEAD it was created from. What cannot be removed is named with the command that
+    removes it.
     """
+    origin = _head(base)
     step = f"git worktree add {path}"
     try:
-        run_git(base, "worktree", "add", "-b", branch, str(path), timeout=CHECKOUT_TIMEOUT)
+        _git_session(base, "worktree", "add", "-b", branch, str(path), timeout=CHECKOUT_TIMEOUT)
         step = f"git config {_marker(branch)}"
         run_git(base, "config", "--local", _marker(branch), str(path))
     except GitError as exc:
         reason = exc.stderr or exc.message
         if _timed_out(exc):
             reason = f"{exc.message}: {exc.stderr}" if exc.stderr else exc.message
-        left = _undo_add(base, path, branch)
+        if f"a branch named '{branch}' already exists" in exc.stderr:
+            raise BranchExistsError(
+                f"branch {branch} already exists: it was created while start ran; nothing was changed"
+            ) from exc
+        foreign = f"'{path}' already exists" in exc.stderr
+        left = _undo_add(base, path, branch, origin, own_path=not foreign)
         message = f"{step} failed: {reason}"
+        if foreign and not left:
+            raise ConflictError(
+                f"{path} exists and is not a worktree of this repository: it was created while start ran; nothing"
+                " was changed"
+            ) from exc
         if not left:
             raise AddFailedError(f"{message}; the partial worktree and branch were removed") from exc
         raise AddFailedError(
@@ -376,34 +391,44 @@ def _timed_out(error: GitError) -> bool:
     return isinstance(error.__cause__, subprocess.TimeoutExpired)
 
 
-def _undo_add(base: Path, path: Path, branch: str) -> list[tuple[str, str]]:
-    """Remove what a failed ``git worktree add`` created; ``(what, the command that removes it)`` for each leftover."""
+def _undo_add(
+    base: Path, path: Path, branch: str, origin: str | None, *, own_path: bool = True
+) -> list[tuple[str, str]]:
+    """Remove what a failed ``git worktree add`` created; ``(what, the command that removes it)`` for each leftover.
+
+    ``path`` is left alone unless ``own_path`` (the add did not fail because it already existed). The branch is
+    deleted only while its tip is ``origin``, the base HEAD it was created from; one whose tip moved (a hook
+    committed to it, or another process made it) is a leftover the user decides about.
+    """
     quoted = shlex.quote(str(base))
     left: list[tuple[str, str]] = []
-    try:
-        registered = any(entry.path == path for entry in _entries(base))
-    except GitError:
-        registered = True
-    if registered:
+    if own_path:
         try:
-            run_git(base, "worktree", "remove", "--force", "--force", str(path), timeout=CHECKOUT_TIMEOUT)
-        except GitError as exc:
-            _log.info("could not remove the partial worktree %s: %s", path, exc.message)
-            left.append(
-                (f"worktree {path}", f"git -C {quoted} worktree remove --force --force {shlex.quote(str(path))}")
-            )
-    if not registered and (path.exists() or path.is_symlink()):
-        left.append((f"directory {path}", f"rm -rf {shlex.quote(str(path))}"))
+            registered = any(entry.path == path for entry in _entries(base))
+        except GitError:
+            registered = True
+        if registered:
+            try:
+                _git_session(base, "worktree", "remove", "--force", "--force", str(path), timeout=CHECKOUT_TIMEOUT)
+            except GitError as exc:
+                _log.info("could not remove the partial worktree %s: %s", path, exc.message)
+                left.append(
+                    (f"worktree {path}", f"git -C {quoted} worktree remove --force --force {shlex.quote(str(path))}")
+                )
+        if not registered and (path.exists() or path.is_symlink()):
+            left.append((f"directory {path}", f"rm -rf {shlex.quote(str(path))}"))
+    remains, moved = True, False
     try:
-        exists = _succeeds(base, "rev-parse", "--verify", "--quiet", f"refs/heads/{branch}")
-        if exists and not left:
+        tip = _query(base, "rev-parse", "--verify", "--quiet", f"refs/heads/{branch}")
+        remains, moved = tip is not None, tip is not None and tip != origin
+        if remains and not moved and not left:
             run_git(base, "branch", "-d", branch)
-            exists = False
+            remains = False
     except GitError as exc:
         _log.info("could not delete the branch %s: %s", branch, exc.message)
-        exists = True
-    if exists:
-        left.append((f"branch {branch}", f"git -C {quoted} branch -D {branch}"))
+    if remains:
+        note = " (it no longer points at the base HEAD it was created from)" if moved else ""
+        left.append((f"branch {branch}{note}", f"git -C {quoted} branch -D {branch}"))
     return left
 
 
@@ -460,33 +485,69 @@ def _error_object(stdout: bytes) -> dict[str, Any] | None:
     return error if isinstance(error, dict) and isinstance(error.get("code"), str) else None
 
 
-def _execute(argv: list[str], cwd: Path, label: str, timeout: float) -> subprocess.CompletedProcess[bytes] | str:
-    """Run ``argv`` in ``cwd`` with its output captured, without the caller's ``VIRTUAL_ENV``; why it could not
-    run when it timed out or did not start."""
-    env = {key: value for key, value in os.environ.items() if key != "VIRTUAL_ENV"}
-    try:
-        # A session of its own, so a timeout stops the whole command (``uv sync`` under the shell), not the shell alone.
-        process = subprocess.Popen(
-            argv,
-            cwd=cwd,
-            env=env,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            start_new_session=True,
-        )
-    except OSError as exc:
-        return f"{label} could not start: {exc}"
+def _session(
+    argv: list[str], cwd: Path | None, env: dict[str, str], timeout: float
+) -> subprocess.CompletedProcess[bytes]:
+    """Run ``argv`` in a session of its own with its output captured; ``OSError`` when it cannot start.
+
+    A timeout (``subprocess.TimeoutExpired``, re-raised) or any other exception first kills the whole process
+    group, so what the command started (``uv sync`` under a shell, a hook or filter under Git) stops with it.
+    """
+    process = subprocess.Popen(
+        argv,
+        cwd=cwd,
+        env=env,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        start_new_session=True,
+    )
     with process:
         try:
             stdout, stderr = process.communicate(timeout=timeout)
-        except subprocess.TimeoutExpired:
-            _kill_group(process)
-            return f"{label} did not finish within {timeout:.0f}s"
         except BaseException:
             _kill_group(process)
             raise
     return subprocess.CompletedProcess(argv, process.returncode, stdout, stderr)
+
+
+def _git_session(cwd: Path, *args: str, timeout: float) -> bytes:
+    """``run_git`` (same environment, errors and output) for Git commands that run hooks and filters.
+
+    ``git worktree add`` runs the ``post-checkout`` hook and checkout filters (Git LFS); in a session of its own, a
+    timeout kills them with Git instead of leaving them writing into a path the cleanup removes. A timeout is a
+    ``GitError`` whose ``__cause__`` is ``subprocess.TimeoutExpired``, as from ``run_git``.
+    """
+    command = ("git", "-C", str(cwd), *args)
+    label = f"git {args[0]}"
+    env = {**os.environ, "LC_ALL": "C", "GIT_TERMINAL_PROMPT": "0"}
+    try:
+        completed = _session(list(command), None, env, timeout)
+    except subprocess.TimeoutExpired as exc:
+        raise GitError(f"{label} timed out after {timeout}s in {cwd}", command=command) from exc
+    except OSError as exc:
+        raise GitError(f"git is not available: {exc}", command=command) from exc
+    if completed.returncode != 0:
+        stderr = completed.stderr.decode("utf-8", errors="replace").strip()
+        raise GitError(
+            f"{label} failed in {cwd}: {stderr or f'exit status {completed.returncode}'}",
+            command=command,
+            returncode=completed.returncode,
+            stderr=stderr,
+        )
+    return completed.stdout
+
+
+def _execute(argv: list[str], cwd: Path, label: str, timeout: float) -> subprocess.CompletedProcess[bytes] | str:
+    """Run ``argv`` in ``cwd`` with its output captured, without the caller's ``VIRTUAL_ENV``, in a session of its
+    own (``_session``); why it could not run when it timed out or did not start."""
+    env = {key: value for key, value in os.environ.items() if key != "VIRTUAL_ENV"}
+    try:
+        return _session(argv, cwd, env, timeout)
+    except subprocess.TimeoutExpired:
+        return f"{label} did not finish within {timeout:.0f}s"
+    except OSError as exc:
+        return f"{label} could not start: {exc}"
 
 
 def _kill_group(process: subprocess.Popen[bytes]) -> None:
@@ -581,8 +642,9 @@ def finish(
     ``before_remove`` raises. A slug whose worktree is already
     gone and whose branch is merged into the base HEAD (what a stopped run leaves) resumes with deleting the branch,
     but only when ``start`` created that branch (its ``branch.<slug>.devkitWorktree`` marker); any other merged branch
-    of that name is ``WORKTREE_NOT_FOUND`` and is never deleted. The marker gates only this path: a slug whose worktree
-    exists finishes whether or not its branch carries it.
+    of that name is ``WORKTREE_NOT_FOUND`` and is never deleted. The marker gates only this path, and only with
+    ``delete_branch`` (without it nothing is deleted, so such a rerun finishes with nothing to remove): a slug whose
+    worktree exists finishes whether or not its branch carries it.
     """
     check_slug(slug)
     if position.linked:
@@ -600,14 +662,16 @@ def finish(
         if not exists or not _merged(base, ref, _head(base)):
             unmerged = f", and branch {slug} is not merged into the base HEAD" if exists else ""
             raise NotFoundError(f"no worktree at {path_for(position, slug)} or on branch {slug}{unmerged}")
-        if not _created(base, slug):
+        # Keeping the branch deletes nothing, so the marker does not matter: the rerun has nothing left to remove.
+        if delete_branch and not _created(base, slug):
             raise NotFoundError(
                 f"no worktree at {path_for(position, slug)} or on branch {slug}; the branch {slug} is merged into the"
-                f" base HEAD but has no {_marker(slug)} marker, so devkit worktree start did not create it and finish"
-                " does not delete it; nothing was changed",
+                f" base HEAD but has no {_marker(slug)} marker, so devkit worktree start did not create it (or created"
+                " it before devkit recorded the marker; such branches are not resumed automatically) and finish does"
+                " not delete it; nothing was changed",
                 fix=f"Once the user agrees, git -C {shlex.quote(str(base))} branch -d {slug}",
             )
-        _log.info("the worktree of %s is gone; resuming with the branch deletion", slug)
+        _log.info("the worktree of %s is gone; resuming after its removal", slug)
         result = FinishResult(slug, path_for(position, slug), slug, removed=True)
     else:
         result = FinishResult(slug, entry.path, slug)
@@ -658,7 +722,7 @@ def finish(
 
 def _remove(base: Path, path: Path) -> None:
     try:
-        run_git(base, "worktree", "remove", str(path), timeout=CHECKOUT_TIMEOUT)
+        _git_session(base, "worktree", "remove", str(path), timeout=CHECKOUT_TIMEOUT)
     except GitError as exc:
         if _timed_out(exc):  # the directory may be partly deleted while still registered
             raise RemoveFailedError(

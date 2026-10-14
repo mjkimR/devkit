@@ -44,7 +44,7 @@ SYMLINK_MODE = "120000"
 GITLINK_MODE = "160000"
 _CHUNK = 1 << 20
 # Upper bound on materializing one snapshot, however steadily Git streams it; the idle timeout
-# (``DEFAULT_TIMEOUT`` without output) catches a stalled Git long before.
+# (``DEFAULT_TIMEOUT`` without progress reading Git's output) catches a stalled Git long before.
 SNAPSHOT_LIMIT = 30 * 60.0
 
 
@@ -183,9 +183,12 @@ class _BlobReader:
     Each object is read as its ``<sha> <type> <size>`` header followed by
     exactly ``size`` bytes and a newline; memory never holds more than one
     chunk of a regular file or one symlink target. The process is killed when
-    ``timeout`` seconds pass without output (each header and chunk read resets
-    it, so the time a large tree takes scales with its size) or after ``limit``
-    seconds in all; ``timeout=None`` never kills it.
+    ``timeout`` seconds pass without progress reading Git's output (each header
+    and chunk the caller reads resets it, so the time a large tree takes scales
+    with its size, and time the caller spends between reads counts too) or
+    after ``limit`` seconds in all; ``timeout=None`` never kills it. A Git that
+    exits with status 0 completed its output, so ``finish`` succeeds even when
+    the watchdog fired after the exit (it found nothing left to kill).
     """
 
     def __init__(
@@ -236,7 +239,7 @@ class _BlobReader:
         self._stderr.extend(self._process.stderr.read())
 
     def _watch(self) -> None:
-        """Kill Git once ``timeout`` seconds pass without output, or ``limit`` seconds in all."""
+        """Kill Git once ``timeout`` seconds pass without progress reading its output, or ``limit`` seconds in all."""
         assert self._timeout is not None
         while True:
             now = time.monotonic()
@@ -244,7 +247,9 @@ class _BlobReader:
             total = self._started + self._limit - now
             if idle <= 0 or total <= 0:
                 self._timed_out = (
-                    f"no output for {self._timeout}s" if idle <= 0 else f"not finished after {self._limit}s"
+                    f"no progress reading its output for {self._timeout}s"
+                    if idle <= 0
+                    else f"not finished after {self._limit}s"
                 )
                 self._process.kill()
                 return
@@ -288,13 +293,18 @@ class _BlobReader:
         return b"".join(self.chunks(name, size))
 
     def finish(self) -> None:
-        """Wait for Git to exit; a nonzero status is an error even after every object was read."""
+        """Wait for Git to exit; a nonzero status is an error even after every object was read.
+
+        Only the exit status decides: a watchdog that fires between Git's exit and this method stopping it
+        kills nothing, and a Git it did kill exits with a signal status, reported as the timeout.
+        """
         self._stdout.close()
+        self._progress = time.monotonic()  # every object was read: no reading is pending
         returncode = self._process.wait()
         self._stopped.set()
         for thread in self._threads:
             thread.join()
-        if self._timed_out or returncode != 0:
+        if returncode != 0:
             raise self._failure(f"exit status {returncode}")
 
     def close(self) -> None:

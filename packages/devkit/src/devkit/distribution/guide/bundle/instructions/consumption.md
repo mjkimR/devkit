@@ -161,7 +161,8 @@ repository's own assets in their source bundle (see `in-repo-bundle`).
 `uv run devkit status` reports, without changing anything, how the workspace
 compares with the receipt: missing, modified, execute-bit-changed or symlinked
 managed files, override drift of deployed assets, the guidance block state (an
-edited or unrecorded block is an error), seeded files that no longer
+edited block is an error, and so is an unrecorded one unless it is exactly the
+block `devkit sync` writes, which the next sync adopts), seeded files that no longer
 exist, a selected bundle whose package is missing or broken, a pending journal, and whether the running `devkit` version wrote the
 receipt. Whatever needs acting on is listed under `errors`, each with its
 `advisory` (`action`, `fix`); follow them. It exits 1 when there is any, else 0.
@@ -177,8 +178,8 @@ project other than the current directory's.
 
 `TRANSACTION_PENDING`: run `uv run devkit recover`. It restores the files named
 in the journal under `.devkit/transient/` to their state before the interrupted
-run, refusing (`RECOVERY_BLOCKED`) if one was edited since; then run
-`devkit sync` again. `LOCK_HELD`: another devkit command is running; wait for
+run, refusing (`RECOVERY_BLOCKED`) if one was edited since, or if an earlier
+devkit wrote the journal (follow its `[FIX]`); then run `devkit sync` again. `LOCK_HELD`: another devkit command is running; wait for
 it and never delete the lock.
 
 ## Commit discipline

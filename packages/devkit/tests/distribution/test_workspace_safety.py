@@ -7,13 +7,20 @@ import threading
 from pathlib import Path
 
 import pytest
+from devkit.core import LockHeldError as CoreLockHeldError
 from devkit.core import extensions as core_extensions
 from devkit.core.errors import ReceiptError
 from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH
 from devkit.distribution.bundles import build_bundle, load_bundle
 from devkit.distribution.bundles.subagents import read_contract, render_projection
 from devkit.distribution.content import Content
-from devkit.distribution.errors import BundleError, DistributionError, LockHeldError, UnsafeWorkspaceError
+from devkit.distribution.errors import (
+    BundleError,
+    DistributionError,
+    LockHeldError,
+    RecoveryError,
+    UnsafeWorkspaceError,
+)
 from devkit.distribution.installation import extensions, transaction
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.context import get_context
@@ -155,6 +162,9 @@ def test_readers_share_the_lock_and_writers_exclude_them(
     monkeypatch.setattr(transaction, "READ_LOCK_TIMEOUT", 0.05)
     with transaction.project_lock(target), pytest.raises(LockHeldError, match="project lock"):
         get_context(target, "team")
+    with transaction.project_lock(target), pytest.raises(CoreLockHeldError, match="project lock") as raised:
+        get_context(target, "team")  # the core class catches it too
+    assert raised.value.seconds == 0.05
 
 
 def test_reader_waits_for_a_writer(item: InstalledBundle, target: Path) -> None:
@@ -211,6 +221,65 @@ def test_a_transaction_refuses_a_file_where_a_directory_must_be(tmp_path: Path) 
     with pytest.raises(UnsafeWorkspaceError, match="docs is not a directory"):
         transaction.apply_changes(tmp_path, {"docs/guide.md": Content(b"x", 0o644)})
     assert not (tmp_path / ".devkit").exists()
+
+
+NOTES = 'schema = 1\nname = "team"\nversion = "0.1.0"\n[[assets]]\nid = "notes"\nkind = "document"\nsource = "notes"\n'
+NOTES_FILE = ".devkit/managed/team/notes"
+
+
+def test_a_managed_file_that_becomes_a_directory_upstream_is_replaced(tmp_path: Path, target: Path) -> None:
+    sync_project(target, [write_bundle(tmp_path / "v1", NOTES, {"notes": "file\n"})])
+    assert (target / NOTES_FILE).is_file()
+    upgraded = write_bundle(tmp_path / "v2", NOTES, {"notes/SKILL.md": "directory\n"})
+    planned = sync_project(target, [upgraded], dry_run=True).actions
+    assert [(item.path, item.action) for item in planned][:2] == [
+        (NOTES_FILE, "remove"),
+        (f"{NOTES_FILE}/SKILL.md", "create"),
+    ]
+    sync_project(target, [upgraded])
+    assert (target / NOTES_FILE / "SKILL.md").read_text() == "directory\n"
+    assert sync_project(target, [upgraded]).actions == []
+
+
+def test_a_rolled_back_file_to_directory_transition_restores_the_file(
+    tmp_path: Path, target: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    sync_project(target, [write_bundle(tmp_path / "v1", NOTES, {"notes": "file\n"})])
+    upgraded = write_bundle(tmp_path / "v2", NOTES, {"notes/SKILL.md": "directory\n"})
+    write = transaction.atomic_write
+    failed: list[str] = []
+
+    def fail_on_receipt(root: Path, name: str, content: Content | None) -> None:
+        if name == RECEIPT_PATH and not failed:
+            failed.append(name)  # the commit's receipt write fails; the rollback's goes through
+            raise OSError("disk full")
+        write(root, name, content)
+
+    monkeypatch.setattr(transaction, "atomic_write", fail_on_receipt)
+    with pytest.raises(OSError, match="disk full"):
+        sync_project(target, [upgraded])
+    monkeypatch.undo()
+    assert (target / NOTES_FILE).read_text() == "file\n"
+    assert not (target / ".devkit/transient/sync-journal.json").exists()
+
+
+def test_a_project_file_deleted_in_the_same_change_set_still_blocks_a_directory(tmp_path: Path) -> None:
+    (tmp_path / "docs").write_text("a project file\n")
+    with pytest.raises(UnsafeWorkspaceError, match="docs is not a directory"):
+        transaction.apply_changes(tmp_path, {"docs": None, "docs/guide.md": Content(b"x", 0o644)})
+    assert (tmp_path / "docs").read_text() == "a project file\n"
+
+
+def test_a_journal_from_an_earlier_devkit_is_refused_with_a_manual_rollback(target: Path) -> None:
+    journal = target / ".devkit/transient/sync-journal.json"
+    journal.parent.mkdir(parents=True, exist_ok=True)
+    journal.write_text(json.dumps({"schema": 1, "changes": {}}))
+    with pytest.raises(RecoveryError) as raised:
+        transaction.recover_locked(target)
+    error = raised.value
+    assert error.code == "RECOVERY_BLOCKED" and "earlier devkit" in error.message
+    assert error.fix == transaction.LEGACY_JOURNAL_FIX and "devkit recover" in transaction.LEGACY_JOURNAL_FIX
+    assert journal.exists()
 
 
 def test_removed_projections_leave_no_empty_directories(item: InstalledBundle, target: Path) -> None:

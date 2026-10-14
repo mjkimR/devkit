@@ -2,14 +2,29 @@ from __future__ import annotations
 
 import os
 import stat
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from pathlib import Path
 
 import pytest
 from devkit.core import atomic_write_bytes, atomic_write_text, remove_empty_tree
+from devkit.core import files as files_module
 
 
-def test_atomic_write_creates_parents_and_writes_exactly(tmp_path: Path) -> None:
+@pytest.fixture
+def umask() -> Iterator[Callable[[int], None]]:
+    """``umask(value)`` sets the process umask until the test ends."""
+    original = os.umask(0o022)
+    os.umask(original)
+
+    def apply(value: int) -> None:
+        os.umask(value)
+
+    yield apply
+    os.umask(original)
+
+
+def test_atomic_write_creates_parents_and_writes_exactly(tmp_path: Path, umask: Callable[[int], None]) -> None:
+    umask(0o022)
     path = tmp_path / "a" / "b.txt"
     atomic_write_text(path, "x\r\ny\n")
     assert path.read_bytes() == b"x\r\ny\n"
@@ -25,6 +40,28 @@ def test_atomic_write_keeps_the_existing_mode_unless_given(tmp_path: Path) -> No
     assert path.read_bytes() == b"new" and stat.S_IMODE(path.stat().st_mode) == 0o755
     atomic_write_bytes(path, b"newer", mode=0o600)
     assert stat.S_IMODE(path.stat().st_mode) == 0o600
+
+
+def test_a_new_file_honours_the_umask(tmp_path: Path, umask: Callable[[int], None]) -> None:
+    umask(0o077)
+    atomic_write_bytes(tmp_path / "private", b"x")
+    assert stat.S_IMODE((tmp_path / "private").stat().st_mode) == 0o600
+    umask(0o002)
+    atomic_write_bytes(tmp_path / "shared", b"x")
+    assert stat.S_IMODE((tmp_path / "shared").stat().st_mode) == 0o664
+    atomic_write_bytes(tmp_path / "given", b"x", mode=0o640)
+    assert stat.S_IMODE((tmp_path / "given").stat().st_mode) == 0o640
+
+
+def test_a_failed_directory_sync_after_the_replacement_is_not_raised(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def fail(path: Path) -> None:
+        raise OSError("fsync failed")
+
+    monkeypatch.setattr(files_module, "_fsync_directory", fail)
+    atomic_write_bytes(tmp_path / "f.txt", b"new")
+    assert (tmp_path / "f.txt").read_bytes() == b"new"
 
 
 def test_atomic_write_replaces_a_symlink_instead_of_writing_through_it(tmp_path: Path) -> None:
@@ -84,6 +121,47 @@ def test_remove_empty_tree_never_follows_or_removes_a_symlinked_directory(tmp_pa
     assert remove_empty_tree(link) == [] and link.is_symlink()
     assert remove_empty_tree(holder) == [] and (holder / "inner").is_symlink()
     assert (real / "sub").is_dir()
+
+
+def test_remove_empty_tree_never_follows_a_directory_swapped_for_a_symlink(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    tree = tmp_path / "tree"
+    (tree / "a" / "b").mkdir(parents=True)
+    outside = tmp_path / "outside"
+    (outside / "b").mkdir(parents=True)
+    walk = os.walk
+
+    def swapping_walk(*args: object, **kwargs: object) -> Iterator[tuple[str, list[str], list[str]]]:
+        yield from walk(*args, **kwargs)  # type: ignore[call-overload]
+        (tree / "a" / "b").rmdir()
+        (tree / "a").rmdir()
+        (tree / "a").symlink_to(outside, target_is_directory=True)
+
+    monkeypatch.setattr(os, "walk", swapping_walk)
+    with pytest.raises(OSError):
+        remove_empty_tree(tree)
+    assert (outside / "b").is_dir() and (tree / "a").is_symlink()
+
+
+def test_remove_empty_tree_removes_nothing_when_the_top_was_swapped(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    tree = tmp_path / "tree"
+    (tree / "a").mkdir(parents=True)
+    outside = tmp_path / "outside"
+    (outside / "a").mkdir(parents=True)
+    walk = os.walk
+
+    def swapping_walk(*args: object, **kwargs: object) -> Iterator[tuple[str, list[str], list[str]]]:
+        yield from walk(*args, **kwargs)  # type: ignore[call-overload]
+        (tree / "a").rmdir()
+        tree.rmdir()
+        tree.symlink_to(outside, target_is_directory=True)
+
+    monkeypatch.setattr(os, "walk", swapping_walk)
+    assert remove_empty_tree(tree) == []
+    assert (outside / "a").is_dir() and tree.is_symlink()
 
 
 def test_remove_empty_tree_of_a_missing_path_or_a_file_removes_nothing(tmp_path: Path) -> None:

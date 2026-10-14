@@ -171,13 +171,37 @@ def test_materialize_reports_a_git_failure_and_a_timeout(repo: Path, tmp_path: P
 
     import time
 
-    slow = _BlobReader(repo, [], timeout=0.0)
+    # More output than a pipe holds and nobody reading it: Git cannot finish before the watchdog kills it.
+    slow = _BlobReader(repo, [snapshot.files[0][1]] * 5000, timeout=0.0)
     deadline = time.monotonic() + 10
     while not slow._timed_out and time.monotonic() < deadline:
         time.sleep(0.01)
     with pytest.raises(SnapshotError, match="timed out"):
         slow.finish()
     slow.close()
+
+
+def test_a_watchdog_firing_after_a_clean_exit_does_not_fail_the_run(
+    repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from devkit.rules.workspace.snapshot import _BlobReader
+
+    snapshot = git_snapshot(repo, staged=True)
+    name, sha, _ = snapshot.files[0]
+    reader = _BlobReader(repo, [sha], timeout=60.0)
+    try:
+        reader.read(name, reader.header(name, sha))
+        wait = reader._process.wait
+
+        def wait_then_fire(*args: object, **kwargs: object) -> int:
+            returncode = wait()
+            reader._timed_out = "no progress reading its output for 60.0s"  # the watchdog fires before finish stops it
+            return returncode
+
+        monkeypatch.setattr(reader._process, "wait", wait_then_fire)
+        reader.finish()  # Git exited 0: every object was delivered
+    finally:
+        reader.close()
 
 
 def test_the_blob_reader_timeout_counts_idle_time_and_the_limit_bounds_the_whole_run(repo: Path) -> None:
@@ -199,7 +223,7 @@ def test_the_blob_reader_timeout_counts_idle_time_and_the_limit_bounds_the_whole
     finally:
         steady.close()
 
-    bounded = _BlobReader(repo, [sha for _, sha in blobs], timeout=60.0, limit=0.0)
+    bounded = _BlobReader(repo, [blobs[0][1]] * 5000, timeout=60.0, limit=0.0)  # cannot finish unread
     deadline = time.monotonic() + 10
     while not bounded._timed_out and time.monotonic() < deadline:
         time.sleep(0.01)

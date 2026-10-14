@@ -31,7 +31,7 @@ from devkit.core.cli import (
     resolve_root,
     workspace_option,
 )
-from devkit.core.errors import ArgumentError
+from devkit.core.errors import ArgumentError, DevkitRootNestedError
 
 
 class Finding(AdvisoryError):
@@ -226,6 +226,18 @@ def test_a_looping_workspace_root_is_an_argument_error(tmp_path: Path) -> None:
     result = _invoke("-w", str(tmp_path / "a"), "--format", "json")
     assert result.exit_code == 2 and json.loads(result.stdout)["error"]["code"] == "ARGUMENT_INVALID"
     assert "cannot be resolved" in json.loads(result.stdout)["error"]["message"]
+
+
+def test_resolve_root_applies_require_devkit_root_to_the_workspace_root(repo: Path) -> None:
+    (repo / ".devkit").mkdir()
+    (repo / "sub").mkdir()
+    assert resolve_root(str(repo)) == repo
+    with pytest.raises(ArgumentError, match="is inside the Git work tree"):
+        resolve_root(str(repo / "sub"))
+    (repo / ".devkit").rmdir()
+    (repo / "sub/.devkit").mkdir()
+    with pytest.raises(DevkitRootNestedError):
+        resolve_root(repo / "sub")
 
 
 def test_a_reported_error_keeps_stdout_to_the_result(tmp_path: Path) -> None:

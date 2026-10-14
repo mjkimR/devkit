@@ -54,3 +54,16 @@ def test_fixes_name_the_command_that_repairs_the_state() -> None:
     assert errors.NotSynchronizedError("x").fix == "devkit sync"
     assert errors.PendingTransactionError("x").fix == "devkit recover"
     assert errors.LockHeldError("x").retry_after == errors.LOCK_RETRY_AFTER
+
+
+def test_the_project_lock_error_is_also_the_core_lock_error() -> None:
+    from devkit.core import LockHeldError as CoreLockHeldError
+
+    error = errors.LockHeldError("x", what="waiting for the lock", seconds=10.0)
+    assert isinstance(error, CoreLockHeldError) and isinstance(error, errors.DistributionError)
+    assert (error.code, error.what, error.seconds, error.retry_after) == (
+        "LOCK_HELD",
+        "waiting for the lock",
+        10.0,
+        errors.LOCK_RETRY_AFTER,
+    )

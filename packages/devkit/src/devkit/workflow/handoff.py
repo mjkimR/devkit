@@ -232,8 +232,11 @@ def apply_handoff(plan: HandoffPlan, *, when: date | None = None, by: str = "", 
     An explicit choice is first recorded as an accepted ``handoff`` decision so
     the audit trail names it; the history entry closes the segment at the
     highest decision sequence. The record is written whole or not at all, and
-    when the anchor cannot be rewritten it is removed again, so a failed or
-    interrupted handoff leaves the unit as it was.
+    when the anchor cannot be rewritten (any exception, ``KeyboardInterrupt``
+    included) it is removed again, so a failed handoff leaves the unit as it
+    was. A process killed outright between the two writes leaves the record in
+    the unchanged segment: an accepted choice of the target, which the next
+    ``handoff`` (with or without ``--workflow``) uses.
     """
     unit = plan.unit
     decision = plan.decision

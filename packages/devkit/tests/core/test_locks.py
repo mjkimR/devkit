@@ -10,7 +10,6 @@ from pathlib import Path
 import pytest
 from devkit.advisory import ActionMode, AdvisoryError
 from devkit.core import (
-    ArgumentError,
     Deadline,
     DeadlineExceededError,
     LockHeldError,
@@ -112,8 +111,8 @@ def test_the_lock_is_released_when_the_block_raises(tmp_path: Path) -> None:
         pass
 
 
-def test_timeout_and_deadline_together_are_an_argument_error(tmp_path: Path) -> None:
-    with pytest.raises(ArgumentError), file_lock(tmp_path / "lock", timeout=1, deadline=Deadline(1)):
+def test_timeout_and_deadline_together_are_a_programming_error(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="not both"), file_lock(tmp_path / "lock", timeout=1, deadline=Deadline(1)):
         pass
 
 

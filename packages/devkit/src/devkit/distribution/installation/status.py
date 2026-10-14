@@ -8,6 +8,7 @@ reports what differs; what needs acting on is collected under ``errors``.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -40,9 +41,10 @@ from devkit.distribution.installation.results import (
     tool_json,
 )
 from devkit.distribution.installation.sync import (
-    BLOCK_CONFLICTS,
+    block_conflict,
     edited_files_error,
     guidance_block_error,
+    planned_guidance_block,
     read_deployed,
     require_project_dir,
     tool_identity,
@@ -51,6 +53,7 @@ from devkit.distribution.installation.transaction import pending_journal, projec
 from devkit.distribution.installation.workspace import AGENTS_FILE, occupied, snapshot
 
 _EMPTY_SELECTION = Selection((), {})
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -227,29 +230,59 @@ def _files_status(root: Path, files: dict[str, FileRecord]) -> FilesStatus:
     return FilesStatus(ok, missing, modified, mode_mismatch, unsafe, stale)
 
 
-def _block_state(root: Path, recorded: str | None, enabled: bool) -> tuple[str, AdvisoryError | None]:
-    """The guidance block state; ``invalid`` with its error when ``AGENTS.md`` cannot be read safely."""
-    if not enabled:
-        return "disabled", None
+@dataclass(frozen=True)
+class _BlockState:
+    # ``ok`` | ``missing`` | ``modified`` | ``unowned`` | ``disabled`` | ``invalid``
+    state: str
+    # The ``BLOCK_CONFLICTS`` state ``devkit sync`` would raise; ``None`` when it would raise none.
+    conflict: str | None = None
+    # Why ``AGENTS.md`` cannot be read safely (``invalid``).
+    error: AdvisoryError | None = None
+
+
+def _planned_block(
+    root: Path, installed: list[InstalledBundle], config: ProjectConfig, receipt: Receipt | None
+) -> str | None:
+    """The block a plain ``devkit sync`` would write; ``None`` when planning that sync fails (status reports why)."""
+    try:
+        return planned_guidance_block(root, installed, config, receipt)
+    except AdvisoryError as exc:
+        logger.debug("guidance block not planned: %s", exc.message)
+        return None
+
+
+def _block_state(
+    root: Path, installed: list[InstalledBundle], config: ProjectConfig, receipt: Receipt | None
+) -> _BlockState:
+    """The guidance block state and the conflict ``devkit sync`` would raise for it (``block_conflict``).
+
+    An ``unowned`` block is compared with the block a sync would write: an
+    identical one is adopted by the next sync, so it is no conflict.
+    """
+    if not config.guidance_block:
+        return _BlockState("disabled")
     try:
         current = snapshot(root, AGENTS_FILE)
         existing = guidance_block.extract(guidance_block.decode(current.data if current else None))
     except (UnsafeWorkspaceError, GuidanceBlockError) as exc:
         exc.exit_code = ExitCode.FINDINGS
-        return "invalid", exc
+        return _BlockState("invalid", error=exc)
     if existing is None:
-        return "missing", None
+        return _BlockState("missing")
+    recorded = receipt.guidance_block if receipt is not None else None
     if recorded is None:
-        return "unowned", None
-    return ("ok" if guidance_block.digest(existing) == recorded else "modified"), None
+        desired = _planned_block(root, installed, config, receipt)
+        return _BlockState("unowned", block_conflict(existing, None, desired))
+    conflict = block_conflict(existing, recorded, None)
+    return _BlockState("ok" if conflict is None else "modified", conflict)
 
 
 def _problems(
-    files: FilesStatus, journal: bool, drift: list[tuple[str, str]], block: str, block_error: AdvisoryError | None
+    files: FilesStatus, journal: bool, drift: list[tuple[str, str]], block: _BlockState
 ) -> list[AdvisoryError]:
     """What ``devkit status`` exits 1 for: missing, stale, modified, mode-mismatched or unsafe files, a journal, override
-    drift, a root ``AGENTS.md`` that cannot be read safely, and a guidance block that is ``modified`` or ``unowned``
-    (the ``SYNC_CONFLICT`` a sync raises for it, as for an edited managed file)."""
+    drift, a root ``AGENTS.md`` that cannot be read safely, and a guidance block in the ``SYNC_CONFLICT`` a sync raises
+    for it, as for an edited managed file: ``modified``, or ``unowned`` and not the block the sync would adopt."""
     findings = ExitCode.FINDINGS
     problems: list[AdvisoryError] = []
     if files.missing:
@@ -292,10 +325,10 @@ def _problems(
                 exit_code=findings,
             )
         )
-    if block_error is not None:
-        problems.append(block_error)
-    if block in BLOCK_CONFLICTS:
-        problems.append(guidance_block_error(block, exit_code=findings))
+    if block.error is not None:
+        problems.append(block.error)
+    if block.conflict is not None:
+        problems.append(guidance_block_error(block.conflict, exit_code=findings))
     if journal:
         problems.append(PendingTransactionError("an interrupted synchronization left its journal", exit_code=findings))
     if drift:
@@ -329,7 +362,7 @@ def get_project_status(root: Path, installed: list[InstalledBundle]) -> ProjectS
             for item in override_statuses(installed, receipt)
             if item.drift_detected and (item.bundle, item.asset) in deployed
         ]
-        block, block_error = _block_state(root, receipt.guidance_block if receipt else None, config.guidance_block)
+        block = _block_state(root, installed, config, receipt)
         journal = pending_journal(root)
         selected = effective_selection(installed, config, receipt)
         packages, warnings = _unusable_packages(installed, selected)
@@ -341,11 +374,11 @@ def get_project_status(root: Path, installed: list[InstalledBundle]) -> ProjectS
             selection=receipt.selection if receipt is not None else _EMPTY_SELECTION,
             files=files,
             override_drift=drift,
-            guidance_block=block,
+            guidance_block=block.state,
             seeded=[SeededStatus(entry, occupied(root, entry.path)) for entry in (receipt.seeded if receipt else ())],
             pending_journal=journal,
             tool=ToolStatus(tool_identity(), receipt.tool if receipt is not None else None),
-            errors=[*packages, *_problems(files, journal, drift, block, block_error)],
+            errors=[*packages, *_problems(files, journal, drift, block)],
             notices=warnings,
         )
 

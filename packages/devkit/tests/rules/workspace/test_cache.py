@@ -6,7 +6,8 @@ from pathlib import Path
 import pytest
 from devkit.advisory import ActionMode
 from devkit.core import FrontmatterError, UnsafePathError
-from devkit.rules import PinnedWriteError, WorkspaceCache
+from devkit.rules import PinnedWriteError, RuleContext, WorkspaceCache
+from devkit.rules.workspace.snapshot import Snapshot
 from testsupport.rules import init_repo, write
 
 
@@ -189,3 +190,28 @@ def test_transient_devkit_files_and_explicit_ignored_targets_are_scanned(tmp_pat
     ]
     with pytest.raises(PinnedWriteError):
         cache.write_text(".devkit/overrides/b/rule.md", "y")
+
+
+def test_an_explicit_target_in_another_normalization_is_listed_once(tmp_path: Path) -> None:
+    root = tmp_path / "ws"
+    write(root, unicodedata.normalize("NFD", "café.md"), "x\n")
+    cache = WorkspaceCache(root)
+    cache.add_explicit([unicodedata.normalize("NFC", "café.md")])
+    found = cache.find_files(root)
+    assert [unicodedata.normalize("NFC", p.name) for p in found] == ["café.md"]
+
+
+def test_only_command_line_targets_are_listed_inside_dependency_directories(tmp_path: Path) -> None:
+    root = tmp_path / "ws"
+    write(root, "node_modules/pkg/README.md", "x\n")
+    write(root, "docs/a.md", "x\n")
+    target = ["node_modules/pkg/README.md"]
+    named = RuleContext(workspace_root=root, changed_files=target, cache=WorkspaceCache(root))
+    assert [p.relative_to(root).as_posix() for p in named.cache.find_files(root)] == [
+        "docs/a.md",
+        "node_modules/pkg/README.md",
+    ]
+    snapshot = Snapshot(root, "staged", "0" * 40, "0" * 40, tuple(target), (), ())
+    diffed = RuleContext(workspace_root=root, changed_files=target, cache=WorkspaceCache(root), snapshot=snapshot)
+    assert diffed.changed_files == target
+    assert [p.relative_to(root).as_posix() for p in diffed.cache.find_files(root)] == ["docs/a.md"]

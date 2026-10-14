@@ -108,6 +108,18 @@ class DefinitionProblem(DefinitionError):
         return data
 
 
+class OptionalStageWarning(DefinitionProblem):
+    """An optional stage has a gate or a ``human`` exit check that is never requested (``WARNING``, never raised).
+
+    An unmet optional stage is passed over and never becomes current, so nothing lists its request; only
+    ``approvals.<gate>=auto``, ``--given`` or a decision record a host writes satisfy it. ``validate`` reports it;
+    the definition stays usable.
+    """
+
+    code = "WORKFLOW_OPTIONAL_STAGE_UNASKED"
+    level = Level.WARNING
+
+
 class RoleUnknownProblem(DefinitionProblem):
     """A stage role outside the project's subagent vocabulary."""
 

@@ -148,3 +148,25 @@ def test_fix_encodes_candidate_names_that_link_syntax_would_alter(tmp_path: Path
     assert MarkdownLinkRule().fix(RuleContext(workspace_root=tmp_path)) == ["a.md"]
     assert (tmp_path / "a.md").read_text() == "".join(f"[x](docs/{link})\n" for link in encoded.values())
     assert MarkdownLinkRule().check(RuleContext(workspace_root=tmp_path)) == []
+
+
+def test_an_explicitly_named_symlink_checks_its_target(tmp_path: Path) -> None:
+    write_files(tmp_path, {"a/real.md": "[y](wrong/y.md)\n", "a/y.md": "y\n", "a/ok.md": "fine\n"})
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs/alias.md").symlink_to("../a/real.md")
+    (tmp_path / "docs/again.md").symlink_to("../a/real.md")
+    (tmp_path / "docs/good.md").symlink_to("../a/ok.md")
+    rule = MarkdownLinkRule()
+
+    def files(targets: list[str]) -> list[str]:
+        return [v.file for v in rule.check(RuleContext(workspace_root=tmp_path, changed_files=targets))]
+
+    assert files(["docs/alias.md"]) == ["a/real.md"]
+    assert files(["docs/alias.md", "docs/again.md"]) == ["a/real.md"]  # one target, checked once
+    assert files(["docs/alias.md", "a/real.md"]) == ["a/real.md"]  # already a target: not checked twice
+    assert files(["docs/good.md"]) == []
+    excluded = RuleContext(workspace_root=tmp_path, changed_files=["docs/alias.md"], exclude=("a/**",))
+    assert rule.check(excluded) == []
+    ctx = RuleContext(workspace_root=tmp_path, changed_files=["docs/alias.md"])
+    assert rule.fix(ctx) == ["a/real.md"]
+    assert (tmp_path / "a/real.md").read_text() == "[y](y.md)\n" and (tmp_path / "docs/alias.md").is_symlink()

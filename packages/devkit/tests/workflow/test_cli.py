@@ -7,7 +7,7 @@ import pytest
 from click.testing import CliRunner, Result
 from devkit.advisory import AdvisoryError
 from devkit.workflow.cli import cli
-from testsupport.workflow import WORKFLOW, write_config, write_receipt
+from testsupport.workflow import SIMPLE_UNIT, WORKFLOW, simple_workspace, write_config, write_receipt
 
 CONFIG = """schema = 1
 [workflow]
@@ -249,3 +249,24 @@ def test_cli_uses_synchronized_workflow_from_receipt(tmp_path: Path) -> None:
     assert created.exit_code == 0, created.output
     nxt = _run("next", "-w", str(tmp_path), "--unit", ".devkit/transient/work/login", "--no-lint")
     assert nxt.exit_code == 0 and "[WORKFLOW: direct-delivery" in nxt.output
+
+
+def test_requests_reports_a_lint_error_like_next(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import devkit.rules
+
+    def broken(*_: object, **__: object) -> None:
+        raise RuntimeError("rule exploded")
+
+    root = simple_workspace(tmp_path, check="lint-clean")
+    assert _run("new", "-w", str(root), "u").exit_code == 0
+    monkeypatch.setattr(devkit.rules, "run_project_rules", broken)
+    result = _run("requests", "-w", str(root), "--unit", SIMPLE_UNIT, "--format", "json")
+    assert result.exit_code == 2 and result.stderr == ""
+    document = json.loads(result.stdout)
+    assert document["requests"] == [] and [e["code"] for e in document["errors"]] == ["UNEXPECTED_ERROR"]
+    text = _run("requests", "-w", str(root), "--unit", SIMPLE_UNIT)
+    assert text.stdout.splitlines() == ["[REQUESTS: none]", '[LINT_ERROR: "RuntimeError: rule exploded"]']
+    assert text.exit_code == 2 and "(UNEXPECTED_ERROR) RuntimeError: rule exploded" in text.stderr
+
+    clean = json.loads(_run("requests", "-w", str(root), "--unit", SIMPLE_UNIT, "--no-lint", "--format", "json").stdout)
+    assert clean == {"requests": [], "errors": []}

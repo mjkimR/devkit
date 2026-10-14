@@ -1,6 +1,6 @@
 schema = 1
 name = "authoring"
-version = "0.1.0"
+version = "0.1.1"
 # Built in but opt-in (no auto_select): `devkit add authoring[:<preset>]` deploys it.
 default_preset = "all"
 

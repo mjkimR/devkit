@@ -1,4 +1,4 @@
-"""Workflow engine test helpers: a valid definition and workspace writers."""
+"""Workflow engine test helpers: a valid definition, a one-stage workspace, workspace writers and the CLI runner."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from click.testing import CliRunner, Result
 
 WORKFLOW = """---
 id: direct-delivery
@@ -65,6 +66,28 @@ stages:
 
 Prose, not parsed.
 """
+
+
+# A one-stage definition: ``SIMPLE.format(id=..., check=...)``.
+SIMPLE = "---\nid: {id}\nschema_version: 1\nstages:\n  - id: s\n    exit: [{check}]\n---\n"
+# The unit ``new u`` creates under the default layout.
+SIMPLE_UNIT = ".devkit/transient/work/u"
+
+
+def run_cli(*args: str) -> Result:
+    """Invoke ``devkit workflow`` with ``args``."""
+    from devkit.workflow.cli import cli
+
+    return CliRunner().invoke(cli, list(args))
+
+
+def simple_workspace(root: Path, check: str = "anchor-exists") -> Path:
+    """``root`` with the one-stage workflow ``w`` (exit ``check``) as ``[workflow].default``."""
+    defs = root / ".devkit/workflows"
+    defs.mkdir(parents=True, exist_ok=True)
+    (defs / "w.md").write_text(SIMPLE.format(id="w", check=check))
+    write_config(root, '[workflow]\ndefault = "w"\n')
+    return root
 
 
 def write_config(root: Path, body: str) -> Path:

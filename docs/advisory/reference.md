@@ -35,7 +35,7 @@ This module implements the Agent Advisory Protocol and nothing else.
 | `Actor`, `Retry` | Error fields: `TOOL`/`USER`/`DEVELOPER`/`NONE`; `SAFE`/`AFTER_FIX`/`UNSAFE`. |
 | `ExitCode` | `OK = 0`, `FINDINGS = 1`, `ERROR = 2`. |
 | `ACTION_TEXT` | The canonical directive text per `ActionMode`. |
-| `HEADLINE`, `FIELDS`, `CONTINUATION` | The block grammar of [protocol, section 3](protocol.md#3-block-format), for code that parses rendered blocks (`devkit.compact` does): `HEADLINE` maps each `Level` to its 9-character headline sentinel (`"[ERROR]  "`, `"[WARN]   "`, `"[NOTICE] "`), `FIELDS` is the tuple of field sentinels in rendering order (`"[ACTION] "` to `"[DETAIL] "`), and `CONTINUATION` the 9-space indentation of a value's further lines. Every rendered line starts with one of them. A new field sentinel is added to `FIELDS`. |
+| `HEADLINE`, `FIELDS`, `CONTINUATION` | Since `0.1.1`. The block grammar of [protocol, section 3](protocol.md#3-block-format), for code that parses rendered blocks (`devkit.compact` does): `HEADLINE` maps each `Level` to its 9-character headline sentinel (`"[ERROR]  "`, `"[WARN]   "`, `"[NOTICE] "`), `FIELDS` is the tuple of field sentinels in rendering order (`"[ACTION] "` to `"[DETAIL] "`), and `CONTINUATION` the 9-space indentation of a value's further lines. Every rendered line starts with one of them. A new field sentinel is added to `FIELDS`. |
 | `as_advisory_error(exc)`, `render_error(exc)` | Pass an `ERROR`-level `AdvisoryError` through; adapt anything else, a warning or notice that was raised included, to `UNEXPECTED_ERROR` (`MAINTENANCE`). A foreign exception's message is `<ExceptionType>: <text>` (the type alone when the text is empty). |
 
 Rendering and serialization:

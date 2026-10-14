@@ -303,6 +303,27 @@ class LocalTarget:
     suffix: str
 
 
+# Characters that force an angle-bracket destination when a written path contains them.
+_NEEDS_ANGLE = re.compile(r"[\s()]")
+# Characters percent-encoded in a written path, so ``local_target`` reads it back unchanged:
+# ``%`` and ``\`` would be decoded or unescaped, ``#`` and ``?`` would start a fragment or query,
+# and ``<``/``>`` cannot appear inside an angle-bracket destination.
+_ENCODE = {char: f"%{ord(char):02X}" for char in "%\\#?<>"}
+
+
+def encode_destination(path: str, suffix: str = "", *, angle: bool = False) -> str:
+    """The link destination for the relative ``path`` (decoded, POSIX) followed by ``suffix`` (``?query`` /
+    ``#fragment`` as written), which ``local_target`` reads back as ``path``.
+
+    ``%``, ``\\``, ``#``, ``?``, ``<`` and ``>`` are percent-encoded; a path with whitespace or parentheses is
+    wrapped in ``<...>`` unless ``angle`` says the destination being replaced is already inside angle brackets
+    (which the caller keeps).
+    """
+    encoded = "".join(_ENCODE.get(char, char) for char in path)
+    destination = f"{encoded}{suffix}"
+    return f"<{destination}>" if not angle and _NEEDS_ANGLE.search(encoded) else destination
+
+
 def local_target(destination: str) -> LocalTarget | None:
     """The workspace file a link destination points to, or ``None`` for anything else.
 

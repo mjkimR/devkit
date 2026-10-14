@@ -70,6 +70,17 @@ class UnitRef:
 
 
 @dataclass(frozen=True)
+class UnitScope:
+    """A unit's anchor, binding and the id of the workflow it follows, read without loading that definition."""
+
+    dir: Path  # absolute
+    anchor: str
+    binding: Binding
+    workflow: str  # the binding's workflow, else ``[workflow].default``
+    rel: str  # workspace-relative when inside the workspace
+
+
+@dataclass(frozen=True)
 class DefinitionDescription:
     """A definition with its problems, effective policies and anchor, and optionally a unit's binding (``show``)."""
 
@@ -407,6 +418,21 @@ class Workspace:
             )
         return UnitRef(unit_dir, found, binding, doc, self.rel(unit_dir))
 
+    def unit_scope(self, unit: str | Path, *, anchor: str | None = None) -> UnitScope:
+        """The unit's anchor (``locate_anchor``), binding and workflow id, without loading the definition.
+
+        Enough to scope what is recorded in the unit (``envelope new``), so a
+        missing or invalid definition or a broken plugin check does not stop
+        it. An unbound unit follows ``[workflow].default``; without one it is
+        ``WorkflowNotSelectedError``.
+        """
+        unit_dir = self.unit_path(unit)
+        found = self.locate_anchor(unit_dir, anchor)
+        binding = self._binding(unit_dir, found)
+        self._require_selection(unit_dir, binding)
+        workflow = binding.workflow or self.config.default or ""
+        return UnitScope(unit_dir, found, binding, workflow, self.rel(unit_dir))
+
     def _require_selection(self, unit_dir: Path, binding: Binding) -> None:
         """Raise ``WorkflowNotSelectedError`` for an unbound unit when ``[workflow].default`` is unset."""
         if not binding.workflow and not self.config.default:
@@ -500,4 +526,4 @@ class Workspace:
         return result
 
 
-__all__ = ["DefinitionDescription", "UnitRef", "Workspace"]
+__all__ = ["DefinitionDescription", "UnitRef", "UnitScope", "Workspace"]

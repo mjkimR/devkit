@@ -8,13 +8,12 @@ from __future__ import annotations
 import base64
 import json
 import os
-import tempfile
 from collections.abc import Iterable, Iterator
 from contextlib import ExitStack, contextmanager
 from pathlib import Path
 
 from devkit.core import LockHeldError as CoreLockHeldError
-from devkit.core import UnsafePathError, file_lock
+from devkit.core import UnsafePathError, atomic_write_bytes, file_lock
 from devkit.distribution.content import Content, json_content
 from devkit.distribution.errors import LockHeldError, PendingTransactionError, RecoveryError, UnsafeWorkspaceError
 from devkit.distribution.installation.workspace import JOURNAL, LOCK, checked_path, owned_prefix, project_path, snapshot
@@ -77,25 +76,31 @@ def prune_empty_parents(root: Path, name: str, *, stop: str | None = None) -> No
         parent = parent.parent
 
 
-def missing_directories(root: Path, names: Iterable[str]) -> list[str]:
-    """The workspace-relative directories that writing ``names`` would create, parents first."""
+def missing_directories(root: Path, names: Iterable[str], removed: frozenset[str] = frozenset()) -> list[str]:
+    """The workspace-relative directories that writing ``names`` would create, parents first.
+
+    A path in ``removed`` (a managed file the same change set deletes) counts as missing.
+    """
     missing: dict[str, None] = {}
     for name in names:
         parts = name.split("/")[:-1]
         for depth in range(1, len(parts) + 1):
             directory = "/".join(parts[:depth])
-            if directory not in missing and not os.path.lexists(root / directory):
+            if directory not in missing and (directory in removed or not os.path.lexists(root / directory)):
                 missing[directory] = None
     return list(missing)
 
 
-def blocked_parent(root: Path, name: str) -> str | None:
-    """The first existing ancestor of ``name`` that is not a directory (a file stands where a directory must be)."""
+def blocked_parent(root: Path, name: str, removed: frozenset[str] = frozenset()) -> str | None:
+    """The first existing ancestor of ``name`` that is not a directory (a file stands where a directory must be).
+
+    An ancestor in ``removed`` (a managed file the same change set deletes first) blocks nothing.
+    """
     parts = name.split("/")[:-1]
     for depth in range(1, len(parts) + 1):
         directory = "/".join(parts[:depth])
         path = root / directory
-        if not os.path.lexists(path):
+        if directory in removed or not os.path.lexists(path):
             return None
         if not path.is_dir():
             return directory
@@ -111,10 +116,25 @@ def blocked_parent_error(name: str, parent: str) -> UnsafeWorkspaceError:
     )
 
 
+def _removed_owned(changes: dict[str, Content | None]) -> frozenset[str]:
+    """The owned destinations (managed or projected files) that ``changes`` delete."""
+    return frozenset(name for name, content in changes.items() if content is None and owned_prefix(name) is not None)
+
+
+def _ordered(changes: dict[str, Content | None]) -> list[tuple[str, Content | None]]:
+    """``changes`` with the deletions first, so a deleted file frees its path for a directory written in its place."""
+    return sorted(changes.items(), key=lambda item: item[1] is not None)
+
+
 def require_writable(root: Path, changes: dict[str, Content | None]) -> None:
-    """``UnsafeWorkspaceError`` when a file stands where a directory of a path to write must be."""
+    """``UnsafeWorkspaceError`` when a file stands where a directory of a path to write must be.
+
+    A managed or projected file that the same ``changes`` delete is no obstacle (an upstream asset whose file became
+    a directory): the transaction deletes it before it writes. Any other file, a project file above all, is.
+    """
+    removed = _removed_owned(changes)
     for name, content in changes.items():
-        parent = None if content is None else blocked_parent(root, name)
+        parent = None if content is None else blocked_parent(root, name, removed)
         if parent is not None:
             raise blocked_parent_error(name, parent)
 
@@ -132,21 +152,14 @@ def _prune_created(root: Path, directories: list[str]) -> None:
 
 
 def replace_file(path: Path, content: Content | None) -> None:
-    """Atomically replace (or, with ``None``, delete) one already validated file path."""
-    if content is None:
-        path.unlink(missing_ok=True)
-    else:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        fd, temporary = tempfile.mkstemp(prefix=".devkit-write-", dir=path.parent)
-        try:
-            with os.fdopen(fd, "wb") as stream:
-                os.fchmod(stream.fileno(), content.mode)
-                stream.write(content.data)
-                stream.flush()
-                os.fsync(stream.fileno())
-            os.replace(temporary, path)
-        finally:
-            Path(temporary).unlink(missing_ok=True)
+    """Atomically replace (``devkit.core.atomic_write_bytes``) or, with ``None``, delete one already validated file.
+
+    Either way the directory entry is ``fsync``ed before this returns.
+    """
+    if content is not None:
+        atomic_write_bytes(path, content.data, mode=content.mode)
+        return
+    path.unlink(missing_ok=True)
     if path.parent.exists():
         _fsync_directory(path.parent)
 
@@ -177,7 +190,12 @@ def project_lock(root: Path, *, shared: bool = False) -> Iterator[None]:
         except UnsafePathError as exc:
             raise UnsafeWorkspaceError(f"unsafe lock file: {LOCK}", target_files=[LOCK]) from exc
         except CoreLockHeldError as exc:
-            raise LockHeldError("another devkit operation holds the project lock", target_files=[LOCK]) from exc
+            raise LockHeldError(
+                "another devkit operation holds the project lock",
+                target_files=[LOCK],
+                what=exc.what,
+                seconds=exc.seconds,
+            ) from exc
         yield
 
 
@@ -207,10 +225,35 @@ def require_no_journal(root: Path) -> None:
         raise PendingTransactionError("an interrupted synchronization left its journal")
 
 
+def _replaced_by_directory(root: Path, name: str, after: Content | None, directories: list[str]) -> bool:
+    """Whether the transaction deleted the file ``name`` and created a directory in its place (its ``after``)."""
+    path = root / name
+    return after is None and name in directories and path.is_dir() and not path.is_symlink()
+
+
+LEGACY_JOURNAL_FIX = (
+    f"Run `devkit recover` with the devkit version that wrote {JOURNAL}; without it, restore by hand: for each path"
+    " under `changes`, keep the file when it equals the base64 `after` content, write back the `before` content"
+    f" (delete the file when `before` is null) otherwise, then delete {JOURNAL} and run `devkit sync`"
+)
+
+
+def _legacy_journal_error() -> RecoveryError:
+    """The refusal of a journal an earlier devkit wrote (no ``directories`` entry), which this devkit does not read."""
+    return RecoveryError(
+        f"recovery journal written by an earlier devkit (it has no `directories` entry): {JOURNAL}",
+        target_files=[JOURNAL],
+        fix=LEGACY_JOURNAL_FIX,
+        what_to_report=f"{JOURNAL} is from an earlier devkit; roll it back with that version or by hand",
+    )
+
+
 def recover_locked(root: Path) -> int:
     journal = read_json(root, JOURNAL)
     if journal is None:
         return 0
+    if set(journal) == {"schema", "changes"}:
+        raise _legacy_journal_error()
     if (
         set(journal) != {"schema", "changes", "directories"}
         or type(journal["schema"]) is not int
@@ -229,7 +272,7 @@ def recover_locked(root: Path) -> int:
         if name == JOURNAL or not isinstance(values, dict) or set(values) != {"before", "after"}:
             raise RecoveryError("invalid recovery entry", target_files=[JOURNAL])
         before, after = _decode(values["before"]), _decode(values["after"])
-        if snapshot(root, name) not in (before, after):
+        if not _replaced_by_directory(root, name, after, directories) and snapshot(root, name) not in (before, after):
             raise RecoveryError(
                 f"recovery blocked by subsequent edit: {name}",
                 target_files=[name, JOURNAL],
@@ -256,17 +299,20 @@ def apply_changes(root: Path, changes: dict[str, Content | None]) -> None:
     if not changes:
         return
     require_writable(root, changes)
+    # Deletions first, in the journal too: a rollback undoes the writes in reverse, before it restores those files.
+    ordered = _ordered(changes)
     journal = {
         "schema": 1,
         "changes": {
-            name: {"before": _encode(snapshot(root, name)), "after": _encode(content)}
-            for name, content in changes.items()
+            name: {"before": _encode(snapshot(root, name)), "after": _encode(content)} for name, content in ordered
         },
-        "directories": missing_directories(root, [name for name, content in changes.items() if content is not None]),
+        "directories": missing_directories(
+            root, [name for name, content in ordered if content is not None], _removed_owned(changes)
+        ),
     }
     atomic_write(root, JOURNAL, Content(json_content(journal).data, 0o600))
     try:
-        for name, content in changes.items():
+        for name, content in ordered:
             atomic_write(root, name, content)
     except Exception:
         recover_locked(root)

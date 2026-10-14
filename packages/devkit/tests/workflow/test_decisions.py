@@ -1,14 +1,44 @@
 from __future__ import annotations
 
+import errno
+import fcntl
 import json
+import os
+import sys
+from concurrent.futures import ThreadPoolExecutor
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+import pytest
 import yaml
 from click.testing import CliRunner, Result
-from devkit.workflow import Options, evaluate_definition, load_decisions, parse_definition, render_evaluation
+from devkit.core import LockHeldError, LockUnsupportedError
+from devkit.core.errors import UnsafePathError
+from devkit.workflow import (
+    DecisionInvalidError,
+    Options,
+    Workspace,
+    create_unit,
+    evaluate_definition,
+    load_decisions,
+    load_envelopes,
+    parse_definition,
+    record_answer,
+    render_evaluation,
+)
 from devkit.workflow.cli import cli
-from devkit.workflow.unit.decisions import DecisionRecordError, Decisions, new_decision, parse_record, write_decision
-from testsupport.workflow import WORKFLOW, write_config, write_unit
+from devkit.workflow.unit import records
+from devkit.workflow.unit.decisions import (
+    Decision,
+    DecisionRecordError,
+    Decisions,
+    new_decision,
+    parse_record,
+    record_instant,
+    utc_timestamp,
+    write_decision,
+)
+from testsupport.workflow import WORKFLOW, simple_workspace, write_config, write_record, write_unit
 
 HUMAN_CHECK = """---
 id: signoff
@@ -531,3 +561,170 @@ def test_cli_handoff_uses_recorded_choice(tmp_path: Path) -> None:
     payload = json.loads(done.stdout)
     assert payload["to"] == "direct-delivery" and payload["decision"] == "decisions/01-handoff.yaml"
     assert "[WORKFLOW: direct-delivery" in _run("next", "-w", str(root), "--unit", unit, "--no-lint").output
+
+
+# --- feedback ---------------------------------------------------------------------------------
+
+
+def test_feedback_answers_validate_the_action(tmp_path: Path) -> None:
+    root = simple_workspace(tmp_path)
+    ws = Workspace(root)
+    unit = create_unit(ws, "u")
+    with pytest.raises(DecisionInvalidError):
+        record_answer(ws, unit, "feedback:x", "approve", ["text"])
+    assert not (unit.dir / "decisions").exists()
+
+
+# --- numbered record files --------------------------------------------------------------------
+
+
+def _leftovers(directory: Path) -> list[str]:
+    return sorted(p.name for p in directory.iterdir() if records.is_temporary(p.name))
+
+
+def _gate(stale: Decisions, name: str = "a") -> Decision:
+    return new_decision(stale, f"gate:{name}", "accept", workflow="w", stage="s")
+
+
+def test_a_sequence_is_unique_across_requests(tmp_path: Path) -> None:
+    unit = write_unit(tmp_path, "u")
+    stale = load_decisions(unit)
+    first = write_decision(unit, _gate(stale))
+    # A concurrent writer computed the same next sequence for another request.
+    second = write_decision(unit, new_decision(stale, "return:s", "accept", workflow="w"))
+    assert (first.seq, second.seq) == (1, 2)
+    assert second.file == "decisions/02-return-s.yaml"
+    assert [r.seq for r in load_decisions(unit).records] == [1, 2]
+
+
+def test_a_sequence_is_never_below_a_taken_one(tmp_path: Path) -> None:
+    unit = write_unit(tmp_path, "u")
+    stale = load_decisions(unit)
+    write_record(unit, "05-gate-a.yaml", request="gate:a", kind="approve", action="accept", workflow="w", stage="s")
+    # Sequence 1 is free, but a record written now must order after record 5.
+    assert write_decision(unit, _gate(stale, "b")).seq == 6
+
+
+def test_concurrent_writers_get_distinct_sequences(tmp_path: Path) -> None:
+    unit = write_unit(tmp_path, "u")
+    stale = load_decisions(unit)
+
+    def write(i: int) -> int:
+        return write_decision(unit, _gate(stale, f"g{i}")).seq
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        seqs = list(pool.map(write, range(24)))
+    assert sorted(seqs) == list(range(1, 25))
+    assert len(load_decisions(unit).records) == 24 and _leftovers(unit / "decisions") == []
+
+
+def test_a_failed_write_leaves_no_record_and_no_temporary_file(tmp_path: Path) -> None:
+    directory = tmp_path / "decisions"
+
+    def write(body: str) -> tuple[Path, int]:
+        return records.write_numbered(directory, 1, lambda n: f"{n:02d}-gate-a.yaml", lambda _: None, body)
+
+    with pytest.raises(UnicodeEncodeError):
+        write("request: \udc80\n")  # cannot be encoded: the write fails part-way
+    assert list(directory.iterdir()) == []
+    assert write("request: gate:a\n") == (directory / "01-gate-a.yaml", 1)
+
+
+def test_records_are_written_whole_without_hard_links(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def no_links(*_: object) -> None:
+        raise OSError(errno.ENOTSUP, "Operation not supported")
+
+    monkeypatch.setattr(records.os, "link", no_links)
+    unit = write_unit(tmp_path, "u")
+    stale = load_decisions(unit)
+    assert [write_decision(unit, _gate(stale, name)).seq for name in ("a", "b")] == [1, 2]
+    assert [r.request for r in load_decisions(unit).records] == ["gate:a", "gate:b"]
+    assert records.write_new_file(unit / "task.md", "replaced") is False
+    assert (unit / "task.md").read_text().startswith("---\nid: x") and _leftovers(unit) == []
+
+
+def test_a_writer_waits_for_the_lock_a_bounded_time(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    unit = write_unit(tmp_path, "u")
+    (unit / "decisions").mkdir()
+    monkeypatch.setattr(records, "LOCK_TIMEOUT", 0.05)
+    holder = os.open(unit / "decisions", os.O_RDONLY)
+    try:
+        fcntl.flock(holder, fcntl.LOCK_EX)
+        with pytest.raises(LockHeldError) as raised:
+            write_decision(unit, _gate(load_decisions(unit)))
+        assert raised.value.code == "LOCK_HELD"
+    finally:
+        os.close(holder)
+    assert write_decision(unit, _gate(load_decisions(unit))).seq == 1
+
+
+def test_writing_records_needs_flock(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    unit = write_unit(tmp_path, "u")
+    monkeypatch.setitem(sys.modules, "fcntl", None)  # `import fcntl` raises ImportError
+    with pytest.raises(LockUnsupportedError) as raised:
+        write_decision(unit, _gate(load_decisions(unit)))
+    assert raised.value.code == "LOCK_UNSUPPORTED"
+
+
+def test_records_are_never_written_through_a_symbolic_link(tmp_path: Path) -> None:
+    unit = write_unit(tmp_path, "u")
+    (tmp_path / "elsewhere").mkdir()
+    (unit / "decisions").symlink_to(tmp_path / "elsewhere", target_is_directory=True)
+    with pytest.raises(UnsafePathError):
+        write_decision(unit, _gate(load_decisions(unit)))
+    assert list((tmp_path / "elsewhere").iterdir()) == []
+
+
+def test_loaders_skip_temporary_files(tmp_path: Path) -> None:
+    unit = write_unit(tmp_path, "u")
+    for directory, name in (("decisions", "01-gate-a.yaml"), ("envelopes", "review-01.yaml")):
+        (unit / directory).mkdir()
+        (unit / directory / f".{name}.0123456789ab.tmp").write_text("partial: [")
+    decisions, envelopes = load_decisions(unit), load_envelopes(unit)
+    assert (decisions.records, decisions.errors, decisions.max_seq) == ([], [], 0)
+    assert (envelopes.by_kind, envelopes.errors) == ({}, [])
+
+
+def test_a_concurrent_return_voids_an_approval_given_from_the_same_state(tmp_path: Path) -> None:
+    doc = parse_definition(
+        "---\nid: w\nschema_version: 1\nstages:\n  - id: s\n    human_gate: g\n    exit: [anchor-exists]\n---\n"
+    )
+    unit = write_unit(tmp_path, "u")
+    stale = load_decisions(unit)
+    write_decision(unit, _gate(stale, "g"))
+    write_decision(unit, new_decision(stale, "return:s", "accept", workflow="w"))
+    res = evaluate_definition(doc, Options(workspace_root=tmp_path, unit_dir=unit, anchor="task.md", skip_lint=True))
+    assert res.stage is not None and [u.name for u in res.unmet] == ["gate:g"]
+
+
+# --- timestamps -------------------------------------------------------------------------------
+
+
+def test_timestamps_are_written_to_the_microsecond() -> None:
+    moment = datetime(2026, 10, 12, 9, 30, 0, 250000, tzinfo=UTC)
+    assert utc_timestamp(moment) == "2026-10-12T09:30:00.250000Z"
+    # A whole second is written without a fraction, which reads back as the whole second.
+    assert utc_timestamp(moment.replace(microsecond=0)) == "2026-10-12T09:30:00Z"
+    later = moment + timedelta(seconds=1)
+    assert utc_timestamp(moment, after=later) == "2026-10-12T09:30:01.250000Z"
+    assert utc_timestamp(later, after=moment) == "2026-10-12T09:30:01.250000Z"
+
+
+@pytest.mark.parametrize(
+    ("text", "width"),
+    [
+        ("2026-10-12T09:30:00Z", timedelta(seconds=1)),
+        ("2026-10-12T09:30:00.250000Z", timedelta(microseconds=1)),
+        ("2026-10-12 09:30:00.25+00:00", timedelta(milliseconds=10)),
+        ("2026-10-12T11:30+02:00", timedelta(minutes=1)),
+    ],
+)
+def test_an_instant_spans_the_precision_of_its_timestamp(text: str, width: timedelta) -> None:
+    instant = record_instant(text)
+    assert instant is not None and instant.end - instant.start == width
+    assert instant.start == datetime.fromisoformat(text)
+
+
+@pytest.mark.parametrize("text", ["", "2026-10-12", "2026-10-12T09:30:00", "yesterday"])
+def test_a_timestamp_without_a_zone_or_time_has_no_instant(text: str) -> None:
+    assert record_instant(text) is None

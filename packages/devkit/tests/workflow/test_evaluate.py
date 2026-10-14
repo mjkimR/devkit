@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -13,7 +14,7 @@ from devkit.workflow import (
     schema_hash,
 )
 from devkit.workflow.definition.checks import CheckClass
-from testsupport.workflow import WORKFLOW, write_record, write_unit
+from testsupport.workflow import SIMPLE, WORKFLOW, run_cli, simple_workspace, write_record, write_unit
 
 DOC = parse_definition(WORKFLOW)
 
@@ -297,3 +298,87 @@ def test_a_return_to_a_later_stage_or_an_unplaced_envelope_voids_nothing(tmp_pat
     later = {"kind": "return", "action": "accept", "workflow": "reviewed", "stage": "report"}
     write_record(unit, "01-return-report.yaml", request="return:report", at="2026-10-12T09:30:00Z", **later)
     assert evaluate_definition(REVIEWED, _opts(tmp_path, unit)).stage.id == "report"  # type: ignore[union-attr]
+
+
+RETURNED = {"kind": "return", "action": "accept", "workflow": "reviewed", "stage": "build"}
+
+
+@pytest.mark.parametrize("written", ["2026-10-12T09:30:00Z", "2026-10-12T09:30:00.900000+00:00"])
+def test_a_return_voids_an_envelope_from_the_same_second(tmp_path: Path, written: str) -> None:
+    unit = write_unit(tmp_path, "work/a")
+    (unit / "built.txt").write_text("x")
+    _write_env(unit, "review-01.yaml", PASSED_REVIEW.format(at=written))
+    assert evaluate_definition(REVIEWED, _opts(tmp_path, unit)).stage.id == "report"  # type: ignore[union-attr]
+    # The return names only its second, so it may have been written after the envelope.
+    write_record(unit, "01-return-build.yaml", request="return:build", at="2026-10-12T09:30:00Z", **RETURNED)
+    res = evaluate_definition(REVIEWED, _opts(tmp_path, unit))
+    assert res.stage is not None and res.stage.id == "review"
+    assert [u.name for u in res.unmet] == ["envelope-review-passed"]
+
+
+@pytest.mark.parametrize(
+    ("written", "counts"),
+    [
+        ("2026-10-12T09:30:00.400000Z", False),  # before the return
+        ("2026-10-12T09:30:00.500000Z", False),  # the same microsecond: the order is unknown
+        ("2026-10-12T09:30:00.500001Z", True),
+        ("2026-10-12T09:30:01Z", True),
+        ("2026-10-12T09:30:00Z", False),  # a whole second that contains the return
+    ],
+)
+def test_sub_second_times_order_an_envelope_and_a_return(tmp_path: Path, written: str, counts: bool) -> None:
+    unit = write_unit(tmp_path, "work/a")
+    (unit / "built.txt").write_text("x")
+    write_record(unit, "01-return-build.yaml", request="return:build", at="2026-10-12T09:30:00.500000Z", **RETURNED)
+    _write_env(unit, "review-01.yaml", PASSED_REVIEW.format(at=written))
+    stage = evaluate_definition(REVIEWED, _opts(tmp_path, unit)).stage
+    assert stage is not None and stage.id == ("report" if counts else "review")
+
+
+# --- lint-clean -------------------------------------------------------------------------------
+
+
+def test_lint_clean_on_a_unit_outside_the_root_is_a_reported_error(tmp_path: Path) -> None:
+    root = simple_workspace(tmp_path / "project", check="lint-clean")
+    outside = write_unit(tmp_path, "outside/u")
+    result = run_cli("next", "-w", str(root), "--unit", str(outside), "--format", "json")
+    assert result.exit_code == 2, result.output
+    [error] = json.loads(result.stdout)["errors"]
+    assert error["code"] == "PATH_UNSAFE" and "outside the workspace root" in error["message"]
+
+    # A unit reached through a symbolic link that leaves the root is the same unit.
+    (root / "linked").symlink_to(outside, target_is_directory=True)
+    text = run_cli("next", "-w", str(root), "--unit", "linked")
+    assert text.exit_code == 2 and "[LINT_ERROR: " in text.stdout and "(PATH_UNSAFE)" in text.stderr
+
+
+def test_the_lint_detail_names_a_unit_outside_the_root_as_given(tmp_path: Path) -> None:
+    doc = parse_definition(SIMPLE.format(id="w", check="lint-clean"))
+    unit = write_unit(tmp_path, "outside/u")
+
+    def lint(_root: Path, _files: list[str]) -> list[str]:
+        return [f"v{i}" for i in range(5)]
+
+    res = evaluate_definition(doc, _opts(tmp_path / "work", unit, lint=lint, skip_lint=False))
+    assert res.unit == unit.as_posix() and res.lint_error is not None
+    assert res.lint_error.code == "PATH_UNSAFE"
+    # Inside the root, the detail names the unit relative to it.
+    res = evaluate_definition(doc, _opts(tmp_path, unit, lint=lint, skip_lint=False))
+    assert "2 more (devkit rules check outside/u)" in res.unmet[0].detail
+
+
+def test_lint_clean_skips_the_temporary_files_of_writes_in_progress(tmp_path: Path) -> None:
+    doc = parse_definition(SIMPLE.format(id="w", check="lint-clean"))
+    unit = write_unit(tmp_path, "u")
+    (unit / "decisions").mkdir()
+    (unit / "decisions/.01-gate-a.yaml.0123456789ab.tmp").write_text("partial")
+    (unit / ".task.md.0123456789ab.tmp").write_text("partial")
+    (unit / ".notes.tmp").write_text("not a write in progress")
+    linted: list[str] = []
+
+    def lint(_root: Path, files: list[str]) -> list[str]:
+        linted.extend(files)
+        return []
+
+    assert evaluate_definition(doc, _opts(tmp_path, unit, lint=lint, skip_lint=False)).complete
+    assert linted == ["u/.notes.tmp", "u/task.md"]

@@ -155,6 +155,29 @@ def _hook(repo: Path, name: str, body: str) -> None:
     hook.chmod(0o755)
 
 
+def _wait_for(path: Path, timeout: float = 5.0) -> str:
+    """The text of ``path`` once a process has written it, waiting at most ``timeout`` seconds."""
+    deadline = time.monotonic() + timeout
+    while not path.exists():
+        if time.monotonic() > deadline:
+            pytest.fail(f"{path} was never written")
+        time.sleep(0.02)
+    return path.read_text()
+
+
+def _assert_gone(pid: int, what: str, timeout: float = 5.0) -> None:
+    """Fail (after killing it) when the process ``pid`` is still running ``timeout`` seconds from now."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            return
+        time.sleep(0.02)
+    os.kill(pid, signal.SIGKILL)
+    pytest.fail(f"{what} outlived its timeout")
+
+
 def _only_the_base(repo: Path, slug: str) -> None:
     assert [entry.path for entry in status(locate(repo)).worktrees] == [repo]
     assert not (repo.parent / f"repo-wt-{slug}").exists() and git(repo, "branch", "--list", slug) == ""
@@ -185,26 +208,72 @@ def test_a_failed_marker_write_removes_the_new_worktree_and_branch(repo: Path, m
     _only_the_base(repo, "demo")
 
 
-def test_a_timed_out_worktree_add_removes_what_it_created(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_a_timed_out_worktree_add_removes_what_it_created(
+    repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setattr(lifecycle, "CHECKOUT_TIMEOUT", 1.0)
-    _hook(repo, "post-checkout", "sleep 5\n")
+    pidfile = tmp_path / "hook.pid"
+    _hook(repo, "post-checkout", f"sleep 30 & echo $! > {pidfile}.tmp && mv {pidfile}.tmp {pidfile}; wait\n")
     with pytest.raises(AddFailedError, match=r"timed out after 1\.0s"):
         start(locate(repo), "demo")
     _only_the_base(repo, "demo")
+    _assert_gone(int(_wait_for(pidfile)), "the post-checkout hook's child")
+
+
+def test_a_branch_created_while_start_runs_is_left_alone(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    git(repo, "checkout", "-q", "-b", "elsewhere")
+    commit(repo, "theirs.txt")
+    git(repo, "checkout", "-q", "main")
+    session = lifecycle._git_session
+
+    def racing(cwd: Path, *args: str, **options: Any) -> bytes:
+        if args[:2] == ("worktree", "add"):
+            git(repo, "branch", "demo", "elsewhere")  # another process takes the name after start checked it
+        return session(cwd, *args, **options)
+
+    monkeypatch.setattr(lifecycle, "_git_session", racing)
+    with pytest.raises(BranchExistsError, match="created while start ran"):
+        start(locate(repo), "demo")
+    assert git(repo, "rev-parse", "demo") == git(repo, "rev-parse", "elsewhere")
+    assert not (repo.parent / "repo-wt-demo").exists()
+
+
+def test_a_path_created_while_start_runs_is_left_alone(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    path = repo.parent / "repo-wt-demo"
+    session = lifecycle._git_session
+
+    def racing(cwd: Path, *args: str, **options: Any) -> bytes:
+        if args[:2] == ("worktree", "add"):
+            write(path, "theirs.txt", "theirs\n")  # another process fills the path after start checked it
+        return session(cwd, *args, **options)
+
+    monkeypatch.setattr(lifecycle, "_git_session", racing)
+    with pytest.raises(ConflictError, match="created while start ran"):
+        start(locate(repo), "demo")
+    assert (path / "theirs.txt").read_text() == "theirs\n"
+    assert git(repo, "branch", "--list", "demo") == ""  # the branch Git created before refusing is removed
+
+
+def test_a_branch_a_hook_committed_to_is_named_not_deleted(repo: Path) -> None:
+    _hook(repo, "post-checkout", "git commit -q --allow-empty -m hooked && exit 1\n")
+    with pytest.raises(AddFailedError) as raised:
+        start(locate(repo), "demo")
+    assert raised.value.details == ("left: branch demo (it no longer points at the base HEAD it was created from)",)
+    assert git(repo, "branch", "--list", "demo")
 
 
 def test_what_a_failed_worktree_add_cannot_remove_is_named_with_its_command(
     repo: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _hook(repo, "post-checkout", "exit 1\n")
-    run_git = lifecycle.run_git
+    session = lifecycle._git_session
 
     def no_removal(cwd: Path, *args: str, **options: Any) -> bytes:
         if args[:2] == ("worktree", "remove"):
             raise GitError("git worktree failed", returncode=128, stderr="fatal: cannot remove")
-        return run_git(cwd, *args, **options)
+        return session(cwd, *args, **options)
 
-    monkeypatch.setattr(lifecycle, "run_git", no_removal)
+    monkeypatch.setattr(lifecycle, "_git_session", no_removal)
     with pytest.raises(AddFailedError) as raised:
         start(locate(repo), "demo")
     path = repo.parent / "repo-wt-demo"
@@ -221,7 +290,7 @@ def test_what_a_failed_worktree_add_cannot_remove_is_named_with_its_command(
 def test_a_timed_out_removal_names_the_half_removed_worktree(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     created = start(locate(repo), "demo")
     git(repo, "merge", "-q", "--ff-only", "demo")
-    run_git = lifecycle.run_git
+    session = lifecycle._git_session
 
     def timing_out(cwd: Path, *args: str, **options: Any) -> bytes:
         if args[:2] == ("worktree", "remove"):
@@ -229,9 +298,9 @@ def test_a_timed_out_removal_names_the_half_removed_worktree(repo: Path, monkeyp
             raise GitError("git worktree timed out after 1800.0s in somewhere") from subprocess.TimeoutExpired(
                 ["git"], 1800.0
             )
-        return run_git(cwd, *args, **options)
+        return session(cwd, *args, **options)
 
-    monkeypatch.setattr(lifecycle, "run_git", timing_out)
+    monkeypatch.setattr(lifecycle, "_git_session", timing_out)
     with pytest.raises(RemoveFailedError, match="may be partly deleted") as raised:
         finish(locate(repo), "demo")
     assert raised.value.fix == (
@@ -242,22 +311,14 @@ def test_a_timed_out_removal_names_the_half_removed_worktree(repo: Path, monkeyp
 def test_a_setup_that_times_out_is_stopped_with_its_children(
     repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(lifecycle, "SETUP_TIMEOUT", 0.5)
+    monkeypatch.setattr(lifecycle, "SETUP_TIMEOUT", 1.0)
     pidfile = tmp_path / "child.pid"
-    result = start(locate(repo), "demo", setup=f"sleep 30 & echo $! > {pidfile}; wait")
+    result = start(
+        locate(repo), "demo", setup=f"sleep 30 & echo $! > {pidfile}.tmp && mv {pidfile}.tmp {pidfile}; wait"
+    )
     [warning] = result.notices
     assert warning.code == "WORKTREE_SETUP_FAILED" and "did not finish within" in warning.message
-    child = int(pidfile.read_text())
-    deadline = time.monotonic() + 5
-    while time.monotonic() < deadline:
-        try:
-            os.kill(child, 0)
-        except ProcessLookupError:
-            break
-        time.sleep(0.02)
-    else:
-        os.kill(child, signal.SIGKILL)
-        pytest.fail("the setup's child outlived its timeout")
+    _assert_gone(int(_wait_for(pidfile)), "the setup's child")
 
 
 def test_status_treats_a_worktree_on_an_unborn_branch_as_unmerged(repo: Path) -> None:
@@ -368,6 +429,18 @@ def test_finish_without_a_worktree_never_deletes_a_branch_start_did_not_create(r
     git(repo, "worktree", "remove", str(created.path))  # removed by hand: the marked branch resumes
     done = finish(locate(repo), "demo")
     assert (done.removed, done.branch_deleted) == (True, True) and git(repo, "branch", "--list", "demo") == ""
+
+
+def test_finish_keeping_the_branch_reruns_without_a_worktree_whatever_its_marker(repo: Path) -> None:
+    created = start(locate(repo), "demo")
+    git(repo, "config", "--local", "--unset", "branch.demo.devkitWorktree")  # a branch from before the marker
+    first = finish(locate(repo), "demo", delete_branch=False)
+    assert (first.removed, first.branch_deleted) == (True, False) and not created.path.exists()
+    rerun = finish(locate(repo), "demo", delete_branch=False)  # nothing left to remove: done again
+    assert (rerun.removed, rerun.branch_deleted) == (True, False)
+    assert git(repo, "branch", "--list", "demo").strip() == "demo"
+    with pytest.raises(NotFoundError, match="not resumed automatically"):
+        finish(locate(repo), "demo")  # deleting it still needs the marker
 
 
 def test_finish_with_a_worktree_needs_no_marker(repo: Path) -> None:

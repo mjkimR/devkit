@@ -114,7 +114,8 @@ payloads such as `pre-push` requires a replay contract so every child receives t
   `00-legacy` and the preserved hook. Otherwise it removes the dispatcher and managed adapter and restores
   `<hook>.legacy`. It never deletes user entries, including non-executable files or directories.
 - **`core.hooksPath`**: a value pointing elsewhere is left unchanged. Explicit install refuses
-  (`GATE_HOOKS_PATH_SET`), sync reports a skipped-install warning, and status reports the setting. Uninstall
+  (`GATE_HOOKS_PATH_SET`), sync reports a skipped-install warning, and status reports the setting with a
+  `GATE_HOOKS_PATH_SET` warning naming the enabled gates that do not run. Uninstall
   still cleans the common hooks directory. Remediation depends on scope: unset a local or worktree value in
   that scope, override global/system values for this clone, or remove command-scope options/environment.
 - **Bypass**: `git commit --no-verify` skips `pre-commit` and `commit-msg` as Git defines.

@@ -5,14 +5,14 @@
 
 ## 1. File Contract
 
-Delegated roles and reviews return a YAML envelope written to `<unit>/envelopes/<kind>-<NN>.yaml`. `kind` matches `[a-z][a-z0-9-]*`; `NN` is a sequence per kind of at least two digits (`01` ... `99`, `100`, ...). The highest sequence is current and earlier files are history. Files are never overwritten; `devkit workflow envelope new` writes the next number, and writes the file whole (a temporary file linked into place), so an interrupted write leaves no partial envelope.
+Delegated roles and reviews return a YAML envelope written to `<unit>/envelopes/<kind>-<NN>.yaml`. `kind` matches `[a-z][a-z0-9-]*`; `NN` is a sequence per kind of at least two digits (`01` ... `99`, `100`, ...). The highest sequence is current and earlier files are history. Files are never overwritten; `devkit workflow envelope new` writes the next number under the same directory lock as decision records, and writes the file whole (a hidden temporary file that takes its name without replacing a file, [Answer](human-interaction.md#4-answer)), so an interrupted write leaves no partial envelope. Files named `.<name>.<12 hex digits>.tmp` are such temporary files and are never loaded.
 
 ```yaml
 kind: review
 stage: review
 workflow: direct-delivery    # the workflow the unit was bound to when written (envelope new records it)
 segment: 0                   # finished segments in the anchor's workflow_history when written
-created_at: 2026-10-12T10:00:00Z
+created_at: 2026-10-12T10:00:00.250000Z   # UTC; to the second is also valid
 status: completed            # completed | needs_input | failed
 summary: "1-3 line judgment"
 findings:
@@ -39,7 +39,7 @@ review: review-01.yaml       # reverify only: the review round it closes
 
 ## 2. Authoring
 
-`devkit workflow envelope new --unit DIR [--anchor FILE] --kind KIND [--stage ID]` resolves the unit like every unit command (`--anchor` names the anchor when the directory holds several, `ANCHOR_AMBIGUOUS`), records the bound workflow (or the configured default for an unbound unit) and the current segment in `workflow` and `segment`, and with no other flag writes a `needs_input` skeleton for the author to fill in. Any further flag switches to authoring, where the file is written complete so that no agent edits YAML by hand:
+`devkit workflow envelope new --unit DIR [--anchor FILE] --kind KIND [--stage ID]` locates the unit's anchor like every unit command (`--anchor` names the anchor when the directory holds several, `ANCHOR_AMBIGUOUS`), records the bound workflow (or the configured default for an unbound unit, `WORKFLOW_NOT_SELECTED` without one) and the current segment in `workflow` and `segment`, and with no other flag writes a `needs_input` skeleton for the author to fill in. It reads only the anchor's binding, never the workflow definition or the plugin checks, so a review can be recorded while the definition is missing or invalid. `created_at` is the current UTC time to the microsecond, or the end of the latest accepted `return` of the segment when the clock has not passed it, so a `return` followed at once by `envelope new` never voids the new envelope ([Returns](human-interaction.md#5-how-the-engine-applies-answers)). Any further flag switches to authoring, where the file is written complete so that no agent edits YAML by hand:
 
 | Flag | Effect |
 | --- | --- |

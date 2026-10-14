@@ -33,7 +33,9 @@ Without `-w`/`--workspace-root` the commands use the devkit root of the current
 directory: the Git work tree's top level, or outside Git the nearest directory
 with a `.devkit/` folder, else the current directory
 ([core reference](../core/reference.md)). An explicit `-w` below the top level of
-a Git work tree is `ARGUMENT_INVALID`.
+a Git work tree is `ARGUMENT_INVALID`. A `.devkit/` below the top level of a Git
+work tree whose top level has none is `DEVKIT_ROOT_NESTED` (`INPUT_ERROR`), with
+or without `-w`, rather than a check that loads no managed rules and passes.
 
 - `check` never writes files. Targets, exclusions and phases:
   [Evaluation Lifecycle, section 3](evaluation-lifecycle.md#3-cli-execution-and-phases).
@@ -298,14 +300,22 @@ file written for another location is rewritten to reach the same target from
 where the file is now. URLs, root-relative and fragment- or query-only
 destinations are left alone, `#fragment` and `?query` are kept, and a
 destination that still names its target keeps the author's spelling.
-Destinations are compared as written (no percent-decoding or escape removal).
-Changed files are replaced with `atomic_write_text`; nothing is raised for a
-file. The report lists the rewritten `files`, each `RelocatedLink` (`path`,
-`line`, `old`, `new`; `to_dict` keys `from` and `to`) and each
-`UnresolvedLink` (`path`, `line`, `target`, `reason`), whose
+Destinations are read as `markdown_link` reads them (`local_target`: escapes
+removed, percent-encoding decoded), and a new destination is written with
+`devkit.rules.workspace.markdown.encode_destination(path, suffix='', angle=False)`, which percent-encodes `%`,
+`\`, `#`, `?`, `<` and `>` and wraps a path with whitespace or parentheses in
+`<...>` (unless the destination already is), so it reads back as the same path;
+a trailing `/` (`docs/sub/`) is kept. A file that is a symbolic link is skipped
+(`symlink`): it is an alias of its target, which is relocated at its own path
+when it is among `files`. A file that resolves outside `root` or under
+`.devkit/managed/` or `.devkit/overrides/` is never read or written
+(`protected`). Changed files are replaced with `atomic_write_text`; nothing is
+raised for a file. The report lists the rewritten `files`, each `RelocatedLink`
+(`path`, `line`, `old`, `new` as written; `to_dict` keys `from` and `to`) and
+each `UnresolvedLink` (`path`, `line`, `target`, `reason`), whose
 `UnresolvedReason` is `unmapped` (a link into a moved-away path no mapping
-covers, left as written), `unreadable` or `unwritable` (a whole file: `line`
-`0`, empty `target`).
+covers, left as written), or, for a whole file (`line` `0`, empty `target`),
+`unreadable`, `unwritable`, `symlink` or `protected`.
 
 ### Rule tests
 
@@ -315,11 +325,14 @@ covers, left as written), `unreadable` or `unwritable` (a whole file: `line`
 - `load_rule(anchor, rule_id=None) -> Rule`: `anchor` is a test file
   (`__file__`) under `<rule folder>/tests/`, or the rule folder itself; the
   folder is loaded as a plugin package, as devkit loads a deployed rule (for a
-  managed copy or its project override: the managed modules, each replaced by
-  the override's file when it holds one), and the rule with `rule_id` (or the
-  only one) is returned. Raises `RuleLoadError`
-  (`RULES_LOAD_FAILED`) when the folder fails to load, defines no rule, several
-  without `rule_id`, or none with it.
+  managed copy or its project override: with an installation receipt, exactly
+  the package `devkit rules check` builds from it, only the files the receipt
+  lists for the rule, verified against their hashes; without a receipt, the
+  managed modules, each replaced by the override's file when it holds one), and
+  the rule with `rule_id` (or the only one) is returned. Raises `RuleLoadError`
+  (`RULES_LOAD_FAILED`) when the folder fails to load, is a deployed copy the
+  receipt does not list or lists with a missing or drifted file, defines no
+  rule, several without `rule_id`, or none with it.
 - `check(rule, root, files=None, *, targets=(), fix=False, dry_run=False, settings=None, phase=None) -> list[Violation]`:
   writes `files` (workspace-relative path to `str` or `bytes`) under `root`,
   evaluates the one rule with `evaluate_rules` (phase defaults to the rule's
@@ -414,7 +427,7 @@ are returned in `RuleRegistry.errors`, `ProjectRun.load_errors` and
 | `PinnedWriteError` | `RULES_PINNED_WRITE_REFUSED` | `BLOCKED` | a fixer tried to write a receipt-pinned copy under `.devkit/managed/` or `.devkit/overrides/` |
 | `RuleDefinitionError` | `RULES_DEFINITION_INVALID` | `MAINTENANCE` | a rule class declares an invalid `promote_to` (raised at construction) |
 | `PolicyError` | `RULES_POLICY_INVALID` | `INPUT_ERROR` | a phase or severity override or settings entry names an unknown rule or changes nothing (collected) |
-| `SettingsError` | `RULES_SETTINGS_INVALID` | `INPUT_ERROR`, or `MAINTENANCE` for a defect in the rule's settings declaration | settings do not type-check, or the settings class's `__post_init__` or `validate_settings` rejects them (collected; a `PolicyError`). `MAINTENANCE` covers rejected defaults, an unsupported or unresolvable field type, an `init=False` field, and any exception other than `ValueError` from the class or `validate_settings` |
+| `SettingsError` | `RULES_SETTINGS_INVALID` | `INPUT_ERROR`, or `MAINTENANCE` for a defect in the rule's settings declaration | settings do not type-check, or the settings class's `__post_init__` or `validate_settings` rejects them (collected; a `PolicyError`). `MAINTENANCE` covers rejected defaults, an unsupported or unresolvable field type, an `init=False` field, and any exception other than `ValueError` from the class or `validate_settings`; its `fix` names the rule, its settings class and the file defining it (fix the declaration, or report it to the rule's author) instead of the `[rules]` table |
 | `RuleLoadError` | `RULES_LOAD_FAILED` | `MAINTENANCE`; `AUTO` when missing | a rule package fails to load (or a `.py` file sits directly in `--rules-dir`), or the receipt is malformed or lists a missing or drifted rule (collected; `fix` names `devkit sync`); a missing rule file (a fresh clone or worktree lacks the ignored managed copies) is `AUTO` with the fix `devkit sync` |
 | `RuleExecutionError` | `RULES_EXECUTION_FAILED` | `MAINTENANCE` | a rule raised while checking or fixing; `[TARGET]` is the file defining it (collected). An `ERROR` advisory the rule raised keeps its own code, mode, fix, targets and details, with `rule_id` set (a `RULES_PINNED_WRITE_REFUSED` from a fixer stays one) |
 | `RulesTestUnavailableError` | `RULES_TEST_UNAVAILABLE` | `MAINTENANCE` | `devkit rules test` (or `run_rule_tests`) cannot import pytest in the interpreter running devkit; `fix`: `uv add --dev pytest` (raised before any test runs) |
@@ -453,7 +466,11 @@ they are results on stdout and never affect `--strict`.
 - Snapshot gates materialize the whole tree, so time and disk use grow with
   repository size; blobs are streamed from one `git cat-file --batch` process
   and written as they arrive. Git is stopped (`RULES_SNAPSHOT_FAILED`) only when
-  it produces no output for the Git timeout (60 seconds) or materializing takes
-  more than 30 minutes in all, so a large tree is not cut off by the 60 seconds.
+  there is no progress reading its output for the Git timeout (60 seconds; each
+  object header and chunk read resets it, and time spent writing a file between
+  reads counts) or materializing takes more than 30 minutes in all, so a large
+  tree is not cut off by the 60 seconds. Only Git's exit status decides the
+  result: a Git that exited with status 0 delivered every object, even when the
+  timeout expired as it exited.
 - Phase overrides can only move a rule to `hygiene`; promoting a rule to
   `linter` is done by editing its declared phase.

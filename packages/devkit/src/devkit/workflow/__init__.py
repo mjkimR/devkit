@@ -97,12 +97,13 @@ from devkit.workflow.unit.envelope import (
     Envelopes,
     Finding,
     compose_envelope,
+    envelope_timestamp,
     load_envelopes,
     render_envelope,
     write_envelope,
 )
 from devkit.workflow.unit.units import UnitInfo, create_unit, list_units
-from devkit.workflow.workspace import DefinitionDescription, UnitRef, Workspace
+from devkit.workflow.workspace import DefinitionDescription, UnitRef, UnitScope, Workspace
 
 __all__ = [
     "AnchorAmbiguousError",
@@ -180,6 +181,7 @@ __all__ = [
     "UnitInfo",
     "UnitNotFoundError",
     "UnitRef",
+    "UnitScope",
     "ValidationReport",
     "Waiting",
     "WorkflowAssetMissingError",
@@ -198,6 +200,7 @@ __all__ = [
     "create_unit",
     "discover_definitions",
     "discover_roles",
+    "envelope_timestamp",
     "evaluate_definition",
     "is_ancestor",
     "lint_with_rules",

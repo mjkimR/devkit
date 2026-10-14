@@ -11,7 +11,7 @@ import yaml
 
 from devkit.workflow.definition.ids import IDENT_HINT, IDENT_PATTERN, is_ident
 from devkit.workflow.errors import EnvelopeFormatError, EnvelopeKindError
-from devkit.workflow.unit.records import as_text, write_numbered
+from devkit.workflow.unit.records import as_text, is_temporary, write_numbered
 
 ENVELOPES_DIR = "envelopes"
 FILE = re.compile(rf"({IDENT_PATTERN})-(\d{{2,}})\.ya?ml")
@@ -244,7 +244,7 @@ def load_envelopes(unit_dir: Path) -> Envelopes:
     if not directory.is_dir():
         return out
     for entry in sorted(directory.iterdir()):
-        if entry.is_dir() or entry.suffix not in {".yaml", ".yml"}:
+        if is_temporary(entry.name) or entry.suffix not in {".yaml", ".yml"} or entry.is_dir():
             continue
         try:
             parsed = read_envelope(entry, f"{ENVELOPES_DIR}/{entry.name}")

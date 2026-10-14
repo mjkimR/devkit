@@ -127,7 +127,11 @@ class RuleContext:
             if not self._excluded(relative):
                 normalized.append(relative)
         self.changed_files = normalized
-        self.cache.add_explicit(normalized)
+        if snapshot is None:
+            # Targets named on the command line are listed by ``find_files`` even where discovery skips files
+            # (Git-ignored, dependency and cache directories); a snapshot's changed files are not such
+            # exceptions, so a scan of the snapshot lists what a whole-workspace scan would.
+            self.cache.add_explicit(normalized)
 
     def _relative(self, path: str | Path) -> str | None:
         """Workspace-relative POSIX form of ``path``, or ``None`` when it lies outside the workspace.

@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import datetime
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError, as_advisory_error
@@ -38,9 +37,12 @@ from devkit.workflow.unit.decisions import (
     RETURN_PREFIX,
     Decision,
     Decisions,
+    Instant,
     load_decisions,
+    record_instant,
 )
 from devkit.workflow.unit.envelope import Envelope, Envelopes, load_envelopes
+from devkit.workflow.unit.records import is_temporary
 
 __all__ = ["LintFunc", "Options", "evaluate_definition"]
 
@@ -79,7 +81,7 @@ class _Evaluator:
         # Envelopes scoped to another workflow or segment do not count either; unscoped ones count everywhere.
         self.envelopes: Envelopes = _after_returns(
             load_envelopes(self.unit_dir).scoped(doc.id, binding.segment),
-            [(_instant(r.at), doc.stage_index(r.request[len(RETURN_PREFIX) :])) for r in returns],
+            [(record_instant(r.at), doc.stage_index(r.request[len(RETURN_PREFIX) :])) for r in returns],
             doc,
         )
         self.primitives = PrimitiveContext(opts.workspace_root, self.unit_dir, self.envelopes, opts.ancestor)
@@ -213,7 +215,7 @@ class _Evaluator:
                             "or run the command with -w <the unit's project root>"
                         ),
                     )
-                files = sorted(_rel(p, root) for p in self.unit_dir.rglob("*") if p.is_file())
+                files = _unit_files(self.unit_dir, root)
                 self.lint_violations = self.opts.lint(root, files)
             except Exception as exc:
                 self.lint_error = as_advisory_error(exc)
@@ -229,6 +231,14 @@ class _Evaluator:
         return True, True, ""
 
 
+def _unit_files(unit_dir: Path, root: Path) -> list[str]:
+    """The unit's files for ``lint-clean``, without the temporary files of writes in progress (``is_temporary``).
+
+    A writer removes its temporary file at any moment, so linting one could fail on a file that no longer exists.
+    """
+    return sorted(_rel(p, root) for p in unit_dir.rglob("*") if not is_temporary(p.name) and p.is_file())
+
+
 def _rel(path: Path, root: Path) -> str:
     """``path`` relative to ``root`` when inside it, else as given (``Workspace.rel``)."""
     try:
@@ -237,35 +247,26 @@ def _rel(path: Path, root: Path) -> str:
         return path.as_posix()
 
 
-def _instant(text: str) -> datetime | None:
-    """An ISO 8601 timestamp of a record (``Z`` or an offset) truncated to the second; ``None`` when missing or malformed."""
-    try:
-        moment = datetime.fromisoformat(text)
-    except ValueError:
-        return None
-    return moment.replace(microsecond=0) if moment.tzinfo is not None else None
-
-
-def _after_returns(
-    envelopes: Envelopes, returns: list[tuple[datetime | None, int]], doc: WorkflowDocument
-) -> Envelopes:
+def _after_returns(envelopes: Envelopes, returns: list[tuple[Instant | None, int]], doc: WorkflowDocument) -> Envelopes:
     """The envelopes no later return re-opened.
 
-    A return to a stage voids, besides the approvals, every envelope recorded for that stage or a later one at or
-    before the return: going back means doing that work again, so an earlier review or report no longer satisfies the
-    stage. Times compare at whole seconds, the precision of the records, and an envelope from the same second as the
-    return is void: its order is unknown, and asking for it again is safer than letting stale evidence count.
+    A return to a stage voids, besides the approvals, every envelope recorded for that stage or a later one that is
+    not certainly after the return: going back means doing that work again, so an earlier review or report no longer
+    satisfies the stage. Each time spans what its precision allows (``record_instant``: a whole second for
+    ``...:00Z``), and an envelope counts only when its earliest possible time is at or after the latest possible
+    time of the return; when the order is unknown, asking for the envelope again is safer than letting stale
+    evidence count. ``envelope new`` stamps a new envelope after the segment's latest return, so it always counts.
     An envelope without a stage of the definition or a ``created_at``, or a return without a time, voids nothing.
     """
-    timed = [(at, target) for at, target in returns if at is not None and target >= 0]
+    timed = [(at.end, target) for at, target in returns if at is not None and target >= 0]
     if not timed:
         return envelopes
 
     def current(envelope: Envelope) -> bool:
-        written, index = _instant(envelope.created_at), doc.stage_index(envelope.stage)
+        written, index = record_instant(envelope.created_at), doc.stage_index(envelope.stage)
         if written is None or index < 0:
             return True
-        return not any(written <= at and target <= index for at, target in timed)
+        return not any(written.start < end and target <= index for end, target in timed)
 
     kept = {kind: [e for e in items if current(e)] for kind, items in envelopes.by_kind.items()}
     return Envelopes({kind: items for kind, items in kept.items() if items}, list(envelopes.errors))

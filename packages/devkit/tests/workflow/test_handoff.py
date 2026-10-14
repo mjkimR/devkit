@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import devkit.workflow.handoff as handoff_module
+import pytest
 from click.testing import CliRunner, Result
 from devkit.workflow import (
     Binding,
@@ -18,7 +20,7 @@ from devkit.workflow import (
 from devkit.workflow.cli import cli
 from devkit.workflow.definition.checks import CheckClass
 from devkit.workflow.render import render_document
-from testsupport.workflow import WORKFLOW, write_config, write_unit
+from testsupport.workflow import SIMPLE, SIMPLE_UNIT, WORKFLOW, write_config, write_unit
 
 FIRST = """---
 id: triage
@@ -300,3 +302,29 @@ def test_cli_validate_reports_unknown_candidate(tmp_path: Path) -> None:
     assert result.exit_code == 1 and "next[1].workflow: unknown workflow 'hotfix'" in result.output
     show = _run("show", "-w", str(root), "triage")
     assert show.exit_code == 1 and "[NEXT: hotfix recommended=no" in show.output and "[PROBLEM: next[1]" in show.output
+
+
+@pytest.mark.parametrize("failure", [OSError("disk full"), KeyboardInterrupt()])
+def test_a_failed_explicit_handoff_removes_the_record_it_wrote(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failure: BaseException
+) -> None:
+    defs = tmp_path / ".devkit/workflows"
+    defs.mkdir(parents=True)
+    (defs / "a.md").write_text(SIMPLE.format(id="a", check="anchor-exists")[:-4] + "next:\n  - { workflow: b }\n---\n")
+    (defs / "b.md").write_text(SIMPLE.format(id="b", check="anchor-exists"))
+    write_config(tmp_path, '[workflow]\ndefault = "a"\n')
+    assert _run("new", "-w", str(tmp_path), "u").exit_code == 0
+    anchor = (tmp_path / SIMPLE_UNIT / "task.md").read_text()
+    written: list[str] = []
+
+    def rewrite_fails(*_: object) -> None:
+        # The decision record is already written when the anchor rewrite fails.
+        written.extend(p.name for p in (tmp_path / SIMPLE_UNIT / "decisions").iterdir())
+        raise failure
+
+    monkeypatch.setattr(handoff_module, "replace_text", rewrite_fails)
+    result = _run("handoff", "-w", str(tmp_path), "--unit", SIMPLE_UNIT, "--workflow", "b", "--no-lint")
+    assert result.exit_code != 0
+    assert written == ["01-handoff.yaml"]
+    assert (tmp_path / SIMPLE_UNIT / "task.md").read_text() == anchor
+    assert list((tmp_path / SIMPLE_UNIT / "decisions").iterdir()) == []

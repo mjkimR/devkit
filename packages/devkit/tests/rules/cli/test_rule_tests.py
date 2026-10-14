@@ -210,6 +210,41 @@ def test_managed_tests_kept_by_an_override_run_against_the_overridden_module(tmp
     assert result.result is rule_tests.RuleTestResult.FAILED  # the managed tests caught the broken override
 
 
+def test_with_a_receipt_load_rule_loads_only_the_files_it_lists(tmp_path: Path) -> None:
+    import inspect
+
+    from devkit.rules.engine.errors import RuleLoadError
+    from devkit.rules.testing import load_rule
+    from testsupport.rules import digests, write_receipt
+
+    managed = tmp_path / ".devkit/managed/team/rules/good"
+    override = tmp_path / ".devkit/overrides/team/rules/good"
+    _rule(managed.parent, "good", "RULE-good", {"test_rule.py": PASSING})
+    write(override, "rule.py", RULE.format(name="Good", rule_id="RULE-good"))
+    # Files the receipt does not list: devkit never loads them, so neither does load_rule.
+    write(managed, "stray.py", RULE.format(name="Stray", rule_id="RULE-stray"))
+    write(override, "extra.py", RULE.format(name="Extra", rule_id="RULE-extra"))
+    managed_rule = ".devkit/managed/team/rules/good/rule.py"
+    asset = {"bundle": "team", "id": "good", "kind": "rule", "paths": [".devkit/overrides/team/rules/good/rule.py"]}
+    write_receipt(tmp_path, [asset], digests(tmp_path, managed_rule))
+    for anchor in (managed / "tests/test_rule.py", override):
+        rule = load_rule(anchor)
+        assert rule.id == "RULE-good"
+        assert Path(inspect.getfile(type(rule))).resolve() == (override / "rule.py").resolve()
+
+    write(override, "rule.py", "raise RuntimeError('not loaded')\n")
+    asset["paths"] = [managed_rule]
+    write_receipt(tmp_path, [asset], digests(tmp_path, managed_rule))
+    assert Path(inspect.getfile(type(load_rule(override)))).resolve() == (managed / "rule.py").resolve()
+
+    (managed / "rule.py").write_text(RULE.format(name="Good", rule_id="RULE-drifted"))
+    with pytest.raises(RuleLoadError, match="differs from the hash in the receipt"):
+        load_rule(managed)
+    write_receipt(tmp_path, [])
+    with pytest.raises(RuleLoadError, match="is not a rule asset the installation receipt"):
+        load_rule(managed)
+
+
 def test_an_interrupted_run_prints_the_results_so_far(workspace: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     import dataclasses
 

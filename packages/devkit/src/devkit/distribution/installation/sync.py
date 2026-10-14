@@ -298,25 +298,73 @@ def _plan_managed_files(
     return orphans
 
 
+def block_conflict(existing: str, recorded: str | None, desired: str | None) -> str | None:
+    """The ``BLOCK_CONFLICTS`` state a sync raises for the guidance block ``existing``; ``None`` when there is none.
+
+    ``"modified"``: the block's digest differs from the receipt's ``recorded``
+    one. ``"unowned"``: the receipt records no block and ``existing`` is not
+    exactly ``desired``, the block the sync writes; that one is adopted.
+    ``desired`` is consulted only without ``recorded``; ``None`` (the sync
+    could not be planned) decides nothing.
+    """
+    if recorded is not None:
+        return "modified" if guidance_block.digest(existing) != recorded else None
+    if desired is None or guidance_block.normalize(existing) == desired:
+        return None
+    return "unowned"
+
+
+def _plan_inventory(
+    root: Path,
+    installed: list[InstalledBundle],
+    selection: Selection,
+    previous_overrides: dict[str, dict[str, OverrideRecord]],
+) -> Inventory:
+    """What the selection deploys: the inventory of the selected bundles' assets."""
+    return desired_inventory(
+        [item for item in installed if item.bundle.name in selection.presets],
+        {name: list(values) for name, values in selection.presets.items()},
+        list(selection.agents),
+        root=root,
+        previous_overrides=previous_overrides,
+    )
+
+
+def _render_block(selection: Selection, inventory: Inventory) -> str:
+    """The guidance block a sync of ``selection`` writes."""
+    return guidance_block.render(
+        list(selection.presets),
+        [kind for kind in GENERATED_SKILLS if any(asset.kind == kind for asset in inventory.assets)],
+        inventory.fragments(),
+    )
+
+
+def planned_guidance_block(
+    root: Path, installed: list[InstalledBundle], config: ProjectConfig, previous: Receipt | None
+) -> str:
+    """The guidance block a plain ``devkit sync`` would write now; raises what planning that sync raises."""
+    selection = _resolve_selection(installed, config, previous, None, None, ())
+    overrides = {bundle: dict(records) for bundle, records in previous.overrides.items()} if previous else {}
+    return _render_block(selection, _plan_inventory(root, installed, selection, overrides))
+
+
 def _plan_guidance_block(
     root: Path,
     changes: Changes,
     actions: list[Action],
     conflicts: _Conflicts,
     recorded: str | None,
+    desired: str,
     *,
     enabled: bool,
-    bundles: list[str],
-    entry_skills: list[str],
-    fragments: list[str],
 ) -> tuple[str | None, list[AdvisoryError]]:
-    """Add the root ``AGENTS.md`` change for the managed block; return the hash to record and any notice.
+    """Add the root ``AGENTS.md`` change for the managed block (``desired``); return the hash to record and any notice.
 
     The block is owned like a managed file: a hand edit (digest differs from
     the receipt) is a conflict, a removed block is written again, and the bytes
     outside the markers are never touched. Markers the receipt does not know
     are a conflict, unless the block is exactly the one sync writes: that one
-    is adopted. With ``enabled`` off the receipt stops recording the block: one
+    is adopted (``block_conflict``). With ``enabled`` off the receipt stops recording the block: one
     whose digest still matches is removed, an edited one is left in place with
     an ``ORPHAN_LEFT`` warning; a project that never had the block is not read
     at all.
@@ -352,12 +400,8 @@ def _plan_guidance_block(
         changes[AGENTS_FILE] = None if remainder is None else Content(remainder.encode("utf-8"), mode)
         actions.append(Action(AGENTS_FILE, "remove" if remainder is None else "update"))
         return None, []
-    desired = guidance_block.render(bundles, entry_skills, fragments)
     if existing is not None:
-        if recorded is None and guidance_block.normalize(existing) != desired:
-            conflicts.block = "unowned"
-        elif recorded is not None and guidance_block.digest(existing) != recorded:
-            conflicts.block = "modified"
+        conflicts.block = block_conflict(existing, recorded, desired)
     if existing is None or guidance_block.normalize(existing) != desired:
         changes[AGENTS_FILE] = Content(guidance_block.compose(text, desired).encode("utf-8"), mode)
         actions.append(Action(AGENTS_FILE, "create" if current is None else "update"))
@@ -819,13 +863,7 @@ def commit_locked(
     previous_overrides = {b: dict(r) for b, r in previous.overrides.items()} if previous else {}
     if rebaseline is not None:
         previous_overrides.get(rebaseline[0], {}).pop(rebaseline[1], None)
-    inventory = desired_inventory(
-        [item for item in installed if item.bundle.name in selection.presets],
-        {name: list(values) for name, values in selection.presets.items()},
-        list(selection.agents),
-        root=root,
-        previous_overrides=previous_overrides,
-    )
+    inventory = _plan_inventory(root, installed, selection, previous_overrides)
     if config.override_drift == "block":
         _refuse_override_drift(inventory.drift)
     old_files = dict(previous.file_records) if previous else {}
@@ -844,10 +882,8 @@ def commit_locked(
         actions,
         conflicts,
         previous.guidance_block if previous else None,
+        _render_block(selection, inventory),
         enabled=config.guidance_block,
-        bundles=list(selection.presets),
-        entry_skills=[kind for kind in GENERATED_SKILLS if any(asset.kind == kind for asset in inventory.assets)],
-        fragments=inventory.fragments(),
     )
     conflicts.check()
     # A file where a destination's directory must be stops the sync in planning, ``--dry-run`` included.

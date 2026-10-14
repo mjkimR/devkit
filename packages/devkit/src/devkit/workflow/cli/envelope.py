@@ -11,8 +11,14 @@ from devkit.core.cli import FORMAT_OPTION, boundary, echo_json, exit_on_problems
 from devkit.workflow.cli.app import ANCHOR, UNIT, WORKSPACE, cli, workspace
 from devkit.workflow.errors import EnvelopeFlagError
 from devkit.workflow.render import quote
-from devkit.workflow.unit.decisions import utc_timestamp
-from devkit.workflow.unit.envelope import compose_envelope, load_envelopes, render_envelope, skeleton, write_envelope
+from devkit.workflow.unit.envelope import (
+    compose_envelope,
+    envelope_timestamp,
+    load_envelopes,
+    render_envelope,
+    skeleton,
+    write_envelope,
+)
 
 
 @cli.group(name="envelope")
@@ -81,15 +87,18 @@ def envelope_new_cmd(
     findings of the round it closes with --from latest.
 
     The envelope records the workflow the unit is bound to and the segment
-    (finished handoffs) it is in; checks count it only in that segment.
+    (finished handoffs) it is in; checks count it only in that segment. The
+    definition itself is not loaded, so a review can be recorded while it is
+    missing or invalid. created_at is stamped after the segment's latest
+    return, so a return never voids an envelope written after it.
     """
     ws = workspace(workspace_root)
-    ref = ws.resolve_unit(unit, anchor=anchor)
-    unit_dir, workflow, segment = ref.dir, ref.doc.id, ref.binding.segment
+    scope = ws.unit_scope(unit, anchor=anchor)
+    unit_dir, workflow, segment = scope.dir, scope.workflow, scope.binding.segment
     authoring = any((status is not None, summary is not None, assumptions, unverified, checks, base, head)) or any(
         (findings_file, source, resolve, waive)
     )
-    created = utc_timestamp()
+    created = envelope_timestamp(unit_dir, workflow, scope.binding.segment_start)
     if authoring:
         findings_yaml = _read_findings_file(findings_file) if findings_file is not None else None
         draft = compose_envelope(

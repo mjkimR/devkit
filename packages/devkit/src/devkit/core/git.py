@@ -44,14 +44,17 @@ def run_git(
     status (``None`` if there is none) and Git's decoded standard error.
     ``index`` sets ``GIT_INDEX_FILE`` for this call.
 
-    ``deadline`` bounds the call by a shared ``Deadline`` instead of ``timeout``: an expired deadline
-    starts no Git, Git gets the time left on it, and a Git still running when it runs out is killed.
+    ``deadline`` bounds the call by a shared ``Deadline`` instead of ``timeout``; passing a ``timeout`` other
+    than ``DEFAULT_TIMEOUT`` with it is a programming error (``ValueError``), as it is for ``file_lock``. An
+    expired deadline starts no Git, Git gets the time left on it, and a Git still running when it runs out is killed.
     Both raise ``deadline.exceeded("git <subcommand>")`` (``DeadlineExceededError`` unless the deadline
     has an error factory); every other failure is still ``GitError``.
     """
     command = ("git", "-C", str(cwd), *args)
     label = f"git {args[0]}" if args else "git"
     if deadline is not None:
+        if timeout != DEFAULT_TIMEOUT:
+            raise ValueError("run_git takes a timeout or a deadline, not both")
         deadline.check(label)
         timeout = max(deadline.remaining(), 0.001)
     env = {**os.environ, "LC_ALL": "C", "GIT_TERMINAL_PROMPT": "0"}

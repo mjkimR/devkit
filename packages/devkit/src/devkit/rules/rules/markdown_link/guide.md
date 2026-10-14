@@ -10,7 +10,9 @@ silently breaks the links to it; agents follow links to load context, so a broke
 - **What is checked**: inline links and images, `[text](target)` and `![alt](target)`, in the Markdown files the run
   targets. The destination is resolved relative to the linking file, after removing a `?query` or `#fragment` and
   decoding percent-encoding and backslash escapes. A symlinked Markdown file is not checked itself: it is an alias of
-  its target, which is checked and repaired at its own path.
+  its target, which is checked and repaired at its own path. A symlink named as an explicit target
+  (`devkit rules check docs/alias.md`) checks and repairs its target instead, reported at the target's path, unless
+  the target is excluded, receipt-pinned, outside the workspace or already a target of the run.
 - **What is not**: URLs with a scheme (`https:`, `mailto:`), fragment-only links (`#section`), root-relative and
   protocol-relative paths (`/x`, `//host`), reference-style links (`[text][ref]`) and autolinks; links inside fenced
   code blocks and inline code spans.

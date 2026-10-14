@@ -233,10 +233,10 @@ def test_post_sync_leaves_symbolic_hooks_and_reserved_entries_untouched(repo: Pa
 
 
 def _fail_template_write(monkeypatch: pytest.MonkeyPatch) -> None:
-    def fail(path: Path, text: str, mode: int) -> None:
+    def fail(path: Path, text: str, *, mode: int | None = None) -> None:
         raise PermissionError(13, "Permission denied", str(path))
 
-    monkeypatch.setattr(local_config, "_write", fail)
+    monkeypatch.setattr(local_config, "atomic_write_text", fail)
 
 
 def test_a_template_that_cannot_be_written_keeps_the_hook_notices(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:

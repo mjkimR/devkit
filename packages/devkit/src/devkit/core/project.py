@@ -7,7 +7,8 @@ Two roots, kept apart by name:
   managed files are read from.
 
 Inside a Git work tree the two are the same directory: a ``.devkit/`` below the top level is not a project of its
-own. Outside Git the devkit root is the nearest directory with ``.devkit/``.
+own, and one below a top level that has none is refused (``DevkitRootNestedError``) rather than ignored. Outside Git
+the devkit root is the nearest directory with ``.devkit/``.
 """
 
 from __future__ import annotations
@@ -17,7 +18,7 @@ import tomllib
 from pathlib import Path
 from typing import Any
 
-from devkit.core.errors import ArgumentError, ConfigError, GitError, UnsafePathError
+from devkit.core.errors import ArgumentError, ConfigError, DevkitRootNestedError, GitError, UnsafePathError
 from devkit.core.git import run_git
 from devkit.core.receipt import CONFIG_PATH
 
@@ -74,13 +75,37 @@ def _home() -> Path | None:
         return None
 
 
+def _nested_devkit(origin: Path, toplevel: Path) -> Path | None:
+    """The nearest directory from ``origin`` up to, not including, ``toplevel`` that holds a ``.devkit``
+    directory, when ``toplevel`` holds none; else ``None``."""
+    if (toplevel / DEVKIT_DIR).is_dir():
+        return None
+    for candidate in (origin, *origin.parents):
+        if candidate == toplevel or not candidate.is_relative_to(toplevel):
+            break
+        if (candidate / DEVKIT_DIR).is_dir():
+            return candidate
+    return None
+
+
+def _nested_error(nested: Path, toplevel: Path) -> DevkitRootNestedError:
+    return DevkitRootNestedError(
+        f"{nested} holds {DEVKIT_DIR}/ but is inside the Git work tree {toplevel}, whose top level has none; "
+        "inside a Git work tree the devkit root is the repository's top level",
+        target_files=[str(nested / DEVKIT_DIR)],
+        fix=f"Make {nested} a Git repository of its own (git init), or move {nested / DEVKIT_DIR} to {toplevel}",
+    )
+
+
 def find_project_root(start: Path) -> Path:
     """The devkit root for ``start`` (a directory, or a file whose directory is used).
 
     Resolution, on the resolved ``start``:
 
     1. Inside a Git work tree, its top level: the repository root is the devkit root, and a ``.devkit`` directory
-       below it is not a project of its own.
+       below it is not a project of its own. When the top level has no ``.devkit`` directory but ``start`` or a
+       directory between it and the top level has one, ``DevkitRootNestedError`` (``DEVKIT_ROOT_NESTED``) names
+       both: resolving to the top level would silently read no configuration, receipt or managed rules.
     2. Outside a Git work tree (or without Git), the nearest directory, ``start`` itself first and then each
        parent, that contains a ``.devkit`` directory. The walk stops below the user's home directory: the home
        directory and the directories above it are never searched, so a stray ``~/.devkit`` does not claim every
@@ -97,6 +122,9 @@ def find_project_root(start: Path) -> Path:
         origin = origin.parent
     toplevel = git_toplevel(origin)
     if toplevel is not None:
+        nested = _nested_devkit(origin, toplevel)
+        if nested is not None:
+            raise _nested_error(nested, toplevel)
         return toplevel
     home = _home()
     for candidate in (origin, *origin.parents):
@@ -110,18 +138,30 @@ def find_project_root(start: Path) -> Path:
 def require_devkit_root(root: Path, param: str = "--workspace-root") -> Path:
     """``root`` resolved, when it can be a devkit root: outside Git, or the top level of its Git work tree.
 
-    Raises ``ArgumentError`` naming ``param`` for a directory below the top level of a Git work tree, since the
-    repository root is the devkit root there.
+    For a directory below the top level of a Git work tree, raises ``DevkitRootNestedError``
+    (``DEVKIT_ROOT_NESTED``) when it or a directory between it and the top level holds ``.devkit/`` and the top
+    level does not, else ``ArgumentError`` naming ``param``, since the repository root is the devkit root there.
+    That error's fix suggests the top level only when the top level holds ``.devkit/``.
     """
     root = root.resolve()
     toplevel = git_toplevel(root)
-    if toplevel is not None and toplevel != root:
-        raise ArgumentError(
-            f"{param} {root} is inside the Git work tree {toplevel}; the devkit root is the repository's top level",
-            target_files=[param],
-            fix=f"Pass {param} {toplevel}, or omit it to use the repository of the current directory",
+    if toplevel is None or toplevel == root:
+        return root
+    nested = _nested_devkit(root, toplevel)
+    if nested is not None:
+        raise _nested_error(nested, toplevel)
+    if (toplevel / DEVKIT_DIR).is_dir():
+        fix = f"Pass {param} {toplevel}, or omit it to use the repository of the current directory"
+    else:
+        fix = (
+            f"Make {root} a Git repository of its own (git init) to use it as a devkit root, "
+            f"or omit {param} to use the repository of the current directory"
         )
-    return root
+    raise ArgumentError(
+        f"{param} {root} is inside the Git work tree {toplevel}; the devkit root is the repository's top level",
+        target_files=[param],
+        fix=fix,
+    )
 
 
 def read_toml(path: Path, display: str | None = None) -> dict[str, Any] | None:

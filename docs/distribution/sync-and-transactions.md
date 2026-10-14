@@ -278,9 +278,11 @@ Every mutating command follows these steps:
    writes will create are flushed to `.devkit/transient/sync-journal.json` before the disk changes. A file standing
    where a destination's directory must be (a project file `.claude/skills/review` when a skill `review` is
    deployed) is `WORKSPACE_UNSAFE` before any write, already in the pre-flight (`--dry-run` included); its `[FIX]`
-   moves that file out of the way.
-4. **Atomic replacement**: each file is written to a temporary sibling (`.devkit-write-*`), `fchmod`ed, `fsync`ed and
-   moved into place with `os.replace`; directory entries are `fsync`ed.
+   moves that file out of the way. A managed or projected file the same sync deletes is no obstacle (an upstream
+   asset whose file became a directory): deletions are journaled and applied before writes, and a rollback restores
+   the file in place of the directory.
+4. **Atomic replacement**: each file is written with `devkit.core.atomic_write_bytes` (a temporary sibling,
+   `fchmod`ed, `fsync`ed and moved into place with `os.replace`); directory entries are `fsync`ed, deletions' too.
 5. **Directory pruning**: removing a managed or projected file removes the directories it leaves empty, up to its
    owned prefix (`.claude/skills/<id>/` goes, `.claude/skills/` stays). Seeded targets' directories are never
    pruned by a committed sync. A rolled-back transaction (a failed write, or `devkit recover`) also removes the
@@ -288,7 +290,10 @@ Every mutating command follows these steps:
    it, or that holds anything else, stays.
 6. **Recovery**: a later `sync` that finds the journal stops with `TRANSACTION_PENDING` (fix: `devkit recover`).
    `devkit recover` restores every recorded file whose content has not changed since; a later edit stops it with
-   `RECOVERY_BLOCKED` (`HALT`).
+   `RECOVERY_BLOCKED` (`HALT`). The journal format is not versioned across devkit releases: a journal an earlier
+   devkit wrote (without `directories`) is `RECOVERY_BLOCKED` too, and its `[FIX]` says to run `devkit recover` with
+   the version that wrote it, or to roll back by hand (keep each listed file that equals its base64 `after`, write
+   back its `before` otherwise, deleting the file when `before` is null), delete the journal and run `devkit sync`.
 
 ### Post-Sync Extensions
 

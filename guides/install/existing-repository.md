@@ -36,7 +36,7 @@ ls "$(git rev-parse --git-common-dir)/hooks"
 ```
 
 - `core.hooksPath` set: devkit leaves it alone and skips its hooks (`GATE_HOOK_INSTALL_SKIPPED`). Commit gates then
-  do not run; report it, do not change the setting.
+  do not run, and `devkit gate status` warns with `GATE_HOOKS_PATH_SET`; report it, do not change the setting.
 - Existing executable hooks (for example from the `pre-commit` framework): devkit renames each to
   `<hook>.legacy` and keeps running it before its own gates. Tell the user this will happen.
 
