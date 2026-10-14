@@ -1,0 +1,19 @@
+schema = 1
+name = "github-milestones"
+version = "0.1.0"
+default_preset = "all"
+
+# Sizing, tracker boundaries and issue linking, catalogued by `devkit get-context`.
+[[assets]]
+id = "github-milestones"
+kind = "instruction"
+source = "instructions/github-milestones.md"
+
+# The decomposition procedure, found through `devkit playbook search`.
+[[assets]]
+id = "decompose-initiative"
+kind = "playbook"
+source = "playbooks/decompose-initiative.md"
+
+[presets.conventions]
+assets = ["github-milestones"]

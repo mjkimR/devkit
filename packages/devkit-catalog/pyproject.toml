@@ -1,0 +1,24 @@
+[project]
+name = "devkit-catalog"
+version = "0.1.0"
+description = "Opt-in devkit bundles: installed but never deployed until a project selects them"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+# One entry point per bundle; the name is the bundle name. No catalog bundle declares auto_select.
+[project.entry-points."devkit.bundles"]
+github-milestones = "devkit_catalog.github_milestones"
+
+[dependency-groups]
+dev = ["devkit-agt"]  # the tests load the bundles with devkit's manifest reader
+
+[tool.uv.sources]
+devkit-agt = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/devkit_catalog"]

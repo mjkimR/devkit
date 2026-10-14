@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Consumer smoke test: build every workspace package into wheels, install the
-# devkit wheel (with the devkit-advisory wheel it requires) and the starter
-# content wheel into a fresh project the way a consumer would, verify the built-in bundles are deployed by default, select the
-# starter bundle, verify the workspace converges, exercise every CLI group, run
+# devkit wheel (with the devkit-advisory wheel it requires), the starter and
+# catalog content wheels into a fresh project the way a consumer would, verify the built-in bundles are deployed by default
+# and the catalog bundles are not, select the starter and a catalog bundle, verify the workspace converges, exercise every CLI group, run
 # deployed and built-in rule tests, and make real commits through the installed
 # gate hooks in a fresh Git repository;
 # add the released model wheel and run a dense search;
@@ -41,13 +41,14 @@ wheel() {
 devkit_wheel=$(wheel devkit_agt)
 advisory_wheel=$(wheel devkit_advisory)
 starter_wheel=$(wheel devkit_starter)
+catalog_wheel=$(wheel devkit_catalog)
 
 echo "==> creating a fresh consumer project"
 (
     cd "$project"
     unset VIRTUAL_ENV
     uv init --bare --name smoke-consumer --no-workspace >/dev/null
-    uv add --dev "$devkit_wheel" "$advisory_wheel" "$starter_wheel" >/dev/null
+    uv add --dev "$devkit_wheel" "$advisory_wheel" "$starter_wheel" "$catalog_wheel" >/dev/null
     echo "--- devkit --version"
     uv run devkit --version
     uv run python -c "
@@ -71,6 +72,13 @@ with discover_bundles() as bundles:
     grep -q '"devkit"' .devkit/installation.json
     grep -q '"advisory"' .devkit/installation.json
     test -d .devkit/managed/devkit
+    test ! -e .devkit/managed/github-milestones
+    echo "--- devkit add github-milestones:conventions (a catalog bundle is deployed only once selected)"
+    uv run devkit add github-milestones:conventions >/dev/null
+    test -f .devkit/managed/github-milestones/instructions/github-milestones.md
+    test ! -e .devkit/managed/github-milestones/playbooks
+    uv run devkit remove github-milestones >/dev/null
+    test ! -e .devkit/managed/github-milestones
     echo "--- devkit add starter"
     uv run devkit add starter
     echo "--- devkit sync --check (must exit 0)"

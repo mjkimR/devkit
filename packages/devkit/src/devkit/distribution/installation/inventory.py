@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
+from functools import partial
 from pathlib import Path
 
 from devkit.core.receipt import MANAGED_PATH, AssetRecord, OverrideRecord, PackageRecord
 from devkit.distribution.bundles.fragments import read_fragment, references, render_fragment
 from devkit.distribution.bundles.guidance import prepend_context
+from devkit.distribution.bundles.invocation import user_only, user_only_extras
 from devkit.distribution.bundles.manifest import Asset, Bundle, source_files
 from devkit.distribution.bundles.playbooks import playbook_entry
 from devkit.distribution.bundles.subagents import (
@@ -106,8 +109,16 @@ class Inventory:
             )
         self.files[destination] = content
 
-    def copy(self, destination: str, path: Path, context_bundle: str | None = None) -> None:
+    def copy(
+        self,
+        destination: str,
+        path: Path,
+        context_bundle: str | None = None,
+        render: Callable[[bytes], bytes] | None = None,
+    ) -> None:
         data = path.read_bytes()
+        if render is not None:
+            data = render(data)
         if context_bundle is not None:
             data = prepend_context(data, context_bundle, destination)
         self.put(destination, Content(data, normal_mode(path.stat().st_mode)))
@@ -225,18 +236,29 @@ class _BundleInventory:
         if asset.kind == "skill":
             self.inventory.claim(f"{skill_dir}/{asset.id}", owner)
         paths = set()
+        relatives = set()
         for path in source_files(self.bundle.root, source):
-            read_from, _ = resolve_source(self.root, self.bundle, path.relative_to(self.bundle.root).as_posix())
+            read_from, cited = resolve_source(self.root, self.bundle, path.relative_to(self.bundle.root).as_posix())
+            render = None
             if asset.kind == "skill":
-                dest = f"{skill_dir}/{asset.id}/{path.relative_to(origin).as_posix()}"
+                relative = path.relative_to(origin).as_posix()
+                relatives.add(relative)
+                dest = f"{skill_dir}/{asset.id}/{relative}"
+                if asset.invocation == "user":
+                    render = partial(user_only, relative, agent=agent, context=cited)
             else:
                 suffix = HOST_FILES[agent]
                 if not origin.is_file() or origin.suffix != suffix:
                     raise BundleError(f"{asset.id}: {agent} subagent must be one {suffix} file")
                 dest = f"{subagent_dir}/{asset.id}{suffix}"
                 self.inventory.claim(dest, owner)
-            self.inventory.copy(dest, read_from, self._context(path))
+            self.inventory.copy(dest, read_from, self._context(path), render)
             paths.add(dest)
+        if asset.kind == "skill" and asset.invocation == "user":
+            for relative, data in user_only_extras(agent, relatives).items():
+                dest = f"{skill_dir}/{asset.id}/{relative}"
+                self.inventory.put(dest, Content(data, 0o644))
+                paths.add(dest)
         return paths
 
     def _contract(self, asset: Asset, agent: str, rel: str) -> set[str]:

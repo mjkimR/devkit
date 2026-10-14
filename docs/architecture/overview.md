@@ -57,10 +57,12 @@ devkit/
 ├── packages/
 │   ├── devkit/                # The devkit package: src/devkit/<module>/ per module above, cli.py the root `devkit` group
 │   ├── devkit-advisory/       # devkit.advisory on its own (src/devkit/advisory/), devkit's lowest layer
-│   └── devkit-starter/        # Example external content package
+│   ├── devkit-starter/        # Example external content package
+│   └── devkit-catalog/        # Opt-in content bundles (none auto-selected)
 ├── models/devkit-embed/       # The default embedding model of devkit.search (data only), released by hand
 ├── examples/bundles/          # Example bundle delivery-workflow (the starter bundle lives in devkit-starter)
 ├── scripts/                   # Shared shell logic behind the justfile recipes
+├── guides/                    # Agent-facing installation guides (INSTALL_GUIDE.md is the entry point)
 └── docs/                      # docs/<module>/ per module (index in section 5)
 ```
 
@@ -70,7 +72,7 @@ Inside each module, files are grouped by concern; each module's documentation ha
 
 ## 3. Module Interaction Model
 
-1. **Content packaging**: assets (instructions, skills, playbooks, rules, workflows, workflow checks, subagent roles, gates, documents, guidance fragments) are declared in a `bundle.toml` inside a Python package and registered under the `devkit.bundles` entry-point group. The `devkit-agt` distribution registers its own `devkit`, `advisory`, `authoring` and `git-commits` bundles; external packages such as `devkit-starter` register theirs. A repository's own assets ship as an in-repository bundle.
+1. **Content packaging**: assets (instructions, skills, playbooks, rules, workflows, workflow checks, subagent roles, gates, documents, guidance fragments) are declared in a `bundle.toml` inside a Python package and registered under the `devkit.bundles` entry-point group. The `devkit-agt` distribution registers its own `devkit`, `advisory`, `authoring` and `git-commits` bundles; external packages such as `devkit-starter` and `devkit-catalog` register theirs. A repository's own assets ship as an in-repository bundle.
 2. **Selection and synchronization**: installed bundles that declare `auto_select` (built in: `devkit`, `advisory`) are selected with their default preset unless `.devkit/config.toml` opts out (`[presets] <bundle> = false`); every other bundle, including the opt-in built-ins `authoring` and `git-commits`, is selected with `devkit add`. `devkit sync` verifies the bundles, writes managed copies under `.devkit/managed/<bundle>/`, projects native skills and subagents into `.agents/`, `.codex/` and `.claude/`, maintains the managed block in the root `AGENTS.md` (with the selected bundles' guidance fragments), seeds project files once, and records every file in `.devkit/installation.json` in one transaction.
 3. **Consumption by the other modules**:
    - Agents load bundle guidance on demand with `devkit get-context <bundle>`, and occasional procedures with `devkit playbook search` after an explicit `devkit-playbook` invocation.
@@ -163,4 +165,5 @@ Each module's `reference.md` is the quick reference (CLI, configuration, library
 
 ### Examples
 - [devkit-starter](../../packages/devkit-starter/README.md): An external content package whose `src/devkit_starter/bundle` is the starter example bundle.
+- [devkit-catalog](../../packages/devkit-catalog/README.md): Opt-in content bundles, one `src/devkit_catalog/<module>/bundle` per bundle.
 - [delivery-workflow example bundle](../../examples/bundles/delivery-workflow/README.md): A workflow asset with a host-neutral reviewer role.

@@ -18,6 +18,8 @@ EXTENSION_KEY = re.compile(r"x-[a-z][a-z0-9-]*\Z")
 ALL = "all"
 # Agents devkit projects native assets for; also the only valid ``variants`` keys.
 AGENT_NAMES = ("antigravity", "claude-code", "codex")
+# Agents reading one shared skill directory (``.agents/skills``): their skill variants must be identical.
+SHARED_SKILL_AGENTS = ("codex", "antigravity")
 
 
 def locate_frontmatter(data: bytes, context: str, kind: str) -> tuple[str, FrontmatterBlock | None]:

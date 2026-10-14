@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from devkit.distribution.bundles.invocation import CLAUDE_KEY, CODEX_FILE, codex_policy
+
 NAME = "devkit-playbook"
 MANAGED_ROOT = f".devkit/managed/_devkit/skills/{NAME}"
 
@@ -44,8 +46,8 @@ def skill_files(agent: str | None = None) -> dict[str, bytes]:
         "description: Search and reuse occasional task procedures only when the user explicitly invokes devkit-playbook.\n"
     )
     if agent == "claude-code":
-        frontmatter += "disable-model-invocation: true\n"
+        frontmatter += f"{CLAUDE_KEY}: true\n"
     files = {"SKILL.md": (frontmatter + "---\n\n" + BODY).encode()}
     if agent in {None, "codex"}:
-        files["agents/openai.yaml"] = b"policy:\n  allow_implicit_invocation: false\n"
+        files[CODEX_FILE] = codex_policy(False)
     return files

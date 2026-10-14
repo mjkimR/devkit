@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from devkit.distribution.bundles.invocation import CODEX_FILE, codex_policy
+
 NAME = "devkit-workflow"
 MANAGED_ROOT = f".devkit/managed/_devkit/skills/{NAME}"
 
@@ -77,5 +79,5 @@ def skill_files(agent: str | None = None) -> dict[str, bytes]:
     )
     files = {"SKILL.md": (frontmatter + "---\n\n" + BODY).encode()}
     if agent in {None, "codex"}:
-        files["agents/openai.yaml"] = b"policy:\n  allow_implicit_invocation: true\n"
+        files[CODEX_FILE] = codex_policy(True)
     return files

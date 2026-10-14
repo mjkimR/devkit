@@ -23,7 +23,10 @@ Every asset is identified by `(bundle, kind, id)`; ids are unique within a bundl
 standards are in the [Resource Taxonomy](../architecture/resource-taxonomy.md).
 
 - `skill`: a directory containing `SKILL.md` and supporting files; the whole tree is deployed, executable bits
-  (`0755`) preserved. One `source` serves every agent; `variants` ship a directory per agent.
+  (`0755`) preserved. One `source` serves every agent; `variants` ship a directory per agent. `invocation` (optional,
+  `auto` or `user`, default `auto`) says who starts the skill: under `user` only an explicit user invocation does,
+  and each projection carries the agent's native setting
+  ([Agent Projections](agent-projections.md#2-projection-rules)).
 - `subagent`: a delegated agent persona: native files per agent (`variants`, copied verbatim) or one host-neutral
   role contract (`source`) rendered per selected agent. See [Agent Projections](agent-projections.md).
 - `instruction`: Markdown whose YAML frontmatter declares a nonempty `name` and `description`, the header
@@ -70,6 +73,12 @@ default_preset = "daily"
 id = "review"
 kind = "skill"
 source = "skills/review"
+
+[[assets]]
+id = "release"
+kind = "skill"
+source = "skills/release"
+invocation = "user"                    # only an explicit user invocation starts it
 
 [[assets]]
 id = "reviewer"
@@ -146,6 +155,11 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
   frontmatter block, closes it (sync inserts the context prerequisite after it). `codex` and `antigravity` variants
   project to the same `.agents/skills/<asset-id>/` and must be identical (same files, bytes and modes). The ids
   `devkit-playbook` and `devkit-workflow` are reserved for the entry skills `devkit sync` generates.
+- **Skill invocation**: only `skill` assets declare `invocation`, and only `auto` or `user`. `bundle.toml` is the one
+  place a bundle sets it: a skill source or variant whose `SKILL.md` frontmatter declares `disable-model-invocation`,
+  or whose `agents/openai.yaml` declares `policy.allow_implicit_invocation`, is invalid whatever its `invocation`,
+  and so is an `agents/openai.yaml` that is not a YAML mapping (with an optional `policy` mapping). A project
+  override of the skill is held to the same rule at sync.
 - **Plugin packages**: the `source` of a `rule`, `gate` or `workflow-check` asset is a directory (a file is
   `BUNDLE_INVALID` with a fix naming the directory to move it into). Every `.py` file in it, recursively, is a module
   of one package, except files under a `tests` directory, `test_*.py`, `*_test.py`, `__pycache__` and hidden

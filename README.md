@@ -4,13 +4,25 @@ Personal developer tools monorepo. Its main product is the `devkit-agt` distribu
 package with one CLI for agent asset distribution, repository rules, delivery
 workflows, commit gates, agent advisories and compact command output.
 
+## Installing with an AI agent
+
+Give your coding agent the installation guide and let it take over:
+
+```text
+Install devkit in this repository by following
+https://github.com/mjkimR/devkit/blob/main/guides/INSTALL_GUIDE.md
+```
+
+The agent checks whether the repository is new or existing, analyzes it, proposes a plan and recommended bundles,
+and asks before writing anything or committing. The guides live in [`guides/`](guides/INSTALL_GUIDE.md).
+
 ## Structure
 
 `packages/devkit` is the package, `packages/devkit-advisory` its
 `devkit.advisory` library shipped on its own for other repositories' runtime,
-`packages/devkit-starter` an example content package, `models/devkit-embed` the embedding model of the
+`packages/devkit-starter` an example content package, `packages/devkit-catalog` opt-in content bundles, `models/devkit-embed` the embedding model of the
 `devkit-agt[search]` extra (built by hand, outside the workspace), `examples/bundles/` further example bundles, `scripts/` the shell logic
-behind the justfile recipes, and `docs/` the documentation per module; see
+behind the justfile recipes, `guides/` the agent-facing installation guides, and `docs/` the documentation per module; see
 [Architecture Overview, section 2](docs/architecture/overview.md#2-monorepo-structure).
 
 ## Development
@@ -30,8 +42,8 @@ just --list                # every recipe (rules-fix, rules-phases, rules-explai
 ```
 
 Module commands discover projects from `packages/*/pyproject.toml` and
-`tools/*/pyproject.toml`; pass a project name (`devkit-agt`, `devkit-advisory` or
-`devkit-starter`) or `all`. `devkit` remains a module-command alias for `devkit-agt`. Extra pytest arguments follow the module: `just test devkit -k cache`.
+`tools/*/pyproject.toml`; pass a project name (`devkit-agt`, `devkit-advisory`,
+`devkit-starter` or `devkit-catalog`) or `all`. `devkit` remains a module-command alias for `devkit-agt`. Extra pytest arguments follow the module: `just test devkit -k cache`.
 `uv run pytest` from the repository root runs every test.
 
 The repository, CLI (`devkit`), Python namespace (`devkit.*`), bundle names and
@@ -73,7 +85,8 @@ wheel from the release `packages/devkit/pyproject.toml` pins: uv applies a Git
 dependency's own sources. Declare neither again with another source, or uv
 reports conflicting URLs. The example content
 package `devkit-starter` is in each release too: add its wheel the same way, then
-`uv run devkit add starter`.
+`uv run devkit add starter`. So is `devkit-catalog`, whose opt-in bundles
+(`github-milestones`, ...) deploy only after `uv run devkit add <bundle>`.
 
 ```bash
 uv add --dev "devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
@@ -97,7 +110,7 @@ workflow runs the full CI on the tagged commit, refuses a tag that is not on
 `main` or does not match the devkit version, builds the wheels with
 `just release-build <tag>` (try it locally) and
 publishes the release. `devkit-advisory` has the devkit version and is bumped
-with it (devkit pins it exactly; a test checks both). `devkit-starter` keeps its own version.
+with it (devkit pins it exactly; a test checks both). `devkit-starter` and `devkit-catalog` keep their own versions.
 
 `devkit-embed` keeps its own version too and is not rebuilt by releases: devkit
 installs it, in this workspace and from Git, from the release URL in the
@@ -112,4 +125,5 @@ run `uv lock`.
 
 - [Architecture Overview](docs/architecture/overview.md): modules, interaction model, and the full documentation index.
 - [devkit package](packages/devkit/README.md): module table with links to each module's reference.
+- [devkit-catalog](packages/devkit-catalog/README.md): opt-in content bundles and how to add one.
 - Examples: [devkit-starter](packages/devkit-starter/README.md), [delivery-workflow bundle](examples/bundles/delivery-workflow/README.md).

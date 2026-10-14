@@ -25,6 +25,13 @@ and are reached through `get-context`, playbook search or their paths.
   and no `source` gets no projection for an agent it has no variant for, reported like a subagent below
   (`ASSET_UNPROJECTED`). One skill directory has one owner: two bundles shipping a skill of the same id are a
   `BUNDLE_CONFLICT` even when their files agree.
+- **Skill invocation**: a skill declared with `invocation = "user"` gets each agent's native "explicit invocation
+  only" setting in its projections; the managed copy stays the upstream source. Claude Code: `SKILL.md` gains
+  `disable-model-invocation: true` as the last frontmatter key (a frontmatter block is added when the file has
+  none). `.agents/skills/` (Codex, shared with Antigravity): `agents/openai.yaml` gains
+  `policy.allow_implicit_invocation: false`, appended to a shipped file that has no `policy` (its bytes are kept),
+  written into its `policy` mapping otherwise (the file is re-serialized), or generated when the skill ships none.
+  Antigravity has no such setting and follows the skill body. `auto` skills are projected unchanged.
 - **Shared directory**: Codex and Antigravity both read `.agents/skills/`. Identical projections for both
   (including the generated `devkit-playbook` and `devkit-workflow` skills) are written once and stay while either
   agent is selected; differing bytes for one path are a collision error, so `codex` and `antigravity` skill

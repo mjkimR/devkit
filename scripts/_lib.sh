@@ -49,6 +49,7 @@ resolve_module() {
     case "$1" in
         devkit) echo "devkit-agt" ;;
         starter) echo "devkit-starter" ;;
+        catalog) echo "devkit-catalog" ;;
         *) echo "$1" ;;
     esac
 }

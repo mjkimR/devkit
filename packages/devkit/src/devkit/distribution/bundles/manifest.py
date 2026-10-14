@@ -10,9 +10,10 @@ from typing import Any
 from devkit.core.errors import UnsafePathError
 from devkit.core.paths import normalize_relpath
 from devkit.core.plugins import PluginPackage, check_plugin_modules
-from devkit.distribution.bundles.common import AGENT_NAMES, ALL, SLUG, VERSION, locate_frontmatter
+from devkit.distribution.bundles.common import AGENT_NAMES, ALL, SHARED_SKILL_AGENTS, SLUG, VERSION, locate_frontmatter
 from devkit.distribution.bundles.fragments import read_fragment, references
 from devkit.distribution.bundles.instructions import read_instruction_header
+from devkit.distribution.bundles.invocation import INVOCATIONS, check_skill_source
 from devkit.distribution.bundles.playbooks import playbook_entry, read_playbook_header
 from devkit.distribution.bundles.subagents import HOST_FILES, read_contract, subagent_entry
 from devkit.distribution.bundles.workflows import read_workflow_header, workflow_entry
@@ -37,8 +38,6 @@ KINDS = frozenset(
 PLUGIN_KINDS = frozenset({"rule", "gate", "workflow-check"})
 # The kinds projected into agent directories (agent-projections.md); only they may ship per-agent ``variants``.
 VARIANT_KINDS = frozenset({"skill", "subagent"})
-# Agents reading one shared skill directory (``.agents/skills``): their skill variants must be identical.
-SHARED_SKILL_AGENTS = ("codex", "antigravity")
 # The entry skills ``devkit sync`` generates next to synchronized playbooks and workflows.
 RESERVED_SKILL_IDS = frozenset({"devkit-playbook", "devkit-workflow"})
 # Workspace roots a seeded target may never enter: devkit's own state, Git, agent projections
@@ -59,6 +58,8 @@ class Asset:
     # ``seeded`` assets are written once to ``target`` (workspace-relative) and then project-owned.
     seeded: bool = False
     target: str | None = None
+    # Who starts a skill: ``auto`` (the agent on its own) or ``user`` (explicit invocation only); see ``invocation``.
+    invocation: str = "auto"
 
 
 @dataclass(frozen=True)
@@ -222,6 +223,7 @@ def _check_source(root: Path, asset_id: str, kind: str, variant: str, source: st
             raise BundleError(f"{asset_id}: skill source must contain SKILL.md")
         # Sync inserts the context prerequisite after the frontmatter, which must therefore be well-formed.
         locate_frontmatter((path / "SKILL.md").read_bytes(), f"{asset_id}/{source}/SKILL.md", "skill")
+        check_skill_source(path, f"{asset_id}/{source}")
     if kind in PLUGIN_KINDS:
         _check_plugin_package(asset_id, kind, source, path)
     if kind == "instruction":
@@ -251,7 +253,7 @@ def _tree(root: Path, source: str) -> list[tuple[str, bytes, int]]:
 
 
 def _asset(root: Path, raw: Any) -> Asset:
-    item = _mapping(raw, {"id", "kind", "source", "variants", "seeded", "target"}, "asset")
+    item = _mapping(raw, {"id", "kind", "source", "variants", "seeded", "target", "invocation"}, "asset")
     asset_id = _slug(item.get("id"), "asset.id")
     kind = item.get("kind")
     if not isinstance(kind, str) or kind not in KINDS:
@@ -272,6 +274,11 @@ def _asset(root: Path, raw: Any) -> Asset:
     if ("target" in item) != seeded:
         raise BundleError(f"{asset_id}: target is required for seeded assets and not allowed otherwise")
     target_path = seed_target(item["target"], asset_id) if seeded else None
+    invocation = item.get("invocation", "auto")
+    if "invocation" in item and kind != "skill":
+        raise BundleError(f"{asset_id}: only skill assets declare invocation")
+    if invocation not in INVOCATIONS:
+        raise BundleError(f"{asset_id}: invocation must be one of {list(INVOCATIONS)}")
     if "source" in item:
         pairs = {"common": item["source"]}
     else:
@@ -293,7 +300,7 @@ def _asset(root: Path, raw: Any) -> Asset:
             f"{asset_id}: codex and antigravity skill variants project to the same .agents/skills directory"
             " and must be identical"
         )
-    return Asset(asset_id, kind, tuple(sources), seeded, target_path)
+    return Asset(asset_id, kind, tuple(sources), seeded, target_path, invocation)
 
 
 def _check_fragment_references(bundle: Bundle) -> None:

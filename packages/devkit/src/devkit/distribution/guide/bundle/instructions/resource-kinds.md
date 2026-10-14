@@ -81,6 +81,11 @@ a moment no skill marks, such as "before writing a commit message").
   checks it); playbooks need `name`, `description` and optional `aliases`.
 - A `description` says *when to read* the document, not what it contains.
   The agent decides from the header alone whether to open the body.
+- A skill only the user should start (a release, a destructive cleanup)
+  declares `invocation = "user"` in `bundle.toml`; sync writes each agent's
+  native setting into its projection. Never set `disable-model-invocation`
+  or `policy.allow_implicit_invocation` in the skill source itself;
+  `devkit bundle validate` rejects both.
 - Only skills and subagents take per-agent `variants`. A subagent role
   contract names all three agents under `hosts` (`status: unsupported` for an
   agent that gets no file); `devkit bundle validate` checks both.
