@@ -22,7 +22,9 @@ from devkit.workflow.project.layout import LayoutSpec, parse_layout_spec
 SCHEMA_VERSION = 1
 ISOLATIONS = ("none", "preferred", "required")
 HANDOFF_GATE = "handoff"
-DOCUMENT_KEYS = frozenset({"id", "title", "status", "schema_version", "checks", "stages", "next", "layout"})
+DOCUMENT_KEYS = frozenset({"id", "title", "status", "schema_version", "checks", "stages", "next", "layout", "gates"})
+# How a person's gate answer reaches the engine: a decision record, or `next --given <gate>` with nothing written.
+GATE_ANSWERS = ("record", "given")
 STAGE_KEYS = frozenset(
     {
         "id",
@@ -107,6 +109,7 @@ class WorkflowDocument:
     stages: tuple[StageDefinition, ...] = ()
     next: tuple[Candidate, ...] = ()
     layout: LayoutSpec | None = None  # keys the definition overrides in the project layout
+    gate_answers: tuple[tuple[str, str], ...] = ()  # (gate, answer) for gates whose answer is not the default
     path: Path | None = None
     unknown_keys: tuple[str, ...] = field(default=(), compare=False)  # unknown top-level keys
 
@@ -121,6 +124,10 @@ class WorkflowDocument:
     def gates(self) -> set[str]:
         return {s.gate for s in self.stages if s.gate}
 
+    def gate_answer(self, gate: str) -> str:
+        """``record`` (the default) or ``given``: how the executor passes a person's answer to ``gate``."""
+        return dict(self.gate_answers).get(gate, "record")
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
@@ -132,6 +139,7 @@ class WorkflowDocument:
             "stages": [s.to_dict() for s in self.stages],
             "next": [c.to_dict() for c in self.next],
             "layout": self.layout.to_dict() if self.layout else None,
+            "gates": {gate: {"answer": answer} for gate, answer in self.gate_answers},
             "hash": schema_hash(self),
         }
 
@@ -268,6 +276,27 @@ def _candidates(raw: Any) -> tuple[Candidate, ...]:
     return tuple(out)
 
 
+def _gate_answers(raw: Any, gates: set[str]) -> tuple[tuple[str, str], ...]:
+    if raw is None:
+        return ()
+    if not isinstance(raw, dict):
+        raise DefinitionError("gates: expected a mapping of gate name to settings")
+    out: list[tuple[str, str]] = []
+    for gate, settings in raw.items():
+        if gate not in gates:
+            raise DefinitionError(f"gates.{gate}: not the human_gate of any stage")
+        if not isinstance(settings, dict):
+            raise DefinitionError(f"gates.{gate}: expected a mapping with answer")
+        if unknown := set(settings) - {"answer"}:
+            raise DefinitionError(f"gates.{gate}: unknown keys {sorted(unknown)}")
+        answer = settings.get("answer", "record")
+        if answer not in GATE_ANSWERS:
+            raise DefinitionError(f"gates.{gate}.answer: expected one of {list(GATE_ANSWERS)}")
+        if answer != "record":
+            out.append((gate, answer))
+    return tuple(sorted(out))
+
+
 def parse_definition(text: str, path: Path | None = None) -> WorkflowDocument:
     """Parse a definition document; raises ``DefinitionError`` for anything that cannot be represented."""
     try:
@@ -299,6 +328,7 @@ def parse_definition(text: str, path: Path | None = None) -> WorkflowDocument:
         stages=stages,
         next=_candidates(data.get("next")),
         layout=layout,
+        gate_answers=_gate_answers(data.get("gates"), {s.gate for s in stages if s.gate}),
         path=path,
         unknown_keys=tuple(sorted(set(data) - DOCUMENT_KEYS)),
     )

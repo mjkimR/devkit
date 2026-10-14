@@ -54,6 +54,7 @@ class Request:
     options: tuple[Option, ...] = ()
     allow_note: bool = True
     declined: Decision | None = None
+    answer: str = "record"  # gate requests: record (devkit workflow answer) or given (next --given <gate>)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -64,6 +65,7 @@ class Request:
             "target": self.target.to_dict(),
             "options": [o.to_dict() for o in self.options],
             "allow_note": self.allow_note,
+            "answer": self.answer,
             "declined": (
                 {"file": self.declined.file, "note": self.declined.note, "at": self.declined.at}
                 if self.declined
@@ -91,6 +93,7 @@ def stage_requests(
                     prompt=f"Approve gate {stage.gate!r} to finish stage {stage.id!r} of {doc.id}.",
                     target=Target("gate", stage.gate, stage.id),
                     declined=declined(rid),
+                    answer=doc.gate_answer(stage.gate),
                 )
             )
         elif u.class_ == CheckClass.HUMAN and not u.satisfied:

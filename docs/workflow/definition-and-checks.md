@@ -77,6 +77,7 @@ Prose for humans and agents. Not parsed.
 | `stages` | yes | Ordered stage list, at least one. |
 | `next` | no | Workflows this one may hand a completed unit to. See [Handoff Candidates](#handoff-candidates). |
 | `layout` | no | Mapping with any of `work_dir`, `unit_path`, `anchor`; each overrides the `[workflow]` default for this workflow's units and is validated like the configuration key. See [Per-Definition Layout](overview.md#per-definition-layout). |
+| `gates` | no | Mapping of a gate name (the `human_gate` of a stage) to `{answer: record \| given}`, default `record`. `given` means a person's approval reaches the engine as `next --given <gate>` and the executor writes no decision record: use it for a gate asked after the work is final, where a record would need one more commit. Evaluation does not change (a record still satisfies the gate); the gate's `[REQUEST]` and `show`'s `[GATE]` line end with `answer=given`. A name that is no stage's gate, or another key or value, is an error. Not part of the schema hash. |
 
 ### Stage Fields
 

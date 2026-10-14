@@ -32,7 +32,8 @@ Two more record kinds are written by the engine itself rather than answering a r
   "target": {"type": "gate", "name": "integration", "stage": "integrate"},
   "options": [],
   "allow_note": true,
-  "declined": null
+  "declined": null,
+  "answer": "record"
 }
 ```
 
@@ -46,11 +47,13 @@ Two more record kinds are written by the engine itself rather than answering a r
 | `options` | `choose` only: `[{"id", "description", "recommended", "eligible"}]`, in declaration order; `description` lists the candidate's `when` checks with their results. Exactly one option is chosen. An ineligible option is shown but cannot be accepted. |
 | `allow_note` | Whether a note may accompany the answer. Always `true` today. |
 | `declined` | The latest `decline` record for this request (`{"file", "note", "at"}`) when the request is still open, otherwise `null`. A declined request stays open: it may be asked again. |
+| `answer` | How the answer reaches the engine: `record` (`devkit workflow answer` or a host's record) or `given` (the definition's `gates.<gate>.answer`: after the person's approval the executor passes `next --given <gate>` on this and every later run and writes nothing; an objection takes a return path). `record` for every request that is not a gate. |
 
 Text form (free text is a JSON string literal, so it always stays on one line):
 
 ```text
 [REQUEST: id=gate:integration kind=approve title="Approve integration" target=gate:integration stage=integrate note=allowed]
+[REQUEST: id=gate:release kind=approve title="Approve release" target=gate:release stage=release note=allowed answer=given]
 [REQUEST: id=handoff kind=choose title="Choose next workflow" options=spec-driven,hotfix,direct-delivery eligible=hotfix,direct-delivery recommended=-]
 [DECLINED: id=gate:integration file=decisions/01-gate-integration.yaml note="rebase first"]
 ```
@@ -95,7 +98,7 @@ No other key is allowed. Records are never edited or deleted by the engine. Only
 - **Per stage.** An `approve` record answers its request for the stage named in its `stage` field only. A gate or human check used by several stages of one workflow is asked, and answered, in each of them; an approval given in one stage never satisfies another.
 - **Handoff choice.** Under `approvals.handoff = "ask"`, an `accept` whose value is an eligible candidate sets `chosen` in `[HANDOFF: ...]`; `devkit workflow handoff --unit DIR` then rebinds without `--workflow`. `handoff --workflow <id>` writes the same accepted `handoff` record before rebinding. Under `auto`, a recorded choice takes precedence over the engine's first-eligible pick. A recorded choice that is not an eligible candidate is reported as a `[DECISION_ERROR]` and ignored.
 - **Returns.** When the unit goes back to an earlier stage, approvals given for that stage and later ones must be given again. `devkit workflow return --unit DIR --to STAGE [--note TEXT] [--by NAME]` records it as an accepted `return:<stage>` record; `STAGE` must be the current stage or an earlier one. `next` never records a return: when it finds the current stage earlier than a stage with a valid approval, it lists those approvals as `[STALE_APPROVAL: ... counts=yes void_with="devkit workflow return --unit DIR --to STAGE"]` and they keep counting. Whether the redone work needs fresh approval is a person's decision; run `return` to require it. An `approve` record is void once a later `return` record targets its stage or an earlier one. The same return voids the envelopes recorded before it for its target stage or a later one (their `stage` placed in the definition, their `created_at` not certainly after the record's `at`), so a stage whose exit reads an envelope (`envelope-review-passed`, `envelope-check-pass`) is satisfied again only by a new one; an envelope without a stage or a `created_at` is never voided. Each time stands for the span its precision allows: `2026-10-12T09:30:00Z` for that whole second, a time to the microsecond for that microsecond. An envelope counts only when the earliest moment its `created_at` allows is at or after the latest moment the return's `at` allows; when the order is unknown (both in the same second, written to the second) the envelope is void, since asking for it again is safer than letting one that may predate the return satisfy the stage. `envelope new` never falls into that case: it writes `created_at` to the microsecond and, when the clock has not passed the latest accepted return of the segment yet (the same instant, a clock behind a host's record), stamps it at the end of that return's span instead, so an envelope written after a return always counts ([Review Envelopes](envelopes.md#2-authoring)). Approvals need no such rule; they are ordered by sequence number.
-- **Given versus recorded.** `--given` is an assertion for the current invocation only, intended for runner checks (CI evidence) and scripted use; it is not stored. A recorded decision is the durable form and the one hosts should use for approvals.
+- **Given versus recorded.** `--given` is an assertion for the current invocation only, intended for runner checks (CI evidence), scripted use and gates the definition marks `answer: given`; it is not stored. A recorded decision is the durable form and the one hosts should use for every other approval. A `given` gate trades the record for one fewer commit: its authority is the person's approval the executor reports, or the runner's binding (a PR's ready state).
 - **Policy `auto` and `off`.** No request is emitted; the output records the policy that decided (`[GATE: ... source=policy]` while the stage is current, `[SKIPPED: ...]`), so a reader can tell a delegated decision from a human one.
 
 Decision records stay in the unit through handoffs as an audit trail, but they belong to the segment they were given in: an approval or handoff choice from a finished segment never counts in the next one, even for a gate with the same name. Envelopes written by `envelope new` are scoped the same way, by their `workflow` and `segment` keys ([Review Envelopes](envelopes.md#1-file-contract)).

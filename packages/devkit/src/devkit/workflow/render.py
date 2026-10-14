@@ -109,7 +109,8 @@ def render_requests(requests: list[Request]) -> list[str]:
         else:
             lines.append(
                 f"[REQUEST: id={r.id} kind={r.kind} title={quote(r.title)} target={r.target.type}:{r.target.name} "
-                f"stage={_dash(r.target.stage)} note={'allowed' if r.allow_note else 'no'}]"
+                f"stage={_dash(r.target.stage)} note={'allowed' if r.allow_note else 'no'}"
+                f"{' answer=given' if r.answer == 'given' else ''}]"
             )
         if r.declined:
             lines.append(f"[DECLINED: id={r.id} file={r.declined.file} note={quote(r.declined.note)}]")
@@ -139,7 +140,10 @@ def render_document(
         if stages.get(s.id) == "off":
             lines.append(f"[SKIP: {s.id} reason=stages.{s.id}=off]")
         if s.gate:
-            lines.append(f"[GATE: {s.gate} policy={approvals.get(s.gate, 'ask')}]")
+            answer = doc.gate_answer(s.gate)
+            lines.append(
+                f"[GATE: {s.gate} policy={approvals.get(s.gate, 'ask')}{' answer=given' if answer == 'given' else ''}]"
+            )
         lines.append(f"[ENTRY: {_dash(' '.join(s.entry))}]")
         lines.append(f"[EXIT: {_dash(' '.join(s.exit))}]")
         lines.append(f"[ARTIFACTS: {_dash(' '.join(s.artifacts))}]")

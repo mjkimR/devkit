@@ -4,6 +4,7 @@ import errno
 import fcntl
 import json
 import os
+import re
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
@@ -16,6 +17,7 @@ from devkit.core import LockHeldError, LockUnsupportedError
 from devkit.core.errors import UnsafePathError
 from devkit.workflow import (
     DecisionInvalidError,
+    DefinitionError,
     Options,
     Workspace,
     create_unit,
@@ -24,7 +26,9 @@ from devkit.workflow import (
     load_envelopes,
     parse_definition,
     record_answer,
+    render_document,
     render_evaluation,
+    schema_hash,
 )
 from devkit.workflow.cli import cli
 from devkit.workflow.unit import records
@@ -306,6 +310,49 @@ def test_given_still_satisfies_without_a_record(tmp_path: Path) -> None:
     unit = write_unit(tmp_path, "work/a")
     res = evaluate_definition(parse_definition(WORKFLOW), _opts(tmp_path, unit, given=("direction",)))
     assert res.done == ["intent"] and load_decisions(unit).records == []
+
+
+def _with_gates(gates: str) -> str:
+    """``WORKFLOW`` with a top-level ``gates`` value."""
+    return WORKFLOW.replace("schema_version: 1\n", f"schema_version: 1\ngates: {gates}\n", 1)
+
+
+def test_a_given_gate_says_so_in_its_request_and_needs_no_record(tmp_path: Path) -> None:
+    doc = parse_definition(_with_gates("{ direction: { answer: given } }"))
+    assert doc.gate_answer("direction") == "given" and doc.to_dict()["gates"] == {"direction": {"answer": "given"}}
+    assert schema_hash(doc) == schema_hash(parse_definition(WORKFLOW))
+    assert "[GATE: direction policy=ask answer=given]" in render_document(doc)
+    unit = write_unit(tmp_path, "work/a")
+    res = evaluate_definition(doc, _opts(tmp_path, unit))
+    assert res.requests[0].answer == "given" and res.to_dict()["requests"][0]["answer"] == "given"
+    assert (
+        '[REQUEST: id=gate:direction kind=approve title="Approve direction" target=gate:direction stage=intent '
+        "note=allowed answer=given]" in render_evaluation(res)
+    )
+    res = evaluate_definition(doc, _opts(tmp_path, unit, given=("direction",)))
+    assert res.done == ["intent"] and load_decisions(unit).records == []
+
+
+def test_a_recorded_gate_keeps_its_request_unchanged(tmp_path: Path) -> None:
+    doc = parse_definition(_with_gates("{ direction: { answer: record } }"))
+    assert doc.gate_answers == () and doc.gate_answer("direction") == "record"
+    res = evaluate_definition(doc, _opts(tmp_path, write_unit(tmp_path, "work/a")))
+    assert res.requests[0].answer == "record" and "answer=" not in render_evaluation(res)
+
+
+@pytest.mark.parametrize(
+    ("gates", "message"),
+    [
+        ("[direction]", "gates: expected a mapping"),
+        ("{ release: { answer: given } }", "gates.release: not the human_gate of any stage"),
+        ("{ direction: given }", "gates.direction: expected a mapping with answer"),
+        ("{ direction: { answer: given, note: x } }", "gates.direction: unknown keys ['note']"),
+        ("{ direction: { answer: never } }", "gates.direction.answer: expected one of ['record', 'given']"),
+    ],
+)
+def test_gate_settings_are_validated(gates: str, message: str) -> None:
+    with pytest.raises(DefinitionError, match=re.escape(message)):
+        parse_definition(_with_gates(gates))
 
 
 def test_handoff_request_and_recorded_choice(tmp_path: Path) -> None:

@@ -49,8 +49,12 @@ never derive it from files yourself.
    `uv run devkit workflow answer --unit <dir> --request gate:<name> --action
    accept` (or `--action decline --note "<reason>"`), then rerun `next`. A host
    with its own approval UI writes the same record; never record an answer you
-   did not receive. `source=policy` means the gate was passed by project policy
-   (`auto`): report that basis in your summary.
+   did not receive. When the request ends with `answer=given`, the workflow
+   keeps no record for that gate: after the user's explicit approval write
+   nothing and pass `--given <name>` to this and every later `next`; on an
+   objection take a `[RETURNS]` path instead. Name the user's approval as the
+   basis in your report. `source=policy` means the gate was passed by project
+   policy (`auto`): report that basis in your summary.
 5. Stop on errors. An `[ERROR] (CODE)` block on stderr carries an `[ACTION]`
    directive; follow it. `WORKFLOW_DRIFT` means the definition changed under
    this unit: review the change with the user before running the `bind`

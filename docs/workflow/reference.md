@@ -51,7 +51,7 @@ just workflow checks                                  # registered checks, plugi
 just workflow validate                                # definitions under definitions_dir, roles, shared stages
 just workflow new login-flow                          # create and bind a unit
 just workflow next --unit .devkit/transient/work/login-flow
-just workflow next --unit <dir> --given integration   # assert a gate for this run only
+just workflow next --unit <dir> --given integration   # assert a gate for this run only (every run for an answer=given gate)
 just workflow next --unit <dir> --format json
 just workflow requests --unit <dir>                   # open human requests (approvals, choices)
 just workflow answer --unit <dir> --request gate:integration --action accept
