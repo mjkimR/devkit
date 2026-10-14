@@ -293,7 +293,7 @@ caller that moves Markdown files. `LinkRelocation` says where things went:
 deepest key wins), `removed` (old paths that are gone), `file_origins` (new
 file to the old file it was written as) and `directory_origins` (new directory
 to the old one its files were written for). Paths are absolute or relative to
-`root`. A link into a moved-away path goes to its new location; a link of a
+`root`; the maps take `str` or `Path` keys (`LinkRelocation[K]`, inferred from the arguments). A link into a moved-away path goes to its new location; a link of a
 file written for another location is rewritten to reach the same target from
 where the file is now. URLs, root-relative and fragment- or query-only
 destinations are left alone, `#fragment` and `?query` are kept, and a

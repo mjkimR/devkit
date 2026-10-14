@@ -18,6 +18,7 @@ from collections.abc import Collection, Iterable, Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
+from typing import Any
 
 from devkit.core import atomic_write_text
 from devkit.rules.workspace.markdown import extract_links
@@ -36,8 +37,9 @@ class UnresolvedReason(StrEnum):
 
 
 @dataclass(frozen=True)
-class LinkRelocation:
-    """Where moved paths went, and where moved files were written for.
+class LinkRelocation[K: StrPath]:
+    """Where moved paths went, and where moved files were written for; ``K`` is the key type of the maps
+    (``str`` or ``Path``), inferred from the arguments, since ``Mapping`` keys are invariant.
 
     - ``files``: old path to new path, exactly. A directory linked to as a whole is mapped here too.
     - ``directories``: old directory to new directory, for every path strictly beneath it (the deepest
@@ -51,11 +53,11 @@ class LinkRelocation:
       matching directory wins); the same for every file beneath it without a ``file_origins`` entry.
     """
 
-    files: Mapping[StrPath, StrPath] = field(default_factory=dict)
-    directories: Mapping[StrPath, StrPath] = field(default_factory=dict)
+    files: Mapping[K, StrPath] = field(default_factory=dict)
+    directories: Mapping[K, StrPath] = field(default_factory=dict)
     removed: Collection[StrPath] = ()
-    file_origins: Mapping[StrPath, StrPath] = field(default_factory=dict)
-    directory_origins: Mapping[StrPath, StrPath] = field(default_factory=dict)
+    file_origins: Mapping[K, StrPath] = field(default_factory=dict)
+    directory_origins: Mapping[K, StrPath] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -104,7 +106,7 @@ def _deepest(path: str, directories: Mapping[str, str], *, inclusive: bool) -> t
 
 
 class _Plan:
-    def __init__(self, root: Path, relocation: LinkRelocation) -> None:
+    def __init__(self, root: Path, relocation: LinkRelocation[Any]) -> None:
         def norm(path: StrPath) -> str:
             return os.path.normpath(os.path.join(root, os.fspath(path)))
 
@@ -143,7 +145,9 @@ def _read(path: str) -> str:
         return handle.read()
 
 
-def relocate_links(root: Path, files: Iterable[StrPath], relocation: LinkRelocation) -> LinkRelocationReport:
+def relocate_links[K: StrPath](
+    root: Path, files: Iterable[StrPath], relocation: LinkRelocation[K]
+) -> LinkRelocationReport:
     """Rewrite the relative inline Markdown links of ``files`` (``extract_links``) for ``relocation``.
 
     A destination with a scheme (``https:``, ``mailto:``), a root-relative one (``/x``) and a fragment- or

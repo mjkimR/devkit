@@ -267,3 +267,13 @@ def test_unreadable_and_unwritable_files_are_reported(tmp_path: Path) -> None:
     ]
     assert report.files == [] and report.rewritten == []
     assert locked.read_text(encoding="utf-8") == "[a](../old/a.md)\n"
+
+
+def test_string_maps_need_no_conversion(tmp_path: Path) -> None:
+    # Mapping keys are invariant: a plain dict[str, str] must type-check as LinkRelocation's maps.
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs/a.md").write_text("[x](old.md)\n", encoding="utf-8")
+    moved: dict[str, str] = {"docs/old.md": "docs/new.md"}
+    report = relocate_links(tmp_path, ["docs/a.md"], LinkRelocation(files=moved, directories=moved))
+    assert (tmp_path / "docs/a.md").read_text(encoding="utf-8") == "[x](new.md)\n"
+    assert [(item.old, item.new) for item in report.rewritten] == [("old.md", "new.md")]
