@@ -204,6 +204,7 @@ executes, with the rule ID in the message.
 | `RULE-file-length` | `rules.file_length` | hygiene, warning | files above `max_lines` (settings `max_lines`, `extensions`) | [guide.md](../../packages/devkit/src/devkit/rules/rules/file_length/guide.md) |
 | `RULE-secret-leak` | `rules.secret_leak` | linter, error | credential file names and private key or token patterns in explicit targets | [guide.md](../../packages/devkit/src/devkit/rules/rules/secret_leak/guide.md) |
 | `RULE-clean-artifacts` | `rules.clean_artifacts` | linter, error | compiled binaries, database files and logs above 1 MiB in explicit targets | [guide.md](../../packages/devkit/src/devkit/rules/rules/clean_artifacts/guide.md) |
+| `RULE-cli-contract` | `rules.cli_contract` | linter, error | `devkit` invocations in Markdown code name commands and options the running command line has, plugins included (settings `exclude`, `unchecked_commands`) | [guide.md](../../packages/devkit/src/devkit/rules/rules/cli_contract/guide.md) |
 
 The guide of each rule is canonical for its behavior; `devkit rules explain
 <RULE-id>` prints it. The safety rules report nothing for a run without

@@ -9,6 +9,7 @@ from devkit.rules.engine.models import Rule
 from devkit.rules.rules import (
     BaseRule,
     CleanArtifactsRule,
+    CliContractRule,
     FileLengthRule,
     MarkdownLinkRule,
     SecretLeakRule,
@@ -82,4 +83,5 @@ def default_rule_registry() -> RuleRegistry:
     registry.register(FileLengthRule())
     registry.register(SecretLeakRule())
     registry.register(CleanArtifactsRule())
+    registry.register(CliContractRule())
     return registry

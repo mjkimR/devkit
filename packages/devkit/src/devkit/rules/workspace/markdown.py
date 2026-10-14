@@ -5,7 +5,8 @@ Two scanners live here so every reader agrees on them:
 - ``prose_lines`` yields the lines outside fenced code blocks (CommonMark
   fences: a run of three or more backticks or tildes, closed only by a run of
   the same character at least as long with nothing after it). Link extraction
-  and the checklist counter both use it.
+  and the checklist counter both use it; ``fenced_lines`` yields the lines
+  inside, and ``code_spans`` the inline code of a prose line.
 - ``count_tasks`` is the single checklist counter: a rule that reasons about
   task completion and a workflow check that gates on it must agree on what a
   task is.
@@ -43,12 +44,8 @@ def split_lines(text: str) -> list[str]:
     return text.split("\n")
 
 
-def prose_lines(text: str, *, first_line: int = 1) -> Iterator[tuple[int, str]]:
-    """``(line_number, line)`` for every line of ``text`` outside fenced code blocks.
-
-    ``first_line`` is the number of the first line of ``text`` in its document.
-    Fence delimiter lines themselves are not yielded.
-    """
+def _lines(text: str, first_line: int) -> Iterator[tuple[int, str, bool]]:
+    """``(line_number, line, fenced)`` for every line of ``text`` except fence delimiter lines."""
     fence = ""
     for offset, line in enumerate(split_lines(text)):
         stripped = line.strip()
@@ -57,10 +54,29 @@ def prose_lines(text: str, *, first_line: int = 1) -> Iterator[tuple[int, str]]:
             if run:
                 fence = run
                 continue
-            yield first_line + offset, line
+            yield first_line + offset, line, False
             continue
         if run and run[0] == fence[0] and len(run) >= len(fence) and not stripped[len(run) :].strip():
             fence = ""
+            continue
+        yield first_line + offset, line, True
+
+
+def prose_lines(text: str, *, first_line: int = 1) -> Iterator[tuple[int, str]]:
+    """``(line_number, line)`` for every line of ``text`` outside fenced code blocks.
+
+    ``first_line`` is the number of the first line of ``text`` in its document.
+    Fence delimiter lines themselves are not yielded.
+    """
+    return ((number, line) for number, line, fenced in _lines(text, first_line) if not fenced)
+
+
+def fenced_lines(text: str, *, first_line: int = 1) -> Iterator[tuple[int, str]]:
+    """``(line_number, line)`` for every line of ``text`` inside fenced code blocks, delimiter lines excluded.
+
+    An unclosed fence runs to the end of ``text``, as in CommonMark.
+    """
+    return ((number, line) for number, line, fenced in _lines(text, first_line) if fenced)
 
 
 def count_tasks(text: str) -> tuple[int, int]:
@@ -132,6 +148,18 @@ def _code_spans(line: str) -> list[tuple[int, int]]:
         spans.append((start, runs[closer][1]))
         index = closer + 1
     return spans
+
+
+def code_spans(line: str) -> list[tuple[int, str]]:
+    """``(column, content)`` of each inline code span of a prose line; ``column`` is 1-based, at the opening run.
+
+    The content is stripped of surrounding whitespace.
+    """
+    found: list[tuple[int, str]] = []
+    for start, end in _code_spans(line):
+        width = len(line[start:end]) - len(line[start:end].lstrip("`"))
+        found.append((start + 1, line[start + width : end - width].strip()))
+    return found
 
 
 def _skip_blanks(line: str, index: int) -> int:

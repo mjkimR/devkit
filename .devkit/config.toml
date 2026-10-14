@@ -1,0 +1,5 @@
+# Rule policy for this repository's own documents (`just rules-check`). devkit does not install bundles into itself.
+
+[rules.settings.RULE-cli-contract]
+# devkit-spec's `devkit spec` group is the documented example of a command plugin; it is not installed here.
+unchecked_commands = ["spec"]

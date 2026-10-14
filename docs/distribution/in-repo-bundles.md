@@ -163,7 +163,7 @@ order between bundles is not a declared priority, so prefer IDs prefixed with th
 
 ## 7. Open Items
 
-- **Scaffolding**: a `devkit bundle init <path>` command writing the `pyproject.toml`, `__init__.py` and a minimal
+- **Scaffolding**: a `bundle init <path>` subcommand writing the `pyproject.toml`, `__init__.py` and a minimal
   `bundle.toml`. Not implemented.
 - **Explicit rule precedence**: a declared load order replacing bundle name ordering, if shadowing upstream rules
   becomes common. Not planned until a concrete need appears.
