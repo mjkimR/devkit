@@ -210,6 +210,48 @@ def test_snapshot_run_reads_policy_from_the_index(tmp_path: Path) -> None:
     assert _files(run.result.violations) == ["docs/b.md"]
 
 
+def _committed_repo(tmp_path: Path) -> Path:
+    root = (tmp_path / "repo").resolve()
+    root.mkdir()
+    _git(root, "init", "-q", "-b", "main")
+    _write(root, "docs/a.md", "# A\n")
+    _write(root, "docs/b.md", "[a](a.md)\n")
+    _git(root, "add", ".")
+    _git(root, "-c", "user.email=a@b", "-c", "user.name=a", "commit", "-qm", "init")
+    return root
+
+
+def test_a_staged_snapshot_matching_the_working_tree_is_evaluated_in_place(tmp_path: Path) -> None:
+    root = _committed_repo(tmp_path)
+    _write(root, "docs/c.md", BROKEN)
+    _git(root, "add", "docs/c.md")
+    run = run_project_rules(root, snapshot=git_snapshot(root, staged=True))
+    assert run.workspace_root == root and _files(run.result.violations) == ["docs/c.md"]
+
+    # Untracked files outside .devkit/ are visible in place: a link to one resolves.
+    _write(root, "docs/d.md", "[e](e.md)\n")
+    _git(root, "add", "docs/d.md")
+    _write(root, "docs/e.md", "# E\n")
+    run = run_project_rules(root, snapshot=git_snapshot(root, staged=True))
+    assert run.workspace_root == root and _files(run.result.violations) == ["docs/c.md"]
+
+
+def test_a_staged_deletion_checks_the_links_to_it_in_place(tmp_path: Path) -> None:
+    root = _committed_repo(tmp_path)
+    _git(root, "rm", "-q", "docs/a.md")
+    run = run_project_rules(root, snapshot=git_snapshot(root, staged=True))
+    assert run.workspace_root == root and _files(run.result.violations) == ["docs/b.md"]
+
+
+def test_a_partially_staged_snapshot_is_materialized(tmp_path: Path) -> None:
+    root = _committed_repo(tmp_path)
+    _write(root, "docs/c.md", BROKEN)
+    _git(root, "add", "docs/c.md")
+    _write(root, "docs/c.md", "fixed but not staged\n")
+    run = run_project_rules(root, snapshot=git_snapshot(root, staged=True))
+    assert run.workspace_root != root and _files(run.result.violations) == ["docs/c.md"]
+
+
 def test_snapshot_without_changes_checks_nothing(tmp_path: Path) -> None:
     root = (tmp_path / "repo").resolve()
     root.mkdir()

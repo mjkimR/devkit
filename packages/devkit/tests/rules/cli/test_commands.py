@@ -526,7 +526,7 @@ def test_cli_staged_gate_rejects_managed_rule_that_drifted_from_the_receipt(tmp_
     (root / ".devkit/managed/team/rules/no_todo.py").unlink()
     result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged"])
     assert result.exit_code == 2
-    assert "missing from the working tree" in result.stderr
+    assert "(RULES_LOAD_FAILED)" in result.stderr and "[FIX]    devkit sync" in result.stderr
 
 
 def test_cli_missing_managed_rule_fails_in_working_tree_check(tmp_path: Path) -> None:

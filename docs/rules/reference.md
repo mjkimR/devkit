@@ -41,8 +41,10 @@ or without `-w`, rather than a check that loads no managed rules and passes.
   [Evaluation Lifecycle, section 3](evaluation-lifecycle.md#3-cli-execution-and-phases).
 - `check --staged` evaluates the Git index (the built-in `rules-check`
   commit gate runs the same evaluation before every commit); `check --ci --base <ref>` evaluates `HEAD` against its merge base with
-  `<ref>`. Both run the linter phase over the changed files of a materialized
-  tree and refuse file arguments, `--phase hygiene` and `fix`
+  `<ref>`. Both run the linter phase over the changed files of the tree,
+  `--staged` in the working tree when it holds exactly the staged content and
+  otherwise, like `--ci`, in a materialized copy, and refuse file arguments,
+  `--phase hygiene` and `fix`
   ([Evaluation Lifecycle, section 6](evaluation-lifecycle.md#6-git-snapshot-gates)).
 - `fix --dry-run` reports the initial findings, marking fixable ones
   `status=fixable`, without running any fixer.
@@ -463,7 +465,8 @@ they are results on stdout and never affect `--strict`.
   a repaired destination percent-encodes `%`, `\`, `#`, `?`, `<` and `>` so it
   decodes back to the candidate's path.
 - Settings fields are scalars and string lists; nested tables are not supported.
-- Snapshot gates materialize the whole tree, so time and disk use grow with
+- A materialized snapshot (every `--ci` run, and a `--staged` run whose working
+  tree differs from the index) writes the whole tree, so time and disk use grow with
   repository size; blobs are streamed from one `git cat-file --batch` process
   and written as they arrive. Git is stopped (`RULES_SNAPSHOT_FAILED`) only when
   there is no progress reading its output for the Git timeout (60 seconds; each

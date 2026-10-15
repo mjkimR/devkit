@@ -4,8 +4,12 @@
 contain) and ``--ci --base <ref>`` evaluates ``HEAD`` against its merge base
 with ``<ref>``. Both read the tree from Git rather than the working directory,
 so unstaged edits, ignored files and local-only configuration cannot change the
-result. The tree is materialized into a temporary directory, which becomes the
-workspace root for the run: ``.devkit/config.toml``, the installation receipt
+result. A staged snapshot whose tracked files all match the working tree
+(``matches_working_tree``) and that has no untracked file under ``.devkit/`` is
+evaluated in place instead, which costs what the commit changes rather than
+what the repository holds; untracked files elsewhere are then visible to the
+rules. Otherwise the tree is materialized into a temporary
+directory, which becomes the workspace root for the run: ``.devkit/config.toml``, the installation receipt
 and synchronized rules are therefore taken from the same snapshot. Managed rule
 copies are usually Git-ignored and absent from the tree; the rule engine then
 reads them from the working tree only when they match the hash recorded in the
@@ -154,6 +158,23 @@ def git_snapshot(root: Path, *, staged: bool, base: str = "origin/main") -> Snap
         deleted=tuple(deleted),
         files=tuple(files),
     )
+
+
+def matches_working_tree(snapshot: Snapshot) -> bool:
+    """Whether a staged snapshot can be evaluated in place: the working tree holds what it commits.
+
+    Compares the index the snapshot was taken from (``commit_index``, else Git's own) with the working tree,
+    content-wise; any difference, a submodule's included, keeps the snapshot materialized. So does an untracked,
+    not ignored file under ``.devkit/`` (a new ``config.toml``, receipt or override), since the policy must come
+    from what is committed. A ``ci`` snapshot never matches: ``HEAD`` against its merge base is evaluated from
+    the tree.
+    """
+    if snapshot.mode != "staged":
+        return False
+    index = commit_index(snapshot.root)
+    if _git(snapshot.root, "diff", "--name-only", "-z", index=index):
+        return False
+    return not _git(snapshot.root, "ls-files", "-z", "--others", "--exclude-standard", "--", ".devkit", index=index)
 
 
 def _inside_tree(name: str, link_target: str) -> bool:

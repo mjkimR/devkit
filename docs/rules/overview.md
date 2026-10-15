@@ -33,7 +33,7 @@ src/devkit/rules/
 │   ├── cache.py             # WorkspaceCache (file discovery, bytes, text, frontmatter, links)
 │   ├── catalog.py           # DocumentCatalog (paths, basenames, frontmatter id/title/status)
 │   ├── markdown.py          # Fences, inline links, count_tasks (the checklist counter shared with devkit.workflow)
-│   └── snapshot.py          # Staged / CI Git trees materialized for gate evaluation
+│   └── snapshot.py          # Staged / CI Git trees for gate evaluation (in place or materialized)
 ├── rules/                   # Built-in governance rules (repository-generic only)
 │   ├── base.py              # Base rule helper class (settings, guide, related, promote_to)
 │   └── <name>/              # one folder per rule: rule.py, guide.md, tests/ (markdown_link, file_length,

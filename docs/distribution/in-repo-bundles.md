@@ -135,9 +135,10 @@ their receipts record which version they run.
 The bundle's rules deploy to `.devkit/managed/my-repo/rules/`, are listed under their asset's `paths`, load in
 `devkit rules check` without flags and are configured in `[rules]` like any rule.
 
-Snapshot gates (`devkit rules check --staged`, `--ci`) evaluate a materialized Git tree, which lacks the Git-ignored
-managed copies; the gate reads such a file from the working tree only when its SHA-256 matches the `files` entry of
-the receipt committed to the snapshot
+Snapshot gates (`devkit rules check --staged`, `--ci`) evaluate a Git tree whose receipt pins the Git-ignored managed
+copies: a materialized tree lacks them, and the gate reads such a file from the working tree only when its SHA-256
+matches the `files` entry of the receipt committed to the snapshot; a staged snapshot evaluated in place checks the
+same hash
 ([Evaluation Lifecycle](../rules/evaluation-lifecycle.md#6-git-snapshot-gates)). Hence:
 
 - After editing a rule, run `devkit sync` and stage the receipt with the rule source; a stale receipt fails the gate,

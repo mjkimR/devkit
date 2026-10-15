@@ -33,7 +33,7 @@ from devkit.rules.engine.settings import SettingsResolver
 from devkit.rules.rules.base import guide_path
 from devkit.rules.workspace.cache import WorkspaceCache
 from devkit.rules.workspace.markdown import local_target
-from devkit.rules.workspace.snapshot import Snapshot, materialize_snapshot
+from devkit.rules.workspace.snapshot import Snapshot, matches_working_tree, materialize_snapshot
 
 SNAPSHOT_PREFIX = "devkit-rules-snapshot-"
 
@@ -333,6 +333,11 @@ def run_project_rules(
     otherwise), so unstaged rule edits cannot change the result. A snapshot
     run cannot take ``targets`` or ``fix``, and ``snapshot`` must come from
     ``root``; violating that contract is a programming error (``ValueError``).
+    A staged snapshot whose tracked files all match the working tree and with
+    no untracked file under ``.devkit/`` (``matches_working_tree``), run without
+    ``rules_dir``, is evaluated in place on the same targets: nothing is
+    materialized, so the cost follows what the commit changes, and untracked
+    files elsewhere are visible to the rules.
 
     Raises ``RulesConfigError`` (``RULES_CONFIG_INVALID``) for an invalid ``[rules]``
     table, ``TargetError`` (``RULES_TARGET_INVALID``) for an invalid explicit
@@ -359,6 +364,20 @@ def run_project_rules(
         raise ValueError("a snapshot run cannot apply fixes")
     if snapshot.root != root.resolve():
         raise ValueError(f"snapshot was taken from {snapshot.root}, not {root.resolve()}")
+    if rules_dir is None and matches_working_tree(snapshot):
+        # The working tree holds the staged tree: evaluate there, without writing the whole tree out.
+        workspace = snapshot.root
+        return _run(
+            workspace,
+            targets=snapshot_targets(snapshot, workspace, git_filter=True),
+            expand=False,
+            phase=phase,
+            fix=False,
+            dry_run=False,
+            rules_dir=None,
+            source_root=None,
+            snapshot=snapshot,
+        )
     rules_rel = _snapshot_rules_dir(snapshot, rules_dir)
     with tempfile.TemporaryDirectory(prefix=SNAPSHOT_PREFIX) as directory:
         workspace = Path(directory).resolve()
@@ -386,12 +405,13 @@ def run_project_rules(
         )
 
 
-def snapshot_targets(snapshot: Snapshot, workspace: Path) -> list[str]:
+def snapshot_targets(snapshot: Snapshot, workspace: Path, *, git_filter: bool = False) -> list[str]:
     """The snapshot's changed files, then every Markdown file whose relative links point at a deleted path.
 
-    ``workspace`` is the materialized snapshot. Deleting a document breaks the
-    links to it in files the commit does not touch, so those files are checked
-    too.
+    ``workspace`` is the materialized snapshot, or the working tree when the
+    snapshot is evaluated in place (``git_filter`` then skips Git-ignored files).
+    Deleting a document breaks the links to it in files the commit does not
+    touch, so those files are checked too.
     """
     targets = list(snapshot.changed)
     if not snapshot.deleted:
@@ -399,7 +419,7 @@ def snapshot_targets(snapshot: Snapshot, workspace: Path) -> list[str]:
     deleted = set(snapshot.deleted)
     for name in snapshot.deleted:  # links to a directory that lost files
         deleted.update(parent.as_posix() for parent in PurePosixPath(name).parents if parent.as_posix() != ".")
-    cache = WorkspaceCache(workspace, git_filter=False)
+    cache = WorkspaceCache(workspace, git_filter=git_filter)
     for path in cache.find_files(workspace, extensions=(".md",)):
         rel = path.relative_to(workspace).as_posix()
         if rel in targets:
