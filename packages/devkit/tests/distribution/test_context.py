@@ -81,7 +81,7 @@ def test_deployed_prerequisite_preserves_frontmatter_and_source(project) -> None
             output = (target / directory / skill / "SKILL.md").read_bytes()
             assert output.startswith(b"---\r\nname: example\r\n---\r\n")
             assert output.count(b"uv run devkit get-context team") == 1
-            assert b"only once per bundle in the current agent context" in output
+            assert b"once per bundle per agent context" in output
             assert output.endswith(b"Skill body.\r\n")
     assert (source / "review/SKILL.md").read_bytes() == original
     assert sync_project(target, installed).to_dict()["actions"] == []

@@ -12,16 +12,9 @@ CONTEXT_END = "<!-- /DEVKIT:CONTEXT -->"
 def context_prerequisite(bundle: str) -> str:
     return (
         f"{CONTEXT_START}\n"
-        "Before performing this skill, load this bundle's context by running\n"
-        f"`uv run devkit get-context {bundle}` from the consumer project.\n"
-        "Run this only once per bundle in the current agent context, shared across\n"
-        "all skills from this bundle. If its guidance is already available, skip\n"
-        "the command. Read and apply the full constitution. The instruction catalog\n"
-        "exposes headers and paths only; read an instruction body when relevant.\n"
-        "If loading fails, resolve the failure before performing this skill.\n"
-        "Reload only if\n"
-        "the guidance is no longer available, for example after context compaction\n"
-        "or in a new agent context.\n"
+        f"Required first: `uv run devkit get-context {bundle}`, once per bundle per agent context"
+        " (skip if already loaded; reload after compaction). Apply the full constitution;"
+        " read instruction bodies only when relevant.\n"
         f"{CONTEXT_END}\n\n"
     )
 
