@@ -57,7 +57,8 @@ def test_install_status_uninstall(repo: Path) -> None:
 
     data = _status(repo)
     assert [h["state"] for h in data["hooks"]] == ["managed"] * 3
-    assert [g["id"] for g in data["gates"]] == ["verify-commands", "message-nonempty"] and data["config_sources"] == []
+    assert [g["id"] for g in data["gates"]] == ["rules-check", "verify-commands", "message-nonempty"]
+    assert data["config_sources"] == []
     assert data["hooks_dir"] == str((repo / ".git/hooks").resolve()) and data["hooks_path"] is None
     assert data["errors"] == []
 
@@ -155,7 +156,7 @@ def test_core_hooks_path_is_refused_and_reported(repo: Path) -> None:
     assert [(n["code"], n["level"]) for n in data["notices"]] == [("GATE_HOOKS_PATH_SET", "WARNING")]
     notice = data["notices"][0]
     assert notice["message"].startswith("enabled gates do not run: core.hooksPath is set to '.husky'")
-    assert notice["advisory"]["details"] == ["gates=verify-commands,message-nonempty"]
+    assert notice["advisory"]["details"] == ["gates=rules-check,verify-commands,message-nonempty"]
     assert (
         notice["advisory"]["fix"]
         == "Once the user agrees, run `git config --unset core.hooksPath`, then `devkit gate install`"
@@ -360,7 +361,10 @@ def test_staged_rules_in_verify_commands_check_what_is_committed(
     git(repo, "commit", "-m", "init")
     _install(repo)
     command = f"{shlex.quote(PYTHON)} -m devkit rules check --staged"
-    (repo / ".git/devkit.config").write_text(f"[gates.settings.verify-commands]\ncommands = [{json.dumps(command)}]\n")
+    (repo / ".git/devkit.config").write_text(
+        f"[gates.settings.verify-commands]\ncommands = [{json.dumps(command)}]\n"
+        "[gates.settings.rules-check]\nenabled = false\n"  # the nested command alone, as a project may configure it
+    )
 
     # `commit -a` and `commit <paths>` commit a temporary index, which the staged check reads.
     (repo / "a.md").write_text("[bad](missing.md)\n")
@@ -499,7 +503,7 @@ def test_library_entry_points(repo: Path) -> None:
     project = load_gate_project(repo / "sub")
     assert project.root == repo and project.common_git_dir == (repo / ".git").resolve()
     assert project.validation.ok and project.config.sources == ()
-    assert [g.id for g in project.registry.get_all()] == ["verify-commands", "message-nonempty"]
+    assert [g.id for g in project.registry.get_all()] == ["rules-check", "verify-commands", "message-nonempty"]
 
     (repo / "MSG").write_text("\n")
     report = run_hook(repo, Stage.COMMIT_MSG, ["MSG"])
@@ -615,7 +619,8 @@ def test_conflicting_paths_are_not_overwritten_and_preflight_all_stages(repo: Pa
 def test_empty_stages_only_get_dispatchers_and_directories(repo: Path) -> None:
     (repo / ".devkit").mkdir()
     (repo / ".devkit/config.toml").write_text(
-        "[gates.settings.verify-commands]\nenabled = false\n[gates.settings.message-nonempty]\nenabled = false\n"
+        "[gates.settings.rules-check]\nenabled = false\n[gates.settings.verify-commands]\nenabled = false\n"
+        "[gates.settings.message-nonempty]\nenabled = false\n"
     )
     _install(repo)
     assert all(item.state is hooks.HookState.MANAGED and item.python is None for item in hooks.status(repo))

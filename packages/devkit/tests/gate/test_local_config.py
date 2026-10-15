@@ -32,7 +32,7 @@ def test_install_writes_a_commented_table_per_gate(repo: Path) -> None:
     assert f"[CONFIG: template=created path={_config(repo)}]" in output
     text = _config(repo).read_text()
     assert tomllib.loads(text) == {}  # every line is a comment until the developer uncomments one
-    assert local_config.mentioned_gates(text) == {"verify-commands", "message-nonempty", "team-block"}
+    assert local_config.mentioned_gates(text) == {"rules-check", "verify-commands", "message-nonempty", "team-block"}
     assert "## pre-commit gate, on by default: test gate\n# [gates.settings.team-block]\n" in text
     assert "#   enabled = true\n#   allow = false  # boolean\n" in text
     assert "## commit-msg gate, on by default: Refuse" in text

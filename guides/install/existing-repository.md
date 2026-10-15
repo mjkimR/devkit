@@ -103,9 +103,11 @@ uv run devkit rules check
 ```
 
 The built-in rules (Markdown links, file length, secret leaks, build artifacts, `devkit` command citations) may
-report findings in existing files. Report the counts by rule to the user; do not fix them in bulk as part of the installation. When the
-user wants the commit gate to run the rules, add `uv run devkit rules check --staged` to the gate commands only
-after the existing findings are resolved or accepted, or every commit will be blocked.
+report findings in existing files. Report the counts by rule to the user; do not fix them in bulk as part of the installation. The
+commit gate checks the rules by default (`rules-check`) on the files each commit changes, so a commit that touches a file
+with an existing error-severity finding is refused until it is fixed. Tell the user, and offer the choices: fix the
+findings, park a rule in the `hygiene` phase or lower its severity in `[rules]`, or set `enabled = false` in
+`[gates.settings.rules-check]` until they are resolved.
 
 Then continue with [Bundle Recommendations](bundle-recommendations.md) and
 [Installation Guide, step 5](../INSTALL_GUIDE.md#step-5-verify-and-report).

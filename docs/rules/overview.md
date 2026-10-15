@@ -10,7 +10,7 @@ Related: [Evaluation Lifecycle](evaluation-lifecycle.md), [Rule Authoring Guide]
 2. **No built-in document model**: the engine does not know what a specification, story or decision record is. Identifier grammars, frontmatter schemas, target directories and cross-reference semantics belong to the bundle that defines those documents and arrive as `kind = "rule"` assets; the engine provides the cache, the Markdown file catalog, policy and execution. Built-in rules cover only what holds for any repository.
 3. **Session caching**: one in-memory cache per evaluation session holds file lists, bytes, text, frontmatter and links.
 4. **Convergent autofix**: one repair pass followed by one recheck, never a repair loop ([Evaluation Lifecycle, section 2](evaluation-lifecycle.md#2-autofix-and-convergence)).
-5. **One evaluation path**: the CLI (also at commit time, through the `verify-commands` gate) and the workflow engine's `lint-clean` check both call `run_project_rules`, so they cannot disagree on policy.
+5. **One evaluation path**: the CLI, the `rules-check` commit gate and the workflow engine's `lint-clean` check both call `run_project_rules`, so they cannot disagree on policy.
 
 ## 2. Subsystem Layout
 
@@ -47,7 +47,7 @@ Library callers import the public API from `devkit.rules`; built-in rule classes
 
 - **Content wheels**: bundles ship rules as `kind = "rule"` assets; `devkit sync` records each deployed file in `.devkit/installation.json`, and `devkit rules` loads them from the receipt without any flag ([Rule sources](rule-authoring.md#5-rule-sources-and-registration)).
 - **Project policy**: a consumer changes a distributed rule's phase, severity or settings only through `[rules]` in `.devkit/config.toml`; managed rule files are hash-checked and never edited in place.
-- **Pre-commit and CI**: a project runs `uv run devkit rules check --staged` at commit time by listing it in the `verify-commands` gate ([Commit Gate Overview](../gate/overview.md#2a-built-in-gates)); CI runs `devkit rules check --ci --base <ref>`. Both evaluate the exact Git tree, so the result cannot depend on unstaged or ignored files ([Evaluation Lifecycle, section 6](evaluation-lifecycle.md#6-git-snapshot-gates)).
+- **Pre-commit and CI**: the built-in `rules-check` commit gate evaluates what `devkit rules check --staged` evaluates on every commit, on by default once the hooks are installed ([Commit Gate Overview](../gate/overview.md#2a-built-in-gates)); CI runs `devkit rules check --ci --base <ref>`. Both evaluate the exact Git tree, so the result cannot depend on unstaged or ignored files ([Evaluation Lifecycle, section 6](evaluation-lifecycle.md#6-git-snapshot-gates)).
 
 ## 4. Shared Foundation
 

@@ -16,8 +16,8 @@ from devkit.core.deadline import Deadline
 from devkit.core.errors import GitError
 
 DEFAULT_TIMEOUT = 60.0  # seconds; the one Git timeout every devkit area uses
-# The index of the commit being made, which the ``verify-commands`` gate passes to the commands it runs after
-# removing Git's own ``GIT_INDEX_FILE`` from their environment (see ``commit_index``).
+# The index of the commit being made, which the ``verify-commands`` gate passes to the commands it runs, and the
+# ``rules-check`` gate sets while it runs, after removing Git's own ``GIT_INDEX_FILE`` (see ``commit_index``).
 COMMIT_INDEX_VARIABLE = "DEVKIT_GIT_INDEX_FILE"
 
 
@@ -84,10 +84,11 @@ def run_git(
 
 
 def commit_index(root: Path) -> str | None:
-    """The index of the commit a hook is making when a devkit command runs from the ``verify-commands`` gate.
+    """The index of the commit a hook is making when devkit runs from the ``verify-commands`` or ``rules-check`` gate.
 
-    The gate removes Git's ``GIT_INDEX_FILE`` from its commands' environment (so a test suite running Git in its
-    own repositories is not pointed at it) and passes it as ``DEVKIT_GIT_INDEX_FILE`` instead. It applies only
+    Both gates remove Git's ``GIT_INDEX_FILE`` from the environment the check runs in (so Git run in another
+    repository, a test suite's or a materialized snapshot's, is not pointed at it) and pass it as
+    ``DEVKIT_GIT_INDEX_FILE`` instead. It applies only
     while ``GIT_INDEX_FILE`` is unset and only to the repository whose Git directory holds that index, so
     ``git commit -a`` and ``git commit <paths>``, which commit a temporary index, are evaluated as committed.
     ``None`` otherwise: Git's own ``GIT_INDEX_FILE``, or the default index, applies.

@@ -70,6 +70,14 @@ class VerifyUnstagedNotice(GateError):
     what_to_report = "The verification ran on files that are not part of this commit; its result may not match it"
 
 
+class RulesWarningsNotice(GateError):
+    """``rules-check`` found warning-severity violations in the staged tree (``WARNING``); never raised."""
+
+    code = "GATE_RULES_WARNINGS"
+    level = Level.WARNING
+    fix = "Fix the listed violations when they are in scope; devkit rules check --staged lists them again"
+
+
 class GateTemplateNotice(GateError):
     """The commented settings template could not be written to ``devkit.config`` (a warning, never raised).
 

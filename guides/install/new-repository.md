@@ -72,12 +72,13 @@ playbooks do (playbooks bring the generated `devkit-playbook` skill), so do this
 ## 5. Continue
 
 1. Select bundles with [Bundle Recommendations](bundle-recommendations.md), using the user's answers to question 3.
-2. Optional: when the project has fast verification commands, offer to run them before every commit:
+2. Optional: the commit gate already checks the rules (`rules-check`, on by default). When the project has fast
+   verification commands, offer to run them before every commit too:
 
    ```toml
    # .devkit/config.toml
    [gates.settings.verify-commands]
-   commands = ["uv run devkit rules check --staged"]
+   commands = ["just lint-check"]
    ```
 
    Call tools through `uv run` or a recipe runner; Git hooks do not have `.venv/bin` on `PATH`.

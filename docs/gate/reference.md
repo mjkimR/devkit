@@ -54,6 +54,9 @@ Every gate error derives from `GateError` (`devkit.gate.errors`), which sets `ac
 | `GATE_RESULT_INVALID` | `GateResultError` | `MAINTENANCE` | `2` | a gate built a `FAILED` `GateResult`, gave a `GateResult` a notice that is not an `AdvisoryError`, or returned something other than a `GateResult` or `None`; the stage's other gates still run |
 | `GATE_PYTHON_INVALID` | `GatePythonError` | `INPUT_ERROR` | `2` | `install --python` names an interpreter that cannot import `devkit.gate` |
 | `GATE_INTERPRETER_UNAVAILABLE` | `GateInterpreterError` (printed by the `20-devkit` entry) | `MAINTENANCE`; `CONTINUE` (level `WARNING`) in `post-commit` | `2`; `0` in `post-commit` | at commit time the entry's interpreter is missing or cannot import `devkit.gate`, so the stage's gates did not run; `[DETAIL] python=<path>` and the reason (`not an executable file`, or the import error's first line) |
+| `GATE_RULES_FAILED` | `GateRefusedError` | `BLOCKED` | `1` | `rules-check` found unfixed error-severity violations in the staged tree; one `<RULE-id> <file>:<line>: <message>` detail per violation (and `  fix: <remediation>`), the first 20 listed, then `... and <n> more` |
+| `GATE_RULES_WARNINGS` | `RulesWarningsNotice` | `CONTINUE` (level `WARNING`) | `0` | returned, never raised: `rules-check` found warning-severity violations in the staged tree, listed as in `GATE_RULES_FAILED` |
+| `RULES_RUN_FAILED` | `devkit.rules.RulesRunError` | `MAINTENANCE`, or `AUTO` | `2` | `rules-check` could not complete the run (rules that cannot load, an invalid policy, a rule that raised); each problem is a detail; `AUTO` with their fix when every problem is `AUTO` with that one fix (`devkit sync` for missing managed rule files). `RULES_CONFIG_INVALID` and `RULES_SNAPSHOT_FAILED` pass through unchanged |
 | `GATE_VERIFY_FAILED` | `GateRefusedError` | `BLOCKED` | `1` | a `verify-commands` command exited nonzero; one `command: ... exit=... log=...` detail per failed command, then its summaries, failed tests or last lines and relayed `devkit` error blocks (`  > `) |
 | `GATE_VERIFY_NOT_RUN` | `VerifyNotRunError` | `MAINTENANCE`, or `AUTO` | `2` | a nested `devkit` command could not run (exit `2` with its own error block, such as `RULES_LOAD_FAILED`); same details; `AUTO` with the relayed fix when every relayed error is `AUTO` with that one fix (`devkit sync` for missing managed files) |
 | `GATE_VERIFY_UNSTAGED` | `VerifyUnstagedNotice` | `NOTE` (level `NOTICE`) | `0` | returned, never raised: `verify-commands` ran on a working tree with unstaged or untracked files |
@@ -74,6 +77,7 @@ Every gate error derives from `GateError` (`devkit.gate.errors`), which sets `ac
 
 | Gate | Stage | Default | Behavior |
 | --- | --- | --- | --- |
+| `rules-check` | `pre-commit` | on, skipped when nothing is staged | Evaluates the linter phase on the staged tree as `devkit rules check --staged` does, in the hook's process, and refuses on an unfixed error-severity violation (`GATE_RULES_FAILED`); warnings pass with `GATE_RULES_WARNINGS`; a run that cannot complete is `RULES_RUN_FAILED`. |
 | `verify-commands` | `pre-commit` | on, skipped while `commands` is empty | Runs `[gates.settings.verify-commands] commands` (shell lines, in order, from the work tree's top level, through `devkit.compact`) and refuses when any fails (`GATE_VERIFY_FAILED`, or `GATE_VERIFY_NOT_RUN` when a nested `devkit` command could not run); notes a working tree that differs from the commit (`GATE_VERIFY_UNSTAGED`). |
 | `message-nonempty` | `commit-msg` | on | Refuses a message that is blank (whitespace only) above any scissors line. |
 
@@ -94,7 +98,10 @@ It ships no gate: messages are not validated. Adapt the conventions (scope names
 
 ```toml
 [gates.settings.verify-commands]
-commands = ["just lint-check", "uv run devkit rules check --staged"]
+commands = ["just lint-check", "just test"]
+
+[gates.settings.rules-check]
+enabled = false   # only to keep rules out of commits; tune rules in [rules] instead
 
 [gates.settings.<gate-id>]
 enabled = true
@@ -108,7 +115,7 @@ packages/devkit/src/devkit/gate/
 ├── errors.py       # GateError and its subclasses, one class per code
 ├── engine/         # models (Stage, GateResult, GateContext), BaseGate, layered config, registry, runner
 ├── hooks/          # dispatchers, gate scripts, installation, local template and Git queries
-├── gates/          # built-in gates (verify-commands, message-nonempty)
+├── gates/          # built-in gates (rules-check, verify-commands, message-nonempty)
 ├── cli/            # devkit gate (a thin layer over the library)
 └── __main__.py     # python -m devkit.gate: the gate CLI alone, which the wrappers run
 ```

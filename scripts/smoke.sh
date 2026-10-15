@@ -131,9 +131,6 @@ with discover_bundles() as bundles:
     uv run devkit add authoring >/dev/null
     cat >> .devkit/config.toml <<'TOML'
 
-[gates.settings.verify-commands]
-commands = ["uv run devkit rules check --staged"]
-
 [worktree]
 pull_request = "auto"
 setup = "uv sync --quiet"

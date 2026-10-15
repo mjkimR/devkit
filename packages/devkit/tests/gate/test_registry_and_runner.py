@@ -29,7 +29,8 @@ from devkit.gate import (
 )
 from testsupport.gate import deploy_gate, gate_ctx, gate_source
 
-_DEFAULTS = GatesConfig()
+# These tests run outside a Git repository, where the built-in rules-check gate cannot take a snapshot.
+_DEFAULTS = GatesConfig({"rules-check": GateEntry(False)})
 
 
 def _receipt(root: Path) -> dict:
@@ -123,7 +124,7 @@ def test_project_registry_loads_gates_and_reports_problems(tmp_path: Path) -> No
     deploy_gate(tmp_path, "raise RuntimeError('boom')\n", ".devkit/managed/team/gates/broken/gate.py")
     deploy_gate(tmp_path, gate_source("message-nonempty", cls="Dup"), ".devkit/managed/team/gates/dup/gate.py")
     registry = project_registry(tmp_path)
-    assert [g.id for g in registry.get_all()] == ["team-block", "verify-commands", "message-nonempty"]
+    assert [g.id for g in registry.get_all()] == ["rules-check", "team-block", "verify-commands", "message-nonempty"]
     assert registry.sources["team-block"] == ".devkit/managed/team/gates/block/gate.py"
     messages = [e.message for e in registry.errors]
     assert any("failed to load gate package .devkit/managed/team/gates/broken: boom" in m for m in messages)
@@ -199,12 +200,13 @@ def test_run_stage_orders_gates_and_runs_past_failures(tmp_path: Path) -> None:
     assert calls == ["early", "late"]
     assert [(r.gate_id, r.outcome) for r in report.runs] == [
         ("early", Outcome.SKIPPED),
+        ("rules-check", Outcome.SKIPPED),
         ("team-block", Outcome.FAILED),
         ("verify-commands", Outcome.SKIPPED),
         ("late", Outcome.PASSED),
     ]
-    assert not report.ok and report.runs[1].error is not None and report.runs[1].error.code == "TEST_REFUSED"
-    assert report.problems == (report.runs[1].error,) and report.exit_code is ExitCode.FINDINGS
+    assert not report.ok and report.runs[2].error is not None and report.runs[2].error.code == "TEST_REFUSED"
+    assert report.problems == (report.runs[2].error,) and report.exit_code is ExitCode.FINDINGS
 
 
 def test_gate_result_cannot_report_failure() -> None:
@@ -363,17 +365,18 @@ def test_run_stage_applies_enabled_and_settings(tmp_path: Path) -> None:
     registry = project_registry(tmp_path)
     report = run_stage(gate_ctx(tmp_path), registry, _DEFAULTS)
     assert [(r.gate_id, r.outcome, r.note) for r in report.runs] == [
+        ("rules-check", Outcome.SKIPPED, "disabled"),
         ("team-block", Outcome.SKIPPED, "disabled"),
         ("verify-commands", Outcome.SKIPPED, "no commands configured"),
     ]
 
     config = GatesConfig({**_DEFAULTS.gates, "team-block": GateEntry(True, {"allow": True})})
     report = run_stage(gate_ctx(tmp_path), registry, config)
-    assert report.ok and report.runs[0].note == "allowed"
+    assert report.ok and report.runs[1].note == "allowed"
 
     config = GatesConfig({**_DEFAULTS.gates, "team-block": GateEntry(True, {"allow": "yes"})})
     report = run_stage(gate_ctx(tmp_path), registry, config)
-    assert not report.ok and report.runs[0].outcome is Outcome.SKIPPED and report.runs[0].note == "invalid settings"
+    assert not report.ok and report.runs[1].outcome is Outcome.SKIPPED and report.runs[1].note == "invalid settings"
     assert any("expected bool" in e.message for e in report.errors)
 
 
@@ -381,6 +384,7 @@ def test_invalid_settings_of_a_disabled_gate_or_another_stage_are_reported(tmp_p
     registry = default_gate_registry()
     config = GatesConfig(
         {
+            **_DEFAULTS.gates,
             "verify-commands": GateEntry(False, {"bogus": 1}),
             "message-nonempty": GateEntry(True, {"bogus": 1}),
         }
@@ -390,7 +394,7 @@ def test_invalid_settings_of_a_disabled_gate_or_another_stage_are_reported(tmp_p
     assert "unknown settings ['bogus']" in validation.errors[0].message  # verify-commands, disabled
     assert "gate has no settings" in validation.errors[1].message  # message-nonempty, another stage
     report = run_stage(gate_ctx(tmp_path), registry, config)
-    assert not report.ok and [r.note for r in report.runs] == ["disabled"]
+    assert not report.ok and [r.note for r in report.runs] == ["disabled", "disabled"]
 
 
 def test_configured_gate_that_is_not_installed_fails_the_stage(tmp_path: Path) -> None:

@@ -79,7 +79,7 @@ Inside each module, files are grouped by concern; each module's documentation ha
    - Agents load bundle guidance on demand with `devkit get-context <bundle>`, and occasional procedures with `devkit playbook search` after an explicit `devkit-playbook` invocation.
    - `devkit rules check` loads the rule assets recorded in the receipt in addition to the built-in rules; `devkit rules check --staged` and `--ci` evaluate exact Git trees.
    - `devkit workflow` discovers workflow definitions, workflow checks and subagent roles from the receipt; the generated `devkit-workflow` entry skill routes agents to `devkit workflow next`.
-   - `devkit gate install` writes hook wrappers that run `devkit.gate`; gates come from the package (`verify-commands`, `message-nonempty`) and from `kind = "gate"` assets in the receipt.
+   - `devkit gate install` writes hook wrappers that run `devkit.gate`; gates come from the package (`rules-check`, `verify-commands`, `message-nonempty`) and from `kind = "gate"` assets in the receipt.
 
 ## 4. Errors, Exit Codes and Platforms
 

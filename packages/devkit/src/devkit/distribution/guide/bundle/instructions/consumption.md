@@ -94,7 +94,9 @@ Configure a rule's severity, phase or settings in `[rules]` of
 same way through `devkit gate` and `[gates]`; per-clone gate settings go in
 `.git/devkit.config`, which lists every installed gate as a commented table
 (uncomment a table's header and only the keys you change: an uncommented key replaces
-its `.devkit/config.toml` value; devkit only appends tables for new gates). Snapshot gates (`--staged`,
+its `.devkit/config.toml` value; devkit only appends tables for new gates). The
+built-in `rules-check` gate runs the `--staged` evaluation on every commit; turn it
+off with `enabled = false` in `[gates.settings.rules-check]`. Snapshot gates (`--staged`,
 `--ci`) evaluate the Git tree and trust the committed receipt: a managed rule
 that is missing or differs from the receipt's hash fails the gate, and its
 `[FIX]` says to run `devkit sync` and commit the receipt.

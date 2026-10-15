@@ -88,7 +88,7 @@ The **bundle context** is the whole `get-context <bundle>` response: the constit
 - **Role**: Procedures for occasional tasks, retrieved for reuse and extended through experience. Explicit, recurring execution flows belong to workflows; frequency alone does not turn a policy or judgment criterion into a playbook.
 - **Consumption**: Only through two entry conditions, never through implicit scanning during ordinary tasks (which adds latency, prompt bloat and hallucinated runbooks):
   1. **Explicit user invocation** of the shared `devkit-playbook` skill (`"use devkit-playbook to recover the replica"`).
-  2. **Rule-triggered remediation**: a `governance-rule`, evaluated out-of-band by `devkit.rules` (`just rules-check`, CI, the `verify-commands` commit gate) at zero token cost, reports a violation whose `Violation.remediation` points to the playbook (a search query or path) instead of embedding the procedure in the rule.
+  2. **Rule-triggered remediation**: a `governance-rule`, evaluated out-of-band by `devkit.rules` (`just rules-check`, CI, the `rules-check` commit gate) at zero token cost, reports a violation whose `Violation.remediation` points to the playbook (a search query or path) instead of embedding the procedure in the rule.
 
   Individual playbooks are not exposed in the default context, `get-context` or the native skill catalog, and ordinary prompt instructions do not bypass these entry conditions.
 - **Format Requirements**: English YAML frontmatter with required `name` and `description`, plus an optional `aliases` string array. The body contains explicit `Prerequisites`, numbered `Step N` actions, and unambiguous completion conditions.
@@ -128,7 +128,7 @@ An explicit invocation applies to the requested task, not to all future tasks in
 
 #### 7. `governance-rule`
 - **Role**: Invariants that can and must be 100% mechanically verified via parsing, regex, or static analysis.
-- **Consumption**: Evaluated out-of-band by `devkit.rules` during `just rules-check`, `devkit rules check`, `check --staged` from the `verify-commands` commit gate, or CI (`check --ci`). `devkit sync` records every deployed rule file in the installation receipt and `devkit rules` loads each asset from there as one plugin package; a consumer tunes a rule's phase, severity and typed settings in `[rules]` of `.devkit/config.toml`, never by editing the managed files.
+- **Consumption**: Evaluated out-of-band by `devkit.rules` during `just rules-check`, `devkit rules check`, the `rules-check` commit gate, or CI (`check --ci`). `devkit sync` records every deployed rule file in the installation receipt and `devkit rules` loads each asset from there as one plugin package; a consumer tunes a rule's phase, severity and typed settings in `[rules]` of `.devkit/config.toml`, never by editing the managed files.
 - **Format Requirements**: A plugin package directory: the rule module, optional `__init__.py`, helper modules imported relatively, the guide, resources and the rule's tests in `tests/` ([Rule Authoring](../rules/rule-authoring.md#3-implementing-a-custom-rule-example); run with `devkit rules test`, [Testing a Rule](../rules/rule-authoring.md#6-testing-a-rule)).
 - **Token Budget**: Zero LLM context unless violations are reported. A rule may ship a Markdown guide that `devkit rules explain` prints on demand.
 - **Target Location**: `.devkit/managed/<bundle>/<source path>` (for example `rules/<rule>/`).
