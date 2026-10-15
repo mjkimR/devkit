@@ -63,6 +63,7 @@ from devkit.distribution.installation.config import (
     effective_selection,
     merge_selection,
     prepare_config_update,
+    preview_config_template,
     read_config,
     refresh_config_template,
     resolve_selection,
@@ -507,15 +508,23 @@ def config() -> None:
 
 @config.command(name="template")
 @WORKSPACE
+@click.option(
+    "--print",
+    "print_only",
+    is_flag=True,
+    help="Write nothing; add the whole file the template would produce to the output as text.",
+)
 @_json_command
-def config_template(workspace_root: str | None) -> None:
+def config_template(workspace_root: str | None, print_only: bool) -> None:
     """Add the commented template to .devkit/config.toml: every key it lacks, at its default.
 
     devkit's top-level keys go after the file's last top-level key, the [tool.<name>] tables of installed tools
     (the devkit.config_template entry points) at the end. Existing lines are never changed. Prints path, state
-    (created, updated or unchanged) and added; a tool whose template fails is a warning under notices.
+    (created, updated or unchanged) and added; a tool whose template fails is a warning under notices. With
+    --print nothing is written and text holds the resulting file.
     """
-    result = refresh_config_template(resolve_root(workspace_root))
+    root = resolve_root(workspace_root)
+    result = preview_config_template(root) if print_only else refresh_config_template(root)
     echo_json(result.to_dict())
     echo_notices(result.notices)
     exit_on_warnings(result.notices)

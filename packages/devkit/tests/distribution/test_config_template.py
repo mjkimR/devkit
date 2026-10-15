@@ -18,6 +18,7 @@ from devkit.distribution.installation.config import (
     TEMPLATE_HEADER,
     ProjectConfig,
     prepare_config_update,
+    preview_config_template,
     read_config,
     refresh_config_template,
     update_config,
@@ -301,3 +302,39 @@ def test_cli_prints_the_result_as_json(project: Path, tools: list[SimpleNamespac
     _write(project, "schema = 2\n")
     refused = runner.invoke(cli, ["config", "template", "--workspace-root", str(project)])
     assert refused.exit_code == 2 and json.loads(refused.stdout)["error"]["code"] == "CONFIG_INVALID"
+
+
+def test_preview_writes_nothing_and_shows_the_file_a_write_would_produce(
+    tmp_path: Path, tools: list[SimpleNamespace]
+) -> None:
+    preview = preview_config_template(tmp_path)
+    assert not (tmp_path / ".devkit").exists()  # no file, directory or lock file
+    assert (preview.state, preview.added) == ("created", DEVKIT_PARTS)
+    written = refresh_config_template(tmp_path)
+    assert (written.state, written.added) == (preview.state, preview.added)
+    assert preview.text == _text(tmp_path)
+    again = preview_config_template(tmp_path)
+    assert (again.state, again.added, again.text) == ("unchanged", [], _text(tmp_path))
+
+
+def test_preview_refuses_an_invalid_config(project: Path, tools: list[SimpleNamespace]) -> None:
+    _write(project, "schema = 2\n")
+    with pytest.raises(Exception) as raised:
+        preview_config_template(project)
+    assert getattr(raised.value, "code", "") == "CONFIG_INVALID"
+    assert _text(project) == "schema = 2\n"
+
+
+def test_cli_print_adds_the_text_and_leaves_the_file(project: Path, tools: list[SimpleNamespace]) -> None:
+    before = 'schema = 1\n[presets]\nteam = "all"\n'
+    _write(project, before)
+    result = CliRunner().invoke(cli, ["config", "template", "--print", "--workspace-root", str(project)])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert list(payload) == ["path", "state", "added", "text", "notices"]
+    assert payload["state"] == "updated" and payload["text"].startswith("schema = 1\n")
+    assert '# override_drift = "warn"' in payload["text"]
+    assert _text(project) == before
+    assert not (project / ".devkit/transient").exists()
+    plain = json.loads(CliRunner().invoke(cli, ["config", "template", "--workspace-root", str(project)]).stdout)
+    assert "text" not in plain and _text(project) == payload["text"]

@@ -544,19 +544,45 @@ class TemplateState(StrEnum):
 
 @dataclass(frozen=True)
 class ConfigTemplateResult:
-    """What ``refresh_config_template`` did: ``added`` names the keys and tables it wrote, in file order."""
+    """What ``refresh_config_template`` did, or what ``preview_config_template`` would do.
+
+    ``added`` names the keys and tables written, in file order; ``text`` is the whole file a preview would write
+    (``None`` for a write).
+    """
 
     state: TemplateState
     added: list[str] = field(default_factory=list)
     notices: list[AdvisoryError] = field(default_factory=list)
+    text: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {
-            "path": CONFIG_PATH,
-            "state": self.state.value,
-            "added": list(self.added),
-            "notices": [notice.to_dict() for notice in self.notices],
-        }
+        result: dict[str, Any] = {"path": CONFIG_PATH, "state": self.state.value, "added": list(self.added)}
+        if self.text is not None:
+            result["text"] = self.text
+        result["notices"] = [notice.to_dict() for notice in self.notices]
+        return result
+
+
+def _template(root: Path) -> tuple[str | None, str, list[str], list[AdvisoryError]]:
+    """The file before (``None`` when missing), the file with the template added, the added parts and notices."""
+    read_config(root)
+    path = _config_path(root)
+    before = path.read_text("utf-8") if path.exists() else None
+    tools, notices = load_tool_templates()
+    text, added = add_template(
+        before if before is not None else f"schema = {SCHEMA}\n",
+        TEMPLATE_HEADER,
+        TEMPLATE_SECTIONS,
+        tools,
+        devkit_tables=TEMPLATE_TABLES,
+    )
+    return before, text, added, notices
+
+
+def _template_state(before: str | None, text: str) -> TemplateState:
+    if text == before:
+        return TemplateState.UNCHANGED
+    return TemplateState.CREATED if before is None else TemplateState.UPDATED
 
 
 def refresh_config_template(root: Path) -> ConfigTemplateResult:
@@ -568,19 +594,21 @@ def refresh_config_template(root: Path) -> ConfigTemplateResult:
     """
     exists = (root / CONFIG_PATH).parent.is_dir()
     with project_lock(root) if exists else nullcontext():
-        read_config(root)
-        path = _config_path(root)
-        before = path.read_text("utf-8") if path.exists() else None
-        tools, notices = load_tool_templates()
-        text, added = add_template(
-            before if before is not None else f"schema = {SCHEMA}\n",
-            TEMPLATE_HEADER,
-            TEMPLATE_SECTIONS,
-            tools,
-            devkit_tables=TEMPLATE_TABLES,
-        )
-        if text == before:
-            return ConfigTemplateResult(TemplateState.UNCHANGED, notices=notices)
+        before, text, added, notices = _template(root)
+        state = _template_state(before, text)
+        if state is TemplateState.UNCHANGED:
+            return ConfigTemplateResult(state, notices=notices)
         _check_writable(root)
         _write(root, text)
-    return ConfigTemplateResult(TemplateState.CREATED if before is None else TemplateState.UPDATED, added, notices)
+    return ConfigTemplateResult(state, added, notices)
+
+
+def preview_config_template(root: Path) -> ConfigTemplateResult:
+    """What ``refresh_config_template`` would write, without writing: ``text`` is the whole resulting file.
+
+    The file is validated the same way (an invalid one is a ``ConfigError``). Nothing is created, not even
+    ``.devkit/`` or a lock file; ``state`` and ``added`` are those the write would report.
+    """
+    before, text, added, notices = _template(root)
+    state = _template_state(before, text)
+    return ConfigTemplateResult(state, added if state is not TemplateState.UNCHANGED else [], notices, text)

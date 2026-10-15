@@ -203,6 +203,9 @@ spec = "core"
 - **Failures**: an extension that fails to load, raises, is not named like a `[tool.<name>]` table, or returns
   anything but valid tables is left out with a `CONFIG_TEMPLATE_EXTENSION_FAILED` warning, and the command
   succeeds; when a selection command created the file, the warning joins the sync result's `notices`.
+- **Preview**: `devkit config template --print` writes nothing (no file, no `.devkit/`, no lock file) and adds
+  `text`, the whole file a write would produce, to the output; `state` and `added` are those the write would report,
+  and an invalid file is `CONFIG_INVALID` as for a write.
 - `devkit sync` never adds to the template; after installing a tool, `devkit config template` adds its tables.
 
 ### Resolution Order

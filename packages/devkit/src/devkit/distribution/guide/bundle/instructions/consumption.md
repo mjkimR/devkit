@@ -127,7 +127,8 @@ keys, common workflow and worktree settings, and registered `[tool.<name>]`
 tables of installed tools. Values show defaults, or marked examples when unset
 by default. Read those comments to learn what a setting does and what
 applies while it is unset; uncomment a key to change it. The command only adds
-what the file lacks and never changes a line.
+what the file lacks and never changes a line; `--print` shows the resulting file
+under `text` without writing it.
 
 `devkit sync --locked` rebuilds only what the committed receipt records
 (Git-ignored managed copies) and never writes the receipt, the `AGENTS.md`
