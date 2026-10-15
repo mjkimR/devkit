@@ -11,7 +11,7 @@ Personal developer tools monorepo.
 - `guides/` holds the agent-facing installation guides a consumer's agent follows from a GitHub link; keep their commands, codes and bundle recommendations in step with `docs/` and the packages.
 - `docs/<area>/` is canonical for each module's semantics; `docs/<area>/reference.md` and package READMEs stay quick references that link there, and the bundled guide instructions are consumer-facing mirrors kept in step.
 - Write all documentation, architecture specifications, and guide materials in English.
-- Do not commit `.env`, log secrets/PII, or commit/push without explicit instructions.
+- Do not commit `.env` or log secrets/PII.
 
 ## Agent-First Design
 
