@@ -635,7 +635,7 @@ def finish(
     slug: str,
     *,
     merge: bool = False,
-    pull_request: bool = False,
+    pull_request: str = "auto",
     delete_branch: bool = True,
     before_remove: Callable[[FinishResult], None] | None = None,
 ) -> FinishResult:
@@ -663,9 +663,9 @@ def finish(
         raise RunFromBaseError(
             f"{position.root} is the worktree finish would remove", target_files=[str(position.base)]
         )
-    if merge and pull_request:
+    if merge and pull_request == "required":
         raise PullRequestPolicyError(
-            "[worktree] pull_request = true integrates through a pull request; --merge would merge locally"
+            '[worktree] pull_request = "required" integrates through a pull request; --merge would merge locally'
         )
     base, ref = position.base, f"refs/heads/{slug}"
     entry = _find(position, slug)

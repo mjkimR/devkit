@@ -116,7 +116,7 @@ RULE-file-length = "error"
 default = "direct-delivery"
 
 [worktree]                            # owned by devkit.worktree
-pull_request = true                   # integrate through pull requests (default false)
+pull_request = "required"             # integrate through pull requests only (default "auto")
 
 [gates.settings.message-nonempty]     # owned by devkit.gate
 enabled = true

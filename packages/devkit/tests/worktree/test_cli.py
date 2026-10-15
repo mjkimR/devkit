@@ -59,7 +59,7 @@ def test_start_runs_the_configured_setup_and_warns_when_it_fails(repo: Path) -> 
 
 
 def test_finish_reports_progress_before_a_refusal_and_resumes(repo: Path) -> None:
-    configure(repo, "pull_request = false\n")
+    configure(repo, 'pull_request = "auto"\n')
     git(repo, "add", ".")
     git(repo, "commit", "-q", "-m", "config")
     assert invoke("start", "demo", "-w", str(repo)).exit_code == 0
@@ -90,7 +90,7 @@ def test_finish_reports_progress_before_a_refusal_and_resumes(repo: Path) -> Non
 
 
 def test_a_refused_finish_in_json_carries_the_partial_result_and_the_error(repo: Path) -> None:
-    configure(repo, "pull_request = false\n")
+    configure(repo, 'pull_request = "auto"\n')
     git(repo, "add", ".")
     git(repo, "commit", "-q", "-m", "config")
     invoke("start", "demo", "-w", str(repo))
@@ -106,7 +106,7 @@ def test_a_refused_finish_in_json_carries_the_partial_result_and_the_error(repo:
 def test_a_git_failure_after_the_merge_reports_progress_and_the_push_warning_then_resumes(
     repo: Path, tmp_path: Path, refuse_deleting: Callable[[Path, str], Path]
 ) -> None:
-    configure(repo, "pull_request = false\n")
+    configure(repo, 'pull_request = "auto"\n')
     git(repo, "add", ".")
     git(repo, "commit", "-q", "-m", "config")
     git(repo, "remote", "add", "origin", str(tmp_path / "gone.git"))  # unreachable: the push fails
@@ -131,7 +131,7 @@ def test_a_git_failure_after_the_merge_reports_progress_and_the_push_warning_the
 
 
 def test_merge_is_refused_under_the_pull_request_policy(repo: Path) -> None:
-    configure(repo, "pull_request = true\n")
+    configure(repo, 'pull_request = "required"\n')
     invoke("start", "demo", "-w", str(repo))
     refused = invoke("finish", "demo", "--merge", "-w", str(repo), "--format", "json")
     assert refused.exit_code == 2 and json.loads(refused.stdout)["error"]["code"] == "WORKTREE_PR_POLICY"
@@ -167,12 +167,14 @@ def test_outside_a_repository_every_command_fails_cleanly(tmp_path: Path) -> Non
 
 
 def test_worktree_config_defaults_and_validation(repo: Path) -> None:
-    assert read_worktree_config(repo) == WorktreeConfig(pull_request=False, delete_branch=True, setup=None)
-    configure(repo, 'pull_request = true\ndelete_branch = false\nsetup = "uv sync"\n')
-    assert read_worktree_config(repo) == WorktreeConfig(True, False, "uv sync")
+    assert read_worktree_config(repo) == WorktreeConfig(pull_request="auto", delete_branch=True, setup=None)
+    configure(repo, 'pull_request = "required"\ndelete_branch = false\nsetup = "uv sync"\n')
+    assert read_worktree_config(repo) == WorktreeConfig("required", False, "uv sync")
     for table, message in [
         ("bogus = 1\n", "unknown fields"),
-        ('pull_request = "no"\n', "pull_request must be true or false"),
+        ('pull_request = "no"\n', 'pull_request must be "auto" or "required"'),
+        ("pull_request = true\n", 'pull_request must be "auto" or "required"'),
+        ('delete_branch = "no"\n', "delete_branch must be true or false"),
         ('setup = " "\n', "setup must be a non-empty shell command"),
         ("setup = 3\n", "setup must be a non-empty shell command"),
     ]:

@@ -152,7 +152,10 @@ TEMPLATE_TABLES = (
     TemplateTable(
         (
             TemplateKey(
-                "pull_request", False, "integrate through a pull request; true refuses worktree finish --merge"
+                "pull_request",
+                "auto",
+                "auto: a pull request or worktree finish --merge, as the task needs; required refuses --merge",
+                kind='"auto" | "required"',
             ),
             TemplateKey("delete_branch", True, "worktree finish deletes the merged branch with git branch -d"),
             TemplateKey(

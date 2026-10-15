@@ -8,7 +8,7 @@ One Git worktree per task, integrated and removed by one command. Semantics: [Ta
 uv run devkit worktree start fix-login          # in the base checkout: create ../<repo>-wt-fix-login on branch fix-login
 cd ../<repo>-wt-fix-login                        # work and commit there
 uv run devkit worktree finish fix-login          # in the base, after the pull request merged
-uv run devkit worktree finish fix-login --merge  # or merge locally (refused under [worktree] pull_request = true)
+uv run devkit worktree finish fix-login --merge  # or merge locally (refused under [worktree] pull_request = "required")
 uv run devkit worktree status                    # leftovers: unmerged or dirty worktrees, stray branches
 ```
 
@@ -30,7 +30,7 @@ Every command takes `-w/--workspace-root` (any directory in the checkout; defaul
 
 ## Configuration
 
-`[worktree]` in `.devkit/config.toml`: `pull_request` (default `false`), `delete_branch` (default `true`), `setup` (a shell command, default none). See [Overview, section 5](overview.md#5-configuration).
+`[worktree]` in `.devkit/config.toml`: `pull_request` (`"auto"` or `"required"`, default `"auto"`), `delete_branch` (default `true`), `setup` (a shell command, default none). See [Overview, section 5](overview.md#5-configuration).
 
 ## Error codes
 
@@ -40,7 +40,7 @@ Every command takes `-w/--workspace-root` (any directory in the checkout; defaul
 | --- | --- | --- | --- |
 | `WORKTREE_NESTED` | `ERROR` (`BLOCKED`) | `NestedError` | `start` inside a linked worktree. |
 | `WORKTREE_RUN_FROM_BASE` | `ERROR` (`BLOCKED`) | `RunFromBaseError` | `finish` inside a linked worktree. |
-| `WORKTREE_PR_POLICY` | `ERROR` (`BLOCKED`) | `PullRequestPolicyError` | `finish --merge` under `pull_request = true`. |
+| `WORKTREE_PR_POLICY` | `ERROR` (`BLOCKED`) | `PullRequestPolicyError` | `finish --merge` under `pull_request = "required"`. |
 | `WORKTREE_UNSUPPORTED_LAYOUT` | `ERROR` (`BLOCKED`) | `UnsupportedLayoutError` | A Git directory outside its work tree. |
 | `WORKTREE_CONFLICT` | `ERROR` (`INTERACTION`) | `ConflictError` | `start`: the slug's path is a worktree on another branch, has uncommitted changes or a missing directory (`[FIX]` `git worktree prune`), or exists and is not a worktree (also when another process created it while `start` ran; it is left alone). `finish`: the worktree is detached or on another branch, or the slug's branch is the base checkout's. |
 | `WORKTREE_BRANCH_EXISTS` | `ERROR` (`INTERACTION`) | `BranchExistsError` | The slug's branch exists or is checked out elsewhere, also when another process created it while `start` ran (nothing is removed). |

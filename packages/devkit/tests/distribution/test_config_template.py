@@ -94,7 +94,7 @@ def test_creates_the_file_with_devkit_keys_at_their_defaults(tmp_path: Path, too
             "approvals": {"intent": "ask", "direction": "ask", "integration": "ask"},
             "stages": {"collect-feedback": "on"},
         },
-        "worktree": {"pull_request": False, "delete_branch": True, "setup": "uv sync"},
+        "worktree": {"pull_request": "auto", "delete_branch": True, "setup": "uv sync"},
     }
     assert read_config(uncommented) == ProjectConfig()  # every commented value is the default
     assert not (tmp_path / ".devkit/transient").exists()  # no lock file in a project without .devkit/

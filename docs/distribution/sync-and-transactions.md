@@ -159,9 +159,9 @@ spec = "core"
 
 ## Git worktree behavior.
 # [worktree]
-#   pull_request = false  # boolean; true refuses worktree finish --merge
-#   delete_branch = true  # boolean; delete the merged branch with git branch -d
-#   setup = "uv sync"     # example; string; unset: no setup command
+#   pull_request = "auto"  # "auto" | "required"; required refuses worktree finish --merge
+#   delete_branch = true   # boolean; delete the merged branch with git branch -d
+#   setup = "uv sync"      # example; string; unset: no setup command
 
 ## [tool.spec]: the settings of devkit-spec; devkit passes [tool.*] tables through unread.
 # [tool.spec]
@@ -185,7 +185,7 @@ spec = "core"
 - **Common tables**: `[workflow.approvals]`, `[workflow.stages]` and `[worktree]` follow the project's tables,
   before tool tables. Approval names and stage ids come from workflow definitions: the template shows delivery
   gate names (`intent`, `direction`, `integration`) at `ask`, and `collect-feedback` at `on`. These are representative
-  names, not a fixed schema. Worktree defaults are `pull_request = false`, `delete_branch = true`, and no setup
+  names, not a fixed schema. Worktree defaults are `pull_request = "auto"`, `delete_branch = true`, and no setup
   command; `setup = "uv sync"` is marked as an example. See [Workflow](../workflow/overview.md#3-approval-gates)
   and [Worktree](../worktree/overview.md#5-configuration) for their behavior.
 - **Tool tables**: a package registers a callable under the `devkit.config_template` entry-point group, named after

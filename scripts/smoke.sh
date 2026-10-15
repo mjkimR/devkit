@@ -135,7 +135,7 @@ with discover_bundles() as bundles:
 commands = ["uv run devkit rules check --staged"]
 
 [worktree]
-pull_request = false
+pull_request = "auto"
 setup = "uv sync --quiet"
 TOML
     git add -A

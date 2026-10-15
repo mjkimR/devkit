@@ -51,7 +51,7 @@ class RunFromBaseError(_Guardrail):
 
 
 class PullRequestPolicyError(_Guardrail):
-    """``finish --merge`` under ``[worktree] pull_request = true`` (``BLOCKED``): integration goes through a PR."""
+    """``finish --merge`` under ``[worktree] pull_request = "required"`` (``BLOCKED``): integration is a PR."""
 
     code = "WORKTREE_PR_POLICY"
     fix = "Merge the pull request, then run finish without --merge"
@@ -152,8 +152,9 @@ class UnmergedError(_Interaction):
 
     code = "WORKTREE_UNMERGED"
     fix = (
-        "Merge the branch first (its pull request, or `finish --merge` without the PR policy); a squash or rebase "
-        "merge leaves the branch unmerged, so remove that worktree and branch only with the user's authorization"
+        "Merge the branch first (its pull request, or `finish --merge` unless pull requests are required); a "
+        "squash or rebase merge leaves the branch unmerged, so remove that worktree and branch only with the user's "
+        "authorization"
     )
 
 
