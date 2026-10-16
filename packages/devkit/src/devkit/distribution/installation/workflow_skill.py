@@ -62,7 +62,7 @@ never derive it from files yourself.
    gate, whatever its policy. A `[REQUEST: id=question:... answer=envelope]`
    line is a question: ask it, and record the user's answer with
    `uv run devkit workflow envelope new --unit <dir> --kind answer
-   --answers-to <question-NN.yaml> --answers-file <file>`, one rewritten
+   --answers-to <worker-NN.yaml> --answers-file <file>`, one rewritten
    `decision` per question, never `workflow answer`.
 5. Stop on errors. An `[ERROR] (CODE)` block on stderr carries an `[ACTION]`
    directive; follow it. `WORKFLOW_DRIFT` means the definition changed under

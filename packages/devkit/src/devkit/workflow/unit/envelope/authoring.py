@@ -26,7 +26,6 @@ from devkit.workflow.unit.envelope.model import (
     ANSWER_KEYS,
     EFFORTS,
     FINDING_KEYS,
-    QUESTION,
     QUESTION_KEYS,
     RESOLUTION,
     STATUSES,
@@ -78,14 +77,13 @@ def skeleton(kind: str, stage: str, created_at: str, workflow: str = "", segment
         lines.append("review: review-NN.yaml        # the review round this reverify closes")
     if kind in {"review", "reverify", "final-report"}:
         lines.append('diff_scope: { base: "", head: "" }')
-    if kind == QUESTION:
-        lines.append("questions: []                 # id, title, prompt, context, options, allow_note")
     if kind == ANSWER:
-        lines.append("answers_to: question-NN.yaml  # the question envelope this answers")
+        lines.append("answers_to: worker-NN.yaml    # the worker envelope whose questions this answers")
         lines.append("answers: []                   # question, choice, decision, constraints")
     if kind == RESOLUTION:
         lines.append("resolves: worker-NN.yaml      # the envelope whose problem this resolves")
     if kind == WORKER:
+        lines.append("# questions: []   # needs_input: id, title, prompt, context, options, allow_note")
         lines.append(
             '# problem: { cause: "", attempts: [], recovery: "" }   # needs_input/failed: an execution problem'
         )
@@ -341,7 +339,7 @@ def compose_envelope(
     them); ``workflow`` and ``segment`` scope the new envelope to it.
     ``loaded`` are all the unit's envelopes, whatever their segment, which
     ``answers_to`` and ``resolves`` must name. The status defaults to
-    ``needs_input`` for a question, ``failed`` with a problem, else
+    ``needs_input`` with questions, ``failed`` with only a problem, else
     ``completed``. The result satisfies the envelope contract of its kind.
 
     Raises an ``AuthoringError`` subclass: ``EnvelopeStatusError``,
@@ -349,7 +347,7 @@ def compose_envelope(
     ``EnvelopeItemsError`` or ``EnvelopeReferenceError``.
     """
     if status is None:
-        status = "needs_input" if kind == QUESTION else "failed" if problem else STATUSES[0]
+        status = "needs_input" if questions_yaml is not None else "failed" if problem else STATUSES[0]
     if status not in STATUSES:
         raise EnvelopeStatusError(
             f"--status {status!r} not in {'|'.join(STATUSES)}",
@@ -413,21 +411,19 @@ def _check_contract(draft: Envelope, loaded: Envelopes) -> None:
     if problem is not None:
         raise EnvelopeReferenceError(
             problem,
-            fix="Name an envelope `devkit workflow envelope check` lists: --answers-to a question-NN.yaml with those"
-            " questions and options, --resolves an envelope with a problem",
+            fix="Name an envelope `devkit workflow envelope check` lists: --answers-to a worker-NN.yaml with those"
+            " questions and options, --resolves a worker-NN.yaml with a problem",
         )
 
 
 def _contract_fix(kind: str) -> str:
-    if kind == QUESTION:
-        return "Pass --questions-file with at least one question; a question envelope has status needs_input"
     if kind == ANSWER:
-        return "Pass --answers-to question-NN.yaml and --answers-file; an answer envelope has status completed"
+        return "Pass --answers-to worker-NN.yaml and --answers-file; an answer envelope has status completed"
     if kind == RESOLUTION:
-        return "Pass --resolves <kind>-NN.yaml and --summary; a resolution has status completed"
+        return "Pass --resolves worker-NN.yaml and --summary; a resolution has status completed"
     return (
-        "Drop the fields this kind does not carry; only a worker envelope carries a problem, with --status needs_input"
-        " or failed, and a failed worker envelope needs --problem and --recovery"
+        "Drop the fields this kind does not carry; only a worker envelope carries questions (status needs_input) and"
+        " a problem (needs_input or failed), and a failed worker envelope needs --problem and --recovery"
     )
 
 

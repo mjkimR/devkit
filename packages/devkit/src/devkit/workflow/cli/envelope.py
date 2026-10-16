@@ -60,13 +60,13 @@ def _read_items_file(flag: str, path: str | None, what: str) -> str | None:
     "--resolve", "resolve", multiple=True, help="Mark a carried finding resolved: its number, or all (repeatable)"
 )
 @click.option("--waive", "waive", multiple=True, help="Mark a carried finding waived: <number>=<reason> (repeatable)")
-@click.option("--questions-file", default=None, help="question: YAML list of questions (path, or - for stdin)")
-@click.option("--answers-to", default="", help="answer: the question-NN.yaml it answers")
+@click.option("--questions-file", default=None, help="worker: YAML list of questions (path, or - for stdin)")
+@click.option("--answers-to", default="", help="answer: the worker-NN.yaml whose questions it answers")
 @click.option("--answers-file", default=None, help="answer: YAML list of rewritten answers (path, or - for stdin)")
 @click.option("--problem", default="", help="An execution problem: its cause (with --recovery; needs_input or failed)")
 @click.option("--tried", "attempts", multiple=True, help="What was tried against the problem (repeatable)")
 @click.option("--recovery", default="", help="The recommended recovery for the problem")
-@click.option("--resolves", default="", help="resolution: the <kind>-NN.yaml whose problem it resolves")
+@click.option("--resolves", default="", help="resolution: the worker-NN.yaml whose problem it resolves")
 @click.option("--effort", default="", help="activity_effort the run applied: low | medium | high")
 @FORMAT_OPTION
 @boundary
@@ -112,12 +112,12 @@ def envelope_new_cmd(
     created_at is stamped after the segment's latest return, so a return never
     voids an envelope written after it.
 
-    question, answer, worker and resolution envelopes carry their own fields:
-    --questions-file (question), --answers-to and --answers-file (answer),
-    --problem/--tried/--recovery (an execution problem, worker), --resolves
-    (resolution), and --effort on any kind. The written envelope satisfies
-    the contract of its kind, and answers_to/resolves must name one of the
-    unit's envelopes.
+    worker, answer and resolution envelopes carry their own fields: a worker
+    envelope (one per run) --questions-file for what it asks a person and
+    --problem/--tried/--recovery for an execution problem; an answer
+    --answers-to and --answers-file; a resolution --resolves. --effort goes
+    on any kind. The written envelope satisfies the contract of its kind,
+    and answers_to/resolves must name one of the unit's worker envelopes.
     """
     ws = workspace(workspace_root)
     scope = ws.unit_scope(unit, anchor=anchor)

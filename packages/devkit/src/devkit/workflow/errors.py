@@ -422,7 +422,7 @@ class EnvelopeItemsError(AuthoringError):
 
 
 class EnvelopeReferenceError(AuthoringError):
-    """``--answers-to`` or ``--resolves`` names no fitting envelope of the unit: no question envelope with the
-    answered questions and options, or no envelope with a problem."""
+    """``--answers-to`` or ``--resolves`` names no fitting envelope of the unit: no worker envelope with the
+    answered questions and options, or no worker envelope with a problem."""
 
     code = "ENVELOPE_REFERENCE_INVALID"

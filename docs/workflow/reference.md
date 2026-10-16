@@ -65,8 +65,8 @@ just workflow list --exclude-status completed         # active units; --status <
 just workflow envelope new --unit <dir> --kind review # needs_input skeleton to fill in
 just workflow envelope new --unit <dir> --kind review --summary "..." --findings-file findings.yaml --check tests="PASS 3/3"
 just workflow envelope new --unit <dir> --kind reverify --from latest --resolve 1 --waive "2=accepted cost"
-just workflow envelope new --unit <dir> --kind question --summary "..." --questions-file questions.yaml
-just workflow envelope new --unit <dir> --kind answer --summary "..." --answers-to question-01.yaml --answers-file answers.yaml
+just workflow envelope new --unit <dir> --kind worker --summary "..." --questions-file questions.yaml
+just workflow envelope new --unit <dir> --kind answer --summary "..." --answers-to worker-01.yaml --answers-file answers.yaml
 just workflow envelope new --unit <dir> --kind worker --summary "..." --problem "<cause>" --tried "<attempt>" --recovery "<step>"
 just workflow envelope new --unit <dir> --kind resolution --summary "<what was done>" --resolves worker-02.yaml
 just workflow envelope check --unit <dir>             # every envelope file and any contract violation
@@ -166,6 +166,6 @@ The main calls:
 
 - [Workflow Engine Overview](overview.md): delivery model, layout template, approval, stage and handoff policies, integration with rules and distribution.
 - [Workflow Definitions and Checks](definition-and-checks.md): document schema, shared stages, handoff candidates, check registry and plugin checks, binding and drift.
-- [Review Envelopes](envelopes.md): envelope file contract (questions, answers, problems, resolutions), authoring flags, `envelope check`, the hold on gates and integration.
+- [Review Envelopes](envelopes.md): envelope file contract (worker questions and problems, answers, resolutions), authoring flags, `envelope check`, the hold on gates and integration.
 - [Human Interaction Contract](human-interaction.md): request kinds, decision records, how answers are applied.
 - [CLI and Output Contract](cli-and-output.md): commands, exit and error codes, text sentinels and JSON shapes.

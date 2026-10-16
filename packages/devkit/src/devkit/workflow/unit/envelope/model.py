@@ -1,8 +1,9 @@
 """``<unit>/envelopes/<kind>-NN.yaml``: the envelope model, loading, validation, review state and hold state.
 
-Besides reviews, the contract defines the envelopes of delegated work: a ``question`` puts questions to a person,
-an ``answer`` records the rewritten answers to one, a ``worker`` reports one run (an execution problem in its
-``problem`` field) and a ``resolution`` closes a problem it names in ``resolves``. A unit with an unresolved
+Besides reviews, the contract defines the envelopes of delegated work. A ``worker`` envelope is the one record of
+a run: the questions it puts to a person in ``questions``, an execution problem in ``problem``. What another actor
+does later references it: an ``answer`` records the rewritten answers (``answers_to``), a ``resolution`` closes the
+problem (``resolves``). A unit with an unresolved
 problem is *blocked*; one with a question not fully answered *waits for answers*. Both hold its gates
 (``Envelopes.hold``).
 """
@@ -24,7 +25,7 @@ from devkit.workflow.unit.records import as_text, is_temporary, write_numbered
 ENVELOPES_DIR = "envelopes"
 FILE = re.compile(rf"({IDENT_PATTERN})-(\d{{2,}})\.ya?ml")
 REVIEW_REF = re.compile(r"review-\d{2,}\.ya?ml")
-QUESTION_REF = re.compile(r"question-\d{2,}\.ya?ml")
+WORKER_REF = re.compile(r"worker-\d{2,}\.ya?ml")
 RESOLUTIONS = ("open", "resolved", "waived")
 STATUSES = ("completed", "needs_input", "failed")
 EFFORTS = ("low", "medium", "high")
@@ -35,7 +36,7 @@ ANSWER_KEYS = ("question", "choice", "decision", "constraints")
 PROBLEM_KEYS = ("cause", "attempts", "recovery")
 TITLE_LIMIT = 40  # a question's title, like a request's
 # Kinds whose fields and status the contract fixes, besides review and reverify.
-QUESTION, ANSWER, WORKER, RESOLUTION = "question", "answer", "worker", "resolution"
+ANSWER, WORKER, RESOLUTION = "answer", "worker", "resolution"
 
 
 @dataclass(frozen=True)
@@ -73,7 +74,7 @@ class Option:
 
 @dataclass(frozen=True)
 class Question:
-    """One question of a ``question`` envelope, shaped like a ``choose`` request."""
+    """One question of a ``worker`` envelope, shaped like a ``choose`` request."""
 
     id: str
     title: str
@@ -143,11 +144,11 @@ class Envelope:
     diff_head: str = ""
     assumptions: tuple[str, ...] = ()
     unverified_areas: tuple[str, ...] = ()
-    questions: tuple[Question, ...] = ()  # question
-    answers_to: str = ""  # answer: the question-NN.yaml it answers
+    questions: tuple[Question, ...] = ()  # worker: what the run asks a person
+    answers_to: str = ""  # answer: the worker-NN.yaml whose questions it answers
     answers: tuple[Answer, ...] = ()  # answer
     problem: Problem | None = None  # worker: an execution problem
-    resolves: str = ""  # resolution: the <kind>-NN.yaml whose problem it resolves
+    resolves: str = ""  # resolution: the worker-NN.yaml whose problem it resolves
     activity_effort: str = ""  # low | medium | high: the effort the run applied
 
     @property
@@ -240,9 +241,9 @@ class Envelopes:
         return [e for e in self.all() if e.problem is not None and e.name not in resolved]
 
     def pending_questions(self) -> list[tuple[Envelope, Question]]:
-        """``(question envelope, question)`` for every question no ``answer`` envelope answers yet.
+        """``(worker envelope, question)`` for every question no ``answer`` envelope answers yet.
 
-        The answers to one question envelope may be spread over several answer envelopes.
+        The answers to one worker envelope's questions may be spread over several answer envelopes.
         """
         answered: dict[str, set[str]] = {}
         for answer in self.by_kind.get(ANSWER, []):
@@ -250,7 +251,7 @@ class Envelopes:
                 answered.setdefault(answer.answers_to, set()).update(a.question for a in answer.answers)
         return [
             (env, q)
-            for env in self.by_kind.get(QUESTION, [])
+            for env in self.by_kind.get(WORKER, [])
             for q in env.questions
             if q.id not in answered.get(env.name, set())
         ]
@@ -512,8 +513,8 @@ def _check_kind_fields(
     summary: str,
 ) -> None:
     """The fields each kind carries, and the statuses they allow (``docs/workflow/envelopes.md``)."""
-    if questions and kind != QUESTION:
-        raise EnvelopeFormatError("questions: only a question envelope carries questions")
+    if questions and kind != WORKER:
+        raise EnvelopeFormatError("questions: only a worker envelope carries questions")
     if (answers or answers_to) and kind != ANSWER:
         raise EnvelopeFormatError("answers and answers_to: only an answer envelope carries them")
     if resolves and kind != RESOLUTION:
@@ -522,21 +523,20 @@ def _check_kind_fields(
         raise EnvelopeFormatError("problem: only a worker envelope carries a problem")
     if problem is not None and status == "completed":
         raise EnvelopeFormatError("problem: a completed envelope reports no problem; use needs_input or failed")
-    if kind == QUESTION:
-        if not questions:
-            raise EnvelopeFormatError("a question envelope needs questions")
-        if status != "needs_input":
-            raise EnvelopeFormatError("a question envelope has status needs_input")
-    elif kind == ANSWER:
-        if QUESTION_REF.fullmatch(answers_to) is None:
-            raise EnvelopeFormatError("an answer needs `answers_to: question-NN.yaml` naming the questions it answers")
+    if questions and status != "needs_input":
+        raise EnvelopeFormatError("questions: a worker envelope that asks has status needs_input")
+    if kind == ANSWER:
+        if WORKER_REF.fullmatch(answers_to) is None:
+            raise EnvelopeFormatError(
+                "an answer needs `answers_to: worker-NN.yaml` naming the run whose questions it answers"
+            )
         if not answers:
             raise EnvelopeFormatError("an answer envelope needs answers")
         if status != "completed":
             raise EnvelopeFormatError("an answer envelope has status completed")
     elif kind == RESOLUTION:
-        if FILE.fullmatch(resolves) is None:
-            raise EnvelopeFormatError("a resolution needs `resolves: <kind>-NN.yaml` naming the problem it resolves")
+        if WORKER_REF.fullmatch(resolves) is None:
+            raise EnvelopeFormatError("a resolution needs `resolves: worker-NN.yaml` naming the problem it resolves")
         if status != "completed":
             raise EnvelopeFormatError("a resolution envelope has status completed")
         if not summary.strip():
@@ -550,8 +550,8 @@ def reference_error(envelope: Envelope, loaded: Mapping[str, Envelope]) -> str |
     name), or ``None`` when it does or the envelope references nothing."""
     if envelope.kind == ANSWER:
         target = loaded.get(envelope.answers_to)
-        if target is None or target.kind != QUESTION:
-            return f"answers_to {envelope.answers_to!r} names no well-formed question envelope of the unit"
+        if target is None or not target.questions:
+            return f"answers_to {envelope.answers_to!r} names no well-formed worker envelope with questions in the unit"
         questions = {q.id: q for q in target.questions}
         for answer in envelope.answers:
             question = questions.get(answer.question)
@@ -562,7 +562,7 @@ def reference_error(envelope: Envelope, loaded: Mapping[str, Envelope]) -> str |
     if envelope.kind == RESOLUTION:
         target = loaded.get(envelope.resolves)
         if target is None or target.problem is None:
-            return f"resolves {envelope.resolves!r} names no well-formed envelope with a problem in the unit"
+            return f"resolves {envelope.resolves!r} names no well-formed worker envelope with a problem in the unit"
     return None
 
 

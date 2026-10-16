@@ -5,14 +5,14 @@
 
 ## 1. Scope
 
-The engine stops for a person in four situations: an approval gate, a declared `human` check, the choice of the next workflow after a handoff, and a question a delegated role recorded in a `question` envelope. This document defines the data contract between the engine and whoever answers: what a request looks like, what an answer looks like, where answers are stored and how the engine applies them. Presentation is out of scope: a terminal agent, an IDE panel, a chat bot or a web page is compliant as long as it reads requests from the engine's output and writes answers in the record format below. The engine never infers an answer from conversation.
+The engine stops for a person in four situations: an approval gate, a declared `human` check, the choice of the next workflow after a handoff, and a question a delegated run recorded in its `worker` envelope. This document defines the data contract between the engine and whoever answers: what a request looks like, what an answer looks like, where answers are stored and how the engine applies them. Presentation is out of scope: a terminal agent, an IDE panel, a chat bot or a web page is compliant as long as it reads requests from the engine's output and writes answers in the record format below. The engine never infers an answer from conversation.
 
 ## 2. Request Kinds
 
 | Kind | Asked when | Answer |
 | --- | --- | --- |
 | `approve` | A gated stage's exit checks all hold and `approvals.<gate>` is `ask`; or a declared `human` check in the current stage is unmet. | `accept` or `decline`, with an optional note. |
-| `choose` | The bound workflow is complete, it declares `next` candidates, and `approvals.handoff` is `ask` (or `auto` found no eligible candidate). Also every unanswered question of a `question` envelope ([Review Envelopes](envelopes.md#11-questions-answers-problems-and-resolutions)). | Handoff: `accept` with one eligible option id, or `decline`. Question: an answer envelope with one option id, or `choice: null` and the answer in its decision when the question allows a note. |
+| `choose` | The bound workflow is complete, it declares `next` candidates, and `approvals.handoff` is `ask` (or `auto` found no eligible candidate). Also every unanswered question of a `worker` envelope ([Review Envelopes](envelopes.md#11-questions-answers-problems-and-resolutions)). | Handoff: `accept` with one eligible option id, or `decline`. Question: an answer envelope with one option id, or `choice: null` and the answer in its decision when the question allows a note. |
 | `feedback` | Never emitted by the engine. Reserved for notes a person attaches to a stage or artifact at any time. | `accept` with free text. Never blocks. |
 
 Questions reuse the `choose` kind rather than adding one, so a terminal agent or a web page renders gate requests, handoff choices and questions with one renderer. They differ in how the answer comes back: a question's `answer` is `envelope`, its target type is `question`, and the person's choice and note are rewritten into an `answer` envelope by whoever processes them (`devkit workflow envelope new --kind answer`); `devkit workflow answer` refuses it (`DECISION_INVALID`). A question is never declined or cancelled: it stays open until an answer envelope answers it.
@@ -41,11 +41,11 @@ Two more record kinds are written by the engine itself rather than answering a r
 
 | Field | Meaning |
 | --- | --- |
-| `id` | Deterministic identifier, unique among the unit's open requests: `gate:<gate>`, `check:<name>`, `handoff`, or `question:<question-NN>.<question id>` (`question:question-01.q1`). An answer references it. |
+| `id` | Deterministic identifier, unique among the unit's open requests: `gate:<gate>`, `check:<name>`, `handoff`, or `question:<worker-NN>.<question id>` (`question:worker-01.q1`). An answer references it. |
 | `kind` | `approve` or `choose` (the engine never emits `feedback`). |
 | `title` | Short label for a chip or button row, at most 40 characters. |
 | `prompt` | One sentence a person can act on. |
-| `target` | What the request decides: `{"type": "gate" \| "check" \| "handoff" \| "question", "name", "stage"}`. `stage` is the current stage id, `null` for a handoff, and the question envelope's stage for a question, whose `name` is `<question-NN.yaml>#<question id>`. |
+| `target` | What the request decides: `{"type": "gate" \| "check" \| "handoff" \| "question", "name", "stage"}`. `stage` is the current stage id, `null` for a handoff, and the worker envelope's stage for a question, whose `name` is `<worker-NN.yaml>#<question id>`. |
 | `options` | `choose` only: `[{"id", "description", "recommended", "eligible"}]`, in declaration order; for a handoff `description` lists the candidate's `when` checks with their results. Exactly one option is chosen. An ineligible option is shown but cannot be accepted. A question's options are its own, all eligible, possibly none. |
 | `allow_note` | Whether a note may accompany the answer: `true`, except for a question that sets `allow_note: false`. |
 | `declined` | The latest `decline` record for this request (`{"file", "note", "at"}`) when the request is still open, otherwise `null`. A declined request stays open: it may be asked again. |
@@ -58,7 +58,7 @@ Text form (free text is a JSON string literal, so it always stays on one line):
 [REQUEST: id=gate:integration kind=approve title="Approve integration" target=gate:integration stage=integrate note=allowed]
 [REQUEST: id=gate:release kind=approve title="Approve release" target=gate:release stage=release note=allowed answer=given]
 [REQUEST: id=handoff kind=choose title="Choose next workflow" options=spec-driven,hotfix,direct-delivery eligible=hotfix,direct-delivery recommended=-]
-[REQUEST: id=question:question-01.q1 kind=choose title="Storage format" target=question:question-01.yaml#q1 stage=direction-handoff options=a,b recommended=a note=allowed answer=envelope]
+[REQUEST: id=question:worker-01.q1 kind=choose title="Storage format" target=question:worker-01.yaml#q1 stage=direction-handoff options=a,b recommended=a note=allowed answer=envelope]
 [DECLINED: id=gate:integration file=decisions/01-gate-integration.yaml note="rebase first"]
 ```
 

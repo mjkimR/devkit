@@ -1,4 +1,4 @@
-"""Question, answer, worker and resolution envelopes, and the hold they put on gates and integration."""
+"""Worker (questions, problem), answer and resolution envelopes, and the hold they put on gates and integration."""
 
 from __future__ import annotations
 
@@ -46,7 +46,7 @@ def _write(unit: Path, name: str, data: dict[str, object]) -> None:
 
 def _question(**extra: object) -> dict[str, object]:
     return {
-        "kind": "question",
+        "kind": "worker",
         "status": "needs_input",
         "questions": [
             {"id": "q1", "title": "Format", "prompt": "Which?", "options": [{"id": "a"}, {"id": "b"}]},
@@ -81,35 +81,36 @@ def root(tmp_path: Path) -> Path:
 @pytest.mark.parametrize(
     ("name", "data", "reason"),
     [
-        ("question-01.yaml", {"kind": "question", "status": "needs_input"}, "needs questions"),
-        ("question-01.yaml", _question(status="completed"), "status needs_input"),
+        ("worker-02.yaml", _question(status="completed"), "status needs_input"),
+        ("worker-02.yaml", _question(status="failed", problem={"cause": "x", "recovery": "y"}), "status needs_input"),
+        ("question-01.yaml", _question(kind="question"), "only a worker envelope carries questions"),
         (
-            "question-01.yaml",
+            "worker-02.yaml",
             {**_question(), "problem": {"cause": "x", "recovery": "y"}},
-            "only a worker envelope carries a problem",
+            None,
         ),
         (
-            "question-01.yaml",
+            "worker-02.yaml",
             {
-                "kind": "question",
+                "kind": "worker",
                 "status": "needs_input",
                 "questions": [{"id": "q1", "title": "x" * 41, "prompt": "p"}],
             },
             "at most 40",
         ),
         (
-            "question-01.yaml",
+            "worker-02.yaml",
             {
-                "kind": "question",
+                "kind": "worker",
                 "status": "needs_input",
                 "questions": [{"id": "q1", "title": "t", "prompt": "p", "allow_note": False}],
             },
             "must allow a note",
         ),
         (
-            "question-01.yaml",
+            "worker-02.yaml",
             {
-                "kind": "question",
+                "kind": "worker",
                 "status": "needs_input",
                 "questions": [
                     {
@@ -126,7 +127,7 @@ def root(tmp_path: Path) -> Path:
         (
             "review-01.yaml",
             {"kind": "review", "status": "completed", "questions": [{"id": "q", "title": "t", "prompt": "p"}]},
-            "only a question envelope",
+            "only a worker envelope carries questions",
         ),
         ("answer-01.yaml", {"kind": "answer", "status": "completed", "answers": []}, "answers_to"),
         ("worker-01.yaml", {"kind": "worker", "status": "failed"}, "needs a problem"),
@@ -153,19 +154,21 @@ def test_kind_fields_are_validated(tmp_path: Path, name: str, data: dict[str, ob
 
 
 def test_references_must_fit(tmp_path: Path) -> None:
-    _write(tmp_path, "question-01.yaml", _question())
+    _write(tmp_path, "worker-02.yaml", _question())
     _write(tmp_path, "worker-01.yaml", {"kind": "worker", "status": "completed"})
-    answer = {"kind": "answer", "status": "completed", "answers_to": "question-01.yaml"}
+    answer = {"kind": "answer", "status": "completed", "answers_to": "worker-02.yaml"}
     _write(tmp_path, "answer-01.yaml", {**answer, "answers": [{"question": "q9", "decision": "d"}]})
     _write(tmp_path, "answer-02.yaml", {**answer, "answers": [{"question": "q1", "choice": "z", "decision": "d"}]})
-    _write(tmp_path, "answer-03.yaml", {**answer, "answers_to": "question-07.yaml", "answers": [{"question": "q1", "decision": "d"}]})  # fmt: skip
+    _write(tmp_path, "answer-03.yaml", {**answer, "answers_to": "worker-07.yaml", "answers": [{"question": "q1", "decision": "d"}]})  # fmt: skip
     _write(tmp_path, "resolution-01.yaml", {"kind": "resolution", "status": "completed", "resolves": "worker-01.yaml", "summary": "s"})  # fmt: skip
+    _write(tmp_path, "answer-04.yaml", {**answer, "answers_to": "worker-01.yaml", "answers": [{"question": "q1", "decision": "d"}]})  # fmt: skip
     envelopes = load_envelopes(tmp_path)
     reasons = {e.file: e.message for e in envelopes.errors}
-    assert "not a question of question-01.yaml" in reasons["envelopes/answer-01.yaml"]
+    assert "not a question of worker-02.yaml" in reasons["envelopes/answer-01.yaml"]
     assert "'z' is not an option" in reasons["envelopes/answer-02.yaml"]
-    assert "no well-formed question envelope" in reasons["envelopes/answer-03.yaml"]
-    assert "no well-formed envelope with a problem" in reasons["envelopes/resolution-01.yaml"]
+    assert "no well-formed worker envelope with questions" in reasons["envelopes/answer-03.yaml"]
+    assert "no well-formed worker envelope with questions" in reasons["envelopes/answer-04.yaml"]
+    assert "no well-formed worker envelope with a problem" in reasons["envelopes/resolution-01.yaml"]
     assert "answer" not in envelopes.by_kind and "resolution" not in envelopes.by_kind
     # Answers that answer nothing leave every question pending.
     assert [q.id for _, q in envelopes.hold().questions] == ["q1", "q2"]
@@ -182,11 +185,11 @@ def test_a_problem_holds_until_a_resolution_names_it(tmp_path: Path) -> None:
 
 
 def test_waiting_for_answers_is_not_a_problem(tmp_path: Path) -> None:
-    _write(tmp_path, "question-01.yaml", _question())
+    _write(tmp_path, "worker-02.yaml", _question())
     _write(tmp_path, "worker-01.yaml", {"kind": "worker", "status": "needs_input", "summary": "asked"})
     hold = load_envelopes(tmp_path).hold()
     assert not hold.blocked and [q.id for _, q in hold.questions] == ["q1", "q2"]
-    answer = {"kind": "answer", "status": "completed", "answers_to": "question-01.yaml"}
+    answer = {"kind": "answer", "status": "completed", "answers_to": "worker-02.yaml"}
     _write(tmp_path, "answer-01.yaml", {**answer, "answers": [{"question": "q1", "choice": "a", "decision": "Keep TOML."}]})  # fmt: skip
     assert [q.id for _, q in load_envelopes(tmp_path).hold().questions] == ["q2"]
     # Answers may be spread over several envelopes; a note-only answer has no choice.
@@ -209,23 +212,23 @@ def _new(root: Path, *args: str, stdin: str | None = None) -> dict[str, object]:
 
 def test_authoring_question_answer_problem_and_resolution(root: Path) -> None:
     unit = root / SIMPLE_UNIT
-    asked = _new(root, "--kind", "question", "--stage", "review", "--summary", "two questions", "--questions-file", "-", stdin=QUESTIONS)  # fmt: skip
-    assert asked["status"] == "needs_input" and asked["file"] == f"{SIMPLE_UNIT}/envelopes/question-01.yaml"
-    data = yaml.safe_load((unit / "envelopes/question-01.yaml").read_text())
+    asked = _new(root, "--kind", "worker", "--stage", "review", "--summary", "two questions", "--questions-file", "-", stdin=QUESTIONS)  # fmt: skip
+    assert asked["status"] == "needs_input" and asked["file"] == f"{SIMPLE_UNIT}/envelopes/worker-01.yaml"
+    data = yaml.safe_load((unit / "envelopes/worker-01.yaml").read_text())
     assert data["questions"][0]["options"][0] == {"id": "a", "description": "Keep TOML", "recommended": True}
     (root / "answers.yaml").write_text(
         "- { question: q1, choice: a, decision: Keep TOML and tidy key names., constraints: [warn one release] }\n"
         "- { question: q2, choice: null, decision: Migrate keys only. }\n"
     )
-    answered = _new(root, "--kind", "answer", "--stage", "review", "--summary", "q1 and q2 decided", "--answers-to", "envelopes/question-01.yaml", "--answers-file", str(root / "answers.yaml"), "--effort", "low")  # fmt: skip
+    answered = _new(root, "--kind", "answer", "--stage", "review", "--summary", "q1 and q2 decided", "--answers-to", "envelopes/worker-01.yaml", "--answers-file", str(root / "answers.yaml"), "--effort", "low")  # fmt: skip
     assert answered["status"] == "completed"
     data = yaml.safe_load((unit / "envelopes/answer-01.yaml").read_text())
-    assert data["answers_to"] == "question-01.yaml" and data["activity_effort"] == "low"
+    assert data["answers_to"] == "worker-01.yaml" and data["activity_effort"] == "low"
     assert data["answers"][0]["constraints"] == ["warn one release"]
     failed = _new(root, "--kind", "worker", "--stage", "review", "--summary", "stopped", "--problem", "fixture broken", "--tried", "rerun", "--recovery", "repair the fixture")  # fmt: skip
     assert failed["status"] == "failed"
     assert load_envelopes(unit).hold().blocked
-    resolved = _new(root, "--kind", "resolution", "--summary", "fixture repaired; tests pass", "--resolves", "worker-01.yaml")  # fmt: skip
+    resolved = _new(root, "--kind", "resolution", "--summary", "fixture repaired; tests pass", "--resolves", "worker-02.yaml")  # fmt: skip
     assert resolved["status"] == "completed"
     assert not load_envelopes(unit).hold()
 
@@ -233,7 +236,11 @@ def test_authoring_question_answer_problem_and_resolution(root: Path) -> None:
 @pytest.mark.parametrize(
     ("args", "code"),
     [
-        (("--kind", "question", "--summary", "x"), "ENVELOPE_FLAG_INVALID"),
+        (
+            ("--kind", "worker", "--status", "completed", "--summary", "x", "--questions-file", "-"),
+            "ENVELOPE_FLAG_INVALID",
+        ),
+        (("--kind", "question", "--summary", "x", "--questions-file", "-"), "ENVELOPE_FLAG_INVALID"),
         (("--kind", "review", "--summary", "x", "--questions-file", "-"), "ENVELOPE_FLAG_INVALID"),
         (("--kind", "worker", "--status", "failed", "--summary", "x"), "ENVELOPE_FLAG_INVALID"),
         (("--kind", "worker", "--summary", "x", "--recovery", "y"), "ENVELOPE_FLAG_INVALID"),
@@ -261,10 +268,10 @@ def test_authoring_refuses_what_the_contract_refuses(root: Path, args: tuple[str
 
 
 def test_malformed_items_are_refused(root: Path) -> None:
-    out = _new(root, "--kind", "question", "--summary", "x", "--questions-file", "-", stdin="- { id: Q, title: t, prompt: p }\n")  # fmt: skip
+    out = _new(root, "--kind", "worker", "--summary", "x", "--questions-file", "-", stdin="- { id: Q, title: t, prompt: p }\n")  # fmt: skip
     assert out["exit"] == 2 and "ENVELOPE_ITEMS_INVALID" in str(out["err"])
-    _new(root, "--kind", "question", "--summary", "x", "--questions-file", "-", stdin=QUESTIONS)
-    out = _new(root, "--kind", "answer", "--summary", "x", "--answers-to", "question-01.yaml", "--answers-file", "-", stdin="- { question: q1, choice: c, decision: d }\n")  # fmt: skip
+    _new(root, "--kind", "worker", "--summary", "x", "--questions-file", "-", stdin=QUESTIONS)
+    out = _new(root, "--kind", "answer", "--summary", "x", "--answers-to", "worker-01.yaml", "--answers-file", "-", stdin="- { question: q1, choice: c, decision: d }\n")  # fmt: skip
     assert out["exit"] == 2 and "ENVELOPE_REFERENCE_INVALID" in str(out["err"])
 
 
@@ -276,21 +283,21 @@ def _next(root: Path, *args: str) -> dict[str, object]:
 
 
 def test_questions_are_choose_requests_answered_by_an_envelope(root: Path) -> None:
-    _new(root, "--kind", "question", "--stage", "review", "--summary", "x", "--questions-file", "-", stdin=QUESTIONS)
+    _new(root, "--kind", "worker", "--stage", "review", "--summary", "x", "--questions-file", "-", stdin=QUESTIONS)
     result = _next(root)
     requests = {r["id"]: r for r in result["requests"]}  # type: ignore[union-attr]
-    q1 = requests["question:question-01.q1"]
+    q1 = requests["question:worker-01.q1"]
     assert (q1["kind"], q1["answer"], q1["context"]) == ("choose", "envelope", "proposal.md section 3")
-    assert q1["target"] == {"type": "question", "name": "question-01.yaml#q1", "stage": "review"}
+    assert q1["target"] == {"type": "question", "name": "worker-01.yaml#q1", "stage": "review"}
     assert [o["id"] for o in q1["options"] if o["recommended"]] == ["a"]
-    assert result["waiting"] == {"class": "human", "checks": ["question:question-01.q1", "question:question-01.q2"]}
+    assert result["waiting"] == {"class": "human", "checks": ["question:worker-01.q1", "question:worker-01.q2"]}
     text = run_cli("next", "-w", str(root), "--unit", SIMPLE_UNIT, "--no-lint").stdout
-    assert '[PENDING_QUESTION: envelopes/question-01.yaml id=q1 title="Storage format"]' in text
+    assert '[PENDING_QUESTION: envelopes/worker-01.yaml id=q1 title="Storage format"]' in text
     assert (
-        '[REQUEST: id=question:question-01.q1 kind=choose title="Storage format" target=question:question-01.yaml#q1'
+        '[REQUEST: id=question:worker-01.q1 kind=choose title="Storage format" target=question:worker-01.yaml#q1'
         " stage=review options=a,b recommended=a note=allowed answer=envelope]" in text
     )
-    refused = run_cli("answer", "-w", str(root), "--unit", SIMPLE_UNIT, "--no-lint", "--request", "question:question-01.q1", "--action", "accept", "--value", "a")  # fmt: skip
+    refused = run_cli("answer", "-w", str(root), "--unit", SIMPLE_UNIT, "--no-lint", "--request", "question:worker-01.q1", "--action", "accept", "--value", "a")  # fmt: skip
     assert refused.exit_code == 2 and "DECISION_INVALID" in refused.stderr and "--kind answer" in refused.stderr
 
 
@@ -321,14 +328,14 @@ def test_a_hold_keeps_every_gate_from_passing(root: Path, policy: str) -> None:
 def test_envelope_check_reports_the_hold(root: Path) -> None:
     unit = root / SIMPLE_UNIT
     _write(unit, "worker-01.yaml", _problem())
-    _write(unit, "question-01.yaml", _question())
+    _write(unit, "worker-02.yaml", _question())
     text = run_cli("envelope", "check", "-w", str(root), "--unit", SIMPLE_UNIT)
     assert text.exit_code == 0
     assert (
         "[ENVELOPE: envelopes/worker-01.yaml kind=worker seq=01 status=failed open_findings=0 problem=yes]"
         in text.stdout
     )
-    assert "[BLOCKED: envelopes/worker-01.yaml" in text.stdout and "[PENDING_QUESTION: envelopes/question-01.yaml id=q2" in text.stdout  # fmt: skip
+    assert "[BLOCKED: envelopes/worker-01.yaml" in text.stdout and "[PENDING_QUESTION: envelopes/worker-02.yaml id=q2" in text.stdout  # fmt: skip
     data = json.loads(run_cli("envelope", "check", "-w", str(root), "--unit", SIMPLE_UNIT, "--format", "json").stdout)
     assert data["blocked"] is True and [q["id"] for q in data["pending_questions"]] == ["q1", "q2"]
 
@@ -356,17 +363,17 @@ def test_finish_guard_reads_the_units_the_branch_changed_at_its_tip(tmp_path: Pa
     _git(repo, "switch", "-q", "-c", "dev-x")
     unit = repo / "docs/specs/x"
     _write(unit, "worker-01.yaml", _problem())
-    _write(unit, "question-01.yaml", _question())
+    _write(unit, "worker-02.yaml", _question())
     tip = _commit(repo, "work")
     assert finish_guard(repo, "dev-x", base, tip) == [
         "docs/specs/x/envelopes/worker-01.yaml: unresolved problem: tests cannot start",
-        "docs/specs/x/envelopes/question-01.yaml: unanswered question q1: Format",
-        "docs/specs/x/envelopes/question-01.yaml: unanswered question q2: Scope",
+        "docs/specs/x/envelopes/worker-02.yaml: unanswered question q1: Format",
+        "docs/specs/x/envelopes/worker-02.yaml: unanswered question q2: Scope",
     ]
     # Uncommitted envelopes neither block nor clear: the guard reads the tip.
     _write(unit, "resolution-01.yaml", {"kind": "resolution", "status": "completed", "resolves": "worker-01.yaml", "summary": "fixed"})  # fmt: skip
     assert len(finish_guard(repo, "dev-x", base, tip)) == 3
-    answer = {"kind": "answer", "status": "completed", "answers_to": "question-01.yaml"}
+    answer = {"kind": "answer", "status": "completed", "answers_to": "worker-02.yaml"}
     _write(unit, "answer-01.yaml", {**answer, "answers": [{"question": "q1", "decision": "a"}, {"question": "q2", "decision": "b"}]})  # fmt: skip
     tip = _commit(repo, "resolve and answer")
     assert finish_guard(repo, "dev-x", base, tip) == []

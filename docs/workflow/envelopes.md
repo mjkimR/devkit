@@ -39,14 +39,15 @@ review: review-01.yaml       # reverify only: the review round it closes
 
 ### 1.1 Questions, Answers, Problems and Resolutions
 
-Four kinds record delegated work that a person or another run picks up. A question waiting for answers and an execution problem are different states: a question is answered, a problem is resolved, and neither is inferred from `needs_input` alone.
+A run of delegated work leaves one `worker` envelope: what it did, the questions it puts to a person (`questions`) and an execution problem it stopped on (`problem`). What another actor does later is a separate envelope that references that run: an `answer` records the rewritten answers to its questions, a `resolution` closes its problem. A question waiting for answers and an execution problem are different states: a question is answered, a problem is resolved, and neither is inferred from `needs_input` alone.
 
 ```yaml
-# envelopes/question-01.yaml: what to ask a person, gathered in one round
-kind: question
+# envelopes/worker-01.yaml: one run that stopped to ask, gathering its questions in one round
+kind: worker
 stage: direction-handoff
-status: needs_input          # always needs_input
-summary: "Storage format and migration scope"
+status: needs_input          # a worker envelope with questions has status needs_input
+summary: "Storage format and migration scope need a decision"
+activity_effort: medium
 questions:
   - id: q1                   # [a-z][a-z0-9-]*, unique in the envelope
     title: "Storage format"  # 40 characters at most, like a request title
@@ -63,7 +64,7 @@ questions:
 kind: answer
 status: completed            # always completed
 summary: "q1 decided"
-answers_to: question-01.yaml # the question envelope it answers
+answers_to: worker-01.yaml   # the run whose questions it answers
 answers:
   - question: q1             # a question of answers_to, one answer per question
     choice: a                # one of its options, or null for an answer outside them
@@ -74,6 +75,7 @@ answers:
 ```yaml
 # envelopes/worker-02.yaml: one run that stopped on an execution problem
 kind: worker
+stage: build
 status: failed               # failed requires problem; needs_input carries it only for an execution problem
 summary: "Build stopped"
 activity_effort: medium
@@ -88,17 +90,16 @@ problem:
 kind: resolution
 status: completed            # always completed
 summary: "Fixture repaired in tests/conftest.py; the build stage passes"   # what was done and why it resolves it
-resolves: worker-02.yaml     # the envelope whose problem it resolves
+resolves: worker-02.yaml     # the run whose problem it resolves
 ```
 
 | Kind | Fields | Rules |
 | --- | --- | --- |
-| `question` | `questions` (required, non-empty) | Status `needs_input`. Each question is shaped like a `choose` request ([Human Interaction Contract](human-interaction.md#3-request)). |
-| `answer` | `answers_to`, `answers` (both required) | Status `completed`. `answers_to` names a well-formed `question-NN.yaml` of the unit; each answer names one of its questions and, unless `choice` is `null`, one of that question's options. |
-| `worker` | `problem` (optional; no other kind carries it) | `failed` requires `problem`; `completed` refuses it. A `needs_input` worker envelope without `problem` waits for the questions of a question envelope, which carries them; a worker envelope carries no `questions`. |
-| `resolution` | `resolves` (required) | Status `completed` and a non-empty `summary`. `resolves` names a well-formed envelope of the unit that carries a `problem`. |
+| `worker` | `questions`, `problem` (both optional; no other kind carries them) | One per run. With `questions` the status is `needs_input`; each question is shaped like a `choose` request ([Human Interaction Contract](human-interaction.md#3-request)). `failed` requires `problem`; `completed` refuses it. A run that both asks and hit a problem records both, with status `needs_input`. |
+| `answer` | `answers_to`, `answers` (both required) | Status `completed`. `answers_to` names a well-formed `worker-NN.yaml` of the unit that has questions; each answer names one of them and, unless `choice` is `null`, one of that question's options. |
+| `resolution` | `resolves` (required) | Status `completed` and a non-empty `summary`. `resolves` names a well-formed `worker-NN.yaml` of the unit that carries a `problem`. |
 
-`problem` (`cause` and `recovery` required, `attempts` a list of strings) is carried only by a `worker` envelope, never with status `completed`: an execution problem is reported by the run that hit it, in one envelope kind. An answer or resolution whose reference names no fitting envelope is malformed: it answers or resolves nothing. References are file names in the same `envelopes/` directory, checked over every envelope of the unit whatever its segment.
+`problem` has `cause` and `recovery` (required) and `attempts` (a list of strings). An answer or resolution whose reference names no fitting envelope is malformed: it answers or resolves nothing. References are file names in the same `envelopes/` directory, checked over every envelope of the unit whatever its segment.
 
 ## 2. Authoring
 
@@ -115,13 +116,13 @@ resolves: worker-02.yaml     # the envelope whose problem it resolves
 | `--from latest` (or a review/reverify file) | Carries the findings of the round being closed into a `reverify` and sets its `review`. `latest` is the deciding review state among the envelopes of the current segment. Refused for `review`; required for `reverify`. |
 | `--resolve N` (repeatable) or `--resolve all` | Marks carried finding `N` (1-based) resolved; `all` resolves every open one. A number outside the carried findings is `ENVELOPE_FLAG_INVALID`. |
 | `--waive N=REASON` (repeatable) | Marks carried finding `N` waived and records the reason as its `waiver`; `suggested_action` is kept. |
-| `--questions-file PATH` (or `-`) | `question` only: a YAML list of questions ([section 1.1](#11-questions-answers-problems-and-resolutions)). A malformed list is `ENVELOPE_ITEMS_INVALID`. |
-| `--answers-to FILE`, `--answers-file PATH` (or `-`) | `answer` only: the question envelope answered (a file name, or a path whose last part is one) and a YAML list of answers. A malformed list is `ENVELOPE_ITEMS_INVALID`; a reference that does not fit is `ENVELOPE_REFERENCE_INVALID`. |
-| `--problem CAUSE`, `--tried TEXT` (repeatable), `--recovery TEXT` | An execution problem; `--tried` and `--recovery` need `--problem`. |
-| `--resolves FILE` | `resolution` only: the envelope whose problem it resolves (`ENVELOPE_REFERENCE_INVALID` when it carries none). |
+| `--questions-file PATH` (or `-`) | `worker` only: a YAML list of the questions the run asks ([section 1.1](#11-questions-answers-problems-and-resolutions)). A malformed list is `ENVELOPE_ITEMS_INVALID`. |
+| `--answers-to FILE`, `--answers-file PATH` (or `-`) | `answer` only: the worker envelope whose questions are answered (a file name, or a path whose last part is one) and a YAML list of answers. A malformed list is `ENVELOPE_ITEMS_INVALID`; a reference that does not fit is `ENVELOPE_REFERENCE_INVALID`. |
+| `--problem CAUSE`, `--tried TEXT` (repeatable), `--recovery TEXT` | `worker` only: an execution problem; `--tried` and `--recovery` need `--problem`. |
+| `--resolves FILE` | `resolution` only: the worker envelope whose problem it resolves (`ENVELOPE_REFERENCE_INVALID` when it carries none). |
 | `--effort low\|medium\|high` | `activity_effort`. |
 
-The status defaults to `needs_input` for a question, `failed` with `--problem`, and `completed` otherwise. Before writing, `envelope new` refuses an envelope its loader would report malformed: fields or a status the kind does not allow (`ENVELOPE_FLAG_INVALID`) or a reference that does not fit. Only one of `--findings-file`, `--questions-file` and `--answers-file` may read stdin. A bare skeleton of these kinds (no authoring flag) lists their fields with placeholders and, like a reverify skeleton, stays malformed until it is filled in.
+The status defaults to `needs_input` with `--questions-file`, `failed` with only `--problem`, and `completed` otherwise. Before writing, `envelope new` refuses an envelope its loader would report malformed: fields or a status the kind does not allow (`ENVELOPE_FLAG_INVALID`) or a reference that does not fit. Only one of `--findings-file`, `--questions-file` and `--answers-file` may read stdin. A bare skeleton of these kinds (no authoring flag) lists their fields with placeholders and, like a reverify skeleton, stays malformed until it is filled in.
 
 Findings from `--findings-file` are appended after any carried findings. The written key order is `kind, stage, workflow, segment, created_at, status, review, summary, findings, assumptions, unverified_areas, checks, diff_scope, questions, answers_to, answers, problem, resolves, activity_effort`, omitting empty optional keys. The kind must match `[a-z][a-z0-9-]*` (`ENVELOPE_KIND_INVALID`). The sequence follows the highest `<kind>-NN` file present, malformed files included. The confirmation line is `[ENVELOPE: <file> kind=K seq=NN status=S open_findings=N]`; `--format json` emits `{"file", "kind", "seq", "status", "open_findings"}`.
 
@@ -134,10 +135,10 @@ Findings from `--findings-file` are appended after any carried findings. The wri
 A unit's envelopes hold it in two cases, read over every envelope of the unit whatever its workflow segment, and not cleared by a `return`:
 
 - **Blocked**: an envelope carries a `problem` that no `resolution` names in `resolves`. Later commits or successful runs do not clear it; only a resolution written by whoever actually fixed it does. Comments or a request to rerun do not.
-- **Waiting for answers**: a question of a `question` envelope that no `answer` envelope answers. The answers to one question envelope may be spread over several answer envelopes. Whether an answer was reflected in the documents is the author's responsibility; the engine checks that it was recorded.
+- **Waiting for answers**: a question of a `worker` envelope that no `answer` envelope answers. The answers to one run's questions may be spread over several answer envelopes. Whether an answer was reflected in the documents is the author's responsibility; the engine checks that it was recorded.
 
 While a unit is held:
 
 - **No gate passes.** `devkit workflow next` reports the gate as not satisfied (`held=yes`) whatever would satisfy it (policy `auto`, `--given`, an accepted record), asks no gate request, and a gated stage whose exit checks hold shows the unmet `envelope-hold` check (class `disk`) naming the blocking files and the number of unanswered questions. Stages without a gate, and the runs that resolve a problem or answer questions, go on.
-- **Unanswered questions are requests.** Each becomes a `choose` request `question:<question-NN>.<id>` answered by an answer envelope (`answer: envelope`), not by `devkit workflow answer` ([Human Interaction Contract](human-interaction.md#2-request-kinds)), and the unit waits for them (`[WAITING: human ...]`).
+- **Unanswered questions are requests.** Each becomes a `choose` request `question:<worker-NN>.<id>` answered by an answer envelope (`answer: envelope`), not by `devkit workflow answer` ([Human Interaction Contract](human-interaction.md#2-request-kinds)), and the unit waits for them (`[WAITING: human ...]`).
 - **Integration is refused.** `devkit worktree finish --merge` calls the `devkit.finish_guard` extensions before its first change; devkit-agt registers one (`devkit.workflow.integration:finish_guard`) that reads every unit whose `envelopes/` files the branch changed (between the merge base and the branch tip), at the committed tip, and refuses the merge with `WORKTREE_BLOCKED` listing one line per unresolved problem and unanswered question ([Task Worktrees](../worktree/overview.md)). Uncommitted envelopes neither block nor clear it. Other integrators (a pull request service) apply the same rule by reading the envelopes at the head they merge: `envelope check --format json` reports `blocked`, `problems` and `pending_questions`.

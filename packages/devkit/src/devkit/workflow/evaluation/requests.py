@@ -39,7 +39,7 @@ class Option:
 @dataclass(frozen=True)
 class Target:
     type: str  # gate | check | handoff | question
-    name: str  # a question: <question-NN.yaml>#<question id>
+    name: str  # a question: <worker-NN.yaml>#<question id>
     stage: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
@@ -139,7 +139,7 @@ def handoff_request(doc: WorkflowDocument, handoff: Handoff, declined: DeclinedL
 
 
 def question_request_id(envelope: Envelope, question: Question) -> str:
-    """``question:<question-NN>.<question id>``, e.g. ``question:question-01.q1``."""
+    """``question:<worker-NN>.<question id>``, e.g. ``question:worker-01.q1``."""
     return f"{QUESTION_PREFIX}{envelope.name.rsplit('.', 1)[0]}.{question.id}"
 
 
