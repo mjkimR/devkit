@@ -130,7 +130,7 @@ TEMPLATE_TABLES = (
     TemplateTable(
         (
             TemplateKey(
-                "dev-integration", "ask", "approve integrating the change into the base", kind='"ask" | "auto" | "off"'
+                "integration", "ask", "approve integrating the change into the base", kind='"ask" | "auto" | "off"'
             ),
         ),
         path=("workflow", "approvals"),

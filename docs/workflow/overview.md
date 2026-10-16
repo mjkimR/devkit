@@ -74,11 +74,11 @@ workflow_hash: sha256:...
 
 ## 3. Approval Gates
 
-A stage declares `human_gate: true` (gate named after the stage id) or `human_gate: "<gate>"` (a shared gate name such as `plan-accept` or `dev-integration`). Each gate is governed by project policy:
+A stage declares `human_gate: true` (gate named after the stage id) or `human_gate: "<gate>"` (a shared gate name such as `direction` or `integration`). Each gate is governed by project policy:
 
 ```toml
 [workflow.approvals]
-dev-integration = "auto"
+integration = "auto"
 ```
 
 | Policy | Behavior in `next` |

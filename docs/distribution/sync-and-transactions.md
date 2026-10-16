@@ -149,7 +149,7 @@ spec = "core"
 
 ## Workflow approval gates: names come from workflow definitions; the gate below is an example.
 # [workflow.approvals]
-#   dev-integration = "ask"  # ask | auto | off; approve integrating the change into the base
+#   integration = "ask"  # ask | auto | off; approve integrating the change into the base
 
 ## Workflow stages: policies apply by stage id; unset stages use on.
 # [workflow.stages]

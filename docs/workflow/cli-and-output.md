@@ -92,7 +92,7 @@ The library raises the same codes, one class per code. `WorkflowError` is the ba
 ```text
 [WORKFLOW: direct-delivery unit=.devkit/transient/work/login status=in-progress bound=yes]
 [DONE: intent build-verify review]
-[GATE_PASSED: plan-intent stage=intent policy=ask source=decision:decisions/01-gate-plan-intent.yaml]
+[GATE_PASSED: intent stage=intent policy=ask source=decision:decisions/01-gate-intent.yaml]
 [SKIPPED: collect-feedback reason=stages.collect-feedback=off]
 [STAGE: integrate human_gate=integration role=developer isolation=none]
 [UNMET: gate:integration]
