@@ -159,7 +159,7 @@ class FinishResult:
     path: Path
     merged: bool = False
     push: str | None = None
-    removed: bool = False
+    removed: bool | None = False  # None: the branch never had a worktree (``start_branch``, made by hand)
     branch_deleted: bool = False
     discarded: bool = False
     notices: list[AdvisoryError] = field(default_factory=list)
@@ -1084,7 +1084,7 @@ def finish(
                 " keeps its branch",
             )
         _log.info("%s has no worktree; finishing the marked branch alone", branch)
-        result = FinishResult(branch, _marked_path(position, branch), removed=True)
+        result = FinishResult(branch, _marked_path(position, branch), removed=_gone(position, branch))
         back = _config(base, _marker(branch, BASE_KEY))
         if merge and back and position.branch != back:
             raise ConflictError(
@@ -1130,7 +1130,7 @@ def finish(
     try:
         if before_remove is not None:
             before_remove(result)
-        if not result.removed:
+        if result.removed is False:
             _remove(base, result.path)
             result.removed = True
         if delete_branch:
@@ -1150,6 +1150,13 @@ def finish(
             vars(error)["result"] = result
         raise
     return result
+
+
+def _gone(position: Position, branch: str) -> bool | None:
+    """For a branch without a worktree: ``True`` when its worktree was removed earlier (its marker names the worktree
+    path), ``None`` when it never had one (``start_branch`` marks the checkout it switched; or no marker at all)."""
+    value = _config(position.base, _marker(branch))
+    return True if value and Path(value) == path_for(position, branch) else None
 
 
 def _marked_path(position: Position, branch: str) -> Path:
@@ -1182,13 +1189,13 @@ def discard(
             raise NotFoundError(f"no worktree at {path_for(position, branch)} or on branch {branch}")
         # An activity branch is dropped whether or not devkit started it (another checkout, made by hand): its name
         # says it is a task's, and the close that drops it is the caller's decision.
-        result = FinishResult(branch, _marked_path(position, branch), removed=True)
+        result = FinishResult(branch, _marked_path(position, branch), removed=_gone(position, branch))
     else:
         result = FinishResult(branch, entry.path)
     try:
         if before_remove is not None:
             before_remove(result)
-        if not result.removed:
+        if result.removed is False:
             _remove(base, result.path)
             result.removed = True
         if exists:

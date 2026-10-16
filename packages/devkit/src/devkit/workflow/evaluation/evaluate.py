@@ -294,8 +294,9 @@ def _held_from(hold: Hold, doc: WorkflowDocument) -> int:
 def _hold_result(hold: Hold) -> CheckResult:
     """The unmet ``envelope-hold`` check of a gate stage whose gate the unit's envelopes hold."""
     parts = []
-    if hold.problems:
-        parts.append("blocked by " + ", ".join(e.file for e in hold.problems))
+    blocking = [e.file for e in hold.problems] + [e.file for e in hold.malformed]
+    if blocking:
+        parts.append("blocked by " + ", ".join(blocking))
     if hold.questions:
         parts.append(
             f"{len(hold.questions)} unanswered question(s) in " + ", ".join(sorted({e.file for e, _ in hold.questions}))

@@ -54,7 +54,7 @@ Then, in order: the base checkout is switched back to its `devkitBase` when it w
 - a locked worktree (`git worktree lock`): `WORKTREE_LOCKED`, whose `[FIX]` is `git worktree unlock <path>` once the user agrees;
 - neither a worktree nor a branch: `WORKTREE_NOT_FOUND`;
 - no worktree, and a branch without the marker (`start` did not create it, a `finish` already completed for it, or `start` created it before devkit recorded the marker: such branches are not resumed automatically): `WORKTREE_NOT_FOUND`, nothing changed, whatever `delete_branch` says. No caller cleanup, merge or push runs for such a branch, and `finish` never deletes it itself: when it is merged, with `delete_branch = true` the `[FIX]` is `git branch -d <branch>` once the user agrees; with `delete_branch = false` it says that nothing is left to finish.
-- no worktree, and a marked branch: it is finished without a removal (`removed=yes`), whether its worktree was removed (by hand, or by a stopped run) or it never had one (`start --no-worktree`). Without `--merge` it must be merged like any other (`WORKTREE_UNMERGED`).
+- no worktree, and a marked branch: it is finished without a removal: `removed=yes` when its worktree was removed earlier (by hand, or by a stopped run), `removed=-` when it never had one (`start --no-worktree`). Without `--merge` it must be merged like any other (`WORKTREE_UNMERGED`).
 
 These checks, and those of step 1, run before the first change, so each of their refusals leaves the repository as it was; only uncommitted changes in the worktree surface later, at step 3:
 

@@ -405,7 +405,9 @@ def _check_contract(draft: Envelope, loaded: Envelopes) -> None:
     except EnvelopeFormatError as exc:
         raise EnvelopeFlagError(
             f"the envelope would not satisfy the contract of kind {draft.kind}: {exc.message}",
-            fix=_contract_fix(draft.kind),
+            fix="Pass --stage <the stage the run worked in>"
+            if "names the stage" in exc.message
+            else _contract_fix(draft.kind),
         ) from exc
     problem = reference_error(draft, {e.name: e for e in loaded.all()})
     if problem is not None:

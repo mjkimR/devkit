@@ -450,7 +450,7 @@ def test_finish_keeping_the_branch_never_resumes_a_branch_start_did_not_create(r
 def test_finish_keeping_the_branch_resumes_after_a_removed_worktree_until_it_completes(repo: Path) -> None:
     created = start(locate(repo), "dev-demo")
     git(repo, "worktree", "remove", str(created.path))  # what a stopped run leaves: the marked branch resumes
-    seen: list[bool] = []
+    seen: list[bool | None] = []
     done = finish(locate(repo), "dev-demo", delete_branch=False, before_remove=lambda r: seen.append(r.removed))
     assert seen == [True] and (done.removed, done.branch_deleted) == (True, False)
     assert git(repo, "branch", "--list", "dev-demo").strip() == "dev-demo" and marker(repo, "dev-demo") == ""
@@ -516,7 +516,7 @@ def test_finish_merges_resumes_after_a_dirty_worktree_and_cleans_up(repo: Path) 
 
 def test_finish_without_branch_deletion_and_with_a_caller_cleanup(repo: Path) -> None:
     created = start(locate(repo), "dev-demo")
-    seen: list[tuple[bool, bool]] = []
+    seen: list[tuple[bool | None, bool]] = []
     result = finish(
         locate(repo), "dev-demo", delete_branch=False, before_remove=lambda r: seen.append((r.removed, r.path.is_dir()))
     )

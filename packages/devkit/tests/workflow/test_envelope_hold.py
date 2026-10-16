@@ -494,6 +494,7 @@ def test_a_malformed_worker_envelope_holds_from_the_stage_it_states(staged: Path
     assert result["malformed_workers"][0]["file"] == "envelopes/worker-01.yaml"  # type: ignore[index]
     text = run_cli("next", "-w", str(staged), "--unit", SIMPLE_UNIT, "--no-lint").stdout
     assert "[BLOCKED: envelopes/worker-01.yaml malformed=yes reason=" in text
+    assert result["unmet"][0]["detail"] == "blocked by envelopes/worker-01.yaml"  # type: ignore[index]
     # Without a stage it states, or as YAML that is no mapping, it holds every gate.
     (unit / "envelopes/worker-01.yaml").write_text("- not a mapping\n")
     assert _next(staged)["stage"]["id"] == "intent"  # type: ignore[index]
@@ -624,3 +625,8 @@ def test_passed_gates_report_what_passed_them(staged: Path) -> None:
     text = run_cli("next", "-w", str(staged), "--unit", SIMPLE_UNIT, "--no-lint", "--given", "dev-integration").stdout
     assert "[GATE_PASSED: plan-intent stage=intent policy=auto source=policy]" in text
     assert "[GATE_PASSED: dev-integration stage=integrate policy=ask source=given]" in text
+
+
+def test_a_worker_envelope_without_stage_is_refused_with_the_flag_to_add(root: Path) -> None:
+    out = _new(root, "--kind", "worker", "--summary", "x", "--effort", "medium")
+    assert out["exit"] == 2 and "Pass --stage" in str(out["err"])

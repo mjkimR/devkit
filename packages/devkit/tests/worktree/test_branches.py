@@ -139,7 +139,7 @@ def test_a_branch_without_a_worktree_is_integrated_from_the_base(repo: Path) -> 
     assert off_base.value.fix == f"git -C {repo} switch main, then rerun"
     git(repo, "switch", "-q", "main")
     done = finish(locate(repo), "dev-demo", merge=True)
-    assert (done.merged, done.removed, done.branch_deleted) == (True, True, True)
+    assert (done.merged, done.removed, done.branch_deleted) == (True, None, True)  # None: it never had a worktree
     assert done.path == repo  # the checkout it was started in, where post-finish cleanup finds its records
     assert (repo / "work.txt").is_file() and git(repo, "branch", "--list", "dev-demo") == ""
 
@@ -404,7 +404,12 @@ def test_discard_drops_an_unmerged_branch_and_its_worktree(repo: Path) -> None:
         discard(locate(repo), "dev-solo")  # the base checkout is on it
     git(repo, "switch", "-q", "main")
     solo = discard(locate(repo), "dev-solo")
-    assert solo.path == repo and solo.branch_deleted and git(repo, "branch", "--list", "dev-solo") == ""
+    assert (
+        solo.path == repo
+        and solo.removed is None
+        and solo.branch_deleted
+        and git(repo, "branch", "--list", "dev-solo") == ""
+    )
     git(repo, "branch", "dev-foreign")  # an activity branch devkit did not start (another checkout, by hand)
     assert discard(locate(repo), "dev-foreign").branch_deleted
     assert git(repo, "branch", "--list", "dev-foreign") == ""

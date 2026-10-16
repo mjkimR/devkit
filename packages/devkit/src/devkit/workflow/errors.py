@@ -387,7 +387,10 @@ class EnvelopeFormatError(_FileProblem):
     code = "ENVELOPE_INVALID"
     input_error = True
     exit_code = ExitCode.FINDINGS
-    fix = f"Fix or remove the file; the contract is {ENVELOPE_CONTRACT}"
+    fix = (
+        "Fix or remove the file; write envelopes with `devkit workflow envelope new`, which refuses one that breaks"
+        f" the contract (devkit's {ENVELOPE_CONTRACT})"
+    )
     # What could still be read of the file, so a malformed worker envelope holds from its own stage.
     stage: str = ""
     workflow: str = ""
