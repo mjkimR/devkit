@@ -23,6 +23,7 @@ devkit workflow list [--status S]... [--exclude-status S]... [--format text|json
 # With only --unit (and --stage) each writes the next envelopes/<kind>-NN.yaml skeleton; any other flag writes it complete.
 devkit workflow envelope new --kind KIND COMMON [--findings-file PATH|-]      # any kind but the five below
 devkit workflow envelope worker --stage ID COMMON [--questions-file PATH|-] [--problem CAUSE [--tried TEXT]... --recovery TEXT]
+                                [--findings-file PATH|-]
 devkit workflow envelope answer COMMON [--answers-to FILE --answers-file PATH|-]
 devkit workflow envelope resolution COMMON [--resolves FILE]
 devkit workflow envelope review COMMON [--findings-file PATH|-]

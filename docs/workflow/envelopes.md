@@ -113,7 +113,7 @@ Five kinds have a command of their own that takes the options of their fields: `
 | `--check NAME=VERDICT[ detail]` | Repeatable; `VERDICT` is `PASS`, `FAIL` or `SKIP` and may carry a detail such as `PASS 14/14`. |
 | `--base REV`, `--head REV` | `diff_scope`; `--head` is what `revision-ancestor` compares and must be a hexadecimal commit id (`--head $(git rev-parse HEAD)`). |
 | `--effort low\|medium\|high` | `activity_effort`. |
-| `--findings-file PATH` (or `-` for stdin) | `new`, `review` and `reverify`: a YAML list of findings with `issue` and `evidence` (required) and optionally `failure_condition`, `suggested_action`, `resolution` (default `open`) and `waiver`; other keys are refused. A `review` records findings as found, so a resolution other than `open` is refused. |
+| `--findings-file PATH` (or `-` for stdin) | `new`, `worker`, `review` and `reverify`: a YAML list of findings with `issue` and `evidence` (required) and optionally `failure_condition`, `suggested_action`, `resolution` (default `open`) and `waiver`; other keys are refused. A `review` records findings as found, so a resolution other than `open` is refused. |
 | `--from latest` (or a review/reverify file) | `reverify` only, and required by its contract: carries the findings of the round being closed and sets its `review`. `latest` is the deciding review state among the envelopes of the current segment. |
 | `--resolve N` (repeatable) or `--resolve all` | `reverify` only: marks carried finding `N` (1-based) resolved; `all` resolves every open one. A number outside the carried findings is `ENVELOPE_FLAG_INVALID`. |
 | `--waive N=REASON` (repeatable) | `reverify` only: marks carried finding `N` waived and records the reason as its `waiver`; `suggested_action` is kept. |

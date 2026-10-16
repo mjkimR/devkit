@@ -210,6 +210,7 @@ def envelope_new_cmd(kind: str, **options: Any) -> None:
 @click.option("--problem", default="", help="An execution problem: its cause (with --recovery; needs_input or failed)")
 @click.option("--tried", "attempts", multiple=True, help="What was tried against the problem (repeatable)")
 @click.option("--recovery", default="", help="The recommended recovery for the problem")
+@FINDINGS_FILE
 @FORMAT_OPTION
 @boundary
 def envelope_worker_cmd(**options: Any) -> None:
@@ -217,7 +218,8 @@ def envelope_worker_cmd(**options: Any) -> None:
 
     --questions-file holds what it asks a person (status needs_input);
     --problem/--tried/--recovery an execution problem (status failed, or
-    needs_input when only a person can decide).
+    needs_input when only a person can decide); --findings-file what the
+    problem consists of, one finding each.
     """
     _write("worker", **options)
 

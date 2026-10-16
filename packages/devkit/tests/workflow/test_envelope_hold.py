@@ -627,6 +627,13 @@ def test_passed_gates_report_what_passed_them(staged: Path) -> None:
     assert "[GATE_PASSED: dev-integration stage=integrate policy=ask source=given]" in text
 
 
+def test_a_worker_problem_lists_its_findings(root: Path) -> None:
+    out = _new(root, "worker", "--stage", "review", "--summary", "range refused", "--problem", "boundary broken", "--recovery", "revert a.py", "--findings-file", "-", stdin="- { issue: a.py outside scope, evidence: a.py }\n")  # fmt: skip
+    assert out["status"] == "failed" and out["open_findings"] == 1
+    data = yaml.safe_load((root / SIMPLE_UNIT / "envelopes/worker-01.yaml").read_text())
+    assert data["findings"][0]["issue"] == "a.py outside scope" and data["problem"]["cause"] == "boundary broken"
+
+
 def test_a_worker_envelope_without_stage_is_refused_with_the_flag_to_add(root: Path) -> None:
     refused = run_cli("envelope", "worker", "-w", str(root), "--unit", SIMPLE_UNIT, "--summary", "x")
     assert refused.exit_code == 2 and "Missing option '--stage'" in refused.stderr
