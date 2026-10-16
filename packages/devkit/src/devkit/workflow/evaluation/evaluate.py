@@ -237,7 +237,8 @@ def _after_returns(envelopes: Envelopes, returns: list[tuple[Instant | None, int
     satisfies the stage. Each time spans what its precision allows (``record_instant``: a whole second for
     ``...:00Z``), and an envelope counts only when its earliest possible time is at or after the latest possible
     time of the return; when the order is unknown, asking for the envelope again is safer than letting stale
-    evidence count. ``envelope new`` stamps a new envelope after the segment's latest return, so it always counts.
+    evidence count. The envelope authoring commands stamp a new envelope after the segment's latest return, so it
+    always counts.
     An envelope without a stage of the definition or a ``created_at``, or a return without a time, voids nothing.
     """
     timed = [(at.end, target) for at, target in returns if at is not None and target >= 0]

@@ -35,14 +35,15 @@ never derive it from files yourself.
    stage, producing the artifacts the definition names. `[DELEGATE]` asks for a
    subagent with that role and isolation; delegate when the host supports it,
    otherwise perform the stage yourself and say so. Write review and report
-   envelopes with `uv run devkit workflow envelope new --unit <dir> --kind <kind>`,
-   passing the result as flags (`--status`, `--summary`, `--check <name>=PASS|FAIL|SKIP`,
-   `--findings-file`, and for a reverify `--from latest` with `--resolve`/`--waive`)
-   rather than editing YAML by hand; with only `--kind` it writes a skeleton to
-   fill in. Validate with `uv run devkit workflow envelope check --unit <dir>`;
+   envelopes with `uv run devkit workflow envelope review --unit <dir>` (and
+   `reverify`, `worker`, `answer`, `resolution`; any other kind with
+   `envelope new --unit <dir> --kind <kind>`), passing the result as flags
+   (`--status`, `--summary`, `--check <name>=PASS|FAIL|SKIP`, `--findings-file`,
+   and for a reverify `--from latest` with `--resolve`/`--waive`) rather than
+   editing YAML by hand; without them it writes a skeleton to fill in. Validate with `uv run devkit workflow envelope check --unit <dir>`;
    never overwrite an existing envelope. A run that cannot go on records the
-   cause with `--problem`, `--tried` and `--recovery` (a `failed` or
-   `needs_input` envelope); whoever actually fixes it writes a `resolution`
+   cause in a `worker` envelope with `--problem`, `--tried` and `--recovery`
+   (`failed` or `needs_input`); whoever actually fixes it writes a `resolution`
    with `--resolves <file>` and the fix in the same commit.
 4. Respect gates. `[GATE: <name> policy=ask satisfied=no ...]` with
    `[WAITING: human gate:<name>]` means a person must approve; it appears only
@@ -62,7 +63,7 @@ never derive it from files yourself.
    `[BLOCKED]` (an unresolved problem) or `[PENDING_QUESTION]` holds the gates
    from the stage that raised it on, whatever their policy. A `[REQUEST: id=question:... answer=envelope]`
    line is a question: ask it, and record the user's answer with
-   `uv run devkit workflow envelope new --unit <dir> --kind answer
+   `uv run devkit workflow envelope answer --unit <dir>
    --answers-to <worker-NN.yaml> --answers-file <file>`, one rewritten
    `decision` per question, never `workflow answer`.
 5. Stop on errors. An `[ERROR] (CODE)` block on stderr carries an `[ACTION]`

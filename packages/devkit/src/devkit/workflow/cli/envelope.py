@@ -1,9 +1,12 @@
-"""``envelope new`` and ``envelope check``."""
+"""``envelope new``, its kind commands (``worker``, ``answer``, ``resolution``, ``review``, ``reverify``) and
+``envelope check``."""
 
 from __future__ import annotations
 
 import sys
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import click
 
@@ -20,10 +23,48 @@ from devkit.workflow.unit.envelope import (
     write_envelope,
 )
 
+# Kinds whose fields need options of their own; ``envelope new`` refuses them.
+KIND_COMMANDS = ("worker", "answer", "resolution", "review", "reverify")
+
 
 @cli.group(name="envelope")
 def envelope_group() -> None:
     """Envelope files under <unit>/envelopes/."""
+
+
+def _common(stage_required: bool = False) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    """The options every authoring command takes; ``--stage`` is required where the contract needs it."""
+    options = (
+        WORKSPACE,
+        UNIT,
+        ANCHOR,
+        # click counts any default, None included, as a value and then never asks for a required option.
+        click.option("--stage", required=True, help="Stage the envelope belongs to")
+        if stage_required
+        else click.option("--stage", default="", help="Stage the envelope belongs to"),
+        click.option("--status", default=None, help="completed (default when authoring) | needs_input | failed"),
+        click.option("--summary", default=None, help="1-3 line judgment"),
+        click.option("--assume", "assumptions", multiple=True, help="An assumption the judgment rests on (repeatable)"),
+        click.option("--unverified", "unverified", multiple=True, help="An area that was not verified (repeatable)"),
+        click.option("--check", "checks", multiple=True, help="Check result name=PASS|FAIL|SKIP[ detail] (repeatable)"),
+        click.option("--base", default="", help="diff_scope base revision"),
+        click.option(
+            "--head", default="", help="diff_scope head commit id (hexadecimal; required for revision-ancestor)"
+        ),
+        click.option("--effort", default="", help="activity_effort the run applied: low | medium | high"),
+    )
+
+    def apply(fn: Callable[..., Any]) -> Callable[..., Any]:
+        for option in reversed(options):
+            fn = option(fn)
+        return fn
+
+    return apply
+
+
+FINDINGS_FILE = click.option(
+    "--findings-file", default=None, help="YAML list of findings to record (path, or - for stdin)"
+)
 
 
 def _read_items_file(flag: str, path: str | None, what: str) -> str | None:
@@ -41,40 +82,12 @@ def _read_items_file(flag: str, path: str | None, what: str) -> str | None:
         ) from exc
 
 
-@envelope_group.command(name="new")
-@WORKSPACE
-@UNIT
-@ANCHOR
-@click.option("--kind", required=True, help="Envelope kind, e.g. review, reverify, final-report")
-@click.option("--stage", default="", help="Stage the envelope belongs to")
-@click.option("--status", default=None, help="completed (default when authoring) | needs_input | failed")
-@click.option("--summary", default=None, help="1-3 line judgment")
-@click.option("--assume", "assumptions", multiple=True, help="An assumption the judgment rests on (repeatable)")
-@click.option("--unverified", "unverified", multiple=True, help="An area that was not verified (repeatable)")
-@click.option("--check", "checks", multiple=True, help="Check result name=PASS|FAIL|SKIP[ detail] (repeatable)")
-@click.option("--base", default="", help="diff_scope base revision")
-@click.option("--head", default="", help="diff_scope head commit id (hexadecimal; required for revision-ancestor)")
-@click.option("--findings-file", default=None, help="YAML list of findings to record (path, or - for stdin)")
-@click.option("--from", "source", default=None, help="Carry findings forward: latest, or a review/reverify file")
-@click.option(
-    "--resolve", "resolve", multiple=True, help="Mark a carried finding resolved: its number, or all (repeatable)"
-)
-@click.option("--waive", "waive", multiple=True, help="Mark a carried finding waived: <number>=<reason> (repeatable)")
-@click.option("--questions-file", default=None, help="worker: YAML list of questions (path, or - for stdin)")
-@click.option("--answers-to", default="", help="answer: the worker-NN.yaml whose questions it answers")
-@click.option("--answers-file", default=None, help="answer: YAML list of rewritten answers (path, or - for stdin)")
-@click.option("--problem", default="", help="An execution problem: its cause (with --recovery; needs_input or failed)")
-@click.option("--tried", "attempts", multiple=True, help="What was tried against the problem (repeatable)")
-@click.option("--recovery", default="", help="The recommended recovery for the problem")
-@click.option("--resolves", default="", help="resolution: the worker-NN.yaml whose problem it resolves")
-@click.option("--effort", default="", help="activity_effort the run applied: low | medium | high")
-@FORMAT_OPTION
-@boundary
-def envelope_new_cmd(
+def _write(
+    kind: str,
+    *,
     workspace_root: str | None,
     unit: str,
     anchor: str | None,
-    kind: str,
     stage: str,
     status: str | None,
     summary: str | None,
@@ -83,42 +96,21 @@ def envelope_new_cmd(
     checks: tuple[str, ...],
     base: str,
     head: str,
-    findings_file: str | None,
-    source: str | None,
-    resolve: tuple[str, ...],
-    waive: tuple[str, ...],
-    questions_file: str | None,
-    answers_to: str,
-    answers_file: str | None,
-    problem: str,
-    attempts: tuple[str, ...],
-    recovery: str,
-    resolves: str,
     effort: str,
     output_format: str,
+    findings_file: str | None = None,
+    source: str | None = None,
+    resolve: tuple[str, ...] = (),
+    waive: tuple[str, ...] = (),
+    questions_file: str | None = None,
+    answers_to: str = "",
+    answers_file: str | None = None,
+    problem: str = "",
+    attempts: tuple[str, ...] = (),
+    recovery: str = "",
+    resolves: str = "",
 ) -> None:
-    """Write the next <kind>-NN.yaml; existing files are never overwritten.
-
-    With only --kind (and --stage) a needs_input skeleton is written for the
-    author to fill in. Any other flag switches to authoring: the envelope is
-    written complete, status defaults to completed, and reverify carries the
-    findings of the round it closes with --from latest.
-
-    The envelope records the workflow the unit is bound to and the segment
-    (finished handoffs) it is in; checks count it only in that segment. The
-    definition itself is not loaded (only read for its id when the default is
-    a .md path), so a review can be recorded while it is invalid, or missing
-    when it is named by id.
-    created_at is stamped after the segment's latest return, so a return never
-    voids an envelope written after it.
-
-    worker, answer and resolution envelopes carry their own fields: a worker
-    envelope (one per run) --questions-file for what it asks a person and
-    --problem/--tried/--recovery for an execution problem; an answer
-    --answers-to and --answers-file; a resolution --resolves. --effort goes
-    on any kind. The written envelope satisfies the contract of its kind,
-    and answers_to/resolves must name one of the unit's worker envelopes.
-    """
+    """Write the next <kind>-NN.yaml: a skeleton when no authoring flag is given, else the complete envelope."""
     ws = workspace(workspace_root)
     scope = ws.unit_scope(unit, anchor=anchor)
     unit_dir, workflow, segment = scope.dir, scope.workflow, scope.binding.segment
@@ -176,6 +168,114 @@ def envelope_new_cmd(
         echo_json({"file": rel, "kind": kind, "seq": seq, "status": written_status, "open_findings": open_findings})
         return
     click.echo(f"[ENVELOPE: {rel} kind={kind} seq={seq:02d} status={written_status} open_findings={open_findings}]")
+
+
+@envelope_group.command(name="new")
+@click.option("--kind", required=True, help="Envelope kind, e.g. scout, red, final-report")
+@_common()
+@FINDINGS_FILE
+@FORMAT_OPTION
+@boundary
+def envelope_new_cmd(kind: str, **options: Any) -> None:
+    """Write the next <kind>-NN.yaml of a kind without fields of its own; existing files are never overwritten.
+
+    worker, answer, resolution, review and reverify envelopes are written by
+    their own commands (`envelope <kind>`), which take the options of their
+    fields; this command refuses them.
+
+    With only --kind (and --stage) a needs_input skeleton is written for the
+    author to fill in. Any other flag switches to authoring: the envelope is
+    written complete and status defaults to completed. The same holds for
+    every kind command.
+
+    The envelope records the workflow the unit is bound to and the segment
+    (finished handoffs) it is in; checks count it only in that segment. The
+    definition itself is not loaded (only read for its id when the default is
+    a .md path), so a review can be recorded while it is invalid, or missing
+    when it is named by id.
+    created_at is stamped after the segment's latest return, so a return never
+    voids an envelope written after it.
+    """
+    if kind in KIND_COMMANDS:
+        raise EnvelopeFlagError(
+            f"kind {kind} has its own command",
+            fix=f"Use `devkit workflow envelope {kind}` with the same options",
+        )
+    _write(kind, **options)
+
+
+@envelope_group.command(name="worker")
+@_common(stage_required=True)
+@click.option("--questions-file", default=None, help="YAML list of questions for a person (path, or - for stdin)")
+@click.option("--problem", default="", help="An execution problem: its cause (with --recovery; needs_input or failed)")
+@click.option("--tried", "attempts", multiple=True, help="What was tried against the problem (repeatable)")
+@click.option("--recovery", default="", help="The recommended recovery for the problem")
+@FORMAT_OPTION
+@boundary
+def envelope_worker_cmd(**options: Any) -> None:
+    """Write the next worker-NN.yaml, the record of one run (one per run).
+
+    --questions-file holds what it asks a person (status needs_input);
+    --problem/--tried/--recovery an execution problem (status failed, or
+    needs_input when only a person can decide).
+    """
+    _write("worker", **options)
+
+
+@envelope_group.command(name="answer")
+@_common()
+@click.option("--answers-to", default="", help="The worker-NN.yaml whose questions it answers")
+@click.option("--answers-file", default=None, help="YAML list of rewritten answers (path, or - for stdin)")
+@FORMAT_OPTION
+@boundary
+def envelope_answer_cmd(**options: Any) -> None:
+    """Write the next answer-NN.yaml: the decisions on a worker envelope's questions.
+
+    --answers-to must name one of the unit's worker envelopes with those
+    questions and options.
+    """
+    _write("answer", **options)
+
+
+@envelope_group.command(name="resolution")
+@_common()
+@click.option("--resolves", default="", help="The worker-NN.yaml whose problem it resolves")
+@FORMAT_OPTION
+@boundary
+def envelope_resolution_cmd(**options: Any) -> None:
+    """Write the next resolution-NN.yaml: the fix of a worker envelope's problem.
+
+    --resolves must name one of the unit's worker envelopes with a problem.
+    """
+    _write("resolution", **options)
+
+
+@envelope_group.command(name="review")
+@_common()
+@FINDINGS_FILE
+@FORMAT_OPTION
+@boundary
+def envelope_review_cmd(**options: Any) -> None:
+    """Write the next review-NN.yaml: findings as found (all open); envelope reverify closes the round."""
+    _write("review", **options)
+
+
+@envelope_group.command(name="reverify")
+@_common()
+@click.option("--from", "source", default=None, help="The round it closes: latest, or a review/reverify file")
+@click.option(
+    "--resolve", "resolve", multiple=True, help="Mark a carried finding resolved: its number, or all (repeatable)"
+)
+@click.option("--waive", "waive", multiple=True, help="Mark a carried finding waived: <number>=<reason> (repeatable)")
+@FINDINGS_FILE
+@FORMAT_OPTION
+@boundary
+def envelope_reverify_cmd(**options: Any) -> None:
+    """Write the next reverify-NN.yaml: carry the findings of the round it closes (--from latest) and close them.
+
+    --findings-file adds findings found while reverifying.
+    """
+    _write("reverify", **options)
 
 
 @envelope_group.command(name="check")

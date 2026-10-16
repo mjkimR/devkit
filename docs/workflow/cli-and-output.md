@@ -18,13 +18,15 @@ devkit workflow show --unit DIR [--anchor FILE] [--format text|json]  # the unit
 devkit workflow checks [--format text|json]                      # registered check names, classes and parameters (plugins included)
 devkit workflow validate [PATH]... [--format text|json]          # validate definitions (default: both sources, plus roles and shared stages)
 devkit workflow list [--status S]... [--exclude-status S]... [--format text|json]  # discovered units across every layout
-devkit workflow envelope new --unit DIR [--anchor FILE] --kind KIND [--stage ID] [--format text|json]  # write the next envelopes/<kind>-NN.yaml skeleton
-devkit workflow envelope new --unit DIR --kind KIND [--status S] [--summary TEXT] [--assume TEXT]... [--unverified TEXT]...
-                            [--check NAME=PASS|FAIL|SKIP[ detail]]... [--base REV] [--head REV] [--findings-file PATH|-]
-                            [--from latest|FILE] [--resolve N|all]... [--waive N=REASON]...
-                            [--questions-file PATH|-] [--answers-to FILE --answers-file PATH|-]
-                            [--problem CAUSE [--tried TEXT]... --recovery TEXT] [--resolves FILE]
-                            [--effort low|medium|high]                                        # write it complete
+# COMMON: --unit DIR [--anchor FILE] [--stage ID] [--status S] [--summary TEXT] [--assume TEXT]... [--unverified TEXT]...
+#         [--check NAME=PASS|FAIL|SKIP[ detail]]... [--base REV] [--head REV] [--effort low|medium|high] [--format text|json]
+# With only --unit (and --stage) each writes the next envelopes/<kind>-NN.yaml skeleton; any other flag writes it complete.
+devkit workflow envelope new --kind KIND COMMON [--findings-file PATH|-]      # any kind but the five below
+devkit workflow envelope worker --stage ID COMMON [--questions-file PATH|-] [--problem CAUSE [--tried TEXT]... --recovery TEXT]
+devkit workflow envelope answer COMMON [--answers-to FILE --answers-file PATH|-]
+devkit workflow envelope resolution COMMON [--resolves FILE]
+devkit workflow envelope review COMMON [--findings-file PATH|-]
+devkit workflow envelope reverify COMMON [--from latest|FILE] [--resolve N|all]... [--waive N=REASON]... [--findings-file PATH|-]
 devkit workflow envelope check --unit DIR [--format text|json]   # every envelope file, contract violations and the hold
 ```
 
@@ -68,7 +70,7 @@ The library raises the same codes, one class per code. `WorkflowError` is the ba
 | `GIVEN_INVALID` | `GivenInvalidError` | `INPUT_ERROR` | `2` | a `--given` name is neither a gate nor a registered runner or human check |
 | `WORKFLOW_DRIFT` | `DriftError` | `BLOCKED` | `1` | the bound schema hash changed under in-flight work; `[FIX]` names the `bind` command |
 | `REQUEST_UNKNOWN` | `RequestUnknownError` | `INPUT_ERROR` | `2` | `answer --request` is not an open request of the unit (and not `feedback:*`); the details list the open ids |
-| `DECISION_INVALID` | `DecisionInvalidError` | `INPUT_ERROR` | `2` | the `answer` action or value does not fit the request: a value on `approve` or on an action other than `accept`, a missing, unknown or ineligible option, more than one value; or the request is a `question:*` one, answered by an answer envelope (`[FIX]` is the `envelope new --kind answer` command) |
+| `DECISION_INVALID` | `DecisionInvalidError` | `INPUT_ERROR` | `2` | the `answer` action or value does not fit the request: a value on `approve` or on an action other than `accept`, a missing, unknown or ineligible option, more than one value; or the request is a `question:*` one, answered by an answer envelope (`[FIX]` is the `envelope answer` command) |
 | `DECISION_RECORD_INVALID`, `HANDOFF_CHOICE_IGNORED` | `DecisionRecordError`, `HandoffChoiceIgnoredError` | `INPUT_ERROR` | `2` | collected with `file`: a decision record does not match the format (`parse_record`, `load_decisions`); a recorded handoff choice is not an eligible candidate and is ignored |
 | `RETURN_INVALID` | `ReturnInvalidError` | `INPUT_ERROR` | `2` | `return --to` names no stage of the workflow, or one after the current stage |
 | `HANDOFF_NOT_READY`, `HANDOFF_NONE`, `HANDOFF_OFF` | `HandoffNotReadyError`, `HandoffNoneError`, `HandoffOffError` | `INPUT_ERROR` | `2` | the unit's workflow is not complete, declares no `next`, or handoff is disabled by policy |
@@ -76,7 +78,7 @@ The library raises the same codes, one class per code. `WorkflowError` is the ba
 | `HANDOFF_UNDECIDED`, `HANDOFF_INVALID`, `HANDOFF_INELIGIBLE` | `HandoffUndecidedError`, `HandoffInvalidError`, `HandoffIneligibleError` | `INPUT_ERROR` | `2` | `auto` found no eligible candidate; the choice is not a candidate, or its `when` checks fail |
 | `HANDOFF_LAYOUT_MISMATCH` | `HandoffLayoutMismatchError` | `INPUT_ERROR` | `2` | the chosen candidate's anchor differs from the unit's; relocate the unit, then `bind` |
 | `HANDOFF_HELD` | `HandoffHeldError` | `BLOCKED` | `1` | `handoff` of a complete unit its envelopes hold: an unresolved problem, an unanswered question or a malformed worker envelope (one detail each); clear them first ([Review Envelopes, section 4](envelopes.md#4-hold-blocked-and-waiting-for-answers)) |
-| `ENVELOPE_STATUS_INVALID`, `ENVELOPE_FLAG_INVALID`, `ENVELOPE_FROM_INVALID`, `ENVELOPE_FINDINGS_INVALID`, `ENVELOPE_ITEMS_INVALID`, `ENVELOPE_REFERENCE_INVALID` | `EnvelopeStatusError`, `EnvelopeFlagError`, `EnvelopeFromError`, `EnvelopeFindingsError`, `EnvelopeItemsError`, `EnvelopeReferenceError` (base `AuthoringError`) | `INPUT_ERROR` | `2` | `envelope new` authoring flags that cannot produce a valid envelope; a `--resolve`/`--waive` number outside the carried findings, and fields or a status the kind does not allow, are `ENVELOPE_FLAG_INVALID`; a malformed `--questions-file` or `--answers-file` is `ENVELOPE_ITEMS_INVALID`; an `--answers-to` or `--resolves` that names no fitting envelope of the unit is `ENVELOPE_REFERENCE_INVALID` |
+| `ENVELOPE_STATUS_INVALID`, `ENVELOPE_FLAG_INVALID`, `ENVELOPE_FROM_INVALID`, `ENVELOPE_FINDINGS_INVALID`, `ENVELOPE_ITEMS_INVALID`, `ENVELOPE_REFERENCE_INVALID` | `EnvelopeStatusError`, `EnvelopeFlagError`, `EnvelopeFromError`, `EnvelopeFindingsError`, `EnvelopeItemsError`, `EnvelopeReferenceError` (base `AuthoringError`) | `INPUT_ERROR` | `2` | authoring flags (`envelope new` and the kind commands) that cannot produce a valid envelope, or `envelope new` given a kind that has its own command; a `--resolve`/`--waive` number outside the carried findings, and fields or a status the kind does not allow, are `ENVELOPE_FLAG_INVALID`; a malformed `--questions-file` or `--answers-file` is `ENVELOPE_ITEMS_INVALID`; an `--answers-to` or `--resolves` that names no fitting envelope of the unit is `ENVELOPE_REFERENCE_INVALID` |
 | `ENVELOPE_KIND_INVALID` | `EnvelopeKindError` | `INPUT_ERROR` | `2` | an envelope kind does not match `[a-z][a-z0-9-]*` (`write_envelope`) |
 | `ENVELOPE_INVALID` | `EnvelopeFormatError` | `INPUT_ERROR` | `1` | collected with `file` by `load_envelopes`: a malformed envelope file, or an answer or resolution whose `answers_to` or `resolves` names no fitting envelope; `envelope check` reports each one with its `[TARGET]` |
 | `RECEIPT_INVALID` | `devkit.core` `ReceiptError` | `MAINTENANCE` | `2` | `.devkit/installation.json` exists but does not match its schema; restore it from version control, then run `devkit sync` |
@@ -179,4 +181,4 @@ The other commands:
 - `list --format json`: `{"units": [{"unit", "anchor", "status", "workflow", "workflow_hash", "history", "error"}]}` across every layout in use; the text form is `[UNIT: <dir> status=S workflow=W anchor=A]`, with `error="..."` for a unit whose anchor cannot be read (in JSON, the `ANCHOR_INVALID` advisory `to_dict()`). `--status <value>` keeps units whose anchor `status` equals a given value (repeatable) and `--exclude-status <value>` drops them; both are exact matches and nothing is excluded by default, so active units are `--exclude-status completed`.
 - `handoff --format json`: `{"unit", "from", "to", "workflow_hash", "policy", "decision", "history"}`.
 - `requests --format json`: `{"requests": [...], "errors": [...]}`, where `errors` holds the error that stopped `lint-clean`, if any; in text it is a `[LINT_ERROR: "..."]` line after the requests, and the command exits with its exit code as `next` does. `answer` and `return` emit the written record with its `file`.
-- `envelope new` and `envelope check`: see [Review Envelopes](envelopes.md).
+- `envelope new`, `worker`, `answer`, `resolution`, `review`, `reverify` and `check`: see [Review Envelopes](envelopes.md).

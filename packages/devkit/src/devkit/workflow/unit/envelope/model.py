@@ -135,7 +135,7 @@ class Envelope:
     stage: str = ""
     workflow: str = ""  # the workflow the unit was bound to when written; empty: counts in every segment
     segment: int | None = None  # finished segments (workflow_history entries) when written; None: any segment
-    created_at: str = ""  # ISO 8601 UTC, as `envelope new` writes it; empty when the file has none
+    created_at: str = ""  # ISO 8601 UTC, as the authoring commands write it; empty when the file has none
     summary: str = ""
     review: str = ""  # reverify: the review-NN.yaml it closes
     findings: tuple[Finding, ...] = ()

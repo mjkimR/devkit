@@ -115,7 +115,7 @@ def record_answer(
             source, _, question = request.target.name.partition("#")
             raise DecisionInvalidError(
                 f"{request_id} is a question; its answer is an answer envelope, not a decision record",
-                fix=f"devkit workflow envelope new --unit {ref.rel} --kind answer --answers-to {source}"
+                fix=f"devkit workflow envelope answer --unit {ref.rel} --answers-to {source}"
                 f" --answers-file <file with `- question: {question}`, choice, decision>",
             )
         value = validate_answer(request, action, values)

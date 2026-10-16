@@ -178,7 +178,7 @@ def _chain(root: Path) -> Path:
 
 def _review(root: Path, *extra: str) -> Result:
     return run_cli(
-        "envelope", "new", "-w", str(root), "--unit", SIMPLE_UNIT, "--kind", "review", "--stage", "review",
+        "envelope", "review", "-w", str(root), "--unit", SIMPLE_UNIT, "--stage", "review",
         "--summary", "ok", *extra,
     )  # fmt: skip
 
@@ -227,9 +227,7 @@ def test_reverify_from_latest_reads_only_the_current_segment(tmp_path: Path) -> 
     assert run_cli("new", "-w", str(root), "u").exit_code == 0
     assert _review(root).exit_code == 0
     assert run_cli("handoff", "-w", str(root), "--unit", SIMPLE_UNIT, "--no-lint").exit_code == 0
-    carried = run_cli(
-        "envelope", "new", "-w", str(root), "--unit", SIMPLE_UNIT, "--kind", "reverify", "--from", "latest"
-    )
+    carried = run_cli("envelope", "reverify", "-w", str(root), "--unit", SIMPLE_UNIT, "--from", "latest")
     assert carried.exit_code == 2 and "(ENVELOPE_FROM_INVALID)" in carried.stderr
 
 
@@ -317,7 +315,7 @@ def test_envelope_new_does_not_need_the_definition(tmp_path: Path, definition: s
         path.write_text(definition)
     assert run_cli("next", "-w", str(root), "--unit", SIMPLE_UNIT, "--no-lint").exit_code == 2
     result = run_cli(
-        "envelope", "new", "-w", str(root), "--unit", SIMPLE_UNIT, "--kind", "review", "--summary", "ok",
+        "envelope", "review", "-w", str(root), "--unit", SIMPLE_UNIT, "--summary", "ok",
         "--format", "json",
     )  # fmt: skip
     assert result.exit_code == 0, result.output

@@ -275,7 +275,7 @@ def test_compose_review_and_reverify_round_trip(tmp_path: Path) -> None:
     [
         ({"kind": "review", "status": "maybe"}, "ENVELOPE_STATUS_INVALID", "not in"),
         ({"kind": "review", "resolve": ["1"]}, "ENVELOPE_FROM_INVALID", "need --from"),
-        ({"kind": "review", "source": "latest"}, "ENVELOPE_FLAG_INVALID", "use kind reverify"),
+        ({"kind": "review", "source": "latest"}, "ENVELOPE_FLAG_INVALID", "a reverify carries findings"),
         ({"kind": "reverify"}, "ENVELOPE_FROM_INVALID", "reverify needs --from"),
         ({"kind": "reverify", "source": "latest"}, "ENVELOPE_FROM_INVALID", "no review envelope"),
         ({"kind": "final-report", "checks": ["tests"]}, "ENVELOPE_FLAG_INVALID", "name=PASS|FAIL|SKIP"),
@@ -334,13 +334,11 @@ def test_cli_envelope_new_authoring_and_check(workspace: Path, tmp_path: Path) -
     findings.write_text("- issue: Null deref\n  evidence: a.py:3\n")
     review = _run(
         "envelope",
-        "new",
+        "review",
         "-w",
         str(workspace),
         "--unit",
         unit,
-        "--kind",
-        "review",
         "--stage",
         "review",
         "--summary",
@@ -364,13 +362,11 @@ def test_cli_envelope_new_authoring_and_check(workspace: Path, tmp_path: Path) -
 
     reverify = _run(
         "envelope",
-        "new",
+        "reverify",
         "-w",
         str(workspace),
         "--unit",
         unit,
-        "--kind",
-        "reverify",
         "--from",
         "latest",
         "--resolve",
@@ -383,11 +379,9 @@ def test_cli_envelope_new_authoring_and_check(workspace: Path, tmp_path: Path) -
     data = yaml.safe_load((workspace / unit / "envelopes/reverify-01.yaml").read_text())
     assert data["review"] == "review-01.yaml" and data["findings"][0]["resolution"] == "resolved"
 
-    bad = _run("envelope", "new", "-w", str(workspace), "--unit", unit, "--kind", "review", "--status", "nope")
+    bad = _run("envelope", "review", "-w", str(workspace), "--unit", unit, "--status", "nope")
     assert bad.exit_code == 2 and "(ENVELOPE_STATUS_INVALID)" in bad.stderr
-    unreadable = _run(
-        "envelope", "new", "-w", str(workspace), "--unit", unit, "--kind", "review", "--findings-file", "/nope.yaml"
-    )
+    unreadable = _run("envelope", "review", "-w", str(workspace), "--unit", unit, "--findings-file", "/nope.yaml")
     assert unreadable.exit_code == 2 and "(ENVELOPE_FLAG_INVALID)" in unreadable.stderr
 
     ok = _run("envelope", "check", "-w", str(workspace), "--unit", unit)

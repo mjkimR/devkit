@@ -177,9 +177,22 @@ def test_envelope_check_needs_only_some_anchor_and_new_resolves_the_unit(ambiguo
     unit = ["-w", str(ambiguous), "--unit", "docs/proposals/dup"]
     assert _run("envelope", "check", *unit).exit_code == 0
     # `new` records the bound workflow and segment, so it resolves the unit like every unit command.
-    refused = _run("envelope", "new", *unit, "--kind", "review")
+    refused = _run(
+        "envelope",
+        "review",
+        *unit,
+    )
     assert refused.exit_code == 2 and "(ANCHOR_AMBIGUOUS)" in refused.stderr
-    assert _run("envelope", "new", *unit, "--anchor", "proposal.md", "--kind", "review").exit_code == 0
+    assert (
+        _run(
+            "envelope",
+            "review",
+            *unit,
+            "--anchor",
+            "proposal.md",
+        ).exit_code
+        == 0
+    )
     missing = _run("envelope", "check", "-w", str(ambiguous), "--unit", "docs/proposals")
     assert missing.exit_code == 2 and "(UNIT_NOT_FOUND)" in missing.stderr
 

@@ -388,8 +388,8 @@ class EnvelopeFormatError(_FileProblem):
     input_error = True
     exit_code = ExitCode.FINDINGS
     fix = (
-        "Fix or remove the file; write envelopes with `devkit workflow envelope new`, which refuses one that breaks"
-        f" the contract (devkit's {ENVELOPE_CONTRACT})"
+        "Fix or remove the file; write envelopes with `devkit workflow envelope new` or the kind's own command,"
+        f" which refuses one that breaks the contract (devkit's {ENVELOPE_CONTRACT})"
     )
     # What could still be read of the file, so a malformed worker envelope holds from its own stage.
     stage: str = ""
@@ -405,7 +405,7 @@ class EnvelopeKindError(WorkflowError):
 
 
 class AuthoringError(WorkflowError):
-    """Base of the ``envelope new`` authoring errors: flags that cannot produce a valid envelope."""
+    """Base of the envelope authoring errors (``envelope new``, the kind commands): flags that make no valid envelope."""
 
     input_error = True
 

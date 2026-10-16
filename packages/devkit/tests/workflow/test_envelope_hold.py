@@ -215,19 +215,19 @@ def test_waiting_for_answers_is_not_a_problem(tmp_path: Path) -> None:
 # -- authoring ---------------------------------------------------------------------------------------------------------
 
 
-def _new(root: Path, *args: str, stdin: str | None = None) -> dict[str, object]:
+def _new(root: Path, kind: str, *args: str, stdin: str | None = None) -> dict[str, object]:
     from click.testing import CliRunner
     from devkit.workflow.cli import cli
 
     result = CliRunner().invoke(
-        cli, ["envelope", "new", "-w", str(root), "--unit", SIMPLE_UNIT, "--format", "json", *args], input=stdin
+        cli, ["envelope", kind, "-w", str(root), "--unit", SIMPLE_UNIT, "--format", "json", *args], input=stdin
     )
     return json.loads(result.stdout) if result.exit_code == 0 else {"exit": result.exit_code, "err": result.stdout}
 
 
 def test_authoring_question_answer_problem_and_resolution(root: Path) -> None:
     unit = root / SIMPLE_UNIT
-    asked = _new(root, "--kind", "worker", "--stage", "review", "--summary", "two questions", "--questions-file", "-", stdin=QUESTIONS)  # fmt: skip
+    asked = _new(root, "worker", "--stage", "review", "--summary", "two questions", "--questions-file", "-", stdin=QUESTIONS)  # fmt: skip
     assert asked["status"] == "needs_input" and asked["file"] == f"{SIMPLE_UNIT}/envelopes/worker-01.yaml"
     data = yaml.safe_load((unit / "envelopes/worker-01.yaml").read_text())
     assert data["questions"][0]["options"][0] == {"id": "a", "description": "Keep TOML", "recommended": True}
@@ -235,15 +235,15 @@ def test_authoring_question_answer_problem_and_resolution(root: Path) -> None:
         "- { question: q1, choice: a, decision: Keep TOML and tidy key names., constraints: [warn one release] }\n"
         "- { question: q2, choice: null, decision: Migrate keys only. }\n"
     )
-    answered = _new(root, "--kind", "answer", "--stage", "review", "--summary", "q1 and q2 decided", "--answers-to", "envelopes/worker-01.yaml", "--answers-file", str(root / "answers.yaml"), "--effort", "low")  # fmt: skip
+    answered = _new(root, "answer", "--stage", "review", "--summary", "q1 and q2 decided", "--answers-to", "envelopes/worker-01.yaml", "--answers-file", str(root / "answers.yaml"), "--effort", "low")  # fmt: skip
     assert answered["status"] == "completed"
     data = yaml.safe_load((unit / "envelopes/answer-01.yaml").read_text())
     assert data["answers_to"] == "worker-01.yaml" and data["activity_effort"] == "low"
     assert data["answers"][0]["constraints"] == ["warn one release"]
-    failed = _new(root, "--kind", "worker", "--stage", "review", "--summary", "stopped", "--problem", "fixture broken", "--tried", "rerun", "--recovery", "repair the fixture")  # fmt: skip
+    failed = _new(root, "worker", "--stage", "review", "--summary", "stopped", "--problem", "fixture broken", "--tried", "rerun", "--recovery", "repair the fixture")  # fmt: skip
     assert failed["status"] == "failed"
     assert load_envelopes(unit).hold().blocked
-    resolved = _new(root, "--kind", "resolution", "--summary", "fixture repaired; tests pass", "--resolves", "worker-02.yaml")  # fmt: skip
+    resolved = _new(root, "resolution", "--summary", "fixture repaired; tests pass", "--resolves", "worker-02.yaml")  # fmt: skip
     assert resolved["status"] == "completed"
     assert not load_envelopes(unit).hold()
 
@@ -284,10 +284,10 @@ def test_authoring_refuses_what_the_contract_refuses(root: Path, args: tuple[str
 
 
 def test_malformed_items_are_refused(root: Path) -> None:
-    out = _new(root, "--kind", "worker", "--summary", "x", "--questions-file", "-", stdin="- { id: Q, title: t, prompt: p }\n")  # fmt: skip
+    out = _new(root, "worker", "--stage", "review", "--summary", "x", "--questions-file", "-", stdin="- { id: Q, title: t, prompt: p }\n")  # fmt: skip
     assert out["exit"] == 2 and "ENVELOPE_ITEMS_INVALID" in str(out["err"])
-    _new(root, "--kind", "worker", "--summary", "x", "--questions-file", "-", stdin=QUESTIONS)
-    out = _new(root, "--kind", "answer", "--summary", "x", "--answers-to", "worker-01.yaml", "--answers-file", "-", stdin="- { question: q1, choice: c, decision: d }\n")  # fmt: skip
+    _new(root, "worker", "--stage", "review", "--summary", "x", "--questions-file", "-", stdin=QUESTIONS)
+    out = _new(root, "answer", "--summary", "x", "--answers-to", "worker-01.yaml", "--answers-file", "-", stdin="- { question: q1, choice: c, decision: d }\n")  # fmt: skip
     assert out["exit"] == 2 and "ENVELOPE_REFERENCE_INVALID" in str(out["err"])
 
 
@@ -299,7 +299,7 @@ def _next(root: Path, *args: str) -> dict[str, object]:
 
 
 def test_questions_are_choose_requests_answered_by_an_envelope(root: Path) -> None:
-    _new(root, "--kind", "worker", "--stage", "review", "--summary", "x", "--questions-file", "-", stdin=QUESTIONS)
+    _new(root, "worker", "--stage", "review", "--summary", "x", "--questions-file", "-", stdin=QUESTIONS)
     result = _next(root)
     requests = {r["id"]: r for r in result["requests"]}  # type: ignore[union-attr]
     q1 = requests["question:worker-01.q1"]
@@ -314,7 +314,7 @@ def test_questions_are_choose_requests_answered_by_an_envelope(root: Path) -> No
         ' stage=review options=a,b recommended=a note=allowed answer=envelope context="proposal.md section 3"]' in text
     )
     refused = run_cli("answer", "-w", str(root), "--unit", SIMPLE_UNIT, "--no-lint", "--request", "question:worker-01.q1", "--action", "accept", "--value", "a")  # fmt: skip
-    assert refused.exit_code == 2 and "DECISION_INVALID" in refused.stderr and "--kind answer" in refused.stderr
+    assert refused.exit_code == 2 and "DECISION_INVALID" in refused.stderr and "envelope answer" in refused.stderr
 
 
 @pytest.mark.parametrize("policy", ["ask", "auto"])
@@ -628,5 +628,9 @@ def test_passed_gates_report_what_passed_them(staged: Path) -> None:
 
 
 def test_a_worker_envelope_without_stage_is_refused_with_the_flag_to_add(root: Path) -> None:
-    out = _new(root, "--kind", "worker", "--summary", "x", "--effort", "medium")
-    assert out["exit"] == 2 and "Pass --stage" in str(out["err"])
+    refused = run_cli("envelope", "worker", "-w", str(root), "--unit", SIMPLE_UNIT, "--summary", "x")
+    assert refused.exit_code == 2 and "Missing option '--stage'" in refused.stderr
+    loaded = load_envelopes(root / SIMPLE_UNIT)
+    with pytest.raises(AuthoringError, match="names the stage") as caught:
+        compose_envelope(unit_dir=root / SIMPLE_UNIT, envelopes=loaded, kind="worker", summary="x", effort="medium")
+    assert "Pass --stage" in (caught.value.fix or "")

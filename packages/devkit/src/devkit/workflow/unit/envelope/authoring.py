@@ -1,4 +1,4 @@
-"""Authoring ``envelope new``: flag parsing, carrying review findings forward and rendering."""
+"""Authoring envelopes (``envelope new`` and the kind commands): flag parsing, carrying findings forward, rendering."""
 
 from __future__ import annotations
 
@@ -289,8 +289,8 @@ def _check_flag_combination(kind: str, source: str | None, closing: bool, head: 
         )
     if kind == "review" and source is not None:
         raise EnvelopeFlagError(
-            "a review records findings as found; use kind reverify to carry findings forward with --from",
-            fix="Use --kind reverify --from latest",
+            "a review records findings as found; a reverify carries findings forward with --from",
+            fix="Use `devkit workflow envelope reverify --from latest`",
         )
     if kind == "reverify" and source is None:
         raise EnvelopeFromError(
@@ -333,7 +333,7 @@ def compose_envelope(
     effort: str = "",
     loaded: Envelopes | None = None,
 ) -> Envelope:
-    """Validate the authoring flags of ``envelope new`` and build the envelope to write.
+    """Validate the authoring flags of an envelope command and build the envelope to write.
 
     ``envelopes`` are those of the current segment (``--from latest`` reads
     them); ``workflow`` and ``segment`` scope the new envelope to it.

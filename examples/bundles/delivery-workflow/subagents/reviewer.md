@@ -29,8 +29,8 @@ acceptance criteria.
 
 ## Return
 
-A review envelope written with `devkit workflow envelope new --unit <dir>
---kind review --stage review`, never by editing YAML:
+A review envelope written with `devkit workflow envelope review --unit <dir>
+--stage review`, never by editing YAML:
 
 - `--status completed` when the review ran (zero findings is a pass),
   `needs_input` when it could not run without an answer, `failed` when it

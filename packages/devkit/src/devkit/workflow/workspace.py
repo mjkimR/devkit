@@ -396,9 +396,9 @@ class Workspace:
     def unit_scope(self, unit: str | Path, *, anchor: str | None = None) -> UnitScope:
         """The unit's anchor (``locate_anchor``), binding and workflow id, without loading the definition.
 
-        Enough to scope what is recorded in the unit (``envelope new``), so a
-        missing or invalid definition does not stop
-        it. An unbound unit follows ``[workflow].default``; without one it is
+        Enough to scope what is recorded in the unit (the envelope authoring
+        commands), so a missing or invalid definition does not stop it. An
+        unbound unit follows ``[workflow].default``; without one it is
         ``WorkflowNotSelectedError``. A default that is a definition path is
         read (unvalidated, as ``load_definition`` does) for its id, the scope
         evaluation counts envelopes in; a missing or unreadable file raises

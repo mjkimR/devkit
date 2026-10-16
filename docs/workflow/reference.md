@@ -61,13 +61,14 @@ just workflow show direct-delivery
 just workflow show --unit <dir>                       # the unit's bound workflow plus its binding and drift
 just workflow list                                    # units across every layout in use
 just workflow list --exclude-status completed         # active units; --status <value> keeps exact matches
-just workflow envelope new --unit <dir> --kind review # needs_input skeleton to fill in
-just workflow envelope new --unit <dir> --kind review --summary "..." --findings-file findings.yaml --check tests="PASS 3/3"
-just workflow envelope new --unit <dir> --kind reverify --from latest --resolve 1 --waive "2=accepted cost"
-just workflow envelope new --unit <dir> --kind worker --summary "..." --questions-file questions.yaml
-just workflow envelope new --unit <dir> --kind answer --summary "..." --answers-to worker-01.yaml --answers-file answers.yaml
-just workflow envelope new --unit <dir> --kind worker --summary "..." --problem "<cause>" --tried "<attempt>" --recovery "<step>"
-just workflow envelope new --unit <dir> --kind resolution --summary "<what was done>" --resolves worker-02.yaml
+just workflow envelope review --unit <dir>            # needs_input skeleton to fill in
+just workflow envelope review --unit <dir> --summary "..." --findings-file findings.yaml --check tests="PASS 3/3"
+just workflow envelope reverify --unit <dir> --from latest --resolve 1 --waive "2=accepted cost"
+just workflow envelope worker --unit <dir> --stage <stage> --summary "..." --questions-file questions.yaml
+just workflow envelope answer --unit <dir> --summary "..." --answers-to worker-01.yaml --answers-file answers.yaml
+just workflow envelope worker --unit <dir> --stage <stage> --summary "..." --problem "<cause>" --tried "<attempt>" --recovery "<step>"
+just workflow envelope resolution --unit <dir> --summary "<what was done>" --resolves worker-02.yaml
+just workflow envelope new --unit <dir> --kind final-report --check tests="PASS 3/3"  # any other kind
 just workflow envelope check --unit <dir>             # every envelope file and any contract violation
 ```
 
@@ -144,7 +145,7 @@ The main calls:
 | --- | --- |
 | `Workspace(root=None, *, lint=lint_with_rules, ancestor=is_ancestor)` | Load `[workflow]` configuration; the receipt, definitions, roles and plugins load lazily, once. |
 | `ws.resolve_unit(unit, workflow=None, *, anchor=None) -> UnitRef` | Unit directory, anchor, binding and the workflow to evaluate against; `anchor` resolves `ANCHOR_AMBIGUOUS`. |
-| `ws.unit_scope(unit, *, anchor=None) -> UnitScope` | Unit directory, anchor, binding and the bound (else default) workflow id, without loading the definition, except to read the id of a default given as a `.md` path (what `envelope new` uses). |
+| `ws.unit_scope(unit, *, anchor=None) -> UnitScope` | Unit directory, anchor, binding and the bound (else default) workflow id, without loading the definition, except to read the id of a default given as a `.md` path (what the envelope authoring commands use). |
 | `ws.bind_unit(unit, workflow=None, *, anchor=None) -> UnitRef` | `bind`: record the workflow and its schema hash in the anchor, keeping the history. A `workflow` path that is not the discovered definition of its id raises `WorkflowNotBindableError` (also from `create_unit`). |
 | `ws.evaluate_unit(unit, *, given=(), lint=True, enforce_drift=True) -> UnitEvaluation` | Evaluate with the project's policies; raises `DriftError`; never writes a file. Approvals of later stages are listed in `UnitEvaluation.stale_approvals` and count until `return_to` voids them. |
 | `ws.definition(ref=None, binding=None)`, `ws.load_definition(ref)` | A validated (or raw) definition by id or path relative to the root, from the cached definitions. |
@@ -155,7 +156,7 @@ The main calls:
 | `record_answer(ws, unit, request_id, action, values=(), *, note="", by="", lint=True) -> Decision` | `answer`. |
 | `return_to(ws, unit, stage, *, note="", by="", lint=True) -> Decision` | `return`. |
 | `plan_handoff(ws, unit, result, choice=None) -> HandoffPlan`, `apply_handoff(plan, *, when=None, by="", note="") -> HandoffOutcome` | `handoff`. |
-| `compose_envelope(...) -> Envelope`, `envelope_timestamp(unit_dir, workflow, segment_start)`, `render_envelope(envelope, created_at)`, `write_envelope(unit_dir, kind, body)` | `envelope new`; pass `workflow=scope.workflow, segment=scope.binding.segment` (from `ws.unit_scope`) to scope the envelope, `load_envelopes(dir).scoped(workflow, segment)` as `envelopes`, and `envelope_timestamp(dir, workflow, scope.binding.segment_start)` as `created_at` so no earlier return voids it. |
+| `compose_envelope(...) -> Envelope`, `envelope_timestamp(unit_dir, workflow, segment_start)`, `render_envelope(envelope, created_at)`, `write_envelope(unit_dir, kind, body)` | The envelope authoring commands; pass `workflow=scope.workflow, segment=scope.binding.segment` (from `ws.unit_scope`) to scope the envelope, `load_envelopes(dir).scoped(workflow, segment)` as `envelopes`, and `envelope_timestamp(dir, workflow, scope.binding.segment_start)` as `created_at` so no earlier return voids it. |
 | `load_envelopes(dir).hold() -> Hold` | Unresolved problems and unanswered questions over every segment (`blocked`, `problems`, `questions`, `reasons()`); `UnitEvaluation.hold` carries the same. |
 | `evaluate_definition(doc, Options) -> UnitEvaluation` | Pure evaluation without policies or writes. |
 

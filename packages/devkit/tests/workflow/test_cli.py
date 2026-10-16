@@ -89,16 +89,27 @@ def test_end_to_end_new_next_bind_envelope_list(workspace: Path) -> None:
     listed = json.loads(_run("list", "-w", str(workspace), "--format", "json").stdout)["units"]
     assert listed[0]["unit"] == ".devkit/transient/work/login" and listed[0]["workflow"] == "direct-delivery"
 
-    env = _run("envelope", "new", "-w", str(workspace), "--unit", str(unit), "--kind", "review", "--stage", "review")
+    env = _run("envelope", "review", "-w", str(workspace), "--unit", str(unit), "--stage", "review")
     assert (
         env.exit_code == 0
         and env.output.strip()
         == "[ENVELOPE: .devkit/transient/work/login/envelopes/review-01.yaml kind=review seq=01 status=needs_input open_findings=0]"
     )
-    env = _run("envelope", "new", "-w", str(workspace), "--unit", str(unit), "--kind", "review")
+    env = _run(
+        "envelope",
+        "review",
+        "-w",
+        str(workspace),
+        "--unit",
+        str(unit),
+    )
     assert "seq=02" in env.output
     bad_kind = _run("envelope", "new", "-w", str(workspace), "--unit", str(unit), "--kind", "Bad")
     assert bad_kind.exit_code == 2 and "(ENVELOPE_KIND_INVALID)" in bad_kind.stderr
+    for kind in ("worker", "answer", "resolution", "review", "reverify"):  # each has its own command
+        own = _run("envelope", "new", "-w", str(workspace), "--unit", str(unit), "--kind", kind)
+        assert own.exit_code == 2 and "(ENVELOPE_FLAG_INVALID)" in own.stderr
+        assert f"devkit workflow envelope {kind}" in own.stderr
 
     as_json = json.loads(
         _run("next", "-w", str(workspace), "--unit", str(unit), "--no-lint", "--format", "json").stdout
