@@ -14,26 +14,29 @@ and buries the steps that matter. The rule warns when a skill or playbook Markdo
 
 ## 2. Cause of Violation
 
-- A file is larger than `max_bytes` UTF-8 bytes (default 8192): `File has <n> bytes; effective max_bytes is <max>`.
-  Bytes track token cost for English and Korean better than lines or characters.
+- A file is larger than `max_bytes` UTF-8 bytes (default 12288): `File has <n> bytes; effective max_bytes is <max>`.
+  The default is 12 KiB. The whole file counts, including YAML frontmatter, comments and whitespace; each
+  supporting Markdown file is measured separately, not summed with `SKILL.md`.
 
 ## 3. Remediation
 
 Follow Step 2 of the `skill-authoring` playbook (`uv run devkit playbook search "restructure a large skill"`):
 
-1. Compress repeated explanation.
-2. Move content needed only in some situations to `references/`, stating when each reference is read.
-3. Keep `SKILL.md` a thin router to those references.
-4. Review the supporting files the same way.
+1. Split content needed only in some situations into focused `references/` files, stating when each is read.
+2. Keep `SKILL.md` a thin router with always-required constraints; remove repeated explanation.
+3. Aim for each resulting file to use about 75-80% of its effective `max_bytes`, leaving room for later edits.
+   This is restructuring guidance, not an additional limit: files between that range and the limit do not warn.
+4. Review supporting files the same way. Do not merely trim the document to just below the warning threshold.
 
 Never hide an always-required safety or boundary constraint in a rarely read file, and do not shrink a file by
-joining lines: size is a signal for review, not a goal. The rule never rewrites files.
+joining lines or splitting one inseparable procedure into arbitrary fragments: size is a signal for review, not a
+goal. The rule never rewrites files.
 
 ## 4. Configuration
 
 | Setting | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `max_bytes` | positive integer | `8192` | Bytes allowed per file. |
+| `max_bytes` | positive integer | `12288` | Bytes allowed per file. |
 | `extensions` | list of literal suffixes | `[".md"]` | Files measured. |
 | `paths` | list of patterns | the four skill and playbook locations above | Where skills live. |
 
@@ -44,7 +47,7 @@ paths = [".agents/skills/**", "tools/agents/**"]
 # Read as one procedure; split deferred.
 [[rules.settings.RULE-skill-document-size.overrides]]
 path = ".agents/skills/release/SKILL.md"
-max_bytes = 12288
+max_bytes = 16384
 ```
 
 Patterns are workspace-relative; a standalone `**` matches zero or more path segments.

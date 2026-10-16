@@ -57,19 +57,23 @@ optional `references/` and `scripts/`) or a playbook, and when
 
 ## Step 2: Restructure a large skill
 
-Apply these in order and stop once the file is focused; a later step is not
-required when an earlier one suffices.
+The default warning threshold is 12 KiB (12288 bytes) per Markdown file, including
+frontmatter. When a file exceeds its effective `max_bytes`, prefer splitting
+conditional content to trimming it just below the threshold. Aim for each resulting
+file to use about 75-80% of its effective limit so later edits have room. This is
+guidance, not an additional pass/fail threshold; do not split an inseparable
+procedure or move always-required constraints just to reach that range.
 
-1. **Compress.** Remove repeated explanation, long background and overlapping
-   examples. Keep execution conditions, required constraints and verification
-   criteria.
-2. **Split conditional content first.** Move content that only some runs need:
+1. **Split conditional content first.** Move content that only some runs need:
    recovery procedures, tool- or host-specific instructions, the detailed schema
    of one stage, rare long examples. Name each file after its situation and
    state the read condition where `SKILL.md` links it.
-3. **Thin router.** `SKILL.md` keeps purpose and trigger, shared constraints,
+2. **Thin router.** `SKILL.md` keeps purpose and trigger, shared constraints,
    task branches and the situational reference paths. Do not instruct the agent
    to read every reference at start; that loads the same context as before.
+3. **Compress repetition.** Remove repeated explanation, long background and
+   overlapping examples. Keep execution conditions, required constraints and
+   verification criteria.
 4. **Review supporting files.** Apply the same steps to a large reference. Split
    it by situation or procedure, not by arbitrary size. Avoid many tiny files
    and chains where one reference sends the agent to another.
@@ -84,7 +88,7 @@ comment directly above it in `.devkit/config.toml`:
 # Read as one procedure; split deferred.
 [[rules.settings.RULE-skill-document-size.overrides]]
 path = ".agents/skills/example/SKILL.md"
-max_bytes = 12288
+max_bytes = 16384
 ```
 
 Update or remove the entry when the file moves or shrinks.

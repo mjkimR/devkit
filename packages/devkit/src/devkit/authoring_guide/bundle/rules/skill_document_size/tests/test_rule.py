@@ -20,13 +20,15 @@ def _receipt(owned: list[str]) -> str:
 
 def test_checks_project_and_bundle_sources(tmp_path: Path) -> None:
     files = {
-        ".agents/skills/demo/SKILL.md": "x" * 8192,
-        ".claude/skills/demo/references/guide.md": "x" * 8193,
-        "tools/kit/src/kit/bundle/playbooks/ops.md": "x" * 9000,
-        "tools/kit/src/kit/bundle/skills/demo/scripts/tool.py": "x" * 9000,
-        "docs/large.md": "x" * 9000,
+        ".agents/skills/demo/SKILL.md": "x" * 12288,
+        # The restructuring target is guidance; files above 80% of the limit still pass.
+        ".agents/skills/room-to-grow/SKILL.md": "x" * 10000,
+        ".claude/skills/demo/references/guide.md": "x" * 12289,
+        "tools/kit/src/kit/bundle/playbooks/ops.md": "x" * 13000,
+        "tools/kit/src/kit/bundle/skills/demo/scripts/tool.py": "x" * 13000,
+        "docs/large.md": "x" * 13000,
         # A projection the receipt owns is fixed in its bundle, never reported in the project.
-        ".claude/skills/devkit-playbook/SKILL.md": "x" * 9000,
+        ".claude/skills/devkit-playbook/SKILL.md": "x" * 13000,
         ".devkit/installation.json": _receipt([".claude/skills/devkit-playbook/SKILL.md"]),
     }
     found = check(RULE, tmp_path, files)
@@ -34,14 +36,14 @@ def test_checks_project_and_bundle_sources(tmp_path: Path) -> None:
         ".claude/skills/demo/references/guide.md",
         "tools/kit/src/kit/bundle/playbooks/ops.md",
     ]
-    assert found[0].message == "File has 8193 bytes; effective max_bytes is 8192"
+    assert found[0].message == "File has 12289 bytes; effective max_bytes is 12288"
     assert "skill-authoring playbook" in found[0].remediation
     assert {(v.phase.value, v.severity.value) for v in found} == {("hygiene", "warning")}
 
 
 def test_paths_and_overrides_come_from_settings(tmp_path: Path) -> None:
-    files = {".agents/skills/demo/SKILL.md": "x" * 9000, "agents/custom/SKILL.md": "x" * 9000}
-    settings = {"paths": ["agents/**"], "overrides": [{"path": "agents/custom/SKILL.md", "max_bytes": 12288}]}
+    files = {".agents/skills/demo/SKILL.md": "x" * 13000, "agents/custom/SKILL.md": "x" * 13000}
+    settings = {"paths": ["agents/**"], "overrides": [{"path": "agents/custom/SKILL.md", "max_bytes": 16384}]}
     assert check(RULE, tmp_path, files, settings=settings) == []
     found = check(RULE, tmp_path, settings={"paths": ["agents/**"]})
     assert [v.file for v in found] == ["agents/custom/SKILL.md"]
@@ -53,6 +55,6 @@ def test_invalid_settings_are_reported(tmp_path: Path) -> None:
 
 
 def test_follows_changed_file_targets(tmp_path: Path) -> None:
-    files = {".agents/skills/a/SKILL.md": "x" * 9000, ".agents/skills/b/SKILL.md": "x" * 9000}
+    files = {".agents/skills/a/SKILL.md": "x" * 13000, ".agents/skills/b/SKILL.md": "x" * 13000}
     found = check(RULE, tmp_path, files, targets=[".agents/skills/b"])
     assert [v.file for v in found] == [".agents/skills/b/SKILL.md"]

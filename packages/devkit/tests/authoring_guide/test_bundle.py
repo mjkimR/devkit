@@ -32,7 +32,7 @@ def test_content_is_english_and_skill_documents_fit_their_own_budget() -> None:
     hangul = re.compile(r"[ᄀ-ᇿ㄰-㆏가-힣]")
     for path in sorted(BUNDLE.rglob("*.md")):
         assert not hangul.search(path.read_text()), path.name
-        assert path.stat().st_size <= 8192, path.name
+        assert path.stat().st_size <= 12288, path.name
 
 
 def _run(*args: str) -> str:
@@ -73,7 +73,7 @@ def test_add_deploys_both_presets_and_the_playbooks_are_searchable(consumer: Pat
 
 def test_deployed_rules_run_from_the_receipt(consumer: Path) -> None:
     # Each rule's behaviour is tested in its folder (rules/<name>/tests/); this checks the deployed copies load.
-    write(consumer, ".agents/skills/demo/SKILL.md", "x" * 9000)
+    write(consumer, ".agents/skills/demo/SKILL.md", "x" * 13000)
     write(consumer, "packages/app/AGENTS.md", "x" * 9000)
     found = _violations(consumer)
     assert [item["file"] for item in found["RULE-skill-document-size"]] == [".agents/skills/demo/SKILL.md"]

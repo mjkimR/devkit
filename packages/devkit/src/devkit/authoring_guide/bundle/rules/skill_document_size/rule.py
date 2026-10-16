@@ -18,8 +18,10 @@ from devkit.rules.rules import BaseRule
 DEFAULT_PATHS = (".agents/skills/**", ".claude/skills/**", "**/bundle/skills/**", "**/bundle/playbooks/**")
 
 REMEDIATION = (
-    "Restructure the document without hiding required constraints: compress repeated explanation;"
-    " move conditional content to references/ and state when each file is read; keep SKILL.md a thin router."
+    "Split conditional content into focused references/ files and state when each file is read;"
+    " keep SKILL.md a thin router and preserve always-required constraints."
+    " Aim for each resulting file to use about 75-80% of its effective max_bytes, leaving room for edits;"
+    " this is guidance, not an additional limit. Do not just trim the file to the warning threshold."
     ' Follow the skill-authoring playbook (`uv run devkit playbook search "restructure a large skill"`).'
     " For a justified exception, raise max_bytes for this exact path in"
     " [[rules.settings.RULE-skill-document-size.overrides]] with a comment giving the reason"
@@ -28,7 +30,7 @@ REMEDIATION = (
 
 @dataclass(frozen=True)
 class SkillDocumentSizeSettings:
-    max_bytes: int = 8192
+    max_bytes: int = 12288
     extensions: list[str] = field(default_factory=lambda: [".md"])
     paths: list[str] = field(default_factory=lambda: list(DEFAULT_PATHS))
 
