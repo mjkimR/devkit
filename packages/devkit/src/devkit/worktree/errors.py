@@ -32,6 +32,14 @@ class _Interaction(WorktreeError):
     actor = Actor.USER
 
 
+class BaseOnBranchError(WorktreeError):
+    """``finish`` or ``finish --discard`` ran while the base checkout is on the ``--no-worktree`` branch it finishes
+    (``AUTO``): switching back to the recorded ``devkitBase`` is the routine step, so ``[FIX]`` is that switch."""
+
+    code = "WORKTREE_BASE_ON_BRANCH"
+    actor = Actor.TOOL
+
+
 class _Guardrail(WorktreeError):
     guardrail = True
 

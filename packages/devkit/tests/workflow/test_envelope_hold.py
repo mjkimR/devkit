@@ -48,6 +48,7 @@ def _write(unit: Path, name: str, data: dict[str, object]) -> None:
 def _question(**extra: object) -> dict[str, object]:
     return {
         "kind": "worker",
+        "stage": "build",
         "status": "needs_input",
         "questions": [
             {"id": "q1", "title": "Format", "prompt": "Which?", "options": [{"id": "a"}, {"id": "b"}]},
@@ -60,6 +61,7 @@ def _question(**extra: object) -> dict[str, object]:
 def _problem(**extra: object) -> dict[str, object]:
     return {
         "kind": "worker",
+        "stage": "build",
         "status": "failed",
         "problem": {"cause": "tests cannot start", "attempts": ["reinstalled"], "recovery": "fix the fixture"},
         **extra,
@@ -131,12 +133,20 @@ def root(tmp_path: Path) -> Path:
             "only a worker envelope carries questions",
         ),
         ("answer-01.yaml", {"kind": "answer", "status": "completed", "answers": []}, "answers_to"),
-        ("worker-01.yaml", {"kind": "worker", "status": "failed"}, "needs a problem"),
-        ("worker-01.yaml", {"kind": "worker", "status": "needs_input"}, "asks questions or reports a problem"),
+        ("worker-01.yaml", {"kind": "worker", "stage": "build", "status": "failed"}, "needs a problem"),
+        (
+            "worker-01.yaml",
+            {"kind": "worker", "stage": "build", "status": "needs_input"},
+            "asks questions or reports a problem",
+        ),
         ("review-01.yaml", _problem(kind="review"), "only a worker envelope carries a problem"),
         ("worker-01.yaml", _problem(status="completed"), "completed envelope reports no problem"),
         ("worker-01.yaml", _problem(problem={"cause": "x"}), "missing required key recovery"),
-        ("worker-01.yaml", {"kind": "worker", "status": "completed", "activity_effort": "max"}, "activity_effort"),
+        (
+            "worker-01.yaml",
+            {"kind": "worker", "stage": "build", "status": "completed", "activity_effort": "max"},
+            "activity_effort",
+        ),
         ("resolution-01.yaml", {"kind": "resolution", "status": "completed", "summary": "x"}, "resolves"),
         (
             "resolution-01.yaml",
@@ -157,7 +167,7 @@ def test_kind_fields_are_validated(tmp_path: Path, name: str, data: dict[str, ob
 
 def test_references_must_fit(tmp_path: Path) -> None:
     _write(tmp_path, "worker-02.yaml", _question())
-    _write(tmp_path, "worker-01.yaml", {"kind": "worker", "status": "completed"})
+    _write(tmp_path, "worker-01.yaml", {"kind": "worker", "stage": "build", "status": "completed"})
     answer = {"kind": "answer", "status": "completed", "answers_to": "worker-02.yaml"}
     _write(tmp_path, "answer-01.yaml", {**answer, "answers": [{"question": "q9", "decision": "d"}]})
     _write(tmp_path, "answer-02.yaml", {**answer, "answers": [{"question": "q1", "choice": "z", "decision": "d"}]})
@@ -178,7 +188,11 @@ def test_references_must_fit(tmp_path: Path) -> None:
 
 def test_a_problem_holds_until_a_resolution_names_it(tmp_path: Path) -> None:
     _write(tmp_path, "worker-01.yaml", _problem())
-    _write(tmp_path, "worker-02.yaml", {"kind": "worker", "status": "completed", "summary": "later run went fine"})
+    _write(
+        tmp_path,
+        "worker-02.yaml",
+        {"kind": "worker", "stage": "build", "status": "completed", "summary": "later run went fine"},
+    )
     hold = load_envelopes(tmp_path).hold()
     assert hold.blocked and [e.file for e in hold.problems] == ["envelopes/worker-01.yaml"]
     assert hold.reasons("unit/") == ["unit/envelopes/worker-01.yaml: unresolved problem: tests cannot start"]
@@ -246,6 +260,7 @@ def test_authoring_question_answer_problem_and_resolution(root: Path) -> None:
         (("--kind", "worker", "--status", "failed", "--summary", "x"), "ENVELOPE_FLAG_INVALID"),
         (("--kind", "worker", "--summary", "x", "--recovery", "y"), "ENVELOPE_FLAG_INVALID"),
         (("--kind", "worker", "--summary", "x", "--effort", "max"), "ENVELOPE_FLAG_INVALID"),
+        (("--kind", "worker", "--summary", "x"), "ENVELOPE_FLAG_INVALID"),  # a worker envelope names its stage
         (("--kind", "resolution", "--summary", "x", "--resolves", "worker-04.yaml"), "ENVELOPE_REFERENCE_INVALID"),
     ],
 )
@@ -296,7 +311,7 @@ def test_questions_are_choose_requests_answered_by_an_envelope(root: Path) -> No
     assert '[PENDING_QUESTION: envelopes/worker-01.yaml id=q1 title="Storage format"]' in text
     assert (
         '[REQUEST: id=question:worker-01.q1 kind=choose title="Storage format" target=question:worker-01.yaml#q1'
-        " stage=review options=a,b recommended=a note=allowed answer=envelope]" in text
+        ' stage=review options=a,b recommended=a note=allowed answer=envelope context="proposal.md section 3"]' in text
     )
     refused = run_cli("answer", "-w", str(root), "--unit", SIMPLE_UNIT, "--no-lint", "--request", "question:worker-01.q1", "--action", "accept", "--value", "a")  # fmt: skip
     assert refused.exit_code == 2 and "DECISION_INVALID" in refused.stderr and "--kind answer" in refused.stderr
@@ -469,14 +484,22 @@ def test_a_hold_keeps_the_gates_passed_before_it(staged: Path) -> None:
     assert _next(staged)["stage"]["id"] == "intent"  # type: ignore[index]
 
 
-def test_a_malformed_worker_envelope_holds_every_gate(staged: Path) -> None:
+def test_a_malformed_worker_envelope_holds_from_the_stage_it_states(staged: Path) -> None:
     unit = staged / SIMPLE_UNIT
-    _write(unit, "worker-01.yaml", {**_problem(), "problem": {"cause": "x", "recovery": "y", "severity": 1}})
+    broken = {"cause": "x", "recovery": "y", "severity": 1}
+    _write(unit, "worker-01.yaml", {**_problem(stage="build", workflow="w"), "problem": broken})
     result = _next(staged)
-    assert result["stage"]["id"] == "intent" and result["blocked"] is True  # type: ignore[index]
+    assert result["done"] == ["intent", "build"] and result["stage"]["id"] == "integrate"  # type: ignore[index]
+    assert result["blocked"] is True and result["gate"]["held"] is True  # type: ignore[index]
     assert result["malformed_workers"][0]["file"] == "envelopes/worker-01.yaml"  # type: ignore[index]
     text = run_cli("next", "-w", str(staged), "--unit", SIMPLE_UNIT, "--no-lint").stdout
     assert "[BLOCKED: envelopes/worker-01.yaml malformed=yes reason=" in text
+    # Without a stage it states, or as YAML that is no mapping, it holds every gate.
+    (unit / "envelopes/worker-01.yaml").write_text("- not a mapping\n")
+    assert _next(staged)["stage"]["id"] == "intent"  # type: ignore[index]
+    _write(unit, "worker-01.yaml", {"kind": "worker", "status": "completed", "summary": "no stage"})
+    result = _next(staged)
+    assert result["stage"]["id"] == "intent" and "names the stage" in result["malformed_workers"][0]["reason"]  # type: ignore[index]
 
 
 def test_a_hold_keeps_the_handoff(staged: Path) -> None:
@@ -590,3 +613,14 @@ def test_malformed_gate_policies_are_definition_errors(tmp_path: Path, gates: st
     text = f"---\nid: w\nschema_version: 1\ngates:\n  {gates}\nstages:\n  - id: a\n    human_gate: plan-accept\n    exit: [anchor-exists]\n---\n"
     with pytest.raises(DefinitionError, match=reason):
         parse_definition(text)
+
+
+def test_passed_gates_report_what_passed_them(staged: Path) -> None:
+    result = _next(staged)  # plan-intent = auto in the fixture
+    assert result["passed_gates"] == [
+        {"stage": "intent", "name": "plan-intent", "policy": "auto", "satisfied": True, "source": "policy",
+         "decision": None, "held": False}
+    ]  # fmt: skip
+    text = run_cli("next", "-w", str(staged), "--unit", SIMPLE_UNIT, "--no-lint", "--given", "dev-integration").stdout
+    assert "[GATE_PASSED: plan-intent stage=intent policy=auto source=policy]" in text
+    assert "[GATE_PASSED: dev-integration stage=integrate policy=ask source=given]" in text

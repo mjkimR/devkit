@@ -58,7 +58,7 @@ Text form (free text is a JSON string literal, so it always stays on one line):
 [REQUEST: id=gate:integration kind=approve title="Approve integration" target=gate:integration stage=integrate note=allowed]
 [REQUEST: id=gate:release kind=approve title="Approve release" target=gate:release stage=release note=allowed answer=given]
 [REQUEST: id=handoff kind=choose title="Choose next workflow" options=spec-driven,hotfix,direct-delivery eligible=hotfix,direct-delivery recommended=-]
-[REQUEST: id=question:worker-01.q1 kind=choose title="Storage format" target=question:worker-01.yaml#q1 stage=direction-handoff options=a,b recommended=a note=allowed answer=envelope]
+[REQUEST: id=question:worker-01.q1 kind=choose title="Storage format" target=question:worker-01.yaml#q1 stage=direction-handoff options=a,b recommended=a note=allowed answer=envelope context="proposal.md section 3"]
 [DECLINED: id=gate:integration file=decisions/01-gate-integration.yaml note="rebase first"]
 ```
 

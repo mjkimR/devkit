@@ -234,7 +234,7 @@ def stale_branches(
         last = max(committed, updated) if updated is not None else committed
         if moment - last <= period:
             continue
-        unit = _unit(base, name)
+        unit = _unit(base, name, refs)
         state = _pr_state(item) if pulls is not None else "unknown"
         url = item.get("url") if item and isinstance(item.get("url"), str) else None
         stale.append(StaleBranch(name, unit, last, state, url, tuple(refs)))
@@ -242,12 +242,24 @@ def stale_branches(
     return StaleResult(True, stale_after, len(branches), stale, notices)
 
 
-def _unit(base: Path, branch: str) -> str | None:
+def _unit(base: Path, branch: str, refs: list[str]) -> str | None:
+    """The unit ``attach`` recorded for the branch, while the branch still holds it (a handoff replaces a proposal
+    with its spec, so the recorded directory can be gone): ``None`` otherwise, for the caller to map the slug."""
     try:
         value = os.fsdecode(run_git(base, "config", "--local", "--get", f"branch.{branch}.{UNIT_KEY}")).strip()
     except GitError:
         return None
-    return value or None
+    if not value:
+        return None
+    remotes = [ref for ref in refs if ref != "local"]
+    tip = f"refs/heads/{branch}" if "local" in refs else f"refs/remotes/{remotes[0]}/{branch}" if remotes else None
+    if tip is None:
+        return None
+    try:
+        kind = os.fsdecode(run_git(base, "cat-file", "-t", f"{tip}:{value}")).strip()
+    except GitError:
+        return None
+    return value if kind == "tree" else None
 
 
 def hygiene(root: Path) -> list[AdvisoryError] | None:

@@ -44,6 +44,8 @@ def render_evaluation(res: UnitEvaluation) -> str:
     if res.drift:
         lines.append(f"[DRIFT: recorded={res.drift.recorded} current={res.drift.current}]")
     lines.append(f"[DONE: {_dash(' '.join(res.done))}]")
+    for stage_id, g in res.passed_gates:
+        lines.append(f"[GATE_PASSED: {g.name} stage={stage_id} policy={g.policy} source={_gate_source(g)}]")
     for s in res.skipped:
         lines.append(f"[SKIPPED: {s.id} reason={s.reason}]")
     stage = res.stage
@@ -121,7 +123,8 @@ def render_requests(requests: list[Request]) -> list[str]:
                 f"[REQUEST: id={r.id} kind=choose title={quote(r.title)} target=question:{r.target.name} "
                 f"stage={_dash(r.target.stage)} options={_dash(','.join(o.id for o in r.options))} "
                 f"recommended={_dash(','.join(o.id for o in r.options if o.recommended))} "
-                f"note={'allowed' if r.allow_note else 'no'} answer=envelope]"
+                f"note={'allowed' if r.allow_note else 'no'} answer=envelope"
+                + (f" context={quote(r.context)}]" if r.context else "]")
             )
         elif r.kind == "choose":
             lines.append(

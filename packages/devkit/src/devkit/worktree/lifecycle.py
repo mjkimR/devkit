@@ -40,6 +40,7 @@ from devkit.worktree.errors import (
     BaseBehindError,
     BaseDetachedError,
     BaseDirtyError,
+    BaseOnBranchError,
     BranchAheadNotice,
     BranchDeleteFailedError,
     BranchExistsError,
@@ -985,10 +986,10 @@ def _find(position: Position, branch: str) -> _Entry | None:
     if entry.path == base:
         back = _config(base, _marker(branch, BASE_KEY))
         if back:
-            raise ConflictError(
-                f"the base checkout is on {branch}; finish integrates {branch} into {back} from the base checkout"
-                " on that branch; nothing was changed",
-                fix=f"git -C {shlex.quote(str(base))} switch {back}, then rerun",
+            raise BaseOnBranchError(
+                f"the base checkout is on {branch}; finish works on it from {back}, the branch it was started from;"
+                " nothing was changed",
+                fix=f"git -C {shlex.quote(str(base))} switch {back}",
             )
         raise ConflictError(
             f"{branch} is the base checkout's branch; finish integrates a task branch into the base and never"
@@ -1164,7 +1165,7 @@ def discard(
     """Drop an unmerged activity branch: remove its worktree and force-delete the branch (``git branch -D``).
 
     The close of a task (a depth escalation, a supersede, an abandon) is the only use; the caller decides it on the
-    authority its close kind needs. Only a branch devkit started (its marker) or one with a worktree is dropped;
+    authority its close kind needs. Any activity branch is dropped, whether or not devkit started it;
     a worktree with uncommitted or untracked changes is ``WORKTREE_DIRTY``: never removed by force. ``before_remove``
     runs before the worktree is removed, as for ``finish``. Remote branches and pull requests are the caller's.
     """
@@ -1179,15 +1180,11 @@ def discard(
     if entry is None:
         if not exists:
             raise NotFoundError(f"no worktree at {path_for(position, branch)} or on branch {branch}")
-        if not _created(base, branch):
-            raise NotFoundError(
-                f"branch {branch} has no worktree and no {_marker(branch)} marker: devkit did not start it, so"
-                " discard does not delete it; nothing was changed",
-                fix=f"Once the user agrees, git -C {shlex.quote(str(base))} branch -D {branch}",
-            )
-        result = FinishResult(branch, _marked_path(position, branch), removed=True, discarded=True)
+        # An activity branch is dropped whether or not devkit started it (another checkout, made by hand): its name
+        # says it is a task's, and the close that drops it is the caller's decision.
+        result = FinishResult(branch, _marked_path(position, branch), removed=True)
     else:
-        result = FinishResult(branch, entry.path, discarded=True)
+        result = FinishResult(branch, entry.path)
     try:
         if before_remove is not None:
             before_remove(result)
@@ -1203,6 +1200,7 @@ def discard(
                 ) from exc
             result.branch_deleted = True
         _unmark(base, branch)
+        result.discarded = True
     except AdvisoryError as error:
         if isinstance(error, WorktreeError) or not hasattr(error, "result"):
             vars(error)["result"] = result

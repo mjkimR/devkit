@@ -56,10 +56,11 @@ never derive it from files yourself.
    keeps no record for that gate: after the user's explicit approval write
    nothing and pass `--given <name>` to this and every later `next`; on an
    objection take a `[RETURNS]` path instead. Name the user's approval as the
-   basis in your report. `source=policy` means the gate was passed by project
-   policy (`auto`): report that basis in your summary.
-   `[BLOCKED]` (an unresolved problem) or `[PENDING_QUESTION]` holds every
-   gate, whatever its policy. A `[REQUEST: id=question:... answer=envelope]`
+   basis in your report. `[GATE_PASSED: <gate> ... source=...]` lists every
+   gate already passed with its basis: `source=policy` means project policy
+   (`auto`) passed it; report that basis in your summary.
+   `[BLOCKED]` (an unresolved problem) or `[PENDING_QUESTION]` holds the gates
+   from the stage that raised it on, whatever their policy. A `[REQUEST: id=question:... answer=envelope]`
    line is a question: ask it, and record the user's answer with
    `uv run devkit workflow envelope new --unit <dir> --kind answer
    --answers-to <worker-NN.yaml> --answers-file <file>`, one rewritten

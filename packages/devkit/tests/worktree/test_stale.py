@@ -25,10 +25,13 @@ def repo(tmp_path: Path) -> Path:
     return init_repo(tmp_path / "repo").resolve()
 
 
-def aged_branch(repo: Path, branch: str, days: int, start: str = "main") -> None:
-    """Create ``branch`` from ``start`` with one commit dated ``days`` ago, leaving the checkout on ``start``."""
+def aged_branch(repo: Path, branch: str, days: int, start: str = "main", unit: str | None = None) -> None:
+    """Create ``branch`` from ``start`` with one commit dated ``days`` ago (holding ``unit``/spec.md when given),
+    leaving the checkout on ``start``."""
     git(repo, "switch", "-q", "-c", branch, start)
     write(repo, f"{branch}.txt", "x\n")
+    if unit is not None:
+        write(repo, f"{unit}/spec.md", "x\n")
     git(repo, "add", ".")
     when = f"@{int(datetime.now(UTC).timestamp()) - days * DAY} +0000"
     env = {**os.environ, "GIT_COMMITTER_DATE": when, "GIT_AUTHOR_DATE": when}
@@ -62,7 +65,7 @@ def test_stale_is_skipped_with_a_notice_without_gh(repo: Path) -> None:
 
 
 def test_stale_judges_commits_and_pull_requests_of_activity_branches_only(repo: Path, tmp_path: Path) -> None:
-    aged_branch(repo, "dev-old", 30)
+    aged_branch(repo, "dev-old", 30, unit="docs/specs/old")
     aged_branch(repo, "plan-busy", 30)  # an old commit, but its pull request moved yesterday
     aged_branch(repo, "dev-new", 1)
     aged_branch(repo, "side", 90)  # not an activity branch
@@ -142,3 +145,10 @@ def test_hygiene_runs_show_stale_branches_and_linter_runs_never_do(repo: Path, m
         result = CliRunner().invoke(cli, [*args, "-w", str(repo)])
         assert "STALE" not in result.stderr
     assert calls == []
+
+
+def test_a_recorded_unit_the_branch_no_longer_holds_is_not_reported(repo: Path) -> None:
+    aged_branch(repo, "dev-gone", 30, unit="docs/specs/gone")
+    git(repo, "config", "--local", "branch.dev-gone.devkitUnit", "docs/proposals/PROP-gone")  # handed off since
+    [item] = stale_branches(locate(repo), gh=fake_gh()).stale
+    assert item.unit is None  # the caller maps the slug instead of resuming a unit that is gone

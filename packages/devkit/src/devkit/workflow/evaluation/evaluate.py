@@ -279,13 +279,15 @@ def _held_from(hold: Hold, doc: WorkflowDocument) -> int:
     """The index of the first stage whose gate the hold keeps from passing.
 
     A problem or question holds the gate of the stage its worker envelope was written in and of every later stage;
-    gates passed before it stay passed, so a run that resolves it goes on from where the unit is. An envelope of
-    another workflow or with no stage of this one, and a malformed worker envelope, hold every gate.
+    gates passed before it stay passed, so a run that resolves it goes on from where the unit is. A malformed worker
+    envelope holds from the stage it still states. An envelope of another workflow or with no stage of this one
+    holds every gate.
     """
-    envelopes = [*hold.problems, *(e for e, _ in hold.questions)]
-    if hold.malformed or not envelopes:
+    scopes = [(e.stage, e.workflow) for e in (*hold.problems, *(e for e, _ in hold.questions))]
+    scopes += [(e.stage, e.workflow) for e in hold.malformed]
+    if not scopes:
         return 0
-    indexes = [doc.stage_index(e.stage) if e.workflow in ("", doc.id) else -1 for e in envelopes]
+    indexes = [doc.stage_index(stage) if workflow in ("", doc.id) else -1 for stage, workflow in scopes]
     return 0 if any(i < 0 for i in indexes) else min(indexes)
 
 
@@ -365,6 +367,8 @@ def evaluate_definition(doc: WorkflowDocument, opts: Options) -> UnitEvaluation:
             unmet.append(_gate_result(gate))
         if not unmet and (gate is None or gate.satisfied):
             res.done.append(stage.id)
+            if gate is not None:
+                res.passed_gates.append((stage.id, gate))  # what passed it: policy, given or a decision record
             continue
         if stage.optional:
             continue

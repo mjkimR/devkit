@@ -374,6 +374,8 @@ def _parse_envelope(rel: str, seq: int, name_kind: str, data: Any) -> Envelope:
     problem = _problem(data.get("problem"))
     resolves = as_text(data.get("resolves"))
     _check_kind_fields(kind, status, questions, answers, answers_to, problem, resolves, as_text(data.get("summary")))
+    if kind == WORKER and as_text(data.get("stage")) in ("", "-"):
+        raise EnvelopeFormatError("a worker envelope names the stage its run worked in (stage)")
     return Envelope(
         kind=kind,
         status=status,
@@ -632,18 +634,33 @@ def collect_envelopes(files: Iterable[tuple[str, Callable[[], str]]]) -> Envelop
     for name, read in sorted(files, key=lambda item: item[0]):
         rel = f"{ENVELOPES_DIR}/{name}"
         try:
-            parsed = parse_envelope_text(name, rel, read())
-        except EnvelopeFormatError as exc:
-            out.errors.append(exc)
-            continue
+            text = read()
         except (OSError, UnicodeError) as exc:
             out.errors.append(EnvelopeFormatError(str(exc), file=rel))
+            continue
+        try:
+            parsed = parse_envelope_text(name, rel, text)
+        except EnvelopeFormatError as exc:
+            exc.stage, exc.workflow = _readable_scope(text)
+            out.errors.append(exc)
             continue
         out.by_kind.setdefault(parsed.kind, []).append(parsed)
     for items in out.by_kind.values():
         items.sort(key=lambda e: e.seq)
     _check_references(out)
     return out
+
+
+def _readable_scope(text: str) -> tuple[str, str]:
+    """The ``stage`` and ``workflow`` a malformed envelope still states, when its YAML is a mapping."""
+    try:
+        data = yaml.safe_load(text)
+    except yaml.YAMLError:
+        return "", ""
+    if not isinstance(data, dict):
+        return "", ""
+    stage, workflow = as_text(data.get("stage")), as_text(data.get("workflow"))
+    return ("" if stage == "-" else stage), (workflow if is_ident(workflow) else "")
 
 
 def load_envelopes(unit_dir: Path) -> Envelopes:

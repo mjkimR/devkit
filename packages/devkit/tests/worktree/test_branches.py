@@ -16,6 +16,7 @@ from devkit.core.errors import ArgumentError
 from devkit.worktree import (
     AttachRefusedError,
     BaseDetachedError,
+    BaseOnBranchError,
     BranchExistsError,
     BranchOutOfSyncError,
     ConflictError,
@@ -126,9 +127,9 @@ def test_start_branch_refusals(repo: Path) -> None:
 def test_a_branch_without_a_worktree_is_integrated_from_the_base(repo: Path) -> None:
     start_branch(locate(repo), "dev-demo")
     commit(repo, "work.txt")
-    with pytest.raises(ConflictError) as raised:
+    with pytest.raises(BaseOnBranchError) as raised:  # routine: the agent switches back and reruns
         finish(locate(repo), "dev-demo", merge=True)
-    assert raised.value.fix == f"git -C {repo} switch main, then rerun"
+    assert raised.value.fix == f"git -C {repo} switch main" and raised.value.mode is ActionMode.AUTO
     git(repo, "switch", "-q", "main")
     with pytest.raises(UnmergedError):
         finish(locate(repo), "dev-demo")
@@ -399,14 +400,14 @@ def test_discard_drops_an_unmerged_branch_and_its_worktree(repo: Path) -> None:
     assert seen == ["dev-demo"] and not created.path.exists() and git(repo, "branch", "--list", "dev-demo") == ""
     start_branch(locate(repo), "dev-solo")
     commit(repo, "solo.txt")
-    with pytest.raises(ConflictError):
+    with pytest.raises(BaseOnBranchError):
         discard(locate(repo), "dev-solo")  # the base checkout is on it
     git(repo, "switch", "-q", "main")
     solo = discard(locate(repo), "dev-solo")
     assert solo.path == repo and solo.branch_deleted and git(repo, "branch", "--list", "dev-solo") == ""
-    git(repo, "branch", "dev-foreign")
-    with pytest.raises(NotFoundError, match="devkit did not start it"):
-        discard(locate(repo), "dev-foreign")
+    git(repo, "branch", "dev-foreign")  # an activity branch devkit did not start (another checkout, by hand)
+    assert discard(locate(repo), "dev-foreign").branch_deleted
+    assert git(repo, "branch", "--list", "dev-foreign") == ""
 
 
 def test_finish_discard_runs_post_finish_and_excludes_merge(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:

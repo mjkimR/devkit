@@ -113,6 +113,7 @@ class UnitEvaluation:
     decision_errors: list[DecisionRecordError] = field(default_factory=list)
     stale_approvals: list[Decision] = field(default_factory=list)  # approvals for stages after the current one
     hold: Hold = field(default_factory=Hold)  # unresolved problems and unanswered questions, whatever the segment
+    passed_gates: list[tuple[str, GateStatus]] = field(default_factory=list)  # (stage, gate) of done gated stages
 
     @property
     def complete(self) -> bool:
@@ -150,5 +151,6 @@ class UnitEvaluation:
             "requests": [r.to_dict() for r in self.requests],
             "stale_approvals": [d.file for d in self.stale_approvals],
             **self.hold.to_dict(),
+            "passed_gates": [{"stage": stage, **gate.to_dict()} for stage, gate in self.passed_gates],
             "errors": [e.to_dict() for e in self.errors],
         }

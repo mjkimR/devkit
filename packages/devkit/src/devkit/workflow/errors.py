@@ -388,6 +388,9 @@ class EnvelopeFormatError(_FileProblem):
     input_error = True
     exit_code = ExitCode.FINDINGS
     fix = f"Fix or remove the file; the contract is {ENVELOPE_CONTRACT}"
+    # What could still be read of the file, so a malformed worker envelope holds from its own stage.
+    stage: str = ""
+    workflow: str = ""
 
 
 class EnvelopeKindError(WorkflowError):

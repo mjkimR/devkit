@@ -92,6 +92,7 @@ The library raises the same codes, one class per code. `WorkflowError` is the ba
 ```text
 [WORKFLOW: direct-delivery unit=.devkit/transient/work/login status=in-progress bound=yes]
 [DONE: intent build-verify review]
+[GATE_PASSED: plan-intent stage=intent policy=ask source=decision:decisions/01-gate-plan-intent.yaml]
 [SKIPPED: collect-feedback reason=stages.collect-feedback=off]
 [STAGE: integrate human_gate=integration role=developer isolation=none]
 [UNMET: gate:integration]
@@ -154,6 +155,7 @@ When the workflow is complete and declares `next` candidates (and `approvals.han
   "handoff": null,
   "requests": [],
   "stale_approvals": [],
+  "passed_gates": [],
   "blocked": false,
   "problems": [],
   "pending_questions": [],
@@ -165,6 +167,7 @@ When the workflow is complete and declares `next` candidates (and `approvals.han
 - `gate` is `null` for an ungated stage, else `{"name", "policy", "satisfied", "source", "decision", "held"}` (`source` is `policy`, `given`, `decision` or `null`; `decision` names the record file; `held` is `true` while the unit's envelopes keep it from passing).
 - `blocked`, `problems` (`[{"file", "cause", "attempts", "recovery"}]`), `pending_questions` (`[{"file", "id", "title"}]`) and `malformed_workers` (`[{"file", "reason"}]`) report the hold of the unit's envelopes, over every segment ([Review Envelopes, section 4](envelopes.md#4-hold-blocked-and-waiting-for-answers)).
 - `handoff` is `null` until the workflow is complete; then it is `{"policy", "candidates": [{"workflow", "recommended", "eligible", "checks": [...]}], "eligible": [...], "recommended": [...], "chosen", "decision"}`.
+- `passed_gates` lists the gates of done stages with what passed them: `[{"stage", "name", "policy", "satisfied", "source", "decision", "held"}]`, in text one `[GATE_PASSED: <gate> stage=<id> policy=P source=policy|given|decision:<file>]` line each after `[DONE]`. A gate an `auto` policy passed is never current, so this is where a report finds the basis of every gate.
 - `requests` holds the open requests ([Human Interaction Contract](human-interaction.md#3-request)); `stale_approvals` the files of approvals for stages after the current one, which still count until a `return` record voids them.
 - `errors` holds every collected problem: malformed envelopes (`ENVELOPE_INVALID`) and decision records (`DECISION_RECORD_INVALID`, `HANDOFF_CHOICE_IGNORED`) with their `file`, and the `devkit.rules` error that stopped `lint-clean`.
 
