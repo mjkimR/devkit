@@ -1,23 +1,30 @@
-"""devkit.worktree: the task worktree lifecycle (``devkit worktree start|finish|status``).
+"""devkit.worktree: activity branches and their task worktrees (``devkit worktree start|finish|status|stale``).
 
-A task runs in ``<parent of base>/<base name>-wt-<slug>`` on branch ``<slug>``;
-``finish`` integrates it into the base checkout and removes it, refusing
-instead of forcing at every step. SDD-agnostic: a methodology layer decides
-which tasks use a worktree and adds its own cleanup through ``before_remove``.
-See ``docs/worktree/overview.md``.
+A task runs on an activity branch ``plan-<slug>`` or ``dev-<slug>``, in ``<parent of base>/<base name>-wt-<branch>``
+or (``start_branch``) in the current checkout; ``attach`` continues an existing branch, ``finish`` integrates it into
+the base checkout and removes it, refusing instead of forcing at every step, and ``stale_branches`` reports branches
+nobody has moved for ``[worktree] stale_after``. SDD-agnostic: a methodology layer decides which tasks use a worktree
+and plugs in through ``before_remove`` and the ``devkit.post_finish``, ``devkit.finish_guard`` and
+``devkit.attach_check`` extension points. See ``docs/worktree/overview.md``.
 """
 
 from devkit.worktree.config import WorktreeConfig, read_worktree_config
 from devkit.worktree.errors import (
     AddFailedError,
+    AttachCheckFailedError,
+    AttachRefusedError,
     BaseBehindError,
     BaseDetachedError,
     BaseDirtyError,
+    BlockedError,
+    BranchAheadNotice,
     BranchDeleteFailedError,
     BranchExistsError,
+    BranchOutOfSyncError,
     BranchUnpushedError,
     ConflictError,
     DirtyError,
+    GuardFailedError,
     LockedError,
     MergeNotFastForwardError,
     NestedError,
@@ -25,43 +32,62 @@ from devkit.worktree.errors import (
     PullRequestPolicyError,
     PushFailedWarning,
     PushRejectedWarning,
+    RemoteUncheckedWarning,
     RemoveFailedError,
     RunFromBaseError,
     SetupFailedWarning,
+    StaleBranchWarning,
+    StalePullRequestsUnknownNotice,
+    StaleSkippedNotice,
     SyncFailedWarning,
+    UnitInvalidError,
     UnmergedError,
     UnsupportedLayoutError,
     WorktreeConfigError,
     WorktreeError,
 )
 from devkit.worktree.lifecycle import (
+    ACTIVITY_PREFIXES,
+    BranchStartResult,
     BranchStatus,
     FinishResult,
     Position,
     StartResult,
     StatusResult,
     WorktreeStatus,
-    check_slug,
+    attach,
+    check_branch,
     find,
     finish,
     locate,
     path_for,
+    slug_of,
     start,
+    start_branch,
     status,
 )
+from devkit.worktree.stale import StaleBranch, StaleResult, stale_branches
 
 __all__ = [
+    "ACTIVITY_PREFIXES",
     "AddFailedError",
+    "AttachCheckFailedError",
+    "AttachRefusedError",
     "BaseBehindError",
     "BaseDetachedError",
     "BaseDirtyError",
+    "BlockedError",
+    "BranchAheadNotice",
     "BranchDeleteFailedError",
     "BranchExistsError",
+    "BranchOutOfSyncError",
+    "BranchStartResult",
     "BranchStatus",
     "BranchUnpushedError",
     "ConflictError",
     "DirtyError",
     "FinishResult",
+    "GuardFailedError",
     "LockedError",
     "MergeNotFastForwardError",
     "NestedError",
@@ -70,24 +96,35 @@ __all__ = [
     "PullRequestPolicyError",
     "PushFailedWarning",
     "PushRejectedWarning",
+    "RemoteUncheckedWarning",
     "RemoveFailedError",
     "RunFromBaseError",
     "SetupFailedWarning",
+    "StaleBranch",
+    "StaleBranchWarning",
+    "StalePullRequestsUnknownNotice",
+    "StaleResult",
+    "StaleSkippedNotice",
     "StartResult",
     "StatusResult",
     "SyncFailedWarning",
+    "UnitInvalidError",
     "UnmergedError",
     "UnsupportedLayoutError",
     "WorktreeConfig",
     "WorktreeConfigError",
     "WorktreeError",
     "WorktreeStatus",
-    "check_slug",
+    "attach",
+    "check_branch",
     "find",
     "finish",
     "locate",
     "path_for",
     "read_worktree_config",
+    "slug_of",
+    "stale_branches",
     "start",
+    "start_branch",
     "status",
 ]

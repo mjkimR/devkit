@@ -25,7 +25,7 @@ from devkit.workflow.definition.checks import (
 from devkit.workflow.definition.definition import HANDOFF_GATE, StageDefinition, WorkflowDocument, schema_hash
 from devkit.workflow.errors import UnitNotFoundError
 from devkit.workflow.evaluation.primitives import AncestorFunc, PrimitiveContext, evaluate_primitive
-from devkit.workflow.evaluation.requests import handoff_request, stage_requests
+from devkit.workflow.evaluation.requests import handoff_request, question_requests, stage_requests
 from devkit.workflow.evaluation.results import Delegate, Drift, GateStatus, Skipped, UnitEvaluation, Waiting
 from devkit.workflow.handoff import evaluate_handoff
 from devkit.workflow.project.plugins import BaseCheck, CheckContext
@@ -41,7 +41,7 @@ from devkit.workflow.unit.decisions import (
     load_decisions,
     record_instant,
 )
-from devkit.workflow.unit.envelope import Envelope, Envelopes, load_envelopes
+from devkit.workflow.unit.envelope import Envelope, Envelopes, Hold, load_envelopes
 from devkit.workflow.unit.records import is_temporary
 
 __all__ = ["LintFunc", "Options", "evaluate_definition"]
@@ -50,6 +50,8 @@ __all__ = ["LintFunc", "Options", "evaluate_definition"]
 LintFunc = Callable[[Path, list[str]], list[str]]
 # Violations a ``lint-clean`` detail quotes; the rest are counted, with the command that lists them all.
 LINT_DETAIL_SHOWN = 3
+# The unmet check a gate stage reports while unresolved problems or unanswered questions hold its gate.
+HOLD_CHECK = "envelope-hold"
 
 
 @dataclass(frozen=True)
@@ -78,9 +80,12 @@ class _Evaluator:
         self.decisions = self.all_decisions.segment(doc.id, binding.segment_start)
         returns = [r for r in self.decisions.records if r.kind == "return" and r.action == "accept"]
         self.returns = [(r.seq, doc.stage_index(r.request[len(RETURN_PREFIX) :])) for r in returns]
+        # Problems and questions hold the unit whatever their segment, and a return does not clear them.
+        loaded = load_envelopes(self.unit_dir)
+        self.hold: Hold = loaded.hold()
         # Envelopes scoped to another workflow or segment do not count either; unscoped ones count everywhere.
         self.envelopes: Envelopes = _after_returns(
-            load_envelopes(self.unit_dir).scoped(doc.id, binding.segment),
+            loaded.scoped(doc.id, binding.segment),
             [(record_instant(r.at), doc.stage_index(r.request[len(RETURN_PREFIX) :])) for r in returns],
             doc,
         )
@@ -279,6 +284,18 @@ def _gate_result(gate: GateStatus) -> CheckResult:
     )
 
 
+def _hold_result(hold: Hold) -> CheckResult:
+    """The unmet ``envelope-hold`` check of a gate stage whose gate the unit's envelopes hold."""
+    parts = []
+    if hold.problems:
+        parts.append("blocked by " + ", ".join(e.file for e in hold.problems))
+    if hold.questions:
+        parts.append(
+            f"{len(hold.questions)} unanswered question(s) in " + ", ".join(sorted({e.file for e, _ in hold.questions}))
+        )
+    return CheckResult(HOLD_CHECK, CheckClass.DISK, False, True, "; ".join(parts))
+
+
 def _waiting_for(stage: StageDefinition, unmet: list[CheckResult]) -> Waiting | None:
     """Who the stage waits for: only people or runners, once nothing else is unmet."""
     if not unmet:
@@ -332,6 +349,11 @@ def evaluate_definition(doc: WorkflowDocument, opts: Options) -> UnitEvaluation:
             continue
         unmet = [r for r in (ev.eval_ref(ref, stage.id) for ref in stage.exit) if not r.satisfied]
         gate = ev.gate(stage.gate, policy, stage.id) if stage.gate and policy else None
+        if gate is not None and ev.hold:
+            # No gate passes, by any source, while a problem is unresolved or a question unanswered; it is not asked.
+            gate = GateStatus(gate.name, gate.policy, False, held=True)
+            if not unmet:
+                unmet.append(_hold_result(ev.hold))
         # The gate is asked only once the stage's own work is done.
         if gate is not None and not gate.satisfied and not unmet:
             unmet.append(_gate_result(gate))
@@ -363,5 +385,12 @@ def evaluate_definition(doc: WorkflowDocument, opts: Options) -> UnitEvaluation:
             res.waiting = Waiting(CheckClass.HUMAN, (HANDOFF_GATE,))
             res.requests = [handoff_request(doc, handoff, ev.declined)]
 
+    res.hold = ev.hold
+    if ev.hold.questions:
+        asked = question_requests(ev.hold.questions)
+        res.requests = [*res.requests, *asked]
+        if res.stage is not None:
+            # The answers decide how the work goes on: the unit waits for them, not for its other checks.
+            res.waiting = Waiting(CheckClass.HUMAN, tuple(r.id for r in asked))
     res.lint_error = ev.lint_error
     return res

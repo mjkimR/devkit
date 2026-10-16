@@ -21,8 +21,11 @@ devkit workflow list [--status S]... [--exclude-status S]... [--format text|json
 devkit workflow envelope new --unit DIR [--anchor FILE] --kind KIND [--stage ID] [--format text|json]  # write the next envelopes/<kind>-NN.yaml skeleton
 devkit workflow envelope new --unit DIR --kind KIND [--status S] [--summary TEXT] [--assume TEXT]... [--unverified TEXT]...
                             [--check NAME=PASS|FAIL|SKIP[ detail]]... [--base REV] [--head REV] [--findings-file PATH|-]
-                            [--from latest|FILE] [--resolve N|all]... [--waive N=REASON]...   # write it complete
-devkit workflow envelope check --unit DIR [--format text|json]   # every envelope file and any contract violation
+                            [--from latest|FILE] [--resolve N|all]... [--waive N=REASON]...
+                            [--questions-file PATH|-] [--answers-to FILE --answers-file PATH|-]
+                            [--problem CAUSE [--tried TEXT]... --recovery TEXT] [--resolves FILE]
+                            [--effort low|medium|high]                                        # write it complete
+devkit workflow envelope check --unit DIR [--format text|json]   # every envelope file, contract violations and the hold
 ```
 
 `--anchor FILE` names the anchor file that identifies the unit when its directory holds several candidate anchors (`ANCHOR_AMBIGUOUS`); see [Per-Definition Layout](overview.md#per-definition-layout).
@@ -65,16 +68,16 @@ The library raises the same codes, one class per code. `WorkflowError` is the ba
 | `GIVEN_INVALID` | `GivenInvalidError` | `INPUT_ERROR` | `2` | a `--given` name is neither a gate nor a registered runner or human check |
 | `WORKFLOW_DRIFT` | `DriftError` | `BLOCKED` | `1` | the bound schema hash changed under in-flight work; `[FIX]` names the `bind` command |
 | `REQUEST_UNKNOWN` | `RequestUnknownError` | `INPUT_ERROR` | `2` | `answer --request` is not an open request of the unit (and not `feedback:*`); the details list the open ids |
-| `DECISION_INVALID` | `DecisionInvalidError` | `INPUT_ERROR` | `2` | the `answer` action or value does not fit the request: a value on `approve` or on an action other than `accept`, a missing, unknown or ineligible option, more than one value |
+| `DECISION_INVALID` | `DecisionInvalidError` | `INPUT_ERROR` | `2` | the `answer` action or value does not fit the request: a value on `approve` or on an action other than `accept`, a missing, unknown or ineligible option, more than one value; or the request is a `question:*` one, answered by an answer envelope (`[FIX]` is the `envelope new --kind answer` command) |
 | `DECISION_RECORD_INVALID`, `HANDOFF_CHOICE_IGNORED` | `DecisionRecordError`, `HandoffChoiceIgnoredError` | `INPUT_ERROR` | `2` | collected with `file`: a decision record does not match the format (`parse_record`, `load_decisions`); a recorded handoff choice is not an eligible candidate and is ignored |
 | `RETURN_INVALID` | `ReturnInvalidError` | `INPUT_ERROR` | `2` | `return --to` names no stage of the workflow, or one after the current stage |
 | `HANDOFF_NOT_READY`, `HANDOFF_NONE`, `HANDOFF_OFF` | `HandoffNotReadyError`, `HandoffNoneError`, `HandoffOffError` | `INPUT_ERROR` | `2` | the unit's workflow is not complete, declares no `next`, or handoff is disabled by policy |
 | `HANDOFF_CHOICE_REQUIRED` | `HandoffChoiceRequiredError` | `INTERACTION` | `2` | `handoff` under `approvals.handoff = "ask"` without a recorded choice: stop and ask the user; `[FIX]` is the `answer` command to run with their choice (details list the candidates) |
 | `HANDOFF_UNDECIDED`, `HANDOFF_INVALID`, `HANDOFF_INELIGIBLE` | `HandoffUndecidedError`, `HandoffInvalidError`, `HandoffIneligibleError` | `INPUT_ERROR` | `2` | `auto` found no eligible candidate; the choice is not a candidate, or its `when` checks fail |
 | `HANDOFF_LAYOUT_MISMATCH` | `HandoffLayoutMismatchError` | `INPUT_ERROR` | `2` | the chosen candidate's anchor differs from the unit's; relocate the unit, then `bind` |
-| `ENVELOPE_STATUS_INVALID`, `ENVELOPE_FLAG_INVALID`, `ENVELOPE_FROM_INVALID`, `ENVELOPE_FINDINGS_INVALID` | `EnvelopeStatusError`, `EnvelopeFlagError`, `EnvelopeFromError`, `EnvelopeFindingsError` (base `AuthoringError`) | `INPUT_ERROR` | `2` | `envelope new` authoring flags that cannot produce a valid envelope; a `--resolve`/`--waive` number outside the carried findings is `ENVELOPE_FLAG_INVALID` |
+| `ENVELOPE_STATUS_INVALID`, `ENVELOPE_FLAG_INVALID`, `ENVELOPE_FROM_INVALID`, `ENVELOPE_FINDINGS_INVALID`, `ENVELOPE_ITEMS_INVALID`, `ENVELOPE_REFERENCE_INVALID` | `EnvelopeStatusError`, `EnvelopeFlagError`, `EnvelopeFromError`, `EnvelopeFindingsError`, `EnvelopeItemsError`, `EnvelopeReferenceError` (base `AuthoringError`) | `INPUT_ERROR` | `2` | `envelope new` authoring flags that cannot produce a valid envelope; a `--resolve`/`--waive` number outside the carried findings, and fields or a status the kind does not allow, are `ENVELOPE_FLAG_INVALID`; a malformed `--questions-file` or `--answers-file` is `ENVELOPE_ITEMS_INVALID`; an `--answers-to` or `--resolves` that names no fitting envelope of the unit is `ENVELOPE_REFERENCE_INVALID` |
 | `ENVELOPE_KIND_INVALID` | `EnvelopeKindError` | `INPUT_ERROR` | `2` | an envelope kind does not match `[a-z][a-z0-9-]*` (`write_envelope`) |
-| `ENVELOPE_INVALID` | `EnvelopeFormatError` | `INPUT_ERROR` | `1` | collected with `file` by `load_envelopes`: a malformed envelope file; `envelope check` reports each one with its `[TARGET]` |
+| `ENVELOPE_INVALID` | `EnvelopeFormatError` | `INPUT_ERROR` | `1` | collected with `file` by `load_envelopes`: a malformed envelope file, or an answer or resolution whose `answers_to` or `resolves` names no fitting envelope; `envelope check` reports each one with its `[TARGET]` |
 | `RECEIPT_INVALID` | `devkit.core` `ReceiptError` | `MAINTENANCE` | `2` | `.devkit/installation.json` exists but does not match its schema; restore it from version control, then run `devkit sync` |
 | `GIT_FAILED` | `devkit.core` `GitError` | `MAINTENANCE` | `2` | `is_ancestor` cannot answer, or is given a non-hexadecimal revision (`INPUT_ERROR`) |
 | `LOCK_HELD`, `LOCK_UNSUPPORTED`, `PATH_UNSAFE` | `devkit.core` `LockHeldError`, `LockUnsupportedError`, `UnsafePathError` | `DEFER`, `BLOCKED`, `INPUT_ERROR` | `2` | writing a decision record, an envelope or a new unit's anchor: another writer held the directory lock for 10 seconds; `flock` is unavailable on the platform or the file system; the records directory is a symbolic link ([Answer](human-interaction.md#4-answer)) |
@@ -103,7 +106,8 @@ The library raises the same codes, one class per code. `WorkflowError` is the ba
 - `[BOUND_ELSEWHERE: workflow=<id>]` follows `[WORKFLOW]` when the unit is bound to another workflow than the one evaluated; `[DRIFT: recorded=... current=...]` when the bound definition changed ([Binding and Drift](definition-and-checks.md#3-binding-and-drift)).
 - `[SKIPPED: <id> reason=...]` names the policy entry that skipped the stage: `stages.<id>=off` or `approvals.<gate>=off`.
 - `[WAITING]` appears when the current stage's gate is asked (every exit check holds), or when every unmet check is `runner` or `human`. Its class is `human` when any unmet check is human.
-- `[GATE: <name> policy=P satisfied=yes|no source=S]` appears only for a gated current stage. `source` is `policy` (`auto`), `given` (`--given`), `decision:<file>` (an accepted record) or `-` while not satisfied.
+- `[GATE: <name> policy=P satisfied=yes|no source=S]` appears only for a gated current stage. `source` is `policy` (`auto`), `given` (`--given`), `decision:<file>` (an accepted record) or `-` while not satisfied. It ends with `held=yes` while the unit's envelopes hold the gate.
+- `[BLOCKED: <file> cause="..." recovery="..."]` per unresolved problem and `[PENDING_QUESTION: <file> id=<question> title="..."]` per unanswered question, whatever the stage ([Review Envelopes, section 4](envelopes.md#4-hold-blocked-and-waiting-for-answers)). While any is listed no gate passes, by policy, `--given` or record, and none is asked: a gated stage whose exit checks hold reports the unmet `envelope-hold` check instead. Unanswered questions also become `question:*` requests and set `[WAITING: human <their ids>]`.
 - `[DELEGATE: role=R isolation=I]` and `[RETURNS: <to> when="..."; ...]` describe the current stage. `[DELEGATE]` carries `contract=<path>` when the role is in the project's vocabulary (receipt `subagent` asset or `roles_dir` file); otherwise the key is absent.
 - `[STALE_APPROVAL: <file> request=<id> stage=<stage> counts=yes void_with="devkit workflow return --unit <dir> --to <current stage>"]` lists approvals of later stages found while an earlier stage is current. It is a read-only notice: `next` writes nothing, and those approvals keep counting until `devkit workflow return` records a `return:<stage>` decision that voids them.
 - `[LINT_ERROR: "..."]` appears when `lint-clean` could not run; the command then also reports the `devkit.rules` error on stderr (text mode), unchanged (for example `RULES_RUN_FAILED`), and exits with its exit code.
@@ -149,11 +153,15 @@ When the workflow is complete and declares `next` candidates (and `approvals.han
   "handoff": null,
   "requests": [],
   "stale_approvals": [],
+  "blocked": false,
+  "problems": [],
+  "pending_questions": [],
   "errors": []
 }
 ```
 
-- `gate` is `null` for an ungated stage, else `{"name", "policy", "satisfied", "source", "decision"}` (`source` is `policy`, `given`, `decision` or `null`; `decision` names the record file).
+- `gate` is `null` for an ungated stage, else `{"name", "policy", "satisfied", "source", "decision", "held"}` (`source` is `policy`, `given`, `decision` or `null`; `decision` names the record file; `held` is `true` while the unit's envelopes keep it from passing).
+- `blocked`, `problems` (`[{"file", "cause", "attempts", "recovery"}]`) and `pending_questions` (`[{"file", "id", "title"}]`) report the hold of the unit's envelopes, over every segment ([Review Envelopes, section 4](envelopes.md#4-hold-blocked-and-waiting-for-answers)).
 - `handoff` is `null` until the workflow is complete; then it is `{"policy", "candidates": [{"workflow", "recommended", "eligible", "checks": [...]}], "eligible": [...], "recommended": [...], "chosen", "decision"}`.
 - `requests` holds the open requests ([Human Interaction Contract](human-interaction.md#3-request)); `stale_approvals` the files of approvals for stages after the current one, which still count until a `return` record voids them.
 - `errors` holds every collected problem: malformed envelopes (`ENVELOPE_INVALID`) and decision records (`DECISION_RECORD_INVALID`, `HANDOFF_CHOICE_IGNORED`) with their `file`, and the `devkit.rules` error that stopped `lint-clean`.

@@ -137,14 +137,14 @@ setup = "uv sync --quiet"
 TOML
     git add -A
     git commit -q -m "chore: verify commits with devkit rules"
-    started=$(uv run devkit worktree start smoke-task)
-    grep -q 'created=yes setup="uv sync --quiet" synced=yes' <<<"$started"
-    task="../$(basename "$PWD")-wt-smoke-task"
+    started=$(uv run devkit worktree start dev-smoke-task)
+    grep -q 'created=yes existing=no unit=- setup="uv sync --quiet" synced=yes' <<<"$started"
+    task="../$(basename "$PWD")-wt-dev-smoke-task"
     test -d "$task/.devkit/managed/authoring" && test -x "$task/.venv/bin/python"
     printf 'task\n' > "$task/task.md"
     git -C "$task" add task.md
     git -C "$task" commit -q -m "docs: smoke task in a worktree"
-    finished=$(uv run devkit worktree finish smoke-task --merge)
+    finished=$(uv run devkit worktree finish dev-smoke-task --merge)
     grep -q 'merged=yes push=no-upstream removed=yes branch_deleted=yes' <<<"$finished"
     test ! -e "$task" && test -f task.md
     uv run devkit gate uninstall >/dev/null

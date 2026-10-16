@@ -31,6 +31,14 @@ git-commits = "devkit.commits_guide"
 [project.entry-points."devkit.post_sync"]
 gate-hooks = "devkit.gate.hooks.local_config:post_sync"
 
+[project.entry-points."devkit.hygiene"]
+worktree-stale = "devkit.worktree.stale:hygiene"
+
+# The integration guard of `devkit worktree finish --merge`: a branch whose units hold an unresolved problem or an
+# unanswered question in their envelopes is not merged.
+[project.entry-points."devkit.finish_guard"]
+workflow-envelopes = "devkit.workflow.integration:finish_guard"
+
 [dependency-groups]
 dev = [
     "pytest>=8.0.0",

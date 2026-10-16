@@ -10,7 +10,7 @@ import click
 from devkit.core.cli import FORMAT_OPTION, boundary, echo_json, exit_on_problems, is_json
 from devkit.workflow.cli.app import ANCHOR, UNIT, WORKSPACE, cli, workspace
 from devkit.workflow.errors import EnvelopeFlagError
-from devkit.workflow.render import quote
+from devkit.workflow.render import quote, render_hold
 from devkit.workflow.unit.envelope import (
     compose_envelope,
     envelope_timestamp,
@@ -26,16 +26,18 @@ def envelope_group() -> None:
     """Envelope files under <unit>/envelopes/."""
 
 
-def _read_findings_file(path: str) -> str:
+def _read_items_file(flag: str, path: str | None, what: str) -> str | None:
+    if path is None:
+        return None
     if path == "-":
         return sys.stdin.read()
     try:
         return Path(path).read_text("utf-8")
     except (OSError, UnicodeError) as exc:
         raise EnvelopeFlagError(
-            f"--findings-file: {exc}",
+            f"{flag}: {exc}",
             target_files=[path],
-            fix="Pass a readable YAML list of findings, or - for stdin",
+            fix=f"Pass a readable YAML list of {what}, or - for stdin",
         ) from exc
 
 
@@ -58,6 +60,14 @@ def _read_findings_file(path: str) -> str:
     "--resolve", "resolve", multiple=True, help="Mark a carried finding resolved: its number, or all (repeatable)"
 )
 @click.option("--waive", "waive", multiple=True, help="Mark a carried finding waived: <number>=<reason> (repeatable)")
+@click.option("--questions-file", default=None, help="question: YAML list of questions (path, or - for stdin)")
+@click.option("--answers-to", default="", help="answer: the question-NN.yaml it answers")
+@click.option("--answers-file", default=None, help="answer: YAML list of rewritten answers (path, or - for stdin)")
+@click.option("--problem", default="", help="An execution problem: its cause (with --recovery; needs_input or failed)")
+@click.option("--tried", "attempts", multiple=True, help="What was tried against the problem (repeatable)")
+@click.option("--recovery", default="", help="The recommended recovery for the problem")
+@click.option("--resolves", default="", help="resolution: the <kind>-NN.yaml whose problem it resolves")
+@click.option("--effort", default="", help="activity_effort the run applied: low | medium | high")
 @FORMAT_OPTION
 @boundary
 def envelope_new_cmd(
@@ -77,6 +87,14 @@ def envelope_new_cmd(
     source: str | None,
     resolve: tuple[str, ...],
     waive: tuple[str, ...],
+    questions_file: str | None,
+    answers_to: str,
+    answers_file: str | None,
+    problem: str,
+    attempts: tuple[str, ...],
+    recovery: str,
+    resolves: str,
+    effort: str,
     output_format: str,
 ) -> None:
     """Write the next <kind>-NN.yaml; existing files are never overwritten.
@@ -93,19 +111,36 @@ def envelope_new_cmd(
     when it is named by id.
     created_at is stamped after the segment's latest return, so a return never
     voids an envelope written after it.
+
+    question, answer, worker and resolution envelopes carry their own fields:
+    --questions-file (question), --answers-to and --answers-file (answer),
+    --problem/--tried/--recovery (an execution problem, worker), --resolves
+    (resolution), and --effort on any kind. The written envelope satisfies
+    the contract of its kind, and answers_to/resolves must name one of the
+    unit's envelopes.
     """
     ws = workspace(workspace_root)
     scope = ws.unit_scope(unit, anchor=anchor)
     unit_dir, workflow, segment = scope.dir, scope.workflow, scope.binding.segment
+    content = (findings_file, source, resolve, waive, questions_file, answers_to, answers_file, problem, attempts)
     authoring = any((status is not None, summary is not None, assumptions, unverified, checks, base, head)) or any(
-        (findings_file, source, resolve, waive)
+        (*content, recovery, resolves, effort)
     )
     created = envelope_timestamp(unit_dir, workflow, scope.binding.segment_start)
     if authoring:
-        findings_yaml = _read_findings_file(findings_file) if findings_file is not None else None
+        if [findings_file, questions_file, answers_file].count("-") > 1:
+            raise EnvelopeFlagError(
+                "only one of --findings-file, --questions-file and --answers-file can read stdin",
+                fix="Pass the others as files",
+            )
+        findings_yaml = _read_items_file("--findings-file", findings_file, "findings")
+        questions_yaml = _read_items_file("--questions-file", questions_file, "questions")
+        answers_yaml = _read_items_file("--answers-file", answers_file, "answers")
+        loaded = load_envelopes(unit_dir)
         draft = compose_envelope(
             unit_dir=unit_dir,
-            envelopes=load_envelopes(unit_dir).scoped(workflow, segment),
+            envelopes=loaded.scoped(workflow, segment),
+            loaded=loaded,
             kind=kind,
             stage=stage,
             workflow=workflow,
@@ -121,6 +156,14 @@ def envelope_new_cmd(
             source=source,
             resolve=resolve,
             waive=waive,
+            questions_yaml=questions_yaml,
+            answers_to=answers_to,
+            answers_yaml=answers_yaml,
+            problem=problem,
+            attempts=attempts,
+            recovery=recovery,
+            resolves=resolves,
+            effort=effort,
         )
         body = render_envelope(draft, created)
         written_status, open_findings = draft.status, draft.open_findings()
@@ -141,23 +184,32 @@ def envelope_new_cmd(
 @FORMAT_OPTION
 @boundary
 def envelope_check_cmd(workspace_root: str | None, unit: str, output_format: str) -> None:
-    """Report every envelope file of a unit and any contract violation (exit 1 when a file is malformed)."""
+    """Report every envelope file of a unit and any contract violation (exit 1 when a file is malformed).
+
+    Also reports what holds the unit's gates: unresolved problems ([BLOCKED]) and
+    unanswered questions ([PENDING_QUESTION]); neither changes the exit code.
+    """
     ws = workspace(workspace_root)
     unit_dir = ws.unit_path(unit)
     ws.present_anchors(unit_dir)
     envelopes = load_envelopes(unit_dir)
     loaded = envelopes.all()
+    hold = envelopes.hold()
     errors = sorted(envelopes.errors, key=lambda e: e.file)
     unit_rel = ws.rel(unit_dir)
     for err in errors:
         err.target_files = (f"{unit_rel}/{err.file}",)
     if is_json(output_format):
-        echo_json({"envelopes": [e.to_dict() for e in loaded], "errors": [e.to_dict() for e in errors]})
+        echo_json(
+            {"envelopes": [e.to_dict() for e in loaded], **hold.to_dict(), "errors": [e.to_dict() for e in errors]}
+        )
     else:
         for e in loaded:
             click.echo(
-                f"[ENVELOPE: {e.file} kind={e.kind} seq={e.seq:02d} status={e.status} open_findings={e.open_findings()}]"
+                f"[ENVELOPE: {e.file} kind={e.kind} seq={e.seq:02d} status={e.status} open_findings={e.open_findings()}"
+                f"{' problem=yes' if e.problem else ''}]"
             )
+        click.echo(render_hold(hold), nl=False)
         for err in errors:
             click.echo(f"[ENVELOPE_ERROR: {err.file} {quote(err.message)}]")
         if not errors:

@@ -1,8 +1,16 @@
-"""``<unit>/envelopes/<kind>-NN.yaml``: the envelope model, loading, validation and review state."""
+"""``<unit>/envelopes/<kind>-NN.yaml``: the envelope model, loading, validation, review state and hold state.
+
+Besides reviews, the contract defines the envelopes of delegated work: a ``question`` puts questions to a person,
+an ``answer`` records the rewritten answers to one, a ``worker`` reports one run (an execution problem in its
+``problem`` field) and a ``resolution`` closes a problem it names in ``resolves``. A unit with an unresolved
+problem is *blocked*; one with a question not fully answered *waits for answers*. Both hold its gates
+(``Envelopes.hold``).
+"""
 
 from __future__ import annotations
 
 import re
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -16,9 +24,18 @@ from devkit.workflow.unit.records import as_text, is_temporary, write_numbered
 ENVELOPES_DIR = "envelopes"
 FILE = re.compile(rf"({IDENT_PATTERN})-(\d{{2,}})\.ya?ml")
 REVIEW_REF = re.compile(r"review-\d{2,}\.ya?ml")
+QUESTION_REF = re.compile(r"question-\d{2,}\.ya?ml")
 RESOLUTIONS = ("open", "resolved", "waived")
 STATUSES = ("completed", "needs_input", "failed")
+EFFORTS = ("low", "medium", "high")
 FINDING_KEYS = ("issue", "evidence", "failure_condition", "suggested_action", "resolution", "waiver")
+QUESTION_KEYS = ("id", "title", "prompt", "context", "options", "allow_note")
+OPTION_KEYS = ("id", "description", "recommended")
+ANSWER_KEYS = ("question", "choice", "decision", "constraints")
+PROBLEM_KEYS = ("cause", "attempts", "recovery")
+TITLE_LIMIT = 40  # a question's title, like a request's
+# Kinds whose fields and status the contract fixes, besides review and reverify.
+QUESTION, ANSWER, WORKER, RESOLUTION = "question", "answer", "worker", "resolution"
 
 
 @dataclass(frozen=True)
@@ -43,6 +60,70 @@ class Finding:
 
 
 @dataclass(frozen=True)
+class Option:
+    """One option of a question, shaped like an option of a ``choose`` request."""
+
+    id: str
+    description: str = ""
+    recommended: bool = False
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"id": self.id, "description": self.description, "recommended": self.recommended}
+
+
+@dataclass(frozen=True)
+class Question:
+    """One question of a ``question`` envelope, shaped like a ``choose`` request."""
+
+    id: str
+    title: str
+    prompt: str
+    context: str = ""
+    options: tuple[Option, ...] = ()
+    allow_note: bool = True
+
+    def to_dict(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"id": self.id, "title": self.title, "prompt": self.prompt}
+        if self.context:
+            out["context"] = self.context
+        out["options"] = [o.to_dict() for o in self.options]
+        out["allow_note"] = self.allow_note
+        return out
+
+
+@dataclass(frozen=True)
+class Answer:
+    """The rewritten answer to one question: the chosen option (``None`` outside the options) and the decision."""
+
+    question: str
+    decision: str
+    choice: str | None = None
+    constraints: tuple[str, ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"question": self.question, "choice": self.choice, "decision": self.decision}
+        if self.constraints:
+            out["constraints"] = list(self.constraints)
+        return out
+
+
+@dataclass(frozen=True)
+class Problem:
+    """An execution problem: its cause, what was tried and the recommended recovery."""
+
+    cause: str
+    recovery: str
+    attempts: tuple[str, ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"cause": self.cause}
+        if self.attempts:
+            out["attempts"] = list(self.attempts)
+        out["recovery"] = self.recovery
+        return out
+
+
+@dataclass(frozen=True)
 class Envelope:
     """One envelope. ``file`` and ``seq`` are empty for an envelope not yet written."""
 
@@ -62,6 +143,17 @@ class Envelope:
     diff_head: str = ""
     assumptions: tuple[str, ...] = ()
     unverified_areas: tuple[str, ...] = ()
+    questions: tuple[Question, ...] = ()  # question
+    answers_to: str = ""  # answer: the question-NN.yaml it answers
+    answers: tuple[Answer, ...] = ()  # answer
+    problem: Problem | None = None  # worker: an execution problem
+    resolves: str = ""  # resolution: the <kind>-NN.yaml whose problem it resolves
+    activity_effort: str = ""  # low | medium | high: the effort the run applied
+
+    @property
+    def name(self) -> str:
+        """The file name (``worker-02.yaml``), which ``answers_to`` and ``resolves`` reference."""
+        return Path(self.file).name
 
     def open_findings(self) -> int:
         return sum(1 for f in self.findings if f.resolution == "open")
@@ -97,6 +189,12 @@ class Envelope:
             "diff_scope": {"base": self.diff_base, "head": self.diff_head}
             if self.diff_head or self.diff_base
             else None,
+            "questions": [q.to_dict() for q in self.questions],
+            "answers_to": self.answers_to or None,
+            "answers": [a.to_dict() for a in self.answers],
+            "problem": self.problem.to_dict() if self.problem else None,
+            "resolves": self.resolves or None,
+            "activity_effort": self.activity_effort or None,
         }
 
 
@@ -132,6 +230,62 @@ class Envelopes:
     def all(self) -> list[Envelope]:
         """Every loaded envelope, ordered by file name."""
         return sorted((e for items in self.by_kind.values() for e in items), key=lambda e: e.file)
+
+    def unresolved_problems(self) -> list[Envelope]:
+        """The envelopes whose ``problem`` no ``resolution`` names in ``resolves``; any of them blocks the unit.
+
+        Later commits or successful runs do not clear a problem: only a resolution that references it does.
+        """
+        resolved = {e.resolves for e in self.by_kind.get(RESOLUTION, []) if e.status == "completed"}
+        return [e for e in self.all() if e.problem is not None and e.name not in resolved]
+
+    def pending_questions(self) -> list[tuple[Envelope, Question]]:
+        """``(question envelope, question)`` for every question no ``answer`` envelope answers yet.
+
+        The answers to one question envelope may be spread over several answer envelopes.
+        """
+        answered: dict[str, set[str]] = {}
+        for answer in self.by_kind.get(ANSWER, []):
+            if answer.status == "completed":
+                answered.setdefault(answer.answers_to, set()).update(a.question for a in answer.answers)
+        return [
+            (env, q)
+            for env in self.by_kind.get(QUESTION, [])
+            for q in env.questions
+            if q.id not in answered.get(env.name, set())
+        ]
+
+    def hold(self) -> Hold:
+        """What holds the unit's gates: unresolved problems and unanswered questions."""
+        return Hold(tuple(self.unresolved_problems()), tuple(self.pending_questions()))
+
+
+@dataclass(frozen=True)
+class Hold:
+    """Why a unit cannot pass a gate or be integrated: it is blocked, or it waits for answers."""
+
+    problems: tuple[Envelope, ...] = ()
+    questions: tuple[tuple[Envelope, Question], ...] = ()
+
+    def __bool__(self) -> bool:
+        return bool(self.problems or self.questions)
+
+    @property
+    def blocked(self) -> bool:
+        return bool(self.problems)
+
+    def reasons(self, prefix: str = "") -> list[str]:
+        """One line per problem and per unanswered question, file names prefixed with ``prefix``."""
+        lines = [f"{prefix}{e.file}: unresolved problem: {e.problem.cause}" for e in self.problems if e.problem]
+        lines += [f"{prefix}{e.file}: unanswered question {q.id}: {q.title}" for e, q in self.questions]
+        return lines
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "blocked": self.blocked,
+            "problems": [{"file": e.file, **(e.problem.to_dict() if e.problem else {})} for e in self.problems],
+            "pending_questions": [{"file": e.file, "id": q.id, "title": q.title} for e, q in self.questions],
+        }
 
 
 def _text_list(value: Any, what: str) -> tuple[str, ...]:
@@ -203,6 +357,15 @@ def _parse_envelope(rel: str, seq: int, name_kind: str, data: Any) -> Envelope:
     scope = data.get("diff_scope") or {}
     if not isinstance(scope, dict):
         raise EnvelopeFormatError("diff_scope: expected a mapping with base and head")
+    effort = as_text(data.get("activity_effort"))
+    if effort and effort not in EFFORTS:
+        raise EnvelopeFormatError(f"activity_effort {effort!r} not in {'|'.join(EFFORTS)}")
+    questions = _questions(data.get("questions"))
+    answers = _answers(data.get("answers"))
+    answers_to = as_text(data.get("answers_to"))
+    problem = _problem(data.get("problem"))
+    resolves = as_text(data.get("resolves"))
+    _check_kind_fields(kind, status, questions, answers, answers_to, problem, resolves, as_text(data.get("summary")))
     return Envelope(
         kind=kind,
         status=status,
@@ -220,41 +383,271 @@ def _parse_envelope(rel: str, seq: int, name_kind: str, data: Any) -> Envelope:
         diff_head=as_text(scope.get("head")),
         assumptions=_text_list(data.get("assumptions"), "assumptions"),
         unverified_areas=_text_list(data.get("unverified_areas"), "unverified_areas"),
+        questions=questions,
+        answers_to=answers_to,
+        answers=answers,
+        problem=problem,
+        resolves=resolves,
+        activity_effort=effort,
     )
+
+
+def _mapping(item: Any, where: str, keys: tuple[str, ...]) -> dict[str, Any]:
+    if not isinstance(item, dict):
+        raise EnvelopeFormatError(f"{where}: expected a mapping")
+    unknown = set(item) - set(keys)
+    if unknown:
+        raise EnvelopeFormatError(f"{where}: unknown keys {sorted(unknown)}")
+    return item
+
+
+def _required_text(item: dict[str, Any], key: str, where: str) -> str:
+    value = as_text(item.get(key)).strip()
+    if not value:
+        raise EnvelopeFormatError(f"{where}: missing required key {key}")
+    return value
+
+
+def _flag(item: dict[str, Any], key: str, where: str, default: bool) -> bool:
+    value = item.get(key, default)
+    if not isinstance(value, bool):
+        raise EnvelopeFormatError(f"{where}.{key}: expected true or false")
+    return value
+
+
+def _option(item: Any, where: str) -> Option:
+    item = _mapping(item, where, OPTION_KEYS)
+    option_id = as_text(item.get("id"))
+    if not is_ident(option_id):
+        raise EnvelopeFormatError(f"{where}.id {option_id!r} must match {IDENT_HINT}")
+    return Option(option_id, as_text(item.get("description")), _flag(item, "recommended", where, False))
+
+
+def parse_question(item: Any, where: str) -> Question:
+    """One question mapping; raises ``EnvelopeFormatError`` naming ``where``."""
+    item = _mapping(item, where, QUESTION_KEYS)
+    question_id = as_text(item.get("id"))
+    if not is_ident(question_id):
+        raise EnvelopeFormatError(f"{where}.id {question_id!r} must match {IDENT_HINT}")
+    title = _required_text(item, "title", where)
+    if len(title) > TITLE_LIMIT:
+        raise EnvelopeFormatError(f"{where}.title: at most {TITLE_LIMIT} characters")
+    raw = item.get("options") or []
+    if not isinstance(raw, list):
+        raise EnvelopeFormatError(f"{where}.options: expected a list")
+    options = tuple(_option(o, f"{where}.options[{i}]") for i, o in enumerate(raw))
+    if len({o.id for o in options}) != len(options):
+        raise EnvelopeFormatError(f"{where}.options: option ids must be unique")
+    if sum(o.recommended for o in options) > 1:
+        raise EnvelopeFormatError(f"{where}.options: at most one option is recommended")
+    allow_note = _flag(item, "allow_note", where, True)
+    if not options and not allow_note:
+        raise EnvelopeFormatError(f"{where}: a question without options must allow a note")
+    return Question(
+        question_id, title, _required_text(item, "prompt", where), as_text(item.get("context")), options, allow_note
+    )
+
+
+def parse_answer(item: Any, where: str) -> Answer:
+    """One answer mapping; raises ``EnvelopeFormatError`` naming ``where``."""
+    item = _mapping(item, where, ANSWER_KEYS)
+    question = as_text(item.get("question"))
+    if not is_ident(question):
+        raise EnvelopeFormatError(f"{where}.question {question!r} must match {IDENT_HINT}")
+    choice = item.get("choice")
+    if choice is not None and not is_ident(choice):
+        raise EnvelopeFormatError(f"{where}.choice {choice!r} must be an option id or null")
+    return Answer(
+        question,
+        _required_text(item, "decision", where),
+        choice,
+        _text_list(item.get("constraints"), f"{where}.constraints"),
+    )
+
+
+def parse_problem(value: Any, where: str = "problem") -> Problem:
+    """A problem mapping; raises ``EnvelopeFormatError`` naming ``where``."""
+    item = _mapping(value, where, PROBLEM_KEYS)
+    return Problem(
+        _required_text(item, "cause", where),
+        _required_text(item, "recovery", where),
+        _text_list(item.get("attempts"), f"{where}.attempts"),
+    )
+
+
+def _questions(value: Any) -> tuple[Question, ...]:
+    if value is None:
+        return ()
+    if not isinstance(value, list):
+        raise EnvelopeFormatError("questions: expected a list")
+    questions = tuple(parse_question(item, f"questions[{i}]") for i, item in enumerate(value))
+    if len({q.id for q in questions}) != len(questions):
+        raise EnvelopeFormatError("questions: question ids must be unique")
+    return questions
+
+
+def _answers(value: Any) -> tuple[Answer, ...]:
+    if value is None:
+        return ()
+    if not isinstance(value, list):
+        raise EnvelopeFormatError("answers: expected a list")
+    answers = tuple(parse_answer(item, f"answers[{i}]") for i, item in enumerate(value))
+    if len({a.question for a in answers}) != len(answers):
+        raise EnvelopeFormatError("answers: one answer per question")
+    return answers
+
+
+def _problem(value: Any) -> Problem | None:
+    return None if value is None else parse_problem(value)
+
+
+def _check_kind_fields(
+    kind: str,
+    status: str,
+    questions: tuple[Question, ...],
+    answers: tuple[Answer, ...],
+    answers_to: str,
+    problem: Problem | None,
+    resolves: str,
+    summary: str,
+) -> None:
+    """The fields each kind carries, and the statuses they allow (``docs/workflow/envelopes.md``)."""
+    if questions and kind != QUESTION:
+        raise EnvelopeFormatError("questions: only a question envelope carries questions")
+    if (answers or answers_to) and kind != ANSWER:
+        raise EnvelopeFormatError("answers and answers_to: only an answer envelope carries them")
+    if resolves and kind != RESOLUTION:
+        raise EnvelopeFormatError("resolves: only a resolution envelope carries it")
+    if problem is not None and kind != WORKER:
+        raise EnvelopeFormatError("problem: only a worker envelope carries a problem")
+    if problem is not None and status == "completed":
+        raise EnvelopeFormatError("problem: a completed envelope reports no problem; use needs_input or failed")
+    if kind == QUESTION:
+        if not questions:
+            raise EnvelopeFormatError("a question envelope needs questions")
+        if status != "needs_input":
+            raise EnvelopeFormatError("a question envelope has status needs_input")
+    elif kind == ANSWER:
+        if QUESTION_REF.fullmatch(answers_to) is None:
+            raise EnvelopeFormatError("an answer needs `answers_to: question-NN.yaml` naming the questions it answers")
+        if not answers:
+            raise EnvelopeFormatError("an answer envelope needs answers")
+        if status != "completed":
+            raise EnvelopeFormatError("an answer envelope has status completed")
+    elif kind == RESOLUTION:
+        if FILE.fullmatch(resolves) is None:
+            raise EnvelopeFormatError("a resolution needs `resolves: <kind>-NN.yaml` naming the problem it resolves")
+        if status != "completed":
+            raise EnvelopeFormatError("a resolution envelope has status completed")
+        if not summary.strip():
+            raise EnvelopeFormatError("a resolution needs a summary of what was done and why it resolves the problem")
+    elif kind == WORKER and status == "failed" and problem is None:
+        raise EnvelopeFormatError("a failed worker envelope needs a problem (cause, attempts, recovery)")
+
+
+def reference_error(envelope: Envelope, loaded: Mapping[str, Envelope]) -> str | None:
+    """Why ``envelope``'s ``answers_to`` or ``resolves`` does not name a fitting envelope of ``loaded`` (by file
+    name), or ``None`` when it does or the envelope references nothing."""
+    if envelope.kind == ANSWER:
+        target = loaded.get(envelope.answers_to)
+        if target is None or target.kind != QUESTION:
+            return f"answers_to {envelope.answers_to!r} names no well-formed question envelope of the unit"
+        questions = {q.id: q for q in target.questions}
+        for answer in envelope.answers:
+            question = questions.get(answer.question)
+            if question is None:
+                return f"answers: {answer.question!r} is not a question of {target.name}"
+            if answer.choice is not None and answer.choice not in {o.id for o in question.options}:
+                return f"answers: {answer.choice!r} is not an option of {target.name} {question.id}"
+    if envelope.kind == RESOLUTION:
+        target = loaded.get(envelope.resolves)
+        if target is None or target.problem is None:
+            return f"resolves {envelope.resolves!r} names no well-formed envelope with a problem in the unit"
+    return None
+
+
+def _check_references(out: Envelopes) -> None:
+    """Move every answer or resolution whose reference does not fit to ``out.errors``: it answers or resolves
+    nothing, so the question stays pending and the problem unresolved."""
+    loaded = {e.name: e for e in out.all()}
+    for kind in (ANSWER, RESOLUTION):
+        kept: list[Envelope] = []
+        for envelope in out.by_kind.get(kind, []):
+            problem = reference_error(envelope, loaded)
+            if problem is None:
+                kept.append(envelope)
+            else:
+                out.errors.append(EnvelopeFormatError(problem, file=envelope.file))
+        if kind in out.by_kind:
+            out.by_kind[kind] = kept
+            if not kept:
+                del out.by_kind[kind]
 
 
 def read_envelope(path: Path, rel: str) -> Envelope:
     """Read and validate the envelope file at ``path`` (reported as ``rel``); raises ``EnvelopeFormatError``."""
-    match = FILE.fullmatch(path.name)
+    if FILE.fullmatch(path.name) is None:
+        raise EnvelopeFormatError(f"file name must be <kind>-<NN>.yaml with kind matching {IDENT_HINT}", file=rel)
+    try:
+        text = path.read_text("utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise EnvelopeFormatError(str(exc), file=rel) from exc
+    return parse_envelope_text(path.name, rel, text)
+
+
+def parse_envelope_text(name: str, rel: str, text: str) -> Envelope:
+    """Validate the envelope file ``name`` (reported as ``rel``) with content ``text``; raises
+    ``EnvelopeFormatError``. References to other envelopes are checked by ``collect_envelopes``."""
+    match = FILE.fullmatch(name)
     if match is None:
         raise EnvelopeFormatError(f"file name must be <kind>-<NN>.yaml with kind matching {IDENT_HINT}", file=rel)
     try:
-        data = yaml.safe_load(path.read_text("utf-8"))
-    except (OSError, UnicodeError) as exc:
-        raise EnvelopeFormatError(str(exc), file=rel) from exc
+        data = yaml.safe_load(text)
     except yaml.YAMLError as exc:
         raise EnvelopeFormatError(f"yaml: {exc}", file=rel) from exc
     return parse_envelope(rel, int(match.group(2)), match.group(1), data)
 
 
-def load_envelopes(unit_dir: Path) -> Envelopes:
-    """Read ``unit_dir/envelopes``; a missing directory yields an empty set, a malformed file an entry in ``errors``."""
+def is_envelope_name(name: str) -> bool:
+    """Whether a file named ``name`` in ``envelopes/`` is loaded as an envelope (temporary files are not)."""
+    return not is_temporary(name) and Path(name).suffix in {".yaml", ".yml"}
+
+
+def collect_envelopes(files: Iterable[tuple[str, Callable[[], str]]]) -> Envelopes:
+    """Envelopes from ``(file name, reader)`` pairs of one unit's ``envelopes/`` directory.
+
+    A malformed file is an entry in ``errors``, and so is an answer or resolution whose ``answers_to`` or
+    ``resolves`` names no fitting envelope of the same set.
+    """
     out = Envelopes()
-    directory = unit_dir / ENVELOPES_DIR
-    if not directory.is_dir():
-        return out
-    for entry in sorted(directory.iterdir()):
-        if is_temporary(entry.name) or entry.suffix not in {".yaml", ".yml"} or entry.is_dir():
-            continue
+    for name, read in sorted(files, key=lambda item: item[0]):
+        rel = f"{ENVELOPES_DIR}/{name}"
         try:
-            parsed = read_envelope(entry, f"{ENVELOPES_DIR}/{entry.name}")
+            parsed = parse_envelope_text(name, rel, read())
         except EnvelopeFormatError as exc:
             out.errors.append(exc)
+            continue
+        except (OSError, UnicodeError) as exc:
+            out.errors.append(EnvelopeFormatError(str(exc), file=rel))
             continue
         out.by_kind.setdefault(parsed.kind, []).append(parsed)
     for items in out.by_kind.values():
         items.sort(key=lambda e: e.seq)
+    _check_references(out)
     return out
+
+
+def load_envelopes(unit_dir: Path) -> Envelopes:
+    """Read ``unit_dir/envelopes``; a missing directory yields an empty set, a malformed file an entry in ``errors``."""
+    directory = unit_dir / ENVELOPES_DIR
+    if not directory.is_dir():
+        return Envelopes()
+    files = [
+        (entry.name, lambda entry=entry: entry.read_text("utf-8"))
+        for entry in directory.iterdir()
+        if is_envelope_name(entry.name) and not entry.is_dir()
+    ]
+    return collect_envelopes(files)
 
 
 def write_envelope(unit_dir: Path, kind: str, body: str) -> tuple[Path, int]:

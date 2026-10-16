@@ -35,7 +35,7 @@ and `git-commits` (commit message conventions,
 | `devkit.workflow` | Data-driven delivery workflow engine | `devkit workflow` | [docs/workflow](../../docs/workflow/reference.md) |
 | `devkit.gate` | Pluggable Git commit gates and extensible hook dispatchers installed by sync | `devkit gate` | [docs/gate](../../docs/gate/reference.md) |
 | `devkit.distribution` | Bundle packaging and transactional synchronization, plus the built-in `devkit` guide bundle | `devkit sync`, `add`, `remove`, `list`, `status`, ... | [docs/distribution](../../docs/distribution/reference.md) |
-| `devkit.worktree` | One Git worktree per task: start, finish (integrate, remove, delete the branch), status | `devkit worktree` | [docs/worktree](../../docs/worktree/reference.md) |
+| `devkit.worktree` | Activity branches (`plan-<slug>`, `dev-<slug>`) and one Git worktree per task: start (new, without a worktree, or attached to an existing branch), finish (integrate, remove, delete the branch), status, stale branches | `devkit worktree` | [docs/worktree](../../docs/worktree/reference.md) |
 | `devkit.generated` | Tracked generated files: settle their merge conflicts by regenerating, check and regenerate them | `devkit generated` | [docs/generated](../../docs/generated/reference.md) |
 | `devkit.search` | Lexical, dense and hybrid document search; dense needs the `devkit-agt[search]` extra | none | [docs/search](../../docs/search/reference.md) |
 | `devkit.compact` | Verification commands with the full log on disk and a bounded view for agents | `devkit run` | [docs/compact](../../docs/compact/reference.md) |

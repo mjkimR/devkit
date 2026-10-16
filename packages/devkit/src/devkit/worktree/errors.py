@@ -65,10 +65,10 @@ class UnsupportedLayoutError(_Guardrail):
 
 
 class ConflictError(_Interaction):
-    """The slug's path or branch is not a task worktree ``start`` can reuse or ``finish`` can remove (``INTERACTION``).
+    """The activity branch or its path is not a task worktree ``start`` can reuse or ``finish`` can remove (``INTERACTION``).
 
     ``start``: the path is a worktree on another branch, with uncommitted changes or with its directory missing, or
-    it exists and is not a worktree. ``finish``: the worktree is detached or on another branch, or the slug's branch
+    it exists and is not a worktree. ``finish``: the worktree is detached or on another branch, or the branch
     is the base checkout's. The ``[FIX]`` names the step for each.
     """
 
@@ -77,26 +77,84 @@ class ConflictError(_Interaction):
 
 
 class BranchExistsError(_Interaction):
-    """A branch named after the slug already exists or is checked out elsewhere (``INTERACTION``)."""
+    """The activity branch already exists locally or on a remote, or is checked out elsewhere (``INTERACTION``).
+
+    A new ``start`` never takes over an existing branch; the ``[FIX]`` names the ``--existing-branch`` path that
+    attaches it explicitly.
+    """
 
     code = "WORKTREE_BRANCH_EXISTS"
-    fix = "Delete or rename that branch, or choose another slug"
+    fix = "Continue the existing branch with --existing-branch <branch> --unit <dir>, or choose another slug"
+
+
+class BranchOutOfSyncError(_Interaction):
+    """``start --existing-branch``: the local branch lacks commits of its remote-tracking branch (``INTERACTION``).
+
+    devkit never merges or resets to reconcile them; nothing changed. A local branch ahead of the remote is attached.
+    """
+
+    code = "WORKTREE_BRANCH_OUT_OF_SYNC"
+    fix = "Bring the local branch up to date with the remote branch, then rerun"
+
+
+class UnitInvalidError(WorktreeError):
+    """``start --existing-branch``: ``--unit`` is not a directory of the branch's tree (``INPUT_ERROR``)."""
+
+    code = "WORKTREE_UNIT_INVALID"
+    input_error = True
+    fix = "Pass --unit as the unit directory relative to the devkit project, as it exists on the branch"
+
+
+class AttachRefusedError(_Interaction):
+    """A ``devkit.attach_check`` extension found that the branch and the unit do not belong together (``INTERACTION``).
+
+    Each reason is a detail; nothing changed.
+    """
+
+    code = "WORKTREE_ATTACH_REFUSED"
+    fix = "Pass the unit that belongs to this activity branch, or the branch that belongs to this unit"
+
+
+class AttachCheckFailedError(WorktreeError):
+    """A ``devkit.attach_check`` extension raised or returned something other than a list of strings
+    (``MAINTENANCE``); the attach is refused, since the correspondence was not verified."""
+
+    code = "WORKTREE_ATTACH_CHECK_FAILED"
+    fix = "Repair or uninstall the package that registers the failing extension, then rerun"
+
+
+class BlockedError(_Interaction):
+    """A ``devkit.finish_guard`` extension refused to integrate the branch, ``finish --merge`` (``INTERACTION``).
+
+    Each reason is a detail (for example an unresolved problem envelope); nothing changed.
+    """
+
+    code = "WORKTREE_BLOCKED"
+    fix = "Resolve what each detail names on the branch, commit it, then rerun"
+
+
+class GuardFailedError(WorktreeError):
+    """A ``devkit.finish_guard`` extension raised or returned something other than a list of strings
+    (``MAINTENANCE``); ``finish --merge`` is refused, since the branch was not verified. Nothing changed."""
+
+    code = "WORKTREE_GUARD_FAILED"
+    fix = "Repair or uninstall the package that registers the failing extension, then rerun"
 
 
 class NotFoundError(_Interaction):
-    """No worktree has the slug's path or branch (``INTERACTION``).
+    """No worktree has the branch or its path (``INTERACTION``).
 
-    For ``finish``, also when the slug's merged branch lacks the marker ``start`` records (or a finish already
+    For ``finish``, also when the merged branch lacks the marker ``start`` records (or a finish already
     completed for it): nothing runs, merges, pushes or is deleted for that branch, and with ``delete_branch`` the
     ``[FIX]`` deletes it only once the user agrees.
     """
 
     code = "WORKTREE_NOT_FOUND"
-    fix = "Check `devkit worktree status` or `git worktree list` for the slug"
+    fix = "Check `devkit worktree status` or `git worktree list` for the branch"
 
 
 class LockedError(_Interaction):
-    """``finish`` found the slug's worktree locked (``git worktree lock``, ``INTERACTION``); nothing changed."""
+    """``finish`` found the branch's worktree locked (``git worktree lock``, ``INTERACTION``); nothing changed."""
 
     code = "WORKTREE_LOCKED"
     fix = "Unlock the worktree (git worktree unlock <path>) once the user agrees, then rerun"
@@ -106,7 +164,7 @@ class BaseDetachedError(_Interaction):
     """``finish --merge`` found the base checkout on a detached HEAD (``INTERACTION``); nothing changed.
 
     A fast-forward would move no branch and the push would be skipped, leaving the task's commits on no branch
-    once the slug's branch is deleted.
+    once the branch is deleted.
     """
 
     code = "WORKTREE_BASE_DETACHED"
@@ -124,7 +182,7 @@ class BaseBehindError(_Interaction):
 
 
 class BranchUnpushedError(_Interaction):
-    """The slug's branch has an upstream that lacks its commits, so ``git branch -d`` would refuse it (``INTERACTION``).
+    """The branch has an upstream that lacks its commits, so ``git branch -d`` would refuse it (``INTERACTION``).
 
     Raised before any change; the ``[FIX]`` pushes the branch to that upstream.
     """
@@ -188,7 +246,7 @@ class AddFailedError(_Interaction):
 
 
 class BranchDeleteFailedError(_Interaction):
-    """``git branch -d`` refused the slug's branch after the worktree was removed (``INTERACTION``).
+    """``git branch -d`` refused the branch after the worktree was removed (``INTERACTION``).
 
     Raised with the partial ``result``; rerunning the same command finds the merged branch without its worktree
     and deletes it.
@@ -221,6 +279,46 @@ class PushRejectedWarning(WorktreeError):
 
     code = "WORKTREE_PUSH_REJECTED"
     level = Level.WARNING
+
+
+class BranchAheadNotice(WorktreeError):
+    """``--existing-branch``: the local branch has commits its remote-tracking ref lacks (``NOTICE``); it is attached
+    as it is, and the remote is synchronized only by a push."""
+
+    code = "WORKTREE_BRANCH_AHEAD"
+    level = Level.NOTICE
+
+
+class RemoteUncheckedWarning(WorktreeError):
+    """``start`` could not ask a remote whether it has the branch (unreachable, timed out; ``WARNING``).
+
+    The remote-tracking refs fetched before stood in for it; the branch was created when none of them had it.
+    """
+
+    code = "WORKTREE_REMOTE_UNCHECKED"
+    level = Level.WARNING
+
+
+class StaleBranchWarning(WorktreeError):
+    """An activity branch has had no commit and no pull request activity for ``[worktree] stale_after``
+    (``WARNING``); the ``[FIX]`` names how to resume it, and how to discard it once the user decides."""
+
+    code = "WORKTREE_STALE_BRANCH"
+    level = Level.WARNING
+
+
+class StaleSkippedNotice(WorktreeError):
+    """The stale-branch check did not run: ``gh auth status`` failed or ``gh`` is missing (``NOTICE``)."""
+
+    code = "WORKTREE_STALE_SKIPPED"
+    level = Level.NOTICE
+
+
+class StalePullRequestsUnknownNotice(WorktreeError):
+    """``gh pr list`` failed, so stale branches were judged by their last commit alone (``NOTICE``)."""
+
+    code = "WORKTREE_STALE_PR_UNKNOWN"
+    level = Level.NOTICE
 
 
 class SetupFailedWarning(WorktreeError):

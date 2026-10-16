@@ -162,6 +162,7 @@ spec = "core"
 #   pull_request = "auto"  # "auto" | "required"; required refuses worktree finish --merge
 #   delete_branch = true   # boolean; delete the merged branch with git branch -d
 #   setup = "uv sync"      # example; string; unset: no setup command
+#   stale_after = "14d"    # "<N>d" | "<N>w"; idle plan-*/dev-* branches are reported
 
 ## [tool.spec]: the settings of devkit-spec; devkit passes [tool.*] tables through unread.
 # [tool.spec]

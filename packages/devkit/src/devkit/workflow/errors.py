@@ -413,3 +413,16 @@ class EnvelopeStatusError(AuthoringError):
     """``--status`` is not one of the envelope statuses."""
 
     code = "ENVELOPE_STATUS_INVALID"
+
+
+class EnvelopeItemsError(AuthoringError):
+    """The ``--questions-file`` or ``--answers-file`` content is not a valid list of questions or answers."""
+
+    code = "ENVELOPE_ITEMS_INVALID"
+
+
+class EnvelopeReferenceError(AuthoringError):
+    """``--answers-to`` or ``--resolves`` names no fitting envelope of the unit: no question envelope with the
+    answered questions and options, or no envelope with a problem."""
+
+    code = "ENVELOPE_REFERENCE_INVALID"

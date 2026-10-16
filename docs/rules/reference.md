@@ -114,6 +114,8 @@ parseable:
   `[PHASE_OVERRIDE: ...]`/`[PROMOTION: ...]` lines (whole-workspace runs only)
   ([Evaluation Lifecycle, section 4](evaluation-lifecycle.md#4-phase-transitions-overrides-and-promotions))
   and a `RULES_PROMOTION_READY` notice on stderr when one has `remaining=0`;
+  a whole-workspace `check --phase hygiene` adds the notices of the `devkit.hygiene`
+  extensions ([Evaluation Lifecycle, section 3](evaluation-lifecycle.md#3-cli-execution-and-phases));
   then `[SUMMARY: errors=N warnings=N infos=N fixed=N]` counting unfixed
   findings per severity and the fixed ones; then `[OK: ...]` when the command
   exits `0`. A run that could not evaluate and found nothing prints no summary.
@@ -449,6 +451,8 @@ Warnings and notices are returned, never raised, at level `WARNING` or
 | --- | --- | --- |
 | `RULES_PROMOTION_READY` | `NOTICE` | a whole-workspace `hygiene` run finds a phase override or promotion with `remaining=0`; `target_files` names the files to edit (`.devkit/config.toml` for an override, the file declaring the rule for a promotion), `fix` the edit (drop the `[rules.phase_overrides]` entry, or switch the declared phase to its `promote_to`) |
 | `RULES_RELATED_UNRESOLVED` | `NOTICE` | `explain` of a rule whose `related` entry names an asset that is not deployed (`fix`: `devkit add <bundle>`), is neither an instruction nor a playbook, or is one without a Markdown file (`fix`: add it to the bundle, then `devkit sync`); the entry is printed with `path=-`. A receipt that cannot be read is one notice for all entries carrying the receipt's code (`RECEIPT_INVALID`), target and fix |
+| `HYGIENE_NOTICE` | `NOTICE` | a line a `devkit.hygiene` extension returned in a whole-workspace `check --phase hygiene`; its package owns its meaning (an advisory it returns keeps its own code instead, such as `WORKTREE_STALE_BRANCH`) |
+| `HYGIENE_EXTENSION_FAILED` | `WARNING` | a `devkit.hygiene` extension raised or returned something other than a list; the run's own result stands |
 | any collected problem's code | `WARNING` | `explain` reports a loading or policy problem that does not concern the described rule, `test` any loading or policy problem (`with_level`; the code is unchanged) |
 
 Rule violations of severity `warning` or `info` are findings, not advisories:

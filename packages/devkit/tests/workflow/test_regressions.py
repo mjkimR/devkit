@@ -515,6 +515,7 @@ def test_r8_gate_reports_what_satisfied_it(tmp_path: Path) -> None:
         "satisfied": True,
         "source": "decision",
         "decision": "decisions/01-gate-integration.yaml",
+        "held": False,
     }
     assert (
         "[GATE: integration policy=ask satisfied=yes source=decision:decisions/01-gate-integration.yaml]"

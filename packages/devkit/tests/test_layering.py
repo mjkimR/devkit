@@ -159,6 +159,12 @@ ENTRY_POINT_EXCEPTIONS: dict[tuple[str, str], str] = {
     # Dependency inversion: gate registers its hook installation as a post-sync extension; distribution calls it
     # through ``devkit.core.extensions`` without importing gate code.
     ("devkit.post_sync", "gate-hooks"): "gate",
+    # Dependency inversion: workflow registers the envelope hold check as a finish guard; worktree loads it through
+    # its entry point (failing closed) without importing workflow code.
+    ("devkit.finish_guard", "workflow-envelopes"): "workflow",
+    # Dependency inversion: worktree registers its stale activity branch report as a hygiene extension; rules calls
+    # it through ``devkit.core.extensions`` without importing worktree code.
+    ("devkit.hygiene", "worktree-stale"): "worktree",
 }
 
 

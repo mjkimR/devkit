@@ -12,6 +12,7 @@ from collections.abc import Mapping
 from devkit.workflow.definition.definition import WorkflowDocument, schema_hash
 from devkit.workflow.evaluation.requests import Request, candidate_summary
 from devkit.workflow.evaluation.results import GateStatus, UnitEvaluation
+from devkit.workflow.unit.envelope import Hold
 
 
 def quote(value: str) -> str:
@@ -80,12 +81,16 @@ def render_evaluation(res: UnitEvaluation) -> str:
             lines.append(f"[RETURNS: {parts}]")
         if res.gate:
             g = res.gate
-            lines.append(f"[GATE: {g.name} policy={g.policy} satisfied={_yn(g.satisfied)} source={_gate_source(g)}]")
+            held = " held=yes" if g.held else ""
+            lines.append(
+                f"[GATE: {g.name} policy={g.policy} satisfied={_yn(g.satisfied)} source={_gate_source(g)}{held}]"
+            )
         if res.waiting:
             lines.append(f"[WAITING: {res.waiting.class_.value} {' '.join(res.waiting.checks)}]")
         void = quote(f"devkit workflow return --unit {res.unit} --to {stage.id}")
         for d in res.stale_approvals:
             lines.append(f"[STALE_APPROVAL: {d.file} request={d.request} stage={d.stage} counts=yes void_with={void}]")
+    lines.extend(render_hold(res.hold).splitlines())
     lines.extend(render_requests(res.requests))
     for e in res.envelope_errors:
         lines.append(f"[ENVELOPE_ERROR: {e.file} {quote(e.message)}]")
@@ -96,10 +101,28 @@ def render_evaluation(res: UnitEvaluation) -> str:
     return "\n".join(lines) + "\n"
 
 
+def render_hold(hold: Hold) -> str:
+    """``[BLOCKED: ...]`` per unresolved problem and ``[PENDING_QUESTION: ...]`` per unanswered question."""
+    lines = [
+        f"[BLOCKED: {e.file} cause={quote(e.problem.cause)} recovery={quote(e.problem.recovery)}]"
+        for e in hold.problems
+        if e.problem
+    ]
+    lines += [f"[PENDING_QUESTION: {e.file} id={q.id} title={quote(q.title)}]" for e, q in hold.questions]
+    return "".join(f"{line}\n" for line in lines)
+
+
 def render_requests(requests: list[Request]) -> list[str]:
     lines: list[str] = []
     for r in requests:
-        if r.kind == "choose":
+        if r.target.type == "question":
+            lines.append(
+                f"[REQUEST: id={r.id} kind=choose title={quote(r.title)} target=question:{r.target.name} "
+                f"stage={_dash(r.target.stage)} options={_dash(','.join(o.id for o in r.options))} "
+                f"recommended={_dash(','.join(o.id for o in r.options if o.recommended))} "
+                f"note={'allowed' if r.allow_note else 'no'} answer=envelope]"
+            )
+        elif r.kind == "choose":
             lines.append(
                 f"[REQUEST: id={r.id} kind=choose title={quote(r.title)} "
                 f"options={_dash(','.join(o.id for o in r.options))} "

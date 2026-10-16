@@ -12,6 +12,7 @@ from devkit.workflow.errors import DecisionRecordError, EnvelopeFormatError
 from devkit.workflow.evaluation.requests import Request
 from devkit.workflow.unit.binding import Binding
 from devkit.workflow.unit.decisions import Decision
+from devkit.workflow.unit.envelope import Hold
 
 if TYPE_CHECKING:
     from devkit.workflow.handoff import Handoff
@@ -40,6 +41,7 @@ class GateStatus:
     satisfied: bool
     source: str = ""
     decision: str | None = None
+    held: bool = False  # an unresolved problem or unanswered question keeps it from passing, whatever its source
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -48,6 +50,7 @@ class GateStatus:
             "satisfied": self.satisfied,
             "source": self.source or None,
             "decision": self.decision,
+            "held": self.held,
         }
 
 
@@ -109,6 +112,7 @@ class UnitEvaluation:
     requests: list[Request] = field(default_factory=list)
     decision_errors: list[DecisionRecordError] = field(default_factory=list)
     stale_approvals: list[Decision] = field(default_factory=list)  # approvals for stages after the current one
+    hold: Hold = field(default_factory=Hold)  # unresolved problems and unanswered questions, whatever the segment
 
     @property
     def complete(self) -> bool:
@@ -145,5 +149,6 @@ class UnitEvaluation:
             "handoff": self.handoff.to_dict() if self.handoff else None,
             "requests": [r.to_dict() for r in self.requests],
             "stale_approvals": [d.file for d in self.stale_approvals],
+            **self.hold.to_dict(),
             "errors": [e.to_dict() for e in self.errors],
         }

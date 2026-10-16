@@ -40,7 +40,10 @@ never derive it from files yourself.
    `--findings-file`, and for a reverify `--from latest` with `--resolve`/`--waive`)
    rather than editing YAML by hand; with only `--kind` it writes a skeleton to
    fill in. Validate with `uv run devkit workflow envelope check --unit <dir>`;
-   never overwrite an existing envelope.
+   never overwrite an existing envelope. A run that cannot go on records the
+   cause with `--problem`, `--tried` and `--recovery` (a `failed` or
+   `needs_input` envelope); whoever actually fixes it writes a `resolution`
+   with `--resolves <file>` and the fix in the same commit.
 4. Respect gates. `[GATE: <name> policy=ask satisfied=no ...]` with
    `[WAITING: human gate:<name>]` means a person must approve; it appears only
    once the stage's other exit checks hold. The matching
@@ -55,6 +58,12 @@ never derive it from files yourself.
    objection take a `[RETURNS]` path instead. Name the user's approval as the
    basis in your report. `source=policy` means the gate was passed by project
    policy (`auto`): report that basis in your summary.
+   `[BLOCKED]` (an unresolved problem) or `[PENDING_QUESTION]` holds every
+   gate, whatever its policy. A `[REQUEST: id=question:... answer=envelope]`
+   line is a question: ask it, and record the user's answer with
+   `uv run devkit workflow envelope new --unit <dir> --kind answer
+   --answers-to <question-NN.yaml> --answers-file <file>`, one rewritten
+   `decision` per question, never `workflow answer`.
 5. Stop on errors. An `[ERROR] (CODE)` block on stderr carries an `[ACTION]`
    directive; follow it. `WORKFLOW_DRIFT` means the definition changed under
    this unit: review the change with the user before running the `bind`

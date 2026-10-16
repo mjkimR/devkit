@@ -1,15 +1,16 @@
-"""The task worktree lifecycle: locate the checkout, start a slug's worktree, finish it, report leftovers.
+"""The task worktree lifecycle: locate the checkout, start an activity branch, finish it, report leftovers.
 
-A slug's worktree is always ``<parent of base>/<base name>-wt-<slug>`` on the
-branch ``<slug>``, created from the base checkout's HEAD; the base working tree
-is never touched by ``start``. A branch ``start`` creates carries the marker
-``branch.<slug>.devkitWorktree`` (the worktree path) in the common Git
-configuration; ``git branch -d`` removes it with the branch, and a ``finish``
-that keeps the branch unsets it. ``finish`` runs in the base: it fast-forwards
-the base onto the branch and pushes it (``merge=True``) or verifies the branch is
-merged, removes the worktree and deletes the branch. Every step refuses
-instead of forcing, the checks of the worktree's branch, the base and the
-upstreams run before the first change, and rerunning resumes. ``status`` changes nothing.
+A task runs on an activity branch ``<activity>-<slug>`` (``plan-<slug>`` or ``dev-<slug>``, ``check_branch``). Its
+worktree is always ``<parent of base>/<base name>-wt-<branch>``, created from the base checkout's HEAD; the base
+working tree is never touched by ``start``. ``start_branch`` creates the branch without a worktree and switches the
+current checkout to it; ``attach`` gives an existing branch its worktree. Every branch these create or attach carries
+the marker ``branch.<branch>.devkitWorktree`` (the worktree or checkout path) in the common Git configuration, with
+``devkitBase`` (the branch ``start_branch`` started from) and ``devkitUnit`` (the unit ``attach`` was given) beside
+it; ``git branch -d`` removes them with the branch, and a ``finish`` that keeps the branch unsets the marker.
+``finish`` runs in the base: it fast-forwards the base onto the branch and pushes it (``merge=True``) or verifies the
+branch is merged, removes the worktree and deletes the branch. Every step refuses instead of forcing, the checks of
+the worktree's branch, the base and the upstreams run before the first change, and rerunning resumes. ``status``
+changes nothing.
 """
 
 from __future__ import annotations
@@ -39,8 +40,10 @@ from devkit.worktree.errors import (
     BaseBehindError,
     BaseDetachedError,
     BaseDirtyError,
+    BranchAheadNotice,
     BranchDeleteFailedError,
     BranchExistsError,
+    BranchOutOfSyncError,
     BranchUnpushedError,
     ConflictError,
     DirtyError,
@@ -51,10 +54,12 @@ from devkit.worktree.errors import (
     PullRequestPolicyError,
     PushFailedWarning,
     PushRejectedWarning,
+    RemoteUncheckedWarning,
     RemoveFailedError,
     RunFromBaseError,
     SetupFailedWarning,
     SyncFailedWarning,
+    UnitInvalidError,
     UnmergedError,
     UnsupportedLayoutError,
     WorktreeError,
@@ -62,10 +67,15 @@ from devkit.worktree.errors import (
 
 _log = get_logger(__name__)
 
-SLUG = re.compile(r"[a-z0-9][a-z0-9_-]{0,63}")
-# Recorded in the common configuration on every branch ``start`` creates; only a marked branch is deleted without its
-# worktree, so ``finish`` never deletes an ordinary branch that happens to share a slug's name.
+ACTIVITY_PREFIXES = ("plan", "dev")  # Planning and Development activity branches: plan-<slug>, dev-<slug>
+BRANCH = re.compile(rf"(?:{'|'.join(ACTIVITY_PREFIXES)})-[a-z0-9][a-z0-9_-]*")
+BRANCH_LIMIT = 64  # characters of the whole branch name, prefix included
+# Recorded in the common configuration on every branch ``start`` creates or attaches; only a marked branch is deleted
+# without its worktree, so ``finish`` never deletes an ordinary branch that happens to share the name.
 MARKER = "devkitWorktree"
+BASE_KEY = "devkitBase"  # the branch ``start_branch`` started from, where the base checkout returns to
+UNIT_KEY = "devkitUnit"  # the unit directory ``attach`` was given, for the stale-branch report
+LS_REMOTE_TIMEOUT = 30.0  # seconds to ask one remote whether it has the branch
 PUSH_TIMEOUT = 120.0  # seconds; a slow or stuck push must not hold the cleanup
 FETCH_TIMEOUT = 120.0  # seconds for the upstream fetch before the merge
 SETUP_TIMEOUT = 900.0  # seconds for the `setup` command (dependency installs)
@@ -85,24 +95,54 @@ class Position:
 
 @dataclass(frozen=True)
 class StartResult:
-    slug: str
-    path: Path
     branch: str
+    path: Path
     base: Path
     created: bool  # False when the existing worktree was reused
     setup: str | None = None  # the setup command that ran, if any
     synced: bool | None = None  # whether `devkit sync --locked` restored the project; None when it did not run
     notices: list[AdvisoryError] = field(default_factory=list)
+    existing: bool = False  # the branch existed before (`attach`)
+    unit: str | None = None  # the unit `attach` was given, relative to the devkit project
+
+    @property
+    def slug(self) -> str:
+        return slug_of(self.branch)
 
     def to_dict(self) -> dict[str, Any]:
         return {
+            "branch": self.branch,
             "slug": self.slug,
             "path": str(self.path),
-            "branch": self.branch,
             "base": str(self.base),
             "created": self.created,
+            "existing": self.existing,
+            "unit": self.unit,
             "setup": self.setup,
             "synced": self.synced,
+            "notices": [notice.to_dict() for notice in self.notices],
+        }
+
+
+@dataclass(frozen=True)
+class BranchStartResult:
+    """``start_branch``: the branch was created at ``checkout``'s HEAD and ``checkout`` switched to it."""
+
+    branch: str
+    checkout: Path
+    started_from: str  # the branch the checkout was on, recorded as ``devkitBase``
+    notices: list[AdvisoryError] = field(default_factory=list)
+
+    @property
+    def slug(self) -> str:
+        return slug_of(self.branch)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "branch": self.branch,
+            "slug": self.slug,
+            "checkout": str(self.checkout),
+            "from": self.started_from,
             "notices": [notice.to_dict() for notice in self.notices],
         }
 
@@ -110,19 +150,23 @@ class StartResult:
 @dataclass
 class FinishResult:
     """How far ``finish`` got; ``push`` is ``pushed``, ``rejected``, ``failed`` or ``no-upstream``, ``None`` without
-    a merge. ``removed`` is also ``True`` when the worktree was already gone (a rerun after it was removed)."""
+    a merge. ``removed`` is also ``True`` when there was no worktree to remove (a rerun after it was removed, or a
+    branch ``start_branch`` created)."""
 
-    slug: str
-    path: Path
     branch: str
+    path: Path
     merged: bool = False
     push: str | None = None
     removed: bool = False
     branch_deleted: bool = False
     notices: list[AdvisoryError] = field(default_factory=list)
 
+    @property
+    def slug(self) -> str:
+        return slug_of(self.branch)
+
     def to_dict(self) -> dict[str, Any]:
-        value = dataclasses.asdict(self) | {"path": str(self.path)}
+        value = {"branch": self.branch, "slug": self.slug} | dataclasses.asdict(self) | {"path": str(self.path)}
         value["notices"] = [notice.to_dict() for notice in self.notices]
         return value
 
@@ -219,15 +263,23 @@ def _resolve(path: str) -> Path:
     return Path(path).resolve()
 
 
-def check_slug(slug: str) -> str:
-    """``slug`` when it is a valid task slug (lowercase letters, digits, ``-`` and ``_``; 64 at most)."""
-    if not SLUG.fullmatch(slug):
+def check_branch(branch: str) -> str:
+    """``branch`` when it is an activity branch: ``plan-`` or ``dev-`` and a slug of lowercase letters, digits,
+    ``-`` and ``_`` starting with a letter or digit, 64 characters at most in all."""
+    if not BRANCH.fullmatch(branch) or len(branch) > BRANCH_LIMIT:
         raise ArgumentError(
-            f"slug {slug!r}: expected lowercase letters, digits, '-' and '_', starting with a letter or digit"
-            " (64 characters at most)",
-            target_files=["SLUG"],
+            f"branch {branch!r}: expected an activity branch <activity>-<slug>, the activity one of"
+            f" {', '.join(ACTIVITY_PREFIXES)} and the slug lowercase letters, digits, '-' and '_' starting with a"
+            f" letter or digit ({BRANCH_LIMIT} characters at most in all)",
+            target_files=["BRANCH"],
+            fix="Pass plan-<slug> for a Planning activity or dev-<slug> for a Development activity",
         )
-    return slug
+    return branch
+
+
+def slug_of(branch: str) -> str:
+    """The slug of an activity branch: its name without the activity prefix."""
+    return branch.split("-", 1)[1] if "-" in branch else branch
 
 
 def locate(start: Path) -> Position:
@@ -242,9 +294,9 @@ def locate(start: Path) -> Position:
     return Position(root=root, base=common.parent, branch=branch or None, linked=git_dir != common)
 
 
-def path_for(position: Position, slug: str) -> Path:
-    """``<parent of base>/<base name>-wt-<slug>``."""
-    return position.base.parent / f"{position.base.name}-wt-{slug}"
+def path_for(position: Position, branch: str) -> Path:
+    """``<parent of base>/<base name>-wt-<branch>``."""
+    return position.base.parent / f"{position.base.name}-wt-{branch}"
 
 
 def _entries(base: Path) -> list[_Entry]:
@@ -269,9 +321,9 @@ def _entries(base: Path) -> list[_Entry]:
     return entries
 
 
-def _marker(branch: str) -> str:
-    """The configuration key marking ``branch`` as created by ``start``."""
-    return f"branch.{branch}.{MARKER}"
+def _marker(branch: str, key: str = MARKER) -> str:
+    """The configuration key marking ``branch`` as created by ``start`` (or another of its ``devkit*`` keys)."""
+    return f"branch.{branch}.{key}"
 
 
 def _created(base: Path, branch: str) -> bool:
@@ -292,10 +344,12 @@ def _clean(checkout: Path) -> bool:
     return not _git(checkout, "status", "--porcelain", "--untracked-files=normal")
 
 
-def start(position: Position, slug: str, *, setup: str | None = None, project: Path | None = None) -> StartResult:
-    """Create the slug's worktree from the base HEAD, or reuse it when it is on the slug's branch and clean.
+def start(position: Position, branch: str, *, setup: str | None = None, project: Path | None = None) -> StartResult:
+    """Create the activity branch's worktree from the base HEAD, or reuse it when it is on the branch and clean.
 
-    A new worktree is a fresh checkout without the base's ignored files, so two steps follow its creation:
+    A branch that already exists, locally or on a remote (``_remote_holders``), is refused
+    (``WORKTREE_BRANCH_EXISTS``): an existing branch is continued only through ``attach``. A new worktree is a fresh
+    checkout without the base's ignored files, so two steps follow its creation:
 
     1. ``setup`` runs in the worktree through ``/bin/sh -c`` (without the caller's ``VIRTUAL_ENV``), for the
        environment the project needs (``uv sync``);
@@ -308,13 +362,13 @@ def start(position: Position, slug: str, *, setup: str | None = None, project: P
     reruns it; the worktree stays. A reused worktree runs neither. A failed ``git worktree add`` leaves nothing
     behind (``WORKTREE_ADD_FAILED``).
     """
-    check_slug(slug)
+    check_branch(branch)
     if position.linked:
         raise NestedError(
             f"{position.root} is a linked worktree; task worktrees are created from the base checkout",
             target_files=[str(position.base)],
         )
-    path, branch = path_for(position, slug), slug
+    path = path_for(position, branch)
     for entry in _entries(position.base):
         if entry.path == path:
             if entry.prunable:
@@ -326,16 +380,25 @@ def start(position: Position, slug: str, *, setup: str | None = None, project: P
                 raise ConflictError(f"{path} is a worktree on {entry.branch or 'a detached HEAD'}, not {branch}")
             if not _clean(path):
                 raise ConflictError(f"{path} has uncommitted changes")
-            return StartResult(slug, path, branch, position.base, created=False)
+            return StartResult(branch, path, position.base, created=False)
         if entry.branch == branch:
-            raise BranchExistsError(f"branch {branch} is checked out at {entry.path}")
+            raise BranchExistsError(f"branch {branch} is checked out at {entry.path}", fix=_attach_fix(branch))
     if path.exists() or path.is_symlink():
         raise ConflictError(f"{path} exists and is not a worktree of this repository")
-    if _succeeds(position.base, "rev-parse", "--verify", "--quiet", f"refs/heads/{branch}"):
-        raise BranchExistsError(f"branch {branch} already exists")
+    notices = _refuse_existing(position.base, branch)
     _add(position.base, path, branch)
     _log.info("created worktree %s on %s", path, branch)
-    notices: list[AdvisoryError] = []
+    setup_ran, synced = _prepare(path, setup, project, notices)
+    return StartResult(branch, path, position.base, True, setup_ran, synced, notices)
+
+
+def _prepare(
+    path: Path, setup: str | None, project: Path | None, notices: list[AdvisoryError]
+) -> tuple[str | None, bool | None]:
+    """Run ``setup`` and ``devkit sync --locked`` in a new worktree; their warnings go to ``notices``.
+
+    Returns the setup command that ran and whether the sync restored the project (``None`` when it did not run).
+    """
     if setup is not None:
         failure = _run(["/bin/sh", "-c", setup], path, f"setup {setup!r}", SETUP_TIMEOUT)
         if failure is not None:
@@ -347,12 +410,315 @@ def start(position: Position, slug: str, *, setup: str | None = None, project: P
         synced = warning is None
         if warning is not None:
             notices.append(warning)
-    return StartResult(slug, path, branch, position.base, True, setup, synced, notices)
+    return setup, synced
 
 
-def _add(base: Path, path: Path, branch: str) -> None:
-    """``git worktree add -b branch path`` and the branch's marker; on failure, remove what was created before raising
-    ``WORKTREE_ADD_FAILED``.
+def _attach_fix(branch: str, source: str | None = None) -> str:
+    return (
+        f"To continue it, devkit worktree start {branch} --existing-branch {source or branch} --unit <unit directory>;"
+        " otherwise choose another slug"
+    )
+
+
+def _refuse_existing(base: Path, branch: str) -> list[AdvisoryError]:
+    """Refuse a new ``branch`` that exists locally or on a remote; the warnings of remotes that could not be asked."""
+    if _succeeds(base, "rev-parse", "--verify", "--quiet", f"refs/heads/{branch}"):
+        raise BranchExistsError(f"branch {branch} already exists", fix=_attach_fix(branch))
+    holders, notices = _remote_holders(base, branch)
+    if holders:
+        raise BranchExistsError(
+            f"branch {branch} already exists on {', '.join(holders)}",
+            fix=_attach_fix(branch, f"{holders[0]}/{branch}"),
+        )
+    return notices
+
+
+def _remote_holders(base: Path, branch: str) -> tuple[list[str], list[AdvisoryError]]:
+    """The remotes that have ``branch``, and a warning for each remote that could not be asked.
+
+    Each configured remote is asked with ``git ls-remote --heads`` (no prompts, within ``LS_REMOTE_TIMEOUT``); one
+    that cannot be reached is judged by its remote-tracking ref ``refs/remotes/<remote>/<branch>`` from the last
+    fetch instead, and reported as ``WORKTREE_REMOTE_UNCHECKED``.
+    """
+    holders: list[str] = []
+    notices: list[AdvisoryError] = []
+    for remote in _git(base, "remote").splitlines():
+        try:
+            listed = os.fsdecode(
+                run_git(base, "ls-remote", "--heads", remote, f"refs/heads/{branch}", timeout=LS_REMOTE_TIMEOUT)
+            ).strip()
+        except GitError as exc:
+            tracked = _succeeds(base, "rev-parse", "--verify", "--quiet", f"refs/remotes/{remote}/{branch}")
+            notices.append(
+                RemoteUncheckedWarning(
+                    f"could not ask {remote} whether it has {branch}: {exc.stderr or exc.message}; judged by"
+                    f" refs/remotes/{remote}/{branch} from the last fetch ({'present' if tracked else 'absent'})",
+                    fix=f"Once {remote} is reachable, git -C {shlex.quote(str(base))} ls-remote --heads {remote}"
+                    f" {branch}; if it lists the branch, continue it with --existing-branch {remote}/{branch}",
+                )
+            )
+            if tracked:
+                holders.append(remote)
+            continue
+        if listed:
+            holders.append(remote)
+    return holders, notices
+
+
+def start_branch(position: Position, branch: str) -> BranchStartResult:
+    """Create the activity branch at the current HEAD and switch the current checkout to it, without a worktree.
+
+    ``git switch -c`` carries uncommitted changes over to the branch. The same name rule and refusals as ``start``
+    apply: a branch that exists locally or on a remote is ``WORKTREE_BRANCH_EXISTS``. The branch gets the marker
+    (the checkout's path) and ``devkitBase``, the branch the checkout was on, so ``finish --merge`` can integrate it
+    from the base once the checkout is back on that branch. It runs in the base checkout (``WORKTREE_NESTED`` in a
+    linked worktree, which ``finish`` would remove) on a branch (``WORKTREE_BASE_DETACHED`` otherwise: nothing would
+    say where the task integrates).
+    """
+    check_branch(branch)
+    if position.linked:
+        raise NestedError(
+            f"{position.root} is a linked worktree; activity branches are started in the base checkout",
+            target_files=[str(position.base)],
+        )
+    if position.branch is None:
+        raise BaseDetachedError(
+            f"{position.root} is on a detached HEAD; the branch would record no branch to integrate into",
+            target_files=[str(position.root)],
+        )
+    for entry in _entries(position.base):
+        if entry.branch == branch:
+            raise BranchExistsError(f"branch {branch} is checked out at {entry.path}", fix=_attach_fix(branch))
+    notices = _refuse_existing(position.base, branch)
+    try:
+        run_git(position.root, "switch", "--quiet", "-c", branch)
+    except GitError as exc:
+        if f"a branch named '{branch}' already exists" in exc.stderr:
+            raise BranchExistsError(
+                f"branch {branch} already exists: it was created while start ran; nothing was changed",
+                fix=_attach_fix(branch),
+            ) from exc
+        raise
+    run_git(position.base, "config", "--local", _marker(branch), str(position.root))
+    run_git(position.base, "config", "--local", _marker(branch, BASE_KEY), position.branch)
+    _log.info("switched %s to the new branch %s from %s", position.root, branch, position.branch)
+    return BranchStartResult(branch, position.root, position.branch, notices)
+
+
+def attach(
+    position: Position,
+    branch: str,
+    *,
+    source: str,
+    unit: str,
+    setup: str | None = None,
+    project: Path | None = None,
+    check: Callable[[Path, str, str, str], None] | None = None,
+) -> StartResult:
+    """Give the existing activity branch ``branch`` its worktree, to continue it at the stage its unit reached.
+
+    ``source`` is ``branch`` or ``<remote>/<branch>``. The branch must exist locally or as a fetched
+    remote-tracking ref (nothing is fetched); a remote-only branch gets a local branch tracking it. A local branch
+    that lacks commits of its remote-tracking branch is ``WORKTREE_BRANCH_OUT_OF_SYNC`` (never merged or reset); one
+    ahead of it is attached. ``unit`` (relative to ``project``, the devkit project directory in the checkout) must be
+    a directory of the branch's tree (``WORKTREE_UNIT_INVALID``); ``check(root, branch, unit, tip)`` then verifies
+    that branch and unit belong together (the ``devkit.attach_check`` extensions in the CLI). Nothing in the branch
+    is reset or rewritten.
+
+    A registered, clean worktree of the branch at its path is reused; one elsewhere, or a path occupied otherwise,
+    is refused. When the base checkout is on the branch, it must be clean and is switched back to the branch
+    recorded as ``devkitBase`` (``WORKTREE_CONFLICT`` when none is), then the worktree is created as by ``start``,
+    with its setup and sync. The marker and ``devkitUnit`` are recorded.
+    """
+    check_branch(branch)
+    if position.linked:
+        raise NestedError(
+            f"{position.root} is a linked worktree; task worktrees are created from the base checkout",
+            target_files=[str(position.base)],
+        )
+    base = position.base
+    remotes = _git(base, "remote").splitlines()
+    remote = _source_remote(source, branch, remotes)
+    unit_path = _unit_path(unit, project)
+    local = _query(base, "rev-parse", "--verify", "--quiet", f"refs/heads/{branch}^{{commit}}")
+    remote_ref, remote_tip = _remote_tracking(base, branch, remote, remotes, local is not None)
+    if local is None and remote_tip is None:
+        raise NotFoundError(
+            f"branch {branch} exists neither locally nor as a fetched remote-tracking ref"
+            + (f" refs/remotes/{remote}/{branch}" if remote else ""),
+            fix=f"git -C {shlex.quote(str(base))} fetch {remote or '--all'}, then rerun; or start a new branch"
+            f" without --existing-branch",
+        )
+    ahead = None
+    if local is not None and remote_tip is not None and remote_ref is not None:
+        ahead = _check_in_sync(position, branch, local, remote_ref)
+    tip = local or remote_tip
+    assert tip is not None
+    if _object_type(base, f"{tip}:{unit_path}") != "tree":
+        raise UnitInvalidError(f"{unit_path} is not a directory on {branch} ({tip[:7]})", target_files=[unit])
+    if check is not None:
+        check(base, branch, unit_path, tip)
+    path = path_for(position, branch)
+    reuse, back = False, None
+    for entry in _entries(base):
+        if entry.path == path:
+            if entry.prunable:
+                raise ConflictError(
+                    f"{path} is a registered worktree whose directory is missing",
+                    fix=f"git -C {shlex.quote(str(base))} worktree prune",
+                )
+            if entry.branch != branch:
+                raise ConflictError(f"{path} is a worktree on {entry.branch or 'a detached HEAD'}, not {branch}")
+            if not _clean(path):
+                raise ConflictError(f"{path} has uncommitted changes")
+            reuse = True
+        elif entry.branch == branch and entry.path == base:
+            back = _return_branch(base, branch)
+        elif entry.branch == branch:
+            raise BranchExistsError(
+                f"branch {branch} is checked out at {entry.path}, not at {path}; nothing was changed",
+                fix=f"Finish or remove the worktree at {entry.path} once the user agrees, then rerun",
+            )
+    if not reuse and (path.exists() or path.is_symlink()):
+        raise ConflictError(f"{path} exists and is not a worktree of this repository")
+    if back is not None:
+        run_git(base, "switch", "--quiet", back)
+        _log.info("switched the base checkout from %s back to %s", branch, back)
+    if local is None:
+        assert remote_ref is not None
+        run_git(base, "branch", "--quiet", "--track", branch, remote_ref)
+    notices: list[AdvisoryError] = [ahead] if ahead is not None else []
+    setup_ran: str | None = None
+    synced: bool | None = None
+    if not reuse:
+        _add(base, path, branch, existing=True)
+        _log.info("attached worktree %s to the existing branch %s", path, branch)
+        setup_ran, synced = _prepare(path, setup, project, notices)
+    run_git(base, "config", "--local", _marker(branch), str(path))
+    run_git(base, "config", "--local", _marker(branch, UNIT_KEY), unit)
+    return StartResult(branch, path, base, not reuse, setup_ran, synced, notices, existing=True, unit=unit)
+
+
+def _source_remote(source: str, branch: str, remotes: list[str]) -> str | None:
+    """The remote ``--existing-branch`` names (``<remote>/<branch>``), ``None`` for ``<branch>``."""
+    if source == branch:
+        return None
+    remote, _, name = source.rpartition("/")
+    if name == branch and remote in remotes:
+        return remote
+    raise ArgumentError(
+        f"--existing-branch {source!r} must be {branch} or <remote>/{branch} with a configured remote"
+        f" ({', '.join(remotes) or 'none configured'})",
+        target_files=["--existing-branch"],
+        fix=f"Pass --existing-branch {branch}" + (f" or --existing-branch {remotes[0]}/{branch}" if remotes else ""),
+    )
+
+
+def _unit_path(unit: str, project: Path | None) -> str:
+    """``unit`` (relative to the devkit project) as a path relative to the checkout's top level."""
+    relative = Path(unit)
+    if not unit or relative.is_absolute() or ".." in relative.parts or relative == Path("."):
+        raise UnitInvalidError(
+            f"--unit {unit!r} must be a directory relative to the devkit project, inside it", target_files=[unit]
+        )
+    return (project / relative if project is not None else relative).as_posix()
+
+
+def _remote_tracking(
+    base: Path, branch: str, remote: str | None, remotes: list[str], local: bool
+) -> tuple[str | None, str | None]:
+    """The remote-tracking ref (``refs/remotes/<remote>/<branch>``) the branch is compared with or created from, and
+    its tip.
+
+    The named remote; else the local branch's upstream when it is a remote-tracking ref; else, for a remote-only
+    branch, the one remote whose tracking ref exists (``ARGUMENT_INVALID`` when several do).
+    """
+    if remote is None and local:
+        upstream = _git(base, "for-each-ref", "--format=%(upstream)", f"refs/heads/{branch}")
+        if not upstream.startswith("refs/remotes/"):
+            return None, None
+        tip = _query(base, "rev-parse", "--verify", "--quiet", f"{upstream}^{{commit}}")
+        return (upstream, tip) if tip else (None, None)
+    candidates = [remote] if remote is not None else remotes
+    found = [
+        (ref, tip)
+        for name in candidates
+        if (
+            tip := _query(
+                base, "rev-parse", "--verify", "--quiet", f"{(ref := f'refs/remotes/{name}/{branch}')}^{{commit}}"
+            )
+        )
+    ]
+    if len(found) > 1:
+        names = [ref.removeprefix("refs/remotes/") for ref, _ in found]
+        raise ArgumentError(
+            f"branch {branch} exists on several remotes ({', '.join(names)})",
+            target_files=["--existing-branch"],
+            fix=f"Pass --existing-branch {names[0]} (or another <remote>/{branch})",
+        )
+    return found[0] if found else (None, None)
+
+
+def _check_in_sync(position: Position, branch: str, local: str, remote_ref: str) -> BranchAheadNotice | None:
+    """Refuse a local branch that lacks commits of ``remote_ref``; one ahead of it passes with a notice that the
+    remote still lacks its commits, an equal one silently."""
+    base = position.base
+    if _succeeds(base, "merge-base", "--is-ancestor", remote_ref, local):
+        if _git(base, "rev-parse", f"{remote_ref}^{{commit}}") == local:
+            return None
+        name = remote_ref.removeprefix("refs/remotes/")
+        remote, _, _ = name.partition("/")
+        return BranchAheadNotice(
+            f"the local branch {branch} has commits {name} lacks; it was attached as it is, and the remote is synchronized"
+            " only by a push",
+            fix=f"git -C {shlex.quote(str(base))} push {shlex.quote(remote)} {branch} when the work is to be shared",
+        )
+    behind = _succeeds(base, "merge-base", "--is-ancestor", local, remote_ref)
+    name = remote_ref.removeprefix("refs/remotes/")
+    holder = next((entry.path for entry in _entries(base) if entry.branch == branch), None)
+    if behind and holder is None:
+        fix = f"git -C {shlex.quote(str(base))} fetch . {remote_ref}:refs/heads/{branch}, then rerun"
+    elif behind:
+        fix = f"git -C {shlex.quote(str(holder))} merge --ff-only {name}, then rerun"
+    else:
+        fix = f"Reconcile {branch} with {name} (rebase or merge) with the user, then rerun"
+    state = "is behind" if behind else "has diverged from"
+    raise BranchOutOfSyncError(
+        f"the local branch {branch} {state} {name}; devkit neither merges nor resets it; nothing was changed",
+        fix=fix,
+    )
+
+
+def _object_type(base: Path, spec: str) -> str | None:
+    """The type of the object ``spec`` (``<rev>:<path>``) names, ``None`` when it names none."""
+    try:
+        return _git(base, "cat-file", "-t", spec)
+    except GitError as exc:
+        if exc.returncode is None:
+            raise
+        return None
+
+
+def _return_branch(base: Path, branch: str) -> str:
+    """The recorded ``devkitBase`` the base checkout, which is on ``branch``, switches back to; refuse when it has
+    uncommitted changes or no branch is recorded."""
+    if not _clean(base):
+        raise ConflictError(
+            f"the base checkout {base} is on {branch} with uncommitted changes; nothing was changed",
+            fix=f"Commit the changes on {branch} (or stash them) in {base}, then rerun",
+        )
+    back = _config(base, _marker(branch, BASE_KEY))
+    if not back:
+        raise ConflictError(
+            f"the base checkout {base} is on {branch} and no branch to return to is recorded; nothing was changed",
+            fix=f"git -C {shlex.quote(str(base))} switch <the branch {branch} integrates into>, then rerun",
+        )
+    return back
+
+
+def _add(base: Path, path: Path, branch: str, *, existing: bool = False) -> None:
+    """``git worktree add -b branch path`` (``git worktree add path branch`` for an ``existing`` branch, which is never
+    deleted) and the branch's marker; on failure, remove what was created before raising ``WORKTREE_ADD_FAILED``.
 
     The marker (``branch.<branch>.devkitWorktree = <path>``) is written to the common configuration (``--local`` in
     the base checkout), so ``finish`` can tell the branch from one devkit did not create. ``start`` checked that
@@ -367,19 +733,20 @@ def _add(base: Path, path: Path, branch: str) -> None:
     origin = _head(base)
     step = f"git worktree add {path}"
     try:
-        _git_session(base, "worktree", "add", "-b", branch, str(path), timeout=CHECKOUT_TIMEOUT)
+        add = ("add", str(path), branch) if existing else ("add", "-b", branch, str(path))
+        _git_session(base, "worktree", *add, timeout=CHECKOUT_TIMEOUT)
         step = f"git config {_marker(branch)}"
         run_git(base, "config", "--local", _marker(branch), str(path))
     except GitError as exc:
         reason = exc.stderr or exc.message
         if _timed_out(exc):
             reason = f"{exc.message}: {exc.stderr}" if exc.stderr else exc.message
-        if f"a branch named '{branch}' already exists" in exc.stderr:
+        if not existing and f"a branch named '{branch}' already exists" in exc.stderr:
             raise BranchExistsError(
                 f"branch {branch} already exists: it was created while start ran; nothing was changed"
             ) from exc
         foreign = f"'{path}' already exists" in exc.stderr
-        left = _undo_add(base, path, branch, origin, own_path=not foreign)
+        left = _undo_add(base, path, branch, origin, own_path=not foreign, own_branch=not existing)
         message = f"{step} failed: {reason}"
         if foreign and not left:
             raise ConflictError(
@@ -402,13 +769,14 @@ def _timed_out(error: GitError) -> bool:
 
 
 def _undo_add(
-    base: Path, path: Path, branch: str, origin: str | None, *, own_path: bool = True
+    base: Path, path: Path, branch: str, origin: str | None, *, own_path: bool = True, own_branch: bool = True
 ) -> list[tuple[str, str]]:
     """Remove what a failed ``git worktree add`` created; ``(what, the command that removes it)`` for each leftover.
 
-    ``path`` is left alone unless ``own_path`` (the add did not fail because it already existed). The branch is
-    deleted only while its tip is ``origin``, the base HEAD it was created from; one whose tip moved (a hook
-    committed to it, or another process made it) is a leftover the user decides about.
+    ``path`` is left alone unless ``own_path`` (the add did not fail because it already existed), the branch unless
+    ``own_branch`` (the add created it). The branch is deleted only while its tip is ``origin``, the base HEAD it
+    was created from; one whose tip moved (a hook committed to it, or another process made it) is a leftover the
+    user decides about.
     """
     quoted = shlex.quote(str(base))
     left: list[tuple[str, str]] = []
@@ -427,6 +795,8 @@ def _undo_add(
                 )
         if not registered and (path.exists() or path.is_symlink()):
             left.append((f"directory {path}", f"rm -rf {shlex.quote(str(path))}"))
+    if not own_branch:
+        return left
     remains, moved = True, False
     try:
         tip = _query(base, "rev-parse", "--verify", "--quiet", f"refs/heads/{branch}")
@@ -585,30 +955,38 @@ def _run(argv: list[str], cwd: Path, label: str, timeout: float) -> str | None:
     return None if completed.returncode == 0 else _failure(label, completed)
 
 
-def _find(position: Position, slug: str) -> _Entry | None:
-    """The slug's worktree (by its path, else its branch), checked for ``finish``; ``None`` when there is none.
+def _find(position: Position, branch: str) -> _Entry | None:
+    """The branch's worktree (by its path, else its branch), checked for ``finish``; ``None`` when there is none.
 
-    Only a linked worktree on the branch ``slug`` qualifies: ``finish`` judges the merge by that branch, so removing
-    a worktree that is detached or on another branch would drop commits the branch does not hold
-    (``WORKTREE_CONFLICT``), as would treating the base checkout as the task. A locked worktree is
-    ``WORKTREE_LOCKED``.
+    Only a linked worktree on ``branch`` qualifies: ``finish`` judges the merge by that branch, so removing a worktree
+    that is detached or on another branch would drop commits the branch does not hold (``WORKTREE_CONFLICT``), as
+    would treating the base checkout as the task; a base checkout on a branch ``start_branch`` created is told to
+    switch back to its recorded ``devkitBase``. A locked worktree is ``WORKTREE_LOCKED``.
     """
-    base, path = position.base, path_for(position, slug)
+    base, path = position.base, path_for(position, branch)
     entries = _entries(base)
     entry = next((item for item in entries if item.path == path), None)
-    entry = entry or next((item for item in entries if item.branch == slug), None)
+    entry = entry or next((item for item in entries if item.branch == branch), None)
     if entry is None:
         return None
     if entry.path == base:
+        back = _config(base, _marker(branch, BASE_KEY))
+        if back:
+            raise ConflictError(
+                f"the base checkout is on {branch}; finish integrates {branch} into {back} from the base checkout"
+                " on that branch; nothing was changed",
+                fix=f"git -C {shlex.quote(str(base))} switch {back}, then rerun",
+            )
         raise ConflictError(
-            f"{slug} is the base checkout's branch; finish integrates a task branch into the base and never removes it",
-            fix="Pass the slug of a linked worktree (`devkit worktree status` lists them)",
+            f"{branch} is the base checkout's branch; finish integrates a task branch into the base and never"
+            " removes it",
+            fix="Pass the branch of a linked worktree (`devkit worktree status` lists them)",
         )
-    if entry.branch != slug:
+    if entry.branch != branch:
         raise ConflictError(
-            f"{entry.path} is on {entry.branch or 'a detached HEAD'}, not {slug}; removing it would drop commits"
-            f" the branch {slug} does not hold; nothing was changed",
-            fix=f"Check out {slug} in {entry.path} with the worktree's commits on it, then rerun",
+            f"{entry.path} is on {entry.branch or 'a detached HEAD'}, not {branch}; removing it would drop commits"
+            f" the branch {branch} does not hold; nothing was changed",
+            fix=f"Check out {branch} in {entry.path} with the worktree's commits on it, then rerun",
         )
     if entry.locked:
         raise LockedError(
@@ -618,47 +996,51 @@ def _find(position: Position, slug: str) -> _Entry | None:
     return entry
 
 
-def find(position: Position, slug: str) -> Path:
-    """The path of the slug's linked worktree on the branch ``slug``, found by its path or its branch.
+def find(position: Position, branch: str) -> Path:
+    """The path of the branch's linked worktree, found by its path or its branch.
 
     ``WORKTREE_NOT_FOUND`` when there is none; ``WORKTREE_CONFLICT`` or ``WORKTREE_LOCKED`` when ``finish`` would
     refuse to remove it.
     """
-    entry = _find(position, slug)
+    entry = _find(position, branch)
     if entry is None:
-        raise NotFoundError(f"no worktree at {path_for(position, slug)} or on branch {slug}")
+        raise NotFoundError(f"no worktree at {path_for(position, branch)} or on branch {branch}")
     return entry.path
 
 
 def finish(
     position: Position,
-    slug: str,
+    branch: str,
     *,
     merge: bool = False,
     pull_request: str = "auto",
     delete_branch: bool = True,
     before_remove: Callable[[FinishResult], None] | None = None,
+    guard: Callable[[str, str], None] | None = None,
 ) -> FinishResult:
-    """Integrate the slug's branch into the base, then remove its worktree and branch.
+    """Integrate the activity branch into the base, then remove its worktree and the branch.
 
     ``merge`` fast-forwards the base onto the branch (it must be clean and on a branch, and contain the tip of its
     upstream when one is configured and reachable) and pushes the base branch to that upstream; a failed push is a
     ``WORKTREE_PUSH_FAILED`` or ``WORKTREE_PUSH_REJECTED`` warning and does not stop the cleanup. Without ``merge``
-    the branch must already be merged into the base HEAD. The checks of the worktree's branch and lock, the base
-    and the upstreams (including whether ``git branch -d`` will accept the branch) run before the first change;
-    uncommitted changes in the worktree surface when it is removed (``WORKTREE_DIRTY``). ``before_remove`` runs
-    once the merge is confirmed and before the worktree is removed (a caller's own cleanup; it runs again on a
-    rerun). A refusal after that carries the partial result as ``error.result``, also an ``AdvisoryError`` that
-    ``before_remove`` raises. A slug whose worktree is already
-    gone and whose branch is merged into the base HEAD (what a stopped run leaves) resumes after the removal, but only
-    when ``start`` created that branch (its ``branch.<slug>.devkitWorktree`` marker), whether or not ``delete_branch``
-    deletes it; any other merged branch of that name is ``WORKTREE_NOT_FOUND``, and nothing runs, merges, pushes or
-    is deleted for it. The marker gates only this path: a slug whose worktree exists finishes whether or not its
-    branch carries it. It lasts until the finish completes: ``git branch -d`` removes it with the branch, and without
-    ``delete_branch`` it is unset once the worktree is removed, so a rerun after a completed finish is
-    ``WORKTREE_NOT_FOUND`` either way.
+    the branch must already be merged into the base HEAD. With ``merge``, ``guard(merge_base, tip)`` runs after the
+    other checks and before the first change, with the commit ids of the branch's merge base with the base HEAD
+    (empty when there is none) and of its tip; it refuses by raising (the ``devkit.finish_guard`` extensions in the
+    CLI). The checks of the worktree's branch and lock, the base and the upstreams (including whether ``git branch
+    -d`` will accept the branch) run before the first change; uncommitted changes in the worktree surface when it is
+    removed (``WORKTREE_DIRTY``). ``before_remove`` runs once the merge is confirmed and before the worktree is
+    removed (a caller's own cleanup; it runs again on a rerun). A refusal after that carries the partial result as
+    ``error.result``, also an ``AdvisoryError`` that ``before_remove`` raises.
+
+    A branch without a worktree is finished only when ``start``, ``start_branch`` or ``attach`` marked it (its
+    ``branch.<branch>.devkitWorktree`` marker): one whose worktree is already gone (what a stopped run leaves), or
+    one ``start_branch`` created, which ``merge`` integrates like a worktree's branch. Any other branch of that name
+    is ``WORKTREE_NOT_FOUND``, and nothing runs, merges, pushes or is deleted for it. The marker gates only this
+    path: a branch whose worktree exists finishes whether or not it carries it. It lasts until the finish
+    completes: ``git branch -d`` removes it with the branch, and without ``delete_branch`` it is unset once the
+    worktree is removed, so a rerun after a completed finish is ``WORKTREE_NOT_FOUND`` either way.
     """
-    check_slug(slug)
+    check_branch(branch)
     if position.linked:
         raise RunFromBaseError(
             f"{position.root} is the worktree finish would remove", target_files=[str(position.base)]
@@ -667,30 +1049,30 @@ def finish(
         raise PullRequestPolicyError(
             '[worktree] pull_request = "required" integrates through a pull request; --merge would merge locally'
         )
-    base, ref = position.base, f"refs/heads/{slug}"
-    entry = _find(position, slug)
+    base, ref = position.base, f"refs/heads/{branch}"
+    entry = _find(position, branch)
     if entry is None:
         exists = _succeeds(base, "rev-parse", "--verify", "--quiet", ref)
-        if not exists or not _merged(base, ref, _head(base)):
-            unmerged = f", and branch {slug} is not merged into the base HEAD" if exists else ""
-            raise NotFoundError(f"no worktree at {path_for(position, slug)} or on branch {slug}{unmerged}")
-        # Only a branch start created resumes, whether or not it is deleted: any other merged branch (the base's own
-        # included) would otherwise run ``before_remove``, merge and push for a task that never existed.
-        if not _created(base, slug):
+        if not exists or not _created(base, branch):
+            if not exists or not _merged(base, ref, _head(base)):
+                unmerged = f", and branch {branch} is not merged into the base HEAD" if exists else ""
+                raise NotFoundError(f"no worktree at {path_for(position, branch)} or on branch {branch}{unmerged}")
+            # Only a marked branch resumes, whether or not it is deleted: any other merged branch (the base's own
+            # included) would otherwise run ``before_remove``, merge and push for a task that never existed.
             raise NotFoundError(
-                f"no worktree at {path_for(position, slug)} or on branch {slug}; the branch {slug} is merged into the"
-                f" base HEAD but has no {_marker(slug)} marker, so devkit worktree start did not create it, or a"
-                " finish already completed for it (or start created it before devkit recorded the marker; such"
-                " branches are not resumed automatically); finish does not resume it; nothing was changed",
-                fix=f"Once the user agrees, git -C {shlex.quote(str(base))} branch -d {slug}"
+                f"no worktree at {path_for(position, branch)} or on branch {branch}; the branch {branch} is merged"
+                f" into the base HEAD but has no {_marker(branch)} marker, so devkit worktree start did not create"
+                " it, or a finish already completed for it (or start created it before devkit recorded the marker;"
+                " such branches are not resumed automatically); finish does not resume it; nothing was changed",
+                fix=f"Once the user agrees, git -C {shlex.quote(str(base))} branch -d {branch}"
                 if delete_branch
-                else f"Nothing is left to finish: {slug} has no worktree, and [worktree] delete_branch = false keeps"
-                " its branch",
+                else f"Nothing is left to finish: {branch} has no worktree, and [worktree] delete_branch = false"
+                " keeps its branch",
             )
-        _log.info("the worktree of %s is gone; resuming after its removal", slug)
-        result = FinishResult(slug, path_for(position, slug), slug, removed=True)
+        _log.info("%s has no worktree; finishing the marked branch alone", branch)
+        result = FinishResult(branch, path_for(position, branch), removed=True)
     else:
-        result = FinishResult(slug, entry.path, slug)
+        result = FinishResult(branch, entry.path)
     if merge:
         if position.branch is None:
             raise BaseDetachedError(
@@ -700,17 +1082,21 @@ def finish(
         if not _clean(base):
             raise BaseDirtyError(f"{base} has uncommitted changes", target_files=[str(base)])
     elif not _merged(base, ref, _head(base)):
-        raise UnmergedError(f"{slug} is not merged into the base HEAD; nothing was changed")
+        raise UnmergedError(f"{branch} is not merged into the base HEAD; nothing was changed")
     if delete_branch:
-        _check_deletable(base, slug)
+        _check_deletable(base, branch)
     if merge:
+        if guard is not None:
+            tip = _git(base, "rev-parse", "--verify", f"{ref}^{{commit}}")
+            head = _head(base)
+            guard((_query(base, "merge-base", head, tip) or "") if head else "", tip)
         _check_upstream(position)
         try:
             run_git(base, "merge", "--ff-only", "--quiet", ref)
         except GitError as exc:
             if exc.returncode is None:
                 raise
-            raise MergeNotFastForwardError(f"{slug} cannot be fast-forwarded onto the base: {exc.stderr}") from exc
+            raise MergeNotFastForwardError(f"{branch} cannot be fast-forwarded onto the base: {exc.stderr}") from exc
         result.merged = True
         _push(position, result)
     try:
@@ -721,14 +1107,14 @@ def finish(
             result.removed = True
         if delete_branch:
             try:
-                run_git(base, "branch", "-d", slug)
+                run_git(base, "branch", "-d", branch)
             except GitError as exc:
                 raise BranchDeleteFailedError(
-                    f"the worktree is removed, but git branch -d {slug} failed: {exc.stderr or exc.message}"
+                    f"the worktree is removed, but git branch -d {branch} failed: {exc.stderr or exc.message}"
                 ) from exc
             result.branch_deleted = True
         else:
-            _unmark(base, slug)  # the finish is complete; a rerun no longer resumes
+            _unmark(base, branch)  # the finish is complete; a rerun no longer resumes
     except AdvisoryError as error:
         # Every refusal from here on carries the partial result, an advisory ``before_remove`` raises included
         # (unless that caller's error defines a ``result`` of its own).

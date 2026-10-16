@@ -163,9 +163,15 @@ TEMPLATE_TABLES = (
                 help="shell command run in a newly created worktree; unset: no setup command",
                 example="uv sync",
             ),
+            TemplateKey(
+                "stale_after",
+                "14d",
+                "idle plan-*/dev-* branches are reported by devkit worktree stale and hygiene runs",
+                kind='"<N>d" | "<N>w"',
+            ),
         ),
         path=("worktree",),
-        help="Git worktree behavior: integration policy, branch cleanup and setup for new worktrees.",
+        help="Git worktree behavior: integration policy, branch cleanup, setup for new worktrees and stale branches.",
     ),
 )
 

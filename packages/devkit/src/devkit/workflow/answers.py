@@ -111,6 +111,13 @@ def record_answer(
                 *([f"open: {rid}" for rid in open_requests] or ["open: none"]),
                 fix="Run `devkit workflow requests --unit <dir>` and answer one of the listed ids",
             )
+        if request.answer == "envelope":
+            source, _, question = request.target.name.partition("#")
+            raise DecisionInvalidError(
+                f"{request_id} is a question; its answer is an answer envelope, not a decision record",
+                fix=f"devkit workflow envelope new --unit {ref.rel} --kind answer --answers-to {source}"
+                f" --answers-file <file with `- question: {question}`, choice, decision>",
+            )
         value = validate_answer(request, action, values)
         stage = request.target.stage or ""
     decisions = load_decisions(ref.dir)

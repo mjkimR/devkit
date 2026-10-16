@@ -8,7 +8,9 @@ instead of raising (``RuleProblem`` and its subclasses) are returned in
 ``EvaluationResult.errors``; each carries a code and, when it concerns one rule,
 that rule's ID in ``rule_id``. ``str(problem)`` is its message.
 ``PromotionReadyNotice`` is a notice a completed run returns in
-``ProjectRun.notices``; it is never raised.
+``ProjectRun.notices``; it is never raised. ``HygieneNotice`` and
+``HygieneExtensionFailedNotice`` are what the ``devkit.hygiene`` extensions add
+to a whole-workspace ``check -p hygiene``; never raised either.
 """
 
 from __future__ import annotations
@@ -144,6 +146,22 @@ class RelatedUnresolvedNotice(RulesError):
 
     code = "RULES_RELATED_UNRESOLVED"
     level = Level.NOTICE
+
+
+class HygieneNotice(RulesError):
+    """A line a ``devkit.hygiene`` extension returned; its package owns its meaning (``NOTICE``, ``brief``)."""
+
+    code = "HYGIENE_NOTICE"
+    level = Level.NOTICE
+    brief = True
+
+
+class HygieneExtensionFailedNotice(RulesError):
+    """A ``devkit.hygiene`` extension raised or returned something other than a list; the run's result stands
+    (``WARNING``)."""
+
+    code = "HYGIENE_EXTENSION_FAILED"
+    level = Level.WARNING
 
 
 class RulesRunError(RulesError):

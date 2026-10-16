@@ -13,7 +13,7 @@ The `devkit` modules, their boundaries and interaction, the conventions every mo
 5. **Agent Advisories (`devkit.advisory`, distribution `devkit-advisory`)**: the Agent Advisory Protocol, through which every command reports errors, warnings and notices with an `[ACTION]` directive; the built-in `advisory` bundle (`devkit.advisory_guide`) teaches it to agents in consumer repositories.
 6. **Compact Command Output (`devkit.compact`)**: verification commands run with their complete output in a log file and a bounded view for the agent (`devkit run`).
 7. **Document Search (`devkit.search`)**: lexical (BM25), dense (static embeddings) and hybrid ranking over a caller's documents, a library without a CLI; dense search comes with the `devkit-agt[search]` extra.
-8. **Task Worktrees (`devkit.worktree`)**: one Git worktree per task, created from the base checkout and integrated, removed and reported by deterministic commands that refuse instead of forcing (`devkit worktree`).
+8. **Task Worktrees (`devkit.worktree`)**: one activity branch (`plan-<slug>`, `dev-<slug>`) per task activity and its Git worktree, created from the base checkout (or attached to an existing branch) and integrated, removed and reported, stale branches included, by deterministic commands that refuse instead of forcing (`devkit worktree`).
 9. **Generated Files (`devkit.generated`)**: tracked files a command generates (lockfiles, the installation receipt) registered with that command, so merge conflicts in them are settled by regenerating and stale ones are caught in CI (`devkit generated`).
 
 All of them build on `devkit.core`, the SDD-agnostic shared foundation (frontmatter grammar, installation receipt, safe paths, atomic writes, Git runner, deadlines, file locks, plugin loading, project discovery, CLI plumbing).
@@ -125,8 +125,8 @@ Each module's `reference.md` is the quick reference (CLI, configuration, library
 - [Advisory Reference](../advisory/reference.md): The `devkit.advisory` library and the `advisory` guide bundle.
 
 ### Task Worktrees (`devkit.worktree`)
-- [Worktree Reference](../worktree/reference.md): `devkit worktree start|finish|status`, output, configuration, error codes, library.
-- [Worktree Overview](../worktree/overview.md): Paths, the start and finish steps, refusals and resumption, status, the setup command.
+- [Worktree Reference](../worktree/reference.md): `devkit worktree start|finish|status|stale`, output, configuration, extension points, error codes, library.
+- [Worktree Overview](../worktree/overview.md): Activity branches and paths, the start, attach and finish steps, refusals and resumption, status, the setup command, stale branches.
 
 ### Generated Files (`devkit.generated`)
 - [Generated Reference](../generated/reference.md): `devkit generated list|check|regen|resolve`, output, configuration, error codes, library.

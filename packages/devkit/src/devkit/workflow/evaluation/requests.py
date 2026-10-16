@@ -9,11 +9,15 @@ from typing import TYPE_CHECKING, Any
 from devkit.workflow.definition.checks import GATE_PREFIX, CheckClass, CheckResult
 from devkit.workflow.definition.definition import StageDefinition, WorkflowDocument
 from devkit.workflow.unit.decisions import CHECK_PREFIX, HANDOFF_REQUEST, Decision
+from devkit.workflow.unit.envelope import Envelope, Question
 
 if TYPE_CHECKING:
     from devkit.workflow.handoff import Handoff
 
 TITLE_LIMIT = 40
+QUESTION_PREFIX = "question:"
+# How an answer reaches the engine: a decision record, the executor's --given, or an answer envelope.
+ANSWER_CHANNELS = ("record", "given", "envelope")
 
 
 @dataclass(frozen=True)
@@ -34,8 +38,8 @@ class Option:
 
 @dataclass(frozen=True)
 class Target:
-    type: str  # gate | check | handoff
-    name: str
+    type: str  # gate | check | handoff | question
+    name: str  # a question: <question-NN.yaml>#<question id>
     stage: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
@@ -54,7 +58,8 @@ class Request:
     options: tuple[Option, ...] = ()
     allow_note: bool = True
     declined: Decision | None = None
-    answer: str = "record"  # gate requests: record (devkit workflow answer) or given (next --given <gate>)
+    answer: str = "record"  # record (devkit workflow answer), given (next --given <gate>) or envelope (an answer)
+    context: str = ""  # a question's context: what the question rests on
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -66,6 +71,7 @@ class Request:
             "options": [o.to_dict() for o in self.options],
             "allow_note": self.allow_note,
             "answer": self.answer,
+            "context": self.context or None,
             "declined": (
                 {"file": self.declined.file, "note": self.declined.note, "at": self.declined.at}
                 if self.declined
@@ -130,3 +136,32 @@ def handoff_request(doc: WorkflowDocument, handoff: Handoff, declined: DeclinedL
         options=options,
         declined=declined(HANDOFF_REQUEST),
     )
+
+
+def question_request_id(envelope: Envelope, question: Question) -> str:
+    """``question:<question-NN>.<question id>``, e.g. ``question:question-01.q1``."""
+    return f"{QUESTION_PREFIX}{envelope.name.rsplit('.', 1)[0]}.{question.id}"
+
+
+def question_requests(questions: tuple[tuple[Envelope, Question], ...]) -> list[Request]:
+    """A ``choose`` request for every unanswered question; it is answered by an answer envelope, not a record.
+
+    Unlike a handoff choice, a question may be answered outside its options (``choice: null`` with the answer in
+    the decision) when it allows a note.
+    """
+    return [
+        Request(
+            id=question_request_id(envelope, question),
+            kind="choose",
+            title=question.title,
+            prompt=question.prompt,
+            target=Target(
+                "question", f"{envelope.name}#{question.id}", envelope.stage if envelope.stage != "-" else None
+            ),
+            options=tuple(Option(o.id, o.description, o.recommended) for o in question.options),
+            allow_note=question.allow_note,
+            answer="envelope",
+            context=question.context,
+        )
+        for envelope, question in questions
+    ]

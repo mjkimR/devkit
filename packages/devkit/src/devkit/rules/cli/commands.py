@@ -39,6 +39,7 @@ from devkit.core.cli import (
 from devkit.core.errors import ArgumentError
 from devkit.rules.cli import output
 from devkit.rules.engine.errors import RuleProblem
+from devkit.rules.engine.hygiene import run_hygiene_extensions
 from devkit.rules.engine.models import Phase, Rule
 from devkit.rules.engine.phases import resolve_phases
 from devkit.rules.engine.project import ProjectRules, load_project_rules, run_project_rules
@@ -91,6 +92,8 @@ def _execute(request: RunRequest) -> None:
     violations = run.result.violations
     errors = run.errors
     notices = run.notices
+    if request.phase is Phase.HYGIENE and snapshot is None and not request.fix and run.whole_workspace:
+        notices = [*notices, *run_hygiene_extensions(run.workspace_root)]
     if request.json:
         echo_json(
             {

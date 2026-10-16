@@ -28,7 +28,7 @@ src/devkit/workflow/
 │   ├── frontmatter.py   # anchor frontmatter on devkit.core.frontmatter; in-place key updates
 │   ├── decisions.py     # decisions/NN-<request>.yaml records, scoped to a workflow segment
 │   ├── records.py       # record files: directory lock, unique sequences, whole, never replaced; temporary names
-│   └── envelope/        # model.py (envelopes/<kind>-NN.yaml, review state, write_envelope), authoring.py (compose_envelope)
+│   └── envelope/        # model.py (envelopes/<kind>-NN.yaml, review state, hold, write_envelope), authoring.py (compose_envelope)
 ├── evaluation/
 │   ├── evaluate.py      # pure stage evaluation: evaluate_definition (Options -> UnitEvaluation)
 │   ├── results.py       # UnitEvaluation, GateStatus, Delegate, Waiting, Drift, Skipped
@@ -36,6 +36,7 @@ src/devkit/workflow/
 │   ├── primitives.py    # evaluators of the disk primitives
 │   ├── git.py           # merge-base ancestry for revision checks
 │   └── lint.py          # the lint-clean binding to devkit.rules
+├── integration.py       # finish_guard: the devkit.finish_guard extension refusing a held branch
 └── cli/                 # app.py (group, options, error boundary), units.py, run.py, definitions.py, envelope.py
 ```
 
@@ -64,6 +65,10 @@ just workflow list --exclude-status completed         # active units; --status <
 just workflow envelope new --unit <dir> --kind review # needs_input skeleton to fill in
 just workflow envelope new --unit <dir> --kind review --summary "..." --findings-file findings.yaml --check tests="PASS 3/3"
 just workflow envelope new --unit <dir> --kind reverify --from latest --resolve 1 --waive "2=accepted cost"
+just workflow envelope new --unit <dir> --kind question --summary "..." --questions-file questions.yaml
+just workflow envelope new --unit <dir> --kind answer --summary "..." --answers-to question-01.yaml --answers-file answers.yaml
+just workflow envelope new --unit <dir> --kind worker --summary "..." --problem "<cause>" --tried "<attempt>" --recovery "<step>"
+just workflow envelope new --unit <dir> --kind resolution --summary "<what was done>" --resolves worker-02.yaml
 just workflow envelope check --unit <dir>             # every envelope file and any contract violation
 ```
 
@@ -154,12 +159,13 @@ The main calls:
 | `return_to(ws, unit, stage, *, note="", by="", lint=True) -> Decision` | `return`. |
 | `plan_handoff(ws, unit, result, choice=None) -> HandoffPlan`, `apply_handoff(plan, *, when=None, by="", note="") -> HandoffOutcome` | `handoff`. |
 | `compose_envelope(...) -> Envelope`, `envelope_timestamp(unit_dir, workflow, segment_start)`, `render_envelope(envelope, created_at)`, `write_envelope(unit_dir, kind, body)` | `envelope new`; pass `workflow=scope.workflow, segment=scope.binding.segment` (from `ws.unit_scope`) to scope the envelope, `load_envelopes(dir).scoped(workflow, segment)` as `envelopes`, and `envelope_timestamp(dir, workflow, scope.binding.segment_start)` as `created_at` so no earlier return voids it. |
+| `load_envelopes(dir).hold() -> Hold` | Unresolved problems and unanswered questions over every segment (`blocked`, `problems`, `questions`, `reasons()`); `UnitEvaluation.hold` carries the same. |
 | `evaluate_definition(doc, Options) -> UnitEvaluation` | Pure evaluation without policies or writes. |
 
 ## Specifications
 
 - [Workflow Engine Overview](overview.md): delivery model, layout template, approval, stage and handoff policies, integration with rules and distribution.
 - [Workflow Definitions and Checks](definition-and-checks.md): document schema, shared stages, handoff candidates, check registry and plugin checks, binding and drift.
-- [Review Envelopes](envelopes.md): envelope file contract, authoring flags, `envelope check`.
+- [Review Envelopes](envelopes.md): envelope file contract (questions, answers, problems, resolutions), authoring flags, `envelope check`, the hold on gates and integration.
 - [Human Interaction Contract](human-interaction.md): request kinds, decision records, how answers are applied.
 - [CLI and Output Contract](cli-and-output.md): commands, exit and error codes, text sentinels and JSON shapes.

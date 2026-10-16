@@ -1,11 +1,14 @@
-"""``devkit worktree`` commands: start a slug's task worktree, finish it after the merge, report leftovers.
+"""``devkit worktree`` commands: start an activity branch (with its worktree, without one, or attached to an existing
+branch), finish it after the merge, report leftovers and stale branches.
 
-Text output: ``start`` prints ``[WORKTREE_STARTED: <slug> path= branch= base= created= setup= synced=]`` and
-``[NEXT_CMD: cd <path>]``; ``finish`` prints ``[WORKTREE_FINISHED: <slug> path= merged= push= removed=
-branch_deleted=]``, also before a refusal that stopped it after the merge; ``status`` prints one
-``[WORKTREE: <path> ...]`` line per worktree, one ``[BRANCH: <name> head=]`` line per unmerged branch no
-worktree checks out, and ``[SUMMARY: ...]``. ``--format json`` prints the result object (a refused
-``finish`` that changed something adds ``errors``). ``status`` only reports and exits ``0``.
+Text output: ``start`` prints ``[WORKTREE_STARTED: <branch> path= base= created= existing= unit= setup= synced=]``
+and ``[NEXT_CMD: cd <path>]``, or with ``--no-worktree`` ``[BRANCH_STARTED: <branch> checkout= from=]``; ``finish``
+prints ``[WORKTREE_FINISHED: <branch> path= merged= push= removed= branch_deleted=]``, also before a refusal that
+stopped it after the merge; ``status`` prints one ``[WORKTREE: <path> ...]`` line per worktree, one ``[BRANCH:
+<name> head=]`` line per unmerged branch no worktree checks out, and ``[SUMMARY: ...]``; ``stale`` prints one
+``[STALE_BRANCH: <branch> ...]`` line per stale activity branch and ``[SUMMARY: checked= branches= stale=
+stale_after=]``. ``--format json`` prints the result object (a refused ``finish`` that changed something adds
+``errors``). ``status`` and ``stale`` only report and exit ``0``.
 """
 
 from __future__ import annotations
@@ -28,14 +31,26 @@ from devkit.core.cli import (
     is_json,
     workspace_option,
 )
+from devkit.core.errors import ArgumentError
 from devkit.core.project import find_project_root
 from devkit.worktree.config import WorktreeConfig, read_worktree_config
 from devkit.worktree.errors import WorktreeError
-from devkit.worktree.extensions import run_post_finish
-from devkit.worktree.lifecycle import FinishResult, Position, finish, locate, start, status
+from devkit.worktree.extensions import run_attach_checks, run_finish_guards, run_post_finish
+from devkit.worktree.lifecycle import (
+    FinishResult,
+    Position,
+    StartResult,
+    attach,
+    finish,
+    locate,
+    start,
+    start_branch,
+    status,
+)
+from devkit.worktree.stale import stale_branches
 
 WORKSPACE = workspace_option("Any directory inside the checkout [default: the current directory]")
-SLUG = click.argument("slug")
+BRANCH = click.argument("branch")
 _BARE = re.compile(r'[^\s"\]=]+')
 
 
@@ -64,25 +79,85 @@ def cli() -> None:
 
 
 @cli.command(name="start")
-@SLUG
+@BRANCH
 @WORKSPACE
+@click.option(
+    "--no-worktree",
+    is_flag=True,
+    help="Create the branch at the current HEAD and switch this checkout to it, carrying uncommitted changes",
+)
+@click.option(
+    "--existing-branch",
+    "existing",
+    default=None,
+    metavar="BRANCH|REMOTE/BRANCH",
+    help="Attach a worktree to the existing BRANCH (local, or a fetched remote-tracking copy) instead of creating it",
+)
+@click.option(
+    "--unit", default=None, help="With --existing-branch: the unit directory on the branch (project-relative)"
+)
 @FORMAT_OPTION
 @boundary
-def start_cmd(slug: str, workspace_root: str | None, output_format: str) -> None:
-    """Create (or reuse) <parent>/<repo>-wt-<SLUG> on branch SLUG from the base HEAD.
+def start_cmd(
+    branch: str,
+    workspace_root: str | None,
+    no_worktree: bool,
+    existing: str | None,
+    unit: str | None,
+    output_format: str,
+) -> None:
+    """Create (or reuse) <parent>/<repo>-wt-<BRANCH> on the new activity branch BRANCH (plan-<slug> or dev-<slug>).
 
-    A new worktree runs the [worktree] setup command, then `devkit sync --locked` to restore the managed files a
-    fresh checkout lacks; continue the task in the printed directory.
+    A branch that exists locally or on a remote is refused; continue it with --existing-branch BRANCH --unit DIR,
+    which attaches a worktree to it after checking that the branch is in sync with its remote and holds the unit.
+    --no-worktree creates the branch in this checkout instead. A new worktree runs the [worktree] setup command,
+    then `devkit sync --locked` to restore the managed files a fresh checkout lacks; continue the task in the
+    printed directory.
     """
+    if no_worktree and (existing is not None or unit is not None):
+        raise ArgumentError(
+            "--no-worktree starts a new branch; --existing-branch and --unit attach a worktree to an existing one",
+            target_files=["--no-worktree"],
+            fix="Drop --no-worktree, or drop --existing-branch and --unit",
+        )
+    if (existing is None) != (unit is None):
+        raise ArgumentError(
+            "--existing-branch and --unit go together",
+            target_files=["--existing-branch", "--unit"],
+            fix=f"Pass both: --existing-branch {branch} --unit <unit directory>",
+        )
     position, config, project = _position(workspace_root)
-    result = start(position, slug, setup=config.setup, project=project)
+    if no_worktree:
+        started = start_branch(position, branch)
+        if is_json(output_format):
+            echo_json(started.to_dict())
+        else:
+            click.echo(
+                f"[BRANCH_STARTED: {_value(started.branch)} checkout={_value(started.checkout)}"
+                f" from={_value(started.started_from)}]"
+            )
+        echo_notices(started.notices)
+        exit_on_warnings(started.notices)
+        return
+    if existing is not None and unit is not None:
+        result: StartResult = attach(
+            position,
+            branch,
+            source=existing,
+            unit=unit,
+            setup=config.setup,
+            project=project,
+            check=run_attach_checks,
+        )
+    else:
+        result = start(position, branch, setup=config.setup, project=project)
     if is_json(output_format):
         echo_json(result.to_dict())
     else:
         click.echo(
-            f"[WORKTREE_STARTED: {_value(result.slug)} path={_value(result.path)} branch={_value(result.branch)}"
-            f" base={_value(result.base)} created={_value(result.created)} setup={_value(result.setup)}"
-            f" synced={_value(result.synced)}]"
+            f"[WORKTREE_STARTED: {_value(result.branch)} path={_value(result.path)} base={_value(result.base)}"
+            f" created={_value(result.created)} existing={_value(result.existing)} unit={_value(result.unit)}"
+            f" setup={_value(result.setup)} synced={_value(result.synced)}]"
         )
         click.echo(f"[NEXT_CMD: cd {shlex.quote(str(result.path))}]")
     echo_notices(result.notices)
@@ -91,14 +166,14 @@ def start_cmd(slug: str, workspace_root: str | None, output_format: str) -> None
 
 def _finished(result: FinishResult) -> str:
     return (
-        f"[WORKTREE_FINISHED: {_value(result.slug)} path={_value(result.path)} merged={_value(result.merged)}"
+        f"[WORKTREE_FINISHED: {_value(result.branch)} path={_value(result.path)} merged={_value(result.merged)}"
         f" push={_value(result.push)} removed={_value(result.removed)}"
         f" branch_deleted={_value(result.branch_deleted)}]"
     )
 
 
 @cli.command(name="finish")
-@SLUG
+@BRANCH
 @WORKSPACE
 @click.option(
     "--merge",
@@ -108,16 +183,22 @@ def _finished(result: FinishResult) -> str:
 )
 @FORMAT_OPTION
 @boundary
-def finish_cmd(slug: str, workspace_root: str | None, merge: bool, output_format: str) -> None:
-    """Integrate SLUG's branch into the base, then remove its worktree and branch; run it from the base.
+def finish_cmd(branch: str, workspace_root: str | None, merge: bool, output_format: str) -> None:
+    """Integrate BRANCH into the base, then remove its worktree and the branch; run it from the base.
 
-    Without --merge the branch must already be merged (for example through its pull request). Rerun the
-    same command after resolving a refusal: the steps already done are skipped.
+    Without --merge the branch must already be merged (for example through its pull request). With --merge the
+    installed devkit.finish_guard extensions check the branch first (WORKTREE_BLOCKED). Rerun the same command
+    after resolving a refusal: the steps already done are skipped.
     """
     position, config, _ = _position(workspace_root)
     try:
         result = finish(
-            position, slug, merge=merge, pull_request=config.pull_request, delete_branch=config.delete_branch
+            position,
+            branch,
+            merge=merge,
+            pull_request=config.pull_request,
+            delete_branch=config.delete_branch,
+            guard=lambda merge_base, tip: run_finish_guards(position.base, branch, merge_base, tip),
         )
     except WorktreeError as error:
         partial = error.result
@@ -165,3 +246,32 @@ def status_cmd(workspace_root: str | None, output_format: str) -> None:
         f" unmerged={sum(item.merged is False for item in linked)} dirty={sum(item.dirty is True for item in linked)}"
         f" branches={len(result.branches)}]"
     )
+
+
+@cli.command(name="stale")
+@WORKSPACE
+@FORMAT_OPTION
+@boundary
+def stale_cmd(workspace_root: str | None, output_format: str) -> None:
+    """List the plan-*/dev-* branches idle longer than [worktree] stale_after (needs gh logged in).
+
+    Changes nothing. Each stale branch is also a WORKTREE_STALE_BRANCH warning whose fix names how to resume it and,
+    once the user decides, how to discard it; without gh the check is skipped with a notice.
+    """
+    position, config, _ = _position(workspace_root)
+    result = stale_branches(position, config.stale_after)
+    notices = [*result.notices, *(item.warning(position.base, config.stale_after) for item in result.stale)]
+    if is_json(output_format):
+        echo_json(result.to_dict() | {"notices": [notice.to_dict() for notice in notices]})
+    else:
+        for item in result.stale:
+            data = item.to_dict()
+            click.echo(
+                f"[STALE_BRANCH: {_value(item.branch)} unit={_value(item.unit)}"
+                f" last_activity={data['last_activity']} pr={item.pr} refs={','.join(item.refs)}]"
+            )
+        click.echo(
+            f"[SUMMARY: checked={_value(result.checked)} branches={result.branches} stale={len(result.stale)}"
+            f" stale_after={result.stale_after}]"
+        )
+    echo_notices(notices)

@@ -15,18 +15,34 @@ from devkit.workflow.errors import (
     EnvelopeFlagError,
     EnvelopeFormatError,
     EnvelopeFromError,
+    EnvelopeItemsError,
+    EnvelopeReferenceError,
     EnvelopeStatusError,
 )
 from devkit.workflow.evaluation.git import is_revision
 from devkit.workflow.unit.decisions import load_decisions, utc_timestamp
 from devkit.workflow.unit.envelope.model import (
+    ANSWER,
+    ANSWER_KEYS,
+    EFFORTS,
     FINDING_KEYS,
+    QUESTION,
+    QUESTION_KEYS,
+    RESOLUTION,
     STATUSES,
+    WORKER,
+    Answer,
     Envelope,
     Envelopes,
     Finding,
+    Problem,
+    Question,
+    parse_answer,
+    parse_envelope_text,
     parse_finding,
+    parse_question,
     read_envelope,
+    reference_error,
 )
 
 CHECK_VERDICTS = ("PASS", "FAIL", "SKIP")
@@ -62,6 +78,17 @@ def skeleton(kind: str, stage: str, created_at: str, workflow: str = "", segment
         lines.append("review: review-NN.yaml        # the review round this reverify closes")
     if kind in {"review", "reverify", "final-report"}:
         lines.append('diff_scope: { base: "", head: "" }')
+    if kind == QUESTION:
+        lines.append("questions: []                 # id, title, prompt, context, options, allow_note")
+    if kind == ANSWER:
+        lines.append("answers_to: question-NN.yaml  # the question envelope this answers")
+        lines.append("answers: []                   # question, choice, decision, constraints")
+    if kind == RESOLUTION:
+        lines.append("resolves: worker-NN.yaml      # the envelope whose problem this resolves")
+    if kind == WORKER:
+        lines.append(
+            '# problem: { cause: "", attempts: [], recovery: "" }   # needs_input/failed: an execution problem'
+        )
     return "\n".join(lines) + "\n"
 
 
@@ -145,6 +172,52 @@ def parse_findings(text: str, kind: str) -> tuple[Finding, ...]:
                 fix="Drop resolution, or write a reverify envelope",
             )
         out.append(finding)
+    return tuple(out)
+
+
+def _items(text: str, flag: str, keys: tuple[str, ...]) -> list[Any]:
+    """The YAML list a ``--questions-file`` or ``--answers-file`` holds."""
+    try:
+        data = yaml.safe_load(text)
+    except yaml.YAMLError as exc:
+        raise EnvelopeItemsError(
+            f"{flag}: yaml: {exc}",
+            fix="Fix the YAML at the reported line; quote a value that starts with [ { & * ! % @ or ` or contains ': '",
+        ) from exc
+    if not isinstance(data, list) or not data:
+        raise EnvelopeItemsError(
+            f"{flag}: expected a non-empty YAML list", fix=f"Write one `- {keys[0]}: ...` item per entry"
+        )
+    return data
+
+
+def parse_questions(text: str) -> tuple[Question, ...]:
+    """A YAML list of questions (``id``, ``title``, ``prompt``, ``context``, ``options``, ``allow_note``)."""
+    out: list[Question] = []
+    for i, item in enumerate(_items(text, "--questions-file", QUESTION_KEYS), start=1):
+        try:
+            out.append(parse_question(item, f"question {i}"))
+        except EnvelopeFormatError as exc:
+            raise EnvelopeItemsError(
+                f"--questions-file: {exc}",
+                fix="Write a mapping with id, title (40 characters at most), prompt, and optionally context, options"
+                " ({id, description, recommended}) and allow_note",
+            ) from exc
+    return tuple(out)
+
+
+def parse_answers(text: str) -> tuple[Answer, ...]:
+    """A YAML list of answers (``question``, ``choice``, ``decision``, ``constraints``)."""
+    out: list[Answer] = []
+    for i, item in enumerate(_items(text, "--answers-file", ANSWER_KEYS), start=1):
+        try:
+            out.append(parse_answer(item, f"answer {i}"))
+        except EnvelopeFormatError as exc:
+            raise EnvelopeItemsError(
+                f"--answers-file: {exc}",
+                fix="Write a mapping with question, choice (an option id or null), decision (one sentence) and"
+                " optionally constraints",
+            ) from exc
     return tuple(out)
 
 
@@ -252,16 +325,31 @@ def compose_envelope(
     source: str | None = None,
     resolve: Iterable[str] = (),
     waive: Iterable[str] = (),
+    questions_yaml: str | None = None,
+    answers_to: str = "",
+    answers_yaml: str | None = None,
+    problem: str = "",
+    attempts: Iterable[str] = (),
+    recovery: str = "",
+    resolves: str = "",
+    effort: str = "",
+    loaded: Envelopes | None = None,
 ) -> Envelope:
     """Validate the authoring flags of ``envelope new`` and build the envelope to write.
 
     ``envelopes`` are those of the current segment (``--from latest`` reads
     them); ``workflow`` and ``segment`` scope the new envelope to it.
+    ``loaded`` are all the unit's envelopes, whatever their segment, which
+    ``answers_to`` and ``resolves`` must name. The status defaults to
+    ``needs_input`` for a question, ``failed`` with a problem, else
+    ``completed``. The result satisfies the envelope contract of its kind.
 
     Raises an ``AuthoringError`` subclass: ``EnvelopeStatusError``,
-    ``EnvelopeFlagError``, ``EnvelopeFromError`` or ``EnvelopeFindingsError``.
+    ``EnvelopeFlagError``, ``EnvelopeFromError``, ``EnvelopeFindingsError``,
+    ``EnvelopeItemsError`` or ``EnvelopeReferenceError``.
     """
-    status = STATUSES[0] if status is None else status
+    if status is None:
+        status = "needs_input" if kind == QUESTION else "failed" if problem else STATUSES[0]
     if status not in STATUSES:
         raise EnvelopeStatusError(
             f"--status {status!r} not in {'|'.join(STATUSES)}",
@@ -278,7 +366,14 @@ def compose_envelope(
         findings = apply_resolutions(findings, resolve_list, waive_map)
     if findings_yaml is not None:
         findings = findings + parse_findings(findings_yaml, kind)
-    return Envelope(
+    attempt_list = tuple(attempts)
+    if (attempt_list or recovery) and not problem:
+        raise EnvelopeFlagError("--tried and --recovery describe a --problem", fix="Add --problem <cause>")
+    if effort and effort not in EFFORTS:
+        raise EnvelopeFlagError(
+            f"--effort {effort!r} not in {'|'.join(EFFORTS)}", fix=f"Use one of {'|'.join(EFFORTS)}"
+        )
+    draft = Envelope(
         kind=kind,
         status=status,
         stage=stage,
@@ -292,6 +387,47 @@ def compose_envelope(
         diff_head=head,
         assumptions=tuple(assumptions),
         unverified_areas=tuple(unverified),
+        questions=parse_questions(questions_yaml) if questions_yaml is not None else (),
+        answers_to=Path(answers_to).name if answers_to else "",
+        answers=parse_answers(answers_yaml) if answers_yaml is not None else (),
+        problem=Problem(problem, recovery, attempt_list) if problem else None,
+        resolves=Path(resolves).name if resolves else "",
+        activity_effort=effort,
+    )
+    _check_contract(draft, loaded if loaded is not None else envelopes)
+    return draft
+
+
+def _check_contract(draft: Envelope, loaded: Envelopes) -> None:
+    """Refuse a draft that its loader would report malformed: the fields and status its kind requires, a complete
+    problem, and ``answers_to``/``resolves`` naming a fitting envelope of ``loaded``."""
+    name = f"{draft.kind}-01.yaml"
+    try:
+        parse_envelope_text(name, name, render_envelope(draft, "-"))
+    except EnvelopeFormatError as exc:
+        raise EnvelopeFlagError(
+            f"the envelope would not satisfy the contract of kind {draft.kind}: {exc.message}",
+            fix=_contract_fix(draft.kind),
+        ) from exc
+    problem = reference_error(draft, {e.name: e for e in loaded.all()})
+    if problem is not None:
+        raise EnvelopeReferenceError(
+            problem,
+            fix="Name an envelope `devkit workflow envelope check` lists: --answers-to a question-NN.yaml with those"
+            " questions and options, --resolves an envelope with a problem",
+        )
+
+
+def _contract_fix(kind: str) -> str:
+    if kind == QUESTION:
+        return "Pass --questions-file with at least one question; a question envelope has status needs_input"
+    if kind == ANSWER:
+        return "Pass --answers-to question-NN.yaml and --answers-file; an answer envelope has status completed"
+    if kind == RESOLUTION:
+        return "Pass --resolves <kind>-NN.yaml and --summary; a resolution has status completed"
+    return (
+        "Drop the fields this kind does not carry; only a worker envelope carries a problem, with --status needs_input"
+        " or failed, and a failed worker envelope needs --problem and --recovery"
     )
 
 
@@ -315,4 +451,16 @@ def render_envelope(draft: Envelope, created_at: str) -> str:
     data["checks"] = dict(draft.checks)
     if draft.diff_base or draft.diff_head:
         data["diff_scope"] = {"base": draft.diff_base, "head": draft.diff_head}
+    if draft.questions:
+        data["questions"] = [q.to_dict() for q in draft.questions]
+    if draft.answers_to:
+        data["answers_to"] = draft.answers_to
+    if draft.answers:
+        data["answers"] = [a.to_dict() for a in draft.answers]
+    if draft.problem is not None:
+        data["problem"] = draft.problem.to_dict()
+    if draft.resolves:
+        data["resolves"] = draft.resolves
+    if draft.activity_effort:
+        data["activity_effort"] = draft.activity_effort
     return yaml.safe_dump(data, sort_keys=False, allow_unicode=True, width=10**6)

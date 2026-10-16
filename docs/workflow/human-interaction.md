@@ -5,17 +5,19 @@
 
 ## 1. Scope
 
-The engine stops for a person in three situations: an approval gate, a declared `human` check, and the choice of the next workflow after a handoff. This document defines the data contract between the engine and whoever answers: what a request looks like, what an answer looks like, where answers are stored and how the engine applies them. Presentation is out of scope: a terminal agent, an IDE panel, a chat bot or a web page is compliant as long as it reads requests from the engine's output and writes answers in the record format below. The engine never infers an answer from conversation.
+The engine stops for a person in four situations: an approval gate, a declared `human` check, the choice of the next workflow after a handoff, and a question a delegated role recorded in a `question` envelope. This document defines the data contract between the engine and whoever answers: what a request looks like, what an answer looks like, where answers are stored and how the engine applies them. Presentation is out of scope: a terminal agent, an IDE panel, a chat bot or a web page is compliant as long as it reads requests from the engine's output and writes answers in the record format below. The engine never infers an answer from conversation.
 
 ## 2. Request Kinds
 
 | Kind | Asked when | Answer |
 | --- | --- | --- |
 | `approve` | A gated stage's exit checks all hold and `approvals.<gate>` is `ask`; or a declared `human` check in the current stage is unmet. | `accept` or `decline`, with an optional note. |
-| `choose` | The bound workflow is complete, it declares `next` candidates, and `approvals.handoff` is `ask` (or `auto` found no eligible candidate). | `accept` with one eligible option id, or `decline`. |
+| `choose` | The bound workflow is complete, it declares `next` candidates, and `approvals.handoff` is `ask` (or `auto` found no eligible candidate). Also every unanswered question of a `question` envelope ([Review Envelopes](envelopes.md#11-questions-answers-problems-and-resolutions)). | Handoff: `accept` with one eligible option id, or `decline`. Question: an answer envelope with one option id, or `choice: null` and the answer in its decision when the question allows a note. |
 | `feedback` | Never emitted by the engine. Reserved for notes a person attaches to a stage or artifact at any time. | `accept` with free text. Never blocks. |
 
-`cancel` is valid for every kind: the person dismissed the request without deciding. A cancelled record is kept for the audit trail and has no effect on evaluation.
+Questions reuse the `choose` kind rather than adding one, so a terminal agent or a web page renders gate requests, handoff choices and questions with one renderer. They differ in how the answer comes back: a question's `answer` is `envelope`, its target type is `question`, and the person's choice and note are rewritten into an `answer` envelope by whoever processes them (`devkit workflow envelope new --kind answer`); `devkit workflow answer` refuses it (`DECISION_INVALID`). A question is never declined or cancelled: it stays open until an answer envelope answers it.
+
+`cancel` is valid for every kind of decision record: the person dismissed the request without deciding. A cancelled record is kept for the audit trail and has no effect on evaluation.
 
 Two more record kinds are written by the engine itself rather than answering a request: `return` records (section 5) and the `choose` record that `handoff --workflow <id>` writes for an explicit choice.
 
@@ -39,15 +41,16 @@ Two more record kinds are written by the engine itself rather than answering a r
 
 | Field | Meaning |
 | --- | --- |
-| `id` | Deterministic identifier, unique among the unit's open requests: `gate:<gate>`, `check:<name>` or `handoff`. An answer references it. |
+| `id` | Deterministic identifier, unique among the unit's open requests: `gate:<gate>`, `check:<name>`, `handoff`, or `question:<question-NN>.<question id>` (`question:question-01.q1`). An answer references it. |
 | `kind` | `approve` or `choose` (the engine never emits `feedback`). |
 | `title` | Short label for a chip or button row, at most 40 characters. |
 | `prompt` | One sentence a person can act on. |
-| `target` | What the request decides: `{"type": "gate" \| "check" \| "handoff", "name", "stage"}`. `stage` is the current stage id, or `null` for a handoff. |
-| `options` | `choose` only: `[{"id", "description", "recommended", "eligible"}]`, in declaration order; `description` lists the candidate's `when` checks with their results. Exactly one option is chosen. An ineligible option is shown but cannot be accepted. |
-| `allow_note` | Whether a note may accompany the answer. Always `true` today. |
+| `target` | What the request decides: `{"type": "gate" \| "check" \| "handoff" \| "question", "name", "stage"}`. `stage` is the current stage id, `null` for a handoff, and the question envelope's stage for a question, whose `name` is `<question-NN.yaml>#<question id>`. |
+| `options` | `choose` only: `[{"id", "description", "recommended", "eligible"}]`, in declaration order; for a handoff `description` lists the candidate's `when` checks with their results. Exactly one option is chosen. An ineligible option is shown but cannot be accepted. A question's options are its own, all eligible, possibly none. |
+| `allow_note` | Whether a note may accompany the answer: `true`, except for a question that sets `allow_note: false`. |
 | `declined` | The latest `decline` record for this request (`{"file", "note", "at"}`) when the request is still open, otherwise `null`. A declined request stays open: it may be asked again. |
-| `answer` | How the answer reaches the engine: `record` (`devkit workflow answer` or a host's record) or `given` (the definition's `gates.<gate>.answer`: after the person's approval the executor passes `next --given <gate>` on this and every later run and writes nothing; an objection takes a return path). `record` for every request that is not a gate. |
+| `answer` | How the answer reaches the engine: `record` (`devkit workflow answer` or a host's record), `given` (the definition's `gates.<gate>.answer`: after the person's approval the executor passes `next --given <gate>` on this and every later run and writes nothing; an objection takes a return path) or `envelope` (a question: an `answer` envelope). `record` for every other request that is not a gate. |
+| `context` | A question's `context` (what it rests on), else `null`. |
 
 Text form (free text is a JSON string literal, so it always stays on one line):
 
@@ -55,10 +58,11 @@ Text form (free text is a JSON string literal, so it always stays on one line):
 [REQUEST: id=gate:integration kind=approve title="Approve integration" target=gate:integration stage=integrate note=allowed]
 [REQUEST: id=gate:release kind=approve title="Approve release" target=gate:release stage=release note=allowed answer=given]
 [REQUEST: id=handoff kind=choose title="Choose next workflow" options=spec-driven,hotfix,direct-delivery eligible=hotfix,direct-delivery recommended=-]
+[REQUEST: id=question:question-01.q1 kind=choose title="Storage format" target=question:question-01.yaml#q1 stage=direction-handoff options=a,b recommended=a note=allowed answer=envelope]
 [DECLINED: id=gate:integration file=decisions/01-gate-integration.yaml note="rebase first"]
 ```
 
-Requests appear only for the current stage (or the pending handoff), so a unit has at most a handful open at once. Everything in a request is derived from the definition, the project policy and the unit's files; nothing is stored.
+Gate and check requests appear only for the current stage (or the pending handoff), so a unit has at most a handful open at once; questions appear whatever the stage until answered, and while any is unanswered, or a problem is unresolved, no gate request is asked ([Review Envelopes, section 4](envelopes.md#4-hold-blocked-and-waiting-for-answers)). Everything in a request is derived from the definition, the project policy and the unit's files; nothing is stored.
 
 ## 4. Answer
 
