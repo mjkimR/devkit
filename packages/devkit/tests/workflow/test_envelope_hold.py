@@ -21,7 +21,7 @@ stages:
   - id: review
     exit: [anchor-exists]
   - id: accept
-    human_gate: plan-accept
+    human_gate: accept
     exit: [anchor-exists]
 ---
 """
@@ -319,10 +319,10 @@ def test_questions_are_choose_requests_answered_by_an_envelope(root: Path) -> No
 
 @pytest.mark.parametrize("policy", ["ask", "auto"])
 def test_a_hold_keeps_every_gate_from_passing(root: Path, policy: str) -> None:
-    write_config(root, f'[workflow]\ndefault = "w"\n[workflow.approvals]\nplan-accept = "{policy}"\n')
+    write_config(root, f'[workflow]\ndefault = "w"\n[workflow.approvals]\naccept = "{policy}"\n')
     unit = root / SIMPLE_UNIT
     _write(unit, "worker-01.yaml", _problem(stage="review"))
-    for given in ((), ("--given", "plan-accept")):
+    for given in ((), ("--given", "accept")):
         result = _next(root, *given)
         assert result["stage"]["id"] == "accept"  # type: ignore[index]
         assert result["gate"]["satisfied"] is False and result["gate"]["held"] is True  # type: ignore[index]
@@ -338,7 +338,7 @@ def test_a_hold_keeps_every_gate_from_passing(root: Path, policy: str) -> None:
     if policy == "auto":
         assert result["complete"] is True
     else:
-        assert [r["id"] for r in result["requests"]] == ["gate:plan-accept"]  # type: ignore[union-attr]
+        assert [r["id"] for r in result["requests"]] == ["gate:accept"]  # type: ignore[union-attr]
 
 
 def test_envelope_check_reports_the_hold(root: Path) -> None:
@@ -448,12 +448,12 @@ id: w
 schema_version: 1
 stages:
   - id: intent
-    human_gate: plan-intent
+    human_gate: intent
     exit: [anchor-exists]
   - id: build
     exit: [anchor-exists]
   - id: integrate
-    human_gate: dev-integration
+    human_gate: integration
     exit: [anchor-exists]
 next:
   - { workflow: v }
@@ -467,7 +467,7 @@ def staged(tmp_path: Path) -> Path:
     defs.mkdir(parents=True)
     (defs / "w.md").write_text(STAGED)
     (defs / "v.md").write_text("---\nid: v\nschema_version: 1\nstages:\n  - id: s\n    exit: [anchor-exists]\n---\n")
-    write_config(tmp_path, '[workflow]\ndefault = "w"\n[workflow.approvals]\nplan-intent = "auto"\nhandoff = "auto"\n')
+    write_config(tmp_path, '[workflow]\ndefault = "w"\n[workflow.approvals]\nintent = "auto"\nhandoff = "auto"\n')
     assert run_cli("new", "-w", str(tmp_path), "u").exit_code == 0
     return tmp_path
 
@@ -476,7 +476,7 @@ def test_a_hold_keeps_the_gates_passed_before_it(staged: Path) -> None:
     unit = staged / SIMPLE_UNIT
     _write(unit, "worker-01.yaml", _problem(stage="build", workflow="w"))
     result = _next(staged)
-    # plan-intent passed before the problem was raised in build: the unit stays at integrate, not back at intent.
+    # intent passed before the problem was raised in build: the unit stays at integrate, not back at intent.
     assert result["done"] == ["intent", "build"] and result["stage"]["id"] == "integrate"  # type: ignore[index]
     assert result["gate"]["held"] is True  # type: ignore[index]
     # A problem without a stage of this workflow holds every gate.
@@ -504,9 +504,7 @@ def test_a_malformed_worker_envelope_holds_from_the_stage_it_states(staged: Path
 
 
 def test_a_hold_keeps_the_handoff(staged: Path) -> None:
-    write_config(
-        staged, '[workflow]\ndefault = "w"\n[workflow.approvals]\nplan-intent = "auto"\ndev-integration = "auto"\n'
-    )
+    write_config(staged, '[workflow]\ndefault = "w"\n[workflow.approvals]\nintent = "auto"\nintegration = "auto"\n')
     unit = staged / SIMPLE_UNIT
     assert _next(staged)["requests"][0]["id"] == "handoff"  # type: ignore[index]
     _write(unit, "worker-01.yaml", _question(stage="integrate", workflow="w"))
@@ -522,13 +520,13 @@ def test_a_hold_keeps_the_handoff(staged: Path) -> None:
 def test_handoff_refuses_a_held_complete_unit(staged: Path) -> None:
     write_config(
         staged,
-        '[workflow]\ndefault = "w"\n[workflow.approvals]\nplan-intent = "auto"\ndev-integration = "auto"\nhandoff = "auto"\n',
+        '[workflow]\ndefault = "w"\n[workflow.approvals]\nintent = "auto"\nintegration = "auto"\nhandoff = "auto"\n',
     )
     unit = staged / SIMPLE_UNIT
     _write(unit, "worker-01.yaml", _problem())  # gates turned off are skipped; the handoff is still held
     write_config(
         staged,
-        '[workflow]\ndefault = "w"\n[workflow.approvals]\nplan-intent = "off"\ndev-integration = "off"\nhandoff = "auto"\n',
+        '[workflow]\ndefault = "w"\n[workflow.approvals]\nintent = "off"\nintegration = "off"\nhandoff = "auto"\n',
     )
     result = _next(staged)
     assert result["complete"] is True and result["requests"] == [] and result["blocked"] is True
@@ -542,14 +540,14 @@ NARROWED = """---
 id: w
 schema_version: 1
 gates:
-  plan-accept: { policies: [ask] }
-  dev-integration: { answer: given, policies: [ask, auto] }
+  accept: { policies: [ask] }
+  integration: { answer: given, policies: [ask, auto] }
 stages:
   - id: accept
-    human_gate: plan-accept
+    human_gate: accept
     exit: [frontmatter(task.md status planned|reviewing)]
   - id: integrate
-    human_gate: dev-integration
+    human_gate: integration
     exit: [anchor-exists]
 ---
 """
@@ -569,10 +567,10 @@ def narrowed(tmp_path: Path) -> Path:
     ("approvals", "ok"),
     [
         ("", True),
-        ('plan-accept = "ask"\n', True),
-        ('plan-accept = "auto"\n', False),
-        ('dev-integration = "auto"\n', True),
-        ('dev-integration = "off"\n', False),
+        ('accept = "ask"\n', True),
+        ('accept = "auto"\n', False),
+        ('integration = "auto"\n', True),
+        ('integration = "off"\n', False),
     ],
 )
 def test_a_definition_narrows_the_policies_of_its_gates(narrowed: Path, approvals: str, ok: bool) -> None:
@@ -582,17 +580,17 @@ def test_a_definition_narrows_the_policies_of_its_gates(narrowed: Path, approval
         assert result.exit_code == 0, result.stderr
         return
     assert result.exit_code == 2 and "(WORKFLOW_GATE_POLICY)" in result.stderr
-    for command in (("requests",), ("answer", "--request", "gate:plan-accept", "--action", "accept")):
+    for command in (("requests",), ("answer", "--request", "gate:accept", "--action", "accept")):
         refused = run_cli(*command, "-w", str(narrowed), "--unit", SIMPLE_UNIT, "--no-lint")
         assert refused.exit_code == 2 and "WORKFLOW_GATE_POLICY" in refused.stderr
 
 
 def test_narrowed_policies_show_and_frontmatter_takes_alternatives(narrowed: Path) -> None:
     shown = run_cli("show", "-w", str(narrowed), "w").stdout
-    assert "[GATE: plan-accept policy=ask policies=ask]" in shown
-    assert "[GATE: dev-integration policy=ask answer=given policies=ask,auto]" in shown
+    assert "[GATE: accept policy=ask policies=ask]" in shown
+    assert "[GATE: integration policy=ask answer=given policies=ask,auto]" in shown
     result = _next(narrowed)
-    assert result["stage"]["id"] == "accept" and result["unmet"][0]["name"] == "gate:plan-accept"  # type: ignore[index]
+    assert result["stage"]["id"] == "accept" and result["unmet"][0]["name"] == "gate:accept"  # type: ignore[index]
     anchor = narrowed / SIMPLE_UNIT / "task.md"
     anchor.write_text(anchor.read_text().replace("status: planned", "status: rejected"))
     assert _next(narrowed)["unmet"][0]["detail"] == "status=rejected"  # type: ignore[index]
@@ -601,30 +599,30 @@ def test_narrowed_policies_show_and_frontmatter_takes_alternatives(narrowed: Pat
 @pytest.mark.parametrize(
     ("gates", "reason"),
     [
-        ("plan-accept: { policies: [] }", "non-empty list"),
-        ("plan-accept: { policies: [auto] }", "must include ask"),
-        ("plan-accept: { policies: [ask, ask] }", "distinct"),
-        ("plan-accept: { policies: [ask, maybe] }", "distinct values of"),
-        ("plan-accept: { policy: [ask] }", "unknown keys"),
+        ("accept: { policies: [] }", "non-empty list"),
+        ("accept: { policies: [auto] }", "must include ask"),
+        ("accept: { policies: [ask, ask] }", "distinct"),
+        ("accept: { policies: [ask, maybe] }", "distinct values of"),
+        ("accept: { policy: [ask] }", "unknown keys"),
     ],
 )
 def test_malformed_gate_policies_are_definition_errors(tmp_path: Path, gates: str, reason: str) -> None:
     from devkit.workflow import DefinitionError, parse_definition
 
-    text = f"---\nid: w\nschema_version: 1\ngates:\n  {gates}\nstages:\n  - id: a\n    human_gate: plan-accept\n    exit: [anchor-exists]\n---\n"
+    text = f"---\nid: w\nschema_version: 1\ngates:\n  {gates}\nstages:\n  - id: a\n    human_gate: accept\n    exit: [anchor-exists]\n---\n"
     with pytest.raises(DefinitionError, match=reason):
         parse_definition(text)
 
 
 def test_passed_gates_report_what_passed_them(staged: Path) -> None:
-    result = _next(staged)  # plan-intent = auto in the fixture
+    result = _next(staged)  # intent = auto in the fixture
     assert result["passed_gates"] == [
-        {"stage": "intent", "name": "plan-intent", "policy": "auto", "satisfied": True, "source": "policy",
+        {"stage": "intent", "name": "intent", "policy": "auto", "satisfied": True, "source": "policy",
          "decision": None, "held": False}
     ]  # fmt: skip
-    text = run_cli("next", "-w", str(staged), "--unit", SIMPLE_UNIT, "--no-lint", "--given", "dev-integration").stdout
-    assert "[GATE_PASSED: plan-intent stage=intent policy=auto source=policy]" in text
-    assert "[GATE_PASSED: dev-integration stage=integrate policy=ask source=given]" in text
+    text = run_cli("next", "-w", str(staged), "--unit", SIMPLE_UNIT, "--no-lint", "--given", "integration").stdout
+    assert "[GATE_PASSED: intent stage=intent policy=auto source=policy]" in text
+    assert "[GATE_PASSED: integration stage=integrate policy=ask source=given]" in text
 
 
 def test_a_worker_problem_lists_its_findings(root: Path) -> None:
