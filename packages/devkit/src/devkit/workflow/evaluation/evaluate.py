@@ -23,12 +23,11 @@ from devkit.workflow.definition.checks import (
     Registry,
 )
 from devkit.workflow.definition.definition import HANDOFF_GATE, StageDefinition, WorkflowDocument, schema_hash
-from devkit.workflow.errors import UnitNotFoundError
+from devkit.workflow.errors import GatePolicyError, UnitNotFoundError
 from devkit.workflow.evaluation.primitives import AncestorFunc, PrimitiveContext, evaluate_primitive
 from devkit.workflow.evaluation.requests import handoff_request, question_requests, stage_requests
 from devkit.workflow.evaluation.results import Delegate, Drift, GateStatus, Skipped, UnitEvaluation, Waiting
 from devkit.workflow.handoff import evaluate_handoff
-from devkit.workflow.project.plugins import BaseCheck, CheckContext
 from devkit.workflow.project.roles import is_builtin_role
 from devkit.workflow.unit.binding import AnchorState, Binding, read_anchor
 from devkit.workflow.unit.decisions import (
@@ -65,7 +64,6 @@ class Options:
     lint: LintFunc | None = None
     skip_lint: bool = False
     ancestor: AncestorFunc | None = None
-    plugins: tuple[BaseCheck, ...] = ()  # loaded plugin checks definitions may reference
     roles: dict[str, str] = field(default_factory=dict)  # role -> contract path, for [DELEGATE]
 
 
@@ -162,8 +160,6 @@ class _Evaluator:
         if check.class_ == CheckClass.LINT:
             evaluated, ok, detail = self.lint()
             return CheckResult(ref, check.class_, ok, evaluated, detail)
-        if check.class_ == CheckClass.PLUGIN:
-            return self.plugin(ref, inv)
         if ref in self.given:
             return CheckResult(ref, check.class_, True, False, "given by executor")
         if check.class_ == CheckClass.HUMAN:
@@ -171,26 +167,6 @@ class _Evaluator:
             if accepted is not None:
                 return CheckResult(ref, check.class_, True, False, f"accepted by {accepted.file}")
         return CheckResult(ref, check.class_, False, False, f"declared for {check.class_.value}; not evaluated")
-
-    def plugin(self, ref: str, inv: Invocation) -> CheckResult:
-        """Run a loaded plugin check; a raising plugin is an unsatisfied, evaluated result."""
-        plugin = self.registry.plugins[inv.name]
-        ctx = CheckContext(
-            workspace_root=self.opts.workspace_root,
-            unit_dir=self.unit_dir,
-            anchor=self.opts.anchor,
-            ref=ref,
-            name=inv.name,
-            args=inv.args,
-            envelopes=self.envelopes,
-        )
-        try:
-            result = plugin.evaluate(ctx)
-        except Exception as exc:
-            return CheckResult(ref, CheckClass.PLUGIN, False, True, f"check failed: {exc}")
-        if not isinstance(result, CheckResult):
-            return CheckResult(ref, CheckClass.PLUGIN, False, True, "check returned no CheckResult")
-        return CheckResult(ref, CheckClass.PLUGIN, result.satisfied, result.evaluated, result.detail)
 
     def gate(self, gate: str, policy: str, stage: str) -> GateStatus:
         if policy == "auto":
@@ -285,6 +261,20 @@ def _gate_result(gate: GateStatus) -> CheckResult:
     )
 
 
+def _check_gate_policies(doc: WorkflowDocument, opts: Options) -> None:
+    """Refuse a ``[workflow.approvals]`` policy the definition does not accept for its gate (``GatePolicyError``)."""
+    for gate in sorted(doc.gates):
+        policy, allowed = opts.approvals.get(gate, "ask"), doc.gate_policies_for(gate)
+        if policy not in allowed:
+            raise GatePolicyError(
+                f"[workflow.approvals] {gate} = {policy!r}, but workflow {doc.id} accepts only"
+                f" {' | '.join(allowed)} for that gate",
+                target_files=[".devkit/config.toml"],
+                fix=f"Remove {gate} from [workflow.approvals] in .devkit/config.toml, or set it to one of"
+                f" {', '.join(allowed)}",
+            )
+
+
 def _held_from(hold: Hold, doc: WorkflowDocument) -> int:
     """The index of the first stage whose gate the hold keeps from passing.
 
@@ -342,9 +332,10 @@ def evaluate_definition(doc: WorkflowDocument, opts: Options) -> UnitEvaluation:
     unit_rel = _rel(opts.unit_dir, opts.workspace_root)
     state = _read_anchor(opts, unit_rel)
     binding = state.binding
-    registry = Registry.build(opts.anchor, doc.declared_checks, opts.plugins)
+    registry = Registry.build(opts.anchor, doc.declared_checks)
     ev = _Evaluator(doc, registry, opts, binding)
 
+    _check_gate_policies(doc, opts)
     res = UnitEvaluation(workflow=doc.id, unit=unit_rel, status=state.status, binding=binding)
     res.envelope_errors = list(ev.envelopes.errors)
     if binding.bound and binding.workflow != doc.id:

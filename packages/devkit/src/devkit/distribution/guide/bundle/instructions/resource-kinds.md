@@ -28,8 +28,7 @@ Can a program verify the invariant with certainty?
             yes -> the bundle's AGENTS.md (constitution)
             no  -> instruction (default for policies, standards, judgment criteria)
 
-Three kinds sit outside the tree: `workflow-check` (a Python check a workflow
-definition names, run by `devkit workflow`), `document` (reference
+Two kinds sit outside the tree: `document` (reference
 material read by path, or with `seeded = true` a scaffold such as a docs tree
 that the project owns and edits after the first sync) and `guidance` (a short
 line in the root AGENTS.md block that sends every session to an instruction at
@@ -48,7 +47,6 @@ a moment no skill marks, such as "before writing a commit message").
 | `playbook` | `playbooks/<slug>.md` or directory with `SKILL.md` | Only on explicit `devkit-playbook` invocation or rule remediation | selected headers, then one body |
 | constitution | `AGENTS.md` at the bundle root | Returned whole by `get-context`, once per bundle | about 50 to 100 lines |
 | `instruction` | `instructions/<slug>.md` with `name` and `description` frontmatter | Header returned by `get-context`; body read when relevant | header always, body on demand |
-| `workflow-check` | `checks/<slug>/`: a plugin package directory (`BaseCheck` subclasses) | `devkit workflow` adds them to its check registry; loaded from the receipt | none |
 | `document` | any files | Unseeded: a managed copy agents read by path. `seeded = true` with a `target`: written once into the project, then project-owned | only when read |
 | `guidance` | one Markdown file of list items, at most 300 bytes; `{path:<asset-id>}` names another asset's file | Rendered into the root `AGENTS.md` block by `devkit sync`, read by every session | every turn: keep it to a pointer with its read condition |
 

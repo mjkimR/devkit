@@ -8,9 +8,6 @@ from pathlib import Path
 import pytest
 from devkit.core.errors import GitError
 from devkit.workflow import (
-    BaseCheck,
-    CheckContext,
-    CheckResult,
     Options,
     evaluate_definition,
     is_ancestor,
@@ -123,16 +120,3 @@ def test_disk_primitive_edge_cases(tmp_path: Path) -> None:
         == "envelopes/final-report-01.yaml head 'HEAD' is not a revision"
     )
     assert details["revision-ancestor(nothing review)"] == "no nothing envelope"
-
-
-def test_plugin_that_returns_no_result_is_unsatisfied(tmp_path: Path) -> None:
-    class Sloppy(BaseCheck):
-        name = "sloppy"
-
-        def evaluate(self, ctx: CheckContext) -> CheckResult:
-            return None  # type: ignore[return-value]
-
-    unit = write_unit(tmp_path, "work/u")
-    opts = Options(workspace_root=tmp_path, unit_dir=unit, anchor="task.md", plugins=(Sloppy(),))
-    res = evaluate_definition(parse_definition(_stage("sloppy")), opts)
-    assert (res.unmet[0].evaluated, res.unmet[0].detail) == (True, "check returned no CheckResult")

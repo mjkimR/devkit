@@ -30,7 +30,7 @@ from devkit.workflow.render import quote
 def checks_cmd(workspace_root: str | None, output_format: str) -> None:
     """List registered check names, classes and parameters."""
     ws = workspace(workspace_root)
-    entries = Registry.build(ws.config.anchor, (), ws.plugins()).entries()
+    entries = Registry.build(ws.config.anchor).entries()
     if is_json(output_format):
         echo_json({"checks": [c.to_dict() for c in entries]})
         return
@@ -50,7 +50,7 @@ def validate_cmd(workspace_root: str | None, paths: tuple[str, ...], output_form
 
     Exits with the highest exit code among the problems: 1 when a definition
     is invalid or definitions disagree on a shared stage, 2 when a definition
-    or plugin check file cannot be loaded. Warnings (an optional stage whose
+    file cannot be loaded. Warnings (an optional stage whose
     approval is never requested) leave a definition valid; under --strict
     they exit 1.
     """

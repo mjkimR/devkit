@@ -41,9 +41,6 @@ standards are in the [Resource Taxonomy](../architecture/resource-taxonomy.md).
   workflow is synchronized, `devkit sync` generates the `devkit-workflow` entry skill under
   `.devkit/managed/_devkit/skills/`, projects it into every selected agent, and records the definition under
   `entrypoints` in the receipt so `devkit workflow` finds it without configuration.
-- `workflow-check`: Python check evaluators (`BaseCheck` subclasses) in one plugin package directory per asset, which
-  `devkit.workflow` loads from the receipt into its check registry; see
-  [Workflow Definitions and Checks](../workflow/definition-and-checks.md).
 - `gate`: Python commit gates in one plugin package directory per asset, run by `devkit.gate` at a Git hook stage,
   loaded from the receipt's `paths` and configured in `[gates]` of `.devkit/config.toml` or the per-clone `.git/devkit.config`; see the
   [Commit Gate Overview](../gate/overview.md).
@@ -160,7 +157,7 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
   or whose `agents/openai.yaml` declares `policy.allow_implicit_invocation`, is invalid whatever its `invocation`,
   and so is an `agents/openai.yaml` that is not a YAML mapping (with an optional `policy` mapping). A project
   override of the skill is held to the same rule at sync.
-- **Plugin packages**: the `source` of a `rule`, `gate` or `workflow-check` asset is a directory (a file is
+- **Plugin packages**: the `source` of a `rule` or `gate` asset is a directory (a file is
   `BUNDLE_INVALID` with a fix naming the directory to move it into). Every `.py` file in it, recursively, is a module
   of one package, except files under a `tests` directory, `test_*.py`, `*_test.py`, `__pycache__` and hidden
   entries; `__init__.py` is optional. The directory must contain at least one module, every directory and file name

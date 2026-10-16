@@ -213,7 +213,6 @@ def test_plain_and_snapshot_runs_share_the_check_with_the_gate_registry() -> Non
 
     from devkit.gate.engine import registry
     from devkit.rules.engine import discovery
-    from devkit.workflow.project import plugins
 
-    for module in (discovery, registry, plugins):
+    for module in (discovery, registry):
         assert "verified_asset_packages(" in inspect.getsource(module)

@@ -168,7 +168,7 @@ stages:
     problems = [str(p) for p in validate_definition(parse_definition(text), "task.md")]
     assert problems == [
         "checks: duplicate declared check 'ci-passed'",
-        "checks: declared check 'file-exists' collides with a built-in or plugin check",
+        "checks: declared check 'file-exists' collides with a built-in check",
     ]
 
 

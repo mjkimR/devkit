@@ -77,7 +77,7 @@ def test_every_code_has_exactly_one_class() -> None:
     assert shared == {}
     assert workflow_errors.CheckReferenceProblem("x").code == "WORKFLOW_CHECK_INVALID"
     assert int(workflow_errors.CheckReferenceProblem("x").exit_code) == 1
-    assert {"WORKFLOW_DEFINITION_INVALID", "WORKFLOW_CHECK_INVALID", "WORKFLOW_CHECK_LOAD_FAILED"} <= set(by_code)
+    assert {"WORKFLOW_DEFINITION_INVALID", "WORKFLOW_CHECK_INVALID"} <= set(by_code)
 
 
 def test_the_base_class_sets_actor_and_retry_once() -> None:

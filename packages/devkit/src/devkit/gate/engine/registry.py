@@ -10,8 +10,8 @@ as ``devkit.rules`` loads ``kind = "rule"`` assets:
 - the receipt is read with ``devkit.core.receipt`` (strict: a receipt that
   exists but is malformed, or lists an unsafe path, is an error);
 - every listed module file is found and checked with
-  ``devkit.core.verified_asset_packages``, as ``devkit.rules`` and
-  ``devkit.workflow`` find rule and plugin check packages: a file that is
+  ``devkit.core.verified_asset_packages``, as ``devkit.rules`` finds
+  rule packages: a file that is
   missing, resolves outside the project, or differs from the SHA-256 the
   receipt records for it is reported as that ``AssetFileError``
   (``ASSET_FILE_INVALID``), never a silent skip, and its package is not loaded;

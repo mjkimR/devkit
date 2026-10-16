@@ -1,7 +1,7 @@
-"""A workspace as the workflow engine sees it: configuration, definitions, roles, plugin checks and units.
+"""A workspace as the workflow engine sees it: configuration, definitions, roles and units.
 
 ``Workspace`` is the library entry point the CLI is built on. It loads each
-source once (the receipt, the discovered definitions, roles and plugin checks
+source once (the receipt, the discovered definitions and roles
 are cached and reused by every call), resolves a unit directory to its anchor,
 binding and workflow, and evaluates units with the project's policies
 (approvals, stage switches, lint, Git, drift). Every failure is an
@@ -34,7 +34,6 @@ from devkit.workflow.errors import (
     DefinitionProblem,
     DriftError,
     GivenInvalidError,
-    PluginError,
     UnitNotFoundError,
     WorkflowError,
     WorkflowInvalidError,
@@ -49,7 +48,6 @@ from devkit.workflow.evaluation.primitives import AncestorFunc
 from devkit.workflow.evaluation.results import UnitEvaluation
 from devkit.workflow.project.config import WorkflowConfig, load_workflow_config
 from devkit.workflow.project.layout import LayoutSpec, TemplateLayout
-from devkit.workflow.project.plugins import BaseCheck, load_plugin_checks
 from devkit.workflow.project.roles import discover_roles
 from devkit.workflow.unit.binding import Binding, read_anchor, write_binding
 
@@ -135,7 +133,6 @@ class Workspace:
         self._discovery_errors: list[WorkflowError] = []
         self._roles_loaded = False
         self._roles: dict[str, str] | None = None
-        self._plugins: list[BaseCheck] | None = None
         self._layouts: dict[LayoutSpec, TemplateLayout] = {}
 
     # -- paths ---------------------------------------------------------------
@@ -190,29 +187,8 @@ class Workspace:
             self._roles_loaded = True
         return self._roles
 
-    def plugins(self) -> list[BaseCheck]:
-        """Plugin checks from receipt ``workflow-check`` assets and ``checks_dir``.
-
-        A file that cannot be loaded raises ``PluginError``
-        (``WORKFLOW_CHECK_LOAD_FAILED``); several are reported in one error.
-        """
-        if self._plugins is None:
-            loaded, errors = load_plugin_checks(self.root, self.config.checks_dir, self.receipt)
-            if len(errors) == 1:
-                raise errors[0]
-            if errors:
-                fixes = list(dict.fromkeys(e.fix for e in errors if e.fix))
-                raise PluginError(
-                    "plugin checks could not be loaded",
-                    *errors,
-                    fix="; ".join(fixes) or None,
-                    target_files=list(dict.fromkeys(t for e in errors for t in e.target_files)),
-                )
-            self._plugins = loaded
-        return self._plugins
-
     def registry(self, doc: WorkflowDocument) -> Registry:
-        return Registry.build(self.anchor_for(doc), doc.declared_checks, self.plugins())
+        return Registry.build(self.anchor_for(doc), doc.declared_checks)
 
     # -- definitions -----------------------------------------------------------
 
@@ -228,9 +204,9 @@ class Workspace:
         return doc.anchor(self.config.anchor)
 
     def validate_definition(self, doc: WorkflowDocument, known: Iterable[str] | None = None) -> list[DefinitionProblem]:
-        """Validate against the project anchor, known ids, the role vocabulary and the loaded plugin checks."""
+        """Validate against the project anchor, known ids and the role vocabulary."""
         ids = set(known) if known is not None else self.known_ids() | {doc.id}
-        return validate_definition(doc, self.config.anchor, ids, self.roles(), self.plugins())
+        return validate_definition(doc, self.config.anchor, ids, self.roles())
 
     def load_definition(self, ref: str) -> WorkflowDocument:
         """The definition ``ref`` names (an id, or a path relative to the root), not validated.
@@ -318,7 +294,6 @@ class Workspace:
             anchor=self.config.anchor,
             known_ids=self.known_ids(),
             roles=self.roles(),
-            plugins=self.plugins(),
             compare_shared=not paths,
         )
         return replace(report, roles_dir=self.config.roles_dir)
@@ -422,7 +397,7 @@ class Workspace:
         """The unit's anchor (``locate_anchor``), binding and workflow id, without loading the definition.
 
         Enough to scope what is recorded in the unit (``envelope new``), so a
-        missing or invalid definition or a broken plugin check does not stop
+        missing or invalid definition does not stop
         it. An unbound unit follows ``[workflow].default``; without one it is
         ``WorkflowNotSelectedError``. A default that is a definition path is
         read (unvalidated, as ``load_definition`` does) for its id, the scope
@@ -497,7 +472,6 @@ class Workspace:
             lint=self.lint,
             skip_lint=not lint,
             ancestor=self.ancestor,
-            plugins=tuple(self.plugins()),
             roles=dict(self.roles() or {}),
         )
 

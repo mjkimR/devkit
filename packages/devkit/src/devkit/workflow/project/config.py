@@ -25,11 +25,10 @@ DEFAULT_UNIT_PATH = "{slug}"
 DEFAULT_ANCHOR = "task.md"
 DEFAULT_DEFINITIONS_DIR = ".devkit/workflows"
 DEFAULT_ROLES_DIR = ".devkit/roles"
-DEFAULT_CHECKS_DIR = ".devkit/workflow-checks"
 
 POLICIES = ("ask", "auto", "off")
 STAGE_POLICIES = ("on", "off")
-DIRECTORY_KEYS = ("definitions_dir", "roles_dir", "checks_dir")
+DIRECTORY_KEYS = ("definitions_dir", "roles_dir")
 ALLOWED_KEYS = frozenset({*LAYOUT_KEYS, *DIRECTORY_KEYS, "default", APPROVALS_KEY, STAGES_KEY})
 DEFAULTS = {
     "work_dir": DEFAULT_WORK_DIR,
@@ -37,7 +36,6 @@ DEFAULTS = {
     "anchor": DEFAULT_ANCHOR,
     "definitions_dir": DEFAULT_DEFINITIONS_DIR,
     "roles_dir": DEFAULT_ROLES_DIR,
-    "checks_dir": DEFAULT_CHECKS_DIR,
 }
 
 
@@ -48,7 +46,6 @@ class WorkflowConfig:
     anchor: str = DEFAULT_ANCHOR
     definitions_dir: str = DEFAULT_DEFINITIONS_DIR
     roles_dir: str = DEFAULT_ROLES_DIR  # project-authored subagent contracts, <role>.md
-    checks_dir: str = DEFAULT_CHECKS_DIR  # project-authored plugin checks, one package directory each
     default: str | None = None
     approvals: dict[str, str] = field(default_factory=dict)
     stages: dict[str, str] = field(default_factory=dict)
@@ -115,7 +112,6 @@ def parse_workflow_config(data: object, source: Path | None = None) -> WorkflowC
         anchor=_path_value(section, "anchor"),
         definitions_dir=_path_value(section, "definitions_dir"),
         roles_dir=_path_value(section, "roles_dir"),
-        checks_dir=_path_value(section, "checks_dir"),
         default=default,
         approvals=_policy_table(section, APPROVALS_KEY, POLICIES, "gate names"),
         stages=_policy_table(section, STAGES_KEY, STAGE_POLICIES, "stage ids"),

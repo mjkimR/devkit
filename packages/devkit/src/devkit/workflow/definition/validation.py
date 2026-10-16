@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from devkit.workflow.definition.checks import DECLARABLE, Check, CheckClass, Registry
 from devkit.workflow.definition.definition import (
@@ -34,9 +34,6 @@ from devkit.workflow.errors import (
 )
 from devkit.workflow.project.roles import is_builtin_role
 
-if TYPE_CHECKING:
-    from devkit.workflow.project.plugins import BaseCheck
-
 SHARED_STAGE_FIELDS = ("exit", "gate", "role", "isolation", "skills", "artifacts")
 # An unmet optional stage is passed over and never becomes current, so nothing asks for its approvals.
 _UNASKED = (
@@ -57,28 +54,22 @@ def _check_problem(stage: str, field: str, exc: CheckError) -> CheckReferencePro
     return CheckReferenceProblem(exc.message, where=_where(stage, field))
 
 
-def _registry(
-    anchor: str, doc: WorkflowDocument, plugins: tuple[BaseCheck, ...]
-) -> tuple[Registry, list[DefinitionProblem]]:
+def _registry(anchor: str, doc: WorkflowDocument) -> tuple[Registry, list[DefinitionProblem]]:
     """The definition's registry; each declared check that is rejected is reported and left out, the rest kept."""
     try:
-        return Registry.build(anchor, doc.declared_checks, plugins), []
+        return Registry.build(anchor, doc.declared_checks), []
     except CheckError as exc:
         problems: list[DefinitionProblem] = [_check_problem("", "checks", exc)]
-    try:
-        Registry.build(anchor, (), plugins)
-    except CheckError:
-        plugins = ()  # the colliding plugin is the problem already reported
     kept: list[Check] = []
     for check in doc.declared_checks:
         try:
-            Registry.build(anchor, (*kept, check), plugins)
+            Registry.build(anchor, (*kept, check))
         except CheckError as exc:
             if all(p.message != exc.message for p in problems):
                 problems.append(_check_problem("", "checks", exc))
             continue
         kept.append(check)
-    return Registry.build(anchor, tuple(kept), plugins), problems
+    return Registry.build(anchor, tuple(kept)), problems
 
 
 def validate_definition(
@@ -86,7 +77,6 @@ def validate_definition(
     anchor: str,
     known_ids: Iterable[str] | None = None,
     roles: Mapping[str, str] | None = None,
-    plugins: Iterable[BaseCheck] = (),
 ) -> list[DefinitionProblem]:
     """Every problem in the document; an empty list means it is usable.
 
@@ -95,8 +85,7 @@ def validate_definition(
     that exist in the workspace; when given, a ``next`` candidate naming
     another id is reported. ``roles`` is the project's subagent vocabulary
     (``role -> contract path``); when given, a stage role outside it is
-    reported, and ``None`` skips that check. ``plugins`` are the loaded plugin
-    checks that definitions may reference.
+    reported, and ``None`` skips that check.
     """
     problems: list[DefinitionProblem] = []
     if not is_ident(doc.id):
@@ -109,7 +98,7 @@ def validate_definition(
         )
     for key in doc.unknown_keys:
         problems.append(_problem("", key, "unknown document key"))
-    registry, registry_problems = _registry(doc.anchor(anchor), doc, tuple(plugins))
+    registry, registry_problems = _registry(doc.anchor(anchor), doc)
     problems.extend(registry_problems)
     gates = doc.gates
     for check in doc.declared_checks:
@@ -128,14 +117,12 @@ def validate_definition(
     return problems
 
 
-def definition_warnings(
-    doc: WorkflowDocument, anchor: str, plugins: Iterable[BaseCheck] = ()
-) -> list[OptionalStageWarning]:
+def definition_warnings(doc: WorkflowDocument, anchor: str) -> list[OptionalStageWarning]:
     """What makes the document harder to use without making it invalid: ``OptionalStageWarning`` for each gate or
     ``human`` exit check of an optional stage, which nothing requests. Unresolvable checks are left to
     ``validate_definition``.
     """
-    registry, _ = _registry(doc.anchor(anchor), doc, tuple(plugins))
+    registry, _ = _registry(doc.anchor(anchor), doc)
     warnings: list[OptionalStageWarning] = []
 
     def warn(stage: StageDefinition, field: str, what: str, satisfied: str) -> None:
@@ -340,17 +327,15 @@ def validate_definitions(
     anchor: str,
     known_ids: Iterable[str],
     roles: Mapping[str, str] | None,
-    plugins: Iterable[BaseCheck] = (),
     compare_shared: bool = True,
 ) -> ValidationReport:
     """Validate ``docs`` together: each one, and (with ``compare_shared``) their shared stages."""
     known = set(known_ids) | {d.id for d in docs}
-    plugins = tuple(plugins)
     reports = tuple(
         DefinitionReport(
             d,
-            tuple(validate_definition(d, anchor, known, roles, plugins)),
-            tuple(definition_warnings(d, anchor, plugins)),
+            tuple(validate_definition(d, anchor, known, roles)),
+            tuple(definition_warnings(d, anchor)),
         )
         for d in docs
     )

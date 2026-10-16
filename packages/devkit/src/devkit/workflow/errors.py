@@ -8,8 +8,8 @@ only what differs (input error, exit code, interaction). Errors of
 and of ``devkit.rules`` (the ``lint-clean`` binding) pass through unchanged.
 
 Problems that are collected rather than raised (a malformed decision record or
-envelope, a definition that cannot be loaded or does not validate, a plugin
-check file that fails, a shared stage that differs) are instances of these
+envelope, a definition that cannot be loaded or does not validate, a shared
+stage that differs) are instances of these
 same classes; ``to_dict()`` is their JSON form.
 """
 
@@ -61,6 +61,17 @@ class WorkflowConfigError(core_errors.ConfigError, WorkflowError):
 
     code = "WORKFLOW_CONFIG_INVALID"
     fix = "Correct the [workflow], [workflow.approvals] and [workflow.stages] tables of .devkit/config.toml"
+
+
+class GatePolicyError(WorkflowError):
+    """``[workflow.approvals]`` sets a gate to a policy its workflow definition does not accept (``gates.<gate>.policies``).
+
+    A refusal before evaluation: a gate a methodology reserves for a person cannot be passed or skipped by
+    configuration, wherever ``next``, ``requests``, ``answer``, ``return`` or ``handoff`` evaluates the unit.
+    """
+
+    code = "WORKFLOW_GATE_POLICY"
+    input_error = True
 
 
 class LayoutError(WorkflowError):
@@ -159,12 +170,6 @@ class CheckError(WorkflowError):
 
 class CheckReferenceProblem(CheckError, DefinitionProblem):
     """A check reference in a definition that does not resolve: the collected form of ``CheckError``."""
-
-
-class PluginError(WorkflowError):
-    """A plugin check file cannot be loaded or declares an invalid check."""
-
-    code = "WORKFLOW_CHECK_LOAD_FAILED"
 
 
 # -- selecting a workflow ----------------------------------------------------------

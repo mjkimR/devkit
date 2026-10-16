@@ -8,7 +8,6 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner, Result
-from devkit.core import PluginPackage
 from devkit.workflow import (
     AnchorInvalidError,
     DefinitionError,
@@ -17,7 +16,6 @@ from devkit.workflow import (
     TemplateLayout,
     Workspace,
     evaluate_definition,
-    load_check_packages,
     load_decisions,
     load_envelopes,
     parse_definition,
@@ -524,39 +522,6 @@ def test_r8_gate_reports_what_satisfied_it(tmp_path: Path) -> None:
 
 
 # --- R10 and nits ----------------------------------------------------------------------------------
-
-
-GOOD_AND_BAD = """
-from devkit.workflow import BaseCheck
-
-
-class Good(BaseCheck):
-    name = "good"
-
-    def evaluate(self, ctx):
-        return ctx.passed()
-
-
-class Bad(BaseCheck):
-    name = "Bad Name"
-"""
-
-
-def test_r10_plugin_packages_load_atomically(tmp_path: Path) -> None:
-    sources = {
-        "mixed": {"good.py": GOOD_AND_BAD.split("class Bad")[0], "bad.py": GOOD_AND_BAD.replace("Good", "Fine")},
-        "first": {"first.py": GOOD_AND_BAD.split("class Bad")[0]},
-        "second": {"second.py": GOOD_AND_BAD.split("class Bad")[0]},
-    }
-    for name, files in sources.items():
-        (tmp_path / name).mkdir()
-        for file, text in files.items():
-            (tmp_path / name / file).write_text(text)
-    loaded, errors = load_check_packages([PluginPackage.from_directory(tmp_path / name) for name in sources])
-    assert [c.name for c in loaded] == ["good"]  # only first/
-    assert len(errors) == 2
-    assert "mixed" in str(errors[0]) and "must match" in str(errors[0])
-    assert "second" in str(errors[1]) and "already defined" in str(errors[1])
 
 
 def test_nit_feedback_value_requires_accept_and_list_reports_unreadable_anchors(tmp_path: Path) -> None:

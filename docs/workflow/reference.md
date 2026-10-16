@@ -20,8 +20,7 @@ src/devkit/workflow/
 ├── project/
 │   ├── config.py        # [workflow], [workflow.approvals] and [workflow.stages]
 │   ├── layout.py        # unit_path template, discovery, per-definition layout spec
-│   ├── roles.py         # subagent role vocabulary from receipt subagent assets and roles_dir
-│   └── plugins.py       # plugin checks from receipt workflow-check assets and checks_dir
+│   └── roles.py         # subagent role vocabulary from receipt subagent assets and roles_dir
 ├── unit/
 │   ├── units.py         # create_unit, list_units
 │   ├── binding.py       # workflow / workflow_hash / workflow_history in the anchor file
@@ -48,7 +47,7 @@ rather than from the subpackages.
 From this monorepo, run `just init`, then:
 
 ```bash
-just workflow checks                                  # registered checks, plugin checks included
+just workflow checks                                  # registered checks: primitives and aliases
 just workflow validate                                # definitions under definitions_dir, roles, shared stages
 just workflow new login-flow                          # create and bind a unit
 just workflow next --unit .devkit/transient/work/login-flow
@@ -92,7 +91,6 @@ unit_path = "{slug}"                  # str.format template; {slug} and {date:<s
 anchor = "task.md"                    # file that identifies a unit and carries the binding
 definitions_dir = ".devkit/workflows" # workflow definition files
 roles_dir = ".devkit/roles"           # project-authored subagent contracts, <role>.md
-checks_dir = ".devkit/workflow-checks" # project-authored plugin checks, one package directory each
 default = "direct-delivery"           # used by `new` and by unbound units
 
 [workflow.approvals]
@@ -103,13 +101,13 @@ handoff = "ask"                       # reserved: who picks the next workflow of
 collect-feedback = "off"              # on (default) | off: skip this stage id in every workflow
 ```
 
-Layout template: [Overview, Work Units and Layout](overview.md#2-work-units-and-layout). Gate, stage and handoff policies: [Overview, Approval Gates](overview.md#3-approval-gates). Role vocabulary: [Overview, Integration](overview.md#4-integration-with-the-rule-engine-and-distribution). Plugin checks: [Plugin Checks](definition-and-checks.md#plugin-checks).
+Layout template: [Overview, Work Units and Layout](overview.md#2-work-units-and-layout). Gate, stage and handoff policies: [Overview, Approval Gates](overview.md#3-approval-gates). Role vocabulary: [Overview, Integration](overview.md#4-integration-with-the-rule-engine-and-distribution).
 
 ## Library
 
-`Workspace` is the entry point. It applies the same configuration, plugin
-checks, roles, lint binding and drift guard as the CLI, and loads the receipt,
-the discovered definitions, roles and plugin checks once for every call. Every
+`Workspace` is the entry point. It applies the same configuration, roles,
+lint binding and drift guard as the CLI, and loads the receipt, the discovered
+definitions and roles once for every call. Every
 failure is an `AdvisoryError` with a stable `code`, one class per code: a
 `WorkflowError` subclass (`WorkflowConfigError`, `DefinitionError`,
 `LayoutError`, `CheckError`, `DriftError`, `HandoffChoiceRequiredError`, ...),
@@ -164,7 +162,7 @@ The main calls:
 ## Specifications
 
 - [Workflow Engine Overview](overview.md): delivery model, layout template, approval, stage and handoff policies, integration with rules and distribution.
-- [Workflow Definitions and Checks](definition-and-checks.md): document schema, shared stages, handoff candidates, check registry and plugin checks, binding and drift.
+- [Workflow Definitions and Checks](definition-and-checks.md): document schema, shared stages, handoff candidates, check registry, binding and drift.
 - [Review Envelopes](envelopes.md): envelope file contract (worker questions and problems, answers, resolutions), authoring flags, `envelope check`, the hold on gates and integration.
 - [Human Interaction Contract](human-interaction.md): request kinds, decision records, how answers are applied.
 - [CLI and Output Contract](cli-and-output.md): commands, exit and error codes, text sentinels and JSON shapes.

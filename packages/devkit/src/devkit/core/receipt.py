@@ -394,7 +394,7 @@ def verified_asset_file(
 ) -> Path:
     """The file to load for ``item``, one of ``asset.paths``, checked against the receipt.
 
-    The one verification every consumer of receipt-listed code (rules, gates, workflow plugin checks)
+    The one verification every consumer of receipt-listed code (rules and gates)
     applies before importing a synchronized file:
 
     - ``item`` must stay inside ``root`` once symlinks are resolved;
@@ -478,7 +478,7 @@ def verified_asset_packages(
 ) -> tuple[tuple[PluginPackage, ...], tuple[AssetFileError, ...]]:
     """One plugin package per ``kind`` asset, every module file verified, and the files that cannot be used.
 
-    This is how rules, gates and workflow plugin checks find their
+    This is how rules and gates find their
     synchronized code. Each asset's files (``entrypoints`` then ``paths``,
     ``AssetRecord.files``) are taken relative to the asset's source directory:
     the ``.devkit/managed/<bundle>/`` or ``.devkit/overrides/<bundle>/`` prefix

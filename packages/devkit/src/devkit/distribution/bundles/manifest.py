@@ -28,14 +28,13 @@ KINDS = frozenset(
         "playbook",
         "rule",
         "workflow",
-        "workflow-check",
         "gate",
         "document",
         "guidance",
     }
 )
 # The kinds whose source is a plugin package directory of Python modules (``devkit.core.plugins``).
-PLUGIN_KINDS = frozenset({"rule", "gate", "workflow-check"})
+PLUGIN_KINDS = frozenset({"rule", "gate"})
 # The kinds projected into agent directories (agent-projections.md); only they may ship per-agent ``variants``.
 VARIANT_KINDS = frozenset({"skill", "subagent"})
 # The entry skills ``devkit sync`` generates next to synchronized playbooks and workflows.

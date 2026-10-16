@@ -42,8 +42,8 @@ def full_receipt() -> dict[str, Any]:
             {
                 "bundle": "team",
                 "id": "check",
-                "kind": "workflow-check",
-                "paths": [".devkit/overrides/team/checks/c.py"],
+                "kind": "rule",
+                "paths": [".devkit/overrides/team/rules/c.py"],
             },
         ],
         "files": {
@@ -54,8 +54,8 @@ def full_receipt() -> dict[str, Any]:
         "overrides": {
             "team": {
                 "check": {
-                    "kind": "workflow-check",
-                    "relative_path": "checks/c.py",
+                    "kind": "rule",
+                    "relative_path": "rules/c.py",
                     "baseline_upstream_sha256": SHA_A,
                     "override_sha256": SHA_B,
                 }
@@ -90,7 +90,7 @@ def test_full_receipt_round_trip(tmp_path: Path) -> None:
     assert receipt.selection.agents == ("claude-code", "codex")
     assert dict(receipt.selection.presets) == {"team": ("all",)}
     assert [a.id for a in receipt.assets()] == ["rules", "flow", "docs", "check"]
-    assert [a.id for a in receipt.assets(kind="rule")] == ["rules"]
+    assert [a.id for a in receipt.assets(kind="rule")] == ["rules", "check"]
     assert receipt.assets(kind="gate") == ()
     rules = receipt.assets(kind="rule")[0]
     assert rules.paths == (".devkit/managed/team/rules/a.py", ".devkit/managed/team/rules/README.md")
@@ -109,7 +109,7 @@ def test_full_receipt_round_trip(tmp_path: Path) -> None:
     assert receipt.file("nope") is None
     assert receipt.tool is not None and receipt.tool.package == "devkit-agt"
     override = receipt.overrides["team"]["check"]
-    assert override.relative_path == "checks/c.py" and override.override_sha256 == SHA_B
+    assert override.relative_path == "rules/c.py" and override.override_sha256 == SHA_B
     assert receipt.seeded[0].path == "docs/README.md"
     assert receipt.guidance_block == SHA_A
 

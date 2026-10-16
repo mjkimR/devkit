@@ -510,3 +510,83 @@ def test_handoff_refuses_a_held_complete_unit(staged: Path) -> None:
     assert result["complete"] is True and result["requests"] == [] and result["blocked"] is True
     refused = run_cli("handoff", "-w", str(staged), "--unit", SIMPLE_UNIT, "--no-lint")
     assert refused.exit_code == 1 and "(HANDOFF_HELD)" in refused.stderr
+
+
+# -- gate policies a definition narrows, and frontmatter alternatives -------------------------------------------------
+
+NARROWED = """---
+id: w
+schema_version: 1
+gates:
+  plan-accept: { policies: [ask] }
+  dev-integration: { answer: given, policies: [ask, auto] }
+stages:
+  - id: accept
+    human_gate: plan-accept
+    exit: [frontmatter(task.md status planned|reviewing)]
+  - id: integrate
+    human_gate: dev-integration
+    exit: [anchor-exists]
+---
+"""
+
+
+@pytest.fixture
+def narrowed(tmp_path: Path) -> Path:
+    defs = tmp_path / ".devkit/workflows"
+    defs.mkdir(parents=True)
+    (defs / "w.md").write_text(NARROWED)
+    write_config(tmp_path, '[workflow]\ndefault = "w"\n')
+    assert run_cli("new", "-w", str(tmp_path), "u").exit_code == 0
+    return tmp_path
+
+
+@pytest.mark.parametrize(
+    ("approvals", "ok"),
+    [
+        ("", True),
+        ('plan-accept = "ask"\n', True),
+        ('plan-accept = "auto"\n', False),
+        ('dev-integration = "auto"\n', True),
+        ('dev-integration = "off"\n', False),
+    ],
+)
+def test_a_definition_narrows_the_policies_of_its_gates(narrowed: Path, approvals: str, ok: bool) -> None:
+    write_config(narrowed, f'[workflow]\ndefault = "w"\n[workflow.approvals]\n{approvals}')
+    result = run_cli("next", "-w", str(narrowed), "--unit", SIMPLE_UNIT, "--no-lint")
+    if ok:
+        assert result.exit_code == 0, result.stderr
+        return
+    assert result.exit_code == 2 and "(WORKFLOW_GATE_POLICY)" in result.stderr
+    for command in (("requests",), ("answer", "--request", "gate:plan-accept", "--action", "accept")):
+        refused = run_cli(*command, "-w", str(narrowed), "--unit", SIMPLE_UNIT, "--no-lint")
+        assert refused.exit_code == 2 and "WORKFLOW_GATE_POLICY" in refused.stderr
+
+
+def test_narrowed_policies_show_and_frontmatter_takes_alternatives(narrowed: Path) -> None:
+    shown = run_cli("show", "-w", str(narrowed), "w").stdout
+    assert "[GATE: plan-accept policy=ask policies=ask]" in shown
+    assert "[GATE: dev-integration policy=ask answer=given policies=ask,auto]" in shown
+    result = _next(narrowed)
+    assert result["stage"]["id"] == "accept" and result["unmet"][0]["name"] == "gate:plan-accept"  # type: ignore[index]
+    anchor = narrowed / SIMPLE_UNIT / "task.md"
+    anchor.write_text(anchor.read_text().replace("status: planned", "status: rejected"))
+    assert _next(narrowed)["unmet"][0]["detail"] == "status=rejected"  # type: ignore[index]
+
+
+@pytest.mark.parametrize(
+    ("gates", "reason"),
+    [
+        ("plan-accept: { policies: [] }", "non-empty list"),
+        ("plan-accept: { policies: [auto] }", "must include ask"),
+        ("plan-accept: { policies: [ask, ask] }", "distinct"),
+        ("plan-accept: { policies: [ask, maybe] }", "distinct values of"),
+        ("plan-accept: { policy: [ask] }", "unknown keys"),
+    ],
+)
+def test_malformed_gate_policies_are_definition_errors(tmp_path: Path, gates: str, reason: str) -> None:
+    from devkit.workflow import DefinitionError, parse_definition
+
+    text = f"---\nid: w\nschema_version: 1\ngates:\n  {gates}\nstages:\n  - id: a\n    human_gate: plan-accept\n    exit: [anchor-exists]\n---\n"
+    with pytest.raises(DefinitionError, match=reason):
+        parse_definition(text)

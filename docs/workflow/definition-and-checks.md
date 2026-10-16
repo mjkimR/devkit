@@ -73,11 +73,11 @@ Prose for humans and agents. Not parsed.
 | `title` | no | Display title. |
 | `status` | no | `active` or `draft`; informational. |
 | `schema_version` | yes | Must be the integer `1`. |
-| `checks` | no | Extra `runner` or `human` checks the workflow declares. Each has `name` (`[a-z][a-z0-9-]*`), `class` and `description`, and nothing else. Names must be unique, and must not collide with built-in or plugin checks, nor with a gate of the workflow (so `--given` stays unambiguous). |
+| `checks` | no | Extra `runner` or `human` checks the workflow declares. Each has `name` (`[a-z][a-z0-9-]*`), `class` and `description`, and nothing else. Names must be unique, and must not collide with built-in checks, nor with a gate of the workflow (so `--given` stays unambiguous). |
 | `stages` | yes | Ordered stage list, at least one. |
 | `next` | no | Workflows this one may hand a completed unit to. See [Handoff Candidates](#handoff-candidates). |
 | `layout` | no | Mapping with any of `work_dir`, `unit_path`, `anchor`; each overrides the `[workflow]` default for this workflow's units and is validated like the configuration key. See [Per-Definition Layout](overview.md#per-definition-layout). |
-| `gates` | no | Mapping of a gate name (the `human_gate` of a stage) to `{answer: record \| given}`, default `record`. `given` means a person's approval reaches the engine as `next --given <gate>` and the executor writes no decision record: use it for a gate asked after the work is final, where a record would need one more commit. Evaluation does not change (a record still satisfies the gate); the gate's `[REQUEST]` and `show`'s `[GATE]` line end with `answer=given`. A name that is no stage's gate, or another key or value, is an error. Not part of the schema hash. |
+| `gates` | no | Mapping of a gate name (the `human_gate` of a stage) to `{answer: record \| given, policies: [...]}`. `answer` defaults to `record`. `given` means a person's approval reaches the engine as `next --given <gate>` and the executor writes no decision record: use it for a gate asked after the work is final, where a record would need one more commit. Evaluation does not change (a record still satisfies the gate); the gate's `[REQUEST]` and `show`'s `[GATE]` line end with `answer=given`. `policies` narrows the `[workflow.approvals]` policies the gate accepts to a non-empty list of distinct values of `ask`, `auto` and `off` that includes `ask` (the policy of an unset gate); a methodology fixes a gate to a person with `[ask]`. A configured policy outside it stops every command that evaluates the unit with `WORKFLOW_GATE_POLICY` ([Approval Gates](overview.md#3-approval-gates)), and `show`'s `[GATE]` line ends with `policies=...`. A name that is no stage's gate, or another key or value, is an error. Not part of the schema hash. |
 
 ### Stage Fields
 
@@ -135,14 +135,13 @@ A check reference is `name` or `name(arg1 arg2 ...)`. Arguments are whitespace-s
 | `lint` | the engine, by running `devkit.rules` | no violation in the unit's files |
 | `runner` | an external runner (CI); declared only | named in `--given` |
 | `human` | a person; declared only | an accepted `check:<name>` decision record of the current segment for the stage being evaluated, or named in `--given` |
-| `plugin` | the engine, by calling a loaded plugin check | the plugin's `evaluate` returns a satisfied result |
 
 ### Primitives
 
 | Name | Parameters | Description |
 | --- | --- | --- |
 | `file-exists` | `file` | the file exists in the unit directory (every `file` argument is a relative path inside the unit) |
-| `frontmatter` | `file field value` | the file's top-level frontmatter field equals the value |
+| `frontmatter` | `file field value` | the file's top-level frontmatter field equals the value, or one of the values `value` joins with `\|` (`frontmatter(proposal.md status reviewing\|accepted)`) |
 | `tasks-checked` | `file` | the file has at least one `- [ ]`/`- [x]` task and none unchecked; items inside YAML frontmatter or fenced code are not tasks (the counter is `devkit.rules.count_tasks`, shared with rules) |
 | `not-skeleton` | `file` | the file is missing or has no line equal to `<!-- devkit:skeleton -->` |
 | `envelope-completed` | `kind` | the deciding `envelopes/<kind>-NN.yaml` of the current segment ([Review Envelopes](envelopes.md)) has `status: completed` and no open finding |
@@ -163,33 +162,6 @@ Aliases resolve against the anchor name in force for the workflow (its own `layo
 | `tasks-exists` | `file-exists(tasks.md)` |
 | `tasks-all-checked` | `tasks-checked(tasks.md)` |
 | `envelope-review-passed` | `envelope-completed(review)` |
-
-### Plugin Checks
-
-Checks beyond the primitives come from **plugin packages**, directories of Python modules loaded in this order: every `kind = "workflow-check"` asset recorded in the installation receipt (one package per asset, whose modules are its listed `.py` files), then each immediate subdirectory of `[workflow] checks_dir` (default `.devkit/workflow-checks`). A bundle declares such an asset in `bundle.toml` with a directory `source`; `devkit sync` deploys and records it exactly as a `kind = "rule"` asset. Every `.py` file of a package is a module (files under `tests/`, `test_*.py` and `*_test.py` excepted, so tests live beside the code), `__init__.py` is optional, and modules import each other relatively (`from .words import contains`), also lazily inside `evaluate`. Plugin packages are executable Python and must come from a trusted source. A package's modules define one or more `BaseCheck` subclasses, for example `.devkit/workflow-checks/words/check.py`:
-
-```python
-from devkit.workflow import BaseCheck, CheckContext, CheckResult
-
-
-class HasWord(BaseCheck):
-    name = "has-word"                       # [a-z][a-z0-9-]*; must not collide with a built-in or alias
-    description = "the file contains the word"
-    params = ("file", "word")               # positional argument names, as `checks` prints them
-
-    def evaluate(self, ctx: CheckContext) -> CheckResult:
-        text = ctx.read(ctx.args[0])        # text of a file in the unit directory, or None
-        if text is None:
-            return ctx.failed(f"{ctx.args[0]} missing")
-        return ctx.passed() if ctx.args[1] in text else ctx.failed("word not found")
-```
-
-- `CheckContext` carries `workspace_root`, `unit_dir`, `anchor`, the reference as written (`ref`), `name`, `args` and the unit's loaded `envelopes`; `ctx.passed(detail)` and `ctx.failed(detail)` build results with the right name and class.
-- A loaded check is listed by `checks` with class `plugin`, resolved by `validate` like a primitive (argument count must match `params`), and evaluated by `next`. A check that raises yields an unsatisfied, evaluated result whose detail starts with `check failed:`; a result built with another name or class is normalized.
-- Subdirectories of `checks_dir` whose name starts with `_` or `.` are skipped; a `.py` file directly in `checks_dir` is `WORKFLOW_CHECK_LOAD_FAILED` with a fix that moves it into `<checks_dir>/<name>/`. A receipt-listed module is loaded whatever its name.
-- Loading is atomic per package: a package any module of which fails to import, that defines a check with an invalid `name` or `params`, or that defines a name an earlier package (or another of its own classes) already defined contributes none of its checks and is `WORKFLOW_CHECK_LOAD_FAILED` (`PluginError`, `MAINTENANCE`) naming the package, never a silent skip.
-- Receipt-listed packages are found and their files verified first with `devkit.core.receipt.verified_asset_packages`, as rules and gates are: a file that is missing, resolves outside the project or differs from the SHA-256 the receipt records is `WORKFLOW_CHECK_LOAD_FAILED` with the fix `devkit sync` (restore) or `devkit override create <bundle>:<asset>` (keep the edit); only a project override under `.devkit/overrides/` may lack a record and then loads as it is; any other file without one is refused the same way, and a package with a refused file is not loaded.
-- A definition's declared `runner`/`human` check may not reuse a plugin's name.
 
 ### Implicit Gate Check
 

@@ -25,6 +25,8 @@ HANDOFF_GATE = "handoff"
 DOCUMENT_KEYS = frozenset({"id", "title", "status", "schema_version", "checks", "stages", "next", "layout", "gates"})
 # How a person's gate answer reaches the engine: a decision record, or `next --given <gate>` with nothing written.
 GATE_ANSWERS = ("record", "given")
+# The gate policies of `[workflow.approvals]`; a definition may narrow a gate to some of them (`gates.<gate>.policies`).
+GATE_POLICIES = ("ask", "auto", "off")
 STAGE_KEYS = frozenset(
     {
         "id",
@@ -110,6 +112,7 @@ class WorkflowDocument:
     next: tuple[Candidate, ...] = ()
     layout: LayoutSpec | None = None  # keys the definition overrides in the project layout
     gate_answers: tuple[tuple[str, str], ...] = ()  # (gate, answer) for gates whose answer is not the default
+    gate_policies: tuple[tuple[str, tuple[str, ...]], ...] = ()  # (gate, allowed policies) for narrowed gates
     path: Path | None = None
     unknown_keys: tuple[str, ...] = field(default=(), compare=False)  # unknown top-level keys
 
@@ -128,6 +131,10 @@ class WorkflowDocument:
         """``record`` (the default) or ``given``: how the executor passes a person's answer to ``gate``."""
         return dict(self.gate_answers).get(gate, "record")
 
+    def gate_policies_for(self, gate: str) -> tuple[str, ...]:
+        """The ``[workflow.approvals]`` policies ``gate`` accepts: those the definition narrows it to, else all."""
+        return dict(self.gate_policies).get(gate, GATE_POLICIES)
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
@@ -139,9 +146,15 @@ class WorkflowDocument:
             "stages": [s.to_dict() for s in self.stages],
             "next": [c.to_dict() for c in self.next],
             "layout": self.layout.to_dict() if self.layout else None,
-            "gates": {gate: {"answer": answer} for gate, answer in self.gate_answers},
+            "gates": self._gates_dict(),
             "hash": schema_hash(self),
         }
+
+    def _gates_dict(self) -> dict[str, dict[str, Any]]:
+        out: dict[str, dict[str, Any]] = {gate: {"answer": answer} for gate, answer in self.gate_answers}
+        for gate, policies in self.gate_policies:
+            out.setdefault(gate, {})["policies"] = list(policies)
+        return dict(sorted(out.items()))
 
     def anchor(self, default: str) -> str:
         """The anchor file name for this workflow's units: declared, or the project default."""
@@ -276,25 +289,43 @@ def _candidates(raw: Any) -> tuple[Candidate, ...]:
     return tuple(out)
 
 
-def _gate_answers(raw: Any, gates: set[str]) -> tuple[tuple[str, str], ...]:
+def _gate_settings(
+    raw: Any, gates: set[str]
+) -> tuple[tuple[tuple[str, str], ...], tuple[tuple[str, tuple[str, ...]], ...]]:
+    """``gates``: per gate, how its answer reaches the engine (``answer``) and the policies it accepts (``policies``)."""
     if raw is None:
-        return ()
+        return (), ()
     if not isinstance(raw, dict):
         raise DefinitionError("gates: expected a mapping of gate name to settings")
-    out: list[tuple[str, str]] = []
+    answers: list[tuple[str, str]] = []
+    narrowed: list[tuple[str, tuple[str, ...]]] = []
     for gate, settings in raw.items():
         if gate not in gates:
             raise DefinitionError(f"gates.{gate}: not the human_gate of any stage")
         if not isinstance(settings, dict):
-            raise DefinitionError(f"gates.{gate}: expected a mapping with answer")
-        if unknown := set(settings) - {"answer"}:
+            raise DefinitionError(f"gates.{gate}: expected a mapping with answer and/or policies")
+        if unknown := set(settings) - {"answer", "policies"}:
             raise DefinitionError(f"gates.{gate}: unknown keys {sorted(unknown)}")
         answer = settings.get("answer", "record")
         if answer not in GATE_ANSWERS:
             raise DefinitionError(f"gates.{gate}.answer: expected one of {list(GATE_ANSWERS)}")
         if answer != "record":
-            out.append((gate, answer))
-    return tuple(sorted(out))
+            answers.append((gate, answer))
+        if "policies" in settings:
+            policies = settings["policies"]
+            if (
+                not isinstance(policies, list)
+                or not policies
+                or any(p not in GATE_POLICIES for p in policies)
+                or len(set(policies)) != len(policies)
+            ):
+                raise DefinitionError(
+                    f"gates.{gate}.policies: expected a non-empty list of distinct values of {list(GATE_POLICIES)}"
+                )
+            if "ask" not in policies:
+                raise DefinitionError(f"gates.{gate}.policies: must include ask, the policy of an unset gate")
+            narrowed.append((gate, tuple(p for p in GATE_POLICIES if p in policies)))
+    return tuple(sorted(answers)), tuple(sorted(narrowed))
 
 
 def parse_definition(text: str, path: Path | None = None) -> WorkflowDocument:
@@ -319,6 +350,7 @@ def parse_definition(text: str, path: Path | None = None) -> WorkflowDocument:
             layout = parse_layout_spec(data["layout"])
         except LayoutError as exc:
             raise DefinitionError(str(exc)) from exc
+    gate_answers, gate_policies = _gate_settings(data.get("gates"), {s.gate for s in stages if s.gate})
     return WorkflowDocument(
         id=doc_id,
         title=_str(data, "title", "document"),
@@ -328,7 +360,8 @@ def parse_definition(text: str, path: Path | None = None) -> WorkflowDocument:
         stages=stages,
         next=_candidates(data.get("next")),
         layout=layout,
-        gate_answers=_gate_answers(data.get("gates"), {s.gate for s in stages if s.gate}),
+        gate_answers=gate_answers,
+        gate_policies=gate_policies,
         path=path,
         unknown_keys=tuple(sorted(set(data) - DOCUMENT_KEYS)),
     )

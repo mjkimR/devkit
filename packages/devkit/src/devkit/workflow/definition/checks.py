@@ -2,16 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from devkit.core.paths import is_safe_relpath
 from devkit.workflow.errors import CheckError
-
-if TYPE_CHECKING:
-    from devkit.workflow.project.plugins import BaseCheck
 
 __all__ = [
     "DECLARABLE",
@@ -34,7 +30,6 @@ class CheckClass(StrEnum):
     LINT = "lint"  # evaluated by running devkit.rules
     RUNNER = "runner"  # an external runner; declared, never evaluated here
     HUMAN = "human"  # a person; declared, never evaluated here
-    PLUGIN = "plugin"  # evaluated by a check loaded from a bundle asset or the project's checks_dir
 
 
 DECLARABLE = (CheckClass.RUNNER, CheckClass.HUMAN)
@@ -99,7 +94,12 @@ LINT_CLEAN = "lint-clean"
 
 PRIMITIVES: tuple[Check, ...] = (
     Check(FILE_EXISTS, CheckClass.DISK, "the file exists in the unit directory", ("file",)),
-    Check(FRONTMATTER, CheckClass.DISK, "the file's frontmatter field equals the value", ("file", "field", "value")),
+    Check(
+        FRONTMATTER,
+        CheckClass.DISK,
+        "the file's frontmatter field equals the value, or one of the values joined by |",
+        ("file", "field", "value"),
+    ),
     Check(TASKS_CHECKED, CheckClass.DISK, "the file has at least one task checkbox and no unchecked one", ("file",)),
     Check(NOT_SKELETON, CheckClass.DISK, f"the file is missing or has no line equal to {SKELETON_MARKER}", ("file",)),
     Check(
@@ -187,21 +187,15 @@ def parse_check(text: str) -> Invocation:
 
 @dataclass
 class Registry:
-    """Built-in checks, anchor aliases, loaded plugin checks and a workflow's declared runner/human checks."""
+    """Built-in checks, anchor aliases and a workflow's declared runner/human checks."""
 
     checks: dict[str, Check] = field(default_factory=dict)
-    plugins: dict[str, BaseCheck] = field(default_factory=dict)
 
     @classmethod
-    def build(cls, anchor: str, declared: tuple[Check, ...] = (), plugins: Iterable[BaseCheck] = ()) -> Registry:
+    def build(cls, anchor: str, declared: tuple[Check, ...] = ()) -> Registry:
         reg = cls()
         for c in PRIMITIVES + anchor_aliases(anchor):
             reg.checks[c.name] = c
-        for plugin in plugins:
-            if plugin.name in reg.checks:
-                raise CheckError(f"plugin check {plugin.name!r} collides with a built-in check")
-            reg.checks[plugin.name] = plugin.to_check()
-            reg.plugins[plugin.name] = plugin
         names: set[str] = set()
         for c in declared:
             if c.class_ not in DECLARABLE:
@@ -210,7 +204,7 @@ class Registry:
                 raise CheckError(f"duplicate declared check {c.name!r}")
             names.add(c.name)
             if c.name in reg.checks:
-                raise CheckError(f"declared check {c.name!r} collides with a built-in or plugin check")
+                raise CheckError(f"declared check {c.name!r} collides with a built-in check")
             reg.checks[c.name] = c
         return reg
 

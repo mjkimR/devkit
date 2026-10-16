@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 from collections.abc import Mapping
 
-from devkit.workflow.definition.definition import WorkflowDocument, schema_hash
+from devkit.workflow.definition.definition import GATE_POLICIES, WorkflowDocument, schema_hash
 from devkit.workflow.evaluation.requests import Request, candidate_summary
 from devkit.workflow.evaluation.results import GateStatus, UnitEvaluation
 from devkit.workflow.unit.envelope import Hold
@@ -166,7 +166,8 @@ def render_document(
         if s.gate:
             answer = doc.gate_answer(s.gate)
             lines.append(
-                f"[GATE: {s.gate} policy={approvals.get(s.gate, 'ask')}{' answer=given' if answer == 'given' else ''}]"
+                f"[GATE: {s.gate} policy={approvals.get(s.gate, 'ask')}{' answer=given' if answer == 'given' else ''}"
+                + (f" policies={','.join(p)}]" if (p := doc.gate_policies_for(s.gate)) != GATE_POLICIES else "]")
             )
         lines.append(f"[ENTRY: {_dash(' '.join(s.entry))}]")
         lines.append(f"[EXIT: {_dash(' '.join(s.exit))}]")

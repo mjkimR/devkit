@@ -156,7 +156,7 @@ Each module's `reference.md` is the quick reference (CLI, configuration, library
 ### Workflow Engine (`devkit.workflow`)
 - [Workflow Reference](../workflow/reference.md): Module map, CLI usage, configuration and library API.
 - [Workflow Engine Overview](../workflow/overview.md): Delivery model, work unit layout, approval gates, integration, and the relationship to specrig.
-- [Workflow Definitions and Checks](../workflow/definition-and-checks.md): Definition schema, shared stages, handoff candidates, check registry and plugin checks, binding and drift.
+- [Workflow Definitions and Checks](../workflow/definition-and-checks.md): Definition schema, shared stages, handoff candidates, check registry, binding and drift.
 - [Review Envelopes](../workflow/envelopes.md): Envelope file contract, authoring flags and `envelope check`.
 - [Human Interaction Contract](../workflow/human-interaction.md): Requests, decision records, and how hosts ask and answer.
 - [Workflow CLI and Output](../workflow/cli-and-output.md): Commands, exit and error codes, text sentinels and JSON output.

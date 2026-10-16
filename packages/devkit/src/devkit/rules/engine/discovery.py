@@ -8,8 +8,8 @@ every listed ``.py`` file is one of its modules, whatever its name, except test
 files; any other file under the asset is ignored.
 
 Packages are found and their files checked with
-``devkit.core.verified_asset_packages``, as the commit gate registry and
-workflow plugin checks find theirs:
+``devkit.core.verified_asset_packages``, as the commit gate registry
+finds its packages:
 
 - a file the receipt records under ``files`` must match its SHA-256, so a
   managed rule edited by hand is a load error (``devkit sync`` restores it,

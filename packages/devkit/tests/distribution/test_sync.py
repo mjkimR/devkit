@@ -535,30 +535,6 @@ enabled = true
     assert (bare / managed).is_file()
 
 
-def test_sync_records_workflow_check_assets_like_rules(tmp_path: Path, bare: Path) -> None:
-    root = tmp_path / "checks-source"
-    (root / "checks/materials").mkdir(parents=True)
-    (root / "checks/materials/materials.py").write_text("raise RuntimeError('must not run at sync')\n")
-    (root / "bundle.toml").write_text("""schema = 1
-name = "sdd"
-version = "0.1.0"
-[[assets]]
-id = "materials-present"
-kind = "workflow-check"
-source = "checks/materials"
-""")
-    write_config(bare, 'schema = 1\n[presets]\nsdd = "all"\n')
-    sync_project(bare, [InstalledBundle("sdd-content", "0.1.0", load_bundle(root))])
-    receipt = json.loads((bare / RECEIPT_PATH).read_text())
-    assert {
-        "bundle": "sdd",
-        "id": "materials-present",
-        "kind": "workflow-check",
-        "paths": [".devkit/managed/sdd/checks/materials/materials.py"],
-    } in receipt["assets"]
-    assert (bare / ".devkit/managed/sdd/checks/materials/materials.py").is_file()
-
-
 def test_receipt_cannot_own_config(installed: list[InstalledBundle], target: Path) -> None:
     sync_project(target, installed)
     path = target / RECEIPT_PATH

@@ -60,7 +60,7 @@ def frontmatter_equals(ctx: PrimitiveContext, args: tuple[str, ...]) -> Outcome:
         got = frontmatter.field(frontmatter.parse(text), fld)
     except FrontmatterError as exc:
         return Outcome(False, f"{file}: {exc}")
-    return Outcome(got == want, f"{fld}={got or '-'}")
+    return Outcome(got in want.split("|"), f"{fld}={got or '-'}")
 
 
 def not_skeleton(ctx: PrimitiveContext, args: tuple[str, ...]) -> Outcome:

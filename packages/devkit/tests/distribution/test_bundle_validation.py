@@ -227,7 +227,7 @@ def test_unwritable_output_directory_is_an_argument_error(small: Bundle, tmp_pat
         locked.chmod(0o700)
 
 
-@pytest.mark.parametrize("kind", ["rule", "gate", "workflow-check"])
+@pytest.mark.parametrize("kind", ["rule", "gate"])
 def test_plugin_assets_must_be_package_directories(tmp_path: Path, kind: str) -> None:
     manifest = f'[[assets]]\nid = "p"\nkind = "{kind}"\nsource = "plugins/p.py"\n'
     with pytest.raises(BundleError, match=f"a {kind} asset's source must be a plugin package directory") as info:
