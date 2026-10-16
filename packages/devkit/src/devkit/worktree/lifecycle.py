@@ -151,7 +151,8 @@ class BranchStartResult:
 class FinishResult:
     """How far ``finish`` got; ``push`` is ``pushed``, ``rejected``, ``failed`` or ``no-upstream``, ``None`` without
     a merge. ``removed`` is also ``True`` when there was no worktree to remove (a rerun after it was removed, or a
-    branch ``start_branch`` created)."""
+    branch ``start_branch`` created, whose ``path`` is the checkout it was started in). ``discarded`` is ``True`` for
+    ``discard``: the branch was deleted unmerged."""
 
     branch: str
     path: Path
@@ -159,6 +160,7 @@ class FinishResult:
     push: str | None = None
     removed: bool = False
     branch_deleted: bool = False
+    discarded: bool = False
     notices: list[AdvisoryError] = field(default_factory=list)
 
     @property
@@ -345,10 +347,11 @@ def _clean(checkout: Path) -> bool:
 
 
 def start(position: Position, branch: str, *, setup: str | None = None, project: Path | None = None) -> StartResult:
-    """Create the activity branch's worktree from the base HEAD, or reuse it when it is on the branch and clean.
+    """Create the activity branch's worktree from the base HEAD.
 
     A branch that already exists, locally or on a remote (``_remote_holders``), is refused
-    (``WORKTREE_BRANCH_EXISTS``): an existing branch is continued only through ``attach``. A new worktree is a fresh
+    (``WORKTREE_BRANCH_EXISTS``), also when its worktree is already registered: an existing branch is continued only
+    through ``attach`` (``--existing-branch``), which checks it and reuses that worktree. A new worktree is a fresh
     checkout without the base's ignored files, so two steps follow its creation:
 
     1. ``setup`` runs in the worktree through ``/bin/sh -c`` (without the caller's ``VIRTUAL_ENV``), for the
@@ -359,7 +362,7 @@ def start(position: Position, branch: str, *, setup: str | None = None, project:
        and context commands read, never changing the committed receipt, ``AGENTS.md`` or seeded files.
 
     A failure of either is a warning (``WORKTREE_SETUP_FAILED``, ``WORKTREE_SYNC_FAILED``) whose ``[FIX]``
-    reruns it; the worktree stays. A reused worktree runs neither. A failed ``git worktree add`` leaves nothing
+    reruns it; the worktree stays. A failed ``git worktree add`` leaves nothing
     behind (``WORKTREE_ADD_FAILED``).
     """
     check_branch(branch)
@@ -378,9 +381,10 @@ def start(position: Position, branch: str, *, setup: str | None = None, project:
                 )
             if entry.branch != branch:
                 raise ConflictError(f"{path} is a worktree on {entry.branch or 'a detached HEAD'}, not {branch}")
-            if not _clean(path):
-                raise ConflictError(f"{path} has uncommitted changes")
-            return StartResult(branch, path, position.base, created=False)
+            raise BranchExistsError(
+                f"branch {branch} already has its worktree at {path}; a new start never continues an existing branch",
+                fix=_attach_fix(branch),
+            )
         if entry.branch == branch:
             raise BranchExistsError(f"branch {branch} is checked out at {entry.path}", fix=_attach_fix(branch))
     if path.exists() or path.is_symlink():
@@ -630,15 +634,18 @@ def _remote_tracking(
     """The remote-tracking ref (``refs/remotes/<remote>/<branch>``) the branch is compared with or created from, and
     its tip.
 
-    The named remote; else the local branch's upstream when it is a remote-tracking ref; else, for a remote-only
-    branch, the one remote whose tracking ref exists (``ARGUMENT_INVALID`` when several do).
+    The named remote (``WORKTREE_NOT_FOUND`` when a local branch exists but that remote's tracking ref was never
+    fetched: comparing with nothing would attach a stale branch); else the local branch's upstream when it is a
+    fetched remote-tracking ref; else the one remote whose tracking ref exists, also for a local branch without an
+    upstream (``--no-worktree`` sets none), so a fetched copy that moved on is never skipped (``ARGUMENT_INVALID``
+    when several do).
     """
     if remote is None and local:
         upstream = _git(base, "for-each-ref", "--format=%(upstream)", f"refs/heads/{branch}")
-        if not upstream.startswith("refs/remotes/"):
-            return None, None
-        tip = _query(base, "rev-parse", "--verify", "--quiet", f"{upstream}^{{commit}}")
-        return (upstream, tip) if tip else (None, None)
+        if upstream.startswith("refs/remotes/"):
+            tip = _query(base, "rev-parse", "--verify", "--quiet", f"{upstream}^{{commit}}")
+            if tip:
+                return upstream, tip
     candidates = [remote] if remote is not None else remotes
     found = [
         (ref, tip)
@@ -655,6 +662,12 @@ def _remote_tracking(
             f"branch {branch} exists on several remotes ({', '.join(names)})",
             target_files=["--existing-branch"],
             fix=f"Pass --existing-branch {names[0]} (or another <remote>/{branch})",
+        )
+    if remote is not None and local and not found:
+        raise NotFoundError(
+            f"--existing-branch {remote}/{branch}: refs/remotes/{remote}/{branch} was never fetched, so the local"
+            f" branch {branch} cannot be compared with it; nothing was changed",
+            fix=f"git -C {shlex.quote(str(base))} fetch {shlex.quote(remote)}, then rerun",
         )
     return found[0] if found else (None, None)
 
@@ -1070,7 +1083,14 @@ def finish(
                 " keeps its branch",
             )
         _log.info("%s has no worktree; finishing the marked branch alone", branch)
-        result = FinishResult(branch, path_for(position, branch), removed=True)
+        result = FinishResult(branch, _marked_path(position, branch), removed=True)
+        back = _config(base, _marker(branch, BASE_KEY))
+        if merge and back and position.branch != back:
+            raise ConflictError(
+                f"{branch} was started from {back}, but the base checkout is on {position.branch or 'a detached HEAD'};"
+                f" finish --merge integrates it into {back}; nothing was changed",
+                fix=f"git -C {shlex.quote(str(base))} switch {back}, then rerun",
+            )
     else:
         result = FinishResult(branch, entry.path)
     if merge:
@@ -1086,13 +1106,20 @@ def finish(
     if delete_branch:
         _check_deletable(base, branch)
     if merge:
+        tip = _git(base, "rev-parse", "--verify", f"{ref}^{{commit}}")
         if guard is not None:
-            tip = _git(base, "rev-parse", "--verify", f"{ref}^{{commit}}")
             head = _head(base)
             guard((_query(base, "merge-base", head, tip) or "") if head else "", tip)
         _check_upstream(position)
+        if _git(base, "rev-parse", "--verify", f"{ref}^{{commit}}") != tip:
+            raise ConflictError(
+                f"{branch} moved while finish checked it (it was {tip[:7]}); only the checked commit is merged;"
+                " nothing was changed",
+                fix="Let the run committing to it end, then rerun the same command",
+            )
         try:
-            run_git(base, "merge", "--ff-only", "--quiet", ref)
+            # The commit the guard checked, not the branch ref, which a running worker could move meanwhile.
+            run_git(base, "merge", "--ff-only", "--quiet", tip)
         except GitError as exc:
             if exc.returncode is None:
                 raise
@@ -1118,6 +1145,65 @@ def finish(
     except AdvisoryError as error:
         # Every refusal from here on carries the partial result, an advisory ``before_remove`` raises included
         # (unless that caller's error defines a ``result`` of its own).
+        if isinstance(error, WorktreeError) or not hasattr(error, "result"):
+            vars(error)["result"] = result
+        raise
+    return result
+
+
+def _marked_path(position: Position, branch: str) -> Path:
+    """The checkout a marked branch without a worktree belongs to: the path its marker records (``start_branch``
+    records the checkout it switched), else the branch's worktree path."""
+    value = _config(position.base, _marker(branch))
+    return Path(value) if value else path_for(position, branch)
+
+
+def discard(
+    position: Position, branch: str, *, before_remove: Callable[[FinishResult], None] | None = None
+) -> FinishResult:
+    """Drop an unmerged activity branch: remove its worktree and force-delete the branch (``git branch -D``).
+
+    The close of a task (a depth escalation, a supersede, an abandon) is the only use; the caller decides it on the
+    authority its close kind needs. Only a branch devkit started (its marker) or one with a worktree is dropped;
+    a worktree with uncommitted or untracked changes is ``WORKTREE_DIRTY``: never removed by force. ``before_remove``
+    runs before the worktree is removed, as for ``finish``. Remote branches and pull requests are the caller's.
+    """
+    check_branch(branch)
+    if position.linked:
+        raise RunFromBaseError(
+            f"{position.root} is the worktree discard would remove", target_files=[str(position.base)]
+        )
+    base, ref = position.base, f"refs/heads/{branch}"
+    entry = _find(position, branch)
+    exists = _succeeds(base, "rev-parse", "--verify", "--quiet", ref)
+    if entry is None:
+        if not exists:
+            raise NotFoundError(f"no worktree at {path_for(position, branch)} or on branch {branch}")
+        if not _created(base, branch):
+            raise NotFoundError(
+                f"branch {branch} has no worktree and no {_marker(branch)} marker: devkit did not start it, so"
+                " discard does not delete it; nothing was changed",
+                fix=f"Once the user agrees, git -C {shlex.quote(str(base))} branch -D {branch}",
+            )
+        result = FinishResult(branch, _marked_path(position, branch), removed=True, discarded=True)
+    else:
+        result = FinishResult(branch, entry.path, discarded=True)
+    try:
+        if before_remove is not None:
+            before_remove(result)
+        if not result.removed:
+            _remove(base, result.path)
+            result.removed = True
+        if exists:
+            try:
+                run_git(base, "branch", "-D", branch)
+            except GitError as exc:
+                raise BranchDeleteFailedError(
+                    f"the worktree is removed, but git branch -D {branch} failed: {exc.stderr or exc.message}"
+                ) from exc
+            result.branch_deleted = True
+        _unmark(base, branch)
+    except AdvisoryError as error:
         if isinstance(error, WorktreeError) or not hasattr(error, "result"):
             vars(error)["result"] = result
         raise

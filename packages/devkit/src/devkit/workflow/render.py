@@ -109,6 +109,7 @@ def render_hold(hold: Hold) -> str:
         if e.problem
     ]
     lines += [f"[PENDING_QUESTION: {e.file} id={q.id} title={quote(q.title)}]" for e, q in hold.questions]
+    lines += [f"[BLOCKED: {e.file} malformed=yes reason={quote(e.message)}]" for e in hold.malformed]
     return "".join(f"{line}\n" for line in lines)
 
 

@@ -92,7 +92,7 @@ def test_creates_the_file_with_devkit_keys_at_their_defaults(tmp_path: Path, too
         "guidance_block": True,
         "override_drift": "warn",
         "workflow": {
-            "approvals": {"intent": "ask", "direction": "ask", "integration": "ask"},
+            "approvals": {"dev-integration": "ask"},
             "stages": {"collect-feedback": "on"},
         },
         "worktree": {"pull_request": "auto", "delete_branch": True, "setup": "uv sync", "stale_after": "14d"},
@@ -139,7 +139,7 @@ def test_common_tables_read_back_with_default_policies(tmp_path: Path, tools: li
     assert read_worktree_config(tmp_path) == WorktreeConfig()
     expanded = uncomment(_text(tmp_path))
     workflow = parse_workflow_config(tomllib.loads(expanded))
-    for gate in ("intent", "direction", "integration", "custom-gate"):
+    for gate in ("dev-integration", "custom-gate"):
         assert workflow.policy(gate) == WorkflowConfig().policy(gate)
     assert workflow.stage_policy("collect-feedback") == WorkflowConfig().stage_policy("collect-feedback")
     assert '#   setup = "uv sync"  # example;' in _text(tmp_path)

@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from devkit.core.errors import GitError
 from devkit.workflow.errors import AuthoringError
 from devkit.workflow.integration import finish_guard
 from devkit.workflow.unit.envelope import compose_envelope, load_envelopes
@@ -131,6 +132,7 @@ def root(tmp_path: Path) -> Path:
         ),
         ("answer-01.yaml", {"kind": "answer", "status": "completed", "answers": []}, "answers_to"),
         ("worker-01.yaml", {"kind": "worker", "status": "failed"}, "needs a problem"),
+        ("worker-01.yaml", {"kind": "worker", "status": "needs_input"}, "asks questions or reports a problem"),
         ("review-01.yaml", _problem(kind="review"), "only a worker envelope carries a problem"),
         ("worker-01.yaml", _problem(status="completed"), "completed envelope reports no problem"),
         ("worker-01.yaml", _problem(problem={"cause": "x"}), "missing required key recovery"),
@@ -186,7 +188,6 @@ def test_a_problem_holds_until_a_resolution_names_it(tmp_path: Path) -> None:
 
 def test_waiting_for_answers_is_not_a_problem(tmp_path: Path) -> None:
     _write(tmp_path, "worker-02.yaml", _question())
-    _write(tmp_path, "worker-01.yaml", {"kind": "worker", "status": "needs_input", "summary": "asked"})
     hold = load_envelopes(tmp_path).hold()
     assert not hold.blocked and [q.id for _, q in hold.questions] == ["q1", "q2"]
     answer = {"kind": "answer", "status": "completed", "answers_to": "worker-02.yaml"}
@@ -377,8 +378,29 @@ def test_finish_guard_reads_the_units_the_branch_changed_at_its_tip(tmp_path: Pa
     _write(unit, "answer-01.yaml", {**answer, "answers": [{"question": "q1", "decision": "a"}, {"question": "q2", "decision": "b"}]})  # fmt: skip
     tip = _commit(repo, "resolve and answer")
     assert finish_guard(repo, "dev-x", base, tip) == []
-    _git(repo, "rm", "-q", "-r", "docs/specs/x")
-    assert finish_guard(repo, "dev-x", base, _commit(repo, "drop the unit")) == []
+    # Deleting a problem envelope does not clear it: a deleted file of a kept unit is read at the merge base.
+    _git(repo, "switch", "-q", "main")
+    _write(repo / "docs/specs/y", "worker-01.yaml", _problem())
+    (repo / "docs/specs/y/spec.md").write_text("y\n")
+    held_base = _commit(repo, "a held unit on the base")
+    _git(repo, "switch", "-q", "-c", "dev-y")
+    _git(repo, "rm", "-q", "docs/specs/y/envelopes/worker-01.yaml")
+    assert finish_guard(repo, "dev-y", held_base, _commit(repo, "delete the problem")) == [
+        "docs/specs/y/envelopes/worker-01.yaml: unresolved problem: tests cannot start"
+    ]
+    _git(repo, "rm", "-q", "-r", "docs/specs/y")
+    assert finish_guard(repo, "dev-y", held_base, _commit(repo, "drop the unit")) == []
+    # A malformed worker envelope holds: whether it reports a problem cannot be known.
+    _write(
+        repo / "docs/specs/z",
+        "worker-01.yaml",
+        {**_problem(), "problem": {"cause": "x", "recovery": "y", "severity": 1}},
+    )
+    malformed = finish_guard(repo, "dev-y", held_base, _commit(repo, "malformed"))
+    assert len(malformed) == 1 and "docs/specs/z/envelopes/worker-01.yaml: malformed worker envelope" in malformed[0]
+    # Git failures propagate (the guard runner refuses the merge): fail closed.
+    with pytest.raises(GitError):
+        finish_guard(repo, "dev-y", held_base, "0" * 40)
 
 
 def test_finish_merge_refuses_a_held_branch_through_the_installed_guard(tmp_path: Path) -> None:
@@ -404,3 +426,87 @@ def test_finish_merge_refuses_a_held_branch_through_the_installed_guard(tmp_path
     _commit(worktree, "resolve")
     assert CliRunner().invoke(cli, finish).exit_code == 0
     assert (repo / "docs/specs/x/envelopes/resolution-01.yaml").is_file()
+
+
+STAGED = """---
+id: w
+schema_version: 1
+stages:
+  - id: intent
+    human_gate: plan-intent
+    exit: [anchor-exists]
+  - id: build
+    exit: [anchor-exists]
+  - id: integrate
+    human_gate: dev-integration
+    exit: [anchor-exists]
+next:
+  - { workflow: v }
+---
+"""
+
+
+@pytest.fixture
+def staged(tmp_path: Path) -> Path:
+    defs = tmp_path / ".devkit/workflows"
+    defs.mkdir(parents=True)
+    (defs / "w.md").write_text(STAGED)
+    (defs / "v.md").write_text("---\nid: v\nschema_version: 1\nstages:\n  - id: s\n    exit: [anchor-exists]\n---\n")
+    write_config(tmp_path, '[workflow]\ndefault = "w"\n[workflow.approvals]\nplan-intent = "auto"\nhandoff = "auto"\n')
+    assert run_cli("new", "-w", str(tmp_path), "u").exit_code == 0
+    return tmp_path
+
+
+def test_a_hold_keeps_the_gates_passed_before_it(staged: Path) -> None:
+    unit = staged / SIMPLE_UNIT
+    _write(unit, "worker-01.yaml", _problem(stage="build", workflow="w"))
+    result = _next(staged)
+    # plan-intent passed before the problem was raised in build: the unit stays at integrate, not back at intent.
+    assert result["done"] == ["intent", "build"] and result["stage"]["id"] == "integrate"  # type: ignore[index]
+    assert result["gate"]["held"] is True  # type: ignore[index]
+    # A problem without a stage of this workflow holds every gate.
+    _write(unit, "worker-02.yaml", _problem(stage="elsewhere", workflow="w"))
+    assert _next(staged)["stage"]["id"] == "intent"  # type: ignore[index]
+
+
+def test_a_malformed_worker_envelope_holds_every_gate(staged: Path) -> None:
+    unit = staged / SIMPLE_UNIT
+    _write(unit, "worker-01.yaml", {**_problem(), "problem": {"cause": "x", "recovery": "y", "severity": 1}})
+    result = _next(staged)
+    assert result["stage"]["id"] == "intent" and result["blocked"] is True  # type: ignore[index]
+    assert result["malformed_workers"][0]["file"] == "envelopes/worker-01.yaml"  # type: ignore[index]
+    text = run_cli("next", "-w", str(staged), "--unit", SIMPLE_UNIT, "--no-lint").stdout
+    assert "[BLOCKED: envelopes/worker-01.yaml malformed=yes reason=" in text
+
+
+def test_a_hold_keeps_the_handoff(staged: Path) -> None:
+    write_config(
+        staged, '[workflow]\ndefault = "w"\n[workflow.approvals]\nplan-intent = "auto"\ndev-integration = "auto"\n'
+    )
+    unit = staged / SIMPLE_UNIT
+    assert _next(staged)["requests"][0]["id"] == "handoff"  # type: ignore[index]
+    _write(unit, "worker-01.yaml", _question(stage="integrate", workflow="w"))
+    result = _next(staged)
+    assert result["complete"] is False  # the integrate gate is held by the question
+    _write(unit, "answer-01.yaml", {"kind": "answer", "status": "completed", "answers_to": "worker-01.yaml", "answers": [{"question": "q1", "decision": "a"}]})  # fmt: skip
+    result = _next(staged)
+    assert result["complete"] is False and [r["id"] for r in result["requests"]] == ["question:worker-01.q2"]  # type: ignore[union-attr]
+    refused = run_cli("handoff", "-w", str(staged), "--unit", SIMPLE_UNIT, "--no-lint")
+    assert refused.exit_code != 0
+
+
+def test_handoff_refuses_a_held_complete_unit(staged: Path) -> None:
+    write_config(
+        staged,
+        '[workflow]\ndefault = "w"\n[workflow.approvals]\nplan-intent = "auto"\ndev-integration = "auto"\nhandoff = "auto"\n',
+    )
+    unit = staged / SIMPLE_UNIT
+    _write(unit, "worker-01.yaml", _problem())  # gates turned off are skipped; the handoff is still held
+    write_config(
+        staged,
+        '[workflow]\ndefault = "w"\n[workflow.approvals]\nplan-intent = "off"\ndev-integration = "off"\nhandoff = "auto"\n',
+    )
+    result = _next(staged)
+    assert result["complete"] is True and result["requests"] == [] and result["blocked"] is True
+    refused = run_cli("handoff", "-w", str(staged), "--unit", SIMPLE_UNIT, "--no-lint")
+    assert refused.exit_code == 1 and "(HANDOFF_HELD)" in refused.stderr

@@ -19,11 +19,13 @@ from devkit.worktree import (
     BranchExistsError,
     BranchOutOfSyncError,
     ConflictError,
+    DirtyError,
     NestedError,
     NotFoundError,
     UnitInvalidError,
     UnmergedError,
     attach,
+    discard,
     extensions,
     finish,
     locate,
@@ -130,8 +132,14 @@ def test_a_branch_without_a_worktree_is_integrated_from_the_base(repo: Path) -> 
     git(repo, "switch", "-q", "main")
     with pytest.raises(UnmergedError):
         finish(locate(repo), "dev-demo")
+    git(repo, "switch", "-q", "-c", "elsewhere")
+    with pytest.raises(ConflictError, match="started from main") as off_base:
+        finish(locate(repo), "dev-demo", merge=True)  # it is integrated into the branch it was started from only
+    assert off_base.value.fix == f"git -C {repo} switch main, then rerun"
+    git(repo, "switch", "-q", "main")
     done = finish(locate(repo), "dev-demo", merge=True)
     assert (done.merged, done.removed, done.branch_deleted) == (True, True, True)
+    assert done.path == repo  # the checkout it was started in, where post-finish cleanup finds its records
     assert (repo / "work.txt").is_file() and git(repo, "branch", "--list", "dev-demo") == ""
 
 
@@ -163,7 +171,8 @@ def test_attach_gives_an_existing_branch_its_worktree_without_touching_it(repo: 
     assert config(repo, "dev-demo", "devkitUnit") == "docs/specs/demo"
     again = attach(locate(repo), "dev-demo", source="dev-demo", unit="docs/specs/demo")
     assert (again.created, again.path) == (False, path)
-    assert not start(locate(repo), "dev-demo").created  # its worktree now exists: a plain start reuses it
+    with pytest.raises(BranchExistsError, match="already has its worktree"):  # only attach continues it
+        start(locate(repo), "dev-demo")
     git(repo, "worktree", "remove", str(path))
     with pytest.raises(BranchExistsError):
         start(locate(repo), "dev-demo")  # without the worktree, a plain start never takes the branch over
@@ -334,3 +343,78 @@ def test_the_start_flags_go_together(repo: Path) -> None:
     started = CliRunner().invoke(cli, ["worktree", "start", "dev-demo", "--no-worktree", "-w", str(repo)])
     assert started.exit_code == 0, started.output
     assert started.stdout == f"[BRANCH_STARTED: dev-demo checkout={repo} from=main]\n"
+
+
+# -- review fixes: remote comparison without an upstream, the merged commit, discard -------------------------------
+
+
+def test_attach_compares_a_branch_without_upstream_with_the_remote_that_has_it(repo: Path, tmp_path: Path) -> None:
+    with_remote(repo, tmp_path)
+    start_branch(locate(repo), "dev-demo")
+    commit(repo, "docs/specs/demo/spec.md")
+    git(repo, "push", "-q", "origin", "dev-demo")  # no -u: start_branch sets no upstream
+    git(repo, "switch", "-q", "main")
+    other = tmp_path / "other"
+    git(tmp_path, "clone", "-q", "-b", "dev-demo", str(tmp_path / "remote.git"), str(other))
+    git(other, "config", "user.email", "t@example.com")
+    git(other, "config", "user.name", "t")
+    commit(other, "docs/specs/demo/more.md")
+    git(other, "push", "-q", "origin", "dev-demo")
+    git(repo, "fetch", "-q", "origin")
+    with pytest.raises(BranchOutOfSyncError, match="is behind origin/dev-demo"):
+        attach(locate(repo), "dev-demo", source="dev-demo", unit="docs/specs/demo")
+
+
+def test_attach_refuses_a_named_remote_that_was_never_fetched(repo: Path, tmp_path: Path) -> None:
+    with_remote(repo, tmp_path)
+    local_branch(repo, "dev-demo")
+    with pytest.raises(NotFoundError, match="was never fetched") as raised:
+        attach(locate(repo), "dev-demo", source="origin/dev-demo", unit="docs/specs/demo")
+    assert raised.value.fix == f"git -C {repo} fetch origin, then rerun"
+
+
+def test_finish_merges_the_commit_the_guard_checked(repo: Path) -> None:
+    created = start(locate(repo), "dev-demo")
+    commit(created.path, "work.txt")
+    head = git(repo, "rev-parse", "HEAD")
+
+    def moving(merge_base: str, tip: str) -> None:
+        commit(created.path, "late.txt")  # a run still committing while finish checks the branch
+
+    with pytest.raises(ConflictError, match="moved while finish checked it"):
+        finish(locate(repo), "dev-demo", merge=True, guard=moving)
+    assert git(repo, "rev-parse", "HEAD") == head
+
+
+def test_discard_drops_an_unmerged_branch_and_its_worktree(repo: Path) -> None:
+    created = start(locate(repo), "dev-demo")
+    commit(created.path, "work.txt")
+    write(created.path, "wip.txt", "x\n")
+    with pytest.raises(DirtyError):
+        discard(locate(repo), "dev-demo")  # never by force
+    (created.path / "wip.txt").unlink()
+    seen: list[str] = []
+    done = discard(locate(repo), "dev-demo", before_remove=lambda result: seen.append(result.branch))
+    assert (done.discarded, done.merged, done.removed, done.branch_deleted) == (True, False, True, True)
+    assert seen == ["dev-demo"] and not created.path.exists() and git(repo, "branch", "--list", "dev-demo") == ""
+    start_branch(locate(repo), "dev-solo")
+    commit(repo, "solo.txt")
+    with pytest.raises(ConflictError):
+        discard(locate(repo), "dev-solo")  # the base checkout is on it
+    git(repo, "switch", "-q", "main")
+    solo = discard(locate(repo), "dev-solo")
+    assert solo.path == repo and solo.branch_deleted and git(repo, "branch", "--list", "dev-solo") == ""
+    git(repo, "branch", "dev-foreign")
+    with pytest.raises(NotFoundError, match="devkit did not start it"):
+        discard(locate(repo), "dev-foreign")
+
+
+def test_finish_discard_runs_post_finish_and_excludes_merge(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    start(locate(repo), "dev-demo")
+    seen: list[dict[str, Any]] = []
+    entries(monkeypatch, "devkit.post_finish", spec=lambda base, result: seen.append(result))
+    both = CliRunner().invoke(cli, ["worktree", "finish", "dev-demo", "--merge", "--discard", "-w", str(repo)])
+    assert both.exit_code == 2 and "ARGUMENT_INVALID" in both.stderr
+    done = CliRunner().invoke(cli, ["worktree", "finish", "dev-demo", "--discard", "-w", str(repo)])
+    assert done.exit_code == 0 and "merged=no" in done.stdout and "discarded=yes" in done.stdout
+    assert seen and seen[0]["discarded"] is True and seen[0]["branch"] == "dev-demo"

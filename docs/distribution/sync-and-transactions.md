@@ -147,11 +147,9 @@ schema = 1
 [presets]
 spec = "core"
 
-## Workflow approval gates: names come from workflow definitions; these delivery gates are examples.
+## Workflow approval gates: names come from workflow definitions; the gate below is an example.
 # [workflow.approvals]
-#   intent = "ask"       # ask | auto | off; confirm requirements, scope and verification (G1)
-#   direction = "ask"    # ask | auto | off; approve implementation direction and design (G2)
-#   integration = "ask"  # ask | auto | off; approve integration and PR creation (G3)
+#   dev-integration = "ask"  # ask | auto | off; approve integrating the change into the base
 
 ## Workflow stages: policies apply by stage id; unset stages use on.
 # [workflow.stages]

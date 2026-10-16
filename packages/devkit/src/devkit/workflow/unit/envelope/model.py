@@ -256,9 +256,13 @@ class Envelopes:
             if q.id not in answered.get(env.name, set())
         ]
 
+    def malformed_workers(self) -> list[EnvelopeFormatError]:
+        """The malformed ``worker-NN`` files: whether they report a problem or questions cannot be known."""
+        return [e for e in self.errors if WORKER_REF.fullmatch(Path(e.file).name)]
+
     def hold(self) -> Hold:
-        """What holds the unit's gates: unresolved problems and unanswered questions."""
-        return Hold(tuple(self.unresolved_problems()), tuple(self.pending_questions()))
+        """What holds the unit's gates: unresolved problems, unanswered questions and malformed worker envelopes."""
+        return Hold(tuple(self.unresolved_problems()), tuple(self.pending_questions()), tuple(self.malformed_workers()))
 
 
 @dataclass(frozen=True)
@@ -267,18 +271,20 @@ class Hold:
 
     problems: tuple[Envelope, ...] = ()
     questions: tuple[tuple[Envelope, Question], ...] = ()
+    malformed: tuple[EnvelopeFormatError, ...] = ()  # worker files that cannot be read: held, fail closed
 
     def __bool__(self) -> bool:
-        return bool(self.problems or self.questions)
+        return bool(self.problems or self.questions or self.malformed)
 
     @property
     def blocked(self) -> bool:
-        return bool(self.problems)
+        return bool(self.problems or self.malformed)
 
     def reasons(self, prefix: str = "") -> list[str]:
-        """One line per problem and per unanswered question, file names prefixed with ``prefix``."""
+        """One line per problem, unanswered question and malformed worker envelope, files prefixed with ``prefix``."""
         lines = [f"{prefix}{e.file}: unresolved problem: {e.problem.cause}" for e in self.problems if e.problem]
         lines += [f"{prefix}{e.file}: unanswered question {q.id}: {q.title}" for e, q in self.questions]
+        lines += [f"{prefix}{e.file}: malformed worker envelope: {e.message}" for e in self.malformed]
         return lines
 
     def to_dict(self) -> dict[str, Any]:
@@ -286,6 +292,7 @@ class Hold:
             "blocked": self.blocked,
             "problems": [{"file": e.file, **(e.problem.to_dict() if e.problem else {})} for e in self.problems],
             "pending_questions": [{"file": e.file, "id": q.id, "title": q.title} for e, q in self.questions],
+            "malformed_workers": [{"file": e.file, "reason": e.message} for e in self.malformed],
         }
 
 
@@ -543,6 +550,8 @@ def _check_kind_fields(
             raise EnvelopeFormatError("a resolution needs a summary of what was done and why it resolves the problem")
     elif kind == WORKER and status == "failed" and problem is None:
         raise EnvelopeFormatError("a failed worker envelope needs a problem (cause, attempts, recovery)")
+    elif kind == WORKER and status == "needs_input" and problem is None and not questions:
+        raise EnvelopeFormatError("a needs_input worker envelope asks questions or reports a problem")
 
 
 def reference_error(envelope: Envelope, loaded: Mapping[str, Envelope]) -> str | None:

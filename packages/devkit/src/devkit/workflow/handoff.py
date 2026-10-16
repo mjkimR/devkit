@@ -12,6 +12,7 @@ from devkit.workflow.definition.definition import HANDOFF_GATE, WorkflowDocument
 from devkit.workflow.errors import (
     HandoffChoiceIgnoredError,
     HandoffChoiceRequiredError,
+    HandoffHeldError,
     HandoffIneligibleError,
     HandoffInvalidError,
     HandoffLayoutMismatchError,
@@ -199,6 +200,13 @@ def plan_handoff(ws: Workspace, unit: UnitRef, result: UnitEvaluation, choice: s
             f"unit {unit.rel} has not completed workflow {doc.id}: stage {result.stage.id} is current",
             *(f"unmet={u.name}" for u in result.unmet),
             fix=f"Finish the current stage (`devkit workflow next --unit {unit.rel}`) before handing off",
+        )
+    if result.hold:
+        raise HandoffHeldError(
+            f"unit {unit.rel} is held by its envelopes; it is not handed off until they are cleared",
+            *result.hold.reasons(),
+            fix=f"Resolve each problem (resolution envelope), answer each question (answer envelope) and fix any"
+            f" malformed worker envelope, then rerun; `devkit workflow envelope check --unit {unit.rel}` lists them",
         )
     if not doc.next:
         raise HandoffNoneError(

@@ -81,7 +81,7 @@ def test_a_separate_git_directory_is_an_unsupported_layout(tmp_path: Path) -> No
     assert raised.value.mode is ActionMode.BLOCKED
 
 
-def test_start_creates_from_base_head_and_reuses_a_clean_worktree(repo: Path) -> None:
+def test_start_creates_from_base_head_and_refuses_to_start_it_again(repo: Path) -> None:
     write(repo, "uncommitted.txt", "stays in the base\n")
     result = start(locate(repo), "dev-demo")
     assert result.created and result.path == repo.parent / "repo-wt-dev-demo" and result.branch == "dev-demo"
@@ -89,8 +89,8 @@ def test_start_creates_from_base_head_and_reuses_a_clean_worktree(repo: Path) ->
     assert not (result.path / "uncommitted.txt").exists() and (repo / "uncommitted.txt").exists()
     assert marker(repo, "dev-demo") == str(result.path)
     assert git(result.path, "config", "--get", "branch.dev-demo.devkitWorktree") == str(result.path)  # common config
-    again = start(locate(repo), "dev-demo")
-    assert not again.created and again.path == result.path
+    with pytest.raises(BranchExistsError, match="already has its worktree"):
+        start(locate(repo), "dev-demo")
 
 
 def test_start_guards(repo: Path) -> None:
@@ -99,9 +99,9 @@ def test_start_guards(repo: Path) -> None:
         start(locate(created.path), "dev-other")
     assert nested.value.mode is ActionMode.BLOCKED
     write(created.path, "wip.txt", "x\n")
-    with pytest.raises(ConflictError, match="uncommitted changes") as conflict:
-        start(locate(repo), "dev-demo")
-    assert conflict.value.mode is ActionMode.INTERACTION
+    with pytest.raises(BranchExistsError, match="already has its worktree") as existing:
+        start(locate(repo), "dev-demo")  # dirty or clean, an existing branch's worktree is never started again
+    assert existing.value.mode is ActionMode.INTERACTION
     git(repo, "worktree", "add", "-q", "-b", "elsewhere", str(repo.parent / "repo-wt-dev-taken"))
     with pytest.raises(ConflictError, match="on elsewhere"):
         start(locate(repo), "dev-taken")
@@ -137,7 +137,8 @@ def test_setup_runs_once_in_a_new_worktree_without_the_callers_virtualenv(
     assert result.setup == setup and result.notices == []
     assert (result.path / "setup.log").read_text() == "ran\n"
     (result.path / "setup.log").unlink()
-    assert start(locate(repo), "dev-demo", setup=setup).notices == [] and not (result.path / "setup.log").exists()
+    with pytest.raises(BranchExistsError):  # an existing branch is never started again, so setup runs once
+        start(locate(repo), "dev-demo", setup=setup)
 
 
 def test_a_failed_setup_is_a_warning_and_keeps_the_worktree(repo: Path) -> None:
@@ -687,7 +688,7 @@ def test_start_restores_the_managed_files_a_fresh_checkout_lacks(repo: Path) -> 
 
 def test_sync_uses_the_worktree_environment_with_devkit_and_skips_without_a_receipt(repo: Path, tmp_path: Path) -> None:
     assert start(locate(repo), "dev-plain", project=Path(".")).synced is None
-    write(repo, ".gitignore", ".venv/\n")  # as in any Python project, so the reused worktree is clean
+    write(repo, ".gitignore", ".venv/\n")  # as in any Python project
     synchronized(repo)
     marker = tmp_path / "used"
     script = tmp_path / "python"  # stands in for the worktree's .venv interpreter and records that it ran
@@ -699,7 +700,6 @@ def test_sync_uses_the_worktree_environment_with_devkit_and_skips_without_a_rece
     setup += " && mkdir -p .venv/lib/python3.12/site-packages/devkit_agt-0.0.0.dist-info"
     result = start(locate(repo), "dev-demo", setup=setup, project=Path("."))
     assert result.synced is True and marker.read_text() == "used\n"
-    assert start(locate(repo), "dev-demo", project=Path(".")).synced is None  # reused: nothing runs
 
 
 def test_a_failed_sync_is_a_warning_and_keeps_the_worktree(repo: Path) -> None:

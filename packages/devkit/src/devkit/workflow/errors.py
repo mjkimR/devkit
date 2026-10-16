@@ -313,6 +313,14 @@ class HandoffNotReadyError(WorkflowError):
     input_error = True
 
 
+class HandoffHeldError(WorkflowError):
+    """An unresolved problem, an unanswered question or a malformed worker envelope holds the handoff choice."""
+
+    code = "HANDOFF_HELD"
+    guardrail = True
+    exit_code = ExitCode.FINDINGS
+
+
 class HandoffNoneError(WorkflowError):
     """The workflow declares no ``next`` candidates."""
 

@@ -130,18 +130,13 @@ TEMPLATE_TABLES = (
     TemplateTable(
         (
             TemplateKey(
-                "intent", "ask", "confirm user requirements, scope and verification (G1)", kind='"ask" | "auto" | "off"'
-            ),
-            TemplateKey(
-                "direction", "ask", "approve implementation direction and design (G2)", kind='"ask" | "auto" | "off"'
-            ),
-            TemplateKey(
-                "integration", "ask", "approve integration and PR creation (G3)", kind='"ask" | "auto" | "off"'
+                "dev-integration", "ask", "approve integrating the change into the base", kind='"ask" | "auto" | "off"'
             ),
         ),
         path=("workflow", "approvals"),
         help="Workflow approval gates: ask waits for approval, auto satisfies the gate, off skips its stage."
-        " Names come from workflow definitions; the delivery gates below are examples. Unset gates use ask.",
+        " Names come from workflow definitions; the gate below is an example, and a methodology package may fix"
+        " some gates to a person (see its policy command). Unset gates use ask.",
     ),
     TemplateTable(
         (TemplateKey("collect-feedback", "on", "set off to skip feedback collection", kind='"on" | "off"'),),

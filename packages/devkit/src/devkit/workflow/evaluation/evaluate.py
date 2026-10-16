@@ -83,6 +83,7 @@ class _Evaluator:
         # Problems and questions hold the unit whatever their segment, and a return does not clear them.
         loaded = load_envelopes(self.unit_dir)
         self.hold: Hold = loaded.hold()
+        self.held_from = _held_from(self.hold, doc)
         # Envelopes scoped to another workflow or segment do not count either; unscoped ones count everywhere.
         self.envelopes: Envelopes = _after_returns(
             loaded.scoped(doc.id, binding.segment),
@@ -284,6 +285,20 @@ def _gate_result(gate: GateStatus) -> CheckResult:
     )
 
 
+def _held_from(hold: Hold, doc: WorkflowDocument) -> int:
+    """The index of the first stage whose gate the hold keeps from passing.
+
+    A problem or question holds the gate of the stage its worker envelope was written in and of every later stage;
+    gates passed before it stay passed, so a run that resolves it goes on from where the unit is. An envelope of
+    another workflow or with no stage of this one, and a malformed worker envelope, hold every gate.
+    """
+    envelopes = [*hold.problems, *(e for e, _ in hold.questions)]
+    if hold.malformed or not envelopes:
+        return 0
+    indexes = [doc.stage_index(e.stage) if e.workflow in ("", doc.id) else -1 for e in envelopes]
+    return 0 if any(i < 0 for i in indexes) else min(indexes)
+
+
 def _hold_result(hold: Hold) -> CheckResult:
     """The unmet ``envelope-hold`` check of a gate stage whose gate the unit's envelopes hold."""
     parts = []
@@ -349,8 +364,8 @@ def evaluate_definition(doc: WorkflowDocument, opts: Options) -> UnitEvaluation:
             continue
         unmet = [r for r in (ev.eval_ref(ref, stage.id) for ref in stage.exit) if not r.satisfied]
         gate = ev.gate(stage.gate, policy, stage.id) if stage.gate and policy else None
-        if gate is not None and ev.hold:
-            # No gate passes, by any source, while a problem is unresolved or a question unanswered; it is not asked.
+        if gate is not None and ev.hold and index >= ev.held_from:
+            # No gate at or after the stage that raised the hold passes, by any source; it is not asked.
             gate = GateStatus(gate.name, gate.policy, False, held=True)
             if not unmet:
                 unmet.append(_hold_result(ev.hold))
@@ -381,7 +396,7 @@ def evaluate_definition(doc: WorkflowDocument, opts: Options) -> UnitEvaluation:
         res.handoff = handoff
         if ignored is not None:
             res.decision_errors.append(ignored)
-        if handoff is not None and handoff.chosen is None:
+        if handoff is not None and handoff.chosen is None and not ev.hold:
             res.waiting = Waiting(CheckClass.HUMAN, (HANDOFF_GATE,))
             res.requests = [handoff_request(doc, handoff, ev.declined)]
 
@@ -389,8 +404,7 @@ def evaluate_definition(doc: WorkflowDocument, opts: Options) -> UnitEvaluation:
     if ev.hold.questions:
         asked = question_requests(ev.hold.questions)
         res.requests = [*res.requests, *asked]
-        if res.stage is not None:
-            # The answers decide how the work goes on: the unit waits for them, not for its other checks.
-            res.waiting = Waiting(CheckClass.HUMAN, tuple(r.id for r in asked))
+        # The answers decide how the work goes on: the unit waits for them, not for its other checks.
+        res.waiting = Waiting(CheckClass.HUMAN, tuple(r.id for r in asked))
     res.lint_error = ev.lint_error
     return res

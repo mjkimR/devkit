@@ -35,19 +35,9 @@ def test_start_prints_the_worktree_and_the_cd_hint(repo: Path) -> None:
         f"[WORKTREE_STARTED: dev-demo path={path} base={repo} created=yes existing=no unit=- setup=- synced=-]",
         f"[NEXT_CMD: cd {path}]",
     ]
-    reused = json.loads(invoke("start", "dev-demo", "-w", str(repo), "--format", "json").stdout)
-    assert reused == {
-        "branch": "dev-demo",
-        "slug": "demo",
-        "path": str(path),
-        "base": str(repo),
-        "created": False,
-        "existing": False,
-        "unit": None,
-        "setup": None,
-        "synced": None,
-        "notices": [],
-    }
+    again = json.loads(invoke("start", "dev-demo", "-w", str(repo), "--format", "json").stdout)
+    assert again["error"]["code"] == "WORKTREE_BRANCH_EXISTS"  # an existing branch is continued only by attaching it
+    assert "--existing-branch dev-demo" in again["error"]["advisory"]["fix"]
 
 
 def test_start_runs_the_configured_setup_and_warns_when_it_fails(repo: Path) -> None:
@@ -57,7 +47,7 @@ def test_start_runs_the_configured_setup_and_warns_when_it_fails(repo: Path) -> 
     result = invoke("start", "dev-demo", "-w", str(repo))
     assert result.exit_code == 0 and 'created=yes existing=no unit=- setup="exit 4"' in result.stdout
     assert "[WARN]   (WORKTREE_SETUP_FAILED) setup 'exit 4' exited 4" in result.stderr
-    assert invoke("start", "dev-demo", "-w", str(repo), "--strict").exit_code == 0  # reused: no setup, no warning
+    assert invoke("start", "dev-demo", "-w", str(repo), "--strict").exit_code == 2  # existing: refused, no setup
 
 
 def test_finish_reports_progress_before_a_refusal_and_resumes(repo: Path) -> None:
@@ -73,7 +63,7 @@ def test_finish_reports_progress_before_a_refusal_and_resumes(repo: Path) -> Non
     refused = invoke("finish", "dev-demo", "--merge", "-w", str(repo))
     assert refused.exit_code == 2
     assert refused.stdout == (
-        f"[WORKTREE_FINISHED: dev-demo path={path} merged=yes push=no-upstream removed=no branch_deleted=no]\n"
+        f"[WORKTREE_FINISHED: dev-demo path={path} merged=yes push=no-upstream removed=no branch_deleted=no discarded=no]\n"
     )
     assert "(WORKTREE_DIRTY)" in refused.stderr
     (path / "wip.txt").unlink()
@@ -87,6 +77,7 @@ def test_finish_reports_progress_before_a_refusal_and_resumes(repo: Path) -> Non
         "push": None,
         "removed": True,
         "branch_deleted": True,
+        "discarded": False,
         "notices": [],
     }
 
@@ -123,13 +114,16 @@ def test_a_git_failure_after_the_merge_reports_progress_and_the_push_warning_the
     refused = invoke("finish", "dev-demo", "--merge", "-w", str(repo))
     assert refused.exit_code == 2
     assert refused.stdout == (
-        f"[WORKTREE_FINISHED: dev-demo path={path} merged=yes push=failed removed=yes branch_deleted=no]\n"
+        f"[WORKTREE_FINISHED: dev-demo path={path} merged=yes push=failed removed=yes branch_deleted=no discarded=no]\n"
     )
     assert "(WORKTREE_PUSH_FAILED)" in refused.stderr and "(WORKTREE_BRANCH_DELETE_FAILED)" in refused.stderr
     hook.unlink()
     done = invoke("finish", "dev-demo", "-w", str(repo))
     assert done.exit_code == 0, done.output
-    assert done.stdout == f"[WORKTREE_FINISHED: dev-demo path={path} merged=no push=- removed=yes branch_deleted=yes]\n"
+    assert (
+        done.stdout
+        == f"[WORKTREE_FINISHED: dev-demo path={path} merged=no push=- removed=yes branch_deleted=yes discarded=no]\n"
+    )
 
 
 def test_merge_is_refused_under_the_pull_request_policy(repo: Path) -> None:

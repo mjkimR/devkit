@@ -47,6 +47,7 @@ from devkit.worktree.lifecycle import (
     start_branch,
     status,
 )
+from devkit.worktree.lifecycle import discard as discard_branch
 from devkit.worktree.stale import stale_branches
 
 WORKSPACE = workspace_option("Any directory inside the checkout [default: the current directory]")
@@ -75,7 +76,7 @@ def _position(workspace_root: str | None) -> tuple[Position, WorktreeConfig, Pat
 
 @click.group(name="worktree")
 def cli() -> None:
-    """Task worktrees: one checkout per slug, integrated and removed by finish."""
+    """Task worktrees: one checkout per activity branch (plan-<slug>, dev-<slug>), integrated and removed by finish."""
 
 
 @cli.command(name="start")
@@ -106,7 +107,7 @@ def start_cmd(
     unit: str | None,
     output_format: str,
 ) -> None:
-    """Create (or reuse) <parent>/<repo>-wt-<BRANCH> on the new activity branch BRANCH (plan-<slug> or dev-<slug>).
+    """Create <parent>/<repo>-wt-<BRANCH> on the new activity branch BRANCH (plan-<slug> or dev-<slug>).
 
     A branch that exists locally or on a remote is refused; continue it with --existing-branch BRANCH --unit DIR,
     which attaches a worktree to it after checking that the branch is in sync with its remote and holds the unit.
@@ -168,7 +169,7 @@ def _finished(result: FinishResult) -> str:
     return (
         f"[WORKTREE_FINISHED: {_value(result.branch)} path={_value(result.path)} merged={_value(result.merged)}"
         f" push={_value(result.push)} removed={_value(result.removed)}"
-        f" branch_deleted={_value(result.branch_deleted)}]"
+        f" branch_deleted={_value(result.branch_deleted)} discarded={_value(result.discarded)}]"
     )
 
 
@@ -181,25 +182,36 @@ def _finished(result: FinishResult) -> str:
     help="Fast-forward the base onto the branch and push it to its upstream first"
     ' (refused under [worktree] pull_request = "required")',
 )
+@click.option(
+    "--discard",
+    is_flag=True,
+    help="Close: drop the unmerged branch (remove its worktree, git branch -D) on the authority the close needs",
+)
 @FORMAT_OPTION
 @boundary
-def finish_cmd(branch: str, workspace_root: str | None, merge: bool, output_format: str) -> None:
+def finish_cmd(branch: str, workspace_root: str | None, merge: bool, discard: bool, output_format: str) -> None:
     """Integrate BRANCH into the base, then remove its worktree and the branch; run it from the base.
 
     Without --merge the branch must already be merged (for example through its pull request). With --merge the
-    installed devkit.finish_guard extensions check the branch first (WORKTREE_BLOCKED). Rerun the same command
-    after resolving a refusal: the steps already done are skipped.
+    installed devkit.finish_guard extensions check the branch first (WORKTREE_BLOCKED). --discard closes a task
+    instead: the branch is dropped unmerged, only on the authority its close needs. Rerun the same command after
+    resolving a refusal: the steps already done are skipped.
     """
+    if merge and discard:
+        raise ArgumentError("--merge and --discard exclude each other", target_files=["--discard"])
     position, config, _ = _position(workspace_root)
     try:
-        result = finish(
-            position,
-            branch,
-            merge=merge,
-            pull_request=config.pull_request,
-            delete_branch=config.delete_branch,
-            guard=lambda merge_base, tip: run_finish_guards(position.base, branch, merge_base, tip),
-        )
+        if discard:
+            result = discard_branch(position, branch)
+        else:
+            result = finish(
+                position,
+                branch,
+                merge=merge,
+                pull_request=config.pull_request,
+                delete_branch=config.delete_branch,
+                guard=lambda merge_base, tip: run_finish_guards(position.base, branch, merge_base, tip),
+            )
     except WorktreeError as error:
         partial = error.result
         if not isinstance(partial, FinishResult):
@@ -226,7 +238,7 @@ def finish_cmd(branch: str, workspace_root: str | None, merge: bool, output_form
 def status_cmd(workspace_root: str | None, output_format: str) -> None:
     """List every worktree with its branch, merge and dirty state, and the unmerged branches no worktree checks out.
 
-    Changes nothing. A merged, clean linked worktree is finished with `devkit worktree finish <slug>`; remove
+    Changes nothing. A merged, clean linked worktree is finished with `devkit worktree finish <branch>`; remove
     anything unmerged, dirty or prunable only with the user's authorization.
     """
     result = status(_position(workspace_root)[0])

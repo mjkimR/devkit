@@ -96,8 +96,7 @@ checks_dir = ".devkit/workflow-checks" # project-authored plugin checks, one pac
 default = "direct-delivery"           # used by `new` and by unbound units
 
 [workflow.approvals]
-direction = "auto"                    # ask (default) | auto | off
-integration = "ask"
+dev-integration = "auto"              # ask (default) | auto | off
 handoff = "ask"                       # reserved: who picks the next workflow of a completed unit
 
 [workflow.stages]
