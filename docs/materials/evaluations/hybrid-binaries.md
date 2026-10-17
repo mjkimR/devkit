@@ -1,9 +1,9 @@
 # Hybrid Architecture & Native Binary Distribution Evaluation
 
-**Status**: Not adopted. Evaluation record (2026-10-11), updated 2026-10-13  
-**Decision**: `devkit` stays pure Python. Semantic search, the main candidate, landed without native code: [`devkit.search`](../../search/overview.md) embeds with a static Model2Vec model through numpy and tokenizers (prebuilt wheels) and ships the model as a data-only wheel, at about 20 ms more than a Go engine per search. The other triggers in [section 6](#6-adoption-criteria-and-recommended-roadmap) still apply to the sync engine and the rule scanner  
-**Target Modules**: `devkit.distribution` (playbook search, sync engine), `devkit.rules` (workspace scanner)  
-**Related Documents**: `ARCH-08-2-resource-taxonomy`, [Distribution Overview](../../distribution/overview.md)
+**Status**: Not adopted. Evaluation record (2026-10-11), updated 2026-10-13
+**Decision**: `devkit` stays pure Python. Semantic search, the main candidate, landed without native code: `CAP-SRCH-document-search` embeds with a static Model2Vec model through numpy and tokenizers (prebuilt wheels) and ships the model as a data-only wheel, at about 20 ms more than a Go engine per search. The other triggers in [section 6](#6-adoption-criteria-and-recommended-roadmap) still apply to the sync engine and the rule scanner
+**Target Modules**: `devkit.distribution` (playbook search, sync engine), `devkit.rules` (workspace scanner)
+**Related Documents**: `ARCH-08-2-resource-taxonomy`, `ARCH-05-4-distribution-components`
 
 ## 1. Objectives
 

@@ -37,18 +37,18 @@ Selected lifecycle `hook` assets add one scoped ownership category: exact matche
 `.codex/hooks.json`, recorded under `host_hooks` rather than `files`. All foreign entries remain project-owned;
 edited or missing owned groups conflict, and removal never adopts or deletes foreign entries. Planning, writes
 and rollback use the same transaction. Host trust and permission settings are never changed.
-See [Host Integration](../../host/overview.md#3-shared-configuration-ownership).
+See `CAP-HOST-lifecycle-observation`.
 
 1. **Project configuration (`.devkit/config.toml`)**: owned by the developer. `devkit sync` never edits it on its
    own; only the selection commands (`devkit add`, `devkit remove`, and `devkit sync` selection flags without
    `--no-save`) edit `agents` and `[presets]`, preserving unrelated tables, comments and formatting. A selection
    command that creates the file writes the commented template with it, and `devkit config template` adds the parts
    of the template the file lacks, never changing a line
-   ([Commented Template](../../distribution/sync-and-transactions.md#commented-template)). The receipt cannot claim it.
+   (`CAP-DIST-sync-and-transactions`). The receipt cannot claim it.
 2. **Managed assets (`.devkit/managed/<bundle>/`)**: a read-only cache of the upstream bundle files at their
    original relative paths, regenerated deterministically by `devkit sync`.
 3. **Native projections**: copied or rendered files in agent directories
-   ([Agent Projections](../../distribution/agent-projections.md)), tracked by path, SHA-256 and mode in the receipt.
+   (`CAP-DIST-agent-projections`), tracked by path, SHA-256 and mode in the receipt.
 4. **Foreign files**: devkit manages only files recorded in the receipt and preserves every other file. A planned
    write onto an existing file the receipt does not record aborts the sync before any write
    (`unowned destinations already exist: <paths>`, `SYNC_CONFLICT`), unless the file is identical to the desired
@@ -72,7 +72,7 @@ See [Host Integration](../../host/overview.md#3-shared-configuration-ownership).
      `.devkit/managed/` is a stray file.
    - Only files byte-for-byte identical to their recorded signature are ever deleted.
 6. **Host guidance block (root `AGENTS.md`)**: the
-   [host guidance block](../../architecture/ARCH-08-2-resource-taxonomy.md#1-host-guidance-block) between `<!-- DEVKIT:START -->`
+   `ARCH-08-2-resource-taxonomy` between `<!-- DEVKIT:START -->`
    and `<!-- DEVKIT:END -->`.
    - Content: the installed bundle names, the once-per-bundle `devkit get-context` rule, the generated entry
      skills, then the selected `guidance` fragments ordered by bundle name and asset id; deterministic for a given
@@ -95,7 +95,7 @@ See [Host Integration](../../host/overview.md#3-shared-configuration-ownership).
      warning. With no recorded block, sync never reads `AGENTS.md`.
    - `CLAUDE.md` is never written; the project points it at `AGENTS.md` with its own symlink or include line.
 7. **Seeded files (write-once scaffolding)**: the `target` of a seeded `document` asset
-   ([Manifest Specification](../../distribution/manifest-spec.md#2-asset-kinds)).
+   (`CAP-DIST-manifest-spec`).
    - Written only when the destination does not exist, as a `seed` action through the same journal as every other
      write. An existing file there is not a collision; it is left alone. Before the first seed (while the receipt
      does not record the path under `seeded`), a directory or symlink at the target, two selected bundles seeding

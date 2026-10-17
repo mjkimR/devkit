@@ -11,7 +11,7 @@ created_at: 2026-10-17
 
 The Agent Advisory Protocol is how a tool tells an AI agent what happened **and what to do next**. Every error, warning and notice a `devkit` command reports is an advisory: a block of sentinel lines on stderr (or the same envelope as JSON) whose `[ACTION]` directive the agent follows instead of guessing, improvising workarounds or retrying in loops.
 
-This is the canonical specification. `devkit.advisory` implements it ([reference](../../advisory/reference.md)); the `agent-advisory` and `agent-advisory-python` instructions of the built-in `advisory` bundle are its consumer-facing mirrors, kept in step with it. Where an advisory sits among the rest of a command's output is specified in [Agent-First Output](../../architecture/ARCH-08-1-agent-output.md).
+This is the canonical specification. `devkit.advisory` implements it ([reference](../../development/reference/advisory.md)); the `agent-advisory` and `agent-advisory-python` instructions of the built-in `advisory` bundle are its consumer-facing mirrors, kept in step with it. Where an advisory sits among the rest of a command's output is specified in `ARCH-08-1-agent-output`.
 
 ## 1. Principles
 
@@ -31,7 +31,7 @@ Every advisory has a **level**. The level decides whether the operation failed; 
 | `WARNING` | `[WARN]` | succeeded, but something needs the user's attention | unchanged (`--strict` raises `0` to `1`) | always; mode `CONTINUE` |
 | `NOTICE` | `[NOTICE]` | succeeded; something is worth knowing | unchanged | recommended; mode `NOTE`; may be omitted (`brief`) |
 
-There is no `INFO` level. Information that neither changes the agent's next step nor needs to reach the user is a log line (`[INFO]`, shown only under `-v`; see [Agent-First Output, section 8](../../architecture/ARCH-08-1-agent-output.md#8-logs-info)).
+There is no `INFO` level. Information that neither changes the agent's next step nor needs to reach the user is a log line (`[INFO]`, shown only under `-v`; see `ARCH-08-1-agent-output`).
 
 Choosing a level:
 
@@ -261,7 +261,7 @@ To prevent blind retries and destructive side-quests without paralyzing the agen
 - **Lasting conditions.** A condition that persists across runs is reported by what it asks for. One the user must act on is a `WARNING` and is reported on every run until it is resolved (a stray file, an override behind upstream). One that asks for nothing is a `NOTICE` reported when it appears or changes, not on every run that finds it unchanged (a bundle that became available); afterwards it stays visible as data (a JSON field, a list command). A condition the user decided on (an opted-out bundle) is never announced again.
 - **Targets are files.** `[TARGET]` names what the agent would open: a file path, a flag, or a `path:line:col` location. Identifiers such as rule IDs or `bundle:asset` labels belong in the message or `[DETAIL]`.
 - **Fixes are runnable.** `[FIX]` is an exact command or edit, never a template with placeholders such as `<bundle>`. When there are several candidates, `[FIX]` names a command that lists them (or the command for the single one), and `[DETAIL]` gives one exact command per candidate.
-- **Order and quiet runs.** On stderr, warnings precede notices, each in collected order, and errors come last; JSON keeps the collected order. `-q` hides notices, never warnings or errors; JSON always carries every advisory. See [Agent-First Output, sections 5 and 6](../../architecture/ARCH-08-1-agent-output.md#5-stderr-advisories).
+- **Order and quiet runs.** On stderr, warnings precede notices, each in collected order, and errors come last; JSON keeps the collected order. `-q` hides notices, never warnings or errors; JSON always carries every advisory. See `ARCH-08-1-agent-output`.
 
 ## 9. Structured Output
 
@@ -273,7 +273,7 @@ Machine channels carry the same envelope as data:
   - for an `ERROR` only: `actor`, `retry`, `guardrail`, `input_error`, and `retry_after` when set;
   - `fix`, `what_to_report`, `target_files` and `details` only when they have a value.
 
-  An absent key means "none". A result lists collected errors under `errors` and warnings and notices under `notices`; a command that fails outright prints `{"error": {...}}` ([Agent-First Output, section 4](../../architecture/ARCH-08-1-agent-output.md#4-stdout-json)). A JSON command renders no block on stderr: an agent host that merges the channels would read each advisory twice.
+  An absent key means "none". A result lists collected errors under `errors` and warnings and notices under `notices`; a command that fails outright prints `{"error": {...}}` (`ARCH-08-1-agent-output`). A JSON command renders no block on stderr: an agent host that merges the channels would read each advisory twice.
 - **HTTP (RFC 7807)**: errors only: `{"type", "title": <code>, "status": <HTTP status>, "detail": <message>, "code", "advisory"}`. `type` is `<documentation base URI>/<code>` or `about:blank`. The server decides whether to expose `advisory` (for example, only on authenticated or internal APIs); request headers never enable it. Warnings and notices travel inside the successful response body, in its `notices`.
 - **MCP tools**: a failed call returns the rendered error block as the error result text; a successful call appends its rendered warning and notice blocks after the result text.
 

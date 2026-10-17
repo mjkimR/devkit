@@ -10,15 +10,15 @@ created_at: 2026-10-17
 # [CAP-GOV-rules-engine] Agent Rule Engine: Architecture Overview
 
 `devkit.rules` (`devkit rules` CLI) is a deterministic governance engine: repository-level checks, relative Markdown link validation and repair, hygiene checks, and execution of the rules that bundles distribute for their own document models.
-Related: [Evaluation Lifecycle](../../rules/evaluation-lifecycle.md), [Rule Authoring Guide](../../rules/rule-authoring.md), [Rules Reference](../../rules/reference.md),
-[Commit Gate Overview](../../gate/overview.md), [In-Repository Bundles](../../distribution/in-repo-bundles.md), `ARCH-08-2-resource-taxonomy`.
+Related: `CAP-GOV-evaluation-lifecycle`, `CAP-GOV-rule-authoring`, [Rules Reference](../../development/reference/rules.md),
+`CAP-GATE-commit-gates`, `CAP-DIST-in-repo-bundles`, `ARCH-08-2-resource-taxonomy`.
 
 ## 1. Principles
 
 1. **Deterministic checks**: repository invariants (relative links, file sizes, committed secrets) are enforced by parsing, not by prompt instructions.
 2. **No built-in document model**: the engine does not know what a specification, story or decision record is. Identifier grammars, frontmatter schemas, target directories and cross-reference semantics belong to the bundle that defines those documents and arrive as `kind = "rule"` assets; the engine provides the cache, the Markdown file catalog, policy and execution. Built-in rules cover only what holds for any repository.
 3. **Session caching**: one in-memory cache per evaluation session holds file lists, bytes, text, frontmatter and links.
-4. **Convergent autofix**: one repair pass followed by one recheck, never a repair loop ([Evaluation Lifecycle, section 2](../../rules/evaluation-lifecycle.md#2-autofix-and-convergence)).
+4. **Convergent autofix**: one repair pass followed by one recheck, never a repair loop (`CAP-GOV-evaluation-lifecycle`).
 5. **One evaluation path**: the CLI, the `rules-check` commit gate and the workflow engine's `lint-clean` check both call `run_project_rules`, so they cannot disagree on policy.
 
 ## 2. Subsystem Layout
@@ -54,9 +54,9 @@ Library callers import the public API from `devkit.rules`; built-in rule classes
 
 ## 3. Integration with Content Wheels and devkit
 
-- **Content wheels**: bundles ship rules as `kind = "rule"` assets; `devkit sync` records each deployed file in `.devkit/installation.json`, and `devkit rules` loads them from the receipt without any flag ([Rule sources](../../rules/rule-authoring.md#5-rule-sources-and-registration)).
+- **Content wheels**: bundles ship rules as `kind = "rule"` assets; `devkit sync` records each deployed file in `.devkit/installation.json`, and `devkit rules` loads them from the receipt without any flag (`CAP-GOV-rule-authoring`).
 - **Project policy**: a consumer changes a distributed rule's phase, severity or settings only through `[rules]` in `.devkit/config.toml`; managed rule files are hash-checked and never edited in place.
-- **Pre-commit and CI**: the built-in `rules-check` commit gate evaluates what `devkit rules check --staged` evaluates on every commit, on by default once the hooks are installed ([Commit Gate Overview](../../gate/overview.md#2a-built-in-gates)); CI runs `devkit rules check --ci --base <ref>`. Both evaluate the exact Git tree, so the result cannot depend on unstaged or ignored files ([Evaluation Lifecycle, section 6](../../rules/evaluation-lifecycle.md#6-git-snapshot-gates)).
+- **Pre-commit and CI**: the built-in `rules-check` commit gate evaluates what `devkit rules check --staged` evaluates on every commit, on by default once the hooks are installed (`CAP-GATE-commit-gates`); CI runs `devkit rules check --ci --base <ref>`. Both evaluate the exact Git tree, so the result cannot depend on unstaged or ignored files (`CAP-GOV-evaluation-lifecycle`).
 
 ## 4. Shared Foundation
 

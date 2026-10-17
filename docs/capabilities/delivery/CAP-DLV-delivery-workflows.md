@@ -22,9 +22,9 @@ The `spec` bundle ships one devkit workflow definition per combination of `plann
 (`kind = "workflow"` assets in `packages/devkit-spec/src/devkit_spec/bundle/workflows/`), six host-neutral role contracts
 (`kind = "subagent"` assets in `packages/devkit-spec/src/devkit_spec/bundle/subagents/`), all in the `core` preset, and the
 `devkit.integration.readiness` provider `spec` (`packages/devkit-spec/src/devkit_spec/integration.py`). devkit's workflow engine
-evaluates the definitions ([Workflow Engine](https://github.com/mjkimR/devkit/blob/main/docs/workflow/overview.md));
+evaluates the definitions (`CAP-DLV-workflow-orchestration`);
 `devkit sync` projects the roles into each agent host's subagent directory
-([Agent Projections](https://github.com/mjkimR/devkit/blob/main/docs/distribution/agent-projections.md)). The
+(`CAP-DIST-agent-projections`). The
 definitions are the only source of stage order, checks, gates and returns: an executor reads them, never an ad-hoc
 sequence.
 
@@ -288,7 +288,7 @@ has no envelope key: it lives in `reconcile.md`.
 ### 4.6 Role Contracts
 
 One Markdown contract per role in devkit's
-[role contract format](https://github.com/mjkimR/devkit/blob/main/docs/distribution/agent-projections.md#role-contract-format):
+`CAP-DIST-agent-projections`:
 `role`, `title`, `description`, an optional `skill` and a `hosts` block for `claude-code`, `codex` and `antigravity`.
 Extension keys devkit does not interpret: `x-execution` (`isolated`), `x-invocation` (`optional`), `x-model-profile`
 (`light-medium`, `general-high`, `high-reasoning`; never a host model name) and `x-git-actions` (`[read]` for every

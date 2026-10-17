@@ -5,11 +5,11 @@ Personal developer tools monorepo.
 ## Architecture and Boundaries
 
 - Python monorepo managed with `uv` workspaces and `just`.
-- Python sources live in `packages/<package>/src/` or `tools/<tool>/src/` (`models/devkit-embed` is a data package outside the workspace, built by hand); tests belong in each package's `tests/`, never under `src/`, except a rule's own tests, which travel with it in its folder (`<rule>/tests/`, [Rule Authoring, section 6](docs/rules/rule-authoring.md#6-testing-a-rule)).
+- Python sources live in `packages/<package>/src/` or `tools/<tool>/src/` (`models/devkit-embed` is a data package outside the workspace, built by hand); tests belong in each package's `tests/`, never under `src/`, except a rule's own tests, which travel with it in its folder (`<rule>/tests/`, `CAP-GOV-rule-authoring`).
 - Keep `justfile` recipes thin; shared shell logic belongs in `scripts/`.
 - Inside `packages/devkit`, lower modules never import higher ones (`advisory` < `core` < `rules` < `workflow`/`gate`; `search`, `compact`, `worktree` and `host` use only `core` and `advisory`; `distribution` also uses `search` and `host`; `integration` uses `core`, `advisory`, `host` and `worktree`; `rules`, `gate` and `generated` also use `compact`; the data-only bundle areas `advisory_guide` and `commits_guide` import nothing, and `authoring_guide` only `core`, `advisory` and `rules`); a test enforces the layering (`packages/devkit/tests/test_layering.py`). `devkit.advisory` ships as the separate `devkit-advisory` distribution (standard library only, no entry points), and `devkit` is a namespace package both share: never add `src/devkit/__init__.py`.
 - `guides/` holds the agent-facing installation guides a consumer's agent follows from a GitHub link; keep their commands, codes and bundle recommendations in step with `docs/` and the packages.
-- `docs/<area>/` is canonical for each module's semantics; `docs/<area>/reference.md` and package READMEs stay quick references that link there, and the bundled guide instructions are consumer-facing mirrors kept in step.
+- `docs/capabilities/<area>/` is canonical for each module's behavior, and `docs/architecture/` defines system structure; `docs/development/reference/<module>.md` and package READMEs stay quick references that point to those contracts, and the bundled guide instructions are consumer-facing mirrors kept in step.
 - Write all documentation, architecture specifications, and guide materials in English.
 - Do not commit `.env` or log secrets/PII.
 
@@ -23,7 +23,7 @@ Personal developer tools monorepo.
 - **Levels**: a failure or refusal is raised as an `AdvisoryError`; something a successful operation must report is returned with its result under `notices` at `WARNING` or `NOTICE`, never raised and never logged. Warnings and notices do not change exit codes (`0` success, `1` negative result, `2` could not run), except under `--strict`.
 - **Context budget**: default output carries only what changes the agent's next step or must reach the user. Diagnostics are `logging` calls, visible under `-v`.
 - **Libraries never print**: commands write output only through `devkit.core.cli` (`boundary`, `echo_json`, `echo_notices`, `exit_on_warnings`).
-- Specifications: [Agent-First Output](docs/architecture/ARCH-08-1-agent-output.md) and [Agent Advisory Protocol](docs/advisory/protocol.md).
+- Specifications: `ARCH-08-1-agent-output` and `CAP-ADV-agent-advisory-protocol`.
 
 ## Compatibility
 
@@ -33,7 +33,7 @@ Personal developer tools monorepo.
 
 ## Packages
 
-Keep package descriptions in this guide to a high-level summary of their purpose. Do not add package-specific configurations or detailed architectural explanations here; refer to the package README and `docs/<area>/` when deeper details are needed:
+Keep package descriptions in this guide to a high-level summary of their purpose. Do not add package-specific configurations or detailed architectural explanations here; refer to the package README and `docs/capabilities/<area>/` when deeper details are needed:
 
 - `devkit-agt`: The single devkit distribution with one CLI (`devkit`): agent asset distribution, repository rules, delivery workflows, commit gates and structured agent advisories, built on an SDD-agnostic shared core. See [packages/devkit/README.md](packages/devkit/README.md) for its modules and layering.
 - `devkit-advisory`: The Agent Advisory Protocol library (`devkit.advisory`) on its own, for other repositories' runtime; `devkit-agt` depends on the same version. See [packages/devkit-advisory/README.md](packages/devkit-advisory/README.md).

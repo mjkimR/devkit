@@ -184,7 +184,7 @@ _STARTED = re.compile(rf"{_NODE_ID} ")
 # A count is shorter than this many repeats of any line (two characters each, newline included).
 _REPEATS_KEPT = 64
 
-# The Agent Advisory Protocol block grammar (docs/advisory/protocol.md, section 3). A rendered block has no
+# The Agent Advisory Protocol block grammar (docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md, section 3). A rendered block has no
 # empty lines, so an empty line ends one.
 _HEADLINES = {sentinel: level for level, sentinel in HEADLINE.items()}
 _FIELDS = (*FIELDS, CONTINUATION)

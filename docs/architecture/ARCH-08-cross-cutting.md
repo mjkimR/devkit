@@ -28,7 +28,7 @@ Every command in `devkit` reports errors, warnings, and notices through the stru
 - **Directives**: Every advisory MUST carry an actionable `[ACTION]` directive telling the agent what to fix or inspect next.
 - **Library Contracts**: Library functions raise subclasses of `AdvisoryError` containing typed codes and retry modes (`IMMEDIATE`, `AFTER_FIX`, `AFTER_INPUT`, `NEVER`).
 
-See [Agent Advisory Protocol Specification](../advisory/protocol.md) for full details.
+See `CAP-ADV-agent-advisory-protocol` for full details.
 
 ---
 
@@ -43,7 +43,7 @@ Commands emit output strictly divided between channels:
   - Agent Advisory blocks (`[ERROR]`, `[WARN]`, `[NOTICE]`).
   - Diagnostic logs (`[INFO]`) only enabled with `-v`.
 
-See [Agent-First Output Specification](ARCH-08-1-agent-output.md) for channel routing and formatting rules.
+See `ARCH-08-1-agent-output` for channel routing and formatting rules.
 
 ---
 

@@ -14,7 +14,7 @@ This project manages its documentation based on **Spec-Driven Development (SDD)*
 | **`stories/`** | User Stories | User-centric journeys, actor value flows, acceptance criteria (`US-<slug>`) |
 | **`materials/`** | Reference & Spikes | Technical spikes, benchmarks, external libraries, competitor analysis reports |
 | **`proposals/`** | Proposals | Pre-spec proposals incubating uncertain work (`PROP-<slug>`) |
-| **`development/`** | Development & Collaboration | Local environment setup, Git workflow, commit/PR conventions, CI/CD pipelines |
+| **`development/`** | Development & Collaboration | Local environment setup, Git workflow, commit/PR conventions, CI/CD pipelines, and CLI/API quick references in `development/reference/` |
 | **`glossary.md`** | Ubiquitous Glossary | Core domain business and technical ubiquitous terminology definitions |
 
 ---
@@ -41,3 +41,12 @@ This project manages its documentation based on **Spec-Driven Development (SDD)*
 3. **Living Spec Reconciliation**:
    - `docs/` is the durable source of truth. Temporary sprint checklists and PR task lists belong in `specs/`.
    - Upon task completion, all changes to contracts, capabilities, and system behaviors must be reconciled into `docs/`.
+
+## 4. Finding Module Documentation
+
+- Behavior and contracts: `capabilities/<area>/CAP-<AREA>-<slug>.md`.
+- Component structure, dependencies, and runtime flows: `architecture/ARCH-*.md`.
+- CLI usage, configuration, error codes, and library examples: [Module References](development/reference/README.md).
+
+Module references point to the durable capability and architecture documents; maintain each contract there once.
+Refer to ID-bearing documents by full ID; use ordinary links for quick references and other documents without IDs.

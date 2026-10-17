@@ -1,7 +1,7 @@
 # Agent Runtime Hooks Evaluation
 
 Historical evaluation of a path-scoped context advisor. The shared lifecycle hook foundation is now implemented
-separately in [Host Integration](../../host/overview.md). That foundation does not adopt the proposed advisor,
+separately in `CAP-HOST-lifecycle-observation`. That foundation does not adopt the proposed advisor,
 cross-host support or its latency target. Statements below describe the original evaluation, not current support.
 
 - **Status**: Not adopted. Evaluation record (2026-10-14), from a technical spike run on 2026-10-03 for specrig, the
@@ -9,9 +9,9 @@ cross-host support or its latency target. Statements below describe the original
 - **Decision**: devkit ships no agent runtime hooks for now: no consumer needs them yet. Hosts support the mechanism,
   so devkit can add it when a concrete need appears; [section 6](#6-adoption-criteria) lists what to settle then.
 - **Target Modules**: `devkit.distribution` (a new projected asset kind), a new advisor command.
-- **Related Documents**: [Native Agent Projections](../../distribution/agent-projections.md),
-  [Workspace Ownership](../../distribution/workspace-ownership.md), `ARCH-08-2-resource-taxonomy`,
-  [Agent-First Output](../../architecture/ARCH-08-1-agent-output.md).
+- **Related Documents**: `CAP-DIST-agent-projections`,
+  `CAP-DIST-workspace-ownership`, `ARCH-08-2-resource-taxonomy`,
+  `ARCH-08-1-agent-output`.
 
 ## 1. Objectives
 
@@ -62,12 +62,12 @@ Sources (as of the spike; recheck before adoption):
 ## 4. Constraints from devkit's Contracts
 
 - **Host settings are off limits today.** devkit never touches host settings or trust configuration
-  ([Native Agent Projections, section 2](../../distribution/agent-projections.md#2-projection-rules)). Hook
+  (`CAP-DIST-agent-projections`). Hook
   registration lives in host settings files (`.claude/settings.json`, `.codex/config.toml`) or a host file next to
   them (`.codex/hooks.json`). Support needs an explicit decision: a projected, receipt-owned hook file per host, a
   narrowly owned entry inside a settings file, or a printed snippet the user installs.
 - **Output contract.** The hook's stdout must be the host's JSON (`hookSpecificOutput`), not devkit sentinels. The
-  advisor is a documented exception to [Agent-First Output](../../architecture/ARCH-08-1-agent-output.md), like any host-defined protocol.
+  advisor is a documented exception to `ARCH-08-1-agent-output`, like any host-defined protocol.
 - **Fail-open.** A failing or slow advisor never blocks the tool call; it records a diagnostic and exits cleanly.
 - **Context budget.** Hints are capped at two lines and deduplicated per session to avoid crowding the context.
 - **Latency.** The hook runs on every matched tool call. The spike set a p95 budget of 10 ms; a Python process start

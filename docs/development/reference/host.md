@@ -1,6 +1,6 @@
 # Host Integration Reference
 
-Canonical semantics: [overview.md](overview.md).
+Canonical semantics: `CAP-HOST-lifecycle-observation`.
 
 | Command | Result |
 | --- | --- |
@@ -26,7 +26,7 @@ native CLI boundary turns them into warning responses. See the overview for the 
 
 Malformed bundle sources are surfaced as `BUNDLE_INVALID` by bundle validation; unsafe deployment paths follow
 distribution's existing path advisory contract. A valid installation is not proof that Codex has enabled or trusted
-it. Native integration confirmation and execution are described in [Integration](../integration/overview.md).
+it. Native integration confirmation and execution are described in `CAP-INT-mcp-services`.
 
 
 ## MCP services

@@ -8,7 +8,7 @@ created_at: 2026-10-17
 
 # [ARCH-05-3-command-plugins] Command Plugins
 
-An installed package adds a command group to the `devkit` command line through the `devkit.commands` entry-point group, the way a content package adds a bundle through `devkit.bundles` ([Content Packages](../distribution/content-packages.md)). A methodology layer built on devkit (devkit-spec mounts `devkit spec`) ships its commands, its bundle and its rules in one wheel, and agents reach all of it through the one `devkit` executable of the project environment.
+An installed package adds a command group to the `devkit` command line through the `devkit.commands` entry-point group, the way a content package adds a bundle through `devkit.bundles` (`CAP-DIST-content-packages`). A methodology layer built on devkit (devkit-spec mounts `devkit spec`) ships its commands, its bundle and its rules in one wheel, and agents reach all of it through the one `devkit` executable of the project environment.
 
 ## 1. Declaring a Command
 
@@ -35,7 +35,7 @@ spec = "devkit_spec.cli:cli"
 
 A plugin command is a devkit command, so it keeps the output contract an agent relies on:
 
-- Build every command on `devkit.core.cli`: `boundary`, `FORMAT_OPTION`, `workspace_option`, `echo_json`, `echo_notices`, `exit_on_warnings`, `exit_on_problems`. The boundary gives it the output options, the Agent Advisory Protocol rendering and the exit codes of [Agent-First Output](ARCH-08-1-agent-output.md).
+- Build every command on `devkit.core.cli`: `boundary`, `FORMAT_OPTION`, `workspace_option`, `echo_json`, `echo_notices`, `exit_on_warnings`, `exit_on_problems`. The boundary gives it the output options, the Agent Advisory Protocol rendering and the exit codes of `ARCH-08-1-agent-output`.
 - Raise `AdvisoryError` subclasses with the plugin's own stable codes, prefixed by its domain (`SPEC_...`), and document them in the plugin's own docs; never reuse a devkit code for a different condition.
 - `devkit --version` prints only devkit's version. A plugin that reports its own version does so under its group (`devkit spec --version`) with a `[VERSION: <package> <version>]` line.
 - Use devkit through each module's public surface (`devkit.<module>` `__init__` exports and `devkit.core.cli`), never its private helpers. devkit makes breaking changes in place while it has no external consumers ([AGENTS.md](../../AGENTS.md#compatibility)), so a plugin pins devkit to a minor range and moves with it.

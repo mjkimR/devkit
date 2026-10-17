@@ -21,7 +21,7 @@ from devkit.workflow.unit.envelope import parse_findings
 from testsupport.workflow import WORKFLOW, write_config
 
 REPO = Path(__file__).resolve().parents[4]
-REFERENCE = REPO / "docs/workflow/reference.md"
+REFERENCE = REPO / "docs/development/reference/workflow.md"
 EXAMPLE = REPO / "examples/bundles/delivery-workflow"
 
 

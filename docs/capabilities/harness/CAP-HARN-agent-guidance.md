@@ -26,7 +26,7 @@ entrypoints:
 The `spec` bundle (`packages/devkit-spec/src/devkit_spec/bundle/`, registered through the `devkit.bundles` entry point `spec`) is the
 half of devkit-spec an agent reads: it tells every session how spec-driven delivery works, which route a request
 takes and which procedure each stage runs. devkit distributes it like any content package
-([Manifest Specification](https://github.com/mjkimR/devkit/blob/main/docs/distribution/manifest-spec.md)): `devkit
+(`CAP-DIST-manifest-spec`): `devkit
 sync` copies the assets to `.devkit/managed/spec/`, projects skills and role contracts into each agent host's native
 directories and writes the guidance pointer into the root `AGENTS.md` block.
 

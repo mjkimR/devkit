@@ -45,4 +45,4 @@ created_at: 2026-10-16
 devkit workflow next on all six PROP-* units: no WORKFLOW_DRIFT
 ```
 
-- **Disposition**: `src/devkit_spec/bundle/skills/spec/SKILL.md`: `WORKFLOW_DRIFT` names the `stages` list and states that a body, title or stage-name edit needs no rebind; devkit already documents the hash inputs (`docs/workflow/definition-and-checks.md`, Schema Hash), so nothing is forwarded.
+- **Disposition**: `src/devkit_spec/bundle/skills/spec/SKILL.md`: `WORKFLOW_DRIFT` names the `stages` list and states that a body, title or stage-name edit needs no rebind; devkit already documents the hash inputs (`docs/capabilities/delivery/CAP-DLV-workflow-definitions.md`, Schema Hash), so nothing is forwarded.

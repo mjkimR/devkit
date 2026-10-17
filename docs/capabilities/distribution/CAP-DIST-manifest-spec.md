@@ -10,12 +10,12 @@ created_at: 2026-10-17
 # [CAP-DIST-manifest-spec] Bundle Manifest Specification (`bundle.toml`)
 
 Schema version `1`. How a bundle reaches a project as a Python package is specified in
-[Content Packages](../../distribution/content-packages.md).
+`CAP-DIST-content-packages`.
 
 ## 1. Bundle Layout
 
 A bundle is a directory with `bundle.toml` at its root, an optional `AGENTS.md` constitution (returned by
-`devkit get-context`, see [Context Loading](../../distribution/context-and-playbooks.md)) and the asset sources the manifest declares:
+`devkit get-context`, see `CAP-DIST-context-and-playbooks`) and the asset sources the manifest declares:
 
 ```text
 bundle/
@@ -35,13 +35,13 @@ standards are in the `ARCH-08-2-resource-taxonomy`.
   (`0755`) preserved. One `source` serves every agent; `variants` ship a directory per agent. `invocation` (optional,
   `auto` or `user`, default `auto`) says who starts the skill: under `user` only an explicit user invocation does,
   and each projection carries the agent's native setting
-  ([Agent Projections](../../distribution/agent-projections.md#2-projection-rules)).
+  (`CAP-DIST-agent-projections`).
 - `subagent`: a delegated agent persona: native files per agent (`variants`, copied verbatim) or one host-neutral
-  role contract (`source`) rendered per selected agent. See [Agent Projections](../../distribution/agent-projections.md).
+  role contract (`source`) rendered per selected agent. See `CAP-DIST-agent-projections`.
 - `instruction`: Markdown whose YAML frontmatter declares a nonempty `name` and `description`, the header
   `devkit get-context` catalogs. Every file of the source, including each file of a directory source, carries one.
 - `playbook`: a procedure for an occasional task, found through playbook search; header rules are in
-  [Context Loading & Playbooks, section 3](../../distribution/context-and-playbooks.md#3-playbook-discovery-and-search-devkit-playbook).
+  `CAP-DIST-context-and-playbooks`.
 - `rule`: Python governance rules run by `devkit.rules`, shipped as one plugin package directory per asset (see
   **Plugin packages** below). The receipt lists every deployed file under the asset's `paths` and `devkit rules`
   loads the package from there; a consumer configures the rules in `[rules]` of `.devkit/config.toml`.
@@ -52,23 +52,23 @@ standards are in the `ARCH-08-2-resource-taxonomy`.
   `entrypoints` in the receipt so `devkit workflow` finds it without configuration.
 - `gate`: Python commit gates in one plugin package directory per asset, run by `devkit.gate` at a Git hook stage,
   loaded from the receipt's `paths` and configured in `[gates]` of `.devkit/config.toml` or the per-clone `.git/devkit.config`; see the
-  [Commit Gate Overview](../../gate/overview.md).
+  `CAP-GATE-commit-gates`.
 - `hook`: one declarative TOML file selecting a host, event and installed service handler. Sync manages exact
   registrations in a shared host file, recorded under `host_hooks` in the receipt. Codex command hooks are the
-  initial target; see [Host Integration](../../host/overview.md#2-hook-assets) for schema, deployment and runtime.
+  initial target; see `CAP-HOST-lifecycle-observation` for schema, deployment and runtime.
 - `document`: plain files with no engine semantics. Unseeded, a managed copy agents read by path. With
   `seeded = true` and a `target`, a **seeded** asset: written once to the workspace-relative `target` (a directory
   source to `target/<relative path>`, executable bits preserved) when that path does not exist, then project-owned;
   this is how a bundle scaffolds a docs tree, a glossary or a policy file. Seeded files are never catalogued by
   `get-context`, playbook search or projections. Runtime behavior:
-  [Workspace Ownership, section 2](../../distribution/workspace-ownership.md#2-ownership-categories-and-invariants).
+  `CAP-DIST-workspace-ownership`.
 - `guidance`: a fragment of the root `AGENTS.md` guidance block, for a pointer every agent session must see (for
   example "read the commit conventions before writing a commit message"). The source is one Markdown file of list
   items: every line is a `- ` item or a two-space continuation line, no blank lines or HTML comments, at most 300
   UTF-8 bytes. `{path:<asset-id>}` names another asset of the same bundle; `devkit sync` replaces it with the path
   agents read (the project override, else the managed copy). A fragment is also deployed as a managed copy and may be
   overridden; the override must meet the same rules. With `guidance_block = false` fragments are written nowhere.
-  Block placement and ordering: [Workspace Ownership, section 2](../../distribution/workspace-ownership.md#2-ownership-categories-and-invariants).
+  Block placement and ordering: `CAP-DIST-workspace-ownership`.
 
 ## 3. Manifest Syntax
 
@@ -145,7 +145,7 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
   of another one as well. Set it when the default preset is what nearly every project installing the package wants;
   leave it off for content a project adds deliberately (the built-in `devkit` and `advisory` bundles set it,
   `authoring` and `git-commits` do not). Until a project selects presets explicitly, upgrades follow the current
-  `default_preset`. See the [selection model](../../distribution/sync-and-transactions.md#2-asset-selection-model).
+  `default_preset`. See the `CAP-DIST-sync-and-transactions`.
 
 ## 4. Validation
 
@@ -158,7 +158,7 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
 - **Editing by-products**: inside a directory source, `.DS_Store`, `__pycache__/` and `*.pyc` are not bundle content:
   never validated, deployed, hashed or archived.
 - **Source vs. variants**: an asset declares either one `source` or a `variants` mapping, never both. Only `skill`
-  and `subagent` assets, the kinds projected per agent ([Agent Projections](../../distribution/agent-projections.md#1-projection-matrix)),
+  and `subagent` assets, the kinds projected per agent (`CAP-DIST-agent-projections`),
   may declare `variants`; its keys must be supported agent names (`antigravity`, `claude-code`, `codex`).
 - **Skills**: a `skill` source or variant is a directory containing a `SKILL.md` that is UTF-8 and, when it opens a
   frontmatter block, closes it (sync inserts the context prerequisite after it). `codex` and `antigravity` variants
@@ -175,20 +175,20 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
   entries; `__init__.py` is optional. The directory must contain at least one module, every directory and file name
   of a module must be a Python identifier, and no module may have two files (`a.py` beside `a/__init__.py` or
   beside a package directory `a/`). Modules import each other relatively; the loading model is
-  [`devkit.core.plugins`](../../core/reference.md). Guides, resources and tests ship in the same directory; a rule's
-  tests in its `tests/` folder run with `devkit rules test` ([Testing a Rule](../../rules/rule-authoring.md#6-testing-a-rule)).
+  [`devkit.core.plugins`](../../development/reference/core.md). Guides, resources and tests ship in the same directory; a rule's
+  tests in its `tests/` folder run with `devkit rules test` (`CAP-GOV-rule-authoring`).
 - **Native subagents**: each `subagent` variant is one file with the agent's native suffix: `.toml` for `codex`,
   `.md` for `claude-code` and `antigravity`.
 - **Headers**: instruction, playbook and workflow headers and role contracts follow the frontmatter grammar of
   `devkit.core.frontmatter` (a `---` opener, a `---` or `...` closer, a YAML mapping without duplicate keys).
 - **Role contracts**: a `subagent` declared with `source` is a single Markdown file whose frontmatter has `role` equal
   to the asset id, `title`, `description`, a `hosts` table with a block for every supported agent (valid statuses,
-  allowlisted keys), and a nonempty body ([format](../../distribution/agent-projections.md#role-contract-format)).
+  allowlisted keys), and a nonempty body (`CAP-DIST-agent-projections`).
 - **Workflows**: two `workflow` assets of one bundle may not declare the same header `id`.
 - **Presets**: asset lists are nonempty, unique and reference declared ids.
 - **Verbatim native content**: `subagent` variant files are never parsed, modified or stripped. Skill variants are
   deployed like a skill `source`, context prerequisite included
-  ([Context Loading](../../distribution/context-and-playbooks.md#skill-prerequisite)).
+  (`CAP-DIST-context-and-playbooks`).
 - **Guidance fragments**: a single `source` file (no `variants`, never `seeded`) meeting the fragment rules above.
   Each `{path:<asset-id>}` names an asset of the bundle with exactly one file `source` that is neither `guidance` nor
   seeded, and every preset that selects the fragment selects the named assets too.

@@ -13,7 +13,7 @@ These observations support `SPEC-planning-feedback-capture`; they describe curre
 | `packages/devkit-spec/src/devkit_spec/namespaces.py`, `_bundle_anchor` | Nested proposal files follow proposal.md's namespace | Preserve namespace through normal proposal-to-spec handoff |
 | `packages/devkit-spec/src/devkit_spec/bundle/skills/spec-feedback/references/template.md` | Status is open, promoted, dismissed or forwarded; only hygiene changes it | Open is the transfer criterion; moves never change status |
 | `packages/devkit-spec/src/devkit_spec/bundle/workflows/sdd-proposal.md` | Rejection starts no worker and changes state/answers only | Sweep before returning the run; retain files until later cleanup |
-| devkit `docs/workflow/definition-and-checks.md`, Shared Stages | Shared IDs require equal exit, gate, role, isolation, skills, artifacts; entry is informational | Reuse collect-feedback exactly, with proposal-specific entry |
+| devkit `docs/capabilities/delivery/CAP-DLV-workflow-definitions.md`, Shared Stages | Shared IDs require equal exit, gate, role, isolation, skills, artifacts; entry is informational | Reuse collect-feedback exactly, with proposal-specific entry |
 | `tests/test_workflows.py` | Shared-stage equality and current proposal gate behavior are tested | Add stage progression/policy coverage without relaxing the gate |
 | workbench `docs/strategy-layer/01-master-flow.md` §6.2 | No feedback procedure yet; rejection must not invoke workers or Cloud Agents | Explicit upstream update is a handoff prerequisite |
 

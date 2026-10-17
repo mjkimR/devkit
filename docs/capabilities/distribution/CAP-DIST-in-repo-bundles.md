@@ -12,7 +12,7 @@ created_at: 2026-10-17
 A repository's own assets (a rule encoding a project convention, a skill driving its release script, an on-call
 playbook) must be versioned with it, never published, and still get everything devkit does for distributed assets:
 planning, hash-tracked projection, receipt recording, rule discovery and Git snapshot gates. The consumer-facing
-version of this document is the `in-repo-bundle` instruction of the [`devkit` guide bundle](../../distribution/reference.md#4-bundles-shipped-with-devkit);
+version of this document is the `in-repo-bundle` instruction of the [`devkit` guide bundle](../../development/reference/distribution.md#4-bundles-shipped-with-devkit);
 keep the two in step.
 
 ## 1. Decision
@@ -90,8 +90,8 @@ source = "playbooks/on-call.md"
 ```
 
 The entry point name (`my-repo`) is the bundle name
-([Content Packages](../../distribution/content-packages.md#1-content-wheel-contract)).
-The manifest follows the [Manifest Specification](../../distribution/manifest-spec.md) without exception; `devkit bundle validate` and
+(`CAP-DIST-content-packages`).
+The manifest follows the `CAP-DIST-manifest-spec` without exception; `devkit bundle validate` and
 `devkit bundle plan` work on `tools/my-repo-devkit/src/my_repo_devkit/bundle` before it is installed.
 
 ## 3. Installation
@@ -125,7 +125,7 @@ uv run devkit add my-repo        # records [presets] my-repo = "all" and synchro
 
 The package belongs in `[dependency-groups].dev`, never `[project.dependencies]`: dependency groups are not written
 to a built wheel, so if the repository is itself published, its consumers never receive the bundle, its rules or its
-entry point ([Content Packages, section 3](../../distribution/content-packages.md#3-dependency-boundaries)). To share the bundle later,
+entry point (`CAP-DIST-content-packages`). To share the bundle later,
 publish the package or let other repositories depend on it with a Git URL and `subdirectory`.
 
 ## 4. Editing Lifecycle
@@ -148,7 +148,7 @@ Snapshot gates (`devkit rules check --staged`, `--ci`) evaluate a Git tree whose
 copies: a materialized tree lacks them, and the gate reads such a file from the working tree only when its SHA-256
 matches the `files` entry of the receipt committed to the snapshot; a staged snapshot evaluated in place checks the
 same hash
-([Evaluation Lifecycle](../../rules/evaluation-lifecycle.md#6-git-snapshot-gates)). Hence:
+(`CAP-GOV-evaluation-lifecycle`). Hence:
 
 - After editing a rule, run `devkit sync` and stage the receipt with the rule source; a stale receipt fails the gate,
   whose `[FIX]` says to run `devkit sync`.

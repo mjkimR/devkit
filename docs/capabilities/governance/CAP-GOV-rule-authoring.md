@@ -10,8 +10,8 @@ created_at: 2026-10-17
 # [CAP-GOV-rule-authoring] Rule Authoring Guide and Rule Protocol
 
 Rule contracts, the workspace API rules read through, where rules load from, and how a rule is tested.
-Related: `CAP-GOV-rules-engine`, [Evaluation Lifecycle](../../rules/evaluation-lifecycle.md),
-[Rules Reference](../../rules/reference.md).
+Related: `CAP-GOV-rules-engine`, `CAP-GOV-evaluation-lifecycle`,
+[Rules Reference](../../development/reference/rules.md).
 
 ## 1. Rule Protocols and Contracts
 
@@ -36,7 +36,7 @@ class Rule(Protocol):
         ...
 ```
 
-`phase` is the rule's default phase; the evaluator applies project phase overrides before filtering, so a rule never inspects them ([Evaluation Lifecycle, section 4](../../rules/evaluation-lifecycle.md#4-phase-transitions-overrides-and-promotions)). The evaluator sets each violation's `severity` and `phase` to the rule's effective values, so a rule does not pass them.
+`phase` is the rule's default phase; the evaluator applies project phase overrides before filtering, so a rule never inspects them (`CAP-GOV-evaluation-lifecycle`). The evaluator sets each violation's `severity` and `phase` to the rule's effective values, so a rule does not pass them.
 
 Any object satisfying the protocol can be passed to `RuleRegistry.register`. Rule files (section 5) contribute only the `BaseRule` subclasses they define.
 
@@ -60,11 +60,11 @@ class NoTodoRule(BaseRule):
         )
 ```
 
-`promote_to` is only valid as `Phase.LINTER` on a `Phase.HYGIENE` rule; any other combination raises `RuleDefinitionError` (`RULES_DEFINITION_INVALID`) at construction, which makes the rule package a loading error. How the pending promotion is reported: [Evaluation Lifecycle, section 4](../../rules/evaluation-lifecycle.md#rule-promotions-promote_to).
+`promote_to` is only valid as `Phase.LINTER` on a `Phase.HYGIENE` rule; any other combination raises `RuleDefinitionError` (`RULES_DEFINITION_INVALID`) at construction, which makes the rule package a loading error. How the pending promotion is reported: `CAP-GOV-evaluation-lifecycle`.
 
 ### Optional `settings` and `validate_settings`
 
-`BaseRule.settings` holds a frozen dataclass instance with the rule's defaults. Its fields may be `int`, `float`, `str`, `bool` or `list[str]`, each optionally `| None` (the only fields that accept `null`); nested tables are not supported, and any other annotation is rejected when the rule is loaded. Gate settings use the same type checker (`devkit.rules.engine.settings.check_setting_value`). A project sets the values, globally or per path, in `[rules.settings.<RULE-id>]` ([Evaluation Lifecycle, section 5](../../rules/evaluation-lifecycle.md#5-project-policy-severity-overrides-and-typed-settings)). Rules read the effective instance with `ctx.settings(self, path)`; without a resolver (library callers that skip `evaluate_rules`) the defaults are returned.
+`BaseRule.settings` holds a frozen dataclass instance with the rule's defaults. Its fields may be `int`, `float`, `str`, `bool` or `list[str]`, each optionally `| None` (the only fields that accept `null`); nested tables are not supported, and any other annotation is rejected when the rule is loaded. Gate settings use the same type checker (`devkit.rules.engine.settings.check_setting_value`). A project sets the values, globally or per path, in `[rules.settings.<RULE-id>]` (`CAP-GOV-evaluation-lifecycle`). Rules read the effective instance with `ctx.settings(self, path)`; without a resolver (library callers that skip `evaluate_rules`) the defaults are returned.
 
 ```python
 from dataclasses import dataclass, field
@@ -142,7 +142,7 @@ class Autofixable(Rule, Protocol):
         ...
 ```
 
-`fix` returns every workspace-relative path it modified; the evaluator invalidates those paths and rechecks ([Evaluation Lifecycle](../../rules/evaluation-lifecycle.md#2-autofix-and-convergence)). Fixers write through `ctx.cache.write_text` and leave alone files `read_text_strict` rejects.
+`fix` returns every workspace-relative path it modified; the evaluator invalidates those paths and rechecks (`CAP-GOV-evaluation-lifecycle`). Fixers write through `ctx.cache.write_text` and leave alone files `read_text_strict` rejects.
 
 ## 2. Rule Context and Workspace Cache
 
@@ -150,7 +150,7 @@ Rules read files through `ctx.cache`, not direct disk I/O:
 
 - `ctx.is_file_targeted(path)`: `True` if the file is in the current run's targets. It is `False` for any path matched by `[rules] exclude`, even in a whole-workspace run, so a rule that scans with `find_files` must call it before reporting. `ctx.changed_files` already has excluded paths removed; `ctx.has_targets` says whether the run named explicit targets.
 - `ctx.snapshot`: the Git snapshot a `check --staged` or `--ci` run evaluates (`devkit.rules.Snapshot`: `mode` `staged` or `ci`, `base`, `changed` and `deleted` paths, the repository `root`), `None` for a working-tree run. Rules about diff evidence read it: a record that claims a file changed can be checked against `changed`, and a declaration naming a deleted path against `deleted`, even when the declaring file itself is not in the diff.
-- `ctx.cache.find_files(root, extensions=(".md",))`: Sorted absolute paths of the regular files under `root` with one of `extensions` (`None` lists every file), with the target discovery of [Evaluation Lifecycle, section 3](../../rules/evaluation-lifecycle.md#3-cli-execution-and-phases) (cached).
+- `ctx.cache.find_files(root, extensions=(".md",))`: Sorted absolute paths of the regular files under `root` with one of `extensions` (`None` lists every file), with the target discovery of `CAP-GOV-evaluation-lifecycle` (cached).
 - `ctx.cache.read_text(path)` / `ctx.cache.read_bytes(path)`: Contents of a workspace-relative or absolute path (cached). `read_text` replaces undecodable bytes with U+FFFD; `read_text_strict(path)` returns `None` for a file that is not valid UTF-8, which a fixer must then leave alone.
 - `ctx.cache.write_text(path, content)`: Writes exact UTF-8 bytes (no newline translation), replacing the file atomically with its permission bits kept, and refreshes the cache; a path that resolves (symlinks followed) outside the workspace root is refused with `UnsafePathError` (`PATH_UNSAFE`), and paths under `.devkit/managed/` and `.devkit/overrides/` with `PinnedWriteError` (`RULES_PINNED_WRITE_REFUSED`).
 - `ctx.cache.get_frontmatter(path)`: The YAML frontmatter mapping (`devkit.core.frontmatter` grammar) or `None`; raises `devkit.core.FrontmatterError` (`FRONTMATTER_INVALID`) for a malformed block.
@@ -228,7 +228,7 @@ Saved as `rules/doc_heading/`, it runs with `devkit rules check --rules-dir rule
 
 ## 4. Built-in Rules
 
-Built-in rules (`devkit.rules.rules`, catalog in the [Rules Reference](../../rules/reference.md#built-in-rules)) are limited to invariants that hold for any repository. Rules about a particular documentation model (frontmatter schemas, identifier grammars, directory layouts, cross-references) ship in the bundle that owns that model, together with the guides and templates they cite, as `kind = "rule"` assets.
+Built-in rules (`devkit.rules.rules`, catalog in the [Rules Reference](../../development/reference/rules.md#built-in-rules)) are limited to invariants that hold for any repository. Rules about a particular documentation model (frontmatter schemas, identifier grammars, directory layouts, cross-references) ship in the bundle that owns that model, together with the guides and templates they cite, as `kind = "rule"` assets.
 
 ## 5. Rule Sources and Registration
 
@@ -257,7 +257,7 @@ result = evaluate_rules(ctx, registry.get_all())
 print(f"Total findings: {len(result.violations)}")
 ```
 
-`RuleContext` takes every argument by keyword; only `workspace_root` is required. Pass `cache=WorkspaceCache(root)` to share one cache across several evaluations; without it the context creates its own. A cache built for another root is refused. To run a project as `devkit rules check` does (policy, receipt rules and `rules_dir` together), call `run_project_rules` instead ([Rules Reference, Library](../../rules/reference.md#library)).
+`RuleContext` takes every argument by keyword; only `workspace_root` is required. Pass `cache=WorkspaceCache(root)` to share one cache across several evaluations; without it the context creates its own. A cache built for another root is refused. To run a project as `devkit rules check` does (policy, receipt rules and `rules_dir` together), call `run_project_rules` instead ([Rules Reference, Library](../../development/reference/rules.md#library)).
 
 ## 6. Testing a Rule
 
@@ -267,7 +267,7 @@ anything under `tests/` or named `test_*.py`/`*_test.py`. Leave `tests/` without
 files by path (`--import-mode=importlib`). The built-in rules follow the same layout
 (`devkit/rules/rules/<name>/tests/test_rule.py`), as do the `authoring` bundle's rules.
 
-`devkit.rules.testing` loads and evaluates a rule as devkit does ([Rules Reference, Rule tests](../../rules/reference.md#rule-tests)):
+`devkit.rules.testing` loads and evaluates a rule as devkit does ([Rules Reference, Rule tests](../../development/reference/rules.md#rule-tests)):
 
 - `load_rule(__file__)` loads the folder above `tests/` as a plugin package, exactly as a deployed copy is loaded, and
   returns its rule (`load_rule(__file__, "RULE-x")` when the package defines several). The tests of a deployed copy
@@ -307,4 +307,4 @@ defined there) and `--rules-dir`. Each tests directory runs in a pytest subproce
 neither bytecode nor a pytest cache next to the tests; arguments after `--` go to pytest
 (`devkit rules test RULE-doc-heading --rules-dir rules -- -k heading -x`). pytest must be importable by the interpreter
 running devkit (`RULES_TEST_UNAVAILABLE` otherwise: `uv add --dev pytest`). Output and exit codes:
-[Rules Reference](../../rules/reference.md#cli-usage).
+[Rules Reference](../../development/reference/rules.md#cli-usage).

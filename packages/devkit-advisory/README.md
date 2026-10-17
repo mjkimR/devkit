@@ -1,6 +1,6 @@
 # devkit-advisory
 
-The Python library of the [Agent Advisory Protocol](../../docs/advisory/protocol.md): `devkit.advisory`, agent-directed
+The Python library of the `CAP-ADV-agent-advisory-protocol`: `devkit.advisory`, agent-directed
 errors, warnings and notices with stable codes and deterministic `[ACTION]` directives. Requires Python 3.12 or
 later and nothing else: standard library only, no entry points, no CLI.
 
@@ -19,4 +19,4 @@ uv add "devkit-advisory @ https://github.com/mjkimR/devkit/releases/download/v0.
 ```
 
 The API, its compatibility promise and the guide bundle that `devkit` deploys for it are documented in
-[docs/advisory](../../docs/advisory/reference.md).
+[advisory reference](../../docs/development/reference/advisory.md).

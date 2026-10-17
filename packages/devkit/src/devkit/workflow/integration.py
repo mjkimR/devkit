@@ -6,7 +6,7 @@ malformed worker envelope in a unit the branch changed. It reads the committed t
 files, so uncommitted envelopes neither block nor clear the merge. Envelope files are never removed one by one: a
 file the branch deleted from a unit that still exists still counts, read at the merge base, so deleting a problem
 does not clear it. A Git failure propagates, and the guard runner then refuses the merge (fail closed). See
-``docs/workflow/envelopes.md``.
+``docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md``.
 """
 
 from __future__ import annotations

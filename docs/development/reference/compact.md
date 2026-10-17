@@ -1,6 +1,6 @@
 # devkit.compact
 
-Compact command output for agents (`devkit run`): a command runs with its complete output in a log file, and the caller gets a bounded view of it. Semantics, budgets and recognized formats: [Compact Command Output Overview](overview.md).
+Compact command output for agents (`devkit run`): a command runs with its complete output in a log file, and the caller gets a bounded view of it. Semantics, budgets and recognized formats: `CAP-CMP-bounded-execution`.
 
 ## Usage
 
@@ -33,7 +33,7 @@ Options go before the command; everything from the command on is passed to it un
 <last 5,000 characters>
 ```
 
-`[RUN_LAST_LINE]` lines replace summaries only when the command passed without a recognized one; `[RUN_FAILURE]` lines (failed tests the excerpt cuts out), `[RUN_OUTPUT]` and the excerpt appear only when it failed; `[RUN_OMITTED]` only when a budget was exceeded. A run interrupted by Ctrl-C, `SIGTERM` or `SIGHUP` stops the command's process group and prints only `[RUN: ... outcome=interrupted exit=<code> log=<path>]`; the log shows where the command stopped. Each omission marker names the log lines it left out (`sed -n '41,212p' <log>` reads them), and a `[... previous line repeated N more times, log lines A-B ...]` line stands for identical lines in a row. `filtered=` counts the progress, noise and repeated lines filtered out of the excerpt; the log keeps them. In text mode stderr carries the relayed advisory blocks of nested `devkit` commands (warnings and notices, then the runner's notices, then errors); under `--format json` they are only in `advisories` and stderr stays empty. JSON keys: `command`, `outcome`, `exit_code`, `log`, `summaries`, `last_lines`, `failures`, `warnings`, `advisories`, `omitted`, `output`, `filtered`, `notices`. Line formats, budgets and filters: [Overview, sections 4 and 5](overview.md#4-the-bounded-view). For shorter reports, set the tools' own options in the recipe: `pytest --tb=short`, `ruff check --output-format=concise`.
+`[RUN_LAST_LINE]` lines replace summaries only when the command passed without a recognized one; `[RUN_FAILURE]` lines (failed tests the excerpt cuts out), `[RUN_OUTPUT]` and the excerpt appear only when it failed; `[RUN_OMITTED]` only when a budget was exceeded. A run interrupted by Ctrl-C, `SIGTERM` or `SIGHUP` stops the command's process group and prints only `[RUN: ... outcome=interrupted exit=<code> log=<path>]`; the log shows where the command stopped. Each omission marker names the log lines it left out (`sed -n '41,212p' <log>` reads them), and a `[... previous line repeated N more times, log lines A-B ...]` line stands for identical lines in a row. `filtered=` counts the progress, noise and repeated lines filtered out of the excerpt; the log keeps them. In text mode stderr carries the relayed advisory blocks of nested `devkit` commands (warnings and notices, then the runner's notices, then errors); under `--format json` they are only in `advisories` and stderr stays empty. JSON keys: `command`, `outcome`, `exit_code`, `log`, `summaries`, `last_lines`, `failures`, `warnings`, `advisories`, `omitted`, `output`, `filtered`, `notices`. Line formats, budgets and filters: `CAP-CMP-bounded-execution`. For shorter reports, set the tools' own options in the recipe: `pytest --tb=short`, `ruff check --output-format=concise`.
 
 Logs: `<tmp>/devkit-run-<uid>/<project hash>/` (both levels private to the user, `0700`), the 20 newest per project. The view covers what the command wrote until it exited; processes it leaves running keep running and append to the log.
 
@@ -58,11 +58,11 @@ run.passed, run.exit_code, run.log
 run.scan.summaries, run.scan.last_lines, run.scan.failures, run.scan.warnings, run.scan.advisories, run.scan.output, run.scan.omitted
 ```
 
-`run_command(argv, *, cwd=None, env=None, slow_after=60.0, notices=True, log_dir=None)` never prints and raises `CommandNotStartedError`, `LogDirectoryError` when the log cannot be written, or `CommandInterrupted` (a `SystemExit` with code `128 + N`; `.run` is the interrupted `CommandRun`) after stopping the command's group on Ctrl-C, `SIGTERM` or `SIGHUP`; `scan(stream, *, notices=True, base=())` reads any text stream into a `Scan`, showing warning locations under a `base` directory relative to it. Fields: [Overview, Library](overview.md#6-library).
+`run_command(argv, *, cwd=None, env=None, slow_after=60.0, notices=True, log_dir=None)` never prints and raises `CommandNotStartedError`, `LogDirectoryError` when the log cannot be written, or `CommandInterrupted` (a `SystemExit` with code `128 + N`; `.run` is the interrupted `CommandRun`) after stopping the command's group on Ctrl-C, `SIGTERM` or `SIGHUP`; `scan(stream, *, notices=True, base=())` reads any text stream into a `Scan`, showing warning locations under a `base` directory relative to it. Fields: `CAP-CMP-bounded-execution`.
 
 ## Agent guidance
 
-The `devkit` guide bundle (selected by default) carries the instruction `devkit-run`: when to use `devkit run`, how to read its output and log, and how to put it inside a project's recipes. Agents find it through `devkit get-context devkit`; by default it adds nothing to `AGENTS.md`. The opt-in preset `devkit:run` (`devkit add devkit:run`) adds one `AGENTS.md` line pointing at `devkit run` and this instruction ([Overview, section 6](overview.md#6-library)). Its source is `src/devkit/distribution/guide/bundle/instructions/devkit-run.md`; keep it in step with this reference.
+The `devkit` guide bundle (selected by default) carries the instruction `devkit-run`: when to use `devkit run`, how to read its output and log, and how to put it inside a project's recipes. Agents find it through `devkit get-context devkit`; by default it adds nothing to `AGENTS.md`. The opt-in preset `devkit:run` (`devkit add devkit:run`) adds one `AGENTS.md` line pointing at `devkit run` and this instruction (`CAP-CMP-bounded-execution`). Its source is `src/devkit/distribution/guide/bundle/instructions/devkit-run.md`; keep it in step with this reference.
 
 ## Module map
 

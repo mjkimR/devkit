@@ -17,4 +17,4 @@ No rule code is executed by this package. `devkit sync` projects the skill (and
 the generated playbook entry skill) for every agent target by default (Codex,
 Claude Code and Antigravity); narrow the targets with `--agent codex` or
 `--agent claude-code`.
-See the [distribution documentation](../../docs/distribution/overview.md).
+See the `ARCH-05-4-distribution-components`.

@@ -105,7 +105,7 @@ uv run devkit spec policy [-w/--workspace-root DIR] [--format text|json] [-q] [-
 ```
 
 - `GATE_POLICY`: one line per gate; `policy` is `ask`, `auto` or `off`
-  ([devkit approval gates](https://github.com/mjkimR/devkit/blob/main/docs/workflow/overview.md#3-approval-gates));
+  (`CAP-DLV-workflow-orchestration`);
   `source` is `fixed` for `plan-intent` and `plan-accept`, `config` when `.devkit/config.toml` sets it, else
   `default`.
 - `STAGE_POLICY`: one line per stage the project switched off (`state=off`), sorted.

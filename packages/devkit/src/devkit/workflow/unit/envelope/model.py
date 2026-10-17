@@ -521,7 +521,7 @@ def _check_kind_fields(
     resolves: str,
     summary: str,
 ) -> None:
-    """The fields each kind carries, and the statuses they allow (``docs/workflow/envelopes.md``)."""
+    """The fields each kind carries, and the statuses they allow (``docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md``)."""
     if questions and kind != WORKER:
         raise EnvelopeFormatError("questions: only a worker envelope carries questions")
     if (answers or answers_to) and kind != ANSWER:

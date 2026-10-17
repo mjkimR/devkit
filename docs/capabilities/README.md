@@ -45,3 +45,8 @@ capabilities/
 2. **M:N Association with Stories**: Reference associated user stories using `US-<slug>` identifiers in the frontmatter `stories:` list.
 3. **Normative Force**: Express contracts explicitly using RFC 2119 keywords (`MUST`, `SHOULD`, `MAY`).
 4. **Summary**: Provide a 1-2 sentence English summary in frontmatter (embedded by document search).
+
+## 3. Module References
+
+Capabilities define behavior and contracts. System structure belongs in `../architecture/`; CLI/API usage,
+configuration tables, and executable examples live in [Module References](../development/reference/README.md).

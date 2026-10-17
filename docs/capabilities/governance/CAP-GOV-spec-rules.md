@@ -29,7 +29,7 @@ and `devkit rules fix`. This capability is the catalog and the contract summary 
   configuration failures), each rule's checks and fix, and how the rules are packaged.
 - **Out-of-Scope** (Non-Goals):
   - The rule engine (phases, severities, `[rules]` configuration, `explain`, `phases`, output sentinels, exit codes):
-    devkit's ([devkit rules reference](https://github.com/mjkimR/devkit/blob/main/docs/rules/reference.md)).
+    devkit's ([devkit rules reference](https://github.com/mjkimR/devkit/blob/main/docs/development/reference/rules.md)).
   - The document model the rules read: `CAP-DOCS-document-model`.
   - The entrypoint path contract and derivation: `CAP-TRACE-code-entrypoints` (this capability summarizes
     `RULE-code-entrypoints` only).

@@ -14,7 +14,7 @@ created_at: 2026-10-17
 Guidance in startup files costs tokens on every turn and dilutes rarely needed procedures. devkit therefore loads
 it in stages:
 
-- The root `AGENTS.md` guidance block holds only orientation ([Workspace Ownership](../../distribution/workspace-ownership.md#2-ownership-categories-and-invariants)).
+- The root `AGENTS.md` guidance block holds only orientation (`CAP-DIST-workspace-ownership`).
 - `devkit get-context <bundle>` returns a bundle's constitution and instruction headers; the agent reads bodies on
   demand.
 - Playbooks stay on disk under `.devkit/managed/<bundle>/` and are searched only when a task explicitly calls for
@@ -83,14 +83,14 @@ aliases: [postgres standby repair, replication failure]
 ### Search Engine
 
 `devkit playbook search <query>` ranks an in-memory index rebuilt from receipt-owned files on every call (no
-persistent cache) with [`devkit.search`](../../search/overview.md). Only `name`, `description` and `aliases` are indexed;
+persistent cache) with `CAP-SRCH-document-search`. Only `name`, `description` and `aliases` are indexed;
 bodies never are.
 
 - **Mode**: `auto` (default) is `hybrid` when the `devkit-agt[search]` extra is installed and `lexical` otherwise;
   `lexical`, `dense` and `hybrid` select one ranking explicitly. `lexical` is BM25 ($k_1=1.5$, $b=0.75$, positive
   IDF, unique query terms; case and Latin accents are normalized and punctuation separates terms), `dense` the cosine
   similarity of the query and header embeddings, and `hybrid` their Reciprocal Rank Fusion
-  ([Search Overview](../../search/overview.md#2-modes)). An explicit `dense` or `hybrid` without the extra fails with
+  (`CAP-SRCH-document-search`). An explicit `dense` or `hybrid` without the extra fails with
   `SEARCH_EXTRA_MISSING` or `SEARCH_MODEL_NOT_FOUND` (exit `2`); only `auto` falls back. The result's `mode` names
   the ranking that ran, and each `score` is that ranking's: BM25, cosine similarity or the fused value.
 

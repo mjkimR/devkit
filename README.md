@@ -24,7 +24,7 @@ and asks before writing anything or committing. The guides live in [`guides/`](g
 `packages/devkit-starter` an example content package, `packages/devkit-catalog` opt-in content bundles, `models/devkit-embed` the embedding model of the
 `devkit-agt[search]` extra (built by hand, outside the workspace), `examples/bundles/` further example bundles, `scripts/` the shell logic
 behind the justfile recipes, `guides/` the agent-facing installation guides, and `docs/` the Living Spec documentation; see
-[Architecture Overview, section 2](docs/architecture/ARCH-05-1-containers.md).
+`ARCH-05-1-containers`.
 
 ## Development
 
@@ -124,7 +124,7 @@ run `uv lock`.
 
 ## Documentation
 
-- [Architecture Overview](docs/architecture/ARCH-01-introduction-and-goals.md): modules, interaction model, and the full documentation index.
+- `ARCH-01-introduction-and-goals`: modules, interaction model, and the full documentation index.
 - [devkit package](packages/devkit/README.md): module table with links to each module's reference.
 - [devkit-catalog](packages/devkit-catalog/README.md): opt-in content bundles and how to add one.
 - Examples: [devkit-starter](packages/devkit-starter/README.md), [delivery-workflow bundle](examples/bundles/delivery-workflow/README.md).

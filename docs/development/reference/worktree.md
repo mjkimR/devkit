@@ -1,6 +1,6 @@
 # devkit.worktree
 
-One activity branch (`plan-<slug>`, `dev-<slug>`) per task activity, with its own Git worktree when it needs one, integrated and removed by one command. Semantics: [Task Worktrees Overview](overview.md).
+One activity branch (`plan-<slug>`, `dev-<slug>`) per task activity, with its own Git worktree when it needs one, integrated and removed by one command. Semantics: `CAP-WT-task-worktrees`.
 
 ## Usage
 
@@ -37,7 +37,7 @@ Every command takes `-w/--workspace-root` (any directory in the checkout; defaul
 
 ## Configuration
 
-`[worktree]` in `.devkit/config.toml`: `pull_request` (`"auto"` or `"required"`, default `"auto"`), `delete_branch` (default `true`), `setup` (a shell command, default none), `stale_after` (`"<N>d"` or `"<N>w"`, default `"14d"`). See [Overview, section 5](overview.md#5-configuration).
+`[worktree]` in `.devkit/config.toml`: `pull_request` (`"auto"` or `"required"`, default `"auto"`), `delete_branch` (default `true`), `setup` (a shell command, default none), `stale_after` (`"<N>d"` or `"<N>w"`, default `"14d"`). See `CAP-WT-task-worktrees`.
 
 ## Extension points
 
@@ -47,7 +47,7 @@ Every command takes `-w/--workspace-root` (any directory in the checkout; defaul
 | `devkit.finish_guard` | `finish --merge`, before the first change | `extension(base, branch, merge_base, tip)` | returned reasons refuse (`WORKTREE_BLOCKED`); a failure refuses (`WORKTREE_GUARD_FAILED`) |
 | `devkit.attach_check` | `start --existing-branch`, before the first change | `extension(root, branch, unit, tip)` | returned reasons refuse (`WORKTREE_ATTACH_REFUSED`); a failure refuses (`WORKTREE_ATTACH_CHECK_FAILED`) |
 
-`devkit.worktree` itself registers the `devkit.hygiene` extension `worktree-stale` ([Overview, section 6](overview.md#6-stale-branches)).
+`devkit.worktree` itself registers the `devkit.hygiene` extension `worktree-stale` (`CAP-WT-task-worktrees`).
 
 ## Error codes
 
@@ -113,7 +113,7 @@ report = status(position)                                             # StatusRe
 stale = stale_branches(position, config.stale_after)                  # StaleResult(checked, stale, notices, ...)
 ```
 
-`attach`'s `check` and `finish`'s `guard` refuse by raising; the CLI passes the `devkit.attach_check` and `devkit.finish_guard` extensions (`run_attach_checks`, `run_finish_guards` in `devkit.worktree.extensions`). A refusal raised after `finish` changed something has the partial `FinishResult` as `error.result`, also an `AdvisoryError` that `before_remove` raises (unless it defines a `result` of its own); rerunning `finish` resumes, also when only the merged branch is left and carries the `branch.<branch>.devkitWorktree` marker `start` records ([Overview, section 3](overview.md#3-finish)).
+`attach`'s `check` and `finish`'s `guard` refuse by raising; the CLI passes the `devkit.attach_check` and `devkit.finish_guard` extensions (`run_attach_checks`, `run_finish_guards` in `devkit.worktree.extensions`). A refusal raised after `finish` changed something has the partial `FinishResult` as `error.result`, also an `AdvisoryError` that `before_remove` raises (unless it defines a `result` of its own); rerunning `finish` resumes, also when only the merged branch is left and carries the `branch.<branch>.devkitWorktree` marker `start` records (`CAP-WT-task-worktrees`).
 
 
 ## Local-only integration
@@ -122,7 +122,7 @@ stale = stale_branches(position, config.stale_after)                  # StaleRes
 The public `finish` API takes `network="forbid"` and optional `before_step(step, result)`. `plan_finish` returns an
 immutable `FinishPlan`; `validate_finish` rechecks its identities allowing only declared completed transitions.
 `run_finish_guards` and `run_post_finish` are public extension runners. Approval and scoped partial recovery belong
-to [Integration](../integration/overview.md); these low-level APIs retain their caller-owned authority contract.
+to `CAP-INT-mcp-services`; these low-level APIs retain their caller-owned authority contract.
 
 An eligible local merge that fails reports `WORKTREE_MERGE_FAILED`: inspect Git state and host filesystem access,
 then resume the remaining approved scope. It is separate from `WORKTREE_MERGE_NOT_FF`, which requires reconciling

@@ -1,6 +1,6 @@
 # devkit.advisory
 
-Python implementation of the [Agent Advisory Protocol](protocol.md), shipped as the `devkit-advisory` distribution, plus the built-in `advisory` bundle of `devkit` that installs its guide in consumer repositories. Where advisories sit in a command's output is specified in [Agent-First Output](../architecture/ARCH-08-1-agent-output.md).
+Python implementation of the `CAP-ADV-agent-advisory-protocol`, shipped as the `devkit-advisory` distribution, plus the built-in `advisory` bundle of `devkit` that installs its guide in consumer repositories. Where advisories sit in a command's output is specified in `ARCH-08-1-agent-output`.
 
 ## Scope
 
@@ -11,7 +11,7 @@ This module implements the Agent Advisory Protocol and nothing else.
 
 ## Contents
 
-- **Runtime**: `devkit.advisory` in the `devkit-advisory` distribution (`packages/devkit-advisory/`): standard library only, no entry points, and the lowest layer of `devkit` (it imports no other devkit module; tests in both packages enforce this). `devkit-agt` depends on the same version, so the module is present wherever `devkit` is. `error.py` (`AdvisoryError`), `types.py` (`ExitCode`, `Level`, `ActionMode`, `Actor`, `Retry`), `advisory.py` (`Advisory`, mode derivation, `ACTION_TEXT`, the block sentinels `HEADLINE`, `FIELDS` and `CONTINUATION`, rendering). Every other devkit module raises `AdvisoryError` subclasses and returns warnings and notices as `AdvisoryError` instances at a lower level ([Errors, Exit Codes and Platforms](../architecture/ARCH-08-cross-cutting.md#4-exit-code-conventions)).
+- **Runtime**: `devkit.advisory` in the `devkit-advisory` distribution (`packages/devkit-advisory/`): standard library only, no entry points, and the lowest layer of `devkit` (it imports no other devkit module; tests in both packages enforce this). `devkit-agt` depends on the same version, so the module is present wherever `devkit` is. `error.py` (`AdvisoryError`), `types.py` (`ExitCode`, `Level`, `ActionMode`, `Actor`, `Retry`), `advisory.py` (`Advisory`, mode derivation, `ACTION_TEXT`, the block sentinels `HEADLINE`, `FIELDS` and `CONTINUATION`, rendering). Every other devkit module raises `AdvisoryError` subclasses and returns warnings and notices as `AdvisoryError` instances at a lower level (`ARCH-08-cross-cutting`).
 - **Bundle** `advisory` (`devkit.advisory_guide`, `bundle/`, `default_preset = "core"`), built into `devkit` (not `devkit-advisory`, so a runtime environment carries no agent content) with `auto_select = true` and therefore selected by default:
 
 | Preset | Assets | For |
@@ -19,7 +19,7 @@ This module implements the Agent Advisory Protocol and nothing else.
 | `core` | `agent-advisory` (language-agnostic protocol and authoring rules) | Any repository |
 | `python` | `agent-advisory` + `agent-advisory-python` (library guide) | Python repositories using `devkit.advisory` |
 
-`agent-advisory` is the consumer-facing mirror of [protocol.md](protocol.md) and `agent-advisory-python` documents this library; both are kept in step with the specification, and a test keeps the `[ACTION]` texts in `agent-advisory` identical to `ACTION_TEXT`.
+`agent-advisory` is the consumer-facing mirror of `CAP-ADV-agent-advisory-protocol` and `agent-advisory-python` documents this library; both are kept in step with the specification, and a test keeps the `[ACTION]` texts in `agent-advisory` identical to `ACTION_TEXT`.
 
 ## Library
 
@@ -35,16 +35,16 @@ This module implements the Agent Advisory Protocol and nothing else.
 | `Actor`, `Retry` | Error fields: `TOOL`/`USER`/`DEVELOPER`/`NONE`; `SAFE`/`AFTER_FIX`/`UNSAFE`. |
 | `ExitCode` | `OK = 0`, `FINDINGS = 1`, `ERROR = 2`. |
 | `ACTION_TEXT` | The canonical directive text per `ActionMode`. |
-| `HEADLINE`, `FIELDS`, `CONTINUATION` | Since `0.1.1`. The block grammar of [protocol, section 3](protocol.md#3-block-format), for code that parses rendered blocks (`devkit.compact` does): `HEADLINE` maps each `Level` to its 9-character headline sentinel (`"[ERROR]  "`, `"[WARN]   "`, `"[NOTICE] "`), `FIELDS` is the tuple of field sentinels in rendering order (`"[ACTION] "` to `"[DETAIL] "`), and `CONTINUATION` the 9-space indentation of a value's further lines. Every rendered line starts with one of them. A new field sentinel is added to `FIELDS`. |
+| `HEADLINE`, `FIELDS`, `CONTINUATION` | Since `0.1.1`. The block grammar of `CAP-ADV-agent-advisory-protocol`, for code that parses rendered blocks (`devkit.compact` does): `HEADLINE` maps each `Level` to its 9-character headline sentinel (`"[ERROR]  "`, `"[WARN]   "`, `"[NOTICE] "`), `FIELDS` is the tuple of field sentinels in rendering order (`"[ACTION] "` to `"[DETAIL] "`), and `CONTINUATION` the 9-space indentation of a value's further lines. Every rendered line starts with one of them. A new field sentinel is added to `FIELDS`. |
 | `as_advisory_error(exc)`, `render_error(exc)` | Pass an `ERROR`-level `AdvisoryError` through; adapt anything else, a warning or notice that was raised included, to `UNEXPECTED_ERROR` (`MAINTENANCE`). A foreign exception's message is `<ExceptionType>: <text>` (the type alone when the text is empty). |
 
 Rendering and serialization:
 
 - `error.lines()` / `error.render()`: the sentinel block (`[ERROR]`, `[WARN]` or `[NOTICE]` headline by level) for stderr or an MCP tool result.
-- `error.to_dict(include_advisory=True)`: `{code, level, message, exit_code, advisory}`; `advisory` holds what the block shows, the `[ACTION]` text as `action` included, and omits empty fields ([protocol, section 9](protocol.md#9-structured-output)).
+- `error.to_dict(include_advisory=True)`: `{code, level, message, exit_code, advisory}`; `advisory` holds what the block shows, the `[ACTION]` text as `action` included, and omits empty fields (`CAP-ADV-agent-advisory-protocol`).
 - `error.to_problem_details(status=..., type_base=...)`: RFC 7807 body, for errors. `status` is the HTTP status chosen by the caller; the library never maps codes or exit codes to statuses.
 
-A warning or notice is an `AdvisoryError` whose `level` is `WARNING` or `NOTICE`, declared on a subclass (`level = Level.NOTICE`) or produced with `with_level`; it is collected and returned, never raised. Field semantics per level (ignored failure fields, `brief`) are in [protocol, section 4](protocol.md#4-fields).
+A warning or notice is an `AdvisoryError` whose `level` is `WARNING` or `NOTICE`, declared on a subclass (`level = Level.NOTICE`) or produced with `with_level`; it is collected and returned, never raised. Field semantics per level (ignored failure fields, `brief`) are in `CAP-ADV-agent-advisory-protocol`.
 
 ## Installing
 
@@ -61,7 +61,7 @@ uv run devkit add advisory:python
 
 Neither is on a package index: name both wheels by URL, or both Git sources at the same `rev`
 (`subdirectory = "packages/devkit"` and `"packages/devkit-advisory"`); see the
-[root README](../../README.md#using-devkit-in-another-project).
+[root README](../../../README.md#using-devkit-in-another-project).
 
 Other repositories need only the guide, which `devkit sync` deploys with the `core` preset by default:
 

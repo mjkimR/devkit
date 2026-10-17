@@ -79,7 +79,7 @@ uv add "devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packa
 uv run devkit workflow next --unit <dir>
 ```
 
-Exit codes: `0` the command did its job (`next` whatever the stage), `1` a negative result (`validate`, `show`, `envelope check`), `2` it could not run. The full command synopsis, exit and error codes, sentinels and JSON shapes are in the [CLI and Output Contract](cli-and-output.md).
+Exit codes: `0` the command did its job (`next` whatever the stage), `1` a negative result (`validate`, `show`, `envelope check`), `2` it could not run. The full command synopsis, exit and error codes, sentinels and JSON shapes are in the `CAP-DLV-cli-and-output`.
 
 ## Configuration
 
@@ -102,7 +102,7 @@ handoff = "ask"                       # reserved: who picks the next workflow of
 collect-feedback = "off"              # on (default) | off: skip this stage id in every workflow
 ```
 
-Layout template: [Overview, Work Units and Layout](overview.md#2-work-units-and-layout). Gate, stage and handoff policies: [Overview, Approval Gates](overview.md#3-approval-gates). Role vocabulary: [Overview, Integration](overview.md#4-integration-with-the-rule-engine-and-distribution).
+Layout template: `CAP-DLV-workflow-orchestration`. Gate, stage and handoff policies: `CAP-DLV-workflow-orchestration`. Role vocabulary: `CAP-DLV-workflow-orchestration`.
 
 ## Library
 
@@ -159,8 +159,8 @@ The main calls:
 
 ## Specifications
 
-- [Workflow Engine Overview](overview.md): delivery model, layout template, approval, stage and handoff policies, integration with rules and distribution.
-- [Workflow Definitions and Checks](definition-and-checks.md): document schema, shared stages, handoff candidates, check registry, binding.
-- [Review Envelopes](envelopes.md): envelope file contract (worker questions and problems, answers, resolutions), authoring flags, `envelope check`, the hold on gates and integration.
-- [Human Interaction Contract](human-interaction.md): request kinds, decision records, how answers are applied.
-- [CLI and Output Contract](cli-and-output.md): commands, exit and error codes, text sentinels and JSON shapes.
+- `CAP-DLV-workflow-orchestration`: delivery model, layout template, approval, stage and handoff policies, integration with rules and distribution.
+- `CAP-DLV-workflow-definitions`: document schema, shared stages, handoff candidates, check registry, binding.
+- `CAP-DLV-workflow-envelopes`: envelope file contract (worker questions and problems, answers, resolutions), authoring flags, `envelope check`, the hold on gates and integration.
+- `CAP-DLV-human-interaction`: request kinds, decision records, how answers are applied.
+- `CAP-DLV-cli-and-output`: commands, exit and error codes, text sentinels and JSON shapes.

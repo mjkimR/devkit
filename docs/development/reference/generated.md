@@ -1,6 +1,6 @@
 # devkit.generated
 
-Tracked generated files: register them, check them, regenerate them, and settle their merge conflicts by regenerating. Semantics: [Generated Files Overview](overview.md).
+Tracked generated files: register them, check them, regenerate them, and settle their merge conflicts by regenerating. Semantics: `CAP-GEN-tracked-artifacts`.
 
 ## Usage
 
@@ -43,7 +43,7 @@ JSON:
 
 ## Configuration
 
-`.devkit/generated.toml` (optional, Git-tracked) holds one `[artifacts.<id>]` table per artifact, with `paths`, `command`, `inputs`, `updates`, `after`, `seed`, `optional` and `enabled`. A table with a built-in id (`devkit-receipt`) changes only the keys it sets. See [Overview, section 1](overview.md#1-artifacts).
+`.devkit/generated.toml` (optional, Git-tracked) holds one `[artifacts.<id>]` table per artifact, with `paths`, `command`, `inputs`, `updates`, `after`, `seed`, `optional` and `enabled`. A table with a built-in id (`devkit-receipt`) changes only the keys it sets. See `CAP-GEN-tracked-artifacts`.
 
 ## Error codes
 

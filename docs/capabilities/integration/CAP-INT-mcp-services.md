@@ -12,7 +12,7 @@ created_at: 2026-10-17
 `devkit.integration` prepares an immutable request, obtains a native confirmation through `devkit.host`, and
 executes a local fast-forward and its exact cleanup scope. `host` owns MCP transport and native UI adaptation;
 integration owns authorization binding, policy, readiness and execution. It imports no SDD models. Command and
-code quick reference: [reference.md](../../integration/reference.md).
+code quick reference: [reference.md](../../development/reference/integration.md).
 
 ## 1. Supported path
 
@@ -140,7 +140,7 @@ replay a serialized result as authority.
 
 Install `devkit-agt[mcp]` in a retained runtime. `devkit host mcp config --format json -w <base>` prints an exact
 Codex add command, TOML snippet, inspection command and removal command without editing settings. Review it, then
-register through Codex's own configuration tooling. See [Host MCP](../../host/reference.md#mcp-services).
+register through Codex's own configuration tooling. See [Host MCP](../../development/reference/host.md#mcp-services).
 
 Development checks exercise an installed SDK client/server over stdio and real disposable Git fixtures: approval,
 non-approval, decline/cancel, absent form capability, caller approval-flag rejection, stale scope, PR policy,

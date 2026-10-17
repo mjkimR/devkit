@@ -24,7 +24,7 @@ of the current directory; outside a Git work tree it is the nearest directory (t
 parents, never the home directory or above it) that contains `.devkit/`, else the current directory. A `-w` that is
 not an existing directory, or one below the top level of a Git work tree, is `ARGUMENT_INVALID`: inside a
 repository `.devkit/` lives at the top level only. A `.devkit/` below the top level of a work tree whose top level
-has none is `DEVKIT_ROOT_NESTED` ([core reference](../core/reference.md)).
+has none is `DEVKIT_ROOT_NESTED` ([core reference](core.md)).
 `sync`, `add` and `remove` print text by default (see [Sync output and notices](#sync-output-and-notices)) and
 take `--format json`. Every other command prints exactly one JSON object on stdout: the result (`override list`
 wraps its entries as `{"overrides": [...]}`), or `{"error": {...}}` when the command fails. A JSON result carries
@@ -32,7 +32,7 @@ its errors, warnings and notices, so nothing is rendered on stderr in JSON mode;
 Advisory Protocol blocks on stderr. Exit code `0` is success; `1` is returned by `devkit sync --check` when a synchronization is needed,
 by `devkit sync --locked` when it would change committed files, and by `devkit status` when its report shows a problem; `2` is any error, including an invalid argument such as a
 malformed `bundle[:preset]` or `--agent` combined with `--no-agents` (see
-[Errors, Exit Codes and Platforms](../architecture/ARCH-08-cross-cutting.md#4-exit-code-conventions)).
+`ARCH-08-cross-cutting`).
 
 ---
 
@@ -40,34 +40,34 @@ malformed `bundle[:preset]` or `--agent` combined with `--no-agents` (see
 
 Lifecycle `hook` assets use these same bundle and sync commands. Bundle plans include `host_hooks`; project status
 includes hook registration problems. Detailed handler and observation inspection is `devkit host status`.
-Shared-file ownership, codes and setup: [Host Integration Reference](../host/reference.md).
+Shared-file ownership, codes and setup: [Host Integration Reference](host.md).
 
 | Command | Description |
 | --- | --- |
-| `devkit sync [options]` | Synchronizes the selection: managed copies under `.devkit/managed/`, native projections, seeded files that do not exist yet and the root `AGENTS.md` guidance block, in one transaction ([Synchronization & Transactions](sync-and-transactions.md#3-transaction-safety-guarantees)). |
+| `devkit sync [options]` | Synchronizes the selection: managed copies under `.devkit/managed/`, native projections, seeded files that do not exist yet and the root `AGENTS.md` guidance block, in one transaction (`CAP-DIST-sync-and-transactions`). |
 | `devkit add <bundle>[:<preset>]...` | Joins bundles or presets to the selection in `.devkit/config.toml` (default preset when none is named), then synchronizes. |
 | `devkit remove <bundle>...` | Deselects bundles in `.devkit/config.toml` (`false` for an auto-selected bundle), then synchronizes. |
 | `devkit list` | Installed content packages, bundle metadata, available and default presets, selection state (`builtin`, `auto_select`, `opted_out`), synchronized asset paths and the `seeded` list. Like `devkit status` it does not check the recorded paths on disk, so a symlinked managed file never fails it (`devkit status` reports it). |
 | `devkit status` | Read-only report of the installed state against the receipt; see [below](#devkit-status). |
-| `devkit config template` | Writes the commented template into `.devkit/config.toml`: devkit's top-level keys, common workflow and worktree tables, and the `[tool.<name>]` tables of the installed tools, at defaults or with marked examples when unset, only the parts the file lacks ([Commented Template](sync-and-transactions.md#commented-template)). Prints `path`, `state` (`created`, `updated`, `unchanged`), `added` (the key and table names written) and `notices`; an invalid file is `CONFIG_INVALID` and is left alone. `--print` writes nothing and adds `text`, the whole file a write would produce. |
+| `devkit config template` | Writes the commented template into `.devkit/config.toml`: devkit's top-level keys, common workflow and worktree tables, and the `[tool.<name>]` tables of the installed tools, at defaults or with marked examples when unset, only the parts the file lacks (`CAP-DIST-sync-and-transactions`). Prints `path`, `state` (`created`, `updated`, `unchanged`), `added` (the key and table names written) and `notices`; an invalid file is `CONFIG_INVALID` and is left alone. `--print` writes nothing and adds `text`, the whole file a write would produce. |
 | `devkit recover` | Rolls back an interrupted transaction from the journal in `.devkit/transient/` without overwriting newer edits. Prints `recovered_files`: the number of files restored. |
-| `devkit get-context <bundle>` | The bundle constitution and the header catalog of its instructions ([Context Loading](context-and-playbooks.md#2-bundle-context-devkit-get-context)). |
-| `devkit playbook search <query>` | Search over synchronized playbook headers: hybrid with the `devkit-agt[search]` extra, else lexical BM25; `--mode`, `--min-score`, `--min-similarity`, `--limit`, `--max-bytes` ([Playbook Search](context-and-playbooks.md#3-playbook-discovery-and-search-devkit-playbook)). |
+| `devkit get-context <bundle>` | The bundle constitution and the header catalog of its instructions (`CAP-DIST-context-and-playbooks`). |
+| `devkit playbook search <query>` | Search over synchronized playbook headers: hybrid with the `devkit-agt[search]` extra, else lexical BM25; `--mode`, `--min-score`, `--min-similarity`, `--limit`, `--max-bytes` (`CAP-DIST-context-and-playbooks`). |
 | `devkit override list` | Tracked project overrides and their drift status. |
 | `devkit override create <bundle>:<asset> [--force]` | Copies every upstream file of a selected, non-seeded asset to `.devkit/overrides/` (plus a baseline copy), records the current upstream as its baseline and synchronizes; `--force` overwrites existing override files and the baseline. |
 | `devkit override diff <bundle>:<asset>` | Per file: what upstream changed since the baseline, and what the override changed. |
 | `devkit override accept <bundle>:<asset>` | Records the current upstream as the override's baseline after review. |
 | `devkit override remove <bundle>:<asset>` | Deletes the override files of the asset's upstream files and its baseline, then synchronizes the pristine upstream files; any other project file under the override stays (`ORPHAN_LEFT`). |
-| `devkit bundle validate <source>` | Verifies `bundle.toml`, the declared sources, the kind-specific headers (instructions, playbooks, workflows, role contracts) and every per-agent rule a sync applies ([Manifest Specification, section 4](manifest-spec.md#4-validation)). `<source>` is the bundle directory. Prints `name`, `version` and `assets` (the number of declared assets). |
+| `devkit bundle validate <source>` | Verifies `bundle.toml`, the declared sources, the kind-specific headers (instructions, playbooks, workflows, role contracts) and every per-agent rule a sync applies (`CAP-DIST-manifest-spec`). `<source>` is the bundle directory. Prints `name`, `version` and `assets` (the number of declared assets). |
 | `devkit bundle plan <source> [--preset <name>] [--agent <name>]...` | Previews every destination a local bundle deploys (managed copies, native projections, generated entry skills, seeded files), computed by the same inventory as `sync`, without a consumer project. Defaults: the default preset (else `all`) and every supported agent. Prints `bundle`, `version`, `preset`, `agents`, `assets` (as in the sync result), `files` (`destination`, `sha256`, `mode`) and `seeded` (`destination`, `asset`, `sha256`). |
-| `devkit bundle build <source> --output <zip>` | Builds a deterministic ZIP archive ([Manifest Specification, section 5](manifest-spec.md#5-deterministic-local-archive-build)). Prints `path`, `sha256` (of the archive) and `files` (the number of archived files, `inventory.json` included). |
+| `devkit bundle build <source> --output <zip>` | Builds a deterministic ZIP archive (`CAP-DIST-manifest-spec`). Prints `path`, `sha256` (of the archive) and `files` (the number of archived files, `inventory.json` included). |
 
-Override semantics are specified in [Workspace Ownership, section 3](workspace-ownership.md#3-project-overrides-and-drift-review).
+Override semantics are specified in `CAP-DIST-workspace-ownership`.
 
 ### Sync Options
 
 A missing whole `.codex/hooks.json` can also be restored from unchanged receipt `host_hooks` under `--locked`;
-existing shared host files are never edited by locked sync. See [Host Integration](../host/overview.md).
+existing shared host files are never edited by locked sync. See `CAP-HOST-lifecycle-observation`.
 
 - `--agent <name>` (repeatable): narrows the projection targets, recorded as `agents` in `.devkit/config.toml`.
 - `--no-agents`: records `agents = []`, which unlinks unchanged native projections and keeps managed copies.
@@ -90,14 +90,14 @@ existing shared host files are never edited by locked sync. See [Host Integratio
   would change any of them (the installed bundles no longer match the receipt, or there is no receipt), it writes
   nothing and fails with `RECEIPT_STALE` (`INTERACTION`, exit `1`: a negative result, as for `--check`); every other
   error exits `2` as in a plain sync (a missing package is `SELECTION_INVALID`). It runs post-sync extensions only when it committed, and
-  takes no other selection or mode flag ([Synchronization & Transactions](sync-and-transactions.md#locked-synchronization)).
+  takes no other selection or mode flag (`CAP-DIST-sync-and-transactions`).
 
 ---
 
 ## 3. Project Configuration (`.devkit/config.toml`)
 
 The Git-tracked selection. Its keys, the selection rules and their resolution order are specified in
-[Synchronization & Transactions, section 2](sync-and-transactions.md#2-asset-selection-model).
+`CAP-DIST-sync-and-transactions`.
 
 ```toml
 schema = 1
@@ -135,15 +135,15 @@ option = "on"
 A selection command that creates the file, and `devkit config template`, write commented managed-scope and update-policy keys,
 common workflow and worktree settings, and the registered `[tool.<name>]` tables of installed tools. Values show
 defaults, or marked examples when unset by default
-([Commented Template](sync-and-transactions.md#commented-template)). A template extension that fails is left out
+(`CAP-DIST-sync-and-transactions`). A template extension that fails is left out
 with a `CONFIG_TEMPLATE_EXTENSION_FAILED` warning (`ConfigTemplateExtensionFailedNotice`: it failed to load, raised,
 has a name that is not a `[tool.<name>]` name, or returned no valid tables; `what_to_report` names the entry point),
 in the command's `notices`, or in the sync result's when a selection command created the file.
 
 `devkit sync` passes `[rules]`, `[workflow]` and `[gates]` through untouched; see the
-[Rules Reference](../rules/reference.md#project-configuration), the
-[Workflow Reference](../workflow/reference.md#configuration) and the
-[Commit Gate Overview](../gate/overview.md#6-configuration-layers).
+[Rules Reference](rules.md#project-configuration), the
+[Workflow Reference](workflow.md#configuration) and the
+`CAP-GATE-commit-gates`.
 
 ### Sync output and notices
 
@@ -159,7 +159,7 @@ never the deployed state it kept, which is the same on every run:
 One `[CHANGE: <create|update|remove|seed> <path>]` line follows per write (a path with spaces, quotes or brackets
 is a JSON string), and `[OK: the workspace matches the selection]` when there is nothing to write. The warnings
 and notices follow on stderr as `[WARN]` and `[NOTICE]` blocks
-([Agent Advisory Protocol](../advisory/protocol.md#3-block-format)); `-q` hides the notices, never the warnings, and
+(`CAP-ADV-agent-advisory-protocol`); `-q` hides the notices, never the warnings, and
 `--strict` exits `1` when there is a warning.
 
 `--format json` prints the whole `SyncResult` object instead: `dry_run`, `selection`, `packages`, `assets`,
@@ -185,7 +185,7 @@ they run in their own `notices` list.
 | `POST_SYNC_NOTICE` | `NOTICE` (brief) | `PostSyncNotice` | a line a post-sync extension returned | `details`: the extension |
 
 Each class above derives from `SyncNotice` (`SYNC_NOTICE`), which is never reported on its own. A post-sync extension may also return `AdvisoryError` objects with codes of its own, or raise one; they keep their level, except that an
-`ERROR` is lowered to `WARNING` ([extensions](sync-and-transactions.md#post-sync-extensions)).
+`ERROR` is lowered to `WARNING` (`CAP-DIST-sync-and-transactions`).
 
 ### `devkit status`
 
@@ -222,7 +222,7 @@ error's `fix`, never in its message. The others are `DistributionError` subclass
 | --- | --- | --- | --- |
 | `DistributionError` | `DISTRIBUTION_FAILED` | `MAINTENANCE` | the base class, raised as it is only for an internal defect of `devkit.distribution` |
 | `BundleError` | `BUNDLE_INVALID` | `INPUT_ERROR` | `bundle.toml`, a declared source or an asset header is invalid or unreadable; from `bundle validate`, `plan` and `build`, `target_files` names the bundle directory |
-| `PackageError` | `BUNDLE_PACKAGE_INVALID` | `MAINTENANCE` | an installed content package registers an unusable, misnamed or duplicate bundle, or its resource module fails to import or load; `fix` names the package to upgrade or uninstall. Only a selected bundle's package (or a duplicate) is an error; any other is a `WARNING` under `notices` ([Content Packages](content-packages.md#1-content-wheel-contract)) |
+| `PackageError` | `BUNDLE_PACKAGE_INVALID` | `MAINTENANCE` | an installed content package registers an unusable, misnamed or duplicate bundle, or its resource module fails to import or load; `fix` names the package to upgrade or uninstall. Only a selected bundle's package (or a duplicate) is an error; any other is a `WARNING` under `notices` (`CAP-DIST-content-packages`) |
 | `SelectionError` | `SELECTION_INVALID` | `INPUT_ERROR` | an unknown or unselected bundle, preset, asset or override, or a selected bundle (by `config.toml`, or deployed per the receipt) whose package is not installed; `fix`: install it (`uv sync`) or `devkit remove <bundle>` |
 | `NotSynchronizedError` | `NOT_SYNCHRONIZED` | `AUTO` (`devkit sync`) | no receipt, or a context file no longer matches it |
 | `ReceiptStaleError` | `RECEIPT_STALE` | `INTERACTION` | `devkit sync --locked` refused because the committed state no longer matches the installed bundles (no receipt, a changed receipt, a missing or stale guidance block, or a missing `.devkit/.gitignore`); nothing was written and the exit code is `1`. `target_files`: the committed paths that would change (the receipt, `AGENTS.md`, seeded files, `.devkit/.gitignore`); `[DETAIL]`: up to 20 planned writes; `fix`: `devkit sync`, then commit the files it changes, once the user agrees |
@@ -252,7 +252,7 @@ documents; keep them in step.
 | `consumption` | Using, changing or troubleshooting devkit-managed assets: context loading, playbooks, rules and gates, overrides, selection and the sync/receipt lifecycle. |
 | `resource-kinds` | Adding a rule, skill, subagent, instruction, playbook, workflow or gate: the decision tree and comparison of asset kinds. |
 | `in-repo-bundle` | Adding repository-specific assets: shipping them as a bundle installed from the same repository. |
-| `devkit-run` | Running tests, linters or type checks directly, or setting up recipes for them: `devkit run` and its output; see [devkit.compact](../compact/reference.md). |
+| `devkit-run` | Running tests, linters or type checks directly, or setting up recipes for them: `devkit run` and its output; see [devkit.compact](compact.md). |
 
 The other built-in bundles are documented with the module whose engine they use, but each lives in a data-only
 resource module whose `__init__.py` imports nothing, so discovering it never imports that engine (a failing engine
@@ -260,20 +260,20 @@ import cannot make the bundle unusable):
 
 | Bundle | Resource module | Selection | Contents |
 | --- | --- | --- | --- |
-| `advisory` | `devkit.advisory_guide` | Auto-selected (`core`) | Agent Advisory Protocol guides; see [devkit.advisory](../advisory/reference.md). |
-| `authoring` | `devkit.authoring_guide` | Opt-in: `devkit add authoring` (`all`), or one of the presets `skill-authoring`, `agent-guide-authoring` | Size rules and restructuring playbooks for skills and agent guides; see [devkit.rules](../rules/reference.md#built-in-authoring-bundle). |
-| `git-commits` | `devkit.commits_guide` | Opt-in: `devkit add git-commits` | Commit message conventions and their `AGENTS.md` pointer; see [devkit.gate](../gate/reference.md#built-in-git-commits-bundle). |
+| `advisory` | `devkit.advisory_guide` | Auto-selected (`core`) | Agent Advisory Protocol guides; see [devkit.advisory](advisory.md). |
+| `authoring` | `devkit.authoring_guide` | Opt-in: `devkit add authoring` (`all`), or one of the presets `skill-authoring`, `agent-guide-authoring` | Size rules and restructuring playbooks for skills and agent guides; see [devkit.rules](rules.md#built-in-authoring-bundle). |
+| `git-commits` | `devkit.commits_guide` | Opt-in: `devkit add git-commits` | Commit message conventions and their `AGENTS.md` pointer; see [devkit.gate](gate.md#built-in-git-commits-bundle). |
 
 ---
 
 ## 5. Specifications
 
-- [Overview](overview.md): principles, architecture units, module layout and library surface.
-- [Bundle Manifest Specification](manifest-spec.md): `bundle.toml` schema 1, asset kinds, presets, validation and archive builds.
-- [Content Packages](content-packages.md): the content wheel contract, installation, upgrades and dependency boundaries.
-- [Workspace Ownership & Overrides](workspace-ownership.md): workspace layout, ownership categories, the guidance block, seeded files and override drift.
-- [Synchronization & Transactions](sync-and-transactions.md): the receipt, the selection model, and the transaction engine (lock, journal, recovery, post-sync extensions).
-- [Native Agent Projections](agent-projections.md): projection matrix and role contracts for Codex, Claude Code and Antigravity.
-- [Context Loading & Playbooks](context-and-playbooks.md): `get-context`, the skill prerequisite, and playbook search.
-- [In-Repository Bundles](in-repo-bundles.md): repository-owned assets as a content package installed from the same repository.
-- [Resource Taxonomy](../architecture/ARCH-08-2-resource-taxonomy.md): guidance taxonomy and naming standards.
+- `ARCH-05-4-distribution-components`: principles, architecture units, module layout and library surface.
+- `CAP-DIST-manifest-spec`: `bundle.toml` schema 1, asset kinds, presets, validation and archive builds.
+- `CAP-DIST-content-packages`: the content wheel contract, installation, upgrades and dependency boundaries.
+- `CAP-DIST-workspace-ownership`: workspace layout, ownership categories, the guidance block, seeded files and override drift.
+- `CAP-DIST-sync-and-transactions`: the receipt, the selection model, and the transaction engine (lock, journal, recovery, post-sync extensions).
+- `CAP-DIST-agent-projections`: projection matrix and role contracts for Codex, Claude Code and Antigravity.
+- `CAP-DIST-context-and-playbooks`: `get-context`, the skill prerequisite, and playbook search.
+- `CAP-DIST-in-repo-bundles`: repository-owned assets as a content package installed from the same repository.
+- `ARCH-08-2-resource-taxonomy`: guidance taxonomy and naming standards.

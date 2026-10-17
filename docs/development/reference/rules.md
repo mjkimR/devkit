@@ -7,10 +7,10 @@ schemas or cross-references ship in bundles (`kind = "rule"`) and load through
 the installation receipt. Part of the `devkit-agt` distribution (`devkit rules` CLI);
 requires Python 3.12 or later.
 
-Semantics: [Rule Engine Overview](overview.md) (architecture, layout),
-[Evaluation Lifecycle](evaluation-lifecycle.md) (phases, targets, autofix,
-policy, snapshot gates), [Rule Authoring Guide](rule-authoring.md) (rule
-protocol, workspace API, rule sources), [Resource Taxonomy](../architecture/ARCH-08-2-resource-taxonomy.md).
+Semantics: `CAP-GOV-rules-engine` (architecture, layout),
+`CAP-GOV-evaluation-lifecycle` (phases, targets, autofix,
+policy, snapshot gates), `CAP-GOV-rule-authoring` (rule
+protocol, workspace API, rule sources), `ARCH-08-2-resource-taxonomy`.
 
 ## CLI usage
 
@@ -32,20 +32,20 @@ pass their arguments through.
 Without `-w`/`--workspace-root` the commands use the devkit root of the current
 directory: the Git work tree's top level, or outside Git the nearest directory
 with a `.devkit/` folder, else the current directory
-([core reference](../core/reference.md)). An explicit `-w` below the top level of
+([core reference](core.md)). An explicit `-w` below the top level of
 a Git work tree is `ARGUMENT_INVALID`. A `.devkit/` below the top level of a Git
 work tree whose top level has none is `DEVKIT_ROOT_NESTED` (`INPUT_ERROR`), with
 or without `-w`, rather than a check that loads no managed rules and passes.
 
 - `check` never writes files. Targets, exclusions and phases:
-  [Evaluation Lifecycle, section 3](evaluation-lifecycle.md#3-cli-execution-and-phases).
+  `CAP-GOV-evaluation-lifecycle`.
 - `check --staged` evaluates the Git index (the built-in `rules-check`
   commit gate runs the same evaluation before every commit); `check --ci --base <ref>` evaluates `HEAD` against its merge base with
   `<ref>`. Both run the linter phase over the changed files of the tree,
   `--staged` in the working tree when it holds exactly the staged content and
   otherwise, like `--ci`, in a materialized copy, and refuse file arguments,
   `--phase hygiene` and `fix`
-  ([Evaluation Lifecycle, section 6](evaluation-lifecycle.md#6-git-snapshot-gates)).
+  (`CAP-GOV-evaluation-lifecycle`).
 - `fix --dry-run` reports the initial findings, marking fixable ones
   `status=fixable`, without running any fixer.
 - `phases` prints each rule's default and effective phase without evaluating.
@@ -66,14 +66,14 @@ or without `-w`, rather than a check that loads no managed rules and passes.
   them), with
   `PYTHONDONTWRITEBYTECODE=1`: nothing is written next to the tests, so a run
   leaves `.devkit/managed/` untouched. The full output goes to a log file, as
-  with `devkit run` ([Compact Reference](../compact/reference.md)). Arguments
+  with `devkit run` ([Compact Reference](compact.md)). Arguments
   after `--` are passed to pytest. Loading and policy problems are reported as
   warnings; a rule that fails to load is not available to test. Writing the
-  tests: [Rule Authoring Guide, section 6](rule-authoring.md#6-testing-a-rule).
+  tests: `CAP-GOV-rule-authoring`.
 
 ### Exit codes
 
-The devkit convention ([Errors, Exit Codes and Platforms](../architecture/ARCH-08-cross-cutting.md#4-exit-code-conventions)):
+The devkit convention (`ARCH-08-cross-cutting`):
 
 | Command | `0` | `1` | `2` |
 | --- | --- | --- | --- |
@@ -96,7 +96,7 @@ In text mode every problem is printed on stderr as an Agent Advisory Protocol
 block with its code ([Errors](#errors)); problems that do not fail a command are
 `[WARN]` blocks after the result. Under `--format json` the JSON object carries
 them and nothing is printed on stderr
-([Agent-First Output](../architecture/ARCH-08-1-agent-output.md)).
+(`ARCH-08-1-agent-output`).
 
 Text output is one `[KIND: ...]` sentinel line per fact; free text (messages,
 remediations, descriptions) is written as a JSON string so every line stays
@@ -112,10 +112,10 @@ parseable:
   `[VIOLATION: ...]` per finding (`status` is `open`, `fixable` or `fixed`;
   `remediation` and `guide` appear when the rule gives them); a hygiene run's
   `[PHASE_OVERRIDE: ...]`/`[PROMOTION: ...]` lines (whole-workspace runs only)
-  ([Evaluation Lifecycle, section 4](evaluation-lifecycle.md#4-phase-transitions-overrides-and-promotions))
+  (`CAP-GOV-evaluation-lifecycle`)
   and a `RULES_PROMOTION_READY` notice on stderr when one has `remaining=0`;
   a whole-workspace `check --phase hygiene` adds the notices of the `devkit.hygiene`
-  extensions ([Evaluation Lifecycle, section 3](evaluation-lifecycle.md#3-cli-execution-and-phases));
+  extensions (`CAP-GOV-evaluation-lifecycle`);
   then `[SUMMARY: errors=N warnings=N infos=N fixed=N]` counting unfixed
   findings per severity and the fixed ones; then `[OK: ...]` when the command
   exits `0`. A run that could not evaluate and found nothing prints no summary.
@@ -179,7 +179,7 @@ result prints `{"error": {...}}` instead.
 
 Everything lives in the Git-tracked `.devkit/config.toml` under `[rules]`, the
 only place a project changes a distributed rule's behavior. Semantics and
-validation: [Evaluation Lifecycle](evaluation-lifecycle.md), sections 3
+validation: `CAP-GOV-evaluation-lifecycle`, sections 3
 (`exclude`), 4 (phase overrides) and 5 (severity overrides, settings).
 
 ```toml
@@ -209,11 +209,11 @@ executes, with the rule ID in the message.
 
 | Rule | Module | Phase, severity | Checks | Guide |
 | --- | --- | --- | --- | --- |
-| `RULE-markdown-link` | `rules.markdown_link` | linter, error | relative Markdown links point at existing files; autofix rewrites a broken link when exactly one Markdown file has its basename | [guide.md](../../packages/devkit/src/devkit/rules/rules/markdown_link/guide.md) |
-| `RULE-file-length` | `rules.file_length` | hygiene, warning | files above `max_lines` (settings `max_lines`, `extensions`) | [guide.md](../../packages/devkit/src/devkit/rules/rules/file_length/guide.md) |
-| `RULE-secret-leak` | `rules.secret_leak` | linter, error | credential file names and private key or token patterns in explicit targets | [guide.md](../../packages/devkit/src/devkit/rules/rules/secret_leak/guide.md) |
-| `RULE-clean-artifacts` | `rules.clean_artifacts` | linter, error | compiled binaries, database files and logs above 1 MiB in explicit targets | [guide.md](../../packages/devkit/src/devkit/rules/rules/clean_artifacts/guide.md) |
-| `RULE-cli-contract` | `rules.cli_contract` | linter, error | `devkit` invocations in Markdown code name commands and options the running command line has, plugins included (settings `exclude`, `unchecked_commands`) | [guide.md](../../packages/devkit/src/devkit/rules/rules/cli_contract/guide.md) |
+| `RULE-markdown-link` | `rules.markdown_link` | linter, error | relative Markdown links point at existing files; autofix rewrites a broken link when exactly one Markdown file has its basename | [guide.md](../../../packages/devkit/src/devkit/rules/rules/markdown_link/guide.md) |
+| `RULE-file-length` | `rules.file_length` | hygiene, warning | files above `max_lines` (settings `max_lines`, `extensions`) | [guide.md](../../../packages/devkit/src/devkit/rules/rules/file_length/guide.md) |
+| `RULE-secret-leak` | `rules.secret_leak` | linter, error | credential file names and private key or token patterns in explicit targets | [guide.md](../../../packages/devkit/src/devkit/rules/rules/secret_leak/guide.md) |
+| `RULE-clean-artifacts` | `rules.clean_artifacts` | linter, error | compiled binaries, database files and logs above 1 MiB in explicit targets | [guide.md](../../../packages/devkit/src/devkit/rules/rules/clean_artifacts/guide.md) |
+| `RULE-cli-contract` | `rules.cli_contract` | linter, error | `devkit` invocations in Markdown code name commands and options the running command line has, plugins included (settings `exclude`, `unchecked_commands`) | [guide.md](../../../packages/devkit/src/devkit/rules/rules/cli_contract/guide.md) |
 
 The guide of each rule is canonical for its behavior; `devkit rules explain
 <RULE-id>` prints it. The safety rules report nothing for a run without
@@ -233,8 +233,8 @@ uv run devkit rules check --phase hygiene
 
 | Preset | Rule (warning, hygiene) | Playbook |
 | --- | --- | --- |
-| `skill-authoring` | `RULE-skill-document-size`: a skill or playbook Markdown file above `max_bytes` (12288 UTF-8 bytes) ([guide](../../packages/devkit/src/devkit/authoring_guide/bundle/rules/skill_document_size/guide.md)) | `skill-authoring`: router structure for new skills, the four restructuring steps, helper-script rules |
-| `agent-guide-authoring` | `RULE-agent-guide-size`: an `AGENTS.md` or `CLAUDE.md` above `max_bytes` (8192 UTF-8 bytes), reporting the devkit guidance block's share ([guide](../../packages/devkit/src/devkit/authoring_guide/bundle/rules/agent_guide_size/guide.md)) | `agent-guide-authoring`: what stays in an always-loaded guide (no structure trees; module specifics only as links), where the rest moves, per-host loading |
+| `skill-authoring` | `RULE-skill-document-size`: a skill or playbook Markdown file above `max_bytes` (12288 UTF-8 bytes) ([guide](../../../packages/devkit/src/devkit/authoring_guide/bundle/rules/skill_document_size/guide.md)) | `skill-authoring`: router structure for new skills, the four restructuring steps, helper-script rules |
+| `agent-guide-authoring` | `RULE-agent-guide-size`: an `AGENTS.md` or `CLAUDE.md` above `max_bytes` (8192 UTF-8 bytes), reporting the devkit guidance block's share ([guide](../../../packages/devkit/src/devkit/authoring_guide/bundle/rules/agent_guide_size/guide.md)) | `agent-guide-authoring`: what stays in an always-loaded guide (no structure trees; module specifics only as links), where the rest moves, per-host loading |
 
 Both remediations name the playbook and its `uv run devkit playbook search`
 query. The rules are bundle assets (one plugin package directory each) loaded
@@ -278,7 +278,7 @@ neither problems nor blocking violations, and `run.raise_for_problems()` raises
 `RulesRunError` when there are problems. `build_project_registry` and
 `expand_targets` expose the individual steps; `RuleContext`,
 `default_rule_registry` and `evaluate_rules` serve callers that assemble a run
-themselves ([Rule Authoring Guide, section 5](rule-authoring.md#5-rule-sources-and-registration));
+themselves (`CAP-GOV-rule-authoring`);
 `validate_policy` checks a `[rules]` policy against loaded rules and returns
 `PolicyError` objects that carry the rule ID.
 `match_path(pattern, file)` and `validate_pattern(pattern)` are the path
@@ -324,7 +324,7 @@ covers, left as written), or, for a whole file (`line` `0`, empty `target`),
 ### Rule tests
 
 `devkit.rules.testing` is what the tests in a rule's folder use
-([Rule Authoring Guide, section 6](rule-authoring.md#6-testing-a-rule)):
+(`CAP-GOV-rule-authoring`):
 
 - `load_rule(anchor, rule_id=None) -> Rule`: `anchor` is a test file
   (`__file__`) under `<rule folder>/tests/`, or the rule folder itself; the
@@ -369,11 +369,11 @@ tests, for example `rules/banned_words/rule.py` with `rules/banned_words/guide.m
 and `rules/banned_words/tests/` beside it. A `.py` file directly in the
 directory is a `RULES_LOAD_FAILED` loading error whose fix moves it into
 `<rules-dir>/<name>/`. The package layout is in
-[Implementing a Custom Rule](rule-authoring.md#3-implementing-a-custom-rule-example);
+`CAP-GOV-rule-authoring`;
 loading order, skipped names and failure handling are in
-[Rule sources](rule-authoring.md#5-rule-sources-and-registration),
+`CAP-GOV-rule-authoring`,
 and the rule contract (settings, `guide`, autofix) in the
-[Rule Authoring Guide](rule-authoring.md#1-rule-protocols-and-contracts).
+`CAP-GOV-rule-authoring`.
 
 ```python
 from dataclasses import dataclass, field
@@ -445,7 +445,7 @@ or its settings class's `__post_init__` raises `ValueError`, which the engine
 reports as `SettingsError`.
 
 Warnings and notices are returned, never raised, at level `WARNING` or
-`NOTICE` ([Agent Advisory Protocol](../advisory/protocol.md#2-levels)):
+`NOTICE` (`CAP-ADV-agent-advisory-protocol`):
 
 | Code | Level | When |
 | --- | --- | --- |

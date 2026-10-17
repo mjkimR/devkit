@@ -9,8 +9,8 @@ created_at: 2026-10-17
 
 # [CAP-CMP-bounded-execution] Compact Command Output: Architecture Overview
 
-**Package**: `devkit.compact` (`devkit run` CLI). Usage, error codes and module map: [Compact Reference](../../compact/reference.md).  
-**Related**: [Agent-First Output](../../architecture/ARCH-08-1-agent-output.md), [Agent Advisory Protocol](../../advisory/protocol.md).
+**Package**: `devkit.compact` (`devkit run` CLI). Usage, error codes and module map: [Compact Reference](../../development/reference/compact.md).
+**Related**: `ARCH-08-1-agent-output`, `CAP-ADV-agent-advisory-protocol`.
 
 ## 1. Overview and Objectives
 
@@ -23,7 +23,7 @@ Test runners, linters and type checkers print for people: progress dots, passed 
 3. **Progress and noise are not output.** Lines that only report progress or a passing item, overwritten progress bar states, lines that carry nothing an agent acts on, sections that repeat what the view already reports and copies of a line repeated in a row are filtered out of the excerpt, since they push the lines that locate a failure out of the budget. A line that names a failure is never filtered (of a run of identical ones, the first stays). The runner filters only what is safe without understanding a tool's structure; shortening a tool's own reports (tracebacks, code frames) is the tool's option to set (section 5).
 4. **Directives survive.** An advisory block a nested `devkit` command prints is taken out whole and relayed on stderr, so its `[ACTION]` reaches the agent even when the output around it is cut.
 5. **The runner wraps, it does not plan.** It runs one command as given. Which commands verify a project stays with the project (`justfile`, `package.json` scripts).
-6. **Same contract as every devkit command** ([Agent-First Output](../../architecture/ARCH-08-1-agent-output.md)).
+6. **Same contract as every devkit command** (`ARCH-08-1-agent-output`).
 
 ## 2. Execution
 
@@ -81,7 +81,7 @@ Every omission marker names the log lines it stands for, counted as `sed` counts
 
 A `FAILED` or `ERROR` line (also inside a filtered section), `SKIPPED [n] <reason>` in the short summary, a pytest progress line with `F` or `E`, any other line with a failure marker, and a diff line that does not name a pinned package stay. The log keeps everything: when a run stops without a summary (a crash, a hang the host killed), its last progress line there shows where.
 
-**Advisory blocks** are recognized by the protocol's grammar ([block format](../../advisory/protocol.md#3-block-format)), using the sentinels `devkit.advisory` exports (`HEADLINE`, `FIELDS`, `CONTINUATION`) so the scan follows the protocol's renderer; a rendered block contains no empty line, so an empty line ends one. A block longer than its budget is never relayed: once it outgrows the budget it ends, is counted in `[RUN_OMITTED]` and stays in the excerpt, as does a block that does not fit what is left of the budget. Under `-q`, relayed `[NOTICE]` blocks are dropped (the nested command also receives `DEVKIT_QUIET=1`).
+**Advisory blocks** are recognized by the protocol's grammar (`CAP-ADV-agent-advisory-protocol`), using the sentinels `devkit.advisory` exports (`HEADLINE`, `FIELDS`, `CONTINUATION`) so the scan follows the protocol's renderer; a rendered block contains no empty line, so an empty line ends one. A block longer than its budget is never relayed: once it outgrows the budget it ends, is counted in `[RUN_OMITTED]` and stays in the excerpt, as does a block that does not fit what is left of the budget. Under `-q`, relayed `[NOTICE]` blocks are dropped (the nested command also receives `DEVKIT_QUIET=1`).
 
 ## 5. Output
 

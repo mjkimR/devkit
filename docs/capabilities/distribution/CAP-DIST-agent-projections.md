@@ -11,7 +11,7 @@ created_at: 2026-10-17
 
 Skills and subagents are projected into each selected agent's own directories. Every supported agent
 (`codex`, `claude-code`, `antigravity`) is a target unless `agents` in `.devkit/config.toml` narrows the list; the
-flags that set it are in the [reference](../../distribution/reference.md#sync-options), and `devkit bundle plan <source> --agent <name>`
+flags that set it are in the [reference](../../development/reference/distribution.md#sync-options), and `devkit bundle plan <source> --agent <name>`
 previews the projections of a bundle before it is installed.
 
 ## 1. Projection Matrix
@@ -57,9 +57,9 @@ and are reached through `get-context`, playbook search or their paths.
   from `devkit bundle validate` and discovery). `emulated` and `unverified` projections tell the agent that the host
   does not enforce the boundaries itself.
 - **Host configuration boundary**: selected `hook` assets manage only their receipt-recorded matcher groups in
-  `.codex/hooks.json` ([Host Integration](../../host/overview.md#3-shared-configuration-ownership)); foreign entries are
+  `.codex/hooks.json` (`CAP-HOST-lifecycle-observation`); foreign entries are
   preserved. devkit never touches other host settings, credentials, trust configuration or user-level instruction files. Outside `.devkit/` and the agent directories it writes only the guidance block of the root
-  `AGENTS.md` and seeded files ([Workspace Ownership](../../distribution/workspace-ownership.md#2-ownership-categories-and-invariants));
+  `AGENTS.md` and seeded files (`CAP-DIST-workspace-ownership`);
   `CLAUDE.md` is never written.
 
 ### Role Contract Format

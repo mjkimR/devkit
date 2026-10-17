@@ -1,6 +1,6 @@
 # Integration Reference
 
-Canonical behavior: [overview.md](overview.md).
+Canonical behavior: `CAP-INT-mcp-services`.
 
 | Interface | Purpose |
 | --- | --- |

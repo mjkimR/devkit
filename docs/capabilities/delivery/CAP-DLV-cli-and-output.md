@@ -9,8 +9,8 @@ created_at: 2026-10-17
 
 # [CAP-DLV-cli-and-output] Workflow CLI and Output Contract
 
-**Package**: `devkit.workflow` (`devkit workflow` CLI). Envelope commands: [Review Envelopes](../../workflow/envelopes.md); requests and decision records: [Human Interaction Contract](../../workflow/human-interaction.md).  
-**Related**: `CAP-DLV-workflow-orchestration`, [Agent-First Output](../../architecture/ARCH-08-1-agent-output.md).
+**Package**: `devkit.workflow` (`devkit workflow` CLI). Envelope commands: `CAP-DLV-workflow-envelopes`; requests and decision records: `CAP-DLV-human-interaction`.
+**Related**: `CAP-DLV-workflow-orchestration`, `ARCH-08-1-agent-output`.
 
 ## 1. Commands
 
@@ -40,13 +40,13 @@ devkit workflow envelope reverify COMMON [--from latest|FILE] [--resolve N|all].
 devkit workflow envelope check --unit DIR [--format text|json]   # every envelope file, contract violations and the hold
 ```
 
-`--anchor FILE` names the anchor file that identifies the unit when its directory holds several candidate anchors (`ANCHOR_AMBIGUOUS`); see [Per-Definition Layout](CAP-DLV-workflow-orchestration.md#per-definition-layout).
+`--anchor FILE` names the anchor file that identifies the unit when its directory holds several candidate anchors (`ANCHOR_AMBIGUOUS`); see `CAP-DLV-workflow-orchestration`.
 
 All commands accept `-w/--workspace-root`. It defaults to the devkit root of the current directory (the Git work tree's top level; outside Git, the nearest directory with a `.devkit/` folder); an explicit value that is not an existing directory, or one below the top level of a Git work tree, is `ARGUMENT_INVALID`; a `.devkit/` below the top level of a work tree whose top level has none is `DEVKIT_ROOT_NESTED`.
 
 ## 2. Exit Codes and Errors
 
-Exit codes follow the devkit convention ([Errors, Exit Codes and Platforms](../../architecture/ARCH-08-cross-cutting.md#4-exit-code-conventions)):
+Exit codes follow the devkit convention (`ARCH-08-cross-cutting`):
 
 | Exit | When |
 | --- | --- |
@@ -86,13 +86,13 @@ The library raises the same codes, one class per code. `WorkflowError` is the ba
 | `HANDOFF_CHOICE_REQUIRED` | `HandoffChoiceRequiredError` | `INTERACTION` | `2` | `handoff` under `approvals.handoff = "ask"` without a recorded choice: stop and ask the user; `[FIX]` is the `answer` command to run with their choice (details list the candidates) |
 | `HANDOFF_UNDECIDED`, `HANDOFF_INVALID`, `HANDOFF_INELIGIBLE` | `HandoffUndecidedError`, `HandoffInvalidError`, `HandoffIneligibleError` | `INPUT_ERROR` | `2` | `auto` found no eligible candidate; the choice is not a candidate, or its `when` checks fail |
 | `HANDOFF_LAYOUT_MISMATCH` | `HandoffLayoutMismatchError` | `INPUT_ERROR` | `2` | the chosen candidate's anchor differs from the unit's; relocate the unit, then `bind` |
-| `HANDOFF_HELD` | `HandoffHeldError` | `BLOCKED` | `1` | `handoff` of a complete unit its envelopes hold: an unresolved problem, an unanswered question or a malformed worker envelope (one detail each); clear them first ([Review Envelopes, section 4](../../workflow/envelopes.md#4-hold-blocked-and-waiting-for-answers)) |
+| `HANDOFF_HELD` | `HandoffHeldError` | `BLOCKED` | `1` | `handoff` of a complete unit its envelopes hold: an unresolved problem, an unanswered question or a malformed worker envelope (one detail each); clear them first (`CAP-DLV-workflow-envelopes`) |
 | `ENVELOPE_STATUS_INVALID`, `ENVELOPE_FLAG_INVALID`, `ENVELOPE_FROM_INVALID`, `ENVELOPE_FINDINGS_INVALID`, `ENVELOPE_ITEMS_INVALID`, `ENVELOPE_REFERENCE_INVALID` | `EnvelopeStatusError`, `EnvelopeFlagError`, `EnvelopeFromError`, `EnvelopeFindingsError`, `EnvelopeItemsError`, `EnvelopeReferenceError` (base `AuthoringError`) | `INPUT_ERROR` | `2` | authoring flags (`envelope new` and the kind commands) that cannot produce a valid envelope, or `envelope new` given a kind that has its own command; a `--resolve`/`--waive` number outside the carried findings, and fields or a status the kind does not allow, are `ENVELOPE_FLAG_INVALID`; a malformed `--questions-file` or `--answers-file` is `ENVELOPE_ITEMS_INVALID`; an `--answers-to` or `--resolves` that names no fitting envelope of the unit is `ENVELOPE_REFERENCE_INVALID` |
 | `ENVELOPE_KIND_INVALID` | `EnvelopeKindError` | `INPUT_ERROR` | `2` | an envelope kind does not match `[a-z][a-z0-9-]*` (`write_envelope`) |
 | `ENVELOPE_INVALID` | `EnvelopeFormatError` | `INPUT_ERROR` | `1` | collected with `file` by `load_envelopes`: a malformed envelope file, or an answer or resolution whose `answers_to` or `resolves` names no fitting envelope; `envelope check` reports each one with its `[TARGET]` |
 | `RECEIPT_INVALID` | `devkit.core` `ReceiptError` | `MAINTENANCE` | `2` | `.devkit/installation.json` exists but does not match its schema; restore it from version control, then run `devkit sync` |
 | `GIT_FAILED` | `devkit.core` `GitError` | `MAINTENANCE` | `2` | `is_ancestor` cannot answer, or is given a non-hexadecimal revision (`INPUT_ERROR`) |
-| `LOCK_HELD`, `LOCK_UNSUPPORTED`, `PATH_UNSAFE` | `devkit.core` `LockHeldError`, `LockUnsupportedError`, `UnsafePathError` | `DEFER`, `BLOCKED`, `INPUT_ERROR` | `2` | writing a decision record, an envelope or a new unit's anchor: another writer held the directory lock for 10 seconds; `flock` is unavailable on the platform or the file system; the records directory is a symbolic link ([Answer](../../workflow/human-interaction.md#4-answer)) |
+| `LOCK_HELD`, `LOCK_UNSUPPORTED`, `PATH_UNSAFE` | `devkit.core` `LockHeldError`, `LockUnsupportedError`, `UnsafePathError` | `DEFER`, `BLOCKED`, `INPUT_ERROR` | `2` | writing a decision record, an envelope or a new unit's anchor: another writer held the directory lock for 10 seconds; `flock` is unavailable on the platform or the file system; the records directory is a symbolic link (`CAP-DLV-human-interaction`) |
 | `WORKFLOW_OPTIONAL_STAGE_UNASKED` | `OptionalStageWarning` | `CONTINUE` (level `WARNING`) | `0` (`1` under `--strict`) | returned, never raised, by `validate` under `notices` with `where`: an optional stage's gate or `human` exit check is never requested; the definition stays valid |
 | `WORKFLOW_ROLES_UNCHECKED` | `RolesUncheckedNotice` | `NOTE` (level `NOTICE`, brief) | `0` | returned, never raised, by `validate` when neither a receipt nor `[workflow] roles_dir` exists, so stage roles were not checked |
 
@@ -120,11 +120,11 @@ The library raises the same codes, one class per code. `WorkflowError` is the ba
 - `[SKIPPED: <id> reason=...]` names the policy entry that skipped the stage: `stages.<id>=off` or `approvals.<gate>=off`.
 - `[WAITING]` appears when the current stage's gate is asked (every exit check holds), or when every unmet check is `runner` or `human`. Its class is `human` when any unmet check is human.
 - `[GATE: <name> policy=P satisfied=yes|no source=S]` appears only for a gated current stage. `source` is `policy` (`auto`), `given` (`--given`), `decision:<file>` (an accepted record) or `-` while not satisfied. It ends with `held=yes` while the unit's envelopes hold the gate.
-- `[BLOCKED: <file> cause="..." recovery="..."]` per unresolved problem, `[BLOCKED: <file> malformed=yes reason="..."]` per malformed worker envelope and `[PENDING_QUESTION: <file> id=<question> title="..."]` per unanswered question, whatever the stage ([Review Envelopes, section 4](../../workflow/envelopes.md#4-hold-blocked-and-waiting-for-answers)). While any is listed, no gate of the stage that raised it or a later stage passes, by policy, `--given` or record, and none is asked: such a gated stage whose exit checks hold reports the unmet `envelope-hold` check instead. Gates passed before stay passed, and the handoff is neither asked nor run. Unanswered questions also become `question:*` requests and set `[WAITING: human <their ids>]`.
+- `[BLOCKED: <file> cause="..." recovery="..."]` per unresolved problem, `[BLOCKED: <file> malformed=yes reason="..."]` per malformed worker envelope and `[PENDING_QUESTION: <file> id=<question> title="..."]` per unanswered question, whatever the stage (`CAP-DLV-workflow-envelopes`). While any is listed, no gate of the stage that raised it or a later stage passes, by policy, `--given` or record, and none is asked: such a gated stage whose exit checks hold reports the unmet `envelope-hold` check instead. Gates passed before stay passed, and the handoff is neither asked nor run. Unanswered questions also become `question:*` requests and set `[WAITING: human <their ids>]`.
 - `[DELEGATE: role=R isolation=I]` and `[RETURNS: <to> when="..."; ...]` describe the current stage. `[DELEGATE]` carries `contract=<path>` when the role is in the project's vocabulary (receipt `subagent` asset or `roles_dir` file); otherwise the key is absent.
 - `[STALE_APPROVAL: <file> request=<id> stage=<stage> counts=yes void_with="devkit workflow return --unit <dir> --to <current stage>"]` lists approvals of later stages found while an earlier stage is current. It is a read-only notice: `next` writes nothing, and those approvals keep counting until `devkit workflow return` records a `return:<stage>` decision that voids them.
 - `[LINT_ERROR: "..."]` appears when `lint-clean` could not run; the command then also reports the `devkit.rules` error on stderr (text mode), unchanged (for example `RULES_RUN_FAILED`), and exits with its exit code.
-- Whenever a person must act, one `[REQUEST: ...]` line per open request follows the stage block (ending with `answer=given` for a gate the definition marks so: pass `--given <gate>` after the approval instead of recording it), with `[DECLINED: ...]` for a request that was refused and is still open, and `[DECISION_ERROR: file "reason"]` for a malformed or ignored record (formats in [Human Interaction Contract](../../workflow/human-interaction.md#3-request)).
+- Whenever a person must act, one `[REQUEST: ...]` line per open request follows the stage block (ending with `answer=given` for a gate the definition marks so: pass `--given <gate>` after the approval instead of recording it), with `[DECLINED: ...]` for a request that was refused and is still open, and `[DECISION_ERROR: file "reason"]` for a malformed or ignored record (formats in `CAP-DLV-human-interaction`).
 
 When the workflow is complete and declares `next` candidates (and `approvals.handoff` is not `off`), the handoff block follows:
 
@@ -175,10 +175,10 @@ When the workflow is complete and declares `next` candidates (and `approvals.han
 ```
 
 - `gate` is `null` for an ungated stage, else `{"name", "policy", "satisfied", "source", "decision", "held"}` (`source` is `policy`, `given`, `decision` or `null`; `decision` names the record file; `held` is `true` while the unit's envelopes keep it from passing).
-- `blocked`, `problems` (`[{"file", "cause", "attempts", "recovery"}]`), `pending_questions` (`[{"file", "id", "title"}]`) and `malformed_workers` (`[{"file", "reason"}]`) report the hold of the unit's envelopes, over every segment ([Review Envelopes, section 4](../../workflow/envelopes.md#4-hold-blocked-and-waiting-for-answers)).
+- `blocked`, `problems` (`[{"file", "cause", "attempts", "recovery"}]`), `pending_questions` (`[{"file", "id", "title"}]`) and `malformed_workers` (`[{"file", "reason"}]`) report the hold of the unit's envelopes, over every segment (`CAP-DLV-workflow-envelopes`).
 - `handoff` is `null` until the workflow is complete; then it is `{"policy", "candidates": [{"workflow", "recommended", "eligible", "checks": [...]}], "eligible": [...], "recommended": [...], "chosen", "decision"}`.
 - `passed_gates` lists the gates of done stages with what passed them: `[{"stage", "name", "policy", "satisfied", "source", "decision", "held"}]`, in text one `[GATE_PASSED: <gate> stage=<id> policy=P source=policy|given|decision:<file>]` line each after `[DONE]`. A gate an `auto` policy passed is never current, so this is where a report finds the basis of every gate.
-- `requests` holds the open requests ([Human Interaction Contract](../../workflow/human-interaction.md#3-request)); `stale_approvals` the files of approvals for stages after the current one, which still count until a `return` record voids them.
+- `requests` holds the open requests (`CAP-DLV-human-interaction`); `stale_approvals` the files of approvals for stages after the current one, which still count until a `return` record voids them.
 - `errors` holds every collected problem: malformed envelopes (`ENVELOPE_INVALID`) and decision records (`DECISION_RECORD_INVALID`, `HANDOFF_CHOICE_IGNORED`) with their `file`, and the `devkit.rules` error that stopped `lint-clean`.
 
 The other commands:
@@ -189,4 +189,4 @@ The other commands:
 - `list --format json`: `{"units": [{"unit", "anchor", "status", "workflow", "history", "error"}]}` across every layout in use; the text form is `[UNIT: <dir> status=S workflow=W anchor=A]`, with `error="..."` for a unit whose anchor cannot be read (in JSON, the `ANCHOR_INVALID` advisory `to_dict()`). `--status <value>` keeps units whose anchor `status` equals a given value (repeatable) and `--exclude-status <value>` drops them; both are exact matches and nothing is excluded by default, so active units are `--exclude-status completed`.
 - `handoff --format json`: `{"unit", "from", "to", "policy", "decision", "history"}`.
 - `requests --format json`: `{"requests": [...], "errors": [...]}`, where `errors` holds the error that stopped `lint-clean`, if any; in text it is a `[LINT_ERROR: "..."]` line after the requests, and the command exits with its exit code as `next` does. `answer` and `return` emit the written record with its `file`.
-- `envelope new`, `worker`, `answer`, `resolution`, `review`, `reverify` and `check`: see [Review Envelopes](../../workflow/envelopes.md).
+- `envelope new`, `worker`, `answer`, `resolution`, `review`, `reverify` and `check`: see `CAP-DLV-workflow-envelopes`.

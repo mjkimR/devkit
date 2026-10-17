@@ -11,7 +11,7 @@ created_at: 2026-10-17
 
 Bundles reach a project as Python packages installed with `uv`; `devkit` relies on standard packaging instead of a
 registry, resolver or download cache of its own. The bundle itself is specified in the
-[Manifest Specification](../../distribution/manifest-spec.md); repository-owned bundles in [In-Repository Bundles](../../distribution/in-repo-bundles.md).
+`CAP-DIST-manifest-spec`; repository-owned bundles in `CAP-DIST-in-repo-bundles`.
 
 ## 1. Content Wheel Contract
 
@@ -70,12 +70,12 @@ packages of the project.
   works after the package is gone; for a bundle without an entry it then writes no `false`.
 - **Clean checkout**: `uv sync`, then `uv run devkit sync --locked`, which rebuilds ignored managed and native files
   from the installed wheels and fails (exit `1`, `RECEIPT_STALE`) instead of changing the committed receipt
-  ([Locked Synchronization](../../distribution/sync-and-transactions.md#locked-synchronization)).
+  (`CAP-DIST-sync-and-transactions`).
 
 ## 3. Dependency Boundaries
 
 Availability follows Python dependency resolution; deployment follows the bundle's `auto_select` and the consumer's
-`.devkit/config.toml` ([selection model](../../distribution/sync-and-transactions.md#2-asset-selection-model)). When a content package
+`.devkit/config.toml` (`CAP-DIST-sync-and-transactions`). When a content package
 `packageB` depends on `packageA`:
 
 - **`[project.dependencies]`** puts `packageA` in the wheel's `Requires-Dist`. A consumer that adds `packageB` gets

@@ -5,7 +5,7 @@ or deleted by the engine. Records name the workflow they were given in; only
 records of the current workflow segment (the bound workflow, written after the
 last handoff) count. Within that segment the effective decision for a request
 is its latest non-``cancel`` record by sequence. Malformed records are
-reported, not fatal. See ``docs/workflow/human-interaction.md``.
+reported, not fatal. See ``docs/capabilities/delivery/CAP-DLV-human-interaction.md``.
 """
 
 from __future__ import annotations

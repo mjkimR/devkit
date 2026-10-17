@@ -6,7 +6,7 @@ the project selects it with `devkit add`, and a preset picks its assets.
 
 | Bundle | Presets (default first) | Contents |
 | --- | --- | --- |
-| `host-observer` | `all` | Codex lifecycle hook registrations using devkit's metadata-only observer; [host setup and inspection](../../docs/host/overview.md#5-observer-and-inspection) |
+| `host-observer` | `all` | Codex lifecycle hook registrations using devkit's metadata-only observer; `CAP-HOST-lifecycle-observation` |
 | `github-milestones` | `all`, `conventions` | Milestone sizing and issue-linking instruction; `decompose-initiative` playbook (`gh` CLI) |
 
 ```bash
@@ -31,5 +31,5 @@ check, a command) belongs in `devkit-agt` instead.
    [Bundle Recommendations](../../guides/install/bundle-recommendations.md), with the signal that warrants it.
 
 `tests/test_bundles.py` enforces the entry point, version, opt-in and naming
-rules. See [Content Packages](../../docs/distribution/content-packages.md) and the
-[Manifest Specification](../../docs/distribution/manifest-spec.md).
+rules. See `CAP-DIST-content-packages` and the
+`CAP-DIST-manifest-spec`.

@@ -1,14 +1,14 @@
 ---
 id: ARCH-08-1-agent-output
 title: Agent-First Output
-summary: Output contract for devkit commands: stdout sentinels, JSON envelopes, advisory routing, and log capturing.
+summary: "Output contract for devkit commands: stdout sentinels, JSON envelopes, advisory routing, and log capturing."
 status: active
 created_at: 2026-10-17
 ---
 
 # [ARCH-08-1-agent-output] Agent-First Output
 
-The primary consumer of every `devkit` command is an AI coding agent that runs it through a shell or a tool call and acts on what comes back; a person reads the same output, but nothing is shaped for a person at the agent's expense. Everything a command prints lands in the agent's context window, so output is a contract, not a log. This document specifies that contract; the advisory blocks themselves are specified in the [Agent Advisory Protocol](../advisory/protocol.md), exit codes in [Architecture Overview, section 4](ARCH-08-cross-cutting.md#4-exit-code-conventions).
+The primary consumer of every `devkit` command is an AI coding agent that runs it through a shell or a tool call and acts on what comes back; a person reads the same output, but nothing is shaped for a person at the agent's expense. Everything a command prints lands in the agent's context window, so output is a contract, not a log. This document specifies that contract; the advisory blocks themselves are specified in the `CAP-ADV-agent-advisory-protocol`, exit codes in `ARCH-08-cross-cutting`.
 
 ## 1. Principles
 
@@ -16,7 +16,7 @@ The primary consumer of every `devkit` command is an AI coding agent that runs i
 2. **Match, do not parse.** Text output is one fact per line, each behind a sentinel an agent can match with a fixed string. JSON output is exactly one object. Neither needs prose understanding.
 3. **Codes, not prose.** Every condition worth reporting has a stable `UPPER_SNAKE` code. Messages explain; codes identify. Callers and tests branch on codes, never on message text.
 4. **Directives, not narration.** A condition the agent must act on carries an `[ACTION]` directive that says what to do and what not to do. Nothing relies on the agent inferring intent from a description.
-5. **Context budget.** The default output carries only what changes the agent's next step or must reach the user. Progress, timing, passed checks and diagnostics are logs, shown only under `-v`. A lasting condition that asks for nothing is announced once, when it appears, and stays visible as data afterwards ([protocol, section 8](../advisory/protocol.md#8-warnings-and-notices-in-practice)).
+5. **Context budget.** The default output carries only what changes the agent's next step or must reach the user. Progress, timing, passed checks and diagnostics are logs, shown only under `-v`. A lasting condition that asks for nothing is announced once, when it appears, and stays visible as data afterwards (`CAP-ADV-agent-advisory-protocol`).
 6. **Deterministic.** The same state gives the same bytes: no colour, no emoji, no box drawing, no progress bars, no alignment tables, no output that changes with the terminal (TTY detection, width, locale). stdout and stderr are always UTF-8 (a character UTF-8 cannot encode, such as a lone surrogate from an undecodable path, is written as its `\uXXXX` escape, which keeps JSON valid). JSON text is UTF-8 too, never `\uXXXX`-escaped: an escaped non-English path or message costs the agent context and has to be decoded back before it can be used.
 7. **Libraries never print.** Library functions return results and collected advisories, and raise `AdvisoryError`; only the CLI layer writes to stdout or stderr. An embedding caller (another tool, an MCP server, a test) gets the same information as data.
 
@@ -35,11 +35,11 @@ Every stderr line is either a sentinel line or a continuation line indented 9 sp
 The native `devkit host hook` transport is a scoped exception: it emits only the host-defined JSON response on
 stdout, warnings on stderr and exit 0 for advisory dispatch failures. It has no `--format`, verbosity or strict
 options. It never emits devkit result sentinels or ordinary error objects; see
-[Host Integration](../host/overview.md#4-runtime-and-service-extension). Other host commands follow this contract.
+`CAP-HOST-lifecycle-observation`. Other host commands follow this contract.
 
 `devkit host mcp serve` likewise reserves stdout for native MCP JSON-RPC, without ordinary output options.
 Startup errors go to stderr and exit 2; per-tool results carry structured advisory data. The optional SDK owns
-protocol framing. See [Host MCP](../host/reference.md#mcp-services).
+protocol framing. See [Host MCP](../development/reference/host.md#mcp-services).
 
 ## 3. stdout: Text
 
@@ -70,13 +70,13 @@ Under `--format json` (and for the distribution commands other than `sync`, `add
 ```
 
 - The command's payload sits under named keys (`violations`, `rules`, `units`, `checks`, `requests`, `overrides`, ...), or is the object itself for a single result (`SyncResult`).
-- `errors` lists problems the command collected instead of raising, `notices` lists its warnings and notices; each entry is an advisory's `to_dict()`: `{"code", "level", "message", "exit_code", "advisory": {...}}`, plus fields a module adds (`rule_id`, `file`, `where`). `advisory` holds what the block would show: `mode`, the `[ACTION]` directive as `action`, and each other field only when it has a value ([protocol, section 9](../advisory/protocol.md#9-structured-output)). A command that can collect neither omits the key.
+- `errors` lists problems the command collected instead of raising, `notices` lists its warnings and notices; each entry is an advisory's `to_dict()`: `{"code", "level", "message", "exit_code", "advisory": {...}}`, plus fields a module adds (`rule_id`, `file`, `where`). `advisory` holds what the block would show: `mode`, the `[ACTION]` directive as `action`, and each other field only when it has a value (`CAP-ADV-agent-advisory-protocol`). A command that can collect neither omits the key.
 - A command that fails outright prints `{"error": {...}}` (the same envelope) instead of a result, with the warnings and notices it collected before the failure under `notices`.
 - JSON is never filtered by `-q` or `-v`: it always carries every error and notice.
 
 ## 5. stderr: Advisories
 
-In text mode every error, warning and notice is an Agent Advisory Protocol block ([format](../advisory/protocol.md#3-block-format)) on stderr; in JSON mode none is (section 4 carries them). Their order on stderr is fixed:
+In text mode every error, warning and notice is an Agent Advisory Protocol block (`CAP-ADV-agent-advisory-protocol`) on stderr; in JSON mode none is (section 4 carries them). Their order on stderr is fixed:
 
 1. `[INFO]` log lines (only under `-v`), as they occur;
 2. warnings and notices, after the result has been printed: warnings first, then notices, each in the order the command collected them (JSON keeps the collected order);
@@ -102,7 +102,7 @@ Every command takes the same three output options (`devkit.core.cli.output_optio
 
 ## 7. Exit Codes
 
-`0` success, `1` the command ran and reports a negative result, `2` it could not do its job; the full rules are in [Architecture Overview, section 4](ARCH-08-cross-cutting.md#4-exit-code-conventions). Warnings and notices never change the exit code, except under `--strict` (section 6). A command whose reader closes stdout early (`devkit ... | head`) stops writing and exits `2` without an advisory: its result was not delivered.
+`0` success, `1` the command ran and reports a negative result, `2` it could not do its job; the full rules are in `ARCH-08-cross-cutting`. Warnings and notices never change the exit code, except under `--strict` (section 6). A command whose reader closes stdout early (`devkit ... | head`) stops writing and exits `2` without an advisory: its result was not delivered.
 
 ## 8. Logs (`INFO`)
 
@@ -117,8 +117,8 @@ Diagnostics that neither change the agent's next step nor need to reach the user
 
 | Concern | Where |
 | --- | --- |
-| Advisory model, levels, modes, `[ACTION]` texts, block rendering, `to_dict` | `devkit.advisory` ([reference](../advisory/reference.md)) |
-| `boundary` (with `output_options` and the log handler), `echo_notices`, `exit_on_warnings`, `echo_json`, `exit_on_problems` | `devkit.core.cli` ([reference](../core/reference.md)) |
+| Advisory model, levels, modes, `[ACTION]` texts, block rendering, `to_dict` | `devkit.advisory` ([reference](../development/reference/advisory.md)) |
+| `boundary` (with `output_options` and the log handler), `echo_notices`, `exit_on_warnings`, `echo_json`, `exit_on_problems` | `devkit.core.cli` ([reference](../development/reference/core.md)) |
 | `NullHandler` on the `devkit` logger, `get_logger` for every module | `devkit.core.logs` |
 | Result lines and JSON payloads of each command | each area's `cli/` package, documented in its reference |
 | Warnings and notices each area reports | each area's reference (error and notice code tables) |

@@ -10,13 +10,13 @@ created_at: 2026-10-17
 # [CAP-GOV-evaluation-lifecycle] Evaluation Lifecycle and Autofix Convergence
 
 How a run selects targets and rules, applies project policy, repairs and rechecks, and evaluates Git snapshots.
-Related: `CAP-GOV-rules-engine`, [Rule Authoring Guide](../../rules/rule-authoring.md),
-[Rules Reference](../../rules/reference.md) (commands, output, exit codes, error codes).
+Related: `CAP-GOV-rules-engine`, `CAP-GOV-rule-authoring`,
+[Rules Reference](../../development/reference/rules.md) (commands, output, exit codes, error codes).
 
 ## 1. Lifecycle
 
 1. Build the `RuleContext` and `WorkspaceCache`; a Git snapshot gate first materializes the staged or CI tree and uses it as the root (section 6).
-2. Load rules ([Rule Authoring Guide, section 5](../../rules/rule-authoring.md#5-rule-sources-and-registration)) and validate the project policy: phase overrides, severity overrides, typed settings and `exclude` patterns. Any loading or policy problem stops the run before a rule executes.
+2. Load rules (`CAP-GOV-rule-authoring`) and validate the project policy: phase overrides, severity overrides, typed settings and `exclude` patterns. Any loading or policy problem stops the run before a rule executes.
 3. Select the active rules for the phase (`linter` or `hygiene`) and run their checks, collecting violations and execution errors.
 4. With `fix` (not `--dry-run`) and no execution error, run each `Autofixable.fix()` once, sequentially, then recheck all active rules once (section 2).
 5. Return the final violations and errors.
@@ -32,12 +32,12 @@ Related: `CAP-GOV-rules-engine`, [Rule Authoring Guide](../../rules/rule-authori
 
 ## 3. CLI Execution and Phases
 
-Command synopsis, output and exit codes: [Rules Reference, CLI usage](../../rules/reference.md#cli-usage).
+Command synopsis, output and exit codes: [Rules Reference, CLI usage](../../development/reference/rules.md#cli-usage).
 
 - **Phases**:
-  - `linter`: relative Markdown links, the safety checks on explicit targets, and every rule declared in this phase. The Git snapshot gates evaluate this phase: `check --staged` (at commit time, the built-in `rules-check` gate of [`devkit gate`](../../gate/overview.md#2a-built-in-gates)) and `check --ci`.
+  - `linter`: relative Markdown links, the safety checks on explicit targets, and every rule declared in this phase. The Git snapshot gates evaluate this phase: `check --staged` (at commit time, the built-in `rules-check` gate of `CAP-GATE-commit-gates`) and `check --ci`.
   - `hygiene`: the `linter` rules plus file length warnings, every rule declared in this phase, and every rule parked there by a project phase override.
-- **Hygiene extensions**: a whole-workspace `check --phase hygiene` (no targets, no snapshot) also calls every `devkit.hygiene` entry point of the installed packages, in sorted name order, as `extension(workspace_root)`, after the rules ran, and reports what they return on stderr with the run's notices: a string is a `HYGIENE_NOTICE`, an advisory keeps its code (an `ERROR` lowered to `WARNING`). They check repository state that is not a file rule, such as the stale `plan-*`/`dev-*` branches `devkit.worktree` reports as `WORKTREE_STALE_BRANCH` warnings ([Task Worktrees, section 6](../../worktree/overview.md#6-stale-branches)). An extension never fails the run: an exception or a malformed return value is a `HYGIENE_EXTENSION_FAILED` warning, and warnings change the exit code only under `--strict`. The `linter` phase, explicit targets, the Git snapshot gates (commit gate, CI) and `fix` never call them.
+- **Hygiene extensions**: a whole-workspace `check --phase hygiene` (no targets, no snapshot) also calls every `devkit.hygiene` entry point of the installed packages, in sorted name order, as `extension(workspace_root)`, after the rules ran, and reports what they return on stderr with the run's notices: a string is a `HYGIENE_NOTICE`, an advisory keeps its code (an `ERROR` lowered to `WARNING`). They check repository state that is not a file rule, such as the stale `plan-*`/`dev-*` branches `devkit.worktree` reports as `WORKTREE_STALE_BRANCH` warnings (`CAP-WT-task-worktrees`). An extension never fails the run: an exception or a malformed return value is a `HYGIENE_EXTENSION_FAILED` warning, and warnings change the exit code only under `--strict`. The `linter` phase, explicit targets, the Git snapshot gates (commit gate, CI) and `fix` never call them.
 - **Targets**: workspace-relative or absolute paths inside the workspace. A file named on the command line is checked as is, by every rule (also those that scan the workspace with `find_files`), even when Git ignores it (for example a workflow unit under `.devkit/transient/`) or it sits in a dependency or cache directory (`.venv/`, `node_modules/`). A directory expands recursively to its regular files with the same discovery as a whole-workspace scan: dependency and cache directories (`.git`, `.venv`, `node_modules`, ...), `.devkit/managed/` and `.devkit/overrides/`, and symlinks resolving outside the workspace are skipped, and inside a Git work tree only files Git does not ignore are listed (tracked plus untracked; names are compared in Unicode NFC, so a file whose on-disk name is decomposed, as macOS may store it, still matches Git's precomposed name). No targets means the whole workspace; a directory without files checks nothing. A target that is neither an existing file nor a directory inside the workspace, including a file or directory symlink that resolves outside it, and a file or directory inside `.devkit/managed/` or `.devkit/overrides/` (receipt-pinned copies rules never read), fails with `RULES_TARGET_INVALID` before any rule runs. Link repair still indexes every Markdown file in the workspace when checking selected files.
 - **Exclusions**: `exclude` under `[rules]` lists workspace-relative patterns (the `**` grammar of settings overrides, section 5) that no rule targets. Excluded paths are removed from explicit, directory-expanded and snapshot targets, and `ctx.is_file_targeted` is `False` for them; a run whose explicit targets are all excluded checks nothing rather than falling back to the whole workspace. They stay in the document catalog, so link repair can still resolve to them. An invalid pattern is a policy error.
 
@@ -67,7 +67,7 @@ RULE-markdown-link = "hygiene"
 
 ### Rule Promotions (`promote_to`)
 
-A new rule meeting many existing violations is declared `phase=Phase.HYGIENE` with `promote_to=Phase.LINTER` ([declaration](../../rules/rule-authoring.md#optional-promote_to)) instead of blocking every session at once. Whole-workspace `hygiene` runs print its remaining count:
+A new rule meeting many existing violations is declared `phase=Phase.HYGIENE` with `promote_to=Phase.LINTER` (`CAP-GOV-rule-authoring`) instead of blocking every session at once. Whole-workspace `hygiene` runs print its remaining count:
 
 ```text
 [PROMOTION: RULE-no-todo=hygiene promote_to=linter remaining=12]
@@ -92,7 +92,7 @@ The value is `error`, `warning` or `info`. Violations report the effective sever
 
 ### Typed Settings (`[rules.settings.<RULE-id>]`)
 
-A rule declares typed settings with defaults ([Rule Authoring Guide](../../rules/rule-authoring.md#optional-settings-and-validate_settings)); a project configures them, optionally per path:
+A rule declares typed settings with defaults (`CAP-GOV-rule-authoring`); a project configures them, optionally per path:
 
 ```toml
 [rules.settings.RULE-file-length]
@@ -133,4 +133,4 @@ The workspace root must be the Git work tree top level; a subdirectory is refuse
 - `--rules-dir` must lie inside the repository and is read from the snapshot, so an unstaged edit of a custom rule cannot change the result. A directory outside the repository, or one that is not in the snapshot (untracked or ignored), fails with `RULES_DIR_INVALID`, exit code 2.
 - Snapshot gates run the `linter` phase only and refuse file arguments, `--phase hygiene` and `fix`; `--staged` and `--ci` are mutually exclusive and `--base` applies to `--ci` only.
 
-The built-in safety rules `RULE-secret-leak` and `RULE-clean-artifacts` ([catalog](../../rules/reference.md#built-in-rules)) inspect explicit targets only, so they matter chiefly in these gates: a whole-workspace `check` reports nothing for them, because a working tree scan would flag ignored local files.
+The built-in safety rules `RULE-secret-leak` and `RULE-clean-artifacts` ([catalog](../../development/reference/rules.md#built-in-rules)) inspect explicit targets only, so they matter chiefly in these gates: a whole-workspace `check` reports nothing for them, because a working tree scan would flag ignored local files.

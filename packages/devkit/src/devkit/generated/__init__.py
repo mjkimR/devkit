@@ -4,7 +4,7 @@ A project registers the files a command generates (lockfiles, receipts, generate
 regenerates them; devkit's own receipt is registered by default. ``resolve`` settles a merge, rebase or
 cherry-pick conflict in those files by regenerating them instead of merging their text, ``check`` reports files
 that differ from what their command produces, and ``regen`` rewrites them. SDD-agnostic and trigger-agnostic: a
-merge driver, a hook or a CI job calls the same commands. See ``docs/generated/overview.md``.
+merge driver, a hook or a CI job calls the same commands. See ``docs/capabilities/generated/CAP-GEN-tracked-artifacts.md``.
 """
 
 from devkit.generated.engine import (

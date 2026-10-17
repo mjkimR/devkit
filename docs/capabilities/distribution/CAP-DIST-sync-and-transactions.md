@@ -13,7 +13,7 @@ created_at: 2026-10-17
 
 Selected lifecycle hooks also record an optional `host_hooks` array, each entry containing `host`, qualified
 `asset`, `event`, `handler`, `command`, `matcher` and integer `timeout`. These records own exact groups in shared host
-configuration; the shared file is never claimed by `files`. See [Host Integration](../../host/overview.md).
+configuration; the shared file is never claimed by `files`. See `CAP-HOST-lifecycle-observation`.
 
 The receipt is the single record of the installed state, committed to Git, `schema = 1`:
 
@@ -77,7 +77,7 @@ The receipt is the single record of the installed state, committed to Git, `sche
   targets.
 - `files`: SHA-256 and mode (`0644` or `0755`) of every deployed file. Modes are compared by their execute bit only.
 - `overrides`: tracked overrides per asset, with the digests defined in
-  [Workspace Ownership, section 3](../../distribution/workspace-ownership.md#drift-detection). An override of an asset that is later
+  `CAP-DIST-workspace-ownership`. An override of an asset that is later
   not deployed (its bundle deselected, its preset narrowed) keeps its record while its files remain, so drift is still
   reported when the asset is selected again.
 - `guidance_block`: the SHA-256 of the root `AGENTS.md` block (markers included, LF line endings); absent under
@@ -97,12 +97,12 @@ rules: `files` may only name managed or projected destinations, and asset `paths
 ## 2. Asset Selection Model
 
 Installing a package makes its bundle **available**. A bundle that declares `auto_select`
-([Manifest Specification](../../distribution/manifest-spec.md#presets-and-the-default-preset)) is also **selected** with its
+(`CAP-DIST-manifest-spec`) is also **selected** with its
 `default_preset` from then on, whether the package was added directly or arrived as a runtime dependency of another
 one, until `.devkit/config.toml` names it (other presets) or sets it to `false` (opted out). Every other bundle is
 selected only by an entry in `config.toml`. Among the bundles built into `devkit`, `devkit` and `advisory` are
 auto-selected; `authoring` and `git-commits` are not. The rationale is recorded in
-[Resource Taxonomy](../../architecture/ARCH-08-2-resource-taxonomy.md#architecture-decision-author-declared-auto-selection).
+`ARCH-08-2-resource-taxonomy`.
 
 ### Project Configuration (`.devkit/config.toml`, `schema = 1`)
 
@@ -131,8 +131,8 @@ devkit = false                          # opt out of an auto-selected bundle
   longer installed ([below](#unselected-and-auto-selected-bundles)).
 - **`guidance_block`**: `false` stops `devkit sync` from managing the root `AGENTS.md` block (default `true`).
 - **`override_drift`**: `"warn"` (default) or `"block"`; see
-  [Workspace Ownership, section 3](../../distribution/workspace-ownership.md#drift-detection).
-- **`[playbooks]`**: search defaults; see [Context Loading & Playbooks](../../distribution/context-and-playbooks.md#search-engine).
+  `CAP-DIST-workspace-ownership`.
+- **`[playbooks]`**: search defaults; see `CAP-DIST-context-and-playbooks`.
 - **`[rules]`, `[workflow]`, `[gates]`**: owned by `devkit.rules`, `devkit.workflow` and `devkit.gate`; passed
   through untouched.
 - **`[tool.<name>]`**: the extension namespace, as in `pyproject.toml`. A tool built on devkit keeps its own policy
@@ -185,7 +185,7 @@ spec = "core"
 #   timeout = 10  # integer from 1 to 300; seconds one registry command may wait
 ```
 
-- **Layout**: as in the [gate settings template](../../gate/overview.md#6a-settings-template), prose is commented twice
+- **Layout**: as in the `CAP-GATE-commit-gates`, prose is commented twice
   (`##`), keys and table headers once (`#`), so uncommenting a whole table yields valid TOML and leaves the prose a
   comment. A key unset by default shows an example marked `example;`; an array of tables (`[[...]]`) shows example
   values.
@@ -198,11 +198,11 @@ spec = "core"
   before tool tables. Approval names and stage ids come from workflow definitions: the template shows delivery
   gate names (`intent`, `direction`, `integration`) at `ask`, and `collect-feedback` at `on`. These are representative
   names, not a fixed schema. Worktree defaults are `pull_request = "auto"`, `delete_branch = true`, and no setup
-  command; `setup = "uv sync"` is marked as an example. See [Workflow](../../workflow/overview.md#3-approval-gates)
-  and [Worktree](../../worktree/overview.md#5-configuration) for their behavior.
+  command; `setup = "uv sync"` is marked as an example. See `CAP-DLV-workflow-orchestration`
+  and `CAP-WT-task-worktrees` for their behavior.
 - **Tool tables**: a package registers a callable under the `devkit.config_template` entry-point group, named after
   its `[tool.<name>]` table. Called with no argument, it returns `list[devkit.core.TemplateTable]`
-  ([Core Reference](../../core/reference.md#modules)); devkit renders the headers from the entry-point name, so a tool
+  ([Core Reference](../../development/reference/core.md#modules)); devkit renders the headers from the entry-point name, so a tool
   never writes outside its own table, and the template is the same for every project. The tables go at the end of
   the file in entry-point name order, after one intro line per tool naming its package.
 - **Append-only**: a key whose name the file mentions (set, or in any comment) and a table whose header the file
@@ -240,7 +240,7 @@ devkit remove starter             # deselects; unchanged deployed files are remo
 
 - `devkit add` joins the named presets to those the bundle already deploys (its entry, or the default preset of an
   auto-selected bundle), existing presets first, and never drops one; without a preset it uses `default_preset`
-  ([Manifest Specification](../../distribution/manifest-spec.md#presets-and-the-default-preset)), and a bundle without one needs an
+  (`CAP-DIST-manifest-spec`), and a bundle without one needs an
   explicit preset. `devkit add` replaces a `false` entry.
 - `devkit sync --preset <bundle>:<preset>` replaces the bundle's presets.
 - `devkit remove` deletes the entry of a bundle that is not auto-selected and writes `false` for an auto-selected
@@ -281,7 +281,7 @@ Every mutating command follows these steps:
 
 1. **Pre-flight**: computes the desired inventory, the seeded files whose targets are absent and the guidance
    block; checks ownership and collisions on disk before writing a byte
-   ([Workspace Ownership, section 2](../../distribution/workspace-ownership.md#2-ownership-categories-and-invariants)). The result
+   (`CAP-DIST-workspace-ownership`). The result
    lists every planned write under `actions` (`create`, `update` or `remove` per path, `seed` for a seeded file,
    `AGENTS.md` included).
 2. **Project lock**: `fcntl.flock` on `.devkit/transient/lock` (`devkit.core.file_lock`, POSIX only). Writers
@@ -330,15 +330,15 @@ keeps its code and level, except that an `ERROR` is lowered to `WARNING`. Both j
 This is how a package built on devkit reacts to a changed workspace without devkit knowing it; since the lock is
 released, an extension may call devkit reads such as `get_context`. `devkit` registers one itself,
 `gate-hooks`, which installs shared Git hook dispatchers and active gate entries and keeps the commented gate settings template current
-([Commit Gate Overview](../../gate/overview.md#6a-settings-template)).
+(`CAP-GATE-commit-gates`).
 
 The result fields and every notice code are listed in the
-[reference](../../distribution/reference.md#sync-output-and-notices); warnings and notices never fail a sync except under `--strict`.
+[reference](../../development/reference/distribution.md#sync-output-and-notices); warnings and notices never fail a sync except under `--strict`.
 
 ### Locked Synchronization
 
 An unchanged receipt may also restore an absent whole host hook file from its `host_hooks` registrations. Existing
-shared host files require a plain sync for any change; see [Host Integration](../../host/overview.md).
+shared host files require a plain sync for any change; see `CAP-HOST-lifecycle-observation`.
 
 The receipt, the root `AGENTS.md` block and seeded files are Git-tracked state that every clone shares; the managed
 copies under `.devkit/managed/` (and native projections a repository ignores) are rebuilt per clone. `devkit sync

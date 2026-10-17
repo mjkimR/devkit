@@ -1,9 +1,17 @@
-# Agent Asset Distribution: Overview
+---
+id: ARCH-05-4-distribution-components
+title: Building Block View - Distribution Components
+summary: "Agent asset distribution components, content wheel ingestion, workspace projections, and transaction boundaries."
+status: active
+created_at: 2026-10-17
+---
+
+# [ARCH-05-4-distribution-components] Building Block View: Distribution Components
 
 `devkit.distribution` packages, projects, upgrades, audits and restores agent assets (instructions, playbooks,
 skills, subagents, workflows, rules, gates, hooks) for Codex, Claude Code and Antigravity as versioned Python packages.
-Commands, configuration and codes are in the [reference](reference.md); its
-[section 5](reference.md#5-specifications) lists the specifications.
+Commands, configuration and codes are in the [reference](../development/reference/distribution.md); its
+[section 5](../development/reference/distribution.md#5-specifications) lists the specifications.
 
 ## 1. Principles
 
@@ -55,9 +63,9 @@ Commands, configuration and codes are in the [reference](reference.md); its
 ```
 
 Three `schema = 1` contracts connect the units: the bundle manifest `bundle.toml` inside each content wheel
-([Manifest Specification](manifest-spec.md)), the Git-tracked project configuration `.devkit/config.toml`
-([selection model](sync-and-transactions.md#2-asset-selection-model)) and the Git-tracked receipt
-`.devkit/installation.json` ([receipt](sync-and-transactions.md#1-the-installation-receipt-devkitinstallationjson)).
+(`CAP-DIST-manifest-spec`), the Git-tracked project configuration `.devkit/config.toml`
+(`CAP-DIST-sync-and-transactions`) and the Git-tracked receipt
+`.devkit/installation.json` (`CAP-DIST-sync-and-transactions`).
 `devkit.rules`, `devkit.workflow` and `devkit.gate` load the assets the receipt records; asset code declares its
 own dependencies through wheels.
 
@@ -92,7 +100,7 @@ is the JSON the command prints.
     `devkit.config_template` extension point for `[tool.<name>]` tables at the end, append-only.
   - `discovery.py`: installed bundles via `devkit.bundles`; built-in and auto-selected bundles.
   - `host_hooks.py`: shared host configuration planning inside the sync transaction; exact owned groups are
-    recorded in the receipt. Contracts: [Host Integration](../host/overview.md).
+    recorded in the receipt. Contracts: `CAP-HOST-lifecycle-observation`.
   - `inventory.py`: the desired state (`Inventory`): managed copies, projections, rendered role contracts,
     generated entry skills, rendered fragments, seeds, override tracking.
   - `overrides.py`, `override_commands.py`: which file a deployment reads, drift tracking, `override ...` commands.
@@ -103,7 +111,7 @@ is the JSON the command prints.
   - `playbook_skill.py`, `workflow_skill.py`: the generated `devkit-playbook` and `devkit-workflow` entry skills.
   - `extensions.py`: the `devkit.post_sync` extension point.
 - `errors.py`: the `DistributionError` hierarchy, one class per code, and the sync notice classes
-  ([codes](reference.md#error-codes), [notices](reference.md#sync-output-and-notices)).
+  ([codes](../development/reference/distribution.md#error-codes), [notices](../development/reference/distribution.md#sync-output-and-notices)).
 - `cli/`: the distribution commands, listed in `COMMANDS`; the root `devkit` group loads each one lazily by name. Output and exit codes
-  follow [Agent-First Output](../architecture/ARCH-08-1-agent-output.md) and the
-  [reference conventions](reference.md#1-quick-start).
+  follow `ARCH-08-1-agent-output` and the
+  [reference conventions](../development/reference/distribution.md#1-quick-start).

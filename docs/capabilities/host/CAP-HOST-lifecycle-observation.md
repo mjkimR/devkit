@@ -12,7 +12,7 @@ created_at: 2026-10-17
 `devkit.host` connects host lifecycle events to installed service handlers. `devkit.distribution` deploys hook
 definitions and manages their registrations. The host module owns native input/output and service dispatch; a
 service owns its domain behavior. The integration service uses this boundary without placing Git
-execution, SDD models or approval policy inside an adapter. Quick reference: [reference.md](../../host/reference.md).
+execution, SDD models or approval policy inside an adapter. Quick reference: [reference.md](../../development/reference/host.md).
 
 ## 1. Boundaries
 
@@ -23,9 +23,9 @@ execution, SDD models or approval policy inside an adapter. Quick reference: [re
 
 `host` depends only on `core` and `advisory`; `distribution` may depend on `host`. No service is required to import
 distribution internals. `host/mcp` supplies an optional SDK stdio transport and native confirmation callback to
-installed service factories (`devkit.host.services`). The [integration service](../../integration/overview.md) consumes
+installed service factories (`devkit.host.services`). The `CAP-INT-mcp-services` consumes
 it directly rather than synthesizing lifecycle events. Host adapters grant no filesystem/network permission and
-contain no Git executor, automatic policy dispatch or background recovery. Setup: [MCP services](../../host/reference.md#mcp-services).
+contain no Git executor, automatic policy dispatch or background recovery. Setup: [MCP services](../../development/reference/host.md#mcp-services).
 
 The initial adapter targets locally executed Codex CLI command hooks on POSIX. Other hosts are unsupported.
 Protocol definitions follow [Codex Hooks](https://learn.chatgpt.com/docs/hooks); deployment and subprocess tests

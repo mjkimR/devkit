@@ -9,7 +9,7 @@ created_at: 2026-10-17
 
 # [CAP-SRCH-document-search] Document Search: Overview
 
-`devkit.search` ranks a caller's documents against a query: lexically (BM25), densely (embedding similarity) or both (hybrid). It is SDD-agnostic: it knows documents only as an id, metadata text and an optional body. Choosing which documents to rank (scopes, namespaces) and pinning exact id matches are the caller's job. Quick reference: [reference.md](../../search/reference.md).
+`devkit.search` ranks a caller's documents against a query: lexically (BM25), densely (embedding similarity) or both (hybrid). It is SDD-agnostic: it knows documents only as an id, metadata text and an optional body. Choosing which documents to rank (scopes, namespaces) and pinning exact id matches are the caller's job. Quick reference: [reference.md](../../development/reference/search.md).
 
 ## 1. Document Model
 
@@ -68,10 +68,10 @@ Licensing: potion-base-8M and bge-base-en-v1.5 are MIT licensed; the package shi
 
 ## 6. Module Layout
 
-`devkit.search` imports only `devkit.core` and `devkit.advisory`; `devkit.distribution` ranks `devkit playbook search` with it ([Playbook Search](../../distribution/context-and-playbooks.md#search-engine)).
+`devkit.search` imports only `devkit.core` and `devkit.advisory`; `devkit.distribution` ranks `devkit playbook search` with it (`CAP-DIST-context-and-playbooks`).
 
 - `lexical.py`: `tokenize`, `Bm25`, `bm25_scores`.
 - `dense.py`: `Embedder`, `load_embedder`, the model package layout.
 - `fusion.py`: `reciprocal_rank_fusion`.
 - `index.py`: `SearchIndex`, `SearchDocument`, `SearchHit`, `SearchMode`.
-- `errors.py`: the `SearchError` hierarchy, one class per code ([reference](../../search/reference.md#error-codes)).
+- `errors.py`: the `SearchError` hierarchy, one class per code ([reference](../../development/reference/search.md#error-codes)).

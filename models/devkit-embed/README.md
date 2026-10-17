@@ -3,7 +3,7 @@
 The [potion-base-8M](https://huggingface.co/minishlab/potion-base-8M) static
 embedding model (English, 256 dimensions), converted to float16 (15 MB), as a
 data-only package for dense and hybrid search in
-[`devkit.search`](../../docs/search/reference.md). It registers the
+[`devkit.search`](../../docs/development/reference/search.md). It registers the
 `devkit.embedding_models` entry point `potion-base-8m` and is installed by the
 `devkit-agt[search]` extra.
 

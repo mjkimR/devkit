@@ -1,4 +1,4 @@
-"""Human requests: the open questions a unit puts to a person (see docs/workflow/human-interaction.md)."""
+"""Human requests: the open questions a unit puts to a person (see docs/capabilities/delivery/CAP-DLV-human-interaction.md)."""
 
 from __future__ import annotations
 

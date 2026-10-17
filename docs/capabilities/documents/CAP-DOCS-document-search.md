@@ -17,7 +17,7 @@ created_at: 2026-10-13
 ## 1. Summary
 
 `devkit spec search` finds documents by meaning when the exact ID is not known. The ranking is devkit's
-([devkit.search](https://github.com/mjkimR/devkit/blob/main/docs/search/overview.md)); devkit-spec adds the spec
+(`CAP-SRCH-document-search`); devkit-spec adds the spec
 search policy on top: which documents are candidates, which fields are embedded, exact-match pinning and glossary
 expansion. Going from a known ID to its path stays `devkit spec resolve` (`CAP-DOCS-document-lookup`).
 

@@ -20,10 +20,10 @@ entrypoints:
 
 devkit-spec has no executable of its own. Its click group `spec` (`devkit_spec.cli:cli`) is registered under the
 `devkit.commands` entry point `spec`, and devkit's root group imports it only when `devkit spec` runs
-([Command Plugins](https://github.com/mjkimR/devkit/blob/main/docs/architecture/ARCH-05-3-command-plugins.md)). Agents reach
+(`ARCH-05-3-command-plugins`). Agents reach
 the whole toolchain through the one `devkit` executable of the project environment. Every subcommand is built on
 `devkit.core.cli` and follows devkit's agent-first output contract
-([Agent-First Output](https://github.com/mjkimR/devkit/blob/main/docs/architecture/ARCH-08-1-agent-output.md)). Rationale:
+(`ARCH-08-1-agent-output`). Rationale:
 `ADR-mount-under-the-devkit-command-line`.
 
 ## 2. Scope & Boundary

@@ -31,4 +31,4 @@ created_at: 2026-10-14
 `uv run devkit workflow answer --unit <dir> --request gate:<name> --action accept`"
 ```
 
-- **Disposition**: devkit `gates.<gate>.answer` (`docs/workflow/definition-and-checks.md`), with `answer=given` on the gate's `[REQUEST]` and the generated `devkit-workflow` skill following it; `direct-delivery`, `bugfix` and `s-lane` declare `gates: {integration: {answer: given}}`.
+- **Disposition**: devkit `gates.<gate>.answer` (`docs/capabilities/delivery/CAP-DLV-workflow-definitions.md`), with `answer=given` on the gate's `[REQUEST]` and the generated `devkit-workflow` skill following it; `direct-delivery`, `bugfix` and `s-lane` declare `gates: {integration: {answer: given}}`.

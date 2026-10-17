@@ -1,6 +1,6 @@
 # devkit.gate
 
-Pluggable Git commit gates (`devkit gate` CLI): managed hook wrappers, layered configuration, gate discovery and the stage runner. Policy lives in content wheels that ship gates as `kind = "gate"` bundle assets. Semantics: [Commit Gate Overview](overview.md).
+Pluggable Git commit gates (`devkit gate` CLI): managed hook wrappers, layered configuration, gate discovery and the stage runner. Policy lives in content wheels that ship gates as `kind = "gate"` bundle assets. Semantics: `CAP-GATE-commit-gates`.
 
 ## Usage
 
@@ -15,24 +15,24 @@ uv run devkit add <bundle>:<preset>   # a preset that includes the bundle's gate
 uv run devkit sync                    # deploys the gate packages and records their files in the receipt
 ```
 
-Writing syncs install dispatchers automatically. Existing regular hooks are moved to `<hook>.legacy` with a warning and run through `<hook>.d/00-legacy`; `<hook>.d/20-devkit` is added only for stages with enabled gates. Add executable scripts beside it in filename order. Symlinks and non-regular hooks need `install --force`; `git commit --no-verify` skips `pre-commit` and `commit-msg`. See [Hook Wrappers](overview.md#3-hook-wrappers).
+Writing syncs install dispatchers automatically. Existing regular hooks are moved to `<hook>.legacy` with a warning and run through `<hook>.d/00-legacy`; `<hook>.d/20-devkit` is added only for stages with enabled gates. Add executable scripts beside it in filename order. Symlinks and non-regular hooks need `install --force`; `git commit --no-verify` skips `pre-commit` and `commit-msg`. See `CAP-GATE-commit-gates`.
 
 ## Commands
 
 | Command | Purpose |
 | --- | --- |
-| `devkit gate install [--force] [--python PATH]` | Prepare dispatchers and active `20-devkit` entries, and append the commented table of every gate `<common-git-dir>/devkit.config` does not mention yet ([Settings Template](overview.md#6a-settings-template)). |
+| `devkit gate install [--force] [--python PATH]` | Prepare dispatchers and active `20-devkit` entries, and append the commented table of every gate `<common-git-dir>/devkit.config` does not mention yet (`CAP-GATE-commit-gates`). |
 | `devkit gate uninstall` | Remove owned devkit entries; keep dispatchers for user scripts, otherwise restore preserved hooks. |
 | `devkit gate status [--format text\|json] [--strict]` | Hooks directory and `core.hooksPath`, hook states and script filenames, every gate with stage, order, effective enablement and source, configuration layers, and every problem that fails a commit (`load_gate_project`, the same `validate_gates` the stages run). Warns with `GATE_HOOK_ENTRY_MISSING` when a stage has enabled gates but no installed `20-devkit` entry, so they would not run; when `core.hooksPath` sends Git to another directory, no managed hook runs and `install` refuses, so one `GATE_HOOKS_PATH_SET` warning names every enabled gate instead, with the fix that clears the setting. Warnings leave the exit code `0`, except under `--strict`, which exits `1` on them. |
-| `devkit gate run [-q\|-v] [--strict] <stage> [hook args]` | Run one stage (`run_hook`); what the wrappers call, and how to test a stage by hand. Options go before `<stage>`; hooks set `DEVKIT_QUIET`, `DEVKIT_VERBOSE` or `DEVKIT_STRICT` instead, since Git passes no flags ([Agent-First Output](../architecture/ARCH-08-1-agent-output.md#6-verbosity-and-strictness)). |
+| `devkit gate run [-q\|-v] [--strict] <stage> [hook args]` | Run one stage (`run_hook`); what the wrappers call, and how to test a stage by hand. Options go before `<stage>`; hooks set `DEVKIT_QUIET`, `DEVKIT_VERBOSE` or `DEVKIT_STRICT` instead, since Git passes no flags (`ARCH-08-1-agent-output`). |
 
 `-w/--workspace-root` (default: the current directory) may name any existing directory inside the repository; every command, `install` and `uninstall` included, works on the work tree's top level (`devkit.core.require_git_toplevel`), as a hook does. A `-w` that is not an existing directory is `ARGUMENT_INVALID`; one outside a work tree is `GIT_FAILED` (`INPUT_ERROR`).
 
-Output follows [Agent-First Output](../architecture/ARCH-08-1-agent-output.md). `install`, `uninstall` and `status` print sentinel lines on stdout (`[HOOKS: …]`, `[HOOK: …]`, `[GATE: <id> stage=<stage> …]`, `[CONFIG: sources=…]`, and from `install` `[CONFIG: template=<state> path=<path>]`). `status --format json` prints one object with `hooks_dir`, `hooks_path`, `hooks`, `gates`, `config_sources`, `errors` (each `{code, message, exit_code, advisory}`) and `notices` (its warnings, the same shape), or `{"error": {...}}` when the status cannot be read. `run` prints nothing on stdout, so the hook stays silent when every gate passes: a refusal or failure is one advisory block per gate on stderr whose first `[DETAIL]` is `gate=<id> stage=<stage>` (before the gate's own details), a configuration problem is its own block, and passed and skipped gates appear only under `-v`, as `[INFO]` lines. Notices such as `GATE_VERIFY_UNSTAGED` are `[NOTICE]` blocks: in `pre-commit` and `commit-msg` they come before the refusal and failure blocks, so errors are last; in `post-commit`, whose problems are `[WARN]` blocks (the commit already exists), they come after those.
+Output follows `ARCH-08-1-agent-output`. `install`, `uninstall` and `status` print sentinel lines on stdout (`[HOOKS: …]`, `[HOOK: …]`, `[GATE: <id> stage=<stage> …]`, `[CONFIG: sources=…]`, and from `install` `[CONFIG: template=<state> path=<path>]`). `status --format json` prints one object with `hooks_dir`, `hooks_path`, `hooks`, `gates`, `config_sources`, `errors` (each `{code, message, exit_code, advisory}`) and `notices` (its warnings, the same shape), or `{"error": {...}}` when the status cannot be read. `run` prints nothing on stdout, so the hook stays silent when every gate passes: a refusal or failure is one advisory block per gate on stderr whose first `[DETAIL]` is `gate=<id> stage=<stage>` (before the gate's own details), a configuration problem is its own block, and passed and skipped gates appear only under `-v`, as `[INFO]` lines. Notices such as `GATE_VERIFY_UNSTAGED` are `[NOTICE]` blocks: in `pre-commit` and `commit-msg` they come before the refusal and failure blocks, so errors are last; in `post-commit`, whose problems are `[WARN]` blocks (the commit already exists), they come after those.
 
 ## Exit codes
 
-The devkit convention ([Errors, Exit Codes and Platforms](../architecture/ARCH-08-cross-cutting.md#4-exit-code-conventions)) applies. `status` is a report: it exits `1` when it lists any problem that would fail a commit, whatever the problem's own code. A blocking `run` collects several problems and exits with the highest `exit_code` among them: a refusal (`GateRefusedError`) gives `1`; a configuration, registry, load or settings problem, an error a gate raised that is not a refusal (such as a rule engine error), or an unexpected exception gives `2`. Any nonzero status of a blocking stage aborts the commit.
+The devkit convention (`ARCH-08-cross-cutting`) applies. `status` is a report: it exits `1` when it lists any problem that would fail a commit, whatever the problem's own code. A blocking `run` collects several problems and exits with the highest `exit_code` among them: a refusal (`GateRefusedError`) gives `1`; a configuration, registry, load or settings problem, an error a gate raised that is not a refusal (such as a rule engine error), or an unexpected exception gives `2`. Any nonzero status of a blocking stage aborts the commit.
 
 | Command | `0` | `1` | `2` |
 | --- | --- | --- | --- |
@@ -81,7 +81,7 @@ Every gate error derives from `GateError` (`devkit.gate.errors`), which sets `ac
 | `verify-commands` | `pre-commit` | on, skipped while `commands` is empty | Runs `[gates.settings.verify-commands] commands` (shell lines, in order, from the work tree's top level, through `devkit.compact`) and refuses when any fails (`GATE_VERIFY_FAILED`, or `GATE_VERIFY_NOT_RUN` when a nested `devkit` command could not run); notes a working tree that differs from the commit (`GATE_VERIFY_UNSTAGED`). |
 | `message-nonempty` | `commit-msg` | on | Refuses a message that is blank (whitespace only) above any scissors line. |
 
-Outcomes and failure codes: [Built-in Gates](overview.md#2a-built-in-gates).
+Outcomes and failure codes: `CAP-GATE-commit-gates`.
 
 ## Built-in git-commits bundle
 
@@ -94,7 +94,7 @@ It ships no gate: messages are not validated. Adapt the conventions (scope names
 
 ## Configuration
 
-`.devkit/config.toml` (tracked) is overridden by `<common-git-dir>/devkit.config` (untracked, per clone); see [Configuration Layers](overview.md#6-configuration-layers). A key in `devkit.config` replaces the project's value as a whole (an array too): in its commented template, uncomment a table's header and only the keys you change ([Settings Template](overview.md#6a-settings-template)).
+`.devkit/config.toml` (tracked) is overridden by `<common-git-dir>/devkit.config` (untracked, per clone); see `CAP-GATE-commit-gates`. A key in `devkit.config` replaces the project's value as a whole (an array too): in its commented template, uncomment a table's header and only the keys you change (`CAP-GATE-commit-gates`).
 
 ```toml
 [gates.settings.verify-commands]
@@ -122,7 +122,7 @@ packages/devkit/src/devkit/gate/
 
 The opt-in `git-commits` bundle is not part of this module: it lives in the data-only `devkit.commits_guide` ([Built-in git-commits bundle](#built-in-git-commits-bundle)).
 
-`devkit gate` is a thin command line over `load_gate_project(root)` (gates, layered configuration, every problem `gate status` reports) and `run_hook(root, stage, args)` (one stage, as the hook wrapper runs it; `report.ok`, `report.problems`, `report.exit_code`). See [Library](overview.md#2-library).
+`devkit gate` is a thin command line over `load_gate_project(root)` (gates, layered configuration, every problem `gate status` reports) and `run_hook(root, stage, args)` (one stage, as the hook wrapper runs it; `report.ok`, `report.problems`, `report.exit_code`). See `CAP-GATE-commit-gates`.
 
 ## Writing a gate
 
@@ -157,4 +157,4 @@ class StagedFileLimitGate(BaseGate):  # BaseGate is abstract: implement run()
         return GateResult.passed()
 ```
 
-Declare the file as a `kind = "gate"` asset in `bundle.toml` and add it to a preset ([Distribution](overview.md#5-distribution)); the [Gate Contract](overview.md#4-gate-contract) defines results, refusals, context and ordering.
+Declare the file as a `kind = "gate"` asset in `bundle.toml` and add it to a preset (`CAP-GATE-commit-gates`); the `CAP-GATE-commit-gates` defines results, refusals, context and ordering.

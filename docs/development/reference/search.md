@@ -1,6 +1,6 @@
 # devkit.search
 
-Lexical, dense and hybrid search over a caller's documents. Semantics, measurements and the model package: [Document Search Overview](overview.md). There is no CLI of its own; `devkit playbook search` ranks with it.
+Lexical, dense and hybrid search over a caller's documents. Semantics, measurements and the model package: `CAP-SRCH-document-search`. There is no CLI of its own; `devkit playbook search` ranks with it.
 
 ## Install
 
@@ -10,7 +10,7 @@ Lexical search is part of `devkit`, and the default `auto` mode uses it when not
 uv add 'devkit-agt[search] @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit'
 ```
 
-From Git or in this repository, the extra installs the model wheel from the release that `packages/devkit/pyproject.toml` pins; from a release wheel, add `devkit-embed` by its URL ([README](../../README.md#using-devkit-in-another-project)).
+From Git or in this repository, the extra installs the model wheel from the release that `packages/devkit/pyproject.toml` pins; from a release wheel, add `devkit-embed` by its URL ([README](../../../README.md#using-devkit-in-another-project)).
 
 ## Library
 
