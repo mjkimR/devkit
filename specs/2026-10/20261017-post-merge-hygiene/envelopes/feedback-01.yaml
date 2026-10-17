@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-17T09:53:58.664617Z'
+status: completed
+summary: Swept repository and upstream assets used in the session and deduplicated the open backlog; task defects were fixed, with no additional observations.
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=0
