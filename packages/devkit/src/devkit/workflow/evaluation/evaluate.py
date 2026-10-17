@@ -1,8 +1,7 @@
 """Stage evaluation: which stage a unit is in, what is unmet and what comes next.
 
 ``evaluate_definition`` is pure: it reads the unit's files and returns a
-``UnitEvaluation``. The drift policy belongs to ``Workspace.evaluate_unit``;
-nothing here writes a file.
+``UnitEvaluation``. Nothing here writes a file.
 """
 
 from __future__ import annotations
@@ -22,11 +21,11 @@ from devkit.workflow.definition.checks import (
     Invocation,
     Registry,
 )
-from devkit.workflow.definition.definition import HANDOFF_GATE, StageDefinition, WorkflowDocument, schema_hash
+from devkit.workflow.definition.definition import HANDOFF_GATE, StageDefinition, WorkflowDocument
 from devkit.workflow.errors import GatePolicyError, UnitNotFoundError
 from devkit.workflow.evaluation.primitives import AncestorFunc, PrimitiveContext, evaluate_primitive
 from devkit.workflow.evaluation.requests import handoff_request, question_requests, stage_requests
-from devkit.workflow.evaluation.results import Delegate, Drift, GateStatus, Skipped, UnitEvaluation, Waiting
+from devkit.workflow.evaluation.results import Delegate, GateStatus, Skipped, UnitEvaluation, Waiting
 from devkit.workflow.handoff import evaluate_handoff
 from devkit.workflow.project.roles import is_builtin_role
 from devkit.workflow.unit.binding import AnchorState, Binding, read_anchor
@@ -344,8 +343,6 @@ def evaluate_definition(doc: WorkflowDocument, opts: Options) -> UnitEvaluation:
     res.envelope_errors = list(ev.envelopes.errors)
     if binding.bound and binding.workflow != doc.id:
         res.bound_elsewhere = binding.workflow
-    elif binding.bound and binding.hash != (current := schema_hash(doc)):
-        res.drift = Drift(recorded=binding.hash, current=current)
 
     for index, stage in enumerate(doc.stages):
         if stage.exception:

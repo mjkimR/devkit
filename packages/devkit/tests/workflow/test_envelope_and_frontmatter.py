@@ -41,10 +41,8 @@ def test_field_stringifies_scalars() -> None:
 
 def test_update_preserves_other_lines_and_nested_keys() -> None:
     text = "---\nid: x\nworkflow: old\nmeta:\n  workflow: nested\n# comment\n---\nbody\n"
-    out = fm.update(text, {"workflow": "new", "workflow_hash": "sha256:abc"})
-    assert (
-        out == "---\nid: x\nmeta:\n  workflow: nested\n# comment\nworkflow: new\nworkflow_hash: sha256:abc\n---\nbody\n"
-    )
+    out = fm.update(text, {"workflow": "new", "owner": "agent"})
+    assert out == "---\nid: x\nmeta:\n  workflow: nested\n# comment\nworkflow: new\nowner: agent\n---\nbody\n"
 
 
 def test_update_handles_crlf_and_missing_block() -> None:
@@ -68,13 +66,11 @@ def test_binding_read_write(tmp_path: Path) -> None:
     anchor.write_text("---\nid: a\nstatus: planned\n---\n# a\n")
     assert read_binding(anchor) == Binding()
     assert not read_binding(anchor).bound
-    write_binding(anchor, Binding("wf", "sha256:1"))
-    assert read_binding(anchor) == Binding("wf", "sha256:1")
-    assert anchor.read_text().startswith(
-        "---\nid: a\nstatus: planned\nworkflow: wf\nworkflow_hash: sha256:1\n---\n# a\n"
-    )
-    write_binding(anchor, Binding("wf", "sha256:2"))
-    assert anchor.read_text().count("workflow_hash") == 1
+    write_binding(anchor, Binding("wf"))
+    assert read_binding(anchor) == Binding("wf")
+    assert anchor.read_text().startswith("---\nid: a\nstatus: planned\nworkflow: wf\n---\n# a\n")
+    write_binding(anchor, Binding("wf"))
+    assert "workflow_hash" not in anchor.read_text()
 
 
 # --- envelopes --------------------------------------------------------------------------
@@ -234,7 +230,7 @@ def test_reverify_from_latest_reads_only_the_current_segment(tmp_path: Path) -> 
 def test_unscoped_envelopes_count_in_every_segment(tmp_path: Path) -> None:
     doc = parse_definition(REVIEWED.format(id="b", other="a"))
     unit = write_unit(tmp_path, "u")
-    write_binding(unit / "task.md", Binding("b", "h", (HistoryEntry("a", "h", "2026-10-12", 0),)))
+    write_binding(unit / "task.md", Binding("b", (HistoryEntry("a", "2026-10-12", 0),)))
     (unit / "envelopes").mkdir()
     opts = Options(workspace_root=tmp_path, unit_dir=unit, anchor="task.md", skip_lint=True)
 

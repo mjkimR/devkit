@@ -54,7 +54,7 @@ creates one without a proposal, writing the document IDs the spec rules expect (
    the frontmatter. devkit's `not-skeleton(<file>)` check keeps `specify` (or `plan-tasks`) open until the file is
    written for real and the line removed. A skeleton-marked `spec.md` is exempt from `RULE-document-summary` until it
    is written.
-5. **Binding**: `spec.md` is bound with devkit's `write_binding` (`workflow`, `workflow_hash`) to `--workflow`,
+5. **Binding**: `spec.md` is bound with devkit's `write_binding` (`workflow`) to `--workflow`,
    default `sdd-spec-feature`. The bound workflow is the only record of the work's `task-kind`: `spec.md` has no
    `kind` field. An explicit workflow that does not resolve or validate, or that names by path a
    definition other than the one discovered for its id (devkit's `WORKFLOW_NOT_BINDABLE`: the binding records only
@@ -130,7 +130,7 @@ specs/<YYYY-MM>/<YYYYMMDD>-<slug>/
 
 - **`spec.md`**: frontmatter `id: SPEC-<slug>`, `title`, optional `summary`, `status: planned`,
   `created: <bundle date>`, optional `namespace` and `milestone`, `related_capabilities: []`,
-  `related_stories: []`, then `workflow` and `workflow_hash` from the binding. H1 `# [SPEC-<slug>] <title>`; sections
+  `related_stories: []`, then `workflow` from the binding. H1 `# [SPEC-<slug>] <title>`; sections
   `1. Problem Statement & Motivation`, `2. User Stories`, `3. Non-Goals` (a `Scope Excluded` placeholder),
   `4. Acceptance Criteria & Behavioral Contracts` (one placeholder `### [AC-01] <scenario>` with Given/When/Then
   lines) and, after a handoff with leftover proposal sections, `5. Carried Proposal Notes`.

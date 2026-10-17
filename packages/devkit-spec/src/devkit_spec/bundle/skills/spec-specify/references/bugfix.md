@@ -56,7 +56,7 @@ When investigation shows the fix needs a contract change or a design choice outs
 
 ## Output standard
 
-It is the skeleton `devkit spec new --workflow sdd-spec-bugfix` and `devkit spec proposal handoff` write, filled in: keep their section order and frontmatter lines (`id`, `summary`, `workflow`, `workflow_hash`). The Step 1 scope goes under Non-Goals.
+It is the skeleton `devkit spec new --workflow sdd-spec-bugfix` and `devkit spec proposal handoff` write, filled in: keep their section order and frontmatter lines (`id`, `summary`, `workflow`). The Step 1 scope goes under Non-Goals.
 
 ```markdown
 ---
@@ -70,7 +70,6 @@ related_capabilities:
 related_stories:
   - US-<slug>
 workflow: sdd-spec-bugfix            # written by `devkit spec new --workflow sdd-spec-bugfix` or `devkit spec proposal handoff`
-workflow_hash: sha256:<hex>
 ---
 
 # [SPEC-<defect-slug>] <Defect Title>

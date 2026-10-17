@@ -17,7 +17,6 @@ from devkit.workflow import (
     parse_check,
     parse_definition,
     resolve_definition,
-    schema_hash,
     validate_definition,
 )
 from devkit.workflow.definition.discovery import discover_definitions, managed_definition_paths
@@ -90,15 +89,6 @@ def test_human_gate_true_names_gate_after_stage() -> None:
         "---\nid: w\nschema_version: 1\nstages:\n  - id: g3\n    human_gate: true\n    exit: [anchor-exists]\n---\n"
     )
     assert doc.stages[0].gate == "g3"
-
-
-def test_schema_hash_ignores_title_and_body() -> None:
-    a = parse_definition(WORKFLOW)
-    b = parse_definition(WORKFLOW.replace('title: "Direct delivery"', 'title: "Other"') + "\nmore prose\n")
-    c = parse_definition(WORKFLOW.replace("skills: [wf-intent]", "skills: [wf-start]"))
-    assert schema_hash(a) == schema_hash(b)
-    assert schema_hash(a) != schema_hash(c)
-    assert schema_hash(a).startswith("sha256:")
 
 
 @pytest.mark.parametrize(
@@ -326,7 +316,7 @@ def test_validate_warns_about_an_optional_gated_stage(tmp_path: Path) -> None:
     assert document["ok"] is True and document["definitions"][0]["errors"] == []
     assert [n["code"] for n in document["notices"]] == ["WORKFLOW_OPTIONAL_STAGE_UNASKED", "WORKFLOW_ROLES_UNCHECKED"]
     text = run_cli("validate", "-w", str(root))
-    assert text.exit_code == 0 and text.stdout.startswith("[VALID: .devkit/workflows/w.md id=w ")
+    assert text.exit_code == 0 and text.stdout.startswith("[VALID: .devkit/workflows/w.md id=w]")
     assert "[WARN]" in text.stderr and "(WORKFLOW_OPTIONAL_STAGE_UNASKED)" in text.stderr
     assert run_cli("validate", "-w", str(root), "--strict").exit_code == 1
 

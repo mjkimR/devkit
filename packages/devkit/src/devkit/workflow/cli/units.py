@@ -41,10 +41,10 @@ def new_cmd(workspace_root: str | None, slug: str, workflow_ref: str | None, whe
 )
 @boundary
 def bind_cmd(workspace_root: str | None, unit: str, anchor: str | None, workflow_ref: str | None) -> None:
-    """Record which workflow a unit follows and the hash of its stage schema."""
+    """Record which workflow a unit follows."""
     ws = workspace(workspace_root)
     ref = ws.bind_unit(unit, workflow_ref, anchor=anchor)
-    click.echo(f"[BOUND: {ref.doc.id} hash={ref.binding.hash}]")
+    click.echo(f"[BOUND: {ref.doc.id}]")
 
 
 @cli.command(name="show")
@@ -57,7 +57,7 @@ def bind_cmd(workspace_root: str | None, unit: str, anchor: str | None, workflow
 def show_cmd(
     workspace_root: str | None, ref: str | None, unit: str | None, anchor: str | None, output_format: str
 ) -> None:
-    """Print a workflow definition's stages, gates and schema hash (by id/path, or a unit's binding).
+    """Print a workflow definition's stages and gates (by id/path, or a unit's binding).
 
     Exits 1 when the report lists problems (under "errors" in JSON), whatever their own codes.
     """
@@ -85,8 +85,7 @@ def show_cmd(
     else:
         click.echo(render_document(doc, ws.config.approvals, ws.config.stages), nl=False)
         if binding is not None:
-            drift = str(description.drift).lower()
-            click.echo(f"[BINDING: workflow={binding.workflow or '-'} hash={binding.hash or '-'} drift={drift}]")
+            click.echo(f"[BINDING: workflow={binding.workflow or '-'}]")
         for problem in description.errors:
             click.echo(f"[PROBLEM: {problem}]")
     if not description.ok:

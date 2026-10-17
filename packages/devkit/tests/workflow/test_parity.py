@@ -118,21 +118,21 @@ def test_delegate_without_vocabulary_has_no_contract(tmp_path: Path) -> None:
 # --- show --unit ----------------------------------------------------------------
 
 
-def test_show_unit_prints_binding_and_drift(workspace: Path) -> None:
+def test_show_unit_prints_binding_and_current_definition(workspace: Path) -> None:
     write_config(workspace, CONFIG)
     assert _run("new", "-w", str(workspace), "login").exit_code == 0
     unit = ".devkit/transient/work/login"
     shown = _run("show", "-w", str(workspace), "--unit", unit)
     assert shown.exit_code == 0, shown.output
     assert "[WORKFLOW: direct-delivery" in shown.output
-    assert "[BINDING: workflow=direct-delivery hash=sha256:" in shown.output and "drift=false]" in shown.output
+    assert "[BINDING: workflow=direct-delivery]" in shown.output
     data = json.loads(_run("show", "-w", str(workspace), "--unit", unit, "--format", "json").stdout)
-    assert data["binding"]["workflow"] == "direct-delivery" and data["binding"]["drift"] is False
+    assert data["binding"] == {"workflow": "direct-delivery", "workflow_history": []}
 
     definition = workspace / ".devkit/workflows/direct-delivery.md"
     definition.write_text(definition.read_text().replace("skills: [wf-build]", "skills: [wf-implement]"))
-    drifted = _run("show", "-w", str(workspace), "--unit", unit)
-    assert drifted.exit_code == 0 and "drift=true]" in drifted.output
+    updated = _run("show", "-w", str(workspace), "--unit", unit)
+    assert updated.exit_code == 0 and "wf-implement" in updated.output
 
     both = _run("show", "-w", str(workspace), "direct-delivery", "--unit", unit)
     assert both.exit_code == 2 and "(ARGUMENT_INVALID)" in both.stderr

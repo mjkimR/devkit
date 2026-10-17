@@ -11,7 +11,6 @@ from click.testing import CliRunner, Result
 from devkit.workflow import (
     AnchorInvalidError,
     DefinitionError,
-    DriftError,
     Options,
     TemplateLayout,
     Workspace,
@@ -20,7 +19,6 @@ from devkit.workflow import (
     load_envelopes,
     parse_definition,
     render_evaluation,
-    schema_hash,
     validate_definition,
     write_envelope,
 )
@@ -214,33 +212,31 @@ def test_b3_no_gate_request_or_human_wait_while_exit_checks_are_unmet(tmp_path: 
     assert res.waiting is not None and res.waiting.checks == ("gate:integration",)
 
 
-# --- B4 / R1: drift ----------------------------------------------------------------------------
+# --- B4 / R1: current definitions ----------------------------------------------------------------------------
 
 
-def test_b4_evaluating_another_workflow_is_not_drift(tmp_path: Path) -> None:
+def test_b4_evaluating_another_workflow_reports_binding(tmp_path: Path) -> None:
     root = _workspace(tmp_path, {"a": A, "b": B, "c": C, "d": D}, "a")
     assert _run("new", "-w", str(root), "u").exit_code == 0
     result = _next(root, "--workflow", "d")
     assert result.exit_code == 0, result.stderr
     assert "[BOUND_ELSEWHERE: workflow=a]" in result.output and "[DRIFT" not in result.output
     data = json.loads(_next(root, "--workflow", "d", "--format", "json").stdout)
-    assert data["bound_elsewhere"] == "a" and data["drift"] is None
+    assert data["bound_elsewhere"] == "a" and "drift" not in data
 
 
-def test_r1_drift_policy_lives_in_the_library(tmp_path: Path) -> None:
+def test_r1_current_definition_checks_apply_without_rebinding(tmp_path: Path) -> None:
     root = _workspace(tmp_path, {"d": D}, "d")
     assert _run("new", "-w", str(root), "u").exit_code == 0
+    ws = Workspace(root)
+    assert ws.evaluate_unit(ws.resolve_unit(UNIT), lint=False).complete
     definition = root / ".devkit/workflows/d.md"
     definition.write_text(definition.read_text().replace("exit: [anchor-exists]", "exit: [file-exists(x)]"))
     ws = Workspace(root)
-    with pytest.raises(DriftError) as raised:
-        ws.evaluate_unit(ws.resolve_unit(UNIT), lint=False)
-    assert raised.value.code == "WORKFLOW_DRIFT"
-    assert ws.evaluate_unit(ws.resolve_unit(UNIT), lint=False, enforce_drift=False).blocked_by_drift
-    # A unit with no current stage reports drift without blocking.
-    (root / UNIT / "x").write_text("x")
     result = ws.evaluate_unit(ws.resolve_unit(UNIT), lint=False)
-    assert result.complete and result.drift is not None
+    assert not result.complete and [check.name for check in result.unmet] == ["file-exists(x)"]
+    (root / UNIT / "x").write_text("x")
+    assert ws.evaluate_unit(ws.resolve_unit(UNIT), lint=False).complete
 
 
 # --- B5 / B6: frontmatter rewriting ---------------------------------------------------------------
@@ -403,14 +399,6 @@ def test_r3_invalid_anchor_is_an_error_in_the_library(tmp_path: Path) -> None:
     with pytest.raises(AnchorInvalidError) as raised:
         evaluate_definition(parse_definition(A), Options(workspace_root=tmp_path, unit_dir=unit, anchor="task.md"))
     assert raised.value.code == "ANCHOR_INVALID"
-
-
-def test_r4_display_names_do_not_change_the_hash() -> None:
-    renamed = WORKFLOW.replace("name: Intent", "name: Clarify intent")
-    assert schema_hash(parse_definition(renamed)) == schema_hash(parse_definition(WORKFLOW))
-    assert schema_hash(
-        parse_definition(WORKFLOW.replace("isolation: preferred", "isolation: required"))
-    ) != schema_hash(parse_definition(WORKFLOW))
 
 
 def test_r5_unknown_keys_gate_names_and_schema_version() -> None:

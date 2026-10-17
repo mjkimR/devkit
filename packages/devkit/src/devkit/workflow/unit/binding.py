@@ -1,4 +1,4 @@
-"""The binding recorded in a unit's anchor: the workflow it follows, the schema hash and the handoff history."""
+"""The binding recorded in a unit's anchor: the workflow it follows, the handoff history."""
 
 from __future__ import annotations
 
@@ -17,7 +17,6 @@ from devkit.workflow.unit import frontmatter
 from devkit.workflow.unit.records import temporary_path
 
 WORKFLOW_KEY = "workflow"
-HASH_KEY = "workflow_hash"
 HISTORY_KEY = "workflow_history"
 
 
@@ -30,14 +29,12 @@ class HistoryEntry:
     """
 
     workflow: str
-    hash: str
     completed: str  # ISO date
     last_decision: int = 0
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "workflow": self.workflow,
-            "hash": self.hash,
             "completed": self.completed,
             "last_decision": self.last_decision,
         }
@@ -46,12 +43,11 @@ class HistoryEntry:
 @dataclass(frozen=True)
 class Binding:
     workflow: str = ""
-    hash: str = ""
     history: tuple[HistoryEntry, ...] = ()
 
     @property
     def bound(self) -> bool:
-        return bool(self.workflow and self.hash)
+        return bool(self.workflow)
 
     @property
     def segment(self) -> int:
@@ -66,7 +62,6 @@ class Binding:
     def to_dict(self) -> dict[str, Any]:
         return {
             "workflow": self.workflow or None,
-            "workflow_hash": self.hash or None,
             "workflow_history": [h.to_dict() for h in self.history],
         }
 
@@ -81,7 +76,6 @@ def _history(value: Any) -> tuple[HistoryEntry, ...]:
             out.append(
                 HistoryEntry(
                     workflow=item["workflow"],
-                    hash=frontmatter.field(item, "hash"),
                     completed=frontmatter.field(item, "completed"),
                     last_decision=last if isinstance(last, int) and not isinstance(last, bool) else 0,
                 )
@@ -93,7 +87,6 @@ def binding_from(data: Mapping[str, Any]) -> Binding:
     """The binding recorded in an anchor's parsed frontmatter."""
     return Binding(
         workflow=frontmatter.field(data, WORKFLOW_KEY),
-        hash=frontmatter.field(data, HASH_KEY),
         history=_history(data.get(HISTORY_KEY)),
     )
 
@@ -135,7 +128,7 @@ def render_binding(text: str, binding: Binding) -> str:
     one top-level line per key. An empty history leaves an existing one untouched.
     An anchor without frontmatter gets a block holding the binding.
     """
-    updates = {WORKFLOW_KEY: binding.workflow, HASH_KEY: binding.hash}
+    updates = {WORKFLOW_KEY: binding.workflow}
     if binding.history:
         flow = yaml.safe_dump(
             [h.to_dict() for h in binding.history], default_flow_style=True, sort_keys=False, width=10**6

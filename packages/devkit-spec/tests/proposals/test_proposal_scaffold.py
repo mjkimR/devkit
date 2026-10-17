@@ -139,7 +139,7 @@ def test_create_proposal_binds_sdd_proposal(workspace: Path) -> None:
     created = create_proposal(workspace, "bound")
     meta = parse((workspace / created.path).read_text(encoding="utf-8")).data
     assert meta is not None and meta["workflow"] == "sdd-proposal"
-    assert str(meta["workflow_hash"]).startswith("sha256:")
+    assert "workflow_hash" not in meta
     assert created.workflow == "sdd-proposal" and created.notices == []
     assert created.next_command == "devkit workflow next --unit docs/proposals/PROP-bound"
 

@@ -19,7 +19,6 @@ from devkit.workflow.definition.definition import (
     SCHEMA_VERSION,
     StageDefinition,
     WorkflowDocument,
-    schema_hash,
 )
 from devkit.workflow.definition.ids import IDENT_HINT, is_ident
 from devkit.workflow.errors import (
@@ -270,7 +269,6 @@ class DefinitionReport:
             "id": self.doc.id,
             "path": _display_path(self.doc.path, root),
             "ok": self.ok,
-            "hash": schema_hash(self.doc) if self.ok else None,
             "errors": [p.to_dict() for p in self.problems],
         }
 

@@ -19,7 +19,7 @@ A multi-stage delivery procedure (intent, specify, build, review, reconcile, int
 1. **Procedure is data.** A workflow is a Markdown file whose frontmatter declares `stages[]`. The body carries prose gate rules; the engine never parses it.
 2. **The CLI decides the stage.** `devkit workflow next` evaluates every stage's exit checks in order and reports the first unmet stage. Agents treat `[STAGE]` as the diagnosed stage rather than re-deriving it.
 3. **Gates are enforced by policy, not prose.** Under `ask` a gated stage passes only with a recorded approval or an explicit `--given <gate>` for one run. The project lowers a gate in configuration, never by editing the workflow.
-4. **Drift is detected.** A work unit records the hash of the stage schema it was bound to; when the definition changes while a stage is still current, `next` refuses until the unit is rebound.
+4. **Bindings follow current definitions.** A work unit records its workflow ID; `next` evaluates the current definition, so changed stages and checks apply without rebinding.
 5. **Layout is a template.** Where work units live and how their directories are named is a configured path template; the engine assumes only "a directory containing an anchor file".
 6. **Agent-neutral.** Definitions, CLI output and entry skills are identical bytes for every host. Only subagent role projection differs per host, and `devkit.distribution` owns that.
 
@@ -61,7 +61,7 @@ layout:
 - `new --workflow incubate` creates the unit under the definition's layout and writes its anchor; `[UNIT: ...]` names the anchor.
 - `list` discovers units under every distinct layout in use (the project default plus each discovered definition's) and prints the anchor per row.
 - `next`, `bind`, `handoff`, `requests`, `answer`, `return`, `show --unit` and `envelope` take a unit directory. With `--workflow` (`next`, `bind`), that definition's anchor must exist there. Without it, the engine looks for the project anchor and then every anchor a discovered definition declares: exactly one must be present. None is `UNIT_NOT_FOUND`; more than one is `ANCHOR_AMBIGUOUS`, resolved by passing `--anchor FILE` (every command above except `envelope check`, which only needs some anchor to be present). The binding (or the configured default) then selects the workflow, whose anchor must be the file that was found; otherwise `ANCHOR_MISMATCH` names both, and its fix is renaming the anchor or `bind --workflow <id>` with a workflow whose anchor is the found file.
-- Aliases such as `anchor-exists` resolve against the definition's own anchor, in validation and in evaluation. Changing a layout never causes drift.
+- Aliases such as `anchor-exists` resolve against the definition's own anchor, in validation and in evaluation. Layout changes apply on the next evaluation.
 - `handoff` refuses a candidate whose anchor differs from the unit's (`HANDOFF_LAYOUT_MISMATCH`). Moving a unit into another layout and renaming its anchor is the caller's job (a methodology layer such as specrig's proposal handoff); `bind --workflow <id>` then records the new binding.
 
 ### The Anchor File
@@ -74,12 +74,11 @@ id: <slug>
 status: planned
 created: 2026-10-12
 workflow: direct-delivery
-workflow_hash: sha256:...
 ---
 # <slug>
 ```
 
-`status` is read by frontmatter checks and reported by `next`. `workflow` and `workflow_hash` are the binding ([Binding and Drift](../../workflow/definition-and-checks.md#3-binding-and-drift)).
+`status` is read by frontmatter checks and reported by `next`. `workflow` is the binding ([Binding](../../workflow/definition-and-checks.md#3-binding)).
 
 ## 3. Approval Gates
 

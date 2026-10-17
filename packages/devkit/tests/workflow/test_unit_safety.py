@@ -216,7 +216,7 @@ def test_show_unit_reports_an_invalid_bound_definition(workspace: Path) -> None:
     by_ref = _run("show", "direct-delivery", "-w", str(workspace))
     by_unit = _run("show", "--unit", ".devkit/transient/work/u", "-w", str(workspace))
     assert by_ref.exit_code == by_unit.exit_code == 1
-    assert "[BINDING: workflow=direct-delivery hash=- drift=false]" in by_unit.output
+    assert "[BINDING: workflow=direct-delivery]" in by_unit.output
     assert "[PROBLEM: review.role: unknown role 'reviewer'" in by_unit.output
     assert Workspace(workspace).describe_unit(".devkit/transient/work/u").errors
 
@@ -227,9 +227,9 @@ def test_show_unit_reports_an_invalid_bound_definition(workspace: Path) -> None:
 def test_binding_is_written_into_an_anchor_without_frontmatter(tmp_path: Path) -> None:
     anchor = tmp_path / "task.md"
     anchor.write_text("# plain\n\nbody\n")
-    write_binding(anchor, Binding("wf", "sha256:1"))
-    assert anchor.read_text() == "---\nworkflow: wf\nworkflow_hash: sha256:1\n---\n# plain\n\nbody\n"
-    assert read_binding(anchor) == Binding("wf", "sha256:1")
+    write_binding(anchor, Binding("wf"))
+    assert anchor.read_text() == "---\nworkflow: wf\n---\n# plain\n\nbody\n"
+    assert read_binding(anchor) == Binding("wf")
 
 
 def test_binding_write_keeps_mode_and_original_on_failure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -237,7 +237,7 @@ def test_binding_write_keeps_mode_and_original_on_failure(tmp_path: Path, monkey
     original = "---\nid: a\n---\n# a\n"
     anchor.write_text(original)
     anchor.chmod(0o640)
-    write_binding(anchor, Binding("wf", "sha256:1"))
+    write_binding(anchor, Binding("wf"))
     assert anchor.stat().st_mode & 0o777 == 0o640 and "workflow: wf" in anchor.read_text()
 
     anchor.write_text(original)
@@ -247,7 +247,7 @@ def test_binding_write_keeps_mode_and_original_on_failure(tmp_path: Path, monkey
 
     monkeypatch.setattr(binding_module.os, "replace", disk_full)
     with pytest.raises(OSError):
-        write_binding(anchor, Binding("wf", "sha256:2"))
+        write_binding(anchor, Binding("wf"))
     assert anchor.read_text() == original
     assert sorted(os.listdir(tmp_path)) == ["task.md"]
 
@@ -257,7 +257,7 @@ def test_binding_write_through_a_link_replaces_the_target(tmp_path: Path) -> Non
     real.write_text("---\nid: a\n---\n")
     link = tmp_path / "task.md"
     link.symlink_to(real)
-    write_binding(link, Binding("wf", "sha256:1"))
+    write_binding(link, Binding("wf"))
     assert link.is_symlink() and "workflow: wf" in real.read_text()
 
 
@@ -361,7 +361,7 @@ def test_a_path_to_the_discovered_definition_binds_and_resolves_later(tmp_path: 
     root = simple_workspace(tmp_path)
     assert run_cli("new", "-w", str(root), "u", "--workflow", ".devkit/workflows/w.md").exit_code == 0
     bound = run_cli("bind", "-w", str(root), "--unit", SIMPLE_UNIT, "--workflow", str(root / ".devkit/workflows/w.md"))
-    assert bound.exit_code == 0 and bound.stdout.startswith("[BOUND: w ")
+    assert bound.exit_code == 0 and bound.stdout.startswith("[BOUND: w]")
     for args in (("next",), ("requests",), ("show",)):
         result = run_cli(*args, "-w", str(root), "--unit", SIMPLE_UNIT)
         assert result.exit_code == 0, (args, result.stderr)

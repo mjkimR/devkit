@@ -180,7 +180,5 @@ def handoff_cmd(
         echo_json(outcome.to_dict())
         return
     tail = f" decision={outcome.decision}" if outcome.decision else ""
-    click.echo(
-        f"[HANDOFF: from={outcome.source} to={outcome.target} hash={outcome.workflow_hash} policy={outcome.policy}{tail}]"
-    )
+    click.echo(f"[HANDOFF: from={outcome.source} to={outcome.target} policy={outcome.policy}{tail}]")
     click.echo(f"[HISTORY: {' '.join(h.workflow for h in outcome.history)}]")

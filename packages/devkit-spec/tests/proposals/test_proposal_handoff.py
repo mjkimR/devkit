@@ -466,7 +466,7 @@ def test_marks_skeletons(workspace: Path) -> None:
         assert lines[closing + 1] == SKELETON_MARKER, name
         assert text.count(SKELETON_MARKER) == 1, name
     spec = (target / "spec.md").read_text(encoding="utf-8")
-    assert "\nworkflow: sdd-spec-feature\nworkflow_hash: sha256:" in spec
+    assert "\nworkflow: sdd-spec-feature\n" in spec
     assert "## 3. Non-Goals\n\n1. **Scope Excluded**: <what this change will not do>\n" in spec
     assert "### [AC-01] <scenario>\n- **Given** <precondition>\n" in spec
     assert _frontmatter_keys((target / "tasks.md").read_text(encoding="utf-8")) == ["id", "spec", "plan"]
@@ -481,7 +481,7 @@ def test_binds_the_proposal_workflow(workspace: Path) -> None:
     accept(_new(workspace, "defect"), "\ntask_kind: bugfix")
     result = handoff_proposal(workspace, "defect", today=TODAY)
     spec = (spec_dir(workspace, "defect") / "spec.md").read_text(encoding="utf-8")
-    assert "\nworkflow: sdd-spec-bugfix\nworkflow_hash: sha256:" in spec
+    assert "\nworkflow: sdd-spec-bugfix\n" in spec
     assert spec.startswith("---\nid: SPEC-defect\n")
     assert "kind" not in parse(spec).data  # type: ignore[operator]  # the bound workflow is the task-kind
     # sdd-spec-bugfix writes plan.md and tasks.md later; the scope they would carry lands in spec.md's notes.

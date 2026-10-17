@@ -67,9 +67,8 @@ never derive it from files yourself.
    --answers-to <worker-NN.yaml> --answers-file <file>`, one rewritten
    `decision` per question, never `workflow answer`.
 5. Stop on errors. An `[ERROR] (CODE)` block on stderr carries an `[ACTION]`
-   directive; follow it. `WORKFLOW_DRIFT` means the definition changed under
-   this unit: review the change with the user before running the `bind`
-   command the `[FIX]` line names.
+   directive; follow it. Units follow the current definition of their bound
+   workflow; definition changes take effect without rebinding.
 6. After each stage, rerun `next` to confirm progress before reporting. Report
    the stage you reached and anything the output listed as unmet.
 7. Hand off when the workflow is complete. `[STAGE: - complete=true]` followed

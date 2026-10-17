@@ -27,7 +27,7 @@ Review `docs/architecture/` and the capabilities the feature touches (`devkit sp
 
 ## Step 5: Output standard
 
-Keep the frontmatter lines `devkit spec new` or `devkit spec proposal handoff` wrote (`id`, `workflow`, `workflow_hash`, and `summary` when given); fill in the rest.
+Keep the frontmatter lines `devkit spec new` or `devkit spec proposal handoff` wrote (`id`, `workflow`, and `summary` when given); fill in the rest.
 
 ```markdown
 ---
@@ -41,7 +41,6 @@ related_capabilities:
 related_stories:
   - US-<slug>
 workflow: sdd-spec-feature          # written by `devkit spec new` or `devkit spec proposal handoff`
-workflow_hash: sha256:<hex>
 ---
 
 # [SPEC-<feature-slug>] <Feature Title>

@@ -44,7 +44,7 @@ Read one reference, not both. A defect the session can reproduce and fix without
 
 - [ ] The boundary (feature) or the current, expected and preserved behavior (bugfix) follows the agreed intent, and the choices made inside it are recorded as assumptions.
 - [ ] Every non-goal states what is excluded; every AC is mechanically checkable.
-- [ ] `spec.md` written in the reference's output standard, keeping the `id`, `workflow` and `workflow_hash` frontmatter the bundle was created with, and an English `summary` of what the spec changes (`RULE-document-summary`).
+- [ ] `spec.md` written in the reference's output standard, keeping the `id` and `workflow` frontmatter the bundle was created with, and an English `summary` of what the spec changes (`RULE-document-summary`).
 - [ ] The skeleton marker line `<!-- devkit:skeleton -->` is removed from `spec.md`; until then `not-skeleton(spec.md)` keeps the `specify` (feature) or `characterize` (bugfix) stage open. The markers in `plan.md` and `tasks.md` are removed by `spec-plan` and `spec-tasks`.
 - [ ] `devkit rules check <dir>` reports no spec-rule violation other than coverage the tasks have not been written for yet.
 - [ ] Ready for `spec-plan` (feature: still the `specify` stage; bugfix: the `plan-tasks` stage once `characterize` holds).

@@ -9,7 +9,6 @@ from pathlib import Path, PurePosixPath
 
 from devkit.core.errors import UnsafePathError
 from devkit.core.paths import resolve_within
-from devkit.workflow.definition.definition import schema_hash
 from devkit.workflow.errors import AnchorInvalidError, LayoutError, UnitDirNotEmptyError, UnitExistsError
 from devkit.workflow.project.layout import TemplateLayout
 from devkit.workflow.unit import frontmatter
@@ -70,8 +69,8 @@ def create_unit(
             ),
         )
     unit_dir.mkdir(parents=True, exist_ok=True)
-    binding = Binding(doc.id, schema_hash(doc))
-    data = {"id": slug, "status": status, "created": day, "workflow": binding.workflow, "workflow_hash": binding.hash}
+    binding = Binding(doc.id)
+    data = {"id": slug, "status": status, "created": day, "workflow": binding.workflow}
     # Exclusive and whole: of two concurrent `new` calls for one slug, exactly one creates the anchor.
     if not write_new_file(unit_dir / anchor, frontmatter.render(data, f"# {slug}\n")):
         raise exists
@@ -124,7 +123,6 @@ class UnitInfo:
             "anchor": self.anchor,
             "status": self.status,
             "workflow": self.binding.workflow or None,
-            "workflow_hash": self.binding.hash or None,
             "history": " ".join(h.workflow for h in self.binding.history) or None,
             "error": self.error.to_dict() if self.error is not None else None,
         }

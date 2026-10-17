@@ -4,7 +4,7 @@
 source once (the receipt, the discovered definitions and roles
 are cached and reused by every call), resolves a unit directory to its anchor,
 binding and workflow, and evaluates units with the project's policies
-(approvals, stage switches, lint, Git, drift). Every failure is an
+(approvals, stage switches, lint, Git). Every failure is an
 ``AdvisoryError`` with a stable code: a ``WorkflowError``, or a ``devkit.core``
 error such as ``RECEIPT_INVALID``.
 """
@@ -19,7 +19,7 @@ from typing import Any
 from devkit.core.project import find_project_root
 from devkit.core.receipt import Receipt, load_receipt
 from devkit.workflow.definition.checks import DECLARABLE, Registry
-from devkit.workflow.definition.definition import WorkflowDocument, schema_hash
+from devkit.workflow.definition.definition import WorkflowDocument
 from devkit.workflow.definition.discovery import (
     definition_path,
     discover_definitions,
@@ -32,7 +32,6 @@ from devkit.workflow.errors import (
     AnchorAmbiguousError,
     AnchorMismatchError,
     DefinitionProblem,
-    DriftError,
     GivenInvalidError,
     UnitNotFoundError,
     WorkflowError,
@@ -93,21 +92,13 @@ class DefinitionDescription:
     def ok(self) -> bool:
         return not self.errors
 
-    @property
-    def drift(self) -> bool:
-        """Whether the binding names this definition with another schema hash."""
-        binding = self.binding
-        if binding is None or not binding.bound or binding.workflow != self.doc.id:
-            return False
-        return binding.hash != schema_hash(self.doc)
-
     def to_dict(self) -> dict[str, Any]:
         data = self.doc.to_dict()
         data["approvals"] = dict(self.approvals)
         data["stages_off"] = list(self.stages_off)
         data["anchor"] = self.anchor
         if self.binding is not None:
-            data["binding"] = {**self.binding.to_dict(), "drift": self.drift}
+            data["binding"] = self.binding.to_dict()
         data["ok"] = self.ok
         data["errors"] = [p.to_dict() for p in self.errors]
         return data
@@ -436,7 +427,7 @@ class Workspace:
         return self.describe(self.load_definition(binding.workflow or self.config.default or ""), binding)
 
     def bind_unit(self, unit: str | Path, workflow: str | None = None, *, anchor: str | None = None) -> UnitRef:
-        """Record the workflow ``unit`` follows and the hash of its stage schema; returns the rebound unit.
+        """Record the workflow ``unit`` follows; returns the rebound unit.
 
         ``workflow`` defaults to the current binding, else ``[workflow].default``;
         ``anchor`` is as for ``resolve_unit``. The handoff history is kept. A
@@ -445,8 +436,8 @@ class Workspace:
         """
         ref = self.resolve_unit(unit, workflow, anchor=anchor)
         self.require_bindable(ref.doc, workflow)
-        binding = Binding(ref.doc.id, schema_hash(ref.doc), ref.binding.history)
-        write_binding(ref.anchor_path, Binding(binding.workflow, binding.hash))
+        binding = Binding(ref.doc.id, ref.binding.history)
+        write_binding(ref.anchor_path, Binding(binding.workflow))
         return replace(ref, binding=binding)
 
     def check_given(self, doc: WorkflowDocument, given: Iterable[str]) -> None:
@@ -481,27 +472,15 @@ class Workspace:
         *,
         given: Sequence[str] = (),
         lint: bool = True,
-        enforce_drift: bool = True,
     ) -> UnitEvaluation:
         """Evaluate ``unit`` with the project's policies; never writes a file.
 
-        Raises ``DriftError`` (``WORKFLOW_DRIFT``) when the bound definition
-        changed and a stage is still current, unless ``enforce_drift`` is off.
         Approvals for stages after the current one (the unit went back) are
         listed in ``UnitEvaluation.stale_approvals`` and keep counting until
         ``return_to`` voids them.
         """
         self.check_given(unit.doc, given)
         result = evaluate_definition(unit.doc, self.options(unit, given=given, lint=lint))
-        if enforce_drift and result.blocked_by_drift:
-            assert result.drift is not None
-            raise DriftError(
-                "the bound stage schema changed under in-flight work",
-                f"recorded={result.drift.recorded}",
-                f"current={result.drift.current}",
-                target_files=[self.rel(unit.anchor_path)],
-                fix=f"Review the change to {unit.doc.id}, then run `devkit workflow bind --unit {unit.rel}` to accept it",
-            )
         return result
 
 

@@ -106,32 +106,23 @@ next:
         assert any(fragment in p for p in problems), fragment
 
 
-def test_schema_hash_ignores_next() -> None:
-    from devkit.workflow import schema_hash
-
-    assert schema_hash(parse_definition(FIRST)) == schema_hash(parse_definition(FIRST.split("next:")[0] + "---\n"))
-
-
 # --- binding history ---------------------------------------------------------------
 
 
 def test_binding_history_round_trip(tmp_path: Path) -> None:
     anchor = tmp_path / "task.md"
     anchor.write_text("---\nid: a\nstatus: planned\n---\n# a\n")
-    history = (HistoryEntry("triage", "sha256:1", "2026-10-12"),)
-    write_binding(anchor, Binding("spec-driven", "sha256:2", history))
-    assert read_binding(anchor) == Binding("spec-driven", "sha256:2", history)
+    history = (HistoryEntry("triage", "2026-10-12"),)
+    write_binding(anchor, Binding("spec-driven", history))
+    assert read_binding(anchor) == Binding("spec-driven", history)
     text = anchor.read_text()
     assert text.count("workflow_history") == 1 and text.endswith("---\n# a\n")
-    write_binding(
-        anchor, Binding("hotfix", "sha256:3", (*history, HistoryEntry("spec-driven", "sha256:2", "2026-10-13")))
-    )
+    write_binding(anchor, Binding("hotfix", (*history, HistoryEntry("spec-driven", "2026-10-13"))))
     binding = read_binding(anchor)
     assert [h.workflow for h in binding.history] == ["triage", "spec-driven"]
     assert anchor.read_text().count("workflow_history") == 1
     assert binding.to_dict()["workflow_history"][1] == {
         "workflow": "spec-driven",
-        "hash": "sha256:2",
         "completed": "2026-10-13",
         "last_decision": 0,
     }
@@ -234,12 +225,12 @@ def test_cli_handoff_ask_flow(tmp_path: Path) -> None:
         "handoff", "-w", str(root), "--unit", unit, "--no-lint", "--workflow", "spec-driven", "--date", "2026-10-13"
     )
     assert done.exit_code == 0, done.output
-    assert done.output.startswith("[HANDOFF: from=triage to=spec-driven hash=sha256:")
+    assert done.output.startswith("[HANDOFF: from=triage to=spec-driven policy=")
     # An explicit choice is recorded as the handoff decision.
     assert "policy=ask decision=decisions/01-handoff.yaml]" in done.output
     assert "[HISTORY: triage]" in done.output
     anchor = (root / unit / "task.md").read_text()
-    assert "workflow: spec-driven" in anchor and "workflow_history: [{workflow: triage, hash: 'sha256:" in anchor
+    assert "workflow: spec-driven" in anchor and "workflow_history: [{workflow: triage, completed:" in anchor
     assert "completed: '2026-10-13'" in anchor and anchor.endswith("---\n# login\n")
 
     # The unit now follows spec-driven from its first stage; triage is history, not re-evaluated.

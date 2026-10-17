@@ -18,8 +18,6 @@ Read [Stage ids](#stage-ids) when mapping `[STAGE]` onto the skill's decision ma
 | `[ENVELOPE_ERROR: <file> "..."]` | An envelope file is malformed and ignored | A defect to fix before anything else (`devkit workflow envelope check --unit <dir>`). |
 | `[DECISION_ERROR: <file> "..."]` | A decision record is malformed, or a recorded choice is ignored | A defect to fix before anything else; a malformed approval does not count. |
 | `[LINT_ERROR: "..."]` | `lint-clean` could not run; the rules error follows on stderr | Fix what stops `devkit rules check` from running first. |
-| `WORKFLOW_DRIFT` advisory | The bound workflow's stage schema changed after binding (active bundle) | Show the user the change (`devkit workflow show --unit <dir>`); once they accept it, run the `[FIX]` command `devkit workflow bind --unit <dir>`. A rebind planned in the bundle's own tasks is already accepted. |
-| `[DRIFT: ...]` on a completed bundle | Its workflow changed later | History; nothing to do. |
 | `WORKFLOW_NOT_FOUND` advisory | The bound workflow id has no definition | Restore the workflow (`devkit sync` for a managed one) or bind the bundle to an existing one. |
 | `WORKFLOW_NOT_SELECTED` advisory | The unit is unbound and no default applies | Bind it: `devkit workflow bind --unit <dir> --workflow <id>`. |
 

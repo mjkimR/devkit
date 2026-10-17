@@ -15,7 +15,6 @@ from devkit.workflow import (
     DecisionRecordError,
     Decisions,
     DefinitionError,
-    DriftError,
     LayoutError,
     WorkflowConfigError,
     WorkflowError,
@@ -72,14 +71,6 @@ def test_envelope_check_with_malformed_files_exits_one(unit_ws: Path) -> None:
     (unit_ws / UNIT / "envelopes/review-01.yaml").write_text("status: completed\n")
     result = _run("envelope", "check", "-w", str(unit_ws), "--unit", UNIT)
     assert result.exit_code == ExitCode.FINDINGS and "(ENVELOPE_INVALID)" in result.stderr
-
-
-def test_drift_guard_refusal_exits_one(unit_ws: Path) -> None:
-    definition = unit_ws / ".devkit/workflows/direct-delivery.md"
-    definition.write_text(WORKFLOW.replace("skills: [wf-intent]", "skills: [wf-scope]"))
-    result = _run("next", "-w", str(unit_ws), "--unit", UNIT, "--no-lint")
-    assert result.exit_code == ExitCode.FINDINGS and "(WORKFLOW_DRIFT)" in result.stderr
-    assert "[ACTION] BLOCKED" in result.stderr
 
 
 # --- 2: the command could not do its job ------------------------------------------------------------
@@ -181,7 +172,6 @@ def test_library_errors_are_workflow_errors_with_codes(tmp_path: Path) -> None:
         "ENVELOPE_KIND_INVALID",
     ]
     assert all(e.value.mode is ActionMode.INPUT_ERROR for e in (layout, definition, check, request, kind))
-    assert DriftError("x").exit_code == ExitCode.FINDINGS and DriftError("x").mode is ActionMode.BLOCKED
     assert issubclass(DecisionRecordError, WorkflowError)
 
 

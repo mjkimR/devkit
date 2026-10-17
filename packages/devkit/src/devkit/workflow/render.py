@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 from collections.abc import Mapping
 
-from devkit.workflow.definition.definition import GATE_POLICIES, WorkflowDocument, schema_hash
+from devkit.workflow.definition.definition import GATE_POLICIES, WorkflowDocument
 from devkit.workflow.evaluation.requests import Request, candidate_summary
 from devkit.workflow.evaluation.results import GateStatus, UnitEvaluation
 from devkit.workflow.unit.envelope import Hold
@@ -41,8 +41,6 @@ def render_evaluation(res: UnitEvaluation) -> str:
     ]
     if res.bound_elsewhere:
         lines.append(f"[BOUND_ELSEWHERE: workflow={res.bound_elsewhere}]")
-    if res.drift:
-        lines.append(f"[DRIFT: recorded={res.drift.recorded} current={res.drift.current}]")
     lines.append(f"[DONE: {_dash(' '.join(res.done))}]")
     for stage_id, g in res.passed_gates:
         lines.append(f"[GATE_PASSED: {g.name} stage={stage_id} policy={g.policy} source={_gate_source(g)}]")
@@ -149,9 +147,7 @@ def render_document(
 ) -> str:
     approvals = approvals or {}
     stages = stages or {}
-    lines = [
-        f"[WORKFLOW: {doc.id} title={quote(doc.title)} status={_dash(doc.status)} stages={len(doc.stages)} hash={schema_hash(doc)}]"
-    ]
+    lines = [f"[WORKFLOW: {doc.id} title={quote(doc.title)} status={_dash(doc.status)} stages={len(doc.stages)}]"]
     if doc.layout:
         lay = doc.layout
         lines.append(

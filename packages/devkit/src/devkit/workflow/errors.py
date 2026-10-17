@@ -259,18 +259,6 @@ class GivenInvalidError(WorkflowError):
     input_error = True
 
 
-class DriftError(WorkflowError):
-    """The bound stage schema changed under in-flight work (a guardrail).
-
-    A refusal of ``next`` that reports the unit's state, so the CLI exits
-    ``FINDINGS`` (1) like a refused commit, not ``ERROR``.
-    """
-
-    code = "WORKFLOW_DRIFT"
-    guardrail = True
-    exit_code = ExitCode.FINDINGS
-
-
 # -- decisions and answers -----------------------------------------------------------
 
 

@@ -42,7 +42,7 @@ def test_creates_a_bound_bundle(workspace: Path) -> None:
     }
     spec = _meta(target / "spec.md")
     assert spec["id"] == "SPEC-login-flow" and spec["title"] == "Login: Flow" and spec["status"] == "planned"
-    assert spec["workflow"] == "sdd-spec-feature" and str(spec["workflow_hash"]).startswith("sha256:")
+    assert spec["workflow"] == "sdd-spec-feature" and "workflow_hash" not in spec
     assert "kind" not in spec
     assert _meta(target / "plan.md") == {"id": "PLAN-login-flow", "spec": "SPEC-login-flow"}
     assert _meta(target / "tasks.md") == {

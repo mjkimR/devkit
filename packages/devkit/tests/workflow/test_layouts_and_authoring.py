@@ -80,7 +80,7 @@ def test_parse_layout_spec_partial_and_errors() -> None:
             parse_layout_spec(raw)
 
 
-def test_definition_layout_is_parsed_validated_and_hash_neutral() -> None:
+def test_definition_layout_is_parsed_and_validated() -> None:
     doc = parse_definition(PROPOSAL)
     assert doc.layout == LayoutSpec("docs/proposals", "{slug}", "proposal.md")
     assert doc.anchor("task.md") == "proposal.md" and parse_definition(WORKFLOW).anchor("task.md") == "task.md"
@@ -88,7 +88,7 @@ def test_definition_layout_is_parsed_validated_and_hash_neutral() -> None:
     # aliases resolve against the declared anchor, so anchor-exists is valid without the project anchor
     assert validate_definition(doc, "task.md", known_ids={"incubate", "direct-delivery"}) == []
     same = parse_definition(PROPOSAL.replace("anchor: proposal.md", "anchor: other.md"))
-    assert same.to_dict()["hash"] == doc.to_dict()["hash"]
+    assert same.anchor("task.md") == "other.md"
     with pytest.raises(DefinitionError, match=r"layout\.unit_path"):
         parse_definition(PROPOSAL.replace('unit_path: "{slug}"', 'unit_path: "{nope}"'))
 
@@ -125,7 +125,7 @@ def test_new_list_next_bind_across_layouts(two_layouts: Path) -> None:
     assert "[STAGE: draft" in nxt.output and "frontmatter(proposal.md status accepted)" in nxt.output
 
     bound = _run("bind", "-w", str(root), "--unit", "docs/proposals/search")
-    assert bound.exit_code == 0 and bound.output.startswith("[BOUND: incubate hash=sha256:")
+    assert bound.exit_code == 0 and bound.output.startswith("[BOUND: incubate]")
 
     show = _run("show", "-w", str(root), "incubate")
     assert "[LAYOUT: work_dir=docs/proposals unit_path={slug} anchor=proposal.md]" in show.output

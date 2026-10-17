@@ -11,7 +11,6 @@ from devkit.workflow import (
     evaluate_definition,
     parse_definition,
     render_evaluation,
-    schema_hash,
 )
 from devkit.workflow.definition.checks import CheckClass
 from testsupport.workflow import SIMPLE, WORKFLOW, run_cli, simple_workspace, write_record, write_unit
@@ -234,12 +233,11 @@ def test_not_skeleton_and_envelope_check_pass(tmp_path: Path) -> None:
     assert evaluate_definition(doc, _opts(tmp_path, unit)).complete
 
 
-def test_drift_is_reported_on_result(tmp_path: Path) -> None:
-    unit = write_unit(tmp_path, "work/a", extra="workflow: direct-delivery\nworkflow_hash: sha256:old\n")
+def test_workflow_id_alone_is_a_binding(tmp_path: Path) -> None:
+    unit = write_unit(tmp_path, "work/a", extra="workflow: direct-delivery\n")
     res = evaluate_definition(DOC, _opts(tmp_path, unit))
-    assert res.binding.bound and res.drift is not None
-    assert res.drift.recorded == "sha256:old" and res.drift.current == schema_hash(DOC)
-    assert "[DRIFT: recorded=sha256:old" in render_evaluation(res)
+    assert res.binding.bound and res.binding.workflow == "direct-delivery"
+    assert "drift" not in res.to_dict()
 
 
 def test_envelope_errors_are_surfaced_not_fatal(tmp_path: Path) -> None:

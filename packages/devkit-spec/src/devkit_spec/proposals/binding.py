@@ -11,7 +11,7 @@ import logging
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError
-from devkit.workflow import Binding, Workspace, schema_hash
+from devkit.workflow import Binding, Workspace
 
 from devkit_spec.errors import ProposalWorkflowError, SpecError
 
@@ -76,4 +76,4 @@ def resolve_binding(
             ) from exc
         _log.info("default workflow %s not bound: %s (%s)", workflow, exc.message, exc.code)
         return None, exc
-    return Binding(doc.id, schema_hash(doc)), None
+    return Binding(doc.id), None

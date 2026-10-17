@@ -5,7 +5,7 @@ optionally, ``target-docs.md`` (the Living Spec blueprint). A proposal and a spe
 handed-off ``PROP-<slug>`` maps to exactly one ``SPEC-<slug>``.
 
 ``proposal.md`` is the anchor of a devkit workflow unit: a new proposal is bound to workflow ``sdd-proposal`` when the
-project has it. ``workflow`` and ``workflow_hash`` are that binding. ``task_kind`` (``feature`` or ``bugfix``) is the
+project has it. ``workflow`` records that binding. ``task_kind`` (``feature`` or ``bugfix``) is the
 provisional ``task-kind`` the proposal is confirmed with at ``plan-accept``; the spec follows ``sdd-spec-<task_kind>``
 after handoff. ``supersedes`` names the accepted proposal a close by supersede replaces, and ``needs_decompose: true``
 marks a draft Backlog splits before Planning starts. ``namespace`` names the document namespace (``devkit_spec.namespaces``) the bundle

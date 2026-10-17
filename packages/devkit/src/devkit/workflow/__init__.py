@@ -3,7 +3,7 @@
 Start from ``Workspace``: it loads the project's configuration, definitions,
 and roles once, resolves a unit directory (``resolve_unit``),
 binds it (``bind_unit``) and evaluates it with the project's policies
-(``evaluate_unit``), including the drift guard. ``create_unit``,
+(``evaluate_unit``), following the current definition. ``create_unit``,
 ``list_units``, ``record_answer``, ``return_to``,
 ``plan_handoff``/``apply_handoff`` and the envelope helpers cover the
 commands; ``evaluate_definition`` is the pure evaluation underneath.
@@ -23,7 +23,6 @@ from devkit.workflow.definition.definition import (
     WorkflowDocument,
     load_definition,
     parse_definition,
-    schema_hash,
 )
 from devkit.workflow.definition.discovery import discover_definitions, load_definition_dir, resolve_definition
 from devkit.workflow.definition.validation import (
@@ -44,7 +43,6 @@ from devkit.workflow.errors import (
     DecisionRecordError,
     DefinitionError,
     DefinitionProblem,
-    DriftError,
     EnvelopeFindingsError,
     EnvelopeFlagError,
     EnvelopeFormatError,
@@ -86,7 +84,7 @@ from devkit.workflow.evaluation.evaluate import LintFunc, Options, evaluate_defi
 from devkit.workflow.evaluation.git import is_ancestor
 from devkit.workflow.evaluation.lint import lint_with_rules
 from devkit.workflow.evaluation.requests import Option, Request, Target
-from devkit.workflow.evaluation.results import Delegate, Drift, GateStatus, Skipped, UnitEvaluation, Waiting
+from devkit.workflow.evaluation.results import Delegate, GateStatus, Skipped, UnitEvaluation, Waiting
 from devkit.workflow.handoff import CandidateResult, Handoff, HandoffOutcome, HandoffPlan, apply_handoff, plan_handoff
 from devkit.workflow.project.config import WorkflowConfig, load_workflow_config
 from devkit.workflow.project.layout import LayoutSpec, TemplateLayout, parse_layout_spec, validate_template
@@ -131,8 +129,6 @@ __all__ = [
     "DefinitionProblem",
     "DefinitionReport",
     "Delegate",
-    "Drift",
-    "DriftError",
     "Envelope",
     "EnvelopeFindingsError",
     "EnvelopeFlagError",
@@ -229,7 +225,6 @@ __all__ = [
     "render_requests",
     "resolve_definition",
     "return_to",
-    "schema_hash",
     "validate_answer",
     "validate_definition",
     "validate_definitions",

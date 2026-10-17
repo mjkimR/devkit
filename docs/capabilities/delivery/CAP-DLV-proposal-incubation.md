@@ -50,7 +50,7 @@ removes it.
    `plan-accept`. Anything else is `SPEC_PROPOSAL_NOT_APPROVED` (`INTERACTION`: stop and ask the user). A proposal
    marked `needs_decompose: true` is split in Backlog, never handed off (`SPEC_PROPOSAL_NEEDS_DECOMPOSE`), and one
    proposal hands off to exactly one spec.
-3. **The follow-up workflow comes from `task_kind`; effort hints stay on the proposal**: `workflow` and `workflow_hash` in `proposal.md` are devkit's
+3. **The follow-up workflow comes from `task_kind`; effort hints stay on the proposal**: `workflow` in `proposal.md` is devkit's
    binding of the proposal unit itself; `task_kind` (`feature` or `bugfix`, confirmed at `plan-accept`) selects the follow-up workflow `sdd-spec-<task_kind>` (any other value is `SPEC_PROPOSAL_INVALID`), while `planning_effort` and `dev_effort` (`low` | `medium` | `high`, scaffolded default `medium`) are non-authoritative activity-effort hints on `proposal.md`. `planning_effort` guides Planning and `dev_effort` is refined before `plan-accept` to guide Development (`[HANDOFF]` and `HandoffResult.dev_effort` expose it). After handoff the bound workflow carries the
    `task-kind` and `spec.md` has neither a `kind` field (`ADR-task-kind-and-planning-depth`) nor `planning_effort`/`dev_effort` fields (confirmed run effort is recorded on `worker-NN.yaml` envelopes).
 4. **Validate everything before writing**: handoff checks the slug, the proposal file and its frontmatter, the
@@ -193,7 +193,7 @@ legacy proposal or PADR whose slug starts that way, before writing anything, wit
 | `dev_effort` | `low`, `medium` (scaffolded default) or `high` (`--dev-effort`): non-authoritative Development `activity-effort` hint, provisional in Backlog and refined during Planning before `plan-accept`; returned by `handoff` (`dev_effort`) and not carried to `spec.md`. |
 | `supersedes` | Optional (`--supersedes PROP-<old>`): the accepted proposal a close by supersede replaces; it must exist (`SPEC_PROPOSAL_NOT_FOUND`) and be `accepted` (`SPEC_PROPOSAL_NOT_APPROVED`). |
 | `needs_decompose` | Optional (`--needs-decompose`): `true` marks a draft Backlog splits before Planning starts. |
-| `workflow`, `workflow_hash` | devkit's binding of the proposal unit (`sdd-proposal`). |
+| `workflow` | devkit's binding of the proposal unit (`sdd-proposal`). |
 
 The scaffolded body has sections `1. Background & Hypothesis`, `2. Technical Spike Questions`,
 `3. Proposed Design & Impact` and `4. Lifecycle & Retirement Criteria`.

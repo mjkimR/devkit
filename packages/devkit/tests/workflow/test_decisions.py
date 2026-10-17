@@ -28,7 +28,6 @@ from devkit.workflow import (
     record_answer,
     render_document,
     render_evaluation,
-    schema_hash,
 )
 from devkit.workflow.cli import cli
 from devkit.workflow.unit import records
@@ -320,7 +319,6 @@ def _with_gates(gates: str) -> str:
 def test_a_given_gate_says_so_in_its_request_and_needs_no_record(tmp_path: Path) -> None:
     doc = parse_definition(_with_gates("{ direction: { answer: given } }"))
     assert doc.gate_answer("direction") == "given" and doc.to_dict()["gates"] == {"direction": {"answer": "given"}}
-    assert schema_hash(doc) == schema_hash(parse_definition(WORKFLOW))
     assert "[GATE: direction policy=ask answer=given]" in render_document(doc)
     unit = write_unit(tmp_path, "work/a")
     res = evaluate_definition(doc, _opts(tmp_path, unit))

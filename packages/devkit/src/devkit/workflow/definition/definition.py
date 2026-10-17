@@ -1,4 +1,4 @@
-"""Workflow definition documents: the model, parsing and the schema hash.
+"""Workflow definition documents: the model and parsing.
 
 Validation lives in ``validation`` and discovery (definitions directory plus
 synchronized workflow assets) in ``discovery``.
@@ -6,8 +6,6 @@ synchronized workflow assets) in ``discovery``.
 
 from __future__ import annotations
 
-import hashlib
-import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -43,8 +41,6 @@ STAGE_KEYS = frozenset(
         "returns",
     }
 )
-# Display-only stage fields; changing them never causes drift.
-DISPLAY_FIELDS = frozenset({"name"})
 
 
 @dataclass(frozen=True)
@@ -147,7 +143,6 @@ class WorkflowDocument:
             "next": [c.to_dict() for c in self.next],
             "layout": self.layout.to_dict() if self.layout else None,
             "gates": self._gates_dict(),
-            "hash": schema_hash(self),
         }
 
     def _gates_dict(self) -> dict[str, dict[str, Any]]:
@@ -159,16 +154,6 @@ class WorkflowDocument:
     def anchor(self, default: str) -> str:
         """The anchor file name for this workflow's units: declared, or the project default."""
         return self.layout.anchor if self.layout and self.layout.anchor else default
-
-
-def schema_hash(doc: WorkflowDocument) -> str:
-    """``sha256:<hex>`` of the canonical JSON of the stages without display-only fields.
-
-    Nothing outside ``stages`` affects it, and neither does a stage's ``name``.
-    """
-    stages = [{k: v for k, v in s.to_dict().items() if k not in DISPLAY_FIELDS} for s in doc.stages]
-    payload = json.dumps(stages, sort_keys=True, separators=(",", ":"))
-    return "sha256:" + hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 def _str_list(value: Any, what: str) -> tuple[str, ...]:

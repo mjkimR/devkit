@@ -77,14 +77,14 @@ Prose for humans and agents. Not parsed.
 | `stages` | yes | Ordered stage list, at least one. |
 | `next` | no | Workflows this one may hand a completed unit to. See [Handoff Candidates](#handoff-candidates). |
 | `layout` | no | Mapping with any of `work_dir`, `unit_path`, `anchor`; each overrides the `[workflow]` default for this workflow's units and is validated like the configuration key. See [Per-Definition Layout](overview.md#per-definition-layout). |
-| `gates` | no | Mapping of a gate name (the `human_gate` of a stage) to `{answer: record \| given, policies: [...]}`. `answer` defaults to `record`. `given` means a person's approval reaches the engine as `next --given <gate>` and the executor writes no decision record: use it for a gate asked after the work is final, where a record would need one more commit. Evaluation does not change (a record still satisfies the gate); the gate's `[REQUEST]` and `show`'s `[GATE]` line end with `answer=given`. `policies` narrows the `[workflow.approvals]` policies the gate accepts to a non-empty list of distinct values of `ask`, `auto` and `off` that includes `ask` (the policy of an unset gate); a methodology fixes a gate to a person with `[ask]`. A configured policy outside it stops every command that evaluates the unit with `WORKFLOW_GATE_POLICY` ([Approval Gates](overview.md#3-approval-gates)), and `show`'s `[GATE]` line ends with `policies=...`. A name that is no stage's gate, or another key or value, is an error. Not part of the schema hash. |
+| `gates` | no | Mapping of a gate name (the `human_gate` of a stage) to `{answer: record \| given, policies: [...]}`. `answer` defaults to `record`. `given` means a person's approval reaches the engine as `next --given <gate>` and the executor writes no decision record: use it for a gate asked after the work is final, where a record would need one more commit. Evaluation does not change (a record still satisfies the gate); the gate's `[REQUEST]` and `show`'s `[GATE]` line end with `answer=given`. `policies` narrows the `[workflow.approvals]` policies the gate accepts to a non-empty list of distinct values of `ask`, `auto` and `off` that includes `ask` (the policy of an unset gate); a methodology fixes a gate to a person with `[ask]`. A configured policy outside it stops every command that evaluates the unit with `WORKFLOW_GATE_POLICY` ([Approval Gates](overview.md#3-approval-gates)), and `show`'s `[GATE]` line ends with `policies=...`. A name that is no stage's gate, or another key or value, is an error. |
 
 ### Stage Fields
 
 | Field | Type | Meaning |
 | --- | --- | --- |
 | `id` | string | Unique within the document; matches `[a-z][a-z0-9-]*`. Shared across definitions (see [Shared Stages](#shared-stages)). |
-| `name` | string | Display name. Changing it never causes drift. |
+| `name` | string | Display name. |
 | `human_gate` | `false`, `true` or string | `true` names the gate after the stage id; a string names a shared gate (`[a-z][a-z0-9-]*`, so `[workflow.approvals]` can name it). `handoff` is reserved. See [Approval Gates](overview.md#3-approval-gates). |
 | `optional` | `true` or `false` | When unmet, the stage is passed over instead of becoming current. Since it never becomes current, nothing lists its requests: a `human_gate` is satisfied only by `approvals.<gate>=auto`, `--given <gate>` or a record a host writes, a `human` exit check only by `--given` or such a record. `validate` reports either as a `WORKFLOW_OPTIONAL_STAGE_UNASKED` warning; the definition stays valid and usable. |
 | `exception` | `true` or `false` | Never evaluated; documents an out-of-band path. |
@@ -120,10 +120,6 @@ next:
 | `recommended` | bool | Shown to the person choosing; informational. |
 
 Eligibility is computed from checks so that an automatic handoff is deterministic; whether a person or the engine chooses is the [`handoff` gate](overview.md#the-handoff-gate) policy. The candidate's own first stage then evaluates the unit's existing files, so a candidate whose entry checks require earlier artifacts is naturally filtered by `when`.
-
-### Schema Hash
-
-`sha256:<hex>` of the canonical JSON (`sort_keys=True`, compact separators) of the `stages` list after normalization, without each stage's display `name`. Title, status, body, comments, stage names, the `checks` declaration, the `next` list and the `layout` mapping do not affect it. `show` prints it; `bind` records it in the anchor.
 
 ## 2. Checks
 
@@ -167,22 +163,19 @@ Aliases resolve against the anchor name in force for the workflow (its own `layo
 
 A stage with `human_gate` carries an implicit `human` check named `gate:<gate>`. It is asked only once every exit check of the stage holds: until then it is not listed under `[UNMET]`, no request is emitted, `[WAITING]` does not name it and `[GATE]` shows it as `satisfied=no`. Then it is listed under `[UNMET]` like any other check. It is satisfied by an accepted `gate:<gate>` decision record of the current segment, by `--given <gate>`, or by the `auto` policy; the whole stage is skipped under `off`, and any stage is skipped by `[workflow.stages] <id> = "off"` before its checks are evaluated ([Stage Policy](overview.md#stage-policy)).
 
-## 3. Binding and Drift
+## 3. Binding
 
-`new` and `bind` write `workflow: <id>` and `workflow_hash: <hash>` into the anchor's frontmatter. The binding records only the id, which every unit command looks up among the discovered definitions, so `--workflow <path>` binds only the file discovered for its id (for example `.devkit/workflows/<id>.md`); any other definition file is refused with `WORKFLOW_NOT_BINDABLE` before anything is written. `next --workflow <path>` still evaluates a unit against such a file without binding it. `handoff` rebinds the unit to the chosen candidate and appends the finished segment to `workflow_history`, one flow-style line:
+`new` and `bind` write `workflow: <id>` into the anchor's frontmatter. The binding records only the id, which every unit command looks up among the discovered definitions, so `--workflow <path>` binds only the file discovered for its id (for example `.devkit/workflows/<id>.md`); any other definition file is refused with `WORKFLOW_NOT_BINDABLE` before anything is written. `next --workflow <path>` still evaluates a unit against such a file without binding it. `handoff` rebinds the unit to the chosen candidate and appends the finished segment to `workflow_history`, one flow-style line:
 
 ```yaml
 workflow: spec-driven
-workflow_hash: sha256:74bc...
-workflow_history: [{workflow: triage, hash: 'sha256:a017...', completed: '2026-10-13', last_decision: 2}]
+workflow_history: [{workflow: triage, completed: '2026-10-13', last_decision: 2}]
 ```
 
-Binding updates replace the whole value of the keys they write, including every line of a block-style value, and keep every other frontmatter line and the body. An anchor without frontmatter (read as unbound) gets a block holding the binding. The anchor is replaced atomically (a temporary file in its directory, with its permission bits), so a failed write leaves it intact; a `handoff` whose anchor cannot be rewritten (any error, an interrupt included) removes the decision record it wrote for `--workflow`. Only a process killed outright between the two writes leaves that record behind: an accepted `handoff` choice in the unchanged segment, which the next `handoff` uses. `last_decision` is the highest decision sequence number when the segment ended; decision records up to it belong to finished segments. After a handoff, `next` evaluates the new workflow from its first stage against the unit's files; finished segments are never re-evaluated, and drift applies to the current binding only.
+Binding updates replace the whole value of the keys they write, including every line of a block-style value, and keep every other frontmatter line and the body. An anchor without frontmatter (read as unbound) gets a block holding the binding. The anchor is replaced atomically (a temporary file in its directory, with its permission bits), so a failed write leaves it intact; a `handoff` whose anchor cannot be rewritten (any error, an interrupt included) removes the decision record it wrote for `--workflow`. Only a process killed outright between the two writes leaves that record behind: an accepted `handoff` choice in the unchanged segment, which the next `handoff` uses. `last_decision` is the highest decision sequence number when the segment ended; decision records up to it belong to finished segments. After a handoff, `next` evaluates the new workflow from its first stage against the unit's files; finished segments are never re-evaluated.
 
 On `next` (the policy lives in the library, `Workspace.evaluate_unit`):
 
 - Unbound anchor: evaluated against `--workflow` or the configured default; output says `bound=no`.
-- Bound, hash matches: normal evaluation.
-- Bound to another workflow than the one evaluated (`--workflow`): no drift; `[BOUND_ELSEWHERE: workflow=<bound id>]` and JSON `bound_elsewhere` name the binding.
-- Bound, hash differs, a stage is current: refused with a `WORKFLOW_DRIFT` advisory (`BLOCKED`) on stderr whose `[DETAIL]` lines carry the recorded and current hashes, exit `1`. Run `bind` to accept the reviewed change. The anchor's `status` field does not change this.
-- Bound, hash differs, no stage is current (`[STAGE: - complete=true]`): evaluated against the current definition and reported as `[DRIFT: ...]`; a finished unit is never blocked.
+- Bound: evaluated against the current definition; changes take effect without rebinding.
+- Bound to another workflow than the one evaluated (`--workflow`): `[BOUND_ELSEWHERE: workflow=<bound id>]` and JSON `bound_elsewhere` name the binding.

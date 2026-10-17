@@ -16,14 +16,14 @@ created_at: 2026-10-17
 
 ```bash
 devkit workflow new <slug> [--workflow ID] [--date YYYY-MM-DD] [--status S]   # create a unit from the layout template and bind it
-devkit workflow bind --unit DIR [--anchor FILE] [--workflow ID]  # record or refresh the binding (accepts drift)
+devkit workflow bind --unit DIR [--anchor FILE] [--workflow ID]  # record or change the workflow binding
 devkit workflow next --unit DIR [--anchor FILE] [--workflow ID] [--given NAME]... [--no-lint] [--format text|json]
 devkit workflow handoff --unit DIR [--anchor FILE] [--workflow ID] [--date YYYY-MM-DD] [--by NAME] [--no-lint] [--format text|json]
 devkit workflow requests --unit DIR [--anchor FILE] [--no-lint] [--format text|json]   # open human requests of a unit
 devkit workflow answer --unit DIR [--anchor FILE] --request ID --action accept|decline|cancel [--value V] [--note TEXT] [--by NAME] [--no-lint] [--format text|json]
 devkit workflow return --unit DIR [--anchor FILE] --to STAGE [--note TEXT] [--by NAME] [--no-lint] [--format text|json]  # go back; later approvals are asked again
-devkit workflow show <ID|PATH> [--format text|json]              # a definition's stages, hash and next candidates
-devkit workflow show --unit DIR [--anchor FILE] [--format text|json]  # the unit's bound definition plus [BINDING: ... drift=bool]
+devkit workflow show <ID|PATH> [--format text|json]              # a definition's stages and next candidates
+devkit workflow show --unit DIR [--anchor FILE] [--format text|json]  # the unit's bound definition plus [BINDING: workflow=...]
 devkit workflow checks [--format text|json]                      # registered check names, classes and parameters (plugins included)
 devkit workflow validate [PATH]... [--format text|json]          # validate definitions (default: both sources, plus roles and shared stages)
 devkit workflow list [--status S]... [--exclude-status S]... [--format text|json]  # discovered units across every layout
@@ -51,7 +51,7 @@ Exit codes follow the devkit convention ([Errors, Exit Codes and Platforms](../.
 | Exit | When |
 | --- | --- |
 | `0` | The command did its job. `next` exits `0` whatever the stage, including a unit that waits for a person (`[WAITING]`, `[REQUEST]`, a recorded decline), a delegation (`[DELEGATE]`) or a handoff choice. |
-| `1` | The command ran and reports a negative result: `validate` found invalid definitions or shared-stage differences (a definition file that cannot be loaded at all makes it exit `2`), `show` found problems in the definition, `envelope check` found malformed envelope files (`ENVELOPE_INVALID`), or `next` refused a unit whose bound stage schema changed (`WORKFLOW_DRIFT`). |
+| `1` | The command ran and reports a negative result: `validate` found invalid definitions or shared-stage differences (a definition file that cannot be loaded at all makes it exit `2`), `show` found problems in the definition, `envelope check` found malformed envelope files (`ENVELOPE_INVALID`). |
 | `2` | The command could not do its job: a usage error from the command line parser, an argument error (`ARGUMENT_INVALID`: a `-w` or `validate` path that does not exist, a malformed `--date`, `show` given both or neither of `REF` and `--unit`, or `--anchor` without `--unit`), and every other error code below (unreadable configuration, receipt, definition or anchor, a refused input, a lint run that could not execute, an unexpected error). |
 
 A command that collects several problems (`validate`, `envelope check`) exits with the highest exit code among them. `show` only reports, so it exits `1` when its report lists any problem, whatever the problem's own code, and `2` only when it cannot run (an unknown workflow, an unreadable definition or configuration).
@@ -78,7 +78,6 @@ The library raises the same codes, one class per code. `WorkflowError` is the ba
 | `UNIT_DIR_NOT_EMPTY` | `UnitDirNotEmptyError` | `INPUT_ERROR` | `2` | `new` found the unit directory without an anchor but holding leftover records (`decisions/*.yaml`, `envelopes/*.yaml` or `*.yml`, listed as details and targets), which would count in the new unit (fix: another slug, or move the records out); other files such as `.gitkeep` or notes are left in place and do not refuse it |
 | `ANCHOR_AMBIGUOUS`, `ANCHOR_MISMATCH` | `AnchorAmbiguousError`, `AnchorMismatchError` | `INPUT_ERROR` | `2` | several candidate anchor files exist in the unit (pass `--anchor FILE`); the selected workflow declares a different anchor than the file that identifies the unit, or than `--anchor` names |
 | `GIVEN_INVALID` | `GivenInvalidError` | `INPUT_ERROR` | `2` | a `--given` name is neither a gate nor a registered runner or human check |
-| `WORKFLOW_DRIFT` | `DriftError` | `BLOCKED` | `1` | the bound schema hash changed under in-flight work; `[FIX]` names the `bind` command |
 | `REQUEST_UNKNOWN` | `RequestUnknownError` | `INPUT_ERROR` | `2` | `answer --request` is not an open request of the unit (and not `feedback:*`); the details list the open ids |
 | `DECISION_INVALID` | `DecisionInvalidError` | `INPUT_ERROR` | `2` | the `answer` action or value does not fit the request: a value on `approve` or on an action other than `accept`, a missing, unknown or ineligible option, more than one value; or the request is a `question:*` one, answered by an answer envelope (`[FIX]` is the `envelope answer` command) |
 | `DECISION_RECORD_INVALID`, `HANDOFF_CHOICE_IGNORED` | `DecisionRecordError`, `HandoffChoiceIgnoredError` | `INPUT_ERROR` | `2` | collected with `file`: a decision record does not match the format (`parse_record`, `load_decisions`); a recorded handoff choice is not an eligible candidate and is ignored |
@@ -117,7 +116,7 @@ The library raises the same codes, one class per code. `WorkflowError` is the ba
 ```
 
 - `[STAGE: - complete=true]` when every stage is done or skipped.
-- `[BOUND_ELSEWHERE: workflow=<id>]` follows `[WORKFLOW]` when the unit is bound to another workflow than the one evaluated; `[DRIFT: recorded=... current=...]` when the bound definition changed ([Binding and Drift](../../workflow/definition-and-checks.md#3-binding-and-drift)).
+- `[BOUND_ELSEWHERE: workflow=<id>]` follows `[WORKFLOW]` when the unit is bound to another workflow than the one evaluated.
 - `[SKIPPED: <id> reason=...]` names the policy entry that skipped the stage: `stages.<id>=off` or `approvals.<gate>=off`.
 - `[WAITING]` appears when the current stage's gate is asked (every exit check holds), or when every unmet check is `runner` or `human`. Its class is `human` when any unmet check is human.
 - `[GATE: <name> policy=P satisfied=yes|no source=S]` appears only for a gated current stage. `source` is `policy` (`auto`), `given` (`--given`), `decision:<file>` (an accepted record) or `-` while not satisfied. It ends with `held=yes` while the unit's envelopes hold the gate.
@@ -163,7 +162,6 @@ When the workflow is complete and declares `next` candidates (and `approvals.han
   "gate": null,
   "waiting": null,
   "complete": false,
-  "drift": null,
   "handoff": null,
   "requests": [],
   "stale_approvals": [],
@@ -185,10 +183,10 @@ When the workflow is complete and declares `next` candidates (and `approvals.han
 
 The other commands:
 
-- `show --format json`: the parsed document plus `hash`, `layout`, the effective `anchor`, `approvals`, `stages_off`, `ok` and `errors` (the definition's problems, with `where`). `show --unit <dir>` describes the definition the unit is bound to (else `[workflow].default`), loaded unvalidated like `show <ref>` so its problems are reported, not raised, and adds `binding` (`workflow`, `workflow_hash`, `workflow_history`, `drift`) and, in text, a `[BINDING: workflow=W hash=H drift=true|false]` line after the document.
-- `validate --format json`: `{"ok", "roles_checked", "definitions": [{"id", "path", "ok", "hash", "errors"}], "errors", "notices"}`. A definition's own `errors` carry `where` (`WORKFLOW_DEFINITION_INVALID`, `WORKFLOW_CHECK_INVALID` or `ROLE_UNKNOWN`, exit `1`); the top-level `errors` hold the files that could not be loaded (`WORKFLOW_DEFINITION_INVALID`, `WORKFLOW_ASSET_MISSING`, exit `2`) and the shared-stage differences (`SHARED_STAGE_MISMATCH`, exit `1`). `notices` hold each definition's warnings (`WORKFLOW_OPTIONAL_STAGE_UNASKED`, with `where`; they leave the definition `ok`) and `WORKFLOW_ROLES_UNCHECKED`. In text, each problem of a definition is a `[PROBLEM: <where>: <message>]` line and a shared-stage difference is `[INVALID: shared stage '<id>' differs between <a> and <b>: <field>]`; warnings and notices follow on stderr.
+- `show --format json`: the parsed document plus `layout`, the effective `anchor`, `approvals`, `stages_off`, `ok` and `errors` (the definition's problems, with `where`). `show --unit <dir>` describes the definition the unit is bound to (else `[workflow].default`), loaded unvalidated like `show <ref>` so its problems are reported, not raised, and adds `binding` (`workflow`, `workflow_history`) and, in text, a `[BINDING: workflow=W]` line after the document.
+- `validate --format json`: `{"ok", "roles_checked", "definitions": [{"id", "path", "ok", "errors"}], "errors", "notices"}`. A definition's own `errors` carry `where` (`WORKFLOW_DEFINITION_INVALID`, `WORKFLOW_CHECK_INVALID` or `ROLE_UNKNOWN`, exit `1`); the top-level `errors` hold the files that could not be loaded (`WORKFLOW_DEFINITION_INVALID`, `WORKFLOW_ASSET_MISSING`, exit `2`) and the shared-stage differences (`SHARED_STAGE_MISMATCH`, exit `1`). `notices` hold each definition's warnings (`WORKFLOW_OPTIONAL_STAGE_UNASKED`, with `where`; they leave the definition `ok`) and `WORKFLOW_ROLES_UNCHECKED`. In text, each problem of a definition is a `[PROBLEM: <where>: <message>]` line and a shared-stage difference is `[INVALID: shared stage '<id>' differs between <a> and <b>: <field>]`; warnings and notices follow on stderr.
 - `checks --format json`: `{"checks": [...]}`, the registry: primitives and the anchor aliases.
-- `list --format json`: `{"units": [{"unit", "anchor", "status", "workflow", "workflow_hash", "history", "error"}]}` across every layout in use; the text form is `[UNIT: <dir> status=S workflow=W anchor=A]`, with `error="..."` for a unit whose anchor cannot be read (in JSON, the `ANCHOR_INVALID` advisory `to_dict()`). `--status <value>` keeps units whose anchor `status` equals a given value (repeatable) and `--exclude-status <value>` drops them; both are exact matches and nothing is excluded by default, so active units are `--exclude-status completed`.
-- `handoff --format json`: `{"unit", "from", "to", "workflow_hash", "policy", "decision", "history"}`.
+- `list --format json`: `{"units": [{"unit", "anchor", "status", "workflow", "history", "error"}]}` across every layout in use; the text form is `[UNIT: <dir> status=S workflow=W anchor=A]`, with `error="..."` for a unit whose anchor cannot be read (in JSON, the `ANCHOR_INVALID` advisory `to_dict()`). `--status <value>` keeps units whose anchor `status` equals a given value (repeatable) and `--exclude-status <value>` drops them; both are exact matches and nothing is excluded by default, so active units are `--exclude-status completed`.
+- `handoff --format json`: `{"unit", "from", "to", "policy", "decision", "history"}`.
 - `requests --format json`: `{"requests": [...], "errors": [...]}`, where `errors` holds the error that stopped `lint-clean`, if any; in text it is a `[LINT_ERROR: "..."]` line after the requests, and the command exits with its exit code as `next` does. `answer` and `return` emit the written record with its `file`.
 - `envelope new`, `worker`, `answer`, `resolution`, `review`, `reverify` and `check`: see [Review Envelopes](../../workflow/envelopes.md).

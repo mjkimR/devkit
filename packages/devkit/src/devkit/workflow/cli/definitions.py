@@ -19,7 +19,6 @@ from devkit.core.cli import (
 from devkit.core.errors import ArgumentError
 from devkit.workflow.cli.app import WORKSPACE, cli, workspace
 from devkit.workflow.definition.checks import Registry
-from devkit.workflow.definition.definition import schema_hash
 from devkit.workflow.render import quote
 
 
@@ -71,7 +70,7 @@ def validate_cmd(workspace_root: str | None, paths: tuple[str, ...], output_form
         for r in report.definitions:
             where = ws.rel(r.doc.path) if r.doc.path else r.doc.id
             if r.ok:
-                click.echo(f"[VALID: {where} id={r.doc.id} hash={schema_hash(r.doc)}]")
+                click.echo(f"[VALID: {where} id={r.doc.id}]")
                 continue
             click.echo(f"[INVALID: {where} id={r.doc.id} problems={len(r.problems)}]")
             for problem in r.problems:

@@ -8,7 +8,7 @@ from datetime import date
 from typing import TYPE_CHECKING, Any
 
 from devkit.workflow.definition.checks import CheckResult
-from devkit.workflow.definition.definition import HANDOFF_GATE, WorkflowDocument, schema_hash
+from devkit.workflow.definition.definition import HANDOFF_GATE, WorkflowDocument
 from devkit.workflow.errors import (
     HandoffChoiceIgnoredError,
     HandoffChoiceRequiredError,
@@ -128,7 +128,6 @@ class HandoffOutcome:
     unit: str
     source: str
     target: str
-    workflow_hash: str
     policy: str
     decision: str | None
     history: tuple[HistoryEntry, ...]
@@ -138,7 +137,6 @@ class HandoffOutcome:
             "unit": self.unit,
             "from": self.source,
             "to": self.target,
-            "workflow_hash": self.workflow_hash,
             "policy": self.policy,
             "decision": self.decision,
             "history": [h.to_dict() for h in self.history],
@@ -265,9 +263,9 @@ def apply_handoff(plan: HandoffPlan, *, when: date | None = None, by: str = "", 
         last = load_decisions(unit.dir).max_seq
         day = (when or date.today()).isoformat()
         binding = unit.binding
-        entry = HistoryEntry(plan.source.id, binding.hash or schema_hash(plan.source), day, last)
+        entry = HistoryEntry(plan.source.id, day, last)
         history = (*binding.history, entry)
-        new_binding = Binding(plan.target.id, schema_hash(plan.target), history)
+        new_binding = Binding(plan.target.id, history)
         replace_text(unit.anchor_path, render_binding(text, new_binding))
     except BaseException:
         if written is not None:
@@ -277,7 +275,6 @@ def apply_handoff(plan: HandoffPlan, *, when: date | None = None, by: str = "", 
         unit=unit.rel,
         source=plan.source.id,
         target=plan.target.id,
-        workflow_hash=new_binding.hash,
         policy=plan.policy,
         decision=decision.file if decision else None,
         history=history,

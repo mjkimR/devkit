@@ -73,15 +73,6 @@ class Waiting:
         return {"class": self.class_.value, "checks": list(self.checks)}
 
 
-@dataclass(frozen=True)
-class Drift:
-    recorded: str
-    current: str
-
-    def to_dict(self) -> dict[str, str]:
-        return {"recorded": self.recorded, "current": self.current}
-
-
 @dataclass
 class UnitEvaluation:
     """The evaluation of a unit against a workflow: where it stands, what is unmet and what comes next.
@@ -105,7 +96,6 @@ class UnitEvaluation:
     gate: GateStatus | None = None
     waiting: Waiting | None = None
     envelope_errors: list[EnvelopeFormatError] = field(default_factory=list)
-    drift: Drift | None = None
     bound_elsewhere: str | None = None  # the workflow the unit is bound to, when evaluated against another
     lint_error: AdvisoryError | None = None
     handoff: Handoff | None = None
@@ -118,11 +108,6 @@ class UnitEvaluation:
     @property
     def complete(self) -> bool:
         return self.stage is None
-
-    @property
-    def blocked_by_drift(self) -> bool:
-        """Drift under in-flight work: the definition changed and a stage is still current."""
-        return self.drift is not None and self.stage is not None
 
     @property
     def errors(self) -> list[AdvisoryError]:
@@ -146,7 +131,6 @@ class UnitEvaluation:
             "gate": self.gate.to_dict() if self.gate else None,
             "waiting": self.waiting.to_dict() if self.waiting else None,
             "complete": self.complete,
-            "drift": self.drift.to_dict() if self.drift else None,
             "handoff": self.handoff.to_dict() if self.handoff else None,
             "requests": [r.to_dict() for r in self.requests],
             "stale_approvals": [d.file for d in self.stale_approvals],

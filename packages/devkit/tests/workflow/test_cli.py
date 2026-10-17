@@ -51,7 +51,7 @@ def test_validate_and_show(workspace: Path) -> None:
         and "[GATE: direction policy=ask]" in show.output
     )
     data = json.loads(_run("show", "-w", str(workspace), "direct-delivery", "--format", "json").stdout)
-    assert data["hash"].startswith("sha256:") and data["approvals"] == {"direction": "ask", "integration": "ask"}
+    assert "hash" not in data and data["approvals"] == {"direction": "ask", "integration": "ask"}
     missing = _run("show", "-w", str(workspace), "missing")
     assert missing.exit_code == 2 and "(WORKFLOW_NOT_FOUND)" in missing.stderr
 
@@ -73,9 +73,7 @@ def test_end_to_end_new_next_bind_envelope_list(workspace: Path) -> None:
     assert created.output.strip() == "[UNIT: .devkit/transient/work/login workflow=direct-delivery anchor=task.md]"
     unit = workspace / ".devkit/transient/work/login"
     anchor = (unit / "task.md").read_text()
-    assert (
-        "workflow: direct-delivery" in anchor and "workflow_hash: sha256:" in anchor and "created: 2026-10-12" in anchor
-    )
+    assert "workflow: direct-delivery" in anchor and "workflow_hash" not in anchor and "created: 2026-10-12" in anchor
     assert (unit / "envelopes").is_dir()
     dup = _run("new", "-w", str(workspace), "login")
     assert dup.exit_code == 2 and "(UNIT_EXISTS)" in dup.stderr
@@ -117,37 +115,21 @@ def test_end_to_end_new_next_bind_envelope_list(workspace: Path) -> None:
     assert as_json["stage"]["id"] == "build-verify" and as_json["bound"] is True and as_json["complete"] is False
 
 
-def test_next_blocks_on_drift_until_rebind(workspace: Path) -> None:
+def test_next_applies_definition_changes_without_rebinding(workspace: Path) -> None:
     write_config(workspace, CONFIG)
     _run("new", "-w", str(workspace), "login")
     unit = ".devkit/transient/work/login"
+    anchor = workspace / unit / "task.md"
+    original = anchor.read_bytes()
     definition = workspace / ".devkit/workflows/direct-delivery.md"
-    definition.write_text(definition.read_text().replace("skills: [wf-build]", "skills: [wf-implement]"))
-
-    blocked = _run("next", "-w", str(workspace), "--unit", unit, "--no-lint")
-    assert blocked.exit_code == 1
-    assert (
-        "[ERROR]  (WORKFLOW_DRIFT)" in blocked.stderr and "[FIX]" in blocked.stderr and "bind --unit" in blocked.stderr
-    )
-    assert "[DETAIL] recorded=sha256:" in blocked.stderr
-    blocked_json = _run("next", "-w", str(workspace), "--unit", unit, "--no-lint", "--format", "json")
-    payload = json.loads(blocked_json.stdout)["error"]
-    assert payload["code"] == "WORKFLOW_DRIFT" and payload["advisory"]["mode"] == "BLOCKED"
-
-    bound = _run("bind", "-w", str(workspace), "--unit", unit)
-    assert bound.exit_code == 0 and bound.output.startswith("[BOUND: direct-delivery hash=sha256:")
-    assert _run("next", "-w", str(workspace), "--unit", unit, "--no-lint").exit_code == 0
-
-
-def test_anchor_status_completed_does_not_bypass_the_drift_guard(workspace: Path) -> None:
-    # R1: only a unit with no current stage is exempt; the anchor's status field is not.
-    write_config(workspace, CONFIG)
-    _run("new", "-w", str(workspace), "login", "--status", "completed")
-    unit = ".devkit/transient/work/login"
-    definition = workspace / ".devkit/workflows/direct-delivery.md"
-    definition.write_text(definition.read_text().replace("skills: [wf-build]", "skills: [wf-implement]"))
+    definition.write_text(definition.read_text().replace("skills: [wf-build]", "skills: [wf-scope]"))
     result = _run("next", "-w", str(workspace), "--unit", unit, "--no-lint")
-    assert result.exit_code == 1 and "(WORKFLOW_DRIFT)" in result.stderr
+    assert result.exit_code == 0, result.stderr
+    assert "wf-scope" in result.stdout
+    data = json.loads(_run("next", "-w", str(workspace), "--unit", unit, "--no-lint", "--format", "json").stdout)
+    assert data["bound"] is True and data["next_skill"] == "wf-scope"
+    assert "drift" not in data
+    assert anchor.read_bytes() == original
 
 
 def test_given_validation_and_gate_flow(workspace: Path) -> None:

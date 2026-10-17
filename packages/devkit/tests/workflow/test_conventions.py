@@ -20,6 +20,7 @@ from devkit.workflow import (
     DecisionRecordError,
     DefinitionProblem,
     EnvelopeFormatError,
+    HistoryEntry,
     WorkflowConfigError,
     WorkflowError,
     Workspace,
@@ -86,7 +87,6 @@ def test_the_base_class_sets_actor_and_retry_once() -> None:
     assert WorkflowConfigError("x").code == "WORKFLOW_CONFIG_INVALID"
     assert workflow_errors.HandoffChoiceRequiredError("x").mode is ActionMode.INTERACTION
     assert workflow_errors.WorkflowAssetMissingError("x").mode is ActionMode.AUTO
-    assert workflow_errors.DriftError("x").mode is ActionMode.BLOCKED
 
 
 # --- full-match grammars --------------------------------------------------------------------------
@@ -158,9 +158,10 @@ def test_bind_unit_rebinds_and_keeps_history(tmp_path: Path) -> None:
     ws = Workspace(_workspace(tmp_path))
     unit = create_unit(ws, "u")
     old = read_binding(unit.anchor_path)
-    write_binding(unit.anchor_path, type(old)("direct-delivery", "sha256:old", old.history))
+    write_binding(unit.anchor_path, type(old)("direct-delivery", (HistoryEntry("triage", "2026-10-12", 2),)))
     rebound = ws.bind_unit(unit.rel)
-    assert rebound.binding.hash == unit.binding.hash and rebound.binding.workflow == "direct-delivery"
+    assert rebound.binding.workflow == "direct-delivery"
+    assert rebound.binding.history == (HistoryEntry("triage", "2026-10-12", 2),)
     assert read_binding(unit.anchor_path) == rebound.binding
 
 
