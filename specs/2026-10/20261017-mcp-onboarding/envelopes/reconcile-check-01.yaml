@@ -1,0 +1,15 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-17T14:36:25.953387Z'
+status: completed
+summary: Independent reviewer confirmed all three reconciliation targets and installation routes match implementation, including user/effective scope and project shadow refusal.
+findings: []
+assumptions:
+- Fresh-context reconcile reviewer with emulated read-only isolation; Git state unchanged.
+checks:
+  contracts: PASS no missing targets or contract mismatches
+diff_scope:
+  base: 48459ebdc9b6a33284cc653131366db2c7e94b13
+  head: f2d20e789904e5acf31e9bb12d0eebde4ef2fc12

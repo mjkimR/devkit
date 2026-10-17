@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-17T14:36:27.299669Z'
+status: completed
+summary: Explicit Codex MCP setup/status and linked optional onboarding are implemented, reviewed and reconciled. User settings remain unchanged; client connection/UI are separate evidence.
+findings: []
+assumptions:
+- Medium effort; required isolated worktree; local integration chosen under PR auto because no external platform review is required.
+- Only Codex user-scoped registration is implemented. No project opt-in schema or automatic sync registration; no real host configuration was changed.
+unverified_areas:
+- Actual current-session MCP connection and native approval UI are not implied by registration tests.
+checks:
+  tests: PASS 2248 complete devkit tests; 111 focused tests including isolated real Codex registration
+  build: PASS consumer wheel/install/CLI/hook/MCP smoke after scope fix
+  lint: PASS Ruff 352 files, Pyright zero errors/warnings and cumulative governance rules
+diff_scope:
+  base: 48459ebdc9b6a33284cc653131366db2c7e94b13
+  head: f2d20e789904e5acf31e9bb12d0eebde4ef2fc12
