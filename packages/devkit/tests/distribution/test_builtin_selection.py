@@ -300,30 +300,46 @@ def _run(*args: str) -> str:
     return result.stdout
 
 
+def _default_selection() -> dict[str, list[str]]:
+    with discover_bundles() as installed:
+        return {
+            bundle.bundle.name: [bundle.bundle.default_preset]
+            for bundle in installed
+            if bundle.auto_selected and bundle.bundle.default_preset
+        }
+
+
 def test_cli_sync_deploys_the_shipped_builtins(target: Path) -> None:
     _run("sync", "--workspace-root", str(target))
-    assert _selection(target) == BUILTINS  # devkit-starter, when installed, is not auto-selected
+    expected = _default_selection()
+    assert _selection(target) == expected  # devkit-starter, when installed, is not auto-selected
     listed = {item["bundle"]: item for item in json.loads(_run("list", "--workspace-root", str(target)))["installed"]}
     assert listed["devkit"]["builtin"] and listed["devkit"]["auto_select"] and listed["devkit"]["selected"] == ["core"]
     assert listed["advisory"]["builtin"] and not listed["advisory"]["opted_out"]
     if "starter" in listed:
         assert not listed["starter"]["builtin"] and listed["starter"]["selected"] is None
+    if "spec" in listed:
+        assert (
+            not listed["spec"]["builtin"] and listed["spec"]["auto_select"] and listed["spec"]["selected"] == ["core"]
+        )
 
 
 def test_cli_remove_persists_false_and_add_clears_it(target: Path) -> None:
+    expected = _default_selection()
+    without_advisory = {k: v for k, v in expected.items() if k != "advisory"}
     _run("sync", "--workspace-root", str(target))
     _run("remove", "advisory", "--workspace-root", str(target))
     assert _config(target)["presets"] == {"advisory": False}
-    assert _selection(target) == {"devkit": ["core"]}
+    assert _selection(target) == without_advisory
     listed = {item["bundle"]: item for item in json.loads(_run("list", "--workspace-root", str(target)))["installed"]}
     assert listed["advisory"]["opted_out"] and listed["advisory"]["selected"] is None
     assert json.loads(_run("status", "--workspace-root", str(target)))["opted_out"] == ["advisory"]
     _run("sync", "--workspace-root", str(target))
-    assert _selection(target) == {"devkit": ["core"]}
+    assert _selection(target) == without_advisory
 
     _run("add", "advisory", "--workspace-root", str(target))
     assert _config(target)["presets"] == {"advisory": "core"}
-    assert _selection(target) == BUILTINS
+    assert _selection(target) == expected
 
     _run("add", "advisory:python", "--workspace-root", str(target))
     assert _config(target)["presets"] == {"advisory": ["core", "python"]}

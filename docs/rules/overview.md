@@ -2,7 +2,7 @@
 
 `devkit.rules` (`devkit rules` CLI) is a deterministic governance engine: repository-level checks, relative Markdown link validation and repair, hygiene checks, and execution of the rules that bundles distribute for their own document models.
 Related: [Evaluation Lifecycle](evaluation-lifecycle.md), [Rule Authoring Guide](rule-authoring.md), [Rules Reference](reference.md),
-[Commit Gate Overview](../gate/overview.md), [In-Repository Bundles](../distribution/in-repo-bundles.md), [Resource Taxonomy](../architecture/resource-taxonomy.md).
+[Commit Gate Overview](../gate/overview.md), [In-Repository Bundles](../distribution/in-repo-bundles.md), [Resource Taxonomy](../architecture/ARCH-08-2-resource-taxonomy.md).
 
 ## 1. Principles
 

@@ -1,0 +1,1511 @@
+{
+  "assets": [
+    {
+      "bundle": "advisory",
+      "id": "agent-advisory",
+      "kind": "instruction",
+      "paths": [
+        ".devkit/managed/advisory/instructions/agent-advisory.md"
+      ]
+    },
+    {
+      "bundle": "authoring",
+      "entrypoints": [
+        ".devkit/managed/authoring/playbooks/skill-authoring/SKILL.md"
+      ],
+      "id": "skill-authoring",
+      "kind": "playbook",
+      "paths": [
+        ".devkit/managed/authoring/playbooks/skill-authoring/SKILL.md",
+        ".devkit/managed/authoring/playbooks/skill-authoring/references/scripts.md"
+      ]
+    },
+    {
+      "bundle": "authoring",
+      "id": "skill-document-size",
+      "kind": "rule",
+      "paths": [
+        ".devkit/managed/authoring/rules/skill_document_size/guide.md",
+        ".devkit/managed/authoring/rules/skill_document_size/rule.py",
+        ".devkit/managed/authoring/rules/skill_document_size/tests/test_rule.py"
+      ]
+    },
+    {
+      "bundle": "devkit",
+      "id": "consumption",
+      "kind": "instruction",
+      "paths": [
+        ".devkit/managed/devkit/instructions/consumption.md"
+      ]
+    },
+    {
+      "bundle": "devkit",
+      "id": "resource-kinds",
+      "kind": "instruction",
+      "paths": [
+        ".devkit/managed/devkit/instructions/resource-kinds.md"
+      ]
+    },
+    {
+      "bundle": "devkit",
+      "id": "in-repo-bundle",
+      "kind": "instruction",
+      "paths": [
+        ".devkit/managed/devkit/instructions/in-repo-bundle.md"
+      ]
+    },
+    {
+      "bundle": "devkit",
+      "id": "devkit-run",
+      "kind": "instruction",
+      "paths": [
+        ".devkit/managed/devkit/instructions/devkit-run.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "contract-authoring",
+      "kind": "instruction",
+      "paths": [
+        ".devkit/managed/spec/instructions/contract-authoring.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "living-spec-writing",
+      "kind": "instruction",
+      "paths": [
+        ".devkit/managed/spec/instructions/living-spec-writing.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "spec-pointer",
+      "kind": "guidance",
+      "paths": [
+        ".devkit/managed/spec/guidance/spec-pointer.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "document-reference",
+      "kind": "rule",
+      "paths": [
+        ".devkit/managed/spec/rules/document_reference/guide.md",
+        ".devkit/managed/spec/rules/document_reference/rule.py",
+        ".devkit/managed/spec/rules/document_reference/tests/test_rule.py"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "id-convention",
+      "kind": "rule",
+      "paths": [
+        ".devkit/managed/spec/rules/id_convention/guide.md",
+        ".devkit/managed/spec/rules/id_convention/rule.py",
+        ".devkit/managed/spec/rules/id_convention/tests/test_rule.py"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "spec-format",
+      "kind": "rule",
+      "paths": [
+        ".devkit/managed/spec/rules/spec_format/guide.md",
+        ".devkit/managed/spec/rules/spec_format/rule.py",
+        ".devkit/managed/spec/rules/spec_format/tests/test_rule.py"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "traceability-link",
+      "kind": "rule",
+      "paths": [
+        ".devkit/managed/spec/rules/traceability_link/guide.md",
+        ".devkit/managed/spec/rules/traceability_link/rule.py",
+        ".devkit/managed/spec/rules/traceability_link/tests/test_rule.py"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "task-coverage",
+      "kind": "rule",
+      "paths": [
+        ".devkit/managed/spec/rules/task_coverage/guide.md",
+        ".devkit/managed/spec/rules/task_coverage/rule.py",
+        ".devkit/managed/spec/rules/task_coverage/tests/test_rule.py"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "spec-lifecycle",
+      "kind": "rule",
+      "paths": [
+        ".devkit/managed/spec/rules/spec_lifecycle/guide.md",
+        ".devkit/managed/spec/rules/spec_lifecycle/rule.py",
+        ".devkit/managed/spec/rules/spec_lifecycle/tests/test_rule.py"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "spec-progress",
+      "kind": "rule",
+      "paths": [
+        ".devkit/managed/spec/rules/spec_progress/guide.md",
+        ".devkit/managed/spec/rules/spec_progress/rule.py",
+        ".devkit/managed/spec/rules/spec_progress/tests/test_rule.py"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "spec",
+      "kind": "skill",
+      "paths": [
+        ".agents/skills/spec/SKILL.md",
+        ".agents/skills/spec/references/branches.md",
+        ".agents/skills/spec/references/classification.md",
+        ".agents/skills/spec/references/completion.md",
+        ".agents/skills/spec/references/effort.md",
+        ".agents/skills/spec/references/envelope.md",
+        ".agents/skills/spec/references/feedback-retirement.md",
+        ".agents/skills/spec/references/git-policy.md",
+        ".agents/skills/spec/references/playbooks.md",
+        ".agents/skills/spec/references/worker-records.md",
+        ".agents/skills/spec/references/worktree.md",
+        ".claude/skills/spec/SKILL.md",
+        ".claude/skills/spec/references/branches.md",
+        ".claude/skills/spec/references/classification.md",
+        ".claude/skills/spec/references/completion.md",
+        ".claude/skills/spec/references/effort.md",
+        ".claude/skills/spec/references/envelope.md",
+        ".claude/skills/spec/references/feedback-retirement.md",
+        ".claude/skills/spec/references/git-policy.md",
+        ".claude/skills/spec/references/playbooks.md",
+        ".claude/skills/spec/references/worker-records.md",
+        ".claude/skills/spec/references/worktree.md",
+        ".devkit/managed/spec/skills/spec/SKILL.md",
+        ".devkit/managed/spec/skills/spec/references/branches.md",
+        ".devkit/managed/spec/skills/spec/references/classification.md",
+        ".devkit/managed/spec/skills/spec/references/completion.md",
+        ".devkit/managed/spec/skills/spec/references/effort.md",
+        ".devkit/managed/spec/skills/spec/references/envelope.md",
+        ".devkit/managed/spec/skills/spec/references/feedback-retirement.md",
+        ".devkit/managed/spec/skills/spec/references/git-policy.md",
+        ".devkit/managed/spec/skills/spec/references/playbooks.md",
+        ".devkit/managed/spec/skills/spec/references/worker-records.md",
+        ".devkit/managed/spec/skills/spec/references/worktree.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "spec-next",
+      "kind": "skill",
+      "paths": [
+        ".agents/skills/spec-next/SKILL.md",
+        ".agents/skills/spec-next/references/post-handoff.md",
+        ".agents/skills/spec-next/references/workflow-signals.md",
+        ".claude/skills/spec-next/SKILL.md",
+        ".claude/skills/spec-next/references/post-handoff.md",
+        ".claude/skills/spec-next/references/workflow-signals.md",
+        ".devkit/managed/spec/skills/spec-next/SKILL.md",
+        ".devkit/managed/spec/skills/spec-next/references/post-handoff.md",
+        ".devkit/managed/spec/skills/spec-next/references/workflow-signals.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "spec-specify",
+      "kind": "skill",
+      "paths": [
+        ".agents/skills/spec-specify/SKILL.md",
+        ".agents/skills/spec-specify/references/bugfix.md",
+        ".agents/skills/spec-specify/references/feature.md",
+        ".claude/skills/spec-specify/SKILL.md",
+        ".claude/skills/spec-specify/references/bugfix.md",
+        ".claude/skills/spec-specify/references/feature.md",
+        ".devkit/managed/spec/skills/spec-specify/SKILL.md",
+        ".devkit/managed/spec/skills/spec-specify/references/bugfix.md",
+        ".devkit/managed/spec/skills/spec-specify/references/feature.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "spec-plan",
+      "kind": "skill",
+      "paths": [
+        ".agents/skills/spec-plan/SKILL.md",
+        ".claude/skills/spec-plan/SKILL.md",
+        ".devkit/managed/spec/skills/spec-plan/SKILL.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "spec-tasks",
+      "kind": "skill",
+      "paths": [
+        ".agents/skills/spec-tasks/SKILL.md",
+        ".claude/skills/spec-tasks/SKILL.md",
+        ".devkit/managed/spec/skills/spec-tasks/SKILL.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "spec-review",
+      "kind": "skill",
+      "paths": [
+        ".agents/skills/spec-review/SKILL.md",
+        ".claude/skills/spec-review/SKILL.md",
+        ".devkit/managed/spec/skills/spec-review/SKILL.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "spec-sync",
+      "kind": "skill",
+      "paths": [
+        ".agents/skills/spec-sync/SKILL.md",
+        ".claude/skills/spec-sync/SKILL.md",
+        ".devkit/managed/spec/skills/spec-sync/SKILL.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "spec-integrate",
+      "kind": "skill",
+      "paths": [
+        ".agents/skills/spec-integrate/SKILL.md",
+        ".claude/skills/spec-integrate/SKILL.md",
+        ".devkit/managed/spec/skills/spec-integrate/SKILL.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "spec-delegate",
+      "kind": "skill",
+      "paths": [
+        ".agents/skills/spec-delegate/SKILL.md",
+        ".agents/skills/spec-delegate/references/hosts.md",
+        ".agents/skills/spec-delegate/references/payload.md",
+        ".agents/skills/spec-delegate/references/worker.md",
+        ".claude/skills/spec-delegate/SKILL.md",
+        ".claude/skills/spec-delegate/references/hosts.md",
+        ".claude/skills/spec-delegate/references/payload.md",
+        ".claude/skills/spec-delegate/references/worker.md",
+        ".devkit/managed/spec/skills/spec-delegate/SKILL.md",
+        ".devkit/managed/spec/skills/spec-delegate/references/hosts.md",
+        ".devkit/managed/spec/skills/spec-delegate/references/payload.md",
+        ".devkit/managed/spec/skills/spec-delegate/references/worker.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "spec-orchestrate",
+      "kind": "skill",
+      "paths": [
+        ".agents/skills/spec-orchestrate/SKILL.md",
+        ".agents/skills/spec-orchestrate/agents/openai.yaml",
+        ".claude/skills/spec-orchestrate/SKILL.md",
+        ".devkit/managed/spec/skills/spec-orchestrate/SKILL.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "spec-rule",
+      "kind": "skill",
+      "paths": [
+        ".agents/skills/spec-rule/SKILL.md",
+        ".agents/skills/spec-rule/references/config.md",
+        ".agents/skills/spec-rule/references/templates.md",
+        ".claude/skills/spec-rule/SKILL.md",
+        ".claude/skills/spec-rule/references/config.md",
+        ".claude/skills/spec-rule/references/templates.md",
+        ".devkit/managed/spec/skills/spec-rule/SKILL.md",
+        ".devkit/managed/spec/skills/spec-rule/references/config.md",
+        ".devkit/managed/spec/skills/spec-rule/references/templates.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "spec-feedback",
+      "kind": "skill",
+      "paths": [
+        ".agents/skills/spec-feedback/SKILL.md",
+        ".agents/skills/spec-feedback/references/categories.md",
+        ".agents/skills/spec-feedback/references/sweep.md",
+        ".agents/skills/spec-feedback/references/template.md",
+        ".claude/skills/spec-feedback/SKILL.md",
+        ".claude/skills/spec-feedback/references/categories.md",
+        ".claude/skills/spec-feedback/references/sweep.md",
+        ".claude/skills/spec-feedback/references/template.md",
+        ".devkit/managed/spec/skills/spec-feedback/SKILL.md",
+        ".devkit/managed/spec/skills/spec-feedback/references/categories.md",
+        ".devkit/managed/spec/skills/spec-feedback/references/sweep.md",
+        ".devkit/managed/spec/skills/spec-feedback/references/template.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "spec-entrypoints",
+      "kind": "skill",
+      "paths": [
+        ".agents/skills/spec-entrypoints/SKILL.md",
+        ".claude/skills/spec-entrypoints/SKILL.md",
+        ".devkit/managed/spec/skills/spec-entrypoints/SKILL.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "docs-skeleton",
+      "kind": "document",
+      "paths": [],
+      "seeded": [
+        "docs/README.md",
+        "docs/architecture/ARCH-01-introduction-and-goals.md",
+        "docs/architecture/ARCH-03-context.md",
+        "docs/architecture/ARCH-05-1-containers.md",
+        "docs/architecture/ARCH-05-2-components.md",
+        "docs/architecture/ARCH-06-runtime-view.md",
+        "docs/architecture/ARCH-07-deployment.md",
+        "docs/architecture/ARCH-08-cross-cutting.md",
+        "docs/architecture/README.md",
+        "docs/capabilities/README.md",
+        "docs/decisions/README.md",
+        "docs/development/ci-cd.md",
+        "docs/development/setup.md",
+        "docs/development/workflow.md",
+        "docs/glossary.md",
+        "docs/glossary.yaml",
+        "docs/materials/README.md",
+        "docs/proposals/README.md",
+        "docs/stories/README.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "reconcile-contract",
+      "kind": "rule",
+      "paths": [
+        ".devkit/managed/spec/rules/reconcile_contract/guide.md",
+        ".devkit/managed/spec/rules/reconcile_contract/rule.py",
+        ".devkit/managed/spec/rules/reconcile_contract/tests/test_rule.py"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "code-entrypoints",
+      "kind": "rule",
+      "paths": [
+        ".devkit/managed/spec/rules/code_entrypoints/guide.md",
+        ".devkit/managed/spec/rules/code_entrypoints/rule.py",
+        ".devkit/managed/spec/rules/code_entrypoints/tests/test_rule.py"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "document-summary",
+      "kind": "rule",
+      "paths": [
+        ".devkit/managed/spec/rules/document_summary/guide.md",
+        ".devkit/managed/spec/rules/document_summary/rule.py",
+        ".devkit/managed/spec/rules/document_summary/tests/test_rule.py"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "templates",
+      "kind": "document",
+      "paths": [
+        ".devkit/managed/spec/templates/capability.md",
+        ".devkit/managed/spec/templates/decision.md",
+        ".devkit/managed/spec/templates/proposal.md",
+        ".devkit/managed/spec/templates/story.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "entrypoints": [
+        ".devkit/managed/spec/workflows/sdd-session-feature.md"
+      ],
+      "id": "sdd-session-feature",
+      "kind": "workflow",
+      "paths": [
+        ".devkit/managed/spec/workflows/sdd-session-feature.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "entrypoints": [
+        ".devkit/managed/spec/workflows/sdd-session-bugfix.md"
+      ],
+      "id": "sdd-session-bugfix",
+      "kind": "workflow",
+      "paths": [
+        ".devkit/managed/spec/workflows/sdd-session-bugfix.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "entrypoints": [
+        ".devkit/managed/spec/workflows/sdd-spec-feature.md"
+      ],
+      "id": "sdd-spec-feature",
+      "kind": "workflow",
+      "paths": [
+        ".devkit/managed/spec/workflows/sdd-spec-feature.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "entrypoints": [
+        ".devkit/managed/spec/workflows/sdd-spec-bugfix.md"
+      ],
+      "id": "sdd-spec-bugfix",
+      "kind": "workflow",
+      "paths": [
+        ".devkit/managed/spec/workflows/sdd-spec-bugfix.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "entrypoints": [
+        ".devkit/managed/spec/workflows/sdd-proposal.md"
+      ],
+      "id": "sdd-proposal",
+      "kind": "workflow",
+      "paths": [
+        ".devkit/managed/spec/workflows/sdd-proposal.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "challenger",
+      "kind": "subagent",
+      "paths": [
+        ".agents/agents/challenger.md",
+        ".claude/agents/challenger.md",
+        ".codex/agents/challenger.toml",
+        ".devkit/managed/spec/subagents/challenger.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "reconcile-reviewer",
+      "kind": "subagent",
+      "paths": [
+        ".agents/agents/reconcile-reviewer.md",
+        ".claude/agents/reconcile-reviewer.md",
+        ".codex/agents/reconcile-reviewer.toml",
+        ".devkit/managed/spec/subagents/reconcile-reviewer.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "code-reviewer",
+      "kind": "subagent",
+      "paths": [
+        ".agents/agents/code-reviewer.md",
+        ".claude/agents/code-reviewer.md",
+        ".codex/agents/code-reviewer.toml",
+        ".devkit/managed/spec/subagents/code-reviewer.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "scout",
+      "kind": "subagent",
+      "paths": [
+        ".agents/agents/scout.md",
+        ".claude/agents/scout.md",
+        ".codex/agents/scout.toml",
+        ".devkit/managed/spec/subagents/scout.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "development-worker",
+      "kind": "subagent",
+      "paths": [
+        ".agents/agents/development-worker.md",
+        ".claude/agents/development-worker.md",
+        ".devkit/managed/spec/subagents/development-worker.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "planning-worker",
+      "kind": "subagent",
+      "paths": [
+        ".agents/agents/planning-worker.md",
+        ".claude/agents/planning-worker.md",
+        ".devkit/managed/spec/subagents/planning-worker.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "entrypoints": [
+        ".devkit/managed/spec/playbooks/brownfield-adoption/SKILL.md"
+      ],
+      "id": "brownfield-adoption",
+      "kind": "playbook",
+      "paths": [
+        ".devkit/managed/spec/playbooks/brownfield-adoption/SKILL.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "entrypoints": [
+        ".devkit/managed/spec/playbooks/feedback-hygiene/SKILL.md"
+      ],
+      "id": "feedback-hygiene",
+      "kind": "playbook",
+      "paths": [
+        ".devkit/managed/spec/playbooks/feedback-hygiene/SKILL.md"
+      ]
+    }
+  ],
+  "files": {
+    ".agents/agents/challenger.md": {
+      "mode": 420,
+      "sha256": "1007227bbe360874576697fc047e88f735d3192ebf483dd7c66f8c614e7e1aa3"
+    },
+    ".agents/agents/code-reviewer.md": {
+      "mode": 420,
+      "sha256": "bc4f723643781a05286b7cc7ef8612d30864065ad3634fbf7c5f5436bec0bc4a"
+    },
+    ".agents/agents/development-worker.md": {
+      "mode": 420,
+      "sha256": "725fa5d2a53779eeee584c63569399345d8e78114631dcefae68c62550566bfa"
+    },
+    ".agents/agents/planning-worker.md": {
+      "mode": 420,
+      "sha256": "68f5ec7c85098bda075f3efd3eadb02789c957bb42fbed3c8c362ccec2f9655d"
+    },
+    ".agents/agents/reconcile-reviewer.md": {
+      "mode": 420,
+      "sha256": "1baf6b06b3305ea1da33c42bb936762276c4149d23de301a5c595f4b5bffb936"
+    },
+    ".agents/agents/scout.md": {
+      "mode": 420,
+      "sha256": "26ef3caf7d03b333977147f8d657b3b45315b104d5c1cb4c5647d737df661d53"
+    },
+    ".agents/skills/devkit-playbook/SKILL.md": {
+      "mode": 420,
+      "sha256": "eb2926a6c126471a57fe552209158d46e0243293b6ace07d7f92d3b31980a05c"
+    },
+    ".agents/skills/devkit-playbook/agents/openai.yaml": {
+      "mode": 420,
+      "sha256": "a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94"
+    },
+    ".agents/skills/devkit-workflow/SKILL.md": {
+      "mode": 420,
+      "sha256": "464364e4550a3e10adc3278b2d8fe0500bffa0e6673f634d753f73a80d6e8d91"
+    },
+    ".agents/skills/devkit-workflow/agents/openai.yaml": {
+      "mode": 420,
+      "sha256": "8619a54e8c098122a7f3881394f84ca89b684366e848233a29ad18b6ec363935"
+    },
+    ".agents/skills/spec-delegate/SKILL.md": {
+      "mode": 420,
+      "sha256": "066821a3069ae73cf88eaab3a1412dc990006d88bd14cd23d6028f04cff88c12"
+    },
+    ".agents/skills/spec-delegate/references/hosts.md": {
+      "mode": 420,
+      "sha256": "36558d8a84a6a066eec416e84803649abe3155c4015b4755480e63e72fd4f4ed"
+    },
+    ".agents/skills/spec-delegate/references/payload.md": {
+      "mode": 420,
+      "sha256": "72314ffa854e41d253715970febf4d480bf5b67e1785fd32247f5cfbd9b2d8d3"
+    },
+    ".agents/skills/spec-delegate/references/worker.md": {
+      "mode": 420,
+      "sha256": "d55ddc833b70416847347f57cfb9f0d69e73e68d45c78d8f0a4a4e692db6662c"
+    },
+    ".agents/skills/spec-entrypoints/SKILL.md": {
+      "mode": 420,
+      "sha256": "21314fe44d446a9e4dbf12e2983c8ae7e1ab62b6c76db1b384f321ffc811be0e"
+    },
+    ".agents/skills/spec-feedback/SKILL.md": {
+      "mode": 420,
+      "sha256": "d65f4e8cdd790b70c3ab83e36e1f9e11f27d41d1207938d8ebce22070c25cb5c"
+    },
+    ".agents/skills/spec-feedback/references/categories.md": {
+      "mode": 420,
+      "sha256": "2c265290bc5bf87553f528503384ea5848ae7e4d598da07d036262cc9e506b33"
+    },
+    ".agents/skills/spec-feedback/references/sweep.md": {
+      "mode": 420,
+      "sha256": "cf188ac3d0d36bf7c5b1722328a1805e03edd43446e003db8eb4b2189b95fa09"
+    },
+    ".agents/skills/spec-feedback/references/template.md": {
+      "mode": 420,
+      "sha256": "7f8b10822a01ba3f14cc3d6128e747fe3859868a7933affb2f5420838554e21d"
+    },
+    ".agents/skills/spec-integrate/SKILL.md": {
+      "mode": 420,
+      "sha256": "52be9d9fd3cc9cd4f65a1e093bf97f1cb62c3a007d1b92c9181b0b6b0c950bc5"
+    },
+    ".agents/skills/spec-next/SKILL.md": {
+      "mode": 420,
+      "sha256": "9e3a668e627c4cdc69e6253c3c1e9877e562ca3e59217ea12b7aa84f8178ea46"
+    },
+    ".agents/skills/spec-next/references/post-handoff.md": {
+      "mode": 420,
+      "sha256": "6ad658c21daaf5251b7b57095d2d1f2b5cc4a7f86d1672d1ab3a62115eeba2b1"
+    },
+    ".agents/skills/spec-next/references/workflow-signals.md": {
+      "mode": 420,
+      "sha256": "69da256801609452b381e9b7ce11f147df3843091f973626d8d3a9c30163ddb5"
+    },
+    ".agents/skills/spec-orchestrate/SKILL.md": {
+      "mode": 420,
+      "sha256": "b594320c26900c02cfd468eca1fffc99b89e9b7065c942b2445888d1bb7a5377"
+    },
+    ".agents/skills/spec-orchestrate/agents/openai.yaml": {
+      "mode": 420,
+      "sha256": "a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94"
+    },
+    ".agents/skills/spec-plan/SKILL.md": {
+      "mode": 420,
+      "sha256": "9cbad5ee9fb04ce7f03827756ee5c2792155ab61498b08f9026d63045bf6cfa7"
+    },
+    ".agents/skills/spec-review/SKILL.md": {
+      "mode": 420,
+      "sha256": "5fe8e668c7d8e702b1cdfd71e7e33a8dda7451b9b8c8dd40a4d3714d553ba7ff"
+    },
+    ".agents/skills/spec-rule/SKILL.md": {
+      "mode": 420,
+      "sha256": "e666075c9e62f4bb46575d40fd70313dd12f4604eaed99b0c066519bea273bc4"
+    },
+    ".agents/skills/spec-rule/references/config.md": {
+      "mode": 420,
+      "sha256": "bfe6d6f60343281e54383c3b8170b220de7e69e0d79d4c13b5bd31f85e54094a"
+    },
+    ".agents/skills/spec-rule/references/templates.md": {
+      "mode": 420,
+      "sha256": "ae1bbd8541266f51fd542cfaccd4f10e14ea2d452c3eb6e5c5d269330973db29"
+    },
+    ".agents/skills/spec-specify/SKILL.md": {
+      "mode": 420,
+      "sha256": "0ed6ba225ac60fbab8600abb89f227ebfb005bfff61c533bf20173d3501063fd"
+    },
+    ".agents/skills/spec-specify/references/bugfix.md": {
+      "mode": 420,
+      "sha256": "8ef32cb788f3f27bbb9d8b9fda643d6ed655bc3089bb0465d91d138dc2fb45fb"
+    },
+    ".agents/skills/spec-specify/references/feature.md": {
+      "mode": 420,
+      "sha256": "7b06de43e2e0796ff347fe7258c03c989920fb33c6f67967d49fda51c9c72651"
+    },
+    ".agents/skills/spec-sync/SKILL.md": {
+      "mode": 420,
+      "sha256": "922a7d2f64ea1de246991a29751c2af26cf56d798379b971cc67e40f03fbbba3"
+    },
+    ".agents/skills/spec-tasks/SKILL.md": {
+      "mode": 420,
+      "sha256": "d7c6e21dd06101ccab9711199428494f8702ba7844c5004d55e6e0ca1b9bcc89"
+    },
+    ".agents/skills/spec/SKILL.md": {
+      "mode": 420,
+      "sha256": "74e664afceabb8baa832579f75520f6581b6c3f0a5c07d9919c8a9156b7ef097"
+    },
+    ".agents/skills/spec/references/branches.md": {
+      "mode": 420,
+      "sha256": "19f4959a88a6636e33191df2840738df3c51f7143508e1536fe786d6f9d885c0"
+    },
+    ".agents/skills/spec/references/classification.md": {
+      "mode": 420,
+      "sha256": "d9973af302ddf0068e0a68997ecb55799ced32bfd5fc5eae58c7fd75a5dffab0"
+    },
+    ".agents/skills/spec/references/completion.md": {
+      "mode": 420,
+      "sha256": "633c08f50590d3a5b74936f1940e36eab0734e6ed0c470e1ca9642981fdbf13c"
+    },
+    ".agents/skills/spec/references/effort.md": {
+      "mode": 420,
+      "sha256": "2f6965fb64e91f1f631c317925f96f05c7919869a3039748f70a83d85e42e284"
+    },
+    ".agents/skills/spec/references/envelope.md": {
+      "mode": 420,
+      "sha256": "485a52e359c8224439cf3ec06174d95bc50523c6e9bb6e9e28d5c759163329d2"
+    },
+    ".agents/skills/spec/references/feedback-retirement.md": {
+      "mode": 420,
+      "sha256": "fc2e3dcfcaa668b375c3a18cd23722734d4328b877d343c22c456e5e58332e21"
+    },
+    ".agents/skills/spec/references/git-policy.md": {
+      "mode": 420,
+      "sha256": "b3b85bd386a111ffd6e9950a1ff0aaed2d758dc902a7d541787e53d6324a1f4f"
+    },
+    ".agents/skills/spec/references/playbooks.md": {
+      "mode": 420,
+      "sha256": "03b69d9d20563634b6819b3d94d7e390ca3955c88f043ce7f690ce6b8815616e"
+    },
+    ".agents/skills/spec/references/worker-records.md": {
+      "mode": 420,
+      "sha256": "1746ece7b8a419c5409d56ddf078a06887c1f6222363b9d8cdeeec5367b0e36d"
+    },
+    ".agents/skills/spec/references/worktree.md": {
+      "mode": 420,
+      "sha256": "330cdbdbc0f144cf767dabb5b1a8cb611d874ea0b529140f4bc37349c2bb73c5"
+    },
+    ".claude/agents/challenger.md": {
+      "mode": 420,
+      "sha256": "42f8f39394161f0a2e852d8b4b842e2521e013c30b9014f7afaabbe2c13c4177"
+    },
+    ".claude/agents/code-reviewer.md": {
+      "mode": 420,
+      "sha256": "9850a29f451b4c76200270ee75bb39e49589a1c4ad5e3daa1adce4c1d5a0f398"
+    },
+    ".claude/agents/development-worker.md": {
+      "mode": 420,
+      "sha256": "ce6b2df04680b31398a646513e03caccbe059a3d39ba3172cc68c16fc4aa4056"
+    },
+    ".claude/agents/planning-worker.md": {
+      "mode": 420,
+      "sha256": "abf7a701b3fb330c70e92331d22079bc4f8f01aa9dabc2e8a754f865b0b83047"
+    },
+    ".claude/agents/reconcile-reviewer.md": {
+      "mode": 420,
+      "sha256": "50eb1c40a761269b56e0c4025c9e9f45a3aac4ea4a6b9c59420ade877bce7992"
+    },
+    ".claude/agents/scout.md": {
+      "mode": 420,
+      "sha256": "3e4f0a890bab5c472bef90d0fa0f46f31028668bd5f44f3c366c2f58c11f311a"
+    },
+    ".claude/skills/devkit-playbook/SKILL.md": {
+      "mode": 420,
+      "sha256": "ee0bc59240c360ede46d87cdd2575779ddd9b553f613b8088adc635040886a2e"
+    },
+    ".claude/skills/devkit-workflow/SKILL.md": {
+      "mode": 420,
+      "sha256": "464364e4550a3e10adc3278b2d8fe0500bffa0e6673f634d753f73a80d6e8d91"
+    },
+    ".claude/skills/spec-delegate/SKILL.md": {
+      "mode": 420,
+      "sha256": "066821a3069ae73cf88eaab3a1412dc990006d88bd14cd23d6028f04cff88c12"
+    },
+    ".claude/skills/spec-delegate/references/hosts.md": {
+      "mode": 420,
+      "sha256": "36558d8a84a6a066eec416e84803649abe3155c4015b4755480e63e72fd4f4ed"
+    },
+    ".claude/skills/spec-delegate/references/payload.md": {
+      "mode": 420,
+      "sha256": "72314ffa854e41d253715970febf4d480bf5b67e1785fd32247f5cfbd9b2d8d3"
+    },
+    ".claude/skills/spec-delegate/references/worker.md": {
+      "mode": 420,
+      "sha256": "d55ddc833b70416847347f57cfb9f0d69e73e68d45c78d8f0a4a4e692db6662c"
+    },
+    ".claude/skills/spec-entrypoints/SKILL.md": {
+      "mode": 420,
+      "sha256": "21314fe44d446a9e4dbf12e2983c8ae7e1ab62b6c76db1b384f321ffc811be0e"
+    },
+    ".claude/skills/spec-feedback/SKILL.md": {
+      "mode": 420,
+      "sha256": "d65f4e8cdd790b70c3ab83e36e1f9e11f27d41d1207938d8ebce22070c25cb5c"
+    },
+    ".claude/skills/spec-feedback/references/categories.md": {
+      "mode": 420,
+      "sha256": "2c265290bc5bf87553f528503384ea5848ae7e4d598da07d036262cc9e506b33"
+    },
+    ".claude/skills/spec-feedback/references/sweep.md": {
+      "mode": 420,
+      "sha256": "cf188ac3d0d36bf7c5b1722328a1805e03edd43446e003db8eb4b2189b95fa09"
+    },
+    ".claude/skills/spec-feedback/references/template.md": {
+      "mode": 420,
+      "sha256": "7f8b10822a01ba3f14cc3d6128e747fe3859868a7933affb2f5420838554e21d"
+    },
+    ".claude/skills/spec-integrate/SKILL.md": {
+      "mode": 420,
+      "sha256": "52be9d9fd3cc9cd4f65a1e093bf97f1cb62c3a007d1b92c9181b0b6b0c950bc5"
+    },
+    ".claude/skills/spec-next/SKILL.md": {
+      "mode": 420,
+      "sha256": "9e3a668e627c4cdc69e6253c3c1e9877e562ca3e59217ea12b7aa84f8178ea46"
+    },
+    ".claude/skills/spec-next/references/post-handoff.md": {
+      "mode": 420,
+      "sha256": "6ad658c21daaf5251b7b57095d2d1f2b5cc4a7f86d1672d1ab3a62115eeba2b1"
+    },
+    ".claude/skills/spec-next/references/workflow-signals.md": {
+      "mode": 420,
+      "sha256": "69da256801609452b381e9b7ce11f147df3843091f973626d8d3a9c30163ddb5"
+    },
+    ".claude/skills/spec-orchestrate/SKILL.md": {
+      "mode": 420,
+      "sha256": "3edee27a84ff45e68c3cf3b4d0d3e49504ea6e681c64cb54aef8ba2da62bdf6a"
+    },
+    ".claude/skills/spec-plan/SKILL.md": {
+      "mode": 420,
+      "sha256": "9cbad5ee9fb04ce7f03827756ee5c2792155ab61498b08f9026d63045bf6cfa7"
+    },
+    ".claude/skills/spec-review/SKILL.md": {
+      "mode": 420,
+      "sha256": "5fe8e668c7d8e702b1cdfd71e7e33a8dda7451b9b8c8dd40a4d3714d553ba7ff"
+    },
+    ".claude/skills/spec-rule/SKILL.md": {
+      "mode": 420,
+      "sha256": "e666075c9e62f4bb46575d40fd70313dd12f4604eaed99b0c066519bea273bc4"
+    },
+    ".claude/skills/spec-rule/references/config.md": {
+      "mode": 420,
+      "sha256": "bfe6d6f60343281e54383c3b8170b220de7e69e0d79d4c13b5bd31f85e54094a"
+    },
+    ".claude/skills/spec-rule/references/templates.md": {
+      "mode": 420,
+      "sha256": "ae1bbd8541266f51fd542cfaccd4f10e14ea2d452c3eb6e5c5d269330973db29"
+    },
+    ".claude/skills/spec-specify/SKILL.md": {
+      "mode": 420,
+      "sha256": "0ed6ba225ac60fbab8600abb89f227ebfb005bfff61c533bf20173d3501063fd"
+    },
+    ".claude/skills/spec-specify/references/bugfix.md": {
+      "mode": 420,
+      "sha256": "8ef32cb788f3f27bbb9d8b9fda643d6ed655bc3089bb0465d91d138dc2fb45fb"
+    },
+    ".claude/skills/spec-specify/references/feature.md": {
+      "mode": 420,
+      "sha256": "7b06de43e2e0796ff347fe7258c03c989920fb33c6f67967d49fda51c9c72651"
+    },
+    ".claude/skills/spec-sync/SKILL.md": {
+      "mode": 420,
+      "sha256": "922a7d2f64ea1de246991a29751c2af26cf56d798379b971cc67e40f03fbbba3"
+    },
+    ".claude/skills/spec-tasks/SKILL.md": {
+      "mode": 420,
+      "sha256": "d7c6e21dd06101ccab9711199428494f8702ba7844c5004d55e6e0ca1b9bcc89"
+    },
+    ".claude/skills/spec/SKILL.md": {
+      "mode": 420,
+      "sha256": "74e664afceabb8baa832579f75520f6581b6c3f0a5c07d9919c8a9156b7ef097"
+    },
+    ".claude/skills/spec/references/branches.md": {
+      "mode": 420,
+      "sha256": "19f4959a88a6636e33191df2840738df3c51f7143508e1536fe786d6f9d885c0"
+    },
+    ".claude/skills/spec/references/classification.md": {
+      "mode": 420,
+      "sha256": "d9973af302ddf0068e0a68997ecb55799ced32bfd5fc5eae58c7fd75a5dffab0"
+    },
+    ".claude/skills/spec/references/completion.md": {
+      "mode": 420,
+      "sha256": "633c08f50590d3a5b74936f1940e36eab0734e6ed0c470e1ca9642981fdbf13c"
+    },
+    ".claude/skills/spec/references/effort.md": {
+      "mode": 420,
+      "sha256": "2f6965fb64e91f1f631c317925f96f05c7919869a3039748f70a83d85e42e284"
+    },
+    ".claude/skills/spec/references/envelope.md": {
+      "mode": 420,
+      "sha256": "485a52e359c8224439cf3ec06174d95bc50523c6e9bb6e9e28d5c759163329d2"
+    },
+    ".claude/skills/spec/references/feedback-retirement.md": {
+      "mode": 420,
+      "sha256": "fc2e3dcfcaa668b375c3a18cd23722734d4328b877d343c22c456e5e58332e21"
+    },
+    ".claude/skills/spec/references/git-policy.md": {
+      "mode": 420,
+      "sha256": "b3b85bd386a111ffd6e9950a1ff0aaed2d758dc902a7d541787e53d6324a1f4f"
+    },
+    ".claude/skills/spec/references/playbooks.md": {
+      "mode": 420,
+      "sha256": "03b69d9d20563634b6819b3d94d7e390ca3955c88f043ce7f690ce6b8815616e"
+    },
+    ".claude/skills/spec/references/worker-records.md": {
+      "mode": 420,
+      "sha256": "1746ece7b8a419c5409d56ddf078a06887c1f6222363b9d8cdeeec5367b0e36d"
+    },
+    ".claude/skills/spec/references/worktree.md": {
+      "mode": 420,
+      "sha256": "330cdbdbc0f144cf767dabb5b1a8cb611d874ea0b529140f4bc37349c2bb73c5"
+    },
+    ".codex/agents/challenger.toml": {
+      "mode": 420,
+      "sha256": "d6899d2b7c9498ada12ea9d22080744ad4440d4aebc120f34f728db6547041d6"
+    },
+    ".codex/agents/code-reviewer.toml": {
+      "mode": 420,
+      "sha256": "d79a19e1a9e48d265650292136620d3632cfc150c381bb6860a11e525d74d28a"
+    },
+    ".codex/agents/reconcile-reviewer.toml": {
+      "mode": 420,
+      "sha256": "fae51aa8996e12ec6ba47c4e33ad17399c83f23e97f7dc0c522e875796974f56"
+    },
+    ".codex/agents/scout.toml": {
+      "mode": 420,
+      "sha256": "4582f15cd7f41b9c2b943803c07248f16e8997a1d2765edf4ae7146faabd3aca"
+    },
+    ".devkit/managed/_devkit/skills/devkit-playbook/SKILL.md": {
+      "mode": 420,
+      "sha256": "eb2926a6c126471a57fe552209158d46e0243293b6ace07d7f92d3b31980a05c"
+    },
+    ".devkit/managed/_devkit/skills/devkit-playbook/agents/openai.yaml": {
+      "mode": 420,
+      "sha256": "a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94"
+    },
+    ".devkit/managed/_devkit/skills/devkit-workflow/SKILL.md": {
+      "mode": 420,
+      "sha256": "464364e4550a3e10adc3278b2d8fe0500bffa0e6673f634d753f73a80d6e8d91"
+    },
+    ".devkit/managed/_devkit/skills/devkit-workflow/agents/openai.yaml": {
+      "mode": 420,
+      "sha256": "8619a54e8c098122a7f3881394f84ca89b684366e848233a29ad18b6ec363935"
+    },
+    ".devkit/managed/advisory/bundle.toml": {
+      "mode": 420,
+      "sha256": "e9913636f7939ef3658ba98f4a2afd0bc66419dee96064089222cfbad030766f"
+    },
+    ".devkit/managed/advisory/instructions/agent-advisory.md": {
+      "mode": 420,
+      "sha256": "d6a5e93bfe6dba0f9b55ca33e16ab5bbf37f232856f26d71e4e57880cf139866"
+    },
+    ".devkit/managed/authoring/bundle.toml": {
+      "mode": 420,
+      "sha256": "1286142919408f968203e545952ff7bc77d5bf8e65c17b0f5b29eebbbfb8d60c"
+    },
+    ".devkit/managed/authoring/playbooks/skill-authoring/SKILL.md": {
+      "mode": 420,
+      "sha256": "7f6a0b5e77e6a5ab0b95e935bf84e24eba84dc3c097baaed9600d3eb2b6d8621"
+    },
+    ".devkit/managed/authoring/playbooks/skill-authoring/references/scripts.md": {
+      "mode": 420,
+      "sha256": "31427a5453733263ae25a37299a118fbcedc2756827ae1776429428caa8a863b"
+    },
+    ".devkit/managed/authoring/rules/skill_document_size/guide.md": {
+      "mode": 420,
+      "sha256": "e087a5c4c3b46235318b78f5cc84b1f201089b27ab53af6725fd42fca285a7e0"
+    },
+    ".devkit/managed/authoring/rules/skill_document_size/rule.py": {
+      "mode": 420,
+      "sha256": "494cac5b6bcd781f42fe4f155bdb830563e656650b87e5e8cd2b64ff22792841"
+    },
+    ".devkit/managed/authoring/rules/skill_document_size/tests/test_rule.py": {
+      "mode": 420,
+      "sha256": "e81971f82c6b676cae8a8d7ed0a368961194ce0ee0801cbc833d9376e504600d"
+    },
+    ".devkit/managed/devkit/AGENTS.md": {
+      "mode": 420,
+      "sha256": "0b941ff21b95a3f3509e7d6632059a06be5c0896a6082e676d484d1ffad6e6ad"
+    },
+    ".devkit/managed/devkit/bundle.toml": {
+      "mode": 420,
+      "sha256": "202db55b9c1a361f225198bf31a5b6c1d624a060b84105c29836cc14815cea1c"
+    },
+    ".devkit/managed/devkit/instructions/consumption.md": {
+      "mode": 420,
+      "sha256": "6a38c82795019ff69d8fa6ba218b3d624c7fc1c9e59bd9e8d8863faeee8ff69d"
+    },
+    ".devkit/managed/devkit/instructions/devkit-run.md": {
+      "mode": 420,
+      "sha256": "9c1271816f3b02c4c7da0d3c0fbd56728b09f0382c154a49ab0861b7a4dae854"
+    },
+    ".devkit/managed/devkit/instructions/in-repo-bundle.md": {
+      "mode": 420,
+      "sha256": "503688267d190ce23021df0648c40ef2baef7474c4de2c85b4c7addf91232861"
+    },
+    ".devkit/managed/devkit/instructions/resource-kinds.md": {
+      "mode": 420,
+      "sha256": "736b1ecc9a8c1bb374dd80ce71ec46e2dc629bd5c10b468599c010e5de54cd0e"
+    },
+    ".devkit/managed/spec/AGENTS.md": {
+      "mode": 420,
+      "sha256": "2f4c2450d4ee59d67a664c7dcb49d4f62cd5b4a1e40a89e7752d748847f40adf"
+    },
+    ".devkit/managed/spec/bundle.toml": {
+      "mode": 420,
+      "sha256": "d83b0f9e27d3f581fd0cdce0d3044b80d8fb00d397e3c1d3b9717c0a0cf32478"
+    },
+    ".devkit/managed/spec/guidance/spec-pointer.md": {
+      "mode": 420,
+      "sha256": "196ef5be773845c62a7e409666370746b8866d2ba5fae99811fb250361ec3d94"
+    },
+    ".devkit/managed/spec/instructions/contract-authoring.md": {
+      "mode": 420,
+      "sha256": "22a117a268d05b00a363b1d2e471912a44c4c2c5df3c48f7558deac00e0d6043"
+    },
+    ".devkit/managed/spec/instructions/living-spec-writing.md": {
+      "mode": 420,
+      "sha256": "1190450fb9f58535cff671e512ca3435b257f68699ff51b5a0c100a1b245ebbf"
+    },
+    ".devkit/managed/spec/playbooks/brownfield-adoption/SKILL.md": {
+      "mode": 420,
+      "sha256": "1b45d958f2d762713ffb458062efedf48aafb85ce6095543294c550a110bfee5"
+    },
+    ".devkit/managed/spec/playbooks/feedback-hygiene/SKILL.md": {
+      "mode": 420,
+      "sha256": "d13780b90245dd3d4cb0fef00d383d85867169e9384a85f969a53f6235155a30"
+    },
+    ".devkit/managed/spec/rules/code_entrypoints/guide.md": {
+      "mode": 420,
+      "sha256": "9a7fdc8e440c99a19b8b76c107ce7717e4cb191774491dd12e502d2ac2d28818"
+    },
+    ".devkit/managed/spec/rules/code_entrypoints/rule.py": {
+      "mode": 420,
+      "sha256": "678076f730cb2a8c372b10c833943b349002f218f62c7343393a389059d8fcf4"
+    },
+    ".devkit/managed/spec/rules/code_entrypoints/tests/test_rule.py": {
+      "mode": 420,
+      "sha256": "927d06e0637c87fe19d81a332317e78d8b7b8d640d2507e1c5a508c067908cec"
+    },
+    ".devkit/managed/spec/rules/document_reference/guide.md": {
+      "mode": 420,
+      "sha256": "2d63d1c9acda9eecea16162eed17d82011b3d532b4a1c80aed6bce777137c6d2"
+    },
+    ".devkit/managed/spec/rules/document_reference/rule.py": {
+      "mode": 420,
+      "sha256": "d69be1444da8d025f661b28d326479f35a14c0a3ac2fff599c547fbdbfbbb5d0"
+    },
+    ".devkit/managed/spec/rules/document_reference/tests/test_rule.py": {
+      "mode": 420,
+      "sha256": "7c8d6d7a304cbe261594bb66abaec29b833fe11250fafcf927da51573722b585"
+    },
+    ".devkit/managed/spec/rules/document_summary/guide.md": {
+      "mode": 420,
+      "sha256": "f0c524972cf17726b2d4b67248730409d3447c241537e211cb151f74a5e24a9d"
+    },
+    ".devkit/managed/spec/rules/document_summary/rule.py": {
+      "mode": 420,
+      "sha256": "732af908288da21f1a38dcca6cae4f4ebad2c984026d6757997b17738cb8e310"
+    },
+    ".devkit/managed/spec/rules/document_summary/tests/test_rule.py": {
+      "mode": 420,
+      "sha256": "71e4317a005bedfc4b7386ec9b7603efe1161a60e2d131cbdb8a996f365fbb49"
+    },
+    ".devkit/managed/spec/rules/id_convention/guide.md": {
+      "mode": 420,
+      "sha256": "6672b9072b62c38d9d1afc441dd384a87d62c5aa674b8f88bd3ae210c1b2450b"
+    },
+    ".devkit/managed/spec/rules/id_convention/rule.py": {
+      "mode": 420,
+      "sha256": "61666df1fb51f49a52aafa6cc98e900de499a608557aa04d63cacf93b356e9af"
+    },
+    ".devkit/managed/spec/rules/id_convention/tests/test_rule.py": {
+      "mode": 420,
+      "sha256": "07f101ba3db63fb95c65c61dd5dec12133adb36cb06854fada0fdc84c66338b6"
+    },
+    ".devkit/managed/spec/rules/reconcile_contract/guide.md": {
+      "mode": 420,
+      "sha256": "850e34799c5a339a2c66991c590ff719c25b8f374c1535d4a5af14680350a3f4"
+    },
+    ".devkit/managed/spec/rules/reconcile_contract/rule.py": {
+      "mode": 420,
+      "sha256": "32e2d45d73ba643289a3e71a9a505ff68b67fe11574af13f062998db939630b4"
+    },
+    ".devkit/managed/spec/rules/reconcile_contract/tests/test_rule.py": {
+      "mode": 420,
+      "sha256": "568fe21af92160fe4eee143c9a516fb731c093450dd4bb6dc80d9fd1923f109e"
+    },
+    ".devkit/managed/spec/rules/spec_format/guide.md": {
+      "mode": 420,
+      "sha256": "4cf7d9d781ea62c994b1b9e3b988c554f8d205896d282c0ab119bac66fe7b038"
+    },
+    ".devkit/managed/spec/rules/spec_format/rule.py": {
+      "mode": 420,
+      "sha256": "74b4ec56bc5fe1b7ad4d6d472c02ad16888fd9b35f2081a0b0512e659057635a"
+    },
+    ".devkit/managed/spec/rules/spec_format/tests/test_rule.py": {
+      "mode": 420,
+      "sha256": "b493889304528e6ab8d75d1c39629836c3aeec2c5c2395087811b4ed19148b55"
+    },
+    ".devkit/managed/spec/rules/spec_lifecycle/guide.md": {
+      "mode": 420,
+      "sha256": "54ae89c4cb9de8c40387c75b772bb4545118f8070f3a5e8ec17b33b5793fbeaa"
+    },
+    ".devkit/managed/spec/rules/spec_lifecycle/rule.py": {
+      "mode": 420,
+      "sha256": "93e4adad80f7edb8b6a583c091289754d181ec8db801844b00d656449a495eec"
+    },
+    ".devkit/managed/spec/rules/spec_lifecycle/tests/test_rule.py": {
+      "mode": 420,
+      "sha256": "9ff4b85835d573373866c090e8b4717e94fc18a9d6f9b6ab25a338d12f1b7c37"
+    },
+    ".devkit/managed/spec/rules/spec_progress/guide.md": {
+      "mode": 420,
+      "sha256": "579e2134ebe19129fb70250959c9fd6f546178ab48fc908b73ffaf54baadc6a3"
+    },
+    ".devkit/managed/spec/rules/spec_progress/rule.py": {
+      "mode": 420,
+      "sha256": "a9b052ba781ecfea65a0a25b27ca1abfe29291a4129935e190756546d3b4a8d7"
+    },
+    ".devkit/managed/spec/rules/spec_progress/tests/test_rule.py": {
+      "mode": 420,
+      "sha256": "7a3f96fadacad9607b37c164e3040ab289053683fd8cd1aedef86dac3a3d219b"
+    },
+    ".devkit/managed/spec/rules/task_coverage/guide.md": {
+      "mode": 420,
+      "sha256": "30cefd334447405ad360eb6b80ece2fa0eb5ba3f30e4b8df7826118214c9e87d"
+    },
+    ".devkit/managed/spec/rules/task_coverage/rule.py": {
+      "mode": 420,
+      "sha256": "604106c8ffbfd637af79e8e8da5aa3dd39da64d62af9d1d7b304ee6ddca5b106"
+    },
+    ".devkit/managed/spec/rules/task_coverage/tests/test_rule.py": {
+      "mode": 420,
+      "sha256": "4becb627451ba4a907765867c4579771b6eff83e63e443f2d140aa496d601165"
+    },
+    ".devkit/managed/spec/rules/traceability_link/guide.md": {
+      "mode": 420,
+      "sha256": "66d5e6f388a635d68995dc694b3380e4681292157fdb448b31c4ff4e051d0eb6"
+    },
+    ".devkit/managed/spec/rules/traceability_link/rule.py": {
+      "mode": 420,
+      "sha256": "0f6f4a223a506658a7dd52105fa1c722e00dee348531f3c9ed2e47c63fdfa121"
+    },
+    ".devkit/managed/spec/rules/traceability_link/tests/test_rule.py": {
+      "mode": 420,
+      "sha256": "9d3fb0c852b118c52a6349fff38f1ccddc245f6442fc6541a52c3c5f7c16df86"
+    },
+    ".devkit/managed/spec/skills/spec-delegate/SKILL.md": {
+      "mode": 420,
+      "sha256": "066821a3069ae73cf88eaab3a1412dc990006d88bd14cd23d6028f04cff88c12"
+    },
+    ".devkit/managed/spec/skills/spec-delegate/references/hosts.md": {
+      "mode": 420,
+      "sha256": "36558d8a84a6a066eec416e84803649abe3155c4015b4755480e63e72fd4f4ed"
+    },
+    ".devkit/managed/spec/skills/spec-delegate/references/payload.md": {
+      "mode": 420,
+      "sha256": "72314ffa854e41d253715970febf4d480bf5b67e1785fd32247f5cfbd9b2d8d3"
+    },
+    ".devkit/managed/spec/skills/spec-delegate/references/worker.md": {
+      "mode": 420,
+      "sha256": "d55ddc833b70416847347f57cfb9f0d69e73e68d45c78d8f0a4a4e692db6662c"
+    },
+    ".devkit/managed/spec/skills/spec-entrypoints/SKILL.md": {
+      "mode": 420,
+      "sha256": "21314fe44d446a9e4dbf12e2983c8ae7e1ab62b6c76db1b384f321ffc811be0e"
+    },
+    ".devkit/managed/spec/skills/spec-feedback/SKILL.md": {
+      "mode": 420,
+      "sha256": "d65f4e8cdd790b70c3ab83e36e1f9e11f27d41d1207938d8ebce22070c25cb5c"
+    },
+    ".devkit/managed/spec/skills/spec-feedback/references/categories.md": {
+      "mode": 420,
+      "sha256": "2c265290bc5bf87553f528503384ea5848ae7e4d598da07d036262cc9e506b33"
+    },
+    ".devkit/managed/spec/skills/spec-feedback/references/sweep.md": {
+      "mode": 420,
+      "sha256": "cf188ac3d0d36bf7c5b1722328a1805e03edd43446e003db8eb4b2189b95fa09"
+    },
+    ".devkit/managed/spec/skills/spec-feedback/references/template.md": {
+      "mode": 420,
+      "sha256": "7f8b10822a01ba3f14cc3d6128e747fe3859868a7933affb2f5420838554e21d"
+    },
+    ".devkit/managed/spec/skills/spec-integrate/SKILL.md": {
+      "mode": 420,
+      "sha256": "52be9d9fd3cc9cd4f65a1e093bf97f1cb62c3a007d1b92c9181b0b6b0c950bc5"
+    },
+    ".devkit/managed/spec/skills/spec-next/SKILL.md": {
+      "mode": 420,
+      "sha256": "9e3a668e627c4cdc69e6253c3c1e9877e562ca3e59217ea12b7aa84f8178ea46"
+    },
+    ".devkit/managed/spec/skills/spec-next/references/post-handoff.md": {
+      "mode": 420,
+      "sha256": "6ad658c21daaf5251b7b57095d2d1f2b5cc4a7f86d1672d1ab3a62115eeba2b1"
+    },
+    ".devkit/managed/spec/skills/spec-next/references/workflow-signals.md": {
+      "mode": 420,
+      "sha256": "69da256801609452b381e9b7ce11f147df3843091f973626d8d3a9c30163ddb5"
+    },
+    ".devkit/managed/spec/skills/spec-orchestrate/SKILL.md": {
+      "mode": 420,
+      "sha256": "b594320c26900c02cfd468eca1fffc99b89e9b7065c942b2445888d1bb7a5377"
+    },
+    ".devkit/managed/spec/skills/spec-plan/SKILL.md": {
+      "mode": 420,
+      "sha256": "9cbad5ee9fb04ce7f03827756ee5c2792155ab61498b08f9026d63045bf6cfa7"
+    },
+    ".devkit/managed/spec/skills/spec-review/SKILL.md": {
+      "mode": 420,
+      "sha256": "5fe8e668c7d8e702b1cdfd71e7e33a8dda7451b9b8c8dd40a4d3714d553ba7ff"
+    },
+    ".devkit/managed/spec/skills/spec-rule/SKILL.md": {
+      "mode": 420,
+      "sha256": "e666075c9e62f4bb46575d40fd70313dd12f4604eaed99b0c066519bea273bc4"
+    },
+    ".devkit/managed/spec/skills/spec-rule/references/config.md": {
+      "mode": 420,
+      "sha256": "bfe6d6f60343281e54383c3b8170b220de7e69e0d79d4c13b5bd31f85e54094a"
+    },
+    ".devkit/managed/spec/skills/spec-rule/references/templates.md": {
+      "mode": 420,
+      "sha256": "ae1bbd8541266f51fd542cfaccd4f10e14ea2d452c3eb6e5c5d269330973db29"
+    },
+    ".devkit/managed/spec/skills/spec-specify/SKILL.md": {
+      "mode": 420,
+      "sha256": "0ed6ba225ac60fbab8600abb89f227ebfb005bfff61c533bf20173d3501063fd"
+    },
+    ".devkit/managed/spec/skills/spec-specify/references/bugfix.md": {
+      "mode": 420,
+      "sha256": "8ef32cb788f3f27bbb9d8b9fda643d6ed655bc3089bb0465d91d138dc2fb45fb"
+    },
+    ".devkit/managed/spec/skills/spec-specify/references/feature.md": {
+      "mode": 420,
+      "sha256": "7b06de43e2e0796ff347fe7258c03c989920fb33c6f67967d49fda51c9c72651"
+    },
+    ".devkit/managed/spec/skills/spec-sync/SKILL.md": {
+      "mode": 420,
+      "sha256": "922a7d2f64ea1de246991a29751c2af26cf56d798379b971cc67e40f03fbbba3"
+    },
+    ".devkit/managed/spec/skills/spec-tasks/SKILL.md": {
+      "mode": 420,
+      "sha256": "d7c6e21dd06101ccab9711199428494f8702ba7844c5004d55e6e0ca1b9bcc89"
+    },
+    ".devkit/managed/spec/skills/spec/SKILL.md": {
+      "mode": 420,
+      "sha256": "74e664afceabb8baa832579f75520f6581b6c3f0a5c07d9919c8a9156b7ef097"
+    },
+    ".devkit/managed/spec/skills/spec/references/branches.md": {
+      "mode": 420,
+      "sha256": "19f4959a88a6636e33191df2840738df3c51f7143508e1536fe786d6f9d885c0"
+    },
+    ".devkit/managed/spec/skills/spec/references/classification.md": {
+      "mode": 420,
+      "sha256": "d9973af302ddf0068e0a68997ecb55799ced32bfd5fc5eae58c7fd75a5dffab0"
+    },
+    ".devkit/managed/spec/skills/spec/references/completion.md": {
+      "mode": 420,
+      "sha256": "633c08f50590d3a5b74936f1940e36eab0734e6ed0c470e1ca9642981fdbf13c"
+    },
+    ".devkit/managed/spec/skills/spec/references/effort.md": {
+      "mode": 420,
+      "sha256": "2f6965fb64e91f1f631c317925f96f05c7919869a3039748f70a83d85e42e284"
+    },
+    ".devkit/managed/spec/skills/spec/references/envelope.md": {
+      "mode": 420,
+      "sha256": "485a52e359c8224439cf3ec06174d95bc50523c6e9bb6e9e28d5c759163329d2"
+    },
+    ".devkit/managed/spec/skills/spec/references/feedback-retirement.md": {
+      "mode": 420,
+      "sha256": "fc2e3dcfcaa668b375c3a18cd23722734d4328b877d343c22c456e5e58332e21"
+    },
+    ".devkit/managed/spec/skills/spec/references/git-policy.md": {
+      "mode": 420,
+      "sha256": "b3b85bd386a111ffd6e9950a1ff0aaed2d758dc902a7d541787e53d6324a1f4f"
+    },
+    ".devkit/managed/spec/skills/spec/references/playbooks.md": {
+      "mode": 420,
+      "sha256": "03b69d9d20563634b6819b3d94d7e390ca3955c88f043ce7f690ce6b8815616e"
+    },
+    ".devkit/managed/spec/skills/spec/references/worker-records.md": {
+      "mode": 420,
+      "sha256": "1746ece7b8a419c5409d56ddf078a06887c1f6222363b9d8cdeeec5367b0e36d"
+    },
+    ".devkit/managed/spec/skills/spec/references/worktree.md": {
+      "mode": 420,
+      "sha256": "330cdbdbc0f144cf767dabb5b1a8cb611d874ea0b529140f4bc37349c2bb73c5"
+    },
+    ".devkit/managed/spec/subagents/challenger.md": {
+      "mode": 420,
+      "sha256": "73d16b19a84e9d2e08c6c97309607cc5928a1a09b71135c4e25d1c028acb1ecb"
+    },
+    ".devkit/managed/spec/subagents/code-reviewer.md": {
+      "mode": 420,
+      "sha256": "ff5146d13431d95c19c9e5733a9465b3f3871a4c2be48cd07a5aeb6350503866"
+    },
+    ".devkit/managed/spec/subagents/development-worker.md": {
+      "mode": 420,
+      "sha256": "86590dc7fefbd4de01fe0ae5871a6d4fd5b9c40fdee6db06918b2390aa6534e2"
+    },
+    ".devkit/managed/spec/subagents/planning-worker.md": {
+      "mode": 420,
+      "sha256": "6f51a2bb865efc4993dca17c4ab8fd596946e2ba74e87565ed36339121c0e50a"
+    },
+    ".devkit/managed/spec/subagents/reconcile-reviewer.md": {
+      "mode": 420,
+      "sha256": "74ece6259b5604896b10a5acb430a9441c61cc94d954091a7b378c484f5410e3"
+    },
+    ".devkit/managed/spec/subagents/scout.md": {
+      "mode": 420,
+      "sha256": "87e12d28a4c92826105055b7772d0d9cd9d81ad84062d0a484d0811aa7487ad1"
+    },
+    ".devkit/managed/spec/templates/capability.md": {
+      "mode": 420,
+      "sha256": "680ee3438a2954e17faa19f89b307f7fec653f59cb3517d658a51a44bcc097b0"
+    },
+    ".devkit/managed/spec/templates/decision.md": {
+      "mode": 420,
+      "sha256": "15d30aff07d9a61b77566f84d58b31925f2299cfd6689cac35a9c51237811ec9"
+    },
+    ".devkit/managed/spec/templates/proposal.md": {
+      "mode": 420,
+      "sha256": "305e3f8bbad24b177bd7cd8a2bfef9e033549f8f0d0dd035c35313a129bcaf8a"
+    },
+    ".devkit/managed/spec/templates/story.md": {
+      "mode": 420,
+      "sha256": "36b87f3c259bdad89cbb043d3cfd9339cd1e1c014caf21b0e2226f36f0640f0d"
+    },
+    ".devkit/managed/spec/workflows/sdd-proposal.md": {
+      "mode": 420,
+      "sha256": "ad716ecf898dc421c1417f97bd032f50225c686bba6efff810516160b7dcb591"
+    },
+    ".devkit/managed/spec/workflows/sdd-session-bugfix.md": {
+      "mode": 420,
+      "sha256": "e48eb06535170587405169e76a6f68d300f14441ecae039ced090b34916b6610"
+    },
+    ".devkit/managed/spec/workflows/sdd-session-feature.md": {
+      "mode": 420,
+      "sha256": "74a7dbfea2bc92173154c6f28a1c9b4b481afc0e6dc21547558a5d96ce8c4ae3"
+    },
+    ".devkit/managed/spec/workflows/sdd-spec-bugfix.md": {
+      "mode": 420,
+      "sha256": "02f8ece9358678f358d3b22a15882405302d3599b9cd8ddd39f9f634bf5733fb"
+    },
+    ".devkit/managed/spec/workflows/sdd-spec-feature.md": {
+      "mode": 420,
+      "sha256": "ece496dc531a4acbab21fcb0504096128450d2d52a440ca4f75811f2df517213"
+    }
+  },
+  "guidance_block": "06be010db0995f6232e5352a8b090e65fe1d82eb8a51f03511adde6a77346c0d",
+  "packages": [
+    {
+      "bundle": "advisory",
+      "bundle_version": "0.1.1",
+      "package": "devkit-agt",
+      "package_version": "0.1.1"
+    },
+    {
+      "bundle": "authoring",
+      "bundle_version": "0.1.1",
+      "package": "devkit-agt",
+      "package_version": "0.1.1"
+    },
+    {
+      "bundle": "devkit",
+      "bundle_version": "0.1.1",
+      "package": "devkit-agt",
+      "package_version": "0.1.1"
+    },
+    {
+      "bundle": "spec",
+      "bundle_version": "0.1.0",
+      "package": "devkit-spec",
+      "package_version": "0.1.0"
+    }
+  ],
+  "schema": 1,
+  "seeded": [
+    {
+      "bundle": "spec",
+      "id": "docs-skeleton",
+      "path": "docs/README.md"
+    },
+    {
+      "bundle": "spec",
+      "id": "docs-skeleton",
+      "path": "docs/architecture/ARCH-01-introduction-and-goals.md"
+    },
+    {
+      "bundle": "spec",
+      "id": "docs-skeleton",
+      "path": "docs/architecture/ARCH-03-context.md"
+    },
+    {
+      "bundle": "spec",
+      "id": "docs-skeleton",
+      "path": "docs/architecture/ARCH-05-1-containers.md"
+    },
+    {
+      "bundle": "spec",
+      "id": "docs-skeleton",
+      "path": "docs/architecture/ARCH-05-2-components.md"
+    },
+    {
+      "bundle": "spec",
+      "id": "docs-skeleton",
+      "path": "docs/architecture/ARCH-06-runtime-view.md"
+    },
+    {
+      "bundle": "spec",
+      "id": "docs-skeleton",
+      "path": "docs/architecture/ARCH-07-deployment.md"
+    },
+    {
+      "bundle": "spec",
+      "id": "docs-skeleton",
+      "path": "docs/architecture/ARCH-08-cross-cutting.md"
+    },
+    {
+      "bundle": "spec",
+      "id": "docs-skeleton",
+      "path": "docs/architecture/README.md"
+    },
+    {
+      "bundle": "spec",
+      "id": "docs-skeleton",
+      "path": "docs/capabilities/README.md"
+    },
+    {
+      "bundle": "spec",
+      "id": "docs-skeleton",
+      "path": "docs/decisions/README.md"
+    },
+    {
+      "bundle": "spec",
+      "id": "docs-skeleton",
+      "path": "docs/development/ci-cd.md"
+    },
+    {
+      "bundle": "spec",
+      "id": "docs-skeleton",
+      "path": "docs/development/setup.md"
+    },
+    {
+      "bundle": "spec",
+      "id": "docs-skeleton",
+      "path": "docs/development/workflow.md"
+    },
+    {
+      "bundle": "spec",
+      "id": "docs-skeleton",
+      "path": "docs/glossary.md"
+    },
+    {
+      "bundle": "spec",
+      "id": "docs-skeleton",
+      "path": "docs/glossary.yaml"
+    },
+    {
+      "bundle": "spec",
+      "id": "docs-skeleton",
+      "path": "docs/materials/README.md"
+    },
+    {
+      "bundle": "spec",
+      "id": "docs-skeleton",
+      "path": "docs/proposals/README.md"
+    },
+    {
+      "bundle": "spec",
+      "id": "docs-skeleton",
+      "path": "docs/stories/README.md"
+    }
+  ],
+  "selection": {
+    "agents": [
+      "antigravity",
+      "claude-code",
+      "codex"
+    ],
+    "presets": {
+      "advisory": [
+        "core"
+      ],
+      "authoring": [
+        "skill-authoring"
+      ],
+      "devkit": [
+        "core"
+      ],
+      "spec": [
+        "core",
+        "docs-skeleton"
+      ]
+    }
+  },
+  "tool": {
+    "package": "devkit-agt",
+    "version": "0.1.1"
+  }
+}

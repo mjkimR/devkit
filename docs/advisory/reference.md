@@ -1,6 +1,6 @@
 # devkit.advisory
 
-Python implementation of the [Agent Advisory Protocol](protocol.md), shipped as the `devkit-advisory` distribution, plus the built-in `advisory` bundle of `devkit` that installs its guide in consumer repositories. Where advisories sit in a command's output is specified in [Agent-First Output](../architecture/agent-output.md).
+Python implementation of the [Agent Advisory Protocol](protocol.md), shipped as the `devkit-advisory` distribution, plus the built-in `advisory` bundle of `devkit` that installs its guide in consumer repositories. Where advisories sit in a command's output is specified in [Agent-First Output](../architecture/ARCH-08-1-agent-output.md).
 
 ## Scope
 
@@ -11,7 +11,7 @@ This module implements the Agent Advisory Protocol and nothing else.
 
 ## Contents
 
-- **Runtime**: `devkit.advisory` in the `devkit-advisory` distribution (`packages/devkit-advisory/`): standard library only, no entry points, and the lowest layer of `devkit` (it imports no other devkit module; tests in both packages enforce this). `devkit-agt` depends on the same version, so the module is present wherever `devkit` is. `error.py` (`AdvisoryError`), `types.py` (`ExitCode`, `Level`, `ActionMode`, `Actor`, `Retry`), `advisory.py` (`Advisory`, mode derivation, `ACTION_TEXT`, the block sentinels `HEADLINE`, `FIELDS` and `CONTINUATION`, rendering). Every other devkit module raises `AdvisoryError` subclasses and returns warnings and notices as `AdvisoryError` instances at a lower level ([Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)).
+- **Runtime**: `devkit.advisory` in the `devkit-advisory` distribution (`packages/devkit-advisory/`): standard library only, no entry points, and the lowest layer of `devkit` (it imports no other devkit module; tests in both packages enforce this). `devkit-agt` depends on the same version, so the module is present wherever `devkit` is. `error.py` (`AdvisoryError`), `types.py` (`ExitCode`, `Level`, `ActionMode`, `Actor`, `Retry`), `advisory.py` (`Advisory`, mode derivation, `ACTION_TEXT`, the block sentinels `HEADLINE`, `FIELDS` and `CONTINUATION`, rendering). Every other devkit module raises `AdvisoryError` subclasses and returns warnings and notices as `AdvisoryError` instances at a lower level ([Errors, Exit Codes and Platforms](../architecture/ARCH-08-cross-cutting.md#4-exit-code-conventions)).
 - **Bundle** `advisory` (`devkit.advisory_guide`, `bundle/`, `default_preset = "core"`), built into `devkit` (not `devkit-advisory`, so a runtime environment carries no agent content) with `auto_select = true` and therefore selected by default:
 
 | Preset | Assets | For |

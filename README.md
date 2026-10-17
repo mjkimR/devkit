@@ -20,10 +20,11 @@ and asks before writing anything or committing. The guides live in [`guides/`](g
 
 `packages/devkit` is the package, `packages/devkit-advisory` its
 `devkit.advisory` library shipped on its own for other repositories' runtime,
+`packages/devkit-spec` the Spec-Driven Development (SDD) extension,
 `packages/devkit-starter` an example content package, `packages/devkit-catalog` opt-in content bundles, `models/devkit-embed` the embedding model of the
 `devkit-agt[search]` extra (built by hand, outside the workspace), `examples/bundles/` further example bundles, `scripts/` the shell logic
-behind the justfile recipes, `guides/` the agent-facing installation guides, and `docs/` the documentation per module; see
-[Architecture Overview, section 2](docs/architecture/overview.md#2-monorepo-structure).
+behind the justfile recipes, `guides/` the agent-facing installation guides, and `docs/` the Living Spec documentation; see
+[Architecture Overview, section 2](docs/architecture/ARCH-05-1-containers.md).
 
 ## Development
 
@@ -43,7 +44,7 @@ just --list                # every recipe (rules-fix, rules-phases, rules-explai
 
 Module commands discover projects from `packages/*/pyproject.toml` and
 `tools/*/pyproject.toml`; pass a project name (`devkit-agt`, `devkit-advisory`,
-`devkit-starter` or `devkit-catalog`) or `all`. `devkit` remains a module-command alias for `devkit-agt`. Extra pytest arguments follow the module: `just test devkit -k cache`.
+`devkit-spec`, `devkit-starter` or `devkit-catalog`) or `all`. `devkit` remains a module-command alias for `devkit-agt`. Extra pytest arguments follow the module: `just test devkit -k cache`.
 `uv run pytest` from the repository root runs every test.
 
 The repository, CLI (`devkit`), Python namespace (`devkit.*`), bundle names and
@@ -123,7 +124,7 @@ run `uv lock`.
 
 ## Documentation
 
-- [Architecture Overview](docs/architecture/overview.md): modules, interaction model, and the full documentation index.
+- [Architecture Overview](docs/architecture/ARCH-01-introduction-and-goals.md): modules, interaction model, and the full documentation index.
 - [devkit package](packages/devkit/README.md): module table with links to each module's reference.
 - [devkit-catalog](packages/devkit-catalog/README.md): opt-in content bundles and how to add one.
 - Examples: [devkit-starter](packages/devkit-starter/README.md), [delivery-workflow bundle](examples/bundles/delivery-workflow/README.md).

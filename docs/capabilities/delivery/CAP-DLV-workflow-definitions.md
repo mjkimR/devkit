@@ -10,7 +10,7 @@ created_at: 2026-10-17
 # [CAP-DLV-workflow-definitions] Workflow Definitions and Checks
 
 **Package**: `devkit.workflow`. Review envelopes: [Review Envelopes](../../workflow/envelopes.md); what `next` prints: [CLI and Output Contract](../../workflow/cli-and-output.md).  
-**Related**: [Workflow Engine Overview](CAP-DLV-workflow-orchestration.md), [Rule Authoring Guide](../../rules/rule-authoring.md).
+**Related**: `CAP-DLV-workflow-orchestration`, [Rule Authoring Guide](../../rules/rule-authoring.md).
 
 ## 1. Workflow Definition File
 

@@ -47,8 +47,8 @@ Layering (`advisory` < `core` < `rules` < `workflow`/`gate`; `search`, `compact`
 and `worktree` and `host` use only `core` and `advisory`, `distribution` also `search` and `host`, `rules`,
 `gate` and `generated` also `compact`; enforced by a test), the shared CLI
 conventions (`-w/--workspace-root`, `--format`, exit codes) and the documentation
-index are in the [Architecture Overview](../../docs/architecture/overview.md).
+index are in the [Architecture Overview](../../docs/architecture/ARCH-01-introduction-and-goals.md).
 
 Other installed packages can mount their own command groups under `devkit`
 through the `devkit.commands` entry-point group
-([Command Plugins](../../docs/architecture/command-plugins.md)).
+([Command Plugins](../../docs/architecture/ARCH-05-3-command-plugins.md)).

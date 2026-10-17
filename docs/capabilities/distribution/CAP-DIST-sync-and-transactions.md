@@ -102,7 +102,7 @@ Installing a package makes its bundle **available**. A bundle that declares `aut
 one, until `.devkit/config.toml` names it (other presets) or sets it to `false` (opted out). Every other bundle is
 selected only by an entry in `config.toml`. Among the bundles built into `devkit`, `devkit` and `advisory` are
 auto-selected; `authoring` and `git-commits` are not. The rationale is recorded in
-[Resource Taxonomy](../../architecture/resource-taxonomy.md#architecture-decision-author-declared-auto-selection).
+[Resource Taxonomy](../../architecture/ARCH-08-2-resource-taxonomy.md#architecture-decision-author-declared-auto-selection).
 
 ### Project Configuration (`.devkit/config.toml`, `schema = 1`)
 

@@ -32,7 +32,7 @@ its errors, warnings and notices, so nothing is rendered on stderr in JSON mode;
 Advisory Protocol blocks on stderr. Exit code `0` is success; `1` is returned by `devkit sync --check` when a synchronization is needed,
 by `devkit sync --locked` when it would change committed files, and by `devkit status` when its report shows a problem; `2` is any error, including an invalid argument such as a
 malformed `bundle[:preset]` or `--agent` combined with `--no-agents` (see
-[Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)).
+[Errors, Exit Codes and Platforms](../architecture/ARCH-08-cross-cutting.md#4-exit-code-conventions)).
 
 ---
 
@@ -276,4 +276,4 @@ import cannot make the bundle unusable):
 - [Native Agent Projections](agent-projections.md): projection matrix and role contracts for Codex, Claude Code and Antigravity.
 - [Context Loading & Playbooks](context-and-playbooks.md): `get-context`, the skill prerequisite, and playbook search.
 - [In-Repository Bundles](in-repo-bundles.md): repository-owned assets as a content package installed from the same repository.
-- [Resource Taxonomy](../architecture/resource-taxonomy.md): guidance taxonomy and naming standards.
+- [Resource Taxonomy](../architecture/ARCH-08-2-resource-taxonomy.md): guidance taxonomy and naming standards.

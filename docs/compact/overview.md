@@ -1,7 +1,7 @@
 # Compact Command Output: Architecture Overview
 
 **Package**: `devkit.compact` (`devkit run` CLI). Usage, error codes and module map: [Compact Reference](reference.md).  
-**Related**: [Agent-First Output](../architecture/agent-output.md), [Agent Advisory Protocol](../advisory/protocol.md).
+**Related**: [Agent-First Output](../architecture/ARCH-08-1-agent-output.md), [Agent Advisory Protocol](../advisory/protocol.md).
 
 ## 1. Overview and Objectives
 
@@ -14,7 +14,7 @@ Test runners, linters and type checkers print for people: progress dots, passed 
 3. **Progress and noise are not output.** Lines that only report progress or a passing item, overwritten progress bar states, lines that carry nothing an agent acts on, sections that repeat what the view already reports and copies of a line repeated in a row are filtered out of the excerpt, since they push the lines that locate a failure out of the budget. A line that names a failure is never filtered (of a run of identical ones, the first stays). The runner filters only what is safe without understanding a tool's structure; shortening a tool's own reports (tracebacks, code frames) is the tool's option to set (section 5).
 4. **Directives survive.** An advisory block a nested `devkit` command prints is taken out whole and relayed on stderr, so its `[ACTION]` reaches the agent even when the output around it is cut.
 5. **The runner wraps, it does not plan.** It runs one command as given. Which commands verify a project stays with the project (`justfile`, `package.json` scripts).
-6. **Same contract as every devkit command** ([Agent-First Output](../architecture/agent-output.md)).
+6. **Same contract as every devkit command** ([Agent-First Output](../architecture/ARCH-08-1-agent-output.md)).
 
 ## 2. Execution
 

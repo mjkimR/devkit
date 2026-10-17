@@ -20,7 +20,7 @@ bundle/
 ## 2. Asset Kinds
 
 Every asset is identified by `(bundle, kind, id)`; ids are unique within a bundle. Classification criteria and naming
-standards are in the [Resource Taxonomy](../architecture/resource-taxonomy.md).
+standards are in the [Resource Taxonomy](../architecture/ARCH-08-2-resource-taxonomy.md).
 
 - `skill`: a directory containing `SKILL.md` and supporting files; the whole tree is deployed, executable bits
   (`0755`) preserved. One `source` serves every agent; `variants` ship a directory per agent. `invocation` (optional,

@@ -20,7 +20,7 @@ read only for a name that is not built in, or for the root ``--help``, so the
 built-in commands never pay for the scan. A plugin that cannot be used (its
 module fails to import, its target is not a click command, or two packages
 declare its name) fails only its own command, with ``COMMAND_PLUGIN_INVALID``.
-See ``docs/architecture/command-plugins.md``.
+See ``docs/architecture/ARCH-05-3-command-plugins.md``.
 """
 
 from __future__ import annotations

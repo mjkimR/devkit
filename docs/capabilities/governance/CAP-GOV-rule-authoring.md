@@ -10,7 +10,7 @@ created_at: 2026-10-17
 # [CAP-GOV-rule-authoring] Rule Authoring Guide and Rule Protocol
 
 Rule contracts, the workspace API rules read through, where rules load from, and how a rule is tested.
-Related: [Rule Engine Overview](CAP-GOV-rules-engine.md), [Evaluation Lifecycle](../../rules/evaluation-lifecycle.md),
+Related: `CAP-GOV-rules-engine`, [Evaluation Lifecycle](../../rules/evaluation-lifecycle.md),
 [Rules Reference](../../rules/reference.md).
 
 ## 1. Rule Protocols and Contracts

@@ -43,7 +43,7 @@ Commands emit output strictly divided between channels:
   - Agent Advisory blocks (`[ERROR]`, `[WARN]`, `[NOTICE]`).
   - Diagnostic logs (`[INFO]`) only enabled with `-v`.
 
-See [Agent-First Output Specification](agent-output.md) for channel routing and formatting rules.
+See [Agent-First Output Specification](ARCH-08-1-agent-output.md) for channel routing and formatting rules.
 
 ---
 
@@ -65,7 +65,7 @@ Agent assets distributed by `devkit` fall into a three-tier taxonomy:
 3. **Packaging & Selection Layer**:
    - Bundle presets and project configuration (`.devkit/config.toml`).
 
-See [Resource Taxonomy Specification](resource-taxonomy.md) for detailed asset schemas.
+See `ARCH-08-2-resource-taxonomy` for detailed asset schemas.
 
 ---
 

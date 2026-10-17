@@ -50,6 +50,7 @@ resolve_module() {
         devkit) echo "devkit-agt" ;;
         starter) echo "devkit-starter" ;;
         catalog) echo "devkit-catalog" ;;
+        spec) echo "devkit-spec" ;;
         *) echo "$1" ;;
     esac
 }

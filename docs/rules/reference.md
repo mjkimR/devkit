@@ -10,7 +10,7 @@ requires Python 3.12 or later.
 Semantics: [Rule Engine Overview](overview.md) (architecture, layout),
 [Evaluation Lifecycle](evaluation-lifecycle.md) (phases, targets, autofix,
 policy, snapshot gates), [Rule Authoring Guide](rule-authoring.md) (rule
-protocol, workspace API, rule sources), [Resource Taxonomy](../architecture/resource-taxonomy.md).
+protocol, workspace API, rule sources), [Resource Taxonomy](../architecture/ARCH-08-2-resource-taxonomy.md).
 
 ## CLI usage
 
@@ -73,7 +73,7 @@ or without `-w`, rather than a check that loads no managed rules and passes.
 
 ### Exit codes
 
-The devkit convention ([Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)):
+The devkit convention ([Errors, Exit Codes and Platforms](../architecture/ARCH-08-cross-cutting.md#4-exit-code-conventions)):
 
 | Command | `0` | `1` | `2` |
 | --- | --- | --- | --- |
@@ -96,7 +96,7 @@ In text mode every problem is printed on stderr as an Agent Advisory Protocol
 block with its code ([Errors](#errors)); problems that do not fail a command are
 `[WARN]` blocks after the result. Under `--format json` the JSON object carries
 them and nothing is printed on stderr
-([Agent-First Output](../architecture/agent-output.md)).
+([Agent-First Output](../architecture/ARCH-08-1-agent-output.md)).
 
 Text output is one `[KIND: ...]` sentinel line per fact; free text (messages,
 remediations, descriptions) is written as a JSON string so every line stays

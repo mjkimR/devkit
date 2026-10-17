@@ -23,7 +23,7 @@ Personal developer tools monorepo.
 - **Levels**: a failure or refusal is raised as an `AdvisoryError`; something a successful operation must report is returned with its result under `notices` at `WARNING` or `NOTICE`, never raised and never logged. Warnings and notices do not change exit codes (`0` success, `1` negative result, `2` could not run), except under `--strict`.
 - **Context budget**: default output carries only what changes the agent's next step or must reach the user. Diagnostics are `logging` calls, visible under `-v`.
 - **Libraries never print**: commands write output only through `devkit.core.cli` (`boundary`, `echo_json`, `echo_notices`, `exit_on_warnings`).
-- Specifications: [Agent-First Output](docs/architecture/agent-output.md) and [Agent Advisory Protocol](docs/advisory/protocol.md).
+- Specifications: [Agent-First Output](docs/architecture/ARCH-08-1-agent-output.md) and [Agent Advisory Protocol](docs/advisory/protocol.md).
 
 ## Compatibility
 
@@ -53,3 +53,18 @@ Run lint, type checks, and relevant tests before completing code changes:
 | Test Coverage | `just test-cov [module]` |
 | Governance Rules | `just rules-check` or `just rules-fix` |
 | Consumer smoke (packaging, CLI wiring, hooks) | `just smoke` |
+
+<!-- DEVKIT:START -->
+## devkit
+
+This repository installs agent assets with `devkit`. `.devkit/config.toml` selects
+bundles; `.devkit/installation.json` records what is deployed.
+
+- Before work that touches a bundle's assets, run `uv run devkit get-context <bundle>` once per bundle in the current agent context. Installed bundles: `advisory`, `authoring`, `devkit`, `spec`.
+- Entry skill `devkit-playbook`: find and run an operational playbook (explicit user invocation only).
+- Entry skill `devkit-workflow`: diagnose and follow the delivery workflow stage of a work unit.
+- Never edit `.devkit/managed/` or projected agent files; change the source bundle or use `devkit override`.
+- Before any development work, run `uv run devkit get-context spec` once per agent context and follow it. Start work with `/spec <intent>`; `/spec-next` orients. `docs/` is the current-state Living Spec, `specs/` holds feature specs.
+
+This block is managed by `devkit sync`; edit outside the markers only.
+<!-- DEVKIT:END -->

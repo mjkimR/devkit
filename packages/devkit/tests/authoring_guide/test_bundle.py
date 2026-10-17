@@ -88,7 +88,7 @@ def test_rule_tests_ship_with_the_rules_and_are_never_loaded(consumer: Path) -> 
         test = f".devkit/managed/authoring/rules/{name}/tests/test_rule.py"
         assert (consumer / test).is_file()
         assert test in receipt.file_records
-    packages = resolve_managed_rules(consumer).packages
+    packages = [p for p in resolve_managed_rules(consumer).packages if "/authoring/" in p.location.as_posix()]
     assert sorted(dotted for package in packages for dotted in package.modules) == ["rule", "rule"]
 
 

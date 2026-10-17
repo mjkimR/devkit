@@ -29,7 +29,7 @@ distribution commands must agree on:
   stderr UTF-8 with ``backslashreplace``, and a reader that closes stdout
   early (``devkit ... | head``) ends the command quietly with exit ``2``.
 
-The output contract is ``docs/architecture/agent-output.md``.
+The output contract is ``docs/architecture/ARCH-08-1-agent-output.md``.
 
 click only parses syntax here: every semantic argument check raises
 ``ArgumentError`` (``ARGUMENT_INVALID``) through the boundary, so a JSON

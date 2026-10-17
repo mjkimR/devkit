@@ -1,10 +1,31 @@
-# Rule policy for this repository's own documents (`just rules-check`). devkit does not install bundles into itself.
+# devkit project configuration for dogfooding SDD with devkit-spec
+
+[presets]
+spec = ["core", "docs-skeleton"]
+authoring = "skill-authoring"
+
+[worktree]
+pull_request = "auto"
+
+[integration]
+provider = "spec"
 
 [rules.settings.RULE-cli-contract]
-# devkit-spec's `devkit spec` group is the documented example of a command plugin; it is not installed here.
-unchecked_commands = ["spec"]
+# Records of rejected, past or planned commands: decisions weigh alternatives, proposals and specs describe commands
+# not built yet, materials are free-form.
+exclude = ["docs/decisions/**", "docs/proposals/**", "docs/materials/**", "specs/**"]
 
 # Capabilities carry full contracts, interfaces and code tables; they are long by nature (RULE-file-length guide §5).
 [[rules.settings.RULE-file-length.overrides]]
 path = "docs/capabilities/**"
 max_lines = 600
+
+## [tool.spec]: the settings of devkit-spec; devkit passes [tool.*] tables through unread.
+[tool.spec]
+worktree = "required"  # direct mode: every spec and proposal activity runs in a task worktree (default "auto")
+
+[tool.spec.feedback]
+capture = "observed"
+coverage = "repo-and-upstream"
+detail = "detailed"
+reminder = "contextual"

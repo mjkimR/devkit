@@ -1,7 +1,7 @@
 # Workflow CLI and Output Contract
 
 **Package**: `devkit.workflow` (`devkit workflow` CLI). Envelope commands: [Review Envelopes](envelopes.md); requests and decision records: [Human Interaction Contract](human-interaction.md).  
-**Related**: [Workflow Engine Overview](overview.md), [Agent-First Output](../architecture/agent-output.md).
+**Related**: [Workflow Engine Overview](overview.md), [Agent-First Output](../architecture/ARCH-08-1-agent-output.md).
 
 ## 1. Commands
 
@@ -37,7 +37,7 @@ All commands accept `-w/--workspace-root`. It defaults to the devkit root of the
 
 ## 2. Exit Codes and Errors
 
-Exit codes follow the devkit convention ([Errors, Exit Codes and Platforms](../architecture/overview.md#4-errors-exit-codes-and-platforms)):
+Exit codes follow the devkit convention ([Errors, Exit Codes and Platforms](../architecture/ARCH-08-cross-cutting.md#4-exit-code-conventions)):
 
 | Exit | When |
 | --- | --- |

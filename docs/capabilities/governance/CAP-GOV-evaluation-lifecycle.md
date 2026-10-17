@@ -10,7 +10,7 @@ created_at: 2026-10-17
 # [CAP-GOV-evaluation-lifecycle] Evaluation Lifecycle and Autofix Convergence
 
 How a run selects targets and rules, applies project policy, repairs and rechecks, and evaluates Git snapshots.
-Related: [Rule Engine Overview](CAP-GOV-rules-engine.md), [Rule Authoring Guide](../../rules/rule-authoring.md),
+Related: `CAP-GOV-rules-engine`, [Rule Authoring Guide](../../rules/rule-authoring.md),
 [Rules Reference](../../rules/reference.md) (commands, output, exit codes, error codes).
 
 ## 1. Lifecycle

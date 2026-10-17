@@ -13,12 +13,14 @@ members = [
     "devkit-advisory",
     "devkit-agt",
     "devkit-catalog",
+    "devkit-spec",
     "devkit-starter",
 ]
 
 [manifest.dependency-groups]
 dev = [
     { name = "devkit-agt", extras = ["search", "mcp"], editable = "packages/devkit" },
+    { name = "devkit-spec", extras = ["search"], editable = "packages/devkit-spec" },
     { name = "pyright", specifier = ">=1.1.390" },
     { name = "pytest", specifier = ">=8.0.0" },
     { name = "pytest-cov", specifier = ">=5.0.0" },
@@ -399,6 +401,44 @@ version = "0.1.0"
 source = { url = "https://github.com/mjkimR/devkit/releases/download/v0.1.0/devkit_embed-0.1.0-py3-none-any.whl" }
 wheels = [
     { url = "https://github.com/mjkimR/devkit/releases/download/v0.1.0/devkit_embed-0.1.0-py3-none-any.whl", hash = "sha256:2b8534b60d85e36c2027e2c0d13d110289fa877b9c0b2639b8c4daedbe461f38" },
+]
+
+[[package]]
+name = "devkit-spec"
+version = "0.1.0"
+source = { editable = "packages/devkit-spec" }
+dependencies = [
+    { name = "click" },
+    { name = "devkit-agt" },
+]
+
+[package.optional-dependencies]
+search = [
+    { name = "devkit-agt", extra = ["search"] },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pyright" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "click", specifier = ">=8.1.7" },
+    { name = "devkit-agt", editable = "packages/devkit" },
+    { name = "devkit-agt", extras = ["search"], marker = "extra == 'search'", editable = "packages/devkit" },
+]
+provides-extras = ["search"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pyright", specifier = ">=1.1.390" },
+    { name = "pytest", specifier = ">=8.0.0" },
+    { name = "pytest-cov", specifier = ">=5.0.0" },
+    { name = "ruff", specifier = ">=0.9.0" },
 ]
 
 [[package]]

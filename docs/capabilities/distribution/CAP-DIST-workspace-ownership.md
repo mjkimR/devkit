@@ -72,7 +72,7 @@ See [Host Integration](../../host/overview.md#3-shared-configuration-ownership).
      `.devkit/managed/` is a stray file.
    - Only files byte-for-byte identical to their recorded signature are ever deleted.
 6. **Host guidance block (root `AGENTS.md`)**: the
-   [host guidance block](../../architecture/resource-taxonomy.md#1-host-guidance-block) between `<!-- DEVKIT:START -->`
+   [host guidance block](../../architecture/ARCH-08-2-resource-taxonomy.md#1-host-guidance-block) between `<!-- DEVKIT:START -->`
    and `<!-- DEVKIT:END -->`.
    - Content: the installed bundle names, the once-per-bundle `devkit get-context` rule, the generated entry
      skills, then the selected `guidance` fragments ordered by bundle name and asset id; deterministic for a given

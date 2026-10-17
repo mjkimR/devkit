@@ -1,6 +1,9 @@
-from __future__ import annotations
+from collections.abc import Callable
+from pathlib import Path
 
 import pytest
+
+Write = Callable[[str, str], Path]
 
 
 @pytest.fixture(autouse=True)

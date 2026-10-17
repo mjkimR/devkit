@@ -46,7 +46,7 @@ src/package_b_playbooks/
 - A repository without Python code (a prompt collection, a Go tool) can map its own layout into a content wheel at
   build time with Hatch `force-include`.
 - The same wheel may also mount commands under `devkit` through the `devkit.commands` entry-point group
-  ([Command Plugins](../../architecture/command-plugins.md)).
+  (`ARCH-05-3-command-plugins`).
 
 ## 2. Installation and Lifecycle
 
