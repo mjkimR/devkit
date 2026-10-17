@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-17T10:30:22.611436Z'
+status: completed
+summary: Four hygiene items implemented and independently reviewed; Living Spec reconciled and reference lengths are 317 and 171 lines. Integration remains subject to dev-integration ask policy.
+findings: []
+assumptions:
+- 'pull_request=auto uses local integration: no platform review requirement; worktree=required isolated the change. Spec bundle mirror, receipt and executable documentation test were necessary scope extensions.'
+checks:
+  tests: PASS just test devkit 2223 and just test spec 845
+  build: PASS just smoke
+  lint: PASS lint-check and Pyright for devkit/spec, cumulative CI rules, whole-workspace hygiene and diff whitespace
+diff_scope:
+  base: 77ffd856c290c77f37c289a073281ba46e1d5f34
+  head: cbedca0685c31efa1500d19bea34f9e94ae42379
+activity_effort: medium

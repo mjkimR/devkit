@@ -1,0 +1,16 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-17T10:30:19.519074Z'
+status: completed
+summary: Independent reconcile reviewer verified all five declared documentation targets, scope validation, optional severity, hook preservation, reference relocation and owned entrypoints; no findings.
+findings: []
+assumptions:
+- Codex reconcile-reviewer isolation is emulated; read-only role and unchanged HEAD, worktree and index confirmed.
+unverified_areas:
+- Reviewer relied on supplied test, lint, type and smoke evidence.
+checks: {}
+diff_scope:
+  base: 77ffd856c290c77f37c289a073281ba46e1d5f34
+  head: cbedca0685c31efa1500d19bea34f9e94ae42379
