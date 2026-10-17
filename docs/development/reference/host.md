@@ -37,12 +37,29 @@ and integration preparation without the SDK.
 | Command | Result |
 | --- | --- |
 | `devkit host mcp config [-w BASE] [--format json]` | Exact executable/arguments, Codex add/get/remove commands and TOML; changes no configuration |
+| `devkit host mcp setup [--host codex] [--replace] [-w BASE] [--format json]` | Explicit user-scoped registration through Codex; matching entries unchanged, conflicting entries refused without --replace |
+| `devkit host mcp status [--host codex] [-w BASE] [--format json]` | Read-only registration and SDK diagnostics; exit 0 matching with SDK, 1 findings, 2 inspection failure |
 | `devkit host mcp serve [-w BASE]` | Installed service tools over native MCP stdio; stdout is JSON-RPC only |
 
-The config command prints a `codex mcp add devkit -- ...` command. Review the retained runtime and base path before
-executing it. `codex mcp get devkit --json` inspects registration; `codex mcp remove devkit` removes that named
-registration through Codex. Existing user settings and trust remain host-owned. Registration is not connection or
-UI evidence. The executable, dependencies and base checkout must remain available throughout the session.
+Follow [optional MCP onboarding](../../../guides/install/mcp.md) from the installation routes. Run setup from the
+retained base checkout and its retained Python environment; it rejects linked-worktree and submodule workspace or
+runtime paths. It uses the running interpreter, imports the SDK/server before writing, calls `codex mcp add devkit`
+and verifies the effective result. Identical enabled command/args with no environment, cwd or tool overrides are
+`unchanged`; a different entry is refused unless `--replace` was explicit. Replacement does not first remove it.
+Codex's writer owns persistence; a failed write/verification is not a devkit rollback guarantee. Concurrent external
+host configuration edits are outside devkit's transaction scope.
+
+Registration uses Codex's user scope and fixed name `devkit`, so switching repositories can conflict. Setup does
+not edit project TOML, trust, tool approval policies or execution permissions. The read-only config command retains
+its add/get/remove commands and TOML snippet. `codex mcp remove devkit` removes that named user registration.
+`devkit sync` neither registers MCP nor inspects machine registration; there is no persistent MCP selection setting.
+
+Status reports `state=missing|matching|different`, desired workspace/command/args, `sdk_available`, errors and notices;
+it does not expose existing environment values or foreign server settings. Setup adds
+`action=registered|replaced|unchanged`. Text results are `HOST_MCP_SETUP` / `HOST_MCP_STATUS` sentinels; JSON is one
+object. `connection`, `approval_ui`, `trust` and `execution_permissions` remain `unknown`: reconnect the client,
+inspect its tool catalog and verify actual UI separately. The executable, dependencies and base checkout must
+remain available throughout the session.
 
 Installed packages register factories under `devkit.host.services`: `factory(root) -> tuple[McpTool, ...]`.
 `devkit.host.mcp` exports dependency-free `McpTool`, `Confirmation`, `ConfirmationReply` contracts. A tool receives
@@ -54,6 +71,10 @@ through this extension point rather than a host-to-domain import.
 
 | Code | Next action |
 | --- | --- |
+| `HOST_MCP_REGISTRATION_FAILED` | Inspect Codex CLI/configuration access and effective registration before retrying |
+| `HOST_MCP_REGISTRATION_MISSING` | Run setup from the retained base/runtime |
+| `HOST_MCP_REGISTRATION_CONFLICT` | Inspect the existing entry; use --replace only for an intended replacement |
+| `HOST_MCP_RUNTIME_UNSAFE` | Run setup outside linked worktrees using the retained base/runtime |
 | `HOST_MCP_EXTRA_REQUIRED` | Install the MCP extra in the retained server runtime |
 | `HOST_MCP_FAILED` | Inspect the installed service entry points and runtime, then reconnect |
 | `HOST_MCP_ARGUMENT_INVALID` | Read the advertised tool schema and supply its declared arguments |

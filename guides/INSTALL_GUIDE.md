@@ -82,6 +82,12 @@ uv add --dev "devkit-catalog @ git+https://github.com/mjkimR/devkit.git#subdirec
 After the base installation, follow [Bundle Recommendations](install/bundle-recommendations.md): match the repository
 against each opt-in bundle, present the recommendations with their evidence, and select the approved ones.
 
+## Optional: MCP connection
+
+When Codex native integration tools are wanted, follow [MCP onboarding](install/mcp.md) after bundle selection.
+Include its optional dependency and user-scoped registration in the approved installation plan. Asset sync does
+not register MCP. Report registration, client connection and visible approval UI as separate observations.
+
 ## Step 5: Verify and report
 
 ```bash

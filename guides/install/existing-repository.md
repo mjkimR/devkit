@@ -109,6 +109,8 @@ with an existing error-severity finding is refused until it is fixed. Tell the u
 findings, park a rule in the `hygiene` phase or lower its severity in `[rules]`, or set `enabled = false` in
 `[gates.settings.rules-check]` until they are resolved.
 
+For optional Codex native service tools, follow [MCP onboarding](mcp.md) after bundle selection.
+
 Then continue with [Bundle Recommendations](bundle-recommendations.md) and
 [Installation Guide, step 5](../INSTALL_GUIDE.md#step-5-verify-and-report).
 
@@ -129,3 +131,6 @@ uv run devkit list               # bundles, their selection state and presets
   [Installation Guide, step 3](../INSTALL_GUIDE.md#step-3-package-sources).
 - Bundle recommendations still apply: compare `devkit list` against
   [Bundle Recommendations](bundle-recommendations.md) and offer the missing ones.
+
+- To add or diagnose optional Codex MCP registration, follow [MCP onboarding](mcp.md); reinstalling or running sync
+  does not register it.

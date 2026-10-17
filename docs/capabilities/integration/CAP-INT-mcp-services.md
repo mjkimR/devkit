@@ -138,9 +138,14 @@ replay a serialized result as authority.
 
 ## 6. Setup and verification
 
-Install `devkit-agt[mcp]` in a retained runtime. `devkit host mcp config --format json -w <base>` prints an exact
-Codex add command, TOML snippet, inspection command and removal command without editing settings. Review it, then
-register through Codex's own configuration tooling. See [Host MCP](../../development/reference/host.md#mcp-services).
+Follow the optional MCP onboarding route linked from installation. Install `devkit-agt[mcp]` in a retained base
+runtime, then run `devkit host mcp setup --host codex` there for explicit user-scoped Codex registration.
+`devkit host mcp status --host codex` checks registration against that runtime/base and SDK availability; it leaves
+connection and approval UI unknown. Matching entries are unchanged; different registrations require explicit
+`--replace`. Setup refuses linked-worktree/submodule workspace or runtime paths. Sync does not register MCP.
+The read-only `devkit host mcp config --format json -w <base>` still prints exact add/get/remove commands and TOML.
+Reconnect the client and verify tool discovery and visible confirmation separately. See `CAP-HOST-lifecycle-observation`
+and [Host MCP](../../development/reference/host.md#mcp-services).
 
 Development checks exercise an installed SDK client/server over stdio and real disposable Git fixtures: approval,
 non-approval, decline/cancel, absent form capability, caller approval-flag rejection, stale scope, PR policy,

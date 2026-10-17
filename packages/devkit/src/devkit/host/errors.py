@@ -55,3 +55,24 @@ class HostConfirmationError(HostError):
 class HostMcpDependencyError(HostError):
     code = "HOST_MCP_EXTRA_REQUIRED"
     fix = "Install the devkit-agt[mcp] extra into the server runtime, then reconnect the MCP server"
+
+
+class HostMcpRegistrationError(HostError):
+    code = "HOST_MCP_REGISTRATION_FAILED"
+    fix = "Run codex mcp list --json and codex mcp get devkit --json, correct CLI/configuration access, then retry devkit host mcp status"
+
+
+class HostMcpRegistrationMissing(HostError):
+    code = "HOST_MCP_REGISTRATION_MISSING"
+    fix = "Run devkit host mcp setup --host codex from the retained base runtime"
+
+
+class HostMcpRegistrationConflict(HostError):
+    code = "HOST_MCP_REGISTRATION_CONFLICT"
+    guardrail = True
+    fix = "Inspect codex mcp get devkit --json; to replace that user-scoped entry, run devkit host mcp setup --host codex --replace from the retained base runtime"
+
+
+class HostMcpRuntimeError(HostError):
+    code = "HOST_MCP_RUNTIME_UNSAFE"
+    fix = "Run devkit host mcp setup --host codex using the retained base checkout and its Python environment outside linked worktrees"

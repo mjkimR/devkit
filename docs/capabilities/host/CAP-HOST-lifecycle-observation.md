@@ -1,9 +1,13 @@
 ---
 id: CAP-HOST-lifecycle-observation
 title: "Host Lifecycle Observation"
-summary: "Host environment observation, native event hook dispatch, and status reporting."
+summary: "Host lifecycle hook dispatch, MCP transport, explicit Codex MCP registration, and read-only installation diagnostics."
 area: host
 status: active
+entrypoints:
+  - packages/devkit/src/devkit/host/cli.py
+  - packages/devkit/src/devkit/host/errors.py
+  - packages/devkit/src/devkit/host/mcp/onboarding.py
 created_at: 2026-10-17
 ---
 
@@ -159,3 +163,25 @@ uv run devkit remove host-observer
 
 This removes registrations and managed definitions; local observation metadata stays under the ignored transient
 directory. Reinstalling can expose an older timestamp, so compare it with the current validation session.
+
+## 8. Explicit MCP onboarding
+
+Installation routes lead to optional Codex MCP onboarding independently of asset sync. `host mcp setup` registers
+server `devkit` through Codex CLI in user scope, using the running Python and selected retained base. It preflights
+the SDK/server import and refuses linked-worktree or submodule workspace/runtime paths. The runtime and checkout
+must remain available after integration cleanup. No package, trust or permission setting is installed or changed
+implicitly, and sync does not call the host CLI or manage an MCP selection setting.
+
+Setup leaves an identical enabled stdio command/arguments registration unchanged. Environment, cwd, tool selection
+or disabled state differences are conflicts as well as a different runtime or repository; replacement requires
+explicit `--replace`. It uses the host's add writer without a remove/add gap, then verifies the effective entry.
+Host command failure or mismatching verification raises an advisory without asserting rollback or success.
+Concurrent external configuration writers remain outside the transaction boundary.
+
+`host mcp status` is read-only: it reports missing/matching/different registration and local SDK availability,
+without launching services, exposing environment values or returning other servers' settings. Matching with the
+SDK exits 0; findings exit 1; inability to inspect exits 2. Setup and status JSON carry desired workspace, command,
+arguments, user scope, errors and notices. Setup also carries registered/replaced/unchanged action. Text mode uses
+result sentinels. Both leave connection, approval UI, trust and execution permissions unknown; client reconnect,
+tool discovery and actual native UI require separate evidence. The config generator remains read-only and works
+without the MCP extra. Command and advisory details are in the host reference.

@@ -88,7 +88,7 @@ def hook(host: str, asset: str, workspace_root: str | None) -> None:
 
 @cli.group()
 def mcp() -> None:
-    """MCP service transport and inspectable manual host configuration."""
+    """MCP service transport, explicit registration and registration diagnostics."""
 
 
 @mcp.command(name="config")
@@ -105,6 +105,43 @@ def mcp_config(workspace_root: str | None, output_format: str) -> None:
     else:
         click.echo("[HOST_MCP_CONFIG: codex server=devkit transport=stdio]")
         click.echo(result["toml"], nl=False)
+
+
+@mcp.command(name="setup")
+@click.option("--host", type=click.Choice(["codex"]), default="codex", show_default=True)
+@click.option("--replace", is_flag=True, help="Replace a different user-scoped devkit registration")
+@workspace_option()
+@FORMAT_OPTION
+@boundary
+def mcp_setup(host: str, replace: bool, workspace_root: str | None, output_format: str) -> None:
+    """Register this retained runtime/base with Codex; matching registrations are unchanged."""
+    from devkit.host.mcp.onboarding import setup_registration
+
+    result = setup_registration(resolve_root(workspace_root), replace=replace)
+    if is_json(output_format):
+        echo_json(result)
+    else:
+        click.echo(f"[HOST_MCP_SETUP: {host} server=devkit scope=user action={result['action']} connection=unknown]")
+
+
+@mcp.command(name="status")
+@click.option("--host", type=click.Choice(["codex"]), default="codex", show_default=True)
+@workspace_option()
+@FORMAT_OPTION
+@boundary
+def mcp_status(host: str, workspace_root: str | None, output_format: str) -> None:
+    """Read registration and SDK status; connection and approval UI remain unknown."""
+    from devkit.host.mcp.onboarding import inspect_registration
+
+    result, errors = inspect_registration(resolve_root(workspace_root))
+    if is_json(output_format):
+        echo_json(result)
+    else:
+        click.echo(
+            f"[HOST_MCP_STATUS: {host} server=devkit scope=user state={result['state']} sdk={'yes' if result['sdk_available'] else 'no'} connection=unknown]"
+        )
+        echo_notices(errors)
+    sys.exit(report_exit_code(errors))
 
 
 @mcp.command(name="serve")
