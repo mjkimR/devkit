@@ -1,56 +1,43 @@
 # devkit-spec
 
-Spec-driven development for AI coding agents, built on [devkit](https://github.com/mjkimR/devkit). One Python
-package ships both halves:
+Spec-driven development for AI coding agents, built on [devkit](../../README.md). One Python package ships:
 
-- the `spec` **bundle** (`devkit.bundles`): instructions, skills, workflows, rules, templates and the docs skeleton,
-  deployed into a project by `devkit sync` like any content package;
-- the `devkit spec` **commands** (`devkit.commands`): mounted into devkit's own command line, so agents reach the
-  whole toolchain through the one `devkit` executable of the project environment.
+- the `spec` bundle (`devkit.bundles`): instructions, skills, workflows, rules, templates and an opt-in docs skeleton;
+- the `devkit spec` command group (`devkit.commands`), mounted under the project's `devkit` executable.
 
-devkit provides everything that is not specific to spec-driven development: asset distribution, the rule, workflow
-and gate engines, document search, task worktrees and the Agent Advisory Protocol. devkit-spec adds the document model
-(Living Spec, feature specs, IDs, references) and the procedures on top.
-The project's own Living Spec starts at [docs/README.md](../../docs/README.md).
-
-Status: the document model with namespaces (`devkit spec
-resolve|refs|list|search`), ten spec rules, the four delivery workflows with their role contracts, proposals and spec
-bundles (`devkit spec proposal new|padr|handoff`, `devkit spec new`), code entrypoints (`devkit spec entrypoints`),
-the scope registry (`devkit spec scope`), `devkit spec policy`, the constitution, instructions, templates, 12 `spec*`
-skills, two playbooks and the opt-in docs skeleton.
+Devkit provides asset distribution, rule/workflow/gate engines, document search, task worktrees and the Agent
+Advisory Protocol. This extension adds the Living Spec document model, namespaces, IDs and references, proposals,
+spec bundles, code entrypoints, scope registry and SDD guidance. Contracts start at `CAP-HARN-command-mount`
+and `CAP-HARN-agent-guidance`; repository documentation starts at [docs/README.md](../../docs/README.md).
 
 ## Use in a project
 
-```bash
-uv add --dev "devkit-spec @ git+https://github.com/mjkimR/devkit-spec"   # devkit comes with it (Git source)
-uv run devkit sync                # deploys the spec bundle (auto_select) with devkit's own bundles
-uv run devkit add spec:docs-skeleton  # optional: seed the docs/ skeleton (written once where absent, then project-owned)
-uv run devkit spec --version      # [VERSION: devkit-spec <version>]
-```
-
-The repository is private: Git must be able to read it. Locally `gh auth setup-git` (or any Git credential helper)
-is enough. Where only a token is available (CI, cloud agents), give Git the token through the environment, nothing
-written to disk; `uv.lock` keeps plain URLs:
+Install from this monorepo's package subdirectory. uv resolves devkit-agt and devkit-advisory from the same commit:
 
 ```bash
-export GIT_CONFIG_COUNT=1
-export GIT_CONFIG_KEY_0="url.https://x-access-token:${GITHUB_TOKEN}@github.com/.insteadOf"
-export GIT_CONFIG_VALUE_0="https://github.com/"
-uv sync --locked
+uv add --dev "devkit-spec @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-spec"
+uv run devkit sync                   # deploy the spec bundle's default preset
+uv run devkit add spec:docs-skeleton  # optional: seed absent docs/ files, then leave them project-owned
+uv run devkit spec --version         # [VERSION: devkit-spec <version>]
 ```
+
+For release wheels, install the extension and its base dependencies explicitly because they are not hosted on a
+package index. Use the filenames and commands in the chosen GitHub Release; see [Releasing](../../README.md#releasing).
 
 A project opts out of the bundle with `[presets] spec = false` in `.devkit/config.toml`. `uv run devkit config
-template` writes every key the file accepts as a comment at its default, devkit-spec's `[tool.spec]` tables
-included; uncomment a key to change it.
+template` writes the supported keys as commented defaults, including this extension's `[tool.spec]` tables.
 
 ## Development
 
-devkit comes from its GitHub main through a Git source pinned in `uv.lock`; `just local-devkit <command>` tries
-an unpushed devkit checkout at `../devkit`. Then:
+Work from the monorepo root. Workspace sources link the local devkit packages:
 
 ```bash
-just init        # uv sync
-just ci          # lint-check, check, test, rules-check
+just init                     # install all workspace packages and development dependencies
+just lint-check devkit-spec
+just check devkit-spec
+just test devkit-spec
+just rules-check              # repository-wide documentation and governance checks
+just smoke                    # wheel installation, CLI mounting, bundle deployment and seeded document discovery
 ```
 
-Python 3.12 or later, macOS or Linux.
+Python 3.12 or later, macOS or Linux. The [development guide](../../docs/development/setup.md) lists prerequisites.

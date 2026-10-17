@@ -4,15 +4,21 @@ Continuous integration and automated verification checks for devkit.
 
 ## 1. Automated Verification Checks
 
-Pull requests and main branch pushes execute the following verification steps:
+The `ci` workflow runs by manual dispatch (`gh workflow run ci`) or through `workflow_call` from the release
+workflow. Pull requests and main branch pushes do not trigger it. Workspace checks run on Linux and macOS;
+consumer smoke runs on Linux. The workflow executes:
 
 | Step | Command Executed | Purpose |
 | :--- | :--- | :--- |
 | **Lint & Format** | `just lint-check` | Enforces Ruff formatting and linter invariants. |
 | **Type Check** | `just check` | Enforces Pyright static typing across all workspace code. |
 | **Test Suite** | `just test` | Runs the full pytest test suite across all workspace packages. |
-| **Governance Rules** | `just rules-check --ci --base origin/main` | Runs devkit governance rules against modified files. |
+| **Governance Rules** | `just rules-check` | Runs devkit governance rules on the working tree. |
 | **Consumer Smoke** | `just smoke` | Builds wheels and verifies installation in a clean consumer environment. |
+
+For cumulative branch verification before integration, also run `just rules-check --ci --base <base-ref>` locally.
+The consumer smoke installs the base packages first, preserving their independent coverage, then installs the
+`devkit-spec` wheel and checks command mounting, opt-in docs seeding and seeded document discovery.
 
 ## 2. Test Execution and Restricted Environments
 
@@ -35,7 +41,7 @@ CI continues to run the complete suite through `just test`.
 
 ## 3. Release Automation
 
-Tags matching `v*` trigger the release workflow:
-1. Builds wheels for all packages via `uv build --all-packages`.
-2. Generates `SHA256SUMS`.
-3. Creates a GitHub Release and attaches the built wheel artifacts.
+Tags matching `v*` trigger the release workflow. It requires a tag on `main` matching the `devkit-agt` version,
+runs the reusable CI workflow on that commit, then calls `just release-build <tag>` to build every workspace
+package wheel and generate `SHA256SUMS` and installation notes. It publishes those artifacts in a GitHub Release.
+The separately released embedding-model wheel is referenced by URL and is not rebuilt.

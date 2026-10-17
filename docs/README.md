@@ -26,7 +26,7 @@ This project manages its documentation based on **Spec-Driven Development (SDD)*
    - `capabilities/` and `stories/` cross-reference each other via Markdown Frontmatter (`stories:` and `capabilities:`).
 2. **Separation of Durable Backbone (`docs/`) and Ephemeral Task Specs (`specs/`)**:
    - `docs/` is the permanent Living Spec maintained throughout the system lifecycle.
-   - Sprint/ticket task specifications reside in `specs/` and are archived/cleaned upon completion.
+   - Sprint/ticket task specifications reside in `specs/`; completed bundles remain in place as work history.
    - Completed work reconciles changed core architecture and rules back into `docs/` (Reconciliation).
 
 ---

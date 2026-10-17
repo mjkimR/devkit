@@ -1050,7 +1050,7 @@
     },
     ".devkit/managed/spec/rules/document_reference/guide.md": {
       "mode": 420,
-      "sha256": "2d63d1c9acda9eecea16162eed17d82011b3d532b4a1c80aed6bce777137c6d2"
+      "sha256": "e38a02a47342c68312ed316ca87c2a9048d064dc5ea4d52e6854f2dee8892915"
     },
     ".devkit/managed/spec/rules/document_reference/rule.py": {
       "mode": 420,

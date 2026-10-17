@@ -1,7 +1,7 @@
 ---
 id: CAP-HARN-agent-guidance
 title: Agent Guidance Assets
-summary: "Agent guidance deployed by the spec bundle, including proposal-local Planning feedback, per-run capture and sweep policy, worker contracts and feedback preservation before proposal deletion."
+summary: "Agent guidance deployed by the spec bundle, including delivery skills, worker contracts, feedback capture and preservation, and an opt-in docs skeleton whose documents remain discoverable after installation."
 area: harness
 status: active
 created_at: 2026-10-13
@@ -32,12 +32,12 @@ directories and writes the guidance pointer into the root `AGENTS.md` block.
 
 ## 2. Scope & Boundary
 
-- **In-Scope**: the bundle manifest and presets, the constitution, the two instructions, the guidance pointer, the 12
+- **In-Scope**: the bundle manifest and presets, the constitution, the two instructions, the guidance pointer, the
   `spec*` skills and their references, the two playbooks, the document templates and the docs skeleton; the role
   contracts as deployed assets.
 - **Out-of-Scope**:
   - Workflow definitions and role contract semantics: `CAP-DLV-delivery-workflows`.
-  - The eight rule assets and their guides: `CAP-GOV-spec-rules`.
+  - The rule assets and their guides: `CAP-GOV-spec-rules`.
   - The commands the guidance invokes: `CAP-HARN-command-mount` and the capabilities it lists.
   - Distribution, projection, context loading and playbook search themselves: devkit.
 - **Non-Goals**:
@@ -88,7 +88,7 @@ directories and writes the guidance pointer into the root `AGENTS.md` block.
 
 | Preset | Selection | Assets |
 | --- | --- | --- |
-| `core` | Automatic on `devkit sync` (`auto_select`) | Instructions, the guidance pointer, the eight rules, `templates`, the 13 skills, the four workflows, the five role contracts, the two playbooks. |
+| `core` | Automatic on `devkit sync` (`auto_select`) | Instructions, the guidance pointer, the rules, `templates`, skills, workflows, role contracts and playbooks. |
 | `docs-skeleton` | Opt-in: `devkit add spec:docs-skeleton` (or `[presets] spec = ["core", "docs-skeleton"]`) | The `docs-skeleton` seed. |
 
 A project opts out of the bundle with `[presets] spec = false` in `.devkit/config.toml`. The constitution
@@ -98,7 +98,7 @@ A project opts out of the bundle with `[presets] spec = false` in `.devkit/confi
 | --- | --- |
 | `instruction` | `contract-authoring`, `living-spec-writing` |
 | `guidance` | `spec-pointer` |
-| `rule` | `document-reference`, `id-convention`, `spec-format`, `traceability-link`, `task-coverage`, `spec-lifecycle`, `reconcile-contract`, `document-summary`, `code-entrypoints` (`CAP-GOV-spec-rules`) |
+| `rule` | `document-reference`, `id-convention`, `spec-format`, `traceability-link`, `task-coverage`, `spec-lifecycle`, `spec-progress`, `reconcile-contract`, `document-summary`, `code-entrypoints` (`CAP-GOV-spec-rules`) |
 | `skill` | the 13 skills of 4.4 |
 | `workflow` | `sdd-session-feature`, `sdd-session-bugfix`, `sdd-spec-feature`, `sdd-spec-bugfix`, `sdd-proposal` |
 | `subagent` | `challenger`, `reconcile-reviewer`, `code-reviewer`, `scout`, `planning-worker`, `development-worker` |
@@ -238,3 +238,8 @@ docs/
 
 The directory READMEs state each directory's naming and authoring conventions and point at `devkit spec list` for
 discovery instead of catalog tables.
+
+Every seeded ID-bearing document MUST parse without document-index problems and resolve by its declared ID.
+The package regression test verifies all seeded architecture IDs and preservation of customized content. The
+consumer wheel smoke installs devkit-spec after the base-only checks, verifies its command mount, and checks
+opt-in docs seeding and discovery in the installed package.

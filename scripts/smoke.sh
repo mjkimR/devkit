@@ -6,6 +6,7 @@
 # deployed and built-in rule tests, and make real commits through the installed
 # gate hooks in a fresh Git repository;
 # add the released model wheel and run a dense search;
+# install the spec wheel and verify its command mount, opt-in docs seed and document index;
 # then install the devkit-advisory wheel alone, as a runtime dependency, and
 # verify it brings devkit.advisory and nothing else of devkit.
 # The wheels are installed by path, so a same-named package on an index can never
@@ -43,6 +44,7 @@ devkit_wheel=$(wheel devkit_agt)
 advisory_wheel=$(wheel devkit_advisory)
 starter_wheel=$(wheel devkit_starter)
 catalog_wheel=$(wheel devkit_catalog)
+spec_wheel=$(wheel devkit_spec)
 
 echo "==> creating a fresh consumer project"
 (
@@ -203,6 +205,27 @@ assert load_embedder().dimensions == 256
 index = SearchIndex([SearchDocument('secrets', 'Secrets must not enter the repository'), SearchDocument('length', 'File length warning')])
 assert index.search('leaked credentials', mode=SearchMode.HYBRID)[0].id == 'secrets'
 "
+    echo "--- SDD extension: install its wheel, mount the command and opt into valid docs"
+    uv add --dev "$spec_wheel" >/dev/null
+    uv run devkit spec --version
+    uv run devkit sync >/dev/null
+    test ! -e docs
+    test -f .devkit/managed/spec/bundle.toml
+    uv run devkit add spec:docs-skeleton >/dev/null
+    uv run python -c '
+from pathlib import Path
+from devkit_spec.documents import DocumentIndex
+index = DocumentIndex.load(Path.cwd())
+assert not index.problems, index.problems
+for document_id in (
+    "ARCH-01-introduction-and-goals", "ARCH-03-context", "ARCH-05-1-containers",
+    "ARCH-05-2-components", "ARCH-06-runtime-view", "ARCH-07-deployment", "ARCH-08-cross-cutting",
+):
+    assert index.resolve(document_id).path == f"docs/architecture/{document_id}.md"
+'
+    uv run devkit spec resolve ARCH-03-context ARCH-07-deployment ARCH-08-cross-cutting >/dev/null
+    uv run devkit sync --check >/dev/null
+    uv run devkit rules check
 )
 
 echo "==> runtime-only consumer: the devkit-advisory wheel alone"

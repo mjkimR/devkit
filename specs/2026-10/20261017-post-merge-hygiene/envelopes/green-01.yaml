@@ -1,0 +1,16 @@
+kind: green
+stage: fix-verify
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-17T09:51:31.423839Z'
+status: completed
+summary: Seeded documents resolve cleanly; base and SDD consumer paths pass.
+findings: []
+assumptions:
+- Checks ran on the complete uncommitted implementation; no runtime source APIs changed.
+checks:
+  resolved: PASS strengthened skeleton regression now passes; consumer smoke verifies all seven architecture IDs without index problems
+  preserved: PASS 3101 workspace tests, opt-in and existing-content regression checks, base/advisory and SDD wheel smoke
+diff_scope:
+  base: 03220bdec593e34bfff314786bc94c67ef02199e
+  head: ''

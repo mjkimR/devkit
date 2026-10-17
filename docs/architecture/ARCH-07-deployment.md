@@ -21,8 +21,9 @@ devkit packages are not hosted on PyPI. Instead, each Git tag (`vX.Y.Z`) trigger
 GitHub Release Assets (vX.Y.Z):
 ├── devkit_agt-X.Y.Z-py3-none-any.whl
 ├── devkit_advisory-X.Y.Z-py3-none-any.whl
-├── devkit_starter-X.Y.Z-py3-none-any.whl
-├── devkit_catalog-X.Y.Z-py3-none-any.whl
+├── devkit_spec-<spec-version>-py3-none-any.whl
+├── devkit_starter-<starter-version>-py3-none-any.whl
+├── devkit_catalog-<catalog-version>-py3-none-any.whl
 └── SHA256SUMS
 ```
 
@@ -30,17 +31,15 @@ GitHub Release Assets (vX.Y.Z):
 
 In consumer projects managed with `uv`, devkit is declared either via release wheel URLs or directly via Git references in `pyproject.toml`:
 
-```toml
-[dependency-groups]
-dev = [
-    "devkit-agt",
-    "devkit-advisory",
-]
-
-[tool.uv.sources]
-devkit-agt = { git = "https://github.com/mjkimR/devkit", subdirectory = "packages/devkit", rev = "<commit-sha>" }
-devkit-advisory = { git = "https://github.com/mjkimR/devkit", subdirectory = "packages/devkit-advisory", rev = "<commit-sha>" }
+```bash
+uv add --dev "devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
+# Optional SDD extension; uv uses the same monorepo for its base dependencies:
+uv add --dev "devkit-spec @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-spec"
 ```
+
+`uv.lock` pins the resolved commits. Devkit-agt and devkit-advisory share a version; spec, starter and catalog keep
+independent versions. Release-wheel installations name every required local package wheel explicitly; release
+notes include both base and SDD installation commands.
 
 ---
 
@@ -57,10 +56,12 @@ When installed and synchronized, devkit establishes the following layout inside 
 │   │   ├── devkit/
 │   │   └── advisory/
 │   ├── overrides/             # Local modifications to upstream bundle assets
-│   ├── transient/             # Atomic transaction journals
-│   └── worktrees/             # Active task worktrees
-├── .agents/skills/            # Projected native skills for Antigravity & generic agents
+│   └── transient/             # Atomic transaction journals
+├── .agents/skills/            # Projected skills shared by Codex and Antigravity
 ├── .claude/skills/            # Projected skills for Claude Code
-├── .codex/skills/             # Projected skills for Codex
+├── .codex/agents/             # Projected Codex subagent contracts
 └── AGENTS.md                  # Root instructions with managed <!-- DEVKIT:START/END --> block
 ```
+
+Task worktrees are sibling checkouts at `<parent of base>/<base name>-wt-<branch>`, outside `.devkit/`.
+See `CAP-WT-task-worktrees` and `CAP-DIST-agent-projections` for the canonical path and projection contracts.

@@ -111,7 +111,7 @@ workflow runs the full CI on the tagged commit, refuses a tag that is not on
 `main` or does not match the devkit version, builds the wheels with
 `just release-build <tag>` (try it locally) and
 publishes the release. `devkit-advisory` has the devkit version and is bumped
-with it (devkit pins it exactly; a test checks both). `devkit-starter` and `devkit-catalog` keep their own versions.
+with it (devkit pins it exactly; a test checks both). `devkit-spec`, `devkit-starter` and `devkit-catalog` keep their own versions.
 
 `devkit-embed` keeps its own version too and is not rebuilt by releases: devkit
 installs it, in this workspace and from Git, from the release URL in the

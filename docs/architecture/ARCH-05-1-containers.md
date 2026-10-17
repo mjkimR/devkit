@@ -21,6 +21,7 @@ devkit is structured as a Python monorepo using `uv` workspaces:
 graph TD
     subgraph DevkitWorkspace ["devkit Monorepo (uv workspace)"]
         PkgDevkit["packages/devkit<br>(devkit-agt wheel)"]
+        PkgSpec["packages/devkit-spec<br>(devkit-spec wheel)"]
         PkgAdv["packages/devkit-advisory<br>(devkit-advisory wheel)"]
         PkgCat["packages/devkit-catalog<br>(devkit-catalog wheel)"]
         PkgStart["packages/devkit-starter<br>(devkit-starter wheel)"]
@@ -35,6 +36,8 @@ graph TD
     PkgAdv -.->|Runtime dependency (std-lib only)| Runtime
     PkgDevkit -.->|Dev dependency (CLI harness)| DevTools
     ModelEmbed -.->|Optional search extra| PkgDevkit
+    PkgSpec -->|Harness dependency| PkgDevkit
+    PkgSpec -.->|SDD commands and agent assets| DevTools
 ```
 
 ---
@@ -53,7 +56,15 @@ graph TD
 - **Dependencies**: None (Python standard library only).
 - **Role**: Published on its own so consumer libraries can raise and handle advisories without importing the devkit CLI or orchestration engines.
 
-### 2.3 Opt-in and Example Content Packages
+### 2.3 `devkit-spec` (`packages/devkit-spec`)
+- **Distribution Wheel**: `devkit_spec-<version>-py3-none-any.whl`
+- **CLI**: `devkit spec`, mounted through `devkit.commands`.
+- **Contents**: The SDD document model and commands, proposals, spec bundles, code entrypoints, scope registry,
+  and the `spec` guidance bundle with its workflows, rules, templates and opt-in docs skeleton.
+- **Dependencies**: `devkit-agt` and `click`; the base harness remains SDD-agnostic.
+- **Contracts**: `CAP-HARN-command-mount`, `CAP-HARN-agent-guidance`.
+
+### 2.4 Opt-in and Example Content Packages
 - **`devkit-catalog` (`packages/devkit-catalog`)**: Ships opt-in bundle assets (e.g. `github-milestones`, `host-observer`) that are installed in the environment but only deployed when explicitly selected (`devkit add <bundle>`).
 - **`devkit-starter` (`packages/devkit-starter`)**: Example external content package demonstrating bundle authoring.
 - **`devkit-embed` (`models/devkit-embed`)**: Hand-built data package containing the default dense embedding model for `devkit-agt[search]`.

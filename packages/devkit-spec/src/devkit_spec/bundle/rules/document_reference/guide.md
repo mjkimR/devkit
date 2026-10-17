@@ -14,7 +14,7 @@ ambiguous ID sends an agent to the wrong document. `stories` and `related_storie
 - **What is not**: reference extraction skips code fences, indented code, inline code other than a single ID, HTML
   comments, escapes, link labels, `~~strikethrough~~` (a historical mention of a removed document stays allowed
   there) and a heading's own ID
-  ([documents overview](https://github.com/mjkimR/devkit-spec/blob/main/docs/capabilities/documents/CAP-DOCS-document-model.md)).
+  ([documents overview](https://github.com/mjkimR/devkit/blob/main/docs/capabilities/documents/CAP-DOCS-document-model.md)).
   External URLs, images, code files, documents without IDs, links with a fragment or query and root-relative links
   keep Markdown links. Materials (`docs/materials/`, any `/materials/` directory) are free-form and not checked.
 - **Completed specs**: files of a spec bundle whose `spec.md` is `completed` are work history: checked only when named
