@@ -4,6 +4,9 @@ title: "Commit Gates"
 summary: "Pluggable commit hooks, shell wrappers, layered policies, and snapshot verification."
 area: gate
 status: active
+entrypoints:
+  - packages/devkit/src/devkit/gate/hooks/hooks.py
+  - packages/devkit/src/devkit/gate/hooks/local_config.py
 created_at: 2026-10-17
 ---
 
@@ -127,7 +130,11 @@ payloads such as `pre-push` requires a replay contract so every child receives t
 - **Automatic installation**: the `devkit.post_sync` extension `gate-hooks` runs after writing syncs, including
   `--locked`; it does not run on `--dry-run` or `--check`, or install outside a Git worktree. Unsafe layouts,
   custom `core.hooksPath` and installation failures produce `GATE_HOOK_INSTALL_SKIPPED` warnings with the
-  reason code and remediation. The sync succeeds unless warnings trigger `--strict`.
+  reason code and remediation. Automatic sync retains each existing fallback that is executable and can import
+  `devkit.gate`, validated under the clone-wide lock, so a linked worktree does not replace a valid shared fallback
+  with its own disposable interpreter. Missing or invalid fallbacks of active entries use the validated sync
+  interpreter. Explicit `devkit gate install` replaces active fallbacks with `sys.executable` or its `--python`
+  argument. The sync succeeds unless warnings trigger `--strict`.
 - **Removal**: uninstall removes owned `20-devkit` entries. If user entries remain, it keeps the dispatcher,
   `00-legacy` and the preserved hook. Otherwise it removes the dispatcher and managed adapter and restores
   `<hook>.legacy`. It never deletes user entries, including non-executable files or directories.

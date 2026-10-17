@@ -1,9 +1,13 @@
 ---
 id: CAP-DLV-workflow-envelopes
 title: "Workflow Envelopes"
-summary: "Stage envelopes recording findings, questions, problems, and verification evidence."
+summary: "Stage envelopes recording findings with optional severity, questions, problems, and verification evidence, with CLI scope revisions verified in Git workspaces."
 area: delivery
 status: active
+entrypoints:
+  - packages/devkit/src/devkit/workflow/cli/envelope.py
+  - packages/devkit/src/devkit/workflow/unit/envelope/authoring.py
+  - packages/devkit/src/devkit/workflow/unit/envelope/model.py
 created_at: 2026-10-17
 ---
 
@@ -29,13 +33,14 @@ findings:
     evidence: "path:line"
     failure_condition: "Under which input it fails"
     suggested_action: "Recommended next step"
+    severity: "medium"       # optional non-empty string; descriptive metadata
     resolution: open         # open | resolved | waived (default open)
     waiver: "why it is accepted"   # waived findings only
 assumptions: ["what the judgment rests on"]        # optional
 unverified_areas: ["what was not checked"]        # optional
 checks:                      # free-form keys; a value starting with PASS satisfies envelope-check-pass
   tests: "PASS 14/14"
-diff_scope: { base: "main", head: "<sha>" }
+diff_scope: { base: "<base-sha>", head: "<head-sha>" }
 review: review-01.yaml       # reverify only: the review round it closes
 ```
 
@@ -44,6 +49,7 @@ review: review-01.yaml       # reverify only: the review round it closes
 - `workflow` (a workflow id) and `segment` (a non-negative integer) scope the envelope to one `CAP-DLV-workflow-orchestration`, like decision records: the checks of a workflow count only envelopes whose `workflow` is that workflow and whose `segment` is the number of entries in the anchor's `workflow_history` (`0` before the first handoff). After a handoff the next workflow therefore does not see the previous segment's reviews, and a workflow re-entered later (`a` to `b` to `a`) does not see those of its earlier segment. An envelope without `workflow` counts in every segment; one with `workflow` but no `segment` counts in every segment of that workflow. A `workflow` that is not an id, or a `segment` that is not a non-negative integer, makes the envelope malformed.
 - `completed` with no findings is a valid pass. `needs_input` and `failed` never satisfy a check.
 - `assumptions` and `unverified_areas` are lists of strings; `checks` is a mapping; `findings` is a list of mappings with only the finding keys shown above. `activity_effort`, on any kind, is `low`, `medium` or `high`: the effort the run applied. The kinds of delegated work carry the fields of [section 1.1](#11-questions-answers-problems-and-resolutions); on any other kind those fields make the envelope malformed. Other top-level keys are ignored.
+- Finding `severity`, when supplied, is a non-empty string label. Empty, whitespace-only and non-string values are malformed. It is preserved in loading, serialization and reverify carry-forward; omission stays omitted. It has no effect on open-finding counts, check satisfaction or exit codes.
 - Malformed envelopes are reported as `[ENVELOPE_ERROR: file "reason"]` (in JSON, an `ENVELOPE_INVALID` entry of `errors` with its `file`) and are not loaded; evaluation continues.
 
 ### 1.1 Questions, Answers, Problems and Resolutions
@@ -120,9 +126,9 @@ Five kinds have a command of their own that takes the options of their fields: `
 | `--summary TEXT` | The judgment. |
 | `--assume TEXT`, `--unverified TEXT` | Repeatable; fill `assumptions` and `unverified_areas`. |
 | `--check NAME=VERDICT[ detail]` | Repeatable; `VERDICT` is `PASS`, `FAIL` or `SKIP` and may carry a detail such as `PASS 14/14`. |
-| `--base REV`, `--head REV` | `diff_scope`; `--head` is what `revision-ancestor` compares and must be a hexadecimal commit id (`--head $(git rev-parse HEAD)`). |
+| `--base REV`, `--head REV` | `diff_scope`; `--head` is what `revision-ancestor` compares and must be a hexadecimal commit id (`--head $(git rev-parse HEAD)`). In Git workspaces each supplied revision must resolve to a commit and is stored as its full commit ID. Unknown and non-commit revisions are refused with `ENVELOPE_FLAG_INVALID` (exit `2`) before writing an envelope. |
 | `--effort low\|medium\|high` | `activity_effort`. |
-| `--findings-file PATH` (or `-` for stdin) | `new`, `worker`, `review` and `reverify`: a YAML list of findings with `issue` and `evidence` (required) and optionally `failure_condition`, `suggested_action`, `resolution` (default `open`) and `waiver`; other keys are refused. A `review` records findings as found, so a resolution other than `open` is refused. |
+| `--findings-file PATH` (or `-` for stdin) | `new`, `worker`, `review` and `reverify`: a YAML list of findings with `issue` and `evidence` (required) and optionally `failure_condition`, `suggested_action`, `severity` (a non-empty string label), `resolution` (default `open`) and `waiver`; other keys are refused. A `review` records findings as found, so a resolution other than `open` is refused. |
 | `--from latest` (or a review/reverify file) | `reverify` only, and required by its contract: carries the findings of the round being closed and sets its `review`. `latest` is the deciding review state among the envelopes of the current segment. |
 | `--resolve N` (repeatable) or `--resolve all` | `reverify` only: marks carried finding `N` (1-based) resolved; `all` resolves every open one. A number outside the carried findings is `ENVELOPE_FLAG_INVALID`. |
 | `--waive N=REASON` (repeatable) | `reverify` only: marks carried finding `N` waived and records the reason as its `waiver`; `suggested_action` is kept. |
@@ -132,6 +138,8 @@ Five kinds have a command of their own that takes the options of their fields: `
 | `--resolves FILE` | `resolution`: the worker envelope whose problem it resolves (`ENVELOPE_REFERENCE_INVALID` when it carries none). |
 
 The status defaults to `needs_input` with `--questions-file`, `failed` with only `--problem`, and `completed` otherwise. Before writing, every authoring command refuses an envelope its loader would report malformed: fields or a status the kind does not allow (`ENVELOPE_FLAG_INVALID`) or a reference that does not fit. Only one of `--findings-file`, `--questions-file` and `--answers-file` may read stdin. A bare skeleton of these kinds (no authoring flag) lists their fields with placeholders and, like a reverify skeleton, stays malformed until it is filled in.
+
+Revision resolution applies to CLI authoring commands, including kind-specific commands. Outside Git, authoring retains supplied scope values and the hexadecimal head syntax check. Pure library composition and historical loading remain independent of repository history; they do not resolve revisions.
 
 Findings from `--findings-file` are appended after any carried findings. The written key order is `kind, stage, workflow, segment, created_at, status, review, summary, findings, assumptions, unverified_areas, checks, diff_scope, questions, answers_to, answers, problem, resolves, activity_effort`, omitting empty optional keys. The kind must match `[a-z][a-z0-9-]*` (`ENVELOPE_KIND_INVALID`). The sequence follows the highest `<kind>-NN` file present, malformed files included. The confirmation line is `[ENVELOPE: <file> kind=K seq=NN status=S open_findings=N]`; `--format json` emits `{"file", "kind", "seq", "status", "open_findings"}`.
 

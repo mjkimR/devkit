@@ -2,7 +2,7 @@
 id: SPEC-hygiene-reliability
 title: Repair hygiene reliability and rule reference size
 summary: "Preserve shared hook interpreters during sync, validate envelope revisions, retain finding severity, and split the rules reference."
-status: in-progress
+status: completed
 created: 2026-10-17
 related_capabilities:
   - CAP-GATE-commit-gates
