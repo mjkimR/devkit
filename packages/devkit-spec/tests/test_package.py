@@ -15,6 +15,8 @@ from devkit.cli import COMMANDS
 from devkit.cli import cli as devkit_cli
 from devkit.distribution import load_bundle
 
+from devkit_spec.documents import DocumentIndex
+
 ROOT = Path(__file__).resolve().parents[1]
 BUNDLE = ROOT / "src/devkit_spec/bundle"
 RULES = (
@@ -119,5 +121,15 @@ def test_the_docs_skeleton_is_opt_in_and_passes_the_rules(tmp_path: Path) -> Non
     assert added.returncode == 0, added.stderr
     assert (tmp_path / "docs/architecture/ARCH-01-introduction-and-goals.md").is_file()
     assert (tmp_path / "docs/glossary.yaml").is_file()
+    index = DocumentIndex.load(tmp_path)
+    assert not index.problems, index.problems
+    for source in (BUNDLE / "seed/docs/architecture").glob("ARCH-*.md"):
+        assert index.resolve(source.stem).path == f"docs/architecture/{source.name}"
+    existing = tmp_path / "docs/architecture/ARCH-01-introduction-and-goals.md"
+    customized = existing.read_text(encoding="utf-8") + "\nProject-owned content.\n"
+    existing.write_text(customized, encoding="utf-8")
+    synced = _devkit("sync", "-w", str(tmp_path))
+    assert synced.returncode == 0, synced.stderr
+    assert existing.read_text(encoding="utf-8") == customized
     check = _devkit("rules", "check", "-w", str(tmp_path))
     assert check.returncode == 0, check.stdout

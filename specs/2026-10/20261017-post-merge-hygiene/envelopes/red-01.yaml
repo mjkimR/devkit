@@ -1,0 +1,15 @@
+kind: red
+stage: reproduce
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-17T09:49:20.010622Z'
+status: completed
+summary: Seed regression fails on three malformed architecture summaries.
+findings: []
+assumptions:
+- Regression ran on the uncommitted strengthened test against unchanged seed files.
+checks:
+  reproduced: PASS strengthened test_the_docs_skeleton_is_opt_in_and_passes_the_rules fails with three SPEC_DOCUMENT_INVALID index problems before seed changes
+diff_scope:
+  base: 03220bdec593e34bfff314786bc94c67ef02199e
+  head: ''
