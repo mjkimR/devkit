@@ -3,3 +3,8 @@
 [rules.settings.RULE-cli-contract]
 # devkit-spec's `devkit spec` group is the documented example of a command plugin; it is not installed here.
 unchecked_commands = ["spec"]
+
+# Capabilities carry full contracts, interfaces and code tables; they are long by nature (RULE-file-length guide §5).
+[[rules.settings.RULE-file-length.overrides]]
+path = "docs/capabilities/**"
+max_lines = 600
