@@ -2,7 +2,7 @@
 id: SPEC-post-merge-hygiene
 title: Repair post-integration package hygiene
 summary: "Repair invalid seeded document metadata and align package installation, smoke verification and documentation with the monorepo."
-status: in-progress
+status: completed
 created: 2026-10-17
 related_capabilities:
   - CAP-HARN-agent-guidance
