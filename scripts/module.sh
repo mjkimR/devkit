@@ -6,7 +6,8 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 source ./scripts/_lib.sh
 
 action=${1:?Expected an action}
-target=$(resolve_module "${2:-all}")
+requested_target=${2:-all}
+target=$(resolve_module "$requested_target")
 shift $(($# < 2 ? $# : 2))
 validate_module "$target"
 # Assigned before the loop so a discovery failure aborts under `set -e`.
@@ -24,6 +25,14 @@ if [ "$action" = init ]; then
     fi
     exit 0
 fi
+
+# asyncio and the MCP SDK use local sockets to wake their event loops from threads.
+# Fail before pytest starts when a sandbox blocks those writes; the caller owns approval and retry.
+case "$action" in
+    test|test-cov)
+        uv run --no-active python scripts/check_test_environment.py -- just "$action" "$requested_target" "$@"
+        ;;
+esac
 
 # One pytest session over every module: the root configuration lists all test paths.
 if [ "$target" = all ]; then

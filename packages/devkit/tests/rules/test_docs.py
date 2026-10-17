@@ -1,4 +1,4 @@
-"""The runnable examples in ``docs/rules`` execute against a real workspace."""
+"""The rule capability and reference examples execute against a real workspace."""
 
 from __future__ import annotations
 
@@ -8,7 +8,9 @@ from typing import Any
 
 import pytest
 
-DOCS = Path(__file__).parents[4] / "docs/rules"
+DOCS = Path(__file__).parents[4] / "docs"
+AUTHORING = "capabilities/governance/CAP-GOV-rule-authoring.md"
+REFERENCE = "development/reference/rules.md"
 _BLOCK = re.compile(r"```python\n(.*?)```", re.DOTALL)
 
 
@@ -23,15 +25,15 @@ def test_rule_authoring_example_package_and_registration_run(tmp_path: Path, mon
     monkeypatch.chdir(tmp_path)
     package = tmp_path / "rules/doc_heading"
     (package / "tests").mkdir(parents=True)
-    (helper,) = _blocks("rule-authoring.md", "def starts_with_h1(")
-    (rule_source,) = _blocks("rule-authoring.md", "class DocHeadingRule(BaseRule)")
+    (helper,) = _blocks(AUTHORING, "def starts_with_h1(")
+    (rule_source,) = _blocks(AUTHORING, "class DocHeadingRule(BaseRule)")
     (package / "headings.py").write_text(helper)
     (package / "rule.py").write_text(rule_source)
     (package / "guide.md").write_text("# RULE-doc-heading\n")
     (package / "tests/test_headings.py").write_text("raise RuntimeError('devkit never imports tests')\n")
 
     namespace: dict[str, Any] = {}
-    (registration,) = _blocks("rule-authoring.md", "registry.discover_from_dir(")
+    (registration,) = _blocks(AUTHORING, "registry.discover_from_dir(")
     exec(registration, namespace)
     assert namespace["registry"].errors == []
     result = namespace["result"]
@@ -56,7 +58,7 @@ def test_reference_settings_example_runs(tmp_path: Path) -> None:
     (workspace / ".devkit/config.toml").write_text('[rules.settings.RULE-banned-words]\nbanned = ["TODO", "FIXME"]\n')
     rules = tmp_path / "rules"
     (rules / "banned_words").mkdir(parents=True)
-    (source,) = _blocks("reference.md", "class BannedWordsRule(BaseRule)")
+    (source,) = _blocks(REFERENCE, "class BannedWordsRule(BaseRule)")
     (rules / "banned_words/rule.py").write_text(source)
     from devkit.rules import run_project_rules
 
