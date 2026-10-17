@@ -169,4 +169,3 @@ class BannedWordsRule(BaseRule):
                 out.append(Violation(self.id, rel, 1, "banned marker"))
         return out
 ```
-
