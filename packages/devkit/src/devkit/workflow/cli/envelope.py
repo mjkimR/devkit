@@ -10,9 +10,11 @@ from typing import Any
 
 import click
 
+from devkit.core import GitError, run_git
 from devkit.core.cli import FORMAT_OPTION, boundary, echo_json, exit_on_problems, is_json
 from devkit.workflow.cli.app import ANCHOR, UNIT, WORKSPACE, cli, workspace
 from devkit.workflow.errors import EnvelopeFlagError
+from devkit.workflow.evaluation.git import is_revision
 from devkit.workflow.render import quote, render_hold
 from devkit.workflow.unit.envelope import (
     compose_envelope,
@@ -47,9 +49,13 @@ def _common(stage_required: bool = False) -> Callable[[Callable[..., Any]], Call
         click.option("--assume", "assumptions", multiple=True, help="An assumption the judgment rests on (repeatable)"),
         click.option("--unverified", "unverified", multiple=True, help="An area that was not verified (repeatable)"),
         click.option("--check", "checks", multiple=True, help="Check result name=PASS|FAIL|SKIP[ detail] (repeatable)"),
-        click.option("--base", default="", help="diff_scope base revision"),
         click.option(
-            "--head", default="", help="diff_scope head commit id (hexadecimal; required for revision-ancestor)"
+            "--base", default="", help="diff_scope base revision (resolved to a full commit id in Git workspaces)"
+        ),
+        click.option(
+            "--head",
+            default="",
+            help="diff_scope head commit id (hexadecimal; resolved and verified in Git workspaces)",
         ),
         click.option("--effort", default="", help="activity_effort the run applied: low | medium | high"),
     )
@@ -80,6 +86,36 @@ def _read_items_file(flag: str, path: str | None, what: str) -> str | None:
             target_files=[path],
             fix=f"Pass a readable YAML list of {what}, or - for stdin",
         ) from exc
+
+
+def _resolve_scope(root: Path, base: str, head: str) -> tuple[str, str]:
+    """Resolve supplied scope revisions before writing; retain lexical-only authoring outside Git."""
+    if head and not is_revision(head):
+        raise EnvelopeFlagError(
+            f"--head {head!r} must be a hexadecimal commit id", fix="Pass --head $(git rev-parse HEAD)"
+        )
+    if not (base or head):
+        return base, head
+    # Workspace.root is normalized to the Git top level inside a repository (including linked worktrees).
+    # Detect metadata rather than interpreting Git's human-readable error messages as a not-a-repository signal.
+    if not (root / ".git").exists():
+        return base, head
+    resolved = []
+    for flag, revision in (("--base", base), ("--head", head)):
+        if not revision:
+            resolved.append("")
+            continue
+        try:
+            sha = run_git(root, "rev-parse", "--verify", "--end-of-options", f"{revision}^{{commit}}")
+        except GitError as exc:
+            if exc.returncode is None:
+                raise
+            raise EnvelopeFlagError(
+                f"{flag} {revision!r} does not resolve to a commit",
+                fix=f"Pass {flag} an existing commit in this repository (inspect `git rev-parse --verify <rev>^{{commit}}`)",
+            ) from exc
+        resolved.append(sha.decode("ascii").strip())
+    return resolved[0], resolved[1]
 
 
 def _write(
@@ -128,6 +164,7 @@ def _write(
         findings_yaml = _read_items_file("--findings-file", findings_file, "findings")
         questions_yaml = _read_items_file("--questions-file", questions_file, "questions")
         answers_yaml = _read_items_file("--answers-file", answers_file, "answers")
+        base, head = _resolve_scope(ws.root, base, head)
         loaded = load_envelopes(unit_dir)
         draft = compose_envelope(
             unit_dir=unit_dir,

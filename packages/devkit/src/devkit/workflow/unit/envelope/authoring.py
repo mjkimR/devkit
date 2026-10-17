@@ -156,7 +156,7 @@ def parse_findings(text: str, kind: str) -> tuple[Finding, ...]:
         except EnvelopeFormatError as exc:
             raise EnvelopeFindingsError(
                 f"--findings-file: {exc}",
-                fix=f"Write a mapping with only {', '.join(FINDING_KEYS[:5])} (and waiver on a waived finding)",
+                fix=f"Write a mapping with only {', '.join(FINDING_KEYS)} (waiver only on a waived finding)",
             ) from exc
         finding = replace(finding, issue=finding.issue.strip(), evidence=finding.evidence.strip())
         if not finding.issue or not finding.evidence:

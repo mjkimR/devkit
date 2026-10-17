@@ -1,7 +1,7 @@
 ---
 id: FB-worktree-sync-repoints-the-hook-interpreter
 title: devkit sync in a task worktree points the shared hooks' fallback interpreter at that worktree
-scope: upstream
+scope: repo
 kind: friction
 category: tool-error
 target: devkit sync (post-sync gate-hooks extension)
@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: true
-status: open
+status: promoted
 created_at: 2026-10-15
 ---
 
@@ -50,3 +50,5 @@ $ uv run devkit gate install   (base)
 [HOOK: pre-commit state=managed python=<base>/.venv/bin/python3 python_ok=true scripts=10-cgate,20-devkit]
 ```
 
+
+- **Disposition**: `SPEC-hygiene-reliability`: Automatic sync retains each valid shared fallback; explicit installs select a replacement interpreter.

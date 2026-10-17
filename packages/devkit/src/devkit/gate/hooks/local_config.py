@@ -252,7 +252,7 @@ def post_sync(root: Path, result: dict[str, Any]) -> list[AdvisoryError] | None:
         return None
     notices: list[AdvisoryError] = []
     try:
-        installed = hooks.install(top, sys.executable)
+        installed = hooks.install(top, sys.executable, preserve_python=True)
     except (AdvisoryError, OSError) as exc:
         if isinstance(exc, AdvisoryError):
             notice = HookInstallSkippedNotice(

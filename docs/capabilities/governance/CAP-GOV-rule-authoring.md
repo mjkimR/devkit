@@ -257,7 +257,7 @@ result = evaluate_rules(ctx, registry.get_all())
 print(f"Total findings: {len(result.violations)}")
 ```
 
-`RuleContext` takes every argument by keyword; only `workspace_root` is required. Pass `cache=WorkspaceCache(root)` to share one cache across several evaluations; without it the context creates its own. A cache built for another root is refused. To run a project as `devkit rules check` does (policy, receipt rules and `rules_dir` together), call `run_project_rules` instead ([Rules Reference, Library](../../development/reference/rules.md#library)).
+`RuleContext` takes every argument by keyword; only `workspace_root` is required. Pass `cache=WorkspaceCache(root)` to share one cache across several evaluations; without it the context creates its own. A cache built for another root is refused. To run a project as `devkit rules check` does (policy, receipt rules and `rules_dir` together), call `run_project_rules` instead ([Rules Reference, Library](../../development/reference/rules-library.md)).
 
 ## 6. Testing a Rule
 
@@ -267,7 +267,7 @@ anything under `tests/` or named `test_*.py`/`*_test.py`. Leave `tests/` without
 files by path (`--import-mode=importlib`). The built-in rules follow the same layout
 (`devkit/rules/rules/<name>/tests/test_rule.py`), as do the `authoring` bundle's rules.
 
-`devkit.rules.testing` loads and evaluates a rule as devkit does ([Rules Reference, Rule tests](../../development/reference/rules.md#rule-tests)):
+`devkit.rules.testing` loads and evaluates a rule as devkit does ([Rules Reference, Rule tests](../../development/reference/rules-library.md#rule-tests)):
 
 - `load_rule(__file__)` loads the folder above `tests/` as a plugin package, exactly as a deployed copy is loaded, and
   returns its rule (`load_rule(__file__, "RULE-x")` when the package defines several). The tests of a deployed copy

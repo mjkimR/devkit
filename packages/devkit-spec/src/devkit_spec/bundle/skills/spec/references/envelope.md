@@ -18,6 +18,7 @@ findings:
     evidence: "path:line or source URL"
     failure_condition: "Under which input or state it fails (required for challenger and reviewer)"
     suggested_action: "Recommended next step"
+    severity: "medium"        # optional descriptive non-empty string
 assumptions: ["Assumptions made inside the approved scope"]
 unverified_areas: ["Scope not explored or needing confirmation"]
 checks: { tests: "PASS 14/14" }        # when the role ran checks
@@ -25,7 +26,7 @@ diff_scope: { base: "<ref>", head: "<sha>" }
 ```
 
 - `completed` with an empty `findings` list is a valid pass (zero findings allowed; no filler objections).
-- A finding carries only the keys above (devkit adds `resolution` and `waiver`) and refuses any other, `severity` included (`ENVELOPE_FINDINGS_INVALID`): never request a severity field from a role; a rank goes into `issue`, such as `(medium) ...`.
+- A finding carries only the keys above (devkit adds `resolution` and `waiver`) and refuses any other (`ENVELOPE_FINDINGS_INVALID`). Optional `severity` is a non-empty string label retained through review and reverify; it does not change finding resolution or gate outcomes.
 - `needs_input` names the missing input or the decision only the human can make.
 - `failed` covers timeout, cancellation, tool failure, unsupported host feature, or a stale `diff_scope`. A failed or stale result is never completion evidence.
 - Docs impact has no envelope key: the implementer writes it into `reconcile.md` (targets, or the no-impact reasoning in its body). Its verification at every effort is a `reconcile-check` envelope ([completion](completion.md)).
@@ -67,5 +68,5 @@ docs/proposals/PROP-<slug>/envelopes/<kind>-<NN>.yaml
 - Required keys: `kind` (equal to the file name kind) and `status`. A malformed file is reported as `[ENVELOPE_ERROR: ...]` and ignored.
 - Everything else is optional and written only when it carries information: `stage`, `summary` (recommended), `findings`, `assumptions`, `unverified_areas`, `checks`, `diff_scope`. Do not restate other files: Git has the dates and paths, `reconcile.md` has the docs impact.
 - `dev-integration` approval is not an envelope. Under `ask`, authority is the user's explicit OK, asserted with `--given dev-integration` on each `devkit workflow next --unit <dir>` after it and never written to a file, or the PR ready state where a runner binds the gate. Under `auto`, it is the reported policy delegation after required review, reconciliation and checks (`[GATE_PASSED: dev-integration ... source=policy]`). After that authorization `devkit workflow next --unit <dir>` names the `integrate` stage.
-- `devkit workflow next --unit <dir>` evaluates these files (`envelope-review-passed`, `envelope-check-pass`, `envelope-completed`, `revision-ancestor`; `revision-ancestor` compares `diff_scope.head` of two kinds and needs real commit ids). Write files with `devkit workflow envelope new --unit <dir> --kind <kind> [--stage <id>]` (`review`, `reverify`, `worker`, `answer`, `resolution`: `envelope <kind>`) and authoring flags; never edit YAML: `--summary`, repeatable `--check key=PASS|FAIL|SKIP[ detail]` (how `envelope-check-pass` stages such as `feedback`, `red` and `green` get their evidence), `--assume`, `--unverified`, `--findings-file <path>|-`, `--base`, `--head $(git rev-parse HEAD)`; `envelope reverify --from latest --resolve N|all --waive N=REASON` carries findings forward. Check files with `devkit workflow envelope check --unit <dir>`.
+- `devkit workflow next --unit <dir>` evaluates these files (`envelope-review-passed`, `envelope-check-pass`, `envelope-completed`, `revision-ancestor`; `revision-ancestor` compares `diff_scope.head` of two kinds and needs real commit ids). Write files with `devkit workflow envelope new --unit <dir> --kind <kind> [--stage <id>]` (`review`, `reverify`, `worker`, `answer`, `resolution`: `envelope <kind>`) and authoring flags; never edit YAML: `--summary`, repeatable `--check key=PASS|FAIL|SKIP[ detail]` (how `envelope-check-pass` stages such as `feedback`, `red` and `green` get their evidence), `--assume`, `--unverified`, `--findings-file <path>|-`, `--base`, `--head $(git rev-parse HEAD)` (supplied revisions resolve to full commit IDs in Git workspaces; unknown or non-commit revisions are refused); `envelope reverify --from latest --resolve N|all --waive N=REASON` carries findings forward. Check files with `devkit workflow envelope check --unit <dir>`.
 - `session` depth keeps the report in the final response or PR body and writes no envelope at any effort; a reviewer subagent returns its result as a message. The conversation always keeps the summary and the file path, never the whole envelope.

@@ -15,7 +15,9 @@ The updated contracts are `CAP-GATE-commit-gates` and `CAP-DLV-workflow-envelope
 - Gate hook installation gains an automatic-only fallback-preservation option, validated within the clone lock.
 - Workflow CLI resolves supplied scope revisions with core run_git in Git workspaces before writing an envelope.
 - Finding parsing and serialization retain optional descriptive severity strings, including reverify carry-forward.
+  Update the spec bundle reference that currently forbids severity, then sync its receipt and projections.
 - Move the rules library section to rules-library.md and update inbound links.
+- Promote the three selected hygiene feedback records to this spec and correct their ownership to repo.
 - No new dependencies, migrations or schema versions.
 
 ## 3. Failure Modes and Boundaries

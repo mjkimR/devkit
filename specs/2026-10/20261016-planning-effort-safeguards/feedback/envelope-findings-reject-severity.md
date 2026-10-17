@@ -1,7 +1,7 @@
 ---
 id: FB-envelope-findings-reject-severity
 title: Envelope findings refuse a severity key that role outputs naturally carry
-scope: upstream
+scope: repo
 kind: friction
 category: tool-error
 target: devkit workflow envelope review --findings-file
@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: true
-status: open
+status: promoted
 created_at: 2026-10-16
 ---
 
@@ -46,3 +46,5 @@ created_at: 2026-10-16
 [ERROR] (ENVELOPE_FINDINGS_INVALID) --findings-file: finding 1: unknown keys ['severity']
 [FIX] Write a mapping with only issue, evidence, failure_condition, suggested_action, resolution (and waiver on a waived finding)
 ```
+
+- **Disposition**: `SPEC-hygiene-reliability`: Finding severity is optional non-empty string metadata retained through review and reverify.

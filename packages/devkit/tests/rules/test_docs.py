@@ -10,7 +10,7 @@ import pytest
 
 DOCS = Path(__file__).parents[4] / "docs"
 AUTHORING = "capabilities/governance/CAP-GOV-rule-authoring.md"
-REFERENCE = "development/reference/rules.md"
+REFERENCE = "development/reference/rules-library.md"
 _BLOCK = re.compile(r"```python\n(.*?)```", re.DOTALL)
 
 

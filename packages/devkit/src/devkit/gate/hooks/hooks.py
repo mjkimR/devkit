@@ -388,11 +388,12 @@ def _entries(path: Path) -> Path:
     return path.with_name(path.name + ".d")
 
 
-def install(cwd: Path, python: str, *, force: bool = False) -> InstallResult:
+def install(cwd: Path, python: str, *, force: bool = False, preserve_python: bool = False) -> InstallResult:
     """Install dispatchers and ``20-devkit`` entries, preserving regular foreign hooks automatically.
 
     ``force`` also permits moving symlinks or non-regular hooks. Preflight all stages before writing;
     reserved entry collisions, existing backups and custom ``core.hooksPath`` are always refused.
+    Automatic sync uses ``preserve_python`` to retain each valid existing fallback under the clone lock.
     """
     location = locate(cwd)
     _refuse_hooks_path(location)
@@ -431,6 +432,14 @@ def install(cwd: Path, python: str, *, force: bool = False) -> InstallResult:
                 entry = entries / name
                 if _present(entry) and not _owned(entry, marker):
                     raise HookLayoutError("reserved hook entry is not managed by devkit", str(entry))
+        fallbacks: dict[str, str] = {}
+        if preserve_python:
+            for item in current:
+                if item.python and item.python not in fallbacks:
+                    try:
+                        fallbacks[item.python] = check_python(item.python)
+                    except GatePythonError:
+                        fallbacks[item.python] = recorded
         location.directory.mkdir(parents=True, exist_ok=True)
         result = InstallResult()
         for item in current:
@@ -439,7 +448,7 @@ def install(cwd: Path, python: str, *, force: bool = False) -> InstallResult:
             if item in moving or _present(_backup(item.path)):
                 _write(entries / LEGACY_ENTRY, legacy_script(item.stage))
             if item.stage in stages:
-                _write(entries / DEVKIT_ENTRY, wrapper_script(item.stage, recorded))
+                _write(entries / DEVKIT_ENTRY, wrapper_script(item.stage, fallbacks.get(item.python or "", recorded)))
             if item in moving:
                 os.rename(item.path, _backup(item.path))
             try:

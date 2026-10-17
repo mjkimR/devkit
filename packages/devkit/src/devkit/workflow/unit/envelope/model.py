@@ -29,7 +29,7 @@ WORKER_REF = re.compile(r"worker-\d{2,}\.ya?ml")
 RESOLUTIONS = ("open", "resolved", "waived")
 STATUSES = ("completed", "needs_input", "failed")
 EFFORTS = ("low", "medium", "high")
-FINDING_KEYS = ("issue", "evidence", "failure_condition", "suggested_action", "resolution", "waiver")
+FINDING_KEYS = ("issue", "evidence", "failure_condition", "suggested_action", "resolution", "waiver", "severity")
 QUESTION_KEYS = ("id", "title", "prompt", "context", "options", "allow_note")
 OPTION_KEYS = ("id", "description", "recommended")
 ANSWER_KEYS = ("question", "choice", "decision", "constraints")
@@ -47,6 +47,7 @@ class Finding:
     suggested_action: str = ""
     resolution: str = "open"
     waiver: str = ""  # why a waived finding is accepted
+    severity: str = ""  # optional descriptive label; does not affect checks
 
     def to_dict(self) -> dict[str, str]:
         out = {"issue": self.issue, "evidence": self.evidence}
@@ -57,6 +58,8 @@ class Finding:
         out["resolution"] = self.resolution
         if self.waiver:
             out["waiver"] = self.waiver
+        if self.severity:
+            out["severity"] = self.severity
         return out
 
 
@@ -314,7 +317,11 @@ def parse_finding(item: Any, where: str) -> Finding:
     resolution = as_text(item.get("resolution")) or "open"
     if resolution not in RESOLUTIONS:
         raise EnvelopeFormatError(f"{where}.resolution {resolution!r} not in {'|'.join(RESOLUTIONS)}")
+    severity = item.get("severity", "")
+    if "severity" in item and (not isinstance(severity, str) or not severity.strip()):
+        raise EnvelopeFormatError(f"{where}.severity: expected a non-empty string")
     return Finding(
+        severity=severity,
         issue=as_text(item.get("issue")),
         evidence=as_text(item.get("evidence")),
         failure_condition=as_text(item.get("failure_condition")),

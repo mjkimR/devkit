@@ -726,7 +726,7 @@
     },
     ".agents/skills/spec/references/envelope.md": {
       "mode": 420,
-      "sha256": "485a52e359c8224439cf3ec06174d95bc50523c6e9bb6e9e28d5c759163329d2"
+      "sha256": "89018ffbdadca2b9f740f42a567ef489693537564a30d0de81e7abdd4474c207"
     },
     ".agents/skills/spec/references/feedback-retirement.md": {
       "mode": 420,
@@ -898,7 +898,7 @@
     },
     ".claude/skills/spec/references/envelope.md": {
       "mode": 420,
-      "sha256": "485a52e359c8224439cf3ec06174d95bc50523c6e9bb6e9e28d5c759163329d2"
+      "sha256": "89018ffbdadca2b9f740f42a567ef489693537564a30d0de81e7abdd4474c207"
     },
     ".claude/skills/spec/references/feedback-retirement.md": {
       "mode": 420,
@@ -1274,7 +1274,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/envelope.md": {
       "mode": 420,
-      "sha256": "485a52e359c8224439cf3ec06174d95bc50523c6e9bb6e9e28d5c759163329d2"
+      "sha256": "89018ffbdadca2b9f740f42a567ef489693537564a30d0de81e7abdd4474c207"
     },
     ".devkit/managed/spec/skills/spec/references/feedback-retirement.md": {
       "mode": 420,

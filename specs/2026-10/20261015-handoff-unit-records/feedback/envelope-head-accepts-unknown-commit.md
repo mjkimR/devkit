@@ -1,7 +1,7 @@
 ---
 id: FB-envelope-head-accepts-unknown-commit
 title: devkit workflow envelope new accepts a --head that names no commit
-scope: upstream
+scope: repo
 kind: friction
 category: tool-error
 target: devkit workflow envelope new --head
@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-15
 ---
 
@@ -38,3 +38,5 @@ $ devkit workflow envelope new --unit specs/2026-10/20261015-smoke-check --kind 
 $ devkit workflow envelope check --unit specs/2026-10/20261015-smoke-check
 [OK: 1 envelopes]
 ```
+
+- **Disposition**: `SPEC-hygiene-reliability`: CLI authoring resolves supplied base and head revisions to existing full commit IDs in Git workspaces.
