@@ -76,3 +76,9 @@ class HostMcpRegistrationConflict(HostError):
 class HostMcpRuntimeError(HostError):
     code = "HOST_MCP_RUNTIME_UNSAFE"
     fix = "Run devkit host mcp setup --host codex using the retained base checkout and its Python environment outside linked worktrees"
+
+
+class HostMcpRegistrationShadowed(HostError):
+    code = "HOST_MCP_REGISTRATION_SHADOWED"
+    guardrail = True
+    fix = "Inspect Codex project/profile MCP settings and the user devkit entry; resolve the override explicitly before retrying user-scoped setup"

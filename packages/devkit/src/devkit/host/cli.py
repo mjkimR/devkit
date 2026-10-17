@@ -138,7 +138,7 @@ def mcp_status(host: str, workspace_root: str | None, output_format: str) -> Non
         echo_json(result)
     else:
         click.echo(
-            f"[HOST_MCP_STATUS: {host} server=devkit scope=user state={result['state']} sdk={'yes' if result['sdk_available'] else 'no'} connection=unknown]"
+            f"[HOST_MCP_STATUS: {host} server=devkit scope=user state={result['state']} effective={result['effective_state']} sdk={'yes' if result['sdk_available'] else 'no'} connection=unknown]"
         )
         echo_notices(errors)
     sys.exit(report_exit_code(errors))

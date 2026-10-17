@@ -70,6 +70,13 @@ registration from a working connection and visible approval UI.
   conflict handling, status, removal, client reconnect and separate UI verification. CLI JSON is exactly one object,
   text results are sentinels, and subprocess output never leaks into result streams.
 
+### [AC-06] Project configuration does not authorize hidden user writes
+
+- **Given** the workspace or an ancestor declares a project-level devkit MCP entry
+- **When** status or setup runs, including setup with --replace
+- **Then** status distinguishes user registration state and effective workspace state; setup refuses with
+  HOST_MCP_REGISTRATION_SHADOWED before mutation, preserving both configuration files even for a matching project entry.
+
 ## 5. Assumptions
 
 Codex is the only implemented adapter. The existing fixed server name devkit and Codex's user-scoped CLI registration

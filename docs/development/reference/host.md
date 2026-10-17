@@ -52,9 +52,15 @@ host configuration edits are outside devkit's transaction scope.
 Registration uses Codex's user scope and fixed name `devkit`, so switching repositories can conflict. Setup does
 not edit project TOML, trust, tool approval policies or execution permissions. The read-only config command retains
 its add/get/remove commands and TOML snippet. `codex mcp remove devkit` removes that named user registration.
+A workspace or ancestor `.codex/config.toml` declaration for `devkit` is
+`HOST_MCP_REGISTRATION_SHADOWED`: setup refuses before writing, including with `--replace`, even when the project
+entry matches. Effective/user state disagreement also refuses setup. Resolve the project/profile override
+explicitly; replacing user settings cannot manage a shadowing project entry.
 `devkit sync` neither registers MCP nor inspects machine registration; there is no persistent MCP selection setting.
 
-Status reports `state=missing|matching|different`, desired workspace/command/args, `sdk_available`, errors and notices;
+Status reads the named user entry from `$CODEX_HOME/config.toml` (default `~/.codex/config.toml`) and effective
+workspace settings through Codex. It reports user `state=missing|matching|different`, `effective_state`,
+`project_override`, desired workspace/command/args, `sdk_available`, errors and notices;
 it does not expose existing environment values or foreign server settings. Setup adds
 `action=registered|replaced|unchanged`. Text results are `HOST_MCP_SETUP` / `HOST_MCP_STATUS` sentinels; JSON is one
 object. `connection`, `approval_ui`, `trust` and `execution_permissions` remain `unknown`: reconnect the client,
@@ -74,6 +80,7 @@ through this extension point rather than a host-to-domain import.
 | `HOST_MCP_REGISTRATION_FAILED` | Inspect Codex CLI/configuration access and effective registration before retrying |
 | `HOST_MCP_REGISTRATION_MISSING` | Run setup from the retained base/runtime |
 | `HOST_MCP_REGISTRATION_CONFLICT` | Inspect the existing entry; use --replace only for an intended replacement |
+| `HOST_MCP_REGISTRATION_SHADOWED` | Resolve project/profile overrides before attempting user-scoped setup |
 | `HOST_MCP_RUNTIME_UNSAFE` | Run setup outside linked worktrees using the retained base/runtime |
 | `HOST_MCP_EXTRA_REQUIRED` | Install the MCP extra in the retained server runtime |
 | `HOST_MCP_FAILED` | Inspect the installed service entry points and runtime, then reconnect |

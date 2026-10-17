@@ -1,0 +1,22 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-17T14:32:19.870395Z'
+status: completed
+summary: Isolated medium code review identified conflated user and effective project registration scope.
+findings:
+- issue: Effective project registration is incorrectly treated as user-scoped registration.
+  evidence: packages/devkit/src/devkit/host/mcp/onboarding.py:52,103,145
+  failure_condition: A trusted project-only devkit entry is returned by Codex list/get; setup can falsely return unchanged or replace user settings hidden by a project override.
+  suggested_action: Distinguish user registration and effective configuration, refusing project overrides before mutation with isolated regression coverage.
+  resolution: open
+  severity: high
+assumptions:
+- Fresh-context Codex reviewer with emulated isolation; read-only Git comparison confirmed no writes.
+checks:
+  tests: PASS 2245 devkit tests; focused 108; installed consumer smoke
+  lint: PASS lint-check, pyright and targeted rules
+diff_scope:
+  base: 48459ebdc9b6a33284cc653131366db2c7e94b13
+  head: 3bda1e239a9950354706670189f57631e3626f9f

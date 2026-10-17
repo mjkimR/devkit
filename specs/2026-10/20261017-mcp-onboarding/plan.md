@@ -13,7 +13,11 @@ Explicit user-invoked setup extends the existing read-only config command withou
 
 ## 2. Components and Interfaces
 
-Add host/mcp/onboarding.py with bounded captured subprocess calls to Codex list/add/get. Use list to distinguish
+Add host/mcp/onboarding.py with bounded captured subprocess calls to Codex list/add/get. Read the named user
+entry from CODEX_HOME/config.toml (default ~/.codex/config.toml) with tomllib, without editing it. Codex list/get
+provide effective configuration, which can include project layers. Inspect workspace/ancestor .codex/config.toml
+layers and refuse any devkit entry before setup mutation, even if identical; --replace only manages the user entry.
+Report user state and effective_state separately. Effective/user state disagreement also refuses setup. Use list to distinguish
 missing entries from CLI/configuration failures; inspect only the named entry and never return foreign settings
 or credential values. Setup preflights the running SDK/server and rejects linked-worktree workspace or interpreter
 paths, including symlink spellings, before invoking add. Reuse configuration() for exact command/args.

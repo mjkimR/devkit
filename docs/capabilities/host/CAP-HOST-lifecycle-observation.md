@@ -178,9 +178,15 @@ explicit `--replace`. It uses the host's add writer without a remove/add gap, th
 Host command failure or mismatching verification raises an advisory without asserting rollback or success.
 Concurrent external configuration writers remain outside the transaction boundary.
 
+User entry inspection reads `$CODEX_HOME/config.toml` (default `~/.codex/config.toml`) without editing it; Codex
+list/get inspect effective workspace settings. Status reports user `state` separately from `effective_state` and
+`project_override`. A workspace or ancestor project declaration of `devkit` refuses setup before mutation,
+even when matching or with `--replace`; differing user/effective states also refuse. The caller must resolve the
+project/profile override explicitly, because replacing a user entry cannot manage that override.
+
 `host mcp status` is read-only: it reports missing/matching/different registration and local SDK availability,
 without launching services, exposing environment values or returning other servers' settings. Matching with the
-SDK exits 0; findings exit 1; inability to inspect exits 2. Setup and status JSON carry desired workspace, command,
+SDK and no shadowing project/profile setting exits 0; findings exit 1; inability to inspect exits 2. Setup and status JSON carry desired workspace, command,
 arguments, user scope, errors and notices. Setup also carries registered/replaced/unchanged action. Text mode uses
 result sentinels. Both leave connection, approval UI, trust and execution permissions unknown; client reconnect,
 tool discovery and actual native UI require separate evidence. The config generator remains read-only and works

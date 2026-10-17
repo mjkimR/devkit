@@ -5,8 +5,10 @@ from __future__ import annotations
 import importlib
 import importlib.util
 import json
+import os
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +18,7 @@ from devkit.host.errors import (
     HostMcpRegistrationConflict,
     HostMcpRegistrationError,
     HostMcpRegistrationMissing,
+    HostMcpRegistrationShadowed,
     HostMcpRuntimeError,
 )
 from devkit.host.mcp.configuration import configuration
@@ -66,6 +69,59 @@ def _registration(root: Path) -> dict | None:
     return entry
 
 
+def _config_entry(path: Path) -> dict | None:
+    try:
+        config = tomllib.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return None
+    except (OSError, ValueError, UnicodeError) as exc:
+        raise HostMcpRegistrationError(
+            "cannot inspect Codex configuration; correct configuration access and syntax"
+        ) from exc
+    servers = config.get("mcp_servers", {})
+    if not isinstance(servers, dict):
+        raise HostMcpRegistrationError("Codex mcp_servers must be a table")
+    entry = servers.get("devkit")
+    if entry is not None and not isinstance(entry, dict):
+        raise HostMcpRegistrationError("Codex devkit registration must be a table")
+    return entry
+
+
+def _user_config() -> Path:
+    home = os.environ.get("CODEX_HOME")
+    return (Path(home).expanduser() if home else Path.home() / ".codex") / "config.toml"
+
+
+def _user_registration() -> dict | None:
+    entry = _config_entry(_user_config())
+    if entry is None:
+        return None
+    return {
+        "name": "devkit",
+        "enabled": entry.get("enabled", True),
+        "transport": {
+            "type": "stdio" if "command" in entry else "streamable_http",
+            "command": entry.get("command"),
+            "args": entry.get("args", []),
+            "env": entry.get("env"),
+            "env_vars": entry.get("env_vars"),
+            "cwd": entry.get("cwd"),
+        },
+        "enabled_tools": entry.get("enabled_tools"),
+        "disabled_tools": entry.get("disabled_tools"),
+    }
+
+
+def _project_registration(root: Path) -> bool:
+    user_path = _user_config().resolve()
+    # Ancestor project layers can shadow the named user server. Never replace a hidden user entry.
+    return any(
+        path.resolve() != user_path and _config_entry(path) is not None
+        for parent in (root.resolve(), *root.resolve().parents)
+        for path in [parent / ".codex" / "config.toml"]
+    )
+
+
 def _matches(entry: dict, desired: dict) -> bool:
     transport = entry["transport"]
     return (
@@ -87,13 +143,24 @@ def _sdk_available() -> bool:
 
 def _report(root: Path) -> tuple[dict, list[AdvisoryError]]:
     desired = configuration(root)
-    entry = _registration(root)
+    entry = _user_registration()
+    effective = _registration(root)
+    project_override = _project_registration(root)
+    effective_state = "missing" if effective is None else "matching" if _matches(effective, desired) else "different"
     state = "missing" if entry is None else "matching" if _matches(entry, desired) else "different"
     errors: list[AdvisoryError] = []
     if state == "missing":
         errors.append(HostMcpRegistrationMissing("Codex has no devkit MCP registration"))
     elif state == "different":
         errors.append(HostMcpRegistrationConflict("Codex devkit registration differs from this workspace/runtime"))
+    if project_override:
+        errors.append(
+            HostMcpRegistrationShadowed(
+                "a project Codex configuration declares devkit; user setup cannot manage that entry"
+            )
+        )
+    elif effective_state != state:
+        errors.append(HostMcpRegistrationShadowed("effective Codex registration differs from the user configuration"))
     available = _sdk_available()
     if not available:
         errors.append(HostMcpDependencyError("the running Python has no MCP SDK"))
@@ -102,6 +169,8 @@ def _report(root: Path) -> tuple[dict, list[AdvisoryError]]:
         "server": "devkit",
         "scope": "user",
         "state": state,
+        "effective_state": effective_state,
+        "project_override": project_override,
         "workspace_root": str(root.resolve()),
         "command": desired["command"],
         "args": desired["args"],
@@ -143,6 +212,9 @@ def setup_registration(root: Path, *, replace: bool = False) -> dict:
     except ImportError as exc:
         raise HostMcpDependencyError("the running Python cannot import the MCP server and SDK") from exc
     before, errors = _report(root)
+    shadowed = next((error for error in errors if isinstance(error, HostMcpRegistrationShadowed)), None)
+    if shadowed is not None:
+        raise shadowed
     if before["state"] == "matching":
         return before | {"action": "unchanged"}
     if before["state"] == "different" and not replace:
@@ -152,7 +224,7 @@ def setup_registration(root: Path, *, replace: bool = False) -> dict:
     desired = configuration(root)
     _codex(root, "add", "devkit", "--", desired["command"], *desired["args"])
     after, _ = _report(root)
-    if after["state"] != "matching":
+    if after["state"] != "matching" or after["errors"]:
         raise HostMcpRegistrationError(
             "Codex add completed but the effective devkit registration does not match; inspect before retrying"
         )

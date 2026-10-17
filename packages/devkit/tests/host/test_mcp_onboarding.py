@@ -49,6 +49,8 @@ def host(tmp_path, monkeypatch):
         return "host progress must never appear on devkit stdout"
 
     monkeypatch.setattr(m, "_codex", codex)
+    monkeypatch.setattr(m, "_user_registration", lambda: state["entry"])
+    monkeypatch.setattr(m, "_project_registration", lambda root: False)
     monkeypatch.setattr(m, "_retained", lambda root: None)
     monkeypatch.setattr(m, "_sdk_available", lambda: True)
     return tmp_path, state
@@ -207,3 +209,50 @@ def test_real_codex_registration_in_isolated_home(tmp_path, monkeypatch):
     assert m.inspect_registration(root)[0]["state"] == "different"
     assert m.setup_registration(root, replace=True)["action"] == "replaced"
     assert os.environ["CODEX_HOME"] == str(codex_home)
+
+
+@pytest.mark.skipif(shutil.which("codex") is None, reason="Codex CLI is optional")
+@pytest.mark.parametrize("matching", [True, False])
+def test_project_only_registration_is_not_user_registration(tmp_path, monkeypatch, matching):
+    root = tmp_path / "base"
+    (root / ".codex").mkdir(parents=True)
+    codex_home = tmp_path / "codex-home"
+    codex_home.mkdir()
+    monkeypatch.setenv("CODEX_HOME", str(codex_home))
+    monkeypatch.setattr(m, "_retained", lambda root: None)
+    monkeypatch.setattr(m, "_sdk_available", lambda: True)
+    user_config = codex_home / "config.toml"
+    user_config.write_text("[projects." + json.dumps(str(root)) + ']\ntrust_level = "trusted"\n')
+    desired = configuration(root)
+    project_config = root / ".codex/config.toml"
+    project_config.write_text(desired["toml"] if matching else '[mcp_servers.devkit]\ncommand="/other/python"\n')
+    saved_user, saved_project = user_config.read_bytes(), project_config.read_bytes()
+    result = invoke(root, "status", "--format", "json")
+    data = json.loads(result.stdout)
+    assert result.exit_code == 1 and data["state"] == "missing" and data["project_override"]
+    assert data["effective_state"] == ("matching" if matching else "different")
+    for flags in [[], ["--replace"]]:
+        result = invoke(root, "setup", *flags, "--format", "json")
+        assert result.exit_code == 2
+        assert json.loads(result.stdout)["error"]["code"] == "HOST_MCP_REGISTRATION_SHADOWED"
+        assert user_config.read_bytes() == saved_user and project_config.read_bytes() == saved_project
+
+
+def test_config_read_failures_and_ancestor_override(tmp_path, monkeypatch):
+    codex_home = tmp_path / "home"
+    codex_home.mkdir()
+    monkeypatch.setenv("CODEX_HOME", str(codex_home))
+    path = codex_home / "config.toml"
+    path.write_text("invalid [")
+    with pytest.raises(HostMcpRegistrationError):
+        m._user_registration()
+    path.write_text("mcp_servers=[]")
+    with pytest.raises(HostMcpRegistrationError):
+        m._user_registration()
+    path.write_text("")
+    parent = tmp_path / "parent"
+    (parent / ".codex").mkdir(parents=True)
+    (parent / ".codex/config.toml").write_text('[mcp_servers.devkit]\ncommand="/project/python"\n')
+    root = parent / "child"
+    root.mkdir()
+    assert m._project_registration(root)

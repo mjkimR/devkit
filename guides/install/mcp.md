@@ -28,7 +28,7 @@ uv run devkit host mcp status --host codex --format json
 Preserve the project's selected package source and revision; add the `mcp` extra to that dependency rather than
 switching an existing pinned or wheel installation to another source. The extra belongs in the retained runtime.
 `config` is read-only and works without the SDK. `status` reads Codex registration and local SDK availability;
-exit 0 means matching registration with the SDK, 1 means missing/different registration or absent SDK, and 2 means
+exit 0 means matching user registration with the SDK and no shadowing settings, 1 means missing/different registration or absent SDK, and 2 means
 inspection could not run. It does not connect to the server or prove visible approval UI.
 
 ## 3. Register explicitly
@@ -41,7 +41,10 @@ uv run devkit host mcp status --host codex --format json
 Setup reports `registered` on first registration and `unchanged` for an identical enabled registration. It captures
 Codex output and verifies registration after writing. A different existing entry is
 `HOST_MCP_REGISTRATION_CONFLICT`: inspect `codex mcp get devkit --json` locally before replacing it. Inspection can
-contain environment values; do not paste credentials into reports. When the approved intent includes replacing
+contain environment values; do not paste credentials into reports. Status separates user `state` and workspace
+`effective_state`; Codex can load project overrides. `HOST_MCP_REGISTRATION_SHADOWED` means a workspace/ancestor
+project entry exists, or effective settings disagree with the user entry. Resolve that override explicitly first:
+setup refuses before writing, even for a matching project entry and even with `--replace`. When the approved intent includes replacing
 that entry, run:
 
 ```bash
