@@ -1,5 +1,9 @@
 # Agent Runtime Hooks Evaluation
 
+Historical evaluation of a path-scoped context advisor. The shared lifecycle hook foundation is now implemented
+separately in [Host Integration](../../host/overview.md). That foundation does not adopt the proposed advisor,
+cross-host support or its latency target. Statements below describe the original evaluation, not current support.
+
 - **Status**: Not adopted. Evaluation record (2026-10-14), from a technical spike run on 2026-10-03 for specrig, the
   predecessor of devkit-spec.
 - **Decision**: devkit ships no agent runtime hooks for now: no consumer needs them yet. Hosts support the mechanism,

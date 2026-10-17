@@ -49,7 +49,7 @@ Every command is agent-first: its primary consumer is an AI coding agent, and it
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Layering.** `advisory` imports no other module; `core` may import `advisory`; `rules` may import `core`, `advisory` and `compact` (`devkit rules test` runs each rule's tests through it); `workflow` may import `core`, `advisory` and `rules`; `gate` may import those and `compact` (the `verify-commands` gate runs commands through it); `search`, `compact` and `worktree` may import only `core` and `advisory`; `generated` may import `core`, `advisory` and `compact` (its commands run through it); `distribution` may import `core`, `advisory` and `search`. The built-in bundles other than `devkit` live in data-only modules (`devkit.advisory_guide`, `devkit.authoring_guide`, `devkit.commits_guide`) whose `__init__` imports nothing, so bundle discovery, which imports each bundle's resource module, never loads the rules or gate engine; the `authoring` rules shipped there build on the public `devkit.core` and `devkit.rules` APIs and run from the synchronized copies. `devkit.cli` assembles the command line. A test enforces this. The root group maps each command name to a `module:attribute` reference and imports the module only when that command runs, so a command imports only its own area and the layers below it; a test enforces this too. Installed packages mount further top-level commands through the `devkit.commands` entry-point group ([Command Plugins](command-plugins.md)).
+**Layering.** `advisory` imports no other module; `core` may import `advisory`; `rules` may import `core`, `advisory` and `compact` (`devkit rules test` runs each rule's tests through it); `workflow` may import `core`, `advisory` and `rules`; `gate` may import those and `compact` (the `verify-commands` gate runs commands through it); `search`, `compact`, `worktree` and `host` may import only `core` and `advisory`; `generated` may import `core`, `advisory` and `compact` (its commands run through it); `distribution` may import `core`, `advisory`, `search` and `host`; `integration` may import `core`, `advisory`, `host` and `worktree`. The built-in bundles other than `devkit` live in data-only modules (`devkit.advisory_guide`, `devkit.authoring_guide`, `devkit.commits_guide`) whose `__init__` imports nothing, so bundle discovery, which imports each bundle's resource module, never loads the rules or gate engine; the `authoring` rules shipped there build on the public `devkit.core` and `devkit.rules` APIs and run from the synchronized copies. `devkit.cli` assembles the command line. A test enforces this. The root group maps each command name to a `module:attribute` reference and imports the module only when that command runs, so a command imports only its own area and the layers below it; a test enforces this too. Installed packages mount further top-level commands through the `devkit.commands` entry-point group ([Command Plugins](command-plugins.md)).
 
 ## 2. Monorepo Structure
 
@@ -80,6 +80,11 @@ Inside each module, files are grouped by concern; each module's documentation ha
    - `devkit rules check` loads the rule assets recorded in the receipt in addition to the built-in rules; `devkit rules check --staged` and `--ci` evaluate exact Git trees.
    - `devkit workflow` discovers workflow definitions, workflow checks and subagent roles from the receipt; the generated `devkit-workflow` entry skill routes agents to `devkit workflow next`.
    - `devkit gate install` writes hook wrappers that run `devkit.gate`; gates come from the package (`rules-check`, `verify-commands`, `message-nonempty`) and from `kind = "gate"` assets in the receipt.
+
+Host lifecycle hooks are deployed by distribution and executed through `devkit.host` native adapters and installed
+service handlers. `devkit host status` inspects registration and observed metadata. Host trust and permissions are
+separate from installation. Optional MCP transport connects native confirmation to the scoped integration service.
+See [Host Integration](../host/overview.md).
 
 ## 4. Errors, Exit Codes and Platforms
 
@@ -117,12 +122,20 @@ Each module's `reference.md` is the quick reference (CLI, configuration, library
 - [Resource Taxonomy](resource-taxonomy.md): Three-tier classification and naming standards for agent assets.
 - [Command Plugins](command-plugins.md): Top-level commands that installed packages mount through `devkit.commands`, their loading and their output contract.
 - [Hybrid Binary Distribution Evaluation](evaluations/hybrid-binaries.md): Evaluation record on bundling compiled binaries with `uv` wheels (not adopted; semantic search landed in pure Python as `devkit.search`).
-- [Agent Runtime Hooks Evaluation](evaluations/agent-hooks.md): Evaluation record on pre-action agent hooks (Codex and Claude Code `PreToolUse`) for path-scoped hints (not adopted; supportable when a consumer needs it).
+- [Agent Runtime Hooks Evaluation](evaluations/agent-hooks.md): Historical context-advisor evaluation; the shared host hook foundation is now adopted separately in [Host Integration](../host/overview.md).
 
 ### Shared Foundation (`devkit.core`, `devkit.advisory`)
 - [Core Reference](../core/reference.md): Frontmatter grammar, receipt reader, safe paths, atomic writes, Git runner, deadlines, file locks, plugin loading, project discovery, CLI plumbing.
 - [Agent Advisory Protocol](../advisory/protocol.md): Levels, block format, fields, mode derivation and canonical `[ACTION]` directives.
 - [Advisory Reference](../advisory/reference.md): The `devkit.advisory` library and the `advisory` guide bundle.
+
+### Scoped Integration (`devkit.integration`)
+- [Integration Overview](../integration/overview.md): request, readiness, scoped cleanup, authority and partial recovery.
+- [Integration Reference](../integration/reference.md): CLI, tools, public API and codes.
+
+### Host Integration (`devkit.host`)
+- [Host Reference](../host/reference.md): commands, library exports and advisories.
+- [Host Overview](../host/overview.md): hook definitions, shared configuration ownership, native dispatch and service handlers.
 
 ### Task Worktrees (`devkit.worktree`)
 - [Worktree Reference](../worktree/reference.md): `devkit worktree start|finish|status|stale`, output, configuration, extension points, error codes, library.

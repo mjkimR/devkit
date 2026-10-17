@@ -24,6 +24,12 @@ AGENTS.md                 # Project-owned; only the DEVKIT:START/END block insid
 
 ## 2. Ownership Categories and Invariants
 
+Selected lifecycle `hook` assets add one scoped ownership category: exact matcher groups in the shared
+`.codex/hooks.json`, recorded under `host_hooks` rather than `files`. All foreign entries remain project-owned;
+edited or missing owned groups conflict, and removal never adopts or deletes foreign entries. Planning, writes
+and rollback use the same transaction. Host trust and permission settings are never changed.
+See [Host Integration](../host/overview.md#3-shared-configuration-ownership).
+
 1. **Project configuration (`.devkit/config.toml`)**: owned by the developer. `devkit sync` never edits it on its
    own; only the selection commands (`devkit add`, `devkit remove`, and `devkit sync` selection flags without
    `--no-save`) edit `agents` and `[presets]`, preserving unrelated tables, comments and formatting. A selection

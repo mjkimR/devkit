@@ -28,6 +28,7 @@ recommend comes from it.
 | `authoring` (built in) | The root `AGENTS.md` or `CLAUDE.md` is long or grows often. | `agent-guide-authoring` |
 | `authoring` (built in) | Both of the above. | Default `all` |
 | `advisory:python` (built in) | The project depends on `devkit-advisory` at runtime, or builds Python CLIs that agents consume. | Adds the Python library guide to the auto-selected protocol guide. |
+| `host-observer` (`devkit-catalog`) | The user wants to validate Codex CLI lifecycle hook delivery. | Default `all`: five metadata-only observer hooks; requires devkit on the host PATH and separate host trust review. |
 | `github-milestones` (`devkit-catalog`) | The remote is GitHub, `gh` works, and the project plans work with milestones and issues (existing milestones, or the user says so). | Default `all`: conventions and the `decompose-initiative` playbook. |
 | `github-milestones` (`devkit-catalog`) | GitHub issues are used, but planning happens elsewhere. | `conventions`: issue linking and closing keywords only. |
 

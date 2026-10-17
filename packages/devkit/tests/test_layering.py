@@ -36,7 +36,9 @@ ALLOWED: dict[str, set[str]] = {
     "workflow": {"core", "advisory", "rules"},
     "gate": {"core", "advisory", "rules", "compact"},
     "search": {"core", "advisory"},
-    "distribution": {"core", "advisory", "search"},
+    "distribution": {"core", "advisory", "search", "host"},
+    "host": {"core", "advisory"},
+    "integration": {"core", "advisory", "host", "worktree"},
     "compact": {"core", "advisory"},
     "worktree": {"core", "advisory"},
     "generated": {"core", "advisory", "compact"},
@@ -156,6 +158,7 @@ DATA_AREAS = {"advisory_guide", "authoring_guide", "commits_guide"}
 
 # Entry points whose target the loading area may not import, each a known runtime coupling (group, entry name).
 ENTRY_POINT_EXCEPTIONS: dict[tuple[str, str], str] = {
+    ("devkit.host.services", "integration"): "integration",
     # Dependency inversion: gate registers its hook installation as a post-sync extension; distribution calls it
     # through ``devkit.core.extensions`` without importing gate code.
     ("devkit.post_sync", "gate-hooks"): "gate",

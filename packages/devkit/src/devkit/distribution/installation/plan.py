@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Any
 
-from devkit.core.receipt import AssetRecord
+from devkit.core.receipt import AssetRecord, HostHookRecord
 from devkit.distribution.bundles.common import ALL
 from devkit.distribution.bundles.manifest import Bundle
 from devkit.distribution.content import sha256
@@ -45,6 +45,7 @@ class BundlePlan:
     assets: list[AssetRecord]
     files: list[PlannedFile]
     seeded: list[PlannedSeed]
+    host_hooks: list[HostHookRecord]
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -55,6 +56,7 @@ class BundlePlan:
             "assets": [asset_json(asset) for asset in self.assets],
             "files": [item.to_dict() for item in self.files],
             "seeded": [item.to_dict() for item in self.seeded],
+            "host_hooks": [asdict(item) for item in self.host_hooks],
         }
 
 
@@ -80,4 +82,5 @@ def plan_bundle(bundle: Bundle, preset: str | None = None, agents: list[str] | N
         seeded=[
             PlannedSeed(dest, seed.asset, sha256(seed.content.data)) for dest, seed in sorted(inventory.seeds.items())
         ],
+        host_hooks=inventory.host_hooks,
     )

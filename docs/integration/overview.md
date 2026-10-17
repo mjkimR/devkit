@@ -1,0 +1,140 @@
+# Scoped Local Integration
+
+`devkit.integration` prepares an immutable request, obtains a native confirmation through `devkit.host`, and
+executes a local fast-forward and its exact cleanup scope. `host` owns MCP transport and native UI adaptation;
+integration owns authorization binding, policy, readiness and execution. It imports no SDD models. Command and
+code quick reference: [reference.md](reference.md).
+
+## 1. Supported path
+
+The first path is an interactive Codex CLI MCP tool call under `dev-integration=ask`. `integration_integrate`
+prepares the request, awaits form elicitation, and continues into execution in the same call. Only native
+`action=accept` with a boolean `approve=true` grants authority. The field defaults to false. Submission without
+approval, decline, cancellation, unavailable form capability and transport failure perform no integration changes.
+Tool arguments cannot supply `approved`, authority tokens or serialized execution requests.
+
+The executor runs from the retained base checkout on its target branch, using an installed interpreter outside
+the worktree being removed. It supports normal linked worktrees and marked `--no-worktree` activity branches.
+It excludes PR operations, fetch, push, remote branch deletion, squash/rebase integration and automatic policy
+dispatch. Required-PR policy refuses the local path. Worktree/PR `auto` does not authorize integration.
+
+Project trust, hook trust, MCP tool approval, the business integration confirmation and host filesystem/network
+permissions are distinct. This service never changes host permission settings. Native tool annotations describe
+real write/destructive effects; they do not substitute for the integration form. Count actual prompts separately
+when validating a Codex session. SDK transport tests do not establish interactive UI or permission behavior.
+
+## 2. Request and state validation
+
+Each request has a random process-local ID and a digest of its immutable contents:
+
+- base repository, common Git directory and its filesystem identity;
+- source branch and full commit SHA, target branch and expected full SHA;
+- exact worktree path and filesystem identity, source upstream and devkit task markers;
+- local branch deletion/marker policy, fixed FF method and network exclusion;
+- Unit or session task reference, explicitly separate caller claims and provider evidence;
+- effective configuration/receipt digest, expected post-merge configuration/receipt digest, provider and guard identities;
+- each post-finish extension and its exact package-owned cleanup identities and revisions.
+
+Claims are a provider-specific JSON object of at most 16 KiB; they are declarations, not automatically verified
+facts or approval. A Unit task requires its canonical repository-relative directory. A session task has no Unit,
+envelope or invented gate file. The provider decides how each kind establishes review, checks and other completion
+conditions. Its evidence must bind the exact source and target SHAs and use stable `UPPER_SNAKE` codes.
+
+Prepare checks clean base/source state, worktree identity/lock, fast-forward eligibility and safe local branch
+deletion. It runs existing finish guards and plans scoped post-finish cleanup before showing confirmation.
+Execution rechecks provider evidence before merge and revalidates Git identities, policy and cleanup scope at each
+mutation boundary. Source/target changes, changed policy outside the expected merge, provider/guard changes or
+changed cleanup revisions invalidate the request. A source commit's known configuration changes are included in
+the expected post-merge digest. `delete_branch=false` in either applicable policy keeps the branch.
+
+The Git common-directory lock serializes devkit integration executors. Stop workers that mutate the branch before
+approval; arbitrary Git processes and filesystem editors do not take this lock. Git and filesystem identities are
+rechecked immediately before operations, but this is not an exactly-once or general cross-process transaction.
+
+## 3. Readiness providers
+
+Configure the installed provider in the base project's `.devkit/config.toml`:
+
+```toml
+[integration]
+provider = "my-methodology"
+```
+
+There is no permissive default provider. A missing, duplicate, unloadable or malformed provider fails closed. Its
+package registers a module or object with `check(context)`:
+
+```toml
+[project.entry-points."devkit.integration.readiness"]
+my-methodology = "my_package.integration"
+```
+
+`check(IntegrationContext) -> Readiness` verifies final committed work at `context.finish.source_sha`, compared with
+`target_sha`. It returns immutable `Evidence(code, value)` entries and any blocking `reasons`. Empty evidence,
+wrong SHAs and malformed results fail closed. Evidence must be deterministic across rechecks: use commit IDs and
+verified facts rather than timestamps or mutable command logs. Read-only checks must not mutate Git, call network
+services or treat claims as approval. Verification commands and any report/evidence interpretation belong to the
+provider; the generic executor never executes model-supplied commands.
+
+For SDD, devkit-spec owns the provider's Unit/session evidence, review, reconcile and blocked/question policy.
+The existing workflow envelope finish guard remains active, but is not proof of all completion conditions. This
+release supplies the public provider contract; installing devkit alone does not supply SDD readiness. The devkit
+contract is released before the consuming package updates its dependency, provider and guidance.
+
+## 4. Scoped post-finish cleanup
+
+Reuse `devkit.post_finish` registration. Classic `worktree finish` keeps its existing callable contract. For
+approval-bound integration, the registered object must additionally expose:
+
+```python
+integration_local_only = True
+
+def integration_plan(context) -> tuple[CleanupTarget, ...]: ...
+def integration_validate(context, targets: tuple[CleanupTarget, ...]) -> None: ...
+def integration_run(context, result: FinishResult, targets: tuple[CleanupTarget, ...]) -> CleanupResult: ...
+```
+
+Each `CleanupTarget(kind, identity, revision)` names one exact package-owned target. Planning and validation are
+read-only. Validation refuses replaced/revised targets; the runner consumes only the approved tuple and is safe to
+rerun after partial completion. It must not discover additional targets to delete at execution time.
+`CleanupResult(done, notices)` reports completion and normal advisory notices. `done=false` leaves cleanup partial
+with `INTEGRATION_CLEANUP_INCOMPLETE` and an explicit resume directive. Earlier Git progress is preserved.
+Completed cleanup extensions are skipped on subsequent attempts.
+
+An installed legacy callback without this scoped contract is `INTEGRATION_CLEANUP_UNSCOPED` before approval; it is
+never silently skipped or invoked with broader authority. devkit-spec must adapt its existing scope/proposal
+cleanup before its installed pair can use this path. This avoids a second host adapter or duplicated Git executor.
+
+The executor itself invokes no network operation. Installed providers, guards, Git hooks/filters and cleanup code
+are trusted code and must obey the local-only contract; OS/host network restrictions enforce the process boundary.
+The application does not claim to sandbox arbitrary extension code.
+
+## 5. Partial results and main-agent recovery
+
+Structured results report `status`, authority, native UI action, the request, `steps`, per-extension cleanup steps,
+the underlying `FinishResult`, observed refs/worktree registration, failing operation, errors and notices. Steps
+are `not_run`, `running`, `completed`, `skipped`, `failed` or `unknown`. A timeout can leave an unknown operation;
+the observed state is included rather than asserting that it never happened.
+
+After affirmative confirmation, `integration_resume(request_id)` can finish the retained request without asking
+the business approval again solely for execution-permission failure. It inspects state and preserves completed
+merge/removal steps. It does not merge again after a confirmed merge. Changed scope requires a new request and
+approval; dirty, locked, replaced or unrelated worktrees are preserved. Permission remedies stay host-owned.
+
+The service retains at most 128 requests in memory. Pending/partial requests are not evicted to make room; completed
+or non-approved ones can be retired. There is no approval file, durable execution journal, automatic background
+retry or cross-session restart recovery. After process termination or an unknown request ID, inspect Git first.
+Use the existing guarded `worktree finish --local-only` cleanup path only after confirming the remaining targets
+and existing authority, or obtain a new request for the remaining scope. Never infer approval from a digest or
+replay a serialized result as authority.
+
+## 6. Setup and verification
+
+Install `devkit-agt[mcp]` in a retained runtime. `devkit host mcp config --format json -w <base>` prints an exact
+Codex add command, TOML snippet, inspection command and removal command without editing settings. Review it, then
+register through Codex's own configuration tooling. See [Host MCP](../host/reference.md#mcp-services).
+
+Development checks exercise an installed SDK client/server over stdio and real disposable Git fixtures: approval,
+non-approval, decline/cancel, absent form capability, caller approval-flag rejection, stale scope, PR policy,
+branch retention, scoped cleanup and merge-then-cleanup failure recovery. No external API call is needed.
+Consumer smoke installs the wheel extra and checks the installed transport. Native Codex UI, actual host permission
+prompts and the installed devkit-spec provider remain separate validation evidence, not consequences of SDK tests.

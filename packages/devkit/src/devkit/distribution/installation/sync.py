@@ -47,6 +47,7 @@ from devkit.distribution.installation.config import (
 )
 from devkit.distribution.installation.discovery import InstalledBundle, unusable_notices
 from devkit.distribution.installation.extensions import run_post_sync
+from devkit.distribution.installation.host_hooks import plan_host_hooks
 from devkit.distribution.installation.inventory import GENERATED_SKILLS, Inventory, Seed, desired_inventory
 from devkit.distribution.installation.overrides import Drift, overridden_files
 from devkit.distribution.installation.receipt import read_receipt, receipt_content, receipt_json
@@ -500,6 +501,7 @@ def _build_receipt(
         ),
         seeded=seeded,
         guidance_block=block_hash,
+        host_hooks=tuple(inventory.host_hooks),
     )
 
 
@@ -563,7 +565,14 @@ def _restores_only(
     return (
         previous is not None
         and _without_tool(receipt) == _without_tool(previous)
-        and all(_restores(item, previous.file_records, deployed) for item in actions)
+        and all(
+            _restores(item, previous.file_records, deployed)
+            or (
+                item.action == "create"
+                and item.path in {".codex/hooks.json" for record in previous.host_hooks if record.host == "codex"}
+            )
+            for item in actions
+        )
     )
 
 
@@ -874,6 +883,7 @@ def commit_locked(
     conflicts = _Conflicts()
     notices = unusable_notices(installed, selection.presets)
     deployed = read_deployed(root)
+    plan_host_hooks(root, previous.host_hooks if previous else (), inventory.host_hooks, changes, actions)
     notices.extend(_plan_managed_files(root, old_files, deployed, inventory.files, changes, actions, conflicts))
     recorded_seeds = frozenset(entry.path for entry in previous.seeded) if previous else frozenset()
     seeded = _plan_seeds(root, inventory.seeds, recorded_seeds, changes, actions, locked=locked)

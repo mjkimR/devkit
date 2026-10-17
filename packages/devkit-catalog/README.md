@@ -6,6 +6,7 @@ the project selects it with `devkit add`, and a preset picks its assets.
 
 | Bundle | Presets (default first) | Contents |
 | --- | --- | --- |
+| `host-observer` | `all` | Codex lifecycle hook registrations using devkit's metadata-only observer; [host setup and inspection](../../docs/host/overview.md#5-observer-and-inspection) |
 | `github-milestones` | `all`, `conventions` | Milestone sizing and issue-linking instruction; `decompose-initiative` playbook (`gh` CLI) |
 
 ```bash
@@ -18,7 +19,7 @@ uv run devkit add github-milestones:conventions      # or only the instruction
 ## Adding a bundle
 
 A catalog bundle holds content only: instructions, playbooks, skills, documents,
-guidance fragments and rules. A bundle that needs devkit code (a gate, a workflow
+guidance fragments, rules and declarative hooks using installed devkit handlers. A bundle that needs devkit code (a gate, a workflow
 check, a command) belongs in `devkit-agt` instead.
 
 1. Create `src/devkit_catalog/<module>/__init__.py` (empty) and

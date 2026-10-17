@@ -39,7 +39,7 @@ extraPaths = [
 
 [dependency-groups]
 dev = [
-    "devkit-agt[search]",  # numpy, tokenizers and the model wheel for the dense search tests and `just model-build`
+    "devkit-agt[search,mcp]",  # optional runtimes exercised by tests and consumer smoke
     "pyright>=1.1.390",
     "pytest>=8.0.0",
     "pytest-cov>=5.0.0",

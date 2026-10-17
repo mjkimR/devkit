@@ -24,6 +24,15 @@ The primary consumer of every `devkit` command is an AI coding agent that runs i
 
 Every stderr line is either a sentinel line or a continuation line indented 9 spaces under the sentinel above it.
 
+The native `devkit host hook` transport is a scoped exception: it emits only the host-defined JSON response on
+stdout, warnings on stderr and exit 0 for advisory dispatch failures. It has no `--format`, verbosity or strict
+options. It never emits devkit result sentinels or ordinary error objects; see
+[Host Integration](../host/overview.md#4-runtime-and-service-extension). Other host commands follow this contract.
+
+`devkit host mcp serve` likewise reserves stdout for native MCP JSON-RPC, without ordinary output options.
+Startup errors go to stderr and exit 2; per-tool results carry structured advisory data. The optional SDK owns
+protocol framing. See [Host MCP](../host/reference.md#mcp-services).
+
 ## 3. stdout: Text
 
 Text-mode stdout is made of one-line sentinels:

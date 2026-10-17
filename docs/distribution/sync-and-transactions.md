@@ -2,6 +2,10 @@
 
 ## 1. The Installation Receipt (`.devkit/installation.json`)
 
+Selected lifecycle hooks also record an optional `host_hooks` array, each entry containing `host`, qualified
+`asset`, `event`, `handler`, `command`, `matcher` and integer `timeout`. These records own exact groups in shared host
+configuration; the shared file is never claimed by `files`. See [Host Integration](../host/overview.md).
+
 The receipt is the single record of the installed state, committed to Git, `schema = 1`:
 
 ```json
@@ -323,6 +327,9 @@ The result fields and every notice code are listed in the
 [reference](reference.md#sync-output-and-notices); warnings and notices never fail a sync except under `--strict`.
 
 ### Locked Synchronization
+
+An unchanged receipt may also restore an absent whole host hook file from its `host_hooks` registrations. Existing
+shared host files require a plain sync for any change; see [Host Integration](../host/overview.md).
 
 The receipt, the root `AGENTS.md` block and seeded files are Git-tracked state that every clone shares; the managed
 copies under `.devkit/managed/` (and native projections a repository ignores) are rebuilt per clone. `devkit sync

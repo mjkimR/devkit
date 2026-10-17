@@ -1,7 +1,7 @@
 # Agent Asset Distribution: Overview
 
 `devkit.distribution` packages, projects, upgrades, audits and restores agent assets (instructions, playbooks,
-skills, subagents, workflows, rules, gates) for Codex, Claude Code and Antigravity as versioned Python packages.
+skills, subagents, workflows, rules, gates, hooks) for Codex, Claude Code and Antigravity as versioned Python packages.
 Commands, configuration and codes are in the [reference](reference.md); its
 [section 5](reference.md#5-specifications) lists the specifications.
 
@@ -64,7 +64,8 @@ own dependencies through wheels.
 ## 3. Module Layout
 
 The code lives in `packages/devkit/src/devkit/distribution/` and imports only `devkit.core` (frontmatter grammar,
-typed receipt reader, safe relative paths, project root discovery) and `devkit.advisory`. Modules import each other
+typed receipt reader, safe relative paths, project root discovery), `devkit.advisory`, `devkit.search` for
+playbook search and `devkit.host` for native hook contracts. Modules import each other
 by absolute path (`devkit.distribution...`), never relatively. The library surface is exported from
 `devkit.distribution`: `sync_project`, `load_bundle`, `get_context`, `search_playbooks`, the override operations,
 `plan_bundle`, `get_project_status`, `get_project_listing`, and their results, frozen dataclasses whose `to_dict()`
@@ -90,6 +91,8 @@ is the JSON the command prints.
   - `config_template.py`: the commented template's text: devkit's keys after the last top-level key, the
     `devkit.config_template` extension point for `[tool.<name>]` tables at the end, append-only.
   - `discovery.py`: installed bundles via `devkit.bundles`; built-in and auto-selected bundles.
+  - `host_hooks.py`: shared host configuration planning inside the sync transaction; exact owned groups are
+    recorded in the receipt. Contracts: [Host Integration](../host/overview.md).
   - `inventory.py`: the desired state (`Inventory`): managed copies, projections, rendered role contracts,
     generated entry skills, rendered fragments, seeds, override tracking.
   - `overrides.py`, `override_commands.py`: which file a deployment reads, drift tracking, `override ...` commands.

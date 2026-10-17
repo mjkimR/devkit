@@ -27,6 +27,7 @@ from devkit.worktree.errors import (
     DirtyError,
     GuardFailedError,
     LockedError,
+    MergeFailedError,
     MergeNotFastForwardError,
     NestedError,
     NotFoundError,
@@ -47,6 +48,7 @@ from devkit.worktree.errors import (
     WorktreeConfigError,
     WorktreeError,
 )
+from devkit.worktree.extensions import run_finish_guards, run_post_finish
 from devkit.worktree.lifecycle import (
     ACTIVITY_PREFIXES,
     BranchStartResult,
@@ -68,6 +70,7 @@ from devkit.worktree.lifecycle import (
     start_branch,
     status,
 )
+from devkit.worktree.planning import FinishPlan, plan_finish, validate_finish
 from devkit.worktree.stale import StaleBranch, StaleResult, stale_branches
 
 __all__ = [
@@ -89,9 +92,11 @@ __all__ = [
     "BranchUnpushedError",
     "ConflictError",
     "DirtyError",
+    "FinishPlan",
     "FinishResult",
     "GuardFailedError",
     "LockedError",
+    "MergeFailedError",
     "MergeNotFastForwardError",
     "NestedError",
     "NotFoundError",
@@ -125,10 +130,14 @@ __all__ = [
     "finish",
     "locate",
     "path_for",
+    "plan_finish",
     "read_worktree_config",
+    "run_finish_guards",
+    "run_post_finish",
     "slug_of",
     "stale_branches",
     "start",
     "start_branch",
     "status",
+    "validate_finish",
 ]

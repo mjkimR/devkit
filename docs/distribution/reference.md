@@ -38,6 +38,10 @@ malformed `bundle[:preset]` or `--agent` combined with `--no-agents` (see
 
 ## 2. CLI Commands
 
+Lifecycle `hook` assets use these same bundle and sync commands. Bundle plans include `host_hooks`; project status
+includes hook registration problems. Detailed handler and observation inspection is `devkit host status`.
+Shared-file ownership, codes and setup: [Host Integration Reference](../host/reference.md).
+
 | Command | Description |
 | --- | --- |
 | `devkit sync [options]` | Synchronizes the selection: managed copies under `.devkit/managed/`, native projections, seeded files that do not exist yet and the root `AGENTS.md` guidance block, in one transaction ([Synchronization & Transactions](sync-and-transactions.md#3-transaction-safety-guarantees)). |
@@ -61,6 +65,9 @@ malformed `bundle[:preset]` or `--agent` combined with `--no-agents` (see
 Override semantics are specified in [Workspace Ownership, section 3](workspace-ownership.md#3-project-overrides-and-drift-review).
 
 ### Sync Options
+
+A missing whole `.codex/hooks.json` can also be restored from unchanged receipt `host_hooks` under `--locked`;
+existing shared host files are never edited by locked sync. See [Host Integration](../host/overview.md).
 
 - `--agent <name>` (repeatable): narrows the projection targets, recorded as `agents` in `.devkit/config.toml`.
 - `--no-agents`: records `agents = []`, which unlinks unchanged native projections and keeps managed copies.

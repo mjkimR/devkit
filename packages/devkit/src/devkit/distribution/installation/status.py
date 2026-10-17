@@ -51,6 +51,7 @@ from devkit.distribution.installation.sync import (
 )
 from devkit.distribution.installation.transaction import pending_journal, project_lock
 from devkit.distribution.installation.workspace import AGENTS_FILE, occupied, snapshot
+from devkit.host import HostError, inspect_host
 
 _EMPTY_SELECTION = Selection((), {})
 logger = logging.getLogger(__name__)
@@ -138,6 +139,7 @@ class ProjectStatus:
     seeded: list[SeededStatus]
     pending_journal: bool
     tool: ToolStatus
+    host_hooks: list[dict[str, Any]] = field(default_factory=list)
     errors: list[AdvisoryError] = field(default_factory=list)
     notices: list[AdvisoryError] = field(default_factory=list)
 
@@ -157,6 +159,7 @@ class ProjectStatus:
             "seeded": [item.to_dict() for item in self.seeded],
             "pending_journal": self.pending_journal,
             "tool": self.tool.to_dict(),
+            "host_hooks": self.host_hooks,
             "errors": [error.to_dict() for error in self.errors],
             "notices": [notice.to_dict() for notice in self.notices],
         }
@@ -367,6 +370,15 @@ def get_project_status(root: Path, installed: list[InstalledBundle]) -> ProjectS
         selected = effective_selection(installed, config, receipt)
         packages, warnings = _unusable_packages(installed, selected)
         packages.extend(_missing_packages(installed, selected, config))
+        host_hooks: list[dict[str, Any]] = []
+        host_errors: list[AdvisoryError] = []
+        for host in sorted({record.host for record in receipt.host_hooks} if receipt else set()):
+            try:
+                host_report = inspect_host(root, host, check_handlers=False)
+                host_hooks.extend(host_report.hooks)
+                host_errors.extend(host_report.errors)
+            except HostError as exc:
+                host_errors.append(exc)
         return ProjectStatus(
             receipt=receipt is not None,
             schema=receipt.schema if receipt is not None else None,
@@ -378,7 +390,8 @@ def get_project_status(root: Path, installed: list[InstalledBundle]) -> ProjectS
             seeded=[SeededStatus(entry, occupied(root, entry.path)) for entry in (receipt.seeded if receipt else ())],
             pending_journal=journal,
             tool=ToolStatus(tool_identity(), receipt.tool if receipt is not None else None),
-            errors=[*packages, *_problems(files, journal, drift, block)],
+            host_hooks=host_hooks,
+            errors=[*packages, *_problems(files, journal, drift, block), *host_errors],
             notices=warnings,
         )
 

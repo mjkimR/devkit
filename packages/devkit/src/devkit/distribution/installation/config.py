@@ -62,6 +62,7 @@ FIELDS = frozenset(
         "workflow",
         "gates",
         "worktree",
+        "integration",
         "guidance_block",
         "override_drift",
         "tool",

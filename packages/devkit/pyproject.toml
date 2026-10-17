@@ -12,6 +12,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+mcp = ["mcp>=1.30,<2"]
 # Dense and hybrid devkit.search: numpy, tokenizers and the default embedding model.
 search = [
     "numpy>=2.0",
@@ -38,6 +39,12 @@ worktree-stale = "devkit.worktree.stale:hygiene"
 # unanswered question in their envelopes is not merged.
 [project.entry-points."devkit.finish_guard"]
 workflow-envelopes = "devkit.workflow.integration:finish_guard"
+
+[project.entry-points."devkit.host.handlers"]
+observe = "devkit.host.observation:observe"
+
+[project.entry-points."devkit.host.services"]
+integration = "devkit.integration.mcp:create_tools"
 
 [dependency-groups]
 dev = [

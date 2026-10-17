@@ -19,6 +19,7 @@ from devkit.distribution.bundles.subagents import HOST_FILES, read_contract, sub
 from devkit.distribution.bundles.workflows import read_workflow_header, workflow_entry
 from devkit.distribution.content import normal_mode
 from devkit.distribution.errors import BundleError, SelectionError
+from devkit.host import HookDefinitionError, read_hook
 
 KINDS = frozenset(
     {
@@ -31,6 +32,7 @@ KINDS = frozenset(
         "gate",
         "document",
         "guidance",
+        "hook",
     }
 )
 # The kinds whose source is a plugin package directory of Python modules (``devkit.core.plugins``).
@@ -226,6 +228,13 @@ def _check_source(root: Path, asset_id: str, kind: str, variant: str, source: st
         check_skill_source(path, f"{asset_id}/{source}")
     if kind in PLUGIN_KINDS:
         _check_plugin_package(asset_id, kind, source, path)
+    if kind == "hook":
+        if not path.is_file() or path.suffix != ".toml":
+            raise BundleError(f"{asset_id}: hook source must be one .toml file")
+        try:
+            read_hook(path.read_bytes(), f"{asset_id}/{source}")
+        except HookDefinitionError as exc:
+            raise BundleError(exc.message, target_files=exc.target_files, fix=exc.fix) from exc
     if kind == "instruction":
         for file in files:
             read_instruction_header(file.read_bytes(), f"{asset_id}/{file.relative_to(root).as_posix()}")

@@ -19,7 +19,8 @@ Schema (``schema = 1``)::
       "overrides"?: {bundle: {asset: {"kind", "relative_path",
                                       "baseline_upstream_sha256", "override_sha256"}}},
       "seeded"?: [{"bundle", "id", "path"}],
-      "guidance_block"?: hex64
+      "guidance_block"?: hex64,
+      "host_hooks"?: [{"host", "asset", "event", "handler", "command", "matcher", "timeout"}]
     }
 
 Unknown or missing keys, wrong types, duplicate JSON keys and unsafe paths
@@ -59,7 +60,7 @@ FILE_MODES = frozenset({0o644, 0o755})
 _SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 _SLUG = re.compile(r"[a-z][a-z0-9-]*\Z")
 _REQUIRED = frozenset({"schema", "packages", "selection", "assets", "files"})
-_OPTIONAL = frozenset({"tool", "overrides", "seeded", "guidance_block"})
+_OPTIONAL = frozenset({"tool", "overrides", "seeded", "guidance_block", "host_hooks"})
 
 
 @dataclass(frozen=True)
@@ -128,6 +129,19 @@ class SeededRecord:
 
 
 @dataclass(frozen=True)
+class HostHookRecord:
+    """One owned matcher group in a shared host configuration file; host code defines its rendering."""
+
+    host: str
+    asset: str
+    event: str
+    handler: str
+    command: str
+    matcher: str
+    timeout: int
+
+
+@dataclass(frozen=True)
 class Receipt:
     """A validated receipt. Mappings are read-only views."""
 
@@ -140,6 +154,7 @@ class Receipt:
     overrides: Mapping[str, Mapping[str, OverrideRecord]] = field(default_factory=lambda: MappingProxyType({}))
     seeded: tuple[SeededRecord, ...] = ()
     guidance_block: str | None = None
+    host_hooks: tuple[HostHookRecord, ...] = ()
 
     def assets(self, kind: str | None = None) -> tuple[AssetRecord, ...]:
         """Asset records in receipt order, optionally only those of one ``kind``."""
@@ -361,7 +376,39 @@ def parse_receipt(raw: bytes | str) -> Receipt:
         overrides=_overrides(data["overrides"]) if "overrides" in data else MappingProxyType({}),
         seeded=_seeded(data["seeded"]) if "seeded" in data else (),
         guidance_block=_sha256(data["guidance_block"], "guidance_block") if "guidance_block" in data else None,
+        host_hooks=_host_hooks(data["host_hooks"]) if "host_hooks" in data else (),
     )
+
+
+def _host_hooks(value: Any) -> tuple[HostHookRecord, ...]:
+    records: list[HostHookRecord] = []
+    seen: set[tuple[str, str]] = set()
+    for index, item in enumerate(_list(value, "host_hooks")):
+        where = f"host_hooks[{index}]"
+        item = _object(item, where, {"host", "asset", "event", "handler", "command", "matcher", "timeout"})
+        host = _slug(item["host"], f"{where}.host")
+        asset = _string(item["asset"], f"{where}.asset")
+        parts = asset.split(":")
+        if len(parts) != 2 or not all(_SLUG.fullmatch(part) for part in parts):
+            raise _fail(where, "asset must be bundle:asset using lowercase slugs")
+        if (host, asset) in seen:
+            raise _fail(where, "duplicate host hook asset")
+        seen.add((host, asset))
+        matcher, timeout = item["matcher"], item["timeout"]
+        if not isinstance(matcher, str) or type(timeout) is not int or not 1 <= timeout <= 600:
+            raise _fail(where, "matcher must be a string; timeout must be an integer from 1 to 600")
+        records.append(
+            HostHookRecord(
+                host,
+                asset,
+                _string(item["event"], where),
+                _slug(item["handler"], f"{where}.handler"),
+                _string(item["command"], where),
+                matcher,
+                timeout,
+            )
+        )
+    return tuple(records)
 
 
 def load_receipt(root: Path) -> Receipt | None:

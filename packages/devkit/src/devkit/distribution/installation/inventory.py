@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from functools import partial
 from pathlib import Path
 
-from devkit.core.receipt import MANAGED_PATH, AssetRecord, OverrideRecord, PackageRecord
+from devkit.core.receipt import MANAGED_PATH, AssetRecord, HostHookRecord, OverrideRecord, PackageRecord
 from devkit.distribution.bundles.fragments import read_fragment, references, render_fragment
 from devkit.distribution.bundles.guidance import prepend_context
 from devkit.distribution.bundles.invocation import user_only, user_only_extras
@@ -26,6 +26,7 @@ from devkit.distribution.errors import BundleConflictError, BundleError, Selecti
 from devkit.distribution.installation import playbook_skill, workflow_skill
 from devkit.distribution.installation.discovery import InstalledBundle
 from devkit.distribution.installation.overrides import Drift, resolve_source, track_override
+from devkit.host import adapter_for, read_hook
 
 # Shared entry skills generated when at least one asset of the kind is synchronized.
 GENERATED_SKILLS = {"playbook": playbook_skill, "workflow": workflow_skill}
@@ -83,6 +84,7 @@ class Inventory:
     guidance: list[Fragment] = field(default_factory=list)
     # Projected skill directory or subagent file -> its owner (``bundle:asset``, or a generated entry skill).
     projections: dict[str, str] = field(default_factory=dict)
+    host_hooks: list[HostHookRecord] = field(default_factory=list)
 
     def fragments(self) -> list[str]:
         """Rendered guidance in the block's stable order: by bundle, then asset ID."""
@@ -160,6 +162,8 @@ class _BundleInventory:
             paths = self._managed(asset)
             if asset.kind == "guidance":
                 self._fragment(asset)
+            if asset.kind == "hook":
+                self._hook(asset)
             for agent in self.agents:
                 paths |= self._project(asset, agent)
             self.inventory.assets.append(
@@ -173,6 +177,17 @@ class _BundleInventory:
 
     def _context(self, path: Path) -> str | None:
         return self.bundle.name if path in self.context_files else None
+
+    def _hook(self, asset: Asset) -> None:
+        ((_, source),) = asset.sources
+        read_from, cited = resolve_source(self.root, self.bundle, source)
+        hook = read_hook(read_from.read_bytes(), cited)
+        for agent in self.agents:
+            if agent != hook.host:
+                self.inventory.unprojected.append(Unprojected(self.bundle.name, asset.id, agent))
+        if hook.host not in self.agents:
+            return
+        self.inventory.host_hooks.append(adapter_for(hook.host).record(f"{self.bundle.name}:{asset.id}", hook))
 
     def _seed(self, asset: Asset) -> None:
         assert asset.target is not None

@@ -295,7 +295,8 @@ def test_every_command_has_the_output_options() -> None:
         for path, command in _leaf_commands(root_cli)
         if not {"quiet", "verbose", "strict"} <= {param.name for param in command.params}
     ]
-    assert missing == []
+    # Native host protocol transport emits only host JSON; verbosity and strictness cannot alter its response.
+    assert missing == ["devkit host hook", "devkit host mcp serve"]
 
 
 def test_notices_follow_the_result_and_respect_quiet_and_strict(tmp_path: Path) -> None:

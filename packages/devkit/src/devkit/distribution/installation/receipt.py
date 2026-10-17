@@ -8,6 +8,7 @@ back into the JSON devkit writes.
 
 from __future__ import annotations
 
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +28,7 @@ from devkit.distribution.installation.results import (
     tool_json,
 )
 from devkit.distribution.installation.workspace import METADATA, OWNED_PREFIXES, checked_path, owned_path, snapshot
+from devkit.host import HookDefinition, HostError, adapter_for
 
 
 def asset_path_allowed(bundle: str, name: str) -> bool:
@@ -69,6 +71,20 @@ def read_receipt(root: Path, *, check_disk: bool = True) -> Receipt | None:
                 raise ReceiptError(f"{RECEIPT_PATH}: invalid asset path: {name}")
             if check_disk:
                 checked_path(root, name)
+    for record in receipt.host_hooks:
+        try:
+            adapter = adapter_for(record.host)
+            adapter.validate(
+                HookDefinition(record.host, record.event, record.handler, record.matcher, record.timeout), RECEIPT_PATH
+            )
+            if record.command != adapter.command(record.asset):
+                raise ReceiptError(f"{RECEIPT_PATH}: invalid host hook command")
+            if record.host not in receipt.selection.agents or not any(
+                asset.kind == "hook" and f"{asset.bundle}:{asset.id}" == record.asset for asset in receipt.asset_records
+            ):
+                raise ReceiptError(f"{RECEIPT_PATH}: host hook must belong to a selected host and hook asset")
+        except HostError as exc:
+            raise ReceiptError(f"{RECEIPT_PATH}: invalid host hook registration: {exc.message}") from exc
     return receipt
 
 
@@ -91,6 +107,8 @@ def receipt_json(receipt: Receipt) -> dict[str, Any]:
         value["seeded"] = seeded_json(receipt.seeded)
     if receipt.guidance_block is not None:
         value["guidance_block"] = receipt.guidance_block
+    if receipt.host_hooks:
+        value["host_hooks"] = [asdict(record) for record in receipt.host_hooks]
     return value
 
 

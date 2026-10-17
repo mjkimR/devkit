@@ -213,6 +213,13 @@ class MergeNotFastForwardError(_Interaction):
     fix = "Integrate the base into the branch first (rebase or merge it in the worktree), then rerun"
 
 
+class MergeFailedError(WorktreeError):
+    """An otherwise eligible local merge failed; inspect state before retrying the approved operation."""
+
+    code = "WORKTREE_MERGE_FAILED"
+    fix = "Inspect Git state and the reported failure, restore host access to the base/common Git directory, then resume only the remaining approved scope"
+
+
 class UnmergedError(_Interaction):
     """``finish`` without ``--merge`` found the branch not merged into the base (``INTERACTION``); nothing changed."""
 

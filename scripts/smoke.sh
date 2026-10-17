@@ -15,6 +15,7 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 source ./scripts/_lib.sh
+source_root=$PWD
 
 work=$(mktemp -d "${TMPDIR:-/tmp}/devkit-smoke.XXXXXX")
 trap 'rm -rf "$work"' EXIT
@@ -73,6 +74,34 @@ with discover_bundles() as bundles:
     grep -q '"advisory"' .devkit/installation.json
     test -d .devkit/managed/devkit
     test ! -e .devkit/managed/github-milestones
+    echo "--- host hooks: preserve foreign entries, dispatch from a subdirectory, inspect and remove"
+    mkdir -p .codex host-subdir
+    cat > .codex/hooks.json <<'JSON'
+{"description":"Consumer hooks","hooks":{"Stop":[{"hooks":[{"type":"command","command":"true"}]}]}}
+JSON
+    uv run devkit add host-observer >/dev/null
+    uv run python -c '
+import json, os, pathlib, subprocess, sys
+root = pathlib.Path.cwd()
+environment = dict(os.environ, PATH=str(pathlib.Path(sys.executable).parent) + os.pathsep + os.environ["PATH"])
+config = json.loads((root / ".codex/hooks.json").read_bytes())
+assert config["description"] == "Consumer hooks"
+command = config["hooks"]["PreToolUse"][0]["hooks"][0]["command"]
+event = {"hook_event_name":"PreToolUse", "cwd":str(root / "host-subdir"), "tool_input":{"command":"PRIVATE"}}
+run = subprocess.run(command, shell=True, cwd=root / "host-subdir", env=environment, input=json.dumps(event), text=True, capture_output=True)
+assert run.returncode == 0 and run.stderr == "" and json.loads(run.stdout) == {}, run
+status = subprocess.run(["devkit", "host", "status", "--format", "json"], env=environment, check=True, text=True, capture_output=True)
+report = json.loads(status.stdout)
+assert report["ok"] and len(report["hooks"]) == 5
+assert next(item for item in report["hooks"] if item["asset"] == "host-observer:pre-tool")["last_received"]
+assert "PRIVATE" not in json.dumps(report)
+'
+    uv run devkit sync --check >/dev/null
+    uv run devkit remove host-observer >/dev/null
+    uv run python -c '
+import json, pathlib
+assert json.loads(pathlib.Path(".codex/hooks.json").read_bytes()) == {"description":"Consumer hooks","hooks":{"Stop":[{"hooks":[{"type":"command","command":"true"}]}]}}
+'
     echo "--- devkit add github-milestones:conventions (a catalog bundle is deployed only once selected)"
     uv run devkit add github-milestones:conventions >/dev/null
     test -f .devkit/managed/github-milestones/instructions/github-milestones.md
@@ -147,6 +176,13 @@ TOML
     finished=$(uv run devkit worktree finish dev-smoke-task --merge)
     grep -q 'merged=yes push=no-upstream removed=yes branch_deleted=yes' <<<"$finished"
     test ! -e "$task" && test -f task.md
+    echo "--- optional MCP extra: absent transport is actionable, installed transport integrates a Git fixture"
+    uv run devkit host mcp config --format json >/dev/null
+    status=0
+    uv run devkit host mcp serve >/dev/null 2>"$work/mcp-extra.err" || status=$?
+    test "$status" -eq 2 && grep -q HOST_MCP_EXTRA_REQUIRED "$work/mcp-extra.err"
+    uv add --dev 'devkit-agt[mcp]' >/dev/null
+    uv run python "$source_root/scripts/smoke_integration.py" "$work"
     uv run devkit gate uninstall >/dev/null
     test ! -e .git/hooks/pre-commit
     echo "--- devkit rules test: without pytest RULES_TEST_UNAVAILABLE (exit 2); with it the deployed and built-in tests pass"

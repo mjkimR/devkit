@@ -189,7 +189,10 @@ def _finished(result: FinishResult) -> str:
 )
 @FORMAT_OPTION
 @boundary
-def finish_cmd(branch: str, workspace_root: str | None, merge: bool, discard: bool, output_format: str) -> None:
+@click.option("--local-only", is_flag=True, help="Exclude fetch and push; keep all local merge and cleanup guards")
+def finish_cmd(
+    branch: str, workspace_root: str | None, merge: bool, discard: bool, output_format: str, local_only: bool
+) -> None:
     """Integrate BRANCH into the base, then remove its worktree and the branch; run it from the base.
 
     Without --merge the branch must already be merged (for example through its pull request). With --merge the
@@ -211,6 +214,7 @@ def finish_cmd(branch: str, workspace_root: str | None, merge: bool, discard: bo
                 pull_request=config.pull_request,
                 delete_branch=config.delete_branch,
                 guard=lambda merge_base, tip: run_finish_guards(position.base, branch, merge_base, tip),
+                network="forbid" if local_only else "allow",
             )
     except WorktreeError as error:
         partial = error.result

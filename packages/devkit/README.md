@@ -5,7 +5,8 @@ agent advisories and compact command output in one Python package with one CLI
 (`devkit`). The distribution name is `devkit-agt`; imports remain `devkit.*`. Requires Python 3.12 or later; runtime dependencies are `click`,
 `pyyaml`, `tomlkit` and `devkit-advisory` (the `devkit.advisory` library, published
 separately so other repositories can depend on it at runtime alone; same version). The `search` extra (`devkit-agt[search]`) adds `numpy`,
-`tokenizers` and the embedding model package for dense and hybrid search.
+`tokenizers` and the embedding model package for dense and hybrid search. The `mcp` extra adds the SDK for native
+stdio services and confirmation; hook execution and integration preparation need no SDK.
 
 ## Install
 
@@ -36,12 +37,14 @@ and `git-commits` (commit message conventions,
 | `devkit.gate` | Pluggable Git commit gates and extensible hook dispatchers installed by sync | `devkit gate` | [docs/gate](../../docs/gate/reference.md) |
 | `devkit.distribution` | Bundle packaging and transactional synchronization, plus the built-in `devkit` guide bundle | `devkit sync`, `add`, `remove`, `list`, `status`, ... | [docs/distribution](../../docs/distribution/reference.md) |
 | `devkit.worktree` | Activity branches (`plan-<slug>`, `dev-<slug>`) and one Git worktree per task: start (new, without a worktree, or attached to an existing branch), finish (integrate, remove, delete the branch), status, stale branches | `devkit worktree` | [docs/worktree](../../docs/worktree/reference.md) |
+| `devkit.host` | Lifecycle hooks, optional MCP transport, native confirmation and service dispatch; distribution owns hook deployment | `devkit host` | [docs/host](../../docs/host/reference.md) |
+| `devkit.integration` | Approval-bound local FF integration, readiness providers, exact cleanup scope and partial recovery | `devkit integration` and host MCP tools | [docs/integration](../../docs/integration/reference.md) |
 | `devkit.generated` | Tracked generated files: settle their merge conflicts by regenerating, check and regenerate them | `devkit generated` | [docs/generated](../../docs/generated/reference.md) |
 | `devkit.search` | Lexical, dense and hybrid document search; dense needs the `devkit-agt[search]` extra | none | [docs/search](../../docs/search/reference.md) |
 | `devkit.compact` | Verification commands with the full log on disk and a bounded view for agents | `devkit run` | [docs/compact](../../docs/compact/reference.md) |
 
 Layering (`advisory` < `core` < `rules` < `workflow`/`gate`; `search`, `compact`
-and `worktree` use only `core` and `advisory`, `distribution` also `search`, `rules`,
+and `worktree` and `host` use only `core` and `advisory`, `distribution` also `search` and `host`, `rules`,
 `gate` and `generated` also `compact`; enforced by a test), the shared CLI
 conventions (`-w/--workspace-root`, `--format`, exit codes) and the documentation
 index are in the [Architecture Overview](../../docs/architecture/overview.md).

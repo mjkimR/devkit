@@ -3,7 +3,7 @@
 ``devkit sync``, ``add``, ``remove``, ``list``, ``status`` and the other
 distribution commands sit at the top level, as does ``devkit run`` (compact
 command output); ``devkit rules``, ``devkit workflow``, ``devkit gate``,
-``devkit worktree`` and ``devkit generated`` are the rule engine, workflow
+``devkit worktree``, ``devkit host`` and ``devkit generated`` are the rule engine, workflow
 engine, commit gate, task worktree and generated file groups. ``devkit
 --version`` prints one ``[VERSION: devkit <version>]`` line.
 
@@ -61,6 +61,8 @@ COMMANDS: dict[str, str] = {
     "gate": "devkit.gate.cli:cli",
     "worktree": "devkit.worktree.cli:cli",
     "generated": "devkit.generated.cli:cli",
+    "host": "devkit.host.cli:cli",
+    "integration": "devkit.integration.cli:cli",
 }
 
 

@@ -1,0 +1,29 @@
+schema = 1
+name = "host-observer"
+version = "0.1.0"
+default_preset = "all"
+
+[[assets]]
+id = "session-start"
+kind = "hook"
+source = "hooks/session-start.toml"
+
+[[assets]]
+id = "prompt"
+kind = "hook"
+source = "hooks/prompt.toml"
+
+[[assets]]
+id = "pre-tool"
+kind = "hook"
+source = "hooks/pre-tool.toml"
+
+[[assets]]
+id = "post-tool"
+kind = "hook"
+source = "hooks/post-tool.toml"
+
+[[assets]]
+id = "stop"
+kind = "hook"
+source = "hooks/stop.toml"

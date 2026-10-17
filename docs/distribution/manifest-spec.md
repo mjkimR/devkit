@@ -44,6 +44,9 @@ standards are in the [Resource Taxonomy](../architecture/resource-taxonomy.md).
 - `gate`: Python commit gates in one plugin package directory per asset, run by `devkit.gate` at a Git hook stage,
   loaded from the receipt's `paths` and configured in `[gates]` of `.devkit/config.toml` or the per-clone `.git/devkit.config`; see the
   [Commit Gate Overview](../gate/overview.md).
+- `hook`: one declarative TOML file selecting a host, event and installed service handler. Sync manages exact
+  registrations in a shared host file, recorded under `host_hooks` in the receipt. Codex command hooks are the
+  initial target; see [Host Integration](../host/overview.md#2-hook-assets) for schema, deployment and runtime.
 - `document`: plain files with no engine semantics. Unseeded, a managed copy agents read by path. With
   `seeded = true` and a `target`, a **seeded** asset: written once to the workspace-relative `target` (a directory
   source to `target/<relative path>`, executable bits preserved) when that path does not exist, then project-owned;

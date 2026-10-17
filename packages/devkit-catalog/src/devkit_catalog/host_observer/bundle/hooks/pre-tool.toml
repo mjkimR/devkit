@@ -1,0 +1,4 @@
+host = "codex"
+event = "PreToolUse"
+handler = "observe"
+timeout = 10

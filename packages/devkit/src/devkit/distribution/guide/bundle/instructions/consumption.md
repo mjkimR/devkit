@@ -16,8 +16,15 @@ description: Read before using, changing or troubleshooting devkit-managed asset
 | `.devkit/managed/<bundle>/` | no | Pristine copies extracted from installed bundles |
 | `.devkit/transient/` | no | The project lock and the journal of an interrupted sync |
 | `.claude/`, `.agents/`, `.codex/` projections | usually no | Native copies of skills and subagents for each selected agent |
+| `.codex/hooks.json` | project choice | Shared host configuration; only receipt-recorded `host_hooks` matcher groups belong to devkit, all other entries stay project-owned |
 | `AGENTS.md` (root) | yes | Project-owned; only the `<!-- DEVKIT:START -->` ... `<!-- DEVKIT:END -->` block is managed |
 | Seeded files (`seeded` in the receipt) | yes | Project-owned; written once by a bundle, never updated or removed by sync |
+
+Selected `hook` assets register installed service handlers at native host events. `devkit host status --format json`
+inspects registration, handler validity and the observer's last metadata. Edited or missing owned groups in an
+existing host file are `HOST_HOOK_CONFLICT`; restore the receipt-recorded groups while preserving user entries,
+then sync. Removing the bundle removes only its owned groups. A missing whole file can be restored by sync.
+Host enablement, trust and execution permissions are separate; a successful installation does not establish them.
 
 `uv run devkit sync` rebuilds the generated paths from the installed packages
 and the configuration; edit sources and configuration, never generated copies.

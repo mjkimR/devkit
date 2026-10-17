@@ -49,6 +49,7 @@ from devkit.worktree.errors import (
     ConflictError,
     DirtyError,
     LockedError,
+    MergeFailedError,
     MergeNotFastForwardError,
     NestedError,
     NotFoundError,
@@ -1031,8 +1032,13 @@ def finish(
     delete_branch: bool = True,
     before_remove: Callable[[FinishResult], None] | None = None,
     guard: Callable[[str, str], None] | None = None,
+    network: str = "allow",
+    before_step: Callable[[str, FinishResult], None] | None = None,
 ) -> FinishResult:
     """Integrate the activity branch into the base, then remove its worktree and the branch.
+
+    ``network="forbid"`` excludes fetch and push. ``before_step(step, result)`` runs immediately before each
+    local mutation (merge, worktree_remove, branch_delete or marker_clear); it may refuse by raising.
 
     ``merge`` fast-forwards the base onto the branch (it must be clean and on a branch, and contain the tip of its
     upstream when one is configured and reachable) and pushes the base branch to that upstream; a failed push is a
@@ -1054,6 +1060,8 @@ def finish(
     completes: ``git branch -d`` removes it with the branch, and without ``delete_branch`` it is unset once the
     worktree is removed, so a rerun after a completed finish is ``WORKTREE_NOT_FOUND`` either way.
     """
+    if network not in {"allow", "forbid"}:
+        raise ArgumentError("network must be allow or forbid")
     check_branch(branch)
     if position.linked:
         raise RunFromBaseError(
@@ -1111,7 +1119,8 @@ def finish(
         if guard is not None:
             head = _head(base)
             guard((_query(base, "merge-base", head, tip) or "") if head else "", tip)
-        _check_upstream(position)
+        if network == "allow":
+            _check_upstream(position)
         if _git(base, "rev-parse", "--verify", f"{ref}^{{commit}}") != tip:
             raise ConflictError(
                 f"{branch} moved while finish checked it (it was {tip[:7]}); only the checked commit is merged;"
@@ -1119,22 +1128,33 @@ def finish(
                 fix="Let the run committing to it end, then rerun the same command",
             )
         try:
+            if before_step is not None:
+                before_step("merge", result)
             # The commit the guard checked, not the branch ref, which a running worker could move meanwhile.
             run_git(base, "merge", "--ff-only", "--quiet", tip)
         except GitError as exc:
             if exc.returncode is None:
                 raise
+            if network == "forbid" and _merged(base, _head(base), tip):
+                raise MergeFailedError(f"local merge of {branch} failed: {exc.stderr or exc.message}") from exc
             raise MergeNotFastForwardError(f"{branch} cannot be fast-forwarded onto the base: {exc.stderr}") from exc
         result.merged = True
-        _push(position, result)
+        if network == "allow":
+            _push(position, result)
+        else:
+            result.push = "excluded"
     try:
         if before_remove is not None:
             before_remove(result)
         if result.removed is False:
+            if before_step is not None:
+                before_step("worktree_remove", result)
             _remove(base, result.path)
             result.removed = True
         if delete_branch:
             try:
+                if before_step is not None:
+                    before_step("branch_delete", result)
                 run_git(base, "branch", "-d", branch)
             except GitError as exc:
                 raise BranchDeleteFailedError(
@@ -1142,6 +1162,8 @@ def finish(
                 ) from exc
             result.branch_deleted = True
         else:
+            if before_step is not None:
+                before_step("marker_clear", result)
             _unmark(base, branch)  # the finish is complete; a rerun no longer resumes
     except AdvisoryError as error:
         # Every refusal from here on carries the partial result, an advisory ``before_remove`` raises included

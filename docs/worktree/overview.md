@@ -47,6 +47,13 @@ Then, in order: the base checkout is switched back to its `devkitBase` when it w
 
 ## 3. finish
 
+`--local-only` excludes fetch and push, including with `--merge`; local guards and safe cleanup remain active.
+The library equivalent is `finish(..., network="forbid")` (`"allow"` preserves existing behavior). Successful local
+merging reports `push=excluded`. Public `plan_finish` and `validate_finish` bind exact repository, ref and cleanup
+identities, and `before_step` validates each mutation boundary for the
+[approval-bound integration service](../integration/overview.md). These APIs do not supply business approval.
+Installed callbacks and native Git hooks must obey the local-only contract; this API is not a process sandbox.
+
 `finish` runs in the base checkout (`WORKTREE_RUN_FROM_BASE` otherwise) and finds the worktree by its path, else its branch. It removes only a linked worktree on the branch, because it judges the merge by that branch alone:
 
 - a worktree at the branch's path that is detached or on another branch would take commits the branch does not hold with it: `WORKTREE_CONFLICT`, whose `[FIX]` is to check out the branch there with those commits on it;

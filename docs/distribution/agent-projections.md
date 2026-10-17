@@ -47,8 +47,9 @@ and are reached through `get-context`, playbook search or their paths.
   `status: unsupported` gets no file, and a contract that does not name every agent is invalid (`BUNDLE_INVALID`
   from `devkit bundle validate` and discovery). `emulated` and `unverified` projections tell the agent that the host
   does not enforce the boundaries itself.
-- **No host mutation**: devkit never touches host settings, credentials, trust configuration or user-level
-  instruction files. Outside `.devkit/` and the agent directories it writes only the guidance block of the root
+- **Host configuration boundary**: selected `hook` assets manage only their receipt-recorded matcher groups in
+  `.codex/hooks.json` ([Host Integration](../host/overview.md#3-shared-configuration-ownership)); foreign entries are
+  preserved. devkit never touches other host settings, credentials, trust configuration or user-level instruction files. Outside `.devkit/` and the agent directories it writes only the guidance block of the root
   `AGENTS.md` and seeded files ([Workspace Ownership](workspace-ownership.md#2-ownership-categories-and-invariants));
   `CLAUDE.md` is never written.
 

@@ -48,6 +48,7 @@ a moment no skill marks, such as "before writing a commit message").
 | constitution | `AGENTS.md` at the bundle root | Returned whole by `get-context`, once per bundle | about 50 to 100 lines |
 | `instruction` | `instructions/<slug>.md` with `name` and `description` frontmatter | Header returned by `get-context`; body read when relevant | header always, body on demand |
 | `document` | any files | Unseeded: a managed copy agents read by path. `seeded = true` with a `target`: written once into the project, then project-owned | only when read |
+| `hook` | one TOML definition (`host`, `event`, `handler`, optional `matcher`, `timeout`) | The selected host invokes an installed `devkit.host.handlers` callable; inspect with `devkit host status` | native response only; trust and permissions stay host-owned |
 | `guidance` | one Markdown file of list items, at most 300 bytes; `{path:<asset-id>}` names another asset's file | Rendered into the root `AGENTS.md` block by `devkit sync`, read by every session | every turn: keep it to a pointer with its read condition |
 
 ## Boundaries that are easy to get wrong

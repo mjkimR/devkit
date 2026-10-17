@@ -1,0 +1,4 @@
+host = "codex"
+event = "SessionStart"
+handler = "observe"
+timeout = 10
