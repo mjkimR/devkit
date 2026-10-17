@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-mcp-onboarding
 feature: SPEC-mcp-onboarding
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/host/CAP-HOST-lifecycle-observation.md
     resolution: modified

@@ -2,7 +2,7 @@
 id: SPEC-mcp-onboarding
 title: Explicit MCP onboarding and registration status
 summary: "Add explicit Codex MCP setup and registration diagnostics, connected to installation guides without implicit sync registration."
-status: in-progress
+status: completed
 created: 2026-10-17
 related_capabilities:
   - CAP-HOST-lifecycle-observation

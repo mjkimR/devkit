@@ -1,0 +1,23 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-17T14:34:57.523859Z'
+status: completed
+review: review-01.yaml
+summary: Isolated reviewer verified the scope fix against AC-06; user/effective states and project shadow preflight preserve both configuration files.
+findings:
+- issue: Effective project registration is incorrectly treated as user-scoped registration.
+  evidence: packages/devkit/src/devkit/host/mcp/onboarding.py:52,103,145
+  failure_condition: A trusted project-only devkit entry is returned by Codex list/get; setup can falsely return unchanged or replace user settings hidden by a project override.
+  suggested_action: Distinguish user registration and effective configuration, refusing project overrides before mutation with isolated regression coverage.
+  resolution: resolved
+  severity: high
+assumptions:
+- Fresh-context reviewer reverified the changed scope with emulated read-only isolation.
+checks:
+  tests: PASS 111 focused host/integration/layering tests including isolated Codex regressions
+  lint: PASS Pyright zero errors/warnings; Ruff and cumulative rules
+diff_scope:
+  base: 3bda1e239a9950354706670189f57631e3626f9f
+  head: dad01d8ebd8582a905798376a1ebc37ab71fe8f2
