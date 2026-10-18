@@ -75,7 +75,7 @@ Option 2 with `depends_on`, ordered by the skill:
 - **Document**: `docs/roadmap/MS-<slug>.md`, kind `milestone`, ID prefix `MS`. Frontmatter: `id`, `title`, English
   `summary`, `status`, `created_at`, optional `depends_on` (a list of `MS-` IDs). Body: the goal it advances (citing
   `ARCH-01-introduction-and-goals`), the exit condition, out of scope; no work items. The slug starts with a word:
-  release-style names read `MS-release-1-0`, not `MS-1-0`. Milestones are global; per-namespace roadmaps are deferred
+  release-style names read MS-release-1-0, not MS-1-0. Milestones are global; per-namespace roadmaps are deferred
   until a repository needs them.
 - **Status**: `planned` → `active` → `done`, or `dropped` from `planned` or `active`. The user activates, closes and
   drops a milestone through Backlog (base commits, like drafts). Several may be `active` at once. `done` and `dropped`
