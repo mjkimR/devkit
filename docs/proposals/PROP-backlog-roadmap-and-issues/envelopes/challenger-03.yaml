@@ -1,0 +1,17 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-18T02:03:27.494573Z'
+status: completed
+summary: Scope-narrowing review found one remaining issue-field requirement in the parent overview.
+findings:
+- issue: Parent overview retains the excluded issue field
+  evidence: workbench docs/strategy-layer/00-overview.md Unit boundary table still required issue linking after the narrowed proposal excluded it
+  failure_condition: A downstream agent restores tracker fields or record-recognition obligations from the overview
+  suggested_action: Align the overview with the external tracker exclusion in strategy section 5.4
+  resolution: open
+assumptions:
+- Isolated Codex challenger; emulated read-only role, no file or Git mutations.
+checks: {}
+activity_effort: high

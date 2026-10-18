@@ -1,7 +1,7 @@
 ---
 id: PADR-roadmap-in-repository
 title: Roadmap owned by the repository
-summary: 'The repository, not GitHub or autohub, owns goals and the roadmap: goals stay in ARCH-01-introduction-and-goals, milestones become documents, every request not yet started is a draft proposal, and GitHub issues are an optional intake that Backlog drains into drafts, never a second backlog.'
+summary: "The repository owns goals, milestone documents and queued draft proposals; decomposition and handoff preserve request provenance without issue tracker or autohub integration."
 proposal: PROP-backlog-roadmap-and-issues
 status: draft
 created_at: 2026-10-16
@@ -13,7 +13,7 @@ created_at: 2026-10-16
 - **Date**: 2026-10-16
 - **Involved Components/Capabilities**: `ARCH-01-introduction-and-goals`, `CAP-DOCS-document-model`,
   `CAP-DLV-proposal-incubation`, `CAP-HARN-agent-guidance`
-- **Related**: `PADR-milestone-documents` (the form of a milestone), `PADR-issue-link-only` (the GitHub link)
+- **Related**: `PADR-milestone-documents` (the form of a milestone)
 
 ---
 
@@ -56,8 +56,8 @@ migration.
 
 ### Option 2: The repository owns goals and the roadmap (Selected)
 - **Overview**: goals stay in `ARCH-01-introduction-and-goals`; milestones are documents (`PADR-milestone-documents`);
-  every request not yet started is a draft proposal; Units link to their milestone by ID and optionally to a GitHub
-  issue (`PADR-issue-link-only`).
+  every request not yet started is a draft proposal; Units link to their milestone by ID and retain request provenance
+  through `decomposed_from` and `supersedes`.
 - **Pros**: offline, validated by existing rules, reachable through `devkit spec list`, `resolve` and `refs`; history
   in Git; agrees with autohub that repository documents own direction.
 - **Cons**: changing a milestone is a commit; no human-facing roadmap screen until a viewer renders it; small requests
@@ -86,15 +86,9 @@ Option 2:
   path exists (the draft proposal `draft-direct-acceptance` on the base), a small draft runs Planning at `low` effort.
 - **Follow-ups found during work** stay feedback; Backlog promotes a `repo`-scope feedback item it accepts into a
   draft placed in a milestone.
-- **GitHub issues are intake, not backlog.** An open issue that no Unit links is a request not yet triaged; a linked
-  one is tracked by its Unit. When `gh` is available, Backlog lists open issues, skips those a Unit links (`issue` on a
-  draft, proposal or spec on the base, or on the `plan-`/`dev-` branch of a linked slug) and drains each of the rest:
-  into a draft linked by `issue`; into feedback, closing the issue with a comment naming the feedback ID; or closed as
-  declined, with the reason. Issues autohub creates as Work Plan records are skipped, recognized by the record-keeping
-  notice autohub writes into them; the exact marker is agreed with autohub before the procedure ships
-  (`PADR-issue-link-only`).
-- **Backlog** keeps its role (classify, add drafts, decompose) and adds placing work in a milestone and draining open
-  issues; it does not create or manage GitHub milestones.
+- **External trackers are excluded.** No issue field, issue intake, issue closing, tracker synchronization or
+  autohub record recognition is part of this design. Repository documents hold requests and their provenance.
+- **Backlog** classifies, adds drafts, decomposes requests and manages milestone placement and lifecycle.
 
 ---
 
@@ -108,4 +102,4 @@ Option 2:
 - autohub may later map a Work Plan's `group_key` to a milestone ID and render milestones in the repository viewer;
   neither is part of this proposal.
 - Follow-ups outside this proposal: a direct-acceptance path for drafts that need no Planning (a draft proposal of its
-  own), GitHub lookup commands, and the Backlog subagents listed as TODO in 01 §5 (triage, decomposer).
+  own), and the Backlog subagents listed as TODO in 01 §5 (triage, decomposer).
