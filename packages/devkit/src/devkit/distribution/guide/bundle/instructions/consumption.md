@@ -153,12 +153,15 @@ uv run devkit override create <bundle>:<asset>   # copy the asset's files into .
 uv run devkit override list                      # tracked overrides and their drift status
 uv run devkit override diff <bundle>:<asset>     # per file: what upstream changed, what the override changed
 uv run devkit override accept <bundle>:<asset>   # record the current upstream as the baseline after merging
-uv run devkit override remove <bundle>:<asset>   # back to the pristine upstream files
+uv run devkit override remove <bundle>:<asset>   # use upstream sources again
 ```
 
 `create` copies every file of the asset (all files of a skill directory). Each
-override file replaces its upstream file in projections, `get-context` and
+ordinary override file replaces its upstream file in projections, `get-context` and
 playbook search; unchanged copies still follow upstream only through `accept`.
+For `.md.jinja` instructions, guidance and documents, edit the raw template override and run `devkit sync`;
+consumers read its rendered managed `.md` output, never the raw Jinja source. A bundle may declare variables;
+set their values under `[bundles.<bundle>.variables]` in `.devkit/config.toml` and sync to render them.
 Drift is reported when any upstream file of the asset changes; `create --force`
 replaces the override with the current upstream and makes that the baseline.
 An asset that is deselected keeps its tracked override while the override files

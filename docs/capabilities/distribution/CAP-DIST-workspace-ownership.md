@@ -17,7 +17,7 @@ created_at: 2026-10-17
   config.toml             # Project configuration: selection, agents, module tables (Git-tracked)
   generated.toml          # Optional generated-file registry of `devkit generated` (Git-tracked)
   installation.json       # Receipt: packages, selection, file hashes & modes (Git-tracked)
-  managed/<bundle>/       # Pristine copies of upstream bundle files (generated)
+  managed/<bundle>/       # Upstream copies and rendered Markdown template outputs (generated)
   overrides/
     <bundle>/             # Full file replacements for managed assets (Git-tracked)
     .baseline/<bundle>/   # Upstream copies taken at create/accept, for `override diff` (Git-tracked)
@@ -45,8 +45,10 @@ See `CAP-HOST-lifecycle-observation`.
    command that creates the file writes the commented template with it, and `devkit config template` adds the parts
    of the template the file lacks, never changing a line
    (`CAP-DIST-sync-and-transactions`). The receipt cannot claim it.
-2. **Managed assets (`.devkit/managed/<bundle>/`)**: a read-only cache of the upstream bundle files at their
-   original relative paths, regenerated deterministically by `devkit sync`.
+2. **Managed assets (`.devkit/managed/<bundle>/`)**: generated files, regenerated deterministically by `devkit sync`.
+   Ordinary files cache upstream bytes at their original relative paths. Supported `.md.jinja` sources instead
+   produce rendered `.md` files using declared project inputs, after resolving raw project overrides;
+   see `CAP-DIST-manifest-spec` and `CAP-DIST-sync-and-transactions`.
 3. **Native projections**: copied or rendered files in agent directories
    (`CAP-DIST-agent-projections`), tracked by path, SHA-256 and mode in the receipt.
 4. **Foreign files**: devkit manages only files recorded in the receipt and preserves every other file. A planned
@@ -76,8 +78,9 @@ See `CAP-HOST-lifecycle-observation`.
    and `<!-- DEVKIT:END -->`.
    - Content: the installed bundle names, the once-per-bundle `devkit get-context` rule, the generated entry
      skills, then the selected `guidance` fragments ordered by bundle name and asset id; deterministic for a given
-     selection. A project changes a fragment with `devkit override create <bundle>:<asset>`, never inside the
-     markers; an overridden instruction a fragment names is cited by its override path.
+     selection, source content and template inputs. A project changes a fragment with `devkit override create <bundle>:<asset>`, never inside the
+     markers. Ordinary overridden instructions are cited by their override paths; template instructions are cited
+     by their rendered managed `.md` paths, including when their raw `.md.jinja` source is overridden.
    - Placement: the file is created when absent, the block appended when it has no markers, and replaced in place
      otherwise. Bytes outside the markers are project-owned. Each marker stands on a line of its own; a marker
      elsewhere, or more than one of either, is malformed and stops the sync (`GUIDANCE_BLOCK_INVALID`). The block is
@@ -122,6 +125,11 @@ An override customizes an upstream asset without a fork. It is a set of complete
 `.devkit/overrides/<bundle>/<path in the bundle>`, not patches: agents and tools read and edit them as ordinary files,
 and upstream line shifts cannot make them fail to apply.
 
+Template overrides keep raw `.md.jinja` sources and baselines at the original bundle-relative paths. The sync
+renders the effective source into managed `.md` output; guidance and `get-context` cite that rendered file, whose
+final bytes must match the receipt. Changes to a raw template require a sync before consumers read their effect.
+Raw-source override digests and upstream drift checks remain independent of template inputs and final output hashes.
+
 ### Creating an Override
 
 `devkit override create <bundle>:<asset>` copies every upstream file of the asset (all files of a skill or directory
@@ -133,7 +141,7 @@ upstream digest becomes the recorded baseline. `--force` overwrites existing ove
 baseline, so drift recorded against the old one is gone.
 
 An override replaces individual files: files missing from the override directory are read from upstream, and extra
-files are ignored. Projections, `get-context` and playbook search read the override in place of the upstream file.
+files are ignored. For ordinary assets, projections, `get-context` and playbook search read the override in place of the upstream file.
 A symlink anywhere on an override path (`.devkit/overrides` itself, a bundle directory, a file) stops the sync
 before any write (`WORKSPACE_UNSAFE`): override content never comes from outside the project.
 
@@ -175,6 +183,6 @@ override files remain, and its drift is reported once it is selected again.
 - `devkit override accept <bundle>:<asset>` then records the current upstream digest as the baseline (through the
   journal) and refreshes the baseline copies; it fails for an asset without a tracked override.
 - `devkit override remove <bundle>:<asset>` deletes the override files of the asset's upstream files and the
-  baseline files, prunes empty directories and synchronizes the pristine upstream files, under one lock with the same
+  baseline files, prunes empty directories and synchronizes the upstream sources (rendered for templates), under one lock with the same
   rollback as `create`; the receipt entry disappears with that sync. Any other project file under the asset's override
   paths stays and is reported as an `ORPHAN_LEFT` warning.

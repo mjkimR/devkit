@@ -1,0 +1,20 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-18T13:33:17.267751Z'
+status: completed
+summary: Independent read-only review identified concrete gaps for correction.
+findings:
+- issue: Template destinations can collide with a destination parent directory.
+  evidence: packages/devkit/src/devkit/distribution/bundles/manifest.py:444
+  failure_condition: guide.md.jinja and guide.md/child.md map to a file and a descendant; dry-run accepts the plan but sync fails during writes.
+  suggested_action: Reject ancestor and descendant destinations in manifest validation and test before-write rejection.
+  resolution: open
+assumptions:
+- Codex emulated role in a fresh isolated context; no writes or index changes.
+checks: {}
+diff_scope:
+  base: 3c72395111741d147586860c36c17eef158f51a3
+  head: d63524375c84083eb661321ebacc553ea6145085
+activity_effort: medium

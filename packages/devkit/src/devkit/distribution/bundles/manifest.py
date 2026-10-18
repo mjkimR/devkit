@@ -444,6 +444,10 @@ def _load(root: Path) -> Bundle:
                 previous = destinations.setdefault(dest, rel)
                 if previous != rel:
                     raise BundleError(f"template destination collision: {previous} and {rel}")
+    for destination, source in destinations.items():
+        for parent in PurePosixPath(destination).parents:
+            if parent.as_posix() in destinations:
+                raise BundleError(f"template destination collision: {destinations[parent.as_posix()]} and {source}")
     _check_fragment_references(bundle)
     _check_workflow_ids(bundle)
     if bundle.constitution is not None:

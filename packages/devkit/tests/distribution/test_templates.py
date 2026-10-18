@@ -273,3 +273,20 @@ def test_invalid_template_override_is_rolled_back(tmp_path: Path) -> None:
         create_override(root, [item], "style:style")
     assert not (root / ".devkit/overrides/style/style.md.jinja").exists()
     assert (root / ".devkit/installation.json").read_bytes() == before
+
+
+def test_template_file_cannot_be_another_destinations_directory(tmp_path: Path) -> None:
+    with pytest.raises(BundleError, match="destination collision"):
+        write_bundle(
+            tmp_path / "source",
+            """schema=1
+name="collision"
+version="0.1.0"
+[[assets]]
+id="docs"
+kind="document"
+source="docs"
+""",
+            {"docs/guide.md.jinja": "rendered\n", "docs/guide.md/child.md": "child\n"},
+        )
+    assert not (tmp_path / "source/.devkit").exists()

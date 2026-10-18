@@ -66,7 +66,7 @@ standards are in the `ARCH-08-2-resource-taxonomy`.
   example "read the commit conventions before writing a commit message"). The source is one Markdown file of list
   items: every line is a `- ` item or a two-space continuation line, no blank lines or HTML comments, at most 300
   UTF-8 bytes. `{path:<asset-id>}` names another asset of the same bundle; `devkit sync` replaces it with the path
-  agents read (the project override, else the managed copy). A fragment is also deployed as a managed copy and may be
+  agents read (the rendered managed `.md` for templates; otherwise the project override, else the managed copy). A fragment is also deployed as a managed copy and may be
   overridden; the override must meet the same rules. With `guidance_block = false` fragments are written nowhere.
   Block placement and ordering: `CAP-DIST-workspace-ownership`.
 
@@ -214,7 +214,8 @@ An instruction, guidance or document source MAY contain `.md.jinja` files. Only 
 files preserve literal Jinja syntax. A `.jinja` source in any other kind, or with another preceding extension,
 is `BUNDLE_INVALID`. Constitution files are not templated. The final `.jinja` suffix alone is removed from each
 managed destination and from directory-seeded filenames. An explicit seeded `target` remains the authored path.
-Two distinct source paths mapping to the same managed destination are `BUNDLE_INVALID`, even with identical bytes.
+Two distinct source paths mapping to the same managed destination, or a file and its descendant, are
+`BUNDLE_INVALID`, even with identical bytes.
 
 The manifest declares every configurable input, using identifier names matching `[a-z][a-z0-9_]*`:
 

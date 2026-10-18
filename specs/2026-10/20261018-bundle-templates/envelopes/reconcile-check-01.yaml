@@ -1,0 +1,25 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-18T13:33:17.447099Z'
+status: completed
+summary: Independent read-only review identified concrete gaps for correction.
+findings:
+- issue: Workspace ownership statements omit rendered template exceptions.
+  evidence: docs/capabilities/distribution/CAP-DIST-workspace-ownership.md:20,48,80,136
+  failure_condition: Template overrides are rendered into renamed managed paths, while the existing ownership contract promises original upstream paths and direct override reads.
+  suggested_action: Qualify ordinary-file contracts and include this capability in reconcile targets.
+  resolution: open
+- issue: Context capability promises raw paths for all overridden instructions.
+  evidence: docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md:32
+  failure_condition: An overridden .md.jinja instruction is returned from managed .md output rather than the raw override directory.
+  suggested_action: Describe rendered template paths and add the capability to reconcile targets.
+  resolution: open
+assumptions:
+- Codex emulated role in a fresh isolated context; no writes or index changes.
+checks: {}
+diff_scope:
+  base: 3c72395111741d147586860c36c17eef158f51a3
+  head: d63524375c84083eb661321ebacc553ea6145085
+activity_effort: medium

@@ -29,8 +29,10 @@ subdirectory (or with `-w`) and takes the shared project lock, waiting up to ten
 - `constitution`: the full text of the optional UTF-8 `AGENTS.md` at the bundle root, which `devkit sync` always
   deploys to `.devkit/managed/<bundle>/AGENTS.md` whatever the presets; `null` when absent.
 - `instructions`: for each synchronized instruction of the selected presets, its YAML `header` (`name`,
-  `description`) and absolute `path`. An overridden instruction is read from `.devkit/overrides/<bundle>/...`; every
-  other file must still match its receipt hash (`NOT_SYNCHRONIZED` otherwise). Bodies are never returned.
+  `description`) and absolute `path`. An ordinary overridden instruction is read from
+  `.devkit/overrides/<bundle>/...`. A template instruction is read from rendered managed `.md` output, including
+  when its raw `.md.jinja` source is overridden; source or variable changes require a sync. Every file read outside
+  the override tree must match its receipt hash (`NOT_SYNCHRONIZED` otherwise). Bodies are never returned.
 
 ```markdown
 ---
