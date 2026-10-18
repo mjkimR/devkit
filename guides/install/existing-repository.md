@@ -45,8 +45,6 @@ ls "$(git rev-parse --git-common-dir)/hooks"
 - Verification commands: `justfile`, `Makefile`, `package.json` scripts, `[tool.*]` sections of `pyproject.toml`,
   `.github/workflows/`. Note the fast ones (format check, lint, type check) as candidates for the commit gate.
 - Commit style: `git log --format=%s -n 50`. Mostly `type(scope): subject` means Conventional Commits.
-- GitHub usage: `git remote -v`, and when `gh` is available and authenticated,
-  `gh api repos/{owner}/{repo}/milestones --jq length` and `gh issue list --limit 5`.
 - Agent-authored content: `SKILL.md` files, playbooks, a long root `AGENTS.md` or `CLAUDE.md`.
 
 ## 2. Present the plan

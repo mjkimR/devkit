@@ -7,13 +7,11 @@ the project selects it with `devkit add`, and a preset picks its assets.
 | Bundle | Presets (default first) | Contents |
 | --- | --- | --- |
 | `host-observer` | `all` | Codex lifecycle hook registrations using devkit's metadata-only observer; `CAP-HOST-lifecycle-observation` |
-| `github-milestones` | `all`, `conventions` | Milestone sizing and issue-linking instruction; `decompose-initiative` playbook (`gh` CLI) |
 
 ```bash
 uv add --dev "devkit-catalog @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-catalog"
 uv run devkit list                                   # catalog bundles are listed as unselected
-uv run devkit add github-milestones                  # the default preset (all)
-uv run devkit add github-milestones:conventions      # or only the instruction
+uv run devkit add host-observer                      # the default preset (all)
 ```
 
 ## Adding a bundle

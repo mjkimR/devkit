@@ -65,6 +65,6 @@ graph TD
 - **Contracts**: `CAP-HARN-command-mount`, `CAP-HARN-agent-guidance`.
 
 ### 2.4 Opt-in and Example Content Packages
-- **`devkit-catalog` (`packages/devkit-catalog`)**: Ships opt-in bundle assets (e.g. `github-milestones`, `host-observer`) that are installed in the environment but only deployed when explicitly selected (`devkit add <bundle>`).
+- **`devkit-catalog` (`packages/devkit-catalog`)**: Ships opt-in bundle assets (e.g. `host-observer`) that are installed in the environment but only deployed when explicitly selected (`devkit add <bundle>`).
 - **`devkit-starter` (`packages/devkit-starter`)**: Example external content package demonstrating bundle authoring.
 - **`devkit-embed` (`models/devkit-embed`)**: Hand-built data package containing the default dense embedding model for `devkit-agt[search]`.

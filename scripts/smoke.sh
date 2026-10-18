@@ -69,13 +69,14 @@ else:
 with discover_bundles() as bundles:
     assert {item.bundle.name for item in bundles if item.builtin} == {'devkit', 'advisory', 'authoring', 'git-commits'}
     assert all(item.package == 'devkit-agt' for item in bundles if item.builtin)
+    assert {item.bundle.name for item in bundles if item.package == 'devkit-catalog'} == {'host-observer'}
 "
     echo "--- devkit sync (built-in bundles are selected by default)"
     uv run devkit sync >/dev/null
     grep -q '"devkit"' .devkit/installation.json
     grep -q '"advisory"' .devkit/installation.json
     test -d .devkit/managed/devkit
-    test ! -e .devkit/managed/github-milestones
+    test ! -e .devkit/managed/host-observer
     echo "--- host hooks: preserve foreign entries, dispatch from a subdirectory, inspect and remove"
     mkdir -p .codex host-subdir
     cat > .codex/hooks.json <<'JSON'
@@ -104,12 +105,6 @@ assert "PRIVATE" not in json.dumps(report)
 import json, pathlib
 assert json.loads(pathlib.Path(".codex/hooks.json").read_bytes()) == {"description":"Consumer hooks","hooks":{"Stop":[{"hooks":[{"type":"command","command":"true"}]}]}}
 '
-    echo "--- devkit add github-milestones:conventions (a catalog bundle is deployed only once selected)"
-    uv run devkit add github-milestones:conventions >/dev/null
-    test -f .devkit/managed/github-milestones/instructions/github-milestones.md
-    test ! -e .devkit/managed/github-milestones/playbooks
-    uv run devkit remove github-milestones >/dev/null
-    test ! -e .devkit/managed/github-milestones
     echo "--- devkit add starter"
     uv run devkit add starter
     echo "--- devkit sync --check (must exit 0)"

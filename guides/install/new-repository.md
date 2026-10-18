@@ -11,8 +11,8 @@ Ask these in one message, with the defaults stated so the user can answer "defau
    `claude-code` and `antigravity`. Default: the agent you are, plus any others the user names.
 2. **Project kind**: what will the repository hold (language, a library or a service, documentation only)? This
    decides whether the root `pyproject.toml` is only devkit's tooling manifest or the project's own.
-3. **Practices**: should commits follow Conventional Commits? Will work be planned with GitHub Milestones and
-   Issues? Will the repository author agent skills or a large `AGENTS.md`? The answers feed
+3. **Practices**: should commits follow Conventional Commits? Will the repository author agent skills or a large
+   `AGENTS.md`? The answers feed
    [Bundle Recommendations](bundle-recommendations.md).
 
 Then present the plan (the steps below with the chosen values) and wait for approval.

@@ -8,7 +8,6 @@ dependencies = []
 
 # One entry point per bundle; the name is the bundle name. No catalog bundle declares auto_select.
 [project.entry-points."devkit.bundles"]
-github-milestones = "devkit_catalog.github_milestones"
 host-observer = "devkit_catalog.host_observer"
 
 [dependency-groups]
