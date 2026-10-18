@@ -13,7 +13,7 @@ from devkit.core.plugins import PluginPackage, check_plugin_modules
 from devkit.distribution.bundles.common import AGENT_NAMES, ALL, SHARED_SKILL_AGENTS, SLUG, VERSION, locate_frontmatter
 from devkit.distribution.bundles.fragments import read_fragment, references
 from devkit.distribution.bundles.instructions import read_instruction_header
-from devkit.distribution.bundles.invocation import INVOCATIONS, check_skill_source
+from devkit.distribution.bundles.invocation import INVOCATIONS, check_skill_source, skill_entry
 from devkit.distribution.bundles.playbooks import playbook_entry, read_playbook_header
 from devkit.distribution.bundles.subagents import HOST_FILES, read_contract, subagent_entry
 from devkit.distribution.bundles.templates import TEMPLATE_KINDS, Variable, declarations, output_path
@@ -225,16 +225,18 @@ def _check_source(root: Path, asset_id: str, kind: str, variant: str, source: st
     templates = [file for file in files if file.name.endswith(".jinja")]
     if templates:
         if kind not in TEMPLATE_KINDS or any(not file.name.endswith(".md.jinja") for file in templates):
-            raise BundleError(f"{asset_id}: templates require .md.jinja instruction, guidance or document sources")
+            raise BundleError(
+                f"{asset_id}: templates require .md.jinja instruction, guidance, document or skill sources"
+            )
         if kind == "guidance" and not path.is_file():
             raise BundleError(f"{asset_id}: guidance source must be one file")
-        if path.is_file():
+        if path.is_file() and kind != "skill":
             return
     if kind == "skill":
-        if not path.is_dir() or not (path / "SKILL.md").is_file():
-            raise BundleError(f"{asset_id}: skill source must contain SKILL.md")
+        entry = skill_entry(path, f"{asset_id}/{source}")
         # Sync inserts the context prerequisite after the frontmatter, which must therefore be well-formed.
-        locate_frontmatter((path / "SKILL.md").read_bytes(), f"{asset_id}/{source}/SKILL.md", "skill")
+        if entry.name == "SKILL.md":
+            locate_frontmatter(entry.read_bytes(), f"{asset_id}/{source}/SKILL.md", "skill")
         check_skill_source(path, f"{asset_id}/{source}")
     if kind in PLUGIN_KINDS:
         _check_plugin_package(asset_id, kind, source, path)

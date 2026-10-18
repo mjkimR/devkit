@@ -45,12 +45,20 @@ def test_response_style_deploys_configured_language(tmp_path: Path, language: st
     from devkit.distribution.installation.sync import sync_project
 
     bundle = load_bundle(_bundle_root(ENTRY_POINTS["response-style"]))
-    update_config(tmp_path, agents=[], presets={"response-style": ["all"]})
+    update_config(tmp_path, agents=["codex", "claude-code", "antigravity"], presets={"response-style": ["all"]})
     path = tmp_path / ".devkit/config.toml"
     path.write_text(path.read_text() + f'\n[bundles.response-style.variables]\nlanguage = "{language}"\n')
     sync_project(tmp_path, [InstalledBundle("devkit-catalog", PROJECT["version"], bundle)])
-    target = tmp_path / ".devkit/managed/response-style/instructions/response-style.md"
+    target = tmp_path / ".devkit/managed/response-style/skills/response-style/SKILL.md"
     text = target.read_text()
     assert "{{" not in text and "{%" not in text
-    assert ("Use the language of the user's current request" if language == "auto" else "Use ko as the default") in text
-    assert str(target.relative_to(tmp_path)) in (tmp_path / "AGENTS.md").read_text()
+    guidance = (tmp_path / "AGENTS.md").read_text()
+    assert "read and apply the `response-style` skill" in guidance
+    assert ".devkit/managed/response-style/instructions/" not in guidance
+    assert ("Use ko as the default" if language == "ko" else "Use the language of the user's current request") in text
+    assert "default conversation language" not in guidance
+    for directory in (".agents/skills", ".claude/skills"):
+        projected = tmp_path / directory / "response-style/SKILL.md"
+        assert projected.is_file()
+        assert "# Communication" in projected.read_text()
+    assert not (tmp_path / ".devkit/managed/response-style/instructions/response-style.md").exists()

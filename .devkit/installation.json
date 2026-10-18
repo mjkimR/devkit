@@ -65,9 +65,11 @@
     {
       "bundle": "response-style",
       "id": "response-style",
-      "kind": "instruction",
+      "kind": "skill",
       "paths": [
-        ".devkit/managed/response-style/instructions/response-style.md"
+        ".agents/skills/response-style/SKILL.md",
+        ".claude/skills/response-style/SKILL.md",
+        ".devkit/managed/response-style/skills/response-style/SKILL.md"
       ]
     },
     {
@@ -628,6 +630,10 @@
       "mode": 420,
       "sha256": "8619a54e8c098122a7f3881394f84ca89b684366e848233a29ad18b6ec363935"
     },
+    ".agents/skills/response-style/SKILL.md": {
+      "mode": 420,
+      "sha256": "4aa8a37a681ccb89359ee8a58c877d0f2d9acbb8e7a22e24639b378c9f4f6c9b"
+    },
     ".agents/skills/spec-delegate/SKILL.md": {
       "mode": 420,
       "sha256": "066821a3069ae73cf88eaab3a1412dc990006d88bd14cd23d6028f04cff88c12"
@@ -811,6 +817,10 @@
     ".claude/skills/devkit-workflow/SKILL.md": {
       "mode": 420,
       "sha256": "72cdaf2da774a3afe720520521ce7ceac813aa561f9e36f479499ff25ce054d2"
+    },
+    ".claude/skills/response-style/SKILL.md": {
+      "mode": 420,
+      "sha256": "4aa8a37a681ccb89359ee8a58c877d0f2d9acbb8e7a22e24639b378c9f4f6c9b"
     },
     ".claude/skills/spec-delegate/SKILL.md": {
       "mode": 420,
@@ -1034,7 +1044,7 @@
     },
     ".devkit/managed/devkit/instructions/consumption.md": {
       "mode": 420,
-      "sha256": "b3fb08693eb83d8262dbfd7194786ef62d67451e0701ef461dcfa65d55ad8c02"
+      "sha256": "9a59d94f9634710a3adc200d26f983a7bd40836c3bc974ae2e9656193688990c"
     },
     ".devkit/managed/devkit/instructions/devkit-run.md": {
       "mode": 420,
@@ -1046,17 +1056,17 @@
     },
     ".devkit/managed/devkit/instructions/resource-kinds.md": {
       "mode": 420,
-      "sha256": "f96289aa8241e4e3f645dce22765b6515910861c33ca7e1778bd2ee419de6fe1"
+      "sha256": "8a64ed6172883f9dd94ca34ccb413ec612d93108e93603fb13553538a72c3196"
     },
     ".devkit/managed/response-style/bundle.toml": {
       "mode": 420,
-      "sha256": "9f24eb971dbd18386e146e17288839cdbc4fd20faa14966627542b3b002e4346"
+      "sha256": "30646c8c36602051823217e91e44a3d688db63402b613a46be1c494f97cb40bf"
     },
     ".devkit/managed/response-style/guidance/response-pointer.md": {
       "mode": 420,
-      "sha256": "60d7a69a02b02fddc4ab569a458335875096978a870e0539e3ad6c8dec626212"
+      "sha256": "6be4bcce3db22af29523a1f11a200571b6bfe90d903ab8c5adec4ae9a2bc56ea"
     },
-    ".devkit/managed/response-style/instructions/response-style.md": {
+    ".devkit/managed/response-style/skills/response-style/SKILL.md": {
       "mode": 420,
       "sha256": "4aa8a37a681ccb89359ee8a58c877d0f2d9acbb8e7a22e24639b378c9f4f6c9b"
     },
@@ -1421,7 +1431,7 @@
       "sha256": "ece496dc531a4acbab21fcb0504096128450d2d52a440ca4f75811f2df517213"
     }
   },
-  "guidance_block": "4cbcf68427d70ebab58d56821afeb5d06c3d312b72a8ecc5103051e3b2c0c967",
+  "guidance_block": "2f456ec6f1fd93719fa7129d86d6a0e85e4a7d0c50d5b1eb669c42ee29be510a",
   "packages": [
     {
       "bundle": "advisory",

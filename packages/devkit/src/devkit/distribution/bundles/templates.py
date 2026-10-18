@@ -12,7 +12,7 @@ from devkit.distribution.errors import BundleError
 Scalar = str | bool | int
 NAME = re.compile(r"[a-z][a-z0-9_]*\Z")
 TYPES = {"string": str, "boolean": bool, "integer": int}
-TEMPLATE_KINDS = frozenset({"instruction", "guidance", "document"})
+TEMPLATE_KINDS = frozenset({"instruction", "guidance", "document", "skill"})
 
 
 @dataclass(frozen=True)

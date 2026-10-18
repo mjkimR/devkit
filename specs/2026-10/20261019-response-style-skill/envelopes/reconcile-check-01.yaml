@@ -1,0 +1,22 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-18T15:53:51.360604Z'
+status: completed
+summary: Independent reconcile reviewer found two missing Living Spec targets.
+findings:
+- issue: Architecture rendering description omits skill templates.
+  evidence: docs/architecture/ARCH-05-4-distribution-components.md:124 enumerates instruction, guidance and document rendering only.
+  failure_condition: Supported skill sources and overrides remain absent from architecture rendering description.
+  suggested_action: Update rendering description and add the architecture document as a reconcile target.
+  resolution: open
+- issue: Override receipt contract omits templated skill entry paths.
+  evidence: docs/capabilities/distribution/CAP-DIST-workspace-ownership.md:153 describes SKILL.md while primary_path returns SKILL.md.jinja for template entries.
+  failure_condition: Receipt raw template entry differs from documented relative_path semantics.
+  suggested_action: Include authored SKILL.md.jinja entries and add the ownership capability as a reconcile target.
+  resolution: open
+assumptions:
+- Uncommitted cumulative review in emulated read-only host context.
+checks: {}
+activity_effort: high

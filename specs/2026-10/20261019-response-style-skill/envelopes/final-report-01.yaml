@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-18T15:54:36.056165Z'
+status: completed
+summary: Skill Markdown templates render before validation and native projection; response-style language is contained in SKILL.md.jinja and AGENTS.md only references the skill.
+findings: []
+assumptions:
+- Continued existing checkout on session-to-spec depth increase; implementation reviewed uncommitted and no commit or integration performed.
+unverified_areas:
+- Post-commit cumulative governance and integration are outside this uncommitted implementation.
+checks:
+  tests: PASS 520 broad distribution/catalog/layering tests; 47 focused template/catalog tests
+  build: PASS both wheels built and isolated wheel consumer smoke passed for auto and ko
+  lint: PASS Ruff, Pyright, rules check, sync --check and diff whitespace checks
+activity_effort: high

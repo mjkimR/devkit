@@ -4,6 +4,8 @@ title: "Manifest Specification"
 summary: "Schema, asset kinds, presets, validation, and deterministic archive builds for devkit bundles."
 area: distribution
 status: active
+entrypoints:
+  - packages/devkit/src/devkit/distribution/bundles/
 created_at: 2026-10-17
 ---
 
@@ -31,7 +33,7 @@ bundle/
 Every asset is identified by `(bundle, kind, id)`; ids are unique within a bundle. Classification criteria and naming
 standards are in the `ARCH-08-2-resource-taxonomy`.
 
-- `skill`: a directory containing `SKILL.md` and supporting files; the whole tree is deployed, executable bits
+- `skill`: a directory containing exactly one of `SKILL.md` or `SKILL.md.jinja` and supporting files; the whole tree is deployed, executable bits
   (`0755`) preserved. One `source` serves every agent; `variants` ship a directory per agent. `invocation` (optional,
   `auto` or `user`, default `auto`) says who starts the skill: under `user` only an explicit user invocation does,
   and each projection carries the agent's native setting
@@ -160,8 +162,9 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
 - **Source vs. variants**: an asset declares either one `source` or a `variants` mapping, never both. Only `skill`
   and `subagent` assets, the kinds projected per agent (`CAP-DIST-agent-projections`),
   may declare `variants`; its keys must be supported agent names (`antigravity`, `claude-code`, `codex`).
-- **Skills**: a `skill` source or variant is a directory containing a `SKILL.md` that is UTF-8 and, when it opens a
-  frontmatter block, closes it (sync inserts the context prerequisite after it). `codex` and `antigravity` variants
+- **Skills**: a `skill` source or variant is a directory containing exactly one of `SKILL.md` or `SKILL.md.jinja`.
+  The final entry is UTF-8 with valid YAML mapping frontmatter when present; rendering and validation precede
+  insertion of the context prerequisite. Declaring both entries is `BUNDLE_INVALID`. `codex` and `antigravity` variants
   project to the same `.agents/skills/<asset-id>/` and must be identical (same files, bytes and modes). The ids
   `devkit-playbook` and `devkit-workflow` are reserved for the entry skills `devkit sync` generates.
 - **Skill invocation**: only `skill` assets declare `invocation`, and only `auto` or `user`. `bundle.toml` is the one
@@ -210,10 +213,10 @@ verification; projects receive bundles as installed wheels, not archives.
 
 ## Markdown templates and bundle variables
 
-An instruction, guidance or document source MAY contain `.md.jinja` files. Only those files are rendered; ordinary
+An instruction, guidance, document or skill source MAY contain `.md.jinja` files. Only those files are rendered; ordinary
 files preserve literal Jinja syntax. A `.jinja` source in any other kind, or with another preceding extension,
 is `BUNDLE_INVALID`. Constitution files are not templated. The final `.jinja` suffix alone is removed from each
-managed destination and from directory-seeded filenames. An explicit seeded `target` remains the authored path.
+managed and native skill destination and from directory-seeded filenames. An explicit seeded `target` remains the authored path.
 Two distinct source paths mapping to the same managed destination, or a file and its descendant, are
 `BUNDLE_INVALID`, even with identical bytes.
 
@@ -245,7 +248,9 @@ StrictUndefined, UTF-8, LF output, no HTML escaping, preserved trailing newlines
 calls. Available filters are `lower`, `upper`, `trim`, `default`, `replace`, `length`; built-in Jinja tests remain
 available. The sandbox limits access, not resource consumption; bundles remain installed, trusted content.
 
-Syntax, evaluation, UTF-8 and rendered instruction-header/guidance errors are `BUNDLE_INVALID` before writes.
+Syntax, evaluation, UTF-8 and rendered instruction-header, skill-frontmatter or guidance errors are
+`BUNDLE_INVALID` before writes. Rendered skill files obey the manifest-owned invocation restrictions before native
+settings and context prerequisites are inserted; these checks run even with no selected agents.
 Guidance fragment formatting, the 300-byte limit, path references and selected target requirements apply to the
 rendered text. These checks also apply to project template overrides. Ordinary source validation is unchanged.
 Jinja is imported only when a `.md.jinja` file actually renders, never merely by loading a bundle or its manifest.

@@ -150,7 +150,7 @@ before any write (`WORKSPACE_UNSAFE`): override content never comes from outside
 The first sync that sees an override records it in the receipt under `overrides.<bundle>.<asset>`:
 `baseline_upstream_sha256` is a digest over **every** upstream file of the asset (SHA-256 of the sorted
 `path NUL sha256` lines), `override_sha256` the same over the override files, and `relative_path` names the asset
-(its `SKILL.md`, file or directory source).
+(its authored `SKILL.md` or `SKILL.md.jinja` entry, file or directory source).
 
 On every sync the current upstream digest is compared with the baseline. Because it covers every file, a change to a
 skill's script is drift even when only its `SKILL.md` is overridden. On drift the override stays projected and:

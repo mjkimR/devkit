@@ -41,7 +41,7 @@ a moment no skill marks, such as "before writing a commit message").
 | --- | --- | --- | --- |
 | `rule` | `rules/<slug>/`: a plugin package directory of `.py` modules, guide and tests | `devkit rules check`, hooks, CI; loaded from the receipt | none |
 | `gate` | `gates/<slug>/`: a plugin package directory | `devkit gate` at a Git hook stage | none |
-| `skill` | `skills/<slug>/SKILL.md` and support files | The agent host lists it and invokes it as a tool; the body opens with the bundle context prerequisite | name and description always; body on invocation |
+| `skill` | `skills/<slug>/SKILL.md` or `SKILL.md.jinja`, and support files | The agent host lists it and invokes it as a tool; the body opens with the bundle context prerequisite | name and description always; body on invocation |
 | `subagent` | native file per agent or `subagents/<slug>.md` contract | The host loads it when delegating | persona on load |
 | `workflow` | one Markdown definition with `id` and `stages` | `devkit-workflow` entry skill and `devkit workflow next` | stage output only |
 | `playbook` | `playbooks/<slug>.md` or directory with `SKILL.md` | Only on explicit `devkit-playbook` invocation or rule remediation | selected headers, then one body |
@@ -102,7 +102,8 @@ a moment no skill marks, such as "before writing a commit message").
 
 ## Configurable Markdown
 
-Instruction, guidance and document assets may use `.md.jinja` sources. Declare each input in the manifest under
+Instruction, guidance, document and skill assets may use `.md.jinja` sources. A skill directory contains exactly
+one of `SKILL.md` or `SKILL.md.jinja`; its native projections always contain `SKILL.md`. Declare each input in the manifest under
 `[variables.<name>]` with `type = "string"`, `"boolean"` or `"integer"` and an optional same-type `default`.
 Consumers set `[bundles.<bundle>.variables]` in `.devkit/config.toml`. Use `{{ vars.<name> }}` in the template;
 only declared scalar values are exposed. `sync` strips the final `.jinja`, validates the rendered content and hashes

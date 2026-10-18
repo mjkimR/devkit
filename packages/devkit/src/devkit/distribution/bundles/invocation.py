@@ -67,6 +67,14 @@ def check_skill_source(path: Path, context: str) -> None:
             check_skill_file(relative, (path / relative).read_bytes(), f"{context}/{relative}")
 
 
+def skill_entry(path: Path, context: str) -> Path:
+    """Resolve exactly one authored entry; template contents are validated after rendering."""
+    entries = [path / name for name in ("SKILL.md", "SKILL.md.jinja") if (path / name).is_file()]
+    if not path.is_dir() or len(entries) != 1:
+        raise BundleError(f"{context}: skill source must contain exactly one of SKILL.md or SKILL.md.jinja")
+    return entries[0]
+
+
 def user_only(relative: str, data: bytes, agent: str, context: str) -> bytes:
     """One projected file of a ``user`` skill as ``agent`` reads it; ``context`` names the file in errors.
 

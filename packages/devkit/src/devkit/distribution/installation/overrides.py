@@ -85,8 +85,10 @@ def asset_files(bundle: Bundle, asset: Asset) -> list[str]:
 def primary_path(bundle: Bundle, asset: Asset) -> str:
     """The path that names an asset in reports: ``SKILL.md`` of a skill directory, else its first source."""
     source = asset.sources[0][1]
-    entry = bundle.root / source / "SKILL.md"
-    return f"{source}/SKILL.md" if entry.is_file() else source
+    for name in ("SKILL.md", "SKILL.md.jinja"):
+        if (bundle.root / source / name).is_file():
+            return f"{source}/{name}"
+    return source
 
 
 def asset_digest(files: Iterable[tuple[str, bytes]]) -> str:

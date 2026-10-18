@@ -121,6 +121,7 @@ is the JSON the command prints.
 The `bundles/templates.py` module owns scalar variable declarations, template destination naming and restricted
 Jinja rendering. Its Jinja imports are local to rendering so CLI discovery, ordinary bundle loading and non-template
 sync do not load the engine. The installation config reader owns `[bundles.<name>.variables]`; inventory resolves
-those values against declarations and renders selected instruction, guidance and document `.md.jinja` sources,
+those values against declarations and renders selected instruction, guidance, document and skill `.md.jinja` sources,
 including raw project overrides, into final managed `.md` files before transaction planning and receipt hashing.
+Skill projections use the rendered filenames and contents before native invocation settings are inserted.
 This does not execute bundle Python code or alter the verbatim contract of native host configurations.

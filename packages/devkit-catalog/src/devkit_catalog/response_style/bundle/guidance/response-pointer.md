@@ -1,1 +1,1 @@
-- Before responding to the user, read {path:response-style} and apply its communication guidelines.
+- Before responding to the user, read and apply the `response-style` skill.

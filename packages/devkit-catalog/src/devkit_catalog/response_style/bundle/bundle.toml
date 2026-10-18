@@ -9,8 +9,8 @@ default = "auto"
 
 [[assets]]
 id = "response-style"
-kind = "instruction"
-source = "instructions/response-style.md.jinja"
+kind = "skill"
+source = "skills/response-style"
 
 [[assets]]
 id = "response-pointer"

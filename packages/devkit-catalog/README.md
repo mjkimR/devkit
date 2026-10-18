@@ -35,8 +35,8 @@ rules. See `CAP-DIST-content-packages` and the
 
 ## Response style
 
-`devkit add response-style` installs independently authored communication instructions. Configure the default
-conversation language before syncing (the default `auto` follows the current request):
+`devkit add response-style` installs the `response-style` skill and an `AGENTS.md` reminder to read and apply it
+before responding. Configure the default conversation language before syncing (the default `auto` follows the current request):
 
 ```toml
 [bundles.response-style.variables]
@@ -44,4 +44,5 @@ language = "ko"
 ```
 
 Run `devkit sync` after changing variables. Language values are natural-language names or codes understood by the
-agent, not a closed locale registry. Documentation and code-comment language still follow repository requirements.
+agent, not a closed locale registry. The language is rendered into the skill from `SKILL.md.jinja`; the root
+reminder only references the skill. Documentation and code-comment language still follow repository requirements.

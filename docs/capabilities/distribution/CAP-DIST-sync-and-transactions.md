@@ -4,6 +4,9 @@ title: "Synchronization & Transactions"
 summary: "Transactional deployment of bundle assets, atomic journal safety, recovery, and receipt management."
 area: distribution
 status: active
+entrypoints:
+  - packages/devkit/src/devkit/distribution/installation/inventory.py
+  - packages/devkit/src/devkit/distribution/installation/overrides.py
 created_at: 2026-10-17
 ---
 
@@ -380,5 +383,6 @@ changes their receipt hashes; locked sync refuses any resulting committed-state 
 Template overrides retain their `.md.jinja` source paths and raw-source digests. Inventory chooses the upstream or
 project override, renders and validates it, then writes the resulting `.md` into the managed tree. Receipt asset
 paths and guidance references name that managed result even when a template is overridden, so get-context reads
-only rendered content. Non-template overrides retain their existing paths and ownership behavior. A template error
+only rendered content. Skill entry and supporting Markdown templates follow the same raw override and rendered
+consumer-path contract; native skill projections receive rendered filenames and contents. Non-template overrides retain their existing paths and ownership behavior. A template error
 aborts before transaction writes; override commands restore their preliminary writes when planning fails.

@@ -42,9 +42,9 @@ source = "pointer.md.jinja"
     )
 
 
-def config(root: Path, language: str = '"ko"') -> None:
+def config(root: Path, language: str = '"ko"', *, agents: tuple[str, ...] = ()) -> None:
     (root / ".devkit").mkdir(parents=True, exist_ok=True)
-    (root / ".devkit/config.toml").write_text(f"""agents = []
+    (root / ".devkit/config.toml").write_text(f"""agents = {json.dumps(agents)}
 [presets]
 style = "all"
 [bundles.style.variables]
@@ -290,3 +290,130 @@ source="docs"
             {"docs/guide.md.jinja": "rendered\n", "docs/guide.md/child.md": "child\n"},
         )
     assert not (tmp_path / "source/.devkit").exists()
+
+
+def skill_bundle(tmp_path: Path, *, entry: str | None = None, invocation: str = "auto"):
+    return write_bundle(
+        tmp_path / "source",
+        f'''schema=1
+name="style"
+version="0.1.0"
+[variables.language]
+type="string"
+default="auto"
+[[assets]]
+id="respond"
+kind="skill"
+source="skills/respond"
+invocation="{invocation}"
+''',
+        {
+            "AGENTS.md": "# Bundle context\n",
+            "skills/respond/SKILL.md.jinja": entry
+            if entry is not None
+            else instruction("respond", "Language: {{ vars.language }}\n"),
+            "skills/respond/references/language.md.jinja": "Language: {{ vars.language }}\n",
+            "skills/respond/literal.md": "{{ not_a_variable }}\n",
+            "skills/respond/scripts/run.sh": "#!/bin/sh\nexit 0\n",
+        },
+        executable=("skills/respond/scripts/run.sh",),
+    )
+
+
+def test_skill_templates_project_with_context_and_native_invocation(tmp_path: Path) -> None:
+    item = skill_bundle(tmp_path, invocation="user")
+    inventory = desired_inventory(
+        [item], {"style": ["all"]}, ["codex", "claude-code", "antigravity"], variables={"style": {"language": "ko"}}
+    )
+    for directory in (".devkit/managed/style/skills", ".agents/skills", ".claude/skills"):
+        prefix = f"{directory}/respond"
+        entry = inventory.files[f"{prefix}/SKILL.md"].data
+        assert b"Language: ko" in entry
+        assert entry.count(b"<!-- DEVKIT:CONTEXT -->") == 1
+        assert inventory.files[f"{prefix}/references/language.md"].data == b"Language: ko\n"
+        assert inventory.files[f"{prefix}/literal.md"].data == b"{{ not_a_variable }}\n"
+        assert inventory.files[f"{prefix}/scripts/run.sh"].mode == 0o755
+    assert not any(path.endswith(".jinja") for path in inventory.files)
+    assert b"disable-model-invocation: true" in inventory.files[".claude/skills/respond/SKILL.md"].data
+    assert b"disable-model-invocation" not in inventory.files[".devkit/managed/style/skills/respond/SKILL.md"].data
+    assert b"allow_implicit_invocation: false" in inventory.files[".agents/skills/respond/agents/openai.yaml"].data
+
+
+@pytest.mark.parametrize(
+    "entry",
+    [
+        "---\nname: respond\n",
+        "---\nname: [\n---\nBody\n",
+        "---\n{{ vars.language }}\n---\nBody\n",
+        "---\nname: respond\n{% if vars.language == 'ko' %}disable-model-invocation: true\n{% endif %}---\nBody\n",
+        "{{ vars.missing }}",
+    ],
+)
+def test_invalid_rendered_skill_fails_before_writes(tmp_path: Path, entry: str) -> None:
+    item = skill_bundle(tmp_path, entry=entry)
+    root = tmp_path / "project"
+    config(root)
+    with pytest.raises(BundleError):
+        sync_project(root, [item])
+    assert not (root / ".devkit/installation.json").exists()
+    assert not (root / ".devkit/managed").exists()
+
+
+def test_skill_template_override_and_locked_restoration(tmp_path: Path) -> None:
+    from devkit.distribution.installation.overrides import primary_path
+
+    item = skill_bundle(tmp_path)
+    root = tmp_path / "project"
+    agents = ("codex", "claude-code", "antigravity")
+    config(root, agents=agents)
+    sync_project(root, [item])
+    assert primary_path(item.bundle, item.bundle.assets[0]) == "skills/respond/SKILL.md.jinja"
+    create_override(root, [item], "style:respond")
+    raw = root / ".devkit/overrides/style/skills/respond/SKILL.md.jinja"
+    raw.write_text(instruction("respond", "Override: {{ vars.language }}\n"))
+    sync_project(root, [item])
+    managed = root / ".devkit/managed/style/skills/respond/SKILL.md"
+    projected = root / ".agents/skills/respond/SKILL.md"
+    assert "Override: ko" in managed.read_text() and "Override: ko" in projected.read_text()
+    assert sync_project(root, [item]).to_dict()["actions"] == []
+    before = (root / ".devkit/installation.json").read_bytes()
+    record = json.loads(before)["overrides"]["style"]["respond"]
+    assert record["relative_path"] == "skills/respond/SKILL.md.jinja"
+    managed.unlink()
+    projected.unlink()
+    sync_project(root, [item], locked=True)
+    assert "Override: ko" in managed.read_text() and "Override: ko" in projected.read_text()
+    assert (root / ".devkit/installation.json").read_bytes() == before
+    config(root, '"en"', agents=agents)
+    with pytest.raises(ReceiptStaleError):
+        sync_project(root, [item], locked=True)
+    assert "Override: ko" in projected.read_text()
+    sync_project(root, [item])
+    assert "Override: en" in projected.read_text()
+    before = (root / ".devkit/installation.json").read_bytes()
+    raw.write_text("---\nname: [\n---\n")
+    with pytest.raises(BundleError):
+        sync_project(root, [item])
+    assert (root / ".devkit/installation.json").read_bytes() == before
+    assert "Override: en" in projected.read_text()
+    remove_override(root, [item], "style:respond")
+    assert "Language: en" in projected.read_text()
+
+
+@pytest.mark.parametrize("relative", ["SKILL.md", "references/language.md", "agents/openai.yaml.jinja"])
+def test_skill_template_collisions_and_non_markdown_templates_are_rejected(tmp_path: Path, relative: str) -> None:
+    item = skill_bundle(tmp_path)
+    path = item.bundle.root / "skills/respond" / relative
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("plain\n")
+    with pytest.raises(BundleError):
+        load_bundle(item.bundle.root)
+
+
+def test_skill_template_entry_requires_a_directory(tmp_path: Path) -> None:
+    with pytest.raises(BundleError, match="skill source must contain"):
+        write_bundle(
+            tmp_path / "source",
+            'schema=1\nname="style"\nversion="0.1.0"\n[[assets]]\nid="respond"\nkind="skill"\nsource="SKILL.md.jinja"\n',
+            {"SKILL.md.jinja": instruction("respond", "Body\n")},
+        )

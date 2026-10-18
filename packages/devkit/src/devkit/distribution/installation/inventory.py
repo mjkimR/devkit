@@ -4,14 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from functools import partial
 from pathlib import Path
 
 from devkit.core.receipt import MANAGED_PATH, AssetRecord, HostHookRecord, OverrideRecord, PackageRecord
 from devkit.distribution.bundles.fragments import read_fragment, references, render_fragment
 from devkit.distribution.bundles.guidance import prepend_context
 from devkit.distribution.bundles.instructions import read_instruction_header
-from devkit.distribution.bundles.invocation import user_only, user_only_extras
+from devkit.distribution.bundles.invocation import check_skill_file, skill_entry, user_only, user_only_extras
 from devkit.distribution.bundles.manifest import Asset, Bundle, source_files
 from devkit.distribution.bundles.playbooks import playbook_entry
 from devkit.distribution.bundles.subagents import (
@@ -155,7 +154,7 @@ class _BundleInventory:
         # A bundle with a context (constitution or instructions) prefixes its skills with the load prerequisite.
         if constitution is not None or any(asset.kind == "instruction" for asset in chosen):
             self.context_files = {
-                bundle.root / source / "SKILL.md"
+                skill_entry(bundle.root / source, f"{asset.id}/{source}")
                 for asset in chosen
                 if asset.kind == "skill"
                 for _, source in asset.sources
@@ -235,8 +234,20 @@ class _BundleInventory:
                         read_instruction_header(data, cited)
                     elif asset.kind == "guidance":
                         read_fragment(data, cited)
-                    self.inventory.put(self.prefix + output_path(rel), Content(data, normal_mode(path.stat().st_mode)))
+                    elif asset.kind == "skill":
+                        check_skill_file(
+                            output_path(path.relative_to(self.bundle.root / source).as_posix()), data, cited
+                        )
+                    dest = self.prefix + output_path(rel)
+                    if context := self._context(path):
+                        data = prepend_context(data, context, dest)
+                    self.inventory.put(dest, Content(data, normal_mode(path.stat().st_mode)))
                 else:
+                    if asset.kind == "skill":
+                        read_from, cited = resolve_source(self.root, self.bundle, rel)
+                        check_skill_file(
+                            path.relative_to(self.bundle.root / source).as_posix(), read_from.read_bytes(), cited
+                        )
                     self.inventory.copy(self.prefix + rel, path, self._context(path))
                 paths.add(consumer_path(self.root, self.bundle, rel))
         return paths
@@ -282,20 +293,26 @@ class _BundleInventory:
         relatives = set()
         for path in source_files(self.bundle.root, source):
             read_from, cited = resolve_source(self.root, self.bundle, path.relative_to(self.bundle.root).as_posix())
-            render = None
             if asset.kind == "skill":
-                relative = path.relative_to(origin).as_posix()
+                relative = output_path(path.relative_to(origin).as_posix())
                 relatives.add(relative)
                 dest = f"{skill_dir}/{asset.id}/{relative}"
+                data = read_from.read_bytes()
+                if path.name.endswith(".md.jinja"):
+                    data = render_template(data, self.variables, cited)
+                check_skill_file(relative, data, cited)
                 if asset.invocation == "user":
-                    render = partial(user_only, relative, agent=agent, context=cited)
+                    data = user_only(relative, data, agent, cited)
+                if context := self._context(path):
+                    data = prepend_context(data, context, dest)
+                self.inventory.put(dest, Content(data, normal_mode(read_from.stat().st_mode)))
             else:
                 suffix = HOST_FILES[agent]
                 if not origin.is_file() or origin.suffix != suffix:
                     raise BundleError(f"{asset.id}: {agent} subagent must be one {suffix} file")
                 dest = f"{subagent_dir}/{asset.id}{suffix}"
                 self.inventory.claim(dest, owner)
-            self.inventory.copy(dest, read_from, self._context(path), render)
+                self.inventory.copy(dest, read_from, self._context(path))
             paths.add(dest)
         if asset.kind == "skill" and asset.invocation == "user":
             for relative, data in user_only_extras(agent, relatives).items():

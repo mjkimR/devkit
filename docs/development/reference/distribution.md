@@ -280,7 +280,9 @@ import cannot make the bundle unusable):
 
 ## Configurable Markdown templates
 
-For instruction, guidance and document assets, `name.md.jinja` renders to `name.md`; ordinary Markdown stays literal.
+For instruction, guidance, document and skill assets, `name.md.jinja` renders to `name.md`; ordinary Markdown stays
+literal. A skill directory contains exactly one of `SKILL.md` or `SKILL.md.jinja`; native projections always expose
+`SKILL.md`.
 Declare typed `[variables.<identifier>]` inputs in `bundle.toml` and set project values under
 `[bundles.<bundle>.variables]` in `.devkit/config.toml`, then `devkit sync`. Templates use `{{ vars.language }}`.
 The engine loads only during rendering. See `CAP-DIST-manifest-spec` for syntax and restrictions and

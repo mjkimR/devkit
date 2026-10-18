@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: Approved skill templating; session depth raised to spec for distribution contract
+  changes.
+by: user
+at: '2026-10-18T15:48:17.126443Z'
