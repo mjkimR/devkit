@@ -36,3 +36,33 @@ def test_the_hygiene_run_shows_them_through_the_installed_entry_point(tmp_path: 
     _proposal(tmp_path, "gone", "rejected")
     result = CliRunner().invoke(devkit_cli, ["rules", "check", "-p", "hygiene", "-w", str(tmp_path)])
     assert "(SPEC_PROPOSAL_REJECTED_PENDING) docs/proposals/PROP-gone is rejected" in result.stderr
+
+
+def test_finished_milestones_report_only_unsettled_anchor_members(tmp_path: Path) -> None:
+    (tmp_path / ".devkit/managed/spec").mkdir(parents=True)
+    for status in ("done", "dropped"):
+        write(tmp_path, f"docs/roadmap/MS-{status}.md", f"---\nid: MS-{status}\nstatus: {status}\n---\n")
+        write(
+            tmp_path,
+            f"docs/proposals/PROP-{status}/proposal.md",
+            f"---\nid: PROP-{status}\nstatus: draft\nmilestone: MS-{status}\n---\n",
+        )
+    write(
+        tmp_path,
+        "docs/proposals/PROP-rejected/proposal.md",
+        "---\nid: PROP-rejected\nstatus: rejected\nmilestone: MS-done\n---\n",
+    )
+    write(
+        tmp_path,
+        "specs/2026-10/20261018-finished/spec.md",
+        "---\nid: SPEC-finished\nstatus: completed\nmilestone: MS-done\n---\n",
+    )
+    found = rejected_proposals(tmp_path)
+    assert found is not None
+    warnings = [w for w in found if w.code.startswith("SPEC_MILESTONE_")]
+    assert [w.code for w in warnings] == ["SPEC_MILESTONE_DONE_UNSETTLED", "SPEC_MILESTONE_DROPPED_UNSETTLED"]
+    assert all("PROP-rejected" not in w.message and "SPEC-finished" not in w.message for w in warnings)
+    assert all(w.fix and "Backlog" in w.fix for w in warnings)
+    _proposal(tmp_path, "done", "rejected")
+    _proposal(tmp_path, "dropped", "rejected")
+    assert not [w for w in rejected_proposals(tmp_path) or [] if w.code.startswith("SPEC_MILESTONE_")]

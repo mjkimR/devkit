@@ -39,6 +39,7 @@ from __future__ import annotations
 import re
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
+from pathlib import Path
 
 from devkit.core import FrontmatterError
 from devkit.core.frontmatter import FrontmatterBlock, locate
@@ -47,6 +48,7 @@ from devkit.rules.rules import BaseRule
 
 from devkit_spec.config import Namespace
 from devkit_spec.documents import DocumentIndex, Kind, VisibleLine, in_feedback, visible_lines
+from devkit_spec.documents.index import is_document_file
 from devkit_spec.namespaces import docs_roots, living_path
 from devkit_spec.rules import FIX_COMMAND, document_index, explicitly_targeted, namespaces
 
@@ -61,7 +63,7 @@ _STORY_STEM = re.compile(r"^US-([a-z0-9]+(?:-[a-z0-9]+)*)$", re.ASCII)
 _ARCH_STEM = re.compile(r"^ARCH-(?:(\d{2})(?:-([1-9]))?-)?([a-z0-9]+(?:-[a-z0-9]+)*)$", re.ASCII)
 # The document's own ID token opens its first H1 (``# [ID] Title`` or ``# `ID` Title``); in a spec bundle file it may
 # follow a leading label (``# Technical Plan: `SPEC-<slug>` Title``). An ID later in the heading is a reference.
-_ID_TOKEN = r"(?P<token>(?:\[|`)(?P<id>(?:SPEC|PLAN|TASKS|REC|ADR|FB|CAP|US|ARCH)-[^\]`]+)(?:\]|`))"
+_ID_TOKEN = r"(?P<token>(?:\[|`)(?P<id>(?:SPEC|PLAN|TASKS|REC|ADR|FB|CAP|US|ARCH|MS)-[^\]`]+)(?:\]|`))"
 _HEADING_TOKEN = re.compile(rf"^#[ \t]+{_ID_TOKEN}")
 _LABELLED_HEADING_TOKEN = re.compile(rf"^#[ \t]+(?:[^`\[\]:\r\n]+:[ \t]+)?{_ID_TOKEN}")
 _ANY_ID_TOKEN = re.compile(_ID_TOKEN)
@@ -268,10 +270,42 @@ def _targets(ctx: RuleContext) -> list[_Target]:
             targets.append(_feedback(path))
     registered = namespaces(ctx)
     for docs_root in docs_roots(registered):
+        for path in _markdown(ctx, f"{docs_root}/roadmap"):
+            if not is_document_file(Path(path).name):
+                continue
+            stem = _stem(path)
+            slug = stem.removeprefix("MS-")
+            valid = (
+                docs_root == "docs"
+                and len(path.split("/")) == 3
+                and stem.startswith("MS-")
+                and re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug) is not None
+                and _has_letter(slug)
+            )
+            targets.append(
+                _Target(
+                    path,
+                    Kind.MILESTONE,
+                    slug=slug,
+                    expected_id=stem if valid else "",
+                    path_issue=""
+                    if valid
+                    else "Milestone must be stored at docs/roadmap/MS-{slug}.md with a word-led kebab-case slug",
+                )
+            )
+    for docs_root in docs_roots(registered):
         for directory, kind in _LIVING_DIRECTORIES.items():
             for path in _markdown(ctx, f"{docs_root}/{directory}"):
                 if not path.endswith("/README.md"):
                     targets.append(_living_spec(path, kind, docs_root, registered))
+    covered = {target.path for target in targets}
+    for document in document_index(ctx).documents:
+        if document.kind is Kind.MILESTONE and document.path not in covered:
+            targets.append(
+                _Target(
+                    document.path, Kind.MILESTONE, path_issue="Milestone must be stored at docs/roadmap/MS-{slug}.md"
+                )
+            )
     return targets
 
 
@@ -413,7 +447,7 @@ class IdConventionRule(BaseRule):
         def reportable(path: str) -> bool:
             if not ctx.is_file_targeted(path):
                 return False
-            return not _historical(path, completed) or explicitly_targeted(ctx, path)
+            return not (_historical(path, completed) or path in index.historical) or explicitly_targeted(ctx, path)
 
         def add(
             path: str, line: int, message: str, remediation: str, *, column: int = 0, fixable: bool = False

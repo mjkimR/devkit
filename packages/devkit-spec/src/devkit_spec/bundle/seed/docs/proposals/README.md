@@ -34,7 +34,7 @@ docs/proposals/PROP-{slug}/
   target_area: capabilities/<area>/      # Target capability area on graduation
   priority: high                        # critical | high | medium | low (estimated priority)
   size: M                               # S | M | L | XL (estimated scope)
-  milestone: "Phase 1: Foundation"      # (Optional) Target milestone, phase, or release
+  milestone: MS-foundation             # (Optional) Existing repository milestone ID
   boundaries:
     owns:
       - capabilities/<area>/
@@ -49,7 +49,7 @@ docs/proposals/PROP-{slug}/
   ```
   - **`priority`**: Business/system significance (`critical` > `high` > `medium` > `low`).
   - **`size`**: Estimated implementation scope (S=single fix, M=1-2 sessions, L=complex module, XL=major overhaul).
-  - **`milestone`**: (Optional) Target milestone or phase name; carried over to `spec.md` on handoff.
+  - **`milestone`**: (Optional) Existing global MS ID; carried over to `spec.md` on handoff.
   - **`boundaries`**: Declared scope impact (`owns`) and excluded scope (`excludes`).
   - **`planning_effort` / `dev_effort`**: Non-authoritative `activity-effort` hints (`low` | `medium` | `high`, default `medium`) for Planning and Development; `dev_effort` is refined during Planning before `plan-accept` and returned by `handoff`, while confirmed run effort is recorded on `worker-NN.yaml` envelopes (never copied to `spec.md`).
 - **`materials/` Markdown**: follow the material convention: file `{YYYYMMDD}-{slug}.md`, `id: MAT-<slug>`, `created_at`, H1 `# [MAT-<slug>] <title>`. `RULE-spec-format` skips `materials/` directories, so the frontmatter is recommended, not checked. Non-Markdown files need no metadata. After handoff the files move to `docs/materials/`.
@@ -63,7 +63,7 @@ Do not manually maintain catalog tables in README files. Active proposals are di
 
 ```bash
 devkit spec proposal new <slug>                        # Scaffold proposal bundle
-devkit spec proposal new <slug> --milestone "Phase 1"   # Scaffold with target milestone
+devkit spec proposal new <slug> --milestone MS-foundation   # Scaffold with target milestone
 devkit spec proposal new <slug> --with-target-docs      # Scaffold with Living Spec target blueprint
 devkit spec proposal new <slug> --task-kind bugfix     # A defect: the spec follows sdd-spec-bugfix
 devkit spec proposal new <slug> --planning-effort low --dev-effort high  # Scaffold with explicit effort hints
@@ -72,3 +72,5 @@ devkit spec proposal padr <slug> <title> --summary <text>  # Scaffold preliminar
 devkit spec list proposal                               # List proposals
 devkit spec proposal handoff <slug>                     # Graduate proposal (scaffold spec, clean bundle)
 ```
+
+Assign an existing repository milestone with `--milestone MS-<slug>`; the field is an MS ID, not free text.

@@ -55,6 +55,8 @@ Run `devkit spec list feedback --status open --where severity=critical` for the 
 
 ## 3. Decision Matrix & Action Guidance
 
+Queued drafts are not in-progress Units. When no activity is in progress, follow [next-work selection](references/next-work.md) before choosing an arbitrary draft. In-progress means a plan-/dev- branch, a reviewing/accepted proposal, or an incomplete spec.
+
 **Critical feedback first.** If open feedback with `severity: critical` exists, the first recommendation is a feedback hygiene pass on those items now (through the `devkit-playbook` skill when the project has a playbook for it); the stage recommendation below follows as the second item. Open feedback with lower severity is mentioned in one line and left for the next hygiene session.
 
 Match the diagnostic findings to one of the following states. Stage names, entry/exit checks and human gates come from the bound workflow (`devkit workflow show --unit <dir>`); this matrix only maps repository evidence onto those stages.
@@ -75,7 +77,7 @@ Map `[STAGE]` ids onto these rows with the stage table in [workflow signals](ref
 | **Collect feedback (Sweep)** | Reconcile done, no `envelopes/feedback-NN.yaml` with `checks.swept` passing (stage not `[SKIPPED]`) | Sweep the session for unrecorded observations, write the files and the sweep envelope | `spec-feedback` |
 | **Awaiting `dev-integration` (Integration Approval)** | Review and reconcile done, final change report not yet approved | Present the final change report and wait for the user's OK (asserted with `--given dev-integration`, not recorded) or PR ready state | `spec` |
 | **Integration (Post-Approval)** | `dev-integration` held (the user's OK, PR ready state, or `source=policy`), not yet integrated with base or merged | Integrate base, re-verify changed parts, confirm reconcile, run `devkit rules check --ci --base <ref>`, report | `spec-integrate` |
-| **Idle / Clean Working Tree** | No active specs, working tree clean | Ready for new feature request, bugfix, or proposal brainstorming | `/spec <intent>` |
+| **Idle / Clean Working Tree** | No in-progress Unit | Recommend eligible queued drafts and Backlog actions with [next-work selection](references/next-work.md) | `spec-next` |
 
 ### 3.1 Post-handoff link check
 

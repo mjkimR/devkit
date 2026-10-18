@@ -19,3 +19,5 @@ docs/proposals/PROP-{slug}/
 ├── decisions/             # (Optional) Preliminary decision records (PADR-{slug}.md)
 └── materials/             # (Optional) Spikes, benchmarks, surveys
 ```
+
+Assign an existing repository milestone with `--milestone MS-<slug>`; the field is an MS ID, not free text.

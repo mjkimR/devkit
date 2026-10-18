@@ -292,3 +292,14 @@ without IDs every rule's tests. The repository's own `pytest` collects the same 
 | Code | Level | Condition |
 | --- | --- | --- |
 | `RULES_EXECUTION_FAILED` | `ERROR` (devkit's) | A rule raised an exception that is not an advisory; exit `2`. An advisory a rule raises keeps its own code: a malformed `[tool.spec]` table is `SPEC_CONFIG_INVALID` with the rule's ID. |
+
+### Milestone hygiene advisories
+
+The existing spec hygiene extension also checks repository milestone membership on the base. It reads proposal/spec anchors only; completed specs and rejected proposals are settled or excluded. It never claims to inspect unmerged branches.
+
+| Code | Level | Condition and resolution |
+| --- | --- | --- |
+| `SPEC_MILESTONE_DONE_UNSETTLED` | WARNING | A done milestone still has unsettled members; review and reassign/clear those members, reject a proposal or finish the work before closing the milestone. |
+| `SPEC_MILESTONE_DROPPED_UNSETTLED` | WARNING | A dropped milestone still has unsettled members; review and reassign/clear or reject those members. |
+
+Warnings carry the milestone and member paths, deterministic remediation and the usual success exit code unless strict mode is requested. No out-of-order activation or close-candidate warning is emitted (`ADR-milestone-documents`).

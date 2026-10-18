@@ -21,6 +21,7 @@ from pathlib import Path
 
 from devkit.core import FrontmatterError
 
+from devkit_spec.documents.ids import Kind
 from devkit_spec.documents.model import Document, Reference
 from devkit_spec.documents.parse import parse_document
 from devkit_spec.errors import DocumentInvalidWarning, DuplicateIdError, UnresolvedIdError
@@ -115,6 +116,8 @@ class DocumentIndex:
         index.documents.sort(key=lambda document: document.path)
         specs = {d.path: d for d in index.documents if d.path.endswith("/spec.md")}
         for document in index.documents:
+            if document.kind is Kind.MILESTONE and document.status.lower() in {"done", "dropped"}:
+                index.historical.add(document.path)
             bundle = _spec_bundle(document.path)
             spec = specs.get(f"{bundle}/spec.md") if bundle else None
             # Statuses compare case-insensitively, as the spec rules compare them (``RULE-spec-lifecycle``).

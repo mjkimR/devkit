@@ -17,7 +17,7 @@ import yaml
 from devkit.core import FrontmatterError
 from devkit.core.frontmatter import load_header, locate
 
-from devkit_spec.documents.ids import ID_SOURCE, kind_of
+from devkit_spec.documents.ids import ID_SOURCE, Kind, kind_of
 from devkit_spec.documents.markdown import visible_lines
 from devkit_spec.documents.model import (
     BODY,
@@ -27,6 +27,7 @@ from devkit_spec.documents.model import (
     Document,
     Issue,
     Reference,
+    is_unit_anchor,
 )
 
 _CODE_SPAN_ID = re.compile(rf"`({ID_SOURCE})`")
@@ -57,6 +58,14 @@ def parse_document(path: str, text: str) -> Document | None:
     nodes = _field_nodes(block.header) if fields else {}
     line_starts = _line_starts(text) if fields else []
     for name in fields:
+        if name in {"decomposed_from", "supersedes"} and not is_unit_anchor(document):
+            continue
+        if name == "depends_on" and document.kind is not Kind.MILESTONE:
+            document.issues.append(Issue(header_line, "depends_on is valid only on milestones"))
+            continue
+        if name == "milestone" and not is_unit_anchor(document):
+            document.issues.append(Issue(header_line, "milestone is valid only on proposal/spec anchors"))
+            continue
         refs = _field_references(document, name, data[name], nodes.get(name), line_starts, header_line)
         (document.provenance if name in PROVENANCE_FIELDS else document.references).extend(refs)
     document.references.extend(_body_references(document, text, block.end, block.body_line))

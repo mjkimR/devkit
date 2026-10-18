@@ -114,3 +114,7 @@ The rule has no settings. Namespaces come from `[[tool.spec.namespaces]]` in `.d
 
 There is no inline suppression. Quote an old date- or number-based identifier inside inline code or a code block, or
 keep it in a `materials/` directory; `[rules] exclude` removes a file from every rule.
+
+## Milestone documents
+
+Global milestones live at docs/roadmap/MS-<slug>.md; the slug is word-led kebab-case (MS-release-1-0). The filename, id and first H1 token agree. Nested or namespaced roadmap locations are invalid.

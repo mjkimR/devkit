@@ -92,3 +92,36 @@ def test_history_and_materials_are_skipped_unless_targeted(tmp_path: Path) -> No
 def test_only_targets_are_reported(tmp_path: Path) -> None:
     files = {"docs/a.md": _doc("CAP-A-a", "`US-none`\n"), "docs/b.md": _doc("CAP-A-b", "`US-none`\n")}
     assert [file for file, _, _ in _found(check(RULE, tmp_path, files, targets=["docs/b.md"]))] == ["docs/b.md"]
+
+
+def test_milestone_cycles_are_seen_through_untargeted_nodes(tmp_path: Path) -> None:
+    files = {
+        "docs/roadmap/MS-a.md": _doc("MS-a", header="depends_on: [MS-b]\n"),
+        "docs/roadmap/MS-b.md": _doc("MS-b", header="depends_on: [MS-a]\n"),
+        "docs/proposals/PROP-x/proposal.md": _doc("PROP-x", header="milestone: MS-a\n"),
+    }
+    found = check(RULE, tmp_path, files, targets=["docs/roadmap/MS-a.md"])
+    assert len(found) == 1 and "dependency cycle includes MS-a" in found[0].message
+
+
+def test_milestone_wrong_kind_and_historical_origins(tmp_path: Path) -> None:
+    files = {
+        "docs/roadmap/MS-a.md": _doc("MS-a", header="depends_on: [PROP-x]\n"),
+        "docs/proposals/PROP-x/proposal.md": _doc(
+            "PROP-x", header="milestone: PROP-x\ndecomposed_from: PROP-deleted\n"
+        ),
+    }
+    messages = [v.message for v in check(RULE, tmp_path, files)]
+    assert any("depends_on takes MS- IDs" in message for message in messages)
+    assert any("milestone takes MS- IDs" in message for message in messages)
+    assert not any("PROP-deleted" in message for message in messages)
+
+
+def test_self_cycle_and_wrong_provenance_shape(tmp_path: Path) -> None:
+    files = {
+        "docs/roadmap/MS-a.md": _doc("MS-a", header="depends_on: [MS-a]\n"),
+        "docs/proposals/PROP-x/proposal.md": _doc("PROP-x", header="supersedes: MS-a\n"),
+    }
+    messages = [v.message for v in check(RULE, tmp_path, files)]
+    assert any("dependency cycle" in message for message in messages)
+    assert any("supersedes takes PROP- IDs" in message for message in messages)

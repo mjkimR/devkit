@@ -575,3 +575,22 @@ def test_proposal_feedback_paths_identity_and_heading(tmp_path: Path) -> None:
     check(RULE, tmp_path, fix=True)
     fixed = (tmp_path / base / "wrong.md").read_text()
     assert "id: FB-wrong" in fixed and "# [FB-wrong]" in fixed
+
+
+def test_global_milestone_path_and_word_led_slug(tmp_path: Path) -> None:
+    from devkit.rules.testing import check
+
+    files = {
+        "docs/roadmap/MS-release-1-0.md": "---\nid: MS-release-1-0\n---\n# [MS-release-1-0] Release\n",
+        "docs/roadmap/MS-2026-q4.md": "---\nid: MS-2026-q4\n---\n# [MS-2026-q4] Invalid\n",
+        "docs/misplaced.md": "---\nid: MS-misplaced\n---\n# [MS-misplaced] Invalid\n",
+    }
+    violations = check(RULE, tmp_path, files)
+    assert not [v for v in violations if v.file.endswith("MS-release-1-0.md")]
+    assert any(v.file.endswith("MS-2026-q4.md") and "Milestone" in v.message for v in violations)
+
+
+def test_historical_milestone_ids_require_explicit_target(tmp_path: Path) -> None:
+    path = "docs/roadmap/MS-old.md"
+    assert check(RULE, tmp_path, {path: "---\nid: MS-wrong\nstatus: done\n---\n# [MS-wrong] Old\n"}) == []
+    assert check(RULE, tmp_path, targets=[path])

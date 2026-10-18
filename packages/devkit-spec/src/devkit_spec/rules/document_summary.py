@@ -26,7 +26,7 @@ from devkit_spec.rules import document_index, is_material, reportable
 
 RULE_ID = "RULE-document-summary"
 SKELETON_MARKER = "<!-- devkit:skeleton -->"
-REQUIRED = {Kind.CAPABILITY, Kind.STORY, Kind.DECISION, Kind.ARCHITECTURE}
+REQUIRED = {Kind.CAPABILITY, Kind.STORY, Kind.DECISION, Kind.ARCHITECTURE, Kind.MILESTONE}
 ANCHORS = {Kind.PROPOSAL: "proposal.md", Kind.SPEC: "spec.md"}
 REMEDIATION = (
     "Write `summary:` in the frontmatter: one or two English sentences saying what the document defines"

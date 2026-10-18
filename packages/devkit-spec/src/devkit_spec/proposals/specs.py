@@ -134,6 +134,9 @@ def spec_files(
     milestone = text_value(meta.get("milestone"))
     extra = f"\nnamespace: {yaml_scalar(namespace)}" if namespace else ""
     extra += f"\nmilestone: {yaml_scalar(milestone)}" if milestone else ""
+    for name in ("decomposed_from", "supersedes"):
+        value = text_value(meta.get(name))
+        extra += f"\n{name}: {yaml_scalar(value)}" if value else ""
     summary_line = f"\nsummary: {yaml_scalar(summary)}" if summary else ""
     spec = f"""---
 id: SPEC-{slug}
@@ -349,6 +352,7 @@ def create_spec(
     workflow: str | None = None,
     namespace: str | None = None,
     summary: str | None = None,
+    milestone: str | None = None,
     day: date | None = None,
     cwd: Path | None = None,
 ) -> CreatedSpec:
@@ -370,6 +374,9 @@ def create_spec(
     root = root.resolve()
     slug = new_slug(slug.strip().removeprefix("SPEC-"), error=SpecSlugError)
     require_development_branch(root, slug, "devkit spec new", SpecWrongBranchError)
+    from devkit_spec.proposals.roadmap import milestone_id
+
+    milestone = milestone_id(root, milestone)
     namespace, reported = bundle_namespace(root, namespace, cwd)
     summary = require_summary(summary)
     day = day or date.today()
@@ -392,6 +399,7 @@ def create_spec(
         title,
         day.isoformat(),
         origin="<Describe the problem, who has it and why it matters now.>\n",
+        meta={"milestone": milestone},
         namespace=namespace,
         summary=summary,
         bugfix=spec_only(binding),

@@ -54,7 +54,7 @@ PROPOSALS = "docs/proposals"
 # ``devkit_spec.proposals``, which imports the rules.
 PROPOSAL_FILE = "proposal.md"
 TARGET_DOCS = "target-docs.md"
-SCOPE = ("docs/capabilities", "docs/stories", PROPOSALS)
+SCOPE = ("docs/capabilities", "docs/stories", PROPOSALS, "docs/roadmap")
 NAMESPACE_SCOPE = ("capabilities", "stories")
 NAMESPACE_FIELD = "namespace"
 EFFORT_FIELDS = ("planning_effort", "dev_effort")
@@ -154,6 +154,18 @@ def _problems(ctx: RuleContext, path: str) -> list[_Problem]:
                     line=_field_line(ctx.cache.read_text(path), field),
                 )
             )
+    if path.startswith("docs/roadmap/"):
+        status = data.get("status")
+        if isinstance(status, str) and status.strip() and status not in {"planned", "active", "done", "dropped"}:
+            problems.append(
+                _Problem(
+                    "milestone status must be planned | active | done | dropped", "Set the milestone lifecycle status"
+                )
+            )
+        if _blank(data.get("created_at")):
+            problems.append(
+                _Problem("milestone is missing created_at", "Set created_at to its creation date", fixable=True)
+            )
     return problems
 
 
@@ -166,6 +178,7 @@ def _scope(ctx: RuleContext) -> list[str]:
     """Workspace-relative paths of the targeted files the rule checks, by directory (``_directories``), then path."""
     root = ctx.workspace_root
     paths: list[str] = []
+    historical = document_index(ctx).historical
     for directory in _directories(namespaces(ctx)):
         if not (root / directory).is_dir():
             continue
@@ -176,6 +189,7 @@ def _scope(ctx: RuleContext) -> list[str]:
                 and in_source_directory(relative)
                 and "/materials/" not in relative
                 and ctx.is_file_targeted(relative)
+                and (relative not in historical or explicitly_targeted(ctx, relative))
             ):
                 paths.append(relative)
     return paths
@@ -300,7 +314,13 @@ def _field_line(text: str, name: str) -> int:
 def _fixed(text: str, stem: str, document_id: str | None, today: str) -> str | None:
     """``text`` with its missing required fields filled in (``id`` only when ``document_id`` is set, ``title``
     defaulting to ``stem``); ``None`` when its frontmatter cannot be fixed."""
-    default_status = "open" if document_id and document_id.startswith("FB-") else DEFAULT_STATUS
+    default_status = (
+        "planned"
+        if document_id and document_id.startswith("MS-")
+        else "open"
+        if document_id and document_id.startswith("FB-")
+        else DEFAULT_STATUS
+    )
     try:
         block = locate(text)
     except FrontmatterError:
@@ -319,9 +339,11 @@ def _fixed(text: str, stem: str, document_id: str | None, today: str) -> str | N
         return None
     defaults = {"id": document_id, "title": _h1_title(text[block.end :]) or stem, "status": default_status}
     missing = {name: value for name, value in defaults.items() if value is not None and _blank(data.get(name))}
-    if not missing:
+    if not missing and not (document_id and document_id.startswith("MS-") and _blank(data.get("created_at"))):
         return None
-    if all(_blank(data.get(name)) for name in CREATED_FIELDS):
+    if (document_id and document_id.startswith("MS-") and _blank(data.get("created_at"))) or all(
+        _blank(data.get(name)) for name in CREATED_FIELDS
+    ):
         missing["created_at"] = today
     newline = block.newline or "\n"
     for name, value in missing.items():

@@ -279,3 +279,19 @@ def test_proposal_effort_hints_are_validated(tmp_path: Path) -> None:
     ]
     assert not any(v.fixable for v in violations)
     assert violations[0].remediation == "Set planning_effort to one of low | medium | high, or remove the field"
+
+
+def test_milestone_fix_uses_planned_and_created_at(tmp_path: Path) -> None:
+    path = "docs/roadmap/MS-release-1-0.md"
+    check(RULE, tmp_path, {path: "# Release\n"}, fix=True)
+    text = (tmp_path / path).read_text()
+    assert "id: MS-release-1-0" in text and "status: planned" in text and "created_at:" in text
+    assert check(RULE, tmp_path) == []
+
+
+def test_milestone_status_is_validated_and_created_at_fixed_independently(tmp_path: Path) -> None:
+    path = "docs/roadmap/MS-a.md"
+    files = {path: "---\nid: MS-a\ntitle: A\nstatus: draft\ncreated: 2026-10-18\n---\n"}
+    found = check(RULE, tmp_path, files, fix=True)
+    assert any("milestone status" in v.message and not v.fixed for v in found)
+    assert "created_at:" in (tmp_path / path).read_text()

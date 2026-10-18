@@ -74,3 +74,7 @@ See `ADR-example`.
 capabilities:
   - CAP-AREA-example
 ```
+
+## Milestone relations and request origins
+
+Only proposal/spec anchors may declare milestone, a scalar existing MS ID. Only milestone documents may declare depends_on, a list of existing MS IDs. Dependency cycles, including self-cycles, are errors; a targeted run checks reachability through the complete index and reports participating targeted milestones. decomposed_from and supersedes on Unit anchors are scalar PROP IDs kept as provenance: source existence is not required after deletion.

@@ -68,3 +68,7 @@ summary: Ranks documents for a query by meaning, pinning exact IDs and narrowing
 status: active
 ---
 ```
+
+## Milestones
+
+Milestone documents require an English summary under the same length and language rules. Done/dropped milestones follow historical-document targeting.

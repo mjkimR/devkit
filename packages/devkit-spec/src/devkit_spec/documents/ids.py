@@ -28,6 +28,7 @@ class Kind(StrEnum):
     RECONCILE = "reconcile"
     FEEDBACK = "feedback"
     MATERIAL = "material"
+    MILESTONE = "milestone"
 
 
 PREFIXES: dict[str, Kind] = {
@@ -43,6 +44,7 @@ PREFIXES: dict[str, Kind] = {
     "REC": Kind.RECONCILE,
     "FB": Kind.FEEDBACK,
     "MAT": Kind.MATERIAL,
+    "MS": Kind.MILESTONE,
 }
 
 ID_SOURCE = rf"(?:{'|'.join(PREFIXES)})-[A-Za-z0-9][A-Za-z0-9_-]*"

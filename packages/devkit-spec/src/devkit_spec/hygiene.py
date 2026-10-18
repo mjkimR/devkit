@@ -52,4 +52,37 @@ def rejected_proposals(root: Path) -> list[AdvisoryError] | None:
                 f" {target} in the same commit",
             )
         )
-    return found or None
+    return [*found, *milestone_members(root)] or None
+
+
+def milestone_members(root: Path) -> list[AdvisoryError]:
+    """Warn from base documents only; branch checks belong to Backlog decisions."""
+    from devkit_spec.documents import DocumentIndex
+    from devkit_spec.documents.ids import Kind
+    from devkit_spec.documents.model import is_unit_anchor
+    from devkit_spec.errors import MilestoneDoneUnsettledWarning, MilestoneDroppedUnsettledWarning
+
+    index = DocumentIndex.load(root)
+    found: list[AdvisoryError] = []
+    for milestone in index.documents:
+        if milestone.kind is not Kind.MILESTONE or milestone.status not in {"done", "dropped"}:
+            continue
+        members = [
+            d
+            for d in index.documents
+            if is_unit_anchor(d)
+            and d.frontmatter.get("milestone") == milestone.id
+            and not (d.kind is Kind.SPEC and d.status.lower() == "completed")
+            and not (d.kind is Kind.PROPOSAL and d.status.lower() == "rejected")
+        ]
+        if not members:
+            continue
+        warning = MilestoneDoneUnsettledWarning if milestone.status == "done" else MilestoneDroppedUnsettledWarning
+        found.append(
+            warning(
+                f"{milestone.id} is {milestone.status} with unsettled members: {', '.join(d.id for d in members)}",
+                target_files=[milestone.path, *(d.path for d in members)],
+                fix="Review each listed member in Backlog; reassign or clear its milestone, reject a proposal, or complete the outstanding work before closing the milestone",
+            )
+        )
+    return found

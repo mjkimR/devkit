@@ -64,7 +64,9 @@ def proposal_group() -> None:
 @click.argument("slug")
 @click.option("--title", "-t", default=None, help="Proposal title [default: the slug]")
 @click.option("--target-area", "-a", default=None, help="Capability area the proposal targets (capabilities/<area>/)")
-@click.option("--milestone", "-m", default=None, help="Milestone, phase or release; carried to spec.md on handoff")
+@click.option(
+    "--milestone", "-m", default=None, help="Existing global MS-<slug> milestone ID; carried to spec.md on handoff"
+)
 @click.option(
     "--task-kind",
     default=None,
@@ -97,6 +99,7 @@ def proposal_group() -> None:
     default=None,
     help="PROP-<slug> of the accepted proposal this draft replaces (close by supersede) [default: none]",
 )
+@click.option("--decomposed-from", default=None, help="PROP-<slug> of the editable draft being decomposed")
 @click.option("--needs-decompose", is_flag=True, help="Mark the draft to be split in Backlog before Planning starts")
 @click.option("--with-target-docs", is_flag=True, help="Also scaffold target-docs.md, the Living Spec blueprint")
 @WORKSPACE
@@ -113,6 +116,7 @@ def new_cmd(
     namespace: str | None,
     summary: str | None,
     supersedes: str | None,
+    decomposed_from: str | None,
     needs_decompose: bool,
     with_target_docs: bool,
     workspace_root: str | None,
@@ -131,6 +135,7 @@ def new_cmd(
         namespace=namespace,
         summary=summary,
         supersedes=supersedes,
+        decomposed_from=decomposed_from,
         needs_decompose=needs_decompose,
         with_target_docs=with_target_docs,
         cwd=Path.cwd(),

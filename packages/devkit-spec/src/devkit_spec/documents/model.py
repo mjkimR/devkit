@@ -8,10 +8,10 @@ from typing import Any
 from devkit_spec.documents.ids import Kind
 
 # Frontmatter fields that reference other documents. A list field holds IDs, a scalar field one ID.
-LIST_FIELDS = ("stories", "capabilities", "related_stories", "related_capabilities")
-SCALAR_FIELDS = ("spec", "plan")
+LIST_FIELDS = ("stories", "capabilities", "related_stories", "related_capabilities", "depends_on")
+SCALAR_FIELDS = ("spec", "plan", "milestone")
 # Where a document came from: an edge of its history, not of the current contract.
-PROVENANCE_FIELDS = ("proposal",)
+PROVENANCE_FIELDS = ("proposal", "decomposed_from", "supersedes")
 BODY = "body"
 
 
@@ -104,3 +104,11 @@ class Document:
 
 def _text(value: object) -> str:
     return value.strip() if isinstance(value, str) else ""
+
+
+def is_unit_anchor(document: Document) -> bool:
+    """A proposal or spec anchor, excluding target blueprints and other bundle files."""
+    return (document.kind is Kind.SPEC and document.path.endswith("/spec.md")) or (
+        document.kind is Kind.PROPOSAL
+        and (document.path.endswith("/proposal.md") or document.path == f"docs/proposals/{document.id}.md")
+    )

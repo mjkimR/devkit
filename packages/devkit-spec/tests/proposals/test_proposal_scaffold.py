@@ -47,12 +47,15 @@ def test_yaml_scalar_quotes_only_when_needed(value: str, scalar: str) -> None:
 
 
 def test_create_proposal_bundle(workspace: Path) -> None:
+    roadmap = workspace / "docs/roadmap/MS-foundation.md"
+    roadmap.parent.mkdir(parents=True)
+    roadmap.write_text("---\nid: MS-foundation\nstatus: planned\n---\n")
     created = create_proposal(
         workspace,
         "Fast Engine",
         title="Fast: Rule Engine",
         target_area="capabilities/governance",
-        milestone="Phase 1: Foundation",
+        milestone="MS-foundation",
         with_target_docs=True,
         today=TODAY,
     )
@@ -74,7 +77,7 @@ def test_create_proposal_bundle(workspace: Path) -> None:
     assert meta["title"] == "Fast: Rule Engine"
     assert meta["status"] == "draft"
     assert meta["target_area"] == "capabilities/governance/"
-    assert meta["milestone"] == "Phase 1: Foundation"
+    assert meta["milestone"] == "MS-foundation"
     assert meta["boundaries"] == {"owns": ["capabilities/governance/"], "excludes": ["docs/decisions/"]}
     assert "workflow" not in meta and meta["task_kind"] == "feature"
     assert meta["planning_effort"] == "medium" and meta["dev_effort"] == "medium"

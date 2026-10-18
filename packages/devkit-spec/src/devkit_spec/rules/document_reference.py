@@ -24,6 +24,7 @@ from devkit.rules import Phase, RuleContext, Severity, Violation
 from devkit.rules.rules import BaseRule
 
 from devkit_spec.documents import Document, DocumentIndex, Reference, is_id, rewrite
+from devkit_spec.documents.ids import Kind
 from devkit_spec.rules import FIX_COMMAND, document_index, is_material, reportable
 
 RULE_ID = "RULE-document-reference"
@@ -35,6 +36,8 @@ EXPECTED_PREFIX = {
     "related_capabilities": "CAP-",
     "spec": "SPEC-",
     "plan": "PLAN-",
+    "milestone": "MS-",
+    "depends_on": "MS-",
 }
 
 
@@ -117,7 +120,40 @@ class DocumentReferenceRule(BaseRule):
                 add(document, issue.line, issue.message, "Use the documented relation field type")
             for ref in document.references:
                 self._reference(index, document, ref, historical, add)
+            for ref in document.provenance:
+                if ref.field in {"decomposed_from", "supersedes"} and (
+                    not is_id(ref.target) or not ref.target.startswith("PROP-")
+                ):
+                    add(
+                        document,
+                        ref.line,
+                        f"{ref.field} takes PROP- IDs, got {ref.target!r}",
+                        "Use the source proposal ID as provenance",
+                    )
             self._links(ctx, index, document, add)
+        graph = {
+            d.id: [ref.target for ref in d.references if ref.field == "depends_on"]
+            for d in index.documents
+            if d.kind is Kind.MILESTONE
+        }
+        for document in index.documents:
+            if document.id not in graph or not reportable(ctx, index, document):
+                continue
+            pending = list(graph[document.id])
+            seen: set[str] = set()
+            while pending:
+                current = pending.pop()
+                if current == document.id:
+                    add(
+                        document,
+                        1,
+                        f"milestone dependency cycle includes {document.id}",
+                        "Remove a depends_on edge to break the cycle",
+                    )
+                    break
+                if current not in seen:
+                    seen.add(current)
+                    pending.extend(graph.get(current, []))
         return found
 
     def _reference(self, index: DocumentIndex, document: Document, ref: Reference, historical: bool, add: Add) -> None:

@@ -94,3 +94,7 @@ capabilities:
   - CAP-HARN-context-pack-slicing
 ---
 ```
+
+## Milestone metadata
+
+Documents under docs/roadmap/ require id, title, status and created_at. Status is planned, active, done or dropped. The safe fix fills the path-derived MS ID, missing title, status planned and created_at; it never changes an invalid existing status. RULE-document-summary checks the English summary.

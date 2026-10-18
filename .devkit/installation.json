@@ -162,6 +162,7 @@
       "kind": "skill",
       "paths": [
         ".agents/skills/spec/SKILL.md",
+        ".agents/skills/spec/references/backlog.md",
         ".agents/skills/spec/references/branches.md",
         ".agents/skills/spec/references/classification.md",
         ".agents/skills/spec/references/completion.md",
@@ -173,6 +174,7 @@
         ".agents/skills/spec/references/worker-records.md",
         ".agents/skills/spec/references/worktree.md",
         ".claude/skills/spec/SKILL.md",
+        ".claude/skills/spec/references/backlog.md",
         ".claude/skills/spec/references/branches.md",
         ".claude/skills/spec/references/classification.md",
         ".claude/skills/spec/references/completion.md",
@@ -184,6 +186,7 @@
         ".claude/skills/spec/references/worker-records.md",
         ".claude/skills/spec/references/worktree.md",
         ".devkit/managed/spec/skills/spec/SKILL.md",
+        ".devkit/managed/spec/skills/spec/references/backlog.md",
         ".devkit/managed/spec/skills/spec/references/branches.md",
         ".devkit/managed/spec/skills/spec/references/classification.md",
         ".devkit/managed/spec/skills/spec/references/completion.md",
@@ -202,12 +205,15 @@
       "kind": "skill",
       "paths": [
         ".agents/skills/spec-next/SKILL.md",
+        ".agents/skills/spec-next/references/next-work.md",
         ".agents/skills/spec-next/references/post-handoff.md",
         ".agents/skills/spec-next/references/workflow-signals.md",
         ".claude/skills/spec-next/SKILL.md",
+        ".claude/skills/spec-next/references/next-work.md",
         ".claude/skills/spec-next/references/post-handoff.md",
         ".claude/skills/spec-next/references/workflow-signals.md",
         ".devkit/managed/spec/skills/spec-next/SKILL.md",
+        ".devkit/managed/spec/skills/spec-next/references/next-work.md",
         ".devkit/managed/spec/skills/spec-next/references/post-handoff.md",
         ".devkit/managed/spec/skills/spec-next/references/workflow-signals.md"
       ]
@@ -377,6 +383,7 @@
         "docs/glossary.yaml",
         "docs/materials/README.md",
         "docs/proposals/README.md",
+        "docs/roadmap/README.md",
         "docs/stories/README.md"
       ]
     },
@@ -417,6 +424,7 @@
       "paths": [
         ".devkit/managed/spec/templates/capability.md",
         ".devkit/managed/spec/templates/decision.md",
+        ".devkit/managed/spec/templates/milestone.md",
         ".devkit/managed/spec/templates/proposal.md",
         ".devkit/managed/spec/templates/story.md"
       ]
@@ -646,7 +654,11 @@
     },
     ".agents/skills/spec-next/SKILL.md": {
       "mode": 420,
-      "sha256": "9e3a668e627c4cdc69e6253c3c1e9877e562ca3e59217ea12b7aa84f8178ea46"
+      "sha256": "f6d75be221a05ad0f9c3b591bb7d8d83750ac0c2d3ed726aba3a23f1df20d3b5"
+    },
+    ".agents/skills/spec-next/references/next-work.md": {
+      "mode": 420,
+      "sha256": "bb76c828c4ab629d2eaa19d2e2addf2326b9d322947184eea4472ea91b9e5d9a"
     },
     ".agents/skills/spec-next/references/post-handoff.md": {
       "mode": 420,
@@ -708,13 +720,17 @@
       "mode": 420,
       "sha256": "fc9361f9b617027ef293a65e82338c9fefc718142780183a489b2e82452d3146"
     },
+    ".agents/skills/spec/references/backlog.md": {
+      "mode": 420,
+      "sha256": "a90f5e2e3c025cc9c5a409bb80a8836b722235ecd309b4cdb28d9669770d5bbf"
+    },
     ".agents/skills/spec/references/branches.md": {
       "mode": 420,
       "sha256": "19f4959a88a6636e33191df2840738df3c51f7143508e1536fe786d6f9d885c0"
     },
     ".agents/skills/spec/references/classification.md": {
       "mode": 420,
-      "sha256": "d9973af302ddf0068e0a68997ecb55799ced32bfd5fc5eae58c7fd75a5dffab0"
+      "sha256": "fa60a2fc986f2e36310cea0a264350a002f51965a3754f4ad78d725ae29b9a6f"
     },
     ".agents/skills/spec/references/completion.md": {
       "mode": 420,
@@ -822,7 +838,11 @@
     },
     ".claude/skills/spec-next/SKILL.md": {
       "mode": 420,
-      "sha256": "9e3a668e627c4cdc69e6253c3c1e9877e562ca3e59217ea12b7aa84f8178ea46"
+      "sha256": "f6d75be221a05ad0f9c3b591bb7d8d83750ac0c2d3ed726aba3a23f1df20d3b5"
+    },
+    ".claude/skills/spec-next/references/next-work.md": {
+      "mode": 420,
+      "sha256": "bb76c828c4ab629d2eaa19d2e2addf2326b9d322947184eea4472ea91b9e5d9a"
     },
     ".claude/skills/spec-next/references/post-handoff.md": {
       "mode": 420,
@@ -880,13 +900,17 @@
       "mode": 420,
       "sha256": "fc9361f9b617027ef293a65e82338c9fefc718142780183a489b2e82452d3146"
     },
+    ".claude/skills/spec/references/backlog.md": {
+      "mode": 420,
+      "sha256": "a90f5e2e3c025cc9c5a409bb80a8836b722235ecd309b4cdb28d9669770d5bbf"
+    },
     ".claude/skills/spec/references/branches.md": {
       "mode": 420,
       "sha256": "19f4959a88a6636e33191df2840738df3c51f7143508e1536fe786d6f9d885c0"
     },
     ".claude/skills/spec/references/classification.md": {
       "mode": 420,
-      "sha256": "d9973af302ddf0068e0a68997ecb55799ced32bfd5fc5eae58c7fd75a5dffab0"
+      "sha256": "fa60a2fc986f2e36310cea0a264350a002f51965a3754f4ad78d725ae29b9a6f"
     },
     ".claude/skills/spec/references/completion.md": {
       "mode": 420,
@@ -1050,7 +1074,7 @@
     },
     ".devkit/managed/spec/rules/document_reference/guide.md": {
       "mode": 420,
-      "sha256": "e38a02a47342c68312ed316ca87c2a9048d064dc5ea4d52e6854f2dee8892915"
+      "sha256": "ee56e4d05eaa5570972ac3064c410d15ec029669be41fd4bcca4216e6db76cca"
     },
     ".devkit/managed/spec/rules/document_reference/rule.py": {
       "mode": 420,
@@ -1058,11 +1082,11 @@
     },
     ".devkit/managed/spec/rules/document_reference/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "7c8d6d7a304cbe261594bb66abaec29b833fe11250fafcf927da51573722b585"
+      "sha256": "4e35a64d8cdc0ba1e0cb611ae8d7368dff2960e03738c151c57ae9e3c97f1313"
     },
     ".devkit/managed/spec/rules/document_summary/guide.md": {
       "mode": 420,
-      "sha256": "f0c524972cf17726b2d4b67248730409d3447c241537e211cb151f74a5e24a9d"
+      "sha256": "a9774d419eddb1ecfa438d48db111f7b7d3e1feae064bbb0f85918254fa6c441"
     },
     ".devkit/managed/spec/rules/document_summary/rule.py": {
       "mode": 420,
@@ -1070,11 +1094,11 @@
     },
     ".devkit/managed/spec/rules/document_summary/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "71e4317a005bedfc4b7386ec9b7603efe1161a60e2d131cbdb8a996f365fbb49"
+      "sha256": "9d68f6fcc0a3c91742f41fae2046ccc38ccc52aedcbf76dce21c1ff0c795de7c"
     },
     ".devkit/managed/spec/rules/id_convention/guide.md": {
       "mode": 420,
-      "sha256": "6672b9072b62c38d9d1afc441dd384a87d62c5aa674b8f88bd3ae210c1b2450b"
+      "sha256": "63861c4248a1a8be8c04866bd191ea8b8114dfb0e10560b278e4cfb834ab59e3"
     },
     ".devkit/managed/spec/rules/id_convention/rule.py": {
       "mode": 420,
@@ -1082,7 +1106,7 @@
     },
     ".devkit/managed/spec/rules/id_convention/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "07f101ba3db63fb95c65c61dd5dec12133adb36cb06854fada0fdc84c66338b6"
+      "sha256": "a87520897311a0d4fd77cb24d56e627d45388be26ddf02d19dab47ba4de27d36"
     },
     ".devkit/managed/spec/rules/reconcile_contract/guide.md": {
       "mode": 420,
@@ -1098,7 +1122,7 @@
     },
     ".devkit/managed/spec/rules/spec_format/guide.md": {
       "mode": 420,
-      "sha256": "4cf7d9d781ea62c994b1b9e3b988c554f8d205896d282c0ab119bac66fe7b038"
+      "sha256": "e1adf4f644abe0be9401ed4a448e8a0b559e7a5f6fb8116dda210b4e27fdad6f"
     },
     ".devkit/managed/spec/rules/spec_format/rule.py": {
       "mode": 420,
@@ -1106,7 +1130,7 @@
     },
     ".devkit/managed/spec/rules/spec_format/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "b493889304528e6ab8d75d1c39629836c3aeec2c5c2395087811b4ed19148b55"
+      "sha256": "b0d512baa713569587e04841fa2f9297fc77ff22deb4461886ed751c0ea1088e"
     },
     ".devkit/managed/spec/rules/spec_lifecycle/guide.md": {
       "mode": 420,
@@ -1198,7 +1222,11 @@
     },
     ".devkit/managed/spec/skills/spec-next/SKILL.md": {
       "mode": 420,
-      "sha256": "9e3a668e627c4cdc69e6253c3c1e9877e562ca3e59217ea12b7aa84f8178ea46"
+      "sha256": "f6d75be221a05ad0f9c3b591bb7d8d83750ac0c2d3ed726aba3a23f1df20d3b5"
+    },
+    ".devkit/managed/spec/skills/spec-next/references/next-work.md": {
+      "mode": 420,
+      "sha256": "bb76c828c4ab629d2eaa19d2e2addf2326b9d322947184eea4472ea91b9e5d9a"
     },
     ".devkit/managed/spec/skills/spec-next/references/post-handoff.md": {
       "mode": 420,
@@ -1256,13 +1284,17 @@
       "mode": 420,
       "sha256": "fc9361f9b617027ef293a65e82338c9fefc718142780183a489b2e82452d3146"
     },
+    ".devkit/managed/spec/skills/spec/references/backlog.md": {
+      "mode": 420,
+      "sha256": "a90f5e2e3c025cc9c5a409bb80a8836b722235ecd309b4cdb28d9669770d5bbf"
+    },
     ".devkit/managed/spec/skills/spec/references/branches.md": {
       "mode": 420,
       "sha256": "19f4959a88a6636e33191df2840738df3c51f7143508e1536fe786d6f9d885c0"
     },
     ".devkit/managed/spec/skills/spec/references/classification.md": {
       "mode": 420,
-      "sha256": "d9973af302ddf0068e0a68997ecb55799ced32bfd5fc5eae58c7fd75a5dffab0"
+      "sha256": "fa60a2fc986f2e36310cea0a264350a002f51965a3754f4ad78d725ae29b9a6f"
     },
     ".devkit/managed/spec/skills/spec/references/completion.md": {
       "mode": 420,
@@ -1327,6 +1359,10 @@
     ".devkit/managed/spec/templates/decision.md": {
       "mode": 420,
       "sha256": "15d30aff07d9a61b77566f84d58b31925f2299cfd6689cac35a9c51237811ec9"
+    },
+    ".devkit/managed/spec/templates/milestone.md": {
+      "mode": 420,
+      "sha256": "86f17fee331da36262cc55dd43655d1894d31b5e94b22c490b43126fba81fd9a"
     },
     ".devkit/managed/spec/templates/proposal.md": {
       "mode": 420,
@@ -1475,6 +1511,11 @@
       "bundle": "spec",
       "id": "docs-skeleton",
       "path": "docs/proposals/README.md"
+    },
+    {
+      "bundle": "spec",
+      "id": "docs-skeleton",
+      "path": "docs/roadmap/README.md"
     },
     {
       "bundle": "spec",

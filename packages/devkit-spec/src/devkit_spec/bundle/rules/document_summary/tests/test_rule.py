@@ -89,3 +89,15 @@ def test_history_and_targets(tmp_path: Path) -> None:
     assert [f for f, _, _ in _found(check(RULE, tmp_path, targets=["docs/capabilities/core/CAP-CORE-b.md"]))] == [
         "docs/capabilities/core/CAP-CORE-b.md"
     ]
+
+
+def test_milestone_summary_required_and_history_targeting(tmp_path: Path) -> None:
+    from devkit.rules.testing import check
+
+    files = {
+        "docs/roadmap/MS-a.md": "---\nid: MS-a\nstatus: active\n---\n",
+        "docs/roadmap/MS-old.md": "---\nid: MS-old\nstatus: done\n---\n",
+    }
+    found = check(RULE, tmp_path, files)
+    assert [v.file for v in found] == ["docs/roadmap/MS-a.md"]
+    assert check(RULE, tmp_path, targets=["docs/roadmap/MS-old.md"])

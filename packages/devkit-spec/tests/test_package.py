@@ -133,3 +133,13 @@ def test_the_docs_skeleton_is_opt_in_and_passes_the_rules(tmp_path: Path) -> Non
     assert existing.read_text(encoding="utf-8") == customized
     check = _devkit("rules", "check", "-w", str(tmp_path))
     assert check.returncode == 0, check.stdout
+
+
+def test_roadmap_template_and_guidance_are_packaged() -> None:
+    template = (BUNDLE / "templates/milestone.md").read_text()
+    assert "status: planned" in template and "depends_on: []" in template
+    backlog = (BUNDLE / "skills/spec/references/backlog.md").read_text()
+    selection = (BUNDLE / "skills/spec-next/references/next-work.md").read_text()
+    assert "--decomposed-from" in backlog and "plan-`/`dev-" in backlog
+    assert "2027-01-31" in selection and "ADR-roadmap-review" in selection
+    assert (BUNDLE / "seed/docs/roadmap/README.md").is_file()

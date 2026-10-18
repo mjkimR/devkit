@@ -302,6 +302,7 @@ def create_proposal(
     namespace: str | None = None,
     summary: str | None = None,
     supersedes: str | None = None,
+    decomposed_from: str | None = None,
     needs_decompose: bool = False,
     with_target_docs: bool = False,
     today: date | None = None,
@@ -329,6 +330,10 @@ def create_proposal(
     kind = require_task_kind(task_kind)
     planning = require_effort(planning_effort, "--planning-effort")
     dev = require_effort(dev_effort, "--dev-effort")
+    from devkit_spec.proposals.roadmap import decomposition_source, milestone_id
+
+    milestone = milestone_id(root, milestone)
+    decomposed_from = decomposition_source(root, decomposed_from, slug)
     replaced = _supersedes(supersedes, slug)
     _check_superseded(root, replaced)
     title = (title or "").strip() or slug
@@ -360,6 +365,7 @@ def create_proposal(
         planning_effort=planning,
         dev_effort=dev,
         supersedes=replaced,
+        decomposed_from=decomposed_from,
         needs_decompose=needs_decompose,
     )
     proposal.write_text(text, encoding="utf-8")
@@ -403,6 +409,7 @@ def _proposal(
     planning_effort: str = DEFAULT_EFFORT,
     dev_effort: str = DEFAULT_EFFORT,
     supersedes: str | None = None,
+    decomposed_from: str | None = None,
     needs_decompose: bool = False,
 ) -> str:
     summary_line = (
@@ -416,6 +423,7 @@ def _proposal(
     dev_effort_line = f"dev_effort: {dev_effort:<25} # low | medium | high (hint for Development)"
     task_kind_line = f"task_kind: {task_kind:<26} # feature | bugfix: the spec follows sdd-spec-<task_kind>"
     supersedes_line = f"supersedes: {supersedes}\n" if supersedes else ""
+    supersedes_line += f"decomposed_from: {decomposed_from}\n" if decomposed_from else ""
     decompose_line = (
         "needs_decompose: true                 # split in Backlog before Planning starts\n" if needs_decompose else ""
     )

@@ -107,6 +107,20 @@ class ProposalRejectedPendingWarning(SpecError):
     level = Level.WARNING
 
 
+class MilestoneDoneUnsettledWarning(SpecError):
+    """A done milestone still has unsettled base members."""
+
+    code = "SPEC_MILESTONE_DONE_UNSETTLED"
+    level = Level.WARNING
+
+
+class MilestoneDroppedUnsettledWarning(SpecError):
+    """A dropped milestone still has unsettled base members."""
+
+    code = "SPEC_MILESTONE_DROPPED_UNSETTLED"
+    level = Level.WARNING
+
+
 class ProposalInPlanningError(SpecError):
     """``proposal check``: Backlog may not change the proposal: its ``plan-<slug>`` exists (Planning runs there), or
     it is no longer a draft (``INPUT_ERROR``)."""
