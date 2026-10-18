@@ -2,7 +2,7 @@
 id: SPEC-remove-github-milestones
 title: Remove GitHub milestone guidance
 summary: "Remove the opt-in GitHub milestone bundle and its recommendations while preserving repository-owned roadmap documents."
-status: planned
+status: completed
 created: 2026-10-18
 related_capabilities:
   - CAP-DIST-content-packages

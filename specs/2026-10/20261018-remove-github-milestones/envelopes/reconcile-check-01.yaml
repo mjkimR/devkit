@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-18T04:57:13.286954Z'
+status: completed
+summary: 'Author self-verification: architecture names the sole remaining catalog bundle; guides, package registration and wheel agree. Generic content packaging and document milestone contracts require no changes. Entrypoint derivation has no eligible targets.'
+findings: []
+checks:
+  reconcile: PASS architecture target modified; document milestone package unchanged; historical ADRs preserved
+diff_scope:
+  base: 6c96bb359cf1d60610146b91de7d9190edd9b260
+  head: bbf876e9002b112a824d625682ae4344d30513ba
+activity_effort: low

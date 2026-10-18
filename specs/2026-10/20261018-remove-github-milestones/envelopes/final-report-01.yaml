@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-18T04:57:24.806699Z'
+status: completed
+summary: Removed the GitHub milestone catalog bundle, registration, consumer recommendations and obsolete smoke steps. Preserved host-observer opt-in lifecycle coverage and document milestones. Author self-review and reconcile verification passed.
+findings: []
+assumptions:
+- Existing-repository tracker probing was also removed because it only supported the removed bundle recommendation.
+checks:
+  tests: PASS 4 catalog tests and 867 devkit-spec tests
+  build: PASS catalog wheel resources and entry points inspected; full just smoke passed
+  lint: PASS catalog lint and type checks; shell syntax; git diff --check; devkit rules check
+diff_scope:
+  base: 6c96bb359cf1d60610146b91de7d9190edd9b260
+  head: bbf876e9002b112a824d625682ae4344d30513ba
+activity_effort: low
