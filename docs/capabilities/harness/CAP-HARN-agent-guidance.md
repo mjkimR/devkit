@@ -145,7 +145,7 @@ Living Spec and `specs/` holds feature specs.
 | `spec-tasks` | Write `tasks.md` with `_Boundary:` and `_Requirements:`. | `list spec`, `scope update` |
 | `spec-review` | Verify the change against the spec, the diff and the checks before completion. | |
 | `spec-sync` | Reconcile the change into the Living Spec and resolve `reconcile.md`. | `list`, `refs`, `search`, `proposal new`, `scope update` |
-| `spec-integrate` | Integrate after `dev-integration`: conflicts, re-verification, reconcile confirmation, cumulative check, approval-bound local merge (`integration_prepare`, `integration_integrate`, `integration_status`, `integration_resume`) or CLI fallback (`devkit worktree finish --merge --local-only`), cleanup. | `policy`, `scope sweep`, `proposal prune` |
+| `spec-integrate` | Prepare integration: conflicts, re-verification, reconcile confirmation, cumulative check, then one native approval through direct `integration_integrate` (optional preflight `integration_prepare`, inspection `integration_status`, approved recovery `integration_resume`) or CLI fallback (`devkit worktree finish --merge --local-only`), cleanup. | `policy`, `scope sweep`, `proposal prune` |
 | `spec-delegate` | Delegate to a role contract as the `activity-effort` asks, record its envelope, validate a worker's committed range and handle its questions and problems. | |
 | `spec-orchestrate` | User-invoked `local-orchestrated` mode per activity: one-shot Planning and Development workers in their own worktrees, the Host keeping preparation, validation, questions, problems and integration; a plain instruction returns to `direct`. | `new`, `scope register`, `scope query`, `scope update` |
 | `spec-rule` | Author or tune a project rule for `devkit rules` in the project's own bundle. | |
@@ -243,6 +243,16 @@ Every seeded ID-bearing document MUST parse without document-index problems and 
 The package regression test verifies all seeded architecture IDs and preservation of customized content. The
 consumer wheel smoke installs devkit-spec after the base-only checks, verifies its command mount, and checks
 opt-in docs seeding and discovery in the installed package.
+
+### Native local integration approval
+
+After checks, review, reconcile and the final report, the MCP path calls integration_integrate directly for a single
+native confirmation. No separate chat approval or mandatory integration_prepare precedes it. Readiness preparation
+on the task branch may run before that form; base advancement and cleanup require acceptance. A workflow waiting
+on dev-integration permits requesting native approval; --given dev-integration follows acceptance only. Optional
+prepare is read-only inspection, status exposes concise progress or detail=true internals, and resume continues
+only already approved remaining work without another form. CLI fallback retains conversational approval and PR
+integration retains its ready-state authority. Unavailable native confirmation is reported, never inferred as approval.
 
 ### Repository Backlog and next work
 

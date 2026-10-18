@@ -167,10 +167,7 @@ class IntegrationService:
     async def integrate(self, branch: str, task: Task, confirm: Confirmation) -> IntegrationResult:
         result = await asyncio.to_thread(self.prepare, branch, task)
         request = result.request
-        message = (
-            "Approve this exact local integration and cleanup request. No fetch, push, remote deletion or PR operation. Scope: "
-            + json.dumps(request.to_dict(), ensure_ascii=False)
-        )
+        message = request.confirmation_message()
         try:
             reply = await confirm(
                 message,

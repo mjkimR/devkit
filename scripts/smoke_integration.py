@@ -68,7 +68,17 @@ async def conversation(root: Path, worktree: Path) -> None:
         assert approved.structuredContent is not None and approved.structuredContent["status"] == "completed", approved
         assert len(approvals) == 2 and tip in approvals[1] and before in approvals[1]
         assert not worktree.exists() and git(root, "rev-parse", "HEAD") == tip
-        assert approved.structuredContent["network_operations"] == "excluded"
+        assert approved.structuredContent["request"]["network_operations"] == "excluded"
+        assert "context" not in approved.structuredContent["request"]
+        assert "SMOKE_CHECK_PASSED" not in approvals[1]
+        request_id = approved.structuredContent["request"]["id"]
+        inspected = await session.call_tool("integration_status", {"request_id": request_id})
+        assert inspected.structuredContent is not None and "context" not in inspected.structuredContent["request"]
+        detailed = await session.call_tool("integration_status", {"request_id": request_id, "detail": True})
+        assert detailed.structuredContent is not None and detailed.structuredContent["request"]["readiness"]["evidence"]
+        resumed = await session.call_tool("integration_resume", {"request_id": request_id})
+        assert resumed.structuredContent is not None and resumed.structuredContent["status"] == "completed"
+        assert len(approvals) == 2
 
 
 def main() -> None:

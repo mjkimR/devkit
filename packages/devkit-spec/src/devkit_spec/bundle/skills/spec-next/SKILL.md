@@ -75,7 +75,7 @@ Map `[STAGE]` ids onto these rows with the stage table in [workflow signals](ref
 | **Building (Verification Review)** | All tasks in `tasks.md` checked | Inspect git diff, check for stray files, verify boundary isolation | `spec-review` |
 | **Reconcile (Living Spec Sync)** | Review passed, pending docs sync | Reconcile into `docs/capabilities/`, `docs/stories/`, and write `reconcile.md` | `spec-sync` |
 | **Collect feedback (Sweep)** | Reconcile done, no `envelopes/feedback-NN.yaml` with `checks.swept` passing (stage not `[SKIPPED]`) | Sweep the session for unrecorded observations, write the files and the sweep envelope | `spec-feedback` |
-| **Awaiting `dev-integration` (Integration Approval)** | Review and reconcile done, final change report not yet approved | Present the final change report and wait for the user's OK (asserted with `--given dev-integration`, not recorded) or PR ready state | `spec` |
+| **Awaiting `dev-integration` (Integration Approval)** | Review and reconcile done, final change report not yet approved | Present the final change report; recommend direct `integration_integrate` for one native approval on the local MCP path, or conversational approval/PR ready state on fallback paths. Assert `--given dev-integration` only after approval | `spec` |
 | **Integration (Post-Approval)** | `dev-integration` held (the user's OK, PR ready state, or `source=policy`), not yet integrated with base or merged | Integrate base, re-verify changed parts, confirm reconcile, run `devkit rules check --ci --base <ref>`, report | `spec-integrate` |
 | **Idle / Clean Working Tree** | No in-progress Unit | Recommend eligible queued drafts and Backlog actions with [next-work selection](references/next-work.md) | `spec-next` |
 

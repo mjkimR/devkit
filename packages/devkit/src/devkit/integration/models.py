@@ -101,6 +101,51 @@ class IntegrationRequest:
         value.pop("id")
         return digest(value)
 
+    def approval_scope(self) -> dict[str, Any]:
+        """User-visible effects; internal validation remains bound by the full request digest."""
+        plan = self.context.finish
+        return {
+            "id": self.id,
+            "digest": self.digest,
+            "repository": plan.base,
+            "task": {"kind": self.context.task.kind, "id": self.context.task.id},
+            "source": {"branch": plan.branch, "sha": plan.source_sha},
+            "target": {"branch": plan.target_branch, "sha": plan.target_sha},
+            "worktree": {"path": plan.path, "remove": plan.worktree_identity is not None},
+            "delete_branch": plan.delete_branch,
+            "cleanup": [
+                {
+                    "extension": scope.extension,
+                    "targets": [{"kind": target.kind, "identity": target.identity} for target in scope.targets],
+                }
+                for scope in self.cleanup
+            ],
+            "merge_method": "ff-only",
+            "network_operations": "excluded",
+        }
+
+    def confirmation_message(self) -> str:
+        """Show decisions and exact effect targets without implementation diagnostics."""
+        plan = self.context.finish
+        lines = [
+            "Approve local fast-forward integration and the listed cleanup?",
+            f"Repository: {plan.base}",
+            f"Task: {self.context.task.id}",
+            f"Source: {plan.branch} @ {plan.source_sha}",
+            f"Target: {plan.target_branch} @ {plan.target_sha}",
+            f"Remove worktree: {plan.path}" if plan.worktree_identity is not None else "Remove worktree: no",
+            f"Delete local branch: {plan.branch}" if plan.delete_branch else "Delete local branch: no",
+            "Cleanup targets:",
+        ]
+        targets = [
+            f"- {scope.extension}: {target.kind} {target.identity}"
+            for scope in self.cleanup
+            for target in scope.targets
+        ]
+        lines.extend(targets or ["- none"])
+        lines.append("No fetch, push, remote deletion or PR operations.")
+        return "\n".join(lines)
+
     def to_dict(self) -> dict[str, Any]:
         return asdict(self) | {"digest": self.digest, "merge_method": "ff-only", "network_operations": "excluded"}
 
@@ -121,6 +166,26 @@ class IntegrationResult:
     failing_operation: str | None = None
     errors: list[AdvisoryError] = field(default_factory=list)
     notices: list[AdvisoryError] = field(default_factory=list)
+
+    def compact_dict(self) -> dict[str, Any]:
+        """Bounded default MCP result; detailed inspection uses the full serializer."""
+        result: dict[str, Any] = {
+            "request": self.request.approval_scope(),
+            "status": self.status,
+            "authority": self.authority,
+            "steps": dict(self.steps),
+            "errors": [error.to_dict() for error in self.errors],
+            "notices": [notice.to_dict() for notice in self.notices],
+        }
+        if self.ui_action is not None:
+            result["ui_action"] = self.ui_action
+        if self.cleanup_steps:
+            result["cleanup_steps"] = dict(self.cleanup_steps)
+        if self.failing_operation is not None:
+            result["failing_operation"] = self.failing_operation
+        if self.observed:
+            result["observed"] = dict(self.observed)
+        return result
 
     def to_dict(self) -> dict[str, Any]:
         return {

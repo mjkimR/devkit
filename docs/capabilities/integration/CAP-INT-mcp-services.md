@@ -1,7 +1,7 @@
 ---
 id: CAP-INT-mcp-services
 title: "Scoped MCP Services"
-summary: "Model Context Protocol server endpoints exposing devkit integration services."
+summary: "Four scoped local integration MCP tools with one native approval, concise default results, detailed inspection and resumable cleanup."
 area: integration
 status: active
 created_at: 2026-10-17
@@ -17,10 +17,32 @@ code quick reference: [reference.md](../../development/reference/integration.md)
 ## 1. Supported path
 
 The first path is an interactive Codex CLI MCP tool call under `dev-integration=ask`. `integration_integrate`
-prepares the request, awaits form elicitation, and continues into execution in the same call. Only native
+prepares the request, awaits form elicitation, and continues into execution in the same call. After reporting verified work, call it directly; no separate conversational approval or preceding integration_prepare call is required. The native affirmative form supplies local dev-integration ask approval and exact execution authority together. A workflow waiting on that gate permits the approval-requesting call; --given dev-integration is asserted only after native acceptance. Only native
 `action=accept` with a boolean `approve=true` grants authority. The field defaults to false. Submission without
 approval, decline, cancellation, unavailable form capability and transport failure perform no integration changes.
 Tool arguments cannot supply `approved`, authority tokens or serialized execution requests.
+
+The form displays the repository, task, source/target branches and full SHAs, worktree removal and local branch
+retention/deletion, and each cleanup extension's target kinds and identities. It states fast-forward execution and
+network exclusion. Filesystem identities, policy hashes, provider/guard registrations, cleanup revisions and full
+readiness evidence remain in the immutable internal request and digest; they are not printed in the form.
+
+The four tools have distinct roles:
+
+- `integration_prepare`: optional read-only readiness and effect-scope inspection; no authority is granted. Integrate
+  prepares a fresh request, so callers do not pass a prepared request ID as execution authority.
+- `integration_integrate`: the normal entry point; prepares, requests one native approval, executes and returns progress.
+- `integration_status`: read-only retained progress and observed state, concise by default. Optional boolean `detail`
+  defaults false; true returns the complete retained request, evidence, revisions and underlying finish result.
+- `integration_resume`: continues remaining steps of an already approved process-local request, with no second form.
+  It accepts only request_id and cannot grant authority, change scope or request arbitrary execution.
+
+Task tools accept branch, task_kind, task_id, optional unit and claims. All four default result views include the
+request ID/digest and effect scope, status, authority, steps, errors and notices. UI action, per-extension steps,
+failing operation and observed state appear when present. Internal validation fields and duplicate FinishResult
+are omitted. Detailed status preserves the existing full representation. CLI preparation and the library's full
+serialization remain unchanged. MCP text JSON and structuredContent encode the same compact object for clients
+using either transport representation.
 
 The executor runs from the retained base checkout on its target branch, using an installed interpreter outside
 the worktree being removed. It supports normal linked worktrees and marked `--no-worktree` activity branches.

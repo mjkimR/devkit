@@ -58,7 +58,9 @@ creates no Unit, envelope, gate record file or reconcile document.
 Read `devkit spec policy` before classification, gate and Git decisions. `plan-intent` (goal, scope, verification,
 expected behavior for a bugfix, `task-kind` and `planning-depth`) and `plan-accept` (a proposal's direction) are always
 the user's and are recorded with `devkit workflow answer --by user`; `dev-integration` follows its policy: under `ask`
-the user's OK is asserted with `--given dev-integration` on the `devkit workflow next` runs after it
+local MCP integration reports verified work and calls `integration_integrate` directly for one native confirmation,
+without a separate chat approval or mandatory `integration_prepare`. Its accepted OK is asserted with
+`--given dev-integration` on the `devkit workflow next` runs after it
 (`ADR-integration-approval-asserted`), under `auto` it is delegated once the path's review, checks and reconcile pass.
 There is no Development direction gate: inside the agreed intent choices are made with the recommended option and
 recorded; only a problem that breaks the agreement stops the work. Records name the authority (`user` or `policy`) and

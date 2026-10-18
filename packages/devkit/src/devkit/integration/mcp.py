@@ -25,11 +25,23 @@ TASK_SCHEMA = {
     "required": ["branch", "task_kind", "task_id"],
     "additionalProperties": False,
 }
-REQUEST_SCHEMA = {
+STATUS_SCHEMA = {
     "type": "object",
-    "properties": {"request_id": {"type": "string"}},
+    "properties": {
+        "request_id": {"type": "string"},
+        "detail": {
+            "type": "boolean",
+            "default": False,
+            "description": "Include the full retained validation request and diagnostics.",
+        },
+    },
     "required": ["request_id"],
     "additionalProperties": False,
+}
+
+REQUEST_SCHEMA = {
+    **STATUS_SCHEMA,
+    "properties": {"request_id": {"type": "string"}},
 }
 
 
@@ -42,28 +54,29 @@ def create_tools(root: Path) -> tuple[McpTool, ...]:
         )
 
     async def prepare(args: dict, _confirm: Confirmation) -> dict:
-        return (await asyncio.to_thread(service.prepare, args["branch"], task(args))).to_dict()
+        return (await asyncio.to_thread(service.prepare, args["branch"], task(args))).compact_dict()
 
     async def integrate(args: dict, confirm: Confirmation) -> dict:
-        return (await service.integrate(args["branch"], task(args), confirm)).to_dict()
+        return (await service.integrate(args["branch"], task(args), confirm)).compact_dict()
 
     async def resume(args: dict, _confirm: Confirmation) -> dict:
-        return (await asyncio.to_thread(service.resume, args["request_id"])).to_dict()
+        return (await asyncio.to_thread(service.resume, args["request_id"])).compact_dict()
 
     async def status(args: dict, _confirm: Confirmation) -> dict:
-        return (await asyncio.to_thread(service.inspect, args["request_id"])).to_dict()
+        result = await asyncio.to_thread(service.inspect, args["request_id"])
+        return result.to_dict() if args.get("detail", False) else result.compact_dict()
 
     return (
         McpTool(
             "integration_prepare",
-            "Inspect an exact local FF integration request and provider readiness without approval or Git mutations.",
+            "Optional read-only preflight: inspect concise local FF scope and readiness without approval or Git mutations. Not required before integration_integrate, which prepares its own request. Use integration_status(detail=true) for full retained diagnostics.",
             TASK_SCHEMA,
             prepare,
             read_only=True,
         ),
         McpTool(
             "integration_integrate",
-            "Request host-native user confirmation, then perform the approved local FF integration and cleanup. "
+            "Prepare, request one host-native user confirmation, then perform local FF integration and cleanup. No prior integration_prepare call or separate conversational approval is required. Returns concise scope and progress. "
             "Invoking this tool does not assert prior integration approval: before confirmation it only validates "
             "and prepares the exact scope, without merging, deleting branches, removing worktrees or running cleanup. "
             "Decline, cancellation or unavailable confirmation causes no integration changes. "
@@ -79,15 +92,15 @@ def create_tools(root: Path) -> tuple[McpTool, ...]:
         ),
         McpTool(
             "integration_resume",
-            "Inspect and finish the remaining scope of a request already approved in this server process. Never supplies new approval or broadens cleanup.",
+            "Resume only remaining steps of a request already approved in this server process, without a second confirmation. Returns concise progress and actionable errors; never supplies new approval or broadens cleanup. Inspect with integration_status before recovery when the outcome is uncertain.",
             REQUEST_SCHEMA,
             resume,
             destructive=True,
         ),
         McpTool(
             "integration_status",
-            "Inspect retained request progress and current Git refs before recovery. Unknown request IDs require independent Git inspection.",
-            REQUEST_SCHEMA,
+            "Read-only retained progress and observed Git state, concise by default. Set detail=true for the full immutable request, evidence and cleanup revisions. Unknown request IDs require independent Git inspection.",
+            STATUS_SCHEMA,
             status,
             read_only=True,
         ),

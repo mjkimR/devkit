@@ -336,3 +336,47 @@ def test_server_runtime_inside_worktree_is_refused_even_with_symlinked_python(re
     monkeypatch.setattr(sys, "executable", str(worktree / ".venv/bin/python"))
     with pytest.raises(RuntimeLocationError):
         IntegrationService(base).prepare("dev-demo", TASK)
+
+
+def test_confirmation_lists_scoped_cleanup_effects_without_internal_revisions(repo, monkeypatch):
+    base, worktree = repo
+
+    class Cleanup:
+        integration_local_only = True
+
+        def integration_plan(self, _context):
+            return (CleanupTarget("record", "task-1", "internal-revision-1"),)
+
+        def integration_validate(self, _context, targets):
+            assert targets == self.integration_plan(_context)
+
+        def integration_run(self, _context, _result, _targets):
+            return CleanupResult(True)
+
+    original = providers.metadata.entry_points
+    monkeypatch.setattr(
+        providers.metadata,
+        "entry_points",
+        lambda **kw: (
+            [Entry("scoped", "scoped:cleanup", Cleanup())]
+            if kw.get("group") == "devkit.post_finish"
+            else original(**kw)
+        ),
+    )
+    service = IntegrationService(base)
+
+    async def decline(message, _schema):
+        assert f"Repository: {base}" in message and str(worktree) in message
+        assert "scoped: record task-1" in message and "internal-revision-1" not in message
+        assert "Delete local branch: dev-demo" in message and "No fetch, push" in message
+        return ConfirmationReply("decline", {})
+
+    result = asyncio.run(service.integrate("dev-demo", TASK, decline))
+    assert result.status == "declined" and worktree.exists()
+    compact = result.compact_dict()
+    assert compact["request"]["cleanup"] == [
+        {"extension": "scoped", "targets": [{"kind": "record", "identity": "task-1"}]}
+    ]
+    detailed = result.to_dict()
+    assert detailed["request"]["cleanup"][0]["targets"][0]["revision"] == "internal-revision-1"
+    assert compact["request"]["digest"] == detailed["request"]["digest"]

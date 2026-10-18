@@ -5,14 +5,17 @@ Canonical behavior: `CAP-INT-mcp-services`.
 | Interface | Purpose |
 | --- | --- |
 | `devkit integration prepare BRANCH --task-kind unit|session --task-id ID [--unit DIR] [--claims JSON] [-w DIR] [--format json]` | Inspect readiness and exact scope, without approval or integration mutations |
-| MCP `integration_prepare` | The same preparation in the retained service process |
-| MCP `integration_integrate` | Prepare, obtain native confirmation and execute in one call |
-| MCP `integration_status` | Observe retained request progress and actual Git refs/worktree registration |
+| MCP `integration_prepare` | Optional preflight in the retained service process; not required before integrate |
+| MCP `integration_integrate` | Normal entry point: prepare, obtain one native confirmation and execute; no prior chat approval |
+| MCP `integration_status` | Inspect concise progress and observed Git state; detail=true returns full retained diagnostics |
 | MCP `integration_resume` | Recover only the remaining scope of an already approved request in this process |
 | `devkit worktree finish BRANCH --merge --local-only` | Public FF/cleanup operation excluding fetch and push; caller supplies existing authority |
 
-Task tools accept `branch`, `task_kind`, `task_id`, optional `unit`, optional `claims`. Status/resume accept only
-`request_id`. No tool accepts an approval boolean, arbitrary command, cleanup path or merge strategy.
+Task tools accept `branch`, `task_kind`, `task_id`, optional `unit`, optional `claims`. Status accepts `request_id` and optional boolean `detail` (default false); resume accepts only `request_id`. No tool accepts an approval boolean, arbitrary command, cleanup path or merge strategy.
+
+All four tools return concise scope/progress by default. Internal validation identities, policy hashes, registrations,
+evidence and cleanup revisions remain bound to the request digest and are available through detailed status.
+Partial results retain steps, errors, failing operation and observed state. Text and structured MCP outputs agree.
 
 Public API: `devkit.integration` exports `IntegrationService`, `Task`, `IntegrationContext`, `Evidence`, `Readiness`,
 `ReadinessProvider`, `IntegrationRequest`, `IntegrationResult`, `CleanupTarget`, `CleanupScope`, `CleanupResult`,

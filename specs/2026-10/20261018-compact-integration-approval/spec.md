@@ -2,7 +2,7 @@
 id: SPEC-compact-integration-approval
 title: Compact native integration approval
 summary: "Optimize all four integration MCP tools with one native confirmation, concise scope and result output, and explicit detailed inspection."
-status: planned
+status: in-progress
 created: 2026-10-18
 related_capabilities:
   - CAP-INT-mcp-services
