@@ -48,3 +48,7 @@ Its primary mission is to provide an **agent-first developer harness** that unif
 2. **Transactional Safety**: Synchronization operations (`devkit sync`) write atomically or roll back cleanly without leaving corrupted intermediate states.
 3. **Strict Layering**: Lower foundation modules never import or depend on higher orchestrators.
 4. **Platform Compatibility**: POSIX-compliant execution across macOS and Linux with zero external daemon requirements.
+
+## Repository roadmap
+
+The repository owns its roadmap under `docs/roadmap/`. A global MS milestone document cites the mission or quality goal it advances, states an observable exit condition and holds no work list. Proposal/spec anchors declare milestone membership; Backlog maintains explicit lifecycle decisions and spec-next recommends queued work (`ADR-roadmap-in-repository`, `ADR-milestone-documents`). External trackers and autohub integration are outside this roadmap contract.

@@ -41,7 +41,7 @@ creates one without a proposal, writing the document IDs the spec rules expect (
 
 ## 3. Business Rules & Policies
 
-1. **Validate before writing**: `devkit spec new` MUST check the slug, `--namespace`, `--summary`, slug availability
+1. **Validate before writing**: `devkit spec new` MUST check the slug, `--namespace`, `--summary`, `--milestone`, slug availability
    and an explicit `--workflow` before it writes anything; any refusal leaves the workspace unchanged.
 2. **Slug normalization**: a leading `SPEC-` is dropped, then the proposal normalization applies (a leading `PROP-`
    and trailing `.md` dropped, every run of characters other than letters, digits, `_` and `-` becomes `-`, outer
@@ -68,7 +68,7 @@ creates one without a proposal, writing the document IDs the spec rules expect (
 7. **Optional fields**: `summary` is written to `spec.md` only when `--summary` is given; without it the agent adds
    the field when removing the marker. `namespace` is written when `--namespace` is given, else when the current
    directory lies in a registered namespace (`CAP-DOCS-namespaces` section 3.3, rule 3, without the every-namespace
-   fallback); otherwise no field is written and the bundle is global.
+   fallback); otherwise no field is written and the bundle is global. `--milestone MS-<slug>` writes optional membership only after resolving one global milestone at docs/roadmap/<ID>.md; invalid or ambiguous membership fails with ARGUMENT_INVALID before writes.
 8. **Roll back on failure**: any failure while writing removes what was written. An advisory error (such as
    `FRONTMATTER_INVALID` binding `spec.md`) is reported with its own code, any other failure as `SPEC_WRITE_FAILED`.
    A roll-back that could not remove something is always `SPEC_WRITE_FAILED`, whose message says the roll-back was
@@ -84,7 +84,7 @@ creates one without a proposal, writing the document IDs the spec rules expect (
 
 ```text
 devkit spec new <slug> [--title/-t TEXT] [--summary TEXT] [--workflow <id>] [--namespace <name>]
-                       [--date YYYY-MM-DD] [-w/--workspace-root DIR] [--format text|json] [-q] [-v] [--strict]
+                       [--milestone/-m MS-<slug>] [--date YYYY-MM-DD] [-w/--workspace-root DIR] [--format text|json] [-q] [-v] [--strict]
 ```
 
 | Option | Meaning |
@@ -93,6 +93,7 @@ devkit spec new <slug> [--title/-t TEXT] [--summary TEXT] [--workflow <id>] [--n
 | `--summary` | Write `summary: <text>` into `spec.md`: one or two English sentences saying what the spec defines. Empty, or containing a letter outside the Latin script: `ARGUMENT_INVALID` (`[TARGET] --summary`), nothing written. |
 | `--workflow` | Workflow `spec.md` is bound to (default `sdd-spec-feature`; `sdd-spec-bugfix` writes `spec.md` only). |
 | `--namespace` | Write `namespace: <name>`: `global` or a namespace registered in `[[tool.spec.namespaces]]`, else `ARGUMENT_INVALID` with the valid names in `[FIX]`. Omitted: the namespace of the current directory, if any (rule 7). |
+| `--milestone/-m` | One existing global MS ID; optional membership, ARGUMENT_INVALID before writes when invalid or ambiguous. |
 | `--date` | Bundle date (default: today): the directory name and `created`. |
 
 ```bash

@@ -27,8 +27,8 @@ lookup commands (`CAP-DOCS-document-lookup`), document search (`CAP-DOCS-documen
   - What a document is: location, frontmatter identity, exclusions.
   - The ID grammar and the kind each prefix names.
   - The reference forms (frontmatter relation fields, prose ID spans and brackets) and what prose excludes.
-  - The `proposal` provenance field.
-  - Historical documents (files of completed spec bundles, their feedback aside).
+  - The `proposal`, `decomposed_from` and `supersedes` provenance fields.
+  - Historical documents (completed spec bundle files except feedback, and done/dropped milestones).
   - The `summary` field as data of the model.
   - The index: loading, invalid files, ID resolution, incoming and outgoing references, in-place rewriting.
 - **Out-of-Scope** (Non-Goals):
@@ -57,13 +57,13 @@ lookup commands (`CAP-DOCS-document-lookup`), document search (`CAP-DOCS-documen
 5. **Uniqueness**: IDs are repository-wide and MUST be unique across `docs/`, `specs/` and every namespace docs root.
    The index keeps every declaration of an ID, so a duplicate is detectable (`SPEC_ID_DUPLICATE`).
 6. **Summary**: `summary` is one or two English sentences saying what the document defines. It is REQUIRED on
-   capabilities, stories, decisions, architecture documents, `proposal.md` and `spec.md` (`RULE-document-summary`)
+   capabilities, stories, decisions, architecture documents, milestones, `proposal.md` and `spec.md` (`RULE-document-summary`)
    and is the main signal of document search (`CAP-DOCS-document-search`). Titles and bodies MAY use any language.
 7. **Historical documents**: The files of a spec bundle (`specs/<YYYY-MM>/<bundle>/...`) whose `spec.md` has
    `status: completed` are historical: work history kept in place. Browsing and search MUST hide them unless
    `--history` is passed; the rules check them only when they are named as explicit targets. The bundle's
    `feedback/` directory is the exception: a feedback file stays `open` until a feedback-hygiene session settles it,
-   so it MUST stay current whatever the bundle's status (`SPEC-open-feedback-and-progress`).
+   so it MUST stay current whatever the bundle's status (`SPEC-open-feedback-and-progress`). Milestones whose status is done or dropped are also historical: hidden from browsing/search by default, resolvable and available with `--history`; rules check them only when explicitly targeted.
 
 Proposal-local feedback also stays current while a rejected proposal awaits cleanup. Handoff carries open feedback
 into the spec; Host deletion without handoff preserves it in the month-level backlog
@@ -86,6 +86,7 @@ live; the index itself does not check it.
 | `SPEC`, `PLAN`, `TASKS`, `REC` | `spec`, `plan`, `tasks`, `reconcile` | `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/{spec,plan,tasks,reconcile}.md` |
 | `FB` | `feedback` | `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/feedback/<slug>.md`, `specs/<YYYY-MM>/feedback/<YYYYMMDD>-<slug>.md`, `docs/proposals/PROP-<slug>/feedback/<slug>.md` |
 | `MAT` | `material` | `docs/materials/...` |
+| `MS` | `milestone` | `docs/roadmap/MS-<slug>.md` (global only) |
 
 The table order is the kind order: `devkit spec list` sorts by it. Living Spec documents of a namespace live under
 `docs/packages/<name>/` with the same layout (`CAP-DOCS-namespaces`).
@@ -94,7 +95,7 @@ The table order is the kind order: `devkit spec list` sorts by it. Living Spec d
 
 1. **Full IDs only**: A document MUST reference another by its full ID, never by a Markdown path.
 2. **Relation fields** (frontmatter): `stories`, `capabilities`, `related_stories`, `related_capabilities` hold a list
-   of IDs; `spec` and `plan` hold one ID. A field of the wrong shape (a scalar where a list is expected, a non-string
+   of IDs; `spec` and `plan` hold one ID. Proposal/spec anchors may declare `milestone`, one MS ID; milestones alone may declare `depends_on`, a list of MS IDs. A field of the wrong shape (a scalar where a list is expected, a non-string
    item) is recorded as an issue and skipped; `RULE-document-reference` reports it.
 3. **Prose references**: a single-backtick code span holding exactly one ID (the canonical form) or the same ID in
    square brackets (the bracket form, which `devkit rules fix` converts to the canonical form).
@@ -105,8 +106,7 @@ The table order is the kind order: `devkit spec list` sorts by it. Living Spec d
    the following lines of its paragraph; an opener nothing closes is literal text.
 5. **Self heading**: on a heading line starting with `# `, the document's own ID (the `# [<ID>] Title` token) is not a
    reference.
-6. **Provenance**: `proposal` (the proposal a spec was handed off from) is provenance, not a reference. It is kept
-   apart from the reference graph: `refs` does not show it and reference rules do not resolve it.
+6. **Provenance**: `proposal` (the proposal a spec was handed off from), and `decomposed_from`/`supersedes` on Unit anchors, are provenance, not current references. They are kept apart from the reference graph: `refs` does not show them and reference rules do not require their sources to exist. New origin fields are scalar PROP IDs; wrong shapes and kinds are errors.
 7. **Positions**: every reference MUST keep its field (`body` for prose), its 1-based line and column, and the
    character offsets of the ID in the file (quotes included for a quoted frontmatter value), so a fix rewrites
    exactly what was read and nothing else.

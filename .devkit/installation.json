@@ -1106,7 +1106,7 @@
     },
     ".devkit/managed/spec/rules/id_convention/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "a87520897311a0d4fd77cb24d56e627d45388be26ddf02d19dab47ba4de27d36"
+      "sha256": "5f9611cbd635c3655acff24f9b981f3dbcc7be6569cd874ccf7f69b02f191932"
     },
     ".devkit/managed/spec/rules/reconcile_contract/guide.md": {
       "mode": 420,

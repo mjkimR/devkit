@@ -139,7 +139,7 @@ Living Spec and `specs/` holds feature specs.
 | Skill | Purpose | devkit-spec commands it runs |
 | --- | --- | --- |
 | `spec` | Entry router: classify the work, run Backlog and inline Planning, raise the depth and close, drive the workflow; Tier 2 routes operational requests to playbooks. | `policy`, `new`, `proposal new`, `proposal handoff` |
-| `spec-next` | Orientation: diagnose the stage of work under way and the next action. | `policy`, `list spec\|proposal\|feedback`, `proposal padr`, `proposal handoff` |
+| `spec-next` | Orientation: diagnose work under way; when idle, recommend queued drafts by repository milestone, priority and size. | `policy`, `list spec\|proposal\|feedback`, `proposal padr`, `proposal handoff` |
 | `spec-specify` | Write `spec.md` (feature or bugfix reference); creates the bundle with `devkit spec new`. | `new`, `list`, `refs`, `search`, `policy` |
 | `spec-plan` | Write `plan.md`: design, interfaces, verification plan. | `list`, `refs`, `search` |
 | `spec-tasks` | Write `tasks.md` with `_Boundary:` and `_Requirements:`. | `list spec`, `scope update` |
@@ -220,7 +220,7 @@ report location. Pending ownership or submission leaves feedback open. Capture n
 
 ### 4.6 Templates
 
-`.devkit/managed/spec/templates/{capability,story,decision,proposal}.md`: frontmatter with a required English
+`.devkit/managed/spec/templates/{capability,story,decision,proposal,milestone}.md`: frontmatter with a required English
 `summary`, the H1 `# [<ID>] <Title>` convention and the section skeleton of each document kind (`devkit spec proposal
 new` and `padr` write the proposal and PADR shapes themselves; `CAP-DLV-proposal-incubation`).
 
@@ -232,7 +232,7 @@ The `docs-skeleton` asset seeds `docs/`, each file written once where absent and
 docs/
 ├── README.md, glossary.md, glossary.yaml     # entry, terms, search synonyms
 ├── architecture/                              # README.md and arc42 chapters ARCH-01, 03, 05-1, 05-2, 06, 07, 08
-├── capabilities/README.md, stories/README.md, decisions/README.md, materials/README.md, proposals/README.md
+├── capabilities/README.md, stories/README.md, decisions/README.md, materials/README.md, proposals/README.md, roadmap/README.md
 └── development/setup.md, workflow.md, ci-cd.md
 ```
 
@@ -243,3 +243,11 @@ Every seeded ID-bearing document MUST parse without document-index problems and 
 The package regression test verifies all seeded architecture IDs and preservation of customized content. The
 consumer wheel smoke installs devkit-spec after the base-only checks, verifies its command mount, and checks
 opt-in docs seeding and discovery in the installed package.
+
+### Repository Backlog and next work
+
+The spec classification reference routes Backlog to its repository-only procedure (`ADR-roadmap-in-repository`). Immediate session/spec requests use inline Planning; every request not starting now and every decomposition result is a draft proposal. Decomposed_from and supersedes preserve request origin through handoff. Backlog reviews feedback, places drafts in milestones and prepares explicit user decisions for milestone activation, closing and dropping. No issue field, tracker intake/closing or autohub dependency applies.
+
+Milestones are global MS documents with goal, exit condition and non-goals, never copied work lists. Units declare membership. Activation shows unmet dependencies but permits an explicit out-of-order decision. Close checks the base and activity branches, including members introduced only on branches; unavailable evidence prevents claiming settlement. Drop prepares member reassignment/clearing/rejection and shows successor dependencies. Done/dropped records remain hidden history (`ADR-milestone-documents`).
+
+Spec-next treats a slug with a plan-/dev- branch, a reviewing/accepted proposal or an incomplete spec as in progress; queued drafts do not suppress idle recommendations. Eligible draft order is critical first, milestone rank (active, ready planned, no milestone), milestone created_at/ID, priority, size, draft created_at/ID. Unready/finished milestone and needs_decompose drafts are Backlog actions; critical drafts still rank first. The skill supplies deterministic ties/defaults; the CLI adds no sorting. It recommends intent confirmation when absent and mentions open feedback hygiene. At three done milestones or 2027-01-31 it reports roadmap review due until ADR-roadmap-review exists; this is a reminder, not a gate.

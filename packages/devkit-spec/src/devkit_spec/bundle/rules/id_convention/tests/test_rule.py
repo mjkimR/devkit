@@ -594,3 +594,12 @@ def test_historical_milestone_ids_require_explicit_target(tmp_path: Path) -> Non
     path = "docs/roadmap/MS-old.md"
     assert check(RULE, tmp_path, {path: "---\nid: MS-wrong\nstatus: done\n---\n# [MS-wrong] Old\n"}) == []
     assert check(RULE, tmp_path, targets=[path])
+
+
+def test_fix_preserves_historical_milestones_when_current_ids_need_repair(tmp_path: Path) -> None:
+    old = "docs/roadmap/MS-old.md"
+    original = "---\nid: MS-retired\nstatus: done\n---\n# [MS-retired] Original\n"
+    files = {old: original, "docs/roadmap/MS-live.md": "---\nid: MS-wrong\nstatus: active\n---\n# [MS-wrong] Live\n"}
+    check(RULE, tmp_path, files, fix=True)
+    assert (tmp_path / old).read_text() == original
+    assert "id: MS-live" in (tmp_path / "docs/roadmap/MS-live.md").read_text()

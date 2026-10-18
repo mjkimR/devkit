@@ -66,3 +66,13 @@ inline Planning (`--workflow sdd-spec-bugfix` for a defect); a `proposal` task s
 - **When**: the agent raises its depth (`[ROUTING_POLICY: depth_escalation=auto]`)
 - **Then**: it adds a spec Unit with `devkit spec new <slug>` in the current work environment, records the agreed
   intent and the work so far and continues from the workflow's next stage, keeping the changes made so far
+
+### Scenario 5: Queued requests retain repository provenance
+- **Given** a request will not start now, or a draft must be decomposed
+- **When** the agent follows Backlog
+- **Then** it creates draft proposals, optionally assigns existing global MS IDs, and preserves decomposed_from/supersedes through handoff without requiring an external tracker.
+
+### Scenario 6: Idle orientation recommends actionable work
+- **Given** queued drafts exist and no Unit is in progress
+- **When** spec-next orients the agent
+- **Then** it recommends an eligible draft in the milestone/priority/size order of `CAP-HARN-agent-guidance`, reports decomposition or milestone cleanup as Backlog actions, and leaves intent approval and milestone transitions to the user.

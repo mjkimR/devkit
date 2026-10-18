@@ -17,8 +17,7 @@ fields of an existing block with the same values, adding ``created_at`` when nei
 proposal ``PROP-<slug>.md`` or a PADR ``PROP-<slug>/decisions/PADR-<name>.md`` (the stem), of a bundle's
 ``proposal.md`` (``PROP-<slug>``) and of its ``target-docs.md`` (``PROP-<slug>-target``); any other file under
 ``docs/proposals/`` derives none, so its missing ``id`` is reported but not fixed (the fix still fills the other
-fields). It never touches a file the check accepts, a malformed block or a field of the wrong type. None of these
-files can be work history (only spec bundle files are), so every targeted file is checked.
+fields). It never touches a file the check accepts, a malformed block or a field of the wrong type. Done/dropped milestone documents are history and checked only when explicitly targeted.
 
 The ``namespace`` field of a bundle anchor (a ``proposal.md`` under ``docs/proposals/``, a ``spec.md`` under
 ``specs/``), when present, must be a string naming ``global`` or a registered namespace; it is not fixable. Anchors are

@@ -560,11 +560,17 @@ class IdConventionRule(BaseRule):
             )
 
     def fix(self, ctx: RuleContext) -> list[str]:
-        completed = _completed_bundles(document_index(ctx))
+        index = document_index(ctx)
+        completed = _completed_bundles(index)
         changed: list[str] = []
         for target in _targets(ctx):
             path = target.path
-            if target.path_issue or not ctx.is_file_targeted(path) or _historical(path, completed):
+            if (
+                target.path_issue
+                or not ctx.is_file_targeted(path)
+                or _historical(path, completed)
+                or path in index.historical
+            ):
                 continue
             text = ctx.cache.read_text_strict(path)
             if text is None:

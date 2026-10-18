@@ -10,6 +10,7 @@ stories:
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/rules/
   - packages/devkit-spec/src/devkit_spec/bundle/rules/
+  - packages/devkit-spec/src/devkit_spec/hygiene.py
 created_at: 2026-10-13
 ---
 
@@ -87,7 +88,7 @@ Documents reference each other by exact, resolvable full IDs. Checks every curre
 
 - MUST report: a relation field of the wrong shape, a value that is not a full ID, or an ID of the wrong kind
   (`stories`, `related_stories` take `US`; `capabilities`, `related_capabilities` take `CAP`; `spec` takes `SPEC`;
-  `plan` takes `PLAN`).
+  `plan` takes `PLAN`; `milestone` and `depends_on` take `MS`).
 - MUST report a reference to an ID no document declares or several documents declare; a missing or duplicated ID is
   fixed by hand (the rule never guesses which document was meant).
 - MUST report a bracket reference in prose (fixable: converted to the code-span form).
@@ -135,10 +136,10 @@ sequence numbers are forbidden (they collide across parallel branches).
 
 ### 3.5 `RULE-spec-format`
 
-Every capability, story and proposal starts with a YAML frontmatter block that sets `id`, `title` and `status` as
+Every capability, story, proposal and global milestone starts with a YAML frontmatter block that sets `id`, `title` and `status` as
 non-blank strings.
 
-- **Scope**: Markdown files under `docs/capabilities/`, `docs/stories/`, `docs/proposals/`, and `capabilities/`,
+- **Scope**: Markdown files under `docs/capabilities/`, `docs/stories/`, `docs/proposals/`, `docs/roadmap/`, and `capabilities/`,
   `stories/` of each namespace docs root, except `README.md`, templates, directories starting with `.` and
   `materials/`. Unlike the index, a file is checked even when it declares no ID.
 - MUST report: no block (`---` on the first line, closed by `---`); a malformed block (unclosed, invalid YAML,
@@ -149,7 +150,7 @@ non-blank strings.
   that is not a string naming `global` or a registered namespace (not fixable). The `namespace` field is checked in
   current proposals and specs, and in every one of them when the run targets `.devkit/config.toml`.
 - **Fix**: fills what is missing and leaves present values alone: `id` the ID the path derives, `title` the first
-  `# ` heading (a leading ID token dropped) else the file stem, `status: draft` (`open` for proposal feedback), and `created_at` today when none of
+  `# ` heading (a leading ID token dropped) else the file stem, `status: draft` (`open` for proposal feedback, `planned` for milestones), and `created_at` today when none of
   `created_at`, `created`, `date` is set. The path derives the file stem for a capability, story, single-file
   proposal or PADR, `PROP-<slug>` for a bundle's `proposal.md` and `PROP-<slug>-target` for its `target-docs.md`, and
   `FB-<name>` for its direct `feedback/<name>.md`; any other file under `docs/proposals/` derives none, and its missing `id` is reported without a fix.
@@ -237,7 +238,7 @@ every current document that declares a path the diff deletes. Not fixable. The f
 
 `summary` is the main signal of `devkit spec search` (`CAP-DOCS-document-search`).
 
-- MUST report: a capability, story, decision, architecture document, `proposal.md` or `spec.md` without `summary`
+- MUST report: a capability, story, decision, architecture document, milestone, `proposal.md` or `spec.md` without `summary`
   (a file still carrying the skeleton marker `<!-- devkit:skeleton -->` is exempt until written); a `summary` that is
   not a non-empty string; a letter outside the Latin script in any `summary` (digits, punctuation and symbols are
   allowed); a `summary` longer than `max_length` characters.
@@ -303,3 +304,9 @@ The existing spec hygiene extension also checks repository milestone membership 
 | `SPEC_MILESTONE_DROPPED_UNSETTLED` | WARNING | A dropped milestone still has unsettled members; review and reassign/clear or reject those members. |
 
 Warnings carry the milestone and member paths, deterministic remediation and the usual success exit code unless strict mode is requested. No out-of-order activation or close-candidate warning is emitted (`ADR-milestone-documents`).
+
+### Milestone validation contract
+
+Milestones use the global docs/roadmap/MS-<slug>.md path with word-led kebab-case slugs, matching ID and H1 token; namespace roadmap locations are invalid. Format requires id, title, status and created_at; summary follows the English summary rule. Status is planned/active/done/dropped. Safe fixes fill missing metadata with planned status and created_at; existing invalid statuses need correction by hand.
+
+Milestone membership is a scalar existing MS ID on proposal/spec anchors only. Depends_on is an MS-ID list on milestones only. Wrong field locations/shapes/kinds, unresolved or duplicate targets and cycles (including self-cycles) are errors. A targeted run checks cycles through the complete index and reports participating targeted milestones. Decomposed_from/supersedes on anchors are scalar PROP provenance; deleted sources are valid. Done/dropped milestone history follows explicit targeting and is never rewritten automatically.

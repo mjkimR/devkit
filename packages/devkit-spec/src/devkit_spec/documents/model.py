@@ -61,7 +61,7 @@ class Document:
 
     ``id`` is the frontmatter ``id`` (``reconcile_id`` for a reconcile file), ``path`` workspace-relative.
     ``frontmatter`` is the parsed header as it is. ``references`` are the edges of the current contract (reference
-    fields and prose), ``provenance`` the ``proposal`` a spec was handed off from. A parsed document is shared
+    fields and prose), ``provenance`` the proposal and Unit origin fields retained outside the current reference graph. A parsed document is shared
     between index loads of the same text and is never modified afterwards.
     """
 
