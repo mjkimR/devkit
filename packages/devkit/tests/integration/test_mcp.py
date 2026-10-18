@@ -52,9 +52,11 @@ serve(Path(sys.argv[1]))
 def test_native_protocol_confirmation_binds_to_real_git_scope(repo, action, content, expected):
     base, worktree = repo
     source, target = git(worktree, "rev-parse", "HEAD"), git(base, "rev-parse", "HEAD")
+    refs_before = git(base, "show-ref")
     messages = []
 
     async def confirm(context, params):
+        assert git(base, "show-ref") == refs_before and worktree.exists()
         messages.append(params.message)
         return types.ElicitResult(action=action, content=content)
 
@@ -74,6 +76,21 @@ def test_native_protocol_confirmation_binds_to_real_git_scope(repo, action, cont
                 "integration_resume",
                 "integration_status",
             }
+            integration = next(tool for tool in tools.tools if tool.name == "integration_integrate")
+            assert integration.annotations is not None
+            assert integration.annotations.readOnlyHint is False
+            assert integration.annotations.destructiveHint is True
+            assert integration.annotations.openWorldHint is False
+            assert integration.description is not None
+            for guarantee in (
+                "does not assert prior integration approval",
+                "before confirmation it only validates",
+                "Decline, cancellation or unavailable confirmation",
+                "host confirmation UI authorizes execution",
+                "changed scope blocks execution",
+                "No fetch, push, remote deletion or PR operations",
+            ):
+                assert guarantee in integration.description
             result = await session.call_tool(
                 "integration_integrate", {"branch": "dev-demo", "task_kind": "session", "task_id": "sdk-fixture"}
             )
@@ -87,13 +104,13 @@ def test_native_protocol_confirmation_binds_to_real_git_scope(repo, action, cont
         assert not worktree.exists() and git(base, "rev-parse", "HEAD") == source
         assert result["authority"] == "mcp-elicitation"
     else:
-        assert worktree.exists() and git(base, "rev-parse", "HEAD") == target
+        assert worktree.exists() and git(base, "show-ref") == refs_before
         assert result["authority"] == "none"
 
 
 def test_client_without_forms_and_caller_approval_flags_cannot_execute(repo):
     base, worktree = repo
-    target = git(base, "rev-parse", "HEAD")
+    refs_before = git(base, "show-ref")
 
     async def run():
         params = StdioServerParameters(command=sys.executable, args=["-c", SCRIPT, str(base)])
@@ -112,7 +129,7 @@ def test_client_without_forms_and_caller_approval_flags_cannot_execute(repo):
             assert result.structuredContent["errors"][0]["code"] == "HOST_CONFIRMATION_UNAVAILABLE"
 
     asyncio.run(run())
-    assert worktree.exists() and git(base, "rev-parse", "HEAD") == target
+    assert worktree.exists() and git(base, "show-ref") == refs_before
 
 
 def test_manual_configuration_is_inspectable_and_does_not_write_host_settings(repo):

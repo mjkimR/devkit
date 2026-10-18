@@ -63,7 +63,16 @@ def create_tools(root: Path) -> tuple[McpTool, ...]:
         ),
         McpTool(
             "integration_integrate",
-            "Prepare a final committed task, obtain native confirmation and execute exactly its local FF merge and cleanup. No fetch, push or PR operations. Requires the configured readiness provider.",
+            "Request host-native user confirmation, then perform the approved local FF integration and cleanup. "
+            "Invoking this tool does not assert prior integration approval: before confirmation it only validates "
+            "and prepares the exact scope, without merging, deleting branches, removing worktrees or running cleanup. "
+            "Decline, cancellation or unavailable confirmation causes no integration changes. "
+            "Only an explicit affirmative response through the host confirmation UI authorizes execution; "
+            "tool-call permission and caller arguments do not grant that authority. "
+            "Approval is bound to the prepared source and target commits and cleanup scope; changed scope blocks execution. "
+            "After approval, effects may include advancing the base branch, removing the source worktree, "
+            "deleting its local branch and running the listed scoped cleanup. "
+            "No fetch, push, remote deletion or PR operations. Requires the configured readiness provider.",
             TASK_SCHEMA,
             integrate,
             destructive=True,

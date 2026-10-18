@@ -98,6 +98,34 @@ def test_prepared_request_is_not_authority_and_cannot_cross_process(repo):
         IntegrationService(base).inspect(result.request.id)
 
 
+def test_pending_confirmation_leaves_git_and_worktree_unchanged(repo):
+    base, worktree = repo
+    before = git(base, "show-ref")
+
+    async def run():
+        entered, release = asyncio.Event(), asyncio.Event()
+
+        async def confirm(_message, _schema):
+            entered.set()
+            await release.wait()
+            return ConfirmationReply("cancel", {})
+
+        service = IntegrationService(base)
+        pending = asyncio.create_task(service.integrate("dev-demo", TASK, confirm))
+        try:
+            await asyncio.wait_for(entered.wait(), timeout=5)
+            assert not pending.done()
+            assert git(base, "show-ref") == before and worktree.exists()
+            assert not (base / ".git/devkit-integration.lock").exists()
+        finally:
+            release.set()
+            await pending
+        assert pending.result().status == "cancelled"
+        assert git(base, "show-ref") == before and worktree.exists()
+
+    asyncio.run(run())
+
+
 @pytest.mark.parametrize("moved", ["source", "target", "policy", "cleanup"])
 def test_changed_scope_invalidates_confirmation(repo, moved):
     base, worktree = repo
