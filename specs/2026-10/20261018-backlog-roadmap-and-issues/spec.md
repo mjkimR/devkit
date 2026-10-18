@@ -2,7 +2,7 @@
 id: SPEC-backlog-roadmap-and-issues
 title: 'Backlog: repository roadmap and next-work selection'
 summary: Gives Backlog a repository-owned roadmap of milestone documents ordered by depends_on, links Units to milestones, preserves request provenance through decomposition and handoff, and lets spec-next recommend the next work without issue tracker integration.
-status: in-progress
+status: completed
 created: 2026-10-18
 related_capabilities: []
 related_stories: []

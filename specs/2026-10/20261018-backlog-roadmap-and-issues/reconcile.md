@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-backlog-roadmap-and-issues
 feature: SPEC-backlog-roadmap-and-issues
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-document-model.md
     resolution: modified
