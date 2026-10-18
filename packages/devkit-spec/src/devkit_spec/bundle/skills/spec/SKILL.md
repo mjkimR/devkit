@@ -37,7 +37,7 @@ Classify the request on the three axes of the spec constitution (`devkit get-con
 | `spec` × `bugfix` | `sdd-spec-bugfix` | Same with `--workflow sdd-spec-bugfix`; Development characterizes the defect (`spec-specify`, bugfix reference), reproduces with a `red` envelope and verifies with a `green` one. |
 | `proposal` (either kind) | `sdd-proposal`, then `sdd-spec-<task_kind>` | Backlog: `devkit spec proposal new <slug> --task-kind feature\|bugfix [--planning-effort ...] [--dev-effort ...]`; the user's confirmation of the draft is `plan-intent`. Planning (its own activity) runs on `plan-<slug>` to `plan-accept` (updating `dev_effort` before acceptance); Development starts on `dev-<slug>` with `devkit spec proposal handoff <slug>` and the `spec-next` skill's post-handoff link check. |
 | Spike, independent review, or reconcile verification in an isolated context | Support role | `spec-delegate` (`scout`, `challenger`, `code-reviewer`, `reconcile-reviewer`), as the `activity-effort` asks. |
-| Integration after `dev-integration` authorization | Integration | `spec-integrate`: base integration, re-verify changed parts, confirm reconcile, final checks. |
+| Native approval preparation, or integration after CLI/PR `dev-integration` authorization | Integration | `spec-integrate`: base integration, re-verify changed parts, confirm reconcile, final checks. |
 
 Read a workflow's stage order, checks, gates (`plan-intent`, `plan-accept`, `dev-integration`; the `exception` stage) and returns with `devkit workflow show --unit <dir>`, or `devkit workflow show <workflow-id>` for work without a bundle. External runners use the same definition; follow it.
 

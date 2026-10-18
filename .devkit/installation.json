@@ -650,7 +650,7 @@
     },
     ".agents/skills/spec-integrate/SKILL.md": {
       "mode": 420,
-      "sha256": "93343bddc4a7eeef03ca01683f6755077dc2035083387443205752127cb48f53"
+      "sha256": "c871307b7637a4bb7912d649ce359a92e130ba390aa218ec3b5a48d8a24ece73"
     },
     ".agents/skills/spec-next/SKILL.md": {
       "mode": 420,
@@ -718,7 +718,7 @@
     },
     ".agents/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "ce08ad9c99cf0f436c0d96b5e64a1b7e08be09b9676b59eb6b1c1782e1d53776"
+      "sha256": "27f126de88f5d8af63ac7705675f1d9b6e8da6547a66e4fccb4997a49b182300"
     },
     ".agents/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -762,7 +762,7 @@
     },
     ".agents/skills/spec/references/worktree.md": {
       "mode": 420,
-      "sha256": "89a0c87a33183dbd91351381c438886bc0f611d27b3f7f924ac06f1a4c60a447"
+      "sha256": "b98be32be100f1308bdab3dbfe9c91eca46d8d4c18a610b49b1109c7706bf6f0"
     },
     ".claude/agents/challenger.md": {
       "mode": 420,
@@ -834,7 +834,7 @@
     },
     ".claude/skills/spec-integrate/SKILL.md": {
       "mode": 420,
-      "sha256": "93343bddc4a7eeef03ca01683f6755077dc2035083387443205752127cb48f53"
+      "sha256": "c871307b7637a4bb7912d649ce359a92e130ba390aa218ec3b5a48d8a24ece73"
     },
     ".claude/skills/spec-next/SKILL.md": {
       "mode": 420,
@@ -898,7 +898,7 @@
     },
     ".claude/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "ce08ad9c99cf0f436c0d96b5e64a1b7e08be09b9676b59eb6b1c1782e1d53776"
+      "sha256": "27f126de88f5d8af63ac7705675f1d9b6e8da6547a66e4fccb4997a49b182300"
     },
     ".claude/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -942,7 +942,7 @@
     },
     ".claude/skills/spec/references/worktree.md": {
       "mode": 420,
-      "sha256": "89a0c87a33183dbd91351381c438886bc0f611d27b3f7f924ac06f1a4c60a447"
+      "sha256": "b98be32be100f1308bdab3dbfe9c91eca46d8d4c18a610b49b1109c7706bf6f0"
     },
     ".codex/agents/challenger.toml": {
       "mode": 420,
@@ -1218,7 +1218,7 @@
     },
     ".devkit/managed/spec/skills/spec-integrate/SKILL.md": {
       "mode": 420,
-      "sha256": "93343bddc4a7eeef03ca01683f6755077dc2035083387443205752127cb48f53"
+      "sha256": "c871307b7637a4bb7912d649ce359a92e130ba390aa218ec3b5a48d8a24ece73"
     },
     ".devkit/managed/spec/skills/spec-next/SKILL.md": {
       "mode": 420,
@@ -1282,7 +1282,7 @@
     },
     ".devkit/managed/spec/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "ce08ad9c99cf0f436c0d96b5e64a1b7e08be09b9676b59eb6b1c1782e1d53776"
+      "sha256": "27f126de88f5d8af63ac7705675f1d9b6e8da6547a66e4fccb4997a49b182300"
     },
     ".devkit/managed/spec/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -1326,7 +1326,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/worktree.md": {
       "mode": 420,
-      "sha256": "89a0c87a33183dbd91351381c438886bc0f611d27b3f7f924ac06f1a4c60a447"
+      "sha256": "b98be32be100f1308bdab3dbfe9c91eca46d8d4c18a610b49b1109c7706bf6f0"
     },
     ".devkit/managed/spec/subagents/challenger.md": {
       "mode": 420,

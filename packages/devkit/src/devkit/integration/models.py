@@ -127,18 +127,22 @@ class IntegrationRequest:
     def confirmation_message(self) -> str:
         """Show decisions and exact effect targets without implementation diagnostics."""
         plan = self.context.finish
+
+        def display(value: str) -> str:
+            return json.dumps(value, ensure_ascii=False)
+
         lines = [
             "Approve local fast-forward integration and the listed cleanup?",
-            f"Repository: {plan.base}",
-            f"Task: {self.context.task.id}",
-            f"Source: {plan.branch} @ {plan.source_sha}",
-            f"Target: {plan.target_branch} @ {plan.target_sha}",
-            f"Remove worktree: {plan.path}" if plan.worktree_identity is not None else "Remove worktree: no",
-            f"Delete local branch: {plan.branch}" if plan.delete_branch else "Delete local branch: no",
+            f"Repository: {display(plan.base)}",
+            f"Task: {display(self.context.task.id)}",
+            f"Source: {display(plan.branch)} @ {plan.source_sha}",
+            f"Target: {display(plan.target_branch)} @ {plan.target_sha}",
+            f"Remove worktree: {display(plan.path)}" if plan.worktree_identity is not None else "Remove worktree: no",
+            f"Delete local branch: {display(plan.branch)}" if plan.delete_branch else "Delete local branch: no",
             "Cleanup targets:",
         ]
         targets = [
-            f"- {scope.extension}: {target.kind} {target.identity}"
+            f"- {display(scope.extension)}: {display(target.kind)} {display(target.identity)}"
             for scope in self.cleanup
             for target in scope.targets
         ]

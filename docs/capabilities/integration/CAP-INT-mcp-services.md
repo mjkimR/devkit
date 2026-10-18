@@ -4,6 +4,8 @@ title: "Scoped MCP Services"
 summary: "Four scoped local integration MCP tools with one native approval, concise default results, detailed inspection and resumable cleanup."
 area: integration
 status: active
+entrypoints:
+  - packages/devkit/src/devkit/integration/
 created_at: 2026-10-17
 ---
 
@@ -24,7 +26,8 @@ Tool arguments cannot supply `approved`, authority tokens or serialized executio
 
 The form displays the repository, task, source/target branches and full SHAs, worktree removal and local branch
 retention/deletion, and each cleanup extension's target kinds and identities. It states fast-forward execution and
-network exclusion. Filesystem identities, policy hashes, provider/guard registrations, cleanup revisions and full
+network exclusion. Text values are quoted and control characters escaped so caller text cannot introduce misleading
+extra scope lines. Filesystem identities, policy hashes, provider/guard registrations, cleanup revisions and full
 readiness evidence remain in the immutable internal request and digest; they are not printed in the form.
 
 The four tools have distinct roles:

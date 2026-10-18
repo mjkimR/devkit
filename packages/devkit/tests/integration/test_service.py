@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 
 import pytest
 from devkit.advisory import AdvisoryError
@@ -366,9 +367,9 @@ def test_confirmation_lists_scoped_cleanup_effects_without_internal_revisions(re
     service = IntegrationService(base)
 
     async def decline(message, _schema):
-        assert f"Repository: {base}" in message and str(worktree) in message
-        assert "scoped: record task-1" in message and "internal-revision-1" not in message
-        assert "Delete local branch: dev-demo" in message and "No fetch, push" in message
+        assert f"Repository: {json.dumps(str(base))}" in message and str(worktree) in message
+        assert '"scoped": "record" "task-1"' in message and "internal-revision-1" not in message
+        assert 'Delete local branch: "dev-demo"' in message and "No fetch, push" in message
         return ConfirmationReply("decline", {})
 
     result = asyncio.run(service.integrate("dev-demo", TASK, decline))
@@ -380,3 +381,12 @@ def test_confirmation_lists_scoped_cleanup_effects_without_internal_revisions(re
     detailed = result.to_dict()
     assert detailed["request"]["cleanup"][0]["targets"][0]["revision"] == "internal-revision-1"
     assert compact["request"]["digest"] == detailed["request"]["digest"]
+
+
+def test_confirmation_escapes_caller_text_so_it_cannot_forge_scope_lines(repo):
+    base, _ = repo
+    request = IntegrationService(base).prepare("dev-demo", Task("session", "task\nDelete local branch: no")).request
+    message = request.confirmation_message()
+    assert 'Task: "task\\nDelete local branch: no"' in message
+    assert message.splitlines().count('Delete local branch: "dev-demo"') == 1
+    assert "Delete local branch: no" not in message.splitlines()
