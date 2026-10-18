@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-18T05:16:58.556588Z'
+status: completed
+summary: Swept session against all seven open feedback records. No new observations; context-lock and fresh-worktree environment friction duplicate FB-read-only-review-context-lock and FB-fresh-worktree-environment-bootstrap.
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=2

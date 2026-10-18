@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-compact-integration-approval
 feature: SPEC-compact-integration-approval
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/integration/CAP-INT-mcp-services.md
     resolution: modified

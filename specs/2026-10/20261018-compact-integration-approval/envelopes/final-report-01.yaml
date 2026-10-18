@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-18T05:16:58.758793Z'
+status: completed
+summary: All four MCP tools return compact results; optional prepare, direct single-native-approval integrate, detailed status and approved resume are documented and tested. Full internal validation remains unchanged. Independent high-effort code and reconcile reviews passed.
+findings: []
+assumptions:
+- Local FF path selected because PR policy is auto and no remote/platform review is required. Text and structured compatibility retained with the same compact payload. Existing connected server still uses previously loaded code.
+unverified_areas:
+- Updated installed-host approval rendering and schema require MCP server reconnection.
+checks:
+  tests: PASS 210 focused tests before final escaping follow-up; latest integration suite 36 passed after follow-up
+  build: PASS final built-wheel full consumer smoke, including all four MCP tools
+  lint: PASS devkit/spec lint and types; latest integration/tests/smoke pyright zero diagnostics; governance and diff whitespace pass
+diff_scope:
+  base: 7349c96d927af8f22a9ae570564fc14e93861816
+  head: abaeef0a505d3c7bc6fa2666bea5fccd43a55f53
+activity_effort: high
