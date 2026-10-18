@@ -2,7 +2,7 @@
 id: SPEC-bundle-templates
 title: Configurable bundle templates
 summary: "Render Markdown templates using typed bundle variables without loading Jinja for ordinary commands."
-status: planned
+status: in-progress
 created: 2026-10-18
 related_capabilities: [CAP-DIST-manifest-spec, CAP-DIST-sync-and-transactions]
 related_stories: []
