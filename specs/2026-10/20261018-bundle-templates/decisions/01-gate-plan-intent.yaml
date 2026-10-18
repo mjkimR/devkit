@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: Implement the agreed filename-based templates, declared bundle variables and
+  lazy Jinja loading.
+by: user
+at: '2026-10-18T13:22:54.649273Z'
