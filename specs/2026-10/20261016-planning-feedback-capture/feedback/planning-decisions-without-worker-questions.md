@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-16
 ---
 
@@ -40,3 +40,5 @@ created_at: 2026-10-16
 CLI help: answer records decisions on a worker envelope's questions; --answers-to must name a worker envelope
 with those questions/options. The worker-record reference only documents that path. The Planning materials of
 `SPEC-planning-feedback-capture` contain a proposed direction without prior worker-question answers.
+
+- **Disposition**: Dismissed: proposal/PADR documents retain Planning direction and rationale, the spec records the agreed contract, and gates record approvals; a separate decision record without a worker question would duplicate these existing artifacts.

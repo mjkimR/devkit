@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-15
 ---
 
@@ -47,3 +47,5 @@ $ git reflog show origin/rules-commit-gate   -> bc14046 refs/remotes/origin/rule
 $ git config --get push.autoSetupRemote   -> true
 branch.rules-commit-gate.vscode-merge-base origin/main
 ```
+
+- **Disposition**: Dismissed: a separate manual push may have included the feature branch; the cause remains unverified, and no further investigation or repository policy change is required for this isolated observation.
