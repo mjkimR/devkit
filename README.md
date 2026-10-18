@@ -45,6 +45,12 @@ just --list                # every recipe (rules-fix, rules-phases, rules-explai
 Module commands discover projects from `packages/*/pyproject.toml` and
 `tools/*/pyproject.toml`; pass a project name (`devkit-agt`, `devkit-advisory`,
 `devkit-spec`, `devkit-starter` or `devkit-catalog`) or `all`. `devkit` remains a module-command alias for `devkit-agt`. Extra pytest arguments follow the module: `just test devkit -k cache`.
+
+This repository's lint, type-check and test recipes use `devkit run` for bounded output.
+When changing or repairing the runner, use `DEVKIT_RUN_MODE=raw just test` (also supported by
+the lint, check and coverage recipes) to run tools directly. CI runs the full checks in raw mode
+and separately runs the compact tests through `devkit run`.
+
 `uv run pytest` from the repository root runs every test.
 
 The repository, CLI (`devkit`), Python namespace (`devkit.*`), bundle names and

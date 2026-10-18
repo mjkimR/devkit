@@ -21,6 +21,9 @@ permissions:
 
 jobs:
   workspace:
+    # The full suite must remain usable even when the working-tree runner breaks.
+    env:
+      DEVKIT_RUN_MODE: raw
     strategy:
       fail-fast: false
       matrix:
@@ -37,6 +40,8 @@ jobs:
       - run: just lint-check
       - run: just check
       - run: just test
+      # Exercise the runner around its own tests independently of the direct full suite.
+      - run: uv run --no-active devkit run -- uv run --no-active pytest packages/devkit/tests/compact
       - run: just rules-check
 
   consumer-smoke:

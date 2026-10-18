@@ -26,6 +26,20 @@ if [ "$action" = init ]; then
     exit 0
 fi
 
+# Repository dogfooding only: keep a direct path when the runner itself is under repair.
+case "${DEVKIT_RUN_MODE:-compact}" in
+    compact|raw) ;;
+    *) echo "Expected DEVKIT_RUN_MODE=compact or raw" >&2; exit 2 ;;
+esac
+
+run_check() {
+    if [ "${DEVKIT_RUN_MODE:-compact}" = raw ]; then
+        uv run --no-active "$@"
+    else
+        uv run --no-active devkit run -- uv run --no-active "$@"
+    fi
+}
+
 # asyncio and the MCP SDK use local sockets to wake their event loops from threads.
 # Fail before pytest starts when a sandbox blocks those writes; the caller owns approval and retry.
 case "$action" in
@@ -38,7 +52,7 @@ esac
 if [ "$target" = all ]; then
     case "$action" in
         test)
-            uv run --no-active pytest "${xdist[@]}" "$@"
+            run_check pytest "${xdist[@]}" "$@"
             exit 0
             ;;
         test-cov)
@@ -46,7 +60,7 @@ if [ "$target" = all ]; then
             for module in $modules; do
                 cov+=("--cov=$(resolve_module_path "$module")/src")
             done
-            uv run --no-active pytest "${xdist[@]}" "${cov[@]}" --cov-config=pyproject.toml "$@"
+            run_check pytest "${xdist[@]}" "${cov[@]}" --cov-config=pyproject.toml "$@"
             exit 0
             ;;
     esac
@@ -62,18 +76,18 @@ for module in $modules; do
     fi
     case "$action" in
         lint)
-            uv run --no-active ruff check --fix "$path"
-            uv run --no-active ruff format "$path"
+            run_check ruff check --fix "$path"
+            run_check ruff format "$path"
             ;;
         lint-check)
-            uv run --no-active ruff check "$path"
-            uv run --no-active ruff format --check "$path"
+            run_check ruff check "$path"
+            run_check ruff format --check "$path"
             ;;
-        check) uv run --no-active pyright "$path" ;;
-        test) uv run --no-active pytest "${xdist[@]}" "${test_paths[@]}" "$@" ;;
+        check) run_check pyright "$path" ;;
+        test) run_check pytest "${xdist[@]}" "${test_paths[@]}" "$@" ;;
         test-cov)
             COVERAGE_FILE=".coverage.$module" \
-                uv run --no-active pytest "${xdist[@]}" --cov="$path/src" --cov-config=pyproject.toml "${test_paths[@]}" "$@"
+                run_check pytest "${xdist[@]}" --cov="$path/src" --cov-config=pyproject.toml "${test_paths[@]}" "$@"
             ;;
         *) echo "Unknown action: $action" >&2; exit 1 ;;
     esac
