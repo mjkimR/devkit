@@ -12,6 +12,10 @@ dev_effort: medium                    # low | medium | high (hint for Developmen
 boundaries:
   owns:
     - capabilities/distribution/
+    - capabilities/core/
+    - capabilities/host/
+    - capabilities/search/
+    - architecture/
   excludes:
     - docs/decisions/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
@@ -36,19 +40,28 @@ Extracting `devkit.distribution` into a dedicated `packages/devkit-dist` package
 4. `devkit-spec`: Spec-Driven Development (SDD) Living Spec extension, proposals, and lifecycle rules.
 
 ## 2. Technical Spike Questions
+The standalone scope and foundation ownership are decided in `PADR-dist-foundation-ownership`:
+- Installing `devkit-dist` alone provides the distribution commands, including native hook support, context loading, and playbook functionality, without installing the harness engines.
+- `devkit-dist` owns the shared foundation required by those features and the sole `devkit` console entry point. `devkit-agt` depends on it and supplies the harness engines; `devkit-dist` does not depend on `devkit-agt`.
+
 - **Q1 (Packaging & Namespace)**: Should `devkit-dist` use a separate top-level module `devkit_dist` or maintain `devkit.distribution` via PEP 420 native namespace packaging?
-- **Q2 (CLI and Entrypoint Aggregation)**: How will `devkit` CLI mount commands from `devkit-dist` (`sync`, `add`, `remove`, `list`, `status`, `config`)? Should `devkit-agt` depend on `devkit-dist` directly or via command plugins?
+- **Q2 (CLI and Entrypoint Aggregation)**: How should the CLI owned by `devkit-dist` mount the harness commands supplied by its downstream dependent `devkit-agt`? Evaluate the existing `devkit.commands` extension point and lazy loading, with no competing console entry points.
 - **Q3 (Configuration Schema Ownership)**: Which package owns the base `.devkit/config.toml` and `.devkit/installation.json` schema validation, and how do downstream packages (`devkit-agt`, `devkit-spec`) contribute tool-specific configuration sections?
+- **Q4 (Foundation Boundaries)**: Which parts of `devkit.core`, `devkit.search`, and `devkit.host` move into `devkit-dist` to support standalone operation, and which harness-specific services remain in `devkit-agt`?
+- **Q5 (Bundled Content & Compatibility)**: Which bundled guides and auto-selection defaults belong to each package, and which existing CLI, configuration, receipt, and Python API behaviors are preserved?
 
 ## 3. Proposed Design & Impact
 - **Package Layout**:
   - `packages/devkit-dist/src/devkit_dist/` (or `devkit/distribution/` if namespace package is preferred).
   - Package metadata published as `devkit-dist`.
+  - The shared foundation and sole `devkit` console entry point ship with `devkit-dist`; `devkit-agt` supplies the higher-level harness engines.
 - **Boundaries**:
   - `packages/devkit` (`devkit-agt`) takes a direct dependency on `devkit-dist`.
   - Core capabilities under `capabilities/distribution/` ([CAP-DIST-manifest-spec](file:///home/mj/projects/workbench/repos/devkit/docs/capabilities/distribution/CAP-DIST-manifest-spec.md), [CAP-DIST-content-packages](file:///home/mj/projects/workbench/repos/devkit/docs/capabilities/distribution/CAP-DIST-content-packages.md), [CAP-DIST-sync-and-transactions](file:///home/mj/projects/workbench/repos/devkit/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md), [CAP-DIST-workspace-ownership](file:///home/mj/projects/workbench/repos/devkit/docs/capabilities/distribution/CAP-DIST-workspace-ownership.md)) become owned by `devkit-dist`.
+  - Scope includes shared foundation ownership, CLI composition, package metadata, installation/release wiring, and affected architecture and consumer guides. Planning determines the precise module split.
 - **Consumer Impact**:
   - Repositories that only deploy agent skills and playbooks can install `devkit-dist` without bringing in workflow/gate/evaluation engines.
+  - Standalone installation also supports native hooks, context loading, and playbook operations.
   - Existing `devkit-agt` users retain 100% backwards compatibility through dependency inclusion and command re-export.
 
 ## 4. Lifecycle & Retirement Criteria
