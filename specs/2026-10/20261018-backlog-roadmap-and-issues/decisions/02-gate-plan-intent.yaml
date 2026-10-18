@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: Start feature Development for repository-owned milestones, draft provenance,
+  Backlog and next-work recommendation; external tracker integration excluded.
+by: user
+at: '2026-10-18T02:06:12.479840Z'

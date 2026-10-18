@@ -23,7 +23,7 @@ workflow_hash: sha256:90918c632715461d07f99f683b8381bdbe6381ad6689a7575a72c002c1
 - **Parent design**: the strategy layer's master flow (workbench `docs/strategy-layer/01-master-flow.md`, §5.1 Backlog
   edits drafts only, §5.2 decomposition, §6.2 proposal Planning) and policy (`03-policy.md` §4: Planning acceptance
   commits go through the Planning branch's PR under `required`).
-- **Origin**: `PROP-backlog-roadmap-and-issues` makes every request not yet started a draft proposal and has a
+- **Origin**: the original proposal of `SPEC-backlog-roadmap-and-issues` makes every request not yet started a draft proposal and has a
   decomposition yield drafts only; until this path exists, small drafts run Planning at `low` effort.
 - **Related**: `ADR-task-kind-and-planning-depth` (depth is lowered only by a proposal's handoff),
   `CAP-DLV-proposal-incubation`, `CAP-DLV-delivery-workflows`.
@@ -67,7 +67,7 @@ human decisions explicit and recorded, and keeps the proposal body, gates and pr
 - **Q5. Tooling.** Is the path a skill procedure over existing commands (`devkit workflow answer` twice, a status
   edit), or a command (working name `devkit spec proposal accept <slug> --direct`) that checks eligibility, records
   both gates and sets the status in one validated step? Does `devkit spec proposal check` need a mode for it?
-- **Q6. Visibility before acceptance.** If `PROP-backlog-roadmap-and-issues`'s follow-up shows the applied effort and
+- **Q6. Visibility before acceptance.** If `SPEC-backlog-roadmap-and-issues`'s follow-up shows the applied effort and
   support roles before `plan-accept`, a direct acceptance shows "Planning skipped" in the same place.
 
 ## 3. Proposed Design & Impact
@@ -93,7 +93,7 @@ A working direction for Planning to test:
 
 ## 4. Lifecycle & Retirement Criteria
 
-- **Depends on**: `PROP-backlog-roadmap-and-issues` (drafts as the queue for every request); can be planned in
+- **Depends on**: `SPEC-backlog-roadmap-and-issues` (drafts as the queue for every request); can be planned in
   parallel.
 - **Order of change**: the strategy layer's 01 and 03 are updated first (workbench); this package then follows.
 - On acceptance (`plan-accept`): record `gate:plan-accept`, set `status: accepted` and merge the Planning branch;

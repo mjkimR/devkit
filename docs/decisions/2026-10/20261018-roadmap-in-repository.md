@@ -1,19 +1,19 @@
 ---
-id: PADR-roadmap-in-repository
+id: ADR-roadmap-in-repository
 title: Roadmap owned by the repository
 summary: "The repository owns goals, milestone documents and queued draft proposals; decomposition and handoff preserve request provenance without issue tracker or autohub integration."
-proposal: PROP-backlog-roadmap-and-issues
-status: draft
+proposal: SPEC-backlog-roadmap-and-issues
+status: accepted
 created_at: 2026-10-16
 ---
 
-# [PADR-roadmap-in-repository] Roadmap owned by the repository
+# [ADR-roadmap-in-repository] Roadmap owned by the repository
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-16
 - **Involved Components/Capabilities**: `ARCH-01-introduction-and-goals`, `CAP-DOCS-document-model`,
   `CAP-DLV-proposal-incubation`, `CAP-HARN-agent-guidance`
-- **Related**: `PADR-milestone-documents` (the form of a milestone)
+- **Related**: `ADR-milestone-documents` (the form of a milestone)
 
 ---
 
@@ -55,7 +55,7 @@ migration.
   autohub's contract and adds a third copy of the plan.
 
 ### Option 2: The repository owns goals and the roadmap (Selected)
-- **Overview**: goals stay in `ARCH-01-introduction-and-goals`; milestones are documents (`PADR-milestone-documents`);
+- **Overview**: goals stay in `ARCH-01-introduction-and-goals`; milestones are documents (`ADR-milestone-documents`);
   every request not yet started is a draft proposal; Units link to their milestone by ID and retain request provenance
   through `decomposed_from` and `supersedes`.
 - **Pros**: offline, validated by existing rules, reachable through `devkit spec list`, `resolve` and `refs`; history
@@ -76,7 +76,7 @@ Option 2:
 - **Goals** stay as prose in `ARCH-01-introduction-and-goals` §1.2. They get no IDs and no document kind; a milestone
   names the goal it advances by citing that document. Reopen condition: a repository needs goals per namespace, or
   more than one milestone must be traced to the same goal mechanically.
-- **Milestones** are repository documents (`PADR-milestone-documents`). The strategy layer's glossary entry "Phase =
+- **Milestones** are repository documents (`ADR-milestone-documents`). The strategy layer's glossary entry "Phase =
   one GitHub milestone" becomes "Phase = one milestone document".
 - **Requests not yet started are draft proposals**, whatever their eventual depth. A decomposition splits a draft into
   drafts only, each naming the original in `decomposed_from: PROP-<slug>` (a plain field like `supersedes`, not a

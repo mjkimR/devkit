@@ -20,7 +20,7 @@ Branch timing, not a wrong ID: the cited draft existed, only on the base.
 
 ## 1. Friction / Question (friction, question)
 
-- **Context**: Planning of `PROP-backlog-roadmap-and-issues` on its `plan-` branch. Meanwhile Backlog added the draft
+- **Context**: Planning of `SPEC-backlog-roadmap-and-issues` on its `plan-` branch. Meanwhile Backlog added the draft
   proposal for direct acceptance to the base (Backlog commits go to the base directly).
 - **Expectation**: The Planning branch could cite the new draft by its full ID, as the constitution asks.
 - **Actual**: The commit gate refused the PADR: `RULE-document-reference` reported that no document has that ID,

@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-backlog-roadmap-and-issues
+by: user
+at: '2026-10-18T02:04:55.029532Z'

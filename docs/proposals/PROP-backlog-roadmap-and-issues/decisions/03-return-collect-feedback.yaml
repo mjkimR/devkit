@@ -1,9 +1,0 @@
-request: return:collect-feedback
-kind: return
-action: accept
-workflow: sdd-proposal
-stage: collect-feedback
-note: Narrow the accepted direction to repository roadmap, draft provenance and next-work
-  selection; exclude issue tracker integration and refresh Planning feedback evidence
-by: host
-at: '2026-10-18T02:02:32.776047Z'

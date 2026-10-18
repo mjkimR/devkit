@@ -1,25 +1,25 @@
 ---
-id: PADR-milestone-documents
+id: ADR-milestone-documents
 title: Milestone documents ordered by depends_on
 summary: A milestone is an MS-<slug> document under docs/roadmap/ with a status lifecycle and a depends_on list declared by the successor as its start condition; Units join it by a validated ID, and spec-next recommends Planning-eligible drafts in a fully defined order.
-proposal: PROP-backlog-roadmap-and-issues
-status: draft
+proposal: SPEC-backlog-roadmap-and-issues
+status: accepted
 created_at: 2026-10-16
 ---
 
-# [PADR-milestone-documents] Milestone documents ordered by depends_on
+# [ADR-milestone-documents] Milestone documents ordered by depends_on
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-16
 - **Involved Components/Capabilities**: `CAP-DOCS-document-model`, `CAP-DOCS-document-lookup`, `CAP-GOV-spec-rules`,
   `CAP-DLV-proposal-incubation`, `CAP-DLV-spec-bundles`, `CAP-HARN-agent-guidance`
-- **Parent**: `PADR-roadmap-in-repository`
+- **Parent**: `ADR-roadmap-in-repository`
 
 ---
 
 ## 1. Context & Problem Statement
 
-`PADR-roadmap-in-repository` puts the roadmap in the repository. It still has to choose the form: what a milestone is,
+`ADR-roadmap-in-repository` puts the roadmap in the repository. It still has to choose the form: what a milestone is,
 how milestones are ordered, how a Unit joins one, how the next work is chosen, and how the record stays true as work
 completes, given that Units in progress live on `plan-` and `dev-` branches while the base shows only merged state
 (01 §4.7).

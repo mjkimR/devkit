@@ -2,7 +2,7 @@
 id: PROP-backlog-roadmap-and-issues-target
 title: Target Living Spec Structure for PROP-backlog-roadmap-and-issues
 status: draft
-proposal: PROP-backlog-roadmap-and-issues
+proposal: SPEC-backlog-roadmap-and-issues
 created_at: 2026-10-16
 # The Living Spec files this proposal changes, one "- file: <workspace-relative path>" each;
 # devkit spec scope compare reads them to find overlaps with other work.
@@ -52,7 +52,7 @@ This document defines the target blueprint of how the docs/ backbone (Living Spe
 
 - **`ARCH-01-introduction-and-goals`** (modify): states that the roadmap lives in `docs/roadmap/` and that milestones
   cite the goals of §1.2.
-- **ADRs promoted on handoff**: `PADR-roadmap-in-repository`, `PADR-milestone-documents`.
+- **ADRs promoted on handoff**: `ADR-roadmap-in-repository`, `ADR-milestone-documents`.
 
 ---
 
