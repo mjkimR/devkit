@@ -63,6 +63,22 @@
       ]
     },
     {
+      "bundle": "response-style",
+      "id": "response-style",
+      "kind": "instruction",
+      "paths": [
+        ".devkit/managed/response-style/instructions/response-style.md"
+      ]
+    },
+    {
+      "bundle": "response-style",
+      "id": "response-pointer",
+      "kind": "guidance",
+      "paths": [
+        ".devkit/managed/response-style/guidance/response-pointer.md"
+      ]
+    },
+    {
       "bundle": "spec",
       "id": "contract-authoring",
       "kind": "instruction",
@@ -1032,6 +1048,18 @@
       "mode": 420,
       "sha256": "f96289aa8241e4e3f645dce22765b6515910861c33ca7e1778bd2ee419de6fe1"
     },
+    ".devkit/managed/response-style/bundle.toml": {
+      "mode": 420,
+      "sha256": "9f24eb971dbd18386e146e17288839cdbc4fd20faa14966627542b3b002e4346"
+    },
+    ".devkit/managed/response-style/guidance/response-pointer.md": {
+      "mode": 420,
+      "sha256": "60d7a69a02b02fddc4ab569a458335875096978a870e0539e3ad6c8dec626212"
+    },
+    ".devkit/managed/response-style/instructions/response-style.md": {
+      "mode": 420,
+      "sha256": "4aa8a37a681ccb89359ee8a58c877d0f2d9acbb8e7a22e24639b378c9f4f6c9b"
+    },
     ".devkit/managed/spec/AGENTS.md": {
       "mode": 420,
       "sha256": "9d78dcc5246f29e0c544b9865f2c3f36dea3d2b2ff435078442286b4deac11a3"
@@ -1393,7 +1421,7 @@
       "sha256": "ece496dc531a4acbab21fcb0504096128450d2d52a440ca4f75811f2df517213"
     }
   },
-  "guidance_block": "06be010db0995f6232e5352a8b090e65fe1d82eb8a51f03511adde6a77346c0d",
+  "guidance_block": "4cbcf68427d70ebab58d56821afeb5d06c3d312b72a8ecc5103051e3b2c0c967",
   "packages": [
     {
       "bundle": "advisory",
@@ -1412,6 +1440,12 @@
       "bundle_version": "0.1.1",
       "package": "devkit-agt",
       "package_version": "0.1.1"
+    },
+    {
+      "bundle": "response-style",
+      "bundle_version": "0.1.0",
+      "package": "devkit-catalog",
+      "package_version": "0.1.0"
     },
     {
       "bundle": "spec",
@@ -1538,6 +1572,9 @@
       ],
       "devkit": [
         "core"
+      ],
+      "response-style": [
+        "all"
       ],
       "spec": [
         "core",

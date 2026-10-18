@@ -3,6 +3,7 @@
 [presets]
 spec = ["core", "docs-skeleton"]
 authoring = "skill-authoring"
+response-style = "all"
 
 [worktree]
 pull_request = "auto"
