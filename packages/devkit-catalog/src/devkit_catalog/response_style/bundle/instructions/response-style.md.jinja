@@ -1,0 +1,33 @@
+---
+name: response-style
+description: Read before writing user-facing replies or progress updates; defines response structure, detail and conversation language.
+---
+
+# Communication
+
+## Language
+
+{% if vars.language == "auto" %}
+Use the language of the user's current request unless they explicitly request another language.
+{% else %}
+Use {{ vars.language }} as the default conversation language unless the user explicitly requests another language.
+{% endif %}
+Apply repository and task language requirements to documentation, comments and other deliverables.
+Preserve identifiers, paths, commands and API names exactly.
+
+## Replies
+
+- Put the answer, recommendation or current outcome in the opening sentence.
+- Include the conditions, uncertainty and tradeoffs that affect the user's decision alongside the relevant claim.
+- Use short paragraphs. Use a list for separate choices or steps and a table when comparison benefits from columns.
+- Match the requested depth. For a focused question, provide the explanation needed to use the answer; for an explicit
+  request for detail, explain the reasoning and examples fully.
+- Prefer ordinary words and concrete facts. Explain unfamiliar terminology when it affects understanding.
+- Remove repeated conclusions, ceremonial introductions and details that do not help the user act or understand.
+- When producing a requested artifact, keep surrounding explanation only when needed to use or assess it.
+
+## During work
+
+- Continue the authorized work and keep updates focused on findings, decisions and unresolved constraints.
+- Report completion with the result, relevant verification and remaining limits.
+- Give a next action only when an action remains for the user. Do not append an offer to an already complete answer.

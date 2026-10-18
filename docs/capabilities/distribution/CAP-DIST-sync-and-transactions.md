@@ -118,7 +118,7 @@ devkit = false                          # opt out of an auto-selected bundle
 ```
 
 - **Top-level keys**: `schema`, `agents`, `presets`, `playbooks`, `rules`, `workflow`, `gates`, `guidance_block`,
-  `override_drift`, `tool`; anything else is `CONFIG_INVALID`.
+  `override_drift`, `bundles`, `tool`; anything else is `CONFIG_INVALID`.
 - **`schema`**: optional; `1` is the only version. `devkit add` writes it when it creates the file.
 - **`agents`**: the projection targets. Absent, every supported agent (`antigravity`, `claude-code`, `codex`);
   `[]` (written by `devkit sync --no-agents`) turns projection off while managed copies stay.
@@ -359,3 +359,26 @@ the selection runs a plain `devkit sync` and commits what it changes. In CI, `de
 environment is installed both restores the managed copies the later steps read and fails when a bundle source or
 an upgraded package no longer matches the committed receipt. `sync --check` stays the read-only check for a
 workspace that is already synchronized.
+
+### Bundle template inputs
+
+`bundles` is an additional accepted top-level configuration key. Each `[bundles.<bundle>.variables]` table supplies
+only that bundle's declared inputs; bundle names use the bundle slug grammar and variable names use identifiers.
+Values are strings, booleans or integers. Each bundle table accepts only `variables`. Shape/type errors are
+`CONFIG_INVALID`; undeclared inputs, declaration-type mismatches and missing required inputs are `CONFIG_INVALID`
+when planning a selected bundle. Unselected bundle settings remain stored without requiring installation or selection.
+
+```toml
+[bundles.response-style.variables]
+language = "ko"
+```
+
+Project values override manifest defaults; no other resolution tiers exist. Configuration is Git-tracked and input
+to the desired inventory, including dry-run, check and locked sync. A configuration change that changes final bytes
+changes their receipt hashes; locked sync refuses any resulting committed-state change under its existing contract.
+
+Template overrides retain their `.md.jinja` source paths and raw-source digests. Inventory chooses the upstream or
+project override, renders and validates it, then writes the resulting `.md` into the managed tree. Receipt asset
+paths and guidance references name that managed result even when a template is overridden, so get-context reads
+only rendered content. Non-template overrides retain their existing paths and ownership behavior. A template error
+aborts before transaction writes; override commands restore their preliminary writes when planning fails.

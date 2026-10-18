@@ -8,6 +8,7 @@ dependencies = []
 
 # One entry point per bundle; the name is the bundle name. No catalog bundle declares auto_select.
 [project.entry-points."devkit.bundles"]
+response-style = "devkit_catalog.response_style"
 host-observer = "devkit_catalog.host_observer"
 
 [dependency-groups]

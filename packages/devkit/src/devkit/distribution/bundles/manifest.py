@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import tomllib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -16,6 +16,7 @@ from devkit.distribution.bundles.instructions import read_instruction_header
 from devkit.distribution.bundles.invocation import INVOCATIONS, check_skill_source
 from devkit.distribution.bundles.playbooks import playbook_entry, read_playbook_header
 from devkit.distribution.bundles.subagents import HOST_FILES, read_contract, subagent_entry
+from devkit.distribution.bundles.templates import TEMPLATE_KINDS, Variable, declarations, output_path
 from devkit.distribution.bundles.workflows import read_workflow_header, workflow_entry
 from devkit.distribution.content import normal_mode
 from devkit.distribution.errors import BundleError, SelectionError
@@ -74,6 +75,7 @@ class Bundle:
     # Selected without ``devkit add`` (with ``default_preset``) once its package is installed, for any package;
     # ``<bundle> = false`` in ``.devkit/config.toml`` opts out.
     auto_select: bool = False
+    variables: dict[str, Variable] = field(default_factory=dict)
 
     @property
     def preset_names(self) -> list[str]:
@@ -220,6 +222,14 @@ def _check_source(root: Path, asset_id: str, kind: str, variant: str, source: st
     """Validate the kind-specific content of one source, as every agent projection will read it."""
     path = safe_source(root, source)
     files = source_files(root, source)
+    templates = [file for file in files if file.name.endswith(".jinja")]
+    if templates:
+        if kind not in TEMPLATE_KINDS or any(not file.name.endswith(".md.jinja") for file in templates):
+            raise BundleError(f"{asset_id}: templates require .md.jinja instruction, guidance or document sources")
+        if kind == "guidance" and not path.is_file():
+            raise BundleError(f"{asset_id}: guidance source must be one file")
+        if path.is_file():
+            return
     if kind == "skill":
         if not path.is_dir() or not (path / "SKILL.md").is_file():
             raise BundleError(f"{asset_id}: skill source must contain SKILL.md")
@@ -237,6 +247,8 @@ def _check_source(root: Path, asset_id: str, kind: str, variant: str, source: st
             raise BundleError(exc.message, target_files=exc.target_files, fix=exc.fix) from exc
     if kind == "instruction":
         for file in files:
+            if file.name.endswith(".md.jinja"):
+                continue
             read_instruction_header(file.read_bytes(), f"{asset_id}/{file.relative_to(root).as_posix()}")
     if kind == "playbook":
         read_playbook_header(playbook_entry(root, source).read_bytes(), f"{asset_id}/{source}")
@@ -318,6 +330,8 @@ def _check_fragment_references(bundle: Bundle) -> None:
         if asset.kind != "guidance":
             continue
         ((_, source),) = asset.sources
+        if source.endswith(".md.jinja"):
+            continue  # Final references and fragment limits are checked after project rendering.
         named = references(read_fragment((bundle.root / source).read_bytes(), f"{asset.id}/{source}"))
         for ref in named:
             if bundle.single_file_source(ref) is None:
@@ -365,7 +379,7 @@ def _load(root: Path) -> Bundle:
     try:
         data = _mapping(
             tomllib.loads(manifest.read_text("utf-8")),
-            {"schema", "name", "version", "assets", "presets", "default_preset", "auto_select"},
+            {"schema", "name", "version", "assets", "presets", "default_preset", "auto_select", "variables"},
             "bundle",
         )
     except (OSError, UnicodeError, RecursionError, tomllib.TOMLDecodeError) as exc:
@@ -409,7 +423,27 @@ def _load(root: Path) -> Bundle:
         raise BundleError("auto_select must be a boolean")
     if auto_select and default_preset is None:
         raise BundleError("auto_select requires default_preset")
-    bundle = Bundle(root, name, version, tuple(assets), presets, default_preset, auto_select)
+    bundle = Bundle(
+        root,
+        name,
+        version,
+        tuple(assets),
+        presets,
+        default_preset,
+        auto_select,
+        declarations(data.get("variables", {})),
+    )
+    destinations: dict[str, str] = {"bundle.toml": "bundle.toml"}
+    if bundle.constitution is not None:
+        destinations["AGENTS.md"] = "AGENTS.md"
+    for asset in assets:
+        for _, source in asset.sources:
+            for file in source_files(root, source):
+                rel = file.relative_to(root).as_posix()
+                dest = output_path(rel)
+                previous = destinations.setdefault(dest, rel)
+                if previous != rel:
+                    raise BundleError(f"template destination collision: {previous} and {rel}")
     _check_fragment_references(bundle)
     _check_workflow_ids(bundle)
     if bundle.constitution is not None:

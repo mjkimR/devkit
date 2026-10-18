@@ -1,0 +1,18 @@
+schema = 1
+name = "response-style"
+version = "0.1.0"
+default_preset = "all"
+
+[variables.language]
+type = "string"
+default = "auto"
+
+[[assets]]
+id = "response-style"
+kind = "instruction"
+source = "instructions/response-style.md.jinja"
+
+[[assets]]
+id = "response-pointer"
+kind = "guidance"
+source = "guidance/response-pointer.md"

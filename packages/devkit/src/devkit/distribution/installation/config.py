@@ -33,6 +33,7 @@ from devkit.core.errors import ConfigError
 from devkit.core.project import read_toml
 from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH, Receipt
 from devkit.distribution.bundles.common import AGENT_NAMES, SLUG
+from devkit.distribution.bundles.templates import NAME, Scalar
 from devkit.distribution.content import Content
 from devkit.distribution.errors import SelectionError
 from devkit.distribution.installation.config_template import (
@@ -66,6 +67,7 @@ FIELDS = frozenset(
         "guidance_block",
         "override_drift",
         "tool",
+        "bundles",
     }
 )
 OVERRIDE_DRIFT = ("warn", "block")
@@ -182,6 +184,7 @@ class ProjectConfig:
     guidance_block: bool = True
     # ``override_drift = "block"`` makes upstream drift behind an override abort the sync.
     override_drift: str = "warn"
+    variables: dict[str, dict[str, Scalar]] = field(default_factory=dict)
 
 
 def _config_path(root: Path) -> Path:
@@ -370,6 +373,29 @@ def read_playbook_config(root: Path) -> dict[str, int | float | str]:
     return validate_playbooks_config(data.get("playbooks")) if data else {}
 
 
+def bundle_variables(raw: object) -> dict[str, dict[str, Scalar]]:
+    if not isinstance(raw, dict):
+        raise ConfigError("config bundles: expected a table")
+    result = {}
+    for bundle, settings in raw.items():
+        if not isinstance(bundle, str) or not SLUG.fullmatch(bundle):
+            raise ConfigError("config bundles: invalid bundle name")
+        if not isinstance(settings, dict) or set(settings) - {"variables"}:
+            raise ConfigError(f"config bundles.{bundle}: expected variables table only")
+        values = settings.get("variables", {})
+        if not isinstance(values, dict):
+            raise ConfigError(f"config bundles.{bundle}.variables: expected a table")
+        if any(
+            not isinstance(k, str) or not NAME.fullmatch(k) or type(v) not in (str, bool, int)
+            for k, v in values.items()
+        ):
+            raise ConfigError(
+                f"config bundles.{bundle}.variables: expected identifier keys and string/boolean/integer values"
+            )
+        result[bundle] = dict(values)
+    return result
+
+
 def read_config(root: Path) -> ProjectConfig:
     data = _load(root)
     if data is None:
@@ -388,6 +414,7 @@ def read_config(root: Path) -> ProjectConfig:
         opted_out=opted_out,
         guidance_block=guidance_block,
         override_drift=override_drift,
+        variables=bundle_variables(data.get("bundles", {})),
     )
 
 

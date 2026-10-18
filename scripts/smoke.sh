@@ -69,7 +69,7 @@ else:
 with discover_bundles() as bundles:
     assert {item.bundle.name for item in bundles if item.builtin} == {'devkit', 'advisory', 'authoring', 'git-commits'}
     assert all(item.package == 'devkit-agt' for item in bundles if item.builtin)
-    assert {item.bundle.name for item in bundles if item.package == 'devkit-catalog'} == {'host-observer'}
+    assert {item.bundle.name for item in bundles if item.package == 'devkit-catalog'} == {'host-observer', 'response-style'}
 "
     echo "--- devkit sync (built-in bundles are selected by default)"
     uv run devkit sync >/dev/null
@@ -77,6 +77,30 @@ with discover_bundles() as bundles:
     grep -q '"advisory"' .devkit/installation.json
     test -d .devkit/managed/devkit
     test ! -e .devkit/managed/host-observer
+    test ! -e .devkit/managed/response-style
+    echo "--- response templates: lazy imports, configured language and final output"
+    uv run python -c '
+import sys
+from devkit.distribution.installation.discovery import discover_bundles
+with discover_bundles() as bundles:
+    assert any(item.bundle.name == "response-style" for item in bundles)
+assert "jinja2" not in sys.modules
+'
+    cat >> .devkit/config.toml <<'TOML'
+
+[bundles.response-style.variables]
+language = "ko"
+TOML
+    uv run devkit add response-style >/dev/null
+    uv run python -c '
+from pathlib import Path
+path = Path(".devkit/managed/response-style/instructions/response-style.md")
+assert "Use ko as the default" in path.read_text()
+assert not path.with_suffix(".md.jinja").exists()
+assert str(path) in Path("AGENTS.md").read_text()
+'
+    uv run devkit sync --check >/dev/null
+    uv run devkit remove response-style >/dev/null
     echo "--- host hooks: preserve foreign entries, dispatch from a subdirectory, inspect and remove"
     mkdir -p .codex host-subdir
     cat > .codex/hooks.json <<'JSON'

@@ -13,5 +13,5 @@ plan: PLAN-bundle-templates
   - **_Boundary**: packages/devkit-catalog/, guides/install/bundle-recommendations.md
   - _Requirements: AC-05_
 - [ ] **Task 3**: Verify package checks and consumer behavior.
-  - **_Boundary**: packages/devkit/tests/, packages/devkit-catalog/tests/
+  - **_Boundary**: packages/devkit/tests/, packages/devkit-catalog/tests/, scripts/smoke.sh
   - _Requirements: AC-01, AC-02, AC-03, AC-04, AC-05_

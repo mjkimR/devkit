@@ -36,3 +36,21 @@ def test_every_bundle_directory_is_registered() -> None:
 
 def test_catalog_names_do_not_collide_with_devkit_builtins() -> None:
     assert not set(ENTRY_POINTS) & set(DEVKIT_PROJECT["entry-points"]["devkit.bundles"])
+
+
+@pytest.mark.parametrize("language", ["auto", "ko"])
+def test_response_style_deploys_configured_language(tmp_path: Path, language: str) -> None:
+    from devkit.distribution.installation.config import update_config
+    from devkit.distribution.installation.discovery import InstalledBundle
+    from devkit.distribution.installation.sync import sync_project
+
+    bundle = load_bundle(_bundle_root(ENTRY_POINTS["response-style"]))
+    update_config(tmp_path, agents=[], presets={"response-style": ["all"]})
+    path = tmp_path / ".devkit/config.toml"
+    path.write_text(path.read_text() + f'\n[bundles.response-style.variables]\nlanguage = "{language}"\n')
+    sync_project(tmp_path, [InstalledBundle("devkit-catalog", PROJECT["version"], bundle)])
+    target = tmp_path / ".devkit/managed/response-style/instructions/response-style.md"
+    text = target.read_text()
+    assert "{{" not in text and "{%" not in text
+    assert ("Use the language of the user's current request" if language == "auto" else "Use ko as the default") in text
+    assert str(target.relative_to(tmp_path)) in (tmp_path / "AGENTS.md").read_text()

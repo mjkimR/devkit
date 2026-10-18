@@ -115,3 +115,12 @@ is the JSON the command prints.
 - `cli/`: the distribution commands, listed in `COMMANDS`; the root `devkit` group loads each one lazily by name. Output and exit codes
   follow `ARCH-08-1-agent-output` and the
   [reference conventions](../development/reference/distribution.md#1-quick-start).
+
+## Configurable content rendering
+
+The `bundles/templates.py` module owns scalar variable declarations, template destination naming and restricted
+Jinja rendering. Its Jinja imports are local to rendering so CLI discovery, ordinary bundle loading and non-template
+sync do not load the engine. The installation config reader owns `[bundles.<name>.variables]`; inventory resolves
+those values against declarations and renders selected instruction, guidance and document `.md.jinja` sources,
+including raw project overrides, into final managed `.md` files before transaction planning and receipt hashing.
+This does not execute bundle Python code or alter the verbatim contract of native host configurations.

@@ -99,3 +99,12 @@ a moment no skill marks, such as "before writing a commit message").
   imports them. A rule's tests go in its `tests/` folder, load the rule with
   `devkit.rules.testing.load_rule(__file__)` and run with
   `devkit rules test <RULE-id>`.
+
+## Configurable Markdown
+
+Instruction, guidance and document assets may use `.md.jinja` sources. Declare each input in the manifest under
+`[variables.<name>]` with `type = "string"`, `"boolean"` or `"integer"` and an optional same-type `default`.
+Consumers set `[bundles.<bundle>.variables]` in `.devkit/config.toml`. Use `{{ vars.<name> }}` in the template;
+only declared scalar values are exposed. `sync` strips the final `.jinja`, validates the rendered content and hashes
+its final bytes. Ordinary Markdown is never templated. Keep filenames and headers stable, and declare defaults
+when local `bundle plan` should work without project inputs. Guidance limits apply after rendering.

@@ -330,6 +330,7 @@ def _plan_inventory(
         list(selection.agents),
         root=root,
         previous_overrides=previous_overrides,
+        variables=read_config(root).variables,
     )
 
 

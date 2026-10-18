@@ -6,6 +6,7 @@ the project selects it with `devkit add`, and a preset picks its assets.
 
 | Bundle | Presets (default first) | Contents |
 | --- | --- | --- |
+| `response-style` | `all` | Concise user-facing replies with configurable conversation language |
 | `host-observer` | `all` | Codex lifecycle hook registrations using devkit's metadata-only observer; `CAP-HOST-lifecycle-observation` |
 
 ```bash
@@ -31,3 +32,16 @@ check, a command) belongs in `devkit-agt` instead.
 `tests/test_bundles.py` enforces the entry point, version, opt-in and naming
 rules. See `CAP-DIST-content-packages` and the
 `CAP-DIST-manifest-spec`.
+
+## Response style
+
+`devkit add response-style` installs independently authored communication instructions. Configure the default
+conversation language before syncing (the default `auto` follows the current request):
+
+```toml
+[bundles.response-style.variables]
+language = "ko"
+```
+
+Run `devkit sync` after changing variables. Language values are natural-language names or codes understood by the
+agent, not a closed locale registry. Documentation and code-comment language still follow repository requirements.

@@ -17,6 +17,7 @@ from pathlib import Path
 
 from devkit.core.receipt import MANAGED_PATH, OVERRIDES_PATH, OverrideRecord
 from devkit.distribution.bundles.manifest import Asset, Bundle, source_files
+from devkit.distribution.bundles.templates import output_path
 from devkit.distribution.content import sha256
 from devkit.distribution.installation.workspace import BASELINE, checked_path
 
@@ -62,6 +63,12 @@ def resolve_source(root: Path | None, bundle: Bundle, rel: str) -> tuple[Path, s
         assert root is not None
         return root / override_rel(bundle.name, rel), override_rel(bundle.name, rel)
     return bundle.root / rel, f"{MANAGED_PATH}/{bundle.name}/{rel}"
+
+
+def consumer_path(root: Path | None, bundle: Bundle, rel: str) -> str:
+    if rel.endswith(".md.jinja"):
+        return f"{MANAGED_PATH}/{bundle.name}/{output_path(rel)}"
+    return resolve_source(root, bundle, rel)[1]
 
 
 def asset_files(bundle: Bundle, asset: Asset) -> list[str]:

@@ -7,6 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "click>=8.1.7",
     "devkit-advisory==0.1.1",  # released in lockstep with devkit, from the same tag
+    "jinja2>=3.1.6,<4",
     "pyyaml>=6.0.1",
     "tomlkit>=0.13",
 ]

@@ -10,6 +10,7 @@ from pathlib import Path
 from devkit.core.receipt import MANAGED_PATH, AssetRecord, HostHookRecord, OverrideRecord, PackageRecord
 from devkit.distribution.bundles.fragments import read_fragment, references, render_fragment
 from devkit.distribution.bundles.guidance import prepend_context
+from devkit.distribution.bundles.instructions import read_instruction_header
 from devkit.distribution.bundles.invocation import user_only, user_only_extras
 from devkit.distribution.bundles.manifest import Asset, Bundle, source_files
 from devkit.distribution.bundles.playbooks import playbook_entry
@@ -20,12 +21,13 @@ from devkit.distribution.bundles.subagents import (
     read_contract,
     render_projection,
 )
+from devkit.distribution.bundles.templates import Scalar, output_path, render_template, resolve_variables
 from devkit.distribution.bundles.workflows import workflow_entry
 from devkit.distribution.content import Content, normal_mode
 from devkit.distribution.errors import BundleConflictError, BundleError, SelectionError
 from devkit.distribution.installation import playbook_skill, workflow_skill
 from devkit.distribution.installation.discovery import InstalledBundle
-from devkit.distribution.installation.overrides import Drift, resolve_source, track_override
+from devkit.distribution.installation.overrides import Drift, consumer_path, resolve_source, track_override
 from devkit.host import adapter_for, read_hook
 
 # Shared entry skills generated when at least one asset of the kind is synchronized.
@@ -129,11 +131,14 @@ class Inventory:
 class _BundleInventory:
     """Adds one selected bundle to an ``Inventory``."""
 
-    def __init__(self, inventory: Inventory, bundle: Bundle, agents: list[str], root: Path | None) -> None:
+    def __init__(
+        self, inventory: Inventory, bundle: Bundle, agents: list[str], root: Path | None, variables: dict[str, Scalar]
+    ) -> None:
         self.inventory = inventory
         self.bundle = bundle
         self.agents = agents
         self.root = root
+        self.variables = resolve_variables(bundle.variables, variables, bundle.name)
         self.prefix = f"{MANAGED_PATH}/{bundle.name}/"
         self.context_files: set[Path] = set()
         self.selected: set[str] = set()
@@ -196,13 +201,22 @@ class _BundleInventory:
         seeds = self.inventory.seeds
         targets = []
         for path in source_files(self.bundle.root, source):
-            dest = asset.target if origin.is_file() else f"{asset.target}/{path.relative_to(origin).as_posix()}"
+            dest = (
+                asset.target
+                if origin.is_file()
+                else f"{asset.target}/{output_path(path.relative_to(origin).as_posix())}"
+            )
             if dest in seeds:
                 raise BundleConflictError(
                     f"seeded target collision: {dest} ({seeds[dest].bundle} and {self.bundle.name})",
                     target_files=[dest],
                 )
-            seeds[dest] = Seed(self.bundle.name, asset.id, Content(path.read_bytes(), normal_mode(path.stat().st_mode)))
+            data = (
+                render_template(path.read_bytes(), self.variables, source)
+                if path.name.endswith(".md.jinja")
+                else path.read_bytes()
+            )
+            seeds[dest] = Seed(self.bundle.name, asset.id, Content(data, normal_mode(path.stat().st_mode)))
             targets.append(dest)
         self.inventory.assets.append(
             AssetRecord(self.bundle.name, asset.id, asset.kind, (), seeded=tuple(sorted(targets)))
@@ -214,15 +228,29 @@ class _BundleInventory:
         for _, source in asset.sources:
             for path in source_files(self.bundle.root, source):
                 rel = path.relative_to(self.bundle.root).as_posix()
-                self.inventory.copy(self.prefix + rel, path, self._context(path))
-                paths.add(resolve_source(self.root, self.bundle, rel)[1])
+                if rel.endswith(".md.jinja"):
+                    read_from, cited = resolve_source(self.root, self.bundle, rel)
+                    data = render_template(read_from.read_bytes(), self.variables, cited)
+                    if asset.kind == "instruction":
+                        read_instruction_header(data, cited)
+                    elif asset.kind == "guidance":
+                        read_fragment(data, cited)
+                    self.inventory.put(self.prefix + output_path(rel), Content(data, normal_mode(path.stat().st_mode)))
+                else:
+                    self.inventory.copy(self.prefix + rel, path, self._context(path))
+                paths.add(consumer_path(self.root, self.bundle, rel))
         return paths
 
     def _fragment(self, asset: Asset) -> None:
         """Render a guidance asset (the project override, if any) with its placeholders resolved."""
         ((_, source),) = asset.sources
         read_from, cited = resolve_source(self.root, self.bundle, source)
-        text = read_fragment(read_from.read_bytes(), cited)
+        data = (
+            self.inventory.files[self.prefix + output_path(source)].data
+            if source.endswith(".md.jinja")
+            else read_from.read_bytes()
+        )
+        text = read_fragment(data, cited)
         paths = {}
         for ref in references(text):
             target = self.bundle.single_file_source(ref)
@@ -230,7 +258,7 @@ class _BundleInventory:
                 raise BundleError(
                     f"{cited}: {{path:{ref}}} must name a selected single-file, non-guidance asset of {self.bundle.name}"
                 )
-            paths[ref] = resolve_source(self.root, self.bundle, target)[1]
+            paths[ref] = consumer_path(self.root, self.bundle, target)
         self.inventory.guidance.append(Fragment(self.bundle.name, asset.id, render_fragment(text, paths)))
 
     def _project(self, asset: Asset, agent: str) -> set[str]:
@@ -313,6 +341,7 @@ def desired_inventory(
     *,
     root: Path | None = None,
     previous_overrides: dict[str, dict[str, OverrideRecord]] | None = None,
+    variables: dict[str, dict[str, Scalar]] | None = None,
 ) -> Inventory:
     """Everything ``installed`` deploys for ``presets`` and ``agents``.
 
@@ -329,7 +358,7 @@ def desired_inventory(
     for item in installed:
         bundle = item.bundle
         inventory.packages.append(PackageRecord(item.package, item.package_version, bundle.name, bundle.version))
-        _BundleInventory(inventory, bundle, agents, root).add(
+        _BundleInventory(inventory, bundle, agents, root, (variables or {}).get(bundle.name, {})).add(
             presets[bundle.name], dict((previous_overrides or {}).get(bundle.name, {}))
         )
     for kind, module in GENERATED_SKILLS.items():

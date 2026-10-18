@@ -277,3 +277,11 @@ import cannot make the bundle unusable):
 - `CAP-DIST-context-and-playbooks`: `get-context`, the skill prerequisite, and playbook search.
 - `CAP-DIST-in-repo-bundles`: repository-owned assets as a content package installed from the same repository.
 - `ARCH-08-2-resource-taxonomy`: guidance taxonomy and naming standards.
+
+## Configurable Markdown templates
+
+For instruction, guidance and document assets, `name.md.jinja` renders to `name.md`; ordinary Markdown stays literal.
+Declare typed `[variables.<identifier>]` inputs in `bundle.toml` and set project values under
+`[bundles.<bundle>.variables]` in `.devkit/config.toml`, then `devkit sync`. Templates use `{{ vars.language }}`.
+The engine loads only during rendering. See `CAP-DIST-manifest-spec` for syntax and restrictions and
+`CAP-DIST-sync-and-transactions` for input resolution, overrides and receipt behavior.

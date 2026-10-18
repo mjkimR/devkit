@@ -207,3 +207,44 @@ verification; projects receive bundles as installed wheels, not archives.
   `0755`.
 - An embedded `inventory.json` records the SHA-256 and mode of every archived file.
 - A failed build leaves no partial archive; an existing output file is never replaced.
+
+## Markdown templates and bundle variables
+
+An instruction, guidance or document source MAY contain `.md.jinja` files. Only those files are rendered; ordinary
+files preserve literal Jinja syntax. A `.jinja` source in any other kind, or with another preceding extension,
+is `BUNDLE_INVALID`. Constitution files are not templated. The final `.jinja` suffix alone is removed from each
+managed destination and from directory-seeded filenames. An explicit seeded `target` remains the authored path.
+Two distinct source paths mapping to the same managed destination are `BUNDLE_INVALID`, even with identical bytes.
+
+The manifest declares every configurable input, using identifier names matching `[a-z][a-z0-9_]*`:
+
+```toml
+[variables.language]
+type = "string"
+default = "auto"
+
+[variables.max_items]
+type = "integer"
+default = 3
+
+[variables.show_examples]
+type = "boolean"
+default = false
+```
+
+`type` is required and exactly `string`, `boolean` or `integer`; `default` is optional and must have that exact type
+(booleans are not integers). No other declaration keys are accepted. Omitting the default makes the input required.
+Variable declarations validate without rendering; template content validation occurs on inventory planning.
+`bundle plan` uses defaults and fails with `CONFIG_INVALID` for a required input it cannot resolve.
+
+Project configuration supplies inputs as defined by `CAP-DIST-sync-and-transactions`. Templates receive only the
+resolved `vars` mapping, for example `{{ vars.language }}` or `{% if vars.show_examples %}...{% endif %}`.
+No project-wide config, environment, paths, clock, loader or global functions are exposed. Jinja uses a sandbox,
+StrictUndefined, UTF-8, LF output, no HTML escaping, preserved trailing newlines and no Python attribute access or
+calls. Available filters are `lower`, `upper`, `trim`, `default`, `replace`, `length`; built-in Jinja tests remain
+available. The sandbox limits access, not resource consumption; bundles remain installed, trusted content.
+
+Syntax, evaluation, UTF-8 and rendered instruction-header/guidance errors are `BUNDLE_INVALID` before writes.
+Guidance fragment formatting, the 300-byte limit, path references and selected target requirements apply to the
+rendered text. These checks also apply to project template overrides. Ordinary source validation is unchanged.
+Jinja is imported only when a `.md.jinja` file actually renders, never merely by loading a bundle or its manifest.
