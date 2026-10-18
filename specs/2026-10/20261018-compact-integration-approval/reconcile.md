@@ -7,6 +7,8 @@ targets:
     resolution: modified
   - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md
     resolution: modified
+  - file: docs/development/reference/integration.md
+    resolution: modified
 ---
 
 # Reconciliation: Compact native integration approval

@@ -1,0 +1,21 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-18T05:16:03.895085Z'
+status: failed
+summary: 'Independent reconcile review found one missing target: the changed integration quick reference was described in prose but omitted from targets. API, authority, recovery and guidance agree.'
+findings:
+- issue: Changed integration quick reference is absent from reconcile targets.
+  evidence: reconcile.md:5 lists two capability files; docs/development/reference/integration.md:8 changes the tool contract reference.
+  failure_condition: The reconciliation record must enumerate every changed docs file.
+  suggested_action: Add docs/development/reference/integration.md as a modified target.
+  resolution: open
+assumptions:
+- Codex role isolation emulated; reviewer changed no files/index/HEAD.
+checks:
+  coverage: FAIL quick reference target omitted
+diff_scope:
+  base: 7349c96d927af8f22a9ae570564fc14e93861816
+  head: 534e17cd449d1a5a9a86eacd357ac3b00d08b53c
+activity_effort: high

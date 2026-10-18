@@ -144,8 +144,9 @@ The application does not claim to sandbox arbitrary extension code.
 
 ## 5. Partial results and main-agent recovery
 
-Structured results report `status`, authority, native UI action, the request, `steps`, per-extension cleanup steps,
-the underlying `FinishResult`, observed refs/worktree registration, failing operation, errors and notices. Steps
+Compact results report status, authority, concise request scope, steps, errors and notices, plus native UI action,
+per-extension cleanup steps, observed state and failing operation when present. Detailed status additionally reports
+the complete request and underlying FinishResult. Steps
 are `not_run`, `running`, `completed`, `skipped`, `failed` or `unknown`. A timeout can leave an unknown operation;
 the observed state is included rather than asserting that it never happened.
 
