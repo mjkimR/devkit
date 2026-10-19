@@ -1,0 +1,11 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T02:14:27.273058Z'
+status: completed
+summary: Swept the Development run (spec, build, reviews, reconcile, smoke, release and install verification) and the diff; recorded FB-worker-scope-misses-link-repairs and FB-adr-standalone-rule-asset-claim; duplicate FB-smoke-response-style-skill-path (smoke response-style check, fixed in this change); the four Planning items carried in the bundle stay open
+findings: []
+checks:
+  swept: PASS recorded=2 duplicates=1
+activity_effort: high
