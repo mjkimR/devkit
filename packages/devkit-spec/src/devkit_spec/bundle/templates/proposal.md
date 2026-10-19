@@ -25,6 +25,10 @@ dev_effort: medium                    # low | medium | high: Development activit
 ## 1. Background & Hypothesis
 <!-- Describe background, current challenges, and core hypothesis to address -->
 
+## Source feedback (when this proposal receives feedback)
+<!-- List full FB IDs and the scope this work receives; keep these references in the handed-off spec. Promotion
+routes the observation; only verified task completion resolves it. Omit this section when there is no source. -->
+
 ## 2. Technical Spike Questions
 <!-- Define key uncertainties and technical questions to answer -->
 - **Q1**: 

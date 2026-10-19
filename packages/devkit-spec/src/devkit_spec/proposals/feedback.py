@@ -12,7 +12,7 @@ from devkit_spec.errors import ProposalInvalidError
 from devkit_spec.proposals.scaffold import first_segment_has_letter
 
 FEEDBACK = "feedback"
-STATUSES = frozenset({"open", "promoted", "dismissed", "forwarded"})
+STATUSES = frozenset({"open", "promoted", "resolved", "dismissed", "forwarded"})
 _NAME = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*", re.ASCII)
 
 

@@ -127,10 +127,15 @@ kebab-case name. Missing/unknown status, unreadable/malformed files, nested dire
 sources are refused with `SPEC_PROPOSAL_INVALID` before writes. Non-Markdown sidecars and README keep generic
 preservation. Unsafe/conflicting destinations use `SPEC_PROPOSAL_TARGET_EXISTS`.
 
-Only `open` feedback enters the new spec's `feedback/`; `promoted`, `dismissed` and
+Only `open` feedback enters the new spec's `feedback/`; `promoted`, `resolved`, `dismissed` and
 `forwarded` files follow the materials path. IDs, statuses and observation dates stay unchanged. Feedback uses
 the existing preflight, move, cross-filesystem rollback and exact/source relocation maps, never generic carry a second
 time. Link/ID rewrites retain the best-effort notice contract of rule 7.
+
+A proposal receiving feedback records full source FB IDs and its received scope in a `Source feedback` body
+section. Handoff carries those references into the spec (feature and bugfix); drafting retains them. Promotion routes
+work and does not prove its completion. Handoff never marks source feedback resolved; the implementer checks source
+resolution during reconciliation under `ADR-feedback-resolution-lifecycle`.
 
 Without handoff, rejection/decomposition return keeps feedback in place until authorized Host deletion. Before any
 such deletion, the Host moves open files once to `specs/<current-month>/feedback/<today>-<name>.md` in the same

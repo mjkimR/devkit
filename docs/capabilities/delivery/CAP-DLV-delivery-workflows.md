@@ -440,3 +440,18 @@ Registered under the `devkit.integration.readiness` entry point as `spec` and se
 3. **Session tasks (`task.kind == "session"`)**: requires a `dev-<slug>` branch with no spec unit for `<slug>`, verifies that no spec or proposal unit touched between `merge_base(target_sha, source_sha)` and `source_sha` is held or incomplete (`spec.md` must be `completed`, `proposal.md` must be `accepted`), and validates structured JSON declarations in `task.claims_json` (`task_kind` in `feature|bugfix`, `effort` in `low|medium|high`, `review`, `tests`, `lint` passed, plus `reproduced: true` and `resolved: true` for `bugfix`).
 4. **Cumulative CI governance rules**: runs `run_project_rules(workspace, snapshot=ci_snapshot, phase=Phase.LINTER)` on the `merge_base..source_sha` snapshot (`mode="ci"`) and requires zero load/evaluation errors and zero blocking violations (`CI_RULES=pass`).
 5. **Deterministic evidence**: returns `Readiness(source_sha, target_sha, evidence=..., reasons=...)` whose coded `Evidence` tuple (`TASK_KIND`, `WORKFLOW`, `UNIT`, `SOURCE_SHA`, `TARGET_SHA`, `STAGE_STATUS`, `HOLD_STATUS`, `SESSION_CLAIMS`, `CI_RULES`) is 100% deterministic from committed Git state, satisfying `IntegrationService`'s pre-merge equality recheck.
+
+## Source feedback at completion
+
+`ADR-feedback-resolution-lifecycle` separates promoted work from verified resolution. Task entry records full FB IDs
+and received scope in a proposal/spec `Source feedback` section or a session's agreed scope. Handoff preserves the
+references and source states; drafting retains them. Source files needing updates belong in implementation/delegation
+boundaries; otherwise the Host applies their dispositions from verified results.
+
+At `living-spec-draft`, review each spec source against the final diff and verification and record its disposition in
+`reconcile.md`. At `report-session`, perform the same review before the commit and report outcomes in the final
+response or PR body, with no new session artifact. Set an open/promoted source resolved only for a fully addressed,
+verified fix, recording destination, implemented outcome and verification evidence. Partial/deferred/unverified
+sources retain state with remaining scope reported; unrelated captured observations stay open. Recheck the task's
+own resolutions after changes invalidate their evidence. This completion obligation is independent of capture
+settings and collect-feedback stage policy, and grants no integration authority or additional workflow gate.

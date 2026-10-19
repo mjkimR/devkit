@@ -53,7 +53,12 @@ targets:
 ### Step 2a: Hand Off Deferred Work
 - Apply the Deferred Work Handoff in the `spec` skill's `references/completion.md` before deleting a source proposal or marking the spec completed, and record the destination in `reconcile.md`. Never transfer unmet requirements still in the agreed scope to make the feature appear complete.
 
-### Step 2b: Sync Entrypoints from the Bundle
+### Step 2b: Resolve Source Feedback
+- Apply [Source feedback resolution](../spec/references/completion.md#source-feedback-resolution) to the spec's
+  explicit source FB IDs. Record resolved items and their verification, or the remaining scope of items left
+  unchanged, in `reconcile.md`. Handoff alone never counts as resolution; unrelated newly captured feedback stays open.
+
+### Step 2c: Sync Entrypoints from the Bundle
 - Run the `spec-entrypoints` skill for this bundle: derive (doc, code) candidates, review them, apply the chosen ones. A document whose `entrypoints` changed is a `modified` target in `reconcile.md`.
 
 ### Step 3: Run Deterministic Lint Gates

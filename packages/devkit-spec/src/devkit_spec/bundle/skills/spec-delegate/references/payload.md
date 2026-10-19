@@ -24,6 +24,10 @@ A reviewer round at `high` (the `spec` skill's `references/review-loop.md`) is a
 
 A Planning or Development worker records its feedback inside its own unit before its last work commit; a Planning run also returns fresh sweep evidence ([run coverage](../../spec-feedback/references/sweep.md#planning-run-coverage)).
 
+Source feedback files explicitly linked by the task and requiring disposition are part of its expected boundaries.
+Include their actual paths in a worker's allowed write scope; otherwise the Host updates them at completion from the
+worker's verified result. The unit directory alone does not authorize edits to source feedback elsewhere.
+
 ## Native worker paths and permissions
 
 Name the absolute assigned worktree, command cwd requirement and every nested-role read scope explicitly; initial

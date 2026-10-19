@@ -20,6 +20,15 @@ Decide in this order and propose the result; the user confirms `task-kind` and `
 - **`session`**: agree the intent in the conversation, no Unit. With a PR the work runs on `dev-<slug>`, else on the current branch (on the base under `ask` integration: `dev-<slug>` or the OK first). A `session` task runs in `direct` or the `cloud-pr` general PR path only; in `local-orchestrated` handle it yourself in `direct`.
 - **Development decides inside the agreement.** A choice inside the agreed goal, scope and contract takes the recommended option and is recorded. Only a problem that cannot be solved without changing the agreement, or at all, stops the work: a worker records it and you resolve it per [worker records](worker-records.md) §3; a `session` task reports it in the conversation or the cloud run's problem report and does not integrate. A change of scope needs the user and a close (§4).
 
+### Source feedback at entry
+
+When the agreed work addresses named feedback, record its full FB IDs and the intended scope in a `Source feedback`
+section of the proposal/spec body; for a session keep them in the agreed conversational scope (no new file).
+Keep that section when drafting a handed-off spec: handoff carries proposal body references and never resolves them.
+Resolve the IDs to actual files before planning boundaries, and include those paths wherever completion needs to
+update them, including delegated write scope. Do not infer sources from a matching target alone. Follow
+[Source feedback resolution](completion.md#source-feedback-resolution) at completion.
+
 ## 3. Raising the depth
 
 Raising is yours to decide (`[ROUTING_POLICY: depth_escalation=auto]`); under `ask` confirm it with the user first. Lowering never happens except through a proposal's handoff. Workers and Cloud Agents never raise it: they report the need as a problem.

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 from conftest import Write
-from proposals.support import MONTH, STAMP, TODAY, accept, spec_dir
+from proposals.support import MONTH, STAMP, TODAY, accept, spec_dir, write_workflow
 
 from devkit_spec.documents import DocumentIndex
 from devkit_spec.errors import ProposalHandoffError, ProposalInvalidError, ProposalTargetExistsError
@@ -27,7 +27,7 @@ def _new(root: Path, slug: str = "review") -> Path:
 
 def test_mixed_feedback_follows_status_and_rewrites_links(workspace: Path, write: Write) -> None:
     bundle = _new(workspace)
-    for state in ("open", "promoted", "dismissed", "forwarded"):
+    for state in ("open", "promoted", "resolved", "dismissed", "forwarded"):
         write(
             f"{bundle.relative_to(workspace)}/feedback/{state}.md",
             _feedback(state, state, "`PROP-review` [context](../proposal.md)\n"),
@@ -37,7 +37,14 @@ def test_mixed_feedback_follows_status_and_rewrites_links(workspace: Path, write
     target = spec_dir(workspace, "review")
     assert sorted(p.name for p in (target / "feedback").iterdir()) == ["open.md"]
     materials = workspace / str(result.materials)
-    assert sorted(p.name for p in (materials / "feedback").iterdir()) == ["dismissed.md", "forwarded.md", "promoted.md"]
+    assert sorted(p.name for p in (materials / "feedback").iterdir()) == [
+        "dismissed.md",
+        "forwarded.md",
+        "promoted.md",
+        "resolved.md",
+    ]
+    for state in ("promoted", "resolved", "dismissed", "forwarded"):
+        assert f"status: {state}" in (materials / f"feedback/{state}.md").read_text()
     content = (target / "feedback/open.md").read_text()
     assert "status: open" in content and "created_at: 2026-10-01" in content
     assert "`SPEC-review`" in content and "[context](../spec.md)" in content
@@ -161,3 +168,20 @@ def test_unreadable_feedback_refused_before_writes(
     with pytest.raises(ProposalInvalidError):
         handoff_proposal(workspace, "review", today=TODAY)
     assert source.exists() and not spec_dir(workspace, "review").exists()
+
+
+@pytest.mark.parametrize("task_kind", ["feature", "bugfix"])
+def test_source_feedback_reference_survives_handoff_without_resolution(
+    workspace: Path, write: Write, task_kind: str
+) -> None:
+    write_workflow(workspace, f"sdd-spec-{task_kind}")
+    proposal = workspace / create_proposal(workspace, "review", today=TODAY, task_kind=task_kind).path
+    accept(proposal)
+    with proposal.open("a") as stream:
+        stream.write("\n## Source feedback\n\n- `FB-source`: address the recorded observation.\n")
+    source = write("specs/2026-10/feedback/20261001-source.md", _feedback("source", "promoted"))
+    before = source.read_text()
+    result = handoff_proposal(workspace, "review", today=TODAY)
+    assert "`FB-source`" in (workspace / result.dir / "spec.md").read_text()
+    assert source.read_text() == before
+    assert not proposal.exists()

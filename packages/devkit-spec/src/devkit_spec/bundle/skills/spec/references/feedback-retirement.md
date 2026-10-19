@@ -5,7 +5,7 @@ The Host owns this operation; a rejection starts no worker and retains feedback 
 A normal handoff routes the feedback itself.
 
 1. Inspect direct `feedback/*.md` before deleting anything. Validate readable frontmatter, path-derived ID,
-   known status (`open|promoted|dismissed|forwarded`), and safe source/destination paths. Keep invalid or unknown
+   known status (`open|promoted|resolved|dismissed|forwarded`), and safe source/destination paths. Keep invalid or unknown
    input in place and report it; never infer that it is settled. Preserve the source Git revision and paths for context.
 2. Plan each `status: open` file into `specs/<current-YYYY-MM>/feedback/<today-YYYYMMDD>-<name>.md`, preserving its
    ID, status and observation date. Settled records remain in Git history. Check all destination paths and

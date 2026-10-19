@@ -375,3 +375,12 @@ def test_proposal_lines_and_records_carry_task_kind_and_effort_hints(workspace: 
     ) == (None, None, None)
     assert "planning_effort" not in records["CAP-CORE-a"] and "dev_effort" not in records["CAP-CORE-a"]
     assert _ids(workspace, "proposal", "--where", "planning_effort=low", "--where", "dev_effort=high") == ["PROP-a"]
+
+
+@pytest.mark.parametrize("status", ["open", "resolved"])
+def test_feedback_resolution_status_filter(docs: Path, write: Write, status: str) -> None:
+    for state in ("open", "promoted", "resolved"):
+        write(f"specs/2026-10/20261001-done/feedback/{state}.md", _doc(f"FB-{state}", status=state))
+    result = _spec("list", "feedback", "--status", status, "--format", "json", workspace=docs)
+    assert result.exit_code == 0
+    assert [d["id"] for d in json.loads(result.stdout)["documents"]] == [f"FB-{status}"]

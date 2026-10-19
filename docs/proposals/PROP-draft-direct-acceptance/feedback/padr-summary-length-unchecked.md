@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-19
 ---
 
@@ -46,3 +46,9 @@ created_at: 2026-10-19
 [VIOLATION: RULE-document-summary severity=error file=.../PADR-direct-acceptance-command-and-handoff-guard.md line=4 message="summary has 320 characters; keep it to one or two sentences (300 at most)"]
 [VIOLATION: RULE-document-summary severity=error file=.../PADR-eligibility-for-direct-acceptance.md line=4 message="summary has 309 characters; ..."]
 ```
+
+- **Disposition**: `SPEC-summary-length-guard`, implementation commit ec04a75: shared summary validation rejects
+  more than 300 stripped characters before spec, proposal or PADR writes. Verified with
+  `pytest packages/devkit-spec/tests/proposals/test_proposal_summary.py -q` as part of a focused 77-test passing
+  run; its library and CLI boundary cases accept 300, reject 301 with ARGUMENT_INVALID targeting --summary,
+  and assert no filesystem changes on rejection.

@@ -5,7 +5,10 @@ description: 'Record observations on repository-owned (optionally upstream) tool
 
 # spec-feedback: Repository-First Feedback Capture
 
-One observation, one file, committed with the work. Feedback files are non-blocking: they stay `status: open` through completion and integration. Promoting, dismissing or forwarding them happens only in a separate feedback-hygiene session the user asks for; this skill only records.
+One observation, one file, committed with the work. This skill only records: new observations stay `status: open`.
+Hygiene promotes, dismisses or forwards selected items. An authorized task resolves only its explicitly linked source
+feedback after implementation and verification, following the `spec` skill's [completion procedure](../spec/references/completion.md#source-feedback-resolution).
+`promoted` means handed to follow-up work; `resolved` means the observation was fully addressed and verified.
 
 ---
 
@@ -57,7 +60,7 @@ Do not record: ordinary task defects (fix them), rejected non-goals, or ideas wi
    - **The assessment is yours**: why you agree or disagree on the merits, never "the user asked for it".
    - `severity: critical` only when the next task in this repository will certainly block at the same point. Simple inconvenience is `blocked` or below.
    - `recurring: true` when you have seen this before in this repository.
-4. **Return to the task.** Do not mention the file as a completion item; `devkit spec list feedback` discovers it. Do not change `status` yourself.
+4. **Return to the task.** Do not mention the file as a completion item; `devkit spec list feedback` discovers it. Capture never changes `status`; source-feedback resolution belongs to task completion.
 
 Before each Planning or Development run's last work commit, capture observed feedback in its proposal or spec, including questions or problems. Handoff carries open files to the spec; deletion without handoff follows the `spec` skill's `references/feedback-retirement.md`.
 

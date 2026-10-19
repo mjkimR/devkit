@@ -33,6 +33,28 @@ Reconcile verification is a `reconcile-check` envelope at `living-spec-draft` at
 
 `session` depth (session: no records) still runs the checks and the effort's review. Its commit is a plain `git commit` before `dev-integration` (the approval covers committed work; a PR is pushed then), without `spec-integrate`, except on the base branch with no PR under `dev-integration = ask`: there start `dev-<slug>`, or get the approval before committing ([git policy](git-policy.md)). Work the user's authorized scope; do not silently abandon remaining work for a session time limit.
 
+## Source feedback resolution
+
+Before reporting completion, review each FB ID explicitly linked in the task's `Source feedback` section or the
+session's agreed scope against the final diff and verification. For a spec, do this in `living-spec-draft` and
+record each outcome in `reconcile.md`; for a session, do it in `report-session` before its commit and report the
+outcomes in the final response or PR body. No additional session artifact is created. This obligation applies even
+when feedback capture is requested-only or `collect-feedback` is off.
+
+- Change an `open` or `promoted` source item to `resolved` only when the authorized implementation fully addresses
+  its observation and the applicable tests/review verify the result. Append a Disposition naming the SPEC ID (or
+  changed paths for a session), the implemented outcome and concrete verification evidence. Preserve prior promotion
+  history. This permission covers the task's explicit sources, not unrelated feedback found by a sweep.
+- A partial, deferred or unverified source keeps its existing state; record its remaining scope and destination in
+  the reconciliation/session report. Required work still in the agreed scope cannot be deferred to claim completion.
+- Handoff, a plan, a passing document check or integration alone is not fix verification. Resolution on the task
+  branch does not assert integration; the implementation and FB update reach the base through normal integration.
+- Recheck resolutions after review fixes or changed inputs. If the task's own resolution no longer has evidence,
+  restore its pre-task state (`open` or `promoted`) and explain the remaining work before reporting completion.
+- Capture never resolves new observations. Dismissal, forwarding and promotion remain hygiene dispositions; a
+  separate hygiene session is not needed to resolve sources within an already authorized task. A source whose path
+  lies outside a delegated write boundary is handled by the Host, never silently edited by the worker.
+
 ## Deferred Work Handoff
 
 Before deleting a source proposal or reporting completion, find concrete work its roadmap or the final scope explicitly retains for later. Each such follow-up MUST be tracked, by default as feedback for Backlog (`/spec-feedback`), or as a draft proposal when concrete enough: link or update a matching open `PROP-...` (`devkit spec search "<topic>" --kind proposal`), else `devkit spec proposal new <slug>`. Record the source, remaining scope, reason for deferral, dependencies or restart conditions, and expected acceptance checks; group work with the same outcome.

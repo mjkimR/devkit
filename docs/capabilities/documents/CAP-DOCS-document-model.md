@@ -62,12 +62,22 @@ lookup commands (`CAP-DOCS-document-lookup`), document search (`CAP-DOCS-documen
 7. **Historical documents**: The files of a spec bundle (`specs/<YYYY-MM>/<bundle>/...`) whose `spec.md` has
    `status: completed` are historical: work history kept in place. Browsing and search MUST hide them unless
    `--history` is passed; the rules check them only when they are named as explicit targets. The bundle's
-   `feedback/` directory is the exception: a feedback file stays `open` until a feedback-hygiene session settles it,
-   so it MUST stay current whatever the bundle's status (`SPEC-open-feedback-and-progress`). Milestones whose status is done or dropped are also historical: hidden from browsing/search by default, resolvable and available with `--history`; rules check them only when explicitly targeted.
+   `feedback/` directory is the exception: observations may remain open after the bundle completes,
+   so feedback of every status MUST stay current whatever the bundle's status (`SPEC-open-feedback-and-progress`). Milestones whose status is done or dropped are also historical: hidden from browsing/search by default, resolvable and available with `--history`; rules check them only when explicitly targeted.
 
 Proposal-local feedback also stays current while a rejected proposal awaits cleanup. Handoff carries open feedback
 into the spec; Host deletion without handoff preserves it in the month-level backlog
 (`CAP-DLV-proposal-incubation`). Existing discovery, resolution and namespace rules apply before and after moves.
+
+### Feedback lifecycle
+
+Feedback status is `open`, `promoted`, `resolved`, `dismissed` or `forwarded`
+(`ADR-feedback-resolution-lifecycle`). Promotion routes an observation to follow-up work; resolution means a fully
+implemented and verified fix. Dismissal records a reason and forwarding requires an actual authorized submission.
+Capture writes open observations and never changes status. Explicitly linked source feedback is resolved during
+spec reconciliation or session completion, with destination, implemented outcome and verification in its Disposition.
+Partial or unverified sources retain their state. Generic list/status filters discover resolved records separately
+from open ones; completion of the enclosing spec never resolves feedback automatically.
 
 ### 3.2 IDs and Kinds
 

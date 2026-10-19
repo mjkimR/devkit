@@ -37,6 +37,8 @@ Read one reference, not both. A defect the session can reproduce and fix without
 - **References**: cite capabilities, stories and ADRs by full ID in backticks (`` `CAP-<AREA>-<slug>` ``), never by Markdown path or a date- or number-based ID. Write example or fixture IDs in a scenario as plain text: in backticks or brackets they are references and must resolve; `related_capabilities` and `related_stories` hold bare `CAP` and `US` IDs that resolve (`RULE-document-reference`).
 - **Invariants**: review `docs/architecture/` and the affected capabilities. If a `MUST` has to change, say that an ADR is required before implementation.
 - **No questions during Development**: resolve what is unclear from the agreed intent, the issue, the proposal and the code; decide with the recommended option and record each inference in `spec.md` as an assumption. A point that needs the agreed goal, scope or contract changed is a problem for the Host, never a question to the user or a `[NEEDS CLARIFICATION]` marker. Explicit user instructions take precedence.
+- **Source feedback**: preserve the full FB IDs and intended scope from inline Planning or the carried proposal in
+  a `Source feedback` section; do not trim them as incidental notes. Include the source files in task boundaries.
 - **Only what the change needs**: drop an optional output section that does not apply instead of writing "N/A".
 - **Self-validation** before finishing: completeness (personas, inputs, outputs, edge cases), clarity (every AC measurable), consistency (non-goals and invariants respected), scenario IDs unique.
 
