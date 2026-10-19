@@ -1,12 +1,12 @@
 ---
 id: PROP-integration-follow-ups
-title: "Integration follow-ups: base advances, auto dispatch, pull request cleanup and host confirmation adapters"
-summary: "Plans four integration extensions: tolerating base advances during approval, policy-driven dispatch under dev-integration auto, pull request and squash or rebase cleanup, and confirmation adapters for hosts beyond Codex."
+title: "Integration base advances: merge commits, effective policy digest and readiness on the result"
+summary: "Lets an approved local integration absorb target commits that land during its confirmation: tasks land as merge commits built outside the base checkout, the approval binds the effective integration policy instead of raw file bytes, and readiness runs again on the merged result."
 status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-19
 target_area: integration/
 priority: high                        # critical | high | medium | low
-size: XL                              # S | M | L | XL
+size: L                               # S | M | L | XL
 planning_effort: high                 # low | medium | high (hint for Planning)
 dev_effort: high                      # low | medium | high (hint for Development)
 boundaries:
@@ -22,10 +22,13 @@ task_kind: feature                    # feature | bugfix: the spec follows sdd-s
 workflow: sdd-proposal
 ---
 
-# [PROP-integration-follow-ups] Integration follow-ups: base advances, auto dispatch, pull request cleanup and host confirmation adapters
+# [PROP-integration-follow-ups] Integration base advances: merge commits, effective policy digest and readiness on the result
 
 - **Merged draft**: this draft also carries the former `integration-base-advance` draft (Backlog merge), whose
   questions are E1 to E6 below.
+- **Split (Planning, `answer-01.yaml` q1-split)**: this proposal keeps the base advances (E1 to E6). Pull request
+  cleanup (Q3) is `PROP-integration-pull-request-cleanup` and host confirmation (Q4) is
+  `PROP-integration-host-confirmation`, both drafts; auto dispatch (Q2) stays as the open feedback it came from.
 - **Related**: `CAP-INT-mcp-services`, `CAP-WT-task-worktrees`, `ADR-integration-approval-asserted`.
 
 ## 1. Background & Hypothesis
@@ -33,7 +36,8 @@ workflow: sdd-proposal
 ### 1.1 Problem
 
 `SPEC-hook-driven-integration-cleanup` shipped approval-bound local integration under `dev-integration = ask` and
-deferred three extensions (its Non-Goal 3); daily use since then added a fourth problem. Each is recorded as feedback:
+deferred three extensions (its Non-Goal 3); daily use since then added a fourth problem. Each is recorded as feedback;
+this proposal now addresses the first, and 3.1 says where the other three went:
 
 - **Base advances** (`FB-integration-stale-on-base-advance`): an accepted `integration_integrate` confirmation was
   refused with `INTEGRATION_REQUEST_STALE` because another activity's commit landed on `main` during the confirmation.
@@ -59,13 +63,15 @@ since completed local integrations through `integration_integrate` with `authori
 ### 1.2 Hypothesis
 
 The four extensions share the integration service, its confirmation binding and the scoped cleanup, so one Planning
-can settle their common contract (what an approval binds, how execution may adapt, which authority runs it) and
-decide whether they are delivered together or split. Base advances affect every integration today, so they are the
-first candidate.
+could settle their common contract and decide whether they are delivered together or split. Planning split them
+(3.1): base advances affect every integration today and auto dispatch would depend on them, so they are delivered
+first, here. An approval can then bind the approved source, the confirmation target and its descendants within one
+call, and land a clean merge with readiness checked again on the result, without a second confirmation.
 
 ## 2. Technical Spike Questions
 
 - **Q1 (Split and order)**: One spec or several? Which extension comes first, and which depends on another?
+  Decided in 3.1.
 
 Base advances:
 
@@ -90,7 +96,7 @@ Base advances:
 - **E6 (Bounds)**: whether the executor retries when the base advances again during its own run (under the existing
   Git common-directory lock, other devkit executors are already serialized), and how many times.
 
-The deferred extensions:
+The deferred extensions, kept here as asked at the start of Planning; 3.1 moved each out of this proposal:
 
 - **Q2 (Auto dispatch)**: which readiness evidence must hold before an `authority="policy-auto"` integration runs
   without a prompt, and how is that authority recorded?
@@ -109,22 +115,23 @@ Spike evidence: `envelopes/scout-01.yaml`, the option comparison in
 
 ### 3.1 Split and order (Q1)
 
-Recommended (pending the user's answer): this proposal keeps the base advances (E1 to E6), is retitled to that
-scope before `plan-accept`, and goes to `plan-accept`. The other extensions are handled as follows; their order is a
-preference, not a dependency, except where named:
+Decided (`answer-01.yaml` q1-split): this proposal keeps the base advances (E1 to E6), is retitled to that scope and
+goes to `plan-accept`. The other extensions are handled as follows; their order is a preference, not a dependency,
+except where named:
 
 1. **Base advances** (this proposal): every integration is affected today; Q2 depends on it (an unattended run
    would otherwise be refused on the first base advance).
-2. **Pull request and squash or rebase cleanup** (Q3): a child draft. It needs its own proof of tree or patch
+2. **Pull request and squash or rebase cleanup** (Q3): the draft `PROP-integration-pull-request-cleanup`. It needs its own proof of tree or patch
    equivalence for squash and rebase merges (local merge commits keep ancestry, so 3.2 does not provide it), remote
    authority in the form, and must weigh `ADR-branch-guards-and-close-discard` (which supersedes
    `ADR-worktree-and-pull-request-levels`).
 3. **Auto dispatch** (Q2): an `authority="policy-auto"` integration contradicts accepted texts verbatim
    (`ADR-integration-approval-asserted`: "no policy value grants commit, merge, publication or deletion authority";
-   also `CAP-DLV-project-policy`, `CAP-DLV-delivery-workflows`, `CAP-INT-mcp-services`). It becomes a child draft
-   only once the user decides that a policy may grant merge and deletion authority (then its Planning ends in a
-   superseding ADR); until then it stays as the open feedback it came from.
-4. **Host confirmation** (Q4): a child draft, independent of 1 to 3. The Claude Code terminal CLI is already a
+   also `CAP-DLV-project-policy`, `CAP-DLV-delivery-workflows`, `CAP-INT-mcp-services`). No draft is created: it
+   stays as the open feedback it came from (`FB-auto-integration-dispatch`) until the user decides whether a policy
+   may ever grant merge and deletion authority; a draft created then ends its Planning in a superseding ADR.
+4. **Host confirmation** (Q4): the draft `PROP-integration-host-confirmation` (milestone
+   `MS-multi-host-native-integration`), independent of 1 to 3. The Claude Code terminal CLI is already a
    verified native path (`SPEC-claude-terminal-mcp-approval`, docs only); the `Confirmation` callable in
    `devkit.host.mcp` is host-agnostic form elicitation. What is left is research-led: a
    `devkit host mcp setup --host claude` adapter and verification of Claude Desktop, the VS Code extension, the Agent
@@ -135,7 +142,7 @@ preference, not a dependency, except where named:
 Terms: the **confirmation target** is the target SHA shown in the form; a **build** is one attempt that reads the
 current target (the **build target**), builds the **result commit** and fast-forwards the base onto it.
 
-- **Merge method (E1)**: a new `[worktree] merge = "no-ff" | "ff-only"` key, default `"no-ff"`, read by the
+- **Merge method (E1)**, decided (`answer-01.yaml` e1-merge-method): a new `[worktree] merge = "no-ff" | "ff-only"` key, default `"no-ff"`, read by the
   integration service and `devkit worktree finish --merge`; `ff-only` in either the base's or the source's policy
   wins (like `delete_branch = false`). `no-ff` lands a merge commit whose first parent is the target and second the
   approved source tip: one `--first-parent` line per task, and every SHA the unit's records cite stays reachable and
@@ -192,7 +199,7 @@ current target (the **build target**), builds the **result commit** and fast-for
 - **Prepare scope**: apart from the cleanup-only request above, `prepare` keeps today's requirement that the source
   contains the target (an activity branch cut
   before later target commits integrates them first through `spec-integrate` Step 1 and re-verifies). Only advances
-  after `prepare` are tolerated, so the gap that question T discloses is limited to commits landed during the
+  after `prepare` are tolerated, so the gap the tests disclosure covers is limited to commits landed during the
   confirmation and execution.
 - **Recovery after a failed or unknown merge step**: the base containing the latest result (the source under
   `ff-only`) means merged; the base equal to the last build target means not merged; anything else is stale or
@@ -225,9 +232,9 @@ current target (the **build target**), builds the **result commit** and fast-for
   inside the unit directory since the merge base is a reason), adds a `SPEC_POLICY` evidence item (a digest of the
   parsed `[tool.spec]` of the base and the result) that it does not declare target-bound, so evidence equality refuses
   a policy change, and runs its CI rules on the result tree with the diff from the build target.
-- **Tests on the landed tree**: pending the user's answer (question T). Recommended: tests are not run on the result
-  (the executor never runs commands); the form and the integration report say that tests and review ran on the
-  source and that only the CI rules ran on the result.
+- **Tests on the landed tree**, decided (`answer-01.yaml` t-tests-on-result): tests are not run on the result (the
+  executor never runs commands); only the CI rules run on it, and the form and the integration report say that tests
+  and review ran on the source only.
 - **Confirmation text (E5)**: the form says "Approve local integration of <branch> into <target> with a merge
   commit?", shows the confirmation target SHA, and states that later commits on the target are merged in without
   another confirmation only if the merge is clean, the integration policy is unchanged and readiness passes again
@@ -237,8 +244,8 @@ current target (the **build target**), builds the **result commit** and fast-for
 - **Bounds (E6) and approval lifetime**: one build per call. Advances during the confirmation are absorbed by that
   build; with the CLI taking the lock every devkit executor is serialized, so only a non-devkit ref write can move the
   target between the build and its fast-forward, which is `INTEGRATION_TARGET_MOVED` with nothing changed (no
-  in-call retry). Pending the user's answer (question A), recommended:
-  the approval tolerates target advances only within that call; `integration_resume` continues an approved request
+  in-call retry). Decided (`answer-01.yaml` a-approval-lifetime): the approval tolerates target advances only within
+  that call; `integration_resume` continues an approved request
   only onto the last build target (its CAP-INT section 5 use, permission failures and cleanup after the merge), and a
   later target needs a new confirmation.
 - **Prepare builds nothing**: `integration_prepare` and `plan_finish` stay read-only; the prospective result tree is
@@ -255,7 +262,7 @@ work.
 
 ### 3.3 Impact and coordination
 
-- **Impact (base advances)**: `packages/devkit/src/devkit/integration/` (request and execution context, policy
+- **Impact**: `packages/devkit/src/devkit/integration/` (request and execution context, policy
   digest, builds, recovery, confirmation text, new codes `INTEGRATION_TARGET_MOVED`, `INTEGRATION_RECEIPT_CONFLICT`, the cleanup-only request), `packages/devkit/src/devkit/worktree/` (`config.py`
   merge key, `planning.py`, `lifecycle.py` `finish`, the merge-commit build, the `WORKTREE_MERGE_NOT_FF` fix text and `WORKTREE_MERGE_CONFLICT`, `WORKTREE_GIT_UNSUPPORTED` and `WORKTREE_COMMIT_FAILED`, lock, push fix, CLI help for `--merge`, module docstring),
   devkit-spec's readiness provider (`devkit_spec/integration.py`) and scoped cleanup (`devkit_spec/cleanup.py`), its
@@ -265,8 +272,10 @@ work.
   `docs/development/reference/integration.md` and `worktree.md`. No change to `devkit.host` (packages/devkit-dist).
   Accepted ADRs are not changed; the handoff promotes this proposal's PADRs.
 - **Milestone**: `MS-multi-host-native-integration`'s exit condition says the approval is "bound to the verified
-  source and target commits"; with 3.2 it binds the confirmation target and its descendants. The milestone is the
-  user's to change: asked at `plan-accept`, not rewritten here.
+  source and target commits"; with 3.2 it binds the confirmation target and its descendants within one call.
+  Decided (`answer-01.yaml` m-milestone-wording): Development updates the exit condition during reconcile, in the
+  same change, to "bound to the verified source commit and the confirmation target and its descendants"; Planning
+  does not edit the milestone.
 - **Coordination**: none. The devkit-dist package separation is complete (`SPEC-devkit-dist-package-separation`
   completed, its branch gone); `integration/` and `worktree/` are in `packages/devkit` (devkit-agt) and `host/` in
   `packages/devkit-dist`.
@@ -274,6 +283,7 @@ work.
 ## 4. Lifecycle & Retirement Criteria
 
 - Preliminary decisions: `devkit spec proposal padr integration-follow-ups "<title>"`.
-- If Planning splits the work: decompose into child drafts with `--decomposed-from PROP-integration-follow-ups`.
+- Split done in Planning (3.1): the child drafts were created with `devkit spec proposal new` and name this proposal
+  in their body; `--decomposed-from` refuses a source in Planning (`SPEC_PROPOSAL_IN_PLANNING`).
 - On acceptance (`plan-accept`): hand off with `devkit spec proposal handoff integration-follow-ups`.
 - On rejection: `status: rejected` with the user's reason in the commit message.

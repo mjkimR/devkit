@@ -38,7 +38,7 @@ commits, most of them records, which its envelopes cite by SHA.
 
 ## 4. Decision Outcome
 
-`[worktree] merge = "no-ff" | "ff-only"`, default `"no-ff"`, for the integration service and
+`[worktree] merge = "no-ff" | "ff-only"`, default `"no-ff"` (user decision), for the integration service and
 `devkit worktree finish --merge`. Under `no-ff` the result commit is built in the object store with the target as
 first parent and the approved source tip as second, under a devkit-composed message, and the base only
 fast-forwards to it. Without an advance the tree is the source tree (`commit-tree <source>^{tree}`); with one the
@@ -64,7 +64,9 @@ otherwise; it takes the integration lock in its command entry. `ff`, squash and 
   contains the latest result commit".
 - One extra commit per integration even when the target did not move.
 - Commit-msg hook trailers (DCO, Change-Id) are not added to the merge commit.
-- The `WORKTREE_PUSH_REJECTED` fix stops recommending `git pull --rebase`: `--rebase=merges` if a fixture shows it
-  keeps the unit's SHAs, else `--no-rebase` with its first-parent cost documented.
+- The `WORKTREE_PUSH_REJECTED` fix stops recommending `git pull --rebase`: `git pull --rebase=merges` if a fixture
+  shows it keeps the unit's SHAs, else `git fetch <remote> <ref>` then `git merge --no-ff -m "chore(merge): integrate
+  <remote>/<ref> into <target>" FETCH_HEAD` (`git pull` has no message option), with its first-parent cost
+  documented.
 - Options also weighed: a scratch detached worktree running `git merge --no-ff` (hooks run, older Git works, could
   host tests) lost on checkout cost, a temporary worktree to clean up and the executor's no-commands rule.

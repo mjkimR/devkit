@@ -43,9 +43,11 @@ the build target immediately before the fast-forward (else `INTEGRATION_TARGET_M
 reasons and evidence equal to the approved evidence except the codes it declared target-bound at confirmation (the
 declared set is digested); devkit-spec declares `TARGET_SHA` and `RESULT_SHA`, evaluates the unit from the source
 tree, binds its `[tool.spec]` policy through a source-bound `SPEC_POLICY` item and runs its CI rules on the result
-tree. `prepare` still requires the source to contain the target, so only advances after it are tolerated. Tests are not re-run on the result
-(pending the user's answer); the form and report say so. One build per call (no in-call retry); the approval's
-lifetime is pending the user's answer (recommended: within that call; resume only onto the last build target).
+tree. `prepare` still requires the source to contain the target, so only advances after it are tolerated. Tests are not re-run on the result:
+only the CI rules run on it, and the form and the integration report say that tests and review ran on the source
+only (user decision). One build per call (no in-call retry); the approval tolerates target advances only within the
+integrate call that asked for it (user decision): `integration_resume` continues only onto the last build target, and
+a later target needs a new confirmation.
 Recovery: the base containing the latest result means merged, equal to the last build target means not merged,
 anything else is stale or ambiguous.
 
@@ -55,4 +57,5 @@ anything else is stale or ambiguous.
 - Readiness runs twice per integration (prepare and the build); CI rules cost is bounded by the diff.
 - A semantic break that no CI rule catches can land after a clean merge of a later target; main's own CI finds it.
 - The approval's meaning changes from "this target" to "this source onto the target as it will be, under these
-  conditions"; `CAP-INT-mcp-services` section 2 is rewritten accordingly.
+  conditions, within one call"; `CAP-INT-mcp-services` section 2 is rewritten accordingly, and Development updates
+  the exit condition of `MS-multi-host-native-integration` to the same binding (user decision).
