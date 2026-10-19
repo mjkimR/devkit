@@ -327,14 +327,15 @@ Extension keys devkit does not interpret: `x-execution` (`isolated`), `x-invocat
 (`light-medium`, `general-high`, `high-reasoning`; never a host model name) and `x-git-actions` (`[read]` for every
 role but the two workers, `[read, commit]`).
 
-Each role's reasoning effort is preset from its model profile in the host blocks, with no model name
-(`ADR-role-effort-presets`): `effort` under `claude-code` and `model_reasoning_effort` under a `codex` block that is
-not `unsupported`, at `low`, `medium` or `high` only; Antigravity has no such key and the two workers set none, so
-they run at the session's effort. The preset is independent of `activity-effort` and applies only when the projected
-agent is spawned: a role the main session runs itself (Codex `emulated` or a main-session substitute) uses the
-session's effort. On Claude Code a per-call `effort` or `CLAUDE_CODE_EFFORT_LEVEL` overrides the preset; on Codex
-the preset wins over a spawn value. `packages/devkit-spec/tests/test_role_contracts.py` pins role, profile and preset
-for every contract.
+The four read-only roles preset a reasoning effort in their host blocks, with no model name
+(`ADR-role-effort-presets`): `medium` for the `light-medium` profile, `high` for `general-high` and `high-reasoning`,
+as `effort` under `claude-code` and `model_reasoning_effort` under a `codex` block that is not `unsupported`, at
+`low`, `medium` or `high` only. Antigravity has no such key. The two workers set none, whatever their profile, so
+they run at the session's effort like the Host whose work they take over. The preset is independent of
+`activity-effort` and applies only when the projected agent is spawned: a role the main session runs itself (Codex
+`emulated` or a main-session substitute) uses the session's effort. On Claude Code a per-call `effort` or
+`CLAUDE_CODE_EFFORT_LEVEL` overrides the preset; on Codex the preset wins over a spawn value.
+`packages/devkit-spec/tests/test_role_contracts.py` pins role, profile and preset for every contract.
 
 | Role | Skill | Model profile | Reasoning effort | Writes | Envelope kind |
 | --- | --- | --- | --- | --- | --- |
