@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: Implement the agreed affected-test merge policy and changed-head nightly full
+  CI.
+by: user
+at: '2026-10-19T09:22:33.130702Z'
