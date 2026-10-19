@@ -1,0 +1,30 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T08:15:24.075877Z'
+status: completed
+summary: Implemented accepted Codex native worker contracts through specify, build, independent code review, Living Spec reconciliation and feedback. Both source and installed projections are emulated/workspace-write; trust-aware fallback, absolute paths, scoped approvals and truthful partial failure are aligned. No open findings; stop before dev-integration. Host full repository suite and final cumulative/base validation remain pending.
+findings: []
+assumptions:
+- Medium Development; native generic worker explicitly emulates the managed contract under accepted experiment; named nested reviewers use emulated path boundaries and absolute read scopes.
+- No source changed after independent code review; later capability summary/wrapping and reconcile were independently verified. Existing subagent entrypoints retained; procedure/test/receipt join candidates rejected.
+- Each sibling/source/registry/sync/Git mutation and necessary verification requested its own narrow approval; no broad prefix, host settings or trust edits.
+unverified_areas:
+- Host full suite, final cumulative ancestry/boundary/clean-base validation and dev-integration remain pending.
+- Fresh-host named-role loading, denied approval, failed emergency preservation and other host/version behavior were not live tested; deterministic tests cover instruction branches only.
+checks:
+  tests: PASS 125 targeted actual role/projection, distribution renderer and bundle-budget tests; no warnings
+  build: PASS just smoke built all wheels and passed consumer CLI, hooks, worktree, SDD and runtime-only scenarios
+  lint: PASS just lint-check devkit-spec; ruff check and format
+  types: PASS just check devkit-spec; 0 errors and 0 warnings
+  rules: PASS cumulative rules --ci --base 6bbf88f55d836b675600389f2784041d35232535; zero errors/warnings
+  review: PASS independent code-reviewer review-01.yaml; no findings
+  reconcile: PASS independent reconcile-check-01.yaml; no findings; sole target resolved
+  sync: PASS normal source sync committed receipt; actual installed worker TOMLs valid; status 224 ok/no drift/errors; sync-check unchanged
+  full_repository_suite: SKIP Host will run once on returned reviewed final HEAD before integration
+  feedback: PASS observed sweep; 0 new and 2 duplicates; no automatic approval-review rejection
+  optional_scope_query: SKIP default-sandbox shared-lock access unavailable; stopped without retry; required approved scope updates passed overlaps=0
+diff_scope:
+  base: 6bbf88f55d836b675600389f2784041d35232535
+  head: 2344b072d62e7113015c7ccf755e35a981c60d22
