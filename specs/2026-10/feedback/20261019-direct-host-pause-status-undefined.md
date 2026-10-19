@@ -18,7 +18,7 @@ created_at: 2026-10-19
 
 ## 1. Friction / Question (friction, question)
 
-- **Context**: The round-5 `challenger` of `PROP-worktree-host-compatibility` found that its Development, run in
+- **Context**: The round-5 `challenger` of ~~`PROP-worktree-host-compatibility`~~ found that its Development, run in
   `direct`, must pause mid-activity while the user runs a live Codex turn the user agreed to in Planning. The
   proposal had to say how that pause is recorded.
 - **Expectation**: `worker-records.md` says which status a `direct` Host's `worker` envelope takes when it stops for
@@ -42,7 +42,7 @@ created_at: 2026-10-19
 - **Versions**: devkit-spec on `main` at dfea030; branch `plan-worktree-host-compatibility`.
 - **Conditions**: `high` Planning, recovery turn after a review-loop cap hand-over.
 - **Workarounds Attempted**: none other than the interpretation above.
-- **Related Assets**: `envelopes/challenger-05.yaml` finding 2; `PADR-codex-process-worker` §4 The live turn itself;
+- **Related Assets**: `envelopes/challenger-05.yaml` finding 2; ~~`PADR-codex-process-worker`~~ §4 The live turn itself;
   `packages/devkit/src/devkit/workflow/unit/envelope/model.py` (`hold`).
 
 ## Evidence
@@ -52,3 +52,5 @@ worker-records.md §1: "in `direct` mode you write it for your run whenever you 
 worker-records.md §1: "A `completed` envelope never carries a problem, and a `needs_input` one always carries questions or a problem"
 sdd-spec-feature.md: "Only a problem that cannot be solved without changing the agreed goal, scope or contract stops the work"
 ```
+
+Historical source: Git `1b8478093a44cf2d0b74c412bffc93f259459ef0:docs/proposals/PROP-worktree-host-compatibility/feedback/direct-host-pause-status-undefined.md`; relative evidence paths refer to that proposal bundle.

@@ -18,7 +18,7 @@ created_at: 2026-10-19
 
 ## 1. Friction / Question (friction, question)
 
-- **Context**: A `high` Planning turn of `PROP-worktree-host-compatibility` folded the user's answers and had to
+- **Context**: A `high` Planning turn of ~~`PROP-worktree-host-compatibility`~~ folded the user's answers and had to
   re-run the bounded review loop on what changed. Its three earlier `challenger` rounds were recorded before the
   high-effort review loop spec integrated on `main`: their summaries carry no `round <N>;` marker and their findings
   carry `high`/`medium` severities instead of `P1`/`P2`/`P3`. The `plan-` branch still lacks `references/review-loop.md`;
@@ -54,3 +54,5 @@ review-loop.md, section 1: "Counts are read from these markers, never from new f
 challenger-03.yaml: summary: 'Third round: no high finding; ...'  severity: medium
 git -C <worktree> ls-tree plan-worktree-host-compatibility -- .../skills/spec/references/review-loop.md -> no output
 ```
+
+Historical source: Git `1b8478093a44cf2d0b74c412bffc93f259459ef0:docs/proposals/PROP-worktree-host-compatibility/feedback/review-loop-round-count-across-procedure-change.md`; relative evidence paths refer to that proposal bundle.

@@ -25,4 +25,6 @@ are required.
 
 Deferred work: portable worktree access for workers on Codex and Antigravity, and the choice among host access
 configuration, an in-repository worktree, a worker process per worktree or host-native isolation, is retained in
-`PROP-worktree-host-compatibility`.
+~~`PROP-worktree-host-compatibility`~~.
+
+Historical proposal source: Git `1b8478093a44cf2d0b74c412bffc93f259459ef0:docs/proposals/PROP-worktree-host-compatibility/`.

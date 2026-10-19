@@ -44,7 +44,7 @@ created_at: 2026-10-19
 - **Workarounds Attempted**: `-c sandbox_workspace_write.exclude_slash_tmp=true` and a changed `TMPDIR` had no effect
   under the `:workspace` profile; the in-scope lab worked.
 - **Related Assets**: `planning-worker` Write boundaries; `spec-delegate` `references/payload.md`;
-  `MAT-worktree-host-spike-evidence` §2.2.
+  ~~`MAT-worktree-host-spike-evidence`~~ §2.2.
 
 ## Evidence
 
@@ -55,3 +55,5 @@ planning-worker.md, Write boundaries:
 Probe under /private/tmp: "1 root=base: write file in sibling wt rc=0"
 Probe under <worktree>/docs/proposals/PROP-<slug>/.lab: "1 root=base: write file in sibling wt rc=1"
 ```
+
+Historical source: Git `1b8478093a44cf2d0b74c412bffc93f259459ef0:docs/proposals/PROP-worktree-host-compatibility/feedback/planning-probe-lab-location.md`; relative evidence paths refer to that proposal bundle.

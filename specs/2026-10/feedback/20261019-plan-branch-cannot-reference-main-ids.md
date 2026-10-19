@@ -49,3 +49,5 @@ created_at: 2026-10-19
  message="no document has the ID ADR-role-effort-presets"]
 [VIOLATION: RULE-document-reference ... message="no document has the ID PROP-worker-range-validation"]
 ```
+
+Historical source: Git `1b8478093a44cf2d0b74c412bffc93f259459ef0:docs/proposals/PROP-worktree-host-compatibility/feedback/plan-branch-cannot-reference-main-ids.md`; relative evidence paths refer to that proposal bundle.

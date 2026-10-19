@@ -33,7 +33,7 @@ Handed off from the orchestration-mode proposal; spike findings are kept in sect
 ## 3. Non-Goals
 
 1. **Scope Excluded**: worker support on Codex and Antigravity beyond the contract's host statuses, and any change
-   to where worktrees live or how hosts grant directory access; `PROP-worktree-host-compatibility` investigates them.
+   to where worktrees live or how hosts grant directory access; ~~`PROP-worktree-host-compatibility`~~ investigates them.
 2. **Scope Excluded**: task-level fan-out inside one spec bundle; one parallel item is one unit with its own bundle
    and worktree.
 3. **Scope Excluded**: workflow stage changes; implementation stages keep `role: developer`, so direct mode never
@@ -97,3 +97,5 @@ Handed off from the orchestration-mode proposal; spike findings are kept in sect
   order.
 - `spec` and `spec-delegate` have no byte headroom: the router gets no new row (the constitution names the mode),
   and `spec-delegate` moves its per-role payload table to a reference.
+
+Historical proposal source: Git `1b8478093a44cf2d0b74c412bffc93f259459ef0:docs/proposals/PROP-worktree-host-compatibility/`.

@@ -18,8 +18,10 @@ targets:
   `x-git-actions` per role, the worker row, and the worker paragraph (complete committed result, range validation from
   the last accepted head, block without discarding); the envelope table records worker envelopes as the host's
   validations.
-- `PROP-worktree-host-compatibility`: Q1 now covers write access to the Git common directory, since workers commit.
+- ~~`PROP-worktree-host-compatibility`~~: Q1 now covers write access to the Git common directory, since workers commit.
   Its dated material keeps the earlier assumption as history.
 - No story changes: no story describes the worker. No architecture changes: roles and their contracts are described
   in `CAP-DLV-delivery-workflows`.
 - No deferred work is retained: mechanical enforcement of the block (a workflow check) is a non-goal of this spec.
+
+Historical proposal source: Git `1b8478093a44cf2d0b74c412bffc93f259459ef0:docs/proposals/PROP-worktree-host-compatibility/`.

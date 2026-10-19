@@ -18,9 +18,9 @@ Evidence gathered in the first Planning turn (worktree at 97cdcd8). Paths are re
 - Repository records: 25 `reverify-*.yaml` and 11 `challenger-*.yaml` under `specs/` and `docs/`. Renaming the
   reverify `review` key would make every existing reverify malformed, so the key stays.
 - Reproductions: `FB-challenger-findings-stay-open` (`challenger-01 ... open_findings=15`), and the
-  `PROP-worktree-host-compatibility` feedback envelopes `feedback-01..03` (challenger-04 and -05 open after the fold).
+  ~~`PROP-worktree-host-compatibility`~~ feedback envelopes `feedback-01..03` (challenger-04 and -05 open after the fold).
 - Round count: `FB-review-loop-round-count-across-procedure-change` (open, in
-  `docs/proposals/PROP-worktree-host-compatibility/feedback/`). Its `worker-02.yaml` counted three unmarked rounds as
+  `specs/2026-10/feedback/20261019-review-loop-round-count-across-procedure-change.md`). Its `worker-02.yaml` counted three unmarked rounds as
   rounds 1 to 3 and recorded round 4 as the cap round. `references/review-loop.md` section 1: "Counts are read from
   these markers"; nothing says what an unmarked round counts as, or whether folding user answers opens a new batch.
 
@@ -60,3 +60,5 @@ Evidence gathered in the first Planning turn (worktree at 97cdcd8). Paths are re
 - Gate behavior (`docs/capabilities/gate/`): error-severity violations refuse the commit (`GATE_RULES_FAILED`);
   warnings pass with `GATE_RULES_WARNINGS`.
 - Namespaced docs roots (`docs/packages/<name>/`, `[[tool.spec.namespaces]]`) hold their own `capabilities/`.
+
+Historical proposal source: Git `1b8478093a44cf2d0b74c412bffc93f259459ef0:docs/proposals/PROP-worktree-host-compatibility/`.

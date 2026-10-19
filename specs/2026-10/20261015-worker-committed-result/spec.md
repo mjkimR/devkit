@@ -35,7 +35,7 @@ complete unit of work that passes the commit gate; a result that fails validatio
 2. **Scope Excluded**: pushing, opening or merging pull requests from the worker; the execution environment does that.
 3. **Scope Excluded**: a workflow check or devkit feature that enforces the block; the host procedure and the worker
    envelope carry it.
-4. **Scope Excluded**: Codex or Antigravity worker support (`PROP-worktree-host-compatibility`).
+4. **Scope Excluded**: Codex or Antigravity worker support (~~`PROP-worktree-host-compatibility`~~).
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
@@ -77,3 +77,5 @@ complete unit of work that passes the commit gate; a result that fails validatio
 - **When** `devkit spec resolve ADR-worker-delivers-committed-result` runs
 - **Then** it resolves to an `accepted` decision stating the principle, the worker's Git actions, the range validation
   and the block-not-discard rule
+
+Historical proposal source: Git `1b8478093a44cf2d0b74c412bffc93f259459ef0:docs/proposals/PROP-worktree-host-compatibility/`.
