@@ -2,7 +2,7 @@
 id: PROP-envelope-record-gaps
 title: 'Close gaps in Planning records: folded challenger findings, settled assumptions, proposal boundaries'
 summary: Lets folded challenger findings close in the record, gives answer envelopes a place for assumptions the user settled, and checks that a proposal's boundaries name existing areas, so Planning records match what actually happened.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                       # draft | reviewing | accepted | rejected
 created_at: 2026-10-19
 target_area: delivery/
 priority: medium                      # critical | high | medium | low
