@@ -163,6 +163,15 @@ fields and rows per role), `spec-specify/references/feature.md` and
 `bugfix.md`, `spec-feedback/references/sweep.md` and `template.md`, `spec-rule/references/config.md` and
 `templates.md`.
 
+### Repository verification policy
+
+`spec-plan`, `spec-review` and `spec-integrate` follow the consuming repository's verification policy. They plan and
+run affected tests when supported, preserve selector full-suite fallbacks and frontend checks, and require a local
+full suite only when the repository or selector calls for it. Delegated reviewers reuse valid results and run
+only missing or stale checks. Integration incorporates a moved base and resolves conflicts before checking the
+final content; merging unchanged verified content does not require post-merge tests. Lint, type and cumulative
+governance checks remain required. Nightly/release coverage is a repository choice, not a bundle-wide schedule.
+
 ### Feedback capture policy
 
 `spec-feedback` reads `FEEDBACK_POLICY` from `devkit spec policy` (`CAP-DLV-project-policy`). Repository-owned
