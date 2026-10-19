@@ -14,6 +14,7 @@ boundaries:
     - packages/devkit-spec/src/devkit_spec/bundle/subagents/
     - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-delegate/
     - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-orchestrate/
+    - packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/worker-records.md
     - packages/devkit-spec/tests/
     - docs/capabilities/delivery/
   excludes:
@@ -28,7 +29,7 @@ workflow_hash: sha256:90918c632715461d07f99f683b8381bdbe6381ad6689a7575a72c002c1
 ## 1. Background & Hypothesis
 
 `SPEC-orchestration-mode` has worker subagents implement in their own devkit worktree
-(`<parent of base>/<base name>-wt-<slug>`). Its spike found that no host gives a subagent its own working directory:
+(`<parent of base>/<base name>-wt-<branch>`). Its spike found that no host gives a subagent its own working directory:
 on Claude Code a worker shares the session's directory and must use absolute paths and `git -C`, and the session must
 already allow the sibling path; Codex `workspace-write` confines writes to the project root, which excludes the
 sibling worktree; Antigravity has no documented working-directory control. Orchestration mode therefore starts as
@@ -103,12 +104,17 @@ Evidence and the option table: `MAT-worktree-host-spike-evidence`; scout returns
 
 - `PADR-worktree-access-preconditions`: worktrees stay sibling checkouts; devkit projects no host access settings
   and sets no repository Git profile; each host's access is a documented session precondition, marked observed or
-  documented, which the Host probes before the first worker turn in a worktree; a refusal after the probe stops the
-  worker through its problem procedure, and an uncommittable one is recorded by the Host.
+  documented, which every worker probes with its own tools before it writes; a refused probe ends the turn with
+  nothing written, and a worker refused later stops through its problem procedure or, when even its emergency commit
+  is refused, is reported by the Host as stopped with its uncommitted paths.
 - `PADR-host-native-worktrees-excluded`: `devkit worktree start` stays the only source of an activity's worktree.
 - `PADR-codex-process-worker` (only for `codex-worker-scope` = `process-worker`): on Codex a worker turn runs as a
   `codex exec` process rooted in its worktree with both git dirs granted, shipped only when one live turn passes;
-  a failed turn ships the recorded reasons only.
+  a failed turn ships the recorded reasons only. For `keep-unsupported` the turn recording the answer deletes it and
+  its references.
+- Effort by answer: `process-worker` keeps `dev_effort: high` and `size: M` (a new launch procedure, skill changes and
+  a live external verification); `keep-unsupported` sets `dev_effort: medium` and `size: S` (the worker probe, the
+  stopped-worker report, the hosts reference and comments).
 - Open, not widened: on every host a worker has the session's access to the shared `.git` (other refs, config, hooks,
   the scope registry), which the Host's range check does not see.
 
@@ -127,14 +133,15 @@ Evidence and the option table: `MAT-worktree-host-spike-evidence`; scout returns
   - Contract tests (`packages/devkit-spec/tests/test_role_contracts.py`): both worker contracts keep Claude Code
     `native`, Codex `unsupported` and Antigravity `unverified`, set no `isolation`, and carry `x-process-hosts: [codex]`
     exactly when the Codex live turn passed.
-  - The access probe's commands are covered by a test showing they leave refs, index and `git status` unchanged.
+  - A contract test runs both worker contracts' probe commands on a throwaway repository with a linked worktree and
+    asserts refs, reflogs of existing refs, the index and `git status` unchanged.
   - `packages/devkit-spec/tests/test_bundle_budgets.py` passes (`spec-delegate/SKILL.md` at most 11776 bytes).
   - The hosts reference states each host's precondition marked observed or documented, matching
-    `MAT-worktree-host-spike-evidence` and any Development record; the Q5 `/add-dir` statement appears only with a
-    recorded session.
-  - With `process-worker`: the live Codex turn's record in the spec's materials (fields in
-    `PADR-codex-process-worker` §4) shows a commit through the gate and a passing range check, or the failure that
-    kept Codex substituting.
-  - `just ci` passes.
+    `MAT-worktree-host-spike-evidence` and the Development evidence; the Q5 `/add-dir` statement appears only with a
+    session recorded in the spec's `tasks.md` evidence.
+  - With `process-worker`: the live Codex turn's record in the spec's `tasks.md` evidence and the Development `worker`
+    envelope (fields and the Passes criterion in `PADR-codex-process-worker` §4) shows either Passes with the launch
+    shipped, or the failed condition with nothing of the launch shipped.
+  - `just lint-check`, `just check`, `just test`, `just rules-check` and `just smoke` pass.
 - On acceptance: set `status: accepted` and run `devkit spec proposal handoff worktree-host-compatibility`. On
   rejection: record a rejection ADR and delete the proposal directory.

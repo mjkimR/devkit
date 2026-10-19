@@ -9,11 +9,12 @@ created_at: 2026-10-19
 
 # [PADR-codex-process-worker] Codex worker as a separate process rooted in its worktree
 
-- **Status**: Draft; applies only if the user answers `codex-worker-scope` with `process-worker` (otherwise it is
-  deleted before handoff and `PADR-worktree-access-preconditions` alone records the Codex reasons)
+- **Status**: Draft
 - **Date**: 2026-10-19
+- **Applies to**: the answer `process-worker` of `codex-worker-scope`. For `keep-unsupported`, the Planning turn that
+  records the answer deletes this PADR and removes every reference to it in the same commit, before `plan-accept`.
 - **Answers**: Q3 and Q5 of `PROP-worktree-host-compatibility`; option O3. Evidence: `MAT-worktree-host-spike-evidence`
-  §2.2, `envelopes/scout-02.yaml`; reviewed in `envelopes/challenger-01.yaml`.
+  §2.2, `envelopes/scout-02.yaml`; reviewed in `envelopes/challenger-01.yaml` and `envelopes/challenger-02.yaml`.
 
 ---
 
@@ -47,17 +48,20 @@ every writable root unless named exactly. A process rooted in the worktree with 
 
 ## 4. Decision Outcome
 
-- The worker contracts MUST declare the process launch with the top-level extension key `x-process-hosts`, a list of
-  host ids, and their Codex block stays `status: unsupported` (no `.codex/agents/<worker>.toml`). The key is added only
-  in the verified branch below.
-- **Launch** (verified branch): in `local-orchestrated` mode on a host named in `x-process-hosts`, after the access
-  probe of `PADR-worktree-access-preconditions`, the Host runs each `planning-worker` or `development-worker` turn as
+- When the live verification below passes, the worker contracts declare the process launch with the top-level
+  extension key `x-process-hosts: [codex]` (a list of host ids), and their Codex block stays `status: unsupported`
+  (no `.codex/agents/<worker>.toml`).
+- **Launch** (verified branch): in `local-orchestrated` mode on a host named in `x-process-hosts`, the Host runs each
+  `planning-worker` or `development-worker` turn as
   one `codex exec -C <worktree> -s workspace-write --add-dir <repo>/.git --add-dir <repo>/.git/worktrees/<name>`
   process. The Host adds only these two grants and the sandbox mode; grants the user's own Codex configuration holds
   stay the user's. The prompt is the effective contract body (`.devkit/overrides/spec/subagents/<role>.md` when it
   exists, else `.devkit/managed/spec/subagents/<role>.md`) followed by the payload `spec-delegate` defines.
+- The worker's first step is the access probe every worker runs (`PADR-worktree-access-preconditions`), so it tests
+  the process's own sandbox; a refused probe ends the turn with nothing written.
 - The Host starts the process outside its own sandbox (an escalated command approved by the user or the configured
-  auto review); a Host that cannot do so runs the activity in `direct`. The committed `worker` envelope and the final
+  auto review). When escalation is unavailable or declined, the Host reports to the user and stops; it does not fall
+  back to `direct`, which needs the same escalated writes. The committed `worker` envelope and the final
   head are the return, validated exactly as for a subagent worker (`references/worker.md`); the process's last
   message is not trusted beyond them.
 - `spec-delegate` Step 3 and `spec-orchestrate` MUST name the process launch as the path for a host listed in
@@ -65,11 +69,14 @@ every writable root unless named exactly. A process rooted in the worktree with 
   `spec-delegate/SKILL.md` stays within its tested budget (`BUDGET - 512` = 11776 bytes,
   `packages/devkit-spec/tests/test_bundle_budgets.py`).
 - **Live verification** (Development): one Planning or Development turn through this launch on a Codex Host, recorded
-  in the spec's materials with the command line, the codex version, the configuration mode (legacy `sandbox_mode` or
-  a profile), the base and final head, the range-check result, a commit through the real commit gate, the affected
-  tests, a nested role spawned inside the process and the turn's duration against the Host's command timeout.
-  - **Passes**: the key, the launch text in `spec-delegate` and `spec-orchestrate`, and `CAP-DLV-delivery-workflows`
-    ship as above.
+  as evidence of its task in the spec's `tasks.md` and in the Development `worker` envelope's checks: the command
+  line, the codex version, the configuration mode (legacy `sandbox_mode` or a profile), the Codex trust status of the
+  repository, the base and final head, the range-check result, the commit gate's result, the affected tests, the
+  nested role spawned and the turn's duration against the Host's command timeout.
+  - **Passes** when all hold: the probe and a commit through the real commit gate succeed inside the process, the
+    Host's range check passes, the affected tests run, a nested role is spawned and returns, the turn ends within the
+    Host's command timeout, and the launch runs under the user's own configuration mode. Then the key, the launch
+    text in `spec-delegate` and `spec-orchestrate`, and `CAP-DLV-delivery-workflows` ship as above.
   - **Fails**: nothing of the launch ships; the hosts reference and the contract comments record the failed
     condition, and Codex keeps the main session running the activity in `direct`.
 
@@ -78,6 +85,8 @@ every writable root unless named exactly. A process rooted in the worktree with 
 - Changes `spec-delegate` (`SKILL.md` Step 3, `references/hosts.md`), `spec-orchestrate`, the two worker contracts and
   their tests, and `CAP-DLV-delivery-workflows`; no devkit package change.
 - Each Codex worker turn costs a separate model session and an approval.
+- Unverified until the live turn: that legacy `-s workspace-write --add-dir` lifts the git-dir protection as a profile
+  rule does (the probes used `codex sandbox -P`), and how `-s` combines with a user's permission profile.
 - The two grants give the process the same shared `.git` access a Claude Code worker has through its session; the
   range check does not see it on either host (`PADR-worktree-access-preconditions` §5).
 - Claude Code keeps the native subagent; a `claude -p` launch can be added later by listing `claude-code`.
