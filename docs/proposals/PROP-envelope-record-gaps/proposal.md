@@ -29,7 +29,9 @@ workflow: sdd-proposal
   `challenger` finding into the proposal, but the envelope keeps them `open`, because only a `reverify` closes findings
   and it must name a `review-NN.yaml`. On 2026-10-19 both high-effort Planning units reported findings as open that
   had been fixed, and both counted earlier unmarked challenger rounds toward the review-loop cap, so the record no
-  longer showed the real state of the review.
+  longer showed the real state of the review. The round count is also the subject of two open feedback items,
+  `FB-review-loop-round-count-across-procedure-change` and `FB-review-round-count-before-markers`, which both ask
+  whether a fold of the user's answers opens a fresh round; Development links them to this proposal.
 - **Settled assumptions have no slot** (`FB-answer-envelope-no-slot-for-settled-assumptions`): when the user's answer
   also settles a worker assumption, the answer envelope can only carry it as free text in a constraint.
 - **Proposal boundaries are unchecked** (`FB-proposal-boundaries-unchecked`): `boundaries.owns` may name a capability
