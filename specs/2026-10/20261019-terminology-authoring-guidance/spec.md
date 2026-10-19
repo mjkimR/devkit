@@ -1,169 +1,121 @@
 ---
 id: SPEC-terminology-authoring-guidance
 title: Terminology authoring guidance and a glossary that agents read
-summary: Adds domain-neutral terminology authoring guidance to the spec bundle, reshapes the seeded glossary table around owners, exclusions, avoided synonyms and code identifiers, and makes spec-sync update the glossary, so docs/glossary.md is read while writing instead of only seeded.
+summary: "Adds domain-neutral terminology authoring guidance to the spec bundle, reshapes the seeded glossary table around owners, exclusions, avoided synonyms and code identifiers, and makes spec-sync update the glossary, so docs/glossary.md is read while writing instead of only seeded."
 status: planned
 created: 2026-10-19
-related_capabilities: []
-related_stories: []
+related_capabilities:
+  - CAP-HARN-agent-guidance
+  - CAP-DLV-delivery-workflows
+related_stories:
+  - US-keep-the-living-spec-consistent
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-terminology-authoring-guidance] Terminology authoring guidance and a glossary that agents read
 
 ## 1. Problem Statement & Motivation
 
-Handed off from proposal PROP-terminology-authoring-guidance on 2026-10-19.
-- Target Docs Blueprint: `PROP-terminology-authoring-guidance-target` (Living Spec targets for this plan and reconcile.md)
+Handed off from proposal PROP-terminology-authoring-guidance on 2026-10-19; the Planning decisions are
+`ADR-terminology-guidance-lives-in-living-spec-writing` (where the guidance lives, the generic-noun list, the length
+bound) and `ADR-seeded-glossary-columns` (the seeded columns, Avoid entries as search synonyms, older glossaries).
+Target Docs Blueprint: `PROP-terminology-authoring-guidance-target`.
 
-### 1. Background & Hypothesis
+The `spec` bundle seeds a `docs/glossary.md`, but nothing reads it while writing:
 
-#### 1.1 Problem
+- The `## Glossary` section of the `living-spec-writing` instruction says only where terms are defined, nothing about
+  when to check or update them, and no `spec*` skill mentions the glossary, so `spec-sync` never asks whether a change
+  introduced or renamed a domain term.
+- The seeded authoring guideline "Code symbols (classes, DB tables, API fields) should adhere to the canonical
+  terminology defined in this glossary" reads as a mandate to rename code; a way to map terms to existing identifiers
+  is missing.
+- The seeded columns (`Term | English / Abbr | Definition & Description | Relevant Area | Remarks`) have no owner, no
+  rejected synonyms and no code identifiers.
 
-The starting point is a draft of terminology rules used in another project (origin: user), first incubated earlier
-and carried over here because its findings hold for the `spec` bundle. The current state of the bundle:
+The change ships eight domain-neutral terminology rules as the body of the instruction's `## Glossary` section,
+reshapes the seeded glossary table around the fields those rules use, adds one glossary question to `spec-sync`
+Step 1 and migrates devkit's own `docs/glossary.md` to the new columns. The guidance asks for no approval and adds no
+gate; no command changes (instructions are bundle assets, `CAP-HARN-agent-guidance`), and the docs skeleton stays
+opt-in (`ADR-docs-skeleton-is-opt-in`).
 
-- **Nothing reads the glossary while writing.** The only bundle mention of the glossary in an authoring path is the
-  `## Glossary` section of the `living-spec-writing` instruction, which says where terms are defined and nothing about
-  when to check or update them. No `spec*` skill mentions it, so `spec-sync` never asks whether a change introduced or
-  renamed a domain term. The seeded `docs/glossary.md` is written once and then not consulted.
-- **The seeded guideline reads as permission to rename code.** The second authoring guideline of
-  `packages/devkit-spec/src/devkit_spec/bundle/seed/docs/glossary.md` is "Code symbols (classes, DB tables, API fields) should adhere to the
-  canonical terminology defined in this glossary." Tidying document terms can be read as a mandate to rename API fields
-  and tables; what is actually needed, a way to map terms to existing identifiers, is missing.
-- **The table has no place for the rules.** The seeded columns are `Term | English / Abbr | Definition & Description |
-  Relevant Area | Remarks`: no owner, no adjacent concepts to keep apart, no rejected synonyms, no code identifiers.
-- devkit-spec's own `docs/glossary.md` already moved part of the way: its tables are `Term | Definition | Defined in`,
-  where "Defined in" names the owning document ID, and it settles that `docs/` as a whole is the Living Spec (the
-  scope conflict earlier glossaries had).
+### Assumptions
 
-#### 1.2 Hypothesis
-
-Ship domain-neutral terminology guidance as bundle instruction text, reshape the seeded glossary table around the
-fields that guidance uses, and add one impact question to `spec-sync`. Every session then sees the guidance header
-through `devkit get-context spec` and reads the body before writing documents, and the glossary becomes a document that
-is checked while writing and updated at reconciliation instead of a seeded file nobody opens.
-
-- No new human gate or question point. The guidance informs the agent's naming decisions and asks for no approval.
-- No command change: instructions are bundle assets (`CAP-HARN-agent-guidance`), and the skeleton stays opt-in
-  (`ADR-docs-skeleton-is-opt-in`). Projects without a `docs/glossary.md` still receive the guidance; registration
-  steps apply only where a glossary exists.
+- The three short lines the proposal places beside the rules (project additions to the generic-noun list, Avoid
+  entries as `glossary.yaml` synonyms, the older-glossary fallback) are written as the last sentence of rule 1, the
+  last sentence of rule 3 and one closing paragraph: each sits next to the rule it qualifies and the section stays
+  inside the 30-line bound.
+- The 30-line bound counts the lines `git diff --numstat` reports as added to `living-spec-writing.md` against the
+  handoff base, the rewritten `description` line included; each added line is at most 120 characters (the ADR's
+  reading of the instruction's style). Existing longer lines are not rewritten.
+- devkit's own `docs/glossary.md` leaves `Avoid` empty: no rejected synonym is established in devkit's documents, and
+  an Avoid entry would also have to enter `docs/glossary.yaml`, which this change does not edit. `Code identifiers`
+  is filled where a definition already names an identifier.
+- The seeded `docs/glossary.md` keeps its title and lead sentence; the pointer to the guidance follows the lead.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Terminology authoring guidance and a glossary that agents read so that system capabilities are extended.
+- **US-1**: As an agent writing a `docs/` or `specs/` document, I want terminology rules and a glossary I am told to
+  check, so that a new concept gets a qualified, registered term and existing code identifiers are mapped instead of
+  renamed. Relates to `US-keep-the-living-spec-consistent`.
+- **US-2**: As an agent reconciling a change in `spec-sync`, I want Step 1 to ask whether the change introduced or
+  renamed a domain term, so that `docs/glossary.md` is updated with the rest of the Living Spec.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: a deterministic rule that checks generic or avoided terms.
+   - **Rationale**: the judgement is contextual and false positives are costly.
+   - **When to Reconsider**: repeated violations are observed; a hygiene rule is then its own proposal.
+2. **Scope Excluded**: renaming code, API, schema or database identifiers, in devkit or as a mandate to consumers.
+3. **Scope Excluded**: generating or synchronising `docs/glossary.md` and `docs/glossary.yaml` from each other.
+4. **Scope Excluded**: any command, rule, workflow or `bundle.toml` change, a new instruction asset, or a constitution
+   (`packages/devkit-spec/src/devkit_spec/bundle/AGENTS.md`) change.
+5. **Scope Excluded**: migrating a project-owned glossary; a seeded file stays as written (`ADR-docs-skeleton-is-opt-in`).
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] The instruction carries the terminology rules
+- **Given** the `living-spec-writing` instruction of the `spec` bundle
+- **When** its `## Glossary` section and frontmatter are read
+- **Then** the section keeps the package-glossary sentence, holds eight numbered rules matching the proposal's
+  guidance draft (generic nouns, full term, one concept one term, same spelling different owner, established terms,
+  document terms versus code identifiers, registration check, records keep their wording), contains the sentence
+  "does not authorize renaming code, APIs or schemas", and the `description` names terminology and the glossary
 
-## 5. Carried Proposal Notes
+### [AC-02] The guidance names the glossary links and the fallback
+- **Given** the `## Glossary` section of AC-01
+- **When** it is read
+- **Then** it states that project additions and exceptions to the rule 1 list live in a section of `docs/glossary.md`,
+  that an Avoid entry is also a synonym of the term's cluster where `docs/glossary.yaml` exists, and that a glossary
+  without the `Owner`, `Avoid` and `Code identifiers` columns records them in its existing cells
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-03] The instruction grows by at most 30 lines
+- **Given** `living-spec-writing.md` at the handoff base c0a37b07e18cde2dfdac37e9620d09d73b44dd6c
+- **When** `git diff --numstat c0a37b07e18cde2dfdac37e9620d09d73b44dd6c -- packages/devkit-spec/src/devkit_spec/bundle/instructions/living-spec-writing.md` runs
+- **Then** the added count is at most 30 and every added line is at most 120 characters
 
-### 2. Technical Spike Questions
+### [AC-04] The seeded glossary uses the five columns
+- **Given** the seed `packages/devkit-spec/src/devkit_spec/bundle/seed/docs/glossary.md`
+- **When** it is read
+- **Then** its table header is exactly `| Term | Definition | Owner | Avoid | Code identifiers |`, it has a section for
+  avoided generic nouns and accepted exceptions, it points to the `living-spec-writing` instruction, and neither
+  "Authoring Guidelines" nor "Code symbols (classes, DB tables, API fields)" appears in it
 
-Settled in Planning; the decisions and their options are in `ADR-terminology-guidance-lives-in-living-spec-writing`
-(Q1, Q2, Q6) and `ADR-seeded-glossary-columns` (Q3, Q4, Q5).
+### [AC-05] The seeded glossary still installs cleanly
+- **Given** a fresh Git repository with the `spec` bundle synced
+- **When** `devkit add spec:docs-skeleton` runs and then `devkit rules check`
+- **Then** `docs/glossary.md` is written with the five-column header and `devkit rules check` exits 0
 
-- **Q1. Separate instruction or a section of `living-spec-writing`.** Folded into the `## Glossary` section of
-  `living-spec-writing`; its description is widened to name terminology and the glossary. No new asset.
-- **Q2. Where the generic-noun list lives.** Both: a short default in the instruction (rule 1), project additions and
-  exceptions in a section of the seeded `docs/glossary.md`.
-- **Q3. Column set.** `Term | Definition | Owner | Avoid | Code identifiers`; exclusions and adjacent terms are written
-  in the definition; an original-language rendering goes in the `Term` cell (`기능 원장 (Living Spec)`).
-- **Q4. `Avoid` and `glossary.yaml` synonyms.** One line of guidance: where `docs/glossary.yaml` exists, an Avoid entry
-  is also added as a synonym of the term's cluster. No generation between the files.
-- **Q5. Existing glossaries.** One-line fallback: without the columns, owner, exclusions and avoided synonyms go in the
-  existing remarks or definition cells; no migration of a project-owned glossary is required.
-- **Q6. Context budget.** An acceptance criterion: the change adds at most 30 lines to `living-spec-writing.md`; the
-  `spec-sync` change is one Step 1 bullet.
+### [AC-06] spec-sync asks the glossary question in one Step 1 bullet
+- **Given** `packages/devkit-spec/src/devkit_spec/bundle/skills/spec-sync/SKILL.md`
+- **When** its diff against the handoff base is read
+- **Then** exactly one bullet is added, under `### Step 1`, asking whether the change introduced or renamed a domain
+  term and directing an update of `docs/glossary.md` where it exists, and the file stays within the 12288-byte skill
+  document budget (`packages/devkit-spec/tests/test_bundle_budgets.py` passes)
 
-### 3. Proposed Design & Impact
-
-#### 3.1 Placement
-
-| Location | Content |
-| --- | --- |
-| `packages/devkit-spec/src/devkit_spec/bundle/instructions/living-spec-writing.md` (`## Glossary` section and description, Q1) | The guidance of 3.2, at most 30 added lines (Q6) |
-| `packages/devkit-spec/src/devkit_spec/bundle/seed/docs/glossary.md` | The table of 3.3, a project section for avoided generic nouns and exceptions, a one-line pointer to the guidance; the two existing authoring guidelines removed |
-| `packages/devkit-spec/src/devkit_spec/bundle/skills/spec-sync/SKILL.md`, Step 1 | One impact question: did the change introduce or rename a domain term? Then update `docs/glossary.md` |
-| `docs/glossary.md` (dogfood) | Migrated to the five columns of 3.3: `Defined in` becomes `Owner`, `Avoid` and `Code identifiers` added |
-
-The constitution (`packages/devkit-spec/src/devkit_spec/bundle/AGENTS.md`) gains nothing: it already tells every session to read the
-relevant instruction bodies, and repeating the guidance there costs context in every session.
-
-#### 3.2 Guidance Draft
-
-The normative level follows the `contract-authoring` instruction: no check enforces these rules, so the text uses
-boundary statements ("does not authorize") and SHOULD rather than MUST.
-
-```markdown
-1. Do not name a new domain concept with a bare generic noun (target, resource, scope,
-   context, state, status, revision, data, item). Add a qualifier that shows what it applies
-   to, who owns it, or where it ends. Padding (`target data`) is not a qualifier.
-2. Use the full registered term in titles, headings, table cells and sentences meant to
-   stand alone. A short form is fine inside a paragraph whose subject is already clear.
-3. One concept, one term. Record rejected synonyms in the Avoid column and do not alternate.
-4. Same spelling, different owner or meaning: register each separately with its owner
-   (approval request version vs. deployment revision). Never bulk-replace a word across contexts.
-5. Use established terms and proper nouns (User Story, idempotency, product names) with their
-   standard meaning; describe only the project's scope of use.
-6. Keep document terms and code identifiers distinct. Quote existing API fields, types, paths
-   and JSON exactly and map them ("approval subject (`target` field)"). This guidance does not
-   authorize renaming code, APIs or schemas; a rename is its own spec. New identifiers SHOULD
-   follow the registered term.
-7. Before registering a term, check overlap with existing rows and record its owner and what it
-   excludes. In Living Spec documents, rename in place without "formerly X" notes.
-8. ADRs, docs/materials/, completed specs, quotations and generated output keep their original
-   wording and are not reused as the current contract.
-```
-
-Beside the rules the section carries three short lines: project additions to the rule 1 list and exceptions live in a
-section of `docs/glossary.md` (Q2); an Avoid entry is also a synonym of the term's cluster in `docs/glossary.yaml`
-where that file exists (Q4); a glossary without the columns of 3.3 records owner, exclusions and avoided synonyms in its
-existing cells (Q5). The existing package-glossary sentence of the section stays.
-
-Relative to the original draft: rule 3 (one concept, one term) is new, covering the direction the draft missed; the
-draft's last item is split into 7 (when to check, tied to in-place rewriting) and 8 (records keep their wording,
-mapped to ADRs, materials and completed specs); domain-specific examples are replaced with generic ones.
-
-#### 3.3 Glossary Table
-
-```markdown
-| Term | Definition | Owner | Avoid | Code identifiers |
-```
-
-- **Definition**: also states what the term excludes and which adjacent term it is distinct from when confusion is
-  likely (rule 7).
-- **Owner**: the document ID that defines the term (`CAP-...`, `ADR-...`) or the owning component; rules 4 and 7.
-- **Avoid**: rejected synonyms; rule 3. Where `docs/glossary.yaml` exists, each is also a synonym of the term's cluster.
-- **Code identifiers**: the matching API fields, types and paths; rule 6.
-- Empty `Avoid` and `Code identifiers` cells are allowed. A glossary with older columns records these fields in its
-  remarks or definition cells (Q5).
-
-#### 3.4 Non-Goals
-
-- No deterministic rule checks generic or avoided terms: the judgement is contextual and false positives are costly.
-  A hygiene rule is a separate proposal once repeated violations are observed.
-- No bulk renaming of code, API or database identifiers.
-- No generation or synchronisation between `glossary.md` and `glossary.yaml`.
-- No command change.
-
-### 4. Lifecycle & Retirement Criteria
-
-- Preliminary decisions: none expected; the instruction mechanism is devkit's resource taxonomy and the bundle's
-  instruction assets (`CAP-HARN-agent-guidance`).
-- Research: none needed.
-- On acceptance: Q1 to Q6 are settled (section 2); set `status: accepted` and run `devkit spec proposal handoff
-  terminology-authoring-guidance`.
-- On rejection: record a rejection ADR in `docs/decisions/` and delete the proposal directory.
+### [AC-07] devkit's own glossary uses the five columns
+- **Given** devkit's `docs/glossary.md`
+- **When** it is read
+- **Then** every term table has the header `| Term | Definition | Owner | Avoid | Code identifiers |`, every row keeps
+  its owning document ID in `Owner`, the column name `Defined in` no longer appears, and the lead paragraph names the
+  five columns
 
