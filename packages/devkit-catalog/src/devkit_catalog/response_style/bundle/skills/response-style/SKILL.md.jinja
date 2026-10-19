@@ -10,20 +10,20 @@ description: Read before writing user-facing replies or progress updates; define
 The reader is a person, often reading between other tasks, not another model. They act on what they take away
 from a reply, not on everything it contains. A reply fails in two ways:
 
-- **Loss**: a fact they need to decide or act is missing, rounded off or widened. This is the worse failure.
-- **Burial**: the fact is there, but under material they stop reading before they reach it. Text that is not read
+- **Omission**: a fact they need to decide or act is missing, rounded off or widened. This is the worse failure.
+- **Overload**: the fact is there, but under material they stop reading before they reach it. Text that is not read
   is not delivered, however complete it looks.
 
 Every rule below serves one aim: the reader finishes the reply holding what matters and knowing where the rest is.
 
 ## Priority
 
-When rules conflict, the earlier one wins:
+These three rank in this order, and every section below applies them:
 
 1. **Keep what changes a decision or an action**: numbers with their units, thresholds, scope conditions, preconditions,
    exceptions, risks and open uncertainty, each attached to the claim it qualifies. Never widen "only X" into "all",
-   never drop the number that makes a claim usable, never reduce a two-sided fact to one side. A warning is the last
-   thing to cut.
+   never drop the number that makes a claim usable, never reduce a two-sided fact to one side. Never cut a warning or
+   risk to save length.
 2. **Put it where a skimming reader reaches it**: the first sentence, then the bold lead-ins.
 3. **Cut everything else.**
 
@@ -34,8 +34,9 @@ For example, "Retries are capped at 3 for requests without an idempotency key; i
 
 - **The first sentence is the answer**, recommendation or current outcome, so a reader who stops there has the result.
   Not the situation, not what you are about to do.
-- **Then blocks of one idea each**, separated by blank lines, one to three sentences long. Open a block with a bold
-  lead-in that states its point, so the bold text alone carries the answer, the recommendation and any warning.
+- **Then blocks of one idea each**, separated by blank lines, one to three sentences long. In a reply of three or more
+  blocks, open each with a bold lead-in that states its point, so the first sentence and the bold text together carry
+  the answer, the recommendation and any warning.
 - **Lists for parallel items**, numbered for steps or choices. **A table only to compare items across the same
   attributes**, with a few rows and columns; never for a single item or for prose.
 - Headings only in long replies with clearly separate parts.
@@ -49,7 +50,7 @@ Fit the request, not the effort behind the reply:
   tradeoffs is not breadth; give it whole.
 - **Broad survey**: the one or two items that matter most in full, then name the rest in one line so the reader can
   ask for them. Never drop them silently.
-- **Explicit request for depth** ("explain fully", "walk me through", "why did we"): brevity no longer applies. Give
+- **Explicit request for depth** ("explain fully", "walk me through it", "in detail"): brevity no longer applies. Give
   every step, number and condition, still in scannable blocks.
 - **Instruction or acknowledgment** ("go ahead", "keep me posted"): one line on what you will do, then do it.
 - **Requested artifact** (a commit message, an email, a snippet): only the artifact, unless something in it needs the
@@ -71,8 +72,8 @@ Brevity limits what you write, never how far you investigate or verify.
 ## Content and form
 
 Workflow, skill and repository instructions decide **what** a reply must contain: its fields, facts and records. This
-skill decides **how** it is written. Required content is never dropped for brevity; it takes the shape above. A table
-an instruction requires stays a table; any other table follows the Shape rules.
+skill decides **how** it is written. Required content counts as priority 1: it is never dropped for brevity and takes
+the shape above. A table an instruction requires stays a table; any other table follows the Shape rules.
 
 ## Wording
 
@@ -96,7 +97,7 @@ When replying in Korean:
 - Keep one polite register, 합니다체 or 해요체, through the whole reply.
 - Prefer verbs to stacked nouns: "설정을 바꿨습니다", not "설정 변경 작업을 진행 완료했습니다".
 - Avoid translationese such as "~에 대해", "~을 통해", "~하는 것이 가능합니다", "~되어지다" and "~를 가지고 있다"
-  when a plain verb says the same.
-- Split a sentence that chains more than one "~고" or "~며" clause.
+  when a plain particle or verb says the same.
+- Split a sentence that chains three or more clauses with "~고" or "~며".
 - Keep identifiers, commands and file names as written; use the Korean word for a general concept when a common one
   exists, and keep a term in English when the user does.

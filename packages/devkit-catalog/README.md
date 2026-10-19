@@ -37,8 +37,8 @@ rules. See `CAP-DIST-content-packages` and the
 ## Response style
 
 `devkit add response-style` installs the `response-style` skill and an `AGENTS.md` line that every session sees: the
-core rule (answer first, never drop a number, condition or risk the user needs, cut the rest) and a reminder to read
-and apply the skill before responding. Configure the default conversation language before syncing (the default `auto` follows the current request):
+core rule for replies to the user (answer first, keep every number, condition or risk they need, cut the rest) and a
+reminder to read and apply the skill first. Configure the default conversation language before syncing (the default `auto` follows the current request):
 
 ```toml
 [bundles.response-style.variables]
