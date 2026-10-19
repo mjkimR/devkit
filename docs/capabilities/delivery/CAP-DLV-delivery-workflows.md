@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-delivery-workflows
 title: Delivery Workflows
-summary: "Five delivery workflows define stages, gates, checks and run records, separate code/reconcile reviews with bounded high-effort loops, integration readiness, and native Codex workers with emulated boundaries and scoped approvals."
+summary: "Five delivery workflows define stages, gates, checks, bounded reviews and run records, verified source-feedback resolution, integration readiness, and native Codex workers with emulated boundaries and scoped approvals."
 area: delivery
 status: active
 created_at: 2026-10-13

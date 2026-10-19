@@ -1,7 +1,7 @@
 ---
 id: CAP-HARN-agent-guidance
 title: Agent Guidance Assets
-summary: "Agent guidance deployed by the spec bundle, including delivery skills, worker contracts, feedback capture and preservation, terminology guidance, and an opt-in docs skeleton with a five-column glossary whose documents remain discoverable after installation."
+summary: "Agent guidance deployed by the spec bundle covers delivery skills, worker contracts, feedback capture and verified source resolution, terminology guidance, and an opt-in docs skeleton with a five-column glossary."
 area: harness
 status: active
 created_at: 2026-10-13

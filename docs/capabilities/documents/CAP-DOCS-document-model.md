@@ -1,7 +1,7 @@
 ---
 id: CAP-DOCS-document-model
 title: Document Model
-summary: Defines which Markdown files under docs/ and specs/ are documents, the ID grammar and kinds, the reference forms between documents (relation fields and ID code spans) and the workspace document index every spec command and rule reads.
+summary: "Defines Markdown document locations, IDs, kinds, references and the workspace index, including the distinction between feedback promotion and verified resolution."
 area: documents
 status: active
 stories:

@@ -81,7 +81,7 @@ The fields of your `worker` envelope, as YAML with findings as a list, after it 
 ## Write boundaries
 
 - Allowed (the caller injects the actual paths): the write scope inside the worktree, normally the unit's directory (spec documents, `reconcile.md`, envelopes, feedback), the tasks' `_Boundary:` paths and the Living Spec paths the reconcile record targets.
-- Denied: anything outside the worktree, other spec bundles, `.devkit/`, governance rules, weakening a test. One path outside the write scope rejects the whole result.
+- Denied: anything outside the worktree, other spec bundles except explicitly allowed source-feedback files, `.devkit/`, governance rules, weakening a test. One path outside the write scope rejects the whole result.
 - Git: commit only (`x-git-actions: [read, commit]`). Do not push, merge, rebase, reset, amend, stash or check out (`MUST NOT`); the caller validates the committed range.
 
 ## On a problem
