@@ -2,7 +2,7 @@
 id: SPEC-role-reasoning-effort-presets
 title: Per-role reasoning effort presets
 summary: Presets a host reasoning effort in each spec role contract's host block (Claude Code effort, Codex model_reasoning_effort) so subagents run at a fixed effort per role without naming models.
-status: in-progress
+status: completed
 created: 2026-10-19
 related_capabilities:
   - CAP-DLV-delivery-workflows
