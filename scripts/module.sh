@@ -93,9 +93,9 @@ esac
 
 run_check() {
     if [ "${DEVKIT_RUN_MODE:-compact}" = raw ]; then
-        uv run --no-active "$@"
+        uv run --no-active --no-sync "$@"
     else
-        uv run --no-active devkit run -- uv run --no-active "$@"
+        uv run --no-active --no-sync devkit run -- uv run --no-active --no-sync "$@"
     fi
 }
 
@@ -103,7 +103,7 @@ run_check() {
 # Fail before pytest starts when a sandbox blocks those writes; the caller owns approval and retry.
 case "$action" in
     test|test-cov)
-        uv run --no-active python scripts/check_test_environment.py -- just "$action" "$requested_target" \
+        uv run --no-active --no-sync python scripts/check_test_environment.py -- just "$action" "$requested_target" \
             ${given[@]+"${given[@]}"}
         ;;
 esac

@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: workaround
 recurring: true
-status: open
+status: dismissed
 created_at: 2026-10-19
 ---
 
@@ -42,3 +42,6 @@ scope update: SCOPE_ACK status=applied overlaps=0
 normal commit: cgate Commit rewritten; subsequent rev-parse returned actual HEAD
 independent code-reviewer and reconcile-reviewer: completed, no findings, HEAD unchanged
 ```
+
+- **Disposition**: dismissed. The observation records experimental spike evidence regarding native subagent execution across sibling worktrees in Codex. Host-level support for persistent scoped worktree access is an upstream Codex platform capability, not a devkit repository defect.
+

@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: workaround
 recurring: true
-status: open
+status: resolved
 created_at: 2026-10-19
 ---
 
@@ -42,3 +42,6 @@ Failed to fetch the release wheel; dns error
 Escalated reruns: All checks passed; 218 files already formatted;
 Pyright: 0 errors, 0 warnings, 0 informations
 ```
+
+- **Disposition**: `session` task `dev-feedback-resolutions`: updated `scripts/module.sh` (`run_check` and `check_test_environment`) to invoke `uv run` with `--no-sync` so initialized worktrees and sandboxed environments do not resolve remote package metadata over the network. Verified with `pytest packages/devkit/tests/test_module_script.py`.
+

@@ -10,7 +10,7 @@ agent: codex
 origin: user
 severity: workaround
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-18
 ---
 
@@ -41,3 +41,6 @@ No native form was reached on that call.
 Later integration returned status completed, authority mcp-elicitation and ui_action accept.
 Fresh SDK list_tools exposes the clarified description; the current host tool catalog still exposes the previous description.
 ```
+
+- **Disposition**: dismissed. Pre-confirmation descriptions and fail-closed handling were already incorporated in `packages/devkit/src/devkit/integration/mcp.py`. The host reviewer's policy behavior of rejecting the dispatch prior to interactive elicitation is external to devkit repository control.
+

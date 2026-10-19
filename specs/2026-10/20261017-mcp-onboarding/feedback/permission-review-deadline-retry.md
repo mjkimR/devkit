@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: workaround
 recurring: true
-status: open
+status: dismissed
 created_at: 2026-10-17
 ---
 
@@ -43,3 +43,6 @@ Two exec requests returned: automatic permission approval review did not finish 
 The diagnostic allowed one retry and said timeout alone does not imply an unsafe action.
 Subsequent commands completed lint/type/governance checks, feature commits and consumer smoke.
 ```
+
+- **Disposition**: dismissed. The observation concerns intermittent deadline timeouts in the external OpenAI Codex automatic permission approval review service during exec calls. devkit repository packages do not operate the external approval review backend.
+

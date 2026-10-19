@@ -51,6 +51,7 @@ def test_test_recipe_preserves_arguments_and_preflight(
     assert preflight == [
         "run",
         "--no-active",
+        "--no-sync",
         "python",
         "scripts/check_test_environment.py",
         "--",
@@ -61,9 +62,9 @@ def test_test_recipe_preserves_arguments_and_preflight(
         "foo and bar",
         "-n0",
     ]
-    prefix = ["run", "--no-active"]
+    prefix = ["run", "--no-active", "--no-sync"]
     if mode != "raw":
-        prefix += ["devkit", "run", "--", "uv", "run", "--no-active"]
+        prefix += ["devkit", "run", "--", "uv", "run", "--no-active", "--no-sync"]
     assert check[: len(prefix) + 1] == [*prefix, "pytest"]
     assert check[-3:] == ["-k", "foo and bar", "-n0"]
 

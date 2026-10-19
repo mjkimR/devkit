@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: blocked
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-18
 ---
 
@@ -46,3 +46,6 @@ sync dry-run: create=205 update=0 remove=0.
 automatic review: protected .agents/.codex mutations rejected under direct-edit prohibition and missing explicit authority.
 after explicit authorization: sync succeeded with create=205 update=0 remove=0.
 ```
+
+- **Disposition**: dismissed. The observation concerns host-level automatic permission review prompt/policy in OpenAI Codex, which mistakenly interpreted the direct-edit prohibition as forbidding the sanctioned recovery generator (`devkit sync`). devkit repository code does not own or configure the host's automatic review model behavior.
+
