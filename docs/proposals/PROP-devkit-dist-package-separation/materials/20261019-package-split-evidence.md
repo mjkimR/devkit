@@ -153,3 +153,10 @@ Harness references in the `devkit` bundle text (for question `harness-guidance`)
 | 9 | Benefit framed as smaller dependencies | Proposal section 1.1 and Consumer Impact restated; non-goal added |
 | 10 | Root `AGENTS.md` not a reconcile target | Added to `PADR-dist-module-split` consequences |
 | 11 | Harness command non-goal conflicts with agent-first output | Turned into user question `standalone-harness-signals` |
+
+Re-review (envelope `challenger-02.yaml`): all eleven resolutions confirmed. Three low-severity issues in the draft
+questions were fixed before asking: `harness-guidance` is asked first and `compact-home` states its costs per
+`harness-guidance` answer; the `bundle-to-agt` option was dropped (it contradicted `PADR-dist-module-split`,
+`PADR-dist-bundles-compatibility` and the rejected B2); `standalone-harness-signals` states that only third-party or
+in-repo bundles can trigger it and that engine presence is detected by name only, through the `devkit.commands`
+entry points (`rules`, `gate`, `workflow`), never by importing or locating a harness module.

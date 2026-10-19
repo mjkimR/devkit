@@ -60,8 +60,11 @@ Where the harness guidance now inside the `devkit` bundle goes is decided by the
 `harness-guidance`); where `devkit run` and its guidance go follows question `compact-home`; how a standalone
 installation reports harness assets it cannot run and harness command names follows question
 `standalone-harness-signals`. The generated `devkit-workflow` entry skill stays a projection of `devkit-dist`
-(workflow assets are part of its manifest taxonomy); a bundle shipping workflow assets is useful only with the
-workflow engine installed.
+(workflow assets are part of its manifest taxonomy). It is the one harness directive a standalone installation can
+still deploy, and only for a third-party or in-repo bundle: no first-party bundle installable without `devkit-agt`
+ships rule, gate or workflow assets (only `devkit-spec`, which requires `devkit-agt`, and `authoring`, which ships
+with it, do). The driver above therefore holds for every first-party standalone setup; the third-party case is what
+`standalone-harness-signals` covers.
 
 ### Compatibility
 

@@ -113,7 +113,8 @@ Choose **N1** and **F1**.
   and `testsupport.gate`), and move or split accordingly (`materials/20261019-package-split-evidence.md` section 5).
 - The workspace venv installs every package, so `devkit-agt` entry points stay visible to `devkit-dist` tests run
   there. A separate dist-only check MUST run the `devkit-dist` tests in an environment that installs `devkit-dist`
-  (with its extras) and not `devkit-agt` (an isolated `uv run --package devkit-dist` or the smoke installation),
+  (with its extras) and not `devkit-agt` (a separate environment synced exactly with only `devkit-dist`, or the
+  smoke installation; the workspace dev group installs `devkit-agt`, so an inexact sync does not qualify),
   asserting `importlib.util.find_spec("devkit.rules") is None`; CI runs it.
 - Root `pyproject.toml` adds the new source root to ruff `namespace-packages`, Pyright `extraPaths`, pytest
   `testpaths` and the dev dependency group; release, smoke and CI wiring add the new wheel.
