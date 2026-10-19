@@ -248,7 +248,7 @@ The auto-selected `advisory` bundle (`devkit.advisory_guide`) ships one rule in 
 
 | Rule | Phase, severity | Checks |
 | --- | --- | --- |
-| `RULE-advisory-unique-code` | linter, error | `AdvisoryError` classes declaring the same code, in the class body or through `code=` at a call, lie on one inheritance line; the workspace's Python files are read statically (settings `bases`, `exclude`) ([guide](../../../packages/devkit/src/devkit/advisory_guide/bundle/rules/unique_code/guide.md)) |
+| `RULE-advisory-unique-code` | linter, error | a code is declared by one `AdvisoryError` class and its subclasses, in class bodies or through `code=` at calls; the workspace's Python files are read statically (settings `bases`, `exclude`) ([guide](../../../packages/devkit/src/devkit/advisory_guide/bundle/rules/unique_code/guide.md)) |
 
 ## Library
 

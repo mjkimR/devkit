@@ -1,20 +1,21 @@
 """``RULE-advisory-unique-code``: an advisory code names one condition.
 
 Shipped by the ``advisory`` bundle (preset ``python``) and loaded by ``devkit rules`` from the synchronized copy.
-The workspace's Python files are read statically (``index.py``), never imported: the classes that declare a code,
-in their body or through a ``code=`` keyword at a call, must lie on one inheritance line.
+The workspace's Python files are read statically (``index.py``), never imported: a code is declared by one advisory
+class and its subclasses, in their bodies or through ``code=`` keywords at calls.
 """
 
 from __future__ import annotations
 
 import ast
 from collections import defaultdict
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 
 from devkit.rules import Phase, RuleContext, Severity, Violation, match_path, validate_pattern
 from devkit.rules.rules import BaseRule
 
-from .index import Index, Module, Target, parse_module
+from .index import Imports, Index, Module, Target, function_imports, parse_module
 
 REMEDIATION = (
     "Give the condition a code of its own, or derive the class from the class that owns the code"
@@ -39,6 +40,22 @@ class _Declaration:
     owner: Target  # an advisory class, or a configured base outside the workspace
     file: str
     line: int
+    in_body: bool  # declared in the owner's class body, not passed at a call
+
+
+def _calls(module: Module) -> Iterator[tuple[ast.Call, Imports]]:
+    """Every call of ``module`` with the lazy imports of the functions enclosing it, innermost first."""
+
+    def visit(node: ast.AST, local: Imports) -> Iterator[tuple[ast.Call, Imports]]:
+        for child in ast.iter_child_nodes(node):
+            inner = local
+            if isinstance(child, ast.FunctionDef | ast.AsyncFunctionDef):
+                inner = {**local, **function_imports(module, child)}
+            elif isinstance(child, ast.Call):
+                yield child, local
+            yield from visit(child, inner)
+
+    yield from visit(module.tree, {})
 
 
 class _Analysis:
@@ -87,18 +104,42 @@ class _Analysis:
                     continue
                 code = self.index.string_value(module.name, value)
                 if code:
-                    found.append(_Declaration(code, owner, module.file, statement.lineno))
-        for node in ast.walk(module.tree):
-            if not isinstance(node, ast.Call):
-                continue
+                    found.append(_Declaration(code, owner, module.file, statement.lineno, in_body=True))
+        for node, local in _calls(module):
             keyword = next((k for k in node.keywords if k.arg == "code"), None)
-            if keyword is None:
-                continue
-            callee = self.index.resolve_expression(module.name, node.func)
-            code = self.index.string_value(module.name, keyword.value)
-            if callee is not None and code and self.is_advisory(callee, module.file):
-                found.append(_Declaration(code, callee, module.file, keyword.value.lineno))
+            code = self.index.string_value(module.name, keyword.value, local) if keyword else None
+            callee = self.callee(module, node.func, local) if code else None
+            if code and callee is not None:
+                found.append(_Declaration(code, callee, module.file, node.lineno, in_body=False))
         return found
+
+    def callee(self, module: Module, func: ast.expr, local: Imports) -> Target | None:
+        """The advisory class a call constructs or calls a classmethod of (``Error(...)``, ``Error.blocked(...)``)."""
+        target = self.index.resolve_expression(module.name, func, local)
+        if target is not None and self.is_advisory(target, module.file):
+            return target
+        if isinstance(func, ast.Attribute):  # a classmethod of a base outside the workspace
+            owner = self.index.resolve_expression(module.name, func.value, local)
+            if owner is not None and owner.kind == "external" and self.is_advisory(owner, module.file):
+                return owner
+        return None
+
+    def heads(self, declarations: list[_Declaration]) -> set[Target]:
+        """The owners no other owner absorbs.
+
+        An owner absorbs its subclasses; one that declares the code only at calls absorbs only owners that do too, so
+        a code passed when raising a base never hides two subclasses declaring it.
+        """
+        owners = {d.owner for d in declarations}
+        in_body = {d.owner for d in declarations if d.in_body}
+        return {
+            owner
+            for owner in owners
+            if not any(
+                other != owner and other in self.ancestors(owner) and (other in in_body or owner not in in_body)
+                for other in owners
+            )
+        }
 
 
 def _describe(target: Target, first: _Declaration) -> str:
@@ -110,7 +151,7 @@ class AdvisoryUniqueCodeRule(BaseRule):
         super().__init__(
             id="RULE-advisory-unique-code",
             name="advisory-unique-code",
-            description="Advisory classes declaring the same code lie on one inheritance line.",
+            description="A code is declared by one advisory class and its subclasses.",
             phase=Phase.LINTER,
             severity=Severity.ERROR,
             settings=UniqueCodeSettings(),
@@ -147,8 +188,7 @@ class AdvisoryUniqueCodeRule(BaseRule):
 
         violations: list[Violation] = []
         for code, declarations in by_code.items():
-            owners = {d.owner for d in declarations}
-            heads = {o for o in owners if not any(other != o and other in analysis.ancestors(o) for other in owners)}
+            heads = analysis.heads(declarations)
             if len(heads) < 2:
                 continue
             first = {

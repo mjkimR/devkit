@@ -1023,11 +1023,11 @@
     },
     ".devkit/managed/advisory/bundle.toml": {
       "mode": 420,
-      "sha256": "0fb64c32b1b58e26e7132a6819070ff18539c28010b7995f7684a6c04516d611"
+      "sha256": "92dd6c87f594d5e2eaf8a3a94b9d760e5f08b344a90ddb2d488b6715480bdc25"
     },
     ".devkit/managed/advisory/instructions/agent-advisory-python.md": {
       "mode": 420,
-      "sha256": "4dcb8859266c2908c676d9aa7f761bc6825488316fa762e43b362c869c40f22f"
+      "sha256": "d49275ae1bd12401173be3905e30661b1ac2b67ef321fc7ccbc15d660ebf1bf4"
     },
     ".devkit/managed/advisory/instructions/agent-advisory.md": {
       "mode": 420,
@@ -1035,19 +1035,19 @@
     },
     ".devkit/managed/advisory/rules/unique_code/guide.md": {
       "mode": 420,
-      "sha256": "76fc4cd3cabc54c0551ef923242dc7110f2523fae0b05fc4e37f582453a78acd"
+      "sha256": "281863201022e36ec50ada8d49aa52cf220dd666bf5ec2d559e35974929a3013"
     },
     ".devkit/managed/advisory/rules/unique_code/index.py": {
       "mode": 420,
-      "sha256": "e1b7134e98afe0084bb45907d40998f068eefe3411b6f3006193bca528dfc556"
+      "sha256": "07ce171acfe64605856e6d473f0b06d6bcdedff47dd5cf68e3004df48c616981"
     },
     ".devkit/managed/advisory/rules/unique_code/rule.py": {
       "mode": 420,
-      "sha256": "792bf92ce6691bcc8952394e286c4660ebf16f9fead9f7f6c219f2cbe7c9d5e0"
+      "sha256": "e389190131a4af8fc2f78c8ebc8c5d1542686a8cfad0aa1a3cba89a219612022"
     },
     ".devkit/managed/advisory/rules/unique_code/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "aeb37550ee5444a0a3ad1b7123a86aaf38d369f0ba6d9455fed12e50559260f0"
+      "sha256": "6d23cdf84e3208923d8b0921494760ec07fae66c9c204a5f56226c85b5f43a3b"
     },
     ".devkit/managed/authoring/bundle.toml": {
       "mode": 420,

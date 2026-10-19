@@ -15,7 +15,7 @@ id = "agent-advisory-python"
 kind = "instruction"
 source = "instructions/agent-advisory-python.md"
 
-# Linter error when two unrelated AdvisoryError classes declare the same code.
+# Linter error unless each code is declared by one AdvisoryError class and its subclasses.
 [[assets]]
 id = "unique-code"
 kind = "rule"

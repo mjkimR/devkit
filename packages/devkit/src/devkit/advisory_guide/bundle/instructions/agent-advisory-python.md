@@ -30,7 +30,7 @@ raise ConfigInvalidError(
 )
 ```
 
-A code names one condition: classes declaring the same code, in their body or through `code=` at a call, lie on one inheritance line (a subclass may redeclare its base's code). `RULE-advisory-unique-code` checks this in the `python` preset.
+A code names one condition: it is declared by one class and its subclasses, in their bodies or through `code=` at a call (a subclass may redeclare its base's code). `RULE-advisory-unique-code` checks this in the `python` preset.
 
 For one-off errors, use the factories. They set every field that decides the mode (`level = ERROR`, `actor`, `retry`, `guardrail`, `input_error`), so a subclass default never changes the mode a factory names:
 

@@ -1,0 +1,46 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-18T23:27:54.662589Z'
+status: completed
+summary: 'REVISE: code-reviewer subagent; AC-01..AC-10 re-verified; one medium (lazy import scoping) and four low findings.'
+findings:
+- issue: 'Function-local (lazy) imports are merged into one module-wide namespace, first binding winning, so a call is attributed to the wrong class when two functions lazily import different classes under one name, or a lazy import shadows a top-level class name: a false error-severity violation.'
+  evidence: packages/devkit/src/devkit/advisory_guide/bundle/rules/unique_code/index.py:99
+  failure_condition: 'k/a.py and k/b.py each define ConfigError with codes A_CODE and B_CODE; k/use.py has def f(): from k.a import ConfigError; raise ConfigError(''m'', code=''A_CODE'') and def g(): from k.b import ConfigError; raise ConfigError(''m'', code=''B_CODE''): 2 violations reported instead of 0.'
+  suggested_action: Resolve call sites in their own function scope before the module namespace, and add a rule test.
+  resolution: open
+  severity: medium
+- issue: A code passed at a call of a shared base absorbs a collision between unrelated subclasses (single-root reduction), and in a consumer a factory call on the external base (devkit.advisory.AdvisoryError.blocked) is never collected; the 'one inheritance line' wording describes a chain while the condition is one owning ancestor.
+  evidence: packages/devkit/src/devkit/advisory_guide/bundle/rules/unique_code/rule.py:151
+  failure_condition: 'class Base(AdvisoryError): code = ''BASE''; class S1(Base): code = ''DUP''; class S2(Base): code = ''DUP''; raise Base(''m'', code=''DUP''): 0 violations, 2 without the call.'
+  suggested_action: Let a call-site owner never absorb a class-body owner, collect factory calls on external bases, and align the wording with the single-owner definition.
+  resolution: open
+  severity: low
+- issue: 'Annotated module-level string constants (CODE: Final = ''X'') are not indexed, so code = CODE is skipped.'
+  evidence: packages/devkit/src/devkit/advisory_guide/bundle/rules/unique_code/index.py:91
+  failure_condition: 'app.py: CODE: Final = ''DUP''; class S1(AdvisoryError): code = CODE; class S2(AdvisoryError): code = ''DUP'': 0 violations instead of 2.'
+  suggested_action: Index ast.AnnAssign with a Name target and a string Constant value; add a test.
+  resolution: open
+  severity: low
+- issue: AC-03 says the violation is at the call's line; the rule reports the line of the code= keyword value, which differs for a multi-line call.
+  evidence: packages/devkit/src/devkit/advisory_guide/bundle/rules/unique_code/rule.py:100
+  failure_condition: "raise B(\n    'msg',\n    code='OWNED',\n) is reported at the code= line."
+  suggested_action: Report the call's line, or record the deviation.
+  resolution: open
+  severity: low
+- issue: Guide section 4 omits path overrides and the per-file semantics of bases and exclude required by the rule guide template.
+  evidence: packages/devkit/src/devkit/advisory_guide/bundle/rules/unique_code/guide.md:41
+  failure_condition: A consumer sets bases through a path override for one directory; subclasses defined elsewhere are not advisory even when raised from that directory, and the guide does not say so.
+  suggested_action: Document path overrides and the per-file semantics of bases and exclude in guide section 4.
+  resolution: open
+  severity: low
+checks:
+  lint: PASS just lint-check devkit
+  typecheck: PASS just check devkit
+  tests: PASS 2308 passed, 2 skipped
+  rules: PASS devkit rules check --ci --base 8fc64ef
+diff_scope:
+  base: 8fc64ef7159aa4c883cc71a3f868ae9a336bb400
+  head: 0a0f2a150e9399785912e7c64aa30ac3e3dd636f

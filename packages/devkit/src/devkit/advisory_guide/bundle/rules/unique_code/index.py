@@ -1,7 +1,7 @@
 """A static index of a workspace's Python modules: classes, string constants and imports, resolved without importing.
 
 Module names come from paths (below the last ``src`` segment, else from the workspace root; ``__init__.py`` names
-its package). A reference that leaves the workspace stays a dotted name (``Target.external``), so a base imported
+its package). Imports inside a function bind names in that function only (``function_imports``). A reference that leaves the workspace stays a dotted name (``Target.external``), so a base imported
 from an installed package can still be matched by name.
 """
 
@@ -11,6 +11,8 @@ import ast
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from typing import Literal
+
+Imports = dict[str, tuple[str, str | None]]  # local name -> (module, attribute or None for a module import)
 
 
 @dataclass(frozen=True)
@@ -29,7 +31,7 @@ class Module:
     tree: ast.Module
     classes: dict[str, ast.ClassDef] = field(default_factory=dict)
     constants: dict[str, str] = field(default_factory=dict)
-    imports: dict[str, tuple[str, str | None]] = field(default_factory=dict)  # local -> (module, attribute)
+    imports: Imports = field(default_factory=dict)  # top-level bindings only
 
 
 def module_name(rel: str) -> tuple[str, bool]:
@@ -54,9 +56,7 @@ def _top_level(body: list[ast.stmt]) -> Iterator[ast.stmt]:
                 yield from _top_level(block)
 
 
-def _record_import(
-    module: Module, node: ast.Import | ast.ImportFrom, imports: dict[str, tuple[str, str | None]]
-) -> None:
+def _record_import(module: Module, node: ast.Import | ast.ImportFrom, imports: Imports) -> None:
     if isinstance(node, ast.Import):
         for alias in node.names:
             if alias.asname:
@@ -88,19 +88,29 @@ def parse_module(rel: str, text: str) -> Module | None:
     for node in _top_level(tree.body):
         if isinstance(node, ast.ClassDef):
             module.classes.setdefault(node.name, node)
-        elif (
-            isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str)
-        ):
-            for target in node.targets:
-                if isinstance(target, ast.Name):
+        elif isinstance(node, ast.Assign | ast.AnnAssign) and isinstance(node.value, ast.Constant):
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            for target in targets:
+                if isinstance(target, ast.Name) and isinstance(node.value.value, str):
                     module.constants.setdefault(target.id, node.value.value)
         elif isinstance(node, ast.Import | ast.ImportFrom):
             _record_import(module, node, module.imports)
-    # Imports inside functions (lazy imports) bind names too; a top-level binding of the same name wins.
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import | ast.ImportFrom):
-            _record_import(module, node, module.imports)
     return module
+
+
+def function_imports(module: Module, function: ast.FunctionDef | ast.AsyncFunctionDef) -> Imports:
+    """The names ``function`` binds by importing (lazy imports), not counting functions or classes nested in it."""
+    imports: Imports = {}
+
+    def visit(node: ast.AST) -> None:
+        for child in ast.iter_child_nodes(node):
+            if isinstance(child, ast.Import | ast.ImportFrom):
+                _record_import(module, child, imports)
+            elif not isinstance(child, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef | ast.Lambda):
+                visit(child)
+
+    visit(function)
+    return imports
 
 
 class Index:
@@ -111,8 +121,13 @@ class Index:
         for module in sorted(modules, key=lambda m: m.file):
             self.modules.setdefault(module.name, module)  # the first path in sorted order owns a duplicate name
 
-    def resolve(self, module: str, name: str, _seen: frozenset[tuple[str, str]] = frozenset()) -> Target:
-        """What ``name`` means in ``module``, following imports and re-exports."""
+    def resolve(
+        self, module: str, name: str, local: Imports | None = None, _seen: frozenset[tuple[str, str]] = frozenset()
+    ) -> Target:
+        """What ``name`` means in ``module`` (``local``: the bindings of the enclosing functions, which come first)."""
+        if local and name in local:
+            source, attribute = local[name]
+            return Target("module", source) if attribute is None else self.resolve(source, attribute)
         here = self.modules.get(module)
         if here is None or (module, name) in _seen:
             if f"{module}.{name}" in self.modules:
@@ -126,7 +141,7 @@ class Index:
             source, attribute = here.imports[name]
             if attribute is None:
                 return Target("module", source)
-            return self.resolve(source, attribute, _seen | {(module, name)})
+            return self.resolve(source, attribute, _seen=_seen | {(module, name)})
         if f"{module}.{name}" in self.modules:
             return Target("module", f"{module}.{name}")
         return Target("external", f"{module}.{name}")
@@ -136,12 +151,12 @@ class Index:
         module, _, name = dotted.rpartition(".")
         return self.resolve(module, name)
 
-    def resolve_expression(self, module: str, node: ast.expr) -> Target | None:
+    def resolve_expression(self, module: str, node: ast.expr, local: Imports | None = None) -> Target | None:
         """``Name`` and dotted ``Attribute`` expressions; an attribute of a class resolves to the class."""
         if isinstance(node, ast.Name):
-            return self.resolve(module, node.id)
+            return self.resolve(module, node.id, local)
         if isinstance(node, ast.Attribute):
-            owner = self.resolve_expression(module, node.value)
+            owner = self.resolve_expression(module, node.value, local)
             if owner is None:
                 return None
             if owner.kind == "module":
@@ -161,9 +176,9 @@ class Index:
         found = (self.resolve_expression(module.name, base) for base in node.bases)
         return [target for target in found if target is not None]
 
-    def string_value(self, module: str, node: ast.expr) -> str | None:
+    def string_value(self, module: str, node: ast.expr, local: Imports | None = None) -> str | None:
         """A string literal, or a name bound to a module-level string literal."""
         if isinstance(node, ast.Constant):
             return node.value if isinstance(node.value, str) else None
-        target = self.resolve_expression(module, node)
+        target = self.resolve_expression(module, node, local)
         return target.name if target is not None and target.kind == "constant" else None

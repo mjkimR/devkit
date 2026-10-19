@@ -47,9 +47,10 @@ def test_a_subclass_may_redeclare_its_base_code(tmp_path: Path) -> None:
 def test_a_constructor_code_owned_by_an_unrelated_class_is_reported(tmp_path: Path) -> None:
     files = {
         "a.py": ADVISORY + 'class A(AdvisoryError):\n    code = "OWNED"\n',
-        "b.py": ADVISORY + "class B(AdvisoryError):\n    pass\n\n\ndef run():\n    raise B('msg', code='OWNED')\n",
+        "b.py": ADVISORY
+        + "class B(AdvisoryError):\n    pass\n\n\ndef run():\n    raise B(\n        'msg',\n        code='OWNED',\n    )\n",
     }
-    assert _found(check(RULE, tmp_path, files)) == [
+    assert _found(check(RULE, tmp_path, files)) == [  # at the call's line
         ("a.py", 5, 'Code "OWNED" is also declared by b.B (b.py:9); a code names one condition'),
         ("b.py", 9, 'Code "OWNED" is also declared by a.A (a.py:5); a code names one condition'),
     ]
@@ -130,3 +131,55 @@ def test_unparseable_files_are_skipped(tmp_path: Path) -> None:
         "b.py": ADVISORY + 'class B(AdvisoryError):\n    code = "DUP"\n',
     }
     assert [v.file for v in check(RULE, tmp_path, files)] == ["a.py", "b.py"]
+
+
+def test_lazy_imports_bind_names_in_their_function_only(tmp_path: Path) -> None:
+    files = {
+        "src/k/a.py": ADVISORY + 'class ConfigError(AdvisoryError):\n    code = "A_CODE"\n',
+        "src/k/b.py": ADVISORY + 'class ConfigError(AdvisoryError):\n    code = "B_CODE"\n',
+        "src/k/use.py": (
+            ADVISORY
+            + 'class ConfigError(AdvisoryError):\n    code = "USE_CODE"\n\n'
+            + "def f():\n    from k.a import ConfigError\n\n    raise ConfigError('m', code='A_CODE')\n\n"
+            + "def g():\n    from k.b import ConfigError\n\n    def inner():\n        raise ConfigError('m', code='B_CODE')\n\n"
+            + "def h():\n    raise ConfigError('m', code='USE_CODE')\n"
+        ),
+    }
+    assert check(RULE, tmp_path, files) == []
+
+
+def test_a_code_passed_when_raising_a_base_does_not_hide_its_subclasses(tmp_path: Path) -> None:
+    files = {
+        "app.py": (
+            ADVISORY
+            + 'class Base(AdvisoryError):\n    code = "BASE"\n\n'
+            + 'class S1(Base):\n    code = "DUP"\n\n'
+            + 'class S2(Base):\n    code = "DUP"\n\n'
+            + "def run():\n    raise Base('m', code='DUP')\n"
+        ),
+    }
+    assert [v.line for v in check(RULE, tmp_path, files)] == [8, 11, 14]
+
+
+def test_factory_calls_on_a_base_outside_the_workspace_are_collected(tmp_path: Path) -> None:
+    files = {
+        "app.py": ADVISORY + 'class A(AdvisoryError):\n    code = "DUP"\n',
+        "use.py": ADVISORY + "def run():\n    raise AdvisoryError.blocked('m', code='DUP')\n",
+    }
+    found = check(RULE, tmp_path, files)
+    assert _found(found)[1] == (
+        "use.py",
+        5,
+        'Code "DUP" is also declared by app.A (app.py:5); a code names one condition',
+    )
+    assert len(found) == 2
+
+
+def test_annotated_module_constants_are_codes(tmp_path: Path) -> None:
+    files = {
+        "app.py": (
+            "from typing import Final\n\n" + ADVISORY + 'CODE: Final = "DUP"\n\n'
+            'class S1(AdvisoryError):\n    code = CODE\n\nclass S2(AdvisoryError):\n    code = "DUP"\n'
+        ),
+    }
+    assert len(check(RULE, tmp_path, files)) == 2

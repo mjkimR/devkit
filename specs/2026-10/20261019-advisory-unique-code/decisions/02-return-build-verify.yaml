@@ -1,0 +1,6 @@
+request: return:build-verify
+kind: return
+action: accept
+workflow: sdd-spec-feature
+stage: build-verify
+at: '2026-10-18T23:27:47.495884Z'

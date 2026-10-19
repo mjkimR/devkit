@@ -21,3 +21,10 @@ plan: PLAN-advisory-unique-code
     `docs/development/reference/distribution.md`,
     `packages/devkit/src/devkit/advisory_guide/bundle/instructions/agent-advisory-python.md`
   - _Requirements: AC-10_
+- [x] **Task 4**: Review fixes: function-scoped lazy imports, call-site owners never cover class-body owners, factory
+  calls on external bases, annotated constants, call-line reporting and the guide's per-file settings
+  - **_Boundary**: `packages/devkit/src/devkit/advisory_guide/bundle/rules/unique_code/`,
+    `packages/devkit/src/devkit/advisory_guide/bundle/instructions/agent-advisory-python.md`,
+    `packages/devkit/src/devkit/advisory_guide/bundle/bundle.toml`, `docs/development/reference/rules.md`
+  - _Requirements: AC-03, AC-11, AC-12, AC-13_
+  - **Verification**: `uv run devkit rules test RULE-advisory-unique-code`

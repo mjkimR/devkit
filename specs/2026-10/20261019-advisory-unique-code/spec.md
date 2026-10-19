@@ -49,8 +49,10 @@ An *advisory class* is a class defined in a checked workspace file that derives,
 from a configured base (`bases`, default `devkit.advisory.AdvisoryError` and `devkit.advisory.error.AdvisoryError`). A
 *code declaration* is either a class-body `code = "X"` / `code: str = "X"` on an advisory class (owned by that class) or
 a `code="X"` keyword on a call to an advisory class or one of its classmethods (owned by the called class). The value
-may be a string literal or a name bound to a module-level string literal. A code *collides* when its owners have more
-than one root: no owner is an ancestor of (or equal to) all the others.
+may be a string literal or a name bound to a module-level string literal, plain or annotated. Names resolve through
+the module's imports, and inside a function through that function's own imports first. An owner *covers* an owner
+derived from it, except that an owner declaring the code only at calls never covers one declaring it in its class
+body. A code *collides* when more than one of its owners is covered by no other owner.
 
 ### [AC-01] Unrelated classes declaring one code are reported
 - **Given** `a.py` defines `class A(AdvisoryError): code = "DUP"` and `b.py` defines `class B(AdvisoryError): code = "DUP"`
@@ -114,6 +116,25 @@ than one root: no owner is an ancestor of (or equal to) all the others.
 - **Then** the rule asset belongs to the `python` preset only, this repository selects `advisory` at `python`, the
   rule is loaded, `devkit rules check` reports no `RULE-advisory-unique-code` violation, and
   `packages/devkit/tests/test_layering.py` passes with `advisory_guide` allowed to import `rules` only
+
+### [AC-11] Lazy imports bind names in their function only
+- **Given** `use.py` defines a class `ConfigError` and two functions that each import a different `ConfigError` and
+  raise it with that class's own code, one of them from a nested function
+- **When** the rule runs
+- **Then** it returns no violation
+
+### [AC-12] A code passed when raising a base does not cover its subclasses
+- **Given** `class Base(AdvisoryError)`, subclasses `S1(Base)` and `S2(Base)` declaring `code = "DUP"`, and
+  `raise Base("m", code="DUP")`; separately, `AdvisoryError.blocked("m", code="DUP")` on a base outside the workspace
+  beside a subclass declaring `DUP`
+- **When** the rule runs
+- **Then** the first workspace reports three violations (both subclasses and the call), and the second reports two
+  (the subclass and the factory call)
+
+### [AC-13] Annotated module constants are codes
+- **Given** `CODE: Final = "DUP"`, `class S1(AdvisoryError): code = CODE` and `class S2(AdvisoryError): code = "DUP"`
+- **When** the rule runs
+- **Then** it returns two violations
 
 ## 5. Assumptions
 
