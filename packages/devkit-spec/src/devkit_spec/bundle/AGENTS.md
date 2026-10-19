@@ -56,6 +56,13 @@ states the reason as a decision. Nothing grants new merge, publication or deleti
 switched off as skipped. Before formal worktree work read the `spec` skill's `references/worktree.md`; before
 completion or Git actions its `references/completion.md`.
 
+Human intervention belongs at defined approval and human review points. Between them, within agreed intent and
+existing authority, agents SHOULD execute, inspect failures, fix, revalidate and retry autonomously. Helper tools
+and validation MUST NOT add human approval or acknowledgment solely for routine findings. Escalate only for a due
+human decision, a necessary change to the agreement, missing authority, an existing explicit stop rule or a problem
+the responsible agent cannot resolve. Workers escalate to the Host first. Required checks, reviews, sandbox limits
+and delegated boundaries still apply; reuse existing authorization within its scope (`ADR-autonomy-between-approval-gates`).
+
 Mode per activity: `direct` (default; the Host implements), `local-orchestrated` (one-shot workers in their own
 worktrees; user-invoked `spec-orchestrate`) or `cloud-pr` (a Cloud Agent from a PR). Heavier modes are the user's
 choice; a `session` task runs only in `direct` or the `cloud-pr` general PR path.
