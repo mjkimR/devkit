@@ -2,7 +2,7 @@
 id: PROP-draft-direct-acceptance
 title: Direct acceptance of drafts that need no Planning
 summary: Lets the user accept a draft proposal whose direction is already settled directly in Backlog, recording plan-intent and plan-accept together without a Planning branch, so small drafts such as decomposition results go straight to handoff.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                      # draft | reviewing | accepted | rejected
 created_at: 2026-10-16
 target_area: capabilities/delivery/
 priority: medium                      # critical | high | medium | low
