@@ -55,50 +55,46 @@ viewer read-only leaves every approval on its existing single path.
 
 ## 2. Technical Spike Questions
 
-- **Q1. Packaging for autohub.** Decided in Backlog: no registry publication. devkit's viewer is an npm package in
-  a subdirectory; autohub commits its `npm pack` tarball built from a pinned devkit commit under
-  `modules/hub-ui/vendor/` and depends on it with `file:vendor/<name>.tgz`, its integrity pinned by
-  `package-lock.json`, with a note naming the source commit and rebuild steps. This is how autohub already consumes
-  app-common's `api-codegen` (`vendor/api-codegen.md`); npm Git dependencies install only a repository's root
-  package. Open: whether one Svelte component library covers both autohub and devkit's own server or the server
-  needs a separate static build, and why autohub moved from dynamically loaded external viewer bundles (autohub
-  `bfdef18`) to a native component (autohub `0d8c05f`), so the move does not reintroduce what that change removed.
-- **Q2. Package and command.** Which distribution ships the server and the built assets: an extra of `devkit-spec`
-  (which owns the proposal and milestone document kinds), a new distribution, or `devkit-catalog`? What is the
-  command (working name `devkit spec view`), and how does its stdout stay within `ARCH-08-1-agent-output` (one
-  `[KIND: ...]` sentinel with the URL, nothing else)? Which server stack keeps the runtime dependencies proportionate
-  (standard library versus Starlette or similar)?
-- **Q3. Node toolchain in this repository.** Building the SPA adds Node to a Python monorepo. Where does the frontend
-  source live (`packages/<name>/frontend/` or similar), how do `just lint`, `just check`, `just test` and
-  `just smoke` cover it, and is the built output committed, built at wheel time or published separately?
-- **Q4. Multi-repository registration.** How are repositories registered: repeated `--repo` options, a user-level
-  file, or reuse of an existing list (workbench `config/repos.txt`)? What is a repository's stable ID in URLs
-  (`/api/repos/{id}/info|tree|blob?ref=`)?
-- **Q5. Reading through Git.** Reads use `git ls-tree` and `git show <ref>:<path>` so no path outside a registered
-  repository is reachable and any branch can be read. Does the viewer also offer the working tree (uncommitted
-  edits), and how does it list `plan-` and `dev-` branches and registered worktrees for a milestone's members?
-- **Q6. Parsing and version drift.** The viewer parses frontmatter in the browser, so the server never runs each
-  repository's own devkit. Registered repositories may pin different `devkit-spec` versions; how does the viewer
-  treat unknown kinds or fields (render as plain documents, never fail)?
-- **Q7. Roadmap view.** What does the roadmap tab show: milestones by status, `depends_on` order and readiness,
-  members per milestone (proposals and specs whose `milestone` names it, matching `refs --direction in`) with their
-  settled state, across the base and Unit branches?
-- **Q8. Local server safety.** Bind to `127.0.0.1` only; the server is read-only, so no write endpoint exists. Is a
-  per-launch token still needed against other local pages reading repository content?
+Answered in Planning; the decisions are `PADR-viewer-distribution-and-frontend-build` (Q1 to Q3) and
+`PADR-read-only-local-server-over-git-refs` (Q4 to Q8).
+
+- **Q1. Packaging for autohub.** No registry publication (decided in Backlog). autohub commits the `npm pack` tarball
+  of devkit's viewer library, built from a pinned devkit commit, under `modules/hub-ui/vendor/` and depends on it with
+  `file:vendor/<name>.tgz`, as it already does for app-common's `api-codegen` (`vendor/api-codegen.md`); npm Git
+  dependencies install only a repository's root package. One frontend source yields both the component library and
+  devkit's own app. What autohub removed in `0d8c05f` was runtime loading of an externally hosted Custom Element
+  bundle (an HTTPS URL and SHA-256 in a Git-ignored local file, downloaded at deployment build time, published
+  separately); a vendored library compiled into autohub's build brings none of it back.
+- **Q2. Package and command.** A separate `devkit-viewer` distribution mounted through `devkit.commands` as
+  `devkit viewer serve`, so only those who run it install its assets; it needs no `devkit-spec` code. stdout carries
+  one `[VIEWER: url=... repos=...]` sentinel. The server is the standard library's `http.server`.
+- **Q3. Node toolchain.** The frontend lives in `packages/devkit-viewer/frontend/`. Its built app is committed and
+  registered as a tracked generated artifact (`CAP-GEN-tracked-artifacts`), so installing devkit from Git never
+  needs Node; the `just` recipes gain frontend lint, type check and tests through `scripts/`, and `just smoke` checks
+  the installed wheel serves its assets.
+- **Q4. Registration.** `--repo PATH` (repeatable) and `--scan DIR` (direct children that are Git repositories with
+  `.devkit/config.toml`). The ID is the directory name; duplicates are refused. workbench's `config/repos.txt` names
+  clone targets, not checkouts, so it is not read.
+- **Q5. Reading through Git.** `git ls-tree` and `git cat-file` at a ref; a new optional `refs` member of
+  `RepositoryDataSource` lists local branches. The uncommitted working tree is not shown (a possible follow-up);
+  nothing is fetched.
+- **Q6. Version drift.** The browser parses the documents; unknown kinds and fields render as plain documents.
+- **Q7. Roadmap view.** Milestones by status (history behind a toggle), `depends_on` order and readiness, and members
+  on the default branch and, through `refs`, on local `plan-` and `dev-` branches, read on demand.
+- **Q8. Safety.** Loopback only, a `Host` header check against DNS rebinding, no CORS headers, GET only; no token.
 
 ## 3. Proposed Design & Impact
 
-A working direction for Planning to test:
-
-- **Move**: bring the read-only parts (`SddViewer`, `KnowledgeViews`, `documents.ts`, `repository.ts`, and the file
-  tree and blob views) into devkit. The autohub run and decision panels (`SddExecution`, `SddProposals`,
-  `SddRunLinks`) stay in autohub, since they call autohub's execution API.
-- **Add**: a roadmap tab over `docs/roadmap/MS-*.md` (Q7) and a repository switcher.
-- **Serve**: one local process serves several registered repositories (Q4), reads through Git at a ref (Q5) and
-  serves the built viewer assets (Q2, Q3).
-- **autohub**: after this proposal, autohub replaces its copy with the devkit-owned viewer and passes its existing
-  GitHub-backed data source (Q1). That change belongs to autohub and follows this package's release.
-- **Approvals stay out.** The viewer neither records decisions nor talks to the integration MCP server:
+- **Move**: the read-only viewer (`SddViewer`, `KnowledgeViews`, `documents.ts`, the `RepositoryDataSource`
+  interface) becomes a Svelte component library in devkit. autohub keeps `RepositoryView`, its Git browser
+  (`FileTreeTable`, `FileBlobViewer`, which use its shadcn components) and its run and decision panels
+  (`SddExecution`, `SddProposals`, `SddRunLinks`, which call its execution API).
+- **Add**: a roadmap view over `docs/roadmap/MS-*.md` (Q7) in the library, and a repository switcher in devkit's app.
+- **Serve**: `devkit viewer serve` serves several registered repositories (Q4) through Git at a ref (Q5) and the
+  committed app build (Q3).
+- **autohub**: after a devkit commit carries the library, autohub replaces its copy with the vendored tarball and
+  passes its existing GitHub-backed data source (Q1). That change belongs to autohub.
+- **Approvals stay out** (`PADR-read-only-local-server-over-git-refs`):
   - Gate, handoff and question answers that are records (`CAP-DLV-human-interaction`) could be written by a web page
     under the contract, but the waiting agent would not see them until its next `devkit workflow next`, and the viewer
     would become a writing server with commit and token concerns.
@@ -106,9 +102,10 @@ A working direction for Planning to test:
     started (`CAP-INT-mcp-services`); a separate server cannot grant it without changing that approval path.
   - The viewer and the MCP server also differ in lifetime: one long-lived process for many repositories versus one
     process per host session.
-- **Impact**: a new capability area `capabilities/viewer/`; `CAP-DLV-proposal-incubation` and
-  `ADR-milestone-documents` gain a pointer to the viewer; the package README and `docs/development/reference/` gain
-  the command; `AGENTS.md` lists the package if a new distribution is chosen (Q2).
+- **Impact**: a new distribution `packages/devkit-viewer/` and its README; a new capability area
+  `capabilities/viewer/`; `docs/development/reference/` gains the command; `AGENTS.md` and the README list the
+  distribution; `.devkit/generated.toml` registers the assets; the layering test covers `devkit_viewer`;
+  `ADR-roadmap-in-repository`'s "no human-facing roadmap screen" cost is met by the viewer.
 
 ### 3.1 Non-Goals
 
@@ -117,6 +114,7 @@ A working direction for Planning to test:
 - **Scope Excluded**: showing open workflow requests (`[REQUEST: ...]`); it needs each repository's own devkit to run
   and is a possible follow-up.
 - **Scope Excluded**: editing documents, starting Planning or Development, or any other write from the viewer.
+- **Scope Excluded**: showing uncommitted working tree content.
 - **Scope Excluded**: remote hosting, authentication for several users, and GitHub API access in the devkit server.
 - **Scope Excluded**: the autohub change that adopts the devkit-owned viewer (autohub's own work).
 
