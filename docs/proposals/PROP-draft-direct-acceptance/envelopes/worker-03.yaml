@@ -1,0 +1,65 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T03:54:38.257115Z'
+status: needs_input
+summary: 'Recovery Planning turn at high (the user''s ruling (a) on worker-02): ran challenger-06 (round 6, scope 2f533ed..96ddbc8). It resolved challenger-05 #2, #4, #5, #7 to #10. Self-verified and fixed in e28d7cc: #3 (3.2 carries the base-only commit, new slug and revert recovery into 01 5.1/2.2), #5 (revert restores only when no later commit changed the paths; the Host names the deletion commit to the user at once), #6 (Q5 wording) and #7 (story scenario 7). Each applies the suggested_action as written in the named section, with no decision changed. #1 and #2 recur, so they cannot be self-verified; #4 is Decision needed. resolution-01 closes worker-02. Support roles this run: challenger-06.'
+findings: []
+assumptions:
+- challenger-01 to challenger-04 count as rounds 1 to 4; challenger-05 was round 5 (opened on the worker's reading of the answers), challenger-06 is round 6 (the user's ruling)
+- The workbench strategy layer is updated first; 3.2 lists the edits as an ordering dependency
+unverified_areas:
+- Whether the engine opens gate:plan-accept on a fresh plan-<slug> for an already-accepted proposal (option B of planning-acceptance-without-record)
+- Revert conflict behaviour after feedback hygiene, reasoned not reproduced
+- autohub use of the accept command; commit gate reaction to an accepted proposal committed on the base
+checks: {}
+diff_scope:
+  base: 4153e6b19ad7fae61b1c6d2b8f0fc8f6e1bd9d0b
+  head: 2a7db99f20a1fb1353d27ab81ce64f89b14b3d26
+questions:
+- id: planning-acceptance-without-record
+  title: Unrecorded Planning acceptance recovery
+  prompt: The handoff guard refuses a proposal that went through Planning (it has a worker envelope) and is accepted without a recorded plan-accept. Which recovery should the proposal name?
+  context: 'Only a hand edit can produce this state. Every accepted proposal in this repository has its gate record. Round 5 dropped the plain-form repair. Round 6 showed that the example recovery it left ("revert the hand edit") strands the proposal: status reviewing on the base, no plan-<slug>, and no route out (challenger-06 #1, which recurs challenger-03 #2).'
+  options:
+  - id: revert-planning-merge
+    description: Revert the whole Planning merge on the base back to draft, then run Planning again. A refused --direct repair is likewise undone by reverting its draft->accepted edit. No new command path.
+    recommended: true
+  - id: plain-form-repair-on-fresh-branch
+    description: The plain form also accepts an accepted proposal with no gate record when a worker envelope exists. It runs on a fresh plan-<slug> from the base and is merged per policy (a PR under required). This adds a code path, and whether the engine allows it has not been checked.
+    recommended: false
+  - id: leave-to-user
+    description: Keep the current text (the refusal goes to the user, no route is named) and list the gap at plan-accept.
+    recommended: false
+  allow_note: true
+- id: base-checkout-definition
+  title: Base checkout for a direct acceptance
+  prompt: How should accept --direct decide that it runs on the base?
+  context: 'Today it refuses a detached HEAD, plan-*/dev-* branches and branches with a recorded devkitBase. A hand-made wip or release branch still passes, so the claim "any branch other than the base is refused" is false (challenger-06 #2, which recurs challenger-05 #6).'
+  options:
+  - id: positive-base-check
+    description: Positive check. The current worktree must be the main worktree, and its branch must equal the integration base (the origin/HEAD target when it resolves, as the integration resolves it). Anything else is refused.
+    recommended: true
+  - id: negative-list-only
+    description: Keep the negative list and drop the false claim. A non-devkit branch is then accepted, and the Host's push-access check is the only guard.
+    recommended: false
+  allow_note: true
+- id: reclassification-on-protected-base
+  title: Reclassification on a protected base
+  prompt: Round 5 limited session reclassification to bases the Host can push to. Should it stay that way?
+  context: 'With this limit, a repository with a protected base always sends queued session-depth work through Planning and a spec Unit. Direct acceptance is unavailable there too. Your earlier answer (session-reclassification) did not cover this (challenger-06 #4, Decision needed).'
+  options:
+  - id: keep-restriction
+    description: Keep it. A protected base keeps the draft on its normal route, the same as for direct acceptance.
+    recommended: true
+  - id: deletion-on-session-branch
+    description: Make the deletion the first commit of the session's dev-<newslug> PR. The draft then stays visible and editable on the base until that merge.
+    recommended: false
+  allow_note: true
+problem:
+  cause: 'The user-requested round 6 returned findings that recur (challenger-06 #1 recurs challenger-03 #2, P2; #2 recurs challenger-05 #6, P3). Fixing them changes decisions (a recovery route for a Planning acceptance without its gate record, and a positive definition of the base checkout). review-loop 2 and 4 forbid self-verifying a recurring finding, and the payload stops at a recurrence or a decision change.'
+  attempts:
+  - 'Fixed and self-verified the four minor findings (#3, #5, #6, #7) in e28d7cc. Left #1 and #2 unfixed with options, because each fix is a decision. Kept #4 (Decision needed) out of the loop.'
+  recovery: 'The Host asks the user the three questions below. A planning-worker records the answers and folds them as the user''s decisions. The user then chooses: go straight to the plan-accept request with the folded diff shown (recommended, because every remaining change would be the user''s own decision), or run one more fresh challenger round on the fold.'
+activity_effort: high
