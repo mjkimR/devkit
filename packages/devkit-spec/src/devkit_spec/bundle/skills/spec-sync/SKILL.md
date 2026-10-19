@@ -32,6 +32,7 @@ Use this skill right after `spec-review` passes: the `living-spec-draft` stage (
 ### Step 1: Identify Impact on Permanent Backbone
 - Read `spec.md` and the code changes; `devkit spec refs <ID> --direction in` and `devkit spec search "<topic>"` find the documents a changed behavior is described in.
 - New user story → `docs/stories/<area>/US-<slug>.md`; new capability → `docs/capabilities/<area>/CAP-<AREA>-<slug>.md`; changed capability → edit it; changed architecture → `docs/architecture/`.
+- Did the change introduce or rename a domain term? Then update `docs/glossary.md` where it exists, by the Glossary section of the `living-spec-writing` instruction.
 
 ### Step 2: Document Reconciliation Record
 The `spec` skill's `references/completion.md` holds the evidence rules (waivers, required mismatches). Retain resolved records in place.

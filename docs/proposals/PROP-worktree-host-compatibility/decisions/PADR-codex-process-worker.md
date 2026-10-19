@@ -149,5 +149,5 @@ every writable root unless named exactly. A process rooted in the worktree with 
   range check does not see it on either host (`PADR-worktree-access-preconditions` §5).
 - Claude Code keeps the native subagent; a `claude -p` launch can be added later by listing `claude-code`.
 - Draft proposals touching the same files (the worker range validation proposal on `main`: `spec-delegate`,
-  `spec-orchestrate` and the worker contracts; `PROP-direct-planning-procedure`: the `planning-worker` steps; `PROP-integration-follow-ups`)
+  `spec-orchestrate` and the worker contracts; `SPEC-direct-planning-procedure`: the `planning-worker` steps; `PROP-integration-follow-ups`)
   rebase onto this change when accepted after it.

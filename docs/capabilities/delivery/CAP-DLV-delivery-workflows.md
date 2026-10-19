@@ -13,6 +13,7 @@ entrypoints:
   - packages/devkit-spec/src/devkit_spec/bundle/subagents/
   - packages/devkit-spec/src/devkit_spec/integration.py
   - packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/review-loop.md
+  - packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/planning.md
 ---
 
 # [CAP-DLV-delivery-workflows] Delivery Workflows
@@ -100,7 +101,8 @@ sequence.
    Docs reflection and conflict resolution within the approved intent need no re-approval.
 9. **Living Spec before `dev-integration`**: the Living Spec reflection, a resolved `reconcile.md` and
    `status: completed` of the anchor MUST be complete before the gate; an optional review feedback breakpoint between
-   `review-refine` and `living-spec-draft` adds no stage, check or approval file.
+   `review-refine` and `living-spec-draft` adds no stage, check or approval file. The reflection includes `docs/glossary.md`,
+   where it exists, when the change introduces or renames a domain term (`spec-sync` Step 1).
 10. **Integration is a stage, not a persona**: its code authority is limited to conflict resolution and the
     verification that needs; its docs authority is the reflection the approved change requires. It re-verifies only
     what conflict resolution and docs reflection changed and does not restart code review.
@@ -345,13 +347,16 @@ they run at the session's effort like the Host whose work they take over. The pr
 | `reconcile-reviewer` | `spec-sync` | `light-medium` | `medium` | nothing: verifies the implementer's reconcile at `medium`/`high`, subject to rule 15 | `reconcile-check` |
 | `code-reviewer` | `spec-review` | `general-high` | `high` | nothing: verifies implementation against requirements and checks | `review`, `reverify`, or a message for a session |
 | `scout` | none: the procedure is in the contract | `light-medium` | `medium` | nothing, or the proposal's `materials/` on request | `scout` |
-| `planning-worker` | none: the procedure is in the contract | `general-high` | session | the proposal directory in its `plan-` worktree, committed | `worker` (its own) |
+| `planning-worker` | none: the procedure is in `spec/references/planning.md`, which the contract cites | `general-high` | session | the proposal directory in its `plan-` worktree, committed | `worker` (its own) |
 | `development-worker` | none: the procedure is in the contract | `general-high` | session | the unit's write scope in its `dev-` worktree, committed at every stage boundary | `worker` (its own) and the stage envelopes |
 
 The contract body is the role's prompt and holds only what the role needs: purpose, input fields, return fields,
 write boundaries, failure handling and, for a role whose procedure no main session runs (`challenger`, `scout`, the
-workers), the procedure itself. Caller guidance (per-role payload, host guarantees, the post-run diff comparison,
-envelope recording, range validation) lives in `spec-delegate` (`SPEC-subagent-procedure-in-contract`).
+`development-worker`), the procedure itself. Planning runs in a main session in `direct` mode, so its ordered steps
+live in the `spec` skill's `references/planning.md`, which the `planning-worker` contract cites; the contract keeps
+only the worker's own obligations (worktree, nested roles, return, write boundaries, problems)
+(`ADR-executor-neutral-planning-steps-in-a-spec-reference`). Caller guidance (per-role payload, host guarantees, the
+post-run diff comparison, envelope recording, range validation) lives in `spec-delegate` (`SPEC-subagent-procedure-in-contract`).
 
 The workers exist for `local-orchestrated` mode (`spec-orchestrate`, user-invoked per activity) and never for
 `session` depth. Each is one-shot: it runs one turn of one activity in that activity's devkit worktree, using absolute

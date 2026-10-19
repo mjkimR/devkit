@@ -53,4 +53,4 @@ worker-records.md §1: "in direct mode you write it for your run whenever you st
 planning-worker contract, Procedure 2: "On the first turn set status: reviewing in proposal.md and commit it."
 ```
 
-- **Disposition**: `PROP-direct-planning-procedure`: drafted in Backlog to move the Planning steps into a spec skill reference that the planning-worker contract cites.
+- **Disposition**: `SPEC-direct-planning-procedure`: its original proposal, drafted in Backlog, moves the Planning steps into a spec skill reference that the planning-worker contract cites.

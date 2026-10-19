@@ -1,0 +1,31 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T06:27:42.052933Z'
+status: completed
+summary: 'reconcile-reviewer initial medium verification (independent): reflection of CAP-HARN-agent-guidance, CAP-DLV-delivery-workflows and docs/glossary.md complete and accurate; no P1/P2, two P3 open.'
+findings:
+- issue: Two migrated Owner cells in docs/glossary.md name capability IDs that resolve to no document (carried over from Defined in), while the lead now defines Owner as the defining capability or decision.
+  evidence: docs/glossary.md:44 (CAP-ADV-protocol), docs/glossary.md:45 (CAP-HOST-lifecycle)
+  failure_condition: An Owner cell names an ID that resolves to no document.
+  suggested_action: Set them to CAP-ADV-agent-advisory-protocol and CAP-HOST-lifecycle-observation.
+  resolution: open
+  severity: P3
+- issue: reconcile.md No impact does not name CAP-DOCS-document-search, although rule 3 and CAP-HARN 4.7 link Avoid entries to docs/glossary.yaml synonym clusters that capability defines.
+  evidence: specs/2026-10/20261019-terminology-authoring-guidance/reconcile.md:29-36; docs/capabilities/documents/CAP-DOCS-document-search.md:103-118
+  failure_condition: A document the change touches conceptually is neither a target nor named as no-impact.
+  suggested_action: 'Add a No-impact line: unchanged, Avoid entries enter glossary.yaml as ordinary synonyms under the existing schema.'
+  resolution: open
+  severity: P3
+assumptions:
+- The reviewer read the reflection as uncommitted working-tree content at branch head d56d76c; it was committed unchanged as 22fa15e8c5fa67dbef2c937d6d506147c57f43a5.
+unverified_areas:
+- 'The reviewer had no shell: git diff, tests and rules results were not rerun by it.'
+checks:
+  targets: PASS reconcile.md targets equal the target-docs blueprint
+  accuracy: PASS reflected statements match living-spec-writing.md, seed glossary.md and spec-sync Step 1
+diff_scope:
+  base: c0a37b07e18cde2dfdac37e9620d09d73b44dd6c
+  head: 22fa15e8c5fa67dbef2c937d6d506147c57f43a5
+activity_effort: medium
