@@ -50,4 +50,6 @@ spec.md (handoff skeleton), section 5 "Proposed Design & Impact":
 
 <unit>/decisions/: 01-gate-plan-intent.yaml, 02-gate-plan-accept.yaml (no PADR file)
 docs/decisions/2026-10/20261019-role-effort-presets.md: id: ADR-role-effort-presets
+  section 1 still cites the proposal-relative path `materials/host-effort-semantics.md`; the handoff moved the
+  file to docs/materials/2026-10/20261019-role-reasoning-effort-presets/ (same pattern: a code-span path, not a link)
 ```
