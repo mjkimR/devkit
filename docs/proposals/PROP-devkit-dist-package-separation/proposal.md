@@ -2,7 +2,7 @@
 id: PROP-devkit-dist-package-separation
 title: Separate asset distribution into independent devkit-dist package
 summary: Extracts agent asset distribution, bundle manifests, and sync logic into a standalone devkit-dist package to decouple distribution from developer harness tooling.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-17
 target_area: capabilities/distribution/
 priority: high                        # critical | high | medium | low
