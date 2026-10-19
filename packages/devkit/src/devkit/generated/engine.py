@@ -26,7 +26,7 @@ from pathlib import Path
 
 from devkit.advisory import AdvisoryError, Level
 from devkit.compact import CommandRun, run_command
-from devkit.core import ArgumentError, GitError, require_git_toplevel, run_git
+from devkit.core import ArgumentError, ConfigError, GitError, require_git_toplevel, run_git
 from devkit.generated.errors import (
     CommandFailedError,
     ConflictsRemainWarning,
@@ -263,12 +263,16 @@ def _plan(
     """The artifacts ``ids`` name, with the ones they depend on; all of them when ``ids`` is empty.
 
     ``working`` is the project root of the working tree when ``registry`` was read at ``rev``: an unknown ID that its
-    registry declares is named as not committed, so the refusal does not contradict ``devkit generated list``.
+    registry declares is named as not committed, so the refusal does not contradict ``devkit generated list``. The
+    lookup is best effort: a working-tree registry that cannot be read leaves the plain unknown-ID refusal.
     """
     unknown = [artifact_id for artifact_id in ids if registry.get(artifact_id) is None]
     if unknown and working is not None:
-        pending = load_registry(working)
-        uncommitted = [artifact_id for artifact_id in unknown if pending.get(artifact_id) is not None]
+        try:
+            pending: Registry | None = load_registry(working)
+        except ConfigError:
+            pending = None
+        uncommitted = [artifact_id for artifact_id in unknown if pending is not None and pending.get(artifact_id)]
         if uncommitted:
             raise ArgumentError(
                 f"generated artifacts registered in the working tree but not at {rev}: {', '.join(uncommitted)}",

@@ -247,6 +247,9 @@ def test_check_names_an_artifact_registered_only_in_the_working_tree(repo: Path)
     assert ".devkit/generated.toml" in fix and "--rev" in fix
     with pytest.raises(ArgumentError, match="unknown or disabled generated artifacts: missing"):
         check(repo, ["missing"])
+    write(repo, ".devkit/generated.toml", "[artifacts.gen\n")  # mid-edit: the committed registry still holds
+    with pytest.raises(ArgumentError, match="unknown or disabled generated artifacts: missing"):
+        check(repo, ["missing"])
 
 
 def invoke(*args: str):
