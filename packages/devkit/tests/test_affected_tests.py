@@ -40,7 +40,14 @@ def test_a_leaf_area_selects_no_unrelated_area(affected: ModuleType) -> None:
     assert selection.mode == "partial"
     assert f"{TESTS}/gate" in selection.paths
     assert {f"{TESTS}/worktree", f"{TESTS}/integration", f"{TESTS}/distribution"}.isdisjoint(selection.paths)
-    assert set(affected.SOURCE_TREE_TESTS) <= set(selection.paths)
+    assert set(affected.SOURCE_TREE_TESTS) - {f"{TESTS}/core/test_cli.py"} <= set(selection.paths)
+    assert f"{TESTS}/core/test_cli.py" in selection.paths  # scans every source file for stdout kinds
+
+
+def test_a_shared_helper_imported_at_module_level_carries_its_dependencies(affected: ModuleType) -> None:
+    # tests/workflow imports testsupport.gate at module level, which imports devkit.gate.
+    selection = affected.select(ROOT, ["packages/devkit/src/devkit/gate/runner.py"])
+    assert f"{TESTS}/workflow" in selection.paths
 
 
 @pytest.mark.parametrize(
@@ -150,6 +157,8 @@ def test_an_unknown_base_is_refused(affected: ModuleType, tmp_path: Path) -> Non
     with pytest.raises(AdvisoryError) as raised:
         affected.changed_paths(tmp_path, "nosuch")
     assert raised.value.code == "TEST_BASE_UNKNOWN"
+    assert raised.value.fix == "git branch --all --list"
+    assert raised.value.input_error
 
 
 def test_the_command_reports_an_unknown_base_and_runs_nothing() -> None:

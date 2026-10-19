@@ -55,10 +55,17 @@ DATA: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("scripts/fetch_model.py", (f"{DEVKIT}/tests/search/test_packaging.py",)),
     ("scripts/affected_tests.py", (f"{DEVKIT}/tests/test_affected_tests.py",)),
 )
-# Tests over devkit's whole source tree (layering, documented codes, CLI wiring), run for any devkit source change.
+# Tests over devkit's whole source tree (layering, documented codes, CLI wiring, stdout kinds), run for any devkit
+# source change.
 SOURCE_TREE_TESTS = tuple(
     f"{DEVKIT}/tests/{name}"
-    for name in ("test_layering.py", "test_documented_codes.py", "test_cli_imports.py", "test_cli_plugins.py")
+    for name in (
+        "test_layering.py",
+        "test_documented_codes.py",
+        "test_cli_imports.py",
+        "test_cli_plugins.py",
+        "core/test_cli.py",
+    )
 )
 
 # Paths no test reads: planning records, agent projections, guides, CI and release scripts.
@@ -103,6 +110,7 @@ class Workspace:
     def __init__(self, root: Path) -> None:
         self.root = root
         self.packages = self._packages()
+        self._helpers: dict[Path, set[str]] = {}
         directories = [*(root / DEVKIT_SRC).iterdir(), *(root / DEVKIT / "tests").iterdir()]
         self.areas = sorted({p.name for p in directories if p.is_dir()} - {"__pycache__", "testsupport"})
 
@@ -149,6 +157,30 @@ class Workspace:
                     if called in _IMPORTING_CALLS and isinstance(first, ast.Constant) and isinstance(first.value, str):
                         names = [first.value]
                 found.update(n for n in map(self.node_of, names) if n)
+            found |= self._helper_imports(tree)
+        return found
+
+    def _helper_imports(self, tree: ast.Module) -> set[str]:
+        """The nodes of the shared ``testsupport`` helpers a file imports at module level.
+
+        A helper imported inside a function counts for that test only, so it is left out like any data dependency.
+        """
+        found: set[str] = set()
+        for node in tree.body:
+            modules: list[str] = []
+            if isinstance(node, ast.Import):
+                modules = [alias.name for alias in node.names]
+            elif isinstance(node, ast.ImportFrom) and not node.level and node.module:
+                modules = [node.module, *(f"{node.module}.{alias.name}" for alias in node.names)]
+            for module in modules:
+                parts = module.split(".")
+                if parts[0] != "testsupport" or len(parts) < 2:
+                    continue
+                helper = self.root / DEVKIT / "tests/testsupport" / f"{parts[1]}.py"
+                if helper not in self._helpers:
+                    self._helpers[helper] = set()  # a cycle between helpers ends here
+                    self._helpers[helper] = self.imports([helper]) if helper.is_file() else set()
+                found |= self._helpers[helper]
         return found
 
     def _python(self, directory: Path, *, tests: bool) -> Iterator[Path]:
@@ -273,13 +305,12 @@ def changed_paths(root: Path, base: str) -> list[str]:
     resolved = _git(root, "rev-parse", "--verify", "--quiet", f"{base}^{{commit}}")
     merge_base = _git(root, "merge-base", "HEAD", base) if resolved.returncode == 0 else resolved
     if merge_base.returncode != 0:
-        raise AdvisoryError(
-            f"base ref {base!r} does not resolve to a commit with a merge base",
+        raise AdvisoryError.invalid_input(
+            f"base ref {base!r} does not resolve to a commit with a merge base; rerun with --base set to an "
+            "existing branch",
             f"base={base}",
             code="TEST_BASE_UNKNOWN",
-            actor=Actor.TOOL,
-            retry=Retry.AFTER_FIX,
-            fix="just test-affected --base <existing-ref>",
+            fix="git branch --all --list",
         )
     found: set[str] = set()
     for args in (

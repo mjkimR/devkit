@@ -80,7 +80,7 @@ the changed nodes plus everything that imports them, transitively.
 
 | Group | Paths | Depends on |
 | --- | --- | --- |
-| `devkit-agt` area `A` | those of `packages/devkit/tests/A`, `packages/devkit/src/devkit/A` that hold tests | `devkit.A` and the nodes its test files import |
+| `devkit-agt` area `A` | those of `packages/devkit/tests/A`, `packages/devkit/src/devkit/A` that hold tests | `devkit.A`, the nodes its test files import, and those of the `testsupport` helpers they import at module level |
 | A top-level `packages/devkit/tests/test_*.py` | the file | the nodes it imports |
 | Another package `P` | those of `packages/P/tests`, `packages/P/src` that hold tests | its own node and the nodes its test files import |
 
@@ -105,7 +105,7 @@ A group is selected when one of its dependencies is affected.
 
 3. Source: `packages/devkit/src/devkit/<A>/...` changes node `devkit.A`; `packages/<P>/src/...` changes the node of
    `P`. Any change under `packages/devkit/src/` also selects the tests over the whole source tree
-   (`SOURCE_TREE_TESTS`: `test_layering.py`, `test_documented_codes.py`, `test_cli_imports.py`, `test_cli_plugins.py`).
+   (`SOURCE_TREE_TESTS`: `test_layering.py`, `test_documented_codes.py`, `test_cli_imports.py`, `test_cli_plugins.py`, `core/test_cli.py`).
 4. Tests: a changed `test_*.py` under a `tests` directory selects itself; any other file there (a support module, a
    fixture) selects its directory.
 5. Untested: `specs/`, `guides/`, `.claude/`, `.agents/`, `.codex/`, `.devkit/`, `.github/`, `scripts/smoke.sh`,
@@ -124,8 +124,8 @@ xdist options, `DEVKIT_RUN_MODE` and the exit code are those of `just test all`.
 
 ## 4. Error Handling & Edge Cases
 
-- **Unknown base ref or no merge base**: `TEST_BASE_UNKNOWN` (`Actor.TOOL`, `Retry.AFTER_FIX`), `[FIX]` naming
-  `just test-affected --base <existing-ref>`; nothing runs. A failing `git diff` or `git ls-files` is
+- **Unknown base ref or no merge base**: `TEST_BASE_UNKNOWN`, an input error (`AdvisoryError.invalid_input`)
+  whose `[FIX]` is the exact command listing the candidate refs, `git branch --all --list`; nothing runs. A failing `git diff` or `git ls-files` is
   `TEST_CHANGES_UNREADABLE` (`Actor.USER`).
 - **A source file that does not parse**: skipped by the scan (an `INFO` log record); the changed file still maps to its
   node, and the full suite before integration covers what the scan cannot see.

@@ -14,14 +14,18 @@ validate_module "$target"
 # `${a[@]+"${a[@]}"}` expands an empty array under `set -u` on macOS's bash 3.2.
 given=("$@")
 
-# The directory names under a module's tests/, the areas a selector can name.
+# The directory names under a module's tests/, the areas a selector can name (shared helpers excluded).
 areas() {
     local dir names=()
     for dir in "$1"/tests/*/; do
+        [ -d "$dir" ] || continue
         dir=$(basename "$dir")
-        [ "$dir" = __pycache__ ] || names+=("$dir")
+        case "$dir" in
+            __pycache__|testsupport) ;;
+            *) names+=("$dir") ;;
+        esac
     done
-    echo "${names[*]}"
+    echo "${names[*]-}"
 }
 
 # Append the test paths one selector names to `selected`: an existing path (a `::` node suffix allowed) as given,

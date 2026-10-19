@@ -46,10 +46,11 @@ reviewed head before integration:
 - **Result**: stdout's first line is
   `[TEST_SELECTION: mode=<full|partial|none> base=<ref> changed=<n> paths=<n> reason=<text>]`; `--list` adds one
   `[TEST_PATH: <path>]` per path and runs nothing. Otherwise `full` and `partial` run `just test all [paths...]`
-  with its preflight, options and exit code, and `none` exits `0`. A base without a merge base is `TEST_BASE_UNKNOWN`
-  (exit `2`).
-- **Limits**: static imports do not show tests that run the CLI in a subprocess or load entry points; the full
-  suite before integration covers them.
+  with its preflight, options and exit code, and `none` exits `0`. A base without a merge base is the input error `TEST_BASE_UNKNOWN`
+  (exit `2`), whose `[FIX]` lists the existing branches.
+- **Limits**: a group's dependencies include those of the shared `testsupport` helpers it imports at module level,
+  not of helpers imported inside a test function; static imports also do not show tests that run the CLI in a
+  subprocess or load entry points. The full suite before integration covers them.
 
 Before starting pytest or its workers, both recipes run `scripts/check_test_environment.py` through the
 workspace Python environment. The check sends and receives one byte through a local socket pair, with
