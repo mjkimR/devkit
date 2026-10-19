@@ -2,7 +2,7 @@
 id: SPEC-terminology-authoring-guidance
 title: Terminology authoring guidance and a glossary that agents read
 summary: "Adds domain-neutral terminology authoring guidance to the spec bundle, reshapes the seeded glossary table around owners, exclusions, avoided synonyms and code identifiers, and makes spec-sync update the glossary, so docs/glossary.md is read while writing instead of only seeded."
-status: in-progress
+status: completed
 created: 2026-10-19
 related_capabilities:
   - CAP-HARN-agent-guidance

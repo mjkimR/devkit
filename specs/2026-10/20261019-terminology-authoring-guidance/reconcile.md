@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-terminology-authoring-guidance
 feature: SPEC-terminology-authoring-guidance
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md
     resolution: modified
@@ -24,12 +24,15 @@ targets:
 - `CAP-DLV-delivery-workflows`: business rule 9 states that the Living Spec reflection includes `docs/glossary.md`
   when a change introduces or renames a domain term (`spec-sync` Step 1).
 - `docs/glossary.md`: migrated to `Term | Definition | Owner | Avoid | Code identifiers` (AC-07, Task 4); its lead
-  names the five columns.
+  names the five columns, and every `Owner` cell resolves (`CAP-ADV-agent-advisory-protocol` and
+  `CAP-HOST-lifecycle-observation` replace two IDs that resolved to no document).
 
 ## No impact
 
 - Stories: `US-keep-the-living-spec-consistent` and the other stories do not name the glossary or its columns, so no
   acceptance criterion changes.
+- `CAP-DOCS-document-search`: unchanged. Avoid entries enter `docs/glossary.yaml` as ordinary synonyms under its
+  existing `terms: [{primary, synonyms}]` schema; no schema or expansion change (`ADR-seeded-glossary-columns`).
 - Architecture and decisions: no structural change; the two ADRs were promoted at handoff and are not edited.
 - Entrypoints: the `CAP-HARN-agent-guidance` entrypoints already cover `bundle/instructions/`, `bundle/skills/` and
   `bundle/seed/`; no other capability gains a code path.
