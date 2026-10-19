@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T06:30:02.013885Z'
+status: completed
+summary: Terminology rules in the living-spec-writing Glossary section (25 added lines, bound 30), five-column seeded glossary with an Avoided Generic Nouns section, one spec-sync Step 1 bullet, devkit's glossary migrated; AC-01 to AC-07 met.
+findings: []
+assumptions:
+- Only Markdown under docs/ and specs/ changed after the full suite ran at a83f1bb; test-affected and rules were rerun on the final head.
+- The 120-character bound applies to added body lines; the one-line frontmatter description is exempt (spec.md Assumptions).
+checks:
+  tests: PASS just test 3548 passed, 14 skipped (head a83f1bb); just test-affected 963 passed (head 83be8471675af9d308c08de85d5cd0a43686a73b)
+  build: PASS just check devkit-spec 0 errors; just smoke passed
+  lint: PASS just lint-check devkit-spec; just rules-check 0 violations; devkit rules check --ci --base c0a37b07 errors=0
+diff_scope:
+  base: c0a37b07e18cde2dfdac37e9620d09d73b44dd6c
+  head: 83be8471675af9d308c08de85d5cd0a43686a73b
