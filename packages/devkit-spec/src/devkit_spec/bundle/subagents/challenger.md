@@ -7,14 +7,16 @@ x-invocation: optional
 x-model-profile: high-reasoning
 x-git-actions: [read]
 hosts:
-  # Choose a high-reasoning model at invocation time, not in the contract.
+  # The reasoning effort is preset per role (ADR-role-effort-presets); the model is left to the runtime.
   claude-code:
     status: native
     tools: [Read, Grep, Glob]
+    effort: high
   # Expected diff after the run: none.
   codex:
     status: emulated
     sandbox_mode: read-only
+    model_reasoning_effort: high
   antigravity:
     status: native
     tools: [view_file, grep_search]

@@ -64,7 +64,7 @@ EFFORT_PRESETS: dict[str, tuple[str, str | None]] = {
 
 ## 5. Verification & Test Plan
 
-- `just test devkit-spec tests/test_role_contracts.py` during development; `just test devkit-spec` once the change
+- `just test devkit-spec packages/devkit-spec/tests/test_role_contracts.py` during development; `just test devkit-spec` once the change
   is complete (AC-01 to AC-04).
 - Mutation check for AC-04, automated: the per-role assertions live in one helper that returns the violations for
   a parsed frontmatter; a test feeds it copies of real contracts with a changed profile, a changed preset, a preset

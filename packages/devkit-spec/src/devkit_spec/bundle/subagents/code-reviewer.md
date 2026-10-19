@@ -13,9 +13,11 @@ hosts:
     status: native
     tools: [Read, Grep, Glob, Bash]
     disallowedTools: [Write, Edit]
+    effort: high
   # No sandbox override: tests need a writable cache, so the parent's sandbox is inherited.
   codex:
     status: emulated
+    model_reasoning_effort: high
   antigravity:
     status: native
     tools: [view_file, grep_search, run_command]

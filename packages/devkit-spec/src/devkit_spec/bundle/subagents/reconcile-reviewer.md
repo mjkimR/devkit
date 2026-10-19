@@ -12,8 +12,10 @@ hosts:
   claude-code:
     status: native
     tools: [Read, Grep, Glob]
+    effort: medium
   codex:
     status: emulated
+    model_reasoning_effort: medium
   antigravity:
     status: native
     tools: [view_file, grep_search]

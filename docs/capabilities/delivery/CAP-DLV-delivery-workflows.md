@@ -50,8 +50,9 @@ sequence.
   - **Scope Excluded**: a runner. Dispatching stages, the integration queue, the shared-docs write lock, retry caps,
     executing merges and declaring `lint-ci-clean` and `merged` belong to an external runner, or to the executor
     declaring them with `--given` when none exists.
-  - **Scope Excluded**: model selection. Model and reasoning effort are the runtime's settings; `activity-effort`
-    sets only how thorough an activity's review and verification are.
+  - **Scope Excluded**: model selection. The model is the runtime's setting; role contracts preset only a
+    model-independent reasoning effort per role (§4.6, `ADR-role-effort-presets`), independent of `activity-effort`,
+    which sets only how thorough an activity's review and verification are.
 
 ## 3. Business Rules & Policies
 
@@ -326,14 +327,23 @@ Extension keys devkit does not interpret: `x-execution` (`isolated`), `x-invocat
 (`light-medium`, `general-high`, `high-reasoning`; never a host model name) and `x-git-actions` (`[read]` for every
 role but the two workers, `[read, commit]`).
 
-| Role | Skill | Model profile | Writes | Envelope kind |
-| --- | --- | --- | --- | --- |
-| `challenger` | none: the procedure is in the contract | `high-reasoning` | nothing | `challenger` |
-| `reconcile-reviewer` | `spec-sync` | `light-medium` | nothing: verifies the implementer's reconcile at `medium`/`high`, subject to rule 15 | `reconcile-check` |
-| `code-reviewer` | `spec-review` | `general-high` | nothing: verifies implementation against requirements and checks | `review`, `reverify`, or a message for a session |
-| `scout` | none: the procedure is in the contract | `light-medium` | nothing, or the proposal's `materials/` on request | `scout` |
-| `planning-worker` | none: the procedure is in the contract | `general-high` | the proposal directory in its `plan-` worktree, committed | `worker` (its own) |
-| `development-worker` | none: the procedure is in the contract | `general-high` | the unit's write scope in its `dev-` worktree, committed at every stage boundary | `worker` (its own) and the stage envelopes |
+Each role's reasoning effort is preset from its model profile in the host blocks, with no model name
+(`ADR-role-effort-presets`): `effort` under `claude-code` and `model_reasoning_effort` under a `codex` block that is
+not `unsupported`, at `low`, `medium` or `high` only; Antigravity has no such key and the two workers set none, so
+they run at the session's effort. The preset is independent of `activity-effort` and applies only when the projected
+agent is spawned: a role the main session runs itself (Codex `emulated` or a main-session substitute) uses the
+session's effort. On Claude Code a per-call `effort` or `CLAUDE_CODE_EFFORT_LEVEL` overrides the preset; on Codex
+the preset wins over a spawn value. `packages/devkit-spec/tests/test_role_contracts.py` pins role, profile and preset
+for every contract.
+
+| Role | Skill | Model profile | Reasoning effort | Writes | Envelope kind |
+| --- | --- | --- | --- | --- | --- |
+| `challenger` | none: the procedure is in the contract | `high-reasoning` | `high` | nothing | `challenger` |
+| `reconcile-reviewer` | `spec-sync` | `light-medium` | `medium` | nothing: verifies the implementer's reconcile at `medium`/`high`, subject to rule 15 | `reconcile-check` |
+| `code-reviewer` | `spec-review` | `general-high` | `high` | nothing: verifies implementation against requirements and checks | `review`, `reverify`, or a message for a session |
+| `scout` | none: the procedure is in the contract | `light-medium` | `medium` | nothing, or the proposal's `materials/` on request | `scout` |
+| `planning-worker` | none: the procedure is in the contract | `general-high` | session | the proposal directory in its `plan-` worktree, committed | `worker` (its own) |
+| `development-worker` | none: the procedure is in the contract | `general-high` | session | the unit's write scope in its `dev-` worktree, committed at every stage boundary | `worker` (its own) and the stage envelopes |
 
 The contract body is the role's prompt and holds only what the role needs: purpose, input fields, return fields,
 write boundaries, failure handling and, for a role whose procedure no main session runs (`challenger`, `scout`, the

@@ -11,10 +11,12 @@ hosts:
   claude-code:
     status: native
     tools: [Read, Grep, Glob, WebFetch, Bash]
+    effort: medium
   # The sandbox is not a path-level boundary; the caller compares the diff afterwards.
   codex:
     status: emulated
     sandbox_mode: read-only
+    model_reasoning_effort: medium
   antigravity:
     status: native
     tools: [view_file, grep_search, run_command]
