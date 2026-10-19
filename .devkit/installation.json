@@ -223,6 +223,7 @@
         ".agents/skills/spec/references/envelope.md",
         ".agents/skills/spec/references/feedback-retirement.md",
         ".agents/skills/spec/references/git-policy.md",
+        ".agents/skills/spec/references/planning.md",
         ".agents/skills/spec/references/review-loop.md",
         ".agents/skills/spec/references/worker-records.md",
         ".agents/skills/spec/references/worktree.md",
@@ -235,6 +236,7 @@
         ".claude/skills/spec/references/envelope.md",
         ".claude/skills/spec/references/feedback-retirement.md",
         ".claude/skills/spec/references/git-policy.md",
+        ".claude/skills/spec/references/planning.md",
         ".claude/skills/spec/references/review-loop.md",
         ".claude/skills/spec/references/worker-records.md",
         ".claude/skills/spec/references/worktree.md",
@@ -247,6 +249,7 @@
         ".devkit/managed/spec/skills/spec/references/envelope.md",
         ".devkit/managed/spec/skills/spec/references/feedback-retirement.md",
         ".devkit/managed/spec/skills/spec/references/git-policy.md",
+        ".devkit/managed/spec/skills/spec/references/planning.md",
         ".devkit/managed/spec/skills/spec/references/review-loop.md",
         ".devkit/managed/spec/skills/spec/references/worker-records.md",
         ".devkit/managed/spec/skills/spec/references/worktree.md"
@@ -639,7 +642,7 @@
     },
     ".agents/agents/planning-worker.md": {
       "mode": 420,
-      "sha256": "6744167b6d74f3bf85481e66290c17a13dd5602b684adab3f7bdb5a37fe338cf"
+      "sha256": "5655580eb3040de6f33dbb32936b9d4eff787a1919257b4a76a651155d648448"
     },
     ".agents/agents/reconcile-reviewer.md": {
       "mode": 420,
@@ -775,7 +778,7 @@
     },
     ".agents/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "dfdfb538ef812e7c6ccdabeb1e63456bd8ea9ceb07fe1b3a448375dab6954ebc"
+      "sha256": "0acc2f94adad73661fa4c04d24de7b3cdb03bfef3650c95f36f595e4351cda3d"
     },
     ".agents/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -809,6 +812,10 @@
       "mode": 420,
       "sha256": "64b2a0c9c49219c4f9f679e026a73fab7f3bae75ca90e1b8861e37328e2ca49f"
     },
+    ".agents/skills/spec/references/planning.md": {
+      "mode": 420,
+      "sha256": "c579fabdeef0cfd6c1e038c05eddf012b22273d7120f125291c95421f7210729"
+    },
     ".agents/skills/spec/references/review-loop.md": {
       "mode": 420,
       "sha256": "c8373e9c4de57bb6c7343d14fdb0a77aa446e169a9f81d92e185ce63adfa99d8"
@@ -835,7 +842,7 @@
     },
     ".claude/agents/planning-worker.md": {
       "mode": 420,
-      "sha256": "e114a4c4adeb1f4bfa6dbbc1e9736231a9bf58c219ab946bf32b82f8e8e6794b"
+      "sha256": "8c844f88ea1bb28bbb692ae73b3d34ae6aaef85869826368fc94a90373c0dc8d"
     },
     ".claude/agents/reconcile-reviewer.md": {
       "mode": 420,
@@ -959,7 +966,7 @@
     },
     ".claude/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "dfdfb538ef812e7c6ccdabeb1e63456bd8ea9ceb07fe1b3a448375dab6954ebc"
+      "sha256": "0acc2f94adad73661fa4c04d24de7b3cdb03bfef3650c95f36f595e4351cda3d"
     },
     ".claude/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -992,6 +999,10 @@
     ".claude/skills/spec/references/git-policy.md": {
       "mode": 420,
       "sha256": "64b2a0c9c49219c4f9f679e026a73fab7f3bae75ca90e1b8861e37328e2ca49f"
+    },
+    ".claude/skills/spec/references/planning.md": {
+      "mode": 420,
+      "sha256": "c579fabdeef0cfd6c1e038c05eddf012b22273d7120f125291c95421f7210729"
     },
     ".claude/skills/spec/references/review-loop.md": {
       "mode": 420,
@@ -1391,7 +1402,7 @@
     },
     ".devkit/managed/spec/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "dfdfb538ef812e7c6ccdabeb1e63456bd8ea9ceb07fe1b3a448375dab6954ebc"
+      "sha256": "0acc2f94adad73661fa4c04d24de7b3cdb03bfef3650c95f36f595e4351cda3d"
     },
     ".devkit/managed/spec/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -1425,6 +1436,10 @@
       "mode": 420,
       "sha256": "64b2a0c9c49219c4f9f679e026a73fab7f3bae75ca90e1b8861e37328e2ca49f"
     },
+    ".devkit/managed/spec/skills/spec/references/planning.md": {
+      "mode": 420,
+      "sha256": "c579fabdeef0cfd6c1e038c05eddf012b22273d7120f125291c95421f7210729"
+    },
     ".devkit/managed/spec/skills/spec/references/review-loop.md": {
       "mode": 420,
       "sha256": "c8373e9c4de57bb6c7343d14fdb0a77aa446e169a9f81d92e185ce63adfa99d8"
@@ -1451,7 +1466,7 @@
     },
     ".devkit/managed/spec/subagents/planning-worker.md": {
       "mode": 420,
-      "sha256": "029e0ce136e706c0cdb89df26297e77aefb4b60c6c227918dbbf1ee58f0dd2c2"
+      "sha256": "68708e30941f91b8897feb34fdf4c84c7d47a3aab19ad0e5da3ad914cc6d462d"
     },
     ".devkit/managed/spec/subagents/reconcile-reviewer.md": {
       "mode": 420,

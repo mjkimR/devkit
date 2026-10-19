@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T06:27:01.921434Z'
+status: completed
+summary: 'Development sweep over this run and its committed records: 2 recorded (FB-direct-host-support-role-wait-rule from review-01 finding 1; FB-specify-boundary-commit-refused-by-task-coverage), 0 duplicates; the Planning-run FB-padr-title-branch-length-limit is carried, not re-recorded.'
+findings: []
+checks:
+  swept: PASS recorded=2 duplicates=0

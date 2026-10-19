@@ -32,7 +32,7 @@ workflow_hash: sha256:90918c632715461d07f99f683b8381bdbe6381ad6689a7575a72c002c1
   (the `spec` skill's `references/backlog.md`, `ADR-roadmap-in-repository`).
 - **Related**: the lowering rule (depth is lowered only by a proposal's handoff: 01 §2.2, the `spec` skill's
   `references/classification.md` §3), `ADR-task-kind-and-planning-depth` (the axes and gates),
-  `CAP-DLV-proposal-incubation`, `CAP-DLV-delivery-workflows`, `PROP-direct-planning-procedure` (Planning steps for
+  `CAP-DLV-proposal-incubation`, `CAP-DLV-delivery-workflows`, `SPEC-direct-planning-procedure` (Planning steps for
   any executor; independent, both edit the `spec` skill).
 - **Planning material**: [options](materials/options-comparison.md), [engine evidence](materials/engine-evidence.md).
 
@@ -232,7 +232,7 @@ Development here, the workbench updates (A2, chosen, and the session reclassific
   and the second as qualified.
 - The proposal template's lifecycle line (`proposals/scaffold.py`): it says acceptance merges the Planning branch;
   make it hold for a direct acceptance.
-- `PROP-direct-planning-procedure` also edits the `spec` skill; whichever lands second rebases its text.
+- `SPEC-direct-planning-procedure` also edits the `spec` skill; whichever lands second rebases its text.
 
 ### 3.4 Non-Goals
 

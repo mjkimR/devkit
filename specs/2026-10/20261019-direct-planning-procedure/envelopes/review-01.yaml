@@ -1,0 +1,43 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T06:23:15.827871Z'
+status: completed
+summary: 'code-reviewer round 1: the move is faithful; every changed word in the steps is covered by plan.md §3 except one extra dropped ''nested''; AC-01 to AC-05 met; three P3 findings, none blocking.'
+findings:
+- issue: 'Discovered requirement: the reference has no rule to wait for a support role or to treat a failed one as a problem; those sentences live only in the planning-worker contract, per the ADR split, and spec-delegate/SKILL.md has none either, so a direct-mode Host gets no such instruction.'
+  evidence: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/planning.md:9; packages/devkit-spec/src/devkit_spec/bundle/subagents/planning-worker.md:39
+  failure_condition: A direct-mode Host at medium or high writes the worker envelope or ends the turn before a challenger returns, or a failed role is not recorded as a problem.
+  suggested_action: Decide whether the wait rule is executor-neutral; if so a follow-up moves it to planning.md step 3 and keeps only the nested spawn in the contract. That changes the agreed ADR split, so it needs a decision; otherwise waive as intended scope.
+  resolution: open
+  severity: P3
+- issue: 'A second ''nested'' was dropped beyond what plan.md §3 records: old step 4 ''Record each nested scout or challenger return'' became ''Record each scout or challenger return''.'
+  evidence: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/planning.md:9; specs/2026-10/20261019-direct-planning-procedure/plan.md:36
+  failure_condition: A later check of the move against plan.md §3 finds a reworded word with no record.
+  suggested_action: Extend the plan.md §3 sentence to say 'nested' drops in both places in old step 4.
+  resolution: open
+  severity: P3
+- issue: plan.md §2 gives spec/SKILL.md as 6613 bytes after the move; the file at head 99ed387 is 6620 bytes.
+  evidence: specs/2026-10/20261019-direct-planning-procedure/plan.md:21; packages/devkit-spec/src/devkit_spec/bundle/skills/spec/SKILL.md
+  failure_condition: Anyone relying on the recorded measurement gets a number off by 7 bytes.
+  suggested_action: Change 6613 to 6620 in plan.md §2.
+  resolution: open
+  severity: P3
+assumptions:
+- The caller's check results are for head 99ed387
+unverified_areas:
+- reconcile.md not reviewed (reconcile-reviewer's role)
+- Projected .agents/ copies checked only through installation.json hashes
+checks:
+  tests: PASS just test devkit-spec 954 passed
+  lint: PASS just lint devkit-spec
+  typecheck: PASS just check devkit-spec 0 errors
+  rules: PASS just rules-check 0 errors
+  smoke: PASS just smoke
+  move_diff: PASS word-level diff of old steps 2-6 against new steps 1-5
+  links: PASS relative links resolve
+diff_scope:
+  base: d981971a83770aa666749512f33a1dbcde8ce9e8
+  head: 99ed387894dbbc694b14ad98bb44be0481263a3b
+activity_effort: medium

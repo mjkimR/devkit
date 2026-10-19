@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: PROP-direct-planning-procedure
+by: user
+at: '2026-10-19T06:14:27.735324Z'

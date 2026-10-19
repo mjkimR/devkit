@@ -16,6 +16,7 @@ DELEGATE = BUNDLE / "skills/spec-delegate/SKILL.md"
 WORKER_RESULTS = BUNDLE / "skills/spec-delegate/references/worker.md"
 ORCHESTRATE = BUNDLE / "skills/spec-orchestrate/SKILL.md"
 TASKS = BUNDLE / "skills/spec-tasks/SKILL.md"
+PLANNING = BUNDLE / "skills/spec/references/planning.md"
 # ADR-role-effort-presets: role -> (x-model-profile, reasoning effort preset). The workers set none and run at the
 # session's effort; Antigravity has no effort key; no contract names a model.
 EFFORT_PRESETS: dict[str, tuple[str, str | None]] = {
@@ -155,12 +156,38 @@ def test_the_development_worker_result_is_self_contained() -> None:
     assert "a separate `reconcile-reviewer` nested subagent that verifies" in body
 
 
-def test_the_planning_worker_collects_questions_in_one_round() -> None:
+# Planning steps an executor runs in either mode, moved out of the contract
+# (ADR-executor-neutral-planning-steps-in-a-spec-reference).
+MOVED_PLANNING_PHRASES = (
+    "Collect the questions for the user in one round, never stopping at the first",
+    "as a commit of their own",
+    "status: reviewing",
+    "needs_decompose: true",
+    "never into a file of their own",
+    "envelope answer --unit <proposal dir> --answers-to <worker-NN.yaml>",
+    "--questions-file",
+    "check `dev_effort` in `proposal.md`",
+    "run the enabled `collect-feedback` sweep",
+)
+
+
+def test_the_planning_steps_live_in_the_spec_reference_for_any_executor() -> None:
+    reference = " ".join(PLANNING.read_text(encoding="utf-8").split())
     body = " ".join(_contract("planning-worker")[1].split())
-    assert "Collect the questions for the user in one round, never stopping at the first" in body
-    assert "as a commit of their own" in body
-    assert "status: reviewing" in body and "needs_decompose: true" in body
+    for phrase in MOVED_PLANNING_PHRASES:
+        assert phrase in reference, phrase
+        assert phrase not in body, phrase
+    assert "the Host in `direct` mode or a `planning-worker`" in reference
+    assert "[planning](references/planning.md)" in (BUNDLE / "skills/spec/SKILL.md").read_text(encoding="utf-8")
+    assert "Follow `.devkit/managed/spec/skills/spec/references/planning.md`" in body
+
+
+def test_the_planning_worker_keeps_its_worker_obligations() -> None:
+    body = " ".join(_contract("planning-worker")[1].split())
+    assert "as a nested subagent (Host -> worker -> role)" in body
+    assert "never end the turn while one is still running" in body
     assert "Waiting for the user's answers is not a problem" in body
+    assert "Scratch files go in an ignored path inside the worktree" in body
 
 
 @pytest.mark.parametrize("role", [r for r in ROLES if r not in WORKERS])
@@ -242,7 +269,7 @@ def test_a_run_records_its_questions_and_problem_in_one_worker_envelope() -> Non
     assert "one run leaves one `worker` envelope" in records
     assert "--answers-to worker-NN.yaml" in records and "--resolves worker-NN.yaml" in records
     assert "There is no separate question or problem kind" in records
-    planning = _contract("planning-worker")[1]
+    planning = " ".join(PLANNING.read_text(encoding="utf-8").split())
     assert (
         "--questions-file" in planning
         and "envelope answer --unit <proposal dir> --answers-to <worker-NN.yaml>" in planning

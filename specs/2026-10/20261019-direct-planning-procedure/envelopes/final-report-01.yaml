@@ -1,0 +1,22 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T06:28:06.614211Z'
+status: completed
+summary: 'Planning steps 2-6 moved from the planning-worker contract into spec/references/planning.md (4514 bytes), linked from the spec SKILL.md proposal row (6620 of 11776 bytes); the contract (4361 bytes, was 7953) keeps the worktree rule, a citing step and the nested-role rule; tests pin the moved phrases; CAP-DLV-delivery-workflows §4.6 reconciled. Code review: 3 P3 (2 fixed, 1 waived to FB-direct-host-support-role-wait-rule); reconcile-check passed.'
+findings: []
+assumptions:
+- Executor-address rewordings in planning.md are recorded in plan.md §3
+unverified_areas:
+- Full repository suite (just test) not run; the Host runs it once on the reviewed head before integration
+checks:
+  tests: PASS just test-affected 962 passed
+  build: PASS just smoke
+  lint: PASS just lint-check devkit-spec
+  typecheck: PASS just check devkit-spec 0 errors
+  rules: PASS just rules-check and devkit rules check --ci --base d981971
+diff_scope:
+  base: d981971a83770aa666749512f33a1dbcde8ce9e8
+  head: 413a1837e8de5099d0d16cf86dc9585a2f2f4893
+activity_effort: medium
