@@ -51,7 +51,9 @@ low to save cost. The user chose to allow it on their explicit decision (`answer
   it as a `session` task, with the reason the work meets the `session` criteria; only the user's explicit decision
   allows it, and the Host never deletes silently. Workers and Cloud Agents never do it. Before proposing it the Host
   settles that it can push to the base (or that there is no remote), as for a direct acceptance; a protected base
-  keeps the draft on its normal route.
+  keeps the draft on its normal route. The user kept this restriction (`answer-02.yaml`,
+  `reclassification-on-protected-base`): on a protected base queued `session`-depth work goes through Planning and a
+  spec Unit, and direct acceptance is unavailable there too; the deletion never rides the session's `dev-<slug>` PR.
 - **Conditions**: the draft is `status: draft` with no local or fetched `plan-<slug>` (`devkit spec proposal check`,
   fetch first, as for every deletion) and has no `PADR-*.md` in `decisions/` (its workflow gate records do not count).
   The `session` criteria cannot hold for a draft marked `needs_decompose` (not yet classified, `classification.md` §1),

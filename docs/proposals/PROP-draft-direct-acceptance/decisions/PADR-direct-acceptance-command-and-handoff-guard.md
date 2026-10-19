@@ -62,15 +62,21 @@ acceptance on the base under every policy, and allowed one request to ask both g
     direct acceptance. A repair, like every acceptance, follows the user's explicit acceptance of a full request.
     There is no repair of a Planning acceptance (a `worker` envelope exists): every accepted proposal today has its
     gate record, and once the command is the only writer only a hand edit can produce that state, so the guard's
-    refusal stands and the Host reports it to the user, who decides the recovery (for example reverting the hand
-    edit); the plain form keeps its precondition (in review, on `plan-<slug>`);
+    refusal stands and the plain form keeps its precondition (in review, on `plan-<slug>`). The recovery, on the
+    user's decision (`answer-02.yaml`, `planning-acceptance-without-record`), is to revert the whole Planning merge
+    on the base, which returns the proposal to `draft`, and run Planning again; a refused `--direct` repair is undone
+    the same way, by reverting its `draft`->`accepted` edit, which returns the draft for Planning. No command path is
+    added for either;
   - `--check` runs every check read-only and writes nothing; the command never records `plan-intent`, never commits,
     merges or runs the handoff.
   `reject` stays the follow-up 01 §10 plans.
 - **Where it runs (A2, the user's choice)**: a direct acceptance is Backlog work under every policy, like Backlog's
-  other changes (01 §5.1, 03 §1), committed on the base checkout only: the command refuses a detached `HEAD`, any
-  `plan-*` or `dev-*` branch (the slug's own included) and any branch with a recorded `devkitBase`, so any branch
-  other than the base is refused.
+  other changes (01 §5.1, 03 §1), committed on the base checkout only. The command checks it positively
+  (`answer-02.yaml`, `base-checkout-definition`): the current worktree is the main worktree and its branch equals the
+  integration base (the `origin/HEAD` target when it resolves, as the integration resolves it); anything else is
+  refused, a linked worktree, a detached `HEAD` and any other branch (`plan-*`, `dev-*`, a hand-made one) included.
+  When `origin/HEAD` does not resolve (no remote), the main worktree's branch is the base, as `devkit worktree`
+  treats it, and a detached `HEAD` or a `plan-*` or `dev-*` branch is still refused.
   Before proposing it the Host settles that it can push to the base (or that there is no remote); a protected base means
   Planning instead, and a stranded acceptance commit is undone with `git revert`, never a reset. The Host runs
   `--check`, sweeps its own acceptance session only once the user has accepted, just before the command (under the
@@ -92,7 +98,8 @@ acceptance on the base under every policy, and allowed one request to ask both g
   name `SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED`, `INTERACTION`): its directive is to stop and ask the user, never to
   record an acceptance unasked. For a proposal without a `worker` envelope, on the user's explicit acceptance the
   Host repairs it on the base with `accept --direct`, merges the base into `dev-<slug>` and reruns the handoff; with
-  a `worker` envelope it reports the refusal to the user (no repair command); a worker or Cloud Agent reports it as a
+  a `worker` envelope it reports the refusal to the user (no repair command) and, on the user's decision, reverts the
+  whole Planning merge on the base back to `draft` for Planning to run again; a worker or Cloud Agent reports it as a
   problem instead. A single-file or unbound proposal, which can carry no gate record,
   keeps the status-only rule.
 - **The note survives the handoff**: carried gate records keep the proposal's note after `PROP-<slug>`
@@ -106,7 +113,7 @@ acceptance on the base under every policy, and allowed one request to ask both g
 ## 5. Consequences
 
 - A partial direct acceptance cannot be handed off and can be repaired; a bound Planning acceptance whose gate record
-  is missing is caught too and goes to the user.
+  is missing is caught too, goes to the user and is recovered by reverting the Planning merge to `draft`.
 - Every party that records an acceptance (the Host locally, autohub) stops editing the `status:` line by hand; the
   `sdd-proposal` gate rules and the `spec` skill name the command.
 - Tests that hand off a bound proposal with only `status: accepted` must record the gate; tests of the carried note

@@ -88,8 +88,9 @@ gates and provenance carried by the handoff.
   already plans, with a `--direct` variant for an eligible draft, a read-only `--check` and a `--direct` repair of an
   accepted proposal without its gate record and without a `worker` envelope (on the base, after the user's explicit
   acceptance), records the acceptance through the engine in one step; a Planning acceptance without its record goes
-  to the user; the handoff of a bound bundle also requires the gate record and keeps its note; the stage schema stays;
-  `devkit spec proposal check` gets no mode.
+  to the user, who recovers it by reverting the whole Planning merge on the base back to `draft` and running Planning
+  again, and a refused repair is undone by reverting its edit (`answer-02.yaml`); the handoff of a bound bundle also
+  requires the gate record and keeps its note; the stage schema stays; `devkit spec proposal check` gets no mode.
 - **Q6. Visibility.** Answered in the same PADR: the acceptance request shows "Planning: skipped (direct acceptance)"
   where a Planning acceptance shows its applied effort and support roles (the `sdd-proposal` gate rules), with
   `task_kind`, the `planning_effort` hint, the eligibility reason, the PADRs to be promoted and `dev_effort`.
@@ -140,7 +141,8 @@ Beside direct acceptance:
 
 - **Session reclassification** (`PADR-session-reclassification-of-a-queued-draft`): when the user picks a queued draft
   whose work is `session` depth, the Host may propose doing it as a `session` task with the reason; on the user's
-  explicit decision, with base push access settled first, a draft without PADRs (and not marked `needs_decompose`,
+  explicit decision, with base push access settled first (a protected base keeps the draft on its normal route, the
+  user's choice in `answer-02.yaml`), a draft without PADRs (and not marked `needs_decompose`,
   superseding or a depth escalation) is
   deleted in one Backlog commit on the base that preserves its open feedback and names the decision, and the session
   starts through inline Planning. No command is added; the lowering rule states this as its one exception besides a
@@ -190,10 +192,11 @@ Development here, the workbench updates (A2, chosen, and the session reclassific
 ### 3.3 Impact in this repository
 
 - `devkit-spec` code: `devkit spec proposal accept` (the Planning form, `--direct`, `--check`, the `--direct` repair,
-  the base-checkout check) and its library function; the handoff guard for bound bundles with its own code
-  (`errors.py`); the fix text of `SPEC_PROPOSAL_NOT_APPROVED`, which today tells the agent to set `status: accepted`
-  by hand and record the gate wherever it is (it names the command: a direct acceptance on the base, or Planning); the
-  carried gate note; tests for each, and existing handoff tests that rely on the status alone.
+  the positive base-checkout check: the main worktree on the integration base) and its library function; the handoff
+  guard for bound bundles with its own code (`errors.py`); the fix text of `SPEC_PROPOSAL_NOT_APPROVED`, which today
+  tells the agent to set `status: accepted` by hand and record the gate wherever it is (it names the command: a direct
+  acceptance on the base, or Planning); the carried gate note; tests for each, and existing handoff tests that rely on
+  the status alone.
 - `CAP-HARN-command-mount` (the command table) and `CAP-HARN-agent-guidance` (the skill table's commands) list
   `devkit spec proposal accept`; the `spec-orchestrate` skill (step 4) records acceptances with the command instead of
   by hand.
