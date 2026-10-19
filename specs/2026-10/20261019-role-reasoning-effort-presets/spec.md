@@ -1,24 +1,21 @@
 ---
-id: PROP-role-reasoning-effort-presets
+id: SPEC-role-reasoning-effort-presets
 title: Per-role reasoning effort presets
-summary: "Presets a host reasoning effort in each spec role contract's host block (Claude Code effort, Codex model_reasoning_effort) so subagents run at a fixed effort per role without naming models."
-status: accepted                      # draft | reviewing | accepted | rejected
-created_at: 2026-10-19
-target_area: capabilities/delivery/
-priority: medium                      # critical | high | medium | low
-size: S                               # S | M | L | XL
-planning_effort: low                  # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - capabilities/delivery/
-  excludes:
-    - docs/decisions/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+summary: Presets a host reasoning effort in each spec role contract's host block (Claude Code effort, Codex model_reasoning_effort) so subagents run at a fixed effort per role without naming models.
+status: planned
+created: 2026-10-19
+related_capabilities: []
+related_stories: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-role-reasoning-effort-presets] Per-role reasoning effort presets
+# [SPEC-role-reasoning-effort-presets] Per-role reasoning effort presets
+
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-role-reasoning-effort-presets on 2026-10-19.
+- **Preserved Materials**: `docs/materials/2026-10/20261019-role-reasoning-effort-presets`
 
 - **Origin**: split from `SPEC-high-effort-review-loop`. Passing a reasoning effort per call when `activity-effort`
   is `high` works only on Claude Code: Antigravity's host block has no effort key, and on Codex the review roles are
@@ -28,9 +25,9 @@ workflow: sdd-proposal
 - **Related**: `CAP-DLV-delivery-workflows` (§4.6 role contracts, model selection non-goal),
   `CAP-DIST-agent-projections` (host key allowlist), `SPEC-high-effort-review-loop`.
 
-## 1. Background & Hypothesis
+### 1. Background & Hypothesis
 
-### 1.1 Problem
+#### 1.1 Problem
 
 - Every spec role contract carries an abstract `x-model-profile` (`light-medium`, `general-high`, `high-reasoning`)
   that nothing reads, so each subagent runs at whatever reasoning effort the host defaults to.
@@ -38,14 +35,33 @@ workflow: sdd-proposal
 - The host key allowlists already accept a reasoning effort: `effort` for Claude Code and `model_reasoning_effort`
   for Codex (`devkit/distribution/bundles/subagents.py`). No contract uses them.
 
-### 1.2 Hypothesis
+#### 1.2 Hypothesis
 
 Setting a model-independent reasoning effort per role, derived from its `x-model-profile`, makes the profile take
 effect on the hosts that support it, with no maintenance when models change.
 
-## 2. Technical Spike Questions
+## 2. User Stories
 
-- **Q1. Values per role. Decided** (`answer-01`, `PADR-role-effort-presets`): only `low`, `medium` and `high` are
+- **US-1**: As a developer/agent, I want to implement Per-role reasoning effort presets so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
+
+- **Q1. Values per role. Decided** (`answer-01`, `ADR-role-effort-presets`): only `low`, `medium` and `high` are
   used. `scout` and `reconcile-reviewer` → `medium`; `code-reviewer` and `challenger` → `high`; `planning-worker`
   and `development-worker` set no preset and run at the session's effort, like the Host whose work they take over.
 - **Q2. Host semantics. Answered** (`materials/host-effort-semantics.md`): Claude Code's agent `effort` and Codex's
@@ -59,7 +75,7 @@ effect on the hosts that support it, with no maintenance when models change.
 - **Q4. Profile and preset drift. Decided** (`answer-01`): `packages/devkit-spec/tests/test_role_contracts.py`
   asserts the Q1 mapping for every role contract.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 - Role contracts (`packages/devkit-spec/src/devkit_spec/bundle/subagents/`): `scout.md` and `reconcile-reviewer.md`
   set `effort: medium` in `claude-code` and `model_reasoning_effort: medium` in `codex`; `code-reviewer.md` and
@@ -82,10 +98,11 @@ effect on the hosts that support it, with no maintenance when models change.
   values above `high`.
 - **Decisions**: `decisions/PADR-role-effort-presets.md`.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - Preliminary decisions are recorded as PADRs in `decisions/`; research goes in `materials/`.
 - On acceptance (`plan-accept`): record `gate:plan-accept`, set `status: accepted` and merge the Planning branch;
   Development starts with `devkit spec proposal handoff role-reasoning-effort-presets`.
 - On rejection: change only `status: rejected`, with the user's reason in the commit message; a later hygiene pass
   writes the rejection ADR and deletes the proposal directory.
+

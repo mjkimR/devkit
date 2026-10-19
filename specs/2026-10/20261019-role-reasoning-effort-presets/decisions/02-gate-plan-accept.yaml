@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-role-reasoning-effort-presets
+by: user
+at: '2026-10-19T02:27:52.305676Z'

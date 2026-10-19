@@ -1,15 +1,15 @@
 ---
-id: PADR-role-effort-presets
+id: ADR-role-effort-presets
 title: Static reasoning effort presets for reviewer roles
 summary: 'Role contracts preset a model-independent reasoning effort in their Claude Code and Codex host blocks: medium for scout and reconcile-reviewer, high for code-reviewer and challenger, none for the two workers, which run at the session''s effort; a test pins the mapping.'
-proposal: PROP-role-reasoning-effort-presets
-status: draft
+proposal: SPEC-role-reasoning-effort-presets
+status: accepted
 created_at: 2026-10-19
 ---
 
-# [PADR-role-effort-presets] Static reasoning effort presets for reviewer roles
+# [ADR-role-effort-presets] Static reasoning effort presets for reviewer roles
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-19
 
 ---
