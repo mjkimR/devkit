@@ -29,7 +29,8 @@ uv run devkit sync            # deploys every installed bundle that declares aut
 uv run devkit add <bundle>    # selects any other bundle: the built-in git-commits or another content package
 ```
 
-A project that uses the harness declares `devkit-agt` instead, never both: `devkit-agt` brings `devkit-dist`. A tool
+A project that uses the harness declares `devkit-agt` instead, never both (`devkit-agt` brings `devkit-dist` from the
+same commit; only a release-wheel installation names the `devkit-dist` wheel next to it, since no index serves it). A tool
 installation names the script owner and adds the harness:
 `uv tool install 'devkit-dist @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-dist' --with 'devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit'`.
 

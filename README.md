@@ -90,7 +90,9 @@ uv run devkit rules check
 all three wheels are named. A repository that only deploys agent assets installs `devkit-dist` (with
 `devkit-advisory`) alone: it gets sync, context loading, playbooks and native hooks, the `devkit` and `advisory`
 bundles, and no harness command or guidance (`devkit rules` and the other harness commands answer with
-`HARNESS_COMMAND_UNAVAILABLE`). A project declares one of the two, never both. A library or service that only raises
+`HARNESS_COMMAND_UNAVAILABLE`). A Git installation declares exactly one of the two, never both (`devkit-agt` brings
+`devkit-dist` from the same commit); a release-wheel installation of `devkit-agt` names the `devkit-dist` and
+`devkit-advisory` wheels next to it only because no index serves them. A library or service that only raises
 and renders advisories at runtime depends on `devkit-advisory` alone (standard library only, no CLI, no bundles);
 its development tooling adds `devkit-dist` or `devkit-agt`. The import is `devkit.advisory` either way: `devkit` is
 a namespace package that the three wheels share. A tool installation names the owner of the `devkit` executable

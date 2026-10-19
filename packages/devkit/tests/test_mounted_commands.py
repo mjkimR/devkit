@@ -99,3 +99,10 @@ def test_version_lives_only_on_the_root_group() -> None:
     for group in ("rules", "workflow", "gate"):
         result = runner.invoke(root.cli, [group, "--version"])
         assert result.exit_code == 2 and "No such option" in result.output
+
+
+@pytest.mark.parametrize("name", sorted(MOUNTED))
+def test_each_mounted_command_shows_its_help_through_the_root_group(name: str) -> None:
+    result = CliRunner().invoke(root.cli, [name, "--help"])
+    assert result.exit_code == 0, result.output
+    assert result.stdout.startswith(f"Usage: devkit {name}")

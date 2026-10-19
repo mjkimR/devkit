@@ -24,7 +24,8 @@ uv run devkit sync            # deploys every installed bundle that declares aut
 uv run devkit add <bundle>    # selects any other bundle: built-in opt-in ones or another content package
 ```
 
-A project declares `devkit-agt` or `devkit-dist`, never both. A tool installation names the owner of the executable
+A Git installation declares `devkit-agt` or `devkit-dist`, never both; a release-wheel installation of `devkit-agt`
+names the `devkit-dist` and `devkit-advisory` wheels next to it only because no index serves them. A tool installation names the owner of the executable
 and adds this package: `uv tool install 'devkit-dist @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-dist' --with 'devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit'`.
 
 The bundles built into this package are `harness` (auto-selected: the guidance for rules, commit gates, workflows

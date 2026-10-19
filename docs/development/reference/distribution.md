@@ -19,7 +19,9 @@ uv run devkit sync --agent codex --agent claude-code   # projections go to every
 uv run devkit list
 ```
 
-`devkit-agt` (the harness) depends on `devkit-dist` at the same version; a project declares one of them, never both.
+`devkit-agt` (the harness) depends on `devkit-dist` at the same version; a Git installation declares one of them, never
+both, and a release-wheel installation of `devkit-agt` names the `devkit-dist` and `devkit-advisory` wheels next to it
+only because no index serves them.
 In this monorepo, run `uv sync --all-packages` first, then `uv run --package devkit-dist devkit sync -w <target-directory>`.
 
 Every distribution command takes `-w/--workspace-root <dir>`. Without it, the devkit root is the Git top level

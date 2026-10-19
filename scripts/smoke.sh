@@ -77,14 +77,22 @@ assert [entry.name for entry in entry_points(group='devkit.commands')] == []
         fi
         status=0
         uv run devkit "$name" --help >/dev/null 2>"$work/harness-$name.err" || status=$?
-        test "$status" -eq 2 && grep -q HARNESS_COMMAND_UNAVAILABLE "$work/harness-$name.err"
+        # Each condition is its own statement: errexit ignores a failure inside an && list.
+        [ "$status" -eq 2 ] || { echo "error: devkit $name exited $status without devkit-agt, expected 2" >&2; exit 1; }
+        grep -q HARNESS_COMMAND_UNAVAILABLE "$work/harness-$name.err"
     done
     status=0
     out=$(uv run devkit rules check --format json 2>"$work/harness-json.err") || status=$?
-    test "$status" -eq 2 && test ! -s "$work/harness-json.err" && grep -q '"code": "HARNESS_COMMAND_UNAVAILABLE"' <<<"$out"
+    [ "$status" -eq 2 ] || { echo "error: devkit rules --format json exited $status, expected 2" >&2; exit 1; }
+    [ ! -s "$work/harness-json.err" ] || { echo "error: devkit rules --format json wrote to stderr" >&2; exit 1; }
+    grep -q '"code": "HARNESS_COMMAND_UNAVAILABLE"' <<<"$out"
     status=0
     uv run devkit no-such-command >/dev/null 2>"$work/unknown.err" || status=$?
-    test "$status" -eq 2 && ! grep -q HARNESS_COMMAND_UNAVAILABLE "$work/unknown.err"
+    [ "$status" -eq 2 ] || { echo "error: devkit no-such-command exited $status, expected 2" >&2; exit 1; }
+    if grep -q HARNESS_COMMAND_UNAVAILABLE "$work/unknown.err"; then
+        echo "error: an unknown command name answered with HARNESS_COMMAND_UNAVAILABLE" >&2
+        exit 1
+    fi
     echo "--- devkit sync deploys only the distribution bundles"
     uv run devkit sync >/dev/null
     uv run python -c '

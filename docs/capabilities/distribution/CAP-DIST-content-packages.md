@@ -102,7 +102,9 @@ The CLI ships in two wheels released in lockstep with `devkit-advisory` (`ADR-di
   commit gates, task worktrees, generated files, integration, `devkit run`), mounted as `devkit.commands` plugins
   (`ARCH-05-3-command-plugins`).
 
-A project declares exactly one of them: the requirement it already has, `devkit-agt` when it uses the harness.
+A project declares exactly one of them as its devkit requirement, `devkit-agt` when it uses the harness; a
+release-wheel installation of `devkit-agt` also names the `devkit-dist` and `devkit-advisory` wheels of the same release,
+because no index serves them.
 Bundles registered by either wheel are built in (`builtin` in `devkit list` and `devkit status`), so the
 `BUNDLE_AUTO_SELECTED` notice never names them:
 

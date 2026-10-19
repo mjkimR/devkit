@@ -108,3 +108,12 @@ def _found(installed: list[InstalledBundle]):
         yield installed
 
     return found()
+
+
+def test_dry_run_and_locked_syncs_report_it_too(
+    monkeypatch: pytest.MonkeyPatch, team: InstalledBundle, target: Path
+) -> None:
+    _commands(monkeypatch)
+    assert _engine_notices(sync_project(target, [team], dry_run=True).to_dict()["notices"])
+    sync_project(target, [team])
+    assert _engine_notices(sync_project(target, [team], locked=True).to_dict()["notices"])
