@@ -38,7 +38,7 @@ UNWRITABLE = "unwritable"
 # location), ``unreadable`` and ``unwritable``.
 
 _CODE_SPAN_ID = re.compile(rf"`({ID_SOURCE})`")
-_CODE_SPAN_PATH = re.compile(r"`([A-Za-z0-9_.-]+/(?:[A-Za-z0-9_.-]+/?)*)`")
+_CODE_SPAN_PATH = re.compile(r"`([A-Za-z0-9_.-]+/(?:[A-Za-z0-9_.-]+/)*[A-Za-z0-9_.-]*)`")
 _FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})")
 _BRACKET_ID = re.compile(rf"\[({ID_SOURCE})\]")
 
@@ -261,10 +261,12 @@ def rewrite_ids(
 def rewrite_paths(root: Path, files: Iterable[str], plan: RelocationPlan, report: RewriteReport) -> None:
     """Rewrite code-span paths that documents written from a bundle proposal give relative to it.
 
-    A carried spec and a promoted ADR keep the proposal's prose, where a file of the bundle is often named as a code
-    span (`` `decisions/PADR-x.md` ``, `` `materials/notes.md` ``) rather than linked. Such a span that names a file
-    or directory the handoff relocated becomes the new document's ID in backticks, or else its new
-    repository-relative path. Fenced code blocks and spans naming nothing relocated are left as they are.
+    The documents the handoff wrote or moved out of the bundle (the carried spec and blueprint, the promoted ADRs,
+    moved feedback and other carried files) keep the proposal's prose, where a file of the bundle is often named as a
+    code span (`` `decisions/PADR-x.md` ``, `` `materials/notes.md` ``) rather than linked. In their bodies, such a
+    span that names a file or directory the handoff relocated becomes the new document's ID in backticks, or else its
+    new repository-relative path. Frontmatter, fenced code blocks and spans naming nothing relocated are left as they
+    are.
     """
     if not plan.dir_target:
         return
@@ -277,12 +279,17 @@ def rewrite_paths(root: Path, files: Iterable[str], plan: RelocationPlan, report
             report.unresolved.append(Unresolved(display, 0, PATH, "", UNREADABLE))
             continue
         changed: list[Rewritten] = []
+        block = locate(text)
+        body_line = block.body_line if block is not None else 1
         lines = text.split("\n")
         fence = ""
         for number, line in enumerate(lines, start=1):
+            if number < body_line:
+                continue
             run = _FENCE.match(line)
             if fence:
-                if run and run.group(1)[0] == fence[0] and len(run.group(1)) >= len(fence):
+                marker = run.group(1) if run is not None else ""
+                if marker[:1] == fence[0] and len(marker) >= len(fence) and run and not line[run.end() :].strip():
                     fence = ""
                 continue
             if run:

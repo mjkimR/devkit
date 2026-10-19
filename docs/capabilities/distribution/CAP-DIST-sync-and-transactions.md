@@ -308,7 +308,9 @@ Every mutating command follows these steps:
    (`sync`, `add`, `remove`, `recover`, `override create|accept|remove`) take it exclusively and fail at once when it is held (`LOCK_HELD`,
    `DEFER`). Readers (`get-context`, `playbook search`, `status`, `list`, `override list|diff`, and `sync`, `add`
    and `remove` under `--dry-run` or `--check`, which write nothing) share it and wait
-   up to ten seconds for a writer; in a project without `.devkit/` they take no lock, so reading never creates it.
+   up to ten seconds for a writer; in a project without `.devkit/` they take no lock, so reading never creates it. A
+   reader that gets `EROFS`, `EACCES` or `EPERM` creating or opening the lock (a read-only review sandbox) reads
+   without it; writers still fail.
 3. **Write-ahead journal**: pending operations, base64 backups of the files they replace, the directories the
    writes will create and those a written file replaces are flushed to `.devkit/transient/sync-journal.json` before
    the disk changes. A file standing where a destination's directory must be (a project file `.claude/skills/review`

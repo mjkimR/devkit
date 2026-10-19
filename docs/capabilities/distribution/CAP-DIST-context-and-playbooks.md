@@ -24,7 +24,8 @@ it in stages:
 
 `devkit get-context <bundle>` returns the bundle's **context**: its constitution and the header catalog of its
 synchronized instructions, so an instruction-only bundle still has one. It runs from the project or a
-subdirectory (or with `-w`) and takes the shared project lock, waiting up to ten seconds while a sync writes.
+subdirectory (or with `-w`) and takes the shared project lock, waiting up to ten seconds while a sync writes; where
+the file system is read-only for it, it reads without the lock (`CAP-DIST-sync-and-transactions`).
 
 - `constitution`: the full text of the optional UTF-8 `AGENTS.md` at the bundle root, which `devkit sync` always
   deploys to `.devkit/managed/<bundle>/AGENTS.md` whatever the presets; `null` when absent.

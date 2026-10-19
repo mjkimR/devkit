@@ -38,7 +38,10 @@ class MarkdownLinkRule(BaseRule, Autofixable):
         super().__init__(
             id="RULE-markdown-link",
             name="relative-markdown-link-check",
-            description="Validates relative markdown link targets and automatically corrects broken relative paths.",
+            description=(
+                "Validates relative markdown link targets, reports machine-local file: links and automatically"
+                " corrects broken relative paths."
+            ),
             phase=Phase.LINTER,
             severity=Severity.ERROR,
             guide="guide.md",

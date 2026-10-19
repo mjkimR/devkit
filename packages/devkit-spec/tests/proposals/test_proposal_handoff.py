@@ -3,6 +3,7 @@ from __future__ import annotations
 import errno
 import os
 import shutil
+import time
 from collections.abc import Callable
 from pathlib import Path
 
@@ -452,6 +453,18 @@ def test_rewrites_code_span_paths_into_the_bundle(workspace: Path) -> None:
     assert f"See `{materials}/notes.md`." in adr
     paths = [(item.old, item.new) for item in result.rewritten if item.kind == "path"]
     assert ("decisions/PADR-pick-a.md", "ADR-pick-a") in paths
+
+
+def test_code_span_path_matching_stays_linear() -> None:
+    from devkit_spec.proposals.rewrite import _CODE_SPAN_PATH
+
+    long = "packages/devkit-spec/src/devkit_spec/proposals/rewrite.py"
+    started = time.monotonic()
+    # A nested-quantifier pattern needed seconds for the 26-character case and doubled per character.
+    assert _CODE_SPAN_PATH.search(f"`docs/{'a' * 26} x`") is None
+    assert _CODE_SPAN_PATH.search(f"`{long}:256`") is None
+    assert time.monotonic() - started < 0.5
+    assert [m.group(1) for m in _CODE_SPAN_PATH.finditer(f"`{long}` `materials/`")] == [long, "materials/"]
 
 
 def test_leaves_completed_bundles_alone(workspace: Path, write: Write) -> None:

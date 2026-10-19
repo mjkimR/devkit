@@ -299,11 +299,12 @@ proposal as it was; their `feedback/` is scanned, since feedback stays current.
   provenance field) are rewritten from the IDs of the documents actually written: `PROP-<slug>` to `SPEC-<slug>`,
   each `PADR-<slug>` to its `ADR-<slug>`, and `PROP-<slug>-target` to itself (a `[ID]` becomes `` `ID` ``). Bare
   text, inline code other than a lone ID and fenced code do not change.
-- **Code-span paths** (`kind=path`) in the documents written from a bundle proposal (the carried `spec.md` and the
-  promoted ADRs): an inline code span holding a path relative to the bundle (`` `decisions/PADR-x.md` ``,
+- **Code-span paths** (`kind=path`) in the bodies of the documents the handoff wrote or moved out of a bundle
+  proposal (the carried `spec.md` and blueprint, the promoted ADRs, moved feedback and other carried files): an inline
+  code span holding a path relative to the bundle (`` `decisions/PADR-x.md` ``,
   `` `materials/notes.md` ``, `` `materials/` ``) that names a relocated file or directory becomes the new document's
-  ID in backticks (`` `ADR-x` ``), or else its new repository-relative path. Spans naming nothing relocated and fenced
-  code do not change.
+  ID in backticks (`` `ADR-x` ``), or else its new repository-relative path. Frontmatter, fenced code and spans naming
+  nothing relocated do not change.
 
 | Unresolved reason | Meaning |
 | --- | --- |

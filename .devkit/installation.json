@@ -722,7 +722,7 @@
     },
     ".agents/skills/spec-next/references/post-handoff.md": {
       "mode": 420,
-      "sha256": "6ad658c21daaf5251b7b57095d2d1f2b5cc4a7f86d1672d1ab3a62115eeba2b1"
+      "sha256": "1b0d1e484158404a6164c95fd7bfa1430ff9dd6f8eaaf6af4b1aa7eb9187971f"
     },
     ".agents/skills/spec-next/references/workflow-signals.md": {
       "mode": 420,
@@ -914,7 +914,7 @@
     },
     ".claude/skills/spec-next/references/post-handoff.md": {
       "mode": 420,
-      "sha256": "6ad658c21daaf5251b7b57095d2d1f2b5cc4a7f86d1672d1ab3a62115eeba2b1"
+      "sha256": "1b0d1e484158404a6164c95fd7bfa1430ff9dd6f8eaaf6af4b1aa7eb9187971f"
     },
     ".claude/skills/spec-next/references/workflow-signals.md": {
       "mode": 420,
@@ -1350,7 +1350,7 @@
     },
     ".devkit/managed/spec/skills/spec-next/references/post-handoff.md": {
       "mode": 420,
-      "sha256": "6ad658c21daaf5251b7b57095d2d1f2b5cc4a7f86d1672d1ab3a62115eeba2b1"
+      "sha256": "1b0d1e484158404a6164c95fd7bfa1430ff9dd6f8eaaf6af4b1aa7eb9187971f"
     },
     ".devkit/managed/spec/skills/spec-next/references/workflow-signals.md": {
       "mode": 420,

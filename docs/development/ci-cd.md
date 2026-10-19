@@ -40,8 +40,8 @@ reviewed head before integration:
   module's default paths. An area is a directory under the module's `tests/` together with the matching
   `src/<package>/<area>` directory (`just test devkit gate worktree -k cache`); a path from the repository root is
   passed as given and one from the module directory (`tests/gate/test_hooks.py`) is prefixed with it, a `::` node
-  suffix included. An unknown area exits `2`, lists the module's areas and says where paths are taken from, before
-  any tool runs. `all` passes its arguments to pytest unchanged.
+  suffix included. An unknown area exits `2`, lists the module's areas (shared helpers such as `testsupport` and
+  `distsupport` excluded) and says where paths are taken from, before any tool runs. `all` passes its arguments to pytest unchanged.
 - **`just test-affected [--base REF] [--list] [-- PYTEST-ARGS]`** (`scripts/affected_tests.py`): collects the paths
   changed since the merge base of `HEAD` and `REF` (default `main`; committed, staged, unstaged, untracked, both
   sides of a rename) and selects tests from them:

@@ -29,15 +29,15 @@ areas() {
 }
 
 # Append the test paths one selector names to `selected`: an existing path (a `::` node suffix allowed) from the
-# repository root as given, else one from the module directory, else the area's existing `tests/<name>` and
-# `src/*/<name>` directories.
+# repository root as given, else a path-like selector (with `/` or `::`) from the module directory, else the area's
+# existing `tests/<name>` and `src/*/<name>` directories.
 add_selector() {
     local base=$1 selector=$2 dir found=0
     if [ -e "${selector%%::*}" ]; then
         selected+=("$selector")
         return 0
     fi
-    if [ -e "$base/${selector%%::*}" ]; then
+    if [[ "$selector" == */* || "$selector" == *::* ]] && [ -e "$base/${selector%%::*}" ]; then
         selected+=("$base/$selector")
         return 0
     fi
