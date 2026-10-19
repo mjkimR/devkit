@@ -83,10 +83,9 @@ Affected:
   `packages/devkit-spec/tests/test_effort_procedure.py`.
 - No gate or policy change; no check of `sdd-proposal` starts reading challenger findings.
 
-Coordination: `PROP-direct-planning-procedure` moves the ordered Planning steps out of the `planning-worker` contract
-into a `spec` skill reference. Its Development should integrate first (size S, `dev_effort: low`); this Development
-then puts the challenger-reverify step into that reference instead of the contract. If this one integrates first, the
-other moves the reworded step 4 as written.
+Coordination: `SPEC-direct-planning-procedure` (integrated) moved the ordered Planning steps out of the
+`planning-worker` contract into the `spec` skill's `references/planning.md`. This Development puts the
+challenger-reverify step into that reference instead of the contract.
 
 ## 4. Lifecycle & Retirement Criteria
 
