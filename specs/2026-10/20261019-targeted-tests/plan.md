@@ -80,12 +80,13 @@ the changed nodes plus everything that imports them, transitively.
 
 | Group | Paths | Depends on |
 | --- | --- | --- |
-| `devkit-agt` area `A` | existing of `packages/devkit/tests/A`, `packages/devkit/src/devkit/A` | `devkit.A` and the nodes its test files import |
-| Another package `P` | `packages/P/tests`, `packages/P/src` | its own node and the nodes its test files import |
+| `devkit-agt` area `A` | those of `packages/devkit/tests/A`, `packages/devkit/src/devkit/A` that hold tests | `devkit.A` and the nodes its test files import |
+| A top-level `packages/devkit/tests/test_*.py` | the file | the nodes it imports |
+| Another package `P` | those of `packages/P/tests`, `packages/P/src` that hold tests | its own node and the nodes its test files import |
 
 A group is selected when one of its dependencies is affected.
 
-**Path mapping** (first match wins, per changed path):
+**Path mapping** (per changed path; a full trigger anywhere wins, and the data table adds to the other rules):
 
 1. Full suite: `packages/devkit/src/devkit/core/`, `packages/devkit-advisory/`, `packages/devkit/src/devkit/cli.py`,
    `packages/devkit/src/devkit/__main__.py`, `uv.lock`, any `pyproject.toml` or `conftest.py`,
@@ -103,14 +104,14 @@ A group is selected when one of its dependencies is affected.
    | `scripts/affected_tests.py` | `packages/devkit/tests/test_affected_tests.py` |
 
 3. Source: `packages/devkit/src/devkit/<A>/...` changes node `devkit.A`; `packages/<P>/src/...` changes the node of
-   `P`. Any change under `packages/devkit/src/` also selects every `packages/devkit/tests/test_*.py` (layering, CLI
-   wiring, documented codes).
+   `P`. Any change under `packages/devkit/src/` also selects the tests over the whole source tree
+   (`SOURCE_TREE_TESTS`: `test_layering.py`, `test_documented_codes.py`, `test_cli_imports.py`, `test_cli_plugins.py`).
 4. Tests: a changed `test_*.py` under a `tests` directory selects itself; any other file there (a support module, a
    fixture) selects its directory.
 5. Untested: `specs/`, `guides/`, `.claude/`, `.agents/`, `.codex/`, `.devkit/`, `.github/`, `scripts/smoke.sh`,
    `scripts/smoke_integration.py`, `scripts/release.sh`, Markdown files at the repository root or a package root,
    `.gitignore`, `.python-version`.
-6. Anything else: full suite, with that path as the reason, so a new directory is never silently untested.
+6. Anything else matched by no rule above: full suite, with that path as the reason, so a new directory is never silently untested.
 
 Selected paths that no longer exist (a deleted test file) are dropped; a path inside another selected directory is
 dropped as covered. No selected path with no full trigger is `mode=none`.
@@ -123,9 +124,10 @@ xdist options, `DEVKIT_RUN_MODE` and the exit code are those of `just test all`.
 
 ## 4. Error Handling & Edge Cases
 
-- **Unknown base ref or no merge base**: `TEST_BASE_UNKNOWN` (`Actor.AGENT`, `Retry.AFTER_FIX`), `[FIX]` naming
-  `just test-affected --base <ref>` with an existing ref; nothing runs.
-- **A source file that does not parse**: skipped by the scan and logged under `-v`; the changed file still maps to its
+- **Unknown base ref or no merge base**: `TEST_BASE_UNKNOWN` (`Actor.TOOL`, `Retry.AFTER_FIX`), `[FIX]` naming
+  `just test-affected --base <existing-ref>`; nothing runs. A failing `git diff` or `git ls-files` is
+  `TEST_CHANGES_UNREADABLE` (`Actor.USER`).
+- **A source file that does not parse**: skipped by the scan (an `INFO` log record); the changed file still maps to its
   node, and the full suite before integration covers what the scan cannot see.
 - **Detached HEAD or a base equal to HEAD**: the merge base is HEAD and only uncommitted and untracked changes count.
 

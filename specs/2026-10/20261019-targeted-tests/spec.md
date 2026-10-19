@@ -2,7 +2,7 @@
 id: SPEC-targeted-tests
 title: Targeted and affected test runs
 summary: 'Run only the tests a change needs: area targeting for just test, a diff-based just test-affected selection, and agent guidance that keeps the full suite to one run before integration.'
-status: planned
+status: in-progress
 created: 2026-10-19
 related_capabilities: []
 related_stories: []

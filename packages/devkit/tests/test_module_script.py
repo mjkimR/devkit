@@ -68,6 +68,73 @@ def test_test_recipe_preserves_arguments_and_preflight(
     assert check[-3:] == ["-k", "foo and bar", "-n0"]
 
 
+def pytest_paths(check: list[str]) -> list[str]:
+    """The test paths of a recorded pytest call: after the xdist and coverage options, before the extra arguments."""
+    rest = [arg for arg in check[check.index("worksteal") + 1 :] if not arg.startswith("--cov")]
+    return rest[: next((i for i, arg in enumerate(rest) if arg.startswith("-")), len(rest))]
+
+
+def run_module(script_env: dict[str, str], *args: str) -> subprocess.CompletedProcess[str]:
+    script_env["DEVKIT_RUN_MODE"] = "raw"
+    return subprocess.run(
+        ["bash", str(ROOT / "scripts/module.sh"), *args], env=script_env, capture_output=True, text=True
+    )
+
+
+@pytest.mark.parametrize(
+    ("args", "paths", "extra"),
+    [
+        (["gate"], ["packages/devkit/tests/gate", "packages/devkit/src/devkit/gate"], []),
+        (
+            ["gate", "worktree", "-k", "foo"],
+            [
+                "packages/devkit/tests/gate",
+                "packages/devkit/src/devkit/gate",
+                "packages/devkit/tests/worktree",
+                "packages/devkit/src/devkit/worktree",
+            ],
+            ["-k", "foo"],
+        ),
+        (
+            ["packages/devkit/tests/gate/test_hooks.py::test_commits_run_built_in_gates"],
+            ["packages/devkit/tests/gate/test_hooks.py::test_commits_run_built_in_gates"],
+            [],
+        ),
+        ([], ["packages/devkit/tests", "packages/devkit/src"], []),
+        (["-k", "foo"], ["packages/devkit/tests", "packages/devkit/src"], ["-k", "foo"]),
+    ],
+)
+@pytest.mark.parametrize("action", ["test", "test-cov"])
+def test_selectors_replace_the_module_paths(
+    script_env: dict[str, str], action: str, args: list[str], paths: list[str], extra: list[str]
+) -> None:
+    result = run_module(script_env, action, "devkit", *args)
+    assert result.returncode == 0, result.stderr
+    preflight, check = calls(script_env)
+    assert preflight[-len(args) - 3 :] == ["just", action, "devkit", *args]
+    assert pytest_paths(check) == paths
+    assert check[len(check) - len(extra) :] == extra
+
+
+def test_an_area_of_another_module_includes_its_source_package(script_env: dict[str, str]) -> None:
+    result = run_module(script_env, "test", "spec", "scope")
+    assert result.returncode == 0, result.stderr
+    assert pytest_paths(calls(script_env)[1]) == [
+        "packages/devkit-spec/tests/scope",
+        "packages/devkit-spec/src/devkit_spec/scope",
+    ]
+
+
+def test_an_unknown_area_runs_no_tool(script_env: dict[str, str]) -> None:
+    result = run_module(script_env, "test", "devkit", "nosuch", "-k", "foo")
+    assert result.returncode == 2
+    assert "Unknown area for devkit-agt: nosuch" in result.stderr
+    available = next(line for line in result.stderr.splitlines() if line.startswith("Available areas: "))
+    assert {"gate", "worktree", "core"} <= set(available.split(": ", 1)[1].split())
+    assert "__pycache__" not in available
+    assert not Path(script_env["CALLS"]).exists()
+
+
 @pytest.mark.parametrize("mode", ["compact", "raw"])
 def test_failure_stops_checks_without_retry(script_env: dict[str, str], mode: str) -> None:
     script_env.update(DEVKIT_RUN_MODE=mode, TOOL_EXIT="2")
