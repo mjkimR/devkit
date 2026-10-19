@@ -37,7 +37,8 @@ activity that edits a bundled skill invalidates every open confirmation though n
 
 The digest covers `[workflow.approvals]` `dev-integration`, `[worktree]` `pull_request`, `delete_branch` and
 `merge`, and `[integration] provider`, normalized after parsing. The base's digest must be equal at confirmation and
-execution; the result commit's digest must equal the one prospected at confirmation. Provider, guard and cleanup
+execution; the result commit's digest must equal the one prospected at confirmation; a cleanup-only request (a source the
+target already contains) builds nothing, checks no result digest and expects the target's policy at `prepare`. Provider, guard and cleanup
 extension identities stay separate request fields (the last option). Each build checks the receipt records the merge
 makes inconsistent: a record whose path is tracked in the result and whose blob or recorded hash differs from both
 parents must match there, else `INTEGRATION_RECEIPT_CONFLICT` before anything lands. Untracked projections and

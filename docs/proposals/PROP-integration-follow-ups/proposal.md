@@ -17,6 +17,7 @@ boundaries:
     - packages/devkit/src/devkit/integration/
     - packages/devkit/src/devkit/worktree/
     - packages/devkit-spec/src/devkit_spec/
+    - docs/roadmap/MS-multi-host-native-integration.md
   excludes: []                       # docs/decisions/ is written only by the handoff's PADR promotion
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
 workflow: sdd-proposal
@@ -207,13 +208,15 @@ current target (the **build target**), builds the **result commit** and fast-for
   contains the result (later commits on the base are allowed), not that it equals it; `validate_finish(merged=True)`,
   the service's recovery and devkit-spec's cleanup `_is_post_git` change from "HEAD equals the source" to "HEAD
   contains the result (the source under `ff-only`) and the worktree is gone".
-- **Guards**: unchanged at `prepare` (the source contains the target, so `plan.target_sha` is the merge base); before
+- **Guards**: unchanged at `prepare` (the source contains the target, so `plan.target_sha` is the merge base), except
+  the cleanup-only request ("Already merged": `merge-base(target, source)`, the source, is the guard base); before
   each fast-forward of a build on an advanced target the guards run again with `merge-base(build target, source)`
   and the source tip.
 - **Effective policy (E3)**: the request binds a digest of parsed values devkit owns: `[workflow.approvals]`
   `dev-integration`, `[worktree]` `pull_request`, `delete_branch` and `merge`, and `[integration] provider`, for the
   base at confirmation (must equal at each build) and for the result commit (must equal what the confirmation
-  prospected). Provider, guard and cleanup extension identities stay separate fields as today. Raw config and receipt
+  prospected; a cleanup-only request builds nothing, checks no result digest and expects the target's policy at
+  `prepare`). Provider, guard and cleanup extension identities stay separate fields as today. Raw config and receipt
   bytes and asset hashes are no longer bound. Instead of refusing every managed path changed on both sides, each
   build checks the receipt records the merge itself makes inconsistent: a record whose path is tracked in the result
   and whose blob or recorded hash differs from both parents must match there, else `INTEGRATION_RECEIPT_CONFLICT`.
@@ -234,22 +237,32 @@ current target (the **build target**), builds the **result commit** and fast-for
   a policy change, and runs its CI rules on the result tree with the diff from the build target.
 - **Tests on the landed tree**, decided (`answer-01.yaml` t-tests-on-result): tests are not run on the result (the
   executor never runs commands); only the CI rules run on it, and the form and the integration report say that tests
-  and review ran on the source only.
+  and review ran on the source only. The SDD-agnostic form (devkit-agt) does not say what a provider checks: the
+  readiness provider declares a short result-check disclosure at confirmation, which the form shows and the request
+  digest binds with the declared target-bound codes; devkit-spec declares "CI rules only on the merged result; tests
+  and review ran on the source only", and `spec-integrate`'s integration report states the same.
 - **Confirmation text (E5)**: the form says "Approve local integration of <branch> into <target> with a merge
   commit?", shows the confirmation target SHA, and states that later commits on the target are merged in without
-  another confirmation only if the merge is clean, the integration policy is unchanged and readiness passes again
-  (CI rules only on the result), otherwise nothing changes on the target. The result reports the confirmation
+  another confirmation only if the merge is clean, the integration policy is unchanged and readiness provider
+  <provider> passes again on the merged result (followed by the provider's disclosure), otherwise nothing changes on
+  the target. The result reports the confirmation
   target, the build target and the result commit. `approval_scope()` and `to_dict()` carry the configured
   `merge_method`.
 - **Bounds (E6) and approval lifetime**: one build per call. Advances during the confirmation are absorbed by that
   build; with the CLI taking the lock every devkit executor is serialized, so only a non-devkit ref write can move the
   target between the build and its fast-forward, which is `INTEGRATION_TARGET_MOVED` with nothing changed (no
   in-call retry). Decided (`answer-01.yaml` a-approval-lifetime): the approval tolerates target advances only within
-  that call; `integration_resume` continues an approved request
-  only onto the last build target (its CAP-INT section 5 use, permission failures and cleanup after the merge), and a
-  later target needs a new confirmation.
+  that call; `integration_resume` continues an approved request only onto the last build target (its CAP-INT section
+  5 use, permission failures and cleanup after the merge), and a later target needs a new confirmation. A request
+  whose approving call ran no build has no build target to resume onto and needs a new confirmation. So that a
+  concurrent devkit executor does not void an approval, the approving call waits for the Git common-directory
+  integration lock up to a bound (a module constant, 30 seconds, which Development checks against the hosts' MCP
+  tool-call timeouts, such as Codex `tool_timeout_sec`, and lowers if a host would cut the call), instead of today's
+  `timeout=0`; past the bound it is `LOCK_HELD` with nothing changed. `integration_resume` keeps `timeout=0`. Both
+  paths are tested.
 - **Prepare builds nothing**: `integration_prepare` and `plan_finish` stay read-only; the prospective result tree is
-  the source tree, and the prospective policy is read from the source commit as today.
+  the source tree, and the prospective policy is read from the source commit as today, except the cleanup-only
+  request, whose expected policy is the target's at `prepare` ("Already merged").
 - **Skills**: `spec-integrate` Step 1 (merge the base into the activity branch before integration) stays required
   before `prepare` when the branch does not contain the target, and after a refusal on a later target (conflict,
   receipt conflict, readiness on the result); the worktree reference and `CAP-WT-task-worktrees` describe the merge
@@ -266,10 +279,12 @@ work.
   digest, builds, recovery, confirmation text, new codes `INTEGRATION_TARGET_MOVED`, `INTEGRATION_RECEIPT_CONFLICT`, the cleanup-only request), `packages/devkit/src/devkit/worktree/` (`config.py`
   merge key, `planning.py`, `lifecycle.py` `finish`, the merge-commit build, the `WORKTREE_MERGE_NOT_FF` fix text and `WORKTREE_MERGE_CONFLICT`, `WORKTREE_GIT_UNSUPPORTED` and `WORKTREE_COMMIT_FAILED`, lock, push fix, CLI help for `--merge`, module docstring),
   devkit-spec's readiness provider (`devkit_spec/integration.py`) and scoped cleanup (`devkit_spec/cleanup.py`), its
-  `spec-integrate` skill and worktree reference, `CAP-INT-mcp-services` (sections 1, 2 and 5), `CAP-WT-task-worktrees`
+  `spec-integrate` skill, its integration report text (`spec/references/completion.md`) and worktree reference,
+  the confirmation lock wait, `CAP-INT-mcp-services` (sections 1, 2 and 5), `CAP-WT-task-worktrees`
   (section 3 rerun and fix text), `CAP-DLV-delivery-workflows` 4.8 (readiness binding), `CAP-DLV-project-policy` (the
   new key), the project config template, `guides/` (Git 2.38 for advanced targets),
-  `docs/development/reference/integration.md` and `worktree.md`. No change to `devkit.host` (packages/devkit-dist).
+  `docs/development/reference/integration.md` and `worktree.md`, and the exit condition of
+  `docs/roadmap/MS-multi-host-native-integration.md` (below). No change to `devkit.host` (packages/devkit-dist).
   Accepted ADRs are not changed; the handoff promotes this proposal's PADRs.
 - **Milestone**: `MS-multi-host-native-integration`'s exit condition says the approval is "bound to the verified
   source and target commits"; with 3.2 it binds the confirmation target and its descendants within one call.
@@ -285,5 +300,12 @@ work.
 - Preliminary decisions: `devkit spec proposal padr integration-follow-ups "<title>"`.
 - Split done in Planning (3.1): the child drafts were created with `devkit spec proposal new` and name this proposal
   in their body; `--decomposed-from` refuses a source in Planning (`SPEC_PROPOSAL_IN_PLANNING`).
+- Source feedback after the split (owner: the Host, outside this Planning's write scope, after the plan branch merges
+  and before the handoff): `FB-auto-integration-dispatch` goes back to `status: open`, its disposition replaced by a
+  note that the user keeps it open until deciding whether a policy may grant merge and deletion authority
+  (`answer-01.yaml` q1-split); `FB-pr-remote-and-squash-integration`'s disposition becomes
+  `PROP-integration-pull-request-cleanup`, and `FB-multi-host-integration-ergonomics`'s
+  `PROP-integration-host-confirmation`. Left undone, the handoff rewrites all three to this proposal's spec and auto
+  dispatch later reads as delivered.
 - On acceptance (`plan-accept`): hand off with `devkit spec proposal handoff integration-follow-ups`.
 - On rejection: `status: rejected` with the user's reason in the commit message.
