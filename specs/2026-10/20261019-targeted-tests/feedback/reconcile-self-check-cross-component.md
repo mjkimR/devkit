@@ -50,4 +50,4 @@ identified, their agreement with the actual diff can be directly demonstrated, a
 interpretation or cross-component impact. ... If any condition is uncertain, call the reviewer."
 ```
 
-- **Disposition**: skills/spec/references/effort.md: the medium reconcile exception defines cross-component impact with one example each way
+- **Disposition**: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/effort.md, docs/capabilities/delivery/CAP-DLV-delivery-workflows.md: the medium reconcile exception defines cross-component impact (packages, capability areas and repository tooling counted separately; the change's own reflection excluded)

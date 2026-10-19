@@ -47,4 +47,4 @@ devkit workflow next (start of run): [STAGE: collect-feedback ...] [UNMET: envel
 planning-worker.md step 6: "--stage (the stage `next` named) and --effort always"
 ```
 
-- **Disposition**: worker-records.md and both worker contracts: --stage is the stage next names when the worker envelope is written, after the run's other records
+- **Disposition**: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/worker-records.md, packages/devkit-spec/src/devkit_spec/bundle/subagents/planning-worker.md, packages/devkit-spec/src/devkit_spec/bundle/subagents/development-worker.md, docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md: --stage is the stage next names when the worker envelope is written, after the run's other records

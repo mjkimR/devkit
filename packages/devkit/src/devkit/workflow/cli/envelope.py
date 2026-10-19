@@ -247,7 +247,7 @@ def envelope_new_cmd(kind: str, **options: Any) -> None:
     "--questions-file",
     default=None,
     help=(
-        "YAML list of questions for a person, each {id, title, prompt, context?, options: [{id, description,"
+        "YAML list of questions for a person, each {id, title, prompt, context?, options?: [{id, description,"
         " recommended?}], allow_note?} (path, or - for stdin)"
     ),
 )

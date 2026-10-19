@@ -37,4 +37,4 @@ created_at: 2026-10-19
 - `development-worker.md`, `planning-worker.md`: each restates the per-effort review steps.
 - `envelopes/challenger-01.yaml` of this proposal: finding on the impact list missing the worker contracts.
 
-- **Disposition**: PROP-direct-planning-procedure: moving the Planning steps, with their per-effort review, into one spec reference; SPEC-high-effort-review-loop already moved the high loop into review-loop.md
+- **Disposition**: PROP-direct-planning-procedure: moving the Planning steps, with their per-effort review, into one spec reference; SPEC-high-effort-review-loop already moved the high loop into review-loop.md. The remaining development-worker step 4 and workflow-body sentences state what each role runs at each level, which effort.md does not own, so they stay
