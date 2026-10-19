@@ -57,8 +57,8 @@ Use this skill when all implementation tasks in `tasks.md` are marked complete (
 ### Delegated execution (Reviewer role)
 - This skill is executed by the `code-reviewer` role in an isolated context at medium and high (its role contract, invoked through `spec-delegate`; `devkit workflow next` shows `[DELEGATE]` for this stage). The first medium code review is mandatory regardless of change size. At low the Developer runs it directly; both produce the same envelope.
 - When delegated: inputs are the actual diff (`diff_scope`), the relevant contracts and the Developer's check results, not the implementer's narrative. The Reviewer MUST NOT modify source, tests, spec files or docs, and MUST NOT stage or commit; discovered requirements are returned as findings.
-- Every finding carries `evidence` (path:line) and a `failure_condition`. Zero findings is a valid PASS; do not manufacture defects. A review of a stale head is returned as `needs_input` and is not completion evidence.
-- After fixes, re-verify only the changed part rather than re-running the whole review. At medium the implementer verifies fixes and subsequent changes and decides whether to call the code-reviewer again, using the `spec` skill's `references/effort.md` criteria. Record verification evidence in `reverify`, identifying who checked later changes. High retains re-review after fixes.
+- Every finding carries `evidence` (path:line), a `failure_condition` and a `severity` of `P1`, `P2` or `P3` at every effort (the `spec` skill's `references/review-loop.md` section 3 defines them; the implementer records the reviewer's level unchanged). Zero findings is a valid PASS; do not manufacture defects. A review of a stale head is returned as `needs_input` and is not completion evidence.
+- After fixes, re-verify only the changed part rather than re-running the whole review. At medium the implementer verifies fixes and subsequent changes and decides whether to call the code-reviewer again, using the `spec` skill's `references/effort.md` criteria. Record verification evidence in `reverify`, identifying who checked later changes. At high the review runs in the bounded rounds of the `spec` skill's `references/review-loop.md`: a fresh reviewer per round, given the earlier findings and the round's diff scope, until a round finds nothing or every fix of its batch is minor and self-verified; each summary starts with `round <N>;`.
 
 ### Optional feedback breakpoint
 
@@ -77,6 +77,7 @@ devkit workflow envelope review --unit <dir> --stage review-refine \
   evidence: "path:line"
   failure_condition: "<under which input or state it fails>"
   suggested_action: "<recommended next step>"
+  severity: "P2"
 EOF
 ```
 

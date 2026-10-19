@@ -30,7 +30,7 @@ Use this skill when the main Developer session hands exploration, criticism, an 
 ## 3. Procedure
 
 ### Step 1: Decide whether to delegate
-- Follow the `spec` skill's `references/effort.md`: `low` self-review; `medium` and `high` initial `code-reviewer` required regardless of size. Unit paths also use `reconcile-reviewer`; only medium permits its documented initial self-check exception and discretionary repeat calls. A session returns a message, never an envelope or worker. Proposal Planning uses `challenger` at medium/high (re-review at high), `scout` for evidence. `[DELEGATE]` names the role; effort decides how it runs.
+- Follow the `spec` skill's `references/effort.md`: `low` self-review; `medium` and `high` initial `code-reviewer` required regardless of size. Unit paths also use `reconcile-reviewer`; only medium permits its documented initial self-check exception and discretionary repeat calls, and `high` runs both in the bounded rounds of the `spec` skill's `references/review-loop.md` (a fresh call per round). A session returns a message, never an envelope or worker. Proposal Planning uses `challenger` at medium/high (rounds at high), `scout` for evidence and always at high. `[DELEGATE]` names the role; effort decides how it runs.
 - `local-orchestrated` (`spec-orchestrate`): a `planning-worker` runs one proposal Planning turn, a `development-worker` one Development turn of a spec unit, each in its worktree; never for `session`. A worker runs its role subagents nested (Host → worker → role).
 
 ### Step 2: Build the input payload

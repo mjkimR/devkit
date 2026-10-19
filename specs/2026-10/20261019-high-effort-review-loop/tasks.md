@@ -8,13 +8,13 @@ plan: PLAN-high-effort-review-loop
 
 Bundle paths are under `packages/devkit-spec/src/devkit_spec/bundle/`; tests under `packages/devkit-spec/tests/`.
 
-- [ ] **Task 1**: The `high` loop reference and the effort rules, with their tests
+- [x] **Task 1**: The `high` loop reference and the effort rules, with their tests
   - **_Boundary**: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/review-loop.md,
     packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/effort.md,
     packages/devkit-spec/tests/test_effort_procedure.py
   - _Requirements: AC-01, AC-02, AC-03, AC-05, AC-06_
   - **Verification**: `uv run pytest packages/devkit-spec/tests/test_effort_procedure.py packages/devkit-spec/tests/test_bundle_budgets.py`
-- [ ] **Task 2**: Severity levels in the envelope reference, `spec-review` and the three reviewer contracts, and the
+- [x] **Task 2**: Severity levels in the envelope reference, `spec-review` and the three reviewer contracts, and the
   reviewer round inputs in the payload table
   - **_Boundary**: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/envelope.md,
     packages/devkit-spec/src/devkit_spec/bundle/skills/spec-review/SKILL.md,
@@ -25,7 +25,7 @@ Bundle paths are under `packages/devkit-spec/src/devkit_spec/bundle/`; tests und
     packages/devkit-spec/src/devkit_spec/bundle/subagents/scout.md,
     packages/devkit-spec/tests/test_effort_procedure.py
   - _Requirements: AC-04, AC-08_
-- [ ] **Task 3**: Every other restatement of `high` cites the loop: workflow bodies, worker contracts, `spec-delegate`,
+- [x] **Task 3**: Every other restatement of `high` cites the loop: workflow bodies, worker contracts, `spec-delegate`,
   `spec-sync`, `spec-orchestrate`, completion reference
   - **_Boundary**: packages/devkit-spec/src/devkit_spec/bundle/workflows/,
     packages/devkit-spec/src/devkit_spec/bundle/subagents/development-worker.md,

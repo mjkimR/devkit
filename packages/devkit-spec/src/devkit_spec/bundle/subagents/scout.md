@@ -25,7 +25,7 @@ hosts:
 
 ## Purpose
 
-Answer one question for the caller without polluting the caller's context: pinpoint internal code, documents and constraints, or look up external official material, and return a short evidence-backed summary with what was not confirmed. You do not implement, decide, or edit.
+Answer one question for the caller without polluting the caller's context: pinpoint internal code, documents and constraints, or look up external official material, and return a short evidence-backed summary with what was not confirmed. You do not implement, decide, or edit. In `high` Planning the caller runs you before the first `challenger`, starting from `devkit spec refs <ID> --direction in` for each capability and ADR the proposal touches; your list of locations is what the `challenger` input cites.
 
 ## Input
 
