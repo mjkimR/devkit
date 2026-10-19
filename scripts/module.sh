@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Shared implementation for workspace development commands:
-#   module.sh <action> [module|all] [extra args...]
+#   module.sh <action> [module|all] [selectors...] [extra args...]
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 source ./scripts/_lib.sh
@@ -10,6 +10,59 @@ requested_target=${2:-all}
 target=$(resolve_module "$requested_target")
 shift $(($# < 2 ? $# : 2))
 validate_module "$target"
+# The arguments as given, for the preflight's [FIX]; selectors are shifted off below.
+# `${a[@]+"${a[@]}"}` expands an empty array under `set -u` on macOS's bash 3.2.
+given=("$@")
+
+# The directory names under a module's tests/, the areas a selector can name (shared helpers excluded).
+areas() {
+    local dir names=()
+    for dir in "$1"/tests/*/; do
+        [ -d "$dir" ] || continue
+        dir=$(basename "$dir")
+        case "$dir" in
+            __pycache__|testsupport) ;;
+            *) names+=("$dir") ;;
+        esac
+    done
+    echo "${names[*]-}"
+}
+
+# Append the test paths one selector names to `selected`: an existing path (a `::` node suffix allowed) as given,
+# else the area's existing `tests/<name>` and `src/*/<name>` directories.
+add_selector() {
+    local base=$1 selector=$2 dir found=0
+    if [ -e "${selector%%::*}" ]; then
+        selected+=("$selector")
+        return 0
+    fi
+    for dir in "$base/tests/$selector" "$base"/src/*/"$selector"; do
+        if [ -d "$dir" ]; then
+            selected+=("$dir")
+            found=1
+        fi
+    done
+    [ "$found" -eq 1 ] && return 0
+    echo "Unknown area for $target: $selector" >&2
+    echo "Available areas: $(areas "$base")" >&2
+    return 1
+}
+
+# Selectors (`just test devkit gate worktree -k foo`): the arguments before the first option replace a single
+# module's default test paths; the rest go to pytest. `all` passes everything on, as pytest's own paths override
+# the configured testpaths.
+selected=()
+if [ "$target" != all ]; then
+    case "$action" in
+        test|test-cov)
+            module_path=$(resolve_module_path "$target")
+            while [ $# -gt 0 ] && [ "${1#-}" = "$1" ]; do
+                add_selector "$module_path" "$1" || exit 2
+                shift
+            done
+            ;;
+    esac
+fi
 # Assigned before the loop so a discovery failure aborts under `set -e`.
 modules=$(list_modules)
 # pytest-xdist: worksteal keeps the slow Git-hook tests from piling onto one worker;
@@ -44,7 +97,8 @@ run_check() {
 # Fail before pytest starts when a sandbox blocks those writes; the caller owns approval and retry.
 case "$action" in
     test|test-cov)
-        uv run --no-active python scripts/check_test_environment.py -- just "$action" "$requested_target" "$@"
+        uv run --no-active python scripts/check_test_environment.py -- just "$action" "$requested_target" \
+            ${given[@]+"${given[@]}"}
         ;;
 esac
 
@@ -73,6 +127,9 @@ for module in $modules; do
     test_paths=("$path/tests")
     if [ -d "$path/src" ]; then
         test_paths+=("$path/src")
+    fi
+    if [ ${#selected[@]} -gt 0 ]; then
+        test_paths=("${selected[@]}")
     fi
     case "$action" in
         lint)

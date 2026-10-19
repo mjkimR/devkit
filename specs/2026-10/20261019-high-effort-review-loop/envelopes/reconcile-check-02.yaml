@@ -1,0 +1,23 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T02:12:46.962474Z'
+status: completed
+summary: 'closes reconcile-check-01; implementer self-verification (medium repeat-call discretion, no second reviewer call): findings 2-4 fixed in CAP-DLV-delivery-workflows by applying each suggested_action as written; finding 1 waived (recorded below) and handed to the Host; reconcile.md resolved.'
+findings:
+- issue: 'reconcile-check-01 finding 1: ADR-medium-review-delegation frontmatter (status superseded, superseded_by) not set.'
+  evidence: docs/decisions/2026-10/20261016-medium-review-delegation.md:5; specs/2026-10/20261019-high-effort-review-loop/reconcile.md targets
+  failure_condition: The unit integrates with the old ADR still accepted and no superseded_by.
+  suggested_action: 'Host: in the integrate stage set status superseded and superseded_by ADR-bounded-high-effort-review-loop, and change the reconcile target to modified.'
+  resolution: waived
+  waiver: The file is outside this Development turn's write scope; reconcile.md now states the target as a deferred Host edit (not a no-impact claim), and the worker envelope carries it as an open finding for the integrate stage, whose docs authority covers the reflection the approved change requires.
+  severity: P2
+assumptions:
+- 'Verifier: the implementer, not the reconcile reviewer; changed scope ac29b14..9057dd3131d8839a86a191667ad4653e85a156ab (CAP-DLV-delivery-workflows rule 7 extra round limited to cap or recurrence problems, section 4.5 return fields with severity, rule 15 out-of-scope and Decision needed exclusions; reconcile.md), each edit compared with review-loop.md sections 1 and 4.'
+checks:
+  verified: 'PASS devkit rules check docs/capabilities/delivery and the unit: 0 violations'
+diff_scope:
+  base: ac29b14f8f58e833807a3e389984b4f1d5e53cc0
+  head: 9057dd3131d8839a86a191667ad4653e85a156ab
+activity_effort: medium

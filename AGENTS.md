@@ -46,16 +46,19 @@ Keep package descriptions in this guide to a high-level summary of their purpose
 
 ## Verification
 
-Run lint, type checks, and relevant tests before completing code changes:
+Run lint, type checks, and relevant tests before completing code changes. During development run only the tests
+the change can affect; run the full suite once on the reviewed head before integration, not after every edit. A
+viewer frontend change selects no pytest test: run the command its `[FRONTEND_CHECK: ...]` line names instead:
 
 | Target | Command |
 | --- | --- |
 | Lint & format | `just lint [module]` |
 | Lint & format check (CI) | `just lint-check [module]` |
 | Type check (Pyright) | `just check [module]` |
-| Tests | `just test [module]` |
+| Tests during development | `just test-affected` (from the diff) or `just test <module> [area\|path...]` |
+| Full test suite (once before integration) | `just test` |
 | devkit-dist without devkit-agt (dist-only check) | `just test-dist` |
-| Test Coverage | `just test-cov [module]` |
+| Test Coverage | `just test-cov [module] [area\|path...]` |
 | Governance Rules | `just rules-check` or `just rules-fix` |
 | Consumer smoke (packaging, CLI wiring, hooks) | `just smoke` |
 | Viewer frontend (needs Node; rebuild the committed page after a change) | `just viewer lint`, `just viewer check`, `just viewer test`, `just viewer build` |

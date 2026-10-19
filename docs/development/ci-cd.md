@@ -33,6 +33,47 @@ page, a script and `/api/repos`.
 `-n auto --maxprocesses 8 --dist worksteal`: up to eight workers, sharing work as workers become available.
 Extra pytest arguments follow these defaults, so `just test all -n0` runs serially.
 
+During development an agent runs only the tests a change can affect, and the full `just test` once on the
+reviewed head before integration:
+
+- **Selectors**: for a single module, the arguments before the first option are areas or paths that replace the
+  module's default paths. An area is a directory under the module's `tests/` together with the matching
+  `src/<package>/<area>` directory (`just test devkit gate worktree -k cache`); a path is passed as given, a `::`
+  node suffix included. An unknown area exits `2` and lists the module's areas before any tool runs. `all` passes
+  its arguments to pytest unchanged.
+- **`just test-affected [--base REF] [--list] [-- PYTEST-ARGS]`** (`scripts/affected_tests.py`): collects the paths
+  changed since the merge base of `HEAD` and `REF` (default `main`; committed, staged, unstaged, untracked, both
+  sides of a rename) and selects tests from them:
+  - Shared foundations (`devkit.core`, `devkit-advisory`, `cli.py`, `__main__.py`, any `pyproject.toml` or
+    `conftest.py`, `uv.lock`, the shared test helpers `testsupport` and `distsupport`) select the full suite.
+  - Repository files that tests read (`docs/`, `examples/`, `models/`, the recipe scripts and `justfile`) select
+    those tests from a fixed table.
+  - A package source change selects the test groups (a `devkit-dist` or `devkit-agt` area, a top-level test file of
+    either, another workspace package) that import its area or an area importing it, transitively by static imports;
+    a `devkit-dist` or `devkit-agt` source change also selects the tests over the whole devkit source tree (layering,
+    documented codes, CLI wiring, stdout kinds).
+  - A changed `test_*.py` in a `tests` directory selects itself; any other file there selects its directory.
+  - The devkit-viewer frontend (`packages/devkit-viewer/frontend/`, `scripts/viewer.sh`) selects no pytest test:
+    pytest never exercises it. The result names the frontend checks instead (below); the page they rebuild under
+    `src/devkit_viewer/static/` is package source and selects the viewer's tests.
+  - Planning records and agent projections (`specs/`, `.claude/`, `.agents/`, `.codex/`, `.devkit/`), `guides/`,
+    `.github/`, the smoke and release scripts, `.gitignore`, `.python-version` and Markdown at the repository or a
+    package root select nothing.
+  - Any other path selects the full suite.
+- **Result**: stdout's first line is
+  `[TEST_SELECTION: mode=<full|partial|none> base=<ref> changed=<n> paths=<n> reason=<text>]` (`reason=frontend`
+  for a frontend-only change). When a frontend path changed, the next line is
+  `[FRONTEND_CHECK: just viewer install && just viewer lint && just viewer check && just viewer test && just viewer
+  pack && just viewer build]`, the checks of the CI viewer job: the agent runs that command (Node and npm) and
+  commits the rebuilt page with the sources. `--list` adds one `[TEST_PATH: <path>]` per path and runs nothing.
+  Otherwise `full` and `partial` run `just test all [paths...]`
+  with its preflight, options and exit code, and `none` exits `0`. A base without a merge base is the input error
+  `TEST_BASE_UNKNOWN` (exit `2`), whose `[FIX]` lists the existing branches; a failing `git diff` or `git ls-files`
+  is `TEST_CHANGES_UNREADABLE` (exit `2`), for the user to resolve in the repository before rerunning.
+- **Limits**: a group's dependencies include those of the shared helpers it imports at module level,
+  not of helpers imported inside a test function; static imports also do not show tests that run the CLI in a
+  subprocess or load entry points. The full suite before integration covers them.
+
 Before starting pytest or its workers, both recipes run `scripts/check_test_environment.py` through the
 workspace Python environment. The check sends and receives one byte through a local socket pair, with
 one-second I/O timeouts. Python's asyncio uses local sockets to wake an event loop from another thread;

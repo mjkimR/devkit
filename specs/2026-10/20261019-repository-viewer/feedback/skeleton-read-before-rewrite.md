@@ -10,7 +10,7 @@ agent: claude-code
 origin: user
 severity: workaround
 recurring: true
-status: open
+status: promoted
 created_at: 2026-10-19
 ---
 
@@ -50,3 +50,5 @@ spec-plan SKILL.md §3: "Rewrite specs/<YYYY-MM>/<YYYYMMDD>-<slug>/plan.md, keep
 Host refusal on the first write of plan.md and of PADR-read-only-local-server-over-git-refs.md:
 "File has not been read yet. Read it first before writing to it."
 ```
+
+- **Disposition**: commit fa6aa90 (docs(spec): read command-written skeletons before rewriting them): spec-specify, spec-plan, spec-tasks and the planning-worker PADR step now say to read the skeleton first.

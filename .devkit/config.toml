@@ -8,6 +8,7 @@ response-style = "all"
 
 [worktree]
 pull_request = "auto"
+setup = "just init"  # a new worktree gets the workspace environment before its first devkit command
 
 [integration]
 provider = "spec"

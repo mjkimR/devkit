@@ -1,0 +1,24 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T02:08:02.439635Z'
+status: completed
+review: review-01.yaml
+summary: 'Finding 1 (P2) fixed in 8a09821 and self-verified by the implementer (medium; no repeat code-reviewer call): review-loop.md Fixing and Next round rows now keep a contested P1 open with its counter-evidence and send the batch to the next round; spec.md 5 §3.1 matches; test_effort_procedure.py asserts both sentences.'
+findings:
+- issue: 'The round rules give no defined way to contest a P1: Fixing requires every finding fixed and only P2/P3 may be waived, Next round starts only on a fix that fails the minor-fix conditions, yet the contested-P1 hand-over needs one more round given the counter-evidence while that P1 is unfixed.'
+  evidence: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/review-loop.md:12
+  failure_condition: 'A high round returns a P1 the implementer holds invalid and does not fix: no fix was made, so the End condition is vacuously true, no rule starts the round section 4 requires, and the loop stops with an open P1 that blocks review-refine; the contested-P1 hand-over is unreachable (also for reconcile and Planning).'
+  suggested_action: Add to review-loop.md section 1 that a P1 the implementer holds invalid stays open in the closing record with its counter-evidence and sends the whole batch to the next round, which is the one more round of section 4; optionally assert it in test_effort_procedure.py.
+  resolution: resolved
+  severity: P2
+assumptions:
+- 'Self-verification: wording-only fix confined to the location the finding names, applying its suggested_action as written; no contract beyond ADR-bounded-high-effort-review-loop changed.'
+checks:
+  tests: PASS uv run pytest test_effort_procedure.py test_bundle_budgets.py (123 passed)
+  lint: PASS just lint-check
+diff_scope:
+  base: 870e5cc332a94623fe635d5e0d6ec67374eee9b6
+  head: 8a0982187a23ff36c397240a0d0dad0ea4529817
+activity_effort: medium

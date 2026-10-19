@@ -183,6 +183,10 @@ The frontmatter is the only stage definition. Read it with `devkit workflow show
 
 There is no Development direction gate. Implementation choices inside the agreed expected behavior are decided with the recommended option and recorded. When the agreed expected behavior cannot be kept (the defect turns out to be a design problem, or the expected behavior itself is disputed), the work stops as a problem: a worker records it and ends, and the Host decides recovery or a close; it is never taken back to Planning.
 
+## Role invocation
+
+Developer, `spec-review` and `spec-sync` by default; the `code-reviewer` and `reconcile-reviewer` roles follow the `activity-effort` of the Development activity (`low`: self-review and self-checked reconcile; `medium`: one mandatory initial code review regardless of size and a separate reconcile review, with the initial reconcile self-check exception and discretionary repeat calls defined in the `spec` skill's `references/effort.md`; `high`: code reviewer and reconcile reviewer, each in the bounded rounds of the `spec` skill's `references/review-loop.md`, the first reconcile verification always independent, and a hand-over that is not resolved in the loop recorded as a `worker` problem or question). The implementer writes, fixes and resolves the reconcile at every effort; the stage's reviewer role only verifies it. Effort never lowers the floor: gates, this workflow's exit checks, the Red and Green evidence and `required` policies hold at every effort.
+
 ## Gate rules
 
 - **`plan-intent` records the intent, the expected behavior included.** The gate opens once `spec.md` exists; record the user's confirmation with `devkit workflow answer --unit <dir> --request gate:plan-intent --action accept --by user`. A spec handed off from a proposal carries the proposal's `gate:plan-intent` and `gate:plan-accept` under their own names (`[CARRIED_GATE]`).

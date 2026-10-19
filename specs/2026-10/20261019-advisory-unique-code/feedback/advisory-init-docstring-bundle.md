@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-19
 ---
 
@@ -50,3 +50,5 @@ packages/devkit/src/devkit/advisory_guide/__init__.py:
     The protocol's Python library is the separate ``devkit-advisory`` distribution (``devkit.advisory``), which
     registers no bundle, ...
 ```
+
+- **Disposition**: packages/devkit-advisory/src/devkit/advisory/__init__.py: the docstring drops the bundled-guide clause and names `devkit.advisory_guide` as where the guides ship.

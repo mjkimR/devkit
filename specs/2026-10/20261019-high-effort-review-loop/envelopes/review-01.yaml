@@ -1,0 +1,27 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T02:07:30.446446Z'
+status: completed
+summary: 'Initial mandatory code-reviewer subagent pass (medium), 8ca289b..870e5cc: AC-01 to AC-09 met, no non-goal implemented, all paths inside the task boundaries; one P2 on the contested-P1 path.'
+findings:
+- issue: 'The round rules give no defined way to contest a P1: Fixing requires every finding fixed and only P2/P3 may be waived, Next round starts only on a fix that fails the minor-fix conditions, yet the contested-P1 hand-over needs one more round given the counter-evidence while that P1 is unfixed.'
+  evidence: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/review-loop.md:12
+  failure_condition: 'A high round returns a P1 the implementer holds invalid and does not fix: no fix was made, so the End condition is vacuously true, no rule starts the round section 4 requires, and the loop stops with an open P1 that blocks review-refine; the contested-P1 hand-over is unreachable (also for reconcile and Planning).'
+  suggested_action: Add to review-loop.md section 1 that a P1 the implementer holds invalid stays open in the closing record with its counter-evidence and sends the whole batch to the next round, which is the one more round of section 4; optionally assert it in test_effort_procedure.py.
+  resolution: open
+  severity: P2
+assumptions:
+- Reviewer ran as a native Claude Code code-reviewer subagent nested under the development worker (host status native).
+unverified_areas:
+- 'just smoke not run: bundle.toml unchanged'
+checks:
+  tests: PASS just test devkit-spec (936 passed)
+  lint: PASS just lint-check; just rules-check 0 violations
+  types: PASS just check devkit-spec (pyright 0 errors)
+  workflow_validate: PASS devkit workflow validate exit 0; workflow hunks below frontmatter
+diff_scope:
+  base: 8ca289bbde3277409623cf86d38d3839e40d447f
+  head: 870e5cc332a94623fe635d5e0d6ec67374eee9b6
+activity_effort: medium

@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-19
 ---
 
@@ -49,3 +49,5 @@ created_at: 2026-10-19
 [ERROR]  (ARGUMENT_INVALID) unknown or disabled generated artifacts: viewer-assets
 [FIX]    Pass ids that `devkit generated list` prints (registered: devkit-receipt)
 ```
+
+- **Disposition**: packages/devkit/src/devkit/generated/engine.py: `devkit generated check` names an ID registered only in the working tree as not committed at the checked revision, with a `[FIX]` to commit `.devkit/generated.toml` or pass `--rev`.

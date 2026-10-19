@@ -7,6 +7,8 @@ created_at: 2026-10-14
 target_area: capabilities/harness/
 priority: high                        # critical | high | medium | low
 size: M                               # S | M | L | XL
+planning_effort: low                  # low | medium | high (hint for Planning)
+dev_effort: medium                    # low | medium | high (hint for Development)
 boundaries:
   owns:
     - capabilities/harness/

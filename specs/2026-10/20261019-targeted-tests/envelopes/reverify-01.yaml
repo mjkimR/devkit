@@ -1,0 +1,44 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T00:37:15.743736Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer fixed all four findings and verified them against each failure condition; no further reviewer call (medium discretionary repeat): changes stay inside the reviewed files and contracts.'
+findings:
+- issue: TEST_BASE_UNKNOWN carries a placeholder template as [FIX] and renders as AUTO, against CAP-ADV-agent-advisory-protocol (fixes are runnable, never placeholder templates); plan.md section 4 prescribes the same fix
+  evidence: scripts/affected_tests.py:276-283
+  failure_condition: '`just test-affected --base nosuch`: an agent following AUTO runs `just test-affected --base <existing-ref>` literally; the shell reads `<existing-ref>` as a redirect from a missing file and the retry fails'
+  suggested_action: Make [FIX] an exact command listing candidate refs or drop it, choose an actor/retry whose directive is to rerun with an existing ref, and update plan.md section 4
+  resolution: resolved
+  severity: medium
+- issue: areas() expands an empty array under bash 3.2 set -u, prints "*" for a tests/ without subdirectories, and lists testsupport as an area
+  evidence: scripts/module.sh:18-25
+  failure_condition: '`bash scripts/module.sh test catalog nosuch` prints `names[*]: unbound variable` and an empty `Available areas:` (exit 2, no tool run)'
+  suggested_action: Use a guarded expansion, skip the unmatched glob, exclude testsupport, test a module without areas
+  resolution: resolved
+  severity: low
+- issue: SOURCE_TREE_TESTS leaves out core/test_cli.py, whose test_stdout_never_uses_an_advisory_sentinel_as_a_kind scans every devkit source file
+  evidence: scripts/affected_tests.py:58-62; packages/devkit/tests/core/test_cli.py:347-356
+  failure_condition: A non-core area change adding a reserved sentinel such as `[WARN:` as a stdout kind passes `just test-affected`
+  suggested_action: Add packages/devkit/tests/core/test_cli.py to SOURCE_TREE_TESTS
+  resolution: resolved
+  severity: low
+- issue: Group dependencies ignore what the shared testsupport helpers import, so a group using testsupport.gate does not depend on devkit.gate
+  evidence: scripts/affected_tests.py:121-128,195-196; packages/devkit/tests/workflow/test_hygiene_authoring.py:13; packages/devkit/tests/testsupport/gate.py:11
+  failure_condition: A gate change removing the GateContext or Stage export breaks workflow/test_hygiene_authoring.py at collection, but `just test-affected` does not select packages/devkit/tests/workflow
+  suggested_action: Follow module-level testsupport imports into group dependencies (keeps AC-07, distribution's import is function-local) or list the gap under ci-cd.md Limits
+  resolution: resolved
+  severity: low
+assumptions:
+- 'Verified by the implementer, not the code-reviewer: the reviewer checked ef29d03 only.'
+checks:
+  tests: 'PASS just test-affected on dd1b00c: 922 passed (selection includes test_affected_tests.py, test_module_script.py, doc tests, devkit-spec)'
+  regressions: 'PASS new cases: catalog unknown area without areas, testsupport excluded, gate change selects tests/workflow and core/test_cli.py, TEST_BASE_UNKNOWN is an input error with fix git branch --all --list'
+  lint: PASS ruff check, ruff format --check, pyright on changed scripts and tests
+  rules: PASS just rules-check
+diff_scope:
+  base: b94232699bedf73244f22462563580f03aa21e26
+  head: dd1b00cdec058e9a8812bd4c76a67f9bb93bf80a
+activity_effort: medium

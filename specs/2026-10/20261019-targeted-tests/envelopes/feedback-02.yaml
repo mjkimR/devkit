@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T00:42:52.750154Z'
+status: completed
+summary: 'Re-swept after the final checks: recorded FB-reconcile-self-check-cross-component and FB-smoke-response-style-instruction-path; no duplicates in the open backlog.'
+findings: []
+checks:
+  swept: PASS recorded=2 duplicates=0

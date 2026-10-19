@@ -1,7 +1,7 @@
 """Agent Advisory Protocol runtime: errors, warnings and notices for AI agents.
 
-Standard library only and free of import-time side effects: devkit imports this
-module to read the bundled guide under ``bundle/``.
+Standard library only and free of import-time side effects. The protocol guides ship
+separately, in the ``advisory`` bundle of ``devkit.advisory_guide``.
 """
 
 from devkit.advisory.advisory import ACTION_TEXT, CONTINUATION, FIELDS, HEADLINE, Advisory

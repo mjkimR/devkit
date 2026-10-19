@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T02:13:57.540559Z'
+status: completed
+summary: 'Bounded high-effort review loop shipped in the devkit-spec bundle (new spec/references/review-loop.md; effort, envelope, completion references; spec-review, spec-delegate and payload, spec-sync, spec-orchestrate; six role contracts; five workflow bodies, prose only) with test_effort_procedure.py; Living Spec reflected in CAP-DLV-delivery-workflows and CAP-DLV-workflow-envelopes. Review: review-01 (1 P2) closed by reverify-01; reconcile: reconcile-check-01 (3 P2, 1 P3) closed by reconcile-check-02.'
+findings: []
+assumptions:
+- 'Open for the Host: ADR-medium-review-delegation needs status superseded and superseded_by ADR-bounded-high-effort-review-loop (outside this turn''s write scope); the integrate stage then changes its reconcile target from waived to modified.'
+- devkit rules check --ci --base 8ca289b reports RULE-reconcile-contract on the ADR target because the handoff commit 8ca289b itself promoted the ADR; against the branch merge base 9c274b2 it passes.
+- 'Scope overlap: devkit spec scope update reports one unresolved overlap with SPEC-devkit-dist-package-separation, which declares the whole packages/devkit-spec/src/devkit_spec/bundle directory.'
+checks:
+  tests: PASS just test devkit-spec (936 passed); just smoke passed
+  build: PASS just check devkit-spec (pyright 0 errors); devkit workflow validate exit 0
+  lint: PASS just lint-check; just rules-check 0 violations; devkit rules check --ci --base 9c274b2 (branch merge base) 0 violations
+diff_scope:
+  base: 8ca289bbde3277409623cf86d38d3839e40d447f
+  head: 85eb37917b8d9ddd24ca2a267564a09f5b8210fd
+activity_effort: medium

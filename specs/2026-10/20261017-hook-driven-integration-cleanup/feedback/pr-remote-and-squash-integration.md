@@ -10,7 +10,7 @@ agent: antigravity
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-17
 ---
 
@@ -40,3 +40,5 @@ SPEC-hook-driven-integration-cleanup AC-06 & Non-Goal 3:
 "Scope Excluded: Automatic dev-integration=auto hook dispatch, remote/PR merge operations, squash/rebase cleanup, or non-Codex host adapters in this release."
 "pull_request = 'required' fails closed with WORKTREE_PR_POLICY."
 ```
+
+- **Disposition**: `PROP-integration-follow-ups`: drafted in Backlog together with the other two deferred integration extensions, now that ask-mode integration has been used in real workflows.

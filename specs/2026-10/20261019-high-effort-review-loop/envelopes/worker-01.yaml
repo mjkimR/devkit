@@ -1,0 +1,30 @@
+kind: worker
+stage: integration-approval
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T02:14:14.182685Z'
+status: completed
+summary: 'Development turn from specify to the final change report: specify, build-verify (3 tasks), review-refine (code-reviewer subagent review-01, 1 P2 fixed, reverify-01), living-spec-draft (reconcile-reviewer subagent reconcile-check-01, 3 P2 + 1 P3; reconcile-check-02 closes it with self-verification and one waiver), collect-feedback (2 recorded), final-report-01. Waiting at dev-integration.'
+findings:
+- issue: ADR-medium-review-delegation still has status accepted and no superseded_by; the supersede link is one-sided.
+  evidence: docs/decisions/2026-10/20261016-medium-review-delegation.md:5; specs/2026-10/20261019-high-effort-review-loop/reconcile.md (waived target)
+  suggested_action: 'Host, in the integrate stage: set status superseded and superseded_by ADR-bounded-high-effort-review-loop in that frontmatter and change the reconcile target to resolution modified (the file was outside this turn''s write scope).'
+  resolution: open
+- issue: devkit spec scope update reports one unresolved overlap with SPEC-devkit-dist-package-separation, which declares the whole packages/devkit-spec/src/devkit_spec/bundle directory.
+  evidence: SCOPE_ACK status=applied revision=2 overlaps=1 unresolved=1 (bundle skills, subagents and workflows files of this unit)
+  suggested_action: Order the two integrations; the second integrates the base first.
+  resolution: open
+assumptions:
+- 'High triggers changed after Planning (a37add2): the session reclassification advice is stated by what the work does, keeping the agreed mapping (spec.md 1.1).'
+- 'FB-reconcile-self-check-cross-component left open: defining cross-component impact changes the medium rule, which ADR-bounded-high-effort-review-loop carries over unchanged (spec non-goal 4).'
+- Carried feedback stays open with status unchanged; FB-effort-procedure-restated is applied only to the files this change touched.
+checks:
+  lint: PASS just lint-check; just rules-check; devkit rules check --ci --base 9c274b2
+  types: PASS just check devkit-spec
+  tests: PASS just test devkit-spec (936 passed)
+  smoke: PASS just smoke
+  workflow_validate: PASS devkit workflow validate
+diff_scope:
+  base: 8ca289bbde3277409623cf86d38d3839e40d447f
+  head: 5582d10a2f49f09ccba7449f91816241fd0d8f72
+activity_effort: medium
