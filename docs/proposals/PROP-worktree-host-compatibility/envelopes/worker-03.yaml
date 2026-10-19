@@ -1,0 +1,32 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T03:53:15.682828Z'
+status: completed
+summary: 'Recovery Planning turn (activity-effort high) at the user''s request: one further fresh challenger round outside the cap on the round-4 batch (challenger-05, round 5: no P1, no recurrence; 4 P2, 4 P3), all eight fixed in 3e1308e and self-verified under review-loop section 2 (only PADR-codex-process-worker §4-§5 and proposal.md §3.2/§4; suggested edits applied as written; no decision changed; text checked against each finding). F1 the Development Host''s validation is stated (named head, named write scope, clean status, tests rerun; a failure blocks and the turn Fails; added to Passes; the request names head, write scope and effort). F2 before asking, the Host commits and ends its run with a completed worker envelope naming the pending task, whose head starts both range checks. F3 the bounded turn covers the support roles its task_goal names. F4 its Host side is stated in the development-worker Return, CAP-DLV §4.6 and spec-orchestrate step 2 (shipping it only with the launch was not taken: a decision change). F5 Fails cleanup with a resolution per live-turn problem. F6 the live-turn acceptance check is a named review check. F7 plan.md and the verification task carry direct mode. F8 the Codex Host''s escalated steps include the test rerun. resolution-01 resolves worker-02. dev_effort high and size M kept. Support roles this turn: challenger-05.'
+findings:
+- issue: On every host a worker has the session's access to the shared .git (other refs, config, hooks, the scope registry), which the Host's committed-range check does not see; this proposal neither widens nor closes the gap.
+  evidence: PADR-worktree-access-preconditions §5; envelopes/challenger-01.yaml finding 2
+  suggested_action: A follow-up proposal for a Host snapshot of refs and .git config, hooks and devkit files before and after a worker turn.
+  resolution: open
+  severity: P2
+assumptions:
+- F1's addition of the Development Host's validation to Passes specifies the validation step the decision already had (its result was recorded but had no effect); it does not change what ships or who runs the turn
+- F2's completed status for the Development Host's pause follows worker-records by elimination (no question, no problem); no gate reads a worker envelope's status (EnvelopeSet.hold counts problems, questions and malformed records only); recorded as FB-direct-host-pause-status-undefined
+- The three challenger rounds recorded before the review loop reached main count as rounds 1-3 (FB-review-loop-round-count-across-procedure-change); round 5 ran outside the cap at the user's request
+- Claude Code stays native on this repository's observed auto-mode runs; acceptEdits, default and sandbox cases rest on documentation
+- IDs that exist only on main are cited in plain words because the branch's reference rule cannot resolve them (FB-plan-branch-cannot-reference-main-ids)
+unverified_areas:
+- 'End-to-end codex exec worker turn: nested role spawn, trust mapping of a linked worktree, legacy -s workspace-write --add-dir lifting the git-dir protection, the commit gate offline under the sandbox'
+- Whether a base-rooted Codex Host can rerun uv or pytest in the sibling dev- worktree under escalation
+- Whether a development-worker inside codex exec leaves a hold shown by devkit workflow next untouched as the bounded task_goal states
+- devkit sync --locked in a dev- worktree after bundle contract edits (installation.json)
+- Antigravity subagent access and .git handling (documentation only; user chose keep-unverified)
+checks:
+  rules: PASS devkit rules check on the proposal directory
+  feedback: PASS feedback-03 swept recorded=1 duplicates=2
+diff_scope:
+  base: 928d0e61eef0a806d14efd7a9518b8b4c4d98b25
+  head: 0fb0158b6cb76c1aad8dffcec254924ffa3c7dbc
+activity_effort: high
