@@ -78,18 +78,27 @@ Choose **M1**.
   requirement `devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit`, never a bare
   package name the default index would resolve): in a project, replace the `devkit-dist` requirement with that
   `devkit-agt` requirement in the same dependency group (`devkit-agt` depends on `devkit-dist` at the same version,
-  so the project never declares both); for a tool installation, reinstall with `--with` and the same requirement.
+  so the project never declares both); for a tool installation, reinstall naming both Git requirements
+  (`uv tool install --reinstall 'devkit-dist @ git+...#subdirectory=packages/devkit-dist' --with 'devkit-agt @
+  git+...#subdirectory=packages/devkit'`).
   Whether it carries a release ref follows the missing-extra fixes, so all install directives stay identical in
   form. The directive does not detect the installation form and is shared with the standalone asset notice of
   `PADR-dist-bundles-compatibility`.
 - The list holds command names only, never module paths or entry point targets, so `devkit-dist` still names no
   harness module and the per-wheel layering test (module references) holds; this is what separates it from the
   rejected M2. That test MUST also scan `devkit/cli.py` and `devkit/__main__.py` (today's scanner exempts top-level
-  files and sees only import-call arguments) and every string constant naming a `devkit-agt` area
-  (`devkit.<area>`), so a harness target left in the `COMMANDS` map fails it; bare command names stay allowed. `devkit --help` in a standalone installation lists only installed commands, never the listed
+  files and sees only import-call arguments) and every string constant that is a dotted module path or a
+  `module:attribute` reference starting with `devkit.<agt-area>`, so a harness target left in the `COMMANDS` map
+  fails it; docstrings, prose constants (such as the generated `devkit-workflow` skill body) and bare command names
+  stay allowed. `devkit-agt`'s entry point layering test, which today maps each group to its loading area from the
+  `*GROUP` constants of its own sources, reads the groups loaded by `devkit-dist` (`devkit.commands`,
+  `devkit.bundles`, `devkit.post_sync`, `devkit.host.services`, ...) by scanning the `*GROUP` constants of the
+  `devkit-dist` sources too, which its environment always installs. `devkit --help` in a standalone installation lists only installed commands, never the listed
   names.
 - `devkit-agt` ships no console script, so a tool installation names the script owner and adds the harness:
-  `uv tool install devkit-dist --with devkit-agt` (wheel paths or Git URLs alike).
+  `uv tool install <devkit-dist requirement> --with <devkit-agt requirement>`, each a wheel path or a full Git
+  requirement (`devkit-dist @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-dist`), never
+  a bare package name the default index would resolve.
 
 ## 5. Consequences
 

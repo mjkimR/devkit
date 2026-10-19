@@ -214,3 +214,21 @@ Evidence checked while folding (worktree head after `answer-01.yaml`):
 | 8 | Bundle name `harness` collides with the `harness` capability area | low | User question `harness-bundle-name` |
 | 9 | Contract 3 defaults list, overrides of moved assets, `devkit = false` projects | low | Contract 3 reworded generically; overrides named in upgrade consequences and release notes; opt-out kept in release notes |
 | 10 | Two evidence details inaccurate | low | Corrected in section 8; a `devkit-agt` test asserting `harness` is built in and auto-selected is required |
+
+## 10. Second re-review (envelope `challenger-04.yaml`) and disposition
+
+Nine of the ten `challenger-03.yaml` dispositions were confirmed; the round found no new contradiction with
+`answer-01.yaml` or `PADR-dist-foundation-ownership`.
+
+| # | Finding | Severity | Disposition |
+| --- | --- | --- | --- |
+| 1 | Draft `preset-moved-hint` title over 40 characters | medium | Question dropped (finding 4) |
+| 2 | `contract-6-split` attributes Planning's inventory to the user | low | Question dropped; the split is recorded in `PADR-dist-bundles-compatibility` as a correction of the Planning inventory, open to the user at plan-accept |
+| 3 | `keep-harness` context omits `CAP-HARN-agent-guidance` | low | Question context states it; circular reason removed |
+| 4 | `preset-moved-hint` incomplete; doing nothing needs no consent | low | Question dropped; the generic hint is a non-goal, open at plan-accept; `SELECTION_INVALID` stopping the whole sync recorded |
+| 5 | Tool form still bare; tool branch lacks the `devkit-dist` requirement | low | Both places in `PADR-dist-command-composition` name full requirements; the section 7 row 6 form above is historical |
+| 6 | Compatibility exceptions incomplete | low | Added the tool-version notice, the `[FIX]` texts, the harness-named plugin case; `devkit config template` stays byte-identical |
+| 7 | Layering string match ambiguous; `devkit-agt` group map | low | Match limited to dotted module paths and `module:attribute` references; the `devkit-agt` test scans `devkit-dist`'s `*GROUP` constants too |
+| 8 | Override consequence partly wrong | low | Split into moved-asset and split-asset cases |
+| 9 | Release-notes list inconsistent | low | One list in the consequences |
+| 10 | In-repo example test missing | low | Added to verification |

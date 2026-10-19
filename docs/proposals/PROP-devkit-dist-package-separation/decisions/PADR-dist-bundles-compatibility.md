@@ -99,8 +99,11 @@ Choose **B1**, **H1** and **K1**.
   the user for confirmation (question `harness-bundle-name`) before it becomes a selection key. It carries:
   - a constitution with the harness intro (rules and commit gates run as code) and the harness contracts: today's
     contract 5 (rules and gates run as code, configured in `[rules]` and `[gates]`) and the snapshot-gate part of
-    contract 6 (snapshot gates trust the committed receipt and fail when a managed rule no longer matches it;
-    whether contract 6 moves split or whole is question `contract-6-split`);
+    contract 6 (snapshot gates trust the committed receipt and fail when a managed rule no longer matches it). The
+    Planning inventory behind the `harness-guidance` question listed all of contract 6 as harness text; its first
+    sentence (commit the receipt after `devkit sync`) is distribution guidance, so under the user's decision that
+    the `devkit` bundle keeps distribution guidance it stays there (a correction of that inventory, open to the
+    user at plan-accept);
   - the harness parts of `consumption` (rules, gates and workflows in the configuration table, "Workflows",
     "Rules and commit gates" with `.git/devkit.config` and the `rules-check` gate), of `resource-kinds` (how rule,
     gate and workflow assets are run and tested: `devkit rules`, `devkit rules test`, `devkit gate`,
@@ -131,17 +134,22 @@ Choose **B1**, **H1** and **K1**.
 - With `devkit-agt` installed, every existing `devkit` command, option, sentinel, JSON field, advisory code and exit
   code MUST behave as before the split, except for these enumerated changes: the content of the `devkit` bundle and
   the new `harness` bundle (`devkit get-context`, managed files), the `harness` entry in `devkit list`,
-  `devkit status` and the receipt, the receipt's tool and package names, and the two preset selections below.
+  `devkit status` and the receipt, the receipt's tool and package names, the tool-version notice naming both
+  packages (`PADR-dist-config-receipt-ownership`), the missing-extra `[FIX]` texts (`PADR-dist-module-split`), a
+  third-party `devkit.commands` plugin named like a harness command now failing with `COMMAND_PLUGIN_INVALID`
+  instead of being ignored (`PADR-dist-command-composition`), and the two preset selections below. `devkit config
+  template` output with `devkit-agt` installed stays byte-identical (the harness tables keep their place).
   `devkit --version` keeps its `[VERSION: devkit <version>]` form and reports the `devkit-dist` version.
 - Two selections of the `devkit` bundle change, accepted in place under the AGENTS.md compatibility policy (no alias
   preset, no migration reader, no special-cased directive; the release notes and guides name both):
   - `devkit:run` (`devkit = ["core", "run"]`, `devkit = "run"`, `devkit add devkit:run`) fails with the existing
-    `SELECTION_INVALID` until it selects `harness:run`; today its fix lists the bundle's own presets
-    (`devkit:all, devkit:core`), neither of which restores the pointer.
+    `SELECTION_INVALID`, which stops the whole sync (the `harness` bundle included) until the configuration selects
+    `harness:run`; its fix lists the bundle's own presets (`devkit:all, devkit:core`), neither of which restores the
+    pointer.
   - `devkit:all` (`devkit = "all"`) keeps working but no longer deploys `devkit-run` and `run-pointer`; a project
     that wants the pointer selects `harness:run`.
-  Whether `SELECTION_INVALID` also names a preset of that name declared by another installed bundle (a generic
-  hint, not a `devkit:run` special case) is question `preset-moved-hint`.
+  A generic `SELECTION_INVALID` hint naming a preset of the same name in another installed bundle is a non-goal
+  (it needs the installed-bundle set at every selection call site; open to the user at plan-accept).
 - `devkit-dist`, `devkit-agt` and `devkit-advisory` MUST be released in lockstep from one tag at one version;
   `devkit-agt` pins `devkit-dist` to that exact version, as it pins `devkit-advisory`. `devkit-spec`,
   `devkit-catalog` and `devkit-starter` keep independent versions.
@@ -150,15 +158,18 @@ Choose **B1**, **H1** and **K1**.
   their development dependency to `devkit-dist`.
 - Configuration and receipt behavior follow `PADR-dist-config-receipt-ownership`; import paths follow
   `PADR-dist-module-split`.
-- Non-goals: renaming `packages/devkit`; shim modules, alias distributions or alias presets; a smaller third-party
+- Non-goals: renaming `packages/devkit`; shim modules, alias distributions or alias presets; a cross-bundle preset
+  hint in `SELECTION_INVALID`; a smaller third-party
   dependency set for `devkit-dist` (it needs every runtime dependency `devkit-agt` has today: click, pyyaml, jinja2,
   tomlkit).
 
 ## 5. Consequences
 
 - The installation guides (`guides/`) gain a distribution-only installation path next to the existing harness and
-  SDD paths; release notes list the `devkit-dist` wheel, which a release-wheel installation of `devkit-agt` must name
-  explicitly, the new `harness` bundle and the `devkit:run` to `harness:run` selection change.
+  SDD paths. The release notes carry one list: the `devkit-dist` wheel, which a release-wheel installation of
+  `devkit-agt` must name explicitly; the new auto-selected `harness` bundle; `devkit:run` to `harness:run` (the sync
+  fails until changed); the `devkit:all` change; the re-selection of `harness` in projects that opted out with
+  `devkit = false`; and the two override cases below.
 - `CAP-DIST-content-packages` states which distribution's bundles are built in and lists `harness`;
   `docs/development/reference/distribution.md` (bundles shipped with devkit), `docs/development/reference/compact.md`,
   `CAP-CMP-bounded-execution` and `guides/install/bundle-recommendations.md` name `harness` as the home of
@@ -170,9 +181,10 @@ Choose **B1**, **H1** and **K1**.
   appear under `.devkit/managed/harness/`, the `devkit` bundle's managed files change or disappear, and the receipt
   gains a `harness` entry, all committed with the upgrade. A project that opted out with `devkit = false` gets
   `harness` selected (built-in bundles raise no new-bundle notice) and opts out again with `harness = false`.
-  Project overrides of moved assets (for example `.devkit/overrides/devkit/instructions/devkit-run.md`, or of the
-  split `consumption` and constitution) stop applying, since overrides resolve per bundle; the release notes name
-  them and the project re-creates them as `harness:<asset>`.
+  Overrides resolve by bundle name and path: an override of a moved asset (`devkit-run`, `run-pointer`) stops
+  applying and is re-created as `harness:<asset>`; an override of a split asset that keeps its path in the `devkit`
+  bundle (`consumption`, the constitution) keeps applying with an upstream-drift report and still carries the old
+  harness text, so the project reconciles it (removing the harness sections) to avoid deploying them twice.
 - Development reconciles the `devkit:run` selections: this repository's `.devkit/config.toml` and receipt select only
   `devkit:core` and no first-party package configuration selects `devkit:run` (checked at Planning, materials
   section 8), so no selection here changes; the references to update are the `devkit` bundle manifest, its guide
@@ -184,5 +196,7 @@ Choose **B1**, **H1** and **K1**.
   notice), and both bundles' context: `devkit get-context devkit` carries no harness command, `devkit get-context
   harness` carries the moved guidance. A `devkit-agt` test asserts that `harness` is listed `builtin`, auto-selected
   with `["core"]`, and a dist-only check asserts it is absent (no existing test covers it: the `BUILTINS` constant
-  of `tests/distribution/test_builtin_selection.py` is unused). A before/after comparison of the `--format json`
+  of `tests/distribution/test_builtin_selection.py` is unused). The guide bundle test asserts that the `devkit`
+  bundle's in-repo example never lists `devkit-dist` and `devkit-agt` in one dependency group. A before/after
+  comparison of the `--format json`
   output of the distribution commands on a fixture project allows only the enumerated changes above.
