@@ -1,7 +1,7 @@
 ---
 id: PADR-codex-process-worker
 title: Codex worker as a separate process rooted in its worktree
-summary: Offers a Codex Planning or Development worker turn as a codex exec process rooted in the activity's worktree with both git dirs granted, only once one live turn has passed the Host's range check; until then, or when it fails, the Codex main session keeps running the activity in direct.
+summary: Offers a Codex worker turn as a codex exec process rooted in its worktree with both git dirs granted, only once one bounded live Development turn run by the user meets the Passes criterion; otherwise, or if not run, the Codex main session keeps running the activity in direct.
 proposal: PROP-worktree-host-compatibility
 status: draft
 created_at: 2026-10-19
@@ -60,9 +60,10 @@ every writable root unless named exactly. A process rooted in the worktree with 
   process. The Host adds only these two grants, the sandbox mode and, when it knows its own session's reasoning
   effort, `-c model_reasoning_effort=<that effort>` (the role effort presets decision integrated on `main`: a worker
   runs at the session's effort); otherwise the process runs at the user's configured default and `CAP-DLV-delivery-workflows` says so.
-  Grants the user's own Codex configuration holds stay the user's. The prompt is the effective contract body
-  (`.devkit/overrides/spec/subagents/<role>.md` when it exists, else `.devkit/managed/spec/subagents/<role>.md`)
-  followed by the payload `spec-delegate` defines.
+  Grants the user's own Codex configuration holds stay the user's. The prompt is the effective contract body in the worktree
+  (`<worktree>/.devkit/overrides/spec/subagents/<role>.md` when it exists, else
+  `<worktree>/.devkit/managed/spec/subagents/<role>.md`), whose frontmatter also decides the launch, followed by the
+  payload `spec-delegate` defines.
 - **Launch preconditions**, stated in the hosts reference: the worktree was synced by `devkit worktree start`
   without `WORKTREE_SYNC_FAILED` (the projections a nested role needs are gitignored and exist only through that
   sync), and the worktree path is trusted in the user's Codex configuration, which loads project-scoped `.codex/`
@@ -80,55 +81,52 @@ every writable root unless named exactly. A process rooted in the worktree with 
   `spec-delegate/SKILL.md` stays within its tested budget (`BUDGET - 512` = 11776 bytes,
   `packages/devkit-spec/tests/test_bundle_budgets.py`; 7778 bytes on `main` at this Planning).
 - **Live verification** (Development): one bounded `development-worker` turn of this proposal's spec, in its own
-  `dev-` worktree, launched through this launch by a Codex Host the user runs. Development first adds what the turn
-  and its hand-off need, independent of the outcome:
-  - the development-worker contract and its payload row accept a bounded `task_goal` that names spec tasks; such a
-    turn ends after those tasks with `completed` and the next stage in its summary, and the Host continues with a new
-    turn;
-  - the development-worker may end a turn `needs_input` with a question when the next step is an action only the user
-    can take outside the worker's reach (the contract's question clause, and the prose of
-    `bundle/workflows/sdd-spec-feature.md` that lets only a problem stop the work); its payload row carries the
-    user's rewritten answers and the contract records them first as `answer` envelopes, as `planning-worker` does;
-  - `references/worker.md`: commits another Host made on the unit since the last accepted head are validated as one
-    worker range up to the final head that Host reported, before the next spawn.
+  `dev-` worktree, launched through this launch by a Codex Host the user runs.
+  - The development-worker contract and its payload row accept a bounded `task_goal` that names spec tasks: such a
+    turn does only those tasks, leaves any hold `devkit workflow next` shows on the unit as it is (no `answer` or
+    `resolution`), ends after them with `completed` and the next stage in its summary. This stays whatever the
+    outcome; a contract test asserts it.
+  - **This spec's Development runs in `direct` mode** on its Host. A Host rooted in the base checkout would load
+    main's worker contracts and `spec-delegate`, which lack the probe, the bounded turn and the launch; in `direct`
+    the Host does the work itself and never spawns from those texts.
 - The live turn itself:
-  - Development writes the key and the launch text on its branch and re-syncs its `dev-` worktree, so the worktree's
-    `.devkit/managed` and projected roles match the branch. When it reaches the verification task, the Development
-    turn ends `needs_input` with a question asking the user to run the turn. The question names the unit, the
-    worktree, the bounded `task_goal` (the probe, one small task of `tasks.md` through the commit gate, its affected
-    tests and one nested support role), the branch's `spec-delegate` text in the worktree as the Host procedure for
-    this turn, the Codex Host's escalated steps, the fields to report and that the base checkout and the worktree
-    stay untouched outside the turn. Its options are `ran` (the report as the answer's note) and `not-run`. The
-    Development worker and its Host never run `codex exec` themselves.
+  - Development writes the key, the bounded turn and the launch text on its branch and re-syncs its `dev-` worktree,
+    so the worktree's `.devkit/managed` and projected roles match the branch. At the verification task the Host asks
+    the user in the conversation to run the turn, naming: the unit and the worktree; the bounded `task_goal` (the
+    probe, one small task of `tasks.md` through the commit gate, its affected tests and one nested support role);
+    the contract to launch, `<worktree>/.devkit/managed/spec/subagents/development-worker.md` (or its override in the
+    worktree), whose frontmatter carries the key; the branch's `spec-delegate` text in the worktree as the Codex
+    Host's procedure; the Codex Host's escalated steps (launch, scope update, any blocking envelope commit); the
+    fields to report; and that the base checkout and the worktree stay untouched outside the turn. The Development
+    Host never runs `codex exec` itself.
   - The user starts a Codex session in the base checkout, which acts as Host for that one turn: it builds the payload,
-    starts the process escalated and validates the return as `references/worker.md` defines, then the user answers
-    the question with its report.
-  - The next Development turn records the answer and the evidence in the verification task of the spec's `tasks.md`
-    and in its `worker` envelope's checks: the command line, the codex version, the configuration mode (legacy
-    `sandbox_mode` or a profile), the reasoning effort, the Codex trust status of the worktree, the worktree sync
-    result, the base and final head, the range-check result, the commit gate's result, the affected tests, the nested
-    role spawned and the turn's duration against the Host's command timeout. The Development Host validates the live
-    turn's commits as another Host's range before it spawns again.
+    starts the process escalated, validates the return as the branch's `references/worker.md` defines and reports
+    the fields and its final head; the user passes the report to the Development Host, or says the turn was not run.
+  - The Development Host validates the live turn's commits from its own last commit up to the reported final head
+    with the checks of `references/worker.md`, then records the evidence in the verification task of the spec's
+    `tasks.md`: the command line, the codex version, the configuration mode (legacy `sandbox_mode` or a profile), the
+    reasoning effort, the Codex trust status of the worktree, the worktree sync result, the base and final head, both
+    Hosts' range-check results, the commit gate's result, the affected tests, the nested role spawned and the turn's
+    duration against the Codex Host's command timeout. The live turn's own `worker` envelope carries its in-process
+    checks.
   - **Passes** when all hold: the probe and a commit through the real commit gate succeed inside the process, the
-    Host's range check passes, the affected tests run and pass inside the process, a nested role is spawned and
-    returns, the turn ends within the Host's command timeout, and the launch runs under the user's own configuration
-    mode. Then the key, the launch text in `spec-delegate` and `spec-orchestrate`, and `CAP-DLV-delivery-workflows`
-    ship as above.
-  - **Fails** (including a test or gate failure caused only by the process's sandbox, and the answer `not-run`,
-    recorded with its reason): Development removes the key and the launch text from its branch, so nothing of the
-    launch ships; the hosts reference and the contract comments record the failed condition, and Codex keeps the
-    main session running the activity in `direct`. The bounded-turn, user-action question and other-Host range
-    changes stay: they do not depend on Codex.
+    Codex Host's range check passes, the affected tests run and pass inside the process, a nested role is spawned
+    and returns, the turn ends within the Codex Host's command timeout, and the launch runs under the user's own
+    configuration mode. Then the key, the launch text in `spec-delegate` and `spec-orchestrate`, and
+    `CAP-DLV-delivery-workflows` ship as above.
+  - **Fails** (including a test or gate failure caused only by the process's sandbox, and a turn the user did not
+    run, recorded with its reason): Development removes the key and the launch text from its branch, so nothing of
+    the launch ships; the hosts reference and the contract comments record the failed condition, and Codex keeps the
+    main session running the activity in `direct`. The bounded turn stays.
 
 ## 5. Consequences
 
-- Changes `spec-delegate` (`SKILL.md` Step 3, `references/hosts.md`, `references/worker.md`,
-  `references/payload.md`), `spec-orchestrate`, the two worker contracts and their tests,
-  `bundle/workflows/sdd-spec-feature.md` (prose only), `.devkit/installation.json` (managed hashes) and
+- Changes `spec-delegate` (`SKILL.md` Step 3, `references/hosts.md`, `references/payload.md`), `spec-orchestrate`,
+  the two worker contracts and their tests, `.devkit/installation.json` (managed hashes) and
   `CAP-DLV-delivery-workflows`; no devkit package change.
 - Each Codex worker turn costs a separate model session and an approval.
-- Development pauses once for the user's live turn; the result decides what ships, and either outcome completes
-  Development.
+- Development runs in `direct` and pauses once for the user's live turn; the result decides what ships, and either
+  outcome completes Development.
 - Unverified until the live turn: that legacy `-s workspace-write --add-dir` lifts the git-dir protection as a profile
   rule does (the probes used `codex sandbox -P`), how `-s` combines with a user's permission profile, whether
   `codex exec` can spawn a nested role, and whether Codex maps a linked worktree to the main repository's trust.

@@ -15,7 +15,6 @@ boundaries:
     - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-delegate/
     - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-orchestrate/
     - packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/worker-records.md
-    - packages/devkit-spec/src/devkit_spec/bundle/workflows/sdd-spec-feature.md
     - .devkit/installation.json
     - packages/devkit-spec/tests/
     - docs/capabilities/delivery/
@@ -113,14 +112,14 @@ Evidence and the option table: `MAT-worktree-host-spike-evidence`; scout returns
 - `PADR-codex-process-worker`: on Codex a worker turn runs as one approved `codex exec` process rooted in its
   worktree with both git dirs granted, at the Host session's reasoning effort when known, on a synced and trusted
   worktree; shipped only when one bounded live Development turn passes; a failed or unrun turn ships the recorded
-  reasons only. The user runs that turn from a Codex session when a Development question asks for it; the
-  Development worker never runs `codex exec` itself. To make that hand-off possible, Development adds, whatever the
-  outcome: a bounded `task_goal` for a development-worker turn, a development-worker question for an action only the
-  user can take (with its answers recorded first), and Host validation of commits another Host made on the unit.
+  reasons only. This spec's Development runs in `direct` (a base-rooted Host would load main's contracts); its Host
+  asks the user in the conversation to run that turn from a Codex session, naming the worktree's contract and the
+  branch's `spec-delegate` text, then validates the turn's commits and records the evidence. The development-worker
+  gains a bounded `task_goal` turn whatever the outcome.
 - Answers (`envelopes/answer-01.yaml`): `codex-worker-scope` = `process-worker`, `codex-live-turn` =
   `user-codex-host`, `antigravity-verification` = `keep-unverified`.
 - Effort: `dev_effort: high` and `size: M` (a new launch procedure, skill and contract changes, the worker probe and a
-  live verification handed to the user mid-Development, and the development-worker hand-off changes it needs).
+  live verification handed to the user mid-Development, and the bounded development-worker turn it needs).
 - Main drift checked (`envelopes/scout-03.yaml`): no change on `main` contradicts the decisions;
   `devkit.distribution` now lives in `packages/devkit-dist`.
 - Open, not widened: on every host a worker has the session's access to the shared `.git` (other refs, config, hooks,
@@ -139,19 +138,19 @@ Evidence and the option table: `MAT-worktree-host-spike-evidence`; scout returns
 - Restart condition: `SPEC-orchestration-mode` integrated with its Claude Code path working.
 - Expected acceptance checks:
   - Contract tests (`packages/devkit-spec/tests/test_role_contracts.py`): both worker contracts keep Claude Code
-    `native`, Codex `unsupported` and Antigravity `unverified`, set no `isolation`, and carry `x-process-hosts: [codex]`
-    exactly when the Codex live turn passed.
-  - Contract tests assert the development-worker's bounded `task_goal` turn end, its user-action question clause and
-    record-answers-first step, the `answers` field of its payload row, and the other-Host range rule in
-    `references/worker.md`.
+    `native`, Codex `unsupported` and Antigravity `unverified` and set no `isolation`; a test pins the presence or
+    absence of `x-process-hosts: [codex]`, and the review checks it against the outcome recorded in `tasks.md`.
+  - Contract tests assert the development-worker's bounded `task_goal` turn (only the named tasks, holds left open,
+    `completed` with the next stage) in the contract and its payload row.
   - A contract test runs both worker contracts' probe commands on a throwaway repository with a linked worktree and
     asserts refs, reflogs of existing refs, the index and `git status` unchanged.
   - `packages/devkit-spec/tests/test_bundle_budgets.py` passes (`spec-delegate/SKILL.md` at most 11776 bytes).
-  - The hosts reference states each host's precondition marked observed or documented, matching
-    `MAT-worktree-host-spike-evidence` and the Development evidence; the Q5 `/add-dir` statement appears only with a
-    session recorded in the spec's `tasks.md` evidence.
-  - The live Codex turn's record in the spec's `tasks.md` evidence and the Development `worker` envelope (fields and
-    the Passes criterion in `PADR-codex-process-worker` §4) shows either Passes with the launch shipped, or the failed
+  - A contract test asserts that each host's precondition in the hosts reference carries an `(observed)` or
+    `(documented)` marker; the review checks the markers against `MAT-worktree-host-spike-evidence` and the
+    Development evidence, and that the Q5 `/add-dir` statement appears only with a session recorded in the spec's
+    `tasks.md` evidence.
+  - The live Codex turn's record in the spec's `tasks.md` evidence and the live turn's own `worker` envelope (fields
+    and the Passes criterion in `PADR-codex-process-worker` §4) shows either Passes with the launch shipped, or the failed
     condition (a turn the user did not run included) with nothing of the launch shipped.
   - `just lint-check`, `just check`, `just test`, `just rules-check` and `just smoke` pass.
 - On acceptance: set `status: accepted` and run `devkit spec proposal handoff worktree-host-compatibility`. On
