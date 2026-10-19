@@ -2,7 +2,7 @@
 id: SPEC-affected-frontend
 title: Frontend changes in affected test selection
 summary: just test-affected stops sending devkit-viewer frontend changes to the full pytest suite and instead names the frontend checks the change needs.
-status: in-progress
+status: completed
 created: 2026-10-19
 related_capabilities: []
 related_stories: []

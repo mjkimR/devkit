@@ -1,0 +1,25 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T01:18:39.356651Z'
+status: completed
+review: review-01.yaml
+summary: Implementer added just viewer pack before build in FRONTEND_CHECK, the spec line, plan and ci-cd.md, matching the CI viewer job; verified by tests and rules, no further reviewer call (medium discretionary).
+findings:
+- issue: The FRONTEND_CHECK line leaves out `just viewer pack`, which CI's viewer job runs to check the library tarball and its exports; the spec fixed the line without it
+  evidence: scripts/affected_tests.py:74; specs/2026-10/20261019-affected-frontend/spec.md:37-39; .github/workflows/ci.yml:78
+  failure_condition: A frontend change that removes a library export or breaks package.json exports passes every named command locally and fails CI at `just viewer pack`
+  suggested_action: Add `&& just viewer pack` before `just viewer build` in the spec line, FRONTEND_CHECK and docs, or waive it
+  resolution: resolved
+  severity: low
+assumptions:
+- Verified by the implementer; the reviewer checked 4dab254 only.
+checks:
+  tests: 'PASS just test-affected: 42 passed (frontend line assertions updated)'
+  lint: PASS ruff check and format on changed files
+  rules: PASS just rules-check
+diff_scope:
+  base: a37add294ca0ce4cd2f24a3a32a43e29a0b3d91a
+  head: db22638125d92a5524c01df444fe49b0bb2f15f8
+activity_effort: medium
