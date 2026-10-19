@@ -76,10 +76,46 @@ Impact depends on the choice: the worker contract's host blocks and `spec-delega
 `worktree` path convention and config (O2, O4, O5), the distribution projections (O1, O4 hooks), and a worker launch
 procedure (O3).
 
+### 3.1 Spike findings
+
+Evidence and the option table: `MAT-worktree-host-spike-evidence`; scout returns `envelopes/scout-01.yaml` and
+`envelopes/scout-02.yaml`.
+
+- A worker's commit writes the worktree, its own git dir `<repo>/.git/worktrees/<name>/` and the shared `<repo>/.git/`.
+  No host gives a subagent its own working directory or a per-agent extra directory: access is the session's.
+- Claude Code: the observed orchestrated runs work in auto mode without a sandbox or configured directories. In
+  `default` or `acceptEdits` mode the worktree must be a session working directory; with the Bash sandbox on, a
+  base-rooted session cannot write the base's `.git` `objects/` and `refs/`, so the worker's commit fails.
+- Codex: `spawn_agent` keeps the parent's cwd and sandbox, and `.git` plus the worktree's own git dir are read-only in
+  every writable root unless named exactly; with both granted, a session rooted in the worktree commits (verified with
+  `codex sandbox`). A sandboxed Codex Host cannot start a nested sandboxed process.
+- Antigravity: subagents inherit the parent's scopes; access outside the project folders is off by default; `.git`
+  handling is undocumented.
+- A worktree inside the repository does not lift the git-dir protection (O2); relative worktree paths make the
+  repository unreadable for Apple Git 2.39 and older libgit2 and go-git (O5); host-native worktrees cannot continue
+  one devkit branch across worker turns (O4).
+
+### 3.2 Decisions
+
+- `PADR-worktree-access-preconditions`: worktrees stay sibling checkouts; devkit projects no host access settings
+  and sets no repository Git profile; each host's access is a documented session precondition, and a worker whose
+  access is refused stops through its problem procedure.
+- `PADR-host-native-worktrees-excluded`: `devkit worktree start` stays the only source of an activity's worktree.
+- `PADR-codex-process-worker` (pending `codex-worker-scope`): on Codex a worker turn runs as a `codex exec` process
+  rooted in its worktree with both git dirs granted, offered only after one verified live turn.
+
+### 3.3 Non-goals
+
+- Moving task worktrees, changing `devkit worktree` or the distribution projections, or writing host settings.
+- A `claude -p` process worker for Claude Code, and host-native worktree adoption.
+- Live verification on Antigravity unless `antigravity-verification` selects it.
+
 ## 4. Lifecycle & Retirement Criteria
 
 - Restart condition: `SPEC-orchestration-mode` integrated with its Claude Code path working.
 - Expected acceptance checks: a worker on each host the chosen option supports writes only inside its worktree and
-  the host's diff check passes; the worker contract's host statuses match the verified behavior.
+  the host's diff check passes (Claude Code: the observed native runs; Codex: one live `codex exec` turn under
+  `PADR-codex-process-worker`); the worker contracts' host statuses and comments and the `spec-delegate` hosts
+  reference match the verified behavior; `spec-delegate/SKILL.md` stays within its byte budget.
 - On acceptance: set `status: accepted` and run `devkit spec proposal handoff worktree-host-compatibility`. On
   rejection: record a rejection ADR and delete the proposal directory.
