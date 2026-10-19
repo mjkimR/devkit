@@ -6,9 +6,9 @@ status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-17
 target_area: capabilities/distribution/
 priority: high                        # critical | high | medium | low
-size: M                               # S | M | L | XL
+size: L                               # S | M | L | XL
 planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
+dev_effort: high                      # low | medium | high (hint for Development)
 boundaries:
   owns:
     - capabilities/distribution/
@@ -33,36 +33,37 @@ workflow_hash: sha256:1ef60809329fded5a496efb7757fd2d07c59a9c1ec1aef6858bbef2fb5
 - **Unclear boundaries between delivery workflow and asset distribution**: Delivery workflows and commit gates operate on top of distribution receipts, but the core asset packaging and synchronization protocol has zero dependency on workflow state machines or rule AST evaluation.
 
 ### 1.2 Hypothesis
-Extracting `devkit.distribution` into a dedicated `packages/devkit-dist` package provides clean modularization:
-1. `devkit-advisory`: Core runtime exit codes and protocol definitions (zero external dependencies).
-2. `devkit-dist`: Bundle manifests, agent projection, sync transactions, receipt tracking, and asset discovery.
-3. `devkit-agt`: Developer harness, rule engine, delivery workflows, commit gates, and top-level CLI aggregator.
-4. `devkit-spec`: Spec-Driven Development (SDD) Living Spec extension, proposals, and lifecycle rules.
+Extracting `devkit.distribution` and the foundation it needs into a dedicated `packages/devkit-dist` package provides clean modularization:
+1. `devkit-advisory`: The Agent Advisory Protocol library (standard library only); unchanged.
+2. `devkit-dist`: The shared foundation (`devkit.core`, `devkit.search`, `devkit.host`), bundle manifests, agent projection, sync transactions, the receipt, asset discovery, context loading, playbooks, native hooks, and the sole `devkit` console script.
+3. `devkit-agt`: The developer harness (rule engine, delivery workflows, commit gates, task worktrees, generated files, integration), mounted under `devkit` as first-party command plugins.
+4. `devkit-spec`: Spec-Driven Development (SDD) Living Spec extension, proposals, and lifecycle rules; still built on `devkit-agt`.
 
 ## 2. Technical Spike Questions
 The standalone scope and foundation ownership are decided in `PADR-dist-foundation-ownership`:
 - Installing `devkit-dist` alone provides the distribution commands, including native hook support, context loading, and playbook functionality, without installing the harness engines.
 - `devkit-dist` owns the shared foundation required by those features and the sole `devkit` console entry point. `devkit-agt` depends on it and supplies the harness engines; `devkit-dist` does not depend on `devkit-agt`.
 
-- **Q1 (Packaging & Namespace)**: Should `devkit-dist` use a separate top-level module `devkit_dist` or maintain `devkit.distribution` via PEP 420 native namespace packaging?
-- **Q2 (CLI and Entrypoint Aggregation)**: How should the CLI owned by `devkit-dist` mount the harness commands supplied by its downstream dependent `devkit-agt`? Evaluate the existing `devkit.commands` extension point and lazy loading, with no competing console entry points.
-- **Q3 (Configuration Schema Ownership)**: Which package owns the base `.devkit/config.toml` and `.devkit/installation.json` schema validation, and how do downstream packages (`devkit-agt`, `devkit-spec`) contribute tool-specific configuration sections?
-- **Q4 (Foundation Boundaries)**: Which parts of `devkit.core`, `devkit.search`, and `devkit.host` move into `devkit-dist` to support standalone operation, and which harness-specific services remain in `devkit-agt`?
-- **Q5 (Bundled Content & Compatibility)**: Which bundled guides and auto-selection defaults belong to each package, and which existing CLI, configuration, receipt, and Python API behaviors are preserved?
+Planning settled the questions below; options, evidence and the challenger's review are in `materials/20261019-package-split-evidence.md`.
+
+- **Q1 (Packaging & Namespace)**: Keep the `devkit.*` import paths in the shared PEP 420 namespace; no `devkit_dist` top-level package. `PADR-dist-module-split`.
+- **Q2 (CLI and Entrypoint Aggregation)**: `devkit-dist` owns `devkit.cli` with only its own built-in commands; `devkit-agt` mounts `rules`, `workflow`, `gate`, `worktree`, `generated` and `integration` through the existing `devkit.commands` entry point group. `PADR-dist-command-composition`.
+- **Q3 (Configuration Schema Ownership)**: `devkit-dist` owns the `.devkit/config.toml` schema, its template renderer and the receipt; harness tables stay reserved pass-through names, their commented templates move to `devkit-agt` through a `devkit.config_tables` entry point group; `[tool.<name>]` contributions are unchanged. `PADR-dist-config-receipt-ownership`.
+- **Q4 (Foundation Boundaries)**: `devkit.core`, `devkit.search` and `devkit.host` move whole; the harness engines stay. The home of `devkit.compact` (`devkit run`) waits for the user (question `compact-home`). `PADR-dist-module-split`.
+- **Q5 (Bundled Content & Compatibility)**: `devkit`, `advisory` and `git-commits` ship with `devkit-dist`, `authoring` with `devkit-agt`; behavior, names and import paths are preserved, ownership metadata changes in place, and the three wheels are released in lockstep. Where the harness guidance of the `devkit` bundle goes waits for the user (question `harness-guidance`). `PADR-dist-bundles-compatibility`.
 
 ## 3. Proposed Design & Impact
 - **Package Layout**:
-  - `packages/devkit-dist/src/devkit_dist/` (or `devkit/distribution/` if namespace package is preferred).
-  - Package metadata published as `devkit-dist`.
-  - The shared foundation and sole `devkit` console entry point ship with `devkit-dist`; `devkit-agt` supplies the higher-level harness engines.
+  - `packages/devkit-dist/src/devkit/` (wheel `devkit-dist`) ships `devkit/core`, `devkit/search`, `devkit/host`, `devkit/distribution`, `devkit/cli.py`, `devkit/__main__.py` and the data-only bundle areas it owns, into the namespace shared with `devkit-advisory` and `devkit-agt`.
+  - `packages/devkit/` stays the `devkit-agt` source tree (rules, workflow, gate, worktree, generated, integration, authoring bundle) and pins `devkit-dist` to its own version; its `search` and `mcp` extras pass through to `devkit-dist`'s.
 - **Boundaries**:
-  - `packages/devkit` (`devkit-agt`) takes a direct dependency on `devkit-dist`.
-  - Core capabilities under `capabilities/distribution/` ([CAP-DIST-manifest-spec](file:///home/mj/projects/workbench/repos/devkit/docs/capabilities/distribution/CAP-DIST-manifest-spec.md), [CAP-DIST-content-packages](file:///home/mj/projects/workbench/repos/devkit/docs/capabilities/distribution/CAP-DIST-content-packages.md), [CAP-DIST-sync-and-transactions](file:///home/mj/projects/workbench/repos/devkit/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md), [CAP-DIST-workspace-ownership](file:///home/mj/projects/workbench/repos/devkit/docs/capabilities/distribution/CAP-DIST-workspace-ownership.md)) become owned by `devkit-dist`.
-  - Scope includes shared foundation ownership, CLI composition, package metadata, installation/release wiring, and affected architecture and consumer guides. Planning determines the precise module split.
+  - `devkit-dist` never imports a `devkit-agt` area; a per-wheel layering test enforces it, and the `devkit-dist` tests run without `devkit-agt` installed.
+  - The distribution contracts (`CAP-DIST-manifest-spec`, `CAP-DIST-content-packages`, `CAP-DIST-sync-and-transactions`, `CAP-DIST-workspace-ownership`, `CAP-DIST-agent-projections`, `CAP-DIST-context-and-playbooks`, `CAP-DIST-in-repo-bundles`), `CAP-HOST-lifecycle-observation` and `CAP-SRCH-document-search` describe behavior owned by `devkit-dist`.
+  - Scope includes shared foundation ownership, CLI composition, package metadata, installation/release wiring, the affected architecture documents and consumer guides.
 - **Consumer Impact**:
   - Repositories that only deploy agent skills and playbooks can install `devkit-dist` without bringing in workflow/gate/evaluation engines.
   - Standalone installation also supports native hooks, context loading, and playbook operations.
-  - Existing `devkit-agt` users retain 100% backwards compatibility through dependency inclusion and command re-export.
+  - Existing `devkit-agt` users keep every command, option, output, code, configuration key and import path: `devkit-agt` includes `devkit-dist` as a dependency and mounts its commands under the same names. The first writing `devkit sync` after the upgrade rewrites the receipt's tool and package names, committed with the upgrade.
 
 ## 4. Lifecycle & Retirement Criteria
 - Preliminary decisions: Record key decisions via `devkit spec proposal padr devkit-dist-package-separation "<title>"`.
