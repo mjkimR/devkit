@@ -131,15 +131,27 @@ class IntegrationRequest:
         def display(value: str) -> str:
             return json.dumps(value, ensure_ascii=False)
 
+        presentation = {item.code: item.value for item in self.readiness.evidence}
+
+        def brief(value: str, limit: int = 1500) -> str:
+            return display(value if len(value) <= limit else value[:limit] + "… [truncated]")
+
         lines = [
-            "Approve local fast-forward integration and the listed cleanup?",
+            f"Merge {display(plan.branch)} into {display(plan.target_branch)}?",
+        ]
+        for code, label in (("TASK_TITLE", "Work"), ("TASK_SUMMARY", "Goal"), ("RESULT_SUMMARY", "Completed work")):
+            if presentation.get(code):
+                lines.append(f"{label}: {brief(presentation[code])}")
+        lines += [
+            "This advances the local target branch to the verified source commit (fast-forward).",
+            "",
             f"Repository: {display(plan.base)}",
             f"Task: {display(self.context.task.id)}",
             f"Source: {display(plan.branch)} @ {plan.source_sha}",
             f"Target: {display(plan.target_branch)} @ {plan.target_sha}",
             f"Remove worktree: {display(plan.path)}" if plan.worktree_identity is not None else "Remove worktree: no",
             f"Delete local branch: {display(plan.branch)}" if plan.delete_branch else "Delete local branch: no",
-            "Cleanup targets:",
+            "Additional cleanup:",
         ]
         targets = [
             f"- {display(scope.extension)}: {display(target.kind)} {display(target.identity)}"
@@ -147,7 +159,11 @@ class IntegrationRequest:
             for target in scope.targets
         ]
         lines.extend(targets or ["- none"])
-        lines.append("No fetch, push, remote deletion or PR operations.")
+        lines += [
+            "",
+            "Approve only if this work and the cleanup above are ready.",
+            "No fetch, push, remote deletion or PR operations.",
+        ]
         return "\n".join(lines)
 
     def to_dict(self) -> dict[str, Any]:

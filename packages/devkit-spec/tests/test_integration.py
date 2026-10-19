@@ -391,6 +391,9 @@ def test_unit_readiness_passes_for_completed_feature_bugfix_and_proposal(tmp_pat
     assert codes["TASK_KIND"] == "unit"
     assert codes["WORKFLOW"] == "sdd-spec-feature"
     assert codes["UNIT"] == unit_feat
+    assert codes["TASK_TITLE"] == "Feature feat"
+    assert codes["TASK_SUMMARY"] == "Add feature feat."
+    assert codes["RESULT_SUMMARY"] == "All checks pass."
     assert codes["HOLD_STATUS"] == "clear"
     assert codes["CI_RULES"] == "pass"
 
@@ -657,3 +660,128 @@ def test_integration_service_partial_post_finish_and_resume(tmp_path: Path, sync
     assert resumed.cleanup_steps == {"spec": "completed"}
     assert not (repo / "docs/proposals/PROP-feat").exists()
     assert providers.provider("spec")[1] is not None
+
+
+@pytest.fixture
+def accepted_handoff_base(tmp_path, synced_template):
+    repo = _make_synced_repo(tmp_path, synced_template)
+    _cli(repo, "sync")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "track complete synchronized projections")
+    wt = _start_worktree(repo, "plan-idea", tmp_path / "wt-idea")
+    unit = _complete_proposal(wt)
+    file = wt / unit / "proposal.md"
+    file.write_text(file.read_text().replace("dev_effort: medium", "dev_effort: high"))
+    git(wt, "add", "-A")
+    git(wt, "commit", "-q", "-m", "refine effort")
+    git(repo, "merge", "--ff-only", "plan-idea")
+    return repo
+
+
+@pytest.mark.parametrize(
+    "action,content,status",
+    [
+        ("accept", {"approve": False, "activity_effort": "high"}, "not_approved"),
+        ("decline", {}, "declined"),
+        ("cancel", {}, "cancelled"),
+    ],
+)
+def test_handoff_nonapproval_makes_no_git_changes(accepted_handoff_base, action, content, status):
+    from devkit_spec.handoff_mcp import HandoffService
+
+    repo = accepted_handoff_base
+    before = git(repo, "show-ref")
+
+    async def confirm(message, schema):
+        assert 'Goal: "Proposal summary."' in message and "Accepted plan:" in message
+        assert schema["properties"]["activity_effort"]["default"] == "high"
+        assert schema["properties"]["approve"]["default"] is False
+        assert git(repo, "show-ref") == before
+        return ConfirmationReply(action, content)
+
+    result = asyncio.run(HandoffService(repo).handoff("idea", confirm))
+    assert result["status"] == status
+    assert git(repo, "show-ref") == before
+    assert not (repo.parent / "repo-wt-dev-idea").exists()
+
+
+def test_handoff_approval_creates_development_and_returns_selected_effort(accepted_handoff_base):
+    from devkit_spec.handoff_mcp import HandoffService
+
+    repo = accepted_handoff_base
+
+    async def confirm(message, schema):
+        return ConfirmationReply("accept", {"approve": True, "activity_effort": "low"})
+
+    result = asyncio.run(HandoffService(repo).handoff("idea", confirm))
+    assert result["status"] == "handed_off", json.dumps(result, indent=2)
+    assert result["activity_effort"] == "low"
+    worktree = Path(result["worktree"]["path"])
+    assert git(worktree, "branch", "--show-current") == "dev-idea"
+    assert (worktree / result["handoff"]["dir"] / "spec.md").is_file()
+    assert (repo / "docs/proposals/PROP-idea/proposal.md").is_file()
+    assert not (worktree / "docs/proposals/PROP-idea").exists()
+
+
+def test_handoff_changed_base_requires_fresh_review_before_creating_worktree(accepted_handoff_base):
+    from devkit_spec.errors import HandoffStaleError
+    from devkit_spec.handoff_mcp import HandoffService
+
+    repo = accepted_handoff_base
+
+    async def confirm(message, schema):
+        git(repo, "commit", "--allow-empty", "-q", "-m", "base advanced")
+        return ConfirmationReply("accept", {"approve": True, "activity_effort": "medium"})
+
+    with pytest.raises(HandoffStaleError):
+        asyncio.run(HandoffService(repo).handoff("idea", confirm))
+    assert not (repo.parent / "repo-wt-dev-idea").exists()
+
+
+@pytest.mark.parametrize("approved", [True, False])
+def test_handoff_native_sdk_roundtrip(accepted_handoff_base, approved):
+    from datetime import timedelta
+
+    from mcp import ClientSession, StdioServerParameters, types
+    from mcp.client.stdio import stdio_client
+
+    repo = accepted_handoff_base
+    before = git(repo, "show-ref")
+    calls = []
+
+    async def confirm(context, params):
+        assert git(repo, "show-ref") == before
+        assert params.requestedSchema["properties"]["activity_effort"]["default"] == "high"
+        calls.append(params.message)
+        return types.ElicitResult(action="accept", content={"approve": approved, "activity_effort": "medium"})
+
+    async def run():
+        params = StdioServerParameters(
+            command=sys.executable,
+            args=[
+                "-c",
+                "from pathlib import Path; import sys; from devkit.host.mcp.server import serve; serve(Path(sys.argv[1]))",
+                str(repo),
+            ],
+        )
+        async with (
+            stdio_client(params) as (read, stream),
+            ClientSession(
+                read, stream, read_timeout_seconds=timedelta(seconds=30), elicitation_callback=confirm
+            ) as session,
+        ):
+            await session.initialize()
+            tools = await session.list_tools()
+            tool = next(tool for tool in tools.tools if tool.name == "spec_handoff")
+            assert tool.annotations is not None and tool.annotations.openWorldHint is True
+            response = await session.call_tool("spec_handoff", {"slug": "idea"})
+            assert response.structuredContent is not None
+            return response.structuredContent
+
+    result = asyncio.run(run())
+    assert len(calls) == 1
+    assert result["status"] == ("handed_off" if approved else "not_approved"), result
+    if approved:
+        assert result["activity_effort"] == "medium"
+    else:
+        assert git(repo, "show-ref") == before

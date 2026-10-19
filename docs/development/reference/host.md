@@ -75,7 +75,8 @@ remain available throughout the session.
 
 Installed packages register factories under `devkit.host.services`: `factory(root) -> tuple[McpTool, ...]`.
 `devkit.host.mcp` exports dependency-free `McpTool`, `Confirmation`, `ConfirmationReply` contracts. A tool receives
-validated arguments and a confirmation callback backed by the current SDK request/session. Native form capability
+validated arguments and a confirmation callback backed by the current SDK request/session. `McpTool.open_world`
+(default false) declares whether the operation may reach external systems; native annotations preserve that value. Native form capability
 is checked before elicitation. SDK response correlation binds each reply to the awaiting call; the adapter grants
 no permission based on tool arguments. Duplicate tool names and unusable services fail closed. Service/library
 Python stdout is discarded after the SDK captures its protocol stream. The built-in integration service is loaded

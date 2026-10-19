@@ -447,3 +447,34 @@ directory whose namespace applies when `namespace` is omitted);
 | `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | devkit's `ArgumentError` | `new`: `--namespace` is neither `global` nor registered, `--task-kind` is not `feature` or `bugfix`, `--planning-effort` or `--dev-effort` is not `low`, `medium` or `high`, `--supersedes` names no other proposal. `new`, `padr`: stripped `--summary` is empty, longer than 300 characters or not English. |
 | `SPEC_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `SpecConfigError` | `[tool.spec]` is malformed and it must be read: `new` without `--namespace global`, a proposal's `namespace` other than `global` at handoff, or a handoff in a linked worktree. |
 | `SPEC_SCOPE_REGISTER_FAILED` | `WARNING` | `ScopeRegisterFailedWarning` | A handoff in a task worktree could not register its bundle (`CAP-COLL-work-scope-registry`). |
+
+
+## Local native MCP handoff
+
+Installing devkit-spec registers `spec_handoff` through `devkit.host.services`. This is the local alternative to
+an external runner's user interaction; it does not call or modify AutoHub. The caller supplies only the accepted
+proposal slug. From a clean retained base checkout on its base branch, the service reads the committed proposal
+and requires its `sdd-proposal` workflow to be complete. A native form displays the title, goal, accepted plan,
+base commit, Development branch/worktree, configured setup command and asset restoration effects. The form's
+`activity_effort` enum is `low`, `medium`, `high`, defaulting to `dev_effort` or `medium` when absent; `approve`
+defaults false. Only an accepted form with `approve=true` and a valid effort starts Development. Decline, cancel,
+non-approval, unavailable native confirmation and malformed replies perform no handoff mutations.
+
+The service revalidates the reviewed base and configuration before creating `dev-<slug>` and its worktree through
+the existing worktree library. An existing branch is refused. Setup/sync failure preserves the worktree with
+`status=needs_recovery`; a changed or dirty source after setup refuses handoff. On success it calls the existing
+proposal handoff and work-scope registration, returning `status=handed_off`, the worktree, handoff result,
+`activity_effort`, `next_command`, notices and any scope token. The caller continues Development in that worktree
+and records the confirmed effort on its worker envelope; the proposal hint remains non-authoritative. The base
+proposal remains until final integration. A handoff failure returns its error with the created worktree for
+inspection; no automatic rollback deletes the worktree and a lost response is recovered by inspecting Git.
+
+This service grants no final merge authority, dispatches no worker and creates no PR. Configured setup is trusted
+project code and may install dependencies; the MCP tool declares `openWorldHint=true`, and the form does not promise that setup is network-free. Its process-local
+lock serializes calls to this service, not arbitrary Git/editor processes. Native rendering remains host-owned.
+
+| Code | Meaning | Action |
+| --- | --- | --- |
+| `SPEC_HANDOFF_NOT_READY` | Base or accepted proposal is not ready. | Resolve the named prerequisite and call again. |
+| `SPEC_HANDOFF_REPLY_INVALID` | Accepted native form has no valid effort. | Choose low, medium or high in a fresh form. |
+| `SPEC_HANDOFF_STALE` | Reviewed base, proposal or configuration changed. | Inspect the current scope and obtain a fresh confirmation. |

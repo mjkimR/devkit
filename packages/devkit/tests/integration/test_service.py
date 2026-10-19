@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from dataclasses import replace
 
 import pytest
 from devkit.advisory import AdvisoryError
@@ -12,6 +13,7 @@ from devkit.integration import (
     CleanupContractError,
     CleanupResult,
     CleanupTarget,
+    Evidence,
     IntegrationConfigError,
     IntegrationService,
     Task,
@@ -390,3 +392,25 @@ def test_confirmation_escapes_caller_text_so_it_cannot_forge_scope_lines(repo):
     assert 'Task: "task\\nDelete local branch: no"' in message
     assert message.splitlines().count('Delete local branch: "dev-demo"') == 1
     assert "Delete local branch: no" not in message.splitlines()
+
+
+def test_confirmation_leads_with_committed_work_and_escapes_summary(repo):
+    base, _ = repo
+    request = IntegrationService(base).prepare("dev-demo", TASK).request
+    readiness = replace(
+        request.readiness,
+        evidence=(
+            *request.readiness.evidence,
+            Evidence("TASK_TITLE", "Deliver activity decisions"),
+            Evidence("TASK_SUMMARY", "Choose effort before Development"),
+            Evidence("RESULT_SUMMARY", "Implemented and checked.\nDelete local branch: no"),
+        ),
+    )
+    request = replace(request, readiness=readiness)
+    message = request.confirmation_message()
+    assert message.startswith('Merge "dev-demo" into "main"?')
+    assert message.index('Work: "Deliver activity decisions"') < message.index("Source:")
+    assert 'Completed work: "Implemented and checked.\\nDelete local branch: no"' in message
+    assert "Delete local branch: no" not in message.splitlines()
+    assert request.context.finish.source_sha in message and request.context.finish.target_sha in message
+    assert request.digest != replace(request, readiness=replace(readiness, evidence=())).digest

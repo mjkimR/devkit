@@ -42,6 +42,9 @@ spec-rejected-proposals = "devkit_spec.hygiene:rejected_proposals"
 [project.entry-points."devkit.config_template"]
 spec = "devkit_spec.config:template"
 
+[project.entry-points."devkit.host.services"]
+spec = "devkit_spec.handoff_mcp:create_tools"
+
 [dependency-groups]
 dev = [
     "pyright>=1.1.390",

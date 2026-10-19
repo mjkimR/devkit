@@ -455,3 +455,9 @@ verified fix, recording destination, implemented outcome and verification eviden
 sources retain state with remaining scope reported; unrelated captured observations stay open. Recheck the task's
 own resolutions after changes invalidate their evidence. This completion obligation is independent of capture
 settings and collect-feedback stage policy, and grants no integration authority or additional workflow gate.
+
+
+Native local Development starts may use `spec_handoff` (`CAP-DLV-proposal-incubation`): its confirmation form shows
+the accepted plan and lets the user override the `dev_effort` hint before the worktree and spec handoff are created.
+The returned `activity_effort` is the run input and is recorded on that run's worker envelope. This supplies the
+local user interaction otherwise provided by an external runner; final integration retains its separate approval.

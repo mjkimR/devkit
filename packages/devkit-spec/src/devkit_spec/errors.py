@@ -541,3 +541,24 @@ class ScopeRegisterFailedWarning(ScopeError):
     code = "SPEC_SCOPE_REGISTER_FAILED"
     level = Level.WARNING
     fix = "Fix the cause in [DETAIL], then run devkit spec scope register --spec <dir> in the worktree"
+
+
+class HandoffNotReadyError(SpecError):
+    """The local MCP handoff lacks a clean base or accepted, completed proposal."""
+
+    code = "SPEC_HANDOFF_NOT_READY"
+    fix = "Resolve the reported prerequisite in the base checkout, then call spec_handoff again"
+
+
+class HandoffReplyError(SpecError):
+    """An affirmative native handoff reply has no valid activity effort."""
+
+    code = "SPEC_HANDOFF_REPLY_INVALID"
+    fix = "Call spec_handoff again and choose low, medium or high in the native form"
+
+
+class HandoffStaleError(SpecError):
+    """The approved proposal, base commit or policy changed before handoff."""
+
+    code = "SPEC_HANDOFF_STALE"
+    fix = "Inspect the changed base or worktree and call spec_handoff again for a fresh review"

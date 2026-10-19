@@ -15,7 +15,7 @@ workflow: sdd-spec-feature
 
 People starting Development need the accepted plan's summary, the next action and an editable effort recommendation. People approving local integration need a readable explanation of completed work before exact Git and cleanup scope.
 
-The user authorized implementing the discussed handoff and inspecting/improving main-branch merge approval. Work is feature, spec depth, direct mode, medium effort. AutoHub changes live on its matching activity branch and are verified independently.
+The user authorized implementing the discussed handoff and inspecting/improving main-branch merge approval. Work is feature, spec depth, direct mode, medium effort. AutoHub and native MCP are alternative hosts of the same user intervention. This change implements only the local devkit MCP path.
 
 ## Non-Goals
 
@@ -25,13 +25,13 @@ No change to required gates, provider verification, local integration authority,
 
 ### [AC-01] Review an activity before starting
 - **Given** a proposal on a selected base branch
-- **When** the user reviews Planning or Development through AutoHub's web UI or MCP
+- **When** the user reviews the Planning-to-Development handoff through devkit MCP
 - **Then** the review presents its title, summary, plan details, next action, immutable base SHA and activity-specific effort hint, falling back to medium.
 
 ### [AC-02] Confirm effort and prevent stale starts
 - **Given** an activity review
 - **When** the user starts with a chosen effort
-- **Then** the choice reaches the enrolled run, a changed base refuses the start before creating a branch, and repeated UI clicks cannot submit concurrent starts.
+- **Then** the choice is returned as Development run input, a changed base refuses the handoff before creating a worktree, and an existing Development branch is refused rather than started twice.
 
 ### [AC-03] Native MCP handoff confirmation
 - **Given** an accepted proposal and an MCP client supporting form elicitation

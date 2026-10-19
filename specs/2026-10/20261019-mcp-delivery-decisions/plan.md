@@ -11,7 +11,7 @@ Preserve `CAP-INT-mcp-services`, layer boundaries and the read-only viewer. SDD 
 
 ## Components
 
-AutoHub: add a shared activity preview read model/API/MCP tool. Read the proposal at an immutable Git SHA. The web confirmation dialog and a new native MCP handoff tool consume that same preview. Add expected_base_sha to start requests and validate before any branch mutation. Existing direct start tools remain available for agents already authorized to start; the handoff tool obtains native user approval.
+devkit-spec: register a spec_handoff service with the existing devkit.host.services extension point. Read the accepted proposal, expose its summary and plan with effort defaulted from dev_effort, then obtain native form approval before creating the Development worktree and running the existing handoff library. Revalidate base HEAD, clean state and policy before creation and source HEAD before handoff. Return the selected effort as run input; retain partial worktrees for explicit recovery. AutoHub is an alternative host and is outside this change.
 
 Devkit: add title/summary as deterministic provider evidence from the committed anchor, and render readable merge intent before exact scope. No new dependency or schema migration.
 
@@ -21,4 +21,4 @@ Native confirmation failure grants no authority. Decline/cancel returns an expli
 
 ## Verification
 
-Unit tests cover preview defaults, overrides, stale starts and non-approval. Frontend tests cover summary and per-activity confirmation; run AutoHub lint/type/build checks. Run devkit lint/type checks and just test-affected, including existing real MCP/Git confirmation tests. Independent medium code and reconcile review cover both worktrees.
+Unit tests cover preview defaults, overrides, stale starts and non-approval. SDK transport tests cover the actual native form exchange. Run devkit lint/type checks and just test-affected, including existing real MCP/Git confirmation tests. Independent medium code and reconcile review cover both worktrees.

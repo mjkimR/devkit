@@ -800,7 +800,7 @@
     },
     ".agents/skills/spec/references/effort.md": {
       "mode": 420,
-      "sha256": "af3a927dd5e5f798fe2bed1c59f85bfe3714e93cd13adadf9c9dcec499201bb5"
+      "sha256": "eb2dc6b6eb9d045550710202acecf56d8ba0076e42a6dd30f363f94db016c6e2"
     },
     ".agents/skills/spec/references/envelope.md": {
       "mode": 420,
@@ -828,7 +828,7 @@
     },
     ".agents/skills/spec/references/worktree.md": {
       "mode": 420,
-      "sha256": "0127ab6b52a0a09964c8972f71a370d196dd1320e13b0d02dc3d29efb8c5d592"
+      "sha256": "07975032296d9419ce801e65dc5f29c2b7203882c0529c3ee525f0caa67c4f86"
     },
     ".claude/agents/challenger.md": {
       "mode": 420,
@@ -988,7 +988,7 @@
     },
     ".claude/skills/spec/references/effort.md": {
       "mode": 420,
-      "sha256": "af3a927dd5e5f798fe2bed1c59f85bfe3714e93cd13adadf9c9dcec499201bb5"
+      "sha256": "eb2dc6b6eb9d045550710202acecf56d8ba0076e42a6dd30f363f94db016c6e2"
     },
     ".claude/skills/spec/references/envelope.md": {
       "mode": 420,
@@ -1016,7 +1016,7 @@
     },
     ".claude/skills/spec/references/worktree.md": {
       "mode": 420,
-      "sha256": "0127ab6b52a0a09964c8972f71a370d196dd1320e13b0d02dc3d29efb8c5d592"
+      "sha256": "07975032296d9419ce801e65dc5f29c2b7203882c0529c3ee525f0caa67c4f86"
     },
     ".codex/agents/challenger.toml": {
       "mode": 420,
@@ -1432,7 +1432,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/effort.md": {
       "mode": 420,
-      "sha256": "af3a927dd5e5f798fe2bed1c59f85bfe3714e93cd13adadf9c9dcec499201bb5"
+      "sha256": "eb2dc6b6eb9d045550710202acecf56d8ba0076e42a6dd30f363f94db016c6e2"
     },
     ".devkit/managed/spec/skills/spec/references/envelope.md": {
       "mode": 420,
@@ -1460,7 +1460,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/worktree.md": {
       "mode": 420,
-      "sha256": "0127ab6b52a0a09964c8972f71a370d196dd1320e13b0d02dc3d29efb8c5d592"
+      "sha256": "07975032296d9419ce801e65dc5f29c2b7203882c0529c3ee525f0caa67c4f86"
     },
     ".devkit/managed/spec/subagents/challenger.md": {
       "mode": 420,

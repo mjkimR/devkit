@@ -75,7 +75,7 @@ def test_native_protocol_confirmation_binds_to_real_git_scope(repo, action, cont
         ):
             await session.initialize()
             tools = await session.list_tools()
-            assert {tool.name for tool in tools.tools} == {
+            assert {tool.name for tool in tools.tools} >= {
                 "integration_prepare",
                 "integration_integrate",
                 "integration_resume",

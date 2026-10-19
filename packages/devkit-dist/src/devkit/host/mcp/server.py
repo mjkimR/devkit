@@ -31,7 +31,7 @@ def build_server(tools: dict[str, McpTool]) -> Server:
                 description=tool.description,
                 inputSchema=tool.input_schema,
                 annotations=types.ToolAnnotations(
-                    readOnlyHint=tool.read_only, destructiveHint=tool.destructive, openWorldHint=False
+                    readOnlyHint=tool.read_only, destructiveHint=tool.destructive, openWorldHint=tool.open_world
                 ),
             )
             for tool in tools.values()

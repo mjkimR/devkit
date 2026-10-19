@@ -25,3 +25,4 @@ class McpTool:
     invoke: Invocation
     read_only: bool = False
     destructive: bool = False
+    open_world: bool = False

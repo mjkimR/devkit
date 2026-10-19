@@ -293,6 +293,14 @@ def _check_unit_task(
         Evidence("STAGE_STATUS", stage_status),
         Evidence("HOLD_STATUS", hold_status),
     ]
+    for code, key in (("TASK_TITLE", "title"), ("TASK_SUMMARY", "summary")):
+        value = anchor_data.get(key)
+        if isinstance(value, str) and value.strip():
+            evidence.append(Evidence(code, value.strip()))
+    reports = load_envelopes(ref.dir).scoped(workflow_id, ref.binding.segment)
+    report = reports.latest("final-report")
+    if report is not None and report.status == "completed" and report.summary.strip():
+        evidence.append(Evidence("RESULT_SUMMARY", report.summary.strip()))
     return evidence, reasons
 
 

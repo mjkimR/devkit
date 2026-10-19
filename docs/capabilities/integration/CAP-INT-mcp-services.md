@@ -26,7 +26,11 @@ prepares the request, awaits form elicitation, and continues into execution in t
 approval, decline, cancellation, unavailable form capability and transport failure perform no integration changes.
 Tool arguments cannot supply `approved`, authority tokens or serialized execution requests.
 
-The form displays the repository, task, source/target branches and full SHAs, worktree removal and local branch
+The form leads with the source-to-target merge action and, when supplied by the readiness provider, the committed
+task title, goal and final-report summary (`TASK_TITLE`, `TASK_SUMMARY`, `RESULT_SUMMARY` evidence). The SDD provider
+reads these from the source commit; they are presentation evidence, not additional approval authority. Each displayed
+summary is bounded to 1,500 characters with an explicit truncation marker; full evidence remains in the request.
+The form then displays the repository, task, source/target branches and full SHAs, worktree removal and local branch
 retention/deletion, and each cleanup extension's target kinds and identities. It states fast-forward execution and
 network exclusion. Text values are quoted and control characters escaped so caller text cannot introduce misleading
 extra scope lines. Filesystem identities, policy hashes, provider/guard registrations, cleanup revisions and full
