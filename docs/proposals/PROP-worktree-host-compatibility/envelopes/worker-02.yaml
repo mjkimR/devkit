@@ -1,0 +1,45 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T03:16:15.469540Z'
+status: needs_input
+summary: 'Planning (activity-effort high): recorded answer-01 (process-worker, user-codex-host, keep-unverified); PADR-codex-process-worker unconditional (bounded live Development turn run by the user from a Codex session; this spec''s Development in direct mode; contract rooted in the worktree; Host-session effort; synced and trusted worktree preconditions); boundaries add .devkit/installation.json; dev_effort high, size M kept. Support roles: scout-03 (main drift), challenger-04 (round 4; round 3''s three findings resolved; 4 P2, 3 P3, all fixed in 781b303). Round 4 is the cap round and its batch changed decisions, so it is handed over instead of self-verified.'
+findings:
+- issue: 'Round-4 fix batch not self-verifiable at the cap round: challenger-04 P2 #1 and #2 were fixed by changing decisions (this spec''s Development runs in direct mode; the development-worker user-action question clause, its answers payload field, record-answers-first step, sdd-spec-feature.md ownership and the other-Host range rule in worker.md were dropped), so review-loop section 2 (no decision changed) does not hold and a fifth round would be needed.'
+  evidence: envelopes/challenger-04.yaml findings 1-2; PADR-codex-process-worker §4 Live verification and The live turn itself; proposal.md §3.2 and boundaries; review-loop.md (main) sections 2 and 4
+  suggested_action: The user asks for one further fresh challenger round outside the cap on commit 781b303 (a resolution envelope names this problem), or accepts the fixes at plan-accept.
+  resolution: open
+  severity: P2
+- issue: 'Round-4 fixes for challenger-04 P2 #3 and #4 and the three P3s are applied but unreviewed: the bounded task_goal now leaves any hold open; the launch roots the contract at <worktree>/.devkit/...; the live report goes to the Development Host in the conversation and into tasks.md (no answer note); the key check is a pinned presence test plus a review against tasks.md; hosts-reference markers get a contract test; the PADR summary names the Passes criterion.'
+  evidence: envelopes/challenger-04.yaml findings 3-7; PADR-codex-process-worker frontmatter and §4; proposal.md §4
+  suggested_action: Include them in the further round, or accept them with the batch.
+  resolution: open
+  severity: P3
+- issue: On every host a worker has the session's access to the shared .git (other refs, config, hooks, the scope registry), which the Host's committed-range check does not see; this proposal neither widens nor closes the gap.
+  evidence: PADR-worktree-access-preconditions §5; envelopes/challenger-01.yaml finding 2
+  suggested_action: A follow-up proposal for a Host snapshot of refs and .git config, hooks and devkit files before and after a worker turn.
+  resolution: open
+  severity: P2
+assumptions:
+- The three challenger rounds recorded before the review loop reached main count as rounds 1-3 (FB-review-loop-round-count-across-procedure-change); counting from markers alone would make this round 1
+- Claude Code stays native on this repository's observed auto-mode runs; acceptEdits, default and sandbox cases rest on documentation
+- IDs that exist only on main are cited in plain words because the branch's reference rule cannot resolve them (FB-plan-branch-cannot-reference-main-ids)
+unverified_areas:
+- 'End-to-end codex exec worker turn: nested role spawn, trust mapping of a linked worktree, legacy -s workspace-write --add-dir lifting the git-dir protection, the commit gate offline under the sandbox'
+- Whether a development-worker inside codex exec leaves a hold shown by devkit workflow next untouched as the bounded task_goal states
+- devkit sync --locked in a dev- worktree after bundle contract edits (installation.json)
+- Antigravity subagent access and .git handling (documentation only; user chose keep-unverified)
+checks:
+  rules: PASS devkit rules check on the proposal directory
+  feedback: PASS feedback-02 swept recorded=2 duplicates=3
+diff_scope:
+  base: 2ddea2bc5af47fa725868cdd244f951a11238ce8
+  head: ac05a91dd4d4e5aca0c32ab1825aa4a23de40109
+problem:
+  cause: 'High review loop cap reached: round 4 (the third after the initial review, counting the three unmarked earlier challenger rounds) returned four P2 findings whose fixes changed decisions, so the batch fails review-loop section 2 and may not get a fifth round without the user.'
+  attempts:
+  - Fixed every round-4 finding in commit 781b303 (direct mode for this spec's Development, dropped the user-action question path, rooted contract path, hold-left-open task_goal, mechanical checks, PADR summary)
+  - 'Checked section 2: P2 #1 and #2 fixes change decisions, so self-verification is not allowed'
+  recovery: Ask for one further fresh challenger round outside the cap on 781b303 (recorded with a resolution envelope naming this problem), then request plan-accept; or accept the fixes as they stand at plan-accept.
+activity_effort: high
