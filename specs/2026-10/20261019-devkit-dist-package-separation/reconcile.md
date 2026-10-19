@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-devkit-dist-package-separation
 feature: SPEC-devkit-dist-package-separation
-status: pending
+status: resolved
 targets:
   - file: docs/architecture/ARCH-01-introduction-and-goals.md
     resolution: modified

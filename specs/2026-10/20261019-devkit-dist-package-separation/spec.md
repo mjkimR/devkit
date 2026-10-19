@@ -2,7 +2,7 @@
 id: SPEC-devkit-dist-package-separation
 title: Separate asset distribution into independent devkit-dist package
 summary: "Splits devkit-agt into a devkit-dist wheel (foundation, distribution, root devkit CLI, devkit/advisory/git-commits bundles) and a devkit-agt wheel that mounts the harness commands and ships the authoring and new harness bundles, with coded standalone signals and per-wheel layering."
-status: in-progress
+status: completed
 created: 2026-10-19
 related_capabilities:
   - CAP-DIST-content-packages
