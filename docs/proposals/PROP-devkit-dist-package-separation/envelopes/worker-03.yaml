@@ -1,0 +1,23 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T00:30:32.751064Z'
+status: completed
+summary: 'Planning (activity-effort high): recorded answer-02 (harness-bundle-name: keep-harness, with the contract 6 split and the cross-bundle preset-hint non-goal settled by the user in the same round as constraints) and folded it: proposal.md and PADR-dist-bundles-compatibility now state the bundle name harness and module devkit.harness_guide as the user''s decision (contract in CAP-DIST-content-packages, separate from the devkit-spec harness capability area), the contract 6 split and the non-goal as user-settled instead of open at plan-accept; PADR-dist-module-split names devkit.harness_guide; the PADR summary now says two preset selections change, matching its body. No re-review: the change is wording only, every outcome was already in the documents and reviewed by challenger-03 (findings 4, 7, 8) and challenger-04 (findings 2, 4); no decision, requirement or scope changed. Support roles: none this run. No question left; ready for plan-accept.'
+findings: []
+assumptions:
+- Answer and worker envelopes use the stage next named at the start of the run (direction-handoff); see FB-worker-stage-choice-ambiguous
+- The two same-round user decisions are recorded as constraints of the harness-bundle-name answer; see FB-answer-envelope-no-slot-for-settled-assumptions
+- PADR-dist-foundation-ownership not reopened; dev_effort high and size L unchanged; the proposed codes HARNESS_COMMAND_UNAVAILABLE and HARNESS_ENGINE_MISSING stay proposed for Development
+unverified_areas:
+- Consumer repositories outside this workspace selecting devkit:run or devkit:all, or shipping a bundle named harness
+- Sync behavior for an override whose asset left its bundle; devkit config template placement of entry-point harness tables
+- uv tool install --reinstall with two Git requirements not executed; no wheels built
+checks:
+  rules: PASS devkit rules check on the proposal directory
+  feedback: PASS feedback-03 swept recorded=1 duplicates=1
+diff_scope:
+  base: 1fc3a5322c04b23e56a9c202796123fe91ca88ea
+  head: 1bb754d73810a955445d80aec04372494fde3e23
+activity_effort: high

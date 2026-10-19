@@ -1,0 +1,33 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T00:36:56.054441Z'
+status: completed
+summary: 'round 2; focused re-check after the user''s decisions: the loop is executable with existing envelope mechanics and no schema change; challenger-01 findings 2-15 resolved or superseded by decisions (1 and 10 superseded); 3 P2 and 1 P3 new, all folded into proposal.md and the PADR in the same run.'
+findings:
+- issue: The cap rule let a non-minor P2/P3 fix close unreviewed and left the precedence of a minor-fix P1 at the cap undefined.
+  evidence: docs/proposals/PROP-high-effort-review-loop/proposal.md:105
+  failure_condition: The cap round returns a P2 whose fix adds an error code; it is self-verified and ships unreviewed at high.
+  suggested_action: The cap only limits further rounds; at the cap a fully minor batch ends the loop, any other batch is handed over.
+  resolution: open
+  severity: P2
+- issue: No closure rule after a hand-over for a P1 the user rules invalid, or for a fix asked for after a cap problem.
+  evidence: docs/proposals/PROP-high-effort-review-loop/proposal.md:92
+  failure_condition: The user sides with the implementer; the P1 stays open and envelope-review-passed never holds.
+  suggested_action: Close an invalid P1 by a waiver citing the answer envelope; give a post-resolution fix one further round outside the cap.
+  resolution: open
+  severity: P2
+- issue: Superseding ADR-medium-review-delegation drops its supplement to the verifier assignment of ADR-reconcile-check-envelope.
+  evidence: docs/decisions/2026-10/20261016-medium-review-delegation.md:37
+  failure_condition: A reviewer cites ADR-reconcile-check-envelope against the medium reconcile self-check carried into effort.md.
+  suggested_action: State that the new decision supplements that verifier assignment, keeping its envelope separation and stage check.
+  resolution: open
+  severity: P2
+- issue: Round numbers and the earlier reconcile-check have no field and no fixed text; supersedes on the new ADR would be set inside an excluded directory.
+  evidence: packages/devkit/src/devkit/workflow/unit/envelope/model.py:356
+  failure_condition: A worker adds a reference key (a schema change) or edits the promoted ADR outside owns.
+  suggested_action: Fixed summary markers (round N; closes reconcile-check-NN;); set supersedes in the PADR frontmatter now.
+  resolution: open
+  severity: P3
+checks: {}

@@ -21,7 +21,8 @@ and asks before writing anything or committing. The guides live in [`guides/`](g
 `packages/devkit` is the package, `packages/devkit-advisory` its
 `devkit.advisory` library shipped on its own for other repositories' runtime,
 `packages/devkit-spec` the Spec-Driven Development (SDD) extension,
-`packages/devkit-starter` an example content package, `packages/devkit-catalog` opt-in content bundles, `models/devkit-embed` the embedding model of the
+`packages/devkit-starter` an example content package, `packages/devkit-catalog` opt-in content bundles,
+`packages/devkit-viewer` the local repository viewer (`devkit viewer serve`, with its Svelte frontend), `models/devkit-embed` the embedding model of the
 `devkit-agt[search]` extra (built by hand, outside the workspace), `examples/bundles/` further example bundles, `scripts/` the shell logic
 behind the justfile recipes, `guides/` the agent-facing installation guides, and `docs/` the Living Spec documentation; see
 `ARCH-05-1-containers`.
@@ -35,6 +36,8 @@ just init                  # create the virtualenv with every workspace package 
 just lint                  # ruff fix + format (just lint-check verifies only, as CI does)
 just check                 # pyright
 just test                  # pytest; just test-cov adds coverage
+just test devkit gate      # one module's areas or paths
+just test-affected         # the tests the changes since main can affect
 just rules-check           # devkit rules check on the working tree
 just rules-check --staged  # the exact staged tree
 just rules-check --ci --base origin/main
@@ -44,7 +47,7 @@ just --list                # every recipe (rules-fix, rules-phases, rules-explai
 
 Module commands discover projects from `packages/*/pyproject.toml` and
 `tools/*/pyproject.toml`; pass a project name (`devkit-agt`, `devkit-advisory`,
-`devkit-spec`, `devkit-starter` or `devkit-catalog`) or `all`. `devkit` remains a module-command alias for `devkit-agt`. Extra pytest arguments follow the module: `just test devkit -k cache`.
+`devkit-spec`, `devkit-starter`, `devkit-catalog` or `devkit-viewer`) or `all`. `devkit` remains a module-command alias for `devkit-agt`. Area names (directories under the module's `tests/`, with the matching `src` package) or paths after the module narrow `test` and `test-cov`, and extra pytest arguments follow them: `just test devkit gate worktree -k cache`. `just test-affected [--base REF] [--list] [-- PYTEST-ARGS]` derives the paths from the changes since the merge base with `main`.
 
 This repository's lint, type-check and test recipes use `devkit run` for bounded output.
 When changing or repairing the runner, use `DEVKIT_RUN_MODE=raw just test` (also supported by
@@ -94,6 +97,7 @@ reports conflicting URLs. The example content
 package `devkit-starter` is in each release too: add its wheel the same way, then
 `uv run devkit add starter`. So is `devkit-catalog`, whose opt-in bundles
 (such as `host-observer`) deploy only after `uv run devkit add <bundle>`.
+So is `devkit-viewer`, which mounts `devkit viewer serve`.
 
 ```bash
 uv add --dev "devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
@@ -117,7 +121,7 @@ workflow runs the full CI on the tagged commit, refuses a tag that is not on
 `main` or does not match the devkit version, builds the wheels with
 `just release-build <tag>` (try it locally) and
 publishes the release. `devkit-advisory` has the devkit version and is bumped
-with it (devkit pins it exactly; a test checks both). `devkit-spec`, `devkit-starter` and `devkit-catalog` keep their own versions.
+with it (devkit pins it exactly; a test checks both). `devkit-spec`, `devkit-starter`, `devkit-catalog` and `devkit-viewer` keep their own versions.
 
 `devkit-embed` keeps its own version too and is not rebuilt by releases: devkit
 installs it, in this workspace and from Git, from the release URL in the
@@ -133,4 +137,5 @@ run `uv lock`.
 - `ARCH-01-introduction-and-goals`: modules, interaction model, and the full documentation index.
 - [devkit package](packages/devkit/README.md): module table with links to each module's reference.
 - [devkit-catalog](packages/devkit-catalog/README.md): opt-in content bundles and how to add one.
+- [devkit-viewer](packages/devkit-viewer/README.md): the local repository viewer and its frontend commands (`just viewer ...`).
 - Examples: [devkit-starter](packages/devkit-starter/README.md), [delivery-workflow bundle](examples/bundles/delivery-workflow/README.md).

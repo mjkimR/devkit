@@ -1,9 +1,0 @@
-request: gate:plan-intent
-kind: approve
-action: accept
-workflow: sdd-proposal
-stage: intent-proposal
-note: classification proposal x feature; planning effort low, development effort high;
-  no milestone; Q1 packaging decided as a vendored tarball without registry publication
-by: user
-at: '2026-10-18T23:32:39.875665Z'

@@ -40,20 +40,25 @@ Keep package descriptions in this guide to a high-level summary of their purpose
 - `devkit-spec`: Spec-driven delivery commands and agent assets on the shared devkit harness. See [packages/devkit-spec/README.md](packages/devkit-spec/README.md).
 - `devkit-starter`: Example external content package demonstrating bundle packaging and distribution. See [packages/devkit-starter/README.md](packages/devkit-starter/README.md).
 - `devkit-catalog`: Opt-in content bundles that are available once installed but deployed only when a project selects them. See [packages/devkit-catalog/README.md](packages/devkit-catalog/README.md).
+- `devkit-viewer`: A local, read-only page for the Living Spec, proposals, specs and roadmap of several devkit repositories (`devkit viewer serve`), and the Svelte viewer library autohub vendors. See [packages/devkit-viewer/README.md](packages/devkit-viewer/README.md).
 
 ## Verification
 
-Run lint, type checks, and relevant tests before completing code changes:
+Run lint, type checks, and relevant tests before completing code changes. During development run only the tests
+the change can affect; run the full suite once on the reviewed head before integration, not after every edit. A
+viewer frontend change selects no pytest test: run the command its `[FRONTEND_CHECK: ...]` line names instead:
 
 | Target | Command |
 | --- | --- |
 | Lint & format | `just lint [module]` |
 | Lint & format check (CI) | `just lint-check [module]` |
 | Type check (Pyright) | `just check [module]` |
-| Tests | `just test [module]` |
-| Test Coverage | `just test-cov [module]` |
+| Tests during development | `just test-affected` (from the diff) or `just test <module> [area\|path...]` |
+| Full test suite (once before integration) | `just test` |
+| Test Coverage | `just test-cov [module] [area\|path...]` |
 | Governance Rules | `just rules-check` or `just rules-fix` |
 | Consumer smoke (packaging, CLI wiring, hooks) | `just smoke` |
+| Viewer frontend (needs Node; rebuild the committed page after a change) | `just viewer lint`, `just viewer check`, `just viewer test`, `just viewer build` |
 
 <!-- DEVKIT:START -->
 ## devkit

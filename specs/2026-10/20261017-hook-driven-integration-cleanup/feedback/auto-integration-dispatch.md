@@ -10,7 +10,7 @@ agent: antigravity
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-17
 ---
 
@@ -41,3 +41,5 @@ SPEC-hook-driven-integration-cleanup Non-Goal 3:
 Rationale: These are explicitly retained follow-ups that depend on first verifying the local dev-integration=ask provider and scoped cleanup contracts.
 When to Reconsider: Once the tracked follow-up items (FB-auto-integration-dispatch, FB-pr-remote-and-squash-integration, FB-multi-host-integration-ergonomics) meet their restart conditions."
 ```
+
+- **Disposition**: `PROP-integration-follow-ups`: drafted in Backlog together with the other two deferred integration extensions, now that ask-mode integration has been used in real workflows.

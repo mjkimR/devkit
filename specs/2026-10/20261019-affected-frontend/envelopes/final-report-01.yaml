@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T01:19:54.409813Z'
+status: completed
+summary: just test-affected sends viewer frontend changes to no pytest test and prints a FRONTEND_CHECK line with the CI viewer job's commands; docs updated; review and reconcile closed.
+findings: []
+checks:
+  tests: 'PASS just test (full) on 4dab254: 3377 passed, 2 skipped; just test-affected on head: 42 passed'
+  build: PASS no packaging change; scripts only
+  lint: PASS just lint-check, just check, devkit rules check --ci --base a37add2
+diff_scope:
+  base: a37add294ca0ce4cd2f24a3a32a43e29a0b3d91a
+  head: 6e871528d28a6ffd88ff6358daafffa482a4d6e7

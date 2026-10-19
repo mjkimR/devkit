@@ -21,11 +21,15 @@ lint-check module="all":
 check module="all":
     bash scripts/module.sh check "$1"
 
-# Run pytest for a specific module or all modules
+# Run pytest for a module or all; areas or paths after a module narrow it (just test devkit gate -k foo)
 test module="all" *args:
     bash scripts/module.sh test "$@"
 
-# Run pytest with test coverage report
+# Run only the tests the changes since a base can affect (just test-affected [--base REF] [--list] [-- PYTEST-ARGS])
+test-affected *args:
+    uv run --no-active python scripts/affected_tests.py "$@"
+
+# Run pytest with test coverage report (same module, area and path selection as test)
 test-cov module="all" *args:
     bash scripts/module.sh test-cov "$@"
 
@@ -56,6 +60,10 @@ workflow *args:
 # Run the commit gate CLI (install, uninstall, status, run)
 gate *args:
     uv run --no-active --package devkit-agt devkit gate "$@"
+
+# Frontend of devkit-viewer (needs Node): install, lint, check, test, build (the committed page) or pack [dir]
+viewer action *args:
+    bash scripts/viewer.sh "$@"
 
 # Build all wheels and exercise them from a fresh consumer project (needs git)
 smoke:

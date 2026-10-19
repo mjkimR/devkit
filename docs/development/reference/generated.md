@@ -59,7 +59,7 @@ Exit codes: `0` success; `1` from `check` when an artifact is stale; `2` a refus
 | `GENERATED_STALE` | `ERROR` (`MAINTENANCE`, exit `1`) | `StaleError` | `check`: artifacts differ from what their command produces at the commit; `[FIX]` is `devkit generated regen <ids>`, then commit. |
 | `GENERATED_CONFLICTS_REMAIN` | `WARNING` | `ConflictsRemainWarning` | `resolve` settled the generated conflicts; conflicts no artifact owns remain (listed). |
 | `CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit.core.ConfigError` | `.devkit/generated.toml` cannot be read or is not valid TOML. |
-| `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit.core.ArgumentError` | An unknown or disabled artifact id, or a `--rev` that is not a commit. |
+| `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit.core.ArgumentError` | An unknown or disabled artifact id (`check` names one registered only in the working tree as not committed at `--rev`), or a `--rev` that is not a commit. |
 | `GIT_FAILED` | `ERROR` | `devkit.core.GitError` | Not in a Git work tree, or another Git command failed. |
 
 ## Library

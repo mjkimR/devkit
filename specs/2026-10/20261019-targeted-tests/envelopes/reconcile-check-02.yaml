@@ -1,0 +1,17 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T00:40:38.497686Z'
+status: completed
+summary: 'Implementer self-verification of the reconcile-check-01 fixes (medium discretionary repeat, no new reviewer call): ci-cd.md §2 now states every selection rule, the devkit-only source-tree tests and both advisory codes; all four findings closed.'
+findings: []
+assumptions:
+- Verified by the implementer against scripts/affected_tests.py, not by the reconcile-reviewer, which checked b8e66a7 only.
+checks:
+  rules: 'PASS select() probes: test-only change partial with itself, .github and package README none, devkit-spec source change without source-tree tests'
+  docs: PASS just rules-check clean; no line over 120 columns in ci-cd.md
+diff_scope:
+  base: b94232699bedf73244f22462563580f03aa21e26
+  head: 7b88223f7a68e266218c28073762a9901f1a928f
+activity_effort: medium

@@ -55,7 +55,7 @@ Use this skill after a specification (`specs/<YYYY-MM>/<YYYYMMDD>-<slug>/spec.md
 
 ## 3. Plan Output Standard
 
-Rewrite `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/plan.md`, keeping its `id` and `spec` frontmatter. The invariant review, impacted components and verification sections are always present; the others (diagram, data contracts, storage, failure modes) are written only when the change has that content. Drop a section that does not apply instead of writing "N/A"; a small change can have a short plan. Cite documents by full ID in backticks (`` `ADR-<slug>` ``, `` `CAP-<AREA>-<slug>` ``), never by Markdown path.
+Read the skeleton `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/plan.md`, then rewrite it, keeping its `id` and `spec` frontmatter. The invariant review, impacted components and verification sections are always present; the others (diagram, data contracts, storage, failure modes) are written only when the change has that content. Drop a section that does not apply instead of writing "N/A"; a small change can have a short plan. Cite documents by full ID in backticks (`` `ADR-<slug>` ``, `` `CAP-<AREA>-<slug>` ``), never by Markdown path.
 
 ````markdown
 ---
@@ -101,7 +101,7 @@ class FeatureConfig:
 ## 6. Verification & Test Plan
 - Unit test coverage targets.
 - Integration test scenarios.
-- Commands to run for validation (`just test`, `just lint`, `devkit rules check`, etc.).
+- Commands to run for validation: the targeted tests during development (the touched modules or areas), the full suite once before integration (`just test`), and the other checks (`just lint`, `devkit rules check`, etc.).
 ````
 
 ---

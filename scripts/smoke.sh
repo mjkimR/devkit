@@ -7,6 +7,7 @@
 # gate hooks in a fresh Git repository;
 # add the released model wheel and run a dense search;
 # install the spec wheel and verify its command mount, opt-in docs seed and document index;
+# install the viewer wheel, serve the consumer project and fetch its bundled page;
 # then install the devkit-advisory wheel alone, as a runtime dependency, and
 # verify it brings devkit.advisory and nothing else of devkit.
 # The wheels are installed by path, so a same-named package on an index can never
@@ -45,6 +46,7 @@ advisory_wheel=$(wheel devkit_advisory)
 starter_wheel=$(wheel devkit_starter)
 catalog_wheel=$(wheel devkit_catalog)
 spec_wheel=$(wheel devkit_spec)
+viewer_wheel=$(wheel devkit_viewer)
 
 echo "==> creating a fresh consumer project"
 (
@@ -94,10 +96,10 @@ TOML
     uv run devkit add response-style >/dev/null
     uv run python -c '
 from pathlib import Path
-path = Path(".devkit/managed/response-style/instructions/response-style.md")
+path = Path(".devkit/managed/response-style/skills/response-style/SKILL.md")
 assert "Use ko as the default" in path.read_text()
 assert not path.with_suffix(".md.jinja").exists()
-assert str(path) in Path("AGENTS.md").read_text()
+assert "read and apply the `response-style` skill" in Path("AGENTS.md").read_text()
 '
     uv run devkit sync --check >/dev/null
     uv run devkit remove response-style >/dev/null
@@ -245,6 +247,28 @@ for document_id in (
     uv run devkit spec resolve ARCH-03-context ARCH-07-deployment ARCH-08-cross-cutting >/dev/null
     uv run devkit sync --check >/dev/null
     uv run devkit rules check
+    echo "--- viewer: install its wheel, serve this project and fetch the bundled page"
+    uv add --dev "$viewer_wheel" >/dev/null
+    uv run devkit viewer --version
+    uv run python - <<'PY'
+import re, subprocess, sys, urllib.request
+server = subprocess.Popen([sys.executable, "-P", "-m", "devkit", "viewer", "serve", "--port", "0"], stdout=subprocess.PIPE, text=True)
+try:
+    line = server.stdout.readline().strip()
+    match = re.fullmatch(r"\[VIEWER: url=(http://127\.0\.0\.1:\d+/) repos=1\]", line)
+    assert match, line
+    url = match[1]
+    page = urllib.request.urlopen(url, timeout=10).read().decode()
+    script = re.search(r'src="\./([^"]+\.js)"', page)[1]
+    with urllib.request.urlopen(url + script, timeout=10) as response:
+        assert response.headers["Content-Type"].startswith("text/javascript")
+    repos = urllib.request.urlopen(url + "api/repos", timeout=10).read()
+    assert b'"id": "consumer"' in repos, repos
+finally:
+    server.terminate()
+    server.wait(timeout=10)
+assert server.returncode == 0, server.returncode
+PY
 )
 
 echo "==> runtime-only consumer: the devkit-advisory wheel alone"

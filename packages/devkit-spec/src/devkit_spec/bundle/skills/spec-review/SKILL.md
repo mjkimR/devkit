@@ -44,7 +44,7 @@ Use this skill when all implementation tasks in `tasks.md` are marked complete (
 - Bugfix bundles: the Red and Green envelopes exist and the regression test is kept (`devkit workflow envelope check --unit <dir>`).
 
 ### Step 3: Run Deterministic Verification Gates
-- Execute the test suite: unit tests, integration tests, end-to-end tests (e.g., `just test`).
+- Execute the full test suite once on the reviewed head: unit, integration and end-to-end tests (e.g., `just test`). During implementation only the tests the change can affect run (the touched modules or areas, or the project's affected-test selection); this run catches what that selection misses. A delegated reviewer works from these results and reruns only a check that is missing or stale.
 - Run the linters and formatters (e.g., `just lint`) and the spec rules: `devkit rules check --staged` for staged changes, `devkit rules check --ci --base <ref>` for a committed branch.
 - Ensure exit code is 0 with zero warnings/errors.
 
