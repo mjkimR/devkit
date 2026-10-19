@@ -52,16 +52,33 @@ Option 2, as specified in `PROP-high-effort-review-loop` §3.1 to §3.5:
 - Recurrence is a fixed `recurs:` prefix in `issue`; out-of-scope findings are derived from the round's diff files.
 - Round counts survive `devkit workflow return` within a segment.
 - A P1 still found at the round cap, or a recurring P1, is a `worker` problem; at the cap with only P2/P3 the
-  implementer fixes them and ends the loop; a contested P1 still asserted after one counter-evidence round (D2, recommended) is
-  a `worker` question; a session reports either in the conversation and does not integrate. This is not the `exception` stage.
+  implementer fixes them and ends the loop; a contested P1 still asserted after one counter-evidence round is a `worker`
+  question; a session reports either in the conversation and does not integrate. This is not the `exception` stage.
 
-Open until the user answers (proposal §3.8): D2 contested P1, D3 the relation to
-`ADR-medium-review-delegation`, D4 the round cap, D5 the severity scope.
+- The round cap is 3 rounds after the initial review.
+- Severity is required on every finding at every effort; it has no effect on checks.
+- This decision supersedes `ADR-medium-review-delegation`; its `high` clause is replaced by the rules above and its
+  other rules are carried over unchanged:
+  - Distinct read-only `code-reviewer` and `reconcile-reviewer` contracts. The implementer writes, fixes and resolves
+    the Living Spec reflection and `reconcile.md` at every effort; reviewers only return verification results.
+  - At `medium`, the initial code review is mandatory for session and Unit paths regardless of change size.
+  - Only `medium` Unit-path reconcile verification may omit its initial subagent call, when all affected contracts
+    and documents can be identified, agreement with the actual diff can be directly demonstrated, and no unresolved
+    contract interpretation or cross-component impact remains. A confirmed no-impact or wording-only reflection may
+    qualify; small size alone does not; uncertainty requires the reconcile reviewer. The omission reason and the
+    self-verification evidence are recorded in the existing `reconcile-check` envelope.
+  - After the initial `medium` review, the implementer verifies fixes and later changes and decides whether to call
+    either reviewer again; expanded scope, uncertain correctness or contract interpretation are reasons to call.
+    Findings still need evidence of resolution, later verification is attributed to its actual executor, and a
+    failed or stale initial call never fulfills the required first review.
+  - `low` keeps self-review and a self-checked reconcile.
+  - Stage ids, order, entry and exit checks, gates, returns and effort selection are unchanged; required repository
+    policies remain binding.
 
 ## 5. Consequences
 
 - `high` costs a subagent round per batch that holds a non-minor fix; a batch of trivial fixes closes with recorded
   evidence.
 - Reviewer payloads grow by the earlier findings and the round's diff scope.
-- The `medium` rules are unchanged; `ADR-reconcile-check-envelope` keeps holding, since the initial reconcile
+- The `medium` and `low` rules are unchanged in substance; `ADR-reconcile-check-envelope` keeps holding, since the initial reconcile
   verification at `high` stays independent.

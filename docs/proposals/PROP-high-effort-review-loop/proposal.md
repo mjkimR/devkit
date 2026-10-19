@@ -14,6 +14,7 @@ boundaries:
     - capabilities/delivery/
     - packages/devkit-spec/src/devkit_spec/bundle/
     - packages/devkit-spec/tests/
+    - docs/decisions/2026-10/20261016-medium-review-delegation.md
   excludes:
     - docs/decisions/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
@@ -60,11 +61,12 @@ gives `high` a defined end and a higher bar than `medium` without spending a sub
 All answered in Planning; the decisions are `PADR-bounded-high-effort-review-loop`.
 
 - **Q1. Severity scale.** `P1`, `P2`, `P3` as exact strings, one P1 definition per review kind (§3.3). The reviewer
-  owns the label; the implementer records it unchanged, and `reverify` already carries it forward. Whether it is
-  required at every effort or at `high` only is decision D5.
+  owns the label; the implementer records it unchanged, and `reverify` already carries it forward. It is required on
+  every finding at every effort; it still has no effect on checks.
 - **Q2. Recurrence.** No new finding key: the schema accepts only `issue`, `evidence`, `failure_condition`,
   `suggested_action`, `resolution`, `waiver` and `severity`. The fresh reviewer receives the earlier findings and
-  marks a recurrence with a fixed prefix in `issue` (`recurs: <envelope> #<n>;`). The cap value is decision D4.
+  marks a recurrence with a fixed prefix in `issue` (`recurs: <envelope> #<n>;`). The cap is 3 rounds after the
+  initial review.
 - **Q3. Out-of-scope findings.** Derived, not marked: a finding is out of scope when its `evidence` path is not in
   the round's diff file list. It is fixed with the rest of the batch and never counts as a recurrence.
 - **Q4. Planning loop.** The same loop applies to `challenger` rounds in `high` Planning with the Planning P1
@@ -96,9 +98,9 @@ Hand-over to the user:
 
 | Cause | Unit path (worker or Host) | Session |
 | --- | --- | --- |
-| The round cap (D4) is reached and a P1 is still found | `problem` in the `worker` envelope; recovery names the open P1s | Reported in the conversation; not integrated |
+| The round cap (3 rounds after the initial review) is reached and a P1 is still found | `problem` in the `worker` envelope; recovery names the open P1s | Reported in the conversation; not integrated |
 | The same P1 recurs after its fix (marked `recurs:`) | Same | Same |
-| A P1 the implementer holds invalid, still asserted after one more round given the implementer's counter-evidence (D2) | `questions` entry with the reviewer's and the implementer's positions as options | Asked in the conversation |
+| A P1 the implementer holds invalid, still asserted after one more round given the implementer's counter-evidence (tests or output) | `questions` entry with the reviewer's and the implementer's positions as options | Asked in the conversation |
 
 When the cap is reached with only P2 or P3 findings, the implementer fixes them and ends the loop, recording the
 closures as self-verification.
@@ -156,8 +158,10 @@ no advice. If the user keeps `session`, the work runs at `high` as defined.
 
 ### 3.7 Impact
 
-- **Decision**: `PADR-bounded-high-effort-review-loop`; its relation to `ADR-medium-review-delegation` is decision D3.
-  `ADR-reconcile-check-envelope` keeps holding: the initial reconcile verification at `high` stays independent.
+- **Decision**: `PADR-bounded-high-effort-review-loop`, promoted to an ADR that supersedes
+  `ADR-medium-review-delegation`: it restates the `medium` rules unchanged and adds the `high` rules. Development
+  sets `supersedes` on the new ADR and `status: superseded` with `superseded_by` on the old one (its frontmatter
+  only). `ADR-reconcile-check-envelope` keeps holding: the initial reconcile verification at `high` stays independent.
 - **`devkit-spec` bundle** (`packages/devkit-spec/src/devkit_spec/bundle/`):
   - `skills/spec/references/effort.md` (table, rules, reclassification advice), `skills/spec/references/envelope.md`
     (severity example and values)
@@ -171,16 +175,17 @@ no advice. If the user keeps `session`, the work runs at `high` as defined.
 - **Living Spec**: `CAP-DLV-delivery-workflows` (effort rules, problem rule), `CAP-DLV-workflow-envelopes` (severity
   meaning; no schema change), `CAP-DLV-proposal-incubation` (`plan-accept` gap report for `scout`).
 
-### 3.8 Decisions for the user
+### 3.8 Decisions
 
-- **D2. Contested P1.** Recommended: one more fresh round with the implementer's counter-evidence (tests or output),
-  handed over only if it asserts the P1 again. Alternative: every contested P1 goes straight to the user.
-- **D3. Relation to `ADR-medium-review-delegation`.** Recommended: the new ADR supersedes it, restating its `medium`
-  rules unchanged and adding the `high` rules, so no contradicting clause stays in force. Alternative: a supplement
-  that quotes each overridden clause.
-- **D4. Round cap.** Recommended: 3 rounds after the initial review. Alternative: 5.
-- **D5. Severity scope.** Recommended: required at every effort (no effect on checks; reviewers need not know the
-  effort for it). Alternative: required at `high` only.
+Decided by the user in Planning (`envelopes/answer-01.yaml`):
+
+- Each round takes the whole batch of fixes since the previous round; all findings are fixed together and the next
+  round is skipped only when every fix is minor. P2 and P3 findings may still be waived with a reason.
+- A contested P1 gets one more fresh round with the implementer's counter-evidence and goes to the user only if
+  asserted again.
+- The new ADR supersedes `ADR-medium-review-delegation`.
+- The round cap is 3 rounds after the initial review.
+- Severity is required on every finding at every effort.
 
 ## 4. Lifecycle & Retirement Criteria
 
