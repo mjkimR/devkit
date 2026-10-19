@@ -1,0 +1,16 @@
+kind: green
+stage: fix-verify
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-19T07:31:47.345823Z'
+status: completed
+summary: All creation paths enforce at most 300 stripped characters, refuse 301 before writes, and preserve existing summary behavior.
+findings: []
+assumptions:
+- Green ran on uncommitted fix; new CLI assertion corrected to existing error.advisory.target_files schema.
+checks:
+  resolved: 'PASS focused summary module: 23 passed, including all 12 library/JSON boundary cases and full filesystem snapshots on refusal'
+  preserved: PASS existing 11 summary tests; lint-check devkit-spec and Pyright pass with zero warnings
+diff_scope:
+  base: 471b19a0245bee80240dc68174e976b8add747ea
+  head: ''

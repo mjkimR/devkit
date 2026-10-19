@@ -59,6 +59,7 @@ TARGET_DOCS = "target-docs.md"
 DECISIONS = "decisions"
 MATERIALS = "materials"
 DEFAULT_TARGET_AREA = "capabilities/<area>/"
+_SUMMARY_LIMIT = 300
 
 _UNSAFE = re.compile(r"[^a-zA-Z0-9_-]+")
 _DASHES = re.compile(r"[_-]+")
@@ -215,20 +216,26 @@ def bundle_namespace(root: Path, namespace: str | None, cwd: Path | None) -> tup
 
 
 def require_summary(summary: str | None) -> str | None:
-    """``summary`` stripped when it is non-empty English text (``RULE-document-summary``'s check); ``None`` when
-    omitted. Raises ``ArgumentError`` (``--summary``) for an empty summary or one with a letter outside the Latin
-    script."""
+    """``summary`` stripped when it is non-empty English text of at most 300 characters; ``None`` when omitted.
+
+    Raises ``ArgumentError`` (``--summary``) for an empty summary, one with a letter outside the Latin script, or
+    one exceeding the default ``RULE-document-summary`` length limit.
+    """
     if summary is None:
         return None
     text = summary.strip()
     letters = foreign_letters(text)
     if text and not letters:
-        return text
-    problem = f"contains {''.join(letters[:5])}, not English" if letters else "is empty"
+        if len(text) <= _SUMMARY_LIMIT:
+            return text
+        problem = f"has {len(text)} characters; at most {_SUMMARY_LIMIT} are allowed"
+    else:
+        problem = f"contains {''.join(letters[:5])}, not English" if letters else "is empty"
     raise ArgumentError(
         f"--summary {problem}",
         target_files=["--summary"],
-        fix="Pass --summary with one or two English sentences saying what the document defines",
+        fix=f"Pass --summary with one or two English sentences of at most {_SUMMARY_LIMIT} characters"
+        " saying what the document defines",
     )
 
 
@@ -319,8 +326,8 @@ def create_proposal(
     unbound with a ``SPEC_PROPOSAL_UNBOUND`` notice. Raises ``ProposalSlugError`` for a slug without letters or
     digits, ``ArgumentError`` for a ``task_kind`` outside ``TASK_KINDS``, a ``planning_effort`` or ``dev_effort``
     outside ``EFFORTS``, a ``supersedes`` that is not a proposal ID, a ``namespace`` that is neither ``global`` nor
-    registered or a ``summary`` that is empty or not English, ``ProposalNotFoundError`` for a ``supersedes`` naming no
-    proposal and ``ProposalNotApprovedError`` for one that is not ``accepted``, ``ProposalExistsError`` when the
+    registered or a ``summary`` that is empty, not English or longer than 300 stripped characters,
+    ``ProposalNotFoundError`` for a ``supersedes`` naming no proposal and ``ProposalNotApprovedError`` for one that is not ``accepted``, ``ProposalExistsError`` when the
     bundle or a single-file proposal of the slug exists, ``ProposalSlugConflictError`` when ``SPEC-<slug>`` exists.
     """
     root = root.resolve()
@@ -545,8 +552,8 @@ def create_padr(
     The PADR slug is ``padr_slug`` when given (a leading ``PADR-`` dropped), else the title's (``new_slug``); the
     title stays free text, so ``"2024 roadmap"`` works with ``padr_slug="roadmap-2024"``. ``summary`` is written only
     when given; the promoted ADR keeps it. Raises ``ProposalSlugError`` for a slug without letters or digits or a
-    PADR slug whose first segment has no letter, ``ArgumentError`` for a ``summary`` that is empty or not English,
-    ``ProposalNotFoundError`` when the bundle does not exist, ``ProposalInPlanningError`` when ``plan-<slug>`` exists
+    PADR slug whose first segment has no letter, ``ArgumentError`` for a ``summary`` that is empty, not English or
+    longer than 300 stripped characters, ``ProposalNotFoundError`` when the bundle does not exist, ``ProposalInPlanningError`` when ``plan-<slug>`` exists
     and the checkout is not on it (a proposal in Planning is changed on that branch only, 01 §4.7),
     ``ProposalExistsError`` when any document already declares the PADR ID.
     """

@@ -139,7 +139,7 @@ def test_summary_length_boundary(workspace: Path, command: str, use_cli: bool, l
         if length > 300:
             assert result.exit_code == 2, result.output
             assert payload["error"]["code"] == "ARGUMENT_INVALID"
-            assert payload["error"]["target_files"] == ["--summary"]
+            assert payload["error"]["advisory"]["target_files"] == ["--summary"]
         else:
             assert result.exit_code == 0, result.output
             path = workspace / (payload["dir"] + "/spec.md" if command == "spec" else payload["path"])
