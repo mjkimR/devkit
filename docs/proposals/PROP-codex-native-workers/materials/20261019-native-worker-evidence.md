@@ -1,7 +1,7 @@
 ---
 id: MAT-codex-native-worker-evidence
 title: Codex native worker execution evidence
-summary: "A native Codex Development worker completed a scoped change with command-scoped approvals and nested reviews; default sandbox probes identify the permissions that approvals supplied."
+summary: "Native Codex Development and Planning workers use command-scoped approvals and nested reviews with emulated contracts. Recorded runtime evidence distinguishes operation-specific access from persistent permission and host confinement."
 ---
 
 # [MAT-codex-native-worker-evidence] Codex native worker execution evidence
@@ -33,11 +33,29 @@ summary: "A native Codex Development worker completed a scoped change with comma
   No automatic review rejection occurred. Sandboxed dependency-metadata DNS failures resolved through approved
   verification reruns. These outcomes establish operation-specific success, not persistent authority.
 
+## Native Planning execution
+
+- Invocation: this proposal's real `collaboration.spawn_agent` Planning worker, generic role explicitly following
+  the managed Planning contract under experimental authorization. The spawn mechanism is native and the worker
+  contract emulated; no `codex exec` ran and no source support contract was changed during Planning.
+- Input head: `bca2bb23244100a1ca23a53033892a394d10afad`. Required reviewing commit passed the normal gate and became
+  `004971b70dd0814f44b31a44a96771aceba8e0ad` after rewriting. Later actual heads are returned by the worker record.
+- The worker settled support status, trust/role fallback, scoped approvals, refusal preservation and verification
+  scope in `PADR-codex-native-worker-execution` and `MAT-codex-native-worker-design`.
+- A fresh nested challenger completed with no findings; its record is `envelopes/challenger-01.yaml`. The caller
+  checked that HEAD, index and draft paths were unchanged by the read-only role. The review covers the draft
+  proposal, PADR and design material at its recorded head plus those uncommitted drafts; later evidence/record edits
+  are self-verified by the worker and are not represented as challenger-reviewed.
+- Every mutation requested a separate, narrowly scoped approval with the explicit sibling-worktree cwd. Approvals
+  succeeded; no automatic rejection occurred. Fresh feedback and exactly one worker envelope complete the return.
+- The Host must still validate final ancestry, allowed paths, clean worktree and unchanged base. The worker's actual
+  final HEAD is supplied after the record commit; this material does not pre-approve that Host validation.
+
 ## Remaining verification
 
-- Native Planning with a nested challenger has not yet been run.
+- Native Planning execution is recorded here; committed-return acceptance remains the Host's check.
 - Generic-role success does not establish named-role loading in a newly started host.
 - Denied approval, unavailable approval tools, failed emergency commits and other host/version configurations
   were not exercised. The support contract must state those limits.
 - Prior cross-host research remains in Git at `1b8478093a44cf2d0b74c412bffc93f259459ef0` under
-  `docs/proposals/PROP-worktree-host-compatibility/`. Its process-worker direction is being replaced.
+  `docs/proposals/PROP-worktree-host-compatibility/`. Its process-worker direction has been retired by Backlog.
