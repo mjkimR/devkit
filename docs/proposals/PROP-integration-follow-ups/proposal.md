@@ -145,30 +145,37 @@ current target (the **build target**), builds the **result commit** and fast-for
   options (they rewrite the SHAs the records cite).
 - **Already merged**: when the source is already an ancestor of the current target, nothing is built and the merge
   step is a no-op (a rerun of `finish --merge` after a completed merge only continues the cleanup), for the CLI and
-  the service.
+  the service. A fresh `prepare` of such a branch (after a no-ff merge the target is the merge commit, which the
+  source does not contain; after a server restart this is the only native route) prepares a cleanup-only request:
+  the form says the branch is already merged and lists only the cleanup, the merge step is `skipped`, and
+  `WORKTREE_MERGE_NOT_FF` with its "integrate the base" fix stays for a target the source neither contains nor is
+  contained in.
 - **Where the merge runs (E2)**: never in a checkout. When the target is an ancestor of the source (no advance), the
   result is `git commit-tree <source>^{tree} -p <target> -p <source>`: its tree is exactly the gated source tree and
   no new Git version is needed. When the target advanced, the service builds the tree with
   `git merge-tree --write-tree <target> <source>` (Git 2.38 or later, probed only on this path,
-  `INTEGRATION_GIT_UNSUPPORTED` below it; exit 1 is a conflict, refused with nothing changed; any other status is a
-  failure) and commits it the same way. The message is devkit-composed from validated names only, in the form the repository's commit-msg gate
+  `WORKTREE_GIT_UNSUPPORTED` below it; exit 1 is `WORKTREE_MERGE_CONFLICT`, whose `[ACTION]` is to run
+  `spec-integrate` Step 1 and integrate again, with nothing changed; any other status is a failure) and commits it the same way. The message is devkit-composed from validated names only, in the form the repository's commit-msg gate
   already accepts for merges: `chore(merge): integrate <branch> into <target>` (no task ID or other caller text;
   tested against the configured gate). The base checkout only fast-forwards
   to the result (`git merge --ff-only <result>`), so it never stops mid-merge; the source branch and its worktree are
   untouched. The build lives in `devkit.worktree` (shared by the CLI and the service) and honours the Git identity
   and signing configuration: a missing committer identity is refused before the confirmation (service) or before
   any change (CLI); `commit-tree` runs with no terminal prompt (`GIT_TERMINAL_PROMPT=0`) and a 30-second bound, and a
-  failed or timed-out signature is `WORKTREE_COMMIT_FAILED` (the service reports it as its cause) with nothing
-  changed on the target (the unreferenced object is left to `git gc`). Trailers that commit-msg hooks would add (DCO, Change-Id) are not added; this is
+  failed or timed-out signature is `WORKTREE_COMMIT_FAILED` with nothing changed on the target; the service passes these `WORKTREE_*` codes through as the cause of a
+  refusal, never as `INTEGRATION_REQUEST_STALE` (the unreferenced object is left to `git gc`). Trailers that commit-msg hooks would add (DCO, Change-Id) are not added; this is
   documented. Under `ff-only` the result is the source tip.
 - **CLI `devkit worktree finish --merge`**: runs no readiness provider, so under `no-ff` it builds a merge commit only
   when the target is an ancestor of the source (the landed tree is the gated source tree) and keeps
   `WORKTREE_MERGE_NOT_FF` for an advanced target, as today; the `spec-integrate` Steps 1 to 4 (merge the base into the
-  branch, re-verify) stay the CLI's route. It takes the same Git common-directory lock as the service. The
+  branch, re-verify) stay the CLI's route. It takes the same Git common-directory lock as the service, in the `--merge` command entry
+  (`worktree/cli.py`), not inside `finish()`, which the service calls while holding it. The
   `WORKTREE_PUSH_REJECTED` fix stops recommending `git pull --rebase` (it drops the merge commit and rewrites the
   unit's SHAs): Development verifies with a fixture that `git pull --rebase=merges` keeps the unit's commit SHAs and
   recreates only the merge commit on the fetched upstream, and uses it; if it does not, the fix is
-  `git pull --no-rebase` and CAP-WT states its cost (the upstream's commits become a second parent).
+  `git pull --no-rebase --no-ff -m "chore(merge): integrate <remote>/<ref> into <target>"` (the flag overrides
+  `pull.ff`, the message passes the commit-msg gate) and CAP-WT states its cost (the upstream's commits become a
+  second parent) and that a conflict leaves the base checkout mid-merge (`git merge --abort`).
 - **Target descent and compare-and-swap (E2, E6)**: every build target must descend from the confirmation target
   (a target that was reset or rewritten is stale, `INTEGRATION_REQUEST_STALE`); immediately before the fast-forward
   the base must still point at that build's target, else `INTEGRATION_TARGET_MOVED`.
@@ -187,9 +194,9 @@ current target (the **build target**), builds the **result commit** and fast-for
   contains the result (later commits on the base are allowed), not that it equals it; `validate_finish(merged=True)`,
   the service's recovery and devkit-spec's cleanup `_is_post_git` change from "HEAD equals the source" to "HEAD
   contains the result (the source under `ff-only`) and the worktree is gone".
-- **Guards**: `prepare` passes `merge-base(target, source)` to the finish guards (today `plan.target_sha`, correct
-  only under fast-forward); before each fast-forward the guards run again with the build target's merge base and the
-  source tip.
+- **Guards**: unchanged at `prepare` (the source contains the target, so `plan.target_sha` is the merge base); before
+  each fast-forward of a build on an advanced target the guards run again with `merge-base(build target, source)`
+  and the source tip.
 - **Effective policy (E3)**: the request binds a digest of parsed values devkit owns: `[workflow.approvals]`
   `dev-integration`, `[worktree]` `pull_request`, `delete_branch` and `merge`, and `[integration] provider`, for the
   base at confirmation (must equal at each build) and for the result commit (must equal what the confirmation
@@ -198,13 +205,16 @@ current target (the **build target**), builds the **result commit** and fast-for
   build checks the receipt records the merge itself makes inconsistent: a record whose path is tracked in the result
   and whose blob or recorded hash differs from both parents must match there, else `INTEGRATION_RECEIPT_CONFLICT`.
   Untracked projections (gitignored `.agents/`, `.claude/`, `.codex/`) and inconsistencies already on a parent are
-  not this integration's and are skipped. It reads the receipt through `devkit.core` (`load_receipt`), not
-  `devkit.distribution`. In this repository 33 of the 366 commits on `main` since 2026-10-12 changed the receipt, so
+  not this integration's and are skipped. It parses the receipt blobs of the result and both parents
+  (`git cat-file blob <commit>:.devkit/installation.json`) with `devkit.core`'s `parse_receipt`, not
+  `devkit.distribution`; a merged receipt that does not parse is `INTEGRATION_RECEIPT_CONFLICT` with nothing
+  changed. In this repository 33 of the 366 commits on `main` since 2026-10-12 changed the receipt, so
   two concurrent bundle-editing units are common.
 - **Readiness after the target advanced (E4)**: each build runs the provider with the execution context; `Readiness`
   binds source, build target and result. It must return no reasons, and its evidence must equal the approved evidence
   except the codes the provider declared target-bound at confirmation; that declared set is part of the request
-  digest. devkit-spec declares `TARGET_SHA` and `RESULT_SHA`, evaluates the unit from the source tree (a target change
+  digest. devkit-spec declares `TARGET_SHA` and `RESULT_SHA` (absent at `prepare`, which builds nothing, and present at each
+  build), evaluates the unit from the source tree (a target change
   inside the unit directory since the merge base is a reason), adds a `SPEC_POLICY` evidence item (a digest of the
   parsed `[tool.spec]` of the base and the result) that it does not declare target-bound, so evidence equality refuses
   a policy change, and runs its CI rules on the result tree with the diff from the build target.
@@ -224,8 +234,8 @@ current target (the **build target**), builds the **result commit** and fast-for
   the approval tolerates target advances only within that call; `integration_resume` continues an approved request
   only onto the last build target (its CAP-INT section 5 use, permission failures and cleanup after the merge), and a
   later target needs a new confirmation.
-- **Prepare stays side-effect free on refs**: `integration_prepare` and `plan_finish` change no ref, index or
-  worktree; building a prospective tree writes only unreferenced objects (CAP-INT wording updated).
+- **Prepare builds nothing**: `integration_prepare` and `plan_finish` stay read-only; the prospective result tree is
+  the source tree, and the prospective policy is read from the source commit as today.
 - **Skills**: `spec-integrate` Step 1 (merge the base into the activity branch before integration) stays required
   before `prepare` when the branch does not contain the target, and after a refusal on a later target (conflict,
   receipt conflict, readiness on the result); the worktree reference and `CAP-WT-task-worktrees` describe the merge
@@ -239,8 +249,8 @@ work.
 ### 3.3 Impact and coordination
 
 - **Impact (base advances)**: `packages/devkit/src/devkit/integration/` (request and execution context, policy
-  digest, builds, recovery, confirmation text, new codes `INTEGRATION_TARGET_MOVED`, `INTEGRATION_RECEIPT_CONFLICT`, `INTEGRATION_GIT_UNSUPPORTED`), `packages/devkit/src/devkit/worktree/` (`config.py`
-  merge key, `planning.py`, `lifecycle.py` `finish`, the merge-commit build and `WORKTREE_COMMIT_FAILED`, lock, push fix, CLI help for `--merge`, module docstring),
+  digest, builds, recovery, confirmation text, new codes `INTEGRATION_TARGET_MOVED`, `INTEGRATION_RECEIPT_CONFLICT`, the cleanup-only request), `packages/devkit/src/devkit/worktree/` (`config.py`
+  merge key, `planning.py`, `lifecycle.py` `finish`, the merge-commit build and `WORKTREE_MERGE_CONFLICT`, `WORKTREE_GIT_UNSUPPORTED` and `WORKTREE_COMMIT_FAILED`, lock, push fix, CLI help for `--merge`, module docstring),
   devkit-spec's readiness provider (`devkit_spec/integration.py`) and scoped cleanup (`devkit_spec/cleanup.py`), its
   `spec-integrate` skill and worktree reference, `CAP-INT-mcp-services` (sections 1, 2 and 5), `CAP-WT-task-worktrees`
   (section 3 rerun and fix text), `CAP-DLV-delivery-workflows` 4.8 (readiness binding), `CAP-DLV-project-policy` (the

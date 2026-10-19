@@ -1,0 +1,43 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T06:00:31.740842Z'
+status: completed
+summary: 'round 3; round-2 findings: 7 resolved, #4 push fix and #6 codes/placement partial; fixes introduced 1 P2 (no-ff plus the prepare descent rule refuses a fresh prepare of an already merged branch) and 4 P3 (codes and lock placement, push fallback message, receipt read from the result blob, stale texts); pending question recommendations judged sound.'
+findings:
+- issue: 'Under no-ff, ''Already merged'' contradicts ''prepare keeps the requirement that the source contains the target'': after a no-ff merge the target is the merge commit, which the source does not contain, so a fresh prepare refuses WORKTREE_MERGE_NOT_FF and its fix starts a second integration.'
+  evidence: packages/devkit/src/devkit/worktree/planning.py
+  failure_condition: A no-ff integration merges, cleanup fails and the MCP server restarts; integration_integrate on the same branch refuses and the agent merges M into the merged source.
+  suggested_action: Prepare treats a source that is an ancestor of the target as already merged (cleanup-only request) or refuses with its own code directing finish without --merge; test no-ff merge, restart, fresh prepare.
+  resolution: open
+  severity: P2
+- issue: 'recurs: challenger-02.yaml #6; codes and placement incomplete: the merge-tree conflict has no code, INTEGRATION_GIT_UNSUPPORTED cannot be raised in worktree, and the CLI lock location is unspecified (inside finish() the service would refuse itself).'
+  evidence: packages/devkit-dist/src/devkit/core/locks.py
+  failure_condition: A conflict surfaces as REQUEST_STALE; every service integration fails once the lock is taken inside finish().
+  suggested_action: Name the conflict code with an [ACTION] to run spec-integrate Step 1; state where merge-tree and its probe live; take the CLI lock in worktree/cli.py.
+  resolution: open
+  severity: P3
+- issue: 'recurs: challenger-02.yaml #4; the fallback git pull --no-rebase uses Git''s default merge message, which the cgate commit-msg hook refuses (base left mid-merge), and aborts under pull.ff=only.'
+  evidence: specs/2026-10/20261015-commit-gate-rules-default/feedback/integrate-merge-message-fails-commit-msg-gate.md
+  failure_condition: The push is rejected, --rebase=merges rewrites SHAs, the agent runs the fallback and the base checkout is left mid-merge.
+  suggested_action: 'Fallback git pull --no-rebase --no-ff -m ''chore(merge): integrate <remote>/<ref> into <target>''; CAP-WT states a conflict leaves the base mid-merge (git merge --abort).'
+  resolution: open
+  severity: P3
+- issue: load_receipt reads the receipt from disk only while the result exists only in the object store; a merged receipt that does not parse raises an uncoded ReceiptError.
+  evidence: packages/devkit-dist/src/devkit/core/receipt.py
+  failure_condition: Two concurrent bundle-editing units merge cleanly into an unparsable receipt; the build fails uncoded.
+  suggested_action: parse_receipt on the result blob; a parse failure is INTEGRATION_RECEIPT_CONFLICT; test it.
+  resolution: open
+  severity: P3
+- issue: 'Texts stale after the prepare-scope fix: the guard merge-base change at prepare is a no-op; prepare no longer builds a tree; RESULT_SHA at prepare is undefined.'
+  evidence: docs/proposals/PROP-integration-follow-ups/proposal.md
+  failure_condition: Development builds a throwaway result commit at prepare for RESULT_SHA or carries an unneeded guard change.
+  suggested_action: Guards change only for builds on an advanced target; prepare builds nothing; define RESULT_SHA at prepare (absent).
+  resolution: open
+  severity: P3
+assumptions:
+- the round read bd8b2f3 from the files; no shell diff run
+unverified_areas:
+- whether git pull --rebase=merges keeps unit SHAs; cgate subject length limits
+checks: {}

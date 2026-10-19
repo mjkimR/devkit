@@ -42,15 +42,16 @@ commits, most of them records, which its envelopes cite by SHA.
 `devkit worktree finish --merge`. Under `no-ff` the result commit is built in the object store with the target as
 first parent and the approved source tip as second, under a devkit-composed message, and the base only
 fast-forwards to it. Without an advance the tree is the source tree (`commit-tree <source>^{tree}`); with one the
-service builds it with `git merge-tree --write-tree` (Git 2.38 or later, probed only then; a conflict refuses with
-nothing changed). A source already contained in the target builds nothing (a rerun is a no-op). The message uses
+service builds it with `git merge-tree --write-tree` (Git 2.38 or later, probed only then, `WORKTREE_GIT_UNSUPPORTED`
+below; a conflict is `WORKTREE_MERGE_CONFLICT` with nothing changed). A source already contained in the target builds nothing (a rerun is a no-op, and a fresh prepare yields a
+cleanup-only request). The message uses
 validated branch names only (`chore(merge): integrate <branch> into <target>`); the build lives in `devkit.worktree`,
 honours identity and signing configuration, runs with a 30-second bound and no terminal prompt and refuses with
 `WORKTREE_COMMIT_FAILED` and nothing changed on failure. `prepare` still requires the source to contain the target;
 only later advances are merged in. `ff-only` in either policy wins. Under `ff-only` the
 result commit is the source tip and an advanced target is refused as today. The CLI `finish --merge`, which runs no
 readiness provider, builds a merge commit only when the target did not advance and keeps `WORKTREE_MERGE_NOT_FF`
-otherwise; it takes the integration lock. `ff`, squash and rebase are not offered locally.
+otherwise; it takes the integration lock in its command entry. `ff`, squash and rebase are not offered locally.
 
 ## 5. Consequences
 
