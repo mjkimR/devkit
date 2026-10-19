@@ -2,7 +2,7 @@
 id: PROP-direct-planning-procedure
 title: Planning procedure reachable from the spec skill for any executor
 summary: Moves the ordered Planning steps out of the planning-worker contract into a spec skill reference that direct-mode Hosts and workers both follow, so the procedure lives in one place.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                       # draft | reviewing | accepted | rejected
 created_at: 2026-10-19
 target_area: harness/
 priority: medium                      # critical | high | medium | low
