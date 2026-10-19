@@ -2,7 +2,7 @@
 
 Read this in Steps 4 to 6 of `spec-delegate` for a `planning-worker` or `development-worker`. A worker is one-shot:
 it runs one turn in its activity branch's worktree, commits at every stage boundary and ends with its head returned
-and exactly one `worker` envelope, also when it stops on a question or a problem. You validate the committed range,
+and exactly one `worker` envelope, also when it stops on a question or a problem, when record/commit access is permitted. You validate the committed range,
 accept or block it, and decide what a recorded problem needs; you never write the worker's records for it
 (`ADR-worker-delivers-committed-result`). Record formats: the `spec` skill's `references/worker-records.md`.
 
@@ -68,3 +68,18 @@ nothing. A comment or a rerun request alone resolves nothing.
 
 A worker records its feedback inside its own unit before its last work commit; a Planning run also returns fresh sweep
 evidence ([run coverage](../../spec-feedback/references/sweep.md#planning-run-coverage)): validate the range against it.
+
+## Permission failures and incomplete preservation
+
+Unavailable or denied approval stops the actual operation. A worker may attempt its failed record and emergency
+commit only through still-permitted scoped operations. If either also cannot run, require a `failed` return naming
+the actual last SHA, dirty paths, cause, commands tried, recommended recovery and absent/uncommitted record/commit.
+No fabricated envelope, clean tree or committed final HEAD is acceptable. `--no-verify` is only for an ordinary
+commit-gate refusal during the emergency commit, never for sandbox or approval denial; do not switch tools, paths,
+processes, broader requests or host settings to evade refusal.
+
+The Host MUST block a failed dirty or uncommitted return, even when no worker envelope could be written. Inspect
+actual HEAD/status and the cumulative allowed paths without accepting it as a clean committed result. Preserve the
+partial state. Record the failure in the Host's subsequent run when permitted and recover inside approved scope;
+never impersonate the worker's missing record. A still-denied Host operation stops too. Acceptance continues to
+require the ancestry, boundary, clean-base and check validations above; failed preservation weakens none of them.

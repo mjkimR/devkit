@@ -23,3 +23,15 @@ A reviewer round at `high` (the `spec` skill's `references/review-loop.md`) is a
 
 
 A Planning or Development worker records its feedback inside its own unit before its last work commit; a Planning run also returns fresh sweep evidence ([run coverage](../../spec-feedback/references/sweep.md#planning-run-coverage)).
+
+## Native worker paths and permissions
+
+Name the absolute assigned worktree, command cwd requirement and every nested-role read scope explicitly; initial
+cwd may be the base checkout. Every command, including verification and approvals, sets absolute worktree cwd;
+every Git command uses `git -C <worktree>`. A generic native call also receives the absolute effective managed/override
+contract path and the assumption that its role contract is emulated, with instruction loading permitted.
+
+Identify required nested roles and necessary approval capabilities before spawning. Each operation beyond current
+sandbox access needs its own exact scoped approval, including sibling writes, shared Git, registry and verification
+network access. Do not provide a broad persistent prefix or infer later permission from successful preflight. The
+payload preserves the worker's refusal/failure procedure; it cannot promise future grants or native path confinement.

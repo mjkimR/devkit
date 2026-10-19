@@ -12,10 +12,11 @@ hosts:
   claude-code:
     status: native
     tools: [Read, Grep, Glob, Write, Edit, Bash, Agent]
-  # workspace-write confines writes to the project root, which excludes a sibling worktree: the main session substitutes.
+  # Native spawning emulates task boundaries; each operation beyond sandbox access needs its own approval.
   codex:
-    status: unsupported
-  # No documented working-directory control; PROP-worktree-host-compatibility investigates it.
+    status: emulated
+    sandbox_mode: workspace-write
+  # Working-directory behavior has not been live validated for this host.
   antigravity:
     status: unverified
     tools: [view_file, grep_search, replace_file_content, run_command]
@@ -34,7 +35,7 @@ The caller's payload, with `allowed_boundaries` naming the worktree's absolute p
 
 ## Procedure
 
-1. Work only in the worktree. You share the caller's working directory, so every path you read or write is absolute and under the worktree, and every command runs there: `git -C <worktree> ...`, `cd <worktree> && <command>` in one command line. Never touch the caller's checkout.
+1. Work only in the worktree. You share the caller's working directory, so every path you read or write is absolute and under the worktree, and every command runs there: `git -C <worktree> ...`; set the command tool's cwd/workdir explicitly to the absolute worktree path (or `cd <worktree> && <command>` in one command line when the tool has no cwd field). Never touch the caller's checkout.
 2. Run `devkit workflow next --unit <unit>` and follow the stages it names, with the skills each stage lists, until the final change report holds. A spec handed off from a proposal first checks the proposal's premises (target paths, interfaces it depends on, boundaries) against the current base: a difference inside the agreed scope is recorded as an assumption, one that breaks the agreement is a problem.
 3. Decide implementation choices inside the agreed goal, scope and contract with your recommended option and record the reason (`plan.md`, an envelope's assumptions or the final report); never stop only because there is a choice. An improvement that does not block this work is reported as feedback (`spec-feedback`); a follow-up draft proposal is also allowed.
 4. Review and reconcile at the `activity-effort` you were given: `low` your own review and reconcile check, stated as self-review in the envelope; `medium` one mandatory initial `code-reviewer` nested subagent pass regardless of size and a separate `reconcile-reviewer` nested subagent that verifies the reconcile record, with the initial reconcile self-check exception (it applies only to the reconcile check, never to the code review: omit that first call only when every affected contract and document is identified, its agreement with the diff is directly shown and no contract interpretation or cross-component impact is unresolved; when uncertain, call it; read `.devkit/managed/spec/skills/spec/references/effort.md` for the full conditions) and discretionary repeat calls; `high` both roles, each in the bounded rounds of `.devkit/managed/spec/skills/spec/references/review-loop.md` (a fresh subagent per round, `round <N>;` in each summary, severity recorded as returned; the first reconcile verification always independent). You write, fix and resolve the Living Spec changes and `reconcile.md` yourself; the reconcile reviewer only verifies. Record each verification as a `reconcile-check` envelope at `living-spec-draft` at every effort (your self-check at `low`, the reconcile reviewer's returned fields, or your `medium` self-check identifying the omission reason and verification evidence), a new one after each fix; its findings never send the unit back to `review-refine`. Wait for every nested role you start to return before you rely on its result, and never end the turn while one is still running: a turn that ends early reports a result whose work is not done. A role that fails or cannot finish is a problem: record it and make the emergency commit.
@@ -42,6 +43,36 @@ The caller's payload, with `allowed_boundaries` naming the worktree's absolute p
 6. Write your own records with `devkit workflow envelope review|reverify --unit <unit> ...` and `devkit workflow envelope new --unit <unit> --kind red|green|feedback|final-report ...` as the stages ask, never by hand-editing YAML, and end the turn with exactly one `worker` envelope, never one per stage: `devkit workflow envelope worker --unit <unit> --stage <stage> --effort <activity-effort>` (the stage `next` names after the run's other records, and the effort, always), the checks, `--head` set to your last work commit (before the commit that adds this envelope), and a problem when you stop on one (below).
 7. Before the run's last work commit, record concrete observations in the spec's `feedback/` under `capture=observed`, also when the run ends on a problem. Requested-only records no autonomous observations; stage-off skips sweeps, not observed capture. For recording and deduplication read `.devkit/managed/spec/skills/spec-feedback/SKILL.md`.
 8. Commit at every stage boundary: `git -C <worktree> add <paths>` with write-scope paths only, then `git -C <worktree> commit` on the unit branch; the commit gate runs and its refusal is fixed inside the write scope, never bypassed (`--no-verify`), except in the emergency commit of a problem (below). Leave the worktree clean.
+
+## Codex execution and permissions
+
+Native `collaboration.spawn_agent` invocation runs an emulated worker contract: `workspace-write` is not
+worker-specific path confinement, and Git administration is shared. Inherit the session model and reasoning effort;
+do not set an approval-policy override or change host settings. A named role receives only the payload. If the caller
+uses a generic native subagent, read the absolute effective managed/override contract it names and follow it only
+when project-instruction loading is permitted. Never bypass an explicit trust restriction.
+
+Every command MUST set cwd to the absolute assigned worktree, including verification and permission requests;
+every Git command MUST use `git -C <worktree>`. Default cwd may be the base checkout. Nested-role read scopes and
+contract paths MUST be absolute and identify this worktree. Prompt boundaries and Host range validation enforce the
+task scope; do not claim native role/path enforcement.
+
+Request a separate command-scoped approval for each necessary operation outside active sandbox access, naming its
+exact operation, target and justification. This includes sibling-worktree writes, shared Git index/commits, scope
+registry writes and verification requiring unavailable network access. Use no broad persistent prefix. A successful
+preflight or approved command grants no later access; optional safe diagnostics are not permission guarantees.
+
+On unavailable or denied approval, stop that operation and preserve partial state. Do not evade refusal through
+another tool, path, process, broader request or settings edit. Retry a command that failed for another cause only
+after its cause/input changes and authorization permits it. Try the failed worker record and emergency commit only
+through still-permitted, separately scoped operations. Only ordinary commit-gate refusal permits the emergency
+`--no-verify` exception; sandbox or approval denial never does.
+
+If the record or emergency commit also cannot run, return `failed` with the cause, commands tried, recommended
+recovery, actual last commit SHA, dirty paths and which record/commit is absent or uncommitted. Report the actual
+`final_head`; never invent a committed envelope or clean tree. This unsuccessful return is blocked by the Host,
+which owns the subsequent recovery run and its records. The committed-return requirements below apply whenever
+preservation is permitted; inability to preserve them is a failure, not permission to bypass refusal.
 
 ## Return
 

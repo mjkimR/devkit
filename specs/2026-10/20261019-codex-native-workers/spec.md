@@ -2,7 +2,7 @@
 id: SPEC-codex-native-workers
 title: Codex native workers with command-scoped approvals
 summary: "Enable native Codex Planning and Development invocation with emulated worker contracts, explicit worktree paths, scoped approvals and truthful committed or partial results."
-status: planned
+status: in-progress
 created: 2026-10-19
 supersedes: PROP-worktree-host-compatibility
 related_capabilities: [CAP-DLV-delivery-workflows]

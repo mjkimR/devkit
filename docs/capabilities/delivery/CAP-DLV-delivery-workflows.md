@@ -336,8 +336,8 @@ The four read-only roles preset a reasoning effort in their host blocks, with no
 as `effort` under `claude-code` and `model_reasoning_effort` under a `codex` block that is not `unsupported`, at
 `low`, `medium` or `high` only. Antigravity has no such key. The two workers set none, whatever their profile, so
 they run at the session's effort like the Host whose work they take over. The preset is independent of
-`activity-effort` and applies only when the projected agent is spawned: a role the main session runs itself (Codex
-`emulated` or a main-session substitute) uses the session's effort. On Claude Code a per-call `effort` or
+`activity-effort` and applies only when the projected agent is spawned: a role the main session runs itself uses the session's effort. An emulated named-role projection
+still applies its declared preset; workers declare none. On Claude Code a per-call `effort` or
 `CLAUDE_CODE_EFFORT_LEVEL` overrides the preset; on Codex the preset wins over a spawn value.
 `packages/devkit-spec/tests/test_role_contracts.py` pins role, profile and preset for every contract.
 
@@ -360,10 +360,12 @@ post-run diff comparison, envelope recording, range validation) lives in `spec-d
 
 The workers exist for `local-orchestrated` mode (`spec-orchestrate`, user-invoked per activity) and never for
 `session` depth. Each is one-shot: it runs one turn of one activity in that activity's devkit worktree, using absolute
-paths and `git -C <worktree>` because no host gives a subagent its own working directory, runs its role subagents
-nested (Host → worker → role; Claude Code tool `Agent`) and never ends its turn while one is still running, keeps
+paths, an explicit absolute worktree cwd on every command and `git -C <worktree>` because initial cwd may be the
+base checkout, runs its role subagents nested (Host → worker → role; Claude Code tool `Agent`, Codex
+`collaboration.spawn_agent`) with absolute read/contract scopes and never ends its turn while one is still running, keeps
 scratch files in an ignored path inside its worktree, writes its own records, commits at every stage boundary and,
-when it stops on questions or a problem, makes an emergency commit of the unfinished work with its `worker` envelope.
+when it stops on questions or a problem, makes an emergency commit of the unfinished work with its `worker` envelope
+when record/commit access is permitted.
 It never reverts, closes, raises the depth or narrows the scope. The `development-worker` runs from the stage
 `devkit workflow next` names up to the final change report; the `planning-worker` takes a draft proposal toward
 `plan-accept`, collecting its questions in one round. The Host restates either worker's questions for the user (what
@@ -371,7 +373,36 @@ each answer decides, what each option leads to) rather than relaying the worker'
 unit's last accepted head; a range it rejects is a problem in the Host's own `worker` envelope, which blocks the unit
 from review and integration without discarding anything until a resolution names it
 (`ADR-worker-delivers-committed-result`, `ADR-run-records-and-activity-branches`). Host statuses: Claude Code
-`native`, Codex `unsupported` (the Host runs the unit itself in `direct`), Antigravity `unverified`.
+`native`, Codex `emulated` with `sandbox_mode: workspace-write`, Antigravity `unverified`
+(`ADR-codex-native-worker-execution`). Native Codex spawning does not enforce the worker's role/path boundary;
+Git administration remains shared. Workers inherit model and reasoning effort and set no approval-policy override.
+
+Prefer the projected named role with payload only. An unavailable role can mean projection or session-root
+availability; role absence alone does not prove missing trust. Normal status/sync repairs missing or stale
+projections where authorized. A generic native subagent may read the absolute effective managed/override contract
+and explicitly emulate it only when host project-instruction loading is permitted; an explicit trust restriction
+stops fallback and cannot be bypassed by another role, tool, path, process or host settings edit. Before starting a
+worker, missing native spawning, required nested roles or necessary approval capability selects existing Host
+`direct` execution when allowed, or `needs_input` for required isolation. Availability grants no future approval.
+
+Each necessary operation beyond active sandbox access requests a separate narrowly scoped approval naming exact
+operation, target and justification: sibling writes, shared Git index/commits, scope registry and verification/network
+access included. No broad persistent prefix or settings change is introduced; preflight success grants no later
+access. Unavailable or denied approval stops that operation and preserves its actual partial state. Do not evade
+refusal through another tool, path, process or broader request. Retry another-cause failure only after cause/input
+changes and authorization permits it. Failed record/emergency commit operations use only still-permitted scoped
+access. Emergency `--no-verify` is limited to ordinary commit-gate refusal, never sandbox or approval denial.
+
+When the worker record or emergency commit also cannot run, return `failed` with cause, commands tried, recovery,
+actual last SHA, dirty paths and absent/uncommitted records or commit; never invent a clean committed result or final
+HEAD containing it. The Host blocks failed dirty/uncommitted returns even without a worker record and owns a
+subsequent recovery run and its records. Successful acceptance still requires cumulative ancestry through final HEAD,
+strict allowed paths, clean worktree, unchanged base and checks. The one-shot lifecycle and stage gates remain.
+
+Actual generic native Planning and Development runs are recorded in `MAT-codex-native-worker-evidence` for the observed
+runtime. Named-role loading on a fresh host, denied approvals, failed emergency commits and wider host/version
+coverage remain unverified. Deterministic contract/projection tests cover those instruction branches, not platform
+enforcement; no persistent-grant or native confinement guarantee follows.
 
 Stages delegate to `code-reviewer` (`review-refine`), `reconcile-reviewer` (`living-spec-draft`, as verifier) and `scout`
 (`spike`); `challenger` has no stage of its own (its return is recorded at `spike`) and is delegated as the Planning effort asks

@@ -12,10 +12,11 @@ hosts:
   claude-code:
     status: native
     tools: [Read, Grep, Glob, Write, Edit, Bash, Agent]
-  # workspace-write confines writes to the project root, which excludes a sibling worktree: the main session substitutes.
+  # Native spawning emulates task boundaries; each operation beyond sandbox access needs its own approval.
   codex:
-    status: unsupported
-  # No documented working-directory control; PROP-worktree-host-compatibility investigates it.
+    status: emulated
+    sandbox_mode: workspace-write
+  # Working-directory behavior has not been live validated for this host.
   antigravity:
     status: unverified
     tools: [view_file, grep_search, replace_file_content, run_command]
@@ -37,6 +38,36 @@ The caller's payload, with `allowed_boundaries` naming the worktree's absolute p
 1. Work only in the worktree, with absolute paths and `git -C <worktree>`; never touch the caller's checkout. Scratch files go in an ignored path inside the worktree, never outside it.
 2. Follow `.devkit/managed/spec/skills/spec/references/planning.md` for the turn's steps at the `activity-effort` you were given, from the first-turn status change to the single `worker` envelope you write with `devkit workflow envelope worker` and commit with the turn's last changes.
 3. Start each `scout` or `challenger` the effort asks for as a nested subagent (Host -> worker -> role). Wait for every nested role you start to return before you rely on its result, and never end the turn while one is still running: a turn that ends early reports a result whose work is not done. A role that fails or cannot finish is a problem: record it and make the emergency commit.
+
+## Codex execution and permissions
+
+Native `collaboration.spawn_agent` invocation runs an emulated worker contract: `workspace-write` is not
+worker-specific path confinement, and Git administration is shared. Inherit the session model and reasoning effort;
+do not set an approval-policy override or change host settings. A named role receives only the payload. If the caller
+uses a generic native subagent, read the absolute effective managed/override contract it names and follow it only
+when project-instruction loading is permitted. Never bypass an explicit trust restriction.
+
+Every command MUST set cwd to the absolute assigned worktree, including verification and permission requests;
+every Git command MUST use `git -C <worktree>`. Default cwd may be the base checkout. Nested-role read scopes and
+contract paths MUST be absolute and identify this worktree. Prompt boundaries and Host range validation enforce the
+task scope; do not claim native role/path enforcement.
+
+Request a separate command-scoped approval for each necessary operation outside active sandbox access, naming its
+exact operation, target and justification. This includes sibling-worktree writes, shared Git index/commits, scope
+registry writes and verification requiring unavailable network access. Use no broad persistent prefix. A successful
+preflight or approved command grants no later access; optional safe diagnostics are not permission guarantees.
+
+On unavailable or denied approval, stop that operation and preserve partial state. Do not evade refusal through
+another tool, path, process, broader request or settings edit. Retry a command that failed for another cause only
+after its cause/input changes and authorization permits it. Try the failed worker record and emergency commit only
+through still-permitted, separately scoped operations. Only ordinary commit-gate refusal permits the emergency
+`--no-verify` exception; sandbox or approval denial never does.
+
+If the record or emergency commit also cannot run, return `failed` with the cause, commands tried, recommended
+recovery, actual last commit SHA, dirty paths and which record/commit is absent or uncommitted. Report the actual
+`final_head`; never invent a committed envelope or clean tree. This unsuccessful return is blocked by the Host,
+which owns the subsequent recovery run and its records. The committed-return requirements below apply whenever
+preservation is permitted; inability to preserve them is a failure, not permission to bypass refusal.
 
 ## Return
 

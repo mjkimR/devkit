@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import copy
+import tomllib
 from pathlib import Path
 from typing import Any
 
 import pytest
 import yaml
+from devkit.distribution.bundles.subagents import read_contract, render_projection
 
 BUNDLE = Path(__file__).resolve().parents[1] / "src/devkit_spec/bundle"
 WORKERS = ("development-worker", "planning-worker")
@@ -127,7 +129,7 @@ def test_a_worker_commits_its_result_and_records_in_its_worktree(role: str) -> N
     assert hosts["claude-code"]["status"] == "native"
     # Role subagents run nested: Host -> worker -> role.
     assert {"Write", "Edit", "Bash", "Agent"} <= set(hosts["claude-code"]["tools"])
-    assert hosts["codex"]["status"] == "unsupported"
+    assert hosts["codex"] == {"status": "emulated", "sandbox_mode": "workspace-write"}
     assert hosts["antigravity"]["status"] == "unverified"
     assert "git -C <worktree>" in body and "absolute" in body
     assert "Do not push, merge, rebase, reset, amend, stash or check out (`MUST NOT`)" in body
@@ -279,3 +281,114 @@ def test_a_run_records_its_questions_and_problem_in_one_worker_envelope() -> Non
     assert (
         "exactly one `worker` envelope" in development and "envelope resolution --unit <unit> --resolves" in development
     )
+
+
+@pytest.mark.parametrize("role", WORKERS)
+def test_real_worker_projects_complete_emulated_codex_toml(role: str) -> None:
+    source = BUNDLE / f"subagents/{role}.md"
+    contract = read_contract(source.read_bytes(), str(source))
+    rendered = render_projection("codex", contract, f".devkit/managed/spec/subagents/{role}.md")
+    assert rendered is not None
+    projection = tomllib.loads(rendered.decode())
+    assert set(projection) == {"name", "description", "sandbox_mode", "developer_instructions"}
+    assert projection["name"] == role
+    assert projection["sandbox_mode"] == "workspace-write"
+    prompt = projection["developer_instructions"]
+    assert "Host projection: emulated." in prompt
+    assert "The host does not enforce the contract's boundaries itself" in prompt
+    assert prompt.endswith(contract.body.rstrip("\n") + "\n")
+    assert "## Procedure" in prompt and "## Codex execution and permissions" in prompt
+    assert "## On a problem" in prompt
+
+
+@pytest.mark.parametrize("role", WORKERS)
+def test_worker_other_host_settings_are_preserved(role: str) -> None:
+    hosts = _contract(role)[0]["hosts"]
+    assert hosts["claude-code"] == {
+        "status": "native",
+        "tools": ["Read", "Grep", "Glob", "Write", "Edit", "Bash", "Agent"],
+    }
+    assert hosts["antigravity"] == {
+        "status": "unverified",
+        "tools": ["view_file", "grep_search", "replace_file_content", "run_command"],
+        "commandExecutionPolicy": "sandbox",
+    }
+
+
+@pytest.mark.parametrize("role", WORKERS)
+def test_worker_requires_explicit_paths_and_each_operation_approval(role: str) -> None:
+    body = " ".join(_contract(role)[1].split())
+    for requirement in (
+        "Every command MUST set cwd to the absolute assigned worktree, including verification and permission requests",
+        "every Git command MUST use `git -C <worktree>`",
+        "Nested-role read scopes and contract paths MUST be absolute",
+        "separate command-scoped approval for each necessary operation",
+        "sibling-worktree writes, shared Git index/commits, scope registry writes",
+        "verification requiring unavailable network access",
+        "Use no broad persistent prefix",
+        "preflight or approved command grants no later access",
+        "`workspace-write` is not worker-specific path confinement",
+    ):
+        assert requirement in body, (role, requirement)
+
+
+@pytest.mark.parametrize("role", WORKERS)
+def test_worker_refusal_and_failed_emergency_preservation_are_truthful(role: str) -> None:
+    body = " ".join(_contract(role)[1].split())
+    for requirement in (
+        "On unavailable or denied approval, stop that operation and preserve partial state",
+        "Do not evade refusal through another tool, path, process, broader request or settings edit",
+        "only after its cause/input changes and authorization permits it",
+        "only through still-permitted, separately scoped operations",
+        "Only ordinary commit-gate refusal permits the emergency `--no-verify` exception",
+        "sandbox or approval denial never does",
+        "If the record or emergency commit also cannot run, return `failed`",
+        "actual last commit SHA, dirty paths and which record/commit is absent or uncommitted",
+        "never invent a committed envelope or clean tree",
+        "Host, which owns the subsequent recovery run and its records",
+    ):
+        assert requirement in body, (role, requirement)
+
+
+def test_named_and_generic_native_invocation_respect_trust_and_effective_contract() -> None:
+    hosts = " ".join((DELEGATE.parent / "references/hosts.md").read_text().split())
+    for requirement in (
+        "Prefer the projected named role and pass only the payload",
+        "role absence alone does not prove the root is untrusted",
+        "Diagnose availability separately from trust",
+        "effective managed/override contract by absolute path",
+        "only when host project-instruction loading is permitted",
+        "explicitly report emulation",
+        "Never replace an override with the upstream contract during fallback",
+        "An explicit host trust restriction MUST stop this fallback",
+        "Do not use a generic role, another tool/process/path, or host configuration edits to bypass it",
+        "Before starting a worker",
+        "native spawning, required nested roles and the approval capability",
+        "the Host runs the unit in `direct` when allowed; `required` isolation stops with `needs_input`",
+        "Capability availability is not a promise that an approval will be granted",
+    ):
+        assert requirement in hosts, requirement
+    assert "stop and ask the user to register the root" not in hosts
+    payload = " ".join((DELEGATE.parent / "references/payload.md").read_text().split())
+    assert "every nested-role read scope explicitly" in payload
+    assert "Every command, including verification and approvals, sets absolute worktree cwd" in payload
+    orchestrate = " ".join(ORCHESTRATE.read_text().split())
+    assert "Before spawning, check native spawning, required nested roles" in orchestrate
+    assert "`needs_input` for required isolation; no worker starts" in orchestrate
+
+
+def test_callers_block_permission_failures_without_fabricated_worker_records() -> None:
+    results = " ".join(WORKER_RESULTS.read_text().split())
+    records = " ".join((BUNDLE / "skills/spec/references/worker-records.md").read_text().split())
+    assert (
+        "The Host MUST block a failed dirty or uncommitted return, even when no worker envelope could be written"
+        in results
+    )
+    assert "Inspect actual HEAD/status and the cumulative allowed paths" in results
+    assert "never impersonate the worker's missing record" in results
+    for text in (results, records):
+        assert "actual last" in text and "dirty paths" in text and "absent/uncommitted" in text
+        assert "ordinary commit-gate refusal" in text
+        assert "never for sandbox or approval denial" in text or "never sandbox or approval denial" in text
+    assert "The exactly-one committed worker-record requirement cannot be satisfied in this failure branch" in records
+    assert "owns a subsequent recovery run and its records when permitted" in records

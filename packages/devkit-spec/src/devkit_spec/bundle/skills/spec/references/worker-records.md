@@ -18,7 +18,7 @@ devkit workflow envelope worker --unit <dir> --stage <stage> --summary "<what th
 
 - **Questions**: add `--questions-file <path>|-`, a YAML list of `id`, `title` (40 characters at most), `prompt`, optional `context` (what the answer decides and why it matters, for a reader who has not seen the work), `options` (`{id, description, recommended}`, at most one recommended) and `allow_note`; the status becomes `needs_input`. Gather every question of the round in it; finish everything that does not depend on an answer first.
 - **Problem**: add `--problem "<cause>" --tried "<attempt>" --recovery "<recommended recovery>"`; the status becomes `failed`, or pass `--status needs_input` when only the user can decide. A run that both asks and hit a problem records both (`needs_input`). A malformed `worker` envelope holds the unit like a problem (from the stage it states, or every gate when none is readable): fix the file, never answer that stage's gate again.
-- **Emergency commit**: a run that stops on a problem commits its unfinished work with the envelope, so the next actor sees the state. This commit alone may use `git commit --no-verify` when the commit gate refuses the unfinished files; name every check it skipped in the problem (`--tried "commit gate rules-check refused: RULE-x in spec.md"`). Every other commit keeps the gate.
+- **Emergency commit**: a run that stops on a problem commits its unfinished work with the envelope, so the next actor sees the state. This commit alone may use `git commit --no-verify` when the commit gate refuses the unfinished files; name every check it skipped in the problem (`--tried "commit gate rules-check refused: RULE-x in spec.md"`). Every other commit keeps the gate. Sandbox or approval denial never permits this exception.
 - A problem is only what breaks the agreed goal, scope or contract, or what cannot be solved at all; a choice you can decide is not one, and neither is waiting for answers.
 
 Before the last work commit, capture observed feedback inside the proposal or spec, even on questions or problems; Planning runs also follow [planning run coverage](../../spec-feedback/references/sweep.md#planning-run-coverage).
@@ -52,3 +52,16 @@ devkit workflow envelope resolution --unit <dir> --resolves worker-NN.yaml \
 ## 4. Checking and integrating
 
 `devkit workflow envelope check --unit <dir>` lists the files, `[BLOCKED]` and `[PENDING_QUESTION]` (`--format json`: `blocked`, `problems`, `pending_questions`, `malformed_workers`). Whoever merges a pull request (you, `spec-integrate` or the cloud service) runs it on the PR head first and merges only with `"blocked": false` and no `pending_questions`; `devkit worktree finish --merge` checks the same itself.
+
+## 5. When permissions prevent the record or commit
+
+On unavailable or denied approval, stop that operation and preserve partial state; do not evade refusal through an
+alternate tool, path, process, broader request or host settings. Each still-permitted failure-record or emergency
+commit operation requests its own scoped approval when needed. A successful preflight grants no later access.
+
+If the worker record or emergency commit cannot run, return `failed` to the Host with cause, commands tried,
+recommended recovery, actual last commit SHA, dirty paths and the absent/uncommitted record or commit. Do not invent
+a committed envelope, clean tree or final HEAD containing it. The exactly-one committed worker-record requirement
+cannot be satisfied in this failure branch; report that fact. Only ordinary commit-gate refusal permits emergency
+`--no-verify`, never sandbox or approval denial. The Host blocks acceptance of failed dirty/uncommitted results and
+owns a subsequent recovery run and its records when permitted; it does not impersonate the worker's missing record.

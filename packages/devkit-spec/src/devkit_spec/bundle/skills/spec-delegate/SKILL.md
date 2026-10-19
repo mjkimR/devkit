@@ -11,7 +11,7 @@ Use this skill when the main Developer session hands exploration, criticism, an 
 
 ## 1. Inputs
 
-- Role contract: `challenger`, `reconcile-reviewer`, `code-reviewer`, `scout`, `planning-worker` or `development-worker` (the workers in `local-orchestrated` mode only). `devkit workflow next --unit <dir>` prints `[DELEGATE: role=<role> isolation=<level> contract=<path>]` for a stage that prefers isolation; `contract=` is the effective contract (managed or overridden). Otherwise the managed contract is `.devkit/managed/spec/subagents/<role>.md`. The body is the role's prompt, already in its projected agent file, read only when the main session substitutes.
+- Role contract: `challenger`, `reconcile-reviewer`, `code-reviewer`, `scout`, `planning-worker` or `development-worker` (the workers in `local-orchestrated` mode only). `devkit workflow next --unit <dir>` prints `[DELEGATE: role=<role> isolation=<level> contract=<path>]` for a stage that prefers isolation; `contract=` is the effective contract (managed or overridden). Otherwise the managed contract is `.devkit/managed/spec/subagents/<role>.md`. The body is the role's prompt, already in its projected agent file, read when the main session substitutes or a permitted generic subagent emulates the role.
 - Stage context: `devkit workflow next --unit <dir>` (current stage) and `devkit workflow show --unit <dir>` (where returns go).
 
 ---
@@ -31,15 +31,15 @@ Use this skill when the main Developer session hands exploration, criticism, an 
 
 ### Step 1: Decide whether to delegate
 - The `activity-effort` decides which roles run and how: the `spec` skill's `references/effort.md`, and at `high` the bounded rounds of its `references/review-loop.md` (a fresh call per round). `[DELEGATE]` names the role. A `session` task gets a returned message, never an envelope or a worker.
-- `local-orchestrated` (`spec-orchestrate`): a `planning-worker` runs one proposal Planning turn, a `development-worker` one Development turn of a spec unit, each in its worktree; never for `session`. A worker runs its role subagents nested (Host → worker → role).
+- `local-orchestrated` (`spec-orchestrate`): a `planning-worker` runs one proposal Planning turn, a `development-worker` one Development turn of a spec unit, each in its worktree; never for `session`. A worker runs its role subagents nested (Host → worker → role). Before starting it, check native spawning, nested-role and necessary approval capabilities per [hosts](references/hosts.md); use the existing direct/needs_input fallback when unavailable.
 
 ### Step 2: Build the input payload
 Fill all five fields: `task_goal`, `relevant_files`, `allowed_boundaries` (read scope, write scope, denied paths), `diff_scope` (base and head), `expected_output_format`, with the rows per role in [payload](references/payload.md). Record the head SHA you passed (`git rev-parse HEAD`).
 
 ### Step 3: Invoke in isolation
 - Read the stage's `isolation` from `[DELEGATE: ... isolation=none|preferred|required ...]` and the role's `hosts.<host>.status`. State one of: spawn an isolated subagent (`native`, `emulated`, `unverified`); substitute in the main session (`unsupported`, or `preferred` without a fresh context); stop with `needs_input` (`required` and `unsupported`). Record the choice and the status in the envelope's `assumptions`.
-- To spawn, use the host's isolated-context mechanism: read [hosts](references/hosts.md) for the tool, the projected file and the Codex trust requirement. Do not fork the main context when a fresh context is what isolates the result.
-- With a projected file, pass only the payload: the host loads the contract body as the system prompt. When the main session substitutes, follow the contract body yourself. Pass the actual change and the intent, never the main session's narrative.
+- To spawn, use the host's isolated-context mechanism: read [hosts](references/hosts.md) for the tool, the projected file, role availability and trust-aware fallback. Do not fork the main context when a fresh context is what isolates the result.
+- With a projected file, pass only the payload: the host loads the contract body as the system prompt. When a named role is unavailable, a generic native subagent may read the absolute effective contract only under the trust conditions in [hosts](references/hosts.md), and states emulation. When the main session substitutes, follow the contract body yourself. Pass the actual change and the intent, never the main session's narrative.
 
 ### Step 4: Validate the returned fields
 - Required fields present; `status` is one of `completed | needs_input | failed`.
