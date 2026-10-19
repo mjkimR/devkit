@@ -108,13 +108,14 @@ Evidence and the option table: `MAT-worktree-host-spike-evidence`; scout returns
   nothing written, and a worker refused later stops through its problem procedure or, when even its emergency commit
   is refused, is reported by the Host as stopped with its uncommitted paths.
 - `PADR-host-native-worktrees-excluded`: `devkit worktree start` stays the only source of an activity's worktree.
-- `PADR-codex-process-worker` (only for `codex-worker-scope` = `process-worker`): on Codex a worker turn runs as a
-  `codex exec` process rooted in its worktree with both git dirs granted, shipped only when one live turn passes;
-  a failed turn ships the recorded reasons only. For `keep-unsupported` the turn recording the answer deletes it and
-  its references.
-- Effort by answer: `process-worker` keeps `dev_effort: high` and `size: M` (a new launch procedure, skill changes and
-  a live external verification); `keep-unsupported` sets `dev_effort: medium` and `size: S` (the worker probe, the
-  stopped-worker report, the hosts reference and comments).
+- `PADR-codex-process-worker`: on Codex a worker turn runs as one approved `codex exec` process rooted in its
+  worktree with both git dirs granted, shipped only when one live Development turn passes; a failed or unrun turn
+  ships the recorded reasons only. The user runs that turn from a Codex session when Development reaches it; the
+  Development worker never runs `codex exec` itself.
+- Answers (`envelopes/answer-01.yaml`): `codex-worker-scope` = `process-worker`, `codex-live-turn` =
+  `user-codex-host`, `antigravity-verification` = `keep-unverified`.
+- Effort: `dev_effort: high` and `size: M` (a new launch procedure, skill and contract changes, the worker probe and a
+  live verification handed to the user mid-Development).
 - Open, not widened: on every host a worker has the session's access to the shared `.git` (other refs, config, hooks,
   the scope registry), which the Host's range check does not see.
 
@@ -124,7 +125,7 @@ Evidence and the option table: `MAT-worktree-host-spike-evidence`; scout returns
 - A `claude -p` process worker for the Claude Code sandbox case (deferred in `PADR-worktree-access-preconditions`),
   and host-native worktree adoption.
 - Closing the shared-`.git` gap of the range check.
-- Live verification on Antigravity unless `antigravity-verification` selects it.
+- Live verification on Antigravity: it stays `unverified` with its documented preconditions.
 
 ## 4. Lifecycle & Retirement Criteria
 
@@ -139,9 +140,9 @@ Evidence and the option table: `MAT-worktree-host-spike-evidence`; scout returns
   - The hosts reference states each host's precondition marked observed or documented, matching
     `MAT-worktree-host-spike-evidence` and the Development evidence; the Q5 `/add-dir` statement appears only with a
     session recorded in the spec's `tasks.md` evidence.
-  - With `process-worker`: the live Codex turn's record in the spec's `tasks.md` evidence and the Development `worker`
-    envelope (fields and the Passes criterion in `PADR-codex-process-worker` §4) shows either Passes with the launch
-    shipped, or the failed condition with nothing of the launch shipped.
+  - The live Codex turn's record in the spec's `tasks.md` evidence and the Development `worker` envelope (fields and
+    the Passes criterion in `PADR-codex-process-worker` §4) shows either Passes with the launch shipped, or the failed
+    condition (a turn the user did not run included) with nothing of the launch shipped.
   - `just lint-check`, `just check`, `just test`, `just rules-check` and `just smoke` pass.
 - On acceptance: set `status: accepted` and run `devkit spec proposal handoff worktree-host-compatibility`. On
   rejection: record a rejection ADR and delete the proposal directory.

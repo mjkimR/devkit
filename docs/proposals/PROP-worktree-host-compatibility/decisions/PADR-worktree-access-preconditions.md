@@ -113,8 +113,8 @@ repository Git settings (O5).
 
 - Development changes devkit-spec assets and their Living Spec mirror: the probe step, the stopped-worker report and
   the host-block comments of `planning-worker` and `development-worker`; `spec-delegate` (`references/hosts.md`,
-  `references/worker.md` for a failed probe and an uncommittable worker, `SKILL.md` Step 3 only when a process path is
-  added); `spec-orchestrate`; the `spec` skill's `references/worker-records.md` for a run that ends at a refused probe
+  `references/worker.md` for a failed probe and an uncommittable worker, `SKILL.md` Step 3 only when the Codex process
+  launch of `PADR-codex-process-worker` ships); `spec-orchestrate`; the `spec` skill's `references/worker-records.md` for a run that ends at a refused probe
   without a `worker` envelope; their contract tests; and `CAP-DLV-delivery-workflows`.
 - No change to `devkit.worktree`, `devkit.distribution` or the projected key allowlists.
 - The precondition is stated and probed by the worker, not enforced by devkit.
