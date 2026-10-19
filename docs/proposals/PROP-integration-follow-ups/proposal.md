@@ -2,7 +2,7 @@
 id: PROP-integration-follow-ups
 title: "Integration follow-ups: base advances, auto dispatch, pull request cleanup and host confirmation adapters"
 summary: "Plans four integration extensions: tolerating base advances during approval, policy-driven dispatch under dev-integration auto, pull request and squash or rebase cleanup, and confirmation adapters for hosts beyond Codex."
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                       # draft | reviewing | accepted | rejected
 created_at: 2026-10-19
 target_area: integration/
 priority: high                        # critical | high | medium | low
