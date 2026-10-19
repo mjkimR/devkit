@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: Add resolved feedback status, source-feedback traceability, and verified closure
+  in spec and session completion; keep promotion distinct.
+by: user
+at: '2026-10-19T10:02:15.790043Z'
