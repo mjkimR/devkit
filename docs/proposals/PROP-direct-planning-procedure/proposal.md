@@ -8,10 +8,11 @@ target_area: harness/
 priority: medium                      # critical | high | medium | low
 size: S                               # S | M | L | XL
 planning_effort: low                  # low | medium | high (hint for Planning)
-dev_effort: low                       # low | medium | high (hint for Development)
+dev_effort: medium                    # low | medium | high (hint for Development)
 boundaries:
   owns:
     - harness/
+    - delivery/
   excludes:
     - docs/decisions/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
@@ -39,10 +40,30 @@ workflow: sdd-proposal
 
 ## 3. Proposed Design & Impact
 
-- A new `spec` skill reference for Planning, linked from the routing table's proposal row.
-- The `planning-worker` contract keeps only its role-specific obligations and points to the reference.
-- Affected: the devkit-spec bundle (`spec` skill, `planning-worker` contract) and `CAP-HARN-agent-guidance` if it
-  describes where procedures live. No CLI or schema change.
+- **Q1** (`PADR-executor-neutral-planning-steps-in-a-spec-reference`): a new `spec` skill reference
+  `references/planning.md`, linked from the routing table's proposal row, holds the executor-neutral steps of the
+  contract's steps 2 to 6: first-turn `status: reviewing` and the `needs_decompose` return, answers recorded before
+  they are folded, PADRs with a summary, review depth per effort (citing `effort.md` and `review-loop.md`) and the
+  support-role envelopes, one round of questions, the `dev_effort` check, observed feedback, the sweep and the single
+  `worker` envelope. It addresses the `direct` Host and the worker alike and cites `worker-records.md` for envelope
+  mechanics. The `planning-worker` contract keeps the worktree and `git -C` rule, nested roles (start, wait, never end
+  while one runs), Input, Return with `final_head`, Write boundaries and On a problem, and points to the reference by
+  its managed path. The steps move; nothing is copied.
+- **Q2** (`PADR-planning-reference-fits-the-existing-byte-budgets`): the reference is about 4.5 KB against the
+  12288-byte skill document budget and the link keeps `spec/SKILL.md` near 6.6 KB of its 11776; role contracts have
+  no budget and the contract shrinks to about 4 KB. No other reference is trimmed.
+- Affected: `packages/devkit-spec` bundle (`skills/spec/SKILL.md`, the new `skills/spec/references/planning.md`,
+  `subagents/planning-worker.md`); tests that pin contract phrases (`tests/test_role_contracts.py`,
+  `tests/test_effort_procedure.py` `CITING`); `CAP-DLV-delivery-workflows` (the `planning-worker` row of the role
+  table and the sentence on where a worker's procedure lives), so `boundaries.owns` adds `delivery/`.
+  `CAP-HARN-agent-guidance` lists asset ids only and is unchanged. No CLI or schema change.
+- **Development effort `medium`** (was `low`): the move changes the accepted `CAP-DLV-delivery-workflows` statement that the
+  `planning-worker` procedure is in its contract, the default case for `medium` in `effort.md`; one `code-reviewer`
+  pass checks that no step was dropped or reworded in the move.
+- **Order with `PROP-envelope-record-gaps`**: that proposal changes the `planning-worker` contract and `review-loop.md`
+  in Development. Whichever lands second adapts its edits to the other; if this one lands first, the Planning-step
+  edits of `PROP-envelope-record-gaps` go into `references/planning.md` rather than the contract. Recommended order:
+  this one first (size S), so the other edits the steps in their final place.
 
 ## 4. Lifecycle & Retirement Criteria
 
