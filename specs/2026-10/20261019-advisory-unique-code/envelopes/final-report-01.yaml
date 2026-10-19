@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-18T23:35:26.976238Z'
+status: completed
+summary: 'RULE-advisory-unique-code in the advisory bundle''s python preset (static AST + import resolution), selected in this repository with advisory=python; advisory_guide layering opened to rules; docs, guide and instruction updated. Review: review-01 REVISE (5 findings) closed by reverify-01 (subagent) and reverify-02 (plan text, self-verified).'
+findings: []
+assumptions:
+- The import-based test drafted before the spec was never committed; nothing was deleted from the repository.
+- 'Boundary extensions: packages/devkit/tests/advisory_guide/test_bundle.py, packages/devkit/tests/test_documented_codes.py (skips rule tests/ fixtures), CAP-ADV checklist, guides/install/bundle-recommendations.md.'
+checks:
+  tests: PASS just test devkit 2312 passed, 2 skipped; devkit rules test RULE-advisory-unique-code 15 passed
+  build: PASS uv build --package devkit-agt (wheel ships rules/unique_code); just smoke fails on base 8fc64ef too (FB-smoke-response-style-skill-path)
+  lint: PASS just lint-check devkit, just check devkit (0 errors), devkit rules check --ci --base 8fc64ef
+diff_scope:
+  base: 8fc64ef7159aa4c883cc71a3f868ae9a336bb400
+  head: 6ed4b2bb43ecfe6e8202988ae13f127fea8e1533
