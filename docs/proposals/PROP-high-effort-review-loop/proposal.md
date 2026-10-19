@@ -2,7 +2,7 @@
 id: PROP-high-effort-review-loop
 title: Bounded high-effort review procedure
 summary: 'Redefines the high activity-effort procedure: whole-batch review rounds that end when a round finds nothing or every fix is minor, hand-over for persistent, recurring or contested P1s, P1-P3 severity, mandatory scout in high Planning, and session reclassification advice.'
-status: reviewing                     # draft | reviewing | accepted | rejected
+status: accepted                      # draft | reviewing | accepted | rejected
 created_at: 2026-10-19
 target_area: capabilities/delivery/
 priority: high                        # critical | high | medium | low
