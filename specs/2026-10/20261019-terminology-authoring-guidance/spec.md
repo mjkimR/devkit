@@ -2,7 +2,7 @@
 id: SPEC-terminology-authoring-guidance
 title: Terminology authoring guidance and a glossary that agents read
 summary: "Adds domain-neutral terminology authoring guidance to the spec bundle, reshapes the seeded glossary table around owners, exclusions, avoided synonyms and code identifiers, and makes spec-sync update the glossary, so docs/glossary.md is read while writing instead of only seeded."
-status: planned
+status: in-progress
 created: 2026-10-19
 related_capabilities:
   - CAP-HARN-agent-guidance
@@ -45,8 +45,9 @@ opt-in (`ADR-docs-skeleton-is-opt-in`).
   last sentence of rule 3 and one closing paragraph: each sits next to the rule it qualifies and the section stays
   inside the 30-line bound.
 - The 30-line bound counts the lines `git diff --numstat` reports as added to `living-spec-writing.md` against the
-  handoff base, the rewritten `description` line included; each added line is at most 120 characters (the ADR's
-  reading of the instruction's style). Existing longer lines are not rewritten.
+  handoff base, the rewritten `description` line included; each added body line is at most 120 characters (the ADR's
+  reading of the instruction's style). The `description` stays one frontmatter line, as it already exceeded 120
+  characters before the change, and existing longer body lines are not rewritten.
 - devkit's own `docs/glossary.md` leaves `Avoid` empty: no rejected synonym is established in devkit's documents, and
   an Avoid entry would also have to enter `docs/glossary.yaml`, which this change does not edit. `Code identifiers`
   is filled where a definition already names an identifier.
@@ -91,7 +92,7 @@ opt-in (`ADR-docs-skeleton-is-opt-in`).
 ### [AC-03] The instruction grows by at most 30 lines
 - **Given** `living-spec-writing.md` at the handoff base c0a37b07e18cde2dfdac37e9620d09d73b44dd6c
 - **When** `git diff --numstat c0a37b07e18cde2dfdac37e9620d09d73b44dd6c -- packages/devkit-spec/src/devkit_spec/bundle/instructions/living-spec-writing.md` runs
-- **Then** the added count is at most 30 and every added line is at most 120 characters
+- **Then** the added count is at most 30 and every added line below the frontmatter is at most 120 characters
 
 ### [AC-04] The seeded glossary uses the five columns
 - **Given** the seed `packages/devkit-spec/src/devkit_spec/bundle/seed/docs/glossary.md`

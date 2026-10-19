@@ -767,7 +767,7 @@
     },
     ".agents/skills/spec-sync/SKILL.md": {
       "mode": 420,
-      "sha256": "e0fbad90394ab09160b776a9d16f0e4297fccfaec320b6cf3e8b724ca330a269"
+      "sha256": "db46f75145d4a2b94acd3e70f27e388700d5d4f52ab00345dda3acdf2a926518"
     },
     ".agents/skills/spec-tasks/SKILL.md": {
       "mode": 420,
@@ -951,7 +951,7 @@
     },
     ".claude/skills/spec-sync/SKILL.md": {
       "mode": 420,
-      "sha256": "e0fbad90394ab09160b776a9d16f0e4297fccfaec320b6cf3e8b724ca330a269"
+      "sha256": "db46f75145d4a2b94acd3e70f27e388700d5d4f52ab00345dda3acdf2a926518"
     },
     ".claude/skills/spec-tasks/SKILL.md": {
       "mode": 420,
@@ -1159,7 +1159,7 @@
     },
     ".devkit/managed/spec/instructions/living-spec-writing.md": {
       "mode": 420,
-      "sha256": "50b93abee4f594f8a7d7fe7e7322252405f7391801e33f18dea78181d67c8cf5"
+      "sha256": "faadd05fbaff1cfa0198d4963ee70bd52cba9a3b1d917d6f17c10ec81bcfdf52"
     },
     ".devkit/managed/spec/playbooks/brownfield-adoption/SKILL.md": {
       "mode": 420,
@@ -1383,7 +1383,7 @@
     },
     ".devkit/managed/spec/skills/spec-sync/SKILL.md": {
       "mode": 420,
-      "sha256": "e0fbad90394ab09160b776a9d16f0e4297fccfaec320b6cf3e8b724ca330a269"
+      "sha256": "db46f75145d4a2b94acd3e70f27e388700d5d4f52ab00345dda3acdf2a926518"
     },
     ".devkit/managed/spec/skills/spec-tasks/SKILL.md": {
       "mode": 420,
