@@ -13,6 +13,10 @@ targets:
     resolution: modified
   - file: docs/development/reference/README.md
     resolution: modified
+  - file: docs/development/ci-cd.md
+    resolution: modified
+  - file: docs/development/setup.md
+    resolution: modified
   - file: docs/decisions/2026-10/20261019-viewer-distribution-and-frontend-build.md
     resolution: modified
   - file: docs/decisions/2026-10/20261019-read-only-local-server-over-git-refs.md
@@ -29,8 +33,10 @@ the default branch plus local `plan-`/`dev-` branches whatever branch the page s
 
 `ARCH-05-1-containers` adds the container and its edges (harness dependency on `devkit-agt`, the local viewer for
 development environments, the vendored library for autohub). `ARCH-07-deployment` adds the release wheel and the Git
-install line and states that the library is vendored, not released. The module reference (`viewer.md`, indexed in the
-reference README) mirrors the command, codes, API and frontend recipes.
+install line, names the viewer command among the release notes and states that the library is vendored, not
+released. The module reference (`viewer.md`, indexed in the reference README) mirrors the command, codes, API and
+frontend recipes; `ci-cd.md` describes the viewer CI job and smoke step, and `setup.md` the Node prerequisite for
+frontend changes only and the `just viewer` commands.
 
 The two ADRs were promoted from the proposal's PADRs by the handoff and are not edited afterwards. One sentence of
 `ADR-read-only-local-server-over-git-refs` §4 names `git rev-parse --verify --end-of-options` as the ref mechanism;

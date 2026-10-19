@@ -42,8 +42,9 @@ uv add --dev "devkit-viewer @ git+https://github.com/mjkimR/devkit.git#subdirect
 
 `uv.lock` pins the resolved commits. Devkit-agt and devkit-advisory share a version; spec, starter, catalog and
 viewer keep independent versions. The viewer's Svelte library is not a release asset: a host such as autohub
-vendors its `npm pack` tarball from a pinned commit (`CAP-VIEW-repository-viewer`). Release-wheel installations name every required local package wheel explicitly; release
-notes include both base and SDD installation commands.
+vendors its `npm pack` tarball from a pinned commit (`CAP-VIEW-repository-viewer`). Release-wheel installations
+name every required local package wheel explicitly; release notes include the base, SDD and viewer installation
+commands.
 
 ---
 

@@ -1,0 +1,35 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T00:28:55.968364Z'
+status: completed
+summary: 'reconcile-reviewer subagent (high): CAP-VIEW, ARCH-05-1, ARCH-07, reference viewer.md and README row, both ADRs checked against the code; the review-02 waiver is named in reconcile.md; five reflection gaps.'
+findings:
+- issue: docs/development/ci-cd.md omits the viewer CI job and the viewer smoke step; reconcile.md does not name it
+  evidence: docs/development/ci-cd.md:9-21
+  failure_condition: A reader does not learn that CI needs Node, rebuilds the committed page and fails on stale viewer-assets
+  suggested_action: Describe the viewer job and smoke step; add the file to the targets
+  resolution: open
+- issue: docs/development/setup.md lists no Node prerequisite or just viewer recipes for frontend changes
+  evidence: docs/development/setup.md:9,23-33
+  failure_condition: A frontend contributor following setup.md leaves the committed viewer-assets stale
+  suggested_action: Add Node and npm for frontend changes only and the just viewer commands; add the file to the targets
+  resolution: open
+- issue: ARCH-07-deployment says release notes include base and SDD installation commands only
+  evidence: docs/architecture/ARCH-07-deployment.md:45-46
+  failure_condition: The deployment view understates the release notes, which now include the viewer command
+  suggested_action: Name the viewer installation command too
+  resolution: open
+- issue: CAP-VIEW-repository-viewer §5 reads as if milestones also come from activity branches
+  evidence: docs/capabilities/viewer/CAP-VIEW-repository-viewer.md:99-101
+  failure_condition: A milestone only on a plan- or dev- branch is never shown, contrary to the sentence
+  suggested_action: Milestones from the default branch; members from it and from local plan-/dev- branches
+  resolution: open
+- issue: RepositoryDataSource.refs JSDoc says the roadmap reads the selected branch without refs
+  evidence: packages/devkit-viewer/frontend/src/lib/repository.ts:32
+  failure_condition: A host without refs expects the roadmap to follow the selected branch, but it reads info().default_branch
+  suggested_action: Say the default branch
+  resolution: open
+checks:
+  reconcile: FAIL five findings

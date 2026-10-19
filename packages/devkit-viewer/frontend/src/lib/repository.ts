@@ -29,7 +29,7 @@ export interface RepositoryDataSource {
 	info(signal: AbortSignal): Promise<any>;
 	tree(path: string, ref: string, signal: AbortSignal): Promise<any>;
 	blob(path: string, ref: string, signal: AbortSignal): Promise<any>;
-	/** Optional: without it the roadmap reads the selected branch only. */
+	/** Optional: without it the roadmap reads the default branch only. */
 	refs?(signal: AbortSignal): Promise<RepositoryRefs>;
 }
 

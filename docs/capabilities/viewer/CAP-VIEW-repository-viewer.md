@@ -96,9 +96,9 @@ shown. Rendered Markdown and SVG pass through DOMPurify.
   ID.
 - **Readiness**: a milestone is ready when every milestone in its `depends_on` is `done` or `dropped`. A `depends_on`
   naming no milestone is shown as unknown and never counts as satisfied.
-- **Source**: milestones and their members come from the default branch, whatever branch the viewer shows, and,
-  when the data source lists refs, from each local `plan-` and `dev-` branch. Without `refs` (a data source that does
-  not provide it, or a failing one), only the default branch is read, and the page says so.
+- **Source**: milestones come from the default branch, whatever branch the viewer shows. Members come from the
+  default branch and, when the data source lists refs, from each local `plan-` and `dev-` branch. Without `refs` (a
+  data source that does not provide it, or a failing one), only the default branch is read, and the page says so.
 - **Members**: proposals and specs whose `milestone` names the milestone. A rejected proposal is not a member; a
   completed spec is settled. One member per slug: a spec replaces the proposal it was handed off from, and an activity
   branch replaces the default branch's copy. A member found on an activity branch shows that branch. A document opens

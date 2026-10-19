@@ -7,6 +7,8 @@ Prerequisites and initial setup for contributing to devkit.
 - **OS**: macOS or Linux (POSIX).
 - **Python**: 3.12+
 - **Tooling**: `uv` (>= 0.4.0), `just` (>= 1.35.0), and `git`.
+- **Frontend changes only**: Node (>= 22.12) and npm, for the `devkit-viewer` page and library under
+  `packages/devkit-viewer/frontend/`. Installing and testing the Python packages never needs Node.
 
 ## 2. Workspace Initialization
 
@@ -30,4 +32,15 @@ just test                  # Run pytest across all workspace packages
 just test-cov              # Run pytest with coverage report
 just rules-check           # Run devkit governance rules check on the working tree
 just smoke                 # Build packages and verify fresh consumer installation
+```
+
+After changing `packages/devkit-viewer/frontend/` (see [viewer](reference/viewer.md)):
+
+```bash
+just viewer install        # npm ci
+just viewer lint           # prettier --check
+just viewer check          # svelte-check, warnings fail
+just viewer test           # vitest
+just viewer build          # rebuild the committed page; commit it with the sources
+just viewer pack           # the library tarball a host vendors, checked for its exports
 ```
