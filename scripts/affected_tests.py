@@ -69,9 +69,12 @@ SOURCE_TREE_TESTS = tuple(
 )
 
 # The devkit-viewer frontend: pytest never exercises it, so a change there selects no tests and names the frontend
-# checks (Node and npm) instead, rebuilding the committed page last.
+# checks (Node and npm) instead, as the CI viewer job runs them, rebuilding the committed page last.
 FRONTEND_PREFIXES = ("packages/devkit-viewer/frontend/", "scripts/viewer.sh")
-FRONTEND_CHECK = "just viewer install && just viewer lint && just viewer check && just viewer test && just viewer build"
+FRONTEND_CHECK = (
+    "just viewer install && just viewer lint && just viewer check && just viewer test && just viewer pack"
+    " && just viewer build"
+)
 
 # Paths no test reads: planning records, agent projections, guides, CI and release scripts.
 UNTESTED_PREFIXES = (

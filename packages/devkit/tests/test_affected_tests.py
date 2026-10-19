@@ -226,7 +226,7 @@ def test_an_empty_selection_runs_nothing(
 FRONTEND = "packages/devkit-viewer/frontend/src/lib/App.svelte"
 FRONTEND_LINE = (
     "[FRONTEND_CHECK: just viewer install && just viewer lint && just viewer check && just viewer test"
-    " && just viewer build]"
+    " && just viewer pack && just viewer build]"
 )
 
 

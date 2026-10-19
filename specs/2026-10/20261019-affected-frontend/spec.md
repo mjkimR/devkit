@@ -27,7 +27,8 @@ should say exactly which frontend checks to run instead of running unrelated Pyt
 ## 3. Non-Goals
 
 1. **Scope Excluded**: Running the frontend checks from `just test-affected`.
-   - **Rationale**: They need Node and npm; Python test runs must keep working without them (`docs/development/setup.md`).
+   - **Rationale**: They need Node and npm; Python test runs must keep working without them
+     (`docs/development/setup.md`).
    - **When to Reconsider**: The frontend checks become part of `just test` or Node becomes a workspace requirement.
 2. **Scope Excluded**: Selecting individual frontend test files.
 3. **Scope Excluded**: Changing `just viewer`, `just test` or CI.
@@ -36,7 +37,7 @@ should say exactly which frontend checks to run instead of running unrelated Pyt
 
 The frontend paths are those under `packages/devkit-viewer/frontend/` and `scripts/viewer.sh`. The frontend line is
 exactly `[FRONTEND_CHECK: just viewer install && just viewer lint && just viewer check && just viewer test && just
-viewer build]`.
+viewer pack && just viewer build]`, the checks of the CI viewer job.
 
 ### [AC-01] A frontend-only change runs no pytest
 - **Given** a branch whose only changes are frontend paths
@@ -78,6 +79,8 @@ viewer build]`.
 
 ## 5. Assumptions
 
+- The frontend line includes `just viewer pack`, which CI runs to check the library tarball and its exports, so a
+  packaging break is found locally (review finding, inside the agreed goal of naming the checks a change needs).
 - The frontend line always lists `just viewer build`: a frontend source change must rebuild the committed page
   (`viewer-assets` in `.devkit/generated.toml`), and rebuilding unchanged sources leaves it unchanged. `just viewer
   install` comes first because a new worktree has no `node_modules`.

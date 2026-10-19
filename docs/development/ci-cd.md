@@ -61,8 +61,8 @@ reviewed head before integration:
   `[TEST_SELECTION: mode=<full|partial|none> base=<ref> changed=<n> paths=<n> reason=<text>]` (`reason=frontend`
   for a frontend-only change). When a frontend path changed, the next line is
   `[FRONTEND_CHECK: just viewer install && just viewer lint && just viewer check && just viewer test && just viewer
-  build]`: the agent runs that command (Node and npm) and commits the rebuilt page with the sources. `--list` adds one
-  `[TEST_PATH: <path>]` per path and runs nothing. Otherwise `full` and `partial` run `just test all [paths...]`
+  pack && just viewer build]`, the checks of the CI viewer job: the agent runs that command (Node and npm) and
+  commits the rebuilt page with the sources. `--list` adds one `[TEST_PATH: <path>]` per path and runs nothing. Otherwise `full` and `partial` run `just test all [paths...]`
   with its preflight, options and exit code, and `none` exits `0`. A base without a merge base is the input error
   `TEST_BASE_UNKNOWN` (exit `2`), whose `[FIX]` lists the existing branches; a failing `git diff` or `git ls-files`
   is `TEST_CHANGES_UNREADABLE` (exit `2`), for the user to resolve in the repository before rerunning.

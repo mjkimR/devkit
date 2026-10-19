@@ -24,7 +24,7 @@ advisory code changes (`CAP-ADV-agent-advisory-protocol`).
 
 ```python
 FRONTEND_PREFIXES = ("packages/devkit-viewer/frontend/", "scripts/viewer.sh")
-FRONTEND_CHECK = "just viewer install && just viewer lint && just viewer check && just viewer test && just viewer build"
+FRONTEND_CHECK = "just viewer install && just viewer lint && just viewer check && just viewer test && just viewer pack && just viewer build"
 
 @dataclass(frozen=True)
 class Selection:
