@@ -102,9 +102,9 @@ The deferred extensions, kept here as asked at the start of Planning; 3.1 moved 
 - **Q2 (Auto dispatch)**: which readiness evidence must hold before an `authority="policy-auto"` integration runs
   without a prompt, and how is that authority recorded?
 - **Q3 (Remote and pull request)**: how is remote push or pull request merge authority separated from local-only
-  integration, and how is a squash or rebase merge verified (recorded pull request state, tree or patch equivalence)
-  before the worktree and branch are removed? A squash with branch deletion leaves the envelope SHAs unreachable
-  (see the E1 leaning), so a squash path either keeps the source under another ref or is not offered for units.
+  integration, and how is a no-ff PR merge verified against recorded PR state and source ancestry in the fetched
+  target before the worktree and branch are removed? PR integration preserves the source SHAs, as local no-ff
+  integration does; squash and rebase are excluded.
 - **Q4 (Host adapters)**: which confirmation surfaces do Claude Code, Antigravity and other hosts offer that keep the
   binding to `request.id` and the approved scope and never let the agent approve itself?
 
@@ -122,10 +122,10 @@ except where named:
 
 1. **Base advances** (this proposal): every integration is affected today; Q2 depends on it (an unattended run
    would otherwise be refused on the first base advance).
-2. **Pull request and squash or rebase cleanup** (Q3): the draft `PROP-integration-pull-request-cleanup`. It needs its own proof of tree or patch
-   equivalence for squash and rebase merges (local merge commits keep ancestry, so 3.2 does not provide it), remote
-   authority in the form, and must weigh `ADR-branch-guards-and-close-discard` (which supersedes
-   `ADR-worktree-and-pull-request-levels`).
+2. **Pull request no-ff merge and cleanup** (Q3): the draft `PROP-integration-pull-request-cleanup`. It uses merge
+   commits to preserve source SHAs, verifies PR merge state and source ancestry in the fetched target before cleanup,
+   needs remote authority in the form, and must weigh `ADR-branch-guards-and-close-discard` (which supersedes
+   `ADR-worktree-and-pull-request-levels`). Squash and rebase are excluded.
 3. **Auto dispatch** (Q2): an `authority="policy-auto"` integration contradicts accepted texts verbatim
    (`ADR-integration-approval-asserted`: "no policy value grants commit, merge, publication or deletion authority";
    also `CAP-DLV-project-policy`, `CAP-DLV-delivery-workflows`, `CAP-INT-mcp-services`). No draft is created: it

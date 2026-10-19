@@ -41,4 +41,5 @@ SPEC-hook-driven-integration-cleanup AC-06 & Non-Goal 3:
 "pull_request = 'required' fails closed with WORKTREE_PR_POLICY."
 ```
 
-- **Disposition**: `PROP-integration-pull-request-cleanup`: split out of `PROP-integration-follow-ups` in its Planning.
+- **Disposition**: `PROP-integration-pull-request-cleanup`: remote/PR authority and cleanup after a no-ff merge,
+  preserving source SHAs. Squash/rebase support is excluded from the promoted scope.

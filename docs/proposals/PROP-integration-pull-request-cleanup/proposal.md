@@ -1,7 +1,7 @@
 ---
 id: PROP-integration-pull-request-cleanup
-title: Integration through pull requests with squash or rebase cleanup
-summary: Adds remote push and pull request merge authority separate from local integration, and verifies squash or rebase merges before the worktree and branch are removed.
+title: Integration through pull requests with no-ff merge and cleanup
+summary: "Defines one approval for push, no-ff PR merge and cleanup, fixing the source SHA while allowing checked target advances. Reports partial completion and actionable failures for agent-led recovery."
 status: draft                         # draft | reviewing | accepted | rejected
 created_at: 2026-10-19
 target_area: integration/
@@ -22,7 +22,7 @@ task_kind: feature                    # feature | bugfix: the spec follows sdd-s
 workflow: sdd-proposal
 ---
 
-# [PROP-integration-pull-request-cleanup] Integration through pull requests with squash or rebase cleanup
+# [PROP-integration-pull-request-cleanup] Integration through pull requests with no-ff merge and cleanup
 
 - **Split from**: `PROP-integration-follow-ups` (its question Q3), split during that proposal's Planning, which kept
   only the base advances. Created without `decomposed_from`: `devkit spec proposal new --decomposed-from` refuses a
@@ -35,33 +35,75 @@ workflow: sdd-proposal
 
 `SPEC-hook-driven-integration-cleanup` shipped local, approval-bound integration and deferred remote work (its
 Non-Goal 3). The integration service forbids network operations, refuses `[worktree] pull_request = "required"`
-(`WORKTREE_PR_POLICY`) and executes only local merges. When a branch is merged through a pull request with squash or
-rebase, `devkit worktree finish <branch>` reports `WORKTREE_UNMERGED`, because its merge test is commit ancestry, and
-the worktree and branch must be removed by hand.
+(`WORKTREE_PR_POLICY`) and executes only local merges.
 
-`PROP-integration-follow-ups` lands local integrations as merge commits (`[worktree] merge = "no-ff"` by default), so
-local ancestry checks keep working there; it does not provide any proof for squash or rebase merges.
+`PROP-integration-follow-ups` defines local integration with merge commits (`[worktree] merge = "no-ff"` by default).
+This proposal uses the same no-ff history shape for pull request integration: the target receives a merge commit
+and every source SHA cited by the unit's records stays reachable as an ancestor of the target.
 
 Hypothesis: remote push and pull request merge can get their own explicit authority, separate from local-only
-integration, and a squash or rebase merge can be verified (recorded pull request state, tree or patch equivalence)
-before any deletion, without ever removing unmerged work.
+integration, and verified PR merge state plus source ancestry in the fetched target can authorize cleanup without
+removing unmerged work.
 
-## 2. Technical Spike Questions
+## 2. Planning Scope
 
-- **Q1 (Authority)**: how is remote push or pull request merge authority separated from local-only integration in the
-  confirmation form and the request scope, and how are remote targets disclosed?
-- **Q2 (Verification)**: how is a squash or rebase merge verified before the worktree and branch are removed:
-  recorded pull request state, tree equivalence, patch equivalence, or a combination?
-- **Q3 (Cited SHAs)**: a squash with branch deletion leaves the commit SHAs a unit's envelopes cite unreachable. Does a
-  squash path keep the source under another ref, or is it not offered for spec units?
-- **Q4 (Policy)**: how `pull_request = "required"` and `ADR-branch-guards-and-close-discard` constrain the design, and
-  whether an ADR is needed.
+The direction is settled: one approval covers the complete PR integration, the merge method is no-ff, target
+advances follow the local integration principles of `PROP-integration-follow-ups`, and the agent handles failures
+from actionable operation results. Planning specifies the implementation within these decisions:
+
+- Bind the remote repository, PR identity, source/target branches and cleanup targets into the approval request.
+- Define the remote checks that enforce the approved source SHA, target ancestry, unchanged effective policy and
+  readiness on the merge result, including platform limitations and races.
+- Apply `pull_request = "required"` and `ADR-branch-guards-and-close-discard`; refuse this route when project or
+  platform policy forbids no-ff merge commits, including an applicable `ff-only` constraint.
+- Identify any ADR change needed to permit remote operations under the existing approval contract.
 
 ## 3. Proposed Design & Impact
 
-To be designed in this proposal's Planning. Starting points: the merge-commit and effective-policy decisions of
-`PROP-integration-follow-ups` (its PADRs, promoted at its handoff) and the remote operations
-`ADR-integration-approval-asserted` excludes today.
+### 3.1 One approval for the complete operation
+
+One approval MUST cover the disclosed remote and local scope: push the approved source branch, create or update its
+PR, merge it with a no-ff merge commit, fetch and fast-forward the local target, then remove the linked worktree,
+local source branch, remote source branch and package-owned scope records as permitted by the effective cleanup
+policy. Remote branch deletion is part of that same approval when selected, not a separate approval step. The form
+MUST disclose the remote repository, source/target branches, merge method and selected cleanup targets.
+
+The platform's PR merge updates the remote target; no separate push of the local target is needed. Required CI,
+review and branch protection remain conditions of the merge. A failure stops the dependent steps and is reported
+to the agent.
+
+### 3.2 No-ff and SHA rules shared with local integration
+
+PR integration MUST use a no-ff merge commit, preserving source commits and every SHA cited by the unit's records.
+Squash and rebase merge methods MUST NOT be offered by this route. A policy that forbids merge commits prevents this
+route; it does not permit a fallback to squash or rebase.
+
+The approved source SHA stays fixed. A changed source requires a new approval. The target may advance from the
+confirmation target during the approving call when it remains a descendant, the merge is clean, effective policy
+is unchanged and readiness passes again on the merge result. A target reset or rewrite is refused. Planning MUST
+apply these conditions to the remote merge rather than freezing the target at its confirmation SHA or silently
+accepting a platform merge that cannot enforce them. The result discloses what was checked on the merge result.
+
+After the merge, cleanup verifies recorded PR merge state and that the fetched target contains the approved source
+and the recorded merge result; exact equality with either SHA is not required. Later target commits do not by
+themselves prevent cleanup. Updating the local target requires a fast-forward; divergent or dirty local state is
+reported without overwriting it. Source ancestry preserves cited SHAs without an archival ref.
+
+### 3.3 Failures are handed back to the agent
+
+The operation reports completed steps, the failing or unconfirmed step, observed Git/PR state and a stable failure
+code with a deterministic next action. Failure diagnostics follow `CAP-ADV-agent-advisory-protocol`; default output
+contains what changes the agent's next step, with detailed diagnostics available through the normal inspection or
+verbose path. Unknown remote outcomes MUST NOT be reported as successful or followed by destructive cleanup.
+
+The agent inspects the result and chooses the next command. This proposal does not add an automatic retry loop, a
+background recovery service or a separate recovery workflow. Inspection and re-entry reuse existing operation
+mechanisms where practical. Re-entry after a confirmed merge continues only the remaining approved cleanup after
+revalidating its scope and merge evidence. An unmerged request resumed outside its approving call needs a new
+approval if the target has advanced, matching `PROP-integration-follow-ups`' approval lifetime.
+
+**Non-Goals**: squash/rebase integration or cleanup, tree/patch-equivalence proofs for rewritten commits, archival
+refs for otherwise unreachable source SHAs, and automated failure recovery.
 
 ## 4. Lifecycle & Retirement Criteria
 
