@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-direct-planning-procedure
 feature: SPEC-direct-planning-procedure
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
     resolution: modified
