@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: promoted
+status: open
 created_at: 2026-10-19
 ---
 
@@ -57,4 +57,5 @@ payload.md (development-worker): write scope = "the unit's directory, the tasks'
   paths the reconcile targets"
 ```
 
-- **Disposition**: PROP-worker-range-validation: scope derivation from records, including links a move breaks (Q3)
+- **Disposition**: Deferred as open feedback. `PROP-worker-range-validation` uses the Host-supplied scope;
+  automatic scope derivation and link-repair ownership are outside its scope.
