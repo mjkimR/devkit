@@ -1,0 +1,43 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T00:40:15.230083Z'
+status: completed
+summary: 'Independent reconcile-reviewer: targets and no-impact reasoning hold, guidance matches AC-15, code matches spec and plan; revise four ci-cd.md omissions or overstatements of the selection rules (docs only).'
+findings:
+- issue: ci-cd.md says every source change selects the devkit source-tree tests; the code adds them only for packages/devkit/src/ changes
+  evidence: docs/development/ci-cd.md:42-44; scripts/affected_tests.py:270-272
+  failure_condition: A change only under packages/devkit-spec/src/ is predicted to select test_layering.py and the other source-tree tests; --list does not list them
+  suggested_action: Scope the sentence to devkit-agt source changes
+  resolution: open
+  severity: low
+- issue: The test-file rule (a changed test_*.py selects itself, another file in a tests directory its directory) is missing, so the closing full-suite rule predicts mode=full for test-only changes
+  evidence: docs/development/ci-cd.md:37-45; scripts/affected_tests.py:277-280
+  failure_condition: A branch editing only packages/devkit/tests/gate/test_hooks.py is predicted mode=full; the command reports mode=partial with that path
+  suggested_action: Add plan rule 4 to the test-affected bullet
+  resolution: open
+  severity: low
+- issue: The untested-path list omits .github/, the smoke and release scripts, .gitignore, .python-version and package-root Markdown
+  evidence: docs/development/ci-cd.md:44-45; scripts/affected_tests.py:71-86
+  failure_condition: A branch changing only .github/workflows/ci.yml or packages/devkit-spec/README.md is predicted mode=full; the command reports mode=none
+  suggested_action: List them as plan rule 5 does
+  resolution: open
+  severity: low
+- issue: TEST_CHANGES_UNREADABLE is not documented under docs/
+  evidence: scripts/affected_tests.py:321-328; docs/development/ci-cd.md
+  failure_condition: An agent receiving TEST_CHANGES_UNREADABLE finds no documentation for the code
+  suggested_action: Document it in the Result bullet with the user as actor
+  resolution: open
+  severity: low
+assumptions:
+- Claude Code reconcile-reviewer subagent, native isolation, no shell; reviewer changed nothing (git status clean).
+unverified_areas:
+- Projected .claude/.agents skill copies were not byte-compared by the reviewer; devkit sync wrote them and rules-check passes.
+checks:
+  targets: PASS docs/development/ci-cd.md, setup.md, workflow.md named; no CAP, US, ARCH or ADR describes the tooling
+  contract: FAIL ci-cd.md selection rules incomplete (4 low findings)
+diff_scope:
+  base: b94232699bedf73244f22462563580f03aa21e26
+  head: b8e66a729e46a18714d89635b77cf9438b77861b
+activity_effort: medium

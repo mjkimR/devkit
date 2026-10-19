@@ -36,18 +36,26 @@ reviewed head before integration:
   its arguments to pytest unchanged.
 - **`just test-affected [--base REF] [--list] [-- PYTEST-ARGS]`** (`scripts/affected_tests.py`): collects the paths
   changed since the merge base of `HEAD` and `REF` (default `main`; committed, staged, unstaged, untracked, both
-  sides of a rename) and selects tests from them. Shared foundations (`devkit.core`, `devkit-advisory`, `cli.py`,
-  `__main__.py`, any `pyproject.toml` or `conftest.py`, `uv.lock`, `tests/testsupport/`) and any path no rule maps
-  select the full suite. Repository files that tests read (`docs/`, `examples/`, `models/`, the recipe scripts) select
-  those tests from a fixed table. A source change selects the test groups (a `devkit-agt` area, a top-level devkit
-  test file, another workspace package) that import its area or an area importing it, transitively by static
-  imports, plus the devkit tests over the whole source tree. Planning records, agent projections, guides and
-  root-level Markdown select nothing.
+  sides of a rename) and selects tests from them:
+  - Shared foundations (`devkit.core`, `devkit-advisory`, `cli.py`, `__main__.py`, any `pyproject.toml` or
+    `conftest.py`, `uv.lock`, `tests/testsupport/`) select the full suite.
+  - Repository files that tests read (`docs/`, `examples/`, `models/`, the recipe scripts and `justfile`) select
+    those tests from a fixed table.
+  - A package source change selects the test groups (a `devkit-agt` area, a top-level devkit test file, another
+    workspace package) that import its area or an area importing it, transitively by static imports; a `devkit-agt`
+    source change also selects the devkit tests over its whole source tree (layering, documented codes, CLI wiring,
+    stdout kinds).
+  - A changed `test_*.py` in a `tests` directory selects itself; any other file there selects its directory.
+  - Planning records and agent projections (`specs/`, `.claude/`, `.agents/`, `.codex/`, `.devkit/`), `guides/`,
+    `.github/`, the smoke and release scripts, `.gitignore`, `.python-version` and Markdown at the repository or a
+    package root select nothing.
+  - Any other path selects the full suite.
 - **Result**: stdout's first line is
   `[TEST_SELECTION: mode=<full|partial|none> base=<ref> changed=<n> paths=<n> reason=<text>]`; `--list` adds one
   `[TEST_PATH: <path>]` per path and runs nothing. Otherwise `full` and `partial` run `just test all [paths...]`
-  with its preflight, options and exit code, and `none` exits `0`. A base without a merge base is the input error `TEST_BASE_UNKNOWN`
-  (exit `2`), whose `[FIX]` lists the existing branches.
+  with its preflight, options and exit code, and `none` exits `0`. A base without a merge base is the input error
+  `TEST_BASE_UNKNOWN` (exit `2`), whose `[FIX]` lists the existing branches; a failing `git diff` or `git ls-files`
+  is `TEST_CHANGES_UNREADABLE` (exit `2`), for the user to resolve in the repository before rerunning.
 - **Limits**: a group's dependencies include those of the shared `testsupport` helpers it imports at module level,
   not of helpers imported inside a test function; static imports also do not show tests that run the CLI in a
   subprocess or load entry points. The full suite before integration covers them.
