@@ -47,8 +47,10 @@ below; a conflict is `WORKTREE_MERGE_CONFLICT` with nothing changed). A source a
 cleanup-only request). The message uses
 validated branch names only (`chore(merge): integrate <branch> into <target>`); the build lives in `devkit.worktree`,
 honours identity and signing configuration, runs with a 30-second bound and no terminal prompt and refuses with
-`WORKTREE_COMMIT_FAILED` and nothing changed on failure. `prepare` still requires the source to contain the target;
-only later advances are merged in. `ff-only` in either policy wins. Under `ff-only` the
+`WORKTREE_COMMIT_FAILED` and nothing changed on failure. `prepare` still requires the source to contain the target, except for a source the target already contains,
+which yields a cleanup-only request (guards and readiness on `merge-base(target, source)`, the source as its result,
+the target's policy as expected); only later advances are merged in. Conflict and not-fast-forward fixes are
+package-neutral and SHA-preserving: merge the target into the branch, re-verify, prepare again. `ff-only` in either policy wins. Under `ff-only` the
 result commit is the source tip and an advanced target is refused as today. The CLI `finish --merge`, which runs no
 readiness provider, builds a merge commit only when the target did not advance and keeps `WORKTREE_MERGE_NOT_FF`
 otherwise; it takes the integration lock in its command entry. `ff`, squash and rebase are not offered locally.

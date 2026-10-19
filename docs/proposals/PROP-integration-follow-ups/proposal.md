@@ -147,15 +147,19 @@ current target (the **build target**), builds the **result commit** and fast-for
   step is a no-op (a rerun of `finish --merge` after a completed merge only continues the cleanup), for the CLI and
   the service. A fresh `prepare` of such a branch (after a no-ff merge the target is the merge commit, which the
   source does not contain; after a server restart this is the only native route) prepares a cleanup-only request:
-  the form says the branch is already merged and lists only the cleanup, the merge step is `skipped`, and
-  `WORKTREE_MERGE_NOT_FF` with its "integrate the base" fix stays for a target the source neither contains nor is
-  contained in.
+  the form says the branch is already merged and lists only the cleanup, the merge step is `skipped`, and `WORKTREE_MERGE_NOT_FF` stays for a target the source neither contains nor is
+  contained in. The cleanup-only request runs guards and readiness with `merge-base(target, source)`, which is the
+  source (an empty guard diff, so later envelopes in other units are not read as the branch's), its result commit is
+  the source (so "contains the result" means "contains the source"), and its expected policy is the target's at
+  prepare.
 - **Where the merge runs (E2)**: never in a checkout. When the target is an ancestor of the source (no advance), the
   result is `git commit-tree <source>^{tree} -p <target> -p <source>`: its tree is exactly the gated source tree and
   no new Git version is needed. When the target advanced, the service builds the tree with
   `git merge-tree --write-tree <target> <source>` (Git 2.38 or later, probed only on this path,
-  `WORKTREE_GIT_UNSUPPORTED` below it; exit 1 is `WORKTREE_MERGE_CONFLICT`, whose `[ACTION]` is to run
-  `spec-integrate` Step 1 and integrate again, with nothing changed; any other status is a failure) and commits it the same way. The message is devkit-composed from validated names only, in the form the repository's commit-msg gate
+  `WORKTREE_GIT_UNSUPPORTED` below it; exit 1 is `WORKTREE_MERGE_CONFLICT` with nothing changed, whose package-neutral `[ACTION]` is to merge the target
+  into the branch in its worktree with a message the commit-msg gate accepts, re-verify and prepare again (the
+  `spec-integrate` skill maps it to its Step 1); `WORKTREE_MERGE_NOT_FF`'s fix gets the same SHA-preserving text
+  instead of "rebase or merge it in the worktree"; any other status is a failure) and commits it the same way. The message is devkit-composed from validated names only, in the form the repository's commit-msg gate
   already accepts for merges: `chore(merge): integrate <branch> into <target>` (no task ID or other caller text;
   tested against the configured gate). The base checkout only fast-forwards
   to the result (`git merge --ff-only <result>`), so it never stops mid-merge; the source branch and its worktree are
@@ -173,8 +177,9 @@ current target (the **build target**), builds the **result commit** and fast-for
   `WORKTREE_PUSH_REJECTED` fix stops recommending `git pull --rebase` (it drops the merge commit and rewrites the
   unit's SHAs): Development verifies with a fixture that `git pull --rebase=merges` keeps the unit's commit SHAs and
   recreates only the merge commit on the fetched upstream, and uses it; if it does not, the fix is
-  `git pull --no-rebase --no-ff -m "chore(merge): integrate <remote>/<ref> into <target>"` (the flag overrides
-  `pull.ff`, the message passes the commit-msg gate) and CAP-WT states its cost (the upstream's commits become a
+  `git fetch <remote> <ref>` then
+  `git merge --no-ff -m "chore(merge): integrate <remote>/<ref> into <target>" FETCH_HEAD` (`git pull` has no
+  message option; this message passes the commit-msg gate), covered by the same fixture, and CAP-WT states its cost (the upstream's commits become a
   second parent) and that a conflict leaves the base checkout mid-merge (`git merge --abort`).
 - **Target descent and compare-and-swap (E2, E6)**: every build target must descend from the confirmation target
   (a target that was reset or rewritten is stale, `INTEGRATION_REQUEST_STALE`); immediately before the fast-forward
@@ -184,7 +189,8 @@ current target (the **build target**), builds the **result commit** and fast-for
   the guards and the cleanup extensions receive at execution; the latest build target and result SHA are kept in the
   process-local result, outside the digest, and reported. Cleanup revisions bind to the source and to package-owned
   state, never to a target SHA.
-- **Prepare scope**: `prepare` keeps today's requirement that the source contains the target (an activity branch cut
+- **Prepare scope**: apart from the cleanup-only request above, `prepare` keeps today's requirement that the source
+  contains the target (an activity branch cut
   before later target commits integrates them first through `spec-integrate` Step 1 and re-verifies). Only advances
   after `prepare` are tolerated, so the gap that question T discloses is limited to commits landed during the
   confirmation and execution.
@@ -207,8 +213,9 @@ current target (the **build target**), builds the **result commit** and fast-for
   Untracked projections (gitignored `.agents/`, `.claude/`, `.codex/`) and inconsistencies already on a parent are
   not this integration's and are skipped. It parses the receipt blobs of the result and both parents
   (`git cat-file blob <commit>:.devkit/installation.json`) with `devkit.core`'s `parse_receipt`, not
-  `devkit.distribution`; a merged receipt that does not parse is `INTEGRATION_RECEIPT_CONFLICT` with nothing
-  changed. In this repository 33 of the 366 commits on `main` since 2026-10-12 changed the receipt, so
+  `devkit.distribution`; a merged receipt that does not parse is `INTEGRATION_RECEIPT_CONFLICT` with nothing changed. A commit without a
+  receipt has no records: the check is skipped when the result has none, and a parent without one contributes no
+  records. In this repository 33 of the 366 commits on `main` since 2026-10-12 changed the receipt, so
   two concurrent bundle-editing units are common.
 - **Readiness after the target advanced (E4)**: each build runs the provider with the execution context; `Readiness`
   binds source, build target and result. It must return no reasons, and its evidence must equal the approved evidence
@@ -250,7 +257,7 @@ work.
 
 - **Impact (base advances)**: `packages/devkit/src/devkit/integration/` (request and execution context, policy
   digest, builds, recovery, confirmation text, new codes `INTEGRATION_TARGET_MOVED`, `INTEGRATION_RECEIPT_CONFLICT`, the cleanup-only request), `packages/devkit/src/devkit/worktree/` (`config.py`
-  merge key, `planning.py`, `lifecycle.py` `finish`, the merge-commit build and `WORKTREE_MERGE_CONFLICT`, `WORKTREE_GIT_UNSUPPORTED` and `WORKTREE_COMMIT_FAILED`, lock, push fix, CLI help for `--merge`, module docstring),
+  merge key, `planning.py`, `lifecycle.py` `finish`, the merge-commit build, the `WORKTREE_MERGE_NOT_FF` fix text and `WORKTREE_MERGE_CONFLICT`, `WORKTREE_GIT_UNSUPPORTED` and `WORKTREE_COMMIT_FAILED`, lock, push fix, CLI help for `--merge`, module docstring),
   devkit-spec's readiness provider (`devkit_spec/integration.py`) and scoped cleanup (`devkit_spec/cleanup.py`), its
   `spec-integrate` skill and worktree reference, `CAP-INT-mcp-services` (sections 1, 2 and 5), `CAP-WT-task-worktrees`
   (section 3 rerun and fix text), `CAP-DLV-delivery-workflows` 4.8 (readiness binding), `CAP-DLV-project-policy` (the

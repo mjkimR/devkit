@@ -1,0 +1,38 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T06:05:54.637871Z'
+status: completed
+summary: 'round 4 (cap); round-3 findings: #2, #4, #5 resolved, #1 and #3 partial; remaining 1 P2 (cleanup-only request lacks guard base, result and expected policy) and 3 P3 (git pull has no -m, worktree fix texts name a devkit-spec skill and recommend rebase, absent receipt uncoded), each with a concrete suggested action.'
+findings:
+- issue: 'recurs: challenger-03.yaml #1; the cleanup-only request lacks its guard base (plan.target_sha now contains the source, so envelopes added on the target read as deleted), its result commit (checks say HEAD contains the result) and its expected policy (read from the source, compared with the current base); Prepare scope and PADR section 4 contradict the exception.'
+  evidence: packages/devkit/src/devkit/integration/service.py
+  failure_condition: No-ff merge, cleanup fails, restart; main gains a held envelope in another unit or a policy change; the cleanup-only prepare is refused by the guard or stale on every attempt.
+  suggested_action: Guards and readiness run with merge-base(target, source) = the source (empty guard diff); its result is the source; its expected policy is read from the target at prepare; add the exception to Prepare scope and PADR section 4; test it.
+  resolution: open
+  severity: P2
+- issue: 'recurs: challenger-03.yaml #3; git pull has no -m option, so the push fallback is refused as an unknown switch.'
+  evidence: docs/proposals/PROP-integration-follow-ups/proposal.md
+  failure_condition: The WORKTREE_PUSH_REJECTED fix names a command Git refuses; the agent improvises.
+  suggested_action: 'git fetch <remote> <ref> then git merge --no-ff -m ''chore(merge): integrate <remote>/<ref> into <target>'' FETCH_HEAD, covered by the fixture.'
+  resolution: open
+  severity: P3
+- issue: The WORKTREE_MERGE_CONFLICT action names a devkit-spec skill from devkit-agt, and the kept WORKTREE_MERGE_NOT_FF fix still says 'rebase or merge it in the worktree', which rewrites cited SHAs.
+  evidence: packages/devkit/src/devkit/worktree/errors.py
+  failure_condition: A consumer without devkit-spec gets a directive to an uninstalled skill; an agent rebases a unit branch and orphans cited commits.
+  suggested_action: 'Package-neutral, SHA-preserving fix texts: merge the target into the branch in its worktree with a gate-accepted message, re-verify, prepare again; list the NOT_FF fix change in 3.3.'
+  resolution: open
+  severity: P3
+- issue: The receipt check does not define a commit without a receipt; git cat-file then fails uncoded.
+  evidence: packages/devkit/src/devkit/integration/service.py
+  failure_condition: A source adopting devkit sync integrates over an advanced target without a receipt; the build fails uncoded.
+  suggested_action: A receipt absent on a commit has no records; skip the check when absent on the result; test it.
+  resolution: open
+  severity: P3
+assumptions:
+- files read at 406d1c5; no shell diff run
+unverified_areas:
+- git pull option set from documentation, not executed
+- whether later main commits touch a merged unit's directory and trip readiness for a cleanup-only request
+checks: {}
