@@ -214,7 +214,7 @@ current target (the **build target**), builds the **result commit** and fast-for
   and the source tip.
 - **Effective policy (E3)**: the request binds a digest of parsed values devkit owns: `[workflow.approvals]`
   `dev-integration`, `[worktree]` `pull_request`, `delete_branch` and `merge`, and `[integration] provider`, for the
-  base at confirmation (must equal at each build) and for the result commit (must equal what the confirmation
+  base at confirmation (must equal at each build, and at execution of a cleanup-only request) and for the result commit (must equal what the confirmation
   prospected; a cleanup-only request builds nothing, checks no result digest and expects the target's policy at
   `prepare`). Provider, guard and cleanup extension identities stay separate fields as today. Raw config and receipt
   bytes and asset hashes are no longer bound. Instead of refusing every managed path changed on both sides, each
@@ -239,8 +239,10 @@ current target (the **build target**), builds the **result commit** and fast-for
   executor never runs commands); only the CI rules run on it, and the form and the integration report say that tests
   and review ran on the source only. The SDD-agnostic form (devkit-agt) does not say what a provider checks: the
   readiness provider declares a short result-check disclosure at confirmation, which the form shows and the request
-  digest binds with the declared target-bound codes; devkit-spec declares "CI rules only on the merged result; tests
-  and review ran on the source only", and `spec-integrate`'s integration report states the same.
+  digest binds with the declared target-bound codes. The disclosure is required, one line of plain text of at most
+  200 characters; a missing or malformed disclosure fails closed at `prepare` like a malformed `Readiness`.
+  devkit-spec declares "CI rules only on the merged result; tests and review ran on the source only", and
+  `spec-integrate`'s integration report states the same.
 - **Confirmation text (E5)**: the form says "Approve local integration of <branch> into <target> with a merge
   commit?", shows the confirmation target SHA, and states that later commits on the target are merged in without
   another confirmation only if the merge is clean, the integration policy is unchanged and readiness provider
@@ -254,12 +256,17 @@ current target (the **build target**), builds the **result commit** and fast-for
   in-call retry). Decided (`answer-01.yaml` a-approval-lifetime): the approval tolerates target advances only within
   that call; `integration_resume` continues an approved request only onto the last build target (its CAP-INT section
   5 use, permission failures and cleanup after the merge), and a later target needs a new confirmation. A request
-  whose approving call ran no build has no build target to resume onto and needs a new confirmation. So that a
+  whose approving call ran no build resumes only onto the confirmation target (the base must still equal it, else a
+  new confirmation); a cleanup-only request, which never builds, resumes only its remaining cleanup steps. `LOCK_HELD`
+  from the approving call carries an `[ACTION]` naming `integration_resume` while the target still equals the
+  confirmation target, else a new `integration_integrate`. So that a
   concurrent devkit executor does not void an approval, the approving call waits for the Git common-directory
-  integration lock up to a bound (a module constant, 30 seconds, which Development checks against the hosts' MCP
-  tool-call timeouts, such as Codex `tool_timeout_sec`, and lowers if a host would cut the call), instead of today's
-  `timeout=0`; past the bound it is `LOCK_HELD` with nothing changed. `integration_resume` keeps `timeout=0`. Both
-  paths are tested.
+  integration lock up to a bound (a module constant, 30 seconds, which Development checks, together with the 30 s
+  commit-tree bound and readiness on the result, against the hosts' MCP tool-call timeouts after the user's reply,
+  such as Codex `tool_timeout_sec`, and lowers if a host would cut the call), instead of today's `timeout=0`; past the
+  bound it is `LOCK_HELD` with nothing changed. `integration_resume` keeps `timeout=0`. Tests cover the lock freed
+  within the bound (the build runs), the bound exceeded (`LOCK_HELD`, nothing changed) and `integration_resume`
+  refusing a held lock at once.
 - **Prepare builds nothing**: `integration_prepare` and `plan_finish` stay read-only; the prospective result tree is
   the source tree, and the prospective policy is read from the source commit as today, except the cleanup-only
   request, whose expected policy is the target's at `prepare` ("Already merged").
@@ -270,7 +277,7 @@ current target (the **build target**), builds the **result commit** and fast-for
 
 Every extension keeps the existing invariants: fail closed, exact scope binding (repository, task, source branch and
 SHA, confirmation target and its descendants, worktree and branch cleanup, cleanup extensions and targets, effective
-policy, target-bound evidence codes), no network operation without explicit authority, and no deletion of unmerged
+policy, target-bound evidence codes and the provider's result-check disclosure), no network operation without explicit authority, and no deletion of unmerged
 work.
 
 ### 3.3 Impact and coordination
@@ -279,8 +286,9 @@ work.
   digest, builds, recovery, confirmation text, new codes `INTEGRATION_TARGET_MOVED`, `INTEGRATION_RECEIPT_CONFLICT`, the cleanup-only request), `packages/devkit/src/devkit/worktree/` (`config.py`
   merge key, `planning.py`, `lifecycle.py` `finish`, the merge-commit build, the `WORKTREE_MERGE_NOT_FF` fix text and `WORKTREE_MERGE_CONFLICT`, `WORKTREE_GIT_UNSUPPORTED` and `WORKTREE_COMMIT_FAILED`, lock, push fix, CLI help for `--merge`, module docstring),
   devkit-spec's readiness provider (`devkit_spec/integration.py`) and scoped cleanup (`devkit_spec/cleanup.py`), its
-  `spec-integrate` skill, its integration report text (`spec/references/completion.md`) and worktree reference,
-  the confirmation lock wait, `CAP-INT-mcp-services` (sections 1, 2 and 5), `CAP-WT-task-worktrees`
+  `spec-integrate` skill, its integration report text and the confirmation binding sentence (`spec/references/completion.md`, which still
+  says the native confirmation is bound to the exact `(source_sha, target_sha)` pair) and worktree reference,
+  the confirmation lock wait, `CAP-INT-mcp-services` (sections 1, 2, 3 and 5), `CAP-WT-task-worktrees`
   (section 3 rerun and fix text), `CAP-DLV-delivery-workflows` 4.8 (readiness binding), `CAP-DLV-project-policy` (the
   new key), the project config template, `guides/` (Git 2.38 for advanced targets),
   `docs/development/reference/integration.md` and `worktree.md`, and the exit condition of

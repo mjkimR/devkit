@@ -41,16 +41,19 @@ context plus build target and result SHA) goes to the provider, guards and clean
 outside the digest. Every build target must descend from the confirmation target, and the base must still point at
 the build target immediately before the fast-forward (else `INTEGRATION_TARGET_MOVED`). The provider must return no
 reasons and evidence equal to the approved evidence except the codes it declared target-bound at confirmation (the
-declared set is digested). The provider also declares a short result-check disclosure, shown in the form and
-digested. devkit-spec declares `TARGET_SHA` and `RESULT_SHA`, evaluates the unit from the source tree, binds its `[tool.spec]` policy through a source-bound `SPEC_POLICY` item and runs its CI rules on the result
+declared set is digested). The provider also declares a required result-check disclosure (one line, at most 200
+characters; missing or malformed fails closed at `prepare`), shown in the form and digested. devkit-spec declares `TARGET_SHA` and `RESULT_SHA`, evaluates the unit from the source tree, binds its `[tool.spec]` policy through a source-bound `SPEC_POLICY` item and runs its CI rules on the result
 tree. `prepare` still requires the source to contain the target, except for a source the target already contains,
 which yields a cleanup-only request (`PADR-merge-commit-outside-checkout`), so only advances after it are tolerated.
 Tests are not re-run on the result: only the CI rules run on it, and the form and the integration report say that tests and review ran on the source
 only (user decision). One build per call (no in-call retry); the approval tolerates target advances only within the
 integrate call that asked for it (user decision): `integration_resume` continues only onto the last build target, and
-a later target needs a new confirmation; a call that ran no build leaves nothing to resume. The approving call waits
-for the integration lock up to a bound (30 seconds, checked against host MCP tool-call timeouts) instead of
-failing at once, then `LOCK_HELD` with nothing changed.
+a later target needs a new confirmation. A request whose approving call ran no build resumes only onto the
+confirmation target (the base must still equal it, else a new confirmation); a cleanup-only request resumes only its
+remaining cleanup steps; `LOCK_HELD` from the approving call names `integration_resume` while the target still equals
+the confirmation target, else a new `integration_integrate`. The approving call waits for the integration lock up to
+a bound (30 seconds, checked together with the commit-tree bound and readiness on the result against host MCP
+tool-call timeouts after the user's reply) instead of failing at once, then `LOCK_HELD` with nothing changed.
 Recovery: the base containing the latest result means merged, equal to the last build target means not merged,
 anything else is stale or ambiguous.
 
