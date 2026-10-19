@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: intent, scope, non-goals and verification as proposed; task-kind feature, planning-depth
+  spec; activity-effort medium
+by: user
+at: '2026-10-19T00:15:48.001660Z'
