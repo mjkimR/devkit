@@ -14,7 +14,8 @@ created_at: 2026-10-19
 - **Applies to**: the answer `process-worker` of `codex-worker-scope`. For `keep-unsupported`, the Planning turn that
   records the answer deletes this PADR and removes every reference to it in the same commit, before `plan-accept`.
 - **Answers**: Q3 and Q5 of `PROP-worktree-host-compatibility`; option O3. Evidence: `MAT-worktree-host-spike-evidence`
-  §2.2, `envelopes/scout-02.yaml`; reviewed in `envelopes/challenger-01.yaml` and `envelopes/challenger-02.yaml`.
+  §2.2, `envelopes/scout-02.yaml`; reviewed in `envelopes/challenger-01.yaml`, `envelopes/challenger-02.yaml` and
+  `envelopes/challenger-03.yaml`.
 
 ---
 
@@ -68,16 +69,17 @@ every writable root unless named exactly. A process rooted in the worktree with 
   `x-process-hosts`, in place of substitution and of the nested-subagent precondition for that host;
   `spec-delegate/SKILL.md` stays within its tested budget (`BUDGET - 512` = 11776 bytes,
   `packages/devkit-spec/tests/test_bundle_budgets.py`).
-- **Live verification** (Development): one Planning or Development turn through this launch on a Codex Host, recorded
+- **Live verification** (Development): one `development-worker` turn through this launch on a Codex Host, recorded
   as evidence of its task in the spec's `tasks.md` and in the Development `worker` envelope's checks: the command
   line, the codex version, the configuration mode (legacy `sandbox_mode` or a profile), the Codex trust status of the
   repository, the base and final head, the range-check result, the commit gate's result, the affected tests, the
   nested role spawned and the turn's duration against the Host's command timeout.
   - **Passes** when all hold: the probe and a commit through the real commit gate succeed inside the process, the
-    Host's range check passes, the affected tests run, a nested role is spawned and returns, the turn ends within the
+    Host's range check passes, the affected tests run and pass inside the process, a nested role is spawned and returns, the turn ends within the
     Host's command timeout, and the launch runs under the user's own configuration mode. Then the key, the launch
     text in `spec-delegate` and `spec-orchestrate`, and `CAP-DLV-delivery-workflows` ship as above.
-  - **Fails**: nothing of the launch ships; the hosts reference and the contract comments record the failed
+  - **Fails** (including a test or gate failure caused only by the process's sandbox, recorded with its reason):
+    nothing of the launch ships; the hosts reference and the contract comments record the failed
     condition, and Codex keeps the main session running the activity in `direct`.
 
 ## 5. Consequences

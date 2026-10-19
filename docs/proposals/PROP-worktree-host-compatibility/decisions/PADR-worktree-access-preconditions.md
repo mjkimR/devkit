@@ -13,7 +13,7 @@ created_at: 2026-10-19
 - **Date**: 2026-10-19
 - **Answers**: Q1, Q2, Q5 and Q6 of `PROP-worktree-host-compatibility`; options O1, O2 and O5. Evidence:
   `MAT-worktree-host-spike-evidence`, `envelopes/scout-01.yaml`, `envelopes/scout-02.yaml`; reviewed in
-  `envelopes/challenger-01.yaml` and `envelopes/challenger-02.yaml`.
+  `envelopes/challenger-01.yaml`, `envelopes/challenger-02.yaml` and `envelopes/challenger-03.yaml`.
 
 ---
 
@@ -86,16 +86,23 @@ repository Git settings (O5).
   - **Antigravity** (`unverified`): the worktree reachable through the project's folders, `/add-dir` or non-workspace
     access; `.git` handling undocumented.
 - Every worker turn MUST begin, before the worker writes anything, with an access probe run with the worker's own
-  tools in its worktree: create and remove a file, and write the worktree's git dir and the shared objects and refs.
-  The probe leaves refs, reflogs of existing refs, the index and `git status` unchanged (a loose object may remain);
-  Development fixes the commands in both worker contracts and a contract test asserts that invariant on a throwaway
-  repository. A refused probe ends the turn with nothing written: the worker returns `failed` with the refused path
-  or command in its final report and commits nothing; the Host reports the missing precondition and its per-host
-  remedy to the user and records nothing in the unit, which is unchanged.
+  tools in its worktree: create and remove a file in one command, and write the worktree's git dir and the shared
+  objects and refs. The probe leaves refs, reflogs of existing refs, the index and `git status` unchanged (a loose
+  object may remain); Development fixes the commands in both worker contracts and a contract test asserts that
+  invariant on a throwaway repository. A refused probe ends the turn before any of the run's write duties (status
+  change, records, feedback, sweep, `worker` envelope) apply: the worker returns `failed` with the refused path or
+  command in its final report and commits nothing; the contracts state this exception and the `spec` skill's
+  `references/worker-records.md` points to it.
 - A worker whose write, command or commit is refused after its probe passed MUST stop through its contract's problem
-  procedure. When its emergency commit is refused too, it returns the problem and the list of uncommitted paths in
-  its final report; the Host does not commit or revert those files, reports the unit to the user as stopped with that
-  list, and the next run's recovery starts from the dirty worktree.
+  procedure. When its emergency commit is refused too, it returns the problem, its HEAD and the list of uncommitted
+  paths in its final report.
+- After any worker return without a committed `worker` envelope, the Host MUST check the worktree: when HEAD is the
+  head it spawned from and `git status --short` is empty, it records nothing and reports the missing precondition and
+  its per-host remedy to the user. Otherwise the unit keeps the last accepted head from before that run, as a blocked
+  unit does; the Host does not commit or revert the worker's files, commits only its own blocking `worker` envelope by
+  explicit path (`--base <accepted> --head <worker HEAD>`, `references/worker.md`) when its commit is allowed, so
+  `devkit workflow next` shows the unit blocked, and reports the unit to the user as stopped with the accepted head
+  and the uncommitted paths.
 - Precondition statements count only access granted without an interactive approval: a probe passed through approved
   prompts proves nothing for a background worker, whose prompt handling is unverified.
 - A Claude Code session rooted above the project (Q5) MAY load the projected roles with `/add-dir <project>` or
