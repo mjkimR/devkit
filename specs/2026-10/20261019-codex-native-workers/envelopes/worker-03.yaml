@@ -1,0 +1,24 @@
+kind: worker
+stage: integration-approval
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T08:26:21.787269Z'
+status: completed
+summary: Completed this one-shot recovery from build-verify through final-change-report. Fixed the existing workflow projection regression within the expressly authorized test_workflows.py boundary extension; committed the fix and resolution-01.yaml naming worker-02.yaml together. Fresh independent correction code review and reconcile verification returned no findings; feedback sweep deduplicated observed friction; final-report-02.yaml supersedes the earlier pending report. Integration remains Host-owned.
+findings: []
+assumptions:
+- Native Codex worker and nested reviewer boundaries are emulated; all work used explicit absolute sibling-worktree cwd, git -C and separate scoped mutation approvals. No source contracts, capability, ADR, receipt or Host worker-02 envelope were edited in recovery.
+unverified_areas:
+- Host will rerun full just test on final returned HEAD before integration; this worker ran only the focused 85-test selection. Fresh-host named-role loading and deliberate denial experiments remain outside scope.
+checks:
+  tests: 'PASS 85 workflow and role-contract tests in 7.63s: UV_NO_SYNC=1 just test devkit-spec tests/test_workflows.py tests/test_role_contracts.py'
+  lint: PASS package Ruff and formatting; 218 files already formatted
+  types: PASS package Pyright; 0 errors, 0 warnings
+  review: PASS fresh nested code-reviewer; zero findings; exact b43d2f8..ec05d1d correction and boundary reviewed
+  reconcile: PASS fresh independent nested reconcile-reviewer; zero findings; no new Living Spec target
+  governance: 'PASS cumulative rules through correction: 0 errors, 0 warnings; normal gate on every stage commit'
+  resolution: PASS envelopes/resolution-01.yaml resolves worker-02.yaml; envelope check has no unresolved problem
+diff_scope:
+  base: 6bbf88f55d836b675600389f2784041d35232535
+  head: 58233531c8f71cffecfbe134aedf0e59ff49a5f9
+activity_effort: medium
