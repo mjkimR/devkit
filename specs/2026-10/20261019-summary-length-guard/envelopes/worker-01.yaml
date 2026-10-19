@@ -1,0 +1,28 @@
+kind: worker
+stage: integration-approval
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-19T07:37:31.200419Z'
+status: completed
+summary: Completed characterize through final-change-report for the shared 300-character summary guard. Focused tests, static checks, package build, cumulative rules and independent code/reconcile reviews passed; awaits dev-integration.
+findings: []
+assumptions:
+- Experimental native Codex mechanism emulates managed development-worker contract under explicit user authorization despite shipped unsupported host status; no codex exec and no support-contract changes.
+- All operations used explicit sibling-worktree paths; source/unit/shared Git writes requested command-scoped escalation, with no persistent permission grant or host configuration changes.
+- Prepared spec/plan/tasks together before first boundary commit for known normal task-coverage gate; no gate bypass.
+- Creation enforces fixed 300 stripped Unicode characters independently of configurable governance-rule limits; omission and English validation are preserved.
+unverified_areas:
+- Full repository suite remains Host validation before integration; general native worker permission/support guarantees were not established.
+checks:
+  tests: 'PASS focused proposal summary module: Red 6 expected failures and 17 passes; Green 23 passed'
+  build: PASS devkit-spec sdist and wheel built; wheel guard inspected; temporary outputs removed
+  lint: PASS devkit-spec Ruff check and format; Pyright zero errors/warnings; diff whitespace clean
+  rules: PASS cumulative rules check --ci --base 471b19a0245bee80240dc68174e976b8add747ea zero errors/warnings on last work commit
+  review: PASS fresh nested code-reviewer and separate nested reconcile-reviewer returned no findings; both completed before return
+  workflow: PASS all Development stages through final-change-report; integration-approval waits for gate:dev-integration
+  permissions: PASS individual escalated sibling/Git mutations executed; no auto-review rejection; sandboxed lint/type metadata DNS failures resolved by approved reruns
+  full_suite: SKIP Host runs full repository suite once on returned reviewed final head before integration
+diff_scope:
+  base: 471b19a0245bee80240dc68174e976b8add747ea
+  head: 8a86e6de0dfb8145927a6f2179cff20949033b26
+activity_effort: medium
