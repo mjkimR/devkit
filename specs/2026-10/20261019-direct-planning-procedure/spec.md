@@ -1,27 +1,22 @@
 ---
-id: PROP-direct-planning-procedure
+id: SPEC-direct-planning-procedure
 title: Planning procedure reachable from the spec skill for any executor
 summary: Moves the ordered Planning steps out of the planning-worker contract into a spec skill reference that direct-mode Hosts and workers both follow, so the procedure lives in one place.
-status: accepted                        # draft | reviewing | accepted | rejected
-created_at: 2026-10-19
-target_area: harness/
-priority: medium                      # critical | high | medium | low
-size: S                               # S | M | L | XL
-planning_effort: low                  # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - harness/
-    - delivery/
-  excludes:
-    - docs/decisions/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+status: planned
+created: 2026-10-19
+related_capabilities: []
+related_stories: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-direct-planning-procedure] Planning procedure reachable from the spec skill for any executor
+# [SPEC-direct-planning-procedure] Planning procedure reachable from the spec skill for any executor
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-direct-planning-procedure on 2026-10-19.
+
+### 1. Background & Hypothesis
 
 - **Problem**: The `spec` skill's routing table says Planning "runs on `plan-<slug>` to `plan-accept`", and
   `effort.md` gives the review depth per effort, but the ordered Planning steps (set `status: reviewing` and commit,
@@ -31,16 +26,35 @@ workflow: sdd-proposal
 - **Hypothesis**: One Planning reference in the `spec` skill, which the `planning-worker` contract cites instead of
   owning, gives every executor the same steps and leaves one place to change them.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Planning procedure reachable from the spec skill for any executor so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1**: Which steps are executor-neutral and move to the reference, and which stay in the role contract (nested
   delegation, returning the head to the Host)?
 - **Q2**: Can the move fit the existing bundle byte budgets of the `spec` skill and the role contract, or does another
   reference need trimming?
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-- **Q1** (`PADR-executor-neutral-planning-steps-in-a-spec-reference`): a new `spec` skill reference
+- **Q1** (`ADR-executor-neutral-planning-steps-in-a-spec-reference`): a new `spec` skill reference
   `references/planning.md`, linked from the routing table's proposal row, holds the executor-neutral steps of the
   contract's steps 2 to 6: first-turn `status: reviewing` and the `needs_decompose` return, answers recorded before
   they are folded, PADRs with a summary, review depth per effort (citing `effort.md` and `review-loop.md`) and the
@@ -49,7 +63,7 @@ workflow: sdd-proposal
   mechanics. The `planning-worker` contract keeps the worktree and `git -C` rule, nested roles (start, wait, never end
   while one runs), Input, Return with `final_head`, Write boundaries and On a problem, and points to the reference by
   its managed path. The steps move; nothing is copied.
-- **Q2** (`PADR-planning-reference-fits-the-existing-byte-budgets`): the reference is about 4.5 KB against the
+- **Q2** (`ADR-planning-reference-fits-the-existing-byte-budgets`): the reference is about 4.5 KB against the
   12288-byte skill document budget and the link keeps `spec/SKILL.md` near 6.6 KB of its 11776; role contracts have
   no budget and the contract shrinks to about 4 KB. No other reference is trimmed.
 - Affected: `packages/devkit-spec` bundle (`skills/spec/SKILL.md`, the new `skills/spec/references/planning.md`,
@@ -65,8 +79,9 @@ workflow: sdd-proposal
   edits of `PROP-envelope-record-gaps` go into `references/planning.md` rather than the contract. Recommended order:
   this one first (size S), so the other edits the steps in their final place.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - Preliminary decisions: `devkit spec proposal padr direct-planning-procedure "<title>"`.
 - On acceptance (`plan-accept`): hand off with `devkit spec proposal handoff direct-planning-procedure`.
 - On rejection: `status: rejected` with the user's reason in the commit message.
+

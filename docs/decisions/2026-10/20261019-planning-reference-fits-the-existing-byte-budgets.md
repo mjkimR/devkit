@@ -1,15 +1,15 @@
 ---
-id: PADR-planning-reference-fits-the-existing-byte-budgets
+id: ADR-planning-reference-fits-the-existing-byte-budgets
 title: Planning reference fits the existing byte budgets
 summary: The new Planning reference and the one-line link from the spec SKILL.md fit the existing byte budgets, so no other reference is trimmed; role contracts have no byte budget and shrink.
-proposal: PROP-direct-planning-procedure
-status: draft
+proposal: SPEC-direct-planning-procedure
+status: accepted
 created_at: 2026-10-19
 ---
 
-# [PADR-planning-reference-fits-the-existing-byte-budgets] Planning reference fits the existing byte budgets
+# [ADR-planning-reference-fits-the-existing-byte-budgets] Planning reference fits the existing byte budgets
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-19
 
 ---

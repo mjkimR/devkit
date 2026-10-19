@@ -1,15 +1,15 @@
 ---
-id: PADR-executor-neutral-planning-steps-in-a-spec-reference
+id: ADR-executor-neutral-planning-steps-in-a-spec-reference
 title: Executor-neutral Planning steps in a spec reference
 summary: Moves the executor-neutral Planning steps into spec/references/planning.md and keeps only the worker-specific obligations (worktree paths, nested roles, return fields, write boundaries, emergency commit) in the planning-worker contract.
-proposal: PROP-direct-planning-procedure
-status: draft
+proposal: SPEC-direct-planning-procedure
+status: accepted
 created_at: 2026-10-19
 ---
 
-# [PADR-executor-neutral-planning-steps-in-a-spec-reference] Executor-neutral Planning steps in a spec reference
+# [ADR-executor-neutral-planning-steps-in-a-spec-reference] Executor-neutral Planning steps in a spec reference
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-19
 
 ---

@@ -18,7 +18,7 @@ created_at: 2026-10-19
 
 ## 1. Friction / Question (friction, question)
 
-- **Context**: recording a PADR for `PROP-direct-planning-procedure` in a `planning-worker` run.
+- **Context**: recording a PADR for `SPEC-direct-planning-procedure` in a `planning-worker` run.
 - **Expectation**: the `planning-worker` contract and the proposal template show `devkit spec proposal padr <slug>
   "<title>"` with no length limit; a PADR has no branch of its own.
 - **Actual**: a 69-character title was refused with `SPEC_PROPOSAL_SLUG_INVALID`, explaining that `plan-<slug>` and
