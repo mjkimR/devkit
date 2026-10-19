@@ -37,12 +37,15 @@ extraPaths = [
     "./packages/devkit-catalog/src",
     "./packages/devkit-spec/src",
     "./packages/devkit-spec/tests",
+    "./packages/devkit-viewer/src",
+    "./packages/devkit-viewer/tests",
 ]
 
 [dependency-groups]
 dev = [
     "devkit-agt[search,mcp]",  # optional runtimes exercised by tests and consumer smoke
     "devkit-spec[search]",
+    "devkit-viewer",
     "pyright>=1.1.390",
     "pytest>=8.0.0",
     "pytest-cov>=5.0.0",
@@ -54,6 +57,7 @@ dev = [
 devkit-agt = { workspace = true }
 devkit-advisory = { workspace = true }
 devkit-spec = { workspace = true }
+devkit-viewer = { workspace = true }
 
 [tool.pytest.ini_options]
 # Rule tests live in each rule's folder under src (`<rule>/tests/`), so devkit's sources are collected too.
@@ -65,10 +69,12 @@ testpaths = [
     "packages/devkit-catalog/tests",
     "packages/devkit-spec/tests",
     "packages/devkit-spec/src/devkit_spec/bundle/rules",
+    "packages/devkit-viewer/tests",
 ]
 pythonpath = [
     "packages/devkit/tests",
     "packages/devkit-spec/tests",
+    "packages/devkit-viewer/tests",
 ]
 addopts = ["--import-mode=importlib"]
 log_level = "INFO"

@@ -1,0 +1,37 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T00:24:33.006019Z'
+status: needs_input
+summary: 'Planning (activity-effort high): recorded answer-01 (harness-bundle, agt, both) and folded it: new auto-selected harness bundle in devkit-agt carries the harness and devkit run guidance (devkit bundle keeps distribution guidance; contract 6 split as an inventory correction); devkit.compact stays in devkit-agt and run mounts via devkit.commands; dist-only signals = WARNING notice (proposed HARNESS_ENGINE_MISSING) for unrun rule/gate/workflow assets and exit-2 error (proposed HARNESS_COMMAND_UNAVAILABLE) from a name-only list with a source-explicit directive; devkit:run stops sync until harness:run and devkit:all drops the run guidance, accepted without shims; compatibility MUST restated with enumerated exceptions. Support roles: challenger-03 and challenger-04 (re-reviews), all findings folded. One question waits: the bundle name.'
+findings: []
+assumptions:
+- Contract 6 split (receipt commit stays in devkit) corrects the Planning inventory behind harness-guidance; the user can overrule at plan-accept
+- A generic cross-bundle SELECTION_INVALID hint is a non-goal under the no-shims answer; the user can add it at plan-accept
+- Answer and worker envelopes use the stage next names at the start of the run (direction-handoff); see FB-worker-stage-choice-ambiguous
+- PADR-dist-foundation-ownership not reopened; dev_effort high and size L unchanged
+unverified_areas:
+- Consumer repositories outside this workspace selecting devkit:run or devkit:all, or shipping a bundle named harness
+- Sync behavior for an override whose asset left its bundle; devkit config template placement of entry-point harness tables
+- uv tool install --reinstall with two Git requirements not executed; no wheels built
+checks:
+  rules: PASS devkit rules check on the proposal directory
+  feedback: PASS feedback-02 swept recorded=0 duplicates=1
+diff_scope:
+  base: e3aeb402591a7818ba57e533b494baa718666e15
+  head: 468839f1d882a0ea1518aa4e1ba6a0ad7b50576c
+questions:
+- id: harness-bundle-name
+  title: Name of the new harness bundle
+  prompt: Keep `harness` as the name of the new auto-selected bundle that devkit-agt ships, or pick another before it becomes a selection key (`harness:run`, `harness = false`)?
+  context: 'Your answer to harness-guidance proposed the name `harness`. In this repository the word already names the devkit-spec capability area docs/capabilities/harness/, whose CAP-HARN-agent-guidance ("Agent Guidance Assets") documents the guidance assets of the spec bundle, the same kind of thing the new bundle is; the new bundle''s contract would sit in CAP-DIST-content-packages instead. ARCH-01 also calls the whole of devkit a developer harness. A bundle name is a public selection key: renaming it after release breaks `harness:run` selections again. The proposed module name `devkit.harness_guide` follows the bundle name.'
+  options:
+  - id: keep-harness
+    description: Keep `harness`. It is the most descriptive name for the guidance of the rules, gates, workflows and `devkit run` engines; the capability area is a documentation folder and never appears in configuration.
+    recommended: true
+  - id: rename-agt
+    description: Name it `agt` after the wheel that ships it (`agt:run`, `agt = false`), avoiding the overloaded word; the PADRs are renamed before plan-accept.
+    recommended: false
+  allow_note: true
+activity_effort: high

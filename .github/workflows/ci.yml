@@ -1,10 +1,11 @@
 # Continuous integration for the devkit monorepo.
 #
-# Two jobs: the workspace checks every package (devkit, devkit-starter,
-# devkit-catalog: lint, types, tests, governance rules) on Linux and macOS, and the consumer smoke
+# Three jobs: the workspace checks every package (devkit, devkit-starter,
+# devkit-catalog: lint, types, tests, governance rules) on Linux and macOS, the consumer smoke
 # builds the wheels, installs them into a fresh project the way a consumer would
 # and commits through the installed gate hooks (it needs git, which the runner
-# image provides). Both install the devkit-embed model wheel from the release
+# image provides), and the viewer job checks the devkit-viewer frontend and that its
+# committed build matches the sources (it needs Node). Both install the devkit-embed model wheel from the release
 # pinned in packages/devkit/pyproject.toml; nothing builds it here.
 #
 # It does not run on push or pull request: the same checks run locally, and
@@ -54,3 +55,26 @@ jobs:
       - uses: extractions/setup-just@v2
       - run: uv python install 3.12
       - run: just smoke
+
+  viewer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: packages/devkit-viewer/frontend/package-lock.json
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - uses: extractions/setup-just@v2
+      - run: uv python install 3.12
+      - run: just init viewer
+      - run: just viewer install
+      - run: just viewer lint
+      - run: just viewer check
+      - run: just viewer test
+      - run: just viewer pack
+      # Rebuilds the page from the lockfile in a clean checkout and fails when the committed build differs.
+      - run: uv run --no-active devkit generated check viewer-assets

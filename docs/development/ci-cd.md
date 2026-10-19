@@ -6,7 +6,7 @@ Continuous integration and automated verification checks for devkit.
 
 The `ci` workflow runs by manual dispatch (`gh workflow run ci`) or through `workflow_call` from the release
 workflow. Pull requests and main branch pushes do not trigger it. Workspace checks run on Linux and macOS;
-consumer smoke runs on Linux. The workflow executes:
+consumer smoke and the viewer job run on Linux. The workflow executes:
 
 | Step | Command Executed | Purpose |
 | :--- | :--- | :--- |
@@ -15,10 +15,14 @@ consumer smoke runs on Linux. The workflow executes:
 | **Test Suite** | `just test` | Runs the full pytest test suite across all workspace packages. |
 | **Governance Rules** | `just rules-check` | Runs devkit governance rules on the working tree. |
 | **Consumer Smoke** | `just smoke` | Builds wheels and verifies installation in a clean consumer environment. |
+| **Viewer Frontend** | `just viewer install`, `lint`, `check`, `test`, `pack` | With Node 24: formatting, `svelte-check`, the frontend tests and the library tarball's contents and exports. |
+| **Viewer Build** | `uv run --no-active devkit generated check viewer-assets` | Rebuilds the page from the lockfile in a clean checkout and fails when the committed build under `packages/devkit-viewer/src/devkit_viewer/static/` differs. |
 
 For cumulative branch verification before integration, also run `just rules-check --ci --base <base-ref>` locally.
 The consumer smoke installs the base packages first, preserving their independent coverage, then installs the
-`devkit-spec` wheel and checks command mounting, opt-in docs seeding and seeded document discovery.
+`devkit-spec` wheel and checks command mounting, opt-in docs seeding and seeded document discovery, and finally
+installs the `devkit-viewer` wheel, starts `devkit viewer serve` for the consumer project and fetches its bundled
+page, a script and `/api/repos`.
 
 ## 2. Test Execution and Restricted Environments
 
