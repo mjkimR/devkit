@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-18T23:21:38.663785Z'
+status: completed
+summary: CAP-INT-mcp-services, the MCP onboarding guide, install routes, CAP-HOST-lifecycle-observation and the host reference name the Claude Code terminal CLI as a supported native approval path with manual claude mcp registration; MAT-claude-terminal-mcp-approval-evidence retains the run. Low-effort review and reconcile self-check passed.
+findings: []
+assumptions:
+- Claude Code registration stays manual; no setup adapter (non-goal).
+unverified_areas:
+- Claude Code auto mode, prompt count per call, Desktop, VS Code extension and Agent SDK surfaces.
+checks:
+  tests: 'PASS not applicable: documentation only, no code or package change'
+  build: 'PASS not applicable: no package or bundle asset change'
+  lint: PASS devkit rules check --ci --base main (0 errors, 0 warnings); git diff --check
+diff_scope:
+  base: 8fc64ef7159aa4c883cc71a3f868ae9a336bb400
+  head: 5dc2a8bb70564bead6ec6d0ab1fecb1ed8a653bb
