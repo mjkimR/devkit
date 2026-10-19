@@ -1,0 +1,20 @@
+kind: answer
+stage: '-'
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T01:51:37.625353Z'
+status: completed
+summary: 'User answers to the three Planning questions of worker-01: reviewers-only presets, state the emulated-role limit in CAP-DLV section 4.6, add the drift test.'
+findings: []
+checks: {}
+answers_to: worker-01.yaml
+answers:
+- question: q1-effort-values
+  choice: reviewers-only
+  decision: scout and reconcile-reviewer preset medium; code-reviewer and challenger preset high; planning-worker and development-worker set no preset and run at the session's effort.
+- question: q3-emulated-codex
+  choice: state-in-cap
+  decision: CAP-DLV-delivery-workflows section 4.6 states in one sentence that a role the main session runs itself (emulated or substituted) uses the session's effort; the preset applies only to a spawned projected agent.
+- question: q4-drift-test
+  choice: add-test
+  decision: packages/devkit-spec/tests/test_role_contracts.py asserts the q1 mapping for every role contract.
