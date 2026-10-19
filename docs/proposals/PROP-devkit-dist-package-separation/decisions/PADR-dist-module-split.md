@@ -94,7 +94,7 @@ Choose **N1** and **F1**.
 - `devkit-agt` MUST keep `devkit.rules`, `devkit.workflow`, `devkit.gate`, `devkit.worktree`, `devkit.generated`,
   `devkit.integration` and `devkit.compact` (`devkit run`, mounted through `devkit.commands`,
   `PADR-dist-command-composition`), the `authoring` bundle area and the new data-only `harness` bundle area
-  (`PADR-dist-bundles-compatibility`), and depends on `devkit-dist` at the same version.
+  `devkit.harness_guide` (`PADR-dist-bundles-compatibility`), and depends on `devkit-dist` at the same version.
 - The new source tree is `packages/devkit-dist/` (wheel `devkit-dist`); `devkit-agt` stays in `packages/devkit/`,
   so the documented Git dependency URL (`#subdirectory=packages/devkit`) keeps working.
 - Entry points move with their target: the `devkit` console script, the `devkit.bundles` entries of the bundles
@@ -131,5 +131,5 @@ Choose **N1** and **F1**.
   `testpaths` and the dev dependency group; release, smoke and CI wiring add the new wheel.
 - Package READMEs, `docs/development/reference/` pages, `ARCH-05-1-containers`, `ARCH-05-2-components` and
   `ARCH-07-deployment` name the new owner of each module, and the root `AGENTS.md` (Architecture and Boundaries:
-  the layering rule stated for `packages/devkit` and its list of data-only bundle areas, which gains the `harness`
-  area; Packages: `devkit-agt` as the single distribution) describes the three wheels and the per-wheel layering.
+  the layering rule stated for `packages/devkit` and its list of data-only bundle areas, which gains the
+  `harness_guide` area; Packages: `devkit-agt` as the single distribution) describes the three wheels and the per-wheel layering.

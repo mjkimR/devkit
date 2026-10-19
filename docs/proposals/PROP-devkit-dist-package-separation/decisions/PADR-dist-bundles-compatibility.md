@@ -1,7 +1,7 @@
 ---
 id: PADR-dist-bundles-compatibility
 title: Bundled content and compatibility of the split
-summary: Assigns each built-in bundle to the package whose commands it describes, moves the harness guidance and devkit run guidance of the devkit bundle into a new auto-selected harness bundle shipped by devkit-agt, and lists the behaviors the split preserves and the one selection it breaks.
+summary: Assigns each built-in bundle to the package whose commands it describes, moves the harness guidance and devkit run guidance of the devkit bundle into a new auto-selected harness bundle shipped by devkit-agt, and lists the behaviors the split preserves and the two preset selections it changes.
 proposal: PROP-devkit-dist-package-separation
 status: draft
 created_at: 2026-10-19
@@ -12,7 +12,9 @@ created_at: 2026-10-19
 - **Status**: Draft
 - **Date**: 2026-10-19
 - **Answers**: Q5 (bundled content and compatibility) of `PROP-devkit-dist-package-separation`, with the user's
-  answers to `harness-guidance`, `compact-home` and `standalone-harness-signals` (`envelopes/answer-01.yaml`).
+  answers to `harness-guidance`, `compact-home` and `standalone-harness-signals` (`envelopes/answer-01.yaml`), and to
+  `harness-bundle-name` with the contract 6 split and the preset-hint non-goal settled in the same round
+  (`envelopes/answer-02.yaml`).
 
 ---
 
@@ -94,16 +96,16 @@ Choose **B1**, **H1** and **K1**.
   as they are.
 - The `harness` bundle MUST be auto-selected (`auto_select = true`, opted out with `harness = false` under
   `[presets]`) and live in a data-only bundle area of `devkit-agt` whose `__init__.py` imports nothing, like the
-  other built-in bundle areas (proposed module `devkit.harness_guide`). The name `harness` is the user's proposed
-  name; because `harness` also names the `devkit-spec` capability area (`docs/capabilities/harness/`), it is put to
-  the user for confirmation (question `harness-bundle-name`) before it becomes a selection key. It carries:
+  other built-in bundle areas (module `devkit.harness_guide`). The name `harness` is the user's decision
+  (`harness-bundle-name`, answer `keep-harness`), taken knowing that `harness` also names the `devkit-spec`
+  capability area (`docs/capabilities/harness/`, `CAP-HARN-agent-guidance`): the bundle's contract lives in
+  `CAP-DIST-content-packages`, separate from that area. It carries:
   - a constitution with the harness intro (rules and commit gates run as code) and the harness contracts: today's
     contract 5 (rules and gates run as code, configured in `[rules]` and `[gates]`) and the snapshot-gate part of
-    contract 6 (snapshot gates trust the committed receipt and fail when a managed rule no longer matches it). The
-    Planning inventory behind the `harness-guidance` question listed all of contract 6 as harness text; its first
-    sentence (commit the receipt after `devkit sync`) is distribution guidance, so under the user's decision that
-    the `devkit` bundle keeps distribution guidance it stays there (a correction of that inventory, open to the
-    user at plan-accept);
+    contract 6 (snapshot gates trust the committed receipt and fail when a managed rule no longer matches it).
+    Contract 6 is split by the user's decision (`envelopes/answer-02.yaml`): its first sentence (commit the receipt
+    after `devkit sync`) is distribution guidance and stays in the `devkit` bundle, correcting the Planning
+    inventory behind the `harness-guidance` question, which listed all of contract 6 as harness text;
   - the harness parts of `consumption` (rules, gates and workflows in the configuration table, "Workflows",
     "Rules and commit gates" with `.git/devkit.config` and the `rules-check` gate), of `resource-kinds` (how rule,
     gate and workflow assets are run and tested: `devkit rules`, `devkit rules test`, `devkit gate`,
@@ -148,8 +150,8 @@ Choose **B1**, **H1** and **K1**.
     pointer.
   - `devkit:all` (`devkit = "all"`) keeps working but no longer deploys `devkit-run` and `run-pointer`; a project
     that wants the pointer selects `harness:run`.
-  A generic `SELECTION_INVALID` hint naming a preset of the same name in another installed bundle is a non-goal
-  (it needs the installed-bundle set at every selection call site; open to the user at plan-accept).
+  A generic `SELECTION_INVALID` hint naming a preset of the same name in another installed bundle is a non-goal,
+  settled by the user (`envelopes/answer-02.yaml`; it needs the installed-bundle set at every selection call site).
 - `devkit-dist`, `devkit-agt` and `devkit-advisory` MUST be released in lockstep from one tag at one version;
   `devkit-agt` pins `devkit-dist` to that exact version, as it pins `devkit-advisory`. `devkit-spec`,
   `devkit-catalog` and `devkit-starter` keep independent versions.
