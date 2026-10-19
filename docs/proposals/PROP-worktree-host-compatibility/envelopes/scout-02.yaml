@@ -1,0 +1,45 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T02:20:32.866833Z'
+status: completed
+summary: 'Codex and Git: Codex protects .git and the linked worktree''s own git dir inside every writable root, so a commit needs both git dirs granted per worktree; spawn_agent inherits the parent''s cwd and sandbox; a separate codex exec rooted in the worktree is the only plausible Codex worker path (sandbox-verified, not end to end); relative worktree paths make the repository unreadable for Apple Git 2.39 and older libgit2/go-git.'
+findings:
+- issue: 'Codex: inside every writable root .git is read-only, and for a linked worktree the git dir its pointer names (<repo>/.git/worktrees/<name>) is protected as its own exact path. A commit from a linked worktree needs both <repo>/.git and <repo>/.git/worktrees/<name> granted write; granting only <repo>/.git fails on index.lock, only the worktree git dir fails on objects (openai/codex#14338 open, #23661 duplicate).'
+  evidence: learn.chatgpt.com/docs/permissions (Protected paths); codex-rs/protocol/src/permissions.rs; local codex sandbox runs on throwaway repos (macOS seatbelt, codex-cli 0.160.1)
+  suggested_action: Any Codex worker path must grant both git dirs explicitly per worktree; record this as the Codex precondition.
+  resolution: open
+  severity: high
+- issue: Codex permission profiles ([permissions.<name>] with filesystem path = write, default_permissions) do not combine with legacy sandbox_mode/[sandbox_workspace_write]; any loaded sandbox_mode selects the legacy settings. A project .codex/config.toml applies only to a trusted project and can hold only absolute paths, so it cannot name per-worktree git dirs ahead of time.
+  evidence: learn.chatgpt.com/docs/permissions (Relationship to older sandbox settings, Workspace roots); config-reference (project-local config)
+  suggested_action: Do not project Codex permissions from devkit sync; pass per-run grants instead.
+  resolution: open
+  severity: medium
+- issue: Codex spawn_agent has no cwd or writable-root parameter; a role restores the parent's cwd, approval policy and permission profile; custom agent TOML cannot override sandbox_mode or approval_policy. A Codex subagent cannot reach a sibling worktree the parent session cannot.
+  evidence: learn.chatgpt.com/docs/agent-configuration/subagents; codex-rs/core/src/tools/handlers/multi_agents_spec.rs; codex-rs/core/src/agent/control/spawn.rs
+  suggested_action: Keep the Codex worker subagent unsupported; the only Codex worker path is a separate process.
+  resolution: open
+  severity: high
+- issue: codex exec -C <worktree> --add-dir <repo>/.git --add-dir <repo>/.git/worktrees/<name> --json --output-schema <file> -o <file> is the documented shape of a headless worker rooted in the worktree; each --add-dir becomes a workspace root and the workspace_roots form of both git dirs commits under codex sandbox. exec forces approval_policy never unless auto review is selected, so any other blocked action fails rather than prompts. End to end it is unverified (needs a model session).
+  evidence: learn.chatgpt.com/docs/cli/reference (codex exec); codex-rs/exec/src/lib.rs; codex-rs/core/src/config/mod.rs; local codex sandbox runs
+  suggested_action: If Codex worker support is in scope, verify one live codex exec turn as the acceptance check before changing the host status.
+  resolution: open
+  severity: high
+- issue: Codex managed worktrees (app and CLI --worktree) are created detached under $CODEX_HOME/worktrees without a branch and get no extra writable root for the shared git dir, so commits there need escalation; incompatible with devkit's branch per activity.
+  evidence: learn.chatgpt.com/docs/environments/git-worktrees; codex-rs/worktree/src/lib.rs; openai/codex#14338
+  suggested_action: Keep host-native Codex worktrees excluded.
+  resolution: open
+  severity: medium
+- issue: Git worktree.useRelativePaths (Git 2.48+) sets extensions.relativeWorktrees and repositoryformatversion 1; Apple Git 2.39.5 then refuses the whole repository, base checkout included; libgit2 accepts it only from 1.9.4, go-git only from v6 beta. extensions.worktreeConfig (Git 2.20+) is widely supported but no need for it was found.
+  evidence: git-scm.com/docs/git-worktree; Git 2.48.0 release notes; libgit2#7210/#7254; go-git#2336; local test with /usr/bin/git 2.39.5
+  suggested_action: devkit neither sets nor checks either setting; no current host relocates the repository.
+  resolution: open
+  severity: medium
+assumptions:
+- codex-rs main on 2026-10-19, not the 0.160.1 tag; macOS seatbelt only
+unverified_areas:
+- End-to-end codex exec or spawn_agent run (needs a model session)
+- Linux bwrap and Windows sandbox behaviour
+- Legacy sandbox_mode with --add-dir of both git dirs (inferred from source)
+checks: {}
