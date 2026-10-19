@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: goal, scope (Q1-Q3; no gate or policy change), verification, task-kind feature,
+  planning-depth proposal and Planning effort medium confirmed
+by: user
+at: '2026-10-19T06:08:03.239891Z'
