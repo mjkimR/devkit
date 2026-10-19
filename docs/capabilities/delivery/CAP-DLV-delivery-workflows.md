@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-delivery-workflows
 title: Delivery Workflows
-summary: "Five spec delivery workflows define stages, gates, checks and envelopes, including Planning feedback sweeps, per-run capture, separate code and reconcile verification with a bounded high-effort review loop and P1-P3 severity, and the SDD integration readiness provider."
+summary: "Five delivery workflows define stages, gates, checks and run records, separate code/reconcile reviews with bounded high-effort loops, integration readiness, and native Codex workers with emulated boundaries and scoped approvals."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -336,8 +336,8 @@ The four read-only roles preset a reasoning effort in their host blocks, with no
 as `effort` under `claude-code` and `model_reasoning_effort` under a `codex` block that is not `unsupported`, at
 `low`, `medium` or `high` only. Antigravity has no such key. The two workers set none, whatever their profile, so
 they run at the session's effort like the Host whose work they take over. The preset is independent of
-`activity-effort` and applies only when the projected agent is spawned: a role the main session runs itself uses the session's effort. An emulated named-role projection
-still applies its declared preset; workers declare none. On Claude Code a per-call `effort` or
+`activity-effort` and applies only when the projected agent is spawned: a role the main session runs itself uses
+the session's effort. An emulated named-role projection still applies its declared preset; workers declare none. On Claude Code a per-call `effort` or
 `CLAUDE_CODE_EFFORT_LEVEL` overrides the preset; on Codex the preset wins over a spawn value.
 `packages/devkit-spec/tests/test_role_contracts.py` pins role, profile and preset for every contract.
 
