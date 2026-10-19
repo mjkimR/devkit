@@ -1,15 +1,15 @@
 ---
-id: PADR-seeded-glossary-columns
+id: ADR-seeded-glossary-columns
 title: Seeded glossary columns
 summary: "Fixes the seeded glossary table to Term, Definition, Owner, Avoid and Code identifiers, with exclusions written in the definition, Avoid entries mirrored as search synonyms and a remarks fallback for older glossaries."
-proposal: PROP-terminology-authoring-guidance
-status: draft
+proposal: SPEC-terminology-authoring-guidance
+status: accepted
 created_at: 2026-10-19
 ---
 
-# [PADR-seeded-glossary-columns] Seeded glossary columns
+# [ADR-seeded-glossary-columns] Seeded glossary columns
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-19
 
 ---

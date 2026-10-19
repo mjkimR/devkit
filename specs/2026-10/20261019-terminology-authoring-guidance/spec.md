@@ -1,34 +1,25 @@
 ---
-id: PROP-terminology-authoring-guidance
+id: SPEC-terminology-authoring-guidance
 title: Terminology authoring guidance and a glossary that agents read
-summary: "Adds domain-neutral terminology authoring guidance to the spec bundle, reshapes the seeded glossary table around owners, exclusions, avoided synonyms and code identifiers, and makes spec-sync update the glossary, so docs/glossary.md is read while writing instead of only seeded."
-status: accepted                        # draft | reviewing | accepted | rejected
-created_at: 2026-10-14
-target_area: capabilities/harness/
-priority: high                        # critical | high | medium | low
-size: M                               # S | M | L | XL
-planning_effort: low                  # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - capabilities/harness/
-    - packages/devkit-spec/src/devkit_spec/bundle/instructions/
-    - packages/devkit-spec/src/devkit_spec/bundle/seed/docs/glossary.md
-    - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-sync/
-    - docs/glossary.md
-  excludes:
-    - docs/decisions/
-    - packages/devkit-spec/src/devkit_spec/bundle/rules/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
-workflow_hash: sha256:90918c632715461d07f99f683b8381bdbe6381ad6689a7575a72c002c18c1399
+summary: Adds domain-neutral terminology authoring guidance to the spec bundle, reshapes the seeded glossary table around owners, exclusions, avoided synonyms and code identifiers, and makes spec-sync update the glossary, so docs/glossary.md is read while writing instead of only seeded.
+status: planned
+created: 2026-10-19
+related_capabilities: []
+related_stories: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-terminology-authoring-guidance] Terminology authoring guidance and a glossary that agents read
+# [SPEC-terminology-authoring-guidance] Terminology authoring guidance and a glossary that agents read
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
 
-### 1.1 Problem
+Handed off from proposal PROP-terminology-authoring-guidance on 2026-10-19.
+- Target Docs Blueprint: `PROP-terminology-authoring-guidance-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
+
+#### 1.1 Problem
 
 The starting point is a draft of terminology rules used in another project (origin: user), first incubated earlier
 and carried over here because its findings hold for the `spec` bundle. The current state of the bundle:
@@ -47,7 +38,7 @@ and carried over here because its findings hold for the `spec` bundle. The curre
   where "Defined in" names the owning document ID, and it settles that `docs/` as a whole is the Living Spec (the
   scope conflict earlier glossaries had).
 
-### 1.2 Hypothesis
+#### 1.2 Hypothesis
 
 Ship domain-neutral terminology guidance as bundle instruction text, reshape the seeded glossary table around the
 fields that guidance uses, and add one impact question to `spec-sync`. Every session then sees the guidance header
@@ -59,10 +50,29 @@ is checked while writing and updated at reconciliation instead of a seeded file 
   (`ADR-docs-skeleton-is-opt-in`). Projects without a `docs/glossary.md` still receive the guidance; registration
   steps apply only where a glossary exists.
 
-## 2. Technical Spike Questions
+## 2. User Stories
 
-Settled in Planning; the decisions and their options are in `PADR-terminology-guidance-lives-in-living-spec-writing`
-(Q1, Q2, Q6) and `PADR-seeded-glossary-columns` (Q3, Q4, Q5).
+- **US-1**: As a developer/agent, I want to implement Terminology authoring guidance and a glossary that agents read so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
+
+Settled in Planning; the decisions and their options are in `ADR-terminology-guidance-lives-in-living-spec-writing`
+(Q1, Q2, Q6) and `ADR-seeded-glossary-columns` (Q3, Q4, Q5).
 
 - **Q1. Separate instruction or a section of `living-spec-writing`.** Folded into the `## Glossary` section of
   `living-spec-writing`; its description is widened to name terminology and the glossary. No new asset.
@@ -77,9 +87,9 @@ Settled in Planning; the decisions and their options are in `PADR-terminology-gu
 - **Q6. Context budget.** An acceptance criterion: the change adds at most 30 lines to `living-spec-writing.md`; the
   `spec-sync` change is one Step 1 bullet.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### 3.1 Placement
+#### 3.1 Placement
 
 | Location | Content |
 | --- | --- |
@@ -91,7 +101,7 @@ Settled in Planning; the decisions and their options are in `PADR-terminology-gu
 The constitution (`packages/devkit-spec/src/devkit_spec/bundle/AGENTS.md`) gains nothing: it already tells every session to read the
 relevant instruction bodies, and repeating the guidance there costs context in every session.
 
-### 3.2 Guidance Draft
+#### 3.2 Guidance Draft
 
 The normative level follows the `contract-authoring` instruction: no check enforces these rules, so the text uses
 boundary statements ("does not authorize") and SHOULD rather than MUST.
@@ -126,7 +136,7 @@ Relative to the original draft: rule 3 (one concept, one term) is new, covering 
 draft's last item is split into 7 (when to check, tied to in-place rewriting) and 8 (records keep their wording,
 mapped to ADRs, materials and completed specs); domain-specific examples are replaced with generic ones.
 
-### 3.3 Glossary Table
+#### 3.3 Glossary Table
 
 ```markdown
 | Term | Definition | Owner | Avoid | Code identifiers |
@@ -140,7 +150,7 @@ mapped to ADRs, materials and completed specs); domain-specific examples are rep
 - Empty `Avoid` and `Code identifiers` cells are allowed. A glossary with older columns records these fields in its
   remarks or definition cells (Q5).
 
-### 3.4 Non-Goals
+#### 3.4 Non-Goals
 
 - No deterministic rule checks generic or avoided terms: the judgement is contextual and false positives are costly.
   A hygiene rule is a separate proposal once repeated violations are observed.
@@ -148,7 +158,7 @@ mapped to ADRs, materials and completed specs); domain-specific examples are rep
 - No generation or synchronisation between `glossary.md` and `glossary.yaml`.
 - No command change.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - Preliminary decisions: none expected; the instruction mechanism is devkit's resource taxonomy and the bundle's
   instruction assets (`CAP-HARN-agent-guidance`).
@@ -156,3 +166,4 @@ mapped to ADRs, materials and completed specs); domain-specific examples are rep
 - On acceptance: Q1 to Q6 are settled (section 2); set `status: accepted` and run `devkit spec proposal handoff
   terminology-authoring-guidance`.
 - On rejection: record a rejection ADR in `docs/decisions/` and delete the proposal directory.
+

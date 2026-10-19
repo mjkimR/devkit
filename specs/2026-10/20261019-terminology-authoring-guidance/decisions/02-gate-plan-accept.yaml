@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-terminology-authoring-guidance
+by: user
+at: '2026-10-19T05:57:07.108052Z'

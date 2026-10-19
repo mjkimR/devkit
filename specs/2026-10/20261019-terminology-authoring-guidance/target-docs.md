@@ -2,7 +2,7 @@
 id: PROP-terminology-authoring-guidance-target
 title: Target Living Spec Structure for PROP-terminology-authoring-guidance
 status: draft
-proposal: PROP-terminology-authoring-guidance
+proposal: SPEC-terminology-authoring-guidance
 created_at: 2026-10-14
 # The Living Spec files this proposal changes, one "- file: <workspace-relative path>" each;
 # devkit spec scope compare reads them to find overlaps with other work.
@@ -21,8 +21,8 @@ This document defines the target blueprint of how the docs/ backbone (Living Spe
 ## 1. System Capabilities Plan (docs/capabilities/)
 
 - `CAP-HARN-agent-guidance`: section 4.3 updates the `living-spec-writing` row to cover terminology and the glossary
-  (`PADR-terminology-guidance-lives-in-living-spec-writing`); section 4.7 describes the five seeded `glossary.md`
-  columns and its project section for avoided generic nouns (`PADR-seeded-glossary-columns`).
+  (`ADR-terminology-guidance-lives-in-living-spec-writing`); section 4.7 describes the five seeded `glossary.md`
+  columns and its project section for avoided generic nouns (`ADR-seeded-glossary-columns`).
 - `CAP-DLV-delivery-workflows`: the reconciliation scope includes glossary updates when a change introduces or
   renames a domain term (`spec-sync` Step 1).
 

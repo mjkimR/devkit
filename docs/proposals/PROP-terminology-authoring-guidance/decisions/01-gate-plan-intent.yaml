@@ -1,9 +1,0 @@
-request: gate:plan-intent
-kind: approve
-action: accept
-workflow: sdd-proposal
-stage: intent-proposal
-note: goal, scope, verification, task-kind feature, planning-depth proposal and Planning
-  effort low confirmed; Non-Goals unchanged
-by: user
-at: '2026-10-19T05:24:44.963793Z'

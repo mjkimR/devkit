@@ -1,15 +1,15 @@
 ---
-id: PADR-terminology-guidance-lives-in-living-spec-writing
+id: ADR-terminology-guidance-lives-in-living-spec-writing
 title: Terminology guidance lives in living-spec-writing
 summary: "Places the domain-neutral terminology guidance in the Glossary section of the living-spec-writing instruction instead of a new instruction, with a short default list of generic nouns, project additions in docs/glossary.md and a length bound."
-proposal: PROP-terminology-authoring-guidance
-status: draft
+proposal: SPEC-terminology-authoring-guidance
+status: accepted
 created_at: 2026-10-19
 ---
 
-# [PADR-terminology-guidance-lives-in-living-spec-writing] Terminology guidance lives in living-spec-writing
+# [ADR-terminology-guidance-lives-in-living-spec-writing] Terminology guidance lives in living-spec-writing
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-19
 
 ---
