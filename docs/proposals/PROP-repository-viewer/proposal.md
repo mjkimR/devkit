@@ -2,7 +2,7 @@
 id: PROP-repository-viewer
 title: Local multi-repository SDD viewer owned by devkit
 summary: "Moves the autohub SDD repository viewer into devkit as its source owner, adds a roadmap view for milestone documents, and packages it with a local server that serves several repositories at once; the viewer stays read-only and grants no approvals."
-status: reviewing                       # draft | reviewing | accepted | rejected
+status: accepted                        # draft | reviewing | accepted | rejected
 created_at: 2026-10-19
 target_area: capabilities/viewer/
 priority: high                        # critical | high | medium | low
