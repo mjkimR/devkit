@@ -78,7 +78,9 @@ Choose **N1** and **F1**.
 
 - `devkit-dist` MUST keep the import paths `devkit.core`, `devkit.search`, `devkit.host`, `devkit.distribution`,
   `devkit.cli` and `devkit.__main__` unchanged, shipped into the shared `devkit` namespace. No wheel ships
-  `src/devkit/__init__.py`, and no installed file path is shipped by more than one wheel.
+  `src/devkit/__init__.py`, and no installed file path is shipped by more than one wheel: the root
+  `devkit/py.typed` marker is replaced by a `py.typed` in each area package (PEP 561 places markers in the
+  subpackages of a namespace).
 - `devkit-dist` MUST ship `devkit.core`, `devkit.search` and `devkit.host` whole, `devkit.distribution` with the
   `devkit` bundle (`devkit.distribution.guide`), the root command line, and the bundle areas assigned to it by
   `PADR-dist-bundles-compatibility`.
@@ -87,6 +89,10 @@ Choose **N1** and **F1**.
 - The owner of `devkit.compact` (`devkit run`) is decided by the user: question `compact-home` of this Planning.
 - The new source tree is `packages/devkit-dist/` (wheel `devkit-dist`); `devkit-agt` stays in `packages/devkit/`,
   so the documented Git dependency URL (`#subdirectory=packages/devkit`) keeps working.
+- Entry points move with their target: the `devkit` console script, the `devkit.bundles` entries of the bundles
+  `devkit-dist` ships and `devkit.host.handlers` `observe` are declared by `devkit-dist`; `devkit.post_sync`
+  `gate-hooks`, `devkit.hygiene` `worktree-stale`, `devkit.finish_guard` `workflow-envelopes` and
+  `devkit.host.services` `integration` stay with `devkit-agt`.
 - The `search` and `mcp` extras move to `devkit-dist`; `devkit-agt` keeps extras of the same names that require
   the matching `devkit-dist` extras, so `devkit-agt[search]` and `devkit-agt[mcp]` keep working.
 - Layering is enforced per wheel: a `devkit-dist` test refuses any reference to a `devkit-agt` area from its
@@ -97,7 +103,9 @@ Choose **N1** and **F1**.
 
 - Tests move with their area: `core`, `search`, `host` and `distribution` tests become `devkit-dist` tests and run
   in an environment without `devkit-agt`, as `PADR-dist-foundation-ownership` requires; tests that exercise both
-  wheels together stay with `devkit-agt`.
+  wheels together stay with `devkit-agt`. Four `devkit-dist`-side tests currently reach harness code
+  (`distribution/test_config_template.py`, `core/test_cli.py`, the hook assertion of `distribution/test_sync.py`,
+  and `testsupport.gate`), and move or split accordingly (`materials/20261019-package-split-evidence.md` section 5).
 - Root `pyproject.toml` adds the new source root to ruff `namespace-packages`, Pyright `extraPaths`, pytest
   `testpaths` and the dev dependency group; release, smoke and CI wiring add the new wheel.
 - Package READMEs, `docs/development/reference/` pages, `ARCH-05-1-containers`, `ARCH-05-2-components` and

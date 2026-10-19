@@ -74,5 +74,7 @@ Choose **M1**.
 - Verification covers command discovery with `devkit-dist` alone (no harness commands listed), with both wheels
   (every current command listed and runnable) and with `devkit-spec` added, and that exactly one installed
   distribution provides the `devkit` script.
-- The commit-time gate path (`devkit gate` from Git hooks) gains one `devkit.commands` lookup per invocation; the
-  measured cost is recorded in `materials/20261019-package-split-evidence.md`.
+- A harness command now pays one `devkit.commands` scan when it is looked up: about 10 to 13 ms in this workspace
+  (61 installed distributions; `materials/20261019-package-split-evidence.md` section 5). Commit-time gates are not
+  affected: the managed Git hook entry runs `devkit.gate` through its own bootstrap and never imports `devkit.cli`.
+  Native host hooks call `devkit host`, a `devkit-dist` built-in, and pay no scan.

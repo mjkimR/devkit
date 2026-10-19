@@ -12,10 +12,12 @@ dev_effort: high                      # low | medium | high (hint for Developmen
 boundaries:
   owns:
     - capabilities/distribution/
-    - capabilities/core/
     - capabilities/host/
     - capabilities/search/
+    - capabilities/compact/
+    - capabilities/integration/
     - architecture/
+    - development/
   excludes:
     - docs/decisions/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>

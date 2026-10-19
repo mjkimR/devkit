@@ -76,7 +76,44 @@ dependency inversion (`post_sync`, `host.services`), so no group needs to move o
 | `git-commits` | opt-in | commit conventions, AGENTS.md pointer | text only | `devkit-dist` |
 | `authoring` | opt-in | two playbooks, two rule assets | rule engine; area imports `devkit.rules` | `devkit-agt` |
 
-## 5. Option comparison summary
+## 5. Scout findings (envelope `scout-01.yaml`)
+
+- **Tests**: the import split is clean in production code, but four `devkit-dist`-side test locations reach harness
+  code: `tests/distribution/test_config_template.py` imports the `workflow` and `worktree` config readers to check
+  the hard-coded harness template tables (which C2 moves to `devkit-agt` together with this test);
+  `tests/core/test_cli.py` asserts `rules`, `workflow` and `gate` are root commands; the hook assertion in
+  `tests/distribution/test_sync.py` depends on the gate `post_sync` extension; `tests/testsupport/gate.py` imports
+  `devkit.gate` at module level. `testsupport.distribution` and `testsupport.search` are shared by distribution, host
+  and search tests only; `testsupport.rules`, `.gate` and `.workflow` are harness-side.
+- **Latency**: `entry_points(group="devkit.commands")` costs 18 to 24 ms in-process against 10 to 13 ms for
+  `import devkit.cli`; whole-process medians: `devkit --version` 38 ms, `devkit gate --help` 71 ms, `devkit spec
+  --help` (plugin path) 106 ms. A harness command mounted as a plugin pays about 10 to 13 ms more per call. Git hooks
+  run `devkit.gate` through a bootstrap that never imports `devkit.cli`, so commits pay nothing; the gate hook
+  wrapper and the worktree lifecycle probe `devkit_agt-*.dist-info` to pick the interpreter, which stays valid while
+  `devkit.gate` ships in `devkit-agt`.
+- **Namespace overlap**: `packages/devkit/src/devkit/` holds `__main__.py`, `cli.py` and an empty `py.typed`;
+  `devkit-advisory` ships only `devkit/advisory/` (with its own `py.typed`). Two wheels shipping `devkit/py.typed`
+  would clash in RECORD ownership and uninstall; PEP 561 puts markers in the subpackages of a namespace.
+- **Python API consumers**: `devkit-spec` imports `core` (67), `rules` (24), `advisory` (14), `workflow` (6),
+  `search`, `worktree` and `integration` (2 each), and none of `distribution`, `host`, `compact`, `gate`,
+  `generated` or `cli`; its entry points feed groups of both wheels, so it needs `devkit-agt`. Rule plugin code
+  (spec and authoring bundles) imports only `devkit.rules` and `devkit.core`. `devkit-catalog` and `devkit-starter`
+  tests import only `devkit.distribution`.
+- **Wiring**: `scripts/release.sh` (tag check against `packages/devkit/pyproject.toml`, wheel names, release-note
+  install lines), `scripts/smoke.sh` (one wheel per package, `tool_identity().package == "devkit-agt"`, built-in
+  bundle packages, `devkit-agt[mcp]`), `scripts/_lib.sh` (devkit-embed URL read from `packages/devkit/pyproject.toml`,
+  `devkit` alias), root `pyproject.toml` (ruff namespace packages, Pyright paths, dev group, sources, pytest paths),
+  `.github/workflows/ci.yml` (model pin comment, compact test path) and `docs/development/ci-cd.md` (lockstep tag).
+- **Hard-coded identities**: `BUILTIN_DISTRIBUTION`, `TOOL_PACKAGE`, `version("devkit-agt")` in `cli.py` and
+  `host/mcp/server.py`, extra names in `search/errors.py`, `host/errors.py`, `host/cli.py` and
+  `distribution/cli/__init__.py`, and the bundled `in-repo-bundle` and `agent-advisory-python` instructions.
+- **Documents naming the current owner**: `ARCH-01-introduction-and-goals`, `ARCH-03-context`,
+  `ARCH-05-1-containers`, `ARCH-05-2-components`, `ARCH-05-3-command-plugins`, `ARCH-05-4-distribution-components`,
+  `ARCH-07-deployment`, the architecture README, every `CAP-DIST-*` (frontmatter code paths, receipt tool record,
+  built-in bundles, extras), `CAP-SRCH-document-search`, `CAP-INT-mcp-services`, `CAP-HOST-lifecycle-observation`,
+  `docs/development/reference/*`, `guides/*`, the package READMEs and the root README.
+
+## 6. Option comparison summary
 
 | Question | Selected | Rejected | Deciding reason |
 | --- | --- | --- | --- |
