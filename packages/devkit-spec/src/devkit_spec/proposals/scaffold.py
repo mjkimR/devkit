@@ -81,20 +81,26 @@ def require_slug(raw: str, what: str = "slug") -> str:
     return slug
 
 
-def new_slug(raw: str, what: str = "slug", error: type[SpecError] = ProposalSlugError, fix: str | None = None) -> str:
+def new_slug(
+    raw: str,
+    what: str = "slug",
+    error: type[SpecError] = ProposalSlugError,
+    fix: str | None = None,
+    limit: int | None = SLUG_LIMIT,
+) -> str:
     """The slug of a new document: ``clean_slug(raw)`` with ``_`` written as ``-``.
 
-    Raises ``error`` when nothing is left, when it is longer than ``SLUG_LIMIT`` (its activity branches
-    ``plan-<slug>`` and ``dev-<slug>`` must fit devkit worktree's 64 characters), or when the first segment has no
-    letter: ``RULE-id-convention`` reads ``2024-budget`` as a retired number-based ID (``fix`` replaces the default
-    directive then). Lookups of existing documents use ``require_slug``.
+    Raises ``error`` when nothing is left, when it is longer than ``limit`` (its activity branches
+    ``plan-<slug>`` and ``dev-<slug>`` must fit devkit worktree's 64 characters when ``limit=SLUG_LIMIT``), or when
+    the first segment has no letter: ``RULE-id-convention`` reads ``2024-budget`` as a retired number-based ID
+    (``fix`` replaces the default directive then). Lookups of existing documents use ``require_slug``.
     """
     slug = _DASHES.sub("-", clean_slug(raw)).strip("-")
     if not slug:
         raise error(f"{what} {raw!r} has no letter or digit", target_files=[raw])
-    if len(slug) > SLUG_LIMIT:
+    if limit is not None and len(slug) > limit:
         raise error(
-            f"{what} {slug!r} is {len(slug)} characters; at most {SLUG_LIMIT}, so its activity branches plan-<slug>"
+            f"{what} {slug!r} is {len(slug)} characters; at most {limit}, so its activity branches plan-<slug>"
             " and dev-<slug> fit 64 characters",
             target_files=[raw],
             fix=f"Pass a shorter {what}",
@@ -562,13 +568,14 @@ def create_padr(
     summary = require_summary(summary)
     title = title.strip()
     if padr_slug is not None:
-        padr_id = f"PADR-{new_slug(padr_slug.strip().removeprefix('PADR-'), '--slug')}"
+        padr_id = f"PADR-{new_slug(padr_slug.strip().removeprefix('PADR-'), '--slug', limit=None)}"
     else:
         padr_id = "PADR-" + new_slug(
             title,
             "title",
             fix="Pass --slug with a slug whose first word has a letter (for example --slug roadmap-2024), keeping the"
             " title as it is",
+            limit=None,
         )
     bundle = bundle_dir(root, slug)
     if not bundle.is_dir():

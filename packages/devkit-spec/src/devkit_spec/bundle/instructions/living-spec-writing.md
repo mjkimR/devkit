@@ -32,27 +32,15 @@ description: Read before authoring, editing or reviewing docs/ or specs/ documen
 ## Glossary
 
 - Terms are defined in `docs/glossary.md`. In a monorepo, a package's documents (`docs/packages/<name>/`) may keep `docs/packages/<name>/glossary.md`: read it together with the root glossary. A package redefinition applies to that package's documents only.
-- Check the glossary while naming a domain concept or registering a term; registration applies only where a glossary
-  exists. No check enforces the rules below: they inform naming and ask for no approval.
+- Check the glossary while naming a domain concept or registering a term; registration applies only where a glossary exists. No check enforces the rules below: they inform naming and ask for no approval.
 
-1. Do not name a new domain concept with a bare generic noun (target, resource, scope, context, state, status,
-   revision, data, item). Add a qualifier that shows what it applies to, who owns it, or where it ends. Padding
-   (`target data`) is not a qualifier. Project additions and exceptions live in a section of `docs/glossary.md`.
-2. Use the full registered term in titles, headings, table cells and sentences meant to stand alone. A short form is
-   fine inside a paragraph whose subject is already clear.
-3. One concept, one term. Record rejected synonyms in the Avoid column and do not alternate. Where
-   `docs/glossary.yaml` exists, also add each Avoid entry as a synonym of the term's cluster.
-4. Same spelling, different owner or meaning: register each separately with its owner (approval request version vs.
-   deployment revision). Never bulk-replace a word across contexts.
-5. Use established terms and proper nouns (User Story, idempotency, product names) with their standard meaning;
-   describe only the project's scope of use.
-6. Keep document terms and code identifiers distinct. Quote existing API fields, types, paths and JSON exactly and map
-   them ("approval subject (`target` field)"). This guidance does not authorize renaming code, APIs or schemas; a
-   rename is its own spec. New identifiers SHOULD follow the registered term.
-7. Before registering a term, check overlap with existing rows and record its owner and what it excludes. In Living
-   Spec documents, rename in place without "formerly X" notes.
-8. ADRs, `docs/materials/`, completed specs, quotations and generated output keep their original wording and are not
-   reused as the current contract.
+1. Do not name a new domain concept with a bare generic noun (target, resource, scope, context, state, status, revision, data, item). Add a qualifier that shows what it applies to, who owns it, or where it ends. Padding (`target data`) is not a qualifier. Project additions and exceptions live in a section of `docs/glossary.md`.
+2. Use the full registered term in titles, headings, table cells and sentences meant to stand alone. A short form is fine inside a paragraph whose subject is already clear.
+3. One concept, one term. Record rejected synonyms in the Avoid column and do not alternate. Where `docs/glossary.yaml` exists, also add each Avoid entry as a synonym of the term's cluster.
+4. Same spelling, different owner or meaning: register each separately with its owner (approval request version vs. deployment revision). Never bulk-replace a word across contexts.
+5. Use established terms and proper nouns (User Story, idempotency, product names) with their standard meaning; describe only the project's scope of use.
+6. Keep document terms and code identifiers distinct. Quote existing API fields, types, paths and JSON exactly and map them ("approval subject (`target` field)"). This guidance does not authorize renaming code, APIs or schemas; a rename is its own spec. New identifiers SHOULD follow the registered term.
+7. Before registering a term, check overlap with existing rows and record its owner and what it excludes. In Living Spec documents, rename in place without "formerly X" notes.
+8. ADRs, `docs/materials/`, completed specs, quotations and generated output keep their original wording and are not reused as the current contract.
 
-A glossary without the `Owner`, `Avoid` and `Code identifiers` columns records owner, exclusions and avoided synonyms
-in its existing remarks or definition cells; migrating a project-owned glossary is not required.
+A glossary without the `Owner`, `Avoid` and `Code identifiers` columns records owner, exclusions and avoided synonyms in its existing remarks or definition cells; migrating a project-owned glossary is not required.

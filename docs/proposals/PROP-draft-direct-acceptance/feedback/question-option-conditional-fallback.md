@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-19
 ---
 
@@ -43,3 +43,6 @@ created_at: 2026-10-19
 - **Workarounds Attempted**: the interpretation above, recorded as an assumption.
 - **Related Assets**: `envelopes/worker-03.yaml`, `envelopes/answer-02.yaml`,
   `decisions/PADR-direct-acceptance-command-and-handoff-guard.md`.
+
+- **Disposition**: `session` task `dev-feedback-resolutions`: updated `packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/worker-records.md` (section 1, Questions) to require stating what holds when a condition does not hold for conditional question options, avoiding inference during answer folding. Synced to managed files and projections via `devkit sync`.
+

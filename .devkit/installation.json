@@ -824,7 +824,7 @@
     },
     ".agents/skills/spec/references/worker-records.md": {
       "mode": 420,
-      "sha256": "34f08dfac11bdb60ab6ce1b500af51979df0220df1e9e763af9d24f3a97787bb"
+      "sha256": "1d922e076dbaeb16c6812ba6c48af239cfffbd4a1c9f480c87169acced2e2503"
     },
     ".agents/skills/spec/references/worktree.md": {
       "mode": 420,
@@ -1012,7 +1012,7 @@
     },
     ".claude/skills/spec/references/worker-records.md": {
       "mode": 420,
-      "sha256": "34f08dfac11bdb60ab6ce1b500af51979df0220df1e9e763af9d24f3a97787bb"
+      "sha256": "1d922e076dbaeb16c6812ba6c48af239cfffbd4a1c9f480c87169acced2e2503"
     },
     ".claude/skills/spec/references/worktree.md": {
       "mode": 420,
@@ -1180,7 +1180,7 @@
     },
     ".devkit/managed/spec/instructions/living-spec-writing.md": {
       "mode": 420,
-      "sha256": "faadd05fbaff1cfa0198d4963ee70bd52cba9a3b1d917d6f17c10ec81bcfdf52"
+      "sha256": "8f606617bb55c380474068835e454aa3c69110934b03e1bc5f5b28dab96e437c"
     },
     ".devkit/managed/spec/playbooks/brownfield-adoption/SKILL.md": {
       "mode": 420,
@@ -1456,7 +1456,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/worker-records.md": {
       "mode": 420,
-      "sha256": "34f08dfac11bdb60ab6ce1b500af51979df0220df1e9e763af9d24f3a97787bb"
+      "sha256": "1d922e076dbaeb16c6812ba6c48af239cfffbd4a1c9f480c87169acced2e2503"
     },
     ".devkit/managed/spec/skills/spec/references/worktree.md": {
       "mode": 420,

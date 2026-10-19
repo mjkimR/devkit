@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-19
 ---
 
@@ -54,3 +54,6 @@ sdd-spec-feature.md: "Only a problem that cannot be solved without changing the 
 ```
 
 Historical source: Git `1b8478093a44cf2d0b74c412bffc93f259459ef0:docs/proposals/PROP-worktree-host-compatibility/feedback/direct-host-pause-status-undefined.md`; relative evidence paths refer to that proposal bundle.
+
+- **Disposition**: `session` task `dev-feedback-resolutions`: updated `packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/worker-records.md` (section 1, The `worker` envelope) to explicitly state that a direct Host run ending mid-activity without a question or a problem, including a planned pause for the user, records status `completed` with the pending step named in its summary, clarifying that a run's `completed` envelope is not activity completion. Synced to managed files and projections via `devkit sync`.
+

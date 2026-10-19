@@ -251,3 +251,12 @@ def test_padr_needs_a_bundle_and_a_title(workspace: Path) -> None:
     create_proposal(workspace, "there")
     with pytest.raises(ProposalSlugError):
         create_padr(workspace, "there", "?!")
+
+
+def test_create_padr_title_longer_than_proposal_slug_limit(workspace: Path) -> None:
+    create_proposal(workspace, "long-titles")
+    long_title = "Planning steps split between a spec reference and the worker contract"
+    assert len(long_title) == 69
+    created = create_padr(workspace, "long-titles", long_title, today=TODAY)
+    assert created.id == "PADR-planning-steps-split-between-a-spec-reference-and-the-worker-contract"
+    assert (workspace / created.path).exists()

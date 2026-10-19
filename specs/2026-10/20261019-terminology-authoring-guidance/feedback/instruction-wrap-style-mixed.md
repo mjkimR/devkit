@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-19
 ---
 
@@ -44,3 +44,6 @@ created_at: 2026-10-19
 git diff --numstat <base> -- .../living-spec-writing.md  ->  25 added, 1 deleted
 added body lines over 120 characters: 0; the only added line over 120 is the frontmatter description
 ```
+
+- **Disposition**: `session` task `dev-feedback-resolutions`: unwrapped the Glossary section bullets in `packages/devkit-spec/src/devkit_spec/bundle/instructions/living-spec-writing.md` to match the consistent single-line bullet style of the rest of the instruction. Synced to managed files via `devkit sync`.
+

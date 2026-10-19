@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-19
 ---
 
@@ -45,3 +45,6 @@ created_at: 2026-10-19
 is 69 characters; at most 59, so its activity branches plan-<slug> and dev-<slug> fit 64 characters
 [FIX]    Pass a shorter title
 ```
+
+- **Disposition**: `session` task `dev-feedback-resolutions`: parameterized `limit` in `devkit_spec.proposals.scaffold.new_slug` with default `SLUG_LIMIT`, and passed `limit=None` in `create_padr`. Verified with `pytest packages/devkit-spec/tests/proposals/test_proposal_scaffold.py -k test_create_padr_title_longer_than_proposal_slug_limit`: a 69-character title is accepted and creates the matching PADR file.
+
