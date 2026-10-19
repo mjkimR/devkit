@@ -138,7 +138,7 @@ CITING = [
     BUNDLE / "skills/spec-review/SKILL.md",
     BUNDLE / "skills/spec-delegate/SKILL.md",
     BUNDLE / "subagents/development-worker.md",
-    BUNDLE / "subagents/planning-worker.md",
+    BUNDLE / "skills/spec/references/planning.md",
     *WORKFLOWS,
 ]
 

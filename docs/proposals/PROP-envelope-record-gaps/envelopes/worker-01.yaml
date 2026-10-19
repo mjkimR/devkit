@@ -1,0 +1,49 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T06:24:14.793557Z'
+status: needs_input
+summary: 'First Planning turn at medium: status reviewing; spike evidence in materials/spike-evidence.md; three PADRs (reverify closes challenger rounds with a scoped unmarked-round count, refining ADR-bounded-high-effort-review-loop; answer envelopes carry settles by assumption position with --settle; a warning rule RULE-proposal-boundaries with a separate placeholder report, cleared before plan-accept). One challenger pass (challenger-01, 11 findings), folded: 1 P1 (one severity per rule) fixed by making the rule a warning and adding the pre-plan-accept clearing step; P2 first-commit block fixed by the same; P2 accepted-proposal moves, namespace resolution, R1 scoping and missing CAP-DLV-delivery-workflows/ADR citation fixed in the PADRs and proposal; P3 Q1 support details, Q2 wording and path normalization adopted as suggested; the two Decision needed findings became options of the questions (recommended as the challenger suggested). challenger-01 stays open in the record because a reverify cannot yet close a challenger round (the gap this proposal fixes). dev_effort stays medium. Coordination with PROP-direct-planning-procedure noted (that one integrates first).'
+findings: []
+assumptions:
+- PROP-direct-planning-procedure integrates first; otherwise it moves the reworded planning-worker step 4 as written.
+- A project wanting boundaries enforced raises RULE-proposal-boundaries with its own severity override; no policy change here.
+unverified_areas:
+- Proposals in reviewing on other plan- branches were not checked against the new rule.
+checks: {}
+diff_scope:
+  base: 97cdcd825b5e40f8f516ac3a4f1ed2478ab34fd4
+  head: 9adfed940ebf893fce982d7483ae6093c4527d8c
+questions:
+- id: answer-fold-round
+  title: Review rounds after folding answers
+  prompt: At high effort, when a Planning folds your answers into a proposal that already went through review rounds, how should the review loop count the rounds that follow?
+  context: Decides the review-loop rule for high Planning (PADR-reverify-closes-challenger-rounds). Today the loop caps rounds at the third after the initial review and says nothing about answer folds; two open feedback items ran into this. It matters now because the rule goes into review-loop.md in this Development.
+  options:
+  - id: same-loop-extra-round
+    description: The fold is a new batch in the same loop; if it reaches the cap, it gets one more fresh round outside the cap, as a fix you requested does today. The loop stays bounded and your answer never forces a hand-over by itself.
+    recommended: true
+  - id: same-loop
+    description: 'The fold is a new batch in the same loop with no extra round. Strictest: a fold at the cap is handed back to you even though it only applied your answer.'
+    recommended: false
+  - id: fresh-loop
+    description: The fold starts a fresh loop at round 1. Simplest, but every round of answers resets the cap, so the loop has no bound across answer rounds.
+    recommended: false
+  allow_note: true
+- id: new-boundary-paths
+  title: Declaring paths a change will create
+  prompt: The new boundaries rule warns when a proposal's target_area or boundaries.owns names a path that does not exist. How should a proposal declare a path that its Development will create?
+  context: Decides how authors write boundaries for new areas, files or packages (PADR-proposal-boundaries-name-existing-paths). The boundary list is copied as written into the spec and its task boundary at handoff, so any new syntax also changes handoff.
+  options:
+  - id: nearest-ancestor
+    description: Name the nearest existing parent directory (for example packages/devkit-spec/src/devkit_spec/bundle/rules/). No new syntax and no handoff change; the new path itself is named in the proposal text.
+    recommended: true
+  - id: creates-key
+    description: A separate list boundaries.creates for new paths, checked to have an existing parent; handoff copies it as a planned new boundary. Precise, but adds a frontmatter field and a handoff change.
+    recommended: false
+  - id: new-prefix
+    description: Mark the entry inline, for example 'new:capabilities/foo/'. Short, but handoff must strip the marker or it leaks into the spec's task boundary.
+    recommended: false
+  allow_note: true
+activity_effort: medium

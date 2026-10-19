@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T06:28:55.629361Z'
+status: completed
+summary: 'Swept this Development run and its diff (repo-and-upstream): recorded FB-instruction-wrap-style-mixed (during build) and FB-glossary-owner-ids-unchecked; no duplicates among open feedback.'
+findings: []
+checks:
+  swept: PASS recorded=2 duplicates=0

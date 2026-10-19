@@ -1,0 +1,21 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T06:16:25.298744Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer self-verified the fix (no repeat code-reviewer call): docs/glossary.md lead now names Term, Definition, Owner, Avoid and Code identifiers; only that paragraph changed since a83f1bb.'
+findings:
+- issue: AC-07 requires that the lead paragraph of docs/glossary.md names the five columns; it names only Owner, Avoid and Code identifiers. Term and Definition are only implied.
+  evidence: docs/glossary.md:3
+  failure_condition: A strict reading of AC-07 ('the lead paragraph names the five columns') fails against the current lead text (docs/glossary.md:3-5).
+  suggested_action: Name Term and Definition in the lead, or waive in reverify.
+  resolution: resolved
+  severity: P3
+checks:
+  rules: PASS devkit rules check docs/glossary.md and commit gate
+diff_scope:
+  base: a83f1bb13f7e90ac337d03ec6fd9e041cfda9b19
+  head: d5a4a71164588d267e701e9e4c06b17c68f66a50
+activity_effort: medium
