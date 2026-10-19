@@ -15,6 +15,8 @@ boundaries:
     - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-delegate/
     - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-orchestrate/
     - packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/worker-records.md
+    - packages/devkit-spec/src/devkit_spec/bundle/workflows/sdd-spec-feature.md
+    - .devkit/installation.json
     - packages/devkit-spec/tests/
     - docs/capabilities/delivery/
   excludes:
@@ -109,13 +111,18 @@ Evidence and the option table: `MAT-worktree-host-spike-evidence`; scout returns
   is refused, is reported by the Host as stopped with its uncommitted paths.
 - `PADR-host-native-worktrees-excluded`: `devkit worktree start` stays the only source of an activity's worktree.
 - `PADR-codex-process-worker`: on Codex a worker turn runs as one approved `codex exec` process rooted in its
-  worktree with both git dirs granted, shipped only when one live Development turn passes; a failed or unrun turn
-  ships the recorded reasons only. The user runs that turn from a Codex session when Development reaches it; the
-  Development worker never runs `codex exec` itself.
+  worktree with both git dirs granted, at the Host session's reasoning effort when known, on a synced and trusted
+  worktree; shipped only when one bounded live Development turn passes; a failed or unrun turn ships the recorded
+  reasons only. The user runs that turn from a Codex session when a Development question asks for it; the
+  Development worker never runs `codex exec` itself. To make that hand-off possible, Development adds, whatever the
+  outcome: a bounded `task_goal` for a development-worker turn, a development-worker question for an action only the
+  user can take (with its answers recorded first), and Host validation of commits another Host made on the unit.
 - Answers (`envelopes/answer-01.yaml`): `codex-worker-scope` = `process-worker`, `codex-live-turn` =
   `user-codex-host`, `antigravity-verification` = `keep-unverified`.
 - Effort: `dev_effort: high` and `size: M` (a new launch procedure, skill and contract changes, the worker probe and a
-  live verification handed to the user mid-Development).
+  live verification handed to the user mid-Development, and the development-worker hand-off changes it needs).
+- Main drift checked (`envelopes/scout-03.yaml`): no change on `main` contradicts the decisions;
+  `devkit.distribution` now lives in `packages/devkit-dist`.
 - Open, not widened: on every host a worker has the session's access to the shared `.git` (other refs, config, hooks,
   the scope registry), which the Host's range check does not see.
 
@@ -134,6 +141,9 @@ Evidence and the option table: `MAT-worktree-host-spike-evidence`; scout returns
   - Contract tests (`packages/devkit-spec/tests/test_role_contracts.py`): both worker contracts keep Claude Code
     `native`, Codex `unsupported` and Antigravity `unverified`, set no `isolation`, and carry `x-process-hosts: [codex]`
     exactly when the Codex live turn passed.
+  - Contract tests assert the development-worker's bounded `task_goal` turn end, its user-action question clause and
+    record-answers-first step, the `answers` field of its payload row, and the other-Host range rule in
+    `references/worker.md`.
   - A contract test runs both worker contracts' probe commands on a throwaway repository with a linked worktree and
     asserts refs, reflogs of existing refs, the index and `git status` unchanged.
   - `packages/devkit-spec/tests/test_bundle_budgets.py` passes (`spec-delegate/SKILL.md` at most 11776 bytes).
