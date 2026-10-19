@@ -85,9 +85,10 @@ gates and provenance carried by the handoff.
   is deleted as Backlog work, keeping its open feedback, and done as a `session` task, the one stated exception to the
   lowering rule. The draft listed an `issue` field among the carried values; devkit-spec has none.
 - **Q5. Tooling.** Answered in `PADR-direct-acceptance-command-and-handoff-guard`: the `accept` command 01 §10
-  already plans, with a `--direct` variant for an eligible draft, a read-only `--check` and a repair of an acceptance
-  without its gate record (after the user's explicit acceptance), records the acceptance through the engine in one
-  step; the handoff of a bound bundle also requires the gate record and keeps its note; the stage schema stays;
+  already plans, with a `--direct` variant for an eligible draft, a read-only `--check` and a `--direct` repair of an
+  accepted proposal without its gate record and without a `worker` envelope (on the base, after the user's explicit
+  acceptance), records the acceptance through the engine in one step; a Planning acceptance without its record goes
+  to the user; the handoff of a bound bundle also requires the gate record and keeps its note; the stage schema stays;
   `devkit spec proposal check` gets no mode.
 - **Q6. Visibility.** Answered in the same PADR: the acceptance request shows "Planning: skipped (direct acceptance)"
   where a Planning acceptance shows its applied effort and support roles (the `sdd-proposal` gate rules), with
@@ -152,7 +153,9 @@ Development here, the workbench updates (A2, chosen, and the session reclassific
 
 - 01 §5.1 and Q55: replace "accepting without Planning is a follow-up (`PROP-draft-direct-acceptance`)" and "small
   drafts run Planning at `low`" with the direct acceptance: Backlog may accept an eligible draft, on the base checkout,
-  outside the worktree and PR policies like its other work.
+  outside the worktree and PR policies like its other work. Both the direct acceptance and the reclassification
+  deletion commit only on the base checkout once push access is settled; the "commit at the current checkout" and
+  "if the base cannot be pushed, ride an in-progress activity branch" bullets do not apply to them.
 - 01 §4.7 and Q9: a direct acceptance is the one proposal status change Backlog makes on the base without a merge,
   beside the draft edits it already makes; Planning and Development keep their own branches.
 - 01 §1 (activity table and diagram) and §4.4 table: Backlog may give `plan-accept` for an eligible draft; `accepted`
@@ -168,9 +171,11 @@ Development here, the workbench updates (A2, chosen, and the session reclassific
 - 01 §2.2 (the lowering bullet and the depth-adjustment diagram), Q19, §5.1, §6.1 and Q55: on the user's explicit
   decision at pickup, a queued draft without PADRs may be deleted as Backlog work, keeping its open feedback, and done
   as a `session` task; the one exception to lowering only through a handoff, never for a proposal in review or
-  accepted or a spec Unit. Also for it: 01 §1 (the Backlog row and the route diagram) and §5 (the routing diagram)
-  gain the route from a queued draft to inline Planning, §5.5 lets `spec-next` offer it, §6.2 lists the deletion
-  among those that preserve open feedback, and 03 §3 (Backlog row) puts the deletion on the base checkout.
+  accepted or a spec Unit. The deletion commits only on the base checkout once push access is settled, the session
+  uses a new slug, and a session that never integrates is recovered by `git revert` of the deletion commit. Also for
+  it: 01 §1 (the Backlog row and the route diagram) and §5 (the routing diagram) gain the route from a queued draft
+  to inline Planning, §5.5 lets `spec-next` offer it, §6.2 lists the deletion among those that preserve open
+  feedback, and 03 §3 (Backlog row) puts the deletion on the base checkout.
 - 01 §4.2: acceptances are recorded with `devkit spec proposal accept`, other gates with `devkit workflow answer`.
 - 01 §5.5: `spec-next` may recommend direct acceptance for an eligible draft beside Planning.
 - 01 §10 (devkit-spec rows): the planned proposal status-transition CLI gains `--direct`, `--check` and the repair;
@@ -194,7 +199,8 @@ Development here, the workbench updates (A2, chosen, and the session reclassific
   by hand.
 - `US-incubate-and-hand-off-a-proposal` (`docs/stories/delivery/`): scenario 1 hands off on the status alone and
   scenario 5 carries the note as `PROP-<slug>`; both follow the guard and the carried note, and the story names the
-  direct acceptance beside acceptance after Planning.
+  direct acceptance beside acceptance after Planning; scenario 7 also covers the session-reclassification deletion of
+  a draft.
 - `CAP-DLV-proposal-incubation`: the approval rule (rule 2), rule 12 (the carried note), rule 13 (Backlog may accept an
   eligible draft, and may delete a draft for a session reclassification on the user's decision), the command, its codes
   in the code table and its output.

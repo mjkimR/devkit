@@ -66,7 +66,9 @@ low to save cost. The user chose to allow it on their explicit decision (`answer
   PR policies like other Backlog deletions. This record is its authority. In the same commit it preserves open
   feedback and strikes through incoming references on the base, promoted feedback dispositions included, per
   feedback retirement (steps 1 to 4), so nothing dangles. The message states the user's decision and the reason
-  ("depth proposal -> session on the user's decision: <reason>").
+  ("depth proposal -> session on the user's decision: <reason>"). Right after committing it, before the session
+  starts, the Host names the deletion commit to the user, so a session lost before its report still leaves the way
+  back known.
 - **A new slug**: the session, its `dev-<slug>` and any Unit a later raise adds use a slug other than the deleted
   draft's (01 §7.4: a reused slug blurs the work), so a `PROP-<slug>` mention merged later from another branch is
   never rewritten as a handoff.
@@ -74,8 +76,9 @@ low to save cost. The user chose to allow it on their explicit decision (`answer
   draft's `plan-intent` record goes with the draft, and it follows the `session` rules, raising to `spec` when a
   lasting design record, a contract change or a Living Spec change turns out to be needed. Its final report names the
   deletion commit. If it ends without integrating, the recovery is `git revert` of the deletion commit, on the user's
-  decision, which restores the draft with its intent record, milestone, feedback and references (01 §7.2: undo by
-  revert, never a reset).
+  decision, which restores the draft with its intent record, milestone, feedback and references when no later commit
+  changed those paths; otherwise the Host resolves the conflicts with the user, and a milestone closed since pickup
+  is reviewed again for the restored member (01 §7.2: undo by revert, never a reset).
 - **Scope of the exception**: it is the only lowering besides a proposal's handoff, and it applies only to a queued
   draft before Planning; a proposal in review or accepted, and a spec Unit, are never lowered.
 - No command or tool check is added: the deletion uses the existing check, the conditions are visible to the Host, and
