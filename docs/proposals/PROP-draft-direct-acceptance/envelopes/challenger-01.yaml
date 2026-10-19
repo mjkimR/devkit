@@ -1,0 +1,86 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T02:21:11.762786Z'
+status: completed
+summary: 'Engine findings confirmed. Recommended option B conflicts with 01 4.7 (separate Planning and Development PRs, accepted proposal on the base as the start queue) and breaks the 7.4 supersede/abandon close; the comparison omitted rows where A wins. Shared gaps: task_kind not shown at acceptance, handoff guard scope, planning_effort hint, sweep check precision, two misquoted sources.'
+findings:
+- issue: B breaks the 01 4.7 principle that Planning and Development use separate branches and PRs (the accepted proposal on the base is the start queue; reviewers may differ); neither the strategy-change list nor the comparison mentions it.
+  evidence: workbench docs/strategy-layer/01-master-flow.md:238; proposal.md 3.2; materials/options-comparison.md table
+  failure_condition: Under pull_request=required with a team reviewer the direction is first reviewed inside the Development PR, after the implementation exists.
+  suggested_action: List 4.7 as an amendment for B or prefer A; add the row to the comparison.
+  resolution: open
+  severity: high
+- issue: 'Under B the 01 7.4 supersede and abandon closes cannot act on a directly accepted draft: the base copy stays draft, and proposal new --supersedes refuses a non-accepted proposal.'
+  evidence: 01-master-flow.md:558-559; packages/devkit-spec/src/devkit_spec/proposals/scaffold.py:161-190; references/classification.md 4
+  failure_condition: A supersede after a direct acceptance under B fails with SPEC_PROPOSAL_NOT_APPROVED; abandon has no accepted proposal on the base to reference.
+  suggested_action: Specify close semantics for B or choose A, where the close works unchanged.
+  resolution: open
+  severity: high
+- issue: In B the eligibility check runs only after dev-<slug> exists; a refusal or an interrupted session leaves a draft on dev-<slug> that attach refuses and the new guard turns into a Backlog block.
+  evidence: packages/devkit-spec/src/devkit_spec/attach.py:86-87; PADR-direct-acceptance-command-and-handoff-guard 4
+  failure_condition: Resume with --existing-branch fails WORKTREE_ATTACH_REFUSED; running Planning instead needs an unmentioned discard.
+  suggested_action: Add a read-only eligibility pre-check before any branch is started and state the discard on refusal.
+  resolution: open
+  severity: medium
+- issue: B's state 'draft on the base while dev-<slug> owns the slug' is guarded only by check; Planning start, padr and list display still treat it as a runnable draft.
+  evidence: packages/devkit-spec/src/devkit_spec/proposals/backlog.py:44; scaffold.py:574; cli/documents.py:438-443; sdd-proposal.md Planning start
+  failure_condition: Planning starts on plan-<slug> from the base draft while dev-<slug> is in review; the two merges conflict.
+  suggested_action: Guard Planning start, padr and display against dev-<slug>, or avoid the state (A).
+  resolution: open
+  severity: medium
+- issue: 'cloud-pr and autohub are not covered: under B a draft never becomes accepted on the base, so autohub''s start action never offers it.'
+  evidence: 01-master-flow.md:470, 472, 784-787
+  failure_condition: A user driving work from autohub cannot start a directly accepted draft.
+  suggested_action: List 01 7.1 and 10 or state the limitation; include it in the A/B assessment.
+  resolution: open
+  severity: medium
+- issue: The direct acceptance request does not show task_kind, which plan-accept confirms.
+  evidence: bundle/workflows/sdd-proposal.md (task_kind confirmed at plan-accept); CAP-DLV-proposal-incubation.md:54
+  failure_condition: A provisional feature that is really a bugfix is bound to sdd-spec-feature without the user seeing the kind.
+  suggested_action: Show task_kind with its reason in the request and record it as confirmed in the note.
+  resolution: open
+  severity: medium
+- issue: Eligibility ignores the planning_effort hint the user confirmed at plan-intent.
+  evidence: PADR-eligibility-for-direct-acceptance 4; 01-master-flow.md:118, 144
+  failure_condition: A draft confirmed at planning_effort high is proposed for skipping Planning without naming that reversal.
+  suggested_action: Make planning_effort part of eligibility or require the request to name it and the reason.
+  resolution: open
+  severity: medium
+- issue: The handoff guard 'for every proposal' blocks single-file and unbound proposals, which can never carry a gate record.
+  evidence: packages/devkit-spec/src/devkit_spec/proposals/handoff.py:310-316, 612-613; CAP-DLV-proposal-incubation.md:158
+  failure_condition: Handing off docs/proposals/PROP-<slug>.md with status accepted fails SPEC_PROPOSAL_NOT_APPROVED.
+  suggested_action: Scope the guard to bundles bound to sdd-proposal, or retire those forms explicitly.
+  resolution: open
+  severity: medium
+- issue: 'Option A was dismissed on unequal terms: the table omits 4.7, 7.4, cloud-pr start and display consistency, and charges A ''in progress at once'', which is what any accepted proposal means.'
+  evidence: materials/options-comparison.md; 01-master-flow.md:238, 340, 470, 558-559
+  failure_condition: The user picks B on 'fewest strategy changes' and implementation finds the extra work.
+  suggested_action: Correct the table; consider A with the PR policy applied under required.
+  resolution: open
+  severity: medium
+- issue: C was rejected as a forbidden second way of lowering depth, but direct acceptance lowers effective depth the same way, gated only by the user's plan-accept.
+  evidence: 01-master-flow.md:114; materials/options-comparison.md M2 paragraph
+  failure_condition: 2.2's protection is bypassed while its wording is kept.
+  suggested_action: State in the 2.2 change that direct acceptance is an approved route gated by plan-accept; drop the asymmetric argument.
+  resolution: open
+  severity: low
+- issue: The sweep requirement cannot be checked mechanically as written (fresh vs older PASS), and stage-off or requested-only policies are not handled.
+  evidence: PADR-direct-acceptance-command-and-handoff-guard 4; sdd-proposal.md Planning feedback
+  failure_condition: An older PASS passes without a fresh sweep; with collect-feedback off the command refuses a sweep the policy disabled.
+  suggested_action: Defer to the engine's evaluation (record_answer refuses until collect-feedback holds or is off) and keep freshness an executor procedure.
+  resolution: open
+  severity: low
+- issue: 'Two sources are misquoted: the lowering rule is in 01 2.2 and classification.md 3, not ADR-task-kind-and-planning-depth; 01 5.1 names ''accepting without Planning'' as the follow-up.'
+  evidence: docs/decisions/2026-10/20261016-task-kind-and-planning-depth.md; 01-master-flow.md:114, 294
+  failure_condition: Editors and reviewers look in the wrong place.
+  suggested_action: Cite 01 2.2 and classification.md 3; quote 5.1 accurately.
+  resolution: open
+  severity: low
+assumptions:
+- The workbench strategy-layer documents read are the current SSOT
+unverified_areas:
+- autohub implementation
+- Whether a new worktree start runs a devkit-spec check that refuses plan-<slug> while dev-<slug> exists
+checks: {}

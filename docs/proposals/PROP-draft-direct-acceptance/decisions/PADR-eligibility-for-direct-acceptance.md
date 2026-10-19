@@ -40,12 +40,15 @@ for which drafts qualify, split into what a tool can check and what only the Hos
 ## 4. Decision Outcome
 
 - **Checked by the tool**, all at the moment of acceptance: `status: draft`; an effective accepted
-  `gate:plan-intent`; no `needs_decompose: true`; no `supersedes`; no local or fetched `plan-<slug>`; `task_kind` is
-  `feature` or `bugfix`.
-- **Judged by the Host and shown to the user**: the direction leaves nothing to compare (the Host would otherwise
-  propose `planning_effort: low` and has no question to ask), the body has no open spike question, and the draft is
-  not a depth escalation carrying a failed attempt's material. PADRs already in the draft are listed in the request,
-  because the handoff promotes them to accepted ADRs.
+  `gate:plan-intent`; no `needs_decompose: true`; no `supersedes`; no local or fetched `plan-<slug>` other than the
+  checkout the acceptance itself runs in (under `pull_request = required` the acceptance is that branch's only
+  commit); `task_kind` is `feature` or `bugfix`. The same checks run read-only before any branch is started, so a
+  refusal leaves nothing behind.
+- **Judged by the Host and shown to the user**: the direction leaves nothing to compare (no option to weigh, no
+  question to ask), the body has no open spike question, and the draft is not a depth escalation carrying a failed
+  attempt's material. The request names the recorded `planning_effort` hint, which the user confirmed at
+  `plan-intent`; when it is not `low`, the Host states why Planning is skipped anyway. PADRs already in the draft are
+  listed, because the handoff promotes them to accepted ADRs.
 - No size limit.
 
 ## 5. Consequences
@@ -53,3 +56,4 @@ for which drafts qualify, split into what a tool can check and what only the Hos
 - A draft that fails a mechanical check runs Planning as today; the refusal names the failed condition.
 - A draft that passes but that the Host judges unsettled is proposed for Planning, with the reason; the Host never
   proposes direct acceptance silently, and the user may still choose Planning for an eligible draft.
+- Depth escalation has no frontmatter marker, so that exclusion stays a judgment; a marker is not added for it.
