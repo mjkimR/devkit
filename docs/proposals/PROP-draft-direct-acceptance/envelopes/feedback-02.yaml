@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T03:18:57.443837Z'
+status: completed
+summary: Swept this run (answer record, fold-in, new PADR, scout-02, challenger-05 and its fix batch, envelope authoring) against the committed records and open backlog under capture=observed; recorded FB-review-round-count-before-markers; FB-padr-summary-length-unchecked did not recur (the new summary was within the limit).
+findings: []
+checks:
+  swept: PASS recorded=1 duplicates=0
