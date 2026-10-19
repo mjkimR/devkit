@@ -56,6 +56,17 @@ def test_branches_are_local_only(repo: Path) -> None:
     assert reader.default_branch() == "main"
 
 
+def test_branches_shadowed_by_tags_keep_their_full_names(repo: Path) -> None:
+    git(repo, "branch", "dev-x", "plan-x")
+    git(repo, "tag", "main", "plan-x")
+    git(repo, "tag", "dev-x", "main")
+    reader = GitReader(repo)
+    assert reader.default_branch() == "main"
+    assert reader.branches() == ["dev-x", "main", "plan-x"]
+    assert reader.blob("main", "docs/a.md") == b"main a\n"
+    assert reader.blob("dev-x", "docs/a.md") == b"plan a\n"
+
+
 def test_detached_head_is_reported_as_head(repo: Path) -> None:
     git(repo, "switch", "-q", "--detach", "plan-x")
     reader = GitReader(repo)

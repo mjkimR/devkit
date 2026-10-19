@@ -59,16 +59,19 @@ class GitReader:
         except GitError as exc:
             raise git_failed(exc.stderr or str(exc)) from exc
 
+    # Branch names are always full (``refs/heads/`` stripped, never Git's ``--short`` form): a branch a tag of the same
+    # name shadows would be abbreviated to ``heads/<name>``, which ``commit`` would not find.
     def default_branch(self) -> str:
         """The branch checked out in this work tree; ``HEAD`` when it is detached."""
         try:
-            return _decode(run_git(self.root, "symbolic-ref", "--quiet", "--short", "HEAD")).strip()
+            ref = _decode(run_git(self.root, "symbolic-ref", "--quiet", "HEAD")).strip()
         except GitError:
             return "HEAD"
+        return ref.removeprefix("refs/heads/")
 
     def branches(self) -> list[str]:
         """Every local branch, sorted; remote-tracking branches are not listed."""
-        out = self._git("for-each-ref", "--format=%(refname:short)", "refs/heads")
+        out = self._git("for-each-ref", "--format=%(refname:lstrip=2)", "refs/heads")
         return sorted(line for line in _decode(out).splitlines() if line)
 
     def commit(self, ref: str) -> str:
