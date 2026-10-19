@@ -1,0 +1,52 @@
+kind: worker
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T00:20:25.922027Z'
+status: needs_input
+summary: 'Planning in direct mode at low effort: Q2 answered from host documentation (materials/host-effort-semantics.md); Q1, Q3 and Q4 wait for the user; dev_effort stays medium; no support roles.'
+findings: []
+unverified_areas:
+- Claude Code behavior on a model without effort support
+checks: {}
+diff_scope:
+  base: ''
+  head: dea667daff81fc0fd5cfeeb0cd3d15a29fea31ce
+questions:
+- id: q1-effort-values
+  title: Effort value per role
+  prompt: Which reasoning effort does each role contract preset?
+  context: Only low, medium and high are used. Without a preset a subagent runs at the session's or the model's default (medium on the Claude 5.5 family).
+  options:
+  - id: reviewers-only
+    description: scout and reconcile-reviewer medium; code-reviewer and challenger high; planning-worker and development-worker unset (session effort)
+    recommended: true
+  - id: by-profile
+    description: as reviewers-only, plus both workers high following their general-high profile
+    recommended: false
+  allow_note: true
+- id: q3-emulated-codex
+  title: Emulated Codex roles
+  prompt: Is the limit for emulated Codex roles stated?
+  context: A role the main session runs itself uses the session's effort; the preset applies only to a spawned projected agent.
+  options:
+  - id: state-in-cap
+    description: one sentence in CAP-DLV-delivery-workflows section 4.6
+    recommended: true
+  - id: say-nothing
+    description: no statement
+    recommended: false
+  allow_note: true
+- id: q4-drift-test
+  title: Preset drift test
+  prompt: Does a test assert that each preset matches its x-model-profile?
+  context: The mapping lives only in the contracts otherwise.
+  options:
+  - id: add-test
+    description: assert the Q1 mapping in packages/devkit-spec/tests/test_role_contracts.py
+    recommended: true
+  - id: no-test
+    description: no test
+    recommended: false
+  allow_note: true
+activity_effort: low
