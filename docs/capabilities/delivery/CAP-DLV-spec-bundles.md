@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-spec-bundles
 title: Spec Bundles
-summary: Creating a feature spec bundle under specs/<YYYY-MM>/<YYYYMMDD>-<slug>/ with devkit spec new, its layout, the SPEC/PLAN/TASKS skeletons marked for devkit's not-skeleton check, and how spec.md is bound to a delivery workflow.
+summary: "Spec bundle creation validates summaries up to 300 stripped characters before writes, scaffolds SPEC/PLAN/TASKS documents under specs/<YYYY-MM>/<YYYYMMDD>-<slug>/ and binds spec.md to a delivery workflow."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -12,6 +12,7 @@ entrypoints:
   - packages/devkit-spec/src/devkit_spec/proposals/specs.py
   - packages/devkit-spec/src/devkit_spec/proposals/binding.py
   - packages/devkit-spec/src/devkit_spec/cli/specs.py
+  - packages/devkit-spec/src/devkit_spec/proposals/scaffold.py
 ---
 
 # [CAP-DLV-spec-bundles] Spec Bundles

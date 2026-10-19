@@ -2,7 +2,7 @@
 id: SPEC-summary-length-guard
 title: Reject oversized document summaries before creation
 summary: "Document creation commands reject summaries longer than 300 characters before writing files, matching the document summary rule."
-status: in-progress
+status: completed
 created: 2026-10-19
 related_capabilities:
   - CAP-DLV-proposal-incubation

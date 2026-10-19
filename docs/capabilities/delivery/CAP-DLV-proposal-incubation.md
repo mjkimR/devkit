@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-proposal-incubation
 title: Proposal Incubation and Handoff
-summary: "Proposal incubation and handoff create a bound spec, promote decisions, carry open Planning feedback, preserve settled feedback as materials, carry approvals and rewrite references; Host cleanup preserves open feedback before deletion without handoff."
+summary: "Proposal incubation and handoff validate creation summaries, create a bound spec, promote decisions, carry open Planning feedback, preserve settled feedback as materials, carry approvals and rewrite references; cleanup preserves open feedback before deletion without handoff."
 area: delivery
 status: active
 created_at: 2026-10-13
