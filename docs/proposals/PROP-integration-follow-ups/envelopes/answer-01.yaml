@@ -1,0 +1,27 @@
+kind: answer
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T06:14:35.797508Z'
+status: completed
+summary: q1-split, e1-merge-method, t-tests-on-result, a-approval-lifetime and m-milestone-wording decided, each the recommended option.
+findings: []
+checks: {}
+answers_to: worker-01.yaml
+answers:
+- question: q1-split
+  choice: split
+  decision: This proposal narrows to base advances (E1 to E6) and is retitled; pull request cleanup (Q3) and host confirmation (Q4) become child drafts decomposed from it; auto dispatch (Q2) stays as open feedback with no child draft until the user decides whether a policy may grant merge and deletion authority.
+- question: e1-merge-method
+  choice: no-ff-default
+  decision: A new [worktree] merge key with default no-ff and ff-only available; ff-only in either the base's or the source's policy wins.
+- question: t-tests-on-result
+  choice: disclose
+  decision: Only the CI rules run on the merged result; the form and the integration report state that tests and review ran on the source only.
+- question: a-approval-lifetime
+  choice: within-call
+  decision: The approval tolerates target advances only within the integrate call that asked for it; integration_resume continues only onto the last build target, and a later target needs a new confirmation.
+- question: m-milestone-wording
+  choice: update
+  decision: Development updates MS-multi-host-native-integration's exit condition to the confirmation-target binding during reconcile, in the same change.
+activity_effort: high
