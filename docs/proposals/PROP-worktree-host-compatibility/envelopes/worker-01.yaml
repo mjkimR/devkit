@@ -1,0 +1,67 @@
+kind: worker
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T02:47:36.324283Z'
+status: needs_input
+summary: 'Planning (activity-effort high): status reviewing; answered Q1-Q7 with host docs (scout-01 Claude Code/Antigravity, scout-02 Codex/Git), local codex sandbox probes and this repository''s observed Claude Code runs (MAT-worktree-host-spike-evidence; MAT-host-worktree-flows corrected). Decided: PADR-worktree-access-preconditions (sibling worktrees kept, no projected host settings or Git profile, per-host precondition marked observed/documented, a worker-side access probe before any write, defined handling of a return without an envelope); PADR-host-native-worktrees-excluded; PADR-codex-process-worker (codex exec rooted in the worktree with both git dirs, shipped only if one live Development turn passes), pending codex-worker-scope. O1/O2/O5 rejected, O4 excluded. Boundaries set to concrete paths; acceptance checks made mechanical; dev_effort high kept for the recommended answer. Support roles: scout x2, challenger x3 (initial, re-review, third round with no high finding). Three questions wait for the user.'
+findings:
+- issue: On every host a worker has the session's access to the shared .git (other refs, config, hooks, the scope registry), which the Host's committed-range check does not see; this proposal neither widens nor closes the gap.
+  evidence: PADR-worktree-access-preconditions §5; envelopes/challenger-01.yaml finding 2; spec-delegate references/worker.md checks
+  suggested_action: A follow-up proposal for a Host snapshot of refs and .git config, hooks and devkit files before and after a worker turn.
+  resolution: open
+  severity: medium
+assumptions:
+- Worker envelope uses the stage next named at the start of the run (collect-feedback); see FB-worker-stage-choice-ambiguous
+- Review rounds stopped after the third challenger pass found no high issue and its fixes were wording-level; PROP-high-effort-review-loop will bound such loops
+- Claude Code stays native on the evidence of this repository's auto-mode runs without a sandbox; acceptEdits, default and sandbox cases rest on documentation
+- A temporary uncommitted probe lab inside the proposal directory was within the write scope; removed before the next commit (FB-planning-probe-lab-location)
+unverified_areas:
+- End-to-end codex exec worker turn, nested roles and trust inside it, legacy -s workspace-write --add-dir lifting the git-dir protection (only codex sandbox -P probes ran)
+- Claude Code acceptEdits and /add-dir, the Bash sandbox and its escape hatches, background-subagent prompt handling, auto-mode judgment of the probe and --no-verify commits
+- Antigravity subagent access, invoke_subagent parameters and .git handling (documentation only, summarised renders)
+- Claude Code parent-workspace session loading roles via /add-dir <project>
+checks:
+  rules: PASS devkit rules check on the proposal directory
+  feedback: PASS feedback-01 swept recorded=1 duplicates=3
+diff_scope:
+  base: 298dd9e5cfc07d2e5cbe634856f56d2543b1e392
+  head: 78b21b0cdf295b15897fce8441decce46747a56e
+questions:
+- id: codex-worker-scope
+  title: Codex worker path in Development
+  prompt: Should Development add a Codex process worker (codex exec rooted in the worktree), or keep Codex running each activity in direct and document the verified reasons only?
+  context: 'A Codex subagent cannot reach a sibling worktree: spawn_agent keeps the parent''s cwd and sandbox, and a commit needs both <repo>/.git and <repo>/.git/worktrees/<name> granted exactly (verified with codex sandbox). A codex exec process rooted in the worktree with those two grants can commit, but each turn is a separate model session started as an escalated command, approval is never inside exec, and nested roles, trust, the commit gate''s tooling and the Host''s command timeout are unverified until one live turn. PADR-codex-process-worker ships the launch only if that live turn passes. process-worker keeps dev_effort high and size M; keep-unsupported lowers them to medium and S and deletes PADR-codex-process-worker before handoff.'
+  options:
+  - id: process-worker
+    description: Add the Codex process worker, shipped only if one live Codex turn passes in Development
+    recommended: true
+  - id: keep-unsupported
+    description: Keep Codex unsupported; document the verified reasons and preconditions only
+    recommended: false
+  allow_note: true
+- id: codex-live-turn
+  title: Who runs the live Codex turn
+  prompt: If the Codex process worker is in scope, who runs its one live verification turn during Development?
+  context: The turn uses your Codex account and credentials, starts a model session, and must be launched from a Codex Host so the escalated launch, approval and timeout are exercised. A Development worker on Claude Code could run codex exec itself, but that skips the Codex Host's sandbox and approval path the procedure depends on. Ignored when codex-worker-scope is keep-unsupported.
+  options:
+  - id: user-codex-host
+    description: You run it from a Codex session in this repository when Development reaches the verification task; the record goes into the spec's materials
+    recommended: true
+  - id: authorize-development
+    description: Authorize the Development run to invoke codex exec itself from the current Host (no Codex Host sandbox or approval path exercised)
+    recommended: false
+  allow_note: true
+- id: antigravity-verification
+  title: Antigravity live verification
+  prompt: Should Development run a live Antigravity worker check, or keep Antigravity unverified with its documented preconditions?
+  context: Antigravity is installed locally. Its docs show subagents inheriting the parent's scopes, access outside the project folders off by default (allowNonWorkspaceAccess, /add-dir) and an undocumented .git handling. A live check would need an Antigravity session set up for non-workspace access and adds a third host to Development's verification.
+  options:
+  - id: keep-unverified
+    description: Keep Antigravity unverified; document the preconditions only
+    recommended: true
+  - id: live-verify
+    description: Run one live Antigravity worker turn in Development and set the status from its result
+    recommended: false
+  allow_note: true
+activity_effort: high
