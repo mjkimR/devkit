@@ -166,7 +166,7 @@ stages:
 
 A defect against an agreed contract whose fix needs a spec bundle: contract impact, or current, expected and preserved behavior that must be written down. A defect a session can reproduce and fix without written documents takes workflow `sdd-session-bugfix` instead. The bundle (`devkit spec new <slug> --workflow sdd-spec-bugfix`, or a proposal with `task_kind: bugfix` handed off with `devkit spec proposal handoff`) starts with `spec.md` only (ID `SPEC-<slug>`); the bound workflow is the only record of its `task-kind`. The expected behavior is agreed at `plan-intent`; characterizing the defect in `spec.md` (current, expected and preserved behavior, reproduction conditions; procedure: `spec-specify`) is Development's work.
 
-All other rules of the `sdd-spec-feature` body apply; its `build-verify` is `fix-verify` here, and the stages after the fix are the same.
+All other rules of the `sdd-spec-feature` body apply, except that the bundle starts with `spec.md` only and its stages map: `specify` is `characterize` then `plan-tasks` here, `build-verify` is `reproduce` then `fix-verify`, and the stages after the fix are the same.
 
 ## Evidence contract
 

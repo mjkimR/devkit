@@ -7,7 +7,7 @@ Read this for a workflow stage sweep, a Planning run's return or a user-requeste
 Only an explicit user message requesting a session sweep selects the user branch; an agent-chosen invocation of `/spec-feedback` stays autonomous.
 
 - **User-requested session sweep** (collect session observations, a retrospective): cover the whole session whatever the capture, coverage or stage policy says, and write no envelope, even when a spec bundle exists. A request to record one named observation follows the recording procedure instead.
-- **Workflow stage**: `devkit workflow next --unit <dir>` names `collect-feedback` (after `living-spec-draft` in Development, after `spike` in Planning); its exit check is `envelope-check-pass(feedback swept)`. Development sweeps once per spec bundle; the envelope passes with zero observations.
+- **Workflow stage**: `devkit workflow next --unit <dir>` names `collect-feedback` (after `living-spec-draft` in Development, after `spike` in Planning); its exit check is `envelope-check-pass(feedback swept)`. Development sweeps once per spec bundle. Zero observations passes.
 
 Policy (`devkit spec policy`) for an autonomous stage sweep:
 

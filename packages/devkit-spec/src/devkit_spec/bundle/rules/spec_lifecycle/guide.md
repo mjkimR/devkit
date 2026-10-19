@@ -26,8 +26,9 @@ Reported at line 1 of `spec.md` when that is a target, otherwise of the first na
   has reconcile.md with status '<status>'`.
 - `spec.md` is not `completed`, yet every task in `tasks.md` is checked (at least one, none open) and `reconcile.md`
   is `resolved`: `Spec status '<status>' of <spec.md> is stale: all tasks are checked and reconcile.md is resolved`.
-  Tasks are counted as devkit's `tasks-checked` workflow check counts them (checklist items outside the frontmatter
-  and fenced code); a bundle without `tasks.md` or without checklist items is never stale.
+  Tasks are counted as devkit's `tasks-checked` workflow check counts them: `- [ ]` / `- [x]` checklist items (also
+  `*` and `+` markers, any indentation) outside the frontmatter and fenced code blocks. A bundle without `tasks.md`
+  or without checklist items is never stale.
 
 ## 3. Remediation
 

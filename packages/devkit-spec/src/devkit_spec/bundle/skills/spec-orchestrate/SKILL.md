@@ -17,7 +17,7 @@ Propose it when one of these holds, and stay in `direct` otherwise:
 - One unit large enough that you should keep your context for coordination and verification.
 - The user asks to parallelize or delegate.
 
-It changes no gate, policy or authority: `GATE_POLICY` and `GIT_POLICY` apply as in `direct`. Nested subagents are assumed (Host → worker → role); a host without them stays in `direct`.
+It changes no gate, policy or authority: `GATE_POLICY` and `GIT_POLICY` apply as in `direct`. Nested subagents are assumed (Host → worker → role); a host without them stays in `direct`, never a substitute.
 
 ## 2. Units and what stays yours
 

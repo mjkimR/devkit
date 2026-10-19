@@ -120,4 +120,4 @@ A session runs in `direct` or through the `cloud-pr` general PR path (a Work Pla
 
 ## Project policy
 
-Read `devkit spec policy` before the integration decision (`[workflow.approvals]`, `[worktree]`). `auto` delegates `dev-integration` only after the completion conditions hold, at every effort, and the executor reports the delegation, never a human approval; explicit user authority, required PR policy, external protections and action permissions still apply, and local branch cleanup after a confirmed merge follows `[worktree]` and existing deletion authority.
+Read `devkit spec policy` before the integration decision (`[workflow.approvals]`, `[worktree]`). `auto` delegates `dev-integration` only after the completion conditions hold, at every effort, and the executor reports the delegation, never a human approval. `exception` always needs resolution; explicit user authority, required PR policy, external protections and action permissions still apply, and local branch cleanup after a confirmed merge follows `[worktree]` and existing deletion authority.

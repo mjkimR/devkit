@@ -13,7 +13,7 @@ Every error, warning and notice an AI agent reads (CLI commands, rules, validati
 - **Deterministic wording.** Directives never hedge ("likely", "might"); they forbid a blind retry and a workaround, not a rerun after the cause is fixed.
 - **Stable codes.** Every advisory has an `UPPER_SNAKE_CASE` code; callers branch on the code, never on message text.
 - **Context budget.** Emit an advisory only when it changes the agent's next step or must reach the user; other diagnostics are logs, hidden unless verbose.
-- **Channels.** In text mode the result goes to stdout as one-line sentinels and advisories to stderr; in JSON mode one JSON object on stdout carries both. Each advisory is printed once.
+- **Channels.** In text mode the result goes to stdout as one-line sentinels and advisories to stderr; in JSON mode one JSON object on stdout carries both and nothing goes to stderr. Each advisory is printed once.
 
 ## Levels
 
@@ -47,7 +47,7 @@ Render advisories as sentinel lines on standard error (or as the text of a tool 
 [DETAIL] <Diagnostic context; one line per detail>
 ```
 
-Each sentinel is padded to 9 characters; the headline always carries the code. A notice omits `[ACTION]` only when it is `brief` and has no `[FIX]`, since a fix without a directive reads as an instruction to run it. Omit any other line whose field is empty. A multi-line value continues on lines indented 9 spaces; a block never contains a blank line, colour, emoji or Markdown.
+Each sentinel is padded to 9 characters; the headline always carries the code, then the message: one concise sentence. A notice omits `[ACTION]` only when it is `brief` and has no `[FIX]`, since a fix without a directive reads as an instruction to run it. Omit any other line whose field is empty. A multi-line value continues on lines indented 9 spaces; a block never contains a blank line, colour, emoji or Markdown.
 
 ## Fields
 

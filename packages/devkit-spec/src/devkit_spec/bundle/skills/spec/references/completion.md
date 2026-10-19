@@ -2,7 +2,7 @@
 
 Read this when approaching review or completion, and before any gate or Git action.
 
-Before reporting completion or integration, classify the Living Spec impact: authorized contract changes go to capabilities/stories, structural changes to architecture, architecture decisions and lasting policy changes that override a MUST to ADRs, existing policy changes to rules/playbooks. New general rules and reusable procedures are optional promotions: draft first and request only decisions beyond existing authorization. A no-impact change needs a reason, not a new document.
+Every task MUST compare the final diff, the requirements, the check results and the Living Spec impact before reporting completion. Before reporting completion or integration, classify the Living Spec impact: authorized contract changes go to capabilities/stories, structural changes to architecture, architecture decisions and lasting policy changes that override a MUST to ADRs, existing policy changes to rules/playbooks. New general rules and reusable procedures are optional promotions: draft first and request only decisions beyond existing authorization. A no-impact change needs a reason, not a new document.
 
 ## Policy
 

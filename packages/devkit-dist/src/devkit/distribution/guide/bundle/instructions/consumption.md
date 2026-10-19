@@ -48,6 +48,11 @@ successful installation does not establish them.
 Rule, gate and workflow assets are deployed like any other kind; their engines
 come with `devkit-agt`, whose auto-selected `harness` bundle covers them.
 
+When a failing rule's remediation names a playbook, run the
+`uv run devkit playbook search` it names, read the chosen procedure from the
+returned path, loading its bundle's context (`uv run devkit get-context <bundle>`)
+first if not yet loaded, then apply it.
+
 ## Changing what is deployed
 
 ```bash

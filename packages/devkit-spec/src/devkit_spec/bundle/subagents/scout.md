@@ -31,7 +31,7 @@ Answer one question for the caller without polluting the caller's context: pinpo
 
 ## Input
 
-The caller's payload; `allowed_boundaries` names a `materials/` path when the caller wants a written artifact, and `expected_output_format` asks for a summary, a comparison table or a list of locations.
+The caller's payload: `task_goal` (one question or search target), `relevant_files` (starting points), `allowed_boundaries` (read scope; a `materials/` path when the caller wants a written artifact), `diff_scope` (optional) and `expected_output_format` (summary, comparison table or list of locations).
 
 ## Procedure
 

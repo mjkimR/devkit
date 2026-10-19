@@ -44,7 +44,9 @@ The ID is the file stem:
 The first segment of `{slug}` must contain a letter: `CAP-HARN-001-foo` and `US-010-bar` are sequence numbers.
 `{NN}` is an arc42 chapter `01`-`11` in arc42's order (`05-1` containers, `05-2` components), except `09` (decisions
 live in `docs/decisions/`); `12` (the glossary) is `docs/glossary.md`. A deep-dive outside the chapters is
-`ARCH-{slug}`.
+`ARCH-{slug}`. Chapters: 01 Introduction and Goals, 02 Architecture Constraints, 03 System Scope and Context (C4 L1),
+04 Solution Strategy, 05 Building Block View, 06 Runtime View, 07 Deployment View, 08 Cross-cutting Concepts, 09
+Architecture Decisions, 10 Quality Requirements, 11 Risks and Technical Debts, 12 Glossary.
 
 In a monorepo, a package registered in `[[tool.spec.namespaces]]` of `.devkit/config.toml` keeps its Living Spec
 under `docs/packages/<name>/` with the same layout (`capabilities/`, `stories/`, `architecture/`). IDs are

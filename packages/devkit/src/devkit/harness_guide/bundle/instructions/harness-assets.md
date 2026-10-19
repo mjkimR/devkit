@@ -20,8 +20,9 @@ Rules, gates and workflow checks are plugin package directories: every `.py`
 file is a module (tests under `tests/` or named `test_*.py` are never
 imported), `__init__.py` is optional, and modules import each other
 relatively (`from .helpers import parse`) and otherwise only their engine's
-public API and installed packages. A rule's tests go in its `tests/` folder
-and load the rule with `devkit.rules.testing.load_rule(__file__)`.
+public API and installed packages; the bundle package never imports them.
+A rule's tests go in its `tests/` folder and load the rule with
+`devkit.rules.testing.load_rule(__file__)`.
 
 ## Rules of an in-repository bundle
 

@@ -114,7 +114,7 @@ def main() -> int:
 ```
 
 - `error.lines()` / `error.render()`: sentinel lines (`[ERROR]`, `[WARN]` or `[NOTICE]` headline by level) for stderr or an MCP tool result; multi-line values continue on lines indented under their sentinel.
-- `error.to_dict(include_advisory=True)`: JSON payload `{code, level, message, exit_code, advisory}`.
+- `error.to_dict(include_advisory=True)`: JSON payload `{code, level, message, exit_code, advisory}`; a command printing JSON renders no block on stderr.
 - `error.to_problem_details(status=404, type_base="https://docs.example.com/errors")`: RFC 7807 body. `status` is the HTTP status chosen by the web layer; the library never maps codes to statuses.
 - `as_advisory_error(exc)` / `render_error(exc)`: pass through an `ERROR`-level `AdvisoryError`, adapt anything else to `UNEXPECTED_ERROR` (`MAINTENANCE`) with the message `<ExceptionType>: <text>`.
 

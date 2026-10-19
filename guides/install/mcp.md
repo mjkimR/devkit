@@ -32,7 +32,8 @@ uv run devkit host mcp status --host codex --format json
 Add the `mcp` extra to the project's existing devkit requirement, keeping its source and revision (a
 distribution-only installation uses `devkit-dist[mcp]`); never add a second devkit requirement. `config` is
 read-only; its `command` and `args` are what either client runs. `status` inspects only Codex registration and the
-local SDK; it does not connect to the server or prove visible approval UI.
+local SDK (exit 0 matching, 1 missing, different or shadowed registration or no SDK, 2 not inspected); it does not
+connect to the server or prove visible approval UI.
 
 ## 3. Register Codex explicitly
 
@@ -75,7 +76,8 @@ command and arguments, and a connected server.
 Reconnect MCP or start a new client session in the retained base, then inspect `/mcp` and the available tools. A
 successful setup, status or `get` establishes registration only: report registration, client connection and the
 visible confirmation form as separate observations, and verify the form during an actual authorized integration,
-never by merging just to test onboarding.
+never by merging just to test onboarding. Count the client's MCP tool permission prompt and the devkit confirmation
+form separately.
 
 To remove the named user registration, use the client's own command:
 

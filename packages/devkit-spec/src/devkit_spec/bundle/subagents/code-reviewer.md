@@ -32,7 +32,7 @@ Execute the `spec-review` procedure in an isolated context against the actual di
 
 ## Input
 
-The caller's payload (`diff_scope`: base ref and head) plus the check results the caller already has (tests, build, `devkit rules check --staged`), the `activity-effort`, and in a later round of the `high` loop the earlier rounds' findings and the round's diff scope.
+The caller's payload: `task_goal` (verify this change against these acceptance criteria), `relevant_files` (`spec.md`, `plan.md`, `tasks.md`, the capabilities and ADRs the change touches), `allowed_boundaries` (read scope; write scope empty), `diff_scope` (base ref and head), `expected_output_format` (review envelope), plus the check results the caller already has (tests, build, `devkit rules check --staged`), the `activity-effort`, and in a later round of the `high` loop the earlier rounds' findings and the round's diff scope.
 
 ## Procedure
 

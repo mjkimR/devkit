@@ -50,16 +50,16 @@ Run `devkit spec list feedback --status open --where severity=critical` for the 
 
 ## 3. Decision Matrix & Action Guidance
 
-**Critical feedback first.** If open feedback with `severity: critical` exists, the first recommendation is a feedback hygiene pass on those items now (through the `devkit-playbook` skill when the project has a playbook for it); the stage recommendation follows as the second item. Lower-severity open feedback gets one line and waits for the next hygiene session.
+**Critical feedback first.** If open feedback with `severity: critical` exists, the first recommendation is a feedback hygiene pass on those items now (recommend that the user invoke `/devkit-playbook` when the project has a playbook for it; never start a playbook search yourself); the stage recommendation follows as the second item. Lower-severity open feedback gets one line and waits for the next hygiene session.
 
 In-progress means a plan-/dev- branch, a reviewing/accepted proposal, or an incomplete spec; queued drafts are not in progress.
 
 | Diagnosed State | Status Criteria | Recommended Next Action |
 | :--- | :--- | :--- |
-| **Unit in progress** | Step 0 names a `[STAGE]` | Recommend its `[NEXT_SKILL]` with the `[UNMET]` evidence; gates, waits and other lines as [workflow signals](references/workflow-signals.md) describes |
+| **Unit in progress** | Step 0 names a `[STAGE]` | Recommend its `[NEXT_SKILL]` with the `[UNMET]` evidence; gates, waits and other lines as [workflow signals](references/workflow-signals.md) describes. `[NEXT_SKILL]` is only a stage's first skill: in a multi-skill stage recommend `spec-specify`, `spec-plan` or `spec-tasks` for the first of `spec.md`, `plan.md`, `tasks.md` an unmet check names (`not-skeleton(...)`, `file-exists(plan.md)`, `tasks-exists`); `[NEXT_SKILL: -]` (`build-verify`, `fix-verify`) means implement the next unchecked task within its `_Boundary:` and run its tests |
 | **Proposal Hand-off** | Proposal `status: accepted` (`plan-accept` given) and `next` reports it complete (`[STAGE: - complete=true]`) | Start or continue `dev-<slug>` (`devkit worktree start dev-<slug>`, `--no-worktree` in this checkout, or `--existing-branch`), run `devkit spec proposal handoff <slug>` there, then the post-handoff link check (§3.1) |
 | **Proposal Incubation** | Proposal in `draft` or `reviewing` | Review the hypothesis, add research to `materials/`, or draft a PADR (`devkit spec proposal padr <slug> <title>`); for a spike, delegate `scout`/`challenger` (`spec-delegate`) |
-| **Ended (Rejected)** | Proposal is `rejected` | Planning ended: `feedback-hygiene` cleanup; never back to `reviewing` |
+| **Ended (Rejected)** | Proposal is `rejected` | Planning ended: the cleanup `SPEC_PROPOSAL_REJECTED_PENDING`'s `[FIX]` names (rejection ADR, then deletion; the user may invoke the `feedback-hygiene` playbook); never back to `reviewing` |
 | **Idle** | No in-progress Unit | Recommend eligible queued drafts and Backlog actions with [next-work selection](references/next-work.md) |
 
 ### 3.1 Post-handoff link check

@@ -4,7 +4,7 @@ version = "0.1.0"
 default_preset = "core"
 auto_select = true
 
-# Normative wording, measurable contracts, non-goals and policy exceptions.
+# Normative wording, measurable contracts, non-goals and examples (exceptions: the constitution).
 [[assets]]
 id = "contract-authoring"
 kind = "instruction"

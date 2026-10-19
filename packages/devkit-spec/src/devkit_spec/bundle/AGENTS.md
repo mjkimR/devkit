@@ -69,7 +69,7 @@ Reconcile changed behavior, capabilities and constraints into the Living Spec; r
 Spec Units keep a resolved `reconcile.md` and stay in place when completed. A `session` task writes no Unit, envelope,
 gate record, planning or reconcile file and reports the change, effort, review result, verification and remaining
 constraints in its final response or PR body (a needed Living Spec change raises it to `spec`). The `rules-check`
-commit gate runs the spec rules on every commit (`devkit rules check --staged` reproduces it); CI runs
+commit gate (on by default) runs the spec rules on every commit (`devkit rules check --staged` reproduces it); CI runs
 `devkit rules check --ci --base <ref>`. Completion, commit, integration and ending the session are separate events.
 
 ## 5. Templates and Policy Files

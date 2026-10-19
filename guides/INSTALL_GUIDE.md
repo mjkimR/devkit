@@ -128,7 +128,7 @@ Ask whether to commit. Do not commit on your own.
 | `GUIDANCE_BLOCK_INVALID` | `AGENTS.md` has broken or duplicate `DEVKIT` markers | Show the markers to the user and fix them together. |
 | `WORKSPACE_UNSAFE` | `AGENTS.md` is a symlink | Ask the user: make `AGENTS.md` the real file, or set `guidance_block = false`. |
 | `GATE_HOOK_INSTALL_SKIPPED`, `GATE_HOOKS_PATH_SET` | `core.hooksPath` or a foreign hook layout keeps devkit's hooks out, so no gate runs | Report it; the installation is otherwise complete. |
-| `GATE_HOOK_ENTRY_MISSING` from `devkit gate status` | An enabled gate's stage has no devkit hook entry | Run `uv run devkit gate install`, then `uv run devkit gate status` again. |
+| `GATE_HOOK_ENTRY_MISSING` from `devkit gate status` | An enabled gate's stage has no devkit hook entry | Run `uv run devkit gate install`, then `uv run devkit gate status` again; if hooks were skipped (`GATE_HOOK_INSTALL_SKIPPED`), report that instead. |
 | `SELECTION_INVALID` | A selected bundle's package is not installed, or a selected preset does not exist (`devkit:run` became `harness:run`) | Run `uv sync`, or remove the bundle with `uv run devkit remove <bundle>`; replace a `devkit` `run` preset with `harness = "run"` under `[presets]`. |
 | `HARNESS_COMMAND_UNAVAILABLE`, `HARNESS_ENGINE_MISSING` | A harness command, or deployed rule, gate or workflow assets, with `devkit-dist` only | Tell the user; apply the `[FIX]` (switch to `devkit-agt`) only once they agree. |
 | `RECEIPT_STALE` from `devkit sync --locked` | The committed receipt does not match the installed packages | Run a plain `uv run devkit sync` and include its changes in the commit. |

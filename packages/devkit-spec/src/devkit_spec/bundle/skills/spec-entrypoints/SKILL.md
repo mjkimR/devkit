@@ -23,7 +23,7 @@ Use this skill when a spec bundle has both `tasks.md` and `reconcile.md` (normal
 2. **Review** before writing. Drop a document when the bundle touched it only for metadata or wording (its reconcile target is `modified`, but the code paths belong to another capability). Keep a directory candidate only when the document really owns that package; prefer the file-level candidate when a task's boundary was broad. A pair is a declaration join, not proof that the code implements that document.
 3. **Apply** the chosen pairs only: `devkit spec entrypoints derive --spec <dir> --apply --target <CAP-or-US-id> --code <path> [--code ...]`. `--target` picks documents, `--code` keeps candidates equal to or under a path, `--exclude` drops hub paths every bundle touches (root `AGENTS.md`, `README.md`, agent guides). Without them every bearing target and candidate of the bundle is written. To declare a folded file instead of its directory, apply with `--all` (folding is per bundle) or edit the boundary. The command appends and is idempotent; follow the `[FIX]` of any warning.
 4. **Verify**: `devkit rules check <document>` (`RULE-code-entrypoints` checks that every written path exists) and `devkit spec list capability --file <path>` (or `story`) for one written path: the document must be listed.
-5. **Record**: a document whose `entrypoints` changed is a Living Spec change; make sure it is a `modified` target in the bundle's `reconcile.md`.
+5. **Record**: a document whose `entrypoints` changed is a Living Spec change; make sure it is a `modified` target in the bundle's `reconcile.md` (or reported by a `session` task).
 
 ---
 

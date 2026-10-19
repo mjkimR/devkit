@@ -39,7 +39,7 @@ devkit workflow envelope answer --unit <dir> --stage <stage> --summary "q1, q2 d
 
 ## 3. Problems and resolutions
 
-`[BLOCKED: ...]` means a problem has no `resolution` that names it (or a `worker` envelope is malformed: fix the file). It holds the gates of the problem's stage and later ones, the handoff and `devkit worktree finish --merge`; `devkit workflow next` still names the current stage, where the recovery runs. A later commit, a successful `worker` envelope, a comment or a rerun request clears nothing.
+`[BLOCKED: ...]` means a problem has no `resolution` that names it (or a `worker` envelope is malformed: fix the file). It holds the gates of the problem's stage and later ones, the handoff and `devkit worktree finish --merge`; `devkit workflow next` still names the current stage, where the recovery runs. A malformed `worker` envelope without a readable stage holds every gate, so `next` may name an earlier stage until the file is fixed. A later commit, a successful `worker` envelope, a comment or a rerun request clears nothing.
 
 - You decide the recovery inside the approved scope, with strong autonomy: fix or revert yourself (`git revert`, never reset), or send a new worker the recovery request. Record a problem you find yourself (a worker's range you cannot accept) in your own `worker` envelope (`--problem`). A recovery that needs the scope changed goes to the user and a close ([classification](classification.md) §4).
 - Whoever actually fixed it writes the resolution, in the same commit as the fix; one who could not fix it writes none and records what it tried in its own `worker` envelope:

@@ -40,7 +40,7 @@ message") and `hook` (a handler the agent host calls at a native event).
 | --- | --- | --- | --- |
 | `rule` | `rules/<slug>/`: a plugin package directory of `.py` modules, guide and tests | The rule engine of `devkit-agt` (checks, commit gate, CI); loaded from the receipt | none |
 | `gate` | `gates/<slug>/`: a plugin package directory | The commit gate of `devkit-agt` at a Git hook stage | none |
-| `skill` | `skills/<slug>/SKILL.md` or `SKILL.md.jinja`, and support files | The agent host lists it and invokes it as a tool | name and description always; body on invocation |
+| `skill` | `skills/<slug>/SKILL.md` or `SKILL.md.jinja`, and support files | The agent host lists it and invokes it as a tool; sync opens the body with the bundle context prerequisite, so never write it | name and description always; body on invocation |
 | `subagent` | native file per agent or `subagents/<slug>.md` contract | The host loads it when delegating | persona on load |
 | `workflow` | one Markdown definition with `id` and `stages` | The generated `devkit-workflow` entry skill, backed by the workflow engine of `devkit-agt` | stage output only |
 | `playbook` | `playbooks/<slug>.md` or directory with `SKILL.md` | Only on explicit `devkit-playbook` invocation or rule remediation | selected headers, then one body |

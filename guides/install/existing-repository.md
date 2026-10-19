@@ -109,7 +109,7 @@ The built-in rules may report findings in existing files. Report the counts by r
 fix the findings, park a rule in the `hygiene` phase or lower its severity in `[rules]`, or set `enabled = false` in
 `[gates.settings.rules-check]` until they are resolved.
 
-Then continue with [Bundle Recommendations](bundle-recommendations.md) and
+Then continue with [Bundle Recommendations](bundle-recommendations.md), optionally [MCP onboarding](mcp.md), and
 [Installation Guide, step 5](../INSTALL_GUIDE.md#step-5-verify-and-report).
 
 ## Already installed
@@ -127,6 +127,7 @@ uv run devkit list               # bundles, their selection state and presets
   [Installation Guide, step 3](../INSTALL_GUIDE.md#step-3-package-sources).
 - Bundle recommendations still apply: compare `devkit list` against
   [Bundle Recommendations](bundle-recommendations.md) and offer the missing ones.
+- Optional: add or diagnose MCP registration with [MCP onboarding](mcp.md); sync never registers it.
 
 ## Upgrading across the package split
 

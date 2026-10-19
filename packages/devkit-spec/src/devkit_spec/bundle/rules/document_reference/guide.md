@@ -26,7 +26,8 @@ only) one `MS` ID and `depends_on` (milestones only) a list of `MS` IDs, without
 ## 2. Cause of Violation
 
 - A relation field of the wrong shape: `<field> must be a list of IDs` (list fields), `<field> must be one ID`
-  (`spec`, `plan`, `milestone`) or `<field> must contain string IDs`.
+  (`spec`, `plan`, `milestone` and the provenance fields `proposal`, `decomposed_from`, `supersedes`) or `<field>
+  must contain string IDs`.
 - A relation field on the wrong document: `milestone is valid only on proposal/spec anchors`, `depends_on is valid
   only on milestones`.
 - A value that is not a full ID: `<field> must contain a full document ID, got '<value>'`.

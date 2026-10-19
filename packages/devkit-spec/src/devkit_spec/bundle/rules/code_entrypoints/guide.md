@@ -15,7 +15,9 @@ document. The rule keeps every declared path alive, so an agent following an ent
   document's directory; `src/a` covers `src/a/b.py`, not `src/ab`.
 - **Targeting**: violations are reported in the targeted documents. `--staged` and `--ci` also check every current
   document not matched by `[rules] exclude` that declares a path the diff deletes (or a directory containing it), so
-  deleting code without touching the document that declares it fails the commit gate too.
+  deleting code without touching the document that declares it fails the commit gate too. Snapshot runs resolve
+  paths in the snapshot's tree, where an empty directory does not exist, so an unstaged or untracked path or an
+  empty directory fails only there: stage the code rather than edit the declaration.
 
 ## 2. Cause of Violation
 

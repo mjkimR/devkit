@@ -14,8 +14,10 @@ time, backed by the diff.
 - **Diff evidence**: in a snapshot run (`devkit rules check --staged`, which the commit gate runs, and `--ci` on a
   pull request), a well-formed `resolved` record that the diff changes must have each `modified` target changed or
   deleted on the branch: under `--ci` the whole branch against its merge base, at commit time the staged diff plus
-  the branch's earlier commits since its merge base (so a Living Spec page committed at an earlier stage boundary
-  counts), or the staged diff alone for work committed straight on the base branch. A record whose frontmatter is
+  the branch's earlier commits since its merge base with the branch it integrates into (the `devkitBase` a `devkit
+  worktree start --no-worktree` recorded, else the base checkout's branch, else `origin/HEAD`), so a Living Spec
+  page committed at an earlier stage boundary counts. When no such base is found (work committed straight on the
+  base branch), the staged diff alone is the evidence and earlier commits do not count. A record whose frontmatter is
   unchanged from the base claims nothing new and is not re-checked. A plain `devkit rules check` checks the form
   only.
 

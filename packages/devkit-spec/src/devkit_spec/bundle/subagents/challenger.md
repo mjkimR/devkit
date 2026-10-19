@@ -31,12 +31,13 @@ Find what would make a proposal, spec or design fail or unnecessary before anyon
 
 ## Input
 
-The caller's payload plus the `activity-effort` and, in a later round of a `high` Planning loop, the earlier rounds' findings and the proposal changes since the previous round.
+The caller's payload: `task_goal` (what is challenged and the decision it feeds), `relevant_files` (proposal or spec, acceptance criteria, non-goals, ADRs, the capabilities it touches), `allowed_boundaries` (read scope only), `diff_scope` (optional), `expected_output_format` (issue list, alternative table, or both), the `activity-effort` and, in a later round of a `high` Planning loop, the earlier rounds' findings and the proposal changes since the previous round.
 
 ## Procedure
 
 Invariants:
 
+- Read only, no file writes (`MUST`).
 - Every objection has `evidence` and a `failure_condition` (`MUST`): the input, state or event under which the plan fails or the cost is paid.
 - Zero findings is a normal result (`MUST`): return `completed` with an empty `findings` list and say what was examined. Do not manufacture objections to reach a count.
 - Clear defects in the material MUST be reported; style preferences are not findings.
@@ -55,6 +56,12 @@ At `high` you are one round of a bounded loop (`.devkit/managed/spec/skills/spec
 ## Return
 
 The fields of a devkit envelope of kind `challenger`, as YAML with findings as a list; do not write files: `status` (`completed`, `needs_input` or `failed`), `summary`, and `findings` where each finding has `issue`, `evidence`, `failure_condition` (required), `severity` (required at every effort: `P1` when the design fails or conflicts with an accepted ADR or capability, `P2` for a defect in how a decision is specified with a workaround, `P3` for an improvement) and `suggested_action`, which carries the simpler alternative when there is one. A choice only the human can make is a finding whose `suggested_action` starts with `Decision needed:` (decided at `plan-accept`). `assumptions` list what the critique took as given; `unverified_areas` list claims that could not be checked against the repository.
+
+## Write boundaries
+
+- Allowed: none. Read only.
+- Denied: all files.
+- Git: read only.
 
 ## On failure or unresolved
 
