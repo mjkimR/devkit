@@ -1,15 +1,15 @@
 ---
-id: PADR-read-only-local-server-over-git-refs
+id: ADR-read-only-local-server-over-git-refs
 title: Read-only local server over Git refs
 summary: Serves several registered repositories from one foreground local process that reads committed content through Git at any ref, binds to the loopback interface, writes nothing and keeps every approval on its existing path.
-proposal: PROP-repository-viewer
-status: draft
+proposal: SPEC-repository-viewer
+status: accepted
 created_at: 2026-10-19
 ---
 
-# [PADR-read-only-local-server-over-git-refs] Read-only local server over Git refs
+# [ADR-read-only-local-server-over-git-refs] Read-only local server over Git refs
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-19
 
 ---

@@ -1,24 +1,20 @@
 ---
-id: PROP-repository-viewer
+id: SPEC-repository-viewer
 title: Local multi-repository SDD viewer owned by devkit
-summary: "Moves the autohub SDD repository viewer into devkit as its source owner, adds a roadmap view for milestone documents, and packages it with a local server that serves several repositories at once; the viewer stays read-only and grants no approvals."
-status: accepted                        # draft | reviewing | accepted | rejected
-created_at: 2026-10-19
-target_area: capabilities/viewer/
-priority: high                        # critical | high | medium | low
-size: L                               # S | M | L | XL
-planning_effort: low                  # low | medium | high (hint for Planning)
-dev_effort: high                      # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - capabilities/viewer/
-  excludes:
-    - docs/decisions/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+summary: Moves the autohub SDD repository viewer into devkit as its source owner, adds a roadmap view for milestone documents, and packages it with a local server that serves several repositories at once; the viewer stays read-only and grants no approvals.
+status: planned
+created: 2026-10-19
+related_capabilities: []
+related_stories: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-repository-viewer] Local multi-repository SDD viewer owned by devkit
+# [SPEC-repository-viewer] Local multi-repository SDD viewer owned by devkit
+
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-repository-viewer on 2026-10-19.
 
 - **Origin**: proposals and milestones are now both repository documents (`ADR-roadmap-in-repository`,
   `ADR-milestone-documents`), and `ADR-roadmap-in-repository` names the cost: "no human-facing roadmap screen until a viewer renders it".
@@ -26,9 +22,9 @@ workflow: sdd-proposal
 - **Related**: `CAP-DOCS-document-model`, `CAP-DOCS-document-lookup`, `CAP-DLV-proposal-incubation`,
   `CAP-DLV-human-interaction`, `CAP-INT-mcp-services`, `ARCH-08-1-agent-output`.
 
-## 1. Background & Hypothesis
+### 1. Background & Hypothesis
 
-### 1.1 Problem
+#### 1.1 Problem
 
 - **No screen for the plan.** Living Spec, proposals, specs and now milestones (`docs/roadmap/MS-*.md`) are files.
   An agent reads them through `devkit spec list`, `resolve` and `refs`; a person has no view of them outside autohub,
@@ -46,17 +42,36 @@ workflow: sdd-proposal
 - **One repository per view.** A workspace such as workbench holds many devkit repositories; a person wants one
   local place to read all of them.
 
-### 1.2 Hypothesis
+#### 1.2 Hypothesis
 
 A viewer whose source devkit owns, packaged with a small local server that reads several registered repositories
 through Git at any ref, gives people a screen for the Living Spec, proposals, specs and the roadmap without autohub or
 network access, while autohub keeps its features by consuming the same viewer with its own data source. Keeping the
 viewer read-only leaves every approval on its existing single path.
 
-## 2. Technical Spike Questions
+## 2. User Stories
 
-Answered in Planning; the decisions are `PADR-viewer-distribution-and-frontend-build` (Q1 to Q3) and
-`PADR-read-only-local-server-over-git-refs` (Q4 to Q8).
+- **US-1**: As a developer/agent, I want to implement Local multi-repository SDD viewer owned by devkit so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
+
+Answered in Planning; the decisions are `ADR-viewer-distribution-and-frontend-build` (Q1 to Q3) and
+`ADR-read-only-local-server-over-git-refs` (Q4 to Q8).
 
 - **Q1. Packaging for autohub.** No registry publication (decided in Backlog). autohub commits the `npm pack` tarball
   of devkit's viewer library, built from a pinned devkit commit, under `modules/hub-ui/vendor/` and depends on it with
@@ -83,7 +98,7 @@ Answered in Planning; the decisions are `PADR-viewer-distribution-and-frontend-b
   on the default branch and, through `refs`, on local `plan-` and `dev-` branches, read on demand.
 - **Q8. Safety.** Loopback only, a `Host` header check against DNS rebinding, no CORS headers, GET only; no token.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 - **Move**: the read-only viewer (`SddViewer`, `KnowledgeViews`, `documents.ts`, the `RepositoryDataSource`
   interface) becomes a Svelte component library in devkit. autohub keeps `RepositoryView`, its Git browser
@@ -94,7 +109,7 @@ Answered in Planning; the decisions are `PADR-viewer-distribution-and-frontend-b
   committed app build (Q3).
 - **autohub**: after a devkit commit carries the library, autohub replaces its copy with the vendored tarball and
   passes its existing GitHub-backed data source (Q1). That change belongs to autohub.
-- **Approvals stay out** (`PADR-read-only-local-server-over-git-refs`):
+- **Approvals stay out** (`ADR-read-only-local-server-over-git-refs`):
   - Gate, handoff and question answers that are records (`CAP-DLV-human-interaction`) could be written by a web page
     under the contract, but the waiting agent would not see them until its next `devkit workflow next`, and the viewer
     would become a writing server with commit and token concerns.
@@ -107,7 +122,7 @@ Answered in Planning; the decisions are `PADR-viewer-distribution-and-frontend-b
   distribution; `.devkit/generated.toml` registers the assets; the layering test covers `devkit_viewer`;
   `ADR-roadmap-in-repository`'s "no human-facing roadmap screen" cost is met by the viewer.
 
-### 3.1 Non-Goals
+#### 3.1 Non-Goals
 
 - **Scope Excluded**: recording approvals, gate decisions, handoff choices or question answers from the viewer, and
   any connection to the integration MCP tools.
@@ -118,9 +133,10 @@ Answered in Planning; the decisions are `PADR-viewer-distribution-and-frontend-b
 - **Scope Excluded**: remote hosting, authentication for several users, and GitHub API access in the devkit server.
 - **Scope Excluded**: the autohub change that adopts the devkit-owned viewer (autohub's own work).
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - On acceptance (plan-accept): record gate:plan-accept, set status: accepted and merge the Planning branch;
   Development starts with devkit spec proposal handoff repository-viewer.
 - On rejection: change only status: rejected, with the user's reason in the commit message; a later hygiene pass
   writes the rejection ADR and deletes the proposal directory.
+

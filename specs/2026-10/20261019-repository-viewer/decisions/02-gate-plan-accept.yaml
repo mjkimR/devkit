@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-repository-viewer
+by: user
+at: '2026-10-18T23:38:52.125088Z'

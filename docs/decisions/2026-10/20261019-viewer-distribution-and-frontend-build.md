@@ -1,15 +1,15 @@
 ---
-id: PADR-viewer-distribution-and-frontend-build
+id: ADR-viewer-distribution-and-frontend-build
 title: Viewer distribution and frontend build
 summary: Ships the viewer as a separate devkit-viewer distribution that mounts a devkit viewer command, commits the built assets as a tracked generated artifact so installs need no Node, and gives autohub the Svelte component library as a vendored npm pack tarball.
-proposal: PROP-repository-viewer
-status: draft
+proposal: SPEC-repository-viewer
+status: accepted
 created_at: 2026-10-19
 ---
 
-# [PADR-viewer-distribution-and-frontend-build] Viewer distribution and frontend build
+# [ADR-viewer-distribution-and-frontend-build] Viewer distribution and frontend build
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-19
 
 ---
@@ -46,7 +46,7 @@ distribution, where the built assets come from, and how autohub receives the com
   (`MS-catalog-and-context-scaling` non-goals).
 - **A separate `devkit-viewer` distribution (Selected)**: mounted through the `devkit.commands` entry point like
   `devkit spec`; installed only by those who run it. It needs no `devkit-spec` code, because the browser parses the
-  documents (`PADR-read-only-local-server-over-git-refs`).
+  documents (`ADR-read-only-local-server-over-git-refs`).
 
 ### Built assets
 
