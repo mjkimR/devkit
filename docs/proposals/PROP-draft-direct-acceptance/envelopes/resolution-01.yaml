@@ -1,0 +1,14 @@
+kind: resolution
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T03:53:16.656975Z'
+status: completed
+summary: 'Recovery (a), the user''s ruling: one further fresh challenger round outside the cap on the round-5 fix batch (2f533ed..96ddbc8) ran as challenger-06 (round 6); its minor findings #3, #5, #6, #7 are fixed in e28d7cc. Its recurring findings #1 and #2 cannot be self-verified and go to the user as a new problem in worker-03.'
+findings: []
+checks: {}
+diff_scope:
+  base: 2f533ed8170c1d54020b4344b754298af7245931
+  head: e28d7cc04e9dd13f9f53ade64a0022243a04383f
+resolves: worker-02.yaml
+activity_effort: high
