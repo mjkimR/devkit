@@ -1,0 +1,11 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-bugfix
+stage: intent
+note: Approve bugfix/spec, Development medium, shared summary validation for spec
+  new, proposal new and proposal padr, 300-character boundary, no files on rejection,
+  tests and current contract updates; experimental native worker with command-scoped
+  approvals.
+by: user
+at: '2026-10-19T07:25:52.345754Z'
