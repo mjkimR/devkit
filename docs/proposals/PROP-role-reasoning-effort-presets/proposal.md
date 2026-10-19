@@ -2,7 +2,7 @@
 id: PROP-role-reasoning-effort-presets
 title: Per-role reasoning effort presets
 summary: "Presets a host reasoning effort in each spec role contract's host block (Claude Code effort, Codex model_reasoning_effort) so subagents run at a fixed effort per role without naming models."
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-19
 target_area: capabilities/delivery/
 priority: medium                      # critical | high | medium | low
