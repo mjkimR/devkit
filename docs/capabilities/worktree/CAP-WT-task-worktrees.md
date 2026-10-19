@@ -4,6 +4,8 @@ title: "Task Worktrees"
 summary: "Task worktree isolation, activity branches, merge gates, and stale worktree cleanup."
 area: worktree
 status: active
+entrypoints:
+  - packages/devkit/src/devkit/worktree/lifecycle.py
 created_at: 2026-10-17
 ---
 
@@ -143,3 +145,10 @@ An activity branch nobody moves stays in progress: nothing expires it. `devkit w
 - `cli.py`: `devkit worktree start|finish|status|stale`.
 
 The lifecycle was ported from specrig's `worktree` package. the scope registry, its journal and the proposal-directory cleanup are methodology and live in devkit-spec, attached through the `devkit.post_finish` extension point; its `git.worktree` policy (which tasks run in a worktree) is methodology and stays there too.
+
+
+The library's `start(position, branch, ..., revision=COMMIT)` optionally pins the source commit. It resolves the
+revision before remote branch checks and passes the resolved commit to `git worktree add`, so configured setup
+runs from that commit even when another process advances the base meanwhile. Cleanup after failed creation uses
+the pinned commit as its origin. Omitting `revision` preserves creation from the base's current HEAD. The local
+MCP proposal handoff uses this option to keep setup bound to the reviewed commit.

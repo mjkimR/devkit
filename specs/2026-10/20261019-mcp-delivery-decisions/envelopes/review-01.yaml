@@ -1,0 +1,27 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T14:26:37.402423Z'
+status: completed
+summary: Independent medium review found two P2 issues in mandatory gate checks and setup source pinning; integration presentation preserves existing authority.
+findings:
+- issue: Workflow completion alone does not enforce the proposal's mandatory approval gates.
+  evidence: packages/devkit-spec/src/devkit_spec/handoff_mcp.py:92
+  failure_condition: When workflow.stages disables intent-proposal or direction-handoff, evaluation can report complete without the proposal's own plan-intent or plan-accept approval. An accepted status then permits Development to start.
+  suggested_action: Require satisfied plan-intent and plan-accept entries in evaluation.passed_gates before displaying confirmation; add a missing-record and disabled-stage regression.
+  resolution: open
+  severity: P2
+- issue: A base change during worktree creation can run setup from an unreviewed commit.
+  evidence: packages/devkit-spec/src/devkit_spec/handoff_mcp.py:145
+  failure_condition: After prepare revalidates the preview, start performs remote checks, creates from ambient HEAD and runs setup before the stale-source check. A concurrent base advance can therefore execute setup from unapproved contents.
+  suggested_action: Create from the reviewed immutable SHA before setup and add a base-advance regression.
+  resolution: open
+  severity: P2
+assumptions:
+- Fresh isolated generic agent emulated code-reviewer after the named reviewer could not initialize; its source/index/HEAD remained unchanged.
+checks:
+  tests: PASS 3588 passed, 12 skipped at reviewed head
+diff_scope:
+  base: f52e3b64c97797e11b965dff65303a747ae0c8ed
+  head: d9a1f1ce04336e0e49e26bb831aca2ff4ae1f5d1

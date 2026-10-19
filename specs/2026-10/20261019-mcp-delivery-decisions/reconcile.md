@@ -9,6 +9,8 @@ targets:
     resolution: modified
   - file: docs/capabilities/integration/CAP-INT-mcp-services.md
     resolution: modified
+  - file: docs/capabilities/worktree/CAP-WT-task-worktrees.md
+    resolution: modified
   - file: docs/development/reference/host.md
     resolution: modified
 ---

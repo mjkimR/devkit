@@ -2,7 +2,7 @@
 id: SPEC-mcp-delivery-decisions
 title: MCP delivery decisions
 summary: "User-facing Planning to Development handoff with effort selection and understandable local integration confirmation."
-status: planned
+status: in-progress
 created: 2026-10-19
 related_capabilities: [CAP-INT-mcp-services]
 related_stories: []

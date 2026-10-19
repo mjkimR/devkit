@@ -348,8 +348,18 @@ def _clean(checkout: Path) -> bool:
     return not _git(checkout, "status", "--porcelain", "--untracked-files=normal")
 
 
-def start(position: Position, branch: str, *, setup: str | None = None, project: Path | None = None) -> StartResult:
+def start(
+    position: Position,
+    branch: str,
+    *,
+    setup: str | None = None,
+    project: Path | None = None,
+    revision: str | None = None,
+) -> StartResult:
     """Create the activity branch's worktree from the base HEAD.
+
+    With ``revision``, resolve a commit before the remote checks and pass that exact commit to Git for creation:
+    setup never executes a later ambient base HEAD. Without it, creation uses the base HEAD as before.
 
     A branch that already exists, locally or on a remote (``_remote_holders``), is refused
     (``WORKTREE_BRANCH_EXISTS``), also when its worktree is already registered: an existing branch is continued only
@@ -373,6 +383,8 @@ def start(position: Position, branch: str, *, setup: str | None = None, project:
             f"{position.root} is a linked worktree; task worktrees are created from the base checkout",
             target_files=[str(position.base)],
         )
+    if revision is not None:
+        revision = _git(position.base, "rev-parse", "--verify", "--end-of-options", f"{revision}^{{commit}}")
     path = path_for(position, branch)
     for entry in _entries(position.base):
         if entry.path == path:
@@ -392,7 +404,7 @@ def start(position: Position, branch: str, *, setup: str | None = None, project:
     if path.exists() or path.is_symlink():
         raise ConflictError(f"{path} exists and is not a worktree of this repository")
     notices = _refuse_existing(position.base, branch)
-    _add(position.base, path, branch)
+    _add(position.base, path, branch, revision=revision)
     _log.info("created worktree %s on %s", path, branch)
     setup_ran, synced = _prepare(path, setup, project, notices)
     return StartResult(branch, path, position.base, True, setup_ran, synced, notices)
@@ -731,7 +743,7 @@ def _return_branch(base: Path, branch: str) -> str:
     return back
 
 
-def _add(base: Path, path: Path, branch: str, *, existing: bool = False) -> None:
+def _add(base: Path, path: Path, branch: str, *, existing: bool = False, revision: str | None = None) -> None:
     """``git worktree add -b branch path`` (``git worktree add path branch`` for an ``existing`` branch, which is never
     deleted) and the branch's marker; on failure, remove what was created before raising ``WORKTREE_ADD_FAILED``.
 
@@ -745,10 +757,12 @@ def _add(base: Path, path: Path, branch: str, *, existing: bool = False) -> None
     while its tip is still the base HEAD it was created from. What cannot be removed is named with the command that
     removes it.
     """
-    origin = _head(base)
+    origin = revision or _head(base)
     step = f"git worktree add {path}"
     try:
         add = ("add", str(path), branch) if existing else ("add", "-b", branch, str(path))
+        if revision is not None and not existing:
+            add += (revision,)
         _git_session(base, "worktree", *add, timeout=CHECKOUT_TIMEOUT)
         step = f"git config {_marker(branch)}"
         run_git(base, "config", "--local", _marker(branch), str(path))

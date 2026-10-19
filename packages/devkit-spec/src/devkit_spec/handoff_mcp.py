@@ -87,6 +87,9 @@ def prepare(root: Path, slug: str) -> HandoffPreview:
     evaluation = workspace.evaluate_unit(ref, lint=False)
     if ref.doc.id != "sdd-proposal" or not evaluation.complete or evaluation.errors:
         raise HandoffNotReadyError("the proposal workflow must be complete with its own plan-intent and plan-accept")
+    passed = {gate.name for _stage, gate in evaluation.passed_gates if gate.satisfied}
+    if not {"plan-intent", "plan-accept"}.issubset(passed):
+        raise HandoffNotReadyError("the proposal needs its own satisfied plan-intent and plan-accept approvals")
     config = read_worktree_config(root)
     policy = hashlib.sha256()
     for name in ("config.toml", "installation.json"):
@@ -143,7 +146,11 @@ class HandoffService:
             raise HandoffStaleError("the base, accepted plan or policy changed after review")
         position = locate(self.root)
         started = start(
-            position, f"dev-{preview.slug}", setup=preview.setup, project=self.root.relative_to(position.base)
+            position,
+            f"dev-{preview.slug}",
+            setup=preview.setup,
+            project=self.root.relative_to(position.base),
+            revision=preview.head,
         )
         result = {
             "status": "needs_recovery",

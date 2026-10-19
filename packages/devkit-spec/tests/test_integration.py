@@ -785,3 +785,51 @@ def test_handoff_native_sdk_roundtrip(accepted_handoff_base, approved):
         assert result["activity_effort"] == "medium"
     else:
         assert git(repo, "show-ref") == before
+
+
+def test_handoff_pins_reviewed_commit_before_setup_when_base_moves(accepted_handoff_base, monkeypatch):
+    from devkit.worktree import lifecycle
+
+    from devkit_spec.handoff_mcp import HandoffService
+
+    repo = accepted_handoff_base
+    reviewed = git(repo, "rev-parse", "HEAD")
+    original_refuse = lifecycle._refuse_existing
+    setup_heads = []
+
+    def move_during_remote_check(base, branch):
+        notices = original_refuse(base, branch)
+        git(base, "commit", "--allow-empty", "-q", "-m", "advance while checking remote branches")
+        return notices
+
+    def capture_setup(path, setup, project, notices):
+        setup_heads.append(git(path, "rev-parse", "HEAD"))
+        # The fixture has no setup command; copy its locked managed assets without invoking unrelated CLI work.
+        shutil.copytree(repo / ".devkit/managed", path / ".devkit/managed")
+        return None, True
+
+    monkeypatch.setattr(lifecycle, "_refuse_existing", move_during_remote_check)
+    monkeypatch.setattr(lifecycle, "_prepare", capture_setup)
+
+    async def confirm(message, schema):
+        return ConfirmationReply("accept", {"approve": True, "activity_effort": "medium"})
+
+    result = asyncio.run(HandoffService(repo).handoff("idea", confirm))
+    assert result["status"] == "handed_off", result
+    assert setup_heads == [reviewed]
+    assert git(repo, "rev-parse", "HEAD") != reviewed
+
+
+def test_handoff_stage_off_cannot_replace_required_plan_approvals(accepted_handoff_base):
+    from devkit_spec.errors import HandoffNotReadyError
+    from devkit_spec.handoff_mcp import prepare
+
+    repo = accepted_handoff_base
+    for record in (repo / "docs/proposals/PROP-idea/decisions").glob("*-gate-plan-*.yaml"):
+        record.unlink()
+    config = repo / ".devkit/config.toml"
+    config.write_text(config.read_text() + '\n[workflow.stages]\nintent-proposal = "off"\ndirection-handoff = "off"\n')
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "disable proposal gate stages")
+    with pytest.raises(HandoffNotReadyError):
+        prepare(repo, "idea")
