@@ -7,7 +7,7 @@ created_at: 2026-10-19
 target_area: capabilities/viewer/
 priority: high                        # critical | high | medium | low
 size: L                               # S | M | L | XL
-planning_effort: medium               # low | medium | high (hint for Planning)
+planning_effort: low                  # low | medium | high (hint for Planning)
 dev_effort: high                      # low | medium | high (hint for Development)
 boundaries:
   owns:
@@ -22,7 +22,7 @@ workflow: sdd-proposal
 
 - **Origin**: proposals and milestones are now both repository documents (`ADR-roadmap-in-repository`,
   `ADR-milestone-documents`), and `ADR-roadmap-in-repository` names the cost: "no human-facing roadmap screen until a viewer renders it".
-- **Source owner (decided in Backlog)**: devkit owns the viewer source; autohub consumes it.
+- **Source owner (decided in Backlog)**: devkit owns the viewer source; autohub consumes it as a vendored tarball (Q1).
 - **Related**: `CAP-DOCS-document-model`, `CAP-DOCS-document-lookup`, `CAP-DLV-proposal-incubation`,
   `CAP-DLV-human-interaction`, `CAP-INT-mcp-services`, `ARCH-08-1-agent-output`.
 
@@ -55,10 +55,14 @@ viewer read-only leaves every approval on its existing single path.
 
 ## 2. Technical Spike Questions
 
-- **Q1. Distribution of the source to autohub.** How does autohub consume a devkit-owned Svelte viewer: an npm package
-  built from this repository, a vendored build output, or a web component? autohub moved from dynamically loaded
-  external viewer bundles (autohub `bfdef18`) to a native component (autohub `0d8c05f`); establish why before
-  choosing, so the move back does not reintroduce what that change removed.
+- **Q1. Packaging for autohub.** Decided in Backlog: no registry publication. devkit's viewer is an npm package in
+  a subdirectory; autohub commits its `npm pack` tarball built from a pinned devkit commit under
+  `modules/hub-ui/vendor/` and depends on it with `file:vendor/<name>.tgz`, its integrity pinned by
+  `package-lock.json`, with a note naming the source commit and rebuild steps. This is how autohub already consumes
+  app-common's `api-codegen` (`vendor/api-codegen.md`); npm Git dependencies install only a repository's root
+  package. Open: whether one Svelte component library covers both autohub and devkit's own server or the server
+  needs a separate static build, and why autohub moved from dynamically loaded external viewer bundles (autohub
+  `bfdef18`) to a native component (autohub `0d8c05f`), so the move does not reintroduce what that change removed.
 - **Q2. Package and command.** Which distribution ships the server and the built assets: an extra of `devkit-spec`
   (which owns the proposal and milestone document kinds), a new distribution, or `devkit-catalog`? What is the
   command (working name `devkit spec view`), and how does its stdout stay within `ARCH-08-1-agent-output` (one
