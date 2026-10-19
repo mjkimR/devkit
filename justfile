@@ -25,6 +25,10 @@ check module="all":
 test module="all" *args:
     bash scripts/module.sh test "$@"
 
+# Run the devkit-dist tests in a separate environment without devkit-agt (dist-only check)
+test-dist *args:
+    bash scripts/dist_only.sh "$@"
+
 # Run pytest with test coverage report
 test-cov module="all" *args:
     bash scripts/module.sh test-cov "$@"

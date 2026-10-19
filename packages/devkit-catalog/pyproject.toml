@@ -12,10 +12,10 @@ response-style = "devkit_catalog.response_style"
 host-observer = "devkit_catalog.host_observer"
 
 [dependency-groups]
-dev = ["devkit-agt"]  # the tests load the bundles with devkit's manifest reader
+dev = ["devkit-dist"]  # the tests load the bundles with devkit-dist's manifest reader
 
 [tool.uv.sources]
-devkit-agt = { workspace = true }
+devkit-dist = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

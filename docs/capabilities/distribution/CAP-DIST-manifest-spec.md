@@ -5,7 +5,7 @@ summary: "Schema, asset kinds, presets, validation, and deterministic archive bu
 area: distribution
 status: active
 entrypoints:
-  - packages/devkit/src/devkit/distribution/bundles/
+  - packages/devkit-dist/src/devkit/distribution/bundles/
 created_at: 2026-10-17
 ---
 

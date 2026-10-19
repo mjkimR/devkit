@@ -5,8 +5,8 @@ summary: "Transactional deployment of bundle assets, atomic journal safety, reco
 area: distribution
 status: active
 entrypoints:
-  - packages/devkit/src/devkit/distribution/installation/inventory.py
-  - packages/devkit/src/devkit/distribution/installation/overrides.py
+  - packages/devkit-dist/src/devkit/distribution/installation/inventory.py
+  - packages/devkit-dist/src/devkit/distribution/installation/overrides.py
 created_at: 2026-10-17
 ---
 

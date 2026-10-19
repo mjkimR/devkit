@@ -1,34 +1,41 @@
 [project]
 name = "devkit-agt"
 version = "0.1.1"
-description = "Agent asset distribution, repository rules, delivery workflows and commit gates in one CLI"
+description = "Developer harness for devkit: repository rules, delivery workflows, commit gates, task worktrees and bounded command output"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "click>=8.1.7",
-    "devkit-advisory==0.1.1",  # released in lockstep with devkit, from the same tag
-    "jinja2>=3.1.6,<4",
+    "devkit-advisory==0.1.1",  # released in lockstep with devkit-dist and devkit-agt, from the same tag
+    "devkit-dist==0.1.1",  # the devkit executable and the shared foundation, released in lockstep from the same tag
     "pyyaml>=6.0.1",
     "tomlkit>=0.13",
 ]
 
+# The extras of devkit-dist under the names devkit-agt always had: a project that depends on devkit-agt adds the
+# extra here, never a second requirement on devkit-dist.
 [project.optional-dependencies]
-mcp = ["mcp>=1.30,<2"]
-# Dense and hybrid devkit.search: numpy, tokenizers and the default embedding model.
-search = [
-    "numpy>=2.0",
-    "tokenizers>=0.20",
-    "devkit-embed>=0.1,<0.2",
-]
+mcp = ["devkit-dist[mcp]"]
+search = ["devkit-dist[search]"]
 
-[project.scripts]
-devkit = "devkit.cli:cli"
+# devkit-agt ships no console script: devkit-dist owns `devkit`, and these commands mount under it.
+[project.entry-points."devkit.commands"]
+gate = "devkit.gate.cli:cli"
+generated = "devkit.generated.cli:cli"
+integration = "devkit.integration.cli:cli"
+rules = "devkit.rules.cli:cli"
+run = "devkit.compact.cli:run_cmd"
+workflow = "devkit.workflow.cli:cli"
+worktree = "devkit.worktree.cli:cli"
 
 [project.entry-points."devkit.bundles"]
-devkit = "devkit.distribution.guide"
-advisory = "devkit.advisory_guide"
 authoring = "devkit.authoring_guide"
-git-commits = "devkit.commits_guide"
+harness = "devkit.harness_guide"
+
+# Commented templates of the reserved harness tables in .devkit/config.toml, rendered by `devkit config template`.
+[project.entry-points."devkit.config_tables"]
+workflow = "devkit.workflow.project.config:config_tables"
+worktree = "devkit.worktree.config:config_tables"
 
 [project.entry-points."devkit.post_sync"]
 gate-hooks = "devkit.gate.hooks.local_config:post_sync"
@@ -41,9 +48,6 @@ worktree-stale = "devkit.worktree.stale:hygiene"
 [project.entry-points."devkit.finish_guard"]
 workflow-envelopes = "devkit.workflow.integration:finish_guard"
 
-[project.entry-points."devkit.host.handlers"]
-observe = "devkit.host.observation:observe"
-
 [project.entry-points."devkit.host.services"]
 integration = "devkit.integration.mcp:create_tools"
 
@@ -54,20 +58,20 @@ dev = [
 
 [tool.uv.sources]
 devkit-advisory = { workspace = true }
-# The model wheel is built by hand and attached to the release that first ships its version (models/devkit-embed),
-# so every install of devkit-agt[search], from this workspace or from Git, gets the model files.
-devkit-embed = { url = "https://github.com/mjkimR/devkit/releases/download/v0.1.0/devkit_embed-0.1.0-py3-none-any.whl" }
+devkit-dist = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-# `devkit` is a namespace package: devkit/advisory/ comes from the devkit-advisory wheel.
+# `devkit` is a namespace package: devkit/advisory/ comes from devkit-advisory, core, search, host, distribution,
+# cli.py and __main__.py from devkit-dist; every installed path belongs to one wheel.
 packages = ["src/devkit"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "src"]  # rule tests live in each rule's folder (`<rule>/tests/`)
-pythonpath = ["tests"]
+# devkit-agt's tests also use devkit-dist's test helpers (`distsupport`); devkit-dist's tests never use these.
+pythonpath = ["tests", "../devkit-dist/tests"]
 addopts = ["--import-mode=importlib"]
 log_level = "INFO"

@@ -71,7 +71,7 @@ own dependencies through wheels.
 
 ## 3. Module Layout
 
-The code lives in `packages/devkit/src/devkit/distribution/` and imports only `devkit.core` (frontmatter grammar,
+The code lives in `packages/devkit-dist/src/devkit/distribution/` and imports only `devkit.core` (frontmatter grammar,
 typed receipt reader, safe relative paths, project root discovery), `devkit.advisory`, `devkit.search` for
 playbook search and `devkit.host` for native hook contracts. Modules import each other
 by absolute path (`devkit.distribution...`), never relatively. The library surface is exported from

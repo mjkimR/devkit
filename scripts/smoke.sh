@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
-# Consumer smoke test: build every workspace package into wheels, install the
-# devkit wheel (with the devkit-advisory wheel it requires), the starter and
+# Consumer smoke test: build every workspace package into wheels; install the
+# devkit-dist wheel alone (with devkit-advisory) into a fresh project and verify
+# it syncs distribution guidance only, answers harness command names and assets
+# no engine runs with their codes, and owns the one devkit executable; install
+# devkit-dist and devkit-agt as a uv tool and run a harness command; install the
+# devkit-agt wheel (with the devkit-dist and devkit-advisory wheels it requires), the starter and
 # catalog content wheels into a fresh project the way a consumer would, verify the built-in bundles are deployed by default
 # and the catalog bundles are not, select the starter and a catalog bundle, verify the workspace converges, exercise every CLI group, run
 # deployed and built-in rule tests, and make real commits through the installed
@@ -41,6 +45,7 @@ wheel() {
     fi
     echo "${matches[0]}"
 }
+dist_wheel=$(wheel devkit_dist)
 devkit_wheel=$(wheel devkit_agt)
 advisory_wheel=$(wheel devkit_advisory)
 starter_wheel=$(wheel devkit_starter)
@@ -48,20 +53,88 @@ catalog_wheel=$(wheel devkit_catalog)
 spec_wheel=$(wheel devkit_spec)
 viewer_wheel=$(wheel devkit_viewer)
 
+echo "==> distribution-only consumer: the devkit-dist wheel without devkit-agt"
+standalone="$work/standalone"
+mkdir -p "$standalone"
+(
+    cd "$standalone"
+    unset VIRTUAL_ENV
+    uv init --bare --name smoke-standalone --no-workspace >/dev/null
+    uv add --dev "$dist_wheel" "$advisory_wheel" >/dev/null
+    uv run devkit --version
+    uv run python -c "
+import importlib.util
+from importlib.metadata import entry_points, version
+assert importlib.util.find_spec('devkit.rules') is None and importlib.util.find_spec('devkit.compact') is None
+assert [entry.dist.name for entry in entry_points(group='console_scripts', name='devkit')] == ['devkit-dist']
+assert [entry.name for entry in entry_points(group='devkit.commands')] == []
+"
+    help_text=$(uv run devkit --help)
+    for name in rules workflow gate worktree generated integration run; do
+        if grep -qE "^  $name( |$)" <<<"$help_text"; then
+            echo "error: devkit --help lists the harness command $name without devkit-agt" >&2
+            exit 1
+        fi
+        status=0
+        uv run devkit "$name" --help >/dev/null 2>"$work/harness-$name.err" || status=$?
+        test "$status" -eq 2 && grep -q HARNESS_COMMAND_UNAVAILABLE "$work/harness-$name.err"
+    done
+    status=0
+    out=$(uv run devkit rules check --format json 2>"$work/harness-json.err") || status=$?
+    test "$status" -eq 2 && test ! -s "$work/harness-json.err" && grep -q '"code": "HARNESS_COMMAND_UNAVAILABLE"' <<<"$out"
+    status=0
+    uv run devkit no-such-command >/dev/null 2>"$work/unknown.err" || status=$?
+    test "$status" -eq 2 && ! grep -q HARNESS_COMMAND_UNAVAILABLE "$work/unknown.err"
+    echo "--- devkit sync deploys only the distribution bundles"
+    uv run devkit sync >/dev/null
+    uv run python -c '
+import json, pathlib
+receipt = json.loads(pathlib.Path(".devkit/installation.json").read_text())
+assert receipt["tool"]["package"] == "devkit-dist", receipt["tool"]
+assert {item["bundle"]: item["package"] for item in receipt["packages"]} == {"advisory": "devkit-dist", "devkit": "devkit-dist"}
+'
+    test ! -e .devkit/managed/harness
+    context=$(uv run devkit get-context devkit)
+    for command in "devkit rules" "devkit gate" "devkit workflow" "devkit run"; do
+        if grep -q "$command" <<<"$context" || grep -rq "$command" .devkit/managed/devkit; then
+            echo "error: the devkit bundle names $command in a standalone installation" >&2
+            exit 1
+        fi
+    done
+    echo "--- a rule asset no engine runs: HARNESS_ENGINE_MISSING, deployed, exit 0"
+    uv run devkit add advisory:python >/dev/null 2>"$work/engine.err"
+    grep -q HARNESS_ENGINE_MISSING "$work/engine.err"
+    test -f .devkit/managed/advisory/rules/unique_code/rule.py
+    engine_status=$(uv run devkit status)
+    grep -q '"code": "HARNESS_ENGINE_MISSING"' <<<"$engine_status"
+)
+
+echo "==> tool installation: devkit-dist owns the executable, devkit-agt adds the harness"
+(
+    unset VIRTUAL_ENV
+    export UV_TOOL_DIR="$work/tools" UV_TOOL_BIN_DIR="$work/tool-bin"
+    uv tool install "$dist_wheel" --with "$devkit_wheel" --with "$advisory_wheel" >/dev/null 2>&1
+    "$work/tool-bin/devkit" --version
+    "$work/tool-bin/devkit" rules --help >/dev/null
+    "$work/tool-bin/devkit" run --help >/dev/null
+)
+
 echo "==> creating a fresh consumer project"
 (
     cd "$project"
     unset VIRTUAL_ENV
     uv init --bare --name smoke-consumer --no-workspace >/dev/null
-    uv add --dev "$devkit_wheel" "$advisory_wheel" "$starter_wheel" "$catalog_wheel" >/dev/null
+    uv add --dev "$devkit_wheel" "$dist_wheel" "$advisory_wheel" "$starter_wheel" "$catalog_wheel" >/dev/null
     echo "--- devkit --version"
     uv run devkit --version
     uv run python -c "
 from importlib.metadata import PackageNotFoundError, version
 from devkit.distribution.installation.discovery import discover_bundles
 from devkit.distribution.installation.sync import tool_identity
-assert tool_identity().package == 'devkit-agt'
-assert tool_identity().version == version('devkit-agt')
+from importlib.metadata import entry_points
+assert tool_identity().package == 'devkit-dist'
+assert tool_identity().version == version('devkit-dist') == version('devkit-agt')
+assert [entry.dist.name for entry in entry_points(group='console_scripts', name='devkit')] == ['devkit-dist']
 try:
     version('devkit')
 except PackageNotFoundError:
@@ -69,15 +142,19 @@ except PackageNotFoundError:
 else:
     raise AssertionError('the unrelated devkit distribution must not be installed')
 with discover_bundles() as bundles:
-    assert {item.bundle.name for item in bundles if item.builtin} == {'devkit', 'advisory', 'authoring', 'git-commits'}
-    assert all(item.package == 'devkit-agt' for item in bundles if item.builtin)
+    assert {item.bundle.name: item.package for item in bundles if item.builtin} == {
+        'devkit': 'devkit-dist', 'advisory': 'devkit-dist', 'git-commits': 'devkit-dist',
+        'authoring': 'devkit-agt', 'harness': 'devkit-agt',
+    }
     assert {item.bundle.name for item in bundles if item.package == 'devkit-catalog'} == {'host-observer', 'response-style'}
 "
     echo "--- devkit sync (built-in bundles are selected by default)"
     uv run devkit sync >/dev/null
     grep -q '"devkit"' .devkit/installation.json
     grep -q '"advisory"' .devkit/installation.json
+    grep -q '"harness"' .devkit/installation.json
     test -d .devkit/managed/devkit
+    test -f .devkit/managed/harness/instructions/devkit-run.md
     test ! -e .devkit/managed/host-observer
     test ! -e .devkit/managed/response-style
     echo "--- response templates: lazy imports, configured language and final output"
@@ -96,10 +173,10 @@ TOML
     uv run devkit add response-style >/dev/null
     uv run python -c '
 from pathlib import Path
-path = Path(".devkit/managed/response-style/instructions/response-style.md")
+path = Path(".devkit/managed/response-style/skills/response-style/SKILL.md")
 assert "Use ko as the default" in path.read_text()
 assert not path.with_suffix(".md.jinja").exists()
-assert str(path) in Path("AGENTS.md").read_text()
+assert "read and apply the `response-style` skill" in Path("AGENTS.md").read_text()
 '
     uv run devkit sync --check >/dev/null
     uv run devkit remove response-style >/dev/null
@@ -157,9 +234,10 @@ assert json.loads(pathlib.Path(".codex/hooks.json").read_bytes()) == {"descripti
     status=0
     uv run devkit rules check --no-such-option 2>/dev/null || status=$?
     test "$status" -eq 2
-    echo "--- devkit workflow --help / devkit gate --help"
-    uv run devkit workflow --help >/dev/null
-    uv run devkit gate --help >/dev/null
+    echo "--- every harness command group is mounted under devkit"
+    for name in rules workflow gate worktree generated integration run; do
+        uv run devkit "$name" --help >/dev/null
+    done
     echo "--- devkit sync installs hooks, then commits through them"
     git init -q -b main .
     git config user.email smoke@example.com

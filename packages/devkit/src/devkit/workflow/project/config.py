@@ -8,13 +8,14 @@ from functools import cached_property
 from pathlib import Path
 from typing import Any
 
+from devkit.core.config_template import TemplateKey, TemplateTable
 from devkit.core.project import config_table, read_project_config
 from devkit.core.receipt import CONFIG_PATH
 from devkit.workflow.definition.ids import IDENT_HINT, is_ident
 from devkit.workflow.errors import LayoutError, WorkflowConfigError
 from devkit.workflow.project.layout import LAYOUT_KEYS, TemplateLayout, validate_layout_key, validate_relative_dir
 
-__all__ = ["WorkflowConfig", "load_workflow_config", "parse_workflow_config"]
+__all__ = ["WorkflowConfig", "config_tables", "load_workflow_config", "parse_workflow_config"]
 
 WORKFLOW_TABLE = "workflow"
 APPROVALS_KEY = "approvals"
@@ -37,6 +38,33 @@ DEFAULTS = {
     "definitions_dir": DEFAULT_DEFINITIONS_DIR,
     "roles_dir": DEFAULT_ROLES_DIR,
 }
+
+
+def config_tables() -> tuple[TemplateTable, ...]:
+    """The commented ``[workflow.approvals]`` and ``[workflow.stages]`` templates of ``devkit config template``.
+
+    Registered under the ``devkit.config_tables`` entry point ``workflow``. Gate names and stage ids are
+    workflow-defined; these are representative names, with the policies this reader applies to every name by default.
+    """
+    return (
+        TemplateTable(
+            (
+                TemplateKey(
+                    "integration", "ask", "approve integrating the change into the base", kind='"ask" | "auto" | "off"'
+                ),
+            ),
+            path=(APPROVALS_KEY,),
+            help="Workflow approval gates: ask waits for approval, auto satisfies the gate, off skips its stage."
+            " Names come from workflow definitions; the gate below is an example, and a methodology package may fix"
+            " some gates to a person (see its policy command). Unset gates use ask.",
+        ),
+        TemplateTable(
+            (TemplateKey("collect-feedback", "on", "set off to skip feedback collection", kind='"on" | "off"'),),
+            path=(STAGES_KEY,),
+            help="Workflow stages: policies apply by stage id across workflows. The id below is an example;"
+            " unset stages use on. Stage off takes precedence over approval policy.",
+        ),
+    )
 
 
 @dataclass(frozen=True)

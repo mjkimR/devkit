@@ -11,7 +11,6 @@ from typing import Any
 import pytest
 from click.testing import CliRunner
 from devkit.advisory import ActionMode
-from devkit.cli import cli
 from devkit.core.errors import ArgumentError
 from devkit.worktree import (
     AttachRefusedError,
@@ -33,6 +32,7 @@ from devkit.worktree import (
     start,
     start_branch,
 )
+from testsupport.cli import cli
 from testsupport.rules import git, init_repo, write
 
 

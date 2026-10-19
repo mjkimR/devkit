@@ -5,9 +5,9 @@ summary: "Host lifecycle hook dispatch, MCP transport, explicit Codex MCP regist
 area: host
 status: active
 entrypoints:
-  - packages/devkit/src/devkit/host/cli.py
-  - packages/devkit/src/devkit/host/errors.py
-  - packages/devkit/src/devkit/host/mcp/onboarding.py
+  - packages/devkit-dist/src/devkit/host/cli.py
+  - packages/devkit-dist/src/devkit/host/errors.py
+  - packages/devkit-dist/src/devkit/host/mcp/onboarding.py
 created_at: 2026-10-17
 ---
 
