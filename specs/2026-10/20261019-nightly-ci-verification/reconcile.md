@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-nightly-ci-verification
-status: pending
+status: resolved
 targets:
   - file: docs/development/ci-cd.md
     resolution: modified
