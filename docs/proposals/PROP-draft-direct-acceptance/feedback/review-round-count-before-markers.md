@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: friction
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-19
 ---
 
@@ -41,3 +41,7 @@ created_at: 2026-10-19
 - **Conditions**: a unit whose Planning spans the loop's introduction.
 - **Workarounds Attempted**: the interpretation above, stated in the `worker` envelope.
 - **Related Assets**: `references/review-loop.md` §1 and §4 and the bounded high-effort review-loop ADR on main.
+
+- **Disposition**: `PROP-envelope-record-gaps` Q1 and `PADR-reverify-closes-challenger-rounds` explicitly receive
+  unmarked high-effort round counting and answer-fold behavior. The accepted design keeps old high rounds in the
+  count and grants the defined answer-fold recovery round. Implementation is pending; this is promotion, not resolution.

@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-19
 ---
 
@@ -43,3 +43,9 @@ created_at: 2026-10-19
 - **Conditions**: `local-orchestrated` Development, `activity-effort: medium`, base `d981971`.
 - **Related Assets**: `.devkit/managed/spec/rules/task_coverage/`, `spec-specify` §5, the `development-worker`
   contract step 8.
+
+- **Disposition**: Dismissed as a skill-versus-stage boundary misunderstanding. The existing sdd-spec-feature
+  specify stage lists spec-specify, spec-plan and spec-tasks together, requires all three nonskeleton documents and
+  lint-clean, and declares all three as its artifacts. A spec.md-only commit is not that stage boundary. Verified
+  with `devkit workflow show sdd-spec-feature`; task coverage continues to guard the real boundary. No rule relaxation
+  or implementation change is needed.

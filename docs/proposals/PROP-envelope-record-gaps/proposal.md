@@ -25,6 +25,12 @@ workflow: sdd-proposal
 
 # [PROP-envelope-record-gaps] Close gaps in Planning records: folded challenger findings, settled assumptions, proposal boundaries
 
+## Source feedback
+
+- `FB-review-loop-round-count-across-procedure-change` and `FB-review-round-count-before-markers`: Q1 receives
+  the counting of earlier unmarked high-effort rounds and the treatment of user-answer folds. Preserve these IDs
+  through handoff and verify their resolution when the accepted Q1 design is implemented.
+
 ## 1. Background & Hypothesis
 
 - **Folded challenger findings stay open** (`FB-challenger-findings-stay-open`): a planning worker folds every
