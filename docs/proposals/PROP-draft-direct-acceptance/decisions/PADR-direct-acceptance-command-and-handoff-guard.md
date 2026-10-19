@@ -1,7 +1,7 @@
 ---
 id: PADR-direct-acceptance-command-and-handoff-guard
 title: Direct acceptance command and handoff guard
-summary: "A devkit spec proposal accept command checks eligibility and the executor's own feedback sweep, then sets status accepted and records the user's gate:plan-accept in one step; handoff also requires that gate record, and the sdd-proposal schema stays."
+summary: "On a one-commit plan-<slug> branch merged like any Planning branch, a devkit spec proposal accept command checks eligibility, sets status accepted and records the user's gate:plan-accept through the engine; a bound proposal's handoff also requires that gate record."
 proposal: PROP-draft-direct-acceptance
 status: draft
 created_at: 2026-10-19
@@ -22,7 +22,9 @@ A direct acceptance must reach the same end state a Planning acceptance reaches:
 `collect-feedback` sweep, `status: accepted` on disk, then `plan-accept`; anything else is `REQUEST_UNKNOWN`. The
 handoff checks the status but not the gate record, and the only check of a complete Planning outcome is the
 `plan-<slug>` integration check, which a direct acceptance never reaches. A hand edit that sets the status and then
-fails to record the gate would hand off silently without the user's acceptance.
+fails to record the gate would hand off silently without the user's acceptance. Where the acceptance is committed is
+compared in [options](../materials/options-comparison.md); this record assumes the recommended A3 and changes only in
+its first bullet if the user chooses A2.
 
 ## 2. Decision Drivers
 
@@ -45,31 +47,43 @@ fails to record the gate would hand off silently without the user's acceptance.
 
 ## 4. Decision Outcome
 
+- **Where it runs**: a direct acceptance is a Planning acceptance without a Planning run. After the read-only
+  `--check` passes on the base, the Host starts `plan-<slug>`, sweeps its own acceptance session there (a new
+  `feedback` envelope at `collect-feedback`; zero observations is a valid PASS), runs the command and commits; that is
+  the branch's only commit. The branch merges like any Planning branch: locally under `pull_request = auto`, where
+  the existing `plan-<slug>` readiness check validates status, both gates and the sweep, and through its PR under
+  `required`. The command refuses in any other checkout than the slug's own `plan-<slug>`.
 - **Command** (working name `devkit spec proposal accept <slug> --direct --reason "<why it is eligible>"`), run only
   after the user's explicit acceptance:
-  - checks the mechanical eligibility (`PADR-eligibility-for-direct-acceptance`) and the checkout the chosen path
-    requires; `--check` runs the same checks read-only and writes nothing, for use before any branch is started;
-  - writes `status: accepted` and records `gate:plan-accept` through devkit's `record_answer` (`by: user`, note
-    "direct acceptance, Planning skipped: <reason>; task_kind <kind> confirmed"), so the engine decides whether
-    `collect-feedback` holds, is switched off or is skipped by policy; a `REQUEST_UNKNOWN` refusal is reported under a
-    stable code naming the missing sweep, and the status is restored;
-  - never records `plan-intent`, never commits and never runs the handoff.
-  Freshness of the sweep stays an executor procedure, as for every Planning run: the executor sweeps its own
-  acceptance session and writes a new feedback envelope before running the command.
+  - checks the mechanical eligibility (`PADR-eligibility-for-direct-acceptance`); `--check` runs the same checks
+    read-only on the base and writes nothing;
+  - writes `status: accepted` (from `draft`, without `reviewing`) and records `gate:plan-accept` through devkit's
+    `record_answer` (`by: user`, note "direct acceptance, Planning skipped: <reason>; task_kind <kind> confirmed"), so
+    the engine decides whether `collect-feedback` holds, is switched off or is skipped by policy; a `REQUEST_UNKNOWN`
+    refusal is reported under a stable code naming the missing sweep, and the status is restored;
+  - never records `plan-intent`, never commits, merges or runs the handoff.
+  Freshness of the sweep stays an executor procedure, as for every Planning run.
+- **Refusal or objection**: when the command refuses after the branch started, or a reviewer of the `required` PR
+  objects, the user decides; on that decision the Host closes the PR and drops the branch with
+  `devkit worktree finish plan-<slug> --discard`. The base draft is untouched and may run Planning.
 - **Handoff guard**: for a bundle bound to `sdd-proposal`, `devkit spec proposal handoff` also requires the effective
-  accepted `gate:plan-accept` record (the rule it already uses to carry it), refusing with
-  `SPEC_PROPOSAL_NOT_APPROVED` otherwise. A single-file or unbound proposal, which can carry no gate record, keeps the
+  accepted `gate:plan-accept` record (the rule it already uses to carry it), refusing with a code of its own (working
+  name `SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED`) whose fix returns to the base: discard `dev-<slug>` and accept through
+  Planning or a direct acceptance. A single-file or unbound proposal, which can carry no gate record, keeps the
   status-only rule.
+- **The note survives the handoff**: carried gate records keep the proposal's note after `PROP-<slug>`
+  (`PROP-<slug>: <note>`) instead of replacing it, so a spec shows that its direction was accepted without Planning.
 - **Visibility**: the acceptance request shows "Planning: skipped (direct acceptance)" where a Planning acceptance
   shows the applied effort and support roles, together with `task_kind` (which `plan-accept` confirms) and its
   reason, the recorded `planning_effort` hint, the eligibility reason, the PADRs the handoff will promote and the
-  `dev_effort` hint for Development.
+  `dev_effort` hint, which the Host reviews against the settled direction as a Planning executor would.
 - The `sdd-proposal` stage schema is unchanged; its body and `CAP-DLV-delivery-workflows` describe the direct path.
 
 ## 5. Consequences
 
 - A partial direct acceptance cannot be handed off, and a bound Planning acceptance whose gate record is missing is
   caught too.
-- Tests that hand off a bound proposal with only `status: accepted` must record the gate.
+- Tests that hand off a bound proposal with only `status: accepted` must record the gate; tests of the carried note
+  change.
 - The plain `accept` form for a proposal in review (one validated step for Planning acceptance as well) is a possible
   follow-up, outside this proposal.
