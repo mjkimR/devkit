@@ -1,0 +1,62 @@
+kind: worker
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-18T23:55:19.113540Z'
+status: needs_input
+summary: 'Planning (activity-effort high; proposal hint planning_effort medium): status reviewing; Q1-Q5 settled in PADR-dist-module-split (shared devkit.* namespace; core, search, host moved whole), PADR-dist-command-composition (devkit-agt mounts via devkit.commands), PADR-dist-config-receipt-ownership (devkit-dist owns config/receipt; reserved harness tables; devkit.config_tables), PADR-dist-bundles-compatibility (devkit/advisory/git-commits to devkit-dist, authoring to devkit-agt, behavior preserved, lockstep release); dev_effort medium->high, size M->L, boundaries corrected, stale file:/// links replaced by IDs. Support roles: scout-01, challenger-01, challenger-02 (re-review). Three questions wait for the user.'
+findings: []
+assumptions:
+- PADR-dist-foundation-ownership (accepted direction at plan-intent) is not reopened
+- The proposal hint planning_effort stays medium as recorded; this run applied high as the user confirmed
+- worker --stage is the stage next named at the start of the run (collect-feedback); see FB-worker-stage-choice-ambiguous
+unverified_areas:
+- No wheels built and no dist-only test run; packaging behavior (namespace portions, py.typed, uv tool install --with) inferred from metadata and PEP 561
+- Latency measured on one macOS machine only
+checks:
+  rules: PASS devkit rules check on the proposal directory
+  feedback: PASS feedback-01 swept recorded=3
+diff_scope:
+  base: 3c53d75c917d92bcf411a422913b685625d471f2
+  head: 84872143282b9af7f53d887ac5ae0187503c0810
+questions:
+- id: harness-guidance
+  title: Harness guidance in the devkit bundle
+  prompt: 'Where does the harness guidance inside the auto-selected devkit bundle go? (Answer this before compact-home: its costs depend on it.)'
+  context: 'After the split the devkit bundle ships with devkit-dist, and a standalone installation has no `devkit rules`, `devkit gate` or `devkit workflow`. Harness text in the bundle: the constitution (intro on rules and gates, contracts 5 and 6), the consumption instruction (description, configuration table, Workflows, Rules and commit gates), resource-kinds (the rule, gate and workflow kinds and their commands, `devkit rules test`) and in-repo-bundle (rule tests, snapshot gates, a devkit-agt dependency in the example); full list in materials/20261019-package-split-evidence.md section 4. A bundle belongs to exactly one wheel and nothing lets another package extend it. Moving the whole devkit bundle to devkit-agt was rejected (standalone installations would deploy no consumption guidance). Changed or moved files get new hashes, recorded by the next sync like any bundle update.'
+  options:
+  - id: harness-bundle
+    description: A new auto-selected bundle shipped by devkit-agt (proposed name `harness`) carries the harness guidance; the devkit bundle keeps distribution guidance and describes the rule, gate and workflow asset kinds only as things it deploys, noting their engines come with devkit-agt. Projects with devkit-agt get one more managed bundle and receipt entry; config.toml does not change.
+    recommended: true
+  - id: conditional-text
+    description: Keep the guidance in the devkit bundle, reworded to apply only when devkit-agt is installed. No new bundle, but standalone agents still load harness text.
+    recommended: false
+  allow_note: true
+- id: compact-home
+  title: Home of devkit run (compact)
+  prompt: Which wheel ships devkit.compact, the `devkit run` command?
+  context: 'devkit.compact imports only devkit.core and devkit.advisory and needs only click, so either wheel keeps the dependency direction (devkit.rules, devkit.gate and devkit.generated import it downward). The auto-selected devkit bundle (shipped by devkit-dist) puts the devkit-run instruction in its core preset and owns the `run` preset with an AGENTS.md pointer. Costs per harness-guidance answer: with harness-bundle, keeping compact in devkit-agt moves devkit-run and run-pointer into the harness bundle, so configurations selecting `devkit:run` fail with SelectionError (unknown preset) until edited; with conditional-text, they can stay in the devkit bundle with conditional wording and nothing breaks. Putting compact in devkit-dist costs no bundle or configuration change under either answer, but widens the standalone scope of PADR-dist-foundation-ownership (distribution, native hooks, context loading, playbooks) by a feature that is not distribution.'
+  options:
+  - id: dist
+    description: devkit-dist ships devkit.compact as a built-in `devkit run`; the devkit bundle, its presets and existing configurations stay unchanged, and standalone consumers also get compact command output.
+    recommended: true
+  - id: agt
+    description: devkit-agt keeps devkit.compact and mounts `devkit run` through devkit.commands; the standalone scope stays exactly as agreed, and the devkit-run guidance follows the harness-guidance answer (moved with a `devkit:run` selection break under harness-bundle, conditional wording under conditional-text).
+    recommended: false
+  allow_note: true
+- id: standalone-harness-signals
+  title: Standalone signals for harness use
+  prompt: 'In a devkit-dist installation without devkit-agt, how should devkit react to harness use: a selected bundle that ships rule, gate or workflow assets, and a harness command name such as `devkit rules`?'
+  context: 'No first-party bundle installable without devkit-agt ships rule, gate or workflow assets (only devkit-spec, which requires devkit-agt, and authoring, which ships with it, do), so the asset case arises only with third-party or in-repo bundles; then sync deploys rules and gates no engine runs and the devkit-workflow entry skill whose steps call `devkit workflow`. A harness command name today gets click''s code-less usage error (exit 2), while the agent-first contract wants a stable code and a deterministic directive for anything an agent must act on. Detection is by name only: whether a devkit.commands entry point named rules, gate or workflow is installed, and a name-only list of the harness command names (like the reserved config tables); devkit-dist never imports or locates a harness module.'
+  options:
+  - id: both
+    description: Sync and status return a WARNING notice with a stable code when deployed assets of kind rule, gate or workflow have no matching devkit.commands entry point, and a harness command name answers with a coded error directing to install devkit-agt.
+    recommended: true
+  - id: sync-notice-only
+    description: Only the sync/status notice for harness asset kinds; harness command names keep click's usage error.
+    recommended: false
+  - id: none
+    description: No signal; document both as standalone limitations in the consumer guides.
+    recommended: false
+  allow_note: true
+activity_effort: high
