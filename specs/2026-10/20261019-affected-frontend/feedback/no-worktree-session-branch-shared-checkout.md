@@ -55,4 +55,6 @@ integration_integrate (session): WORKTREE_BASE_ON_BRANCH, then INTEGRATION_NOT_R
 git-policy.md: "`session` depth is never required to [use a worktree]"
 ```
 
-- **Disposition**: `PROP-shared-checkout-session-isolation`: drafted in Backlog to decide between a worktree policy and a coded notice for session branches in a shared checkout.
+- **Disposition**: `PROP-shared-checkout-session-isolation`: brief documentation guidance only. Direct
+  users and local orchestration main agents own checkout coordination; mandatory worktrees and additional execution
+  barriers and unconditional runtime notices are excluded.

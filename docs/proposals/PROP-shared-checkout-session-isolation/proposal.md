@@ -1,14 +1,14 @@
 ---
 id: PROP-shared-checkout-session-isolation
-title: Isolation for session branches in a checkout shared by agent sessions
-summary: Decides how session tasks avoid picking up other sessions' commits when they run on a --no-worktree branch in a base checkout shared by several agent sessions.
+title: Non-blocking guidance for session branches in a shared checkout
+summary: "Adds concise guidance for --no-worktree branches in shared checkouts, leaving coordination to the direct user or local orchestration main agent without requiring worktrees or adding execution barriers."
 status: draft                         # draft | reviewing | accepted | rejected
 created_at: 2026-10-19
 target_area: delivery/
 priority: medium                      # critical | high | medium | low
-size: M                               # S | M | L | XL
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
+size: S                               # S | M | L | XL
+planning_effort: low                  # low | medium | high (hint for Planning)
+dev_effort: low                       # low | medium | high (hint for Development)
 boundaries:
   owns:
     - delivery/
@@ -19,7 +19,7 @@ task_kind: feature                    # feature | bugfix: the spec follows sdd-s
 workflow: sdd-proposal
 ---
 
-# [PROP-shared-checkout-session-isolation] Isolation for session branches in a checkout shared by agent sessions
+# [PROP-shared-checkout-session-isolation] Non-blocking guidance for session branches in a shared checkout
 
 ## 1. Background & Hypothesis
 
@@ -27,23 +27,34 @@ workflow: sdd-proposal
   base checkout. When several agent sessions share that checkout, another session's commit can land on the task
   branch while it is checked out. One such branch held a foreign proposal commit, local integration refused it, and
   the work had to be cherry-picked onto a fresh worktree branch (`FB-no-worktree-session-branch-shared-checkout`).
-- **Hypothesis**: Either a policy that prefers a worktree whenever a session task is bound for local integration, or
-  a coded notice from `--no-worktree` that the base checkout stays on the task branch, prevents the mix-up at low cost.
+- **Responsibility**: In direct mode the user coordinates sessions sharing a checkout. In local orchestration the
+  main agent coordinates worker checkout and branch use. Uncoordinated concurrent writes to one checkout are outside
+  this proposal's supported isolation guarantees.
+- **Hypothesis**: Brief agent-facing guidance clarifies shared branch state and coordination responsibility without
+  changing command behavior. An unconditional runtime notice does not identify actual concurrent work and adds no
+  useful signal.
 
-## 2. Technical Spike Questions
+## 2. Planning Scope
 
-- **Q1**: Policy or signal: should `session` tasks bound for local integration require a worktree, or keep
-  `--no-worktree` with a notice (and what code and directive)?
-- **Q2**: Can devkit detect that a checkout is shared by other sessions (for example through the work-scope registry)
-  so the policy or the notice applies only when it matters?
-- **Q3**: How does integration report a branch that carries commits from outside the task, so the agent knows to
-  separate them instead of retrying?
+The scope is documentation only: add the minimum guidance in the `spec` references and clarify the corresponding
+capability contracts. No command implementation, runtime notice, session detection or coordination infrastructure
+is needed.
 
 ## 3. Proposed Design & Impact
 
-- Affected: the `spec` skill's git-policy and branches references, `devkit worktree start --no-worktree`, and the
-  delivery and worktree capabilities (`CAP-DLV-project-policy` and the worktree capability area).
-- Planning compares the policy and signal options above; the decision may change `GIT_POLICY` levels.
+- Keep `--no-worktree` available under its existing policy. Do not require or automatically create a worktree for
+  session tasks, change `GIT_POLICY` levels, add confirmation steps, introduce new refusals or acquire a session
+  ownership lock.
+- Add brief guidance to the `spec` skill's git-policy and branches references: `--no-worktree` switches the current
+  checkout to the task branch, and other sessions using that directory observe the same branch. Direct users and
+  local orchestration main agents coordinate checkout use; a separate worktree remains an available option.
+- Reflect that responsibility boundary in `CAP-DLV-project-policy` and the worktree capability area. Keep command
+  output and success behavior unchanged; do not add an unconditional runtime notice.
+- Keep existing integration checks. Do not add foreign-commit detection, automatic commit separation or a new
+  integration refusal for shared-checkout use.
+
+**Non-Goals**: guaranteed isolation between concurrent sessions in one checkout, shared-session detection,
+runtime notices, mandatory worktrees, session locks, additional approval gates and automatic recovery of mixed branches.
 
 ## 4. Lifecycle & Retirement Criteria
 
