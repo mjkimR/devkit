@@ -1,7 +1,7 @@
 ---
 id: PADR-dist-module-split
 title: Namespace and module split between devkit-dist and devkit-agt
-summary: Keeps the devkit.* module paths through the shared PEP 420 namespace and moves core, search, host, distribution and the root CLI whole into devkit-dist, leaving the harness engines in devkit-agt.
+summary: Keeps the devkit.* module paths through the shared PEP 420 namespace and moves core, search, host, distribution and the root CLI whole into devkit-dist, leaving the harness engines and devkit.compact (devkit run) in devkit-agt.
 proposal: PROP-devkit-dist-package-separation
 status: draft
 created_at: 2026-10-19
@@ -12,7 +12,7 @@ created_at: 2026-10-19
 - **Status**: Draft
 - **Date**: 2026-10-19
 - **Answers**: Q1 (packaging and namespace) and Q4 (foundation boundaries) of `PROP-devkit-dist-package-separation`,
-  within `PADR-dist-foundation-ownership`.
+  within `PADR-dist-foundation-ownership`, with the user's answer to `compact-home` (`envelopes/answer-01.yaml`).
 
 ---
 
@@ -26,6 +26,9 @@ modules (the `devkit.core` package re-exports them), all of `devkit.search`, par
 `integration` module. `devkit.host` and `devkit.search` import only `core` and `advisory`. The layering test
 (`packages/devkit/tests/test_layering.py`) already enforces these edges. Evidence:
 `materials/20261019-package-split-evidence.md`.
+
+`devkit.compact` (`devkit run`) imports only `devkit.core` and `devkit.advisory` and is imported by `devkit.rules`,
+`devkit.gate` and `devkit.generated`, so either wheel keeps the dependency direction; it is not distribution.
 
 `PADR-dist-foundation-ownership` requires `devkit-dist` to run distribution, native hooks, context loading and
 playbooks without `devkit-agt`, and leaves the namespace and the exact core/search/host split to Planning.
@@ -65,6 +68,10 @@ playbooks without `devkit-agt`, and leaves the namespace and the exact core/sear
   keeps adding its integration tools through the `devkit.host.services` entry point; playbook search needs all of
   `search`. Cons: harness-oriented helpers in `core` (`git`, `locks`, `plugins`, `deadline`) ship in the
   distribution wheel.
+- **Home of `devkit.compact` (user question `compact-home`).** In `devkit-dist` it would cost no bundle or
+  configuration change but widen the standalone scope of `PADR-dist-foundation-ownership` by a feature that is not
+  distribution; in `devkit-agt` the standalone scope stays as agreed, and its guidance moves to the `harness`
+  bundle with a `devkit:run` selection break (`PADR-dist-bundles-compatibility`). The user chose `devkit-agt`.
 - **F2: split `core` into a distribution core and a harness core.** Cons: `devkit.core` re-exports every module and
   `receipt` and `project`, which distribution needs, use `git`, `paths` and `files`; the split creates a second
   foundation package, changes the plugin-facing API and saves under 1000 lines.
@@ -84,9 +91,10 @@ Choose **N1** and **F1**.
 - `devkit-dist` MUST ship `devkit.core`, `devkit.search` and `devkit.host` whole, `devkit.distribution` with the
   `devkit` bundle (`devkit.distribution.guide`), the root command line, and the bundle areas assigned to it by
   `PADR-dist-bundles-compatibility`.
-- `devkit-agt` MUST keep `devkit.rules`, `devkit.workflow`, `devkit.gate`, `devkit.worktree`, `devkit.generated`
-  and `devkit.integration`, and depends on `devkit-dist` at the same version.
-- The owner of `devkit.compact` (`devkit run`) is decided by the user: question `compact-home` of this Planning.
+- `devkit-agt` MUST keep `devkit.rules`, `devkit.workflow`, `devkit.gate`, `devkit.worktree`, `devkit.generated`,
+  `devkit.integration` and `devkit.compact` (`devkit run`, mounted through `devkit.commands`,
+  `PADR-dist-command-composition`), the `authoring` bundle area and the new data-only `harness` bundle area
+  (`PADR-dist-bundles-compatibility`), and depends on `devkit-dist` at the same version.
 - The new source tree is `packages/devkit-dist/` (wheel `devkit-dist`); `devkit-agt` stays in `packages/devkit/`,
   so the documented Git dependency URL (`#subdirectory=packages/devkit`) keeps working.
 - Entry points move with their target: the `devkit` console script, the `devkit.bundles` entries of the bundles
@@ -100,15 +108,17 @@ Choose **N1** and **F1**.
   detecting the installation: add the extra to the devkit requirement the project already declares,
   `devkit-agt[<extra>]` when it depends on `devkit-agt`, else `devkit-dist[<extra>]`. They never add a second direct
   requirement on `devkit-dist` next to `devkit-agt`, whose resolved source could conflict.
-- Layering is enforced per wheel: a `devkit-dist` test refuses any reference to a `devkit-agt` area from its
-  sources and its entry points; `devkit-agt` keeps its own table, in which each of its areas may also use the
-  `devkit-dist` areas.
+- Layering is enforced per wheel: a `devkit-dist` test refuses any reference to a `devkit-agt` area (`compact`
+  included) from its sources and its entry points; `devkit-agt` keeps its own table, in which each of its areas may
+  also use the `devkit-dist` areas, `compact` keeps using only `core` and `advisory`, and the `harness` bundle area
+  imports nothing. Harness command names held as plain strings by `devkit-dist` (`PADR-dist-command-composition`)
+  are not module references.
 
 ## 5. Consequences
 
 - Tests move with their area: `core`, `search`, `host` and `distribution` tests become `devkit-dist` tests and run
   in an environment without `devkit-agt`, as `PADR-dist-foundation-ownership` requires; tests that exercise both
-  wheels together stay with `devkit-agt`. Four `devkit-dist`-side tests currently reach harness code
+  wheels together stay with `devkit-agt`; `compact` tests and the CI compact test path stay with `devkit-agt`. Four `devkit-dist`-side tests currently reach harness code
   (`distribution/test_config_template.py`, `core/test_cli.py`, the hook assertion of `distribution/test_sync.py`,
   and `testsupport.gate`), and move or split accordingly (`materials/20261019-package-split-evidence.md` section 5).
 - The workspace venv installs every package, so `devkit-agt` entry points stay visible to `devkit-dist` tests run
@@ -120,5 +130,5 @@ Choose **N1** and **F1**.
   `testpaths` and the dev dependency group; release, smoke and CI wiring add the new wheel.
 - Package READMEs, `docs/development/reference/` pages, `ARCH-05-1-containers`, `ARCH-05-2-components` and
   `ARCH-07-deployment` name the new owner of each module, and the root `AGENTS.md` (Architecture and Boundaries:
-  the layering rule stated for `packages/devkit`; Packages: `devkit-agt` as the single distribution) describes the
-  three wheels and the per-wheel layering.
+  the layering rule stated for `packages/devkit` and its list of data-only bundle areas, which gains the `harness`
+  area; Packages: `devkit-agt` as the single distribution) describes the three wheels and the per-wheel layering.

@@ -71,7 +71,7 @@ dependency inversion (`post_sync`, `host.services`), so no group needs to move o
 
 | Bundle | Selection | Assets | Needs | Assigned to |
 | --- | --- | --- | --- | --- |
-| `devkit` | auto | consumption, resource-kinds, in-repo-bundle, devkit-run; preset `run` adds an AGENTS.md pointer | text only; harness sections describe `devkit rules`, `devkit gate`, `devkit workflow`; `devkit-run` describes `devkit run` (compact) | `devkit-dist` (harness sections: question `harness-guidance`; `devkit-run`: question `compact-home`) |
+| `devkit` | auto | consumption, resource-kinds, in-repo-bundle, devkit-run; preset `run` adds an AGENTS.md pointer | text only; harness sections describe `devkit rules`, `devkit gate`, `devkit workflow`; `devkit-run` describes `devkit run` (compact) | `devkit-dist`; harness sections, `devkit-run`, `run-pointer` and the `run` preset move to the new `harness` bundle of `devkit-agt` (section 8) |
 | `advisory` | auto | protocol guides | text only | `devkit-dist` |
 | `git-commits` | opt-in | commit conventions, AGENTS.md pointer | text only | `devkit-dist` |
 | `authoring` | opt-in | two playbooks, two rule assets | rule engine; area imports `devkit.rules` | `devkit-agt` |
@@ -160,3 +160,38 @@ questions were fixed before asking: `harness-guidance` is asked first and `compa
 `PADR-dist-bundles-compatibility` and the rejected B2); `standalone-harness-signals` states that only third-party or
 in-repo bundles can trigger it and that engine presence is detected by name only, through the `devkit.commands`
 entry points (`rules`, `gate`, `workflow`), never by importing or locating a harness module.
+
+## 8. User answers and folded decisions (envelope `answer-01.yaml`)
+
+| Question | Answer | Folded into |
+| --- | --- | --- |
+| `harness-guidance` | `harness-bundle`: a new auto-selected `harness` bundle shipped by `devkit-agt` carries the harness guidance; the `devkit` bundle keeps only distribution guidance | `PADR-dist-bundles-compatibility` (H1), `PADR-dist-module-split` (area), proposal Q5 |
+| `compact-home` | `agt`: `devkit.compact` stays in `devkit-agt`; `devkit-run`, `run-pointer` and the `run` preset move to `harness`; the `devkit:run` selection break is accepted in place | `PADR-dist-module-split`, `PADR-dist-command-composition` (`run` mounted), `PADR-dist-bundles-compatibility`, proposal Q2/Q4 |
+| `standalone-harness-signals` | `both`: coded sync/status notice for rule, gate and workflow assets no engine runs, coded error for harness command names, name-only detection | `PADR-dist-bundles-compatibility` (notice), `PADR-dist-command-composition` (error, list, precedence) |
+
+Evidence checked while folding (worktree head after `answer-01.yaml`):
+
+- **`devkit:run` selections**: `.devkit/config.toml` has no `devkit` key under `[presets]`, and the receipt's
+  `selection.presets.devkit` is `["core"]`, so this repository selects only `devkit:core`. No configuration of a
+  first-party package (`devkit-spec`, `devkit-catalog`, `devkit-starter`) selects the `devkit` bundle's `run` preset;
+  the only selections of it are the test `tests/distribution/test_guide_bundle.py`
+  (`presets={"devkit": ["core", "run"]}`, `bundle.select(["run"])`, the managed path
+  `.devkit/managed/devkit/instructions/devkit-run.md`). `tests/distribution/test_builtin_selection.py` expects the
+  auto-selected built-ins `{"advisory": ["core"], "devkit": ["core"]}`, which gains `harness` where `devkit-agt` is
+  installed. Consumer repositories outside this workspace were not read.
+- **References naming `devkit:run` or the `devkit-run` instruction's bundle**: the `devkit` bundle manifest comment,
+  `guides/install/bundle-recommendations.md`, `docs/development/reference/distribution.md` (section 4),
+  `docs/development/reference/compact.md`, `CAP-CMP-bounded-execution`. `compact/execute.py` uses `devkit-run` only
+  as its log directory prefix, unrelated to the bundle.
+- **Cross-bundle references**: the `devkit-spec` bundle points to the `devkit` bundle's `in-repo-bundle` instruction
+  from the `spec-rule` skill (rules in the in-repository bundle) and the `brownfield-adoption` and
+  `feedback-hygiene` playbooks (where repository assets belong). The bundle setup stays in `in-repo-bundle`; rule
+  tests and snapshot gates move to `harness`, which the `spec-rule` reference must also name.
+- **Selection failure today**: an unknown preset raises `SelectionError` (`SELECTION_INVALID`) with the fix
+  "Select one of: <bundle>:<preset>..." listing the bundle's own presets (`distribution/bundles/manifest.py`), so a
+  `devkit:run` selection fails with a directive listing `devkit:core` only; the decision adds no special case.
+- **Harness command names** in the current root map (`devkit/cli.py` `COMMANDS`) that `devkit-agt` will mount:
+  `run`, `rules`, `workflow`, `gate`, `worktree`, `generated`, `integration`; `host` stays a `devkit-dist` built-in.
+- **Interpretation**: contract 6 of the `devkit` constitution has a distribution half (commit the receipt after
+  `devkit sync`) and a harness half (snapshot gates trust the receipt); under "the `devkit` bundle keeps only
+  distribution guidance" the first stays and the second moves, recorded in `PADR-dist-bundles-compatibility`.

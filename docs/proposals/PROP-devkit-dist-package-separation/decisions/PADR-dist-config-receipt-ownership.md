@@ -84,6 +84,8 @@ Choose **C2**.
 - A project that installs only `devkit-dist` gets a template without harness tables; adding `devkit-agt` and running
   `devkit config template` adds them without changing a line.
 - Snapshot gates (`devkit rules check --staged`, `--ci`) keep trusting the committed receipt. The split itself
-  changes only the package names it records; managed files whose text changes with the answers to
-  `harness-guidance` and `compact-home` (or move to another bundle) get new hashes or paths, which the first sync
-  records and the project commits, as for any bundle update.
+  changes the package names it records; the move of the harness and `devkit run` guidance into the new `harness`
+  bundle (`PADR-dist-bundles-compatibility`) changes the `devkit` bundle's managed files and adds `harness` files
+  and a `harness` entry, which the first sync records and the project commits, as for any bundle update. The
+  configuration schema does not change; the only configuration a project must edit is a `devkit:run` selection,
+  which becomes `harness:run`.
