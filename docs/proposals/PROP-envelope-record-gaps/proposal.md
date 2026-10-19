@@ -60,8 +60,9 @@ Decisions of this Planning (evidence and the option comparison: `materials/spike
   `envelope new --kind challenger` refuses non-open resolutions; `envelope check` shows `review=<file>` on reverify
   lines. Planning writes one such reverify after each fold, at `medium` and `high`. Rounds without the
   `round <N>;` marker count per loop kind only when an earlier `high` run recorded them before the first marker;
-  otherwise a `high` loop starts at round 1. How a fold of the user's answers counts: open question
-  `answer-fold-round`.
+  otherwise a `high` loop starts at round 1. A fold of the user's answers is a new batch in the same loop; a fold
+  that reaches the cap gets one fresh round outside the cap, like a fix the user requested (user answer
+  `answer-fold-round`, `envelopes/answer-01.yaml`).
 - **Q2** (`PADR-answer-envelopes-settle-worker-assumptions`): an `answer` envelope may carry
   `settles: [{assumption: <1-based position in the answered worker's assumptions>, decision}]`, written with
   `devkit workflow envelope answer --settle N=DECISION`; `answers` may then be empty; it holds and releases nothing.
@@ -69,7 +70,8 @@ Decisions of this Planning (evidence and the option comparison: `materials/spike
   `target_area` and `boundaries.owns` entry of a `draft`, `reviewing` or `accepted` proposal that resolves to no
   existing path (repository path, namespace or global docs-root path, or capability area), and the `<...>`
   placeholder under its own message; the Planning executor clears its reports before the `plan-accept` request. How
-  a path the Development creates is declared: open question `new-boundary-paths`.
+  a path the Development will create is declared by its nearest existing parent directory, the new path named in the
+  proposal text; no new syntax and no handoff change (user answer `new-boundary-paths`, `envelopes/answer-01.yaml`).
 
 Affected:
 

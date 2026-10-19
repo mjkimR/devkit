@@ -67,8 +67,14 @@ rounds recorded before its marker existed) without superseding it.
   before that marker records `activity_effort: high`; otherwise unmarked rounds (a `medium` or `low` run's) never
   count, and a `high` loop that follows them starts at round 1. When a marker disagrees with the inferred count, the
   higher number holds, so the cap is never extended. A `reverify` is never a round.
-- **Folding user answers**: pending the user's answer to question `answer-fold-round` of this Planning's `worker`
-  envelope.
+- **Folding user answers** (the user's answer `answer-fold-round`, `envelopes/answer-01.yaml`): a Planning turn that
+  folds the user's answers into a proposal already reviewed in a `high` loop treats the fold as a new batch of the
+  same loop, never a fresh loop; the round count continues. When the fold's batch reaches the cap round and would need
+  another round, it gets one further fresh round outside the cap, as a fix the user requested does (section 4 of the
+  review loop); that round's `challenger-NN` summary cites the `answer` envelope in place of a `resolution`. Its outcome follows the loop's rules:
+  a recurrence of the same P1 or a batch that still fails section 2 hands over again. An answer alone therefore never
+  forces a hand-over, and the loop stays bounded: one extra round per answered fold at most, and only the user starts
+  a new answer round.
 
 ## 5. Consequences
 
@@ -76,7 +82,7 @@ rounds recorded before its marker existed) without superseding it.
   the challenger resolution refusal and the reverify `review=` output; tests for a challenger reverify, its malformed
   variants and the unchanged review state.
 - Contract: `CAP-DLV-workflow-envelopes` sections 1 to 3; `CAP-DLV-delivery-workflows` (the high review-loop rule
-  naming Planning's closing record); bundle text: `references/review-loop.md` sections 1, 2 and 5, the
+  naming Planning's closing record); bundle text: `references/review-loop.md` sections 1, 2, 4 (the answer fold) and 5, the
   `planning-worker` contract step 4 and the `plan-accept` request in `sdd-proposal.md`; the test that pins the
   review-loop wording (`packages/devkit-spec/tests/test_effort_procedure.py`).
 - Existing challenger envelopes stay open; no back-fill.
