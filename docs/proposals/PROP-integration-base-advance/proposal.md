@@ -7,8 +7,8 @@ created_at: 2026-10-19
 target_area: capabilities/integration/
 priority: high                        # critical | high | medium | low
 size: M                               # S | M | L | XL
-planning_effort: high                 # low | medium | high (hint for Planning)
-dev_effort: high                      # low | medium | high (hint for Development)
+planning_effort: medium               # low | medium | high (hint for Planning)
+dev_effort: medium                    # low | medium | high (hint for Development)
 boundaries:
   owns:
     - capabilities/integration/
