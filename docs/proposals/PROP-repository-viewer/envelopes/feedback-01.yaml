@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-18T23:37:05.830459Z'
+status: completed
+summary: Swept this Planning run (Backlog draft, plan-intent, spike answers, two PADRs) and the open backlog; recorded FB-direct-planning-procedure-location; no duplicates.
+findings: []
+checks:
+  swept: PASS recorded=1 duplicates=0

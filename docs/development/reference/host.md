@@ -49,6 +49,10 @@ and verifies the effective result. Identical enabled command/args with no enviro
 Codex's writer owns persistence; a failed write/verification is not a devkit rollback guarantee. Concurrent external
 host configuration edits are outside devkit's transaction scope.
 
+Claude Code has no setup adapter: register the config output's `command` and `args` with
+`claude mcp add --scope user devkit -- <command> <args...>` ([MCP onboarding](../../../guides/install/mcp.md#4-register-claude-code-explicitly));
+`host mcp status` reports only Codex registration.
+
 Registration uses Codex's user scope and fixed name `devkit`, so switching repositories can conflict. Setup does
 not edit project TOML, trust, tool approval policies or execution permissions. The read-only config command retains
 its add/get/remove commands and TOML snippet. `codex mcp remove devkit` removes that named user registration.
