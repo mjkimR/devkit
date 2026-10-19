@@ -1,0 +1,37 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T02:11:25.585118Z'
+status: completed
+summary: 'Engine and tooling evidence for a Planning-free acceptance: plan-accept opens only after collect-feedback passes and status is reviewing|accepted on disk; handoff checks status but not the gate record; check has no modes; no rule watches proposal status.'
+findings:
+- issue: gate:plan-accept can be answered only while direction-handoff is current; it is not open until collect-feedback passes and proposal.md says reviewing or accepted on disk.
+  evidence: packages/devkit/src/devkit/workflow/answers.py:104-113; packages/devkit/src/devkit/workflow/evaluation/evaluate.py:364-366; packages/devkit/src/devkit/workflow/evaluation/primitives.py:54-63
+  failure_condition: 'A direct acceptance that records plan-accept before the sweep envelope or before writing status: accepted fails with REQUEST_UNKNOWN.'
+  suggested_action: 'Fix the order in the procedure or command: plan-intent, own-session sweep, status accepted, plan-accept, one commit.'
+  resolution: open
+- issue: The collect-feedback exit needs a completed feedback envelope with swept=PASS; stage-off is project-wide and optional:true would drop the sweep from normal Planning.
+  evidence: primitives.py:95-103; evaluate.py:155-163, 350-352, 372-373; packages/devkit/src/devkit/workflow/definition/validation.py:36
+  failure_condition: A direct acceptance without a sweep never reaches direction-handoff.
+  suggested_action: Have the executor sweep its own acceptance session and write the feedback envelope; keep the sdd-proposal schema.
+  resolution: open
+- issue: Handoff requires status accepted but not an accepted gate:plan-accept record; a hand-set status hands off silently without the gate.
+  evidence: packages/devkit-spec/src/devkit_spec/proposals/handoff.py:276-296, 607-626
+  failure_condition: 'status: accepted written without the gate record (partial direct acceptance) passes handoff and the spec carries no plan-accept.'
+  suggested_action: Make handoff also require the effective accepted gate:plan-accept record.
+  resolution: open
+- issue: The draft's Q4 lists an issue field that devkit-spec does not have; tracker fields were removed by the roadmap work.
+  evidence: no issue field in packages/devkit-spec/src/devkit_spec/proposals/; docs/decisions/2026-10/20261018-roadmap-in-repository.md:89-90
+  failure_condition: The proposal argues from a carried field that does not exist.
+  suggested_action: Drop issue from the list of carried fields.
+  resolution: open
+- issue: devkit spec proposal check refuses only for plan-<slug> or a non-draft status; it has no mode for eligibility and does not look at dev-<slug>.
+  evidence: packages/devkit-spec/src/devkit_spec/proposals/backlog.py:31-58
+  failure_condition: A draft on the base whose dev-<slug> already deleted it stays editable for Backlog.
+  suggested_action: Extend the branch guard if the acceptance is recorded on dev-<slug>.
+  resolution: open
+unverified_areas:
+- Whether the engine enforces stage entry checks
+- Tests pinning plan-accept refusal before collect-feedback
+checks: {}
