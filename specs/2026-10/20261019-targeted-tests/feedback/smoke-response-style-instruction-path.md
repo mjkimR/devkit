@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: blocked
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-19
 ---
 
@@ -49,3 +49,5 @@ just smoke (main and branch):
     error: recipe `smoke` failed ... with exit code 1
 ls .devkit/managed/response-style/  ->  bundle.toml guidance skills
 ```
+
+- **Disposition**: scripts/smoke.sh (commit c05b3c5): the smoke now checks the rendered response-style skill and its AGENTS.md pointer instead of the removed instruction path.

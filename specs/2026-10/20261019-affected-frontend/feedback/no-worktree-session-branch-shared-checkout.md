@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-19
 ---
 
@@ -54,3 +54,5 @@ integration_integrate (session): WORKTREE_BASE_ON_BRANCH, then INTEGRATION_NOT_R
   "touched proposal unit docs/proposals/PROP-integration-base-advance is not accepted"
 git-policy.md: "`session` depth is never required to [use a worktree]"
 ```
+
+- **Disposition**: `PROP-shared-checkout-session-isolation`: drafted in Backlog to decide between a worktree policy and a coded notice for session branches in a shared checkout.

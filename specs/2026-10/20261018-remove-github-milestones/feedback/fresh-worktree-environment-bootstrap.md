@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-18
 ---
 
@@ -46,3 +46,5 @@ uv run --no-sync devkit: Creating virtual environment at .venv; Failed to spawn 
 Type check with empty worktree environment: Import pytest could not be resolved.
 Type check with reused base environment: 0 errors, 0 warnings, 0 informations.
 ```
+
+- **Disposition**: .devkit/config.toml: `[worktree] setup = "just init"` provisions the workspace environment (`uv sync --all-packages`) in every new task worktree before its first devkit command.
