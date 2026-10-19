@@ -1,0 +1,22 @@
+kind: worker
+stage: integration-approval
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T02:16:39.334010Z'
+status: completed
+summary: 'Development run from specify to the final change report: spec/plan/tasks, devkit-dist split build with tests, nested code review (review-01, 3 findings fixed, reverify-01 pass), Living Spec reconcile verified by nested reconcile-reviewer (reconcile-check-01 5 findings fixed, -02 pass), feedback sweep, final report; ready for dev-integration'
+findings: []
+assumptions:
+- 'Extension outside the listed write scope: one link path in docs/materials/evaluations/hybrid-binaries.md, required by the commit gate after the file move'
+- Scope registry overlap with SPEC-high-effort-review-loop on .devkit/installation.json (both re-synced) and the declared devkit-spec bundle directory (this change edits only skills/spec-rule/SKILL.md)
+- worker --stage is the stage devkit workflow next names when this envelope is written (FB-worker-stage-choice-ambiguous)
+unverified_areas:
+- Git installs from the pushed GitHub URL (verified with git+file of this branch only)
+checks:
+  tests: PASS just test 3405 passed 14 skipped; just test-dist 980 passed
+  build: PASS just smoke; release.sh v0.1.1
+  lint: PASS just lint-check, just check, devkit rules check --ci --base 4325a4df
+diff_scope:
+  base: 4325a4df0eef83c49c634e70f3634e1b4d200363
+  head: d0ba4db5c4e2f3eb884288a7d0dbf1bf2dc169d4
+activity_effort: high
