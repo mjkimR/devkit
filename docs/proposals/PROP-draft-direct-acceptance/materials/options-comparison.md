@@ -5,7 +5,8 @@ the user's acceptance of a settled draft is recorded, and the alternative of not
 [engine evidence](engine-evidence.md). Revised twice: after `challenger-01.yaml`, which showed that the first version
 omitted the rows where acceptance outside Development wins, and after `challenger-02.yaml`, which showed that an
 acceptance counted as Backlog work under one policy and as a Planning commit under another contradicts 01 §4.7 and
-03 §1/§4; that hybrid (A1) is replaced by A3.
+03 §1/§4; that hybrid (A1) is replaced by A3. A third pass (`challenger-03.yaml`) added the status-quo baseline, which
+shows that A3 saves little, and limited A2 to `pull_request = auto`.
 
 ## The two models
 
@@ -23,49 +24,51 @@ within M1, with M2 kept as option C.
 
 ## Options
 
-- **A3. A Planning acceptance without a Planning run**: the user accepts during Backlog; the Host starts
-  `plan-<slug>` from the base, sweeps its own session, runs the acceptance command as that branch's only commit and
-  merges it like any Planning branch: locally under `pull_request = auto` (`finish --merge` or the local integration,
-  where the `plan-<slug>` readiness check validates status, both gates and the sweep), through its PR under
-  `required`. No worker, no `reviewing` commit, no review run.
-- **A2. Backlog acceptance on the base**: the acceptance is a Backlog commit on the base under every policy, outside
-  the PR policy; needs explicit amendments of 01 §4.7 (Unit activities on their own branch; the base status changes
-  only at a merge) and 03 §4 (acceptance through the Planning PR under `required`).
-- **B. Acceptance at Development start**: the first commit on `dev-<slug>`, followed by the handoff; the acceptance
-  rides in the Development PR.
+- **S. Status quo (baseline)**: Planning at `low` in `direct` mode. The Host starts `plan-<slug>` (a worktree and its
+  setup under `worktree = required`), commits `status: reviewing`, reviews with questions only, sweeps, writes its
+  `worker` envelope, asks for `plan-accept`, records it with `status: accepted` and merges the branch (a PR under
+  `required`).
+- **A2. Backlog acceptance on the base, under `pull_request = auto` only**: the user accepts during Backlog; after the
+  sweep of the acceptance session the command records the acceptance and the Host commits it on the base as Backlog
+  work. Under `required`, 03 §4 already sends every acceptance commit through the Planning PR, so a direct acceptance
+  is not offered there and small drafts run Planning at `low` as today. Needs 01 §4.7 to allow this one status change
+  on the base without a merge, as it already allows Backlog's edits of drafts.
+- **A3. A Planning acceptance without a Planning run**: the acceptance is the only commit of a short `plan-<slug>`,
+  merged like any Planning branch (locally under `auto`, through its PR under `required`).
+- **B. Acceptance at Development start**: the first commit on `dev-<slug>`, followed by the handoff.
 - **C. Reclassify at pickup (M2)**.
+- **D. No new path**: small drafts keep Planning at `low`; only the handoff guard and the planned `accept` command
+  (01 §10) ship.
 
-| | A3 | A2 | B | C |
-| --- | --- | --- | --- | --- |
-| When the user decides | Backlog, any time before Development | Backlog | When Development starts | When Development starts |
-| Branches before Development | One short `plan-<slug>`, one commit | None | None | None |
-| PRs under `required` | A one-commit Planning PR, then Development | Development only | Development only | Development only |
-| 01 §4.7 Unit activities on their own branch; separate Planning and Development PRs; base status changes at a merge | Kept | Amended | Broken | Broken |
-| 03 §1 and §4 (Backlog never through a PR; acceptance through the Planning PR under `required`) | Kept | Amended | Replaced by the Development PR | Not applicable |
-| 01 §5.1 Backlog changes only drafts | Kept: the acceptance is Planning's, not Backlog's | Amended | Kept | Kept |
-| Mechanical validation before the base sees `accepted` | The readiness check on local merge; PR review under `required` | None | None | None |
-| 01 §7.4 supersede and abandon act on the accepted proposal on the base | Work unchanged | Work unchanged | Broken: the base copy is still `draft`, `--supersedes` refuses it | No accepted proposal to supersede |
-| `cloud-pr` start (autohub starts an accepted proposal, 01 §7.1) | Works unchanged | Works unchanged | Local Host only | Local Host only |
-| New guards for a draft owned by `dev-<slug>` (check, Planning start, `padr`, list display) | None | None | All four | All four |
-| Partial state on refusal or objection | A `plan-<slug>` to discard on the user's decision; the base draft is untouched | None | A `dev-<slug>` with a draft, refused by attach | Same as B |
-| Staleness between acceptance and Development | Possible, covered by the premise check (01 §7.3) | Same | None | None |
-| `dev_effort` confirmation | Reviewed in the acceptance request, confirmed again at Development start | Same | Same exchange | Same exchange |
-| Carried body, gates, milestone, provenance | Yes | Yes | Yes | Only with a new conversion command |
+| | S | A2 | A3 | B | C |
+| --- | --- | --- | --- | --- | --- |
+| Branch and worktree before Development | `plan-<slug>` | None | `plan-<slug>`, one commit | None | None |
+| Commits for the acceptance | `reviewing`, review, sweep and worker record, acceptance, merge | One base commit | One branch commit, merge | One `dev-<slug>` commit | One `dev-<slug>` commit |
+| PRs under `required` | Planning PR, then Development | Not offered: S applies | One-commit Planning PR, then Development | Development only | Development only |
+| 01 §4.7 (Unit activities on their own branch; separate Planning and Development PRs; base status changes at a merge) | Kept | Amended: one Backlog status change on the base | Kept | Broken | Broken |
+| 03 §1 and §4 | Kept | Kept (§1 notes that a direct acceptance is Backlog work under `auto`) | Kept | Replaced by the Development PR | Not applicable |
+| 01 §5.1 Backlog changes only drafts | Kept | Amended: Backlog may accept an eligible draft | Kept | Kept | Kept |
+| Validation before the base sees `accepted` | The command's checks; readiness only on the MCP integration path | The command's checks | Same as S | The command's checks | None |
+| 01 §7.4 closes and `cloud-pr` start | Work | Work | Work | Broken / local only | No record / local only |
+| New guards for a draft owned by `dev-<slug>` | None | None | None | Four | Four |
+| Partial state on refusal | Planning continues | None (nothing committed) | A `plan-<slug>` to discard, local and remote | A `dev-<slug>` refused by attach | Same as B |
+| Saving against S | | Branch, worktree, setup, merge, `reviewing` commit, worker record | `reviewing` commit, worker record, questions-only review | Branch, merge, Planning PR | Same as B |
+
+The validation row reflects where checks run today: the `plan-<slug>` readiness check runs only on the MCP local
+integration path (`integration_integrate`); `devkit worktree finish --merge` runs only the envelope-hold guard. The
+command's own checks (eligibility, the engine's gate recording) and the handoff guard are what every option relies on.
 
 ## Assessment
 
-- **A3 is recommended.** It changes no structural rule of the strategy layer: the acceptance is a Planning acceptance
-  whose Planning had nothing to do, on the slug's own branch, merged like any other, and validated by the existing
-  readiness check before the base sees `accepted`. It saves what costs most (the worker run, the `reviewing` commit,
-  the question rounds) but keeps a short branch, which under `worktree = required` also means a worktree and its
-  setup. Under `required` a team sees the acceptance in its own small PR before any implementation; an objection
-  there closes the PR and discards the branch on the user's decision, leaving the draft for Planning.
-- **A2** saves the branch too, at the price of amending 01 §4.7 and 03 §1/§4 so that a Unit's status may change on
-  the base without a merge, and of losing the readiness check and, under `required`, the team's view of the
-  direction before implementation.
-- **B** saves the acceptance PR under `required` and decides together with the Development effort, but breaks 01 §4.7
-  and §7.4, needs four guards for a new "draft owned by Development" state and leaves a stuck branch on refusal.
-- **C** costs a conversion command and loses the `plan-accept` record the closes depend on.
+- **A2 is recommended.** It is the only kept option that removes what S costs most: the branch, its worktree and
+  setup, and the merge. Limiting it to `pull_request = auto` keeps 03 §4 as it is, so a team that requires PRs still
+  reviews every direction before implementation; the price is one explicit amendment of 01 §4.7 (and §5.1, §4.4),
+  of the same kind as the Backlog edits of drafts it already allows.
+- **A3** changes no structural rule but saves only a commit, a record and a short review against S, for a new path,
+  new eligibility rules and several strategy edits.
+- **D** is the honest alternative to A3: if the branch must stay, the saving does not justify a new path; the handoff
+  guard and the planned `accept` command are worth shipping alone.
+- **B** breaks 01 §4.7 and §7.4 and needs four guards; **C** loses the `plan-accept` record the closes depend on.
 
 ## Common to every M1 option
 
@@ -79,7 +82,7 @@ within M1, with M2 kept as option C.
 ## Eligibility (Q1)
 
 See `PADR-eligibility-for-direct-acceptance`. Mechanical: `status: draft`; an accepted `gate:plan-intent`; no
-`needs_decompose: true`; no `supersedes`; no `plan-<slug>` other than the acceptance's own; a valid
+`needs_decompose: true`; no `supersedes`; no local or fetched `plan-<slug>`; no envelope hold; a valid
 `task_kind`. Judgment, shown to the user: the direction leaves nothing to compare, no open spike question, not a depth
 escalation; the request names the `planning_effort` hint and, when it is not `low`, why Planning is skipped anyway.
 No size limit: depth is not size (01 §2.2), and the user's explicit decision is the safeguard.

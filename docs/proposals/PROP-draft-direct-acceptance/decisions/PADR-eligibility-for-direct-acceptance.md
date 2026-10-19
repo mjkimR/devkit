@@ -1,7 +1,7 @@
 ---
 id: PADR-eligibility-for-direct-acceptance
 title: Eligibility for direct acceptance
-summary: "A draft may skip Planning only with an accepted plan-intent, no needs_decompose, no supersedes, no other Planning branch and a valid task_kind, and when the Host judges its direction leaves nothing to compare; no size limit applies."
+summary: "A draft may skip Planning only with an accepted plan-intent, no needs_decompose, no supersedes, no Planning branch, no envelope hold and a valid task_kind, and when the Host judges its direction leaves nothing to compare; no size limit applies."
 proposal: PROP-draft-direct-acceptance
 status: draft
 created_at: 2026-10-19
@@ -40,9 +40,10 @@ for which drafts qualify, split into what a tool can check and what only the Hos
 ## 4. Decision Outcome
 
 - **Checked by the tool**, all at the moment of acceptance: `status: draft`; an effective accepted
-  `gate:plan-intent`; no `needs_decompose: true`; no `supersedes`; no local or fetched `plan-<slug>` other than the
-  checkout the acceptance itself runs in (the acceptance is that branch's only commit); `task_kind` is `feature` or `bugfix`. The same checks run read-only before any branch is started, so a
-  refusal leaves nothing behind.
+  `gate:plan-intent`; no `needs_decompose: true`; no `supersedes`; no local or fetched `plan-<slug>`; `task_kind` is
+  `feature` or `bugfix`; no envelope hold (an unresolved problem, a pending question or a malformed envelope). The
+  conditions of the chosen path are checked too (for the recommended path: `pull_request = auto` and the checkout is
+  on the base branch). The same checks run read-only first, so a refusal leaves nothing behind.
 - **Judged by the Host and shown to the user**: the direction leaves nothing to compare (no option to weigh, no
   question to ask), the body has no open spike question, and the draft is not a depth escalation carrying a failed
   attempt's material. The request names the recorded `planning_effort` hint, which the user confirmed at

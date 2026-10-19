@@ -43,8 +43,10 @@ from a read-only `scout` pass at base `298dd9e` (envelope `scout-01.yaml`). Path
   materials, `namespace`, `summary`, `milestone`, `decomposed_from`, `supersedes`, and both gate records by name;
   `dev_effort` is returned in the result. There is no `issue` field anywhere in devkit-spec.
 - The only code that validates a complete Planning outcome (status, both gates, evaluation complete, no hold) is the
-  `plan-<slug>` integration check (`packages/devkit-spec/src/devkit_spec/integration.py:236-283`). A direct
-  acceptance never passes through it, so today nothing would check a hand-set `status: accepted` on its own.
+  `plan-<slug>` integration check (`packages/devkit-spec/src/devkit_spec/integration.py:236-283`). It runs only on
+  the MCP local integration path (`integration_integrate`, `packages/devkit/src/devkit/integration/service.py:140-142`);
+  `devkit worktree finish --merge` runs only the envelope-hold guard (`packages/devkit/src/devkit/worktree/cli.py:216`).
+  So today nothing reliably checks a hand-set `status: accepted` before the handoff.
 - `devkit spec proposal check` has no modes; it refuses while `plan-<slug>` exists or the status is not `draft`
   (`proposals/backlog.py:31-58`). No rule, commit gate or hygiene check looks at proposal status transitions;
   `devkit workflow answer` makes no branch check.

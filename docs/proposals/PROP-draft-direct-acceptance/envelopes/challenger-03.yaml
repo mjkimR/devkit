@@ -1,0 +1,56 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T02:38:32.332500Z'
+status: completed
+summary: 'Re-review at 5d6fccb: challenger-02 1, 3, 4, 6, 7 resolved; 2 and 5 partly. Nothing refuses a one-commit draft-to-accepted plan branch. New: the readiness check runs only on integration_integrate; A3 saves little over Planning at low (no baseline column); the command overlaps the planned 01 10 accept CLI; guard fix has no valid route; discard route incomplete; holds misreported; impact gaps.'
+findings:
+- issue: The plan-<slug> readiness check runs only on the MCP path (integration_integrate); devkit worktree finish --merge runs only the hold guard, so A3's 'validated before the base sees accepted' is overstated and PADR 1 and engine-evidence contradict PADR 4.
+  evidence: packages/devkit/src/devkit/worktree/cli.py:216; packages/devkit/src/devkit/integration/service.py:140-142; packages/devkit-spec/src/devkit_spec/integration.py:264-285
+  failure_condition: Under auto without MCP elicitation a branch with status accepted and no gate merges unchecked.
+  suggested_action: State where readiness runs; rephrase the comparison row and the A2 claim.
+  resolution: open
+  severity: medium
+- issue: The guard code's fix (discard dev-<slug>, accept through Planning or a direct acceptance) has no valid route for a base copy already accepted without a gate record.
+  evidence: PADR-direct-acceptance-command-and-handoff-guard 4; proposals/backlog.py:51-57; sdd-proposal.md Planning start
+  failure_condition: 'The unit is stuck: --check refuses a non-draft, Planning cannot start, Backlog cannot reset the status.'
+  suggested_action: Name a repair route for accepted-without-gate, for example the accept command recording the gate after the user's explicit acceptance.
+  resolution: open
+  severity: medium
+- issue: The discard route misses the remote plan-<slug>, the PR and an uncommitted sweep envelope; a return to spike is a cheaper alternative on objection.
+  evidence: packages/devkit/src/devkit/worktree/lifecycle.py:1196-1199; packages/devkit-spec/src/devkit_spec/branches.py:74-99; sdd-proposal.md returns
+  failure_condition: A remote plan-<slug> left behind makes check, accept --check and worktree start refuse; a dirty worktree refuses discard.
+  suggested_action: Spell out the full route or prefer a return to spike on the same branch.
+  resolution: open
+  severity: low
+- issue: The command overlaps the planned 01 10 proposal status-transition CLI (devkit spec proposal accept <slug> --by <actor> [--note], one writer for Host and autohub).
+  evidence: workbench 01-master-flow.md:770; PADR-direct-acceptance-command-and-handoff-guard 4
+  failure_condition: A direct-only accept ships with a different shape than the planned shared writer.
+  suggested_action: Implement the planned accept with a direct variant, or amend the 10 row explicitly.
+  resolution: open
+  severity: low
+- issue: Every REQUEST_UNKNOWN is reported as a missing sweep; an envelope hold also suppresses plan-accept and eligibility has no hold check.
+  evidence: packages/devkit/src/devkit/workflow/evaluation/evaluate.py:359-363; answers.py:105-113
+  failure_condition: A held draft passes --check and the command keeps asking for another sweep.
+  suggested_action: Add no-hold to eligibility and report the evaluation's unmet checks or hold reasons.
+  resolution: open
+  severity: low
+- issue: 'No baseline against today''s Planning at low in direct mode: A3 keeps the branch, its merge and both PRs under required, saving only the reviewing commit, a worker envelope and a questions-only review.'
+  evidence: proposal.md 1.1; materials/options-comparison.md columns; planning-worker.md low effort; 01-master-flow.md:176
+  failure_condition: The user picks A3 expecting the branch and PR savings 1.1 describes and gets a one-commit difference.
+  suggested_action: Add a status-quo column and let the user weigh the saving against the command and strategy edits.
+  resolution: open
+  severity: medium
+- issue: 'Impact lists miss texts that describe Planning as runs: the sdd-proposal Planning feedback section, effort.md, spec-next SKILL.md:69, workflow-signals.md:14, 01 lines 22, 613 and Q55.'
+  evidence: bundle/workflows/sdd-proposal.md:124-131; bundle/skills/spec/references/effort.md:3,5; bundle/skills/spec-next/SKILL.md:69; 01-master-flow.md:22, 613, 659
+  failure_condition: An agent writes a worker envelope or proposes a Planning effort for a direct acceptance.
+  suggested_action: 'List them: a direct acceptance has no run, no activity-effort and no worker envelope; its sweep covers the acceptance session.'
+  resolution: open
+  severity: low
+assumptions:
+- plan-intent records carry no content digest
+unverified_areas:
+- autohub handling of a locally opened plan PR carrying plan-accept
+- smoke and viewer fixtures handing off bound proposals by status alone
+checks: {}
