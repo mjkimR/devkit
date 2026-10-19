@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-19
 ---
 
@@ -43,3 +43,5 @@ created_at: 2026-10-19
   `entrypoints:` line is then copied unchanged.
 - Resulting header excerpt: `status: active` / `entrypoints:` (4 entries) / `created_at: 2026-10-13` / `stories:` ... /
   `entrypoints:` (3 entries) / `---`.
+
+- **Disposition**: packages/devkit-spec/src/devkit_spec/entrypoints/apply.py: an existing entrypoints key is replaced wherever it stands; created_at insertion only when there is none

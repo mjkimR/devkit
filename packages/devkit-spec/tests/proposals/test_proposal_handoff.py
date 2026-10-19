@@ -426,6 +426,34 @@ def test_promoted_adrs_keep_working_links(workspace: Path, write: Write) -> None
     assert result.unresolved == []
 
 
+def test_rewrites_code_span_paths_into_the_bundle(workspace: Path) -> None:
+    proposal = _new(workspace, "span-paths")
+    create_padr(workspace, "span-paths", "Pick A")
+    (proposal.parent / "materials/notes.md").write_text("# Notes\n", encoding="utf-8")
+    proposal.write_text(
+        proposal.read_text(encoding="utf-8").replace(
+            "## 3. Proposed Design & Impact",
+            "## 3. Proposed Design & Impact\n\n- **Decisions**: `decisions/PADR-pick-a.md`, evidence in "
+            "`materials/notes.md` and `materials/`; `src/app.py` stays.\n\n```text\n`materials/notes.md`\n```",
+        ),
+        encoding="utf-8",
+    )
+    padr = proposal.parent / "decisions/PADR-pick-a.md"
+    padr.write_text(padr.read_text(encoding="utf-8") + "\nSee `materials/notes.md`.\n", encoding="utf-8")
+    accept(proposal)
+
+    result = handoff_proposal(workspace, "span-paths", today=TODAY)
+
+    materials = f"docs/materials/{MONTH}/{STAMP}-span-paths"
+    spec = (workspace / f"{SPEC}-span-paths/spec.md").read_text(encoding="utf-8")
+    assert f"`ADR-pick-a`, evidence in `{materials}/notes.md` and `{materials}/`; `src/app.py` stays." in spec
+    assert "```text\n`materials/notes.md`\n```" in spec
+    adr = (workspace / f"docs/decisions/{MONTH}/{STAMP}-pick-a.md").read_text(encoding="utf-8")
+    assert f"See `{materials}/notes.md`." in adr
+    paths = [(item.old, item.new) for item in result.rewritten if item.kind == "path"]
+    assert ("decisions/PADR-pick-a.md", "ADR-pick-a") in paths
+
+
 def test_leaves_completed_bundles_alone(workspace: Path, write: Write) -> None:
     accept(_new(workspace, "history"))
     refs = "See [PROP-history] and [the proposal](../../../docs/proposals/PROP-history/proposal.md).\n"

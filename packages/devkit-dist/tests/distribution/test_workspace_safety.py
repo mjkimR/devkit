@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import errno
 import json
+import os
 import threading
 from pathlib import Path
 
@@ -165,6 +167,22 @@ def test_readers_share_the_lock_and_writers_exclude_them(
     with transaction.project_lock(target), pytest.raises(CoreLockHeldError, match="project lock") as raised:
         get_context(target, "team")  # the core class catches it too
     assert raised.value.seconds == 0.05
+
+
+@pytest.mark.parametrize("code", [errno.EROFS, errno.EACCES])
+def test_a_reader_on_a_read_only_file_system_reads_without_the_lock(
+    item: InstalledBundle, target: Path, monkeypatch: pytest.MonkeyPatch, code: int
+) -> None:
+    sync_project(target, [item])
+
+    def refuse(*_args: object, **_kwargs: object) -> None:
+        raise OSError(code, os.strerror(code))
+
+    monkeypatch.setattr(transaction, "file_lock", refuse)
+    assert get_context(target, "team").to_dict()["bundle"] == "team"
+    with pytest.raises(OSError) as raised, transaction.project_lock(target):
+        pass  # a writer never proceeds without the lock
+    assert raised.value.errno == code
 
 
 def test_reader_waits_for_a_writer(item: InstalledBundle, target: Path) -> None:

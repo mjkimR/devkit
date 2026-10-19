@@ -22,7 +22,7 @@ created_at: 2026-10-17
     <bundle>/             # Full file replacements for managed assets (Git-tracked)
     .baseline/<bundle>/   # Upstream copies taken at create/accept, for `override diff` (Git-tracked)
   transient/
-    lock                  # Project lock (fcntl.flock): exclusive for writers, shared for readers
+    lock                  # Project lock (fcntl.flock): exclusive for writers, shared for readers (a reader on a read-only file system reads without it)
     sync-journal.json     # Write-ahead journal of an unfinished transaction
     seen-bundles.json     # Installed bundles this clone was told about (BUNDLE_UNSELECTED is announced once)
     deployed.json         # Signatures of the files this clone's last sync left (tells stale files from edits)

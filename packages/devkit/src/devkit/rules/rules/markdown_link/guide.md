@@ -13,7 +13,9 @@ silently breaks the links to it; agents follow links to load context, so a broke
   its target, which is checked and repaired at its own path. A symlink named as an explicit target
   (`devkit rules check docs/alias.md`) checks and repairs its target instead, reported at the target's path, unless
   the target is excluded, receipt-pinned, outside the workspace or already a target of the run.
-- **What is not**: URLs with a scheme (`https:`, `mailto:`), fragment-only links (`#section`), root-relative and
+- **Machine-local links**: a destination with the `file:` scheme (`file:///home/<user>/...`) points at one machine's
+  checkout and is reported whether or not the file exists there.
+- **What is not**: other URLs with a scheme (`https:`, `mailto:`), fragment-only links (`#section`), root-relative and
   protocol-relative paths (`/x`, `//host`), reference-style links (`[text][ref]`) and autolinks; links inside fenced
   code blocks and inline code spans.
 - **Snapshots**: in `--staged` and `--ci` runs the targets are the changed files plus every Markdown file whose links
@@ -23,6 +25,7 @@ silently breaks the links to it; agents follow links to load context, so a broke
 
 - The resolved file or directory does not exist: a typo, a moved or renamed file, or a wrong number of `../`.
 - The message is `Broken relative markdown link '<target>'`, at the link's line and column.
+- A `file:` destination: `Machine-local file link '<target>'`, never fixable.
 
 ## 3. Remediation
 
@@ -30,6 +33,8 @@ silently breaks the links to it; agents follow links to load context, so a broke
   the destination's file name and the destination stays inside the workspace. The new path is relative to the
   linking file; the link text, title, query and fragment are kept, and a path with spaces or parentheses is written
   as `<...>`. Such violations are reported as fixable (`status=fixable`) with the candidate in the remediation.
+- **Machine-local link**: replace it with a relative link, or with the document's full ID in backticks when it names
+  an ID-bearing document.
 - **By hand**: when no file or several files have that name, correct the path yourself, link a different document,
   or remove the link. A file that is not valid UTF-8 is never rewritten.
 

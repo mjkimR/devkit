@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-19
 ---
 
@@ -53,3 +53,5 @@ docs/decisions/2026-10/20261019-role-effort-presets.md: id: ADR-role-effort-pres
   section 1 still cites the proposal-relative path `materials/host-effort-semantics.md`; the handoff moved the
   file to docs/materials/2026-10/20261019-role-reasoning-effort-presets/ (same pattern: a code-span path, not a link)
 ```
+
+- **Disposition**: packages/devkit-spec/src/devkit_spec/proposals/rewrite.py: handoff rewrites code-span paths in the carried spec and promoted ADRs to the new ID or path (kind=path)

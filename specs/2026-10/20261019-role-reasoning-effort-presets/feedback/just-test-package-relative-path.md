@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-19
 ---
 
@@ -50,3 +50,5 @@ error: recipe `test` failed on line 26 with exit code 2
 scripts/module.sh: if [ -e "${selector%%::*}" ]; then selected+=("$selector") ...
                    for dir in "$base/tests/$selector" "$base"/src/*/"$selector"; do [ -d "$dir" ] ...
 ```
+
+- **Disposition**: scripts/module.sh: a selector is also resolved from the module directory, and the unknown-area error says where paths are taken from

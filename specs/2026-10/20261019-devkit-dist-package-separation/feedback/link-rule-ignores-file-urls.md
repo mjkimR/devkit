@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-19
 ---
 
@@ -54,3 +54,5 @@ proposal.md section 3 (before this run):
 devkit rules check <proposal dir>  ->  [SUMMARY: errors=0 warnings=0 infos=0 fixed=0]
 markdown_link/rule.py: "A relative link whose file does not exist, with its unique repair candidate if any."
 ```
+
+- **Disposition**: RULE-markdown-link: a file: destination is reported as a machine-local link

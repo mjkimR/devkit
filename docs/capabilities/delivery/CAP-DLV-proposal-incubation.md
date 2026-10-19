@@ -299,6 +299,11 @@ proposal as it was; their `feedback/` is scanned, since feedback stays current.
   provenance field) are rewritten from the IDs of the documents actually written: `PROP-<slug>` to `SPEC-<slug>`,
   each `PADR-<slug>` to its `ADR-<slug>`, and `PROP-<slug>-target` to itself (a `[ID]` becomes `` `ID` ``). Bare
   text, inline code other than a lone ID and fenced code do not change.
+- **Code-span paths** (`kind=path`) in the documents written from a bundle proposal (the carried `spec.md` and the
+  promoted ADRs): an inline code span holding a path relative to the bundle (`` `decisions/PADR-x.md` ``,
+  `` `materials/notes.md` ``, `` `materials/` ``) that names a relocated file or directory becomes the new document's
+  ID in backticks (`` `ADR-x` ``), or else its new repository-relative path. Spans naming nothing relocated and fenced
+  code do not change.
 
 | Unresolved reason | Meaning |
 | --- | --- |
@@ -383,7 +388,7 @@ uv run devkit spec proposal check fast-engine                        # before an
 - `handoff`: `[HANDOFF: ...]` (`workflow=-`: unbound; `dev_effort=<effort>` when the proposal declared `dev_effort`), `[TARGET_DOCS: ...]` and `[MATERIALS: ...]` when the bundle had
   them, one `[PROMOTED_ADR: ...]` per PADR, one `[DROPPED_RECORD: <path>]` per workflow record of the proposal
   unit, one `[CARRIED_GATE: <request> decision=<path>]` per approval carried by name (rule 12),
-  one `[REWRITTEN: <path>:<line> kind=link|id from= to=]` per rewrite, one
+  one `[REWRITTEN: <path>:<line> kind=link|id|path from= to=]` per rewrite, one
   `[UNRESOLVED_LINK: <path>:<line> kind= target= reason=]` per link or reference left as it was, `[SCOPE: ...]` when
   it registered the bundle, and `[NEXT_CMD: ...]` when `spec.md` is bound. JSON: `proposal`, `spec`, `dir`,
   `workflow`, `dev_effort` (`null` when absent), `target_docs`, `materials`, `decisions` (`id`, `path`, `padr`), `dropped_records` (paths),

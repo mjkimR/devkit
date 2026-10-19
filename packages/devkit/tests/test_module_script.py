@@ -100,6 +100,11 @@ def run_module(script_env: dict[str, str], *args: str) -> subprocess.CompletedPr
             ["packages/devkit/tests/gate/test_hooks.py::test_commits_run_built_in_gates"],
             [],
         ),
+        (
+            ["tests/gate/test_hooks.py::test_commits_run_built_in_gates"],
+            ["packages/devkit/tests/gate/test_hooks.py::test_commits_run_built_in_gates"],
+            [],
+        ),
         ([], ["packages/devkit/tests", "packages/devkit/src"], []),
         (["-k", "foo"], ["packages/devkit/tests", "packages/devkit/src"], ["-k", "foo"]),
     ],
@@ -132,6 +137,7 @@ def test_an_unknown_area_runs_no_tool(script_env: dict[str, str]) -> None:
     available = next(line for line in result.stderr.splitlines() if line.startswith("Available areas: "))
     assert {"gate", "worktree", "rules"} <= set(available.split(": ", 1)[1].split())
     assert {"__pycache__", "testsupport"}.isdisjoint(available.split(": ", 1)[1].split())
+    assert "A path is taken from the repository root or from packages/devkit." in result.stderr
     assert not Path(script_env["CALLS"]).exists()
 
 

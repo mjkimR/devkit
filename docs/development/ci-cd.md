@@ -38,9 +38,10 @@ reviewed head before integration:
 
 - **Selectors**: for a single module, the arguments before the first option are areas or paths that replace the
   module's default paths. An area is a directory under the module's `tests/` together with the matching
-  `src/<package>/<area>` directory (`just test devkit gate worktree -k cache`); a path is passed as given, a `::`
-  node suffix included. An unknown area exits `2` and lists the module's areas before any tool runs. `all` passes
-  its arguments to pytest unchanged.
+  `src/<package>/<area>` directory (`just test devkit gate worktree -k cache`); a path from the repository root is
+  passed as given and one from the module directory (`tests/gate/test_hooks.py`) is prefixed with it, a `::` node
+  suffix included. An unknown area exits `2`, lists the module's areas and says where paths are taken from, before
+  any tool runs. `all` passes its arguments to pytest unchanged.
 - **`just test-affected [--base REF] [--list] [-- PYTEST-ARGS]`** (`scripts/affected_tests.py`): collects the paths
   changed since the merge base of `HEAD` and `REF` (default `main`; committed, staged, unstaged, untracked, both
   sides of a rename) and selects tests from them:

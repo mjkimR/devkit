@@ -6,7 +6,9 @@ POSIX only (``fcntl.flock`` through ``devkit.core.file_lock``, directory ``fsync
 from __future__ import annotations
 
 import base64
+import errno
 import json
+import logging
 import os
 from collections.abc import Iterable, Iterator
 from contextlib import ExitStack, contextmanager
@@ -25,6 +27,11 @@ from devkit.distribution.installation.workspace import (
     project_path,
     snapshot,
 )
+
+logger = logging.getLogger(__name__)
+
+# A reader that meets one of these while taking the lock reads without it: the file system is read-only for it.
+_READ_ONLY = frozenset({errno.EROFS, errno.EACCES, errno.EPERM})
 
 # How long a reader waits for a writer to release the lock before giving up.
 READ_LOCK_TIMEOUT = 10.0
@@ -221,16 +228,18 @@ def project_lock(root: Path, *, shared: bool = False) -> Iterator[None]:
     (``shared=True``) share it with each other and wait up to
     ``READ_LOCK_TIMEOUT`` seconds for a writer to finish. A reader of a
     project without ``.devkit/`` takes no lock: there is nothing to read yet,
-    and taking it would create the directory.
+    and taking it would create the directory. A reader that cannot create or
+    open the lock file because the file system is read-only for it (a
+    read-only review sandbox) reads without the lock; a writer never does.
     """
     devkit_dir = root / LOCK.split("/", 1)[0]
     if shared and not devkit_dir.exists() and not devkit_dir.is_symlink():
         yield
         return
     path = checked_path(root, LOCK)
-    path.parent.mkdir(parents=True, exist_ok=True)
     with ExitStack() as stack:
         try:
+            path.parent.mkdir(parents=True, exist_ok=True)
             stack.enter_context(file_lock(path, shared=shared, timeout=READ_LOCK_TIMEOUT if shared else 0.0))
         except UnsafePathError as exc:
             raise UnsafeWorkspaceError(f"unsafe lock file: {LOCK}", target_files=[LOCK]) from exc
@@ -241,6 +250,10 @@ def project_lock(root: Path, *, shared: bool = False) -> Iterator[None]:
                 what=exc.what,
                 seconds=exc.seconds,
             ) from exc
+        except OSError as exc:
+            if not shared or exc.errno not in _READ_ONLY:
+                raise
+            logger.info("reading without the project lock: %s is not writable here (%s)", LOCK, exc.strerror)
         yield
 
 
