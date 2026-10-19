@@ -10,8 +10,9 @@ content through the browser by DNS rebinding; no response carries a CORS header.
 - ``/api/repos/<id>/tree?path=&ref=``: ``{"items": [{"name", "path", "type", "size"?}]}``;
 - ``/api/repos/<id>/blob?path=&ref=``: ``{"path", "encoding": "base64", "content", "size"}``.
 
-``ref`` defaults to the checked-out branch. Errors are ``{"error": {"code", "message"}}`` with the status of the
-``ReadError``. Any other path serves a file of the bundled ``static/`` directory (``/`` is ``index.html``).
+``ref`` is ``HEAD`` or a local branch name and defaults to the checked-out branch. Errors are
+``{"error": {"code", "message"}}`` with the status of the ``ReadError``. Any other path serves a file the bundled
+``static/`` directory lists, looked up by its decoded path (``/`` is ``index.html``).
 """
 
 from __future__ import annotations
@@ -52,6 +53,23 @@ def static_root() -> Traversable:
     return files("devkit_viewer") / "static"
 
 
+def bundle_files() -> dict[str, Traversable]:
+    """Every file of the bundled app build by its ``/``-separated relative path: the only files the server serves."""
+    found: dict[str, Traversable] = {}
+
+    def walk(node: Traversable, prefix: str) -> None:
+        for child in node.iterdir():
+            if child.is_dir():
+                walk(child, f"{prefix}{child.name}/")
+            elif child.is_file():
+                found[f"{prefix}{child.name}"] = child
+
+    root = static_root()
+    if root.is_dir():
+        walk(root, "")
+    return found
+
+
 class ViewerServer(ThreadingHTTPServer):
     """A server for ``repositories`` on ``127.0.0.1:<port>`` (``0`` picks a free port)."""
 
@@ -59,6 +77,7 @@ class ViewerServer(ThreadingHTTPServer):
 
     def __init__(self, repositories: Sequence[Repository], port: int) -> None:
         self.repositories = {repo.id: repo for repo in repositories}
+        self.bundle = bundle_files()
         try:
             super().__init__((HOST, port), Handler)
         except OSError as exc:
@@ -156,16 +175,11 @@ class Handler(BaseHTTPRequestHandler):
         return {"path": target, "encoding": "base64", "content": base64.b64encode(data).decode(), "size": len(data)}
 
     def _static(self, path: str) -> None:
-        parts = [unquote(part) for part in path.split("/") if part]
-        not_found = ReadError(HTTPStatus.NOT_FOUND, "VIEWER_NOT_FOUND", f"no file {path!r}")
-        if any(part in (".", "..") or "\\" in part for part in parts):
-            raise not_found
-        node = static_root()
-        for part in parts or ["index.html"]:
-            node = node / part
-        if not node.is_file():
-            raise not_found
-        name = parts[-1] if parts else "index.html"
+        # Only a file the bundle lists is served: the decoded path is a lookup key, never joined to a directory.
+        name = unquote(path).lstrip("/") or "index.html"
+        node = self.server.bundle.get(name)
+        if node is None:
+            raise ReadError(HTTPStatus.NOT_FOUND, "VIEWER_NOT_FOUND", f"no file {path!r}")
         suffix = name[name.rfind(".") :] if "." in name else ""
         content_type = _TYPES.get(suffix) or mimetypes.guess_type(name)[0] or "application/octet-stream"
         self._send(HTTPStatus.OK, node.read_bytes(), content_type)

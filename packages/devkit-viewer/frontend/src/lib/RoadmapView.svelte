@@ -19,17 +19,39 @@
 	} = $props();
 
 	let base = $state<RepositoryDocument[]>([]);
+	let baseRef = $state('');
 	let branches = $state<BranchDocuments[]>([]);
 	let errors = $state<string[]>([]);
 	let loading = $state(false);
 	let branchesUnavailable = $state(false);
 	let history = $state(false);
 
+	// Milestones and their members come from the default branch, whatever branch the viewer shows; Units still in
+	// progress are read from the local plan- and dev- branches the data source lists.
+	async function defaultBranch(repository: RepositoryDataSource, signal: AbortSignal) {
+		if (repository.refs) {
+			try {
+				const refs = await repository.refs(signal);
+				return { name: refs.default_branch, others: refs.branches };
+			} catch {
+				// Fall through: without refs only the default branch is read.
+			}
+		}
+		try {
+			return {
+				name: String((await repository.info(signal)).default_branch || branch),
+				others: null
+			};
+		} catch {
+			return { name: branch, others: null };
+		}
+	}
+
 	$effect(() => {
-		const repository = source,
-			ref = branch;
+		const repository = source;
 		const controller = new AbortController();
 		base = [];
+		baseRef = '';
 		branches = [];
 		errors = [];
 		branchesUnavailable = false;
@@ -37,43 +59,39 @@
 		if (repository)
 			void (async () => {
 				const signal = controller.signal;
-				const selected = await loadRoadmapDocuments(repository, ref, signal);
-				let names: string[] = [];
-				if (repository.refs) {
-					try {
-						names = (await repository.refs(signal)).branches.filter(
-							(name) => name !== ref && isActivityBranch(name)
-						);
-					} catch {
-						if (!signal.aborted) branchesUnavailable = true;
-					}
-				} else branchesUnavailable = true;
-				const others = await Promise.all(
-					names.map(async (name) => ({
-						name,
-						...(await loadRoadmapDocuments(repository, name, signal))
+				const { name, others } = await defaultBranch(repository, signal);
+				const names = (others ?? []).filter((n) => n !== name && isActivityBranch(n));
+				const [selected, ...rest] = await Promise.all(
+					[name, ...names].map(async (ref) => ({
+						name: ref,
+						...(await loadRoadmapDocuments(repository, ref, signal))
 					}))
 				);
 				if (signal.aborted) return;
 				base = selected.documents;
-				branches = others.map(({ name, documents }) => ({ name, documents }));
+				baseRef = name;
+				branchesUnavailable = others === null;
+				branches = rest.map(({ name, documents }) => ({ name, documents }));
 				errors = [
 					...selected.errors,
-					...others.flatMap((o) => o.errors.map((error) => `${o.name}: ${error}`))
+					...rest.flatMap((o) => o.errors.map((error) => `${o.name}: ${error}`))
 				];
 				loading = false;
 			})();
 		return () => controller.abort();
 	});
 
+	// The file explorer shows the viewer's branch, so a document opens there only when it was read from that branch.
+	const opens = (ref: string | null) => (ref ?? baseRef) === branch;
 	const milestones = $derived(buildRoadmap(base, branches, { history }));
 </script>
 
 <div class="roadmap">
 	<div class="filters">
 		<label><input type="checkbox" bind:checked={history} /> 완료·중단 포함</label>
+		{#if baseRef}<span class="note">기준: {baseRef} 브랜치</span>{/if}
 		{#if branchesUnavailable}
-			<span class="note">작업 브랜치를 읽을 수 없어 {branch} 브랜치만 표시합니다.</span>
+			<span class="note">작업 브랜치 목록을 읽을 수 없어 {baseRef} 브랜치만 표시합니다.</span>
 		{:else if branches.length}
 			<span class="note">작업 브랜치 {branches.length}개 포함</span>
 		{/if}
@@ -105,7 +123,9 @@
 								>
 							{/if}
 						{/if}
-						<button onclick={() => onOpen(milestone.path)}>원본 보기</button>
+						{#if opens(null)}
+							<button onclick={() => onOpen(milestone.path)}>원본 보기</button>
+						{/if}
 					</header>
 					<h2>{milestone.title}</h2>
 					{#if milestone.members.length}
@@ -115,13 +135,13 @@
 									<span class="settled" class:done={member.settled}
 										>{member.settled ? '정리됨' : '진행 중'}</span
 									>
-									{#if member.branch}
-										<span class="title">{member.title}</span>
-										<span class="branch">🌿 {member.branch}</span>
-									{:else}
+									{#if opens(member.branch)}
 										<button class="title" onclick={() => onOpen(member.path)}>{member.title}</button
 										>
+									{:else}
+										<span class="title">{member.title}</span>
 									{/if}
+									{#if member.branch}<span class="branch">🌿 {member.branch}</span>{/if}
 									<span class="meta">{member.id} · {member.status}</span>
 								</li>
 							{/each}

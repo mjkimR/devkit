@@ -72,11 +72,19 @@ class GitReader:
         return sorted(line for line in _decode(out).splitlines() if line)
 
     def commit(self, ref: str) -> str:
-        """The full commit ID ``ref`` names; ``VIEWER_REF_UNKNOWN`` for a ref that names none or looks like an option."""
+        """The full commit ID of the local branch named exactly ``ref``, or of ``HEAD``; ``VIEWER_REF_UNKNOWN``
+        otherwise.
+
+        A remote-tracking branch, a tag, a commit ID or a revision expression (``main~1``) is unknown, and a ref that
+        looks like an option never reaches Git as one.
+        """
         if not ref or ref.startswith("-") or "\0" in ref:
             raise ref_unknown(ref)
         try:
-            out = run_git(self.root, "rev-parse", "--verify", "--quiet", "--end-of-options", f"{ref}^{{commit}}")
+            if ref == "HEAD":
+                out = run_git(self.root, "rev-parse", "--verify", "--quiet", "HEAD^{commit}")
+            else:
+                out = run_git(self.root, "show-ref", "--verify", "--hash", f"refs/heads/{ref}")
         except GitError as exc:
             raise ref_unknown(ref) from exc
         return _decode(out).strip()

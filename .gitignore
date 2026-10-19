@@ -56,7 +56,7 @@ models/devkit-embed/src/devkit_embed/tokenizer.json
 .claude/
 .codex/
 
-# devkit-viewer frontend: dependencies and the library package (built for npm pack, never committed)
+# devkit-viewer frontend: dependencies and local build output (the committed page lives under src/devkit_viewer/static/)
 packages/devkit-viewer/frontend/node_modules/
 packages/devkit-viewer/frontend/dist/
 packages/devkit-viewer/frontend/dist-pack/

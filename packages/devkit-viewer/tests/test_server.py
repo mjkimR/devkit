@@ -107,6 +107,8 @@ def test_blob_at_another_branch(server: ViewerServer) -> None:
         ("/api/repos/gamma/info", 404, "VIEWER_REPO_UNKNOWN"),
         ("/api/repos/alpha/tree?path=docs&ref=nope", 404, "VIEWER_REF_UNKNOWN"),
         ("/api/repos/alpha/tree?path=docs&ref=-x", 404, "VIEWER_REF_UNKNOWN"),
+        ("/api/repos/alpha/blob?path=docs/a.md&ref=origin/z", 404, "VIEWER_REF_UNKNOWN"),
+        ("/api/repos/alpha/blob?path=docs/a.md&ref=main~0", 404, "VIEWER_REF_UNKNOWN"),
         ("/api/repos/alpha/blob?path=docs/none.md&ref=main", 404, "VIEWER_PATH_NOT_FOUND"),
         ("/api/repos/alpha/blob?path=docs/../x&ref=main", 400, "VIEWER_PATH_INVALID"),
         ("/api/repos/alpha/tree?path=./docs&ref=main", 400, "VIEWER_PATH_INVALID"),
@@ -156,7 +158,21 @@ def test_bundled_page_and_asset(server: ViewerServer) -> None:
         assert (static_root() / asset).is_file()
 
 
-@pytest.mark.parametrize("path", ["/missing.js", "/../pyproject.toml", "/%2e%2e/cli.py", "/assets/"])
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/missing.js",
+        "/../pyproject.toml",
+        "/%2e%2e/cli.py",
+        "/assets/",
+        "/assets",
+        "/..%2Fserver.py",
+        "/assets/..%2F..%2Fcli.py",
+        "/%2Fetc%2Fhosts",
+        "/%2e%2e%2f%2e%2e%2fpyproject.toml",
+        "/assets/..%5C..%5Ccli.py",
+    ],
+)
 def test_files_outside_the_bundle_are_not_found(server: ViewerServer, path: str) -> None:
     assert request(server, path).status == 404
 

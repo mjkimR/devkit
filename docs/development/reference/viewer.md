@@ -32,8 +32,8 @@ uv run devkit viewer --version
 
 ## HTTP API
 
-`GET` only; another method is `405`, a `Host` other than `127.0.0.1:<port>` or `localhost:<port>` is `403`. `ref`
-defaults to the checked-out branch.
+`GET` only; another method is `405`, a `Host` other than `127.0.0.1:<port>` or `localhost:<port>` is `403`. `ref` is
+`HEAD` or the exact name of a local branch and defaults to the checked-out branch.
 
 ```text
 GET /api/repos                              {"repos": [{"id", "default_branch"}]}

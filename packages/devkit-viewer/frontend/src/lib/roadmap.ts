@@ -8,7 +8,7 @@ export interface Member {
 	status: string;
 	/** A completed spec; everything else still needs work before the milestone can close. */
 	settled: boolean;
-	/** The activity branch the member was read from; `null` for the selected branch. */
+	/** The activity branch the member was read from; `null` for the default branch. */
 	branch: string | null;
 	path: string;
 }
@@ -64,8 +64,8 @@ function memberOf(doc: RepositoryDocument, branch: string | null) {
 }
 
 /**
- * Milestones of the selected branch with their readiness and members. One member per slug: a spec replaces the
- * proposal it was handed off from, and an activity branch replaces the selected branch's copy; rejected proposals
+ * Milestones of the default branch (`base`) with their readiness and members. One member per slug: a spec replaces the
+ * proposal it was handed off from, and an activity branch replaces the default branch's copy; rejected proposals
  * are not members.
  */
 export function buildRoadmap(

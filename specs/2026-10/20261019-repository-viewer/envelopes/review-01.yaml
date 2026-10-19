@@ -1,0 +1,32 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T00:13:45.155443Z'
+status: completed
+summary: 'REVISE (code-reviewer subagent, high): AC-01..AC-08, AC-10..AC-14 confirmed by package tests, vitest and pack check; AC-15 by generated check; library move matches the intended changes; three findings.'
+findings:
+- issue: Static handler splits the path before percent-decoding, so an encoded slash escapes static/ (GET /..%2Fserver.py, /%2Fetc%2Fhosts return 200)
+  evidence: packages/devkit-viewer/src/devkit_viewer/server.py:159
+  failure_condition: A GET to a non-API path whose segment holds %2F with .. or an absolute path, with a local Host header
+  suggested_action: Decode before splitting, refuse ., .., backslash and NUL, confine the resolved file to static/, add regression tests
+  resolution: open
+- issue: The roadmap uses the selected branch as its base, while ADR-read-only-local-server-over-git-refs, plan and AC-12 name the default branch
+  evidence: packages/devkit-viewer/frontend/src/lib/RoadmapView.svelte:40
+  failure_condition: 'A person picks a non-default branch and opens the roadmap: the default branch is never read'
+  suggested_action: Read milestones and base members from the default branch and keep plan-/dev- branches as extra branches; align CAP wording
+  resolution: open
+- issue: tree and blob accept any revision (remote-tracking branches, tags, expressions), while the CAP and ADR say only local branches are read
+  evidence: packages/devkit-viewer/src/devkit_viewer/git.py:74
+  failure_condition: ref=origin/<branch> for a remote-only branch returns 200 instead of 404 VIEWER_REF_UNKNOWN
+  suggested_action: Accept HEAD or a name under refs/heads only; add a test for a remote-tracking ref
+  resolution: open
+unverified_areas:
+- full just smoke run (pre-existing failure on main before the viewer step)
+checks:
+  tests: PASS pytest packages/devkit-viewer/tests 77 passed; vitest 13 passed
+  lint: PASS devkit rules check --ci --base 2c9dc7f
+  smoke: SKIP just smoke fails at a pre-existing response-style step on main; viewer section replayed
+diff_scope:
+  base: 2c9dc7f7bd5f17ae4089e076a83b0457793877e7
+  head: 2e4397214d9624d4dacb8dd4bca9d2c445d55976

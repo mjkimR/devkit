@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App.svelte';
 import { readLocation, writeLocation } from './api';
@@ -31,7 +31,10 @@ beforeEach(() => {
 		})
 	);
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+	cleanup();
+	vi.unstubAllGlobals();
+});
 
 const reads = (prefix: string) =>
 	calls.filter((url) => url.startsWith(prefix) && !url.endsWith('/refs'));

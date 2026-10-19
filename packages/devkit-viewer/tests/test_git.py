@@ -63,10 +63,32 @@ def test_detached_head_is_reported_as_head(repo: Path) -> None:
     assert reader.blob("HEAD", "docs/a.md") == b"plan a\n"
 
 
-@pytest.mark.parametrize("ref", ["no-such-branch", "-x", "--all", ""])
-def test_unknown_refs(repo: Path, ref: str) -> None:
+@pytest.mark.parametrize(
+    "ref",
+    [
+        "no-such-branch",
+        "-x",
+        "--all",
+        "",
+        "origin/z",
+        "v1",
+        "main~1",
+        "main~0",
+        "main^{commit}",
+        "refs/heads/main",
+        "ma*",
+    ],
+)
+def test_only_local_branches_and_head_are_read(repo: Path, ref: str) -> None:
+    git(repo, "update-ref", "refs/remotes/origin/z", "plan-x")
+    git(repo, "tag", "v1", "plan-x")
     error = _error(GitReader(repo).tree, ref, "docs")
     assert (error.status, error.code) == (404, "VIEWER_REF_UNKNOWN")
+
+
+def test_full_commit_ids_are_not_refs(repo: Path) -> None:
+    commit = git(repo, "rev-parse", "plan-x").strip()
+    assert _error(GitReader(repo).blob, commit, "docs/a.md").code == "VIEWER_REF_UNKNOWN"
 
 
 @pytest.mark.parametrize(

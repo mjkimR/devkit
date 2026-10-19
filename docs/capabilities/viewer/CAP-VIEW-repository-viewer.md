@@ -41,9 +41,9 @@ Nothing else is written to stdout. Request logs are `[INFO]` lines on stderr und
 ## 2. Reading through Git
 
 Every read names a repository, a ref and a repository-relative path, and Git resolves the path inside that commit's
-tree: no file outside the repository and no uncommitted content is reachable. Any local branch can be read without
-switching a checkout; remote-only branches are not read and nothing is fetched. The working tree and `HEAD` are never
-touched.
+tree: no file outside the repository and no uncommitted content is reachable. A ref is `HEAD` or the exact name of a
+local branch, which is read without switching a checkout; a remote-tracking branch, a tag, a commit ID or a revision
+expression (`main~1`) is `VIEWER_REF_UNKNOWN`, and nothing is fetched. The working tree and `HEAD` are never touched.
 
 | Endpoint (`GET`) | Answer |
 | --- | --- |
@@ -70,7 +70,8 @@ An empty `path` is the root. Errors are `{"error": {"code", "message"}}`: `VIEWE
   (`CAP-DLV-human-interaction`) and has no connection to the integration MCP tools (`CAP-INT-mcp-services`). Every
   approval keeps its existing path.
 
-Any other path serves a file of the bundled app (`/` is `index.html`), else `404`.
+Any other path serves a file the bundled app lists, looked up by its decoded path (`/` is `index.html`); anything
+else is `404`, so no encoded `..` or absolute path reaches a file outside the bundle.
 
 ## 4. The page
 
@@ -93,11 +94,13 @@ shown. Rendered Markdown and SVG pass through DOMPurify.
   ID.
 - **Readiness**: a milestone is ready when every milestone in its `depends_on` is `done` or `dropped`. A `depends_on`
   naming no milestone is shown as unknown and never counts as satisfied.
-- **Members**: proposals and specs whose `milestone` names the milestone, read from the selected branch and, when the
-  data source lists refs, from each local `plan-` and `dev-` branch. A rejected proposal is not a member; a completed
-  spec is settled. One member per slug: a spec replaces the proposal it was handed off from, and an activity branch
-  replaces the selected branch's copy. A member found on an activity branch shows that branch.
-- Without `refs` (a data source that does not provide it), only the selected branch is read, and the page says so.
+- **Source**: milestones and their members come from the default branch, whatever branch the viewer shows, and,
+  when the data source lists refs, from each local `plan-` and `dev-` branch. Without `refs` (a data source that does
+  not provide it, or a failing one), only the default branch is read, and the page says so.
+- **Members**: proposals and specs whose `milestone` names the milestone. A rejected proposal is not a member; a
+  completed spec is settled. One member per slug: a spec replaces the proposal it was handed off from, and an activity
+  branch replaces the default branch's copy. A member found on an activity branch shows that branch. A document opens
+  in the file explorer only when it was read from the branch the viewer shows.
 
 ## 6. The library for autohub
 
