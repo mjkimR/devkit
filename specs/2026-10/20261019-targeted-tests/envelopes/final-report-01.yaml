@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T00:42:54.713924Z'
+status: completed
+summary: Area selectors for just test/test-cov, just test-affected (diff-based selection), and guidance keeping the full suite to one run before integration; review and reconcile closed.
+findings: []
+assumptions:
+- The base branch moved from b942326 to 58dae19 during the work; integration merges it and re-verifies what changed.
+checks:
+  tests: 'PASS just test (full) on ef29d03: 3275 passed, 2 skipped; just test-affected on c639053: 922 passed (covers every file changed after ef29d03)'
+  build: 'PASS uv build --all-packages --wheel: 5 wheels; just smoke fails at a pre-existing response-style assertion, identical on main 58dae19 (FB-smoke-response-style-instruction-path)'
+  lint: PASS just lint-check, just check (0 errors), devkit rules check --ci --base b942326
+diff_scope:
+  base: b94232699bedf73244f22462563580f03aa21e26
+  head: c63905329cb17eb2df931f8b432b4328d52eadb4
