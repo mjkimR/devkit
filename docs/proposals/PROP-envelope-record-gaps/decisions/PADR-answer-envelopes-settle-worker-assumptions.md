@@ -42,8 +42,13 @@ adds", `references/worker-records.md` section 2). Evidence: `materials/spike-evi
   1-based position into the `assumptions` of the `answers_to` worker envelope, each at most once, `decision` one
   sentence. Positions outside that list make the envelope malformed (a reference that does not fit,
   `ENVELOPE_REFERENCE_INVALID` when authoring).
-- `answers` stays required when `settles` is absent; an answer with `settles` may have no `answers`, and then
-  `answers_to` must name a well-formed worker envelope with assumptions instead of questions.
+- `answers` stays required when `settles` is absent; with `settles`, `answers` may be empty. Whatever `answers` holds,
+  `answers_to` must name a well-formed worker envelope that has questions for each answer and at least as many
+  assumptions as the highest `settles` position.
+- A wrong position makes the whole answer envelope malformed, like any reference that does not fit; its answers then
+  stop counting and their questions are pending again (fail closed, as for answers). The authoring command refuses it
+  before writing.
+- `settles` is written after `answers` in the key order; the hold reads only `answers`.
 - Authoring: `devkit workflow envelope answer --settle N=DECISION` (repeatable), like `--waive`.
 - Only `answer` carries `settles`; it affects no hold, check or exit code.
 - `references/worker-records.md` section 2 says a decision that settles a worker assumption goes into `settles`,

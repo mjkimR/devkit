@@ -15,6 +15,8 @@ boundaries:
     - governance/
     - packages/devkit/src/devkit/workflow/
     - packages/devkit-spec/src/devkit_spec/
+    - packages/devkit/tests/
+    - packages/devkit-spec/tests/
   excludes:
     - docs/decisions/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
@@ -52,27 +54,31 @@ workflow: sdd-proposal
 
 Decisions of this Planning (evidence and the option comparison: `materials/spike-evidence.md`):
 
-- **Q1** (`PADR-reverify-closes-challenger-rounds`): `reverify --from challenger-NN.yaml` closes a challenger round
-  (`--resolve`, `--waive`); the `review` key keeps its name and may name a `challenger-NN.yaml`; the deciding state of
-  `challenger` follows its last reverify. Planning writes one such reverify after each fold, at `medium` and `high`.
-  Review-loop rounds recorded without the `round <N>;` marker count in envelope order within the segment. How a fold
-  of the user's answers counts: open question `answer-fold-round`.
+- **Q1** (`PADR-reverify-closes-challenger-rounds`, refines `ADR-bounded-high-effort-review-loop`):
+  `reverify --from challenger-NN.yaml` closes a challenger round (`--resolve`, `--waive`); the `review` key keeps its
+  name and may name a `challenger-NN.yaml`; the deciding state of `challenger` follows its last reverify;
+  `envelope new --kind challenger` refuses non-open resolutions; `envelope check` shows `review=<file>` on reverify
+  lines. Planning writes one such reverify after each fold, at `medium` and `high`. Rounds without the
+  `round <N>;` marker count per loop kind only when an earlier `high` run recorded them before the first marker;
+  otherwise a `high` loop starts at round 1. How a fold of the user's answers counts: open question
+  `answer-fold-round`.
 - **Q2** (`PADR-answer-envelopes-settle-worker-assumptions`): an `answer` envelope may carry
   `settles: [{assumption: <1-based position in the answered worker's assumptions>, decision}]`, written with
-  `devkit workflow envelope answer --settle N=DECISION`; it holds and releases nothing.
-- **Q3** (`PADR-proposal-boundaries-name-existing-paths`): a new rule `RULE-proposal-boundaries` checks that each
-  `target_area` and `boundaries.owns` entry of a `draft`, `reviewing` or `accepted` proposal resolves (repository
-  path, docs-root path, or capability area); the `<...>` placeholder is reported under its own message; warnings in
-  `draft`, errors from `reviewing`. How a path the Development creates is declared: open question
-  `new-boundary-paths`.
+  `devkit workflow envelope answer --settle N=DECISION`; `answers` may then be empty; it holds and releases nothing.
+- **Q3** (`PADR-proposal-boundaries-name-existing-paths`): a new warning rule `RULE-proposal-boundaries` reports each
+  `target_area` and `boundaries.owns` entry of a `draft`, `reviewing` or `accepted` proposal that resolves to no
+  existing path (repository path, namespace or global docs-root path, or capability area), and the `<...>`
+  placeholder under its own message; the Planning executor clears its reports before the `plan-accept` request. How
+  a path the Development creates is declared: open question `new-boundary-paths`.
 
 Affected:
 
-- devkit-agt `devkit.workflow` envelope model, authoring and `answer`/`reverify` commands (Q1, Q2) with tests;
-  `CAP-DLV-workflow-envelopes`.
+- devkit-agt `devkit.workflow` envelope model, authoring, `answer`/`reverify`/`new`/`check` commands (Q1, Q2) with
+  tests; `CAP-DLV-workflow-envelopes`; `CAP-DLV-delivery-workflows` (the high review-loop rule).
 - devkit-spec: the new rule with its guide and tests (Q3), the proposal template comment, `CAP-DLV-proposal-incubation`,
   `CAP-GOV-spec-rules`; bundle text `references/review-loop.md`, `references/worker-records.md`, the `planning-worker`
-  contract (step 4) and the `plan-accept` request in `workflows/sdd-proposal.md`.
+  contract (step 4) and the `plan-accept` rules in `workflows/sdd-proposal.md`; the wording test
+  `packages/devkit-spec/tests/test_effort_procedure.py`.
 - No gate or policy change; no check of `sdd-proposal` starts reading challenger findings.
 
 Coordination: `PROP-direct-planning-procedure` moves the ordered Planning steps out of the `planning-worker` contract

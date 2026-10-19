@@ -54,7 +54,9 @@ Evidence gathered in the first Planning turn (worktree at 97cdcd8). Paths are re
 - `proposals/handoff.py` and `proposals/specs.py` copy `target_area`, `owns` and `excludes` into the spec's carried
   notes and the task boundary, unchecked.
 - `RULE-spec-format` (`rules/spec_format.py`) already validates proposal-anchor fields (`namespace`, the effort
-  hints); `Violation.severity` is per violation, so one rule can report at warning and error.
+  hints). `Violation` has a `severity` field, but the evaluator overwrites it with the rule's effective severity
+  (`packages/devkit/src/devkit/rules/engine/evaluator.py`, `effective_severity` with the project's overrides), so a
+  rule reports at one severity (corrected after `challenger-01` finding 1).
 - Gate behavior (`docs/capabilities/gate/`): error-severity violations refuse the commit (`GATE_RULES_FAILED`);
   warnings pass with `GATE_RULES_WARNINGS`.
 - Namespaced docs roots (`docs/packages/<name>/`, `[[tool.spec.namespaces]]`) hold their own `capabilities/`.

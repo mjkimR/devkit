@@ -1,7 +1,7 @@
 ---
 id: PADR-reverify-closes-challenger-rounds
 title: Reverify closes challenger rounds
-summary: Lets a reverify close a challenger round, so folded Planning findings end resolved or waived in the record, and counts review-loop rounds recorded without the round marker in envelope order.
+summary: Lets a reverify close a challenger round, so folded Planning findings end resolved or waived in the record, and counts review-loop rounds an earlier high run recorded without the round marker in sequence order.
 proposal: PROP-envelope-record-gaps
 status: draft
 created_at: 2026-10-19
@@ -45,26 +45,38 @@ segment restarts the count.
 
 ## 4. Decision Outcome
 
+This decision refines `ADR-bounded-high-effort-review-loop` (the closing record of a Planning round, and the count of
+rounds recorded before its marker existed) without superseding it.
+
 - **Option A.** `reverify --from` accepts a `challenger-NN.yaml` (or a reverify that closes one) besides review
   files; the `review` key then names that challenger file, and the reference pattern becomes `review-NN.yaml` or
-  `challenger-NN.yaml`. `--from latest` keeps meaning the review state. The deciding state of `challenger` becomes
-  the latest challenger or the last reverify naming it, as for `review`; the review state ignores reverifies of
-  challenger rounds. `review` stays the key name.
+  `challenger-NN.yaml`. `review` stays the key name. `--from latest` keeps meaning the review state; when the unit has
+  no review, its refusal names `--from envelopes/challenger-NN.yaml` in the fix. The deciding state of `challenger`
+  becomes the latest challenger or the last reverify naming it, as for `review`; the review state ignores reverifies
+  of challenger rounds.
+- `envelope new --kind challenger` refuses findings whose `resolution` is not `open`, as `review` does, so the
+  reverify is the only closing path. `envelope check` prints `review=<file>` on reverify lines (and the JSON entry
+  carries `review`), so the `plan-accept` request shows each challenger round with its closing reverify.
 - Planning closes each `challenger` round after its fold with one such `reverify` (`--resolve` for each folded
   finding, `--waive N=<reason>` for a P2 or P3 not taken, `Decision needed:` findings left open for `plan-accept`),
   at `medium` and `high`. At `high` the next `challenger-NN` round still follows when section 2 of the review loop
   requires it; its summary no longer has to restate the dispositions.
-- **Round count R1.** Within one segment, a `challenger`, `review` or `reconcile-check` envelope whose summary has
-  no `round <N>;` marker counts as one round in envelope sequence order; the next marked round's `N` continues from
-  that count. A `reverify` is never a round.
+- **Round count R1, scoped.** Each loop counts its own kind (`challenger`, `review`, `reconcile-check`). Marked
+  rounds count by their marker. A round recorded without a `round <N>;` marker counts, in sequence order of its kind,
+  only when it precedes the loop's first marked round in the segment and a `worker` envelope of the segment written
+  before that marker records `activity_effort: high`; otherwise unmarked rounds (a `medium` or `low` run's) never
+  count, and a `high` loop that follows them starts at round 1. When a marker disagrees with the inferred count, the
+  higher number holds, so the cap is never extended. A `reverify` is never a round.
 - **Folding user answers**: pending the user's answer to question `answer-fold-round` of this Planning's `worker`
   envelope.
 
 ## 5. Consequences
 
-- Engine (`devkit.workflow`, devkit-agt): `REVIEW_REF`, `carried_findings`, `Envelopes.deciding`; tests for a
-  challenger reverify, its malformed variants and the unchanged review state.
-- Contract: `CAP-DLV-workflow-envelopes` sections 1 and 2; bundle text: `references/review-loop.md` sections 1, 2 and
-  5, the `planning-worker` contract step 4 and the `plan-accept` request in `sdd-proposal.md` (support-role envelopes
-  shown with their closing reverify).
+- Engine (`devkit.workflow`, devkit-agt): `REVIEW_REF`, `carried_findings` and its fix text, `Envelopes.deciding`,
+  the challenger resolution refusal and the reverify `review=` output; tests for a challenger reverify, its malformed
+  variants and the unchanged review state.
+- Contract: `CAP-DLV-workflow-envelopes` sections 1 to 3; `CAP-DLV-delivery-workflows` (the high review-loop rule
+  naming Planning's closing record); bundle text: `references/review-loop.md` sections 1, 2 and 5, the
+  `planning-worker` contract step 4 and the `plan-accept` request in `sdd-proposal.md`; the test that pins the
+  review-loop wording (`packages/devkit-spec/tests/test_effort_procedure.py`).
 - Existing challenger envelopes stay open; no back-fill.
