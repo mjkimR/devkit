@@ -1,6 +1,7 @@
 # devkit project configuration for dogfooding SDD with devkit-spec
 
 [presets]
+advisory = "python"
 spec = ["core", "docs-skeleton"]
 authoring = "skill-authoring"
 response-style = "all"

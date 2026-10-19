@@ -260,7 +260,7 @@ import cannot make the bundle unusable):
 
 | Bundle | Resource module | Selection | Contents |
 | --- | --- | --- | --- |
-| `advisory` | `devkit.advisory_guide` | Auto-selected (`core`) | Agent Advisory Protocol guides; see [devkit.advisory](advisory.md). |
+| `advisory` | `devkit.advisory_guide` | Auto-selected (`core`); `devkit add advisory:python` for Python repositories | Agent Advisory Protocol guides and, in `python`, `RULE-advisory-unique-code`; see [devkit.advisory](advisory.md). |
 | `authoring` | `devkit.authoring_guide` | Opt-in: `devkit add authoring` (`all`), or one of the presets `skill-authoring`, `agent-guide-authoring` | Size rules and restructuring playbooks for skills and agent guides; see [devkit.rules](rules.md#built-in-authoring-bundle). |
 | `git-commits` | `devkit.commits_guide` | Opt-in: `devkit add git-commits` | Commit message conventions and their `AGENTS.md` pointer; see [devkit.gate](gate.md#built-in-git-commits-bundle). |
 

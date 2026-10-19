@@ -14,7 +14,7 @@ def test_bundle_presets_split_core_and_python() -> None:
     assert bundle.name == "advisory"
     assert bundle.default_preset == "core"
     assert bundle.select(["core"]) == {"agent-advisory"}
-    assert bundle.select(["python"]) == {"agent-advisory", "agent-advisory-python"}
+    assert bundle.select(["python"]) == {"agent-advisory", "agent-advisory-python", "unique-code"}
 
 
 def test_guide_directives_match_runtime_texts() -> None:

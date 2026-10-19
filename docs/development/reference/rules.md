@@ -241,6 +241,15 @@ query. The rules are bundle assets (one plugin package directory each) loaded
 from the receipt, never imported from the package; their guides define the
 checked paths and settings.
 
+### Built-in advisory bundle
+
+The auto-selected `advisory` bundle (`devkit.advisory_guide`) ships one rule in its `python` preset
+(`uv run devkit add advisory:python`), loaded from the receipt like the authoring rules:
+
+| Rule | Phase, severity | Checks |
+| --- | --- | --- |
+| `RULE-advisory-unique-code` | linter, error | `AdvisoryError` classes declaring the same code, in the class body or through `code=` at a call, lie on one inheritance line; the workspace's Python files are read statically (settings `bases`, `exclude`) ([guide](../../../packages/devkit/src/devkit/advisory_guide/bundle/rules/unique_code/guide.md)) |
+
 ## Library
 
 For project evaluation, link relocation, rule tests and custom-rule examples, see the

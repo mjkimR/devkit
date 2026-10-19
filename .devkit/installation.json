@@ -9,6 +9,25 @@
       ]
     },
     {
+      "bundle": "advisory",
+      "id": "agent-advisory-python",
+      "kind": "instruction",
+      "paths": [
+        ".devkit/managed/advisory/instructions/agent-advisory-python.md"
+      ]
+    },
+    {
+      "bundle": "advisory",
+      "id": "unique-code",
+      "kind": "rule",
+      "paths": [
+        ".devkit/managed/advisory/rules/unique_code/guide.md",
+        ".devkit/managed/advisory/rules/unique_code/index.py",
+        ".devkit/managed/advisory/rules/unique_code/rule.py",
+        ".devkit/managed/advisory/rules/unique_code/tests/test_rule.py"
+      ]
+    },
+    {
       "bundle": "authoring",
       "entrypoints": [
         ".devkit/managed/authoring/playbooks/skill-authoring/SKILL.md"
@@ -1004,11 +1023,31 @@
     },
     ".devkit/managed/advisory/bundle.toml": {
       "mode": 420,
-      "sha256": "e9913636f7939ef3658ba98f4a2afd0bc66419dee96064089222cfbad030766f"
+      "sha256": "0fb64c32b1b58e26e7132a6819070ff18539c28010b7995f7684a6c04516d611"
+    },
+    ".devkit/managed/advisory/instructions/agent-advisory-python.md": {
+      "mode": 420,
+      "sha256": "4dcb8859266c2908c676d9aa7f761bc6825488316fa762e43b362c869c40f22f"
     },
     ".devkit/managed/advisory/instructions/agent-advisory.md": {
       "mode": 420,
       "sha256": "d6a5e93bfe6dba0f9b55ca33e16ab5bbf37f232856f26d71e4e57880cf139866"
+    },
+    ".devkit/managed/advisory/rules/unique_code/guide.md": {
+      "mode": 420,
+      "sha256": "76fc4cd3cabc54c0551ef923242dc7110f2523fae0b05fc4e37f582453a78acd"
+    },
+    ".devkit/managed/advisory/rules/unique_code/index.py": {
+      "mode": 420,
+      "sha256": "e1b7134e98afe0084bb45907d40998f068eefe3411b6f3006193bca528dfc556"
+    },
+    ".devkit/managed/advisory/rules/unique_code/rule.py": {
+      "mode": 420,
+      "sha256": "792bf92ce6691bcc8952394e286c4660ebf16f9fead9f7f6c219f2cbe7c9d5e0"
+    },
+    ".devkit/managed/advisory/rules/unique_code/tests/test_rule.py": {
+      "mode": 420,
+      "sha256": "aeb37550ee5444a0a3ad1b7123a86aaf38d369f0ba6d9455fed12e50559260f0"
     },
     ".devkit/managed/authoring/bundle.toml": {
       "mode": 420,
@@ -1575,7 +1614,7 @@
     ],
     "presets": {
       "advisory": [
-        "core"
+        "python"
       ],
       "authoring": [
         "skill-authoring"

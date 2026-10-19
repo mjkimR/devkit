@@ -24,11 +24,11 @@ PYPROJECT = Path(__file__).parents[1] / "pyproject.toml"
 _IMPORTING_CALLS = {"import_module", "find_spec", "files", "__import__"}
 
 # ``advisory`` is the separate devkit-advisory distribution (``test_advisory_is_standard_library_only`` there),
-# below every area. The ``*_guide`` areas (``DATA_AREAS``) hold built-in bundle content: ``authoring_guide`` ships
-# rule code under ``bundle/rules/``, built on the public rule API and loaded by ``devkit rules`` from the synchronized
-# copies, never imported through the package.
+# below every area. The ``*_guide`` areas (``DATA_AREAS``) hold built-in bundle content: ``advisory_guide`` and
+# ``authoring_guide`` ship rule code under ``bundle/rules/``, built on the public rule API and loaded by
+# ``devkit rules`` from the synchronized copies, never imported through the package.
 ALLOWED: dict[str, set[str]] = {
-    "advisory_guide": set(),
+    "advisory_guide": {"rules"},
     "authoring_guide": {"core", "advisory", "rules"},
     "commits_guide": set(),
     "core": {"advisory"},
