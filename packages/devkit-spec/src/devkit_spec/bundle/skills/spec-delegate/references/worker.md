@@ -58,7 +58,9 @@ nothing. A comment or a rerun request alone resolves nothing.
 ## Questions and problems
 
 - **Questions** (`needs_input` without a problem; `[PENDING_QUESTION]`): put the questions of the worker's envelope to
-  the user in one round, ask back at once about anything ambiguous, and hand the rewritten answers to a new worker,
+  the user in one round, each restated for the user rather than relayed: what the answer decides and why it is asked
+  now, and what each option leads to (scope, size, effort, what changes for the user). Ask back at once about anything
+  ambiguous, and hand the rewritten answers to a new worker,
   which records them first as an `answer` envelope naming that `worker` envelope. Waiting for answers is not a problem
   and needs no resolution, but it holds the gates from the run's stage on, and the handoff, until answered.
 - **Problems** (`failed`, or `needs_input` with a problem): read the cause, what was tried and the recommended recovery.
