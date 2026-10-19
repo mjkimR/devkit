@@ -27,7 +27,7 @@ created_at: 2026-10-15
   contract (`.devkit/managed/spec/subagents/reviewer.md`) and follow it, which is the `emulated` path.
 - **Suggestion**: State in `hosts.md` that a projected role needs a session rooted in the project, and that otherwise
   the caller spawns a generic subagent with the managed contract path (and reports `emulated`). Relevant to
-  `PROP-codex-native-workers`, since a worker in a sibling worktree has the same root question.
+  `SPEC-codex-native-workers`, since a worker in a sibling worktree has the same root question.
 
 ## Diagnostic Details
 
@@ -46,4 +46,4 @@ $ ls .claude/agents   -> challenger.md reconciler.md reviewer.md scout.md worker
 Agent types offered to the session: claude, claude-code-guide, Explore, general-purpose, Plan, statusline-setup
 ```
 
-- **Disposition**: S-Lane: `spec-delegate/references/hosts.md` states the session-root condition and the emulated fallback; `PROP-codex-native-workers` covers role loading for workers.
+- **Disposition**: S-Lane: `spec-delegate/references/hosts.md` states the session-root condition and the emulated fallback; `SPEC-codex-native-workers` covers role loading for workers.

@@ -1,33 +1,24 @@
 ---
-id: PROP-codex-native-workers
+id: SPEC-codex-native-workers
 title: Codex native workers with command-scoped approvals
-summary: "Enable Codex Planning and Development workers through native subagents with explicit worktree paths, command-scoped approvals and validated committed results."
-status: accepted
-created_at: 2026-10-19
-target_area: delivery/
-priority: high
-size: M
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - delivery/
-    - packages/devkit-spec/src/devkit_spec/bundle/subagents/
-    - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-delegate/
-    - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-orchestrate/
-    - packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/worker-records.md
-    - packages/devkit-spec/tests/
-    - .devkit/installation.json
-  excludes:
-    - docs/decisions/
-task_kind: feature
+summary: Enable Codex Planning and Development workers through native subagents with explicit worktree paths, command-scoped approvals and validated committed results.
+status: planned
+created: 2026-10-19
 supersedes: PROP-worktree-host-compatibility
-workflow: sdd-proposal
+related_capabilities: []
+related_stories: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-codex-native-workers] Codex native workers with command-scoped approvals
+# [SPEC-codex-native-workers] Codex native workers with command-scoped approvals
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-codex-native-workers on 2026-10-19.
+- **Preserved Materials**: `docs/materials/2026-10/20261019-codex-native-workers`
+
+### 1. Background & Hypothesis
 
 `SPEC-summary-length-guard` completed a real Development turn through a native Codex subagent with nested code
 and reconcile reviewers, normal stage commits and a committed return validated by the Host. The role contract was
@@ -37,10 +28,29 @@ permissions and limits; `MAT-codex-native-worker-design` compares the alternativ
 
 Native invocation can support both workers without process workers when the host offers nested subagents and
 command-scoped approvals. It supplies neither per-worker path confinement nor a persistent permission grant.
-`PADR-codex-native-worker-execution` defines the proposed contract. Claude Code behavior stays unchanged and
+`ADR-codex-native-worker-execution` defines the proposed contract. Claude Code behavior stays unchanged and
 Antigravity stays `unverified`.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Codex native workers with command-scoped approvals so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1, settled**: Declare both worker `hosts.codex.status` values `emulated`, with `sandbox_mode: workspace-write`.
   Prefer a projected named role; a generic native subagent can read the effective managed/overridden contract when
@@ -59,7 +69,7 @@ Antigravity stays `unverified`.
   lifecycle. No persistent-grant preflight, process launcher, generic probe framework or bounded-turn feature is needed.
   The old bounded-turn requirement is retired; no equivalent new requirement remains.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 The change is instruction and contract work in `devkit-spec`; the existing distribution renderer already emits
 `emulated` Codex TOML and omits `unsupported` roles. No schema, allowlist or host configuration changes are needed.
@@ -88,7 +98,7 @@ features. Review-loop policy and Planning branch freshness are independent track
 The prior process-worker proposal has been superseded and retired by Backlog. Its evidence remains in Git and its
 four open feedback records were preserved; it is no current prerequisite for this direction.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Planning and recommended Development effort remain `medium`: the direction is reversible instruction/contract work,
 with a mandatory nested challenger here and independent code/reconcile verification during Development. No unresolved
@@ -118,3 +128,4 @@ checks installation state. The full suite runs once on the reviewed head and con
 No additional live worker experiment or fresh-host named-role validation is required to claim the bounded `emulated`
 status. On acceptance, hand off on the Development branch with `devkit spec proposal handoff codex-native-workers`.
 Rejection and later cleanup preserve evidence and open feedback through normal retirement.
+

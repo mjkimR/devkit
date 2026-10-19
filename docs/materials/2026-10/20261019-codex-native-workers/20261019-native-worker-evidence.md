@@ -35,25 +35,26 @@ summary: "Native Codex Development and Planning workers use command-scoped appro
 
 ## Native Planning execution
 
-- Invocation: this proposal's real `collaboration.spawn_agent` Planning worker, generic role explicitly following
+- Invocation: the source proposal's real `collaboration.spawn_agent` Planning worker, generic role explicitly following
   the managed Planning contract under experimental authorization. The spawn mechanism is native and the worker
   contract emulated; no `codex exec` ran and no source support contract was changed during Planning.
 - Input head: `bca2bb23244100a1ca23a53033892a394d10afad`. Required reviewing commit passed the normal gate and became
   `004971b70dd0814f44b31a44a96771aceba8e0ad` after rewriting. Later actual heads are returned by the worker record.
 - The worker settled support status, trust/role fallback, scoped approvals, refusal preservation and verification
-  scope in `PADR-codex-native-worker-execution` and `MAT-codex-native-worker-design`.
-- A fresh nested challenger completed with no findings; its record is `envelopes/challenger-01.yaml`. The caller
+  scope in `ADR-codex-native-worker-execution` and `MAT-codex-native-worker-design`.
+- A fresh nested challenger completed with no findings; its record is Git `00de24882aa27c48da614e9ef47f8555bd532bb4:docs/proposals/PROP-codex-native-workers/envelopes/challenger-01.yaml`. The caller
   checked that HEAD, index and draft paths were unchanged by the read-only role. The review covers the draft
   proposal, PADR and design material at its recorded head plus those uncommitted drafts; later evidence/record edits
   are self-verified by the worker and are not represented as challenger-reviewed.
 - Every mutation requested a separate, narrowly scoped approval with the explicit sibling-worktree cwd. Approvals
   succeeded; no automatic rejection occurred. Fresh feedback and exactly one worker envelope complete the return.
-- The Host must still validate final ancestry, allowed paths, clean worktree and unchanged base. The worker's actual
-  final HEAD is supplied after the record commit; this material does not pre-approve that Host validation.
+- The Host validated final head `bc0abce99b6561dc69bd14d73a0d5eb3ac4b22a6`: both ancestor relationships,
+  proposal-only changed paths, clean worktree, unchanged base and cumulative rules passed. The user accepted the
+  design; acceptance commit `00de24882aa27c48da614e9ef47f8555bd532bb4` was merged locally before Development handoff.
 
 ## Remaining verification
 
-- Native Planning execution is recorded here; committed-return acceptance remains the Host's check.
+- Native Planning execution and Host committed-return acceptance are verified for this run.
 - Generic-role success does not establish named-role loading in a newly started host.
 - Denied approval, unavailable approval tools, failed emergency commits and other host/version configurations
   were not exercised. The support contract must state those limits.

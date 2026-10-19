@@ -25,7 +25,7 @@ changing worker frontmatter is enough to produce both TOML roles; the renderer a
 | Native/emulated | Yes, with runtime capabilities and command approvals | Existing spawn and projection only | Refusal can leave partial uncommitted work; Host blocks/recoveries |
 | Process worker | Could, with additional validation | Launcher, access setup, output/lifecycle protocol | Larger unproven path and settings surface |
 
-Recommend native/emulated as `PADR-codex-native-worker-execution` defines. Access diagnostics stay optional and
+Recommend native/emulated as `ADR-codex-native-worker-execution` defines. Access diagnostics stay optional and
 small; actual operations and approvals decide success. One-shot turns already bound lifecycle, so no turn-budget
 feature, broker or generic probe command is justified.
 
@@ -56,7 +56,7 @@ clean tree and unchanged base before treating the run as validated Planning evid
 
 ## Challenger result and verification
 
-The fresh nested challenger returned `completed` with no findings, recorded in `envelopes/challenger-01.yaml`.
+The fresh nested challenger returned `completed` with no findings, recorded in Git `00de24882aa27c48da614e9ef47f8555bd532bb4:docs/proposals/PROP-codex-native-workers/envelopes/challenger-01.yaml`.
 Its scope was the proposal, PADR and this material before this result section was added, plus the listed existing
 contracts and evidence. The worker checked unchanged HEAD/index and only its own three draft paths after the
 return. No finding disposition or re-review is required. The current `envelope reverify` command accepts only

@@ -1,15 +1,15 @@
 ---
-id: PADR-codex-native-worker-execution
+id: ADR-codex-native-worker-execution
 title: Codex workers use native invocation with emulated boundaries
 summary: "Codex Planning and Development workers use native subagents with emulated contract boundaries, explicit worktree paths and command-scoped approvals. Refusal preserves truthful partial results and leaves recovery to the Host."
-proposal: PROP-codex-native-workers
-status: draft
+proposal: SPEC-codex-native-workers
+status: accepted
 created_at: 2026-10-19
 ---
 
-# [PADR-codex-native-worker-execution] Codex workers use native invocation with emulated boundaries
+# [ADR-codex-native-worker-execution] Codex workers use native invocation with emulated boundaries
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-19
 
 ## 1. Context & Problem Statement

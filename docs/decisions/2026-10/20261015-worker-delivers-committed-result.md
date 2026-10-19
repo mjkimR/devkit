@@ -87,5 +87,5 @@ what pull-request-based orchestration needs, and blocking keeps every attempt tr
 - **Negative / Risks**: a rejected range remains in the unit branch's history until it is fixed; a worker with Git
   write access must be trusted not to bypass the commit gate (`--no-verify` stays forbidden, and the range check
   catches out-of-scope paths).
-- **Follow-ups**: `PROP-codex-native-workers` evaluates native Codex worker access and role loading under
+- **Follow-ups**: `SPEC-codex-native-workers` evaluates native Codex worker access and role loading under
   this contract; earlier process-worker and host-native options remain in Git history.

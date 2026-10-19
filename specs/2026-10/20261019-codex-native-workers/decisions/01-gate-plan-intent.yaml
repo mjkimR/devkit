@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: PROP-codex-native-workers
+by: user
+at: '2026-10-19T08:01:13.659037Z'
