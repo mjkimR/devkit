@@ -1,0 +1,19 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T06:12:26.938911Z'
+status: completed
+summary: 'Planning at low (questions only; no scout or challenger) settled Q1 and Q2 in two PADRs: executor-neutral steps 2-6 move to a new spec/references/planning.md the planning-worker contract cites, and worktree, nested-role, return, boundary and problem rules stay in the contract; the move fits all byte budgets with no trimming. Added delivery/ to boundaries.owns (CAP-DLV-delivery-workflows role table changes), raised dev_effort to medium, and recommended landing before PROP-envelope-record-gaps; no questions remain.'
+findings: []
+assumptions:
+- CAP-DLV-delivery-workflows' rule (procedure in the contract only for a role no main session runs) supports moving the Planning steps, since a direct Host runs them.
+- Tests pinning contract phrases (test_role_contracts.py, test_effort_procedure.py CITING) are updated in Development to read the reference.
+unverified_areas:
+- Byte sizes of the new reference and the slimmer contract are estimates from the current text (4277 bytes moved), not measured on written files.
+checks:
+  feedback-sweep: PASS envelopes/feedback-01.yaml
+diff_scope:
+  base: 97cdcd825b5e40f8f516ac3a4f1ed2478ab34fd4
+  head: 0d6d38c12fe179c8a866315f9e6d5a7279866a29
+activity_effort: low
