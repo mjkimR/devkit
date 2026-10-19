@@ -1,27 +1,20 @@
 ---
-id: PROP-high-effort-review-loop
+id: SPEC-high-effort-review-loop
 title: Bounded high-effort review procedure
 summary: 'Redefines the high activity-effort procedure: whole-batch review rounds that end when a round finds nothing or every fix is minor, hand-over for persistent, recurring or contested P1s, P1-P3 severity, mandatory scout in high Planning, and session reclassification advice.'
-status: accepted                      # draft | reviewing | accepted | rejected
-created_at: 2026-10-19
-target_area: capabilities/delivery/
-priority: high                        # critical | high | medium | low
-size: M                               # S | M | L | XL
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - capabilities/delivery/
-    - packages/devkit-spec/src/devkit_spec/bundle/
-    - packages/devkit-spec/tests/
-    - docs/decisions/2026-10/20261016-medium-review-delegation.md
-  excludes:
-    - docs/decisions/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+status: planned
+created: 2026-10-19
+related_capabilities: []
+related_stories: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-high-effort-review-loop] Bounded high-effort review procedure
+# [SPEC-high-effort-review-loop] Bounded high-effort review procedure
+
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-high-effort-review-loop on 2026-10-19.
 
 - **Origin**: `ADR-medium-review-delegation` defined `medium` in detail and kept `high` as it was: "High retains code
   re-review after fixes and independent reconcile verification". `high` was never designed on its own.
@@ -31,13 +24,13 @@ workflow: sdd-proposal
 - **Planning effort**: `medium` by the user's choice, though the change replaces a clause of an accepted ADR: the
   options were compared before Backlog closed, so one `challenger` pass (`envelopes/challenger-01.yaml`) reviews how
   they are specified.
-- **Decision record**: `PADR-bounded-high-effort-review-loop` (promoted to an ADR at handoff).
+- **Decision record**: `ADR-bounded-high-effort-review-loop` (promoted to an ADR at handoff).
 - **Related**: `ADR-medium-review-delegation`, `ADR-reconcile-check-envelope`, `CAP-DLV-delivery-workflows`,
   `CAP-DLV-workflow-envelopes`, `CAP-DLV-proposal-incubation`.
 
-## 1. Background & Hypothesis
+### 1. Background & Hypothesis
 
-### 1.1 Problem
+#### 1.1 Problem
 
 - **Unbounded re-review.** At `high`, every path says only "re-review after the fixes" (`effort.md`, the
   `sdd-session-*` and `sdd-spec-*` workflow bodies, `spec-review`, both worker contracts, `CAP-DLV-delivery-workflows`).
@@ -50,15 +43,34 @@ workflow: sdd-proposal
   contract or document kind, or spans packages, yet `scout` runs only "when the direction needs evidence".
 - **High session work.** Two of the three `high` triggers describe work that is not `session` depth; nothing says so.
 
-### 1.2 Hypothesis
+#### 1.2 Hypothesis
 
 A `high` loop that runs fresh isolated review rounds until no P1 remains, sends each batch of fixes to the next round
 unless every fix in it is strictly minor, and hands over to the user only when P1s persist to the cap, recur, or are contested
 gives `high` a defined end and a higher bar than `medium` without spending a subagent round on each trivial fix.
 
-## 2. Technical Spike Questions
+## 2. User Stories
 
-All answered in Planning; the decisions are `PADR-bounded-high-effort-review-loop`.
+- **US-1**: As a developer/agent, I want to implement Bounded high-effort review procedure so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
+
+All answered in Planning; the decisions are `ADR-bounded-high-effort-review-loop`.
 
 - **Q1. Severity scale.** `P1`, `P2`, `P3` as exact strings, one P1 definition per review kind (§3.3). The reviewer
   owns the label; the implementer records it unchanged, and `reverify` already carries it forward. It is required on
@@ -76,9 +88,9 @@ All answered in Planning; the decisions are `PADR-bounded-high-effort-review-loo
 - **Q5. Session reclassification.** A SHOULD in the `spec` skill (`effort.md`) only: effort is never stored and a
   session is never evaluated by a command, so nothing can raise a notice.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### 3.1 Review loop at `high`
+#### 3.1 Review loop at `high`
 
 Applies to code review (`code-reviewer`), reconcile verification (`reconcile-reviewer`) and `high` Planning
 (`challenger`).
@@ -118,7 +130,7 @@ After a hand-over:
 This is not the `exception` stage; stages, checks and gates are unchanged. The stop reasons join the problem rule
 of `CAP-DLV-delivery-workflows`.
 
-### 3.2 Minor-fix self-verification at `high`
+#### 3.2 Minor-fix self-verification at `high`
 
 The initial `code-reviewer` and `reconcile-reviewer` calls stay mandatory, and so does the initial `challenger` in
 `high` Planning. After a round, its batch of fixes MAY be self-verified instead of starting the next round only when
@@ -136,7 +148,7 @@ every fix in it meets all of these conditions:
   for reconcile, in the `worker` envelope's summary for Planning.
 - A recurring finding can no longer be closed by self-verification.
 
-### 3.3 Severity levels
+#### 3.3 Severity levels
 
 | Level | Code review | Reconcile | Planning |
 | --- | --- | --- | --- |
@@ -147,28 +159,28 @@ every fix in it meets all of these conditions:
 Severity is the reviewer's; the implementer records it as returned and never relabels it. It has no effect on checks;
 the stage exits still count every open finding.
 
-### 3.4 Mandatory `scout` in `high` Planning
+#### 3.4 Mandatory `scout` in `high` Planning
 
 `high` Planning runs `scout`, starting from `devkit spec refs <ID> --direction in` for each capability and ADR the
 proposal touches, so its output is a list the `challenger` input cites. The `plan-accept` request reports a missing
 `scout` envelope at `high` as it does a missing `challenger`.
 
-### 3.5 Reclassification advice for `high` session work
+#### 3.5 Reclassification advice for `high` session work
 
 When `high` is proposed for a `session` task, the advice follows the trigger: creating a contract or document kind
 proposes `spec` depth; reversing an accepted decision proposes `proposal` depth; a multi-package change alone gives
 no advice. If the user keeps `session`, the work runs at `high` as defined.
 
-### 3.6 Out of scope
+#### 3.6 Out of scope
 
 - **Plan review role.** A separate `plan-reviewer` before implementation. Reconsider when feedback records
   design-level P1s from `high` code review in two or more units.
 - **Model and reasoning settings.** `activity-effort` stays independent of them.
 - **Envelope schema.** No new finding key, envelope kind, stage or check.
 
-### 3.7 Impact
+#### 3.7 Impact
 
-- **Decision**: `PADR-bounded-high-effort-review-loop` (frontmatter `supersedes: ADR-medium-review-delegation`,
+- **Decision**: `ADR-bounded-high-effort-review-loop` (frontmatter `supersedes: ADR-medium-review-delegation`,
   carried by the promotion), an ADR that restates the `medium` and `low` rules unchanged and adds the `high` rules.
   Development sets only `status: superseded` and `superseded_by` in the old ADR's frontmatter. Like the ADR it
   replaces, it supplements the verifier assignment of `ADR-reconcile-check-envelope` (`medium` may self-verify the
@@ -188,7 +200,7 @@ no advice. If the user keeps `session`, the work runs at `high` as defined.
 - **Living Spec**: `CAP-DLV-delivery-workflows` (effort rules, problem rule), `CAP-DLV-workflow-envelopes` (severity
   meaning; no schema change), `CAP-DLV-proposal-incubation` (`plan-accept` gap report for `scout`).
 
-### 3.8 Decisions
+#### 3.8 Decisions
 
 Decided by the user in Planning (`envelopes/answer-01.yaml`):
 
@@ -202,10 +214,11 @@ Decided by the user in Planning (`envelopes/answer-01.yaml`):
   leaves `high` unreviewed).
 - Severity is required on every finding at every effort.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - Preliminary decisions are recorded as PADRs in `decisions/`; research goes in `materials/`.
 - On acceptance (`plan-accept`): record `gate:plan-accept`, set `status: accepted` and merge the Planning branch;
   Development starts with `devkit spec proposal handoff high-effort-review-loop`.
 - On rejection: change only `status: rejected`, with the user's reason in the commit message; a later hygiene pass
   writes the rejection ADR and deletes the proposal directory.
+

@@ -20,13 +20,13 @@ workflow: sdd-proposal
 
 # [PROP-role-reasoning-effort-presets] Per-role reasoning effort presets
 
-- **Origin**: split from `PROP-high-effort-review-loop`. Passing a reasoning effort per call when `activity-effort`
+- **Origin**: split from `SPEC-high-effort-review-loop`. Passing a reasoning effort per call when `activity-effort`
   is `high` works only on Claude Code: Antigravity's host block has no effort key, and on Codex the review roles are
   `emulated`, so there is often no separate call to pass it to.
 - **Decided in Backlog**: preset the effort statically per role in the contract's host block, never tied to
   `activity-effort`; name no model; leave Antigravity unset.
 - **Related**: `CAP-DLV-delivery-workflows` (§4.6 role contracts, model selection non-goal),
-  `CAP-DIST-agent-projections` (host key allowlist), `PROP-high-effort-review-loop`.
+  `CAP-DIST-agent-projections` (host key allowlist), `SPEC-high-effort-review-loop`.
 
 ## 1. Background & Hypothesis
 

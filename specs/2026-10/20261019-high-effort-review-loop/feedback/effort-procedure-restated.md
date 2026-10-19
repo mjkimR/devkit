@@ -26,7 +26,7 @@ created_at: 2026-10-19
   files cite it by level name and state only what is specific to them.
 - **Expected Benefit**: one edit per procedure change; no drift between a worker contract and the reference.
 - **Cost & Risk**: readers of a workflow body follow one more link; a test that asserts restated text needs updating.
-- **Attempted**: hypothesis; the impact list of `PROP-high-effort-review-loop` §3.7 needed eleven bundle files for one
+- **Attempted**: hypothesis; the impact list of `SPEC-high-effort-review-loop` §3.7 needed eleven bundle files for one
   effort level, and the Planning review found two worker contracts missing from the first draft of that list.
 
 ## Evidence

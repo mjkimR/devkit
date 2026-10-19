@@ -1,16 +1,16 @@
 ---
-id: PADR-bounded-high-effort-review-loop
+id: ADR-bounded-high-effort-review-loop
 title: Bounded high-effort review loop
 summary: At high, each fresh review round takes every fix since the previous one, findings are fixed together, the loop ends when a round finds nothing or every fix is minor, and persistent, recurring or contested P1s go to the user via worker questions and problems.
-proposal: PROP-high-effort-review-loop
-status: draft
+proposal: SPEC-high-effort-review-loop
+status: accepted
 supersedes: ADR-medium-review-delegation
 created_at: 2026-10-19
 ---
 
-# [PADR-bounded-high-effort-review-loop] Bounded high-effort review loop
+# [ADR-bounded-high-effort-review-loop] Bounded high-effort review loop
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-19
 
 ---
@@ -40,7 +40,7 @@ review, reconcile verification and `high` Planning without changing envelope sch
 
 ## 4. Decision Outcome
 
-Option 2, as specified in `PROP-high-effort-review-loop` §3.1 to §3.5:
+Option 2, as specified in `SPEC-high-effort-review-loop` §3.1 to §3.5:
 
 - A fresh reviewer per round, given the earlier findings, the round's diff scope and the effort; round 1 reviews the
   whole change, each later round every fix since the previous one, never a subset.
