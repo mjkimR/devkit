@@ -1,0 +1,14 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-18T23:19:49.509234Z'
+status: completed
+summary: 'AC-01 to AC-04 confirmed by inspecting the main...HEAD diff: CAP-INT §1/§6 name both terminal hosts with unverified surfaces, mcp.md §4 gives claude mcp add/get/remove, install routes and CAP-HOST/host reference name both hosts, the evidence material records the four outcomes; no code or non-goal touched'
+findings: []
+checks:
+  tests: PASS not applicable, documentation only
+  lint: PASS devkit rules check --ci --base main (0 errors, 0 warnings); git diff --check
+diff_scope:
+  base: 8fc64ef7159aa4c883cc71a3f868ae9a336bb400
+  head: 1f7c31957f64a1263875d355d14d352206aace9c
