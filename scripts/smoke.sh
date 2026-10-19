@@ -96,10 +96,10 @@ TOML
     uv run devkit add response-style >/dev/null
     uv run python -c '
 from pathlib import Path
-path = Path(".devkit/managed/response-style/instructions/response-style.md")
+path = Path(".devkit/managed/response-style/skills/response-style/SKILL.md")
 assert "Use ko as the default" in path.read_text()
 assert not path.with_suffix(".md.jinja").exists()
-assert str(path) in Path("AGENTS.md").read_text()
+assert "read and apply the `response-style` skill" in Path("AGENTS.md").read_text()
 '
     uv run devkit sync --check >/dev/null
     uv run devkit remove response-style >/dev/null
