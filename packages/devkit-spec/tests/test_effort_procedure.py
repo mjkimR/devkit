@@ -44,6 +44,8 @@ def test_the_loop_defines_round_fixing_next_round_end_and_count() -> None:
     assert "`reverify` for code; a new `reconcile-check` for reconcile;" in loop
     assert "the next `challenger-NN` summary or the `worker` envelope's summary" in loop
     assert "The round returns no finding, or every fix of the batch meets section 2 and is self-verified" in loop
+    assert "stays open in that closing record with the counter-evidence" in loop
+    assert "or a P1 stays open as contested" in loop
     assert "starts with `round <N>;`" in loop and "`closes reconcile-check-<NN>;`" in loop
     assert "the third after the initial review" in loop
     assert "A `devkit workflow return` does not reset the count" in loop

@@ -9,8 +9,8 @@ A round hands a reviewer the whole batch of work since the previous round; the i
 | Item | Rule |
 | --- | --- |
 | Round | A fresh reviewer instance, never a continued one. Round 1 reviews the whole change; each later round reviews every fix made since the previous round and what it affects, never a subset. Input: the earlier rounds' findings, the round's diff scope and the effort ([payload](../../spec-delegate/references/payload.md)). |
-| Fixing | The implementer fixes every finding of the round, P1, P2 and P3 together (a P2 or P3 may be waived with a reason), and closes the round before the next is recorded: `reverify` for code; a new `reconcile-check` for reconcile; for Planning, the next `challenger-NN` summary or the `worker` envelope's summary, stating what each finding became. |
-| Next round | Runs when any fix of the batch fails the minor-fix conditions (section 2). The whole batch goes to the next round. |
+| Fixing | The implementer fixes every finding of the round, P1, P2 and P3 together (a P2 or P3 may be waived with a reason), and closes the round before the next is recorded: `reverify` for code; a new `reconcile-check` for reconcile; for Planning, the next `challenger-NN` summary or the `worker` envelope's summary, stating what each finding became. A P1 the implementer holds invalid is not fixed: it stays open in that closing record with the counter-evidence (tests or output) and sends the whole batch to the next round, the one more round of section 4. |
+| Next round | Runs when any fix of the batch fails the minor-fix conditions (section 2) or a P1 stays open as contested. The whole batch goes to the next round. |
 | End | The round returns no finding, or every fix of the batch meets section 2 and is self-verified. |
 | Round count | Each round's envelope summary starts with `round <N>;` (round 1 is the initial review), and a reconcile check that closes an earlier one also with `closes reconcile-check-<NN>;`. Counts are read from these markers, never from new fields. A `devkit workflow return` does not reset the count: envelopes it leaves out of the checks still count within the segment. |
 

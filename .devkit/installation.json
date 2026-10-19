@@ -802,7 +802,7 @@
     },
     ".agents/skills/spec/references/review-loop.md": {
       "mode": 420,
-      "sha256": "69109ff549707ce6b3a0c860698b0503510e9c2e862ba9cd83e05a5474f79e18"
+      "sha256": "254be3d40b83f644e82eeb2433f840d3f90f27c5b790853466b34fcccccd6f90"
     },
     ".agents/skills/spec/references/worker-records.md": {
       "mode": 420,
@@ -990,7 +990,7 @@
     },
     ".claude/skills/spec/references/review-loop.md": {
       "mode": 420,
-      "sha256": "69109ff549707ce6b3a0c860698b0503510e9c2e862ba9cd83e05a5474f79e18"
+      "sha256": "254be3d40b83f644e82eeb2433f840d3f90f27c5b790853466b34fcccccd6f90"
     },
     ".claude/skills/spec/references/worker-records.md": {
       "mode": 420,
@@ -1410,7 +1410,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/review-loop.md": {
       "mode": 420,
-      "sha256": "69109ff549707ce6b3a0c860698b0503510e9c2e862ba9cd83e05a5474f79e18"
+      "sha256": "254be3d40b83f644e82eeb2433f840d3f90f27c5b790853466b34fcccccd6f90"
     },
     ".devkit/managed/spec/skills/spec/references/worker-records.md": {
       "mode": 420,

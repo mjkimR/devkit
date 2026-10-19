@@ -179,8 +179,8 @@ handles every finding of that round together, whatever its severity.
 | Item | Rule |
 | --- | --- |
 | Round | A fresh reviewer instance. Round 1 reviews the whole change; each later round reviews every fix made since the previous round and what it affects. Input: the earlier rounds' findings, the round's diff scope and the effort. |
-| Fixing | The implementer fixes every finding of the round, P1, P2 and P3 together (a P2 or P3 may be waived with a reason), and closes the round: `reverify` for code; for reconcile, a new `reconcile-check`; for Planning, the next `challenger-NN` summary or the `worker` envelope's summary. |
-| Next round | Runs when any fix of the batch fails the minor-fix conditions (§3.2). The whole batch goes to the next round, never a subset. |
+| Fixing | The implementer fixes every finding of the round, P1, P2 and P3 together (a P2 or P3 may be waived with a reason), and closes the round: `reverify` for code; for reconcile, a new `reconcile-check`; for Planning, the next `challenger-NN` summary or the `worker` envelope's summary. A P1 the implementer holds invalid stays open in that record with the counter-evidence and sends the batch to the next round. |
+| Next round | Runs when any fix of the batch fails the minor-fix conditions (§3.2) or a P1 stays open as contested. The whole batch goes to the next round, never a subset. |
 | End | The round returns no finding, or every fix of the batch meets §3.2 and is self-verified. |
 | Round count | The implementer starts each round's envelope summary with `round <N>;` (and `closes reconcile-check-<NN>;` for a closing reconcile check), so counts are read from summaries, never from new fields. Counted across `devkit workflow return` within one segment. |
 
