@@ -7,6 +7,8 @@ created_at: 2026-10-16
 target_area: capabilities/delivery/
 priority: medium                      # critical | high | medium | low
 size: S                               # S | M | L | XL
+planning_effort: high                 # low | medium | high (hint for Planning)
+dev_effort: medium                    # low | medium | high (hint for Development)
 boundaries:
   owns:
     - capabilities/delivery/
