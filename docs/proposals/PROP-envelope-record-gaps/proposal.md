@@ -12,6 +12,9 @@ dev_effort: medium                    # low | medium | high (hint for Developmen
 boundaries:
   owns:
     - delivery/
+    - governance/
+    - packages/devkit/src/devkit/workflow/
+    - packages/devkit-spec/src/devkit_spec/
   excludes:
     - docs/decisions/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
@@ -45,9 +48,35 @@ workflow: sdd-proposal
 
 ## 3. Proposed Design & Impact
 
-- Affected: `devkit.workflow` envelope kinds and validation (Q1, Q2), `CAP-DLV-workflow-envelopes`, the planning-worker
-  contract and `review-loop.md`, and a devkit-spec rule for proposal frontmatter (Q3).
-- No gate or policy change.
+Decisions of this Planning (evidence and the option comparison: `materials/spike-evidence.md`):
+
+- **Q1** (`PADR-reverify-closes-challenger-rounds`): `reverify --from challenger-NN.yaml` closes a challenger round
+  (`--resolve`, `--waive`); the `review` key keeps its name and may name a `challenger-NN.yaml`; the deciding state of
+  `challenger` follows its last reverify. Planning writes one such reverify after each fold, at `medium` and `high`.
+  Review-loop rounds recorded without the `round <N>;` marker count in envelope order within the segment. How a fold
+  of the user's answers counts: open question `answer-fold-round`.
+- **Q2** (`PADR-answer-envelopes-settle-worker-assumptions`): an `answer` envelope may carry
+  `settles: [{assumption: <1-based position in the answered worker's assumptions>, decision}]`, written with
+  `devkit workflow envelope answer --settle N=DECISION`; it holds and releases nothing.
+- **Q3** (`PADR-proposal-boundaries-name-existing-paths`): a new rule `RULE-proposal-boundaries` checks that each
+  `target_area` and `boundaries.owns` entry of a `draft`, `reviewing` or `accepted` proposal resolves (repository
+  path, docs-root path, or capability area); the `<...>` placeholder is reported under its own message; warnings in
+  `draft`, errors from `reviewing`. How a path the Development creates is declared: open question
+  `new-boundary-paths`.
+
+Affected:
+
+- devkit-agt `devkit.workflow` envelope model, authoring and `answer`/`reverify` commands (Q1, Q2) with tests;
+  `CAP-DLV-workflow-envelopes`.
+- devkit-spec: the new rule with its guide and tests (Q3), the proposal template comment, `CAP-DLV-proposal-incubation`,
+  `CAP-GOV-spec-rules`; bundle text `references/review-loop.md`, `references/worker-records.md`, the `planning-worker`
+  contract (step 4) and the `plan-accept` request in `workflows/sdd-proposal.md`.
+- No gate or policy change; no check of `sdd-proposal` starts reading challenger findings.
+
+Coordination: `PROP-direct-planning-procedure` moves the ordered Planning steps out of the `planning-worker` contract
+into a `spec` skill reference. Its Development should integrate first (size S, `dev_effort: low`); this Development
+then puts the challenger-reverify step into that reference instead of the contract. If this one integrates first, the
+other moves the reworded step 4 as written.
 
 ## 4. Lifecycle & Retirement Criteria
 
