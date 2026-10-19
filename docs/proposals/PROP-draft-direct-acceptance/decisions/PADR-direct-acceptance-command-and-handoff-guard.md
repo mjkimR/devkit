@@ -57,24 +57,29 @@ recommended A2 and changes only in its "Where it runs" bullet if the user choose
     acceptance "direct acceptance, Planning skipped: <reason>; task_kind <kind> confirmed"), so the engine decides
     whether `collect-feedback` holds, is switched off or is skipped by policy; on refusal it restores the status and
     reports the evaluation's unmet checks and hold reasons, never a guessed cause;
-  - it also repairs a proposal already `accepted` without an effective `gate:plan-accept` record, after the user's
-    explicit acceptance, by recording the gate;
+  - with `--direct` it also repairs a proposal already `accepted` that has no effective `gate:plan-accept` and no
+    `worker` envelope (no Planning ran), applying every direct-acceptance check except the status; with a `worker`
+    envelope the plain form repairs it as a Planning acceptance. A repair, like every acceptance, follows the user's
+    explicit acceptance of a full request;
   - `--check` runs every check read-only and writes nothing; the command never records `plan-intent`, never commits,
     merges or runs the handoff.
   `reject` stays the follow-up 01 §10 plans.
-- **Where it runs (A2)**: a direct acceptance is Backlog work under `pull_request = auto`, on the base checkout only
-  (another slug's activity branch is refused, and a protected base means Planning instead). The Host runs `--check`,
-  sweeps its own acceptance session (a new `feedback` envelope at `collect-feedback`; zero observations is a valid
-  PASS), runs the command and commits the result on the base. Under `pull_request = required` the command refuses a
-  direct acceptance with a code whose fix is Planning, because 03 §4 sends every acceptance commit through the
-  Planning PR.
+- **Where it runs (A2)**: a direct acceptance is Backlog work under every policy, like Backlog's other changes (01
+  §5.1, 03 §1), committed on the base checkout only (another slug's activity branch is refused). Before proposing it
+  the Host settles that it can push to the base (or that there is no remote); a protected base means Planning instead,
+  and a stranded acceptance commit is undone with `git revert`, never a reset. The Host runs `--check`, sweeps its own
+  acceptance session (a new `feedback` envelope at `collect-feedback`; zero observations is a valid PASS), runs the
+  command and commits the result on the base. Under `pull_request = required` the request states that the direction
+  gets no PR review, and the user may choose Planning for that draft instead.
 - **No run**: a direct acceptance has no Planning run, no `activity-effort` and no `worker` envelope; its sweep covers
   the acceptance session, and freshness stays an executor procedure as for every Planning run.
 - **Handoff guard**: for a bundle bound to `sdd-proposal`, `devkit spec proposal handoff` also requires the effective
   accepted `gate:plan-accept` record (the rule it already uses to carry it), refusing with a code of its own (working
-  name `SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED`) whose fix is to discard `dev-<slug>` and repair the acceptance where the
-  proposal lives with `accept` after the user's explicit acceptance. A single-file or unbound proposal, which can
-  carry no gate record, keeps the status-only rule.
+  name `SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED`, `INTERACTION`): its directive is to stop and ask the user, never to
+  record an acceptance unasked. On the user's explicit acceptance the Host repairs it where the proposal lives with
+  `accept` (on the base for a direct acceptance), merges the base into `dev-<slug>` and reruns the handoff; a worker
+  or Cloud Agent reports it as a problem instead. A single-file or unbound proposal, which can carry no gate record,
+  keeps the status-only rule.
 - **The note survives the handoff**: carried gate records keep the proposal's note after `PROP-<slug>`
   (`PROP-<slug>: <note>`) instead of replacing it, so a spec shows that its direction was accepted without Planning.
 - **Visibility**: the acceptance request shows "Planning: skipped (direct acceptance)" where a Planning acceptance

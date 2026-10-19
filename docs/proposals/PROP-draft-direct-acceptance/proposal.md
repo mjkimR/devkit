@@ -57,10 +57,9 @@ workflow_hash: sha256:90918c632715461d07f99f683b8381bdbe6381ad6689a7575a72c002c1
 ### 1.2 Hypothesis
 
 A direct acceptance, in which the user gives `plan-accept` on sight for an eligible draft during Backlog and one
-validated command records it on the base, removes the Planning branch and run for drafts that need no Planning in
-projects without a PR requirement, while keeping both human decisions explicit and recorded, keeping every
-acceptance under `pull_request = required` in its Planning PR, and keeping the proposal body, gates and provenance
-carried by the handoff.
+validated command records it on the base as Backlog work, removes the Planning branch, its PR and the Planning run for
+drafts that need no Planning, while keeping both human decisions explicit and recorded and keeping the proposal body,
+gates and provenance carried by the handoff.
 
 ## 2. Technical Spike Questions
 
@@ -71,16 +70,18 @@ carried by the handoff.
 - **Q2. Gates.** Open for the user (question `gates-in-one-exchange`): whether one request may carry `plan-intent`
   and `plan-accept` together for a draft without a recorded intent. Either way they are two records, each the user's
   explicit answer; neither is inferred from the other.
-- **Q3. Policy.** Open for the user (question `acceptance-point`). The recommended A2 is Backlog work on the base and
-  is offered only under `pull_request = auto`: under `required`, 03 §4 keeps every acceptance commit in the Planning
-  PR, so small drafts run Planning at `low` there as today. A3 keeps a one-commit Planning branch under every policy.
+- **Q3. Policy.** Open for the user (question `acceptance-point`). The recommended A2 is Backlog work on the base
+  under every policy, inside the existing Backlog exemption (01 §5.1, 03 §1); under `required` the request says the
+  direction gets no PR review and the user may choose Planning for that draft. A2a would offer it only under `auto`,
+  which needs its own rule and makes a policy key decide the flow structure (03 §1).
 - **Q4. Reclassification.** Open for the user (question `session-reclassification`). Reclassifying to a `spec` Unit
   is not needed: direct acceptance reaches the same Unit and keeps the body, provenance and the `plan-accept` record
   the closes depend on. The draft listed an `issue` field among the carried values; devkit-spec has none.
 - **Q5. Tooling.** Answered in `PADR-direct-acceptance-command-and-handoff-guard`: the `accept` command 01 §10
   already plans, with a `--direct` variant for an eligible draft, a read-only `--check` and a repair of an acceptance
-  without its gate record, records the acceptance through the engine in one step; the handoff of a bound bundle also
-  requires the gate record and keeps its note; the stage schema stays; `devkit spec proposal check` gets no mode.
+  without its gate record (after the user's explicit acceptance), records the acceptance through the engine in one
+  step; the handoff of a bound bundle also requires the gate record and keeps its note; the stage schema stays;
+  `devkit spec proposal check` gets no mode.
 - **Q6. Visibility.** Answered in the same PADR: the acceptance request shows "Planning: skipped (direct acceptance)"
   where a Planning acceptance shows its applied effort and support roles (the `sdd-proposal` gate rules), with
   `task_kind`, the `planning_effort` hint, the eligibility reason, the PADRs to be promoted and `dev_effort`.
@@ -89,24 +90,28 @@ carried by the handoff.
 
 ### 3.1 Direction under review
 
-Six ways, the status quo included, were compared ([options](materials/options-comparison.md), revised after three
+Seven ways, the status quo included, were compared ([options](materials/options-comparison.md), revised after four
 `challenger` passes); the user chooses (question `acceptance-point`). The recommendation is **A2**.
 
-- **A2. Backlog acceptance on the base, under `pull_request = auto`** (recommended): in Backlog the Host proposes
-  direct acceptance for an eligible draft (read-only `--check` first) with the eligibility reason, `task_kind` and the
-  effort hints. On the user's explicit acceptance it sweeps its own session (`collect-feedback`), runs
+- **A2. Backlog acceptance on the base** (recommended): in Backlog the Host proposes direct acceptance for an eligible
+  draft (read-only `--check` first; a missing `plan-intent` shows as pending when the request asks for both) with the
+  eligibility reason, `task_kind` and the effort hints, and under `pull_request = required` the note that the
+  direction gets no PR review. On the user's explicit acceptance it sweeps its own session (`collect-feedback`), runs
   `devkit spec proposal accept <slug> --by user --direct --note "<reason>"` on the base checkout and commits the result
-  as Backlog work. Development later starts `dev-<slug>` and runs `devkit spec proposal handoff` as for any accepted
-  proposal, in any mode (autohub included). Under `required` the command refuses a direct acceptance and the draft
-  runs Planning. It saves the branch, its worktree and setup, the merge, the `reviewing` commit and the worker record.
+  as Backlog work, under every policy like Backlog's other changes. Development later starts `dev-<slug>` and runs
+  `devkit spec proposal handoff` as for any accepted proposal, in any mode (autohub included). It saves the branch,
+  its merge or PR, the `reviewing` commit, the worker record and the question round; the saving per configuration is
+  in the comparison.
+- **A2a. A2 under `pull_request = auto` only**: keeps the Planning PR under `required`, but needs a rule of its own and
+  amendments of the Backlog exemption, because a policy key would decide whether a proposal gets a Planning branch.
 - **A3. A one-commit Planning branch**: no structural change, but against today's Planning at `low` it saves only a
-  commit, a record and a questions-only review.
+  commit, a record and a question round; dominated by D.
 - **D. No new path**: keep Planning at `low` for small drafts; ship only the handoff guard and the planned `accept`
-  command. The alternative to choose if the branch must stay.
+  command. The alternative to A2 if its saving does not justify the strategy edits.
 - **B** (acceptance on `dev-<slug>`) and **C** (reclassify to a spec Unit) are not recommended: B breaks 01 §4.7 and
   §7.4 and needs four guards, C loses the `plan-accept` record the closes depend on.
 
-Common to A2 and A3:
+Common to the direct-acceptance options:
 
 - **Record**: the `plan-accept` note states that Planning was skipped, why the draft was eligible and the confirmed
   `task_kind`, as a decision, never the conversation; the handoff carries the gate with its note
@@ -124,22 +129,26 @@ The strategy layer lives in the workbench repository; this package cannot change
 Development here, the workbench updates (for A2):
 
 - 01 §5.1 and Q55: replace "accepting without Planning is a follow-up (`PROP-draft-direct-acceptance`)" and "small
-  drafts run Planning at `low`" with the direct acceptance: Backlog may accept an eligible draft under
-  `pull_request = auto`; under `required` small drafts keep Planning at `low`.
+  drafts run Planning at `low`" with the direct acceptance: Backlog may accept an eligible draft, on the base checkout,
+  outside the worktree and PR policies like its other work.
 - 01 §4.7: a direct acceptance is the one proposal status change Backlog makes on the base without a merge, beside the
   draft edits it already makes; Planning and Development keep their own branches.
-- 01 §4.4 table and the §1 diagram: `accepted` may be set from `draft` by the Host at a direct acceptance in Backlog.
-- 01 §6.2 (or §5): the direct acceptance: eligibility, the read-only check, the sweep of the acceptance session, the
-  request contents (Planning skipped, `task_kind`, `planning_effort`, `dev_effort` reviewed by the Host as a Planning
-  executor would, 01 §2.3), no run, no worker envelope (the §8 `worker` row), no `activity-effort`.
+- 01 §1 (activity table and diagram) and §4.4 table: Backlog may give `plan-accept` for an eligible draft; `accepted`
+  may be set from `draft` by the Host at a direct acceptance.
+- 01 §6.2 (or §5): the direct acceptance: eligibility, the read-only check, base push access settled first, the sweep
+  of the acceptance session, the request contents (Planning skipped, `task_kind`, `planning_effort`, `dev_effort`
+  reviewed by the Host as a Planning executor would, 01 §2.3, and under `required` the missing PR review), no run, no
+  worker envelope (the §8 `worker` row), no `activity-effort`.
 - 01 §3 gate table and §2.2: `plan-accept` may be given on sight for an eligible draft, and it is the Planning
   branch's merge approval only when there is one; depth is still lowered only through a handoff after `plan-accept`,
   and this is the approved route for a queued draft.
+- 01 §4.2: acceptances are recorded with `devkit spec proposal accept`, other gates with `devkit workflow answer`.
 - 01 §5.5: `spec-next` may recommend direct acceptance for an eligible draft beside Planning.
 - 01 §10 (devkit-spec rows): the planned proposal status-transition CLI gains `--direct`, `--check` and the repair;
   new rows for the handoff guard and the carried note.
-- 03 §1: a direct acceptance is Backlog work, offered only under `pull_request = auto`; 03 §4 is unchanged.
-- No change to 01 §5.2, §7.1 or §7.4.
+- 03 §3 (Backlog row): a direct acceptance commits on the base checkout, not on another activity branch; 03 §4 (last
+  bullet): a direct acceptance is Backlog work and takes no PR, also under `required`.
+- No change to 01 §5.2, §7.1, §7.4 or 03 §1.
 
 ### 3.3 Impact in this repository
 
@@ -150,9 +159,10 @@ Development here, the workbench updates (for A2):
   an eligible draft), the command, its codes in the code table and its output.
 - `CAP-DLV-delivery-workflows` and the `sdd-proposal` body: the gate rules (a direct acceptance records `plan-accept`
   for a draft on the base, without `reviewing`; acceptances use the command) and the Planning feedback section (a
-  direct acceptance has no run or worker record; its sweep covers the acceptance session); the stage schema is
-  unchanged.
-- The `spec` skill: `references/backlog.md` (drop "until direct acceptance exists", add the path),
+  direct acceptance has no run or worker record; its sweep covers the acceptance session); in the schema only the
+  `direction-handoff` comment ("never for a draft") changes, while stages, checks and gates stay.
+- The `spec` skill: `references/backlog.md` (drop "until direct acceptance exists", add the path and its base-checkout
+  rule beside the Backlog commit rule),
   `references/classification.md` (§1 routing, §3 lowering rule; §4 "a new draft runs Planning anew" stays for
   supersede and depth-escalation drafts), `references/effort.md` (a direct acceptance has no activity-effort), the
   proposal row of the routing table, `references/worktree.md` (the accepted proposal may come from a direct
@@ -171,7 +181,6 @@ Development here, the workbench updates (for A2):
   reclassification asked in `session-reclassification`).
 - **Scope Excluded**: an autohub UI for direct acceptance (Backlog is `direct` only), the `reject` command 01 §10
   plans, and the strategy-layer documents themselves.
-- **Scope Excluded**: a direct acceptance under `pull_request = required`.
 
 ## 4. Lifecycle & Retirement Criteria
 
