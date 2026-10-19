@@ -51,11 +51,11 @@ plan: PLAN-repository-viewer
 
 ## Phase 3: Build, packaging and automation
 
-- [ ] **Task 3.1**: Committed app build as a tracked generated artifact, reproducible from the lockfile
+- [x] **Task 3.1**: Committed app build as a tracked generated artifact, reproducible from the lockfile
   - **_Boundary**: `packages/devkit-viewer/src/devkit_viewer/static/`, `.devkit/generated.toml`
   - _Requirements: AC-09, AC-15_
   - **Verification**: `uv run devkit generated check viewer-assets`
-- [ ] **Task 3.2**: Frontend commands, CI job, smoke and release wiring
+- [x] **Task 3.2**: Frontend commands, CI job, smoke and release wiring
   - **_Boundary**: `scripts/viewer.sh`, `justfile`, `scripts/smoke.sh`, `scripts/release.sh`, `.github/workflows/ci.yml`
   - _Requirements: AC-09, AC-14, AC-15, AC-16_
   - **Verification**: `just viewer lint`, `just viewer check`, `just smoke`

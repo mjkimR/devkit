@@ -37,6 +37,7 @@ base="https://github.com/$repository/releases/download/$tag"
 devkit_wheel=$(basename "$out"/devkit_agt-*.whl)
 advisory_wheel=$(basename "$out"/devkit_advisory-*.whl)
 spec_wheel=$(basename "$out"/devkit_spec-*.whl)
+viewer_wheel=$(basename "$out"/devkit_viewer-*.whl)
 cat > dist/release-notes.md <<EOF
 ## Install
 
@@ -49,6 +50,9 @@ uv add --dev "devkit-agt[search] @ $base/$devkit_wheel" "devkit-advisory @ $base
 
 # Spec-Driven Development extension (includes the required devkit and advisory wheels)
 uv add --dev "devkit-spec @ $base/$spec_wheel" "devkit-agt @ $base/$devkit_wheel" "devkit-advisory @ $base/$advisory_wheel"
+
+# Local read-only viewer of devkit repositories: devkit viewer serve (includes the required devkit and advisory wheels)
+uv add --dev "devkit-viewer @ $base/$viewer_wheel" "devkit-agt @ $base/$devkit_wheel" "devkit-advisory @ $base/$advisory_wheel"
 
 # devkit.advisory alone, as a runtime dependency of a library or service (standard library only)
 uv add "devkit-advisory @ $base/$advisory_wheel"
