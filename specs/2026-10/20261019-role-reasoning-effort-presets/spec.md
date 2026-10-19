@@ -4,105 +4,120 @@ title: Per-role reasoning effort presets
 summary: Presets a host reasoning effort in each spec role contract's host block (Claude Code effort, Codex model_reasoning_effort) so subagents run at a fixed effort per role without naming models.
 status: planned
 created: 2026-10-19
-related_capabilities: []
+related_capabilities:
+  - CAP-DLV-delivery-workflows
+  - CAP-DIST-agent-projections
 related_stories: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-role-reasoning-effort-presets] Per-role reasoning effort presets
 
 ## 1. Problem Statement & Motivation
 
-Handed off from proposal PROP-role-reasoning-effort-presets on 2026-10-19.
-- **Preserved Materials**: `docs/materials/2026-10/20261019-role-reasoning-effort-presets`
+Handed off from proposal PROP-role-reasoning-effort-presets on 2026-10-19; the decision is
+`ADR-role-effort-presets`.
 
+- **Preserved Materials**: `docs/materials/2026-10/20261019-role-reasoning-effort-presets` (`host-effort-semantics.md`:
+  the hosts' documented effort semantics).
 - **Origin**: split from `SPEC-high-effort-review-loop`. Passing a reasoning effort per call when `activity-effort`
   is `high` works only on Claude Code: Antigravity's host block has no effort key, and on Codex the review roles are
   `emulated`, so there is often no separate call to pass it to.
-- **Decided in Backlog**: preset the effort statically per role in the contract's host block, never tied to
-  `activity-effort`; name no model; leave Antigravity unset.
-- **Related**: `CAP-DLV-delivery-workflows` (§4.6 role contracts, model selection non-goal),
-  `CAP-DIST-agent-projections` (host key allowlist), `SPEC-high-effort-review-loop`.
-
-### 1. Background & Hypothesis
-
-#### 1.1 Problem
-
-- Every spec role contract carries an abstract `x-model-profile` (`light-medium`, `general-high`, `high-reasoning`)
-  that nothing reads, so each subagent runs at whatever reasoning effort the host defaults to.
-- Naming models in contracts would need an update on every model release, and Codex needs concrete model names.
-- The host key allowlists already accept a reasoning effort: `effort` for Claude Code and `model_reasoning_effort`
-  for Codex (`devkit/distribution/bundles/subagents.py`). No contract uses them.
-
-#### 1.2 Hypothesis
-
-Setting a model-independent reasoning effort per role, derived from its `x-model-profile`, makes the profile take
-effect on the hosts that support it, with no maintenance when models change.
+- **Problem**: every spec role contract carries an abstract `x-model-profile` (`light-medium`, `general-high`,
+  `high-reasoning`) that nothing reads, so each projected subagent runs at the host's default reasoning effort
+  (`medium` on the Claude 5.5 family). Naming models in contracts would need an update on every model release.
+- **Available mechanism**: the host key allowlists of `CAP-DIST-agent-projections` already accept a reasoning effort,
+  `effort` for Claude Code and `model_reasoning_effort` for Codex; no contract uses them.
+- **Expected outcome**: the review and research roles run at a fixed, model-independent reasoning effort on Claude
+  Code and Codex; the two workers keep running at the session's effort; a test keeps profile and preset in step.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Per-role reasoning effort presets so that system capabilities are extended.
+- **US-1**: As a Host agent delegating to a review or research role, I want the role's projected agent to carry a
+  reasoning effort that matches its model profile, so that a `code-reviewer` or `challenger` reasons at `high` and a
+  `scout` or `reconcile-reviewer` at `medium` without any model name to maintain.
+- **US-2**: As a user who picked a session effort, I want the `planning-worker` and `development-worker` to run at
+  that effort, so that a worker taking over the Host's work does not override my choice.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: model names in role contracts (`model` keys in any host block).
+   - **Rationale**: they would need an update on every model release; model choice stays with the runtime.
+2. **Scope Excluded**: a reasoning effort passed per call or derived from `activity-effort`.
+   - **Rationale**: it works only on Claude Code; on Codex the agent file wins over a spawn value and an `emulated`
+     role has no separate call (`ADR-role-effort-presets`).
+3. **Scope Excluded**: an Antigravity effort setting. Its host block has no effort key.
+   - **When to Reconsider**: Antigravity documents a per-agent reasoning effort key.
+4. **Scope Excluded**: values above `high` (`xhigh`, `max`, `ultra`).
+   - **When to Reconsider**: both hosts accept the value on the models in use (`ADR-role-effort-presets` §5).
+5. **Scope Excluded**: a preset for `planning-worker` or `development-worker`.
+6. **Scope Excluded**: changes to devkit's projection code or host key allowlists; both keys are already allowed.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+The mapping every scenario below refers to (`ADR-role-effort-presets`):
 
-## 5. Carried Proposal Notes
+| Role | `x-model-profile` | `claude-code` `effort` | `codex` `model_reasoning_effort` | `antigravity` |
+| --- | --- | --- | --- | --- |
+| `scout` | `light-medium` | `medium` | `medium` | unset |
+| `reconcile-reviewer` | `light-medium` | `medium` | `medium` | unset |
+| `code-reviewer` | `general-high` | `high` | `high` | unset |
+| `challenger` | `high-reasoning` | `high` | `high` | unset |
+| `planning-worker` | `general-high` | unset | unset (`unsupported`) | unset |
+| `development-worker` | `general-high` | unset | unset (`unsupported`) | unset |
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-01] Reviewer and research roles preset their effort in the Claude Code and Codex blocks
+- **Given** the role contracts in `packages/devkit-spec/src/devkit_spec/bundle/subagents/`
+- **When** each contract's YAML frontmatter is parsed
+- **Then** `hosts.claude-code.effort` and `hosts.codex.model_reasoning_effort` of `scout` and `reconcile-reviewer`
+  equal `medium`, those of `code-reviewer` and `challenger` equal `high`, and no host block of any of the four
+  carries a `model` key
 
-### 2. Technical Spike Questions
+### [AC-02] Workers and Antigravity carry no preset
+- **Given** the same contracts
+- **When** their frontmatter is parsed
+- **Then** neither `planning-worker` nor `development-worker` has an `effort` key under `claude-code` or a
+  `model_reasoning_effort` key under `codex`, and no contract's `antigravity` block has a key containing `effort`
 
-- **Q1. Values per role. Decided** (`answer-01`, `ADR-role-effort-presets`): only `low`, `medium` and `high` are
-  used. `scout` and `reconcile-reviewer` → `medium`; `code-reviewer` and `challenger` → `high`; `planning-worker`
-  and `development-worker` set no preset and run at the session's effort, like the Host whose work they take over.
-- **Q2. Host semantics. Answered** (`materials/host-effort-semantics.md`): Claude Code's agent `effort` and Codex's
-  agent `model_reasoning_effort` are documented, optional and accept these values. On Claude Code a per-call
-  `effort` overrides the preset and `CLAUDE_CODE_EFFORT_LEVEL` overrides both; on Codex the file value wins over a
-  spawn value. Without a preset a subagent runs at the session's or the model's default, which is `medium` on the
-  Claude 5.5 family.
-- **Q3. Emulated Codex roles. Decided** (`answer-01`): `CAP-DLV-delivery-workflows` §4.6 states in one sentence that
-  a role the main session runs itself (`emulated` or substituted) uses the session's effort; the preset applies only
-  to a spawned projected agent.
-- **Q4. Profile and preset drift. Decided** (`answer-01`): `packages/devkit-spec/tests/test_role_contracts.py`
-  asserts the Q1 mapping for every role contract.
+### [AC-03] The challenger's host comment names the preset instead of an invocation-time model choice
+- **Given** `challenger.md`
+- **When** its frontmatter text is read
+- **Then** it does not contain `Choose a high-reasoning model at invocation time`, and the comment above its
+  `claude-code` block states that the reasoning effort is preset and the model is left to the runtime
 
-### 3. Proposed Design & Impact
+### [AC-04] A drift test pins the mapping for every role contract
+- **Given** `packages/devkit-spec/tests/test_role_contracts.py` with one table of role → `x-model-profile` and
+  expected preset
+- **When** `just test devkit-spec` runs
+- **Then** the test passes on the contracts above, and it fails when a contract's profile or preset differs from its
+  table entry, when a contract file has no table entry, or when a table entry has no contract file
 
-- Role contracts (`packages/devkit-spec/src/devkit_spec/bundle/subagents/`): `scout.md` and `reconcile-reviewer.md`
-  set `effort: medium` in `claude-code` and `model_reasoning_effort: medium` in `codex`; `code-reviewer.md` and
-  `challenger.md` set `high` in both. Every reviewer's `codex` block is `emulated`, so all four get the Codex key.
-  `planning-worker.md` and `development-worker.md` stay unset (their `codex` block is `unsupported` anyway).
-  Antigravity stays unset. The `challenger` host comment "Choose a high-reasoning model at invocation time" is
-  replaced by one that names the preset and leaves the model to the runtime.
-- `CAP-DLV-delivery-workflows`: the model-selection non-goal (§2) keeps model choice with the runtime and states that
-  role contracts preset a reasoning effort per role, independent of `activity-effort`. §4.6 lists the preset keys
-  among the host-block keys, the role table gains a "Reasoning effort" column (`medium`, `high`, or "session" for the
+### [AC-05] The presets reach the projected agent files
+- **Given** the changed contracts in this repository
+- **When** `devkit sync` runs
+- **Then** `.claude/agents/code-reviewer.md` and `.claude/agents/challenger.md` carry `effort: high`,
+  `.claude/agents/scout.md` and `.claude/agents/reconcile-reviewer.md` carry `effort: medium`,
+  `.codex/agents/<role>.toml` of the same four roles carries `model_reasoning_effort` with the same value,
+  `.claude/agents/development-worker.md` and `.claude/agents/planning-worker.md` carry no `effort` key, and
+  `devkit sync --check` exits 0 afterwards
+
+### [AC-06] The Living Spec states the presets and their reach
+- **Given** `CAP-DLV-delivery-workflows`
+- **When** its §2 non-goals and §4.6 are read
+- **Then** the model-selection non-goal keeps model choice with the runtime and states that role contracts preset a
+  reasoning effort per role, independent of `activity-effort`; §4.6 names `effort` and `model_reasoning_effort` as
+  the preset keys, its role table has a "Reasoning effort" column (`medium`, `high`, or "session" for the two
   workers), and one sentence states that a role the main session runs itself (Codex `emulated` or a main-session
-  substitute) uses the session's effort: the preset applies only to a spawned projected agent.
-- Test (`packages/devkit-spec/tests/test_role_contracts.py`): one table of role → `x-model-profile` and expected
-  preset, asserted against every contract's frontmatter (`effort` under `claude-code`, `model_reasoning_effort`
-  under a `codex` block that is not `unsupported`, nothing under `antigravity`); a contract missing from the table,
-  or a table entry with no contract, fails.
-- No change to devkit's projection code or allowlists; both keys are already allowed
-  (`devkit/distribution/bundles/subagents.py`).
-- **Scope Excluded**: model names in contracts; effort passed per call or tied to `activity-effort`; Antigravity;
-  values above `high`.
-- **Decisions**: `decisions/PADR-role-effort-presets.md`.
+  substitute) uses the session's effort
 
-### 4. Lifecycle & Retirement Criteria
+## 5. Assumptions
 
-- Preliminary decisions are recorded as PADRs in `decisions/`; research goes in `materials/`.
-- On acceptance (`plan-accept`): record `gate:plan-accept`, set `status: accepted` and merge the Planning branch;
-  Development starts with `devkit spec proposal handoff role-reasoning-effort-presets`.
-- On rejection: change only `status: rejected`, with the user's reason in the commit message; a later hygiene pass
-  writes the rejection ADR and deletes the proposal directory.
-
+- The proposal named `decisions/PADR-role-effort-presets.md`; the handoff promoted it to `ADR-role-effort-presets`,
+  which this spec cites instead.
+- The proposal's premises hold on the current base (after the package split): the allowlists still include `effort`
+  and `model_reasoning_effort` (now in `packages/devkit-dist/src/devkit/distribution/bundles/subagents.py`), every
+  reviewer's `codex` block is `emulated` and both workers' `codex` blocks are `unsupported`.
+- `CAP-DIST-agent-projections` already lists both keys in its role contract format and needs no change unless the
+  reconcile finds otherwise.
+- The drift test reads only contract frontmatter; projection rendering of allowlisted keys is already covered by
+  devkit's distribution tests and is confirmed here by the `devkit sync` run of AC-05.
