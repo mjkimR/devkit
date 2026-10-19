@@ -89,21 +89,31 @@ finding of that round together, whatever its severity.
 | Item | Rule |
 | --- | --- |
 | Round | A fresh reviewer instance. Round 1 reviews the whole change; each later round reviews every fix made since the previous round and what it affects. Input: the earlier rounds' findings, the round's diff scope and the effort. |
-| Fixing | The implementer fixes every finding of the round, P1, P2 and P3 together (a P2 or P3 may be waived with a reason), and closes the round: `reverify` for code; for reconcile, a new `reconcile-check` naming the earlier one; for Planning, the next `challenger-NN` summary or the `worker` envelope's summary. |
+| Fixing | The implementer fixes every finding of the round, P1, P2 and P3 together (a P2 or P3 may be waived with a reason), and closes the round: `reverify` for code; for reconcile, a new `reconcile-check`; for Planning, the next `challenger-NN` summary or the `worker` envelope's summary. |
 | Next round | Runs when any fix of the batch fails the minor-fix conditions (§3.2). The whole batch goes to the next round, never a subset. |
 | End | The round returns no finding, or every fix of the batch meets §3.2 and is self-verified. |
-| Round count | Counted across `devkit workflow return` within one segment, from the round envelopes' summaries; a return does not reset it. |
+| Round count | The implementer starts each round's envelope summary with a fixed marker, `round <N>;` (and `closes reconcile-check-<NN>;` for a closing reconcile check), so counts are read from summaries, never from new fields. Counted across `devkit workflow return` within one segment; a return does not reset it. |
 
 Hand-over to the user:
 
 | Cause | Unit path (worker or Host) | Session |
 | --- | --- | --- |
-| The round cap (3 rounds after the initial review) is reached and a P1 is still found | `problem` in the `worker` envelope; recovery names the open P1s | Reported in the conversation; not integrated |
+| At the cap round (the third after the initial review), the batch does not meet §3.2 | `problem` in the `worker` envelope; recovery names the open findings | Reported in the conversation; not integrated |
 | The same P1 recurs after its fix (marked `recurs:`) | Same | Same |
 | A P1 the implementer holds invalid, still asserted after one more round given the implementer's counter-evidence (tests or output) | `questions` entry with the reviewer's and the implementer's positions as options | Asked in the conversation |
 
-When the cap is reached with only P2 or P3 findings, the implementer fixes them and ends the loop, recording the
-closures as self-verification.
+The cap only limits further rounds. At the cap round a batch that fully meets §3.2 ends the loop whatever its
+severity, a minor-fix P1 included; any batch that would need another round is handed over, P2 and P3 included unless
+each is waived with a reason. No fix leaves `high` unreviewed unless it is provably minor.
+
+After a hand-over:
+
+- A P1 the user rules invalid is closed with `reverify --waive <N>=<reason>` citing the `answer` envelope: the only
+  waiver a P1 may carry. For reconcile and Planning the same goes into the new `reconcile-check` or the `worker`
+  summary.
+- When the user resolves a cap or recurrence problem by asking for a fix, that fix gets one further fresh round
+  outside the cap, named by the `resolution` envelope. Its outcome follows the rules above; a recurrence of the same
+  P1 hands over again.
 
 This is not the `exception` stage; stages, checks and gates are unchanged. The stop reasons join the problem rule
 of `CAP-DLV-delivery-workflows`.
@@ -158,10 +168,13 @@ no advice. If the user keeps `session`, the work runs at `high` as defined.
 
 ### 3.7 Impact
 
-- **Decision**: `PADR-bounded-high-effort-review-loop`, promoted to an ADR that supersedes
-  `ADR-medium-review-delegation`: it restates the `medium` rules unchanged and adds the `high` rules. Development
-  sets `supersedes` on the new ADR and `status: superseded` with `superseded_by` on the old one (its frontmatter
-  only). `ADR-reconcile-check-envelope` keeps holding: the initial reconcile verification at `high` stays independent.
+- **Decision**: `PADR-bounded-high-effort-review-loop` (frontmatter `supersedes: ADR-medium-review-delegation`,
+  carried by the promotion), an ADR that restates the `medium` and `low` rules unchanged and adds the `high` rules.
+  Development sets only `status: superseded` and `superseded_by` in the old ADR's frontmatter. Like the ADR it
+  replaces, it supplements the verifier assignment of `ADR-reconcile-check-envelope` (`medium` may self-verify the
+  initial reconcile under the stated conditions; `high` may self-verify a batch of minor reconcile fixes); that ADR's
+  envelope separation and stage check stay intact, and the initial reconcile verification at `high` stays
+  independent.
 - **`devkit-spec` bundle** (`packages/devkit-spec/src/devkit_spec/bundle/`):
   - `skills/spec/references/effort.md` (table, rules, reclassification advice), `skills/spec/references/envelope.md`
     (severity example and values)
@@ -184,7 +197,9 @@ Decided by the user in Planning (`envelopes/answer-01.yaml`):
 - A contested P1 gets one more fresh round with the implementer's counter-evidence and goes to the user only if
   asserted again.
 - The new ADR supersedes `ADR-medium-review-delegation`.
-- The round cap is 3 rounds after the initial review.
+- The round cap is 3 rounds after the initial review. The cap only limits further rounds: at the cap a batch that
+  is not fully minor is handed over, whatever its severity (decided in Planning from the rule that no non-minor fix
+  leaves `high` unreviewed).
 - Severity is required on every finding at every effort.
 
 ## 4. Lifecycle & Retirement Criteria

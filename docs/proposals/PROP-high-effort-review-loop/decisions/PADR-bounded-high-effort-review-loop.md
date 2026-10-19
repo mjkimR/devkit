@@ -4,6 +4,7 @@ title: Bounded high-effort review loop
 summary: At high, each fresh review round takes every fix since the previous one, findings are fixed together, the loop ends when a round finds nothing or every fix is minor, and persistent, recurring or contested P1s go to the user via worker questions and problems.
 proposal: PROP-high-effort-review-loop
 status: draft
+supersedes: ADR-medium-review-delegation
 created_at: 2026-10-19
 ---
 
@@ -51,11 +52,14 @@ Option 2, as specified in `PROP-high-effort-review-loop` §3.1 to §3.5:
   unchanged.
 - Recurrence is a fixed `recurs:` prefix in `issue`; out-of-scope findings are derived from the round's diff files.
 - Round counts survive `devkit workflow return` within a segment.
-- A P1 still found at the round cap, or a recurring P1, is a `worker` problem; at the cap with only P2/P3 the
-  implementer fixes them and ends the loop; a contested P1 still asserted after one counter-evidence round is a `worker`
+- The cap (3 rounds after the initial review) only limits further rounds: at the cap round a fully minor batch ends
+  the loop, any other batch is a `worker` problem whatever its severity (P2/P3 may be waived with a reason); a
+  recurring P1 is a `worker` problem too; a contested P1 still asserted after one counter-evidence round is a `worker`
   question; a session reports either in the conversation and does not integrate. This is not the `exception` stage.
 
-- The round cap is 3 rounds after the initial review.
+- A P1 the user rules invalid after a hand-over is closed by a waiver citing the `answer` envelope, the only P1
+  waiver; a fix the user asks for after a cap or recurrence problem gets one further fresh round outside the cap.
+- Round numbers live in a fixed summary marker (`round <N>;`, `closes reconcile-check-<NN>;`), never in new fields.
 - Severity is required on every finding at every effort; it has no effect on checks.
 - This decision supersedes `ADR-medium-review-delegation`; its `high` clause is replaced by the rules above and its
   other rules are carried over unchanged:
@@ -80,5 +84,8 @@ Option 2, as specified in `PROP-high-effort-review-loop` §3.1 to §3.5:
 - `high` costs a subagent round per batch that holds a non-minor fix; a batch of trivial fixes closes with recorded
   evidence.
 - Reviewer payloads grow by the earlier findings and the round's diff scope.
+- Like `ADR-medium-review-delegation`, this decision supplements the verifier assignment of
+  `ADR-reconcile-check-envelope`: `medium` may self-verify the initial reconcile under the stated conditions and
+  `high` may self-verify a batch of minor reconcile fixes.
 - The `medium` and `low` rules are unchanged in substance; `ADR-reconcile-check-envelope` keeps holding, since the initial reconcile
   verification at `high` stays independent.
