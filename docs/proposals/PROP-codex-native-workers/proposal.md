@@ -2,7 +2,7 @@
 id: PROP-codex-native-workers
 title: Codex native workers with command-scoped approvals
 summary: "Enable Codex Planning and Development workers through native subagents with explicit worktree paths, command-scoped approvals and validated committed results."
-status: draft
+status: reviewing
 created_at: 2026-10-19
 target_area: delivery/
 priority: high
