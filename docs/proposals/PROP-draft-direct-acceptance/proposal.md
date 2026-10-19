@@ -2,7 +2,7 @@
 id: PROP-draft-direct-acceptance
 title: Direct acceptance of drafts that need no Planning
 summary: "Lets the user accept a settled draft in Backlog on the base, without a Planning branch or run, through the planned accept command recording plan-accept with a Planning-skipped note; a session-depth draft may instead be deleted at pickup and done as a session on the user's decision."
-status: reviewing                      # draft | reviewing | accepted | rejected
+status: accepted                       # draft | reviewing | accepted | rejected
 created_at: 2026-10-16
 target_area: capabilities/delivery/
 priority: medium                      # critical | high | medium | low
