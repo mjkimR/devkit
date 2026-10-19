@@ -24,7 +24,7 @@ plan: PLAN-repository-viewer
   - **_Boundary**: `packages/devkit-viewer/src/devkit_viewer/repositories.py`,
     `packages/devkit-viewer/src/devkit_viewer/errors.py`, `packages/devkit-viewer/tests/test_repositories.py`
   - _Requirements: AC-02, AC-03_
-- [ ] **Task 1.4**: HTTP server: API routes, JSON errors, Host check, GET only, static files
+- [x] **Task 1.4**: HTTP server: API routes, JSON errors, Host check, GET only, static files
   - **_Boundary**: `packages/devkit-viewer/src/devkit_viewer/server.py`, `packages/devkit-viewer/tests/test_server.py`
   - _Requirements: AC-01, AC-04, AC-05, AC-06, AC-07, AC-08, AC-09_
 - [x] **Task 1.5**: `devkit viewer serve`: the sentinel line, stop on a signal, port refusal
@@ -33,19 +33,19 @@ plan: PLAN-repository-viewer
 
 ## Phase 2: Frontend
 
-- [ ] **Task 2.1**: Frontend project and the viewer moved from autohub as a library, with document indexing tests
+- [x] **Task 2.1**: Frontend project and the viewer moved from autohub as a library, with document indexing tests
   - **_Boundary**: `packages/devkit-viewer/frontend/package.json`, `packages/devkit-viewer/frontend/package-lock.json`,
     `packages/devkit-viewer/frontend/*.config.*`, `packages/devkit-viewer/frontend/tsconfig.json`,
     `packages/devkit-viewer/frontend/.prettier*`, `packages/devkit-viewer/frontend/src/lib/`, `.gitignore`
   - _Requirements: AC-13, AC-14_
   - **Verification**: `just viewer test`, `just viewer pack`
-- [ ] **Task 2.2**: Roadmap model and view: status order, readiness, members across branches
+- [x] **Task 2.2**: Roadmap model and view: status order, readiness, members across branches
   - **_Boundary**: `packages/devkit-viewer/frontend/src/lib/roadmap.ts`,
     `packages/devkit-viewer/frontend/src/lib/roadmap.test.ts`,
     `packages/devkit-viewer/frontend/src/lib/RoadmapView.svelte`,
     `packages/devkit-viewer/frontend/src/lib/SddViewer.svelte`, `packages/devkit-viewer/frontend/src/lib/repository.ts`
   - _Requirements: AC-11, AC-12_
-- [ ] **Task 2.3**: The served app: repository and branch switch
+- [x] **Task 2.3**: The served app: repository and branch switch
   - **_Boundary**: `packages/devkit-viewer/frontend/index.html`, `packages/devkit-viewer/frontend/src/app/`
   - _Requirements: AC-10_
 

@@ -1,0 +1,7 @@
+# Tracked generated files (CAP-GEN-tracked-artifacts): devkit generated check|regen|resolve.
+
+# The page devkit viewer serve ships, built from the frontend sources and lockfile (needs Node and npm).
+[artifacts.viewer-assets]
+paths = ["packages/devkit-viewer/src/devkit_viewer/static/**"]
+inputs = ["packages/devkit-viewer/frontend/**"]
+command = "npm ci --no-audit --no-fund --prefix packages/devkit-viewer/frontend && npm run --prefix packages/devkit-viewer/frontend build:app"
