@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: feature, proposal depth; effort hints set in Backlog
+by: user
+at: '2026-10-19T02:00:49.523470Z'
