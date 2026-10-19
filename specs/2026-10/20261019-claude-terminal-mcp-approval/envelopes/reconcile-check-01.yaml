@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-18T23:20:32.940150Z'
+status: completed
+summary: 'Low-effort self-check: every changed docs/ file is a reconcile target, the guides mirror CAP-INT and CAP-HOST, and no code or entrypoint changed.'
+findings: []
+checks:
+  coverage: PASS 4 docs targets, guides mirrored
+diff_scope:
+  base: 8fc64ef7159aa4c883cc71a3f868ae9a336bb400
+  head: 84de1bc73c26b799c8c32c47aad87625a0907f6e
