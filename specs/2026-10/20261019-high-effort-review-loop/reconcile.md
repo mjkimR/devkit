@@ -13,8 +13,7 @@ targets:
     resolution: waived
     rationale: "It defines no plan-accept request content: the request and its gap report live in the sdd-proposal body and rule 15 of CAP-DLV-delivery-workflows, where the missing-scout gap was added. Its effort-hint and handoff rules are unchanged."
   - file: docs/decisions/2026-10/20261016-medium-review-delegation.md
-    resolution: waived
-    rationale: "Not reflected in this Development turn: its body stays as accepted (ADRs are append-only), and the frontmatter edit the supersede requires (status superseded, superseded_by ADR-bounded-high-effort-review-loop) is outside this turn's write scope. It is an open item for the Host: the integrate stage (docs authority for the reflection the approved change requires) makes the edit and changes this target to modified."
+    resolution: modified
 ---
 
 # Reconcile: `SPEC-high-effort-review-loop`
@@ -37,9 +36,9 @@ targets:
   - Summary: names the bounded high-effort loop and P1-P3 severity.
 - `CAP-DLV-workflow-envelopes`: the example severity is `P2`, and the severity bullet states that the engine validates
   nothing beyond a non-empty string while the `spec` bundle requires and defines the levels. No schema change.
-- Open for the Host: `ADR-medium-review-delegation` still says `status: accepted` without `superseded_by`. The waived
-  target above is a deferred edit, not a no-impact claim; until the integrate stage makes it, the two ADRs' `high`
-  clauses conflict and the supersede link is one-sided (`reconcile-check-01` finding 1).
+- `ADR-medium-review-delegation`: frontmatter only, set in the integrate stage: `status: superseded` and
+  `superseded_by: ADR-bounded-high-effort-review-loop`, so the supersede link runs both ways; the body stays as
+  accepted (`reconcile-check-01` finding 1).
 - `ADR-bounded-high-effort-review-loop`: promoted by the handoff commit on this branch; its status (`accepted`) and
   consequences match the implementation, so this turn did not edit it.
 
