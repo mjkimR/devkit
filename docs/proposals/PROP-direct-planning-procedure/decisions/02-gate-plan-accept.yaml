@@ -1,0 +1,9 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: direction-handoff
+note: direction of both PADRs (Q1, Q2) accepted as presented; dev_effort medium; Development
+  before PROP-envelope-record-gaps
+by: user
+at: '2026-10-19T06:13:26.423090Z'
