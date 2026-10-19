@@ -355,12 +355,12 @@ The workers exist for `local-orchestrated` mode (`spec-orchestrate`, user-invoke
 `session` depth. Each is one-shot: it runs one turn of one activity in that activity's devkit worktree, using absolute
 paths and `git -C <worktree>` because no host gives a subagent its own working directory, runs its role subagents
 nested (Host → worker → role; Claude Code tool `Agent`) and never ends its turn while one is still running, keeps
-scratch files in its own payload-named directory or the worktree, writes its own records, commits at every stage boundary and,
+scratch files in an ignored path inside its worktree, writes its own records, commits at every stage boundary and,
 when it stops on questions or a problem, makes an emergency commit of the unfinished work with its `worker` envelope.
 It never reverts, closes, raises the depth or narrows the scope. The `development-worker` runs from the stage
 `devkit workflow next` names up to the final change report; the `planning-worker` takes a draft proposal toward
-`plan-accept`, collecting its questions in one round; the Host restates them for the user (what each answer decides,
-what each option leads to) rather than relaying the worker's wording. The Host validates the cumulative committed range from the
+`plan-accept`, collecting its questions in one round. The Host restates either worker's questions for the user (what
+each answer decides, what each option leads to) rather than relaying the worker's wording. The Host validates the cumulative committed range from the
 unit's last accepted head; a range it rejects is a problem in the Host's own `worker` envelope, which blocks the unit
 from review and integration without discarding anything until a resolution names it
 (`ADR-worker-delivers-committed-result`, `ADR-run-records-and-activity-branches`). Host statuses: Claude Code
