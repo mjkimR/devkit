@@ -6,7 +6,7 @@ the project selects it with `devkit add`, and a preset picks its assets.
 
 | Bundle | Presets (default first) | Contents |
 | --- | --- | --- |
-| `response-style` | `all` | Concise user-facing replies with configurable conversation language |
+| `response-style` | `all` | Answer-first user-facing replies that keep decision-critical facts, with configurable conversation language |
 | `host-observer` | `all` | Codex lifecycle hook registrations using devkit's metadata-only observer; `CAP-HOST-lifecycle-observation` |
 
 ```bash
@@ -36,8 +36,9 @@ rules. See `CAP-DIST-content-packages` and the
 
 ## Response style
 
-`devkit add response-style` installs the `response-style` skill and an `AGENTS.md` reminder to read and apply it
-before responding. Configure the default conversation language before syncing (the default `auto` follows the current request):
+`devkit add response-style` installs the `response-style` skill and an `AGENTS.md` line that every session sees: the
+core rule (answer first, never drop a number, condition or risk the user needs, cut the rest) and a reminder to read
+and apply the skill before responding. Configure the default conversation language before syncing (the default `auto` follows the current request):
 
 ```toml
 [bundles.response-style.variables]

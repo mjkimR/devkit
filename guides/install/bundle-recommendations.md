@@ -29,7 +29,7 @@ recommend comes from it.
 | `authoring` (built in, `devkit-agt`) | The root `AGENTS.md` or `CLAUDE.md` is long or grows often. | `agent-guide-authoring` |
 | `authoring` (built in, `devkit-agt`) | Both of the above. | Default `all` |
 | `advisory:python` (built in) | The project depends on `devkit-advisory` at runtime, or builds Python CLIs that agents consume. | Adds the Python library guide and `RULE-advisory-unique-code` (one code per condition, run by `devkit-agt`'s rule engine) to the auto-selected protocol guide. |
-| `response-style` (`devkit-catalog`) | The user wants concise replies or a configurable default conversation language. | Default `all`: the `response-style` skill and an `AGENTS.md` reminder; `[bundles.response-style.variables] language = "ko"` selects Korean. |
+| `response-style` (`devkit-catalog`) | The user wants concise replies or a configurable default conversation language. | Default `all`: the `response-style` skill and an `AGENTS.md` line with its core rule and a reminder to read it; `[bundles.response-style.variables] language = "ko"` selects Korean. |
 | `host-observer` (`devkit-catalog`) | The user wants to validate Codex CLI lifecycle hook delivery. | Default `all`: five metadata-only observer hooks; requires devkit on the host PATH and separate host trust review. |
 
 With `devkit-dist` alone, recommend no `devkit-agt` bundle and no rule asset (`advisory:python`): nothing runs them

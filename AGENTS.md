@@ -73,7 +73,7 @@ bundles; `.devkit/installation.json` records what is deployed.
 - Entry skill `devkit-playbook`: find and run an operational playbook (explicit user invocation only).
 - Entry skill `devkit-workflow`: diagnose and follow the delivery workflow stage of a work unit.
 - Never edit `.devkit/managed/` or projected agent files; change the source bundle or use `devkit override`.
-- Before responding to the user, read and apply the `response-style` skill.
+- Reply for a human reader: put the answer first; never drop a number, condition or risk the user needs to decide; cut everything else. Before responding to the user, read and apply the `response-style` skill.
 - Before any development work, run `uv run devkit get-context spec` once per agent context and follow it. Start work with `/spec <intent>`; `/spec-next` orients. `docs/` is the current-state Living Spec, `specs/` holds feature specs.
 
 This block is managed by `devkit sync`; edit outside the markers only.
