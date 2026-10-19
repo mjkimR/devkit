@@ -1,7 +1,7 @@
 ---
 id: CAP-HARN-agent-guidance
 title: Agent Guidance Assets
-summary: "Agent guidance deployed by the spec bundle, including delivery skills, worker contracts, feedback capture and preservation, and an opt-in docs skeleton whose documents remain discoverable after installation."
+summary: "Agent guidance deployed by the spec bundle, including delivery skills, worker contracts, feedback capture and preservation, terminology guidance, and an opt-in docs skeleton with a five-column glossary whose documents remain discoverable after installation."
 area: harness
 status: active
 created_at: 2026-10-13
@@ -129,7 +129,7 @@ The constitution's sections:
 | Asset | Read before |
 | --- | --- |
 | `contract-authoring` | Authoring or reviewing specifications, acceptance criteria, policies, instructions, rules or workflows: RFC 2119 wording, measurable contracts, Non-Goals, examples (policy exceptions are in the spec constitution). |
-| `living-spec-writing` | Authoring, editing or reviewing `docs/` or `specs/`: current-state writing, history placement, completed specs, traceability, summaries, ID references. |
+| `living-spec-writing` | Authoring, editing or reviewing `docs/` or `specs/`: current-state writing, history placement, completed specs, traceability, summaries, ID references, and terminology and the glossary: eight domain-neutral naming rules in its Glossary section (`ADR-terminology-guidance-lives-in-living-spec-writing`) that inform naming, enforce nothing and do not authorize renaming code, APIs or schemas. |
 
 The `spec-pointer` line in the root `AGENTS.md` block: run `uv run devkit get-context spec` once per agent context
 before development work; start work with `/spec <intent>`, orient with `/spec-next`; `docs/` is the current-state
@@ -238,6 +238,13 @@ docs/
 
 The directory READMEs state each directory's naming and authoring conventions and point at `devkit spec list` for
 discovery instead of catalog tables.
+
+The seeded `glossary.md` table is `Term | Definition | Owner | Avoid | Code identifiers` (`ADR-seeded-glossary-columns`):
+the definition also states what a term excludes, `Owner` is the defining document ID or owning component, `Avoid` lists
+rejected synonyms (also synonyms of the term's cluster in `glossary.yaml`) and `Code identifiers` the matching fields,
+types and paths. Its "Avoided Generic Nouns" section holds the project's additions to the `living-spec-writing` default
+list and its accepted exceptions, and the file points to that instruction. A project-owned glossary with older columns
+is not migrated; the instruction's fallback records the same fields in its existing cells.
 
 Every seeded ID-bearing document MUST parse without document-index problems and resolve by its declared ID.
 The package regression test verifies all seeded architecture IDs and preservation of customized content. The
