@@ -41,4 +41,4 @@ SPEC-hook-driven-integration-cleanup AC-06 & Non-Goal 3:
 "pull_request = 'required' fails closed with WORKTREE_PR_POLICY."
 ```
 
-- **Disposition**: `PROP-integration-follow-ups`: drafted in Backlog together with the other two deferred integration extensions, now that ask-mode integration has been used in real workflows.
+- **Disposition**: `PROP-integration-pull-request-cleanup`: split out of `PROP-integration-follow-ups` in its Planning.

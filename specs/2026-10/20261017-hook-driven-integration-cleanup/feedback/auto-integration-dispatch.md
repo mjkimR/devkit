@@ -10,7 +10,7 @@ agent: antigravity
 origin: agent
 severity: workaround
 recurring: false
-status: promoted
+status: open
 created_at: 2026-10-17
 ---
 
@@ -42,4 +42,4 @@ Rationale: These are explicitly retained follow-ups that depend on first verifyi
 When to Reconsider: Once the tracked follow-up items (FB-auto-integration-dispatch, FB-pr-remote-and-squash-integration, FB-multi-host-integration-ergonomics) meet their restart conditions."
 ```
 
-- **Disposition**: `PROP-integration-follow-ups`: drafted in Backlog together with the other two deferred integration extensions, now that ask-mode integration has been used in real workflows.
+- **Disposition**: open. Split out of `PROP-integration-follow-ups` in its Planning: it stays open until the user decides whether a policy may grant merge and deletion authority, which `ADR-integration-approval-asserted` currently rules out.
