@@ -1,0 +1,9 @@
+request: return:build-verify
+kind: return
+action: accept
+workflow: sdd-spec-feature
+stage: build-verify
+note: Host full-suite validation in worker-02.yaml found two stale Codex projection
+  assertions; recover within the accepted contract and tests boundary.
+by: host
+at: '2026-10-19T08:21:22.672207Z'

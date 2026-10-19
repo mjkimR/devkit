@@ -1,0 +1,13 @@
+kind: resolution
+stage: build-verify
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T08:22:26.347891Z'
+status: completed
+summary: Replaced stale sync-level Codex worker absence assertions with parsed TOML metadata, emulated boundary warning and full-body checks while retaining Claude Code and Antigravity projection coverage. Focused workflow and role-contract tests now pass; Host reruns the full suite on the final reviewed head.
+findings: []
+checks:
+  tests: 'PASS 85 tests: UV_NO_SYNC=1 just test devkit-spec tests/test_workflows.py tests/test_role_contracts.py'
+  lint: PASS UV_NO_SYNC=1 just lint-check devkit-spec
+  types: PASS UV_NO_SYNC=1 just check devkit-spec; 0 errors, 0 warnings
+resolves: worker-02.yaml

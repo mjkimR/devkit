@@ -8,6 +8,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -53,11 +54,21 @@ def test_every_role_is_projected_for_every_agent(synced: Path) -> None:
 
 
 @pytest.mark.parametrize("worker", ["development-worker", "planning-worker"])
-def test_a_worker_is_projected_only_where_it_can_reach_a_worktree(synced: Path, worker: str) -> None:
-    assert (synced / f".devkit/managed/spec/subagents/{worker}.md").is_file()
+def test_a_worker_is_projected_with_its_host_execution_contract(synced: Path, worker: str) -> None:
+    source = synced / f".devkit/managed/spec/subagents/{worker}.md"
+    assert source.is_file()
     assert (synced / f".claude/agents/{worker}.md").is_file()
     assert (synced / f".agents/agents/{worker}.md").is_file()
-    assert not (synced / f".codex/agents/{worker}.toml").exists()
+    projection = tomllib.loads((synced / f".codex/agents/{worker}.toml").read_text(encoding="utf-8"))
+    assert set(projection) == {"name", "description", "sandbox_mode", "developer_instructions"}
+    assert projection["name"] == worker
+    assert projection["sandbox_mode"] == "workspace-write"
+    prompt = projection["developer_instructions"]
+    assert "Host projection: emulated." in prompt
+    assert "The host does not enforce the contract's boundaries itself" in prompt
+    body = source.read_text(encoding="utf-8").split("---\n", 2)[2].lstrip("\n")
+    assert prompt.endswith(body.rstrip("\n") + "\n")
+    assert "## Procedure" in prompt and "## Codex execution and permissions" in prompt
 
 
 def test_no_skill_is_projected_for_a_procedure_only_a_role_runs(synced: Path) -> None:

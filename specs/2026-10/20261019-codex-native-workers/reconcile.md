@@ -28,3 +28,8 @@ No accepted requirement is deferred. Wider host/version behavior, fresh-host nam
 failed emergency preservation remain evidence limits rather than added live-validation requirements. Existing
 `FB-native-worker-command-scoped-approvals` and `FB-verification-sync-requires-network` cover the repeated access and
 verification friction; do not duplicate or edit those files from this unit.
+
+The recovery of `envelopes/worker-02.yaml` changes only the existing sync-level regression assertion and unit
+records. It verifies the already reflected Codex emulated/workspace-write contract and complete projected body,
+while retaining both other-host projections. It adds no behavior, constraint, target, domain term or entrypoint;
+the resolved Living Spec targets therefore remain unchanged.
