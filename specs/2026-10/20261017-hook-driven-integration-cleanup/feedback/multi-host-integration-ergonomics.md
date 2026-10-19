@@ -10,7 +10,7 @@ agent: antigravity
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-17
 ---
 
@@ -39,3 +39,5 @@ created_at: 2026-10-17
 SPEC-hook-driven-integration-cleanup Non-Goal 3 & spec-integrate/SKILL.md Step 5:
 "Fallback / manual CLI recovery: when the host does not support interactive MCP confirmation (INTEGRATION_CONFIRMATION_UNAVAILABLE) or the user invokes the CLI directly after giving dev-integration approval, run devkit worktree finish <branch> --merge --local-only in the base checkout."
 ```
+
+- **Disposition**: `PROP-integration-follow-ups`: drafted in Backlog together with the other two deferred integration extensions, now that ask-mode integration has been used in real workflows.
