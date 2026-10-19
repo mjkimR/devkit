@@ -95,15 +95,6 @@ sequence.
    envelope. A session reports either in the conversation and does not
    integrate; none of this is the `exception` stage. A worker records it and ends; the Host decides recovery or a
    close. There is no return from Development to Planning.
-   Human intervention is concentrated at defined approval and human review points
-   (`ADR-autonomy-between-approval-gates`). Between them, agents SHOULD choose, execute, inspect failures, fix,
-   revalidate and retry within agreed intent and existing authority. Helper commands and validation MUST NOT add
-   human approval or acknowledgment solely for routine findings. Automated checks and agent reviews do not create
-   human review points. Escalate only for a due human decision, a necessary goal/scope/contract change, missing
-   authority, an existing explicit stop rule or a problem the responsible agent cannot resolve. Workers report to
-   the Host/main agent first; the Host resolves matters within its authority. Existing required checks, reviews,
-   delegated boundaries and sandbox limits remain. Report actual partial state and reuse authorization within its
-   approved scope; this adds no merge, publication or deletion authority.
 8. **`dev-integration` is per integration unit** (one pull request): it has no exit checks of its own and is asked as
    soon as `integration-approval` is current, that is once the final change report holds. Under `auto` it passes only
    after the path's required review, reconciliation and checks pass, at every `activity-effort`, `low` included.

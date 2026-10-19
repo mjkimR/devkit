@@ -66,4 +66,5 @@ or recoverable failure intervened. An action outside that scope still requires i
 - Agents must distinguish safe recovery within authority from a changed scope or unresolved outcome; unknown
   outcomes remain unknown until inspected and cannot justify destructive follow-up work.
 - Existing required checks and explicit review stops remain; this decision adds no new gate, exception stage or
-  approval mechanism. The spec constitution and workflow contract carry the operational rule.
+  approval mechanism. The detailed principle remains in this ADR; Planning discovers applicable decisions through
+  the existing ADR search step without adding per-decision references to the constitution.
