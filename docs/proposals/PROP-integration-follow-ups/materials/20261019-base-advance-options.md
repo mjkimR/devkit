@@ -41,12 +41,18 @@ devkit must compose. `ff-only` stays useful for a project that requires linear h
 | A: `git merge --no-ff` in the base checkout | left mid-merge, needs `git merge --abort` | unchanged | base | not checked before it lands |
 | B: merge base into the source worktree, then fast-forward the base | never touched | gains a merge commit after approval; the worktree may be in use by a worker | the source side (defeats E1) | the merge commit, if re-checked |
 | C: build the merge in the object store (`git merge-tree --write-tree`, `git commit-tree -p <target> -p <source>`), check it, then `git merge --ff-only <merge>` in the base | never sees a conflict (only a fast-forward runs there) | unchanged | base | exactly the commit that lands |
+| D: `git merge --no-ff` in a scratch detached worktree at the target, check there, fast-forward the base | never touched | unchanged | base | the landed commit; could also run tests |
 
-Recommendation: C. It needs Git 2.38 or later for `merge-tree --write-tree`; `commit-tree` runs no commit hooks, so
+Recommendation: C. D also runs merge hooks, works on older Git and could host tests, but costs a checkout per
+integration and a temporary worktree to clean up, and running tests there would break the executor's rule that it
+never runs commands (an ADR change). The 18 merge commits on `main` are `spec-integrate` Step 1 merges into activity
+branches: they show merge commits are tolerated, not that `main`'s first-parent history already has this shape.
+Round 1 of the challenger (`envelopes/challenger-01.yaml`) refined C: no `merge-tree` when the target did not advance,
+the CLI keeps refusing an advanced target, and receipt consistency replaces the both-sides refusal. It needs Git 2.38 or later for `merge-tree --write-tree`; `commit-tree` runs no commit hooks, so
 the merge commit's message must be fixed by devkit and acceptable to the project's commit rules (see scout).
 Under `ff-only` the result commit is the source tip itself, so one code path serves both methods.
 
-## E3 to E6 (direction)
+## E3 to E6 (first direction; proposal section 3.2 is current)
 
 - E3: the policy digest covers parsed values devkit owns, not bytes: `[workflow.approvals]`, `[worktree]`
   (`pull_request`, `delete_branch`, `merge`) and `[integration] provider`, computed for the base at confirmation, the

@@ -41,9 +41,14 @@ commits, most of them records, which its envelopes cite by SHA.
 `[worktree] merge = "no-ff" | "ff-only"`, default `"no-ff"`, for the integration service and
 `devkit worktree finish --merge`. Under `no-ff` the result commit is built in the object store with the target as
 first parent and the approved source tip as second, under a devkit-composed message, and the base only
-fast-forwards to it; a merge-tree conflict refuses with nothing changed. Under `ff-only` the result commit is the
-source tip and an advanced target is refused as today. `ff`, squash and rebase are not offered locally. Requires
-Git 2.38 or later.
+fast-forwards to it. Without an advance the tree is the source tree (`commit-tree <source>^{tree}`); with one the
+service builds it with `git merge-tree --write-tree` (Git 2.38 or later, probed only then; a conflict refuses with
+nothing changed). A source already contained in the target builds nothing (a rerun is a no-op). The message uses
+validated branch names only; `commit-tree` honours identity and signing configuration, runs time-bound without a
+terminal prompt and refuses with nothing changed on failure. `ff-only` in either policy wins. Under `ff-only` the
+result commit is the source tip and an advanced target is refused as today. The CLI `finish --merge`, which runs no
+readiness provider, builds a merge commit only when the target did not advance and keeps `WORKTREE_MERGE_NOT_FF`
+otherwise; it takes the integration lock. `ff`, squash and rebase are not offered locally.
 
 ## 5. Consequences
 
@@ -53,3 +58,7 @@ Git 2.38 or later.
 - `plan_finish`, `validate_finish(merged=True)` and the service's merge recovery change from "HEAD equals the
   source" to "HEAD equals the recorded result commit".
 - One extra commit per integration even when the target did not move.
+- Commit-msg hook trailers (DCO, Change-Id) are not added to the merge commit.
+- The `WORKTREE_PUSH_REJECTED` fix becomes `git pull --no-rebase`, so a push race does not rewrite the unit's SHAs.
+- Options also weighed: a scratch detached worktree running `git merge --no-ff` (hooks run, older Git works, could
+  host tests) lost on checkout cost, a temporary worktree to clean up and the executor's no-commands rule.

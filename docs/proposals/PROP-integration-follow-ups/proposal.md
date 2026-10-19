@@ -110,86 +110,133 @@ Spike evidence: `envelopes/scout-01.yaml`, the option comparison in
 
 ### 3.1 Split and order (Q1)
 
-Recommended (pending the user's answer): this proposal keeps the base advances (E1 to E6) and goes to `plan-accept`;
-Q2, Q3 and Q4 become child drafts created with `--decomposed-from PROP-integration-follow-ups`, in this order:
+Recommended (pending the user's answer): this proposal keeps the base advances (E1 to E6), is retitled to that
+scope before `plan-accept`, and goes to `plan-accept`. The other extensions are handled as follows; their order is a
+preference, not a dependency, except where named:
 
-1. **Base advances** (this proposal): every integration is affected today, and Q2 and Q3 build on its contract (the
-   result commit, the effective-policy digest, readiness on the result).
-2. **Pull request and squash or rebase cleanup** (Q3): needs the `[worktree] merge` key and the result-commit
-   verification of 3.2; adds remote authority to the form and must weigh `ADR-worktree-and-pull-request-levels`.
+1. **Base advances** (this proposal): every integration is affected today; Q2 depends on it (an unattended run
+   would otherwise be refused on the first base advance).
+2. **Pull request and squash or rebase cleanup** (Q3): a child draft. It needs its own proof of tree or patch
+   equivalence for squash and rebase merges (local merge commits keep ancestry, so 3.2 does not provide it), remote
+   authority in the form, and must weigh `ADR-branch-guards-and-close-discard` (which supersedes
+   `ADR-worktree-and-pull-request-levels`).
 3. **Auto dispatch** (Q2): an `authority="policy-auto"` integration contradicts accepted texts verbatim
    (`ADR-integration-approval-asserted`: "no policy value grants commit, merge, publication or deletion authority";
-   also `ADR-approval-gates-intent-direction-integration`, `CAP-DLV-project-policy`, `CAP-DLV-delivery-workflows`,
-   `CAP-INT-mcp-services`). Its Planning starts with the user's decision whether a policy may ever grant merge and
-   deletion authority, and ends in a superseding ADR if so. Without 1, every unattended run would be refused on the
-   first base advance.
-4. **Host confirmation** (Q4): independent of 1 to 3. The Claude Code terminal CLI is already a verified native path
-   (`SPEC-claude-terminal-mcp-approval`, docs only); the `Confirmation` callable in `devkit.host.mcp` is host-agnostic
-   form elicitation. What is left is research-led: a `devkit host mcp setup --host claude` adapter and verification of
-   Claude Desktop, the VS Code extension, the Agent SDK, Antigravity and OpenCode surfaces, in step with
-   `MS-multi-host-native-integration`.
+   also `CAP-DLV-project-policy`, `CAP-DLV-delivery-workflows`, `CAP-INT-mcp-services`). It becomes a child draft
+   only once the user decides that a policy may grant merge and deletion authority (then its Planning ends in a
+   superseding ADR); until then it stays as the open feedback it came from.
+4. **Host confirmation** (Q4): a child draft, independent of 1 to 3. The Claude Code terminal CLI is already a
+   verified native path (`SPEC-claude-terminal-mcp-approval`, docs only); the `Confirmation` callable in
+   `devkit.host.mcp` is host-agnostic form elicitation. What is left is research-led: a
+   `devkit host mcp setup --host claude` adapter and verification of Claude Desktop, the VS Code extension, the Agent
+   SDK, Antigravity and OpenCode surfaces, in step with `MS-multi-host-native-integration`.
 
 ### 3.2 Base advances
 
-- **Merge method (E1)**: a new `[worktree] merge = "no-ff" | "ff-only"` key, default `"no-ff"`, read by both the
-  integration service and `devkit worktree finish --merge`. `no-ff` always lands a merge commit whose first parent is
-  the target and second the approved source tip: one `--first-parent` line per task, every stage commit and every
-  SHA cited by the unit's records stays reachable and an ancestor of the base (`git branch -d`, `is_ancestor` and the
-  `WORKTREE_UNMERGED` test keep working; `main` already holds 18 merge commits). `ff-only` keeps today's behaviour
-  for projects that require linear history and refuses an advanced base. `ff` (a merge commit only when needed) is not
-  offered: the history shape would depend on timing. Squash and rebase are not local options (they rewrite the SHAs
-  the records cite).
-- **Where the merge runs (E2)**: never in a checkout. The executor builds the result in the object store:
-  `git merge-tree --write-tree <target> <source>` (Git 2.38 or later; a conflict refuses with nothing changed), then
-  `git commit-tree <tree> -p <target> -p <source>` with a devkit-composed message
-  (`merge: integrate <branch> into <target>` and the task ID; no caller text). The base checkout then only
-  fast-forwards to that commit (`git merge --ff-only <result>`), so it never stops mid-merge; the source branch and
-  its worktree are untouched. Under `ff-only` the result commit is the source tip. `commit-tree` runs no commit hooks,
-  so the commit gates do not see the result: readiness on the result (E4) is what checks the tree that lands. A
-  missing committer identity in the base is refused before the confirmation.
-- **Fast-forward assumptions replaced**: `plan_finish` (`WORKTREE_MERGE_NOT_FF` when the base is not an ancestor of
-  the source) checks only under `ff-only`; `validate_finish(merged=True)` and the service's merge recovery test
-  "base HEAD equals the recorded result commit and contains the source" instead of `HEAD == source_sha`; the
-  post-merge policy is read from the result commit, not the source commit.
+Terms: the **confirmation target** is the target SHA shown in the form; a **build** is one attempt that reads the
+current target (the **build target**), builds the **result commit** and fast-forwards the base onto it.
+
+- **Merge method (E1)**: a new `[worktree] merge = "no-ff" | "ff-only"` key, default `"no-ff"`, read by the
+  integration service and `devkit worktree finish --merge`; `ff-only` in either the base's or the source's policy
+  wins (like `delete_branch = false`). `no-ff` lands a merge commit whose first parent is the target and second the
+  approved source tip: one `--first-parent` line per task, and every SHA the unit's records cite stays reachable and
+  an ancestor of the base (`git branch -d`, `is_ancestor` and `WORKTREE_UNMERGED` keep working; ancestry checks in
+  devkit never walk first parents). `ff-only` keeps today's behaviour and refuses an advanced target. `ff` (a merge
+  commit only when needed) is not offered: the history shape would depend on timing. Squash and rebase are not local
+  options (they rewrite the SHAs the records cite).
+- **Already merged**: when the source is already an ancestor of the current target, nothing is built and the merge
+  step is a no-op (a rerun of `finish --merge` after a completed merge only continues the cleanup), for the CLI and
+  the service.
+- **Where the merge runs (E2)**: never in a checkout. When the target is an ancestor of the source (no advance), the
+  result is `git commit-tree <source>^{tree} -p <target> -p <source>`: its tree is exactly the gated source tree and
+  no new Git version is needed. When the target advanced, the service builds the tree with
+  `git merge-tree --write-tree <target> <source>` (Git 2.38 or later, probed only on this path,
+  `INTEGRATION_GIT_UNSUPPORTED` below it; exit 1 is a conflict, refused with nothing changed; any other status is a
+  failure) and commits it the same way. The message is devkit-composed from validated names only:
+  `merge: integrate <branch> into <target>` (no task ID or other caller text). The base checkout only fast-forwards
+  to the result (`git merge --ff-only <result>`), so it never stops mid-merge; the source branch and its worktree are
+  untouched. `commit-tree` honours the Git identity and signing configuration: before the confirmation the service
+  refuses a missing committer identity, runs `commit-tree` time-bound with no terminal prompt, and a failed or
+  timed-out signature refuses with `INTEGRATION_COMMIT_FAILED` and nothing changed on the target (the unreferenced
+  object is left to `git gc`). Trailers that commit-msg hooks would add (DCO, Change-Id) are not added; this is
+  documented. Under `ff-only` the result is the source tip.
+- **CLI `devkit worktree finish --merge`**: runs no readiness provider, so under `no-ff` it builds a merge commit only
+  when the target is an ancestor of the source (the landed tree is the gated source tree) and keeps
+  `WORKTREE_MERGE_NOT_FF` for an advanced target, as today; the `spec-integrate` Steps 1 to 4 (merge the base into the
+  branch, re-verify) stay the CLI's route. It takes the same Git common-directory lock as the service. The
+  `WORKTREE_PUSH_REJECTED` fix becomes `git pull --no-rebase` (a plain rebase would drop the merge commit and rewrite
+  the unit's SHAs).
+- **Target descent and compare-and-swap (E2, E6)**: every build target must descend from the confirmation target
+  (a target that was reset or rewritten is stale, `INTEGRATION_REQUEST_STALE`); immediately before the fast-forward
+  the base must still point at that build's target, else `INTEGRATION_TARGET_MOVED`.
+- **Request and execution state**: `IntegrationRequest` stays immutable and digested, with the confirmation target.
+  A separate execution context (the approved context plus the build target and the result SHA) is what the provider,
+  the guards and the cleanup extensions receive at execution; the latest build target and result SHA are kept in the
+  process-local result, outside the digest, and reported. Cleanup revisions bind to the source and to package-owned
+  state, never to a target SHA.
+- **Recovery after a failed or unknown merge step**: the base at the latest result means merged; the base descending
+  from the confirmation target without containing the source means not merged; anything else is ambiguous (inspect
+  Git). `INTEGRATION_TARGET_MOVED` leaves the merge step `not_run`. After the merge, every step checks that the base
+  contains the result (later commits on the base are allowed), not that it equals it; `validate_finish(merged=True)`,
+  the service's recovery and devkit-spec's cleanup `_is_post_git` change from "HEAD equals the source" to "HEAD
+  contains the result (the source under `ff-only`) and the worktree is gone".
+- **Guards**: `prepare` passes `merge-base(target, source)` to the finish guards (today `plan.target_sha`, correct
+  only under fast-forward); before each fast-forward the guards run again with the build target's merge base and the
+  source tip.
 - **Effective policy (E3)**: the request binds a digest of parsed values devkit owns: `[workflow.approvals]`
   `dev-integration`, `[worktree]` `pull_request`, `delete_branch` and `merge`, and `[integration] provider`, for the
-  base at confirmation (must equal at execution) and for the result commit (must equal what the confirmation
+  base at confirmation (must equal at each build) and for the result commit (must equal what the confirmation
   prospected). Provider, guard and cleanup extension identities stay separate fields as today. Raw config and receipt
-  bytes and asset hashes are no longer bound. A path the receipt records (or `.devkit/installation.json` itself)
-  changed on both sides since the merge base is refused (`fail closed`), since the merged bytes would match neither
-  side's receipt record.
-- **Readiness after the base advanced (E4)**: at execution the provider runs again with the current target and the
-  result commit (`IntegrationContext` gains `result_sha`; `Readiness` binds source, target and result). It must
-  return no reasons, and its evidence must equal the approved evidence except the items the provider declares
-  target-bound. devkit-spec declares `TARGET_SHA` and `RESULT_SHA` target-bound, evaluates the unit from the source
-  tree as today (a base change inside the unit directory since the merge base is a reason) and runs its CI rules on
-  the result tree with the diff from the current target, so a semantic conflict the rules catch refuses before
-  anything lands. Tests are not run by the provider (unchanged).
+  bytes and asset hashes are no longer bound. Instead of refusing every managed path changed on both sides, each
+  build checks receipt consistency on the result tree: every file `.devkit/installation.json` records in the result
+  must match its recorded hash there, else `INTEGRATION_RECEIPT_CONFLICT` (in this repository 33 of the 366 commits on
+  `main` since 2026-10-12 changed the receipt, so two concurrent bundle-editing units are common).
+- **Readiness after the target advanced (E4)**: each build runs the provider with the execution context; `Readiness`
+  binds source, build target and result. It must return no reasons, and its evidence must equal the approved evidence
+  except the codes the provider declared target-bound at confirmation; that declared set is part of the request
+  digest. devkit-spec declares `TARGET_SHA` and `RESULT_SHA`, evaluates the unit from the source tree (a target change
+  inside the unit directory since the merge base is a reason), compares its `[tool.spec]` policy with the one at
+  confirmation, and runs its CI rules on the result tree with the diff from the build target.
+- **Tests on the landed tree**: pending the user's answer (question T). Recommended: tests are not run on the result
+  (the executor never runs commands); the form and the integration report say that tests and review ran on the
+  source and that only the CI rules ran on the result.
 - **Confirmation text (E5)**: the form says "Approve local integration of <branch> into <target> with a merge
-  commit?", shows the target SHA at confirmation time, and states that later commits on the target are merged in
-  without another confirmation only if the merge is clean, the integration policy is unchanged and readiness passes
-  again; otherwise nothing changes on the target. The result reports the target at confirmation, the target merged
-  and the result commit. `approval_scope()` and `to_dict()` carry the configured `merge_method`.
-- **Bounds (E6)**: devkit executors are serialized by the Git common-directory lock, but other commits (a person, a
-  session in the base checkout) are not. If the target moves between building the result and the fast-forward, the
-  executor rebuilds and re-checks, at most three builds per call, then refuses with a new
-  `INTEGRATION_TARGET_MOVED` code and nothing changed on the target; `integration_resume` may try again under the
-  same approval, since the approval never bound the target SHA.
-- **Skills**: `spec-integrate` Step 1 (merge the base into the activity branch before integration) is needed only for
-  a conflict the executor refused; the worktree reference and `CAP-WT-task-worktrees` describe the merge key.
+  commit?", shows the confirmation target SHA, and states that later commits on the target are merged in without
+  another confirmation only if the merge is clean, the integration policy is unchanged and readiness passes again
+  (CI rules only on the result), otherwise nothing changes on the target. The result reports the confirmation
+  target, the build target and the result commit. `approval_scope()` and `to_dict()` carry the configured
+  `merge_method`.
+- **Bounds (E6) and approval lifetime**: at most three builds per `integration_integrate` call while the target keeps
+  moving, then `INTEGRATION_TARGET_MOVED` with nothing changed. Pending the user's answer (question A), recommended:
+  the approval tolerates target advances only within that call; `integration_resume` continues an approved request
+  only onto the last build target (its CAP-INT section 5 use, permission failures and cleanup after the merge), and a
+  later target needs a new confirmation.
+- **Prepare stays side-effect free on refs**: `integration_prepare` and `plan_finish` change no ref, index or
+  worktree; building a prospective tree writes only unreferenced objects (CAP-INT wording updated).
+- **Skills**: `spec-integrate` Step 1 (merge the base into the activity branch before integration) is needed on the
+  native path only for a refusal (conflict, receipt conflict, readiness on the result); the worktree reference and
+  `CAP-WT-task-worktrees` describe the merge key.
 
 Every extension keeps the existing invariants: fail closed, exact scope binding (repository, task, source branch and
-SHA, target branch, worktree and branch cleanup, cleanup extensions and targets, effective policy), no network
-operation without explicit authority, and no deletion of unmerged work.
+SHA, confirmation target and its descendants, worktree and branch cleanup, cleanup extensions and targets, effective
+policy, target-bound evidence codes), no network operation without explicit authority, and no deletion of unmerged
+work.
 
 ### 3.3 Impact and coordination
 
-- **Impact (base advances)**: `packages/devkit/src/devkit/integration/` (request model, policy digest, executor,
-  confirmation text, new code), `packages/devkit/src/devkit/worktree/` (`config.py` merge key, `planning.py`,
-  `lifecycle.py` `finish`), devkit-spec's readiness provider (`devkit_spec/integration.py`) and its
-  `spec-integrate` skill and worktree reference, `CAP-INT-mcp-services`, `CAP-WT-task-worktrees`,
-  `CAP-DLV-project-policy` (the new key), `docs/development/reference/integration.md` and `worktree.md`. No change to
-  `devkit.host` (packages/devkit-dist) or to `docs/decisions/`.
+- **Impact (base advances)**: `packages/devkit/src/devkit/integration/` (request and execution context, policy
+  digest, builds, recovery, confirmation text, new codes `INTEGRATION_TARGET_MOVED`, `INTEGRATION_RECEIPT_CONFLICT`,
+  `INTEGRATION_COMMIT_FAILED`, `INTEGRATION_GIT_UNSUPPORTED`), `packages/devkit/src/devkit/worktree/` (`config.py`
+  merge key, `planning.py`, `lifecycle.py` `finish`, lock, push fix, CLI help for `--merge`, module docstring),
+  devkit-spec's readiness provider (`devkit_spec/integration.py`) and scoped cleanup (`devkit_spec/cleanup.py`), its
+  `spec-integrate` skill and worktree reference, `CAP-INT-mcp-services` (sections 1, 2 and 5), `CAP-WT-task-worktrees`
+  (section 3 rerun and fix text), `CAP-DLV-delivery-workflows` 4.8 (readiness binding), `CAP-DLV-project-policy` (the
+  new key), the project config template, `guides/` (Git 2.38 for advanced targets),
+  `docs/development/reference/integration.md` and `worktree.md`. No change to `devkit.host` (packages/devkit-dist).
+  Accepted ADRs are not changed; the handoff promotes this proposal's PADRs.
+- **Milestone**: `MS-multi-host-native-integration`'s exit condition says the approval is "bound to the verified
+  source and target commits"; with 3.2 it binds the confirmation target and its descendants. The milestone is the
+  user's to change: asked at `plan-accept`, not rewritten here.
 - **Coordination**: none. The devkit-dist package separation is complete (`SPEC-devkit-dist-package-separation`
   completed, its branch gone); `integration/` and `worktree/` are in `packages/devkit` (devkit-agt) and `host/` in
   `packages/devkit-dist`.

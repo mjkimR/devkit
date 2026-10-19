@@ -37,11 +37,15 @@ activity that edits a bundled skill invalidates every open confirmation though n
 The digest covers `[workflow.approvals]` `dev-integration`, `[worktree]` `pull_request`, `delete_branch` and
 `merge`, and `[integration] provider`, normalized after parsing. The base's digest must be equal at confirmation and
 execution; the result commit's digest must equal the one prospected at confirmation. Provider, guard and cleanup
-extension identities stay separate request fields. A path recorded in the receipt, or the receipt itself, changed on
-both sides since the merge base is refused before anything lands.
+extension identities stay separate request fields. Each build checks receipt consistency on the result tree: every
+file `.devkit/installation.json` records there must match its recorded hash, else `INTEGRATION_RECEIPT_CONFLICT`
+before anything lands (a path-overlap refusal was rejected: 33 of 366 recent commits on `main` changed the receipt,
+so concurrent bundle-editing units are common).
 
 ## 5. Consequences
 
 - Bundle syncs and asset edits on the target no longer invalidate confirmations.
-- Provider-owned policy (such as `[tool.spec]`) is checked by the provider's re-run, not by this digest.
-- A source and a target that both re-synced the same managed files must integrate the target into the source first.
+- Provider-owned policy (such as `[tool.spec]`) is the provider's to compare with its value at confirmation;
+  devkit-spec does so.
+- A source and a target whose re-syncs leave an inconsistent merged receipt must integrate the target into the source
+  and re-sync first.
