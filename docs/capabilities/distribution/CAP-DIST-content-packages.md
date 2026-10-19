@@ -4,6 +4,9 @@ title: "Content Packages"
 summary: "Content wheel packaging, bundle distribution and dependency boundaries, the devkit-dist and devkit-agt installations and their built-in bundles, including the auto-selected harness bundle and the standalone signals."
 area: distribution
 status: active
+entrypoints:
+  - packages/devkit-dist/src/devkit/distribution/installation/discovery.py
+  - packages/devkit/src/devkit/harness_guide/
 created_at: 2026-10-17
 ---
 

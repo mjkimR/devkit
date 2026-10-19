@@ -7,6 +7,8 @@ status: active
 entrypoints:
   - packages/devkit-dist/src/devkit/distribution/installation/inventory.py
   - packages/devkit-dist/src/devkit/distribution/installation/overrides.py
+  - packages/devkit-dist/src/devkit/distribution/installation/engines.py
+  - packages/devkit-dist/src/devkit/distribution/installation/config_template.py
 created_at: 2026-10-17
 ---
 
