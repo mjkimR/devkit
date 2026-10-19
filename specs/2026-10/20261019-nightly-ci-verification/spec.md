@@ -2,7 +2,7 @@
 id: SPEC-nightly-ci-verification
 title: Affected tests before merge and changed-head nightly CI
 summary: "Use affected tests for local integration and run full CI nightly when the default branch differs from its last successful nightly verification."
-status: planned
+status: in-progress
 created: 2026-10-19
 related_capabilities: []
 related_stories: []

@@ -4,8 +4,17 @@ Continuous integration and automated verification checks for devkit.
 
 ## 1. Automated Verification Checks
 
-The `ci` workflow runs by manual dispatch (`gh workflow run ci`) or through `workflow_call` from the release
-workflow. Pull requests and main branch pushes do not trigger it. Workspace checks run on Linux and macOS;
+The `ci` workflow runs by manual dispatch (`gh workflow run ci`) or through `workflow_call` from the nightly and
+release workflows. Pull requests and main branch pushes do not trigger it. The `nightly` wrapper is scheduled at
+04:17 Asia/Seoul (`17 19 * * *` UTC) on the default branch. Its cheap gate queries the latest successful `nightly.yml`
+run on that branch: when that head equals the scheduled head, it skips the complete CI; otherwise it runs every
+CI job. No previous success runs CI. Failures and cancellations do not advance the baseline, so an unverified head
+is retried on the next schedule even without new commits. API failures fail the gate. A skipped heavy job can only
+reuse the same previously verified head. Manual nightly dispatch (`gh workflow run nightly`), direct manual CI and
+release calls always run the complete CI. Scheduled starts can be delayed or dropped by GitHub; 04:17 is not a
+completion deadline. See `ADR-nightly-ci-verification`.
+
+Workspace checks run on Linux and macOS;
 consumer smoke and the viewer job run on Linux. The workflow executes:
 
 | Step | Command Executed | Purpose |
@@ -33,8 +42,11 @@ page, a script and `/api/repos`.
 `-n auto --maxprocesses 8 --dist worksteal`: up to eight workers, sharing work as workers become available.
 Extra pytest arguments follow these defaults, so `just test all -n0` runs serially.
 
-During development an agent runs only the tests a change can affect, and the full `just test` once on the
-reviewed head before integration:
+Development, review and integration use affected tests without a separate mandatory local `just test`.
+Before integration, incorporate any moved base, resolve conflicts and run `just test-affected --base <base-ref>`
+against the actual target branch. A merge of the same verified content needs no additional test run. If the base
+or content changes before merging, refresh affected tests and the checks that cover the new content. Reviewers
+reuse valid check results and rerun only missing or stale checks. Lint, types and governance remain required:
 
 - **Selectors**: for a single module, the arguments before the first option are areas or paths that replace the
   module's default paths. An area is a directory under the module's `tests/` together with the matching
@@ -73,7 +85,8 @@ reviewed head before integration:
   is `TEST_CHANGES_UNREADABLE` (exit `2`), for the user to resolve in the repository before rerunning.
 - **Limits**: a group's dependencies include those of the shared helpers it imports at module level,
   not of helpers imported inside a test function; static imports also do not show tests that run the CLI in a
-  subprocess or load entry points. The full suite before integration covers them.
+  subprocess or load entry points. Nightly and release full CI cover these misses; an undetected regression can
+  remain on the default branch until a complete CI runs. The selector's full-suite fallback remains in place.
 
 Before starting pytest or its workers, both recipes run `scripts/check_test_environment.py` through the
 workspace Python environment. The check sends and receives one byte through a local socket pair, with
@@ -86,7 +99,7 @@ The advisory preserves the original recipe and pytest arguments in `[FIX]`. An a
 approval mechanism to rerun that command in a permitted environment; the script never expands permissions or
 retries on its own. Tests are neither skipped nor counted as passed. A direct `pytest` invocation bypasses this
 recipe check; run `uv run python scripts/check_test_environment.py -- <exact-test-command>` first when using it.
-CI continues to run the complete suite through `just test`.
+Nightly, manual and release CI run the complete suite through `just test`. Release publication requires CI success.
 
 ## 3. Release Automation
 

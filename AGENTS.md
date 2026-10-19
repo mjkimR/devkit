@@ -46,9 +46,12 @@ Keep package descriptions in this guide to a high-level summary of their purpose
 
 ## Verification
 
-Run lint, type checks, and relevant tests before completing code changes. During development run only the tests
-the change can affect; run the full suite once on the reviewed head before integration, not after every edit. A
-viewer frontend change selects no pytest test: run the command its `[FRONTEND_CHECK: ...]` line names instead:
+Run lint, type checks, and relevant tests before completing code changes. Use `just test-affected` for development,
+review and the final integration content; no separate local full-suite run is required. Preserve its `mode=full`
+fallback. Incorporate a moved base and resolve conflicts before testing; merging unchanged verified content needs
+no additional test run. Full CI runs nightly at 04:17 Asia/Seoul when the default branch differs from its last
+successful nightly verification, and always at release or manual invocation. A viewer frontend change selects no
+pytest test: run the command its `[FRONTEND_CHECK: ...]` line names instead:
 
 | Target | Command |
 | --- | --- |
@@ -56,7 +59,7 @@ viewer frontend change selects no pytest test: run the command its `[FRONTEND_CH
 | Lint & format check (CI) | `just lint-check [module]` |
 | Type check (Pyright) | `just check [module]` |
 | Tests during development | `just test-affected` (from the diff) or `just test <module> [area\|path...]` |
-| Full test suite (once before integration) | `just test` |
+| Full test suite (nightly, release, manual, or selector fallback) | `just test` |
 | devkit-dist without devkit-agt (dist-only check) | `just test-dist` |
 | Test Coverage | `just test-cov [module] [area\|path...]` |
 | Governance Rules | `just rules-check` or `just rules-fix` |

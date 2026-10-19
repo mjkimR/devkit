@@ -2,8 +2,8 @@
 
 The changed paths since the merge base (committed, staged, unstaged and untracked) map to test paths: shared
 foundations to the full suite, data files to the tests that read them, a source area to the test groups that depend
-on it or on an area importing it. The selection narrows a development run; the full suite on the reviewed head stays
-the safety net for what static imports cannot show.
+on it or on an area importing it. Local development and integration use this selection; nightly and release full
+CI cover dependencies static imports cannot show. Shared foundations still select the full suite.
 """
 
 from __future__ import annotations

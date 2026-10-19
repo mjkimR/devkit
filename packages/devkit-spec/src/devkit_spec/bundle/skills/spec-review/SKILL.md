@@ -34,7 +34,7 @@ Use this skill when all tasks in `tasks.md` are checked (`tasks-all-checked` ope
 - Bugfix bundles: the Red and Green envelopes exist and the regression test is kept (`devkit workflow envelope check --unit <dir>`).
 
 ### Step 3: Run Deterministic Verification Gates
-- Run the full test suite once on the reviewed head (e.g., `just test`); during implementation only the affected tests ran, and this run catches what that selection missed. A delegated reviewer works from these results and reruns only a check that is missing or stale.
+- Follow the repository's test policy on the reviewed content (e.g., `just test-affected`); preserve selector fallbacks and any named frontend checks. Run the full suite locally only when that policy or the selector requires it. A delegated reviewer reuses valid results and reruns only missing or stale checks.
 - Run the linters and formatters (e.g., `just lint`) and the spec rules: `devkit rules check --staged` for staged changes, `devkit rules check --ci --base <ref>` for a committed branch.
 - Exit code 0 with zero warnings and errors.
 

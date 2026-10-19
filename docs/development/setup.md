@@ -28,7 +28,7 @@ just init
 just lint                  # Run ruff check --fix and ruff format
 just lint-check            # Verify linting without modifying files (as in CI)
 just check                 # Run Pyright static type checker
-just test                  # Run pytest across all workspace packages (the full suite)
+just test                  # Full suite: nightly/release CI, manual checks, or selector fallback
 just test devkit gate      # Run one module's areas or paths only
 just test-affected         # Run the tests the changes since main can affect (--list to only show them)
 just test-dist             # Run the devkit-dist tests in a separate environment without devkit-agt

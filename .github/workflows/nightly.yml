@@ -1,0 +1,35 @@
+name: nightly
+
+on:
+  schedule:
+    # 04:17 Asia/Seoul (UTC+9); avoid the top-of-hour scheduling peak.
+    - cron: "17 19 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: nightly-ci-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      run_ci: ${{ steps.baseline.outputs.run_ci }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: node --test .github/scripts/nightly-ci.test.cjs
+      - uses: actions/github-script@v7
+        id: baseline
+        with:
+          script: |
+            const gate = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/nightly-ci.cjs`);
+            await gate({ github, context, core });
+
+  ci:
+    needs: changes
+    if: needs.changes.outputs.run_ci == 'true'
+    uses: ./.github/workflows/ci.yml

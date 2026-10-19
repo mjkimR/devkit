@@ -88,7 +88,7 @@ class FeatureConfig:
 ## 6. Verification & Test Plan
 - Unit test coverage targets.
 - Integration test scenarios.
-- Commands to run for validation: the targeted tests during development (the touched modules or areas), the full suite once before integration (`just test`), and the other checks (`just lint`, `devkit rules check`, etc.).
+- Validation commands under the repository's policy: affected tests during development and before integration (e.g., `just test-affected`), any required full-suite checks, and lint, type and governance checks. State when existing results can be reused.
 ````
 
 ---

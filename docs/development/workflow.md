@@ -24,6 +24,9 @@ Follow concise, imperative, emoji-free commit messages:
 Before committing changes, ensure that:
 1. `just lint` applies clean formatting.
 2. `just check` passes with 0 Pyright errors.
-3. `just test-affected` (or `just test <module> <area...>`) passes the tests the change can affect; the full
-   `just test` passes once on the reviewed head before integration.
+3. During development, `just test-affected` or `just test <module> <area...>` passes the affected tests.
+   Before integration, `just test-affected --base <base-ref>` verifies the final content after incorporating a moved
+   base and resolving conflicts. Keep its full-suite fallback and frontend checks. Reuse this result after merging
+   unchanged verified content; no separate local full-suite or post-merge test run is required. Complete CI runs
+   overnight for unverified default-branch heads and before release (`ADR-nightly-ci-verification`).
 4. `just rules-check --staged` reports 0 governance violations.

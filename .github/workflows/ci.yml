@@ -9,9 +9,9 @@
 # committed build matches the sources (it needs Node). Both install the devkit-embed model wheel from the release
 # pinned in packages/devkit-dist/pyproject.toml; nothing builds it here.
 #
-# It does not run on push or pull request: the same checks run locally, and
-# release.yml runs this workflow on the tagged commit before publishing. Run it
-# by hand (gh workflow run ci) to check Linux before tagging.
+# It does not run on push or pull request. Local integration uses affected tests;
+# nightly.yml calls the full CI for unverified default-branch heads, and release.yml
+# always runs it on the tagged commit before publishing. Manual dispatch also runs it in full.
 name: ci
 
 on:

@@ -40,8 +40,8 @@ git merge -m "<subject the commit-msg gate accepts>" <base-branch>   # the base 
 Resolve conflicts within the approved intent. A conflict that needs a design choice the agreed intent does not cover is a problem for the Host: stop and hold the PR.
 
 ### Step 2: Re-verify what changed
-- List the paths changed by conflict resolution (`git diff --name-only <pre-merge-head> HEAD`).
-- Run the tests and checks that cover those paths; run `spec-review` Step 1 and Step 3 on the changed part only.
+- After incorporating a moved base or resolving conflicts, inspect all resulting changes (`git diff --name-only <pre-merge-head> HEAD`), including a clean merge's incoming changes.
+- Verify the final integration content under the repository's test policy (e.g., `just test-affected --base <base-ref>`), plus checks covering the changed paths. Run `spec-review` Step 1 and Step 3 on the changed part only; preserve selector fallbacks and frontend checks.
 - A defect beyond integration scope returns to the Developer (the build stage: `build-verify`, or `fix-verify` in `sdd-spec-bugfix`); integration is not reported complete.
 
 ### Step 3: Confirm reconciliation
@@ -53,7 +53,7 @@ Resolve conflicts within the approved intent. A conflict that needs a design cho
 ```bash
 devkit rules check --ci --base <base-ref>    # cumulative Git evidence, merge-base..HEAD
 ```
-plus the repository CI (tests, static checks). A plain `devkit rules check` does not count. Unresolved reconciliation means no merge.
+plus the repository's required local checks (tests, types and lint). Reuse valid results for unchanged content; do not repeat the full suite solely because this is integration. A merge of the same verified content needs no post-merge test run; changed base or content requires fresh affected checks. Nightly/release CI follows repository policy. A plain `devkit rules check` does not count. Unresolved reconciliation means no merge.
 
 ### Step 5: Report, obtain native approval if applicable, merge and hand over
 Before requesting native approval, present the verified change report and the intended merge/cleanup effects. After execution, give the integration result report (the `spec` skill's `references/envelope.md`, section 4) in the conversation, not as a file: base integrated, conflicts resolved, what was re-verified, the Step 4 result and the actual `dev-integration` authority. State code review completed (latest review round or reverify) and integration completed as separate facts, each only when it has occurred. Repository CI re-runs the cumulative check as `lint-ci-clean` (`[WAITING: runner lint-ci-clean]`); without a PR there is no CI run: after the local check passes, declare it (`--given lint-ci-clean`) and say so in the report.
