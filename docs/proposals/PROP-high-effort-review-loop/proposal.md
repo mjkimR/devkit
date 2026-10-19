@@ -1,8 +1,8 @@
 ---
 id: PROP-high-effort-review-loop
 title: Bounded high-effort review procedure
-summary: 'Redefines the high activity-effort procedure: P1-driven review rounds that end on no P1 or on stalled progress, a strict self-verification exception for minor fixes in code and reconcile re-review, severity levels, mandatory scout in high Planning, and reclassification advice for high session work.'
-status: draft                         # draft | reviewing | accepted | rejected
+summary: 'Redefines the high activity-effort procedure: whole-batch review rounds that end when a round finds nothing or every fix is minor, hand-over for persistent, recurring or contested P1s, P1-P3 severity, mandatory scout in high Planning, and session reclassification advice.'
+status: accepted                      # draft | reviewing | accepted | rejected
 created_at: 2026-10-19
 target_area: capabilities/delivery/
 priority: high                        # critical | high | medium | low
@@ -12,6 +12,9 @@ dev_effort: medium                    # low | medium | high (hint for Developmen
 boundaries:
   owns:
     - capabilities/delivery/
+    - packages/devkit-spec/src/devkit_spec/bundle/
+    - packages/devkit-spec/tests/
+    - docs/decisions/2026-10/20261016-medium-review-delegation.md
   excludes:
     - docs/decisions/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
@@ -22,113 +25,182 @@ workflow: sdd-proposal
 
 - **Origin**: `ADR-medium-review-delegation` defined `medium` in detail and kept `high` as it was: "High retains code
   re-review after fixes and independent reconcile verification". `high` was never designed on its own.
-- **Decided in Backlog**: the direction in §3 (loop rule, minor-fix exception for code and reconcile, severity
-  levels, mandatory `scout`, session reclassification advice). Out of scope: a plan-review role and model or reasoning
-  settings (see §3.6).
+- **Decided in Backlog**: the direction (review loop that hands over persistent P1s, minor-fix exception for code and
+  reconcile, severity levels, mandatory `scout` in `high` Planning, session reclassification advice). Out of scope: a
+  plan-review role and model or reasoning settings.
+- **Planning effort**: `medium` by the user's choice, though the change replaces a clause of an accepted ADR: the
+  options were compared before Backlog closed, so one `challenger` pass (`envelopes/challenger-01.yaml`) reviews how
+  they are specified.
+- **Decision record**: `PADR-bounded-high-effort-review-loop` (promoted to an ADR at handoff).
 - **Related**: `ADR-medium-review-delegation`, `ADR-reconcile-check-envelope`, `CAP-DLV-delivery-workflows`,
-  `CAP-DLV-workflow-envelopes`, `PROP-role-reasoning-effort-presets`.
+  `CAP-DLV-workflow-envelopes`, `CAP-DLV-proposal-incubation`.
 
 ## 1. Background & Hypothesis
 
 ### 1.1 Problem
 
 - **Unbounded re-review.** At `high`, every path says only "re-review after the fixes" (`effort.md`, the
-  `sdd-session-*` and `sdd-spec-*` workflow bodies, `spec-review` §61, `CAP-DLV-delivery-workflows`). Nothing states
-  the scope of a re-review round, who runs it, when the loop ends, or what happens when it does not converge.
+  `sdd-session-*` and `sdd-spec-*` workflow bodies, `spec-review`, both worker contracts, `CAP-DLV-delivery-workflows`).
+  Nothing states a round's scope, its inputs, when the loop ends, or what happens when it does not converge.
 - **No priority among findings.** A finding's `severity` is an optional free label with no effect on open-finding
-  counts or checks (`CAP-DLV-workflow-envelopes`). A loop cannot be driven by "serious findings" when nothing says
-  which findings are serious.
+  counts or checks (`CAP-DLV-workflow-envelopes`); the envelope reference's example value is `medium`.
 - **Every fix costs a subagent round.** `medium` lets the implementer verify fixes; `high` leaves no room to close a
   typo or a fix the reviewer itself prescribed without another isolated review.
 - **High Planning lacks evidence by rule.** `high` is proposed for work that reverses an accepted decision, creates a
   contract or document kind, or spans packages, yet `scout` runs only "when the direction needs evidence".
-- **High session work.** The `high` triggers mostly describe work whose contract must be fixed first, which is not
-  `session` depth; nothing points that out.
+- **High session work.** Two of the three `high` triggers describe work that is not `session` depth; nothing says so.
 
 ### 1.2 Hypothesis
 
-A `high` loop that runs isolated review rounds until no P1 finding remains, hands over to the user only when progress
-stalls, and lets strictly minor fixes be self-verified with recorded evidence gives `high` a defined end and a
-higher bar than `medium` without spending a subagent round on every trivial fix.
+A `high` loop that runs fresh isolated review rounds until no P1 remains, sends each batch of fixes to the next round
+unless every fix in it is strictly minor, and hands over to the user only when P1s persist to the cap, recur, or are contested
+gives `high` a defined end and a higher bar than `medium` without spending a subagent round on each trivial fix.
 
 ## 2. Technical Spike Questions
 
-- **Q1. Severity scale.** Exact definitions of P1, P2 and P3 for `spec-review` and `challenger` findings, and whether
-  `severity` becomes required only at `high` or at every effort. Envelope code stays unchanged either way: the
-  stage exit keeps counting every open finding regardless of severity.
-- **Q2. Stall detection.** How "the same P1 recurs" and "fixes keep producing P1s" are identified across rounds
-  (matching by `evidence` and `issue`, or an explicit `recurs:` reference written by the implementer in `reverify`),
-  and the value of the safety cap (proposed: 5 rounds).
-- **Q3. Out-of-scope P1.** A re-review round is limited to the fix diff and its impact; a P1 found outside it is fixed
-  but marked. Whether such findings count toward the stall rule.
-- **Q4. Planning loop.** Whether the same loop and minor-fix exception apply to `challenger` re-review in `high`
-  Planning, with `Decision needed:` findings excluded from the loop (they go to `plan-accept`).
-- **Q5. Session reclassification.** Whether the advice is a SHOULD in the `spec` skill only, or also a notice from
-  any command.
+All answered in Planning; the decisions are `PADR-bounded-high-effort-review-loop`.
+
+- **Q1. Severity scale.** `P1`, `P2`, `P3` as exact strings, one P1 definition per review kind (§3.3). The reviewer
+  owns the label; the implementer records it unchanged, and `reverify` already carries it forward. It is required on
+  every finding at every effort; it still has no effect on checks.
+- **Q2. Recurrence.** No new finding key: the schema accepts only `issue`, `evidence`, `failure_condition`,
+  `suggested_action`, `resolution`, `waiver` and `severity`. The fresh reviewer receives the earlier findings and
+  marks a recurrence with a fixed prefix in `issue` (`recurs: <envelope> #<n>;`). The cap is 3 rounds after the
+  initial review.
+- **Q3. Out-of-scope findings.** Derived, not marked: a finding is out of scope when its `evidence` path is not in
+  the round's diff file list. It is fixed with the rest of the batch and never counts as a recurrence.
+- **Q4. Planning loop.** The same loop applies to `challenger` rounds in `high` Planning with the Planning P1
+  definition; `Decision needed:` findings stay out of it and go to `plan-accept`. A `challenger` envelope has no
+  reverify: each round is a new `challenger-NN` envelope whose summary states what the previous round's findings
+  became.
+- **Q5. Session reclassification.** A SHOULD in the `spec` skill (`effort.md`) only: effort is never stored and a
+  session is never evaluated by a command, so nothing can raise a notice.
 
 ## 3. Proposed Design & Impact
 
-### 3.1 Review loop at `high` (code review and reconcile verification)
+### 3.1 Review loop at `high`
+
+Applies to code review (`code-reviewer`), reconcile verification (`reconcile-reviewer`) and `high` Planning
+(`challenger`).
+
+A round hands the reviewer the whole batch of work since the previous round; the implementer then handles every
+finding of that round together, whatever its severity.
 
 | Item | Rule |
 | --- | --- |
-| Reviewer | Each round starts a fresh `code-reviewer` (or `reconcile-reviewer`) with the earlier findings and the fix diff as input. |
-| Scope | The fix diff and what it affects. A P1 outside that scope is still fixed, marked as out of scope. |
-| Loop trigger | Only open P1 findings start another round. P2 and P3 are fixed or waived with a reason by the implementer in the same round and closed in `reverify`. |
-| End | A fresh round returns no P1. |
-| Hand over to the user | The same P1 recurs after its fix; fixing P1s keeps producing new P1s; the implementer and the reviewer disagree on a finding's validity; or the safety cap (Q2) is reached. Recorded as a problem. |
+| Round | A fresh reviewer instance. Round 1 reviews the whole change; each later round reviews every fix made since the previous round and what it affects. Input: the earlier rounds' findings, the round's diff scope and the effort. |
+| Fixing | The implementer fixes every finding of the round, P1, P2 and P3 together (a P2 or P3 may be waived with a reason), and closes the round: `reverify` for code; for reconcile, a new `reconcile-check`; for Planning, the next `challenger-NN` summary or the `worker` envelope's summary. |
+| Next round | Runs when any fix of the batch fails the minor-fix conditions (§3.2). The whole batch goes to the next round, never a subset. |
+| End | The round returns no finding, or every fix of the batch meets §3.2 and is self-verified. |
+| Round count | The implementer starts each round's envelope summary with a fixed marker, `round <N>;` (and `closes reconcile-check-<NN>;` for a closing reconcile check), so counts are read from summaries, never from new fields. Counted across `devkit workflow return` within one segment; a return does not reset it. |
+
+Hand-over to the user:
+
+| Cause | Unit path (worker or Host) | Session |
+| --- | --- | --- |
+| At the cap round (the third after the initial review), the batch does not meet §3.2 | `problem` in the `worker` envelope; recovery names the open findings | Reported in the conversation; not integrated |
+| The same P1 recurs after its fix (marked `recurs:`) | Same | Same |
+| A P1 the implementer holds invalid, still asserted after one more round given the implementer's counter-evidence (tests or output) | `questions` entry with the reviewer's and the implementer's positions as options | Asked in the conversation |
+
+The cap only limits further rounds. At the cap round a batch that fully meets §3.2 ends the loop whatever its
+severity, a minor-fix P1 included; any batch that would need another round is handed over, P2 and P3 included unless
+each is waived with a reason. No fix leaves `high` unreviewed unless it is provably minor.
+
+After a hand-over:
+
+- A P1 the user rules invalid is closed with `reverify --waive <N>=<reason>` citing the `answer` envelope: the only
+  waiver a P1 may carry. For reconcile and Planning the same goes into the new `reconcile-check` or the `worker`
+  summary.
+- When the user resolves a cap or recurrence problem by asking for a fix, that fix gets one further fresh round
+  outside the cap, named by the `resolution` envelope. Its outcome follows the rules above; a recurrence of the same
+  P1 hands over again.
+
+This is not the `exception` stage; stages, checks and gates are unchanged. The stop reasons join the problem rule
+of `CAP-DLV-delivery-workflows`.
 
 ### 3.2 Minor-fix self-verification at `high`
 
-The initial `code-reviewer` and `reconcile-reviewer` calls stay mandatory. After them, a fix MAY be self-verified
-instead of starting a new round only when all of these hold:
+The initial `code-reviewer` and `reconcile-reviewer` calls stay mandatory, and so does the initial `challenger` in
+`high` Planning. After a round, its batch of fixes MAY be self-verified instead of starting the next round only when
+every fix in it meets all of these conditions:
 
-| Condition | Code review | Reconcile |
-| --- | --- | --- |
-| Location | Only the location the finding's `evidence` names | Only the document or entry the finding names |
-| Nature | Typo, comment, formatting, in-scope rename, test-only addition, or the finding's `suggested_action` applied as written | Wording only, or the finding's `suggested_action` applied as written |
-| Contract | No public API, schema, error code, CLI output or other package touched | The contract's meaning is unchanged |
-| Evidence | A test or check reproducing the `failure_condition` passes (for a P1, it failed before the fix) | The edited text and the actual diff are shown to agree |
+| Condition | Code review | Reconcile | Planning |
+| --- | --- | --- | --- |
+| Location | Only the location the finding's `evidence` names | Only the document or entry the finding names | Only the proposal section the finding names |
+| Nature | Typo, comment, formatting, in-scope rename, test-only addition, or the `suggested_action` applied as written when it names a concrete edit | Wording only, or a concrete `suggested_action` applied as written | Wording only, or a concrete `suggested_action` applied as written |
+| Contract | No public API, schema, error code, CLI output or other package touched | The contract's meaning is unchanged | No decision changed |
+| Evidence | Behavior fixes: a test or check reproducing the `failure_condition` passes (for a P1, it failed before the fix). Text-only kinds: the diff is limited to the named location | The edited text and the actual diff are shown to agree | The edited text is shown to agree with the finding |
 
-- Uncertainty on any condition requires the reviewer.
-- Recorded as self-verification with the reason and evidence: in `reverify` for code, in a new `reconcile-check` for
-  reconcile.
-- A later reviewer round includes every self-verified fix in its scope.
-- A finding that recurs can no longer be closed by self-verification.
+- Uncertainty on any condition, for any fix, requires the next round for the whole batch.
+- Recorded as self-verification with the reason and evidence: in `reverify` for code, in the new `reconcile-check`
+  for reconcile, in the `worker` envelope's summary for Planning.
+- A recurring finding can no longer be closed by self-verification.
 
 ### 3.3 Severity levels
 
-- **P1**: violates an acceptance criterion or contract, a correctness defect, data loss or a security issue.
-- **P2**: a defect with a workaround.
-- **P3**: an improvement.
+| Level | Code review | Reconcile | Planning |
+| --- | --- | --- | --- |
+| P1 | Violates an acceptance criterion or contract; a correctness defect, data loss or a security issue | A missing target for a changed behavior or contract, or a reflection that contradicts the implementation or contract | The design fails, or conflicts with an accepted ADR or capability |
+| P2 | A defect with a workaround | An incomplete or imprecise reflection with no contradiction | A defect in how a decision is specified, with a workaround |
+| P3 | An improvement | An improvement | An improvement |
 
-`spec-review` and the reviewer contracts define them; `high` requires `severity` on every finding (Q1).
+Severity is the reviewer's; the implementer records it as returned and never relabels it. It has no effect on checks;
+the stage exits still count every open finding.
 
 ### 3.4 Mandatory `scout` in `high` Planning
 
-`high` Planning runs `scout` to collect the accepted decisions, capabilities and contracts the proposal touches,
-cited in the `challenger` input.
+`high` Planning runs `scout`, starting from `devkit spec refs <ID> --direction in` for each capability and ADR the
+proposal touches, so its output is a list the `challenger` input cites. The `plan-accept` request reports a missing
+`scout` envelope at `high` as it does a missing `challenger`.
 
 ### 3.5 Reclassification advice for `high` session work
 
-When `high` is proposed for a `session` task, the agent first proposes `spec` depth. If the user keeps `session`,
-the work runs at `high` as defined.
+When `high` is proposed for a `session` task, the advice follows the trigger: creating a contract or document kind
+proposes `spec` depth; reversing an accepted decision proposes `proposal` depth; a multi-package change alone gives
+no advice. If the user keeps `session`, the work runs at `high` as defined.
 
 ### 3.6 Out of scope
 
-- **Plan review role.** A separate `plan-reviewer` before implementation. Reconsider when `high` code reviews
-  repeatedly return design-level P1s (record them as feedback).
-- **Model and reasoning settings.** `activity-effort` stays independent of them; static per-role presets are
-  `PROP-role-reasoning-effort-presets`.
+- **Plan review role.** A separate `plan-reviewer` before implementation. Reconsider when feedback records
+  design-level P1s from `high` code review in two or more units.
+- **Model and reasoning settings.** `activity-effort` stays independent of them.
+- **Envelope schema.** No new finding key, envelope kind, stage or check.
 
 ### 3.7 Impact
 
-- A new ADR supplementing `ADR-medium-review-delegation` for `high` (the accepted ADR is not edited).
-- `devkit-spec` bundle: `skills/spec/references/effort.md`, `skills/spec-review/SKILL.md`,
-  `skills/spec-delegate/SKILL.md`, the `code-reviewer`, `reconcile-reviewer` and `challenger` contracts, and the
-  `sdd-session-*`, `sdd-spec-*` and `sdd-proposal` workflow bodies. Stage ids, checks and gates are unchanged.
-- Living Spec: `CAP-DLV-delivery-workflows` (effort rules), `CAP-DLV-workflow-envelopes` (severity meaning, no
-  schema change).
+- **Decision**: `PADR-bounded-high-effort-review-loop` (frontmatter `supersedes: ADR-medium-review-delegation`,
+  carried by the promotion), an ADR that restates the `medium` and `low` rules unchanged and adds the `high` rules.
+  Development sets only `status: superseded` and `superseded_by` in the old ADR's frontmatter. Like the ADR it
+  replaces, it supplements the verifier assignment of `ADR-reconcile-check-envelope` (`medium` may self-verify the
+  initial reconcile under the stated conditions; `high` may self-verify a batch of minor reconcile fixes); that ADR's
+  envelope separation and stage check stay intact, and the initial reconcile verification at `high` stays
+  independent.
+- **`devkit-spec` bundle** (`packages/devkit-spec/src/devkit_spec/bundle/`):
+  - `skills/spec/references/effort.md` (table, rules, reclassification advice), `skills/spec/references/envelope.md`
+    (severity example and values)
+  - `skills/spec-review/SKILL.md` (loop, round order, severity), `skills/spec-delegate/SKILL.md` and
+    `skills/spec-delegate/references/payload.md` (round inputs: earlier findings, round diff scope, effort)
+  - role contracts `code-reviewer`, `reconcile-reviewer`, `challenger`, `scout`, `development-worker`,
+    `planning-worker`
+  - workflow bodies `sdd-session-feature`, `sdd-session-bugfix`, `sdd-spec-feature`, `sdd-spec-bugfix`,
+    `sdd-proposal` (prose only; stage ids, checks and gates unchanged)
+- **Tests**: `packages/devkit-spec/tests/` where they assert the contracts' or workflows' text.
+- **Living Spec**: `CAP-DLV-delivery-workflows` (effort rules, problem rule), `CAP-DLV-workflow-envelopes` (severity
+  meaning; no schema change), `CAP-DLV-proposal-incubation` (`plan-accept` gap report for `scout`).
+
+### 3.8 Decisions
+
+Decided by the user in Planning (`envelopes/answer-01.yaml`):
+
+- Each round takes the whole batch of fixes since the previous round; all findings are fixed together and the next
+  round is skipped only when every fix is minor. P2 and P3 findings may still be waived with a reason.
+- A contested P1 gets one more fresh round with the implementer's counter-evidence and goes to the user only if
+  asserted again.
+- The new ADR supersedes `ADR-medium-review-delegation`.
+- The round cap is 3 rounds after the initial review. The cap only limits further rounds: at the cap a batch that
+  is not fully minor is handed over, whatever its severity (decided in Planning from the rule that no non-minor fix
+  leaves `high` unreviewed).
+- Severity is required on every finding at every effort.
 
 ## 4. Lifecycle & Retirement Criteria
 

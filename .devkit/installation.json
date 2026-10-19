@@ -623,7 +623,7 @@
     },
     ".agents/agents/planning-worker.md": {
       "mode": 420,
-      "sha256": "68f5ec7c85098bda075f3efd3eadb02789c957bb42fbed3c8c362ccec2f9655d"
+      "sha256": "219ec34d53630a1de7b8d606a629f79a29a81c9f383c20e0e74566f7987b3c73"
     },
     ".agents/agents/reconcile-reviewer.md": {
       "mode": 420,
@@ -719,7 +719,7 @@
     },
     ".agents/skills/spec-plan/SKILL.md": {
       "mode": 420,
-      "sha256": "73e9c1f9eba0047835ede752d11feed03d033b845b7967152fe7a241aef22c26"
+      "sha256": "dfb88f3a07c3107da18f5f83ebae8cd3e93464df2f7e9ed409ba90c3c861e349"
     },
     ".agents/skills/spec-review/SKILL.md": {
       "mode": 420,
@@ -739,7 +739,7 @@
     },
     ".agents/skills/spec-specify/SKILL.md": {
       "mode": 420,
-      "sha256": "f043fb4f7b0ad9e8f97e42baad609d83f4f847fa1e24898bbc2302dabdd6ed2b"
+      "sha256": "1b74600a04987507ecaa03f1ec57abd79ac462602a4eef05853129631722dd6b"
     },
     ".agents/skills/spec-specify/references/bugfix.md": {
       "mode": 420,
@@ -755,7 +755,7 @@
     },
     ".agents/skills/spec-tasks/SKILL.md": {
       "mode": 420,
-      "sha256": "d7c6e21dd06101ccab9711199428494f8702ba7844c5004d55e6e0ca1b9bcc89"
+      "sha256": "e4a7f99e0e11d4d7e7d7314ad64e74a87a3bf5d5d5fdd75084fc926c042f3b4a"
     },
     ".agents/skills/spec/SKILL.md": {
       "mode": 420,
@@ -819,7 +819,7 @@
     },
     ".claude/agents/planning-worker.md": {
       "mode": 420,
-      "sha256": "abf7a701b3fb330c70e92331d22079bc4f8f01aa9dabc2e8a754f865b0b83047"
+      "sha256": "9d098568cbb711392f96a3af5dd3ccb89c834559c4e8b8eadedab68bb2e7b1e3"
     },
     ".claude/agents/reconcile-reviewer.md": {
       "mode": 420,
@@ -903,7 +903,7 @@
     },
     ".claude/skills/spec-plan/SKILL.md": {
       "mode": 420,
-      "sha256": "73e9c1f9eba0047835ede752d11feed03d033b845b7967152fe7a241aef22c26"
+      "sha256": "dfb88f3a07c3107da18f5f83ebae8cd3e93464df2f7e9ed409ba90c3c861e349"
     },
     ".claude/skills/spec-review/SKILL.md": {
       "mode": 420,
@@ -923,7 +923,7 @@
     },
     ".claude/skills/spec-specify/SKILL.md": {
       "mode": 420,
-      "sha256": "f043fb4f7b0ad9e8f97e42baad609d83f4f847fa1e24898bbc2302dabdd6ed2b"
+      "sha256": "1b74600a04987507ecaa03f1ec57abd79ac462602a4eef05853129631722dd6b"
     },
     ".claude/skills/spec-specify/references/bugfix.md": {
       "mode": 420,
@@ -939,7 +939,7 @@
     },
     ".claude/skills/spec-tasks/SKILL.md": {
       "mode": 420,
-      "sha256": "d7c6e21dd06101ccab9711199428494f8702ba7844c5004d55e6e0ca1b9bcc89"
+      "sha256": "e4a7f99e0e11d4d7e7d7314ad64e74a87a3bf5d5d5fdd75084fc926c042f3b4a"
     },
     ".claude/skills/spec/SKILL.md": {
       "mode": 420,
@@ -1319,7 +1319,7 @@
     },
     ".devkit/managed/spec/skills/spec-plan/SKILL.md": {
       "mode": 420,
-      "sha256": "73e9c1f9eba0047835ede752d11feed03d033b845b7967152fe7a241aef22c26"
+      "sha256": "dfb88f3a07c3107da18f5f83ebae8cd3e93464df2f7e9ed409ba90c3c861e349"
     },
     ".devkit/managed/spec/skills/spec-review/SKILL.md": {
       "mode": 420,
@@ -1339,7 +1339,7 @@
     },
     ".devkit/managed/spec/skills/spec-specify/SKILL.md": {
       "mode": 420,
-      "sha256": "f043fb4f7b0ad9e8f97e42baad609d83f4f847fa1e24898bbc2302dabdd6ed2b"
+      "sha256": "1b74600a04987507ecaa03f1ec57abd79ac462602a4eef05853129631722dd6b"
     },
     ".devkit/managed/spec/skills/spec-specify/references/bugfix.md": {
       "mode": 420,
@@ -1355,7 +1355,7 @@
     },
     ".devkit/managed/spec/skills/spec-tasks/SKILL.md": {
       "mode": 420,
-      "sha256": "d7c6e21dd06101ccab9711199428494f8702ba7844c5004d55e6e0ca1b9bcc89"
+      "sha256": "e4a7f99e0e11d4d7e7d7314ad64e74a87a3bf5d5d5fdd75084fc926c042f3b4a"
     },
     ".devkit/managed/spec/skills/spec/SKILL.md": {
       "mode": 420,
@@ -1419,7 +1419,7 @@
     },
     ".devkit/managed/spec/subagents/planning-worker.md": {
       "mode": 420,
-      "sha256": "6f51a2bb865efc4993dca17c4ab8fd596946e2ba74e87565ed36339121c0e50a"
+      "sha256": "12abfccd5be8dee743f4d75ceedc23cae2dd2c5da4228f8ec9f54b12419349eb"
     },
     ".devkit/managed/spec/subagents/reconcile-reviewer.md": {
       "mode": 420,
