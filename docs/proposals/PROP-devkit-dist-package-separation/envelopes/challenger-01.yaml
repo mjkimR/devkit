@@ -1,0 +1,84 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-18T23:48:29.759550Z'
+status: completed
+summary: 'PADR structure holds (import closure, N1 namespace, M1 mount, C2 config ownership check out); gaps: harness directives in devkit-dist code and bundle text are under-inventoried, extra fix directives undecided, no mechanism for dist-only tests, user questions omit asymmetric costs.'
+findings:
+- issue: 'Harness directives live in devkit-dist code: workflow_skill.py generates the devkit-workflow entry skill (every step runs devkit workflow) whenever a selected bundle ships a workflow asset; rule and gate assets are synced standalone and never evaluated, without a notice.'
+  evidence: packages/devkit/src/devkit/distribution/installation/workflow_skill.py:12-85; inventory.py:27,33,383-389
+  failure_condition: 'Only devkit-dist installed and a selected bundle ships a workflow, rule or gate asset: sync deploys a skill whose commands are unknown and rules that never run.'
+  suggested_action: 'Decide: entry point inversion, a sync notice when the engine is missing, or a documented limitation.'
+  resolution: open
+  severity: medium
+- issue: The harness-guidance question lists only contracts 5-6 and two consumption sections; harness commands also appear in the constitution intro, consumption description/config table, resource-kinds.md and in-repo-bundle.md (which tells consumers to install devkit-agt). The PADR claim that file hashes and paths are unchanged becomes false once text moves.
+  evidence: distribution/guide/bundle/AGENTS.md:3-5,27-34; instructions/consumption.md:3,12,85-109; resource-kinds.md:17-19,42-46,101; in-repo-bundle.md:85-88,122-143; PADR-dist-config-receipt-ownership.md:86-87
+  failure_condition: User answers with only the listed sections in view; standalone still deploys harness directives.
+  suggested_action: Put the full inventory in the question; make the hash statement conditional.
+  resolution: open
+  severity: medium
+- issue: Missing-extra fix directives (search, mcp) live in devkit-dist modules and no fixed text is right for both installations.
+  evidence: packages/devkit/src/devkit/search/errors.py:20-35; host/errors.py:57; host/cli.py:150; distribution/cli/__init__.py:156
+  failure_condition: Standalone directive installs devkit-agt[search] (pulls the harness); a devkit-dist[search] git requirement next to devkit-agt can conflict with devkit-agt's resolved source.
+  suggested_action: Pick a deterministic directive and record it in PADR-dist-module-split.
+  resolution: open
+  severity: medium
+- issue: 'The requirement that devkit-dist tests run without devkit-agt has no mechanism: one workspace venv installs devkit-agt[search,mcp] and devkit-spec, so agt entry points stay visible to dist tests.'
+  evidence: pyproject.toml:42-68; justfile:25-26; PADR-dist-module-split.md:104-108
+  failure_condition: A dist test or module depends on a devkit-agt entry point; just test and CI stay green while the standalone wheel ships broken.
+  suggested_action: Name a dist-only job (isolated uv run or smoke install) running devkit-dist tests and asserting find_spec('devkit.rules') is None.
+  resolution: open
+  severity: medium
+- issue: 'compact-home question hides asymmetric costs: keeping compact in devkit-agt forces devkit-run and the run preset out of the auto-selected devkit bundle, so configurations selecting devkit:run fail with SelectionError and a fifth built-in bundle is needed.'
+  evidence: distribution/guide/bundle/bundle.toml:27-45; distribution/bundles/manifest.py:104-107; compact/cli.py:29
+  failure_condition: User picks agt without seeing the preset breakage.
+  suggested_action: Show both costs in the question; devkit-dist is cheaper.
+  resolution: open
+  severity: medium
+- issue: After M1 devkit-agt ships no console script, but ARCH-05-3 and CAP-DIST-content-packages describe uv tool install <wheel>.
+  evidence: docs/architecture/ARCH-05-3-command-plugins.md:32; docs/capabilities/distribution/CAP-DIST-content-packages.md:62-64
+  failure_condition: uv tool install devkit-agt finds no executables.
+  suggested_action: Document uv tool install devkit-dist --with devkit-agt.
+  resolution: open
+  severity: low
+- issue: The tool-version notice shows only the old package name, so the switch to devkit-dist never appears.
+  evidence: packages/devkit/src/devkit/distribution/installation/sync.py:523-530
+  failure_condition: First sync prints devkit-agt 0.1.1 -> 0.1.1 while recording devkit-dist.
+  suggested_action: Render the package on both sides when it differs, or drop the claim.
+  resolution: open
+  severity: low
+- issue: The quoted per-call scan cost (10-13 ms) is the whole-process delta; the in-process scan measured 18-24 ms.
+  evidence: PADR-dist-command-composition.md:77-78; materials/20261019-package-split-evidence.md:88-91
+  failure_condition: The PADR records a cost that does not match the measurements listed.
+  suggested_action: Restate the cost with both measurements.
+  resolution: open
+  severity: low
+- issue: The proposal frames the benefit as smaller dependencies, but devkit-dist needs every third-party runtime dependency devkit-agt has; the gain is command surface, guidance and harness code.
+  evidence: packages/devkit/pyproject.toml:7-13; core/cli.py:54; core/frontmatter.py:29; distribution/bundles/templates.py:61-62; installation/config.py:27; proposal.md:34,66
+  failure_condition: plan-accept weighs cost against a false premise.
+  suggested_action: Rewrite section 1.1 and Consumer Impact to state the actual gain.
+  resolution: open
+  severity: low
+- issue: Root AGENTS.md calls devkit-agt the single distribution and states layering inside packages/devkit; not named as a reconcile target.
+  evidence: AGENTS.md:10,38
+  failure_condition: Agents keep reading the outdated package map and layering rule.
+  suggested_action: Add AGENTS.md to the reconcile targets.
+  resolution: open
+  severity: low
+- issue: The non-goal of an advisory for harness command names conflicts with the agent-first contract and the design's own precedent of name-only knowledge (reserved table names).
+  evidence: PADR-dist-command-composition.md:46-48,67-68; PADR-dist-config-receipt-ownership.md:68-69; AGENTS.md:28
+  failure_condition: A standalone agent following leftover guidance gets a code-less click usage error.
+  suggested_action: 'Decide: keep the non-goal or add a name-only reserved set answering with a coded advisory.'
+  resolution: open
+  severity: low
+assumptions:
+- Spawned as a native isolated challenger subagent (claude-code host status native, read-only tools); diff checked empty afterwards
+- PADR-dist-foundation-ownership treated as settled; necessity not re-litigated
+unverified_areas:
+- uv behavior for uv tool install of a package without console scripts and for conflicting devkit-dist URL sources (from knowledge)
+- No wheels built, no tests run; latency taken from the evidence material
+checks: {}
+diff_scope:
+  base: 3c53d75c917d92bcf411a422913b685625d471f2
+  head: 9d390f461e493b6c7f561be5f835b450aa6af976

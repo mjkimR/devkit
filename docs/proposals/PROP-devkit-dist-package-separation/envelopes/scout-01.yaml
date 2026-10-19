@@ -1,0 +1,54 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-18T23:40:04.546835Z'
+status: completed
+summary: Import split is clean (no devkit-dist area imports a harness area); coupling sits in hard-coded devkit-agt identity strings, harness config tables in distribution, four dist-side tests, the root py.typed marker and release/smoke wiring. Harness commands moved to devkit.commands pay about 10-13 ms per call; Git hooks bypass the root CLI.
+findings:
+- issue: 'Dist-side tests coupled to harness: distribution/test_config_template.py imports devkit.workflow and devkit.worktree config readers; core/test_cli.py asserts rules/workflow/gate are root commands; distribution/test_sync.py expects the gate post_sync hook; testsupport.gate imports devkit.gate at top level.'
+  evidence: packages/devkit/tests/distribution/test_config_template.py:28-29; tests/core/test_cli.py:274-295; tests/distribution/test_sync.py:829-840; tests/testsupport/gate.py:11,16
+  suggested_action: Move these assertions to devkit-agt tests that exercise both wheels; keep devkit-dist tests runnable without devkit-agt.
+  resolution: open
+  severity: medium
+- issue: Harness groups moved to devkit.commands pay the entry point scan on every call (about +10-13 ms; entry_points scan 18-24 ms in-process vs import devkit.cli 10-13 ms). Git hooks run devkit.gate through a bootstrap that never imports devkit.cli, so commits are unaffected.
+  evidence: packages/devkit/src/devkit/cli.py:46-84,143-156; gate/hooks/hooks.py:166-218; measured with uv run python -c in the worktree
+  suggested_action: Accept the cost; record it and keep the hook bootstrap independent of the root group.
+  resolution: open
+  severity: low
+- issue: Both wheels would ship devkit/py.typed if the root marker stays; PEP 561 places markers in namespace subpackages.
+  evidence: packages/devkit/src/devkit/py.typed; packages/devkit/pyproject.toml:65-67; PEP 561 packaging section
+  suggested_action: Drop the root marker and ship per-area py.typed files in each wheel.
+  resolution: open
+  severity: medium
+- issue: 'Hard-coded devkit-agt identity in dist-side code: BUILTIN_DISTRIBUTION, TOOL_PACKAGE, version(''devkit-agt'') in cli.py and the MCP server, extra names in search/host fix strings; the gate hook wrapper and worktree lifecycle probe for devkit_agt-*.dist-info to pick the interpreter (stays valid while gate ships in devkit-agt).'
+  evidence: distribution/installation/discovery.py:15; sync.py:77; cli.py:164; host/mcp/server.py:24; search/errors.py:20-35; gate/hooks/hooks.py:202; worktree/lifecycle.py:830-838
+  suggested_action: Rename the dist-side identities to devkit-dist; make built-in a set of the two first-party distributions; keep the agt probes.
+  resolution: open
+  severity: medium
+- issue: The devkit.host.handlers 'observe' entry point targets devkit.host and must move to devkit-dist's metadata; devkit.host.services 'integration' stays with devkit-agt.
+  evidence: packages/devkit/pyproject.toml:44-48; host/runner.py:19-27
+  suggested_action: Move the observe entry with host.
+  resolution: open
+  severity: low
+- issue: 'Release and smoke wiring name wheels and identities: release.sh checks the tag against packages/devkit/pyproject.toml and lists devkit_agt/advisory/spec wheels; smoke.sh asserts tool_identity().package == ''devkit-agt'' and built-in bundle packages; _lib.sh reads the devkit-embed URL from packages/devkit/pyproject.toml; root pyproject namespace-packages, extraPaths, testpaths and dev group name packages/devkit.'
+  evidence: scripts/release.sh:19-55; scripts/smoke.sh:29-224; scripts/_lib.sh:6-13; pyproject.toml:9-72
+  suggested_action: Add devkit-dist to each; add a dist-only smoke installation.
+  resolution: open
+  severity: medium
+- issue: 'Living Spec and guides naming devkit-agt or packages/devkit paths: ARCH-01, ARCH-03, ARCH-05-1/2/3/4, ARCH-07, architecture README, CAP-DIST-* (frontmatter code paths, tool.package, built-in bundles, extras), CAP-SRCH-document-search, CAP-INT-mcp-services, CAP-HOST-lifecycle-observation, docs/development/reference/*, guides/*, package READMEs, root README, bundled in-repo-bundle and agent-advisory-python instructions.'
+  evidence: rg devkit-agt over docs/, guides/, packages/*/README.md, packages/*/src
+  suggested_action: Carry the list into the spec's reconcile targets; capabilities/integration and development references join the proposal boundaries.
+  resolution: open
+  severity: low
+assumptions:
+- Spawned as a native isolated scout subagent (claude-code host status native); read-only, diff checked empty afterwards
+- Timings from one macOS arm64 machine, 3-5 runs, relative magnitudes only
+unverified_areas:
+- No wheels built; py.typed overlap inferred from hatch packages=['src/devkit']
+- No dist-only test run attempted; import failures inferred statically
+- Latency not measured on Linux/CI or with larger site-packages
+checks: {}
+diff_scope:
+  base: 3c53d75c917d92bcf411a422913b685625d471f2
+  head: 47c6881bdbd07162b536cefff03c6ac1dcb8550b
