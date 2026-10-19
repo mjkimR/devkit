@@ -1,0 +1,10 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T00:30:34.981974Z'
+status: completed
+summary: 'reconcile-reviewer subagent (high) re-check at 8293f88: the five reconcile-check-01 findings resolved (ci-cd.md, setup.md, ARCH-07, CAP-VIEW §5, refs JSDoc); no new finding; guides/install need no reflection for an optional personal tool.'
+findings: []
+checks:
+  reconcile: PASS 9 targets verified, 0 findings

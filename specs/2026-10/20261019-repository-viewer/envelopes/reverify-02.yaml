@@ -1,0 +1,21 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T00:23:49.940245Z'
+status: completed
+review: review-02.yaml
+summary: ''
+findings:
+- issue: A local branch that shares its name with a tag is listed as heads/<name> (symbolic-ref --short, refname:short), which commit() then looks up as refs/heads/heads/<name>, so every read of it fails
+  evidence: packages/devkit-viewer/src/devkit_viewer/git.py:65
+  failure_condition: 'A registered repository has a tag named like a local branch (or like the checked-out branch): /refs lists heads/<name> and every tree or blob read of that branch answers 404 VIEWER_REF_UNKNOWN'
+  suggested_action: List full branch names (symbolic-ref without --short, refname:lstrip=2) and test a branch shadowed by a tag
+  resolution: resolved
+- issue: ADR-read-only-local-server-over-git-refs §4 names rev-parse --verify as the ref mechanism, while the code resolves HEAD or refs/heads/<exact name> with show-ref
+  evidence: docs/decisions/2026-10/20261019-read-only-local-server-over-git-refs.md:84
+  failure_condition: A reader of the ADR expects any revision rev-parse resolves to be readable
+  suggested_action: Keep the CAP canonical and record the narrowing, or reword the ADR bullet per the ADR-editing policy
+  resolution: waived
+  waiver: The decision (HEAD or local branches only, nothing fetched) holds and is enforced more strictly; accepted ADRs are append-only, CAP-VIEW-repository-viewer §2 states the exact rule and reconcile.md names the narrowing
+checks: {}

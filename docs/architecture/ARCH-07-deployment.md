@@ -24,6 +24,7 @@ GitHub Release Assets (vX.Y.Z):
 ├── devkit_spec-<spec-version>-py3-none-any.whl
 ├── devkit_starter-<starter-version>-py3-none-any.whl
 ├── devkit_catalog-<catalog-version>-py3-none-any.whl
+├── devkit_viewer-<viewer-version>-py3-none-any.whl
 └── SHA256SUMS
 ```
 
@@ -35,11 +36,15 @@ In consumer projects managed with `uv`, devkit is declared either via release wh
 uv add --dev "devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
 # Optional SDD extension; uv uses the same monorepo for its base dependencies:
 uv add --dev "devkit-spec @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-spec"
+# Optional local viewer; its page is committed, so installing from Git needs no Node:
+uv add --dev "devkit-viewer @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-viewer"
 ```
 
-`uv.lock` pins the resolved commits. Devkit-agt and devkit-advisory share a version; spec, starter and catalog keep
-independent versions. Release-wheel installations name every required local package wheel explicitly; release
-notes include both base and SDD installation commands.
+`uv.lock` pins the resolved commits. Devkit-agt and devkit-advisory share a version; spec, starter, catalog and
+viewer keep independent versions. The viewer's Svelte library is not a release asset: a host such as autohub
+vendors its `npm pack` tarball from a pinned commit (`CAP-VIEW-repository-viewer`). Release-wheel installations
+name every required local package wheel explicitly; release notes include the base, SDD and viewer installation
+commands.
 
 ---
 

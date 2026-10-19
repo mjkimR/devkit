@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: classification proposal x feature; planning effort low, development effort medium;
+  no milestone; static per-role presets without model names, Antigravity unset
+by: user
+at: '2026-10-19T00:17:14.521033Z'

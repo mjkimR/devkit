@@ -17,3 +17,4 @@ Each reference points to the canonical capability and architecture documents by 
 | `devkit.generated` | [Generated](generated.md) | `CAP-GEN-tracked-artifacts` |
 | `devkit.search` | [Search](search.md) | `CAP-SRCH-document-search` |
 | `devkit.compact` | [Compact](compact.md) | `CAP-CMP-bounded-execution` |
+| `devkit_viewer` (devkit-viewer) | [Viewer](viewer.md) | `CAP-VIEW-repository-viewer` |

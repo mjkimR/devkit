@@ -51,6 +51,7 @@ resolve_module() {
         starter) echo "devkit-starter" ;;
         catalog) echo "devkit-catalog" ;;
         spec) echo "devkit-spec" ;;
+        viewer) echo "devkit-viewer" ;;
         *) echo "$1" ;;
     esac
 }

@@ -61,6 +61,10 @@ workflow *args:
 gate *args:
     uv run --no-active --package devkit-agt devkit gate "$@"
 
+# Frontend of devkit-viewer (needs Node): install, lint, check, test, build (the committed page) or pack [dir]
+viewer action *args:
+    bash scripts/viewer.sh "$@"
+
 # Build all wheels and exercise them from a fresh consumer project (needs git)
 smoke:
     bash scripts/smoke.sh

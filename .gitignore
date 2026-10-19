@@ -55,3 +55,9 @@ models/devkit-embed/src/devkit_embed/tokenizer.json
 .agents/
 .claude/
 .codex/
+
+# devkit-viewer frontend: dependencies and local build output (the committed page lives under src/devkit_viewer/static/)
+packages/devkit-viewer/frontend/node_modules/
+packages/devkit-viewer/frontend/dist/
+packages/devkit-viewer/frontend/dist-pack/
+packages/devkit-viewer/frontend/.svelte-kit/
