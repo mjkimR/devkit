@@ -110,14 +110,16 @@ def test_reviewer_and_reconciler_keep_the_skills_the_main_session_shares() -> No
     assert _contract("reconcile-reviewer")[0]["skill"] == "spec-sync"
 
 
-def test_only_scout_gains_a_shell() -> None:
+def test_support_roles_shell_access() -> None:
     scout = _contract("scout")[0]["hosts"]
     assert "Bash" in scout["claude-code"]["tools"]
     assert "run_command" in scout["antigravity"]["tools"]
     assert scout["antigravity"]["commandExecutionPolicy"] == "sandbox"
     challenger = _contract("challenger")[0]["hosts"]
-    assert "Bash" not in challenger["claude-code"]["tools"]
-    assert "run_command" not in challenger["antigravity"]["tools"]
+    assert "Bash" in challenger["claude-code"]["tools"]
+    assert challenger["claude-code"]["disallowedTools"] == ["Write", "Edit"]
+    assert "run_command" in challenger["antigravity"]["tools"]
+    assert challenger["antigravity"]["commandExecutionPolicy"] == "sandbox"
 
 
 @pytest.mark.parametrize("role", WORKERS)

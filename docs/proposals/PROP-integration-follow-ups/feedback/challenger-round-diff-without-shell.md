@@ -10,7 +10,9 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
+resolved_at: 2026-10-19
+disposition: "Granted read-only shell access in challenger subagent definition (Bash with Write/Edit disallowed on Claude Code; run_command with sandbox execution policy on Antigravity), matching x-git-actions: [read] and code-reviewer pattern."
 created_at: 2026-10-19
 ---
 

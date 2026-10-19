@@ -10,7 +10,9 @@ agent: claude-code
 origin: agent
 severity: friction
 recurring: false
-status: open
+status: resolved
+resolved_at: 2026-10-19
+disposition: Clarified review-loop.md §4 that the resolution envelope is recorded when the requested round finishes, and that any failure of the post-resolution round's batch to meet §2 terminates the run and hands back to the user as a problem.
 created_at: 2026-10-19
 ---
 

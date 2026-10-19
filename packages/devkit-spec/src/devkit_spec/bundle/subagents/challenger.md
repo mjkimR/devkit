@@ -8,9 +8,11 @@ x-model-profile: high-reasoning
 x-git-actions: [read]
 hosts:
   # The reasoning effort is preset per role (ADR-role-effort-presets); the model is left to the runtime.
+  # Shell access runs `git diff`; disallowedTools prevents file writes.
   claude-code:
     status: native
-    tools: [Read, Grep, Glob]
+    tools: [Read, Grep, Glob, Bash]
+    disallowedTools: [Write, Edit]
     effort: high
   # Expected diff after the run: none.
   codex:
@@ -19,8 +21,8 @@ hosts:
     model_reasoning_effort: high
   antigravity:
     status: native
-    tools: [view_file, grep_search]
-    commandExecutionPolicy: "off"
+    tools: [view_file, grep_search, run_command]
+    commandExecutionPolicy: sandbox
 ---
 
 # Challenger

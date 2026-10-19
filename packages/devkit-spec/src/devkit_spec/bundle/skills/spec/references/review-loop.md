@@ -53,7 +53,8 @@ A reviewer given earlier findings marks a finding that repeats one of them by st
 
 - At the cap round a batch that fully meets section 2 ends the loop whatever its severity, a minor-fix P1 included; any batch that would need another round is handed over, P2 and P3 included unless each is waived with a reason.
 - A P1 the user rules invalid is closed with `reverify --waive <N>=<reason>` citing the `answer` envelope: the only waiver a P1 may carry. For reconcile and Planning the same goes into the new `reconcile-check` or the `worker` summary.
-- When the user resolves a cap or recurrence problem by asking for a fix, that fix gets one further fresh round outside the cap, named by the `resolution` envelope. Its outcome follows the rules above; a recurrence of the same P1 hands over again.
+- When the user resolves a cap or recurrence problem by asking for a fix, that fix gets one further fresh round outside the cap, named by the `resolution` envelope. The `resolution` envelope is recorded for the completed recovery attempt once the round finishes, regardless of whether the round passed or required a new problem handover.
+- If the post-resolution round's batch fails section 2 for any reason (a recurrence of any severity, or any fix that does not meet the minor-fix conditions), the run terminates and hands back to the user as a `problem` in the `worker` envelope; no further round is started without another user resolution.
 - `Decision needed:` findings of a `challenger` stay out of the loop and go to `plan-accept`.
 
 ## 5. Planning at `high`

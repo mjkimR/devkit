@@ -10,7 +10,9 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
+resolved_at: 2026-10-19
+disposition: Added explicit instruction to planning.md step 3 to wait for every started support role to return before relying on its result and never end the turn while one is still running, matching planning-worker.md.
 created_at: 2026-10-19
 ---
 

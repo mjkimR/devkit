@@ -74,7 +74,8 @@ def test_hand_over_uses_worker_problems_and_questions() -> None:
     assert "At the cap round, the third after the initial review, the batch does not meet section 2" in loop
     assert "The same P1 recurs after its fix" in loop
     assert "still asserted after one more round given the implementer's counter-evidence" in loop
-    assert loop.count("`problem` in the `worker` envelope") == 2
+    assert loop.count("`problem` in the `worker` envelope") == 3
+    assert "terminates and hands back to the user as a `problem` in the `worker` envelope" in loop
     assert "`questions` entry with the reviewer's and the implementer's positions as options" in loop
     assert "Reported in the conversation; not integrated" in loop and "Asked in the conversation" in loop
     assert "citing the `answer` envelope: the only waiver a P1 may carry" in loop
