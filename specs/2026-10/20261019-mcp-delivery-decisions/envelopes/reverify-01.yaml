@@ -1,0 +1,29 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T14:27:44.512146Z'
+status: completed
+review: review-01.yaml
+summary: 'Developer reverified both independent P2 findings: required passed gates are explicit, and creation/setup are pinned to the reviewed commit.'
+findings:
+- issue: Workflow completion alone does not enforce the proposal's mandatory approval gates.
+  evidence: packages/devkit-spec/src/devkit_spec/handoff_mcp.py:92
+  failure_condition: When workflow.stages disables intent-proposal or direction-handoff, evaluation can report complete without the proposal's own plan-intent or plan-accept approval. An accepted status then permits Development to start.
+  suggested_action: Require satisfied plan-intent and plan-accept entries in evaluation.passed_gates before displaying confirmation; add a missing-record and disabled-stage regression.
+  resolution: resolved
+  severity: P2
+- issue: A base change during worktree creation can run setup from an unreviewed commit.
+  evidence: packages/devkit-spec/src/devkit_spec/handoff_mcp.py:145
+  failure_condition: After prepare revalidates the preview, start performs remote checks, creates from ambient HEAD and runs setup before the stale-source check. A concurrent base advance can therefore execute setup from unapproved contents.
+  suggested_action: Create from the reviewed immutable SHA before setup and add a base-advance regression.
+  resolution: resolved
+  severity: P2
+assumptions:
+- Medium repeat review is developer self-verification; the original reviewer did not inspect these fixes.
+checks:
+  handoff: PASS 9 tests including real SDK form exchange, missing gate records and base advance during branch checks
+  types: PASS devkit and devkit-spec
+diff_scope:
+  base: d9a1f1ce04336e0e49e26bb831aca2ff4ae1f5d1
+  head: 9e9e823c7f8e6c3c1de7d8e54794844ad812ba92

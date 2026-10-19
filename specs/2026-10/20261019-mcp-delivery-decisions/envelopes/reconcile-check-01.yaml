@@ -1,0 +1,20 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T14:27:46.807624Z'
+status: completed
+summary: Initial independent reconciliation verified four targets and found one missing handoff entrypoint.
+findings:
+- issue: The new native handoff implementation is missing from its capability's entrypoints.
+  evidence: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md:10
+  failure_condition: Capability discovery by the new implementation file cannot locate its owning contract, leaving the spec-sync entrypoint reflection incomplete.
+  suggested_action: Add packages/devkit-spec/src/devkit_spec/handoff_mcp.py to CAP-DLV-proposal-incubation using the spec-entrypoints procedure.
+  resolution: open
+  severity: P2
+assumptions:
+- Fresh isolated reconcile-reviewer used the emulated Codex projection and changed no files, index or HEAD.
+checks: {}
+diff_scope:
+  base: f52e3b64c97797e11b965dff65303a747ae0c8ed
+  head: d9a1f1ce04336e0e49e26bb831aca2ff4ae1f5d1

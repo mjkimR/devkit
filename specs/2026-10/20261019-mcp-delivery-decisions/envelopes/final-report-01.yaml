@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T14:28:28.567047Z'
+status: completed
+summary: Local MCP reviews the accepted plan and chosen effort before creating Development; merge confirmation leads with committed work summaries. Required approvals and reviewed source pinning are enforced.
+findings: []
+assumptions:
+- AutoHub and local native MCP remain alternative hosts; no AutoHub changes or deployment are included.
+unverified_areas:
+- Native visible UI rendering and activation in the retained runtime require integration and client reconnection.
+checks:
+  tests: PASS 3590 passed, 12 skipped; test-affected full fallback
+  build: PASS devkit-dist, devkit-agt, devkit-spec sdist and wheel builds
+  lint: PASS lint-check and type checks for all changed packages
+diff_scope:
+  base: f52e3b64c97797e11b965dff65303a747ae0c8ed
+  head: 9e9e823c7f8e6c3c1de7d8e54794844ad812ba92
