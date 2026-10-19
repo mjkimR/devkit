@@ -1,0 +1,15 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T15:03:46.569440Z'
+status: completed
+summary: 'Low-effort author self-review: AC-01 through AC-03 match ADR, constitution and workflow contract; existing gates, authority and review stops preserved.'
+findings: []
+checks:
+  tests: 'PASS just test-affected: 1002 passed'
+  lint: PASS document rules and git diff --check; spec-progress resolved by reconcile
+diff_scope:
+  base: f29259da426985574260e9e609f55bdedfbdf159
+  head: 20740549d0e6d0601ac22bede5529831bdff0191
+activity_effort: low

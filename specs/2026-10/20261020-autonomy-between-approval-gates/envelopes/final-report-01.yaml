@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T15:04:10.302907Z'
+status: completed
+summary: Accepted autonomy ADR and synchronized spec constitution; workflow contract preserves required gates, checks, authority and explicit review stops.
+findings: []
+checks:
+  tests: 'PASS just test-affected: 1002 passed'
+  build: PASS documentation-only; devkit sync completed
+  lint: 'PASS devkit rules check: zero errors or warnings; git diff --check'
+diff_scope:
+  base: 50e8d36e07175a3322682d30829a01f68a138586
+  head: 20740549d0e6d0601ac22bede5529831bdff0191

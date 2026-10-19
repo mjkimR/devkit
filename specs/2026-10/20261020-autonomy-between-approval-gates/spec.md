@@ -2,7 +2,7 @@
 id: SPEC-autonomy-between-approval-gates
 title: Agent autonomy between explicit human decision points
 summary: "Concentrates human intervention at defined approval and review points while agents handle implementation, verification and recovery within approved scope."
-status: planned
+status: completed
 created: 2026-10-20
 related_capabilities:
   - CAP-DLV-delivery-workflows

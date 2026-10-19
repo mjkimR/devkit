@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T15:03:49.265676Z'
+status: completed
+summary: 'Low-effort self-verification: both Living Spec targets and source constitution directly agree with AC-01 through AC-03. Entrypoint candidate AGENTS.md rejected as shared constitution policy, not a runtime entrypoint.'
+findings: []
+checks:
+  contracts: PASS compared ADR, constitution, workflow contract and preserved escalation boundaries
+diff_scope:
+  base: 50e8d36e07175a3322682d30829a01f68a138586
+  head: 20740549d0e6d0601ac22bede5529831bdff0191
+activity_effort: low
