@@ -2,7 +2,7 @@
 id: SPEC-direct-planning-procedure
 title: Planning procedure reachable from the spec skill for any executor
 summary: Moves the ordered Planning steps out of the planning-worker contract into a spec skill reference that direct-mode Hosts and workers both follow, so the procedure lives in one place.
-status: planned
+status: in-progress
 created: 2026-10-19
 related_capabilities:
   - CAP-DLV-delivery-workflows
