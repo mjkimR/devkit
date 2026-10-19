@@ -1,6 +1,6 @@
 ---
 name: living-spec-writing
-description: Read before authoring, editing or reviewing docs/ or specs/ documents. Defines current-state writing, history placement, completed specs, story-capability traceability, summaries, ID references, terminology and the glossary.
+description: Read before authoring, editing or reviewing docs/ or specs/ documents. Defines current-state writing, decision placement, history placement, completed specs, story-capability traceability, summaries, ID references, terminology and the glossary.
 ---
 
 # Living Spec Writing
@@ -11,6 +11,19 @@ description: Read before authoring, editing or reviewing docs/ or specs/ documen
 - Do not add dated headings, correction notes ("corrected on ...", "changed from X to Y") or history sections to capabilities, stories, architecture, development guides, the glossary or proposals.
 - Change history belongs in Git, append-only ADRs (replace through `supersedes`) and dated `docs/materials/`. Frontmatter dates and ADR/material dates are metadata, not prose history.
 - Temporary checklists and PR task lists belong in `specs/`, never directly in `docs/`.
+
+## Decision Placement and Duplication
+
+- Record decisions and their rationale in ADRs. Planning already searches related ADRs; importance alone is not a
+  reason to repeat a decision in guidance blocks, constitutions or other always-loaded instructions, or to keep
+  appending references to individual ADRs there.
+- Reserve always-loaded guidance for common constraints an agent needs before it can search for task-specific
+  decisions. An exception SHOULD identify the concrete failure caused by missing that constraint before discovery;
+  include only the minimum operational rule and keep its detailed rationale in the ADR.
+- Capabilities describe the affected feature's current contract. Update that contract when behavior changes, but
+  do not copy the ADR's reasoning or background into it merely to make the decision more visible.
+- Choose placement by when the information is needed. Avoid the pattern "this decision is important, so add it
+  everywhere the agent reads"; use relevant ADR discovery instead of accumulating decision-specific context.
 
 ## Completed Specs and Traceability
 
