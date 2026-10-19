@@ -89,7 +89,8 @@ sequence.
    the cap round, or a recurring P1, is a problem; a P1 the implementer holds invalid and the reviewer asserts again
    after one round given the counter-evidence is a question in the run's `worker` envelope, with both positions as
    options. A P1 the user then rules invalid is closed only by a waiver citing the `answer` envelope, and a fix the
-   user asks for gets one further round outside the cap. A session reports either in the conversation and does not
+   user asks for after a cap or recurrence problem gets one further round outside the cap, named by the `resolution`
+   envelope. A session reports either in the conversation and does not
    integrate; none of this is the `exception` stage. A worker records it and ends; the Host decides recovery or a
    close. There is no return from Development to Planning.
 8. **`dev-integration` is per integration unit** (one pull request): it has no exit checks of its own and is asked as
@@ -143,7 +144,10 @@ sequence.
     calls, the first reconcile verification included, are never replaced by a self-check, and a recurring finding is
     never self-verified. Each round's summary starts with `round <N>;`; the cap is 3 rounds after the initial one and
     is not reset by `devkit workflow return` within a segment. A batch not minor at the cap round and a recurring P1
-    (`recurs:` at the start of the reviewer's `issue`) stop the work (rule 7). The procedure ships in the `spec`
+    (`recurs:` at the start of the reviewer's `issue`) stop the work (rule 7). A finding whose `evidence` path is not
+    in the round's diff file list is out of scope: it is fixed with the batch and never counts as a recurrence; a
+    `challenger` finding whose `suggested_action` starts with `Decision needed:` stays out of the loop and goes to
+    `plan-accept`. The procedure ships in the `spec`
     skill's `references/review-loop.md`.
     Every finding of a `review`, `reconcile-check` or `challenger` envelope carries `severity` `P1`, `P2` or `P3` at
     every effort, with one `P1` definition per review kind (a contract or acceptance-criterion violation, a missing or
@@ -309,7 +313,8 @@ A unit is held while a `worker` envelope's problem has no `resolution` naming it
 `ADR-run-records-and-activity-branches`.
 
 A role returns `status` (`completed`, `needs_input`, `failed`), `summary`, `findings` (`issue`, `evidence`,
-`failure_condition`, `suggested_action`), `assumptions`, `unverified_areas`, `checks` and `diff_scope`. Docs impact
+`failure_condition`, `suggested_action`, and `severity` `P1`, `P2` or `P3` on every `review`, `reconcile-check` and
+`challenger` finding, rule 15), `assumptions`, `unverified_areas`, `checks` and `diff_scope`. Docs impact
 has no envelope key: it lives in `reconcile.md`.
 
 ### 4.6 Role Contracts

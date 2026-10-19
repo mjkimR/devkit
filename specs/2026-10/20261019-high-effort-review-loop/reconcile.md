@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-high-effort-review-loop
 feature: SPEC-high-effort-review-loop
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
     resolution: modified
@@ -14,7 +14,7 @@ targets:
     rationale: "It defines no plan-accept request content: the request and its gap report live in the sdd-proposal body and rule 15 of CAP-DLV-delivery-workflows, where the missing-scout gap was added. Its effort-hint and handoff rules are unchanged."
   - file: docs/decisions/2026-10/20261016-medium-review-delegation.md
     resolution: waived
-    rationale: "Its body stays as accepted (ADRs are append-only). Setting status superseded and superseded_by in its frontmatter is outside this Development turn's write scope; the Host sets them before integration (open item of the final change report)."
+    rationale: "Not reflected in this Development turn: its body stays as accepted (ADRs are append-only), and the frontmatter edit the supersede requires (status superseded, superseded_by ADR-bounded-high-effort-review-loop) is outside this turn's write scope. It is an open item for the Host: the integrate stage (docs authority for the reflection the approved change requires) makes the edit and changes this target to modified."
 ---
 
 # Reconcile: `SPEC-high-effort-review-loop`
@@ -31,11 +31,15 @@ targets:
     on every `review`, `reconcile-check` and `challenger` finding, session reclassification advice, `scout` from
     `devkit spec refs` in `high` Planning and the `plan-accept` gap report for a missing `scout`. The deciding ADR
     reference moves from `ADR-medium-review-delegation` to `ADR-bounded-high-effort-review-loop`; the `medium` and
-    `low` sentences are unchanged.
-  - Section 4.5, `reconcile-check` row: a `high` minor-fix self-verification and the round marker.
+    `low` sentences are unchanged. Rule 15 also states the out-of-scope and `Decision needed:` exclusions.
+  - Section 4.5: the `reconcile-check` row names a `high` minor-fix self-verification and the round marker; the role
+    return fields include `severity`.
   - Summary: names the bounded high-effort loop and P1-P3 severity.
 - `CAP-DLV-workflow-envelopes`: the example severity is `P2`, and the severity bullet states that the engine validates
   nothing beyond a non-empty string while the `spec` bundle requires and defines the levels. No schema change.
+- Open for the Host: `ADR-medium-review-delegation` still says `status: accepted` without `superseded_by`. The waived
+  target above is a deferred edit, not a no-impact claim; until the integrate stage makes it, the two ADRs' `high`
+  clauses conflict and the supersede link is one-sided (`reconcile-check-01` finding 1).
 - `ADR-bounded-high-effort-review-loop`: promoted by the handoff commit on this branch; its status (`accepted`) and
   consequences match the implementation, so this turn did not edit it.
 

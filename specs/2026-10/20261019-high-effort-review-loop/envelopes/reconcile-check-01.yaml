@@ -1,0 +1,41 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T02:11:43.573536Z'
+status: completed
+summary: 'reconcile-reviewer subagent (first reconcile verification, medium, exception not used: cross-component change) at ac29b14: all behavior changes have targets, no contradiction; three P2 and one P3 on precision and the superseded-ADR waiver.'
+findings:
+- issue: The ADR-medium-review-delegation target is waived, but the rationale describes a deferred edit (status superseded, superseded_by), not a waiver; without the edit two accepted ADRs keep conflicting high clauses and the supersedes link is one-sided.
+  evidence: specs/2026-10/20261019-high-effort-review-loop/reconcile.md:15-17; docs/decisions/2026-10/20261016-medium-review-delegation.md:5; docs/decisions/README.md:3
+  failure_condition: reconcile.md resolves with this waiver while the superseded ADR still says accepted with no superseded_by, or the file is edited and the record still says waived.
+  suggested_action: Drop the waiver; keep the target open for the frontmatter edit and record it as modified once the edit lands (or make the edit here if the write scope is widened).
+  resolution: open
+  severity: P2
+- issue: Rule 7 says a fix the user asks for gets one further round outside the cap right after the contested-P1 question, so it reads as covering every hand-over; the procedure limits it to a fix asked for after a cap or recurrence problem, named by the resolution envelope.
+  evidence: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:90-92; packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/review-loop.md:58
+  failure_condition: An implementer reading the capability grants a further round outside the cap after a contested-P1 answer.
+  suggested_action: 'Say: a fix the user asks for after a cap or recurrence problem gets one further round outside the cap, named by the resolution envelope.'
+  resolution: open
+  severity: P2
+- issue: Section 4.5's role return-field list gives finding keys without severity, which the reviewer contracts and envelope.md now require on every review, reconcile-check and challenger finding.
+  evidence: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:311-312; packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/envelope.md:21,29
+  failure_condition: A reader taking section 4.5 as the role return contract builds a review return without severity.
+  suggested_action: Add severity (P1|P2|P3 on review, reconcile-check and challenger findings, rule 15) to the finding keys in section 4.5.
+  resolution: open
+  severity: P2
+- issue: 'Rule 15 leaves out two scope rules of review-loop.md: an out-of-scope finding (evidence outside the round''s diff files) never counts as a recurrence, and challenger Decision needed findings go to plan-accept, not the loop.'
+  evidence: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:135-147; packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/review-loop.md:19,59
+  failure_condition: A reader of the capability alone hands over an out-of-scope repeat as a recurring P1, or loops Decision needed findings.
+  suggested_action: Add one clause to rule 15 covering both.
+  resolution: open
+  severity: P3
+assumptions:
+- Reviewer ran as a native Claude Code reconcile-reviewer subagent nested under the development worker; no shell, files compared at head ac29b14.
+unverified_areas:
+- 'Reviewer had no git access: branch range of the handoff-promoted ADR and head staleness checked by the implementer instead (8ca289b is on the branch; head unchanged at ac29b14 when it returned).'
+checks: {}
+diff_scope:
+  base: 8ca289bbde3277409623cf86d38d3839e40d447f
+  head: ac29b14f8f58e833807a3e389984b4f1d5e53cc0
+activity_effort: medium

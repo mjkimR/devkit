@@ -2,7 +2,7 @@
 id: SPEC-high-effort-review-loop
 title: Bounded high-effort review procedure
 summary: "Bounds the high activity-effort procedure of the devkit-spec bundle: whole-batch review rounds that end on no finding or all-minor fixes, hand-over of persistent, recurring or contested P1s, P1-P3 severity, mandatory high Planning scout and session reclassification advice."
-status: in-progress
+status: completed
 created: 2026-10-19
 related_capabilities:
   - CAP-DLV-delivery-workflows
