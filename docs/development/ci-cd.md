@@ -13,13 +13,16 @@ consumer smoke and the viewer job run on Linux. The workflow executes:
 | **Lint & Format** | `just lint-check` | Enforces Ruff formatting and linter invariants. |
 | **Type Check** | `just check` | Enforces Pyright static typing across all workspace code. |
 | **Test Suite** | `just test` | Runs the full pytest test suite across all workspace packages. |
+| **Dist-only Tests** | `just test-dist` | Syncs a separate environment with `devkit-dist` and its extras only (`scripts/dist_only.sh`), refuses to run if any `devkit-agt` module is importable there, and runs the `devkit-dist` tests without the harness. |
 | **Governance Rules** | `just rules-check` | Runs devkit governance rules on the working tree. |
 | **Consumer Smoke** | `just smoke` | Builds wheels and verifies installation in a clean consumer environment. |
 | **Viewer Frontend** | `just viewer install`, `lint`, `check`, `test`, `pack` | With Node 24: formatting, `svelte-check`, the frontend tests and the library tarball's contents and exports. |
 | **Viewer Build** | `uv run --no-active devkit generated check viewer-assets` | Rebuilds the page from the lockfile in a clean checkout and fails when the committed build under `packages/devkit-viewer/src/devkit_viewer/static/` differs. |
 
 For cumulative branch verification before integration, also run `just rules-check --ci --base <base-ref>` locally.
-The consumer smoke installs the base packages first, preserving their independent coverage, then installs the
+The consumer smoke first installs the `devkit-dist` wheel alone (distribution-only sync, the coded answers to harness
+command names and to rule assets no engine runs, one owner of the `devkit` executable) and a `uv tool install` of
+`devkit-dist` with `devkit-agt`, then installs the base packages, preserving their independent coverage, then installs the
 `devkit-spec` wheel and checks command mounting, opt-in docs seeding and seeded document discovery, and finally
 installs the `devkit-viewer` wheel, starts `devkit viewer serve` for the consumer project and fetches its bundled
 page, a script and `/api/repos`.
@@ -35,20 +38,21 @@ reviewed head before integration:
 
 - **Selectors**: for a single module, the arguments before the first option are areas or paths that replace the
   module's default paths. An area is a directory under the module's `tests/` together with the matching
-  `src/<package>/<area>` directory (`just test devkit gate worktree -k cache`); a path is passed as given, a `::`
-  node suffix included. An unknown area exits `2` and lists the module's areas before any tool runs. `all` passes
-  its arguments to pytest unchanged.
+  `src/<package>/<area>` directory (`just test devkit gate worktree -k cache`); a path from the repository root is
+  passed as given and one from the module directory (`tests/gate/test_hooks.py`) is prefixed with it, a `::` node
+  suffix included. An unknown area exits `2`, lists the module's areas (shared helpers such as `testsupport` and
+  `distsupport` excluded) and says where paths are taken from, before any tool runs. `all` passes its arguments to pytest unchanged.
 - **`just test-affected [--base REF] [--list] [-- PYTEST-ARGS]`** (`scripts/affected_tests.py`): collects the paths
   changed since the merge base of `HEAD` and `REF` (default `main`; committed, staged, unstaged, untracked, both
   sides of a rename) and selects tests from them:
   - Shared foundations (`devkit.core`, `devkit-advisory`, `cli.py`, `__main__.py`, any `pyproject.toml` or
-    `conftest.py`, `uv.lock`, `tests/testsupport/`) select the full suite.
+    `conftest.py`, `uv.lock`, the shared test helpers `testsupport` and `distsupport`) select the full suite.
   - Repository files that tests read (`docs/`, `examples/`, `models/`, the recipe scripts and `justfile`) select
     those tests from a fixed table.
-  - A package source change selects the test groups (a `devkit-agt` area, a top-level devkit test file, another
-    workspace package) that import its area or an area importing it, transitively by static imports; a `devkit-agt`
-    source change also selects the devkit tests over its whole source tree (layering, documented codes, CLI wiring,
-    stdout kinds).
+  - A package source change selects the test groups (a `devkit-dist` or `devkit-agt` area, a top-level test file of
+    either, another workspace package) that import its area or an area importing it, transitively by static imports;
+    a `devkit-dist` or `devkit-agt` source change also selects the tests over the whole devkit source tree (layering,
+    documented codes, CLI wiring, stdout kinds).
   - A changed `test_*.py` in a `tests` directory selects itself; any other file there selects its directory.
   - The devkit-viewer frontend (`packages/devkit-viewer/frontend/`, `scripts/viewer.sh`) selects no pytest test:
     pytest never exercises it. The result names the frontend checks instead (below); the page they rebuild under
@@ -67,7 +71,7 @@ reviewed head before integration:
   with its preflight, options and exit code, and `none` exits `0`. A base without a merge base is the input error
   `TEST_BASE_UNKNOWN` (exit `2`), whose `[FIX]` lists the existing branches; a failing `git diff` or `git ls-files`
   is `TEST_CHANGES_UNREADABLE` (exit `2`), for the user to resolve in the repository before rerunning.
-- **Limits**: a group's dependencies include those of the shared `testsupport` helpers it imports at module level,
+- **Limits**: a group's dependencies include those of the shared helpers it imports at module level,
   not of helpers imported inside a test function; static imports also do not show tests that run the CLI in a
   subprocess or load entry points. The full suite before integration covers them.
 
@@ -86,7 +90,8 @@ CI continues to run the complete suite through `just test`.
 
 ## 3. Release Automation
 
-Tags matching `v*` trigger the release workflow. It requires a tag on `main` matching the `devkit-agt` version,
+Tags matching `v*` trigger the release workflow. It requires a tag on `main` matching the version of `devkit-dist`,
+`devkit-agt` and `devkit-advisory` (released in lockstep),
 runs the reusable CI workflow on that commit, then calls `just release-build <tag>` to build every workspace
 package wheel and generate `SHA256SUMS` and installation notes. It publishes those artifacts in a GitHub Release.
 The separately released embedding-model wheel is referenced by URL and is not rebuilt.

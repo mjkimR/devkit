@@ -1,4 +1,5 @@
-"""Every advisory code devkit can report is documented under ``docs/``.
+"""Every advisory code the devkit wheels (devkit-dist, devkit-agt, devkit-advisory) can report is documented under
+``docs/``.
 
 An agent branches on codes and a person looks them up, so a code that exists only in the source is a contract
 nobody can read. Codes are found where they are defined: as a class attribute (``code = "X"``), a keyword
@@ -11,7 +12,11 @@ import re
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SOURCES = (REPO / "packages/devkit/src/devkit", REPO / "packages/devkit-advisory/src/devkit")
+SOURCES = (
+    REPO / "packages/devkit-dist/src/devkit",
+    REPO / "packages/devkit/src/devkit",
+    REPO / "packages/devkit-advisory/src/devkit",
+)
 DOCS = REPO / "docs"
 CODE = re.compile(r"""(?:\bcode\s*(?::\s*str\s*)?=|\b[A-Z_]+_CODE\s*=)\s*["']([A-Z][A-Z0-9_]+)["']""")
 

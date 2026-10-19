@@ -170,3 +170,18 @@ def test_an_explicitly_named_symlink_checks_its_target(tmp_path: Path) -> None:
     ctx = RuleContext(workspace_root=tmp_path, changed_files=["docs/alias.md"])
     assert rule.fix(ctx) == ["a/real.md"]
     assert (tmp_path / "a/real.md").read_text() == "[y](y.md)\n" and (tmp_path / "docs/alias.md").is_symlink()
+
+
+def test_a_file_url_is_reported_whether_or_not_the_file_exists(tmp_path: Path) -> None:
+    write_files(
+        tmp_path,
+        {
+            "docs/a.md": "# A\n",
+            "docs/b.md": f"[a](file://{tmp_path}/docs/a.md) [gone](FILE:///nowhere/x.md) [web](https://x.org) `file:///y`\n",
+        },
+    )
+    found = MarkdownLinkRule().check(RuleContext(workspace_root=tmp_path))
+    assert [(v.line, v.message, v.fixable) for v in found] == [
+        (1, f"Machine-local file link 'file://{tmp_path}/docs/a.md'", False),
+        (1, "Machine-local file link 'FILE:///nowhere/x.md'", False),
+    ]

@@ -1,7 +1,8 @@
 # Optional: Connect Codex or Claude Code to devkit MCP
 
 Follow this after installing devkit and selecting bundles. MCP adds native service tools, including the integration
-confirmation path. Ordinary asset synchronization and the approved CLI integration fallback work without it.
+confirmation path (its tools come with `devkit-agt`). Ordinary asset synchronization and the approved CLI integration
+fallback work without it.
 `devkit sync` does not register MCP servers or inspect machine registration.
 
 The supported clients are the interactive Codex CLI and the Claude Code terminal CLI. Codex is registered through
@@ -31,7 +32,9 @@ uv run devkit host mcp status --host codex --format json
 ```
 
 Preserve the project's selected package source and revision; add the `mcp` extra to that dependency rather than
-switching an existing pinned or wheel installation to another source. The extra belongs in the retained runtime.
+switching an existing pinned or wheel installation to another source. A distribution-only installation adds it to
+its `devkit-dist` requirement instead (`devkit-dist[mcp] @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-dist`);
+never add a second devkit requirement for it. The extra belongs in the retained runtime.
 `config` is read-only and works without the SDK; its `command` and `args` are what either client runs, while its
 `add_command`, `inspect_command`, `remove_command` and `toml` fields are Codex-specific. `status` reads Codex
 registration and local SDK availability, and does not inspect Claude Code;

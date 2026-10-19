@@ -1,0 +1,11 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T02:13:07.666902Z'
+status: completed
+summary: 'Swept this Development turn (specify through living-spec-draft, both subagent returns, git diff 8ca289b..HEAD) at capture=observed, coverage=repo-and-upstream: recorded FB-entrypoints-apply-duplicate-key and FB-handoff-premise-drift-unreported; duplicates: the sdd-spec-bugfix restatement note is FB-effort-procedure-restated (open, carried). Carried open items untouched.'
+findings: []
+checks:
+  swept: PASS recorded=2 duplicates=1
+activity_effort: medium

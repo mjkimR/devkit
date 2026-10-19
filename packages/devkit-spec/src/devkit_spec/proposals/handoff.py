@@ -94,6 +94,7 @@ from devkit_spec.proposals.rewrite import (
     markdown_files,
     rewrite_ids,
     rewrite_links,
+    rewrite_paths,
 )
 from devkit_spec.proposals.scaffold import (
     DECISIONS,
@@ -415,6 +416,7 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
     report = RewriteReport()
     rewrite_links(root, sources, plan, report)
     rewrite_ids(root, sources, plan, index, report)
+    rewrite_paths(root, sources, plan, report)
 
     notices: list[AdvisoryError] = []
     try:

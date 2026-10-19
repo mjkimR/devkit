@@ -1,0 +1,61 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T03:14:12.256829Z'
+status: completed
+summary: round 4; round 3's three findings are resolved (no-envelope return handling, bounded live Development turn with passing tests, refused-probe exception to the write duties); no P1; four P2 (hand-off depends on branch-only text and an unstated mode, the user-action question contradicts the only-a-problem-stops rule outside the boundaries, the live-turn worker meets its own open hold, the contract path is not rooted in the worktree) and three P3 (report has no answer field, two non-mechanical checks, the PADR summary).
+findings:
+- issue: 'The hand-off depends on contract and skill text this spec''s own Development cannot load: the user-action question, the bounded task_goal turn end and the other-Host range rule exist only on the dev- branch, while a base-rooted Development Host loads main''s development-worker and spec-delegate; the PADR does not say whether this Development runs local-orchestrated or direct.'
+  evidence: main spec-delegate/references/hosts.md:11; CAP-DLV-delivery-workflows.md:371-373; main development-worker.md:38,60; main spec-delegate/references/worker.md:14-15; PADR-codex-process-worker §4 Live verification and The live turn itself
+  failure_condition: A local-orchestrated worker spawned from the base has no bounded turn end and no question clause, and the Host accepts the Codex commits as HEAD without the other-Host check.
+  suggested_action: State the mode and contract source - direct mode with the Host asking the user and recording the evidence, or emulated spawn from the worktree's synced contract validated by the branch's worker.md.
+  resolution: open
+  severity: P2
+- issue: The development-worker user-action question contradicts the only-a-problem-stops rule in sdd-spec-bugfix.md, the bundle AGENTS.md and CAP-DLV rule 7 and its non-goal, which the proposal neither owns nor names; the existing needs_input problem path would serve without new clauses.
+  evidence: main bundle/workflows/sdd-spec-bugfix.md:184; main bundle/AGENTS.md:66; CAP-DLV-delivery-workflows.md:48-49,86-96; main development-worker.md:60; proposal.md boundaries.owns; PADR-codex-process-worker §4 and §5
+  failure_condition: A bugfix worker or a Host reading the guide treats the question as forbidden, or the Living Spec states two rules for one contract.
+  suggested_action: Drop the user-action question clause and sdd-spec-feature.md from owns (use the existing problem path), or own and amend every file stating the rule.
+  resolution: open
+  severity: P2
+- issue: The live-turn worker meets the open question or problem about its own turn in devkit workflow next, with no user and approval never, and its bounded task_goal does not say to leave it open.
+  evidence: main packages/devkit/src/devkit/workflow/render.py:111,121-124; main packages/devkit-dist/src/devkit/distribution/installation/workflow_skill.py:63-68; main development-worker.md:38; PADR-codex-process-worker §4 The live turn itself
+  failure_condition: The live turn stops needs_input or tries to answer the hold instead of doing the probe and the task, and records Fails for an unrelated reason.
+  suggested_action: The task_goal states the open hold is answered by this turn's report and must be left open; a contract test asserts the statement.
+  resolution: open
+  severity: P2
+- issue: 'recurs: scout-03.yaml #5; The launch does not root the contract path, so a Codex Host in the base checkout reads main''s development-worker (no x-process-hosts, no probe, no bounded end).'
+  evidence: PADR-codex-process-worker §4 Launch and The live turn itself; main spec-delegate/SKILL.md:14,42
+  failure_condition: Step 3 substitutes in the main session, or the process runs main's body, so the probe and timeout conditions of Passes cannot be met.
+  suggested_action: Write the prompt and frontmatter source as <worktree>/.devkit/overrides/spec/subagents/<role>.md else <worktree>/.devkit/managed/spec/subagents/<role>.md and name it in the question.
+  resolution: open
+  severity: P2
+- issue: The live-turn report has no place to go - an answer has no note field, and the Host-side facts exist only in the Codex Host.
+  evidence: main packages/devkit/src/devkit/workflow/unit/envelope/model.py:35,415-417,470; authoring.py:210; PADR-codex-process-worker §4 The live turn itself
+  failure_condition: The next turn writes note and is refused, or the evidence is compressed away.
+  suggested_action: Put the report fields in the answer's constraints or a resolution summary, and name the Codex Host's final head as the range end.
+  resolution: open
+  severity: P3
+- issue: 'recurs: challenger-01.yaml #10; Two acceptance checks are not mechanical: x-process-hosts exactly when the live turn passed, and the hosts reference matching the material and evidence.'
+  evidence: proposal.md §4 Expected acceptance checks, first and fifth bullets
+  failure_condition: A Fails record next to a shipped key, or an unbacked observed marker, passes every listed command.
+  suggested_action: The test pins presence or absence and a review checks it against tasks.md; a contract test asserts an (observed) or (documented) marker per host and the match is a named review check.
+  resolution: open
+  severity: P3
+- issue: The PADR-codex-process-worker summary states a weaker shipping condition (range check only) than §4 Passes and omits not-run.
+  evidence: PADR-codex-process-worker frontmatter summary vs §4 Passes and Fails
+  failure_condition: Search results and the promoted ADR summary state a weaker condition than the decision.
+  suggested_action: Summary - only once one bounded live Development turn meets the Passes criterion; otherwise, or if not run, the main session keeps running the activity in direct.
+  resolution: open
+  severity: P3
+assumptions:
+- Judged main's contract, skill and workflow text and the current proposal files
+unverified_areas:
+- Whether a development-worker inside codex exec acts on a REQUEST line
+- codex exec nested role spawn, trust mapping of a linked worktree, legacy -s workspace-write --add-dir
+- Claude Code emulated spawn from the worktree contract under the range check
+checks: {}
+diff_scope:
+  base: c87660697f8bd3a36d849876f83f68eb5637616d
+  head: 24a1692da1135211c39b3c313c582cea7c4c1c87
+activity_effort: high

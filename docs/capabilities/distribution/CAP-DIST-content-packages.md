@@ -1,9 +1,12 @@
 ---
 id: CAP-DIST-content-packages
 title: "Content Packages"
-summary: "External content wheel packaging, bundle distribution, and dependency boundaries."
+summary: "Content wheel packaging, bundle distribution and dependency boundaries, the devkit-dist and devkit-agt installations and their built-in bundles, including the auto-selected harness bundle and the standalone signals."
 area: distribution
 status: active
+entrypoints:
+  - packages/devkit-dist/src/devkit/distribution/installation/discovery.py
+  - packages/devkit/src/devkit/harness_guide/
 created_at: 2026-10-17
 ---
 
@@ -51,17 +54,20 @@ src/package_b_playbooks/
 ## 2. Installation and Lifecycle
 
 ```bash
-base=https://github.com/mjkimR/devkit/releases/download/v0.1.0
-uv add --dev "devkit-agt @ $base/devkit_agt-0.1.0-py3-none-any.whl" \
-  "devkit-advisory @ $base/devkit_advisory-0.1.0-py3-none-any.whl" \
+base=https://github.com/mjkimR/devkit/releases/download/v<version>
+uv add --dev "devkit-dist @ $base/devkit_dist-<version>-py3-none-any.whl" \
+  "devkit-advisory @ $base/devkit_advisory-<version>-py3-none-any.whl" \
   "devkit-starter @ $base/devkit_starter-0.1.0-py3-none-any.whl"
 uv run devkit sync               # deploys auto-selected bundles with their default preset
 uv run devkit add starter        # a bundle without auto_select: records the selection and synchronizes
 ```
 
-Run `devkit` through `uv run` from the project's environment. A globally installed tool
-(`uv tool install <wheel-path>`) runs in an isolated environment where `importlib.metadata` cannot see the content
-packages of the project.
+Run `devkit` through `uv run` from the project's environment. A globally installed tool runs in an isolated
+environment where `importlib.metadata` cannot see the content packages of the project; it names the owner of the
+`devkit` executable and adds what it needs: `uv tool install <devkit-dist requirement> --with <devkit-agt
+requirement>`, each a wheel path or a full Git requirement
+(`devkit-dist @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-dist`), never a bare package
+name the default index would resolve (`ADR-dist-command-composition`).
 
 - **Upgrade**: `uv lock --upgrade-package <package>`, then `uv run devkit sync`.
 - **Teardown**: `uv run devkit remove <bundle>`, then `uv remove --dev <package>`. Removal is always explicit: a
@@ -87,3 +93,50 @@ Availability follows Python dependency resolution; deployment follows the bundle
 
 A consumer that does not want an auto-selected bundle opts it out with `[presets] <bundle> = false`
 (`devkit remove <bundle>` writes it).
+
+## 4. The devkit Wheels and Their Built-in Bundles
+
+The CLI ships in two wheels released in lockstep with `devkit-advisory` (`ADR-dist-foundation-ownership`,
+`ADR-dist-bundles-compatibility`):
+
+- **`devkit-dist`** owns the `devkit` executable, distribution (this capability area), native host hooks, context
+  loading and playbooks. Installed alone, it deploys every asset kind and runs none of the harness.
+- **`devkit-agt`** depends on `devkit-dist` at the same version and adds the harness engines (rules, workflows,
+  commit gates, task worktrees, generated files, integration, `devkit run`), mounted as `devkit.commands` plugins
+  (`ARCH-05-3-command-plugins`).
+
+A project declares exactly one of them as its devkit requirement, `devkit-agt` when it uses the harness; a
+release-wheel installation of `devkit-agt` also names the `devkit-dist` and `devkit-advisory` wheels of the same release,
+because no index serves them.
+Bundles registered by either wheel are built in (`builtin` in `devkit list` and `devkit status`), so the
+`BUNDLE_AUTO_SELECTED` notice never names them:
+
+| Bundle | Wheel | Selection | Contents |
+| --- | --- | --- | --- |
+| `devkit` | `devkit-dist` | Auto-selected (`core`, its only preset) | The consumption contracts and instructions of distribution; it names no harness command as a directive, and describes rule, gate and workflow assets only as kinds it deploys. |
+| `advisory` | `devkit-dist` | Auto-selected (`core`); opt-in `python` | The Agent Advisory Protocol guides; `python` adds the library guide and `RULE-advisory-unique-code`. |
+| `git-commits` | `devkit-dist` | Opt-in | Commit message conventions and their `AGENTS.md` pointer. |
+| `harness` | `devkit-agt` | Auto-selected (`core`); opt-in `run`; `harness = false` opts out | The constitution with the rules-and-gates contract and the snapshot-gate contract (snapshot gates trust the committed receipt), the instructions `harness-consumption` (configuration tables of the engines, workflows, rules and commit gates), `harness-assets` (running and testing rule, gate and workflow assets, rules of an in-repository bundle in Git snapshot gates) and `devkit-run`; the `run` preset adds the `run-pointer` guidance line. |
+| `authoring` | `devkit-agt` | Opt-in | Size rules and restructuring playbooks for skills and agent guides. |
+
+The `harness` bundle is the bundle of this capability; the `devkit-spec` capability area of the same name
+(`CAP-HARN-agent-guidance`) is unrelated to it. The `run` preset and the `devkit-run` and `run-pointer` assets belong
+to `harness`; the `devkit` bundle has no `run` preset, so a `devkit:run` selection fails with `SELECTION_INVALID`
+(whose fix lists `devkit:all, devkit:core`) and a project selects `harness:run` instead, and `devkit:all` deploys no
+`devkit run` guidance. No alias preset exists (`ADR-dist-bundles-compatibility`).
+
+### 4.1 Standalone Signals
+
+An installation without `devkit-agt` reports what it cannot run instead of failing silently, with one directive
+(`HARNESS_INSTALL_FIX`): in a project, replace the `devkit-dist` requirement with
+`devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit` in the same dependency group; for
+a tool installation, `uv tool install --reinstall '<devkit-dist requirement>' --with '<devkit-agt requirement>'`.
+
+- A harness command name (`rules`, `workflow`, `gate`, `worktree`, `generated`, `integration`, `run`) that no
+  installed command provides answers with `HARNESS_COMMAND_UNAVAILABLE` (exit `2`; `ARCH-05-3-command-plugins`).
+- Deployed `rule`, `gate` or `workflow` assets with no `devkit.commands` entry point named `rules`, `gate` or
+  `workflow` raise a `HARNESS_ENGINE_MISSING` warning from `devkit sync` and `devkit status`
+  (`CAP-DIST-sync-and-transactions`). The first-party bundles that reach a standalone installation ship no such asset
+  except the opt-in `advisory:python` rule.
+
+Engine presence is read from entry point names only: `devkit-dist` never imports or locates a harness module.

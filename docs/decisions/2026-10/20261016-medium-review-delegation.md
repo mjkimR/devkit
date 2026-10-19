@@ -2,8 +2,9 @@
 id: ADR-medium-review-delegation
 title: Separate review roles and bound medium delegation
 summary: "Medium requires initial code review regardless of size, permits evidence-backed initial reconcile self-verification, and leaves repeat code and reconcile calls to the implementer while retaining all workflow checks."
-status: accepted
+status: superseded
 created_at: 2026-10-16
+superseded_by: ADR-bounded-high-effort-review-loop
 ---
 
 # [ADR-medium-review-delegation] Separate review roles and bound medium delegation

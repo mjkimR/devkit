@@ -21,19 +21,24 @@ areas() {
         [ -d "$dir" ] || continue
         dir=$(basename "$dir")
         case "$dir" in
-            __pycache__|testsupport) ;;
+            __pycache__|testsupport|distsupport) ;;
             *) names+=("$dir") ;;
         esac
     done
     echo "${names[*]-}"
 }
 
-# Append the test paths one selector names to `selected`: an existing path (a `::` node suffix allowed) as given,
-# else the area's existing `tests/<name>` and `src/*/<name>` directories.
+# Append the test paths one selector names to `selected`: an existing path (a `::` node suffix allowed) from the
+# repository root as given, else a path-like selector (with `/` or `::`) from the module directory, else the area's
+# existing `tests/<name>` and `src/*/<name>` directories.
 add_selector() {
     local base=$1 selector=$2 dir found=0
     if [ -e "${selector%%::*}" ]; then
         selected+=("$selector")
+        return 0
+    fi
+    if [[ "$selector" == */* || "$selector" == *::* ]] && [ -e "$base/${selector%%::*}" ]; then
+        selected+=("$base/$selector")
         return 0
     fi
     for dir in "$base/tests/$selector" "$base"/src/*/"$selector"; do
@@ -45,6 +50,7 @@ add_selector() {
     [ "$found" -eq 1 ] && return 0
     echo "Unknown area for $target: $selector" >&2
     echo "Available areas: $(areas "$base")" >&2
+    echo "A path is taken from the repository root or from $base." >&2
     return 1
 }
 

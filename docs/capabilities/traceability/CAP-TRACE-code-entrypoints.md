@@ -133,7 +133,8 @@ joins them.
 4. Folded and missing paths are reported as `kind=apply` with `reason=folded` or `missing-path`.
 5. Only the `entrypoints` block of the frontmatter is rewritten: in place (every line of the old value, including a
    zero-indented sequence, a multi-line flow list and blank or comment lines between its items; blank and comment
-   lines after its last item stay), else before `created_at`, else at the end of the header. Every other byte, the
+   lines after its last item stay) wherever the key stands in the header, else before `created_at`, else at the end
+   of the header. Every other byte, the
    line endings included, MUST be kept, and the file is replaced atomically (its mode preserved).
 6. A rerun MUST write nothing (every written path is then `declared`).
 7. A document that cannot be read or written, is a symbolic link or lies in a directory that resolves outside the

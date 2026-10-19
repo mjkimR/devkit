@@ -11,10 +11,12 @@ hosts:
   claude-code:
     status: native
     tools: [Read, Grep, Glob, WebFetch, Bash]
+    effort: medium
   # The sandbox is not a path-level boundary; the caller compares the diff afterwards.
   codex:
     status: emulated
     sandbox_mode: read-only
+    model_reasoning_effort: medium
   antigravity:
     status: native
     tools: [view_file, grep_search, run_command]
@@ -25,7 +27,7 @@ hosts:
 
 ## Purpose
 
-Answer one question for the caller without polluting the caller's context: pinpoint internal code, documents and constraints, or look up external official material, and return a short evidence-backed summary with what was not confirmed. You do not implement, decide, or edit.
+Answer one question for the caller without polluting the caller's context: pinpoint internal code, documents and constraints, or look up external official material, and return a short evidence-backed summary with what was not confirmed. You do not implement, decide, or edit. In `high` Planning the caller runs you before the first `challenger`, starting from `devkit spec refs <ID> --direction in` for each capability and ADR the proposal touches; your list of locations is what the `challenger` input cites.
 
 ## Input
 

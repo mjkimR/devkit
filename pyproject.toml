@@ -6,9 +6,13 @@ members = [
 
 [tool.ruff]
 exclude = [".git", ".venv", "build", "dist"]
-# `devkit` is a namespace package shared by devkit-agt and devkit-advisory; without an __init__.py ruff would no
-# longer see packages/*/src as the package root and would sort devkit imports as third-party.
-namespace-packages = ["packages/devkit/src/devkit", "packages/devkit-advisory/src/devkit"]
+# `devkit` is a namespace package shared by devkit-dist, devkit-agt and devkit-advisory; without an __init__.py ruff
+# would no longer see packages/*/src as the package root and would sort devkit imports as third-party.
+namespace-packages = [
+    "packages/devkit-dist/src/devkit",
+    "packages/devkit/src/devkit",
+    "packages/devkit-advisory/src/devkit",
+]
 line-length = 120
 target-version = "py312"
 
@@ -30,6 +34,8 @@ venv = ".venv"
 pythonVersion = "3.12"
 typeCheckingMode = "basic"
 extraPaths = [
+    "./packages/devkit-dist/src",
+    "./packages/devkit-dist/tests",
     "./packages/devkit/src",
     "./packages/devkit/tests",
     "./packages/devkit-advisory/src",
@@ -56,12 +62,15 @@ dev = [
 [tool.uv.sources]
 devkit-agt = { workspace = true }
 devkit-advisory = { workspace = true }
+devkit-dist = { workspace = true }
 devkit-spec = { workspace = true }
 devkit-viewer = { workspace = true }
 
 [tool.pytest.ini_options]
-# Rule tests live in each rule's folder under src (`<rule>/tests/`), so devkit's sources are collected too.
+# Rule tests live in each rule's folder under src (`<rule>/tests/`), so the devkit wheels' sources are collected too.
 testpaths = [
+    "packages/devkit-dist/tests",
+    "packages/devkit-dist/src",
     "packages/devkit/tests",
     "packages/devkit/src",
     "packages/devkit-advisory/tests",
@@ -72,6 +81,7 @@ testpaths = [
     "packages/devkit-viewer/tests",
 ]
 pythonpath = [
+    "packages/devkit-dist/tests",
     "packages/devkit/tests",
     "packages/devkit-spec/tests",
     "packages/devkit-viewer/tests",

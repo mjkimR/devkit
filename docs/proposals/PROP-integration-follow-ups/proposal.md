@@ -72,6 +72,10 @@ Base advances:
 
 - **E1 (Merge method)**: fast-forward when possible, else a merge commit (`git merge --ff`), always a merge commit
   (`--no-ff`), or a policy key (`[worktree] merge = "ff" | "no-ff" | "ff-only"`) with a default.
+  **Backlog leaning (user, 2026-10-19)**: consider an always-merge-commit default (`--no-ff`) first. Every stage
+  boundary commits, so a unit lands about 10 to 13 commits, most of them records only; a merge commit gives one line
+  per unit under `git log --first-parent` while keeping the stage commits that review, reconcile-check, final-report
+  and worker envelopes cite by SHA, and keeps `git bisect` inside a unit.
 - **E2 (Where the merge runs)**: in the base checkout (a conflict leaves the user's base checkout mid-merge and needs
   `git merge --abort`), or first merging the base into the source worktree and then fast-forwarding the base (the
   base checkout never sees a conflict; the source gains a merge commit).
@@ -93,7 +97,8 @@ The deferred extensions:
   without a prompt, and how is that authority recorded?
 - **Q3 (Remote and pull request)**: how is remote push or pull request merge authority separated from local-only
   integration, and how is a squash or rebase merge verified (recorded pull request state, tree or patch equivalence)
-  before the worktree and branch are removed?
+  before the worktree and branch are removed? A squash with branch deletion leaves the envelope SHAs unreachable
+  (see the E1 leaning), so a squash path either keeps the source under another ref or is not offered for units.
 - **Q4 (Host adapters)**: which confirmation surfaces do Claude Code, Antigravity and other hosts offer that keep the
   binding to `request.id` and the approved scope and never let the agent approve itself?
 

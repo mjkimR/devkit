@@ -170,7 +170,8 @@ replay a serialized result as authority.
 
 ## 6. Setup and verification
 
-Follow the optional MCP onboarding route linked from installation. Install `devkit-agt[mcp]` in a retained base
+Follow the optional MCP onboarding route linked from installation. Install `devkit-agt[mcp]` (the integration
+service tools ship with `devkit-agt`, the MCP server with `devkit-dist`, whose `mcp` extra it requires) in a retained base
 runtime, then run `devkit host mcp setup --host codex` there for explicit user-scoped Codex registration.
 `devkit host mcp status --host codex` checks registration against that runtime/base and SDK availability; it leaves
 connection and approval UI unknown. Matching entries are unchanged; different registrations require explicit

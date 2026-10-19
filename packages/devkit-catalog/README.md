@@ -6,7 +6,7 @@ the project selects it with `devkit add`, and a preset picks its assets.
 
 | Bundle | Presets (default first) | Contents |
 | --- | --- | --- |
-| `response-style` | `all` | Concise user-facing replies with configurable conversation language |
+| `response-style` | `all` | Answer-first user-facing replies that keep decision-critical facts, with configurable conversation language |
 | `host-observer` | `all` | Codex lifecycle hook registrations using devkit's metadata-only observer; `CAP-HOST-lifecycle-observation` |
 
 ```bash
@@ -18,8 +18,9 @@ uv run devkit add host-observer                      # the default preset (all)
 ## Adding a bundle
 
 A catalog bundle holds content only: instructions, playbooks, skills, documents,
-guidance fragments, rules and declarative hooks using installed devkit handlers. A bundle that needs devkit code (a gate, a workflow
-check, a command) belongs in `devkit-agt` instead.
+guidance fragments, rules and declarative hooks using installed devkit handlers (its rules run where `devkit-agt` is
+installed). A bundle that needs devkit code (a gate, a workflow check, a command) belongs in `devkit-agt` instead.
+The tests load the bundles with the manifest reader of `devkit-dist`, the package's only development dependency.
 
 1. Create `src/devkit_catalog/<module>/__init__.py` (empty) and
    `src/devkit_catalog/<module>/bundle/bundle.toml` with the package version.
@@ -35,8 +36,9 @@ rules. See `CAP-DIST-content-packages` and the
 
 ## Response style
 
-`devkit add response-style` installs the `response-style` skill and an `AGENTS.md` reminder to read and apply it
-before responding. Configure the default conversation language before syncing (the default `auto` follows the current request):
+`devkit add response-style` installs the `response-style` skill and an `AGENTS.md` line that every session sees: the
+core rule for replies to the user (answer first, keep every number, condition or risk they need, cut the rest) and a
+reminder to read and apply the skill first. Configure the default conversation language before syncing (the default `auto` follows the current request):
 
 ```toml
 [bundles.response-style.variables]

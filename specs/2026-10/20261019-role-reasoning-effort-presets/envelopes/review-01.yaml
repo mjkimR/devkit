@@ -1,0 +1,23 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T02:35:45.189138Z'
+status: completed
+summary: 'code-reviewer (native nested subagent, initial medium round): AC-01..AC-06 met at 3db39db, non-goals respected, zero findings.'
+findings: []
+assumptions:
+- Delegated to the code-reviewer role as a native Claude Code nested subagent (Host -> worker -> role), isolation preferred.
+- Projection rendering of allowlisted keys is covered by the devkit-dist distribution tests; here confirmed by reading the projected files.
+unverified_areas:
+- Runtime host behavior (Claude Code honoring effort, Codex honoring model_reasoning_effort) rests on host documentation in the materials, not execution.
+checks:
+  lint: PASS just lint-check
+  types: PASS just check devkit-spec 0 errors
+  tests: PASS just test devkit-spec 950 passed; test-affected 958 passed; reviewer rerun 40 passed
+  rules: PASS just rules-check; reviewer devkit rules check --ci --base 4f13abc errors=0
+  projection: PASS devkit sync --check OK; projected effort values read
+diff_scope:
+  base: 4f13abc402fc0c419d7093d048b6f9dd18e9f600
+  head: 3db39db96c6fda489d9a2f9c314ace2467480d80
+activity_effort: medium

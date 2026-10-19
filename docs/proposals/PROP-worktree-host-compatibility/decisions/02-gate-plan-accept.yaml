@@ -1,0 +1,10 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: direction-handoff
+note: 'Accepted after the plain-language summary: structure unchanged, host preconditions
+  documented with a pre-write probe, Codex process worker gated on one live turn the
+  user runs, Antigravity unverified; dev_effort high.'
+by: user
+at: '2026-10-19T04:00:09.434376Z'

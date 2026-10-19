@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: workaround
 recurring: true
-status: open
+status: promoted
 created_at: 2026-10-18
 ---
 
@@ -41,3 +41,5 @@ Code-reviewer reported a transient-lock creation failure under read-only restric
 Direct restricted invocation returned code UNEXPECTED_ERROR and OSError errno 30 for <worktree>/.devkit/transient/lock.
 Managed spec/AGENTS.md and relevant instruction files remained readable and supported the review.
 ```
+
+- **Disposition**: packages/devkit-dist/src/devkit/distribution/installation/transaction.py: a reader that cannot create or open the lock on a read-only file system reads without it; writers still fail

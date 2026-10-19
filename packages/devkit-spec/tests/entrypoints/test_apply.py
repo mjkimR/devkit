@@ -148,6 +148,10 @@ def test_apply_refuses_entrypoints_that_are_not_a_list_of_strings(workspace: Pat
             "---\nid: A\ncreated_at: 2026-01-01\n---\n",
             "---\nid: A\nentrypoints:\n  - src/a\ncreated_at: 2026-01-01\n---\n",
         ),
+        (
+            "---\nid: A\ncreated_at: 2026-01-01\nstories: []\nentrypoints:\n  - old/\n---\n",
+            "---\nid: A\ncreated_at: 2026-01-01\nstories: []\nentrypoints:\n  - src/a\n---\n",
+        ),
         ("---\nid: A\nstatus: x\n---\n\n# T\n", "---\nid: A\nstatus: x\nentrypoints:\n  - src/a\n---\n\n# T\n"),
         (
             "---\r\nid: A\r\nstatus: x\r\n---\r\nbody\r\n",

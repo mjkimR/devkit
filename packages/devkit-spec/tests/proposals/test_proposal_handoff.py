@@ -3,6 +3,7 @@ from __future__ import annotations
 import errno
 import os
 import shutil
+import time
 from collections.abc import Callable
 from pathlib import Path
 
@@ -424,6 +425,46 @@ def test_promoted_adrs_keep_working_links(workspace: Path, write: Write) -> None
     assert f"[cap](../../capabilities/x/CAP-X.md) [b]({STAMP}-pick-b.md) [p](../../../{SPEC}-adr-links/spec.md)" in adr
     assert "Supersedes `ADR-pick-b`; unrelated to `PADR-elsewhere`." in adr
     assert result.unresolved == []
+
+
+def test_rewrites_code_span_paths_into_the_bundle(workspace: Path) -> None:
+    proposal = _new(workspace, "span-paths")
+    create_padr(workspace, "span-paths", "Pick A")
+    (proposal.parent / "materials/notes.md").write_text("# Notes\n", encoding="utf-8")
+    proposal.write_text(
+        proposal.read_text(encoding="utf-8").replace(
+            "## 3. Proposed Design & Impact",
+            "## 3. Proposed Design & Impact\n\n- **Decisions**: `decisions/PADR-pick-a.md`, evidence in "
+            "`materials/notes.md` and `materials/`; `src/app.py` stays.\n\n```text\n`materials/notes.md`\n```",
+        ),
+        encoding="utf-8",
+    )
+    padr = proposal.parent / "decisions/PADR-pick-a.md"
+    padr.write_text(padr.read_text(encoding="utf-8") + "\nSee `materials/notes.md`.\n", encoding="utf-8")
+    accept(proposal)
+
+    result = handoff_proposal(workspace, "span-paths", today=TODAY)
+
+    materials = f"docs/materials/{MONTH}/{STAMP}-span-paths"
+    spec = (workspace / f"{SPEC}-span-paths/spec.md").read_text(encoding="utf-8")
+    assert f"`ADR-pick-a`, evidence in `{materials}/notes.md` and `{materials}/`; `src/app.py` stays." in spec
+    assert "```text\n`materials/notes.md`\n```" in spec
+    adr = (workspace / f"docs/decisions/{MONTH}/{STAMP}-pick-a.md").read_text(encoding="utf-8")
+    assert f"See `{materials}/notes.md`." in adr
+    paths = [(item.old, item.new) for item in result.rewritten if item.kind == "path"]
+    assert ("decisions/PADR-pick-a.md", "ADR-pick-a") in paths
+
+
+def test_code_span_path_matching_stays_linear() -> None:
+    from devkit_spec.proposals.rewrite import _CODE_SPAN_PATH
+
+    long = "packages/devkit-spec/src/devkit_spec/proposals/rewrite.py"
+    started = time.monotonic()
+    # A nested-quantifier pattern needed seconds for the 26-character case and doubled per character.
+    assert _CODE_SPAN_PATH.search(f"`docs/{'a' * 26} x`") is None
+    assert _CODE_SPAN_PATH.search(f"`{long}:256`") is None
+    assert time.monotonic() - started < 0.5
+    assert [m.group(1) for m in _CODE_SPAN_PATH.finditer(f"`{long}` `materials/`")] == [long, "materials/"]
 
 
 def test_leaves_completed_bundles_alone(workspace: Path, write: Write) -> None:

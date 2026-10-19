@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
@@ -10,6 +11,8 @@ from devkit.rules.engine.models import Autofixable, Phase, RuleContext, Severity
 from devkit.rules.engine.settings import match_path
 from devkit.rules.rules.base import BaseRule
 from devkit.rules.workspace.markdown import LocalTarget, MarkdownLink, encode_destination, local_target, split_lines
+
+_FILE_URL = re.compile(r"file:", re.IGNORECASE)
 
 
 def _exists(path: Path) -> bool:
@@ -35,18 +38,18 @@ class MarkdownLinkRule(BaseRule, Autofixable):
         super().__init__(
             id="RULE-markdown-link",
             name="relative-markdown-link-check",
-            description="Validates relative markdown link targets and automatically corrects broken relative paths.",
+            description=(
+                "Validates relative markdown link targets, reports machine-local file: links and automatically"
+                " corrects broken relative paths."
+            ),
             phase=Phase.LINTER,
             severity=Severity.ERROR,
             guide="guide.md",
         )
 
-    def _broken_links(self, ctx: RuleContext) -> Iterator[BrokenLink]:
-        """Broken relative links of every targeted Markdown file, in file and document order.
-
-        A broken link is repairable when its destination stays inside the
-        workspace and exactly one Markdown file in the workspace has the same
-        basename.
+    def _targeted_links(self, ctx: RuleContext) -> Iterator[tuple[Path, str, MarkdownLink]]:
+        """The links of every targeted Markdown file with the file and its workspace-relative path, in file and
+        document order.
 
         A symlinked Markdown file is an alias of its target, which is checked
         (and repaired) at its own path: resolving the alias's links from the
@@ -57,7 +60,6 @@ class MarkdownLinkRule(BaseRule, Autofixable):
         passes without checking anything.
         """
         root = ctx.workspace_root
-        catalog = ctx.cache.get_catalog(root)
         aliased: set[Path] = set()
         for path in ctx.cache.find_files(root, extensions=(".md",)):
             rel = path.relative_to(root).as_posix()
@@ -70,17 +72,29 @@ class MarkdownLinkRule(BaseRule, Autofixable):
                 aliased.add(target)
                 path, rel = target, target.relative_to(root).as_posix()
             for link in ctx.cache.get_links(path):
-                target = local_target(link.target)
-                if target is None:
-                    continue
-                if _exists(path.parent / target.path):
-                    continue
-                lexical = Path(os.path.normpath(path.parent / target.path))
-                candidate = None
-                if lexical.is_relative_to(root):
-                    candidates = catalog.find_paths_by_basename(lexical.name)
-                    candidate = candidates[0] if len(candidates) == 1 else None
-                yield BrokenLink(path, rel, link, target, candidate)
+                yield path, rel, link
+
+    def _broken_links(self, ctx: RuleContext) -> Iterator[BrokenLink]:
+        """Broken relative links of every targeted Markdown file, in file and document order.
+
+        A broken link is repairable when its destination stays inside the
+        workspace and exactly one Markdown file in the workspace has the same
+        basename.
+        """
+        root = ctx.workspace_root
+        catalog = ctx.cache.get_catalog(root)
+        for path, rel, link in self._targeted_links(ctx):
+            target = local_target(link.target)
+            if target is None:
+                continue
+            if _exists(path.parent / target.path):
+                continue
+            lexical = Path(os.path.normpath(path.parent / target.path))
+            candidate = None
+            if lexical.is_relative_to(root):
+                candidates = catalog.find_paths_by_basename(lexical.name)
+                candidate = candidates[0] if len(candidates) == 1 else None
+            yield BrokenLink(path, rel, link, target, candidate)
 
     @staticmethod
     def _alias_target(ctx: RuleContext, alias: Path) -> Path | None:
@@ -106,7 +120,22 @@ class MarkdownLinkRule(BaseRule, Autofixable):
         return target
 
     def check(self, ctx: RuleContext) -> list[Violation]:
-        return [
+        machine_local = [
+            Violation(
+                rule_id=self.id,
+                file=rel,
+                line=link.line,
+                column=link.start + 1,
+                message=f"Machine-local file link '{link.target}'",
+                remediation="Use a relative link, or the document's full ID in backticks for an ID-bearing document",
+                fixable=False,
+                severity=self.severity,
+                phase=self.phase,
+            )
+            for _, rel, link in self._targeted_links(ctx)
+            if _FILE_URL.match(link.target)
+        ]
+        return machine_local + [
             Violation(
                 rule_id=self.id,
                 file=broken.rel,

@@ -1,7 +1,7 @@
 ---
 id: ARCH-05-1-containers
 title: Building Block View - Containers
-summary: "Container topology of devkit: workspace packages, distribution wheels, and external content packages."
+summary: "Container topology of devkit: workspace packages, the devkit-dist, devkit-agt and devkit-advisory wheels released in lockstep, and external content packages."
 status: active
 created_at: 2026-10-17
 ---
@@ -20,6 +20,7 @@ devkit is structured as a Python monorepo using `uv` workspaces:
 ```mermaid
 graph TD
     subgraph DevkitWorkspace ["devkit Monorepo (uv workspace)"]
+        PkgDist["packages/devkit-dist<br>(devkit-dist wheel, devkit executable)"]
         PkgDevkit["packages/devkit<br>(devkit-agt wheel)"]
         PkgSpec["packages/devkit-spec<br>(devkit-spec wheel)"]
         PkgAdv["packages/devkit-advisory<br>(devkit-advisory wheel)"]
@@ -35,8 +36,11 @@ graph TD
     end
 
     PkgAdv -.->|Runtime dependency (std-lib only)| Runtime
+    PkgDist -->|Same-version dependency| PkgAdv
+    PkgDevkit -->|Same-version dependency| PkgDist
+    PkgDist -.->|Dev dependency (asset distribution only)| DevTools
     PkgDevkit -.->|Dev dependency (CLI harness)| DevTools
-    ModelEmbed -.->|Optional search extra| PkgDevkit
+    ModelEmbed -.->|Optional search extra| PkgDist
     PkgSpec -->|Harness dependency| PkgDevkit
     PkgSpec -.->|SDD commands and agent assets| DevTools
     PkgViewer -->|Harness dependency| PkgDevkit
@@ -48,19 +52,41 @@ graph TD
 
 ## 2. Package Breakdown
 
-### 2.1 `devkit-agt` (`packages/devkit`)
-- **Distribution Wheel**: `devkit_agt-<version>-py3-none-any.whl`
-- **CLI**: `devkit`
-- **Contents**: The full developer tooling suite: asset distribution, rules engine, delivery workflows, commit gates, task worktrees, compact runner, host hooks, and MCP services.
-- **Dependencies**: `click`, `pyyaml`, `tomlkit`, and `devkit-advisory` (locked to the same version).
+Three wheels share the PEP 420 namespace `devkit` (no wheel ships `devkit/__init__.py`, and no installed path
+belongs to two of them) and are released in lockstep from one tag at one version (`ADR-dist-module-split`,
+`ADR-dist-bundles-compatibility`): `devkit-advisory` < `devkit-dist` < `devkit-agt`, each pinning the exact version of
+the ones below it.
 
-### 2.2 `devkit-advisory` (`packages/devkit-advisory`)
+### 2.1 `devkit-dist` (`packages/devkit-dist`)
+- **Distribution Wheel**: `devkit_dist-<version>-py3-none-any.whl`
+- **CLI**: `devkit`, the sole console script: the distribution commands and `devkit host`, plus whatever installed
+  packages mount through `devkit.commands` (`ARCH-05-3-command-plugins`).
+- **Contents**: The shared foundation (`devkit.core`), document search (`devkit.search`), host hooks and MCP services
+  (`devkit.host`), asset distribution (`devkit.distribution`) with the `.devkit/config.toml` schema and the receipt,
+  the root command line (`devkit.cli`, `devkit.__main__`) and the built-in bundles `devkit`, `advisory` and
+  `git-commits` (`ADR-dist-foundation-ownership`).
+- **Dependencies**: `click`, `jinja2`, `pyyaml`, `tomlkit`, and `devkit-advisory` (locked to the same version);
+  extras `search` (numpy, tokenizers, `devkit-embed`) and `mcp`. It never depends on `devkit-agt`, and its tests also
+  run in an environment without it (`just test-dist`).
+
+### 2.2 `devkit-agt` (`packages/devkit`)
+- **Distribution Wheel**: `devkit_agt-<version>-py3-none-any.whl`
+- **CLI**: no console script; `devkit rules`, `devkit workflow`, `devkit gate`, `devkit worktree`, `devkit generated`,
+  `devkit integration` and `devkit run` mount under the `devkit` executable through `devkit.commands`
+  (`ADR-dist-command-composition`).
+- **Contents**: The developer harness: rules engine, delivery workflows, commit gates, task worktrees, tracked
+  generated files, approval-bound integration and the compact runner, with the built-in bundles `authoring` and
+  `harness` (auto-selected).
+- **Dependencies**: `click`, `pyyaml`, `tomlkit`, `devkit-dist` and `devkit-advisory` (both locked to the same
+  version); its `search` and `mcp` extras require those of `devkit-dist`.
+
+### 2.3 `devkit-advisory` (`packages/devkit-advisory`)
 - **Distribution Wheel**: `devkit_advisory-<version>-py3-none-any.whl`
 - **Contents**: The Agent Advisory Protocol standard library types (`AdvisoryError`, `Advisory`, `ExitCode`, `Actor`, `Level`, `Retry`).
 - **Dependencies**: None (Python standard library only).
 - **Role**: Published on its own so consumer libraries can raise and handle advisories without importing the devkit CLI or orchestration engines.
 
-### 2.3 `devkit-spec` (`packages/devkit-spec`)
+### 2.4 `devkit-spec` (`packages/devkit-spec`)
 - **Distribution Wheel**: `devkit_spec-<version>-py3-none-any.whl`
 - **CLI**: `devkit spec`, mounted through `devkit.commands`.
 - **Contents**: The SDD document model and commands, proposals, spec bundles, code entrypoints, scope registry,
@@ -68,18 +94,20 @@ graph TD
 - **Dependencies**: `devkit-agt` and `click`; the base harness remains SDD-agnostic.
 - **Contracts**: `CAP-HARN-command-mount`, `CAP-HARN-agent-guidance`.
 
-### 2.4 `devkit-viewer` (`packages/devkit-viewer`)
+### 2.5 `devkit-viewer` (`packages/devkit-viewer`)
 - **Distribution Wheel**: `devkit_viewer-<version>-py3-none-any.whl`, carrying the committed page build.
 - **CLI**: `devkit viewer serve`, mounted through `devkit.commands`: a foreground, loopback-only, read-only server
   for several local repositories.
 - **Contents**: the server (`devkit_viewer`) and, under `frontend/`, one Svelte source for the page and for the
   component library whose `npm pack` tarball autohub vendors. Node is needed only to change the frontend.
-- **Dependencies**: `devkit-agt` (its shared core) and `click`; no `devkit-spec` code, since the page parses the
-  documents itself.
+- **Dependencies**: `devkit-agt` and `click`; it uses only `devkit.core` and `devkit.advisory`, which reach it through
+  `devkit-agt`'s dependency on `devkit-dist` (the viewer keeps its `devkit-agt` dependency,
+  `SPEC-devkit-dist-package-separation`); no `devkit-spec` code, since the page parses the documents itself.
 - **Contracts**: `CAP-VIEW-repository-viewer`, `ADR-viewer-distribution-and-frontend-build`,
   `ADR-read-only-local-server-over-git-refs`.
 
-### 2.5 Opt-in and Example Content Packages
+### 2.6 Opt-in and Example Content Packages
 - **`devkit-catalog` (`packages/devkit-catalog`)**: Ships opt-in bundle assets (e.g. `host-observer`) that are installed in the environment but only deployed when explicitly selected (`devkit add <bundle>`).
 - **`devkit-starter` (`packages/devkit-starter`)**: Example external content package demonstrating bundle authoring.
-- **`devkit-embed` (`models/devkit-embed`)**: Hand-built data package containing the default dense embedding model for `devkit-agt[search]`.
+- Both test their bundles against the manifest reader of `devkit-dist`, their only development dependency.
+- **`devkit-embed` (`models/devkit-embed`)**: Hand-built data package containing the default dense embedding model for the `search` extra of `devkit-dist` (and `devkit-agt[search]`).

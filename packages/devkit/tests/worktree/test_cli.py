@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 from devkit.advisory import ActionMode
-from devkit.cli import cli
 from devkit.worktree import WorktreeConfig, WorktreeConfigError, read_worktree_config
+from testsupport.cli import cli
 from testsupport.rules import git, init_repo, write
 
 

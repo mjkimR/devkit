@@ -1,6 +1,6 @@
 # devkit.gate
 
-Pluggable Git commit gates (`devkit gate` CLI): managed hook wrappers, layered configuration, gate discovery and the stage runner. Policy lives in content wheels that ship gates as `kind = "gate"` bundle assets. Semantics: `CAP-GATE-commit-gates`.
+Pluggable Git commit gates (`devkit gate` CLI, shipped by `devkit-agt`): managed hook wrappers, layered configuration, gate discovery and the stage runner. Policy lives in content wheels that ship gates as `kind = "gate"` bundle assets. Semantics: `CAP-GATE-commit-gates`.
 
 ## Usage
 
@@ -85,7 +85,7 @@ Outcomes and failure codes: `CAP-GATE-commit-gates`.
 
 ## Built-in git-commits bundle
 
-Commit message policy is a bundle, not a gate: the package ships the opt-in bundle `git-commits` (sources in `src/devkit/commits_guide/bundle/`, the data-only module `devkit.commits_guide`), deployed after `uv run devkit add git-commits`. Its preset `core` holds:
+Commit message policy is a bundle, not a gate: `devkit-dist` ships the opt-in bundle `git-commits` (sources in `packages/devkit-dist/src/devkit/commits_guide/bundle/`, the data-only module `devkit.commits_guide`), deployed after `uv run devkit add git-commits`; it needs no engine, so a distribution-only installation deploys it too. Its preset `core` holds:
 
 - the instruction `git-commits`: Conventional Commits types, optional scope, imperative subject, body and footer formatting, breaking changes and clean message output; listed by `devkit get-context git-commits`;
 - the `guidance` fragment `commit-pointer`, which adds one line to the root `AGENTS.md` block: "Before drafting or creating a commit message, read `<path>` and follow it." The path is the managed copy, or the project override after `devkit override create git-commits:git-commits`.

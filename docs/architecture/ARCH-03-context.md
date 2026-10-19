@@ -19,7 +19,7 @@ created_at: 2026-10-17
 graph TD
     Agent["AI Coding Agent<br>(Codex, Claude Code, Antigravity)"]
     Dev["Software Engineer"]
-    Devkit["devkit CLI & Libraries<br>(devkit-agt / devkit-advisory)"]
+    Devkit["devkit CLI & Libraries<br>(devkit-dist / devkit-agt / devkit-advisory)"]
     Git["Git Repository<br>(Hooks, Worktrees, Commits)"]
     Workspace["Consumer Workspace<br>(.devkit/, AGENTS.md, Projections)"]
     PackageManager["uv / Python Runtime"]

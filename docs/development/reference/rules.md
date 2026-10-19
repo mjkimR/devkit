@@ -209,7 +209,7 @@ executes, with the rule ID in the message.
 
 | Rule | Module | Phase, severity | Checks | Guide |
 | --- | --- | --- | --- | --- |
-| `RULE-markdown-link` | `rules.markdown_link` | linter, error | relative Markdown links point at existing files; autofix rewrites a broken link when exactly one Markdown file has its basename | [guide.md](../../../packages/devkit/src/devkit/rules/rules/markdown_link/guide.md) |
+| `RULE-markdown-link` | `rules.markdown_link` | linter, error | relative Markdown links point at existing files and no link uses a `file:` URL (never fixable); autofix rewrites a broken link when exactly one Markdown file has its basename | [guide.md](../../../packages/devkit/src/devkit/rules/rules/markdown_link/guide.md) |
 | `RULE-file-length` | `rules.file_length` | hygiene, warning | files above `max_lines` (settings `max_lines`, `extensions`) | [guide.md](../../../packages/devkit/src/devkit/rules/rules/file_length/guide.md) |
 | `RULE-secret-leak` | `rules.secret_leak` | linter, error | credential file names and private key or token patterns in explicit targets | [guide.md](../../../packages/devkit/src/devkit/rules/rules/secret_leak/guide.md) |
 | `RULE-clean-artifacts` | `rules.clean_artifacts` | linter, error | compiled binaries, database files and logs above 1 MiB in explicit targets | [guide.md](../../../packages/devkit/src/devkit/rules/rules/clean_artifacts/guide.md) |
@@ -243,12 +243,12 @@ checked paths and settings.
 
 ### Built-in advisory bundle
 
-The auto-selected `advisory` bundle (`devkit.advisory_guide`) ships one rule in its `python` preset
+The auto-selected `advisory` bundle (`devkit.advisory_guide`, shipped by `devkit-dist`) ships one rule in its `python` preset
 (`uv run devkit add advisory:python`), loaded from the receipt like the authoring rules:
 
 | Rule | Phase, severity | Checks |
 | --- | --- | --- |
-| `RULE-advisory-unique-code` | linter, error | a code is declared by one `AdvisoryError` class and its subclasses, in class bodies or through `code=` at calls; the workspace's Python files are read statically (settings `bases`, `exclude`) ([guide](../../../packages/devkit/src/devkit/advisory_guide/bundle/rules/unique_code/guide.md)) |
+| `RULE-advisory-unique-code` | linter, error | a code is declared by one `AdvisoryError` class and its subclasses, in class bodies or through `code=` at calls; the workspace's Python files are read statically (settings `bases`, `exclude`) ([guide](../../../packages/devkit-dist/src/devkit/advisory_guide/bundle/rules/unique_code/guide.md)) |
 
 ## Library
 

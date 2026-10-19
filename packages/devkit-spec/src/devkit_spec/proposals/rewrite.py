@@ -16,6 +16,7 @@ import os
 import re
 from collections.abc import Iterable
 from dataclasses import dataclass, field
+from functools import partial
 from pathlib import Path
 
 from devkit.core import FrontmatterError, atomic_write_text
@@ -29,6 +30,7 @@ from devkit_spec.documents.model import BODY
 
 LINK = "link"
 ID = "id"
+PATH = "path"  # a code-span path, relative to the proposal, in a document written from it
 AMBIGUOUS = "ambiguous"  # several documents declare the ID, so it is not rewritten
 UNREADABLE = "unreadable"
 UNWRITABLE = "unwritable"
@@ -36,6 +38,8 @@ UNWRITABLE = "unwritable"
 # location), ``unreadable`` and ``unwritable``.
 
 _CODE_SPAN_ID = re.compile(rf"`({ID_SOURCE})`")
+_CODE_SPAN_PATH = re.compile(r"`([A-Za-z0-9_.-]+/(?:[A-Za-z0-9_.-]+/)*[A-Za-z0-9_.-]*)`")
+_FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})")
 _BRACKET_ID = re.compile(rf"\[({ID_SOURCE})\]")
 
 
@@ -252,3 +256,81 @@ def rewrite_ids(
             continue
         report.files.append(display)
         report.rewritten.extend(changed)
+
+
+def rewrite_paths(root: Path, files: Iterable[str], plan: RelocationPlan, report: RewriteReport) -> None:
+    """Rewrite code-span paths that documents written from a bundle proposal give relative to it.
+
+    The documents the handoff wrote or moved out of the bundle (the carried spec and blueprint, the promoted ADRs,
+    moved feedback and other carried files) keep the proposal's prose, where a file of the bundle is often named as a
+    code span (`` `decisions/PADR-x.md` ``, `` `materials/notes.md` ``) rather than linked. In their bodies, such a
+    span that names a file or directory the handoff relocated becomes the new document's ID in backticks, or else its
+    new repository-relative path. Frontmatter, fenced code blocks and spans naming nothing relocated are left as they
+    are.
+    """
+    if not plan.dir_target:
+        return
+    written = sorted(f for f in files if f in plan.moved_files or plan.moved.get(os.path.dirname(f)) == plan.proposal)
+    for file in written:
+        display = _display(root, file)
+        try:
+            text = _read(file)
+        except (OSError, UnicodeDecodeError):
+            report.unresolved.append(Unresolved(display, 0, PATH, "", UNREADABLE))
+            continue
+        changed: list[Rewritten] = []
+        block = locate(text)
+        body_line = block.body_line if block is not None else 1
+        lines = text.split("\n")
+        fence = ""
+        for number, line in enumerate(lines, start=1):
+            if number < body_line:
+                continue
+            run = _FENCE.match(line)
+            if fence:
+                marker = run.group(1) if run is not None else ""
+                if marker[:1] == fence[0] and len(marker) >= len(fence) and run and not line[run.end() :].strip():
+                    fence = ""
+                continue
+            if run:
+                fence = run.group(1)
+                continue
+            replace = partial(_span_path, root, plan, display=display, number=number, changed=changed)
+            lines[number - 1] = _CODE_SPAN_PATH.sub(replace, line)
+        if not changed:
+            continue
+        try:
+            _write(file, "\n".join(lines))
+        except OSError:
+            report.unresolved.append(Unresolved(display, 0, PATH, "", UNWRITABLE))
+            continue
+        if display not in report.files:
+            report.files.append(display)
+        report.rewritten.extend(changed)
+
+
+def _span_path(
+    root: Path, plan: RelocationPlan, match: re.Match[str], display: str, number: int, changed: list[Rewritten]
+) -> str:
+    """The replacement of one code span: the relocated document's ID or new path, recorded in ``changed``."""
+    new = _relocated(plan, os.path.normpath(os.path.join(plan.proposal, match.group(1))))
+    if new is None:
+        return match.group()
+    document = _parse(root, new) if os.path.isfile(new) else None
+    value = document.id if document is not None and document.id else _display(root, new)
+    if os.path.isdir(new) and not value.endswith("/"):
+        value += "/"
+    changed.append(Rewritten(display, number, PATH, match.group(1), value))
+    return f"`{value}`"
+
+
+def _relocated(plan: RelocationPlan, old: str) -> str | None:
+    """Where the handoff put the proposal file or directory ``old``, or ``None``."""
+    if old in plan.exact:
+        return plan.exact[old]
+    for source, destination in plan.prefixes.items():
+        if old == source:
+            return destination
+        if old.startswith(source + os.sep):
+            return destination + old[len(source) :]
+    return None

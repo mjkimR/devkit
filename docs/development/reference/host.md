@@ -31,7 +31,9 @@ it. Native integration confirmation and execution are described in `CAP-INT-mcp-
 
 ## MCP services
 
-Install `devkit-agt[mcp]` in a retained runtime. The base installation still supports hooks, configuration inspection
+Install the `mcp` extra in a retained runtime: `devkit-agt[mcp]` where the project depends on `devkit-agt`, else
+`devkit-dist[mcp]` (`devkit.host` ships in `devkit-dist`; `HOST_MCP_EXTRA_REQUIRED` names both). The integration
+service tools come from `devkit-agt` through `devkit.host.services`. The base installation still supports hooks, configuration inspection
 and integration preparation without the SDK.
 
 | Command | Result |

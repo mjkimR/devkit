@@ -24,7 +24,8 @@ it in stages:
 
 `devkit get-context <bundle>` returns the bundle's **context**: its constitution and the header catalog of its
 synchronized instructions, so an instruction-only bundle still has one. It runs from the project or a
-subdirectory (or with `-w`) and takes the shared project lock, waiting up to ten seconds while a sync writes.
+subdirectory (or with `-w`) and takes the shared project lock, waiting up to ten seconds while a sync writes; where
+the file system is read-only for it, it reads without the lock (`CAP-DIST-sync-and-transactions`).
 
 - `constitution`: the full text of the optional UTF-8 `AGENTS.md` at the bundle root, which `devkit sync` always
   deploys to `.devkit/managed/<bundle>/AGENTS.md` whatever the presets; `null` when absent.
@@ -88,7 +89,8 @@ aliases: [postgres standby repair, replication failure]
 persistent cache) with `CAP-SRCH-document-search`. Only `name`, `description` and `aliases` are indexed;
 bodies never are.
 
-- **Mode**: `auto` (default) is `hybrid` when the `devkit-agt[search]` extra is installed and `lexical` otherwise;
+- **Mode**: `auto` (default) is `hybrid` when the `search` extra (`devkit-dist[search]`, or `devkit-agt[search]`)
+  is installed and `lexical` otherwise;
   `lexical`, `dense` and `hybrid` select one ranking explicitly. `lexical` is BM25 ($k_1=1.5$, $b=0.75$, positive
   IDF, unique query terms; case and Latin accents are normalized and punctuation separates terms), `dense` the cosine
   similarity of the query and header embeddings, and `hybrid` their Reciprocal Rank Fusion

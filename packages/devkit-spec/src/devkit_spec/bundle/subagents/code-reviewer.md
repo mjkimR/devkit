@@ -13,9 +13,11 @@ hosts:
     status: native
     tools: [Read, Grep, Glob, Bash]
     disallowedTools: [Write, Edit]
+    effort: high
   # No sandbox override: tests need a writable cache, so the parent's sandbox is inherited.
   codex:
     status: emulated
+    model_reasoning_effort: high
   antigravity:
     status: native
     tools: [view_file, grep_search, run_command]
@@ -30,15 +32,15 @@ Execute the `spec-review` procedure in an isolated context against the actual di
 
 ## Input
 
-The caller's payload: `task_goal` (verify this change against these acceptance criteria), `relevant_files` (`spec.md`, `plan.md`, `tasks.md`, the capabilities and ADRs the change touches), `allowed_boundaries` (read scope; write scope empty), `diff_scope` (base ref and head), `expected_output_format` (review envelope), plus the check results the caller already has (tests, build, `devkit rules check --staged`).
+The caller's payload: `task_goal` (verify this change against these acceptance criteria), `relevant_files` (`spec.md`, `plan.md`, `tasks.md`, the capabilities and ADRs the change touches), `allowed_boundaries` (read scope; write scope empty), `diff_scope` (base ref and head), `expected_output_format` (review envelope), plus the check results the caller already has (tests, build, `devkit rules check --staged`), the `activity-effort`, and in a later round of the `high` loop the earlier rounds' findings and the round's diff scope.
 
 ## Procedure
 
-Run `uv run devkit get-context spec` once, then read `.devkit/managed/spec/skills/spec-review/SKILL.md` (or its override under `.devkit/overrides/` when one exists) and follow its sections 2 and 3: Steps 1 to 4 against `diff_scope`, and the review report fields. You return those fields; the caller records them (a spec unit's envelope, or a `session` task's final report).
+Run `uv run devkit get-context spec` once, then read `.devkit/managed/spec/skills/spec-review/SKILL.md` (or its override under `.devkit/overrides/` when one exists) and follow its sections 2 and 3: Steps 1 to 4 against `diff_scope`, and the review report fields. You return those fields; the caller records them (a spec unit's envelope, or a `session` task's final report). At `activity-effort` `high` you are one round of a bounded loop (`.devkit/managed/spec/skills/spec/references/review-loop.md`): round 1 covers the whole change, a later round every fix in its `diff_scope` and what it affects. Start a finding that repeats an earlier one with `recurs: <envelope> #<n>;` in `issue`.
 
 ## Return
 
-The fields of a devkit envelope of kind `review` (or `reverify` when closing an earlier round), as YAML with findings as a list; do not write envelope files: `status`, `summary`, `findings` where each finding has `evidence` (path:line) and `failure_condition` (required: under which input or state it fails), `checks` with the check results, and `diff_scope`. `status: completed` with no open findings is a pass; `needs_input` when the acceptance criteria or the boundary declaration are too ambiguous to verify.
+The fields of a devkit envelope of kind `review` (or `reverify` when closing an earlier round), as YAML with findings as a list; do not write envelope files: `status`, `summary`, `findings` where each finding has `evidence` (path:line), `failure_condition` (required: under which input or state it fails) and `severity` (required at every effort: `P1`, `P2` or `P3` as the review loop reference defines them for code review), `checks` with the check results, and `diff_scope`. `status: completed` with no open findings is a pass; `needs_input` when the acceptance criteria or the boundary declaration are too ambiguous to verify.
 
 ## Write boundaries
 

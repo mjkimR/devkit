@@ -22,7 +22,7 @@ created_at: 2026-10-17
     <bundle>/             # Full file replacements for managed assets (Git-tracked)
     .baseline/<bundle>/   # Upstream copies taken at create/accept, for `override diff` (Git-tracked)
   transient/
-    lock                  # Project lock (fcntl.flock): exclusive for writers, shared for readers
+    lock                  # Project lock (fcntl.flock): exclusive for writers, shared for readers (a reader on a read-only file system reads without it)
     sync-journal.json     # Write-ahead journal of an unfinished transaction
     seen-bundles.json     # Installed bundles this clone was told about (BUNDLE_UNSELECTED is announced once)
     deployed.json         # Signatures of the files this clone's last sync left (tells stale files from edits)
@@ -44,7 +44,10 @@ See `CAP-HOST-lifecycle-observation`.
    `--no-save`) edit `agents` and `[presets]`, preserving unrelated tables, comments and formatting. A selection
    command that creates the file writes the commented template with it, and `devkit config template` adds the parts
    of the template the file lacks, never changing a line
-   (`CAP-DIST-sync-and-transactions`). The receipt cannot claim it.
+   (`CAP-DIST-sync-and-transactions`). The receipt cannot claim it. Its schema, the template renderer and the receipt
+   format belong to `devkit-dist`; the reserved harness tables (`[rules]`, `[workflow]`, `[gates]`, `[worktree]`,
+   `[integration]`) to the engines of `devkit-agt`, which contribute their commented templates through the
+   `devkit.config_tables` entry points (`ADR-dist-config-receipt-ownership`).
 2. **Managed assets (`.devkit/managed/<bundle>/`)**: generated files, regenerated deterministically by `devkit sync`.
    Ordinary files cache upstream bytes at their original relative paths. Supported `.md.jinja` sources instead
    produce rendered `.md` files using declared project inputs, after resolving raw project overrides;
@@ -172,6 +175,12 @@ skill's script is drift even when only its `SKILL.md` is overridden. On drift th
 `devkit status` reports drift under `errors` and exits `1` under either policy. Both report drift only for deployed
 assets: the record of an asset that is not deployed (its bundle deselected, its preset narrowed) is kept while its
 override files remain, and its drift is reported once it is selected again.
+
+Overrides resolve by bundle name and path. When an asset belongs to another bundle than the one an override names
+(an override of `devkit:devkit-run`, an asset of the `harness` bundle), the override does not apply: the asset
+deploys from upstream, the override files stay in place with their record while they remain, and the project
+re-creates the override with `devkit override create <bundle>:<asset>` under the asset's bundle. An override of an asset that keeps its
+bundle and path but loses content keeps applying, with drift reported, until the project reconciles it.
 
 ### Reconciliation
 

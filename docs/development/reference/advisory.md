@@ -1,6 +1,6 @@
 # devkit.advisory
 
-Python implementation of the `CAP-ADV-agent-advisory-protocol`, shipped as the `devkit-advisory` distribution, plus the built-in `advisory` bundle of `devkit` that installs its guide in consumer repositories. Where advisories sit in a command's output is specified in `ARCH-08-1-agent-output`.
+Python implementation of the `CAP-ADV-agent-advisory-protocol`, shipped as the `devkit-advisory` distribution, plus the built-in `advisory` bundle of `devkit-dist` that installs its guide in consumer repositories. Where advisories sit in a command's output is specified in `ARCH-08-1-agent-output`.
 
 ## Scope
 
@@ -11,13 +11,13 @@ This module implements the Agent Advisory Protocol and nothing else.
 
 ## Contents
 
-- **Runtime**: `devkit.advisory` in the `devkit-advisory` distribution (`packages/devkit-advisory/`): standard library only, no entry points, and the lowest layer of `devkit` (it imports no other devkit module; tests in both packages enforce this). `devkit-agt` depends on the same version, so the module is present wherever `devkit` is. `error.py` (`AdvisoryError`), `types.py` (`ExitCode`, `Level`, `ActionMode`, `Actor`, `Retry`), `advisory.py` (`Advisory`, mode derivation, `ACTION_TEXT`, the block sentinels `HEADLINE`, `FIELDS` and `CONTINUATION`, rendering). Every other devkit module raises `AdvisoryError` subclasses and returns warnings and notices as `AdvisoryError` instances at a lower level (`ARCH-08-cross-cutting`).
-- **Bundle** `advisory` (`devkit.advisory_guide`, `bundle/`, `default_preset = "core"`), built into `devkit` (not `devkit-advisory`, so a runtime environment carries no agent content) with `auto_select = true` and therefore selected by default:
+- **Runtime**: `devkit.advisory` in the `devkit-advisory` distribution (`packages/devkit-advisory/`): standard library only, no entry points, and the lowest layer of `devkit` (it imports no other devkit module; tests in both packages enforce this). `devkit-dist` and `devkit-agt` depend on the same version, so the module is present wherever `devkit` is. `error.py` (`AdvisoryError`), `types.py` (`ExitCode`, `Level`, `ActionMode`, `Actor`, `Retry`), `advisory.py` (`Advisory`, mode derivation, `ACTION_TEXT`, the block sentinels `HEADLINE`, `FIELDS` and `CONTINUATION`, rendering). Every other devkit module raises `AdvisoryError` subclasses and returns warnings and notices as `AdvisoryError` instances at a lower level (`ARCH-08-cross-cutting`).
+- **Bundle** `advisory` (`devkit.advisory_guide`, `bundle/`, `default_preset = "core"`), built into `devkit-dist` (not `devkit-advisory`, so a runtime environment carries no agent content) with `auto_select = true` and therefore selected by default. Its `python` preset's rule runs where `devkit-agt` is installed; a distribution-only installation deploys it with a `HARNESS_ENGINE_MISSING` warning:
 
 | Preset | Assets | For |
 | --- | --- | --- |
 | `core` | `agent-advisory` (language-agnostic protocol and authoring rules) | Any repository |
-| `python` | `agent-advisory` + `agent-advisory-python` (library guide) + `unique-code` (`RULE-advisory-unique-code`, linter error: two unrelated `AdvisoryError` classes declaring one code; [guide](../../../packages/devkit/src/devkit/advisory_guide/bundle/rules/unique_code/guide.md)) | Python repositories using `devkit.advisory` |
+| `python` | `agent-advisory` + `agent-advisory-python` (library guide) + `unique-code` (`RULE-advisory-unique-code`, linter error: two unrelated `AdvisoryError` classes declaring one code; [guide](../../../packages/devkit-dist/src/devkit/advisory_guide/bundle/rules/unique_code/guide.md)) | Python repositories using `devkit.advisory` |
 
 `agent-advisory` is the consumer-facing mirror of `CAP-ADV-agent-advisory-protocol` and `agent-advisory-python` documents this library; both are kept in step with the specification, and a test keeps the `[ACTION]` texts in `agent-advisory` identical to `ACTION_TEXT`.
 
@@ -49,7 +49,8 @@ A warning or notice is an `AdvisoryError` whose `level` is `WARNING` or `NOTICE`
 ## Installing
 
 A library or service that raises and renders advisories at runtime depends on `devkit-advisory` alone; its
-development tooling adds `devkit` and selects the Python preset of the guide:
+development tooling adds `devkit-agt` (whose rule engine runs `RULE-advisory-unique-code`) and selects the Python
+preset of the guide, which `devkit-dist` ships:
 
 ```bash
 # Runtime: devkit.advisory, standard library only

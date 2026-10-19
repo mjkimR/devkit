@@ -1,12 +1,13 @@
 # Continuous integration for the devkit monorepo.
 #
-# Three jobs: the workspace checks every package (devkit, devkit-starter,
-# devkit-catalog: lint, types, tests, governance rules) on Linux and macOS, the consumer smoke
-# builds the wheels, installs them into a fresh project the way a consumer would
-# and commits through the installed gate hooks (it needs git, which the runner
+# Three jobs: the workspace checks every package (devkit-dist, devkit, devkit-starter,
+# devkit-catalog, ...: lint, types, tests, governance rules) on Linux and macOS, and runs the
+# devkit-dist tests again in an environment without devkit-agt (the dist-only check); the consumer smoke
+# builds the wheels, installs them into fresh projects the way a consumer would (devkit-dist alone, then with
+# devkit-agt) and commits through the installed gate hooks (it needs git, which the runner
 # image provides), and the viewer job checks the devkit-viewer frontend and that its
 # committed build matches the sources (it needs Node). Both install the devkit-embed model wheel from the release
-# pinned in packages/devkit/pyproject.toml; nothing builds it here.
+# pinned in packages/devkit-dist/pyproject.toml; nothing builds it here.
 #
 # It does not run on push or pull request: the same checks run locally, and
 # release.yml runs this workflow on the tagged commit before publishing. Run it
@@ -41,6 +42,8 @@ jobs:
       - run: just lint-check
       - run: just check
       - run: just test
+      # devkit-dist must work without devkit-agt: its tests in an environment synced with devkit-dist alone.
+      - run: just test-dist
       # Exercise the runner around its own tests independently of the direct full suite.
       - run: uv run --no-active devkit run -- uv run --no-active pytest packages/devkit/tests/compact
       - run: just rules-check

@@ -1,0 +1,29 @@
+schema = 1
+name = "devkit"
+version = "0.1.1"
+default_preset = "core"
+# Deployed without `devkit add`; `devkit remove` opts a project out.
+auto_select = true
+
+# How a repository consumes devkit-managed assets: context loading, playbooks,
+# overrides, selection and the sync lifecycle. The rules, gates, workflows and
+# bounded command output of devkit-agt are described by its `harness` bundle.
+[[assets]]
+id = "consumption"
+kind = "instruction"
+source = "instructions/consumption.md"
+
+# Which asset kind to author for a given need, from the consumer's point of view.
+[[assets]]
+id = "resource-kinds"
+kind = "instruction"
+source = "instructions/resource-kinds.md"
+
+# Shipping repository-owned assets as a bundle installed from the same repository.
+[[assets]]
+id = "in-repo-bundle"
+kind = "instruction"
+source = "instructions/in-repo-bundle.md"
+
+[presets.core]
+assets = ["consumption", "resource-kinds", "in-repo-bundle"]

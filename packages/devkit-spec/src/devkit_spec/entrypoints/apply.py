@@ -144,6 +144,7 @@ def set_entrypoints(text: str, entries: Sequence[str]) -> str:
         lines.pop()
     rendered = _render(list(dict.fromkeys(entry.strip() for entry in entries if entry.strip())))
     out: list[str] = []
+    existing = any(_KEY.match(line) for line in lines)
     inserted = False
     index = 0
     while index < len(lines):
@@ -153,7 +154,7 @@ def set_entrypoints(text: str, entries: Sequence[str]) -> str:
             inserted = True
             index = _value_end(lines, index + 1)
             continue
-        if not inserted and _CREATED.match(line):
+        if not inserted and not existing and _CREATED.match(line):
             out.extend(rendered)
             inserted = True
         out.append(line)

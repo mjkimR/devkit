@@ -1,0 +1,40 @@
+schema = 1
+name = "harness"
+version = "0.1.1"
+default_preset = "core"
+# Deployed without `devkit add` wherever devkit-agt is installed; `devkit remove harness` opts a project out.
+auto_select = true
+
+# Running and configuring the engines of devkit-agt in a repository: rules,
+# commit gates, delivery workflows and their configuration tables.
+[[assets]]
+id = "harness-consumption"
+kind = "instruction"
+source = "instructions/harness-consumption.md"
+
+# How rule, gate and workflow assets run and are tested, including the rules of
+# an in-repository bundle in Git snapshot gates.
+[[assets]]
+id = "harness-assets"
+kind = "instruction"
+source = "instructions/harness-assets.md"
+
+# Running tests, linters and type checks through `devkit run`, and wrapping recipes with it.
+[[assets]]
+id = "devkit-run"
+kind = "instruction"
+source = "instructions/devkit-run.md"
+
+# The AGENTS.md line that sends agents to `devkit run` for verification commands.
+# Opt-in (`devkit add harness:run`): a project that runs every check through recipes
+# wrapping `devkit run` does not need it in every session.
+[[assets]]
+id = "run-pointer"
+kind = "guidance"
+source = "guidance/run-pointer.md"
+
+[presets.core]
+assets = ["harness-consumption", "harness-assets", "devkit-run"]
+
+[presets.run]
+assets = ["devkit-run", "run-pointer"]

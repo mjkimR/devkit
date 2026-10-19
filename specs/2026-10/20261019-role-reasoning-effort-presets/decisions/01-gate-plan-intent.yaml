@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: PROP-role-reasoning-effort-presets
+by: user
+at: '2026-10-19T02:27:52.303459Z'

@@ -13,6 +13,7 @@ members = [
     "devkit-advisory",
     "devkit-agt",
     "devkit-catalog",
+    "devkit-dist",
     "devkit-spec",
     "devkit-starter",
     "devkit-viewer",
@@ -347,6 +348,61 @@ source = { editable = "packages/devkit" }
 dependencies = [
     { name = "click" },
     { name = "devkit-advisory" },
+    { name = "devkit-dist" },
+    { name = "pyyaml" },
+    { name = "tomlkit" },
+]
+
+[package.optional-dependencies]
+mcp = [
+    { name = "devkit-dist", extra = ["mcp"] },
+]
+search = [
+    { name = "devkit-dist", extra = ["search"] },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "click", specifier = ">=8.1.7" },
+    { name = "devkit-advisory", editable = "packages/devkit-advisory" },
+    { name = "devkit-dist", editable = "packages/devkit-dist" },
+    { name = "devkit-dist", extras = ["mcp"], marker = "extra == 'mcp'", editable = "packages/devkit-dist" },
+    { name = "devkit-dist", extras = ["search"], marker = "extra == 'search'", editable = "packages/devkit-dist" },
+    { name = "pyyaml", specifier = ">=6.0.1" },
+    { name = "tomlkit", specifier = ">=0.13" },
+]
+provides-extras = ["mcp", "search"]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=8.0.0" }]
+
+[[package]]
+name = "devkit-catalog"
+version = "0.1.0"
+source = { editable = "packages/devkit-catalog" }
+
+[package.dev-dependencies]
+dev = [
+    { name = "devkit-dist" },
+]
+
+[package.metadata]
+
+[package.metadata.requires-dev]
+dev = [{ name = "devkit-dist", editable = "packages/devkit-dist" }]
+
+[[package]]
+name = "devkit-dist"
+version = "0.1.1"
+source = { editable = "packages/devkit-dist" }
+dependencies = [
+    { name = "click" },
+    { name = "devkit-advisory" },
     { name = "jinja2" },
     { name = "pyyaml" },
     { name = "tomlkit" },
@@ -365,6 +421,7 @@ search = [
 [package.dev-dependencies]
 dev = [
     { name = "pytest" },
+    { name = "pytest-xdist" },
 ]
 
 [package.metadata]
@@ -382,22 +439,10 @@ requires-dist = [
 provides-extras = ["mcp", "search"]
 
 [package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=8.0.0" }]
-
-[[package]]
-name = "devkit-catalog"
-version = "0.1.0"
-source = { editable = "packages/devkit-catalog" }
-
-[package.dev-dependencies]
 dev = [
-    { name = "devkit-agt" },
+    { name = "pytest", specifier = ">=8.0.0" },
+    { name = "pytest-xdist", specifier = ">=3.6.0" },
 ]
-
-[package.metadata]
-
-[package.metadata.requires-dev]
-dev = [{ name = "devkit-agt", editable = "packages/devkit" }]
 
 [[package]]
 name = "devkit-embed"
@@ -452,13 +497,13 @@ source = { editable = "packages/devkit-starter" }
 
 [package.dev-dependencies]
 dev = [
-    { name = "devkit-agt" },
+    { name = "devkit-dist" },
 ]
 
 [package.metadata]
 
 [package.metadata.requires-dev]
-dev = [{ name = "devkit-agt", editable = "packages/devkit" }]
+dev = [{ name = "devkit-dist", editable = "packages/devkit-dist" }]
 
 [[package]]
 name = "devkit-viewer"

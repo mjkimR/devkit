@@ -47,7 +47,8 @@ Sources: [Git worktrees](https://learn.chatgpt.com/docs/environments/git-worktre
   ([a write-up](https://gallon.me/letting-codex-agents-commit-making-git-writable-in-the-workspace-write-sandbox.html);
   setup scripts get no variable naming the original repository root:
   [openai/codex#13576](https://github.com/openai/codex/issues/13576)).
-  devkit-spec's worker never commits, so only the worktree directory itself must be writable (to verify).
+  devkit-spec's workers commit their result (`ADR-worker-delivers-committed-result`), so the common directory and
+  the worktree's own git dir must both be writable (verified in `MAT-worktree-host-spike-evidence` §2.2).
 
 ## 3. Repository Git settings
 
