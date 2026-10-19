@@ -10,6 +10,10 @@ shows that A3 saves little. A fourth pass (`challenger-04.yaml`) showed that lim
 contradicts the Backlog policy exemption (01 §5.1, 03 §1, §3, §4); A2 is now independent of policy, like all other
 Backlog work, with the auto-only variant kept as A2a.
 
+**Outcome**: the user chose A2 (`answer-01.yaml`, question `acceptance-point`), allowed one request to ask both gates
+and allowed the `session` reclassification of a queued draft, which is not an option of this comparison (it deletes the
+draft instead of accepting it) and is recorded in `PADR-session-reclassification-of-a-queued-draft`.
+
 ## The two models
 
 - **M1, accept on sight**: the user gives `plan-accept` for a draft whose direction is already settled; the record

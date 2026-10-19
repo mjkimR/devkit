@@ -23,8 +23,8 @@ A direct acceptance must reach the same end state a Planning acceptance reaches:
 handoff checks the status but not the gate record, and the `plan-<slug>` readiness check runs only on the MCP
 integration path. Today every executor edits the `status:` line by hand; 01 §10 already plans one writer for it,
 `devkit spec proposal accept <slug> --by <actor> [--note]`, shared by the local Host and autohub. Where a direct
-acceptance is committed is compared in [options](../materials/options-comparison.md); this record assumes the
-recommended A2 and changes only in its "Where it runs" bullet if the user chooses otherwise.
+acceptance is committed is compared in [options](../materials/options-comparison.md); the user chose A2, Backlog
+acceptance on the base under every policy, and allowed one request to ask both gates (`answer-01.yaml`).
 
 ## 2. Decision Drivers
 
@@ -64,13 +64,19 @@ recommended A2 and changes only in its "Where it runs" bullet if the user choose
   - `--check` runs every check read-only and writes nothing; the command never records `plan-intent`, never commits,
     merges or runs the handoff.
   `reject` stays the follow-up 01 §10 plans.
-- **Where it runs (A2)**: a direct acceptance is Backlog work under every policy, like Backlog's other changes (01
+- **Where it runs (A2, the user's choice)**: a direct acceptance is Backlog work under every policy, like Backlog's other changes (01
   §5.1, 03 §1), committed on the base checkout only (another slug's activity branch is refused). Before proposing it
   the Host settles that it can push to the base (or that there is no remote); a protected base means Planning instead,
   and a stranded acceptance commit is undone with `git revert`, never a reset. The Host runs `--check`, sweeps its own
   acceptance session (a new `feedback` envelope at `collect-feedback`; zero observations is a valid PASS), runs the
   command and commits the result on the base. Under `pull_request = required` the request states that the direction
   gets no PR review, and the user may choose Planning for that draft instead.
+- **Both gates in one request**: for an eligible draft without a recorded `plan-intent`, one request may ask both
+  decisions, each named in full (the intent with goal, scope, verification, `task_kind`, depth and the effort hints;
+  the acceptance with "Planning: skipped" and the eligibility reason), and the user answers each explicitly; neither
+  is inferred from the other. The Host then records `plan-intent` with `devkit workflow answer --by user`, sweeps,
+  runs `accept --direct` and commits all of it in one Backlog commit. If the user accepts only the intent, or the
+  command refuses, the commit holds the draft with its intent record, which Planning starts from.
 - **No run**: a direct acceptance has no Planning run, no `activity-effort` and no `worker` envelope; its sweep covers
   the acceptance session, and freshness stays an executor procedure as for every Planning run.
 - **Handoff guard**: for a bundle bound to `sdd-proposal`, `devkit spec proposal handoff` also requires the effective

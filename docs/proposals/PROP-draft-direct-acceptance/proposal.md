@@ -1,14 +1,14 @@
 ---
 id: PROP-draft-direct-acceptance
 title: Direct acceptance of drafts that need no Planning
-summary: Lets the user accept a draft proposal whose direction is already settled in Backlog, without a Planning branch or run, through the planned accept command recording the user's plan-accept with a Planning-skipped note, so small drafts go straight to handoff.
+summary: "Lets the user accept a settled draft in Backlog on the base, without a Planning branch or run, through the planned accept command recording plan-accept with a Planning-skipped note; a session-depth draft may instead be deleted at pickup and done as a session on the user's decision."
 status: reviewing                      # draft | reviewing | accepted | rejected
 created_at: 2026-10-16
 target_area: capabilities/delivery/
 priority: medium                      # critical | high | medium | low
 size: M                               # S | M | L | XL
 planning_effort: high                 # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
+dev_effort: high                      # low | medium | high (hint for Development)
 boundaries:
   owns:
     - capabilities/delivery/
@@ -44,6 +44,9 @@ workflow_hash: sha256:90918c632715461d07f99f683b8381bdbe6381ad6689a7575a72c002c1
   contract is clear. Planning at `low` still starts `plan-<slug>`, commits `status: reviewing`, records `plan-accept`
   and merges the branch, then Development starts `dev-<slug>`: two branches, and two PRs under
   `pull_request = required`, for one decision the user could make on sight.
+- **Queued session work pays for a Unit.** A request of `session` depth that waits in the queue becomes a draft, and
+  any path to accepting it ends in a spec Unit with a reconcile; the lowering rule forbids doing it as the session
+  it would have been if started at once.
 - **Effort cannot express it.** `activity-effort` sets how thoroughly an activity is done; skipping the activity is a
   routing decision, not a lower thoroughness, so an effort value such as `skip` would blur the axis.
 - **Nothing may accept a draft today.** Backlog changes only a `draft` (01 §5.1, `devkit spec proposal check`), and the
@@ -67,16 +70,19 @@ gates and provenance carried by the handoff.
   `plan-intent`, no `needs_decompose`, no `supersedes`, no Planning branch, no envelope hold, valid `task_kind`, the
   path's conditions; also as a read-only check) plus the Host's judgment that the direction leaves nothing to compare,
   shown to the user with the recorded `planning_effort` hint. No size limit.
-- **Q2. Gates.** Open for the user (question `gates-in-one-exchange`): whether one request may carry `plan-intent`
-  and `plan-accept` together for a draft without a recorded intent. Either way they are two records, each the user's
-  explicit answer; neither is inferred from the other.
-- **Q3. Policy.** Open for the user (question `acceptance-point`). The recommended A2 is Backlog work on the base
-  under every policy, inside the existing Backlog exemption (01 §5.1, 03 §1); under `required` the request says the
-  direction gets no PR review and the user may choose Planning for that draft. A2a would offer it only under `auto`,
-  which needs its own rule and makes a policy key decide the flow structure (03 §1).
-- **Q4. Reclassification.** Open for the user (question `session-reclassification`). Reclassifying to a `spec` Unit
-  is not needed: direct acceptance reaches the same Unit and keeps the body, provenance and the `plan-accept` record
-  the closes depend on. The draft listed an `issue` field among the carried values; devkit-spec has none.
+- **Q2. Gates.** Answered by the user (`answer-01.yaml`, `gates-in-one-exchange`) and recorded in
+  `PADR-direct-acceptance-command-and-handoff-guard`: one request may ask `plan-intent` and `plan-accept` together for
+  an eligible draft without a recorded intent, naming both decisions; they stay two records, each the user's explicit
+  answer, and neither is inferred from the other. Accepting only the intent leaves a draft for Planning.
+- **Q3. Policy.** Answered by the user (`acceptance-point`): A2, Backlog work on the base under every policy, inside
+  the existing Backlog exemption (01 §5.1, 03 §1); under `required` the request says the direction gets no PR review
+  and the user may choose Planning for that draft. A2a and D are not taken.
+- **Q4. Reclassification.** Reclassifying to a `spec` Unit (C) is not needed: direct acceptance reaches the same Unit
+  and keeps the body, provenance and the `plan-accept` record the closes depend on. For `session` work the user
+  allowed a reclassification (`session-reclassification`), recorded in
+  `PADR-session-reclassification-of-a-queued-draft`: on the user's explicit decision at pickup a draft without PADRs
+  is deleted as Backlog work, keeping its open feedback, and done as a `session` task, the one stated exception to the
+  lowering rule. The draft listed an `issue` field among the carried values; devkit-spec has none.
 - **Q5. Tooling.** Answered in `PADR-direct-acceptance-command-and-handoff-guard`: the `accept` command 01 §10
   already plans, with a `--direct` variant for an eligible draft, a read-only `--check` and a repair of an acceptance
   without its gate record (after the user's explicit acceptance), records the acceptance through the engine in one
@@ -88,26 +94,30 @@ gates and provenance carried by the handoff.
 
 ## 3. Proposed Design & Impact
 
-### 3.1 Direction under review
+### 3.1 Chosen direction
 
-Seven ways, the status quo included, were compared ([options](materials/options-comparison.md), revised after four
-`challenger` passes); the user chooses (question `acceptance-point`). The recommendation is **A2**.
+Seven ways, the status quo included, were compared ([options](materials/options-comparison.md), revised after the
+`challenger` rounds); the user chose **A2** (`answer-01.yaml`).
 
-- **A2. Backlog acceptance on the base** (recommended): in Backlog the Host proposes direct acceptance for an eligible
+- **A2. Backlog acceptance on the base** (chosen): in Backlog the Host proposes direct acceptance for an eligible
   draft (read-only `--check` first; a missing `plan-intent` shows as pending when the request asks for both) with the
   eligibility reason, `task_kind` and the effort hints, and under `pull_request = required` the note that the
   direction gets no PR review. On the user's explicit acceptance it sweeps its own session (`collect-feedback`), runs
   `devkit spec proposal accept <slug> --by user --direct --note "<reason>"` on the base checkout and commits the result
   as Backlog work, under every policy like Backlog's other changes. Development later starts `dev-<slug>` and runs
-  `devkit spec proposal handoff` as for any accepted proposal, in any mode (autohub included). It saves the branch,
+  `devkit spec proposal handoff` as for any accepted proposal, in any mode (autohub included). When the draft has no
+  recorded `plan-intent`, the same request may ask both gates, each answered explicitly, and the Host records
+  `plan-intent` first. It saves the branch,
   its merge or PR, the `reviewing` commit, the worker record and the question round; the saving per configuration is
   in the comparison.
+Not chosen:
+
 - **A2a. A2 under `pull_request = auto` only**: keeps the Planning PR under `required`, but needs a rule of its own and
   amendments of the Backlog exemption, because a policy key would decide whether a proposal gets a Planning branch.
 - **A3. A one-commit Planning branch**: no structural change, but against today's Planning at `low` it saves only a
   commit, a record and a question round; dominated by D.
 - **D. No new path**: keep Planning at `low` for small drafts; ship only the handoff guard and the planned `accept`
-  command. The alternative to A2 if its saving does not justify the strategy edits.
+  command.
 - **B** (acceptance on `dev-<slug>`) and **C** (reclassify to a spec Unit) are not recommended: B breaks 01 §4.7 and
   §7.4 and needs four guards, C loses the `plan-accept` record the closes depend on.
 
@@ -123,10 +133,19 @@ Common to the direct-acceptance options:
 - **Depth**: direct acceptance lowers the effective depth of a queued draft on the user's explicit `plan-accept`;
   01 §2.2 names it as the approved route instead of keeping a wording it no longer matches.
 
+Beside direct acceptance:
+
+- **Session reclassification** (`PADR-session-reclassification-of-a-queued-draft`): when the user picks a queued draft
+  whose work is `session` depth, the Host may propose doing it as a `session` task with the reason; on the user's
+  explicit decision, a draft without PADRs (and not marked `needs_decompose`, superseding or a depth escalation) is
+  deleted in one Backlog commit on the base that preserves its open feedback and names the decision, and the session
+  starts through inline Planning. No command is added; the lowering rule states this as its one exception besides a
+  proposal's handoff.
+
 ### 3.2 Strategy-layer changes first (ordering dependency)
 
 The strategy layer lives in the workbench repository; this package cannot change it, and its 01 is the SSOT. Before
-Development here, the workbench updates (for A2):
+Development here, the workbench updates (A2, chosen, and the session reclassification):
 
 - 01 §5.1 and Q55: replace "accepting without Planning is a follow-up (`PROP-draft-direct-acceptance`)" and "small
   drafts run Planning at `low`" with the direct acceptance: Backlog may accept an eligible draft, on the base checkout,
@@ -140,8 +159,13 @@ Development here, the workbench updates (for A2):
   reviewed by the Host as a Planning executor would, 01 §2.3, and under `required` the missing PR review), no run, no
   worker envelope (the §8 `worker` row), no `activity-effort`.
 - 01 §3 gate table and §2.2: `plan-accept` may be given on sight for an eligible draft, and it is the Planning
-  branch's merge approval only when there is one; depth is still lowered only through a handoff after `plan-accept`,
-  and this is the approved route for a queued draft.
+  branch's merge approval only when there is one; one request may ask `plan-intent` and `plan-accept` together for an
+  eligible draft, two explicit answers; depth is lowered only through a handoff after `plan-accept`, the approved
+  route for a queued draft, or by the session reclassification below.
+- 01 §2.2 (the lowering bullet and the depth-adjustment diagram), §5.1, §6.1 and Q55: on the user's explicit decision
+  at pickup, a queued draft without PADRs may be deleted as Backlog work, keeping its open feedback, and done as a
+  `session` task; the one exception to lowering only through a handoff, never for a proposal in review or accepted
+  or a spec Unit.
 - 01 §4.2: acceptances are recorded with `devkit spec proposal accept`, other gates with `devkit workflow answer`.
 - 01 §5.5: `spec-next` may recommend direct acceptance for an eligible draft beside Planning.
 - 01 §10 (devkit-spec rows): the planned proposal status-transition CLI gains `--direct`, `--check` and the repair;
@@ -149,6 +173,8 @@ Development here, the workbench updates (for A2):
 - 03 §3 (Backlog row): a direct acceptance commits on the base checkout, not on another activity branch; 03 §4 (last
   bullet): a direct acceptance is Backlog work and takes no PR, also under `required`.
 - No change to 01 §5.2, §7.1, §7.4 or 03 §1.
+- After the strategy layer is updated, Development checks its text against this proposal's PADRs and reports any
+  difference before changing code.
 
 ### 3.3 Impact in this repository
 
@@ -156,18 +182,22 @@ Development here, the workbench updates (for A2):
   library function; the handoff guard for bound bundles with its own code (`errors.py`); the carried gate note; tests
   for each, and existing handoff tests that rely on the status alone.
 - `CAP-DLV-proposal-incubation`: the approval rule (rule 2), rule 12 (the carried note), rule 13 (Backlog may accept
-  an eligible draft), the command, its codes in the code table and its output.
+  an eligible draft, and may delete a draft for a session reclassification on the user's decision), the command, its codes in the code table and its output.
 - `CAP-DLV-delivery-workflows` and the `sdd-proposal` body: the gate rules (a direct acceptance records `plan-accept`
   for a draft on the base, without `reviewing`; acceptances use the command) and the Planning feedback section (a
   direct acceptance has no run or worker record; its sweep covers the acceptance session); in the schema only the
   `direction-handoff` comment ("never for a draft") changes, while stages, checks and gates stay.
 - The `spec` skill: `references/backlog.md` (drop "until direct acceptance exists", add the path and its base-checkout
-  rule beside the Backlog commit rule),
-  `references/classification.md` (§1 routing, §3 lowering rule; §4 "a new draft runs Planning anew" stays for
+  rule beside the Backlog commit rule, and the session reclassification of a queued draft),
+  `references/feedback-retirement.md` (the reclassification deletion joins the cases that preserve open feedback),
+  `references/classification.md` (§1 routing, §3 lowering rule and its session exception; §4 "a new draft runs Planning anew" stays for
   supersede and depth-escalation drafts), `references/effort.md` (a direct acceptance has no activity-effort), the
   proposal row of the routing table, `references/worktree.md` (the accepted proposal may come from a direct
   acceptance); `spec-next` (`SKILL.md` stage rows, `references/next-work.md` and `references/workflow-signals.md`:
-  an eligible draft may be offered for direct acceptance).
+  an eligible draft may be offered for direct acceptance, and a session-depth draft for session reclassification at
+  pickup).
+- The lowering rule's other statements: the bundle `AGENTS.md` ("never lowered except by a proposal's handoff") and
+  `CAP-HARN-agent-guidance` (the Host "never lowers it") name the session reclassification.
 - The proposal template's lifecycle line (`proposals/scaffold.py`): it says acceptance merges the Planning branch;
   make it hold for a direct acceptance.
 - `PROP-direct-planning-procedure` also edits the `spec` skill; whichever lands second rebases its text.
@@ -177,8 +207,8 @@ Development here, the workbench updates (for A2):
 - **Scope Excluded**: a `skip` value for `activity-effort`.
 - **Scope Excluded**: accepting without the user. Policy delegation (`auto`) never applies to `plan-intent` or
   `plan-accept`, and the command records only after the user's explicit acceptance.
-- **Scope Excluded**: lowering depth any other way than a proposal's handoff (unless the user allows the `session`
-  reclassification asked in `session-reclassification`).
+- **Scope Excluded**: lowering depth any other way than a proposal's handoff and the session reclassification of a
+  queued draft; a tool check for the reclassification (it stays a Backlog deletion on the user's decision).
 - **Scope Excluded**: an autohub UI for direct acceptance (Backlog is `direct` only), the `reject` command 01 §10
   plans, and the strategy-layer documents themselves.
 
