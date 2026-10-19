@@ -1,0 +1,79 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T03:16:29.141334Z'
+status: completed
+summary: 'round 5; outside the cap after the user''s worker-01 answers, scope 0290f52..c89d04c: challenger-04 #1, #3, #4, #6 resolved, #2 partly (recurs as #1 here), #5 resolved for direct acceptance only. New: reclassification fallback and recovery, missed impact items, base-branch definition, sweep timing, slug reuse. dev_effort high justified.'
+findings:
+- issue: 'recurs: challenger-04.yaml #2; the plain-form repair of a Planning acceptance without its gate record contradicts the plain form''s precondition (a proposal in review on plan-<slug>) and has no compliant commit place under pull_request=required; the guard sends the repair to where the proposal lives, the base after the merge.'
+  evidence: decisions/PADR-direct-acceptance-command-and-handoff-guard.md:52-53, 60-63, 85-87; workbench 03-policy.md:99; sdd-proposal.md:115
+  failure_condition: A merged Planning acceptance without a gate record is refused by the plain form, or the Host commits a Planning acceptance straight to a PR-required base.
+  suggested_action: Drop the plain-form repair, or state its checks, branch and a compliant route under required.
+  resolution: open
+  severity: P2
+- issue: When the base cannot be pushed the reclassification deletion travels on dev-<slug>, contradicting its base-checkout rule, the 03 3 edit and direct acceptance's push-access-first rule, and the commit place is unstated.
+  evidence: decisions/PADR-session-reclassification-of-a-queued-draft.md:63-69; proposal.md:170; decisions/PADR-direct-acceptance-command-and-handoff-guard.md:69-70; workbench 01-master-flow.md:297-298, 519
+  failure_condition: A local-base deletion commit diverges after a squash merge (only a reset clears it), and the draft stays editable on the remote base while its deletion is in review.
+  suggested_action: Settle push access before proposing; a protected base keeps the draft on its normal route, or the deletion is the first commit on dev-<slug>.
+  resolution: open
+  severity: P2
+- issue: The draft is deleted before the session starts and the only recovery for a session that never integrates is the Host proposing to file it again, which loses plan-intent, milestone and materials.
+  evidence: decisions/PADR-session-reclassification-of-a-queued-draft.md:63-64, 70-73, 86; workbench 01-master-flow.md:356, 519
+  failure_condition: Context is lost after the deletion commit and the request disappears from the queue.
+  suggested_action: Name git revert of the deletion commit as the recovery and have the session's final report name the deletion commit.
+  resolution: open
+  severity: P2
+- issue: 3.3 misses texts that contradict the change - the SPEC_PROPOSAL_NOT_APPROVED fix text, spec-orchestrate step 4, CAP-HARN-command-mount and the agent-guidance skill table (no proposal accept), and US-incubate-and-hand-off-a-proposal scenarios 1 and 5; docs/stories/ is not in boundaries.owns.
+  evidence: packages/devkit-spec/src/devkit_spec/errors.py:132-141; bundle/skills/spec-orchestrate/SKILL.md:34; docs/capabilities/harness/CAP-HARN-command-mount.md:83; docs/capabilities/harness/CAP-HARN-agent-guidance.md:141; docs/stories/delivery/US-incubate-and-hand-off-a-proposal.md:33-39, 45-51, 70-74
+  failure_condition: The agent hand-sets status accepted on dev-<slug> (option B), and the story contradicts the guard after Development.
+  suggested_action: Add them to 3.3 and stories/delivery/ to boundaries.owns.
+  resolution: open
+  severity: P2
+- issue: The promoted ADR names only ADR-roadmap-in-repository; ADR-run-records-and-activity-branches says every proposal activity runs on plan-<slug> or dev-<slug>.
+  evidence: docs/decisions/2026-10/20261016-run-records-and-activity-branches.md:67-68; workbench 01-master-flow.md:236
+  failure_condition: An accepted ADR reads as forbidding a plan-accept record on the base with no record pointing past it.
+  suggested_action: Name ADR-run-records-and-activity-branches as qualified too.
+  resolution: open
+  severity: P2
+- issue: The tool check 'the checkout is on the base branch' has no definition, and 'another slug''s activity branch is refused' suggests the slug's own dev-<slug> is allowed.
+  evidence: decisions/PADR-eligibility-for-direct-acceptance.md:44-45; decisions/PADR-direct-acceptance-command-and-handoff-guard.md:67-68; packages/devkit-spec/src/devkit_spec/rules/reconcile_contract.py:116-132
+  failure_condition: A base checkout switched to dev-<slug> passes as base and the acceptance lands on dev-<slug>.
+  suggested_action: Refuse a detached HEAD, any plan-*/dev-* branch and a branch with a recorded devkitBase; any branch other than the base is refused.
+  resolution: open
+  severity: P3
+- issue: The combined exchange does not say whether the Host sweeps when only the intent is accepted, and the sweep ignores the project's collect-feedback and capture policy.
+  evidence: decisions/PADR-direct-acceptance-command-and-handoff-guard.md:71-72, 77-79; workbench 01-master-flow.md:399-400
+  failure_condition: A Backlog-session PASS lands in a draft Planning later starts from, or the Host writes an envelope the policy forbids.
+  suggested_action: Sweep only after both answers are yes, just before the command, following the project's policy.
+  resolution: open
+  severity: P3
+- issue: The claim that a later spec Unit under the same slug is never read as the deleted draft's handoff holds only for references on the base at the deletion commit.
+  evidence: decisions/PADR-session-reclassification-of-a-queued-draft.md:65-67; bundle/rules/document_reference/guide.md:32-33, 44; workbench 01-master-flow.md:561
+  failure_condition: A PROP-<slug> mention merged later from another branch is rewritten to SPEC-<slug> by rules fix.
+  suggested_action: Use a new slug for the session and any later Unit, or scope the claim.
+  resolution: open
+  severity: P3
+- issue: 03 1 defines Backlog work without an acceptance while 3.2 says no change to 03 1; Q9 is not listed beside 4.7.
+  evidence: workbench 03-policy.md:15, 99; 01-master-flow.md:705; proposal.md:175-177
+  failure_condition: 03 1 does not cover a direct acceptance as Backlog work.
+  suggested_action: Add the direct acceptance to the 03 1 list and list Q9.
+  resolution: open
+  severity: P3
+- issue: The "Not chosen:" line renders inside the A2 bullet, the A2 paragraph has a stray break, and options-comparison says revised twice before listing four passes.
+  evidence: proposal.md:110-113; materials/options-comparison.md:5-11
+  failure_condition: The rendered proposal folds the other options into A2.
+  suggested_action: Add a blank line, rejoin the sentence, fix the count.
+  resolution: open
+  severity: P3
+assumptions:
+- The user's answer-01 decisions are settled
+- Reviewed as the final text at c89d04c without a shell
+unverified_areas:
+- Commit gate reaction to an accepted proposal committed on the base
+- autohub use of the accept command
+- ff-only divergence after a squash merge, reasoned not reproduced
+checks: {}
+diff_scope:
+  base: 0290f524b368d4034e7dc222c4696115e5ea77f8
+  head: c89d04c0d0839c052a8b061cdcdfe689c82d039e
