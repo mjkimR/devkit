@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-19
 ---
 
@@ -54,3 +54,5 @@ payload.md row: | `reconcile-reviewer` | `spec.md`, `reconcile.md`, the deciding
 reviewer return, unverified_areas: "Exact file list of the diff from <base> to <head>, and whether the worktree
 HEAD still equals <head> (no shell ...)"
 ```
+
+- **Disposition**: PROP-worker-range-validation: changed-path list in read-only reviewer payloads (Q6)

@@ -9,8 +9,8 @@ skill: spec
 agent: claude-code
 origin: agent
 severity: noise
-recurring: false
-status: open
+recurring: true
+status: promoted
 created_at: 2026-10-19
 ---
 
@@ -35,3 +35,5 @@ created_at: 2026-10-19
 - `devkit workflow envelope check --unit docs/proposals/PROP-high-effort-review-loop`:
   `challenger-01.yaml ... open_findings=15`, `challenger-02.yaml ... open_findings=4`, `[OK: 5 envelopes]`.
 - `CAP-DLV-workflow-envelopes`: "A `reverify` envelope must name the `review-NN.yaml` it closes."
+
+- **Disposition**: PROP-envelope-record-gaps: closing folded challenger findings and the round count before markers (Q1)

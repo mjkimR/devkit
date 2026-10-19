@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-19
 ---
 
@@ -56,3 +56,5 @@ RULE-markdown-link guide: "in --staged and --ci runs the targets are the changed
 payload.md (development-worker): write scope = "the unit's directory, the tasks' _Boundary: paths, the Living Spec
   paths the reconcile targets"
 ```
+
+- **Disposition**: PROP-worker-range-validation: scope derivation from records, including links a move breaks (Q3)

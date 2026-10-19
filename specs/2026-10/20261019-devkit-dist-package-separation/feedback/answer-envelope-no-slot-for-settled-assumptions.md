@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-19
 ---
 
@@ -48,3 +48,5 @@ Previous worker envelope (worker-02.yaml) assumptions:
 Recorded answer-02.yaml: one answer (harness-bundle-name, keep-harness) carrying two constraints
 "Settled by the user in the same round: ..." for those two assumptions.
 ```
+
+- **Disposition**: PROP-envelope-record-gaps: a slot for assumptions the user settled (Q2)

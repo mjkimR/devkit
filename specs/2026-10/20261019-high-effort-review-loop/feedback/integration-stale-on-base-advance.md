@@ -10,7 +10,7 @@ agent: claude-code
 origin: user
 severity: workaround
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-19
 ---
 
@@ -44,3 +44,5 @@ created_at: 2026-10-19
 - `service.py` `_validate`: compares a digest of `.devkit/config.toml` and `.devkit/installation.json` with the
   request's and raises `StaleRequestError` on any difference; the request's `merge_method` is fixed to `ff-only`
   (`models.py`).
+
+- **Disposition**: PROP-integration-follow-ups: tolerating base advances during approval (E1-E6)

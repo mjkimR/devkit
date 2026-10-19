@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-19
 ---
 
@@ -39,3 +39,5 @@ created_at: 2026-10-19
   an effect that cannot be undone locally ... or (b) an earlier activity or review of the same work left P1 findings
   unresolved".
 - Handoff output and `devkit workflow next` for the unit name no change since `plan-accept`.
+
+- **Disposition**: PROP-worker-range-validation: base drift reporting for long units and handoff (Q4)

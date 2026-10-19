@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-19
 ---
 
@@ -49,3 +49,5 @@ ls docs/capabilities: README.md advisory collaboration compact delivery distribu
   governance harness host integration search traceability worktree   (no core)
 devkit rules check <proposal dir> -> no finding
 ```
+
+- **Disposition**: PROP-envelope-record-gaps: a rule for proposal boundaries and target_area (Q3)
