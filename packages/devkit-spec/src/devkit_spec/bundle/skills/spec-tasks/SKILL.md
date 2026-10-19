@@ -32,7 +32,7 @@ Tasks hold implementation and verification work only. Review (`spec-review`) and
 
 ## 3. Tasks Output Standard
 
-Rewrite `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/tasks.md`, keeping its `id`, `spec` and `plan` frontmatter:
+Read the skeleton `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/tasks.md`, then rewrite it, keeping its `id`, `spec` and `plan` frontmatter:
 
 ```markdown
 ---
