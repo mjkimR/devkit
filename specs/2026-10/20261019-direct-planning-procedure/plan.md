@@ -18,7 +18,7 @@ spec: SPEC-direct-planning-procedure
 
 - Target Area: harness/ (the `spec` bundle assets) and delivery/ (`CAP-DLV-delivery-workflows`).
 - Measured at base `d981971`: `spec/SKILL.md` 6531 bytes, `planning-worker.md` 7953 bytes. After the move:
-  `references/planning.md` 4514 bytes (ADR estimate about 4.5 KB), `spec/SKILL.md` 6613 bytes (about 6.6 KB),
+  `references/planning.md` 4514 bytes (ADR estimate about 4.5 KB), `spec/SKILL.md` 6620 bytes (about 6.6 KB),
   `planning-worker.md` 4361 bytes (about 4 KB). No other reference changes.
 
 ## 3. Component & Interface Design
@@ -33,9 +33,10 @@ spec: SPEC-direct-planning-procedure
 - `packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/planning.md` (new): the contract's steps 2 to 6
   as steps 1 to 5, addressed to "you" as the executor of the turn (the `direct` Host or the `planning-worker`). Only
   the address changes: "with the payload" becomes "with a worker's payload, or from the user in `direct` mode", "the
-  `activity-effort` you were given" becomes "the Planning `activity-effort`", "nested subagent" drops from the
-  `medium` depth (nesting is the worker's obligation), and the managed paths of `review-loop.md` and `sweep.md` become
-  relative links. The step cross-reference "(step 6)" becomes "(step 5)".
+  `activity-effort` you were given" becomes "the Planning `activity-effort`", "nested" drops from old step 4 in both
+  places, the `medium` depth's "nested subagent" and "each nested `scout` or `challenger` return" (nesting is the
+  worker's obligation), and the managed paths of `review-loop.md` and `sweep.md` become relative links. The step
+  cross-reference "(step 6)" becomes "(step 5)".
 - `skills/spec/SKILL.md`: the routing table's `proposal` row links the reference.
 - `subagents/planning-worker.md`: `## Procedure` keeps step 1 (worktree, `git -C`, scratch), one step that follows the
   reference by its managed path and names `devkit workflow envelope worker`, and the nested-role rule taken out of
