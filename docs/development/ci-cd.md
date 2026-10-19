@@ -50,12 +50,18 @@ reviewed head before integration:
     source change also selects the devkit tests over its whole source tree (layering, documented codes, CLI wiring,
     stdout kinds).
   - A changed `test_*.py` in a `tests` directory selects itself; any other file there selects its directory.
+  - The devkit-viewer frontend (`packages/devkit-viewer/frontend/`, `scripts/viewer.sh`) selects no pytest test:
+    pytest never exercises it. The result names the frontend checks instead (below); the page they rebuild under
+    `src/devkit_viewer/static/` is package source and selects the viewer's tests.
   - Planning records and agent projections (`specs/`, `.claude/`, `.agents/`, `.codex/`, `.devkit/`), `guides/`,
     `.github/`, the smoke and release scripts, `.gitignore`, `.python-version` and Markdown at the repository or a
     package root select nothing.
   - Any other path selects the full suite.
 - **Result**: stdout's first line is
-  `[TEST_SELECTION: mode=<full|partial|none> base=<ref> changed=<n> paths=<n> reason=<text>]`; `--list` adds one
+  `[TEST_SELECTION: mode=<full|partial|none> base=<ref> changed=<n> paths=<n> reason=<text>]` (`reason=frontend`
+  for a frontend-only change). When a frontend path changed, the next line is
+  `[FRONTEND_CHECK: just viewer install && just viewer lint && just viewer check && just viewer test && just viewer
+  build]`: the agent runs that command (Node and npm) and commits the rebuilt page with the sources. `--list` adds one
   `[TEST_PATH: <path>]` per path and runs nothing. Otherwise `full` and `partial` run `just test all [paths...]`
   with its preflight, options and exit code, and `none` exits `0`. A base without a merge base is the input error
   `TEST_BASE_UNKNOWN` (exit `2`), whose `[FIX]` lists the existing branches; a failing `git diff` or `git ls-files`

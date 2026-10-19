@@ -45,7 +45,8 @@ Keep package descriptions in this guide to a high-level summary of their purpose
 ## Verification
 
 Run lint, type checks, and relevant tests before completing code changes. During development run only the tests
-the change can affect; run the full suite once on the reviewed head before integration, not after every edit:
+the change can affect; run the full suite once on the reviewed head before integration, not after every edit. A
+viewer frontend change selects no pytest test: run the command its `[FRONTEND_CHECK: ...]` line names instead:
 
 | Target | Command |
 | --- | --- |

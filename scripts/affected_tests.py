@@ -68,6 +68,11 @@ SOURCE_TREE_TESTS = tuple(
     )
 )
 
+# The devkit-viewer frontend: pytest never exercises it, so a change there selects no tests and names the frontend
+# checks (Node and npm) instead, rebuilding the committed page last.
+FRONTEND_PREFIXES = ("packages/devkit-viewer/frontend/", "scripts/viewer.sh")
+FRONTEND_CHECK = "just viewer install && just viewer lint && just viewer check && just viewer test && just viewer build"
+
 # Paths no test reads: planning records, agent projections, guides, CI and release scripts.
 UNTESTED_PREFIXES = (
     "specs/",
@@ -93,7 +98,8 @@ _IMPORTING_CALLS = frozenset({"import_module", "find_spec", "files", "__import__
 class Selection:
     mode: Literal["full", "partial", "none"]
     paths: tuple[str, ...]  # repository-relative and sorted; empty unless partial
-    reason: str  # full: the triggering path; partial: what changed; none: "untested"
+    reason: str  # full: the triggering path; partial: what changed; none: "frontend" or "untested"
+    frontend: bool = False  # a frontend path changed: the frontend checks are due
 
 
 @dataclass(frozen=True)
@@ -255,9 +261,10 @@ def _source_node(workspace: Workspace, path: str) -> str | None:
 def select(root: Path, changed: Iterable[str]) -> Selection:
     """The test paths a set of changed repository-relative paths can affect."""
     changed = sorted(set(changed))
+    frontend = any(path.startswith(FRONTEND_PREFIXES) for path in changed)
     for path in changed:
         if _full_trigger(path):
-            return Selection("full", (), path)
+            return Selection("full", (), path, frontend)
     workspace = Workspace(root)
     paths: set[str] = set()
     causes: set[str] = set()
@@ -278,10 +285,12 @@ def select(root: Path, changed: Iterable[str]) -> Selection:
             name = path.rsplit("/", 1)[-1]
             paths.add(path if re.fullmatch(r"test_.+\.py", name) else path.rsplit("/", 1)[0])
             causes.add("tests")
+        elif path.startswith(FRONTEND_PREFIXES):
+            causes.add("frontend")
         elif not data and not (
             path in UNTESTED_FILES or path.startswith(UNTESTED_PREFIXES) or UNTESTED_MARKDOWN.fullmatch(path)
         ):
-            return Selection("full", (), path)
+            return Selection("full", (), path, frontend)
     if nodes:
         affected = workspace.dependents(nodes)
         for group in workspace.groups:
@@ -290,8 +299,8 @@ def select(root: Path, changed: Iterable[str]) -> Selection:
     kept = sorted(p for p in paths if (root / p).exists())
     kept = [p for p in kept if not any(p.startswith(f"{other}/") for other in kept)]
     if not kept:
-        return Selection("none", (), "untested")
-    return Selection("partial", tuple(kept), ",".join(sorted(causes)))
+        return Selection("none", (), "frontend" if frontend else "untested", frontend)
+    return Selection("partial", tuple(kept), ",".join(sorted(causes)), frontend)
 
 
 def _git(root: Path, *args: str) -> subprocess.CompletedProcess[bytes]:
@@ -349,6 +358,8 @@ def main(base: str, list_only: bool, pytest_args: tuple[str, ...]) -> None:
         f"[TEST_SELECTION: mode={selection.mode} base={base} changed={len(changed)} "
         f"paths={len(selection.paths)} reason={selection.reason}]"
     )
+    if selection.frontend:
+        click.echo(f"[FRONTEND_CHECK: {FRONTEND_CHECK}]")
     if list_only:
         for path in selection.paths:
             click.echo(f"[TEST_PATH: {path}]")

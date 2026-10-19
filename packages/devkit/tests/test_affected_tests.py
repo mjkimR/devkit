@@ -221,3 +221,55 @@ def test_an_empty_selection_runs_nothing(
     lines = invoke(affected, monkeypatch, ["specs/x.md"])
     assert lines == ["[TEST_SELECTION: mode=none base=main changed=1 paths=0 reason=untested]"]
     assert command == []
+
+
+FRONTEND = "packages/devkit-viewer/frontend/src/lib/App.svelte"
+FRONTEND_LINE = (
+    "[FRONTEND_CHECK: just viewer install && just viewer lint && just viewer check && just viewer test"
+    " && just viewer build]"
+)
+
+
+@pytest.mark.parametrize("path", [FRONTEND, "scripts/viewer.sh"])
+def test_a_frontend_only_change_runs_no_pytest(
+    affected: ModuleType, monkeypatch: pytest.MonkeyPatch, command: list[list[str]], path: str
+) -> None:
+    selection = affected.select(ROOT, [path])
+    assert (selection.mode, selection.paths, selection.reason, selection.frontend) == ("none", (), "frontend", True)
+    lines = invoke(affected, monkeypatch, [path])
+    assert lines == ["[TEST_SELECTION: mode=none base=main changed=1 paths=0 reason=frontend]", FRONTEND_LINE]
+    assert command == []
+
+
+def test_a_mixed_change_keeps_the_other_selection(
+    affected: ModuleType, monkeypatch: pytest.MonkeyPatch, command: list[list[str]]
+) -> None:
+    gate = "packages/devkit/src/devkit/gate/runner.py"
+    alone = affected.select(ROOT, [gate])
+    mixed = affected.select(ROOT, [gate, FRONTEND])
+    assert (mixed.mode, mixed.paths, mixed.frontend) == ("partial", alone.paths, True)
+    assert mixed.reason == "devkit.gate,frontend"
+    lines = invoke(affected, monkeypatch, [gate, FRONTEND], "--list")
+    assert lines[1] == FRONTEND_LINE
+    assert lines[2:] == [f"[TEST_PATH: {path}]" for path in alone.paths]
+
+
+def test_a_full_suite_change_still_names_the_frontend_checks(
+    affected: ModuleType, monkeypatch: pytest.MonkeyPatch, command: list[list[str]]
+) -> None:
+    lines = invoke(affected, monkeypatch, [FRONTEND, "uv.lock"], "--list")
+    assert lines == ["[TEST_SELECTION: mode=full base=main changed=2 paths=0 reason=uv.lock]", FRONTEND_LINE]
+
+
+def test_other_changes_print_no_frontend_line(
+    affected: ModuleType, monkeypatch: pytest.MonkeyPatch, command: list[list[str]]
+) -> None:
+    assert not affected.select(ROOT, ["packages/devkit/src/devkit/gate/runner.py"]).frontend
+    lines = invoke(affected, monkeypatch, ["docs/x.md"], "--list")
+    assert not any(line.startswith("[FRONTEND_CHECK:") for line in lines)
+
+
+def test_the_rebuilt_page_selects_the_viewer_tests(affected: ModuleType) -> None:
+    selection = affected.select(ROOT, ["packages/devkit-viewer/src/devkit_viewer/static/index.html"])
+    assert "packages/devkit-viewer/tests" in selection.paths
+    assert not selection.frontend
