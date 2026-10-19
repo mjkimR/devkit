@@ -1,0 +1,79 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T00:22:50.355558Z'
+status: completed
+summary: 'Second re-review: nine of ten challenger-03 dispositions hold; no new contradiction with answer-01 or PADR-dist-foundation-ownership. One medium (draft question title over 40 characters) and nine low (contract-6-split and preset-moved-hint are worker choices, keep-harness context incomplete, tool directive still bare in one place, exception list incomplete, layering match ambiguous, override consequence partly wrong, release-notes list inconsistent, in-repo example test missing).'
+findings:
+- issue: Draft question preset-moved-hint has a 41-character title, over the 40-character limit.
+  evidence: draft questions (worker scratchpad) preset-moved-hint title
+  failure_condition: The question validator or host UI rejects or cuts the title.
+  suggested_action: Shorten the title or drop the question.
+  resolution: open
+  severity: medium
+- issue: contract-6-split attributes the phrase contracts 5-6 to the user, but it came from Planning's own inventory in worker-01; the split follows from the user's governing decision, so it is a worker correction, not a user decision.
+  evidence: envelopes/worker-01.yaml:26; envelopes/answer-01.yaml:14; packages/devkit/src/devkit/distribution/guide/bundle/AGENTS.md:31-34
+  failure_condition: The user reads Planning's inventory error as their own, or spends attention on a derived answer.
+  suggested_action: Drop the question; record the split as a correction of Planning's inventory, open to overrule at plan-accept.
+  resolution: open
+  severity: low
+- issue: The keep-harness option omits that CAP-HARN-agent-guidance documents the spec bundle's guidance assets, and argues circularly.
+  evidence: docs/capabilities/harness/CAP-HARN-agent-guidance.md:2-5,26
+  failure_condition: The user confirms harness without knowing the Living Spec already uses harness agent guidance for another bundle.
+  suggested_action: State the fact in context and drop the circular reason.
+  resolution: open
+  severity: low
+- issue: preset-moved-hint omits that SELECTION_INVALID blocks the whole sync, credits no-hint with facts true under both options, calls generic-hint small without support, and its recommended answer (do nothing) needs no consent.
+  evidence: packages/devkit/src/devkit/distribution/bundles/manifest.py:95-109; installation/inventory.py:147; installation/config.py:443; installation/override_commands.py:113
+  failure_condition: The user weighs the hint without knowing the failure mode or expects a one-line change.
+  suggested_action: Drop the question, record the generic hint as a non-goal, remove the open confirmation from the proposal.
+  resolution: open
+  severity: low
+- issue: The tool installation form is still bare in the PADR-dist-command-composition decision bullet, and the tool branch of the directive omits the devkit-dist Git requirement.
+  evidence: PADR-dist-command-composition.md:76-84,91-92; packages/devkit/src/devkit/search/errors.py:24,35
+  failure_condition: A guide or directive built from the bare form resolves against PyPI, or the tool branch cannot be run as given.
+  suggested_action: Spell both Git requirements in the tool form in both places.
+  resolution: open
+  severity: low
+- issue: The enumerated compatibility exceptions miss changes other PADRs require (missing-extra fix text, tool-version notice naming both packages, harness-named third-party plugin now COMMAND_PLUGIN_INVALID, possibly config template output).
+  evidence: PADR-dist-module-split.md:106-110; PADR-dist-config-receipt-ownership.md:70-78; PADR-dist-command-composition.md:44-46
+  failure_condition: The before/after comparison fails on intended changes or is widened by hand.
+  suggested_action: Add them; require config template with devkit-agt byte-identical or list it.
+  resolution: open
+  severity: low
+- issue: The layering rule matching every string constant that names a devkit-agt area also matches prose kept in devkit-dist (workflow_skill BODY, docstrings); devkit-agt's entry-point layering test reads loader areas from GROUP constants that move to devkit-dist.
+  evidence: packages/devkit/src/devkit/distribution/installation/workflow_skill.py:8,12; distribution/bundles/workflows.py:1; packages/devkit/tests/test_layering.py:135-152,184-187
+  failure_condition: The dist test fails on prose or is loosened; the agt entry-point test errors or skips groups.
+  suggested_action: Match only dotted module paths or module:attr references; state where the agt test gets the group-to-loader map.
+  resolution: open
+  severity: low
+- issue: The override consequence is partly wrong; overrides of split assets that keep their path in the devkit bundle (consumption) keep applying with the old harness text and only report drift.
+  evidence: packages/devkit/src/devkit/distribution/installation/overrides.py:60-65,118-129
+  failure_condition: Harness guidance deployed twice, or harness directives in a dist-only project.
+  suggested_action: Split into moved-asset and split-asset cases; release notes name both.
+  resolution: open
+  severity: low
+- issue: Release-notes content is inconsistent between the decision and the consequences.
+  evidence: PADR-dist-bundles-compatibility.md:136-137,159-161,171-172; materials section 9
+  failure_condition: Release notes omit the devkit:all change and the opt-out re-selection.
+  suggested_action: One release-notes list in the consequences.
+  resolution: open
+  severity: low
+- issue: The suggested guide-bundle test for the in-repo example dependency rule is not in verification.
+  evidence: envelopes/challenger-03.yaml; PADR-dist-bundles-compatibility.md verification bullet
+  failure_condition: A later edit adds devkit-dist next to devkit-agt unnoticed.
+  suggested_action: Add the assertion to verification.
+  resolution: open
+  severity: low
+assumptions:
+- Native isolated read-only challenger subagent; draft questions read from the worker's scratchpad
+unverified_areas:
+- sync behavior for an override whose asset left its bundle
+- devkit config template harness table placement once contributed by entry point
+- uv tool install --reinstall with two Git requirements not executed
+checks: {}
+diff_scope:
+  base: ec9323b69471ec646fd35d70475b6cb7c090ea9d
+  head: 3df2a290a2f8ea90dd07511e1bf9842c8ef04ef5
+activity_effort: high
