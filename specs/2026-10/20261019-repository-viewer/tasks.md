@@ -8,7 +8,7 @@ plan: PLAN-repository-viewer
 
 ## Phase 1: Python distribution and server
 
-- [ ] **Task 1.1**: `devkit-viewer` distribution skeleton, workspace wiring and the mounted `viewer` group with
+- [x] **Task 1.1**: `devkit-viewer` distribution skeleton, workspace wiring and the mounted `viewer` group with
   `--version`
   - **_Boundary**: `packages/devkit-viewer/pyproject.toml`, `packages/devkit-viewer/README.md`,
     `packages/devkit-viewer/src/devkit_viewer/__init__.py`, `packages/devkit-viewer/src/devkit_viewer/cli.py`,
@@ -16,18 +16,18 @@ plan: PLAN-repository-viewer
     `uv.lock`, `scripts/_lib.sh`, `.devkit/installation.json`
   - _Requirements: AC-16_
   - **Verification**: `just test viewer`
-- [ ] **Task 1.2**: Git reads at a ref: tree, blob, branches, ref and path refusals
+- [x] **Task 1.2**: Git reads at a ref: tree, blob, branches, ref and path refusals
   - **_Boundary**: `packages/devkit-viewer/src/devkit_viewer/git.py`, `packages/devkit-viewer/src/devkit_viewer/errors.py`,
     `packages/devkit-viewer/tests/conftest.py`, `packages/devkit-viewer/tests/test_git.py`
   - _Requirements: AC-04, AC-05, AC-06, AC-07_
-- [ ] **Task 1.3**: Repository registration: `--repo`, `--scan`, the current project, refusals
+- [x] **Task 1.3**: Repository registration: `--repo`, `--scan`, the current project, refusals
   - **_Boundary**: `packages/devkit-viewer/src/devkit_viewer/repositories.py`,
     `packages/devkit-viewer/src/devkit_viewer/errors.py`, `packages/devkit-viewer/tests/test_repositories.py`
   - _Requirements: AC-02, AC-03_
 - [ ] **Task 1.4**: HTTP server: API routes, JSON errors, Host check, GET only, static files
   - **_Boundary**: `packages/devkit-viewer/src/devkit_viewer/server.py`, `packages/devkit-viewer/tests/test_server.py`
   - _Requirements: AC-01, AC-04, AC-05, AC-06, AC-07, AC-08, AC-09_
-- [ ] **Task 1.5**: `devkit viewer serve`: the sentinel line, stop on a signal, port refusal
+- [x] **Task 1.5**: `devkit viewer serve`: the sentinel line, stop on a signal, port refusal
   - **_Boundary**: `packages/devkit-viewer/src/devkit_viewer/cli.py`, `packages/devkit-viewer/tests/test_cli.py`
   - _Requirements: AC-01, AC-03_
 

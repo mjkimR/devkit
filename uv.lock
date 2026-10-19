@@ -15,12 +15,14 @@ members = [
     "devkit-catalog",
     "devkit-spec",
     "devkit-starter",
+    "devkit-viewer",
 ]
 
 [manifest.dependency-groups]
 dev = [
     { name = "devkit-agt", extras = ["search", "mcp"], editable = "packages/devkit" },
     { name = "devkit-spec", extras = ["search"], editable = "packages/devkit-spec" },
+    { name = "devkit-viewer", editable = "packages/devkit-viewer" },
     { name = "pyright", specifier = ">=1.1.390" },
     { name = "pytest", specifier = ">=8.0.0" },
     { name = "pytest-cov", specifier = ">=5.0.0" },
@@ -457,6 +459,37 @@ dev = [
 
 [package.metadata.requires-dev]
 dev = [{ name = "devkit-agt", editable = "packages/devkit" }]
+
+[[package]]
+name = "devkit-viewer"
+version = "0.1.0"
+source = { editable = "packages/devkit-viewer" }
+dependencies = [
+    { name = "click" },
+    { name = "devkit-agt" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pyright" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "click", specifier = ">=8.1.7" },
+    { name = "devkit-agt", editable = "packages/devkit" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pyright", specifier = ">=1.1.390" },
+    { name = "pytest", specifier = ">=8.0.0" },
+    { name = "pytest-cov", specifier = ">=5.0.0" },
+    { name = "ruff", specifier = ">=0.9.0" },
+]
 
 [[package]]
 name = "execnet"
