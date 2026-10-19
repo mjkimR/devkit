@@ -61,26 +61,21 @@ is checked while writing and updated at reconciliation instead of a seeded file 
 
 ## 2. Technical Spike Questions
 
-- **Q1. Separate instruction or a section of `living-spec-writing`.** A new `terminology` instruction gets its own
-  header and description, the trigger the proposal relies on. Folding the text into the existing `## Glossary`
-  section of `living-spec-writing` keeps the instruction count at two and costs no extra header in every
-  `get-context` result; that instruction is already read before any `docs/` or `specs/` edit. Draft: fold it into
-  `living-spec-writing` and widen that instruction's description to mention naming and the glossary.
-- **Q2. Where the generic-noun list lives.** Rule 1 below lists bare generic nouns. Keep a short default in the
-  instruction and put project additions and exceptions in a section of `docs/glossary.md`, or only one of the two.
-  Draft: both; short examples in the instruction, project-specific lists in the glossary.
-- **Q3. Column set.** The six-column table of section 3.3 or devkit-spec's own three columns (`Term | Definition |
-  Defined in`) plus `Avoid` and `Code identifiers`. `Distinct from / Excludes` may fit inside the definition. Draft:
-  `Term | Definition | Owner | Avoid | Code identifiers`, with exclusions written in the definition; the original-
-  language rendering goes in the `Term` cell (`기능 원장 (Living Spec)`) instead of an `English / Abbr` column.
-- **Q4. `Avoid` and `glossary.yaml` synonyms.** A rejected synonym should still find the registered term in `devkit spec
-  search` (`CAP-DOCS-document-search` expands glossary synonyms). Decide whether one line of guidance ("an Avoid entry
-  is also added as a synonym in `docs/glossary.yaml`") is enough. Generating one file from the other stays out of
-  scope.
-- **Q5. Existing glossaries.** A seeded glossary is project-owned, so projects keep the old columns. Decide whether the
-  guidance carries a one-line fallback ("without the column, record owner and exclusions in the remarks"). Draft: yes.
-- **Q6. Context budget.** The text is read before most documentation work. Decide whether a length bound (for example
-  40 lines added) is an acceptance criterion.
+Settled in Planning; the decisions and their options are in `PADR-terminology-guidance-lives-in-living-spec-writing`
+(Q1, Q2, Q6) and `PADR-seeded-glossary-columns` (Q3, Q4, Q5).
+
+- **Q1. Separate instruction or a section of `living-spec-writing`.** Folded into the `## Glossary` section of
+  `living-spec-writing`; its description is widened to name terminology and the glossary. No new asset.
+- **Q2. Where the generic-noun list lives.** Both: a short default in the instruction (rule 1), project additions and
+  exceptions in a section of the seeded `docs/glossary.md`.
+- **Q3. Column set.** `Term | Definition | Owner | Avoid | Code identifiers`; exclusions and adjacent terms are written
+  in the definition; an original-language rendering goes in the `Term` cell (`기능 원장 (Living Spec)`).
+- **Q4. `Avoid` and `glossary.yaml` synonyms.** One line of guidance: where `docs/glossary.yaml` exists, an Avoid entry
+  is also added as a synonym of the term's cluster. No generation between the files.
+- **Q5. Existing glossaries.** One-line fallback: without the columns, owner, exclusions and avoided synonyms go in the
+  existing remarks or definition cells; no migration of a project-owned glossary is required.
+- **Q6. Context budget.** An acceptance criterion: the change adds at most 30 lines to `living-spec-writing.md`; the
+  `spec-sync` change is one Step 1 bullet.
 
 ## 3. Proposed Design & Impact
 
@@ -88,10 +83,10 @@ is checked while writing and updated at reconciliation instead of a seeded file 
 
 | Location | Content |
 | --- | --- |
-| `packages/devkit-spec/src/devkit_spec/bundle/instructions/` (`living-spec-writing.md` or a new `terminology.md`, Q1) | The guidance of 3.2 |
+| `packages/devkit-spec/src/devkit_spec/bundle/instructions/living-spec-writing.md` (`## Glossary` section and description, Q1) | The guidance of 3.2, at most 30 added lines (Q6) |
 | `packages/devkit-spec/src/devkit_spec/bundle/seed/docs/glossary.md` | The table of 3.3, a project section for avoided generic nouns and exceptions, a one-line pointer to the guidance; the two existing authoring guidelines removed |
 | `packages/devkit-spec/src/devkit_spec/bundle/skills/spec-sync/SKILL.md`, Step 1 | One impact question: did the change introduce or rename a domain term? Then update `docs/glossary.md` |
-| `docs/glossary.md` (dogfood) | Migrated to the chosen columns |
+| `docs/glossary.md` (dogfood) | Migrated to the five columns of 3.3: `Defined in` becomes `Owner`, `Avoid` and `Code identifiers` added |
 
 The constitution (`packages/devkit-spec/src/devkit_spec/bundle/AGENTS.md`) gains nothing: it already tells every session to read the
 relevant instruction bodies, and repeating the guidance there costs context in every session.
@@ -122,6 +117,11 @@ boundary statements ("does not authorize") and SHOULD rather than MUST.
    wording and are not reused as the current contract.
 ```
 
+Beside the rules the section carries three short lines: project additions to the rule 1 list and exceptions live in a
+section of `docs/glossary.md` (Q2); an Avoid entry is also a synonym of the term's cluster in `docs/glossary.yaml`
+where that file exists (Q4); a glossary without the columns of 3.3 records owner, exclusions and avoided synonyms in its
+existing cells (Q5). The existing package-glossary sentence of the section stays.
+
 Relative to the original draft: rule 3 (one concept, one term) is new, covering the direction the draft missed; the
 draft's last item is split into 7 (when to check, tied to in-place rewriting) and 8 (records keep their wording,
 mapped to ADRs, materials and completed specs); domain-specific examples are replaced with generic ones.
@@ -129,14 +129,16 @@ mapped to ADRs, materials and completed specs); domain-specific examples are rep
 ### 3.3 Glossary Table
 
 ```markdown
-| Term | Definition | Owner | Distinct from / Excludes | Avoid | Code identifiers |
+| Term | Definition | Owner | Avoid | Code identifiers |
 ```
 
+- **Definition**: also states what the term excludes and which adjacent term it is distinct from when confusion is
+  likely (rule 7).
 - **Owner**: the document ID that defines the term (`CAP-...`, `ADR-...`) or the owning component; rules 4 and 7.
-- **Distinct from / Excludes**: adjacent terms that are easily confused and what the term does not cover.
-- **Avoid**: rejected synonyms; rule 3.
+- **Avoid**: rejected synonyms; rule 3. Where `docs/glossary.yaml` exists, each is also a synonym of the term's cluster.
 - **Code identifiers**: the matching API fields, types and paths; rule 6.
-- Q3 may reduce this set.
+- Empty `Avoid` and `Code identifiers` cells are allowed. A glossary with older columns records these fields in its
+  remarks or definition cells (Q5).
 
 ### 3.4 Non-Goals
 
@@ -151,6 +153,6 @@ mapped to ADRs, materials and completed specs); domain-specific examples are rep
 - Preliminary decisions: none expected; the instruction mechanism is devkit's resource taxonomy and the bundle's
   instruction assets (`CAP-HARN-agent-guidance`).
 - Research: none needed.
-- On acceptance: once Q1 to Q6 have a direction, set `status: accepted` and run `devkit spec proposal handoff
+- On acceptance: Q1 to Q6 are settled (section 2); set `status: accepted` and run `devkit spec proposal handoff
   terminology-authoring-guidance`.
 - On rejection: record a rejection ADR in `docs/decisions/` and delete the proposal directory.

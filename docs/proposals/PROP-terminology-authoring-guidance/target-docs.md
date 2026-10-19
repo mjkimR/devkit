@@ -20,9 +20,9 @@ This document defines the target blueprint of how the docs/ backbone (Living Spe
 
 ## 1. System Capabilities Plan (docs/capabilities/)
 
-- `CAP-HARN-agent-guidance`: section 4.3 describes the terminology guidance (a widened `living-spec-writing` or a new
-  `terminology` instruction, proposal Q1); section 4.7 describes the revised seeded `glossary.md` columns and its
-  project section for avoided generic nouns.
+- `CAP-HARN-agent-guidance`: section 4.3 updates the `living-spec-writing` row to cover terminology and the glossary
+  (`PADR-terminology-guidance-lives-in-living-spec-writing`); section 4.7 describes the five seeded `glossary.md`
+  columns and its project section for avoided generic nouns (`PADR-seeded-glossary-columns`).
 - `CAP-DLV-delivery-workflows`: the reconciliation scope includes glossary updates when a change introduces or
   renames a domain term (`spec-sync` Step 1).
 
@@ -43,11 +43,12 @@ None expected. Instructions are existing bundle assets, and the skeleton stays o
 
 ## 4. Development Conventions & Governance (docs/development/ & .devkit/)
 
-- `packages/devkit-spec/src/devkit_spec/bundle/instructions/`: the guidance text.
+- `packages/devkit-spec/src/devkit_spec/bundle/instructions/living-spec-writing.md`: the guidance text in its `## Glossary`
+  section, at most 30 added lines.
 - `packages/devkit-spec/src/devkit_spec/bundle/skills/spec-sync/SKILL.md` Step 1: one impact question for domain terms.
 - `packages/devkit-spec/src/devkit_spec/bundle/seed/docs/glossary.md`: new columns, a project section for avoided generic nouns and
   exceptions, a pointer to the guidance; the two existing authoring guidelines removed.
-- `docs/glossary.md`: migrated to the chosen columns.
+- `docs/glossary.md`: migrated to the five columns (`Defined in` becomes `Owner`).
 - No rule, workflow or command change.
 
 ---
@@ -58,6 +59,6 @@ None expected. Instructions are existing bundle assets, and the skeleton stays o
 | --- | --- | --- |
 | Authoring rules | Two lines in the seeded `glossary.md`, never read by a skill | Instruction text read before writing documents |
 | Code identifiers | Seeded guideline reads as permission to rename code to the glossary | Identifiers are quoted and mapped; a rename is its own spec |
-| Seeded table | Term, English / Abbr, Definition, Area, Remarks | Term, Definition, Owner, (Distinct from / Excludes), Avoid, Code identifiers (proposal Q3) |
+| Seeded table | Term, English / Abbr, Definition, Area, Remarks | Term, Definition (with exclusions), Owner, Avoid, Code identifiers |
 | Registration timing | Not defined | Checked while writing; updated in `spec-sync` Step 1 |
 | Existing glossaries | Unchanged | Unchanged (project-owned); the guidance's fallback applies to old columns |
