@@ -51,30 +51,37 @@ low to save cost. The user chose to allow it on their explicit decision (`answer
   it as a `session` task, with the reason the work meets the `session` criteria; only the user's explicit decision
   allows it, and the Host never deletes silently. Workers and Cloud Agents never do it.
 - **Conditions**: the draft is `status: draft` with no local or fetched `plan-<slug>` (`devkit spec proposal check`,
-  fetch first, as for every deletion) and has no PADR in `decisions/`. The `session` criteria cannot hold for a draft
-  marked `needs_decompose` (not yet classified, `classification.md` §1), a draft with `supersedes` or a depth
-  escalation's draft (each exists because a direction must be decided first), so the Host does not propose it for
-  them.
+  fetch first, as for every deletion) and has no `PADR-*.md` in `decisions/` (its workflow gate records do not count).
+  The `session` criteria cannot hold for a draft marked `needs_decompose` (not yet classified, `classification.md` §1),
+  a draft with `supersedes` or a depth escalation's draft (each exists because a direction must be decided first), so
+  the Host does not propose it for them.
 - **The request** names what goes: the draft and its gate records, `materials/` (kept in Git history only), the
-  `milestone` membership (a `session` task cannot be a member; the user keeps or reviews the milestone's exit
-  condition), and the open feedback that is preserved.
+  `milestone` membership (a `session` task cannot be a member; no hygiene check reports the lost member, even for a
+  done or dropped milestone, so the user reviews the milestone's exit condition here), and the open feedback that is
+  preserved. The same exchange may also agree the session's intent, which has no record file; each decision is
+  answered explicitly.
 - **The deletion** is one Backlog commit on the base checkout, before the session starts, outside the worktree and
-  PR policies like other Backlog deletions; it preserves open feedback per feedback retirement in the same commit,
-  and its message states the user's decision and the reason ("depth proposal -> session on the user's decision:
-  <reason>").
+  PR policies like other Backlog deletions. This record is its authority. In the same commit it preserves open
+  feedback and strikes through incoming references, promoted feedback dispositions included, per feedback retirement
+  (steps 1 to 4), so nothing dangles and a later `spec` Unit under the same slug is never read as its handoff; the
+  session may reuse the slug. The message states the user's decision and the reason ("depth proposal -> session on
+  the user's decision: <reason>"). When the base cannot be pushed, the deletion travels on the session's
+  `dev-<slug>`, as 01 §5.1 already allows for Backlog commits.
 - **The session** then starts through inline Planning (01 §6.1): its intent is agreed in the conversation, since the
   draft's `plan-intent` record goes with the draft, and it follows the `session` rules, raising to `spec` when a
   lasting design record, a contract change or a Living Spec change turns out to be needed. If it ends without
   integrating, the Host proposes filing the request again as a new draft.
 - **Scope of the exception**: it is the only lowering besides a proposal's handoff, and it applies only to a queued
   draft before Planning; a proposal in review or accepted, and a spec Unit, are never lowered.
-- No command or tool check is added: the deletion uses the existing check, and the conditions are visible to the
-  Host. The ADR this record becomes keeps the exception in devkit-spec's Living Spec; the strategy layer's 01 §2.2
-  states it first.
+- No command or tool check is added: the deletion uses the existing check, the conditions are visible to the Host, and
+  the commit gate's link check and `RULE-document-reference` catch a reference left dangling. The ADR this record
+  becomes keeps the exception in devkit-spec's Living Spec; the strategy layer's 01 §2.2 states it first.
 
 ## 5. Consequences
 
-- The lowering rule gains one stated exception in 01 §2.2, `classification.md` §3, the bundle `AGENTS.md` and
-  `CAP-HARN-agent-guidance`; `backlog.md` and `feedback-retirement.md` name the deletion.
+- The lowering rule gains one stated exception in 01 §2.2 and Q19, `classification.md` §3, the bundle `AGENTS.md`,
+  `CAP-HARN-agent-guidance` and the `CAP-DLV-delivery-workflows` non-goal on depth changes; `backlog.md` grants the
+  deletion, and `feedback-retirement.md`, `CAP-DLV-proposal-incubation` §3.1, the `sdd-proposal` feedback paragraph
+  and 01 §6.2 list it among the deletions that preserve open feedback.
 - A request deleted this way leaves no Unit: its record is the deletion commit and the session's final report.
 - A milestone may lose a member at pickup; the request shows it, so the user can review the milestone.

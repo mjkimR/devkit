@@ -162,10 +162,12 @@ Development here, the workbench updates (A2, chosen, and the session reclassific
   branch's merge approval only when there is one; one request may ask `plan-intent` and `plan-accept` together for an
   eligible draft, two explicit answers; depth is lowered only through a handoff after `plan-accept`, the approved
   route for a queued draft, or by the session reclassification below.
-- 01 §2.2 (the lowering bullet and the depth-adjustment diagram), §5.1, §6.1 and Q55: on the user's explicit decision
-  at pickup, a queued draft without PADRs may be deleted as Backlog work, keeping its open feedback, and done as a
-  `session` task; the one exception to lowering only through a handoff, never for a proposal in review or accepted
-  or a spec Unit.
+- 01 §2.2 (the lowering bullet and the depth-adjustment diagram), Q19, §5.1, §6.1 and Q55: on the user's explicit
+  decision at pickup, a queued draft without PADRs may be deleted as Backlog work, keeping its open feedback, and done
+  as a `session` task; the one exception to lowering only through a handoff, never for a proposal in review or
+  accepted or a spec Unit. Also for it: 01 §1 (the Backlog row and the route diagram) and §5 (the routing diagram)
+  gain the route from a queued draft to inline Planning, §5.5 lets `spec-next` offer it, §6.2 lists the deletion
+  among those that preserve open feedback, and 03 §3 (Backlog row) puts the deletion on the base checkout.
 - 01 §4.2: acceptances are recorded with `devkit spec proposal accept`, other gates with `devkit workflow answer`.
 - 01 §5.5: `spec-next` may recommend direct acceptance for an eligible draft beside Planning.
 - 01 §10 (devkit-spec rows): the planned proposal status-transition CLI gains `--direct`, `--check` and the repair;
@@ -181,23 +183,30 @@ Development here, the workbench updates (A2, chosen, and the session reclassific
 - `devkit-spec` code: `devkit spec proposal accept` (the Planning form, `--direct`, `--check`, the repair) and its
   library function; the handoff guard for bound bundles with its own code (`errors.py`); the carried gate note; tests
   for each, and existing handoff tests that rely on the status alone.
-- `CAP-DLV-proposal-incubation`: the approval rule (rule 2), rule 12 (the carried note), rule 13 (Backlog may accept
-  an eligible draft, and may delete a draft for a session reclassification on the user's decision), the command, its codes in the code table and its output.
-- `CAP-DLV-delivery-workflows` and the `sdd-proposal` body: the gate rules (a direct acceptance records `plan-accept`
-  for a draft on the base, without `reviewing`; acceptances use the command) and the Planning feedback section (a
-  direct acceptance has no run or worker record; its sweep covers the acceptance session); in the schema only the
-  `direction-handoff` comment ("never for a draft") changes, while stages, checks and gates stay.
+- `CAP-DLV-proposal-incubation`: the approval rule (rule 2), rule 12 (the carried note), rule 13 (Backlog may accept an
+  eligible draft, and may delete a draft for a session reclassification on the user's decision), the command, its codes
+  in the code table and its output.
+- `CAP-DLV-proposal-incubation` §3.1 (deletions without handoff keep feedback) gains the session reclassification.
+- `CAP-DLV-delivery-workflows` (also its non-goal "a change of depth adds a Unit or closes the work", which gains the
+  reclassification) and the `sdd-proposal` body: the gate rules (a direct acceptance records `plan-accept` for a draft
+  on the base, without `reviewing`; acceptances use the command) and the Planning feedback section (a direct acceptance
+  has no run or worker record; its sweep covers the acceptance session; a reclassification deletion preserves feedback
+  like a rejection); in the schema only the `direction-handoff` comment ("never for a draft") changes, while stages,
+  checks and gates stay.
 - The `spec` skill: `references/backlog.md` (drop "until direct acceptance exists", add the path and its base-checkout
   rule beside the Backlog commit rule, and the session reclassification of a queued draft),
   `references/feedback-retirement.md` (the reclassification deletion joins the cases that preserve open feedback),
-  `references/classification.md` (§1 routing, §3 lowering rule and its session exception; §4 "a new draft runs Planning anew" stays for
-  supersede and depth-escalation drafts), `references/effort.md` (a direct acceptance has no activity-effort), the
-  proposal row of the routing table, `references/worktree.md` (the accepted proposal may come from a direct
-  acceptance); `spec-next` (`SKILL.md` stage rows, `references/next-work.md` and `references/workflow-signals.md`:
-  an eligible draft may be offered for direct acceptance, and a session-depth draft for session reclassification at
-  pickup).
+  `references/classification.md` (§1 routing, §3 lowering rule and its session exception; §4 "a new draft runs Planning
+  anew" stays for supersede and depth-escalation drafts), `references/effort.md` (a direct acceptance has no
+  activity-effort), the proposal row of the routing table, `references/worktree.md` (the accepted proposal may come from
+  a direct acceptance); `spec-next` (`SKILL.md` stage rows, `references/next-work.md` and
+  `references/workflow-signals.md`: an eligible draft may be offered for direct acceptance, and a session-depth draft
+  for session reclassification at pickup).
 - The lowering rule's other statements: the bundle `AGENTS.md` ("never lowered except by a proposal's handoff") and
-  `CAP-HARN-agent-guidance` (the Host "never lowers it") name the session reclassification.
+  `CAP-HARN-agent-guidance` (the Host "never lowers it", and its Backlog, `spec-next` and skill-table passages) name
+  the session reclassification.
+- `ADR-roadmap-in-repository` keeps its interim "small drafts run Planning at `low`" rule as history; the ADR promoted
+  from `PADR-direct-acceptance-command-and-handoff-guard` names it as the decision it extends.
 - The proposal template's lifecycle line (`proposals/scaffold.py`): it says acceptance merges the Planning branch;
   make it hold for a direct acceptance.
 - `PROP-direct-planning-procedure` also edits the `spec` skill; whichever lands second rebases its text.

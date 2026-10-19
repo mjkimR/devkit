@@ -64,13 +64,13 @@ acceptance on the base under every policy, and allowed one request to ask both g
   - `--check` runs every check read-only and writes nothing; the command never records `plan-intent`, never commits,
     merges or runs the handoff.
   `reject` stays the follow-up 01 §10 plans.
-- **Where it runs (A2, the user's choice)**: a direct acceptance is Backlog work under every policy, like Backlog's other changes (01
-  §5.1, 03 §1), committed on the base checkout only (another slug's activity branch is refused). Before proposing it
-  the Host settles that it can push to the base (or that there is no remote); a protected base means Planning instead,
-  and a stranded acceptance commit is undone with `git revert`, never a reset. The Host runs `--check`, sweeps its own
-  acceptance session (a new `feedback` envelope at `collect-feedback`; zero observations is a valid PASS), runs the
-  command and commits the result on the base. Under `pull_request = required` the request states that the direction
-  gets no PR review, and the user may choose Planning for that draft instead.
+- **Where it runs (A2, the user's choice)**: a direct acceptance is Backlog work under every policy, like Backlog's
+  other changes (01 §5.1, 03 §1), committed on the base checkout only (another slug's activity branch is refused).
+  Before proposing it the Host settles that it can push to the base (or that there is no remote); a protected base means
+  Planning instead, and a stranded acceptance commit is undone with `git revert`, never a reset. The Host runs
+  `--check`, sweeps its own acceptance session (a new `feedback` envelope at `collect-feedback`; zero observations is a
+  valid PASS), runs the command and commits the result on the base. Under `pull_request = required` the request states
+  that the direction gets no PR review, and the user may choose Planning for that draft instead.
 - **Both gates in one request**: for an eligible draft without a recorded `plan-intent`, one request may ask both
   decisions, each named in full (the intent with goal, scope, verification, `task_kind`, depth and the effort hints;
   the acceptance with "Planning: skipped" and the eligibility reason), and the user answers each explicitly; neither
@@ -102,3 +102,6 @@ acceptance on the base under every policy, and allowed one request to ask both g
   `sdd-proposal` gate rules and the `spec` skill name the command.
 - Tests that hand off a bound proposal with only `status: accepted` must record the gate; tests of the carried note
   change.
+- It extends `ADR-roadmap-in-repository`, whose interim rule ("until a direct-acceptance path exists, a small draft
+  runs Planning at `low`") it ends; that ADR stays unedited (`docs/decisions/` is outside this proposal), and the ADR
+  promoted from this record names it.

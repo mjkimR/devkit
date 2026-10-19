@@ -1,0 +1,66 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T03:06:21.173465Z'
+status: completed
+summary: 'Evidence for the session reclassification after the user''s answers: the lowering rule is stated in 01 2.2, Q19, classification.md 3, bundle AGENTS.md and CAP-HARN; 3.2/3.3 miss Q19, several deletion case lists and route passages; no code reacts to a draft deletion except link and reference rules; gaps: protected base, incoming references and slug reuse, silent milestone loss.'
+findings:
+- issue: 01 Q19 restates the lowering rule (raise by Host judgment, lower only by handoff) and is not in the 3.2 list.
+  evidence: workbench docs/strategy-layer/01-master-flow.md:713
+  failure_condition: 01 2.2 gains the exception while Q19 still says handoff only.
+  suggested_action: Add Q19 (or a new Q row) to 3.2.
+  resolution: open
+- issue: Session reclassification routes are missing from 3.2 beyond 2.2/5.1/6.1/Q55 - 01 6.2 feedback preservation cases, the 01 1 Backlog row and both route diagrams (1 B2->PI, 5 RT->IP), 01 5.5 spec-next, and 03 3 Backlog row (base checkout for the deletion).
+  evidence: 01-master-flow.md:30-36, 44, 270-276, 336-347, 402; 03-policy.md:49
+  failure_condition: The SSOT keeps a route set without the reclassification and lets the deletion land on another activity branch.
+  suggested_action: List these passages in 3.2 for the reclassification.
+  resolution: open
+- issue: 3.3 omits CAP-DLV-proposal-incubation 3.1 (deletion without handoff case list), the sdd-proposal feedback paragraph (rejected/decomposition-return only), the CAP-DLV-delivery-workflows non-goal "a change of depth adds a Unit or closes the work", and CAP-HARN-agent-guidance's Backlog and spec-next paragraphs and skill-table row.
+  evidence: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md:135-142; packages/devkit-spec/src/devkit_spec/bundle/workflows/sdd-proposal.md:133-136; docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:45-46; docs/capabilities/harness/CAP-HARN-agent-guidance.md:142, 259, 263
+  failure_condition: Canonical capabilities contradict the new exception.
+  suggested_action: Add them to 3.3.
+  resolution: open
+- issue: ADR-roadmap-in-repository says small drafts run Planning at low until direct acceptance exists; docs/decisions is excluded from the boundaries.
+  evidence: docs/decisions/2026-10/20261018-roadmap-in-repository.md:81-86
+  failure_condition: An accepted ADR stays stale with no record pointing past it.
+  suggested_action: Have the promoted ADRs name ADR-roadmap-in-repository as the decision they extend.
+  resolution: open
+- issue: Feedback retirement grants no deletion authority, so the reclassification's authority must be stated in backlog.md or classification.md.
+  evidence: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/feedback-retirement.md:3, 23, 25-26
+  failure_condition: The deletion has no granting text.
+  suggested_action: Grant it in backlog.md (user decision, conditions) and add the case to feedback-retirement.md.
+  resolution: open
+- issue: Promoted feedback whose disposition names PROP-<slug>, and other incoming references, dangle after the deletion; a reused slug later raised to spec lets RULE-document-reference autofix rewrite PROP-<slug> to SPEC-<slug>, claiming a handoff.
+  evidence: packages/devkit-spec/src/devkit_spec/bundle/playbooks/feedback-hygiene/SKILL.md:72-81; packages/devkit-spec/src/devkit_spec/bundle/rules/document_reference/guide.md
+  failure_condition: Dangling reference errors, or a false handoff claim after autofix.
+  suggested_action: Strike incoming references through in the deletion commit (feedback-retirement step 3) and say whether the slug is reused.
+  resolution: open
+- issue: '"No PADR in decisions/" must mean no PADR-*.md; decisions/ also holds workflow gate records.'
+  evidence: decisions/PADR-session-reclassification-of-a-queued-draft.md 4; decisions/01-gate-plan-intent.yaml
+  failure_condition: The condition is read as an empty directory.
+  suggested_action: Say no PADR-*.md file.
+  resolution: open
+- issue: Milestone hygiene loses a deleted member silently and clears SPEC_MILESTONE_*_UNSETTLED for a done or dropped milestone.
+  evidence: packages/devkit-spec/src/devkit_spec/hygiene.py:58-90
+  failure_condition: An unsettled member of a finished milestone disappears without a warning.
+  suggested_action: Name it in the request and the PADR.
+  resolution: open
+- issue: The reclassification requires a base commit but does not say what happens when the base cannot be pushed; 01 5.1 lets Backlog commits ride on an activity branch.
+  evidence: decisions/PADR-session-reclassification-of-a-queued-draft.md 4; PADR-direct-acceptance-command-and-handoff-guard.md 4; 01-master-flow.md:298
+  failure_condition: The deletion is stranded locally or travels inside the session's dev-<slug>.
+  suggested_action: Settle push access first or allow the deletion on dev-<slug> with the session.
+  resolution: open
+- issue: The PADR does not say whether the reclassification decision and the session intent may be asked in one exchange; the session intent cannot reuse the draft's plan-intent.
+  evidence: packages/devkit-spec/src/devkit_spec/bundle/workflows/sdd-session-feature.md:9, 21-26; decisions/PADR-session-reclassification-of-a-queued-draft.md 4
+  failure_condition: Executors differ on whether a separate exchange is needed.
+  suggested_action: State it.
+  resolution: open
+assumptions:
+- Line numbers read at 3415d78
+unverified_areas:
+- Remaining pages of the refs listings, other packages, autohub and tests
+checks: {}
+diff_scope:
+  base: 0290f524b368d4034e7dc222c4696115e5ea77f8
+  head: 3415d789860780b27d99c02e6523c229c53f8f8a
