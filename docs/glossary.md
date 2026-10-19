@@ -1,8 +1,9 @@
 # Glossary
 
-The ubiquitous terms of devkit as its documents, commands and bundles use them. `Owner` names the capability or
-decision that defines a term's contract, `Avoid` the rejected synonyms and `Code identifiers` the matching fields,
-types and paths. Search synonyms for these terms live in [glossary.yaml](glossary.yaml).
+The ubiquitous terms of devkit as its documents, commands and bundles use them. Each row gives the `Term`, its
+`Definition`, the `Owner` (the capability or decision that defines the term's contract), the rejected synonyms to
+`Avoid` and the matching `Code identifiers` (fields, types and paths). Search synonyms for these terms live in
+[glossary.yaml](glossary.yaml).
 
 ## 1. Distribution and Packaging
 

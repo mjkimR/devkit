@@ -1,0 +1,31 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T06:16:09.774566Z'
+status: completed
+summary: 'code-reviewer initial medium pass on c0a37b0..a83f1bb: AC-01 to AC-07, both ADRs, the proposal draft and Non-Goals checked; REVISE with one P3, no P1/P2.'
+findings:
+- issue: AC-07 requires that the lead paragraph of docs/glossary.md names the five columns; it names only Owner, Avoid and Code identifiers. Term and Definition are only implied.
+  evidence: docs/glossary.md:3
+  failure_condition: A strict reading of AC-07 ('the lead paragraph names the five columns') fails against the current lead text (docs/glossary.md:3-5).
+  suggested_action: Name Term and Definition in the lead, or waive in reverify.
+  resolution: open
+  severity: P3
+assumptions:
+- The 120-character limit applies to added body lines, not the one-line frontmatter description (spec.md Assumptions).
+unverified_areas:
+- Living Spec reconcile of CAP-HARN-agent-guidance and CAP-DLV-delivery-workflows (next stage).
+checks:
+  lint: PASS just lint devkit-spec
+  typecheck: PASS just check devkit-spec 0 errors
+  tests: PASS just test 3548 passed, 14 skipped (full suite, head a83f1bb)
+  tests_affected: PASS just test-affected 963 passed
+  rules: PASS devkit rules check --ci --base c0a37b07 errors=0 warnings=0
+  smoke: PASS just smoke
+  line_bound: PASS numstat 25 added lines in living-spec-writing.md; no added body line over 120 chars
+  skill_budget: PASS spec-sync/SKILL.md 5730 <= 12288 bytes
+diff_scope:
+  base: c0a37b07e18cde2dfdac37e9620d09d73b44dd6c
+  head: a83f1bb13f7e90ac337d03ec6fd9e041cfda9b19
+activity_effort: medium
