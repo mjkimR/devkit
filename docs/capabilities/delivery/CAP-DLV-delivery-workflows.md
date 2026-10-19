@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-delivery-workflows
 title: Delivery Workflows
-summary: "Five spec delivery workflows define stages, gates, checks and envelopes, including Planning feedback sweeps before user returns, per-run capture, separate code and reconcile verification, and the SDD integration readiness provider."
+summary: "Five spec delivery workflows define stages, gates, checks and envelopes, including Planning feedback sweeps, per-run capture, separate code and reconcile verification with a bounded high-effort review loop and P1-P3 severity, and the SDD integration readiness provider."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -12,6 +12,7 @@ entrypoints:
   - packages/devkit-spec/src/devkit_spec/bundle/workflows/
   - packages/devkit-spec/src/devkit_spec/bundle/subagents/
   - packages/devkit-spec/src/devkit_spec/integration.py
+  - packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/review-loop.md
 ---
 
 # [CAP-DLV-delivery-workflows] Delivery Workflows
@@ -84,8 +85,13 @@ sequence.
 7. **No Development direction gate**: Development starts from the agreed intent. Implementation choices inside it
    are made with the recommended option and recorded; a non-blocking improvement is reported as feedback (a
    follow-up draft proposal is also allowed); only a problem that cannot be solved without changing the agreed goal,
-   scope or contract stops the work. A worker records it and ends; the Host decides recovery or a close. There is no
-   return from Development to Planning.
+   scope or contract stops the work. At `high` the review loop also stops it (rule 15): a batch that is not minor at
+   the cap round, or a recurring P1, is a problem; a P1 the implementer holds invalid and the reviewer asserts again
+   after one round given the counter-evidence is a question in the run's `worker` envelope, with both positions as
+   options. A P1 the user then rules invalid is closed only by a waiver citing the `answer` envelope, and a fix the
+   user asks for gets one further round outside the cap. A session reports either in the conversation and does not
+   integrate; none of this is the `exception` stage. A worker records it and ends; the Host decides recovery or a
+   close. There is no return from Development to Planning.
 8. **`dev-integration` is per integration unit** (one pull request): it has no exit checks of its own and is asked as
    soon as `integration-approval` is current, that is once the final change report holds. Under `auto` it passes only
    after the path's required review, reconciliation and checks pass, at every `activity-effort`, `low` included.
@@ -115,27 +121,48 @@ sequence.
     (`[STAGE: - complete=true]`, no `[HANDOFF]` line) and Development starts with `devkit spec proposal handoff <slug>`.
 15. **`activity-effort` sets the review, never the floor**: Development of a spec unit reviews at `low` by the author
     (stated as self-review in the envelope), at `medium` with one mandatory initial `code-reviewer` pass regardless
-    of size and a separate `reconcile-reviewer` check, at `high` with code re-review after fixes and independent
-    reconcile verification. Only medium permits omitting the initial reconcile reviewer when all affected contracts
+    of size and a separate `reconcile-reviewer` check, at `high` with both reviewers in the bounded review loop below.
+    Only medium permits omitting the initial reconcile reviewer when all affected contracts
     and documents are identified, agreement with the actual diff is directly demonstrated, and no unresolved contract
     interpretation or cross-component impact remains. The implementer then records a self-check, omission reason and
     verification evidence in `reconcile-check`; small size alone is insufficient. At medium the implementer verifies
     fixes and subsequent changes and decides repeat calls, considering expanded scope, uncertain correctness and
     contract interpretation. A failed or stale initial call is not required-review evidence. These choices do not
-    change the effort, stages, required policies or high obligations (`ADR-medium-review-delegation`).
+    change the effort, stages or required policies (`ADR-bounded-high-effort-review-loop`).
     The implementer always writes, fixes and resolves the Living Spec reflection and `reconcile.md`; the
     verification at every effort is a `reconcile-check` envelope the `living-spec-draft` exit reads, so its findings
-    are fixed in the reconcile and never reopen `review-refine`. A session
-    reviews at the same levels but its reviewer returns a message and nothing is written. Proposal Planning runs
+    are fixed in the reconcile and never reopen `review-refine`.
+    At `high`, code review, reconcile verification and Planning criticism run in rounds. Each round is a fresh
+    reviewer given the earlier rounds' findings, the round's diff scope and the effort: round 1 covers the whole
+    change, each later round every fix since the previous round, never a subset. The implementer fixes every finding
+    of a round together (a `P2` or `P3` may be waived with a reason) and closes the round with `reverify`, a new
+    `reconcile-check`, or the next `challenger-NN` or `worker` summary; a P1 the implementer holds invalid stays open
+    there with its counter-evidence and sends the batch to the next round. The loop ends when a round finds nothing, or
+    when every fix of the batch is minor (confined to the named location, a text-only or prescribed edit, no contract
+    change, shown by a test or by the diff) and is self-verified with its reason and evidence; the initial reviewer
+    calls, the first reconcile verification included, are never replaced by a self-check, and a recurring finding is
+    never self-verified. Each round's summary starts with `round <N>;`; the cap is 3 rounds after the initial one and
+    is not reset by `devkit workflow return` within a segment. A batch not minor at the cap round and a recurring P1
+    (`recurs:` at the start of the reviewer's `issue`) stop the work (rule 7). The procedure ships in the `spec`
+    skill's `references/review-loop.md`.
+    Every finding of a `review`, `reconcile-check` or `challenger` envelope carries `severity` `P1`, `P2` or `P3` at
+    every effort, with one `P1` definition per review kind (a contract or acceptance-criterion violation, a missing or
+    contradicting reflection, a failing or conflicting design); the reviewer sets it, the implementer records it
+    unchanged, and it affects no check (`CAP-DLV-workflow-envelopes`).
+    A session reviews at the same levels but its reviewer returns a message and nothing is written; when `high` is
+    proposed for a session, the proposal advises `spec` depth for work that creates or changes a contract or a
+    document kind and `proposal` depth for work that reverses an accepted decision. Proposal Planning runs
     questions only at `low`, one `challenger` pass at `medium` (a `scout` when the direction needs evidence) and, at
-    `high`, two or more options compared, a `challenger` and a re-review after changes. A proposal scaffolds
+    `high`, two or more options compared, a `scout` starting from `devkit spec refs <ID> --direction in` for each
+    capability and ADR the proposal touches, then `challenger` rounds of the same loop. A proposal scaffolds
     non-authoritative `planning_effort` and `dev_effort` hints (`low` | `medium` | `high`, default `medium`) in
     `proposal.md`: `planning_effort` is proposed with `plan-intent` and pre-fills Planning start, `dev_effort` is
     refined during Planning before `plan-accept` and returned by `handoff` to pre-fill Development start, while the
     confirmed `activity-effort` of each run is recorded only on its `worker-NN.yaml` envelope (with any override reason
     in `summary`). The effort is always proposed with a reason when the activity starts, and the `plan-accept`
-    request shows each Planning run's effort, the refined `dev_effort` hint and the support-role envelopes present. Gates, exit checks and
-    `required` policies hold at every effort.
+    request shows each Planning run's effort, the refined `dev_effort` hint and the support-role envelopes present,
+    naming a `challenger`, or a `scout` at `high`, that the effort required and no envelope shows. Gates, exit checks
+    and `required` policies hold at every effort.
 16. **Only the workers write to Git**: a read-only role never stages or commits (`x-git-actions: [read]`). The two
     workers (`[read, commit]`) commit on their activity branch, write their own records and never push, merge, rebase,
     reset or amend (`ADR-worker-delivers-committed-result`).
@@ -269,7 +296,7 @@ Envelopes are devkit envelope files under a unit's `envelopes/`, written with
 | `feedback` | `envelopes/feedback-NN.yaml` (`checks.swept`), in the proposal or spec Unit | the executor; each Planning run supplies fresh coverage |
 | `final-report` | `envelopes/final-report-NN.yaml` (`checks.tests`, `build`, `lint`) | the implementer |
 | `challenger`, `scout` | role returns | the caller, from the role's fields |
-| `reconcile-check` | the reconcile verification at `living-spec-draft`, read by its exit (`envelope-completed(reconcile-check)`) | the implementer: self-check at `low`, reconcile-reviewer's returned fields at `medium`/`high`, or medium self-verification under rule 15; identify verifier, evidence and any initial omission reason |
+| `reconcile-check` | the reconcile verification at `living-spec-draft`, read by its exit (`envelope-completed(reconcile-check)`) | the implementer: self-check at `low`, reconcile-reviewer's returned fields at `medium`/`high`, medium self-verification of the initial check or `high` self-verification of a minor-fix batch under rule 15; identify verifier, evidence, any initial omission reason and, at `high`, the `round <N>;` marker |
 | `worker` | one run's result, exactly one per run: the applied `activity-effort`, the run's `questions` (status `needs_input`) and its `problem` (`cause`, `attempts`, `recovery`; `failed` requires it) | the run itself: a worker, the Host in `direct`, or the Host for a range it blocks |
 | `answer` | the rewritten answers to a run's questions (`answers_to: worker-NN.yaml`), one decision per question | the run that processes them, first, in a commit of its own |
 | `resolution` | the fix of a run's problem (`resolves: worker-NN.yaml`, `summary`) | whoever actually fixed it, with the fix |
