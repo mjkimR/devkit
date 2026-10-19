@@ -1,0 +1,13 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T00:24:20.165582Z'
+status: completed
+summary: Swept this Planning run (answer-01 recording, two folds, challenger-03 and challenger-04 re-reviews, commits through the gate) and the proposal's committed records, deduplicated against the 11 open feedback files across namespaces. No new observation; the unspecified stage of the answer envelope (direction-handoff chosen) duplicates FB-worker-stage-choice-ambiguous.
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=1
+diff_scope:
+  base: ''
+  head: 468839f1d882a0ea1518aa4e1ba6a0ad7b50576c
