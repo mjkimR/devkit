@@ -1,0 +1,23 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T02:16:17.462405Z'
+status: completed
+summary: 'devkit-dist split implemented per the five ADRs: new devkit-dist wheel (core, search, host, distribution, root CLI, devkit/advisory/git-commits bundles), devkit-agt mounting its seven commands via devkit.commands with the harness bundle and config_tables templates, standalone signals, per-wheel layering, dist-only CI check, lockstep release; review-01 + reverify-01 passed, reconcile resolved after reconcile-check-02'
+findings: []
+assumptions:
+- advisory:python ships a rule asset; it moves to devkit-dist as decided and raises HARNESS_ENGINE_MISSING standalone (FB-adr-standalone-rule-asset-claim)
+- 'One link path in docs/materials/evaluations/hybrid-binaries.md was rewritten for the moved playbook_search.py: outside the listed write scope, required by the commit gate (FB-worker-scope-misses-link-repairs)'
+- scripts/smoke.sh response-style section fixed to the bundle's skill layout; it failed on the base commit too (FB-smoke-response-style-skill-path)
+- devkit-viewer and devkit-spec keep their devkit-agt dependency (spec non-goal 6)
+- The one-time upgrade list lives in guides/install/existing-repository.md and the generated release notes link it
+checks:
+  tests: PASS just test 3405 passed 14 skipped; just test-dist 980 passed (devkit-dist only env)
+  build: PASS just smoke (standalone, uv tool, combined, runtime consumers); release.sh v0.1.1 built 7 wheels, no path in two wheels; v0.1.2 refused
+  lint: PASS just lint-check, just check (pyright 0 errors), devkit rules check --ci --base 4325a4df errors=0, devkit sync --check clean
+  verification: PASS git+file installs of devkit-agt[search], devkit-dist alone and a two-requirement uv tool install; before/after --format json comparison shows only the enumerated changes
+diff_scope:
+  base: 4325a4df0eef83c49c634e70f3634e1b4d200363
+  head: 2b356e9ff177a0b5e16300f5134a0c9ad8707ba3
+activity_effort: high

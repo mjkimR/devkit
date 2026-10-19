@@ -18,7 +18,7 @@ findings:
     evidence: "path:line or source URL"
     failure_condition: "Under which input or state it fails (required for challenger and reviewer)"
     suggested_action: "Recommended next step"
-    severity: "medium"        # optional descriptive non-empty string
+    severity: "P2"            # P1 | P2 | P3 on every review, reconcile-check and challenger finding
 assumptions: ["Assumptions made inside the approved scope"]
 unverified_areas: ["Scope not explored or needing confirmation"]
 checks: { tests: "PASS 14/14" }        # when the role ran checks
@@ -26,7 +26,7 @@ diff_scope: { base: "<ref>", head: "<sha>" }
 ```
 
 - `completed` with an empty `findings` list is a valid pass (zero findings allowed; no filler objections).
-- A finding carries only the keys above (devkit adds `resolution` and `waiver`) and refuses any other (`ENVELOPE_FINDINGS_INVALID`). Optional `severity` is a non-empty string label retained through review and reverify; it does not change finding resolution or gate outcomes.
+- A finding carries only the keys above (devkit adds `resolution` and `waiver`) and refuses any other (`ENVELOPE_FINDINGS_INVALID`). `severity` is `P1`, `P2` or `P3` on every finding of a `review`, `reconcile-check` or `challenger` envelope, at every effort; the levels per review kind are in [review loop](review-loop.md) section 3. The reviewer sets it and the implementer records it unchanged; `reverify` carries it forward. devkit accepts any non-empty string and the level changes no finding resolution, check or gate outcome. `scout` and `worker` findings carry none.
 - `needs_input` names the missing input or the decision only the human can make.
 - `failed` covers timeout, cancellation, tool failure, unsupported host feature, or a stale `diff_scope`. A failed or stale result is never completion evidence.
 - Docs impact has no envelope key: the implementer writes it into `reconcile.md` (targets, or the no-impact reasoning in its body). Its verification at every effort is a `reconcile-check` envelope ([completion](completion.md)).

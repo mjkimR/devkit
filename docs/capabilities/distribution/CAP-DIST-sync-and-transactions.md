@@ -1,12 +1,14 @@
 ---
 id: CAP-DIST-sync-and-transactions
 title: "Synchronization & Transactions"
-summary: "Transactional deployment of bundle assets, atomic journal safety, recovery, and receipt management."
+summary: "Transactional deployment of bundle assets, atomic journal safety, recovery, the receipt and configuration formats devkit-dist owns, the selection model, and sync and status notices."
 area: distribution
 status: active
 entrypoints:
-  - packages/devkit/src/devkit/distribution/installation/inventory.py
-  - packages/devkit/src/devkit/distribution/installation/overrides.py
+  - packages/devkit-dist/src/devkit/distribution/installation/inventory.py
+  - packages/devkit-dist/src/devkit/distribution/installation/overrides.py
+  - packages/devkit-dist/src/devkit/distribution/installation/engines.py
+  - packages/devkit-dist/src/devkit/distribution/installation/config_template.py
 created_at: 2026-10-17
 ---
 
@@ -69,7 +71,7 @@ The receipt is the single record of the installed state, committed to Git, `sche
   "seeded": [
     { "bundle": "starter", "id": "docs-skeleton", "path": "docs/README.md" }
   ],
-  "tool": { "package": "devkit-agt", "version": "0.1.0" }
+  "tool": { "package": "devkit-dist", "version": "0.1.1" }
 }
 ```
 
@@ -87,10 +89,16 @@ The receipt is the single record of the installed state, committed to Git, `sche
   `guidance_block = false`. `AGENTS.md` itself is never listed under `files`.
 - `seeded`: for every selected seeded asset, the paths it seeds (bundle, asset id, path), sorted by path; present
   only while such an asset is selected, informational, never a selection input.
-- `tool`: the distributor that wrote the receipt. A different running version alone is not a change: a sync with
-  nothing else to do keeps the receipt byte for byte (so `sync --check` stays clean across teammates on different
-  versions); the next sync that writes anything records the running version with a `TOOL_VERSION_CHANGED` notice.
-  A mismatch never refuses anything; the version pin lives in `uv.lock`.
+- `tool`: the distributor that wrote the receipt, `devkit-dist` (`ADR-dist-config-receipt-ownership`). A different
+  running tool alone is not a change: a sync with nothing else to do keeps the receipt byte for byte (so
+  `sync --check` stays clean across teammates on different versions); the next sync that writes anything records the
+  running tool with a `TOOL_VERSION_CHANGED` notice, which names the package on both sides when it changed (a receipt
+  written by the single `devkit-agt` wheel of earlier releases: `devkit-agt 0.1.1 -> devkit-dist 0.1.1`). A mismatch
+  never refuses anything, an older receipt stays readable (the schema version does not change), and the version pin
+  lives in `uv.lock`. Each bundle's `packages` record names the wheel that ships it.
+
+The receipt format (`devkit.core.receipt`) and its writer belong to `devkit-dist`, as does the
+`.devkit/config.toml` schema below.
 
 The receipt holds no absolute paths or timestamps. It is read with the strict reader of `devkit.core.receipt`
 (unknown keys, wrong types, non-canonical or escaping paths are `RECEIPT_INVALID`) plus distribution ownership
@@ -103,8 +111,8 @@ Installing a package makes its bundle **available**. A bundle that declares `aut
 (`CAP-DIST-manifest-spec`) is also **selected** with its
 `default_preset` from then on, whether the package was added directly or arrived as a runtime dependency of another
 one, until `.devkit/config.toml` names it (other presets) or sets it to `false` (opted out). Every other bundle is
-selected only by an entry in `config.toml`. Among the bundles built into `devkit`, `devkit` and `advisory` are
-auto-selected; `authoring` and `git-commits` are not. The rationale is recorded in
+selected only by an entry in `config.toml`. Among the built-in bundles (`CAP-DIST-content-packages`), `devkit` and
+`advisory` of `devkit-dist` and `harness` of `devkit-agt` are auto-selected; `git-commits` and `authoring` are not. The rationale is recorded in
 `ARCH-08-2-resource-taxonomy`.
 
 ### Project Configuration (`.devkit/config.toml`, `schema = 1`)
@@ -120,8 +128,10 @@ team-backend = "all"                    # reserved preset: every asset
 devkit = false                          # opt out of an auto-selected bundle
 ```
 
-- **Top-level keys**: `schema`, `agents`, `presets`, `playbooks`, `rules`, `workflow`, `gates`, `guidance_block`,
-  `override_drift`, `bundles`, `tool`; anything else is `CONFIG_INVALID`.
+- **Top-level keys**: `schema`, `agents`, `presets`, `playbooks`, `rules`, `workflow`, `gates`, `worktree`,
+  `integration`, `guidance_block`, `override_drift`, `bundles`, `tool`; anything else is `CONFIG_INVALID`. The list is
+  the same whether or not `devkit-agt` is installed, so a configuration reads the same in both installations and
+  typos are still caught.
 - **`schema`**: optional; `1` is the only version. `devkit add` writes it when it creates the file.
 - **`agents`**: the projection targets. Absent, every supported agent (`antigravity`, `claude-code`, `codex`);
   `[]` (written by `devkit sync --no-agents`) turns projection off while managed copies stay.
@@ -136,16 +146,18 @@ devkit = false                          # opt out of an auto-selected bundle
 - **`override_drift`**: `"warn"` (default) or `"block"`; see
   `CAP-DIST-workspace-ownership`.
 - **`[playbooks]`**: search defaults; see `CAP-DIST-context-and-playbooks`.
-- **`[rules]`, `[workflow]`, `[gates]`**: owned by `devkit.rules`, `devkit.workflow` and `devkit.gate`; passed
-  through untouched.
+- **`[rules]`, `[workflow]`, `[gates]`, `[worktree]`, `[integration]`**: reserved names owned by `devkit.rules`,
+  `devkit.workflow`, `devkit.gate`, `devkit.worktree` and `devkit.integration` (`devkit-agt`); passed through
+  untouched, never read by distribution.
 - **`[tool.<name>]`**: the extension namespace, as in `pyproject.toml`. A tool built on devkit keeps its own policy
   there and reads it itself; devkit only checks that `<name>` matches `[a-z][a-z0-9_-]*` and the value is a table,
   so a mistyped devkit key elsewhere is still an error.
 
 ### Commented Template
 
-A selection command that creates `config.toml`, and `devkit config template` for an existing one, write commented managed-scope and update-policy keys, common workflow and worktree settings, and the
-registered tables of installed tools. Values show defaults; settings unset by default show marked examples:
+A selection command that creates `config.toml`, and `devkit config template` for an existing one, write commented managed-scope and update-policy keys, the
+tables installed engines register for the reserved names (with `devkit-agt`: workflow and worktree settings), and
+the registered tables of installed tools. Values show defaults; settings unset by default show marked examples:
 
 ```toml
 schema = 1
@@ -197,12 +209,16 @@ spec = "core"
   TOML reads a key below a table header as part of that table; a file without top-level keys gets them first. A
   commented `agents` lists the agents devkit supports now; leaving it unset also projects for those a later devkit
   adds.
-- **Common tables**: `[workflow.approvals]`, `[workflow.stages]` and `[worktree]` follow the project's tables,
-  before tool tables. Approval names and stage ids come from workflow definitions: the template shows delivery
-  gate names (`intent`, `direction`, `integration`) at `ask`, and `collect-feedback` at `on`. These are representative
-  names, not a fixed schema. Worktree defaults are `pull_request = "auto"`, `delete_branch = true`, and no setup
-  command; `setup = "uv sync"` is marked as an example. See `CAP-DLV-workflow-orchestration`
-  and `CAP-WT-task-worktrees` for their behavior.
+- **Reserved tables**: a package registers a callable under the `devkit.config_tables` entry-point group, named
+  after a reserved top-level table, returning `list[devkit.core.TemplateTable]` with paths below that table. devkit
+  renders them after the project's tables and before tool tables, in entry-point name order and without an intro
+  line. `devkit-agt` registers `workflow` (`[workflow.approvals]` with the gate name `integration` at `ask`,
+  `[workflow.stages]` with `collect-feedback` at `on`: representative names, not a fixed schema) and `worktree`
+  (`pull_request = "auto"`, `delete_branch = true`, `stale_after = "14d"`, no setup command; `setup = "uv sync"` is
+  marked as an example), so each template lives with the engine that applies it and a standalone `devkit-dist`
+  template shows no harness table. With `devkit-agt` installed these tables render right after the project's tables
+  and before any `[tool.*]` table, in the order and text shown above (`ADR-dist-config-receipt-ownership`). See `CAP-DLV-workflow-orchestration` and `CAP-WT-task-worktrees` for their
+  behavior.
 - **Tool tables**: a package registers a callable under the `devkit.config_template` entry-point group, named after
   its `[tool.<name>]` table. Called with no argument, it returns `list[devkit.core.TemplateTable]`
   ([Core Reference](../../development/reference/core.md#modules)); devkit renders the headers from the entry-point name, so a tool
@@ -215,9 +231,9 @@ spec = "core"
 - **Selection edits**: a new `agents` or `[presets]` entry goes right after the last key-value entry of its table,
   not after the comments that follow it, so a commented tool table never takes the entry as its own once
   uncommented.
-- **Failures**: an extension that fails to load, raises, is not named like a `[tool.<name>]` table, or returns
-  anything but valid tables is left out with a `CONFIG_TEMPLATE_EXTENSION_FAILED` warning, and the command
-  succeeds; when a selection command created the file, the warning joins the sync result's `notices`.
+- **Failures**: an extension that fails to load, raises, is not named like a `[tool.<name>]` table
+  (`devkit.config_template`) or a reserved table (`devkit.config_tables`), or returns anything but valid tables is
+  left out with a `CONFIG_TEMPLATE_EXTENSION_FAILED` warning, and the command succeeds; when a selection command created the file, the warning joins the sync result's `notices`.
 - **Preview**: `devkit config template --print` writes nothing (no file, no `.devkit/`, no lock file) and adds
   `text`, the whole file a write would produce, to the output; `state` and `added` are those the write would report,
   and an invalid file is `CONFIG_INVALID` as for a write.
@@ -265,7 +281,8 @@ bundles neither selected nor opted out of that this clone has not been told abou
 or `--check`) records the installed names in the Git-ignored `.devkit/transient/seen-bundles.json`, and a missing or
 unreadable record only repeats the announcement. An opted-out bundle is never announced.
 
-The `BUNDLE_AUTO_SELECTED` notice names the auto-selected bundles of packages other than `devkit-agt` that a sync
+The `BUNDLE_AUTO_SELECTED` notice names the auto-selected bundles of packages other than the first-party
+`devkit-dist` and `devkit-agt` (whose bundles are built in, `harness` included) that a sync
 deploys with their `default_preset` while the previous receipt does not record them: a package that was just
 installed, or one whose new release declares `auto_select`. Its `[FIX]` names `devkit remove <bundle>`, which opts
 out. Since the receipt is Git-tracked, a clone that receives the updated receipt is not told again.
@@ -331,9 +348,19 @@ keeps its code and level, except that an `ERROR` is lowered to `WARNING`. Both j
 `extension: <name>` detail; any other exception, or a return value of another type, becomes a
 `POST_SYNC_EXTENSION_FAILED` warning; an extension can never fail or roll back the sync, because the files are already on disk.
 This is how a package built on devkit reacts to a changed workspace without devkit knowing it; since the lock is
-released, an extension may call devkit reads such as `get_context`. `devkit` registers one itself,
+released, an extension may call devkit reads such as `get_context`. `devkit-agt` registers one,
 `gate-hooks`, which installs shared Git hook dispatchers and active gate entries and keeps the commented gate settings template current
-(`CAP-GATE-commit-gates`).
+(`CAP-GATE-commit-gates`); a standalone `devkit-dist` installation installs no Git hooks.
+
+### Engine Notice
+
+Rule, gate and workflow assets are deployed and recorded like any other kind, but only `devkit-agt` runs them.
+When the deployed assets of a sync (`--dry-run`, `--check` and `--locked` included) or of the receipt `devkit status`
+reads include such kinds and no `devkit.commands` entry point named after their engine (`rules`, `gate`,
+`workflow`) is installed, the result's `notices` carry one `HARNESS_ENGINE_MISSING` warning naming each bundle with
+its kinds, whose `[FIX]` adds `devkit-agt` to the installation (`CAP-DIST-content-packages`). It changes no exit code
+except under `--strict`, and the assets are deployed as before. Engine presence is read from entry point names only;
+distribution never imports or locates an engine.
 
 The result fields and every notice code are listed in the
 [reference](../../development/reference/distribution.md#sync-output-and-notices); warnings and notices never fail a sync except under `--strict`.

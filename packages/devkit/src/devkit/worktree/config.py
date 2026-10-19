@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
 
-from devkit.core import config_table, read_project_config
+from devkit.core import TemplateKey, TemplateTable, config_table, read_project_config
 from devkit.worktree.errors import WorktreeConfigError
 
 PULL_REQUEST_POLICIES = ("auto", "required")
@@ -31,6 +31,38 @@ def parse_period(text: str) -> timedelta:
         raise ValueError(f"{text!r} is not <N>d or <N>w")
     days = int(match.group(1)) * (7 if match.group(2) == "w" else 1)
     return timedelta(days=days)
+
+
+def config_tables() -> tuple[TemplateTable, ...]:
+    """The commented ``[worktree]`` template of ``devkit config template``, at the defaults this reader applies.
+
+    Registered under the ``devkit.config_tables`` entry point ``worktree``.
+    """
+    return (
+        TemplateTable(
+            (
+                TemplateKey(
+                    "pull_request",
+                    "auto",
+                    "auto: a pull request or worktree finish --merge, as the task needs; required refuses --merge",
+                    kind='"auto" | "required"',
+                ),
+                TemplateKey("delete_branch", True, "worktree finish deletes the merged branch with git branch -d"),
+                TemplateKey(
+                    "setup",
+                    help="shell command run in a newly created worktree; unset: no setup command",
+                    example="uv sync",
+                ),
+                TemplateKey(
+                    "stale_after",
+                    "14d",
+                    "idle plan-*/dev-* branches are reported by devkit worktree stale and hygiene runs",
+                    kind='"<N>d" | "<N>w"',
+                ),
+            ),
+            help="Git worktree behavior: integration policy, branch cleanup, setup for new worktrees and stale branches.",
+        ),
+    )
 
 
 @dataclass(frozen=True)

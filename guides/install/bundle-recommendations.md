@@ -2,8 +2,9 @@
 
 How to choose opt-in bundles after the base installation. Entry point: [Installation Guide](../INSTALL_GUIDE.md).
 
-A bundle is a set of assets; a preset selects part of it. `devkit` and `advisory` are deployed automatically. Every
-other bundle deploys nothing until it is selected with `uv run devkit add <bundle>[:<preset>]`. Recommend a bundle
+A bundle is a set of assets; a preset selects part of it. `devkit` and `advisory` (and `harness` with `devkit-agt`)
+are deployed automatically. Every other bundle deploys nothing until it is selected with
+`uv run devkit add <bundle>[:<preset>]`. Recommend a bundle
 only on evidence from the repository or the user's answers, and select only what the user approves.
 
 ## 1. See what is available
@@ -22,16 +23,17 @@ recommend comes from it.
 
 | Bundle (package) | Recommend when | Preset |
 | --- | --- | --- |
-| `devkit:run` (built in) | The repository has tests, linters or type checks that agents run. | Adds one `AGENTS.md` line sending agents to `devkit run`, which keeps long command output out of their context. |
+| `harness:run` (built in, `devkit-agt`) | The repository has tests, linters or type checks that agents run. | Adds one `AGENTS.md` line sending agents to `devkit run`, which keeps long command output out of their context. |
 | `git-commits` (built in) | `git log --format=%s -n 50` shows mostly `type(scope): subject`, or the user wants Conventional Commits. | Default `core`: the convention and an `AGENTS.md` pointer to it. |
-| `authoring` (built in) | The repository contains agent skills (`SKILL.md`) or playbooks. | `skill-authoring` |
-| `authoring` (built in) | The root `AGENTS.md` or `CLAUDE.md` is long or grows often. | `agent-guide-authoring` |
-| `authoring` (built in) | Both of the above. | Default `all` |
-| `advisory:python` (built in) | The project depends on `devkit-advisory` at runtime, or builds Python CLIs that agents consume. | Adds the Python library guide and `RULE-advisory-unique-code` (one code per condition) to the auto-selected protocol guide. |
-| `response-style` (`devkit-catalog`) | The user wants concise replies or a configurable default conversation language. | Default `all`: the `response-style` skill and an `AGENTS.md` reminder; `[bundles.response-style.variables] language = "ko"` selects Korean. |
+| `authoring` (built in, `devkit-agt`) | The repository contains agent skills (`SKILL.md`) or playbooks. | `skill-authoring` |
+| `authoring` (built in, `devkit-agt`) | The root `AGENTS.md` or `CLAUDE.md` is long or grows often. | `agent-guide-authoring` |
+| `authoring` (built in, `devkit-agt`) | Both of the above. | Default `all` |
+| `advisory:python` (built in) | The project depends on `devkit-advisory` at runtime, or builds Python CLIs that agents consume. | Adds the Python library guide and `RULE-advisory-unique-code` (one code per condition, run by `devkit-agt`'s rule engine) to the auto-selected protocol guide. |
+| `response-style` (`devkit-catalog`) | The user wants answer-first replies that keep decision-critical facts, or a configurable default conversation language. | Default `all`: the `response-style` skill and an `AGENTS.md` line with its core rule and a reminder to read it; `[bundles.response-style.variables] language = "ko"` selects Korean. |
 | `host-observer` (`devkit-catalog`) | The user wants to validate Codex CLI lifecycle hook delivery. | Default `all`: five metadata-only observer hooks; requires devkit on the host PATH and separate host trust review. |
 
-Do not recommend a bundle without evidence for it. When a signal is weak (for example a few Conventional Commits
+With `devkit-dist` alone, recommend no `devkit-agt` bundle and no rule asset (`advisory:python`): nothing runs them
+(`HARNESS_ENGINE_MISSING`). Do not recommend a bundle without evidence for it. When a signal is weak (for example a few Conventional Commits
 among many free-form messages), mention it as optional.
 
 ## 3. Present and select

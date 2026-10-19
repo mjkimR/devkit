@@ -1,23 +1,28 @@
 # devkit.distribution
 
-Distribution commands of the `devkit` CLI: packaging, projecting and synchronizing AI agent assets. The normative
-specifications are listed in [section 5](#5-specifications).
+Distribution commands of the `devkit` CLI: packaging, projecting and synchronizing AI agent assets. They ship in
+the `devkit-dist` wheel with `devkit.core`, `devkit.search`, `devkit.host` and the root command line; the harness
+commands of `devkit-agt` mount under the same executable. The normative specifications are listed in
+[section 5](#5-specifications).
 
 ---
 
 ## 1. Quick Start
 
 ```bash
-base=https://github.com/mjkimR/devkit/releases/download/v0.1.0
-uv add --dev "devkit-agt @ $base/devkit_agt-0.1.0-py3-none-any.whl" \
-  "devkit-advisory @ $base/devkit_advisory-0.1.0-py3-none-any.whl" \
+base=https://github.com/mjkimR/devkit/releases/download/v<version>
+uv add --dev "devkit-dist @ $base/devkit_dist-<version>-py3-none-any.whl" \
+  "devkit-advisory @ $base/devkit_advisory-<version>-py3-none-any.whl" \
   "devkit-starter @ $base/devkit_starter-0.1.0-py3-none-any.whl"                     # the CLI and a content package
 uv run devkit add starter                              # devkit and advisory are deployed by default; select the rest
 uv run devkit sync --agent codex --agent claude-code   # projections go to every supported agent unless narrowed
 uv run devkit list
 ```
 
-In this monorepo, run `uv sync --all-packages` first, then `uv run --package devkit-agt devkit sync -w <target-directory>`.
+`devkit-agt` (the harness) depends on `devkit-dist` at the same version; a Git installation declares one of them, never
+both, and a release-wheel installation of `devkit-agt` names the `devkit-dist` and `devkit-advisory` wheels next to it
+only because no index serves them.
+In this monorepo, run `uv sync --all-packages` first, then `uv run --package devkit-dist devkit sync -w <target-directory>`.
 
 Every distribution command takes `-w/--workspace-root <dir>`. Without it, the devkit root is the Git top level
 of the current directory; outside a Git work tree it is the nearest directory (the current one first, then its
@@ -49,10 +54,10 @@ Shared-file ownership, codes and setup: [Host Integration Reference](host.md).
 | `devkit remove <bundle>...` | Deselects bundles in `.devkit/config.toml` (`false` for an auto-selected bundle), then synchronizes. |
 | `devkit list` | Installed content packages, bundle metadata, available and default presets, selection state (`builtin`, `auto_select`, `opted_out`), synchronized asset paths and the `seeded` list. Like `devkit status` it does not check the recorded paths on disk, so a symlinked managed file never fails it (`devkit status` reports it). |
 | `devkit status` | Read-only report of the installed state against the receipt; see [below](#devkit-status). |
-| `devkit config template` | Writes the commented template into `.devkit/config.toml`: devkit's top-level keys, common workflow and worktree tables, and the `[tool.<name>]` tables of the installed tools, at defaults or with marked examples when unset, only the parts the file lacks (`CAP-DIST-sync-and-transactions`). Prints `path`, `state` (`created`, `updated`, `unchanged`), `added` (the key and table names written) and `notices`; an invalid file is `CONFIG_INVALID` and is left alone. `--print` writes nothing and adds `text`, the whole file a write would produce. |
+| `devkit config template` | Writes the commented template into `.devkit/config.toml`: devkit's top-level keys, the tables installed engines register for the reserved names (`devkit.config_tables`: `[workflow.approvals]`, `[workflow.stages]` and `[worktree]` with `devkit-agt`), and the `[tool.<name>]` tables of the installed tools, at defaults or with marked examples when unset, only the parts the file lacks (`CAP-DIST-sync-and-transactions`). Prints `path`, `state` (`created`, `updated`, `unchanged`), `added` (the key and table names written) and `notices`; an invalid file is `CONFIG_INVALID` and is left alone. `--print` writes nothing and adds `text`, the whole file a write would produce. |
 | `devkit recover` | Rolls back an interrupted transaction from the journal in `.devkit/transient/` without overwriting newer edits. Prints `recovered_files`: the number of files restored. |
 | `devkit get-context <bundle>` | The bundle constitution and the header catalog of its instructions (`CAP-DIST-context-and-playbooks`). |
-| `devkit playbook search <query>` | Search over synchronized playbook headers: hybrid with the `devkit-agt[search]` extra, else lexical BM25; `--mode`, `--min-score`, `--min-similarity`, `--limit`, `--max-bytes` (`CAP-DIST-context-and-playbooks`). |
+| `devkit playbook search <query>` | Search over synchronized playbook headers: hybrid with the `search` extra (`devkit-dist[search]` or `devkit-agt[search]`), else lexical BM25; `--mode`, `--min-score`, `--min-similarity`, `--limit`, `--max-bytes` (`CAP-DIST-context-and-playbooks`). |
 | `devkit override list` | Tracked project overrides and their drift status. |
 | `devkit override create <bundle>:<asset> [--force]` | Copies every upstream file of a selected, non-seeded asset to `.devkit/overrides/` (plus a baseline copy), records the current upstream as its baseline and synchronizes; `--force` overwrites existing override files and the baseline. |
 | `devkit override diff <bundle>:<asset>` | Per file: what upstream changed since the baseline, and what the override changed. |
@@ -133,14 +138,17 @@ option = "on"
 ```
 
 A selection command that creates the file, and `devkit config template`, write commented managed-scope and update-policy keys,
-common workflow and worktree settings, and the registered `[tool.<name>]` tables of installed tools. Values show
-defaults, or marked examples when unset by default
+the tables installed engines register for the reserved top-level names (`devkit.config_tables`, entry point named
+after the table: devkit-agt registers `workflow` and `worktree`), and the registered `[tool.<name>]` tables of
+installed tools (`devkit.config_template`). Values show defaults, or marked examples when unset by default
 (`CAP-DIST-sync-and-transactions`). A template extension that fails is left out
 with a `CONFIG_TEMPLATE_EXTENSION_FAILED` warning (`ConfigTemplateExtensionFailedNotice`: it failed to load, raised,
-has a name that is not a `[tool.<name>]` name, or returned no valid tables; `what_to_report` names the entry point),
-in the command's `notices`, or in the sync result's when a selection command created the file.
+has a name that is not a `[tool.<name>]` name, or for `devkit.config_tables` not a reserved table, or returned no
+valid tables; `what_to_report` names the entry point), in the command's `notices`, or in the sync result's when a
+selection command created the file.
 
-`devkit sync` passes `[rules]`, `[workflow]` and `[gates]` through untouched; see the
+`devkit sync` passes the reserved tables `[rules]`, `[workflow]`, `[gates]`, `[worktree]` and `[integration]` through
+untouched, whether or not `devkit-agt` is installed; see the
 [Rules Reference](rules.md#project-configuration), the
 [Workflow Reference](workflow.md#configuration) and the
 `CAP-GATE-commit-gates`.
@@ -180,8 +188,9 @@ they run in their own `notices` list.
 | `POST_SYNC_EXTENSION_FAILED` | `WARNING` | `PostSyncExtensionFailedNotice` | a post-sync extension raised an exception other than an advisory, or returned something other than a list | `details`: the hook; `what_to_report`: the failure |
 | `ASSET_UNPROJECTED` | `NOTICE` (brief) | `UnprojectedNotice` | a skill or subagent has no variant for a selected agent and was not projected | message: each `<bundle>:<asset> (<agent>)`; `target_files`: `.devkit/config.toml` (where the project narrows `agents`); `[DETAIL]`: the remedies |
 | `BUNDLE_UNSELECTED` | `NOTICE` | `BundleUnselectedNotice` | installed bundles the project neither selected nor opted out of, reported once per clone when they appear (recorded in `.devkit/transient/seen-bundles.json`) | `fix`: `devkit add <bundle>` for one bundle, else `devkit list`; one `[DETAIL]` per bundle with its exact `devkit add` command and presets |
-| `BUNDLE_AUTO_SELECTED` | `NOTICE` | `BundleAutoSelectedNotice` | auto-selected bundles of packages other than `devkit` that the sync deploys with their default preset and the previous receipt does not record | `fix`: `devkit remove <bundle>` (opts out) for one bundle, else `devkit list`; one `[DETAIL]` per bundle with its package and preset; `what_to_report`: the bundles now deployed |
-| `TOOL_VERSION_CHANGED` | `NOTICE` (brief) | `ToolVersionChangedNotice` | the receipt now records a different running `devkit` version (`devkit <recorded> -> <running>`) | — |
+| `HARNESS_ENGINE_MISSING` | `WARNING` | `HarnessEngineMissingNotice` | deployed `rule`, `gate` or `workflow` assets in an installation with no `devkit.commands` entry point named `rules`, `gate` or `workflow` (devkit-agt not installed); the assets are deployed as selected. Also in `devkit status` `notices` | message: each bundle with its kinds; `[DETAIL]`: one line per bundle; `fix`: the install directive that adds `devkit-agt` (shared with `HARNESS_COMMAND_UNAVAILABLE`, [core reference](core.md)) |
+| `BUNDLE_AUTO_SELECTED` | `NOTICE` | `BundleAutoSelectedNotice` | auto-selected bundles of packages other than the first-party `devkit-dist` and `devkit-agt` that the sync deploys with their default preset and the previous receipt does not record | `fix`: `devkit remove <bundle>` (opts out) for one bundle, else `devkit list`; one `[DETAIL]` per bundle with its package and preset; `what_to_report`: the bundles now deployed |
+| `TOOL_VERSION_CHANGED` | `NOTICE` (brief) | `ToolVersionChangedNotice` | the receipt now records a different running tool: `devkit-dist <recorded> -> <running>`, or with both packages when the package changed (`devkit-agt 0.1.1 -> devkit-dist 0.1.1`) | — |
 | `POST_SYNC_NOTICE` | `NOTICE` (brief) | `PostSyncNotice` | a line a post-sync extension returned | `details`: the extension |
 
 Each class above derives from `SyncNotice` (`SYNC_NOTICE`), which is never reported on its own. A post-sync extension may also return `AdvisoryError` objects with codes of its own, or raise one; they keep their level, except that an
@@ -206,8 +215,9 @@ the sync stops on the planning error first), a selected bundle whose package can
 override drift (`OVERRIDE_DRIFT`, `INTERACTION`: review with `devkit override diff`, then `devkit override accept`). It exits `1`
 when `errors` is nonempty, whatever their own codes, and `2` only when it cannot run (for example an unreadable
 receipt or configuration). An installed package the project does not deploy that cannot be used is a
-`BUNDLE_PACKAGE_INVALID` warning under `notices` (also in `devkit list`), which changes no exit code except under
-`--strict`. `sync --check` remains the check that says whether a sync is needed.
+`BUNDLE_PACKAGE_INVALID` warning under `notices` (also in `devkit list`), and deployed rule, gate or workflow assets
+that no installed engine runs are a `HARNESS_ENGINE_MISSING` warning there; neither changes the exit code except
+under `--strict`. `sync --check` remains the check that says whether a sync is needed.
 
 ### Error codes
 
@@ -239,30 +249,42 @@ error's `fix`, never in its message. The others are `DistributionError` subclass
 
 ## 4. Bundles Shipped With devkit
 
-`devkit` ships a bundle named `devkit` so that the guidance about devkit travels with the CLI version it describes:
-a constitution (`AGENTS.md`) with the consumption contracts and four instructions, delivered through
-`devkit get-context devkit`. It is auto-selected with its default preset, `core`, which adds nothing to `AGENTS.md`;
-`uv run devkit remove devkit` opts out. The opt-in preset `run` (`uv run devkit add devkit:run`) adds the guidance
-fragment `run-pointer`, one `AGENTS.md` line that sends agents to `devkit run` for tests, linters and type checks
-and to the `devkit-run` instruction. The sources live in `src/devkit/distribution/guide/bundle/` and are the consumer-facing mirror of these
-documents; keep them in step.
+`devkit-dist` ships a bundle named `devkit` so that the guidance about devkit travels with the CLI version it
+describes: a constitution (`AGENTS.md`) with the consumption contracts and three instructions, delivered through
+`devkit get-context devkit`. It describes distribution only and names no harness command as a directive. It is
+auto-selected with its default and only preset, `core`, which adds nothing to `AGENTS.md`; `uv run devkit remove
+devkit` opts out. The sources live in `packages/devkit-dist/src/devkit/distribution/guide/bundle/` and are the
+consumer-facing mirror of these documents; keep them in step.
 
 | Asset | Read before |
 | --- | --- |
-| `consumption` | Using, changing or troubleshooting devkit-managed assets: context loading, playbooks, rules and gates, overrides, selection and the sync/receipt lifecycle. |
+| `consumption` | Using, changing or troubleshooting devkit-managed assets: context loading, playbooks, overrides, selection and the sync/receipt lifecycle. |
 | `resource-kinds` | Adding a rule, skill, subagent, instruction, playbook, workflow or gate: the decision tree and comparison of asset kinds. |
 | `in-repo-bundle` | Adding repository-specific assets: shipping them as a bundle installed from the same repository. |
+
+`devkit-agt` ships the `harness` bundle (`CAP-DIST-content-packages`), auto-selected wherever it is installed: a
+constitution with the rules-and-gates and snapshot-gate contracts and the guidance for the harness. Its default
+preset `core` adds nothing to `AGENTS.md`; the opt-in preset `run` (`uv run devkit add harness:run`) adds the
+guidance fragment `run-pointer`, one `AGENTS.md` line that sends agents to `devkit run` for tests, linters and type
+checks and to the `devkit-run` instruction. Its sources live in `packages/devkit/src/devkit/harness_guide/bundle/`.
+
+| Asset | Read before |
+| --- | --- |
+| `harness-consumption` | Running, configuring or troubleshooting rules, commit gates or delivery workflows: their configuration tables, the `devkit-workflow` entry skill, `devkit rules`, `devkit gate` and snapshot gates. |
+| `harness-assets` | Adding or testing a rule, gate or workflow asset, including the rules of an in-repository bundle in Git snapshot gates. |
 | `devkit-run` | Running tests, linters or type checks directly, or setting up recipes for them: `devkit run` and its output; see [devkit.compact](compact.md). |
 
-The other built-in bundles are documented with the module whose engine they use, but each lives in a data-only
-resource module whose `__init__.py` imports nothing, so discovering it never imports that engine (a failing engine
-import cannot make the bundle unusable):
+Bundles shipped by `devkit-dist` or `devkit-agt` count as built in (`builtin` in `devkit list` and
+`devkit status`). The other built-in bundles are documented with the module whose engine they use, but each lives in
+a data-only resource module whose `__init__.py` imports nothing, so discovering it never imports that engine (a
+failing engine import cannot make the bundle unusable):
 
-| Bundle | Resource module | Selection | Contents |
-| --- | --- | --- | --- |
-| `advisory` | `devkit.advisory_guide` | Auto-selected (`core`); `devkit add advisory:python` for Python repositories | Agent Advisory Protocol guides and, in `python`, `RULE-advisory-unique-code`; see [devkit.advisory](advisory.md). |
-| `authoring` | `devkit.authoring_guide` | Opt-in: `devkit add authoring` (`all`), or one of the presets `skill-authoring`, `agent-guide-authoring` | Size rules and restructuring playbooks for skills and agent guides; see [devkit.rules](rules.md#built-in-authoring-bundle). |
-| `git-commits` | `devkit.commits_guide` | Opt-in: `devkit add git-commits` | Commit message conventions and their `AGENTS.md` pointer; see [devkit.gate](gate.md#built-in-git-commits-bundle). |
+| Bundle | Wheel | Resource module | Selection | Contents |
+| --- | --- | --- | --- | --- |
+| `advisory` | `devkit-dist` | `devkit.advisory_guide` | Auto-selected (`core`); `devkit add advisory:python` for Python repositories | Agent Advisory Protocol guides and, in `python`, `RULE-advisory-unique-code` (run by the rule engine of `devkit-agt`); see [devkit.advisory](advisory.md). |
+| `git-commits` | `devkit-dist` | `devkit.commits_guide` | Opt-in: `devkit add git-commits` | Commit message conventions and their `AGENTS.md` pointer; see [devkit.gate](gate.md#built-in-git-commits-bundle). |
+| `authoring` | `devkit-agt` | `devkit.authoring_guide` | Opt-in: `devkit add authoring` (`all`), or one of the presets `skill-authoring`, `agent-guide-authoring` | Size rules and restructuring playbooks for skills and agent guides; see [devkit.rules](rules.md#built-in-authoring-bundle). |
+| `harness` | `devkit-agt` | `devkit.harness_guide` | Auto-selected (`core`); `devkit add harness:run` for the `AGENTS.md` pointer | The harness guidance above. |
 
 ---
 

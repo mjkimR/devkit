@@ -26,13 +26,18 @@ from devkit.core.cli import boundary
 
 ROOT = Path(__file__).resolve().parents[1]
 DEVKIT = "packages/devkit"
-DEVKIT_SRC = f"{DEVKIT}/src/devkit"
+DIST = "packages/devkit-dist"
+DIST_SRC = f"{DIST}/src/devkit"
+# The distributions whose areas share the devkit namespace (devkit-advisory, the lowest layer, triggers the full suite).
+HOMES = (DIST, DEVKIT)
+# Shared test helper packages: name -> directory.
+HELPERS = {"distsupport": f"{DIST}/tests/distsupport", "testsupport": f"{DEVKIT}/tests/testsupport"}
 
 logger = logging.getLogger(__name__)
 
 # Changes every test can depend on: the lowest layers, the CLI assembly, packaging and shared test fixtures.
-FULL_PREFIXES = (f"{DEVKIT_SRC}/core/", "packages/devkit-advisory/", f"{DEVKIT}/tests/testsupport/")
-FULL_FILES = frozenset({f"{DEVKIT_SRC}/cli.py", f"{DEVKIT_SRC}/__main__.py", "uv.lock"})
+FULL_PREFIXES = (f"{DIST_SRC}/core/", "packages/devkit-advisory/", *(f"{path}/" for path in HELPERS.values()))
+FULL_FILES = frozenset({f"{DIST_SRC}/cli.py", f"{DIST_SRC}/__main__.py", "uv.lock"})
 FULL_NAMES = frozenset({"pyproject.toml", "conftest.py"})
 
 # Repository files that tests read directly, which imports do not show: prefix -> test paths.
@@ -47,25 +52,20 @@ DATA: tuple[tuple[str, tuple[str, ...]], ...] = (
         ),
     ),
     ("examples/", ("packages/devkit-starter/tests", f"{DEVKIT}/tests/workflow/test_library.py")),
-    ("models/", (f"{DEVKIT}/tests/search",)),
+    ("models/", (f"{DIST}/tests/search",)),
     ("scripts/module.sh", (f"{DEVKIT}/tests/test_module_script.py",)),
     ("scripts/_lib.sh", (f"{DEVKIT}/tests/test_module_script.py",)),
     ("justfile", (f"{DEVKIT}/tests/test_module_script.py",)),
     ("scripts/check_test_environment.py", (f"{DEVKIT}/tests/test_test_environment.py",)),
-    ("scripts/fetch_model.py", (f"{DEVKIT}/tests/search/test_packaging.py",)),
+    ("scripts/fetch_model.py", (f"{DIST}/tests/search/test_packaging.py",)),
     ("scripts/affected_tests.py", (f"{DEVKIT}/tests/test_affected_tests.py",)),
 )
-# Tests over devkit's whole source tree (layering, documented codes, CLI wiring, stdout kinds), run for any devkit
-# source change.
-SOURCE_TREE_TESTS = tuple(
-    f"{DEVKIT}/tests/{name}"
-    for name in (
-        "test_layering.py",
-        "test_documented_codes.py",
-        "test_cli_imports.py",
-        "test_cli_plugins.py",
-        "core/test_cli.py",
-    )
+# Tests over devkit's whole source tree (layering, documented codes, CLI wiring, stdout kinds), run for any source
+# change in either devkit distribution.
+SOURCE_TREE_TESTS = (
+    *(f"{DIST}/tests/{name}" for name in ("test_layering.py", "test_cli_imports.py", "test_cli_plugins.py")),
+    f"{DIST}/tests/core/test_cli.py",
+    *(f"{DEVKIT}/tests/{name}" for name in ("test_layering.py", "test_documented_codes.py")),
 )
 
 # The devkit-viewer frontend: pytest never exercises it, so a change there selects no tests and names the frontend
@@ -114,21 +114,30 @@ class Group:
 
 
 class Workspace:
-    """The nodes, their static import graph and the test groups of one workspace checkout."""
+    """The nodes, their static import graph and the test groups of one workspace checkout.
+
+    A devkit area lives in one of the ``HOMES`` distributions, with its source under ``src/devkit/<area>`` and its
+    tests under ``tests/<area>`` there.
+    """
 
     def __init__(self, root: Path) -> None:
         self.root = root
         self.packages = self._packages()
         self._helpers: dict[Path, set[str]] = {}
-        directories = [*(root / DEVKIT_SRC).iterdir(), *(root / DEVKIT / "tests").iterdir()]
-        self.areas = sorted({p.name for p in directories if p.is_dir()} - {"__pycache__", "testsupport"})
+        self.homes: dict[str, str] = {}  # devkit area -> the distribution directory it lives in
+        for home in HOMES:
+            directories = [*(root / home / "src/devkit").iterdir(), *(root / home / "tests").iterdir()]
+            for name in {p.name for p in directories if p.is_dir()} - {"__pycache__", *HELPERS}:
+                self.homes.setdefault(name, home)
+        self.areas = sorted(self.homes)
 
     def _packages(self) -> dict[str, str]:
-        """Package directory -> its import package, for every workspace package except devkit and devkit-advisory."""
+        """Package directory -> its import package, for every workspace package outside the devkit namespace."""
         found: dict[str, str] = {}
+        homes = {home.rsplit("/", 1)[-1] for home in HOMES}
         for src in sorted((self.root / "packages").glob("*/src")):
             directory = src.parent.name
-            if directory in ("devkit", "devkit-advisory"):
+            if directory in homes or directory == "devkit-advisory":
                 continue
             names = [p.name for p in src.iterdir() if p.is_dir() and p.name.isidentifier()]
             if len(names) == 1:
@@ -170,7 +179,7 @@ class Workspace:
         return found
 
     def _helper_imports(self, tree: ast.Module) -> set[str]:
-        """The nodes of the shared ``testsupport`` helpers a file imports at module level.
+        """The nodes of the shared ``HELPERS`` a file imports at module level.
 
         A helper imported inside a function counts for that test only, so it is left out like any data dependency.
         """
@@ -183,9 +192,9 @@ class Workspace:
                 modules = [node.module, *(f"{node.module}.{alias.name}" for alias in node.names)]
             for module in modules:
                 parts = module.split(".")
-                if parts[0] != "testsupport" or len(parts) < 2:
+                if parts[0] not in HELPERS or len(parts) < 2:
                     continue
-                helper = self.root / DEVKIT / "tests/testsupport" / f"{parts[1]}.py"
+                helper = self.root / HELPERS[parts[0]] / f"{parts[1]}.py"
                 if helper not in self._helpers:
                     self._helpers[helper] = set()  # a cycle between helpers ends here
                     self._helpers[helper] = self.imports([helper]) if helper.is_file() else set()
@@ -203,7 +212,7 @@ class Workspace:
 
     def sources(self) -> dict[str, Path]:
         """Node -> its production source directory."""
-        nodes = {f"devkit.{area}": self.root / DEVKIT_SRC / area for area in self.areas}
+        nodes = {f"devkit.{area}": self.root / home / "src/devkit" / area for area, home in self.homes.items()}
         for directory, package in self.packages.items():
             nodes[package] = self.root / "packages" / directory / "src" / package
         return nodes
@@ -229,14 +238,15 @@ class Workspace:
     @cached_property
     def groups(self) -> list[Group]:
         groups: list[Group] = []
-        for area in self.areas:
-            tests, src = self.root / DEVKIT / "tests" / area, self.root / DEVKIT_SRC / area
+        for area, home in sorted(self.homes.items()):
+            tests, src = self.root / home / "tests" / area, self.root / home / "src/devkit" / area
             paths = [p for p in (tests, src) if self._has_tests(p)]
             if paths:
                 files = [*self._python(tests, tests=False), *self._python(src, tests=True)]
                 groups.append(Group(self._relative(paths), frozenset({f"devkit.{area}", *self.imports(files)})))
-        for path in sorted((self.root / DEVKIT / "tests").glob("test_*.py")):
-            groups.append(Group(self._relative([path]), frozenset(self.imports([path]))))
+        for home in HOMES:
+            for path in sorted((self.root / home / "tests").glob("test_*.py")):
+                groups.append(Group(self._relative([path]), frozenset(self.imports([path]))))
         for directory, package in self.packages.items():
             base = self.root / "packages" / directory
             paths = [p for p in (base / "tests", base / "src") if self._has_tests(p)]
@@ -254,9 +264,10 @@ def _full_trigger(path: str) -> bool:
 
 def _source_node(workspace: Workspace, path: str) -> str | None:
     """The node a changed source file belongs to, if it is a package source file."""
-    if path.startswith(f"{DEVKIT_SRC}/"):
-        area = path[len(DEVKIT_SRC) + 1 :].split("/")
-        return f"devkit.{area[0]}" if len(area) > 1 else None
+    for home in HOMES:
+        if path.startswith(f"{home}/src/devkit/"):
+            area = path[len(home) + len("/src/devkit/") :].split("/")
+            return f"devkit.{area[0]}" if len(area) > 1 else None
     match = re.fullmatch(r"packages/([^/]+)/src/.+", path)
     return workspace.packages.get(match.group(1)) if match else None
 
@@ -278,7 +289,7 @@ def select(root: Path, changed: Iterable[str]) -> Selection:
             paths.update(tests)
             causes.add(prefix)
         if re.fullmatch(r"packages/[^/]+/src/.+", path):
-            if path.startswith(f"{DEVKIT}/src/"):
+            if path.startswith(tuple(f"{home}/src/" for home in HOMES)):
                 paths.update(SOURCE_TREE_TESTS)
             node = _source_node(workspace, path)
             if node:

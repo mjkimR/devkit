@@ -1,9 +1,0 @@
-request: gate:plan-intent
-kind: approve
-action: accept
-workflow: sdd-proposal
-stage: intent-proposal
-note: 'Planning effort high: spans devkit-agt, a new devkit-dist package and devkit-spec,
-  creating a distribution contract'
-by: user
-at: '2026-10-18T23:28:06.837333Z'

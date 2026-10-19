@@ -33,7 +33,7 @@ findings:
     evidence: "path:line"
     failure_condition: "Under which input it fails"
     suggested_action: "Recommended next step"
-    severity: "medium"       # optional non-empty string; descriptive metadata
+    severity: "P2"           # optional non-empty string; descriptive metadata
     resolution: open         # open | resolved | waived (default open)
     waiver: "why it is accepted"   # waived findings only
 assumptions: ["what the judgment rests on"]        # optional
@@ -49,7 +49,7 @@ review: review-01.yaml       # reverify only: the review round it closes
 - `workflow` (a workflow id) and `segment` (a non-negative integer) scope the envelope to one `CAP-DLV-workflow-orchestration`, like decision records: the checks of a workflow count only envelopes whose `workflow` is that workflow and whose `segment` is the number of entries in the anchor's `workflow_history` (`0` before the first handoff). After a handoff the next workflow therefore does not see the previous segment's reviews, and a workflow re-entered later (`a` to `b` to `a`) does not see those of its earlier segment. An envelope without `workflow` counts in every segment; one with `workflow` but no `segment` counts in every segment of that workflow. A `workflow` that is not an id, or a `segment` that is not a non-negative integer, makes the envelope malformed.
 - `completed` with no findings is a valid pass. `needs_input` and `failed` never satisfy a check.
 - `assumptions` and `unverified_areas` are lists of strings; `checks` is a mapping; `findings` is a list of mappings with only the finding keys shown above. `activity_effort`, on any kind, is `low`, `medium` or `high`: the effort the run applied. The kinds of delegated work carry the fields of [section 1.1](#11-questions-answers-problems-and-resolutions); on any other kind those fields make the envelope malformed. Other top-level keys are ignored.
-- Finding `severity`, when supplied, is a non-empty string label. Empty, whitespace-only and non-string values are malformed. It is preserved in loading, serialization and reverify carry-forward; omission stays omitted. It has no effect on open-finding counts, check satisfaction or exit codes.
+- Finding `severity`, when supplied, is a non-empty string label. Empty, whitespace-only and non-string values are malformed. It is preserved in loading, serialization and reverify carry-forward; omission stays omitted. It has no effect on open-finding counts, check satisfaction or exit codes. The engine validates nothing beyond that: the `spec` bundle's review procedures require `P1`, `P2` or `P3` on every finding of a `review`, `reconcile-check` or `challenger` envelope and define the levels (`CAP-DLV-delivery-workflows` rule 15).
 - Malformed envelopes are reported as `[ENVELOPE_ERROR: file "reason"]` (in JSON, an `ENVELOPE_INVALID` entry of `errors` with its `file`) and are not loaded; evaluation continues.
 
 ### 1.1 Questions, Answers, Problems and Resolutions

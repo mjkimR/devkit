@@ -1,0 +1,107 @@
+---
+name: resource-kinds
+description: Read before adding a rule, skill, subagent, instruction, playbook, workflow, guidance fragment or commit gate to a repository. Decision tree and comparison of devkit asset kinds, how each is consumed, and what each costs in agent context.
+---
+
+# Choosing an asset kind
+
+Every asset devkit distributes has one `kind` declared in its bundle's
+`bundle.toml`. The kind decides where the file lands, when an agent or a tool
+reads it and how many context tokens it costs. Pick the kind from what the
+content *is*, not from how often it is needed.
+
+## Decision tree
+
+```text
+Can a program verify the invariant with certainty?
+  yes -> rule            (Python, run by the rule engine of devkit-agt; zero agent tokens)
+  no  -> Must it run at a Git hook stage and block a commit?
+    yes -> gate          (Python, run by the commit gate of devkit-agt; zero agent tokens)
+    no  -> Is it a reusable tool or script directory the agent executes?
+      yes -> skill       (directory with SKILL.md, projected into agent skill directories)
+      no  -> Is it a delegated persona for a subagent?
+        yes -> subagent  (native file per agent, or one host-neutral role contract)
+        no  -> Is it a procedure rather than a judgment criterion?
+          yes, recurring multi-stage delivery flow -> workflow
+          yes, occasional task                     -> playbook
+          no  -> Is it the bundle's short orientation read before anything else?
+            yes -> the bundle's AGENTS.md (constitution)
+            no  -> instruction (default for policies, standards, judgment criteria)
+
+Two kinds sit outside the tree: `document` (reference
+material read by path, or with `seeded = true` a scaffold such as a docs tree
+that the project owns and edits after the first sync) and `guidance` (a short
+line in the root AGENTS.md block that sends every session to an instruction at
+a moment no skill marks, such as "before writing a commit message").
+```
+
+## Comparison
+
+| Kind | File form | Who consumes it, when | Context cost |
+| --- | --- | --- | --- |
+| `rule` | `rules/<slug>/`: a plugin package directory of `.py` modules, guide and tests | The rule engine of `devkit-agt` (checks, commit gate, CI); loaded from the receipt | none |
+| `gate` | `gates/<slug>/`: a plugin package directory | The commit gate of `devkit-agt` at a Git hook stage | none |
+| `skill` | `skills/<slug>/SKILL.md` or `SKILL.md.jinja`, and support files | The agent host lists it and invokes it as a tool; the body opens with the bundle context prerequisite | name and description always; body on invocation |
+| `subagent` | native file per agent or `subagents/<slug>.md` contract | The host loads it when delegating | persona on load |
+| `workflow` | one Markdown definition with `id` and `stages` | The generated `devkit-workflow` entry skill, backed by the workflow engine of `devkit-agt` | stage output only |
+| `playbook` | `playbooks/<slug>.md` or directory with `SKILL.md` | Only on explicit `devkit-playbook` invocation or rule remediation | selected headers, then one body |
+| constitution | `AGENTS.md` at the bundle root | Returned whole by `get-context`, once per bundle | about 50 to 100 lines |
+| `instruction` | `instructions/<slug>.md` with `name` and `description` frontmatter | Header returned by `get-context`; body read when relevant | header always, body on demand |
+| `document` | any files | Unseeded: a managed copy agents read by path. `seeded = true` with a `target`: written once into the project, then project-owned | only when read |
+| `hook` | one TOML definition (`host`, `event`, `handler`, optional `matcher`, `timeout`) | The selected host invokes an installed `devkit.host.handlers` callable; inspect with `devkit host status` | native response only; trust and permissions stay host-owned |
+| `guidance` | one Markdown file of list items, at most 300 bytes; `{path:<asset-id>}` names another asset's file | Rendered into the root `AGENTS.md` block by `devkit sync`, read by every session | every turn: keep it to a pointer with its read condition |
+
+## Boundaries that are easy to get wrong
+
+- **Instruction versus playbook.** An instruction states rules, constraints
+  and judgment criteria that apply while working; it is reachable from the
+  catalog at any time. A playbook is a numbered procedure for an occasional
+  task and is deliberately invisible until invoked. "Compatibility rules for
+  schema changes" is an instruction; "recover a broken replica" is a playbook.
+- **Playbook versus workflow.** A procedure the repository follows for every
+  delivery, with stages and approval gates, is a workflow definition. A
+  procedure that is reached for now and then is a playbook.
+- **Instruction versus rule.** If a check can be decided mechanically, write a
+  rule, even if a sentence in an instruction would be shorter. Rules cost no
+  tokens and run in gates; prose is advisory.
+- **Constitution versus instruction.** The constitution is read in full every
+  time a bundle's context loads, so it holds only what every task needs:
+  what the bundle is for, its hard contracts and which instructions exist.
+  Everything that only some tasks need belongs in an instruction with a
+  precise description, so the agent can decide from the header alone.
+- **Skill versus instruction.** A skill is for doing: it has steps the agent
+  executes and may ship scripts. A skill that only contains guidance should be
+  an instruction, unless the host must be able to list it as a tool.
+
+## Authoring requirements
+
+- Frontmatter and headers are English. Instructions need `name` and
+  `description` (every file of an instruction source; `devkit bundle validate`
+  checks it); playbooks need `name`, `description` and optional `aliases`.
+- A `description` says *when to read* the document, not what it contains.
+  The agent decides from the header alone whether to open the body.
+- A skill only the user should start (a release, a destructive cleanup)
+  declares `invocation = "user"` in `bundle.toml`; sync writes each agent's
+  native setting into its projection. Never set `disable-model-invocation`
+  or `policy.allow_implicit_invocation` in the skill source itself;
+  `devkit bundle validate` rejects both.
+- Only skills and subagents take per-agent `variants`. A subagent role
+  contract names all three agents under `hosts` (`status: unsupported` for an
+  agent that gets no file); `devkit bundle validate` checks both.
+- Slugs are lowercase with hyphens. Asset ids are unique within a bundle, and
+  rule ids are unique across all bundles a repository installs; a later rule
+  with the same id replaces an earlier one.
+- Rules, gates and workflow checks are plugin package directories run by the
+  engines of `devkit-agt`, which devkit deploys as it deploys any asset; the
+  `harness-assets` instruction of its `harness` bundle covers their modules,
+  imports and tests.
+
+## Configurable Markdown
+
+Instruction, guidance, document and skill assets may use `.md.jinja` sources. A skill directory contains exactly
+one of `SKILL.md` or `SKILL.md.jinja`; its native projections always contain `SKILL.md`. Declare each input in the manifest under
+`[variables.<name>]` with `type = "string"`, `"boolean"` or `"integer"` and an optional same-type `default`.
+Consumers set `[bundles.<bundle>.variables]` in `.devkit/config.toml`. Use `{{ vars.<name> }}` in the template;
+only declared scalar values are exposed. `sync` strips the final `.jinja`, validates the rendered content and hashes
+its final bytes. Ordinary Markdown is never templated. Keep filenames and headers stable, and declare defaults
+when local `bundle plan` should work without project inputs. Guidance limits apply after rendering.

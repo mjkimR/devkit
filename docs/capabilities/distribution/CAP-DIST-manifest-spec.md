@@ -5,7 +5,7 @@ summary: "Schema, asset kinds, presets, validation, and deterministic archive bu
 area: distribution
 status: active
 entrypoints:
-  - packages/devkit/src/devkit/distribution/bundles/
+  - packages/devkit-dist/src/devkit/distribution/bundles/
 created_at: 2026-10-17
 ---
 
@@ -55,6 +55,9 @@ standards are in the `ARCH-08-2-resource-taxonomy`.
 - `gate`: Python commit gates in one plugin package directory per asset, run by `devkit.gate` at a Git hook stage,
   loaded from the receipt's `paths` and configured in `[gates]` of `.devkit/config.toml` or the per-clone `.git/devkit.config`; see the
   `CAP-GATE-commit-gates`.
+- The engines of `rule`, `workflow` and `gate` assets (`devkit.rules`, `devkit.workflow`, `devkit.gate`) ship with
+  `devkit-agt`; `devkit-dist` deploys these kinds without them and reports them with `HARNESS_ENGINE_MISSING`
+  (`CAP-DIST-sync-and-transactions`).
 - `hook`: one declarative TOML file selecting a host, event and installed service handler. Sync manages exact
   registrations in a shared host file, recorded under `host_hooks` in the receipt. Codex command hooks are the
   initial target; see `CAP-HOST-lifecycle-observation` for schema, deployment and runtime.
@@ -145,8 +148,8 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
   required, as soon as its package is installed, without `devkit add`; a project opts out with
   `[presets] <bundle> = false`. Any package may set it, and it applies to a package installed as a runtime dependency
   of another one as well. Set it when the default preset is what nearly every project installing the package wants;
-  leave it off for content a project adds deliberately (the built-in `devkit` and `advisory` bundles set it,
-  `authoring` and `git-commits` do not). Until a project selects presets explicitly, upgrades follow the current
+  leave it off for content a project adds deliberately (the built-in `devkit`, `advisory` and `harness` bundles set
+  it, `git-commits` and `authoring` do not). Until a project selects presets explicitly, upgrades follow the current
   `default_preset`. See the `CAP-DIST-sync-and-transactions`.
 
 ## 4. Validation

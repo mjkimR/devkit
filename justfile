@@ -29,6 +29,10 @@ test module="all" *args:
 test-affected *args:
     uv run --no-active python scripts/affected_tests.py "$@"
 
+# Run the devkit-dist tests in a separate environment without devkit-agt (dist-only check)
+test-dist *args:
+    bash scripts/dist_only.sh "$@"
+
 # Run pytest with test coverage report (same module, area and path selection as test)
 test-cov module="all" *args:
     bash scripts/module.sh test-cov "$@"

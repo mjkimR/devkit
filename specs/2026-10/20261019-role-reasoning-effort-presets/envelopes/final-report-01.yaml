@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T02:40:29.083865Z'
+status: completed
+summary: 'Per-role reasoning effort presets shipped in the devkit-spec bundle: scout and reconcile-reviewer medium, code-reviewer and challenger high (claude-code effort, codex model_reasoning_effort), workers and Antigravity unset; challenger comment names the preset; test_role_contracts.py pins role, profile and preset with drift cases; CAP-DLV-delivery-workflows section 2 and 4.6 reflected. Review: review-01 zero findings; reconcile: reconcile-check-01 zero findings.'
+findings: []
+assumptions:
+- No bundle wiring changed (only frontmatter values of existing contracts), so just smoke was not run; the full suite is the Host's before integration.
+checks:
+  tests: PASS just test devkit-spec 950 passed at 3db39db; just test-affected 958 passed at 8346c1f
+  build: PASS just check devkit-spec (pyright 0 errors); devkit sync applied and devkit sync --check OK
+  lint: PASS just lint-check exit 0; just rules-check 0 violations; devkit rules check --ci --base main 0 violations
+diff_scope:
+  base: 4f13abc402fc0c419d7093d048b6f9dd18e9f600
+  head: 8346c1f4d52b884e2494c7b38bdf9976e2733a7b

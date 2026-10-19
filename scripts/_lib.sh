@@ -3,13 +3,23 @@
 # Pure bash and awk, so discovery does not depend on whichever python3 is on PATH.
 # Every function fails (nonzero status, message on stderr) instead of printing nothing.
 
-# The release URL of the devkit-embed model wheel, pinned in the devkit package's [tool.uv.sources].
+# The release URL of the devkit-embed model wheel, pinned in the devkit-dist package's [tool.uv.sources]
+# (its search extra requires the model).
 model_wheel_url() {
     awk -F'"' '/^devkit-embed[[:space:]]*=[[:space:]]*\{[[:space:]]*url[[:space:]]*=/ { print $2; found = 1; exit }
-        END { if (!found) exit 1 }' packages/devkit/pyproject.toml || {
-        echo "error: no devkit-embed url source in packages/devkit/pyproject.toml" >&2
+        END { if (!found) exit 1 }' packages/devkit-dist/pyproject.toml || {
+        echo "error: no devkit-embed url source in packages/devkit-dist/pyproject.toml" >&2
         return 1
     }
+}
+
+# The [project] version of one pyproject.toml.
+project_version() {
+    awk -F'"' '
+        /^\[/ { in_project = ($0 == "[project]") }
+        in_project && /^version[[:space:]]*=/ { print $2; found = 1; exit }
+        END { if (!found) exit 1 }
+    ' "$1"
 }
 
 # The [project] name of one pyproject.toml.
@@ -48,6 +58,7 @@ list_modules() {
 resolve_module() {
     case "$1" in
         devkit) echo "devkit-agt" ;;
+        dist) echo "devkit-dist" ;;
         starter) echo "devkit-starter" ;;
         catalog) echo "devkit-catalog" ;;
         spec) echo "devkit-spec" ;;

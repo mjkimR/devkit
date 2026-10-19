@@ -7,14 +7,16 @@ x-invocation: optional
 x-model-profile: high-reasoning
 x-git-actions: [read]
 hosts:
-  # Choose a high-reasoning model at invocation time, not in the contract.
+  # The reasoning effort is preset per role (ADR-role-effort-presets); the model is left to the runtime.
   claude-code:
     status: native
     tools: [Read, Grep, Glob]
+    effort: high
   # Expected diff after the run: none.
   codex:
     status: emulated
     sandbox_mode: read-only
+    model_reasoning_effort: high
   antigravity:
     status: native
     tools: [view_file, grep_search]
@@ -29,7 +31,7 @@ Find what would make a proposal, spec or design fail or unnecessary before anyon
 
 ## Input
 
-The caller's payload: `task_goal` (what is being challenged and the decision it feeds), `relevant_files` (proposal or spec, acceptance criteria, non-goals, ADRs, the capabilities it touches), `allowed_boundaries` (read scope only), `diff_scope` (optional) and `expected_output_format` (issue list, alternative table, or both).
+The caller's payload: `task_goal` (what is being challenged and the decision it feeds), `relevant_files` (proposal or spec, acceptance criteria, non-goals, ADRs, the capabilities it touches), `allowed_boundaries` (read scope only), `diff_scope` (optional), the `activity-effort`, in a later round of a `high` Planning loop the earlier rounds' findings and the proposal changes since the previous round, and `expected_output_format` (issue list, alternative table, or both).
 
 ## Procedure
 
@@ -49,9 +51,11 @@ Work through this attack list against `relevant_files`. A referenced document ID
 5. **Unverifiable claims**: AC without a mechanical check, numbers without a measurement plan, vague qualifiers.
 6. **Decisions hidden in the text**: choices presented as settled that the human has not made.
 
+At `high` you are one round of a bounded loop (`.devkit/managed/spec/skills/spec/references/review-loop.md`): a later round attacks the changes since the previous round and what they affect. Start a finding that repeats an earlier one with `recurs: <envelope> #<n>;` in `issue`.
+
 ## Return
 
-The fields of a devkit envelope of kind `challenger`, as YAML with findings as a list; do not write files: `status` (`completed`, `needs_input` or `failed`), `summary`, and `findings` where each finding has `issue`, `evidence`, `failure_condition` (required) and `suggested_action`, which carries the simpler alternative when there is one. A choice only the human can make is a finding whose `suggested_action` starts with `Decision needed:` (decided at `plan-accept`). `assumptions` list what the critique took as given; `unverified_areas` list claims that could not be checked against the repository.
+The fields of a devkit envelope of kind `challenger`, as YAML with findings as a list; do not write files: `status` (`completed`, `needs_input` or `failed`), `summary`, and `findings` where each finding has `issue`, `evidence`, `failure_condition` (required), `severity` (required at every effort: `P1` when the design fails or conflicts with an accepted ADR or capability, `P2` for a defect in how a decision is specified with a workaround, `P3` for an improvement) and `suggested_action`, which carries the simpler alternative when there is one. A choice only the human can make is a finding whose `suggested_action` starts with `Decision needed:` (decided at `plan-accept`). `assumptions` list what the critique took as given; `unverified_areas` list claims that could not be checked against the repository.
 
 ## Write boundaries
 

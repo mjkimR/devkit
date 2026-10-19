@@ -1,0 +1,22 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T02:38:50.490758Z'
+status: completed
+summary: 'reconcile-reviewer (native nested subagent, read-only, initial medium verification): reconcile.md covers the change; CAP-DLV-delivery-workflows reflects AC-06, the handoff-promoted ADR target and the CAP-DIST-agent-projections waiver hold; zero findings.'
+findings: []
+assumptions:
+- Delegated to the reconcile-reviewer role as a native Claude Code nested subagent; it verifies only, the implementer wrote the reconcile.
+- The reviewer has no shell; HEAD was confirmed unchanged at d1f3196 by the implementer after the verification.
+unverified_areas:
+- Runtime host behavior rests on host documentation in the materials, not execution.
+checks:
+  targets_complete: PASS CAP-DLV-delivery-workflows and ADR-role-effort-presets listed; no other Living Spec document states model or effort behavior
+  waiver_valid: PASS CAP-DIST-agent-projections already documents both keys; allowlist unchanged
+  contract_vs_docs: PASS contracts, EFFORT_PRESETS, CAP-DLV 4.6 table and ADR agree
+  projection_sample: PASS sampled projected Claude and Codex files
+  deferred_work: PASS no retained follow-up
+diff_scope:
+  base: 4f13abc402fc0c419d7093d048b6f9dd18e9f600
+  head: d1f3196d849ce50327f337f863d3f81fb4f16d97

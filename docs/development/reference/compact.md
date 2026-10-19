@@ -1,6 +1,6 @@
 # devkit.compact
 
-Compact command output for agents (`devkit run`): a command runs with its complete output in a log file, and the caller gets a bounded view of it. Semantics, budgets and recognized formats: `CAP-CMP-bounded-execution`.
+Compact command output for agents (`devkit run`, shipped by `devkit-agt` and mounted under the `devkit` executable through `devkit.commands`): a command runs with its complete output in a log file, and the caller gets a bounded view of it. Semantics, budgets and recognized formats: `CAP-CMP-bounded-execution`.
 
 ## Usage
 
@@ -62,7 +62,7 @@ run.scan.summaries, run.scan.last_lines, run.scan.failures, run.scan.warnings, r
 
 ## Agent guidance
 
-The `devkit` guide bundle (selected by default) carries the instruction `devkit-run`: when to use `devkit run`, how to read its output and log, and how to put it inside a project's recipes. Agents find it through `devkit get-context devkit`; by default it adds nothing to `AGENTS.md`. The opt-in preset `devkit:run` (`devkit add devkit:run`) adds one `AGENTS.md` line pointing at `devkit run` and this instruction (`CAP-CMP-bounded-execution`). Its source is `src/devkit/distribution/guide/bundle/instructions/devkit-run.md`; keep it in step with this reference.
+The `harness` bundle of `devkit-agt` (selected by default wherever it is installed) carries the instruction `devkit-run`: when to use `devkit run`, how to read its output and log, and how to put it inside a project's recipes. Agents find it through `devkit get-context harness`; by default it adds nothing to `AGENTS.md`. The opt-in preset `harness:run` (`devkit add harness:run`) adds one `AGENTS.md` line pointing at `devkit run` and this instruction (`CAP-CMP-bounded-execution`). Its source is `packages/devkit/src/devkit/harness_guide/bundle/instructions/devkit-run.md`; keep it in step with this reference. Without `devkit-agt`, `devkit run` answers with `HARNESS_COMMAND_UNAVAILABLE` ([core reference](core.md)).
 
 ## Module map
 

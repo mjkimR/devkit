@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T02:13:42.831551Z'
+status: completed
+summary: 'reconcile-reviewer re-check (nested, high) at 47f45c9: all 5 reconcile-check-01 findings settled (viewer core ownership, no history narration, ARCH-05-2 rules equal both layering tables, in-repo-bundle mirror rule, harness managed dir); 31 targets unchanged and equal the changed Living Spec files; stories and ADR no-impact holds'
+findings: []
+checks: {}
+diff_scope:
+  base: 0b29e7ffdfd5e7e66758b57651097f980931e182
+  head: 47f45c9d144b723d84d1eef8950f0d144fba25d6
+activity_effort: high

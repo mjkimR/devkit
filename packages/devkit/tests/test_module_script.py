@@ -130,7 +130,7 @@ def test_an_unknown_area_runs_no_tool(script_env: dict[str, str]) -> None:
     assert result.returncode == 2
     assert "Unknown area for devkit-agt: nosuch" in result.stderr
     available = next(line for line in result.stderr.splitlines() if line.startswith("Available areas: "))
-    assert {"gate", "worktree", "core"} <= set(available.split(": ", 1)[1].split())
+    assert {"gate", "worktree", "rules"} <= set(available.split(": ", 1)[1].split())
     assert {"__pycache__", "testsupport"}.isdisjoint(available.split(": ", 1)[1].split())
     assert not Path(script_env["CALLS"]).exists()
 

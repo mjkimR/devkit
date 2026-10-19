@@ -15,6 +15,7 @@ from devkit.advisory import AdvisoryError
 
 ROOT = Path(__file__).resolve().parents[3]
 TESTS = "packages/devkit/tests"
+DIST_TESTS = "packages/devkit-dist/tests"
 
 
 @pytest.fixture(scope="module")
@@ -39,9 +40,23 @@ def test_a_leaf_area_selects_no_unrelated_area(affected: ModuleType) -> None:
     selection = affected.select(ROOT, ["packages/devkit/src/devkit/gate/runner.py"])
     assert selection.mode == "partial"
     assert f"{TESTS}/gate" in selection.paths
-    assert {f"{TESTS}/worktree", f"{TESTS}/integration", f"{TESTS}/distribution"}.isdisjoint(selection.paths)
-    assert set(affected.SOURCE_TREE_TESTS) - {f"{TESTS}/core/test_cli.py"} <= set(selection.paths)
-    assert f"{TESTS}/core/test_cli.py" in selection.paths  # scans every source file for stdout kinds
+    assert {f"{TESTS}/worktree", f"{TESTS}/integration", f"{DIST_TESTS}/distribution"}.isdisjoint(selection.paths)
+    assert set(affected.SOURCE_TREE_TESTS) <= set(selection.paths)
+    assert f"{DIST_TESTS}/core/test_cli.py" in selection.paths  # scans every source file for stdout kinds
+
+
+def test_a_devkit_dist_area_selects_the_devkit_agt_areas_that_import_it(affected: ModuleType) -> None:
+    selection = affected.select(ROOT, ["packages/devkit-dist/src/devkit/host/configuration.py"])
+    assert selection.mode == "partial"
+    assert selection.reason == "devkit.host"
+    assert {f"{DIST_TESTS}/host", f"{TESTS}/integration"} <= set(selection.paths)
+    assert set(affected.SOURCE_TREE_TESTS) <= set(selection.paths)
+
+
+def test_a_devkit_dist_helper_carries_its_dependencies(affected: ModuleType) -> None:
+    # tests/distribution imports distsupport.distribution at module level.
+    selection = affected.select(ROOT, ["packages/devkit-dist/src/devkit/distribution/installation/engines.py"])
+    assert f"{DIST_TESTS}/distribution" in selection.paths
 
 
 def test_a_shared_helper_imported_at_module_level_carries_its_dependencies(affected: ModuleType) -> None:
@@ -53,15 +68,16 @@ def test_a_shared_helper_imported_at_module_level_carries_its_dependencies(affec
 @pytest.mark.parametrize(
     "path",
     [
-        "packages/devkit/src/devkit/core/git.py",
+        "packages/devkit-dist/src/devkit/core/git.py",
         "packages/devkit-advisory/src/devkit/advisory/error.py",
-        "packages/devkit/src/devkit/cli.py",
-        "packages/devkit/src/devkit/__main__.py",
+        "packages/devkit-dist/src/devkit/cli.py",
+        "packages/devkit-dist/src/devkit/__main__.py",
         "packages/devkit-spec/pyproject.toml",
         "pyproject.toml",
         "uv.lock",
         "packages/devkit-spec/tests/conftest.py",
         "packages/devkit/tests/testsupport/gate.py",
+        "packages/devkit-dist/tests/distsupport/distribution.py",
     ],
 )
 def test_shared_foundations_select_the_full_suite(affected: ModuleType, path: str) -> None:

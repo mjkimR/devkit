@@ -19,6 +19,7 @@ devkit packages are not hosted on PyPI. Instead, each Git tag (`vX.Y.Z`) trigger
 
 ```text
 GitHub Release Assets (vX.Y.Z):
+├── devkit_dist-X.Y.Z-py3-none-any.whl
 ├── devkit_agt-X.Y.Z-py3-none-any.whl
 ├── devkit_advisory-X.Y.Z-py3-none-any.whl
 ├── devkit_spec-<spec-version>-py3-none-any.whl
@@ -34,16 +35,23 @@ In consumer projects managed with `uv`, devkit is declared either via release wh
 
 ```bash
 uv add --dev "devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
+# Or distribution only (no harness commands or guidance), never next to devkit-agt:
+uv add --dev "devkit-dist @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-dist"
 # Optional SDD extension; uv uses the same monorepo for its base dependencies:
 uv add --dev "devkit-spec @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-spec"
 # Optional local viewer; its page is committed, so installing from Git needs no Node:
 uv add --dev "devkit-viewer @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-viewer"
 ```
 
-`uv.lock` pins the resolved commits. Devkit-agt and devkit-advisory share a version; spec, starter, catalog and
-viewer keep independent versions. The viewer's Svelte library is not a release asset: a host such as autohub
+`uv.lock` pins the resolved commits. A Git requirement on `devkit-agt` brings `devkit-dist` and `devkit-advisory` from
+the same commit (their workspace sources), and the `search` extra brings the model wheel from the release
+`packages/devkit-dist/pyproject.toml` pins. `devkit-dist`, `devkit-agt` and `devkit-advisory` share a version and are
+released in lockstep from one tag (`devkit-agt` pins the other two exactly); spec, starter, catalog and viewer keep
+independent versions. A tool installation names the owner of the `devkit` executable and adds the harness:
+`uv tool install <devkit-dist requirement> --with <devkit-agt requirement>` (`ARCH-05-3-command-plugins`). The viewer's Svelte library is not a release asset: a host such as autohub
 vendors its `npm pack` tarball from a pinned commit (`CAP-VIEW-repository-viewer`). Release-wheel installations
-name every required local package wheel explicitly; release notes include the base, SDD and viewer installation
+name every required local package wheel explicitly (a `devkit-agt` installation names the `devkit-dist` and
+`devkit-advisory` wheels too); release notes include the harness, distribution-only, SDD, viewer and tool installation
 commands.
 
 ---
@@ -59,7 +67,8 @@ When installed and synchronized, devkit establishes the following layout inside 
 │   ├── installation.json      # Machine-generated installation receipt
 │   ├── managed/               # Pristine read-only bundle asset copies
 │   │   ├── devkit/
-│   │   └── advisory/
+│   │   ├── advisory/
+│   │   └── harness/           # with devkit-agt (auto-selected harness bundle)
 │   ├── overrides/             # Local modifications to upstream bundle assets
 │   └── transient/             # Atomic transaction journals
 ├── .agents/skills/            # Projected skills shared by Codex and Antigravity

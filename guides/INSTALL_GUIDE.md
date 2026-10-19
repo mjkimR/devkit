@@ -6,7 +6,10 @@ says to ask the user.
 
 devkit distributes agent assets (instructions, skills, playbooks, rules, commit gates) from installed Python
 packages into a repository, records every file it writes in `.devkit/installation.json`, and keeps a managed block
-in the root `AGENTS.md`. It runs from the project's own `uv` environment as `uv run devkit ...`.
+in the root `AGENTS.md`. It runs from the project's own `uv` environment as `uv run devkit ...`. Two packages provide
+it: `devkit-dist` (asset distribution: sync, context, playbooks, native hooks, the `devkit` executable) and
+`devkit-agt` (the developer harness on top: repository rules, commit gates, delivery workflows, task worktrees and
+`devkit run`), which depends on `devkit-dist`.
 
 ## Reading these guides
 
@@ -60,22 +63,35 @@ When unsure, take the existing-repository route: its analysis is read-only and c
 
 ## Step 3: Package sources
 
-Install from Git. uv resolves `devkit-advisory` from the same commit automatically, and `uv.lock` pins the commit:
+Install from Git. uv resolves `devkit-dist` and `devkit-advisory` from the same commit automatically, and `uv.lock`
+pins the commit. Declare exactly one devkit requirement:
 
 ```bash
+# the full harness (the default): distribution plus rules, commit gates, workflows, worktrees and devkit run
 uv add --dev "devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
+# or distribution only, when the user wants agent assets without rules, gates or workflows
+uv add --dev "devkit-dist @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-dist"
+
 uv add --dev "devkit-catalog @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-catalog"
 ```
 
-- `devkit-agt` (required) is the CLI with its built-in bundles. `devkit-catalog` (optional) adds opt-in bundles
-  that deploy nothing until selected; add it only when a [recommended bundle](install/bundle-recommendations.md)
-  comes from it.
-- `devkit-agt` requires Python 3.12 or newer. uv downloads a suitable interpreter when needed, but the project's
+- `devkit-agt` (the default) brings `devkit-dist`, the CLI and every built-in bundle (`devkit`, `advisory` and the
+  auto-selected `harness`); never declare `devkit-dist` next to it. Take `devkit-dist` alone only when the user asks
+  for distribution without the harness: it deploys the `devkit` and `advisory` bundles and has no `devkit rules`,
+  `devkit gate`, `devkit workflow` or `devkit run` (they fail with `HARNESS_COMMAND_UNAVAILABLE`). Adding the harness
+  later replaces the `devkit-dist` requirement with the `devkit-agt` one in the same dependency group.
+- `devkit-catalog` (optional) adds opt-in bundles that deploy nothing until selected; add it only when a
+  [recommended bundle](install/bundle-recommendations.md) comes from it.
+- Both packages require Python 3.12 or newer. uv downloads a suitable interpreter when needed, but the project's
   `requires-python` must allow 3.12; the route documents say how to handle a project that does not.
-- Release wheels are an alternative only when the latest release lists `devkit_agt-*.whl` (and `devkit_catalog-*.whl`
-  when needed): check with `gh release view --repo mjkimR/devkit`. Do not mix Git and wheel sources for these packages.
-- Upgrading later: `uv lock --upgrade-package devkit-agt --upgrade-package devkit-advisory`
-  (plus `--upgrade-package devkit-catalog`), then `uv sync` and `uv run devkit sync`.
+- Release wheels are an alternative only when the latest release lists `devkit_dist-*.whl` and `devkit_agt-*.whl`
+  (and `devkit_catalog-*.whl` when needed): check with `gh release view --repo mjkimR/devkit`. A wheel installation of
+  `devkit-agt` names the `devkit-dist` and `devkit-advisory` wheels of the same release too. Do not mix Git and wheel
+  sources for these packages.
+- Upgrading later: `uv lock --upgrade-package devkit-agt --upgrade-package devkit-dist --upgrade-package devkit-advisory`
+  (plus `--upgrade-package devkit-catalog`), then `uv sync` and `uv run devkit sync`. The first upgrade from a
+  `devkit-agt` that predates `devkit-dist` follows
+  [Upgrading across the package split](install/existing-repository.md#upgrading-across-the-package-split).
 
 ## Step 4: Recommend bundles
 
@@ -93,7 +109,7 @@ Asset sync does not register MCP. Report registration, client connection and vis
 ```bash
 uv run devkit sync --check   # exit 0: the workspace matches the selection
 uv run devkit status         # exit 0: no problems in the installed state
-uv run devkit gate status    # hooks installed (Git repositories only)
+uv run devkit gate status    # hooks installed (devkit-agt in Git repositories only)
 git status --short           # what the installation changed
 ```
 
@@ -118,6 +134,8 @@ Ask whether to commit. Do not commit on your own.
 | `GATE_HOOK_INSTALL_SKIPPED` | Hooks were not installed (custom `core.hooksPath`, foreign hook layout) | Report it; the installation is otherwise complete. See the existing-repository route. |
 | `GATE_HOOKS_PATH_SET` from `devkit gate status` | `core.hooksPath` sends Git to another hooks directory, so no devkit gate runs | Report it with its `[FIX]`; change the setting only once the user agrees. |
 | `GATE_HOOK_ENTRY_MISSING` from `devkit gate status` | An enabled gate's stage has no installed devkit hook entry, so its gates do not run | Run `uv run devkit gate install` (or `uv run devkit sync`), then `uv run devkit gate status` again. If hooks were skipped (`GATE_HOOK_INSTALL_SKIPPED`), report that instead. |
-| `SELECTION_INVALID` | A selected bundle's package is not installed | Run `uv sync`, or remove the bundle with `uv run devkit remove <bundle>`. |
+| `SELECTION_INVALID` | A selected bundle's package is not installed, or a selected preset does not exist (`devkit:run` became `harness:run`) | Run `uv sync`, or remove the bundle with `uv run devkit remove <bundle>`; replace a `devkit` `run` preset with `harness = "run"` under `[presets]`. |
+| `HARNESS_COMMAND_UNAVAILABLE` | A harness command (`devkit rules`, `devkit run`, ...) in an installation with `devkit-dist` only | Tell the user; its `[FIX]` replaces the `devkit-dist` requirement with `devkit-agt` once they agree. |
+| `HARNESS_ENGINE_MISSING` from `devkit sync` or `devkit status` | Deployed rule, gate or workflow assets that nothing runs without `devkit-agt` | Report it; the assets are deployed. Add `devkit-agt` (its `[FIX]`) only when the user agrees. |
 | `RECEIPT_STALE` from `devkit sync --locked` | The committed receipt does not match the installed packages | Run a plain `uv run devkit sync` and include its changes in the commit. |
 | uv reports `requires-python` incompatible | The project allows Python below 3.12 | Stop and ask the user (see the route document). |

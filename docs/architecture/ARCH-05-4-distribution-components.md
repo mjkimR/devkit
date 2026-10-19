@@ -40,7 +40,7 @@ Commands, configuration and codes are in the [reference](../development/referenc
                                   │ (importlib discovery)
                                   ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│                   devkit (Python CLI: devkit)                    │
+│              devkit-dist (Python CLI: devkit)                    │
 │  - Entry-point & resource discovery (`importlib.resources`)      │
 │  - Manifest validation, inventory planning & preset selection    │
 │  - Transaction engine, advisory locking & write-ahead journal    │
@@ -71,7 +71,8 @@ own dependencies through wheels.
 
 ## 3. Module Layout
 
-The code lives in `packages/devkit/src/devkit/distribution/` and imports only `devkit.core` (frontmatter grammar,
+The code lives in `packages/devkit-dist/src/devkit/distribution/` (the `devkit-dist` wheel, which never depends on
+`devkit-agt`) and imports only `devkit.core` (frontmatter grammar,
 typed receipt reader, safe relative paths, project root discovery), `devkit.advisory`, `devkit.search` for
 playbook search and `devkit.host` for native hook contracts. Modules import each other
 by absolute path (`devkit.distribution...`), never relatively. The library surface is exported from
@@ -94,11 +95,17 @@ is the JSON the command prints.
   - `transaction.py`: project lock, write-ahead journal, atomic replacement (also used to save
     `.devkit/config.toml`), recovery, `prune_empty_parents`.
   - `receipt.py`: strict receipt reading (`devkit.core.receipt` plus ownership rules) and serialization.
-  - `config.py`: `.devkit/config.toml` reading, selection resolution, edits checked before a sync and saved after it,
-    devkit's keys and common workflow/worktree tables in the commented template and `refresh_config_template` (`devkit config template`), and `preview_config_template` (`--print`).
-  - `config_template.py`: the commented template's text: devkit's keys after the last top-level key, the
-    `devkit.config_template` extension point for `[tool.<name>]` tables at the end, append-only.
-  - `discovery.py`: installed bundles via `devkit.bundles`; built-in and auto-selected bundles.
+  - `config.py`: `.devkit/config.toml` reading (the closed field list with the reserved harness tables
+    `RESERVED_TABLES` passed through unread), selection resolution, edits checked before a sync and saved after it,
+    devkit's keys in the commented template and `refresh_config_template` (`devkit config template`), and
+    `preview_config_template` (`--print`).
+  - `config_template.py`: the commented template's text: devkit's keys after the last top-level key, then the
+    `devkit.config_tables` extension point for the reserved tables (devkit-agt registers `workflow` and `worktree`)
+    and the `devkit.config_template` extension point for `[tool.<name>]` tables at the end, append-only.
+  - `discovery.py`: installed bundles via `devkit.bundles`; built-in bundles (shipped by `devkit-dist` or
+    `devkit-agt`) and auto-selected bundles.
+  - `engines.py`: the `HARNESS_ENGINE_MISSING` notice for deployed rule, gate or workflow assets when no
+    `devkit.commands` entry point named after their engine is installed; it reads entry point names only.
   - `host_hooks.py`: shared host configuration planning inside the sync transaction; exact owned groups are
     recorded in the receipt. Contracts: `CAP-HOST-lifecycle-observation`.
   - `inventory.py`: the desired state (`Inventory`): managed copies, projections, rendered role contracts,
@@ -112,7 +119,10 @@ is the JSON the command prints.
   - `extensions.py`: the `devkit.post_sync` extension point.
 - `errors.py`: the `DistributionError` hierarchy, one class per code, and the sync notice classes
   ([codes](../development/reference/distribution.md#error-codes), [notices](../development/reference/distribution.md#sync-output-and-notices)).
-- `cli/`: the distribution commands, listed in `COMMANDS`; the root `devkit` group loads each one lazily by name. Output and exit codes
+- `cli/`: the distribution commands, listed in `COMMANDS`; the root `devkit` group of `devkit-dist` loads each one
+  lazily by name (`ARCH-05-3-command-plugins`).
+- `guide/`: the data-only area of the built-in `devkit` bundle (distribution guidance only); the `harness` bundle
+  with the guidance for rules, gates, workflows and `devkit run` is `devkit.harness_guide` in `devkit-agt`. Output and exit codes
   follow `ARCH-08-1-agent-output` and the
   [reference conventions](../development/reference/distribution.md#1-quick-start).
 

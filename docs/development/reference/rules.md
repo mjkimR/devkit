@@ -243,12 +243,12 @@ checked paths and settings.
 
 ### Built-in advisory bundle
 
-The auto-selected `advisory` bundle (`devkit.advisory_guide`) ships one rule in its `python` preset
+The auto-selected `advisory` bundle (`devkit.advisory_guide`, shipped by `devkit-dist`) ships one rule in its `python` preset
 (`uv run devkit add advisory:python`), loaded from the receipt like the authoring rules:
 
 | Rule | Phase, severity | Checks |
 | --- | --- | --- |
-| `RULE-advisory-unique-code` | linter, error | a code is declared by one `AdvisoryError` class and its subclasses, in class bodies or through `code=` at calls; the workspace's Python files are read statically (settings `bases`, `exclude`) ([guide](../../../packages/devkit/src/devkit/advisory_guide/bundle/rules/unique_code/guide.md)) |
+| `RULE-advisory-unique-code` | linter, error | a code is declared by one `AdvisoryError` class and its subclasses, in class bodies or through `code=` at calls; the workspace's Python files are read statically (settings `bases`, `exclude`) ([guide](../../../packages/devkit-dist/src/devkit/advisory_guide/bundle/rules/unique_code/guide.md)) |
 
 ## Library
 

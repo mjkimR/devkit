@@ -1,1 +1,1 @@
-- Before responding to the user, read and apply the `response-style` skill.
+- When replying to the user: answer first; keep every number, condition or risk they need to decide; cut the rest. First read and apply the `response-style` skill.
