@@ -1,0 +1,32 @@
+kind: worker
+stage: integration-approval
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T08:16:03.453813Z'
+status: completed
+summary: 'Completed specify through final-change-report for Codex native workers: real emulated/workspace-write projections, trust-aware generic fallback, absolute paths, per-operation approvals, truthful partial failures and unchanged Host validation. Independent review-01 and reconcile-check-01 have no findings; feedback and final report are committed. Stop before dev-integration; Host full suite and final validation remain pending.'
+findings: []
+assumptions:
+- Native collaboration.spawn_agent generic Development worker emulates the effective managed contract under explicit accepted experiment; nested named code/reconcile roles also use emulated boundaries, read-only absolute scopes and unchanged HEAD checks.
+- Medium activity-effort; accepted design and handoff premises matched base; no repeat direction approval or scope extension needed. No source changed after independent code review.
+- Every necessary sibling/source/registry/sync/Git mutation and verification requested its own narrowly scoped approval with explicit workdir; no broad persistent prefix or host/trust setting change.
+- Existing entrypoints cover both workers; caller-procedure/test/receipt candidates rejected as mechanical joins. Feedback deduplicated FB-native-worker-command-scoped-approvals and FB-verification-sync-requires-network without editing their files.
+unverified_areas:
+- Host full suite, final cumulative ancestry/boundary/clean-base validation and dev-integration remain pending; base checkout was not modified by this worker.
+- Fresh-host named-role loading, denied approvals, failed emergency preservation and wider host/version behavior were not live verified; deterministic tests establish instruction branches, not platform enforcement.
+checks:
+  tests: PASS 125 role, real projection/renderer and bundle-budget tests without warnings
+  lint: PASS just lint-check devkit-spec; ruff check and format
+  types: PASS just check devkit-spec; zero errors or warnings
+  build: PASS just smoke; all wheels and consumer scenarios passed
+  rules: PASS cumulative governance with zero errors/warnings; normal stage commits gated
+  review: PASS envelopes/review-01.yaml independent named code-reviewer; no findings
+  reconcile: PASS envelopes/reconcile-check-01.yaml independent named reconcile-reviewer; no findings; resolved sole delivery target
+  sync: PASS normal source sync and receipt committed; actual worker TOMLs valid; 224 paths ok/no drift/errors; sync-check unchanged
+  feedback: PASS observed coverage; 0 new, 2 duplicates; no automatic approval-review rejection
+  optional_scope_query: SKIP default-sandbox shared-lock access unavailable; stopped without retry; required approved scope updates passed with overlaps=0
+  full_repository_suite: SKIP Host pending once on returned reviewed final HEAD before integration
+diff_scope:
+  base: 6bbf88f55d836b675600389f2784041d35232535
+  head: bda283f139cf805eed3c5f26f9179fbd7c387bbc
+activity_effort: medium
