@@ -2,7 +2,7 @@
 
 An agent branches on codes and a person looks them up, so a code that exists only in the source is a contract
 nobody can read. Codes are found where they are defined: as a class attribute (``code = "X"``), a keyword
-argument (``code="X"``) or a ``*_CODE`` constant.
+argument (``code="X"``) or a ``*_CODE`` constant. A rule's own ``tests/`` under the sources hold fixture codes only.
 """
 
 from __future__ import annotations
@@ -20,6 +20,8 @@ def _defined_codes() -> dict[str, set[str]]:
     codes: dict[str, set[str]] = {}
     for source in SOURCES:
         for path in source.rglob("*.py"):
+            if "tests" in path.relative_to(source).parts:
+                continue
             for match in CODE.finditer(path.read_text(encoding="utf-8")):
                 codes.setdefault(match.group(1), set()).add(str(path.relative_to(source)))
     return codes

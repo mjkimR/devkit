@@ -284,7 +284,7 @@ A consumer never executes `fix` automatically outside `AUTO` (and `INTERACTION` 
 When writing an advisory in any language or rule format:
 
 - [ ] **Level**: Did the operation fail or refuse (`ERROR`), succeed with something the user must learn (`WARNING`), or succeed with something worth knowing (`NOTICE`)? Would a log line do?
-- [ ] **Headline**: Does `code` uniquely identify the condition without string matching? Is the message one concise sentence?
+- [ ] **Headline**: Does `code` uniquely identify the condition without string matching (in Python, `RULE-advisory-unique-code` refuses two unrelated classes declaring one code)? Is the message one concise sentence?
 - [ ] **`[ACTION]`**: For an error, does the derived mode match the intended directive and distinguish a blind retry from a corrected rerun?
 - [ ] **`[TARGET]`**: Does it point to the exact file path, flag name, or line?
 - [ ] **`[FIX]`**: If remediation is possible, is it exact and copy-pasteable?
