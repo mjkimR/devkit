@@ -42,7 +42,8 @@ for which drafts qualify, split into what a tool can check and what only the Hos
 - **Checked by the tool**, all at the moment of acceptance: `status: draft`; an effective accepted
   `gate:plan-intent`; no `needs_decompose: true`; no `supersedes`; no local or fetched `plan-<slug>`; `task_kind` is
   `feature` or `bugfix`; no envelope hold (an unresolved problem, a pending question or a malformed envelope). The
-  conditions of the chosen path (A2) are checked too: the checkout is on the base branch. The
+  conditions of the chosen path (A2) are checked too: the checkout is on the base (no detached `HEAD`, no `plan-*`
+  or `dev-*` branch, no branch with a recorded `devkitBase`). The
   same checks run read-only first, so a refusal leaves nothing behind; a missing `plan-intent` is reported there as a
   pending condition, separate from the blocking ones, because one request may ask for both decisions (the user's
   answer to `gates-in-one-exchange`); the accept command itself still requires it recorded.

@@ -2,11 +2,11 @@
 
 Planning material for `PROP-draft-direct-acceptance` (2026-10-19, `activity-effort` high). It compares where and when
 the user's acceptance of a settled draft is recorded, and the alternative of not accepting at all. Engine facts are in
-[engine evidence](engine-evidence.md). Revised twice: after `challenger-01.yaml`, which showed that the first version
-omitted the rows where acceptance outside Development wins, and after `challenger-02.yaml`, which showed that an
-acceptance counted as Backlog work under one policy and as a Planning commit under another contradicts 01 §4.7 and
-03 §1/§4; that hybrid (A1) is replaced by A3. A third pass (`challenger-03.yaml`) added the status-quo baseline, which
-shows that A3 saves little. A fourth pass (`challenger-04.yaml`) showed that limiting A2 to `pull_request = auto`
+[engine evidence](engine-evidence.md). Revised after each review pass: after `challenger-01.yaml`, which showed that the
+first version omitted the rows where acceptance outside Development wins, and after `challenger-02.yaml`, which showed
+that an acceptance counted as Backlog work under one policy and as a Planning commit under another contradicts 01 §4.7
+and 03 §1/§4; that hybrid (A1) is replaced by A3. A third pass (`challenger-03.yaml`) added the status-quo baseline,
+which shows that A3 saves little. A fourth pass (`challenger-04.yaml`) showed that limiting A2 to `pull_request = auto`
 contradicts the Backlog policy exemption (01 §5.1, 03 §1, §3, §4); A2 is now independent of policy, like all other
 Backlog work, with the auto-only variant kept as A2a.
 

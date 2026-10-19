@@ -58,33 +58,42 @@ acceptance on the base under every policy, and allowed one request to ask both g
     whether `collect-feedback` holds, is switched off or is skipped by policy; on refusal it restores the status and
     reports the evaluation's unmet checks and hold reasons, never a guessed cause;
   - with `--direct` it also repairs a proposal already `accepted` that has no effective `gate:plan-accept` and no
-    `worker` envelope (no Planning ran), applying every direct-acceptance check except the status; with a `worker`
-    envelope the plain form repairs it as a Planning acceptance. A repair, like every acceptance, follows the user's
-    explicit acceptance of a full request;
+    `worker` envelope (no Planning ran), applying every direct-acceptance check except the status, on the base like a
+    direct acceptance. A repair, like every acceptance, follows the user's explicit acceptance of a full request.
+    There is no repair of a Planning acceptance (a `worker` envelope exists): every accepted proposal today has its
+    gate record, and once the command is the only writer only a hand edit can produce that state, so the guard's
+    refusal stands and the Host reports it to the user, who decides the recovery (for example reverting the hand
+    edit); the plain form keeps its precondition (in review, on `plan-<slug>`);
   - `--check` runs every check read-only and writes nothing; the command never records `plan-intent`, never commits,
     merges or runs the handoff.
   `reject` stays the follow-up 01 §10 plans.
 - **Where it runs (A2, the user's choice)**: a direct acceptance is Backlog work under every policy, like Backlog's
-  other changes (01 §5.1, 03 §1), committed on the base checkout only (another slug's activity branch is refused).
+  other changes (01 §5.1, 03 §1), committed on the base checkout only: the command refuses a detached `HEAD`, any
+  `plan-*` or `dev-*` branch (the slug's own included) and any branch with a recorded `devkitBase`, so any branch
+  other than the base is refused.
   Before proposing it the Host settles that it can push to the base (or that there is no remote); a protected base means
   Planning instead, and a stranded acceptance commit is undone with `git revert`, never a reset. The Host runs
-  `--check`, sweeps its own acceptance session (a new `feedback` envelope at `collect-feedback`; zero observations is a
-  valid PASS), runs the command and commits the result on the base. Under `pull_request = required` the request states
+  `--check`, sweeps its own acceptance session only once the user has accepted, just before the command (under the
+  project's sweep policy: a new `feedback` envelope at `collect-feedback`, where zero observations is a valid PASS;
+  with the stage off, none; under requested-only capture, the policy-skip PASS), runs the command and commits the
+  result on the base. Under `pull_request = required` the request states
   that the direction gets no PR review, and the user may choose Planning for that draft instead.
 - **Both gates in one request**: for an eligible draft without a recorded `plan-intent`, one request may ask both
   decisions, each named in full (the intent with goal, scope, verification, `task_kind`, depth and the effort hints;
   the acceptance with "Planning: skipped" and the eligibility reason), and the user answers each explicitly; neither
   is inferred from the other. The Host then records `plan-intent` with `devkit workflow answer --by user`, sweeps,
-  runs `accept --direct` and commits all of it in one Backlog commit. If the user accepts only the intent, or the
-  command refuses, the commit holds the draft with its intent record, which Planning starts from.
+  runs `accept --direct` and commits all of it in one Backlog commit. If the user accepts only the intent, the Host
+  does not sweep and the commit holds the draft with its intent record, which Planning starts from; if the command
+  refuses after the sweep, the sweep envelope is removed before that commit, so Planning sweeps for itself.
 - **No run**: a direct acceptance has no Planning run, no `activity-effort` and no `worker` envelope; its sweep covers
   the acceptance session, and freshness stays an executor procedure as for every Planning run.
 - **Handoff guard**: for a bundle bound to `sdd-proposal`, `devkit spec proposal handoff` also requires the effective
   accepted `gate:plan-accept` record (the rule it already uses to carry it), refusing with a code of its own (working
   name `SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED`, `INTERACTION`): its directive is to stop and ask the user, never to
-  record an acceptance unasked. On the user's explicit acceptance the Host repairs it where the proposal lives with
-  `accept` (on the base for a direct acceptance), merges the base into `dev-<slug>` and reruns the handoff; a worker
-  or Cloud Agent reports it as a problem instead. A single-file or unbound proposal, which can carry no gate record,
+  record an acceptance unasked. For a proposal without a `worker` envelope, on the user's explicit acceptance the
+  Host repairs it on the base with `accept --direct`, merges the base into `dev-<slug>` and reruns the handoff; with
+  a `worker` envelope it reports the refusal to the user (no repair command); a worker or Cloud Agent reports it as a
+  problem instead. A single-file or unbound proposal, which can carry no gate record,
   keeps the status-only rule.
 - **The note survives the handoff**: carried gate records keep the proposal's note after `PROP-<slug>`
   (`PROP-<slug>: <note>`) instead of replacing it, so a spec shows that its direction was accepted without Planning.
@@ -96,12 +105,13 @@ acceptance on the base under every policy, and allowed one request to ask both g
 
 ## 5. Consequences
 
-- A partial direct acceptance cannot be handed off, and a bound Planning acceptance whose gate record is missing is
-  caught too and can be repaired.
+- A partial direct acceptance cannot be handed off and can be repaired; a bound Planning acceptance whose gate record
+  is missing is caught too and goes to the user.
 - Every party that records an acceptance (the Host locally, autohub) stops editing the `status:` line by hand; the
   `sdd-proposal` gate rules and the `spec` skill name the command.
 - Tests that hand off a bound proposal with only `status: accepted` must record the gate; tests of the carried note
   change.
 - It extends `ADR-roadmap-in-repository`, whose interim rule ("until a direct-acceptance path exists, a small draft
-  runs Planning at `low`") it ends; that ADR stays unedited (`docs/decisions/` is outside this proposal), and the ADR
-  promoted from this record names it.
+  runs Planning at `low`") it ends, and qualifies `ADR-run-records-and-activity-branches` (every proposal activity on
+  `plan-<slug>` or `dev-<slug>`): a direct acceptance is Backlog work, and the proposal has no Planning activity.
+  Both ADRs stay unedited (`docs/decisions/` is outside this proposal); the ADR promoted from this record names them.

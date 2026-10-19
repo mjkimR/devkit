@@ -13,6 +13,7 @@ boundaries:
   owns:
     - capabilities/delivery/
     - capabilities/harness/
+    - stories/delivery/
   excludes:
     - docs/decisions/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
@@ -102,14 +103,15 @@ Seven ways, the status quo included, were compared ([options](materials/options-
 - **A2. Backlog acceptance on the base** (chosen): in Backlog the Host proposes direct acceptance for an eligible
   draft (read-only `--check` first; a missing `plan-intent` shows as pending when the request asks for both) with the
   eligibility reason, `task_kind` and the effort hints, and under `pull_request = required` the note that the
-  direction gets no PR review. On the user's explicit acceptance it sweeps its own session (`collect-feedback`), runs
+  direction gets no PR review. On the user's explicit acceptance it sweeps its own session (`collect-feedback`, under the
+  project's sweep policy), runs
   `devkit spec proposal accept <slug> --by user --direct --note "<reason>"` on the base checkout and commits the result
   as Backlog work, under every policy like Backlog's other changes. Development later starts `dev-<slug>` and runs
   `devkit spec proposal handoff` as for any accepted proposal, in any mode (autohub included). When the draft has no
   recorded `plan-intent`, the same request may ask both gates, each answered explicitly, and the Host records
-  `plan-intent` first. It saves the branch,
-  its merge or PR, the `reviewing` commit, the worker record and the question round; the saving per configuration is
-  in the comparison.
+  `plan-intent` first. It saves the branch, its merge or PR, the `reviewing` commit, the worker record and the question
+  round; the saving per configuration is in the comparison.
+
 Not chosen:
 
 - **A2a. A2 under `pull_request = auto` only**: keeps the Planning PR under `required`, but needs a rule of its own and
@@ -137,7 +139,8 @@ Beside direct acceptance:
 
 - **Session reclassification** (`PADR-session-reclassification-of-a-queued-draft`): when the user picks a queued draft
   whose work is `session` depth, the Host may propose doing it as a `session` task with the reason; on the user's
-  explicit decision, a draft without PADRs (and not marked `needs_decompose`, superseding or a depth escalation) is
+  explicit decision, with base push access settled first, a draft without PADRs (and not marked `needs_decompose`,
+  superseding or a depth escalation) is
   deleted in one Backlog commit on the base that preserves its open feedback and names the decision, and the session
   starts through inline Planning. No command is added; the lowering rule states this as its one exception besides a
   proposal's handoff.
@@ -150,8 +153,8 @@ Development here, the workbench updates (A2, chosen, and the session reclassific
 - 01 §5.1 and Q55: replace "accepting without Planning is a follow-up (`PROP-draft-direct-acceptance`)" and "small
   drafts run Planning at `low`" with the direct acceptance: Backlog may accept an eligible draft, on the base checkout,
   outside the worktree and PR policies like its other work.
-- 01 §4.7: a direct acceptance is the one proposal status change Backlog makes on the base without a merge, beside the
-  draft edits it already makes; Planning and Development keep their own branches.
+- 01 §4.7 and Q9: a direct acceptance is the one proposal status change Backlog makes on the base without a merge,
+  beside the draft edits it already makes; Planning and Development keep their own branches.
 - 01 §1 (activity table and diagram) and §4.4 table: Backlog may give `plan-accept` for an eligible draft; `accepted`
   may be set from `draft` by the Host at a direct acceptance.
 - 01 §6.2 (or §5): the direct acceptance: eligibility, the read-only check, base push access settled first, the sweep
@@ -174,15 +177,24 @@ Development here, the workbench updates (A2, chosen, and the session reclassific
   new rows for the handoff guard and the carried note.
 - 03 §3 (Backlog row): a direct acceptance commits on the base checkout, not on another activity branch; 03 §4 (last
   bullet): a direct acceptance is Backlog work and takes no PR, also under `required`.
-- No change to 01 §5.2, §7.1, §7.4 or 03 §1.
+- 03 §1 (the definition of Backlog work): a direct acceptance and the reclassification deletion are Backlog work.
+- No change to 01 §5.2, §7.1 or §7.4.
 - After the strategy layer is updated, Development checks its text against this proposal's PADRs and reports any
   difference before changing code.
 
 ### 3.3 Impact in this repository
 
-- `devkit-spec` code: `devkit spec proposal accept` (the Planning form, `--direct`, `--check`, the repair) and its
-  library function; the handoff guard for bound bundles with its own code (`errors.py`); the carried gate note; tests
-  for each, and existing handoff tests that rely on the status alone.
+- `devkit-spec` code: `devkit spec proposal accept` (the Planning form, `--direct`, `--check`, the `--direct` repair,
+  the base-checkout check) and its library function; the handoff guard for bound bundles with its own code
+  (`errors.py`); the fix text of `SPEC_PROPOSAL_NOT_APPROVED`, which today tells the agent to set `status: accepted`
+  by hand and record the gate wherever it is (it names the command: a direct acceptance on the base, or Planning); the
+  carried gate note; tests for each, and existing handoff tests that rely on the status alone.
+- `CAP-HARN-command-mount` (the command table) and `CAP-HARN-agent-guidance` (the skill table's commands) list
+  `devkit spec proposal accept`; the `spec-orchestrate` skill (step 4) records acceptances with the command instead of
+  by hand.
+- `US-incubate-and-hand-off-a-proposal` (`docs/stories/delivery/`): scenario 1 hands off on the status alone and
+  scenario 5 carries the note as `PROP-<slug>`; both follow the guard and the carried note, and the story names the
+  direct acceptance beside acceptance after Planning.
 - `CAP-DLV-proposal-incubation`: the approval rule (rule 2), rule 12 (the carried note), rule 13 (Backlog may accept an
   eligible draft, and may delete a draft for a session reclassification on the user's decision), the command, its codes
   in the code table and its output.
@@ -205,8 +217,10 @@ Development here, the workbench updates (A2, chosen, and the session reclassific
 - The lowering rule's other statements: the bundle `AGENTS.md` ("never lowered except by a proposal's handoff") and
   `CAP-HARN-agent-guidance` (the Host "never lowers it", and its Backlog, `spec-next` and skill-table passages) name
   the session reclassification.
-- `ADR-roadmap-in-repository` keeps its interim "small drafts run Planning at `low`" rule as history; the ADR promoted
-  from `PADR-direct-acceptance-command-and-handoff-guard` names it as the decision it extends.
+- `ADR-roadmap-in-repository` keeps its interim "small drafts run Planning at `low`" rule as history, and
+  `ADR-run-records-and-activity-branches` its rule that every proposal activity runs on `plan-<slug>` or
+  `dev-<slug>`; the ADR promoted from `PADR-direct-acceptance-command-and-handoff-guard` names the first as extended
+  and the second as qualified.
 - The proposal template's lifecycle line (`proposals/scaffold.py`): it says acceptance merges the Planning branch;
   make it hold for a direct acceptance.
 - `PROP-direct-planning-procedure` also edits the `spec` skill; whichever lands second rebases its text.

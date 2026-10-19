@@ -49,7 +49,9 @@ low to save cost. The user chose to allow it on their explicit decision (`answer
 
 - **Who and when**: in Backlog (`direct`), when the user picks a queued draft to start now, the Host may propose doing
   it as a `session` task, with the reason the work meets the `session` criteria; only the user's explicit decision
-  allows it, and the Host never deletes silently. Workers and Cloud Agents never do it.
+  allows it, and the Host never deletes silently. Workers and Cloud Agents never do it. Before proposing it the Host
+  settles that it can push to the base (or that there is no remote), as for a direct acceptance; a protected base
+  keeps the draft on its normal route.
 - **Conditions**: the draft is `status: draft` with no local or fetched `plan-<slug>` (`devkit spec proposal check`,
   fetch first, as for every deletion) and has no `PADR-*.md` in `decisions/` (its workflow gate records do not count).
   The `session` criteria cannot hold for a draft marked `needs_decompose` (not yet classified, `classification.md` §1),
@@ -62,15 +64,18 @@ low to save cost. The user chose to allow it on their explicit decision (`answer
   answered explicitly.
 - **The deletion** is one Backlog commit on the base checkout, before the session starts, outside the worktree and
   PR policies like other Backlog deletions. This record is its authority. In the same commit it preserves open
-  feedback and strikes through incoming references, promoted feedback dispositions included, per feedback retirement
-  (steps 1 to 4), so nothing dangles and a later `spec` Unit under the same slug is never read as its handoff; the
-  session may reuse the slug. The message states the user's decision and the reason ("depth proposal -> session on
-  the user's decision: <reason>"). When the base cannot be pushed, the deletion travels on the session's
-  `dev-<slug>`, as 01 §5.1 already allows for Backlog commits.
+  feedback and strikes through incoming references on the base, promoted feedback dispositions included, per
+  feedback retirement (steps 1 to 4), so nothing dangles. The message states the user's decision and the reason
+  ("depth proposal -> session on the user's decision: <reason>").
+- **A new slug**: the session, its `dev-<slug>` and any Unit a later raise adds use a slug other than the deleted
+  draft's (01 §7.4: a reused slug blurs the work), so a `PROP-<slug>` mention merged later from another branch is
+  never rewritten as a handoff.
 - **The session** then starts through inline Planning (01 §6.1): its intent is agreed in the conversation, since the
   draft's `plan-intent` record goes with the draft, and it follows the `session` rules, raising to `spec` when a
-  lasting design record, a contract change or a Living Spec change turns out to be needed. If it ends without
-  integrating, the Host proposes filing the request again as a new draft.
+  lasting design record, a contract change or a Living Spec change turns out to be needed. Its final report names the
+  deletion commit. If it ends without integrating, the recovery is `git revert` of the deletion commit, on the user's
+  decision, which restores the draft with its intent record, milestone, feedback and references (01 §7.2: undo by
+  revert, never a reset).
 - **Scope of the exception**: it is the only lowering besides a proposal's handoff, and it applies only to a queued
   draft before Planning; a proposal in review or accepted, and a spec Unit, are never lowered.
 - No command or tool check is added: the deletion uses the existing check, the conditions are visible to the Host, and
@@ -83,5 +88,6 @@ low to save cost. The user chose to allow it on their explicit decision (`answer
   `CAP-HARN-agent-guidance` and the `CAP-DLV-delivery-workflows` non-goal on depth changes; `backlog.md` grants the
   deletion, and `feedback-retirement.md`, `CAP-DLV-proposal-incubation` §3.1, the `sdd-proposal` feedback paragraph
   and 01 §6.2 list it among the deletions that preserve open feedback.
-- A request deleted this way leaves no Unit: its record is the deletion commit and the session's final report.
+- A request deleted this way leaves no Unit: its record is the deletion commit and the session's final report, and a
+  revert of that commit is its only way back to the queue.
 - A milestone may lose a member at pickup; the request shows it, so the user can review the milestone.
