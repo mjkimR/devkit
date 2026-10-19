@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T00:31:04.467768Z'
+status: completed
+summary: 'Swept this Development run (handoff, specify/plan/tasks, build, two code-review rounds, two reconcile checks) and the open backlog: carried FB-direct-planning-procedure-location from Planning; recorded FB-skeleton-read-before-rewrite, FB-smoke-response-style-path and FB-generated-check-uncommitted-registry; no duplicates.'
+findings: []
+checks:
+  swept: PASS recorded=3 duplicates=0
