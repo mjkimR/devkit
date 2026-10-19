@@ -66,18 +66,22 @@ class Declaration:
 ```
 
 - **Module names**: path parts after the last `src` segment, else from the workspace root; `pkg/__init__.py` is `pkg`.
-- **Symbols per module**: top-level `class`, top-level `NAME = "literal"`, `import a.b [as c]`, `from [.]m import x [as
-  y]`. A reference `(module, name)` resolves to a class or constant defined there, follows a `from` import of the same
+- **Symbols per module**: top-level `class`, top-level `NAME = "literal"` and `NAME: T = "literal"`, `import a.b [as
+  c]`, `from [.]m import x [as y]`. Imports inside a function bind names in that function and the functions nested in
+  it only, and are looked up before the module's bindings when a call there is resolved. A reference `(module, name)` resolves to a class or constant defined there, follows a `from` import of the same
   name through re-exports (cycle-guarded), and otherwise stays external as `"<module>.<name>"`. A dotted base `m.X`
   resolves `m` through `import` aliases first. Relative imports resolve against the module's package.
 - **Advisory closure**: a class is advisory when a base resolves to a configured base name (each configured name is
   itself resolved, so `devkit.advisory.AdvisoryError` maps to the class in `devkit.advisory.error` inside this
   repository and stays external in a consumer) or to an advisory class.
 - **Declarations**: class-body `code` assignments of advisory classes; `code=` keywords of calls whose callee is an
-  advisory class or `<advisory class>.<attribute>` (a classmethod factory). Values are string literals or names
+  advisory class or `<advisory class>.<attribute>` (a classmethod factory, also on a configured base outside the
+  workspace); a call declaration is reported at the call's line. Values are string literals or names
   resolving to module constants; anything else is skipped (non-goal 2).
-- **Collision**: per code, owners are reduced to roots (owners that do not derive from another owner). One root is
-  accepted; more than one reports every declaration whose owner is a root, in a targeted file, naming the other roots.
+- **Collision**: per code, an owner covers the owners derived from it, except that an owner declaring the code only
+  at calls never covers one declaring it in its class body (a code passed when raising a base must not hide two
+  subclasses). One uncovered owner is accepted; more than one reports every declaration of an uncovered owner, in a
+  targeted file, naming the other uncovered owners.
   The base class's own `code` (`GENERAL_ERROR`) participates like any other.
 - **Message**: `Code "<CODE>" is also declared by <qualname> (<file>:<line>)[, ...]; a code names one condition`.
   Remediation: give the condition its own code, or derive the class from the one that owns the code.
