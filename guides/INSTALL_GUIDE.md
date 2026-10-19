@@ -84,9 +84,9 @@ against each opt-in bundle, present the recommendations with their evidence, and
 
 ## Optional: MCP connection
 
-When Codex native integration tools are wanted, follow [MCP onboarding](install/mcp.md) after bundle selection.
-Include its optional dependency and user-scoped registration in the approved installation plan. Asset sync does
-not register MCP. Report registration, client connection and visible approval UI as separate observations.
+When Codex or Claude Code native integration tools are wanted, follow [MCP onboarding](install/mcp.md) after
+bundle selection. Include its optional dependency and user-scoped registration in the approved installation plan.
+Asset sync does not register MCP. Report registration, client connection and visible approval UI as separate observations.
 
 ## Step 5: Verify and report
 

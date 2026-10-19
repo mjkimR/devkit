@@ -1,7 +1,7 @@
 ---
 id: CAP-HOST-lifecycle-observation
 title: "Host Lifecycle Observation"
-summary: "Host lifecycle hook dispatch, MCP transport, explicit Codex MCP registration, and read-only installation diagnostics."
+summary: "Host lifecycle hook dispatch, MCP transport, explicit Codex MCP registration (Claude Code registers with its own CLI), and read-only installation diagnostics."
 area: host
 status: active
 entrypoints:
@@ -166,7 +166,9 @@ directory. Reinstalling can expose an older timestamp, so compare it with the cu
 
 ## 8. Explicit MCP onboarding
 
-Installation routes lead to optional Codex MCP onboarding independently of asset sync. `host mcp setup` registers
+Installation routes lead to optional Codex or Claude Code MCP onboarding independently of asset sync. The setup
+adapter is Codex-only: Claude Code registers the `command` and `args` that `host mcp config` prints with its own
+`claude mcp add`, and `host mcp status` does not inspect that registration. `host mcp setup` registers
 server `devkit` through Codex CLI in user scope, using the running Python and selected retained base. It preflights
 the SDK/server import and refuses linked-worktree or submodule workspace/runtime paths. The runtime and checkout
 must remain available after integration cleanup. No package, trust or permission setting is installed or changed

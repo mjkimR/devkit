@@ -1,7 +1,7 @@
 ---
 id: CAP-INT-mcp-services
 title: "Scoped MCP Services"
-summary: "Four scoped local integration MCP tools with one native approval, concise default results, detailed inspection and resumable cleanup."
+summary: "Four scoped local integration MCP tools with one native approval in the Codex and Claude Code terminal CLIs, concise default results, detailed inspection and resumable cleanup."
 area: integration
 status: active
 entrypoints:
@@ -18,7 +18,9 @@ code quick reference: [reference.md](../../development/reference/integration.md)
 
 ## 1. Supported path
 
-The first path is an interactive Codex CLI MCP tool call under `dev-integration=ask`. `integration_integrate`
+The supported paths are interactive MCP tool calls under `dev-integration=ask` from two terminal hosts: the Codex
+CLI and the Claude Code terminal CLI (verified in `MAT-claude-terminal-mcp-approval-evidence`). The server checks the
+client's advertised form capability, not a host name. `integration_integrate`
 prepares the request, awaits form elicitation, and continues into execution in the same call. After reporting verified work, call it directly; no separate conversational approval or preceding integration_prepare call is required. The native affirmative form supplies local dev-integration ask approval and exact execution authority together. A workflow waiting on that gate permits the approval-requesting call; --given dev-integration is asserted only after native acceptance. Only native
 `action=accept` with a boolean `approve=true` grants authority. The field defaults to false. Submission without
 approval, decline, cancellation, unavailable form capability and transport failure perform no integration changes.
@@ -55,7 +57,11 @@ dispatch. Required-PR policy refuses the local path. Worktree/PR `auto` does not
 Project trust, hook trust, MCP tool approval, the business integration confirmation and host filesystem/network
 permissions are distinct. This service never changes host permission settings. Native tool annotations describe
 real write/destructive effects; they do not substitute for the integration form. Count actual prompts separately
-when validating a Codex session. SDK transport tests do not establish interactive UI or permission behavior.
+when validating a host session. SDK transport tests do not establish interactive UI or permission behavior.
+Unverified for Claude Code: its auto mode and other permission modes, the number of prompts per call, and the
+Claude Desktop, VS Code extension and Agent SDK surfaces, where upstream reports describe elicitation declined
+without a visible form (`MAT-native-approval-host-comparison`). Treat those surfaces like any client without
+working form capability.
 
 ## 2. Request and state validation
 
@@ -170,11 +176,15 @@ runtime, then run `devkit host mcp setup --host codex` there for explicit user-s
 connection and approval UI unknown. Matching entries are unchanged; different registrations require explicit
 `--replace`. Setup refuses linked-worktree/submodule workspace or runtime paths. Sync does not register MCP.
 The read-only `devkit host mcp config --format json -w <base>` still prints exact add/get/remove commands and TOML.
-Reconnect the client and verify tool discovery and visible confirmation separately. See `CAP-HOST-lifecycle-observation`
-and [Host MCP](../../development/reference/host.md#mcp-services).
+Claude Code has no devkit setup adapter: register server `devkit` with Claude Code's own writer,
+`claude mcp add --scope user devkit -- <command> <args...>`, using the `command` and `args` that config prints for
+the retained base and runtime; `claude mcp get devkit` inspects it and `claude mcp remove devkit -s user` removes it.
+`devkit host mcp status` does not inspect that registration. Reconnect the client and verify tool discovery and
+visible confirmation separately. See `CAP-HOST-lifecycle-observation` and
+[Host MCP](../../development/reference/host.md#mcp-services).
 
 Development checks exercise an installed SDK client/server over stdio and real disposable Git fixtures: approval,
 non-approval, decline/cancel, absent form capability, caller approval-flag rejection, stale scope, PR policy,
 branch retention, scoped cleanup and merge-then-cleanup failure recovery. No external API call is needed.
-Consumer smoke installs the wheel extra and checks the installed transport. Native Codex UI, actual host permission
+Consumer smoke installs the wheel extra and checks the installed transport. Native host UI, actual host permission
 prompts and the installed devkit-spec provider remain separate validation evidence, not consequences of SDK tests.

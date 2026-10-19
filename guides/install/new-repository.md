@@ -82,7 +82,7 @@ playbooks do (playbooks bring the generated `devkit-playbook` skill), so do this
    ```
 
    Call tools through `uv run` or a recipe runner; Git hooks do not have `.venv/bin` on `PATH`.
-3. Optional: connect Codex native service tools through [MCP onboarding](mcp.md). This uses a retained base/runtime
-   and explicit user-scoped registration, independently of sync.
+3. Optional: connect Codex or Claude Code native service tools through [MCP onboarding](mcp.md). This uses a
+   retained base/runtime and explicit user-scoped registration, independently of sync.
 4. Verify and report as in [Installation Guide, step 5](../INSTALL_GUIDE.md#step-5-verify-and-report). Suggest adding
    the fresh-clone setup (`uv sync`, then `uv run devkit sync --locked`) to the project's README or setup recipe.
