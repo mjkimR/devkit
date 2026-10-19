@@ -45,19 +45,25 @@ effect on the hosts that support it, with no maintenance when models change.
 
 ## 2. Technical Spike Questions
 
-- **Q1. Values per profile.** Proposed: `light-medium` → `medium` (`scout`, `reconcile-reviewer`), `general-high` →
-  `high` (`code-reviewer`, `planning-worker`, `development-worker`), `high-reasoning` → `high` (`challenger`). Only
-  `low`, `medium` and `high` are used, since higher values are not supported by every model.
-- **Q2. Host semantics.** Confirm from host documentation that Claude Code's agent frontmatter `effort` and Codex's
-  agent `model_reasoning_effort` accept these values and apply to the projected agent; record the sources in
-  `materials/`.
-- **Q3. Emulated Codex roles.** When the main session substitutes an `emulated` role, the preset does not apply.
-  Whether the contract or the `spec-delegate` skill states that, or nothing is said.
-- **Q4. Profile and preset drift.** Whether a test asserts that each contract's preset matches its `x-model-profile`.
+- **Q1. Values per profile.** Only `low`, `medium` and `high` are used: both hosts accept them on current models,
+  higher values depend on the model. Recommended: `scout` and `reconcile-reviewer` (`light-medium`) → `medium`;
+  `code-reviewer` (`general-high`) and `challenger` (`high-reasoning`) → `high`; `planning-worker` and
+  `development-worker` unset, so they run at the session's effort like the Host whose work they take over.
+  Alternative: the workers also `high`, following their `general-high` profile. Open for the user.
+- **Q2. Host semantics. Answered** (`materials/host-effort-semantics.md`): Claude Code's agent `effort` and Codex's
+  agent `model_reasoning_effort` are documented, optional and accept these values. On Claude Code a per-call
+  `effort` overrides the preset and `CLAUDE_CODE_EFFORT_LEVEL` overrides both; on Codex the file value wins over a
+  spawn value. Without a preset a subagent runs at the session's or the model's default, which is `medium` on the
+  Claude 5.5 family.
+- **Q3. Emulated Codex roles.** A role the main session runs itself uses the session's effort. Recommended: one
+  sentence in `CAP-DLV-delivery-workflows` §4.6 that a preset applies only when the projected agent is spawned.
+  Open for the user.
+- **Q4. Profile and preset drift.** Recommended: a test in `packages/devkit-spec/tests/test_role_contracts.py`
+  asserting each contract's preset matches its `x-model-profile` under the Q1 mapping. Open for the user.
 
 ## 3. Proposed Design & Impact
 
-- Add the preset to the `claude-code` and `codex` host blocks of the six `devkit-spec` role contracts
+- Add the preset to the `claude-code` and `codex` host blocks of the `devkit-spec` role contracts Q1 selects
   (`codex` only where its status is not `unsupported`). Antigravity stays unset.
 - `CAP-DLV-delivery-workflows`: the model-selection non-goal keeps model choice with the runtime and states that role
   contracts preset a reasoning effort per role; the §4.6 role table gains the preset. `activity-effort` stays
