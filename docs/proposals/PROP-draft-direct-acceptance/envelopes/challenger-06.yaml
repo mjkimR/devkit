@@ -1,0 +1,63 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T03:51:32.371219Z'
+status: completed
+summary: 'round 6; scope 2f533ed..96ddbc8 (the user''s recovery (a) of worker-02): challenger-05 #2, #4, #5, #7, #8, #9, #10 resolved; #1 fixed as worded but recurs challenger-03 #2 (#1 here); #3 partly (#5); #6 partly and recurs (#2). New: 3.2 omits the reclassification base rules for 01, a protected base rules out reclassification (Decision needed), Q5 wording, story scenario 7.'
+findings:
+- issue: 'recurs: challenger-03.yaml #2; the plain-form repair is gone. A Planning-accepted proposal (it has a worker envelope) with no gate record is left to the user, and the only recovery the PADR names ("reverting the hand edit") produces a state no route leaves: reverting the acceptance commit on the base gives status: reviewing on the base with no plan-<slug>; Planning starts only from a draft; proposal check and accept --check refuse anything that is not a draft; the plain form needs plan-<slug>. No route is given when the --direct repair itself refuses (for example a hand-accepted draft with supersedes).'
+  evidence: decisions/PADR-direct-acceptance-command-and-handoff-guard.md:60-66, 90-97; packages/devkit-spec/src/devkit_spec/bundle/workflows/sdd-proposal.md:107, 115; materials/engine-evidence.md:50-51; workbench 01-master-flow.md:239-240, 340; workbench 03-policy.md:99
+  failure_condition: The guard refuses a merged Planning acceptance without a gate record, the Host reverts the acceptance commit, and the base holds a reviewing proposal with no branch that spec-next counts as in progress forever, Backlog cannot edit, Planning cannot restart and dev-<slug> stays refused.
+  suggested_action: 'Replace "for example reverting the hand edit" with a working route: when a worker envelope exists, the plain form also accepts status: accepted with no effective gate:plan-accept on a fresh plan-<slug> from the base, merged per policy; or name the recovery as reverting the whole Planning merge back to draft and running Planning again. For a refused --direct repair, state that reverting the draft->accepted edit returns it to draft for Planning.'
+  resolution: open
+  severity: P2
+- issue: 'recurs: challenger-05.yaml #6; the base-checkout check still never defines the base. devkit only creates plan-* or dev-* branches, so the devkitBase test adds nothing, and any other branch (a hand-made wip or release branch) passes; "so any branch other than the base is refused" is false as written.'
+  evidence: decisions/PADR-direct-acceptance-command-and-handoff-guard.md:70-73; decisions/PADR-eligibility-for-direct-acceptance.md:45-46; packages/devkit/src/devkit/worktree/lifecycle.py:73, 78; packages/devkit-spec/src/devkit_spec/rules/reconcile_contract.py:116-132
+  failure_condition: The main checkout is on a non-devkit branch such as wip; accept --direct passes and the acceptance commit lands off the base, needing a PR under required.
+  suggested_action: Add a positive condition (the current worktree is the main worktree and its branch equals the origin/HEAD target when that resolves, as _integration_base resolves it), or delete the "so" clause and state that only devkit activity branches and a detached HEAD are refused.
+  resolution: open
+  severity: P3
+- issue: 3.2 does not carry the round-5 base rules into 01, the SSOT. It names only 03 §3 for the deletion on the base checkout; push access settled first, the new-slug rule and the revert recovery are not listed for 01, and for both paths 01 §5.1 keeps "commit at the current checkout" and "if the base cannot be pushed, ride an in-progress activity branch or tell the user"; 03 defers to 01.
+  evidence: proposal.md:153-155, 160-163, 168-173; workbench 01-master-flow.md:297-298; workbench 03-policy.md:5, 49; decisions/PADR-session-reclassification-of-a-queued-draft.md:52-54, 65-78
+  failure_condition: After the strategy-layer update as listed, 01 §5.1 still lets a reclassification deletion or a direct acceptance on a protected base ride an activity branch, and 01 overrides the 03 §3 row.
+  suggested_action: 'In the 3.2 bullets for 01 §5.1 and §2.2: both paths commit only on the base checkout once push access is settled; the line-298 fallback does not apply to them; the reclassification uses a new slug, and a session that never integrates is recovered by git revert of the deletion commit.'
+  resolution: open
+  severity: P3
+- issue: 'Decision needed: the round-5 fix narrows the user''s session-reclassification answer: on a protected base the draft keeps its normal route, so queued session-depth work there always goes through Planning and a spec Unit, and direct acceptance, which also needs base push access, is unavailable too. The user has not seen this.'
+  evidence: decisions/PADR-session-reclassification-of-a-queued-draft.md:52-54; envelopes/answer-01.yaml:18-20; envelopes/worker-02.yaml:48; workbench 01-master-flow.md:298
+  failure_condition: The user expects reclassification at pickup on a branch-protected repository and finds it unavailable without having chosen that.
+  suggested_action: 'Decision needed: (a) keep the restriction (protected base means the normal route), or (b) make the deletion the first commit of the session''s dev-<newslug> PR, stating that the draft stays visible on the base until the merge. List it in the plan-accept request.'
+  resolution: open
+  severity: P3
+- issue: Partly resolves challenger-05
+  evidence: decisions/PADR-session-reclassification-of-a-queued-draft.md:65-68, 73-78, 91-92; workbench 01-master-flow.md:329, 402; packages/devkit-spec/src/devkit_spec/hygiene.py:58-90
+  failure_condition: A feedback-hygiene pass changes the moved feedback files or a struck-through reference and the revert conflicts; or the milestone was closed after pickup and the restored draft raises an unsettled-member warning; or the session dies before any report and the request silently leaves the queue.
+  suggested_action: Write "restores ... when no later commit changed those paths; otherwise the Host resolves the conflicts with the user", note the milestone case, and have the Host name the deletion commit to the user right after committing it, before the session starts.
+  resolution: open
+  severity: P3
+- issue: Q5 still says the command has "a repair of an acceptance without its gate record"; after the round-5 fix the only repair is the --direct one, for a proposal without a worker envelope, on the base.
+  evidence: proposal.md:87-91; decisions/PADR-direct-acceptance-command-and-handoff-guard.md:60-66
+  failure_condition: A reader of section 2 expects a repair for a Planning acceptance, which the PADR now refuses.
+  suggested_action: 'Reword Q5: "a --direct repair of an accepted proposal without its gate record and without a worker envelope (on the base, after the user''s explicit acceptance); a Planning acceptance without its record goes to the user".'
+  resolution: open
+  severity: P3
+- issue: 3.3 updates US-incubate-and-hand-off-a-proposal scenarios 1 and 5 only; scenario 7 (deletion without handoff preserves open work) still lists only rejected or decomposed proposals, while every other deletion-case list in 3.3 gains the reclassification deletion.
+  evidence: docs/stories/delivery/US-incubate-and-hand-off-a-proposal.md:83-87; proposal.md:195-197, 201, 205-206; decisions/PADR-session-reclassification-of-a-queued-draft.md:87-90
+  failure_condition: The story's acceptance criteria miss the third deletion case the capability and skills describe after Development.
+  suggested_action: 'Add to the 3.3 story item: "scenario 7 also covers the session-reclassification deletion of a draft".'
+  resolution: open
+  severity: P3
+assumptions:
+- The user's answer-01 decisions are settled; findings only attack how the round-5 fixes specify them
+- Commits after 96ddbc8 change no proposal text
+- A Planning run always writes one worker envelope, so no worker envelope means no Planning ran
+unverified_areas:
+- Whether the engine opens gate:plan-accept on a fresh plan-<slug> for an already-accepted proposal (reasoned, not run)
+- Revert conflict behaviour after feedback hygiene (reasoned, not reproduced)
+- autohub use of the accept command; commit gate reaction to an accepted proposal committed on the base
+checks: {}
+diff_scope:
+  base: 2f533ed8170c1d54020b4344b754298af7245931
+  head: 96ddbc8e18f121a937927056f18a1cebc111147f
+activity_effort: high

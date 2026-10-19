@@ -1,0 +1,56 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T02:29:40.687547Z'
+status: completed
+summary: 'Re-review at 7a220a5: all 12 challenger-01 findings resolved; the plan-<slug> readiness check accepts a one-commit draft-to-accepted branch. New: A1 classifies one act as Backlog work under auto and as a Planning acceptance under required, contradicting 01 4.7 and 03 1/4; plus guard fix text, strategy-list gaps, note lost at handoff, discard route, checkout rule, template line.'
+findings:
+- issue: A1 counts one act as Backlog work under auto (base commit, no branch) and as a Planning acceptance commit under required; 01 4.7 (Unit activities always on their own branch, base status changes only at a merge), 03 1 (structure is not policy) and 03 4 (Backlog work never goes through a PR) contradict it, and 3.2 says they need no change.
+  evidence: proposal.md 3.1, 3.2; materials/options-comparison.md; workbench 01-master-flow.md:236, 239; 03-policy.md:15-16, 84, 99
+  failure_condition: Applied as written, the SSOT both requires a branch and merge for any status change and allows a base acceptance; readers land on A2 or refuse the A1/auto commit.
+  suggested_action: 'Pick one classification: always a one-commit plan-<slug> merged per policy (readiness check validates it), or Backlog work with explicit amendments of 4.7 and 03 4.'
+  resolution: open
+  severity: high
+- issue: The handoff guard reuses SPEC_PROPOSAL_NOT_APPROVED, whose fix sends the agent to accept on dev-<slug> in an order the engine refuses; errors.py and the CAP code table are not in the impact list.
+  evidence: packages/devkit-spec/src/devkit_spec/errors.py:132-141; proposals/handoff.py:277-281; PADR-direct-acceptance-command-and-handoff-guard 4
+  failure_condition: A hand-set accepted status without the gate reaches handoff and the agent records plan-accept on the Development branch.
+  suggested_action: Give the missing gate its own code with a fix that returns to the base path and discards dev-<slug>; list errors.py and the code table.
+  resolution: open
+  severity: medium
+- issue: The strategy-change list misses 01 5.5 (spec-next recommendations), the 2.3/6.2 dev_effort review before plan-accept on the direct path, and the 10 implementation rows.
+  evidence: 01-master-flow.md:118, 338-347, 393, 715-778; proposal.md 3.2, 3.3
+  failure_condition: spec-next offers direct acceptance while 01 5.5 lists only Planning and intent confirmation.
+  suggested_action: Add 5.5, the dev_effort review line and the 10 rows to 3.2.
+  resolution: open
+  severity: medium
+- issue: 'The Planning-skipped note does not survive the handoff: the carried gate''s note becomes PROP-<slug> and the proposal''s records are dropped.'
+  evidence: packages/devkit-spec/src/devkit_spec/proposals/handoff.py:644, 654, 658-666; CAP-DLV-proposal-incubation.md:101-107
+  failure_condition: Development cannot tell a directly accepted direction from a planned one.
+  suggested_action: Carry the original note, or put the fact in the body, or state that it lives in Git history only.
+  resolution: open
+  severity: low
+- issue: A plan-<slug> left by a refused command or an objecting PR reviewer has no defined route or discard authority; the PR reviews an acceptance already recorded.
+  evidence: materials/options-comparison.md; references/classification.md:41; 01-master-flow.md:379, 427, 565
+  failure_condition: A reviewer requests changes and the executor cannot void plan-accept or discard the branch.
+  suggested_action: 'State the route: the user''s decision closes the PR and discards plan-<slug>; the base draft stays and may run Planning.'
+  resolution: open
+  severity: low
+- issue: The checkout rule under auto is unspecified; a Backlog-style acceptance can ride on another slug's activity branch.
+  evidence: PADR-direct-acceptance-command-and-handoff-guard 4; 01-master-flow.md:297-298; references/backlog.md
+  failure_condition: Accepting draft X on dev-Y merges the decision inside Y's Development PR.
+  suggested_action: Refuse anywhere but the slug's own path; the one-commit plan branch removes the case.
+  resolution: open
+  severity: low
+- issue: The scaffolded lifecycle line says to merge the Planning branch on acceptance; the template is not in the impact list.
+  evidence: packages/devkit-spec/src/devkit_spec/proposals/scaffold.py:466
+  failure_condition: A directly accepted draft carries a body describing a step that never happened.
+  suggested_action: Add the template line to the impact list or make it path-independent.
+  resolution: open
+  severity: low
+assumptions:
+- The PR merge path under required does not run the readiness check
+unverified_areas:
+- autohub handling of a locally opened plan PR that already carries plan-accept
+- record_answer refusals other than a missing sweep
+checks: {}
