@@ -73,14 +73,20 @@ Choose **M1**.
   neither its built-in map nor any `devkit.commands` entry point has the name, so an installed `devkit-agt` (or any
   plugin of that name) always wins and harness names stay unreserved as M1 states. The error is an
   `AdvisoryError` with one stable code (proposed `HARNESS_COMMAND_UNAVAILABLE`), exit `2` (could not run, the exit
-  code the usage error has today) and a deterministic directive to add `devkit-agt` to the installation: in a
-  project, require `devkit-agt` in place of `devkit-dist` (it depends on `devkit-dist` at the same version, so the
-  project never declares both); for a tool installation, `uv tool install devkit-dist --with devkit-agt`. The
-  directive does not detect the installation form and is shared with the standalone asset notice of
+  code the usage error has today) and a deterministic directive to add `devkit-agt` to the installation. The
+  directive is runnable and source-explicit in the form the existing missing-extra fixes use (the full Git
+  requirement `devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit`, never a bare
+  package name the default index would resolve): in a project, replace the `devkit-dist` requirement with that
+  `devkit-agt` requirement in the same dependency group (`devkit-agt` depends on `devkit-dist` at the same version,
+  so the project never declares both); for a tool installation, reinstall with `--with` and the same requirement.
+  Whether it carries a release ref follows the missing-extra fixes, so all install directives stay identical in
+  form. The directive does not detect the installation form and is shared with the standalone asset notice of
   `PADR-dist-bundles-compatibility`.
 - The list holds command names only, never module paths or entry point targets, so `devkit-dist` still names no
   harness module and the per-wheel layering test (module references) holds; this is what separates it from the
-  rejected M2. `devkit --help` in a standalone installation lists only installed commands, never the listed
+  rejected M2. That test MUST also scan `devkit/cli.py` and `devkit/__main__.py` (today's scanner exempts top-level
+  files and sees only import-call arguments) and every string constant naming a `devkit-agt` area
+  (`devkit.<area>`), so a harness target left in the `COMMANDS` map fails it; bare command names stay allowed. `devkit --help` in a standalone installation lists only installed commands, never the listed
   names.
 - `devkit-agt` ships no console script, so a tool installation names the script owner and adds the harness:
   `uv tool install devkit-dist --with devkit-agt` (wheel paths or Git URLs alike).
@@ -95,7 +101,8 @@ Choose **M1**.
   error), with both wheels (every current command listed and runnable) and with `devkit-spec` added, and that
   exactly one installed distribution provides the `devkit` script.
 - `ARCH-05-3-command-plugins` documents the name-only list, its precedence (built-in map, then entry points, then
-  the list) and its code; a test keeps the list equal to the `devkit.commands` names `devkit-agt` declares.
+  the list) and its code; a `devkit-agt` test, where both wheels' metadata is visible, keeps the list equal to the
+  `devkit.commands` names `devkit-agt` declares.
 - A harness command now pays one `devkit.commands` scan when it is looked up: 18 to 24 ms for the scan measured
   in-process, about 13 ms added to the whole-process median, in this workspace with 61 installed distributions
   (`materials/20261019-package-split-evidence.md` section 5); negligible next to the commands themselves. Commit-time gates are not

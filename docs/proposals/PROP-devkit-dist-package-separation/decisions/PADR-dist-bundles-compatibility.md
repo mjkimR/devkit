@@ -94,10 +94,13 @@ Choose **B1**, **H1** and **K1**.
   as they are.
 - The `harness` bundle MUST be auto-selected (`auto_select = true`, opted out with `harness = false` under
   `[presets]`) and live in a data-only bundle area of `devkit-agt` whose `__init__.py` imports nothing, like the
-  other built-in bundle areas (proposed module `devkit.harness_guide`). It carries:
+  other built-in bundle areas (proposed module `devkit.harness_guide`). The name `harness` is the user's proposed
+  name; because `harness` also names the `devkit-spec` capability area (`docs/capabilities/harness/`), it is put to
+  the user for confirmation (question `harness-bundle-name`) before it becomes a selection key. It carries:
   - a constitution with the harness intro (rules and commit gates run as code) and the harness contracts: today's
     contract 5 (rules and gates run as code, configured in `[rules]` and `[gates]`) and the snapshot-gate part of
-    contract 6 (snapshot gates trust the committed receipt and fail when a managed rule no longer matches it);
+    contract 6 (snapshot gates trust the committed receipt and fail when a managed rule no longer matches it;
+    whether contract 6 moves split or whole is question `contract-6-split`);
   - the harness parts of `consumption` (rules, gates and workflows in the configuration table, "Workflows",
     "Rules and commit gates" with `.git/devkit.config` and the `rules-check` gate), of `resource-kinds` (how rule,
     gate and workflow assets are run and tested: `devkit rules`, `devkit rules test`, `devkit gate`,
@@ -109,8 +112,11 @@ Choose **B1**, **H1** and **K1**.
 - The `devkit` bundle MUST keep only distribution guidance: contracts 1 to 4, the distribution half of contract 6
   (commit `.devkit/installation.json` after `devkit sync`; the receipt is a `devkit-dist` format), and the
   distribution parts of `consumption`, `resource-kinds` and `in-repo-bundle`. It describes the rule, gate and
-  workflow asset kinds only as kinds it deploys, noting that their engines come with `devkit-agt`, names
-  `devkit-dist` in the in-repo bundle example dependency, and names no harness command as a directive. Its only
+  workflow asset kinds only as kinds it deploys, noting that their engines come with `devkit-agt`, and names no
+  harness command as a directive. Its in-repo bundle example adds the bundle next to the devkit requirement the
+  project already declares (`devkit-agt` when the project uses the harness, otherwise `devkit-dist`) and never adds
+  both, the rule `PADR-dist-module-split` sets for the missing-extra directives. Contract 3 names the
+  auto-selected bundles generically (`devkit list` shows them) instead of listing `devkit` and `advisory`. Its only
   preset is `core`; the `run` preset and the `devkit-run` and `run-pointer` assets leave it.
 - Bundles shipped by `devkit-dist` or `devkit-agt` MUST both count as built in (`builtin`), so the notice for
   auto-selected bundles of other packages keeps excluding first-party bundles, `harness` included.
@@ -120,15 +126,22 @@ Choose **B1**, **H1** and **K1**.
   deterministic directive to add `devkit-agt` to the installation (proposed code `HARNESS_ENGINE_MISSING`; the
   directive wording is shared with the command-name error of `PADR-dist-command-composition`). Engine presence is
   detected by entry point name only; `devkit-dist` never imports or locates a harness module. The notice changes
-  no exit code (except under `--strict`) and deploys the assets as before.
+  no exit code (except under `--strict`) and deploys the assets as before. Its directive is the source-explicit
+  one of `PADR-dist-command-composition`.
 - With `devkit-agt` installed, every existing `devkit` command, option, sentinel, JSON field, advisory code and exit
-  code MUST behave as before the split. `devkit --version` keeps its `[VERSION: devkit <version>]` form and reports
-  the `devkit-dist` version.
-- The one selection the split breaks is the `run` preset of the `devkit` bundle: a configuration that selects
-  `devkit:run` (`devkit = ["core", "run"]`, `devkit = "run"`, `devkit add devkit:run`) fails with the existing
-  `SELECTION_INVALID` until it selects `harness:run`. This break is accepted in place under the AGENTS.md
-  compatibility policy: no alias preset, no migration reader and no special-cased directive; the release notes and
-  guides name the new selection.
+  code MUST behave as before the split, except for these enumerated changes: the content of the `devkit` bundle and
+  the new `harness` bundle (`devkit get-context`, managed files), the `harness` entry in `devkit list`,
+  `devkit status` and the receipt, the receipt's tool and package names, and the two preset selections below.
+  `devkit --version` keeps its `[VERSION: devkit <version>]` form and reports the `devkit-dist` version.
+- Two selections of the `devkit` bundle change, accepted in place under the AGENTS.md compatibility policy (no alias
+  preset, no migration reader, no special-cased directive; the release notes and guides name both):
+  - `devkit:run` (`devkit = ["core", "run"]`, `devkit = "run"`, `devkit add devkit:run`) fails with the existing
+    `SELECTION_INVALID` until it selects `harness:run`; today its fix lists the bundle's own presets
+    (`devkit:all, devkit:core`), neither of which restores the pointer.
+  - `devkit:all` (`devkit = "all"`) keeps working but no longer deploys `devkit-run` and `run-pointer`; a project
+    that wants the pointer selects `harness:run`.
+  Whether `SELECTION_INVALID` also names a preset of that name declared by another installed bundle (a generic
+  hint, not a `devkit:run` special case) is question `preset-moved-hint`.
 - `devkit-dist`, `devkit-agt` and `devkit-advisory` MUST be released in lockstep from one tag at one version;
   `devkit-agt` pins `devkit-dist` to that exact version, as it pins `devkit-advisory`. `devkit-spec`,
   `devkit-catalog` and `devkit-starter` keep independent versions.
@@ -150,19 +163,26 @@ Choose **B1**, **H1** and **K1**.
   `docs/development/reference/distribution.md` (bundles shipped with devkit), `docs/development/reference/compact.md`,
   `CAP-CMP-bounded-execution` and `guides/install/bundle-recommendations.md` name `harness` as the home of
   `devkit-run` and `harness:run` as the opt-in pointer; the CAP-DIST contract that owns sync and status notices
-  documents the standalone notice and its code.
+  documents the standalone notice and its code. `CAP-DIST-in-repo-bundles`, whose consumer mirror is the
+  `in-repo-bundle` instruction, names both mirrors (the `devkit` bundle for the bundle setup, the `harness` bundle
+  for rule discovery, rule tests and Git snapshot gates) and states the example dependency rule above.
 - A project with `devkit-agt` gets the `harness` bundle on its first sync after the upgrade: the moved instructions
   appear under `.devkit/managed/harness/`, the `devkit` bundle's managed files change or disappear, and the receipt
   gains a `harness` entry, all committed with the upgrade. A project that opted out with `devkit = false` gets
   `harness` selected (built-in bundles raise no new-bundle notice) and opts out again with `harness = false`.
+  Project overrides of moved assets (for example `.devkit/overrides/devkit/instructions/devkit-run.md`, or of the
+  split `consumption` and constitution) stop applying, since overrides resolve per bundle; the release notes name
+  them and the project re-creates them as `harness:<asset>`.
 - Development reconciles the `devkit:run` selections: this repository's `.devkit/config.toml` and receipt select only
   `devkit:core` and no first-party package configuration selects `devkit:run` (checked at Planning, materials
   section 8), so no selection here changes; the references to update are the `devkit` bundle manifest, its guide
-  bundle test (`tests/distribution/test_guide_bundle.py`), the built-in selection test
-  (`tests/distribution/test_builtin_selection.py`), the documents listed above, and the `devkit-spec` bundle
+  bundle test (`tests/distribution/test_guide_bundle.py`), the documents listed above, and the `devkit-spec` bundle
   texts that point to `in-repo-bundle` for rules (`spec-rule` skill), which also point to the `harness` bundle for
   rule tests and snapshot gates.
 - Verification covers a dist-only installation that deploys a third-party bundle with rule, gate and workflow
   assets (notice with its code, assets deployed, exit code unchanged), the same with `devkit-agt` installed (no
   notice), and both bundles' context: `devkit get-context devkit` carries no harness command, `devkit get-context
-  harness` carries the moved guidance.
+  harness` carries the moved guidance. A `devkit-agt` test asserts that `harness` is listed `builtin`, auto-selected
+  with `["core"]`, and a dist-only check asserts it is absent (no existing test covers it: the `BUILTINS` constant
+  of `tests/distribution/test_builtin_selection.py` is unused). A before/after comparison of the `--format json`
+  output of the distribution commands on a fixture project allows only the enumerated changes above.

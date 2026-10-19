@@ -109,7 +109,8 @@ Choose **N1** and **F1**.
   `devkit-agt[<extra>]` when it depends on `devkit-agt`, else `devkit-dist[<extra>]`. They never add a second direct
   requirement on `devkit-dist` next to `devkit-agt`, whose resolved source could conflict.
 - Layering is enforced per wheel: a `devkit-dist` test refuses any reference to a `devkit-agt` area (`compact`
-  included) from its sources and its entry points; `devkit-agt` keeps its own table, in which each of its areas may
+  included) from its sources (`devkit/cli.py`, `devkit/__main__.py` and string constants included,
+  `PADR-dist-command-composition`) and its entry points; `devkit-agt` keeps its own table, in which each of its areas may
   also use the `devkit-dist` areas, `compact` keeps using only `core` and `advisory`, and the `harness` bundle area
   imports nothing. Harness command names held as plain strings by `devkit-dist` (`PADR-dist-command-composition`)
   are not module references.

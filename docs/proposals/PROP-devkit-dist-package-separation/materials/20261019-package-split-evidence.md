@@ -178,7 +178,9 @@ Evidence checked while folding (worktree head after `answer-01.yaml`):
   (`presets={"devkit": ["core", "run"]}`, `bundle.select(["run"])`, the managed path
   `.devkit/managed/devkit/instructions/devkit-run.md`). `tests/distribution/test_builtin_selection.py` expects the
   auto-selected built-ins `{"advisory": ["core"], "devkit": ["core"]}`, which gains `harness` where `devkit-agt` is
-  installed. Consumer repositories outside this workspace were not read.
+  installed. Correction after `challenger-03.yaml`: that `BUILTINS` constant is unused; the real-distribution tests
+  compute the default selection, so no test asserts `harness` is auto-selected and built in until Development adds
+  one. Consumer repositories outside this workspace were not read.
 - **References naming `devkit:run` or the `devkit-run` instruction's bundle**: the `devkit` bundle manifest comment,
   `guides/install/bundle-recommendations.md`, `docs/development/reference/distribution.md` (section 4),
   `docs/development/reference/compact.md`, `CAP-CMP-bounded-execution`. `compact/execute.py` uses `devkit-run` only
@@ -188,10 +190,27 @@ Evidence checked while folding (worktree head after `answer-01.yaml`):
   `feedback-hygiene` playbooks (where repository assets belong). The bundle setup stays in `in-repo-bundle`; rule
   tests and snapshot gates move to `harness`, which the `spec-rule` reference must also name.
 - **Selection failure today**: an unknown preset raises `SelectionError` (`SELECTION_INVALID`) with the fix
-  "Select one of: <bundle>:<preset>..." listing the bundle's own presets (`distribution/bundles/manifest.py`), so a
-  `devkit:run` selection fails with a directive listing `devkit:core` only; the decision adds no special case.
+  "Select one of: <bundle>:<preset>..." listing the bundle's own presets, `all` first (`preset_names` in
+  `distribution/bundles/manifest.py`), so a `devkit:run` selection fails with a directive listing `devkit:all,
+  devkit:core`, neither of which restores the pointer (corrected after `challenger-03.yaml`). A `devkit:all`
+  selection keeps working after the split but silently drops `devkit-run` and `run-pointer`.
 - **Harness command names** in the current root map (`devkit/cli.py` `COMMANDS`) that `devkit-agt` will mount:
   `run`, `rules`, `workflow`, `gate`, `worktree`, `generated`, `integration`; `host` stays a `devkit-dist` built-in.
 - **Interpretation**: contract 6 of the `devkit` constitution has a distribution half (commit the receipt after
   `devkit sync`) and a harness half (snapshot gates trust the receipt); under "the `devkit` bundle keeps only
   distribution guidance" the first stays and the second moves, recorded in `PADR-dist-bundles-compatibility`.
+
+## 9. Re-review of the folded answers (envelope `challenger-03.yaml`) and disposition
+
+| # | Finding | Severity | Disposition |
+| --- | --- | --- | --- |
+| 1 | `devkit` bundle in-repo example naming `devkit-dist` would add a second direct requirement in `devkit-agt` projects | medium | `PADR-dist-bundles-compatibility`: the example keeps the requirement the project already declares, never both |
+| 2 | Shared directive used bare package names | medium | `PADR-dist-command-composition`: runnable, source-explicit Git requirement in the form of the missing-extra fixes |
+| 3 | Absolute "behaves as before" MUST contradicts planned changes | medium | Restated with enumerated exceptions and a before/after JSON comparison; proposal Consumer Impact aligned |
+| 4 | `devkit:all` is a second, silent break; `SELECTION_INVALID` fix leads away from `harness:run` | medium | Second break recorded, evidence corrected; the generic cross-bundle hint is user question `preset-moved-hint` |
+| 5 | `CAP-DIST-in-repo-bundles` missing as reconcile target | low | Added to the consequences with both mirrors |
+| 6 | Layering scanner exempts `cli.py`/`__main__` and dict string targets | low | Per-wheel test MUST scan them and `devkit.<agt-area>` string constants; list-equality test lives in `devkit-agt` |
+| 7 | Contract 6 split departs from the literal answer | low | User question `contract-6-split` |
+| 8 | Bundle name `harness` collides with the `harness` capability area | low | User question `harness-bundle-name` |
+| 9 | Contract 3 defaults list, overrides of moved assets, `devkit = false` projects | low | Contract 3 reworded generically; overrides named in upgrade consequences and release notes; opt-out kept in release notes |
+| 10 | Two evidence details inaccurate | low | Corrected in section 8; a `devkit-agt` test asserting `harness` is built in and auto-selected is required |
