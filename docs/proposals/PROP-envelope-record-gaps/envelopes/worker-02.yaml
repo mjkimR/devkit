@@ -1,0 +1,19 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T06:29:37.527338Z'
+status: completed
+summary: 'Second Planning turn at medium: recorded the user''s answers (answer-01, both recommended options) and folded them: PADR-reverify-closes-challenger-rounds now treats a fold of the user''s answers as a new batch of the same high loop with one fresh round outside the cap when it reaches the cap (review-loop.md section 4 added to its consequences); PADR-proposal-boundaries-name-existing-paths declares paths the Development creates by their nearest existing parent, the new path named in the proposal text, no new syntax or handoff change. Merged main (no fast-forward), deleted this branch''s duplicate FB-padr-title-branch-length-limit (rules check --ci against the merge-base: 0 errors) and recorded FB-parallel-planning-feedback-id-collision; sweep in feedback-02. No new scout or challenger: the fold applies options challenger-01 itself recommended. challenger-01''s 11 findings stay open in the record (the gap this proposal fixes); dispositions as in worker-01: 9 fixed in the PADRs and proposal (1 P1 one-severity-per-rule, P2 first-commit block, accepted-proposal moves, namespace resolution, R1 scoping, missing CAP/ADR citation, P3 Q1 details, Q2 wording, path normalization), 2 Decision needed settled by answer-01. dev_effort stays medium. Ready for plan-accept.'
+findings: []
+assumptions:
+- PROP-direct-planning-procedure (accepted on main) integrates its Development first; otherwise it moves the reworded planning-worker step 4 as written.
+- A project wanting boundaries enforced raises RULE-proposal-boundaries with its own severity override; no policy change here.
+unverified_areas:
+- Proposals in reviewing on other plan- branches were not checked against the new rule.
+- No fresh challenger pass on the folded answer text (judged unnecessary at medium).
+checks: {}
+diff_scope:
+  base: 129b49731b10c686bf37e6efab7c8f10e40d26d6
+  head: 747b6c3781ca4ab17fdfe52a7b30bb097075c72a
+activity_effort: medium
