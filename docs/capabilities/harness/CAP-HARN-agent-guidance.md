@@ -73,8 +73,9 @@ directories and writes the guidance pointer into the root `AGENTS.md` block.
    names the moment to read it ("Read this before ...").
 6. **No session hijacking**: agents MUST NOT unilaterally terminate the user's session or stop active work without
    user direction.
-7. **Playbooks on request only**: playbooks are occasional procedures found through `devkit playbook search` when
-   the user asks for one; they are not part of routine delivery.
+7. **Playbooks on request only**: playbooks are occasional procedures found through `devkit playbook search` only
+   when the user invokes `devkit-playbook` or a failing rule's remediation names one; they are not part of routine
+   delivery, and no skill routes to them.
 8. **Templates by path**: new documents start from `.devkit/managed/spec/templates/<kind>.md`; seeded files are
    written once where absent and are project-owned afterwards.
 9. **Skill names**: every skill of the bundle is named `spec` or `spec-<procedure>`. Rationale:
@@ -138,7 +139,7 @@ Living Spec and `specs/` holds feature specs.
 
 | Skill | Purpose | devkit-spec commands it runs |
 | --- | --- | --- |
-| `spec` | Entry router: classify the work, run Backlog and inline Planning, raise the depth and close, drive the workflow; Tier 2 routes operational requests to playbooks. | `policy`, `new`, `proposal new`, `proposal handoff` |
+| `spec` | Entry router: classify the work, run Backlog and inline Planning, raise the depth and close, drive the workflow; never routes to playbooks. | `policy`, `new`, `proposal new`, `proposal handoff` |
 | `spec-next` | Orientation: diagnose work under way; when idle, recommend queued drafts by repository milestone, priority and size. | `policy`, `list spec\|proposal\|feedback`, `proposal padr`, `proposal handoff` |
 | `spec-specify` | Write `spec.md` (feature or bugfix reference); creates the bundle with `devkit spec new`. | `new`, `list`, `refs`, `search`, `policy` |
 | `spec-plan` | Write `plan.md`: design, interfaces, verification plan. | `list`, `refs`, `search` |
@@ -155,7 +156,6 @@ Living Spec and `specs/` holds feature specs.
 Skill references, each read at the moment it names: `spec/references/completion.md` (completion classification,
 policy, `mcp-elicitation` confirmation authority for `integration_integrate`, reconcile record, checks and commits), `spec/references/envelope.md` (delegation input and return envelope,
 final change report), `spec/references/git-policy.md` (worktree, pull request and branch cleanup levels), `spec/references/worktree.md` (task worktree start, work, approval-bound `integration_integrate` and `devkit worktree finish --local-only`, leftovers),
-`spec/references/playbooks.md` (Tier 2 operational playbook routing),
 `spec-next/references/post-handoff.md` (follow-up of `[REWRITTEN]` and `[UNRESOLVED_LINK]` lines),
 `spec-next/references/workflow-signals.md` (`devkit workflow next` lines and advisories),
 `spec-delegate/references/hosts.md` (spawning a role on each host), `spec-delegate/references/payload.md` (payload

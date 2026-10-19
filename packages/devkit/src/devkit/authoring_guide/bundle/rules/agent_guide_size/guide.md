@@ -23,15 +23,9 @@ demand.
 
 ## 3. Remediation
 
-Follow the `agent-guide-authoring` playbook (`uv run devkit playbook search "curate agent guide"`):
-
-1. Drop project structure trees; a one-line-per-module map with links is enough.
-2. Move module-specific conventions, judgment rules, procedures and checkable invariants to where they are read on
-   demand: module READMEs or docs, bundle instructions, playbooks, rules, nested guides.
-3. Keep orientation, boundaries, invariants, verification commands and pointers whose read condition is explicit.
-
-Shrink the guidance block by deselecting presets that contribute `guidance` fragments, never by editing it: `devkit
-sync` regenerates it. The rule never rewrites files.
+Curate the guide by the `agent-guide-authoring` playbook (`uv run devkit playbook search "curate agent guide"`):
+keep what nearly every task needs and move the rest to where it is read on demand. Shrink the guidance block only by
+deselecting presets that contribute `guidance` fragments. The rule never rewrites files.
 
 ## 4. Configuration
 

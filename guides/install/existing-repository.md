@@ -1,11 +1,11 @@
 # Route: Existing Repository
 
-For a repository with code, build files, CI or agent configuration. Analyze first (read-only), present a plan,
-then install with a dry run before every write. Entry point: [Installation Guide](../INSTALL_GUIDE.md).
+For a repository with code, build files, CI or agent configuration: analyze (read-only), present a plan, then
+install with a dry run first. Entry point: [Installation Guide](../INSTALL_GUIDE.md).
 
 ## 1. Analyze (read-only)
 
-Collect the following and keep the evidence (file paths, command output) for the plan.
+Keep the evidence (file paths, command output) for the plan.
 
 ### Python environment
 
@@ -23,7 +23,7 @@ Collect the following and keep the evidence (file paths, command output) for the
   `.codex/` (Codex), `.agents/` (Codex and Antigravity skills). devkit projects for `codex`, `claude-code` and
   `antigravity`; other agents (Cursor, Copilot, Gemini CLI) can still read the `AGENTS.md` block.
 - Existing skills and subagents under `.agents/skills/`, `.claude/skills/`, `.claude/agents/`, `.codex/agents/`:
-  devkit never overwrites them, but a bundle asset with the same name stops the sync with `SYNC_CONFLICT`.
+  a bundle asset with the same name stops the sync with `SYNC_CONFLICT`.
 - `AGENTS.md`: its size and whether it already has `DEVKIT` markers. A symlinked `AGENTS.md` needs a decision
   (`WORKSPACE_UNSAFE`).
 - `CLAUDE.md`: whether it already imports or links `AGENTS.md`.
@@ -35,16 +35,16 @@ git config --get core.hooksPath     # set by husky, lefthook and similar tools
 ls "$(git rev-parse --git-common-dir)/hooks"
 ```
 
-- `core.hooksPath` set: devkit leaves it alone and skips its hooks (`GATE_HOOK_INSTALL_SKIPPED`). Commit gates then
-  do not run, and `devkit gate status` warns with `GATE_HOOKS_PATH_SET`; report it, do not change the setting.
+- `core.hooksPath` set: devkit leaves it alone and skips its hooks (`GATE_HOOK_INSTALL_SKIPPED`), so commit gates
+  do not run; report it, do not change the setting.
 - Existing executable hooks (for example from the `pre-commit` framework): devkit renames each to
   `<hook>.legacy` and keeps running it before its own gates. Tell the user this will happen.
 
 ### Verification and conventions
 
-- Verification commands: `justfile`, `Makefile`, `package.json` scripts, `[tool.*]` sections of `pyproject.toml`,
-  `.github/workflows/`. Note the fast ones (format check, lint, type check) as candidates for the commit gate.
-- Commit style: `git log --format=%s -n 50`. Mostly `type(scope): subject` means Conventional Commits.
+- Verification commands (`justfile`, `Makefile`, `package.json` scripts, `pyproject.toml`, `.github/workflows/`):
+  note the fast ones as commit gate candidates.
+- Commit style: `git log --format=%s -n 50`; mostly `type(scope): subject` means Conventional Commits.
 - Agent-authored content: `SKILL.md` files, playbooks, a long root `AGENTS.md` or `CLAUDE.md`.
 
 ## 2. Present the plan
@@ -89,7 +89,7 @@ uv run devkit sync --agent <agent>
 
 - Repeat `--agent` per agent, or omit it for all supported agents.
 - Add `.venv/` to the root `.gitignore` when it is not ignored yet.
-- On `SYNC_CONFLICT`, nothing was written. Show the named paths and ask how to proceed.
+- On `SYNC_CONFLICT`, nothing was written; show the named paths and ask how to proceed.
 - `CLAUDE.md`: when Claude Code is a target and `CLAUDE.md` does not reference `AGENTS.md`, offer to add the line
   `@AGENTS.md` to it. Do not rewrite its other content.
 - Ignore the native projections in the root `.gitignore` per projected directory, exactly as described in
@@ -104,14 +104,10 @@ recommendations):
 uv run devkit rules check
 ```
 
-The built-in rules (Markdown links, file length, secret leaks, build artifacts, `devkit` command citations) may
-report findings in existing files. Report the counts by rule to the user; do not fix them in bulk as part of the installation. The
-commit gate checks the rules by default (`rules-check`) on the files each commit changes, so a commit that touches a file
-with an existing error-severity finding is refused until it is fixed. Tell the user, and offer the choices: fix the
-findings, park a rule in the `hygiene` phase or lower its severity in `[rules]`, or set `enabled = false` in
+The built-in rules may report findings in existing files. Report the counts by rule to the user; do not fix them in bulk as part of the installation. The
+`rules-check` commit gate refuses a commit that touches a file with an error-severity finding, so offer the choices:
+fix the findings, park a rule in the `hygiene` phase or lower its severity in `[rules]`, or set `enabled = false` in
 `[gates.settings.rules-check]` until they are resolved.
-
-For optional Codex or Claude Code native service tools, follow [MCP onboarding](mcp.md) after bundle selection.
 
 Then continue with [Bundle Recommendations](bundle-recommendations.md) and
 [Installation Guide, step 5](../INSTALL_GUIDE.md#step-5-verify-and-report).
@@ -127,15 +123,10 @@ uv run devkit status             # report problems
 uv run devkit list               # bundles, their selection state and presets
 ```
 
-- `RECEIPT_STALE`: the committed receipt is behind the packages or configuration. Run `uv run devkit sync` and
-  report the changes for commit.
 - When the user asked for an upgrade, follow the upgrade commands in
   [Installation Guide, step 3](../INSTALL_GUIDE.md#step-3-package-sources).
 - Bundle recommendations still apply: compare `devkit list` against
   [Bundle Recommendations](bundle-recommendations.md) and offer the missing ones.
-
-- To add or diagnose optional Codex or Claude Code MCP registration, follow [MCP onboarding](mcp.md); reinstalling
-  or running sync does not register it.
 
 ## Upgrading across the package split
 

@@ -7,16 +7,16 @@ main signal of `devkit spec search`: the embedding model reads a document's ID a
 body, in any language, are ranked lexically only. A short English summary lets English queries find documents written
 in another language.
 
-- **Phase and severity**: `linter`, `error`. Shipped by the `spec` bundle (preset `core`).
+- **Phase and severity**: `linter`, `error`.
 - **What is checked**: the targeted documents, Markdown files under `docs/` and `specs/` whose frontmatter `id` (or
   `reconcile_id`) is a well-formed document ID. A summary is required on capabilities (`CAP-`), stories (`US-`),
-  decisions (`ADR-`), architecture documents (`ARCH-`), `proposal.md` and `spec.md`; any other document that has one
-  is checked for its form.
+  decisions (`ADR-`), architecture documents (`ARCH-`), milestones (`MS-`), `proposal.md` and `spec.md`; any other
+  document that has one is checked for its form.
 - **What is not**: materials (`docs/materials/`, any `/materials/` directory), which are free-form; `README.md`,
   templates (`*-template.md`, `*_template.md`) and symbolic links, which are not documents. A file still carrying the
   skeleton marker `<!-- devkit:skeleton -->` (a spec just created) needs no summary until it is written.
-- **Completed specs**: files of a spec bundle whose `spec.md` is `completed` are work history and are checked only
-  when named as explicit targets.
+- **History**: files of a spec bundle whose `spec.md` is `completed`, and `done` or `dropped` milestones, are checked
+  only when named as explicit targets.
 
 ## 2. Cause of Violation
 
@@ -35,7 +35,7 @@ Not fixable: a summary is written, never generated. Write `summary:` in the fron
 saying what the document defines; the title and body may stay in any language.
 
 Read the `spec:living-spec-writing` instruction (Summaries) before writing or rewriting one: it says what a summary
-states and how to quote it in YAML; `devkit rules explain` prints its path as a `[RELATED: ...]` line.
+states and how to quote it in YAML.
 
 ## 4. Configuration
 
@@ -50,7 +50,7 @@ max_length = 300
 
 ## 5. Exceptions
 
-There is no inline suppression. In a repository whose documents have no summaries yet, run the rule in the hygiene
+No inline suppression. In a repository whose documents have no summaries yet, run the rule in the hygiene
 phase while they are written, then remove the override:
 
 ```toml
@@ -68,7 +68,3 @@ summary: Ranks documents for a query by meaning, pinning exact IDs and narrowing
 status: active
 ---
 ```
-
-## Milestones
-
-Milestone documents require an English summary under the same length and language rules. Done/dropped milestones follow historical-document targeting.

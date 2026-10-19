@@ -1,10 +1,10 @@
 # spec-specify reference: feature specification
 
-Read when the bundle is bound to workflow `sdd-spec-feature` (a new feature, enhancement or contract change). The procedure fills `spec.md` during the `specify` stage. The shared contracts (non-goals, AC format, references, clarification rule, self-validation, DoD) are in `SKILL.md` §4 and §5 and are not repeated here.
+Read when the bundle is bound to workflow `sdd-spec-feature`; the procedure fills `spec.md` during the `specify` stage. The shared contracts (non-goals, AC format, references, clarification rule, self-validation, DoD) are in `SKILL.md` §4 and §5.
 
 ## Step 1: Clarify intent and the core problem
 
-- Derive the real user problem, target audience and business context from the agreed intent (`plan-intent`), the issue and the proposal or its carried content; do not ask the user during Development. Record what you inferred as assumptions (`SKILL.md` §4).
+- Derive the real user problem, audience and context from the agreed intent (`plan-intent`), the issue and the proposal or its carried content, recording inferences as assumptions (`SKILL.md` §4).
 - Identify the primary user story:
   - **As a** `<role>`
   - **I want to** `<action/capability>`
@@ -13,7 +13,7 @@ Read when the bundle is bound to workflow `sdd-spec-feature` (a new feature, enh
 
 ## Step 2: Establish non-goals
 
-Define what this feature will **not** do. Each non-goal names its Scope Excluded; give the Rationale and a When to Reconsider trigger when a later reader would otherwise reopen the question.
+Define what this feature will **not** do (`SKILL.md` §4).
 
 ## Step 3: Define acceptance scenarios
 
@@ -23,7 +23,7 @@ Define what this feature will **not** do. Each non-goal names its Scope Excluded
 
 ## Step 4: Validate against system invariants
 
-Review `docs/architecture/` and the capabilities the feature touches (`devkit spec refs <CAP-ID> --direction in` shows what depends on them). State explicitly when an ADR will be required. A design choice inside the agreed intent is decided with the recommended option and recorded; one outside it is reported as a problem for the Host (there is no Development direction gate).
+Review `docs/architecture/` and the capabilities the feature touches (`devkit spec refs <CAP-ID> --direction in` shows what depends on them). State explicitly when an ADR will be required.
 
 ## Step 5: Output standard
 
@@ -34,7 +34,7 @@ Keep the frontmatter lines `devkit spec new` or `devkit spec proposal handoff` w
 id: SPEC-<feature-slug>
 title: <Feature Title>
 summary: "<one or two English sentences: what the spec changes>"
-status: draft # draft | planned | in-progress | completed
+status: planned # planned | in-progress | completed
 created: <YYYY-MM-DD>
 related_capabilities:
   - CAP-<AREA>-<slug>

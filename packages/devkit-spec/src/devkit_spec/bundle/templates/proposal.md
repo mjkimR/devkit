@@ -7,6 +7,12 @@ created_at: YYYY-MM-DD
 target_area: capabilities/<area>/      # Target capability area on graduation (e.g., capabilities/governance/)
 priority: high                        # critical | high | medium | low (estimated priority)
 size: M                               # S | M | L | XL (estimated scope: S=single fix, M=1-2 sessions, L=complex module, XL=major overhaul)
+# milestone: MS-<slug>                # an existing milestone ID; carried over to spec.md on handoff
+boundaries:                           # declared scope impact (owns) and excluded scope (excludes), carried to the spec
+  owns:
+    - capabilities/<area>/
+  excludes:
+    - docs/decisions/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
 planning_effort: medium               # low | medium | high: Planning activity-effort hint
 dev_effort: medium                    # low | medium | high: Development activity-effort hint

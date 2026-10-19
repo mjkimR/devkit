@@ -7,20 +7,17 @@ changed with the work and which needed no change, and why. The `spec-sync` skill
 requires it to be `resolved` before the spec is `completed`. The rule keeps the record well formed and, at commit
 time, backed by the diff.
 
-- **Phase and severity**: `linter`, `error`. Shipped by the `spec` bundle (preset `core`).
+- **Phase and severity**: `linter`, `error`.
 - **What is checked**: every targeted `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/reconcile.md` of a current spec bundle. A
   completed bundle's record (its `spec.md` `status` is `completed`) is history, checked only when named as an
   explicit target.
 - **Diff evidence**: in a snapshot run (`devkit rules check --staged`, which the commit gate runs, and `--ci` on a
   pull request), a well-formed `resolved` record that the diff changes must have each `modified` target changed or
-  deleted on the branch. `--ci` judges the whole branch against its merge base. At commit time the staged diff is
-  read together with the branch's earlier commits since its merge base with the branch it integrates into: the
-  `devkitBase` a `devkit worktree start --no-worktree` recorded, else the base checkout's branch, else `origin/HEAD`.
-  So a target an earlier commit of the branch changed (an ADR the proposal handoff promoted, a Living Spec page
-  committed at an earlier stage boundary) counts. When no such base is found (work committed straight on the base
-  branch), the staged diff alone is the evidence. A record whose frontmatter is unchanged from the base (only its body was edited,
-  such as a rewritten link) claims nothing new and is not re-checked. A plain `devkit rules check` has no diff and
-  checks the form only.
+  deleted on the branch: under `--ci` the whole branch against its merge base, at commit time the staged diff plus
+  the branch's earlier commits since its merge base (so a Living Spec page committed at an earlier stage boundary
+  counts), or the staged diff alone for work committed straight on the base branch. A record whose frontmatter is
+  unchanged from the base claims nothing new and is not re-checked. A plain `devkit rules check` checks the form
+  only.
 
 ## 2. Cause of Violation
 
@@ -51,12 +48,11 @@ Spec file on the branch (with the record or in an earlier commit), or correct th
 
 ## 4. Configuration
 
-The rule has no settings. Project policy in `.devkit/config.toml` (`[rules] exclude`, `[rules.severity_overrides]`,
-`[rules.phase_overrides]`) applies as to every rule.
+No settings.
 
 ## 5. Exceptions
 
-There is no inline suppression. A Living Spec file that needs no change is recorded as `resolution: waived` with its
+No inline suppression. A Living Spec file that needs no change is recorded as `resolution: waived` with its
 rationale, never left out of a `modified` claim.
 
 ## 6. Example

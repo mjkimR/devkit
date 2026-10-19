@@ -1,18 +1,16 @@
 # Review loop at `high`
 
-Read this when an activity runs at `activity-effort` `high` ([effort](effort.md)): Development code review (`code-reviewer`), reconcile verification (`reconcile-reviewer`) and `high` Planning (`challenger`). Stages, checks and gates are unchanged; the loop is procedure above them (`ADR-bounded-high-effort-review-loop`). It is not the `exception` stage.
+Read this when an activity runs at `activity-effort` `high` ([effort](effort.md)): Development code review (`code-reviewer`), reconcile verification (`reconcile-reviewer`) and `high` Planning (`challenger`). Stages, checks and gates are unchanged; the loop is procedure above them.
 
 ## 1. Rounds
-
-A round hands a reviewer the whole batch of work since the previous round; the implementer then handles every finding of that round together, whatever its severity.
 
 | Item | Rule |
 | --- | --- |
 | Round | A fresh reviewer instance, never a continued one. Round 1 reviews the whole change; each later round reviews every fix made since the previous round and what it affects, never a subset. Input: the earlier rounds' findings, the round's diff scope and the effort ([payload](../../spec-delegate/references/payload.md)). |
 | Fixing | The implementer fixes every finding of the round, P1, P2 and P3 together (a P2 or P3 may be waived with a reason), and closes the round before the next is recorded: `reverify` for code; a new `reconcile-check` for reconcile; for Planning, the next `challenger-NN` summary or the `worker` envelope's summary, stating what each finding became. A P1 the implementer holds invalid is not fixed: it stays open in that closing record with the counter-evidence (tests or output) and sends the whole batch to the next round, the one more round of section 4. |
-| Next round | Runs when any fix of the batch fails the minor-fix conditions (section 2) or a P1 stays open as contested. The whole batch goes to the next round. |
+| Next round | Runs, on the whole batch, when any fix of the batch fails the minor-fix conditions (section 2) or a P1 stays open as contested. |
 | End | The round returns no finding, or every fix of the batch meets section 2 and is self-verified. |
-| Round count | Each round's envelope summary starts with `round <N>;` (round 1 is the initial review), and a reconcile check that closes an earlier one also with `closes reconcile-check-<NN>;`. Counts are read from these markers, never from new fields. A `devkit workflow return` does not reset the count: envelopes it leaves out of the checks still count within the segment. |
+| Round count | Each round's envelope summary starts with `round <N>;` (round 1 is the initial review), and a reconcile check that closes an earlier one also with `closes reconcile-check-<NN>;`. Counts are read from these markers. A `devkit workflow return` does not reset the count. |
 
 The initial `code-reviewer`, `reconcile-reviewer` and `high` Planning `challenger` calls are mandatory; nothing replaces round 1 with a self-check.
 
@@ -53,11 +51,11 @@ A reviewer given earlier findings marks a finding that repeats one of them by st
 | The same P1 recurs after its fix (marked `recurs:`) | `problem` in the `worker` envelope | Reported in the conversation; not integrated |
 | A P1 the implementer holds invalid, still asserted after one more round given the implementer's counter-evidence (tests or output) | `questions` entry with the reviewer's and the implementer's positions as options | Asked in the conversation |
 
-- The cap only limits further rounds. At the cap round a batch that fully meets section 2 ends the loop whatever its severity, a minor-fix P1 included; any batch that would need another round is handed over, P2 and P3 included unless each is waived with a reason. No fix leaves `high` unreviewed unless it is provably minor.
+- At the cap round a batch that fully meets section 2 ends the loop whatever its severity, a minor-fix P1 included; any batch that would need another round is handed over, P2 and P3 included unless each is waived with a reason.
 - A P1 the user rules invalid is closed with `reverify --waive <N>=<reason>` citing the `answer` envelope: the only waiver a P1 may carry. For reconcile and Planning the same goes into the new `reconcile-check` or the `worker` summary.
 - When the user resolves a cap or recurrence problem by asking for a fix, that fix gets one further fresh round outside the cap, named by the `resolution` envelope. Its outcome follows the rules above; a recurrence of the same P1 hands over again.
 - `Decision needed:` findings of a `challenger` stay out of the loop and go to `plan-accept`.
 
 ## 5. Planning at `high`
 
-`high` Planning compares two or more options and runs `scout` before the first `challenger`, starting from `devkit spec refs <ID> --direction in` for each capability and ADR the proposal touches, so the `challenger` input cites its list. A `challenger` envelope has no reverify: each round is a new `challenger-NN` envelope. The `plan-accept` request names a missing `scout` envelope at `high` as it does a missing `challenger`.
+`high` Planning compares two or more options and runs `scout` before the first `challenger`, starting from `devkit spec refs <ID> --direction in` for each capability and ADR the proposal touches, so the `challenger` input cites its list. Each round is a new `challenger-NN` envelope (no reverify).

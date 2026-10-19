@@ -23,34 +23,8 @@ docs/proposals/PROP-{slug}/
 └── materials/             # (Optional) On-demand research, benchmarks, external surveys
 ```
 
-- **`proposal.md` Frontmatter Convention**:
-  ```yaml
-  ---
-  id: PROP-<slug>
-  title: Proposal Title
-  summary: <One or two English sentences: what this proposal changes and why>   # required, English
-  status: draft                         # draft | reviewing | accepted | rejected
-  created_at: YYYY-MM-DD
-  target_area: capabilities/<area>/      # Target capability area on graduation
-  priority: high                        # critical | high | medium | low (estimated priority)
-  size: M                               # S | M | L | XL (estimated scope)
-  milestone: MS-foundation             # (Optional) Existing repository milestone ID
-  boundaries:
-    owns:
-      - capabilities/<area>/
-    excludes:
-      - template/
-  task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-  planning_effort: medium               # low | medium | high: Planning activity-effort hint
-  dev_effort: medium                    # low | medium | high: Development activity-effort hint
-  # supersedes: PROP-<old-slug>         # close by supersede: the accepted proposal this draft replaces
-  # needs_decompose: true               # Backlog splits this draft before Planning starts
-  ---
-  ```
-  - **`priority`**: Business/system significance (`critical` > `high` > `medium` > `low`).
-  - **`size`**: Estimated implementation scope (S=single fix, M=1-2 sessions, L=complex module, XL=major overhaul).
-  - **`milestone`**: (Optional) Existing global MS ID; carried over to `spec.md` on handoff.
-  - **`boundaries`**: Declared scope impact (`owns`) and excluded scope (`excludes`).
+- **`proposal.md` Frontmatter**: `devkit spec proposal new` writes it; the fields and their values are annotated in
+  the proposal template (`.devkit/managed/spec/templates/proposal.md`).
   - **`planning_effort` / `dev_effort`**: Non-authoritative `activity-effort` hints (`low` | `medium` | `high`, default `medium`) for Planning and Development; `dev_effort` is refined during Planning before `plan-accept` and returned by `handoff`, while confirmed run effort is recorded on `worker-NN.yaml` envelopes (never copied to `spec.md`).
 - **`materials/` Markdown**: follow the material convention: file `{YYYYMMDD}-{slug}.md`, `id: MAT-<slug>`, `created_at`, H1 `# [MAT-<slug>] <title>`. `RULE-spec-format` skips `materials/` directories, so the frontmatter is recommended, not checked. Non-Markdown files need no metadata. After handoff the files move to `docs/materials/`.
 - **`target-docs.md` (Recommended)**: Focuses on "What docs/ changes will look like once accepted", while `proposal.md` focuses on "Why". Covers capability ledger, user stories, architecture & decisions, conventions & governance, and before/after comparisons. Recommended for `size: M/L/XL` or when Living Spec structural changes are expected.

@@ -1,6 +1,6 @@
 ---
 name: living-spec-writing
-description: Read before authoring, editing or reviewing docs/ or specs/ documents. Defines current-state writing, history placement, completed-spec treatment, story-capability traceability and internal document references.
+description: Read before authoring, editing or reviewing docs/ or specs/ documents. Defines current-state writing, history placement, completed specs, story-capability traceability, summaries and ID references.
 ---
 
 # Living Spec Writing
@@ -26,9 +26,8 @@ description: Read before authoring, editing or reviewing docs/ or specs/ documen
 
 ## References
 
-- Refer to ID-bearing internal documents with full IDs in prose and exact IDs in relationship fields; omit Markdown paths. IDs are path-derived slugs, never dates or sequence numbers (`RULE-id-convention`).
+- Refer to ID-bearing internal documents with full IDs in prose and exact IDs in relationship fields; omit Markdown paths. IDs are path-derived slugs, never dates or sequence numbers (`RULE-id-convention`, `RULE-document-reference`).
 - Keep external URLs, images, code paths and documents without IDs as ordinary links. Code examples, non-ID inline code and H1 self IDs are not reference edges.
-- Use `devkit spec resolve <ID> [<ID>...]` to find repository-relative paths and `devkit spec refs <ID> --direction out|in` for reference discovery; `RULE-document-reference` checks every reference.
 
 ## Glossary
 

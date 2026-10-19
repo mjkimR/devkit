@@ -7,19 +7,15 @@ implementation starts. They are anchors for finding the code (`devkit spec list 
 documents that own a path), not a complete list of the implementation and not proof that the code implements the
 document. The rule keeps every declared path alive, so an agent following an entrypoint never lands on nothing.
 
-- **Phase and severity**: `linter`, `error`. Shipped by the `spec` bundle (preset `core`).
+- **Phase and severity**: `linter`, `error`.
 - **What is checked**: capabilities (`CAP-`) and stories (`US-`) under `docs/capabilities/`, `docs/stories/` and the
   same directories of a namespace docs root `docs/packages/<name>/`, when they declare `entrypoints`. An omitted
   field and an empty list pass.
-- **Path contract**: paths are relative to the workspace root, written with `/`, whatever the document's directory
-  (also under `docs/packages/<name>/`). `./` and a trailing `/` are normalized; `.` is the whole workspace. Files
-  and directories are both allowed; comparison is by whole path segments and case-sensitive (`src/a` covers
-  `src/a/b.py`, not `src/ab`).
-- **Targeting and snapshots**: violations are reported in the targeted documents, so `devkit rules check` without
-  targets checks every declaration. `--staged` and `--ci` check the documents the change touches and, in addition,
-  every current document not matched by `[rules] exclude` that declares a path the diff deletes (or a directory
-  containing it): deleting code without touching the document that declares it fails the commit gate too. Snapshot
-  runs resolve paths in the snapshot's tree, where an empty directory does not exist.
+- **Path contract**: files or directories, relative to the workspace root and written with `/`, whatever the
+  document's directory; `src/a` covers `src/a/b.py`, not `src/ab`.
+- **Targeting**: violations are reported in the targeted documents. `--staged` and `--ci` also check every current
+  document not matched by `[rules] exclude` that declares a path the diff deletes (or a directory containing it), so
+  deleting code without touching the document that declares it fails the commit gate too.
 
 ## 2. Cause of Violation
 
@@ -41,13 +37,12 @@ the declaration at where the code moved, or remove an obsolete declaration.
 
 ## 4. Configuration
 
-The rule has no settings. Project policy in `.devkit/config.toml` (`[rules] exclude`, `[rules.severity_overrides]`,
-`[rules.phase_overrides]`) applies as to every rule.
+No settings.
 
 ## 5. Exceptions
 
-There is no inline suppression. Remove a declaration rather than excuse it: an entrypoint is optional, and one that
-does not exist misleads. Documents matched by `[rules] exclude` are not checked.
+No inline suppression. Remove a declaration rather than excuse it: an entrypoint is optional, and one that does not
+exist misleads. `[rules] exclude` removes a file from every rule.
 
 ## 6. Example
 

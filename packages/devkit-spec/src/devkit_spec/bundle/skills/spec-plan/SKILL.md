@@ -1,55 +1,42 @@
 ---
 name: spec-plan
-description: Map feature specification requirements to system architecture, review existing capabilities and invariants, evaluate technical tradeoffs, and write an implementation plan (plan.md) sized to the change.
+description: Map spec requirements to the system architecture, check existing capabilities, ADRs and invariants, weigh technical tradeoffs, and write an implementation plan (plan.md) sized to the change.
 ---
 
 # spec-plan: Technical Planning Workflow
 
-Use this skill after a specification (`specs/<YYYY-MM>/<YYYYMMDD>-<slug>/spec.md`) has been drafted and agreed upon: the `specify` stage of workflow `sdd-spec-feature`, or the `plan-tasks` stage (fix design) of workflow `sdd-spec-bugfix`. The goal is to design the technical solution, map changes to codebase architecture, identify data contracts, and establish technical boundaries before generating tasks.
+Use this skill once `spec.md` is drafted and agreed: the `specify` stage of workflow `sdd-spec-feature`, or the `plan-tasks` stage (fix design) of workflow `sdd-spec-bugfix`. It designs the solution, maps changes onto the architecture and sets the contracts and boundaries the tasks build on.
 
 ---
 
 ## 1. Prerequisites & Inputs
 
-- A validated specification at `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/spec.md`; `plan.md` beside it is the skeleton `devkit spec new` or `devkit spec proposal handoff` wrote. A bugfix bundle from `devkit spec new` has none: write `plan.md` at the `plan-tasks` stage with the frontmatter `id: PLAN-<slug>` and `spec: SPEC-<slug>`, then the sections below.
-- System architecture documentation at `docs/architecture/` (e.g., arc42, C4 diagrams).
-- Existing capability definitions at `docs/capabilities/` (`devkit spec list capability`).
-- Architecture Decision Records at `docs/decisions/` (`devkit spec list decision`).
+- `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/spec.md`; `plan.md` beside it is the skeleton `devkit spec new` or `devkit spec proposal handoff` wrote. A bugfix bundle from `devkit spec new` has none: write `plan.md` at the `plan-tasks` stage with the frontmatter `id: PLAN-<slug>` and `spec: SPEC-<slug>`, then the sections below.
+- `docs/architecture/`, capabilities (`devkit spec list capability`) and ADRs (`devkit spec list decision`).
 
 ---
 
 ## 2. Planning Workflow
 
 ### Step 0: Constitution & Invariant Pre-Flight
-- Check the plan against the Living Spec and the spec constitution (`devkit get-context spec`):
-  - `docs/decisions/` (ADRs): Does this plan violate any accepted ADR? (`devkit spec search "<topic>" --kind decision`)
-  - `docs/architecture/`: Does this plan violate module boundaries, import hierarchies, or tech stack constraints (e.g., runtime, packaging or dependency constraints the architecture documents declare)?
-  - `docs/capabilities/`: Does this duplicate or break existing living capabilities? (`devkit spec refs <CAP-ID> --direction in` shows what depends on one.)
-- If an architectural rule MUST be modified or overridden:
-  - Document the reason explicitly and propose drafting a new ADR at `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md` (ID `ADR-<slug>`, template `.devkit/managed/spec/templates/decision.md`).
-  - A design choice inside the agreed intent is decided with the recommended option and its reason recorded here. One that cannot be made without changing the agreed goal, scope or contract is reported as a problem for the Host (no Development direction gate); a bugfix whose fix needs a different defect scope within the agreed expected behavior returns to `characterize`.
+- Check the plan against:
+  - accepted ADRs (`devkit spec search "<topic>" --kind decision`);
+  - module boundaries, import hierarchies and runtime, packaging or dependency constraints in `docs/architecture/`;
+  - existing capabilities it duplicates or breaks (`devkit spec refs <CAP-ID> --direction in` shows what depends on one).
+- An architectural rule that MUST change needs a new ADR, proposed with its reason (`docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`, ID `ADR-<slug>`, template `.devkit/managed/spec/templates/decision.md`).
+- Decide design choices inside the agreed intent with the recommended option and record the reason here; one outside it is a problem for the Host. A bugfix whose fix needs a different defect scope within the agreed expected behavior returns to `characterize`.
 
 ### Step 1: Component Breakdown & Interface Contracts
-- Identify which packages, modules, or services will be touched or introduced.
-- Define internal contracts (data structures, interfaces, function signatures, database schemas).
-- For external APIs or CLI interfaces, specify input flags, return codes, and payload formats.
+- The packages, modules or services touched or introduced, and their internal contracts (data structures, interfaces, signatures, schemas); for external APIs or CLIs, flags, return codes and payload formats.
 
 ### Step 2: Cross-Artifact Consistency Check
-- Cross-audit `spec.md` and the emerging `plan.md`:
-  - Does every User Story in `spec.md` have a corresponding implementation path in `plan.md`?
-  - Does every `[AC-NN]` scenario (happy path + edge cases) have a designated handling component?
-  - Are all Non-Goals in `spec.md` left out of the plan?
+- Every user story in `spec.md` has an implementation path, every `[AC-NN]` scenario a handling component, and no non-goal is in the plan.
 
-### Step 3: Failure Modes, Edge Cases & Rollback Strategy
-- What happens on network failure, partial writes, or corrupt configuration?
-- How is idempotency preserved?
-- Are migrations required? If yes, is there a backwards-compatible rollout plan?
+### Step 3: Failure Modes & Rollback
+- The failure modes the change introduces, and a backwards-compatible rollout for any required migration.
 
-### Step 4: Verification & Test Strategy
-- Unit tests: Mock boundaries and pure logic tests.
-- Integration tests: End-to-end execution, CLI command tests, or contract validation.
-- Static analysis: Linter rules, type checking, or schema validators to enforce.
-- For a bugfix: the reproduction test that becomes the regression test, and the checks that cover the preserved behavior.
+### Step 4: Verification Strategy
+- The tests and static checks that prove each scenario; for a bugfix, the reproduction test that becomes the regression test and the checks that cover the preserved behavior.
 
 ---
 
@@ -107,11 +94,5 @@ class FeatureConfig:
 ---
 
 ## 4. Definition of Done (DoD) for Planning
-- [ ] Pre-flight constitution check verified against `docs/decisions/` and `docs/architecture/`.
-- [ ] Every user story and scenario in `spec.md` has an implementation path; non-goals stay out of the plan.
-- [ ] Sections that do not apply are omitted.
-- [ ] Affected packages, modules, and interfaces are explicitly enumerated.
-- [ ] Testing strategy and validation commands are clearly defined.
-- [ ] File is saved at `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/plan.md`.
-- [ ] The skeleton marker line `<!-- devkit:skeleton -->` is removed from `plan.md` (`not-skeleton(plan.md)` keeps the stage open until then).
-- [ ] Ready to proceed to `spec-tasks`.
+- [ ] Every user story and scenario has an implementation path; non-goals stay out; sections that do not apply are omitted.
+- [ ] The skeleton marker line `<!-- devkit:skeleton -->` is removed from `plan.md` (`not-skeleton(plan.md)` keeps the stage open until then); next is `spec-tasks`.

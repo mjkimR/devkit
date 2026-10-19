@@ -6,14 +6,12 @@ Every acceptance criterion of an active spec is covered by a task, and every tas
 defines, so no criterion is forgotten in the plan and no task builds against a criterion that does not exist. The
 rule checks the ID links only; whether the tasks really fulfil the criteria is for tests and review.
 
-- **Phase and severity**: `linter`, `error`. Shipped by the `spec` bundle (preset `core`).
+- **Phase and severity**: `linter`, `error`.
 - **What is checked**: each `specs/**/tasks.md` against the `spec.md` beside it. A spec without `tasks.md` yet is not
-  checked, and neither is a spec with `status: completed`.
+  checked; a completed spec only when its `spec.md` or `tasks.md` is named as an explicit target.
 - **Targeting**: changing either file can break the pair, so the pair is checked when `spec.md` or `tasks.md` is
   targeted, and each violation is reported on the file it belongs to: a commit that adds `[AC-03]` to `spec.md`
-  reports the uncovered ID on `tasks.md`. Files matched by `[rules] exclude` are never reported. A completed spec's
-  pair is work history, checked only when `spec.md` or `tasks.md` is named as an explicit target
-  (`devkit rules check specs/.../tasks.md`).
+  reports the uncovered ID on `tasks.md`.
 
 ### Acceptance criteria
 
@@ -56,17 +54,15 @@ defines; list only well-formed IDs (`_Requirements: AC-01, AC-02_`); restore a r
 frontmatter.
 
 When a criterion is added, split or rewritten rather than renumbered, read the `spec:contract-authoring` instruction
-(Scope and Verifiability) for how an acceptance scenario is made checkable;
-`devkit rules explain` prints its path as a `[RELATED: ...]` line.
+(Scope and Verifiability) for how an acceptance scenario is made checkable.
 
 ## 4. Configuration
 
-The rule has no settings. Project policy in `.devkit/config.toml` (`[rules] exclude`, `[rules.severity_overrides]`,
-`[rules.phase_overrides]`) applies as to every rule.
+No settings.
 
 ## 5. Exceptions
 
-There is no inline suppression. A criterion that no task implements is either dropped from the spec or given a task;
+No inline suppression. A criterion that no task implements is either dropped from the spec or given a task;
 `[rules] exclude` removes a file from every rule.
 
 ## 6. Examples

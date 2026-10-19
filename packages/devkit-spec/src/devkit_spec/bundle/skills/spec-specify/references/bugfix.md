@@ -1,19 +1,19 @@
 # spec-specify reference: bugfix characterization and evidence
 
-Read when the bundle is bound to workflow `sdd-spec-bugfix` (a defect whose fix needs a spec bundle). Characterization is Development work; the expected behavior was agreed at `plan-intent`. The `characterize` stage writes `spec.md`, the `reproduce` stage writes the Red envelope, the `fix-verify` stage writes the Green envelope. The shared contracts (non-goals, AC format, references, clarification rule, self-validation, DoD) are in `SKILL.md` §4 and §5. Stage order, checks and returns: `devkit workflow show --unit <dir>`; the current stage: `devkit workflow next --unit <dir>`.
+Read when the bundle is bound to workflow `sdd-spec-bugfix`. Characterization is Development work; the expected behavior was agreed at `plan-intent`. `characterize` writes `spec.md`, `reproduce` the Red envelope, `fix-verify` the Green envelope. The shared contracts (non-goals, AC format, references, clarification rule, self-validation, DoD) are in `SKILL.md` §4 and §5.
 
 ## Step 1: Characterize the defect (stage `characterize`)
 
-Write `spec.md` with these sections (the bound workflow `sdd-spec-bugfix` is the only record that it is a bugfix; there is no `kind` field). Do not write a feature-style user story: `devkit spec new` and the proposal handoff give a bugfix `spec.md` a `Defect Characterization` section with the first four items below to fill in.
+Fill the skeleton's `Defect Characterization` section with the first four items below, no feature-style user story (the bound workflow is the only bugfix record; there is no `kind` field).
 
 - **Current behavior**: the trigger conditions, environment and the observed wrong result, with evidence (log, failing command, test name).
-- **Expected behavior and its basis**: the result the existing contract requires, citing the capability, story, ADR or test that defines it by ID. If the agreed expected behavior cannot be kept (it turns out to be disputed, or a design decision rather than a defect), stop and report it as a problem: a worker records it and ends, and the Host decides recovery or a close.
+- **Expected behavior and its basis**: the result the existing contract requires, citing the capability, story, ADR or test that defines it by ID. If the agreed expected behavior cannot be kept (it is disputed, or a design decision rather than a defect), stop: it is a problem for the Host.
 - **Behavior to preserve**: the call paths, input boundaries and related contracts around the change point that must keep working. Name the existing tests that cover them and the gap that needs a new check.
 - **Reproduction conditions**: the exact command, data and environment that reproduce the defect, or, when automation is impossible, the observation conditions and expected results that will serve as alternative evidence.
-- **Scope**: what is excluded from this fix (unrelated cleanup, a contract or structure change that would need the delivery workflow). Non-goals state what is excluded, with a rationale or reopen trigger when it helps.
+- **Scope**: what is excluded from this fix (unrelated cleanup, a contract or structure change), written as Non-Goals.
 - **Acceptance criteria**: at least one `[AC-NN]` scenario for the resolved behavior and one for each preserved behavior, written so the Green envelope can cite them.
 
-The `characterize` exit also runs `lint-clean` over `spec.md`. A bugfix bundle has no `plan.md` or `tasks.md` yet (`devkit spec new` writes `spec.md` only), so `RULE-task-coverage` has nothing to match until the `plan-tasks` stage writes them (`spec-plan`, `spec-tasks`).
+The `characterize` exit also runs `lint-clean` over `spec.md`; `RULE-task-coverage` has nothing to match until `plan-tasks` writes `plan.md` and `tasks.md` (`spec-plan`, `spec-tasks`).
 
 ## Step 2: Reproduce before fixing (stage `reproduce`)
 
@@ -32,7 +32,7 @@ devkit workflow envelope new --unit <dir> --kind red --stage reproduce \
 
 ## Step 3: Fix and verify (stage `fix-verify`)
 
-- Implement within the task's expected scope (`_Boundary:` in `tasks.md`); explain any path beyond it in the report. Do not mix unrelated changes.
+- Implement within the task's `_Boundary:`; explain any path beyond it in the report. Do not mix unrelated changes.
 - Verify resolution under the same reproduction conditions and preservation over the declared paths. Record the Green envelope:
 
 ```bash
@@ -52,11 +52,11 @@ External outages, environment-dependent or non-deterministic defects: fix the ob
 
 ## Step 5: Route changes
 
-When investigation shows the fix needs a contract change or a design choice outside the agreed intent, report it as a problem; Development never returns to Planning. The Host decides: a choice still inside the agreed intent continues; one that needs the direction decided first is a close by depth escalation to a new draft proposal (the `spec` skill's `references/classification.md`). Say which evidence stays valid (reproduction evidence usually does; AC and preserved-behavior lists are re-examined).
+A fix that needs a contract change or a design choice outside the agreed intent is a problem for the Host (Development never returns to Planning; a close is the `spec` skill's `references/classification.md`). Say which evidence stays valid (reproduction evidence usually does; AC and preserved-behavior lists are re-examined).
 
 ## Output standard
 
-It is the skeleton `devkit spec new --workflow sdd-spec-bugfix` and `devkit spec proposal handoff` write, filled in: keep their section order and frontmatter lines (`id`, `summary`, `workflow`). The Step 1 scope goes under Non-Goals.
+The skeleton `devkit spec new --workflow sdd-spec-bugfix` and `devkit spec proposal handoff` write, filled in: keep their section order and frontmatter lines (`id`, `summary`, `workflow`).
 
 ```markdown
 ---

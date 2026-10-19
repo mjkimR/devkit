@@ -1,11 +1,11 @@
 ---
 name: git-commits
-description: Read before drafting or creating a commit. Defines commit message types, optional scope, imperative subjects, body and footer formatting, and clean message output.
+description: Read before drafting or creating a commit message.
 ---
 
 # Git commit conventions
 
-Apply these conventions to commit messages after reading the changes included in the commit. Describe those changes accurately; do not claim behavior or verification that the staged changes and check results do not support.
+Read the changes in the commit first and describe them accurately; never claim behavior or verification that the staged changes and check results do not support.
 
 ## Message structure
 
@@ -21,16 +21,11 @@ Use one subject line. Omit unused body and footer sections, including their plac
 
 ## Type and scope
 
-Allowed types: `feat` (a feature or capability), `fix` (a defect), `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `ci`, `build`, `revert` (undo an earlier change). Where the boundary is not obvious:
+Allowed types: `feat` (a feature or capability), `fix` (a defect), `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `ci`, `build`, `revert` (undo an earlier change). `style` is formatting or whitespace only (visual product changes take the type of their intent); `ci` covers continuous integration, `build` build tooling, packaging or dependencies.
 
-- `style`: formatting or whitespace only, without changing behavior; visual product changes use the type that describes their intent.
-- `refactor`: restructure code without adding a feature or fixing a defect.
-- `chore`: maintenance that does not fit a more specific type.
-- `ci`: continuous integration workflows or configuration; `build`: build tooling, packaging or dependencies.
+Choose the type of the commit's primary intent; supporting tests or documentation can share the implementation commit. Split unrelated changes when practical.
 
-Choose the type that describes the primary intent of the commit. Supporting tests or documentation can share the implementation commit. Split unrelated changes into separate commits when practical.
-
-Scope is optional. When useful, use a short component or area name in parentheses, such as `fix(parser): handle empty input`. Follow established repository scope names rather than inventing a scope for every commit.
+Scope is optional: a short component or area name in parentheses, such as `fix(parser): handle empty input`, following the repository's established scope names.
 
 ## Subject
 
@@ -42,7 +37,7 @@ Scope is optional. When useful, use a short component or area name in parenthese
 
 ## Body
 
-Use a body when the subject alone does not explain the change or its motivation. Explain what changed and why it was needed, focusing on behavior and intent rather than step-by-step implementation details.
+Add a body when the subject alone does not explain the change or its motivation: what changed and why, in terms of behavior and intent, not implementation steps.
 
 Use `- ` for body bullet points. Keep each sentence on one physical line and let the editor wrap it visually: never break a line in the middle of a sentence or hard-wrap to a fixed column width. Newlines belong only between sections, paragraphs, bullets and footer entries.
 

@@ -1,19 +1,19 @@
 ---
 name: agent-advisory
-description: Read before authoring CLI commands, tool or API errors, warnings, notices, rule violations, or advisory envelopes. Defines the Agent Advisory Protocol format, the ERROR/WARNING/NOTICE levels, ActionMode selection (HALT vs INPUT_ERROR vs BLOCKED, CONTINUE, NOTE), and deterministic directives.
+description: Read before authoring CLI commands, tool or API errors, warnings, notices, rule violations or advisory envelopes.
 ---
 
 # The Agent Advisory Protocol
 
-Apply these conventions when authoring CLI commands, deterministic rules, validation, MCP tools, or anything else an AI agent will read and act on. Every error, warning and notice follows the **Agent Advisory Protocol**, so that agents act on explicit directives instead of guessing, improvising workarounds, or retrying in loops.
+Every error, warning and notice an AI agent reads (CLI commands, rules, validation, MCP tools) follows this protocol, so agents act on explicit directives instead of guessing, improvising workarounds or retrying in loops.
 
 ## Principles
 
-- **Direct, do not describe.** An advisory exists to change the agent's next step. `[ACTION]` says what to do; the other lines supply what that step needs.
-- **Deterministic wording.** Directives never hedge ("likely", "might").
+- **Direct, do not describe.** `[ACTION]` says what to do next; the other lines supply what that step needs.
+- **Deterministic wording.** Directives never hedge ("likely", "might"); they forbid a blind retry and a workaround, not a rerun after the cause is fixed.
 - **Stable codes.** Every advisory has an `UPPER_SNAKE_CASE` code; callers branch on the code, never on message text.
-- **Context budget.** Emit an advisory only when it changes the agent's next step or must reach the user. Diagnostics that do neither are logs, hidden unless the user asks for verbose output.
-- **Channels.** In text mode the result goes to stdout as one-line sentinels and advisories go to stderr. In JSON mode the one JSON object on stdout carries the result and every advisory, and nothing goes to stderr. Each advisory is printed once: agent hosts usually merge the two channels.
+- **Context budget.** Emit an advisory only when it changes the agent's next step or must reach the user; other diagnostics are logs, hidden unless verbose.
+- **Channels.** In text mode the result goes to stdout as one-line sentinels and advisories to stderr; in JSON mode one JSON object on stdout carries both. Each advisory is printed once.
 
 ## Levels
 
@@ -47,7 +47,7 @@ Render advisories as sentinel lines on standard error (or as the text of a tool 
 [DETAIL] <Diagnostic context; one line per detail>
 ```
 
-The headline is `[ERROR]  `, `[WARN]   ` or `[NOTICE] ` (each sentinel is padded to 9 characters) and always carries the code, even when the message is empty. `[ACTION]` is always present for errors and warnings; a notice may omit it only when it is `brief` and has no `[FIX]`, since a fix without a directive reads as an instruction to run it. Omit any other line whose field is empty or blank. A value that spans several lines continues on lines indented 9 spaces under its sentinel, so every line either starts with a sentinel or belongs to the one above it. Drop blank lines inside a value: a block never contains a blank line. No colour, emoji or Markdown.
+Each sentinel is padded to 9 characters; the headline always carries the code. A notice omits `[ACTION]` only when it is `brief` and has no `[FIX]`, since a fix without a directive reads as an instruction to run it. Omit any other line whose field is empty. A multi-line value continues on lines indented 9 spaces; a block never contains a blank line, colour, emoji or Markdown.
 
 ## Fields
 
@@ -66,7 +66,7 @@ The headline is `[ERROR]  `, `[WARN]   ` or `[NOTICE] ` (each sentinel is padded
 | `details` | all | Diagnostic lines. |
 | `brief` | notice | `true` omits `[ACTION]` when there is no `fix`. |
 
-Process exit codes follow the checker convention of `grep`, `diff` and `ruff`: `0` success, `1` the command ran and reports a negative result (violations, a failed check, a refused change), `2` the command could not do its job (usage error, unreadable or invalid input, unexpected failure; the default for an error). An error never exits `0`, including the `DEFER` and `INTERACTION` modes: the operation did not happen. A command whose job is to report a state (for example a workflow waiting for a person) reports that state as its result and exits `0`. Warnings and notices never change the exit code, except under an explicit strict mode.
+An error never exits `0`, even in `DEFER` or `INTERACTION` mode: the operation did not happen. A command whose job is to report a state (a workflow waiting for a person) reports it as its result and exits `0`.
 
 ## Mode derivation
 
@@ -84,18 +84,9 @@ The mode is never set directly; it is derived. The first matching rule wins:
 
 Choose fields by asking which directive the agent must follow, then confirm the derived mode matches.
 
-## The retry directive principle
-
-Agents exhibit two failure modes when they meet errors: **infinite blind retries** of an identical command, and **destructive side-questing** (inventing bypass flags such as `--force`, editing rules to pass, finishing the job by hand outside the tool). To prevent both without paralyzing the agent:
-
-- **Prohibit blind retries deterministically**: state that retrying unchanged input or state fails identically.
-- **Never use an unconditional "Do not retry" for fixable input errors**: direct the agent to correct the `[TARGET]` and rerun.
-- **Never use probabilistic phrasing**: directives are deterministic and conditional on fixing the cause.
-- **Never let a warning or notice start work**: `CONTINUE` and `NOTE` forbid running `[FIX]` unasked.
-
 ## Action modes
 
-The `[ACTION]` text is canonical. Implementations render exactly these directives so that every tool speaks with one voice.
+The `[ACTION]` text is canonical: implementations render exactly these directives.
 
 ### `INPUT_ERROR`: invalid arguments, syntax, or user files
 
@@ -109,7 +100,7 @@ INPUT_ERROR — Do not retry with identical input. Retrying unchanged will
 
 ### `HALT`: critical state hazard or corruption risk
 
-- **Use for**: half-applied mutations, lock conflicts, possible state corruption, unrecoverable filesystem hazards. Reserved **strictly** for cases where further execution can damage state.
+- **Use for**: half-applied mutations, lock conflicts, possible state corruption: **only** where further execution can damage state.
 - **Never use for** input typos or fixable syntax errors; use `INPUT_ERROR`.
 - **Set**: `retry = UNSAFE` with `actor` `NONE` or `TOOL`.
 
@@ -163,7 +154,7 @@ MAINTENANCE — A codebase defect or tool failure occurred.
 
 ### `DEFER`: not an error; retry later
 
-- **Use for**: rate limits, external jobs still running, a lock another process holds, scheduled windows. The operation did not happen; something that did happen and only deserves mention is a `NOTICE`.
+- **Use for**: rate limits, external jobs still running, a lock another process holds, scheduled windows: the operation did not happen (one that did is at most a `NOTICE`).
 - **Set**: `actor = NONE`, `retry = SAFE`, and `retry_after`.
 
 ```text
@@ -185,7 +176,7 @@ CONTINUE — The operation succeeded; this does not block it. Do not retry
 ### `NOTE`: a notice; the operation succeeded and this is worth knowing
 
 - **Use for**: an available but unused option, a check skipped because its input does not exist yet, a tracked file rewritten for a benign reason, a transition that is ready.
-- **Set**: `level = NOTICE`; `fix` when there is an obvious follow-up. A notice without `fix` should be `brief = true`: it asks for nothing, so the repeated directive only costs context.
+- **Set**: `level = NOTICE`; `fix` when there is an obvious follow-up, otherwise `brief = true`, since the directive would only cost context.
 
 ```text
 NOTE — For awareness only; nothing needs doing now. Continue. Mention it
@@ -194,8 +185,8 @@ NOTE — For awareness only; nothing needs doing now. Continue. Mention it
 
 ## Warnings and notices in practice
 
-- **Never raised.** A warning or notice describes an operation that succeeded: collect it and return it with the result (under `notices`); the command prints the result first and the notices after it. A raised warning or notice is a defect and is reported as `UNEXPECTED_ERROR`.
-- **One advisory per condition.** Name all affected items in one advisory rather than one block per file.
+- **Never raised.** Return a warning or notice with the result (under `notices`), printed after the result; a raised one is a defect, reported as `UNEXPECTED_ERROR`.
+- **One advisory per condition.** Name all affected items in one advisory, not one block per file.
 - **Lasting conditions.** A condition the user must act on is a warning on every run until resolved; one that asks for nothing is a notice reported when it appears or changes, then left to data (a JSON field, a list command). A condition the user decided on is never announced again.
 - **Warnings first.** On stderr, warnings precede notices and errors come last; JSON keeps the collected order.
 - **Targets are files.** `[TARGET]` names a file, a flag or a `path:line:col` location; identifiers such as rule IDs belong in the message or `[DETAIL]`.
@@ -207,21 +198,8 @@ NOTE — For awareness only; nothing needs doing now. Continue. Mention it
 
 Machine channels carry the same envelope as data:
 
-- **JSON**: `{"code", "level", "message", "exit_code", "advisory": {...}}`. `advisory` carries what the block shows: always `code`, `level` and `mode`; the `[ACTION]` text on one line as `action`, exactly when the block shows it; for an error only `actor`, `retry`, `guardrail`, `input_error` (and `retry_after` when set); `fix`, `what_to_report`, `target_files` and `details` only when they have a value. A result lists collected errors under `errors` and warnings and notices under `notices`; a command that fails outright prints `{"error": {...}}`. Nothing goes to stderr in JSON mode.
-- **HTTP (RFC 7807)**: errors only: `{"type", "title": <code>, "status": <HTTP status>, "detail": <message>, "code", "advisory"}`. `type` is `<documentation base URI>/<code>` or `about:blank`. The server decides whether to expose `advisory` (for example, only on authenticated or internal APIs); request headers never enable it. Warnings and notices travel in the successful response body.
+- **JSON**: `{"code", "level", "message", "exit_code", "advisory": {...}}`. `advisory` carries what the block shows: `code`, `level`, `mode`, the `[ACTION]` text as `action` when shown, the error-only fields for an error, and the other fields when set. A result lists collected errors under `errors` and warnings and notices under `notices`; a command that fails outright prints `{"error": {...}}`.
+- **HTTP (RFC 7807)**: errors only: `{"type", "title": <code>, "status": <HTTP status>, "detail": <message>, "code", "advisory"}`, `type` being `<documentation base URI>/<code>` or `about:blank`. The server, never a request header, decides whether to expose `advisory`. Warnings and notices travel in the successful response body.
 - **MCP tools**: a failed call returns the rendered error block as the error result text; a successful call appends its rendered warning and notice blocks after the result text.
 
 A consumer never executes `fix` automatically outside `AUTO` (and `INTERACTION` after approval, `CONTINUE`/`NOTE` when the user asks). A transport adapter never executes `fix` on the agent's behalf.
-
-## Authoring checklist
-
-When writing an advisory in any language or rule format:
-
-- [ ] **Level**: Did the operation fail or refuse (`ERROR`), succeed with something the user must learn (`WARNING`), or succeed with something worth knowing (`NOTICE`)? Would a log line do?
-- [ ] **Headline**: Does `code` uniquely identify the condition without string matching? Is the message one concise sentence?
-- [ ] **`[ACTION]`**: For an error, does the derived mode match the intended directive and distinguish a blind retry from a corrected rerun?
-- [ ] **`[TARGET]`**: Does it point to the exact file path, flag name, or line?
-- [ ] **`[FIX]`**: If remediation is possible, is it exact and copy-pasteable?
-- [ ] **`[REPORT]`**: If the user must decide or learn something, is the question or summary clear?
-- [ ] **Brief**: Is a notice without `[ACTION]` self-explanatory and free of `fix`?
-- [ ] **Wording**: Is every directive deterministic, with no "likely" or "might"?

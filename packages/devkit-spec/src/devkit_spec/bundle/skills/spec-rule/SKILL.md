@@ -1,20 +1,18 @@
 ---
 name: spec-rule
-description: Author, test, and register a deterministic project governance rule as a devkit rule (a BaseRule subclass with its guide, shipped in the repository's own bundle) with optional safe autofix and typed settings.
+description: Author, test and register a deterministic project governance rule as a devkit rule (a BaseRule with its guide, in the repository's own bundle), with optional safe autofix and typed settings.
 ---
 
 # spec-rule: Governance Rule & Autofix Authoring Workflow
 
-Use this skill when introducing a project convention, architectural boundary, document integrity check, or deterministic remediation (autofix) as a rule.
-
-Rules are not prompt instructions or advisory text. They are fast, deterministic checks that `devkit rules check` runs in the session, the commit gate (`devkit rules check --staged`) runs before every commit and CI runs with `devkit rules check --ci --base <ref>`, to prevent context drift and architectural erosion. The spec bundle's own rules (`RULE-id-convention`, `RULE-spec-lifecycle`, ...; `devkit rules explain <RULE-id>`) are worked examples of the pattern.
+Use this skill when introducing a project convention, architectural boundary, document integrity check, or deterministic remediation (autofix) as a rule: a fast, deterministic check that runs in the session (`devkit rules check`), the commit gate (`--staged`) and CI (`--ci --base <ref>`). The spec bundle's own rules (`devkit rules explain RULE-spec-lifecycle`, ...) are worked examples.
 
 ---
 
 ## 1. Principles
 
 ### Principle 1: A project rule ships in the project's own bundle
-- A rule the repository keeps is a `kind = "rule"` asset of its **in-repository bundle** (a content package under `tools/<repo>-devkit/`, installed as a dev dependency; devkit's `in-repo-bundle` instruction, listed by `devkit get-context devkit`, describes the setup, and the `harness-assets` instruction of devkit-agt's `harness` bundle, listed by `devkit get-context harness`, its rule tests and Git snapshot gates). `devkit sync` deploys it under `.devkit/managed/<bundle>/`, records it in `.devkit/installation.json`, and `devkit rules` loads it without flags.
+- A rule the repository keeps is a `kind = "rule"` asset of its **in-repository bundle** (a content package under `tools/<repo>-devkit/`; setup: devkit's `in-repo-bundle` instruction, rule tests and snapshot gates: the `harness` bundle's `harness-assets` instruction). `devkit sync` deploys it under `.devkit/managed/<bundle>/` and `devkit rules` loads it without flags.
 - One directory per rule asset: `rules/<name>/rule.py` (one or more `BaseRule` subclasses, `guide="guide.md"`; every `.py` file of the asset is loaded except under `tests/`), `rules/<name>/guide.md` (the guide `devkit rules explain` prints and violations cite, in devkit's guide sections) and `rules/<name>/tests/test_rule.py` (the rule's tests, deployed with it).
 - An instruction or playbook holding the rule's judgment or procedure is named with `related=("<bundle>:<asset-id>",)`; `devkit rules explain` prints its path, the guide's Remediation says when to read it, and the instruction names the rule by ID without repeating its checks.
 - `devkit rules check --rules-dir <dir>` loads unrecorded rule files for a local experiment; the commit gate never runs them. Promote a finished experiment into the bundle.
@@ -27,8 +25,7 @@ Rules are not prompt instructions or advisory text. They are fast, deterministic
 - A project can park a linter rule in hygiene with `[rules.phase_overrides]` ([config](references/config.md)).
 
 ### Principle 3: Deterministic autofix
-- If a violation can be resolved **without subjective inference or human ambiguity** (missing frontmatter defaults, link normalization, a missing backlink), implement `fix(ctx) -> list[str]` (the `Autofixable` protocol) and mark those violations `fixable=True`.
-- Fix only when repository state determines exactly one result (one candidate path, one target ID) or a documented default applies. With several candidates, report a remediation instead.
+- Implement `fix(ctx) -> list[str]` (the `Autofixable` protocol) and mark violations `fixable=True` only when repository state determines exactly one result (one candidate path, one target ID) or a documented default applies; with several candidates, report a remediation instead.
 - Write only through `ctx.cache.write_text`, keep every other byte, leave files `ctx.cache.read_text_strict` rejects alone, and return every path written. The engine runs one fix pass and one recheck; a second run must produce zero changes and zero violations (idempotency). Under `ctx.dry_run` return the paths without writing.
 
 ---

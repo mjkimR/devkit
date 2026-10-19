@@ -1,24 +1,21 @@
 ---
 name: spec
-description: Main entry skill for development intent; conversational router and pair programmer. Classifies the work (task-kind, planning-depth, activity-effort), runs Backlog and inline Planning, drives the spec-driven delivery workflows and, on request, operational playbooks.
+description: Main entry skill for development intent; conversational router and pair programmer. Classifies the work (task-kind, planning-depth, activity-effort), runs Backlog and inline Planning and drives the spec-driven delivery workflows.
 ---
 
 # spec: Conversational Router & Pair Programmer
 
-Use this skill for any development task, feature request, troubleshooting, or operational workflow. `spec` is the **central human-agent router**: it directs each intent to the spec-driven delivery skill or operational playbook that fits, using **progressive disclosure**.
+Use this skill for any development task, feature request or troubleshooting. `spec` is the **central human-agent router**: it directs each intent to the spec-driven delivery skill that fits, using **progressive disclosure**.
 
-Read `devkit spec policy` before classifying work. Use the effective approval and Git policy with [completion](references/completion.md). Explicit user instructions and authorization already given take precedence; `dev-integration = auto` removes the integration question once the required checks pass, without granting authority for new Git or external actions. A policy command error stops policy-dependent work.
+Read `devkit spec policy` before classifying work; approval and Git policy follow [completion](references/completion.md#policy). Explicit user instructions and authorization already given take precedence. A policy command error stops policy-dependent work.
 
 ---
 
 ## 1. Operating Invariants
 
-1. **No Session Hijacking (`MUST NOT`)**:
-   - The agent MUST NOT unilaterally declare the user's session finished or stop working on active tasks without user direction.
-2. **Contextual Retrospective Reminder (`SHOULD`)**:
-   - Under `FEEDBACK_POLICY reminder=contextual`, reusable observations from completed work SHOULD prompt an optional `/spec-feedback` sweep. Under `reminder=off`, omit reminders. Routine completions, proposal additions and wording edits alone need no reminder.
-3. **Progressive Disclosure (`SHOULD`)**:
-   - Load only the instructions for the current phase rather than every template, instruction or playbook up front.
+1. **No Session Hijacking (`MUST NOT`)**: never unilaterally declare the user's session finished or stop working on active tasks without user direction.
+2. **Contextual Retrospective Reminder (`SHOULD`)**: under `FEEDBACK_POLICY reminder=contextual`, reusable observations from completed work SHOULD prompt an optional `/spec-feedback` sweep, never a completion or merge gate; under `reminder=off`, none. Routine completions, proposal additions and wording edits need no reminder.
+3. **Progressive Disclosure (`SHOULD`)**: load only the current phase's instructions, not every template, instruction or playbook up front.
 
 ---
 
@@ -26,36 +23,33 @@ Read `devkit spec policy` before classifying work. Use the effective approval an
 
 When the user enters `/spec <intent>` or asks a general engineering question:
 
-### Tier 1: Classification and Planning
-Classify the request on the three axes of the spec constitution (`devkit get-context spec`): `task-kind`, then `planning-depth`, then per activity the mode and `activity-effort` ([effort](references/effort.md)). Propose the classification against the criteria and let the user confirm it at `plan-intent`; for a proposal the same request proposes the Planning effort. Backlog work, inline Planning, depth changes and closes follow [classification](references/classification.md). Before any bundle or edit, settle the branch and worktree per `GIT_POLICY` ([worktree](references/worktree.md); a branch without a worktree, an existing branch: [branches](references/branches.md)):
+### Classification and Planning
+Classify on the three axes of the spec constitution (`devkit get-context spec`): `task-kind`, then `planning-depth`, then per activity the mode and `activity-effort` ([effort](references/effort.md)). Propose the classification and let the user confirm it at `plan-intent`; for a proposal the same request proposes the Planning effort. Backlog, inline Planning, depth changes and closes follow [classification](references/classification.md). Before any bundle or edit, settle the branch and worktree per `GIT_POLICY` ([worktree](references/worktree.md); a branch without a worktree, an existing branch: [branches](references/branches.md)):
 
 | Classification | Workflow | Planning and start |
 | :--- | :--- | :--- |
-| `session` × `feature` | `sdd-session-feature` | Inline Planning: agree the intent in the conversation, no Unit. Implement, verify, review at the effort, report in the final response or PR body (`devkit workflow show sdd-session-feature`; there is no unit, so follow its stages in the session). |
-| `session` × `bugfix` | `sdd-session-bugfix` | Same, with the expected behavior agreed; write a failing reproduction test first (Red), then fix it (Green), and report both. |
+| `session` × `feature` | `sdd-session-feature` | Inline Planning: agree the intent in the conversation (session: no records). Implement, verify and review at the effort, following `devkit workflow show sdd-session-feature` in the session. |
+| `session` × `bugfix` | `sdd-session-bugfix` | Same, with the expected behavior agreed; a failing reproduction test first (Red), then the fix (Green), reporting both. |
 | `spec` × `feature` | `sdd-spec-feature` | Inline Planning on `dev-<slug>`: `devkit spec new <slug> --title "..." --summary "..."`, record `plan-intent`, commit; Development then runs `spec-specify` ➔ `spec-plan` ➔ `spec-tasks` and the later stages. |
 | `spec` × `bugfix` | `sdd-spec-bugfix` | Same with `--workflow sdd-spec-bugfix`; Development characterizes the defect (`spec-specify`, bugfix reference), reproduces with a `red` envelope and verifies with a `green` one. |
-| `proposal` (either kind) | `sdd-proposal`, then `sdd-spec-<task_kind>` | Backlog: `devkit spec proposal new <slug> --task-kind feature\|bugfix [--planning-effort ...] [--dev-effort ...]`; the user's confirmation of the draft is `plan-intent`. Planning (its own activity) runs on `plan-<slug>` to `plan-accept` (updating `dev_effort` before acceptance); Development starts on `dev-<slug>` with `devkit spec proposal handoff <slug>` and the `spec-next` skill's post-handoff link check. |
+| `proposal` (either kind) | `sdd-proposal`, then `sdd-spec-<task_kind>` | Backlog: `devkit spec proposal new <slug> --task-kind feature\|bugfix [--planning-effort ...] [--dev-effort ...]`; the user's confirmation of the draft is `plan-intent`. Planning (its own activity) runs on `plan-<slug>` to `plan-accept`; Development starts on `dev-<slug>` with `devkit spec proposal handoff <slug>` and the `spec-next` skill's post-handoff link check. |
 | Spike, independent review, or reconcile verification in an isolated context | Support role | `spec-delegate` (`scout`, `challenger`, `code-reviewer`, `reconcile-reviewer`), as the `activity-effort` asks. |
 | Native approval preparation, or integration after CLI/PR `dev-integration` authorization | Integration | `spec-integrate`: base integration, re-verify changed parts, confirm reconcile, final checks. |
 
-Read a workflow's stage order, checks, gates (`plan-intent`, `plan-accept`, `dev-integration`; the `exception` stage) and returns with `devkit workflow show --unit <dir>`, or `devkit workflow show <workflow-id>` for work without a bundle. External runners use the same definition; follow it.
+`devkit workflow show --unit <dir>` (or `<workflow-id>` without a bundle) shows a workflow's stages, checks, gates, `exception` stage and returns; external runners use the same definition.
 
-Gates: `plan-intent` and `plan-accept` are always the user's decision, recorded after the user's explicit answer only with `devkit workflow answer --unit <dir> --request gate:<gate> --action accept|decline --by user`. `dev-integration` follows `GATE_POLICY`: under `ask` local MCP integration presents the final report then calls `integration_integrate` directly for its single native approval, without a prior chat approval or mandatory `integration_prepare`; the accepted OK is not recorded but passed as `--given dev-integration` to every later `next`; under `auto` report the policy delegation (`source=policy`), never a human approval. There is no Development direction gate: decide choices inside the agreed intent with the recommended option and record the reason; report a non-blocking improvement as feedback (a follow-up draft proposal is also allowed); stop only for a problem that breaks the agreement (§2 of [classification](references/classification.md)). An approval is never inferred or hand-written; `--given` also asserts a runner check (`lint-ci-clean`, `merged`) per run.
+Gates: `plan-intent` and `plan-accept` are always the user's decision, recorded after the user's explicit answer only with `devkit workflow answer --unit <dir> --request gate:<gate> --action accept|decline --by user`; `dev-integration` follows `GATE_POLICY` ([completion](references/completion.md#policy)). An approval is never inferred or hand-written; `--given` also asserts a runner check (`lint-ci-clean`, `merged`) per run. There is no Development direction gate; a problem that breaks the agreement follows [worker records](references/worker-records.md) §3.
 
-`devkit spec new` and proposal handoff bind the bundle; a bundle made otherwise is bound with `devkit workflow bind --unit <dir> --workflow <id>`. `devkit workflow next --unit <dir>` evaluates the current definition of the bound workflow; changes to stages and checks apply without rebinding. Go back within Development with `devkit workflow return --unit <dir> --to <stage>` (voiding later approvals, envelopes); never back to Planning. Envelopes live under the bundle's `envelopes/` directory ([envelope](references/envelope.md)); a run's questions, problems, answers and resolutions follow [worker records](references/worker-records.md); a `session` task writes none.
+`devkit spec new` and proposal handoff bind the bundle; bind one made otherwise with `devkit workflow bind --unit <dir> --workflow <id>` (definition changes apply without rebinding). Go back within Development with `devkit workflow return --unit <dir> --to <stage>` (voiding later approvals and envelopes); never back to Planning. Envelopes live under the bundle's `envelopes/` ([envelope](references/envelope.md)); a run's questions, problems, answers and resolutions follow [worker records](references/worker-records.md).
 
-### Tier 2: Operational Playbooks
-When the user asks for an operational procedure that is not standard feature development (onboarding, weekly release, database migration, incident recovery), read [playbooks](references/playbooks.md).
+### Playbooks
+`spec` never searches or routes to playbooks. A playbook runs only when the user invokes `devkit-playbook` for the task or a failing rule's remediation names one; any other operational request is ordinary work.
 
 ---
 
 ## 3. Completion & Retrospective Guidance
 
-Read [completion](references/completion.md) when approaching review or completion; reuse its knowledge classification for every task. Before `dev-integration`, run the `collect-feedback` sweep the workflow names (`spec-feedback`; report it as skipped under `[STAGE_POLICY: collect-feedback state=off]`), then present the final change report in the [envelope](references/envelope.md) format (diff scope, checks, assumptions). For local MCP integration, follow `spec-integrate` to prepare and verify the branch, then request native approval directly; do not end the turn to ask the same approval in chat. For CLI/PR integration, after `dev-integration` authorization (the user's explicit OK under `ask`, or policy delegation under `auto`), run `spec-integrate` and report code-review completion and integration completion as separate facts. PR and worktree choices follow [git policy](references/git-policy.md). Commits are plain `git commit`; the commit gate runs the staged checks.
-
-The §1 retrospective reminder is optional; it is not a completion or merge gate.
-
+Read [completion](references/completion.md) when approaching review or completion. Before `dev-integration`, run the `collect-feedback` sweep the workflow names (`spec-feedback`; skipped under `[STAGE_POLICY: collect-feedback state=off]`), then present the final change report in the [envelope](references/envelope.md) format. Integrate with `spec-integrate` under the [policy](references/completion.md#policy) and report code-review completion and integration completion as separate facts. PR and worktree choices follow [git policy](references/git-policy.md). Commits are plain `git commit`; the commit gate runs the staged checks.
 
 Planning returns follow [per-run feedback](../spec-feedback/references/sweep.md#planning-run-coverage).
 Before deleting a proposal without handoff, follow [feedback retirement](references/feedback-retirement.md).

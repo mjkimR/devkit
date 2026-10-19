@@ -5,15 +5,13 @@ description: Decompose the technical plan into independently verifiable tasks in
 
 # spec-tasks: Task Breakdown Workflow
 
-Use this skill once `spec.md` and `plan.md` exist (the `specify` stage of workflow `sdd-spec-feature`, the `plan-tasks` stage of workflow `sdd-spec-bugfix`). The goal is a short list of tasks that each produce a verifiable result, so progress and coverage are visible without re-reading the whole plan.
+Use this skill once `spec.md` and `plan.md` exist (the `specify` stage of workflow `sdd-spec-feature`, the `plan-tasks` stage of workflow `sdd-spec-bugfix`), to write a short list of tasks that each produce a verifiable result.
 
 ---
 
 ## 1. Prerequisites & Inputs
 
-- The specification at `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/spec.md`.
-- The technical plan at `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/plan.md`.
-- The skeleton `tasks.md` beside them (written by `devkit spec new` or `devkit spec proposal handoff`). A bugfix bundle from `devkit spec new` has none: write `tasks.md` with the frontmatter `id: TASKS-<slug>`, `spec: SPEC-<slug>` and `plan: PLAN-<slug>`, then the tasks.
+- `spec.md` and `plan.md` in `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/`, and the skeleton `tasks.md` beside them (written by `devkit spec new` or `devkit spec proposal handoff`). A bugfix bundle from `devkit spec new` has none: write `tasks.md` with the frontmatter `id: TASKS-<slug>`, `spec: SPEC-<slug>` and `plan: PLAN-<slug>`, then the tasks.
 
 ---
 
@@ -22,11 +20,11 @@ Use this skill once `spec.md` and `plan.md` exist (the `specify` stage of workfl
 - **One verifiable result per task**: a task is a unit that can be implemented and checked on its own. Keep the code and its tests in the same task when they change together; split when one part can be verified without the other.
 - **Expected scope (`_Boundary:`)**: every task names the paths it is expected to touch. A long list may wrap onto lines indented deeper than the label line, its entries still separated by commas; a blank line, a list item or any line not indented deeper ends it. It is a scope estimate, not a lock: a change that turns out to need another path goes ahead and is explained in the report. It is strict for a delegated task through the `spec-delegate` write scope: a task a `development-worker` builds names the `docs/` paths its checks require (such as a code-table row), since the worker commits a complete result and writes no `docs/` path outside the boundaries and the reconcile targets.
 - **Acceptance links (`_Requirements:`)**: every task links the scenarios it serves on a direct child line indented two spaces, `- _Requirements: AC-01, AC-02_` (`RULE-task-coverage`); every `[AC-NN]` in `spec.md` is covered by at least one task, and a task cites only IDs the spec defines. A `_Requirements:_` line in a table, prose or under a non-task item covers nothing.
-- **Optional markers, when they help**: a `**Verification**` command when the check is not obvious from the boundary and phase headings when the list is long enough to need grouping.
+- **Optional markers**: a `**Verification**` command when the check is not obvious from the boundary; phase headings for a long list.
 
 Progress is computed from the checkboxes (`devkit spec list spec` shows `tasks=<checked>/<total>`, `devkit workflow next --unit <dir>` evaluates `tasks-all-checked`); do not write task counts.
 
-Tasks hold implementation and verification work only. Review (`spec-review`) and Living Spec sync (`spec-sync`) are workflow stages judged by envelopes and `reconcile.md`; a task for them would have to be checked before it happens, because `tasks-all-checked` opens the `review-refine` stage. Likewise the Red and Green envelopes of a bugfix are stage evidence, not tasks; the reproduction test itself is a task.
+Tasks hold implementation and verification work only: review (`spec-review`), Living Spec sync (`spec-sync`) and a bugfix's Red and Green envelopes are stage evidence, not tasks (`tasks-all-checked` opens `review-refine`); the reproduction test itself is a task.
 
 ---
 
@@ -55,9 +53,6 @@ plan: PLAN-<feature-slug>
 ---
 
 ## 4. Definition of Done (DoD) for Task Breakdown
-- [ ] Every task produces a result that can be checked on its own.
-- [ ] Every task has a `_Boundary:` line and a `_Requirements:` line; every acceptance scenario is covered (`devkit rules check <dir>` reports no `RULE-task-coverage` violation).
-- [ ] No review or sync task: those are workflow stages, not tasks.
-- [ ] The skeleton marker line `<!-- devkit:skeleton -->` is removed from `tasks.md`.
+- [ ] Every acceptance scenario is covered (`devkit rules check <dir>` reports no `RULE-task-coverage` violation), and the skeleton marker line `<!-- devkit:skeleton -->` is removed from `tasks.md`.
 - [ ] In a registered task worktree, `devkit spec scope update --spec <dir>` gave the registry the task boundaries (`SPEC_SCOPE_TOKEN_MISSING`: not registered, skip). `[SCOPE_ACK]` overlaps inform the orchestrator; they are not a gate.
 - [ ] `devkit workflow next --unit <dir>` shows the exit of `specify` (or `plan-tasks`) met: no skeleton marker left in the planning files and `lint-clean`; otherwise it names what is still unmet.

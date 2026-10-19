@@ -20,8 +20,7 @@ optional `references/` and `scripts/`) or a playbook, and when
 
 - The skill or playbook to create or restructure, and where its source lives:
   a project-native skill directory or a bundle source (`bundle/skills/`,
-  `bundle/playbooks/`). Never edit agent projections or `.devkit/managed/`;
-  change the source and run `devkit sync`.
+  `bundle/playbooks/`); for a bundle source, run `devkit sync` after editing.
 - Restructure in a hygiene session or as the task itself, not as a side quest
   of unrelated feature work.
 
@@ -57,12 +56,11 @@ optional `references/` and `scripts/`) or a playbook, and when
 
 ## Step 2: Restructure a large skill
 
-The default warning threshold is 12 KiB (12288 bytes) per Markdown file, including
-frontmatter. When a file exceeds its effective `max_bytes`, prefer splitting
-conditional content to trimming it just below the threshold. Aim for each resulting
-file to use about 75-80% of its effective limit so later edits have room. This is
-guidance, not an additional pass/fail threshold; do not split an inseparable
-procedure or move always-required constraints just to reach that range.
+The default threshold is 12 KiB (12288 bytes) per Markdown file, frontmatter
+included. Prefer splitting conditional content to trimming a file just below its
+effective `max_bytes`, and aim for about 75-80% of the limit so later edits have
+room; that range is guidance, not a threshold, and never a reason to split an
+inseparable procedure or move always-required constraints.
 
 1. **Split conditional content first.** Move content that only some runs need:
    recovery procedures, tool- or host-specific instructions, the detailed schema

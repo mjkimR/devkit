@@ -1,9 +1,8 @@
 # Script support
 
 Read this when a skill step is repetitive and deterministic, or needs to parse
-or filter repository state so that only the relevant slice reaches the context.
-Loading content computed from the current state is one case of this; most
-situation-dependent content is a conditional reference instead.
+or filter repository state so that only the relevant slice reaches the context;
+most situation-dependent content is a conditional reference instead.
 
 ## Decide whether a script is needed
 
@@ -13,8 +12,8 @@ situation-dependent content is a conditional reference instead.
 2. **No script that only prints a reference file.** That is a conditional
    reference with extra cost: running a script can trigger a host approval
    prompt where reading a file does not.
-3. **Otherwise write a script**, and consider Python 3 with the standard library
-   first. It needs no build step and usually runs without extra installation.
+3. **Otherwise write a script**, preferably Python 3 with the standard library,
+   which needs no build step or installation.
 
 ## Writing rules
 

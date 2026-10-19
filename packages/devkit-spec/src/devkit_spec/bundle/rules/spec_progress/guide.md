@@ -7,8 +7,7 @@ task is done, `in-progress` while tasks are being checked, `completed` once the 
 (`RULE-spec-lifecycle`). Nothing else moves a spec to `in-progress`, so this rule reports a spec whose tasks have
 started while its status says they have not.
 
-- **Phase and severity**: `linter`, `warning`: a progress hint, not a contract, so it never blocks a commit. Shipped
-  by the `spec` bundle (preset `core`).
+- **Phase and severity**: `linter`, `warning`: a progress hint, not a contract, so it never blocks a commit.
 - **What is checked**: every spec bundle (`specs/<YYYY-MM>/<YYYYMMDD>-<slug>/` with a `spec.md`). Statuses are compared
   trimmed and case-insensitively.
 - **Targeting**: as `RULE-spec-lifecycle`: `devkit rules check` without targets checks every bundle not matched by
@@ -28,17 +27,15 @@ A bundle whose every task is checked and whose `reconcile.md` is `resolved` is n
 ## 3. Remediation
 
 **Autofix**: `devkit rules fix` sets `status: in-progress` in `spec.md`. It rewrites only the value of the frontmatter's
-top-level `status:` line, keeps every other character (a trailing comment on that line included), and writes only a
-targeted `spec.md`. When only `tasks.md` is targeted, the violation is not fixable; target the spec too
+top-level `status:` line (a trailing comment kept) and writes only a targeted `spec.md`. When only `tasks.md` is targeted, the violation is not fixable; target the spec too
 (`devkit rules fix specs/<YYYY-MM>/<YYYYMMDD>-<slug>/spec.md`).
 
 ## 4. Configuration
 
-The rule has no settings. Project policy in `.devkit/config.toml` (`[rules] exclude`, `[rules.severity_overrides]`,
-`[rules.phase_overrides]`) applies as to every rule; a project that wants the status kept strictly raises it with
+No settings. A project that wants the status kept strictly raises it with
 `[rules.severity_overrides] "RULE-spec-progress" = "error"`.
 
 ## 5. Exceptions
 
-There is no inline suppression. A spec with other statuses (`in-progress`, `completed`, a project-specific value) is
+No inline suppression. A spec with other statuses (`in-progress`, `completed`, a project-specific value) is
 never reported.

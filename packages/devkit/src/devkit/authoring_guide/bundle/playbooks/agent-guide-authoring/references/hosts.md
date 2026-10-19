@@ -6,11 +6,10 @@ current rules in the host's documentation before relying on a detail.
 
 ## Codex
 
-- Reads `AGENTS.md` files from the repository root down to the working
-  directory and combines them, root first, so a nested guide adds to or narrows
-  the root guide for its subtree.
-- Applies a combined size limit and drops what exceeds it, so a large root
-  guide crowds out nested guides.
+- Combines `AGENTS.md` files from the repository root down to the working
+  directory, root first, so a nested guide adds to or narrows the root guide.
+- Drops what exceeds a combined size limit, so a large root guide crowds out
+  nested guides.
 
 ## Claude Code
 

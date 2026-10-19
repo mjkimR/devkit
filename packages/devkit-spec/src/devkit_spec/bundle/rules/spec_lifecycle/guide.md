@@ -7,10 +7,9 @@ Declaring a spec complete and reconciling it with the Living Spec are paired act
 `reconcile.md` must agree; workflow stages are derived from `tasks.md` and `reconcile.md`, so a mismatch misleads the
 next step.
 
-- **Phase and severity**: `linter`, `error`. Shipped by the `spec` bundle (preset `core`).
-- **What is checked**: every `spec.md` under `specs/` defines a bundle (its directory), completed ones included: the
-  first two violations are about completed specs, so unlike the other spec rules this one does not treat completed
-  bundles as untouchable history. Statuses are compared trimmed and case-insensitively.
+- **Phase and severity**: `linter`, `error`.
+- **What is checked**: every bundle (the directory of a `spec.md` under `specs/`), completed ones included, unlike
+  the other spec rules. Statuses are compared trimmed and case-insensitively.
 - **Targeting**: the relationship spans three files, so a change to any of them can break it. `devkit rules check`
   without targets checks every bundle not matched by `[rules] exclude`. A run with targets (a commit checks the files
   it changes) checks a bundle when it targets its `spec.md`, or names its `reconcile.md` or `tasks.md` as an explicit
@@ -27,9 +26,8 @@ Reported at line 1 of `spec.md` when that is a target, otherwise of the first na
   has reconcile.md with status '<status>'`.
 - `spec.md` is not `completed`, yet every task in `tasks.md` is checked (at least one, none open) and `reconcile.md`
   is `resolved`: `Spec status '<status>' of <spec.md> is stale: all tasks are checked and reconcile.md is resolved`.
-  Tasks are the `- [ ]` / `- [x]` checklist items (also `*` and `+` markers, any indentation) outside the frontmatter
-  and fenced code blocks, counted as devkit's `tasks-checked` workflow check counts them. A bundle without
-  `tasks.md` or without checklist items is never stale.
+  Tasks are counted as devkit's `tasks-checked` workflow check counts them (checklist items outside the frontmatter
+  and fenced code); a bundle without `tasks.md` or without checklist items is never stale.
 
 ## 3. Remediation
 
@@ -40,24 +38,21 @@ Reported at line 1 of `spec.md` when that is a target, otherwise of the first na
 2. A completed spec whose `reconcile.md` is not resolved: reconcile the remaining targets, or waive them with a
    substantive rationale, then set the reconcile `status: resolved`.
 3. **Autofix** for a stale spec status: `devkit rules fix` sets `status: completed` in `spec.md`. It rewrites only the
-   value of the frontmatter's top-level `status:` line, keeps every other character (a trailing comment on that line
-   included: a `#` after whitespace and outside a quoted value, so the whole of `"draft #2"` is the value), and writes only a targeted `spec.md` that is
-   valid UTF-8 (a whole-workspace run targets every one). When only `tasks.md` or `reconcile.md` is targeted, the
-   violation is not fixable; target the spec too (`devkit rules fix specs/<YYYY-MM>/<YYYYMMDD>-<slug>/spec.md`). A
-   `spec.md` without a `status:` line is fixed by hand.
+   value of the frontmatter's top-level `status:` line (a trailing comment kept) and writes only a targeted `spec.md`
+   that is valid UTF-8. When only `tasks.md` or `reconcile.md` is targeted, the violation is not fixable; target the
+   spec too (`devkit rules fix specs/<YYYY-MM>/<YYYYMMDD>-<slug>/spec.md`). A `spec.md` without a `status:` line is
+   fixed by hand.
 
 Read the `spec:living-spec-writing` instruction (Completed Specs and Traceability) before setting a spec `completed`
-by hand or moving it back to an earlier stage: it says what a completed spec means for later work;
-`devkit rules explain` prints its path as a `[RELATED: ...]` line.
+by hand or moving it back to an earlier stage: it says what a completed spec means for later work.
 
 ## 4. Configuration
 
-The rule has no settings. Project policy in `.devkit/config.toml` (`[rules] exclude`, `[rules.severity_overrides]`,
-`[rules.phase_overrides]`) applies as to every rule.
+No settings.
 
 ## 5. Exceptions
 
-There is no inline suppression. Set the statuses to the bundle's real stage instead of excusing a mismatch;
+No inline suppression. Set the statuses to the bundle's real stage instead of excusing a mismatch;
 `[rules] exclude` removes a bundle's files from every rule.
 
 ## 6. Examples

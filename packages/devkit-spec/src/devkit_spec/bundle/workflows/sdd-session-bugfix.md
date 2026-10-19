@@ -8,9 +8,7 @@ schema_version: 1
 gates:
   plan-intent: { policies: [ask] }  # always a person (01 §3); configuration cannot pass it
   dev-integration: { answer: given, policies: [ask, auto] }  # off would skip integration
-# Executor-neutral stage schema: what a stage is, needs, produces and where it returns.
-# Stages shared with other workflows keep the same id and the same exit, gate, role, isolation, skills and
-# artifacts (`devkit workflow validate` reports SHARED_STAGE_MISMATCH); returns are this workflow's own.
+# Shared stages must match across workflows (`devkit workflow validate`); returns are this workflow's own.
 # No layout: a session creates no work unit, envelope, gate record file or reconcile document.
 checks:
   - { name: lint-ci-clean, class: runner, description: "devkit rules check --ci --base <ref> passes on the committed head: the Developer runs it after the commit and CI re-runs it as the final gate" }
@@ -110,31 +108,8 @@ stages:
 
 # Session bugfix (`planning-depth` session, `task-kind` bugfix)
 
-A defect against an agreed contract that the session can reproduce and fix without written documents: workflow `sdd-session-feature` with a reproduction step first. The expected behavior is agreed at `plan-intent`. Before the fix, write a test that reproduces the defect and confirm it fails (Red, `reproduce-session`); then fix it so the test passes (Green, `execute-verify`). The test stays as a regression test. Read the stages with `devkit workflow show sdd-session-bugfix`.
+A defect against an agreed contract that the session can reproduce and fix without written documents. The expected behavior is agreed at `plan-intent`. All other rules of the `sdd-session-feature` body apply, its review included (the `spec` skill's `references/effort.md`, at `high` its `references/review-loop.md`).
 
-- A compile, environment or test-setup failure unrelated to the defect is not reproduction; a build failure that is the defect is.
+- **Red before Green.** Before the fix, write a test that reproduces the defect and confirm it fails (Red, `reproduce-session`); then fix it so the test passes (Green, `execute-verify`). The test stays as a regression test. A compile, environment or test-setup failure unrelated to the defect is not reproduction; a build failure that is the defect is.
+- **Report the evidence.** The final response or the PR body includes the Red then Green evidence: the reproduction command, its failure before and its pass after the fix.
 - When the defect is hard to reproduce, or the current, expected and preserved behavior must be written down, raise the depth to `spec` (`sdd-spec-bugfix`). When the agreed expected behavior cannot be kept, report it as a problem.
-
-## Completion conditions
-
-A session completes without document artifacts. It creates no spec Unit, no envelope (review, worker, problem or resolution), no gate record file and no reconcile document, at every `activity-effort`.
-
-- The Host (`direct`) or the Cloud Agent (`cloud-pr` general PR path) implements the agreed intent and runs the tests and checks it needs, including the Red then Green reproduction.
-- The review follows the `activity-effort` of the activity: `low` the author's self-review; `medium` one mandatory initial `code-reviewer` subagent pass regardless of size, then the implementer verifies fixes and subsequent changes and decides repeat calls using the `spec` skill's `references/effort.md`; `high` `code-reviewer` subagent reviews in the bounded rounds of the `spec` skill's `references/review-loop.md`; its hand-over (a batch still not minor at the round cap, a recurring P1, or a contested P1 as a question) is reported in the conversation and the change is not integrated. The Host or Cloud Agent starts the reviewer itself and receives its result as a message; the reviewer writes no envelope. Raising the review effort never raises the depth.
-- `plan-intent`, the `dev-integration` approval policy and the worktree and PR policy apply. Approvals and checks are never skipped, and no file records them: `plan-intent` is the user's agreement in the conversation (or the Work Plan Item), `dev-integration` the user's OK in the session or the PR ready state under `ask`, policy delegation under `auto` once these conditions hold.
-- The final response or the PR body reports the change, the applied effort and review result, the verification result with the Red then Green evidence (the reproduction command, its failure before and its pass after the fix) and the remaining constraints. No final report file is written.
-- A problem the session cannot solve is reported in the conversation (or as the problem report of the autohub general run) and the change is not integrated. A lasting design record, a contract change or a Living Spec change raises the depth to `spec`: add a spec Unit in the current work environment (`devkit spec new`), record the agreed intent and the work so far, and continue with that workflow's next stage; no close, no new slug, and the agreement is not asked again unless the goal or scope changes. A direction that must be decided first is a close by depth escalation to a new draft proposal.
-
-## Mode
-
-A session runs in `direct` or through the `cloud-pr` general PR path (a Work Plan Item a Cloud Agent turns into a PR) only, never in `local-orchestrated`: a one-shot worker cannot read a conversation, and a worktree plus a worker cost more than the work. A Host in `local-orchestrated` handles a session-depth task itself in `direct`. With a PR the work runs on `dev-<slug>`; without one on the current branch, except that on the base branch under `dev-integration = "ask"` the work runs on `dev-<slug>` (`devkit worktree start dev-<slug> --no-worktree`) or the user's OK is obtained before the commit, so nothing reaches the base before the approval (01 §6.1, 03 §3).
-
-## Gate rules
-
-- `merge` and `exception` are the shared stages of the delivery workflows. A session has no `reconcile.md`, so it uses `commit-session` instead of `integrate` and does not run `spec-integrate` or `spec-sync`.
-- `devkit workflow next` is not used: there is no unit to evaluate, so the executor follows the stages itself (`devkit workflow show sdd-session-bugfix`).
-- **Commit before approval**: plain `git commit` once the review is done and before `dev-integration`, so the approval (the user's OK, or a PR's ready state) is given on committed work CI has checked; a PR is pushed and opened at this stage. On a task branch (`dev-<slug>`) the commit stays off the base until the `merge` stage. Committing on the base branch itself would integrate before the approval: under `dev-integration = "ask"` work there only after the user's OK (then the order is approval, commit, push), or start `dev-<slug>` instead; under `auto` the completion conditions are the authority and the commit may follow them. devkit's commit gate runs the staged checks, and repository CI runs the cumulative check (`lint-ci-clean`, locally `devkit rules check --ci --base <ref>`). If integrating the base needed conflict resolution, re-run the checks for what it changed.
-
-## Project policy execution
-
-Read `devkit spec policy` before the integration decision: approvals come from `[workflow.approvals]` (only `dev-integration`, `ask` or `auto`) and PR and branch policy from `[worktree]` in `.devkit/config.toml`. `auto` delegates `dev-integration` only after the completion conditions hold, at every effort, and the executor reports the delegation, never a fabricated human approval. `plan-intent` always needs the user and `exception` always needs resolution. Explicit user authority, required PR policy, external protections and action permissions remain applicable; local branch cleanup after a confirmed merge follows `[worktree]` and existing deletion authority.

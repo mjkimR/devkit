@@ -20,17 +20,10 @@ and buries the steps that matter. The rule warns when a skill or playbook Markdo
 
 ## 3. Remediation
 
-Follow Step 2 of the `skill-authoring` playbook (`uv run devkit playbook search "restructure a large skill"`):
-
-1. Split content needed only in some situations into focused `references/` files, stating when each is read.
-2. Keep `SKILL.md` a thin router with always-required constraints; remove repeated explanation.
-3. Aim for each resulting file to use about 75-80% of its effective `max_bytes`, leaving room for later edits.
-   This is restructuring guidance, not an additional limit: files between that range and the limit do not warn.
-4. Review supporting files the same way. Do not merely trim the document to just below the warning threshold.
-
-Never hide an always-required safety or boundary constraint in a rarely read file, and do not shrink a file by
-joining lines or splitting one inseparable procedure into arbitrary fragments: size is a signal for review, not a
-goal. The rule never rewrites files.
+Restructure the file by Step 2 of the `skill-authoring` playbook
+(`uv run devkit playbook search "restructure a large skill"`): split conditional content into `references/` files,
+never trimming it just below the threshold or moving an always-required safety constraint. The rule never rewrites
+files.
 
 ## 4. Configuration
 

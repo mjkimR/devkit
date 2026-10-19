@@ -1,6 +1,6 @@
 # Feedback template
 
-Read this when writing a feedback file (step 3 of the `spec-feedback` recording procedure). Copy the block below (inside the four-backtick fence) into the destination file, replace every `<...>` placeholder, keep one of sections 1 and 2, and delete the comment.
+Read this when writing a feedback file (step 3 of the `spec-feedback` recording procedure). Copy the block inside the four-backtick fence, replace every `<...>` placeholder, follow and then delete the comment.
 
 ````markdown
 ---
@@ -12,7 +12,7 @@ category: other                     # instruction-conflict | tool-error | spec-a
 target: <asset path or command>     # e.g. the spec-specify skill, devkit spec list, CAP-<AREA>-<slug>
 skill: none                         # active skill when observed (spec, spec-specify, spec-review, ...) or none
 agent: <claude-code | codex | antigravity | ...>
-origin: agent                       # agent | user  (user = raised by the user; set the flag without quoting the user)
+origin: agent                       # agent | user  (user = raised by the user)
 severity: workaround                # critical | blocked | workaround | noise
 recurring: false                    # true if observed 2+ times
 status: open                        # open | promoted | dismissed | forwarded  (changed only by a feedback-hygiene session)
@@ -22,13 +22,13 @@ created_at: <YYYY-MM-DD>
 # [FB-<name>] <title>
 
 <!--
-One incident per file. Use the configured detail level; brief/standard should take about 1 minute.
-If kind is friction / question, fill out Section 1 and remove Section 2.
-If kind is suggestion / change-request, fill out Section 2 and remove Section 1.
-Evidence must include only direct observations: instructions, doc excerpts, summarized command outputs, file states. Do not dump raw command outputs verbatim; summarize or excerpt key lines and mask local paths/PII. Do not quote user utterances.
-Judgments must reflect the agent's own assessment.
-Do not include secrets, tokens, or PII (including local paths/usernames).
-If category is other, specify the nature in the first line below.
+One incident per file, at the configured detail level (brief/standard take about one minute).
+friction / question: fill Section 1 and remove Section 2; suggestion / change-request: the reverse.
+Evidence is only what you observed yourself: instruction or document excerpts, summarized command output, file state.
+Excerpt key lines instead of raw output, and mask local paths and identifiers (<repo>, <worktree>).
+The user's remark is not evidence; never quote or paraphrase the user anywhere in the file.
+Never include secrets, tokens or personal data (local usernames and absolute paths included): the file is shared in the PR.
+If category is other, state the nature in the first line below.
 -->
 
 ## 1. Friction / Question (friction, question)
@@ -50,21 +50,21 @@ If category is other, specify the nature in the first line below.
 ## Evidence
 
 ```text
-<Directly observed instruction/doc excerpts, summarized command output, or file state. Do not dump raw output verbatim; excerpt relevant lines and mask local paths (<repo>, <worktree>). Do not include user utterances.>
+<Directly observed excerpts, summarized command output, or file state.>
 ```
 ````
 
 ## Configured detail
 
-Read `FEEDBACK_POLICY detail` from `devkit spec policy`. All levels keep complete frontmatter, one observation per
-file, direct Evidence, the agent's own assessment and no secrets, tokens or personal data.
+`FEEDBACK_POLICY detail` from `devkit spec policy`. Every level keeps complete frontmatter, the rules of the comment
+above and the agent's own assessment.
 
 - **brief**: retain the applicable section with context/current procedure, actual observation or proposed change,
   a short assessment and Evidence. Omit unused template bullets.
 - **standard**: fill the applicable kind-specific section and Evidence as shown above.
-- **detailed**: use standard detail and add the following section before Evidence. Fill missing facts with
-  `unknown`; do not fabricate output, version numbers or reproduction results. Use `not applicable` when a
-  field does not apply. Do not rerun risky or expensive commands just to complete the record.
+- **detailed**: standard plus the following section before Evidence. Fill missing facts with `unknown` (never
+  fabricate output, versions or reproduction results) and `not applicable` where a field does not apply; do not rerun
+  risky or expensive commands just to complete the record.
 
 ```markdown
 ## Diagnostic Details

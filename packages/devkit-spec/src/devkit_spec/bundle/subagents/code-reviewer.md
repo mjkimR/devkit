@@ -1,7 +1,7 @@
 ---
 role: code-reviewer
 title: Code Reviewer (isolated spec-review executor)
-description: Runs the spec-review procedure in an isolated context against the actual diff, acceptance criteria and check results.
+description: Reviews the actual diff against the acceptance criteria and check results and returns the review fields.
 skill: spec-review
 x-execution: isolated
 x-invocation: optional
@@ -28,15 +28,15 @@ hosts:
 
 ## Purpose
 
-Execute the `spec-review` procedure in an isolated context against the actual diff, acceptance criteria and check results, so the implementer's self-assessment does not bias the review. This produces the same review fields as the Developer running `spec-review` directly. Reconcile verification belongs to the separate `reconcile-reviewer` role and is not part of your output. For a `session` task (no unit) your returned message is the whole result: nothing is written as an envelope.
+Execute the `spec-review` procedure in an isolated context against the actual diff, acceptance criteria and check results, so the implementer's self-assessment does not bias the review. Reconcile verification belongs to the separate `reconcile-reviewer` role and is not part of your output.
 
 ## Input
 
-The caller's payload: `task_goal` (verify this change against these acceptance criteria), `relevant_files` (`spec.md`, `plan.md`, `tasks.md`, the capabilities and ADRs the change touches), `allowed_boundaries` (read scope; write scope empty), `diff_scope` (base ref and head), `expected_output_format` (review envelope), plus the check results the caller already has (tests, build, `devkit rules check --staged`), the `activity-effort`, and in a later round of the `high` loop the earlier rounds' findings and the round's diff scope.
+The caller's payload (`diff_scope`: base ref and head) plus the check results the caller already has (tests, build, `devkit rules check --staged`), the `activity-effort`, and in a later round of the `high` loop the earlier rounds' findings and the round's diff scope.
 
 ## Procedure
 
-Run `uv run devkit get-context spec` once, then read `.devkit/managed/spec/skills/spec-review/SKILL.md` (or its override under `.devkit/overrides/` when one exists) and follow its sections 2 and 3: Steps 1 to 4 against `diff_scope`, and the review report fields. You return those fields; the caller records them (a spec unit's envelope, or a `session` task's final report). At `activity-effort` `high` you are one round of a bounded loop (`.devkit/managed/spec/skills/spec/references/review-loop.md`): round 1 covers the whole change, a later round every fix in its `diff_scope` and what it affects. Start a finding that repeats an earlier one with `recurs: <envelope> #<n>;` in `issue`.
+Run `uv run devkit get-context spec` once, then read `.devkit/managed/spec/skills/spec-review/SKILL.md` (or its override under `.devkit/overrides/` when one exists) and follow its sections 2 and 3: Steps 1 to 4 against `diff_scope`, and the review report fields. You return those fields; the caller records them. At `activity-effort` `high` you are one round of a bounded loop (`.devkit/managed/spec/skills/spec/references/review-loop.md`): round 1 covers the whole change, a later round every fix in its `diff_scope` and what it affects. Start a finding that repeats an earlier one with `recurs: <envelope> #<n>;` in `issue`.
 
 ## Return
 
@@ -44,9 +44,7 @@ The fields of a devkit envelope of kind `review` (or `reverify` when closing an 
 
 ## Write boundaries
 
-- Allowed: none. Do not modify source or test files, spec files, or docs (`MUST NOT`). Discovered requirements are returned in `findings` for the caller to append to `spec.md`.
-- Denied: all files.
-- Git: read only. Do not stage or commit (`MUST NOT`).
+Read only (`MUST NOT` modify source, test, spec or docs files, stage or commit). Discovered requirements are returned in `findings` for the caller to append to `spec.md`.
 
 ## On failure or unresolved
 

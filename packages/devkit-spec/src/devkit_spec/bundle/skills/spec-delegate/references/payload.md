@@ -1,10 +1,8 @@
 # Payload per role
 
-Read this in Step 2 of `spec-delegate` when you fill the five payload fields. Record the head SHA you passed (`git rev-parse HEAD`). For a worker, pass the `activity-effort` of the activity and record what [worker](worker.md) lists before spawning: the unit's last accepted head (a blocked unit keeps its own, never its current HEAD) and the base checkout's status and HEAD, since the worker shares the session's directory and a stray write lands there.
+Read this in Step 2 of `spec-delegate`. Never inject the whole tree. For a worker, pass the `activity-effort` of the activity and record what [worker](worker.md) lists before spawning: the unit's last accepted head (a blocked unit keeps its own, never its current HEAD) and the base checkout's status and HEAD, since a stray write lands there.
 
-Never inject the whole tree.
-
-A reviewer round at `high` (the `spec` skill's `references/review-loop.md`) is always a fresh call: round 1 gets the whole change and the `activity-effort`; each later round also gets the earlier rounds' findings and, as `diff_scope`, the fixes since the previous round.
+A reviewer round at `high` (the `spec` skill's `references/review-loop.md`) is always a fresh call: round 1 gets the whole change; each later round also the earlier rounds' findings and, as `diff_scope`, the fixes since the previous round.
 
 | Field | Content |
 | :--- | :--- |
@@ -24,8 +22,4 @@ A reviewer round at `high` (the `spec` skill's `references/review-loop.md`) is a
 | `planning-worker` | The proposal bundle and the starting points | required: the last accepted head; the worker returns its own head | The worktree's absolute path, the proposal directory as write scope, the `activity-effort`, the user's rewritten answers to the recorded questions |
 
 
-Planning feedback remains inside the proposal directory, with no extra worker write root. Each Planning run records
-observations before its last work commit and returns fresh enabled sweep evidence plus its single worker record,
-including question rounds; validate the actual range against that procedure. A previous PASS is not later-run coverage.
-Stage-off has no sweep envelope, requested-only has policy-skip PASS and incomplete coverage names its gap. Development
-workers likewise capture observed feedback in their own spec before their last work commit.
+A Planning or Development worker records its feedback inside its own unit before its last work commit; a Planning run also returns fresh sweep evidence ([run coverage](../../spec-feedback/references/sweep.md#planning-run-coverage)).

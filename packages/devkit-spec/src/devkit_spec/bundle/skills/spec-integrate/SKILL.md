@@ -1,19 +1,19 @@
 ---
 name: spec-integrate
-description: Prepare and verify local integration, request one native MCP approval or use existing CLI/PR authority, then merge. Integrate the base branch, resolve conflicts, re-verify only what changed, confirm reconcile.md as resolved and the spec as completed, run the cumulative Git evidence check and CI, and report code-review completion and integration completion separately.
+description: Integrate a verified branch by merging the base, re-verify what changed, confirm reconcile, run the cumulative check, then merge via native MCP approval, CLI or PR.
 ---
 
 # spec-integrate: Integration Preparation, Approval and Merge
 
-Use this skill to prepare the local MCP integration before its single native approval, or once CLI/PR `dev-integration` authorization exists. The MCP form supplies the ask decision and exact merge/cleanup authority together; do not request that decision in chat first. CLI/PR paths use the user's existing explicit OK or PR ready state under `ask`, or policy delegation under `auto` after required review and reconciliation. Read `devkit spec policy` and the `spec` skill's `references/completion.md` before proceeding. The OK is never recorded: pass `--given dev-integration` to every `devkit workflow next --unit <dir>` after it, which then names this stage (`integrate`). Integration is a stage, not a persona: the main-session Developer runs it, or an agent an external runner delegates. Stage definition: `devkit workflow show --unit <dir>` (the workflow the bundle is bound to). Reconciliation contract: the `spec` skill's `references/completion.md`.
+Use this skill to prepare the local MCP integration before its single native approval, or once CLI/PR `dev-integration` authorization exists. Read `devkit spec policy` and the `spec` skill's [completion policy](../spec/references/completion.md#policy) first: it defines the `ask`/`auto` authority, the native confirmation as the OK and `--given dev-integration` (never recorded) on every later `devkit workflow next --unit <dir>`, which then names this stage (`integrate`). Integration is a stage, not a persona: the main-session Developer runs it, or an agent an external runner delegates. Stage definition: `devkit workflow show --unit <dir>`.
 
 ---
 
 ## 1. Entry conditions and inputs
 
-- Implementation, review and fixes complete; implementation checks passed. The native MCP path may prepare the branch and request its approval while `gate:dev-integration` is waiting. CLI/PR execution requires existing `dev-integration` authorization. Never assert native acceptance before the form returns it.
-- Inputs: approved change and its spec directory, the review envelope and check results, docs impact and reconcile targets, the current base branch.
-- Base contract: `reconcile.md` is already `resolved` and the spec `completed` before `dev-integration`. Intermediate commits may have carried a pending record, but that does not satisfy this entry condition or the final cumulative check.
+- Implementation, review and fixes complete; implementation checks passed. The native MCP path may prepare the branch and request its approval while `gate:dev-integration` is waiting; CLI/PR execution requires existing `dev-integration` authorization. Never assert native acceptance before the form returns it.
+- Inputs: the approved change and its spec directory, the review envelope and check results, docs impact and reconcile targets, the current base branch.
+- `reconcile.md` is already `resolved` and the spec `completed` before `dev-integration`. A pending record carried by intermediate commits does not satisfy this condition or the final cumulative check.
 
 ## 2. Authority
 
@@ -29,25 +29,25 @@ Trust the prior review: do not restart code review. Re-verify only what conflict
 
 ## 3. Procedure
 
-When the task runs in a worktree (the `spec` skill's `references/worktree.md`): Steps 1 to 4 run there, Step 5 merges into the base checkout, and Step 6 cleans up only after the merge is confirmed.
+In a worktree (the `spec` skill's `references/worktree.md`): Steps 1 to 4 run there, Step 5 merges into the base checkout, and Step 6 cleans up only after the merge is confirmed.
 
 ### Step 1: Integrate the base branch
-For local MCP integration, use the current local base without fetching or pushing. Fetch/pull is used only with existing network authorization on a path that needs it. This task-branch preparation grants no authority to advance the base or delete anything.
+For local MCP integration, use the current local base without fetching or pushing; fetch/pull only with existing network authorization on a path that needs it. This preparation grants no authority to advance the base or delete anything.
 
 ```bash
 git merge -m "<subject the commit-msg gate accepts>" <base-branch>   # the base checkout's branch (it may be ahead of origin); or rebase
 ```
-Resolve conflicts within the approved intent. If a conflict needs a design choice the agreed intent does not cover, stop: hold the PR and report it as a problem; the Host decides recovery or a close.
+Resolve conflicts within the approved intent. A conflict that needs a design choice the agreed intent does not cover is a problem for the Host: stop and hold the PR.
 
 ### Step 2: Re-verify what changed
 - List the paths changed by conflict resolution (`git diff --name-only <pre-merge-head> HEAD`).
 - Run the tests and checks that cover those paths; run `spec-review` Step 1 and Step 3 on the changed part only.
-- A defect beyond integration scope returns to the Developer (the build stage: `build-verify`, or `fix-verify` in workflow `sdd-spec-bugfix`); integration is not reported complete.
+- A defect beyond integration scope returns to the Developer (the build stage: `build-verify`, or `fix-verify` in `sdd-spec-bugfix`); integration is not reported complete.
 
 ### Step 3: Confirm reconciliation
-- Re-check `reconcile.md` targets against the new impact after conflict resolution; add targets if resolution touched contracts.
-- Apply the docs reflection the approved change requires. Confirm `status: resolved` only when every target is in the comparison diff or has a substantive waiver (never for a required contract mismatch). Confirm `spec.md` is `status: completed` (set by `spec-sync` before `dev-integration`).
-- Shared Living Spec files should be written in integration order; on a shared checkout, serialize docs writing and committing. If the index or HEAD changed during a check, re-run the check.
+- Re-check `reconcile.md` targets against the impact after conflict resolution; add targets if resolution touched contracts, and apply the docs reflection they require.
+- Confirm `status: resolved` only when every target is in the comparison diff or has a substantive waiver (never for a required contract mismatch), and `spec.md` `status: completed` (set by `spec-sync`).
+- On a shared checkout, write and commit shared Living Spec files in integration order, one at a time. If the index or HEAD changed during a check, re-run the check.
 
 ### Step 4: Final checks
 ```bash
@@ -56,28 +56,17 @@ devkit rules check --ci --base <base-ref>    # cumulative Git evidence, merge-ba
 plus the repository CI (tests, static checks). A plain `devkit rules check` does not count. Unresolved reconciliation means no merge.
 
 ### Step 5: Report, obtain native approval if applicable, merge and hand over
-Before requesting native approval, present the verified change report and the intended merge/cleanup effects. After execution, produce the integration result report (the `spec` skill's `references/envelope.md`, section 4) in the conversation, not as a file: base integrated, conflicts resolved, what was re-verified and the actual `dev-integration` authority. State code review completed (latest review round or reverify) and integration completed as separate facts only when each has occurred. Run `devkit rules check --ci --base <ref>` locally on the committed head (Step 4) and state the result; it is trusted without a file. Repository CI re-runs it as the final gate (`lint-ci-clean`); `devkit workflow next` shows `[WAITING: runner lint-ci-clean]` until it is declared. Without a PR there is no CI run for the branch: after the local cumulative check passes, declare it (`--given lint-ci-clean`) and say so in the report.
+Before requesting native approval, present the verified change report and the intended merge/cleanup effects. After execution, give the integration result report (the `spec` skill's `references/envelope.md`, section 4) in the conversation, not as a file: base integrated, conflicts resolved, what was re-verified, the Step 4 result and the actual `dev-integration` authority. State code review completed (latest review round or reverify) and integration completed as separate facts, each only when it has occurred. Repository CI re-runs the cumulative check as `lint-ci-clean` (`[WAITING: runner lint-ci-clean]`); without a PR there is no CI run: after the local check passes, declare it (`--given lint-ci-clean`) and say so in the report.
 
 Who merges follows the policy. Through a PR (`pull_request=required`, or chosen under `auto`): push the branch and open the PR; the person or the runner merges there under existing merge authority, only while `devkit workflow envelope check --unit <dir> --format json` on its head reports `"blocked": false` and no `pending_questions`. For a local merge (`pull_request=auto`, no PR):
-- **Primary path (when `devkit` MCP tools are available)**: present the verified change report and call `integration_integrate` directly from the base checkout with `branch`, `task_kind="unit"`, `task_id` and `unit` (session tasks use `task_kind="session"`, `task_id` and `claims`). Do not ask for chat approval or stop at the waiting workflow gate before making this approval-requesting call. The service prepares and checks readiness before showing its native form. `integration_prepare` is optional read-only preflight; it neither authorizes execution nor supplies a request reused by integrate. All four tools return concise scope/progress by default; `integration_status(request_id, detail=true)` exposes full retained evidence and diagnostics. After native acceptance, pass `--given dev-integration` to later workflow checks. Decline/cancel leaves integration unapproved; unavailable confirmation uses the conversational-approval CLI fallback. `integration_integrate` requests an interactive confirmation bound to the exact `(source_sha, target_sha)` pair (`authority="mcp-elicitation"`), fast-forwards the base locally without any network call (`fetch`/`push`/PR are excluded), removes the worktree, deletes the branch when `delete_branch=yes`, and runs scoped post-finish cleanup (`proposal-prune` and `scope-record`, emitted as `SPEC_POST_FINISH_CLEANUP` notices). If post-finish stops in `status: "partial"`, inspect with `integration_status` and resume idempotently with `integration_resume`.
-- **Fallback / manual CLI recovery**: when the host does not support interactive MCP confirmation (`INTEGRATION_CONFIRMATION_UNAVAILABLE`) or the user invokes the CLI directly after giving `dev-integration` approval, run `devkit worktree finish <branch> --merge --local-only` (or without `--local-only` when remote fetch/push is wanted) in the base checkout (Step 6). It refuses a held branch (`WORKTREE_BLOCKED`); integrate the base into the branch first when it moved (Step 1). Rerun the cumulative check on the result; with no runner to report the merge, declare it yourself (`devkit workflow next --unit <dir> --given dev-integration --given lint-ci-clean --given merged`). If head, base or approval changed before merge, return to Step 1.
+- **Primary path (`devkit` MCP tools available)**: call `integration_integrate` directly from the base checkout with `branch`, `task_kind="unit"`, `task_id` and `unit` (a session task: `task_kind="session"`, `task_id` and `claims`), without a chat approval first; `integration_prepare` is an optional read-only preflight. After native acceptance pass `--given dev-integration` to later workflow checks; a decline or cancel leaves integration unapproved. On `status: "partial"`, inspect with `integration_status` (`detail=true` for full evidence) and resume with `integration_resume`. `INTEGRATION_CONFIRMATION_UNAVAILABLE` falls back to the CLI path.
+- **Fallback / manual CLI**: with the user's conversational `dev-integration` OK, run `devkit worktree finish <branch> --merge --local-only` (without `--local-only` when remote fetch/push is wanted) in the base checkout and follow the `[FIX]` of any refusal (`WORKTREE_BLOCKED`: resolve the problem; a moved base: Step 1). Rerun the cumulative check on the result; with no runner to report the merge, declare it (`devkit workflow next --unit <dir> --given dev-integration --given lint-ci-clean --given merged`). If head, base or approval changed before the merge, return to Step 1.
 
 ### Step 6: Clean up after the confirmed merge
-- When `integration_integrate` completed in Step 5, the local fast-forward, worktree removal, branch deletion and scoped post-finish cleanup are already done; use `integration_resume` if `status == "partial"`.
-- On the CLI path (after a PR merge or for manual local merge), run `devkit worktree finish <branch>` in the base checkout (with `--merge` and optionally `--local-only` when a local merge is still to be done). It fast-forwards (and fetches/pushes unless `--local-only`), removes the worktree, and deletes the branch when `delete_branch=yes`. A refusal names its cause (listed in the `spec` skill's `references/worktree.md`) and stops the step that cannot proceed; the same command resumes once it is resolved. A push that fails (`push=failed`, `WORKTREE_PUSH_FAILED`) or is rejected (`push=rejected`, `WORKTREE_PUSH_REJECTED`) does not stop the cleanup; `push=no-upstream` or `push=skipped` (`--local-only`) means nothing was pushed. Report what could not be removed or pushed and why.
-- The finish's post-finish extension removes the task's scope record and empty proposal directories (`[NOTICE]` lines, `SPEC_POST_FINISH_CLEANUP`). A failed cleanup is its own warning (`SPEC_SCOPE_TIMEOUT`, `SPEC_CONFIG_INVALID`, `SPEC_PROPOSAL_CLEANUP_FAILED`, ...): run its `[FIX]` (`devkit spec scope sweep --apply` or `devkit spec proposal prune <slug>`) once resolved; on `POST_FINISH_EXTENSION_FAILED` run both.
+- `integration_integrate` has already cleaned up when it completed (`integration_resume` when `partial`).
+- On the CLI path (after a PR merge or a manual local merge), run `devkit worktree finish <branch>` in the base checkout (`--merge`, optionally `--local-only`, when the local merge is still to be done). Follow the `[FIX]` of each refusal or warning (finish, push and post-finish cleanup codes; the `spec` skill's `references/worktree.md`) and rerun the same command once it is resolved. Report what could not be removed or pushed and why.
 
 ### Returns
-- Design choice the agreed intent does not cover → a problem for the Host (recovery or close).
+- Design choice the agreed intent does not cover → a problem for the Host.
 - Implementation defect beyond integration scope → Developer (the build stage).
 - Retry cap exceeded, tool or execution failure, unresolved semantic conflict → `exception`: hold the work, report cause and evidence. Do not create a new task to bypass a cap.
-
----
-
-## 4. Definition of Done
-
-- [ ] Base integrated; conflicts resolved inside the approved intent.
-- [ ] Changed parts re-verified; no full re-review performed.
-- [ ] `reconcile.md` resolved with evidence; spec completed.
-- [ ] `devkit rules check --ci --base <ref>` and repository CI passed on the final head.
-- [ ] Integration result report issued with code-review and integration completion stated separately.

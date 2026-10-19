@@ -17,8 +17,8 @@ it in stages:
 - The root `AGENTS.md` guidance block holds only orientation (`CAP-DIST-workspace-ownership`).
 - `devkit get-context <bundle>` returns a bundle's constitution and instruction headers; the agent reads bodies on
   demand.
-- Playbooks stay on disk under `.devkit/managed/<bundle>/` and are searched only when a task explicitly calls for
-  one.
+- Playbooks stay on disk under `.devkit/managed/<bundle>/` and are searched only when the user invokes
+  `devkit-playbook` for the task or a failing rule's remediation names one.
 
 ## 2. Bundle Context (`devkit get-context`)
 

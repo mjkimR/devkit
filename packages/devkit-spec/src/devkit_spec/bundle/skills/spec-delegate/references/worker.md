@@ -1,11 +1,10 @@
 # Worker results
 
-Read this in Steps 4 to 6 of `spec-delegate` for a `planning-worker` or `development-worker` (`local-orchestrated`
-mode). A worker is one-shot: it runs one turn in its activity branch's worktree, writes its own records, commits at
-every stage boundary and ends with its head returned and exactly one `worker` envelope, also when it stops on a
-question or a problem (an emergency commit of the unfinished work). You validate the committed range, accept or block
-it, and decide what a recorded problem needs; you never finish a turn by writing the worker's records for it
-(`ADR-worker-delivers-committed-result`). The record formats are in the `spec` skill's `references/worker-records.md`.
+Read this in Steps 4 to 6 of `spec-delegate` for a `planning-worker` or `development-worker`. A worker is one-shot:
+it runs one turn in its activity branch's worktree, commits at every stage boundary and ends with its head returned
+and exactly one `worker` envelope, also when it stops on a question or a problem. You validate the committed range,
+accept or block it, and decide what a recorded problem needs; you never write the worker's records for it
+(`ADR-worker-delivers-committed-result`). Record formats: the `spec` skill's `references/worker-records.md`.
 
 ## The last accepted head
 
@@ -44,9 +43,8 @@ From the last accepted head to the worker's *final HEAD* (`<returned>`: the `fin
   --effort <activity-effort> --problem "<the committed range breaks its boundary or checks>" --recovery "<what must change>" --findings-file -
   --base <accepted> --head <returned>`, one finding per violation (path or check, cause), and commit it before
   anything else, so the worktree stays clean. Keep the commits: never reset or amend; a pull request stays open and
-  blocked (changes requested or a failing required check). A blocked unit goes to no review and no integration: devkit
-  holds the gates of the blocked stage and later ones and the handoff, and refuses `devkit worktree finish --merge`
-  (`WORKTREE_BLOCKED`); `devkit workflow next` keeps naming the current stage, where the recovery runs. Send a new worker the findings
+  blocked (changes requested or a failing required check). A blocked unit goes to no review and no integration
+  (`worker-records.md` §3). Send a new worker the findings
   as a recovery request, or fix it yourself, with further commits on the same branch (a revert commit for an
   out-of-scope change); whoever fixes it commits a `resolution` naming your envelope with the fix. Then validate the
   cumulative range again from the same last accepted head.
@@ -60,18 +58,13 @@ nothing. A comment or a rerun request alone resolves nothing.
 - **Questions** (`needs_input` without a problem; `[PENDING_QUESTION]`): put the questions of the worker's envelope to
   the user in one round, each restated for the user rather than relayed: what the answer decides and why it is asked
   now, and what each option leads to (scope, size, effort, what changes for the user). Ask back at once about anything
-  ambiguous, and hand the rewritten answers to a new worker,
-  which records them first as an `answer` envelope naming that `worker` envelope. Waiting for answers is not a problem
-  and needs no resolution, but it holds the gates from the run's stage on, and the handoff, until answered.
-- **Problems** (`failed`, or `needs_input` with a problem): read the cause, what was tried and the recommended recovery.
-  Inside the approved scope decide yourself: fix or revert (`git revert`, never reset) and commit the fix together
-  with a resolution that names the problem, or send a new worker the recovery request, which commits its fix with
-  that resolution only once it actually solved it. A problem that needs the scope changed goes to the user and a close
-  (the `spec` skill's `references/classification.md`).
+  ambiguous, and hand the rewritten answers to a new worker, which records them first as an `answer` envelope naming
+  that `worker` envelope. Waiting for answers needs no resolution but holds the gates from the run's stage on, and
+  the handoff, until answered.
+- **Problems** (`failed`, or `needs_input` with a problem): read the cause, what was tried and the recommended
+  recovery, and decide it as the `spec` skill's `references/worker-records.md` §3 describes: inside the approved scope
+  fix or revert yourself, or send a new worker the recovery request; the resolution is committed only with a fix that
+  actually solved it. A problem that needs the scope changed goes to the user and a close.
 
-
-Planning feedback remains inside the proposal directory, with no extra worker write root. Each Planning run records
-observations before its last work commit and returns fresh enabled sweep evidence plus its single worker record,
-including question rounds; validate the actual range against that procedure. A previous PASS is not later-run coverage.
-Stage-off has no sweep envelope, requested-only has policy-skip PASS and incomplete coverage names its gap. Development
-workers likewise capture observed feedback in their own spec before their last work commit.
+A worker records its feedback inside its own unit before its last work commit; a Planning run also returns fresh sweep
+evidence ([run coverage](../../spec-feedback/references/sweep.md#planning-run-coverage)): validate the range against it.

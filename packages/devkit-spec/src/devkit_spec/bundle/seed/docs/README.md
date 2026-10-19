@@ -25,7 +25,7 @@ This project manages its documentation based on **Spec-Driven Development (SDD)*
    - `capabilities/` and `stories/` cross-reference each other via Markdown Frontmatter (`stories:` and `capabilities:`).
 2. **Separation of Durable Backbone (`docs/`) and Ephemeral Task Specs (`specs/`)**:
    - `docs/` is the permanent Living Spec maintained throughout the system lifecycle.
-   - Sprint/ticket task specifications reside in `specs/` and are archived/cleaned upon completion.
+   - Sprint/ticket task specifications reside in `specs/` and stay in place as work history once completed.
    - Completed work reconciles changed core architecture and rules back into `docs/` (Reconciliation).
 
 ---
@@ -44,15 +44,7 @@ This project manages its documentation based on **Spec-Driven Development (SDD)*
 
 ---
 
-## 4. AI-First SDD Authoring Guidelines
+## 4. Authoring Guidelines
 
-AI agents interpret documents with a distinct cognitive structure. Avoid these common anti-patterns:
-
-1. **Avoid Abstract Slogans (`A > B`) -> Use RFC 2119 Normative Keywords**:
-   - Absolute inequalities can prompt LLMs to over-optimize A while destroying B.
-   - Use explicit guardrails and keywords (`MUST`, `SHOULD`, `MAY`). When exceptions are needed, document an ADR in `decisions/`.
-2. **Avoid Vague Qualitative Modifiers -> Define Testable Contracts**:
-   - Replace "handle errors properly" or "thorough testing" with verifiable criteria, status codes, and boundary conditions.
-3. **Detailed Standards**:
-   - Read the `contract-authoring` instruction for normative wording and measurable contracts.
-   - Read the `living-spec-writing` instruction for current-state writing, ID references, and history placement rules.
+Read the `contract-authoring` instruction for normative wording and measurable contracts, and the `living-spec-writing`
+instruction for current-state writing, ID references and history placement.

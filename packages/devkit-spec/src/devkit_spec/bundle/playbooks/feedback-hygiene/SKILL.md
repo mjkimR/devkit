@@ -17,14 +17,13 @@ Feedback files recorded by the `spec-feedback` skill (spec-local, proposal-local
 critical items have accumulated.
 
 Resolved items end `promoted`, `dismissed` or `forwarded`, with traceable destinations and artifacts ready for
-review. Items awaiting ownership resolution or authorized external submission remain `open`.
+review.
 
 ## Prerequisites
 
 - The user asked for this playbook. Destinations are the user's decisions; this playbook drafts and asks.
 - A clean working tree (`git status`), or an isolated branch or task worktree.
-- `uv run devkit spec list feedback --status open --all-namespaces -n 0` lists at least one item; otherwise report an
-  empty backlog and stop.
+- The Step 1 listing shows at least one item; otherwise report an empty backlog and stop.
 
 ## Step 1: Collect
 
@@ -50,7 +49,7 @@ remaining frontmatter (`kind`, `category`, `recurring`, `origin`) in Step 2.
 ## Step 3: Decide the destination with the user
 
 Propose the resolution destination or destinations per group. Draft artifacts within existing authorization
-first; request decisions only beyond that scope. External reports are prepared as drafts until submission is authorized:
+first; request decisions only beyond that scope:
 
 | Scope | Destination | Action |
 | :--- | :--- | :--- |
@@ -59,7 +58,7 @@ first; request decisions only beyond that scope. External reports are prepared a
 | `repo` | Decision | Draft `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md` from `.devkit/managed/spec/templates/decision.md` |
 | `repo` | Living Spec fix | A wrong capability, story or architecture statement: fix it through the `spec` skill |
 | any | Dismissal | Record the reason in the disposition line (Step 4) |
-| `upstream` | Forward draft | Prepare a report for the owning tool or bundle, including devkit and devkit-spec; submit only with explicit external-send authorization, then cite the actual report location |
+| `upstream` | Forward draft | Prepare a report for the owning tool or bundle, including devkit and devkit-spec; submit only with explicit external-send authorization |
 | `unknown` | Ownership review | Inspect the observed targets, propose repository or upstream destinations, and keep unresolved items open |
 
 An asset developed in this repository has `scope: repo` even when shipped as an upstream tool to other projects; promote it locally: a defect with clear
@@ -68,7 +67,9 @@ down), a small wording fix a `session` change, an open design question a draft p
 
 ## Step 4: Update status and seal
 
-A forwarding draft alone does not count as `forwarded`; leave it `open` until submission is authorized and an actual report location exists. Link all resolution destinations for an issue spanning several tools.
+An item is `forwarded` only after authorized submission, citing the actual report location; a draft alone stays
+`open`, as does an item whose ownership is unresolved. Link all resolution destinations for an issue spanning several
+tools.
 
 Set the frontmatter `status` of each resolved file (`promoted`, `dismissed` or `forwarded`) and append one
 disposition line to its body so the destination is traceable:
@@ -101,8 +102,8 @@ the reason; quote it.
 
 ## Completion conditions
 
-- Every resolved item selected in Step 1 has `status` `promoted`, `dismissed` or `forwarded` and one disposition line;
-  `uv run devkit spec list feedback --status open --all-namespaces -n 0` lists none of the resolved items. Report items still open because ownership or external submission is pending.
+- Every resolved item selected in Step 1 has `status` `promoted`, `dismissed` or `forwarded` and one disposition line,
+  and the Step 1 listing no longer shows it; items left `open` (Step 4) are reported.
 - Every promotion's draft exists and was reviewed by the user; nothing was promoted without approval.
 - Every rejected proposal the run listed is cleaned up (rejection ADR and deletion in one commit) or reported as left
   for later.

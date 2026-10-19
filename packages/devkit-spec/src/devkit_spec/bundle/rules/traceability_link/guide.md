@@ -7,15 +7,13 @@ Stories and capabilities have an M:N relationship recorded on both sides by exac
 (`docs/capabilities/<area>/CAP-<AREA>-<slug>.md`) lists its stories in `stories`. Paths and partial IDs never match.
 Both sides are kept so an agent reading either document sees the whole relation without a reverse search.
 
-- **Phase and severity**: `linter`, `error`. Shipped by the `spec` bundle (preset `core`).
+- **Phase and severity**: `linter`, `error`.
 - **What is checked**: stories and capabilities under `docs/stories/` and `docs/capabilities/` and under the same
   directories of each package registered in `[[tool.spec.namespaces]]` (`docs/packages/<name>/stories/`,
   `.../capabilities/`); links may cross packages, since IDs are repository-wide. Materials are not checked.
 - **Targeting**: the document missing the reverse link is reported when the run targets it. When it does not (a commit
   that changes only the story, say), the one-sided link is reported on the document that declares it instead, so a
   change that adds only one side is caught.
-
-See what a document links with `devkit spec refs <ID>` and what links it with `devkit spec refs <ID> --direction in`.
 
 ## 2. Cause of Violation
 
@@ -39,16 +37,15 @@ Missing targets, duplicate IDs, wrong ID kinds and malformed fields are reported
 - **By hand**: add the source ID to the target's list, or remove the one-sided link when the relation does not hold.
 - **Related**: whether a story and a capability belong together is a judgment the rule cannot make; read the
   `spec:living-spec-writing` instruction (Completed Specs and Traceability) before removing a link or adding one the
-  fix cannot; `devkit rules explain` prints its path as a `[RELATED: ...]` line.
+  fix cannot.
 
 ## 4. Configuration
 
-The rule has no settings. Namespaces come from `[[tool.spec.namespaces]]` in `.devkit/config.toml`; project policy
-(`[rules] exclude`, `[rules.severity_overrides]`, `[rules.phase_overrides]`) applies as to every rule.
+No settings. Namespaces come from `[[tool.spec.namespaces]]` in `.devkit/config.toml`.
 
 ## 5. Exceptions
 
-There is no inline suppression: a relation either holds on both sides or is removed from both. `[rules] exclude`
+No inline suppression: a relation either holds on both sides or is removed from both. `[rules] exclude`
 removes a file from every rule.
 
 ## 6. Example

@@ -1,8 +1,7 @@
 # devkit Installation Guide (for AI coding agents)
 
-You are an AI coding agent asked to install devkit into the repository you are working in. This guide and the
-documents it links are written for you: follow them in order, run the commands yourself and stop only where a step
-says to ask the user.
+You are an AI coding agent asked to install devkit into the repository you are working in. Follow this guide and
+the documents it links in order, run the commands yourself and stop only where a step says to ask the user.
 
 devkit distributes agent assets (instructions, skills, playbooks, rules, commit gates) from installed Python
 packages into a repository, records every file it writes in `.devkit/installation.json`, and keeps a managed block
@@ -20,8 +19,7 @@ https://raw.githubusercontent.com/mjkimR/devkit/main/guides/INSTALL_GUIDE.md
 https://raw.githubusercontent.com/mjkimR/devkit/main/guides/install/<document>.md
 ```
 
-Resolve every relative link in these guides against the same base. Read a linked document when its step comes up,
-not all of them up front.
+Resolve relative links against the same base, and read a linked document only when its step comes up.
 
 ## Ground rules
 
@@ -30,7 +28,7 @@ not all of them up front.
 2. **Never commit or push.** When the installation is verified, list the files to commit and stop.
 3. **Preserve what exists.** Never overwrite or delete files devkit did not create. devkit edits only the block
    between `<!-- DEVKIT:START -->` and `<!-- DEVKIT:END -->` in `AGENTS.md`; leave everything outside it alone.
-4. **Act on codes, not prose.** devkit reports problems on stderr as blocks such as `[ERROR: SYNC_CONFLICT]` with
+4. **Act on codes, not prose.** devkit reports problems on stderr as blocks such as `[ERROR]  (SYNC_CONFLICT) ...` with
    `[ACTION]` and `[FIX]` lines. Follow those directives; when a directive says to ask the user, ask.
 5. **Do not install tools silently.** If `git` or `uv` is missing, tell the user and ask before installing it.
 
@@ -44,11 +42,10 @@ uv --version                    # uv must be available
 git status --porcelain          # uncommitted changes, if any
 ```
 
-- Not a Git repository: an empty directory follows the new-repository route, which initializes Git after approval.
-  A non-empty directory without Git: ask the user whether to run `git init` first. devkit works without Git, but
-  commit gates and `--locked` restores need it.
-- Uncommitted changes: tell the user and suggest committing or stashing first, so the installation is a separate,
-  reviewable change. Continue only with their agreement.
+- Not a Git repository: an empty directory follows the new-repository route, which initializes Git after approval;
+  for a non-empty one, ask the user whether to run `git init` first (commit gates and `--locked` restores need Git).
+- Uncommitted changes: suggest committing or stashing first, so the installation is a separate, reviewable change.
+  Continue only with the user's agreement.
 - `.devkit/` already exists: devkit is already installed. Follow the maintenance section of the
   [existing-repository route](install/existing-repository.md#already-installed) instead of installing again.
 
@@ -82,12 +79,11 @@ uv add --dev "devkit-catalog @ git+https://github.com/mjkimR/devkit.git#subdirec
   later replaces the `devkit-dist` requirement with the `devkit-agt` one in the same dependency group.
 - `devkit-catalog` (optional) adds opt-in bundles that deploy nothing until selected; add it only when a
   [recommended bundle](install/bundle-recommendations.md) comes from it.
-- Both packages require Python 3.12 or newer. uv downloads a suitable interpreter when needed, but the project's
-  `requires-python` must allow 3.12; the route documents say how to handle a project that does not.
-- Release wheels are an alternative only when the latest release lists `devkit_dist-*.whl` and `devkit_agt-*.whl`
-  (and `devkit_catalog-*.whl` when needed): check with `gh release view --repo mjkimR/devkit`. A wheel installation of
-  `devkit-agt` names the `devkit-dist` and `devkit-advisory` wheels of the same release too. Do not mix Git and wheel
-  sources for these packages.
+- Both packages require Python 3.12 or newer; the project's `requires-python` must allow 3.12 (the route documents
+  cover a project that does not).
+- Release wheels are an alternative only when `gh release view --repo mjkimR/devkit` lists `devkit_dist-*.whl` and
+  `devkit_agt-*.whl` (and `devkit_catalog-*.whl` when needed); a `devkit-agt` wheel installation also names the
+  `devkit-dist` and `devkit-advisory` wheels of that release. Never mix Git and wheel sources for these packages.
 - Upgrading later: `uv lock --upgrade-package devkit-agt --upgrade-package devkit-dist --upgrade-package devkit-advisory`
   (plus `--upgrade-package devkit-catalog`), then `uv sync` and `uv run devkit sync`. The first upgrade from a
   `devkit-agt` that predates `devkit-dist` follows
@@ -100,9 +96,9 @@ against each opt-in bundle, present the recommendations with their evidence, and
 
 ## Optional: MCP connection
 
-When Codex or Claude Code native integration tools are wanted, follow [MCP onboarding](install/mcp.md) after
-bundle selection. Include its optional dependency and user-scoped registration in the approved installation plan.
-Asset sync does not register MCP. Report registration, client connection and visible approval UI as separate observations.
+When Codex or Claude Code native service tools are wanted, now or on an existing installation, follow
+[MCP onboarding](install/mcp.md) after bundle selection, with its optional dependency and user-scoped registration
+in the approved plan. Sync never registers MCP.
 
 ## Step 5: Verify and report
 
@@ -117,7 +113,7 @@ Then report to the user:
 
 - the route taken and anything you skipped or that needs their decision;
 - installed packages and selected bundles with presets;
-- every warning devkit printed (`[WARN: ...]`) and what it means for them;
+- every warning devkit printed (`[WARN]   (<CODE>) ...`) and what it means for them;
 - the files to commit: `pyproject.toml`, `uv.lock`, `.devkit/config.toml`, `.devkit/installation.json`,
   `.devkit/.gitignore`, `AGENTS.md`, `.gitignore` changes and any seeded files;
 - how a fresh clone restores the generated files: `uv sync`, then `uv run devkit sync --locked`.
@@ -128,14 +124,12 @@ Ask whether to commit. Do not commit on your own.
 
 | Code or symptom | Meaning | What to do |
 | --- | --- | --- |
-| `SYNC_CONFLICT` | A file devkit must write already exists with other content | List the named paths to the user; never delete them yourself. Move or rename only with approval, then sync again. |
+| `SYNC_CONFLICT` | A file devkit must write already exists with other content | List the named paths to the user; never delete them yourself. |
 | `GUIDANCE_BLOCK_INVALID` | `AGENTS.md` has broken or duplicate `DEVKIT` markers | Show the markers to the user and fix them together. |
 | `WORKSPACE_UNSAFE` | `AGENTS.md` is a symlink | Ask the user: make `AGENTS.md` the real file, or set `guidance_block = false`. |
-| `GATE_HOOK_INSTALL_SKIPPED` | Hooks were not installed (custom `core.hooksPath`, foreign hook layout) | Report it; the installation is otherwise complete. See the existing-repository route. |
-| `GATE_HOOKS_PATH_SET` from `devkit gate status` | `core.hooksPath` sends Git to another hooks directory, so no devkit gate runs | Report it with its `[FIX]`; change the setting only once the user agrees. |
-| `GATE_HOOK_ENTRY_MISSING` from `devkit gate status` | An enabled gate's stage has no installed devkit hook entry, so its gates do not run | Run `uv run devkit gate install` (or `uv run devkit sync`), then `uv run devkit gate status` again. If hooks were skipped (`GATE_HOOK_INSTALL_SKIPPED`), report that instead. |
+| `GATE_HOOK_INSTALL_SKIPPED`, `GATE_HOOKS_PATH_SET` | `core.hooksPath` or a foreign hook layout keeps devkit's hooks out, so no gate runs | Report it; the installation is otherwise complete. |
+| `GATE_HOOK_ENTRY_MISSING` from `devkit gate status` | An enabled gate's stage has no devkit hook entry | Run `uv run devkit gate install`, then `uv run devkit gate status` again. |
 | `SELECTION_INVALID` | A selected bundle's package is not installed, or a selected preset does not exist (`devkit:run` became `harness:run`) | Run `uv sync`, or remove the bundle with `uv run devkit remove <bundle>`; replace a `devkit` `run` preset with `harness = "run"` under `[presets]`. |
-| `HARNESS_COMMAND_UNAVAILABLE` | A harness command (`devkit rules`, `devkit run`, ...) in an installation with `devkit-dist` only | Tell the user; its `[FIX]` replaces the `devkit-dist` requirement with `devkit-agt` once they agree. |
-| `HARNESS_ENGINE_MISSING` from `devkit sync` or `devkit status` | Deployed rule, gate or workflow assets that nothing runs without `devkit-agt` | Report it; the assets are deployed. Add `devkit-agt` (its `[FIX]`) only when the user agrees. |
+| `HARNESS_COMMAND_UNAVAILABLE`, `HARNESS_ENGINE_MISSING` | A harness command, or deployed rule, gate or workflow assets, with `devkit-dist` only | Tell the user; apply the `[FIX]` (switch to `devkit-agt`) only once they agree. |
 | `RECEIPT_STALE` from `devkit sync --locked` | The committed receipt does not match the installed packages | Run a plain `uv run devkit sync` and include its changes in the commit. |
 | uv reports `requires-python` incompatible | The project allows Python below 3.12 | Stop and ask the user (see the route document). |

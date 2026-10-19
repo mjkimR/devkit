@@ -24,10 +24,8 @@ git init -b main                                      # only when the directory 
 uv init --bare --python 3.12 --no-workspace --name <repository-name>
 ```
 
-- `uv init --bare` writes only a minimal `pyproject.toml` (no build system, no sample code). It serves as devkit's
-  tooling manifest; for a non-Python project that is all it is.
-- For a Python project the user wants scaffolded, use the uv layout they ask for (`uv init --lib` or `uv init --app`)
-  with `--python 3.12` or newer instead.
+- `uv init --bare` writes only a minimal `pyproject.toml`, devkit's tooling manifest. For a Python project the user
+  wants scaffolded, use the layout they ask for (`uv init --lib` or `--app`) with `--python 3.12` or newer instead.
 - `--no-workspace` keeps the new project out of a uv workspace that happens to contain the directory.
 
 Create or extend the root `.gitignore` with at least:
@@ -45,17 +43,14 @@ uv run devkit --version
 uv run devkit sync --agent <agent> [--agent <agent> ...]
 ```
 
-- For a distribution-only installation (no rules, commit gates or workflows), add
-  `"devkit-dist @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-dist"` instead, never both
+- For a distribution-only installation, add `devkit-dist` instead, never both
   ([Installation Guide, step 3](../INSTALL_GUIDE.md#step-3-package-sources)).
-
 - Omit `--agent` to project into every supported agent; the choice is recorded as `agents` in
   `.devkit/config.toml`.
-- The first sync creates `.devkit/config.toml` (commented template), `.devkit/installation.json`,
-  `.devkit/.gitignore`, the root `AGENTS.md` with its managed block, and, with `devkit-agt` in a Git repository, the
-  commit hook dispatchers.
-- When Claude Code is among the agents, Claude Code reads `CLAUDE.md`, not `AGENTS.md`, and devkit never writes
-  `CLAUDE.md`. Offer to create a `CLAUDE.md` containing the single line `@AGENTS.md`.
+- The first sync creates `.devkit/config.toml`, `.devkit/installation.json`, `.devkit/.gitignore`, the root
+  `AGENTS.md` with its managed block and, with `devkit-agt` in a Git repository, the commit hook dispatchers.
+- Claude Code reads `CLAUDE.md`, which devkit never writes: when it is among the agents, offer to create a
+  `CLAUDE.md` containing the single line `@AGENTS.md`.
 
 ## 4. Ignore the native projections
 
@@ -86,7 +81,5 @@ playbooks do (playbooks bring the generated `devkit-playbook` skill), so do this
    ```
 
    Call tools through `uv run` or a recipe runner; Git hooks do not have `.venv/bin` on `PATH`.
-3. Optional: connect Codex or Claude Code native service tools through [MCP onboarding](mcp.md). This uses a
-   retained base/runtime and explicit user-scoped registration, independently of sync.
-4. Verify and report as in [Installation Guide, step 5](../INSTALL_GUIDE.md#step-5-verify-and-report). Suggest adding
+3. Verify and report as in [Installation Guide, step 5](../INSTALL_GUIDE.md#step-5-verify-and-report). Suggest adding
    the fresh-clone setup (`uv sync`, then `uv run devkit sync --locked`) to the project's README or setup recipe.
