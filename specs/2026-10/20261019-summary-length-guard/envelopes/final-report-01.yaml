@@ -1,0 +1,24 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-19T07:37:02.856425Z'
+status: completed
+summary: Shared summary guard accepts 300 stripped characters and rejects longer input before writes across spec, proposal and PADR creation. Red-to-Green, independent code review and independent reconcile verification passed; integration is pending.
+findings: []
+assumptions:
+- Experimental native Codex worker emulates the managed development-worker role under explicit user authority; file and shared Git writes use individual escalated commands, with no host support/config changes.
+- Characterization, plan and tasks were prepared together before the first boundary commit to satisfy the known ordinary task-coverage gate.
+- Fixed creation limit is 300 stripped Unicode characters; project-specific governance-rule limits remain independent.
+- No push, merge or integration was performed; local integration remains assigned to Host after verification and dev-integration authority.
+unverified_areas:
+- Full repository suite is assigned to Host once on the returned reviewed final head before dev-integration; no general Codex worker-host support guarantee is claimed.
+checks:
+  tests: PASS focused summary module 23 passed; Red reproduced six expected failures; Host full repository suite still pending before integration
+  build: PASS uv build --package devkit-spec produced sdist and wheel; inspected wheel contains shared guard; generated artifacts removed
+  lint: PASS just lint-check devkit-spec, just check devkit-spec, cumulative CI rules and diff whitespace; zero warnings/errors
+  review: PASS independent nested code-reviewer and reconcile-reviewer returned no findings
+  feedback: PASS observed native permission outcomes and verification dependency resolution captured; known task-coverage timing deduplicated
+diff_scope:
+  base: 471b19a0245bee80240dc68174e976b8add747ea
+  head: 8509777111326838711af0eb1b3203615b3ad533
