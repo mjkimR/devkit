@@ -25,6 +25,7 @@ graph TD
         PkgAdv["packages/devkit-advisory<br>(devkit-advisory wheel)"]
         PkgCat["packages/devkit-catalog<br>(devkit-catalog wheel)"]
         PkgStart["packages/devkit-starter<br>(devkit-starter wheel)"]
+        PkgViewer["packages/devkit-viewer<br>(devkit-viewer wheel, Svelte library tarball)"]
         ModelEmbed["models/devkit-embed<br>(devkit-embed wheel, manual release)"]
     end
 
@@ -38,6 +39,9 @@ graph TD
     ModelEmbed -.->|Optional search extra| PkgDevkit
     PkgSpec -->|Harness dependency| PkgDevkit
     PkgSpec -.->|SDD commands and agent assets| DevTools
+    PkgViewer -->|Harness dependency| PkgDevkit
+    PkgViewer -.->|Local read-only viewer| DevTools
+    PkgViewer -.->|Vendored viewer library (autohub)| Runtime
 ```
 
 ---
@@ -64,7 +68,18 @@ graph TD
 - **Dependencies**: `devkit-agt` and `click`; the base harness remains SDD-agnostic.
 - **Contracts**: `CAP-HARN-command-mount`, `CAP-HARN-agent-guidance`.
 
-### 2.4 Opt-in and Example Content Packages
+### 2.4 `devkit-viewer` (`packages/devkit-viewer`)
+- **Distribution Wheel**: `devkit_viewer-<version>-py3-none-any.whl`, carrying the committed page build.
+- **CLI**: `devkit viewer serve`, mounted through `devkit.commands`: a foreground, loopback-only, read-only server
+  for several local repositories.
+- **Contents**: the server (`devkit_viewer`) and, under `frontend/`, one Svelte source for the page and for the
+  component library whose `npm pack` tarball autohub vendors. Node is needed only to change the frontend.
+- **Dependencies**: `devkit-agt` (its shared core) and `click`; no `devkit-spec` code, since the page parses the
+  documents itself.
+- **Contracts**: `CAP-VIEW-repository-viewer`, `ADR-viewer-distribution-and-frontend-build`,
+  `ADR-read-only-local-server-over-git-refs`.
+
+### 2.5 Opt-in and Example Content Packages
 - **`devkit-catalog` (`packages/devkit-catalog`)**: Ships opt-in bundle assets (e.g. `host-observer`) that are installed in the environment but only deployed when explicitly selected (`devkit add <bundle>`).
 - **`devkit-starter` (`packages/devkit-starter`)**: Example external content package demonstrating bundle authoring.
 - **`devkit-embed` (`models/devkit-embed`)**: Hand-built data package containing the default dense embedding model for `devkit-agt[search]`.

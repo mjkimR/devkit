@@ -6,6 +6,8 @@ area: viewer
 status: active
 entrypoints:
   - packages/devkit-viewer/src/devkit_viewer/
+  - packages/devkit-viewer/frontend/src/app/
+  - packages/devkit-viewer/frontend/src/lib/
 created_at: 2026-10-19
 ---
 
