@@ -12,7 +12,8 @@ and `CAP-HARN-agent-guidance`; repository documentation starts at [docs/README.m
 
 ## Use in a project
 
-Install from this monorepo's package subdirectory. uv resolves devkit-agt and devkit-advisory from the same commit:
+Install from this monorepo's package subdirectory. uv resolves devkit-agt (the harness it builds on), devkit-dist
+and devkit-advisory from the same commit:
 
 ```bash
 uv add --dev "devkit-spec @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-spec"

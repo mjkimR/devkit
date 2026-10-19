@@ -13,7 +13,8 @@ created_at: 2026-10-17
 
 # [CAP-HOST-lifecycle-observation] Host Integration
 
-`devkit.host` connects host lifecycle events to installed service handlers. `devkit.distribution` deploys hook
+`devkit.host` (shipped by `devkit-dist`, so native hooks and the MCP server work without `devkit-agt`) connects host
+lifecycle events to installed service handlers. `devkit.distribution` deploys hook
 definitions and manages their registrations. The host module owns native input/output and service dispatch; a
 service owns its domain behavior. The integration service uses this boundary without placing Git
 execution, SDD models or approval policy inside an adapter. Quick reference: [reference.md](../../development/reference/host.md).
@@ -192,4 +193,6 @@ SDK and no shadowing project/profile setting exits 0; findings exit 1; inability
 arguments, user scope, errors and notices. Setup also carries registered/replaced/unchanged action. Text mode uses
 result sentinels. Both leave connection, approval UI, trust and execution permissions unknown; client reconnect,
 tool discovery and actual native UI require separate evidence. The config generator remains read-only and works
-without the MCP extra. Command and advisory details are in the host reference.
+without the MCP extra. The MCP server reports the `devkit-dist` version; a missing extra is `HOST_MCP_EXTRA_REQUIRED`,
+whose `[FIX]` adds the `mcp` extra to the devkit requirement the runtime declares (`devkit-agt[mcp]` or
+`devkit-dist[mcp]`). Command and advisory details are in the host reference.

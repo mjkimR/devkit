@@ -29,6 +29,7 @@ just lint                  # Run ruff check --fix and ruff format
 just lint-check            # Verify linting without modifying files (as in CI)
 just check                 # Run Pyright static type checker
 just test                  # Run pytest across all workspace packages
+just test-dist             # Run the devkit-dist tests in a separate environment without devkit-agt
 just test-cov              # Run pytest with coverage report
 just rules-check           # Run devkit governance rules check on the working tree
 just smoke                 # Build packages and verify fresh consumer installation

@@ -77,7 +77,8 @@ No `pyproject.toml` yet (non-Python repository):
 uv init --bare --python 3.12 --no-workspace --name <repository-name>
 ```
 
-Then, for every route:
+Then, for every route (the harness by default; `devkit-dist` instead only for a distribution-only installation, see
+[Installation Guide, step 3](../INSTALL_GUIDE.md#step-3-package-sources)):
 
 ```bash
 uv add --dev "devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
@@ -95,6 +96,9 @@ uv run devkit sync --agent <agent>
   [New Repository, section 4](new-repository.md#4-ignore-the-native-projections).
 
 ## 5. First rules check
+
+With `devkit-agt` installed (a distribution-only installation has no rules to check; skip to the bundle
+recommendations):
 
 ```bash
 uv run devkit rules check
@@ -132,3 +136,23 @@ uv run devkit list               # bundles, their selection state and presets
 
 - To add or diagnose optional Codex or Claude Code MCP registration, follow [MCP onboarding](mcp.md); reinstalling
   or running sync does not register it.
+
+## Upgrading across the package split
+
+`devkit-agt` releases from before `devkit-dist` existed shipped everything in one wheel. Upgrading from one changes
+the following; check each with the user and commit the result together with `pyproject.toml` and `uv.lock`:
+
+- **Packages**: a Git requirement on `devkit-agt` brings `devkit-dist` from the same commit; a release-wheel
+  installation names the `devkit-dist` wheel next to `devkit-agt` and `devkit-advisory`. A tool installation is
+  `uv tool install <devkit-dist requirement> --with <devkit-agt requirement>`.
+- **The `harness` bundle**: the first `uv run devkit sync` deploys the new auto-selected `harness` bundle (the rules,
+  commit gates, workflows and `devkit run` guidance that left the `devkit` bundle), rewrites the `devkit` bundle's
+  managed files and records `devkit-dist` as the receipt's tool. A project that opted out with `devkit = false` gets
+  `harness` selected and opts out again with `harness = false`.
+- **`devkit:run`**: the `run` preset moved to `harness`. A `devkit = ["core", "run"]` (or `"run"`) selection stops the
+  sync with `SELECTION_INVALID` until it becomes `harness = "run"`; `devkit = "all"` keeps working but no longer
+  deploys the `devkit run` guidance.
+- **Overrides**: an override of `devkit:devkit-run` or `devkit:run-pointer` stops applying; re-create it with
+  `uv run devkit override create harness:<asset>` and carry the edit over. An override of `devkit:consumption` or of
+  the `devkit` constitution keeps applying with an upstream-drift report and still holds the old harness text:
+  remove those sections from it (`uv run devkit override diff`, then `accept`).

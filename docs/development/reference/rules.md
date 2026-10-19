@@ -243,7 +243,7 @@ checked paths and settings.
 
 ### Built-in advisory bundle
 
-The auto-selected `advisory` bundle (`devkit.advisory_guide`) ships one rule in its `python` preset
+The auto-selected `advisory` bundle (`devkit.advisory_guide`, shipped by `devkit-dist`) ships one rule in its `python` preset
 (`uv run devkit add advisory:python`), loaded from the receipt like the authoring rules:
 
 | Rule | Phase, severity | Checks |

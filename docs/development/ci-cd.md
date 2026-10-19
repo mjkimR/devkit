@@ -13,13 +13,16 @@ consumer smoke and the viewer job run on Linux. The workflow executes:
 | **Lint & Format** | `just lint-check` | Enforces Ruff formatting and linter invariants. |
 | **Type Check** | `just check` | Enforces Pyright static typing across all workspace code. |
 | **Test Suite** | `just test` | Runs the full pytest test suite across all workspace packages. |
+| **Dist-only Tests** | `just test-dist` | Syncs a separate environment with `devkit-dist` and its extras only (`scripts/dist_only.sh`), refuses to run if any `devkit-agt` module is importable there, and runs the `devkit-dist` tests without the harness. |
 | **Governance Rules** | `just rules-check` | Runs devkit governance rules on the working tree. |
 | **Consumer Smoke** | `just smoke` | Builds wheels and verifies installation in a clean consumer environment. |
 | **Viewer Frontend** | `just viewer install`, `lint`, `check`, `test`, `pack` | With Node 24: formatting, `svelte-check`, the frontend tests and the library tarball's contents and exports. |
 | **Viewer Build** | `uv run --no-active devkit generated check viewer-assets` | Rebuilds the page from the lockfile in a clean checkout and fails when the committed build under `packages/devkit-viewer/src/devkit_viewer/static/` differs. |
 
 For cumulative branch verification before integration, also run `just rules-check --ci --base <base-ref>` locally.
-The consumer smoke installs the base packages first, preserving their independent coverage, then installs the
+The consumer smoke first installs the `devkit-dist` wheel alone (distribution-only sync, the coded answers to harness
+command names and to rule assets no engine runs, one owner of the `devkit` executable) and a `uv tool install` of
+`devkit-dist` with `devkit-agt`, then installs the base packages, preserving their independent coverage, then installs the
 `devkit-spec` wheel and checks command mounting, opt-in docs seeding and seeded document discovery, and finally
 installs the `devkit-viewer` wheel, starts `devkit viewer serve` for the consumer project and fetches its bundled
 page, a script and `/api/repos`.
@@ -45,7 +48,8 @@ CI continues to run the complete suite through `just test`.
 
 ## 3. Release Automation
 
-Tags matching `v*` trigger the release workflow. It requires a tag on `main` matching the `devkit-agt` version,
+Tags matching `v*` trigger the release workflow. It requires a tag on `main` matching the version of `devkit-dist`,
+`devkit-agt` and `devkit-advisory` (released in lockstep),
 runs the reusable CI workflow on that commit, then calls `just release-build <tag>` to build every workspace
 package wheel and generate `SHA256SUMS` and installation notes. It publishes those artifacts in a GitHub Release.
 The separately released embedding-model wheel is referenced by URL and is not rebuilt.

@@ -1,7 +1,7 @@
 ---
 id: CAP-DIST-in-repo-bundles
 title: "In-Repository Bundles"
-summary: "Repository-owned assets packaged and consumed locally without external distribution."
+summary: "Repository-owned assets packaged and consumed locally without external distribution, with their installation next to the declared devkit requirement and their rules in Git snapshot gates."
 area: distribution
 status: active
 created_at: 2026-10-17
@@ -13,7 +13,9 @@ A repository's own assets (a rule encoding a project convention, a skill driving
 playbook) must be versioned with it, never published, and still get everything devkit does for distributed assets:
 planning, hash-tracked projection, receipt recording, rule discovery and Git snapshot gates. The consumer-facing
 version of this document is the `in-repo-bundle` instruction of the [`devkit` guide bundle](../../development/reference/distribution.md#4-bundles-shipped-with-devkit);
-keep the two in step.
+keep the two in step. The bundle setup is mirrored by the `devkit` bundle's `in-repo-bundle` instruction (shipped by
+`devkit-dist`); rule discovery, rule tests and Git snapshot gates by the `harness` bundle's `harness-assets`
+instruction (shipped by `devkit-agt`, which runs the rules).
 
 ## 1. Decision
 
@@ -96,7 +98,10 @@ The manifest follows the `CAP-DIST-manifest-spec` without exception; `devkit bun
 
 ## 3. Installation
 
-In a **uv workspace**, add the package to the members and the dev group:
+In a **uv workspace**, add the package to the members and to the dev group next to the devkit requirement the
+project already declares: `devkit-agt` when the project uses the harness (and always when the bundle ships rules,
+gates or workflows, which only `devkit-agt` runs), otherwise `devkit-dist`. `devkit-agt` depends on `devkit-dist` at
+the same version, so a project never declares both (`ADR-dist-bundles-compatibility`):
 
 ```toml
 # pyproject.toml (repository root)
@@ -142,7 +147,9 @@ their receipts record which version they run.
 ## 5. Rules and Snapshot Gates
 
 The bundle's rules deploy to `.devkit/managed/my-repo/rules/`, are listed under their asset's `paths`, load in
-`devkit rules check` without flags and are configured in `[rules]` like any rule.
+`devkit rules check` without flags and are configured in `[rules]` like any rule. They need `devkit-agt`: in an
+installation with `devkit-dist` alone they are deployed with a `HARNESS_ENGINE_MISSING` warning
+(`CAP-DIST-sync-and-transactions`).
 
 Snapshot gates (`devkit rules check --staged`, `--ci`) evaluate a Git tree whose receipt pins the Git-ignored managed
 copies: a materialized tree lacks them, and the gate reads such a file from the working tree only when its SHA-256

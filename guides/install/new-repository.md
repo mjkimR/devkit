@@ -45,11 +45,15 @@ uv run devkit --version
 uv run devkit sync --agent <agent> [--agent <agent> ...]
 ```
 
+- For a distribution-only installation (no rules, commit gates or workflows), add
+  `"devkit-dist @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-dist"` instead, never both
+  ([Installation Guide, step 3](../INSTALL_GUIDE.md#step-3-package-sources)).
+
 - Omit `--agent` to project into every supported agent; the choice is recorded as `agents` in
   `.devkit/config.toml`.
 - The first sync creates `.devkit/config.toml` (commented template), `.devkit/installation.json`,
-  `.devkit/.gitignore`, the root `AGENTS.md` with its managed block, and, in a Git repository, the commit hook
-  dispatchers.
+  `.devkit/.gitignore`, the root `AGENTS.md` with its managed block, and, with `devkit-agt` in a Git repository, the
+  commit hook dispatchers.
 - When Claude Code is among the agents, Claude Code reads `CLAUDE.md`, not `AGENTS.md`, and devkit never writes
   `CLAUDE.md`. Offer to create a `CLAUDE.md` containing the single line `@AGENTS.md`.
 

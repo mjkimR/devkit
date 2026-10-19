@@ -217,8 +217,8 @@ Package extras (`[project.optional-dependencies]`) were rejected for asset selec
 Installing a content wheel makes its bundle available. Whether that alone deploys it is the bundle author's call: a
 bundle that declares `auto_select` is deployed with its `default_preset` as soon as its package is installed, and a
 project opts it out with `[presets] <bundle> = false`; any other bundle is deployed only once `.devkit/config.toml`
-selects it (`devkit add`). The bundles built into `devkit` follow the same rule (`devkit` and `advisory` declare
-`auto_select`; `authoring` and `git-commits` do not).
+selects it (`devkit add`). The bundles built into the devkit wheels follow the same rule (`devkit` and `advisory` of
+`devkit-dist` and `harness` of `devkit-agt` declare `auto_select`; `git-commits` and `authoring` do not).
 
 A project that installs a package built on devkit installed it to use it, so its default content should arrive
 without a second step. Dependency resolution already decides what reaches the environment:

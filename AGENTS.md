@@ -7,7 +7,8 @@ Personal developer tools monorepo.
 - Python monorepo managed with `uv` workspaces and `just`.
 - Python sources live in `packages/<package>/src/` or `tools/<tool>/src/` (`models/devkit-embed` is a data package outside the workspace, built by hand); tests belong in each package's `tests/`, never under `src/`, except a rule's own tests, which travel with it in its folder (`<rule>/tests/`, `CAP-GOV-rule-authoring`).
 - Keep `justfile` recipes thin; shared shell logic belongs in `scripts/`.
-- Inside `packages/devkit`, lower modules never import higher ones (`advisory` < `core` < `rules` < `workflow`/`gate`; `search`, `compact`, `worktree` and `host` use only `core` and `advisory`; `distribution` also uses `search` and `host`; `integration` uses `core`, `advisory`, `host` and `worktree`; `rules`, `gate` and `generated` also use `compact`; the data-only bundle areas import nothing from their package modules, and their bundle rules only `rules` (`advisory_guide`) or `core`, `advisory` and `rules` (`authoring_guide`)); a test enforces the layering (`packages/devkit/tests/test_layering.py`). `devkit.advisory` ships as the separate `devkit-advisory` distribution (standard library only, no entry points), and `devkit` is a namespace package both share: never add `src/devkit/__init__.py`.
+- The `devkit` namespace is split over three wheels: `devkit-dist` (`packages/devkit-dist`: `core`, `search`, `host`, `distribution`, `cli.py`, `__main__.py` and the data-only bundle areas `advisory_guide` and `commits_guide`), `devkit-agt` (`packages/devkit`: `rules`, `workflow`, `gate`, `worktree`, `generated`, `integration`, `compact` and the data-only bundle areas `authoring_guide` and `harness_guide`) and `devkit-advisory` (`devkit.advisory`, standard library only, no entry points). `devkit` is a namespace package all three share: never add `src/devkit/__init__.py`, and never ship one installed path from two wheels.
+- Layering is enforced per wheel; lower modules never import higher ones. In `devkit-dist`, `advisory` < `core` < `search`/`host` < `distribution`, the data-only bundle areas import nothing from their package modules (the `advisory_guide` bundle rule uses only `rules`), and no module (`cli.py` and string module paths included) references a `devkit-agt` area (`packages/devkit-dist/tests/test_layering.py`). In `devkit-agt`, `rules` < `workflow`/`gate`; `compact` and `worktree` use only `core` and `advisory`; `integration` uses `core`, `advisory`, `host` and `worktree`; `rules`, `gate` and `generated` also use `compact`; `harness_guide` imports nothing and the `authoring_guide` bundle rules only `core`, `advisory` and `rules` (`packages/devkit/tests/test_layering.py`). `devkit-agt` mounts its commands through `devkit.commands` entry points; `devkit-dist` owns the `devkit` executable. The `devkit-dist` tests also run without `devkit-agt` installed (`just test-dist`).
 - `guides/` holds the agent-facing installation guides a consumer's agent follows from a GitHub link; keep their commands, codes and bundle recommendations in step with `docs/` and the packages.
 - `docs/capabilities/<area>/` is canonical for each module's behavior, and `docs/architecture/` defines system structure; `docs/development/reference/<module>.md` and package READMEs stay quick references that point to those contracts, and the bundled guide instructions are consumer-facing mirrors kept in step.
 - Write all documentation, architecture specifications, and guide materials in English.
@@ -29,14 +30,15 @@ Personal developer tools monorepo.
 
 - No external consumers exist yet. Breaking changes to schemas (`bundle.toml`, `.devkit/config.toml`, `.devkit/installation.json`), CLI commands, and APIs may be made in place: do not bump schema versions or add migration paths, deprecation shims, or legacy readers.
 - Once a real consumer exists, delete this section and treat these formats as versioned contracts that require migrations.
-- Exception: `devkit-advisory` (the `devkit.advisory` API) already has runtime consumers in other repositories. Treat it as a semver contract: within `0.x`, a breaking change needs a minor version bump, released in lockstep with `devkit`.
+- Exception: `devkit-advisory` (the `devkit.advisory` API) already has runtime consumers in other repositories. Treat it as a semver contract: within `0.x`, a breaking change needs a minor version bump, released in lockstep with `devkit-dist` and `devkit-agt`.
 
 ## Packages
 
 Keep package descriptions in this guide to a high-level summary of their purpose. Do not add package-specific configurations or detailed architectural explanations here; refer to the package README and `docs/capabilities/<area>/` when deeper details are needed:
 
-- `devkit-agt`: The single devkit distribution with one CLI (`devkit`): agent asset distribution, repository rules, delivery workflows, commit gates and structured agent advisories, built on an SDD-agnostic shared core. See [packages/devkit/README.md](packages/devkit/README.md) for its modules and layering.
-- `devkit-advisory`: The Agent Advisory Protocol library (`devkit.advisory`) on its own, for other repositories' runtime; `devkit-agt` depends on the same version. See [packages/devkit-advisory/README.md](packages/devkit-advisory/README.md).
+- `devkit-dist`: Agent asset distribution with the `devkit` CLI: bundles, agent projections, sync, context loading, playbooks and native hooks, on the SDD-agnostic shared core it owns. See [packages/devkit-dist/README.md](packages/devkit-dist/README.md) for its modules and layering.
+- `devkit-agt`: The developer harness mounted under `devkit`: repository rules, delivery workflows, commit gates, task worktrees, generated files, integration and compact command output; depends on `devkit-dist`. See [packages/devkit/README.md](packages/devkit/README.md) for its modules and layering.
+- `devkit-advisory`: The Agent Advisory Protocol library (`devkit.advisory`) on its own, for other repositories' runtime; `devkit-dist` and `devkit-agt` depend on the same version (the three are released in lockstep). See [packages/devkit-advisory/README.md](packages/devkit-advisory/README.md).
 - `devkit-spec`: Spec-driven delivery commands and agent assets on the shared devkit harness. See [packages/devkit-spec/README.md](packages/devkit-spec/README.md).
 - `devkit-starter`: Example external content package demonstrating bundle packaging and distribution. See [packages/devkit-starter/README.md](packages/devkit-starter/README.md).
 - `devkit-catalog`: Opt-in content bundles that are available once installed but deployed only when a project selects them. See [packages/devkit-catalog/README.md](packages/devkit-catalog/README.md).
@@ -52,6 +54,7 @@ Run lint, type checks, and relevant tests before completing code changes:
 | Lint & format check (CI) | `just lint-check [module]` |
 | Type check (Pyright) | `just check [module]` |
 | Tests | `just test [module]` |
+| devkit-dist without devkit-agt (dist-only check) | `just test-dist` |
 | Test Coverage | `just test-cov [module]` |
 | Governance Rules | `just rules-check` or `just rules-fix` |
 | Consumer smoke (packaging, CLI wiring, hooks) | `just smoke` |

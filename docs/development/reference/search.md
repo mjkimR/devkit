@@ -8,9 +8,13 @@ Lexical search is part of `devkit`, and the default `auto` mode uses it when not
 
 ```bash
 uv add 'devkit-agt[search] @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit'
+# or, in a project that depends on devkit-dist alone:
+uv add 'devkit-dist[search] @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-dist'
 ```
 
-From Git or in this repository, the extra installs the model wheel from the release that `packages/devkit/pyproject.toml` pins; from a release wheel, add `devkit-embed` by its URL ([README](../../../README.md#using-devkit-in-another-project)).
+`devkit.search` ships in `devkit-dist`; `devkit-agt[search]` requires `devkit-dist[search]`. Add the extra to the
+devkit requirement the project already declares, never a second one. From Git or in this repository, the extra
+installs the model wheel from the release that `packages/devkit-dist/pyproject.toml` pins; from a release wheel, add `devkit-embed` by its URL ([README](../../../README.md#using-devkit-in-another-project)).
 
 ## Library
 
@@ -21,7 +25,7 @@ index = SearchIndex([
     SearchDocument("restore-replica", "Restore a PostgreSQL replica after failure", body="..."),
     SearchDocument("publish-release", "Publish a software release"),
 ])
-index.resolve_mode(SearchMode.AUTO)  # SearchMode.HYBRID with devkit-agt[search], else SearchMode.LEXICAL
+index.resolve_mode(SearchMode.AUTO)  # SearchMode.HYBRID with the search extra, else SearchMode.LEXICAL
 index.search("standby database is broken", limit=5, min_similarity=0.35)
 # [SearchHit(id="restore-replica", score=0.0328), ...]; hit.to_dict() == {"id": ..., "score": ...}
 ```
@@ -43,6 +47,6 @@ Only dense and hybrid search raise them; `auto` resolves to lexical instead of r
 
 | Code | Level | Class | Condition |
 | --- | --- | --- | --- |
-| `SEARCH_EXTRA_MISSING` | `ERROR` (`INTERACTION`) | `SearchExtraMissingError` | `numpy` or `tokenizers` cannot be imported; `[FIX]` installs `devkit-agt[search]`. |
+| `SEARCH_EXTRA_MISSING` | `ERROR` (`INTERACTION`) | `SearchExtraMissingError` | `numpy` or `tokenizers` cannot be imported; `[FIX]` (`extra_install_fix("search")`, [core reference](core.md)) adds the extra to the devkit requirement the project declares: `devkit-agt[search]` when it depends on `devkit-agt`, else `devkit-dist[search]`. |
 | `SEARCH_MODEL_NOT_FOUND` | `ERROR` (`INTERACTION`) | `ModelNotFoundError` | No installed package registers the requested model name. |
 | `SEARCH_MODEL_INVALID` | `ERROR` (`MAINTENANCE`) | `ModelInvalidError` | The model package's files are missing or malformed, it cannot be imported, or two packages register the same name. |

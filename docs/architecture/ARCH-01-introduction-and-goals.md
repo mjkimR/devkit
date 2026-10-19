@@ -15,7 +15,7 @@ created_at: 2026-10-17
 
 ## 1. Mission
 
-`devkit` is a developer tooling suite for engineering teams collaborating with AI coding agents (such as Codex, Claude Code, and Antigravity). It ships as one Python distribution, `devkit-agt`, with one CLI (`devkit`); its `devkit.advisory` library is also published on its own as `devkit-advisory`, the standard-library-only runtime dependency of repositories that report advisories from their own code.
+`devkit` is a developer tooling suite for engineering teams collaborating with AI coding agents (such as Codex, Claude Code, and Antigravity). It ships one CLI (`devkit`) in two Python distributions released in lockstep: `devkit-dist` (asset distribution with the shared foundation, host hooks, search and the `devkit` executable) and `devkit-agt` (the developer harness: rules, workflows, gates, worktrees, generated files, integration and compact output, mounted under the same executable), which depends on it; a repository that only deploys agent assets installs `devkit-dist` alone. Its `devkit.advisory` library is also published on its own as `devkit-advisory`, the standard-library-only runtime dependency of repositories that report advisories from their own code.
 
 Its primary mission is to provide an **agent-first developer harness** that unifies:
 1. **Asset Distribution & Guidance Delivery (`devkit.distribution`)**: packaging, versioning, selecting, and synchronizing agent guidance, instructions, playbooks, native skills, subagent roles, and bundle assets across repositories.

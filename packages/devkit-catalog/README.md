@@ -18,8 +18,9 @@ uv run devkit add host-observer                      # the default preset (all)
 ## Adding a bundle
 
 A catalog bundle holds content only: instructions, playbooks, skills, documents,
-guidance fragments, rules and declarative hooks using installed devkit handlers. A bundle that needs devkit code (a gate, a workflow
-check, a command) belongs in `devkit-agt` instead.
+guidance fragments, rules and declarative hooks using installed devkit handlers (its rules run where `devkit-agt` is
+installed). A bundle that needs devkit code (a gate, a workflow check, a command) belongs in `devkit-agt` instead.
+The tests load the bundles with the manifest reader of `devkit-dist`, the package's only development dependency.
 
 1. Create `src/devkit_catalog/<module>/__init__.py` (empty) and
    `src/devkit_catalog/<module>/bundle/bundle.toml` with the package version.
