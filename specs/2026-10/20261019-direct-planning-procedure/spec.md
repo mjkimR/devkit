@@ -4,11 +4,11 @@ title: Planning procedure reachable from the spec skill for any executor
 summary: Moves the ordered Planning steps out of the planning-worker contract into a spec skill reference that direct-mode Hosts and workers both follow, so the procedure lives in one place.
 status: planned
 created: 2026-10-19
-related_capabilities: []
+related_capabilities:
+  - CAP-DLV-delivery-workflows
 related_stories: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-direct-planning-procedure] Planning procedure reachable from the spec skill for any executor
 
@@ -16,72 +16,82 @@ workflow: sdd-spec-feature
 
 Handed off from proposal PROP-direct-planning-procedure on 2026-10-19.
 
-### 1. Background & Hypothesis
+The `spec` skill's routing table says Planning "runs on `plan-<slug>` to `plan-accept`", and `effort.md` gives the
+review depth per effort, but the ordered Planning steps (set `status: reviewing` and commit, record decisions as
+PADRs, gather questions in one round, update `dev_effort`, sweep feedback, end with one `worker` envelope) are written
+only in the `planning-worker` role contract. A Host running Planning in `direct` mode has to read a subagent contract
+written for another actor (`FB-direct-planning-procedure-location`).
 
-- **Problem**: The `spec` skill's routing table says Planning "runs on `plan-<slug>` to `plan-accept`", and
-  `effort.md` gives the review depth per effort, but the ordered Planning steps (set `status: reviewing` and commit,
-  record decisions as PADRs, gather questions in one round, update `dev_effort`, sweep feedback, end with one `worker`
-  envelope) are written only in the `planning-worker` role contract. A Host running Planning in `direct` mode has to
-  read a subagent contract written for another actor (`FB-direct-planning-procedure-location`).
-- **Hypothesis**: One Planning reference in the `spec` skill, which the `planning-worker` contract cites instead of
-  owning, gives every executor the same steps and leaves one place to change them.
+One Planning reference in the `spec` skill, which the `planning-worker` contract cites instead of owning, gives every
+executor the same steps and leaves one place to change them. The split follows
+`ADR-executor-neutral-planning-steps-in-a-spec-reference`; the size follows
+`ADR-planning-reference-fits-the-existing-byte-budgets`.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Planning procedure reachable from the spec skill for any executor so that system capabilities are extended.
+- **US-1**: As a Host running a proposal's Planning in `direct` mode, I want the ordered Planning steps in a `spec`
+  skill reference, so that I follow the same procedure a `planning-worker` follows without reading a subagent prompt.
+- **US-2**: As a maintainer of the Planning procedure, I want the steps in exactly one file, so that a change cannot
+  drift between two copies.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: changing what a Planning step requires. The steps move with their wording; no step is added,
+   dropped or reworded beyond the address to the executor and the links the new location needs.
+2. **Scope Excluded**: CLI, schema, workflow definition or envelope-mechanics changes (`worker-records.md` stays the
+   source for envelope mechanics and is cited, not restated).
+3. **Scope Excluded**: the Planning-step edits of `PROP-envelope-record-gaps`; that proposal adapts to the steps'
+   final place when it lands second.
+4. **Scope Excluded**: trimming another `spec` reference to make room.
+   - **When to Reconsider**: the reference grows past about 8 KB (`ADR-planning-reference-fits-the-existing-byte-budgets`).
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] A direct Host reaches the Planning steps from the spec skill
+- **Given** the `spec` skill's routing table
+- **When** a Host reads the `proposal` row to run Planning in `direct` mode
+- **Then** the row links `references/planning.md`, and that reference holds the ordered steps: first-turn
+  `status: reviewing` with its commit and the `needs_decompose` return, answers recorded in a commit of their own
+  before they are folded, PADRs with `--summary`, the review depth per effort citing `review-loop.md`, the
+  support-role envelopes, questions in one round, the `dev_effort` check, observed feedback, the `collect-feedback`
+  sweep and the single `worker` envelope
 
-## 5. Carried Proposal Notes
+### [AC-02] The planning-worker contract cites the reference and keeps only worker obligations
+- **Given** the `planning-worker` contract
+- **When** a worker reads its `## Procedure`
+- **Then** it holds the worktree and `git -C <worktree>` rule, the nested-role rule (start, wait, never end while one
+  runs) and one step that follows `.devkit/managed/spec/skills/spec/references/planning.md`; `## Input`, `## Return`
+  with `final_head`, `## Write boundaries` and `## On a problem` are unchanged, and none of the moved steps' sentences
+  remain in the contract
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-03] Every moved step survives the move
+- **Given** the contract's steps 2 to 6 at the base `d981971`
+- **When** they are compared with `references/planning.md` and the new contract
+- **Then** each sentence appears in exactly one of the two files, and `packages/devkit-spec/tests/test_role_contracts.py`
+  pins the moved phrases in the reference (`Collect the questions for the user in one round, never stopping at the
+  first`, `as a commit of their own`, `status: reviewing`, `needs_decompose: true`, `never into a file of their own`,
+  `envelope answer --unit <proposal dir> --answers-to <worker-NN.yaml>`) and asserts that the contract no longer holds them
 
-### 2. Technical Spike Questions
+### [AC-04] The byte budgets hold without trimming
+- **Given** `packages/devkit-spec/tests/test_bundle_budgets.py`
+- **When** `just test devkit-spec` runs
+- **Then** `references/planning.md` is under 12288 bytes, `spec/SKILL.md` under 11776 bytes, every `spec` reference
+  is linked from its skill, and no other `spec` reference changes
 
-- **Q1**: Which steps are executor-neutral and move to the reference, and which stay in the role contract (nested
-  delegation, returning the head to the Host)?
-- **Q2**: Can the move fit the existing bundle byte budgets of the `spec` skill and the role contract, or does another
-  reference need trimming?
+### [AC-05] The Living Spec says where the Planning procedure lives
+- **Given** `CAP-DLV-delivery-workflows` §4.6
+- **When** a reader looks up the `planning-worker` row and the sentence on where a role's procedure lives
+- **Then** the row names `spec/references/planning.md` as the procedure's place and the sentence no longer lists the
+  `planning-worker` among the roles whose procedure lives in the contract
 
-### 3. Proposed Design & Impact
+## 5. Assumptions
 
-- **Q1** (`ADR-executor-neutral-planning-steps-in-a-spec-reference`): a new `spec` skill reference
-  `references/planning.md`, linked from the routing table's proposal row, holds the executor-neutral steps of the
-  contract's steps 2 to 6: first-turn `status: reviewing` and the `needs_decompose` return, answers recorded before
-  they are folded, PADRs with a summary, review depth per effort (citing `effort.md` and `review-loop.md`) and the
-  support-role envelopes, one round of questions, the `dev_effort` check, observed feedback, the sweep and the single
-  `worker` envelope. It addresses the `direct` Host and the worker alike and cites `worker-records.md` for envelope
-  mechanics. The `planning-worker` contract keeps the worktree and `git -C` rule, nested roles (start, wait, never end
-  while one runs), Input, Return with `final_head`, Write boundaries and On a problem, and points to the reference by
-  its managed path. The steps move; nothing is copied.
-- **Q2** (`ADR-planning-reference-fits-the-existing-byte-budgets`): the reference is about 4.5 KB against the
-  12288-byte skill document budget and the link keeps `spec/SKILL.md` near 6.6 KB of its 11776; role contracts have
-  no budget and the contract shrinks to about 4 KB. No other reference is trimmed.
-- Affected: `packages/devkit-spec` bundle (`skills/spec/SKILL.md`, the new `skills/spec/references/planning.md`,
-  `subagents/planning-worker.md`); tests that pin contract phrases (`tests/test_role_contracts.py`,
-  `tests/test_effort_procedure.py` `CITING`); `CAP-DLV-delivery-workflows` (the `planning-worker` row of the role
-  table and the sentence on where a worker's procedure lives), so `boundaries.owns` adds `delivery/`.
-  `CAP-HARN-agent-guidance` lists asset ids only and is unchanged. No CLI or schema change.
-- **Development effort `medium`** (was `low`): the move changes the accepted `CAP-DLV-delivery-workflows` statement that the
-  `planning-worker` procedure is in its contract, the default case for `medium` in `effort.md`; one `code-reviewer`
-  pass checks that no step was dropped or reworded in the move.
-- **Order with `PROP-envelope-record-gaps`**: that proposal changes the `planning-worker` contract and `review-loop.md`
-  in Development. Whichever lands second adapts its edits to the other; if this one lands first, the Planning-step
-  edits of `PROP-envelope-record-gaps` go into `references/planning.md` rather than the contract. Recommended order:
-  this one first (size S), so the other edits the steps in their final place.
-
-### 4. Lifecycle & Retirement Criteria
-
-- Preliminary decisions: `devkit spec proposal padr direct-planning-procedure "<title>"`.
-- On acceptance (`plan-accept`): hand off with `devkit spec proposal handoff direct-planning-procedure`.
-- On rejection: `status: rejected` with the user's reason in the commit message.
-
+- The reference addresses "you" as the executor of the Planning turn (the `direct` Host or the `planning-worker`),
+  per the ADR. The moved step 6 keeps its `worker` envelope command; a `direct` Host writes the same single `worker`
+  envelope for its run, as `worker-records.md` already requires of every run.
+- `test_every_restatement_cites_the_loop` keeps the contract in `CITING` only while the contract names
+  `review-loop.md`; the depth step that cites it moves, so the reference replaces the contract in `CITING`.
+- The `Planning returns follow per-run feedback` line at the end of `spec/SKILL.md` stays: it is the skill-level
+  pointer for returns and is not a contract step.
+- The proposal's premises hold at base `d981971`: `spec/SKILL.md` is 6531 bytes, the contract 7953 bytes, and no
+  other unit has edited the contract's steps yet.
