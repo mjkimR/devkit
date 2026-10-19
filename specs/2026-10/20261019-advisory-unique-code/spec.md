@@ -2,7 +2,7 @@
 id: SPEC-advisory-unique-code
 title: Advisory code uniqueness rule
 summary: A Python rule in the advisory bundle that refuses two unrelated AdvisoryError classes declaring the same code, or a constructor code that a class already owns.
-status: planned
+status: in-progress
 created: 2026-10-19
 related_capabilities:
   - CAP-ADV-agent-advisory-protocol
