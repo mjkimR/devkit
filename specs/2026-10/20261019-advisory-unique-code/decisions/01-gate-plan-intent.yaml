@@ -1,0 +1,11 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'spec-depth feature: RULE-advisory-unique-code in the advisory bundle python
+  preset (static AST analysis with import resolution, workspace classes only); open
+  advisory_guide layering to core, advisory and rules; select advisory:python in devkit;
+  replace and delete the import-based uniqueness test. Development effort medium.'
+by: user
+at: '2026-10-18T23:09:25.726996Z'

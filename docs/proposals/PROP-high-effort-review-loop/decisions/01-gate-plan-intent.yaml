@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: classification proposal x feature; planning effort medium, development effort
+  medium; no milestone; plan-review role and model or reasoning settings out of scope
+by: user
+at: '2026-10-19T00:17:14.327506Z'

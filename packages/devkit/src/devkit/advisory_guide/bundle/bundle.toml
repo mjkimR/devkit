@@ -15,10 +15,16 @@ id = "agent-advisory-python"
 kind = "instruction"
 source = "instructions/agent-advisory-python.md"
 
+# Linter error unless each code is declared by one AdvisoryError class and its subclasses.
+[[assets]]
+id = "unique-code"
+kind = "rule"
+source = "rules/unique_code"
+
 # Language-agnostic protocol and authoring rules (errors, warnings, notices) for any repository.
 [presets.core]
 assets = ["agent-advisory"]
 
-# Adds the devkit.advisory Python library guide.
+# Adds the devkit.advisory Python library guide and the code uniqueness rule.
 [presets.python]
-assets = ["agent-advisory", "agent-advisory-python"]
+assets = ["agent-advisory", "agent-advisory-python", "unique-code"]
