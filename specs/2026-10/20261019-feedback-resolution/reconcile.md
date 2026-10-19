@@ -1,8 +1,10 @@
 ---
 reconcile_id: REC-feedback-resolution
 feature: SPEC-feedback-resolution
-status: pending
+status: resolved
 targets:
+  - file: docs/glossary.md
+    resolution: modified
   - file: docs/decisions/2026-10/20261019-feedback-resolution-lifecycle.md
     resolution: modified
   - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md
@@ -29,6 +31,10 @@ targets:
   stage or gate, and retains the requirement when capture/sweep settings suppress new observations.
 - `CAP-DLV-proposal-incubation` reflects resolved feedback preservation, source-reference carry for feature and
   bugfix specs, and no automatic resolution at handoff. Existing reference-rewrite/rollback behavior is unchanged.
+
+- `docs/glossary.md` registers Source feedback, Feedback promotion and Feedback resolution with their defining
+  owner, exclusions and code identifiers. This adds a required terminology target beyond the original task boundary;
+  the independent reconcile review identified the omission and the Host verified the corrected rows against the ADR.
 
 ## Source feedback disposition
 

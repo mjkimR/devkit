@@ -1,0 +1,21 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T10:11:16.175865Z'
+status: completed
+summary: Independent reconcile review verified five targets; required glossary reflection is missing.
+findings:
+- issue: Required glossary reflection and reconcile target are missing.
+  evidence: spec-sync/SKILL.md:40; CAP-DLV-delivery-workflows:444-457; CAP-DOCS-document-model:74-80; docs/glossary.md; reconcile.md:5-15
+  failure_condition: Reflection is declared complete without required registration of the new domain terms.
+  suggested_action: Register Source feedback and Feedback promotion/resolution with owners, exclusions and identifiers; add glossary as a modified target.
+  resolution: open
+  severity: P1
+assumptions:
+- Codex reconcile-reviewer contract emulated with read-only scope and stable HEAD/index validation.
+checks: {}
+diff_scope:
+  base: 0d08126cee65f9b0b79447020a9f2ec18750949f
+  head: 48f7cca17522447dc3e3707d726210ff8cb5b8b2
+activity_effort: medium

@@ -2,7 +2,7 @@
 id: SPEC-feedback-resolution
 title: Resolve feedback through delivery completion
 summary: "Distinguishes feedback resolution from promotion and connects source feedback to spec and session completion with verification evidence."
-status: in-progress
+status: completed
 created: 2026-10-19
 related_capabilities:
   - CAP-HARN-agent-guidance

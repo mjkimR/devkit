@@ -34,6 +34,9 @@ The ubiquitous terms of devkit as its documents, commands and bundles use them. 
 | **Gate** | A workflow stage that pauses for an explicit human or automated decision. | `CAP-DLV-workflow-definitions` |  |  |
 | **Envelope** | A structured YAML file recording the findings, questions, problems, or resolution of a workflow stage. | `CAP-DLV-workflow-envelopes` |  |  |
 | **Task worktree** | An isolated Git worktree created on an activity branch (`plan-<slug>`, `dev-<slug>`) for parallel task execution. | `CAP-WT-task-worktrees` |  |  |
+| **Source feedback** | Explicit FB IDs whose observations and received scope an authorized task addresses; recorded in the proposal/spec body or session agreement. Excludes unrelated observations captured during the task. | `ADR-feedback-resolution-lifecycle` |  | `Source feedback`, `FB-<name>` |
+| **Feedback promotion** | Routing an observation to identified follow-up work. Excludes any claim that the observation has been fixed or verified. | `ADR-feedback-resolution-lifecycle` |  | feedback `status: promoted`, `Disposition` |
+| **Feedback resolution** | Recording that an explicitly linked observation was fully addressed and verified at task completion. Excludes handoff alone, partial fixes and any claim of integration. | `ADR-feedback-resolution-lifecycle` |  | feedback `status: resolved`, `Disposition` |
 
 ## 4. Gates, Host and Integration
 
