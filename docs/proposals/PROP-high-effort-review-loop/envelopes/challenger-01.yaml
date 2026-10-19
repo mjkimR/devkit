@@ -1,0 +1,99 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T00:24:04.713464Z'
+status: completed
+summary: 'One challenger pass (medium Planning): 1 P1, 9 P2, 5 P3; direction workable, needs one closure rule, mapping onto existing envelope fields, wider boundaries and impact list; four decisions for the user.'
+findings:
+- issue: P2/P3 fixes close without a reviewer and without the minor-fix conditions, so a non-minor P2 fix (new error code, CLI output) ships at high unreviewed.
+  evidence: docs/proposals/PROP-high-effort-review-loop/proposal.md:77; docs/decisions/2026-10/20261016-medium-review-delegation.md:31
+  failure_condition: Round 1 returns one P2 whose fix adds an error code; reverify resolves it, no P1 so no round runs, envelope-review-passed holds.
+  suggested_action: 'One closure rule for every fix regardless of severity: a fix meeting the minor-fix conditions is self-verified, any other fix joins the next fresh round. Decision needed: confirm P2/P3 fixes outside the conditions trigger a scoped round.'
+  resolution: open
+  severity: P1
+- issue: The loop end ("a fresh round returns no P1") contradicts closing a P1 by self-verification instead of a round.
+  evidence: docs/proposals/PROP-high-effort-review-loop/proposal.md:78
+  failure_condition: The only P1 is self-verified; one implementer runs another round, another stops.
+  suggested_action: End when no P1 is open after the latest reviewer round and every later closure is self-verified or covered by that round.
+  resolution: open
+  severity: P2
+- issue: Starting round N+1 before round N's reverify drops round N's open non-P1 findings from the deciding state.
+  evidence: docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md:48
+  failure_condition: Round 1 has a P1 and two P2s; round 2 on the P1 fix passes; both P2s were never closed.
+  suggested_action: Require reverify of round N closing or waiving every finding before round N+1 is recorded.
+  resolution: open
+  severity: P2
+- issue: Out-of-scope marks and a recurs reference need finding keys the envelope schema refuses.
+  evidence: packages/devkit/src/devkit/workflow/unit/envelope/model.py:32
+  failure_condition: A findings file with recurs or scope keys is refused (unknown keys).
+  suggested_action: Derive out-of-scope from the round's diff file list; the reviewer states recurrence as a fixed prefix in issue.
+  resolution: open
+  severity: P2
+- issue: Hand-over "recorded as a problem" fits neither session tasks (no envelope) nor a validity disagreement (a decision, not an execution problem).
+  evidence: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:84; packages/devkit-spec/src/devkit_spec/bundle/workflows/sdd-session-feature.md:106
+  failure_condition: A worker hands over a disagreement as a problem and the unit blocks until a resolution, where a question would do.
+  suggested_action: Disagreement becomes a worker question; stall or cap becomes a worker problem; a session reports in the conversation and does not integrate; not the exception stage.
+  resolution: open
+  severity: P2
+- issue: Nobody owns severity; a false-positive P1 always stops the work, and an implementer can relabel a P1 as P2.
+  evidence: packages/devkit-spec/src/devkit_spec/bundle/skills/spec-delegate/SKILL.md:63
+  failure_condition: A reviewer misreads an AC and returns P1, stopping high on noise; or the implementer records it as P2 and skips the loop.
+  suggested_action: 'Severity is the reviewer''s, recorded as returned. Decision needed: a contested P1 gets one more fresh round with counter-evidence before hand-over, or goes straight to the user.'
+  resolution: open
+  severity: P2
+- issue: Reconcile findings rarely meet the code P1 definition, and reconcile-check has no reverify, so high reconcile can become one pass plus self-closure.
+  evidence: docs/decisions/2026-10/20261016-reconcile-check-envelope.md:57
+  failure_condition: A P2 "reconcile.md omits CAP-X" is fixed and closed by a self-recorded reconcile-check; no independent check covers the new target.
+  suggested_action: Define a reconcile P1 (missing target for a changed behavior or contract, contradicting reflection); a round closes with a new reconcile-check naming the earlier one.
+  resolution: open
+  severity: P2
+- issue: boundaries.owns covers only capabilities/delivery/ while the impact list edits the devkit-spec bundle and adds an ADR with no PADR.
+  evidence: docs/proposals/PROP-high-effort-review-loop/proposal.md:12
+  failure_condition: A development-worker edits effort.md outside its write scope; no PADR exists to promote at handoff.
+  suggested_action: Add the bundle path to owns and draft the ADR as a PADR; keep docs/decisions/ excluded.
+  resolution: open
+  severity: P2
+- issue: The impact list misses the worker contracts, the reviewer payload rows (round inputs) and the envelope reference's severity example.
+  evidence: packages/devkit-spec/src/devkit_spec/bundle/subagents/development-worker.md:40; packages/devkit-spec/src/devkit_spec/bundle/skills/spec-delegate/references/payload.md:19
+  failure_condition: A worker follows its unchanged high text; a reviewer is never given the earlier findings; severity values drift between medium and P2.
+  suggested_action: Add development-worker.md, planning-worker.md, spec-delegate payload.md and spec envelope.md to the impact list.
+  resolution: open
+  severity: P2
+- issue: The relation of the new ADR to ADR-medium-review-delegation is undecided while the old high clause would stay in force.
+  evidence: docs/decisions/README.md:3; docs/decisions/2026-10/20261016-medium-review-delegation.md:31
+  failure_condition: A reviewer cites the old high clause and raises a contract P1 against a correct implementation.
+  suggested_action: 'Decision needed: supplement quoting each overridden clause, or supersede.'
+  resolution: open
+  severity: P2
+- issue: planning_effort medium differs from the effort.md trigger for changing an accepted decision.
+  evidence: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/effort.md:5
+  failure_condition: The plan-accept record shows medium for a change to the review contract with no stated reason.
+  suggested_action: State the confirmed effort and its reason in the plan-accept request.
+  resolution: open
+  severity: P3
+- issue: The evidence row (a reproducing test) cannot hold for text-only minor kinds, and "suggested_action as written" is unverifiable when the suggestion is vague.
+  evidence: docs/proposals/PROP-high-effort-review-loop/proposal.md:89
+  failure_condition: A vague suggestion is self-verified in the implementer's favor; typo fixes can never meet the evidence row.
+  suggested_action: Evidence per kind (text-only kinds use a location-limited diff check); "as written" only for a concrete edit.
+  resolution: open
+  severity: P3
+- issue: Mandatory scout has no gap report at plan-accept and overlaps the challenger's contract check.
+  evidence: packages/devkit-spec/src/devkit_spec/bundle/workflows/sdd-proposal.md:115
+  failure_condition: A high Planning skips scout and plan-accept shows no scout as normal.
+  suggested_action: Report a missing scout at high in the plan-accept request; start the scout from devkit spec refs of the touched IDs.
+  resolution: open
+  severity: P3
+- issue: Reclassification advice is too broad across the three high triggers.
+  evidence: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/effort.md:5
+  failure_condition: A cross-package rename is pushed to spec; an ADR reversal is moved to spec instead of proposal.
+  suggested_action: New contract or document kind proposes spec; reversing an accepted decision proposes proposal; multi-package alone gives no advice.
+  resolution: open
+  severity: P3
+- issue: The round cap and reconsider trigger have no measurement or reset rule; a workflow return voids envelopes and resets the count.
+  evidence: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:77
+  failure_condition: After round 4 a return voids review-01..04 and the cap restarts.
+  suggested_action: Count rounds across returns within a segment; give a threshold for the reconsider trigger; the cap value is a decision.
+  resolution: open
+  severity: P3
+checks: {}
