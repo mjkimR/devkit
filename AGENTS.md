@@ -43,15 +43,17 @@ Keep package descriptions in this guide to a high-level summary of their purpose
 
 ## Verification
 
-Run lint, type checks, and relevant tests before completing code changes:
+Run lint, type checks, and relevant tests before completing code changes. During development run only the tests
+the change can affect; run the full suite once on the reviewed head before integration, not after every edit:
 
 | Target | Command |
 | --- | --- |
 | Lint & format | `just lint [module]` |
 | Lint & format check (CI) | `just lint-check [module]` |
 | Type check (Pyright) | `just check [module]` |
-| Tests | `just test [module]` |
-| Test Coverage | `just test-cov [module]` |
+| Tests during development | `just test-affected` (from the diff) or `just test <module> [area\|path...]` |
+| Full test suite (once before integration) | `just test` |
+| Test Coverage | `just test-cov [module] [area\|path...]` |
 | Governance Rules | `just rules-check` or `just rules-fix` |
 | Consumer smoke (packaging, CLI wiring, hooks) | `just smoke` |
 

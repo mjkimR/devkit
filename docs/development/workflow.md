@@ -24,5 +24,6 @@ Follow concise, imperative, emoji-free commit messages:
 Before committing changes, ensure that:
 1. `just lint` applies clean formatting.
 2. `just check` passes with 0 Pyright errors.
-3. `just test` passes all unit and integration tests.
+3. `just test-affected` (or `just test <module> <area...>`) passes the tests the change can affect; the full
+   `just test` passes once on the reviewed head before integration.
 4. `just rules-check --staged` reports 0 governance violations.

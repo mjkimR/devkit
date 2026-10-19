@@ -35,6 +35,8 @@ just init                  # create the virtualenv with every workspace package 
 just lint                  # ruff fix + format (just lint-check verifies only, as CI does)
 just check                 # pyright
 just test                  # pytest; just test-cov adds coverage
+just test devkit gate      # one module's areas or paths
+just test-affected         # the tests the changes since main can affect
 just rules-check           # devkit rules check on the working tree
 just rules-check --staged  # the exact staged tree
 just rules-check --ci --base origin/main
@@ -44,7 +46,7 @@ just --list                # every recipe (rules-fix, rules-phases, rules-explai
 
 Module commands discover projects from `packages/*/pyproject.toml` and
 `tools/*/pyproject.toml`; pass a project name (`devkit-agt`, `devkit-advisory`,
-`devkit-spec`, `devkit-starter` or `devkit-catalog`) or `all`. `devkit` remains a module-command alias for `devkit-agt`. Extra pytest arguments follow the module: `just test devkit -k cache`.
+`devkit-spec`, `devkit-starter` or `devkit-catalog`) or `all`. `devkit` remains a module-command alias for `devkit-agt`. Area names (directories under the module's `tests/`, with the matching `src` package) or paths after the module narrow `test` and `test-cov`, and extra pytest arguments follow them: `just test devkit gate worktree -k cache`. `just test-affected [--base REF] [--list] [-- PYTEST-ARGS]` derives the paths from the changes since the merge base with `main`.
 
 This repository's lint, type-check and test recipes use `devkit run` for bounded output.
 When changing or repairing the runner, use `DEVKIT_RUN_MODE=raw just test` (also supported by

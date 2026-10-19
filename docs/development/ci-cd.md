@@ -26,6 +26,31 @@ The consumer smoke installs the base packages first, preserving their independen
 `-n auto --maxprocesses 8 --dist worksteal`: up to eight workers, sharing work as workers become available.
 Extra pytest arguments follow these defaults, so `just test all -n0` runs serially.
 
+During development an agent runs only the tests a change can affect, and the full `just test` once on the
+reviewed head before integration:
+
+- **Selectors**: for a single module, the arguments before the first option are areas or paths that replace the
+  module's default paths. An area is a directory under the module's `tests/` together with the matching
+  `src/<package>/<area>` directory (`just test devkit gate worktree -k cache`); a path is passed as given, a `::`
+  node suffix included. An unknown area exits `2` and lists the module's areas before any tool runs. `all` passes
+  its arguments to pytest unchanged.
+- **`just test-affected [--base REF] [--list] [-- PYTEST-ARGS]`** (`scripts/affected_tests.py`): collects the paths
+  changed since the merge base of `HEAD` and `REF` (default `main`; committed, staged, unstaged, untracked, both
+  sides of a rename) and selects tests from them. Shared foundations (`devkit.core`, `devkit-advisory`, `cli.py`,
+  `__main__.py`, any `pyproject.toml` or `conftest.py`, `uv.lock`, `tests/testsupport/`) and any path no rule maps
+  select the full suite. Repository files that tests read (`docs/`, `examples/`, `models/`, the recipe scripts) select
+  those tests from a fixed table. A source change selects the test groups (a `devkit-agt` area, a top-level devkit
+  test file, another workspace package) that import its area or an area importing it, transitively by static
+  imports, plus the devkit tests over the whole source tree. Planning records, agent projections, guides and
+  root-level Markdown select nothing.
+- **Result**: stdout's first line is
+  `[TEST_SELECTION: mode=<full|partial|none> base=<ref> changed=<n> paths=<n> reason=<text>]`; `--list` adds one
+  `[TEST_PATH: <path>]` per path and runs nothing. Otherwise `full` and `partial` run `just test all [paths...]`
+  with its preflight, options and exit code, and `none` exits `0`. A base without a merge base is `TEST_BASE_UNKNOWN`
+  (exit `2`).
+- **Limits**: static imports do not show tests that run the CLI in a subprocess or load entry points; the full
+  suite before integration covers them.
+
 Before starting pytest or its workers, both recipes run `scripts/check_test_environment.py` through the
 workspace Python environment. The check sends and receives one byte through a local socket pair, with
 one-second I/O timeouts. Python's asyncio uses local sockets to wake an event loop from another thread;

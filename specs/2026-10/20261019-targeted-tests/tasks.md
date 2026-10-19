@@ -19,7 +19,7 @@ plan: PLAN-targeted-tests
   - **_Boundary**: `scripts/affected_tests.py`, `justfile`, `packages/devkit/tests/test_affected_tests.py`
   - _Requirements: AC-12, AC-13, AC-14_
   - **Verification**: `just test-affected --list`
-- [ ] **Task 4**: Agent guidance and development docs for targeted runs and the single full run before integration
+- [x] **Task 4**: Agent guidance and development docs for targeted runs and the single full run before integration
   - **_Boundary**: `AGENTS.md`, `README.md`, `packages/devkit-spec/src/devkit_spec/bundle/skills/spec-review/SKILL.md`,
     `packages/devkit-spec/src/devkit_spec/bundle/skills/spec-plan/SKILL.md`, `.claude/skills/`, `.agents/skills/`,
     `.devkit/installation.json`, `docs/development/ci-cd.md`, `docs/development/setup.md`,

@@ -719,11 +719,11 @@
     },
     ".agents/skills/spec-plan/SKILL.md": {
       "mode": 420,
-      "sha256": "9cbad5ee9fb04ce7f03827756ee5c2792155ab61498b08f9026d63045bf6cfa7"
+      "sha256": "73e9c1f9eba0047835ede752d11feed03d033b845b7967152fe7a241aef22c26"
     },
     ".agents/skills/spec-review/SKILL.md": {
       "mode": 420,
-      "sha256": "5fe8e668c7d8e702b1cdfd71e7e33a8dda7451b9b8c8dd40a4d3714d553ba7ff"
+      "sha256": "b6f142a17a5f13116db37d4b5dabc861f59797dfce5b3c28bc8bf9fccf2ab7bd"
     },
     ".agents/skills/spec-rule/SKILL.md": {
       "mode": 420,
@@ -903,11 +903,11 @@
     },
     ".claude/skills/spec-plan/SKILL.md": {
       "mode": 420,
-      "sha256": "9cbad5ee9fb04ce7f03827756ee5c2792155ab61498b08f9026d63045bf6cfa7"
+      "sha256": "73e9c1f9eba0047835ede752d11feed03d033b845b7967152fe7a241aef22c26"
     },
     ".claude/skills/spec-review/SKILL.md": {
       "mode": 420,
-      "sha256": "5fe8e668c7d8e702b1cdfd71e7e33a8dda7451b9b8c8dd40a4d3714d553ba7ff"
+      "sha256": "b6f142a17a5f13116db37d4b5dabc861f59797dfce5b3c28bc8bf9fccf2ab7bd"
     },
     ".claude/skills/spec-rule/SKILL.md": {
       "mode": 420,
@@ -1319,11 +1319,11 @@
     },
     ".devkit/managed/spec/skills/spec-plan/SKILL.md": {
       "mode": 420,
-      "sha256": "9cbad5ee9fb04ce7f03827756ee5c2792155ab61498b08f9026d63045bf6cfa7"
+      "sha256": "73e9c1f9eba0047835ede752d11feed03d033b845b7967152fe7a241aef22c26"
     },
     ".devkit/managed/spec/skills/spec-review/SKILL.md": {
       "mode": 420,
-      "sha256": "5fe8e668c7d8e702b1cdfd71e7e33a8dda7451b9b8c8dd40a4d3714d553ba7ff"
+      "sha256": "b6f142a17a5f13116db37d4b5dabc861f59797dfce5b3c28bc8bf9fccf2ab7bd"
     },
     ".devkit/managed/spec/skills/spec-rule/SKILL.md": {
       "mode": 420,

@@ -26,7 +26,9 @@ just init
 just lint                  # Run ruff check --fix and ruff format
 just lint-check            # Verify linting without modifying files (as in CI)
 just check                 # Run Pyright static type checker
-just test                  # Run pytest across all workspace packages
+just test                  # Run pytest across all workspace packages (the full suite)
+just test devkit gate      # Run one module's areas or paths only
+just test-affected         # Run the tests the changes since main can affect (--list to only show them)
 just test-cov              # Run pytest with coverage report
 just rules-check           # Run devkit governance rules check on the working tree
 just smoke                 # Build packages and verify fresh consumer installation
