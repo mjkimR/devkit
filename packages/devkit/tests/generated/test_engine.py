@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 from devkit.cli import cli
+from devkit.core import ArgumentError
 from devkit.generated import (
     CommandFailedError,
     InputsConflictedError,
@@ -233,6 +234,19 @@ def test_check_reports_stale_artifacts_and_leaves_the_checkout_alone(repo: Path)
     skipped = [item.id for item in result.artifacts if item.skipped]
     assert skipped == ["devkit-receipt"]  # optional: no receipt is tracked
     assert check(repo, rev="HEAD~1").stale == []
+
+
+def test_check_names_an_artifact_registered_only_in_the_working_tree(repo: Path) -> None:
+    write(repo, ".devkit/generated.toml", CONFIG + '\n[artifacts.extra]\npaths = ["gen/extra.txt"]\ncommand = "true"\n')
+
+    with pytest.raises(ArgumentError) as raised:
+        check(repo, ["extra"])
+
+    assert "registered in the working tree but not at HEAD: extra" in str(raised.value)
+    fix = raised.value.fix or ""
+    assert ".devkit/generated.toml" in fix and "--rev" in fix
+    with pytest.raises(ArgumentError, match="unknown or disabled generated artifacts: missing"):
+        check(repo, ["missing"])
 
 
 def invoke(*args: str):

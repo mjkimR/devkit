@@ -34,7 +34,7 @@ from devkit.generated.errors import (
     OutputUndeclaredError,
     UnmergedError,
 )
-from devkit.generated.registry import Artifact, Registry, load_registry
+from devkit.generated.registry import PROJECT_FILE, Artifact, Registry, load_registry
 
 # The command that continues each operation once no unmerged path is left.
 CONTINUE = {
@@ -257,8 +257,24 @@ def _skipped(checkout: Checkout, artifact: Artifact, files: set[str]) -> bool:
     return not any((rel := checkout.project_path(path)) is not None and artifact.owns(rel) for path in files)
 
 
-def _plan(registry: Registry, ids: Sequence[str]) -> tuple[Artifact, ...]:
+def _plan(
+    registry: Registry, ids: Sequence[str], *, working: Path | None = None, rev: str = ""
+) -> tuple[Artifact, ...]:
+    """The artifacts ``ids`` name, with the ones they depend on; all of them when ``ids`` is empty.
+
+    ``working`` is the project root of the working tree when ``registry`` was read at ``rev``: an unknown ID that its
+    registry declares is named as not committed, so the refusal does not contradict ``devkit generated list``.
+    """
     unknown = [artifact_id for artifact_id in ids if registry.get(artifact_id) is None]
+    if unknown and working is not None:
+        pending = load_registry(working)
+        uncommitted = [artifact_id for artifact_id in unknown if pending.get(artifact_id) is not None]
+        if uncommitted:
+            raise ArgumentError(
+                f"generated artifacts registered in the working tree but not at {rev}: {', '.join(uncommitted)}",
+                target_files=[PROJECT_FILE],
+                fix=f"Commit the {PROJECT_FILE} change, or pass --rev with a commit whose registry declares them",
+            )
     if unknown:
         known = ", ".join(item.id for item in registry.artifacts) or "none"
         raise ArgumentError(
@@ -401,7 +417,7 @@ def check(root: Path, ids: Sequence[str] = (), *, rev: str = "HEAD") -> RunResul
     try:
         run_git(checkout.top, "worktree", "add", "--detach", "--quiet", str(tree), commit, timeout=WORKTREE_TIMEOUT)
         clone = Checkout(tree / checkout.prefix if checkout.prefix else tree, tree, checkout.prefix)
-        plan = _plan(load_registry(clone.root), ids)
+        plan = _plan(load_registry(clone.root), ids, working=checkout.root, rev=rev)
         return RunResult(_run_all(clone, plan), commit=commit)
     finally:
         with contextlib.suppress(GitError):
