@@ -1,0 +1,17 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T08:14:40.900271Z'
+status: completed
+summary: 'Observed sweep covered this native Development run: separate scoped approvals succeeded for unit/source writes, registry updates, sync and gated commits, and named nested reviews completed. Deduplicated FB-native-worker-command-scoped-approvals and FB-verification-sync-requires-network; recorded no new items. Optional scope-query shared lock was unavailable in default sandbox and stopped without retry; required scope updates succeeded; no automatic approval-review rejection occurred.'
+findings: []
+assumptions:
+- Existing matching feedback remains in its original spec and was not edited; the repeated native access and uv metadata DNS observations add no distinct finding.
+checks:
+  swept: PASS recorded=0 duplicates=2; capture=observed coverage=repo-and-upstream detail=detailed
+  approval_observation: PASS separate scoped mutations and verification grants; no persistent-grant claim
+  optional_scope_query: SKIP default sandbox shared registry lock unavailable; stopped; required scope updates already passed
+diff_scope:
+  base: 6bbf88f55d836b675600389f2784041d35232535
+  head: e56daf27ccf2a2d77dfb62e982efeb7fc6c36483
