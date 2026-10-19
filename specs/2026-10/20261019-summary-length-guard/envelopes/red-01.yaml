@@ -1,0 +1,15 @@
+kind: red
+stage: reproduce
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-19T07:30:06.682868Z'
+status: completed
+summary: All three creation paths accept 301-character summaries through library and JSON CLI instead of refusing them.
+findings: []
+assumptions:
+- Reproduction ran on uncommitted regression tests; production code unchanged.
+checks:
+  reproduced: 'PASS focused summary module: 6 expected 301-character failures; 17 passed, including all 300-character cases'
+diff_scope:
+  base: 471b19a0245bee80240dc68174e976b8add747ea
+  head: ''

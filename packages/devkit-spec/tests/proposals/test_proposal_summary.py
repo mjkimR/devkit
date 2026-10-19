@@ -110,3 +110,59 @@ def test_cli_summary_option(workspace: Path) -> None:
         assert error["code"] == "ARGUMENT_INVALID"
     assert not (workspace / "docs/proposals/PROP-c").exists()
     assert not (workspace / "docs/proposals/PROP-a/decisions/PADR-other.md").exists()
+
+
+@pytest.mark.parametrize("command", ["spec", "proposal", "padr"])
+@pytest.mark.parametrize("use_cli", [False, True], ids=["library", "cli"])
+@pytest.mark.parametrize("length", [300, 301])
+def test_summary_length_boundary(workspace: Path, command: str, use_cli: bool, length: int) -> None:
+    summary = "Defines " + "a" * (length - len("Defines ") - 1) + "."
+    if command == "padr":
+        create_proposal(workspace, "existing", today=TODAY)
+        # A refused PADR must not recreate even its output directory.
+        (workspace / "docs/proposals/PROP-existing/decisions").rmdir()
+    before = {
+        path.relative_to(workspace): path.read_bytes() if path.is_file() else None for path in workspace.rglob("*")
+    }
+    padded = f"  {summary} \n"
+    if use_cli:
+        commands = {
+            "spec": ["spec", "new", "boundary"],
+            "proposal": ["spec", "proposal", "new", "boundary"],
+            "padr": ["spec", "proposal", "padr", "existing", "Boundary"],
+        }
+        result = CliRunner().invoke(
+            devkit_cli,
+            [*commands[command], "--summary", padded, "--format", "json", "-w", str(workspace)],
+        )
+        payload = json.loads(result.stdout)
+        if length > 300:
+            assert result.exit_code == 2, result.output
+            assert payload["error"]["code"] == "ARGUMENT_INVALID"
+            assert payload["error"]["target_files"] == ["--summary"]
+        else:
+            assert result.exit_code == 0, result.output
+            path = workspace / (payload["dir"] + "/spec.md" if command == "spec" else payload["path"])
+            assert _meta(path)["summary"] == summary
+    else:
+
+        def create() -> Path:
+            if command == "spec":
+                created = create_spec(workspace, "boundary", summary=padded, day=TODAY)
+                return workspace / created.dir / "spec.md"
+            if command == "proposal":
+                return workspace / create_proposal(workspace, "boundary", summary=padded, today=TODAY).path
+            return workspace / create_padr(workspace, "existing", "Boundary", summary=padded, today=TODAY).path
+
+        if length > 300:
+            with pytest.raises(ArgumentError) as raised:
+                create()
+            assert raised.value.code == "ARGUMENT_INVALID"
+            assert raised.value.target_files == ("--summary",)
+        else:
+            assert _meta(create())["summary"] == summary
+    if length > 300:
+        after = {
+            path.relative_to(workspace): path.read_bytes() if path.is_file() else None for path in workspace.rglob("*")
+        }
+        assert after == before
