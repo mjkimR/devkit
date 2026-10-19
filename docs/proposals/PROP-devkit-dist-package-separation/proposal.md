@@ -31,7 +31,7 @@ workflow_hash: sha256:1ef60809329fded5a496efb7757fd2d07c59a9c1ec1aef6858bbef2fb5
 
 ### 1.1 Problem
 - **Distribution machinery is coupled with developer harness tools**: Currently, `devkit-agt` (`packages/devkit`) houses the full developer harness (`devkit.rules`, `devkit.workflow`, `devkit.gate`) along with the agent asset distribution system (`devkit.distribution`: bundle loading, asset projections for skills/subagents/instructions/hooks, synchronization, receipt management, and workspace ownership).
-- **Over-scoped dependencies for pure distribution consumers**: Consumers (such as service repositories like `app-common` or host agents) that only need asset synchronization or skills/subagents projections are exposed to the entire harness engine and CLI tooling.
+- **Over-scoped installation for pure distribution consumers**: Consumers (such as service repositories like `app-common` or host agents) that only need asset synchronization or skills/subagents projections get the entire harness engine, its command surface and its auto-deployed guidance. The third-party dependency set is the same either way (click, pyyaml, jinja2, tomlkit are needed by distribution itself); the gain is the harness code, commands and guidance not installed or deployed.
 - **Unclear boundaries between delivery workflow and asset distribution**: Delivery workflows and commit gates operate on top of distribution receipts, but the core asset packaging and synchronization protocol has zero dependency on workflow state machines or rule AST evaluation.
 
 ### 1.2 Hypothesis
@@ -49,7 +49,7 @@ The standalone scope and foundation ownership are decided in `PADR-dist-foundati
 Planning settled the questions below; options, evidence and the challenger's review are in `materials/20261019-package-split-evidence.md`.
 
 - **Q1 (Packaging & Namespace)**: Keep the `devkit.*` import paths in the shared PEP 420 namespace; no `devkit_dist` top-level package. `PADR-dist-module-split`.
-- **Q2 (CLI and Entrypoint Aggregation)**: `devkit-dist` owns `devkit.cli` with only its own built-in commands; `devkit-agt` mounts `rules`, `workflow`, `gate`, `worktree`, `generated` and `integration` through the existing `devkit.commands` entry point group. `PADR-dist-command-composition`.
+- **Q2 (CLI and Entrypoint Aggregation)**: `devkit-dist` owns `devkit.cli` with only its own built-in commands; `devkit-agt` mounts `rules`, `workflow`, `gate`, `worktree`, `generated` and `integration` through the existing `devkit.commands` entry point group. What a standalone installation answers for harness command names and harness assets it cannot run waits for the user (question `standalone-harness-signals`). `PADR-dist-command-composition`.
 - **Q3 (Configuration Schema Ownership)**: `devkit-dist` owns the `.devkit/config.toml` schema, its template renderer and the receipt; harness tables stay reserved pass-through names, their commented templates move to `devkit-agt` through a `devkit.config_tables` entry point group; `[tool.<name>]` contributions are unchanged. `PADR-dist-config-receipt-ownership`.
 - **Q4 (Foundation Boundaries)**: `devkit.core`, `devkit.search` and `devkit.host` move whole; the harness engines stay. The home of `devkit.compact` (`devkit run`) waits for the user (question `compact-home`). `PADR-dist-module-split`.
 - **Q5 (Bundled Content & Compatibility)**: `devkit`, `advisory` and `git-commits` ship with `devkit-dist`, `authoring` with `devkit-agt`; behavior, names and import paths are preserved, ownership metadata changes in place, and the three wheels are released in lockstep. Where the harness guidance of the `devkit` bundle goes waits for the user (question `harness-guidance`). `PADR-dist-bundles-compatibility`.
@@ -63,7 +63,7 @@ Planning settled the questions below; options, evidence and the challenger's rev
   - The distribution contracts (`CAP-DIST-manifest-spec`, `CAP-DIST-content-packages`, `CAP-DIST-sync-and-transactions`, `CAP-DIST-workspace-ownership`, `CAP-DIST-agent-projections`, `CAP-DIST-context-and-playbooks`, `CAP-DIST-in-repo-bundles`), `CAP-HOST-lifecycle-observation` and `CAP-SRCH-document-search` describe behavior owned by `devkit-dist`.
   - Scope includes shared foundation ownership, CLI composition, package metadata, installation/release wiring, the affected architecture documents and consumer guides.
 - **Consumer Impact**:
-  - Repositories that only deploy agent skills and playbooks can install `devkit-dist` without bringing in workflow/gate/evaluation engines.
+  - Repositories that only deploy agent skills and playbooks can install `devkit-dist` without bringing in workflow/gate/evaluation engines, their commands or their guidance; third-party dependencies stay the same.
   - Standalone installation also supports native hooks, context loading, and playbook operations.
   - Existing `devkit-agt` users keep every command, option, output, code, configuration key and import path: `devkit-agt` includes `devkit-dist` as a dependency and mounts its commands under the same names. The first writing `devkit sync` after the upgrade rewrites the receipt's tool and package names, committed with the upgrade.
 

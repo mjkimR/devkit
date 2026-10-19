@@ -24,9 +24,15 @@ imports `devkit.rules`) and `git-commits` (opt-in; commit conventions, data only
 `builtin` when its distribution is `devkit-agt` (`BUILTIN_DISTRIBUTION`), which decides the
 "auto-selected bundle of another package" notice and the `builtin` field of `devkit status`.
 
-The `devkit` bundle mixes distribution guidance with harness guidance: its constitution's contracts 5 and 6 and the
-`consumption` instruction's "Workflows", "Rules and commit gates" sections describe `devkit rules`, `devkit gate`
-and `devkit workflow`, which a standalone `devkit-dist` installation does not have. The proposal promises existing
+The `devkit` bundle mixes distribution guidance with harness guidance (inventory in
+`materials/20261019-package-split-evidence.md` section 4): its constitution (intro and contracts 5 and 6), the
+`consumption` instruction (description, configuration table, "Workflows", "Rules and commit gates"),
+`resource-kinds` (rule, gate and workflow kinds and their commands) and `in-repo-bundle` (rule tests, a
+`devkit-agt` development dependency) describe `devkit rules`, `devkit gate` and `devkit workflow`, which a
+standalone `devkit-dist` installation does not have. Distribution code also emits harness directives: sync
+generates the `devkit-workflow` entry skill (`installation/workflow_skill.py`), whose steps run `devkit workflow`,
+whenever a selected bundle ships a workflow asset, and rule and gate assets are deployed without any engine to run
+them. The proposal promises existing
 `devkit-agt` users full compatibility through dependency inclusion and command re-export.
 
 ## 2. Decision Drivers
@@ -51,7 +57,11 @@ and `devkit workflow`, which a standalone `devkit-dist` installation does not ha
   `devkit-dist` depend on `devkit.rules`, violating `PADR-dist-foundation-ownership`.
 
 Where the harness guidance now inside the `devkit` bundle goes is decided by the user (question
-`harness-guidance`); where `devkit run` and its guidance go follows question `compact-home`.
+`harness-guidance`); where `devkit run` and its guidance go follows question `compact-home`; how a standalone
+installation reports harness assets it cannot run and harness command names follows question
+`standalone-harness-signals`. The generated `devkit-workflow` entry skill stays a projection of `devkit-dist`
+(workflow assets are part of its manifest taxonomy); a bundle shipping workflow assets is useful only with the
+workflow engine installed.
 
 ### Compatibility
 
@@ -82,8 +92,8 @@ Choose **B1** and **K1**.
   their development dependency to `devkit-dist`.
 - Configuration and receipt behavior follow `PADR-dist-config-receipt-ownership`; import paths follow
   `PADR-dist-module-split`.
-- Non-goals: an advisory for harness command names in a standalone installation (an unknown command keeps click's
-  usage error, as today); renaming `packages/devkit`; shim modules or alias distributions.
+- Non-goals: renaming `packages/devkit`; shim modules or alias distributions; a smaller third-party dependency set
+  for `devkit-dist` (it needs every runtime dependency `devkit-agt` has today: click, pyyaml, jinja2, tomlkit).
 
 ## 5. Consequences
 

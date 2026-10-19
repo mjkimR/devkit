@@ -76,6 +76,21 @@ dependency inversion (`post_sync`, `host.services`), so no group needs to move o
 | `git-commits` | opt-in | commit conventions, AGENTS.md pointer | text only | `devkit-dist` |
 | `authoring` | opt-in | two playbooks, two rule assets | rule engine; area imports `devkit.rules` | `devkit-agt` |
 
+Harness references in the `devkit` bundle text (for question `harness-guidance`):
+
+- `AGENTS.md` (constitution): intro lines 3-5 (governance rules and commit gates), contract 5 (rules and gates run
+  as code, `[rules]`/`[gates]`), contract 6 (snapshot gates trust the committed receipt).
+- `instructions/consumption.md`: description and configuration table (rules, gates), "Workflows" (the
+  `devkit-workflow` skill runs `devkit workflow next`), "Rules and commit gates" (`devkit rules check|fix|explain|
+  test`, `devkit gate`, `.git/devkit.config`, `rules-check` gate).
+- `instructions/resource-kinds.md`: decision tree and table rows for `rule` (run by `devkit rules`), `gate` (run by
+  `devkit gate`) and `workflow` (`devkit workflow next`), `devkit rules test`.
+- `instructions/in-repo-bundle.md`: rule tests and snapshot gates (`devkit rules check --staged`, `--rules-dir`), a
+  `devkit-agt` development dependency in the example.
+- `instructions/devkit-run.md`, `guidance/run-pointer.md`: `devkit run` (question `compact-home`).
+- Distribution code: `installation/workflow_skill.py` generates the `devkit-workflow` entry skill, every step of
+  which runs `uv run devkit workflow ...`, whenever a selected bundle ships a workflow asset (`inventory.py`).
+
 ## 5. Scout findings (envelope `scout-01.yaml`)
 
 - **Tests**: the import split is clean in production code, but four `devkit-dist`-side test locations reach harness
@@ -122,3 +137,19 @@ dependency inversion (`post_sync`, `host.services`), so no group needs to move o
 | Q3 config/receipt | C2 reserved names + agt templates via `devkit.config_tables` | C1 status quo, C3 open names, C4 `[tool.devkit-agt]` | config valid with or without the harness; defaults live with their engine |
 | Q4 foundation | F1 core/search/host whole | F2 split core, F3 partial host | closure reaches all of core; hooks need `devkit host` |
 | Q5 bundles | B1 by dependency, K1 preserve behavior | B2 all agt, B3 all dist, K2 shims | each wheel's bundles work in its minimal environment |
+
+## 7. Challenger review (envelope `challenger-01.yaml`) and disposition
+
+| # | Finding | Disposition |
+| --- | --- | --- |
+| 1 | Distribution code emits harness directives (`devkit-workflow` skill; rule and gate assets never run standalone) | Inventoried in `PADR-dist-bundles-compatibility`; the standalone signal is user question `standalone-harness-signals` |
+| 2 | Harness text in the `devkit` bundle under-inventoried; hash claim too strong | Full inventory in section 4 and in question `harness-guidance`; hash statement in `PADR-dist-config-receipt-ownership` made conditional |
+| 3 | Missing-extra `[FIX]` directives undecided | Decided in `PADR-dist-module-split`: name the extra on the requirement the project declares, never a second direct requirement |
+| 4 | No mechanism for dist-only tests | Decided in `PADR-dist-module-split`: a CI check runs `devkit-dist` tests without `devkit-agt`, asserting `devkit.rules` is absent |
+| 5 | `compact-home` costs asymmetric | Costs stated in the question (keeping compact in `devkit-agt` breaks `devkit:run` selections and needs another bundle) |
+| 6 | `uv tool install devkit-agt` finds no script | `PADR-dist-command-composition`: `uv tool install devkit-dist --with devkit-agt`, reconciled into `ARCH-05-3-command-plugins` and `CAP-DIST-content-packages` |
+| 7 | Tool-version notice hides the package change | `PADR-dist-config-receipt-ownership`: the notice names both packages when they differ |
+| 8 | Scan cost misquoted | Restated with both measurements |
+| 9 | Benefit framed as smaller dependencies | Proposal section 1.1 and Consumer Impact restated; non-goal added |
+| 10 | Root `AGENTS.md` not a reconcile target | Added to `PADR-dist-module-split` consequences |
+| 11 | Harness command non-goal conflicts with agent-first output | Turned into user question `standalone-harness-signals` |

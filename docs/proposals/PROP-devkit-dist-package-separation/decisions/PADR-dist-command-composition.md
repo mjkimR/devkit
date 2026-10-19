@@ -64,17 +64,22 @@ Choose **M1**.
   `devkit-agt` reported before (`PADR-dist-bundles-compatibility`).
 - The MCP server's reported version and the receipt's tool record follow the same owner
   (`PADR-dist-config-receipt-ownership`).
-- In a standalone installation a harness command name is an unknown command (click's usage error, exit `2`), like
-  any other unknown name; no reverse knowledge of harness names is added to `devkit-dist`.
+- What a standalone installation answers for a harness command name is decided by the user (question
+  `standalone-harness-signals`): a coded advisory from a name-only reserved set, or click's usage error (exit `2`)
+  as for any unknown name. Either way `devkit-dist` names no harness module.
+- `devkit-agt` ships no console script, so a tool installation names the script owner and adds the harness:
+  `uv tool install devkit-dist --with devkit-agt` (wheel paths or Git URLs alike).
 
 ## 5. Consequences
 
-- `ARCH-05-3-command-plugins` describes `devkit-agt` as a first-party plugin, and the layering test's assertion that
+- `ARCH-05-3-command-plugins` describes `devkit-agt` as a first-party plugin and the tool installation form above
+  (also in `CAP-DIST-content-packages`), and the layering test's assertion that
   `devkit.commands` is loaded by `cli` holds in `devkit-dist`.
 - Verification covers command discovery with `devkit-dist` alone (no harness commands listed), with both wheels
   (every current command listed and runnable) and with `devkit-spec` added, and that exactly one installed
   distribution provides the `devkit` script.
-- A harness command now pays one `devkit.commands` scan when it is looked up: about 10 to 13 ms in this workspace
-  (61 installed distributions; `materials/20261019-package-split-evidence.md` section 5). Commit-time gates are not
+- A harness command now pays one `devkit.commands` scan when it is looked up: 18 to 24 ms for the scan measured
+  in-process, about 13 ms added to the whole-process median, in this workspace with 61 installed distributions
+  (`materials/20261019-package-split-evidence.md` section 5); negligible next to the commands themselves. Commit-time gates are not
   affected: the managed Git hook entry runs `devkit.gate` through its own bootstrap and never imports `devkit.cli`.
   Native host hooks call `devkit host`, a `devkit-dist` built-in, and pay no scan.

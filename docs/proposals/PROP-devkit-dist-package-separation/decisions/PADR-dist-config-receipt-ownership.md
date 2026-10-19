@@ -74,8 +74,8 @@ Choose **C2**.
   `[tool.spec]`).
 - The receipt's `tool.package` MUST name the running distributor, `devkit-dist`. Each bundle's package record names
   the wheel that ships it. The receipt schema version does not change; an existing receipt written by `devkit-agt`
-  stays readable, and the next writing sync records the new names (the existing tool-version notice reports the
-  change).
+  stays readable, and the next writing sync records the new names. The tool-version notice MUST name the package
+  on both sides when it changed (`devkit-agt 0.1.1 -> devkit-dist 0.1.1`); today it renders only the old package.
 
 ## 5. Consequences
 
@@ -83,5 +83,7 @@ Choose **C2**.
   each format and the new entry point group; `ARCH-05-4-distribution-components` lists it.
 - A project that installs only `devkit-dist` gets a template without harness tables; adding `devkit-agt` and running
   `devkit config template` adds them without changing a line.
-- Snapshot gates (`devkit rules check --staged`, `--ci`) keep trusting the committed receipt: file hashes and paths
-  are unchanged by the split, only the package names it records.
+- Snapshot gates (`devkit rules check --staged`, `--ci`) keep trusting the committed receipt. The split itself
+  changes only the package names it records; managed files whose text changes with the answers to
+  `harness-guidance` and `compact-home` (or move to another bundle) get new hashes or paths, which the first sync
+  records and the project commits, as for any bundle update.

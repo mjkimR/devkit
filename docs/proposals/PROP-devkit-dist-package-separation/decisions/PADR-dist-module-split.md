@@ -95,6 +95,11 @@ Choose **N1** and **F1**.
   `devkit.host.services` `integration` stay with `devkit-agt`.
 - The `search` and `mcp` extras move to `devkit-dist`; `devkit-agt` keeps extras of the same names that require
   the matching `devkit-dist` extras, so `devkit-agt[search]` and `devkit-agt[mcp]` keep working.
+- The `[FIX]` directives for a missing extra (`SEARCH_EXTRA_MISSING` and the model fix in `devkit.search`, the MCP
+  extra in `devkit.host`, the `devkit playbook search --mode` help) MUST name the extra deterministically without
+  detecting the installation: add the extra to the devkit requirement the project already declares,
+  `devkit-agt[<extra>]` when it depends on `devkit-agt`, else `devkit-dist[<extra>]`. They never add a second direct
+  requirement on `devkit-dist` next to `devkit-agt`, whose resolved source could conflict.
 - Layering is enforced per wheel: a `devkit-dist` test refuses any reference to a `devkit-agt` area from its
   sources and its entry points; `devkit-agt` keeps its own table, in which each of its areas may also use the
   `devkit-dist` areas.
@@ -106,7 +111,13 @@ Choose **N1** and **F1**.
   wheels together stay with `devkit-agt`. Four `devkit-dist`-side tests currently reach harness code
   (`distribution/test_config_template.py`, `core/test_cli.py`, the hook assertion of `distribution/test_sync.py`,
   and `testsupport.gate`), and move or split accordingly (`materials/20261019-package-split-evidence.md` section 5).
+- The workspace venv installs every package, so `devkit-agt` entry points stay visible to `devkit-dist` tests run
+  there. A separate dist-only check MUST run the `devkit-dist` tests in an environment that installs `devkit-dist`
+  (with its extras) and not `devkit-agt` (an isolated `uv run --package devkit-dist` or the smoke installation),
+  asserting `importlib.util.find_spec("devkit.rules") is None`; CI runs it.
 - Root `pyproject.toml` adds the new source root to ruff `namespace-packages`, Pyright `extraPaths`, pytest
   `testpaths` and the dev dependency group; release, smoke and CI wiring add the new wheel.
 - Package READMEs, `docs/development/reference/` pages, `ARCH-05-1-containers`, `ARCH-05-2-components` and
-  `ARCH-07-deployment` name the new owner of each module.
+  `ARCH-07-deployment` name the new owner of each module, and the root `AGENTS.md` (Architecture and Boundaries:
+  the layering rule stated for `packages/devkit`; Packages: `devkit-agt` as the single distribution) describes the
+  three wheels and the per-wheel layering.
