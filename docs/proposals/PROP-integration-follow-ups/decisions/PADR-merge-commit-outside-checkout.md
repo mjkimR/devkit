@@ -44,8 +44,10 @@ first parent and the approved source tip as second, under a devkit-composed mess
 fast-forwards to it. Without an advance the tree is the source tree (`commit-tree <source>^{tree}`); with one the
 service builds it with `git merge-tree --write-tree` (Git 2.38 or later, probed only then; a conflict refuses with
 nothing changed). A source already contained in the target builds nothing (a rerun is a no-op). The message uses
-validated branch names only; `commit-tree` honours identity and signing configuration, runs time-bound without a
-terminal prompt and refuses with nothing changed on failure. `ff-only` in either policy wins. Under `ff-only` the
+validated branch names only (`chore(merge): integrate <branch> into <target>`); the build lives in `devkit.worktree`,
+honours identity and signing configuration, runs with a 30-second bound and no terminal prompt and refuses with
+`WORKTREE_COMMIT_FAILED` and nothing changed on failure. `prepare` still requires the source to contain the target;
+only later advances are merged in. `ff-only` in either policy wins. Under `ff-only` the
 result commit is the source tip and an advanced target is refused as today. The CLI `finish --merge`, which runs no
 readiness provider, builds a merge commit only when the target did not advance and keeps `WORKTREE_MERGE_NOT_FF`
 otherwise; it takes the integration lock. `ff`, squash and rebase are not offered locally.
@@ -55,10 +57,11 @@ otherwise; it takes the integration lock. `ff`, squash and rebase are not offere
 - One `--first-parent` line per task; stage commits stay bisectable; ancestry checks keep working.
 - `commit-tree` runs no commit hooks: the result's tree is checked by the readiness provider
   (`PADR-target-advance-readiness`), not by the commit gates.
-- `plan_finish`, `validate_finish(merged=True)` and the service's merge recovery change from "HEAD equals the
-  source" to "HEAD equals the recorded result commit".
+- `validate_finish(merged=True)` and the service's merge recovery change from "HEAD equals the source" to "HEAD
+  contains the latest result commit".
 - One extra commit per integration even when the target did not move.
 - Commit-msg hook trailers (DCO, Change-Id) are not added to the merge commit.
-- The `WORKTREE_PUSH_REJECTED` fix becomes `git pull --no-rebase`, so a push race does not rewrite the unit's SHAs.
+- The `WORKTREE_PUSH_REJECTED` fix stops recommending `git pull --rebase`: `--rebase=merges` if a fixture shows it
+  keeps the unit's SHAs, else `--no-rebase` with its first-parent cost documented.
 - Options also weighed: a scratch detached worktree running `git merge --no-ff` (hooks run, older Git works, could
   host tests) lost on checkout cost, a temporary worktree to clean up and the executor's no-commands rule.

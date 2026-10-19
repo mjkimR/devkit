@@ -1,0 +1,67 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T05:53:03.274112Z'
+status: completed
+summary: 'round 2; round-1 findings: 14 resolved, 6 partial, #3 and #6 became user questions T and A; fixes introduced 2 P2 (receipt check refuses gitignored projections; prepare scope widens T) and 7 P3 on recovery wording, push fix, message, CLI commit-tree, [tool.spec] mechanism, build loop and stale texts.'
+findings:
+- issue: 'recurs: challenger-01.yaml #13; the receipt-consistency check as worded refuses every integration: 99 receipt records sit under gitignored .agents/, .claude/ and .codex/ and never exist in a result tree, and an already inconsistent target blocks every integration.'
+  evidence: .devkit/installation.json
+  failure_condition: Any integration once the check exists; the first gitignored record is missing and INTEGRATION_RECEIPT_CONFLICT refuses.
+  suggested_action: Check only tracked records where the merge introduces a mismatch (blob or recorded hash differs from both parents), on devkit.core load_receipt; test a gitignored projection and an already inconsistent target.
+  resolution: open
+  severity: P2
+- issue: 'Decision needed: dropping spec-integrate Step 1 on the native path implies prepare accepts a source that does not contain the target, widening question T from advances during confirmation to every target commit since the branch was cut.'
+  evidence: packages/devkit/src/devkit/worktree/planning.py
+  failure_condition: A branch cut days earlier is integrated natively without Step 1; many untested target commits land while the report says tests ran on the source.
+  suggested_action: (a) keep prepare's descent requirement so only advances after prepare are tolerated (recommended), or (b) accept advanced targets at prepare and disclose the count.
+  resolution: open
+  severity: P2
+- issue: 'recurs: challenger-01.yaml #4; recovery rules contradict each other (equals vs contains the latest result), the merge PADR still says HEAD equals the result, and ''not merged'' allows a rebuild recommendation A forbids.'
+  evidence: docs/proposals/PROP-integration-follow-ups/proposal.md
+  failure_condition: 'Unknown merge step, successful ff, then another commit: every resume reports ambiguous; or a resume rebuilds past the last build target.'
+  suggested_action: Merged = base contains the latest result (source under ff-only); not merged = base equals the last build target; else stale or ambiguous; PADR says contains.
+  resolution: open
+  severity: P3
+- issue: The new push fix git pull --no-rebase creates a foxtrot merge, scrambling the upstream's first-parent line, merges in the base checkout and fails under pull.ff=only.
+  evidence: packages/devkit/src/devkit/worktree/lifecycle.py
+  failure_condition: The upstream moves between the upstream check and the push in CLI finish --merge and the agent follows the fix.
+  suggested_action: State the trade-off, or make the fix re-land the merge onto the fetched upstream; --rebase=merges only after confirming unit SHAs are kept.
+  resolution: open
+  severity: P3
+- issue: 'The devkit-composed message ''merge: integrate ...'' is not a Conventional Commits type the repository''s gate accepts; the precedent is ''chore(merge): integrate main into <slug>''.'
+  evidence: specs/2026-10/20261015-commit-gate-rules-default/feedback/integrate-merge-message-fails-commit-msg-gate.md
+  failure_condition: A commit-message lint over pushed history fails on every integration merge commit.
+  suggested_action: 'Use ''chore(merge): integrate <branch> into <target>'' and test it against the gate.'
+  resolution: open
+  severity: P3
+- issue: Under no-ff the CLI also runs commit-tree, but the identity, time bound, no-prompt and failure code are specified for the service only; INTEGRATION_COMMIT_FAILED cannot be raised in worktree (layering); no timeout value.
+  evidence: packages/devkit/tests/test_layering.py
+  failure_condition: 'commit.gpgsign=true with a locked agent on devkit worktree finish --merge: undefined hang, GIT_FAILED or refusal.'
+  suggested_action: Put the merge-commit build in worktree with WORKTREE_COMMIT_FAILED that the service wraps; give the timeout in seconds.
+  resolution: open
+  severity: P3
+- issue: 'recurs: challenger-01.yaml #19; devkit-spec ''compares [tool.spec] with the one at confirmation'' has no mechanism: the provider never receives confirmation-time state.'
+  evidence: packages/devkit-spec/src/devkit_spec/integration.py
+  failure_condition: A target commit changes [tool.spec] during confirmation and readiness passes silently.
+  suggested_action: A source-bound evidence code (SPEC_POLICY digest of the parsed [tool.spec]) not declared target-bound, enforced by evidence equality.
+  resolution: open
+  severity: P3
+- issue: 'recurs: challenger-01.yaml #17; the three-build loop is unjustified: the first build absorbs advances during confirmation and with the CLI lock every devkit executor is serialized.'
+  evidence: packages/devkit/src/devkit/integration/service.py
+  failure_condition: Retry logic, readiness reruns and tests are paid for on a path no devkit actor triggers.
+  suggested_action: One build per call, then INTEGRATION_TARGET_MOVED with nothing changed.
+  resolution: open
+  severity: P3
+- issue: 'recurs: challenger-01.yaml #21; stale texts: PADR-effective-policy-digest summary and option still say it refuses a managed path both sides changed; title and summary describe four extensions; excludes still lists docs/decisions/ though handoff writes ADRs there.'
+  evidence: docs/proposals/PROP-integration-follow-ups/decisions/PADR-effective-policy-digest.md
+  failure_condition: The promoted ADR's summary states the rejected option; the spec marks its own ADR directory excluded.
+  suggested_action: Fix the PADR now; retitle at Q1; drop docs/decisions/ from excludes or note that only handoff writes there.
+  resolution: open
+  severity: P3
+assumptions:
+- the round read fa5528c from the files; no shell diff run
+unverified_areas:
+- 'whether cgate accepts a merge: type; whether git pull --rebase=merges keeps unit SHAs'
+checks: {}
