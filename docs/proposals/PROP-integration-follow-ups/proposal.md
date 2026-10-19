@@ -2,7 +2,7 @@
 id: PROP-integration-follow-ups
 title: "Integration base advances: merge commits, effective policy digest and readiness on the result"
 summary: "Lets an approved local integration absorb target commits that land during its confirmation: tasks land as merge commits built outside the base checkout, the approval binds the effective integration policy instead of raw file bytes, and readiness runs again on the merged result."
-status: reviewing                     # draft | reviewing | accepted | rejected
+status: accepted                      # draft | reviewing | accepted | rejected
 created_at: 2026-10-19
 target_area: integration/
 priority: high                        # critical | high | medium | low
