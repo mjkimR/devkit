@@ -2,7 +2,7 @@
 id: PROP-worktree-host-compatibility
 title: Worktree access for subagents across hosts
 summary: "Investigate how worker subagents on Claude Code, Codex and Antigravity can read, write and run commands in a sibling devkit worktree, and choose a portable approach for orchestration mode."
-status: reviewing                     # draft | reviewing | accepted | rejected
+status: accepted                      # draft | reviewing | accepted | rejected
 created_at: 2026-10-15
 target_area: delivery/
 priority: medium                      # critical | high | medium | low
