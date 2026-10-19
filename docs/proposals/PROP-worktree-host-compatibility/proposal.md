@@ -11,7 +11,11 @@ planning_effort: high                 # low | medium | high (hint for Planning)
 dev_effort: high                      # low | medium | high (hint for Development)
 boundaries:
   owns:
-    - delivery/
+    - packages/devkit-spec/src/devkit_spec/bundle/subagents/
+    - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-delegate/
+    - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-orchestrate/
+    - packages/devkit-spec/tests/
+    - docs/capabilities/delivery/
   excludes:
     - docs/decisions/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
@@ -98,24 +102,39 @@ Evidence and the option table: `MAT-worktree-host-spike-evidence`; scout returns
 ### 3.2 Decisions
 
 - `PADR-worktree-access-preconditions`: worktrees stay sibling checkouts; devkit projects no host access settings
-  and sets no repository Git profile; each host's access is a documented session precondition, and a worker whose
-  access is refused stops through its problem procedure.
+  and sets no repository Git profile; each host's access is a documented session precondition, marked observed or
+  documented, which the Host probes before the first worker turn in a worktree; a refusal after the probe stops the
+  worker through its problem procedure, and an uncommittable one is recorded by the Host.
 - `PADR-host-native-worktrees-excluded`: `devkit worktree start` stays the only source of an activity's worktree.
-- `PADR-codex-process-worker` (pending `codex-worker-scope`): on Codex a worker turn runs as a `codex exec` process
-  rooted in its worktree with both git dirs granted, offered only after one verified live turn.
+- `PADR-codex-process-worker` (only for `codex-worker-scope` = `process-worker`): on Codex a worker turn runs as a
+  `codex exec` process rooted in its worktree with both git dirs granted, shipped only when one live turn passes;
+  a failed turn ships the recorded reasons only.
+- Open, not widened: on every host a worker has the session's access to the shared `.git` (other refs, config, hooks,
+  the scope registry), which the Host's range check does not see.
 
 ### 3.3 Non-goals
 
 - Moving task worktrees, changing `devkit worktree` or the distribution projections, or writing host settings.
-- A `claude -p` process worker for Claude Code, and host-native worktree adoption.
+- A `claude -p` process worker for the Claude Code sandbox case (deferred in `PADR-worktree-access-preconditions`),
+  and host-native worktree adoption.
+- Closing the shared-`.git` gap of the range check.
 - Live verification on Antigravity unless `antigravity-verification` selects it.
 
 ## 4. Lifecycle & Retirement Criteria
 
 - Restart condition: `SPEC-orchestration-mode` integrated with its Claude Code path working.
-- Expected acceptance checks: a worker on each host the chosen option supports writes only inside its worktree and
-  the host's diff check passes (Claude Code: the observed native runs; Codex: one live `codex exec` turn under
-  `PADR-codex-process-worker`); the worker contracts' host statuses and comments and the `spec-delegate` hosts
-  reference match the verified behavior; `spec-delegate/SKILL.md` stays within its byte budget.
+- Expected acceptance checks:
+  - Contract tests (`packages/devkit-spec/tests/test_role_contracts.py`): both worker contracts keep Claude Code
+    `native`, Codex `unsupported` and Antigravity `unverified`, set no `isolation`, and carry `x-process-hosts: [codex]`
+    exactly when the Codex live turn passed.
+  - The access probe's commands are covered by a test showing they leave refs, index and `git status` unchanged.
+  - `packages/devkit-spec/tests/test_bundle_budgets.py` passes (`spec-delegate/SKILL.md` at most 11776 bytes).
+  - The hosts reference states each host's precondition marked observed or documented, matching
+    `MAT-worktree-host-spike-evidence` and any Development record; the Q5 `/add-dir` statement appears only with a
+    recorded session.
+  - With `process-worker`: the live Codex turn's record in the spec's materials (fields in
+    `PADR-codex-process-worker` §4) shows a commit through the gate and a passing range check, or the failure that
+    kept Codex substituting.
+  - `just ci` passes.
 - On acceptance: set `status: accepted` and run `devkit spec proposal handoff worktree-host-compatibility`. On
   rejection: record a rejection ADR and delete the proposal directory.
