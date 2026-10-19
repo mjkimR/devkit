@@ -1,17 +1,17 @@
 ---
-id: PADR-dist-command-composition
+id: ADR-dist-command-composition
 title: Harness commands mount through devkit.commands
 summary: devkit-dist owns the devkit console script and only its own built-in commands; devkit-agt mounts its command groups, devkit run included, through the existing devkit.commands entry point group, and a standalone installation answers a harness command name with a coded error from a name-only list.
-proposal: PROP-devkit-dist-package-separation
-status: draft
+proposal: SPEC-devkit-dist-package-separation
+status: accepted
 created_at: 2026-10-19
 ---
 
-# [PADR-dist-command-composition] Harness commands mount through devkit.commands
+# [ADR-dist-command-composition] Harness commands mount through devkit.commands
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-19
-- **Answers**: Q2 (CLI and entry point aggregation) of `PROP-devkit-dist-package-separation`, with the user's
+- **Answers**: Q2 (CLI and entry point aggregation) of `SPEC-devkit-dist-package-separation`, with the user's
   answers to `compact-home` and `standalone-harness-signals` (`envelopes/answer-01.yaml`).
 
 ---
@@ -25,7 +25,7 @@ the `devkit.commands` entry point group (`ARCH-05-3-command-plugins`), which `de
 `devkit spec`; built-in names are reserved and win over plugins, and an unusable plugin fails only its own command
 with `COMMAND_PLUGIN_INVALID`. `devkit --version` reads the version of `devkit-agt`.
 
-`PADR-dist-foundation-ownership` gives the sole `devkit` console script to `devkit-dist`, which must not depend on
+`ADR-dist-foundation-ownership` gives the sole `devkit` console script to `devkit-dist`, which must not depend on
 `devkit-agt`, so the root group can no longer name harness modules.
 
 ## 2. Decision Drivers
@@ -51,7 +51,7 @@ with `COMMAND_PLUGIN_INVALID`. `devkit --version` reads the version of `devkit-a
   harness names keep winning over third-party plugins. Cons: a second loading path and precedence rule for a
   collision no package has today.
 - **M4: `devkit-agt` ships its own `devkit` console script.** Cons: two wheels installing the same script is the
-  competing-entry-point conflict `PADR-dist-foundation-ownership` rules out.
+  competing-entry-point conflict `ADR-dist-foundation-ownership` rules out.
 
 ## 4. Decision Outcome
 
@@ -63,13 +63,13 @@ Choose **M1**.
   `integration` and `run`) through a `devkit.commands` entry point with the command's current name and target, so
   command lines, options, output and codes stay unchanged.
 - `devkit --version` MUST read the `devkit-dist` version; with lockstep releases it is the same number
-  `devkit-agt` reported before (`PADR-dist-bundles-compatibility`).
+  `devkit-agt` reported before (`ADR-dist-bundles-compatibility`).
 - The MCP server's reported version and the receipt's tool record follow the same owner
-  (`PADR-dist-config-receipt-ownership`).
+  (`ADR-dist-config-receipt-ownership`).
 - A standalone installation MUST answer a harness command name with a coded error instead of click's code-less
   usage error (user answer `both` to `standalone-harness-signals`). `devkit-dist` holds a name-only list of the
   command names `devkit-agt` mounts (`rules`, `workflow`, `gate`, `worktree`, `generated`, `integration`, `run`),
-  like the reserved configuration tables of `PADR-dist-config-receipt-ownership`; it consults the list only when
+  like the reserved configuration tables of `ADR-dist-config-receipt-ownership`; it consults the list only when
   neither its built-in map nor any `devkit.commands` entry point has the name, so an installed `devkit-agt` (or any
   plugin of that name) always wins and harness names stay unreserved as M1 states. The error is an
   `AdvisoryError` with one stable code (proposed `HARNESS_COMMAND_UNAVAILABLE`), exit `2` (could not run, the exit
@@ -83,7 +83,7 @@ Choose **M1**.
   git+...#subdirectory=packages/devkit'`).
   Whether it carries a release ref follows the missing-extra fixes, so all install directives stay identical in
   form. The directive does not detect the installation form and is shared with the standalone asset notice of
-  `PADR-dist-bundles-compatibility`.
+  `ADR-dist-bundles-compatibility`.
 - The list holds command names only, never module paths or entry point targets, so `devkit-dist` still names no
   harness module and the per-wheel layering test (module references) holds; this is what separates it from the
   rejected M2. That test MUST also scan `devkit/cli.py` and `devkit/__main__.py` (today's scanner exempts top-level

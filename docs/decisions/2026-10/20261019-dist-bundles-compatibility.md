@@ -1,17 +1,17 @@
 ---
-id: PADR-dist-bundles-compatibility
+id: ADR-dist-bundles-compatibility
 title: Bundled content and compatibility of the split
 summary: Assigns each built-in bundle to the package whose commands it describes, moves the harness guidance and devkit run guidance of the devkit bundle into a new auto-selected harness bundle shipped by devkit-agt, and lists the behaviors the split preserves and the two preset selections it changes.
-proposal: PROP-devkit-dist-package-separation
-status: draft
+proposal: SPEC-devkit-dist-package-separation
+status: accepted
 created_at: 2026-10-19
 ---
 
-# [PADR-dist-bundles-compatibility] Bundled content and compatibility of the split
+# [ADR-dist-bundles-compatibility] Bundled content and compatibility of the split
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-19
-- **Answers**: Q5 (bundled content and compatibility) of `PROP-devkit-dist-package-separation`, with the user's
+- **Answers**: Q5 (bundled content and compatibility) of `SPEC-devkit-dist-package-separation`, with the user's
   answers to `harness-guidance`, `compact-home` and `standalone-harness-signals` (`envelopes/answer-01.yaml`), and to
   `harness-bundle-name` with the contract 6 split and the preset-hint non-goal settled in the same round
   (`envelopes/answer-02.yaml`).
@@ -33,7 +33,7 @@ The `devkit` bundle mixes distribution guidance with harness guidance (inventory
 `resource-kinds` (rule, gate and workflow kinds and their commands) and `in-repo-bundle` (rule tests, snapshot
 gates, a `devkit-agt` development dependency) describe `devkit rules`, `devkit gate` and `devkit workflow`, which a
 standalone `devkit-dist` installation does not have; its `devkit-run` instruction and `run-pointer` guidance
-describe `devkit run`, which ships with `devkit-agt` (`PADR-dist-module-split`). Distribution code also emits
+describe `devkit run`, which ships with `devkit-agt` (`ADR-dist-module-split`). Distribution code also emits
 harness directives: sync generates the `devkit-workflow` entry skill (`installation/workflow_skill.py`), whose
 steps run `devkit workflow`, whenever a selected bundle ships a workflow asset, and rule and gate assets are
 deployed without any engine to run them. The proposal promises existing `devkit-agt` users full compatibility
@@ -58,7 +58,7 @@ through dependency inclusion and command re-export.
 - **B2: everything built in stays with `devkit-agt`.** Cons: a standalone installation deploys no consumption
   guidance at all, and the `advisory` protocol guide would require the harness.
 - **B3: everything built in moves to `devkit-dist`.** Cons: `authoring`'s rule assets and area would make
-  `devkit-dist` depend on `devkit.rules`, violating `PADR-dist-foundation-ownership`.
+  `devkit-dist` depend on `devkit.rules`, violating `ADR-dist-foundation-ownership`.
 
 ### Harness guidance of the `devkit` bundle (user question `harness-guidance`)
 
@@ -76,7 +76,7 @@ manifest taxonomy). No first-party bundle installable without `devkit-agt` ships
 (only `devkit-spec`, which requires `devkit-agt`, and `authoring`, which ships with it, do), so the first driver holds
 for every first-party standalone setup; a third-party or in-repo bundle that ships such assets into a standalone
 installation is reported by the standalone signal below (user question `standalone-harness-signals`, answer
-`both`; the command-name half is in `PADR-dist-command-composition`).
+`both`; the command-name half is in `ADR-dist-command-composition`).
 
 ### Compatibility
 
@@ -84,7 +84,7 @@ installation is reported by the standalone signal below (user question `standalo
   configuration keys, receipt schema, entry point group names and import paths stay; package names recorded in the
   receipt, the version source and the extras' home change. No alias packages or shim modules.
 - **K2: shims for old ownership (a `devkit-agt` that re-exports moved modules, legacy receipt readers, a `devkit:run`
-  alias).** Cons: unnecessary with N1 of `PADR-dist-module-split` (import paths do not change) and forbidden by the
+  alias).** Cons: unnecessary with N1 of `ADR-dist-module-split` (import paths do not change) and forbidden by the
   compatibility policy.
 
 ## 4. Decision Outcome
@@ -120,7 +120,7 @@ Choose **B1**, **H1** and **K1**.
   workflow asset kinds only as kinds it deploys, noting that their engines come with `devkit-agt`, and names no
   harness command as a directive. Its in-repo bundle example adds the bundle next to the devkit requirement the
   project already declares (`devkit-agt` when the project uses the harness, otherwise `devkit-dist`) and never adds
-  both, the rule `PADR-dist-module-split` sets for the missing-extra directives. Contract 3 names the
+  both, the rule `ADR-dist-module-split` sets for the missing-extra directives. Contract 3 names the
   auto-selected bundles generically (`devkit list` shows them) instead of listing `devkit` and `advisory`. Its only
   preset is `core`; the `run` preset and the `devkit-run` and `run-pointer` assets leave it.
 - Bundles shipped by `devkit-dist` or `devkit-agt` MUST both count as built in (`builtin`), so the notice for
@@ -129,17 +129,17 @@ Choose **B1**, **H1** and **K1**.
   `devkit status` MUST return a `WARNING` notice with one stable code for the deployed assets of the matching kind
   (`rule`, `gate`, `workflow`), naming the bundles and asset kinds that no installed engine runs, with a
   deterministic directive to add `devkit-agt` to the installation (proposed code `HARNESS_ENGINE_MISSING`; the
-  directive wording is shared with the command-name error of `PADR-dist-command-composition`). Engine presence is
+  directive wording is shared with the command-name error of `ADR-dist-command-composition`). Engine presence is
   detected by entry point name only; `devkit-dist` never imports or locates a harness module. The notice changes
   no exit code (except under `--strict`) and deploys the assets as before. Its directive is the source-explicit
-  one of `PADR-dist-command-composition`.
+  one of `ADR-dist-command-composition`.
 - With `devkit-agt` installed, every existing `devkit` command, option, sentinel, JSON field, advisory code and exit
   code MUST behave as before the split, except for these enumerated changes: the content of the `devkit` bundle and
   the new `harness` bundle (`devkit get-context`, managed files), the `harness` entry in `devkit list`,
   `devkit status` and the receipt, the receipt's tool and package names, the tool-version notice naming both
-  packages (`PADR-dist-config-receipt-ownership`), the missing-extra `[FIX]` texts (`PADR-dist-module-split`), a
+  packages (`ADR-dist-config-receipt-ownership`), the missing-extra `[FIX]` texts (`ADR-dist-module-split`), a
   third-party `devkit.commands` plugin named like a harness command now failing with `COMMAND_PLUGIN_INVALID`
-  instead of being ignored (`PADR-dist-command-composition`), and the two preset selections below. `devkit config
+  instead of being ignored (`ADR-dist-command-composition`), and the two preset selections below. `devkit config
   template` output with `devkit-agt` installed stays byte-identical (the harness tables keep their place).
   `devkit --version` keeps its `[VERSION: devkit <version>]` form and reports the `devkit-dist` version.
 - Two selections of the `devkit` bundle change, accepted in place under the AGENTS.md compatibility policy (no alias
@@ -158,8 +158,8 @@ Choose **B1**, **H1** and **K1**.
 - `devkit-spec` keeps depending on `devkit-agt` (it uses `devkit.rules`, `devkit.workflow`, `devkit.worktree` and
   `devkit.integration`); `devkit-catalog` and `devkit-starter`, which only need the manifest reader in tests, switch
   their development dependency to `devkit-dist`.
-- Configuration and receipt behavior follow `PADR-dist-config-receipt-ownership`; import paths follow
-  `PADR-dist-module-split`.
+- Configuration and receipt behavior follow `ADR-dist-config-receipt-ownership`; import paths follow
+  `ADR-dist-module-split`.
 - Non-goals: renaming `packages/devkit`; shim modules, alias distributions or alias presets; a cross-bundle preset
   hint in `SELECTION_INVALID`; a smaller third-party
   dependency set for `devkit-dist` (it needs every runtime dependency `devkit-agt` has today: click, pyyaml, jinja2,

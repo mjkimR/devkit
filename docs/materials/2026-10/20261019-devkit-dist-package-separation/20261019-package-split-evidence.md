@@ -1,7 +1,7 @@
 # Package split evidence and option comparison (Planning, 2026-10-19)
 
-Planning material for `PROP-devkit-dist-package-separation`: the evidence behind `PADR-dist-module-split`,
-`PADR-dist-command-composition`, `PADR-dist-config-receipt-ownership` and `PADR-dist-bundles-compatibility`, and the
+Planning material for the original proposal of `SPEC-devkit-dist-package-separation`: the evidence behind `ADR-dist-module-split`,
+`ADR-dist-command-composition`, `ADR-dist-config-receipt-ownership` and `ADR-dist-bundles-compatibility`, and the
 open questions left to the user. Measured on the plan-intent head of the Planning branch; paths are
 repository-relative.
 
@@ -142,22 +142,22 @@ Harness references in the `devkit` bundle text (for question `harness-guidance`)
 
 | # | Finding | Disposition |
 | --- | --- | --- |
-| 1 | Distribution code emits harness directives (`devkit-workflow` skill; rule and gate assets never run standalone) | Inventoried in `PADR-dist-bundles-compatibility`; the standalone signal is user question `standalone-harness-signals` |
-| 2 | Harness text in the `devkit` bundle under-inventoried; hash claim too strong | Full inventory in section 4 and in question `harness-guidance`; hash statement in `PADR-dist-config-receipt-ownership` made conditional |
-| 3 | Missing-extra `[FIX]` directives undecided | Decided in `PADR-dist-module-split`: name the extra on the requirement the project declares, never a second direct requirement |
-| 4 | No mechanism for dist-only tests | Decided in `PADR-dist-module-split`: a CI check runs `devkit-dist` tests without `devkit-agt`, asserting `devkit.rules` is absent |
+| 1 | Distribution code emits harness directives (`devkit-workflow` skill; rule and gate assets never run standalone) | Inventoried in `ADR-dist-bundles-compatibility`; the standalone signal is user question `standalone-harness-signals` |
+| 2 | Harness text in the `devkit` bundle under-inventoried; hash claim too strong | Full inventory in section 4 and in question `harness-guidance`; hash statement in `ADR-dist-config-receipt-ownership` made conditional |
+| 3 | Missing-extra `[FIX]` directives undecided | Decided in `ADR-dist-module-split`: name the extra on the requirement the project declares, never a second direct requirement |
+| 4 | No mechanism for dist-only tests | Decided in `ADR-dist-module-split`: a CI check runs `devkit-dist` tests without `devkit-agt`, asserting `devkit.rules` is absent |
 | 5 | `compact-home` costs asymmetric | Costs stated in the question (keeping compact in `devkit-agt` breaks `devkit:run` selections and needs another bundle) |
-| 6 | `uv tool install devkit-agt` finds no script | `PADR-dist-command-composition`: `uv tool install devkit-dist --with devkit-agt`, reconciled into `ARCH-05-3-command-plugins` and `CAP-DIST-content-packages` |
-| 7 | Tool-version notice hides the package change | `PADR-dist-config-receipt-ownership`: the notice names both packages when they differ |
+| 6 | `uv tool install devkit-agt` finds no script | `ADR-dist-command-composition`: `uv tool install devkit-dist --with devkit-agt`, reconciled into `ARCH-05-3-command-plugins` and `CAP-DIST-content-packages` |
+| 7 | Tool-version notice hides the package change | `ADR-dist-config-receipt-ownership`: the notice names both packages when they differ |
 | 8 | Scan cost misquoted | Restated with both measurements |
 | 9 | Benefit framed as smaller dependencies | Proposal section 1.1 and Consumer Impact restated; non-goal added |
-| 10 | Root `AGENTS.md` not a reconcile target | Added to `PADR-dist-module-split` consequences |
+| 10 | Root `AGENTS.md` not a reconcile target | Added to `ADR-dist-module-split` consequences |
 | 11 | Harness command non-goal conflicts with agent-first output | Turned into user question `standalone-harness-signals` |
 
 Re-review (envelope `challenger-02.yaml`): all eleven resolutions confirmed. Three low-severity issues in the draft
 questions were fixed before asking: `harness-guidance` is asked first and `compact-home` states its costs per
-`harness-guidance` answer; the `bundle-to-agt` option was dropped (it contradicted `PADR-dist-module-split`,
-`PADR-dist-bundles-compatibility` and the rejected B2); `standalone-harness-signals` states that only third-party or
+`harness-guidance` answer; the `bundle-to-agt` option was dropped (it contradicted `ADR-dist-module-split`,
+`ADR-dist-bundles-compatibility` and the rejected B2); `standalone-harness-signals` states that only third-party or
 in-repo bundles can trigger it and that engine presence is detected by name only, through the `devkit.commands`
 entry points (`rules`, `gate`, `workflow`), never by importing or locating a harness module.
 
@@ -165,9 +165,9 @@ entry points (`rules`, `gate`, `workflow`), never by importing or locating a har
 
 | Question | Answer | Folded into |
 | --- | --- | --- |
-| `harness-guidance` | `harness-bundle`: a new auto-selected `harness` bundle shipped by `devkit-agt` carries the harness guidance; the `devkit` bundle keeps only distribution guidance | `PADR-dist-bundles-compatibility` (H1), `PADR-dist-module-split` (area), proposal Q5 |
-| `compact-home` | `agt`: `devkit.compact` stays in `devkit-agt`; `devkit-run`, `run-pointer` and the `run` preset move to `harness`; the `devkit:run` selection break is accepted in place | `PADR-dist-module-split`, `PADR-dist-command-composition` (`run` mounted), `PADR-dist-bundles-compatibility`, proposal Q2/Q4 |
-| `standalone-harness-signals` | `both`: coded sync/status notice for rule, gate and workflow assets no engine runs, coded error for harness command names, name-only detection | `PADR-dist-bundles-compatibility` (notice), `PADR-dist-command-composition` (error, list, precedence) |
+| `harness-guidance` | `harness-bundle`: a new auto-selected `harness` bundle shipped by `devkit-agt` carries the harness guidance; the `devkit` bundle keeps only distribution guidance | `ADR-dist-bundles-compatibility` (H1), `ADR-dist-module-split` (area), proposal Q5 |
+| `compact-home` | `agt`: `devkit.compact` stays in `devkit-agt`; `devkit-run`, `run-pointer` and the `run` preset move to `harness`; the `devkit:run` selection break is accepted in place | `ADR-dist-module-split`, `ADR-dist-command-composition` (`run` mounted), `ADR-dist-bundles-compatibility`, proposal Q2/Q4 |
+| `standalone-harness-signals` | `both`: coded sync/status notice for rule, gate and workflow assets no engine runs, coded error for harness command names, name-only detection | `ADR-dist-bundles-compatibility` (notice), `ADR-dist-command-composition` (error, list, precedence) |
 
 Evidence checked while folding (worktree head after `answer-01.yaml`):
 
@@ -198,14 +198,14 @@ Evidence checked while folding (worktree head after `answer-01.yaml`):
   `run`, `rules`, `workflow`, `gate`, `worktree`, `generated`, `integration`; `host` stays a `devkit-dist` built-in.
 - **Interpretation**: contract 6 of the `devkit` constitution has a distribution half (commit the receipt after
   `devkit sync`) and a harness half (snapshot gates trust the receipt); under "the `devkit` bundle keeps only
-  distribution guidance" the first stays and the second moves, recorded in `PADR-dist-bundles-compatibility`.
+  distribution guidance" the first stays and the second moves, recorded in `ADR-dist-bundles-compatibility`.
 
 ## 9. Re-review of the folded answers (envelope `challenger-03.yaml`) and disposition
 
 | # | Finding | Severity | Disposition |
 | --- | --- | --- | --- |
-| 1 | `devkit` bundle in-repo example naming `devkit-dist` would add a second direct requirement in `devkit-agt` projects | medium | `PADR-dist-bundles-compatibility`: the example keeps the requirement the project already declares, never both |
-| 2 | Shared directive used bare package names | medium | `PADR-dist-command-composition`: runnable, source-explicit Git requirement in the form of the missing-extra fixes |
+| 1 | `devkit` bundle in-repo example naming `devkit-dist` would add a second direct requirement in `devkit-agt` projects | medium | `ADR-dist-bundles-compatibility`: the example keeps the requirement the project already declares, never both |
+| 2 | Shared directive used bare package names | medium | `ADR-dist-command-composition`: runnable, source-explicit Git requirement in the form of the missing-extra fixes |
 | 3 | Absolute "behaves as before" MUST contradicts planned changes | medium | Restated with enumerated exceptions and a before/after JSON comparison; proposal Consumer Impact aligned |
 | 4 | `devkit:all` is a second, silent break; `SELECTION_INVALID` fix leads away from `harness:run` | medium | Second break recorded, evidence corrected; the generic cross-bundle hint is user question `preset-moved-hint` |
 | 5 | `CAP-DIST-in-repo-bundles` missing as reconcile target | low | Added to the consequences with both mirrors |
@@ -218,15 +218,15 @@ Evidence checked while folding (worktree head after `answer-01.yaml`):
 ## 10. Second re-review (envelope `challenger-04.yaml`) and disposition
 
 Nine of the ten `challenger-03.yaml` dispositions were confirmed; the round found no new contradiction with
-`answer-01.yaml` or `PADR-dist-foundation-ownership`.
+`answer-01.yaml` or `ADR-dist-foundation-ownership`.
 
 | # | Finding | Severity | Disposition |
 | --- | --- | --- | --- |
 | 1 | Draft `preset-moved-hint` title over 40 characters | medium | Question dropped (finding 4) |
-| 2 | `contract-6-split` attributes Planning's inventory to the user | low | Question dropped; the split is recorded in `PADR-dist-bundles-compatibility` as a correction of the Planning inventory, later settled by the user (`answer-02.yaml`) |
+| 2 | `contract-6-split` attributes Planning's inventory to the user | low | Question dropped; the split is recorded in `ADR-dist-bundles-compatibility` as a correction of the Planning inventory, later settled by the user (`answer-02.yaml`) |
 | 3 | `keep-harness` context omits `CAP-HARN-agent-guidance` | low | Question context states it; circular reason removed |
 | 4 | `preset-moved-hint` incomplete; doing nothing needs no consent | low | Question dropped; the generic hint is a non-goal, later settled by the user (`answer-02.yaml`); `SELECTION_INVALID` stopping the whole sync recorded |
-| 5 | Tool form still bare; tool branch lacks the `devkit-dist` requirement | low | Both places in `PADR-dist-command-composition` name full requirements; the section 7 row 6 form above is historical |
+| 5 | Tool form still bare; tool branch lacks the `devkit-dist` requirement | low | Both places in `ADR-dist-command-composition` name full requirements; the section 7 row 6 form above is historical |
 | 6 | Compatibility exceptions incomplete | low | Added the tool-version notice, the `[FIX]` texts, the harness-named plugin case; `devkit config template` stays byte-identical |
 | 7 | Layering string match ambiguous; `devkit-agt` group map | low | Match limited to dotted module paths and `module:attribute` references; the `devkit-agt` test scans `devkit-dist`'s `*GROUP` constants too |
 | 8 | Override consequence partly wrong | low | Split into moved-asset and split-asset cases |

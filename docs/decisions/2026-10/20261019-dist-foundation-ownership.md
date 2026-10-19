@@ -1,15 +1,15 @@
 ---
-id: PADR-dist-foundation-ownership
+id: ADR-dist-foundation-ownership
 title: Distribution standalone scope and foundation ownership
 summary: Defines standalone distribution features and assigns the shared foundation and sole devkit CLI entry point to devkit-dist, with harness engines supplied by devkit-agt.
-proposal: PROP-devkit-dist-package-separation
-status: draft
+proposal: SPEC-devkit-dist-package-separation
+status: accepted
 created_at: 2026-10-18
 ---
 
-# [PADR-dist-foundation-ownership] Distribution standalone scope and foundation ownership
+# [ADR-dist-foundation-ownership] Distribution standalone scope and foundation ownership
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-18
 
 ---

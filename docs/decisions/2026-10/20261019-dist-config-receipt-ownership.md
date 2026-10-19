@@ -1,17 +1,17 @@
 ---
-id: PADR-dist-config-receipt-ownership
+id: ADR-dist-config-receipt-ownership
 title: Configuration and receipt schema ownership
 summary: devkit-dist owns the .devkit/config.toml schema and the installation receipt; harness tables stay reserved pass-through names, and their commented templates are contributed by devkit-agt through an entry point.
-proposal: PROP-devkit-dist-package-separation
-status: draft
+proposal: SPEC-devkit-dist-package-separation
+status: accepted
 created_at: 2026-10-19
 ---
 
-# [PADR-dist-config-receipt-ownership] Configuration and receipt schema ownership
+# [ADR-dist-config-receipt-ownership] Configuration and receipt schema ownership
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-19
-- **Answers**: Q3 (configuration schema ownership) of `PROP-devkit-dist-package-separation`.
+- **Answers**: Q3 (configuration schema ownership) of `SPEC-devkit-dist-package-separation`.
 
 ---
 
@@ -85,7 +85,7 @@ Choose **C2**.
   `devkit config template` adds them without changing a line.
 - Snapshot gates (`devkit rules check --staged`, `--ci`) keep trusting the committed receipt. The split itself
   changes the package names it records; the move of the harness and `devkit run` guidance into the new `harness`
-  bundle (`PADR-dist-bundles-compatibility`) changes the `devkit` bundle's managed files and adds `harness` files
+  bundle (`ADR-dist-bundles-compatibility`) changes the `devkit` bundle's managed files and adds `harness` files
   and a `harness` entry, which the first sync records and the project commits, as for any bundle update. The
   configuration schema does not change; the only configuration a project must edit is a `devkit:run` selection,
   which becomes `harness:run`.
