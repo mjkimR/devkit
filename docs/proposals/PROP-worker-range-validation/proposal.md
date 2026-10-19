@@ -1,14 +1,14 @@
 ---
 id: PROP-worker-range-validation
-title: Recorded write scopes, range validation and drift handling for orchestrated units
-summary: Records each worker's write scope so one command validates a returned range, derives the scope from reconcile targets and supersede links, and reports or merges base drift for long-running units, cutting the Host's manual checks in local-orchestrated mode.
+title: One-command worker result inspection for orchestrated units
+summary: "Bundles existing worker-result checks and reviewer diff information into one command, using the Host-supplied scope and leaving interpretation to the agent without adding an approval gate."
 status: draft                         # draft | reviewing | accepted | rejected
 created_at: 2026-10-19
 target_area: delivery/
-priority: medium                      # critical | high | medium | low
-size: L                               # S | M | L | XL
-planning_effort: high                 # low | medium | high (hint for Planning)
-dev_effort: high                      # low | medium | high (hint for Development)
+priority: critical                      # critical | high | medium | low
+size: M                               # S | M | L | XL
+planning_effort: low                  # low | medium | high (hint for Planning)
+dev_effort: medium                      # low | medium | high (hint for Development)
 boundaries:
   owns:
     - delivery/
@@ -20,7 +20,7 @@ task_kind: feature                    # feature | bugfix: the spec follows sdd-s
 workflow: sdd-proposal
 ---
 
-# [PROP-worker-range-validation] Recorded write scopes, range validation and drift handling for orchestrated units
+# [PROP-worker-range-validation] One-command worker result inspection for orchestrated units
 
 ## 1. Background & Hypothesis
 
@@ -29,43 +29,42 @@ workflow: sdd-proposal
   the last accepted head, every changed path inside the write scope, a clean worktree, the cumulative rules check
   and `devkit workflow next`. The write scope exists only in the delegation payload, so each scope check was a
   hand-written pattern.
-- **Scope gaps**: two units needed edits outside their scope. The superseded ADR's frontmatter
-  (`status: superseded`, `superseded_by`) fell to the Host at integration, and a link a file move broke was fixed by
-  the worker outside its scope (`FB-worker-scope-misses-link-repairs`).
-- **Base drift**: a long-running unit (the package split) integrated against a main that had gained a script
-  assuming the old layout; the scope registry did not flag it and the Host found it only through failing tests after
-  the merge. Handoff also does not report commits since `plan-accept` that touched a proposal's targets
-  (`FB-handoff-premise-drift-unreported`). After merging the base, a worktree's environment and managed copies were
-  stale until `devkit sync` ran again.
-- **Reviewer input**: the `reconcile-reviewer` has no shell and its payload lists no changed files, so it cannot
-  check the actual diff (`FB-reconcile-reviewer-no-diff-list`).
-- **Hypothesis**: a recorded write scope plus one validation command, a scope derived from the unit's own records,
-  and an explicit drift step for long units remove most of the Host's manual work without changing any gate.
+- **Reviewer input**: `FB-reconcile-reviewer-no-diff-list` identifies missing changed-file information in the
+  read-only reviewer's payload. The same Git inspection can supply it.
+- **Hypothesis**: A small command that collects existing checks and diff information saves repeated shell work. It
+  provides evidence for the main agent; it does not become another approval gate or coordination system.
 
-## 2. Technical Spike Questions
+## 2. Planning Scope
 
-- **Q1 (Recorded scope)**: where the write scope lives (the `worker` envelope, a payload record committed before the
-  turn, or the scope registry), and whether the worker or the Host writes it.
-- **Q2 (Validation command)**: the command's shape (for example a `devkit spec delegate validate --unit <dir>
-  --from <head>`), what it checks (ancestry, paths against the recorded scope, clean status, envelope check, rules
-  against the merge base, `workflow next`), its codes, and which package owns it.
-- **Q3 (Scope derivation)**: which records yield scope paths automatically: reconcile targets, ADRs a promoted ADR
-  supersedes (frontmatter only), files whose links a move breaks, `.devkit/installation.json` after a sync.
-- **Q4 (Base drift)**: when a long unit integrates the base (every stage boundary, before review, or on a drift
-  report), who does it (worker or Host), and what a drift report lists (base commits touching the unit's scope or
-  imports).
-- **Q5 (Worktree refresh)**: whether `devkit worktree` re-runs setup and `devkit sync` after the base is merged
-  into a worktree, or the skill names the step.
-- **Q6 (Reviewer diff list)**: whether delegation payloads for read-only reviewers carry the changed-path list and
-  head, generated by the same command.
+Implement a thin wrapper in `devkit-spec` around the checks the Host already performs. Use an explicit starting
+head, returned head and Host-supplied write scope. Reuse an existing delegation record when available; do not make
+workers author a new mandatory committed scope record or extend the envelope schema just for this helper.
+
+Planning settles only the CLI arguments, concise result fields and reuse of existing check APIs. Prefer existing
+conventions without introducing a separate scope authority or validation lifecycle.
 
 ## 3. Proposed Design & Impact
 
-- Affected: `spec-delegate` and `spec-orchestrate` skills, worker role contracts, possibly a new `devkit spec`
-  subcommand in `devkit-spec` and a `devkit worktree` refresh in `devkit-agt`; `CAP-DLV-delivery-workflows` and
-  `CAP-DLV-workflow-envelopes` if the `worker` envelope gains a scope field.
-- Gates, policies and authority stay as they are; this changes how the Host checks results, not what it may accept.
-- Likely split in Planning: recorded scope and validation (Q1, Q2, Q3, Q6) and drift handling (Q4, Q5).
+- One invocation reports ancestry, changed paths, paths outside the supplied scope, worktree status, existing
+  envelope validation, cumulative rules results and `devkit workflow next`. Include the compared heads and changed
+  paths in information the agent can pass to a read-only reviewer.
+- Default output carries the result and actionable findings; structured output is one JSON object. Preserve the
+  stable codes and actions of existing checks and report checks that could not run distinctly from negative results.
+- Scope mismatches and worktree observations are information for the main agent to assess. The command MUST NOT
+  add an approval request, workflow gate, integration refusal, mandatory scope registration or override option.
+  Existing rules, delegation write boundaries and approval gates retain their current meaning; the helper neither
+  weakens them nor adds a new blocking prerequisite to accepting a worker result.
+- The agent decides how to act on findings and runs any corrective commands. The helper does not modify files,
+  merge the base, refresh environments, run `devkit sync`, retry operations or automatically enlarge write scope.
+- Affected: a small `devkit spec` command, `spec-delegate` and `spec-orchestrate` guidance, reviewer payload guidance,
+  and `CAP-DLV-delivery-workflows`. No new worker envelope fields are required.
+
+**Non-Goals**: automatic scope derivation or expansion, link-repair ownership inference, base-drift detection or
+merging, worktree environment refresh, new approval gates, and automatic enforcement of helper findings.
+
+**Separate feedback**: `FB-worker-scope-misses-link-repairs` and `FB-handoff-premise-drift-unreported` remain open for
+scope construction and handoff drift respectively. Neither is required for this command and neither is implemented
+by this proposal.
 
 ## 4. Lifecycle & Retirement Criteria
 
