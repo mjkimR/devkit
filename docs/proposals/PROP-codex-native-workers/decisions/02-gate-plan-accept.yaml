@@ -1,0 +1,10 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: direction-handoff
+note: Accept Codex native spawning with emulated worker contracts, trust-aware role
+  fallback, command-scoped approvals and truthful refusal results; medium Development,
+  no process worker or MCP broker; preserve other-host behavior.
+by: user
+at: '2026-10-19T08:00:00.021765Z'
