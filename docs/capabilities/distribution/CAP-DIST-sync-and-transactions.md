@@ -216,8 +216,8 @@ spec = "core"
   `[workflow.stages]` with `collect-feedback` at `on`: representative names, not a fixed schema) and `worktree`
   (`pull_request = "auto"`, `delete_branch = true`, `stale_after = "14d"`, no setup command; `setup = "uv sync"` is
   marked as an example), so each template lives with the engine that applies it and a standalone `devkit-dist`
-  template shows no harness table. With `devkit-agt` installed the template is byte for byte the one distribution
-  hard-coded before the split. See `CAP-DLV-workflow-orchestration` and `CAP-WT-task-worktrees` for their
+  template shows no harness table. With `devkit-agt` installed these tables render right after the project's tables
+  and before any `[tool.*]` table, in the order and text shown above (`ADR-dist-config-receipt-ownership`). See `CAP-DLV-workflow-orchestration` and `CAP-WT-task-worktrees` for their
   behavior.
 - **Tool tables**: a package registers a callable under the `devkit.config_template` entry-point group, named after
   its `[tool.<name>]` table. Called with no argument, it returns `list[devkit.core.TemplateTable]`

@@ -93,7 +93,8 @@ devkit-dist = { git = "https://github.com/mjkimR/devkit.git", subdirectory = "pa
 A project that uses the devkit harness (rules, commit gates, workflows)
 declares `devkit-agt` (`subdirectory = "packages/devkit"`) in place of
 `devkit-dist`; it depends on `devkit-dist` at the same version, so a project
-never declares both.
+never declares both. A bundle that ships rule, gate or workflow assets needs
+`devkit-agt` in place of `devkit-dist`: only `devkit-agt` runs those kinds.
 
 In a single project, depend on it by path:
 

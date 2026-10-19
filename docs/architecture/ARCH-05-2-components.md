@@ -61,15 +61,17 @@ graph TD
 4. `distribution` imports `core`, `advisory`, `search`, and `host`.
 5. No `devkit-dist` module (`devkit.cli` and `devkit.__main__` included) references a `devkit-agt` area: not by
    import, importing call, dotted module string or `module:attribute` string, and no `devkit-dist` entry point
-   targets one. Rule code under a data area's `bundle/` (the `advisory` bundle's rule) is bundle content run by the
-   rule engine and may use its public API.
+   targets one. Rule code under the `advisory` bundle's `bundle/` is bundle content (rule 11).
 6. `rules` imports `core`, `advisory`, and `compact` (`devkit rules test` runs rule tests through `compact`).
 7. `workflow` imports `core`, `advisory`, and `rules`.
 8. `gate` imports `core`, `advisory`, `rules`, and `compact`.
 9. `compact` and `worktree` import only `core` and `advisory`.
-10. `integration` imports `core`, `advisory`, `host`, and `worktree`.
+10. `integration` imports `core`, `advisory`, `host`, and `worktree`; `generated` imports `core`, `advisory`, and
+    `compact`.
 11. The data-only bundle areas (`advisory_guide`, `commits_guide` in `devkit-dist`; `authoring_guide`,
-    `harness_guide` in `devkit-agt`) import nothing from their package modules.
+    `harness_guide` in `devkit-agt`) import nothing from their package modules. Rule code under a data area's
+    `bundle/` (no package, loaded by the rule engine from the synchronized copies) is bundle content and may use the
+    public rule API: `rules` for `advisory_guide`, `core`, `advisory` and `rules` for `authoring_guide`.
 12. `devkit.cli` maps its built-in commands to `devkit-dist` module references and lazy-loads them only when the
     command executes; `devkit-agt` commands come from `devkit.commands` entry points (`ARCH-05-3-command-plugins`).
 13. An area that loads an entry point group may load a target of a higher area only through a declared dependency

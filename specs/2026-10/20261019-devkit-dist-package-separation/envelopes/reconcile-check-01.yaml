@@ -1,0 +1,38 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T02:11:26.136350Z'
+status: completed
+summary: 'reconcile-reviewer (nested, high): 31 targets equal the changed Living Spec files; contracts verified against code; no-impact for stories and ADRs holds; 5 doc findings, no contract mismatch'
+findings:
+- issue: ARCH-05-1 says devkit-viewer gets its shared core from devkit-agt; devkit.core ships in devkit-dist
+  evidence: docs/architecture/ARCH-05-1-containers.md:103
+  failure_condition: A reader takes devkit-agt as owner of devkit.core, contradicting ADR-dist-foundation-ownership
+  suggested_action: 'Reword: devkit-agt kept as dependency, it brings devkit-dist whose devkit.core the viewer uses'
+  resolution: open
+- issue: History narration in current-state docs (before the split; measured in Planning)
+  evidence: docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md:219
+  failure_condition: Breaks spec-sync Principle 4; also ARCH-05-3-command-plugins.md:35
+  suggested_action: State the current contract and cite the ADR or spec instead
+  resolution: open
+- issue: ARCH-05-2 layering rules omit generated's edges and the authoring bundle rule content allowance
+  evidence: docs/architecture/ARCH-05-2-components.md:58
+  failure_condition: The rule list does not match the devkit-agt area table the layering test enforces
+  suggested_action: Add the generated rule and extend the bundle content rule to authoring_guide
+  resolution: open
+- issue: The devkit bundle in-repo-bundle instruction lacks the rule that bundles with rule, gate or workflow assets need devkit-agt
+  evidence: packages/devkit-dist/src/devkit/distribution/guide/bundle/instructions/in-repo-bundle.md:93
+  failure_condition: An agent in a dist-only installation ships rules nothing runs; mirror out of step with CAP-DIST-in-repo-bundles
+  suggested_action: Add one sentence naming devkit-agt for such bundles, without harness commands
+  resolution: open
+- issue: ARCH-07 consumer workspace layout omits the harness managed directory of the default devkit-agt installation
+  evidence: docs/architecture/ARCH-07-deployment.md:68
+  failure_condition: The deployment view shows a dist-only layout for the default combined installation
+  suggested_action: Add harness/ with a with-devkit-agt comment
+  resolution: open
+checks: {}
+diff_scope:
+  base: 4325a4df0eef83c49c634e70f3634e1b4d200363
+  head: 0b29e7ffdfd5e7e66758b57651097f980931e182
+activity_effort: high

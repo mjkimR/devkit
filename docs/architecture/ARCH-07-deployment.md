@@ -67,7 +67,8 @@ When installed and synchronized, devkit establishes the following layout inside 
 │   ├── installation.json      # Machine-generated installation receipt
 │   ├── managed/               # Pristine read-only bundle asset copies
 │   │   ├── devkit/
-│   │   └── advisory/
+│   │   ├── advisory/
+│   │   └── harness/           # with devkit-agt (auto-selected harness bundle)
 │   ├── overrides/             # Local modifications to upstream bundle assets
 │   └── transient/             # Atomic transaction journals
 ├── .agents/skills/            # Projected skills shared by Codex and Antigravity

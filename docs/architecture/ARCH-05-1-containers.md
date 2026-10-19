@@ -100,8 +100,9 @@ the ones below it.
   for several local repositories.
 - **Contents**: the server (`devkit_viewer`) and, under `frontend/`, one Svelte source for the page and for the
   component library whose `npm pack` tarball autohub vendors. Node is needed only to change the frontend.
-- **Dependencies**: `devkit-agt` (its shared core) and `click`; no `devkit-spec` code, since the page parses the
-  documents itself.
+- **Dependencies**: `devkit-agt` and `click`; it uses only `devkit.core` and `devkit.advisory`, which reach it through
+  `devkit-agt`'s dependency on `devkit-dist` (the viewer keeps its `devkit-agt` dependency,
+  `SPEC-devkit-dist-package-separation`); no `devkit-spec` code, since the page parses the documents itself.
 - **Contracts**: `CAP-VIEW-repository-viewer`, `ADR-viewer-distribution-and-frontend-build`,
   `ADR-read-only-local-server-over-git-refs`.
 
