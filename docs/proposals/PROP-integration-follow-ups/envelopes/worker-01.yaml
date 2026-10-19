@@ -1,0 +1,111 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T06:08:24.122197Z'
+status: needs_input
+summary: 'Planning at high: status reviewing; scout-01 and four challenger rounds (challenger-01..04, round 4 = cap). Design settled for base advances: no-ff default with an ff-only key, merge built in the object store and fast-forwarded, an effective-policy digest with a receipt check on the merge, readiness re-run on the result, one build per call, a cleanup-only prepare for merged branches. PADR-merge-commit-outside-checkout, PADR-effective-policy-digest, PADR-target-advance-readiness. Section 3 Coordination corrected: the package separation is complete. Round closures: rounds 1-3 fixed every finding (see each next round''s summary); round 4 #3 and #4 were self-verified (concrete suggested_action applied as written, only in 3.2 and PADR section 4, no decision changed); #1 and #2 recur, so they cannot be self-verified and are handed over. Five questions wait (q1-split, e1-merge-method, t-tests-on-result, a-approval-lifetime, m-milestone-wording). dev_effort stays high.'
+findings:
+- issue: 'Cap round hand-over: challenger-04 #1 (cleanup-only request guard base, result and expected policy) was fixed as its suggested_action states but recurs challenger-03 #1, so it cannot be closed by self-verification.'
+  evidence: docs/proposals/PROP-integration-follow-ups/proposal.md
+  suggested_action: One fresh challenger round outside the cap on commit 68764c8 (resolution envelope), or accept the fix.
+  resolution: open
+  severity: P2
+- issue: 'Cap round hand-over: challenger-04 #2 (push fallback without git pull -m) was fixed as suggested but recurs challenger-03 #3; #3 (package-neutral SHA-preserving fix texts) and #4 (absent receipt) were applied as written and meet the minor-fix conditions.'
+  evidence: docs/proposals/PROP-integration-follow-ups/proposal.md
+  suggested_action: Covered by the same fresh round.
+  resolution: open
+  severity: P3
+assumptions:
+- The pending questions' recommended options are what section 3.2 describes; any other answer reopens the affected bullets
+- Git semantics for commit-tree signing, merge-tree (2.38, exit 1 on conflict) and git pull --rebase=merges come from documentation, not execution
+unverified_areas:
+- Whether git pull --rebase=merges keeps unit SHAs (left to a Development fixture)
+- Antigravity, OpenCode, Claude Desktop, VS Code and Agent SDK confirmation surfaces (Q4 research)
+- Challenger rounds 2-4 reviewed head files without running the diff (no shell)
+checks: {}
+diff_scope:
+  base: 9a60a06eda8b80df8c1bbdf32d7792bd10670c1c
+  head: 68764c814e81006bfafc188b9f28c0ab03bec55a
+questions:
+- id: q1-split
+  title: Split and order of the four extensions
+  prompt: Should this proposal narrow to the base advances and leave the other three extensions to separate drafts?
+  context: This decides what this proposal hands off to Development and what stays for later Planning. Base advances affect every integration today, and auto dispatch needs them. Auto dispatch contradicts the accepted ADR-integration-approval-asserted word for word ('no policy value grants commit, merge, publication or deletion authority'), so it needs your decision on policy authority before anyone plans it. Pull request cleanup needs its own squash-equivalence proof. Host confirmation is research on the hosts, independent of the rest; the Claude Code terminal is already verified.
+  options:
+  - id: split
+    description: Narrow this proposal to base advances (E1 to E6) and retitle it. Create child drafts for pull request cleanup (Q3) and host confirmation (Q4). Auto dispatch (Q2) stays as open feedback until you decide whether a policy may ever grant merge and deletion authority.
+    recommended: true
+  - id: split-all
+    description: As above, but also create an auto-dispatch child draft now. Its Planning starts with the policy-authority decision and ends in a superseding ADR if you say yes.
+    recommended: false
+  - id: together
+    description: 'Keep all four in one spec: one large XL Development, and auto dispatch still needs a superseding ADR inside it.'
+    recommended: false
+  - id: backlog
+    description: Return the whole proposal to Backlog for decomposition (needs_decompose) and plan nothing now.
+    recommended: false
+  allow_note: true
+- id: e1-merge-method
+  title: Merge method default
+  prompt: Should integration land every task as a merge commit (no-ff) by default, with ff-only as a project option?
+  context: Your Backlog leaning was no-ff. Planning found it the only option whose history shape does not depend on timing. It keeps every SHA the unit records cite reachable, gives one --first-parent line per task, and lets a later target be merged in without a new confirmation. The cost is one extra commit per integration, even when the target did not move.
+  options:
+  - id: no-ff-default
+    description: New [worktree] merge key, default no-ff, with ff-only available for projects that need linear history (ff-only in either policy wins).
+    recommended: true
+  - id: no-ff-only
+    description: 'Always no-ff with no key: simpler, but a project cannot keep linear history.'
+    recommended: false
+  - id: ff-only-default
+    description: 'Keep ff-only as the default and make no-ff opt-in: base advances stay refused unless a project opts in.'
+    recommended: false
+  allow_note: true
+- id: t-tests-on-result
+  title: Tests on the merged result
+  prompt: When later target commits are merged in cleanly during the confirmation, is it acceptable that only the CI rules run on the merged result, not the tests?
+  context: Today ff-only makes the landed tree the verified tree. With base advances tolerated, a target change that breaks the source semantically, with no textual conflict and no rule violation, can land on main. The window is limited to commits landed during the confirmation and execution, because prepare still requires the branch to contain the target. The executor never runs commands.
+  options:
+  - id: disclose
+    description: Accept it. The form and the integration report say that tests and review ran on the source and only the CI rules ran on the result; main's own CI finds the rest.
+    recommended: true
+  - id: path-disjoint
+    description: Merge in a later target only when its changed paths are disjoint from the source's. Otherwise refuse. This cuts textual merges, but semantic breaks across files remain.
+    recommended: false
+  - id: scratch-tests
+    description: Build the result in a scratch worktree and run a configured check command there. The landed tree is then tested, but this needs an ADR, because the executor would run commands.
+    recommended: false
+  allow_note: true
+- id: a-approval-lifetime
+  title: Approval lifetime for target advances
+  prompt: Should an approval tolerate target advances only within the integrate call that asked for it?
+  context: The approval no longer binds the target SHA. Without a bound, a retained request could be resumed hours later onto a target that gained many unrelated commits, with no second look from you.
+  options:
+  - id: within-call
+    description: Only within that call. integration_resume continues only onto the last build target (permission failures, cleanup after the merge); a later target needs a new confirmation.
+    recommended: true
+  - id: process-lifetime
+    description: Any later target while the MCP process keeps the request, stated in the form text.
+    recommended: false
+  - id: expiry
+    description: A time bound (for example 30 minutes from the confirmation), then a new confirmation.
+    recommended: false
+  allow_note: true
+- id: m-milestone-wording
+  title: Milestone exit-condition wording
+  prompt: May Development update MS-multi-host-native-integration's exit condition from 'bound to the verified source and target commits' to 'bound to the verified source commit and the confirmation target and its descendants'?
+  context: The base-advance design changes what the approval binds. The milestone text is yours to change, so Planning did not rewrite it. Left as is, reconcile would report a mismatch with the milestone.
+  options:
+  - id: update
+    description: Development updates the wording during reconcile, in the same change.
+    recommended: true
+  - id: keep
+    description: Keep the wording; the milestone then treats the new binding as not meeting its exit condition.
+    recommended: false
+  allow_note: true
+problem:
+  cause: 'The bounded review loop reached its cap (round 4) with two recurring findings (challenger-04 #1 P2, #2 P3) fixed as suggested but not independently verified; recurring findings cannot be closed by self-verification.'
+  attempts:
+  - Applied each round-4 suggested_action in proposal 3.2 and PADR-merge-commit-outside-checkout section 4 (commit 68764c8)
+  recovery: Answer the questions; then either request one fresh challenger round outside the cap on the answered proposal (recorded with a resolution envelope naming this problem), or accept the round-4 fixes as they stand.
+activity_effort: high
