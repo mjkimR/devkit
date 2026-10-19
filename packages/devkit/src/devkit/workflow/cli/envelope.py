@@ -243,7 +243,14 @@ def envelope_new_cmd(kind: str, **options: Any) -> None:
 
 @envelope_group.command(name="worker")
 @_common(stage_required=True)
-@click.option("--questions-file", default=None, help="YAML list of questions for a person (path, or - for stdin)")
+@click.option(
+    "--questions-file",
+    default=None,
+    help=(
+        "YAML list of questions for a person, each {id, title, prompt, context?, options: [{id, description,"
+        " recommended?}], allow_note?} (path, or - for stdin)"
+    ),
+)
 @click.option("--problem", default="", help="An execution problem: its cause (with --recovery; needs_input or failed)")
 @click.option("--tried", "attempts", multiple=True, help="What was tried against the problem (repeatable)")
 @click.option("--recovery", default="", help="The recommended recovery for the problem")
@@ -264,7 +271,11 @@ def envelope_worker_cmd(**options: Any) -> None:
 @envelope_group.command(name="answer")
 @_common()
 @click.option("--answers-to", default="", help="The worker-NN.yaml whose questions it answers")
-@click.option("--answers-file", default=None, help="YAML list of rewritten answers (path, or - for stdin)")
+@click.option(
+    "--answers-file",
+    default=None,
+    help="YAML list of rewritten answers, each {question, choice, decision, constraints?} (path, or - for stdin)",
+)
 @FORMAT_OPTION
 @boundary
 def envelope_answer_cmd(**options: Any) -> None:

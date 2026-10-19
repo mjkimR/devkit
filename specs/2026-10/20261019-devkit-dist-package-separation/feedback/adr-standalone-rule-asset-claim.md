@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-19
 ---
 
@@ -53,3 +53,5 @@ advisory_guide/bundle/bundle.toml: id = "unique-code", kind = "rule", source = "
   [presets.python] assets = ["agent-advisory", "agent-advisory-python", "unique-code"]
 previous layering table: "advisory_guide": {"rules"}
 ```
+
+- **Disposition**: No change: the ADR stays as accepted rationale, and the Living Spec already states the exception (CAP-DIST-manifest-spec, CAP-DIST-in-repo-bundles: rule assets deploy without devkit-agt with HARNESS_ENGINE_MISSING)

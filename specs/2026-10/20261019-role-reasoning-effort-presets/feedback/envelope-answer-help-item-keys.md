@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-19
 ---
 
@@ -53,3 +53,5 @@ $ devkit workflow envelope answer --help
 
 model.py: ANSWER_KEYS = ("question", "choice", "decision", "constraints")
 ```
+
+- **Disposition**: packages/devkit/src/devkit/workflow/cli/envelope.py: --answers-file and --questions-file help name their item keys

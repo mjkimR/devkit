@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-19
 ---
 
@@ -33,3 +33,5 @@ created_at: 2026-10-19
 - Scaffolded frontmatter excerpt: `target_area: capabilities/<area>/` and `owns: - capabilities/<area>/`.
 - `devkit spec proposal new --help` lists `--task-kind`, `--planning-effort`, `--dev-effort`, `--namespace`,
   `--summary`, `--supersedes`, `--decomposed-from`, `--needs-decompose`, `--with-target-docs`; no target-area option.
+
+- **Disposition**: PROP-envelope-record-gaps: a rule for the literal target_area placeholder (Q3); proposal new already takes --target-area for both fields

@@ -126,7 +126,8 @@ sequence.
     of size and a separate `reconcile-reviewer` check, at `high` with both reviewers in the bounded review loop below.
     Only medium permits omitting the initial reconcile reviewer when all affected contracts
     and documents are identified, agreement with the actual diff is directly demonstrated, and no unresolved contract
-    interpretation or cross-component impact remains. The implementer then records a self-check, omission reason and
+    interpretation or cross-component impact remains (behavior or agent-facing text changed in more than one package
+    or capability area; references updated elsewhere do not count). The implementer then records a self-check, omission reason and
     verification evidence in `reconcile-check`; small size alone is insufficient. At medium the implementer verifies
     fixes and subsequent changes and decides repeat calls, considering expanded scope, uncertain correctness and
     contract interpretation. A failed or stale initial call is not required-review evidence. These choices do not

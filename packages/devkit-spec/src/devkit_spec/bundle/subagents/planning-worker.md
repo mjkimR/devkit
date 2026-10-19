@@ -44,7 +44,7 @@ The caller's payload: `task_goal` (this proposal's Planning), `relevant_files` (
    user run the enabled `collect-feedback` sweep (this run plus committed records); write fresh feedback
    evidence before the single worker record. Never reuse a prior run's PASS as coverage. Stage-off writes no sweep
    envelope but preserves observed capture; requested-only writes policy-skip PASS without observations. Record
-   incomplete coverage as FAIL with its gap. Then end the turn with exactly one `worker` envelope (`devkit workflow envelope worker --unit <proposal dir> --stage <stage> --effort <activity-effort> --head <your last work commit> ...`, `--stage` (the stage `next` named) and `--effort` always): with `--questions-file -` (each `id`, `title`, `prompt`, `context`, `options` with one `recommended`; written for the user: `context` says what the answer decides and why it matters now, each option what it leads to) when questions wait, which makes it `needs_input`, and with a problem when you stop on one. Commit it with the turn's last changes.
+   incomplete coverage as FAIL with its gap. Then end the turn with exactly one `worker` envelope (`devkit workflow envelope worker --unit <proposal dir> --stage <stage> --effort <activity-effort> --head <your last work commit> ...`, `--stage` (the stage `next` names when you write it, after the run's other records) and `--effort` always): with `--questions-file -` (each `id`, `title`, `prompt`, `context`, `options` with one `recommended`; written for the user: `context` says what the answer decides and why it matters now, each option what it leads to) when questions wait, which makes it `needs_input`, and with a problem when you stop on one. Commit it with the turn's last changes.
 
 ## Return
 

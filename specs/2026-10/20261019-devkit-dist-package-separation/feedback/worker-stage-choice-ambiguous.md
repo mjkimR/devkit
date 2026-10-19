@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-19
 ---
 
@@ -46,3 +46,5 @@ created_at: 2026-10-19
 devkit workflow next (start of run): [STAGE: collect-feedback ...] [UNMET: envelope-check-pass(feedback swept)]
 planning-worker.md step 6: "--stage (the stage `next` named) and --effort always"
 ```
+
+- **Disposition**: worker-records.md and both worker contracts: --stage is the stage next names when the worker envelope is written, after the run's other records

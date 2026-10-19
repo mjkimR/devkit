@@ -13,7 +13,7 @@ devkit workflow envelope worker --unit <dir> --stage <stage> --summary "<what th
   --effort <low|medium|high> --check tests="PASS 14/14" --head <last commit>
 ```
 
-- `--stage` and `--effort` are always passed: the stage `devkit workflow next` names (devkit refuses a `worker` envelope without one), and the only record of the effort the run applied.
+- `--stage` and `--effort` are always passed: the stage `devkit workflow next` names when the envelope is written, after the run's other records (devkit refuses a `worker` envelope without one), and the only record of the effort the run applied.
 - `--head <last commit>` is the head of the work the run did: `git -C <worktree> rev-parse HEAD` after its last work commit, before the commit that adds this envelope. The envelope then goes in one more commit (alone, or with the run's last changes), whose id is the run's **final HEAD**, the one it returns to you. So `diff_scope.head` is always the parent side of the final HEAD, never equal to it: validate the range up to the final HEAD, and check that `diff_scope.head` is its ancestor ([spec-delegate's worker reference](../../spec-delegate/references/worker.md)).
 
 - **Questions**: add `--questions-file <path>|-`, a YAML list of `id`, `title` (40 characters at most), `prompt`, optional `context` (what the answer decides and why it matters, for a reader who has not seen the work), `options` (`{id, description, recommended}`, at most one recommended) and `allow_note`; the status becomes `needs_input`. Gather every question of the round in it; finish everything that does not depend on an answer first.

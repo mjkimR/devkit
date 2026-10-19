@@ -638,11 +638,11 @@
     },
     ".agents/agents/development-worker.md": {
       "mode": 420,
-      "sha256": "eec753d0b1722a7f85d569845750c00d264ccf8b619c3a0bbc02aa5c3293de26"
+      "sha256": "80a96a28d529d783bb7a51c140c84f5df7ced4b956cc8a5e3dfde34917d572fe"
     },
     ".agents/agents/planning-worker.md": {
       "mode": 420,
-      "sha256": "7dfbace6c59953c073e234626864f073f17f1e43dfecec31053cb47ad71a0dd1"
+      "sha256": "559a481661197d98213856894472413a99ebe1e1e7e9dc465af709f4e0e3adea"
     },
     ".agents/agents/reconcile-reviewer.md": {
       "mode": 420,
@@ -798,7 +798,7 @@
     },
     ".agents/skills/spec/references/effort.md": {
       "mode": 420,
-      "sha256": "e2025d9aaf52cc65b54e2087b396ec47506bc2ef37e721930653bb8bc43a304f"
+      "sha256": "48f77b7ed2c0af92493806b9429707465b1172730ee38cd2bd65fe0b91a23778"
     },
     ".agents/skills/spec/references/envelope.md": {
       "mode": 420,
@@ -822,7 +822,7 @@
     },
     ".agents/skills/spec/references/worker-records.md": {
       "mode": 420,
-      "sha256": "781660bc2add7507ea164af73f999aca470d8f03e8ba8204b591ec3afff9a87c"
+      "sha256": "6675ee80989e4c6e09c3898419f7cf4c606666c768cf0b78e804188889b7ef83"
     },
     ".agents/skills/spec/references/worktree.md": {
       "mode": 420,
@@ -838,11 +838,11 @@
     },
     ".claude/agents/development-worker.md": {
       "mode": 420,
-      "sha256": "0b26d92795337937c00e3303dfc9aaeaa64e1e3980c350d714766cc272f608fa"
+      "sha256": "0c1f20df496279f4ffbc8831694eaca40686706f8fdc5f71f82395e2794d8462"
     },
     ".claude/agents/planning-worker.md": {
       "mode": 420,
-      "sha256": "8e26fb7c2b5cebf8cbdf323a9fa772355edf18cf629944848bf4a8720589f43d"
+      "sha256": "36707fb7e8a428030a26c5db3c4f26a8c4415ec465f9fa1413983d00345b9fb5"
     },
     ".claude/agents/reconcile-reviewer.md": {
       "mode": 420,
@@ -986,7 +986,7 @@
     },
     ".claude/skills/spec/references/effort.md": {
       "mode": 420,
-      "sha256": "e2025d9aaf52cc65b54e2087b396ec47506bc2ef37e721930653bb8bc43a304f"
+      "sha256": "48f77b7ed2c0af92493806b9429707465b1172730ee38cd2bd65fe0b91a23778"
     },
     ".claude/skills/spec/references/envelope.md": {
       "mode": 420,
@@ -1010,7 +1010,7 @@
     },
     ".claude/skills/spec/references/worker-records.md": {
       "mode": 420,
-      "sha256": "781660bc2add7507ea164af73f999aca470d8f03e8ba8204b591ec3afff9a87c"
+      "sha256": "6675ee80989e4c6e09c3898419f7cf4c606666c768cf0b78e804188889b7ef83"
     },
     ".claude/skills/spec/references/worktree.md": {
       "mode": 420,
@@ -1422,7 +1422,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/effort.md": {
       "mode": 420,
-      "sha256": "e2025d9aaf52cc65b54e2087b396ec47506bc2ef37e721930653bb8bc43a304f"
+      "sha256": "48f77b7ed2c0af92493806b9429707465b1172730ee38cd2bd65fe0b91a23778"
     },
     ".devkit/managed/spec/skills/spec/references/envelope.md": {
       "mode": 420,
@@ -1446,7 +1446,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/worker-records.md": {
       "mode": 420,
-      "sha256": "781660bc2add7507ea164af73f999aca470d8f03e8ba8204b591ec3afff9a87c"
+      "sha256": "6675ee80989e4c6e09c3898419f7cf4c606666c768cf0b78e804188889b7ef83"
     },
     ".devkit/managed/spec/skills/spec/references/worktree.md": {
       "mode": 420,
@@ -1462,11 +1462,11 @@
     },
     ".devkit/managed/spec/subagents/development-worker.md": {
       "mode": 420,
-      "sha256": "da1247e76421cb865a0755849975ca7ecf283004c49aa163ca645edb0f35b9b4"
+      "sha256": "6cbbcfd242a5c2de4a38bc5ac8e930acbc892120674a86fea844dff54a5698a6"
     },
     ".devkit/managed/spec/subagents/planning-worker.md": {
       "mode": 420,
-      "sha256": "a9ca9f82226b56a13ecf70c04ca080830525d8ebb218c7c1551db6e635e6b224"
+      "sha256": "b4d71da9950680b1a70bc60b5486217199897fc39474f7706d5cdc17339243f8"
     },
     ".devkit/managed/spec/subagents/reconcile-reviewer.md": {
       "mode": 420,

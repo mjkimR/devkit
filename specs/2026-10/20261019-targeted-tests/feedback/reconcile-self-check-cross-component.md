@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-19
 ---
 
@@ -49,3 +49,5 @@ effort.md, Medium initial reconcile exception:
 identified, their agreement with the actual diff can be directly demonstrated, and there is no unresolved contract
 interpretation or cross-component impact. ... If any condition is uncertain, call the reviewer."
 ```
+
+- **Disposition**: skills/spec/references/effort.md: the medium reconcile exception defines cross-component impact with one example each way

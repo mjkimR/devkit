@@ -110,7 +110,7 @@ resolves: worker-02.yaml     # the run whose problem it resolves
 
 | Kind | Fields | Rules |
 | --- | --- | --- |
-| `worker` | `questions`, `problem` (both optional; no other kind carries them) | One per run, naming the `stage` it worked in (a worker envelope without one is malformed; `envelope worker` requires `--stage`). `needs_input` asks questions or reports a problem (an empty one is malformed). With `questions` the status is `needs_input`; each question is shaped like a `choose` request (`CAP-DLV-human-interaction`). `failed` requires `problem`; `completed` refuses it. A run that both asks and hit a problem records both, with status `needs_input`. |
+| `worker` | `questions`, `problem` (both optional; no other kind carries them) | One per run, naming the `stage` `devkit workflow next` names when it is written, after the run's other records (a worker envelope without one is malformed; `envelope worker` requires `--stage`). `needs_input` asks questions or reports a problem (an empty one is malformed). With `questions` the status is `needs_input`; each question is shaped like a `choose` request (`CAP-DLV-human-interaction`). `failed` requires `problem`; `completed` refuses it. A run that both asks and hit a problem records both, with status `needs_input`. |
 | `answer` | `answers_to`, `answers` (both required) | Status `completed`. `answers_to` names a well-formed `worker-NN.yaml` of the unit that has questions; each answer names one of them and, unless `choice` is `null`, one of that question's options. |
 | `resolution` | `resolves` (required) | Status `completed` and a non-empty `summary`. `resolves` names a well-formed `worker-NN.yaml` of the unit that carries a `problem`. |
 
