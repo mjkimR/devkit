@@ -50,3 +50,6 @@ Entrypoint derivation was reviewed per capability. Existing integration, bundle 
 already own their changed implementations. Broad cross-domain/test candidates were rejected; add only the core
 presentation helper to its configuration/runtime contracts and handoff language helper to proposal incubation.
 Host and human-interaction additions are cross-reference clarifications, not new code ownership.
+
+Optional native visible-form evidence collection is tracked by `FB-native-language-form-evidence-gap`; the
+accepted per-host unverified limitation remains in place until harmless terminal observation supplies evidence.
