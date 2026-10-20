@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-feedback-terminal-status
 feature: SPEC-feedback-terminal-status
-status: pending
+status: resolved
 targets:
   - file: docs/decisions/2026-10/20261019-feedback-resolution-lifecycle.md
     resolution: modified

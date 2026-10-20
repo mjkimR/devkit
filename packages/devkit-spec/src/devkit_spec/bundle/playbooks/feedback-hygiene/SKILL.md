@@ -61,7 +61,7 @@ first; request decisions only beyond that scope:
 | `upstream` | Forward draft | Prepare a report for the owning tool or bundle, including devkit and devkit-spec; submit only with explicit external-send authorization |
 | `unknown` | Ownership review | Inspect the observed targets, propose repository or upstream destinations, and keep unresolved items open |
 
-An asset developed in this repository has `scope: repo` even when shipped as an upstream tool to other projects; promote it locally: a defect with clear
+An asset developed in this repository has `scope: repo` even when shipped as an upstream tool to other projects; address it locally: a defect with clear
 expected behavior becomes a `bugfix` task (`sdd-session-bugfix`, or `sdd-spec-bugfix` when its behavior must be written
 down), a small wording fix a `session` change, an open design question a draft proposal (`uv run devkit spec proposal new <slug>`).
 Record full source FB IDs and the scope received in the destination proposal/spec body (`Source feedback`), or in a
@@ -86,7 +86,7 @@ submission. Append a disposition line so each outcome is traceable:
 
 The destination is the spec, proposal, decision, rule or playbook ID that received the item, the changed file path
 for a `session` fix, or the report location for a forward. A resolution also states the implemented outcome and
-concrete test/review evidence; retain prior promotion history. A dismissal states its reason in the same line.
+concrete test/review evidence. A dismissal states its reason in the same line.
 
 ## Step 5: Stale activity branches
 
