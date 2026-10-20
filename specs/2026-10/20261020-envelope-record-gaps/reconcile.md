@@ -5,6 +5,8 @@ status: pending
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md
     resolution: modified
+  - file: docs/capabilities/delivery/CAP-DLV-cli-and-output.md
+    resolution: modified
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
     resolution: modified
   - file: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md
@@ -24,7 +26,9 @@ targets:
   (`settles` in the answer example, the `answer` table row and the item contract); section 2 (`--findings-file`
   refusal for `challenger`, `--from` with challenger files and its refusal fix, the new `--settle` row, the key order);
   section 3 (`review=<file>` on reverify lines; JSON `review` and `settles`).
-- `CAP-DLV-delivery-workflows` rule 15: Planning closes each round with a reverify of the `challenger-NN` round (also at
+- `CAP-DLV-cli-and-output`: the `envelope answer` synopsis (`--answers-file` optional, `--settle`).
+- `CAP-DLV-delivery-workflows`: the envelope table (Planning's reverify closing a `challenger` round; `settles` on
+  `answer`), the command table (`--settle`), and rule 15: Planning closes each round with a reverify of the `challenger-NN` round (also at
   `medium`), the round count of unmarked rounds and answer folds, and the `plan-accept` request showing each challenger
   round with its closing reverify.
 - `CAP-DLV-proposal-incubation`: the `target_area` row states the accepted boundary forms, the nearest-existing-parent
