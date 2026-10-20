@@ -25,7 +25,7 @@ from devkit.host.errors import HostError
 
 LEDGER = ".devkit/transient/mcp/registrations.json"
 JOURNAL = ".devkit/transient/mcp/journal.json"
-DESTINATIONS = {"codex": ".codex/config.toml", "claude": ".mcp.json"}
+DESTINATIONS = {"codex": ".codex/config.toml", "claude": ".mcp.json", "antigravity": ".agents/mcp_config.json"}
 GROUP = "devkit.mcp.registrations"
 
 
@@ -216,6 +216,8 @@ def collisions(root: Path, host: str) -> list[str]:
     if host == "codex":
         paths.append((Path(os.environ.get("CODEX_HOME", str(Path.home() / ".codex"))) / "config.toml", "user"))
         paths.extend((parent / ".codex/config.toml", "ancestor") for parent in root.parents)
+    elif host == "antigravity":
+        paths.append((Path.home() / ".gemini/config/mcp_config.json", "user"))
     else:
         paths.append((Path.home() / ".claude.json", "user/local"))
         paths.append((Path("/Library/Application Support/ClaudeCode/managed-mcp.json"), "managed"))

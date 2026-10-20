@@ -36,19 +36,22 @@ def repo(tmp_path, monkeypatch):
 
 
 def test_registration_converges_and_uninstall_removes_only_owned(repo, monkeypatch):
-    planned = r.plan(repo, ["codex", "claude"])
+    planned = r.plan(repo, ["codex", "claude", "antigravity"])
     assert not (repo / ".mcp.json").exists()  # planning is read-only
+    assert not (repo / ".agents/mcp_config.json").exists()
     r.apply(planned)
     assert git(repo, "status", "--porcelain") == ""
     snapshots = {name: (repo / name).read_bytes() for name in [*r.DESTINATIONS.values(), r.LEDGER]}
-    assert r.plan(repo, ["codex", "claude"]).changes == []
+    assert r.plan(repo, ["codex", "claude", "antigravity"]).changes == []
     assert snapshots == {name: (repo / name).read_bytes() for name in snapshots}
     monkeypatch.setattr(r.metadata, "entry_points", lambda **kw: [])
-    r.apply(r.plan(repo, ["codex", "claude"]))
+    r.apply(r.plan(repo, ["codex", "claude", "antigravity"]))
     assert r._entry("codex", (repo / ".codex/config.toml").read_bytes()) is None
     assert r._entry("claude", (repo / ".mcp.json").read_bytes()) is None
+    assert r._entry("antigravity", (repo / ".agents/mcp_config.json").read_bytes()) is None
     assert git(repo, "status", "--porcelain") == ""
     assert b"/.mcp.json" in (repo / ".git/info/exclude").read_bytes()
+    assert b"/.agents/mcp_config.json" in (repo / ".git/info/exclude").read_bytes()
 
 
 @pytest.mark.parametrize("tracked,ignored", [(True, False), (True, True), (False, False)])
@@ -248,3 +251,10 @@ def test_claude_code_selection_uses_the_claude_adapter(repo):
     r.apply(r.plan(repo, ["claude-code"]))
     assert (repo / ".mcp.json").is_file()
     assert r.inspect(repo, ["claude-code"])["project"]["claude"]["state"] == "owned"
+
+
+def test_antigravity_selection_uses_the_antigravity_adapter(repo):
+    r.apply(r.plan(repo, ["antigravity"]))
+    assert (repo / ".agents/mcp_config.json").is_file()
+    assert r.inspect(repo, ["antigravity"])["project"]["antigravity"]["state"] == "owned"
+    assert b"/.agents/mcp_config.json" in (repo / ".git/info/exclude").read_bytes()

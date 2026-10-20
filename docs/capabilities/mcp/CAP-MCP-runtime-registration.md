@@ -46,8 +46,8 @@ another server or reconstructed after restart. Retained read-only diagnostics re
 ## Registration contract
 
 Dist discovers the optional `devkit.mcp.registrations` provider without importing runtime/domain module names.
-Ordinary sync reconciles selected Codex `.codex/config.toml` mcp_servers.devkit and Claude `.mcp.json`
-mcpServers.devkit entries when `[mcp] register` is true (default). The ignored local ledger at
+Ordinary sync reconciles selected Codex `.codex/config.toml` mcp_servers.devkit, Claude `.mcp.json`
+mcpServers.devkit, and Antigravity `.agents/mcp_config.json` mcpServers.devkit entries when `[mcp] register` is true (default). The ignored local ledger at
 `.devkit/transient/mcp/registrations.json` records exact owned entries, destinations, workspace, launch descriptor
 and owned exclusion lines. It is separate from the committed installation receipt.
 

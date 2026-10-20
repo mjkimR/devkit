@@ -41,7 +41,7 @@ def config(workspace_root: str | None, executable: str | None, output_format: st
 @cli.command()
 @workspace_option()
 @click.option("--executable", type=click.Path())
-@click.option("--host", multiple=True, type=click.Choice(["codex", "claude"]))
+@click.option("--host", multiple=True, type=click.Choice(["codex", "claude", "antigravity"]))
 @FORMAT_OPTION
 @boundary
 def setup(workspace_root: str | None, executable: str | None, host: tuple[str, ...], output_format: str) -> None:

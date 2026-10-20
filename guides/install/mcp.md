@@ -5,8 +5,8 @@ harness requirement. Source installations must name the source for the optional 
 use the matching dist/advisory/runtime release assets. Runtime installation alone can discover an empty service
 set. Install agt for integration and spec for handoff; domain packages do not need the SDK to import.
 
-Run `devkit sync` in the owning checkout. Selected Codex CLI and Claude Code project entries are reconciled under
-`.codex/config.toml` and `.mcp.json`; `[mcp] register = false` opts out. `devkit mcp config --format json` inspects
+Run `devkit sync` in the owning checkout. Selected Codex CLI, Claude Code and Antigravity project entries are reconciled under
+`.codex/config.toml`, `.mcp.json` and `.agents/mcp_config.json`; `[mcp] register = false` opts out. `devkit mcp config --format json` inspects
 the retained launch descriptor, and `devkit mcp setup --executable /retained/bin/python` explicitly selects a
 verified runtime. It must remain installed after task cleanup, including any editable source locations.
 
