@@ -1,7 +1,7 @@
 ---
 id: PROP-worker-shared-state-mcp
-title: MCP-owned shared state and workspace for workers across worktrees
-summary: "Define an MCP-owned shared state and artifact workspace across worktrees, backed by a base-checkout .devkit/.shared local adapter by default and pluggable server adapters with TTL retention."
+title: Shared state and workspace across worktrees and cloud agents
+summary: "Define a shared state and artifact workspace across worktrees and cloud agents, backed by a base-checkout .devkit/.shared local adapter and pluggable server adapters over dual MCP and CLI surfaces."
 status: draft                         # draft | reviewing | accepted | rejected
 created_at: 2026-10-20
 target_area: capabilities/collaboration/
@@ -21,7 +21,7 @@ workflow: sdd-proposal
 ---
 
 
-# [PROP-worker-shared-state-mcp] MCP-owned shared state and workspace for workers across worktrees
+# [PROP-worker-shared-state-mcp] Shared state and workspace across worktrees and cloud agents
 
 ## 1. Background & Hypothesis
 
@@ -32,82 +32,91 @@ mutations. Register, update, release and recovery still need shared registry and
 artifacts—specifically proposal review reports (`PROP-proposal-review-and-approval`)—without dirtying Git working
 trees or committing localized temporary documents into the public English repository.
 
-The hypothesis is that an MCP-owned shared workspace and coordination layer with a pluggable storage adapter can
-serve both bounded coordination records and TTL-governed shared artifacts across linked worktrees and cloud agents.
-The primary architectural driver for routing through MCP rather than plain CLI calls or a custom background daemon is
-**sandbox privilege delegation without daemon management** (`ARCH-01-introduction-and-goals` §3.4):
+The hypothesis is that a shared workspace and coordination layer with a pluggable storage adapter—exposed through both
+MCP tools and equivalent CLI commands—can serve bounded coordination records and TTL-governed shared artifacts across
+local linked worktrees and unattended cloud agents:
 
-- **Sandbox boundary delegation**: in linked worktrees, host shell sandboxes block writes outside the active worktree
-  (such as `<base-checkout>/.devkit/.shared/`, sibling worktrees, `.git/`, and external network/IPC endpoints, as
-  observed in `MAT-codex-native-worker-evidence`). Because the host spawns the MCP server from the retained base
-  runtime outside the per-command shell sandbox (`CAP-MCP-runtime-registration`), MCP tool calls can read and write
-  shared state without repeated OS sandbox escalations or blocked daemon socket connections.
-- **Host-managed process lifecycle (no custom daemon yet)**: MCP `stdio` gives a proven, host-managed privilege proxy
-  today without maintaining a background daemon, socket lifecycle, or crash-recovery supervisor; if future multi-session
-  in-memory coordination or heavy shared resources justify a dedicated local daemon, the adapter boundary can evolve
-  behind the same tool contract.
 - **Default local adapter (`.devkit/.shared/`)**: resolves to the retained base checkout's `.devkit/.shared/`
   directory from any linked worktree (via common-Git-directory discovery), automatically excluded from Git tracking so
   base-checkout cleanliness checks (`git status --porcelain`) remain clean while IDE `file://` links and local viewers
   can open shared artifacts directly.
 - **Pluggable server adapter (e.g., Firestore)**: selectable via environment variables or local execution
   configuration for Cloud Agent environments where no shared local filesystem exists.
-- **MCP-only agent access**: workers and host agents always read, write and list shared workspace artifacts through
-  devkit MCP tools (built on `SPEC-standalone-devkit-mcp` and `CAP-MCP-runtime-registration`), never by hardcoding
-  storage paths.
+- **Dual MCP and CLI surface (trade-off to evaluate in Planning)**:
+  - **Local multi-worktree (`local-orchestrated`) via MCP**: in linked worktrees, host shell sandboxes block writes
+    outside the active worktree (`<base-checkout>/.devkit/.shared/`, sibling worktrees, `.git/`, and external sockets,
+    as observed in `MAT-codex-native-worker-evidence`). When the project MCP server is trusted and connected
+    (`CAP-MCP-runtime-registration`), routing shared-workspace calls through MCP delegates writes to the retained base
+    process without per-command OS sandbox escalations or custom daemon lifecycle management
+    (`ARCH-01-introduction-and-goals` §3.4).
+  - **Cloud Agent (`cloud-pr`) and unapproved/disconnected sessions via CLI**: unlike skills (`SKILL.md`), MCP servers
+    require initial host server trust and tool permission, and cloud runtimes either do not launch local `stdio` MCP
+    transports or run under `CAP-MCP-runtime-registration`'s `cloud` read-only restriction. Exposing the exact same
+    `SharedWorkspaceAdapter` operations through `devkit` CLI commands lets Cloud Agents and non-MCP sessions read and
+    write shared artifacts immediately without interactive server trust.
 
 ## 2. Technical Spike Questions
 
 - **Q1 — Shared workspace contract and concrete consumers:** Define the exact boundary between authoritative
   coordination state (`CAP-COLL-work-scope-registry`) and ephemeral shared artifacts (`PROP-proposal-review-and-approval`
-  review reports). What bounded MCP operations (`put`, `get`, `list`, `delete`/sweep by namespace, kind and slug)
+  review reports). What bounded operations (`put`, `get`, `list`, `delete`/sweep by namespace, kind and slug)
   satisfy both without exposing unrestricted arbitrary filesystem access?
 - **Q2 — Adapter architecture and configuration:** How should the storage adapter interface separate the local
   filesystem backend (`<base-checkout>/.devkit/.shared/`) from remote/server backends (such as Firestore), and how do
   environment variables or `.devkit/config.local.toml` (`SPEC-local-config-execution-environment`) select and configure
-  the active adapter?
-- **Q3 — Service topology, discovery and Git cleanliness:** How does a linked worktree or MCP server resolve the base
+  the active adapter across both CLI and MCP entry points?
+- **Q3 — MCP vs. CLI routing, trust friction and cloud execution:** Compare when agents should call MCP vs. CLI:
+  - In local linked worktrees, does MCP delegation eliminate enough sandbox friction to justify tool-permission setup,
+    or when is direct CLI preferable?
+  - If MCP tools are used for non-interactive shared-workspace writes, how should `devkit.core.mcp` classify them so
+    they are not conflated with human form-elicitation tools (`interactive`) that `CAP-MCP-runtime-registration` blocks
+    in `cloud` mode?
+  - How do CLI and MCP callers share lock discipline and deterministic fallback against the same underlying store?
+- **Q4 — Discovery and Git cleanliness:** How does a linked worktree, CLI command or MCP server resolve the base
   checkout's `.devkit/.shared/` deterministically without trusting arbitrary caller paths, and how is `.devkit/.shared/`
   excluded (via `.gitignore` or clone-local `info/exclude`) so base-checkout preflight checks in integration and
   handoff never fail on shared artifacts?
-- **Q4 — TTL retention, revision metadata and lifecycle:** Ephemeral artifacts such as proposal review reports need
+- **Q5 — TTL retention, revision metadata and lifecycle:** Ephemeral artifacts such as proposal review reports need
   bounded retention (default 7-day TTL) and source-commit (`source_sha`) metadata. When should lazy TTL expiration
-  sweeps run (on MCP write/list operations and `devkit rules check -p hygiene`), and how are expired artifacts cleaned
-  up safely without affecting authoritative scope-registry records?
-- **Q5 — Authority, ownership and concurrency:** Which caller may read, write, overwrite or release each record or
-  artifact? Define atomic writes, lock discipline across concurrent MCP processes, retry/idempotency and behavior on
-  denied authorization or forged repository/worktree identities.
-- **Q6 — Cost and portability:** Compare setup, startup latency and maintenance across available hosts with the
-  direct CLI baseline. Inspect `CAP-INT-mcp-services` and `SPEC-standalone-devkit-mcp` for reusable host transport and
-  registration patterns while preserving package layering.
+  sweeps run (on write/list operations and `devkit rules check -p hygiene`), and how are expired artifacts cleaned up
+  safely without affecting authoritative scope-registry records?
+- **Q6 — Authority, ownership and concurrency:** Which caller may read, write, overwrite or release each record or
+  artifact? Define atomic writes, lock discipline across concurrent CLI/MCP processes, retry/idempotency and behavior
+  on denied authorization or forged repository/worktree identities.
 
 ## 3. Proposed Design & Impact
 
-Planning should define a unified MCP service and adapter contract that covers:
+Planning should define a unified adapter, CLI and optional MCP service contract that covers:
 
 1. **Pluggable storage backend (`SharedWorkspaceAdapter`)**:
    - `local` (default): stores namespaced records and artifacts under `<base-checkout>/.devkit/.shared/`, resolving
      the base checkout from any linked worktree and returning resolved local paths/URIs so host agents and local UIs
      can link directly to generated artifacts.
    - `server` (extensible, e.g., Firestore): selected via environment variable or local config for remote/cloud worker
-     execution, exposing the same logical artifact URI/key and metadata contract to MCP callers.
-2. **Bounded artifact lifecycle with TTL**:
+     execution, exposing the same logical artifact URI/key and metadata contract.
+2. **Dual CLI + MCP access boundary**:
+   - Core library owns all adapter, locking and TTL logic.
+   - MCP tools provide sandbox-delegated access for connected local multi-worktree sessions; CLI commands provide
+     zero-trust-setup execution for Cloud Agents (`cloud-pr`), scripts and sessions without MCP connected.
+3. **Bounded artifact lifecycle with TTL**:
    - Artifacts carry structured metadata (`kind`, `slug` or `unit`, `source_sha`, `created_at`, `expires_at` defaulting
      to 7 days).
    - Lazy sweep removes expired artifacts automatically during workspace operations or hygiene checks; expired or
      missing artifacts can be regenerated on demand.
-3. **Isolation from Git working-tree state**:
+4. **Isolation from Git working-tree state**:
    - `.devkit/.shared/` is ignored by Git so creating or updating shared reports from a worker worktree never dirties
      the base checkout or blocks `integration_integrate` / `spec_handoff`.
 
-Expected impact starts in `CAP-COLL-work-scope-registry` and the MCP service layer (`SPEC-standalone-devkit-mcp`).
-Planning must identify the exact package owner, adapter protocol, environment variable names and code boundaries
-before Development.
+Expected impact starts in `CAP-COLL-work-scope-registry` and `CAP-MCP-runtime-registration`. Planning must identify the
+exact package owner, adapter protocol, CLI/MCP parity, environment variable names and code boundaries before
+Development.
 
 Acceptance evidence for a selected design should include:
 
-- Workers in separate linked worktrees write and read shared artifacts through MCP tools, resolving to the same
-  `<base-checkout>/.devkit/.shared/` store while an unrelated repository remains isolated.
+- Workers in separate linked worktrees write and read shared artifacts through the selected MCP or CLI surface,
+  resolving to the same `<base-checkout>/.devkit/.shared/` store while an unrelated repository remains isolated.
+- Unattended / Cloud Agent execution can read and write shared workspace artifacts through the CLI surface (and configured
+  server adapter) without requiring interactive MCP server trust or form capability.
 - Writing shared artifacts leaves `git status --porcelain --untracked-files=normal` clean in both the base checkout
   and linked worktrees.
 - Artifacts older than the configured TTL (default 7 days) are swept deterministically without touching active
@@ -122,5 +131,6 @@ universal approval guarantees, or replacing Git worktrees.
 ## 4. Lifecycle & Retirement Criteria
 
 This draft records the shared workspace and coordination foundation for Planning; `PROP-proposal-review-and-approval`
-is its primary artifact consumer. Medium Planning should finalize the adapter protocol, MCP tool schemas, `.devkit/.shared/`
-exclusion rule and TTL sweep mechanics before handoff.
+is its primary artifact consumer. Medium Planning should evaluate the MCP vs. CLI trade-offs across local and cloud
+hosts and finalize the adapter protocol, tool/CLI schemas, `.devkit/.shared/` exclusion rule and TTL sweep mechanics
+before handoff.

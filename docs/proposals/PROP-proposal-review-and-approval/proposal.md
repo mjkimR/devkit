@@ -39,15 +39,18 @@ approval** solves these problems together:
 
 1. **Shared-workspace review report**: when Planning reaches `plan-accept`, the executor or Host writes a concise
    review report—focused on newly added PADRs (decision, rejected alternatives, trade-offs), surface/boundary
-   impacts, and waived Challenger risks—into the MCP-owned shared workspace (`PROP-worker-shared-state-mcp`, local
-   default `<base-checkout>/.devkit/.shared/`) in the configured `[presentation] language` (`SPEC-language-setting-coverage`,
-   e.g., Korean) with a 7-day TTL and `source_sha` binding, keeping tracked repository files in English.
-2. **Minimal native MCP `plan-accept` screen and sandbox-delegated execution**: the primary reason to execute
-   `plan-accept` merge and handoff through MCP is **sandbox privilege delegation**—merging/removing `../<repo>-wt-plan-<slug>`
-   and creating/initializing `../<repo>-wt-dev-<slug>` mutate sibling directories and `.git/` administration that per-command
-   shell sandboxes block (`MAT-codex-native-worker-evidence`)—while leveraging the already-established MCP native form UI
-   (`CAP-MCP-runtime-registration`) to display only minimal metadata (title, one-line summary, PADR list, recommended
-   `dev_effort`) and a clickable link (or local `devkit-viewer` route) to the shared review report.
+   impacts, and waived Challenger risks—into the shared workspace (`PROP-worker-shared-state-mcp`, local default
+   `<base-checkout>/.devkit/.shared/` or configured server adapter, accessed via MCP when connected locally or via the
+   equivalent CLI command in Cloud Agent / non-MCP sessions) in the configured `[presentation] language`
+   (`SPEC-language-setting-coverage`, e.g., Korean) with a 7-day TTL and `source_sha` binding, keeping tracked
+   repository files in English.
+2. **Minimal `plan-accept` approval screen and optional MCP sandbox delegation**: the Host presents only minimal
+   metadata (title, one-line summary, PADR list, recommended `dev_effort`) and a clickable link (or local
+   `devkit-viewer` route) to the shared review report. When devkit MCP is connected locally, executing `plan-accept`
+   merge and handoff through MCP delegates sibling worktree (`../<repo>-wt-*`) and `.git/` mutations outside the
+   per-command shell sandbox (`MAT-codex-native-worker-evidence`) while using the native MCP form UI
+   (`CAP-MCP-runtime-registration`); when MCP is not used, the same concise report link and approval choices work
+   through the Host's native question UI and CLI fallback.
 3. **Hold/defer for interactive Q&A**: if the user wants to inspect later or ask questions and request edits, choosing
    decline/cancel holds the proposal so the user can review and refine it conversationally (or in an isolated review
    session via a dedicated review skill) and regenerate the report when ready.
