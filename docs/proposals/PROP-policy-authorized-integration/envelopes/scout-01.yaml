@@ -1,0 +1,40 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-20T13:16:20.500615Z'
+status: completed
+summary: Existing MCP/service policy dispatch is the smallest route; live auto operation remains unverified on both hosts
+findings:
+- issue: Current native executor accepts ask only; local auto needs internally derived policy authority before the existing _run, and auto must not enable the PR route.
+  evidence: packages/devkit/src/devkit/integration/providers.py:78; packages/devkit/src/devkit/integration/service.py:199,237,329
+  resolution: open
+- issue: Existing MCP/service dispatch is the smallest route; an executing CLI adds owning-workspace guards and process-restart recovery. Do not fabricate ConfirmationReply.
+  evidence: packages/devkit/src/devkit/integration/cli.py:16; packages/devkit/src/devkit/integration/service.py:193; packages/devkit-dist/src/devkit/core/mcp_context.py:89
+  resolution: open
+- issue: Preserve source/target/result binding, effective-policy digests, provider/guard identities, exact cleanup revisions, dirty/required-PR/runtime checks and locks.
+  evidence: packages/devkit/src/devkit/integration/service.py:144,149,162,276,321; packages/devkit/src/devkit/integration/models.py:119,193; packages/devkit/src/devkit/integration/providers.py:197
+  resolution: open
+- issue: Keep process-local retained authority and stricter resume target handling; restart requires independent inspection and newly scoped preparation rather than serialized authority.
+  evidence: packages/devkit/src/devkit/integration/service.py:193,289,318; docs/capabilities/integration/CAP-INT-mcp-services.md:216,235
+  resolution: open
+- issue: Retain owning-workspace local execution guards and read-only cloud profiles; no new execution classification is required.
+  evidence: packages/devkit-dist/src/devkit/core/mcp_context.py:38,68,76; packages/devkit-mcp/src/devkit_mcp/server.py:76; packages/devkit-dist/src/devkit/core/mcp.py:26
+  resolution: open
+- issue: Codex separates sandbox, approval policy and MCP tool authorization; configuration documentation does not prove this integration has zero runtime prompts.
+  evidence: https://learn.chatgpt.com/docs/sandboxing; https://learn.chatgpt.com/docs/agent-approvals-security; https://learn.chatgpt.com/docs/config-file/config-reference
+  resolution: open
+- issue: Claude MCP permissions are separate from Bash and local MCP servers run outside the Bash sandbox; never switch to MCP after shell refusal to evade it.
+  evidence: https://code.claude.com/docs/en/permissions; https://code.claude.com/docs/en/sandboxing; docs/capabilities/integration/CAP-INT-mcp-services.md:68
+  resolution: open
+- issue: Claude evidence proves real ask-mode cleanup only; Codex evidence simulated results. Unattended real auto merge and cleanup remain unproven on both hosts.
+  evidence: docs/materials/2026-10/20261019-claude-terminal-mcp-approval/20261019-claude-terminal-mcp-approval-evidence.md:15,39,47; docs/materials/2026-10/20261017-hook-driven-integration-cleanup/codex-spike-evidence.md:8,64
+  resolution: open
+- issue: Update the successor ADR, delivery/integration policy contracts and bundled completion/tool descriptions while preserving source-only tests/review and merged-result CI disclosure.
+  evidence: docs/decisions/2026-10/20261014-integration-approval-asserted.md:91; docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:82,288; docs/capabilities/delivery/CAP-DLV-project-policy.md:49; packages/devkit-spec/src/devkit_spec/integration.py:10,225,433
+  resolution: open
+assumptions:
+- Codex Scout isolation emulated; read-only payload and host diff/index/HEAD comparison used
+unverified_areas:
+- No live auto host smoke, prompt count or exhaustive inbound reference inventory
+checks: {}
