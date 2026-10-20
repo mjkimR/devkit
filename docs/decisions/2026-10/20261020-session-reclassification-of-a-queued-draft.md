@@ -1,15 +1,15 @@
 ---
-id: PADR-session-reclassification-of-a-queued-draft
+id: ADR-session-reclassification-of-a-queued-draft
 title: Session reclassification of a queued draft
 summary: 'A queued draft without PADRs may, on the user''s explicit decision at pickup, be deleted as Backlog work that keeps its open feedback and be done as a session task: the one exception to lowering depth only through a proposal''s handoff.'
-proposal: PROP-draft-direct-acceptance
-status: draft
+proposal: SPEC-draft-direct-acceptance
+status: accepted
 created_at: 2026-10-19
 ---
 
-# [PADR-session-reclassification-of-a-queued-draft] Session reclassification of a queued draft
+# [ADR-session-reclassification-of-a-queued-draft] Session reclassification of a queued draft
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-19
 
 ---
@@ -18,7 +18,7 @@ created_at: 2026-10-19
 
 Every request not started now is a draft proposal (`SPEC-backlog-roadmap-and-issues`), so a request whose work is
 `session` depth (no design choice, no contract impact, verifiable in the session: 01 §2.2, `classification.md` §1)
-also waits as a draft once it is queued. Direct acceptance (`PADR-direct-acceptance-command-and-handoff-guard`) always
+also waits as a draft once it is queued. Direct acceptance (`ADR-direct-acceptance-command-and-handoff-guard`) always
 ends in a spec Unit with `spec.md`, `plan.md`, `tasks.md` and a reconcile, which is heavier than the session the work
 needs. Deleting a draft is already Backlog work, but deleting it in order to do the work as a session lowers the depth
 the request has by structure (a proposal), and the lowering rule allows lowering only through a proposal's handoff
@@ -59,7 +59,7 @@ low to save cost. The user chose to allow it on their explicit decision (`answer
   The `session` criteria cannot hold for a draft marked `needs_decompose` (not yet classified, `classification.md` §1),
   a draft with `supersedes` or a depth escalation's draft (each exists because a direction must be decided first), so
   the Host does not propose it for them.
-- **The request** names what goes: the draft and its gate records, `materials/` (kept in Git history only), the
+- **The request** names what goes: the draft and its gate records, `docs/materials/2026-10/20261020-draft-direct-acceptance/` (kept in Git history only), the
   `milestone` membership (a `session` task cannot be a member; no hygiene check reports the lost member, even for a
   done or dropped milestone, so the user reviews the milestone's exit condition here), and the open feedback that is
   preserved. The same exchange may also agree the session's intent, which has no record file; each decision is

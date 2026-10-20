@@ -20,7 +20,7 @@ created_at: 2026-10-19
 
 ## 1. Friction / Question (friction, question)
 
-- **Context**: the `high` Planning of `PROP-draft-direct-acceptance` handed a cap problem to the user (`worker-02`).
+- **Context**: the `high` Planning of `SPEC-draft-direct-acceptance` handed a cap problem to the user (`worker-02`).
   The user asked for one more fresh `challenger` round (round 6). That round returned P2 and P3 findings marked
   `recurs:`, plus a `Decision needed:` finding.
 - **Expectation**: `review-loop.md` §4 says how a round opened by a `resolution` ends when its batch again fails §2.

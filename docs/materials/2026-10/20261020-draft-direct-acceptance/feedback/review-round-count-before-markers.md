@@ -18,7 +18,7 @@ created_at: 2026-10-19
 
 ## 1. Friction / Question (friction, question)
 
-- **Context**: the `high` Planning of `PROP-draft-direct-acceptance` resumed after the user's answers, with four
+- **Context**: the `high` Planning of `SPEC-draft-direct-acceptance` resumed after the user's answers, with four
   `challenger` envelopes recorded before the high-effort review-loop spec landed on main (not yet on this branch);
   the caller asked the worker to follow the bounded loop of main's `references/review-loop.md`.
 - **Expectation**: the loop says how earlier `challenger` envelopes without a `round <N>;` marker count, and whether a

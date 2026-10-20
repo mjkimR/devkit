@@ -18,7 +18,7 @@ created_at: 2026-10-19
 
 ## 1. Friction / Question (friction, question)
 
-- **Context**: this Planning turn folded the user's answers to `worker-03` of `PROP-draft-direct-acceptance`. The
+- **Context**: this Planning turn folded the user's answers to `worker-03` of `SPEC-draft-direct-acceptance`. The
   recommended option `positive-base-check` of `base-checkout-definition` reads: "its branch must equal the integration
   base (the origin/HEAD target when it resolves, as the integration resolves it). Anything else is refused." The user
   chose it.
@@ -42,7 +42,7 @@ created_at: 2026-10-19
 - **Conditions**: options that depend on an environment condition (a remote, a resolved ref).
 - **Workarounds Attempted**: the interpretation above, recorded as an assumption.
 - **Related Assets**: `envelopes/worker-03.yaml`, `envelopes/answer-02.yaml`,
-  `decisions/PADR-direct-acceptance-command-and-handoff-guard.md`.
+  `ADR-direct-acceptance-command-and-handoff-guard`.
 
 - **Disposition**: `session` task `dev-feedback-resolutions`: updated `packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/worker-records.md` (section 1, Questions) to require stating what holds when a condition does not hold for conditional question options, avoiding inference during answer folding. Synced to managed files and projections via `devkit sync`.
 

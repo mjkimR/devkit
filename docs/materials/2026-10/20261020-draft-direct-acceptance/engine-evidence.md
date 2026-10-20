@@ -1,6 +1,6 @@
 # Engine and tooling evidence for direct acceptance
 
-Planning material for `PROP-draft-direct-acceptance` (2026-10-19): what the current devkit and devkit-spec code allow,
+Planning material for `SPEC-draft-direct-acceptance` (2026-10-19): what the current devkit and devkit-spec code allow,
 from a read-only `scout` pass at base `298dd9e` (envelope `scout-01.yaml`). Paths are repository-relative.
 
 ## Gate order in `sdd-proposal`

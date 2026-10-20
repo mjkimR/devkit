@@ -18,7 +18,7 @@ created_at: 2026-10-19
 
 ## 1. Friction / Question (friction, question)
 
-- **Context**: Planning of `PROP-draft-direct-acceptance` scaffolded two PADRs with
+- **Context**: Planning of `SPEC-draft-direct-acceptance` scaffolded two PADRs with
   `devkit spec proposal padr <slug> "<title>" --summary "<text>"`, as the planning-worker contract requires.
 - **Expectation**: a command that writes the `summary` the summary rule governs either validates it or warns, so a
   scaffolded PADR is valid when written.

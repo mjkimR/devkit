@@ -1,15 +1,15 @@
 ---
-id: PADR-direct-acceptance-command-and-handoff-guard
+id: ADR-direct-acceptance-command-and-handoff-guard
 title: Direct acceptance command and handoff guard
 summary: "The planned devkit spec proposal accept command (01 10) records the user's acceptance in one validated step, also for an eligible draft (--direct), through the engine; a bound proposal's handoff also requires the gate record and keeps its note."
-proposal: PROP-draft-direct-acceptance
-status: draft
+proposal: SPEC-draft-direct-acceptance
+status: accepted
 created_at: 2026-10-19
 ---
 
-# [PADR-direct-acceptance-command-and-handoff-guard] Direct acceptance command and handoff guard
+# [ADR-direct-acceptance-command-and-handoff-guard] Direct acceptance command and handoff guard
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-19
 
 ---
@@ -18,12 +18,12 @@ created_at: 2026-10-19
 
 A direct acceptance must reach the same end state a Planning acceptance reaches: `status: accepted` and an accepted
 `gate:plan-accept` given by the user, which the handoff carries. The engine fixes the order
-([engine evidence](../materials/engine-evidence.md)): `plan-intent` while the proposal is a draft, a passing
+([engine evidence](../../materials/2026-10/20261020-draft-direct-acceptance/engine-evidence.md)): `plan-intent` while the proposal is a draft, a passing
 `collect-feedback` sweep, `status: accepted` on disk, then `plan-accept`; anything else is `REQUEST_UNKNOWN`. The
 handoff checks the status but not the gate record, and the `plan-<slug>` readiness check runs only on the MCP
 integration path. Today every executor edits the `status:` line by hand; 01 §10 already plans one writer for it,
 `devkit spec proposal accept <slug> --by <actor> [--note]`, shared by the local Host and autohub. Where a direct
-acceptance is committed is compared in [options](../materials/options-comparison.md); the user chose A2, Backlog
+acceptance is committed is compared in [options](../../materials/2026-10/20261020-draft-direct-acceptance/options-comparison.md); the user chose A2, Backlog
 acceptance on the base under every policy, and allowed one request to ask both gates (`answer-01.yaml`).
 
 ## 2. Decision Drivers
@@ -51,7 +51,7 @@ acceptance on the base under every policy, and allowed one request to ask both g
   the user's explicit acceptance (`--by user`; autohub records the user's UI acceptance the same way):
   - without `--direct` it accepts a proposal in review (`status: reviewing`) on its `plan-<slug>`: the existing
     Planning acceptance in one step;
-  - with `--direct` it accepts a draft: it checks the eligibility (`PADR-eligibility-for-direct-acceptance`),
+  - with `--direct` it accepts a draft: it checks the eligibility (`ADR-eligibility-for-direct-acceptance`),
     including the path's conditions, and refuses a draft without `--direct`;
   - it writes `status: accepted` and records `gate:plan-accept` through `record_answer`, with the note (for a direct
     acceptance "direct acceptance, Planning skipped: <reason>; task_kind <kind> confirmed"), so the engine decides

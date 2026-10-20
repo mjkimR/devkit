@@ -1,6 +1,6 @@
 # Options for accepting a draft without Planning
 
-Planning material for `PROP-draft-direct-acceptance` (2026-10-19, `activity-effort` high). It compares where and when
+Planning material for `SPEC-draft-direct-acceptance` (2026-10-19, `activity-effort` high). It compares where and when
 the user's acceptance of a settled draft is recorded, and the alternative of not accepting at all. Engine facts are in
 [engine evidence](engine-evidence.md). Revised after each review pass: after `challenger-01.yaml`, which showed that the
 first version omitted the rows where acceptance outside Development wins, and after `challenger-02.yaml`, which showed
@@ -12,7 +12,7 @@ Backlog work, with the auto-only variant kept as A2a.
 
 **Outcome**: the user chose A2 (`answer-01.yaml`, question `acceptance-point`), allowed one request to ask both gates
 and allowed the `session` reclassification of a queued draft, which is not an option of this comparison (it deletes the
-draft instead of accepting it) and is recorded in `PADR-session-reclassification-of-a-queued-draft`.
+draft instead of accepting it) and is recorded in `ADR-session-reclassification-of-a-queued-draft`.
 
 ## The two models
 
@@ -94,7 +94,7 @@ Saving against S per configuration:
 
 ## Eligibility (Q1)
 
-See `PADR-eligibility-for-direct-acceptance`. Mechanical: `status: draft`; an accepted `gate:plan-intent`; no
+See `ADR-eligibility-for-direct-acceptance`. Mechanical: `status: draft`; an accepted `gate:plan-intent`; no
 `needs_decompose: true`; no `supersedes`; no local or fetched `plan-<slug>`; no envelope hold; the base checkout; a valid
 `task_kind`. Judgment, shown to the user: the direction leaves nothing to compare, no open spike question, not a depth
 escalation; the request names the `planning_effort` hint and, when it is not `low`, why Planning is skipped anyway.

@@ -1,15 +1,15 @@
 ---
-id: PADR-eligibility-for-direct-acceptance
+id: ADR-eligibility-for-direct-acceptance
 title: Eligibility for direct acceptance
 summary: "A draft may skip Planning only with an accepted plan-intent, no needs_decompose, no supersedes, no Planning branch, no envelope hold and a valid task_kind, and when the Host judges its direction leaves nothing to compare; no size limit applies."
-proposal: PROP-draft-direct-acceptance
-status: draft
+proposal: SPEC-draft-direct-acceptance
+status: accepted
 created_at: 2026-10-19
 ---
 
-# [PADR-eligibility-for-direct-acceptance] Eligibility for direct acceptance
+# [ADR-eligibility-for-direct-acceptance] Eligibility for direct acceptance
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-19
 
 ---
@@ -45,7 +45,7 @@ for which drafts qualify, split into what a tool can check and what only the Hos
   conditions of the chosen path (A2) are checked too: the current worktree is the main worktree and its branch equals
   the integration base (the `origin/HEAD` target when it resolves; without it, the main worktree's branch, never a
   detached `HEAD` or a `plan-*` or `dev-*` branch), the positive check the user chose (`answer-02.yaml`,
-  `base-checkout-definition`; `PADR-direct-acceptance-command-and-handoff-guard`). The
+  `base-checkout-definition`; `ADR-direct-acceptance-command-and-handoff-guard`). The
   same checks run read-only first, so a refusal leaves nothing behind; a missing `plan-intent` is reported there as a
   pending condition, separate from the blocking ones, because one request may ask for both decisions (the user's
   answer to `gates-in-one-exchange`); the accept command itself still requires it recorded.
