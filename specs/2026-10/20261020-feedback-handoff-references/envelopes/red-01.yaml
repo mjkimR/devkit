@@ -1,0 +1,15 @@
+kind: red
+stage: reproduce
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-20T04:15:57.518099Z'
+status: completed
+summary: Reproduced directory prose corruption and missing historical envelope citations
+findings: []
+assumptions:
+- Tests ran against unchanged production code with uncommitted regression tests
+checks:
+  reproduced: PASS five regression cases fail on the characterized directory rewrite, missing committed pin and unreported unavailable code-span history
+diff_scope:
+  base: b9c051b59df6a590d57472cb85f0914e8a5adadf
+  head: ''

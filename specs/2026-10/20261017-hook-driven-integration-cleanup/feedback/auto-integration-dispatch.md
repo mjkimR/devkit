@@ -10,7 +10,7 @@ agent: antigravity
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-17
 ---
 
@@ -42,4 +42,9 @@ Rationale: These are explicitly retained follow-ups that depend on first verifyi
 When to Reconsider: Once the tracked follow-up items (FB-auto-integration-dispatch, FB-pr-remote-and-squash-integration, FB-multi-host-integration-ergonomics) meet their restart conditions."
 ```
 
-- **Disposition**: open. Split out of `SPEC-integration-follow-ups` in its Planning: it stays open until the user decides whether a policy may grant merge and deletion authority, which `ADR-integration-approval-asserted` currently rules out.
+- **Disposition**: promoted to `PROP-policy-authorized-integration`. The proposal owns the decision about policy-granted merge and deletion authority; `ADR-integration-approval-asserted` remains the current contract until a successor decision is accepted.
+
+## Promotion
+
+Handed to `PROP-policy-authorized-integration` for policy-authorized local integration and scoped cleanup,
+including host permission feasibility. This is a terminal handoff; the proposal owns the remaining decisions.

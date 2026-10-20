@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-20
 ---
 
@@ -47,3 +47,11 @@ created_at: 2026-10-20
 ADR line after handoff: "the draft and its gate records, `docs/materials/2026-10/<stamp>-draft-direct-acceptance/`
 (kept in Git history only), the `milestone` membership ..."
 ```
+
+## Disposition
+
+Directly resolved by `SPEC-feedback-handoff-references`. Directory-only code spans now remain generic while concrete material files and PADR references relocate.
+
+Verification: five regression cases failed before the fix and pass after it; 1,115 affected tests passed,
+with 21 record tests rerun after the final refinement. Lint, type checks and independent code review passed.
+The historical source was verified with `git show`. Integration remains a separate Host step.

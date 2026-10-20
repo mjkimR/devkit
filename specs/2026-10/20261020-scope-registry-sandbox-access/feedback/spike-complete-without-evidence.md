@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-20
 ---
 
@@ -41,3 +41,10 @@ created_at: 2026-10-20
 [STAGE: collect-feedback human_gate=- role=developer isolation=none]
 [CHECK: envelope-check-pass(feedback swept) class=disk evaluated=true detail="no feedback envelope"]
 ```
+
+## Disposition
+
+Dismissed after reassessment. Spike is an optional investigation stage; necessary investigation and review
+remain responsibilities of the existing Planning and Challenger procedures. The observed evidence concerns the
+CLI's `done` display, not a proposal incorrectly accepted because required investigation was omitted. A separate
+completion mechanism is not justified by this case. No workflow or runtime change is made.

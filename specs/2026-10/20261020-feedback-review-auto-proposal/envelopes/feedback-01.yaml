@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T04:22:50.007426Z'
+status: completed
+summary: Reviewed recurrence clarification and draft promotion work; no additional in-scope observation. Existing spike evidence and premise drift feedback remain deferred by user direction.
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=0

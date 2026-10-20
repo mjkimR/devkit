@@ -264,7 +264,7 @@ def rewrite_paths(root: Path, files: Iterable[str], plan: RelocationPlan, report
     The documents the handoff wrote or moved out of the bundle (the carried spec and blueprint, the promoted ADRs,
     moved feedback and other carried files) keep the proposal's prose, where a file of the bundle is often named as a
     code span (`` `decisions/PADR-x.md` ``, `` `materials/notes.md` ``) rather than linked. In their bodies, such a
-    span that names a file or directory the handoff relocated becomes the new document's ID in backticks, or else its
+    span that names a concrete file the handoff relocated becomes the new document's ID in backticks, or else its
     new repository-relative path. Frontmatter, fenced code blocks and spans naming nothing relocated are left as they
     are.
     """
@@ -314,12 +314,10 @@ def _span_path(
 ) -> str:
     """The replacement of one code span: the relocated document's ID or new path, recorded in ``changed``."""
     new = _relocated(plan, os.path.normpath(os.path.join(plan.proposal, match.group(1))))
-    if new is None:
+    if new is None or match.group(1).endswith("/") or os.path.isdir(new):
         return match.group()
     document = _parse(root, new) if os.path.isfile(new) else None
     value = document.id if document is not None and document.id else _display(root, new)
-    if os.path.isdir(new) and not value.endswith("/"):
-        value += "/"
     changed.append(Rewritten(display, number, PATH, match.group(1), value))
     return f"`{value}`"
 

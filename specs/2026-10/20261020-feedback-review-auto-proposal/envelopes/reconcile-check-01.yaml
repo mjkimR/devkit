@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T04:22:33.256256Z'
+status: completed
+summary: 'Self-verification: the sole delivery capability exactly mirrors the reviewed recurrence definition; no cross-component behavior or unresolved interpretation. Medium initial reconcile exception applies.'
+findings: []
+assumptions:
+- 'Independent reconcile call omitted under the medium exception: wording clarification in one package and capability area, all affected documents identified; draft policy proposal changes no runtime authority.'
+checks:
+  contracts: PASS all AC mapped to review-loop guidance and capability
+  entrypoints: PASS declared path already present

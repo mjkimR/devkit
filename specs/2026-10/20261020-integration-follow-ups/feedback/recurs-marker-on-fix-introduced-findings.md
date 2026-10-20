@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-19
 ---
 
@@ -37,3 +37,11 @@ challenger-04.yaml #1: "recurs: challenger-03.yaml #1; the cleanup-only request 
 challenger-04.yaml #2: "recurs: challenger-03.yaml #3; git pull has no -m option ..."
 review-loop.md section 2: "A recurring finding can no longer be closed by self-verification."
 ```
+
+## Disposition
+
+`SPEC-feedback-review-auto-proposal` defines recurrence by the same failure condition persisting or returning,
+including incomplete fixes. Distinct defects introduced by a fix remain new findings; shared location or causality
+alone is insufficient. Existing escalation, out-of-scope exclusions and minor-fix conditions remain unchanged.
+Independent medium review checked all three acceptance scenarios with no findings. Spec lint/type checks and
+1,111 affected tests passed; the Living Spec mirrors the source guidance.

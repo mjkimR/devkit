@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T04:23:32.149073Z'
+status: completed
+summary: 'Completed four direct fixes: dependency-triggered Host refresh, assigned-worktree instructions and CLI, bounded ignored probe paths, and public parse_targets reuse with unchanged grammar. Independent medium code and reconcile reviews passed; four sources resolved.'
+findings: []
+assumptions:
+- Source asset synchronization is Host-owned and was not run by this worker because .devkit is outside write scope.
+unverified_areas:
+- Host must sync the three changed source guidance assets before integration. New upstream feedback capture was omitted after automatic approval refusal and Host instruction.
+checks:
+  tests: PASS just test-affected --base main; 1113 passed
+  build: PASS just check spec; zero errors/warnings; no artifact build required
+  lint: PASS just lint-check spec; cumulative rules zero errors/warnings; diff check passed
+diff_scope:
+  base: bf57fdb0d08edbc32fc6cbc6035c6af66fb4d7b6
+  head: f56a85500b00dbfd7a54fa080057d06436f5dc41

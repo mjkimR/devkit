@@ -654,7 +654,7 @@
     },
     ".agents/agents/planning-worker.md": {
       "mode": 420,
-      "sha256": "6ab4c9947faac124980ca9a6e9dd2e1c85ecf318daf461838194f05dcffb9ca9"
+      "sha256": "137a20ac784ccc954fa137e4e6efaab5c82a72db06d892c40105e8b438531435"
     },
     ".agents/agents/reconcile-reviewer.md": {
       "mode": 420,
@@ -694,7 +694,7 @@
     },
     ".agents/skills/spec-delegate/references/payload.md": {
       "mode": 420,
-      "sha256": "83fdcfbf1cf85b9a36703206bd63931ffc3a92b4e362fc0ac1ef06446d0aa211"
+      "sha256": "0a0f009300c6a1f71bc58724765e0b86dcbcd490186e5060aac0c6c3480df4b7"
     },
     ".agents/skills/spec-delegate/references/worker.md": {
       "mode": 420,
@@ -826,11 +826,11 @@
     },
     ".agents/skills/spec/references/planning.md": {
       "mode": 420,
-      "sha256": "a43170f87af110485d1e8f0890794e1e0a9104ec81666710ca807548d5d01360"
+      "sha256": "af68d3fa3107f0045fa3a681d2588f732fb7aa2136d33db9603fcdf14a9d106b"
     },
     ".agents/skills/spec/references/review-loop.md": {
       "mode": 420,
-      "sha256": "8c33379a2d519ac76e3b88a3df3cb8e1f8e4cb10b2d4de4f25febbcc8e1c3aa0"
+      "sha256": "f9b1051a013a4b670d7dfcffc83306a3aa416e3dafb9197155c7a7d004f748e5"
     },
     ".agents/skills/spec/references/worker-records.md": {
       "mode": 420,
@@ -854,7 +854,7 @@
     },
     ".claude/agents/planning-worker.md": {
       "mode": 420,
-      "sha256": "1ef237e523cb6a4450f400a3e1de270df2473573a76849cd6b9603ec6b4bae69"
+      "sha256": "0113ef30712ee63fb5e8e401898acbaaf0cfcb5b857d01b166ee047ac68f6bf4"
     },
     ".claude/agents/reconcile-reviewer.md": {
       "mode": 420,
@@ -886,7 +886,7 @@
     },
     ".claude/skills/spec-delegate/references/payload.md": {
       "mode": 420,
-      "sha256": "83fdcfbf1cf85b9a36703206bd63931ffc3a92b4e362fc0ac1ef06446d0aa211"
+      "sha256": "0a0f009300c6a1f71bc58724765e0b86dcbcd490186e5060aac0c6c3480df4b7"
     },
     ".claude/skills/spec-delegate/references/worker.md": {
       "mode": 420,
@@ -1014,11 +1014,11 @@
     },
     ".claude/skills/spec/references/planning.md": {
       "mode": 420,
-      "sha256": "a43170f87af110485d1e8f0890794e1e0a9104ec81666710ca807548d5d01360"
+      "sha256": "af68d3fa3107f0045fa3a681d2588f732fb7aa2136d33db9603fcdf14a9d106b"
     },
     ".claude/skills/spec/references/review-loop.md": {
       "mode": 420,
-      "sha256": "8c33379a2d519ac76e3b88a3df3cb8e1f8e4cb10b2d4de4f25febbcc8e1c3aa0"
+      "sha256": "f9b1051a013a4b670d7dfcffc83306a3aa416e3dafb9197155c7a7d004f748e5"
     },
     ".claude/skills/spec/references/worker-records.md": {
       "mode": 420,
@@ -1042,7 +1042,7 @@
     },
     ".codex/agents/planning-worker.toml": {
       "mode": 420,
-      "sha256": "0a72173274d577196fde0b712202fe8a2ef67457562118234f21a84e4ecc87d4"
+      "sha256": "2dc7ea6c8e085aab74d9747b5a3060fca7290aecaa510e2ae5e553a974a8e037"
     },
     ".codex/agents/reconcile-reviewer.toml": {
       "mode": 420,
@@ -1342,7 +1342,7 @@
     },
     ".devkit/managed/spec/skills/spec-delegate/references/payload.md": {
       "mode": 420,
-      "sha256": "83fdcfbf1cf85b9a36703206bd63931ffc3a92b4e362fc0ac1ef06446d0aa211"
+      "sha256": "0a0f009300c6a1f71bc58724765e0b86dcbcd490186e5060aac0c6c3480df4b7"
     },
     ".devkit/managed/spec/skills/spec-delegate/references/worker.md": {
       "mode": 420,
@@ -1470,11 +1470,11 @@
     },
     ".devkit/managed/spec/skills/spec/references/planning.md": {
       "mode": 420,
-      "sha256": "a43170f87af110485d1e8f0890794e1e0a9104ec81666710ca807548d5d01360"
+      "sha256": "af68d3fa3107f0045fa3a681d2588f732fb7aa2136d33db9603fcdf14a9d106b"
     },
     ".devkit/managed/spec/skills/spec/references/review-loop.md": {
       "mode": 420,
-      "sha256": "8c33379a2d519ac76e3b88a3df3cb8e1f8e4cb10b2d4de4f25febbcc8e1c3aa0"
+      "sha256": "f9b1051a013a4b670d7dfcffc83306a3aa416e3dafb9197155c7a7d004f748e5"
     },
     ".devkit/managed/spec/skills/spec/references/worker-records.md": {
       "mode": 420,
@@ -1498,7 +1498,7 @@
     },
     ".devkit/managed/spec/subagents/planning-worker.md": {
       "mode": 420,
-      "sha256": "a1d5c3092bd578c11630b2372db7951a52f973577a9805614cae706a3d61cfce"
+      "sha256": "d0978d868874d9e31e9291f5d23656aab763bf5b20fb1956fc368606d505adbd"
     },
     ".devkit/managed/spec/subagents/reconcile-reviewer.md": {
       "mode": 420,

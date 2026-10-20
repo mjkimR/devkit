@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T04:23:07.914305Z'
+status: completed
+summary: Clarified recurrence identity with preserved escalation and resolved the direct source; separately promoted automatic integration into a draft authority-feasibility proposal. Medium independent code review passed; single-area reconciliation self-verified under the documented exception.
+findings: []
+assumptions:
+- No runtime merge policy changed; proposal remains draft and integration approval is pending.
+checks:
+  tests: PASS 1111 affected tests
+  build: PASS spec type check; documentation-only source change
+  lint: PASS spec lint, cumulative rules and sync check
+diff_scope:
+  base: 3569419a984dbf291e387773dd2e19083a55b018
+  head: ac6adf569abd5075ca60c41f2218e952648bef89

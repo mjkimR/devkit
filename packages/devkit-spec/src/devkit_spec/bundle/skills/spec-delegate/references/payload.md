@@ -30,6 +30,20 @@ Terminal sources are traceability, not implicit write authority or completion wo
 Include their actual paths in a worker's allowed write scope; otherwise the Host updates them at completion from the
 worker's verified result. The unit directory alone does not authorize edits to source feedback elsewhere.
 
+## Planning execution context
+
+For a Planning worker, resolve both operational instructions and CLI execution in the assigned worktree. If the next
+turn needs newer base document IDs or CLI features, the Host first refreshes the branch and synchronizes installed
+instructions under existing Git and permission policy; the worker never merges. Include the refreshed context in
+the next payload. A dependency discovered during the turn is returned as a problem for Host recovery.
+
+Name an ignored temporary probe path inside the proposal directory and allowed write scope. Verify that the path is
+ignored; if none exists, the Host prepares one under its existing authority before delegation. The worker removes
+probe files and throwaway repositories before its last commit, retaining evidence in `materials/`. A path inside
+`/tmp` is not interchangeable with a repository-local path when testing sandbox behavior. If the allowed path cannot
+exercise the condition, the worker reports the needed boundary expansion instead of choosing an outside location.
+An ignored path grants neither sandbox access nor authority beyond the payload.
+
 ## Evidence reads and link repairs
 
 For work depending on external platform facts, name the necessary official documentation reads in the payload's
