@@ -1,15 +1,15 @@
 ---
-id: PADR-informational-range-inspection-reuses-existing-checks
+id: ADR-informational-range-inspection-reuses-existing-checks
 title: Informational range inspection reuses existing checks
 summary: The range inspection command derives its unit, range, write scope and base checkout from the worktree and the unit's committed records (flags override), reports each existing worker-result check as pass, fail or not-run with its existing codes, exits 0, 1 or 2, and blocks, writes or repairs nothing.
-proposal: PROP-worker-range-validation
-status: draft
+proposal: SPEC-worker-range-validation
+status: accepted
 created_at: 2026-10-20
 ---
 
-# [PADR-informational-range-inspection-reuses-existing-checks] Informational range inspection reuses existing checks
+# [ADR-informational-range-inspection-reuses-existing-checks] Informational range inspection reuses existing checks
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-20
 
 ---

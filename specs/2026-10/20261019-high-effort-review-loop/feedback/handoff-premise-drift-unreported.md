@@ -40,5 +40,5 @@ created_at: 2026-10-19
   unresolved".
 - Handoff output and `devkit workflow next` for the unit name no change since `plan-accept`.
 
-- **Disposition**: Deferred as open feedback. `PROP-worker-range-validation` covers existing worker-result checks
+- **Disposition**: Deferred as open feedback. `SPEC-worker-range-validation` covers existing worker-result checks
   only; handoff premise drift is outside its scope.

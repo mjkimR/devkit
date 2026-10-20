@@ -1,28 +1,22 @@
 ---
-id: PROP-worker-range-validation
+id: SPEC-worker-range-validation
 title: One-command worker result inspection for orchestrated units
-summary: "Bundles existing worker-result checks and reviewer diff information into one command that derives its unit, range, write scope and base checkout from the worktree and committed records, leaving interpretation to the agent without adding an approval gate."
-status: accepted                       # draft | reviewing | accepted | rejected
-created_at: 2026-10-19
-target_area: delivery/
-priority: critical                      # critical | high | medium | low
-size: L                               # S | M | L | XL
-planning_effort: low                  # low | medium | high (hint for Planning)
-dev_effort: high                        # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - delivery/
-    - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-delegate/
-    - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-orchestrate/
-  excludes:
-    - docs/decisions/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+summary: Bundles existing worker-result checks and reviewer diff information into one command that derives its unit, range, write scope and base checkout from the worktree and committed records, leaving interpretation to the agent without adding an approval gate.
+status: planned
+created: 2026-10-20
+related_capabilities: []
+related_stories: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-worker-range-validation] One-command worker result inspection for orchestrated units
+# [SPEC-worker-range-validation] One-command worker result inspection for orchestrated units
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-worker-range-validation on 2026-10-20.
+
+### 1. Background & Hypothesis
 
 - **Observed on 2026-10-19**: the first sustained local-orchestrated run (three Development units and two Planning
   units in parallel) worked, but the Host repeated the same checks by hand for every returned range: ancestry from
@@ -34,7 +28,26 @@ workflow: sdd-proposal
 - **Hypothesis**: A small command that collects existing checks and diff information saves repeated shell work. It
   provides evidence for the main agent; it does not become another approval gate or coordination system.
 
-## 2. Planning Scope
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement One-command worker result inspection for orchestrated units so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Planning Scope
 
 Implement a thin wrapper in `devkit-spec` around the checks the Host already performs:
 `devkit spec worker inspect [--unit <dir>] [--base <accepted>] [--head <returned>] [--scope <prefix>... |
@@ -61,7 +74,7 @@ Planning settles the CLI arguments, the derivation rules, concise result fields 
 Prefer existing conventions (the branch/unit binding, the `_Boundary:` and `reconcile.md` parsers, the worktree's
 base-checkout lookup) without introducing a separate scope authority or validation lifecycle.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 - One invocation reports ancestry, changed paths, paths outside the scope, worktree status, existing envelope
   validation, cumulative rules results and `devkit workflow next`, plus the base checkout's HEAD and dirty paths as
@@ -81,7 +94,7 @@ base-checkout lookup) without introducing a separate scope authority or validati
   payload guidance, and `CAP-DLV-delivery-workflows`. No new worker envelope fields are required.
 
 - Settled design (command name, derivation rules and their could-not-run codes, per-check `pass`/`fail`/`not-run`
-  results, exit codes, reviewer fields, no writes): `PADR-informational-range-inspection-reuses-existing-checks`.
+  results, exit codes, reviewer fields, no writes): `ADR-informational-range-inspection-reuses-existing-checks`.
 
 **Non-Goals**: automatic scope expansion (the command never widens what the committed documents declare),
 link-repair ownership inference, base-drift detection or merging, worktree environment refresh, new approval gates,
@@ -91,8 +104,9 @@ and automatic enforcement of helper findings.
 scope construction and handoff drift respectively. Neither is required for this command and neither is implemented
 by this proposal.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - Preliminary decisions: `devkit spec proposal padr worker-range-validation "<title>"`.
 - On acceptance (`plan-accept`): hand off with `devkit spec proposal handoff worker-range-validation`.
 - On rejection: `status: rejected` with the user's reason in the commit message.
+

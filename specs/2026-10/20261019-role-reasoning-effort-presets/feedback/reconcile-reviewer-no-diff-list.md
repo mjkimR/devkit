@@ -55,5 +55,5 @@ reviewer return, unverified_areas: "Exact file list of the diff from <base> to <
 HEAD still equals <head> (no shell ...)"
 ```
 
-- **Disposition**: `PROP-worker-range-validation`: compared heads and changed-path information for read-only
+- **Disposition**: `SPEC-worker-range-validation`: compared heads and changed-path information for read-only
   reviewer payloads, generated with the existing worker-result checks.
