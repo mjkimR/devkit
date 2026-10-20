@@ -31,3 +31,19 @@ Use offline injected ports and bare repositories for acceptance scenarios, inclu
 source loss, pending/restart, failed checks, unknown mutations and cleanup interruption. Run lint/type checks, affected
 tests and governance checks. High-effort independent code review and reconcile verification precede the final report.
 Official GitHub documentation is evidence for platform contracts; no live remote mutations are authorized.
+
+## Resolved CLI premise
+
+`ADR-github-pull-request-repository-binding` records the Host-approved correction of unsupported universal `-R`
+syntax and unstructured ruleset output. Explicit host/repository binding remains mandatory. Use required-check
+queries to distinguish optional failures from required failures; aggregate status alone does not identify that set.
+
+
+## Implementation assumptions
+
+The provider's actual module is `packages/devkit-spec/src/devkit_spec/integration.py`, not an integration directory;
+its test module is `packages/devkit-spec/tests/test_integration.py`. The Host explicitly expanded the worker scope
+for those files and the new superseding adapter ADR. The synchronous REST correction preserves no-queue authority.
+The worker contract is emulated through explicit absolute workdir, scoped permission requests and Host diff
+validation; it is not native filesystem isolation. Platform documentation evidence and external verification limits
+are recorded in the unit's platform-verification material. No external remote mutation or external test repository creation occurred.

@@ -11,7 +11,7 @@ Canonical behavior: `CAP-INT-mcp-services`.
 | MCP `integration_resume` | Recover only the remaining scope of an already approved request in this process |
 | `devkit worktree finish BRANCH --merge --local-only` | Public merge/cleanup operation excluding fetch and push (a merge commit, or a fast-forward under `[worktree] merge = "ff-only"`; the branch must contain the base HEAD); caller supplies existing authority |
 
-Task tools accept `branch`, `task_kind`, `task_id`, optional `unit`, optional `claims`. Status accepts `request_id` and optional boolean `detail` (default false); resume accepts only `request_id`. No tool accepts an approval boolean, arbitrary command, cleanup path or merge strategy:
+Task tools accept `branch`, `task_kind`, `task_id`, optional `unit`, optional `claims`, and `route="local"|"pull-request"` (default local). Status accepts `request_id` and optional boolean `detail` (default false); resume accepts only `request_id`. No tool accepts an approval boolean, arbitrary command, cleanup path or merge strategy:
 the merge method is the project policy (`[worktree] merge`, `ff-only` in either the base's or the source's policy wins).
 
 The approving `integration_integrate` call absorbs target commits that land during the confirmation in one build
@@ -52,3 +52,26 @@ Existing worktree/core advisories retain their codes; a build refusal passes its
 `LOCK_HELD` from the approving call names `integration_resume` or a new `integration_integrate`. Successful operations return notices; execution failures
 carry structured partial progress. The CLI preparation command follows normal devkit output and exit conventions;
 the MCP adapter returns one structured tool result with its error/advisory data.
+
+The native PR route binds the resolved GitHub repository and source SHA, pushes/creates the PR after approval,
+merges synchronously with a head pin, verifies landing evidence and performs disclosed cleanup. `ff-only` refuses it.
+Pending checks return `INTEGRATION_CHECKS_PENDING` as a successful incomplete result; resume on the same checked
+target. `INTEGRATION_TARGET_MOVED` requires target integration into source, verification and new approval.
+`INTEGRATION_LANDED_UNCHECKED` is a warning: run the provider's landed-target check after cleanup and do not report
+checked integration. `INTEGRATION_SOURCE_NOT_CONTAINED` prevents deletion. Unknown mutations require remote
+inspection before recovery. Network subprocesses have 5-second bounds and each phase a 20-second budget; readiness
+and local checks can outlast host timeouts, leaving the server thread running. Inspect status before retrying.
+
+| PR route code | Required next action |
+| --- | --- |
+| `INTEGRATION_REMOTE_UNSUPPORTED` | Inspect remote identity or queue configuration and use a supported same-repository route |
+| `INTEGRATION_GH_UNAVAILABLE` | Install/authenticate gh for the bound host and inspect permissions |
+| `INTEGRATION_TARGET_UPSTREAM` | Configure a same-named target upstream and reconcile unpublished local commits |
+| `INTEGRATION_MERGE_COMMIT_FORBIDDEN` | Use another authorized route; never substitute squash/rebase |
+| `INTEGRATION_PR_CONFLICT` | Inspect conflicting PR identity, draft, base or head and prepare again |
+| `INTEGRATION_REMOTE_BRANCH_DIVERGED` | Reconcile the remote source without force and prepare again |
+| `INTEGRATION_MERGE_REFUSED` | Resolve required checks, review, conflicts or platform policy and prepare again |
+| `INTEGRATION_MERGE_UNCONFIRMED` | Preserve branches and report unconfirmed merge evidence |
+| `INTEGRATION_STEP_UNKNOWN` | Inspect remote state through status/resume; never repeat an unconfirmed mutation |
+| `INTEGRATION_LOCAL_TARGET_BLOCKED` | Restore a clean fast-forwardable target checkout and resume |
+| `INTEGRATION_REMOTE_DELETE_BLOCKED` | Preserve the remote branch until changed-head/dependent-PR conditions resolve |

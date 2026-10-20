@@ -91,7 +91,8 @@ def test_native_protocol_confirmation_binds_to_real_git_scope(repo, action, cont
             assert integration.annotations is not None
             assert integration.annotations.readOnlyHint is False
             assert integration.annotations.destructiveHint is True
-            assert integration.annotations.openWorldHint is False
+            assert integration.annotations.openWorldHint is True
+            assert integration.inputSchema["properties"]["route"]["default"] == "local"
             assert integration.description is not None
             for guarantee in (
                 "does not assert prior integration approval",
@@ -99,7 +100,7 @@ def test_native_protocol_confirmation_binds_to_real_git_scope(repo, action, cont
                 "Decline, cancellation or unavailable confirmation",
                 "host confirmation UI authorizes execution",
                 "changed scope blocks execution",
-                "No fetch, push, remote deletion or PR operations",
+                "default local route excludes network operations",
             ):
                 assert guarantee in integration.description
             result = await session.call_tool(

@@ -496,4 +496,5 @@ def check(context: IntegrationContext) -> Readiness:
         result_sha=context.result_sha,
         target_bound=TARGET_BOUND,
         disclosure=DISCLOSURE,
+        landed_check="devkit rules check",
     )

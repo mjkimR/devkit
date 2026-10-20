@@ -2,7 +2,7 @@
 id: SPEC-integration-pull-request-cleanup
 title: Integration through pull requests with no-ff merge and cleanup
 summary: Defines one approval for push, no-ff PR merge and cleanup, fixing the source SHA while allowing checked target advances. Reports partial completion and actionable failures for agent-led recovery.
-status: planned
+status: in-progress
 created: 2026-10-20
 related_capabilities: []
 related_stories: []
@@ -206,8 +206,11 @@ advances only within its call). The user's decisions on q-checks-wait and q-unch
   `source_upstream` stays unchanged); create the PR when bound to "create"; then the merge section: fetch the target,
   require it to descend from the confirmation target, build the prospective merge and run guards, the receipt check,
   the policy digests and readiness on it as the local route does, recheck the remote target with `ls-remote` is still
-  that build target, and call `gh pr merge <n> --merge --match-head-commit <source> --subject "chore(merge):
-  integrate <branch> into <target>" --body "<task ID>"`. Never `--auto`, `--admin` or `--delete-branch`.
+  that build target, and call the synchronous REST merge endpoint through explicitly bound `gh api`, with
+  `sha=<source>`, `merge_method=merge`, title `chore(merge): integrate <branch> into <target>` and body `<task ID>`.
+  Never enqueue, enable auto-merge, bypass protection or request merge-time branch deletion.
+  `ADR-github-pull-request-repository-binding` corrects the originally proposed CLI mechanics: `gh pr merge`
+  implicitly enqueues when a queue is required, while the synchronous REST endpoint does not support merge queues.
 - **Required checks and review** (decided, `answer-01.yaml` q-checks-wait option a): the approving call never waits.
   At the merge step, after the build and checks, devkit reads the PR (`headRefOid` must be the source; check, review
   and mergeability state). When the platform reports it mergeable with required checks and reviews satisfied (the

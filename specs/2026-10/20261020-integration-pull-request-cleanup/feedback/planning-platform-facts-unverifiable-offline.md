@@ -48,3 +48,11 @@ created_at: 2026-10-20
 scout-01 unverified: All GitHub REST/GraphQL, protection, ruleset, merge queue and bypass behaviour (no network; only local gh help verified)
 challenger-01 unverified: All GitHub behaviour (required-check timing, async mergeability, self-approval, merge parents and tree, ...)
 ```
+
+## Development observation
+
+Official documentation verification found two concrete CLI premise errors before implementation: `gh repo view`
+and `gh api` do not accept universal `-R` binding, and `gh pr merge --merge` can enqueue implicitly even without
+`--auto`. The Host approved corrected mechanics recorded in `ADR-github-pull-request-repository-binding` while
+preserving the agreed explicit-repository and no-queue guarantees. This reinforces the existing recommendation
+to permit official documentation reads during Planning. No live remote mutation was used for verification.

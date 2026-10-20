@@ -1,7 +1,7 @@
 ---
 id: CAP-INT-mcp-services
 title: "Scoped MCP Services"
-summary: "Four scoped local integration MCP tools with one native approval in the Codex and Claude Code terminal CLIs that lands a merge commit absorbing target advances, with concise default results, detailed inspection and resumable cleanup."
+summary: "Four scoped integration MCP tools bind one native approval to local or GitHub pull request integration, with pinned source commits, landing evidence and resumable cleanup."
 area: integration
 status: active
 entrypoints:
@@ -9,11 +9,11 @@ entrypoints:
 created_at: 2026-10-17
 ---
 
-# [CAP-INT-mcp-services] Scoped Local Integration
+# [CAP-INT-mcp-services] Scoped Integration
 
 `devkit.integration` prepares an immutable request, obtains a native confirmation through `devkit.host`, and
-lands the task locally (a merge commit built outside the base checkout, or a fast-forward under
-`[worktree] merge = "ff-only"`) with its exact cleanup scope. `host` owns MCP transport and native UI adaptation;
+lands the task through the selected route: locally (a merge commit built outside the base checkout, or a fast-forward under
+`[worktree] merge = "ff-only"`) or through a GitHub PR merge commit, with its exact cleanup scope. `host` owns MCP transport and native UI adaptation;
 integration owns authorization binding, policy, readiness and execution. It imports no SDD models. Command and
 code quick reference: [reference.md](../../development/reference/integration.md).
 
@@ -22,7 +22,7 @@ code quick reference: [reference.md](../../development/reference/integration.md)
 The supported paths are interactive MCP tool calls under `dev-integration=ask` from two terminal hosts: the Codex
 CLI and the Claude Code terminal CLI (verified in `MAT-claude-terminal-mcp-approval-evidence`). The server checks the
 client's advertised form capability, not a host name. `integration_integrate`
-prepares the request, awaits form elicitation, and continues into execution in the same call. After reporting verified work, call it directly; no separate conversational approval or preceding integration_prepare call is required. The native affirmative form supplies local dev-integration ask approval and exact execution authority together. A workflow waiting on that gate permits the approval-requesting call; --given dev-integration is asserted only after native acceptance. Only native
+prepares the request, awaits form elicitation, and continues into execution in the same call. After reporting verified work, call it directly; no separate conversational approval or preceding integration_prepare call is required. The native affirmative form supplies route-specific dev-integration ask approval and exact execution authority together. A workflow waiting on that gate permits the approval-requesting call; --given dev-integration is asserted only after native acceptance. Only native
 `action=accept` with a boolean `approve=true` grants authority. The field defaults to false. Submission without
 approval, decline, cancellation, unavailable form capability and transport failure perform no integration changes.
 Tool arguments cannot supply `approved`, authority tokens or serialized execution requests.
@@ -39,13 +39,13 @@ target, marked `(at confirmation)`. Under `no-ff` the form states that later com
 without another confirmation only if the merge is clean, the integration policy is unchanged and the named readiness
 provider passes again on the merged result, otherwise nothing changes on the target, followed by the provider's
 result-check disclosure (`Result check: ...`); under `ff-only` that a moved target changes nothing; for a cleanup-only
-request that nothing is merged. It states network exclusion. Text values are quoted and control characters escaped so caller text cannot introduce misleading
+request that nothing is merged. The local form states network exclusion. Text values are quoted and control characters escaped so caller text cannot introduce misleading
 extra scope lines. Filesystem identities, policy hashes, provider/guard registrations, cleanup revisions and full
 readiness evidence remain in the immutable internal request and digest; they are not printed in the form.
 
 The four tools have distinct roles:
 
-- `integration_prepare`: optional read-only readiness and effect-scope inspection; no authority is granted. Integrate
+- `integration_prepare`: optional readiness and effect-scope inspection; PR prepare fetches the remote target but performs no remote write; no authority is granted. Integrate
   prepares a fresh request, so callers do not pass a prepared request ID as execution authority.
 - `integration_integrate`: the normal entry point; prepares, requests one native approval, executes and returns progress.
 - `integration_status`: read-only retained progress and observed state, concise by default. Optional boolean `detail`
@@ -53,7 +53,7 @@ The four tools have distinct roles:
 - `integration_resume`: continues remaining steps of an already approved process-local request, with no second form.
   It accepts only request_id and cannot grant authority, change scope or request arbitrary execution.
 
-Task tools accept branch, task_kind, task_id, optional unit and claims. All four default result views include the
+Task tools accept branch, task_kind, task_id, optional unit, claims and route (`local` by default, or `pull-request`). All four default result views include the
 request ID/digest and effect scope, status, authority, steps, errors and notices. UI action, per-extension steps,
 failing operation and observed state appear when present. Internal validation fields and duplicate FinishResult
 are omitted. Detailed status preserves the existing full representation. CLI preparation and the library's full
@@ -62,11 +62,10 @@ using either transport representation.
 
 The executor runs from the retained base checkout on its target branch, using an installed interpreter outside
 the worktree being removed. It supports normal linked worktrees and marked `--no-worktree` activity branches.
-It excludes PR operations, fetch, push, remote branch deletion, squash/rebase integration and automatic policy
-dispatch. Required-PR policy refuses the local path. Worktree/PR `auto` does not authorize integration.
+The default local route excludes PR operations, fetch, push and remote branch deletion. Both routes exclude squash/rebase integration and automatic policy dispatch. Required-PR policy refuses the local path. Worktree/PR `auto` does not authorize integration.
 
 Project trust, hook trust, MCP tool approval, the business integration confirmation and host filesystem/network
-permissions are distinct. This service never changes host permission settings. Native tool annotations describe
+permissions are distinct. This service never changes host permission settings. All four tools declare `openWorldHint=true`, since PR prepare/status also reach the network. Native tool annotations describe
 real write/destructive effects; they do not substitute for the integration form. Count actual prompts separately
 when validating a host session. SDK transport tests do not establish interactive UI or permission behavior.
 Unverified for Claude Code: its auto mode and other permission modes, the number of prompts per call, and the
@@ -74,7 +73,7 @@ Claude Desktop, VS Code extension and Agent SDK surfaces, where upstream reports
 without a visible form (`MAT-native-approval-host-comparison`). Treat those surfaces like any client without
 working form capability.
 
-## 2. Request and state validation
+## 2. Local request and state validation
 
 Each request has a random process-local ID and a digest of its immutable contents:
 
@@ -165,6 +164,8 @@ verified facts rather than timestamps or mutable command logs. Read-only checks 
 services or treat claims as approval. Verification commands and any report/evidence interpretation belong to the
 provider; the generic executor never executes model-supplied commands.
 
+PR readiness additionally declares a nonempty `landed_check`, bound in the request and shown before approval; devkit-spec declares `devkit rules check` in the retained base checkout. The executor reports this directive and does not execute it.
+
 For SDD, devkit-spec owns the provider's Unit/session evidence, review, reconcile and blocked/question policy.
 The existing workflow envelope finish guard remains active, but is not proof of all completion conditions. This
 release supplies the public provider contract; installing devkit alone does not supply SDD readiness. The devkit
@@ -197,11 +198,13 @@ An installed legacy callback without this scoped contract is `INTEGRATION_CLEANU
 never silently skipped or invoked with broader authority. devkit-spec must adapt its existing scope/proposal
 cleanup before its installed pair can use this path. This avoids a second host adapter or duplicated Git executor.
 
-The executor itself invokes no network operation. Installed providers, guards, Git hooks/filters and cleanup code
+The local executor invokes no network operation; only the PR executor invokes remote operations. Installed providers, guards, Git hooks/filters and cleanup code
 are trusted code and must obey the local-only contract; OS/host network restrictions enforce the process boundary.
 The application does not claim to sandbox arbitrary extension code.
 
 ## 5. Partial results and main-agent recovery
+
+The following local recovery rules are supplemented by the PR route contract below.
 
 Compact results report status, authority, concise request scope, steps, errors and notices, plus native UI action,
 per-extension cleanup steps, observed state and failing operation when present. Detailed status additionally reports
@@ -233,6 +236,67 @@ retry or cross-session restart recovery. After process termination or an unknown
 Use the existing guarded `worktree finish --local-only` cleanup path only after confirming the remaining targets
 and existing authority, or obtain a new request for the remaining scope. Never infer approval from a digest or
 replay a serialized result as authority.
+
+## 5a. GitHub pull request route
+
+`route="pull-request"` implements `ADR-github-pull-request-repository-binding` and
+`ADR-pull-request-merge-with-pinned-source-and-verified-landing`. The gh-backed injectable port lives in
+`devkit.worktree`; provider/cleanup extensions remain local-only. Every repository operation binds the resolved host
+and owner/repository, using supported gh syntax, including Enterprise hosts and aliases resolved by gh. Credentials
+remain owned by gh. No caller-authored PR title or body is accepted; devkit composes them from validated names/task ID.
+
+Prepare fetches the same-named upstream of the checked-out target branch. That fetched commit supplies the
+confirmation target and target policy. A local target ahead of or divergent from upstream, divergent remote source,
+missing authenticated gh, unsupported/fork/draft/wrong-base PR, merge queue, or readable merge-commit prohibition
+refuses before confirmation. `ff-only` on either side refuses this route. Unreadable classic protection is disclosed
+as unverified. Source commits must contain the confirmation target, except confirmed cleanup-only requests.
+
+The immutable request additionally binds route, remote name/URLs and resolved host/repository, source/target refs,
+PR number or create, the source SHA, confirmation target, no-ff merge and selected local/remote cleanup. Raw remote
+URLs are not emitted in result/form serializers. The form lists push, PR create/use, merge, fetch, local fast-forward,
+worktree removal and selected branch/scope deletion. It discloses GitHub automatic branch deletion, which can remove
+the remote branch independently of devkit retention policy, unverified protection, the target race and landed check.
+
+Publication pushes an explicit source-SHA refspec without force or `-u`, preserving the source upstream. PR identity
+changes after prepare refuse new publication. Under the common-directory lock, execution fetches the target,
+requires descendant history and unchanged effective policy, constructs and checks the prospective merge with the
+existing guards, readiness and receipt validation, then rechecks the remote ref. Required checks and reviews must
+pass. The synchronous GitHub merge API receives `sha=<approved source>` and `merge_method=merge`; it cannot enqueue,
+including when queue policy changes after preflight. No auto-merge or admin bypass is requested.
+
+Pending checks/reviews or undetermined mergeability return successful incomplete `status="pending"`, with
+`INTEGRATION_CHECKS_PENDING` under notices, publication completed and merge not run. The directive names bounded
+`gh pr checks <number> -R <host/owner/repo> --watch`, then `integration_resume`; report required checks that never
+start. No lock is held while waiting. Resume acquires the lock without waiting, re-reads PR identity/head/state,
+and merges only onto the last checked target, reusing that checked build. A moved target returns
+`INTEGRATION_TARGET_MOVED`: merge it into the source, re-verify and obtain new approval. Report repeated movement;
+a target advancing faster than checks finish may prevent this route from ever merging.
+
+PR `MERGED` plus merge commit `M` with exactly two parents and `M^2` equal to source confirms the merge. A checked
+landing also requires `M^1` equal to the checked build target, equal checked tree and `M` contained in fetched target.
+Other confirmed landings carry `INTEGRATION_LANDED_UNCHECKED` at WARNING with reason `advanced`, `tree-mismatch`,
+`rewritten-base`, `merge-not-contained` or `not-recorded`, plus merge/parent/fetched-target evidence and the provider's
+landed-check directive. Never describe these as checked integration. Guards/readiness/policy are not rerun on M.
+Source ancestry in the fetched target is mandatory; its loss is `INTEGRATION_SOURCE_NOT_CONTAINED` and deletes nothing.
+
+Checked and unchecked confirmed landings both proceed with the approved cleanup scope: fast-forward a clean local
+target, remove the worktree/local branch through guarded finish, delete the selected remote branch with the exact
+source-SHA lease after checking dependent PRs, then invoke scoped cleanup extensions. Dirty/divergent local target
+stops before deletion. An already-absent remote branch counts as done; a moved branch or open dependent PR is
+`INTEGRATION_REMOTE_DELETE_BLOCKED` and remains intact. Later target configuration changes do not broaden or block
+approved cleanup. A fresh prepare can confirm a still-present merged task for cleanup after restart, reporting
+`not-recorded`; process-local approval is never restored from a file.
+
+Mutation outcomes remain unknown until remote observations confirm them. HTTP 403/405/409/422 merge refusals are
+`INTEGRATION_MERGE_REFUSED`; unresolved transport failures are `INTEGRATION_STEP_UNKNOWN`. Unknown merge never retries
+or deletes destructively. Results distinguish publication, merge, fetch, local fast-forward, local/remote deletion
+and extension progress. `integration_status` observes remote state without authorizing work.
+
+Each network subprocess is capped at 5 seconds, further limited by a 20-second phase budget. Prepare and approved
+execution each start a phase; resume/status start one phase. These network budgets do not bound provider, local Git,
+lock or interactive confirmation time. SDK/offline timings do not establish live-host latency. A host timeout may
+leave the executor thread running; inspect `integration_status` before recovery. Default host timeout evidence and
+measurement limits are recorded in the unit's platform evidence material.
 
 ## 6. Setup and verification
 
