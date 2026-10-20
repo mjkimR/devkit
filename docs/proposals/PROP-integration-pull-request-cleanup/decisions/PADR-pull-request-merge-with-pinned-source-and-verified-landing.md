@@ -16,7 +16,7 @@ created_at: 2026-10-20
 
 ## 1. Context & Problem Statement
 
-`PROP-integration-follow-ups` lets a local approval absorb target advances when the merge is clean, the effective
+`SPEC-integration-follow-ups` lets a local approval absorb target advances when the merge is clean, the effective
 policy is unchanged and readiness passes on the result commit, which it builds itself and fast-forwards onto with a
 compare-and-swap. A pull request merge is performed by the platform: `gh pr merge --match-head-commit` (REST `sha`)
 pins the PR head, but nothing pins the base, and the platform builds its own merge commit onto whatever the target is

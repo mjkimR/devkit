@@ -111,7 +111,7 @@ refs for otherwise unreachable source SHAs, and automated failure recovery.
 
 Evidence: `envelopes/scout-01.yaml`, `envelopes/challenger-01.yaml`, `envelopes/challenger-02.yaml`, the comparison in
 [materials/20261020-pull-request-merge-options.md](materials/20261020-pull-request-merge-options.md) and the PADRs
-under `decisions/`. Premise: `PROP-integration-follow-ups` as accepted (no-ff result built outside the checkout,
+under `decisions/`. Premise: `SPEC-integration-follow-ups` as accepted (no-ff result built outside the checkout,
 execution context, effective policy digest, readiness on the result, cleanup-only request, approval tolerating
 advances only within its call). The user's decisions on q-checks-wait and q-unchecked-landing are recorded in
 `envelopes/answer-01.yaml` and folded below.
@@ -274,7 +274,7 @@ advances only within its call). The user's decisions on q-checks-wait and q-unch
   whether the target ref is updated synchronously with the merge, self-approval prohibition, readability of rulesets and classic protection, `deleteBranchOnMerge`
   and dependent-PR effects of branch deletion, and whether GitHub's merge tree equals `git merge-tree` for clean
   merges. A fact that turns out otherwise and changes this design is a problem for the Host, not a silent adaptation.
-- **Coordination**: Development starts after `PROP-integration-follow-ups`' Development lands on `main`; it builds on
+- **Coordination**: Development starts after `SPEC-integration-follow-ups`' Development lands on `main`; it builds on
   that execution context, build and recovery code rather than the current ff-only code.
 
 ## 4. Lifecycle & Retirement Criteria
