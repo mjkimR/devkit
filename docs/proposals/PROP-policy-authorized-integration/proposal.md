@@ -13,7 +13,14 @@ boundaries:
   owns:
     - packages/devkit/src/devkit/integration/
     - packages/devkit-spec/src/devkit_spec/integration.py
-    - packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/completion.md
+    - packages/devkit/tests/integration/
+    - packages/devkit-spec/tests/test_integration.py
+    - packages/devkit-spec/src/devkit_spec/bundle/
+    - docs/capabilities/integration/
+    - docs/capabilities/delivery/
+    - docs/capabilities/worktree/
+    - docs/development/reference/integration.md
+    - docs/decisions/
   excludes:
     - packages/devkit-advisory/
 task_kind: feature
@@ -46,61 +53,121 @@ unattended merge and cleanup, including whether policy-authorized execution is a
 default MCP routing and a noninteractive environment do not themselves grant that authority. Reuse the extracted
 runtime if the MCP execution route is selected; do not duplicate its packaging or registration work.
 
-## 2. Technical Spike Questions
+## 2. Planning Findings and Selected Route
 
-- **Q1: Authority boundary.** Define how explicit `[workflow.approvals] dev-integration = "auto"` supplies durable
-  user authorization for verified local merge, branch deletion and linked-worktree cleanup. Which existing ADR and
-  capability statements must change, and what evidence must the executor report as policy authority rather than
-  human confirmation? Honor the configured branch-retention policy and bind cleanup to the integrated task.
-- **Q2: Host feasibility.** For Codex CLI and Claude Code, distinguish conversational consent, tool-level approval,
-  sandbox write access and devkit's own confirmation. Determine which checks policy can satisfy and which host
-  approval requirements remain mandatory. Do not claim repository configuration can override platform controls.
-- **Q3: Execution route.** Compare a CLI/service route with an MCP route. Can the same readiness and cleanup checks
-  run without elicitation? What triggers execution, and how are failed or partial attempts resumed without duplicate
-  mutation or pretending they completed?
-- **Q4: Scope and changing state.** Define the checked source, destination, policy and cleanup targets; determine
-  when changed state requires re-verification or a stop. Preserve tests, review and unresolved-problem checks.
-- **Q5: Publication boundary.** Start with local integration and cleanup. Determine whether push/PR publication must
-  remain a separate explicit opt-in rather than inheriting local merge authority.
+The proposed implementation is policy dispatch in the existing `integration_integrate` MCP tool and its shared
+`IntegrationService`, without a new command, background daemon or second opt-in. `ask` continues to require native
+confirmation; `auto` plus the local route derives execution authority from the retained base checkout's shared
+configuration. `integration_prepare` remains a preflight and grants no authority. The main-session Host calls the
+tool after reporting verified work; gate passage alone does not launch anything, and support workers do not merge.
+
+| Option | Reuse and cost | Decision |
+| --- | --- | --- |
+| Existing MCP tool with service policy dispatch | Reuses exact request, identity checks, locking, merge builder, scoped cleanup and retained progress; needs no form in auto mode | Selected |
+| New executing CLI command using the same service | Also needs an owning-workspace environment guard, process-restart recovery and agent routing; current CLI only prepares | Excluded from this implementation |
+| Change only the gate or invoke worktree finish directly | Does not add checked policy authority to the executor or share its retained recovery contract | Rejected |
+
+The current engine already supports local merge, branch/worktree cleanup and partial recovery. Six existing engine
+regressions passed in Planning, including no-network merge, branch retention, permission-failure recovery, exact
+extension cleanup and uncertain-merge inspection. They use the existing ask authority with a test confirmation
+callback; they do not establish implemented auto dispatch or a live unattended host run. Detailed evidence and
+host limitations are retained in `materials/feasibility.md`.
+
+`PADR-policy-authorized-local-integration` proposes a successor to `ADR-integration-approval-asserted`. Existing
+intent and direction decisions remain human decisions; only `dev-integration = "auto"` gains the declared local
+execution authority. Acceptance of this proposal does not change this repository's current ask setting.
 
 ## 3. Proposed Design & Impact
 
-Use `[workflow.approvals] dev-integration = "auto"` as the explicit policy-authorized execution mode: once required
-verification succeeds, the configured executor merges and performs the declared local worktree and branch cleanup,
-reporting the outcome without requesting conversational approval or native business confirmation. The same setting
-authorizes both gate passage and these execution effects; do not introduce a second opt-in for the same scope.
-Keep `ask` as the default and preserve its existing approval route. Branch deletion still follows
-`[worktree] delete_branch`; `auto` does not authorize unrelated or forced cleanup. Replace the existing authority
-rule through an appropriate successor ADR and update the capability and agent instructions together.
+### Authority and scope
 
-Planning must choose and demonstrate a concrete CLI/service or MCP execution route. The current MCP executor
-accepts only `ask` and requires native confirmation, so changing configuration or proposal wording alone cannot
-provide automatic execution. Evidence must distinguish devkit business confirmation, which `auto` removes, from
-host tool approval and filesystem/network permissions, which repository policy cannot override. If a host requires
-a separate permission, report that boundary and the remaining effects explicitly; do not claim unattended success.
+- The executor reads `[workflow.approvals] dev-integration` from the retained base checkout's shared
+  `.devkit/config.toml`. Missing means `ask`; local overlays, caller claims, tool permission and `--given` do not
+  supply policy authority. A source branch that merely changes ask to auto cannot authorize its own merge.
+- For `auto` and `route=local`, prepare the same immutable request and bind source SHA, target SHA, base policy
+  digest, prospective result policy, readiness/provider identities and exact cleanup targets. Record result
+  `authority: policy` and its existing request evidence. Do not synthesize a human approval or `ui_action: accept`.
+- Execution advances the local base using the configured merge method, removes only the task's clean linked
+  worktree and deletes only its merged local branch when `[worktree] delete_branch = true`. The existing scoped
+  post-finish extensions remain covered by the request. No force deletion, unrelated cleanup or discard is granted.
+- `ask` retains its native form and `authority: mcp-elicitation`. Auto on `route=pull-request` is refused before
+  remote operations; local authority never implies push, PR merge or remote branch deletion. Required PR policy
+  still blocks local integration. No remote-authority setting is introduced.
+- Retain the current local execution environment restriction: cloud profiles stay read-only and a cloud owning
+  workspace cannot execute or resume auto integration. This implementation does not change MCP runtime profiles,
+  host trust, filesystem/network permissions or `devkit-advisory`.
 
-Expected acceptance evidence:
+### Execution, changed inputs and recovery
 
-- Given `dev-integration = "auto"`, passing review/reconciliation/checks and sufficient host permissions, local
-  integration merges and removes the task worktree and, when `delete_branch = true`, the merged local branch,
-  without conversational or native devkit confirmation. The executor reports policy authority and actual effects.
-- With `delete_branch = false`, the same automatic operation retains the branch and reports the retained scope.
-- Ask mode still requests approval; missing opt-in never silently authorizes mutation.
-- Dirty worktrees, unresolved findings/problems and invalid cleanup targets prevent unsafe execution.
-- Host permission refusal stops the affected operation and reports what remains; no alternate tool or path bypass.
-- Interrupted execution can be inspected and resumed under a defined authority and state contract.
-- Local opt-in alone does not publish or push remotely.
+- Dispatch inside the service before calling the confirmation callback; auto therefore works without a negotiated
+  elicitation form when the host allows the MCP call. Reuse the existing execution engine and locks rather than
+  invoking the public finish command as a separate authority path.
+- Preserve source immutability, dirty/locked worktree checks, provider readiness, unresolved finding/problem/question
+  checks, receipt checks and exact cleanup validation. Policy is rechecked under the execution contract before
+  mutation and cleanup; changed policy or identities invalidate the request. An already completed operation is
+  reported rather than repeated.
+- During the initial call, accept only a descendant of the prepared target and only when a clean build, unchanged
+  prospective integration policy and provider recheck on the result succeed. A moved target after the build stops
+  before advancing the base. CI rules run on the result; tests and code review ran on the source, as disclosed today.
+- Within the same server process, `integration_status` and `integration_resume` retain step progress and the request's
+  original authority kind. Resume revalidates policy and remaining scope and never broadens it; a later target needs
+  a new integrate call. An auto request requires the policy to remain auto even when its merge has completed; it
+  cannot borrow ask confirmation. A request whose prospective result changes auto to ask is refused before mutation.
+- After server restart there is no restored authority from a request ID or file. Inspect Git and cleanup state,
+  then prepare a fresh policy-authorized request covering only inspectable remaining scope. If source/worktree
+  deletion removed evidence needed to derive extension cleanup, report that cleanup as incomplete and require
+  deliberate recovery; do not infer completion or introduce a durable journal in this change.
+- A host permission denial stops the affected operation, preserves progress and reports what remains. Never switch
+  from a refused shell operation to MCP (or another route) to evade that refusal. A previously selected MCP route
+  uses only its own host-granted server access and tool permissions.
 
-Defects discovered after a verified merge may be recorded as feedback and fixed in follow-up work. That recovery
-preference does not remove checks for defects already known before integration or authorize discarding user data.
+### Host feasibility and verification boundary
 
-Scope excluded: changing current repository policy while drafting, skipping required verification, changing host
-sandbox/trust settings, supporting VS Code/SDK/desktop hosts, and automatically publishing remotely.
+Removing devkit's confirmation callback is implementable without bypassing a host permission check: the transport
+asks for elicitation only when the service invokes the callback. Host MCP-tool authorization and server OS access
+remain prerequisites. This proves a viable design, not a guarantee of zero prompts for every installation. Existing
+Claude terminal evidence demonstrates ask-mode merge and cleanup only. Live auto operation in both Codex CLI and
+Claude Code is still unverified and is required evidence during Development; a denied or unavailable host is reported
+with its remaining boundary, never counted as unattended success.
+
+### Acceptance evidence for Development
+
+- **AC1 — Local auto:** Given shared base auto, local environment and passing completion checks, one integration call
+  merges and cleans the task worktree and selected branch without invoking the confirmation callback; the result
+  reports policy authority and actual effects. Test both merge methods and `delete_branch = false`.
+- **AC2 — Ask and authority origin:** Ask and missing policy still require native acceptance. Source-only auto,
+  caller claims, prepared requests and forbidden local governance keys never grant execution authority.
+- **AC3 — Readiness and state:** Dirty/locked/replaced worktrees, changed source/policy/provider/cleanup scope,
+  unresolved findings/problems/questions, receipt inconsistency and conflicting target movement prevent unsafe
+  effects. Test initial-call descendant advance and resume onto a later target separately.
+- **AC4 — Publication and environment:** Auto PR requests and required-PR local requests refuse before remote writes;
+  local auto performs no fetch/push/PR operation. Cloud owning-workspace and read-only-profile execution/resume refuse,
+  including after runtime environment changes.
+- **AC5 — Partial results:** Inject denial after merge and during cleanup; status names completed and remaining steps,
+  and same-process resume neither repeats merge nor requests business confirmation. Policy revocation blocks remaining
+  work. Restart loses retained authority; recovery inspects remaining state without claiming unobserved completion.
+- **AC6 — Host smoke:** In disposable repositories, exercise the implemented auto tool on Codex CLI and Claude Code
+  with an explicitly allowed MCP tool and server filesystem access. Record host versions, tool permission behavior,
+  absence of devkit elicitation, resulting refs/worktree state and no remote effects. Distinguish any host permission
+  prompt/refusal from a devkit confirmation. Also test SDK transport with no form capability.
+- **AC7 — Contract and guidance:** Promote the successor ADR and update `CAP-INT-mcp-services`,
+  `CAP-DLV-project-policy`, `CAP-DLV-delivery-workflows`, `CAP-WT-task-worktrees`, quick reference and the source
+  constitution/workflows/integration/completion/worktree/git-policy instructions consistently. Keep plan-intent and
+  plan-accept human, publication separate, local governance overrides forbidden and current runtime policy unchanged
+  unless separately requested.
+
+Development runs lint/type checks and `just test-affected`, preserving its full fallback. Add service/MCP tests and
+spec readiness tests for the cases above, then synchronize source bundle projections through devkit rather than
+editing managed assets. No production source changes or new auto behavior are delivered by Planning.
+
+Scope excluded: a new executing CLI, durable execution journal, background watcher, automatic remote publication,
+cloud mutation, changing host permissions or trust, force cleanup, bypassing required verification, VS Code/SDK/desktop
+host support and changing this repository's current ask policy as part of this proposal.
 
 ## 4. Lifecycle & Retirement Criteria
 
-Retain as a draft until the execution contract and Codex CLI/Claude Code feasibility have concrete evidence. Planning
-compares execution routes for the agreed `auto` scope and demonstrates local merge and cleanup under host permissions.
-Acceptance requires the user's decision on that design; promotion alone authorizes neither acceptance nor development.
-If host constraints prevent full automation, present the exact remaining permission boundary and the closest supported
-flow instead of equating a workflow gate pass with execution authority.
+Planning recommends the existing MCP tool with shared-service policy dispatch and `dev_effort: medium`. Acceptance
+requires the user's `plan-accept` on this design, including the MCP dependency and the live-host verification gap.
+Development must prove AC1–AC7; if either supported host cannot satisfy unattended execution under its granted
+permissions, present the exact remaining boundary before claiming the feature complete. Acceptance alone changes no
+runtime policy and authorizes neither publication nor automatic integration of this Planning branch.
