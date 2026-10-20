@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 import yaml
 from conftest import Write
+from devkit.core import run_git
 from devkit.workflow import Workspace, load_decisions
 from proposals.support import CHARACTERIZE, GATED, INCUBATED, MONTH, STAMP, TODAY, accept, spec_dir, write_workflow
 
@@ -235,3 +236,47 @@ def test_a_recording_failure_is_a_warning(workspace: Path, monkeypatch: pytest.M
     spec = f"specs/{MONTH}/{STAMP}-fails"
     assert notice.fix is not None and f"devkit workflow next --unit {spec}" in notice.fix
     assert not (workspace / UNIT.format(slug="fails")).exists()
+
+
+@pytest.mark.parametrize("history", ["committed", "dirty", "untracked", "no-git"])
+def test_historical_record_citations(workspace: Path, write: Write, history: str) -> None:
+    proposal = _proposal(workspace, "history")
+    _answered(workspace, "history")
+    accept(proposal)
+    create_padr(workspace, "history", "Record evidence")
+    record = write("docs/proposals/PROP-history/envelopes/answer-01.yaml", "kind: answer\n")
+    padr = proposal.parent / "decisions/PADR-record-evidence.md"
+    padr.write_text(
+        padr.read_text() + "\nAnswer `envelopes/answer-01.yaml`. "
+        "[answer](../envelopes/answer-01.yaml).\n\n```text\n`envelopes/answer-01.yaml`\n```\n"
+    )
+    outside = write("docs/evidence.md", "[answer](proposals/PROP-history/envelopes/answer-01.yaml)\n")
+    head = ""
+    if history != "no-git":
+        run_git(workspace, "init", "-b", "dev-history")
+        run_git(workspace, "add", ".")
+        if history == "untracked":
+            run_git(workspace, "rm", "--cached", record.relative_to(workspace).as_posix())
+        run_git(workspace, "-c", "user.name=Test", "-c", "user.email=test@example.com", "-c", "core.hooksPath=/dev/null",
+                "commit", "-m", "Evidence")
+        head = run_git(workspace, "rev-parse", "HEAD").decode().strip()
+        if history == "dirty":
+            record.write_text("kind: answer\nsummary: changed\n")
+
+    result = handoff_proposal(workspace, "history", today=TODAY)
+
+    adr = (workspace / f"docs/decisions/{MONTH}/{STAMP}-record-evidence.md").read_text()
+    assert not record.exists()
+    assert "```text\n`envelopes/answer-01.yaml`\n```" in adr
+    if history == "committed":
+        pin = f"{head}:docs/proposals/PROP-history/envelopes/answer-01.yaml"
+        assert f"historical Git `{pin}`" in adr
+        assert adr.count(pin) == 2
+        assert f"historical Git `{pin}`" in outside.read_text()
+        assert run_git(workspace, "show", pin) == b"kind: answer\n"
+        assert len([item for item in result.rewritten if pin in item.new]) == 3
+        assert not result.unresolved
+    else:
+        assert "Answer `envelopes/answer-01.yaml`." in adr
+        assert "historical Git" not in adr + outside.read_text()
+        assert len([item for item in result.unresolved if "answer-01.yaml" in item.target]) == 3

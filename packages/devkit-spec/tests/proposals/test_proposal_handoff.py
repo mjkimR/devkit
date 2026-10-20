@@ -453,17 +453,18 @@ def test_rewrites_code_span_paths_into_the_bundle(workspace: Path) -> None:
         encoding="utf-8",
     )
     padr = proposal.parent / "decisions/PADR-pick-a.md"
-    padr.write_text(padr.read_text(encoding="utf-8") + "\nSee `materials/notes.md`.\n", encoding="utf-8")
+    padr.write_text(padr.read_text(encoding="utf-8") + "\nSee `materials/notes.md`; every draft has `materials/`.\n", encoding="utf-8")
     accept(proposal)
 
     result = handoff_proposal(workspace, "span-paths", today=TODAY)
 
     materials = f"docs/materials/{MONTH}/{STAMP}-span-paths"
     spec = (workspace / f"{SPEC}-span-paths/spec.md").read_text(encoding="utf-8")
-    assert f"`ADR-pick-a`, evidence in `{materials}/notes.md` and `{materials}/`; `src/app.py` stays." in spec
+    assert f"`ADR-pick-a`, evidence in `{materials}/notes.md` and `materials/`; `src/app.py` stays." in spec
     assert "```text\n`materials/notes.md`\n```" in spec
     adr = (workspace / f"docs/decisions/{MONTH}/{STAMP}-pick-a.md").read_text(encoding="utf-8")
-    assert f"See `{materials}/notes.md`." in adr
+    assert f"See `{materials}/notes.md`; every draft has `materials/`." in adr
+    assert not any(item.old == "materials/" for item in result.rewritten)
     paths = [(item.old, item.new) for item in result.rewritten if item.kind == "path"]
     assert ("decisions/PADR-pick-a.md", "ADR-pick-a") in paths
 
