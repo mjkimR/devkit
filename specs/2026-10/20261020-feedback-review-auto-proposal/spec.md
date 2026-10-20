@@ -2,7 +2,7 @@
 id: SPEC-feedback-review-auto-proposal
 title: Clarify recurring findings versus defects introduced by fixes
 summary: "Classify recurrence by the same failure condition while preserving review escalation for incomplete fixes."
-status: planned
+status: in-progress
 created: 2026-10-20
 related_capabilities: [CAP-DLV-delivery-workflows]
 related_stories: []
