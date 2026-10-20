@@ -311,7 +311,8 @@ advances only within its call). The user's decisions on q-checks-wait and q-unch
   `INTEGRATION_LANDED_UNCHECKED` (including `not-recorded`), a rewritten target that drops the source stopping before cleanup, an unknown merge,
   a rejected push, a diverged remote branch, a lease failure, a blocked local fast-forward, restart re-entry and the
   prepare refusals.
-- **Contracts**: no ADR is superseded. Development amends `CAP-INT-mcp-services` (sections 1, 2, 4, 5 and 6: the
+- **Contracts**: `ADR-github-pull-request-repository-binding` supersedes the adapter ADR solely for the Host-approved
+  repository-binding and synchronous no-queue mechanics corrections. Development amends `CAP-INT-mcp-services` (sections 1, 2, 4, 5 and 6: the
   network exclusion becomes route-scoped; the MCP tools that reach the network declare `openWorldHint`),
   `CAP-WT-task-worktrees` (section 5: devkit pushes and opens a PR only on the approved pull request route; the
   `WORKTREE_PR_POLICY` fix), `CAP-DLV-project-policy` (`delete_branch` also selects remote deletion on the PR route),

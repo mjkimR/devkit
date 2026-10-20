@@ -340,3 +340,39 @@ def test_source_change_after_remote_merge_blocks_local_fast_forward(remote_servi
     assert result.status == "partial" and result.errors
     assert result.failing_operation == "local_fast_forward"
     assert git(base, "rev-parse", "HEAD") == before and worktree.exists()
+
+
+def test_failed_build_then_manual_merge_remains_unchecked(remote_service, ready_provider):
+    service, fake, _base, _worktree = remote_service
+    original = ready_provider.check
+    ready_provider.check = lambda context: replace(
+        original(context), reasons=("build failed",) if context.result_sha else ()
+    )
+    result = run(service)
+    assert result.errors and not result.build_checked and result.result_sha
+    fake.merge(result.request.repository, 12, result.request.context.finish.source_sha, "dev-demo", "main", TASK.id)
+    result = service.resume(result.request.id)
+    assert result.status == "completed" and result.landing["reason"] == "not-recorded"
+    assert not result.landing["checked"]
+    assert any(n.code == "INTEGRATION_LANDED_UNCHECKED" for n in result.notices)
+
+
+@pytest.mark.parametrize("deletion", [False, True])
+def test_git_mutation_timeout_preserves_unknown_recovery(remote_service, monkeypatch, deletion):
+    from devkit.core.errors import GitError
+    from devkit.worktree import pull_request as adapter
+
+    service, _fake, _base, worktree = remote_service
+    original = adapter.run_git
+
+    def fail_mutation(root, *args, **kwargs):
+        if args[0] == "push" and ("--delete" in args) == deletion:
+            raise GitError("fixture transport timeout", command=("git", *args), returncode=None)
+        return original(root, *args, **kwargs)
+
+    monkeypatch.setattr(adapter, "run_git", fail_mutation)
+    result = run(service)
+    assert result.errors[0].code == "INTEGRATION_STEP_UNKNOWN"
+    assert result.steps["remote_delete" if deletion else "push"] == "unknown"
+    assert "integration_status" in result.errors[0].fix
+    assert worktree.exists() != deletion

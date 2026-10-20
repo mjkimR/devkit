@@ -142,3 +142,29 @@ def test_runner_is_bounded_noninteractive_and_timeout_is_unknown(tmp_path, monke
 
     monkeypatch.setattr(subprocess, "run", timeout)
     assert run_gh(tmp_path, ["pr", "view", "1", "-R", REPOSITORY.selector]).returncode is None
+
+
+def test_multiple_push_destinations_refused_at_prepare_and_revalidation(tmp_path):
+    root = init_repo(tmp_path / "repo")
+    git(root, "remote", "add", "origin", REPOSITORY.fetch_url)
+    port = GitHub(
+        root,
+        lambda cwd, args: CommandResult(
+            0,
+            json.dumps(
+                {
+                    "url": "https://github.example/owner/repo",
+                    "nameWithOwner": "owner/repo",
+                    "mergeCommitAllowed": True,
+                    "deleteBranchOnMerge": False,
+                }
+            ),
+        ),
+    )
+    port.validate(REPOSITORY)
+    git(root, "config", "--add", "remote.origin.pushurl", REPOSITORY.push_url)
+    git(root, "config", "--add", "remote.origin.pushurl", "https://github.example/other/repo.git")
+    for operation in (lambda: port.resolve("origin"), lambda: port.validate(REPOSITORY)):
+        with pytest.raises(PullRequestError) as error:
+            operation()
+        assert error.value.code == "INTEGRATION_REMOTE_UNSUPPORTED"

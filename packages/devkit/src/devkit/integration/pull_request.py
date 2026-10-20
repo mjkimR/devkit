@@ -442,7 +442,7 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
                     "Keep the branches and report to the user; resume once the fetched target contains the source",
                 )
             reason = None
-            if result.build_target is None or result.result_sha is None:
+            if not result.build_checked or result.build_target is None or result.result_sha is None:
                 reason = "not-recorded"
             elif not is_ancestor(root, merge, target):
                 reason = "merge-not-contained"

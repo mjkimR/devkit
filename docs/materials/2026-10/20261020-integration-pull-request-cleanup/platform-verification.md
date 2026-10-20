@@ -43,3 +43,11 @@ current release. These are documentation defaults, not inspected settings for th
 exceed a host timeout despite bounded network work. Host timeout does not establish cancellation or rollback:
 inspect status after the server worker becomes available; active execution can keep the record busy. Requests and
 checked-build evidence survive only in the same process. Restart requires fresh preparation and confirmation.
+
+
+The offline approving call was measured around `IntegrationService.integrate` including preparation, immediate
+fixture confirmation, build and execution: a completed merge/cleanup took 1.678 seconds; a pending return took
+0.729 seconds (two tests passed). These exclude human confirmation delay and use local bare remotes/fake GitHub,
+so they do not establish live latency or a hard bound for arbitrary provider checks. The twenty-second shared
+network deadline and five-second subprocess bounds limit network contributions under the common sixty-second
+host default; long local work remains the explicitly disclosed limit.

@@ -14,6 +14,7 @@ from typing import Any, Protocol
 from urllib.parse import quote, urlparse
 
 from devkit.advisory import Actor, AdvisoryError, Retry
+from devkit.core.errors import GitError
 from devkit.core.git import run_git
 
 NETWORK_TIMEOUT = 5.0
@@ -27,8 +28,8 @@ class PullRequestError(AdvisoryError):
     code = "INTEGRATION_REMOTE_UNSUPPORTED"
     fix = "Inspect the bound GitHub repository and prepare again; use local integration for unsupported remotes"
 
-    def __init__(self, code: str, message: str, fix: str) -> None:
-        super().__init__(message, fix=fix)
+    def __init__(self, code: str, message: str, fix: str, *details: object) -> None:
+        super().__init__(message, *details, fix=fix)
         self.code = code
 
 
@@ -143,9 +144,19 @@ class GitHub:
                 "Inspect the GitHub response and prepare again",
             ) from exc
 
+    def _push_url(self, remote: str) -> str:
+        urls = run_git(self.root, "remote", "get-url", "--push", "--all", remote).decode().splitlines()
+        if len(urls) != 1:
+            raise PullRequestError(
+                "INTEGRATION_REMOTE_UNSUPPORTED",
+                "Selected remote must have exactly one effective push destination",
+                "Configure one push destination for the selected remote and prepare again",
+            )
+        return urls[0]
+
     def resolve(self, remote: str) -> Repository:
         fetch_url = run_git(self.root, "remote", "get-url", remote).decode().strip()
-        push_url = run_git(self.root, "remote", "get-url", "--push", remote).decode().strip()
+        push_url = self._push_url(remote)
         for url in (fetch_url, push_url):
             parsed = urlparse(url)
             if parsed.scheme in {"http", "https"} and (parsed.username or parsed.password):
@@ -192,7 +203,8 @@ class GitHub:
     def validate(self, repository: Repository) -> None:
         for push, expected in ((False, repository.fetch_url), (True, repository.push_url)):
             args = ["remote", "get-url", *(["--push"] if push else []), repository.remote]
-            if run_git(self.root, *args).decode().strip() != expected:
+            actual = self._push_url(repository.remote) if push else run_git(self.root, *args).decode().strip()
+            if actual != expected:
                 raise PullRequestError("INTEGRATION_PR_CONFLICT", "Bound remote URL changed", "Prepare a new request")
 
     def rules(self, repository: Repository, branch: str) -> list[dict[str, Any]]:
@@ -429,13 +441,24 @@ class GitHub:
         )
         return run_git(self.root, "rev-parse", "--verify", tracking).decode().strip()
 
+    def _mutate(self, *args: str) -> None:
+        try:
+            self._network(*args)
+        except GitError as exc:
+            raise PullRequestError(
+                "INTEGRATION_STEP_UNKNOWN",
+                "Git mutation outcome is unconfirmed",
+                "Inspect integration_status and remote state before recovery; do not repeat an unknown mutation",
+                str(exc),
+            ) from exc
+
     def push(self, repository: Repository, source: str, branch: str) -> None:
         self.validate(repository)
-        self._network("push", repository.remote, f"{source}:refs/heads/{branch}")
+        self._mutate("push", repository.remote, f"{source}:refs/heads/{branch}")
 
     def delete(self, repository: Repository, source: str, branch: str) -> None:
         self.validate(repository)
-        self._network(
+        self._mutate(
             "push",
             f"--force-with-lease=refs/heads/{branch}:{source}",
             repository.remote,
