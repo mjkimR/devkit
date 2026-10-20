@@ -798,7 +798,7 @@
     },
     ".agents/skills/spec/references/branches.md": {
       "mode": 420,
-      "sha256": "ffb6a5e7cd084f3525fbf4eadd44f196dd78afbf21c4e1056a68a6a116b0e959"
+      "sha256": "a4e10e8d796f96970c1d4a110de174fc4d27bfdfc6d5461d1c6b5cffbc1cee93"
     },
     ".agents/skills/spec/references/classification.md": {
       "mode": 420,
@@ -822,7 +822,7 @@
     },
     ".agents/skills/spec/references/git-policy.md": {
       "mode": 420,
-      "sha256": "64b2a0c9c49219c4f9f679e026a73fab7f3bae75ca90e1b8861e37328e2ca49f"
+      "sha256": "ff19589bd76197f0ff2e214f9a280cfc55114fd38a0ae41af602701c90ae17f4"
     },
     ".agents/skills/spec/references/planning.md": {
       "mode": 420,
@@ -986,7 +986,7 @@
     },
     ".claude/skills/spec/references/branches.md": {
       "mode": 420,
-      "sha256": "ffb6a5e7cd084f3525fbf4eadd44f196dd78afbf21c4e1056a68a6a116b0e959"
+      "sha256": "a4e10e8d796f96970c1d4a110de174fc4d27bfdfc6d5461d1c6b5cffbc1cee93"
     },
     ".claude/skills/spec/references/classification.md": {
       "mode": 420,
@@ -1010,7 +1010,7 @@
     },
     ".claude/skills/spec/references/git-policy.md": {
       "mode": 420,
-      "sha256": "64b2a0c9c49219c4f9f679e026a73fab7f3bae75ca90e1b8861e37328e2ca49f"
+      "sha256": "ff19589bd76197f0ff2e214f9a280cfc55114fd38a0ae41af602701c90ae17f4"
     },
     ".claude/skills/spec/references/planning.md": {
       "mode": 420,
@@ -1442,7 +1442,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/branches.md": {
       "mode": 420,
-      "sha256": "ffb6a5e7cd084f3525fbf4eadd44f196dd78afbf21c4e1056a68a6a116b0e959"
+      "sha256": "a4e10e8d796f96970c1d4a110de174fc4d27bfdfc6d5461d1c6b5cffbc1cee93"
     },
     ".devkit/managed/spec/skills/spec/references/classification.md": {
       "mode": 420,
@@ -1466,7 +1466,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/git-policy.md": {
       "mode": 420,
-      "sha256": "64b2a0c9c49219c4f9f679e026a73fab7f3bae75ca90e1b8861e37328e2ca49f"
+      "sha256": "ff19589bd76197f0ff2e214f9a280cfc55114fd38a0ae41af602701c90ae17f4"
     },
     ".devkit/managed/spec/skills/spec/references/planning.md": {
       "mode": 420,
