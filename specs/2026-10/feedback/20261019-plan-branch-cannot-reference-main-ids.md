@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-19
 ---
 
@@ -51,3 +51,11 @@ created_at: 2026-10-19
 ```
 
 Historical source: Git `1b8478093a44cf2d0b74c412bffc93f259459ef0:docs/proposals/PROP-worktree-host-compatibility/feedback/plan-branch-cannot-reference-main-ids.md`; relative evidence paths refer to that proposal bundle.
+
+## Disposition
+
+Directly resolved by `SPEC-feedback-planning-parser`. Planning guidance now requires Host refresh before work depending on newer base IDs and returns an in-flight dependency as a Host recovery problem, preserving worker Git restrictions and local-only ID resolution.
+
+Independent medium code review passed all four acceptance criteria without findings. The affected suite passed
+1,113 tests, including parser default/order/error cases and existing consumer checks; lint, type checks and
+cumulative governance checks passed. This disposition records verified branch work, not integration.

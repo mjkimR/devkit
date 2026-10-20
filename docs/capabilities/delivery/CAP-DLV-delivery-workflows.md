@@ -392,6 +392,18 @@ base checkout, runs its role subagents nested (Host → worker → role; Claude 
 scratch files in an ignored path inside its worktree, writes its own records, commits at every stage boundary and,
 when it stops on questions or a problem, makes an emergency commit of the unfinished work with its `worker` envelope
 when record/commit access is permitted.
+Planning resolves operational instructions and CLI execution in the assigned worktree. When a turn needs newer
+base document IDs or CLI features, the Host incorporates the base and synchronizes that worktree's installed
+instructions under existing Git and permission policy before resuming. A worker discovering that dependency returns
+a problem for Host recovery; it never merges, resolves references from another branch, hides missing IDs in prose,
+or fabricates unsupported records. Base advancement alone does not require a refresh.
+
+The Planning payload names an ignored probe path inside the proposal directory and allowed write scope; the Host
+verifies or prepares it before delegation. The worker removes temporary files and throwaway repositories, including
+their linked worktrees, before its last commit and retains evidence in `materials/`. A probe that needs an outside
+path is a boundary-expansion problem for the Host. Ignored status grants no sandbox or activity-repository Git
+permissions; a temporary path under `/tmp` may not exercise repository-local sandbox conditions.
+
 It never reverts, closes, raises the depth or narrows the scope. The `development-worker` runs from the stage
 `devkit workflow next` names up to the final change report; the `planning-worker` takes a draft proposal toward
 `plan-accept`, collecting its questions in one round. The Host restates either worker's questions for the user (what

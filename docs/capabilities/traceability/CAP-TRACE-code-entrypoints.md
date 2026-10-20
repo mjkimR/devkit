@@ -104,6 +104,13 @@ joins them.
 5. **Pairs**: every document is paired with every candidate. `state` is `declared` when an existing entrypoint equals
    the path or is a directory containing it, else `new`; `exists` tells whether the path is in the working tree.
 
+The reusable `devkit_spec.entrypoints.bundle.parse_targets(text, relative)` function parses reconciliation text
+without reading files. Both disk bundle loading and committed worker-record inspection use it. It returns targets
+in source order, defaults an absent file or non-string resolution to an empty string, and treats an absent or falsy
+`targets` value as empty. Malformed frontmatter, a truthy non-list `targets`, or an entry without a string-valued
+file field (when present) raises `EntrypointsInputInvalidError` with code `SPEC_ENTRYPOINTS_INPUT_INVALID` and the
+supplied `relative` diagnostic path. It does not normalize paths or change the reconciliation grammar.
+
 ### 3.5 Derivation Scope and Filters
 
 1. **`--spec <dir>`** derives one bundle (the directory relative to the workspace root, or absolute, inside the
