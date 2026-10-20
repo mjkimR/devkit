@@ -183,7 +183,10 @@ def integration_validate(context, targets: tuple[CleanupTarget, ...]) -> None: .
 def integration_run(context, result: FinishResult, targets: tuple[CleanupTarget, ...]) -> CleanupResult: ...
 ```
 
-Each `CleanupTarget(kind, identity, revision)` names one exact package-owned target. Planning and validation are
+Validation and the runner receive the execution context: after a build `finish.target_sha` is the build target and
+`result_sha` the landed result commit; a cleanup-only request passes the source as `result_sha`; before a build it is
+the approved context. Cleanup revisions bind to the source and package-owned state, never to a target SHA. Each
+`CleanupTarget(kind, identity, revision)` names one exact package-owned target. Planning and validation are
 read-only. Validation refuses replaced/revised targets; the runner consumes only the approved tuple and is safe to
 rerun after partial completion. It must not discover additional targets to delete at execution time.
 `CleanupResult(done, notices)` reports completion and normal advisory notices. `done=false` leaves cleanup partial
@@ -218,8 +221,9 @@ anything else is stale.
 The approving call waits up to 20 seconds for the Git common-directory integration lock another devkit executor holds
 (`devkit worktree finish --merge` takes it too), then reports `LOCK_HELD` with nothing changed and a `[FIX]` naming
 `integration_resume` while the target still equals the confirmation target, else a new `integration_integrate`.
-`integration_resume` never waits (`LOCK_HELD` at once). The 20-second wait plus the 30-second `commit-tree` bound stays
-below Codex's default 60-second MCP tool timeout; a host that cuts a call leaves the request inspectable with
+`integration_resume` never waits (`LOCK_HELD` at once). The 20-second wait, within the 30-second upper bound of
+`ADR-target-advance-readiness`, plus the 30-second `commit-tree` bound stays below Codex's default 60-second MCP tool
+timeout; a host that cuts a call leaves the request inspectable with
 `integration_status`. Changed scope requires a new request and
 approval; dirty, locked, replaced or unrelated worktrees are preserved. Permission remedies stay host-owned.
 

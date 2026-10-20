@@ -19,6 +19,8 @@ targets:
     resolution: modified
   - file: docs/decisions/2026-10/20261020-target-advance-readiness.md
     resolution: modified
+  - file: docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md
+    resolution: modified
 ---
 
 # Reconciliation: integration base advances
@@ -39,6 +41,9 @@ targets:
   result tree, unit-directory reason, `SPEC_POLICY`, target-bound codes and disclosure).
 - `CAP-DLV-project-policy`: the `[worktree] merge` default and template line, and the merge method among the policies
   devkit models.
+- `CAP-COLL-work-scope-registry`: item 9 states the post-merge criterion of devkit-spec's scoped cleanup (the base
+  HEAD contains the result commit and the worktree is gone; later base commits allowed). `CAP-INT-mcp-services`
+  section 4 states that cleanup receives the execution context.
 - `MS-multi-host-native-integration`: exit condition now reads "bound to the verified source commit and the
   confirmation target and its descendants" (user decision in Planning).
 - References: `docs/development/reference/integration.md` and `worktree.md` (codes, APIs, the merge key).
