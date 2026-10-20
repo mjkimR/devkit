@@ -1,7 +1,7 @@
 ---
 id: CAP-DIST-sync-and-transactions
 title: "Synchronization & Transactions"
-summary: "Transactional deployment of bundle assets, atomic journal safety, recovery, the receipt and configuration formats devkit-dist owns, the selection model, and sync and status notices."
+summary: "Transactional bundle deployment, canonical receipts, restricted checkout-local configuration and personal rendering, with lock, journal and recovery guarantees."
 area: distribution
 status: active
 entrypoints:
@@ -9,6 +9,9 @@ entrypoints:
   - packages/devkit-dist/src/devkit/distribution/installation/overrides.py
   - packages/devkit-dist/src/devkit/distribution/installation/engines.py
   - packages/devkit-dist/src/devkit/distribution/installation/config_template.py
+  - packages/devkit-dist/src/devkit/core/local_config.py
+  - packages/devkit-dist/src/devkit/distribution/installation/local_render.py
+  - packages/devkit-dist/src/devkit/distribution/installation/sync.py
 created_at: 2026-10-17
 ---
 
@@ -384,6 +387,9 @@ sync seeds it again). Any other plan (a seed, the guidance block, `.devkit/.giti
 receipt) writes nothing and raises `ReceiptStaleError` (`RECEIPT_STALE`): an `INTERACTION` error with exit code `1`,
 since updating committed files is the user's decision and an agent must not retry it away with a plain sync. Its
 `[TARGET]` names the committed paths that would change and its `[DETAIL]` lines the planned writes.
+
+Ignored local environment and render-evidence edits are also permitted under the eligibility rules below; they do
+not alter the committed receipt.
 
 A fresh clone (`just init`), `devkit worktree start` and CI run it; whoever changes a bundle source, the lock or
 the selection runs a plain `devkit sync` and commits what it changes. In CI, `devkit sync --locked` after the

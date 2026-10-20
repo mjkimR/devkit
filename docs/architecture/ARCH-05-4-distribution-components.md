@@ -1,7 +1,7 @@
 ---
 id: ARCH-05-4-distribution-components
 title: Building Block View - Distribution Components
-summary: "Agent asset distribution components, content wheel ingestion, workspace projections, and transaction boundaries."
+summary: "Agent asset distribution components, shared and local configuration, canonical and personal runtime views, and transaction boundaries."
 status: active
 created_at: 2026-10-17
 ---

@@ -10,11 +10,12 @@ description: Read before using, changing or troubleshooting devkit-managed asset
 | Path | In Git | Role |
 | --- | --- | --- |
 | `.devkit/config.toml` | yes | Selected bundles and presets, target agents, `guidance_block`, `override_drift`, `[playbooks]`; tables reserved for `devkit-agt` engines and `[tool.<name>]` tables are passed through unread |
-| `.devkit/installation.json` | yes | Receipt: packages, bundle versions, deployed paths, SHA-256 and mode of every file |
+| `.devkit/config.local.toml` | no | Optional checkout-local execution, MCP registration, playbook and bundle-variable preferences |
+| `.devkit/installation.json` | yes | Canonical receipt: packages, bundle versions, deployed paths, SHA-256 and mode of every file |
 | `.devkit/overrides/<bundle>/` | yes | Project-owned replacements for upstream asset files (baselines under `.devkit/overrides/.baseline/`) |
-| `.devkit/.gitignore` | yes | Ignores `managed/` and `transient/`; seeded by sync when absent, then project-owned |
-| `.devkit/managed/<bundle>/` | no | Pristine copies extracted from installed bundles |
-| `.devkit/transient/` | no | The project lock and the journal of an interrupted sync |
+| `.devkit/.gitignore` | yes | Seeded ignore rules; sync maintains `/config.local.toml` and preserves other entries |
+| `.devkit/managed/<bundle>/` | no | Generated canonical or eligible personally rendered copies |
+| `.devkit/transient/` | no | Lock, transaction journal, deployed signatures and personal-render evidence |
 | `.claude/`, `.agents/`, `.codex/` projections | usually no | Native copies of skills and subagents for each selected agent |
 | `.codex/hooks.json` | project choice | Shared host configuration; only receipt-recorded `host_hooks` matcher groups belong to devkit |
 | `AGENTS.md` (root) | yes | Project-owned; only the `<!-- DEVKIT:START -->` ... `<!-- DEVKIT:END -->` block is managed |
@@ -83,6 +84,25 @@ marked examples; it never changes a line, and `--print` shows the result under
 `devkit sync --locked` rebuilds only the Git-ignored copies the committed
 receipt records and never writes the receipt, the `AGENTS.md` block or seeded
 files; when those would change, it writes nothing and fails with `RECEIPT_STALE`.
+It also permits eligible ignored personal output and `--cloud` or `--local` environment persistence.
+
+## Checkout-local preferences
+
+Use ignored `.devkit/config.local.toml` for `[execution] environment = "local" | "cloud"`,
+`[mcp] register = true | false`, `[playbooks]` search preferences and scalar
+`[bundles.<bundle>.variables]` values. Governance, selection and commands remain shared; unknown local keys
+fail with `CONFIG_LOCAL_KEY_FORBIDDEN`. The file is not a secret store.
+`uv run devkit config show --effective --format json` shows values, sources and execution environment.
+
+`uv run devkit sync --cloud` saves cloud execution; `--local` explicitly returns to local. Ordinary sync
+keeps the saved environment. `--no-save`, `--dry-run` and `--check` do not persist it. Cloud means interactive
+approval is unavailable, never approval to act; local does not prove the host can interact.
+
+Personal variables may change only ignored, untracked skill, instruction, subagent and playbook content.
+Receipt hashes, guidance, seeds, paths, modes and executable assets stay canonical. Tracked or unignored
+personal destinations fail with `CONFIG_LOCAL_NOT_IGNORED`; forbidden render changes fail with
+`CONFIG_LOCAL_RENDER_FORBIDDEN`. Missing or stale local evidence is `CONFIG_LOCAL_RENDER_STALE`: run sync.
+Removing personal variables and syncing restores canonical output.
 
 ## Customizing an upstream asset
 

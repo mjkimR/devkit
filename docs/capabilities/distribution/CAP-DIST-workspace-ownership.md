@@ -1,9 +1,11 @@
 ---
 id: CAP-DIST-workspace-ownership
 title: "Workspace Ownership & Overrides"
-summary: "Workspace layout, managed assets, guidance block maintenance, and project override drift review."
+summary: "Shared and checkout-local workspace ownership, managed assets, guidance maintenance, and project override drift review."
 area: distribution
 status: active
+entrypoints:
+  - packages/devkit-dist/src/devkit/distribution/installation/workspace.py
 created_at: 2026-10-17
 ---
 
@@ -13,8 +15,9 @@ created_at: 2026-10-17
 
 ```text
 .devkit/
-  .gitignore              # Ignores managed/ and transient/; seeded by sync when absent, then project-owned (Git-tracked)
+  .gitignore              # Seeded ignore rules plus managed /config.local.toml entry; preserves other rules (Git-tracked)
   config.toml             # Project configuration: selection, agents, module tables (Git-tracked)
+  config.local.toml       # Optional checkout preferences; ignored and never receipt-owned
   generated.toml          # Optional generated-file registry of `devkit generated` (Git-tracked)
   installation.json       # Receipt: packages, selection, file hashes & modes (Git-tracked)
   managed/<bundle>/       # Upstream copies and rendered Markdown template outputs (generated)
@@ -25,7 +28,8 @@ created_at: 2026-10-17
     lock                  # Project lock (fcntl.flock): exclusive for writers, shared for readers (a reader on a read-only file system reads without it)
     sync-journal.json     # Write-ahead journal of an unfinished transaction
     seen-bundles.json     # Installed bundles this clone was told about (BUNDLE_UNSELECTED is announced once)
-    deployed.json         # Signatures of the files this clone's last sync left (tells stale files from edits)
+    deployed.json         # Last deployed signatures and personal destination provenance
+    local-render.json     # Personal signatures bound to canonical receipt and effective variables
 <agent native paths>      # Projected native assets (.agents/, .codex/, .claude/)
 AGENTS.md                 # Project-owned; only the DEVKIT:START/END block inside it is managed (Git-tracked)
 <seeded targets>          # Files a seeded document asset wrote once; project-owned (Git-tracked)

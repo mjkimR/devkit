@@ -1,7 +1,7 @@
 ---
 id: CAP-WT-task-worktrees
 title: "Task Worktrees"
-summary: "Task worktree isolation, activity branches, merge gates, and stale worktree cleanup."
+summary: "Task worktree isolation, creation-time local preference snapshots, activity branches, merge gates, and stale checkout cleanup."
 area: worktree
 status: active
 entrypoints:

@@ -2,7 +2,7 @@
 id: SPEC-local-config-execution-environment
 title: Local configuration and execution environments
 summary: Add ignored checkout-local configuration overlays and an explicit cloud execution environment, with creation-time worktree copying and shared receipt preservation.
-status: in-progress
+status: completed
 created: 2026-10-20
 related_capabilities: [CAP-DIST-sync-and-transactions, CAP-DIST-workspace-ownership, CAP-WT-task-worktrees]
 related_stories: []

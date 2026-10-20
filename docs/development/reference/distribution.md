@@ -90,13 +90,14 @@ existing shared host files are never edited by locked sync. See `CAP-HOST-lifecy
   longer managed, so it appears as an `ORPHAN_LEFT` warning on that run and as a `stray` file afterwards if it sits
   under the managed root.
 - `--locked`: for a fresh clone, a new worktree and CI. Restores only the Git-ignored managed copies (and native
-  projections a repository ignores) to the committed receipt, exactly as recorded: it creates missing ones, updates
+  projections a repository ignores) to canonical or validated personal output: it creates missing ones, updates
   and removes ones this clone's last sync left unchanged after a pull moved the receipt, and never writes the
   receipt, the root `AGENTS.md` block, seeded files (a deleted one stays missing) or `.devkit/.gitignore`. When the sync
   would change any of them (the installed bundles no longer match the receipt, or there is no receipt), it writes
   nothing and fails with `RECEIPT_STALE` (`INTERACTION`, exit `1`: a negative result, as for `--check`); every other
   error exits `2` as in a plain sync (a missing package is `SELECTION_INVALID`). It runs post-sync extensions only when it committed, and
-  takes no other selection or mode flag (`CAP-DIST-sync-and-transactions`).
+  permits `--cloud` or `--local` to save the environment in the ignored local file, but no selection flag,
+  `--dry-run`, `--check` or `--no-save` (`CAP-DIST-sync-and-transactions`).
 
 ---
 
