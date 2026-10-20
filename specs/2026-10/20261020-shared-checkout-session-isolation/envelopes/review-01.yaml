@@ -1,0 +1,16 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T03:09:24.932540Z'
+status: completed
+summary: 'Low-effort self-review: all four guidance additions satisfy AC-01 through AC-04, with existing policy levels, command output, integration checks and approvals unchanged; no findings.'
+findings: []
+checks:
+  tests: PASS 1105 affected tests
+  lint: PASS Ruff, formatting and targeted governance checks
+  types: PASS Pyright
+diff_scope:
+  base: c71e4f3c64d51b890a8fdf8d40a7e1dd7f9753be
+  head: 2429b99d95375c7a1d1a427aa6eade6a70077364
+activity_effort: low
