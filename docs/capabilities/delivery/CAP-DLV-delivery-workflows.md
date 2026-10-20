@@ -130,7 +130,7 @@ sequence.
     An eligible draft may skip Planning by a **direct acceptance** (`ADR-direct-acceptance-command-and-handoff-guard`):
     Backlog work on the base checkout, under every pull-request policy, where the Host sweeps its own acceptance
     session at `collect-feedback` and records `plan-accept` with `devkit spec proposal accept <slug> --by user
-    --direct`, without `reviewing`. It has no Planning branch, run, `activity-effort` or `worker` envelope; the
+    --direct --note "<reason>"`, without `reviewing`. It has no Planning branch, run, `activity-effort` or `worker` envelope; the
     stage schema is unchanged, and the request shows "Planning: skipped (direct acceptance)" where a Planning
     acceptance shows its effort record.
 15. **`activity-effort` sets the review, never the floor**: Development of a spec unit reviews at `low` by the author
@@ -435,7 +435,7 @@ prompt.
 | `devkit workflow next --unit <dir> [--given <check>]...` | Current stage, unmet checks, `[NEXT_SKILL]`, `[WAITING]`, `[DELEGATE]`, `[SKIPPED]`. |
 | `devkit workflow show <id>` / `--unit <dir>` | Render a definition. |
 | `devkit workflow answer --unit <dir> --request gate:<gate> --action accept\|decline --by user` | Record a `plan-intent` decision, or decline `plan-accept`. |
-| `devkit spec proposal accept <slug> --by user [--direct] [--check] [--note <text>]` | Record a `plan-accept` acceptance with `status: accepted` in one step; `--direct` for an eligible draft on the base (`CAP-DLV-proposal-incubation`). |
+| `devkit spec proposal accept <slug> --by user [--note <text>] [--direct --note <reason>] [--check]` | Record a `plan-accept` acceptance with `status: accepted` in one step; `--direct` for an eligible draft on the base (`CAP-DLV-proposal-incubation`). |
 | `devkit workflow return --unit <dir> --to <stage>` | Go back within the activity; voids later approvals and earlier envelopes of those stages. |
 | `devkit workflow bind --unit <dir> --workflow <id>` | Bind an unbound unit, or change its workflow. |
 | `devkit workflow validate` | Validate definitions; `SHARED_STAGE_MISMATCH` across definitions. |
