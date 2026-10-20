@@ -662,12 +662,21 @@ def test_integration_service_partial_post_finish_and_resume(tmp_path: Path, sync
     assert providers.provider("spec")[1] is not None
 
 
-@pytest.fixture
-def accepted_handoff_base(tmp_path, synced_template):
-    repo = _make_synced_repo(tmp_path, synced_template)
+@pytest.fixture(scope="module")
+def handoff_repository_template(tmp_path_factory: pytest.TempPathFactory, synced_template: Path) -> Path:
+    """Worker-local standalone seed; every case creates its own real Planning worktree."""
+    repo = _make_synced_repo(tmp_path_factory.mktemp("handoff-template"), synced_template)
     _cli(repo, "sync")
     git(repo, "add", "-A")
     git(repo, "commit", "-q", "-m", "track complete synchronized projections")
+    return repo
+
+
+@pytest.fixture
+def accepted_handoff_base(tmp_path: Path, handoff_repository_template: Path) -> Path:
+    repo = tmp_path / "repo"
+    # The seed has no linked worktrees, so its Git metadata needs no path repair.
+    shutil.copytree(handoff_repository_template, repo, symlinks=True)
     wt = _start_worktree(repo, "plan-idea", tmp_path / "wt-idea")
     unit = _complete_proposal(wt)
     file = wt / unit / "proposal.md"
@@ -676,6 +685,38 @@ def accepted_handoff_base(tmp_path, synced_template):
     git(wt, "commit", "-q", "-m", "refine effort")
     git(repo, "merge", "--ff-only", "plan-idea")
     return repo
+
+
+def test_handoff_initialization_keeps_template_isolated(
+    accepted_handoff_base: Path, handoff_repository_template: Path
+) -> None:
+    repo, template = accepted_handoff_base, handoff_repository_template
+    relative_asset = Path(".devkit/managed/spec/workflows/sdd-proposal.md")
+    refs = git(template, "show-ref")
+    config = (template / ".git/config").read_bytes()
+    source = (template / "src/app.py").read_bytes()
+    asset = (template / relative_asset).read_bytes()
+    assert not (repo / ".git/index").samefile(template / ".git/index")
+    assert git(repo, "rev-parse", "--absolute-git-dir") == str(repo / ".git")
+    assert git(template, "rev-parse", "--absolute-git-dir") == str(template / ".git")
+    assert git(template, "worktree", "list", "--porcelain").count("worktree ") == 1
+    worktrees = git(repo, "worktree", "list", "--porcelain")
+    assert worktrees.count("worktree ") == 2
+    assert str(template) not in worktrees
+    assert f"worktree {repo.parent / 'wt-idea'}" in worktrees
+
+    git(repo, "config", "fixture.isolation", "case")
+    git(repo, "checkout", "-q", "-b", "isolated-case")
+    write(repo, "src/app.py", "VALUE = 3\n")
+    git(repo, "add", "src/app.py")
+    git(repo, "commit", "-q", "-m", "test: mutate isolated case")
+    (repo / relative_asset).write_text("case-only managed asset\n")
+
+    assert git(template, "show-ref") == refs
+    assert (template / ".git/config").read_bytes() == config
+    assert (template / "src/app.py").read_bytes() == source
+    assert (template / relative_asset).read_bytes() == asset
+    assert git(template, "status", "--porcelain") == ""
 
 
 @pytest.mark.parametrize(

@@ -1,0 +1,10 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'Feature at spec depth: optimize repeated handoff-test initialization, preserving
+  real tested operations, per-test isolation and existing coverage; verify with paired
+  serial and eight-worker measurements.'
+by: user
+at: '2026-10-20T10:41:47.232483Z'
