@@ -1,110 +1,70 @@
 ---
 id: SPEC-response-style-survey
-title: Survey reply-style practice to refine response-style
-summary: Proposes one portable response style with a conclusion-first opening, arrow-marked core sentences and supporting explanation, required-format exceptions and example-based review.
+title: Apply the accepted response style
+summary: "Deploys conclusion-first replies with arrow-marked core sentences, preserved content and format exceptions, and rendered conversation language."
 status: planned
 created: 2026-10-20
-related_capabilities: []
+related_capabilities:
+  - CAP-DIST-content-packages
 related_stories: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
-# [SPEC-response-style-survey] Survey reply-style practice to refine response-style
+# [SPEC-response-style-survey] Apply the accepted response style
 
 ## 1. Problem Statement & Motivation
 
-Handed off from proposal PROP-response-style-survey on 2026-10-20.
-- **Preserved Materials**: `docs/materials/2026-10/20261020-response-style-survey`
-
-### 1. Background & Hypothesis
-
-The response-style bundle combines important content obligations with recurring visual instructions. Its
-block-count thresholds and fixed paragraph sizes are local editorial choices, not established determinants
-of comprehension. The proposed rewrite uses a conclusion-first opening and a consistent marked-point format,
-with depth and format exceptions that follow the request. Its helpfulness remains a judgment to discuss with concrete examples.
-
-The survey inspected actual prompt/style files, license texts and published evaluation descriptions rather
-than relying on repository names or stars. It is a focused review of reply instructions, not an audit of the
-repositories' entire code or a reproduction of their benchmarks. Seven prompt/style repositories and three
-official writing guides are recorded in `MAT-response-style-source-selection`. Popularity screens sources;
-it does not establish that their rules improve devkit replies.
+Apply the accepted direction from `ADR-response-style-adaptive-replies`,
+`ADR-response-style-guidance-budget`, `ADR-response-style-measurement` and
+`ADR-response-style-source-selection`. The current skill imposes fixed block and sentence counts;
+the accepted style uses a conclusion-first opening and marked conclusions with necessary explanation.
+`MAT-response-style-rewrite-draft` and `MAT-response-style-measurement-design` retain the authored
+examples and the limits of their evidence.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Survey reply-style practice to refine response-style so that system capabilities are extended.
+- As a reader, I want the answer and its qualifications early, with enough explanation for my request.
+- As a bundle consumer, I want the same opted-in style deployed with my configured language and native projections.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+- Scope Excluded: live model generation, benchmarks, scoring, universal quality claims and compaction experiments.
+- Scope Excluded: shared guidance-limit changes, skill-body size limits, new presets, host variants and report schemas.
+- Scope Excluded: edits to accepted ADRs or historical survey materials.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### Scenario 1 [AC-01]: Carried from proposal
+### Scenario 1 [AC-01]: Ordinary replies preserve meaning and explain conclusions
 
-Planning provides a concrete rewrite recommendation, complete source notes and reviewable examples, resolves
-independent criticism and presents the direction to the user. Only explicit user acceptance records
-`plan-accept`; it neither authorizes final integration nor asserts a measured quality gain. Handoff promotes
-the appropriate materials and PADRs through the normal workflow. At completion retain the checks actually run,
-the chosen behavior and its limits. Rejection preserves open feedback before normal retirement.
+- **Given** an ordinary reply governed by the skill,
+- **When** its instructions are reviewed against the authored scoped-fact and explanation examples,
+- **Then** they require a conclusion-first sentence, `→ **Core sentence.** Supporting explanation` points,
+  blank lines between points, required facts and qualifications, and requested depth without fixed block or sentence counts.
 
-## 5. Carried Proposal Notes
+### Scenario 2 [AC-02]: Required formats and work reports remain complete
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+- **Given** an artifact-only request, a required workflow format or an unfinished task,
+- **When** the skill and authored artifact/status examples are reviewed,
+- **Then** required formats and fields take precedence, artifacts have no conversational framing, and reports
+  distinguish completed scope from remaining work with actual verification and material limitations.
 
-### 2. Proposed Direction
+### Scenario 3 [AC-03]: Language and deployment remain portable
 
-- **Failure conditions:** Treat missing or distorted decision-relevant information as the more serious failure.
-  Also reject necessary information buried under repetition or irrelevant detail. Preserve the facts, place them
-  early with their qualifications, and remove distractions. Concise reporting does not reduce required work.
-- **Content and output obligations:** Preserve required facts, units, scoped conditions, material risks and
-  requested formats. A style rule cannot drop a workflow field or change a supplied fact to shorten a reply.
-- **First sentence:** For an ordinary reply, its first sentence states the overall answer, recommendation or
-  current result, including a condition that changes that conclusion or the uncertainty that prevents it.
-  A short answer may end there if complete; a long answer develops that conclusion.
-- **Explanation:** Answer a narrow question directly; explain reasoning, examples and alternatives when the
-  request calls for them. A long deliverable gets the space its requirements need. Do not force all replies
-  into a terse mode or an educational mode.
-- **Presentation:** Use `→ **Core sentence.** Supporting explanation` as the default ordinary point format,
-  with blank lines between points. The bold sentence states that point's conclusion; the first point carries the
-  overall answer and later points add distinct information. Use no block-count or sentence-count threshold.
-  Follow required user/workflow formats, and return artifact-only requests without conversational framing.
-- **Work reports:** Name the scope of what is finished and what remains, with actual verification and material
-  limitations. A completed survey, edit or test does not imply completion of the whole request. Show necessary
-  user decisions without appending empty offers or creating new approval requests.
-- **Language and deployment:** Keep one style and the existing Jinja `vars.language` branch: `auto` follows the
-  current request; a configured language supplies the default; an explicit user language request overrides either.
-  Repository/task requirements govern deliverables. Retain short Korean wording guidance, opt-in packaging and
-  all current projections. No presets or host-specific style variants.
-- **Always-loaded guidance:** Keep one pointer within the 300-UTF-8-byte contract in `CAP-DIST-manifest-spec`.
-  This applies to the guidance fragment inserted into `AGENTS.md`, not the whole file or the skill body.
-  Detailed rules stay in `SKILL.md` without a new byte, word or token ceiling. Actual compaction behavior is
-  unverified; this work changes no shared guidance limit.
+- **Given** the opt-in response-style bundle with `auto` or `ko` language,
+- **When** bundle deployment tests and consumer smoke run,
+- **Then** the rendered skill has the selected language instruction, explicit user language overrides,
+  deliverable-language requirements and short Korean wording guidance, with no unresolved Jinja and existing native projections intact.
 
-`MAT-response-style-rewrite-draft` provides the concrete skill-body draft, pointer and four authored examples.
-`ADR-response-style-adaptive-replies`, `ADR-response-style-source-selection`,
-`ADR-response-style-measurement` and `ADR-response-style-guidance-budget` record the proposed choices.
-These are drafts for user direction review, not a recorded `plan-accept` decision.
+### Scenario 4 [AC-04]: Guidance remains a bounded pointer
 
-### 3. Review and Implementation Scope
+- **Given** the single guidance fragment,
+- **When** its UTF-8 bytes including LF are counted and the bundle is deployed,
+- **Then** it is at most 300 bytes, points to the skill and summarizes the ordinary format, and introduces no skill-body limit.
 
-Use the authored examples to discuss the proposed behavior for scoped facts, unfinished work, explanations and
-artifact-only requests. They are illustrations, not observed before/after runs or evidence of measured quality.
-Check content and format obligations separately from subjective wording, depth and readability. No numeric
-score automatically selects a style. `MAT-response-style-measurement-design` defines the verification limits.
+## 5. Assumptions and premises
 
-The Host withdrew its obsolete structured-cohort question; no live host, spending allowance or comparison run
-was approved. Such collection is optional if a concrete need appears and is not a prerequisite for accepting
-this direction. A generation quota, scorer, benchmark framework and reminder-length experiment are non-goals.
-
-After the user's design acceptance, normal handoff creates the Development Unit. Development writes its spec,
-plan and tasks, then implements the accepted bundle text, adjusts the existing deployment tests and smoke
-assertions, and reflects its current behavior in `CAP-DIST-content-packages`. Keep source references and design
-rationale in materials rather than copying them into runtime instructions. Shared distribution validation,
-workflow report formats and unrelated bundle behavior stay outside the scope.
-
-Verify language/template behavior and existing native projections, relevant lint and type checks,
-`just test-affected`, consumer smoke and repository rules. Use independent medium Development review and the
-required Living Spec reconciliation. Report what those checks establish: correct text deployment and reviewed
-behavioral instructions, without claiming universal conversational improvement.
-
+The target bundle, language branches, catalog tests and consumer smoke exist on the handoff base.
+The measurement material is named `response-style-measurement-design.md`; the shortened handoff filename
+refers to that preserved document. No interface or boundary change is needed. The authored examples establish
+reviewable intent, not measured model behavior. Host integration refreshes the installed receipt and projections.
+There are no explicitly linked source feedback IDs to resolve.
