@@ -23,7 +23,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from importlib import metadata
 from devkit.integration import Evidence, Readiness
-from devkit.host.mcp.server import serve
+from devkit_mcp.server import serve
 
 class Provider:
     def check(self, context):
@@ -45,7 +45,7 @@ def entries(**kw):
         return []
     return original(**kw)
 metadata.entry_points = entries
-serve(Path(sys.argv[1]))
+serve(Path(sys.argv[1]), Path(sys.argv[1]))
 """
 
 
@@ -146,14 +146,9 @@ def test_client_without_forms_and_caller_approval_flags_cannot_execute(repo):
     assert worktree.exists() and git(base, "show-ref") == refs_before
 
 
-def test_manual_configuration_is_inspectable_and_does_not_write_host_settings(repo):
-    base, _ = repo
-    result = CliRunner().invoke(cli, ["host", "mcp", "config", "-w", str(base), "--format", "json"])
-    assert result.exit_code == 0
-    value = json.loads(result.stdout)
-    assert value["transport"] == "stdio" and value["args"][-1] == str(base)
-    assert value["inspect_command"] == "codex mcp get devkit --json"
-    assert not (base / ".codex").exists()
+def test_runtime_command_is_mounted_and_old_host_command_is_removed():
+    assert CliRunner().invoke(cli, ["mcp", "--help"]).exit_code == 0
+    assert CliRunner().invoke(cli, ["host", "mcp", "--help"]).exit_code != 0
 
 
 @pytest.mark.parametrize("partial", [False, True])
@@ -163,14 +158,14 @@ def test_all_tools_use_compact_results_and_status_exposes_retained_details(repo,
     script = SCRIPT
     if partial:
         script = script.replace(
-            "serve(Path(sys.argv[1]))",
+            "serve(Path(sys.argv[1]), Path(sys.argv[1]))",
             """from devkit.worktree import lifecycle, RemoveFailedError
 original_remove = lifecycle._remove
 def fail_once(base, path):
     lifecycle._remove = original_remove
     raise RemoveFailedError("fixture permission failure", fix="Resume the approved request")
 lifecycle._remove = fail_once
-serve(Path(sys.argv[1]))""",
+serve(Path(sys.argv[1]), Path(sys.argv[1]))""",
         )
 
     async def confirm(context, params):
@@ -246,3 +241,37 @@ serve(Path(sys.argv[1]))""",
 
     asyncio.run(run())
     assert not worktree.exists()
+
+
+@pytest.mark.parametrize("transition", ["before", "form"])
+def test_cloud_transition_refuses_native_authority(repo, transition):
+    base, worktree = repo
+    before = git(base, "show-ref")
+    overlay = base / ".devkit/config.local.toml"
+    if transition == "before":
+        overlay.write_text('[execution]\nenvironment="cloud"\n')
+    calls = []
+
+    async def confirm(context, params):
+        calls.append(params.message)
+        overlay.write_text('[execution]\nenvironment="cloud"\n')
+        return types.ElicitResult(action="accept", content={"approve": True})
+
+    async def run():
+        params = StdioServerParameters(command=sys.executable, args=["-c", SCRIPT, str(base)])
+        async with (
+            stdio_client(params) as (read, write),
+            ClientSession(read, write, elicitation_callback=confirm) as session,
+        ):
+            await session.initialize()
+            result = await session.call_tool(
+                "integration_integrate", {"branch": "dev-demo", "task_kind": "session", "task_id": "cloud-fixture"}
+            )
+            value = result.structuredContent
+            assert value is not None
+            error = value.get("error") or value["errors"][0]
+            assert error["code"] == "MCP_INTERACTIVE_UNAVAILABLE"
+
+    asyncio.run(run())
+    assert len(calls) == (transition == "form")
+    assert worktree.exists() and git(base, "show-ref") == before

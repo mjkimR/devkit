@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Dist-only check: run the devkit-dist tests in an environment that installs devkit-dist (with its search and mcp
-# extras and its dev group) and not devkit-agt, as ADR-dist-module-split requires. The workspace environment installs
+# Dist-only check: run the devkit-dist tests in an environment that installs devkit-dist (with its search
+# extra and its dev group) and not devkit-agt, as ADR-dist-module-split requires. The workspace environment installs
 # every package, so devkit-agt entry points would stay visible there; this one is a separate environment synced
 # exactly with devkit-dist from uv.lock, in a temporary directory removed on exit.
 #   dist_only.sh [pytest args...]

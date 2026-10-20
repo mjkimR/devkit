@@ -692,7 +692,8 @@ def test_start_restores_the_managed_files_a_fresh_checkout_lacks(repo: Path) -> 
     managed = Path(".devkit/managed/authoring/rules/skill_document_size/rule.py")
     assert (repo / managed).is_file() and git(repo, "check-ignore", str(managed))
     result = start(locate(repo), "dev-demo", project=Path("."))
-    assert result.synced is True and result.notices == []
+    assert result.synced is True
+    assert all(item.code in {"MCP_RUNTIME_UNAVAILABLE", "MCP_REGISTRATION_UNAVAILABLE"} for item in result.notices)
     assert (result.path / managed).is_file()
     assert git(result.path, "status", "--porcelain") == ""  # sync wrote ignored files only
 
@@ -754,3 +755,94 @@ def test_output_that_is_not_an_error_object_keeps_its_headline(monkeypatch: pyte
         "[ERROR]  (SOMETHING_FAILED) the reason",
     ]
     assert warning.message.splitlines()[-1] == "[DETAIL] line 7"
+
+
+def test_start_trusted_guard_stops_after_setup_before_sync(tmp_path, monkeypatch):
+    from devkit.advisory import AdvisoryError
+    from devkit.core.mcp_context import ExecutionBinding, guard_execution, invocation
+    from devkit.worktree import lifecycle, locate
+    from testsupport.rules import git, init_repo, write
+
+    base = init_repo(tmp_path / "base")
+    write(base, ".devkit/config.toml", "schema=1\n")
+    write(base, ".devkit/installation.json", "{}\n")
+    git(base, "add", ".")
+    git(base, "commit", "-qm", "fixture")
+    called = []
+
+    def setup(*args):
+        called.append("setup")
+        write(base, ".devkit/config.local.toml", '[execution]\nenvironment="cloud"\n')
+        return None
+
+    monkeypatch.setattr(lifecycle, "_run", setup)
+    monkeypatch.setattr(lifecycle, "_sync", lambda *args: called.append("sync"))
+    with invocation(ExecutionBinding(base, base)), pytest.raises(AdvisoryError) as exc:
+        lifecycle.start(
+            locate(base), "dev-guard", setup="fixture", project=Path("."), before_step=lambda step: guard_execution()
+        )
+    assert exc.value.code == "MCP_INTERACTIVE_UNAVAILABLE"
+    assert called == ["setup"]
+    assert lifecycle.path_for(locate(base), "dev-guard").exists()
+
+
+def test_start_initializes_optional_registration_after_locked_assets(repo, monkeypatch):
+    from click.testing import CliRunner
+    from devkit.cli import cli
+    from devkit.host import registrations
+
+    synchronized(repo)
+    original = lifecycle._execute
+    modes = []
+    guards = []
+
+    def execute(argv, cwd, label, timeout):
+        if argv[1:4] == ["-m", "devkit", "sync"]:
+            modes.append(argv[4])
+            result = CliRunner().invoke(cli, argv[3:])
+            return subprocess.CompletedProcess(argv, result.exit_code, result.stdout.encode(), result.stderr.encode())
+        return original(argv, cwd, label, timeout)
+
+    monkeypatch.setattr(lifecycle, "_execute", execute)
+    monkeypatch.setattr(registrations, "collisions", lambda *args: [])
+    monkeypatch.setattr(
+        registrations,
+        "provider",
+        lambda root, *args: registrations.LaunchDescriptor(
+            sys.executable,
+            ("-m", "devkit", "mcp", "serve", "--configuration-workspace", str(root)),
+            str(repo),
+            str(root),
+            "local",
+        ),
+    )
+    result = start(locate(repo), "dev-registration", setup=":", project=Path("."), before_step=guards.append)
+    assert result.synced is True
+    assert modes == ["--locked", "--registrations-only"]
+    assert guards[-3:] == ["setup", "sync", "registrations"]
+    assert (result.path / ".mcp.json").is_file()
+    assert str(result.path) in (result.path / ".mcp.json").read_text()
+    assert registrations._ledger(result.path)["workspace"] == str(result.path)
+    assert git(result.path, "status", "--porcelain") == ""
+
+
+def test_guard_stops_registration_after_sync_changes_environment(tmp_path, monkeypatch):
+    from devkit.core.mcp_context import McpInteractiveError
+
+    write(tmp_path, ".devkit/installation.json", "{}")
+    calls = []
+    cloud = False
+
+    def sync(*args, **kwargs):
+        nonlocal cloud
+        calls.append("sync")
+        cloud = True
+
+    def guard(step):
+        if cloud:
+            raise McpInteractiveError("cloud transition")
+
+    monkeypatch.setattr(lifecycle, "_sync", sync)
+    with pytest.raises(McpInteractiveError):
+        lifecycle._prepare(tmp_path, None, Path("."), [], before_step=guard)
+    assert calls == ["sync"]

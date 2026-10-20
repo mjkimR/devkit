@@ -296,7 +296,7 @@ def test_every_command_has_the_output_options() -> None:
         if not {"quiet", "verbose", "strict"} <= {param.name for param in command.params}
     ]
     # Native host protocol transport emits only host JSON; verbosity and strictness cannot alter its response.
-    assert missing == ["devkit host hook", "devkit host mcp serve"]
+    assert missing == ["devkit host hook"]
 
 
 def test_notices_follow_the_result_and_respect_quiet_and_strict(tmp_path: Path) -> None:

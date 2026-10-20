@@ -23,7 +23,7 @@ def test_copy_before_setup_and_independent_snapshot(repo: Path, monkeypatch: pyt
     source.chmod(0o600)
     expected = source.read_bytes()
 
-    def prepare(path, setup, project, notices):
+    def prepare(path, setup, project, notices, *, before_step=None):
         copied = path / LOCAL_CONFIG_PATH
         assert copied.read_bytes() == expected
         assert copied.stat().st_mode & 0o777 == 0o600

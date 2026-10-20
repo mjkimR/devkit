@@ -1,0 +1,40 @@
+kind: worker
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T06:47:40.157417Z'
+status: failed
+summary: Implemented and verified the full accepted MCP runtime, registration, environment guards, lifecycle and package/guidance scope. Independent code review passes; reconciliation has one out-of-boundary P1 contract target pending Host scope expansion. Final-report and integration remain unfinished.
+findings:
+- issue: Canonical agent-output contract still names the removed host MCP serve command.
+  evidence: docs/architecture/ARCH-08-1-agent-output.md:40; independent reconcile-check-02; file is outside the authorized write boundary.
+  suggested_action: Host authorizes narrow command/reference correction; replace with devkit mcp serve, add modified target and reverify reconciliation.
+  resolution: open
+  severity: P1
+assumptions:
+- Emulated confinement uses explicit absolute cwd, git -C, path boundaries, command-scoped approvals and Host range validation; no native isolation guarantee.
+- No-runtime, opt-out, cloud and layer boundaries were preserved; no accepted implementation requirement was deferred.
+- Host owns final asset sync/receipt and incorporation of newer main; no merge, push, publication or real host settings writes performed.
+unverified_areas:
+- Real Codex 0.163.0 and Claude Code 2.1.304 terminal registration/connection, discovery, trust, native form and permission UI; live cloud transport.
+- Final P1 correction, resolved reconciliation, collect-feedback/final-report, final Host asset sync and integration.
+checks:
+  tests: 'PASS just test-affected full fallback: 3888 passed, 14 skipped'
+  dist-only: PASS 1029 passed
+  build: PASS 5 built-wheel combinations; no duplicate paths or SDK leakage; offline release build produced 8 wheels plus SHA256SUMS without publishing
+  lint: PASS 38 changed Python files lint and format check
+  types: PASS scoped Pyright zero errors/warnings
+  code-review: PASS initial 4 P1 and later child-guard P1 resolved independently
+  reconcile: FAIL one P1 out-of-boundary agent-output correction; both P2 resolved independently
+  governance: PASS cumulative original base through 29767f9 zero errors/warnings; normal commit gates passed
+  feedback: PASS observed fixture-scope friction captured; final sweep stage not reached
+diff_scope:
+  base: 2712c2844ffe25cf3320cb245af6965d7c96ab5f
+  head: 29767f95acd641f371233ad137aea10d7f6c2d34
+problem:
+  cause: Independent reconcile found an obsolete MCP command in docs/architecture/ARCH-08-1-agent-output.md, outside the explicit worker write boundary. Host scope expansion was requested; no authorization response was available during this run.
+  attempts:
+  - Recorded reconcile-check-01; fixed both in-scope P2 findings; independent reconcile-check-02 confirmed those fixes and the single remaining P1. Sent the exact additional target to Host; did not modify it.
+  - Committed all permitted work with normal commit gate; cumulative governance passed with zero errors and warnings. Reconcile remains pending and spec in-progress to reflect the open finding.
+  recovery: Authorize the narrow ARCH-08-1-agent-output.md command/reference correction, add its modified reconciliation target and update scope registry, independently recheck, then complete collect-feedback, final-report and a recovery worker envelope before Host integration.
+activity_effort: medium

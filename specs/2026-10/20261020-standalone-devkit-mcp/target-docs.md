@@ -3,9 +3,10 @@ id: PROP-standalone-devkit-mcp-target
 title: Standalone MCP Living Spec targets
 summary: "Maps the standalone MCP runtime, registration and approval contracts to their Development reconciliation targets."
 status: draft
-proposal: PROP-standalone-devkit-mcp
+proposal: SPEC-standalone-devkit-mcp
 created_at: 2026-10-20
 targets:
+  - file: docs/architecture/ARCH-08-1-agent-output.md
   - file: docs/architecture/ARCH-05-1-containers.md
   - file: docs/architecture/ARCH-05-2-components.md
   - file: docs/architecture/ARCH-05-3-command-plugins.md
@@ -26,6 +27,7 @@ targets:
 - `ARCH-05-3-command-plugins`: devkit mcp mount; executable remains owned by dist.
 - `ARCH-05-4-distribution-components`: local registration planning, ledger and transactions.
 - `ARCH-07-deployment`: package combinations and retained runtime lifetime.
+- `ARCH-08-1-agent-output`: standalone runtime command and native-protocol output exception.
 - `CAP-HOST-lifecycle-observation`: extract MCP behavior, preserve hook ownership and narrowly authorize project registration.
 - `CAP-INT-mcp-services`: Host-owned approval, cloud/resume guards and environment origin.
 - `ADR-dist-module-split` and `ADR-dist-command-composition`: narrowly superseded MCP clauses via promoted PADR.

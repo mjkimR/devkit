@@ -29,11 +29,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from devkit.advisory import AdvisoryError
+from devkit.advisory import AdvisoryError, Level
 from devkit.core.errors import ArgumentError, GitError
 from devkit.core.git import run_git
 from devkit.core.local_config import LOCAL_CONFIG_PATH, read_local_config
 from devkit.core.logs import get_logger
+from devkit.core.mcp_context import constraint_environment, guard_execution
 from devkit.core.project import require_git_toplevel
 from devkit.core.receipt import RECEIPT_PATH
 from devkit.worktree.errors import (
@@ -396,11 +397,15 @@ def start(
     setup: str | None = None,
     project: Path | None = None,
     revision: str | None = None,
+    before_step: Callable[[str], None] | None = None,
 ) -> StartResult:
     """Create the activity branch's worktree from the base HEAD.
 
     With ``revision``, resolve a commit before the remote checks and pass that exact commit to Git for creation:
     setup never executes a later ambient base HEAD. Without it, creation uses the base HEAD as before.
+
+    ``before_step`` is an optional trusted caller guard before creation, local config copy, setup and sync.
+    A refusal after an effect leaves the created worktree for caller-owned recovery; no rollback is implied.
 
     A branch that already exists, locally or on a remote (``_remote_holders``), is refused
     (``WORKTREE_BRANCH_EXISTS``), also when its worktree is already registered: an existing branch is continued only
@@ -446,31 +451,50 @@ def start(
         raise ConflictError(f"{path} exists and is not a worktree of this repository")
     notices = _refuse_existing(position.base, branch)
     captured_local = _local_snapshot(position.base, project)
+    if before_step is not None:
+        before_step("worktree_create")
     _add(position.base, path, branch, revision=revision)
     _log.info("created worktree %s on %s", path, branch)
+    if before_step is not None:
+        before_step("local_config_copy")
     _copy_local_snapshot(path, project, captured_local)
-    setup_ran, synced = _prepare(path, setup, project, notices)
+    setup_ran, synced = _prepare(path, setup, project, notices, before_step=before_step)
     return StartResult(branch, path, position.base, True, setup_ran, synced, notices)
 
 
 def _prepare(
-    path: Path, setup: str | None, project: Path | None, notices: list[AdvisoryError]
+    path: Path,
+    setup: str | None,
+    project: Path | None,
+    notices: list[AdvisoryError],
+    *,
+    before_step: Callable[[str], None] | None = None,
 ) -> tuple[str | None, bool | None]:
     """Run ``setup`` and ``devkit sync --locked`` in a new worktree; their warnings go to ``notices``.
 
     Returns the setup command that ran and whether the sync restored the project (``None`` when it did not run).
     """
     if setup is not None:
+        if before_step is not None:
+            before_step("setup")
         failure = _run(["/bin/sh", "-c", setup], path, f"setup {setup!r}", SETUP_TIMEOUT)
         if failure is not None:
             notices.append(SetupFailedWarning(failure, fix=f"cd {shlex.quote(str(path))} && {setup}"))
     synced = None
     target = path / project if project is not None else None
     if target is not None and (target / RECEIPT_PATH).is_file():
+        if before_step is not None:
+            before_step("sync")
         warning = _sync(_interpreter(path), target)
         synced = warning is None
         if warning is not None:
             notices.append(warning)
+        else:
+            if before_step is not None:
+                before_step("registrations")
+            warning = _sync(_interpreter(path), target, registrations_only=True, notices=notices)
+            if warning is not None:
+                notices.append(warning)
     return setup, synced
 
 
@@ -897,7 +921,9 @@ def _interpreter(checkout: Path) -> str:
     return sys.executable
 
 
-def _sync(interpreter: str, target: Path) -> SyncFailedWarning | None:
+def _sync(
+    interpreter: str, target: Path, *, registrations_only: bool = False, notices: list[AdvisoryError] | None = None
+) -> SyncFailedWarning | None:
     """Run ``devkit sync --locked`` in ``target``; ``None`` on success, else the warning that reports why.
 
     The sync runs with ``--format json``, so a refusal arrives as one error object: the warning carries its code,
@@ -905,13 +931,27 @@ def _sync(interpreter: str, target: Path) -> SyncFailedWarning | None:
     (``SELECTION_INVALID``), so rerunning is the fix only when the error names none, or the output is not an error
     object (a timeout, a crash, a devkit without ``--locked``).
     """
-    label = "devkit sync --locked"
-    rerun = f"cd {shlex.quote(str(target))} && {shlex.quote(interpreter)} -m devkit sync --locked"
-    argv = [interpreter, "-m", "devkit", "sync", "--locked", "--format", "json", "-w", str(target)]
+    mode = "--registrations-only" if registrations_only else "--locked"
+    label = f"devkit sync {mode}"
+    rerun = f"cd {shlex.quote(str(target))} && {shlex.quote(interpreter)} -m devkit sync {mode}"
+    argv = [interpreter, "-m", "devkit", "sync", mode, "--format", "json", "-w", str(target)]
     completed = _execute(argv, target, label, SYNC_TIMEOUT)
     if isinstance(completed, str):
         return SyncFailedWarning(completed, fix=rerun)
     if completed.returncode == 0:
+        if registrations_only and notices is not None:
+            document = json.loads(completed.stdout)
+            for item in document.get("notices", []):
+                advisory = item.get("advisory", {})
+                notices.append(
+                    AdvisoryError(
+                        item["message"],
+                        *advisory.get("details", []),
+                        code=item["code"],
+                        level=Level(item["level"]),
+                        fix=advisory.get("fix"),
+                    )
+                )
         return None
     error = _error_object(completed.stdout)
     if error is None:
@@ -996,8 +1036,12 @@ def _execute(argv: list[str], cwd: Path, label: str, timeout: float) -> subproce
     """Run ``argv`` in ``cwd`` with its output captured, without the caller's ``VIRTUAL_ENV``, in a session of its
     own (``_session``); why it could not run when it timed out or did not start."""
     env = {key: value for key, value in os.environ.items() if key != "VIRTUAL_ENV"}
+    env.update(constraint_environment())
     try:
-        return _session(argv, cwd, env, timeout)
+        guard_execution()
+        completed = _session(argv, cwd, env, timeout)
+        guard_execution()
+        return completed
     except subprocess.TimeoutExpired:
         return f"{label} did not finish within {timeout:.0f}s"
     except OSError as exc:

@@ -69,6 +69,9 @@ recovery, actual last commit SHA, dirty paths and which record/commit is absent 
 which owns the subsequent recovery run and its records. The committed-return requirements below apply whenever
 preservation is permitted; inability to preserve them is a failure, not permission to bypass refusal.
 
+Workers return verified committed scope to the Host and never request business approval through MCP. The Host
+validates boundaries and checks before invoking a native approval tool; missing form UI grants no authority.
+
 ## Return
 
 The fields of your `worker` envelope after it is committed: `status` (`completed` when no question is left and the proposal is ready for `plan-accept`; `needs_input` while questions wait for the user, with the `questions`; `failed` with the `problem`), `summary` (what changed, the decisions made in this Planning, the support roles this run used), `findings` for what is left open, `assumptions`, `unverified_areas`, `diff_scope` with `head` set to your last work commit, and `final_head`: `git -C <worktree> rev-parse HEAD` after the commit that adds the envelope, the head the caller validates up to.

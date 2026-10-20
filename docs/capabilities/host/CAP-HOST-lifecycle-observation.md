@@ -1,19 +1,19 @@
 ---
 id: CAP-HOST-lifecycle-observation
 title: "Host Lifecycle Observation"
-summary: "Host lifecycle hook dispatch, MCP transport, explicit Codex MCP registration (Claude Code registers with its own CLI), and read-only installation diagnostics."
+summary: "Host lifecycle hook dispatch, exact project MCP registration for Codex and Claude Code, and read-only installation diagnostics; optional MCP transport lives in devkit-mcp."
 area: host
 status: active
 entrypoints:
   - packages/devkit-dist/src/devkit/host/cli.py
   - packages/devkit-dist/src/devkit/host/errors.py
-  - packages/devkit-dist/src/devkit/host/mcp/onboarding.py
+  - packages/devkit-dist/src/devkit/host/registrations.py
 created_at: 2026-10-17
 ---
 
 # [CAP-HOST-lifecycle-observation] Host Integration
 
-`devkit.host` (shipped by `devkit-dist`, so native hooks and the MCP server work without `devkit-agt`) connects host
+`devkit.host` (shipped by `devkit-dist`, so native hooks work without `devkit-agt`) connects host
 lifecycle events to installed service handlers. `devkit.distribution` deploys hook
 definitions and manages their registrations. The host module owns native input/output and service dispatch; a
 service owns its domain behavior. The integration service uses this boundary without placing Git
@@ -27,9 +27,9 @@ execution, SDD models or approval policy inside an adapter. Quick reference: [re
 - `distribution`: manifest validation, selection, overrides, shared-file planning, receipt, transaction and removal.
 
 `host` depends only on `core` and `advisory`; `distribution` may depend on `host`. No service is required to import
-distribution internals. `host/mcp` supplies an optional SDK stdio transport and native confirmation callback to
-installed service factories (`devkit.host.services`). The `CAP-INT-mcp-services` consumes
-it directly rather than synthesizing lifecycle events. Host adapters grant no filesystem/network permission and
+distribution internals. The separate `devkit_mcp` runtime supplies optional SDK stdio transport and native
+confirmation for installed service factories (`devkit.host.services`). `CAP-INT-mcp-services` defines the domain
+approval contract, while `host/registrations` reconciles exact local project entries. Host adapters grant no filesystem/network permission and
 contain no Git executor, automatic policy dispatch or background recovery. Setup: [MCP services](../../development/reference/host.md#mcp-services).
 
 The initial adapter targets locally executed Codex CLI command hooks on POSIX. Other hosts are unsupported.
@@ -90,8 +90,8 @@ group. An empty `hooks` object and the file container remain. The shared-file ch
 sync journal and rollback. Symlinked or nonregular host destinations are refused. The devkit project lock
 serializes devkit writers; other editors do not take that lock, so avoid editing host configuration during sync.
 
-This is a narrow exception to distribution's host-settings boundary: `.codex/config.toml`, credentials, project
-trust, hook trust, user settings and permission settings remain host-owned. Existing inline hooks are preserved;
+This is a narrow exception to distribution's host-settings boundary: credentials, project trust, hook trust, user settings and permission settings remain host-owned. Exact ignored
+project MCP entries are separately reconciled under `CAP-MCP-runtime-registration`. Existing inline hooks are preserved;
 Codex can load them alongside `hooks.json` and report its own configuration warning.
 
 ## 4. Runtime and service extension
@@ -165,34 +165,10 @@ uv run devkit remove host-observer
 This removes registrations and managed definitions; local observation metadata stays under the ignored transient
 directory. Reinstalling can expose an older timestamp, so compare it with the current validation session.
 
-## 8. Explicit MCP onboarding
+## 8. Project MCP registration
 
-Installation routes lead to optional Codex or Claude Code MCP onboarding independently of asset sync. The setup
-adapter is Codex-only: Claude Code registers the `command` and `args` that `host mcp config` prints with its own
-`claude mcp add`, and `host mcp status` does not inspect that registration. `host mcp setup` registers
-server `devkit` through Codex CLI in user scope, using the running Python and selected retained base. It preflights
-the SDK/server import and refuses linked-worktree or submodule workspace/runtime paths. The runtime and checkout
-must remain available after integration cleanup. No package, trust or permission setting is installed or changed
-implicitly, and sync does not call the host CLI or manage an MCP selection setting.
-
-Setup leaves an identical enabled stdio command/arguments registration unchanged. Environment, cwd, tool selection
-or disabled state differences are conflicts as well as a different runtime or repository; replacement requires
-explicit `--replace`. It uses the host's add writer without a remove/add gap, then verifies the effective entry.
-Host command failure or mismatching verification raises an advisory without asserting rollback or success.
-Concurrent external configuration writers remain outside the transaction boundary.
-
-User entry inspection reads `$CODEX_HOME/config.toml` (default `~/.codex/config.toml`) without editing it; Codex
-list/get inspect effective workspace settings. Status reports user `state` separately from `effective_state` and
-`project_override`. A workspace or ancestor project declaration of `devkit` refuses setup before mutation,
-even when matching or with `--replace`; differing user/effective states also refuse. The caller must resolve the
-project/profile override explicitly, because replacing a user entry cannot manage that override.
-
-`host mcp status` is read-only: it reports missing/matching/different registration and local SDK availability,
-without launching services, exposing environment values or returning other servers' settings. Matching with the
-SDK and no shadowing project/profile setting exits 0; findings exit 1; inability to inspect exits 2. Setup and status JSON carry desired workspace, command,
-arguments, user scope, errors and notices. Setup also carries registered/replaced/unchanged action. Text mode uses
-result sentinels. Both leave connection, approval UI, trust and execution permissions unknown; client reconnect,
-tool discovery and actual native UI require separate evidence. The config generator remains read-only and works
-without the MCP extra. The MCP server reports the `devkit-dist` version; a missing extra is `HOST_MCP_EXTRA_REQUIRED`,
-whose `[FIX]` adds the `mcp` extra to the devkit requirement the runtime declares (`devkit-agt[mcp]` or
-`devkit-dist[mcp]`). Command and advisory details are in the host reference.
+Dist owns the narrow `devkit.mcp.registrations` provider boundary and project-file reconciler described by
+`CAP-MCP-runtime-registration`. It does not own MCP transport or forms. Installing the optional runtime enables
+ordinary sync to reconcile exact local Codex and Claude entries; `[mcp] register = false` opts out. Uninstall,
+opt-out and selected-agent removal retire only exact owned entries. Host trust, permissions and global settings
+remain host-owned. Registration facts do not prove connectivity or native form UI support.

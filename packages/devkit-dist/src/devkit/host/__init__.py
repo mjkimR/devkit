@@ -14,7 +14,6 @@ from devkit.host.errors import (
     HostConfigError,
     HostConfirmationError,
     HostError,
-    HostMcpDependencyError,
     HostMcpError,
     HostMcpInputError,
 )
@@ -34,7 +33,6 @@ __all__ = [
     "HostConfigError",
     "HostConfirmationError",
     "HostError",
-    "HostMcpDependencyError",
     "HostMcpError",
     "HostMcpInputError",
     "HostStatus",

@@ -38,6 +38,7 @@ Keep package descriptions in this guide to a high-level summary of their purpose
 
 - `devkit-dist`: Agent asset distribution with the `devkit` CLI: bundles, agent projections, sync, context loading, playbooks and native hooks, on the SDD-agnostic shared core it owns. See [packages/devkit-dist/README.md](packages/devkit-dist/README.md) for its modules and layering.
 - `devkit-agt`: The developer harness mounted under `devkit`: repository rules, delivery workflows, commit gates, task worktrees, generated files, integration and compact command output; depends on `devkit-dist`. See [packages/devkit/README.md](packages/devkit/README.md) for its modules and layering.
+- `devkit-mcp`: Optional MCP transport, native forms and retained-runtime registration provider; domain services stay in their packages. See [packages/devkit-mcp/README.md](packages/devkit-mcp/README.md).
 - `devkit-advisory`: The Agent Advisory Protocol library (`devkit.advisory`) on its own, for other repositories' runtime; `devkit-dist` and `devkit-agt` depend on the same version (the three are released in lockstep). See [packages/devkit-advisory/README.md](packages/devkit-advisory/README.md).
 - `devkit-spec`: Spec-driven delivery commands and agent assets on the shared devkit harness. See [packages/devkit-spec/README.md](packages/devkit-spec/README.md).
 - `devkit-starter`: Example external content package demonstrating bundle packaging and distribution. See [packages/devkit-starter/README.md](packages/devkit-starter/README.md).

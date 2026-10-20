@@ -74,6 +74,9 @@ recovery, actual last commit SHA, dirty paths and which record/commit is absent 
 which owns the subsequent recovery run and its records. The committed-return requirements below apply whenever
 preservation is permitted; inability to preserve them is a failure, not permission to bypass refusal.
 
+Workers return verified committed scope to the Host and never request business approval through MCP. The Host
+validates boundaries and checks before invoking a native approval tool; missing form UI grants no authority.
+
 ## Return
 
 The fields of your `worker` envelope, as YAML with findings as a list, after it is committed: `status` (`completed` when the final change report holds; `needs_input` or `failed` with the `problem`), `summary` (stages done, checks run), `findings` for anything left open (`issue`, `evidence`, `suggested_action`), `checks` with each result, `assumptions`, `unverified_areas`, `diff_scope` with `head` set to your last work commit, and `final_head`: `git -C <worktree> rev-parse HEAD` after the commit that adds the envelope, the head the caller validates up to (`diff_scope.head` is its ancestor, never equal to it).

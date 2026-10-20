@@ -43,6 +43,10 @@ FULL_NAMES = frozenset({"pyproject.toml", "conftest.py"})
 # Repository files that tests read directly, which imports do not show: prefix -> test paths.
 DATA: tuple[tuple[str, tuple[str, ...]], ...] = (
     (
+        "packages/devkit-mcp/",
+        ("packages/devkit-mcp/tests", f"{DEVKIT}/tests/integration", "packages/devkit-spec/tests/test_integration.py"),
+    ),
+    (
         "docs/",
         (
             f"{DEVKIT}/tests/test_documented_codes.py",
@@ -224,6 +228,8 @@ class Workspace:
             for imported in self.imports(self._python(directory, tests=False)):
                 if imported != node:
                     imported_by.setdefault(imported, set()).add(node)
+        # Optional transport loads these domain services through entrypoints, not static imports.
+        imported_by.setdefault("devkit_mcp", set()).update({"devkit.integration", "devkit_spec"})
         affected, pending = set(changed), list(changed)
         while pending:
             for node in imported_by.get(pending.pop(), ()):

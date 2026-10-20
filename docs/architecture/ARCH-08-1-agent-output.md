@@ -37,9 +37,9 @@ stdout, warnings on stderr and exit 0 for advisory dispatch failures. It has no 
 options. It never emits devkit result sentinels or ordinary error objects; see
 `CAP-HOST-lifecycle-observation`. Other host commands follow this contract.
 
-`devkit host mcp serve` likewise reserves stdout for native MCP JSON-RPC, without ordinary output options.
+`devkit mcp serve` likewise reserves stdout for native MCP JSON-RPC, without ordinary output options.
 Startup errors go to stderr and exit 2; per-tool results carry structured advisory data. The optional SDK owns
-protocol framing. See [Host MCP](../development/reference/host.md#mcp-services).
+protocol framing. See `CAP-MCP-runtime-registration`.
 
 ## 3. stdout: Text
 

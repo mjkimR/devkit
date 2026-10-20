@@ -82,7 +82,7 @@ from devkit.distribution.installation.playbook_search import search_playbooks
 from devkit.distribution.installation.receipt import read_receipt
 from devkit.distribution.installation.results import OverrideChange, SyncResult
 from devkit.distribution.installation.status import get_project_listing, get_project_status
-from devkit.distribution.installation.sync import recover_project, sync_project
+from devkit.distribution.installation.sync import recover_project, sync_project, sync_registrations
 from devkit.search import SearchMode
 
 
@@ -355,6 +355,9 @@ def _sync_and_save(
 @click.option("--dry-run", is_flag=True, help="Report planned actions without writing files or configuration.")
 @click.option("--check", is_flag=True, help="Read-only check; exit 1 when synchronization is needed, 2 on error.")
 @click.option(
+    "--registrations-only", is_flag=True, help="Reconcile only optional local MCP registration after asset restoration."
+)
+@click.option(
     "--locked",
     is_flag=True,
     help="Only restore files the receipt records; write nothing and exit 1 when committed files would change.",
@@ -372,6 +375,7 @@ def sync(
     dry_run: bool,
     check: bool,
     locked: bool,
+    registrations_only: bool,
     output_format: str,
 ) -> None:
     """Synchronize the bundles selected in .devkit/config.toml into a project.
@@ -380,6 +384,17 @@ def sync(
     Git-ignored copies the committed receipt records and never changes the
     receipt, the root AGENTS.md block or seeded files.
     """
+    if registrations_only:
+        if any((agents, no_agents, presets, no_save, cloud, local, dry_run, check, locked)):
+            raise ArgumentError("--registrations-only cannot be combined with other sync modes or selections")
+        registration = sync_registrations(resolve_root(workspace_root))
+        if is_json(output_format):
+            echo_json({"actions": registration.changes, "notices": [item.to_dict() for item in registration.notices]})
+        else:
+            click.echo(f"[MCP_REGISTRATION: changes={len(registration.changes)}]")
+        echo_notices(registration.notices)
+        exit_on_warnings(registration.notices)
+        return
     if cloud and local:
         raise ArgumentError("--cloud and --local cannot be combined", target_files=["--cloud", "--local"])
     if agents and no_agents:

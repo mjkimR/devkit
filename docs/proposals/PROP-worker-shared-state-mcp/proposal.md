@@ -42,7 +42,7 @@ serve both bounded coordination records and TTL-governed shared artifacts across
 - **Pluggable server adapter (e.g., Firestore)**: selectable via environment variables or local execution
   configuration for Cloud Agent environments where no shared local filesystem exists.
 - **MCP-only agent access**: workers and host agents always read, write and list shared workspace artifacts through
-  devkit MCP tools (built on `PROP-standalone-devkit-mcp`), never by hardcoding storage paths.
+  devkit MCP tools (built on `SPEC-standalone-devkit-mcp`), never by hardcoding storage paths.
 
 ## 2. Technical Spike Questions
 
@@ -66,7 +66,7 @@ serve both bounded coordination records and TTL-governed shared artifacts across
   artifact? Define atomic writes, lock discipline across concurrent MCP processes, retry/idempotency and behavior on
   denied authorization or forged repository/worktree identities.
 - **Q6 — Cost and portability:** Compare setup, startup latency and maintenance across available hosts with the
-  direct CLI baseline. Inspect `CAP-INT-mcp-services` and `PROP-standalone-devkit-mcp` for reusable host transport and
+  direct CLI baseline. Inspect `CAP-INT-mcp-services` and `SPEC-standalone-devkit-mcp` for reusable host transport and
   registration patterns while preserving package layering.
 
 ## 3. Proposed Design & Impact
@@ -88,7 +88,7 @@ Planning should define a unified MCP service and adapter contract that covers:
    - `.devkit/.shared/` is ignored by Git so creating or updating shared reports from a worker worktree never dirties
      the base checkout or blocks `integration_integrate` / `spec_handoff`.
 
-Expected impact starts in `CAP-COLL-work-scope-registry` and the MCP service layer (`PROP-standalone-devkit-mcp`).
+Expected impact starts in `CAP-COLL-work-scope-registry` and the MCP service layer (`SPEC-standalone-devkit-mcp`).
 Planning must identify the exact package owner, adapter protocol, environment variable names and code boundaries
 before Development.
 

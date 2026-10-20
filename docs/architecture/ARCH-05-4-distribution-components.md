@@ -146,3 +146,14 @@ output eligibility, captures configuration inputs and validates transient render
 configuration and ledger writes alongside output and shared selection edits. Runtime context/status receive a
 validated receipt view; that view never becomes engine or snapshot authority. Worktree lifecycle captures and copies
 local preferences before setup on creation only. See `CAP-DIST-sync-and-transactions` and `CAP-WT-task-worktrees`.
+
+## Local MCP registration
+
+Ordinary sync asks the optional launch provider for a retained executable/executor and explicit owning workspace,
+then reconciles eligible project host entries separately from portable receipts. The host layer owns the exact-entry
+ledger, collision inspection and recoverable registration journal. It never imports `devkit_mcp` by module name.
+The fixed lock order is common Git exclusion lock followed by checkout project lock. Dry-run/check compute the same
+plan without registration writes; locked sync validates only and directs changed local registrations to ordinary
+sync. Fresh absent registrations are initialized separately after locked asset restoration. Trusted native
+lifecycle children carry only an owning-workspace refusal constraint, checked after locks and before transaction
+writes; approval authority remains in the Host invocation. Tracked or visible foreign destinations remain untouched. See `CAP-MCP-runtime-registration`.

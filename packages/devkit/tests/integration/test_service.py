@@ -7,7 +7,7 @@ from dataclasses import replace
 import pytest
 from devkit.advisory import AdvisoryError
 from devkit.core.errors import GitError
-from devkit.host.mcp import ConfirmationReply
+from devkit.core.mcp import ConfirmationReply
 from devkit.integration import (
     AuthorityError,
     CleanupContractError,

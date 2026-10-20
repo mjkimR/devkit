@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-standalone-devkit-mcp
+by: user
+at: '2026-10-20T05:42:44.606027Z'

@@ -41,7 +41,7 @@ async def conversation(root: Path, worktree: Path) -> None:
         approvals.append(params.message)
         return types.ElicitResult(action="accept", content={"approve": len(approvals) == 2})
 
-    args = ["-m", "devkit", "host", "mcp", "serve", "-w", str(root)]
+    args = ["-m", "devkit", "mcp", "serve", "--workspace-root", str(root), "--configuration-workspace", str(root)]
     params = StdioServerParameters(command=sys.executable, args=args)
     async with (
         stdio_client(params) as (read, write),

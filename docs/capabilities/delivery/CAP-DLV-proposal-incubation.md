@@ -548,3 +548,9 @@ lock serializes calls to this service, not arbitrary Git/editor processes. Nativ
 | `SPEC_HANDOFF_NOT_READY` | Base or accepted proposal is not ready. | Resolve the named prerequisite and call again. |
 | `SPEC_HANDOFF_REPLY_INVALID` | Accepted native form has no valid effort. | Choose low, medium or high in a fresh form. |
 | `SPEC_HANDOFF_STALE` | Reviewed base, proposal or configuration changed. | Inspect the current scope and obtain a fresh confirmation. |
+
+Native handoff is Host-owned. The Host reviews the accepted proposal and worker evidence, then uses the native form
+for exact Development-start authority and effort selection. The explicit owning configuration workspace must remain
+valid and local before the form, after its reply and before subsequent handoff mutations. Cloud cannot start worktree
+creation through MCP. A later environment transition preserves already completed effects as recovery state; it does
+not authorize final integration. See `CAP-MCP-runtime-registration` for runtime/registration and fallback boundaries.

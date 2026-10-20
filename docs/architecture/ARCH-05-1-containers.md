@@ -1,7 +1,7 @@
 ---
 id: ARCH-05-1-containers
 title: Building Block View - Containers
-summary: "Container topology of devkit: workspace packages, the devkit-dist, devkit-agt and devkit-advisory wheels released in lockstep, and external content packages."
+summary: "Container topology of devkit: workspace packages, the devkit-dist, devkit-agt, devkit-advisory and devkit-mcp wheels released in lockstep, and external content packages."
 status: active
 created_at: 2026-10-17
 ---
@@ -21,6 +21,7 @@ devkit is structured as a Python monorepo using `uv` workspaces:
 graph TD
     subgraph DevkitWorkspace ["devkit Monorepo (uv workspace)"]
         PkgDist["packages/devkit-dist<br>(devkit-dist wheel, devkit executable)"]
+        PkgMcp["packages/devkit-mcp<br>(optional devkit-mcp wheel)"]
         PkgDevkit["packages/devkit<br>(devkit-agt wheel)"]
         PkgSpec["packages/devkit-spec<br>(devkit-spec wheel)"]
         PkgAdv["packages/devkit-advisory<br>(devkit-advisory wheel)"]
@@ -37,6 +38,9 @@ graph TD
 
     PkgAdv -.->|Runtime dependency (std-lib only)| Runtime
     PkgDist -->|Same-version dependency| PkgAdv
+    PkgMcp -->|Same-version dependency| PkgDist
+    PkgMcp -.->|MCP transport and native forms| DevTools
+    PkgDevkit -.->|Optional mcp extra| PkgMcp
     PkgDevkit -->|Same-version dependency| PkgDist
     PkgDist -.->|Dev dependency (asset distribution only)| DevTools
     PkgDevkit -.->|Dev dependency (CLI harness)| DevTools
@@ -61,12 +65,12 @@ the ones below it.
 - **Distribution Wheel**: `devkit_dist-<version>-py3-none-any.whl`
 - **CLI**: `devkit`, the sole console script: the distribution commands and `devkit host`, plus whatever installed
   packages mount through `devkit.commands` (`ARCH-05-3-command-plugins`).
-- **Contents**: The shared foundation (`devkit.core`), document search (`devkit.search`), host hooks and MCP services
+- **Contents**: The shared foundation (`devkit.core`), document search (`devkit.search`), host hooks and project MCP registrations
   (`devkit.host`), asset distribution (`devkit.distribution`) with the `.devkit/config.toml` schema and the receipt,
   the root command line (`devkit.cli`, `devkit.__main__`) and the built-in bundles `devkit`, `advisory` and
   `git-commits` (`ADR-dist-foundation-ownership`).
 - **Dependencies**: `click`, `jinja2`, `pyyaml`, `tomlkit`, and `devkit-advisory` (locked to the same version);
-  extras `search` (numpy, tokenizers, `devkit-embed`) and `mcp`. It never depends on `devkit-agt`, and its tests also
+  extra `search` (numpy, tokenizers, `devkit-embed`). It never depends on `devkit-agt`, and its tests also
   run in an environment without it (`just test-dist`).
 
 ### 2.2 `devkit-agt` (`packages/devkit`)
@@ -78,7 +82,7 @@ the ones below it.
   generated files, approval-bound integration and the compact runner, with the built-in bundles `authoring` and
   `harness` (auto-selected).
 - **Dependencies**: `click`, `pyyaml`, `tomlkit`, `devkit-dist` and `devkit-advisory` (both locked to the same
-  version); its `search` and `mcp` extras require those of `devkit-dist`.
+  version); its `search` extra requires `devkit-dist[search]`; `mcp` requires the same-version `devkit-mcp`.
 
 ### 2.3 `devkit-advisory` (`packages/devkit-advisory`)
 - **Distribution Wheel**: `devkit_advisory-<version>-py3-none-any.whl`
@@ -111,3 +115,11 @@ the ones below it.
 - **`devkit-starter` (`packages/devkit-starter`)**: Example external content package demonstrating bundle authoring.
 - Both test their bundles against the manifest reader of `devkit-dist`, their only development dependency.
 - **`devkit-embed` (`models/devkit-embed`)**: Hand-built data package containing the default dense embedding model for the `search` extra of `devkit-dist` (and `devkit-agt[search]`).
+
+### Optional MCP runtime
+
+`packages/devkit-mcp` ships `devkit_mcp` and mounts `devkit mcp` through `devkit.commands`. It is the fourth
+lockstep foundation wheel, depending on the exact dist release, `mcp>=1.30,<2` and `jsonschema`. It owns transport,
+form adaptation and `devkit.host.services` discovery; integration and handoff remain domain services. Dist imports
+no runtime module and keeps the executable, receipts, hooks and narrow project-registration reconciler.
+`ADR-independent-mcp-runtime-with-project-registration-and-environment-guards` defines this inversion.

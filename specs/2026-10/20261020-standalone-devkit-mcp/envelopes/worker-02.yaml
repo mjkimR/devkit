@@ -1,0 +1,28 @@
+kind: worker
+stage: integration-approval
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T06:54:17.926320Z'
+status: completed
+summary: Recovered worker-01 by applying the Host-authorized agent-output correction and explicit resolution-01. Independent reconciliation passes, feedback and verified final-report are committed, and workflow reports all Development stages complete through final-change-report; integration remains Host-owned.
+findings: []
+assumptions:
+- Explicit cwd/git -C, write scopes, command-scoped approvals and Host range validation emulate confinement without native guarantees.
+- Original accepted scope plus explicit Host expansions retained; no accepted requirements deferred and no merge/push/publication performed.
+- Host owns final source-asset sync/receipt, incorporation of moved main and integration.
+unverified_areas:
+- Real Codex/Claude terminal connection, discovery, trust, native forms and permission UI; live cloud transport.
+- Host final synchronization, receipt update and integration.
+checks:
+  tests: PASS full fallback 3888 passed,14 skipped,67.24s; dist-only 1029 passed,10.85s; final recovery changed documents only
+  build: PASS 5 wheel combinations; no duplicate paths or SDK leakage; 8 release wheels and SHA256SUMS built offline without publishing
+  lint: PASS 38 changed Python files lint and format; diff check clean
+  types: PASS scoped Pyright zero errors/warnings
+  reviews: PASS independent code review/reverify and separate reconciliation recheck; no remaining findings
+  governance: PASS cumulative original base through 292a579 zero errors/warnings; subsequent normal commit gates pass
+  workflow: PASS all Development stages through final-change-report done; worker-01 explicitly resolved; integration-approval pending Host
+  feedback: PASS recorded observation and completed sweep; no additional recovery observations
+diff_scope:
+  base: 2712c2844ffe25cf3320cb245af6965d7c96ab5f
+  head: 93165ccad677db400afa4fed8ce748d8bb21b519
+activity_effort: medium

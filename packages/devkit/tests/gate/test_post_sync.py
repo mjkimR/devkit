@@ -37,7 +37,7 @@ def test_sync_installs_hooks_only_after_writing(target: Path, installed: list[In
     sync_project(target, installed, dry_run=True)
     assert not (target / ".git/hooks/pre-commit").exists()
     result = sync_project(target, installed)
-    assert not result.notices
+    assert all(item.code == "MCP_RUNTIME_UNAVAILABLE" for item in result.notices)
     entry = target / ".git/hooks/pre-commit.d/20-devkit"
     assert entry.is_file()
     assert (target / ".git/hooks/post-commit.d").is_dir()

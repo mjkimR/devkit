@@ -35,7 +35,16 @@ The module is SDD-agnostic: it does not decide which tasks use a worktree, and i
    1. **setup**: the `[worktree] setup` command, if configured, runs through `/bin/sh -c` in the worktree, without the caller's `VIRTUAL_ENV`, within 900 seconds. Set it to the project's environment step, for example `uv sync` or `just init`.
    2. **sync**: when the devkit project the command runs in has a receipt (`.devkit/installation.json`), `devkit sync --locked` runs in the same project directory of the worktree, within 300 seconds, with the worktree's `.venv/bin/python` when setup created one with devkit installed in it (a `devkit_agt-*.dist-info` in its `site-packages`, the test the commit gate hooks apply), else the interpreter running `start`. It writes the ignored managed copies only and never changes the tracked receipt, `AGENTS.md` or seeded files; when the worktree's environment no longer matches the committed receipt (a `RECEIPT_STALE` exit `1`) or lacks a deployed bundle's package, it fails and `start` reports `WORKTREE_SYNC_FAILED`. Without it, every devkit command that reads managed files fails in the worktree: bundle rules (and so the `rules-check` commit gate, which then stops with `RULES_RUN_FAILED` directing `devkit sync`), bundle gates, `get-context`, `playbook search`, workflow assets.
 
-   Both run with stdin closed, in a session of their own: a timeout kills the whole process group (the shell and what it started, such as `uv sync`). Their output is discarded unless they fail; a failure or timeout is a `WORKTREE_SETUP_FAILED` or `WORKTREE_SYNC_FAILED` warning, and the worktree stays. The setup warning's `[FIX]` reruns the command. The sync runs with `--format json`, so its warning carries the sync's own error: the code and message (`RECEIPT_STALE`, `SELECTION_INVALID`, ...), its targets under the worktree, its `[DETAIL]` lines and its `[FIX]`, prefixed with the worktree path, since rerunning does not cure a stale receipt or a missing package; only an output that is not an error object (a timeout, a crash) gets the rerun command, with the advisory headlines kept ahead of the last lines. A reused worktree runs neither and preserves its local file byte-for-byte, including intentional absence. Created worktrees own independent snapshots: later base/task edits or deletion do not propagate. Direct `git worktree add` and independent clones do not copy local configuration.
+   After successful locked restoration, `devkit sync --registrations-only` initializes eligible local MCP entries
+   using the same interpreter. Dist discovers the optional provider; no runtime import is added to worktree.
+   Without the provider this is a no-op. Existing registration conflicts still refuse locked sync; absent fresh
+   entries are initialized only in this separate step. Native handoff rechecks its environment before this step.
+   Registration advisories are returned with the result and a failure keeps the created worktree. Trusted native
+   handoff children carry a refusal-only identity constraint for the original owning workspace; sync checks it
+   after locks and before each transaction write. No approval or terminal-cleanup authority crosses the process
+   boundary. The parent rechecks the constraint after child completion.
+
+   Setup, sync and registration initialization run with stdin closed, in a session of their own: a timeout kills the whole process group (the shell and what it started, such as `uv sync`). Their output is discarded unless they fail; a failure or timeout is a `WORKTREE_SETUP_FAILED` or `WORKTREE_SYNC_FAILED` warning, and the worktree stays. The setup warning's `[FIX]` reruns the command. The sync runs with `--format json`, so its warning carries the sync's own error: the code and message (`RECEIPT_STALE`, `SELECTION_INVALID`, ...), its targets under the worktree, its `[DETAIL]` lines and its `[FIX]`, prefixed with the worktree path, since rerunning does not cure a stale receipt or a missing package; only an output that is not an error object (a timeout, a crash) gets the rerun command, with the advisory headlines kept ahead of the last lines. A reused worktree runs neither and preserves its local file byte-for-byte, including intentional absence. Created worktrees own independent snapshots: later base/task edits or deletion do not propagate. Direct `git worktree add` and independent clones do not copy local configuration.
 
 The commit gates of `devkit gate` are shared by every worktree and run with the worktree's own `.venv` first (`CAP-GATE-commit-gates`), so a worktree without one falls back to the interpreter recorded at installation.
 
@@ -163,3 +172,10 @@ revision before remote branch checks and passes the resolved commit to `git work
 runs from that commit even when another process advances the base meanwhile. Cleanup after failed creation uses
 the pinned commit as its origin. Omitting `revision` preserves creation from the base's current HEAD. The local
 MCP proposal handoff uses this option to keep setup bound to the reviewed commit.
+
+Project MCP registration preserves worktree cleanliness: tracked host files and visible foreign untracked files
+remain unchanged; generated entries and their ownership ledger remain ignored. Clone-local exclusions are narrowly
+scoped and checked across linked worktrees before addition. MCP uses a retained interpreter/import source and base
+executor, with the task checkout passed separately as its configuration workspace. Task cleanup cannot remove the
+runtime. Configuration-workspace deletion blocks subsequent approval and resume, apart from exact same-call terminal
+cleanup already approved; see `CAP-MCP-runtime-registration`.

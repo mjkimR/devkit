@@ -1,0 +1,23 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T06:46:15.809048Z'
+status: failed
+summary: Independent recheck resolves both P2 documentation findings; P1 agent-output correction awaits Host write-scope expansion.
+findings:
+- issue: Agent-output contract still names the removed MCP command and is absent from reconciliation targets.
+  evidence: docs/architecture/ARCH-08-1-agent-output.md:40 remains outside the authorized worker write scope.
+  suggested_action: Host authorizes this target; replace the command with devkit mcp serve and add the modified reconciliation target, then reverify.
+  resolution: open
+  severity: P1
+assumptions:
+- Read-only reviewer confinement used explicit absolute worktree commands and git -C; no native confinement guarantee.
+unverified_areas:
+- P1 correction and final committed reconciliation; real-host terminal UI remains unverified.
+checks:
+  independent-reconcile: FAIL P2 topology and confirmation ownership resolved; P1 agent-output scope pending
+diff_scope:
+  base: 2712c2844ffe25cf3320cb245af6965d7c96ab5f
+  head: 6bb3742b33e9781be63122f5bb10f9de631857c6
+activity_effort: medium

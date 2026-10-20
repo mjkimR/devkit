@@ -35,6 +35,7 @@ pythonVersion = "3.12"
 typeCheckingMode = "basic"
 extraPaths = [
     "./packages/devkit-dist/src",
+    "./packages/devkit-mcp/src",
     "./packages/devkit-dist/tests",
     "./packages/devkit/src",
     "./packages/devkit/tests",
@@ -69,6 +70,7 @@ devkit-viewer = { workspace = true }
 [tool.pytest.ini_options]
 # Rule tests live in each rule's folder under src (`<rule>/tests/`), so the devkit wheels' sources are collected too.
 testpaths = [
+    "packages/devkit-mcp/tests",
     "packages/devkit-dist/tests",
     "packages/devkit-dist/src",
     "packages/devkit/tests",

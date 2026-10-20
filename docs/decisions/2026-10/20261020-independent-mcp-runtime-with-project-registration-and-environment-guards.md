@@ -1,15 +1,15 @@
 ---
-id: PADR-independent-mcp-runtime-with-project-registration-and-environment-guards
+id: ADR-independent-mcp-runtime-with-project-registration-and-environment-guards
 title: Independent MCP runtime with project registration and environment guards
 summary: "Place MCP transport in an optional devkit-mcp wheel, keep service contracts in core and domain execution in agt/spec, and reconcile owned project registrations through sync while enforcing cloud restrictions at runtime."
-proposal: PROP-standalone-devkit-mcp
-status: draft
+proposal: SPEC-standalone-devkit-mcp
+status: accepted
 created_at: 2026-10-20
 ---
 
-# [PADR-independent-mcp-runtime-with-project-registration-and-environment-guards] Independent MCP runtime with project registration and environment guards
+# [ADR-independent-mcp-runtime-with-project-registration-and-environment-guards] Independent MCP runtime with project registration and environment guards
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-20
 
 ---

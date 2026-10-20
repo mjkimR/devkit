@@ -14,7 +14,7 @@ import pytest
 from click.testing import CliRunner
 from devkit.cli import cli as devkit_cli
 from devkit.core import git as core_git
-from devkit.host.mcp import ConfirmationReply
+from devkit.core.mcp import ConfirmationReply
 from devkit.integration import (
     IntegrationContext,
     IntegrationService,
@@ -62,7 +62,7 @@ def _make_synced_repo(tmp_path: Path, template: Path, *, extra_config: str = "")
     git(repo, "config", "user.email", "t@example.com")
     git(repo, "config", "user.name", "t")
     git(repo, "config", "commit.gpgsign", "false")
-    shutil.copytree(template / ".devkit", repo / ".devkit")
+    shutil.copytree(template / ".devkit", repo / ".devkit", ignore=shutil.ignore_patterns("transient"))
     write(repo, ".gitignore", ".devkit/managed/\n")
     config_path = repo / ".devkit/config.toml"
     config_text = config_path.read_text(encoding="utf-8") if config_path.exists() else ""
@@ -760,7 +760,7 @@ def test_handoff_native_sdk_roundtrip(accepted_handoff_base, approved):
             command=sys.executable,
             args=[
                 "-c",
-                "from pathlib import Path; import sys; from devkit.host.mcp.server import serve; serve(Path(sys.argv[1]))",
+                "from pathlib import Path; import sys; from devkit_mcp.server import serve; serve(Path(sys.argv[1]), Path(sys.argv[1]))",
                 str(repo),
             ],
         )
@@ -802,7 +802,9 @@ def test_handoff_pins_reviewed_commit_before_setup_when_base_moves(accepted_hand
         git(base, "commit", "--allow-empty", "-q", "-m", "advance while checking remote branches")
         return notices
 
-    def capture_setup(path, setup, project, notices):
+    def capture_setup(path, setup, project, notices, *, before_step=None):
+        if before_step is not None:
+            before_step("sync")
         setup_heads.append(git(path, "rev-parse", "HEAD"))
         # The fixture has no setup command; copy its locked managed assets without invoking unrelated CLI work.
         shutil.copytree(repo / ".devkit/managed", path / ".devkit/managed")
@@ -918,3 +920,45 @@ def test_spec_policy_evidence_changes_with_the_target_tool_spec(tmp_path: Path, 
     )
     after = check(replace(context, finish=replace(plan, target_sha=moved), result_sha=result))
     assert {item.code: item.value for item in after.evidence}["SPEC_POLICY"] != before
+
+
+def test_native_handoff_initializes_fresh_registration(accepted_handoff_base, monkeypatch):
+    from devkit.host import registrations
+    from devkit.worktree import lifecycle
+
+    from devkit_spec.handoff_mcp import HandoffService
+
+    repo = accepted_handoff_base
+    original = lifecycle._execute
+    modes = []
+
+    def execute(argv, cwd, label, timeout):
+        if argv[1:4] == ["-m", "devkit", "sync"]:
+            modes.append(argv[4])
+            result = CliRunner().invoke(devkit_cli, argv[3:])
+            return subprocess.CompletedProcess(argv, result.exit_code, result.stdout.encode(), result.stderr.encode())
+        return original(argv, cwd, label, timeout)
+
+    monkeypatch.setattr(lifecycle, "_execute", execute)
+    monkeypatch.setattr(registrations, "collisions", lambda *args: [])
+    monkeypatch.setattr(
+        registrations,
+        "provider",
+        lambda root, *args: registrations.LaunchDescriptor(
+            sys.executable,
+            ("-m", "devkit", "mcp", "serve", "--configuration-workspace", str(root)),
+            str(repo),
+            str(root),
+            "local",
+        ),
+    )
+
+    async def confirm(message, schema):
+        return ConfirmationReply("accept", {"approve": True, "activity_effort": "medium"})
+
+    result = asyncio.run(HandoffService(repo).handoff("idea", confirm))
+    assert result["status"] == "handed_off", result
+    assert modes == ["--locked", "--registrations-only"]
+    worktree = Path(result["worktree"]["path"])
+    assert registrations._ledger(worktree)["entries"]
+    assert str(worktree) in (worktree / ".mcp.json").read_text()

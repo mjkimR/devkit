@@ -43,5 +43,9 @@ A plugin command is a devkit command, so it keeps the output contract an agent r
 
 - Build every command on `devkit.core.cli`: `boundary`, `FORMAT_OPTION`, `workspace_option`, `echo_json`, `echo_notices`, `exit_on_warnings`, `exit_on_problems`. The boundary gives it the output options, the Agent Advisory Protocol rendering and the exit codes of `ARCH-08-1-agent-output`.
 - Raise `AdvisoryError` subclasses with the plugin's own stable codes, prefixed by its domain (`SPEC_...`), and document them in the plugin's own docs; never reuse a devkit code for a different condition.
-- `devkit --version` prints only the version of `devkit-dist` (the same number as `devkit-agt` and `devkit-advisory`, released in lockstep). A plugin that reports its own version does so under its group (`devkit spec --version`) with a `[VERSION: <package> <version>]` line.
+- `devkit --version` prints only the version of `devkit-dist` (the same number as `devkit-agt`, `devkit-advisory` and `devkit-mcp`, released in lockstep). A plugin that reports its own version does so under its group (`devkit spec --version`) with a `[VERSION: <package> <version>]` line.
 - Use devkit through each module's public surface (`devkit.<module>` `__init__` exports and `devkit.core.cli`), never its private helpers. devkit makes breaking changes in place while it has no external consumers ([AGENTS.md](../../AGENTS.md#compatibility)), so a plugin pins devkit to a minor range and moves with it.
+
+`devkit-mcp` contributes the `mcp` command group. It supplies `config`, `setup`, `remove`, `status` and `serve`;
+The former MCP subgroup under host and the dist MCP extra are absent. `serve` requires an explicit configuration workspace separate
+from the retained executor root. Its stdout is exclusively native MCP protocol traffic.

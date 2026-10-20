@@ -1,60 +1,111 @@
 ---
-id: PROP-standalone-devkit-mcp
+id: SPEC-standalone-devkit-mcp
 title: Independent devkit-mcp runtime and default approval integration
 summary: "Extract the shared MCP runtime into devkit-mcp, manage project registrations through sync, and make native MCP the default interactive approval route while retaining domain services in their owning packages."
-status: accepted
-created_at: 2026-10-20
-target_area: host/
-priority: high
-size: L
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/
-    - pyproject.toml
-    - uv.lock
-    - justfile
-    - AGENTS.md
-    - .github/workflows/
-    - docs/architecture/
-    - docs/development/
-    - docs/decisions/
-    - packages/devkit-dist/src/devkit/core/
-    - packages/devkit-dist/src/devkit/host/
-    - packages/devkit-dist/src/devkit/distribution/
-    - packages/devkit/src/devkit/integration/
-    - packages/devkit-spec/src/devkit_spec/handoff_mcp.py
-    - packages/devkit-spec/src/devkit_spec/bundle/skills/spec/
-    - scripts/
-    - guides/install/
-    - docs/capabilities/host/
-    - docs/capabilities/integration/
-    - docs/capabilities/delivery/
-    - docs/capabilities/worktree/
-  excludes:
-    - packages/devkit-advisory/
-    - packages/devkit-spec/src/devkit_spec/scope/
-task_kind: feature
-workflow: sdd-proposal
+status: completed
+created: 2026-10-20
+related_capabilities: []
+related_stories: []
+workflow: sdd-spec-feature
 ---
 
-# [PROP-standalone-devkit-mcp] Independent devkit-mcp runtime and default approval integration
+# [SPEC-standalone-devkit-mcp] Independent devkit-mcp runtime and default approval integration
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-standalone-devkit-mcp on 2026-10-20.
+- **Preserved Materials**: `docs/materials/2026-10/20261020-standalone-devkit-mcp`
+- Target Docs Blueprint: `PROP-standalone-devkit-mcp-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 The selected direction is an independent optional `devkit-mcp` wheel. It owns stdio transport, native form
 adaptation, installed service discovery and runtime diagnostics. Domain execution stays in `devkit-agt`
 (integration) and `devkit-spec` (handoff). Ordinary hooks and project-file synchronization stay in `devkit-dist`.
 
-`PADR-independent-mcp-runtime-with-project-registration-and-environment-guards` records the package and authority
-boundary. `materials/runtime-and-registration-evidence.md` records code evidence, official platform support,
-alternatives and the verification matrix. These are proposed contracts pending `plan-accept`, not implemented
-behavior. No Development or integration is authorized by this Planning run.
+`ADR-independent-mcp-runtime-with-project-registration-and-environment-guards` records the package and authority
+boundary. `docs/materials/2026-10/20261020-standalone-devkit-mcp/runtime-and-registration-evidence.md` records code evidence, official platform support,
+alternatives and the verification matrix. The accepted ADR authorizes this Development contract; integration remains a separate Host action.
 
-## 2. Settled Design
+## 2. User Stories
 
-### Package and service ownership
+- **US-1**: As a local Host, I want independently installed MCP services with exact project registration and scoped native approval, so that I can review and integrate work without binding runtime lifetime to a removable task checkout.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: Shared worker coordination state, unattended policy-authorized merge/cleanup, remote multi-host serving, desktop/VS Code adapters, global host mutation, trust/sandbox changes, compatibility shims and presentation language changes.
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+The `packages/` parent boundary is solely for the new `packages/devkit-mcp/`, affected pyprojects/READMEs/tests,
+and imports of moved contracts; it does not permit unrelated package refactors. Update dist core/host/distribution,
+agt integration and spec handoff plus relevant bundle skills/subagents, installation guides, root tooling and
+architecture. `target-docs.md` names Living Spec targets. The new ADR supersedes only the MCP ownership/version
+clauses of `ADR-dist-module-split` and `ADR-dist-command-composition`; hook, CLI-executable and receipt ownership
+remain unchanged. Reconcile the explicit project-settings exception in `CAP-HOST-lifecycle-observation`.
+
+Acceptance must demonstrate:
+
+### Scenario 1 [AC-01]: Independent installations
+- **Given** built wheels in isolated environments.
+- **When** installing supported package combinations.
+- **Then** Built-wheel matrices: dist alone, runtime+dist, agt without SDK, agt[mcp], and spec+runtime. No circular dependency,
+   duplicate installed path, missing direct dependency or import via the monorepo masks packaging faults. CLI
+   discovery and server version identify devkit-mcp; dist remains the owner of the devkit executable/receipt.
+
+### Scenario 2 [AC-02]: Transport and confirmation
+- **Given** installed service providers and an MCP client.
+- **When** discovering and invoking tools.
+- **Then** Extraction preserves schema validation, service duplicate/load failures, stdout protocol isolation, native
+   accept/decline/cancel/disconnect handling and missing-form refusal, under the supported installed SDK/protocol.
+
+### Scenario 3 [AC-03]: Registration ownership
+- **Given** selected supported agents and project registration state.
+- **When** sync, dry-run, check, setup or remove reconciles the project.
+- **Then** Repeated sync converges both host files and ownership state; dry-run/check write nothing; opt-out, uninstall,
+   unsupported host, absent retained runtime, user shadowing, edited entry, duplicate key, file-mode preservation,
+   external edit and journal recovery have explicit tests. Absent host files become locally excluded, existing ignored
+   destinations remain eligible, and tracked/visible foreign untracked destinations remain byte-identical with
+   actionable unavailable diagnostics. Exercise worktree start setup, native handoff and integration clean-state
+   preflights for each case; no tracked ignore-file changes are allowed. Common exclude updates and per-checkout
+   writes serialize. No tests or
+   smoke checks edit real user host settings or trust stores.
+
+### Scenario 4 [AC-04]: Execution constraints
+- **Given** explicit owning configuration workspace and retained executor.
+- **When** environment changes before invocation or during confirmation/lock waits.
+- **Then** Local-to-cloud changes before invocation, during form wait and during lock wait stop the next mutation;
+   cloud stale/direct registrations and resume cannot obtain/use interactive approval. Read-only status works
+   without elicitation capability. Prepare is not falsely advertised as the cloud read-only subset. Cross-worktree
+   tests use different copied config values and verify the owning config path, not the retained executor's value.
+
+### Scenario 5 [AC-05]: Runtime lifetime
+- **Given** a retained executable/import source and an approved task scope.
+- **When** task cleanup removes the owning configuration workspace.
+- **Then** Removing the task does not remove the executable/import source. Reconnect cannot import old process authority;
+   concurrent server approval records remain independent. A vanished config workspace prevents new approval and
+   resume; unexpected removal stops mutation, while only the declared same-call terminal cleanup may finish after
+   deliberate removal of its own config workspace.
+
+### Scenario 6 [AC-06]: Host evidence
+- **Given** available Codex CLI and Claude Code terminal hosts.
+- **When** collecting separately attributable UI evidence without changing real settings.
+- **Then** Real Codex CLI and Claude Code terminal sessions separately record registration, trust, discovery, native form,
+   decline/cancel, post-approval effects and permission prompts with versions. Simulated transport tests alone do
+   not establish UI support. If real-host evidence is unavailable, report it as unverified and do not claim that
+   host is fully validated. No desktop/VS Code/SDK adapter is included.
+
+Development keeps `dev_effort: medium`: cross-package review and separate reconcile verification are required,
+but this work performs no release, data migration or advisory API change. Run relevant lint/types/tests via
+`just test-affected`, package layering/dist-only checks, built-wheel smoke and governance checks. Update affected
+selection so new runtime changes select its tests and domain consumers; preserve full fallback. Release-script
+changes are validated without publishing. Extraction is the first internal stage; environment registration and
+guard work follows the integrated configuration contract, then guidance and host evidence. This is one coherent
+proposal, not permission for a partial extraction-only completion.
+
+## 5. Accepted Design
+
+#### Package and service ownership
 
 - Create `packages/devkit-mcp/` with Python namespace `devkit_mcp`, tests and README. Depend on the exact
   `devkit-dist` release plus `mcp>=1.30,<2` and the directly imported `jsonschema` dependency. Add the new wheel to
@@ -73,7 +124,7 @@ behavior. No Development or integration is authorized by this Planning run.
   runtime package has been uninstalled. This is the same dependency-inversion direction as existing extensions;
   dist never imports `devkit_mcp`, integration or spec by module name. No generic remote plugin manager is added.
 
-### Project registration and ownership
+#### Project registration and ownership
 
 Sync reconciles one `devkit` entry for each selected supported agent: Codex CLI in `.codex/config.toml`
 (`[mcp_servers.devkit]`), Claude Code in project `.mcp.json` (`mcpServers.devkit`). `[mcp] register = true` is the
@@ -129,7 +180,7 @@ Status distinguishes desired/recorded/project/effective registration, package/ru
 form UI, trust and permissions. Writing config proves only registration; higher-priority settings and trust can
 still disable it. Status redacts environment values and other servers' settings.
 
-### Runtime lifetime and configuration binding
+#### Runtime lifetime and configuration binding
 
 The launch descriptor separately names the retained interpreter/import installation, retained repository executor
 root, and owning configuration workspace. Select a retained base or tool-installed runtime with the same required
@@ -151,7 +202,7 @@ or excuse an unexpectedly missing workspace. Reject later mutation/approval requ
 introduced. Concurrent processes have independent confirmation authority and use existing domain locks; after
 restart a request ID cannot resume another process's approval.
 
-### Environment and approval restrictions
+#### Environment and approval restrictions
 
 Consume the core resolver from `SPEC-local-config-execution-environment`: `[execution] environment` is `local` or
 `cloud`, default `local`, with `.devkit/config.local.toml` copied by `devkit worktree start` before setup/first sync
@@ -189,7 +240,7 @@ decline/cancel behavior, exact scope, stale-state guards and process-local resum
 normalization of empty form capability and negotiated protocol versions instead of assuming every host supports
 an identical elicitation version.
 
-### Default workflow and fallback
+#### Default workflow and fallback
 
 Direct and local-orchestrated guidance prefers one Host-owned native approval when devkit MCP is connected. The
 Host first validates worker boundaries, committed scope and required checks, presents the result, then calls the
@@ -202,58 +253,9 @@ previous user authorization can be used only when it already covers the exact ac
 No automatic policy dispatcher or unattended mutation authority is added. Handoff retains its effort choice and
 never authorizes final integration. Worker contracts and integration/handoff guidance reflect Host ownership.
 
-## 3. Implementation Scope and Acceptance Evidence
+## 6. Development Assumptions
 
-The `packages/` parent boundary is solely for the new `packages/devkit-mcp/`, affected pyprojects/READMEs/tests,
-and imports of moved contracts; it does not permit unrelated package refactors. Update dist core/host/distribution,
-agt integration and spec handoff plus relevant bundle skills/subagents, installation guides, root tooling and
-architecture. `target-docs.md` names Living Spec targets. The new ADR supersedes only the MCP ownership/version
-clauses of `ADR-dist-module-split` and `ADR-dist-command-composition`; hook, CLI-executable and receipt ownership
-remain unchanged. Reconcile the explicit project-settings exception in `CAP-HOST-lifecycle-observation`.
-
-Acceptance must demonstrate:
-
-1. Built-wheel matrices: dist alone, runtime+dist, agt without SDK, agt[mcp], and spec+runtime. No circular dependency,
-   duplicate installed path, missing direct dependency or import via the monorepo masks packaging faults. CLI
-   discovery and server version identify devkit-mcp; dist remains the owner of the devkit executable/receipt.
-2. Extraction preserves schema validation, service duplicate/load failures, stdout protocol isolation, native
-   accept/decline/cancel/disconnect handling and missing-form refusal, under the supported installed SDK/protocol.
-3. Repeated sync converges both host files and ownership state; dry-run/check write nothing; opt-out, uninstall,
-   unsupported host, absent retained runtime, user shadowing, edited entry, duplicate key, file-mode preservation,
-   external edit and journal recovery have explicit tests. Absent host files become locally excluded, existing ignored
-   destinations remain eligible, and tracked/visible foreign untracked destinations remain byte-identical with
-   actionable unavailable diagnostics. Exercise worktree start setup, native handoff and integration clean-state
-   preflights for each case; no tracked ignore-file changes are allowed. Common exclude updates and per-checkout
-   writes serialize. No tests or
-   smoke checks edit real user host settings or trust stores.
-4. Local-to-cloud changes before invocation, during form wait and during lock wait stop the next mutation;
-   cloud stale/direct registrations and resume cannot obtain/use interactive approval. Read-only status works
-   without elicitation capability. Prepare is not falsely advertised as the cloud read-only subset. Cross-worktree
-   tests use different copied config values and verify the owning config path, not the retained executor's value.
-5. Removing the task does not remove the executable/import source. Reconnect cannot import old process authority;
-   concurrent server approval records remain independent. A vanished config workspace prevents new approval and
-   resume; unexpected removal stops mutation, while only the declared same-call terminal cleanup may finish after
-   deliberate removal of its own config workspace.
-6. Real Codex CLI and Claude Code terminal sessions separately record registration, trust, discovery, native form,
-   decline/cancel, post-approval effects and permission prompts with versions. Simulated transport tests alone do
-   not establish UI support. If real-host evidence is unavailable, report it as unverified and do not claim that
-   host is fully validated. No desktop/VS Code/SDK adapter is included.
-
-Development keeps `dev_effort: medium`: cross-package review and separate reconcile verification are required,
-but this work performs no release, data migration or advisory API change. Run relevant lint/types/tests via
-`just test-affected`, package layering/dist-only checks, built-wheel smoke and governance checks. Update affected
-selection so new runtime changes select its tests and domain consumers; preserve full fallback. Release-script
-changes are validated without publishing. Extraction is the first internal stage; environment registration and
-guard work follows the integrated configuration contract, then guidance and host evidence. This is one coherent
-proposal, not permission for a partial extraction-only completion.
-
-## 4. Lifecycle & Retirement Criteria
-
-Ready for `plan-accept` when the PADR, evidence, cross-proposal dependency and challenger disposition are reviewed.
-Acceptance selects the design; it does not prove runtime/UI behavior or start Development. No essential design
-question remains for this turn beyond accepting or declining the proposal.
-
-Scope excluded: coordination storage and generic shared-filesystem APIs (`PROP-worker-shared-state-mcp`),
-policy-authorized unattended merge/cleanup (`PROP-policy-authorized-integration`), remote multi-host serving,
-VS Code/SDK/desktop adapters, trust/sandbox bypass, global host configuration mutation and compatibility shims.
-Future shared-state services can consume the runtime contract without moving their domain behavior into it.
+The integrated local-config API exposes `EffectiveConfig.values` and `ExecutionEnvironment.environment/source`;
+this implementation consumes those APIs without adding another resolver. The supplied worktree and committed
+handoff define the write boundary. Real-host form UI evidence can remain explicitly unverified; isolated protocol
+and filesystem tests do not claim host UI support. No source feedback files require direct-fix resolution.

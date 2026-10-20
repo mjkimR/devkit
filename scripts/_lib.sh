@@ -59,6 +59,7 @@ resolve_module() {
     case "$1" in
         devkit) echo "devkit-agt" ;;
         dist) echo "devkit-dist" ;;
+        mcp) echo "devkit-mcp" ;;
         starter) echo "devkit-starter" ;;
         catalog) echo "devkit-catalog" ;;
         spec) echo "devkit-spec" ;;

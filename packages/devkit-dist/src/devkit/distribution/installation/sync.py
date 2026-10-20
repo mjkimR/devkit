@@ -14,6 +14,7 @@ from devkit.advisory import AdvisoryError, ExitCode, Level
 from devkit.core.errors import ArgumentError
 from devkit.core.git import run_git
 from devkit.core.local_config import LOCAL_CONFIG_PATH
+from devkit.core.mcp_context import guard_execution
 from devkit.core.project import git_toplevel, require_devkit_root
 from devkit.core.receipt import (
     CONFIG_PATH,
@@ -79,6 +80,7 @@ from devkit.distribution.installation.workspace import (
     owned_prefix,
     snapshot,
 )
+from devkit.host import registrations
 
 TOOL_PACKAGE = "devkit-dist"
 EDITED_FILE_FIX = (
@@ -860,10 +862,35 @@ def sync_project(
     if environment is not None and environment not in ("local", "cloud"):
         raise ArgumentError("environment must be local or cloud")
     root = require_project_dir(root)
+    if not dry_run:
+        guard_execution()
     # A dry run (``--dry-run``, ``--check``) writes nothing, so it reads under the shared lock like any reader.
-    with project_lock(root, shared=dry_run):
+    with registrations.clone_lock(root, dry_run=dry_run), project_lock(root, shared=dry_run):
+        if not dry_run:
+            guard_execution()
+        if not dry_run and not locked:
+            registrations.recover(root)
         captured = local_render.inputs(root)
         update = save() if save is not None and not dry_run else None
+        selected_config = (
+            parse_config(tomllib.loads(update.text))
+            if update is not None and update.text is not None
+            else read_config(root)
+        )
+        registration = registrations.plan(
+            root, agents if agents is not None else selected_config.agents, environment=environment
+        )
+        if locked and registration.changes:
+            if any(
+                registration.before.get(key) is not None
+                for key in (*registrations.DESTINATIONS.values(), registrations.LEDGER)
+            ):
+                raise registrations.RegistrationError(
+                    "locked sync requires ordinary sync to reconcile local MCP registration"
+                )
+            # A fresh checkout has no registration to validate. Asset restoration stays
+            # locked; lifecycle initialization runs separately after this succeeds.
+            registration.after.clear()
         finish = commit_locked(
             root,
             installed,
@@ -878,6 +905,10 @@ def sync_project(
             captured_inputs=captured,
         )
         result = finish()
+        result.notices.extend(registration.notices)
+        result.actions.extend(Action(path, "update") for path in registration.changes)
+        if not dry_run:
+            registrations.apply(registration, locked=locked)
     if update is not None:
         result.notices.extend(update.notices)
     if not dry_run:
@@ -1036,3 +1067,15 @@ def recover_project(root: Path) -> int:
     root = require_project_dir(root)
     with project_lock(root):
         return recover_locked(root)
+
+
+def sync_registrations(root: Path) -> registrations.RegistrationPlan:
+    """Reconcile only optional local registrations after locked worktree asset restoration."""
+    root = require_project_dir(root)
+    guard_execution()
+    with registrations.clone_lock(root), project_lock(root):
+        guard_execution()
+        registrations.recover(root)
+        result = registrations.plan(root, read_config(root).agents)
+        registrations.apply(result)
+    return result

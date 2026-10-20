@@ -125,6 +125,6 @@ with `accept_only` or `--direct`.
 
 ## 4. Lifecycle & Retirement Criteria
 
-Depends on `PROP-standalone-devkit-mcp` (MCP runtime), `PROP-worker-shared-state-mcp` (shared workspace adapter and
+Depends on `SPEC-standalone-devkit-mcp` (MCP runtime), `PROP-worker-shared-state-mcp` (shared workspace adapter and
 7-day TTL storage) and `PROP-language-setting-coverage` (presentation language resolution). Medium Planning should
 settle the exact MCP tool names, form schema, report template and partial-failure recovery semantics before handoff.

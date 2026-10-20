@@ -5,7 +5,7 @@ from dataclasses import replace
 
 import pytest
 from devkit.advisory import AdvisoryError
-from devkit.host.mcp import ConfirmationReply
+from devkit.core.mcp import ConfirmationReply
 from devkit.integration import IntegrationService, Task
 from devkit.worktree.pull_request import CommandResult, GitHub, Repository
 from testsupport.rules import git, write

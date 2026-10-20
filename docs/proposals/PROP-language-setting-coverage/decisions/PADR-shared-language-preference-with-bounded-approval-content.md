@@ -53,7 +53,7 @@ The runtime propagates owning-workspace context without taking over domain langu
 Language is sampled once per form; environment and stale-scope checks remain independent and unchanged.
 
 Development depends on the integrated implementations of `SPEC-local-config-execution-environment` and
-`PROP-standalone-devkit-mcp`. This is a follow-up extension of their contracts. There is no second config resolver,
+`SPEC-standalone-devkit-mcp`. This is a follow-up extension of their contracts. There is no second config resolver,
 registration implementation, business approval flow or standalone translation service.
 
 ## 5. Consequences

@@ -8,9 +8,8 @@ depends on `devkit-dist` and `devkit-advisory` at its own version (the three are
 `devkit workflow`, `devkit gate`, `devkit worktree`, `devkit generated`, `devkit integration` and `devkit run`. It
 ships no console script of its own: its commands are `devkit.commands` plugins (`ARCH-05-3-command-plugins`).
 Requires Python 3.12 or later; runtime dependencies are `click`, `pyyaml`, `tomlkit`, `devkit-dist` and
-`devkit-advisory`. The `search` and `mcp` extras (`devkit-agt[search]`, `devkit-agt[mcp]`) are those of
-`devkit-dist`: dense and hybrid search with the embedding model, and the SDK for native stdio services and
-confirmation.
+`devkit-advisory`. The `search` extra selects `devkit-dist[search]` for dense/hybrid search. The `mcp` extra selects the same-version
+`devkit-mcp` wheel for optional transport and forms. Domain integration imports only dependency-free core contracts.
 
 ## Install
 

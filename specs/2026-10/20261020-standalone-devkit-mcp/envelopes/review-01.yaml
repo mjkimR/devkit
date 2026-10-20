@@ -1,0 +1,44 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T06:14:56.609015Z'
+status: completed
+summary: 'Independent code reviewer: four P1 gaps in recovery, fresh-worktree registration and retained dependencies; lifecycle before-step guards cover setup to sync.'
+findings:
+- issue: Registration recovery can delete or overwrite a destination that became tracked after interruption.
+  evidence: packages/devkit-dist/src/devkit/host/registrations.py:489
+  failure_condition: A written host file is force-added after interruption; recovery restores its absent snapshot without Git eligibility checks.
+  suggested_action: Validate tracked and ignored eligibility before any recovery mutation and immediately before each write; add regression.
+  resolution: open
+  severity: P1
+- issue: Recovery can remove a shared exclusion that another linked checkout now relies on.
+  evidence: packages/devkit-dist/src/devkit/host/registrations.py:493
+  failure_condition: Checkout B registers using the exclusion written by interrupted checkout A; A rolls the unchanged exclusion back.
+  suggested_action: Preserve installed narrow exclusions with ownership bookkeeping and guidance; test two-checkout recovery.
+  resolution: open
+  severity: P1
+- issue: An available runtime makes normal fresh-worktree locked sync fail before restoring assets.
+  evidence: packages/devkit-dist/src/devkit/distribution/installation/sync.py:875
+  failure_condition: Fresh selected-host checkout has no entry or ledger and locked sync refuses the planned initialization.
+  suggested_action: Initialize fresh-worktree registrations while preserving locked asset synchronization and environment guards; test start and handoff.
+  resolution: open
+  severity: P1
+- issue: Runtime retention validation omits the separately installed advisory dependency.
+  evidence: packages/devkit-mcp/src/devkit_mcp/configuration.py:21
+  failure_condition: Advisory is editable-installed from the removable task but probe reports only runtime, core and service entrypoints.
+  suggested_action: Validate required separately installed runtime dependency locations and add candidate-selection regression.
+  resolution: open
+  severity: P1
+assumptions:
+- Emulated role confinement using explicit cwd and read-only reviewer commands; no native guarantee.
+unverified_areas:
+- Real host registration, trust, native form and permission UI
+checks:
+  diff: PASS committed diff and clean unchanged head
+  types: PASS scoped Pyright zero errors
+  verification: SKIP final affected and dist-only reruns pending
+diff_scope:
+  base: 2712c2844ffe25cf3320cb245af6965d7c96ab5f
+  head: dfa585362cb1466918335e30de5ca10bdd9d24ff
+activity_effort: medium

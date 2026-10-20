@@ -84,15 +84,15 @@ def _entry_points() -> list[tuple[str, str, str]]:
 
 
 def test_entry_point_groups_have_a_loading_area() -> None:
-    groups = group_loaders(dist_src(), SRC)
+    groups = group_loaders(dist_src(), SRC, PYPROJECT.parents[1] / "devkit-mcp/src")
     assert {group for group, _, _ in _entry_points()} <= groups.keys()
     assert groups["devkit.bundles"] == "distribution" and groups["devkit.commands"] == "cli"
     assert groups["devkit.config_tables"] == "distribution"
 
 
 def test_entry_points_load_only_lower_layers() -> None:
-    groups = group_loaders(dist_src(), SRC)
-    allowed = {**DIST_ALLOWED, **ALLOWED}
+    groups = group_loaders(dist_src(), SRC, PYPROJECT.parents[1] / "devkit-mcp/src")
+    allowed = {**DIST_ALLOWED, **ALLOWED, "devkit_mcp": {"core", "host", "advisory"}}
     violations = []
     for group, name, module in _entry_points():
         loader, parts = groups[group], module.split(".")
