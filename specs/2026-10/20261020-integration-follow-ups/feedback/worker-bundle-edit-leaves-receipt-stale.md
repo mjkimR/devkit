@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-20
 ---
 
@@ -46,3 +46,9 @@ $ uv run devkit sync --check
 [CHANGE: update .devkit/installation.json]
 development-worker.md, Write boundaries: "Denied: anything outside the worktree, ..., `.devkit/`, ..."
 ```
+
+## Resolution
+
+Directly resolved by `SPEC-worker-guidance-and-fixtures`: spec-integrate assigns official sync and receipt preparation to the Host after base incorporation and before final checks/approval, with base projection sync after landing.
+
+Verification: Independent medium code review confirmed AC-03. This verifies the guidance fix; this worker does not claim Host synchronization has already executed.

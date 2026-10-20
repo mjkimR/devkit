@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-19
 ---
 
@@ -59,3 +59,9 @@ payload.md (development-worker): write scope = "the unit's directory, the tasks'
 
 - **Disposition**: Deferred as open feedback. `SPEC-worker-range-validation` uses the Host-supplied scope;
   automatic scope derivation and link-repair ownership are outside its scope.
+
+## Resolution
+
+Directly resolved by `SPEC-worker-guidance-and-fixtures`: the payload requires Host inbound-reference inspection for planned moves/deletions and exact link-repair-only paths; unexpected repairs require a narrow scope expansion.
+
+Verification: Independent medium code review confirmed AC-05 and the unchanged strict worker write boundary.

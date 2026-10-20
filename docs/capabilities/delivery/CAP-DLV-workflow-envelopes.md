@@ -56,6 +56,10 @@ review: review-01.yaml       # reverify only: the review-NN.yaml or challenger-N
 
 A run of delegated work leaves one `worker` envelope: what it did, the questions it puts to a person (`questions`) and an execution problem it stopped on (`problem`). What another actor does later is a separate envelope that references that run: an `answer` records the rewritten answers to its questions and the assumptions of the run the user settled, a `resolution` closes its problem. A question waiting for answers and an execution problem are different states: a question is answered, a problem is resolved, and neither is inferred from `needs_input` alone.
 
+User direction that neither answers a recorded question nor settles a recorded worker assumption is incorporated
+into the proposal/PADR (or spec/plan) and summarized in the subsequent worker record. It requires no fabricated
+question or new envelope kind. Existing pending questions and settles-only answers retain their normal procedure.
+
 ```yaml
 # envelopes/worker-01.yaml: one run that stopped to ask, gathering its questions in one round
 kind: worker
