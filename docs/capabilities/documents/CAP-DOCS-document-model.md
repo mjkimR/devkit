@@ -72,12 +72,16 @@ into the spec; Host deletion without handoff preserves it in the month-level bac
 ### Feedback lifecycle
 
 Feedback status is `open`, `promoted`, `resolved`, `dismissed` or `forwarded`
-(`ADR-feedback-resolution-lifecycle`). Promotion routes an observation to follow-up work; resolution means a fully
-implemented and verified fix. Dismissal records a reason and forwarding requires an actual authorized submission.
-Capture writes open observations and never changes status. Explicitly linked source feedback is resolved during
-spec reconciliation or session completion, with destination, implemented outcome and verification in its Disposition.
-Partial or unverified sources retain their state. Generic list/status filters discover resolved records separately
-from open ones; completion of the enclosing spec never resolves feedback automatically.
+(`ADR-feedback-terminal-outcomes`). Only open feedback is actionable. Promotion closes feedback by handing it to
+identified follow-up work, whose progress is tracked at the destination; it never implies implementation success.
+Resolution closes an observation directly fixed and verified without promotion, by a session or spec task. Both
+are terminal: completing promoted work does not convert its source to resolved. Dismissal records a reason and
+forwarding requires an actual authorized submission.
+
+Capture writes open observations and never changes status. Completion resolves only explicitly linked open
+sources directly addressed and verified, with outcome and evidence in their Disposition. Partial or unverified
+direct fixes stay open. Terminal references require no completion update. Generic list/status filters discover
+all states; use `--status open` for the actionable backlog. Spec completion never closes feedback automatically.
 
 ### 3.2 IDs and Kinds
 

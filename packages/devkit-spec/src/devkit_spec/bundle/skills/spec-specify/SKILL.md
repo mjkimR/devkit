@@ -38,7 +38,7 @@ Read one reference, not both. A defect the session can reproduce and fix without
 - **Invariants**: review `docs/architecture/` and the affected capabilities. If a `MUST` has to change, say that an ADR is required before implementation.
 - **No questions during Development**: resolve what is unclear from the agreed intent, the issue, the proposal and the code; decide with the recommended option and record each inference in `spec.md` as an assumption. A point that needs the agreed goal, scope or contract changed is a problem for the Host, never a question to the user or a `[NEEDS CLARIFICATION]` marker. Explicit user instructions take precedence.
 - **Source feedback**: preserve the full FB IDs and intended scope from inline Planning or the carried proposal in
-  a `Source feedback` section; do not trim them as incidental notes. Include the source files in task boundaries.
+  a `Source feedback` section; do not trim them as incidental notes. Include only open source files needing direct-fix resolution in task boundaries; terminal sources require no edits.
 - **Only what the change needs**: drop an optional output section that does not apply instead of writing "N/A".
 - **Self-validation** before finishing: completeness (personas, inputs, outputs, edge cases), clarity (every AC measurable), consistency (non-goals and invariants respected), scenario IDs unique.
 

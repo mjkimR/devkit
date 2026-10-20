@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-20
 ---
 
@@ -49,3 +49,10 @@ created_at: 2026-10-20
 workbench strategy layer, 01 §5.1: "Planning 없이 바로 수락하는 경로는 후속(devkit-spec PROP-draft-direct-acceptance)이다."
 proposal §4: "The workbench strategy-layer update (§3.2) comes first; Development here follows it."
 ```
+
+## Disposition
+
+Dismissed: cross-repository coordination belongs to the Host's judgment for the particular task. No general
+repository-external prerequisite inspection, new worker instruction or automated gate is needed. Explicit
+dependencies in an agreed task still matter; this disposition declines a universal procedure rather than
+authorizing agents to ignore those dependencies.

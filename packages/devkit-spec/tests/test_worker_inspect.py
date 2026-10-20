@@ -173,7 +173,7 @@ def test_required_inputs(repo: Path) -> None:
 
 def test_feedback_and_marker(repo: Path) -> None:
     write(repo, f"{UNIT}/spec.md", (repo / UNIT / "spec.md").read_text() + "\n## Source feedback\n`FB-observation`\n")
-    write(repo, "specs/earlier/feedback/observation.md", "---\nid: FB-observation\n---\n")
+    write(repo, "specs/earlier/feedback/observation.md", "---\nid: FB-observation\nstatus: open\n---\n")
     git(repo, "config", "branch.dev-example.devkitUnit", UNIT)
     worker(repo, 1)
     result = inspect(repo, runner=passed)
@@ -183,6 +183,30 @@ def test_feedback_and_marker(repo: Path) -> None:
         "source": "source-feedback",
         "id": "FB-observation",
     } in result["scope"]
+
+
+@pytest.mark.parametrize("status", ["promoted", "resolved", "dismissed", "forwarded", "unknown", None])
+def test_terminal_source_edits_need_explicit_boundary(repo: Path, status: str | None) -> None:
+    source = "specs/earlier/feedback/observation.md"
+    write(repo, f"{UNIT}/spec.md", (repo / UNIT / "spec.md").read_text() + "\n## Source feedback\n`FB-observation`\n")
+    metadata = f"status: {status}\n" if status is not None else ""
+    write(repo, source, f"---\nid: FB-observation\n{metadata}---\n")
+    previous = worker(repo, 1)
+    write(repo, source, (repo / source).read_text() + "\nA later edit.\n")
+    worker(repo, 2)
+    result = inspect(repo, base=previous, runner=passed)
+    assert source in result["outside_scope"]
+    assert not any(entry["source"] == "source-feedback" for entry in result["scope"])
+
+    write(
+        repo,
+        f"{UNIT}/tasks.md",
+        (repo / UNIT / "tasks.md").read_text() + f"\n- [x] Explicit edit\n  - **_Boundary**: `{source}`\n",
+    )
+    worker(repo, 3)
+    result = inspect(repo, base=previous, runner=passed)
+    assert source not in result["outside_scope"]
+    assert any(entry["path"] == source and entry["source"] == "boundary" for entry in result["scope"])
 
 
 def test_rename_reports_old_and_new_names(repo: Path) -> None:

@@ -185,7 +185,8 @@ def derive_scope(root: Path, tip: str, unit: str) -> list[dict[str, Any]]:
                 matches.append(path)
         if len(matches) != 1:
             raise ScopeUnresolved(f"{identifier} resolves to {len(matches)} feedback files")
-        entries.append({"path": matches[0], "source": "source-feedback", "id": identifier})
+        if (parse(read(root, tip, matches[0])).data or {}).get("status") == "open":
+            entries.append({"path": matches[0], "source": "source-feedback", "id": identifier})
     return entries
 
 
