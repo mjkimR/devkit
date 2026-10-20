@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T23:49:27.400734Z'
+status: completed
+summary: Approved local integration now lands each task as a merge commit built outside the base checkout ([worktree] merge = no-ff default, ff-only alternative), binds the effective integration policy instead of raw config/receipt bytes, and absorbs target commits landed during the confirmation in one build with guards, readiness, result-policy and receipt checks on the merged result; devkit-spec checks CI rules on the result and declares its target-bound codes and disclosure. Code review 2 rounds (passed), reconcile verification 2 rounds (passed); 9 Living Spec targets reconciled.
+findings: []
+checks:
+  tests: PASS just test-affected (mode=full) 3628 passed, 14 skipped
+  build: PASS just smoke (wheel build, CLI and MCP integration wiring)
+  lint: PASS just lint-check, just check devkit/devkit-spec 0 errors, devkit rules check --ci --base 8acab92 0 errors
+diff_scope:
+  base: ''
+  head: 756921db434b56049918e296073b9637a434da99
