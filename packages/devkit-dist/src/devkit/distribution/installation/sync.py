@@ -832,8 +832,8 @@ def sync_project(
     one-run selections over the configuration. ``save`` persists a selection
     instead: it renders the configuration edit under the project lock, from the
     configuration as it is then, so concurrent selection commands never lose
-    an edit; the edit is written before the sync reads the configuration and
-    put back when the sync fails, and post-sync extensions see it. ``save`` is never
+    an edit; the rendered edit is planned in memory and journaled with outputs,
+    and post-sync extensions see the committed configuration. ``save`` is never
     called on ``dry_run``. ``locked`` keeps the committed state: the sync only
     restores the Git-ignored files to what the receipt records, or raises ``ReceiptStaleError``
     (``RECEIPT_STALE``) without writing anything. Post-sync extensions run after
@@ -844,6 +844,7 @@ def sync_project(
     root = require_project_dir(root)
     # A dry run (``--dry-run``, ``--check``) writes nothing, so it reads under the shared lock like any reader.
     with project_lock(root, shared=dry_run):
+        captured = local_render.inputs(root)
         update = save() if save is not None and not dry_run else None
         finish = commit_locked(
             root,
@@ -856,6 +857,7 @@ def sync_project(
             environment=environment,
             save_environment=save_environment,
             config_update=update,
+            captured_inputs=captured,
         )
         result = finish()
     if update is not None:
@@ -878,6 +880,7 @@ def commit_locked(
     environment: str | None = None,
     save_environment: bool = True,
     config_update: ConfigUpdate | None = None,
+    captured_inputs: dict[str, bytes | None] | None = None,
 ) -> Callable[[], SyncResult]:
     """Plan a sync and, unless ``dry_run``, commit it; the caller holds the project lock. Runs no post-sync extension.
 
@@ -893,7 +896,8 @@ def commit_locked(
     A ``dry_run`` writes nothing, so the caller may hold the shared lock.
     """
     require_no_journal(root)
-    captured = local_render.inputs(root)
+    captured = captured_inputs if captured_inputs is not None else local_render.inputs(root)
+    local_render.unchanged(root, captured)
     config = read_config(root, effective=False)
     if config_update is not None and config_update.text is not None:
         config = parse_config(tomllib.loads(config_update.text))
@@ -920,10 +924,9 @@ def commit_locked(
     seeded = _plan_seeds(root, inventory.seeds, recorded_seeds, changes, actions, locked=locked)
     _plan_devkit_gitignore(root, changes, actions)
     fresh_ignore = not (root / DEVKIT_GITIGNORE).exists()
-    for name in personal:
+    prior_personal = local_render.recorded_paths(root) & old_files.keys()
+    for name in set(personal) | (prior_personal & changes.keys()):
         local_render.require_ignored(root, name, planned_ignore=fresh_ignore and name.startswith(".devkit/managed/"))
-    if personal:
-        local_render.require_ignored(root, local_render.LOCAL_RENDER, planned_ignore=fresh_ignore)
     block_hash, block_notices = _plan_guidance_block(
         root,
         changes,
@@ -946,18 +949,9 @@ def commit_locked(
         )
     if save_environment:
         local_render.plan_environment(root, environment, changes, actions)
-    if locked:
-        locked_actions = [a for a in actions if a.path != LOCAL_CONFIG_PATH]
-        tracked_changes = (
-            bool(changes) and git_toplevel(root) is not None and bool(run_git(root, "ls-files", "--", *changes).strip())
-        )
-        if tracked_changes or not _restores_only(previous, receipt, locked_actions, deployed):
-            raise _receipt_stale(previous, receipt, actions, deployed)
-    else:
+    if not locked:
         # A personal-only update never rewrites the canonical receipt for the running tool version.
-        personalized = set(personal) | {
-            name for name in old_files if deployed.get(name, old_files[name]) != old_files[name]
-        }
+        personalized = set(personal) | prior_personal
         canonical_changes = {
             name: value for name, value in changes.items() if name != LOCAL_CONFIG_PATH and name not in personalized
         }
@@ -966,8 +960,21 @@ def commit_locked(
         if RECEIPT_PATH in receipt_changes:
             changes[RECEIPT_PATH] = receipt_changes[RECEIPT_PATH]
     pending_receipt = changes.get(RECEIPT_PATH)
-    receipt_bytes = pending_receipt.data if pending_receipt else (root / RECEIPT_PATH).read_bytes()
+    receipt_bytes = (
+        pending_receipt.data
+        if pending_receipt
+        else ((root / RECEIPT_PATH).read_bytes() if previous is not None else receipt_content(receipt).data)
+    )
     local_render.plan_ledger(root, personal, receipt_bytes, changes, actions)
+    if local_render.LOCAL_RENDER in changes or (root / local_render.LOCAL_RENDER).exists():
+        local_render.require_ignored(root, local_render.LOCAL_RENDER, planned_ignore=fresh_ignore)
+    if locked:
+        locked_actions = [a for a in actions if a.path not in (LOCAL_CONFIG_PATH, local_render.LOCAL_RENDER)]
+        tracked_changes = (
+            bool(changes) and git_toplevel(root) is not None and bool(run_git(root, "ls-files", "--", *changes).strip())
+        )
+        if tracked_changes or not _restores_only(previous, receipt, locked_actions, deployed):
+            raise _receipt_stale(previous, receipt, actions, deployed)
     require_writable(root, changes)
     local_render.unchanged(root, captured)
     seen = _read_seen_bundles(root)

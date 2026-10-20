@@ -88,3 +88,31 @@ def test_nested_project_helper_uses_corresponding_path(tmp_path: Path) -> None:
     captured = lifecycle._local_snapshot(base, project)
     lifecycle._copy_local_snapshot(target, project, captured)
     assert (target / project / LOCAL_CONFIG_PATH).read_bytes() == source.read_bytes()
+
+
+def test_copy_rejects_symlinked_destination_parent_before_setup(
+    repo: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    write(repo, LOCAL_CONFIG_PATH, '[execution]\nenvironment="cloud"\n')
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    original = lifecycle._add
+
+    def add(base, path, branch, **kwargs):
+        original(base, path, branch, **kwargs)
+        (path / ".devkit").symlink_to(outside, target_is_directory=True)
+
+    monkeypatch.setattr(lifecycle, "_add", add)
+    monkeypatch.setattr(lifecycle, "_prepare", lambda *args: pytest.fail("setup must not run"))
+    with pytest.raises(LocalCopyError, match="parent is a symlink"):
+        start(locate(repo), "dev-symlink")
+    assert not (outside / "config.local.toml").exists()
+    assert (repo.parent / "repo-wt-dev-symlink").is_dir()
+
+
+def test_copy_rejects_escaping_project_path(tmp_path: Path) -> None:
+    root = tmp_path / "checkout"
+    root.mkdir()
+    with pytest.raises(LocalCopyError, match="escapes"):
+        lifecycle._copy_local_snapshot(root, Path("../outside"), (tmp_path / "source", b"", 0o600))
+    assert not (tmp_path / "outside").exists()

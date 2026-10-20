@@ -292,3 +292,61 @@ source = "skills/response-style"
     with pytest.raises(LocalNotIgnoredError):
         sync.sync_project(root, [item])
     assert tracked_state(root) == canonical
+
+
+@pytest.mark.parametrize("locked", [False, True])
+@pytest.mark.parametrize("case", ["equal-tracked", "equal-unignored", "removed-tracked", "removed-unignored"])
+def test_every_ledger_mutation_requires_ignored_untracked_state(fixture, locked: bool, case: str) -> None:
+    root, item = fixture
+    local(root)
+    sync.sync_project(root, [item])
+    if case.startswith("removed"):
+        (root / LOCAL_CONFIG_PATH).unlink()
+    else:
+        local(root, '[bundles.style.variables]\nlanguage="en"\n')
+    if case.endswith("-tracked"):
+        git(root, "add", "-f", LOCAL_RENDER)
+    else:
+        (root / ".devkit/.gitignore").write_text("/managed/\n/config.local.toml\n")
+    before = (root / LOCAL_RENDER).read_bytes()
+    output = (root / ".devkit/managed/style/style.md").read_bytes()
+    with pytest.raises(LocalNotIgnoredError):
+        sync.sync_project(root, [item], locked=locked)
+    assert (root / LOCAL_RENDER).read_bytes() == before
+    assert (root / ".devkit/managed/style/style.md").read_bytes() == output
+
+
+@pytest.mark.parametrize("tracked", [False, True])
+def test_canonical_restoration_checks_prior_personal_outputs(fixture, tracked: bool) -> None:
+    root, item = fixture
+    local(root)
+    sync.sync_project(root, [item])
+    path = ".devkit/managed/style/style.md"
+    if tracked:
+        git(root, "add", "-f", path)
+    else:
+        (root / ".devkit/.gitignore").write_text("/transient/\n/config.local.toml\n")
+    (root / LOCAL_CONFIG_PATH).unlink()
+    before = (root / path).read_bytes()
+    with pytest.raises(LocalNotIgnoredError):
+        sync.sync_project(root, [item])
+    assert (root / path).read_bytes() == before
+
+
+def test_input_snapshot_precedes_selection_save(fixture) -> None:
+    from devkit.distribution.installation.config import prepare_config_update
+
+    root, item = fixture
+    before = (root / ".devkit/installation.json").read_bytes()
+    changed = (root / ".devkit/config.toml").read_text() + '\n[execution]\nenvironment="cloud"\n'
+
+    def save():
+        update = prepare_config_update(root, agents=[])
+        (root / ".devkit/config.toml").write_text(changed)
+        return update
+
+    with pytest.raises(LocalChangedError):
+        sync.sync_project(root, [item], save=save, environment="local")
+    assert (root / ".devkit/config.toml").read_text() == changed
+    assert (root / ".devkit/installation.json").read_bytes() == before
+    assert not (root / LOCAL_CONFIG_PATH).exists()

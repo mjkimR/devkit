@@ -158,6 +158,18 @@ def plan_ledger(
         actions.append(Action(LOCAL_RENDER, "remove" if after is None else "update" if before else "create"))
 
 
+def recorded_paths(root: Path) -> set[str]:
+    """Prior personal destinations, used only to enforce ownership before restoration."""
+    content = snapshot(root, LOCAL_RENDER)
+    if content is None:
+        return set()
+    try:
+        files = json.loads(content.data)["files"]
+        return {name for name in files if isinstance(name, str)} if isinstance(files, dict) else set()
+    except (ValueError, TypeError, KeyError):
+        return set()
+
+
 def runtime_receipt(root: Path, receipt: Receipt) -> Receipt:
     """Validate local evidence and return a runtime-only view, never used by engines or snapshots."""
     local = read_local_config(root)

@@ -367,13 +367,21 @@ def _copy_local_snapshot(path: Path, project: Path | None, captured: tuple[Path,
     source, content, mode = captured
     destination = path / (project or Path(".")) / LOCAL_CONFIG_PATH
     try:
+        relative = destination.relative_to(path)
+        if ".." in relative.parts or (project is not None and project.is_absolute()):
+            raise OSError("destination escapes the created checkout")
+        ancestor = path
+        for part in relative.parts[:-1]:
+            ancestor /= part
+            if ancestor.is_symlink():
+                raise OSError(f"destination parent is a symlink: {ancestor}")
         if destination.exists() or destination.is_symlink():
             raise OSError("destination already exists; refusing to overwrite it")
         destination.parent.mkdir(parents=True, exist_ok=True)
         with destination.open("xb") as stream:
             stream.write(content)
         destination.chmod(mode)
-    except OSError as exc:
+    except (OSError, ValueError) as exc:
         raise LocalCopyError(
             f"worktree created but local configuration copy failed: {source} -> {destination}: {exc}",
             target_files=[str(source), str(destination)],
