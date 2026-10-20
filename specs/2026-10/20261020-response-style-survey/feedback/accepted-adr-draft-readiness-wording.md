@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-20
 ---
 
@@ -44,3 +44,14 @@ The draft is a direction for user review, not a plan-accept decision or deployed
 
 The readiness sentence does not invalidate acceptance, but costs a separate authority check. This is wording
 friction in the preserved decision, not evidence that the accepted behavior should change.
+
+## Disposition
+
+The session corrected the readiness prose in `ADR-response-style-adaptive-replies`: the draft-review
+statement now describes Planning history, and the outcome explicitly records the accepted direction.
+The user authorized this one-off wording correction to the accepted ADR; its decision, constraints and
+qualification about unobserved runtime quality remain unchanged. No new decision or handoff-engine change
+was introduced.
+
+Verification: low-effort self-review compared the before/after decision and confirmed only readiness wording
+changed; `just lint-check spec`, `just check spec` and `just test-affected --base main` passed (1,111 tests).

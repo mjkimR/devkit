@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-20
 ---
 
@@ -44,3 +44,12 @@ Promotion routes the observation; only verified task completion resolves it.
 Current completion procedure:
 promoted is terminal once handed to identified follow-up work.
 ```
+
+## Disposition
+
+The session corrected `packages/devkit-spec/src/devkit_spec/bundle/templates/proposal.md` to match
+`ADR-feedback-terminal-outcomes`: promotion is terminal handoff, and resolution is a verified direct fix
+without promotion. Official bundle sync updated the installation receipt. No feedback-state migration was made.
+
+Verification: low-effort self-review compared the final template with the accepted terminal-state contract;
+`just lint-check spec`, `just check spec` and `just test-affected --base main` passed (1,111 tests).

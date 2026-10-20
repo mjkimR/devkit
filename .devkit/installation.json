@@ -1522,7 +1522,7 @@
     },
     ".devkit/managed/spec/templates/proposal.md": {
       "mode": 420,
-      "sha256": "30d0faf7252ef6838402d4a7357e94f6932bd5bdd2d0533ee9a3649a0213c7bb"
+      "sha256": "f79ae57cba197a6e030adf6366e9bf09c67bad55a65d3d8f7acc0b8ded202ffc"
     },
     ".devkit/managed/spec/templates/story.md": {
       "mode": 420,
