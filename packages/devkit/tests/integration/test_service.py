@@ -25,6 +25,7 @@ from devkit.worktree import (
     finish,
     lifecycle,
     locate,
+    merging,
 )
 from testsupport.rules import git, write
 
@@ -54,11 +55,21 @@ def test_native_approval_integrates_and_cleans_without_network(repo, monkeypatch
         called.append(args[0])
         return original(root, *args, **kw)
 
+    target = git(base, "rev-parse", "HEAD")
     monkeypatch.setattr(lifecycle, "run_git", run)
+    monkeypatch.setattr(merging, "run_git", run)
     result = integrate(IntegrationService(base))
     assert result.status == "completed" and result.authority == "mcp-elicitation"
     assert result.steps["merge"] == result.steps["worktree_remove"] == result.steps["branch_delete"] == "completed"
-    assert git(base, "rev-parse", "HEAD") == tip and not worktree.exists()
+    assert git(base, "rev-parse", "HEAD^1", "HEAD^2").split() == [target, tip] and not worktree.exists()
+    assert git(base, "log", "-1", "--format=%s") == "chore(merge): integrate dev-demo into main"
+    assert git(base, "rev-parse", "HEAD^{tree}") == git(base, "rev-parse", f"{tip}^{{tree}}")
+    assert result.compact_dict()["build"] == {
+        "confirmation_target": target,
+        "build_target": target,
+        "result": git(base, "rev-parse", "HEAD"),
+    }
+    assert result.compact_dict()["request"]["merge_method"] == "no-ff"
     assert "refs/heads/dev-demo" not in git(base, "show-ref")
     assert "merge" in called and not set(called) & {"fetch", "push", "ls-remote"}
     assert result.to_dict()["network_operations"] == "excluded"
@@ -135,11 +146,12 @@ def test_changed_scope_invalidates_confirmation(repo, moved):
     service = IntegrationService(base)
 
     async def change(_message, _schema):
-        if moved in {"source", "target"}:
-            root = worktree if moved == "source" else base
-            write(root, "changed.txt", "changed\n")
-            git(root, "add", ".")
-            git(root, "commit", "-qm", "change scope")
+        if moved == "source":
+            write(worktree, "changed.txt", "changed\n")
+            git(worktree, "add", ".")
+            git(worktree, "commit", "-qm", "change scope")
+        elif moved == "target":  # rewritten: no longer a descendant of the confirmation target
+            git(base, "commit", "--amend", "-qm", "rewritten target")
         elif moved == "policy":
             write(base, ".devkit/config.toml", '[integration]\nprovider = "other"\n')
         else:
@@ -194,7 +206,7 @@ def test_delete_branch_false_is_preserved(repo):
     result = integrate(IntegrationService(base))
     assert result.status == "completed" and result.steps["branch_delete"] == "skipped"
     assert result.steps["marker_clear"] == "completed" and not worktree.exists()
-    assert git(base, "rev-parse", "dev-demo") == git(base, "rev-parse", "HEAD")
+    assert git(base, "rev-parse", "dev-demo") == git(base, "rev-parse", "HEAD^2")
 
 
 def test_merge_then_permission_failure_resumes_cleanup_without_second_merge_or_approval(repo, monkeypatch):
@@ -213,7 +225,7 @@ def test_merge_then_permission_failure_resumes_cleanup_without_second_merge_or_a
             fix="Grant execution access to the approved path, then call integration_resume with the same request id",
         )
 
-    monkeypatch.setattr(lifecycle, "run_git", run)
+    monkeypatch.setattr(merging, "run_git", run)
     monkeypatch.setattr(lifecycle, "_remove", deny)
     service = IntegrationService(base)
     result = integrate(service)
@@ -292,25 +304,25 @@ def test_public_local_only_finish_excludes_fetch_and_push(repo):
 
 def test_merge_permission_failure_has_correct_remedy_and_retains_authority(repo, monkeypatch):
     base, worktree = repo
-    original = lifecycle.run_git
+    original = merging.run_git
 
     def deny(root, *args, **kw):
         if args[0] == "merge":
             raise GitError("permission denied", returncode=128, stderr="cannot create index.lock: Permission denied")
         return original(root, *args, **kw)
 
-    monkeypatch.setattr(lifecycle, "run_git", deny)
+    monkeypatch.setattr(merging, "run_git", deny)
     service = IntegrationService(base)
     result = integrate(service)
     assert result.status == "blocked" and result.errors[0].code == "WORKTREE_MERGE_FAILED"
     assert worktree.exists()
-    monkeypatch.setattr(lifecycle, "run_git", original)
+    monkeypatch.setattr(merging, "run_git", original)
     assert service.resume(result.request.id).status == "completed"
 
 
 def test_unknown_merge_outcome_is_inspected_and_not_merged_twice(repo, monkeypatch):
     base, _ = repo
-    original = lifecycle.run_git
+    original = merging.run_git
     calls = []
 
     def ambiguous(root, *args, **kw):
@@ -320,13 +332,11 @@ def test_unknown_merge_outcome_is_inspected_and_not_merged_twice(repo, monkeypat
             raise GitError("merge timed out after ref update")
         return value
 
-    monkeypatch.setattr(lifecycle, "run_git", ambiguous)
+    monkeypatch.setattr(merging, "run_git", ambiguous)
     service = IntegrationService(base)
     result = integrate(service)
-    assert (
-        result.steps["merge"] == "unknown" and result.observed["target_sha"] == result.request.context.finish.source_sha
-    )
-    monkeypatch.setattr(lifecycle, "run_git", original)
+    assert result.steps["merge"] == "unknown" and result.observed["target_sha"] == result.result_sha
+    monkeypatch.setattr(merging, "run_git", original)
     assert service.resume(result.request.id).status == "completed" and len(calls) == 1
 
 
@@ -408,7 +418,7 @@ def test_confirmation_leads_with_committed_work_and_escapes_summary(repo):
     )
     request = replace(request, readiness=readiness)
     message = request.confirmation_message()
-    assert message.startswith('Merge "dev-demo" into "main"?')
+    assert message.startswith('Approve local integration of "dev-demo" into "main" with a merge commit?')
     assert message.index('Work: "Deliver activity decisions"') < message.index("Source:")
     assert 'Completed work: "Implemented and checked.\\nDelete local branch: no"' in message
     assert "Delete local branch: no" not in message.splitlines()

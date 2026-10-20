@@ -66,6 +66,7 @@ from devkit.worktree.errors import (
     UnsupportedLayoutError,
     WorktreeError,
 )
+from devkit.worktree.merging import build_result, check_identity, merge_message
 
 _log = get_logger(__name__)
 
@@ -1048,14 +1049,18 @@ def finish(
     guard: Callable[[str, str], None] | None = None,
     network: str = "allow",
     before_step: Callable[[str, FinishResult], None] | None = None,
+    merge_method: str = "no-ff",
 ) -> FinishResult:
     """Integrate the activity branch into the base, then remove its worktree and the branch.
 
     ``network="forbid"`` excludes fetch and push. ``before_step(step, result)`` runs immediately before each
     local mutation (merge, worktree_remove, branch_delete or marker_clear); it may refuse by raising.
 
-    ``merge`` fast-forwards the base onto the branch (it must be clean and on a branch, and contain the tip of its
-    upstream when one is configured and reachable) and pushes the base branch to that upstream; a failed push is a
+    ``merge`` lands the branch on the base (it must be clean and on a branch, and contain the tip of its upstream
+    when one is configured and reachable) and pushes the base branch to that upstream. The branch must contain the
+    base HEAD (``WORKTREE_MERGE_NOT_FF`` otherwise); under ``merge_method="no-ff"`` (``[worktree] merge``) the base
+    fast-forwards onto a merge commit ``merging.build_result`` builds from the base HEAD and the tip, under
+    ``"ff-only"`` onto the tip. A branch the base already contains builds nothing (a rerun after the merge). A failed push is a
     ``WORKTREE_PUSH_FAILED`` or ``WORKTREE_PUSH_REJECTED`` warning and does not stop the cleanup. Without ``merge``
     the branch must already be merged into the base HEAD. With ``merge``, ``guard(merge_base, tip)`` runs after the
     other checks and before the first change, with the commit ids of the branch's merge base with the base HEAD
@@ -1130,8 +1135,16 @@ def finish(
         _check_deletable(base, branch)
     if merge:
         tip = _git(base, "rev-parse", "--verify", f"{ref}^{{commit}}")
+        head = _head(base)
+        if head is not None and not _merged(base, tip, head):
+            if not _merged(base, head, tip):
+                raise MergeNotFastForwardError(
+                    f"{branch} does not contain the base HEAD {head[:12]}; finish --merge lands only a branch that"
+                    " contains it; nothing was changed"
+                )
+            if merge_method == "no-ff":
+                check_identity(base)
         if guard is not None:
-            head = _head(base)
             guard((_query(base, "merge-base", head, tip) or "") if head else "", tip)
         if network == "allow":
             _check_upstream(position)
@@ -1141,15 +1154,30 @@ def finish(
                 " nothing was changed",
                 fix="Let the run committing to it end, then rerun the same command",
             )
+        landing = tip
+        if head is not None and _head(base) != head:
+            raise ConflictError(
+                f"the base HEAD moved while finish checked {branch} (it was {head[:7]}); nothing was changed",
+                fix="Let the run committing to the base end, then rerun the same command",
+            )
+        if head is not None and not _merged(base, tip, head):
+            # The commit the guard checked, not the branch ref, which a running worker could move meanwhile.
+            landing = build_result(
+                base,
+                branch=branch,
+                target_branch=position.branch or "HEAD",
+                target=head,
+                source=tip,
+                method=merge_method,
+            )
         try:
             if before_step is not None:
                 before_step("merge", result)
-            # The commit the guard checked, not the branch ref, which a running worker could move meanwhile.
-            run_git(base, "merge", "--ff-only", "--quiet", tip)
+            run_git(base, "merge", "--ff-only", "--quiet", landing)
         except GitError as exc:
             if exc.returncode is None:
                 raise
-            if network == "forbid" and _merged(base, _head(base), tip):
+            if network == "forbid" and _merged(base, _head(base), landing):
                 raise MergeFailedError(f"local merge of {branch} failed: {exc.stderr or exc.message}") from exc
             raise MergeNotFastForwardError(f"{branch} cannot be fast-forwarded onto the base: {exc.stderr}") from exc
         result.merged = True
@@ -1351,7 +1379,11 @@ def _push(position: Position, result: FinishResult) -> None:
                 PushRejectedWarning(
                     f"the base was merged and the worktree is being cleaned up, but {remote} rejected the push"
                     f" because it has commits the base lacks: {reason}",
-                    fix=f"git -C {base} pull --rebase {shlex.quote(remote)} {merge_ref} && {push}",
+                    fix=(
+                        f"git -C {base} fetch {shlex.quote(remote)} {merge_ref} && git -C {base} merge --no-ff -m"
+                        f" {shlex.quote(merge_message(f'{remote}/{_short(merge_ref)}', position.branch))} FETCH_HEAD"
+                        f" && {push}"
+                    ),
                 )
             )
             return
@@ -1364,6 +1396,10 @@ def _push(position: Position, result: FinishResult) -> None:
         )
         return
     result.push = "pushed"
+
+
+def _short(ref: str) -> str:
+    return ref.removeprefix("refs/heads/")
 
 
 def _config(base: Path, key: str) -> str:

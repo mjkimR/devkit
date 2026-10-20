@@ -2,8 +2,9 @@
 
 A task runs on an activity branch ``plan-<slug>`` or ``dev-<slug>``, in ``<parent of base>/<base name>-wt-<branch>``
 or (``start_branch``) in the current checkout; ``attach`` continues an existing branch, ``finish`` integrates it into
-the base checkout and removes it, refusing instead of forcing at every step, and ``stale_branches`` reports branches
-nobody has moved for ``[worktree] stale_after``. SDD-agnostic: a methodology layer decides which tasks use a worktree
+the base checkout (by default as a merge commit ``merging`` builds outside any checkout) and removes it, refusing
+instead of forcing at every step, and ``stale_branches`` reports branches nobody has moved for
+``[worktree] stale_after``. SDD-agnostic: a methodology layer decides which tasks use a worktree
 and plugs in through ``before_remove`` and the ``devkit.post_finish``, ``devkit.finish_guard`` and
 ``devkit.attach_check`` extension points. See ``docs/capabilities/worktree/CAP-WT-task-worktrees.md``.
 """
@@ -23,10 +24,13 @@ from devkit.worktree.errors import (
     BranchExistsError,
     BranchOutOfSyncError,
     BranchUnpushedError,
+    CommitFailedError,
     ConflictError,
     DirtyError,
+    GitUnsupportedError,
     GuardFailedError,
     LockedError,
+    MergeConflictError,
     MergeFailedError,
     MergeNotFastForwardError,
     NestedError,
@@ -70,6 +74,15 @@ from devkit.worktree.lifecycle import (
     start_branch,
     status,
 )
+from devkit.worktree.merging import (
+    build_result,
+    check_identity,
+    fast_forward,
+    integration_lock,
+    is_ancestor,
+    merge_message,
+    merge_method,
+)
 from devkit.worktree.planning import FinishPlan, plan_finish, validate_finish
 from devkit.worktree.stale import StaleBranch, StaleResult, stale_branches
 
@@ -90,12 +103,15 @@ __all__ = [
     "BranchStartResult",
     "BranchStatus",
     "BranchUnpushedError",
+    "CommitFailedError",
     "ConflictError",
     "DirtyError",
     "FinishPlan",
     "FinishResult",
+    "GitUnsupportedError",
     "GuardFailedError",
     "LockedError",
+    "MergeConflictError",
     "MergeFailedError",
     "MergeNotFastForwardError",
     "NestedError",
@@ -124,11 +140,18 @@ __all__ = [
     "WorktreeError",
     "WorktreeStatus",
     "attach",
+    "build_result",
     "check_branch",
+    "check_identity",
     "discard",
+    "fast_forward",
     "find",
     "finish",
+    "integration_lock",
+    "is_ancestor",
     "locate",
+    "merge_message",
+    "merge_method",
     "path_for",
     "plan_finish",
     "read_worktree_config",

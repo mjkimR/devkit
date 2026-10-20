@@ -35,6 +35,7 @@ from devkit.worktree.lifecycle import (
     check_branch,
     locate,
 )
+from devkit.worktree.merging import check_identity
 
 
 @dataclass(frozen=True)
@@ -51,6 +52,8 @@ class FinishPlan:
     source_upstream: str
     markers: tuple[str, str, str]
     delete_branch: bool
+    merge_method: str = "no-ff"
+    already_merged: bool = False  # the target already contains the source: a cleanup-only plan builds nothing
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -79,9 +82,20 @@ def _deletable(base: Path, branch: str) -> None:
 
 
 def plan_finish(
-    position: Position, branch: str, *, pull_request: str = "auto", delete_branch: bool = True
+    position: Position,
+    branch: str,
+    *,
+    pull_request: str = "auto",
+    delete_branch: bool = True,
+    merge_method: str = "no-ff",
 ) -> FinishPlan:
-    """Preflight local FF integration and exact cleanup without fetching, pushing or changing Git state."""
+    """Preflight local integration and exact cleanup without fetching, pushing or changing Git state.
+
+    The source must contain the target (only later target advances are merged in), or the target must already
+    contain the source, which plans a cleanup-only finish (``already_merged``); any other pair is
+    ``WORKTREE_MERGE_NOT_FF``. Under ``merge_method="no-ff"`` a plan that builds a merge commit refuses without a
+    committer identity (``WORKTREE_COMMIT_FAILED``).
+    """
     check_branch(branch)
     if position.linked:
         raise RunFromBaseError("prepare integration from the retained base checkout")
@@ -102,8 +116,13 @@ def plan_finish(
         raise DirtyError("the task worktree has uncommitted or untracked changes", target_files=[str(path)])
     source = _git(position.base, "rev-parse", "--verify", f"refs/heads/{branch}^{{commit}}")
     target = _git(position.base, "rev-parse", "--verify", "HEAD^{commit}")
-    if not _merged(position.base, target, source):
-        raise MergeNotFastForwardError("integrate the base into the task branch and reverify before preparing approval")
+    already = _merged(position.base, source, target)
+    if not already and not _merged(position.base, target, source):
+        raise MergeNotFastForwardError(
+            f"{branch} neither contains the target {position.branch} at {target[:12]} nor is contained in it"
+        )
+    if merge_method == "no-ff" and not already:
+        check_identity(position.base)
     if delete_branch:
         _deletable(position.base, branch)
     common = position.base / ".git"
@@ -120,19 +139,38 @@ def plan_finish(
         _git(position.base, "for-each-ref", "--format=%(upstream)", f"refs/heads/{branch}"),
         markers,
         delete_branch,
+        merge_method,
+        already,
     )
 
 
-def validate_finish(plan: FinishPlan, *, merged: bool = False, removed: bool = False, finalized: bool = False) -> None:
-    """Recheck identities immediately before a mutation; allow only the executor's own completed transitions."""
+def validate_finish(
+    plan: FinishPlan,
+    *,
+    merged: bool = False,
+    removed: bool = False,
+    finalized: bool = False,
+    result: str | None = None,
+    target: str | None = None,
+) -> None:
+    """Recheck identities immediately before a mutation; allow only the executor's own completed transitions.
+
+    Before the merge the base must point at ``target`` (default: the plan's target); after it, the base must contain
+    ``result`` (default: the source), so later commits on the base are allowed.
+    """
     base = Path(plan.base)
     position = locate(base)
     if str(position.base) != plan.base or position.linked or str(base / ".git") != plan.common_dir:
         raise ConflictError("repository identity changed; prepare a new integration request")
     if _identity(Path(plan.common_dir)) != plan.common_identity or position.branch != plan.target_branch:
         raise ConflictError("Git common directory or target branch changed; prepare a new request")
-    expected = plan.source_sha if merged else plan.target_sha
-    if _git(base, "rev-parse", "--verify", "HEAD^{commit}") != expected:
+    head = _git(base, "rev-parse", "--verify", "HEAD^{commit}")
+    if merged:
+        if not _merged(base, result or plan.source_sha, head):
+            raise ConflictError(
+                "the target no longer contains the integrated result; inspect Git state and prepare a new request"
+            )
+    elif head != (target or plan.target_sha):
         raise ConflictError(
             "target SHA changed outside the approved transition; inspect Git state and prepare a new request"
         )

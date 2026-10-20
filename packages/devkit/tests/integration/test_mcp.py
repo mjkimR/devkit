@@ -28,7 +28,13 @@ from devkit.host.mcp.server import serve
 class Provider:
     def check(self, context):
         plan = context.finish
-        return Readiness(plan.source_sha, plan.target_sha, (Evidence("FIXTURE_CHECK_PASSED", plan.source_sha),))
+        return Readiness(
+            plan.source_sha,
+            plan.target_sha,
+            (Evidence("FIXTURE_CHECK_PASSED", plan.source_sha),),
+            result_sha=context.result_sha,
+            disclosure="fixture checks only",
+        )
 
 provider = Provider()
 original = metadata.entry_points
@@ -106,7 +112,7 @@ def test_native_protocol_confirmation_binds_to_real_git_scope(repo, action, cont
     result = asyncio.run(run())
     assert len(messages) == 1 and source in messages[0] and target in messages[0] and str(worktree) in messages[0]
     if expected == "completed":
-        assert not worktree.exists() and git(base, "rev-parse", "HEAD") == source
+        assert not worktree.exists() and git(base, "rev-parse", "HEAD^1", "HEAD^2").split() == [target, source]
         assert result["authority"] == "mcp-elicitation"
     else:
         assert worktree.exists() and git(base, "show-ref") == refs_before
@@ -234,7 +240,8 @@ serve(Path(sys.argv[1]))""",
             detailed = await call("integration_status", {"request_id": approved_id, "detail": True})
             assert detailed["authority"] == "mcp-elicitation" and detailed["steps"]["merge"] == "completed"
             assert detailed["finish"]["removed"] is True
-            assert detailed["request"]["context"]["finish"]["source_sha"] == git(base, "rev-parse", "HEAD")
+            assert detailed["request"]["context"]["finish"]["source_sha"] == git(base, "rev-parse", "HEAD^2")
+            assert detailed["build"]["result"] == git(base, "rev-parse", "HEAD")
 
     asyncio.run(run())
     assert not worktree.exists()

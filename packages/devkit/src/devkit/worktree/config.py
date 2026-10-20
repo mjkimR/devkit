@@ -4,6 +4,7 @@
 [worktree]
 pull_request = "auto"   # a pull request or finish --merge, as the task needs; "required": pull requests only
 delete_branch = true    # finish deletes the merged branch (`git branch -d`, never -D)
+merge = "no-ff"         # a merge commit per task; "ff-only": fast-forward only (linear history)
 setup = "uv sync"       # shell command run in a newly created worktree (default: none)
 stale_after = "14d"     # an activity branch idle this long is reported by `devkit worktree stale` (<N>d or <N>w)
 ```
@@ -20,8 +21,9 @@ from devkit.core import TemplateKey, TemplateTable, config_table, read_project_c
 from devkit.worktree.errors import WorktreeConfigError
 
 PULL_REQUEST_POLICIES = ("auto", "required")
+MERGE_METHODS = ("no-ff", "ff-only")
 PERIOD = re.compile(r"([1-9][0-9]{0,3})([dw])")
-KEYS = ("pull_request", "delete_branch", "setup", "stale_after")
+KEYS = ("pull_request", "delete_branch", "merge", "setup", "stale_after")
 
 
 def parse_period(text: str) -> timedelta:
@@ -49,6 +51,12 @@ def config_tables() -> tuple[TemplateTable, ...]:
                 ),
                 TemplateKey("delete_branch", True, "worktree finish deletes the merged branch with git branch -d"),
                 TemplateKey(
+                    "merge",
+                    "no-ff",
+                    "no-ff: a merge commit per task; ff-only: fast-forward only, wins in either policy",
+                    kind='"no-ff" | "ff-only"',
+                ),
+                TemplateKey(
                     "setup",
                     help="shell command run in a newly created worktree; unset: no setup command",
                     example="uv sync",
@@ -71,6 +79,7 @@ class WorktreeConfig:
     delete_branch: bool = True
     setup: str | None = None
     stale_after: str = "14d"
+    merge: str = "no-ff"
 
     @property
     def stale_period(self) -> timedelta:
@@ -90,10 +99,18 @@ def read_worktree_config(root: Path) -> WorktreeConfig:
         raise WorktreeConfigError('config worktree: pull_request must be "auto" or "required"')
     if not isinstance(table.get("delete_branch", True), bool):
         raise WorktreeConfigError("config worktree: delete_branch must be true or false")
+    if table.get("merge", "no-ff") not in MERGE_METHODS:
+        raise WorktreeConfigError('config worktree: merge must be "no-ff" or "ff-only"')
     setup = table.get("setup")
     if setup is not None and (not isinstance(setup, str) or not setup.strip()):
         raise WorktreeConfigError("config worktree: setup must be a non-empty shell command")
     stale_after = table.get("stale_after", "14d")
     if not isinstance(stale_after, str) or PERIOD.fullmatch(stale_after) is None:
         raise WorktreeConfigError('config worktree: stale_after must be "<N>d" or "<N>w", such as "14d"')
-    return WorktreeConfig(table.get("pull_request", "auto"), table.get("delete_branch", True), setup, stale_after)
+    return WorktreeConfig(
+        table.get("pull_request", "auto"),
+        table.get("delete_branch", True),
+        setup,
+        stale_after,
+        table.get("merge", "no-ff"),
+    )

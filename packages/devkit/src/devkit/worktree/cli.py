@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import re
 import shlex
+from contextlib import nullcontext
 from pathlib import Path
 
 import click
@@ -48,6 +49,7 @@ from devkit.worktree.lifecycle import (
     status,
 )
 from devkit.worktree.lifecycle import discard as discard_branch
+from devkit.worktree.merging import integration_lock, merge_method
 from devkit.worktree.stale import stale_branches
 
 WORKSPACE = workspace_option("Any directory inside the checkout [default: the current directory]")
@@ -179,8 +181,9 @@ def _finished(result: FinishResult) -> str:
 @click.option(
     "--merge",
     is_flag=True,
-    help="Fast-forward the base onto the branch and push it to its upstream first"
-    ' (refused under [worktree] pull_request = "required")',
+    help="Land the branch on the base first (a merge commit, or a fast-forward under [worktree] merge ="
+    ' "ff-only"; the branch must contain the base HEAD) and push the base to its upstream (refused under'
+    ' [worktree] pull_request = "required")',
 )
 @click.option(
     "--discard",
@@ -196,7 +199,11 @@ def finish_cmd(
     """Integrate BRANCH into the base, then remove its worktree and the branch; run it from the base.
 
     Without --merge the branch must already be merged (for example through its pull request). With --merge the
-    installed devkit.finish_guard extensions check the branch first (WORKTREE_BLOCKED). --discard closes a task
+    installed devkit.finish_guard extensions check the branch first (WORKTREE_BLOCKED), the devkit integration lock
+    of the common Git directory is taken (LOCK_HELD while another integration runs), and the base fast-forwards onto
+    a merge commit built from the base HEAD and the branch tip (onto the tip under [worktree] merge = "ff-only" in
+    the base's or the branch's policy); a branch that does not contain the base HEAD is WORKTREE_MERGE_NOT_FF, and
+    one the base already contains builds nothing. --discard closes a task
     instead: the branch is dropped unmerged, only on the authority its close needs. Rerun the same command after
     resolving a refusal: the steps already done are skipped.
     """
@@ -207,15 +214,19 @@ def finish_cmd(
         if discard:
             result = discard_branch(position, branch)
         else:
-            result = finish(
-                position,
-                branch,
-                merge=merge,
-                pull_request=config.pull_request,
-                delete_branch=config.delete_branch,
-                guard=lambda merge_base, tip: run_finish_guards(position.base, branch, merge_base, tip),
-                network="forbid" if local_only else "allow",
-            )
+            with integration_lock(position.base / ".git") if merge else nullcontext():
+                result = finish(
+                    position,
+                    branch,
+                    merge=merge,
+                    pull_request=config.pull_request,
+                    delete_branch=config.delete_branch,
+                    guard=lambda merge_base, tip: run_finish_guards(position.base, branch, merge_base, tip),
+                    network="forbid" if local_only else "allow",
+                    merge_method=merge_method(position.base, config.merge, f"refs/heads/{branch}")
+                    if merge
+                    else config.merge,
+                )
     except WorktreeError as error:
         partial = error.result
         if not isinstance(partial, FinishResult):

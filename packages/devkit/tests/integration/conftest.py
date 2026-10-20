@@ -23,15 +23,24 @@ class Entry:
 
 class Provider:
     allowed = True
+    disclosure = "fixture checks on the merged result only"
+    calls: list
+
+    def __init__(self) -> None:
+        self.calls = []
 
     def check(self, context):
         plan = context.finish
+        self.calls.append(context)
         ready = git(Path(plan.base), "show", f"{plan.source_sha}:ready.txt") == "ready"
         return Readiness(
             plan.source_sha,
             plan.target_sha,
-            (Evidence("FIXTURE_CHECK_PASSED", plan.source_sha),),
+            (Evidence("FIXTURE_CHECK_PASSED", plan.source_sha), Evidence("TARGET_SHA", plan.target_sha)),
             () if ready and self.allowed else ("finish the fixture checks",),
+            result_sha=context.result_sha,
+            target_bound=("TARGET_SHA",),
+            disclosure=self.disclosure,
         )
 
 

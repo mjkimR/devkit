@@ -28,9 +28,17 @@ class Task:
 
 @dataclass(frozen=True)
 class IntegrationContext:
+    """What a provider, guard or cleanup extension checks.
+
+    At ``prepare`` this is the approved context: ``finish.target_sha`` is the confirmation target and ``result_sha``
+    is ``None`` (nothing is built). At each build the service passes an execution context: ``finish.target_sha`` is
+    the build target (the confirmation target or a descendant) and ``result_sha`` the commit that would land.
+    """
+
     finish: FinishPlan
     task: Task
     network: str = "forbid"
+    result_sha: str | None = None
 
 
 @dataclass(frozen=True)
@@ -41,10 +49,31 @@ class Evidence:
 
 @dataclass(frozen=True)
 class Readiness:
+    """A provider's verdict bound to the context's source, target and result commits.
+
+    ``target_bound`` names the evidence codes whose values may change when the target advances (all other evidence
+    must equal the approved evidence at each build); ``disclosure`` is the one-line, at most 200-character statement
+    of what the provider checks on the merged result, shown in the confirmation form. Both are part of the approved
+    request digest.
+    """
+
     source_sha: str
     target_sha: str
     evidence: tuple[Evidence, ...]
     reasons: tuple[str, ...] = ()
+    result_sha: str | None = None
+    target_bound: tuple[str, ...] = ()
+    disclosure: str = ""
+
+    def comparable(self) -> tuple[object, ...]:
+        """The part a build's readiness must repeat: everything except target-bound evidence and the commits."""
+        bound = set(self.target_bound)
+        return (
+            self.source_sha,
+            tuple(item for item in self.evidence if item.code not in bound),
+            self.target_bound,
+            self.disclosure,
+        )
 
 
 class ReadinessProvider(Protocol):
@@ -120,7 +149,8 @@ class IntegrationRequest:
                 }
                 for scope in self.cleanup
             ],
-            "merge_method": "ff-only",
+            "merge_method": plan.merge_method,
+            "already_merged": plan.already_merged,
             "network_operations": "excluded",
         }
 
@@ -136,19 +166,39 @@ class IntegrationRequest:
         def brief(value: str, limit: int = 1500) -> str:
             return display(value if len(value) <= limit else value[:limit] + "… [truncated]")
 
-        lines = [
-            f"Merge {display(plan.branch)} into {display(plan.target_branch)}?",
-        ]
+        branch, target = display(plan.branch), display(plan.target_branch)
+        if plan.already_merged:
+            lines = [f"Approve cleanup of {branch}, already merged into {target}?"]
+        elif plan.merge_method == "no-ff":
+            lines = [f"Approve local integration of {branch} into {target} with a merge commit?"]
+        else:
+            lines = [f"Approve local integration of {branch} into {target} by fast-forward?"]
         for code, label in (("TASK_TITLE", "Work"), ("TASK_SUMMARY", "Goal"), ("RESULT_SUMMARY", "Completed work")):
             if presentation.get(code):
                 lines.append(f"{label}: {brief(presentation[code])}")
+        if plan.already_merged:
+            lines.append(
+                "The branch is already merged into the target: nothing is merged; only the cleanup below runs."
+            )
+        elif plan.merge_method == "no-ff":
+            lines += [
+                "Later commits on the target are merged in without another confirmation only if the merge is clean,"
+                " the integration policy is unchanged and readiness provider"
+                f" {display(self.provider)} passes again on the merged result; otherwise nothing changes on the"
+                " target.",
+                f"Result check: {display(self.readiness.disclosure)}",
+            ]
+        else:
+            lines.append(
+                "The target advances to the verified source commit (fast-forward); if the target moved, nothing"
+                " changes on the target."
+            )
         lines += [
-            "This advances the local target branch to the verified source commit (fast-forward).",
             "",
             f"Repository: {display(plan.base)}",
             f"Task: {display(self.context.task.id)}",
             f"Source: {display(plan.branch)} @ {plan.source_sha}",
-            f"Target: {display(plan.target_branch)} @ {plan.target_sha}",
+            f"Target: {display(plan.target_branch)} @ {plan.target_sha} (at confirmation)",
             f"Remove worktree: {display(plan.path)}" if plan.worktree_identity is not None else "Remove worktree: no",
             f"Delete local branch: {display(plan.branch)}" if plan.delete_branch else "Delete local branch: no",
             "Additional cleanup:",
@@ -167,7 +217,11 @@ class IntegrationRequest:
         return "\n".join(lines)
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self) | {"digest": self.digest, "merge_method": "ff-only", "network_operations": "excluded"}
+        return asdict(self) | {
+            "digest": self.digest,
+            "merge_method": self.context.finish.merge_method,
+            "network_operations": "excluded",
+        }
 
 
 STEPS = ("merge", "worktree_remove", "branch_delete", "marker_clear", "post_finish")
@@ -186,6 +240,18 @@ class IntegrationResult:
     failing_operation: str | None = None
     errors: list[AdvisoryError] = field(default_factory=list)
     notices: list[AdvisoryError] = field(default_factory=list)
+    # The latest build of this process, outside the request digest: the target it read and the commit it built.
+    build_target: str | None = None
+    result_sha: str | None = None
+
+    def build(self) -> dict[str, Any] | None:
+        if self.build_target is None:
+            return None
+        return {
+            "confirmation_target": self.request.context.finish.target_sha,
+            "build_target": self.build_target,
+            "result": self.result_sha,
+        }
 
     def compact_dict(self) -> dict[str, Any]:
         """Bounded default MCP result; detailed inspection uses the full serializer."""
@@ -205,6 +271,8 @@ class IntegrationResult:
             result["failing_operation"] = self.failing_operation
         if self.observed:
             result["observed"] = dict(self.observed)
+        if self.build_target is not None:
+            result["build"] = self.build()
         return result
 
     def to_dict(self) -> dict[str, Any]:
@@ -218,6 +286,7 @@ class IntegrationResult:
             "finish": self.finish.to_dict() if self.finish else None,
             "observed": self.observed,
             "failing_operation": self.failing_operation,
+            "build": self.build(),
             "network_operations": "excluded",
             "errors": [error.to_dict() for error in self.errors],
             "notices": [notice.to_dict() for notice in self.notices],

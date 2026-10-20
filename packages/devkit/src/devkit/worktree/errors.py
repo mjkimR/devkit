@@ -206,11 +206,45 @@ class BaseDirtyError(_Interaction):
     fix = "Commit or stash the base checkout's changes, then rerun"
 
 
+_MERGE_TARGET_FIX = (
+    "Merge the target branch into the task branch in its worktree (git merge with a message the commit-msg gate"
+    " accepts; never rebase, which rewrites the SHAs the task's records cite), re-verify, then rerun or prepare again"
+)
+
+
 class MergeNotFastForwardError(_Interaction):
-    """The base moved on since the branch was created, so ``--merge`` cannot fast-forward it (``INTERACTION``)."""
+    """The base moved on since the branch was created and the merge may not absorb it (``INTERACTION``).
+
+    ``finish --merge`` lands only a branch that contains the base HEAD; the integration service absorbs later target
+    commits only under ``merge = "no-ff"`` and only after its approval.
+    """
 
     code = "WORKTREE_MERGE_NOT_FF"
-    fix = "Integrate the base into the branch first (rebase or merge it in the worktree), then rerun"
+    fix = _MERGE_TARGET_FIX
+
+
+class MergeConflictError(_Interaction):
+    """Merging the advanced target with the task branch conflicts (``INTERACTION``); nothing changed on the target."""
+
+    code = "WORKTREE_MERGE_CONFLICT"
+    fix = _MERGE_TARGET_FIX
+
+
+class GitUnsupportedError(WorktreeError):
+    """Building a merge onto an advanced target needs ``git merge-tree --write-tree`` (Git 2.38 or later)."""
+
+    code = "WORKTREE_GIT_UNSUPPORTED"
+    fix = "Install Git 2.38 or later, or merge the target into the task branch in its worktree and prepare again"
+
+
+class CommitFailedError(WorktreeError):
+    """The merge commit could not be created (identity, signing, timeout); nothing changed on the target."""
+
+    code = "WORKTREE_COMMIT_FAILED"
+    fix = (
+        "Configure user.name and user.email (and a working, non-interactive signing setup when commit.gpgSign is on)"
+        " for the repository, then rerun or prepare again"
+    )
 
 
 class MergeFailedError(WorktreeError):
