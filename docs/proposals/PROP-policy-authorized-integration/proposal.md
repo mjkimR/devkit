@@ -84,6 +84,8 @@ execution authority. Acceptance of this proposal does not change this repository
 - The executor reads `[workflow.approvals] dev-integration` from the retained base checkout's shared
   `.devkit/config.toml`. Missing means `ask`; local overlays, caller claims, tool permission and `--given` do not
   supply policy authority. A source branch that merely changes ask to auto cannot authorize its own merge.
+  Establish and commit the shared auto policy on the base through an independently authorized change before use;
+  an uncommitted edit to tracked base configuration fails the existing clean-base check.
 - For `auto` and `route=local`, prepare the same immutable request and bind source SHA, target SHA, base policy
   digest, prospective result policy, readiness/provider identities and exact cleanup targets. Record result
   `authority: policy` and its existing request evidence. Do not synthesize a human approval or `ui_action: accept`.
