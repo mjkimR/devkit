@@ -230,14 +230,14 @@ class MergeConflictError(_Interaction):
     fix = _MERGE_TARGET_FIX
 
 
-class GitUnsupportedError(WorktreeError):
+class GitUnsupportedError(_Interaction):
     """Building a merge onto an advanced target needs ``git merge-tree --write-tree`` (Git 2.38 or later)."""
 
     code = "WORKTREE_GIT_UNSUPPORTED"
     fix = "Install Git 2.38 or later, or merge the target into the task branch in its worktree and prepare again"
 
 
-class CommitFailedError(WorktreeError):
+class CommitFailedError(_Interaction):
     """The merge commit could not be created (identity, signing, timeout); nothing changed on the target."""
 
     code = "WORKTREE_COMMIT_FAILED"

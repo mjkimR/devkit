@@ -2,7 +2,7 @@
 id: SPEC-integration-follow-ups
 title: 'Integration base advances: merge commits, effective policy digest and readiness on the result'
 summary: 'Lets an approved local integration absorb target commits that land during its confirmation: tasks land as merge commits built outside the base checkout, the approval binds the effective integration policy instead of raw file bytes, and readiness runs again on the merged result.'
-status: planned
+status: in-progress
 created: 2026-10-20
 related_capabilities:
   - CAP-INT-mcp-services

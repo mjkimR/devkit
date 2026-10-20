@@ -81,6 +81,9 @@ uv add --dev "devkit-catalog @ git+https://github.com/mjkimR/devkit.git#subdirec
   [recommended bundle](install/bundle-recommendations.md) comes from it.
 - Both packages require Python 3.12 or newer; the project's `requires-python` must allow 3.12 (the route documents
   cover a project that does not).
+- An approved local integration whose target advanced during its confirmation (`devkit-agt`) merges with
+  `git merge-tree --write-tree`, which needs Git 2.38 or newer; older Git refuses only that case
+  (`WORKTREE_GIT_UNSUPPORTED`).
 - Release wheels are an alternative only when `gh release view --repo mjkimR/devkit` lists `devkit_dist-*.whl` and
   `devkit_agt-*.whl` (and `devkit_catalog-*.whl` when needed); a `devkit-agt` wheel installation also names the
   `devkit-dist` and `devkit-advisory` wheels of that release. Never mix Git and wheel sources for these packages.
