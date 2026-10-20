@@ -185,3 +185,66 @@ def test_symlink_and_malformed_ledger_refuse(repo, tmp_path):
     ledger.write_text("{}")
     with pytest.raises(r.RegistrationError):
         r.plan(repo, ["claude"])
+
+
+def _interrupt_after_host(repo, monkeypatch):
+    original = r._write
+
+    def fail(path, value, anchor):
+        if path == repo / r.LEDGER:
+            raise OSError("fixture interruption")
+        original(path, value, anchor)
+
+    monkeypatch.setattr(r, "_write", fail)
+    with pytest.raises(OSError):
+        r.apply(r.plan(repo, ["claude"]))
+    monkeypatch.setattr(r, "_write", original)
+
+
+def test_recovery_refuses_newly_tracked_destination(repo, monkeypatch):
+    _interrupt_after_host(repo, monkeypatch)
+    git(repo, "add", "-f", ".mcp.json")
+    before = (repo / ".mcp.json").read_bytes()
+    with pytest.raises(r.RegistrationError, match="Git eligibility"):
+        r.recover(repo)
+    assert (repo / ".mcp.json").read_bytes() == before
+    assert (repo / r.JOURNAL).exists()
+
+
+def test_recovery_retains_exclusion_used_by_linked_checkout(repo, monkeypatch, tmp_path):
+    other = tmp_path / "linked"
+    git(repo, "worktree", "add", "-b", "dev-linked", str(other))
+    _interrupt_after_host(repo, monkeypatch)
+    r.apply(r.plan(other, ["claude"]))
+    other_bytes = (other / ".mcp.json").read_bytes()
+    r.recover(repo)
+    assert not (repo / ".mcp.json").exists()
+    assert (other / ".mcp.json").read_bytes() == other_bytes
+    assert r._ignored(other, ".mcp.json")
+    assert "/.mcp.json" in r._ledger(repo)["excludes"]
+    assert not (repo / r.JOURNAL).exists()
+
+
+def test_recovery_interruption_is_repeatable(repo, monkeypatch):
+    _interrupt_after_host(repo, monkeypatch)
+    original = r._write
+
+    def fail(path, value, anchor):
+        if path == repo / ".mcp.json":
+            raise OSError("recovery interruption")
+        original(path, value, anchor)
+
+    monkeypatch.setattr(r, "_write", fail)
+    with pytest.raises(OSError):
+        r.recover(repo)
+    monkeypatch.setattr(r, "_write", original)
+    r.recover(repo)
+    assert not (repo / r.JOURNAL).exists()
+    assert not (repo / ".mcp.json").exists()
+    assert "/.mcp.json" in r._ledger(repo)["excludes"]
+
+
+def test_claude_code_selection_uses_the_claude_adapter(repo):
+    r.apply(r.plan(repo, ["claude-code"]))
+    assert (repo / ".mcp.json").is_file()
+    assert r.inspect(repo, ["claude-code"])["project"]["claude"]["state"] == "owned"

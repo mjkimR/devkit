@@ -124,3 +124,34 @@ def test_installed_sdk_normalizes_form_capability(capability, form):
     parsed = types.ClientCapabilities.model_validate({"elicitation": capability})
     assert parsed.elicitation is not None
     assert (parsed.elicitation.form is not None) is form
+
+
+def test_probe_reports_advisory_and_candidate_rejects_removable_dependency(clones, monkeypatch):
+    import json
+    import sys
+
+    base, task = clones
+    probe = subprocess.run([sys.executable, "-c", configuration.PROBE], capture_output=True, text=True, check=True)
+    import devkit.advisory
+
+    assert devkit.advisory.__file__ in json.loads(probe.stdout)["paths"]
+    candidate = base / "python"
+    candidate.touch()
+    dependency = task / "packages/devkit-advisory/src/devkit/advisory/__init__.py"
+    monkeypatch.setattr(configuration.metadata, "entry_points", lambda **kw: [])
+    monkeypatch.setattr(configuration.metadata, "version", lambda name: "1.0")
+    original_run = subprocess.run
+    monkeypatch.setattr(
+        configuration.subprocess,
+        "run",
+        lambda *a, **kw: (
+            SimpleNamespace(
+                returncode=0,
+                stdout=json.dumps({"version": "1.0", "services": [], "prefix": str(base), "paths": [str(dependency)]}),
+            )
+            if "-c" in a[0]
+            else original_run(*a, **kw)
+        ),
+    )
+    with pytest.raises(configuration.RuntimeUnavailable):
+        configuration.descriptor(task, executable=str(candidate))

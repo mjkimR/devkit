@@ -29,7 +29,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from devkit.advisory import AdvisoryError
+from devkit.advisory import AdvisoryError, Level
 from devkit.core.errors import ArgumentError, GitError
 from devkit.core.git import run_git
 from devkit.core.local_config import LOCAL_CONFIG_PATH, read_local_config
@@ -488,6 +488,12 @@ def _prepare(
         synced = warning is None
         if warning is not None:
             notices.append(warning)
+        else:
+            if before_step is not None:
+                before_step("registrations")
+            warning = _sync(_interpreter(path), target, registrations_only=True, notices=notices)
+            if warning is not None:
+                notices.append(warning)
     return setup, synced
 
 
@@ -914,7 +920,9 @@ def _interpreter(checkout: Path) -> str:
     return sys.executable
 
 
-def _sync(interpreter: str, target: Path) -> SyncFailedWarning | None:
+def _sync(
+    interpreter: str, target: Path, *, registrations_only: bool = False, notices: list[AdvisoryError] | None = None
+) -> SyncFailedWarning | None:
     """Run ``devkit sync --locked`` in ``target``; ``None`` on success, else the warning that reports why.
 
     The sync runs with ``--format json``, so a refusal arrives as one error object: the warning carries its code,
@@ -922,13 +930,27 @@ def _sync(interpreter: str, target: Path) -> SyncFailedWarning | None:
     (``SELECTION_INVALID``), so rerunning is the fix only when the error names none, or the output is not an error
     object (a timeout, a crash, a devkit without ``--locked``).
     """
-    label = "devkit sync --locked"
-    rerun = f"cd {shlex.quote(str(target))} && {shlex.quote(interpreter)} -m devkit sync --locked"
-    argv = [interpreter, "-m", "devkit", "sync", "--locked", "--format", "json", "-w", str(target)]
+    mode = "--registrations-only" if registrations_only else "--locked"
+    label = f"devkit sync {mode}"
+    rerun = f"cd {shlex.quote(str(target))} && {shlex.quote(interpreter)} -m devkit sync {mode}"
+    argv = [interpreter, "-m", "devkit", "sync", mode, "--format", "json", "-w", str(target)]
     completed = _execute(argv, target, label, SYNC_TIMEOUT)
     if isinstance(completed, str):
         return SyncFailedWarning(completed, fix=rerun)
     if completed.returncode == 0:
+        if registrations_only and notices is not None:
+            document = json.loads(completed.stdout)
+            for item in document.get("notices", []):
+                advisory = item.get("advisory", {})
+                notices.append(
+                    AdvisoryError(
+                        item["message"],
+                        *advisory.get("details", []),
+                        code=item["code"],
+                        level=Level(item["level"]),
+                        fix=advisory.get("fix"),
+                    )
+                )
         return None
     error = _error_object(completed.stdout)
     if error is None:

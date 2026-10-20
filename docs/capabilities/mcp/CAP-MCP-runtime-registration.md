@@ -59,9 +59,15 @@ can be recreated; a missing owned entry in an existing file is a conflict. Forei
 intact, and no-op preserves bytes/mode. Recheck tracked/ignored state and captured file bytes before writes.
 
 A recoverable registration journal binds destinations and ledger updates. An interrupted operation is recovered
-before another ordinary change; foreign edits during recovery refuse mutation. Dry-run/check compute the same
+before another ordinary change; foreign edits or newly tracked/visible destinations during recovery refuse mutation.
+Installed narrow exclusions survive rollback because another checkout may already depend on them; the local ledger
+retains their ownership and recovery itself is repeatable. Dry-run/check compute the same
 plan without writes, installation or host launches. Locked sync validates without host-file changes and directs
-changed local configuration to ordinary sync. Opt-out, uninstall and selected-agent removal retire only exact
+changed existing local configuration to ordinary sync. An absent fresh-checkout registration does not block
+locked asset restoration. After restoration, worktree setup invokes dist-owned `sync --registrations-only`,
+which discovers the optional provider and reconciles local entries without touching assets or the receipt.
+Without an installed provider and ownership state this mode does nothing. The trusted lifecycle guard runs
+again before that initialization; copied opt-out and cloud configuration remain effective. Opt-out, uninstall and selected-agent removal retire only exact
 owned entries. An unloadable installed provider is an error, not an uninstall signal.
 
 Known user/ancestor/local/managed same-name declarations are inspected read-only and reported as collisions;

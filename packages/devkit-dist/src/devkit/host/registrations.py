@@ -297,7 +297,9 @@ def plan(
         except RuntimeUnavailable as exc:
             result.notices.append(exc.with_level(Level.WARNING))
             unavailable = True
-    desired_hosts = set(agents) if enabled and installed else set()
+    desired_hosts = (
+        {"claude" if agent == "claude-code" else agent for agent in agents} if enabled and installed else set()
+    )
     entries = dict(ledger["entries"])
     excludes = list(ledger["excludes"])
     for host in sorted(desired_hosts | entries.keys()):
@@ -490,8 +492,40 @@ def recover(root: Path) -> None:
             anchor = common if key == "exclude" else root
             if _snapshot(result.path(key), anchor) not in (result.before[key], result.after[key]):
                 raise RegistrationError("external edits prevent registration recovery")
+        # Exclusions are clone-local setup: another checkout may have started using one
+        # after this transaction released the common lock. Never roll installed lines back.
+        retained = result.after.get("exclude")
+        if retained is not None and _snapshot(result.path("exclude"), common) == retained:
+            prior = result.before.get(LEDGER)
+            ledger = _json(prior[0]) if prior else {"workspace": str(root), "entries": {}, "excludes": []}
+            old_lines = set((result.before.get("exclude") or (b"", 0))[0].splitlines())
+            added = {line.decode() for line in retained[0].splitlines() if line not in old_lines}
+            owned = {"/" + name for name in DESTINATIONS.values()}
+            ledger["excludes"] = sorted(set(ledger["excludes"]) | (added & owned))
+            result.after[LEDGER] = _snapshot(root / LEDGER, root)
+            result.before[LEDGER] = ((json.dumps(ledger, indent=2) + "\n").encode(), prior[1] if prior else 0o600)
+            result.before["exclude"] = retained
+            # Persist the revised rollback target before mutation, so recovery is itself repeatable.
+            data["changes"] = {
+                key: {"before": _encoded(result.before[key]), "after": _encoded(result.after[key])}
+                for key in result.before
+            }
+
+        def eligible(key: str) -> None:
+            if key in {*DESTINATIONS.values(), LEDGER} and (
+                _tracked(root, key) or (result.path(key).exists() and not _ignored(root, key))
+            ):
+                raise RegistrationError("destination Git eligibility changed before registration recovery")
+
+        for key in result.changes:
+            eligible(key)
+        _write(path, ((json.dumps(data) + "\n").encode(), snap[1]), root)
         for key in reversed(result.changes):
-            _write(result.path(key), result.before[key], common if key == "exclude" else root)
+            eligible(key)
+            anchor = common if key == "exclude" else root
+            if _snapshot(result.path(key), anchor) not in (result.before[key], result.after[key]):
+                raise RegistrationError("external edits interrupted registration recovery")
+            _write(result.path(key), result.before[key], anchor)
         path.unlink()
     except (ValueError, KeyError, TypeError) as exc:
         raise RegistrationError("malformed registration journal; mutation refused") from exc
@@ -528,7 +562,7 @@ def inspect(root: Path, agents: list[str] | tuple[str, ...]) -> dict[str, Any]:
     except RegistrationError as exc:
         notices.append(exc)
     project = {}
-    for host in sorted(set(agents) | ledger["entries"].keys()):
+    for host in sorted({"claude" if agent == "claude-code" else agent for agent in agents} | ledger["entries"].keys()):
         if host not in DESTINATIONS:
             project[host] = {"state": "unsupported"}
             continue

@@ -39,6 +39,7 @@ mounts `devkit mcp`; domain tools remain in agt/spec. See `CAP-MCP-runtime-regis
 | `devkit mcp config [-w WORKSPACE] [--executable PATH] --format json` | Verified retained descriptor; no writes |
 | `devkit mcp setup [-w WORKSPACE] [--host codex|claude] [--executable PATH]` | Exact eligible project reconciliation |
 | `devkit mcp remove [-w WORKSPACE]` | Exact owned entry removal; local exclusions retained |
+| `devkit sync --registrations-only [-w WORKSPACE]` | Reconcile optional registrations after locked asset restoration; no asset changes |
 | `devkit mcp status [-w WORKSPACE] --format json` | Desired/recorded/project facts, runtime and unknown host state |
 | `devkit mcp serve --workspace-root EXECUTOR --configuration-workspace OWNER --profile local|read-only` | Native MCP stdio |
 

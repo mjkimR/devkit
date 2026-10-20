@@ -18,12 +18,14 @@ PROBE = """
 import importlib.util, importlib.metadata, json, sys
 import devkit_mcp.server
 entries = list(importlib.metadata.entry_points(group="devkit.host.services"))
-modules = ["devkit_mcp", "devkit.core"] + [e.value.split(":")[0] for e in entries]
+modules = ["devkit_mcp", "devkit.core", "devkit.advisory"] + [e.value.split(":")[0] for e in entries]
 paths = []
 for name in modules:
     spec = importlib.util.find_spec(name)
     if spec is None: raise RuntimeError("missing service module")
     paths += ([spec.origin] if spec.origin else list(spec.submodule_search_locations or []))
+# Include all imported runtime dependency modules, including editable SDK/schema dependencies.
+paths += [m.__file__ for m in tuple(sys.modules.values()) if getattr(m, "__file__", None)]
 print(json.dumps({"prefix": sys.prefix, "paths": paths,
     "services": sorted((e.name, e.value, e.dist.name, e.dist.version) for e in entries),
     "version": importlib.metadata.version("devkit-mcp")}))

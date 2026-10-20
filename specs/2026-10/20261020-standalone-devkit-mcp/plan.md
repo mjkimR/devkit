@@ -66,3 +66,20 @@ The Host expanded the write boundary narrowly to worktree lifecycle start/prepar
 before-step callback rechecks environment before creation, local copy, setup and sync; handoff records partial
 recovery when a guard refuses after creation. This closes the setup-to-sync transition without adding MCP imports
 to worktree lifecycle or changing ordinary CLI authorization.
+
+
+## Review decisions
+
+Recovery revalidates Git eligibility before mutation and each host write. Installed clone-local exclusions are
+retained across rollback, with a revised durable rollback target preserving their ledger ownership. Runtime probing
+includes advisory and every imported dependency module to reject editable sources under removable worktrees.
+
+A fresh checkout has no existing registration to validate. Locked sync restores assets without writing host files;
+a separate dist-owned `sync --registrations-only` invocation initializes optional registrations afterward. This
+keeps worktree independent of runtime/host imports and uses the same selected interpreter, local opt-out and cloud
+profile. The trusted before-step callback guards that additional mutation boundary. Existing changed registrations
+still refuse locked sync. This narrow lifecycle expansion was authorized by the Host.
+
+Entrypoint derivation was reviewed: broad package, tooling and documentation candidates are rejected as unrelated
+joins. Existing focused host, runtime/core binding, integration, handoff and lifecycle paths remain the useful
+capability entrypoints; no package-wide entrypoints are added automatically.

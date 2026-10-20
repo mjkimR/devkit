@@ -920,3 +920,45 @@ def test_spec_policy_evidence_changes_with_the_target_tool_spec(tmp_path: Path, 
     )
     after = check(replace(context, finish=replace(plan, target_sha=moved), result_sha=result))
     assert {item.code: item.value for item in after.evidence}["SPEC_POLICY"] != before
+
+
+def test_native_handoff_initializes_fresh_registration(accepted_handoff_base, monkeypatch):
+    from devkit.host import registrations
+    from devkit.worktree import lifecycle
+
+    from devkit_spec.handoff_mcp import HandoffService
+
+    repo = accepted_handoff_base
+    original = lifecycle._execute
+    modes = []
+
+    def execute(argv, cwd, label, timeout):
+        if argv[1:4] == ["-m", "devkit", "sync"]:
+            modes.append(argv[4])
+            result = CliRunner().invoke(devkit_cli, argv[3:])
+            return subprocess.CompletedProcess(argv, result.exit_code, result.stdout.encode(), result.stderr.encode())
+        return original(argv, cwd, label, timeout)
+
+    monkeypatch.setattr(lifecycle, "_execute", execute)
+    monkeypatch.setattr(registrations, "collisions", lambda *args: [])
+    monkeypatch.setattr(
+        registrations,
+        "provider",
+        lambda root, *args: registrations.LaunchDescriptor(
+            sys.executable,
+            ("-m", "devkit", "mcp", "serve", "--configuration-workspace", str(root)),
+            str(repo),
+            str(root),
+            "local",
+        ),
+    )
+
+    async def confirm(message, schema):
+        return ConfirmationReply("accept", {"approve": True, "activity_effort": "medium"})
+
+    result = asyncio.run(HandoffService(repo).handoff("idea", confirm))
+    assert result["status"] == "handed_off", result
+    assert modes == ["--locked", "--registrations-only"]
+    worktree = Path(result["worktree"]["path"])
+    assert registrations._ledger(worktree)["entries"]
+    assert str(worktree) in (worktree / ".mcp.json").read_text()

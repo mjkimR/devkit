@@ -144,7 +144,9 @@ def test_post_sync_extensions_do_not_run_on_dry_run_or_check(
 ) -> None:
     calls: list[str] = []
     entries = [_entry("hook", lambda root, result: calls.append("ran") or ["x"])]
-    monkeypatch.setattr(core_extensions.metadata, "entry_points", lambda group: entries)
+    monkeypatch.setattr(
+        core_extensions.metadata, "entry_points", lambda group: entries if group == "devkit.post_sync" else []
+    )
     assert sync_project(target, installed, dry_run=True).to_dict()["notices"] == []
     assert calls == []
     monkeypatch.setattr(discovery, "discover_bundles", lambda: fake_discovery(installed))

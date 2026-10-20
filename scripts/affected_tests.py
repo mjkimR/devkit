@@ -228,6 +228,8 @@ class Workspace:
             for imported in self.imports(self._python(directory, tests=False)):
                 if imported != node:
                     imported_by.setdefault(imported, set()).add(node)
+        # Optional transport loads these domain services through entrypoints, not static imports.
+        imported_by.setdefault("devkit_mcp", set()).update({"devkit.integration", "devkit_spec"})
         affected, pending = set(changed), list(changed)
         while pending:
             for node in imported_by.get(pending.pop(), ()):

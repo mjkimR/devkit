@@ -876,9 +876,16 @@ def sync_project(
             root, agents if agents is not None else selected_config.agents, environment=environment
         )
         if locked and registration.changes:
-            raise registrations.RegistrationError(
-                "locked sync requires ordinary sync to reconcile local MCP registration"
-            )
+            if any(
+                registration.before.get(key) is not None
+                for key in (*registrations.DESTINATIONS.values(), registrations.LEDGER)
+            ):
+                raise registrations.RegistrationError(
+                    "locked sync requires ordinary sync to reconcile local MCP registration"
+                )
+            # A fresh checkout has no registration to validate. Asset restoration stays
+            # locked; lifecycle initialization runs separately after this succeeds.
+            registration.after.clear()
         finish = commit_locked(
             root,
             installed,
@@ -1055,3 +1062,13 @@ def recover_project(root: Path) -> int:
     root = require_project_dir(root)
     with project_lock(root):
         return recover_locked(root)
+
+
+def sync_registrations(root: Path) -> registrations.RegistrationPlan:
+    """Reconcile only optional local registrations after locked worktree asset restoration."""
+    root = require_project_dir(root)
+    with registrations.clone_lock(root), project_lock(root):
+        registrations.recover(root)
+        result = registrations.plan(root, read_config(root).agents)
+        registrations.apply(result)
+    return result
