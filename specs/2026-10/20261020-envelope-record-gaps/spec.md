@@ -2,7 +2,7 @@
 id: SPEC-envelope-record-gaps
 title: 'Close gaps in Planning records: folded challenger findings, settled assumptions, proposal boundaries'
 summary: "Lets a reverify close a challenger round, gives answer envelopes a settles list for worker assumptions the user decided, and adds a warning rule that proposal boundaries name existing paths, so Planning records match what actually happened."
-status: planned
+status: in-progress
 created: 2026-10-20
 related_capabilities:
   - CAP-DLV-workflow-envelopes
@@ -75,7 +75,7 @@ and `ADR-proposal-boundaries-name-existing-paths`. This spec implements them wit
 ### [AC-02] The challenger state follows its last reverify and the review state ignores it
 - **Given** a unit with `review-01.yaml` (one open finding), `challenger-01.yaml` (one open finding) and a reverify
   naming `challenger-01.yaml` that resolves its finding
-- **When** the checks `envelope-check-pass(challenger)` and `envelope-check-pass(review)` are evaluated
+- **When** the checks `envelope-completed(challenger)` and `envelope-review-passed` are evaluated
 - **Then** the challenger check is met (the reverify decides) and the review check is unmet (the review state is still
   `review-01.yaml`, no reverify of a challenger round counts for it)
 

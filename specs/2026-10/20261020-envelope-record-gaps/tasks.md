@@ -6,13 +6,13 @@ plan: PLAN-envelope-record-gaps
 
 # Task Breakdown: `SPEC-envelope-record-gaps` Close gaps in Planning records: folded challenger findings, settled assumptions, proposal boundaries
 
-- [ ] **Task 1**: Reverify closes challenger rounds: reference pattern, deciding state, `--from`, challenger findings
+- [x] **Task 1**: Reverify closes challenger rounds: reference pattern, deciding state, `--from`, challenger findings
   refusal and the `review=` check output, with tests
   - **_Boundary**: `packages/devkit/src/devkit/workflow/unit/envelope/`, `packages/devkit/src/devkit/workflow/cli/envelope.py`,
     `packages/devkit/tests/workflow/`
   - _Requirements: AC-01, AC-02, AC-03, AC-04, AC-05_
   - **Verification**: `just test devkit workflow`
-- [ ] **Task 2**: Answer envelopes carry `settles`, authored with `--settle`, with tests
+- [x] **Task 2**: Answer envelopes carry `settles`, authored with `--settle`, with tests
   - **_Boundary**: `packages/devkit/src/devkit/workflow/unit/envelope/`, `packages/devkit/src/devkit/workflow/cli/envelope.py`,
     `packages/devkit/tests/workflow/`
   - _Requirements: AC-06, AC-07_
