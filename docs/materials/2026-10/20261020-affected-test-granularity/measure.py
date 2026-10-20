@@ -9,6 +9,7 @@ import sys
 import time
 import types
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[4]
 BASE = "29e7dd36845455d92d42e858e3372e3dd812a22e"
@@ -60,7 +61,7 @@ def main() -> None:
         "baseline": load("baseline", baseline),
         "new": load("candidate", (ROOT / "scripts/affected_tests.py").read_text()),
     }
-    result = {
+    result: dict[str, Any] = {
         "base": BASE,
         "collection_count": len(nodeids),
         "collection_seconds": collection_seconds,
@@ -69,7 +70,7 @@ def main() -> None:
     }
     for case, source in CASES.items():
         assert (ROOT / source).is_file(), source
-        row = {"source": source}
+        row: dict[str, Any] = {"source": source}
         for label, module in modules.items():
             times = []
             for _ in range(3):
