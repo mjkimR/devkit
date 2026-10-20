@@ -47,10 +47,8 @@ source must contain it and the target policy is read from it. The approval binds
 server-side by the head pin) and that confirmation target; before the merge call the fetched target must descend from the confirmation target, the prospective merge must be
 clean, the effective policy unchanged and readiness must pass on it. After the call, devkit fetches and reads the PR's
 merge commit `M`: `M^2` equals the source and `M` is contained in the fetched target. When `M^1` is the checked target
-and `M`'s tree equals the checked tree, the landing is checked. Three other cases get distinct codes and are never
-reported as checked: `M^1` descends from the checked target (an advance in the window between the last check and the
-merge, which devkit cannot close), `M^1` does not descend from the confirmation target (a rewritten target), and an
-equal first parent with a different tree (the platform merged differently). B is not required; C is rejected for this
+and `M`'s tree equals the checked tree, the landing is checked; any other landing is never reported as checked (see
+the decisions below). B is not required; C is rejected for this
 route (it removes the PR gate the route exists for).
 
 Decided by the user in this Planning (`envelopes/answer-01.yaml`):
@@ -63,7 +61,8 @@ Decided by the user in this Planning (`envelopes/answer-01.yaml`):
   `M^2` the source) and the source is an ancestor of the fetched target, cleanup runs whether or not the landing was
   checked. Every landing other than the checked one (an advance in the window, a tree mismatch, a first parent outside
   the confirmation target's history, `M` not in the fetched target) is reported as the notice
-  `INTEGRATION_LANDED_UNCHECKED` with its reason and a directive to run the readiness checks on the landed target.
+  `INTEGRATION_LANDED_UNCHECKED` with its reason and a directive naming the landed-target check the readiness
+  provider declares, runnable after cleanup.
   devkit does not re-run guards, readiness or the policy digest on `M`; cleanup uses the scope bound in the approved
   request. Cleanup stops only when the fetched target does not contain the source (`INTEGRATION_SOURCE_NOT_CONTAINED`).
 
@@ -74,8 +73,9 @@ A merge call whose outcome is unknown is resolved only from the PR state; while 
 - A residual race remains and is disclosed in the form and the result; a commit landing in the window is merged
   without devkit's checks and only reported, since cleanup does not wait for it.
 - On a repository with required checks or reviews the usual flow is two calls (approve, then `integration_resume`)
-  unless the agent opened the PR and let its checks pass before `prepare`; a target commit landing while checks run
-  costs a new confirmation.
+  unless the agent opened the PR and let its checks pass before `prepare`. A target commit landing while checks run
+  costs a target merge into the source, re-verification, a new confirmation and a new check run; on a target that
+  moves faster than its checks the route may never merge, which is disclosed.
 - The merge commit is GitHub's: its committer, signature and message handling are the platform's; no local commit
   hooks or trailers apply.
 - Cleanup verifies PR state `MERGED`, `M^2` the source and the source contained in the fetched target; later target
