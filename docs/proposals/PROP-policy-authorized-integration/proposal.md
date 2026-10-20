@@ -38,6 +38,13 @@ its host feasibility before implementation. This draft does not change current p
 - `FB-auto-integration-dispatch`: receive the complete automatic integration and cleanup authority question.
   The feedback is terminal at promotion; progress and decisions belong to this proposal.
 
+
+`PROP-standalone-devkit-mcp` owns the reusable MCP runtime, project registration and default interactive approval
+route, using `PROP-local-config-execution-environment`. This proposal retains the separate authority decision for
+unattended merge and cleanup, including whether policy-authorized execution is allowed in cloud. Package presence,
+default MCP routing and a noninteractive environment do not themselves grant that authority. Reuse the extracted
+runtime if the MCP execution route is selected; do not duplicate its packaging or registration work.
+
 ## 2. Technical Spike Questions
 
 - **Q1: Authority boundary.** Can explicit repository opt-in supply durable user authorization for local merge,
