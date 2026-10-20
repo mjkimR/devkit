@@ -2,7 +2,7 @@
 id: PROP-local-config-execution-environment
 title: Local configuration and execution environments
 summary: "Add ignored checkout-local configuration overlays and an explicit cloud execution environment, with creation-time worktree copying and shared receipt preservation."
-status: reviewing
+status: accepted
 created_at: 2026-10-20
 target_area: distribution/
 priority: high
