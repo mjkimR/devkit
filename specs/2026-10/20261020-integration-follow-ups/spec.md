@@ -24,7 +24,7 @@ Handed off from proposal PROP-integration-follow-ups on 2026-10-20.
 - **Decisions**: `ADR-merge-commit-outside-checkout`, `ADR-effective-policy-digest` and
   `ADR-target-advance-readiness`, promoted at the handoff; `ADR-integration-approval-asserted` stays in force.
 - **Split in Planning**: this spec keeps the base advances. Pull request cleanup is
-  `PROP-integration-pull-request-cleanup` and host confirmation `PROP-integration-host-confirmation` (both drafts);
+  `SPEC-integration-pull-request-cleanup` and a host-confirmation draft (retired as unnecessary for the two supported terminal hosts; see `FB-multi-host-integration-ergonomics`);
   automatic dispatch stays the open feedback `FB-auto-integration-dispatch`, since no policy grants merge or deletion
   authority under `ADR-integration-approval-asserted`.
 
@@ -49,9 +49,8 @@ checked again on the merged result, without a second confirmation.
 - `FB-integration-stale-on-base-advance` (specs/2026-10/20261019-high-effort-review-loop): delivered by this spec.
 - `FB-auto-integration-dispatch` (specs/2026-10/20261017-hook-driven-integration-cleanup): open, split out in
   Planning; not delivered here.
-- `FB-multi-host-integration-ergonomics` (same directory): promoted to `PROP-integration-host-confirmation`; not
-  delivered here.
-- `FB-pr-remote-and-squash-integration` (same directory): promoted to `PROP-integration-pull-request-cleanup`; not
+- `FB-multi-host-integration-ergonomics` (same directory): dismissed after retiring the broader host-confirmation draft; not delivered here.
+- `FB-pr-remote-and-squash-integration` (same directory): promoted to `SPEC-integration-pull-request-cleanup`; not
   delivered here.
 
 ## 2. User Stories
@@ -69,8 +68,8 @@ checked again on the merged result, without a second confirmation.
    - **Rationale**: no policy grants merge or deletion authority (`ADR-integration-approval-asserted`).
    - **When to Reconsider**: the user decides on `FB-auto-integration-dispatch`.
 2. **Scope Excluded**: remote push, pull request merge or cleanup after a pull request, and squash or rebase
-   integration (`PROP-integration-pull-request-cleanup`).
-3. **Scope Excluded**: new host confirmation adapters (`PROP-integration-host-confirmation`) and any change to
+   integration (`SPEC-integration-pull-request-cleanup`).
+3. **Scope Excluded**: new host confirmation adapters (see `FB-multi-host-integration-ergonomics`) and any change to
    `devkit.host` (packages/devkit-dist).
 4. **Scope Excluded**: an `ff` merge method (a merge commit only when needed), squash or rebase as local options, an
    in-call retry when the target moves between a build and its fast-forward, and running tests on the merged result.

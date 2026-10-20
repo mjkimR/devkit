@@ -63,14 +63,14 @@ was introduced.
   (specs/2026-10/20261019-high-effort-review-loop/feedback/integration-stale-on-base-advance.md) is outside this run's
   write scope: the Host sets it to `resolved` with the disposition `SPEC-integration-follow-ups`.
 - `FB-auto-integration-dispatch`: not delivered (Non-Goal 1); stays `open` with its current disposition.
-- `FB-multi-host-integration-ergonomics`: not delivered (Non-Goal 3); stays `promoted` to
-  `PROP-integration-host-confirmation`.
+- `FB-multi-host-integration-ergonomics`: not delivered (Non-Goal 3); dismissed when the broader host-confirmation draft was retired for the two-terminal-host usage scope.
 - `FB-pr-remote-and-squash-integration`: not delivered (Non-Goal 2); stays `promoted` to
-  `PROP-integration-pull-request-cleanup`.
+  `SPEC-integration-pull-request-cleanup`.
 
 ## Deferred work
 
-None: Planning already moved the other extensions to `PROP-integration-pull-request-cleanup`,
-`PROP-integration-host-confirmation` and `FB-auto-integration-dispatch`. The receipt `.devkit/installation.json` must be
+None: Planning moved PR cleanup and automatic dispatch to `SPEC-integration-pull-request-cleanup` and
+`FB-auto-integration-dispatch`. The separate host-confirmation draft was retired;
+`FB-multi-host-integration-ergonomics` records its dismissal. The receipt `.devkit/installation.json` must be
 re-synced for the edited spec bundle files (`devkit sync`) before integration; `.devkit/` is outside this run's write
 scope.
