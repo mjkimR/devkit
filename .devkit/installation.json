@@ -642,7 +642,7 @@
   "files": {
     ".agents/agents/challenger.md": {
       "mode": 420,
-      "sha256": "03b5c978e8ac88e8b2e57b9e23788d13cafccb4d4c8fb3cc274f44542e8d7ee2"
+      "sha256": "0427f36270fcaad1d88f005166194929693f7efcf066c7855e5958265dc8cf82"
     },
     ".agents/agents/code-reviewer.md": {
       "mode": 420,
@@ -842,7 +842,7 @@
     },
     ".claude/agents/challenger.md": {
       "mode": 420,
-      "sha256": "b188dde964d0f114181e0754daf221c17e2e3ae3fa535096bf5f79739589ac60"
+      "sha256": "d59f6401fefec034fc538dd9337509f7963f7e780829d20075038e7d18204396"
     },
     ".claude/agents/code-reviewer.md": {
       "mode": 420,
@@ -1030,7 +1030,7 @@
     },
     ".codex/agents/challenger.toml": {
       "mode": 420,
-      "sha256": "9b6561e600e18d8a27c6f2466fced5f0db5a68d07235e5001450e1eef258530d"
+      "sha256": "5281c38ebd105af9b0402497cf2ee811c3605c91e480b5f94166dcb68057ad1f"
     },
     ".codex/agents/code-reviewer.toml": {
       "mode": 420,
@@ -1486,7 +1486,7 @@
     },
     ".devkit/managed/spec/subagents/challenger.md": {
       "mode": 420,
-      "sha256": "6cd9c54b5d199e707c9f042e82b4ac6547d16ee4ef14702ee6f43af5040f67bc"
+      "sha256": "62c08bdf56984fc7fc6233beb49793c39dcf15cc969216462a7d836028f61e56"
     },
     ".devkit/managed/spec/subagents/code-reviewer.md": {
       "mode": 420,
