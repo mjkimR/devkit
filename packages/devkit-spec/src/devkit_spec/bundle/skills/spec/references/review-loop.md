@@ -28,7 +28,7 @@ After a round, its batch MAY be self-verified instead of starting the next round
 | Evidence | Behavior fixes: a test or check reproducing the `failure_condition` passes (for a P1, it failed before the fix). Text-only kinds: the diff is limited to the named location | The edited text and the actual diff are shown to agree | The edited text is shown to agree with the finding |
 
 - Uncertainty on any condition, for any fix, requires the next round for the whole batch.
-- Record the self-verification with its reason and evidence: in `reverify` for code, in the new `reconcile-check` for reconcile, in the `worker` envelope's summary for Planning.
+- Record the self-verification with its reason and evidence: in `reverify` for code, in the new `reconcile-check` for reconcile, in the closing `reverify` of the `challenger` round for Planning.
 - A recurring finding can no longer be closed by self-verification.
 
 ## 3. Severity

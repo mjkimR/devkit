@@ -60,7 +60,8 @@ def test_minor_fix_self_verification_has_four_conditions_per_review_kind() -> No
     loop = _text(LOOP)
     assert "Uncertainty on any condition, for any fix, requires the next round for the whole batch" in loop
     assert (
-        "in `reverify` for code, in the new `reconcile-check` for reconcile, in the `worker` envelope's summary" in loop
+        "in `reverify` for code, in the new `reconcile-check` for reconcile, in the closing `reverify` of the"
+        " `challenger` round for Planning" in loop
     )
     assert "A recurring finding can no longer be closed by self-verification" in loop
     assert (

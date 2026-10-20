@@ -126,7 +126,7 @@ and `ADR-proposal-boundaries-name-existing-paths`. This spec implements them wit
   proposal whose `owns` is a string
 - **When** the rule runs
 - **Then** each is one `severity=warning` violation on its entry's line (the placeholder with its own message naming
-  the area, the missing paths "names no existing path", the invalid ones "not a literal repository-relative path",
+  the area, the missing paths "names no existing path", or "names no existing directory" for an entry ending in `/`, the invalid ones "not a literal repository-relative path",
   the non-string item and the string `owns` as malformed), and `boundaries.excludes` entries are never reported
 
 ### [AC-10] Only current proposals in the run's targets are checked
