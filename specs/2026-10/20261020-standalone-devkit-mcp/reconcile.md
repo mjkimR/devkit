@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-standalone-devkit-mcp
 feature: SPEC-standalone-devkit-mcp
-status: pending
+status: resolved
 targets:
   - file: docs/architecture/ARCH-05-1-containers.md
     resolution: modified
@@ -36,3 +36,12 @@ The runtime contract separates package/transport ownership, local project regist
 identity and execution constraints. Existing architecture, host, integration, delivery and worktree contracts
 reflect those boundaries. No explicitly linked open direct-fix feedback source requires disposition.
 Native terminal UI remains a separate unverified area; protocol/wheel tests do not establish host UI support.
+
+
+The independent code review findings are resolved in reverify-01 and reverify-02. The reviewed implementation
+keeps locked asset restoration separate from optional registration initialization and carries only a refusal
+constraint across child processes. Native approval and terminal-removal exceptions remain invocation-local.
+Entrypoint candidates were derived and reviewed; existing focused capability paths were retained, and the new
+runtime capability names its runtime, dependency-free contracts, invocation constraints and registration provider.
+Broad cross-capability package/test/tooling candidates were rejected. No accepted implementation requirement was
+deferred; real-host UI evidence remains explicitly unverified under the accepted validation boundary.
