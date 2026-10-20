@@ -168,7 +168,11 @@ sequence.
     the segment written before that marker records `activity_effort: high`; the higher number holds when a marker
     disagrees with that count, a `reverify` is never a round, and a fold of the user's answers is a new batch of the same loop that gets at most one
     fresh round outside the cap (`ADR-reverify-closes-challenger-rounds`). A batch not minor at the cap round and a recurring P1
-    (`recurs:` at the start of the reviewer's `issue`) stop the work (rule 7). A finding whose `evidence` path is not
+    (`recurs:` at the start of the reviewer's `issue`) stop the work (rule 7). Recurrence means the same failure
+    condition remains after an attempted fix, including an incomplete fix, or returns; the reviewer names the earlier
+    finding and explains the shared failure condition. A distinct defect introduced by a fix is a new finding:
+    sharing a file, topic or cause alone is insufficient, and a different remedy does not reclassify an unresolved
+    earlier failure. Existing severity, minor-fix and round-cap conditions apply to both. A finding whose `evidence` path is not
     in the round's diff file list is out of scope: it is fixed with the batch and never counts as a recurrence; a
     `challenger` finding whose `suggested_action` starts with `Decision needed:` stays out of the loop and goes to
     `plan-accept`. The procedure ships in the `spec`
