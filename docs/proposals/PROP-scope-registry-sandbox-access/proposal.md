@@ -2,7 +2,7 @@
 id: PROP-scope-registry-sandbox-access
 title: Work scope registry access across sandboxed worktrees
 summary: "Compare Git-directory storage, shared devkit state, and MCP-mediated access for the work scope registry across sandboxed worktrees. Define permission boundaries and query behavior without assuming that relocating state removes approval requirements."
-status: draft
+status: reviewing
 created_at: 2026-10-20
 target_area: collaboration/
 priority: medium
