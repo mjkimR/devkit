@@ -10,7 +10,7 @@ agent: claude-code
 origin: user
 severity: workaround
 recurring: false
-status: promoted
+status: resolved
 created_at: 2026-10-19
 ---
 
@@ -46,3 +46,7 @@ created_at: 2026-10-19
   (`models.py`).
 
 - **Disposition**: PROP-integration-follow-ups: tolerating base advances during approval (E1-E6)
+- **Disposition (resolved)**: `SPEC-integration-follow-ups` builds one merge result per approving call, accepts a
+  target that descends from the confirmation target with guards and readiness re-run on the result, and digests only
+  the parsed integration policy (`ADR-target-advance-readiness`, `ADR-effective-policy-digest`). Verified by
+  `packages/devkit/tests/integration/test_base_advance.py` and the spec's review rounds 1 and 2.
