@@ -1,30 +1,23 @@
 ---
-id: PROP-response-style-survey
+id: SPEC-response-style-survey
 title: Survey reply-style practice to refine response-style
-summary: "Proposes one portable response style with a conclusion-first opening, arrow-marked core sentences and supporting explanation, required-format exceptions and example-based review."
-status: accepted
-created_at: 2026-10-19
-target_area: distribution/
-priority: medium
-size: M
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - distribution/
-    - packages/devkit-catalog/src/devkit_catalog/response_style/
-    - packages/devkit-catalog/tests/test_bundles.py
-    - scripts/smoke.sh
-  excludes:
-    - packages/devkit-dist/src/
-    - packages/devkit-spec/src/
-task_kind: feature
-workflow: sdd-proposal
+summary: Proposes one portable response style with a conclusion-first opening, arrow-marked core sentences and supporting explanation, required-format exceptions and example-based review.
+status: planned
+created: 2026-10-20
+related_capabilities: []
+related_stories: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-response-style-survey] Survey reply-style practice to refine response-style
+# [SPEC-response-style-survey] Survey reply-style practice to refine response-style
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-response-style-survey on 2026-10-20.
+- **Preserved Materials**: `docs/materials/2026-10/20261020-response-style-survey`
+
+### 1. Background & Hypothesis
 
 The response-style bundle combines important content obligations with recurring visual instructions. Its
 block-count thresholds and fixed paragraph sizes are local editorial choices, not established determinants
@@ -37,7 +30,29 @@ repositories' entire code or a reproduction of their benchmarks. Seven prompt/st
 official writing guides are recorded in `MAT-response-style-source-selection`. Popularity screens sources;
 it does not establish that their rules improve devkit replies.
 
-## 2. Proposed Direction
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Survey reply-style practice to refine response-style so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### Scenario 1 [AC-01]: Carried from proposal
+
+Planning provides a concrete rewrite recommendation, complete source notes and reviewable examples, resolves
+independent criticism and presents the direction to the user. Only explicit user acceptance records
+`plan-accept`; it neither authorizes final integration nor asserts a measured quality gain. Handoff promotes
+the appropriate materials and PADRs through the normal workflow. At completion retain the checks actually run,
+the chosen behavior and its limits. Rejection preserves open feedback before normal retirement.
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Proposed Direction
 
 - **Failure conditions:** Treat missing or distorted decision-relevant information as the more serious failure.
   Also reject necessary information buried under repetition or irrelevant detail. Preserve the facts, place them
@@ -67,11 +82,11 @@ it does not establish that their rules improve devkit replies.
   unverified; this work changes no shared guidance limit.
 
 `MAT-response-style-rewrite-draft` provides the concrete skill-body draft, pointer and four authored examples.
-`PADR-response-style-adaptive-replies`, `PADR-response-style-source-selection`,
-`PADR-response-style-measurement` and `PADR-response-style-guidance-budget` record the proposed choices.
+`ADR-response-style-adaptive-replies`, `ADR-response-style-source-selection`,
+`ADR-response-style-measurement` and `ADR-response-style-guidance-budget` record the proposed choices.
 These are drafts for user direction review, not a recorded `plan-accept` decision.
 
-## 3. Review and Implementation Scope
+### 3. Review and Implementation Scope
 
 Use the authored examples to discuss the proposed behavior for scoped facts, unfinished work, explanations and
 artifact-only requests. They are illustrations, not observed before/after runs or evidence of measured quality.
@@ -93,10 +108,3 @@ Verify language/template behavior and existing native projections, relevant lint
 required Living Spec reconciliation. Report what those checks establish: correct text deployment and reviewed
 behavioral instructions, without claiming universal conversational improvement.
 
-## 4. Acceptance and Lifecycle
-
-Planning provides a concrete rewrite recommendation, complete source notes and reviewable examples, resolves
-independent criticism and presents the direction to the user. Only explicit user acceptance records
-`plan-accept`; it neither authorizes final integration nor asserts a measured quality gain. Handoff promotes
-the appropriate materials and PADRs through the normal workflow. At completion retain the checks actually run,
-the chosen behavior and its limits. Rejection preserves open feedback before normal retirement.

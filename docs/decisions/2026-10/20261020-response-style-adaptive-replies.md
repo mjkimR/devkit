@@ -1,13 +1,13 @@
 ---
-id: PADR-response-style-adaptive-replies
+id: ADR-response-style-adaptive-replies
 title: Write adaptive replies with a small shared instruction set
 summary: "Uses a conclusion-first opening and arrow-marked core sentences with supporting explanation as the ordinary reply format, preserving required content and format exceptions."
-proposal: PROP-response-style-survey
-status: draft
+proposal: SPEC-response-style-survey
+status: accepted
 created_at: 2026-10-20
 ---
 
-# [PADR-response-style-adaptive-replies] Write adaptive replies with a small shared instruction set
+# [ADR-response-style-adaptive-replies] Write adaptive replies with a small shared instruction set
 
 ## 1. Context & Problem Statement
 

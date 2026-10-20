@@ -1,13 +1,13 @@
 ---
-id: PADR-response-style-guidance-budget
+id: ADR-response-style-guidance-budget
 title: Retain the guidance budget until placement evidence exists
 summary: "Keeps the 300-byte fragment contract and one response style until actual host evidence warrants a separately reviewed placement change."
-proposal: PROP-response-style-survey
-status: draft
+proposal: SPEC-response-style-survey
+status: accepted
 created_at: 2026-10-20
 ---
 
-# [PADR-response-style-guidance-budget] Retain the guidance budget until placement evidence exists
+# [ADR-response-style-guidance-budget] Retain the guidance budget until placement evidence exists
 
 ## 1. Context & Problem Statement
 
