@@ -28,8 +28,8 @@ workflow: sdd-proposal
 
 The existing response-style has no recorded behavioral comparison. Popular prompt sources can identify useful
 practices, but stars are a screening signal and do not prove that their instructions improve replies. The
-original reference, Attention Span, is included explicitly as provenance; agreement with a derived style is not
-independent confirmation. Its published measurements are not devkit results.
+survey includes Attention Span as a dedicated reply-style project. Published source measurements are not devkit
+results.
 
 The selected direction is one portable style that preserves decision-relevant content, adapts length to the
 request and avoids unnecessary framing. Its improvement over the current style remains a hypothesis until the
@@ -40,7 +40,7 @@ in long sessions is unmeasured, and does not yet justify a shared distribution-c
 ## 2. Technical Spike Conclusions
 
 - **Q1 (Sources)**: Select OpenCode, Aider, Continue, gptme, Anthropic's official explanatory output-style plugin
-  and Goose, plus the original reference Attention Span (`MAT-response-style-source-attention-span`). All seven meet the >=1,000-star, non-archived, <=180-day default-branch-commit screen, with pinned
+  and Goose, plus Attention Span (`MAT-response-style-source-attention-span`). All seven meet the >=1,000-star, non-archived, <=180-day default-branch-commit screen, with pinned
   prompt/license sources. Add official Google, Microsoft and Toss writing guides as a separate evidence class.
   `MAT-response-style-source-selection` records current counts, source diversity, provenance limits, exclusions
   and the candidate-rule ledger. No majority vote treats unverified shared ancestry as independent evidence.

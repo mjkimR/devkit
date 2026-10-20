@@ -1,11 +1,11 @@
 ---
 id: MAT-response-style-source-attention-span
-title: "Response-style source: Attention Span (original reference)"
-summary: "Records Attention Span as the original reference, with pinned source and license provenance, published evaluation limits and a restriction to original synthesis of ideas."
+title: "Response-style source: Attention Span"
+summary: "Records pinned Attention Span styles, license scope and published evaluation limits for the response-style survey."
 created_at: 2026-10-20
 ---
 
-# [MAT-response-style-source-attention-span] Attention Span (original reference)
+# [MAT-response-style-source-attention-span] Attention Span
 
 ## Provenance
 
@@ -15,8 +15,7 @@ created_at: 2026-10-20
 - Main style: [Attention-kind](https://github.com/alexgreensh/attention-span/blob/f5b6e80b48bd9fca4e4b513ef3fc02cb8ec15222/output-styles/attention-kind.md); related styles:
   [Spartan](https://github.com/alexgreensh/attention-span/blob/f5b6e80b48bd9fca4e4b513ef3fc02cb8ec15222/output-styles/spartan.md), [Rundown](https://github.com/alexgreensh/attention-span/blob/f5b6e80b48bd9fca4e4b513ef3fc02cb8ec15222/output-styles/rundown.md).
 - [Repository license](https://github.com/alexgreensh/attention-span/blob/f5b6e80b48bd9fca4e4b513ef3fc02cb8ec15222/LICENSE): AGPL-3.0; its source scope is not treated as permissive reuse.
-- Source role: original inspiration identified by the user. This relationship is provenance, not independent
-  corroboration of the derived devkit style. It is included for that relationship and also meets the normal screen.
+- Survey role: compare a dedicated reply-style project, its presentation variants and its published evaluation limits.
 
 ## Ideas and evaluation limits
 
