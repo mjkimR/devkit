@@ -1,0 +1,23 @@
+kind: worker
+stage: integration-approval
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T01:13:04.857502Z'
+status: completed
+summary: Completed specify, build-verify, two independent code-review rounds, Living Spec reconciliation with independent verification, feedback and final report. All checks passed; awaiting Host integration approval.
+findings: []
+assumptions:
+- Host projection is emulated; absolute cwd, scoped approvals, reviewer read-only prompts and actual Git diff/state validation substitute native confinement.
+- Derived scope includes declared Source feedback links; payload boundaries remain authoritative and can replace it with --scope.
+unverified_areas:
+- Integration not performed; dev-integration remains for Host. Excluded link-repair ownership and general premise-drift follow-ups remain unchanged.
+checks:
+  tests: PASS 23 focused tests and 1073 affected tests
+  lint: PASS just lint-check spec; just check spec; cumulative rules; git diff --check
+  build: PASS live CLI smoke all seven inspection checks passed
+  review: PASS code round 2 and reconcile round 1; all four initial P1 findings resolved
+  scope: PASS supplied write boundaries; no base checkout changes; clean committed worktree
+diff_scope:
+  base: c2e72c23181751483cf5a6d836d2e3f42bd47315
+  head: 0d22d4b9e27c0ca6e8d03cf6f9b6bca139fbf0e0
+activity_effort: high

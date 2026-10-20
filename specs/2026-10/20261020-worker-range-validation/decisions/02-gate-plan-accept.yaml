@@ -1,0 +1,11 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: 'PROP-worker-range-validation: direction accepted: informational worker inspect
+  command deriving unit, heads, base and write scope from records, flags override;
+  Planning effort low in all three runs, no support roles; recommended dev_effort
+  high'
+by: user
+at: '2026-10-20T00:52:08.923966Z'

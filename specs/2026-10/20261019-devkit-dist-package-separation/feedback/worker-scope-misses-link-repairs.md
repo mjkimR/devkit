@@ -57,5 +57,5 @@ payload.md (development-worker): write scope = "the unit's directory, the tasks'
   paths the reconcile targets"
 ```
 
-- **Disposition**: Deferred as open feedback. `PROP-worker-range-validation` uses the Host-supplied scope;
+- **Disposition**: Deferred as open feedback. `SPEC-worker-range-validation` uses the Host-supplied scope;
   automatic scope derivation and link-repair ownership are outside its scope.

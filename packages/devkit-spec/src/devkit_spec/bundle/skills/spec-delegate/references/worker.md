@@ -21,6 +21,21 @@ Pass it as `diff_scope` base, and record the base checkout's `git -C <base> stat
 
 ## Validate the cumulative range
 
+Run `devkit spec worker inspect --format json` in the worker worktree to collect the existing range, declared-scope,
+cleanliness, committed-envelope, cumulative-rules and workflow checks. Inputs derive from committed records; pass
+`--base <accepted>` and `--head <returned>` when the Host's recorded range differs, and `--scope <prefix>` repeated
+(or `--scope-file <file>`, one prefix per line) for the complete payload scope when it differs from the documents.
+Overrides replace their input; scope overrides never union with the derived paths. `--unit` and `--base-checkout`
+replace those derived inputs too. The result names input and scope provenance, compared commits, changed paths,
+per-check pass/fail/not-run states and base-checkout observations. A not-run check needs its cause assessed; its
+absence is never evidence of a pass. Exit 0 means all executed checks passed, 1 a negative result, 2 unresolved
+required inputs or invalid invocation. Existing codes and actions remain in the check results.
+
+Inspection is evidence, not an approval gate or scope authority. The payload's boundaries and the Host's acceptance
+procedure below still apply; compare base-checkout observations to the saved pre-spawn state yourself. The helper
+writes nothing, repairs nothing and never expands scope. Pass its JSON result, or at least `base`, `head` and
+`changed_paths`, to read-only reviewers. Existing separate commands remain available for focused verification.
+
 From the last accepted head to the worker's *final HEAD* (`<returned>`: the `final_head` it returns, the commit that contains its `worker` envelope). The envelope's `diff_scope.head` is the head of the work it did, committed before the envelope, so it is never `<returned>`; it is evidence about the work, not the end of the range:
 
 - `git -C <worktree> merge-base --is-ancestor <accepted> <returned>` succeeds, the worktree's HEAD is `<returned>`, and the envelope's `diff_scope.head` is an ancestor of `<returned>` (`merge-base --is-ancestor <diff_scope.head> <returned>`).
