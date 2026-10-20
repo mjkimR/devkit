@@ -3,7 +3,7 @@ id: PROP-standalone-devkit-mcp-target
 title: Standalone MCP Living Spec targets
 summary: "Maps the standalone MCP runtime, registration and approval contracts to their Development reconciliation targets."
 status: draft
-proposal: PROP-standalone-devkit-mcp
+proposal: SPEC-standalone-devkit-mcp
 created_at: 2026-10-20
 targets:
   - file: docs/architecture/ARCH-05-1-containers.md

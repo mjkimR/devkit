@@ -57,7 +57,7 @@ not translated agent output. The preference grants no execution authority.
 `SPEC-local-config-execution-environment` owns overlay validation, precedence, worktree copies and render ledgers.
 This follow-up extends its local allowlist by exactly `presentation.language`. Shared config then local config
 selects each preference key. Copy and independent-worktree semantics remain its contract. Development starts after
-that implementation and `PROP-standalone-devkit-mcp` are integrated and their concrete APIs rechecked; Planning
+that implementation and `SPEC-standalone-devkit-mcp` are integrated and their concrete APIs rechecked; Planning
 does not read or rely on mutable sibling implementation. This proposal neither changes their accepted scope nor
 implements a second resolver.
 

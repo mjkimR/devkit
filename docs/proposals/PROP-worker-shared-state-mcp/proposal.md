@@ -39,7 +39,7 @@ This is a separate follow-up, not a dependency of the accepted read-access impro
 with scoped approvals remains a valid baseline if service overhead exceeds the benefit.
 
 
-The shared runtime and project registration foundation are owned by `PROP-standalone-devkit-mcp`, which consumes
+The shared runtime and project registration foundation are owned by `SPEC-standalone-devkit-mcp`, which consumes
 `SPEC-local-config-execution-environment`. This proposal owns coordination operations, authoritative storage,
 concurrency and lifecycle. Prefer extending that runtime if the MCP option is selected; do not duplicate transport
 extraction or registration work. Separate stdio processes still require an explicit shared-store design.
