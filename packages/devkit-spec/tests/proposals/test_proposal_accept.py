@@ -287,6 +287,20 @@ def test_any_failure_after_the_status_write_restores_it(tmp_path: Path, monkeypa
     assert proposal.read_bytes() == before and _plan_accepts(root, "small") == []
 
 
+def test_a_failure_while_collecting_the_reasons_still_restores(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    root = _repo(tmp_path)
+    proposal = _draft(root, swept=False)  # the gate does not open
+    before = proposal.read_bytes()
+
+    def fail(*args: object, **kwargs: object) -> list[str]:
+        raise OSError("unit unreadable")
+
+    monkeypatch.setattr(accept_module, "_not_open_details", fail)
+    with pytest.raises(OSError, match="unit unreadable"):
+        accept_proposal(root, "small", by="user", note="settled", direct=True)
+    assert proposal.read_bytes() == before and _plan_accepts(root, "small") == []
+
+
 def test_the_status_line_keeps_its_comment(tmp_path: Path) -> None:
     root = _repo(tmp_path)
     proposal = _draft(root)

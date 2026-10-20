@@ -182,21 +182,22 @@ def accept_proposal(
         _write_status(path, original, rel)
     try:
         decision = record_answer(workspace, unit, ACCEPT_GATE, "accept", note=recorded, by=by, lint=False)
-    except AdvisoryError as exc:
-        details = _not_open_details(workspace, unit, exc)
-        if form != REPAIR:
-            path.write_bytes(original)
+    except BaseException as exc:
+        # Any failure (the gate not open, a write error, an interruption, also while collecting the reasons below)
+        # leaves no status without its record: the original bytes are restored before anything is raised.
+        try:
+            details = _not_open_details(workspace, unit, exc) if isinstance(exc, AdvisoryError) else []
+        finally:
+            if form != REPAIR:
+                path.write_bytes(original)
+        if not isinstance(exc, AdvisoryError):
+            raise
         undone = "nothing was recorded" if form == REPAIR else "the status was restored"
         raise ProposalGateNotOpenError(
             f"{ACCEPT_GATE} of PROP-{slug} is not open; {undone}",
             *details,
             target_files=[rel],
         ) from exc
-    except BaseException:
-        # Any other failure (a write error, an interruption) leaves no status without its record.
-        if form != REPAIR:
-            path.write_bytes(original)
-        raise
     return AcceptResult(
         f"PROP-{slug}",
         rel,

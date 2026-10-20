@@ -44,7 +44,8 @@ The workflow is `sdd-<planning-depth>[-<task-kind>]`: `sdd-session-feature`, `sd
 `sdd-spec-bugfix` and `sdd-proposal` (handed off to `sdd-spec-<task_kind>`); a team review is `proposal` depth plus PR
 policy. Depth is raised by the Host (`[tool.spec] depth_escalation`), never by a worker, and never lowered except by a
 proposal's handoff or, on the user's explicit decision at pickup, the session reclassification of a queued draft.
-Unit depths write `spec.md`, `plan.md` and `tasks.md` before production code. Follow the workflow definition's stages, checks, gates and returns, never an ad-hoc sequence (`devkit workflow next --unit <dir>`).
+Unit depths write `spec.md`, `plan.md` and `tasks.md` before production code. Follow the workflow definition's
+stages, checks, gates and returns, never an ad-hoc sequence (`devkit workflow next --unit <dir>`).
 
 Read `devkit spec policy` before classification, gate and Git decisions. `plan-intent` (goal, scope, verification,
 expected behavior for a bugfix, `task-kind`, `planning-depth`) and `plan-accept` (a proposal's direction) are always

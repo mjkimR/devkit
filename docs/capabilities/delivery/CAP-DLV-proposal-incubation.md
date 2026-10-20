@@ -58,8 +58,8 @@ removes it.
    (`SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED`, `INTERACTION`: never record an acceptance unasked; without a `worker`
    envelope the user's acceptance is repaired with `accept --direct` on the base, with one the user decides on
    reverting the Planning merge). A single-file or unbound proposal, which carries no gate record, and one bound to
-   another workflow keep the status-only rule. A proposal marked `needs_decompose: true` is split in Backlog, never handed off
-   (`SPEC_PROPOSAL_NEEDS_DECOMPOSE`), and one proposal hands off to exactly one spec.
+   another workflow keep the status-only rule. A proposal marked `needs_decompose: true` is split in Backlog, never
+   handed off (`SPEC_PROPOSAL_NEEDS_DECOMPOSE`), and one proposal hands off to exactly one spec.
 3. **The follow-up workflow comes from `task_kind`; effort hints stay on the proposal**: `workflow` in `proposal.md` is devkit's
    binding of the proposal unit itself; `task_kind` (`feature` or `bugfix`, confirmed at `plan-accept`) selects the follow-up workflow `sdd-spec-<task_kind>` (any other value is `SPEC_PROPOSAL_INVALID`), while `planning_effort` and `dev_effort` (`low` | `medium` | `high`, scaffolded default `medium`) are non-authoritative activity-effort hints on `proposal.md`. `planning_effort` guides Planning and `dev_effort` is refined before `plan-accept` to guide Development (`[HANDOFF]` and `HandoffResult.dev_effort` expose it). After handoff the bound workflow carries the
    `task-kind` and `spec.md` has neither a `kind` field (`ADR-task-kind-and-planning-depth`) nor `planning_effort`/`dev_effort` fields (confirmed run effort is recorded on `worker-NN.yaml` envelopes).
@@ -173,8 +173,8 @@ resolution during reconciliation under `ADR-feedback-resolution-lifecycle`.
 
 Without handoff, rejection/decomposition return keeps feedback in place until authorized Host deletion; a draft
 deleted for a session reclassification (rule 13) preserves its open feedback the same way, in its deletion commit.
-Before any such deletion, the Host moves open files once to `specs/<current-month>/feedback/<today>-<name>.md` in the same
-commit, preserving observation dates; settled records remain in Git. Inspect all source/destination paths and IDs.
+Before any such deletion, the Host moves open files once to `specs/<current-month>/feedback/<today>-<name>.md` in
+the same commit, preserving observation dates; settled records remain in Git. Inspect all source/destination paths and IDs.
 Keep the source on invalid input, collision, failed move or unresolved live dependency. Update relative links;
 historical references to retired proposal/PADR/settled-feedback IDs use existing strikethrough syntax plus retrievable
 Git revision/path context. Current document-reference/link validation must pass before committing deletion.
