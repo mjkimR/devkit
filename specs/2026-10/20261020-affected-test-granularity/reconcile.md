@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-affected-test-granularity
 feature: SPEC-affected-test-granularity
-status: pending
+status: resolved
 targets:
   - file: docs/development/ci-cd.md
     resolution: modified
