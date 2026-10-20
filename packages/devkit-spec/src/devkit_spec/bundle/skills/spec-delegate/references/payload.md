@@ -9,6 +9,7 @@ A reviewer round at `high` (the `spec` skill's `references/review-loop.md`) is a
 | `task_goal` | One goal for this call |
 | `relevant_files` | Files, acceptance criteria, non-goals and ADRs to read; starting points, not a dump |
 | `allowed_boundaries` | Read scope and write scope for this task, plus explicitly denied paths; repository-declared paths, not generic globs |
+| `changed_paths` | Actual paths changed between the compared commits, from `devkit spec worker inspect --format json` (or `git diff --no-renames --name-only <base> <head>` before a worker envelope exists); pass to both review roles |
 | `diff_scope` | Base ref and head of the change under review (required for `code-reviewer`, `reconcile-reviewer` and the workers) |
 | `expected_output_format` | Summary, comparison table, review envelope, docs draft diff, etc. |
 

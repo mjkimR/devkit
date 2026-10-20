@@ -833,3 +833,88 @@ def test_handoff_stage_off_cannot_replace_required_plan_approvals(accepted_hando
     git(repo, "commit", "-q", "-m", "disable proposal gate stages")
     with pytest.raises(HandoffNotReadyError):
         prepare(repo, "idea")
+
+
+def test_readiness_on_the_result_declares_target_bound_codes_and_reads_the_merged_tree(
+    tmp_path: Path, synced_template: Path
+) -> None:
+    from dataclasses import replace
+
+    from devkit.worktree import build_result
+
+    from devkit_spec.integration import DISCLOSURE, TARGET_BOUND, _build_snapshot
+
+    repo = _make_synced_repo(tmp_path, synced_template)
+    wt = _start_worktree(repo, "dev-feat", tmp_path / "wt-feat")
+    unit = _complete_feature_spec(wt, "feat")
+    plan = plan_finish(locate(repo), "dev-feat")
+    context = IntegrationContext(plan, Task(kind="unit", id="SPEC-feat", unit=unit))
+    approved = check(context)
+    codes = {item.code: item.value for item in approved.evidence}
+    assert approved.reasons == () and approved.target_bound == TARGET_BOUND == ("TARGET_SHA", "RESULT_SHA")
+    assert approved.disclosure == DISCLOSURE and approved.result_sha is None
+    assert "RESULT_SHA" not in codes and len(codes["SPEC_POLICY"]) == 64
+
+    def build(target_change: tuple[str, str]) -> IntegrationContext:
+        write(repo, *target_change)
+        git(repo, "add", "-A")
+        git(repo, "commit", "-q", "-m", f"target: {target_change[0]}")
+        moved = git(repo, "rev-parse", "HEAD")
+        result = build_result(
+            repo,
+            branch="dev-feat",
+            target_branch="main",
+            target=moved,
+            source=plan.source_sha,
+            method="no-ff",
+            advance=True,
+        )
+        return replace(context, finish=replace(plan, target_sha=moved), result_sha=result)
+
+    clean = build(("docs/other.md", "unrelated\n"))
+    built = check(clean)
+    assert built.reasons == () and built.result_sha == clean.result_sha
+    assert {item.code: item.value for item in built.evidence}["RESULT_SHA"] == clean.result_sha
+    assert built.comparable() == approved.comparable()  # only target-bound evidence changed
+    assert clean.result_sha is not None
+    snapshot = _build_snapshot(repo, plan.source_sha, clean.finish.target_sha, clean.result_sha)
+    assert snapshot.base == clean.finish.target_sha
+    assert snapshot.tree == git(repo, "rev-parse", f"{clean.result_sha}^{{tree}}")
+    assert "docs/other.md" not in snapshot.changed and "src/app.py" in snapshot.changed
+
+    in_unit = check(build((f"{unit}/note.md", "target note\n")))
+    assert any(f"the target changed {unit}" in reason for reason in in_unit.reasons)
+
+
+def test_spec_policy_evidence_changes_with_the_target_tool_spec(tmp_path: Path, synced_template: Path) -> None:
+    from dataclasses import replace
+
+    from devkit.worktree import build_result
+
+    repo = _make_synced_repo(tmp_path, synced_template)
+    wt = _start_worktree(repo, "dev-feat", tmp_path / "wt-feat")
+    unit = _complete_feature_spec(wt, "feat")
+    plan = plan_finish(locate(repo), "dev-feat")
+    context = IntegrationContext(plan, Task(kind="unit", id="SPEC-feat", unit=unit))
+    before = {item.code: item.value for item in check(context).evidence}["SPEC_POLICY"]
+    config = repo / ".devkit/config.toml"
+    text = config.read_text(encoding="utf-8")
+    text = (
+        text.replace("[tool.spec]\n", '[tool.spec]\nworktree = "auto"\n', 1)
+        if "[tool.spec]\n" in text
+        else (text + '\n[tool.spec]\nworktree = "auto"\n')
+    )
+    config.write_text(text, encoding="utf-8")
+    git(repo, "commit", "-q", "-am", "change tool.spec")
+    moved = git(repo, "rev-parse", "HEAD")
+    result = build_result(
+        repo,
+        branch="dev-feat",
+        target_branch="main",
+        target=moved,
+        source=plan.source_sha,
+        method="no-ff",
+        advance=True,
+    )
+    after = check(replace(context, finish=replace(plan, target_sha=moved), result_sha=result))
+    assert {item.code: item.value for item in after.evidence}["SPEC_POLICY"] != before

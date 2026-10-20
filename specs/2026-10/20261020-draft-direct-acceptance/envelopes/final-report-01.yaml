@@ -1,0 +1,16 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T23:36:34.122287Z'
+status: completed
+summary: 'Direct acceptance implemented: devkit spec proposal accept (planning, --direct, --check, repair), the sdd-proposal handoff guard and carried note, the not-approved directive, guidance for direct acceptance and session reclassification, and the Living Spec reconciled (resolved). Code review closed at round 4 with no open finding; reconcile closed at round 3 (self-verified minor fix).'
+findings: []
+checks:
+  tests: PASS just test-affected 1038 passed (devkit-spec plus devkit docs/codes/workflow library)
+  build: PASS just smoke
+  lint: PASS just lint-check devkit-spec, just check devkit-spec (pyright 0 errors), devkit rules check --ci --base b8c3a77 errors=0
+diff_scope:
+  base: b8c3a775b53ad28377f774f894a2a2bbff5f575d
+  head: 3176918fc2d4e3b8d511640b3443953985837f60
+activity_effort: high

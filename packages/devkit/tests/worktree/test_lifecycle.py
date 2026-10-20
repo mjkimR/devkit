@@ -618,12 +618,23 @@ def test_a_push_rejected_by_a_moved_upstream_has_its_own_code(repo: Path, tmp_pa
     git(repo, "remote", "set-url", "--push", "origin", str(remote))
     created = start(locate(repo), "dev-demo")
     commit(created.path, "work.txt")
+    commit(created.path, "more.txt")
+    unit = git(repo, "rev-list", "main..dev-demo").split()
     result = finish(locate(repo), "dev-demo", merge=True, pull_request="auto")
     assert (result.merged, result.push, result.removed, result.branch_deleted) == (True, "rejected", True, True)
     [warning] = result.notices
     assert warning.code == "WORKTREE_PUSH_REJECTED" and warning.mode is ActionMode.CONTINUE
     push = f"git -C {repo} push origin refs/heads/main:refs/heads/main"
-    assert warning.fix == f"git -C {repo} pull --rebase origin refs/heads/main && {push}"
+    merge = "merge --no-ff -m 'chore(merge): integrate origin/main into main' FETCH_HEAD"
+    assert warning.fix == f"git -C {repo} fetch origin refs/heads/main && git -C {repo} {merge} && {push}"
+    assert warning.fix is not None and "rebase" not in warning.fix
+    # The fix keeps every SHA of the unit an ancestor of the base, unlike git pull --rebase (or --rebase=merges).
+    git(repo, "remote", "set-url", "origin", str(remote))
+    env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+    subprocess.run(warning.fix, shell=True, check=True, capture_output=True, env=env)
+    history = git(repo, "rev-list", "HEAD").split()
+    assert all(sha in history for sha in unit) and git(remote, "rev-parse", "main") == git(repo, "rev-parse", "HEAD")
+    assert git(repo, "log", "-1", "--format=%s") == "chore(merge): integrate origin/main into main"
 
 
 def test_finish_refuses_before_the_merge_when_the_branch_upstream_lacks_its_commits(repo: Path, tmp_path: Path) -> None:

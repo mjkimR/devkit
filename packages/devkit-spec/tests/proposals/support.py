@@ -129,3 +129,22 @@ def accept(proposal: Path, extra: str = "") -> None:
 
 def spec_dir(root: Path, slug: str) -> Path:
     return root / "specs" / MONTH / f"{STAMP}-{slug}"
+
+
+def record_acceptance(proposal: Path, note: str = "") -> Path:
+    """Record the user's accepted ``gate:plan-accept`` in the bound proposal unit of ``proposal`` (proposal.md), the
+    record a bound proposal's handoff requires."""
+    record = proposal.parent / "decisions" / "90-gate-plan-accept.yaml"
+    record.parent.mkdir(parents=True, exist_ok=True)
+    lines = [
+        "request: gate:plan-accept",
+        "kind: approve",
+        "action: accept",
+        "workflow: sdd-proposal",
+        "stage: direction-handoff",
+        *([f"note: {note}"] if note else []),
+        "by: user",
+        "at: '2026-10-13T00:00:00Z'",
+    ]
+    record.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return record

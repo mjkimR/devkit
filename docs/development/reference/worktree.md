@@ -8,7 +8,7 @@ One activity branch (`plan-<slug>`, `dev-<slug>`) per task activity, with its ow
 uv run devkit worktree start dev-login          # in the base checkout: create ../<repo>-wt-dev-login on branch dev-login
 cd ../<repo>-wt-dev-login                        # work and commit there
 uv run devkit worktree finish dev-login          # in the base, after the pull request merged
-uv run devkit worktree finish dev-login --merge  # or merge locally (refused under [worktree] pull_request = "required")
+uv run devkit worktree finish dev-login --merge  # or land it locally as a merge commit (refused under [worktree] pull_request = "required")
 uv run devkit worktree finish dev-login --discard  # close: drop the unmerged branch and its worktree
 uv run devkit worktree start dev-login --no-worktree   # or: the branch in this checkout, no separate directory
 uv run devkit worktree start dev-login --existing-branch origin/dev-login --unit docs/specs/login  # continue it
@@ -37,7 +37,7 @@ Every command takes `-w/--workspace-root` (any directory in the checkout; defaul
 
 ## Configuration
 
-`[worktree]` in `.devkit/config.toml`: `pull_request` (`"auto"` or `"required"`, default `"auto"`), `delete_branch` (default `true`), `setup` (a shell command, default none), `stale_after` (`"<N>d"` or `"<N>w"`, default `"14d"`). See `CAP-WT-task-worktrees`.
+`[worktree]` in `.devkit/config.toml`: `pull_request` (`"auto"` or `"required"`, default `"auto"`), `delete_branch` (default `true`), `merge` (`"no-ff"` or `"ff-only"`, default `"no-ff"`; `"ff-only"` in the base's or the branch's policy wins), `setup` (a shell command, default none), `stale_after` (`"<N>d"` or `"<N>w"`, default `"14d"`). See `CAP-WT-task-worktrees`.
 
 ## Extension points
 
@@ -75,14 +75,17 @@ Every command takes `-w/--workspace-root` (any directory in the checkout; defaul
 | `WORKTREE_BASE_DIRTY` | `ERROR` (`INTERACTION`) | `BaseDirtyError` | `--merge` with uncommitted changes in the base. |
 | `WORKTREE_BASE_BEHIND` | `ERROR` (`INTERACTION`) | `BaseBehindError` | `--merge`: the fetched upstream of the base branch has commits the base lacks; `[FIX]` is `git pull --ff-only`. Nothing changed. |
 | `WORKTREE_BRANCH_UNPUSHED` | `ERROR` (`INTERACTION`) | `BranchUnpushedError` | The branch's upstream lacks its commits, so `git branch -d` would refuse it; `[FIX]` pushes it. Nothing changed. |
-| `WORKTREE_MERGE_NOT_FF` | `ERROR` (`INTERACTION`) | `MergeNotFastForwardError` | The base cannot be fast-forwarded onto the branch. |
+| `WORKTREE_MERGE_NOT_FF` | `ERROR` (`INTERACTION`) | `MergeNotFastForwardError` | The branch does not contain the base HEAD (`finish --merge`, `ff-only`, a prepared integration); `[FIX]` merges the target into the branch, never a rebase. Nothing changed. |
+| `WORKTREE_MERGE_CONFLICT` | `ERROR` (`INTERACTION`) | `MergeConflictError` | An approved integration's merge of an advanced target conflicts with the branch; `[FIX]` merges the target into the branch. Nothing changed. |
+| `WORKTREE_GIT_UNSUPPORTED` | `ERROR` (`INTERACTION`) | `GitUnsupportedError` | Merging an advanced target needs `git merge-tree --write-tree` (Git 2.38 or later). Nothing changed. |
+| `WORKTREE_COMMIT_FAILED` | `ERROR` (`INTERACTION`) | `CommitFailedError` | No committer identity, or `git commit-tree` of the merge commit failed or exceeded 30 seconds (a signing program). Nothing changed. |
 | `WORKTREE_UNMERGED` | `ERROR` (`INTERACTION`) | `UnmergedError` | Without `--merge`, the branch (with a worktree, or a marked one without) is not merged into the base HEAD. |
 | `WORKTREE_DIRTY` | `ERROR` (`INTERACTION`) | `DirtyError` | The worktree has uncommitted or untracked changes. |
 | `WORKTREE_ADD_FAILED` | `ERROR` (`INTERACTION`) | `AddFailedError` | `start`: `git worktree add` failed or timed out (1800 seconds), or recording the branch's marker failed; what it created was removed, or is listed as `left:` details with the removing commands as `[FIX]` (a branch that no longer points at the base HEAD it was created from is never deleted, only listed). Git runs in a session of its own, so a timeout also kills its hooks and filters. |
 | `WORKTREE_REMOVE_FAILED` | `ERROR` (`INTERACTION`) | `RemoveFailedError` | `git worktree remove` failed for another reason or timed out (1800 seconds; `[FIX]` removes the partly deleted worktree); carries the partial result, a rerun resumes. |
 | `WORKTREE_BRANCH_DELETE_FAILED` | `ERROR` (`INTERACTION`) | `BranchDeleteFailedError` | `git branch -d` failed after the removal; carries the partial result, a rerun deletes the branch. |
 | `WORKTREE_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `WorktreeConfigError` | A malformed `[worktree]` table. |
-| `WORKTREE_PUSH_REJECTED` | `WARNING` | `PushRejectedWarning` | The upstream moved on and rejected the push of the merged base; `[FIX]` integrates it (`git pull --rebase`), then pushes. |
+| `WORKTREE_PUSH_REJECTED` | `WARNING` | `PushRejectedWarning` | The upstream moved on and rejected the push of the merged base; `[FIX]` fetches it and merges it with `git merge --no-ff -m "chore(merge): integrate <remote>/<ref> into <base>" FETCH_HEAD` (keeping the task's SHAs, unlike `git pull --rebase`), then pushes. |
 | `POST_FINISH_EXTENSION_FAILED` | `WARNING` | `PostFinishExtensionFailedNotice` | A `devkit.post_finish` extension raised an exception other than an advisory, or returned something other than a list; the finish succeeded. |
 | `POST_FINISH_NOTICE` | `NOTICE` | `PostFinishNotice` | A line a `devkit.post_finish` extension returned (`brief`). |
 | `WORKTREE_PUSH_FAILED` | `WARNING` | `PushFailedWarning` | The merged base branch did not reach its upstream for another reason; `[FIX]` is the push. |
@@ -119,7 +122,9 @@ stale = stale_branches(position, config.stale_after)                  # StaleRes
 ## Local-only integration
 
 `devkit worktree finish BRANCH --merge --local-only` excludes fetch and push and reports `push=excluded`.
-The public `finish` API takes `network="forbid"` and optional `before_step(step, result)`. `plan_finish` returns an
+The public `finish` API takes `network="forbid"`, `merge_method` and optional `before_step(step, result)`; the CLI's
+`--merge` takes the Git common directory's integration lock (`LOCK_HELD` while another integration holds it).
+`build_result` builds the result commit in the object store and `fast_forward` moves the base onto it. `plan_finish` returns an
 immutable `FinishPlan`; `validate_finish` rechecks its identities allowing only declared completed transitions.
 `run_finish_guards` and `run_post_finish` are public extension runners. Approval and scoped partial recovery belong
 to `CAP-INT-mcp-services`; these low-level APIs retain their caller-owned authority contract.

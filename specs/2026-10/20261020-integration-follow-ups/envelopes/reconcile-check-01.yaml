@@ -1,0 +1,25 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T23:46:15.694055Z'
+status: completed
+summary: round 1; independent reconcile-reviewer verified 8/8 targets against the implementation and AC-01..AC-17; no stale statements found elsewhere in docs/; AC-17 cleanup criterion has no Living Spec home (P2); ADR lock-wait wording reads 30 s against the 20 s implementation (P3)
+findings:
+- issue: AC-17 changed devkit-spec's scoped cleanup (post-merge when HEAD contains context.result_sha and the worktree is gone) and cleanup extensions now receive the execution context, but neither CAP-COLL-work-scope-registry item 9 nor CAP-INT section 4 says so, and reconcile.md has no CAP-COLL target
+  evidence: docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md:67
+  failure_condition: a reader implementing or reviewing a ScopedCleanup cannot learn the post-merge criterion or that result_sha is set at cleanup time, and could reintroduce an exact-HEAD check
+  suggested_action: rewrite CAP-COLL item 9 in place, add a sentence to CAP-INT section 4 on the execution context, add CAP-COLL as a modified target
+  resolution: open
+  severity: P2
+- issue: ADR-target-advance-readiness gives the approving call's lock wait as a 30-second bound while the implementation and CAP-INT use 20 seconds
+  evidence: docs/decisions/2026-10/20261020-target-advance-readiness.md:54
+  failure_condition: a reader sees drift and sets LOCK_WAIT to 30, removing the margin under Codex's 60-second tool timeout
+  suggested_action: say in CAP-INT section 5 that the 20-second wait is within the ADR's 30-second upper bound, or adjust the ADR wording
+  resolution: open
+  severity: P3
+checks:
+  targets: PASS 8/8 match implementation and contract
+diff_scope:
+  base: ''
+  head: 007c70f3263baf250b60a81672dcad76567fe10b

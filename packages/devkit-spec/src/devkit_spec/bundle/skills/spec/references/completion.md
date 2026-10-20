@@ -9,7 +9,7 @@ Every task MUST compare the final diff, the requirements, the check results and 
 Read `devkit spec policy` before deciding gate or Git actions:
 
 - `[GATE_POLICY: dev-integration policy=ask]`: present the verified result, then obtain the user's OK:
-  - Local MCP integration: call `integration_integrate` directly. Its native confirmation, bound to the exact `(source_sha, target_sha)` pair and merge/cleanup scope, is the user's OK for this gate: ask no separate chat approval and do not require `integration_prepare` first. A waiting `gate:dev-integration` permits this call; do not assert `--given dev-integration` before native acceptance.
+  - Local MCP integration: call `integration_integrate` directly. Its native confirmation, bound to the verified source commit, the confirmation target and (within that call) its descendants, and the merge/cleanup scope, is the user's OK for this gate: ask no separate chat approval and do not require `integration_prepare` first. A waiting `gate:dev-integration` permits this call; do not assert `--given dev-integration` before native acceptance.
   - CLI fallback: a conversational OK unless already authorized. A PR: its ready state, to which a runner binds the gate.
   - The OK is never written to a file (`ADR-integration-approval-asserted`): for a spec bundle pass `--given dev-integration` to each `devkit workflow next --unit <dir>` after it, and name the OK (`mcp-elicitation` when confirmed through `integration_integrate`) as the authority in the integration report.
   - An objection takes the stage's return path (`devkit workflow return --unit <dir> --to review-refine --note "..."`); an objection about direction is a close ([classification](classification.md) §4).

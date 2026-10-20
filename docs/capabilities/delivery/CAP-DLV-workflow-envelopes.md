@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-workflow-envelopes
 title: "Workflow Envelopes"
-summary: "Stage envelopes recording findings with optional severity, questions, problems, and verification evidence, with CLI scope revisions verified in Git workspaces."
+summary: "Stage envelopes recording findings with optional severity, questions, answers with settled assumptions, problems, and verification evidence; reverify closes review and challenger rounds, and CLI scope revisions are verified in Git workspaces."
 area: delivery
 status: active
 entrypoints:
@@ -41,11 +41,11 @@ unverified_areas: ["what was not checked"]        # optional
 checks:                      # free-form keys; a value starting with PASS satisfies envelope-check-pass
   tests: "PASS 14/14"
 diff_scope: { base: "<base-sha>", head: "<head-sha>" }
-review: review-01.yaml       # reverify only: the review round it closes
+review: review-01.yaml       # reverify only: the review-NN.yaml or challenger-NN.yaml round it closes
 ```
 
 - `kind` and `status` are required; `kind` must match the file name and `status` must be `completed`, `needs_input` or `failed`.
-- A `reverify` envelope must name the `review-NN.yaml` it closes. The deciding review state is the latest review round, or the last reverify that references it. Envelopes a later `devkit workflow return` re-opened are left out first (`CAP-DLV-human-interaction`).
+- A `reverify` envelope must name the `review-NN.yaml` or `challenger-NN.yaml` round it closes; any other value makes it malformed (`ADR-reverify-closes-challenger-rounds`). The deciding state of `review` and of `challenger` is the latest round of that kind, or the last reverify that references it, so a reverify of a challenger round never counts for the review state; every other kind is decided by its latest envelope. Envelopes a later `devkit workflow return` re-opened are left out first (`CAP-DLV-human-interaction`).
 - `workflow` (a workflow id) and `segment` (a non-negative integer) scope the envelope to one `CAP-DLV-workflow-orchestration`, like decision records: the checks of a workflow count only envelopes whose `workflow` is that workflow and whose `segment` is the number of entries in the anchor's `workflow_history` (`0` before the first handoff). After a handoff the next workflow therefore does not see the previous segment's reviews, and a workflow re-entered later (`a` to `b` to `a`) does not see those of its earlier segment. An envelope without `workflow` counts in every segment; one with `workflow` but no `segment` counts in every segment of that workflow. A `workflow` that is not an id, or a `segment` that is not a non-negative integer, makes the envelope malformed.
 - `completed` with no findings is a valid pass. `needs_input` and `failed` never satisfy a check.
 - `assumptions` and `unverified_areas` are lists of strings; `checks` is a mapping; `findings` is a list of mappings with only the finding keys shown above. `activity_effort`, on any kind, is `low`, `medium` or `high`: the effort the run applied. The kinds of delegated work carry the fields of [section 1.1](#11-questions-answers-problems-and-resolutions); on any other kind those fields make the envelope malformed. Other top-level keys are ignored.
@@ -54,7 +54,7 @@ review: review-01.yaml       # reverify only: the review round it closes
 
 ### 1.1 Questions, Answers, Problems and Resolutions
 
-A run of delegated work leaves one `worker` envelope: what it did, the questions it puts to a person (`questions`) and an execution problem it stopped on (`problem`). What another actor does later is a separate envelope that references that run: an `answer` records the rewritten answers to its questions, a `resolution` closes its problem. A question waiting for answers and an execution problem are different states: a question is answered, a problem is resolved, and neither is inferred from `needs_input` alone.
+A run of delegated work leaves one `worker` envelope: what it did, the questions it puts to a person (`questions`) and an execution problem it stopped on (`problem`). What another actor does later is a separate envelope that references that run: an `answer` records the rewritten answers to its questions and the assumptions of the run the user settled, a `resolution` closes its problem. A question waiting for answers and an execution problem are different states: a question is answered, a problem is resolved, and neither is inferred from `needs_input` alone.
 
 ```yaml
 # envelopes/worker-01.yaml: one run that stopped to ask, gathering its questions in one round
@@ -85,6 +85,9 @@ answers:
     choice: a                # one of its options, or null for an answer outside them
     decision: "Keep TOML and only tidy key names"   # one sentence
     constraints: ["Old keys only warn for one release"]   # optional: constraints the answer adds
+settles:                     # optional: assumptions of answers_to the user settled
+  - assumption: 2            # 1-based position in the assumptions of answers_to, each at most once
+    decision: "Keep the TOML layout"   # one sentence
 ```
 
 ```yaml
@@ -111,10 +114,10 @@ resolves: worker-02.yaml     # the run whose problem it resolves
 | Kind | Fields | Rules |
 | --- | --- | --- |
 | `worker` | `questions`, `problem` (both optional; no other kind carries them) | One per run, naming the `stage` `devkit workflow next` names when it is written, after the run's other records (a worker envelope without one is malformed; `envelope worker` requires `--stage`). `needs_input` asks questions or reports a problem (an empty one is malformed). With `questions` the status is `needs_input`; each question is shaped like a `choose` request (`CAP-DLV-human-interaction`). `failed` requires `problem`; `completed` refuses it. A run that both asks and hit a problem records both, with status `needs_input`. |
-| `answer` | `answers_to`, `answers` (both required) | Status `completed`. `answers_to` names a well-formed `worker-NN.yaml` of the unit that has questions; each answer names one of them and, unless `choice` is `null`, one of that question's options. |
+| `answer` | `answers_to` (required), `answers`, `settles` (at least one of the two) | Status `completed`. `answers_to` names a well-formed `worker-NN.yaml` of the unit, with questions when `answers` is not empty; each answer names one of them and, unless `choice` is `null`, one of that question's options. Each `settles` item names a position of that envelope's `assumptions` (`ADR-answer-envelopes-settle-worker-assumptions`); settles hold and release nothing. |
 | `resolution` | `resolves` (required) | Status `completed` and a non-empty `summary`. `resolves` names a well-formed `worker-NN.yaml` of the unit that carries a `problem`. |
 
-`problem` has `cause` and `recovery` (required) and `attempts` (a list of strings). An answer's `choice: null` answers outside the options; it is also how whoever ends a Planning (a rejection, a return for decomposition) closes the questions still open, with the reason as the decision. A question's `allow_note` is a hint for the person's input, not a restriction on answers. An answer or resolution whose reference names no fitting envelope is malformed: it answers or resolves nothing. References are file names in the same `envelopes/` directory, checked over every envelope of the unit whatever its segment.
+`problem` has `cause` and `recovery` (required) and `attempts` (a list of strings). A `settles` item has exactly `assumption` (an integer from `1`) and `decision` (a non-empty string); a repeated position, another key or a position beyond the referenced envelope's `assumptions` makes the answer malformed, so its answers stop counting. An answer's `choice: null` answers outside the options; it is also how whoever ends a Planning (a rejection, a return for decomposition) closes the questions still open, with the reason as the decision. A question's `allow_note` is a hint for the person's input, not a restriction on answers. An answer or resolution whose reference names no fitting envelope is malformed: it answers or resolves nothing. References are file names in the same `envelopes/` directory, checked over every envelope of the unit whatever its segment.
 
 ## 2. Authoring
 
@@ -128,12 +131,13 @@ Five kinds have a command of their own that takes the options of their fields: `
 | `--check NAME=VERDICT[ detail]` | Repeatable; `VERDICT` is `PASS`, `FAIL` or `SKIP` and may carry a detail such as `PASS 14/14`. |
 | `--base REV`, `--head REV` | `diff_scope`; `--head` is what `revision-ancestor` compares and must be a hexadecimal commit id (`--head $(git rev-parse HEAD)`). In Git workspaces each supplied revision must resolve to a commit and is stored as its full commit ID. Unknown and non-commit revisions are refused with `ENVELOPE_FLAG_INVALID` (exit `2`) before writing an envelope. |
 | `--effort low\|medium\|high` | `activity_effort`. |
-| `--findings-file PATH` (or `-` for stdin) | `new`, `worker`, `review` and `reverify`: a YAML list of findings with `issue` and `evidence` (required) and optionally `failure_condition`, `suggested_action`, `severity` (a non-empty string label), `resolution` (default `open`) and `waiver`; other keys are refused. A `review` records findings as found, so a resolution other than `open` is refused. |
-| `--from latest` (or a review/reverify file) | `reverify` only, and required by its contract: carries the findings of the round being closed and sets its `review`. `latest` is the deciding review state among the envelopes of the current segment. |
+| `--findings-file PATH` (or `-` for stdin) | `new`, `worker`, `review` and `reverify`: a YAML list of findings with `issue` and `evidence` (required) and optionally `failure_condition`, `suggested_action`, `severity` (a non-empty string label), `resolution` (default `open`) and `waiver`; other keys are refused. A `review` or `challenger` records findings as found, so a resolution other than `open` is refused (`ENVELOPE_FLAG_INVALID`); its round is closed by a `reverify`. |
+| `--from latest` (or a review, challenger or reverify file) | `reverify` only, and required by its contract: carries the findings of the round being closed and sets its `review`. `latest` is the deciding review state among the envelopes of the current segment; without a review round it is `ENVELOPE_FROM_INVALID`, with a `[FIX]` naming `--from envelopes/challenger-NN.yaml`. A `challenger-NN.yaml` (or a reverify closing one) closes that challenger round; a file of any other kind is `ENVELOPE_FROM_INVALID`. |
 | `--resolve N` (repeatable) or `--resolve all` | `reverify` only: marks carried finding `N` (1-based) resolved; `all` resolves every open one. A number outside the carried findings is `ENVELOPE_FLAG_INVALID`. |
 | `--waive N=REASON` (repeatable) | `reverify` only: marks carried finding `N` waived and records the reason as its `waiver`; `suggested_action` is kept. |
 | `--questions-file PATH` (or `-`) | `worker`: a YAML list of the questions the run asks ([section 1.1](#11-questions-answers-problems-and-resolutions)). A malformed list is `ENVELOPE_ITEMS_INVALID`. |
 | `--answers-to FILE`, `--answers-file PATH` (or `-`) | `answer`: the worker envelope whose questions are answered (a file name, or a path whose last part is one) and a YAML list of answers. A malformed list is `ENVELOPE_ITEMS_INVALID`; a reference that does not fit is `ENVELOPE_REFERENCE_INVALID`. |
+| `--settle N=DECISION` (repeatable) | `answer`: a `settles` item for assumption `N` (1-based) of the `--answers-to` envelope; with it `--answers-file` may be omitted. A value that is not `N=DECISION` with `N` from `1`, or a repeated `N`, is `ENVELOPE_FLAG_INVALID`; a position beyond that envelope's assumptions is `ENVELOPE_REFERENCE_INVALID`. |
 | `--problem CAUSE`, `--tried TEXT` (repeatable), `--recovery TEXT` | `worker`: an execution problem; `--tried` and `--recovery` need `--problem`. |
 | `--resolves FILE` | `resolution`: the worker envelope whose problem it resolves (`ENVELOPE_REFERENCE_INVALID` when it carries none). |
 
@@ -141,11 +145,11 @@ The status defaults to `needs_input` with `--questions-file`, `failed` with only
 
 Revision resolution applies to CLI authoring commands, including kind-specific commands. Outside Git, authoring retains supplied scope values and the hexadecimal head syntax check. Pure library composition and historical loading remain independent of repository history; they do not resolve revisions.
 
-Findings from `--findings-file` are appended after any carried findings. The written key order is `kind, stage, workflow, segment, created_at, status, review, summary, findings, assumptions, unverified_areas, checks, diff_scope, questions, answers_to, answers, problem, resolves, activity_effort`, omitting empty optional keys. The kind must match `[a-z][a-z0-9-]*` (`ENVELOPE_KIND_INVALID`). The sequence follows the highest `<kind>-NN` file present, malformed files included. The confirmation line is `[ENVELOPE: <file> kind=K seq=NN status=S open_findings=N]`; `--format json` emits `{"file", "kind", "seq", "status", "open_findings"}`.
+Findings from `--findings-file` are appended after any carried findings. The written key order is `kind, stage, workflow, segment, created_at, status, review, summary, findings, assumptions, unverified_areas, checks, diff_scope, questions, answers_to, answers, settles, problem, resolves, activity_effort`, omitting empty optional keys. The kind must match `[a-z][a-z0-9-]*` (`ENVELOPE_KIND_INVALID`). The sequence follows the highest `<kind>-NN` file present, malformed files included. The confirmation line is `[ENVELOPE: <file> kind=K seq=NN status=S open_findings=N]`; `--format json` emits `{"file", "kind", "seq", "status", "open_findings"}`.
 
 ## 3. Checking
 
-`devkit workflow envelope check --unit DIR` loads every file under `envelopes/`, prints one `[ENVELOPE: file kind seq status open_findings]` line per valid file (ending with `problem=yes` when it carries a problem), the hold of [section 4](#4-hold-blocked-and-waiting-for-answers) as `[BLOCKED: ...]` and `[PENDING_QUESTION: ...]` lines, one `[ENVELOPE_ERROR: file "reason"]` per malformed one, then `[OK: N envelopes]` when nothing is malformed. The hold does not change the exit code. Each malformed file is also reported on stderr as an `ENVELOPE_INVALID` advisory whose `[TARGET]` is the file, and the command exits `1`. `envelope check` lists every envelope whatever its segment; each JSON entry carries `workflow` and `segment` (`null` when absent). `--format json` emits `{"envelopes": [...], "blocked", "problems", "pending_questions", "errors": [...]}` as the only output, each error the `to_dict()` of the advisory (`code`, `message`, `exit_code`, `advisory` with the file as `target_files`, `file`); nothing goes to stderr.
+`devkit workflow envelope check --unit DIR` loads every file under `envelopes/`, prints one `[ENVELOPE: file kind seq status open_findings]` line per valid file (ending with `problem=yes` when it carries a problem, and with `review=<file>` on a reverify, naming the round it closes), the hold of [section 4](#4-hold-blocked-and-waiting-for-answers) as `[BLOCKED: ...]` and `[PENDING_QUESTION: ...]` lines, one `[ENVELOPE_ERROR: file "reason"]` per malformed one, then `[OK: N envelopes]` when nothing is malformed. The hold does not change the exit code. Each malformed file is also reported on stderr as an `ENVELOPE_INVALID` advisory whose `[TARGET]` is the file, and the command exits `1`. `envelope check` lists every envelope whatever its segment; each JSON entry carries `workflow` and `segment` (`null` when absent), `review` (`null` outside a reverify) and `settles` (a list). `--format json` emits `{"envelopes": [...], "blocked", "problems", "pending_questions", "errors": [...]}` as the only output, each error the `to_dict()` of the advisory (`code`, `message`, `exit_code`, `advisory` with the file as `target_files`, `file`); nothing goes to stderr.
 
 ## 4. Hold: Blocked and Waiting for Answers
 

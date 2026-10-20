@@ -8,8 +8,10 @@ from devkit.integration.errors import (
     IntegrationError,
     ProviderError,
     ReadinessError,
+    ReceiptConflictError,
     RuntimeLocationError,
     StaleRequestError,
+    TargetMovedError,
 )
 from devkit.integration.models import (
     CleanupResult,
@@ -44,8 +46,10 @@ __all__ = [
     "Readiness",
     "ReadinessError",
     "ReadinessProvider",
+    "ReceiptConflictError",
     "RuntimeLocationError",
     "ScopedCleanup",
     "StaleRequestError",
+    "TargetMovedError",
     "Task",
 ]

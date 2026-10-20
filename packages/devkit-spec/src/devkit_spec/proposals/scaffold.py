@@ -476,8 +476,9 @@ size: M                               # S | M | L | XL
 <!--
 - Preliminary decisions: devkit spec proposal padr {slug} "<title>" --summary "<what it decides>" records a PADR in decisions/.
 - Research: collect benchmarks and references in materials/.
-- On acceptance (plan-accept): record gate:plan-accept, set status: accepted and merge the Planning branch; Development
-  starts with devkit spec proposal handoff {slug}.
+- On acceptance (plan-accept): devkit spec proposal accept {slug} --by user records gate:plan-accept and status:
+  accepted, then the Planning branch is merged; an eligible draft may instead be accepted with --direct on the base,
+  without Planning. Development starts with devkit spec proposal handoff {slug}.
 - On rejection: change only status: rejected, with the user's reason in the commit message; a later hygiene pass
   writes the rejection ADR and deletes the proposal directory.
 -->

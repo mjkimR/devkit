@@ -35,6 +35,8 @@ HARNESS_TABLES = (
     '#   pull_request = "auto"  # "auto" | "required"; auto: a pull request or worktree finish --merge, as the task'
     " needs; required refuses --merge\n"
     "#   delete_branch = true  # boolean; worktree finish deletes the merged branch with git branch -d\n"
+    '#   merge = "no-ff"  # "no-ff" | "ff-only"; no-ff: a merge commit per task; ff-only: fast-forward only, wins in'
+    " either policy\n"
     '#   setup = "uv sync"  # example; string; shell command run in a newly created worktree; unset: no setup command\n'
     '#   stale_after = "14d"  # "<N>d" | "<N>w"; idle plan-*/dev-* branches are reported by devkit worktree stale and'
     " hygiene runs\n"

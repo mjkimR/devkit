@@ -1,0 +1,22 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T23:27:51.561860Z'
+status: completed
+review: review-03.yaml
+summary: 'round 3 closed; the recurring P3 fixed in 6180e82: CAP 3.1 and the proposals/__init__.py docstring rewrapped at 120 (remaining longer added lines are table rows, frontmatter and code examples). Recurring, so round 4 (the cap round) reviews it.'
+findings:
+- issue: 'recurs: review-02.yaml #2; the CAP §3.1 rewrap moved the overflow to line 177 (123 characters); proposals/__init__.py:4 is 123 characters, followed by a short line.'
+  evidence: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md:177; packages/devkit-spec/src/devkit_spec/proposals/__init__.py:4
+  failure_condition: Always; inconsistent wrap, no behavior effect.
+  suggested_action: Rewrap CAP lines 176-178 and the __init__.py docstring lines 3-5 at 120, or waive as cosmetic.
+  resolution: resolved
+  severity: P3
+checks:
+  lint: PASS just lint devkit-spec
+  rules: PASS commit gate
+diff_scope:
+  base: 3deeca9cd63a49559f005b27c0da0a8795307e34
+  head: 6180e82a9dfce4372754bf2f8af3920ce1352d03
+activity_effort: high

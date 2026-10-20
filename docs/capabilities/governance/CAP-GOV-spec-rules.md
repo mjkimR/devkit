@@ -1,7 +1,7 @@
 ---
 id: CAP-GOV-spec-rules
 title: Spec Governance Rules
-summary: Defines the ten governance rules the spec bundle ships for devkit rules (references, IDs, frontmatter, traceability, task coverage, spec lifecycle and progress, reconcile records, entrypoints, summaries), their shared targeting and snapshot behavior, fixes and layout.
+summary: Defines the eleven governance rules the spec bundle ships for devkit rules (references, IDs, frontmatter, traceability, task coverage, spec lifecycle and progress, reconcile records, entrypoints, proposal boundaries, summaries), their shared targeting and snapshot behavior, fixes and layout.
 area: governance
 status: active
 stories:
@@ -18,7 +18,7 @@ created_at: 2026-10-13
 
 ## 1. Summary
 
-The `spec` bundle ships ten deterministic rules that keep the Living Spec and the feature specs consistent. `devkit
+The `spec` bundle ships eleven deterministic rules that keep the Living Spec and the feature specs consistent. `devkit
 sync` deploys them with the bundle's `core` preset, and devkit's rule engine runs them beside its own rules:
 `devkit rules check` (whole workspace or named targets), `check --staged` (the commit gate), `check --ci --base <ref>`
 and `devkit rules fix`. This capability is the catalog and the contract summary of each rule; the full guide of a rule
@@ -43,7 +43,7 @@ and `devkit rules fix`. This capability is the catalog and the contract summary 
 ### 3.1 Catalog
 
 Every rule is phase `linter` and is deployed by the `core` preset; every rule is severity `error` except
-`RULE-spec-progress` (`warning`), a progress hint that never blocks a commit.
+`RULE-spec-progress` and `RULE-proposal-boundaries` (`warning`), hints that never block a commit.
 
 | Rule | Checks | Fix |
 | --- | --- | --- |
@@ -56,6 +56,7 @@ Every rule is phase `linter` and is deployed by the `core` preset; every rule is
 | `RULE-spec-progress` | A `draft` or `planned` spec with a checked task is marked `in-progress`. | Sets `status: in-progress`. |
 | `RULE-reconcile-contract` | A `reconcile.md` is well formed; in a snapshot run its `modified` targets changed in the diff. | none |
 | `RULE-code-entrypoints` | Every `entrypoints` path of a capability or story is a valid, existing workspace path. | none |
+| `RULE-proposal-boundaries` | A current proposal's `target_area` and `boundaries.owns` entries name existing paths. | none |
 | `RULE-document-summary` | Searchable documents carry a short English `summary`. | none |
 
 ### 3.2 Shared Behavior
@@ -234,7 +235,23 @@ workspace-relative path, and an existing file or directory inside the workspace.
 every current document that declares a path the diff deletes. Not fixable. The full contract is
 `CAP-TRACE-code-entrypoints`.
 
-### 3.12 `RULE-document-summary`
+### 3.12 `RULE-proposal-boundaries`
+
+A proposal's boundary is copied into its spec at handoff, so it names real paths by `plan-accept`
+(`ADR-proposal-boundaries-name-existing-paths`).
+
+- SHOULD report (severity `warning`), on the entry's line: for a proposal anchor (`docs/proposals/PROP-<slug>/proposal.md`
+  or `docs/proposals/PROP-<slug>.md`) whose `status` is `draft`, `reviewing` or `accepted`, a `target_area` or
+  `boundaries.owns` entry containing `<...>` (the template placeholder, its own message), one that is not a literal
+  repository-relative path, and one that resolves to no existing path. A non-string `target_area`, a non-mapping
+  `boundaries`, a non-list `owns` and a non-string item are malformed. `boundaries.excludes` is not checked.
+- Resolution, in order: relative to the repository root; relative to the proposal's namespace docs root (when
+  `namespace` names a registered namespace), then to `docs/`; as a capability area under the namespace's, then the
+  global `capabilities/`. A trailing `/` requires a directory. A snapshot run resolves in the snapshot's tree.
+- Reported for targeted anchors and in a whole-workspace run, whatever their history; no deleted-path rescan. Not
+  fixable.
+
+### 3.13 `RULE-document-summary`
 
 `summary` is the main signal of `devkit spec search` (`CAP-DOCS-document-search`).
 

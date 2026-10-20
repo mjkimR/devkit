@@ -4,12 +4,12 @@ title: Proposal Title (e.g., Pre-action Hook Context Advisor)
 summary: "One or two English sentences: what this proposal changes and why"   # required, English; quote it, it may contain ": "
 status: draft                         # draft | reviewing | accepted | rejected
 created_at: YYYY-MM-DD
-target_area: capabilities/<area>/      # Target capability area on graduation (e.g., capabilities/governance/)
+target_area: capabilities/<area>/      # Target capability area on graduation: an existing area, docs-root or repository path (e.g., governance/)
 priority: high                        # critical | high | medium | low (estimated priority)
 size: M                               # S | M | L | XL (estimated scope: S=single fix, M=1-2 sessions, L=complex module, XL=major overhaul)
 # milestone: MS-<slug>                # an existing milestone ID; carried over to spec.md on handoff
 boundaries:                           # declared scope impact (owns) and excluded scope (excludes), carried to the spec
-  owns:
+  owns:                               # existing paths (RULE-proposal-boundaries); a path to create: its nearest existing parent
     - capabilities/<area>/
   excludes:
     - docs/decisions/
@@ -39,6 +39,6 @@ routes the observation; only verified task completion resolves it. Omit this sec
 
 ## 4. Lifecycle & Retirement Criteria
 <!-- 
-- On Acceptance: handed off to a spec bundle on dev-<slug>; the proposal is deleted there and its decisions become ADRs
+- On Acceptance: recorded with devkit spec proposal accept (after Planning, or --direct for an eligible draft in Backlog); handed off to a spec bundle on dev-<slug>; the proposal is deleted there and its decisions become ADRs
 - On Rejection: status: rejected only, with the user's reason in the commit message; a later hygiene pass writes the rejection ADR and deletes the proposal
 -->

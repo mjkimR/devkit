@@ -1,0 +1,33 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T23:32:25.684938Z'
+status: completed
+summary: 'round 1; reconcile-reviewer verified the six targets against the code, ADRs and guidance: no missing target; one P1 (4.3 of CAP-DLV-delivery-workflows still names workflow answer for a plan-accept acceptance), one P2 (--check example without --note), one P3 (glossary).'
+findings:
+- issue: CAP-DLV-delivery-workflows 4.3 still says a plan-accept answer is recorded with devkit workflow answer --action accept, contradicting the one-writer contract; rule 5's opening reads the same way.
+  evidence: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:266-268; docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:73-77
+  failure_condition: 'An agent following 4.3 records gate:plan-accept with workflow answer on a reviewing proposal; the status stays reviewing and the handoff refuses: the partial acceptance the ADR prevents.'
+  suggested_action: 'Rewrite the 4.3 bullet and rule 5''s opening: workflow answer for a plan-intent answer or a decline of either gate, devkit spec proposal accept for a plan-accept acceptance.'
+  resolution: open
+  severity: P1
+- issue: The --check example in CAP-DLV-proposal-incubation and spec-next next-work.md omit --note, which --direct requires before any check; AC-04 has the same gap.
+  evidence: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md:380; packages/devkit-spec/src/devkit_spec/proposals/accept.py:114-120; packages/devkit-spec/src/devkit_spec/bundle/skills/spec-next/references/next-work.md:21-22
+  failure_condition: 'Copying the example gives ARGUMENT_INVALID [TARGET] --note instead of [ACCEPT_CHECK: ...].'
+  suggested_action: Add --note "<reason>" to the example and next-work.md; align AC-04's When line.
+  resolution: open
+  severity: P2
+- issue: Two new domain terms (direct acceptance, session reclassification) are not in docs/glossary.md and reconcile.md does not say why.
+  evidence: docs/glossary.md:27-39
+  failure_condition: The terms have no defined owner or exclusions; the new-term check is skipped without a record.
+  suggested_action: Add glossary rows and list docs/glossary.md as a target, or state in reconcile.md why it is left out.
+  resolution: open
+  severity: P3
+checks:
+  targets_complete: PASS
+  docs_vs_implementation: FAIL findings 1 and 2
+diff_scope:
+  base: b8c3a775b53ad28377f774f894a2a2bbff5f575d
+  head: 7d4bec38916fe533f77bf3128d7b42a6c38c83e9
+activity_effort: high

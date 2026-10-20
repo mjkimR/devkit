@@ -1,0 +1,32 @@
+kind: worker
+stage: integration-approval
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T23:49:49.787255Z'
+status: completed
+summary: 'Development of SPEC-integration-follow-ups from specify to the final change report: spec/plan/tasks written, 7 tasks implemented with tests, code review 2 rounds and reconcile verification 2 rounds at high (both passed), 9 Living Spec targets reconciled, feedback swept (1 recorded), final report recorded; next is dev-integration.'
+findings:
+- issue: .devkit/installation.json asset hashes are stale for the three edited devkit-spec bundle files; .devkit/ is outside the worker write scope
+  evidence: 'devkit sync --check: [CHANGE: update .devkit/installation.json]'
+  suggested_action: Host runs devkit sync in the worktree and commits .devkit/installation.json before integration
+  resolution: open
+- issue: FB-integration-stale-on-base-advance is fully addressed but its file is outside the write scope
+  evidence: specs/2026-10/20261019-high-effort-review-loop/feedback/integration-stale-on-base-advance.md
+  suggested_action: 'Host sets status: resolved with the disposition SPEC-integration-follow-ups (verification: test_base_advance.py, review-01/review-02)'
+  resolution: open
+assumptions:
+- Approving-call lock wait is 20 s (within the ADR's 30 s bound) to stay under Codex's default 60 s MCP tool timeout; not verified against a live host
+- git pull --rebase=merges was probed in a pytest fixture and rewrote the unit SHAs, so WORKTREE_PUSH_REJECTED uses fetch plus git merge --no-ff -m ... FETCH_HEAD
+- git commit-tree ignores commit.gpgSign, so the build passes -S when it is set
+unverified_areas:
+- Native host confirmation UI with the new form text (SDK transport tests only)
+- Host MCP tool-call timeouts other than Codex's documented default
+checks:
+  tests: PASS just test-affected mode=full 3628 passed, 14 skipped
+  lint: PASS just lint-check; pyright devkit and devkit-spec 0 errors
+  rules: PASS devkit rules check --ci --base 8acab92 0 errors; commit gate on every commit
+  smoke: PASS just smoke at 8073e79 (before the policy-order fix c0fec97, which touches no CLI or hook wiring)
+diff_scope:
+  base: 8acab92601a562a7878f19a2f09919bede14ce70
+  head: 19675c32539e916866cebee9e93091bb51862d52
+activity_effort: high

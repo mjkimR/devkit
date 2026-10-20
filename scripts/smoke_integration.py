@@ -25,7 +25,8 @@ def check(context):
     plan = context.finish
     value = run_git(Path(plan.base), "show", f"{plan.source_sha}:ready.txt").strip()
     return Readiness(plan.source_sha, plan.target_sha, (Evidence("SMOKE_CHECK_PASSED", plan.source_sha),),
-                     () if value == b"ready" else ("smoke fixture is not ready",))
+                     () if value == b"ready" else ("smoke fixture is not ready",),
+                     result_sha=context.result_sha, disclosure="smoke fixture check only")
 """
 
 
@@ -67,7 +68,7 @@ async def conversation(root: Path, worktree: Path) -> None:
         approved = await session.call_tool("integration_integrate", request)
         assert approved.structuredContent is not None and approved.structuredContent["status"] == "completed", approved
         assert len(approvals) == 2 and tip in approvals[1] and before in approvals[1]
-        assert not worktree.exists() and git(root, "rev-parse", "HEAD") == tip
+        assert not worktree.exists() and git(root, "rev-parse", "HEAD^1", "HEAD^2").split() == [before, tip]
         assert approved.structuredContent["request"]["network_operations"] == "excluded"
         assert "context" not in approved.structuredContent["request"]
         assert "SMOKE_CHECK_PASSED" not in approvals[1]

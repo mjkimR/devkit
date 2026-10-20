@@ -1,5 +1,5 @@
-"""``devkit spec proposal new|padr|handoff|prune|check``: incubate a proposal, record its preliminary decisions, hand
-it off, and guard Backlog changes.
+"""``devkit spec proposal new|padr|accept|handoff|prune|check``: incubate a proposal, record its preliminary decisions,
+record the user's acceptance, hand it off, and guard Backlog changes.
 
 Text output (paths are relative to the workspace root):
 
@@ -8,6 +8,10 @@ Text output (paths are relative to the workspace root):
   workflow, ``[NEXT_CMD: devkit workflow next --unit <dir>]``.
 - ``padr``: ``[PADR: <id> path= proposal=]``.
 - ``prune``: ``[PRUNED: <dir>]`` per empty proposal directory removed, else ``[OK: nothing to prune]``.
+- ``accept``: ``[ACCEPTED: <id> form=planning|direct|repair path= status=accepted decision=]``; with ``--check``
+  ``[ACCEPT_CHECK: <id> form= path= eligible=yes pending=<requests>|-]`` and nothing written. Refusals:
+  ``SPEC_PROPOSAL_ACCEPT_REFUSED``, ``SPEC_PROPOSAL_NOT_ELIGIBLE``, ``SPEC_PROPOSAL_WRONG_WORKTREE``,
+  ``SPEC_PROPOSAL_GATE_NOT_OPEN``.
 - ``check``: ``[PROPOSAL: <id> path= status=draft editable=yes]`` when Backlog may edit, split or delete the proposal;
   ``SPEC_PROPOSAL_IN_PLANNING`` while its ``plan-<slug>`` exists or once it left ``draft``.
 - ``handoff``: ``[HANDOFF: <proposal id> spec= dir= workflow=]`` (with ``dev_effort=`` when the proposal declared it),
@@ -49,6 +53,7 @@ from devkit.core.cli import (
 from devkit_spec.cli.output import sentinel
 from devkit_spec.cli.scope import echo_registered, registered_dict
 from devkit_spec.proposals import create_padr, create_proposal, handoff_proposal, prune_proposals
+from devkit_spec.proposals.accept import ACTOR, accept_proposal
 from devkit_spec.proposals.backlog import check_backlog_editable
 from devkit_spec.scope import SOURCE_HANDOFF, auto_register
 
@@ -193,6 +198,72 @@ def padr_cmd(
         echo_json(created.to_dict())
         return
     click.echo(sentinel("PADR", created.id, path=created.path, proposal=created.proposal))
+
+
+@proposal_group.command(name="accept")
+@click.argument("slug")
+@click.option(
+    "--by",
+    "actor",
+    required=True,
+    type=click.Choice([ACTOR]),
+    help="Who accepted: always the user, recorded only after the user's explicit acceptance",
+)
+@click.option(
+    "--note",
+    default="",
+    help="The decision note; with --direct the reason the draft was eligible (required) [default: none]",
+)
+@click.option(
+    "--direct",
+    is_flag=True,
+    help="Accept an eligible draft on the base checkout without Planning, or repair an accepted proposal that has "
+    "no gate:plan-accept record and no worker envelope",
+)
+@click.option("--check", "check_only", is_flag=True, help="Run every check and write nothing")
+@WORKSPACE
+@FORMAT_OPTION
+@boundary
+def accept_cmd(
+    slug: str,
+    actor: str,
+    note: str,
+    direct: bool,
+    check_only: bool,
+    workspace_root: str | None,
+    output_format: str,
+) -> None:
+    """Record the user's acceptance of proposal SLUG: status accepted and gate:plan-accept, in one step.
+
+    Without --direct: a proposal in review, on its plan-<slug>. With --direct: an eligible draft on the base
+    checkout (Backlog work). Never records plan-intent, commits, merges or hands off.
+    """
+    result = accept_proposal(resolve_root(workspace_root), slug, by=actor, note=note, direct=direct, check=check_only)
+    if is_json(output_format):
+        echo_json(result.to_dict())
+        return
+    if result.checked:
+        click.echo(
+            sentinel(
+                "ACCEPT_CHECK",
+                result.proposal,
+                form=result.form,
+                path=result.path,
+                eligible="yes",
+                pending=",".join(result.pending) or "-",
+            )
+        )
+        return
+    click.echo(
+        sentinel(
+            "ACCEPTED",
+            result.proposal,
+            form=result.form,
+            path=result.path,
+            status=result.status,
+            decision=result.decision,
+        )
+    )
 
 
 @proposal_group.command(name="handoff")

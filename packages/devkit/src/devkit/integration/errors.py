@@ -55,3 +55,22 @@ class CleanupIncompleteWarning(IntegrationError):
     code = "INTEGRATION_CLEANUP_INCOMPLETE"
     level = Level.WARNING
     fix = "Inspect the approved cleanup targets, resolve the reported condition and call integration_resume with the same request id"
+
+
+class TargetMovedError(IntegrationError):
+    code = "INTEGRATION_TARGET_MOVED"
+    guardrail = True
+    fix = (
+        "Inspect the base branch: a non-devkit write moved it between the build and its fast-forward; nothing changed"
+        " on the target. Call integration_resume while the target still equals the last build target, else call"
+        " integration_integrate for a new confirmation"
+    )
+
+
+class ReceiptConflictError(IntegrationError):
+    code = "INTEGRATION_RECEIPT_CONFLICT"
+    guardrail = True
+    fix = (
+        "Merge the target into the task branch in its worktree, run devkit sync there so the receipt matches the"
+        " merged files, commit, re-verify and call integration_integrate again"
+    )

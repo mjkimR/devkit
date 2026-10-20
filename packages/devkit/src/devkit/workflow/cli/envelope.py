@@ -141,6 +141,7 @@ def _write(
     questions_file: str | None = None,
     answers_to: str = "",
     answers_file: str | None = None,
+    settle: tuple[str, ...] = (),
     problem: str = "",
     attempts: tuple[str, ...] = (),
     recovery: str = "",
@@ -150,7 +151,18 @@ def _write(
     ws = workspace(workspace_root)
     scope = ws.unit_scope(unit, anchor=anchor)
     unit_dir, workflow, segment = scope.dir, scope.workflow, scope.binding.segment
-    content = (findings_file, source, resolve, waive, questions_file, answers_to, answers_file, problem, attempts)
+    content = (
+        findings_file,
+        source,
+        resolve,
+        waive,
+        questions_file,
+        answers_to,
+        answers_file,
+        settle,
+        problem,
+        attempts,
+    )
     authoring = any((status is not None, summary is not None, assumptions, unverified, checks, base, head)) or any(
         (*content, recovery, resolves, effort)
     )
@@ -188,6 +200,7 @@ def _write(
             questions_yaml=questions_yaml,
             answers_to=answers_to,
             answers_yaml=answers_yaml,
+            settle=settle,
             problem=problem,
             attempts=attempts,
             recovery=recovery,
@@ -276,13 +289,20 @@ def envelope_worker_cmd(**options: Any) -> None:
     default=None,
     help="YAML list of rewritten answers, each {question, choice, decision, constraints?} (path, or - for stdin)",
 )
+@click.option(
+    "--settle",
+    "settle",
+    multiple=True,
+    help="A worker assumption the user settled: <assumption-number>=<decision> (1-based; repeatable)",
+)
 @FORMAT_OPTION
 @boundary
 def envelope_answer_cmd(**options: Any) -> None:
-    """Write the next answer-NN.yaml: the decisions on a worker envelope's questions.
+    """Write the next answer-NN.yaml: the decisions on a worker envelope's questions and assumptions.
 
     --answers-to must name one of the unit's worker envelopes with those
-    questions and options.
+    questions and options; --settle positions must be among its assumptions.
+    With --settle the answers file may be omitted.
     """
     _write("answer", **options)
 
@@ -312,7 +332,12 @@ def envelope_review_cmd(**options: Any) -> None:
 
 @envelope_group.command(name="reverify")
 @_common()
-@click.option("--from", "source", default=None, help="The round it closes: latest, or a review/reverify file")
+@click.option(
+    "--from",
+    "source",
+    default=None,
+    help="The round it closes: latest (the review round), or a review, challenger or reverify file",
+)
 @click.option(
     "--resolve", "resolve", multiple=True, help="Mark a carried finding resolved: its number, or all (repeatable)"
 )
@@ -321,7 +346,8 @@ def envelope_review_cmd(**options: Any) -> None:
 @FORMAT_OPTION
 @boundary
 def envelope_reverify_cmd(**options: Any) -> None:
-    """Write the next reverify-NN.yaml: carry the findings of the round it closes (--from latest) and close them.
+    """Write the next reverify-NN.yaml: carry the findings of the round it closes (--from latest, or a
+    challenger-NN.yaml of Planning) and close them.
 
     --findings-file adds findings found while reverifying.
     """
@@ -357,7 +383,7 @@ def envelope_check_cmd(workspace_root: str | None, unit: str, output_format: str
         for e in loaded:
             click.echo(
                 f"[ENVELOPE: {e.file} kind={e.kind} seq={e.seq:02d} status={e.status} open_findings={e.open_findings()}"
-                f"{' problem=yes' if e.problem else ''}]"
+                f"{' problem=yes' if e.problem else ''}{f' review={e.review}' if e.review else ''}]"
             )
         click.echo(render_hold(hold), nl=False)
         for err in errors:

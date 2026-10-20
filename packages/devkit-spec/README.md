@@ -46,5 +46,17 @@ Python 3.12 or later, macOS or Linux. The [development guide](../../docs/develop
 Repository roadmaps use global `docs/roadmap/MS-<slug>.md` milestone documents. Assign one with
 `devkit spec proposal new <slug> --milestone MS-<slug>` or `devkit spec new <slug> --milestone MS-<slug>`;
 `proposal new --decomposed-from PROP-<parent>` preserves the original draft's identity. The Backlog and spec-next
-skills own lifecycle decisions and next-work ordering. See `CAP-DOCS-document-model`, `CAP-DLV-proposal-incubation`
-and `CAP-HARN-agent-guidance`; GitHub issue integration is excluded.
+skills own lifecycle decisions and next-work ordering. `devkit spec proposal accept <slug> --by user` records the
+user's acceptance in one step, after Planning or, with `--direct`, for an eligible draft on the base checkout without
+Planning. See `CAP-DOCS-document-model`, `CAP-DLV-proposal-incubation` and `CAP-HARN-agent-guidance`; GitHub issue
+integration is excluded.
+
+### Worker result inspection
+
+`devkit spec worker inspect --format json` collects committed worker range and scope information, cleanliness,
+envelope validation, rules and workflow checks. Inputs derive from the activity worktree and committed records;
+`--unit`, `--base`, `--head`, `--scope` (repeat) or `--scope-file` (one prefix per line), and `--base-checkout` replace
+individual inputs. Scope overrides replace the entire scope. Results include provenance and reviewer-ready compared
+heads and changed paths. Exit 0 means no failed check, 1 a negative check, 2 an invalid invocation or unresolved
+required input; unavailable checks are explicitly not-run. The Host retains scope and acceptance authority.
+The command writes and repairs nothing. See `CAP-DLV-delivery-workflows`.

@@ -3,6 +3,7 @@
 ``current_branch`` reads the branch of a checkout; ``require_development_branch`` refuses to write a slug's
 Development unit (a spec bundle from ``devkit spec new`` or a proposal handoff) on any other branch, in a linked
 worktree and in the base checkout alike: the unit would land on another task's branch, or on the base itself.
+``base_checkout_problem`` is the positive check of a direct acceptance, which is Backlog work on the base checkout.
 Outside Git nothing is checked.
 """
 
@@ -57,6 +58,35 @@ def require_development_branch(root: Path, slug: str, action: str, error: type[A
         f" or `devkit worktree start {expected} --no-worktree`; an existing {expected} is continued with"
         f" `devkit worktree start {expected} --existing-branch {expected} --unit <dir>`. Then rerun there",
     )
+
+
+def base_checkout_problem(root: Path) -> str | None:
+    """Why the checkout at ``root`` is not the base checkout on the integration base, or ``None`` when it is.
+
+    The base checkout is the main worktree (not a linked one) on a branch, not ``plan-*`` or ``dev-*``; when
+    ``refs/remotes/origin/HEAD`` resolves, the branch must be its target. Without it the main worktree's branch is the
+    base, as ``devkit worktree`` treats it. ``None`` outside Git, where nothing is checked.
+    """
+    found = checkout(root)
+    if found is None:
+        return None
+    linked, branch = found
+    if linked:
+        return "the checkout is a linked worktree, not the base checkout"
+    if not branch:
+        return "the base checkout is on a detached HEAD, not on its base branch"
+    if branch.startswith((PLANNING_PREFIX, DEVELOPMENT_PREFIX)):
+        return f"the base checkout is on activity branch {branch}, not on its base branch"
+    try:
+        remote = run_git(root, "symbolic-ref", "--quiet", "refs/remotes/origin/HEAD").decode().strip()
+    except GitError as exc:
+        if exc.returncode is None:
+            raise
+        remote = ""
+    base = remote.removeprefix("refs/remotes/origin/")
+    if base and branch != base:
+        return f"the base checkout is on branch {branch}, not on the integration base {base} (origin/HEAD)"
+    return None
 
 
 def planning_branch_elsewhere(root: Path, slug: str) -> str | None:

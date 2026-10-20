@@ -42,4 +42,4 @@ Rationale: These are explicitly retained follow-ups that depend on first verifyi
 When to Reconsider: Once the tracked follow-up items (FB-auto-integration-dispatch, FB-pr-remote-and-squash-integration, FB-multi-host-integration-ergonomics) meet their restart conditions."
 ```
 
-- **Disposition**: open. Split out of `PROP-integration-follow-ups` in its Planning: it stays open until the user decides whether a policy may grant merge and deletion authority, which `ADR-integration-approval-asserted` currently rules out.
+- **Disposition**: open. Split out of `SPEC-integration-follow-ups` in its Planning: it stays open until the user decides whether a policy may grant merge and deletion authority, which `ADR-integration-approval-asserted` currently rules out.

@@ -2,8 +2,8 @@
 
 Besides reviews, the contract defines the envelopes of delegated work. A ``worker`` envelope is the one record of
 a run: the questions it puts to a person in ``questions``, an execution problem in ``problem``. What another actor
-does later references it: an ``answer`` records the rewritten answers (``answers_to``), a ``resolution`` closes the
-problem (``resolves``). A unit with an unresolved
+does later references it: an ``answer`` records the rewritten answers and the worker assumptions the user settled
+(``answers_to``), a ``resolution`` closes the problem (``resolves``). A unit with an unresolved
 problem is *blocked*; one with a question not fully answered *waits for answers*. Both hold its gates
 (``Envelopes.hold``).
 """
@@ -24,7 +24,9 @@ from devkit.workflow.unit.records import as_text, is_temporary, write_numbered
 
 ENVELOPES_DIR = "envelopes"
 FILE = re.compile(rf"({IDENT_PATTERN})-(\d{{2,}})\.ya?ml")
-REVIEW_REF = re.compile(r"review-\d{2,}\.ya?ml")
+# The rounds a reverify closes: a review round, or a challenger round of Planning (ADR-reverify-closes-challenger-rounds).
+CLOSABLE = ("review", "challenger")
+REVIEW_REF = re.compile(r"(?:review|challenger)-\d{2,}\.ya?ml")
 WORKER_REF = re.compile(r"worker-\d{2,}\.ya?ml")
 RESOLUTIONS = ("open", "resolved", "waived")
 STATUSES = ("completed", "needs_input", "failed")
@@ -33,6 +35,7 @@ FINDING_KEYS = ("issue", "evidence", "failure_condition", "suggested_action", "r
 QUESTION_KEYS = ("id", "title", "prompt", "context", "options", "allow_note")
 OPTION_KEYS = ("id", "description", "recommended")
 ANSWER_KEYS = ("question", "choice", "decision", "constraints")
+SETTLE_KEYS = ("assumption", "decision")
 PROBLEM_KEYS = ("cause", "attempts", "recovery")
 TITLE_LIMIT = 40  # a question's title, like a request's
 # Kinds whose fields and status the contract fixes, besides review and reverify.
@@ -112,6 +115,17 @@ class Answer:
 
 
 @dataclass(frozen=True)
+class Settle:
+    """A worker assumption the user settled: its 1-based position in the answered worker's ``assumptions``."""
+
+    assumption: int
+    decision: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"assumption": self.assumption, "decision": self.decision}
+
+
+@dataclass(frozen=True)
 class Problem:
     """An execution problem: its cause, what was tried and the recommended recovery."""
 
@@ -140,7 +154,7 @@ class Envelope:
     segment: int | None = None  # finished segments (workflow_history entries) when written; None: any segment
     created_at: str = ""  # ISO 8601 UTC, as the authoring commands write it; empty when the file has none
     summary: str = ""
-    review: str = ""  # reverify: the review-NN.yaml it closes
+    review: str = ""  # reverify: the review-NN.yaml or challenger-NN.yaml it closes
     findings: tuple[Finding, ...] = ()
     checks: dict[str, str] = field(default_factory=dict)
     diff_base: str = ""
@@ -150,6 +164,7 @@ class Envelope:
     questions: tuple[Question, ...] = ()  # worker: what the run asks a person
     answers_to: str = ""  # answer: the worker-NN.yaml whose questions it answers
     answers: tuple[Answer, ...] = ()  # answer
+    settles: tuple[Settle, ...] = ()  # answer: the answers_to worker's assumptions the user settled
     problem: Problem | None = None  # worker: an execution problem
     resolves: str = ""  # resolution: the worker-NN.yaml whose problem it resolves
     activity_effort: str = ""  # low | medium | high: the effort the run applied
@@ -196,6 +211,7 @@ class Envelope:
             "questions": [q.to_dict() for q in self.questions],
             "answers_to": self.answers_to or None,
             "answers": [a.to_dict() for a in self.answers],
+            "settles": [s.to_dict() for s in self.settles],
             "problem": self.problem.to_dict() if self.problem else None,
             "resolves": self.resolves or None,
             "activity_effort": self.activity_effort or None,
@@ -211,20 +227,25 @@ class Envelopes:
         items = self.by_kind.get(kind)
         return items[-1] if items else None
 
-    def review_state(self) -> Envelope | None:
-        """The latest review round, or the last reverify that references it."""
-        review = self.latest("review")
-        if review is None:
+    def round_state(self, kind: str) -> Envelope | None:
+        """The latest ``kind`` round (``review`` or ``challenger``), or the last reverify that references it."""
+        latest = self.latest(kind)
+        if latest is None:
             return None
-        decider = review
-        name = Path(review.file).name
+        decider = latest
         for rv in self.by_kind.get("reverify", []):
-            if rv.review == name:
+            if rv.review == latest.name:
                 decider = rv
         return decider
 
+    def review_state(self) -> Envelope | None:
+        """The latest review round, or the last reverify that references it; reverifies of challenger rounds never
+        count."""
+        return self.round_state("review")
+
     def deciding(self, kind: str) -> Envelope | None:
-        return self.review_state() if kind == "review" else self.latest(kind)
+        """The envelope a check of ``kind`` reads: the round state of ``review`` and ``challenger``, else the latest."""
+        return self.round_state(kind) if kind in CLOSABLE else self.latest(kind)
 
     def scoped(self, workflow: str, segment: int) -> Envelopes:
         """The envelopes that count in segment ``segment`` of ``workflow`` (``Envelope.in_segment``)."""
@@ -355,7 +376,9 @@ def _parse_envelope(rel: str, seq: int, name_kind: str, data: Any) -> Envelope:
         raise EnvelopeFormatError(f"status {status!r} not in {'|'.join(STATUSES)}")
     review = as_text(data.get("review"))
     if kind == "reverify" and REVIEW_REF.fullmatch(review) is None:
-        raise EnvelopeFormatError("reverify needs `review: review-NN.yaml` naming the review round it closes")
+        raise EnvelopeFormatError(
+            "reverify needs `review: review-NN.yaml` or `review: challenger-NN.yaml` naming the round it closes"
+        )
     raw_findings = data.get("findings") or []
     if not isinstance(raw_findings, list):
         raise EnvelopeFormatError("findings: expected a list")
@@ -377,10 +400,13 @@ def _parse_envelope(rel: str, seq: int, name_kind: str, data: Any) -> Envelope:
         raise EnvelopeFormatError(f"activity_effort {effort!r} not in {'|'.join(EFFORTS)}")
     questions = _questions(data.get("questions"))
     answers = _answers(data.get("answers"))
+    settles = _settles(data.get("settles"))
     answers_to = as_text(data.get("answers_to"))
     problem = _problem(data.get("problem"))
     resolves = as_text(data.get("resolves"))
-    _check_kind_fields(kind, status, questions, answers, answers_to, problem, resolves, as_text(data.get("summary")))
+    _check_kind_fields(
+        kind, status, questions, answers, answers_to, problem, resolves, as_text(data.get("summary")), settles
+    )
     if kind == WORKER and as_text(data.get("stage")) in ("", "-"):
         raise EnvelopeFormatError("a worker envelope names the stage its run worked in (stage)")
     return Envelope(
@@ -403,6 +429,7 @@ def _parse_envelope(rel: str, seq: int, name_kind: str, data: Any) -> Envelope:
         questions=questions,
         answers_to=answers_to,
         answers=answers,
+        settles=settles,
         problem=problem,
         resolves=resolves,
         activity_effort=effort,
@@ -482,6 +509,15 @@ def parse_answer(item: Any, where: str) -> Answer:
     )
 
 
+def parse_settle(item: Any, where: str) -> Settle:
+    """One settles mapping ``{assumption, decision}``; raises ``EnvelopeFormatError`` naming ``where``."""
+    item = _mapping(item, where, SETTLE_KEYS)
+    position = item.get("assumption")
+    if not isinstance(position, int) or isinstance(position, bool) or position < 1:
+        raise EnvelopeFormatError(f"{where}.assumption: expected a 1-based assumption number")
+    return Settle(position, _required_text(item, "decision", where))
+
+
 def parse_problem(value: Any, where: str = "problem") -> Problem:
     """A problem mapping; raises ``EnvelopeFormatError`` naming ``where``."""
     item = _mapping(value, where, PROBLEM_KEYS)
@@ -514,6 +550,17 @@ def _answers(value: Any) -> tuple[Answer, ...]:
     return answers
 
 
+def _settles(value: Any) -> tuple[Settle, ...]:
+    if value is None:
+        return ()
+    if not isinstance(value, list):
+        raise EnvelopeFormatError("settles: expected a list")
+    settles = tuple(parse_settle(item, f"settles[{i}]") for i, item in enumerate(value))
+    if len({s.assumption for s in settles}) != len(settles):
+        raise EnvelopeFormatError("settles: each assumption at most once")
+    return settles
+
+
 def _problem(value: Any) -> Problem | None:
     return None if value is None else parse_problem(value)
 
@@ -527,12 +574,13 @@ def _check_kind_fields(
     problem: Problem | None,
     resolves: str,
     summary: str,
+    settles: tuple[Settle, ...] = (),
 ) -> None:
     """The fields each kind carries, and the statuses they allow (``docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md``)."""
     if questions and kind != WORKER:
         raise EnvelopeFormatError("questions: only a worker envelope carries questions")
-    if (answers or answers_to) and kind != ANSWER:
-        raise EnvelopeFormatError("answers and answers_to: only an answer envelope carries them")
+    if (answers or answers_to or settles) and kind != ANSWER:
+        raise EnvelopeFormatError("answers, settles and answers_to: only an answer envelope carries them")
     if resolves and kind != RESOLUTION:
         raise EnvelopeFormatError("resolves: only a resolution envelope carries it")
     if problem is not None and kind != WORKER:
@@ -546,8 +594,8 @@ def _check_kind_fields(
             raise EnvelopeFormatError(
                 "an answer needs `answers_to: worker-NN.yaml` naming the run whose questions it answers"
             )
-        if not answers:
-            raise EnvelopeFormatError("an answer envelope needs answers")
+        if not answers and not settles:
+            raise EnvelopeFormatError("an answer envelope needs answers or settles")
         if status != "completed":
             raise EnvelopeFormatError("an answer envelope has status completed")
     elif kind == RESOLUTION:
@@ -568,8 +616,16 @@ def reference_error(envelope: Envelope, loaded: Mapping[str, Envelope]) -> str |
     name), or ``None`` when it does or the envelope references nothing."""
     if envelope.kind == ANSWER:
         target = loaded.get(envelope.answers_to)
-        if target is None or not target.questions:
+        if envelope.answers and (target is None or not target.questions):
             return f"answers_to {envelope.answers_to!r} names no well-formed worker envelope with questions in the unit"
+        if target is None or target.kind != WORKER:
+            return f"answers_to {envelope.answers_to!r} names no well-formed worker envelope in the unit"
+        highest = max((s.assumption for s in envelope.settles), default=0)
+        if highest > len(target.assumptions):
+            return (
+                f"settles: assumption {highest} is not an assumption of {target.name}"
+                f" ({len(target.assumptions)} recorded)"
+            )
         questions = {q.id: q for q in target.questions}
         for answer in envelope.answers:
             question = questions.get(answer.question)

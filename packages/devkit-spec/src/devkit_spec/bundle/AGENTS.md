@@ -43,12 +43,14 @@ The agent classifies work on three axes; the user confirms at `plan-intent`:
 The workflow is `sdd-<planning-depth>[-<task-kind>]`: `sdd-session-feature`, `sdd-session-bugfix`, `sdd-spec-feature`,
 `sdd-spec-bugfix` and `sdd-proposal` (handed off to `sdd-spec-<task_kind>`); a team review is `proposal` depth plus PR
 policy. Depth is raised by the Host (`[tool.spec] depth_escalation`), never by a worker, and never lowered except by a
-proposal's handoff. Unit depths write `spec.md`, `plan.md` and `tasks.md` before production code. Follow the
-workflow definition's stages, checks, gates and returns, never an ad-hoc sequence (`devkit workflow next --unit <dir>`).
+proposal's handoff or, on the user's explicit decision at pickup, the session reclassification of a queued draft.
+Unit depths write `spec.md`, `plan.md` and `tasks.md` before production code. Follow the workflow definition's
+stages, checks, gates and returns, never an ad-hoc sequence (`devkit workflow next --unit <dir>`).
 
 Read `devkit spec policy` before classification, gate and Git decisions. `plan-intent` (goal, scope, verification,
 expected behavior for a bugfix, `task-kind`, `planning-depth`) and `plan-accept` (a proposal's direction) are always
-the user's, recorded with `devkit workflow answer --by user`; `dev-integration` follows `devkit spec policy` (the
+the user's, recorded with `devkit workflow answer --by user` (`plan-accept` with `devkit spec proposal accept --by
+user`, also directly for an eligible draft in Backlog); `dev-integration` follows `devkit spec policy` (the
 `spec` skill's `references/completion.md`, Policy). There is no Development direction gate: inside the agreed intent
 take the recommended option and record it; only a problem that breaks the agreement stops the work. Records name the
 authority (`user` or `policy`) and never carry the conversation (no quotes, paraphrase or dates of it); a decline note

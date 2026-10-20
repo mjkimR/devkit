@@ -1,0 +1,26 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T23:37:26.030299Z'
+status: completed
+review: review-01.yaml
+summary: 'round 1 closed; #1 fixed: _validate compares the effective policy digest before the dev-integration=ask check, test_policy_advance_is_stale gains a dev-integration case (62 integration tests pass); the fix changes a returned error code, so it fails the minor-fix contract condition and goes to round 2; #2 waived with reason'
+findings:
+- issue: AC-07 lists a change to [workflow.approvals] dev-integration among advances that must report INTEGRATION_REQUEST_STALE; the pre-merge validation calls providers.policy, which refuses a non-ask value with INTEGRATION_CONFIG_INVALID before the digest comparison, and the test leaves dev-integration out
+  evidence: packages/devkit/src/devkit/integration/service.py:266
+  failure_condition: 'a target commit setting dev-integration = "auto" lands during the confirmation and the user approves: blocked with INTEGRATION_CONFIG_INVALID instead of INTEGRATION_REQUEST_STALE'
+  suggested_action: compare the effective policy digest before the dev-integration=ask gate and raise StaleRequestError on a mismatch; add a dev-integration case to test_policy_advance_is_stale
+  resolution: resolved
+  severity: P2
+- issue: the accepted ADR-target-advance-readiness trace (answer-01.yaml m-milestone-wording) became (user decision) with no stated reason, outside every task boundary
+  evidence: docs/decisions/2026-10/20261020-target-advance-readiness.md:68
+  failure_condition: a reader tracing the milestone wording finds only (user decision) and the review sees an unexplained change to an accepted ADR
+  suggested_action: state the reason in the worker report, or restore a reference that resolves
+  resolution: waived
+  waiver: The handoff (8acab92) deleted the proposal's envelopes, so answer-01.yaml no longer resolves from the ADR; the caller allowed wording fixes the handoff's rewrite left in the promoted ADRs, and the recorded answer stays in Git history
+  severity: P3
+checks: {}
+diff_scope:
+  base: ''
+  head: c0fec97acb36c8f3dfc181dbb10ca76bfc7e16d9

@@ -1,0 +1,50 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T23:13:01.990768Z'
+status: needs_input
+summary: 'First Planning run (medium): status reviewing; section 3.4 route design added with two PADRs (gh port in devkit.worktree, GitHub only; PR merge with the head pinned to the source, a locally checked prospective merge and verified landing), the fetched remote target as confirmation target, cleanup order with leased remote deletion, unknown-outcome rules, lock and time budget, a code table and an offline fake design. Support roles: scout-01, challenger-01 (2 P1, 9 P2, 3 P3; all folded except the two P1/P2 choices asked here). dev_effort stays high (merges onto a remote target cannot be undone locally).'
+findings: []
+assumptions:
+- PROP-integration-follow-ups is implemented as accepted before this Development starts
+- Only the native form grants push, merge and deletion authority; pull_request and delete_branch only restrict or select
+unverified_areas:
+- All GitHub platform behaviour (no network in this run); listed in proposal 3.4 as Development verification items
+- Host MCP tool-call timeouts for Codex and Claude Code
+checks: {}
+diff_scope:
+  base: 5107484c3e3cee715d7b12316ca835d91e11802e
+  head: 97415c8c6daa96ea60351512e6954a577e0e57bc
+questions:
+- id: q-checks-wait
+  title: Waiting for required checks and review
+  prompt: Required CI checks and reviews start only after the branch is pushed, and the PR author cannot approve their own PR. How should the pull request route reach a mergeable PR?
+  context: This decides whether the approving call can ever merge on a repository with required checks or reviews, and how often a second confirmation is needed. Under the accepted follow-ups lifetime, a later call may merge only while the remote target still equals the last checked target; requests live only in the MCP process.
+  options:
+  - id: a
+    description: Both paths. If the agent already pushed the branch and opened a ready PR (today's spec-integrate PR path), prepare reads its check and review state and the approving call merges at once when they pass. Otherwise the approving call pushes and creates the PR and returns INTEGRATION_CHECKS_PENDING (merge not_run); integration_resume merges later only while the remote target is unchanged, else a new confirmation. The approving call never waits.
+    recommended: true
+  - id: b
+    description: Publication only inside the approval. The approving call always pushes and creates the PR and returns INTEGRATION_CHECKS_PENDING; integration_resume merges while the target is unchanged. On a busy target any commit landing during CI means a second confirmation; a server restart means a new request.
+    recommended: false
+  - id: c
+    description: Let integration_resume absorb later target advances on this route (with the same checks on the merge). Fewest confirmations, but it reverses the accepted follow-ups approval lifetime for this route and needs a superseding decision.
+    recommended: false
+  allow_note: true
+- id: q-unchecked-landing
+  title: Merge landed onto an unchecked target
+  prompt: When the platform merge lands onto a target other than the one devkit checked (a commit landed in the seconds between the last check and the merge, the target was rewritten, or the platform's merge tree differs), what happens to cleanup?
+  context: The merge has already landed and cannot be undone; the source is safely merged by ancestry. The choice decides whether the worktree a follow-up fix would be made in is removed automatically, and is never reported as a checked success.
+  options:
+  - id: a
+    description: For an advance in the race window, run the guards, receipt check, result policy digest and readiness on the landed merge; continue cleanup only when they pass, else stop before cleanup (INTEGRATION_LANDED_ADVANCED) and integration_resume continues it later. A rewritten target or a tree mismatch always stops before cleanup with its own code.
+    recommended: true
+  - id: b
+    description: Always stop before cleanup in all three cases; the agent reports and integration_resume runs the remaining cleanup.
+    recommended: false
+  - id: c
+    description: Report the distinct code and the post-hoc readiness result, but continue cleanup in every case (cleanup safety rests on ancestry only).
+    recommended: false
+  allow_note: true
+activity_effort: medium

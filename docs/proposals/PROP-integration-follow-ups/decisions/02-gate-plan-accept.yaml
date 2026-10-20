@@ -1,9 +1,0 @@
-request: gate:plan-accept
-kind: approve
-action: accept
-workflow: sdd-proposal
-stage: direction-handoff
-note: base-advance direction (E1-E6, three PADRs, split into two child drafts, round-6
-  fixes accepted) accepted as presented; dev_effort high
-by: user
-at: '2026-10-19T06:36:57.666193Z'
