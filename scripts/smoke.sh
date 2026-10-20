@@ -31,7 +31,7 @@ mkdir -p "$dist" "$project"
 
 # Assigned before the loop so a discovery failure aborts under `set -e`.
 modules=$(list_modules)
-model_url=$(model_wheel_url)
+model_wheel=$(readlink -f "$(model_wheel_path)")
 echo "==> building wheels into $dist"
 for module in $modules; do
     uv build --package "$module" --wheel --out-dir "$dist" >/dev/null
@@ -50,6 +50,7 @@ devkit_wheel=$(wheel devkit_agt)
 advisory_wheel=$(wheel devkit_advisory)
 starter_wheel=$(wheel devkit_starter)
 catalog_wheel=$(wheel devkit_catalog)
+mcp_wheel=$(wheel devkit_mcp)
 spec_wheel=$(wheel devkit_spec)
 viewer_wheel=$(wheel devkit_viewer)
 
@@ -292,7 +293,7 @@ TOML
     status=0
     uv run devkit mcp --help >/dev/null 2>"$work/mcp-extra.err" || status=$?
     test "$status" -eq 2
-    uv add --dev 'devkit-agt[mcp]' >/dev/null
+    uv add --dev "$mcp_wheel" 'devkit-agt[mcp]' >/dev/null
     uv run python "$source_root/scripts/smoke_integration.py" "$work"
     uv run devkit gate uninstall >/dev/null
     test ! -e .git/hooks/pre-commit
@@ -306,8 +307,8 @@ TOML
     grep -q 'RULE_TEST: RULE-markdown-link tests=.*/site-packages/devkit/rules/rules/markdown_link/tests result=passed' <<<"$tested"
     grep -q 'SUMMARY: rules=3 passed=3 failed=0 no_tests=0' <<<"$tested"
     test -z "$(find .devkit -name __pycache__ -o -name .pytest_cache)"
-    echo "--- dense search with the released model wheel (numpy and tokenizers from the index)"
-    uv add --dev "devkit-embed @ $model_url" numpy tokenizers >/dev/null
+    echo "--- dense search with the committed model wheel (numpy and tokenizers from the index)"
+    uv add --dev "devkit-embed @ $model_wheel" numpy tokenizers >/dev/null
     uv run python -c "
 from devkit.search import SearchDocument, SearchIndex, SearchMode, load_embedder
 assert load_embedder().dimensions == 256

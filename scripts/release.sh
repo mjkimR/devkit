@@ -5,8 +5,7 @@
 # packages (devkit-dist, devkit-agt, devkit-advisory, devkit-mcp), builds a wheel of every
 # workspace package into dist/release/, writes SHA256SUMS there and the release
 # notes (install commands for this tag) to dist/release-notes.md. The
-# devkit-embed model wheel is not rebuilt: the notes point at the release that
-# ships it, pinned in the devkit-dist package's [tool.uv.sources].
+# devkit-embed model wheel is copied from the committed wheel in models/devkit-embed/wheels/.
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 source ./scripts/_lib.sh
@@ -30,10 +29,11 @@ out=dist/release
 rm -rf "$out"
 mkdir -p "$out"
 modules=$(list_modules)
-model_url=$(model_wheel_url)
+model_wheel=$(model_wheel_path)
 for module in $modules; do
     uv build --package "$module" --wheel --out-dir "$out" >/dev/null
 done
+cp "$model_wheel" "$out/"
 (cd "$out" && shasum -a 256 -- *.whl > SHA256SUMS)
 
 repository=${GITHUB_REPOSITORY:-$(git remote get-url origin | sed -E 's#^(git@github\.com:|https://github\.com/)##; s#\.git$##')}
@@ -44,6 +44,7 @@ advisory_wheel=$(basename "$out"/devkit_advisory-*.whl)
 spec_wheel=$(basename "$out"/devkit_spec-*.whl)
 mcp_wheel=$(basename "$out"/devkit_mcp-*.whl)
 viewer_wheel=$(basename "$out"/devkit_viewer-*.whl)
+embed_wheel=$(basename "$model_wheel")
 cat > dist/release-notes.md <<EOF
 ## Install
 
@@ -56,7 +57,7 @@ uv add --dev "devkit-agt @ $base/$devkit_wheel" "devkit-dist @ $base/$dist_wheel
 uv add --dev "devkit-dist @ $base/$dist_wheel" "devkit-advisory @ $base/$advisory_wheel"
 
 # devkit with dense and hybrid search (adds numpy, tokenizers and the 15 MB embedding model)
-uv add --dev "devkit-agt[search] @ $base/$devkit_wheel" "devkit-dist[search] @ $base/$dist_wheel" "devkit-advisory @ $base/$advisory_wheel" "devkit-embed @ $model_url"
+uv add --dev "devkit-agt[search] @ $base/$devkit_wheel" "devkit-dist[search] @ $base/$dist_wheel" "devkit-advisory @ $base/$advisory_wheel" "devkit-embed @ $base/$embed_wheel"
 
 # Optional MCP runtime and native approval (installed intentionally)
 uv add --dev "devkit-mcp @ $base/$mcp_wheel" "devkit-dist @ $base/$dist_wheel" "devkit-advisory @ $base/$advisory_wheel"

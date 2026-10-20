@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-20
 ---
 
@@ -44,3 +44,5 @@ Failed to fetch wheel from GitHub release; failed to lookup address information
 uv run --no-sync devkit get-context spec
 exit 0; spec constitution and instruction catalog returned
 ```
+
+- **Disposition**: spec unit `SPEC-embed-local-wheel`: committed prebuilt wheel into `models/devkit-embed/wheels/` and configured local path sources in `packages/devkit-dist/pyproject.toml` and workspace root `pyproject.toml`, eliminating remote network checks and DNS lookups on `uv run`. Verified with `unshare -r -n uv run devkit get-context spec`.

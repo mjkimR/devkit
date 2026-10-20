@@ -2,7 +2,7 @@
 id: SPEC-embed-local-wheel
 title: embed-local-wheel
 summary: "Commit the devkit-embed model wheel into the repository and switch package sources to a local path dependency to eliminate network synchronization checks."
-status: planned
+status: in-progress
 created: 2026-10-20
 related_capabilities: ["CAP-SRCH-document-search"]
 related_stories: []

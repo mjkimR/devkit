@@ -64,6 +64,7 @@ dev = [
 devkit-agt = { workspace = true }
 devkit-advisory = { workspace = true }
 devkit-dist = { workspace = true }
+devkit-embed = { path = "models/devkit-embed/wheels/devkit_embed-0.1.0-py3-none-any.whl" }
 devkit-spec = { workspace = true }
 devkit-viewer = { workspace = true }
 

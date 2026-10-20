@@ -80,7 +80,7 @@ uv add --dev "devkit-agt @ $base/devkit_agt-<version>-py3-none-any.whl" \
 uv add --dev "devkit-agt[search] @ $base/devkit_agt-<version>-py3-none-any.whl" \
   "devkit-dist[search] @ $base/devkit_dist-<version>-py3-none-any.whl" \
   "devkit-advisory @ $base/devkit_advisory-<version>-py3-none-any.whl" \
-  "devkit-embed @ https://github.com/mjkimR/devkit/releases/download/v0.1.0/devkit_embed-0.1.0-py3-none-any.whl"
+  "devkit-embed @ $base/devkit_embed-0.1.0-py3-none-any.whl"
 
 uv run devkit sync          # deploys auto-selected bundles (built in: devkit, advisory, harness)
 uv run devkit add git-commits authoring   # opt-in practice bundles built into devkit
@@ -140,13 +140,11 @@ publishes the release. `devkit-dist`, `devkit-agt` and `devkit-advisory` are rel
 checks all three. `devkit-spec`, `devkit-starter`, `devkit-catalog` and `devkit-viewer` keep their own versions.
 
 `devkit-embed` keeps its own version too and is not rebuilt by releases: devkit
-installs it, in this workspace and from Git, from the release URL in the
-`[tool.uv.sources]` of `packages/devkit-dist/pyproject.toml`. When the model changes,
+installs it, in this workspace and from Git, from the committed wheel in
+`models/devkit-embed/wheels/` pinned in `[tool.uv.sources]`. When the model changes,
 bump its version in `models/devkit-embed/pyproject.toml` and the `devkit-dist[search]`
 requirement on it, run `just model-build` (fetches and verifies the files, builds
-`dist/model/`), attach the wheel to a release
-(`gh release upload <tag> dist/model/*.whl`), then point the URL at it and
-run `uv lock`.
+`dist/model/`), copy the built wheel into `models/devkit-embed/wheels/`, and run `uv lock`.
 
 ## Documentation
 
