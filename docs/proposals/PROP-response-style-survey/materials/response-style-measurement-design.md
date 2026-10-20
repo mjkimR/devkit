@@ -20,14 +20,39 @@ The current interactive session and its native child agents are ineligible basel
 repository's response-style instructions. A self-reported lack of inherited style is not proof of isolation.
 
 Keep original fixtures and expected obligations in a proposal material directory through Planning; handoff promotes
-materials, so Development adds the executable input set, result imports and scorer under its spec Unit's
+materials. Only if the structured option is selected, Development adds the executable input set, result imports
+and scorer under its spec Unit's
 `materials/benchmark/`. Do not create a reusable CLI, install a new package, add a dependency or create a process
 launcher. Use a small standard-library script for import, structural validation and summary; record the exact
 external generation command separately. Unit tests cover scorer rejection of a missing or duplicated cell and a
 missing numeric condition, not literal prompt phrases. Model generation remains an explicitly selected execution
 method; none has run during Planning.
 
-## Fixed fixture set
+## Collection options and completion scope
+
+No live option, host or budget has been selected. A smaller practical inspection is the recommended starting
+point; the earlier 72-attempt question remains unanswered and authorizes no collection. Select one scope before
+execution and record that scope, the actual host/model and its limitations.
+
+- **Practical paired inspection**: use an agreed small set of English/Korean requests, showing current and
+  candidate responses side by side. For every collected example check factual conditions, requested content and
+  artifact/report constraints; note failures and disagreements. Discuss readability, tone and explanation depth
+  as preferences with reasons, not scores proving quality. Record inputs, outputs and relevant settings in a
+  short material. No scorer script, full twelve-case matrix, two repetitions, held-out split, 24-candidate-output
+  rule or blind adjudication is required. This may support the final change review when that smaller scope is
+  agreed; it is not merely a mandatory prelude to the larger run. Ordinary bundle tests, rules and independent
+  Development review still apply. No claim of measured improvement beyond those examples follows.
+- **Structured comparison**: only when expressly selected, use the fixed matrix, scorer, complete-cell checks,
+  independent blinded judgments and repetition rules in the sections below. Its 24-candidate-output condition
+  applies only within this option. A smaller sample does not pass as a completed structured run.
+
+For either option, actual generated comparisons need explicit style payloads in fresh contexts, with inherited
+style sources controlled and recorded. Hand-edited or conversationally composed examples may be useful to discuss
+preferences but are labelled illustrative, not observed outputs from a deployed candidate. No unverified run,
+constraint adherence or causal style effect is invented to complete a report. Neither option adds a workflow gate
+or waives incorrect facts. The user sees the concrete outputs in the existing final change review.
+
+## Fixed fixture set (structured option only)
 
 All factual inputs are supplied, synthetic and safe to publish. Freeze exact prompts and obligations before the
 first scored generation. The table specifies their required content rather than golden prose; Development expands
@@ -54,7 +79,7 @@ The author may inspect fixtures, but must not tune against held-out outputs. If 
 current style; any later candidate is a separately labelled iteration with new held-out evidence. Do not report
 reruns as independent confirmation of the original candidate.
 
-## Collection and cost bound
+## Collection and cost bound (structured option only)
 
 Per selected host: 12 cases x 3 arms x 2 independent fresh runs = 72 generation attempts maximum. No automatic
 retries; failures remain recorded with status and cause. An explicit user-authorized rerun starts a named new
@@ -75,7 +100,7 @@ Choose the host/execution method and any monetary/token ceiling with the user be
 Deployment/render tests for Codex, Claude Code and Antigravity do not count as live quality measurements. Publish a
 host-by-host coverage table. An unavailable host remains unmeasured, and results from another host do not fill it.
 
-## Rule-compliance checks and subjective assessment
+## Rule-compliance checks and subjective assessment (structured option only)
 
 The scorer enforces full cell identity `(host, model, arm, fixture, repetition)`, unique cells, no missing outputs,
 exact artifact constraints, and the presence of required numeric/identifier tokens. A token check cannot prove
@@ -86,7 +111,7 @@ Save each judgment with a short reason and evidence span. A second independent b
 claimed candidate improvement, proposed regression and every disagreement between structural checks and semantic judgment; if still
 unresolved, the fixture fails. Automated LLM judgment alone is not a proof of correctness.
 
-A candidate is eligible only with zero failed semantic obligations, zero fabricated completion/actions, and all
+Within the structured option, a candidate passes the required-content check only with zero failed semantic obligations, zero fabricated completion/actions, and all
 artifact/report constraints met across its 24 outputs; it must not introduce a failure the current style avoided.
 Primary rule adherence is a binary score per output, not a subjective quality ranking. Freeze these observable anchors with the
 exact fixtures before collection; a fixture passes only if all its applicable primary anchors hold:

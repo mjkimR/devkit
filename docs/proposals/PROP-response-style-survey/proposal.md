@@ -47,9 +47,11 @@ in long sessions is unmeasured, and does not yet justify a shared distribution-c
 - **Q2 (Reuse)**: Keep per-source notes and original synthesis. Do not copy source wording, examples or structure;
   unresolved website terms are explicit. `PADR-response-style-source-selection` defines the screening and reuse
   direction without treating a license label as legal clearance.
-- **Q3 (Measurement)**: Use twelve fixed English/Korean fixtures, no added bundle style/current/candidate arms,
-  two fresh repetitions and at most 72 generation attempts per selected host. Preserve semantic obligations
-  before optimizing form or length; publish raw synthetic outputs, blinded judgments and incomplete cells.
+- **Q3 (Practical inspection)**: Recommend a small agreed set of current/candidate English/Korean examples,
+  checking required facts and output contracts while discussing subjective readability. That scope can support
+  final review without a full benchmark. An optional structured comparison uses twelve fixtures, three arms,
+  two repetitions and at most 72 generation attempts per host; only that option requires a complete matrix,
+  a scorer and blinded judgments. Preserve semantic obligations before optimizing form or length.
   These are checks of observed behavior and rule compliance, not an objective measure of how good an answer is.
   Readability, appropriate explanation depth and tone include subjective preference. A score cannot automatically
   choose the style. The 72-attempt protocol is an unapproved structured comparison option; a few paired examples
@@ -73,8 +75,10 @@ Planning writes the pinned survey notes, twelve-case evaluation design and three
 After the open execution decision and `plan-accept`, handoff promotes source materials and decisions through the
 normal workflow; Development writes its spec, plan and tasks before editing the bundle.
 
-Development freezes the baseline and fixtures, writes one original candidate and a small spec-local standard-library
-import/scoring script, collects the selected host cohort and records the first results. Reject a candidate that
+Development writes one original candidate and collects only the scope selected before execution. A practical
+inspection records the agreed inputs and paired outputs in a short material, with checks of facts/formats and
+subjective comments. Only selection of the structured option requires freezing its full baseline/fixture set,
+writing a spec-local standard-library import/scoring script and collecting its complete host cohort. Reject a candidate that
 loses required facts or fails artifact/report obligations. Any checks summarize constraint adherence; passing them alone does not select the preferred style.
 Present actual current/candidate examples and the tradeoffs for human judgment during the existing final change
 review. Preserve the current style when the candidate breaks required content or cannot be justified; negative
@@ -88,7 +92,8 @@ quality measurement; unmeasured hosts stay visible in the results. Shared guidan
 `CAP-DIST-manifest-spec` remain unchanged. No report format or unrelated bundle changes.
 
 Verification: complete and uncontaminated results for the collection scope actually selected with the user; original-source provenance and
-license-scope review; scorer rejection tests for missing/duplicate records and incomplete facts; existing language
+license-scope review; if structured collection is selected, scorer rejection tests for missing/duplicate records
+and incomplete facts; existing language
 and host-projection coverage; applicable lint/type checks, `just test-affected`, consumer smoke, repository rules
 and independent medium Development review. No live model call or production change occurs during Planning.
 

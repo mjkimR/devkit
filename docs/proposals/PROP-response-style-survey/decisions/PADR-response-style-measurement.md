@@ -34,13 +34,19 @@ host support. None is a universal answer-quality score.
 The structured comparison option uses twelve English/Korean fixtures, three style arms and two fresh repetitions,
 at most 72 generation attempts per selected host. This option has not been selected or authorized; a small set
 of paired examples is enough to begin a practical inspection, with collection scope chosen before execution. `MAT-response-style-measurement-design` defines isolation, exact obligations, calibration and
-held-out groups, blind semantic checks, promotion thresholds, error preservation and cost records. Select the
+held-out groups, rule-adherence summaries, error preservation and cost records for that structured option. Select the
 host and execution budget with the user before live collection. Freeze observable binary primary anchors; sum
 the two passes per fixture, treat equal sums as ties, and label changes by intent category, including held-out cases, without interpreting that compliance count as
 overall quality or automatically choosing a style. Until then host coverage is an open Planning
 question, not a claim of portability. Only synthetic inputs and owned style text are submitted.
 
-Keep fixture/result/scorer materials inside the Development spec Unit. The scorer is standard-library and
+The recommended practical option records an agreed small set of paired current/candidate examples and checks
+their required facts and output contracts, with subjective comments and limitations. It can support final review
+under that agreed scope. It does not require the full matrix, scorer, held-out split or blinded adjudication;
+those are conditional on the structured option. Neither option is selected by this draft, and the earlier
+72-attempt execution question remains unanswered. No collection is authorized.
+
+Keep any selected fixture/result/scorer materials inside the Development spec Unit. The scorer is standard-library and
 imports generation results; it neither launches models nor defines a new distributed evaluation tool. A candidate that violates factual or required-output obligations is revised or rejected. Style preference is a
 separate human judgment using actual examples and stated tradeoffs in the existing final review; no additional
 workflow approval gate is created.
