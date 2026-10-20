@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-20
 ---
 
@@ -34,3 +34,9 @@ created_at: 2026-10-20
 planning.md step 2: "an `answer` envelope naming the `worker` envelope that asked (... --answers-to <worker-NN.yaml> ...)"
 envelopes/worker-02.yaml: status: completed, no questions
 ```
+
+## Resolution
+
+Directly resolved by `SPEC-worker-guidance-and-fixtures`: worker-records section 2 documents unsolicited decisions in proposal/PADR and the subsequent worker summary, preserving pending answers and settles-only records.
+
+Verification: Independent medium code review found the settles-only exception; the implementer corrected and reverified it against the existing envelope contract.
