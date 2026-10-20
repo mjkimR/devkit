@@ -548,18 +548,23 @@ def config() -> None:
 @boundary
 def config_show(workspace_root: str | None, effective: bool, output_format: str) -> None:
     """Inspect effective checkout preferences without changing configuration."""
+    from dataclasses import asdict
+
     from devkit.core.local_config import read_effective_config
+    from devkit.core.presentation import resolve_language
     from devkit.distribution.installation.transaction import project_lock
 
     root = resolve_root(workspace_root)
     with project_lock(root, shared=True):
         read_config(root)
         result = read_effective_config(root)
+        language = resolve_language(root)
     echo_json(
         {
             "configuration": result.values,
             "sources": result.sources,
             "execution_environment": result.values["execution"]["environment"],
+            "presentation_language": asdict(language),
         }
     )
 

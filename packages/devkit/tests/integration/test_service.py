@@ -85,8 +85,12 @@ def test_native_approval_integrates_and_cleans_without_network(repo, monkeypatch
         ("cancel", {}, "cancelled"),
     ],
 )
-def test_nonapproval_performs_no_integration_mutations(repo, action, content, status):
+@pytest.mark.parametrize("language", ["en", "ko"])
+def test_nonapproval_performs_no_integration_mutations(repo, action, content, status, language):
     base, worktree = repo
+    with (base / ".git/info/exclude").open("a") as stream:
+        stream.write("\n.devkit/config.local.toml\n")
+    (base / ".devkit/config.local.toml").write_text(f'[presentation]\nlanguage="{language}"\n')
     before = git(base, "show-ref")
 
     async def reply(_message, schema):
@@ -141,8 +145,12 @@ def test_pending_confirmation_leaves_git_and_worktree_unchanged(repo):
 
 
 @pytest.mark.parametrize("moved", ["source", "target", "policy", "cleanup"])
-def test_changed_scope_invalidates_confirmation(repo, moved):
+@pytest.mark.parametrize("language", ["en", "ko"])
+def test_changed_scope_invalidates_confirmation(repo, moved, language):
     base, worktree = repo
+    with (base / ".git/info/exclude").open("a") as stream:
+        stream.write("\n.devkit/config.local.toml\n")
+    (base / ".devkit/config.local.toml").write_text(f'[presentation]\nlanguage="{language}"\n')
     service = IntegrationService(base)
 
     async def change(_message, _schema):
@@ -424,3 +432,89 @@ def test_confirmation_leads_with_committed_work_and_escapes_summary(repo):
     assert "Delete local branch: no" not in message.splitlines()
     assert request.context.finish.source_sha in message and request.context.finish.target_sha in message
     assert request.digest != replace(request, readiness=replace(readiness, evidence=())).digest
+
+
+@pytest.mark.parametrize(
+    "method,merged,pr,number",
+    [
+        ("no-ff", False, False, None),
+        ("ff-only", False, False, None),
+        ("no-ff", True, False, None),
+        ("no-ff", False, True, None),
+        ("no-ff", False, True, 31),
+        ("no-ff", True, True, 31),
+    ],
+)
+@pytest.mark.parametrize("cleanup", [False, True])
+def test_bilingual_scope_and_owned_branches(repo, method, merged, pr, number, cleanup):
+    import re
+
+    from devkit.worktree.pull_request import Repository
+
+    base, _ = repo
+    request = IntegrationService(base).prepare("dev-demo", Task("session", "evidence\nnot a heading")).request
+    plan = replace(
+        request.context.finish,
+        merge_method=method,
+        already_merged=merged,
+        delete_branch=cleanup,
+        worktree_identity=request.context.finish.worktree_identity if cleanup else None,
+    )
+    evidence = (
+        Evidence("TASK_TITLE", "제목/English"),
+        Evidence("TASK_SUMMARY", "x" * 1600),
+        Evidence("RESULT_SUMMARY", "source\nverbatim"),
+    )
+    request = replace(
+        request,
+        context=replace(request.context, finish=plan),
+        readiness=replace(request.readiness, evidence=evidence),
+        repository=Repository("origin", "url", "url", "github.com", "owner/repo", cleanup) if pr else None,
+        pr_number=number,
+        unverified_rules=("provider untouched",),
+    )
+    digest = request.digest
+    english, korean = request.confirmation_message("en"), request.confirmation_message("ko")
+    assert "Approve" in english and "승인" in korean
+    assert plan.source_sha in korean and plan.target_sha in korean
+    assert request.digest == digest
+
+    # Every quoted external value is identical; only the owned truncation suffix differs.
+    def quoted(text):
+        return re.findall(r'"(?:[^"\\]|\\.)*"', text)
+
+    assert quoted(english.replace("… [truncated]", "…")) == quoted(korean.replace("… [잘림]", "…"))
+    if not pr:
+        assert "x" * 1500 in korean and "x" * 1501 not in korean
+        assert "fetch, push" in korean
+    else:
+        assert "INTEGRATION_LANDED_UNCHECKED" in korean if merged else "devkit" in korean
+
+
+def test_owning_workspace_language_snapshot_and_guard_independence(repo):
+    from devkit.core.mcp_context import ExecutionBinding, McpInteractiveError, invocation
+
+    base, worktree = repo
+    with (base / ".git/info/exclude").open("a") as stream:
+        stream.write("\n.devkit/config.local.toml\n")
+    (base / ".devkit/config.local.toml").write_text('[presentation]\nlanguage="en"\n')
+    local = worktree / ".devkit/config.local.toml"
+    local.write_text('[presentation]\nlanguage="ko"\n')
+    binding = ExecutionBinding(worktree, base)
+    service = IntegrationService(base)
+    messages = []
+
+    async def cancel(message, schema):
+        messages.append(message)
+        local.write_text('[presentation]\nlanguage="en"\n')
+        assert message == messages[-1]
+        return ConfirmationReply("cancel", {})
+
+    with invocation(binding):
+        asyncio.run(service.integrate("dev-demo", TASK, cancel))
+        asyncio.run(service.integrate("dev-demo", TASK, cancel))
+    assert "승인" in messages[0] and messages[1].startswith("Approve")
+    local.write_text('[presentation]\nlanguage="ko"\n[execution]\nenvironment="cloud"\n')
+    with pytest.raises(McpInteractiveError), invocation(binding):
+        asyncio.run(service.integrate("dev-demo", TASK, cancel))
+    assert len(messages) == 2

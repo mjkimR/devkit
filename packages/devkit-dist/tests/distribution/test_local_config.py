@@ -386,3 +386,44 @@ def test_shared_render_changes_do_not_acquire_personal_provenance(fixture) -> No
     sync.sync_project(root, [item])
     assert "Language: ja" in (root / path).read_text()
     assert json.loads((root / ".devkit/transient/deployed.json").read_text())["personal"] == []
+
+
+@pytest.mark.parametrize("override", [None, "auto", "en", "free text"])
+def test_presentation_inheritance_and_canonical_receipt(fixture, override: str | None) -> None:
+    from dataclasses import replace
+
+    from devkit.distribution.bundles import load_bundle
+
+    root, item = fixture
+    manifest = item.bundle.root / "bundle.toml"
+    manifest.write_text(
+        manifest.read_text().replace('default = "en"', 'default = "en"\ndefault_from = "presentation.language"')
+    )
+    item = replace(item, bundle=load_bundle(item.bundle.root))
+    shared = root / ".devkit/config.toml"
+    shared.write_text(
+        shared.read_text()
+        + '[presentation]\nlanguage="en"\n'
+        + (f'[bundles.style.variables]\nlanguage="{override}"\n' if override is not None else "")
+    )
+    sync.sync_project(root, [item])
+    canonical = tracked_state(root)
+    local(root, '[presentation]\nlanguage="ko"\n')
+    sync.sync_project(root, [item], locked=True)
+    output = root / ".devkit/managed/style/style.md"
+    assert f"Language: {override if override is not None else 'ko'}" in output.read_text()
+    assert tracked_state(root) == canonical
+    assert get_context(root, "style").instructions
+    local(root, '[presentation]\nlanguage="unsupported"\n')
+    with pytest.raises(LocalRenderStaleError):
+        get_context(root, "style")
+    sync.sync_project(root, [item], locked=True)
+    assert f"Language: {override if override is not None else 'en'}" in output.read_text()
+    result = CliRunner().invoke(cli, ["config", "show", "--effective", "-w", str(root)])
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["presentation_language"] == {
+        "requested": "unsupported",
+        "resolved": "en",
+        "fallback": True,
+        "source": str(root / LOCAL_CONFIG_PATH),
+    }

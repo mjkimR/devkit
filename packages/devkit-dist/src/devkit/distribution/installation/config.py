@@ -62,6 +62,7 @@ FIELDS = frozenset(
     {
         "schema",
         "execution",
+        "presentation",
         "mcp",
         "agents",
         "presets",

@@ -58,8 +58,12 @@ serve(Path(sys.argv[1]), Path(sys.argv[1]))
         ("cancel", None, "cancelled"),
     ],
 )
-def test_native_protocol_confirmation_binds_to_real_git_scope(repo, action, content, expected):
+@pytest.mark.parametrize("language", ["en", "ko"])
+def test_native_protocol_confirmation_binds_to_real_git_scope(repo, action, content, expected, language):
     base, worktree = repo
+    with (base / ".git/info/exclude").open("a") as stream:
+        stream.write("\n.devkit/config.local.toml\n")
+    (base / ".devkit/config.local.toml").write_text(f'[presentation]\nlanguage="{language}"\n')
     source, target = git(worktree, "rev-parse", "HEAD"), git(base, "rev-parse", "HEAD")
     refs_before = git(base, "show-ref")
     messages = []
@@ -67,6 +71,8 @@ def test_native_protocol_confirmation_binds_to_real_git_scope(repo, action, cont
     async def confirm(context, params):
         assert git(base, "show-ref") == refs_before and worktree.exists()
         messages.append(params.message)
+        assert ("승인" in params.message) == (language == "ko")
+        assert params.requestedSchema["properties"]["approve"]["default"] is False
         return types.ElicitResult(action=action, content=content)
 
     async def run():
@@ -120,8 +126,12 @@ def test_native_protocol_confirmation_binds_to_real_git_scope(repo, action, cont
         assert result["authority"] == "none"
 
 
-def test_client_without_forms_and_caller_approval_flags_cannot_execute(repo):
+@pytest.mark.parametrize("language", ["en", "ko"])
+def test_client_without_forms_and_caller_approval_flags_cannot_execute(repo, language):
     base, worktree = repo
+    with (base / ".git/info/exclude").open("a") as stream:
+        stream.write("\n.devkit/config.local.toml\n")
+    (base / ".devkit/config.local.toml").write_text(f'[presentation]\nlanguage="{language}"\n')
     refs_before = git(base, "show-ref")
 
     async def run():

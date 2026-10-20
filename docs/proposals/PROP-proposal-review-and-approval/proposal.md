@@ -40,7 +40,7 @@ approval** solves these problems together:
 1. **Shared-workspace review report**: when Planning reaches `plan-accept`, the executor or Host writes a concise
    review report—focused on newly added PADRs (decision, rejected alternatives, trade-offs), surface/boundary
    impacts, and waived Challenger risks—into the MCP-owned shared workspace (`PROP-worker-shared-state-mcp`, local
-   default `<base-checkout>/.devkit/.shared/`) in the configured `[presentation] language` (`PROP-language-setting-coverage`,
+   default `<base-checkout>/.devkit/.shared/`) in the configured `[presentation] language` (`SPEC-language-setting-coverage`,
    e.g., Korean) with a 7-day TTL and `source_sha` binding, keeping tracked repository files in English.
 2. **Minimal native MCP `plan-accept` screen**: the Host opens a native MCP confirmation dialog showing only minimal
    metadata (title, one-line summary, PADR list, recommended `dev_effort`) and a clickable link (or local
@@ -126,5 +126,5 @@ with `accept_only` or `--direct`.
 ## 4. Lifecycle & Retirement Criteria
 
 Depends on `SPEC-standalone-devkit-mcp` (MCP runtime), `PROP-worker-shared-state-mcp` (shared workspace adapter and
-7-day TTL storage) and `PROP-language-setting-coverage` (presentation language resolution). Medium Planning should
+7-day TTL storage) and `SPEC-language-setting-coverage` (presentation language resolution). Medium Planning should
 settle the exact MCP tool names, form schema, report template and partial-failure recovery semantics before handoff.

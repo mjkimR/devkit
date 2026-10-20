@@ -131,13 +131,19 @@ class _BundleInventory:
     """Adds one selected bundle to an ``Inventory``."""
 
     def __init__(
-        self, inventory: Inventory, bundle: Bundle, agents: list[str], root: Path | None, variables: dict[str, Scalar]
+        self,
+        inventory: Inventory,
+        bundle: Bundle,
+        agents: list[str],
+        root: Path | None,
+        variables: dict[str, Scalar],
+        language: str | None,
     ) -> None:
         self.inventory = inventory
         self.bundle = bundle
         self.agents = agents
         self.root = root
-        self.variables = resolve_variables(bundle.variables, variables, bundle.name)
+        self.variables = resolve_variables(bundle.variables, variables, bundle.name, language=language)
         self.prefix = f"{MANAGED_PATH}/{bundle.name}/"
         self.context_files: set[Path] = set()
         self.selected: set[str] = set()
@@ -359,6 +365,7 @@ def desired_inventory(
     root: Path | None = None,
     previous_overrides: dict[str, dict[str, OverrideRecord]] | None = None,
     variables: dict[str, dict[str, Scalar]] | None = None,
+    language: str | None = None,
 ) -> Inventory:
     """Everything ``installed`` deploys for ``presets`` and ``agents``.
 
@@ -375,7 +382,7 @@ def desired_inventory(
     for item in installed:
         bundle = item.bundle
         inventory.packages.append(PackageRecord(item.package, item.package_version, bundle.name, bundle.version))
-        _BundleInventory(inventory, bundle, agents, root, (variables or {}).get(bundle.name, {})).add(
+        _BundleInventory(inventory, bundle, agents, root, (variables or {}).get(bundle.name, {}), language).add(
             presets[bundle.name], dict((previous_overrides or {}).get(bundle.name, {}))
         )
     for kind, module in GENERATED_SKILLS.items():

@@ -1,0 +1,13 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T07:28:59.311930Z'
+status: completed
+summary: 'Swept Development observations: recorded native-language-form-evidence-gap; dependency-sync friction duplicates existing FB-planning-context-command-can-trigger-unavailable-sync and is not rewritten.'
+findings: []
+assumptions:
+- Observed capture; native UI follow-up is evidence collection only and does not defer required implementation.
+checks:
+  swept: PASS recorded=1 duplicates=1
+activity_effort: medium

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
-import json
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -13,10 +12,12 @@ from devkit.core import run_git
 from devkit.core.frontmatter import parse
 from devkit.core.mcp import Confirmation, McpTool
 from devkit.core.mcp_context import guard_execution
+from devkit.core.presentation import approval_language
 from devkit.workflow import Workspace
 from devkit.worktree import locate, path_for, read_worktree_config, start
 
 from devkit_spec.errors import HandoffNotReadyError, HandoffReplyError, HandoffStaleError
+from devkit_spec.handoff_language import schema as approval_schema
 from devkit_spec.proposals import handoff_proposal
 from devkit_spec.proposals.binding import EFFORTS, TASK_KINDS
 from devkit_spec.scope.flow import SOURCE_HANDOFF, auto_register
@@ -36,27 +37,10 @@ class HandoffPreview:
     plan: str
     effort: str
 
-    def message(self) -> str:
-        def show(value: str) -> str:
-            return json.dumps(value, ensure_ascii=False)
+    def message(self, language: str = "en") -> str:
+        from devkit_spec.handoff_language import message
 
-        lines = [
-            f"Start Development: {show(self.title)}",
-            f"Goal: {show(self.summary)}",
-            "Next: create the Development worktree, hand off the accepted plan, then continue implementation.",
-            f"Review and verification level: {self.effort} recommended by dev_effort (medium when absent).",
-            "Low: self-review. Medium: independent initial review. High: repeated independent review.",
-            "Required checks apply at every level. This selection does not change model reasoning settings.",
-            f"Accepted plan: {show(self.plan)}",
-            f"Repository: {show(str(self.root))}",
-            f"Base: {show(self.base_branch)} @ {self.head}",
-            f"Create branch: {show('dev-' + self.slug)}",
-            f"Create worktree: {show(self.worktree)}",
-            f"Run configured setup: {show(self.setup) if self.setup else 'none'}; restore locked agent assets.",
-            "Handoff creates the spec bundle and retires the proposal only inside this new worktree.",
-            "This approves starting Development. Final merge requires its own approval.",
-        ]
-        return "\n".join(lines)
+        return message(self, language)
 
 
 def prepare(root: Path, slug: str) -> HandoffPreview:
@@ -105,7 +89,7 @@ def prepare(root: Path, slug: str) -> HandoffPreview:
         config.setup,
         policy.hexdigest(),
         str(meta.get("title") or f"PROP-{slug}"),
-        str(meta.get("summary") or "Read the accepted plan."),
+        str(meta.get("summary") or ""),
         text,
         effort,
     )
@@ -120,23 +104,12 @@ class HandoffService:
         guard_execution()
         async with self._lock:
             guard_execution()
+            language = approval_language(self.root)
             preview = await asyncio.to_thread(prepare, self.root, slug)
             guard_execution()
             reply = await confirm(
-                preview.message(),
-                {
-                    "type": "object",
-                    "properties": {
-                        "approve": {"type": "boolean", "title": "Start Development of this plan", "default": False},
-                        "activity_effort": {
-                            "type": "string",
-                            "enum": list(EFFORTS),
-                            "default": preview.effort,
-                            "title": "Review and verification level",
-                        },
-                    },
-                    "required": ["approve", "activity_effort"],
-                },
+                preview.message(language),
+                approval_schema(preview.effort, language),
             )
             if reply.action != "accept" or reply.content.get("approve") is not True:
                 return {"status": {"decline": "declined", "cancel": "cancelled"}.get(reply.action, "not_approved")}

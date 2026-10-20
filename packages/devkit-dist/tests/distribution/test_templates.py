@@ -417,3 +417,31 @@ def test_skill_template_entry_requires_a_directory(tmp_path: Path) -> None:
             'schema=1\nname="style"\nversion="0.1.0"\n[[assets]]\nid="respond"\nkind="skill"\nsource="SKILL.md.jinja"\n',
             {"SKILL.md.jinja": instruction("respond", "Body\n")},
         )
+
+
+@pytest.mark.parametrize(
+    "declaration",
+    [
+        {"type": "string", "default_from": "unknown"},
+        {"type": "boolean", "default_from": "presentation.language"},
+        {"type": "string", "default_from": None},
+        {"type": "string", "default_from": ["presentation.language"]},
+    ],
+)
+def test_language_default_binding_validation(declaration) -> None:
+    from devkit.distribution.bundles.templates import declarations
+
+    with pytest.raises(BundleError):
+        declarations({"language": declaration})
+
+
+def test_language_default_binding_precedence() -> None:
+    from devkit.distribution.bundles.templates import declarations, resolve_variables
+
+    declared = declarations(
+        {"language": {"type": "string", "default": "auto", "default_from": "presentation.language"}}
+    )
+    assert resolve_variables(declared, {}, "style") == {"language": "auto"}
+    assert resolve_variables(declared, {}, "style", language="ko") == {"language": "ko"}
+    for value in ("auto", "en", "ko", "free text"):
+        assert resolve_variables(declared, {"language": value}, "style", language="ko") == {"language": value}

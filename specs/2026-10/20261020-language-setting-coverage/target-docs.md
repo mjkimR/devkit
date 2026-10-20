@@ -3,7 +3,7 @@ id: PROP-language-setting-coverage-target
 title: Language preference Living Spec targets
 summary: "Maps shared language resolution, response-style inheritance and bounded approval-content coverage to Development reconciliation targets."
 status: draft
-proposal: PROP-language-setting-coverage
+proposal: SPEC-language-setting-coverage
 created_at: 2026-10-20
 ---
 

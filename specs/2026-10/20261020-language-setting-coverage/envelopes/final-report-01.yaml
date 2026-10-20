@@ -1,0 +1,23 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T07:30:18.489946Z'
+status: completed
+summary: Implemented shared/local presentation language with provenance, bounded manifest inheritance and per-form owning-workspace bilingual approval content. Independent code review and separate reconciliation passed with zero findings; all tasks and 14 Living Spec targets complete. Ready for Host validation before integration.
+findings: []
+assumptions:
+- Confinement emulated with absolute assigned workdir, git -C, scoped approvals and Host range validation; no native path guarantee.
+- Existing invocation binding is read only inside core presentation helper; no registration/guard edits. Native UI limitation is explicitly allowed and tracked in FB-native-language-form-evidence-gap.
+- 'Source asset change: packages/devkit-catalog/src/devkit_catalog/response_style/bundle/bundle.toml. Host owns official sync/receipt and moved-base integration; no business approval requested.'
+unverified_areas:
+- Localized visible forms on Codex CLI0.163.0 and Claude Code2.1.304, displayed metadata and client-owned controls; protocol tests verify supplied content only.
+checks:
+  tests: 'PASS just test-affected full fallback: 3964 passed, 14 skipped in 73.62s; dist-only:1056 passed in12.62s'
+  build: PASS offline wheels devkit-dist, devkit-agt, devkit-spec, devkit-catalog; verified new helper and manifest ZIP entries
+  lint: PASS Ruff affected packages; format20 changed Python files; Pyright source/tests zero errors/warnings; cumulative rules zero errors/warnings
+  review: PASS independent semantic EN/KO code review and independent14-target reconciliation; no findings
+diff_scope:
+  base: de3953d44d585e4187be8d3ed17acda2884e46ff
+  head: d59229f30764c7903075a5311a53b147f5757ef4
+activity_effort: medium

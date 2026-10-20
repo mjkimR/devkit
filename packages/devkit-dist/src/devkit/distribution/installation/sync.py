@@ -15,6 +15,7 @@ from devkit.core.errors import ArgumentError
 from devkit.core.git import run_git
 from devkit.core.local_config import LOCAL_CONFIG_PATH
 from devkit.core.mcp_context import guard_execution
+from devkit.core.presentation import resolve_language
 from devkit.core.project import git_toplevel, require_devkit_root
 from devkit.core.receipt import (
     CONFIG_PATH,
@@ -341,6 +342,7 @@ def _plan_inventory(
         root=root,
         previous_overrides=previous_overrides,
         variables=read_config(root, effective=effective).variables,
+        language=resolve_language(root, effective=effective).resolved,
     )
 
 

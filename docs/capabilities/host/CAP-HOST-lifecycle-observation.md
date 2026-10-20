@@ -172,3 +172,9 @@ Dist owns the narrow `devkit.mcp.registrations` provider boundary and project-fi
 ordinary sync to reconcile exact local Codex and Claude entries; `[mcp] register = false` opts out. Uninstall,
 opt-out and selected-agent removal retire only exact owned entries. Host trust, permissions and global settings
 remain host-owned. Registration facts do not prove connectivity or native form UI support.
+
+
+Native approval language is bounded supplied content under `CAP-INT-mcp-services` and
+`CAP-DLV-proposal-incubation`. The owning workspace's presentation preference does not localize hooks, tool results,
+host chrome, trust or permission prompts, and changes no registration or execution guard. See
+`MAT-language-development-evidence` for the explicit per-host visible-form evidence gap.

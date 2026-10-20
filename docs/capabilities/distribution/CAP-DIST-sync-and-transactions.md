@@ -1,7 +1,7 @@
 ---
 id: CAP-DIST-sync-and-transactions
 title: "Synchronization & Transactions"
-summary: "Transactional bundle deployment, canonical receipts, restricted checkout-local configuration and personal rendering, with lock, journal and recovery guarantees."
+summary: "Transactional deployment, canonical receipts and restricted checkout-local configuration, including presentation-language provenance and personal rendering evidence."
 area: distribution
 status: active
 entrypoints:
@@ -12,6 +12,7 @@ entrypoints:
   - packages/devkit-dist/src/devkit/core/local_config.py
   - packages/devkit-dist/src/devkit/distribution/installation/local_render.py
   - packages/devkit-dist/src/devkit/distribution/installation/sync.py
+  - packages/devkit-dist/src/devkit/core/presentation.py
 created_at: 2026-10-17
 ---
 
@@ -132,7 +133,7 @@ devkit = false                          # opt out of an auto-selected bundle
 ```
 
 - **Top-level keys**: `schema`, `agents`, `presets`, `playbooks`, `rules`, `workflow`, `gates`, `worktree`,
-  `integration`, `guidance_block`, `override_drift`, `bundles`, `tool`; anything else is `CONFIG_INVALID`. The list is
+  `integration`, `guidance_block`, `override_drift`, `bundles`, `tool`, `execution`, `mcp`, `presentation`; anything else is `CONFIG_INVALID`. The list is
   the same whether or not `devkit-agt` is installed, so a configuration reads the same in both installations and
   typos are still caught.
 - **`schema`**: optional; `1` is the only version. `devkit add` writes it when it creates the file.
@@ -423,9 +424,9 @@ aborts before transaction writes; override commands restore their preliminary wr
 ### Checkout-local configuration and execution
 
 `.devkit/config.local.toml` is an optional, ignored, regular TOML file. It accepts optional `schema = 1`,
-`[execution] environment = "local" | "cloud"`, `[mcp] register = true | false`, the existing `[playbooks]`
+`[execution] environment = "local" | "cloud"`, `[mcp] register = true | false`, `[presentation] language`, the existing `[playbooks]`
 search settings, and scalar `[bundles.<bundle>.variables]` inputs. Shared configuration also accepts `execution`
-and `mcp`; environment defaults to `local`, registration to `true`. Registration reconciliation belongs to the
+and `mcp`, plus `presentation`; environment defaults to `local`, registration to `true`. Registration reconciliation belongs to the
 MCP service. The local file is not a secret store.
 
 Core `read_effective_config(root)` returns values and leaf-key source paths. Tables merge recursively; scalars and
@@ -437,7 +438,9 @@ use. Unknown local keys, including governance, selection and command settings, f
 `read_project_config(root)` remains explicitly shared-only for policy and snapshots.
 
 `devkit config show --effective [--format json]` returns `configuration`, per-key `sources`, and
-`execution_environment` under the project read lock. `resolve_execution_environment(root)` requires an existing
+`execution_environment` and `presentation_language` under the project read lock. The language metadata contains
+`requested`, `resolved`, `source` and `fallback`; explicit bundle inputs and their leaf sources remain in the
+configuration/source maps. `resolve_execution_environment(root)` requires an existing
 bound devkit workspace and returns `environment` and its `source`; it never searches another checkout. Missing
 local files use shared/default values. Cloud means interactive approval is unavailable, never permission to change
 an ask policy to auto; local does not prove host interactivity. No process-global environment latch exists.
@@ -454,15 +457,33 @@ extension warnings retain the committed environment.
 
 ### Personal rendering and evidence
 
-Sync builds canonical inventory from shared variables and compares a second inventory using effective variables.
+Sync builds canonical inventory from shared variables and shared presentation defaults, then compares a second
+inventory using effective variables and effective presentation defaults. Per-key shared/local selection happens
+before consumer inheritance: an explicit shared bundle value wins over a local global preference. A manifest's
+`default_from` does not make otherwise forbidden outputs eligible.
 Only bytes of assets with kind `skill`, `instruction`, `subagent` or `playbook` may differ, at ignored untracked
 destinations. Asset selection, paths, modes, manifests, constitutions, executable asset kinds, hooks, guidance and
 seeds remain canonical. A forbidden difference is `CONFIG_LOCAL_RENDER_FORBIDDEN` (exit 2), before any write.
 Existing template-kind validation can reject an executable template earlier during bundle loading.
 
 `.devkit/transient/local-render.json` records only differing file signatures, bound to the canonical receipt digest
-and effective variable digest. The deployed ledger records actual output and personal destination provenance, so loss of render evidence cannot bypass ownership checks during restoration. Unknown provenance falls back conservatively to deployed signatures differing from canonical records. Context and status use a validated runtime
+and a digest of effective bundle variables and presentation preferences. The deployed ledger records actual output and personal destination provenance, so loss of render evidence cannot bypass ownership checks during restoration. Unknown provenance falls back conservatively to deployed signatures differing from canonical records. Context and status use a validated runtime
 receipt view; core receipt loading, rule/workflow/gate engines and snapshot checks retain canonical authority.
-Missing or stale evidence or changed variables raise `CONFIG_LOCAL_RENDER_STALE` (exit 1, run sync). Missing outputs
+Missing or stale evidence or changed variables/presentation preferences raise `CONFIG_LOCAL_RENDER_STALE` (exit 1, run sync). Missing outputs
 use normal sync repair and hand edits retain conflict checks. Removing preferences restores canonical bytes and
 removes obsolete local evidence. The personal language fixture is `[bundles.response-style.variables] language = "ko"`.
+
+### Presentation language
+
+Shared and allowed local `[presentation] language` accepts a string. Exact lowercase `auto`, `en` and `ko` are
+supported; omission selects `auto`. Another string resolves to `en` with the original requested value, selected
+source and `fallback=true` retained. Wrong types, malformed tables or files retain `CONFIG_INVALID`.
+No locale aliases, OS/environment detection or conversation-language inference is performed. The preference grants
+no execution authority. Core `resolve_language(root, effective=True)` uses only the explicit workspace; shared-only
+resolution uses the same validated resolver with local input excluded. `read_effective_config(root, local=False)`
+is the canonical shared-only variant. Local file copying and independent worktree semantics remain unchanged.
+
+For response-style, `auto` follows the current user request. For native approval forms, `auto` deterministically
+uses English; `ko` and `en` select static domain-owned copy. Unsupported strings select English for both inherited
+consumers. Only bundle declarations opting into `default_from = "presentation.language"` inherit this preference.
+Templates still receive only `vars`. See `CAP-INT-mcp-services` and `CAP-DLV-proposal-incubation` for form boundaries.

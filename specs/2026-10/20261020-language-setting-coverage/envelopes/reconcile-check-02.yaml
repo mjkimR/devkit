@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T07:29:20.447192Z'
+status: completed
+summary: 'Post-review self-check: only appended the optional native UI evidence feedback destination to reconcile.md; independent 14-target verification remains valid and no code or canonical contract changed.'
+findings: []
+assumptions:
+- Medium discretionary repeat check performed by implementer for traceability-only addition; initial separate reconcile reviewer PASS is reconcile-check-01.
+checks:
+  reconciliation: PASS independent initial review retained; feedback destination exists and matches allowed unverified limitation
+activity_effort: medium
