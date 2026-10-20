@@ -1,0 +1,39 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T01:07:49.639981Z'
+status: completed
+review: review-01.yaml
+summary: round 1 fixes; all four findings fixed and covered by regression tests; behavior/output changes require independent round 2.
+findings:
+- issue: Committed envelope collection includes files the existing envelope check ignores.
+  evidence: packages/devkit-spec/src/devkit_spec/worker/inputs.py:76
+  failure_condition: Committed README.md, .gitkeep or temporary files under envelopes cause ENVELOPE_INVALID and can prevent previous-base derivation.
+  suggested_action: Apply is_envelope_name before collect_envelopes and test ignored files in current and previous records.
+  resolution: resolved
+  severity: P1
+- issue: Workflow evaluation reads uncommitted unit records contrary to the committed-record requirement.
+  evidence: packages/devkit-spec/src/devkit_spec/worker/inspect.py:140
+  failure_condition: Dirty decisions, envelopes, tasks or anchors alter wrapped workflow next while envelope evidence reads HEAD.
+  suggested_action: Evaluate committed records or mark workflow not-run when dirty records can affect evaluation; add regression coverage.
+  resolution: resolved
+  severity: P1
+- issue: Text output reports paths inside scope when scope is unavailable.
+  evidence: packages/devkit-spec/src/devkit_spec/cli/worker.py:62
+  failure_condition: Failed scope derivation with changed paths still emits outside=no.
+  suggested_action: Omit outside when outside_scope is absent and test text output.
+  resolution: resolved
+  severity: P1
+- issue: Text rendering dumps nested check payloads and places wrapped advisories on stdout.
+  evidence: packages/devkit-spec/src/devkit_spec/cli/worker.py:64
+  failure_condition: Envelope history or structured wrapped advisories are serialized in text check sentinels instead of concise facts and advisory stderr.
+  suggested_action: Render concise facts and actionable findings, render structured advisories on stderr through helpers, retain complete JSON and test routing.
+  resolution: resolved
+  severity: P1
+checks:
+  tests: PASS 23 focused and 1073 affected tests
+  lint: PASS package lint and type checks
+diff_scope:
+  base: ''
+  head: 19141b6ba7dd9d7af5e96d09add17d4518fffdad
