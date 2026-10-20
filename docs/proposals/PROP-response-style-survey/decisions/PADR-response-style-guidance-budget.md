@@ -38,7 +38,9 @@ No reminder-length experiment is required. An actual limit expansion needs obser
 guidance budget and a new accepted design.
 
 The current scope settles the question as retain-limit; it promises no unimplemented distribution change and
-claims no measured long-session effect. The canonical bundle contract reflection goes in
+claims no measured long-session effect. This is a per-guidance-fragment cap for text inserted into `AGENTS.md`,
+not a total-file or skill-body cap. Detailed guidance stays in `SKILL.md`, and no byte, word or token ceiling is
+introduced for that body. The canonical bundle contract reflection goes in
 `CAP-DIST-content-packages`; the manifest contract stays unchanged.
 
 ## 5. Consequences

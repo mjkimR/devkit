@@ -1,7 +1,7 @@
 ---
 id: PROP-response-style-survey
 title: Survey reply-style practice to refine response-style
-summary: "Uses surveyed prompt/style sources to propose one portable response style with explicit content obligations, adaptable explanation and layout, and example-based review."
+summary: "Proposes one portable response style with a conclusion-first opening, arrow-marked core sentences and supporting explanation, required-format exceptions and example-based review."
 status: reviewing
 created_at: 2026-10-19
 target_area: distribution/
@@ -27,9 +27,9 @@ workflow: sdd-proposal
 ## 1. Background & Hypothesis
 
 The response-style bundle combines important content obligations with recurring visual instructions. Its
-mandatory bold openings and fixed paragraph sizes are local editorial choices, not established determinants
-of comprehension. The proposed rewrite keeps meaning and required output explicit while letting explanation
-and layout follow the request. Its helpfulness remains a judgment to discuss with concrete examples.
+block-count thresholds and fixed paragraph sizes are local editorial choices, not established determinants
+of comprehension. The proposed rewrite uses a conclusion-first opening and a consistent marked-point format,
+with depth and format exceptions that follow the request. Its helpfulness remains a judgment to discuss with concrete examples.
 
 The survey inspected actual prompt/style files, license texts and published evaluation descriptions rather
 than relying on repository names or stars. It is a focused review of reply instructions, not an audit of the
@@ -41,19 +41,26 @@ it does not establish that their rules improve devkit replies.
 
 - **Content and output obligations:** Preserve required facts, units, scoped conditions, material risks and
   requested formats. A style rule cannot drop a workflow field or change a supplied fact to shorten a reply.
+- **First sentence:** For an ordinary reply, its first sentence states the overall answer, recommendation or
+  current result, including a condition that changes that conclusion or the uncertainty that prevents it.
+  A short answer may end there if complete; a long answer develops that conclusion.
 - **Explanation:** Answer a narrow question directly; explain reasoning, examples and alternatives when the
   request calls for them. A long deliverable gets the space its requirements need. Do not force all replies
   into a terse mode or an educational mode.
-- **Presentation:** Use paragraphs, lists, comparisons and emphasis where they help the particular material.
-  Remove a mandatory bold opening after three blocks, fixed 1-3-sentence paragraphs and source-specific visual
-  decorations. Preserve any format the user or workflow actually requires.
+- **Presentation:** Use `→ **Core sentence.** Supporting explanation` as the default ordinary point format,
+  with blank lines between points. The bold sentence states that point's conclusion; the first point carries the
+  overall answer and later points add distinct information. Use no block-count or sentence-count threshold.
+  A one-sentence reply may omit the marker; use numbers for order/choices, preserve required user/workflow
+  formats, and output requested artifacts without a conversational prefix. Use `->` for ASCII-only media.
 - **Work reports:** Name the scope of what is finished and what remains, with actual verification and material
   limitations. A completed survey, edit or test does not imply completion of the whole request. Show necessary
   user decisions without appending empty offers or creating new approval requests.
 - **Language and deployment:** Keep one style and the existing language variable, with short Korean wording
   guidance. Preserve opt-in packaging and all current projections. No presets or host-specific style variants.
 - **Always-loaded guidance:** Keep one pointer within the 300-UTF-8-byte contract in `CAP-DIST-manifest-spec`.
-  Longer reminders and actual compaction behavior are unverified; this work changes no shared guidance limit.
+  This applies to the guidance fragment inserted into `AGENTS.md`, not the whole file or the skill body.
+  Detailed rules stay in `SKILL.md` without a new byte, word or token ceiling. Actual compaction behavior is
+  unverified; this work changes no shared guidance limit.
 
 `MAT-response-style-rewrite-draft` provides the concrete skill-body draft, pointer and four authored examples.
 `PADR-response-style-adaptive-replies`, `PADR-response-style-source-selection`,
