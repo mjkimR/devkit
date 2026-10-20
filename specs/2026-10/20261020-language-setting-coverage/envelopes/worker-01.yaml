@@ -1,0 +1,24 @@
+kind: worker
+stage: integration-approval
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T07:31:00.537479Z'
+status: completed
+summary: Completed specify through verified final-change-report with stage commits. Shared/local language, bounded response-style inheritance and owned bilingual integration/handoff forms implemented. Independent code and reconcile reviews passed; workflow waits only for Host integration approval.
+findings: []
+assumptions:
+- 'Confinement emulated: explicit absolute workdir and git -C, narrowly approved writes/commits, Host range validation; no native isolation guarantee.'
+- Core-internal binding lookup preserves owning-workspace context and all guards; source_asset_changes=packages/devkit-catalog/src/devkit_catalog/response_style/bundle/bundle.toml.
+- No integration, push, business approval or real host trust/config mutation. Host owns source-asset sync/receipt and moved-base validation.
+unverified_areas:
+- Codex CLI0.163.0 and Claude Code2.1.304 localized visible native forms and client-owned controls; tracked optional evidence follow-up FB-native-language-form-evidence-gap.
+checks:
+  tests: PASS affected full fallback 3964 passed 14 skipped; standalone dist-only 1056 passed
+  build: PASS four offline wheels; helpers and response-style manifest packaged
+  lint_types: PASS affected-package Ruff,20-file format and Pyright zero errors/warnings
+  governance: PASS cumulative rules zero errors/warnings; normal gates and envelope validation
+  reviews: PASS independent code review including semantic EN/KO comparison; separate14-target reconcile review, zero findings
+diff_scope:
+  base: de3953d44d585e4187be8d3ed17acda2884e46ff
+  head: 7ab277b4dd46ea0cbf792f2b684ee88197ec88d3
+activity_effort: medium
