@@ -255,7 +255,7 @@ class Own:
     problems: list[Problem]
 
 
-def own(session: Session) -> Own:
+def own(session: Session, *, cleanup: bool = True) -> Own:
     """This worktree's record (found by its token) and the other records of the namespace.
 
     Raises ``ScopeTokenMissingError`` without a token, ``ScopeRecordMissingError`` when its record is gone and
@@ -263,7 +263,7 @@ def own(session: Session) -> Own:
     may hold it (``Registry.may_hold``); unreadable files that cannot be it are only ``problems``.
     """
     location = session.location
-    token = load_token(location.token_path)
+    token = load_token(location.token_path, cleanup=cleanup)
     if token is None:
         raise ScopeTokenMissingError(
             "this worktree holds no scope registry token", target_files=[str(location.token_path)]

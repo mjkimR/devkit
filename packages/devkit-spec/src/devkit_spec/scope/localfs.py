@@ -6,7 +6,7 @@
 - Each operation reads, compares and writes inside one lock hold. A record is published with
   ``devkit.core.atomic_write_text`` (a ``.<name>.devkit-*.tmp`` file in the same directory, synced and renamed over
   the record), so a reader never sees a partial record; temp files an interrupted publish left behind are removed
-  on the next lock acquisition.
+  on the next mutating lock acquisition. Queries use read-only shared locks and never clean files.
 - Network file systems are not supported: ``flock`` and rename atomicity are not guaranteed there.
 """
 
@@ -16,6 +16,8 @@ import contextlib
 import json
 import os
 import socket
+import stat
+import time
 from collections.abc import Callable, Collection, Iterator, Mapping
 from dataclasses import replace
 from pathlib import Path
@@ -83,6 +85,37 @@ class FlockLocker:
         return stack.close
 
 
+class ReadFlockLocker:
+    """Shared flock on an existing, read-opened regular file; no creation or cleanup."""
+
+    def acquire(self, lock_file: Path, deadline: Deadline) -> Unlock:
+        try:
+            import fcntl
+        except ImportError as exc:  # pragma: no cover - not on Linux or macOS
+            raise ScopeLockUnsupportedError("fcntl.flock is not available on this platform") from exc
+        # NONBLOCK prevents opening a FIFO from waiting before descriptor validation.
+        fd = os.open(lock_file, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        try:
+            if not stat.S_ISREG(os.fstat(fd).st_mode):
+                raise ScopeSharedPathError(
+                    f"the lock file {lock_file} is not a regular file", target_files=[str(lock_file)]
+                )
+            while True:
+                try:
+                    fcntl.flock(fd, fcntl.LOCK_SH | fcntl.LOCK_NB)
+                    break
+                except BlockingIOError:
+                    remaining = deadline.remaining()
+                    if remaining <= 0:
+                        raise deadline.exceeded("waiting for the namespace lock") from None
+                    time.sleep(min(0.01, remaining))
+        except BaseException:
+            os.close(fd)
+            raise
+        # Closing the descriptor releases flock, including when the read raises.
+        return lambda: os.close(fd)
+
+
 def safe_name(identifier: str) -> str:
     """``identifier`` as a file name: characters other than letters, digits, ``-``, ``_`` and ``.`` become ``_``,
     and a leading ``.`` becomes ``_``, so an ID never names a hidden, temp, lock or parent file."""
@@ -125,12 +158,14 @@ class LocalRegistry:
         shared: Path,
         *,
         locker: Locker | None = None,
+        reader_locker: Locker | None = None,
         hostname: str | None = None,
         now: Callable[[], str] = utc_now,
         worktree_exists: Callable[[str, Deadline], bool] = _git_worktree_exists,
     ) -> None:
         self.shared = shared
         self.locker: Locker = locker or FlockLocker()
+        self.reader_locker: Locker = reader_locker or ReadFlockLocker()
         self.hostname = hostname if hostname is not None else socket.gethostname()
         self.now = now
         self.worktree_exists = worktree_exists
@@ -180,6 +215,27 @@ class LocalRegistry:
                 raise self._shared_error(exc, namespace) from exc
         finally:
             unlock()
+
+    @contextlib.contextmanager
+    def _read_locked(self, namespace: str, deadline: Deadline) -> Iterator[Path | None]:
+        if not valid_namespace(namespace):
+            raise ScopeNamespaceError(f"invalid registry namespace {namespace!r}", target_files=[namespace])
+        deadline.check("the registry operation")
+        directory = self.namespace_dir(namespace)
+        try:
+            try:
+                directory.stat()
+            except FileNotFoundError:
+                # Only an absent namespace is empty; a missing lock in an existing one is an error.
+                yield None
+                return
+            unlock = self.reader_locker.acquire(directory / LOCK_FILE, deadline)
+            try:
+                yield directory
+            finally:
+                unlock()
+        except OSError as exc:
+            raise self._shared_error(exc, namespace) from exc
 
     @staticmethod
     def _clean_temp(directory: Path) -> None:
@@ -272,8 +328,8 @@ class LocalRegistry:
         return token, record
 
     def query(self, namespace: str, deadline: Deadline) -> tuple[list[Record], list[Problem]]:
-        with self._locked(namespace, deadline) as directory:
-            return self._read_all(directory)
+        with self._read_locked(namespace, deadline) as directory:
+            return ([], []) if directory is None else self._read_all(directory)
 
     def update(self, token: str, expected_revision: int, request_id: str, record: Record, deadline: Deadline) -> Record:
         with self._locked(record.namespace, deadline):
@@ -411,7 +467,9 @@ class LocalRegistry:
     def history(self, namespace: str, deadline: Deadline) -> tuple[list[Event], list[Problem]]:
         events: list[Event] = []
         problems: list[Problem] = []
-        with self._locked(namespace, deadline):
+        with self._read_locked(namespace, deadline) as directory:
+            if directory is None:
+                return [], []
             try:
                 lines = self.journal_path(namespace).read_bytes().split(b"\n")
             except FileNotFoundError:
