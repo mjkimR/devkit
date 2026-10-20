@@ -94,8 +94,9 @@ existing shared host files are never edited by locked sync. See `CAP-HOST-lifecy
   and removes ones this clone's last sync left unchanged after a pull moved the receipt, and never writes the
   receipt, the root `AGENTS.md` block, seeded files (a deleted one stays missing) or `.devkit/.gitignore`. When the sync
   would change any of them (the installed bundles no longer match the receipt, or there is no receipt), it writes
-  nothing and fails with `RECEIPT_STALE` (`INTERACTION`, exit `1`: a negative result, as for `--check`); every other
-  error exits `2` as in a plain sync (a missing package is `SELECTION_INVALID`). It runs post-sync extensions only when it committed, and
+  nothing and fails with `RECEIPT_STALE` (`INTERACTION`, exit `1`: a negative result, as for `--check`); each other
+  error follows its code-specific exit status as in a plain sync: concurrent configuration changes are
+  `CONFIG_LOCAL_CHANGED` (exit `1`), and a missing package is `SELECTION_INVALID` (exit `2`). It runs post-sync extensions only when it committed, and
   permits `--cloud` or `--local` to save the environment in the ignored local file, but no selection flag,
   `--dry-run`, `--check` or `--no-save` (`CAP-DIST-sync-and-transactions`).
 
