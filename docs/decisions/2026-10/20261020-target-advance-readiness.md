@@ -65,4 +65,4 @@ anything else is stale or ambiguous.
 - The approval's meaning changes from "this target" to "this source onto the target as it will be, under these
   conditions, within one call"; `CAP-INT-mcp-services` section 2 is rewritten accordingly, and Development updates
   the exit condition of `MS-multi-host-native-integration` to "bound to the verified source commit and the
-  confirmation target and its descendants" (`answer-01.yaml` m-milestone-wording).
+  confirmation target and its descendants" (user decision).
