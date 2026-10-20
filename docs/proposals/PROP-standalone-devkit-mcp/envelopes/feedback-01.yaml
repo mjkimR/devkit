@@ -1,0 +1,12 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-20T04:56:05.107049Z'
+status: completed
+summary: Swept this Planning run, its committed records and pending design/reverify changes under observed capture. No new observations; uv context auto-sync failure duplicates FB-planning-context-command-can-trigger-unavailable-sync, captured by the concurrent config Planning worker at its returned committed head for Host validation.
+findings: []
+assumptions:
+- The duplicate feedback is in the sibling config Planning result; it is evidence for deduplication only, not an available design contract in this branch.
+checks:
+  swept: PASS recorded=0 duplicates=1

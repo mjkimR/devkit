@@ -1,0 +1,21 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-20T04:55:54.414243Z'
+status: completed
+review: challenger-01.yaml
+summary: 'Author reverified the changed design against native clean-state preconditions: registration now writes only ignored untracked destinations, narrowly excludes new files without tracked ignore edits, and explicitly refuses tracked/foreign visible files. Acceptance covers setup, handoff and integration; expected self-removal is bounded to same-call terminal cleanup.'
+findings:
+- issue: Default registration can make the checkout dirty and prevent the native workflow it is intended to enable.
+  evidence: proposal.md:77-86 writes machine-specific entries into possibly tracked .codex/config.toml/.mcp.json; packages/devkit-spec/src/devkit_spec/handoff_mcp.py:65-66 and 168-171 reject tracked/untracked changes; CAP-INT-mcp-services requires clean base/source state.
+  failure_condition: Sync modifies a tracked host config or creates an unignored host file; native handoff/integration then refuses the checkout. Committing absolute paths does not solve per-machine/worktree differences.
+  suggested_action: 'Use a clean-worktree-compatible policy: locally exclude only newly generated untracked files, refuse automatic modification of tracked destinations with actionable unavailable/fallback guidance, preserve clean-tree checks and add absent/ignored/tracked cases through setup, handoff and integration.'
+  resolution: resolved
+  severity: P1
+unverified_areas:
+- Implementation and live-host tests remain future Development evidence; the challenger did not review subsequent author changes.
+checks:
+  design: PASS challenger P1 resolved by explicit ownership/cleanliness contract
+  rules: PASS proposal subtree zero violations
+  diff: PASS whitespace check
