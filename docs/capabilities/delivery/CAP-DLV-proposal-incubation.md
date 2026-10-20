@@ -168,8 +168,9 @@ time. Link/ID rewrites retain the best-effort notice contract of rule 7.
 
 A proposal receiving feedback records full source FB IDs and its received scope in a `Source feedback` body
 section. Handoff carries those references into the spec (feature and bugfix); drafting retains them. Promotion routes
-work and does not prove its completion. Handoff never marks source feedback resolved; the implementer checks source
-resolution during reconciliation under `ADR-feedback-resolution-lifecycle`.
+work and closes the feedback without claiming implementation success. Promoted and other terminal sources require
+no completion edits or re-verification; their references remain traceability. Handoff never resolves open feedback.
+Only direct fixes of explicit open sources are checked at completion under `ADR-feedback-terminal-outcomes`.
 
 Without handoff, rejection/decomposition return keeps feedback in place until authorized Host deletion; a draft
 deleted for a session reclassification (rule 13) preserves its open feedback the same way, in its deletion commit.

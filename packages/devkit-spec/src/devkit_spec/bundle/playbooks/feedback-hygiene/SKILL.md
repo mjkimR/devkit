@@ -12,8 +12,8 @@ aliases:
 # Feedback hygiene
 
 Feedback capture starts observations `open` and never changes their status. This playbook triages selected items:
-`promoted` routes them to follow-up work, `dismissed` declines them, and `forwarded` records an authorized external
-submission. An authorized task's verified fix uses `resolved`, through the `spec` skill's
+`promoted` closes them by routing to follow-up work, `dismissed` declines them, and `forwarded` records an authorized external
+submission. An authorized direct fix without promotion uses terminal `resolved`, through the `spec` skill's
 [completion procedure](../../skills/spec/references/completion.md#source-feedback-resolution), without requiring
 another hygiene session. Run this playbook only in a hygiene session the user asks for.
 
@@ -61,11 +61,12 @@ first; request decisions only beyond that scope:
 | `upstream` | Forward draft | Prepare a report for the owning tool or bundle, including devkit and devkit-spec; submit only with explicit external-send authorization |
 | `unknown` | Ownership review | Inspect the observed targets, propose repository or upstream destinations, and keep unresolved items open |
 
-An asset developed in this repository has `scope: repo` even when shipped as an upstream tool to other projects; promote it locally: a defect with clear
+An asset developed in this repository has `scope: repo` even when shipped as an upstream tool to other projects; address it locally: a defect with clear
 expected behavior becomes a `bugfix` task (`sdd-session-bugfix`, or `sdd-spec-bugfix` when its behavior must be written
 down), a small wording fix a `session` change, an open design question a draft proposal (`uv run devkit spec proposal new <slug>`).
 Record full source FB IDs and the scope received in the destination proposal/spec body (`Source feedback`), or in a
-session's agreed scope. Include source-file paths in implementation boundaries so completion can update them.
+session's agreed scope. Include only open direct-fix source paths in implementation boundaries for completion updates; promoted references
+remain traceability and require no further feedback work.
 
 ## Step 4: Update status and seal
 
@@ -73,9 +74,10 @@ An item is `forwarded` only after authorized submission, citing the actual repor
 `open`, as does an item whose ownership is unresolved. Link all resolution destinations for an issue spanning several
 tools.
 
-Set `promoted` only when follow-up work receives the observation; set `resolved` only after its authorized fix is
-fully implemented and verified, including a direct session fix performed here. Partial or unverified fixes stay
-`open` unless already routed as `promoted`. Use `dismissed` for a reasoned decline and `forwarded` for an actual
+Set terminal `promoted` when follow-up work receives the observation. Track subsequent progress in that destination;
+never convert promoted to resolved merely because the work finishes. Set terminal `resolved` only for an open
+observation directly fixed and verified without promotion, including a session or spec fix. Partial or unverified
+direct fixes stay `open`. Use `dismissed` for a reasoned decline and `forwarded` for an actual
 submission. Append a disposition line so each outcome is traceable:
 
 ```markdown
@@ -84,7 +86,7 @@ submission. Append a disposition line so each outcome is traceable:
 
 The destination is the spec, proposal, decision, rule or playbook ID that received the item, the changed file path
 for a `session` fix, or the report location for a forward. A resolution also states the implemented outcome and
-concrete test/review evidence; retain prior promotion history. A dismissal states its reason in the same line.
+concrete test/review evidence. A dismissal states its reason in the same line.
 
 ## Step 5: Stale activity branches
 
