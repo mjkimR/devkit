@@ -2,7 +2,7 @@
 id: SPEC-handoff-fixture-initialization
 title: Reuse isolated handoff test initialization
 summary: "Reuse synchronized standalone repository templates in handoff tests while preserving independent Git state and real Planning worktree creation."
-status: in-progress
+status: completed
 created: 2026-10-20
 related_capabilities: []
 related_stories: []

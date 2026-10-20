@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: noise
 recurring: true
-status: open
+status: resolved
 created_at: 2026-10-20
 ---
 
@@ -74,3 +74,17 @@ Prototype independent copy and checks: 12 calls, 1.925 s total, 0.166 s median.
 Parallel prototype: eight independent worker seeds; twelve independent test copies.
 Seed refs and working tree unchanged after every prototype execution.
 ```
+
+## Disposition
+
+Resolved by `SPEC-handoff-fixture-initialization`: a worker-local synchronized standalone repository template
+replaces repeated sync and preparation commits. Each independent case copy still creates its real Planning
+worktree and accepted proposal, preserving the original topology without removing or repairing Git metadata.
+Independent medium code review passed without findings. Affected verification passed 30 tests, including all
+21 integration cases and the new Git/config/tracked-file/ignored-asset isolation regression; lint, format,
+Pyright and cumulative governance passed. The same twelve original cases passed all six measurement runs:
+serial elapsed time fell from 46.168 to 29.222 seconds; eight-worker medians fell from 16.988 to 14.803 seconds
+(12.9 percent). Preparation sync calls fell from twelve to one serially and twelve to eight in parallel.
+Reproduction and source hashes are retained in `docs/materials/2026-10/20261020-handoff-fixture-initialization/`.
+These are local measurements, not a portable latency guarantee. Resolution on the task branch does not assert
+integration into the base branch.
