@@ -1,7 +1,7 @@
 ---
 id: MS-refactoring-and-prevention-rules
 title: Maintenance review and refactoring playbook
-summary: "Delivers an on-demand maintenance review and refactoring playbook grounded in AI slop research, covering code, agent guidance, and CLI help while preserving behavior and reducing unnecessary complexity."
+summary: "Delivers an on-demand maintenance review and refactoring playbook grounded in AI slop research, covering code, agent guidance, CLI command consolidation opportunities, and help while preserving behavior and reducing unnecessary complexity."
 status: planned
 created_at: 2026-10-18
 depends_on: []
@@ -26,6 +26,7 @@ remain loaded on demand. The three playbooks share one bundle rather than separa
 - Research into AI slop patterns, causes, reduction methods, and refactoring techniques produces cited findings and repository-applicable review criteria. Criteria distinguish evidenced problems from stylistic preference and state limitations of automated detection.
 - Code review covers redundant behavior, unnecessary abstractions, speculative compatibility paths, unused code, and boilerplate without a demonstrated purpose. Findings cite concrete locations and explain the maintenance cost; refactoring preserves agreed behavior and passes relevant verification.
 - Guidance review covers skills, playbooks, AGENTS.md, and instructions for duplication, conflicts, obsolete exceptions, and excessive always-loaded context. Deletion, consolidation, and moving occasional procedures out of startup guidance preserve necessary constraints, decision criteria, and examples; token or line reduction alone is not proof of correctness.
+- CLI command review inventories commands and subcommands, examines growth for overlapping purposes, fragmented operations, and inconsistent grouping, and assesses whether consolidation or removal would simplify agent task completion. Findings identify concrete candidates, distinct behavior that must be retained, affected callers and documentation, and the trade-offs of consolidation. Command count alone does not establish unnecessary complexity. Contract-changing command removals, renames, or consolidations are proposed as separately scoped follow-up work rather than applied as behavior-preserving refactoring.
 - CLI help and its source docstrings are reviewed for accuracy against actual commands and options, useful next-step information, repetition, and unnecessary detail. Changes to help preserve the documented command contract.
 - Shared implementations are introduced for demonstrated repeated behavior, with updated callers and a usable interface. Speculative commonization is excluded.
 - Recurrence prevention first considers deleting, consolidating, or correcting existing code and guidance. New rules or instructions require an evidenced recurring failure and a stated benefit beyond existing coverage. Deterministic rule proposals state detectable conditions, examples, scope, and false-positive limits; adopted rules follow `CAP-GOV-rule-authoring`. No new rule proposal is required for every cleanup finding.
