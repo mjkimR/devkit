@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Literal
 
 
 @dataclass(frozen=True)
@@ -23,6 +23,7 @@ class McpTool:
     description: str
     input_schema: dict[str, Any]
     invoke: Invocation
+    execution: Literal["read_only", "preflight", "interactive", "approved_resume"] = "interactive"
     read_only: bool = False
     destructive: bool = False
     open_world: bool = False

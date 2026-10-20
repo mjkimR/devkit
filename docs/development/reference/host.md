@@ -31,70 +31,33 @@ it. Native integration confirmation and execution are described in `CAP-INT-mcp-
 
 ## MCP services
 
-Install the `mcp` extra in a retained runtime: `devkit-agt[mcp]` where the project depends on `devkit-agt`, else
-`devkit-dist[mcp]` (`devkit.host` ships in `devkit-dist`; `HOST_MCP_EXTRA_REQUIRED` names both). The integration
-service tools come from `devkit-agt` through `devkit.host.services`. The base installation still supports hooks, configuration inspection
-and integration preparation without the SDK.
+Install `devkit-mcp`, or `devkit-agt[mcp]` for integration, in a retained base/tool runtime. The optional wheel
+mounts `devkit mcp`; domain tools remain in agt/spec. See `CAP-MCP-runtime-registration` and `CAP-INT-mcp-services`.
 
 | Command | Result |
 | --- | --- |
-| `devkit host mcp config [-w BASE] [--format json]` | Exact executable/arguments, Codex add/get/remove commands and TOML; changes no configuration |
-| `devkit host mcp setup [--host codex] [--replace] [-w BASE] [--format json]` | Explicit user-scoped registration through Codex; matching entries unchanged, conflicting entries refused without --replace |
-| `devkit host mcp status [--host codex] [-w BASE] [--format json]` | Read-only registration and SDK diagnostics; exit 0 matching with SDK, 1 findings, 2 inspection failure |
-| `devkit host mcp serve [-w BASE]` | Installed service tools over native MCP stdio; stdout is JSON-RPC only |
+| `devkit mcp config [-w WORKSPACE] [--executable PATH] --format json` | Verified retained descriptor; no writes |
+| `devkit mcp setup [-w WORKSPACE] [--host codex|claude] [--executable PATH]` | Exact eligible project reconciliation |
+| `devkit mcp remove [-w WORKSPACE]` | Exact owned entry removal; local exclusions retained |
+| `devkit mcp status [-w WORKSPACE] --format json` | Desired/recorded/project facts, runtime and unknown host state |
+| `devkit mcp serve --workspace-root EXECUTOR --configuration-workspace OWNER --profile local|read-only` | Native MCP stdio |
 
-Follow [optional MCP onboarding](../../../guides/install/mcp.md) from the installation routes. Run setup from the
-retained base checkout and its retained Python environment; it rejects linked-worktree and submodule workspace or
-runtime paths. It uses the running interpreter, imports the SDK/server before writing, calls `codex mcp add devkit`
-and verifies the effective result. Identical enabled command/args with no environment, cwd or tool overrides are
-`unchanged`; a different entry is refused unless `--replace` was explicit. Replacement does not first remove it.
-Codex's writer owns persistence; a failed write/verification is not a devkit rollback guarantee. Concurrent external
-host configuration edits are outside devkit's transaction scope.
+Ordinary sync reconciles project registration by default when the provider is installed; `[mcp] register = false`
+opts out. No package installation, global settings, trust or permission changes happen during sync. Tracked and
+visible foreign files stay unchanged. Follow [MCP setup](../../../guides/install/mcp.md) for intentional installation
+and host validation. Setup does not prove native UI support.
 
-Claude Code has no setup adapter: register the config output's `command` and `args` with
-`claude mcp add --scope user devkit -- <command> <args...>` ([MCP onboarding](../../../guides/install/mcp.md#4-register-claude-code-explicitly));
-`host mcp status` reports only Codex registration.
-
-Registration uses Codex's user scope and fixed name `devkit`, so switching repositories can conflict. Setup does
-not edit project TOML, trust, tool approval policies or execution permissions. The read-only config command retains
-its add/get/remove commands and TOML snippet. `codex mcp remove devkit` removes that named user registration.
-A workspace or ancestor `.codex/config.toml` declaration for `devkit` is
-`HOST_MCP_REGISTRATION_SHADOWED`: setup refuses before writing, including with `--replace`, even when the project
-entry matches. Effective/user state disagreement also refuses setup. Resolve the project/profile override
-explicitly; replacing user settings cannot manage a shadowing project entry.
-`devkit sync` neither registers MCP nor inspects machine registration; there is no persistent MCP selection setting.
-
-Status reads the named user entry from `$CODEX_HOME/config.toml` (default `~/.codex/config.toml`) and effective
-workspace settings through Codex. It reports user `state=missing|matching|different`, `effective_state`,
-`project_override`, desired workspace/command/args, `sdk_available`, errors and notices;
-it does not expose existing environment values or foreign server settings. Setup adds
-`action=registered|replaced|unchanged`. Text results are `HOST_MCP_SETUP` / `HOST_MCP_STATUS` sentinels; JSON is one
-object. `connection`, `approval_ui`, `trust` and `execution_permissions` remain `unknown`: reconnect the client,
-inspect its tool catalog and verify actual UI separately. The executable, dependencies and base checkout must
-remain available throughout the session.
-
-Installed packages register factories under `devkit.host.services`: `factory(root) -> tuple[McpTool, ...]`.
-`devkit.host.mcp` exports dependency-free `McpTool`, `Confirmation`, `ConfirmationReply` contracts. A tool receives
-validated arguments and a confirmation callback backed by the current SDK request/session. `McpTool.open_world`
-(default false) declares whether the operation may reach external systems; native annotations preserve that value. Native form capability
-is checked before elicitation. SDK response correlation binds each reply to the awaiting call; the adapter grants
-no permission based on tool arguments. Duplicate tool names and unusable services fail closed. Service/library
-Python stdout is discarded after the SDK captures its protocol stream. The built-in integration service is loaded
-through this extension point rather than a host-to-domain import.
-
-| Code | Next action |
+| Code | Recovery |
 | --- | --- |
-| `HOST_MCP_REGISTRATION_FAILED` | Inspect Codex CLI/configuration access and effective registration before retrying |
-| `HOST_MCP_REGISTRATION_MISSING` | Run setup from the retained base/runtime |
-| `HOST_MCP_REGISTRATION_CONFLICT` | Inspect the existing entry; use --replace only for an intended replacement |
-| `HOST_MCP_REGISTRATION_SHADOWED` | Resolve project/profile overrides before attempting user-scoped setup |
-| `HOST_MCP_RUNTIME_UNSAFE` | Run setup outside linked worktrees using the retained base/runtime |
-| `HOST_MCP_EXTRA_REQUIRED` | Install the MCP extra in the retained server runtime |
-| `HOST_MCP_FAILED` | Inspect the installed service entry points and runtime, then reconnect |
-| `HOST_MCP_ARGUMENT_INVALID` | Read the advertised tool schema and supply its declared arguments |
-| `HOST_CONFIRMATION_UNAVAILABLE` | Use an interactive client with native form elicitation; inspect state before retrying |
+| `MCP_REGISTRATION_CONFLICT` | Inspect edited/unowned entries or journal/ledger state; restore exact ownership before sync |
+| `MCP_REGISTRATION_UNAVAILABLE` | Keep host-owned files unchanged; use host setup or an independently authorized CLI/PR route |
+| `MCP_RUNTIME_UNAVAILABLE` | Install/select a retained runtime with matching service packages, then reconcile |
+| `MCP_WORKSPACE_UNAVAILABLE` | Reconnect from an existing retained checkout; inspect partial effects |
+| `MCP_INTERACTIVE_UNAVAILABLE` | Use a local interactive Host or independently authorized CLI/PR route |
+| `HOST_MCP_FAILED` | Correct installed service entry points/runtime and reconnect |
+| `HOST_MCP_ARGUMENT_INVALID` | Supply only the advertised tool schema's arguments |
+| `HOST_CONFIRMATION_UNAVAILABLE` | Use a client with negotiated native form capability; no authority was granted |
 
-`mcp serve` is a native-protocol exception to ordinary CLI output and output flags. Startup failures are advisory
-errors on stderr with exit 2; no ordinary result JSON is written into the protocol stream. Tool results contain
-structured advisory data, preserving partial progress from the service. Setup/trust, tool approval, business
-confirmation and execution permissions are independent; none is inferred from the others.
+`mcp serve` is a native-protocol exception to ordinary output/format flags; startup errors remain advisories on
+stderr. Other commands emit one JSON object or an MCP result sentinel and advisory notices. No output includes
+other servers' settings or environment values. Elicitation accept alone is insufficient: approve must be true.

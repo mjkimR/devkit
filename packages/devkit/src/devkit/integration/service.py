@@ -24,9 +24,10 @@ from devkit.advisory import AdvisoryError, Level
 from devkit.core import LockHeldError
 from devkit.core.errors import GitError
 from devkit.core.git import run_git
+from devkit.core.mcp import Confirmation
+from devkit.core.mcp_context import capture_terminal_removal, guard_execution
 from devkit.core.paths import normalize_relpath
 from devkit.core.project import read_project_config
-from devkit.host.mcp import Confirmation
 from devkit.integration import providers, receipts
 from devkit.integration.errors import (
     AuthorityError,
@@ -99,6 +100,7 @@ class IntegrationService:
         self._records: dict[str, _Record] = {}
 
     def prepare(self, branch: str, task: Task, route: str = "local") -> IntegrationResult:
+        guard_execution()
         if (
             task.kind not in {"unit", "session"}
             or not isinstance(task.id, str)
@@ -196,6 +198,7 @@ class IntegrationService:
     async def integrate(
         self, branch: str, task: Task, confirm: Confirmation, route: str = "local"
     ) -> IntegrationResult:
+        guard_execution()
         result = await asyncio.to_thread(self.prepare, branch, task, route)
         request = result.request
         message = request.confirmation_message()
@@ -226,6 +229,7 @@ class IntegrationService:
                 else {"decline": "declined", "cancel": "cancelled"}.get(reply.action, "not_approved")
             )
             return result
+        guard_execution()
         self._records[request.id].approved = True
         result.authority = "mcp-elicitation"
         return await asyncio.to_thread(self._run, request.id, LOCK_WAIT, True)
@@ -276,6 +280,7 @@ class IntegrationService:
         context: IntegrationContext | None = None,
         target: str | None = None,
     ) -> None:
+        guard_execution(terminal=removed)
         plan = request.context.finish
         # The digest comparison comes first: a changed policy is a stale request whatever its new value is.
         expected = request.post_policy_digest if merged else request.policy_digest
@@ -310,6 +315,7 @@ class IntegrationService:
         return self._run(request_id, 0, False)
 
     def _run(self, request_id: str, wait: float, approving: bool) -> IntegrationResult:
+        guard_execution()
         record = self._record(request_id)
         if not record.approved:
             raise AuthorityError("this request received no affirmative confirmation")
@@ -410,6 +416,8 @@ class IntegrationService:
                     finalized=False,
                     context=context,
                 )
+                if step == "worktree_remove" and approving:
+                    capture_terminal_removal(Path(plan.path))
                 result.finish = progress
                 if progress.removed is True and plan.worktree_identity:
                     result.steps["worktree_remove"] = "completed"
@@ -439,6 +447,7 @@ class IntegrationService:
             for scope in request.cleanup:
                 if result.cleanup_steps[scope.extension] == "completed":
                     continue
+                guard_execution(terminal=True)
                 result.cleanup_steps[scope.extension] = "running"
                 outcome = extensions[scope.extension][1].integration_run(context, result.finish, scope.targets)
                 if (

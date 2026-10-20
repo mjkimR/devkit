@@ -11,7 +11,8 @@ from pathlib import Path
 from devkit.advisory import AdvisoryError
 from devkit.core import run_git
 from devkit.core.frontmatter import parse
-from devkit.host.mcp import Confirmation, McpTool
+from devkit.core.mcp import Confirmation, McpTool
+from devkit.core.mcp_context import guard_execution
 from devkit.workflow import Workspace
 from devkit.worktree import locate, path_for, read_worktree_config, start
 
@@ -116,8 +117,11 @@ class HandoffService:
         self._lock = asyncio.Lock()
 
     async def handoff(self, slug: str, confirm: Confirmation) -> dict:
+        guard_execution()
         async with self._lock:
+            guard_execution()
             preview = await asyncio.to_thread(prepare, self.root, slug)
+            guard_execution()
             reply = await confirm(
                 preview.message(),
                 {
@@ -136,22 +140,35 @@ class HandoffService:
             )
             if reply.action != "accept" or reply.content.get("approve") is not True:
                 return {"status": {"decline": "declined", "cancel": "cancelled"}.get(reply.action, "not_approved")}
+            guard_execution()
             effort = reply.content.get("activity_effort")
             if effort not in EFFORTS:
                 raise HandoffReplyError("choose low, medium or high in the native form")
             return await asyncio.to_thread(self._execute, preview, effort)
 
     def _execute(self, preview: HandoffPreview, effort: str) -> dict:
+        guard_execution()
         if prepare(self.root, preview.slug) != preview:
             raise HandoffStaleError("the base, accepted plan or policy changed after review")
         position = locate(self.root)
-        started = start(
-            position,
-            f"dev-{preview.slug}",
-            setup=preview.setup,
-            project=self.root.relative_to(position.base),
-            revision=preview.head,
-        )
+        guard_execution()
+        try:
+            started = start(
+                position,
+                f"dev-{preview.slug}",
+                setup=preview.setup,
+                project=self.root.relative_to(position.base),
+                revision=preview.head,
+                before_step=lambda _step: guard_execution(),
+            )
+        except AdvisoryError as exc:
+            return {
+                "status": "needs_recovery" if Path(preview.worktree).exists() else "blocked",
+                "worktree": {"path": preview.worktree, "created": Path(preview.worktree).exists()},
+                "activity_effort": effort,
+                "errors": [exc.to_dict()],
+                "notices": [],
+            }
         result = {
             "status": "needs_recovery",
             "worktree": started.to_dict(),
@@ -169,7 +186,9 @@ class HandoffService:
                 raise HandoffStaleError(
                     "setup changed tracked or untracked worktree files; inspect them before handoff"
                 )
+            guard_execution()
             handed = handoff_proposal(root, preview.slug)
+            guard_execution()
             registered, notices = auto_register(root, handed.dir, source=SOURCE_HANDOFF)
             result.update(
                 status="handed_off", handoff=handed.to_dict(), next_command=f"devkit workflow next --unit {handed.dir}"

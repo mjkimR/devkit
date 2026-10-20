@@ -12,7 +12,12 @@ import tomllib
 from pathlib import Path
 
 PACKAGES = Path(__file__).resolve().parents[2]
-WHEELS = {"devkit-dist": "devkit-dist", "devkit-agt": "devkit", "devkit-advisory": "devkit-advisory"}
+WHEELS = {
+    "devkit-dist": "devkit-dist",
+    "devkit-agt": "devkit",
+    "devkit-advisory": "devkit-advisory",
+    "devkit-mcp": "devkit-mcp",
+}
 
 
 def _project(directory: str) -> dict:
@@ -39,8 +44,8 @@ def test_each_wheel_pins_the_exact_version_of_the_wheels_below_it() -> None:
 
 def test_devkit_agt_extras_pass_through_to_devkit_dist() -> None:
     agt, dist = _project("devkit"), _project("devkit-dist")
-    assert agt["optional-dependencies"] == {"mcp": ["devkit-dist[mcp]"], "search": ["devkit-dist[search]"]}
-    assert set(dist["optional-dependencies"]) == {"mcp", "search"}
+    assert agt["optional-dependencies"] == {"mcp": ["devkit-mcp==0.1.1"], "search": ["devkit-dist[search]"]}
+    assert set(dist["optional-dependencies"]) == {"search"}
 
 
 def test_devkit_is_a_namespace_package_and_no_path_has_two_owners() -> None:

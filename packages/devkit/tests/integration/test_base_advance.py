@@ -13,7 +13,7 @@ import pytest
 from devkit.core import LockHeldError
 from devkit.core.errors import GitError
 from devkit.core.locks import file_lock
-from devkit.host.mcp import ConfirmationReply
+from devkit.core.mcp import ConfirmationReply
 from devkit.integration import IntegrationService, ProviderError, Task
 from devkit.integration import service as service_module
 from devkit.integration.receipts import check_merge

@@ -1,258 +1,187 @@
-"""Registration behavior and isolated Codex CLI checks; no native UI claim."""
+"""Project registration ownership, clean-tree behavior and interrupted transaction recovery."""
 
 from __future__ import annotations
 
 import json
-import os
-import shutil
 import subprocess
-import sys
-from copy import deepcopy
-from unittest.mock import Mock
+from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
-from click.testing import CliRunner
-from devkit.cli import cli
-from devkit.host.errors import HostMcpRegistrationError, HostMcpRuntimeError
-from devkit.host.mcp import onboarding as m
-from devkit.host.mcp.configuration import configuration
+from devkit.host import registrations as r
 
 
-def entry(root):
-    desired = configuration(root)
-    return {
-        "name": "devkit",
-        "enabled": True,
-        "transport": {
-            "type": "stdio",
-            "command": desired["command"],
-            "args": desired["args"],
-            "env": None,
-            "env_vars": [],
-            "cwd": None,
-        },
-    }
+def git(root: Path, *args: str) -> str:
+    return subprocess.check_output(["git", "-C", str(root), *args], text=True).strip()
 
 
 @pytest.fixture
-def host(tmp_path, monkeypatch):
-    state = {"entry": None, "writes": []}
-
-    def codex(root, *args):
-        if args[0] == "list":
-            return json.dumps([] if state["entry"] is None else [{"name": "devkit"}])
-        if args[0] == "get":
-            return json.dumps(state["entry"])
-        assert args[:3] == ("add", "devkit", "--")
-        state["writes"].append(args)
-        state["entry"] = entry(root)
-        return "host progress must never appear on devkit stdout"
-
-    monkeypatch.setattr(m, "_codex", codex)
-    monkeypatch.setattr(m, "_user_registration", lambda: state["entry"])
-    monkeypatch.setattr(m, "_project_registration", lambda root: False)
-    monkeypatch.setattr(m, "_retained", lambda root: None)
-    monkeypatch.setattr(m, "_sdk_available", lambda: True)
-    return tmp_path, state
-
-
-def invoke(root, command, *args):
-    return CliRunner().invoke(cli, ["host", "mcp", command, "--host", "codex", "-w", str(root), *args])
-
-
-def test_setup_registers_then_preserves_matching_settings(host):
-    root, state = host
-    result = invoke(root, "setup", "--format", "json")
-    assert result.exit_code == 0, result.output
-    data = json.loads(result.stdout)
-    assert data["action"] == "registered" and data["scope"] == "user"
-    assert data["connection"] == data["approval_ui"] == data["trust"] == "unknown"
-    assert len(state["writes"]) == 1 and result.stderr == ""
-    state["entry"]["tool_timeout_sec"] = 90
-    original = deepcopy(state["entry"])
-    result = invoke(root, "setup", "--format", "json")
-    assert json.loads(result.stdout)["action"] == "unchanged"
-    assert len(state["writes"]) == 1 and state["entry"] == original
-
-
-@pytest.mark.parametrize(
-    "change", ["command", "args", "env", "env_vars", "cwd", "disabled", "enabled_tools", "disabled_tools", "http"]
-)
-def test_conflicts_need_explicit_replacement(host, change):
-    root, state = host
-    saved = entry(root)
-    if change == "disabled":
-        saved["enabled"] = False
-    elif change in {"enabled_tools", "disabled_tools"}:
-        saved[change] = ["integration_status"]
-    else:
-        saved["transport"]["type" if change == "http" else change] = {
-            "command": "/foreign/python",
-            "args": ["other"],
-            "env": {"TOKEN": "never-print-this"},
-            "env_vars": ["TOKEN"],
-            "cwd": "/other",
-            "http": "streamable_http",
-        }[change]
-    state["entry"] = saved
-    result = invoke(root, "setup", "--format", "json")
-    assert result.exit_code == 2
-    assert json.loads(result.stdout)["error"]["code"] == "HOST_MCP_REGISTRATION_CONFLICT"
-    assert not state["writes"] and state["entry"] == saved
-    assert "never-print-this" not in result.output
-    result = invoke(root, "setup", "--replace", "--format", "json")
-    assert result.exit_code == 0, result.output
-    assert json.loads(result.stdout)["action"] == "replaced" and len(state["writes"]) == 1
-
-
-def test_status_missing_different_matching_and_missing_sdk(host, monkeypatch):
-    root, state = host
-    result = invoke(root, "status", "--format", "json")
-    assert result.exit_code == 1 and json.loads(result.stdout)["state"] == "missing"
-    state["entry"] = entry(root)
-    result = invoke(root, "status")
-    assert result.exit_code == 0 and result.stdout.startswith("[HOST_MCP_STATUS:") and result.stderr == ""
-    state["entry"]["enabled"] = False
-    result = invoke(root, "status", "--format", "json")
-    assert result.exit_code == 1 and json.loads(result.stdout)["state"] == "different"
-    state["entry"]["enabled"] = True
-    monkeypatch.setattr(m, "_sdk_available", lambda: False)
-    result = invoke(root, "status", "--format", "json")
-    assert result.exit_code == 1
-    assert json.loads(result.stdout)["errors"][0]["code"] == "HOST_MCP_EXTRA_REQUIRED"
-    assert not state["writes"]
-
-
-def test_missing_sdk_prevents_setup(host, monkeypatch):
-    root, state = host
-    monkeypatch.setattr(m, "_sdk_available", lambda: False)
-    result = invoke(root, "setup", "--format", "json")
-    assert result.exit_code == 2 and json.loads(result.stdout)["error"]["code"] == "HOST_MCP_EXTRA_REQUIRED"
-    assert not state["writes"]
-
-
-@pytest.mark.parametrize("value", ["broken", "{}", "[{}]", '[{"name":"devkit"},{"name":"devkit"}]'])
-def test_invalid_host_responses_cannot_be_mistaken_for_absence(tmp_path, monkeypatch, value):
-    monkeypatch.setattr(m, "_codex", lambda *args: value)
-    result = invoke(tmp_path, "status", "--format", "json")
-    assert result.exit_code == 2
-    assert json.loads(result.stdout)["error"]["code"] == "HOST_MCP_REGISTRATION_FAILED"
-
-
-@pytest.mark.parametrize("failure", [OSError("secret"), subprocess.TimeoutExpired("codex", 15), UnicodeError("secret")])
-def test_process_failures_are_bounded_and_sanitized(tmp_path, monkeypatch, failure):
-    monkeypatch.setattr(m.subprocess, "run", Mock(side_effect=failure))
-    with pytest.raises(HostMcpRegistrationError) as exc:
-        m._codex(tmp_path, "list", "--json")
-    assert "secret" not in str(exc.value)
-
-
-def test_add_or_verification_failure_never_claims_success(host, monkeypatch):
-    root, state = host
-    original = m._codex
-
-    def failed_add(root, *args):
-        if args[0] == "add":
-            raise HostMcpRegistrationError("write failed")
-        return original(root, *args)
-
-    monkeypatch.setattr(m, "_codex", failed_add)
-    result = invoke(root, "setup", "--format", "json")
-    assert result.exit_code == 2 and "action" not in json.loads(result.stdout)
-    monkeypatch.setattr(m, "_codex", lambda *args: "[]")
-    result = invoke(root, "setup", "--format", "json")
-    assert result.exit_code == 2 and "action" not in json.loads(result.stdout)
-    assert not state["writes"]
-
-
-def test_linked_workspace_and_runtime_are_rejected(tmp_path, monkeypatch):
-    base = tmp_path / "base"
-    linked = tmp_path / "linked"
-    base.mkdir()
-    linked.mkdir()
-    (base / ".git").mkdir()
-    (linked / ".git").write_text("gitdir: /missing/worktree")
-    executable = linked / ".venv/bin/python"
-    executable.parent.mkdir(parents=True)
-    executable.symlink_to(sys.executable)
-    monkeypatch.setattr(m.sys, "executable", str(executable))
-    with pytest.raises(HostMcpRuntimeError):
-        m._retained(base)
-    monkeypatch.setattr(m.sys, "executable", "/usr/bin/python3")
-    with pytest.raises(HostMcpRuntimeError):
-        m._retained(linked)
-    alias = tmp_path / "alias"
-    alias.symlink_to(linked, target_is_directory=True)
-    with pytest.raises(HostMcpRuntimeError):
-        m._retained(alias)
-
-
-@pytest.mark.skipif(shutil.which("codex") is None, reason="Codex CLI is optional")
-def test_real_codex_registration_in_isolated_home(tmp_path, monkeypatch):
-    root = tmp_path / "base"
+def repo(tmp_path, monkeypatch):
+    root = tmp_path / "repo"
     root.mkdir()
-    codex_home = tmp_path / "codex-home"
-    codex_home.mkdir()
-    monkeypatch.setenv("CODEX_HOME", str(codex_home))
-    # This test runs in a development worktree; production checks are exercised separately above.
-    monkeypatch.setattr(m, "_retained", lambda root: None)
-    monkeypatch.setattr(m, "_sdk_available", lambda: True)
-    initial = m.setup_registration(root)
-    assert initial["action"] == "registered"
-    settings = codex_home / "config.toml"
-    saved = settings.read_bytes()
-    assert m.setup_registration(root)["action"] == "unchanged"
-    assert settings.read_bytes() == saved
-    assert m.inspect_registration(root)[0]["state"] == "matching"
-    # Register a foreign target, then exercise explicit replacement through the actual CLI.
-    m._codex(root, "add", "devkit", "--env", "EXAMPLE=foreign", "--", "/foreign/python")
-    assert m.inspect_registration(root)[0]["state"] == "different"
-    assert m.setup_registration(root, replace=True)["action"] == "replaced"
-    assert os.environ["CODEX_HOME"] == str(codex_home)
+    git(root, "init", "-b", "main")
+    git(root, "config", "user.email", "fixture@example.invalid")
+    git(root, "config", "user.name", "Fixture")
+    (root / ".devkit").mkdir()
+    (root / ".devkit/config.toml").write_text("schema = 1\n")
+    (root / ".devkit/.gitignore").write_text("transient/\n")
+    git(root, "add", ".devkit")
+    git(root, "commit", "-m", "fixture")
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("CODEX_HOME", str(tmp_path / "codex"))
+    monkeypatch.setattr(r, "collisions", lambda *args: [])
+    launch = r.LaunchDescriptor("/retained/python", ("-m", "devkit", "mcp", "serve"), str(root), str(root), "local")
+    monkeypatch.setattr(r.metadata, "entry_points", lambda **kw: [SimpleNamespace(load=lambda: lambda *a, **k: launch)])
+    return root
 
 
-@pytest.mark.skipif(shutil.which("codex") is None, reason="Codex CLI is optional")
-@pytest.mark.parametrize("matching", [True, False])
-def test_project_only_registration_is_not_user_registration(tmp_path, monkeypatch, matching):
-    root = tmp_path / "base"
-    (root / ".codex").mkdir(parents=True)
-    codex_home = tmp_path / "codex-home"
-    codex_home.mkdir()
-    monkeypatch.setenv("CODEX_HOME", str(codex_home))
-    monkeypatch.setattr(m, "_retained", lambda root: None)
-    monkeypatch.setattr(m, "_sdk_available", lambda: True)
-    user_config = codex_home / "config.toml"
-    user_config.write_text("[projects." + json.dumps(str(root)) + ']\ntrust_level = "trusted"\n')
-    desired = configuration(root)
-    project_config = root / ".codex/config.toml"
-    project_config.write_text(desired["toml"] if matching else '[mcp_servers.devkit]\ncommand="/other/python"\n')
-    saved_user, saved_project = user_config.read_bytes(), project_config.read_bytes()
-    result = invoke(root, "status", "--format", "json")
-    data = json.loads(result.stdout)
-    assert result.exit_code == 1 and data["state"] == "missing" and data["project_override"]
-    assert data["effective_state"] == ("matching" if matching else "different")
-    for flags in [[], ["--replace"]]:
-        result = invoke(root, "setup", *flags, "--format", "json")
-        assert result.exit_code == 2
-        assert json.loads(result.stdout)["error"]["code"] == "HOST_MCP_REGISTRATION_SHADOWED"
-        assert user_config.read_bytes() == saved_user and project_config.read_bytes() == saved_project
+def test_registration_converges_and_uninstall_removes_only_owned(repo, monkeypatch):
+    planned = r.plan(repo, ["codex", "claude"])
+    assert not (repo / ".mcp.json").exists()  # planning is read-only
+    r.apply(planned)
+    assert git(repo, "status", "--porcelain") == ""
+    snapshots = {name: (repo / name).read_bytes() for name in [*r.DESTINATIONS.values(), r.LEDGER]}
+    assert r.plan(repo, ["codex", "claude"]).changes == []
+    assert snapshots == {name: (repo / name).read_bytes() for name in snapshots}
+    monkeypatch.setattr(r.metadata, "entry_points", lambda **kw: [])
+    r.apply(r.plan(repo, ["codex", "claude"]))
+    assert r._entry("codex", (repo / ".codex/config.toml").read_bytes()) is None
+    assert r._entry("claude", (repo / ".mcp.json").read_bytes()) is None
+    assert git(repo, "status", "--porcelain") == ""
+    assert b"/.mcp.json" in (repo / ".git/info/exclude").read_bytes()
 
 
-def test_config_read_failures_and_ancestor_override(tmp_path, monkeypatch):
-    codex_home = tmp_path / "home"
-    codex_home.mkdir()
-    monkeypatch.setenv("CODEX_HOME", str(codex_home))
-    path = codex_home / "config.toml"
-    path.write_text("invalid [")
-    with pytest.raises(HostMcpRegistrationError):
-        m._user_registration()
-    path.write_text("mcp_servers=[]")
-    with pytest.raises(HostMcpRegistrationError):
-        m._user_registration()
-    path.write_text("")
-    parent = tmp_path / "parent"
-    (parent / ".codex").mkdir(parents=True)
-    (parent / ".codex/config.toml").write_text('[mcp_servers.devkit]\ncommand="/project/python"\n')
-    root = parent / "child"
-    root.mkdir()
-    assert m._project_registration(root)
+@pytest.mark.parametrize("tracked,ignored", [(True, False), (True, True), (False, False)])
+def test_tracked_and_visible_foreign_destinations_are_unchanged(repo, tracked, ignored):
+    target = repo / ".mcp.json"
+    raw = b'{"foreign": "kept"}\n'
+    target.write_bytes(raw)
+    if tracked:
+        git(repo, "add", ".mcp.json")
+        git(repo, "commit", "-m", "host-owned")
+    if ignored:
+        (repo / ".git/info/exclude").write_text("/.mcp.json\n")
+    planned = r.plan(repo, ["claude"])
+    assert planned.notices[0].code == "MCP_REGISTRATION_UNAVAILABLE"
+    r.apply(planned)
+    assert target.read_bytes() == raw
+
+
+def test_ignored_foreign_settings_mode_and_noop_preserved(repo):
+    target = repo / ".mcp.json"
+    (repo / ".git/info/exclude").write_text("/.mcp.json\n")
+    target.write_text('{"mcpServers":{"foreign":{"command":"other"}},"metadata":true}')
+    target.chmod(0o640)
+    r.apply(r.plan(repo, ["claude"]))
+    content = target.read_bytes()
+    assert json.loads(content)["mcpServers"]["foreign"] == {"command": "other"}
+    assert target.stat().st_mode & 0o777 == 0o640
+    r.apply(r.plan(repo, ["claude"]))
+    assert target.read_bytes() == content
+
+
+@pytest.mark.parametrize("edit", ["edited", "missing", "unowned", "duplicate", "malformed"])
+def test_conflicts_fail_before_writes(repo, edit):
+    target = repo / ".mcp.json"
+    (repo / ".git/info/exclude").write_text("/.mcp.json\n")
+    if edit in {"edited", "missing"}:
+        r.apply(r.plan(repo, ["claude"]))
+    values = {
+        "edited": '{"mcpServers":{"devkit":{"command":"edited"}}}',
+        "missing": "{}",
+        "unowned": '{"mcpServers":{"devkit":{"command":"/retained/python"}}}',
+        "duplicate": '{"mcpServers":{},"mcpServers":{}}',
+        "malformed": "{",
+    }
+    target.write_text(values[edit])
+    with pytest.raises(r.RegistrationError):
+        r.plan(repo, ["claude", "codex"])
+    assert not (repo / ".codex/config.toml").exists()
+
+
+def test_absent_owned_destination_is_recreated(repo):
+    r.apply(r.plan(repo, ["claude"]))
+    (repo / ".mcp.json").unlink()
+    r.apply(r.plan(repo, ["claude"]))
+    assert r._entry("claude", (repo / ".mcp.json").read_bytes()) is not None
+
+
+def test_foreign_linked_worktree_prevents_new_exclusion(repo, tmp_path):
+    other = tmp_path / "linked"
+    git(repo, "worktree", "add", "-b", "dev-task", str(other))
+    (other / ".mcp.json").write_text("{}")
+    before = (repo / ".git/info/exclude").read_bytes()
+    planned = r.plan(repo, ["claude"])
+    assert planned.notices and not planned.changes
+    r.apply(planned)
+    assert (repo / ".git/info/exclude").read_bytes() == before
+    assert ".mcp.json" in git(other, "status", "--porcelain")
+
+
+def test_external_edit_or_git_index_change_aborts(repo):
+    planned = r.plan(repo, ["claude"])
+    (repo / ".mcp.json").write_text("{}")
+    with pytest.raises(r.RegistrationError):
+        r.apply(planned)
+    assert (repo / ".mcp.json").read_text() == "{}"
+
+
+def test_interrupted_transaction_recovers_exact_previous_bytes(repo, monkeypatch):
+    planned = r.plan(repo, ["codex", "claude"])
+    original = r._write
+
+    def fail(path, value, anchor):
+        if path == repo / ".codex/config.toml":
+            raise OSError("fixture interruption")
+        original(path, value, anchor)
+
+    monkeypatch.setattr(r, "_write", fail)
+    with pytest.raises(OSError):
+        r.apply(planned)
+    assert (repo / r.JOURNAL).exists()
+    monkeypatch.setattr(r, "_write", original)
+    r.recover(repo)
+    assert not (repo / r.JOURNAL).exists()
+    assert not (repo / ".mcp.json").exists()
+    r.apply(r.plan(repo, ["codex", "claude"]))
+    assert not r.plan(repo, ["codex", "claude"]).changes
+
+
+def test_locked_validation_never_writes(repo):
+    planned = r.plan(repo, ["claude"])
+    with pytest.raises(r.RegistrationError):
+        r.apply(planned, locked=True)
+    assert not (repo / ".mcp.json").exists()
+
+
+def test_optout_and_agent_removal(repo):
+    r.apply(r.plan(repo, ["codex", "claude"]))
+    r.apply(r.plan(repo, ["claude"]))
+    assert r._entry("codex", (repo / ".codex/config.toml").read_bytes()) is None
+    (repo / ".devkit/config.local.toml").write_text("[mcp]\nregister=false\n")
+    r.apply(r.plan(repo, ["claude"]))
+    assert r._entry("claude", (repo / ".mcp.json").read_bytes()) is None
+
+
+def test_unloadable_provider_is_not_uninstall(repo, monkeypatch):
+    r.apply(r.plan(repo, ["claude"]))
+
+    def fail():
+        raise ImportError("fixture")
+
+    monkeypatch.setattr(r.metadata, "entry_points", lambda **kw: [SimpleNamespace(load=fail)])
+    with pytest.raises(r.RegistrationError, match="not uninstall"):
+        r.plan(repo, ["claude"])
+    assert r._entry("claude", (repo / ".mcp.json").read_bytes()) is not None
+
+
+def test_symlink_and_malformed_ledger_refuse(repo, tmp_path):
+    (repo / ".mcp.json").symlink_to(tmp_path / "foreign")
+    with pytest.raises(r.RegistrationError):
+        r.plan(repo, ["claude"])
+    (repo / ".mcp.json").unlink()
+    ledger = repo / r.LEDGER
+    ledger.parent.mkdir(parents=True)
+    ledger.write_text("{}")
+    with pytest.raises(r.RegistrationError):
+        r.plan(repo, ["claude"])

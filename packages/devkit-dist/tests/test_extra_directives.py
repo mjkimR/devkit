@@ -10,7 +10,6 @@ from __future__ import annotations
 import pytest
 from click.testing import CliRunner
 from devkit.core.errors import AGT_REQUIREMENT, DIST_REQUIREMENT, extra_install_fix
-from devkit.host.errors import HostMcpDependencyError
 from devkit.search.errors import ModelNotFoundError, SearchExtraMissingError
 from distsupport.distribution import cli
 
@@ -18,7 +17,7 @@ AGT = "devkit-agt[{extra}] @ git+https://github.com/mjkimR/devkit.git#subdirecto
 DIST = "devkit-dist[{extra}] @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-dist"
 
 
-@pytest.mark.parametrize("extra", ["search", "mcp"])
+@pytest.mark.parametrize("extra", ["search"])
 def test_the_directive_names_the_extra_on_either_requirement(extra: str) -> None:
     fix = extra_install_fix(extra)
     assert f"uv add '{AGT.format(extra=extra)}' when it depends on devkit-agt" in fix
@@ -36,7 +35,6 @@ def test_the_requirements_are_source_explicit() -> None:
 def test_every_missing_extra_error_uses_the_directive() -> None:
     assert SearchExtraMissingError("x").fix == extra_install_fix("search")
     assert (ModelNotFoundError("x").fix or "").endswith(extra_install_fix("search"))
-    assert (HostMcpDependencyError("x").fix or "").startswith(extra_install_fix("mcp"))
 
 
 def test_the_playbook_search_mode_help_names_both_extras() -> None:

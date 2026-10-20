@@ -43,6 +43,10 @@ FULL_NAMES = frozenset({"pyproject.toml", "conftest.py"})
 # Repository files that tests read directly, which imports do not show: prefix -> test paths.
 DATA: tuple[tuple[str, tuple[str, ...]], ...] = (
     (
+        "packages/devkit-mcp/",
+        ("packages/devkit-mcp/tests", f"{DEVKIT}/tests/integration", "packages/devkit-spec/tests/test_integration.py"),
+    ),
+    (
         "docs/",
         (
             f"{DEVKIT}/tests/test_documented_codes.py",

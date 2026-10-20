@@ -13,7 +13,7 @@ created_at: 2026-10-17
 
 `devkit.integration` prepares an immutable request, obtains a native confirmation through `devkit.host`, and
 lands the task through the selected route: locally (a merge commit built outside the base checkout, or a fast-forward under
-`[worktree] merge = "ff-only"`) or through a GitHub PR merge commit, with its exact cleanup scope. `host` owns MCP transport and native UI adaptation;
+`[worktree] merge = "ff-only"`) or through a GitHub PR merge commit, with its exact cleanup scope. `devkit-mcp` owns MCP transport and native UI adaptation;
 integration owns authorization binding, policy, readiness and execution. It imports no SDD models. Command and
 code quick reference: [reference.md](../../development/reference/integration.md).
 
@@ -303,28 +303,20 @@ measurement limits are recorded in the unit's platform evidence material.
 
 ## 6. Setup and verification
 
-Follow the optional MCP onboarding route linked from installation. Install `devkit-agt[mcp]` (the integration
-service tools ship with `devkit-agt`, the MCP server with `devkit-dist`, whose `mcp` extra it requires) in a retained base
-runtime, then run `devkit host mcp setup --host codex` there for explicit user-scoped Codex registration.
-`devkit host mcp status --host codex` checks registration against that runtime/base and SDK availability; it leaves
-connection and approval UI unknown. Matching entries are unchanged; different registrations require explicit
-`--replace`. Setup refuses linked-worktree/submodule workspace or runtime paths. Sync does not register MCP.
-The read-only `devkit host mcp config --format json -w <base>` still prints exact add/get/remove commands and TOML.
-Claude Code has no devkit setup adapter: register server `devkit` with Claude Code's own writer,
-`claude mcp add --scope user devkit -- <command> <args...>`, using the `command` and `args` that config prints for
-the retained base and runtime; `claude mcp get devkit` inspects it and `claude mcp remove devkit -s user` removes it.
-`devkit host mcp status` does not inspect that registration. Reconnect the client and verify tool discovery and
-visible confirmation separately. See `CAP-HOST-lifecycle-observation` and
-[Host MCP](../../development/reference/host.md#mcp-services).
+Install `devkit-agt[mcp]` intentionally in a retained base/tool runtime, then run ordinary `devkit sync` for selected
+Codex/Claude project registrations. `devkit mcp status` distinguishes local registration facts from unknown
+connection, effective enablement, forms, trust and permissions. See `CAP-MCP-runtime-registration`.
 
-Development checks exercise an installed SDK client/server over stdio and real disposable Git fixtures: approval,
-non-approval, decline/cancel, absent form capability, caller approval-flag rejection, stale scope, PR policy,
-branch retention, scoped cleanup, merge-then-cleanup failure recovery, merge commits, target advances (clean,
-conflicting, moved, reset, policy and receipt changes), cleanup-only requests and the lock wait. No external API call is needed.
-Consumer smoke installs the wheel extra and checks the installed transport. Native host UI, actual host permission
-prompts and the installed devkit-spec provider remain separate validation evidence, not consequences of SDK tests.
+The Host validates the final committed scope and checks before calling `integration_integrate`; its native form
+is the business approval. Workers return scope to their Host and do not request business approval. No extra chat
+approval or `integration_prepare` call is required when native forms work. Missing runtime, disconnected transport,
+unavailable form or unsupported cloud connectivity requires intentional installation/connection or an independently
+authorized CLI/PR route. Missing UI never grants authority.
 
-
-A fresh cleanup-only PR confirmation says the PR is already merged and lists only remaining fetch, local
-fast-forward and selected cleanup. It does not promise another push or merge, or waiting for required checks.
-It discloses `not-recorded` checked-landing evidence and the provider's landed-target check after cleanup.
+The calling Host's explicit configuration workspace controls execution, independently of source-branch provenance
+or executor cwd. Integration status is read_only; prepare is preflight; integrate is interactive; resume is
+approved_resume. Cloud rejects all but read-only invocation, including stale/direct registrations, before forms,
+after replies/lock waits and before subsequent effects. A transition after effects returns partial progress.
+Missing/malformed/replaced workspace identity fails closed. Only terminal cleanup of the exact configuration
+workspace in the approving call can use its captured context after intentional self-removal; later calls, new
+merge/push and resume cannot. Read-only retained diagnostics remain available.

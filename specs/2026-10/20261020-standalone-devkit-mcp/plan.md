@@ -61,3 +61,8 @@ retained executable/import source and process-local authority tests.
 AC-06: record available host version evidence; actual native UI remains explicitly unverified if unavailable.
 Run relevant lint/types, `just test-affected`, dist-only, wheel smoke, release validation without publication,
 and cumulative governance. Medium review uses an independent code reviewer and separate reconcile reviewer.
+
+The Host expanded the write boundary narrowly to worktree lifecycle start/prepare and related tests. A trusted
+before-step callback rechecks environment before creation, local copy, setup and sync; handoff records partial
+recovery when a guard refuses after creation. This closes the setup-to-sync transition without adding MCP imports
+to worktree lifecycle or changing ordinary CLI authorization.

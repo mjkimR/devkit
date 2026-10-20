@@ -6,8 +6,8 @@ name is `devkit-dist`; imports are `devkit.*` (`devkit.core`, `devkit.search`, `
 `devkit.cli`). It owns the sole `devkit` console script, the `.devkit/config.toml` schema and the receipt format.
 Requires Python 3.12 or later; runtime dependencies are `click`, `jinja2`, `pyyaml`, `tomlkit` and `devkit-advisory`
 (the `devkit.advisory` library, same version). The `search` extra (`devkit-dist[search]`) adds `numpy`, `tokenizers`
-and the embedding model package for dense and hybrid search; the `mcp` extra adds the SDK for native stdio services and
-confirmation.
+and the embedding model package for dense and hybrid search. Optional `devkit-mcp` owns native stdio and forms;
+dist owns exact project registration and does not import the SDK.
 
 `devkit-dist` alone deploys skills, subagents, instructions, playbooks, guidance, documents and host hooks; it runs
 no repository rules, commit gates or delivery workflows. The developer harness (`devkit rules`, `devkit workflow`,
@@ -40,7 +40,7 @@ installation names the script owner and adds the harness:
 | --- | --- | --- | --- |
 | `devkit.core` | Shared foundation: frontmatter grammar, installation receipt, safe paths, atomic writes, Git runner, deadlines, file locks, plugin loading, project discovery, CLI plumbing | none | [core reference](../../docs/development/reference/core.md) |
 | `devkit.distribution` | Bundle packaging and transactional synchronization, plus the built-in `devkit` guide bundle | `devkit sync`, `add`, `remove`, `list`, `status`, ... | [distribution reference](../../docs/development/reference/distribution.md) |
-| `devkit.host` | Lifecycle hooks, optional MCP transport, native confirmation and service dispatch; distribution owns hook deployment | `devkit host` | [host reference](../../docs/development/reference/host.md) |
+| `devkit.host` | Lifecycle hooks, service handlers and exact project MCP registrations; distribution owns hook deployment | `devkit host` | [host reference](../../docs/development/reference/host.md) |
 | `devkit.search` | Lexical, dense and hybrid document search; dense needs the `search` extra | none | [search reference](../../docs/development/reference/search.md) |
 | `devkit.cli` | The root `devkit` group: built-in commands, then `devkit.commands` plugins, then the name-only harness list | `devkit` | `ARCH-05-3-command-plugins` |
 

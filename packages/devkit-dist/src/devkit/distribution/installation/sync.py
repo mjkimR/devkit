@@ -79,6 +79,7 @@ from devkit.distribution.installation.workspace import (
     owned_prefix,
     snapshot,
 )
+from devkit.host import registrations
 
 TOOL_PACKAGE = "devkit-dist"
 EDITED_FILE_FIX = (
@@ -861,9 +862,23 @@ def sync_project(
         raise ArgumentError("environment must be local or cloud")
     root = require_project_dir(root)
     # A dry run (``--dry-run``, ``--check``) writes nothing, so it reads under the shared lock like any reader.
-    with project_lock(root, shared=dry_run):
+    with registrations.clone_lock(root, dry_run=dry_run), project_lock(root, shared=dry_run):
+        if not dry_run and not locked:
+            registrations.recover(root)
         captured = local_render.inputs(root)
         update = save() if save is not None and not dry_run else None
+        selected_config = (
+            parse_config(tomllib.loads(update.text))
+            if update is not None and update.text is not None
+            else read_config(root)
+        )
+        registration = registrations.plan(
+            root, agents if agents is not None else selected_config.agents, environment=environment
+        )
+        if locked and registration.changes:
+            raise registrations.RegistrationError(
+                "locked sync requires ordinary sync to reconcile local MCP registration"
+            )
         finish = commit_locked(
             root,
             installed,
@@ -878,6 +893,10 @@ def sync_project(
             captured_inputs=captured,
         )
         result = finish()
+        result.notices.extend(registration.notices)
+        result.actions.extend(Action(path, "update") for path in registration.changes)
+        if not dry_run:
+            registrations.apply(registration, locked=locked)
     if update is not None:
         result.notices.extend(update.notices)
     if not dry_run:

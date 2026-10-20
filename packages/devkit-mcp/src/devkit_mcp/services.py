@@ -8,8 +8,8 @@ import re
 from importlib import metadata
 from pathlib import Path
 
+from devkit.core.mcp import McpTool
 from devkit.host.errors import HostMcpError
-from devkit.host.mcp import McpTool
 
 SERVICE_GROUP = "devkit.host.services"
 NAME = re.compile(r"[a-zA-Z0-9_-]{1,64}\Z")
@@ -24,7 +24,11 @@ def load_tools(root: Path) -> dict[str, McpTool]:
             if not isinstance(declared, tuple) or not all(isinstance(tool, McpTool) for tool in declared):
                 raise TypeError("service must return a tuple of McpTool")
             for tool in declared:
-                if not NAME.fullmatch(tool.name) or tool.name in tools:
+                if (
+                    not NAME.fullmatch(tool.name)
+                    or tool.name in tools
+                    or tool.execution not in {"read_only", "preflight", "interactive", "approved_resume"}
+                ):
                     raise TypeError("invalid or duplicate tool name")
                 tools[tool.name] = tool
         except Exception as exc:

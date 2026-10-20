@@ -11,6 +11,7 @@ from uuid import uuid4
 
 from devkit.advisory import AdvisoryError, Level
 from devkit.core.git import run_git
+from devkit.core.mcp_context import capture_terminal_removal, guard_execution
 from devkit.core.project import read_project_config
 from devkit.integration import providers, receipts
 from devkit.integration.errors import IntegrationConfigError, StaleRequestError
@@ -65,6 +66,7 @@ def _pr_identity(pr: dict[str, Any], branch: str, target: str) -> None:
 
 
 def prepare(service: IntegrationService, branch: str, task: Task) -> IntegrationResult:
+    guard_execution()
     root, port = service.root, _port(service)
     port.begin_call()
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,255}", task.id):
@@ -89,6 +91,7 @@ def prepare(service: IntegrationService, branch: str, task: Task) -> Integration
             "Configure the target upstream with the same branch name and prepare again",
         )
     repository = port.resolve(remote)
+    guard_execution()
     target_sha = port.fetch(repository, target)
     local_target = _git(root, "rev-parse", "HEAD")
     if not is_ancestor(root, local_target, target_sha):
@@ -135,6 +138,7 @@ def prepare(service: IntegrationService, branch: str, task: Task) -> Integration
         assert pr is not None
         merge_oid = (pr.get("mergeCommit") or {}).get("oid")
         if merge_oid:
+            guard_execution()
             port.fetch_commit(repository, merge_oid)
         _confirmed(root, pr, source)
         if not is_ancestor(root, source, target_sha):
@@ -147,6 +151,7 @@ def prepare(service: IntegrationService, branch: str, task: Task) -> Integration
         )
     remote_source = port.ref(repository, f"refs/heads/{branch}")
     if remote_source and remote_source != source:
+        guard_execution()
         fetched_source = port.fetch(repository, branch)
         if fetched_source != remote_source or not is_ancestor(root, remote_source, source):
             raise _error(
@@ -284,6 +289,7 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
     result, request, root = record.result, record.result.request, service.root
     if result.status == "completed":
         return result
+    guard_execution()
     plan, repository, port = request.context.finish, request.repository, _port(service)
     assert repository is not None
     port.begin_call()
@@ -310,6 +316,7 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
                 )
             result.steps[operation] = "unknown"
             if port.ref(repository, f"refs/heads/{plan.branch}") != plan.source_sha:
+                guard_execution()
                 port.push(repository, plan.source_sha, plan.branch)
             if port.ref(repository, f"refs/heads/{plan.branch}") != plan.source_sha:
                 raise _error("INTEGRATION_STEP_UNKNOWN", "Push outcome is not confirmed")
@@ -326,6 +333,7 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
                     pr = candidates[0]
                 else:
                     result.steps[operation] = "unknown"
+                    guard_execution()
                     port.create(repository, plan.branch, plan.target_branch, request.context.task.id)
                     candidates = [p for p in port.find(repository, plan.branch) if p["state"] == "OPEN"]
                     if len(candidates) != 1:
@@ -336,6 +344,7 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
             result.steps[operation] = "completed"
         operation = "lock"
         with integration_lock(Path(plan.common_dir), timeout=wait):
+            guard_execution()
             if result.steps["worktree_remove"] == "unknown" and not Path(plan.path).exists():
                 entries = _git(root, "worktree", "list", "--porcelain", "-z").split("\0")
                 if f"worktree {plan.path}" not in entries:
@@ -353,6 +362,7 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
             _pr_identity(pr, plan.branch, plan.target_branch)
             if pr["headRefOid"] != plan.source_sha:
                 raise _error("INTEGRATION_REMOTE_BRANCH_DIVERGED", "PR head changed after approval")
+            guard_execution()
             target = port.fetch(repository, plan.target_branch)
             if pr["state"] != "MERGED":
                 if result.steps["merge"] == "unknown":
@@ -373,6 +383,7 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
                 if result.result_sha is None or not result.build_checked:
                     result.build_checked = False
                     result.build_target = target
+                    guard_execution()
                     result.result_sha = build_result(
                         root,
                         branch=plan.branch,
@@ -410,6 +421,7 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
                 if port.ref(repository, f"refs/heads/{plan.target_branch}") != target:
                     raise _error("INTEGRATION_TARGET_MOVED", "Target moved after the checked build")
                 result.steps["merge"] = "unknown"
+                guard_execution()
                 response = port.merge(
                     repository, pr["number"], plan.source_sha, plan.branch, plan.target_branch, request.context.task.id
                 )
@@ -423,6 +435,7 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
                     )
                 if pr["state"] != "MERGED":
                     raise _error("INTEGRATION_STEP_UNKNOWN", "Platform merge outcome is not confirmed")
+                guard_execution()
                 target = port.fetch(repository, plan.target_branch)
             result.pull_request = pr
             merge_oid = (pr.get("mergeCommit") or {}).get("oid")
@@ -430,6 +443,7 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
                 try:
                     _git(root, "cat-file", "-t", merge_oid)
                 except AdvisoryError:
+                    guard_execution()
                     port.fetch_commit(repository, merge_oid)
             merge, parent, tree = _confirmed(root, pr, plan.source_sha)
             result.steps["merge"] = "completed"
@@ -490,6 +504,7 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
                 finalized=record.finalized,
                 check_upstream=False,
             )
+            guard_execution()
             fast_forward(root, target)
             result.steps[operation] = "completed"
             if not record.finalized:
@@ -498,6 +513,9 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
                 def before_step(step: str, progress: FinishResult) -> None:
                     nonlocal operation
                     operation = step
+                    guard_execution(terminal=bool(progress.removed))
+                    if step == "worktree_remove" and approving:
+                        capture_terminal_removal(Path(plan.path))
                     if progress.removed:
                         result.steps["worktree_remove"] = "completed"
                     _validate(service, result, merged=True)
@@ -525,6 +543,7 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
                             "Inspect the lease and dependent PRs; preserve the remote branch and resume after resolution",
                         )
                     result.steps[operation] = "unknown"
+                    guard_execution(terminal=True)
                     port.delete(repository, plan.source_sha, plan.branch)
                     if port.ref(repository, f"refs/heads/{plan.branch}") is not None:
                         raise _error("INTEGRATION_STEP_UNKNOWN", "Remote deletion is unconfirmed")
@@ -533,6 +552,7 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
             assert result.finish is not None
             for scope in request.cleanup:
                 if result.cleanup_steps[scope.extension] != "completed":
+                    guard_execution(terminal=True)
                     done = providers.cleanup_extensions()[scope.extension][1].integration_run(
                         service._context(result), result.finish, scope.targets
                     )

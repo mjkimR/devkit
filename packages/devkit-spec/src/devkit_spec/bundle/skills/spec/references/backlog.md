@@ -105,3 +105,9 @@ Every transition is the user's decision, with a concrete candidate prepared firs
 
 Hygiene reads base facts only: `SPEC_MILESTONE_DONE_UNSETTLED` and `SPEC_MILESTONE_DROPPED_UNSETTLED` name unsettled
 members left on finished milestones until they are completed or reassigned/cleared/rejected.
+
+Native MCP approval belongs to the Host after it validates worker boundaries, committed scope and required checks.
+Workers return that evidence and do not ask for business approval. When the optional runtime, connection or negotiated
+form UI is unavailable, use intentional installation/connection or an independently authorized explicit CLI/PR route;
+missing UI is not approval. Cloud execution exposes read-only inspection and cannot use interactive or resume tools.
+The owning configuration workspace controls this restriction, independently of source-branch provenance.

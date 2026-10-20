@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Build the release assets for a version tag:
 #   release.sh vX.Y.Z
-# Checks that the tag is vX.Y.Z and names the version of the three lockstep
-# packages (devkit-dist, devkit-agt, devkit-advisory), builds a wheel of every
+# Checks that the tag is vX.Y.Z and names the version of the four lockstep
+# packages (devkit-dist, devkit-agt, devkit-advisory, devkit-mcp), builds a wheel of every
 # workspace package into dist/release/, writes SHA256SUMS there and the release
 # notes (install commands for this tag) to dist/release-notes.md. The
 # devkit-embed model wheel is not rebuilt: the notes point at the release that
@@ -18,7 +18,7 @@ if [[ ! "$tag" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
 fi
 version=${tag#v}
 # devkit-dist, devkit-agt and devkit-advisory are released in lockstep from one tag, at one version.
-for metadata in packages/devkit-dist/pyproject.toml packages/devkit/pyproject.toml packages/devkit-advisory/pyproject.toml; do
+for metadata in packages/devkit-dist/pyproject.toml packages/devkit/pyproject.toml packages/devkit-advisory/pyproject.toml packages/devkit-mcp/pyproject.toml; do
     package_version=$(project_version "$metadata")
     if [ "$package_version" != "$version" ]; then
         echo "error: $tag does not match the version $package_version in $metadata" >&2
@@ -42,6 +42,7 @@ dist_wheel=$(basename "$out"/devkit_dist-*.whl)
 devkit_wheel=$(basename "$out"/devkit_agt-*.whl)
 advisory_wheel=$(basename "$out"/devkit_advisory-*.whl)
 spec_wheel=$(basename "$out"/devkit_spec-*.whl)
+mcp_wheel=$(basename "$out"/devkit_mcp-*.whl)
 viewer_wheel=$(basename "$out"/devkit_viewer-*.whl)
 cat > dist/release-notes.md <<EOF
 ## Install
@@ -56,6 +57,9 @@ uv add --dev "devkit-dist @ $base/$dist_wheel" "devkit-advisory @ $base/$advisor
 
 # devkit with dense and hybrid search (adds numpy, tokenizers and the 15 MB embedding model)
 uv add --dev "devkit-agt[search] @ $base/$devkit_wheel" "devkit-dist[search] @ $base/$dist_wheel" "devkit-advisory @ $base/$advisory_wheel" "devkit-embed @ $model_url"
+
+# Optional MCP runtime and native approval (installed intentionally)
+uv add --dev "devkit-mcp @ $base/$mcp_wheel" "devkit-dist @ $base/$dist_wheel" "devkit-advisory @ $base/$advisory_wheel"
 
 # Spec-Driven Development extension (includes the required devkit wheels)
 uv add --dev "devkit-spec @ $base/$spec_wheel" "devkit-agt @ $base/$devkit_wheel" "devkit-dist @ $base/$dist_wheel" "devkit-advisory @ $base/$advisory_wheel"

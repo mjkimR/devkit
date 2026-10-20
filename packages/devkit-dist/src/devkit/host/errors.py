@@ -1,7 +1,6 @@
 """Stable advisories for host configuration and hook dispatch."""
 
 from devkit.advisory import Actor, AdvisoryError, Retry
-from devkit.core.errors import extra_install_fix
 
 
 class HostError(AdvisoryError):
@@ -51,35 +50,3 @@ class HostConfirmationError(HostError):
     code = "HOST_CONFIRMATION_UNAVAILABLE"
     guardrail = True
     fix = "Use an interactive Codex client with form elicitation enabled; repeat the confirmation call only after inspecting Git state"
-
-
-class HostMcpDependencyError(HostError):
-    code = "HOST_MCP_EXTRA_REQUIRED"
-    fix = f"{extra_install_fix('mcp')} (in the server runtime), then reconnect the MCP server"
-
-
-class HostMcpRegistrationError(HostError):
-    code = "HOST_MCP_REGISTRATION_FAILED"
-    fix = "Run codex mcp list --json and codex mcp get devkit --json, correct CLI/configuration access, then retry devkit host mcp status"
-
-
-class HostMcpRegistrationMissing(HostError):
-    code = "HOST_MCP_REGISTRATION_MISSING"
-    fix = "Run devkit host mcp setup --host codex from the retained base runtime"
-
-
-class HostMcpRegistrationConflict(HostError):
-    code = "HOST_MCP_REGISTRATION_CONFLICT"
-    guardrail = True
-    fix = "Inspect codex mcp get devkit --json; to replace that user-scoped entry, run devkit host mcp setup --host codex --replace from the retained base runtime"
-
-
-class HostMcpRuntimeError(HostError):
-    code = "HOST_MCP_RUNTIME_UNSAFE"
-    fix = "Run devkit host mcp setup --host codex using the retained base checkout and its Python environment outside linked worktrees"
-
-
-class HostMcpRegistrationShadowed(HostError):
-    code = "HOST_MCP_REGISTRATION_SHADOWED"
-    guardrail = True
-    fix = "Inspect Codex project/profile MCP settings and the user devkit entry; resolve the override explicitly before retrying user-scoped setup"

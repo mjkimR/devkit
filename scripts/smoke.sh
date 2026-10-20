@@ -288,11 +288,10 @@ TOML
     finished=$(uv run devkit worktree finish dev-smoke-task --merge)
     grep -q 'merged=yes push=no-upstream removed=yes branch_deleted=yes' <<<"$finished"
     test ! -e "$task" && test -f task.md
-    echo "--- optional MCP extra: absent transport is actionable, installed transport integrates a Git fixture"
-    uv run devkit host mcp config --format json >/dev/null
+    echo "--- optional MCP runtime: absent command, installed transport integrates a Git fixture"
     status=0
-    uv run devkit host mcp serve >/dev/null 2>"$work/mcp-extra.err" || status=$?
-    test "$status" -eq 2 && grep -q HOST_MCP_EXTRA_REQUIRED "$work/mcp-extra.err"
+    uv run devkit mcp --help >/dev/null 2>"$work/mcp-extra.err" || status=$?
+    test "$status" -eq 2
     uv add --dev 'devkit-agt[mcp]' >/dev/null
     uv run python "$source_root/scripts/smoke_integration.py" "$work"
     uv run devkit gate uninstall >/dev/null

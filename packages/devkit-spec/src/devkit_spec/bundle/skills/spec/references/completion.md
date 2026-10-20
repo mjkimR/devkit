@@ -64,3 +64,9 @@ Before deleting a source proposal or reporting completion, find concrete work it
 Reference the destination `FB-...` or `PROP-...` by full ID from the source `reconcile.md` (or a `session` task's final report), and from a proposal back to the retained source spec or Git history if the original proposal is removed; a future-work paragraph in a capability document is no handoff. Verify the destination exists (`devkit spec list feedback` or `devkit spec list proposal`) before claiming it is tracked. Drafting a follow-up neither accepts it nor authorizes implementation.
 
 Required acceptance criteria or defects still in the agreed scope MUST remain open; never move them to a proposal to claim completion. The handoff is part of completion in every route.
+
+Native MCP approval belongs to the Host after it validates worker boundaries, committed scope and required checks.
+Workers return that evidence and do not ask for business approval. When the optional runtime, connection or negotiated
+form UI is unavailable, use intentional installation/connection or an independently authorized explicit CLI/PR route;
+missing UI is not approval. Cloud execution exposes read-only inspection and cannot use interactive or resume tools.
+The owning configuration workspace controls this restriction, independently of source-branch provenance.

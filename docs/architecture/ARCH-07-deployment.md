@@ -46,7 +46,7 @@ uv add --dev "devkit-viewer @ git+https://github.com/mjkimR/devkit.git#subdirect
 `uv.lock` pins the resolved commits. A Git requirement on `devkit-agt` brings `devkit-dist` and `devkit-advisory` from
 the same commit (their workspace sources), and the `search` extra brings the model wheel from the release
 `packages/devkit-dist/pyproject.toml` pins. `devkit-dist`, `devkit-agt` and `devkit-advisory` share a version and are
-released in lockstep from one tag (`devkit-agt` pins the other two exactly); spec, starter, catalog and viewer keep
+released with optional `devkit-mcp` in lockstep from one tag (each foundation dependency is pinned exactly); spec, starter, catalog and viewer keep
 independent versions. A tool installation names the owner of the `devkit` executable and adds the harness:
 `uv tool install <devkit-dist requirement> --with <devkit-agt requirement>` (`ARCH-05-3-command-plugins`). The viewer's Svelte library is not a release asset: a host such as autohub
 vendors its `npm pack` tarball from a pinned commit (`CAP-VIEW-repository-viewer`). Release-wheel installations
@@ -79,3 +79,12 @@ When installed and synchronized, devkit establishes the following layout inside 
 
 Task worktrees are sibling checkouts at `<parent of base>/<base name>-wt-<branch>`, outside `.devkit/`.
 See `CAP-WT-task-worktrees` and `CAP-DIST-agent-projections` for the canonical path and projection contracts.
+
+## Optional MCP deployment
+
+Supported isolated installations are dist alone, dist plus runtime, agt without the SDK, agt with its `mcp` extra,
+and spec plus runtime. Runtime-only discovery may return no services. No wheel duplicates another installed path.
+`devkit mcp` uses a retained base or explicitly selected tool runtime with matching service packages and verified
+import locations; linked-worktree interpreters and editable sources are refused. Registration and its absolute
+paths remain ignored machine-local state. Removing a task checkout cannot remove its server runtime. Owning
+configuration loss blocks new approval/resume; only the same approved call's exact terminal cleanup may finish.

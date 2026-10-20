@@ -1,91 +1,31 @@
-# Optional: Connect Codex or Claude Code to devkit MCP
+# Optional MCP runtime and native approval
 
-Follow this after installing devkit and selecting bundles. MCP adds native service tools of `devkit-agt`, including
-the integration confirmation path; asset sync and the approved CLI integration fallback work without it, and
-`devkit sync` never registers MCP servers.
+Install `devkit-mcp` intentionally in the retained base environment, or select `devkit-agt[mcp]` on an existing
+harness requirement. Source installations must name the source for the optional wheel too; release-wheel installs
+use the matching dist/advisory/runtime release assets. Runtime installation alone can discover an empty service
+set. Install agt for integration and spec for handoff; domain packages do not need the SDK to import.
 
-Supported clients are the interactive Codex CLI (registered through devkit's setup adapter, §3) and the Claude Code
-terminal CLI (registered with its own CLI, §4). Elsewhere (Claude Desktop, the VS Code extension, Agent SDK
-sessions) the confirmation form is not verified; use the CLI fallback there.
+Run `devkit sync` in the owning checkout. Selected Codex CLI and Claude Code project entries are reconciled under
+`.codex/config.toml` and `.mcp.json`; `[mcp] register = false` opts out. `devkit mcp config --format json` inspects
+the retained launch descriptor, and `devkit mcp setup --executable /retained/bin/python` explicitly selects a
+verified runtime. It must remain installed after task cleanup, including any editable source locations.
 
-## 1. Choose the retained base and runtime
+Tracked host settings and visible foreign untracked files are never changed. Generated paths use existing ignores
+or narrowly scoped clone-local Git exclusions after checking all worktrees. Edited, unowned identical and conflicting
+entries are not adopted. Resolve reported same-name user/ancestor/local/managed registrations with host tools;
+devkit never mutates global settings, trust or permission policy. `devkit mcp remove` retires exact owned project
+entries; exclusions remain until manually reviewed across every linked worktree.
 
-Run every command below in the base checkout that remains after task worktrees are removed, with its retained
-Python environment; setup registers the running Python, so never run it from a disposable worktree runtime.
+Reconnect the terminal host and inspect `devkit mcp status --format json`. Registration, connection, discovery,
+native form support, trust and execution permissions are separate facts. Complete the host's own trust flow and
+verify tool discovery, decline/cancel and approved effects separately; record host versions with UI evidence.
+Protocol tests do not establish actual terminal UI support. Desktop/VS Code adapters are outside this scope.
 
-The chosen client's CLI must already be installed. Both routes register the fixed name `devkit` in the client's
-**user scope** (`codex mcp add` or `claude mcp add --scope user`); neither writes project settings or changes trust,
-approval policies or execution permissions. This registration is visible outside this repository. Include that scope
-in the installation plan and use existing authorization when it already covers MCP setup; otherwise obtain
-agreement before registration.
+The Host reviews committed scope and required checks, then calls `integration_integrate` or `spec_handoff` for
+one native business approval. It needs no extra chat approval or integration prepare call. Workers return verified
+scope to the Host and never request business approval. Trust, tool and sandbox prompts may still appear.
 
-## 2. Install the extra and inspect
-
-For the Git source used by the installation guide:
-
-```bash
-uv add --dev "devkit-agt[mcp] @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
-uv run devkit host mcp config --format json
-uv run devkit host mcp status --host codex --format json
-```
-
-Add the `mcp` extra to the project's existing devkit requirement, keeping its source and revision (a
-distribution-only installation uses `devkit-dist[mcp]`); never add a second devkit requirement. `config` is
-read-only; its `command` and `args` are what either client runs. `status` inspects only Codex registration and the
-local SDK (exit 0 matching, 1 missing, different or shadowed registration or no SDK, 2 not inspected); it does not
-connect to the server or prove visible approval UI.
-
-## 3. Register Codex explicitly
-
-```bash
-uv run devkit host mcp setup --host codex --format json
-uv run devkit host mcp status --host codex --format json
-```
-
-Setup reports `registered` or `unchanged` and verifies the registration after writing. A different existing entry
-is `HOST_MCP_REGISTRATION_CONFLICT`: inspect `codex mcp get devkit --json` locally before replacing it, and do not
-paste credentials it shows into reports. `HOST_MCP_REGISTRATION_SHADOWED` means a project-level entry overrides the
-user entry; resolve it explicitly first, since setup refuses it even with `--replace`. When the approved intent
-includes replacing the user entry, run:
-
-```bash
-uv run devkit host mcp setup --host codex --replace --format json
-```
-
-Replacement can redirect other sessions using the same name, so never retry a conflict with `--replace` merely to
-make installation pass. After a registration failure, inspect before retrying; setup does not roll back a host CLI
-write.
-
-## 4. Register Claude Code explicitly
-
-devkit has no Claude Code setup adapter. Register the `command` and `args` from §2's `config` output with Claude
-Code's own writer, then inspect the result:
-
-```bash
-claude mcp get devkit
-claude mcp add --scope user devkit -- <command> <args...>
-claude mcp get devkit
-```
-
-An existing `devkit` entry with a different command or arguments can belong to another repository or session:
-replace it only when the approved intent includes that. The final `get` should report user scope, stdio, the same
-command and arguments, and a connected server.
-
-## 5. Reconnect and verify in the client
-
-Reconnect MCP or start a new client session in the retained base, then inspect `/mcp` and the available tools. A
-successful setup, status or `get` establishes registration only: report registration, client connection and the
-visible confirmation form as separate observations, and verify the form during an actual authorized integration,
-never by merging just to test onboarding. Count the client's MCP tool permission prompt and the devkit confirmation
-form separately.
-
-To remove the named user registration, use the client's own command:
-
-```bash
-codex mcp remove devkit
-claude mcp remove devkit -s user
-```
-
-See [Host MCP reference](../../docs/development/reference/host.md#mcp-services),
-[official Codex MCP documentation](https://developers.openai.com/codex/mcp/) and
-[Claude Code MCP documentation](https://code.claude.com/docs/en/mcp).
+Cloud exposes only declared read-only tools and refuses interactive/preflight/resume execution even through stale
+registrations. Its transport connectivity is separately host-dependent. Missing runtime, disconnected server,
+unavailable forms or unsupported cloud transport requires intentional installation/connection or an independently
+authorized CLI/PR route. Missing UI never supplies authority; existing authorization applies only to its exact scope.

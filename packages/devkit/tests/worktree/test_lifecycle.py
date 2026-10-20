@@ -754,3 +754,32 @@ def test_output_that_is_not_an_error_object_keeps_its_headline(monkeypatch: pyte
         "[ERROR]  (SOMETHING_FAILED) the reason",
     ]
     assert warning.message.splitlines()[-1] == "[DETAIL] line 7"
+
+
+def test_start_trusted_guard_stops_after_setup_before_sync(tmp_path, monkeypatch):
+    from devkit.advisory import AdvisoryError
+    from devkit.core.mcp_context import ExecutionBinding, guard_execution, invocation
+    from devkit.worktree import lifecycle, locate
+    from testsupport.rules import git, init_repo, write
+
+    base = init_repo(tmp_path / "base")
+    write(base, ".devkit/config.toml", "schema=1\n")
+    write(base, ".devkit/installation.json", "{}\n")
+    git(base, "add", ".")
+    git(base, "commit", "-qm", "fixture")
+    called = []
+
+    def setup(*args):
+        called.append("setup")
+        write(base, ".devkit/config.local.toml", '[execution]\nenvironment="cloud"\n')
+        return None
+
+    monkeypatch.setattr(lifecycle, "_run", setup)
+    monkeypatch.setattr(lifecycle, "_sync", lambda *args: called.append("sync"))
+    with invocation(ExecutionBinding(base, base)), pytest.raises(AdvisoryError) as exc:
+        lifecycle.start(
+            locate(base), "dev-guard", setup="fixture", project=Path("."), before_step=lambda step: guard_execution()
+        )
+    assert exc.value.code == "MCP_INTERACTIVE_UNAVAILABLE"
+    assert called == ["setup"]
+    assert lifecycle.path_for(locate(base), "dev-guard").exists()

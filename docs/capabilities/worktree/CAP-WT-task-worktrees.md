@@ -163,3 +163,10 @@ revision before remote branch checks and passes the resolved commit to `git work
 runs from that commit even when another process advances the base meanwhile. Cleanup after failed creation uses
 the pinned commit as its origin. Omitting `revision` preserves creation from the base's current HEAD. The local
 MCP proposal handoff uses this option to keep setup bound to the reviewed commit.
+
+Project MCP registration preserves worktree cleanliness: tracked host files and visible foreign untracked files
+remain unchanged; generated entries and their ownership ledger remain ignored. Clone-local exclusions are narrowly
+scoped and checked across linked worktrees before addition. MCP uses a retained interpreter/import source and base
+executor, with the task checkout passed separately as its configuration workspace. Task cleanup cannot remove the
+runtime. Configuration-workspace deletion blocks subsequent approval and resume, apart from exact same-call terminal
+cleanup already approved; see `CAP-MCP-runtime-registration`.

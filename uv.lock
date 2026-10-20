@@ -14,6 +14,7 @@ members = [
     "devkit-agt",
     "devkit-catalog",
     "devkit-dist",
+    "devkit-mcp",
     "devkit-spec",
     "devkit-starter",
     "devkit-viewer",
@@ -355,7 +356,7 @@ dependencies = [
 
 [package.optional-dependencies]
 mcp = [
-    { name = "devkit-dist", extra = ["mcp"] },
+    { name = "devkit-mcp" },
 ]
 search = [
     { name = "devkit-dist", extra = ["search"] },
@@ -371,8 +372,8 @@ requires-dist = [
     { name = "click", specifier = ">=8.1.7" },
     { name = "devkit-advisory", editable = "packages/devkit-advisory" },
     { name = "devkit-dist", editable = "packages/devkit-dist" },
-    { name = "devkit-dist", extras = ["mcp"], marker = "extra == 'mcp'", editable = "packages/devkit-dist" },
     { name = "devkit-dist", extras = ["search"], marker = "extra == 'search'", editable = "packages/devkit-dist" },
+    { name = "devkit-mcp", marker = "extra == 'mcp'", editable = "packages/devkit-mcp" },
     { name = "pyyaml", specifier = ">=6.0.1" },
     { name = "tomlkit", specifier = ">=0.13" },
 ]
@@ -409,9 +410,6 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-mcp = [
-    { name = "mcp" },
-]
 search = [
     { name = "devkit-embed" },
     { name = "numpy" },
@@ -430,13 +428,12 @@ requires-dist = [
     { name = "devkit-advisory", editable = "packages/devkit-advisory" },
     { name = "devkit-embed", marker = "extra == 'search'", url = "https://github.com/mjkimR/devkit/releases/download/v0.1.0/devkit_embed-0.1.0-py3-none-any.whl" },
     { name = "jinja2", specifier = ">=3.1.6,<4" },
-    { name = "mcp", marker = "extra == 'mcp'", specifier = ">=1.30,<2" },
     { name = "numpy", marker = "extra == 'search'", specifier = ">=2.0" },
     { name = "pyyaml", specifier = ">=6.0.1" },
     { name = "tokenizers", marker = "extra == 'search'", specifier = ">=0.20" },
     { name = "tomlkit", specifier = ">=0.13" },
 ]
-provides-extras = ["mcp", "search"]
+provides-extras = ["search"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -450,6 +447,23 @@ version = "0.1.0"
 source = { url = "https://github.com/mjkimR/devkit/releases/download/v0.1.0/devkit_embed-0.1.0-py3-none-any.whl" }
 wheels = [
     { url = "https://github.com/mjkimR/devkit/releases/download/v0.1.0/devkit_embed-0.1.0-py3-none-any.whl", hash = "sha256:2b8534b60d85e36c2027e2c0d13d110289fa877b9c0b2639b8c4daedbe461f38" },
+]
+
+[[package]]
+name = "devkit-mcp"
+version = "0.1.1"
+source = { editable = "packages/devkit-mcp" }
+dependencies = [
+    { name = "devkit-dist" },
+    { name = "jsonschema" },
+    { name = "mcp" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "devkit-dist", editable = "packages/devkit-dist" },
+    { name = "jsonschema", specifier = ">=4.23,<5" },
+    { name = "mcp", specifier = ">=1.30,<2" },
 ]
 
 [[package]]

@@ -396,11 +396,15 @@ def start(
     setup: str | None = None,
     project: Path | None = None,
     revision: str | None = None,
+    before_step: Callable[[str], None] | None = None,
 ) -> StartResult:
     """Create the activity branch's worktree from the base HEAD.
 
     With ``revision``, resolve a commit before the remote checks and pass that exact commit to Git for creation:
     setup never executes a later ambient base HEAD. Without it, creation uses the base HEAD as before.
+
+    ``before_step`` is an optional trusted caller guard before creation, local config copy, setup and sync.
+    A refusal after an effect leaves the created worktree for caller-owned recovery; no rollback is implied.
 
     A branch that already exists, locally or on a remote (``_remote_holders``), is refused
     (``WORKTREE_BRANCH_EXISTS``), also when its worktree is already registered: an existing branch is continued only
@@ -446,27 +450,40 @@ def start(
         raise ConflictError(f"{path} exists and is not a worktree of this repository")
     notices = _refuse_existing(position.base, branch)
     captured_local = _local_snapshot(position.base, project)
+    if before_step is not None:
+        before_step("worktree_create")
     _add(position.base, path, branch, revision=revision)
     _log.info("created worktree %s on %s", path, branch)
+    if before_step is not None:
+        before_step("local_config_copy")
     _copy_local_snapshot(path, project, captured_local)
-    setup_ran, synced = _prepare(path, setup, project, notices)
+    setup_ran, synced = _prepare(path, setup, project, notices, before_step=before_step)
     return StartResult(branch, path, position.base, True, setup_ran, synced, notices)
 
 
 def _prepare(
-    path: Path, setup: str | None, project: Path | None, notices: list[AdvisoryError]
+    path: Path,
+    setup: str | None,
+    project: Path | None,
+    notices: list[AdvisoryError],
+    *,
+    before_step: Callable[[str], None] | None = None,
 ) -> tuple[str | None, bool | None]:
     """Run ``setup`` and ``devkit sync --locked`` in a new worktree; their warnings go to ``notices``.
 
     Returns the setup command that ran and whether the sync restored the project (``None`` when it did not run).
     """
     if setup is not None:
+        if before_step is not None:
+            before_step("setup")
         failure = _run(["/bin/sh", "-c", setup], path, f"setup {setup!r}", SETUP_TIMEOUT)
         if failure is not None:
             notices.append(SetupFailedWarning(failure, fix=f"cd {shlex.quote(str(path))} && {setup}"))
     synced = None
     target = path / project if project is not None else None
     if target is not None and (target / RECEIPT_PATH).is_file():
+        if before_step is not None:
+            before_step("sync")
         warning = _sync(_interpreter(path), target)
         synced = warning is None
         if warning is not None:

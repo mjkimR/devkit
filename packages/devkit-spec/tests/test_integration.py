@@ -14,7 +14,7 @@ import pytest
 from click.testing import CliRunner
 from devkit.cli import cli as devkit_cli
 from devkit.core import git as core_git
-from devkit.host.mcp import ConfirmationReply
+from devkit.core.mcp import ConfirmationReply
 from devkit.integration import (
     IntegrationContext,
     IntegrationService,
@@ -62,7 +62,7 @@ def _make_synced_repo(tmp_path: Path, template: Path, *, extra_config: str = "")
     git(repo, "config", "user.email", "t@example.com")
     git(repo, "config", "user.name", "t")
     git(repo, "config", "commit.gpgsign", "false")
-    shutil.copytree(template / ".devkit", repo / ".devkit")
+    shutil.copytree(template / ".devkit", repo / ".devkit", ignore=shutil.ignore_patterns("transient"))
     write(repo, ".gitignore", ".devkit/managed/\n")
     config_path = repo / ".devkit/config.toml"
     config_text = config_path.read_text(encoding="utf-8") if config_path.exists() else ""
@@ -760,7 +760,7 @@ def test_handoff_native_sdk_roundtrip(accepted_handoff_base, approved):
             command=sys.executable,
             args=[
                 "-c",
-                "from pathlib import Path; import sys; from devkit.host.mcp.server import serve; serve(Path(sys.argv[1]))",
+                "from pathlib import Path; import sys; from devkit_mcp.server import serve; serve(Path(sys.argv[1]), Path(sys.argv[1]))",
                 str(repo),
             ],
         )
@@ -802,7 +802,9 @@ def test_handoff_pins_reviewed_commit_before_setup_when_base_moves(accepted_hand
         git(base, "commit", "--allow-empty", "-q", "-m", "advance while checking remote branches")
         return notices
 
-    def capture_setup(path, setup, project, notices):
+    def capture_setup(path, setup, project, notices, *, before_step=None):
+        if before_step is not None:
+            before_step("sync")
         setup_heads.append(git(path, "rev-parse", "HEAD"))
         # The fixture has no setup command; copy its locked managed assets without invoking unrelated CLI work.
         shutil.copytree(repo / ".devkit/managed", path / ".devkit/managed")

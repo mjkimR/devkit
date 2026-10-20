@@ -13,7 +13,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-mcp = ["mcp>=1.30,<2"]
 # Dense and hybrid devkit.search: numpy, tokenizers and the default embedding model.
 search = [
     "numpy>=2.0",

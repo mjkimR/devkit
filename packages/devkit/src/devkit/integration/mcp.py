@@ -6,7 +6,7 @@ import asyncio
 import json
 from pathlib import Path
 
-from devkit.host.mcp import Confirmation, McpTool
+from devkit.core.mcp import Confirmation, McpTool
 from devkit.integration.models import Task
 from devkit.integration.service import IntegrationService
 
@@ -75,7 +75,7 @@ def create_tools(root: Path) -> tuple[McpTool, ...]:
             "Optional preflight: inspect integration scope. The pull-request route fetches the remote target but performs no remote write. Not required before integration_integrate, which prepares its own request. Use integration_status(detail=true) for full retained diagnostics.",
             TASK_SCHEMA,
             prepare,
-            read_only=True,
+            execution="preflight",
             open_world=True,
         ),
         McpTool(
@@ -103,6 +103,7 @@ def create_tools(root: Path) -> tuple[McpTool, ...]:
             "Resume only remaining steps of a request already approved in this server process, without a second confirmation, onto the target its approving call last built on (or the confirmation target); a later target needs a new integration_integrate. Returns concise progress and actionable errors; never supplies new approval or broadens cleanup. Inspect with integration_status before recovery when the outcome is uncertain.",
             REQUEST_SCHEMA,
             resume,
+            execution="approved_resume",
             destructive=True,
             open_world=True,
         ),
@@ -111,6 +112,7 @@ def create_tools(root: Path) -> tuple[McpTool, ...]:
             "Read-only retained progress and observed Git state, concise by default. Set detail=true for the full immutable request, evidence and cleanup revisions. Unknown request IDs require independent Git inspection.",
             STATUS_SCHEMA,
             status,
+            execution="read_only",
             read_only=True,
             open_world=True,
         ),

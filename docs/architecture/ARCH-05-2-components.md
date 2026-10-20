@@ -93,6 +93,12 @@ graph TD
 | **`devkit.gate`** (agt) | Git hook wrappers enforcing commit policies. | `gate install`, `gate run` |
 | **`devkit.compact`** (agt) | Bounded command execution with persistent log capture. | `devkit run` |
 | **`devkit.search`** (dist) | Lexical (BM25), dense (embeddings), and hybrid document retrieval. | Library API |
-| **`devkit.host`** (dist) | Host environment discovery, lifecycle event hook dispatch, the MCP server. | `host status`, `host mcp` |
+| **`devkit.host`** (dist) | Host environment discovery, lifecycle event hook dispatch, exact project MCP registrations. | `host status` |
 | **`devkit.integration`** (agt) | Approval-bound integration and the MCP service tools it registers with the host. | `integration` |
 | **`devkit.generated`** (agt) | Tracking and deterministic regeneration of machine-generated files. | `generated check`, `generated regen` |
+
+The optional `devkit_mcp` component mounts `mcp`, loads `devkit.host.services` and adapts native forms.
+`devkit.core.mcp` owns SDK-free service contracts and explicit execution classification; the core execution binding
+keeps owning configuration workspace, retained executor and same-clone identity distinct. Domain mutation guards
+consume the process-local binding without importing the transport. Dist discovers only the narrow
+`devkit.mcp.registrations` launch provider; removing that package leaves dist able to retire exact owned entries.
