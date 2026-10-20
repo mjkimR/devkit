@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: promoted
+status: resolved
 created_at: 2026-10-19
 ---
 
@@ -60,3 +60,10 @@ Historical source: Git `1b8478093a44cf2d0b74c412bffc93f259459ef0:docs/proposals/
 - **Disposition**: `SPEC-envelope-record-gaps` Q1 and `ADR-reverify-closes-challenger-rounds` explicitly receive
   unmarked high-effort round counting and answer-fold behavior. The accepted design keeps old high rounds in the
   count and grants the defined answer-fold recovery round. Implementation is pending; this is promotion, not resolution.
+- **Disposition (resolved)**: `SPEC-envelope-record-gaps` implemented it in `references/review-loop.md`: section 1
+  counts each loop's own kind, counts unmarked rounds in sequence order only before the loop's first marked round
+  when a `worker` envelope of the segment records `activity_effort: high` (else a `high` loop starts at round 1),
+  lets the higher number hold and never counts a `reverify`; section 4 makes a fold of the user's answers a new batch
+  of the same loop with one further fresh round outside the cap. Verified by
+  `packages/devkit-spec/tests/test_record_gaps_procedure.py` (`test_the_round_count_covers_unmarked_rounds_and_answer_folds`)
+  and the initial code review of the spec.

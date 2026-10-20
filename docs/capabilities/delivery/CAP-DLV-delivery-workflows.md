@@ -141,14 +141,18 @@ sequence.
     At `high`, code review, reconcile verification and Planning criticism run in rounds. Each round is a fresh
     reviewer given the earlier rounds' findings, the round's diff scope and the effort: round 1 covers the whole
     change, each later round every fix since the previous round, never a subset. The implementer fixes every finding
-    of a round together (a `P2` or `P3` may be waived with a reason) and closes the round with `reverify`, a new
-    `reconcile-check`, or the next `challenger-NN` or `worker` summary; a P1 the implementer holds invalid stays open
+    of a round together (a `P2` or `P3` may be waived with a reason) and closes the round with `reverify` (for
+    Planning, a reverify of the `challenger-NN` round, written after each fold at `medium` too) or a new
+    `reconcile-check`; a P1 the implementer holds invalid stays open
     there with its counter-evidence and sends the batch to the next round. The loop ends when a round finds nothing, or
     when every fix of the batch is minor (confined to the named location, a text-only or prescribed edit, no contract
     change, shown by a test or by the diff) and is self-verified with its reason and evidence; the initial reviewer
     calls, the first reconcile verification included, are never replaced by a self-check, and a recurring finding is
     never self-verified. Each round's summary starts with `round <N>;`; the cap is 3 rounds after the initial one and
-    is not reset by `devkit workflow return` within a segment. A batch not minor at the cap round and a recurring P1
+    is not reset by `devkit workflow return` within a segment. Each loop counts its own kind; a round without the
+    marker counts only before the loop's first marked round and only when a `worker` envelope of the segment records
+    `activity_effort: high`, and a fold of the user's answers is a new batch of the same loop that gets at most one
+    fresh round outside the cap (`ADR-reverify-closes-challenger-rounds`). A batch not minor at the cap round and a recurring P1
     (`recurs:` at the start of the reviewer's `issue`) stop the work (rule 7). A finding whose `evidence` path is not
     in the round's diff file list is out of scope: it is fixed with the batch and never counts as a recurrence; a
     `challenger` finding whose `suggested_action` starts with `Decision needed:` stays out of the loop and goes to
@@ -170,7 +174,8 @@ sequence.
     confirmed `activity-effort` of each run is recorded only on its `worker-NN.yaml` envelope (with any override reason
     in `summary`). The effort is always proposed with a reason when the activity starts, and the `plan-accept`
     request shows each Planning run's effort, the refined `dev_effort` hint and the support-role envelopes present,
-    naming a `challenger`, or a `scout` at `high`, that the effort required and no envelope shows. Gates, exit checks
+    naming a `challenger`, or a `scout` at `high`, that the effort required and no envelope shows, and each
+    `challenger` round with the `reverify` that closes it. Gates, exit checks
     and `required` policies hold at every effort.
 16. **Only the workers write to Git**: a read-only role never stages or commits (`x-git-actions: [read]`). The two
     workers (`[read, commit]`) commit on their activity branch, write their own records and never push, merge, rebase,
