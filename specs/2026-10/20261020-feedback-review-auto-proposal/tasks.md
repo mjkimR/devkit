@@ -3,12 +3,9 @@ id: TASKS-feedback-review-auto-proposal
 spec: SPEC-feedback-review-auto-proposal
 plan: PLAN-feedback-review-auto-proposal
 ---
-<!-- devkit:skeleton -->
 
-# Task Breakdown: `SPEC-feedback-review-auto-proposal` Clarify recurring findings versus defects introduced by fixes
+# Task Breakdown: `SPEC-feedback-review-auto-proposal`
 
-## Phase 1: Implementation
-- [ ] **Task 1.1**: Core Implementation
-  - **_Boundary**: <target area>
-  - _Requirements: AC-01_
-  - **Verification**: <command that verifies the task>
+- [ ] **Task 1**: Define recurrence and contrasting examples without changing loop limits.
+  - **_Boundary**: `packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/review-loop.md`
+  - _Requirements: AC-01, AC-02, AC-03_
