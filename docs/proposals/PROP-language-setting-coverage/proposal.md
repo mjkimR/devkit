@@ -2,7 +2,7 @@
 id: PROP-language-setting-coverage
 title: Extend language settings to MCP approval content
 summary: "Evaluate a shared language preference beyond response-style, including which MCP approval content devkit can localize and which UI elements remain controlled by Codex CLI or Claude Code."
-status: draft
+status: reviewing
 created_at: 2026-10-20
 target_area: host/
 priority: medium
