@@ -2,7 +2,7 @@
 id: SPEC-feedback-terminal-status
 title: Treat feedback promotion and direct resolution as terminal outcomes
 summary: "Feedback promotion closes routing to follow-up work; direct resolution closes verified fixes without promotion."
-status: planned
+status: in-progress
 created: 2026-10-20
 related_capabilities:
   - CAP-DOCS-document-model

@@ -26,8 +26,8 @@ Decide in this order and propose the result; the user confirms `task-kind` and `
 When the agreed work addresses named feedback, record its full FB IDs and the intended scope in a `Source feedback`
 section of the proposal/spec body; for a session keep them in the agreed conversational scope (no new file).
 Keep that section when drafting a handed-off spec: handoff carries proposal body references and never resolves them.
-Resolve the IDs to actual files before planning boundaries, and include those paths wherever completion needs to
-update them, including delegated write scope. Do not infer sources from a matching target alone. Follow
+Resolve open direct-fix sources to actual files before planning boundaries and include paths needing completion
+updates in delegated write scope. Terminal sources remain traceability and require no completion edits. Do not infer sources from a matching target alone. Follow
 [Source feedback resolution](completion.md#source-feedback-resolution) at completion.
 
 ## 3. Raising the depth

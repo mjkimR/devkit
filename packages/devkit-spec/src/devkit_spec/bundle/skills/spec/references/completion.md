@@ -35,25 +35,27 @@ Reconcile verification is a `reconcile-check` envelope at `living-spec-draft` at
 
 ## Source feedback resolution
 
-Before reporting completion, review each FB ID explicitly linked in the task's `Source feedback` section or the
-session's agreed scope against the final diff and verification. For a spec, do this in `living-spec-draft` and
-record each outcome in `reconcile.md`; for a session, do it in `report-session` before its commit and report the
-outcomes in the final response or PR body. No additional session artifact is created. This obligation applies even
-when feedback capture is requested-only or `collect-feedback` is off.
+Only `open` feedback is actionable. `promoted` is terminal once handed to identified follow-up work; progress
+belongs to that destination, and finishing it MUST NOT convert the source to `resolved`. `resolved` is terminal
+for a directly addressed and verified observation without promotion, in either a session or a spec task.
+Terminal source references remain traceability: they require no completion disposition, re-verification or edits.
 
-- Change an `open` or `promoted` source item to `resolved` only when the authorized implementation fully addresses
-  its observation and the applicable tests/review verify the result. Append a Disposition naming the SPEC ID (or
-  changed paths for a session), the implemented outcome and concrete verification evidence. Preserve prior promotion
-  history. This permission covers the task's explicit sources, not unrelated feedback found by a sweep.
-- A partial, deferred or unverified source keeps its existing state; record its remaining scope and destination in
-  the reconciliation/session report. Required work still in the agreed scope cannot be deferred to claim completion.
-- Handoff, a plan, a passing document check or integration alone is not fix verification. Resolution on the task
-  branch does not assert integration; the implementation and FB update reach the base through normal integration.
-- Recheck resolutions after review fixes or changed inputs. If the task's own resolution no longer has evidence,
-  restore its pre-task state (`open` or `promoted`) and explain the remaining work before reporting completion.
-- Capture never resolves new observations. Dismissal, forwarding and promotion remain hygiene dispositions; a
-  separate hygiene session is not needed to resolve sources within an already authorized task. A source whose path
-  lies outside a delegated write boundary is handled by the Host, never silently edited by the worker.
+Before reporting completion, review only explicitly linked open sources addressed directly by the task against
+the final diff and verification. For a spec, record their outcomes in `reconcile.md` at `living-spec-draft`; for a
+session, do this at `report-session` before its commit and report outcomes without creating a new artifact.
+This obligation applies even with requested-only capture or `collect-feedback` off.
+
+- Change an open direct-fix source to `resolved` only when the authorized implementation fully addresses it and
+  applicable tests/review verify the result. Append a Disposition naming the SPEC ID (or changed session paths),
+  implemented outcome and concrete verification evidence. Unrelated feedback found by a sweep is not authorized.
+- Partial, deferred or unverified direct fixes stay open; report remaining scope and destination. Required work
+  still in the agreed scope cannot be deferred to claim completion.
+- Handoff, planning, document checks or integration alone are not fix verification. A branch resolution does not
+  assert integration; the implementation and FB update reach the base through normal integration.
+- Recheck only resolutions made by this task if later changes invalidate their evidence; restore those sources to
+  open and explain remaining work before completion. Do not revisit pre-existing terminal sources.
+- Capture never changes status. A separate hygiene session is not needed for an authorized direct fix. Only open
+  sources requiring updates belong in delegated write scope; the Host handles an out-of-boundary disposition.
 
 ## Deferred Work Handoff
 

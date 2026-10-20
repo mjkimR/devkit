@@ -1,7 +1,7 @@
 # Feedback Sweep
 
 Read this for a workflow stage sweep, a Planning run's return or a user-requested session sweep. The recording procedure of the `spec-feedback` skill (section 2) applies to every observation; promotion, dismissal and forwarding stay in a separate feedback-hygiene session. Capture never changes status;
-resolution of explicitly linked source feedback follows the `spec` completion procedure independently of this sweep.
+resolution of explicitly linked open direct-fix feedback follows the `spec` completion procedure independently of this sweep.
 
 ## Entry
 

@@ -470,19 +470,18 @@ Registered under the `devkit.integration.readiness` entry point as `spec` and se
 
 ## Source feedback at completion
 
-`ADR-feedback-resolution-lifecycle` separates promoted work from verified resolution. Task entry records full FB IDs
-and received scope in a proposal/spec `Source feedback` section or a session's agreed scope. Handoff preserves the
-references and source states; drafting retains them. Source files needing updates belong in implementation/delegation
-boundaries; otherwise the Host applies their dispositions from verified results.
+`ADR-feedback-terminal-outcomes` defines promoted and resolved as terminal routes: promotion transfers tracking to
+identified follow-up work; resolution closes a direct verified fix without promotion. Only open feedback needs action.
+Task entry preserves source FB IDs and scope through handoff and drafting. Terminal references require no completion
+disposition or re-verification and do not implicitly authorize source writes. Completion of follow-up work never
+converts promoted sources to resolved.
 
-At `living-spec-draft`, review each spec source against the final diff and verification and record its disposition in
-`reconcile.md`. At `report-session`, perform the same review before the commit and report outcomes in the final
-response or PR body, with no new session artifact. Set an open/promoted source resolved only for a fully addressed,
-verified fix, recording destination, implemented outcome and verification evidence. Partial/deferred/unverified
-sources retain state with remaining scope reported; unrelated captured observations stay open. Recheck the task's
-own resolutions after changes invalidate their evidence. This completion obligation is independent of capture
-settings and collect-feedback stage policy, and grants no integration authority or additional workflow gate.
-
+At `living-spec-draft`, review only explicit open direct-fix sources against implementation and verification and
+record outcomes in `reconcile.md`. At `report-session`, do the same before committing and report outcomes without
+a new artifact. Record outcome and evidence for resolutions; incomplete or unverified direct fixes stay open.
+Include source files needing updates in task/delegation boundaries; otherwise the Host applies their dispositions.
+Recheck only resolutions newly made by this task if later changes invalidate evidence. This obligation is independent
+of capture settings and collect-feedback policy and grants no integration authority or additional workflow gate.
 
 Native local Development starts may use `spec_handoff` (`CAP-DLV-proposal-incubation`): its confirmation form shows
 the accepted plan and lets the user override the `dev_effort` hint before the worktree and spec handoff are created.
@@ -503,7 +502,8 @@ replaces the entire derived scope. Literal paths match themselves and descendant
   worker envelope when its state is unblocked, otherwise the common `diff_scope.base` of its unresolved problems.
   With no previous worker, use the single merge base with `devkitBase`, or the registered base checkout's branch.
 - Scope: a Planning proposal directory; for Development, the unit directory, literal task boundaries, materials
-  directory, reconciliation targets and explicitly linked Source feedback files. Entries retain their source,
+  directory, reconciliation targets and explicitly linked Source feedback files whose committed status is `open`.
+  Terminal or unknown statuses add no implicit source scope; explicit task boundaries remain independent. Entries retain their source,
   task number or feedback ID. Missing or invalid scope records leave the scope check not-run.
 - Base checkout: the worktree's registered common-directory checkout; absent when run in the base itself. Its
   HEAD and dirty paths are observations for the Host's comparison with its saved state, not checks.
