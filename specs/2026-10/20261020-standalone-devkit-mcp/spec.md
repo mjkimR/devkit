@@ -2,7 +2,7 @@
 id: SPEC-standalone-devkit-mcp
 title: Independent devkit-mcp runtime and default approval integration
 summary: "Extract the shared MCP runtime into devkit-mcp, manage project registrations through sync, and make native MCP the default interactive approval route while retaining domain services in their owning packages."
-status: in-progress
+status: completed
 created: 2026-10-20
 related_capabilities: []
 related_stories: []

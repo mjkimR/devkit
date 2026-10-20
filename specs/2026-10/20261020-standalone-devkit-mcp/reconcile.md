@@ -1,8 +1,10 @@
 ---
 reconcile_id: REC-standalone-devkit-mcp
 feature: SPEC-standalone-devkit-mcp
-status: pending
+status: resolved
 targets:
+  - file: docs/architecture/ARCH-08-1-agent-output.md
+    resolution: modified
   - file: docs/architecture/ARCH-05-1-containers.md
     resolution: modified
   - file: docs/architecture/ARCH-05-2-components.md
@@ -46,6 +48,6 @@ runtime capability names its runtime, dependency-free contracts, invocation cons
 Broad cross-capability package/test/tooling candidates were rejected. No accepted implementation requirement was
 deferred; real-host UI evidence remains explicitly unverified under the accepted validation boundary.
 
-The independent reconciliation recheck resolves both topology and confirmation-ownership findings. One P1 remains:
-ARCH-08-1-agent-output still names the removed command. Its correction is outside the worker write boundary and
-awaits Host scope expansion; the final reconciliation check and final change report are therefore not complete.
+The independent reconciliation recheck resolves both topology and confirmation-ownership findings.
+`ARCH-08-1-agent-output` now names the standalone runtime command and links its runtime contract, following
+Host authorization of this additional target. The native-protocol output exception is unchanged.

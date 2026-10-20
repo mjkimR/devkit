@@ -1,0 +1,14 @@
+kind: resolution
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T06:52:01.355912Z'
+status: completed
+summary: Host authorized the additional agent-output contract target. Corrected its standalone MCP command/reference, updated reconciliation and scope registry, and independently verified all prior reconciliation findings resolved.
+findings: []
+checks:
+  recovery: PASS scope authorization applied; independent reconcile-check-03 passes
+diff_scope:
+  base: ''
+  head: f4a2e6d758d9665636e84c4ce893a12ed4cacc1f
+resolves: worker-01.yaml
