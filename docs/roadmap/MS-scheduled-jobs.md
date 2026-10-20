@@ -1,7 +1,7 @@
 ---
 id: MS-scheduled-jobs
 title: Scheduled repository jobs and activity execution
-summary: "Provides the shared scheduling foundation for periodic hygiene, reporting, and refactoring jobs, with observable execution and recovery while preserving activity approval boundaries."
+summary: "Explores optional scheduling for repository maintenance independently of manually invocable playbooks, with execution recovery and preserved approval boundaries; trigger integration remains a later design decision."
 status: planned
 created_at: 2026-10-18
 depends_on: []
@@ -11,12 +11,12 @@ depends_on: []
 
 ## Goal
 
-Advances `ARCH-01-introduction-and-goals` §1.2 (Repository Governance & Deterministic Verification), §1.3 (Delivery Workflow Orchestration), and §3.4 (Platform Compatibility) by providing a shared scheduling foundation for periodic repository maintenance without requiring a devkit background daemon. Hygiene, reporting, and refactoring are all recurring jobs on this foundation. Hygiene runs deterministic checks (`CAP-GOV-evaluation-lifecycle`); reporting and refactoring also require agent investigation and judgment. Their specialized outcomes are defined by `MS-reporting-and-actionable-insights` and `MS-refactoring-and-prevention-rules`.
+Advances `ARCH-01-introduction-and-goals` §1.2 (Repository Governance & Deterministic Verification), §1.3 (Delivery Workflow Orchestration), and §3.4 (Platform Compatibility) by providing optional scheduling for repository maintenance without requiring a devkit background daemon. Maintenance playbooks are independently usable and verifiable through manual invocation; their delivery does not depend on this milestone. The scheduling mechanism and its integration with playbook invocation remain later design decisions.
 
 ## Exit condition
 
 - Repository-owned job definitions declare the schedule, execution scope, and check or activity to invoke, with a documented runner integration and a verified recurring execution.
-- Periodic hygiene runs through the shared scheduler. Reporting and refactoring use the same job contract and execution records; each is verified as a recurring job in its own milestone.
+- A selected maintenance procedure demonstrates recurring execution through a documented runner integration. Its domain behavior remains owned by the maintenance playbook; scheduling adds invocation and execution tracking.
 - Jobs support separately configured cadences and explicit sequencing or evidence dependencies so reports can consume completed hygiene and refactoring runs and identify unavailable inputs.
 - Job execution handles overlapping invocations, missed runs, failures, and retries with explicit outcomes and recovery actions; repeated execution does not duplicate work already recorded for the same scheduled occurrence.
 - Scheduled activities preserve their workflow approval and integration boundaries. A schedule authorizes invocation within the configured scope; it does not supply a user's decision at a gate.
@@ -24,4 +24,4 @@ Advances `ARCH-01-introduction-and-goals` §1.2 (Repository Governance & Determi
 
 ## Non-goals
 
-- **Scope Excluded**: A required devkit background daemon, a general-purpose distributed scheduler, and bypassing workflow approvals for unattended execution.
+- **Scope Excluded**: A required devkit background daemon, a general-purpose distributed scheduler, bypassing workflow approvals for unattended execution, and defining maintenance procedures or making scheduler adoption a prerequisite for their manual use.
