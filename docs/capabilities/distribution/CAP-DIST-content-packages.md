@@ -1,12 +1,13 @@
 ---
 id: CAP-DIST-content-packages
 title: "Content Packages"
-summary: "Content wheel packaging, bundle distribution and dependency boundaries, the devkit-dist and devkit-agt installations and their built-in bundles, including the auto-selected harness bundle and the standalone signals."
+summary: "Content wheel packaging, bundle distribution and dependency boundaries, the devkit-dist and devkit-agt installations and their built-in bundles, including the auto-selected harness bundle, opt-in response-style instructions and standalone signals."
 area: distribution
 status: active
 entrypoints:
   - packages/devkit-dist/src/devkit/distribution/installation/discovery.py
   - packages/devkit/src/devkit/harness_guide/
+  - packages/devkit-catalog/src/devkit_catalog/response_style/
 created_at: 2026-10-17
 ---
 
@@ -140,3 +141,33 @@ a tool installation, `uv tool install --reinstall '<devkit-dist requirement>' --
   except the opt-in `advisory:python` rule.
 
 Engine presence is read from entry point names only: `devkit-dist` never imports or locates a harness module.
+
+## 5. Opt-in Response Style
+
+The `devkit-catalog` wheel makes `response-style` available without selecting it. `devkit add response-style`
+deploys one portable skill and one guidance pointer through the existing native projections; it adds no
+host-specific style or alternate style preset.
+
+The skill's ordinary reply format is `→ **Core sentence.** Supporting explanation`, with blank lines between
+points. The first sentence gives the overall answer, recommendation or current result, including essential
+conditions or what is missing when the answer is unknown. Later points state distinct conclusions and provide
+needed reasons, conditions and examples, without fixed block or sentence counts. Requested depth determines
+the explanation needed. Decision-relevant facts, quantities, units, identifiers, qualifications, risks and
+tradeoffs remain attached to their claims; omission or distortion is the more serious failure, and unnecessary
+repetition must not obscure required information. Concise reporting does not reduce required work.
+
+Required user and workflow formats take precedence over the ordinary point format, including every required
+field. Artifact-only requests receive the artifact without conversational framing. Work reports distinguish
+what is finished from what remains, give actual verification and material limitations, and put a necessary
+user decision at the end. Style instructions authorize no invented actions or outcomes.
+
+The `language` variable is rendered by Jinja: `auto` follows the current request; a configured value supplies
+the conversation default; an explicit user language request overrides either. Repository and task language
+requirements govern deliverables. Korean replies retain natural sentences, a consistent polite register and
+exact technical identifiers.
+
+The single pointer inserted into `AGENTS.md` stays within `CAP-DIST-manifest-spec`'s 300 UTF-8 bytes per fragment,
+including LF. This is not a limit on the whole guide or skill body. Deployment checks verify rendered text and
+projections; the authored examples in `MAT-response-style-rewrite-draft` illustrate the accepted design and do
+not measure model adherence, reader comprehension, comparative quality or host compaction behavior
+(`ADR-response-style-adaptive-replies`, `ADR-response-style-measurement`).

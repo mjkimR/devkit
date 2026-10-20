@@ -1,13 +1,13 @@
 ---
-id: PADR-response-style-measurement
+id: ADR-response-style-measurement
 title: Review examples and verify the deployed response style
 summary: "Uses authored examples for subjective design review and existing bundle checks for implementation, without a required benchmark or an objective quality ranking."
-proposal: PROP-response-style-survey
-status: draft
+proposal: SPEC-response-style-survey
+status: accepted
 created_at: 2026-10-20
 ---
 
-# [PADR-response-style-measurement] Review examples and verify the deployed response style
+# [ADR-response-style-measurement] Review examples and verify the deployed response style
 
 ## 1. Context & Problem Statement
 
