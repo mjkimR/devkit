@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-19
 ---
 
@@ -39,3 +39,10 @@ devkit rules check --ci --base <merge-base>   (after merging main)
   docs/proposals/PROP-direct-planning-procedure/feedback/..., docs/proposals/PROP-envelope-record-gaps/feedback/..."]
 [SUMMARY: errors=2 warnings=0 infos=0 fixed=0]
 ```
+
+## Disposition
+
+Dismissed: separate branches can independently record the same observation, but the existing integration procedure
+incorporates the current base and runs cumulative rules before landing. `RULE-document-reference` detects duplicate
+IDs in the combined tree, as the recorded incident demonstrates. Keep the existing recovery: retain one observation,
+remove the duplicate and rerun verification. No additional cross-branch reservation or prevention mechanism is needed.

@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-19
 ---
 
@@ -40,3 +40,10 @@ specs/2026-10/20261017-hook-driven-integration-cleanup/feedback/{auto-integratio
 planning-worker write boundaries: "Allowed: the proposal directory ... and a new draft proposal for a follow-up"
 answer-01.yaml q1-split: auto dispatch (Q2) stays as open feedback; Q3 and Q4 become child drafts
 ```
+
+## Disposition
+
+Dismissed under `ADR-feedback-terminal-outcomes`: promotion closes the originating feedback. Subsequent splitting
+or completion is tracked in the receiving work, without reopening the source or requiring a new source disposition.
+No additional Planning-worker permission to maintain terminal feedback is needed. The original observation is
+retained as history.
