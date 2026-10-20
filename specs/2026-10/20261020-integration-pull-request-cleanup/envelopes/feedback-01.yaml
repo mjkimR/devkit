@@ -1,0 +1,13 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T01:38:07.035311Z'
+status: completed
+summary: Swept Development observations and committed records. Reused FB-planning-platform-facts-unverifiable-offline for concrete unsupported gh syntax and implicit queue findings; appended observed evidence. No additional distinct observation requires a new item.
+findings: []
+assumptions:
+- capture=observed coverage=repo-and-upstream detail=detailed; source feedback remains promoted for excluded squash/rebase scope
+checks:
+  swept: PASS recorded=0 duplicates=1 existing item updated
+activity_effort: high
