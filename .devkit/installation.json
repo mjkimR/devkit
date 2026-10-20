@@ -650,7 +650,7 @@
     },
     ".agents/agents/development-worker.md": {
       "mode": 420,
-      "sha256": "260be38c7a9f055ba3cf292901410334e96638bc909ba71c42b5fc5f20803346"
+      "sha256": "a793f2d21d93878bf947cd7feab1b65d3896be850968fd667cc255dd7342083c"
     },
     ".agents/agents/planning-worker.md": {
       "mode": 420,
@@ -850,7 +850,7 @@
     },
     ".claude/agents/development-worker.md": {
       "mode": 420,
-      "sha256": "7734d551d51b77a3b641fc2709955cd1d08f1486429fd392078abf33195fb153"
+      "sha256": "4423c8349e30227f580217b544161288fdfd68fccbc05ec706d665c5ffd6852c"
     },
     ".claude/agents/planning-worker.md": {
       "mode": 420,
@@ -1038,7 +1038,7 @@
     },
     ".codex/agents/development-worker.toml": {
       "mode": 420,
-      "sha256": "68d40214f1e183e9ee2754a8d6f6a3c0f9a81452466cc6db766ad36f69a3b846"
+      "sha256": "b17dfdd2f193c44816b42dd9a6ae3b6a978514ebe8ae186f2b4b31f1ad2c5be2"
     },
     ".codex/agents/planning-worker.toml": {
       "mode": 420,
@@ -1494,7 +1494,7 @@
     },
     ".devkit/managed/spec/subagents/development-worker.md": {
       "mode": 420,
-      "sha256": "bac2218901c1bda58cb9f1d1df1a5295d1ac7ad3b78087683312f14c0e5392c4"
+      "sha256": "fa3dc5341dc73c8b334b287557ad947b7b6ca767faa135753ed0b61a36376fd1"
     },
     ".devkit/managed/spec/subagents/planning-worker.md": {
       "mode": 420,
