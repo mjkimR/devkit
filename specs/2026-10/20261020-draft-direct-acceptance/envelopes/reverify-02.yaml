@@ -1,0 +1,29 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T23:26:08.976370Z'
+status: completed
+review: review-02.yaml
+summary: 'round 2 closed; both recurring P3s fixed in 3deeca9: one handler restores proposal.md in a finally before any exception (also while collecting the reasons) with a new test; AGENTS.md, CAP rule 2 and 3.1 and the errors.py docstring rewrapped at 120. Recurring findings cannot be self-verified, so round 3 reviews the batch.'
+findings:
+- issue: 'recurs: review-01.yaml #2; when the gate does not open, the AdvisoryError handler calls _not_open_details (a full evaluation) before it restores proposal.md, and the sibling except BaseException never covers an exception raised inside that handler.'
+  evidence: packages/devkit-spec/src/devkit_spec/proposals/accept.py:185-199
+  failure_condition: record_answer raises an AdvisoryError, then _not_open_details raises a non-advisory exception (KeyboardInterrupt, OSError); proposal.md stays accepted without a gate:plan-accept record.
+  suggested_action: Restore the original bytes in a finally before ProposalGateNotOpenError is raised, or wrap both handlers in one outer try/except BaseException that restores and re-raises.
+  resolution: resolved
+  severity: P3
+- issue: 'recurs: review-01.yaml #6; AGENTS.md:47 is now 209 characters; CAP rule 2 adds a 126-character line, the §3.1 rewrap leaves 122, and the errors.py docstring line is 121.'
+  evidence: packages/devkit-spec/src/devkit_spec/bundle/AGENTS.md:47; docs/capabilities/delivery/CAP-DLV-proposal-incubation.md:61; docs/capabilities/delivery/CAP-DLV-proposal-incubation.md:176; packages/devkit-spec/src/devkit_spec/errors.py:203
+  failure_condition: Always; inconsistent wrapping, no effect on behavior.
+  suggested_action: Rewrap AGENTS.md:47, CAP lines 60-62 and 175-177 and the errors.py docstring line at 120.
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS just test devkit-spec 1030
+  lint: PASS just lint devkit-spec
+  typecheck: PASS pyright 0 errors
+diff_scope:
+  base: 2036edfde60892f87707c1a9e6b9c0e61eedda61
+  head: 3deeca9cd63a49559f005b27c0da0a8795307e34
+activity_effort: high

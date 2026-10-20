@@ -174,7 +174,8 @@ resolution during reconciliation under `ADR-feedback-resolution-lifecycle`.
 Without handoff, rejection/decomposition return keeps feedback in place until authorized Host deletion; a draft
 deleted for a session reclassification (rule 13) preserves its open feedback the same way, in its deletion commit.
 Before any such deletion, the Host moves open files once to `specs/<current-month>/feedback/<today>-<name>.md` in
-the same commit, preserving observation dates; settled records remain in Git. Inspect all source/destination paths and IDs.
+the same commit, preserving observation dates; settled records remain in Git. Inspect all source/destination paths
+and IDs.
 Keep the source on invalid input, collision, failed move or unresolved live dependency. Update relative links;
 historical references to retired proposal/PADR/settled-feedback IDs use existing strikethrough syntax plus retrievable
 Git revision/path context. Current document-reference/link validation must pass before committing deletion.
