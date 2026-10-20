@@ -1,7 +1,7 @@
 ---
 id: CAP-INT-mcp-services
 title: "Scoped MCP Services"
-summary: "Four scoped local integration MCP tools with one native approval in the Codex and Claude Code terminal CLIs, concise default results, detailed inspection and resumable cleanup."
+summary: "Four scoped local integration MCP tools with one native approval in the Codex and Claude Code terminal CLIs that lands a merge commit absorbing target advances, with concise default results, detailed inspection and resumable cleanup."
 area: integration
 status: active
 entrypoints:
@@ -12,7 +12,8 @@ created_at: 2026-10-17
 # [CAP-INT-mcp-services] Scoped Local Integration
 
 `devkit.integration` prepares an immutable request, obtains a native confirmation through `devkit.host`, and
-executes a local fast-forward and its exact cleanup scope. `host` owns MCP transport and native UI adaptation;
+lands the task locally (a merge commit built outside the base checkout, or a fast-forward under
+`[worktree] merge = "ff-only"`) with its exact cleanup scope. `host` owns MCP transport and native UI adaptation;
 integration owns authorization binding, policy, readiness and execution. It imports no SDD models. Command and
 code quick reference: [reference.md](../../development/reference/integration.md).
 
@@ -26,13 +27,19 @@ prepares the request, awaits form elicitation, and continues into execution in t
 approval, decline, cancellation, unavailable form capability and transport failure perform no integration changes.
 Tool arguments cannot supply `approved`, authority tokens or serialized execution requests.
 
-The form leads with the source-to-target merge action and, when supplied by the readiness provider, the committed
+The form leads with the action, `Approve local integration of "<branch>" into "<target>" with a merge commit?` (`by
+fast-forward?` under `ff-only`; `Approve cleanup of "<branch>", already merged into "<target>"?` for a cleanup-only
+request), and, when supplied by the readiness provider, the committed
 task title, goal and final-report summary (`TASK_TITLE`, `TASK_SUMMARY`, `RESULT_SUMMARY` evidence). The SDD provider
 reads these from the source commit; they are presentation evidence, not additional approval authority. Each displayed
 summary is bounded to 1,500 characters with an explicit truncation marker; full evidence remains in the request.
 The form then displays the repository, task, source/target branches and full SHAs, worktree removal and local branch
-retention/deletion, and each cleanup extension's target kinds and identities. It states fast-forward execution and
-network exclusion. Text values are quoted and control characters escaped so caller text cannot introduce misleading
+retention/deletion, and each cleanup extension's target kinds and identities. The target SHA is the confirmation
+target, marked `(at confirmation)`. Under `no-ff` the form states that later commits on the target are merged in
+without another confirmation only if the merge is clean, the integration policy is unchanged and the named readiness
+provider passes again on the merged result, otherwise nothing changes on the target, followed by the provider's
+result-check disclosure (`Result check: ...`); under `ff-only` that a moved target changes nothing; for a cleanup-only
+request that nothing is merged. It states network exclusion. Text values are quoted and control characters escaped so caller text cannot introduce misleading
 extra scope lines. Filesystem identities, policy hashes, provider/guard registrations, cleanup revisions and full
 readiness evidence remain in the immutable internal request and digest; they are not printed in the form.
 
@@ -72,24 +79,57 @@ working form capability.
 Each request has a random process-local ID and a digest of its immutable contents:
 
 - base repository, common Git directory and its filesystem identity;
-- source branch and full commit SHA, target branch and expected full SHA;
+- source branch and full commit SHA, target branch and the confirmation target's full SHA;
 - exact worktree path and filesystem identity, source upstream and devkit task markers;
-- local branch deletion/marker policy, fixed FF method and network exclusion;
+- local branch deletion/marker policy, the merge method (`no-ff` or `ff-only`), whether the request is cleanup-only,
+  and network exclusion;
 - Unit or session task reference, explicitly separate caller claims and provider evidence;
-- effective configuration/receipt digest, expected post-merge configuration/receipt digest, provider and guard identities;
+- the effective policy digest of the base and the expected one of the result, provider and guard identities;
+- the provider's readiness, including its declared target-bound evidence codes and result-check disclosure;
 - each post-finish extension and its exact package-owned cleanup identities and revisions.
 
 Claims are a provider-specific JSON object of at most 16 KiB; they are declarations, not automatically verified
 facts or approval. A Unit task requires its canonical repository-relative directory. A session task has no Unit,
 envelope or invented gate file. The provider decides how each kind establishes review, checks and other completion
-conditions. Its evidence must bind the exact source and target SHAs and use stable `UPPER_SNAKE` codes.
+conditions. Its evidence binds the context's source, target and result commits and uses stable `UPPER_SNAKE` codes.
 
-Prepare checks clean base/source state, worktree identity/lock, fast-forward eligibility and safe local branch
-deletion. It runs existing finish guards and plans scoped post-finish cleanup before showing confirmation.
-Execution rechecks provider evidence before merge and revalidates Git identities, policy and cleanup scope at each
-mutation boundary. Source/target changes, changed policy outside the expected merge, provider/guard changes or
-changed cleanup revisions invalidate the request. A source commit's known configuration changes are included in
-the expected post-merge digest. `delete_branch=false` in either applicable policy keeps the branch.
+Prepare checks clean base/source state, worktree identity/lock and safe local branch deletion. The source must
+contain the target, or the target must already contain the source, which prepares a cleanup-only request; any other
+pair is `WORKTREE_MERGE_NOT_FF`, whose fix merges the target into the branch (never a rebase). Under `no-ff` a
+missing committer identity is refused before the confirmation (`WORKTREE_COMMIT_FAILED`). Prepare runs the existing
+finish guards (with the merge base: the target, or the source for a cleanup-only request), plans scoped post-finish
+cleanup and builds nothing before showing confirmation.
+
+**Effective policy** (`ADR-effective-policy-digest`): the digest covers the parsed values devkit owns,
+`[workflow.approvals] dev-integration`, `[worktree] pull_request`, `delete_branch` and `merge`, and
+`[integration] provider`, with their defaults. Raw configuration and receipt bytes and asset hashes are not bound, so
+a bundle sync on the target leaves an open confirmation valid. The base's digest must be unchanged at every
+validation before the merge (a change is `INTEGRATION_REQUEST_STALE` whatever the new value); the result commit's
+must equal the one prospected from the source commit; after the merge the base's must equal it. A cleanup-only
+request expects the target's policy at prepare. `delete_branch=false` or `merge="ff-only"` in either the base's or the
+source's policy wins.
+
+**One build per approving call** (`ADR-merge-commit-outside-checkout`, `ADR-target-advance-readiness`): after the
+native acceptance the call reads the current target (the build target), which must descend from the confirmation
+target (a reset or rewritten target is `INTEGRATION_REQUEST_STALE`). `devkit.worktree.build_result` builds the result
+commit in the object store: under `no-ff` a commit with the build target as first parent, the approved source tip as
+second and the message `chore(merge): integrate <branch> into <target>`, whose tree is the source tree when the target
+did not advance and the `git merge-tree --write-tree` result when it did (Git 2.38 or later,
+`WORKTREE_GIT_UNSUPPORTED`; a conflict is `WORKTREE_MERGE_CONFLICT`); under `ff-only` the source tip itself (an advanced
+target is `WORKTREE_MERGE_NOT_FF`). `git commit-tree` uses the identity configuration, signs when `commit.gpgSign` is
+on, never prompts and is bounded to 30 seconds (`WORKTREE_COMMIT_FAILED`). The build then runs the finish guards with
+`merge-base(build target, source)` and the source tip, the readiness provider with the execution context, the result
+policy check and the receipt check: a merged `.devkit/installation.json` record whose path is tracked in the result
+and whose `(recorded hash, blob)` pair equals neither parent's must match its blob (`INTEGRATION_RECEIPT_CONFLICT`,
+also for a merged receipt that does not parse; untracked projections and inconsistencies already on a parent are
+skipped). Immediately before the fast-forward the base must still point at the build target
+(`INTEGRATION_TARGET_MOVED`, merge step `not_run`, no in-call retry). The base checkout only fast-forwards onto the
+result, so it never stops mid-merge; every refusal of the build changes nothing on the target. The result reports
+`build` (confirmation target, build target, result commit), kept in the process outside the request digest.
+
+After the merge every step checks that the base contains the result (later commits on the base are allowed) and
+revalidates Git identities, policy and cleanup scope at each mutation boundary. Changed source, provider/guard
+registrations or cleanup revisions invalidate the request.
 
 The Git common-directory lock serializes devkit integration executors. Stop workers that mutate the branch before
 approval; arbitrary Git processes and filesystem editors do not take this lock. Git and filesystem identities are
@@ -113,8 +153,14 @@ my-methodology = "my_package.integration"
 ```
 
 `check(IntegrationContext) -> Readiness` verifies final committed work at `context.finish.source_sha`, compared with
-`target_sha`. It returns immutable `Evidence(code, value)` entries and any blocking `reasons`. Empty evidence,
-wrong SHAs and malformed results fail closed. Evidence must be deterministic across rechecks: use commit IDs and
+`target_sha`. At prepare `context.result_sha` is `None`; at a build the execution context carries the build target as
+`finish.target_sha` and the result commit as `result_sha`. It returns immutable `Evidence(code, value)` entries, any
+blocking `reasons`, the bound `result_sha`, the `target_bound` evidence codes whose values may change with the target,
+and a required `disclosure`: one printable line of at most 200 characters saying what it checks on the merged result,
+shown in the form. Empty evidence, wrong SHAs, undeclared codes, a missing or malformed disclosure and malformed
+results fail closed (`INTEGRATION_PROVIDER_FAILED`). At a build the result must carry no reasons
+(`INTEGRATION_NOT_READY`) and equal the approved readiness except the target-bound evidence
+(`INTEGRATION_REQUEST_STALE`); the generic executor runs no tests on the result. Evidence must be deterministic across rechecks: use commit IDs and
 verified facts rather than timestamps or mutable command logs. Read-only checks must not mutate Git, call network
 services or treat claims as approval. Verification commands and any report/evidence interpretation belong to the
 provider; the generic executor never executes model-supplied commands.
@@ -162,7 +208,19 @@ the observed state is included rather than asserting that it never happened.
 
 After affirmative confirmation, `integration_resume(request_id)` can finish the retained request without asking
 the business approval again solely for execution-permission failure. It inspects state and preserves completed
-merge/removal steps. It does not merge again after a confirmed merge. Changed scope requires a new request and
+merge/removal steps. It does not merge again after a confirmed merge. The approval tolerates target advances only
+within the approving call: resume continues only onto the last build target, or onto the confirmation target when the
+approving call ran no build, and a later target is `INTEGRATION_REQUEST_STALE` (a new `integration_integrate`); a
+cleanup-only request resumes only its remaining cleanup. After a failed or unknown merge step, a base containing the
+latest result (the source under `ff-only`) means merged, a base equal to the last build target means not merged, and
+anything else is stale.
+
+The approving call waits up to 20 seconds for the Git common-directory integration lock another devkit executor holds
+(`devkit worktree finish --merge` takes it too), then reports `LOCK_HELD` with nothing changed and a `[FIX]` naming
+`integration_resume` while the target still equals the confirmation target, else a new `integration_integrate`.
+`integration_resume` never waits (`LOCK_HELD` at once). The 20-second wait plus the 30-second `commit-tree` bound stays
+below Codex's default 60-second MCP tool timeout; a host that cuts a call leaves the request inspectable with
+`integration_status`. Changed scope requires a new request and
 approval; dirty, locked, replaced or unrelated worktrees are preserved. Permission remedies stay host-owned.
 
 The service retains at most 128 requests in memory. Pending/partial requests are not evicted to make room; completed
@@ -190,6 +248,7 @@ visible confirmation separately. See `CAP-HOST-lifecycle-observation` and
 
 Development checks exercise an installed SDK client/server over stdio and real disposable Git fixtures: approval,
 non-approval, decline/cancel, absent form capability, caller approval-flag rejection, stale scope, PR policy,
-branch retention, scoped cleanup and merge-then-cleanup failure recovery. No external API call is needed.
+branch retention, scoped cleanup, merge-then-cleanup failure recovery, merge commits, target advances (clean,
+conflicting, moved, reset, policy and receipt changes), cleanup-only requests and the lock wait. No external API call is needed.
 Consumer smoke installs the wheel extra and checks the installed transport. Native host UI, actual host permission
 prompts and the installed devkit-spec provider remain separate validation evidence, not consequences of SDK tests.

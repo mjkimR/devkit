@@ -46,11 +46,11 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
 
 1. **Read through the command**: agents MUST read policy through `devkit spec policy`, never by parsing
    `.devkit/config.toml`; a policy command error stops policy-dependent work.
-2. **devkit tables first**: a policy devkit models (approvals, stage switches, pull requests, branch cleanup, worktree
+2. **devkit tables first**: a policy devkit models (approvals, stage switches, pull requests, branch cleanup, merge method, worktree
    setup, integration readiness provider) MUST live in devkit's table; `[tool.spec]` holds only keys devkit has no table for.
 3. **Defaults**: a gate the project does not set is `ask` with `source=default` (devkit's default for every gate);
    `[tool.spec] worktree` and `depth_escalation` default to `"auto"`; `[worktree]` values are devkit's defaults (`pull_request = "auto"`,
-   `delete_branch = true`, no `setup`); `[integration] provider = "spec"` selects `devkit_spec.integration` for `IntegrationService`.
+   `delete_branch = true`, `merge = "no-ff"`, no `setup`); `[integration] provider = "spec"` selects `devkit_spec.integration` for `IntegrationService`.
 4. **Gate order and fixed gates**: the spec workflows' gates `plan-intent`, `plan-accept`, `dev-integration` come
    first, then any other gate the project configures, in sorted order. `plan-intent` and `plan-accept` are always the
    user's decision (`source=fixed`): a `[workflow.approvals]` value other than `ask` (their default) for either is
@@ -135,6 +135,7 @@ collect-feedback = "off"    # switch a stage off by id
 [worktree]
 pull_request = "required"   # always integrate through pull requests (default "auto": as the task needs)
 delete_branch = true        # delete the merged branch
+merge = "no-ff"             # a merge commit per task (default); "ff-only" keeps linear history
 setup = "uv sync"           # run in each new worktree
 
 [integration]

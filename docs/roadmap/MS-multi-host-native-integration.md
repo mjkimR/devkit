@@ -16,7 +16,7 @@ Advances `ARCH-01-introduction-and-goals` §1.9 (Host & Scoped Integration) and 
 ## Exit condition
 
 - Lifecycle observation hooks and host status inspection operate with verified parity across supported hosts.
-- Scoped integration approval and execution (`devkit.integration`) complete through verified host-native MCP elicitation or host hook bindings without requiring the conversational local-CLI fallback path, with approval bound to the verified source and target commits.
+- Scoped integration approval and execution (`devkit.integration`) complete through verified host-native MCP elicitation or host hook bindings without requiring the conversational local-CLI fallback path, with approval bound to the verified source commit and the confirmation target and its descendants.
 
 ## Non-goals
 
