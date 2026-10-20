@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-draft-direct-acceptance
 feature: SPEC-draft-direct-acceptance
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md
     resolution: modified
