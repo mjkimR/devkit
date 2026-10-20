@@ -2,7 +2,7 @@
 id: PROP-policy-authorized-integration
 title: Authorize automatic integration through repository policy
 summary: "Make dev-integration auto authorize verified local merge and scoped branch/worktree cleanup without repeated devkit approval, while respecting host permission boundaries."
-status: reviewing
+status: accepted
 created_at: 2026-10-20
 target_area: delivery/
 priority: medium
