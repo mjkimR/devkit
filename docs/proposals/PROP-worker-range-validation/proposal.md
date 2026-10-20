@@ -1,14 +1,14 @@
 ---
 id: PROP-worker-range-validation
 title: One-command worker result inspection for orchestrated units
-summary: "Bundles existing worker-result checks and reviewer diff information into one command, using the Host-supplied scope and leaving interpretation to the agent without adding an approval gate."
-status: draft                         # draft | reviewing | accepted | rejected
+summary: "Bundles existing worker-result checks and reviewer diff information into one command that derives its unit, range, write scope and base checkout from the worktree and committed records, leaving interpretation to the agent without adding an approval gate."
+status: accepted                       # draft | reviewing | accepted | rejected
 created_at: 2026-10-19
 target_area: delivery/
 priority: critical                      # critical | high | medium | low
-size: M                               # S | M | L | XL
+size: L                               # S | M | L | XL
 planning_effort: low                  # low | medium | high (hint for Planning)
-dev_effort: medium                      # low | medium | high (hint for Development)
+dev_effort: high                        # low | medium | high (hint for Development)
 boundaries:
   owns:
     - delivery/
@@ -36,31 +36,56 @@ workflow: sdd-proposal
 
 ## 2. Planning Scope
 
-Implement a thin wrapper in `devkit-spec` around the checks the Host already performs. Use an explicit starting
-head, returned head and Host-supplied write scope. Reuse an existing delegation record when available; do not make
-workers author a new mandatory committed scope record or extend the envelope schema just for this helper.
+Implement a thin wrapper in `devkit-spec` around the checks the Host already performs:
+`devkit spec worker inspect [--unit <dir>] [--base <accepted>] [--head <returned>] [--scope <prefix>... |
+--scope-file <path>] [--base-checkout <path>]`. Run in a unit's worktree, the command infers every input it can from
+the worktree and the unit's committed records; an explicit flag only overrides the derived value (user decision at
+the `plan-accept` review, superseding the earlier explicit-input design):
 
-Planning settles only the CLI arguments, concise result fields and reuse of existing check APIs. Prefer existing
-conventions without introducing a separate scope authority or validation lifecycle.
+- **Unit**: the unit bound to the worktree's activity branch.
+- **Returned head**: the commit that added the unit's latest `worker` envelope, which is the worker's `final_head`
+  by definition.
+- **Base** (the last accepted head): derived from the unit's `worker` envelopes and their blocked state, or the
+  branch's merge base with its base branch when no earlier `worker` envelope exists.
+- **Write scope**: derived from committed documents: for Planning the proposal directory; for Development the unit
+  directory, the tasks' `_Boundary:` paths, the unit's materials directory, the Living Spec documents `reconcile.md`
+  targets and the linked source feedback the spec names. `--scope` or `--scope-file` replaces it.
+- **Base checkout**: the worktree's registered base checkout, reported as information only.
+
+When the records do not determine an input, the command reports it as could-not-run (exit `2`) with a stable code
+whose action is to pass that flag; it never guesses. The output names every input's value and where it came from,
+including each scope entry's source. The command does not use the scope registry, workers author no new mandatory
+committed scope record and the envelope schema is not extended.
+
+Planning settles the CLI arguments, the derivation rules, concise result fields and reuse of existing check APIs.
+Prefer existing conventions (the branch/unit binding, the `_Boundary:` and `reconcile.md` parsers, the worktree's
+base-checkout lookup) without introducing a separate scope authority or validation lifecycle.
 
 ## 3. Proposed Design & Impact
 
-- One invocation reports ancestry, changed paths, paths outside the supplied scope, worktree status, existing
-  envelope validation, cumulative rules results and `devkit workflow next`. Include the compared heads and changed
-  paths in information the agent can pass to a read-only reviewer.
+- One invocation reports ancestry, changed paths, paths outside the scope, worktree status, existing envelope
+  validation, cumulative rules results and `devkit workflow next`, plus the base checkout's HEAD and dirty paths as
+  information. Include the compared heads and changed paths in information the agent can pass to a read-only
+  reviewer.
 - Default output carries the result and actionable findings; structured output is one JSON object. Preserve the
   stable codes and actions of existing checks and report checks that could not run distinctly from negative results.
 - Scope mismatches and worktree observations are information for the main agent to assess. The command MUST NOT
-  add an approval request, workflow gate, integration refusal, mandatory scope registration or override option.
-  Existing rules, delegation write boundaries and approval gates retain their current meaning; the helper neither
-  weakens them nor adds a new blocking prerequisite to accepting a worker result.
+  add an approval request, workflow gate, integration refusal, mandatory scope registration or an option that
+  overrides findings. Existing rules, delegation write boundaries and approval gates retain their current meaning;
+  the helper neither weakens them nor adds a new blocking prerequisite to accepting a worker result. The derived
+  scope is what the committed documents declare and never wider; the Host's payload scope stays authoritative and
+  can be passed with `--scope` when it differs.
 - The agent decides how to act on findings and runs any corrective commands. The helper does not modify files,
   merge the base, refresh environments, run `devkit sync`, retry operations or automatically enlarge write scope.
-- Affected: a small `devkit spec` command, `spec-delegate` and `spec-orchestrate` guidance, reviewer payload guidance,
-  and `CAP-DLV-delivery-workflows`. No new worker envelope fields are required.
+- Affected: a small `devkit spec worker` command group, `spec-delegate` and `spec-orchestrate` guidance, reviewer
+  payload guidance, and `CAP-DLV-delivery-workflows`. No new worker envelope fields are required.
 
-**Non-Goals**: automatic scope derivation or expansion, link-repair ownership inference, base-drift detection or
-merging, worktree environment refresh, new approval gates, and automatic enforcement of helper findings.
+- Settled design (command name, derivation rules and their could-not-run codes, per-check `pass`/`fail`/`not-run`
+  results, exit codes, reviewer fields, no writes): `PADR-informational-range-inspection-reuses-existing-checks`.
+
+**Non-Goals**: automatic scope expansion (the command never widens what the committed documents declare),
+link-repair ownership inference, base-drift detection or merging, worktree environment refresh, new approval gates,
+and automatic enforcement of helper findings.
 
 **Separate feedback**: `FB-worker-scope-misses-link-repairs` and `FB-handoff-premise-drift-unreported` remain open for
 scope construction and handoff drift respectively. Neither is required for this command and neither is implemented
