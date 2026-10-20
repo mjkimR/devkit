@@ -262,7 +262,11 @@ class Workspace:
                                 base = base.parent
                             target = base.joinpath(*module.split(".")) if module else base
                             helpers = [target.with_suffix(".py"), target / "__init__.py"]
-                            helpers += [target / f"{alias.name}.py" for alias in node.names]
+                            helpers += [
+                                candidate
+                                for alias in node.names
+                                for candidate in (target / f"{alias.name}.py", target / alias.name / "__init__.py")
+                            ]
                             resolved = [helper for helper in helpers if helper.is_file()]
                             pending.extend(resolved)
                             if not resolved and (owner := self._owner(path)):
@@ -294,6 +298,8 @@ class Workspace:
                                 found.add(owner)
                 for name, exact_root in names:
                     found |= self._module_dependencies(name, exact_root=exact_root)
+                    if name in {"devkit.cli", "devkit.__main__"}:
+                        found.add("@root_cli")
                     if not self.node_of(name):
                         helpers = self._helpers_for(path, name)
                         pending.extend(helpers)
@@ -351,6 +357,12 @@ class Workspace:
                     files.append(conftest)
             depends = self.imports(files)
             owner = self._owner(path)
+            if "@root_cli" in depends and (
+                owner == "@devkit_spec" or any(node.startswith("devkit_spec") for node in depends)
+            ):
+                # Root CLI loading of the spec entry point is independent of any direct fine imports.
+                depends.add("@devkit_spec")
+            depends.discard("@root_cli")
             if owner and (owner != "@devkit_spec" or not any(n.startswith("devkit_spec") for n in depends)):
                 depends.add(owner)
             # These consumers scan sources or load the command/bundle through runtime entry points.

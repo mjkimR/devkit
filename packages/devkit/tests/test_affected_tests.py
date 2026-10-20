@@ -472,3 +472,18 @@ def test_mcp_runtime_consumer_mapping_is_retained(affected: ModuleType) -> None:
     assert {"packages/devkit-mcp/tests", f"{TESTS}/integration", f"{SPEC_TESTS}/test_integration.py"} <= set(
         selection.paths
     )
+
+
+def test_relative_helper_package_initializer_keeps_its_dependency(affected: ModuleType, graph_root: Path) -> None:
+    put(graph_root, f"{SPEC_TESTS}/__init__.py", "")
+    put(graph_root, f"{SPEC_TESTS}/helpers/__init__.py", "import devkit_spec.scope.registry")
+    put(graph_root, f"{SPEC_TESTS}/test_package_helper.py", "import devkit_spec.documents\nfrom . import helpers")
+    assert f"{SPEC_TESTS}/test_package_helper.py" in affected.select(graph_root, [SCOPE_SOURCE]).paths
+
+
+@pytest.mark.parametrize("consumer", [f"{SPEC_TESTS}/test_cli.py", f"{TESTS}/external/test_cli.py"])
+def test_root_cli_coverage_survives_an_unrelated_fine_import(
+    affected: ModuleType, graph_root: Path, consumer: str
+) -> None:
+    put(graph_root, consumer, "from devkit.cli import cli\nimport devkit_spec.documents")
+    assert consumer in affected.select(graph_root, [SCOPE_SOURCE]).paths

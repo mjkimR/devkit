@@ -1,0 +1,29 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T07:17:03.553574Z'
+status: completed
+summary: 'Independent medium review: two reproduced dependency omissions; existing checks and measurement totals pass.'
+findings:
+- issue: Relative imports omit helper packages when resolving imported names.
+  evidence: scripts/affected_tests.py:264
+  failure_condition: A fine test imports devkit_spec.documents and from . import helpers; tests/__init__.py exists and helpers/__init__.py imports devkit_spec.scope. The existing initializer prevents fallback but helpers/__init__.py is omitted, excluding the consumer for a scope change.
+  suggested_action: Resolve relative imported names as both module files and package initializers and add an independent regression fixture.
+  resolution: open
+  severity: P1
+- issue: Root CLI consumers lose broad dependency coverage when they also import a fine module.
+  evidence: scripts/affected_tests.py:354
+  failure_condition: A test imports devkit.cli.cli and devkit_spec.documents while exercising the spec entry point; a scope change excludes it because the fine import suppresses the owner edge.
+  suggested_action: Preserve explicit broad spec coverage for root CLI consumers independently of fine imports and extend the fixture.
+  resolution: open
+  severity: P1
+assumptions:
+- Isolated code-reviewer; confinement emulated by absolute read scopes and post-review clean HEAD validation.
+checks:
+  tests: PASS focused 60; affected 69
+  lint: PASS Ruff and Pyright
+  governance: PASS cumulative rules 0 errors or warnings
+diff_scope:
+  base: 29e7dd36845455d92d42e858e3372e3dd812a22e
+  head: c6f5d7959ebac32d0f27ef271bba296d59d7197a
