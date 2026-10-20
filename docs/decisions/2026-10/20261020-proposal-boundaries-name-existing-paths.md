@@ -1,15 +1,15 @@
 ---
-id: PADR-proposal-boundaries-name-existing-paths
+id: ADR-proposal-boundaries-name-existing-paths
 title: Proposal boundaries name existing paths
 summary: Adds a devkit-spec rule that every target_area and boundaries.owns entry of a proposal resolves to an existing path, warning on misses and reporting the template placeholder under its own message.
-proposal: PROP-envelope-record-gaps
-status: draft
+proposal: SPEC-envelope-record-gaps
+status: accepted
 created_at: 2026-10-19
 ---
 
-# [PADR-proposal-boundaries-name-existing-paths] Proposal boundaries name existing paths
+# [ADR-proposal-boundaries-name-existing-paths] Proposal boundaries name existing paths
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-19
 
 ---
@@ -20,7 +20,7 @@ created_at: 2026-10-19
 at `plan-intent` or at handoff, which copies them into the spec's carried notes and task boundary
 (`proposals/handoff.py`, `proposals/specs.py`). A proposal declared `capabilities/core/`, an area that does not exist
 (`FB-proposal-boundaries-unchecked`). `devkit spec proposal new` without `--target-area` writes the placeholder
-`capabilities/<area>/` into both fields. Evidence: `materials/spike-evidence.md`.
+`capabilities/<area>/` into both fields. Evidence: `docs/materials/2026-10/20261020-envelope-record-gaps/spike-evidence.md`.
 
 ## 2. Decision Drivers
 
