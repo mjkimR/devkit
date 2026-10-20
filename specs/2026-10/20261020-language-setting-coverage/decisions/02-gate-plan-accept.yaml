@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-language-setting-coverage
+by: user
+at: '2026-10-20T07:01:17.776905Z'

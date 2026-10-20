@@ -1,45 +1,95 @@
 ---
-id: PROP-language-setting-coverage
+id: SPEC-language-setting-coverage
 title: Extend language settings to MCP approval content
-summary: "Share a local-capable presentation language preference between response-style and domain-owned English/Korean MCP approval content, without claiming host UI localization."
-status: accepted
-created_at: 2026-10-20
-target_area: host/
-priority: medium
-size: M
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/
-    - docs/capabilities/distribution/
-    - docs/capabilities/host/
-    - docs/capabilities/integration/
-    - docs/capabilities/delivery/
-    - docs/development/reference/
-    - guides/
-  excludes:
-    - packages/devkit-advisory/
-task_kind: feature
-workflow: sdd-proposal
+summary: Share a local-capable presentation language preference between response-style and domain-owned English/Korean MCP approval content, without claiming host UI localization.
+status: planned
+created: 2026-10-20
+related_capabilities: []
+related_stories: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-language-setting-coverage] Extend language settings to MCP approval content
+# [SPEC-language-setting-coverage] Extend language settings to MCP approval content
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-language-setting-coverage on 2026-10-20.
+- **Preserved Materials**: `docs/materials/2026-10/20261020-language-setting-coverage`
+- Target Docs Blueprint: `PROP-language-setting-coverage-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 A language preference currently affects only response-style. Integration and handoff build their native approval
 messages in English, and MCP transports that supplied text to the host. Share a small presentation preference
 between these concrete consumers. Localize devkit-owned copy, while keeping host controls and embedded repository
 or provider content outside that promise.
 
-`PADR-shared-language-preference-with-bounded-approval-content` records the accepted design. The evidence and
-alternatives are in `materials/language-coverage-evidence.md`; `target-docs.md` names reconciliation targets.
+`ADR-shared-language-preference-with-bounded-approval-content` records the accepted design. The evidence and
+alternatives are in `docs/materials/2026-10/20261020-language-setting-coverage/language-coverage-evidence.md`; `target-docs.md` names reconciliation targets.
 Design acceptance does not establish implementation or localized native UI support.
 
-## 2. Selected Design
+## 2. User Stories
 
-### Preference and resolution
+- **US-1**: As a developer/agent, I want to implement Extend language settings to MCP approval content so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+The existing `packages/` parent is required only because the accepted MCP extraction's `packages/devkit-mcp/`
+does not exist at this Planning base. It permits that future runtime's context-plumbing modules/tests and, among
+existing packages, only: dist core/config/CLI, distribution variable declarations and inventory/readers with their
+tests; agt integration rendering/service/tests; spec handoff rendering/tests; catalog response-style manifest and
+its tests. New translation helpers belong beside their domains. No other package behavior, host registration,
+approval enforcement or catalog bundle is included. Development narrows file boundaries against the integrated
+prerequisites before implementation. Documentation boundaries are limited to the targets named in `target-docs.md`.
+
+### Scenario 1 [AC-01]: Carried from proposal
+1. Configuration tests cover absent/shared/local values, exact `auto/en/ko`, unsupported-string English fallback
+   with visible provenance, wrong types, malformed local files and inherited worktree copies. Dist-only imports
+   remain SDK/domain-free. MCP requests resolve the owning workspace while executor preferences differ.
+
+### Scenario 2 [AC-02]: Carried from proposal
+2. Manifest tests cover the one valid `default_from` reference, invalid references/types, absent versus explicit
+   consumer overrides, projectless defaults and existing free-text overrides. Shared receipts stay fixed under
+   local language changes; eligible response-style outputs change; tracked/forbidden outputs refuse; sync repairs
+   stale local-render state. An explicit shared consumer override versus a local global preference is exercised.
+
+### Scenario 3 [AC-03]: Carried from proposal
+3. English/Korean static-template parity checks cover every integration route and conditional branch plus handoff.
+   Assert decision-relevant statements and identical interpolated scope/evidence, escaping and truncation limits.
+   Domain reviewers inspect both languages for semantic equivalence; substring/snapshot checks alone are not a
+   semantic translation review. No accepted plan/provider evidence is translated. The handoff form's message
+   remains sufficient when all schema titles/descriptions are omitted by a fixture client.
+
+### Scenario 4 [AC-04]: Carried from proposal
+4. SDK/stdio fixtures assert UTF-8 preservation, schema keys/enum/default/required equivalence and canonical reply
+   parsing. Both languages exercise explicit approval, submit false, decline/cancel, unavailable form, malformed
+   reply and stale-scope behavior. Local/cloud and workspace-identity guards remain independent of language.
+   Changing preference during an open form does not change its text or confer new authority; a new request uses it.
+
+### Scenario 5 [AC-05]: Carried from proposal
+5. Harmless native fixtures for each available CLI record exact client/server/SDK/protocol versions, requested
+   content and observed message/title/description/enum behavior separately. Their accept/decline/cancel handlers
+   return data only and cannot create worktrees, merge, push, clean or change real config/trust. Record omitted or
+   transformed fields, boolean widgets, buttons, validation errors and permission prompts as client-owned behavior.
+   If fixtures cannot run under current permissions, retain an explicit per-host unverified status in docs/report.
+
+### Scenario 6 [AC-06]: Carried from proposal
+6. Run lint/type checks, `just test-affected`, focused distribution-only/packaging checks where imports change,
+   governance checks, mandatory medium code review and separate reconcile review. No product-wide output
+   translation or unrelated regression expansion is required. Development effort remains medium.
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Selected Design
+
+#### Preference and resolution
 
 Add optional `[presentation] language = "auto" | "en" | "ko"` to shared and allowed local configuration.
 The value is a string; the three listed values are supported choices, not a closed validation enum. Missing values
@@ -61,7 +111,7 @@ that implementation and `SPEC-standalone-devkit-mcp` are integrated and their co
 does not read or rely on mutable sibling implementation. This proposal neither changes their accepted scope nor
 implements a second resolver.
 
-### Response-style binding
+#### Response-style binding
 
 Keep the existing bundle-specific `language` variable and its `auto` default. Add one narrowly supported optional
 manifest declaration, `default_from = "presentation.language"`, valid only on string variables and only for this
@@ -84,7 +134,7 @@ assets stale under the existing ledger contract until sync. With `auto`, respons
 request; MCP deterministically uses English because it has no trusted conversation-language input. An explicit
 `ko` or `en` aligns the two consumers unless a response-style override was supplied.
 
-### Approval content ownership
+#### Approval content ownership
 
 The initial translations are reviewed static English and Korean templates owned by each domain: integration in
 `devkit-agt`, handoff in `devkit-spec`. No runtime machine translation, remote service, shared translation framework
@@ -119,7 +169,7 @@ field title/description remains supplied text, never evidence of what a particul
 Native `accept/decline/cancel`, `approve=true` authorization, default false, missing capability, stale-scope guards
 and process-local resume authority are unchanged. Translation must not add a new path around these checks.
 
-### Host support and honest coverage
+#### Host support and honest coverage
 
 Supported target hosts remain the Codex CLI and Claude Code terminal CLI. The protocol carries supplied messages
 and schema labels; actual display is client-owned. Host headings, buttons, boolean widgets, help, validation errors,
@@ -133,42 +183,7 @@ support, but must keep each CLI's localized visible-form status unverified until
 Unavailable UI evidence is a reported limitation, not a license to modify real trust/config or run business actions.
 No such live fixture was launched in this Planning turn.
 
-## 3. Implementation Scope and Acceptance Evidence
-
-The existing `packages/` parent is required only because the accepted MCP extraction's `packages/devkit-mcp/`
-does not exist at this Planning base. It permits that future runtime's context-plumbing modules/tests and, among
-existing packages, only: dist core/config/CLI, distribution variable declarations and inventory/readers with their
-tests; agt integration rendering/service/tests; spec handoff rendering/tests; catalog response-style manifest and
-its tests. New translation helpers belong beside their domains. No other package behavior, host registration,
-approval enforcement or catalog bundle is included. Development narrows file boundaries against the integrated
-prerequisites before implementation. Documentation boundaries are limited to the targets named in `target-docs.md`.
-
-1. Configuration tests cover absent/shared/local values, exact `auto/en/ko`, unsupported-string English fallback
-   with visible provenance, wrong types, malformed local files and inherited worktree copies. Dist-only imports
-   remain SDK/domain-free. MCP requests resolve the owning workspace while executor preferences differ.
-2. Manifest tests cover the one valid `default_from` reference, invalid references/types, absent versus explicit
-   consumer overrides, projectless defaults and existing free-text overrides. Shared receipts stay fixed under
-   local language changes; eligible response-style outputs change; tracked/forbidden outputs refuse; sync repairs
-   stale local-render state. An explicit shared consumer override versus a local global preference is exercised.
-3. English/Korean static-template parity checks cover every integration route and conditional branch plus handoff.
-   Assert decision-relevant statements and identical interpolated scope/evidence, escaping and truncation limits.
-   Domain reviewers inspect both languages for semantic equivalence; substring/snapshot checks alone are not a
-   semantic translation review. No accepted plan/provider evidence is translated. The handoff form's message
-   remains sufficient when all schema titles/descriptions are omitted by a fixture client.
-4. SDK/stdio fixtures assert UTF-8 preservation, schema keys/enum/default/required equivalence and canonical reply
-   parsing. Both languages exercise explicit approval, submit false, decline/cancel, unavailable form, malformed
-   reply and stale-scope behavior. Local/cloud and workspace-identity guards remain independent of language.
-   Changing preference during an open form does not change its text or confer new authority; a new request uses it.
-5. Harmless native fixtures for each available CLI record exact client/server/SDK/protocol versions, requested
-   content and observed message/title/description/enum behavior separately. Their accept/decline/cancel handlers
-   return data only and cannot create worktrees, merge, push, clean or change real config/trust. Record omitted or
-   transformed fields, boolean widgets, buttons, validation errors and permission prompts as client-owned behavior.
-   If fixtures cannot run under current permissions, retain an explicit per-host unverified status in docs/report.
-6. Run lint/type checks, `just test-affected`, focused distribution-only/packaging checks where imports change,
-   governance checks, mandatory medium code review and separate reconcile review. No product-wide output
-   translation or unrelated regression expansion is required. Development effort remains medium.
-
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Ready for `plan-accept` after the PADR, bounded language semantics, challenger disposition, dependency order and
 live-evidence limitation are reviewed. Acceptance chooses this design; it does not start Development or certify
@@ -178,3 +193,4 @@ Scope excluded: translating all CLI/advisory/machine output, repository document
 MCP tool descriptions and result payloads; host-owned UI, permission/trust configuration, VS Code/SDK/desktop host
 support, locale detection, dynamic translation services, arbitrary preference registries and new approval authority.
 SDK transport fixtures are evidence only and do not add SDK-host product support.
+

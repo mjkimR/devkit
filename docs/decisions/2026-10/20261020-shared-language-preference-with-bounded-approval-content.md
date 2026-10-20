@@ -1,15 +1,15 @@
 ---
-id: PADR-shared-language-preference-with-bounded-approval-content
+id: ADR-shared-language-preference-with-bounded-approval-content
 title: Shared language preference with bounded approval content
 summary: "Define one shared and local presentation language preference for response-style and domain-owned MCP approval text, while preserving machine values and separating host rendering from content coverage."
-proposal: PROP-language-setting-coverage
-status: draft
+proposal: SPEC-language-setting-coverage
+status: accepted
 created_at: 2026-10-20
 ---
 
-# [PADR-shared-language-preference-with-bounded-approval-content] Shared language preference with bounded approval content
+# [ADR-shared-language-preference-with-bounded-approval-content] Shared language preference with bounded approval content
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-20
 
 ## 1. Context & Problem Statement
