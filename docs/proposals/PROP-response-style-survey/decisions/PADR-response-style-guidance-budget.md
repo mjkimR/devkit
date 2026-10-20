@@ -33,9 +33,9 @@ always-loaded information causes a measured failure before ordinary skill discov
 
 Retain the 300-byte contract and one response style with the existing language variable. Do not implement presets,
 new variables, per-host variants, manifest exceptions or fragment splitting. A candidate may improve the pointer
-within the current limit. `MAT-response-style-measurement-design` bounds an optional synthetic reminder diagnostic
-at 16 extra generations; its result cannot prove compaction behavior or justify changing the shared limit alone.
-An actual limit expansion needs observed host behavior, an aggregate guidance budget and a new accepted design.
+within the current limit. `MAT-response-style-rewrite-draft` supplies a candidate pointer that fits this budget.
+No reminder-length experiment is required. An actual limit expansion needs observed host behavior, an aggregate
+guidance budget and a new accepted design.
 
 The current scope settles the question as retain-limit; it promises no unimplemented distribution change and
 claims no measured long-session effect. The canonical bundle contract reflection goes in
@@ -43,6 +43,6 @@ claims no measured long-session effect. The canonical bundle contract reflection
 
 ## 5. Consequences
 
-Development stays in the response-style bundle, its existing deployment checks and spec-local benchmark materials.
+Development stays in the response-style bundle, its existing deployment checks and review materials.
 Shorter text cannot remove mandatory workflow fields, tables, numbers or risks. Writing rules describe form;
 workflow and user requirements supply required content. A necessary report-schema change would be separate work.

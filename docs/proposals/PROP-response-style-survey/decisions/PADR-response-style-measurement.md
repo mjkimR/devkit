@@ -1,59 +1,46 @@
 ---
 id: PADR-response-style-measurement
-title: Evaluate reply style with paired loss-sensitive fixtures
-summary: "Defines a bounded paired pilot with semantic preservation, isolated host conditions and separate deployment coverage."
+title: Review examples and verify the deployed response style
+summary: "Uses authored examples for subjective design review and existing bundle checks for implementation, without a required benchmark or an objective quality ranking."
 proposal: PROP-response-style-survey
 status: draft
 created_at: 2026-10-20
 ---
 
-# [PADR-response-style-measurement] Evaluate reply style with paired loss-sensitive fixtures
+# [PADR-response-style-measurement] Review examples and verify the deployed response style
 
 ## 1. Context & Problem Statement
 
-Source popularity does not establish that a rule improves devkit replies. Current repository instructions would
-contaminate a native child-agent baseline; prompt-length reductions can conceal missing facts and report fields.
+A small numeric score cannot decide how much a reply helps a particular reader. A controlled live comparison
+also needs deliberate isolation and a chosen execution budget, neither of which is needed to discuss concrete
+proposed wording. Native role inheritance alone cannot provide an unstyled baseline.
 
 ## 2. Decision Drivers
 
-Preserve decision-relevant content, compare reproducible conditions, include Korean and explicit depth requests,
-keep collection bounded, and distinguish observed rule adherence, subjective reading preferences and rendered
-host support. None is a universal answer-quality score.
+Use reviewable examples, preserve factual and output obligations, distinguish illustrations from observations,
+and keep verification proportionate to a response-style bundle change.
 
 ## 3. Considered Options
 
-| Option | Benefit | Limitation |
+| Option | What it establishes | Limitation |
 | --- | --- | --- |
-| Author taste or stars only | No model cost | Cannot measure reply behavior. |
-| Native child agents in the current checkout | Convenient | Inherited style invalidates the no-style arm. |
-| Fresh isolated host sessions with imported results | Small controlled comparison; no launcher framework | Requires a selected host, verified instruction isolation and an explicit collection budget. |
-| Multi-host large repeated evaluation | Broader coverage | Larger cost and configuration surface than this pilot needs. |
+| Source survey alone | Published practices | Does not show the proposed text or any local behavior. |
+| Authored examples plus normal implementation verification | A concrete design and evidence that its text is deployed correctly | Does not measure reader comprehension or model-wide quality. |
+| Repeated live benchmark and scorer | Observations for the selected cohort | More collection/setup cost; proxy scores still do not settle preference. |
 
 ## 4. Decision Outcome
 
-The structured comparison option uses twelve English/Korean fixtures, three style arms and two fresh repetitions,
-at most 72 generation attempts per selected host. This option has not been selected or authorized; a small set
-of paired examples is enough to begin a practical inspection, with collection scope chosen before execution. `MAT-response-style-measurement-design` defines isolation, exact obligations, calibration and
-held-out groups, rule-adherence summaries, error preservation and cost records for that structured option. Select the
-host and execution budget with the user before live collection. Freeze observable binary primary anchors; sum
-the two passes per fixture, treat equal sums as ties, and label changes by intent category, including held-out cases, without interpreting that compliance count as
-overall quality or automatically choosing a style. Until then host coverage is an open Planning
-question, not a claim of portability. Only synthetic inputs and owned style text are submitted.
+Recommend the second option. `MAT-response-style-rewrite-draft` contains the proposed wording and four illustrative
+request types; `MAT-response-style-measurement-design` states what review and deployment checks do and do not
+prove. Show the examples and rationale for subjective judgment. Apply the normal independent Development review,
+Living Spec reflection, relevant tests, lint, types, smoke and rules before completion.
 
-The recommended practical option records an agreed small set of paired current/candidate examples and checks
-their required facts and output contracts, with subjective comments and limitations. It can support final review
-under that agreed scope. It does not require the full matrix, scorer, held-out split or blinded adjudication;
-those are conditional on the structured option. Neither option is selected by this draft, and the earlier
-72-attempt execution question remains unanswered. No collection is authorized.
-
-Keep any selected fixture/result/scorer materials inside the Development spec Unit. The scorer is standard-library and
-imports generation results; it neither launches models nor defines a new distributed evaluation tool. A candidate that violates factual or required-output obligations is revised or rejected. Style preference is a
-separate human judgment using actual examples and stated tradeoffs in the existing final review; no additional
-workflow approval gate is created.
+No generation quota, scoring tool or large benchmark is a required phase. The Host withdrew its obsolete cohort
+question without selecting a host or recording user approval. A later live comparison needs its own explicit
+conditions and execution allowance; it is not a dependency of `plan-accept` for this recommended design.
 
 ## 5. Consequences
 
-Small-pilot observations describe only the tested cohort and cannot establish how much better a reply is.
-Readability, useful depth and tone remain partly subjective; a metric is a proxy or contract check, not that judgment. Deterministic checks catch missing cells and malformed
-artifacts; semantic preservation needs independent judgment. No per-rule or cross-host effect is inferred from
-aggregate gains, and no unmeasured host is silently considered validated.
+Report a reviewed rewrite and the checks actually performed, rather than an unverified quality gain. Facts,
+required formats and workflow reports cannot be waived by style preference. There is no additional approval
+gate, headless-launcher implementation or automatic style-selection rule.

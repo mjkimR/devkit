@@ -57,6 +57,8 @@ Attention Span metadata and pinned files were retrieved separately on the same l
 six-source snapshot. Its published benchmark is a source report, not an independently reproduced devkit result.
 
 
+The concrete recommendation is `MAT-response-style-rewrite-draft`; its authored examples are not live measurements.
+
 ## Rule ledger for one candidate
 
 This is a candidate-design ledger, not measured findings. The current local bundle remains the baseline. Author
@@ -65,13 +67,13 @@ candidate text from requirements and the ideas below; do not follow any source's
 | Rule or pressure | Source practice / local requirement | Candidate treatment | Test or limit |
 | --- | --- | --- | --- |
 | Attention-oriented presentation | Attention Span | Assess the attention and presentation ideas against local requirements using newly written guidance. | Practical examples; no demonstrated comprehension benefit is inferred. |
-| Direct factual lead | OpenCode; Google and Microsoft writing guides; existing local preference | Preserve answer-first while allowing artifacts to begin with their required syntax. | EN01/KO01 and EN02/KO02; not claimed universally present across all six repositories. |
-| Required content before brevity | Aider editing protocol; Continue code-only exception; local workflow contract | Preserve numbers, conditions, risks and all mandatory report fields. | All semantic obligations; KO06. |
-| Requested depth | gptme concise/completeness balance; Anthropic educational mode | Length follows intent. Do not adopt mandatory educational decorations. | EN03/KO03; length is descriptive, not a minimization objective. |
-| Wrapper-free artifacts | Continue code-only mode; current local user-output requirement | Obey the requested artifact syntax without a conversational preface. | EN05/KO05. |
-| Appropriate next step | gptme discourages generic closing offers; current local rule requires an actual user action | Retain only necessary next actions; reject an unconditional closing step. | EN04/KO04 and EN06. |
-| Plain Korean | Toss UI-writing principles; current local language contract | Use ordinary Korean while preserving identifiers and domain constraints. | Korean semantic review; UI-copy advice is not a complete conversation policy. |
-| Lightweight structure | Goose is a minimal-policy contrast, not support for concision | Evaluate the current mandatory bold lead-ins after three blocks and fixed block size as local hypotheses; do not preserve them solely because they already exist. | Blind readability/style judgments; no global Markdown ban because exact artifacts override form. |
+| Direct factual lead | OpenCode; Google and Microsoft writing guides; existing local preference | Preserve answer-first while allowing artifacts to begin with their required syntax. | Illustrative factual/recommendation examples; not claimed universally present across the repositories. |
+| Required content before brevity | Aider editing protocol; Continue code-only exception; local workflow contract | Preserve numbers, conditions, risks and all mandatory report fields. | Review required content and report formats; use existing deployment checks for implementation. |
+| Requested depth | gptme concise/completeness balance; Anthropic educational mode | Length follows intent. Do not adopt mandatory educational decorations. | Illustrative explanation request; length is descriptive, not a minimization objective. |
+| Wrapper-free artifacts | Continue code-only mode; current local user-output requirement | Obey the requested artifact syntax without a conversational preface. | Illustrative artifact-only request. |
+| Appropriate next step | gptme discourages generic closing offers; current local rule requires an actual user action | Retain only necessary next actions; reject an unconditional closing step. | Review acknowledgment, completion scope and necessary user decisions. |
+| Plain Korean | Toss UI-writing principles; current local language contract | Use ordinary Korean while preserving identifiers and domain constraints. | Korean sample discussion; UI-copy advice is not a complete conversation policy. |
+| Lightweight structure | Goose is a minimal-policy contrast, not support for concision | Evaluate the current mandatory bold lead-ins after three blocks and fixed block size as local hypotheses; do not preserve them solely because they already exist. | Editorial review of the proposed text and examples; exact requested artifacts override form. |
 
 No copied wording, examples or document structure from copyleft or unknown-license sources enters the bundle.
 For permissive sources this project still uses original synthesis and records provenance; license labels do not
