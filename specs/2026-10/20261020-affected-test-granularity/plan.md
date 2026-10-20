@@ -2,24 +2,34 @@
 id: PLAN-affected-test-granularity
 spec: SPEC-affected-test-granularity
 ---
-<!-- devkit:skeleton -->
 
-# Technical Plan: `SPEC-affected-test-granularity` Finer affected-test groups and dependency nodes
+# Technical Plan: `SPEC-affected-test-granularity`
 
-## 1. Architecture Overview & Impact
-- Target Area: delivery/
+## Constitution and invariant review
 
-## 2. Component Breakdown & Interface Contracts
+None: this implements `ADR-select-tests-by-file-with-finer-spec-dependency-nodes` within
+`ADR-nightly-ci-verification`. Existing full fallbacks and the MCP runtime mapping remain.
 
-### Planned Boundaries:
-- `scripts/`
-- `packages/devkit/tests/`
-- `packages/devkit-spec/tests/`
-- `docs/development/ci-cd.md`
-- `docs/development/workflow.md`
+## Components and interfaces
 
-### Excluded Boundaries:
-- `packages/devkit-advisory/src/`
+`scripts/affected_tests.py` retains Selection and CLI contracts. Each test file becomes a group.
+An inventory maps devkit_spec module names to files; other production owners remain coarse.
+Exact module dependencies include executed initializers. A separate broad owner marker represents opaque/root
+consumers without joining unrelated fine modules. Reverse traversal propagates changes through source imports.
+ASTs are cached once per run. Local helper traversal uses a visited set per closure to terminate cycles without
+caching incomplete closures. Ancestor conftests contribute dependencies. Parse/inventory failure selects full.
+Known dynamic CLI, bundle and source-tree consumers retain explicit broad edges; no runtime import is executed.
 
-## 3. Verification & Test Plan
-- <commands and checks that verify the acceptance criteria>
+## Failure modes
+
+Missing changed fine modules, unreadable syntax and ambiguous source modules select full. Static import uncertainty
+widens to the owner. A missing foreign module remains external unless a known local helper or owner applies.
+No persisted state, migration or production package changes are required.
+
+## Verification
+
+Independent fixture tests assert selected and excluded files for imports, reexports, initializers, helper cycles,
+conftests, root consumers and unsafe paths. Existing selector regression tests retain CLI, frontend, data, full
+trigger and Git coverage. Same-revision baseline/new file sets, parametrized collection counts and selector timings
+cover six devkit areas and scope/documents/proposals. Run focused pytest, lint/type checks, just test-affected,
+governance checks, mandatory independent code review and separate reconcile verification.

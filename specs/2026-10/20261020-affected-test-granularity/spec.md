@@ -8,7 +8,6 @@ related_capabilities: []
 related_stories: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-affected-test-granularity] Finer affected-test groups and dependency nodes
 
@@ -34,15 +33,19 @@ conservative fallback and actual dependency coverage. A universal target of 100â
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Finer affected-test groups and dependency nodes so that system capabilities are extended.
+- **US-1**: As a developer/agent, I want narrower affected-test selection while preserving dependent consumers and conservative fallback.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: Function-level selection, runtime coverage databases, production refactors and nightly/release policy changes.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
 ### Scenario 1 [AC-01]: File groups and source graph
+
+**Given** the workspace source and test inventory,
+**When** a production source path changes,
+**Then** the selector applies the following dependency contract.
 
 Build one group per collected-style test_*.py file, including rule tests under src and existing top-level tests.
 Discovery stays filesystem/static; selecting tests does not import production modules or run pytest. Keep current
@@ -70,6 +73,10 @@ precision. New packages such as devkit-mcp retain broad owner grouping until the
 
 ### Scenario 2 [AC-02]: Conservative behavior
 
+**Given** an unsafe, shared, data, test-only or frontend change,
+**When** selection runs,
+**Then** the following fallback and dispatch behaviors are preserved.
+
 Keep all existing full-suite triggers: shared core/advisory, CLI assembly, pyproject metadata, uv.lock, shared-helper
 changes and conftest changes. Preserve fixed data-path mappings, mandatory SOURCE_TREE_TESTS, frontend dispatch,
 unknown-path full fallback, test-only selection and Git merge-base/rename handling. Deleted or renamed fine modules
@@ -83,6 +90,10 @@ first design: keep testsupport.gate's real gate dependency and report its remain
 adds no production refactor or function-level analysis solely to make counts lower.
 
 ### Scenario 3 [AC-03]: Acceptance evidence
+
+**Given** independent dependency fixtures and the integrated source revision,
+**When** baseline and new selection are verified,
+**Then** all following evidence is recorded.
 
 - **AC1:** File groups isolate unrelated test-file imports. A fixture with one external consumer and an unrelated
   sibling proves both positive selection and negative exclusion; applicable conftest/helper imports still select
@@ -110,31 +121,9 @@ Scope excluded: generic Python whole-program analysis, test-function selection, 
 production package splitting, unrelated helper refactoring, changing nightly/release policy and optimization of
 unrelated runtime code. No current selector behavior changes during Planning.
 
-## 5. Carried Proposal Notes
+## 5. Assumptions and premises
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
-
-### 2. Planning Evidence and Alternatives
-
-The current revision collects 3,826 tests, including 1,117 in devkit-spec. The conservative file-group-only probe
-reduces gate selection from 1,072 to 301, but leaves a spec scope change at 1,117 because source nodes remain coarse.
-`docs/materials/2026-10/20261020-affected-test-granularity/selection-evidence.md` records the method, limitations and representative matrix. Supplied counts remain
-historical input, not acceptance targets. No full implementation or fine-source performance result is claimed.
-
-| Option | Consequence | Recommendation |
-| --- | --- | --- |
-| Keep area/package groups | Lowest maintenance, retains observed excess selection | Reject for this goal |
-| Split test files only | Useful reductions, still expands every devkit_spec source edit to all its tests | Insufficient alone |
-| File groups plus fine devkit_spec source graph | Addresses both demonstrated causes while keeping broad defaults elsewhere | Select |
-| Function-level dependencies or runtime coverage database | More machinery and stale-data concerns without evidence it is needed | Exclude |
-
-`ADR-select-tests-by-file-with-finer-spec-dependency-nodes` records the selected design, within
-`ADR-nightly-ci-verification`. No essential user choice remains beyond plan-accept.
-
-### 4. Lifecycle and Delivery
-
-Remain reviewing until plan-accept. Implementation can proceed independently of configuration work, but refresh
-packaging inventory after devkit-mcp lands; coordinate changes to scripts/affected_tests.py instead of overwriting
-its new package coverage. Recheck measurements against the actual Development base. Acceptance chooses the design;
-it does not assert implementation coverage or authorize merging production changes by itself.
-
+The integrated base retains the selector's area/package grouping and the accepted source interfaces.
+The new devkit-mcp package and its explicit runtime consumer mapping are present and must remain covered.
+The accepted design in `ADR-select-tests-by-file-with-finer-spec-dependency-nodes` still applies.
+Measurements are refreshed on this base; historical counts are not acceptance thresholds.
