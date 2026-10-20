@@ -2,7 +2,7 @@
 id: PROP-response-style-survey
 title: Survey reply-style practice to refine response-style
 summary: "Proposes one portable response style with a conclusion-first opening, arrow-marked core sentences and supporting explanation, required-format exceptions and example-based review."
-status: reviewing
+status: accepted
 created_at: 2026-10-19
 target_area: distribution/
 priority: medium
