@@ -2,7 +2,7 @@
 id: SPEC-worker-guidance-and-fixtures
 title: Clarify worker handoffs and isolate Git test fixtures
 summary: "Define unsolicited decision recording, official documentation reads, Host synchronization, link-repair scope and Git fixture isolation."
-status: planned
+status: in-progress
 created: 2026-10-20
 related_capabilities: []
 related_stories: []

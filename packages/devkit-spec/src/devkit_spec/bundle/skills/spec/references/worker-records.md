@@ -38,6 +38,13 @@ devkit workflow envelope answer --unit <dir> --stage <stage> --summary "q1, q2 d
 
 - One decision sentence per question; `choice: null` for an answer outside the options; `constraints` only for what the answer adds. A decision that settles one of the answered run's `assumptions` goes into `settles` (`--settle N=<decision>`, `N` its 1-based position), never into `constraints`; an answer may carry settles alone. Settling holds and releases nothing. When a rejection or a return to Backlog for decomposition ends the Planning, the party ending it closes every question still open the same way: `choice: null` and the reason (`"Planning ended: rejected by the user"`) as the decision, in the commit that ends it; otherwise the open questions hold the Planning branch's merge. Never the raw conversation, the reasoning or the question again. An answer that leaves something ambiguous becomes a new question in the next run's `worker` envelope, never a guess.
 
+### Direction without a recorded question
+
+When the user supplies direction without answering a recorded question, reflect the decision and its reason in the
+proposal/PADR (or spec/plan during Development) and summarize its incorporation in the next worker record. Do not
+fabricate a question or create an answer envelope without a referenced question. Existing pending questions still
+follow the answer procedure above; unsolicited direction does not itself settle them.
+
 ## 3. Problems and resolutions
 
 `[BLOCKED: ...]` means a problem has no `resolution` that names it (or a `worker` envelope is malformed: fix the file). It holds the gates of the problem's stage and later ones, the handoff and `devkit worktree finish --merge`; `devkit workflow next` still names the current stage, where the recovery runs. A malformed `worker` envelope without a readable stage holds every gate, so `next` may name an earlier stage until the file is fixed. A later commit, a successful `worker` envelope, a comment or a rerun request clears nothing.

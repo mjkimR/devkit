@@ -41,6 +41,10 @@ Merge, never rebase: the unit's records cite its commit SHAs. Step 1 is required
 Resolve conflicts within the approved intent. A conflict that needs a design choice the agreed intent does not cover is a problem for the Host: stop and hold the PR.
 
 ### Step 2: Re-verify what changed
+- When bundle sources changed, the Host runs official `devkit sync` in the integration worktree after incorporating
+  the latest base, inspects and commits the resulting tracked receipt/projection changes, then verifies that final
+  content before requesting integration approval. Workers report changed source assets; this grants them no
+  `.devkit/` write exception. A sync failure leaves preparation incomplete.
 - After incorporating a moved base or resolving conflicts, inspect all resulting changes (`git diff --name-only <pre-merge-head> HEAD`), including a clean merge's incoming changes.
 - Verify the final integration content under the repository's test policy (e.g., `just test-affected --base <base-ref>`), plus checks covering the changed paths. Run `spec-review` Step 1 and Step 3 on the changed part only; preserve selector fallbacks and frontend checks.
 - A defect beyond integration scope returns to the Developer (the build stage: `build-verify`, or `fix-verify` in `sdd-spec-bugfix`); integration is not reported complete.
@@ -75,6 +79,9 @@ For a local merge (`pull_request=auto`, no PR):
 - **Fallback / manual CLI**: with the user's conversational `dev-integration` OK, run `devkit worktree finish <branch> --merge --local-only` (without `--local-only` when remote fetch/push is wanted) in the base checkout and follow the `[FIX]` of any refusal (`WORKTREE_BLOCKED`: resolve the problem; a moved base, `WORKTREE_MERGE_NOT_FF`: Step 1). It lands a merge commit built from the base HEAD and the branch, or a fast-forward under `merge = "ff-only"`. Rerun the cumulative check on the result; with no runner to report the merge, declare it (`devkit workflow next --unit <dir> --given dev-integration --given lint-ci-clean --given merged`). If head, base or approval changed before the merge, return to Step 1.
 
 ### Step 6: Clean up after the confirmed merge
+- After bundle changes land, the Host runs official `devkit sync` in the base checkout to refresh its installed
+  projections, checks the result and reports any failure. It inspects any unexpected tracked change before further
+  integration; synchronization is not permission for unrelated modifications.
 - `integration_integrate` has already cleaned up when it completed (`integration_resume` when `partial`).
 - On the CLI path (after a PR merge or a manual local merge), run `devkit worktree finish <branch>` in the base checkout (`--merge`, optionally `--local-only`, when the local merge is still to be done). Follow the `[FIX]` of each refusal or warning (finish, push and post-finish cleanup codes; the `spec` skill's `references/worktree.md`) and rerun the same command once it is resolved. Report what could not be removed or pushed and why.
 

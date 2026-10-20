@@ -1,0 +1,10 @@
+kind: red
+stage: build-verify
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T02:57:48.390669Z'
+status: completed
+summary: 'Three reported scope tests failed with in-worktree basetemp: wrong outside-Git code, locate did not raise, and unexpected auto-registration warning; first setup attempt required creating the cache parent.'
+findings: []
+checks:
+  reproduction: PASS 3 expected failures before fixture isolation
