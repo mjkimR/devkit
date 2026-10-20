@@ -297,3 +297,30 @@ def test_scoped_cleanup_base_checkout_releases_own_record_and_rejects_bad_target
         pass
     else:
         raise AssertionError("expected CleanupContractError for unknown target kind")
+
+
+def test_post_git_means_the_base_contains_the_result(tmp_path: Path) -> None:
+    from dataclasses import replace
+
+    from devkit_spec.cleanup import _is_post_git
+
+    repo = make_repo(tmp_path / "repo")
+    finished = tmp_path / "wt-s"
+    git(repo, "worktree", "add", "-q", "-b", "dev-s", str(finished))
+    write(finished, "work.txt", "x\n")
+    git(finished, "add", ".")
+    git(finished, "commit", "-q", "-m", "work")
+    source = git(finished, "rev-parse", "HEAD")
+    git(repo, "merge", "-q", "--no-ff", "-m", "chore(merge): integrate dev-s into main", "dev-s")
+    result = git(repo, "rev-parse", "HEAD")
+    write(repo, "later.txt", "later\n")
+    git(repo, "add", ".")
+    git(repo, "commit", "-q", "-m", "later commit on the base")
+    context = _context(repo, finished)
+    context = replace(context, finish=replace(context.finish, source_sha=source), result_sha=result)
+    assert not _is_post_git(repo, context)  # the worktree still exists
+    git(repo, "worktree", "remove", str(finished))
+    assert _is_post_git(repo, context)
+    assert _is_post_git(repo, replace(context, result_sha=None))  # the source (ff-only, cleanup-only)
+    git(repo, "reset", "-q", "--hard", "HEAD~2")
+    assert not _is_post_git(repo, context)

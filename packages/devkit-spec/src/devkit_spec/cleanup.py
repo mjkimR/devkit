@@ -165,12 +165,12 @@ def _parse_targets(
 
 
 def _is_post_git(base: Path, context: IntegrationContext) -> bool:
+    """Whether the Git part is done: the base HEAD contains the result (the source under ``ff-only`` or for a
+    cleanup-only request; later commits on the base are allowed) and the worktree is gone."""
     plan = context.finish
     try:
-        head = run_git(base, "rev-parse", "--verify", "HEAD^{commit}").decode("utf-8", errors="replace").strip()
+        run_git(base, "merge-base", "--is-ancestor", context.result_sha or plan.source_sha, "HEAD")
     except GitError:
-        return False
-    if head != plan.source_sha:
         return False
     return plan.worktree_identity is None or not Path(plan.path).exists()
 

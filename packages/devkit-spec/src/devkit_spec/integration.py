@@ -1,16 +1,24 @@
 """``devkit.integration.readiness`` provider (``spec``): SDD completion readiness at ``source_sha``.
 
-``devkit.integration`` calls ``check(context)`` during ``prepare(branch, task)`` and again immediately before merging
-an approved ``IntegrationRequest``. Because ``IntegrationService`` requires ``check(context) == request.readiness`` at
-merge time, readiness verification reads only the committed Git trees of ``context.finish.source_sha`` and
-``context.finish.target_sha`` (never uncommitted working-tree files or wall-clock timestamps) and always returns a
-non-empty tuple of deterministic ``Evidence`` items, with any unmet conditions listed in ``Readiness.reasons``.
+``devkit.integration`` calls ``check(context)`` during ``prepare(branch, task)`` (no result commit yet) and again at
+each build of an approved ``IntegrationRequest`` with the execution context: ``context.finish.target_sha`` is then the
+build target and ``context.result_sha`` the commit that would land. The build's evidence must equal the approved
+evidence except the codes declared target-bound (``TARGET_SHA``, ``RESULT_SHA``), so verification reads only
+committed Git trees (never uncommitted working-tree files or wall-clock timestamps) and always returns a non-empty
+tuple of deterministic ``Evidence`` items, with any unmet conditions listed in ``Readiness.reasons``.
+
+The unit (or session) is evaluated from the source tree; the CI rules run on the result tree with the diff from the
+build target once a result exists (before it, on the source tree with the diff from the merge base). ``SPEC_POLICY``
+binds the parsed ``[tool.spec]`` of the target and of the result (the source before a build). Tests are not re-run on
+the result; ``DISCLOSURE`` says so in the confirmation form.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import tempfile
+import tomllib
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -35,6 +43,9 @@ GITLINK_MODE = "160000"
 SPEC_WORKFLOWS = frozenset({"sdd-spec-feature", "sdd-spec-bugfix"})
 SESSION_KINDS = frozenset({"feature", "bugfix"})
 SESSION_EFFORTS = frozenset({"low", "medium", "high"})
+TARGET_BOUND = ("TARGET_SHA", "RESULT_SHA")
+DISCLOSURE = "CI rules only on the merged result; tests and review ran on the source only"
+CONFIG_PATH = ".devkit/config.toml"
 
 
 def _decode(raw: bytes) -> str:
@@ -47,9 +58,10 @@ def _snapshot_root(base: Path, worktree: Path) -> Path:
     return base.resolve()
 
 
-def _build_snapshot(root: Path, source_sha: str, target_sha: str) -> Snapshot:
-    tree = run_git(root, "rev-parse", "--verify", "--quiet", f"{source_sha}^{{tree}}").decode().strip()
-    prior = run_git(root, "merge-base", "--", target_sha, source_sha).decode().strip()
+def _build_snapshot(root: Path, source_sha: str, target_sha: str, result_sha: str | None = None) -> Snapshot:
+    """The tree to check and its diff: the source from the merge base, or the result from the build target."""
+    tree = run_git(root, "rev-parse", "--verify", "--quiet", f"{result_sha or source_sha}^{{tree}}").decode().strip()
+    prior = target_sha if result_sha else run_git(root, "merge-base", "--", target_sha, source_sha).decode().strip()
     output = run_git(root, "diff", "--name-status", "-z", "--no-renames", prior, tree, "--")
     parts = [part for part in output.split(b"\0") if part]
     changed: list[str] = []
@@ -406,12 +418,54 @@ def _check_session_task(
     return evidence, reasons
 
 
+def _spec_policy(root: Path, commit: str) -> object:
+    """The parsed ``[tool.spec]`` table committed at ``commit``; ``None`` without one, ``"invalid"`` when unreadable."""
+    try:
+        if not run_git(root, "ls-tree", "--name-only", commit, "--", CONFIG_PATH).strip():
+            return None
+        data = tomllib.loads(run_git(root, "show", f"{commit}:{CONFIG_PATH}").decode("utf-8"))
+    except (ValueError, UnicodeError):
+        return "invalid"
+    tool = data.get("tool")
+    return tool.get("spec") if isinstance(tool, dict) else None
+
+
+def _policy_evidence(root: Path, context: IntegrationContext) -> Evidence:
+    """``SPEC_POLICY``: the target's and the result's (or source's) ``[tool.spec]``, so a change refuses the build."""
+    result = context.result_sha or context.finish.source_sha
+    value = [_spec_policy(root, context.finish.target_sha), _spec_policy(root, result)]
+    encoded = json.dumps(value, sort_keys=True, separators=(",", ":"), default=str).encode()
+    return Evidence("SPEC_POLICY", hashlib.sha256(encoded).hexdigest())
+
+
+def _unit_advance(root: Path, context: IntegrationContext) -> list[str]:
+    """A reason when the build target changed the unit directory since the merge base (the unit is read from the
+    source tree, which would not show it)."""
+    unit = (context.task.unit or "").strip("/")
+    if context.result_sha is None or context.task.kind != "unit" or not unit:
+        return []
+    plan = context.finish
+    prior = run_git(root, "merge-base", "--", plan.target_sha, plan.source_sha).decode().strip()
+    if prior == plan.target_sha:
+        return []
+    if run_git(root, "diff", "--name-only", prior, plan.target_sha, "--", unit).strip():
+        return [f"the target changed {unit} since the task branch's merge base; merge the target into the branch"]
+    return []
+
+
 def check(context: IntegrationContext) -> Readiness:
     """Verify SDD completion readiness for ``context`` from committed Git state."""
     base = Path(context.finish.base).resolve()
     worktree = Path(context.finish.path)
     snap_root = _snapshot_root(base, worktree)
-    snapshot = _build_snapshot(snap_root, context.finish.source_sha, context.finish.target_sha)
+    plan = context.finish
+    # The unit is read from the source tree; with a result commit, the CI rules check the tree that would land.
+    snapshot = _build_snapshot(snap_root, plan.source_sha, plan.target_sha)
+    landing = (
+        _build_snapshot(snap_root, plan.source_sha, plan.target_sha, context.result_sha)
+        if context.result_sha
+        else snapshot
+    )
     sources = (worktree.resolve(), base) if worktree.is_dir() else (base,)
 
     with tempfile.TemporaryDirectory(prefix="devkit-spec-readiness-") as temp_dir:
@@ -426,13 +480,20 @@ def check(context: IntegrationContext) -> Readiness:
             evidence, task_reasons = _check_session_task(context, snapshot, workspace)
         reasons.extend(task_reasons)
 
-    ci_status, ci_reasons = _check_ci_rules(snapshot)
+    reasons.extend(_unit_advance(snap_root, context))
+    ci_status, ci_reasons = _check_ci_rules(landing)
     evidence.append(Evidence("CI_RULES", ci_status))
     reasons.extend(ci_reasons)
+    evidence.append(_policy_evidence(snap_root, context))
+    if context.result_sha:
+        evidence.append(Evidence("RESULT_SHA", context.result_sha))
 
     return Readiness(
         source_sha=context.finish.source_sha,
         target_sha=context.finish.target_sha,
         evidence=tuple(evidence),
         reasons=tuple(reasons),
+        result_sha=context.result_sha,
+        target_bound=TARGET_BOUND,
+        disclosure=DISCLOSURE,
     )
