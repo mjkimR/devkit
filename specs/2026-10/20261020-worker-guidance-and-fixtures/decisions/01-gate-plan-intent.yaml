@@ -1,0 +1,7 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+by: user
+at: '2026-10-20T02:53:36.221096Z'

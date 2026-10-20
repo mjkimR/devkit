@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-20
 ---
 
@@ -49,3 +49,9 @@ test_locate_defaults_and_configuration: DID NOT RAISE ScopeNotAWorktreeError
 test_auto_register_only_in_a_linked_worktree_at_either_level: unexpected registration warning
 After bounded Git discovery: 101 passed; subsequent just test-affected: 1099 passed
 ```
+
+## Resolution
+
+Directly resolved by `SPEC-worker-guidance-and-fixtures`: a scope-suite per-test fixture limits Git discovery above tmp_path while preserving actual fixture repositories and restoring the prior environment.
+
+Verification: The three original assertions failed before the fix and all 103 scope tests passed with in-worktree basetemp after it; selector full fallback passed 3791 tests with 14 skips.

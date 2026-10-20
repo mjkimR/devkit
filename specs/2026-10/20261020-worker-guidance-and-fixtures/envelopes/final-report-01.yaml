@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T03:06:25.398665Z'
+status: completed
+summary: Five approved direct fixes implemented and reconciled. Independent medium code review finding corrected and reverified; independent reconcile review passed. Host sync and integration remain separate.
+findings: []
+assumptions:
+- No architecture or lasting policy override; existing Host responsibilities clarified. Terminal feedback left untouched.
+unverified_areas:
+- Host must incorporate latest main, run official sync and verify final integration content; no worker .devkit writes or integration performed.
+checks:
+  tests: PASS scope103 in-worktree after3 expected Red failures; full selector fallback3791 passed14 skipped
+  build: PASS Pyright; guidance/test-only change requires no packaging build
+  lint: PASS Ruff lint and formatting; cumulative rules zero errors/warnings; diff check clean
+diff_scope:
+  base: 8f58df5ccd5267e5ed02d9344a8e44076d22ffd7
+  head: fd218c783e9e7b33930dd88374d6caa782c2d788

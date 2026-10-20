@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-20
 ---
 
@@ -56,3 +56,9 @@ and `gh api` do not accept universal `-R` binding, and `gh pr merge --merge` can
 `--auto`. The Host approved corrected mechanics recorded in `ADR-github-pull-request-repository-binding` while
 preserving the agreed explicit-repository and no-queue guarantees. This reinforces the existing recommendation
 to permit official documentation reads during Planning. No live remote mutation was used for verification.
+
+## Resolution
+
+Directly resolved by `SPEC-worker-guidance-and-fixtures`: the delegation payload distinguishes named official-document reads from service mutations and requires Host-supplied verified evidence when reads are unavailable.
+
+Verification: Independent medium code review confirmed AC-02; no live network grant or external mutation was introduced.

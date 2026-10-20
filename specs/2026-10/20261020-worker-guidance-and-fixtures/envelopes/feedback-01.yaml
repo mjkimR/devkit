@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T03:06:21.904718Z'
+status: completed
+summary: Swept this run, its diff and the full open feedback backlog across namespaces. Five authorized sources were directly fixed; fixture reproduction and cache-parent prerequisite are already captured by FB-worker-fixtures-inherit-git-context. No new repo or upstream observation remains.
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=1

@@ -165,6 +165,21 @@ fields and rows per role), `spec-specify/references/feature.md` and
 `bugfix.md`, `spec-feedback/references/sweep.md` and `template.md`, `spec-rule/references/config.md` and
 `templates.md`.
 
+### Delegation evidence and integration responsibilities
+
+The Host payload names necessary official-documentation reads separately from external-service mutations; it grants
+no blanket network or sandbox exception. When workers cannot read the sources, the Host provides verified evidence.
+Design-critical facts that remain unverified are exposed as problems or questions, not settled design.
+
+For intended moves or deletions, the Host checks ID references and path links before delegation and grants exact
+link-repair-only document paths. Unexpected repair targets require narrow boundary expansion before editing.
+Workers retain their strict write boundaries.
+
+For changed bundle sources, the Host incorporates the latest base, runs official `devkit sync` in the integration
+worktree, inspects and commits tracked receipt/projection updates, then verifies the final content before requesting
+integration approval. Workers report source changes without writing `.devkit/`. After landing, the Host synchronizes
+base-checkout projections and reports failures or unexpected tracked changes for inspection.
+
 ### Repository verification policy
 
 `spec-plan`, `spec-review` and `spec-integrate` follow the consuming repository's verification policy. They plan and

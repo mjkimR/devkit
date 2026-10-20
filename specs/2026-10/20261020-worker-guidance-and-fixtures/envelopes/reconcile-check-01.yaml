@@ -1,0 +1,20 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T03:05:46.159793Z'
+status: completed
+summary: Independent reconcile_guidance verified both Living Spec targets, all five direct source dispositions, preserved settles-only answers, and fixture-only isolation; no findings.
+findings: []
+assumptions:
+- Read-only boundaries emulated with explicit worktree cwd and git -C; no native confinement. Supplied test/static evidence reused.
+unverified_areas:
+- Host integration sync and post-landing base projection sync are subsequent execution steps.
+checks:
+  reflection: PASS Both modified contracts match the supplied diff; no mismatch waived
+  sources: PASS Five open direct-fix sources verified and resolved
+  entrypoints: PASS Existing skills entrypoint and unchanged runtime entrypoints remain appropriate
+diff_scope:
+  base: 8f58df5ccd5267e5ed02d9344a8e44076d22ffd7
+  head: a2420f2e243eada99bfdf58a9b721f286bb3303a
+activity_effort: medium

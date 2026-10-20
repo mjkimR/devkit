@@ -30,6 +30,17 @@ Terminal sources are traceability, not implicit write authority or completion wo
 Include their actual paths in a worker's allowed write scope; otherwise the Host updates them at completion from the
 worker's verified result. The unit directory alone does not authorize edits to source feedback elsewhere.
 
+## Evidence reads and link repairs
+
+For work depending on external platform facts, name the necessary official documentation reads in the payload's
+read authority, separately from external-service mutation authority. This grants no blanket network permission or
+sandbox exception. If the worker cannot perform those reads, the Host supplies verified sources and relevant
+content; design-critical unverified facts remain an explicit problem or question, not settled design.
+
+Before delegating an intended move or deletion, the Host checks inbound references (ID references and path links)
+and includes each affected document as an exact link-repair-only write boundary. An unexpected target requires a
+narrow Host boundary expansion before editing; a move grants no general permission to edit outside the payload.
+
 ## Native worker paths and permissions
 
 Name the absolute assigned worktree, command cwd requirement and every nested-role read scope explicitly; initial
