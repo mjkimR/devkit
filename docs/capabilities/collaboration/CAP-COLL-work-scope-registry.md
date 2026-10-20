@@ -1,7 +1,7 @@
 ---
 id: CAP-COLL-work-scope-registry
 title: Work Scope Comparison and Shared Registry
-summary: devkit spec scope compares the document and code scope of planned or running parallel tasks and keeps their scopes in a registry and journal shared by all worktrees of a repository; overlapping paths inform scheduling and integration order and never block a write.
+summary: "devkit spec scope compares parallel task scopes in a registry and journal shared across repository worktrees. Queries use side-effect-free shared locks; overlaps inform scheduling without granting or blocking writes."
 area: collaboration
 status: active
 created_at: 2026-10-13
@@ -58,8 +58,9 @@ integrated. It never grants or blocks a write, and it is not exclusive ownership
 6. **Idempotent retries**: an `update` whose `request_id` equals the record's `last_request_id` is answered from the
    stored record before anything is collected, without a second write, with the `added` and `removed` counts that
    request recorded. `release` repeated, or run where nothing is registered, succeeds and changes nothing.
-7. **Atomic publication**: every operation holds the namespace lock while it reads, compares and writes; readers never
-   see a partial record.
+7. **Atomic publication**: operations on an existing namespace hold its lock while reading, comparing or writing;
+   shared readers exclude exclusive writers and never see a partial record. An absent namespace observation is empty
+   and may precede a concurrent first registration.
 8. **The journal is diagnostic**: it is never an input to an overlap, stale or stage verdict, and a failed append
    never changes an operation's result or exit code (only a `SPEC_SCOPE_JOURNAL_UNAVAILABLE` warning).
 9. **Cleanup after finish**: devkit-spec's `devkit.post_finish` extension (`devkit_spec.cleanup.after_finish`) implements both the classic callable contract for `devkit worktree finish` and `devkit.integration.ScopedCleanup` (`integration_local_only = True`, `integration_plan`, `integration_validate`, `integration_run`) for `IntegrationService`. It runs in the
@@ -157,13 +158,32 @@ sides. Ranking and weighting are the consumer's.
   (`.devkit-spec-scope-token-<random>`) and hard-linked into place, so it is never read half-written; on a file
   system without hard links the token file is created exclusively and written in place, and a file that does not end
   with the token's newline (a save in progress or interrupted) counts as no token: `release` removes it. A temporary
-  file a crash left behind is removed by the next scope command once it is older than a minute.
-- **Atomicity**: an exclusive `flock` on `<shared>/<namespace>/.lock` (devkit's `file_lock`; the lock file is created
+  file a crash left behind is removed by the next mutating token load/save once it is older than a minute.
+  Query ownership lookup never removes temporary or incomplete token files.
+- **Atomicity**: mutations hold exclusive `flock` on `<shared>/<namespace>/.lock` (devkit's `file_lock`; the lock file is created
   with mode 0600, so the processes sharing a namespace run as one user, and a symbolic link or anything but a
   regular file there is `SPEC_SCOPE_SHARED_PATH_UNAVAILABLE`);
   a record (mode 0644) is published with devkit's `atomic_write_text`: a `.<record>.devkit-*.tmp` file in the same
   directory, synced and renamed over the record. Temp files an interrupted publish left behind are removed at the
-  next lock acquisition, and the OS releases the lock of a process that died.
+  next mutating lock acquisition, and the OS releases the lock of a process that died.
+  Queries open the existing regular, non-symlink lock read-only and hold shared `flock` across all record enumeration
+  and reads, or the journal read. Opening a nonregular lock, including a FIFO, never blocks before rejection.
+  Never unlink or replace the lock while the namespace is in use. Record and history queries are separate
+  observations, not a joint transaction.
+- **Read access**: ordinary `query`, `query --spec`, and `query --history` MUST NOT create directories or locks,
+  open files for writing, append events, or clean record/token temporary files. Only actual namespace ENOENT returns
+  empty without creation. An existing namespace without its lock is `SPEC_SCOPE_SHARED_PATH_UNAVAILABLE`; permission,
+  unsafe-path and other namespace IO failures are errors, never evidence of empty state. Per-record invalid-data
+  warnings remain visible. Neither empty nor partially readable results certify that active work has no overlap.
+- **Initialization and repair**: authorized registration from a worktree without a token can initialize a missing
+  lock. Release and sweep may query first and are not missing-lock recovery. Otherwise an operator repairs a missing
+  lock after writers are quiescent, without deleting records/tokens or replacing an existing lock.
+- **Permissions**: readable initialized state can be queried without write access when the host permits read-open
+  flock. Mutations still need namespace writes (lock, records, temporaries, journal) and, when applicable, worktree
+  Git-directory token writes and cleanup. Hosts grant required access explicitly; refusal stops that operation.
+  Successful reads grant no mutation authority. Storage, configured absolute shared paths, namespaces and token
+  locations remain unchanged; there is no relocation or transport fallback. The access separation follows
+  `ADR-keep-shared-storage-and-separate-read-access`.
 - **Operations** (`devkit_spec.scope.Registry`; the local file adapter `LocalRegistry` is the only implementation):
   - `register`: creates the record; an existing task ID in the namespace is `SPEC_SCOPE_TASK_EXISTS`. A second record
     for the same worktree and host marks both `shared_worktree` (a `SPEC_SCOPE_SHARED_WORKTREE` warning).
@@ -183,7 +203,7 @@ sides. Ranking and weighting are the consumer's.
     else `error` with `stale-revision`.
   - `claim`: reserved for adapters that can publish exclusively; `SPEC_SCOPE_UNSUPPORTED`.
 - **Deadline**: each command runs under `[tool.spec.scope] timeout` (default 10 seconds), one devkit `Deadline` whose
-  expiry raises `SPEC_SCOPE_TIMEOUT`: the lock wait (`file_lock`) and every Git subprocess (`run_git`) take the time
+  expiry raises `SPEC_SCOPE_TIMEOUT`: the shared/exclusive lock wait and every Git subprocess (`run_git`) take the time
   left, and a Git process that outlives it is killed. Running out is `SPEC_SCOPE_TIMEOUT`
   (`[SCOPE_ACK: status=timeout]` for an update); retry an update whose outcome was not seen with `--request-id`.
 - **Journal**: each namespace keeps an append-only `journal.jsonl`, one JSON event per line, appended under the

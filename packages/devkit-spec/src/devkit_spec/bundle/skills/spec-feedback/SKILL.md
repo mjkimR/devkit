@@ -6,9 +6,11 @@ description: 'Record observations on repository-owned (optionally upstream) tool
 # spec-feedback: Repository-First Feedback Capture
 
 One observation, one file, committed with the work. This skill only records: new observations stay `status: open`.
-Hygiene promotes, dismisses or forwards selected items. An authorized task resolves only its explicitly linked source
+Hygiene promotes, dismisses or forwards selected items. An authorized direct-fix task resolves only its explicitly linked open source
 feedback after implementation and verification, following the `spec` skill's [completion procedure](../spec/references/completion.md#source-feedback-resolution).
-`promoted` means handed to follow-up work; `resolved` means the observation was fully addressed and verified.
+`promoted` closes feedback by handing it to follow-up work; `resolved` closes a directly addressed and verified
+observation without promotion. Both are terminal; only open feedback needs action. Follow-up completion does not
+change promoted sources to resolved.
 
 ---
 

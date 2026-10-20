@@ -10,7 +10,7 @@ agent: antigravity
 origin: agent
 severity: workaround
 recurring: false
-status: promoted
+status: dismissed
 created_at: 2026-10-17
 ---
 
@@ -40,4 +40,5 @@ SPEC-hook-driven-integration-cleanup Non-Goal 3 & spec-integrate/SKILL.md Step 5
 "Fallback / manual CLI recovery: when the host does not support interactive MCP confirmation (INTEGRATION_CONFIRMATION_UNAVAILABLE) or the user invokes the CLI directly after giving dev-integration approval, run devkit worktree finish <branch> --merge --local-only in the base checkout."
 ```
 
-- **Disposition**: `PROP-integration-host-confirmation`: split out of `SPEC-integration-follow-ups` in its Planning.
+- **Prior promotion**: Split out of `SPEC-integration-follow-ups` into a host-confirmation draft (retained in Git history at `cb2b1b0`).
+- **Disposition**: Dismissed for this personal repository: Codex CLI and the Claude Code terminal CLI already have supported native confirmation paths (`SPEC-claude-terminal-mcp-approval`, `CAP-INT-mcp-services`). Other host surfaces are outside the intended usage, and no remaining setup-adapter work is requested. The draft is retired without a rejection ADR under an explicit task-scoped exception.

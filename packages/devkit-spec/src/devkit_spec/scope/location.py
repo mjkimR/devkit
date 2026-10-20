@@ -95,13 +95,14 @@ def head_revision(root: Path, deadline: Deadline) -> str:
         return ""
 
 
-def load_token(path: Path) -> str | None:
-    """The saved token; ``None`` when there is none.
+def load_token(path: Path, *, cleanup: bool = True) -> str | None:
+    """The saved token; ``None`` when there is none. Read-only callers pass ``cleanup=False``.
 
     A file that does not end with the token's newline (empty or partial: a save in progress, or one interrupted on a
     file system without hard links) holds no token either; ``incomplete_token`` tells the two apart.
     """
-    _clean_temp_tokens(path.parent)
+    if cleanup:
+        _clean_temp_tokens(path.parent)
     try:
         text = path.read_text(encoding="utf-8")
     except FileNotFoundError:

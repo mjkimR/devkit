@@ -1,15 +1,15 @@
 ---
-id: PADR-keep-shared-storage-and-separate-read-access
+id: ADR-keep-shared-storage-and-separate-read-access
 title: Keep shared storage and separate read access
 summary: Retain Git common-directory storage and per-worktree ownership tokens. Make queries side-effect-free using an existing read-opened lock while keeping explicit authorization for mutations.
-proposal: PROP-scope-registry-sandbox-access
-status: draft
+proposal: SPEC-scope-registry-sandbox-access
+status: accepted
 created_at: 2026-10-20
 ---
 
-# [PADR-keep-shared-storage-and-separate-read-access] Keep shared storage and separate read access
+# [ADR-keep-shared-storage-and-separate-read-access] Keep shared storage and separate read access
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-20
 
 ---
@@ -28,7 +28,7 @@ without claiming that a location or transport bypasses host authorization.
 
 Keep Git storage with scoped mutation approval; configure shared `.devkit/state/`; introduce a service-owned MCP
 registry. The latter two require additional lifecycle and authorization design and do not inherently solve token
-or cross-worktree access. See `materials/access-comparison.md` for the comparison.
+or cross-worktree access. See `docs/materials/2026-10/20261020-scope-registry-sandbox-access/access-comparison.md` for the comparison.
 
 ## 4. Decision Outcome
 

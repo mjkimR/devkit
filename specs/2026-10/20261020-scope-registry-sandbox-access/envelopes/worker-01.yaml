@@ -1,0 +1,26 @@
+kind: worker
+stage: integration-approval
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T02:02:45.123955Z'
+status: completed
+summary: Completed specify, build/verify, independent code review, Living Spec reconciliation and independent verification, feedback capture, and final change report. Pending Host dev-integration approval; no merge or push performed.
+findings: []
+assumptions:
+- Handoff premises match current code. Retained Git storage and explicit mutation permissions follow accepted ADR and user authorization.
+- Worker and support-role confinement emulated; explicit worktree paths, command-scoped escalation, read-only support roles and range checks substitute for native enforcement.
+unverified_areas:
+- Full test suite not executed on Linux; required read-only-fd flock compatibility executed on native Linux tmpfs. Docker Desktop host bind mounts failed flock exclusion and are unsupported.
+checks:
+  tests: 'PASS just test-affected: 1099 tests on macOS'
+  build: 'PASS just check devkit-spec: zero errors/warnings'
+  lint: PASS package Ruff, diff whitespace, cumulative governance and every commit gate
+  platforms: PASS Darwin 24.6.0 and Linux 6.10.14 native tmpfs flock compatibility probes
+  sandbox: PASS actual ordinary, --spec and --history queries without escalation
+  review: PASS /root/scope_reads_dev/review_reads; review-01.yaml no findings
+  reconcile: PASS /root/scope_reads_dev/reconcile_reads; reconcile-check-01.yaml no findings
+  boundaries: PASS committed range restricted to assigned unit, scope source/tests, capability and evidence materials
+diff_scope:
+  base: 17dc472345e435d0ed6363e8a1d5fb1f65357d0c
+  head: 049a42dbb3039f48e84f872890bfa10e03007786
+activity_effort: medium

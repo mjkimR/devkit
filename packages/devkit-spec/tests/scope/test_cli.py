@@ -274,3 +274,28 @@ def test_query_lists_the_records_when_this_worktree_record_may_be_unreadable(rep
     )
     released = _scope(repo, "release")
     assert released.exit_code == 2 and "(SPEC_SCOPE_RECORD_INVALID)" in released.stderr
+
+
+@pytest.mark.parametrize("args", [(), ("--spec", SPEC), ("--history",)])
+@pytest.mark.parametrize("registered", [False, True])
+def test_query_cli_never_writes(
+    repo: Path, monkeypatch: pytest.MonkeyPatch, args: tuple[str, ...], registered: bool
+) -> None:
+    import os
+
+    from scope.test_read_access import guard_writes
+
+    from devkit_spec.scope.flow import open_session
+
+    if registered:
+        result = _scope(repo, "register", "--spec", SPEC)
+        assert result.exit_code == 0, result.output
+    session = open_session(repo)
+    token_temp = session.location.token_path.parent / ".devkit-spec-scope-token-abcdefgh"
+    token_temp.write_text("old token fragment")
+    os.utime(token_temp, (0, 0))
+    with monkeypatch.context() as guarded:
+        guard_writes(guarded)
+        result = _scope(repo, "query", *args, "--format", "json")
+        assert result.exit_code == 0, result.output
+    assert token_temp.read_text() == "old token fragment"

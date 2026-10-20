@@ -2,7 +2,8 @@
 id: ADR-feedback-resolution-lifecycle
 title: Separate feedback routing from verified resolution
 summary: "Feedback promotion hands an observation to follow-up work; resolution records an implemented and verified fix through spec or session completion."
-status: accepted
+status: superseded
+superseded_by: ADR-feedback-terminal-outcomes
 created_at: 2026-10-19
 proposal: SPEC-feedback-resolution
 ---

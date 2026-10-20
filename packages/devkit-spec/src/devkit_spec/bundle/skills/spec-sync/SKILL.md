@@ -55,8 +55,9 @@ targets:
 
 ### Step 2b: Resolve Source Feedback
 - Apply [Source feedback resolution](../spec/references/completion.md#source-feedback-resolution) to the spec's
-  explicit source FB IDs. Record resolved items and their verification, or the remaining scope of items left
-  unchanged, in `reconcile.md`. Handoff alone never counts as resolution; unrelated newly captured feedback stays open.
+  explicit open direct-fix sources. Record their resolutions and verification, or remaining scope, in
+  `reconcile.md`. Terminal sources need no disposition or re-verification. Handoff never resolves open feedback;
+  unrelated newly captured feedback stays open.
 
 ### Step 2c: Sync Entrypoints from the Bundle
 - Run the `spec-entrypoints` skill for this bundle: derive (doc, code) candidates, review them, apply the chosen ones. A document whose `entrypoints` changed is a `modified` target in `reconcile.md`.

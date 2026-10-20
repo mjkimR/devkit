@@ -222,18 +222,18 @@ Hygiene determines ownership and proposes local fixes or upstream report drafts;
 resolution destinations. External submission requires explicit authorization, and `forwarded` requires an actual
 report location. Pending ownership or submission leaves feedback open. Capture never changes feedback status.
 
-Under `ADR-feedback-resolution-lifecycle`, `promoted` means routed to follow-up work and `resolved` means fully
-implemented and verified. Hygiene can route observations; an authorized task resolves its own explicit sources
-without a separate hygiene invocation. Record full FB IDs and received scope in a `Source feedback` section of a
-proposal/spec, or in a session's agreed scope. Handoff and subsequent drafting retain these references without
-changing status. Include source-file paths in task/delegation boundaries, or have the Host apply their updates.
+Under `ADR-feedback-terminal-outcomes`, promoted and resolved feedback are terminal. Promotion hands tracking to
+follow-up work; resolution records a direct verified fix without promotion, in a session or spec. Only open feedback
+needs action. Preserve source FB IDs and received scope for traceability through handoff and drafting. Terminal
+sources require no completion disposition or re-verification, and follow-up completion never converts them to resolved.
 
-The common completion procedure checks each explicit source against the final implementation and verification:
-spec work records outcomes during reconciliation; session work updates source files before its commit and reports
-outcomes without a new artifact. Resolutions retain prior promotion history and name the destination, implemented
-outcome and concrete verification evidence. Partial/deferred/unverified sources keep their state and report remaining
-scope. Recheck a task's own resolutions if later changes invalidate the evidence. Unrelated capture stays open; this
-completion obligation applies even under requested-only capture or a disabled collect-feedback stage.
+The common completion procedure checks only explicit open direct-fix sources against implementation and verification:
+spec work records outcomes in reconciliation, session work updates source files before its commit and reports them
+without a new artifact. Resolutions name the destination, outcome and evidence; partial/deferred/unverified direct
+fixes stay open with remaining scope reported. Include only source files needing these updates in task/delegation
+boundaries, or have the Host apply dispositions. Recheck this task's new resolutions if later changes invalidate
+evidence; do not revisit pre-existing terminal feedback. Unrelated capture stays open. Direct-fix completion applies
+even under requested-only capture or a disabled collect-feedback stage, without a separate hygiene invocation.
 
 ### 4.5 Playbooks
 

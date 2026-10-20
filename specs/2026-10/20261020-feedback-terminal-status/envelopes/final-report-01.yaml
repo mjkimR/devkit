@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T02:21:53.041051Z'
+status: completed
+summary: Promoted feedback terminates routing; resolved terminates a verified direct fix without promotion. Guidance, glossary and four contracts align with a superseding ADR. Worker implicit source scope includes committed open sources only; explicit boundaries remain effective. Historical statuses and archive handling preserved.
+findings: []
+assumptions:
+- Host authorized glossary scope extension. Session and spec direct fixes are both eligible for resolution.
+unverified_areas:
+- Projected bundle sync and integration remain Host actions; this worker changed source assets only.
+checks:
+  tests: PASS 1105 affected tests, including scope and handoff coverage
+  build: PASS Pyright and existing bundle validation tests; no packaging changes
+  lint: PASS Ruff check/format and cumulative governance with zero violations
+diff_scope:
+  base: 3dc04700c52239e65414cb7af5b272a154fe0736
+  head: 22ee3bcf1d2f01ab6219f84b6113e2c847eb081c

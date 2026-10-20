@@ -15,7 +15,7 @@ agent: <claude-code | codex | antigravity | ...>
 origin: agent                       # agent | user  (user = raised by the user)
 severity: workaround                # critical | blocked | workaround | noise
 recurring: false                    # true if observed 2+ times
-status: open                        # open | promoted | resolved | dismissed | forwarded; capture always starts open
+status: open                        # only actionable status; promoted/resolved/dismissed/forwarded are terminal
 created_at: <YYYY-MM-DD>
 ---
 
