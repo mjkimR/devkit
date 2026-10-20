@@ -1,0 +1,26 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-20T00:52:27.078682Z'
+status: completed
+summary: Source analysis confirms query lock/cleanup writes and independent token cleanup; relocation alone leaves token access unchanged. Read-only access must address both paths.
+findings:
+- issue: Query and history acquire a creating writable lock and clean record temporaries.
+  evidence: packages/devkit-spec/src/devkit_spec/scope/localfs.py:164,274,411; packages/devkit-dist/src/devkit/core/locks.py:34
+  resolution: open
+- issue: Ordinary query also removes old token temporaries through own/load_token.
+  evidence: packages/devkit-spec/src/devkit_spec/cli/scope.py:297; scope/flow.py:266; scope/location.py:98,118
+  resolution: open
+- issue: shared_path relocates only registry; tokens remain worktree Git-directory files.
+  evidence: packages/devkit-spec/src/devkit_spec/scope/location.py:49,78,163,195
+  resolution: open
+- issue: Lock-free snapshots weaken namespace consistency; atomic individual records do not serialize multi-record registration or history append.
+  evidence: packages/devkit-spec/src/devkit_spec/scope/localfs.py:218,259; docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md:61,189
+  failure_condition: Concurrent register/release or journal append during an unlocked scan can mix states.
+  resolution: open
+assumptions:
+- Isolated scout, Codex emulated; explicit read boundaries and parent diff validation replace native confinement.
+unverified_areas:
+- No runtime probe or MCP/host authorization verification; project-policy inbound references beyond first 20 not inspected.
+checks: {}
