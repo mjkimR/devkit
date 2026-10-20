@@ -1,0 +1,27 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T23:14:08.649631Z'
+status: completed
+review: review-01.yaml
+summary: 'Both P3 findings fixed and self-verified by the implementer (medium, no repeat call: text-only edits at the named locations, no contract change). 1: review-loop.md section 2 now names the closing reverify of the challenger round as the Planning record; test_effort_procedure pins it (72 passed). 2: AC-09 names both messages; implementation unchanged.'
+findings:
+- issue: references/review-loop.md section 2 still records the Planning minor-fix self-verification in the worker envelope's summary, though sections 1 and 5 now close each Planning round with a reverify of the challenger round; the plan and the ADR list section 2 as changed.
+  evidence: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/review-loop.md:31
+  failure_condition: A plan-accept reader following the review= reverify line finds no self-verification reason for a high Planning batch closed without a next round.
+  suggested_action: Name the closing reverify of the challenger round as the record of the Planning self-verification and pin it in test_record_gaps_procedure.py.
+  resolution: resolved
+  severity: P3
+- issue: AC-09 says missing entries are reported as 'names no existing path', but entries ending in / (core/, docs/glossary.md/) are reported as 'names no existing directory (...)', as the guide and tests pin.
+  evidence: packages/devkit-spec/src/devkit_spec/rules/proposal_boundaries.py:144
+  failure_condition: A literal check of AC-09's message fails for core/ and docs/glossary.md/.
+  suggested_action: Keep the implementation; amend AC-09 to name both messages.
+  resolution: resolved
+  severity: P3
+checks:
+  wording_tests: PASS 72 passed
+diff_scope:
+  base: d94bbf65036483d135981d90000d91db0e7f2081
+  head: 3972cd751fb06f50c3156d4e5105306bf9d9fc2a
+activity_effort: medium
