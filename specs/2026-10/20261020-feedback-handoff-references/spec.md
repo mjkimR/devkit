@@ -2,7 +2,7 @@
 id: SPEC-feedback-handoff-references
 title: Preserve generic and historical references during proposal handoff
 summary: Keep generic materials directory mentions intact and retain deleted envelope citations as Git-pinned historical references.
-status: in-progress
+status: completed
 created: 2026-10-20
 related_capabilities: [CAP-DLV-proposal-incubation]
 related_stories: []

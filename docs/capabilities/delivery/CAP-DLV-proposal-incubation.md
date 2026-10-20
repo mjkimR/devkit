@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-proposal-incubation
 title: Proposal Incubation and Handoff
-summary: "Proposal incubation, acceptance and handoff record the user's acceptance in one validated step, also directly for an eligible draft, create bound specs only from a recorded acceptance, promote decisions, preserve approvals, notes, materials and feedback, and rewrite references."
+summary: "Proposal incubation, acceptance and handoff create bound specs from recorded approval, promote decisions, preserve materials and feedback, and relocate references while retaining generic directory prose and verified historical record citations."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -349,9 +349,17 @@ proposal as it was; their `feedback/` is scanned, since feedback stays current.
 - **Code-span paths** (`kind=path`) in the bodies of the documents the handoff wrote or moved out of a bundle
   proposal (the carried `spec.md` and blueprint, the promoted ADRs, moved feedback and other carried files): an inline
   code span holding a path relative to the bundle (`` `decisions/PADR-x.md` ``,
-  `` `materials/notes.md` ``, `` `materials/` ``) that names a relocated file or directory becomes the new document's
-  ID in backticks (`` `ADR-x` ``), or else its new repository-relative path. Frontmatter, fenced code and spans naming
-  nothing relocated do not change.
+  `` `materials/notes.md` ``) that names a relocated file becomes the new document's ID in backticks
+  (`` `ADR-x` ``), or else its new repository-relative path. Directory-only spans, including `` `materials/` ``
+  and paths resolving to relocated directories without a trailing slash, remain unchanged so generic prose keeps
+  its meaning. Frontmatter, fenced code and spans naming nothing relocated do not change.
+- **Dropped workflow record citations**: before ordinary relocation, relative Markdown links in scanned documents
+  and bundle-relative code spans in carried prose that name an exact dropped record become explicit historical
+  Git citations. The full handoff HEAD commit and repository-relative path identify the record, only when its
+  bytes at HEAD equal the file about to be deleted. A Markdown link becomes its label followed by the historical
+  citation; an existing query or fragment is retained separately as a selector. Rewrites retain `kind=link` or
+  `kind=path`. Without Git history, with an untracked record, or when the record differs from HEAD, the citation
+  remains unchanged and is reported as `unmapped`; handoff does not create a commit or archive the record.
 
 | Unresolved reason | Meaning |
 | --- | --- |
