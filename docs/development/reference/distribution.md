@@ -334,3 +334,9 @@ guidance and seeds. Details and persistence behavior: `CAP-DIST-sync-and-transac
 | `CONFIG_LOCAL_RENDER_FORBIDDEN` | 2 | Remove the local variable or separate its shared template use. |
 | `CONFIG_LOCAL_RENDER_STALE` | 1 | Run sync to refresh local evidence and output. |
 | `CONFIG_LOCAL_CHANGED` | 1 | Finish concurrent configuration edits and rerun sync. |
+
+For shared or personal approval/response defaults, set `[presentation] language = "ko"` (`auto`, `en`, `ko`)
+in shared config or ignored `.devkit/config.local.toml`. `devkit config show --effective` reports the requested and
+resolved language, source and fallback. Run sync for response-style assets; approval forms read per request.
+Explicit response-style bundle variables win. See `CAP-DIST-sync-and-transactions` and `CAP-INT-mcp-services`;
+this does not localize host-owned controls or establish visible native Korean form support.

@@ -62,3 +62,9 @@ and host validation. Setup does not prove native UI support.
 `mcp serve` is a native-protocol exception to ordinary output/format flags; startup errors remain advisories on
 stderr. Other commands emit one JSON object or an MCP result sentinel and advisory notices. No output includes
 other servers' settings or environment values. Elicitation accept alone is insufficient: approve must be true.
+
+For shared or personal approval/response defaults, set `[presentation] language = "ko"` (`auto`, `en`, `ko`)
+in shared config or ignored `.devkit/config.local.toml`. `devkit config show --effective` reports the requested and
+resolved language, source and fallback. Run sync for response-style assets; approval forms read per request.
+Explicit response-style bundle variables win. See `CAP-DIST-sync-and-transactions` and `CAP-INT-mcp-services`;
+this does not localize host-owned controls or establish visible native Korean form support.

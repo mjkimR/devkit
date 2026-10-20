@@ -7,7 +7,7 @@ plan: PLAN-language-setting-coverage
 # Task Breakdown: `SPEC-language-setting-coverage`
 
 - [x] **Task 1**: Shared and effective presentation preference with provenance and configuration tests
-  - **_Boundary**: packages/devkit-dist/src/devkit/core/, packages/devkit-dist/src/devkit/distribution/installation/config.py, packages/devkit-dist/src/devkit/cli.py, packages/devkit-dist/tests/
+  - **_Boundary**: packages/devkit-dist/src/devkit/core/local_config.py, packages/devkit-dist/src/devkit/core/presentation.py, packages/devkit-dist/src/devkit/distribution/installation/config.py, packages/devkit-dist/src/devkit/distribution/cli/__init__.py, packages/devkit-dist/tests/
   - _Requirements: AC-01_
 - [x] **Task 2**: Manifest inheritance and canonical/effective rendering with response-style opt-in and tests
   - **_Boundary**: packages/devkit-dist/src/devkit/distribution/, packages/devkit-dist/tests/, packages/devkit-catalog/src/devkit_catalog/response_style/, packages/devkit-catalog/tests/

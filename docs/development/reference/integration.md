@@ -75,3 +75,9 @@ and local checks can outlast host timeouts, leaving the server thread running. I
 | `INTEGRATION_STEP_UNKNOWN` | Inspect remote state through status/resume; never repeat an unconfirmed mutation |
 | `INTEGRATION_LOCAL_TARGET_BLOCKED` | Restore a clean fast-forwardable target checkout and resume |
 | `INTEGRATION_REMOTE_DELETE_BLOCKED` | Preserve the remote branch until changed-head/dependent-PR conditions resolve |
+
+For shared or personal approval/response defaults, set `[presentation] language = "ko"` (`auto`, `en`, `ko`)
+in shared config or ignored `.devkit/config.local.toml`. `devkit config show --effective` reports the requested and
+resolved language, source and fallback. Run sync for response-style assets; approval forms read per request.
+Explicit response-style bundle variables win. See `CAP-DIST-sync-and-transactions` and `CAP-INT-mcp-services`;
+this does not localize host-owned controls or establish visible native Korean form support.

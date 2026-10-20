@@ -1,7 +1,7 @@
 ---
 id: CAP-DIST-manifest-spec
 title: "Manifest Specification"
-summary: "Schema, asset kinds, presets, validation, and deterministic archive builds for devkit bundles."
+summary: "Bundle schema, asset kinds, scalar templates with bounded presentation-language inheritance, validation and deterministic archive builds."
 area: distribution
 status: active
 entrypoints:
@@ -240,7 +240,11 @@ default = false
 ```
 
 `type` is required and exactly `string`, `boolean` or `integer`; `default` is optional and must have that exact type
-(booleans are not integers). No other declaration keys are accepted. Omitting the default makes the input required.
+(booleans are not integers). The optional `default_from = "presentation.language"` is valid only for string
+variables and only for this exact reference; another reference or type raises `BUNDLE_INVALID`. No other declaration
+keys are accepted. An absent consumer value inherits the resolved presentation preference in workspace planning.
+An explicit bundle value always wins, including `auto` and free text. Projectless planning uses the ordinary declared
+default. Without either a resolving binding or a default, the input is required.
 Variable declarations validate without rendering; template content validation occurs on inventory planning.
 `bundle plan` uses defaults and fails with `CONFIG_INVALID` for a required input it cannot resolve.
 

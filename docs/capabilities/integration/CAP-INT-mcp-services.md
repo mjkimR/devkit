@@ -1,7 +1,7 @@
 ---
 id: CAP-INT-mcp-services
 title: "Scoped MCP Services"
-summary: "Four scoped integration MCP tools bind one native approval to local or GitHub pull request integration, with pinned source commits, landing evidence and resumable cleanup."
+summary: "Scoped integration MCP tools bind native approval to local or pull-request integration, with bilingual owned content, pinned source commits and resumable cleanup."
 area: integration
 status: active
 entrypoints:
@@ -321,3 +321,25 @@ after replies/lock waits and before subsequent effects. A transition after effec
 Missing/malformed/replaced workspace identity fails closed. Only terminal cleanup of the exact configuration
 workspace in the approving call can use its captured context after intentional self-removal; later calls, new
 merge/push and resume cannot. Read-only retained diagnostics remain available.
+
+## Owned approval language
+
+At the start of each confirmation request, integration snapshots `presentation.language` from the runtime's owning
+configuration workspace, independently of its retained executor root. `ko` selects Korean; `en`, `auto` and unsupported
+strings select English under `CAP-DIST-sync-and-transactions`. Tool arguments cannot select the preference or its
+workspace. An open form keeps its rendered language; a later request reads the new preference. Language is outside
+business approval equality/digests. Existing environment, identity, policy, source and target checks still apply.
+
+Static English/Korean templates cover all owned headings, explanatory text, field titles, absence and truncation
+markers for local merge, fast-forward, cleanup-only and pull-request branches. Paths, branches, SHAs, commands,
+identifiers, action/property names, boolean values, defaults and required fields remain canonical. Quoted task and
+result summaries, readiness disclosures, checks, provider identities, cleanup identities and unverified-platform
+evidence remain verbatim, with existing JSON escaping and 1500-character summary truncation. No provider text is
+translated or summarized. Integration still requires native accept with approve=true; default false, decline,
+cancel, absent form capability, stale-scope and process-local resume behavior are unchanged.
+
+The guarantee covers supplied domain content only. Codex CLI and Claude Code own form display, headings, buttons,
+boolean widgets, omitted/transformed metadata, validation errors and trust/permission prompts. Neither whole-screen
+localization nor actual native Korean rendering is claimed. `MAT-language-development-evidence` records passing
+bilingual protocol/domain fixtures and explicitly unverified visible-form status for each host. Existing English
+Claude approval evidence proves those outcomes, not Korean rendering or metadata fidelity.

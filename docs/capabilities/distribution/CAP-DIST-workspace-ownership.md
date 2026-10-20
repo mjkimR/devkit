@@ -1,11 +1,12 @@
 ---
 id: CAP-DIST-workspace-ownership
 title: "Workspace Ownership & Overrides"
-summary: "Shared and checkout-local workspace ownership, managed assets, guidance maintenance, and project override drift review."
+summary: "Shared and checkout-local ownership of managed assets, presentation preferences, guidance and project overrides."
 area: distribution
 status: active
 entrypoints:
   - packages/devkit-dist/src/devkit/distribution/installation/workspace.py
+  - packages/devkit-dist/src/devkit/core/presentation.py
 created_at: 2026-10-17
 ---
 
@@ -207,3 +208,12 @@ tracked local configuration or personal outputs and effective ignore negations w
 report the ignore edit; locked sync refuses a required `.devkit/.gitignore` change. Projects tracking native
 projections must explicitly untrack and ignore the affected outputs before personalization. The receipt, root
 guidance, seeds and shared config stay canonical; see `CAP-DIST-sync-and-transactions`.
+
+## Presentation preference ownership
+
+`presentation.language` belongs to shared configuration with an optional ignored checkout-local override, using
+the same copy-and-diverge worktree semantics as other allowed local preferences. Core owns validation, exact
+`auto/en/ko` resolution, unsupported-string English fallback and source metadata; see `CAP-DIST-sync-and-transactions`.
+Canonical asset planning uses shared preferences; eligible personal rendering uses effective preferences and local
+ledger evidence. The preference never authorizes a tracked output write, a forbidden asset difference or execution.
+Explicit bundle-variable values override inherited presentation defaults, regardless of which layer supplied them.

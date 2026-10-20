@@ -11,6 +11,7 @@ entrypoints:
   - packages/devkit-spec/src/devkit_spec/proposals/
   - packages/devkit-spec/src/devkit_spec/cli/proposals.py
   - packages/devkit-spec/src/devkit_spec/handoff_mcp.py
+  - packages/devkit-spec/src/devkit_spec/handoff_language.py
 ---
 
 # [CAP-DLV-proposal-incubation] Proposal Incubation and Handoff
@@ -554,3 +555,18 @@ for exact Development-start authority and effort selection. The explicit owning 
 valid and local before the form, after its reply and before subsequent handoff mutations. Cloud cannot start worktree
 creation through MCP. A later environment transition preserves already completed effects as recovery state; it does
 not authorize final integration. See `CAP-MCP-runtime-registration` for runtime/registration and fallback boundaries.
+
+### Handoff presentation language
+
+The service snapshots the owning configuration workspace's `presentation.language` before each confirmation,
+independently of the retained executor. English is deterministic for auto/unsupported strings; ko selects Korean.
+Static copy covers Development start, setup/restoration effects, effort meanings, required checks, absent markers
+and separate final-merge approval. Both messages pair canonical `low`, `medium`, `high` with their localized meanings
+and explain that effort does not change model reasoning settings, so omitted field metadata loses no decision facts.
+Titles and other owned schema text are localized; keys, enum values, defaults, required fields and reply parsing
+remain canonical. Accepted title/summary/plan, paths, commands and SHAs remain verbatim with JSON escaping.
+
+A preference edit during an open form changes the next request's copy, not that form or its authority. Existing
+whole-preview/policy equality, workspace identity and environment checks remain independent and can still refuse
+changed configuration. No presentation data is added to preview equality. Native display and host controls are
+client-owned; per-host visible localization is unverified in `MAT-language-development-evidence`.

@@ -1,7 +1,7 @@
 ---
 id: CAP-MCP-runtime-registration
 title: "MCP Runtime and Project Registration"
-summary: "An optional retained MCP runtime binds native approval to an explicit configuration workspace, while dist reconciles exact ignored project registrations without changing host trust or global settings."
+summary: "An optional retained MCP runtime binds approval and presentation context to an owning workspace, while reconciling ignored project registrations without changing host trust."
 status: active
 area: mcp
 entrypoints:
@@ -9,6 +9,7 @@ entrypoints:
   - packages/devkit-dist/src/devkit/core/mcp.py
   - packages/devkit-dist/src/devkit/core/mcp_context.py
   - packages/devkit-dist/src/devkit/host/registrations.py
+  - packages/devkit-dist/src/devkit/core/presentation.py
 created: 2026-10-20
 updated: 2026-10-20
 ---
@@ -95,3 +96,11 @@ removal state and cannot authorize any operation. Child sync rechecks that owner
 before transaction writes, including recovery. The target checkout's copied local configuration cannot replace
 the owner's constraint. Missing/changed owner identity or cloud transition stops remaining writes; partial
 transactions retain their journals for an independently authorized recovery. The parent rechecks on child return.
+
+## Form presentation context
+
+The existing invocation binding also lets core presentation resolution select the owning configuration workspace
+for domain-owned form text. The retained executor's preferences do not override it. Language is read once per form,
+with no language/workspace tool argument and no additional serialized approval authority. Execution/environment and
+workspace identity guards still run independently before and after confirmation and before effects. Static domain
+copy and host-owned display limits are specified in `CAP-INT-mcp-services` and `CAP-DLV-proposal-incubation`.
