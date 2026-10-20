@@ -114,10 +114,24 @@ done or invent a runtime test result.
 
 ### Requested explanation
 
-Input: the user requests the rationale for relaxing fixed visual rules. An appropriate answer may use several
-paragraphs to explain short factual replies, long reasoning and the tradeoff between a visible structure and a
-repetitive template. It need not fit a fixed sentence count. Preserve the distinction between a reasoned editorial
-recommendation and a measured improvement in understanding.
+Input: the user asks, in Korean, for a detailed explanation of why fixed bold openings and paragraph sizes
+should be relaxed. Illustrative output:
+
+> 질문마다 필요한 설명량과 구조가 다르기 때문입니다. 숫자 하나를 묻는 답변에는 한 문단이면 충분할 수
+> 있지만, 원인과 해결책을 설명할 때는 여러 문단이 필요합니다. 고정된 형식을 항상 쓰면 간단한 답변에도
+> 불필요한 구획이 생기고, 이어지는 설명이 억지로 끊길 수 있습니다.
+>
+> 굵은 글씨는 중요한 결론이나 조건을 찾기 쉽게 할 때 쓰고, 목록은 여러 항목이나 순서를 보여줄 때 쓰는
+> 편을 권합니다. 문단 수에 맞춰 일률적으로 적용하기보다, 이 답변에서 무엇을 빠르게 찾아야 하는지를
+> 기준으로 고르는 방식입니다.
+>
+> 형식을 유연하게 골라도 요청받은 정보는 모두 남겨야 합니다. 정해진 보고 양식이나 표가 있다면 그대로
+> 따릅니다. 이 구성이 더 편하게 읽힌다는 판단에는 취향이 들어가므로, 예시를 보며 말투와 설명량을
+> 조정하는 것이 좋습니다.
+
+The reply supplies a reason, contrasting request needs, specific layout choices and the limit imposed by required
+content. Those are editorial grounds for the recommendation, not observations of improved reader comprehension.
+Its paragraphing is one appropriate illustration, not a new mandatory three-paragraph format.
 
 ### Artifact-only request
 
