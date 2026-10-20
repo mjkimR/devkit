@@ -2,7 +2,7 @@
 id: PROP-affected-test-granularity
 title: Finer affected-test groups and dependency nodes
 summary: "Reduce unnecessary affected-test execution with finer test groups and source dependency nodes while preserving conservative fallback and required coverage."
-status: draft
+status: reviewing
 created_at: 2026-10-20
 target_area: delivery/
 priority: medium
