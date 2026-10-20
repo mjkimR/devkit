@@ -1,0 +1,10 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: goal, scope (one approval for push, no-ff PR merge and cleanup; no squash, rebase
+  or automated recovery), verification, task-kind feature, planning-depth proposal
+  and Planning effort medium confirmed
+by: user
+at: '2026-10-19T22:56:31.378005Z'
