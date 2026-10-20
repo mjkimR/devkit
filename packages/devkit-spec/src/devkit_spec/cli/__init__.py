@@ -20,6 +20,7 @@ from devkit_spec.cli.proposals import proposal_group
 from devkit_spec.cli.scope import scope_group
 from devkit_spec.cli.search import search_cmd
 from devkit_spec.cli.specs import spec_new_cmd
+from devkit_spec.cli.worker import worker_group
 
 DISTRIBUTION = "devkit-spec"
 
@@ -55,3 +56,4 @@ cli.add_command(search_cmd)
 cli.add_command(spec_new_cmd)
 cli.add_command(entrypoints_group)
 cli.add_command(scope_group)
+cli.add_command(worker_group)

@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: promoted
+status: resolved
 created_at: 2026-10-19
 ---
 
@@ -55,5 +55,10 @@ reviewer return, unverified_areas: "Exact file list of the diff from <base> to <
 HEAD still equals <head> (no shell ...)"
 ```
 
-- **Disposition**: `PROP-worker-range-validation`: compared heads and changed-path information for read-only
+- **Disposition**: `SPEC-worker-range-validation`: compared heads and changed-path information for read-only
   reviewer payloads, generated with the existing worker-result checks.
+
+- **Verified disposition**: `SPEC-worker-range-validation` adds required actual `changed_paths` and compared
+  commits to both reviewer payloads, with JSON inspection evidence or a Git diff before the worker record exists.
+  The 23 Git/CLI regression tests verify compared heads and changed paths; independent code review round 2
+  passed with no findings. The reconciliation reviewer receives this branch's complete changed-file list.

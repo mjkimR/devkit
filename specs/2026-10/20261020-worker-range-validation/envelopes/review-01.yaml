@@ -1,0 +1,41 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T01:05:19.317314Z'
+status: completed
+summary: round 1; independent code reviewer found four committed-record and text-output contract defects.
+findings:
+- issue: Committed envelope collection includes files the existing envelope check ignores.
+  evidence: packages/devkit-spec/src/devkit_spec/worker/inputs.py:76
+  failure_condition: Committed README.md, .gitkeep or temporary files under envelopes cause ENVELOPE_INVALID and can prevent previous-base derivation.
+  suggested_action: Apply is_envelope_name before collect_envelopes and test ignored files in current and previous records.
+  resolution: open
+  severity: P1
+- issue: Workflow evaluation reads uncommitted unit records contrary to the committed-record requirement.
+  evidence: packages/devkit-spec/src/devkit_spec/worker/inspect.py:140
+  failure_condition: Dirty decisions, envelopes, tasks or anchors alter wrapped workflow next while envelope evidence reads HEAD.
+  suggested_action: Evaluate committed records or mark workflow not-run when dirty records can affect evaluation; add regression coverage.
+  resolution: open
+  severity: P1
+- issue: Text output reports paths inside scope when scope is unavailable.
+  evidence: packages/devkit-spec/src/devkit_spec/cli/worker.py:62
+  failure_condition: Failed scope derivation with changed paths still emits outside=no.
+  suggested_action: Omit outside when outside_scope is absent and test text output.
+  resolution: open
+  severity: P1
+- issue: Text rendering dumps nested check payloads and places wrapped advisories on stdout.
+  evidence: packages/devkit-spec/src/devkit_spec/cli/worker.py:64
+  failure_condition: Envelope history or structured wrapped advisories are serialized in text check sentinels instead of concise facts and advisory stderr.
+  suggested_action: Render concise facts and actionable findings, render structured advisories on stderr through helpers, retain complete JSON and test routing.
+  resolution: open
+  severity: P1
+assumptions:
+- Native isolated context with emulated read-only boundaries; unchanged HEAD and clean status verified.
+checks:
+  tests: PASS 1069 affected tests and 19 focused tests
+  lint: PASS package lint and cumulative rules
+diff_scope:
+  base: c2e72c23181751483cf5a6d836d2e3f42bd47315
+  head: 29aebf5ab0317637962fd986f6cd3b1fbc519b9d
+activity_effort: high

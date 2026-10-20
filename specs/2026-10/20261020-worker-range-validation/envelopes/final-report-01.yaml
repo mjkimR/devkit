@@ -1,0 +1,23 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T01:12:44.250700Z'
+status: completed
+summary: Implemented read-only worker inspection with committed input derivation, provenance, existing checks and reviewer-ready paths. Four round-one findings fixed; independent code round 2 and reconcile round 1 passed. Living Spec and source reviewer feedback reconciled.
+findings: []
+assumptions:
+- Handoff premises checked; existing parsers and collector reused with no new dependencies or envelope fields.
+- 'Host scope remains authoritative: derived Source feedback entries include two explicitly excluded follow-ups; use full payload scope override when validating.'
+- Native support contexts used with emulated read-only/path boundaries verified by Git state; code and reconcile reviews independently passed.
+unverified_areas:
+- Final integration is outside this worker turn and requires Host handling of dev-integration.
+checks:
+  tests: PASS 23 focused Git/CLI tests; just test-affected selected 1073 tests, all passed
+  build: PASS live devkit spec worker inspect CLI smoke exit 0 with all seven checks pass
+  lint: PASS just lint-check spec; just check spec; cumulative rules zero errors/warnings; git diff --check
+  scope: PASS all changed paths within supplied write boundaries; worktree clean before report
+diff_scope:
+  base: c2e72c23181751483cf5a6d836d2e3f42bd47315
+  head: 05001946c264d6121fb39e088eba040cab47d1df
+activity_effort: high

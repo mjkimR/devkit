@@ -1,0 +1,19 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-20T00:00:47.183922Z'
+status: completed
+summary: Removed ancillary ASCII/marker exceptions and duplicate explanation; rewrote all review examples in English and aligned proposal/PADR review guidance. Core first-sentence, point-format, content and work-status instructions remain. Only Planning documents changed.
+findings: []
+assumptions:
+- Host self-verified this bounded cleanup within the previously independently reviewed medium Planning activity; no new independent-review claim.
+unverified_areas:
+- No deployed instruction or model-behavior change tested; final plan acceptance remains pending.
+checks:
+  content: PASS no ASCII fallback clause or Korean text in current proposal, PADRs or material documents; four English example types remain
+  rules: PASS proposal document rules and whitespace check
+diff_scope:
+  base: c45b4182a27635c216fca3c4d3320c3416a4ba50
+  head: 5841f2901fe367d4b02beccdb4dee5492424a2de
+activity_effort: medium
