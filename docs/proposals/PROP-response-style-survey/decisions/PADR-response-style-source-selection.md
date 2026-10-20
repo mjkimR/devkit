@@ -35,7 +35,7 @@ reply-style project. All are evaluated by the same relevance and evidence criter
 separate class with their own license gaps. Record each source, its scope and limitations; do not count shared
 or unverified ancestry as independent votes. Transfer ideas using original wording, never source examples,
 structure or copyleft/unknown-license expression. Track each candidate rule to a source idea or explicit local
-requirement and later to observed fixture results.
+requirement and the agreed example review. Link observed results when an optional live comparison is undertaken.
 
 ## 5. Consequences
 
