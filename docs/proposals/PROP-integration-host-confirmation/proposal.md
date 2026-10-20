@@ -1,7 +1,7 @@
 ---
 id: PROP-integration-host-confirmation
-title: Native integration confirmation on hosts beyond Codex
-summary: Researches and adds native integration confirmation surfaces for Claude Code, Antigravity and other hosts that keep the binding to the request and never let the agent approve itself.
+title: Integration onboarding and diagnostics for Codex CLI and Claude Code
+summary: "Evaluate remaining integration onboarding and registration-diagnostic gaps for Codex CLI and the Claude Code terminal CLI, whose native form approval paths are already supported. Keep other host surfaces outside scope."
 status: draft                         # draft | reviewing | accepted | rejected
 created_at: 2026-10-19
 target_area: integration/
@@ -12,56 +12,69 @@ dev_effort: medium                    # low | medium | high (hint for Developmen
 milestone: MS-multi-host-native-integration
 boundaries:
   owns:
-    - integration/
-    - host/
     - packages/devkit-dist/src/devkit/host/
-    - packages/devkit-spec/src/devkit_spec/
+    - docs/capabilities/host/
+    - docs/capabilities/integration/
   excludes:
     - docs/decisions/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
 workflow: sdd-proposal
 ---
 
-# [PROP-integration-host-confirmation] Native integration confirmation on hosts beyond Codex
 
-- **Split from**: `SPEC-integration-follow-ups` (its question Q4), split during that proposal's Planning, which kept
-  only the base advances. Created without `decomposed_from`: `devkit spec proposal new --decomposed-from` refuses a
-  source in Planning (`SPEC_PROPOSAL_IN_PLANNING`).
+# [PROP-integration-host-confirmation] Integration onboarding and diagnostics for Codex CLI and Claude Code
+
 - **Source feedback**: `FB-multi-host-integration-ergonomics`.
 - **Related**: `CAP-INT-mcp-services`, `CAP-HOST-lifecycle-observation`, `ADR-integration-approval-asserted`,
-  `MAT-native-approval-host-comparison`, `SPEC-claude-terminal-mcp-approval`.
+  `SPEC-claude-terminal-mcp-approval`.
 
 ## 1. Background & Hypothesis
 
-Native integration confirmation runs through MCP form elicitation (`integration_integrate` with
-`authority="mcp-elicitation"`). Hosts without elicitation, or without the projected `devkit` MCP server, get
-`INTEGRATION_CONFIRMATION_UNAVAILABLE` and fall back to `devkit worktree finish <branch> --merge --local-only` after a
-conversational approval.
+The supported interactive native form-approval paths already include Codex CLI and the Claude Code terminal CLI.
+`SPEC-claude-terminal-mcp-approval` verified and documented the Claude terminal path without changing the server.
+The server checks advertised form capability rather than a host-name allowlist. This proposal does not need to add
+another approval surface for either CLI.
 
-What is already known (from the Planning of `SPEC-integration-follow-ups`): the Claude Code terminal CLI is a
-verified native path (`SPEC-claude-terminal-mcp-approval`, docs only), and the `Confirmation` callable in
-`devkit.host.mcp` is host-agnostic form elicitation. What is left is research-led.
+Codex registration and inspection are available through `devkit host mcp setup/status --host codex`. Claude Code
+uses its own `claude mcp add/get/remove` commands with the retained runtime/base printed by devkit configuration;
+there is no devkit Claude setup/status adapter. Registration diagnostics do not prove discovery, visible approval
+or permission-prompt behavior. A missing projected server is different from a client lacking form capability.
 
-Hypothesis: each remaining host offers, or lacks, a confirmation surface that binds to `request.id` and the approved
-scope and that the agent cannot answer itself; devkit adds setup and routing only where such a surface exists.
+Only Codex CLI and the Claude Code terminal CLI are relevant to this personal repository. The hypothesis to test
+is whether their actual setup and diagnostic differences justify a small adapter or clearer guidance. Keeping the
+existing manual Claude route is a valid outcome if it meets the observed need.
 
 ## 2. Technical Spike Questions
 
-- **Q1 (Surfaces)**: which confirmation surfaces do Claude Desktop, the Claude Code VS Code extension, the Agent SDK,
-  Antigravity and OpenCode offer, verified on each host, and which keep the binding to `request.id` and the approved
-  scope without letting the agent approve itself?
-- **Q2 (Setup)**: does a `devkit host mcp setup --host claude` adapter (and equivalents) belong in `devkit.host`, and
-  what does it configure?
-- **Q3 (Routing)**: how `spec-integrate` routes per host between native confirmation and the CLI fallback.
+- **Q1 — Actual friction:** Which concrete registration, stale-runtime, reconnect or tool-discovery problems remain
+  in the two CLI workflows? Compare current documented commands with an actual local setup before proposing code.
+- **Q2 — Minimal solution:** Do existing Claude commands and onboarding guidance suffice, or would a bounded
+  `devkit host mcp setup/status --host claude` adapter remove repeated work? Define idempotence, explicit replacement,
+  retained-runtime checks and failure behavior without treating registration as successful native confirmation.
+- **Q3 — Evidence and routing:** Which CLI versions and interactive permission modes have verified visible form
+  acceptance, rejection and cancellation? Record unknowns explicitly and retain conversational CLI fallback when
+  the running client cannot show the form. Add mode-specific experiments only for actual usage, not a host matrix.
 
 ## 3. Proposed Design & Impact
 
-To be designed in this proposal's Planning, in step with `MS-multi-host-native-integration`. The confirmation text
-and binding come from `SPEC-integration-follow-ups` (confirmation target and its descendants within one call).
+No adapter or new command is selected. Planning first compares no change, concise onboarding corrections and a
+Claude registration/inspection adapter. Keep the existing server, request binding, user-only affirmative approval
+and authorization boundary. Configuration changes remain explicit; no automatic host settings or blanket grants.
+
+Expected impact is limited to host onboarding/diagnostics and their documentation. Identify concrete tests and
+additional paths before Development. Any needed integration routing change must be justified by an observed
+failure in one of the two supported CLIs, not by hypothetical support for another surface.
+
+Verification should show matching registration is unchanged, replacement requires explicit intent, worktree or
+stale runtime references are reported accurately, and registration success is distinguished from tool discovery
+and visible user approval. A native decline/cancel must perform no integration mutation. Reuse existing evidence
+where applicable and state what has not been exercised.
+
+Non-goals: Claude Desktop, VS Code extensions, Agent SDK, Antigravity, OpenCode or other hosts; a new approval
+protocol; agent self-approval; new integration execution behavior; and automatic configuration changes.
 
 ## 4. Lifecycle & Retirement Criteria
 
-- Preliminary decisions: `devkit spec proposal padr integration-host-confirmation "<title>" --summary "<what it decides>"`.
-- Research: collect host evidence in `materials/`.
-- On acceptance (`plan-accept`): hand off with `devkit spec proposal handoff integration-host-confirmation`.
-- On rejection: `status: rejected` with the user's reason in the commit message.
+This remains a draft. Review concrete CLI friction before deciding whether implementation is needed. Close with
+rationale if existing commands and guidance suffice; otherwise settle the minimum scope and verification at
+Planning before acceptance. Historical research materials remain unchanged and do not expand this proposal's scope.
