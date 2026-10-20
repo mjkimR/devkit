@@ -59,12 +59,13 @@ def entrypoint_bearing(path: str) -> bool:
     return living.startswith(_LIVING_DIRECTORIES) and living.endswith(".md")
 
 
-def exists(root: Path, path: str) -> bool:
-    """Whether the normalized ``path`` is a file or directory inside ``root``, symbolic links resolved."""
+def exists(root: Path, path: str, *, directory: bool = False) -> bool:
+    """Whether the normalized ``path`` is a file or directory inside ``root``, symbolic links resolved; with
+    ``directory`` only a directory counts."""
     if path == ROOT:
         return True
     try:
         resolved = resolve_within(root, path)
     except UnsafePathError:
         return False
-    return resolved.is_dir() or resolved.is_file()
+    return resolved.is_dir() or (not directory and resolved.is_file())

@@ -17,7 +17,7 @@ plan: PLAN-envelope-record-gaps
     `packages/devkit/tests/workflow/`
   - _Requirements: AC-06, AC-07_
   - **Verification**: `just test devkit workflow`
-- [ ] **Task 3**: `RULE-proposal-boundaries` with its guide, tests and bundle registration
+- [x] **Task 3**: `RULE-proposal-boundaries` with its guide, tests and bundle registration
   - **_Boundary**: `packages/devkit-spec/src/devkit_spec/rules/`, `packages/devkit-spec/src/devkit_spec/entrypoints/paths.py`,
     `packages/devkit-spec/src/devkit_spec/bundle/rules/proposal_boundaries/`, `packages/devkit-spec/src/devkit_spec/bundle/bundle.toml`,
     `packages/devkit-spec/tests/`

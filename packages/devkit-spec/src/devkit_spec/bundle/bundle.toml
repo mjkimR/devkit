@@ -164,6 +164,12 @@ id = "code-entrypoints"
 kind = "rule"
 source = "rules/code_entrypoints"
 
+# A proposal's target_area and boundaries.owns entries name existing paths (warning).
+[[assets]]
+id = "proposal-boundaries"
+kind = "rule"
+source = "rules/proposal_boundaries"
+
 # Searchable documents carry a short English summary, the main signal of document search.
 [[assets]]
 id = "document-summary"
@@ -261,6 +267,7 @@ assets = [
     "reconcile-contract",
     "document-summary",
     "code-entrypoints",
+    "proposal-boundaries",
     "templates",
     "spec",
     "spec-next",
