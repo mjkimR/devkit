@@ -16,6 +16,7 @@ from pathlib import Path
 
 from devkit.core import LockHeldError as CoreLockHeldError
 from devkit.core import UnsafePathError, atomic_write_bytes, file_lock
+from devkit.core.mcp_context import guard_execution
 from devkit.distribution.content import Content, json_content
 from devkit.distribution.errors import LockHeldError, PendingTransactionError, RecoveryError, UnsafeWorkspaceError
 from devkit.distribution.installation.workspace import (
@@ -85,6 +86,7 @@ def prune_empty_parents(root: Path, name: str, *, stop: str | None = None) -> No
     parent = (root / name).parent
     while parent != boundary and parent.is_relative_to(boundary):
         try:
+            guard_execution()
             parent.rmdir()
         except OSError:
             return
@@ -187,6 +189,7 @@ def require_writable(root: Path, changes: dict[str, Content | None]) -> list[str
 def _remove_emptied(root: Path, name: str) -> None:
     """Remove the directory ``name`` that a file replaces, its deletions applied: only empty directories are left."""
     for current, _, _ in os.walk(root / name, topdown=False):
+        guard_execution()
         os.rmdir(current)
     _fsync_directory((root / name).parent)
 
@@ -198,6 +201,7 @@ def _prune_created(root: Path, directories: list[str]) -> None:
         if any(root.joinpath(*parts[:depth]).is_symlink() for depth in range(1, len(parts) + 1)):
             continue
         try:
+            guard_execution()
             root.joinpath(*parts).rmdir()
         except OSError:
             continue
@@ -208,6 +212,7 @@ def replace_file(path: Path, content: Content | None) -> None:
 
     Either way the directory entry is ``fsync``ed before this returns.
     """
+    guard_execution()
     if content is not None:
         atomic_write_bytes(path, content.data, mode=content.mode)
         return
@@ -309,6 +314,7 @@ def _legacy_journal_error() -> RecoveryError:
 
 
 def recover_locked(root: Path) -> int:
+    guard_execution()
     journal = read_json(root, JOURNAL)
     if journal is None:
         return 0
@@ -385,6 +391,7 @@ def apply_changes(root: Path, changes: dict[str, Content | None]) -> None:
     atomic_write(root, JOURNAL, Content(json_content(journal).data, 0o600))
     try:
         for name, content in ordered:
+            guard_execution()
             if name in replaced:
                 _remove_emptied(root, name)
             atomic_write(root, name, content)

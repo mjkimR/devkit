@@ -20,6 +20,7 @@ from devkit.advisory import AdvisoryError, Level
 from devkit.core.git import run_git
 from devkit.core.local_config import read_effective_config
 from devkit.core.locks import file_lock
+from devkit.core.mcp_context import guard_execution
 from devkit.host.errors import HostError
 
 LEDGER = ".devkit/transient/mcp/registrations.json"
@@ -401,6 +402,7 @@ def plan(
 
 
 def _write(path: Path, value: tuple[bytes, int] | None, anchor: Path) -> None:
+    guard_execution()
     _safe(path, anchor)
     if value is None:
         path.unlink(missing_ok=True)
@@ -466,6 +468,7 @@ def apply(result: RegistrationPlan, *, locked: bool = False) -> None:
         if key in DESTINATIONS.values() and (_tracked(result.root, key) or not _ignored(result.root, key)):
             raise RegistrationError("host destination became tracked or visible before write; recovery required")
         _write(result.path(key), result.after[key], anchor)
+    guard_execution()
     (result.root / JOURNAL).unlink()
 
 
@@ -526,6 +529,7 @@ def recover(root: Path) -> None:
             if _snapshot(result.path(key), anchor) not in (result.before[key], result.after[key]):
                 raise RegistrationError("external edits interrupted registration recovery")
             _write(result.path(key), result.before[key], anchor)
+        guard_execution()
         path.unlink()
     except (ValueError, KeyError, TypeError) as exc:
         raise RegistrationError("malformed registration journal; mutation refused") from exc

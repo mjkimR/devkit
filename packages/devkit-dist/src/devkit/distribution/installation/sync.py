@@ -14,6 +14,7 @@ from devkit.advisory import AdvisoryError, ExitCode, Level
 from devkit.core.errors import ArgumentError
 from devkit.core.git import run_git
 from devkit.core.local_config import LOCAL_CONFIG_PATH
+from devkit.core.mcp_context import guard_execution
 from devkit.core.project import git_toplevel, require_devkit_root
 from devkit.core.receipt import (
     CONFIG_PATH,
@@ -861,8 +862,12 @@ def sync_project(
     if environment is not None and environment not in ("local", "cloud"):
         raise ArgumentError("environment must be local or cloud")
     root = require_project_dir(root)
+    if not dry_run:
+        guard_execution()
     # A dry run (``--dry-run``, ``--check``) writes nothing, so it reads under the shared lock like any reader.
     with registrations.clone_lock(root, dry_run=dry_run), project_lock(root, shared=dry_run):
+        if not dry_run:
+            guard_execution()
         if not dry_run and not locked:
             registrations.recover(root)
         captured = local_render.inputs(root)
@@ -1067,7 +1072,9 @@ def recover_project(root: Path) -> int:
 def sync_registrations(root: Path) -> registrations.RegistrationPlan:
     """Reconcile only optional local registrations after locked worktree asset restoration."""
     root = require_project_dir(root)
+    guard_execution()
     with registrations.clone_lock(root), project_lock(root):
+        guard_execution()
         registrations.recover(root)
         result = registrations.plan(root, read_config(root).agents)
         registrations.apply(result)

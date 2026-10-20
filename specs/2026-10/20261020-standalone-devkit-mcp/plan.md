@@ -83,3 +83,10 @@ still refuse locked sync. This narrow lifecycle expansion was authorized by the 
 Entrypoint derivation was reviewed: broad package, tooling and documentation candidates are rejected as unrelated
 joins. Existing focused host, runtime/core binding, integration, handoff and lifecycle paths remain the useful
 capability entrypoints; no package-wide entrypoints are added automatically.
+
+
+The after-lock review exposed a subprocess boundary shared by locked asset restoration and registration setup.
+Trusted lifecycle children therefore inherit a refusal-only workspace identity constraint through their environment.
+It contains no confirmation, request allowlist or terminal-removal exception; native approval remains process-local.
+This retains the selected worktree interpreter/package semantics while permitting child operations to recheck the
+original Host owner under locks and before writes. The parent also checks immediately after child completion.

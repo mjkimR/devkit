@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+import os
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
@@ -89,6 +91,9 @@ def guard_execution(*, terminal: bool = False) -> None:
     binding = _BINDING.get()
     if binding is not None:
         binding.guard(terminal=terminal)
+    raw = os.environ.get(CONSTRAINT_ENV)
+    if raw is not None:
+        _guard_constraint(raw)
 
 
 def capture_terminal_removal(path: Path) -> None:
@@ -97,3 +102,43 @@ def capture_terminal_removal(path: Path) -> None:
     if binding is not None and path.resolve() == binding.workspace:
         binding.guard()
         binding.terminal_removal = binding.workspace
+
+
+CONSTRAINT_ENV = "DEVKIT_MCP_EXECUTION_CONSTRAINT"
+
+
+def _guard_constraint(raw: str) -> None:
+    """A child restriction can only refuse execution; it grants no invocation or approval authority."""
+    try:
+        value = json.loads(raw)
+        if set(value) != {"workspace", "common", "identity"}:
+            raise ValueError("invalid restriction fields")
+        workspace = Path(value["workspace"])
+        if not workspace.is_absolute():
+            raise ValueError("relative workspace")
+        current = workspace.stat()
+        if [current.st_dev, current.st_ino] != value["identity"] or str(common_directory(workspace)) != value["common"]:
+            raise McpWorkspaceError("the owning workspace identity changed in a child operation")
+        if resolve_execution_environment(workspace).environment != "local":
+            raise McpInteractiveError("cloud execution stops the remaining child operation")
+    except (ValueError, TypeError, KeyError, OSError, AdvisoryError) as exc:
+        if isinstance(exc, McpWorkspaceError):
+            raise
+        raise McpWorkspaceError("the child owning-workspace restriction is unavailable or malformed") from exc
+
+
+def constraint_environment() -> dict[str, str]:
+    """Export only a refusal constraint for trusted child operations, never native approval or cleanup state."""
+    binding = _BINDING.get()
+    if binding is None:
+        return {}
+    guard_execution()
+    return {
+        CONSTRAINT_ENV: json.dumps(
+            {
+                "workspace": str(binding.workspace),
+                "common": str(binding.common),
+                "identity": list(binding.identity),
+            }
+        )
+    }

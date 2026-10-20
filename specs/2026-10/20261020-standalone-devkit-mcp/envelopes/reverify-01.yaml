@@ -1,0 +1,38 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T06:32:32.931285Z'
+status: completed
+review: review-01.yaml
+summary: Independent re-review confirmed all four original findings fixed by recovery eligibility, retained exclusions, fresh lifecycle registration and dependency probing.
+findings:
+- issue: Registration recovery can delete or overwrite a destination that became tracked after interruption.
+  evidence: packages/devkit-dist/src/devkit/host/registrations.py:489
+  failure_condition: A written host file is force-added after interruption; recovery restores its absent snapshot without Git eligibility checks.
+  suggested_action: Validate tracked and ignored eligibility before any recovery mutation and immediately before each write; add regression.
+  resolution: resolved
+  severity: P1
+- issue: Recovery can remove a shared exclusion that another linked checkout now relies on.
+  evidence: packages/devkit-dist/src/devkit/host/registrations.py:493
+  failure_condition: Checkout B registers using the exclusion written by interrupted checkout A; A rolls the unchanged exclusion back.
+  suggested_action: Preserve installed narrow exclusions with ownership bookkeeping and guidance; test two-checkout recovery.
+  resolution: resolved
+  severity: P1
+- issue: An available runtime makes normal fresh-worktree locked sync fail before restoring assets.
+  evidence: packages/devkit-dist/src/devkit/distribution/installation/sync.py:875
+  failure_condition: Fresh selected-host checkout has no entry or ledger and locked sync refuses the planned initialization.
+  suggested_action: Initialize fresh-worktree registrations while preserving locked asset synchronization and environment guards; test start and handoff.
+  resolution: resolved
+  severity: P1
+- issue: Runtime retention validation omits the separately installed advisory dependency.
+  evidence: packages/devkit-mcp/src/devkit_mcp/configuration.py:21
+  failure_condition: Advisory is editable-installed from the removable task but probe reports only runtime, core and service entrypoints.
+  suggested_action: Validate required separately installed runtime dependency locations and add candidate-selection regression.
+  resolution: resolved
+  severity: P1
+checks:
+  tests: PASS full fallback 3884 passed 14 skipped; five wheel matrices passed
+diff_scope:
+  base: ''
+  head: ccdc990b71c6b70348a913a66b824ab820e87358

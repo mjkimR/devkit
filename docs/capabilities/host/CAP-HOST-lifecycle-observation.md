@@ -1,7 +1,7 @@
 ---
 id: CAP-HOST-lifecycle-observation
 title: "Host Lifecycle Observation"
-summary: "Host lifecycle hook dispatch, MCP transport, explicit Codex MCP registration (Claude Code registers with its own CLI), and read-only installation diagnostics."
+summary: "Host lifecycle hook dispatch, exact project MCP registration for Codex and Claude Code, and read-only installation diagnostics; optional MCP transport lives in devkit-mcp."
 area: host
 status: active
 entrypoints:
@@ -13,7 +13,7 @@ created_at: 2026-10-17
 
 # [CAP-HOST-lifecycle-observation] Host Integration
 
-`devkit.host` (shipped by `devkit-dist`, so native hooks and the MCP server work without `devkit-agt`) connects host
+`devkit.host` (shipped by `devkit-dist`, so native hooks work without `devkit-agt`) connects host
 lifecycle events to installed service handlers. `devkit.distribution` deploys hook
 definitions and manages their registrations. The host module owns native input/output and service dispatch; a
 service owns its domain behavior. The integration service uses this boundary without placing Git

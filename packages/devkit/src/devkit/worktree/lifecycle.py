@@ -34,6 +34,7 @@ from devkit.core.errors import ArgumentError, GitError
 from devkit.core.git import run_git
 from devkit.core.local_config import LOCAL_CONFIG_PATH, read_local_config
 from devkit.core.logs import get_logger
+from devkit.core.mcp_context import constraint_environment, guard_execution
 from devkit.core.project import require_git_toplevel
 from devkit.core.receipt import RECEIPT_PATH
 from devkit.worktree.errors import (
@@ -1035,8 +1036,12 @@ def _execute(argv: list[str], cwd: Path, label: str, timeout: float) -> subproce
     """Run ``argv`` in ``cwd`` with its output captured, without the caller's ``VIRTUAL_ENV``, in a session of its
     own (``_session``); why it could not run when it timed out or did not start."""
     env = {key: value for key, value in os.environ.items() if key != "VIRTUAL_ENV"}
+    env.update(constraint_environment())
     try:
-        return _session(argv, cwd, env, timeout)
+        guard_execution()
+        completed = _session(argv, cwd, env, timeout)
+        guard_execution()
+        return completed
     except subprocess.TimeoutExpired:
         return f"{label} did not finish within {timeout:.0f}s"
     except OSError as exc:

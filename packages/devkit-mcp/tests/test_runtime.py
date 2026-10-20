@@ -155,3 +155,83 @@ def test_probe_reports_advisory_and_candidate_rejects_removable_dependency(clone
     )
     with pytest.raises(configuration.RuntimeUnavailable):
         configuration.descriptor(task, executable=str(candidate))
+
+
+@pytest.mark.parametrize("operation", ["registration", "locked"])
+def test_child_sync_rechecks_original_owner_after_lock(clones, operation):
+    import json
+    import os
+    import sys
+
+    from devkit.core.mcp_context import CONSTRAINT_ENV, constraint_environment
+
+    base, task = clones
+    with invocation(ExecutionBinding(base, base)):
+        restricted = constraint_environment()
+    assert set(json.loads(restricted[CONSTRAINT_ENV])) == {"workspace", "common", "identity"}
+    script = """
+import json, sys
+from contextlib import contextmanager
+from pathlib import Path
+from devkit.advisory import AdvisoryError
+from devkit.distribution.installation import sync
+owner, target = Path(sys.argv[1]), Path(sys.argv[2])
+@contextmanager
+def lock(*args, **kwargs):
+    (owner / ".devkit/config.local.toml").write_text('[execution]\\nenvironment="cloud"\\n')
+    yield
+sync.registrations.clone_lock = lock
+sync.registrations.apply = lambda *a, **k: (_ for _ in ()).throw(AssertionError("registration mutation"))
+sync.commit_locked = lambda *a, **k: (_ for _ in ()).throw(AssertionError("asset mutation"))
+try:
+    if sys.argv[3] == "registration": sync.sync_registrations(target)
+    else: sync.sync_project(target, [], locked=True)
+except AdvisoryError as exc:
+    print(json.dumps({"code": exc.code}))
+else:
+    raise AssertionError("owner cloud transition was ignored")
+"""
+    completed = subprocess.run(
+        [sys.executable, "-c", script, str(base), str(task), operation],
+        env={**os.environ, **restricted},
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert json.loads(completed.stdout)["code"] == "MCP_INTERACTIVE_UNAVAILABLE"
+    assert not (task / ".devkit/config.local.toml").exists()
+    assert not (task / ".mcp.json").exists()
+
+
+def test_constraint_never_inherits_terminal_removal_authority(clones, monkeypatch):
+    from devkit.core.mcp_context import constraint_environment
+
+    base, task = clones
+    with invocation(ExecutionBinding(task, base)):
+        restricted = constraint_environment()
+        capture_terminal_removal(task)
+        git(base, "worktree", "remove", str(task))
+        guard_execution(terminal=True)
+    for key, value in restricted.items():
+        monkeypatch.setenv(key, value)
+    with pytest.raises(McpWorkspaceError):
+        guard_execution(terminal=True)
+
+
+def test_cloud_transition_stops_transaction_writes_and_retains_journal(clones, monkeypatch):
+    from devkit.distribution.content import Content
+    from devkit.distribution.installation import transaction
+
+    base, task = clones
+    original = transaction.replace_file
+
+    def write_then_change(path, content):
+        original(path, content)
+        if path == task / transaction.JOURNAL:
+            cloud(base)
+
+    monkeypatch.setattr(transaction, "replace_file", write_then_change)
+    with invocation(ExecutionBinding(base, base)), pytest.raises(McpInteractiveError):
+        transaction.apply_changes(task, {"asset.txt": Content(b"must not be written", 0o644)})
+    assert not (task / "asset.txt").exists()
+    assert (task / transaction.JOURNAL).exists()

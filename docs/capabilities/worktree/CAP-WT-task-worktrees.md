@@ -39,7 +39,10 @@ The module is SDD-agnostic: it does not decide which tasks use a worktree, and i
    using the same interpreter. Dist discovers the optional provider; no runtime import is added to worktree.
    Without the provider this is a no-op. Existing registration conflicts still refuse locked sync; absent fresh
    entries are initialized only in this separate step. Native handoff rechecks its environment before this step.
-   Registration advisories are returned with the result and a failure keeps the created worktree.
+   Registration advisories are returned with the result and a failure keeps the created worktree. Trusted native
+   handoff children carry a refusal-only identity constraint for the original owning workspace; sync checks it
+   after locks and before each transaction write. No approval or terminal-cleanup authority crosses the process
+   boundary. The parent rechecks the constraint after child completion.
 
    Setup, sync and registration initialization run with stdin closed, in a session of their own: a timeout kills the whole process group (the shell and what it started, such as `uv sync`). Their output is discarded unless they fail; a failure or timeout is a `WORKTREE_SETUP_FAILED` or `WORKTREE_SYNC_FAILED` warning, and the worktree stays. The setup warning's `[FIX]` reruns the command. The sync runs with `--format json`, so its warning carries the sync's own error: the code and message (`RECEIPT_STALE`, `SELECTION_INVALID`, ...), its targets under the worktree, its `[DETAIL]` lines and its `[FIX]`, prefixed with the worktree path, since rerunning does not cure a stale receipt or a missing package; only an output that is not an error object (a timeout, a crash) gets the rerun command, with the advisory headlines kept ahead of the last lines. A reused worktree runs neither and preserves its local file byte-for-byte, including intentional absence. Created worktrees own independent snapshots: later base/task edits or deletion do not propagate. Direct `git worktree add` and independent clones do not copy local configuration.
 

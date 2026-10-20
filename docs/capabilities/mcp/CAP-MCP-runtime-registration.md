@@ -4,6 +4,11 @@ title: "MCP Runtime and Project Registration"
 summary: "An optional retained MCP runtime binds native approval to an explicit configuration workspace, while dist reconciles exact ignored project registrations without changing host trust or global settings."
 status: active
 area: mcp
+entrypoints:
+  - packages/devkit-mcp/src/devkit_mcp
+  - packages/devkit-dist/src/devkit/core/mcp.py
+  - packages/devkit-dist/src/devkit/core/mcp_context.py
+  - packages/devkit-dist/src/devkit/host/registrations.py
 created: 2026-10-20
 updated: 2026-10-20
 ---
@@ -82,3 +87,11 @@ approval tool. Workers do not request business approval. No extra chat approval 
 connected native forms work. Trust/tool/sandbox prompts remain independent. Missing UI is never approval: install
 and connect intentionally, or use an independently authorized explicit CLI/PR route. Real Codex and Claude terminal
 UI validation is separate evidence from simulated protocol tests; desktop and VS Code adapters are outside scope.
+
+
+Trusted lifecycle child operations inherit a refusal-only execution constraint naming the original configuration
+workspace, common Git identity and filesystem identity. It contains no request, approval allowlist or terminal
+removal state and cannot authorize any operation. Child sync rechecks that owner after clone/project locks and
+before transaction writes, including recovery. The target checkout's copied local configuration cannot replace
+the owner's constraint. Missing/changed owner identity or cloud transition stops remaining writes; partial
+transactions retain their journals for an independently authorized recovery. The parent rechecks on child return.

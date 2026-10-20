@@ -47,5 +47,5 @@ A plugin command is a devkit command, so it keeps the output contract an agent r
 - Use devkit through each module's public surface (`devkit.<module>` `__init__` exports and `devkit.core.cli`), never its private helpers. devkit makes breaking changes in place while it has no external consumers ([AGENTS.md](../../AGENTS.md#compatibility)), so a plugin pins devkit to a minor range and moves with it.
 
 `devkit-mcp` contributes the `mcp` command group. It supplies `config`, `setup`, `remove`, `status` and `serve`;
-`devkit host mcp` and `devkit-dist[mcp]` are absent. `serve` requires an explicit configuration workspace separate
+The former MCP subgroup under host and the dist MCP extra are absent. `serve` requires an explicit configuration workspace separate
 from the retained executor root. Its stdout is exclusively native MCP protocol traffic.

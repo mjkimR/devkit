@@ -154,4 +154,6 @@ then reconciles eligible project host entries separately from portable receipts.
 ledger, collision inspection and recoverable registration journal. It never imports `devkit_mcp` by module name.
 The fixed lock order is common Git exclusion lock followed by checkout project lock. Dry-run/check compute the same
 plan without registration writes; locked sync validates only and directs changed local registrations to ordinary
-sync. Tracked or visible foreign destinations remain untouched. See `CAP-MCP-runtime-registration`.
+sync. Fresh absent registrations are initialized separately after locked asset restoration. Trusted native
+lifecycle children carry only an owning-workspace refusal constraint, checked after locks and before transaction
+writes; approval authority remains in the Host invocation. Tracked or visible foreign destinations remain untouched. See `CAP-MCP-runtime-registration`.
