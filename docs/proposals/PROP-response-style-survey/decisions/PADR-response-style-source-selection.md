@@ -29,8 +29,9 @@ traceable pins and original expression. Keep source-practice claims separate fro
 
 ## 4. Decision Outcome
 
-Use the third option with the explicit screen and exclusions in `MAT-response-style-source-selection`. Six
-repositories have pinned prompt/license sources and current metadata. Three official writing guides are a
+Use the third option with the explicit screen and exclusions in `MAT-response-style-source-selection`. Seven
+repositories have pinned prompt/license sources and current metadata, including Attention Span as the identified
+original reference. Its relationship to the current style is not independent corroboration. Three official writing guides are a
 separate class with their own license gaps. Record each source, its scope and limitations; do not count shared
 or unverified ancestry as independent votes. Transfer ideas using original wording, never source examples,
 structure or copyleft/unknown-license expression. Track each candidate rule to a source idea or explicit local

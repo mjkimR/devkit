@@ -28,7 +28,8 @@ workflow: sdd-proposal
 
 The existing response-style has no recorded behavioral comparison. Popular prompt sources can identify useful
 practices, but stars are a screening signal and do not prove that their instructions improve replies. The
-previous single-source rewrite's origin is not independently audited or reused in this survey.
+original reference, Attention Span, is included explicitly as provenance; agreement with a derived style is not
+independent confirmation. Its published measurements are not devkit results.
 
 The selected direction is one portable style that preserves decision-relevant content, adapts length to the
 request and avoids unnecessary framing. Its improvement over the current style remains a hypothesis until the
@@ -39,7 +40,7 @@ in long sessions is unmeasured, and does not yet justify a shared distribution-c
 ## 2. Technical Spike Conclusions
 
 - **Q1 (Sources)**: Select OpenCode, Aider, Continue, gptme, Anthropic's official explanatory output-style plugin
-  and Goose. All six meet the >=1,000-star, non-archived, <=180-day default-branch-commit screen, with pinned
+  and Goose, plus the original reference Attention Span (`MAT-response-style-source-attention-span`). All seven meet the >=1,000-star, non-archived, <=180-day default-branch-commit screen, with pinned
   prompt/license sources. Add official Google, Microsoft and Toss writing guides as a separate evidence class.
   `MAT-response-style-source-selection` records current counts, source diversity, provenance limits, exclusions
   and the candidate-rule ledger. No majority vote treats unverified shared ancestry as independent evidence.
@@ -49,6 +50,10 @@ in long sessions is unmeasured, and does not yet justify a shared distribution-c
 - **Q3 (Measurement)**: Use twelve fixed English/Korean fixtures, no added bundle style/current/candidate arms,
   two fresh repetitions and at most 72 generation attempts per selected host. Preserve semantic obligations
   before optimizing form or length; publish raw synthetic outputs, blinded judgments and incomplete cells.
+  These are checks of observed behavior and rule compliance, not an objective measure of how good an answer is.
+  Readability, appropriate explanation depth and tone include subjective preference. A score cannot automatically
+  choose the style. The 72-attempt protocol is an unapproved structured comparison option; a few paired examples
+  can be the first inspection before choosing the collection scope.
   `PADR-response-style-measurement` and `MAT-response-style-measurement-design` define the protocol. Execution
   host, isolation method and collection budget remain the single open Planning question. Existing interactive
   native subagents inherit style and are not valid no-style baselines.
@@ -70,8 +75,10 @@ normal workflow; Development writes its spec, plan and tasks before editing the 
 
 Development freezes the baseline and fixtures, writes one original candidate and a small spec-local standard-library
 import/scoring script, collects the selected host cohort and records the first results. Reject a candidate that
-loses required facts or fails artifact/report obligations. Adopt it only when the predeclared paired criteria pass;
-otherwise retain the current style and publish the negative result. Each retained rule is labelled as existing
+loses required facts or fails artifact/report obligations. Any checks summarize constraint adherence; passing them alone does not select the preferred style.
+Present actual current/candidate examples and the tradeoffs for human judgment during the existing final change
+review. Preserve the current style when the candidate breaks required content or cannot be justified; negative
+results remain useful. Each retained rule is labelled as existing
 local policy, source-supported hypothesis or measured bundle behavior; no per-rule causal claim is inferred.
 
 The production change, if supported, is limited to the response-style bundle, its existing deployment tests and
@@ -80,7 +87,7 @@ opt-in packaging and projection for Codex, Claude Code and Antigravity. Deployme
 quality measurement; unmeasured hosts stay visible in the results. Shared guidance validation and
 `CAP-DIST-manifest-spec` remain unchanged. No report format or unrelated bundle changes.
 
-Verification: complete and uncontaminated result matrix for the selected host; original-source provenance and
+Verification: complete and uncontaminated results for the collection scope actually selected with the user; original-source provenance and
 license-scope review; scorer rejection tests for missing/duplicate records and incomplete facts; existing language
 and host-projection coverage; applicable lint/type checks, `just test-affected`, consumer smoke, repository rules
 and independent medium Development review. No live model call or production change occurs during Planning.

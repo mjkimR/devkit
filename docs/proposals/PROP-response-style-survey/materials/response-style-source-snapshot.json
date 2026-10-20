@@ -115,6 +115,23 @@
       "limit": "This is not evidence for answer-first or brevity. block/goose redirects to aaif-goose/goose and counts once. Extensions can add more guidance; the finding is limited to this base prompt.",
       "observed_at": "2026-10-19T23:04:18Z/2026-10-19T23:04:20Z",
       "archived": false
+    },
+    {
+      "key": "attention-span",
+      "name": "Attention Span",
+      "repo": "alexgreensh/attention-span",
+      "stars": 1475,
+      "branch": "main",
+      "pushed": "2026-10-12T23:49:08Z",
+      "commit_date": "2026-10-12T23:49:08Z",
+      "sha": "f5b6e80b48bd9fca4e4b513ef3fc02cb8ec15222",
+      "path": "output-styles/attention-kind.md",
+      "hash": "a9da2666c64da03b28a7c1b3de8d991dda7c4b1d9e38da99dff46c009e81d8b1",
+      "license": "AGPL-3.0",
+      "license_path": "LICENSE",
+      "observed_date_kst": "2026-10-20",
+      "archived": false,
+      "role": "Original reference identified by the user; not independent evidence about the derived devkit style."
     }
   ]
 }

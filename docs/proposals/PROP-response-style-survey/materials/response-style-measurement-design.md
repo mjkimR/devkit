@@ -10,7 +10,11 @@ created_at: 2026-10-20
 ## Goal and limits
 
 Compare no added bundle style (A), the frozen current rendered style (B), and one candidate (C). This is a small
-engineering pilot, not an estimate of population-wide quality or evidence that each individual rule causes a gain.
+practical inspection, not an estimate of population-wide quality or evidence that each individual rule causes a gain.
+Numbers and output syntax can be checked; readability, useful depth and tone remain partly subjective.
+The structured 72-attempt option below has not been selected or authorized. A few current/candidate examples can
+be inspected first, with the collection scope agreed before generation. Do not require a full benchmark merely
+to discuss style preferences, and never label a partial informal comparison as a completed structured run.
 Host defaults remain present in all arms. A baseline means no devkit response-style instruction, not no host prompt.
 The current interactive session and its native child agents are ineligible baselines when they inherit this
 repository's response-style instructions. A self-reported lack of inherited style is not proof of isolation.
@@ -71,7 +75,7 @@ Choose the host/execution method and any monetary/token ceiling with the user be
 Deployment/render tests for Codex, Claude Code and Antigravity do not count as live quality measurements. Publish a
 host-by-host coverage table. An unavailable host remains unmeasured, and results from another host do not fill it.
 
-## Scoring and promotion
+## Rule-compliance checks and subjective assessment
 
 The scorer enforces full cell identity `(host, model, arm, fixture, repetition)`, unique cells, no missing outputs,
 exact artifact constraints, and the presence of required numeric/identifier tokens. A token check cannot prove
@@ -84,7 +88,7 @@ unresolved, the fixture fails. Automated LLM judgment alone is not a proof of co
 
 A candidate is eligible only with zero failed semantic obligations, zero fabricated completion/actions, and all
 artifact/report constraints met across its 24 outputs; it must not introduce a failure the current style avoided.
-Primary style is a binary score per output, not a subjective ranking. Freeze these observable anchors with the
+Primary rule adherence is a binary score per output, not a subjective quality ranking. Freeze these observable anchors with the
 exact fixtures before collection; a fixture passes only if all its applicable primary anchors hold:
 
 | Fixtures | Primary pass anchors |
@@ -101,18 +105,20 @@ exact fixtures before collection; a fixture passes only if all its applicable pr
 Count primary passes across the two repetitions: each arm has a fixture score in `{0, 1, 2}`. A strict improvement
 means candidate score > current score; a tie means equality (including one pass each, regardless of which repeat
 passed); regression means candidate score < current score. Do not choose a preferred repeat or break a tie using
-unanchored prose preferences. For adoption require strict improvements on at least two fixtures from distinct
-intent categories, at least one of them held-out, and no regression on any held-out fixture. Apply the same binary
-rubric to all arms. Missing or unresolved judgments never become passes. These are engineering thresholds, not
+unanchored prose preferences. Describe improvements, ties and regressions by fixture and intent category, with held-out cases identified.
+Apply the same binary rubric to all arms. Any required-fact or output-contract failure blocks accepting that
+version; stylistic pass counts do not establish overall quality or choose the preferred style. Missing or unresolved judgments never become passes. These are rule-adherence observations, not
 significance tests; two repetitions do not establish a population effect.
 
-Report the unchanged current style when the candidate does not qualify; do not change the scoring contract to
-obtain a winner. Retained existing rules can remain local preferences when no isolated benefit is measured;
+Keep the factual/output-contract checks fixed; do not change them to excuse a candidate
+regression. Present representative paired outputs and disagreements so a person can judge whether the tone,
+amount of explanation and reading flow suit their needs. Keep the current style when a candidate cannot be
+justified. This happens within the existing final change review, not a new approval gate. Retained existing rules can remain local preferences when no isolated benefit is measured;
 source agreement and aggregate improvement do not establish per-rule causality. The native independent reviewer
 may audit anonymized outputs against this rubric because it is judging, not generating a no-style baseline.
 No additional external model-judge API calls are authorized by the 72-answer-generation budget; any such calls
-need their own agreed allowance. Qualitative readability comments are reported separately and cannot change the
-binary adoption decision.
+need their own agreed allowance. Qualitative readability preferences are reported separately and inform the style choice; they cannot waive
+incorrect facts or required-output omissions. No binary compliance score automatically decides adoption.
 
 Report lengths by language and intent only for semantically passing outputs. Show paired median and range for
 brief-intent cases; never optimize the detailed-request or mandatory-report cases by deleting content. Record

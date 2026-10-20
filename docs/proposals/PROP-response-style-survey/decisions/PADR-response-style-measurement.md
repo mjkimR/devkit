@@ -17,7 +17,8 @@ contaminate a native child-agent baseline; prompt-length reductions can conceal 
 ## 2. Decision Drivers
 
 Preserve decision-relevant content, compare reproducible conditions, include Korean and explicit depth requests,
-keep collection bounded, and distinguish measured quality from rendered host support.
+keep collection bounded, and distinguish observed rule adherence, subjective reading preferences and rendered
+host support. None is a universal answer-quality score.
 
 ## 3. Considered Options
 
@@ -30,20 +31,23 @@ keep collection bounded, and distinguish measured quality from rendered host sup
 
 ## 4. Decision Outcome
 
-Use twelve English/Korean fixtures, three style arms and two fresh repetitions, at most 72 generation attempts
-per selected host. `MAT-response-style-measurement-design` defines isolation, exact obligations, calibration and
+The structured comparison option uses twelve English/Korean fixtures, three style arms and two fresh repetitions,
+at most 72 generation attempts per selected host. This option has not been selected or authorized; a small set
+of paired examples is enough to begin a practical inspection, with collection scope chosen before execution. `MAT-response-style-measurement-design` defines isolation, exact obligations, calibration and
 held-out groups, blind semantic checks, promotion thresholds, error preservation and cost records. Select the
 host and execution budget with the user before live collection. Freeze observable binary primary anchors; sum
-the two passes per fixture, treat equal sums as ties, and require improvements in two intent categories including
-one held-out fixture with no held-out regression. Until then host coverage is an open Planning
+the two passes per fixture, treat equal sums as ties, and label changes by intent category, including held-out cases, without interpreting that compliance count as
+overall quality or automatically choosing a style. Until then host coverage is an open Planning
 question, not a claim of portability. Only synthetic inputs and owned style text are submitted.
 
 Keep fixture/result/scorer materials inside the Development spec Unit. The scorer is standard-library and
-imports generation results; it neither launches models nor defines a new distributed evaluation tool. Current
-style is retained when the candidate fails the frozen acceptance criteria.
+imports generation results; it neither launches models nor defines a new distributed evaluation tool. A candidate that violates factual or required-output obligations is revised or rejected. Style preference is a
+separate human judgment using actual examples and stated tradeoffs in the existing final review; no additional
+workflow approval gate is created.
 
 ## 5. Consequences
 
-Small-pilot results support only the tested cohort. Deterministic checks catch missing cells and malformed
+Small-pilot observations describe only the tested cohort and cannot establish how much better a reply is.
+Readability, useful depth and tone remain partly subjective; a metric is a proxy or contract check, not that judgment. Deterministic checks catch missing cells and malformed
 artifacts; semantic preservation needs independent judgment. No per-rule or cross-host effect is inferred from
 aggregate gains, and no unmeasured host is silently considered validated.

@@ -1,7 +1,7 @@
 ---
 id: MAT-response-style-source-selection
 title: Response-style survey source selection and rule candidates
-summary: "Selects six established prompt repositories and three official writing guides, separates source practice from measured effect, and records exclusions and rule-level limits."
+summary: "Selects six established prompt repositories, the original Attention Span reference and three official writing guides, separates source practice from measured effect, and records exclusions and rule-level limits."
 created_at: 2026-10-20
 ---
 
@@ -12,7 +12,8 @@ created_at: 2026-10-20
 Community repositories normally need at least 1,000 GitHub stars, a first-party public instruction with actual
 reply requirements, a readable license, no archive flag and a default-branch commit within 180 days of inspection.
 An official vendor source or official writing guide may be an explicit exception with its reason recorded. All
-six selected repositories meet the community screen without an exception. Stars indicate visibility and adoption,
+seven selected repositories meet the community screen without an exception. Attention Span is also retained as
+the original reference, independently of its popularity; its relation to this bundle is not independent evidence. Stars indicate visibility and adoption,
 not correctness, safety, quality or evidence of a rule's effectiveness. No relative star ranking selects a rule.
 
 Retain breadth of behavior: concise technical communication, mode-specific artifacts, completeness, educational
@@ -28,6 +29,7 @@ content alone is not current-source proof. `response-style-source-snapshot.json`
 
 | Source | Observed stars | Role in survey | Source record |
 | --- | ---: | --- | --- |
+| Attention Span | 1,475 | Original reference; presentation variants and published evaluation limits | `MAT-response-style-source-attention-span` |
 | OpenCode | 217,747 | Direct factual technical replies; model-specific prompt | `MAT-response-style-source-opencode` |
 | Aider | 49,645 | Short explanation plus an obligatory tool edit format | `MAT-response-style-source-aider` |
 | Continue | 36,267 | Code-only request and mode-specific formatting | `MAT-response-style-source-continue` |
@@ -50,7 +52,12 @@ agent behavior. Page-specific Microsoft and Toss reuse terms remain unresolved, 
 - Cursor/Windsurf rule collections are not evidence of those products' first-party defaults. No arbitrary
   community collection fills an unavailable official prompt.
 - Anthropic's former Explanatory style and the inspected plugin are one lineage. block/goose and aaif-goose/goose
-  are one project. The old unnamed AGPL inspiration is not reused or treated as an independently audited source.
+  are one project. The original AGPL inspiration is now identified as Attention Span in `MAT-response-style-source-attention-span`;
+  its ideas may be assessed with original synthesis, while its expression and benchmark code/data are not imported.
+
+Attention Span metadata and pinned files were retrieved separately on the same local date after the original
+six-source snapshot. Its published benchmark is a source report, not an independently reproduced devkit result.
+Agreement with a style that already drew from it is not new independent support.
 
 ## Rule ledger for one candidate
 
@@ -59,6 +66,7 @@ candidate text from requirements and the ideas below; do not follow any source's
 
 | Rule or pressure | Source practice / local requirement | Candidate treatment | Test or limit |
 | --- | --- | --- | --- |
+| Original attention-oriented reference | Attention Span; current bundle provenance | Compare the underlying idea with local requirements; retain original wording and assess presentation preferences separately. | Practical examples, not a claim of independent corroboration or demonstrated comprehension benefit. |
 | Direct factual lead | OpenCode; Google and Microsoft writing guides; existing local preference | Preserve answer-first while allowing artifacts to begin with their required syntax. | EN01/KO01 and EN02/KO02; not claimed universally present across all six repositories. |
 | Required content before brevity | Aider editing protocol; Continue code-only exception; local workflow contract | Preserve numbers, conditions, risks and all mandatory report fields. | All semantic obligations; KO06. |
 | Requested depth | gptme concise/completeness balance; Anthropic educational mode | Length follows intent. Do not adopt mandatory educational decorations. | EN03/KO03; length is descriptive, not a minimization objective. |
