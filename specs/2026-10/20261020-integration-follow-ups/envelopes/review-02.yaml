@@ -1,0 +1,14 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T23:40:10.757898Z'
+status: completed
+summary: 'round 2; code-reviewer reviewed fix c0fec97 in 8073e79..8aa705b against AC-07, AC-09, AC-12 and ADR-effective-policy-digest: digest compared before the ask check in both _land validations, providers.policy still refuses invalid config at an unchanged digest, merged=True path unchanged; the new test fails on the pre-fix order; no findings'
+findings: []
+checks:
+  tests: PASS pytest packages/devkit/tests/integration 62 passed; regression case fails on pre-fix order
+  lint: PASS devkit rules check --ci --base 8073e79 errors=0; ruff clean
+diff_scope:
+  base: 8073e799b7c54e3b592f7eec876120f4d47e6374
+  head: 8aa705ba359585a66e69703ec9c9463f2105a175
