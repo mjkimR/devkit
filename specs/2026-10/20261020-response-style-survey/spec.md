@@ -2,7 +2,7 @@
 id: SPEC-response-style-survey
 title: Apply the accepted response style
 summary: "Deploys conclusion-first replies with arrow-marked core sentences, preserved content and format exceptions, and rendered conversation language."
-status: planned
+status: in-progress
 created: 2026-10-20
 related_capabilities:
   - CAP-DIST-content-packages
