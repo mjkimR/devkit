@@ -1,0 +1,23 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T03:01:20.252685Z'
+status: completed
+review: review-01.yaml
+summary: 'Medium implementer reverified the independent P1 finding: preserve empty cells, keep subsequent rows, and handle omitted/surplus trailing cells by header column position.'
+findings:
+- issue: Removing every leading and trailing pipe discards empty table cells and suppresses subsequent Owner checks.
+  evidence: packages/devkit-spec/src/devkit_spec/rules/document_reference.py:246
+  failure_condition: A recognized glossary table contains a compact row with empty Avoid and Code identifiers cells; the missing Owner and following ordinary rows emit no violations.
+  suggested_action: Remove at most one outer pipe from each end and add compact-row plus following-row regression coverage.
+  resolution: resolved
+  severity: P1
+assumptions:
+- Self-reverification after mandatory independent medium code review; no change to intended root glossary boundary
+checks:
+  tests: PASS 1111 affected tests including compact/no-border/subsequent-row regressions
+  lint: PASS Ruff format Pyright
+diff_scope:
+  base: aa9e256ca1517a4413d1d33a3454bf23d747460a
+  head: aa9e256ca1517a4413d1d33a3454bf23d747460a

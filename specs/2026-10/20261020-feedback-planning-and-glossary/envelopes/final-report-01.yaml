@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T03:04:55.763884Z'
+status: completed
+summary: Preserved Backlog-only decomposition with complete Host return guidance and specific refusal advice; root glossary Owner references now resolve uniquely without indexing or autofix. Two open direct-fix sources resolved; independent code finding corrected and reconciliation passed.
+findings: []
+assumptions:
+- Root glossary five-column tables only; empty or non-reference owners remain permitted; no package glossary expansion
+- Host owns final sync and base integration; no worker merge/push or native path confinement
+unverified_areas:
+- Final integration against later main commits and installed projection sync are Host steps
+checks:
+  tests: PASS 1111 affected tests including snapshot and compact-cell regressions
+  build: PASS Pyright; no packaging or frontend changes
+  lint: PASS Ruff format and cumulative governance rules
+diff_scope:
+  base: b4a1aaa2b9699b065b33225b9fc8a4d7d6552a1e
+  head: ad92c7485591ab22d6bd69870818cd61776b4a6d

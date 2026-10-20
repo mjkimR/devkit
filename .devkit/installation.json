@@ -682,7 +682,7 @@
     },
     ".agents/skills/response-style/SKILL.md": {
       "mode": 420,
-      "sha256": "3a57ae1a51f87eb2c6b832736ca73a02e8fcd0898f17fdd4963fbb4942face3b"
+      "sha256": "afa77c4e8eddcac2921eb6174821de4db386b0fd245ccddf62f3b5f61a7bf53d"
     },
     ".agents/skills/spec-delegate/SKILL.md": {
       "mode": 420,
@@ -794,7 +794,7 @@
     },
     ".agents/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "a81e5f15694ae102e5568a0bf3afb8d36c812c9a39072ee64595312bc953d318"
+      "sha256": "df07d137ca3601c4ff586645d28ab4a0118e27c01ecfcc7726301deded364998"
     },
     ".agents/skills/spec/references/branches.md": {
       "mode": 420,
@@ -826,7 +826,7 @@
     },
     ".agents/skills/spec/references/planning.md": {
       "mode": 420,
-      "sha256": "aa177016a7e9d10040108a3ce42ae3ae33766db4362478a50e304fd9b3b77122"
+      "sha256": "a43170f87af110485d1e8f0890794e1e0a9104ec81666710ca807548d5d01360"
     },
     ".agents/skills/spec/references/review-loop.md": {
       "mode": 420,
@@ -874,7 +874,7 @@
     },
     ".claude/skills/response-style/SKILL.md": {
       "mode": 420,
-      "sha256": "3a57ae1a51f87eb2c6b832736ca73a02e8fcd0898f17fdd4963fbb4942face3b"
+      "sha256": "afa77c4e8eddcac2921eb6174821de4db386b0fd245ccddf62f3b5f61a7bf53d"
     },
     ".claude/skills/spec-delegate/SKILL.md": {
       "mode": 420,
@@ -982,7 +982,7 @@
     },
     ".claude/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "a81e5f15694ae102e5568a0bf3afb8d36c812c9a39072ee64595312bc953d318"
+      "sha256": "df07d137ca3601c4ff586645d28ab4a0118e27c01ecfcc7726301deded364998"
     },
     ".claude/skills/spec/references/branches.md": {
       "mode": 420,
@@ -1014,7 +1014,7 @@
     },
     ".claude/skills/spec/references/planning.md": {
       "mode": 420,
-      "sha256": "aa177016a7e9d10040108a3ce42ae3ae33766db4362478a50e304fd9b3b77122"
+      "sha256": "a43170f87af110485d1e8f0890794e1e0a9104ec81666710ca807548d5d01360"
     },
     ".claude/skills/spec/references/review-loop.md": {
       "mode": 420,
@@ -1166,11 +1166,11 @@
     },
     ".devkit/managed/response-style/guidance/response-pointer.md": {
       "mode": 420,
-      "sha256": "5149214bca08d859ad72f858832d98afd4ca5507a962c1af3dd44a658131dd5e"
+      "sha256": "26e8552c3e8dde09a247c9035512aa9c1988d65e312b8c9b1e26a8398a373fa9"
     },
     ".devkit/managed/response-style/skills/response-style/SKILL.md": {
       "mode": 420,
-      "sha256": "3a57ae1a51f87eb2c6b832736ca73a02e8fcd0898f17fdd4963fbb4942face3b"
+      "sha256": "afa77c4e8eddcac2921eb6174821de4db386b0fd245ccddf62f3b5f61a7bf53d"
     },
     ".devkit/managed/spec/AGENTS.md": {
       "mode": 420,
@@ -1214,7 +1214,7 @@
     },
     ".devkit/managed/spec/rules/document_reference/guide.md": {
       "mode": 420,
-      "sha256": "276a0909d0592ea432ccb277f201443b069aacffb09eaa16bf670f537e5b42e9"
+      "sha256": "66353f0bfb79ad8d23f4dfc14bcaa03ec54df5e1180d5e6919d634a841344e8a"
     },
     ".devkit/managed/spec/rules/document_reference/rule.py": {
       "mode": 420,
@@ -1222,7 +1222,7 @@
     },
     ".devkit/managed/spec/rules/document_reference/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "4e35a64d8cdc0ba1e0cb611ae8d7368dff2960e03738c151c57ae9e3c97f1313"
+      "sha256": "deee118e4e70a373e0046b5e167c9e8ac37b771a18a6fd415720a76f8be3a1a2"
     },
     ".devkit/managed/spec/rules/document_summary/guide.md": {
       "mode": 420,
@@ -1438,7 +1438,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "a81e5f15694ae102e5568a0bf3afb8d36c812c9a39072ee64595312bc953d318"
+      "sha256": "df07d137ca3601c4ff586645d28ab4a0118e27c01ecfcc7726301deded364998"
     },
     ".devkit/managed/spec/skills/spec/references/branches.md": {
       "mode": 420,
@@ -1470,7 +1470,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/planning.md": {
       "mode": 420,
-      "sha256": "aa177016a7e9d10040108a3ce42ae3ae33766db4362478a50e304fd9b3b77122"
+      "sha256": "a43170f87af110485d1e8f0890794e1e0a9104ec81666710ca807548d5d01360"
     },
     ".devkit/managed/spec/skills/spec/references/review-loop.md": {
       "mode": 420,
@@ -1549,7 +1549,7 @@
       "sha256": "5eefc5c1a2f70bfe853b3ebce36be3e9271a55265be65cc12176da621c4186fb"
     }
   },
-  "guidance_block": "aa2dcdfeafaabb015ffb0e01885aa18287bbd1d7db68ea78e7b610d8d5e12cde",
+  "guidance_block": "6af8c3ca4b44f5c5afb1e95ec8c6ea02d489a4188afc43ff41e47c89b51ec90c",
   "packages": [
     {
       "bundle": "advisory",

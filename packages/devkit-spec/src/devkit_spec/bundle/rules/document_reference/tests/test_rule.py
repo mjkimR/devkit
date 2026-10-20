@@ -125,3 +125,122 @@ def test_self_cycle_and_wrong_provenance_shape(tmp_path: Path) -> None:
     messages = [v.message for v in check(RULE, tmp_path, files)]
     assert any("dependency cycle" in message for message in messages)
     assert any("supersedes takes PROP- IDs" in message for message in messages)
+
+
+_GLOSSARY_HEADER = "| Term | Definition | Owner | Avoid | Code identifiers |\n| :--- | :--- | :--- | :--- | :--- |\n"
+
+
+def test_glossary_owner_resolution_without_indexing_or_autofix(tmp_path: Path) -> None:
+    from devkit_spec.documents import DocumentIndex
+
+    glossary = _GLOSSARY_HEADER + (
+        "| one | definition | `CAP-A-valid`, [ADR-missing] | | |\n"
+        "| two | definition | `US-duplicate` | | |\n"
+        "| three | definition | | | |\n"
+    )
+    files = {
+        "docs/glossary.md": glossary,
+        "docs/a.md": _doc("CAP-A-valid"),
+        "docs/b.md": _doc("US-duplicate"),
+        "docs/c.md": _doc("US-duplicate"),
+    }
+    found = check(RULE, tmp_path, files, targets=["docs/glossary.md"])
+    assert _found(found) == [
+        ("docs/glossary.md", 3, "no document has the ID ADR-missing"),
+        ("docs/glossary.md", 4, "US-duplicate is declared by 2 documents: docs/b.md, docs/c.md"),
+    ]
+    assert all(not v.fixable for v in found)
+    assert all(d.path != "docs/glossary.md" for d in DocumentIndex.load(tmp_path).documents)
+    assert _found(check(RULE, tmp_path, targets=["docs/glossary.md"], fix=True)) == _found(found)
+    assert (tmp_path / "docs/glossary.md").read_text() == glossary
+    assert check(RULE, tmp_path, targets=["docs/a.md"]) == []
+    assert check(RULE, tmp_path, targets=["docs/glossary.md"], exclude=["docs/glossary.md"]) == []
+
+
+def test_glossary_only_visible_owner_cells_in_recognized_tables(tmp_path: Path) -> None:
+    ignored_row = "| term | definition | `ADR-ignored` | | |\n"
+    text = (
+        "# Glossary\n\nProse `ADR-ignored`.\n\n"
+        "```markdown\n" + _GLOSSARY_HEADER + ignored_row + "```\n\n"
+        "<!--\n"
+        + _GLOSSARY_HEADER
+        + ignored_row
+        + "-->\n\n"
+        + _GLOSSARY_HEADER
+        + "| `ADR-ignored` | `ADR-ignored` and a `pipe|code` and escaped \\| | `CAP-A-valid` | [ADR-ignored] | `ADR-ignored` |\n"
+        + "| term | definition | <!-- `ADR-ignored` --> ~~`ADR-ignored`~~ \\`ADR-ignored\\` | | |\n"
+        + "| term | definition | `[ADR-ignored]` [label](ADR-ignored) | | |\n"
+        + "| term | definition | | | |\n\n"
+        + "| Term | Definition | Notes |\n| --- | --- | --- |\n| x | y | `ADR-ignored` |\n\n"
+        + "| Term | Definition | Owner | Avoid | Code identifiers |\n"
+        + ignored_row
+        + "\n"
+        + _GLOSSARY_HEADER
+        + "| last | definition | [CAP-A-valid] | | |\n"
+    )
+    assert (
+        check(
+            RULE,
+            tmp_path,
+            {
+                "docs/glossary.md": text,
+                "docs/a.md": _doc("CAP-A-valid"),
+                "docs/other.md": _GLOSSARY_HEADER + ignored_row,
+                "docs/packages/example/glossary.md": _GLOSSARY_HEADER + ignored_row,
+            },
+        )
+        == []
+    )
+
+
+def test_glossary_table_state_ends_at_blank_or_fence(tmp_path: Path) -> None:
+    row = "| term | definition | `ADR-missing` | | |\n"
+    text = _GLOSSARY_HEADER + "\n" + row + "\n" + _GLOSSARY_HEADER + "```\nexample\n```\n" + row
+    assert check(RULE, tmp_path, {"docs/glossary.md": text}) == []
+    assert _found(check(RULE, tmp_path, {"docs/glossary.md": text + "\n" + _GLOSSARY_HEADER + row})) == [
+        ("docs/glossary.md", 15, "no document has the ID ADR-missing")
+    ]
+
+
+def test_glossary_uses_staged_snapshot_contents(tmp_path: Path) -> None:
+    import subprocess
+
+    from devkit.rules.workspace.snapshot import git_snapshot, materialize_snapshot
+
+    root = tmp_path / "repo"
+    root.mkdir()
+
+    def git(*args: str) -> None:
+        subprocess.run(["git", "-C", str(root), *args], check=True, capture_output=True)
+
+    git("init", "-q")
+    git("-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "--allow-empty", "-qm", "init")
+    (root / "docs").mkdir()
+    glossary = root / "docs/glossary.md"
+    glossary.write_text(_GLOSSARY_HEADER + "| term | definition | `ADR-missing` | | |\n")
+    git("add", "docs/glossary.md")
+    glossary.write_text(_GLOSSARY_HEADER + "| term | definition | | | |\n")
+    snapshot = git_snapshot(root, staged=True)
+    materialized = tmp_path / "snapshot"
+    materialize_snapshot(snapshot, materialized)
+    assert check(RULE, root) == []
+    assert _found(check(RULE, materialized, targets=list(snapshot.changed))) == [
+        ("docs/glossary.md", 3, "no document has the ID ADR-missing")
+    ]
+
+
+def test_glossary_compact_empty_cells_keep_owner_and_following_rows(tmp_path: Path) -> None:
+    text = (
+        _GLOSSARY_HEADER
+        + "|term|definition|`ADR-missing`|||\n"
+        + "| term | definition | `ADR-next` | | |\n"
+        + "term|definition|`ADR-no-border`||\n"
+        + "| term | definition |\n"
+        + "| term | definition | `ADR-extra` | | | ignored surplus |\n"
+    )
+    assert _found(check(RULE, tmp_path, {"docs/glossary.md": text})) == [
+        ("docs/glossary.md", 3, "no document has the ID ADR-missing"),
+        ("docs/glossary.md", 4, "no document has the ID ADR-next"),
+        ("docs/glossary.md", 5, "no document has the ID ADR-no-border"),
+        ("docs/glossary.md", 7, "no document has the ID ADR-extra"),
+    ]

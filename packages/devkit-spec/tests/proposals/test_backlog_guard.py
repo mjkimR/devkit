@@ -81,3 +81,37 @@ def test_a_padr_of_a_proposal_in_planning_is_written_on_its_branch_only(tmp_path
     git(root, "switch", "-q", "plan-local")
     on_branch = CliRunner().invoke(devkit_cli, ["spec", "proposal", "padr", "local", "Pick", "-w", str(root)])
     assert on_branch.exit_code == 0 and on_branch.stdout.startswith("[PADR: PADR-pick "), on_branch.output
+
+
+def test_decomposition_recovery_is_specific_and_preserves_source(tmp_path: Path) -> None:
+    root = _repo(tmp_path)
+    for slug in ("local", "remote", "done"):
+        parent = root / f"docs/proposals/PROP-{slug}/proposal.md"
+        before = parent.read_bytes()
+        result = CliRunner().invoke(
+            devkit_cli,
+            ["spec", "proposal", "new", "child", "--decomposed-from", f"PROP-{slug}", "-w", str(root)],
+        )
+        assert result.exit_code == 2
+        assert "SPEC_PROPOSAL_IN_PLANNING" in result.stderr
+        for instruction in (
+            "Host",
+            "draft Backlog",
+            "close open questions",
+            "existing approval",
+            "local/fetched",
+            "proposal check",
+        ):
+            assert instruction in result.stderr
+        assert "Change it on" not in result.stderr
+        assert parent.read_bytes() == before
+        assert not (root / "docs/proposals/PROP-child").exists()
+    generic = CliRunner().invoke(devkit_cli, ["spec", "proposal", "check", "local", "-w", str(root)])
+    assert "Change it on plan-local" in generic.stderr
+    # Returning to draft alone is insufficient; only removing the Planning blocker releases Backlog.
+    git(root, "branch", "-d", "plan-local")
+    created = CliRunner().invoke(
+        devkit_cli, ["spec", "proposal", "new", "child", "--decomposed-from", "PROP-local", "-w", str(root)]
+    )
+    assert created.exit_code == 0, created.output
+    assert "decomposed_from: PROP-local" in (root / "docs/proposals/PROP-child/proposal.md").read_text()

@@ -57,8 +57,29 @@ def test_response_style_deploys_configured_language(tmp_path: Path, language: st
     assert ".devkit/managed/response-style/instructions/" not in guidance
     assert ("Use ko as the default" if language == "ko" else "Use the language of the user's current request") in text
     assert "default conversation language" not in guidance
+    assert "→ **Core sentence.** Explanation" in guidance
+    assert "# Reply style" in text
+    assert "→ **Core sentence.** Supporting explanation." in text
+    assert "Required user and workflow formats take precedence" in text
+    assert "return the artifact without conversational framing" in text
+    assert "State what is finished and what remains" in text
+    assert "Follow repository and task language requirements" in text
+    assert (
+        "unless the user explicitly requests another language" in text
+        if language == "ko"
+        else ("unless they explicitly request another language" in text)
+    )
     for directory in (".agents/skills", ".claude/skills"):
         projected = tmp_path / directory / "response-style/SKILL.md"
         assert projected.is_file()
-        assert "# Communication" in projected.read_text()
+        assert projected.read_text() == text
     assert not (tmp_path / ".devkit/managed/response-style/instructions/response-style.md").exists()
+
+
+def test_response_style_has_one_bounded_guidance_pointer() -> None:
+    root = _bundle_root(ENTRY_POINTS["response-style"])
+    pointers = list((root / "guidance").glob("*.md"))
+    assert len(pointers) == 1
+    pointer = pointers[0].read_bytes()
+    assert pointer.endswith(b"\n")
+    assert len(pointer) <= 300
