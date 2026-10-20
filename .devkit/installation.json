@@ -465,6 +465,16 @@
     },
     {
       "bundle": "spec",
+      "id": "proposal-boundaries",
+      "kind": "rule",
+      "paths": [
+        ".devkit/managed/spec/rules/proposal_boundaries/guide.md",
+        ".devkit/managed/spec/rules/proposal_boundaries/rule.py",
+        ".devkit/managed/spec/rules/proposal_boundaries/tests/test_rule.py"
+      ]
+    },
+    {
+      "bundle": "spec",
       "id": "document-summary",
       "kind": "rule",
       "paths": [
@@ -676,7 +686,7 @@
     },
     ".agents/skills/spec-delegate/SKILL.md": {
       "mode": 420,
-      "sha256": "9a9e2cb26bcc71d77b7e574f92cce883b31acd23d02f1236a2d0fbe5e1ca7800"
+      "sha256": "21c9722a56b5a7650093413d9fbf73f098b7471ff650de331e3ccadc72577228"
     },
     ".agents/skills/spec-delegate/references/hosts.md": {
       "mode": 420,
@@ -804,7 +814,7 @@
     },
     ".agents/skills/spec/references/envelope.md": {
       "mode": 420,
-      "sha256": "c9c9ec5e1d4f0f7cbb9db555a7a123821e796eb203a44da290682db9cb71bcb1"
+      "sha256": "32b43231d55a81a66489560ab2b36c720561da9c26d925422f6ef22de5b058c2"
     },
     ".agents/skills/spec/references/feedback-retirement.md": {
       "mode": 420,
@@ -816,15 +826,15 @@
     },
     ".agents/skills/spec/references/planning.md": {
       "mode": 420,
-      "sha256": "d87f24e882ba7a87cbc27ffa67b6897fc46d5ddd6002f79b88a7465c247f0146"
+      "sha256": "aa177016a7e9d10040108a3ce42ae3ae33766db4362478a50e304fd9b3b77122"
     },
     ".agents/skills/spec/references/review-loop.md": {
       "mode": 420,
-      "sha256": "bd2d0087d586273122c908ae004737816cdce3f7ff0c50648cfbe89dea83c1c1"
+      "sha256": "8c33379a2d519ac76e3b88a3df3cb8e1f8e4cb10b2d4de4f25febbcc8e1c3aa0"
     },
     ".agents/skills/spec/references/worker-records.md": {
       "mode": 420,
-      "sha256": "1d922e076dbaeb16c6812ba6c48af239cfffbd4a1c9f480c87169acced2e2503"
+      "sha256": "e822454931af3d17fdcf00644e9d4ed50b43ff0a5743ed8f5293ca0f4cf64e05"
     },
     ".agents/skills/spec/references/worktree.md": {
       "mode": 420,
@@ -868,7 +878,7 @@
     },
     ".claude/skills/spec-delegate/SKILL.md": {
       "mode": 420,
-      "sha256": "9a9e2cb26bcc71d77b7e574f92cce883b31acd23d02f1236a2d0fbe5e1ca7800"
+      "sha256": "21c9722a56b5a7650093413d9fbf73f098b7471ff650de331e3ccadc72577228"
     },
     ".claude/skills/spec-delegate/references/hosts.md": {
       "mode": 420,
@@ -992,7 +1002,7 @@
     },
     ".claude/skills/spec/references/envelope.md": {
       "mode": 420,
-      "sha256": "c9c9ec5e1d4f0f7cbb9db555a7a123821e796eb203a44da290682db9cb71bcb1"
+      "sha256": "32b43231d55a81a66489560ab2b36c720561da9c26d925422f6ef22de5b058c2"
     },
     ".claude/skills/spec/references/feedback-retirement.md": {
       "mode": 420,
@@ -1004,15 +1014,15 @@
     },
     ".claude/skills/spec/references/planning.md": {
       "mode": 420,
-      "sha256": "d87f24e882ba7a87cbc27ffa67b6897fc46d5ddd6002f79b88a7465c247f0146"
+      "sha256": "aa177016a7e9d10040108a3ce42ae3ae33766db4362478a50e304fd9b3b77122"
     },
     ".claude/skills/spec/references/review-loop.md": {
       "mode": 420,
-      "sha256": "bd2d0087d586273122c908ae004737816cdce3f7ff0c50648cfbe89dea83c1c1"
+      "sha256": "8c33379a2d519ac76e3b88a3df3cb8e1f8e4cb10b2d4de4f25febbcc8e1c3aa0"
     },
     ".claude/skills/spec/references/worker-records.md": {
       "mode": 420,
-      "sha256": "1d922e076dbaeb16c6812ba6c48af239cfffbd4a1c9f480c87169acced2e2503"
+      "sha256": "e822454931af3d17fdcf00644e9d4ed50b43ff0a5743ed8f5293ca0f4cf64e05"
     },
     ".claude/skills/spec/references/worktree.md": {
       "mode": 420,
@@ -1168,7 +1178,7 @@
     },
     ".devkit/managed/spec/bundle.toml": {
       "mode": 420,
-      "sha256": "89ef7c01ac55eb16c666adfe6b577142b393dfbcd034957c3dcf1652f478ebee"
+      "sha256": "c594cb64f808f405ff3ce45c30561cb63e495add1898775db1d1833f3b8e4ab7"
     },
     ".devkit/managed/spec/guidance/spec-pointer.md": {
       "mode": 420,
@@ -1237,6 +1247,18 @@
     ".devkit/managed/spec/rules/id_convention/tests/test_rule.py": {
       "mode": 420,
       "sha256": "5f9611cbd635c3655acff24f9b981f3dbcc7be6569cd874ccf7f69b02f191932"
+    },
+    ".devkit/managed/spec/rules/proposal_boundaries/guide.md": {
+      "mode": 420,
+      "sha256": "1b4eeacdf8be71c0dc8dcec09664b10f86f1aa1d0e1cfe59bc93d83321e10b57"
+    },
+    ".devkit/managed/spec/rules/proposal_boundaries/rule.py": {
+      "mode": 420,
+      "sha256": "cb65104b6b21da5bd8ceeb7f2cd09ea68bb79860e56a685228517844a6625b36"
+    },
+    ".devkit/managed/spec/rules/proposal_boundaries/tests/test_rule.py": {
+      "mode": 420,
+      "sha256": "b2ca90d9f2bbd79e60662da3f339bd43401c308b36a4f2f4631da00b448c91c1"
     },
     ".devkit/managed/spec/rules/reconcile_contract/guide.md": {
       "mode": 420,
@@ -1312,7 +1334,7 @@
     },
     ".devkit/managed/spec/skills/spec-delegate/SKILL.md": {
       "mode": 420,
-      "sha256": "9a9e2cb26bcc71d77b7e574f92cce883b31acd23d02f1236a2d0fbe5e1ca7800"
+      "sha256": "21c9722a56b5a7650093413d9fbf73f098b7471ff650de331e3ccadc72577228"
     },
     ".devkit/managed/spec/skills/spec-delegate/references/hosts.md": {
       "mode": 420,
@@ -1436,7 +1458,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/envelope.md": {
       "mode": 420,
-      "sha256": "c9c9ec5e1d4f0f7cbb9db555a7a123821e796eb203a44da290682db9cb71bcb1"
+      "sha256": "32b43231d55a81a66489560ab2b36c720561da9c26d925422f6ef22de5b058c2"
     },
     ".devkit/managed/spec/skills/spec/references/feedback-retirement.md": {
       "mode": 420,
@@ -1448,15 +1470,15 @@
     },
     ".devkit/managed/spec/skills/spec/references/planning.md": {
       "mode": 420,
-      "sha256": "d87f24e882ba7a87cbc27ffa67b6897fc46d5ddd6002f79b88a7465c247f0146"
+      "sha256": "aa177016a7e9d10040108a3ce42ae3ae33766db4362478a50e304fd9b3b77122"
     },
     ".devkit/managed/spec/skills/spec/references/review-loop.md": {
       "mode": 420,
-      "sha256": "bd2d0087d586273122c908ae004737816cdce3f7ff0c50648cfbe89dea83c1c1"
+      "sha256": "8c33379a2d519ac76e3b88a3df3cb8e1f8e4cb10b2d4de4f25febbcc8e1c3aa0"
     },
     ".devkit/managed/spec/skills/spec/references/worker-records.md": {
       "mode": 420,
-      "sha256": "1d922e076dbaeb16c6812ba6c48af239cfffbd4a1c9f480c87169acced2e2503"
+      "sha256": "e822454931af3d17fdcf00644e9d4ed50b43ff0a5743ed8f5293ca0f4cf64e05"
     },
     ".devkit/managed/spec/skills/spec/references/worktree.md": {
       "mode": 420,
@@ -1500,7 +1522,7 @@
     },
     ".devkit/managed/spec/templates/proposal.md": {
       "mode": 420,
-      "sha256": "3e899b75fe28d3f7946ff400fea1efd3579dafc5b1e8006dfc5c6aa4eb6f0e48"
+      "sha256": "405b03bb9a5355883fa096e8250fceea5667a48df599a6ab18d5e11874fdb0cd"
     },
     ".devkit/managed/spec/templates/story.md": {
       "mode": 420,
@@ -1508,7 +1530,7 @@
     },
     ".devkit/managed/spec/workflows/sdd-proposal.md": {
       "mode": 420,
-      "sha256": "5c0763844701a87c0f76ac37bb6eb9f0bad4b8c5d1d7a068f748c0895fe78102"
+      "sha256": "313292467d7c5de686741a070a2015043c2e81e68fd18dbb5a2cf27dbb381233"
     },
     ".devkit/managed/spec/workflows/sdd-session-bugfix.md": {
       "mode": 420,
