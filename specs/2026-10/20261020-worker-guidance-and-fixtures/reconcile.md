@@ -29,3 +29,9 @@ No architecture, new runtime schema, policy override or additional capability is
 
 All five sources were open and explicitly authorized direct fixes; their resolutions do not claim integration.
 No deferred requirement remains. Host must sync changed bundle assets during integration preparation.
+
+## Entrypoint review
+
+Derived candidates were reviewed: harness guidance already declares its skills directory. The scope-test directory
+is not a production entrypoint for either target. The envelope target only clarifies its guidance; the unchanged
+runtime entrypoints remain correct. No new pair was applied.
