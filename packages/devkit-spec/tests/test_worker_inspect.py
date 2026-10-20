@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib
 import json
 import subprocess
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
@@ -312,3 +313,64 @@ def test_pending_questions_are_failed_check(repo: Path) -> None:
 
     assert result["checks"]["envelopes"]["result"]["pending_questions"]
     assert not result["checks"]["envelopes"]["result"]["errors"]
+
+
+def test_non_envelope_files_are_ignored_at_current_and_previous_commits(repo: Path) -> None:
+    for name in ["README.md", ".gitkeep", ".worker-02.yaml.abcdef123456.tmp"]:
+        write(repo, f"{UNIT}/envelopes/{name}", "not an envelope")
+    previous = worker(repo, 1)
+    worker(repo, 2)
+    result = inspect(repo, runner=passed)
+    assert result["base"] == previous
+    assert result["checks"]["envelopes"]["status"] == "pass"
+    assert len(result["checks"]["envelopes"]["result"]["envelopes"]) == 2
+
+
+def test_dirty_record_never_reaches_disk_workflow_runner(repo: Path) -> None:
+    worker(repo, 1)
+    write(repo, f"{UNIT}/envelopes/worker-02.yaml", "kind: worker\nstatus: failed\n")
+    calls = []
+
+    def runner(root: Path, args: Sequence[str]) -> dict:
+        calls.append(args)
+        return passed(root, args)
+
+    result = inspect(repo, runner=runner)
+    assert result["checks"]["workflow"]["status"] == "not-run"
+    assert all(args[0] != "workflow" for args in calls)
+    assert result["checks"]["envelopes"]["status"] == "pass"
+
+
+def test_text_scope_unknown_omits_outside_and_history(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    (repo / UNIT / "reconcile.md").unlink()
+    worker(repo, 1)
+    monkeypatch.chdir(repo)
+    module = importlib.import_module("devkit_spec.cli.worker")
+    monkeypatch.setattr(module, "inspect", lambda root, **kw: inspect(root, **kw, runner=passed))
+    result = CliRunner().invoke(cli, ["worker", "inspect"])
+    assert result.exit_code == 0, result.output
+    assert "[CHANGED:" in result.stdout
+    assert "outside=" not in result.stdout
+    assert "fixture" not in result.stdout
+    assert "envelopes':" not in result.stdout
+    assert "WORKER_CHECK_NOT_RUN" in result.stderr
+
+
+def test_structured_advisories_use_stderr_once(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from devkit.core.errors import ArgumentError
+
+    worker(repo, 1)
+    monkeypatch.chdir(repo)
+    module = importlib.import_module("devkit_spec.cli.worker")
+    error = ArgumentError("wrapped input invalid", fix="Pass the valid input").to_dict()
+
+    def runner(_root: Path, _args: object) -> dict:
+        return {"status": "not-run", "result": {"errors": [error]}, "stderr": ""}
+
+    monkeypatch.setattr(module, "inspect", lambda root, **kw: inspect(root, **kw, runner=runner))
+    result = CliRunner().invoke(cli, ["worker", "inspect"])
+    assert result.exit_code == 0, result.output
+    assert "ARGUMENT_INVALID" not in result.stdout
+    assert result.stderr.count("(ARGUMENT_INVALID)") == 1
+    assert "[ACTION]" in result.stderr and "[FIX]" in result.stderr
+    assert "Pass the valid input" in result.stderr

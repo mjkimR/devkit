@@ -9,7 +9,7 @@ from typing import Any
 from devkit.core import GitError, run_git
 from devkit.core.errors import ArgumentError
 from devkit.core.frontmatter import parse
-from devkit.workflow.unit.envelope import Envelopes, collect_envelopes
+from devkit.workflow.unit.envelope import Envelopes, collect_envelopes, is_envelope_name
 from devkit.worktree.lifecycle import locate
 
 from devkit_spec.attach import PROPOSAL_UNIT, SPEC_UNIT, attach_check
@@ -73,7 +73,7 @@ def records(root: Path, revision: str, unit: str) -> Envelopes:
     return collect_envelopes(
         (Path(p).name, lambda p=p: read(root, revision, p))
         for p in files(root, revision, prefix)
-        if "/" not in p.removeprefix(prefix)
+        if "/" not in p.removeprefix(prefix) and is_envelope_name(Path(p).name)
     )
 
 

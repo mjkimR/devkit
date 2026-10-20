@@ -507,7 +507,9 @@ replaces the entire derived scope. Literal paths match themselves and descendant
 Checks report `pass`, `fail` or `not-run`: base ancestry, worktree HEAD equality, changed paths and outside-scope
 paths, worktree cleanliness, committed envelope validation (including unresolved problems and pending questions),
 cumulative `devkit rules check --ci --base` and `devkit workflow next`. Both old and new paths of renames are
-included. Rules run only when worktree HEAD equals returned head. Wrapped results retain their codes and actions.
+included. Rules run only when worktree HEAD equals returned head. Workflow evaluation is not-run in a dirty
+worktree because the existing command reads disk; this prevents uncommitted records from changing its result.
+Wrapped results retain their codes and actions.
 
 `--format json` emits one object containing `inputs` (value/source), `scope` entries, `base`, `head`, `changed_paths`,
 optional `outside_scope` and `base_checkout`, `checks`, `notices` and `exit_code`. Text output emits inspection,

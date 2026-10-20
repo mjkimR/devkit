@@ -137,7 +137,11 @@ def inspect(
         if tip == head
         else {"status": "not-run", "cause": "Worktree HEAD differs from returned head"}
     )
-    checks["workflow"] = runner(root, ["workflow", "next", "--unit", unit])
+    checks["workflow"] = (
+        {"status": "not-run", "cause": "Working tree differs from committed HEAD; workflow next reads disk"}
+        if dirty
+        else runner(root, ["workflow", "next", "--unit", unit])
+    )
     checkout = chosen["base_checkout"]["value"]
     if checkout:
         path = Path(checkout)
