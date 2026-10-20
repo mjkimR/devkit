@@ -1,0 +1,272 @@
+{
+  "baseline_revision": "475e8137e6f43656091203a207b48cabede864ba",
+  "checkout_head": "a80112e3626d40dde65e8831e7754ab1c2e10d45",
+  "python": "3.12.3",
+  "scope": "same twelve original handoff consumers; current may include uncommitted changes",
+  "samples": [
+    {
+      "label": "serial-baseline",
+      "wall_seconds": 46.168292866999764,
+      "passed": 12,
+      "cases": [
+        "test_handoff_approval_creates_development_and_returns_selected_effort",
+        "test_handoff_changed_base_requires_fresh_review_before_creating_worktree",
+        "test_handoff_native_sdk_roundtrip[en-False]",
+        "test_handoff_native_sdk_roundtrip[en-True]",
+        "test_handoff_native_sdk_roundtrip[ko-False]",
+        "test_handoff_native_sdk_roundtrip[ko-True]",
+        "test_handoff_nonapproval_makes_no_git_changes[accept-content0-not_approved]",
+        "test_handoff_nonapproval_makes_no_git_changes[cancel-content2-cancelled]",
+        "test_handoff_nonapproval_makes_no_git_changes[decline-content1-declined]",
+        "test_handoff_pins_reviewed_commit_before_setup_when_base_moves",
+        "test_handoff_stage_off_cannot_replace_required_plan_approvals",
+        "test_native_handoff_initializes_fresh_registration"
+      ],
+      "active_workers": 1,
+      "sync_calls": 12,
+      "preparation_commits": 12,
+      "fixture_seconds": {
+        "accepted_handoff_base": [
+          2.6420612840001922,
+          2.8486591660002887,
+          3.094979843999681,
+          2.7858978499998557,
+          2.3778353469997455,
+          2.6574542330008626,
+          2.413283224999759,
+          2.491911046000496,
+          2.5457806010008426,
+          2.609619519000262,
+          2.5681623289992785,
+          2.3557387620003283
+        ],
+        "handoff_repository_template": []
+      }
+    },
+    {
+      "label": "serial-current",
+      "wall_seconds": 29.22223029899942,
+      "passed": 12,
+      "cases": [
+        "test_handoff_approval_creates_development_and_returns_selected_effort",
+        "test_handoff_changed_base_requires_fresh_review_before_creating_worktree",
+        "test_handoff_native_sdk_roundtrip[en-False]",
+        "test_handoff_native_sdk_roundtrip[en-True]",
+        "test_handoff_native_sdk_roundtrip[ko-False]",
+        "test_handoff_native_sdk_roundtrip[ko-True]",
+        "test_handoff_nonapproval_makes_no_git_changes[accept-content0-not_approved]",
+        "test_handoff_nonapproval_makes_no_git_changes[cancel-content2-cancelled]",
+        "test_handoff_nonapproval_makes_no_git_changes[decline-content1-declined]",
+        "test_handoff_pins_reviewed_commit_before_setup_when_base_moves",
+        "test_handoff_stage_off_cannot_replace_required_plan_approvals",
+        "test_native_handoff_initializes_fresh_registration"
+      ],
+      "active_workers": 1,
+      "sync_calls": 1,
+      "preparation_commits": 1,
+      "fixture_seconds": {
+        "accepted_handoff_base": [
+          1.0672770740002306,
+          1.1092855199995029,
+          1.0375310469999022,
+          1.060180149000189,
+          1.2512965460000487,
+          1.24350170300022,
+          1.1246986500000276,
+          1.0270186669995383,
+          1.100843442999576,
+          1.1187736689998928,
+          1.0739780579997387,
+          1.0401168959997449
+        ],
+        "handoff_repository_template": [
+          1.5520723140007249
+        ]
+      }
+    },
+    {
+      "label": "parallel-baseline-1",
+      "wall_seconds": 17.938707137000165,
+      "passed": 12,
+      "cases": [
+        "test_handoff_approval_creates_development_and_returns_selected_effort",
+        "test_handoff_changed_base_requires_fresh_review_before_creating_worktree",
+        "test_handoff_native_sdk_roundtrip[en-False]",
+        "test_handoff_native_sdk_roundtrip[en-True]",
+        "test_handoff_native_sdk_roundtrip[ko-False]",
+        "test_handoff_native_sdk_roundtrip[ko-True]",
+        "test_handoff_nonapproval_makes_no_git_changes[accept-content0-not_approved]",
+        "test_handoff_nonapproval_makes_no_git_changes[cancel-content2-cancelled]",
+        "test_handoff_nonapproval_makes_no_git_changes[decline-content1-declined]",
+        "test_handoff_pins_reviewed_commit_before_setup_when_base_moves",
+        "test_handoff_stage_off_cannot_replace_required_plan_approvals",
+        "test_native_handoff_initializes_fresh_registration"
+      ],
+      "active_workers": 8,
+      "sync_calls": 12,
+      "preparation_commits": 12,
+      "fixture_seconds": {
+        "accepted_handoff_base": [
+          4.609595582999646,
+          4.532103761000144,
+          4.603397318000134,
+          4.569814163000046,
+          4.617030170999897,
+          3.837714270000106,
+          4.584626844000013,
+          3.716918097999951,
+          4.6142579670004125,
+          3.675721980999697,
+          4.566455215999667,
+          3.786561005999829
+        ],
+        "handoff_repository_template": []
+      }
+    },
+    {
+      "label": "parallel-current-1",
+      "wall_seconds": 14.620053527999517,
+      "passed": 12,
+      "cases": [
+        "test_handoff_approval_creates_development_and_returns_selected_effort",
+        "test_handoff_changed_base_requires_fresh_review_before_creating_worktree",
+        "test_handoff_native_sdk_roundtrip[en-False]",
+        "test_handoff_native_sdk_roundtrip[en-True]",
+        "test_handoff_native_sdk_roundtrip[ko-False]",
+        "test_handoff_native_sdk_roundtrip[ko-True]",
+        "test_handoff_nonapproval_makes_no_git_changes[accept-content0-not_approved]",
+        "test_handoff_nonapproval_makes_no_git_changes[cancel-content2-cancelled]",
+        "test_handoff_nonapproval_makes_no_git_changes[decline-content1-declined]",
+        "test_handoff_pins_reviewed_commit_before_setup_when_base_moves",
+        "test_handoff_stage_off_cannot_replace_required_plan_approvals",
+        "test_native_handoff_initializes_fresh_registration"
+      ],
+      "active_workers": 8,
+      "sync_calls": 8,
+      "preparation_commits": 8,
+      "fixture_seconds": {
+        "accepted_handoff_base": [
+          1.7424893209999937,
+          1.745433649000006,
+          1.7125610510001934,
+          1.7645091889999094,
+          1.7441390309995768,
+          1.3983700270000554,
+          1.750034857999708,
+          1.3659947280002598,
+          1.7862614260002374,
+          1.4339188900003137,
+          1.7217926149996856,
+          1.3956801869999254
+        ],
+        "handoff_repository_template": [
+          2.6852747620005175,
+          2.663957682000728,
+          2.656330015999629,
+          2.6799271410000074,
+          2.692156941999201,
+          2.6410625759999675,
+          2.687380225999732,
+          2.670443296000485
+        ]
+      }
+    },
+    {
+      "label": "parallel-current-2",
+      "wall_seconds": 14.985645286999898,
+      "passed": 12,
+      "cases": [
+        "test_handoff_approval_creates_development_and_returns_selected_effort",
+        "test_handoff_changed_base_requires_fresh_review_before_creating_worktree",
+        "test_handoff_native_sdk_roundtrip[en-False]",
+        "test_handoff_native_sdk_roundtrip[en-True]",
+        "test_handoff_native_sdk_roundtrip[ko-False]",
+        "test_handoff_native_sdk_roundtrip[ko-True]",
+        "test_handoff_nonapproval_makes_no_git_changes[accept-content0-not_approved]",
+        "test_handoff_nonapproval_makes_no_git_changes[cancel-content2-cancelled]",
+        "test_handoff_nonapproval_makes_no_git_changes[decline-content1-declined]",
+        "test_handoff_pins_reviewed_commit_before_setup_when_base_moves",
+        "test_handoff_stage_off_cannot_replace_required_plan_approvals",
+        "test_native_handoff_initializes_fresh_registration"
+      ],
+      "active_workers": 8,
+      "sync_calls": 8,
+      "preparation_commits": 8,
+      "fixture_seconds": {
+        "accepted_handoff_base": [
+          1.9999022150004748,
+          1.85704167699987,
+          1.8588019600001644,
+          1.9420033949991193,
+          1.8792598039999575,
+          1.3799789049999163,
+          1.8487271359999795,
+          1.6302955159999328,
+          1.8867939589999878,
+          1.6066630029999942,
+          1.8580550270007734,
+          1.4461787600002936
+        ],
+        "handoff_repository_template": [
+          2.5484952530005103,
+          2.6020130990000325,
+          2.613306724000722,
+          2.5939358730001914,
+          2.585480295999332,
+          2.581859543000064,
+          2.6109488799993414,
+          2.6286050709995834
+        ]
+      }
+    },
+    {
+      "label": "parallel-baseline-2",
+      "wall_seconds": 16.035543048999898,
+      "passed": 12,
+      "cases": [
+        "test_handoff_approval_creates_development_and_returns_selected_effort",
+        "test_handoff_changed_base_requires_fresh_review_before_creating_worktree",
+        "test_handoff_native_sdk_roundtrip[en-False]",
+        "test_handoff_native_sdk_roundtrip[en-True]",
+        "test_handoff_native_sdk_roundtrip[ko-False]",
+        "test_handoff_native_sdk_roundtrip[ko-True]",
+        "test_handoff_nonapproval_makes_no_git_changes[accept-content0-not_approved]",
+        "test_handoff_nonapproval_makes_no_git_changes[cancel-content2-cancelled]",
+        "test_handoff_nonapproval_makes_no_git_changes[decline-content1-declined]",
+        "test_handoff_pins_reviewed_commit_before_setup_when_base_moves",
+        "test_handoff_stage_off_cannot_replace_required_plan_approvals",
+        "test_native_handoff_initializes_fresh_registration"
+      ],
+      "active_workers": 8,
+      "sync_calls": 12,
+      "preparation_commits": 12,
+      "fixture_seconds": {
+        "accepted_handoff_base": [
+          4.268970801999785,
+          4.255688274000022,
+          4.198496070000147,
+          4.2653649760004555,
+          4.24763829099993,
+          3.413643509999929,
+          4.248285654000028,
+          3.263457641000059,
+          4.1774903559999075,
+          3.353556639999624,
+          4.278312518000348,
+          3.430431764999412
+        ],
+        "handoff_repository_template": []
+      }
+    }
+  ],
+  "serial_medians": {
+    "baseline": 46.168292866999764,
+    "current": 29.22223029899942
+  },
+  "parallel_medians": {
+    "baseline": 16.98712509300003,
+    "current": 14.802849407499707
+  },
+  "baseline_source_sha256": "1969f4bc56d6adcf29f54f2310731dcff5504e9d2bf4dcf728f34920ebfbac04",
+  "current_source_sha256": "fd8eb60aa64ec25dd7001c1a7fd38beb08ef6e8b4de279122556f0d43babd5ea"
+}
