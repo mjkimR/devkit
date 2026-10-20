@@ -109,7 +109,7 @@ refs for otherwise unreachable source SHAs, and automated failure recovery.
 
 ### 3.4 Route design (Planning)
 
-Evidence: `envelopes/scout-01.yaml`, `envelopes/challenger-01.yaml`, the comparison in
+Evidence: `envelopes/scout-01.yaml`, `envelopes/challenger-01.yaml`, `envelopes/challenger-02.yaml`, the comparison in
 [materials/20261020-pull-request-merge-options.md](materials/20261020-pull-request-merge-options.md) and the PADRs
 under `decisions/`. Premise: `PROP-integration-follow-ups` as accepted (no-ff result built outside the checkout,
 execution context, effective policy digest, readiness on the result, cleanup-only request, approval tolerating
