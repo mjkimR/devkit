@@ -39,7 +39,11 @@ def _invalid(path: Path, message: str) -> ConfigError:
 
 
 def validate_runtime_tables(data: dict[str, Any], path: Path) -> None:
-    for table, key, default, expected in (("execution", "environment", "local", str), ("mcp", "register", True, bool)):
+    for table, key, default, expected in (
+        ("execution", "environment", "local", str),
+        ("mcp", "register", True, bool),
+        ("presentation", "language", "auto", str),
+    ):
         value = data.get(table, {})
         if not isinstance(value, dict) or set(value) - {key}:
             raise _invalid(path, f"{table}: expected only {key}")
@@ -53,7 +57,7 @@ def read_local_config(root: Path) -> dict[str, Any]:
     if path.is_symlink() or (path.exists() and not stat.S_ISREG(path.stat().st_mode)):
         raise _invalid(path, "config must be a regular file, not a symlink")
     data = read_toml(path) or {}
-    unknown = set(data) - {"schema", "execution", "mcp", "playbooks", "bundles"}
+    unknown = set(data) - {"schema", "execution", "mcp", "presentation", "playbooks", "bundles"}
     if unknown:
         raise LocalKeyForbiddenError(f"{path}: forbidden keys: {sorted(unknown)}", target_files=[str(path)])
     if "schema" in data and (type(data["schema"]) is not int or data["schema"] != 1):
@@ -108,7 +112,7 @@ def merge_config(shared: dict[str, Any], local: dict[str, Any], *, path: Path) -
     return merged
 
 
-def read_effective_config(root: Path) -> EffectiveConfig:
+def read_effective_config(root: Path, *, local: bool = True) -> EffectiveConfig:
     """Read only the explicit workspace; every present local input is validated."""
     shared_path = root / CONFIG_PATH
     if shared_path.is_symlink() or (shared_path.exists() and not shared_path.is_file()):
@@ -117,8 +121,8 @@ def read_effective_config(root: Path) -> EffectiveConfig:
     if "schema" in shared and (type(shared["schema"]) is not int or shared["schema"] != 1):
         raise _invalid(shared_path, "unsupported config schema")
     validate_runtime_tables(shared, shared_path)
-    local = read_local_config(root)
-    values = merge_config(shared, local, path=root / LOCAL_CONFIG_PATH)
+    overlay = read_local_config(root) if local else {}
+    values = merge_config(shared, overlay, path=root / LOCAL_CONFIG_PATH)
     sources: dict[str, str] = {}
 
     def record(data: dict[str, Any], source: str, prefix: str = "") -> None:
@@ -130,8 +134,12 @@ def read_effective_config(root: Path) -> EffectiveConfig:
                 sources[name] = source
 
     record(shared, str(shared_path))
-    record(local, str(root / LOCAL_CONFIG_PATH))
-    for table, key, value in (("execution", "environment", "local"), ("mcp", "register", True)):
+    record(overlay, str(root / LOCAL_CONFIG_PATH))
+    for table, key, value in (
+        ("execution", "environment", "local"),
+        ("mcp", "register", True),
+        ("presentation", "language", "auto"),
+    ):
         values.setdefault(table, {}).setdefault(key, value)
         sources.setdefault(f"{table}.{key}", "default")
     return EffectiveConfig(values, sources)

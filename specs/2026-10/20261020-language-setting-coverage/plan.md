@@ -45,3 +45,7 @@ and separate reconcile review. Reconcile target-docs into canonical contracts an
 This worker uses its assigned worktree and commits at stage boundaries. Confinement is emulated with explicit paths,
 scoped commands and Host range validation. No native path isolation is claimed. Native UI evidence does not authorize
 business actions or real configuration changes. Integration remains the Host's responsibility.
+
+The core presentation helper reads the core-internal invocation binding through a local import, preserving the
+existing runtime API and all guards. This avoids editing mcp_context outside the worker's write scope. Native
+terminal forms remain explicitly unverified per host in `MAT-language-development-evidence`.

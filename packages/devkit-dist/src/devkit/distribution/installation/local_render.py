@@ -69,7 +69,8 @@ def unchanged(root: Path, before: dict[str, bytes | None]) -> None:
 
 
 def variables_digest(root: Path) -> str:
-    values = read_effective_config(root).values.get("bundles", {})
+    config = read_effective_config(root).values
+    values = {"bundles": config.get("bundles", {}), "presentation": config["presentation"]}
     return hashlib.sha256(json.dumps(values, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
@@ -139,7 +140,8 @@ def plan_ledger(
     actions: list[Action],
 ) -> None:
     before = snapshot(root, LOCAL_RENDER)
-    active = bool(read_local_config(root).get("bundles"))
+    local = read_local_config(root)
+    active = bool(local.get("bundles") or local.get("presentation"))
     after = (
         json_content(
             {
@@ -175,7 +177,7 @@ def runtime_receipt(root: Path, receipt: Receipt) -> Receipt:
     local = read_local_config(root)
     read_effective_config(root)
     content = snapshot(root, LOCAL_RENDER)
-    if not local.get("bundles") and content is None:
+    if not (local.get("bundles") or local.get("presentation")) and content is None:
         return receipt
     try:
         data = json.loads(content.data) if content else {}

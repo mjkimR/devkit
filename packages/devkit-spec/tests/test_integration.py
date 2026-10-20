@@ -739,13 +739,15 @@ def test_handoff_changed_base_requires_fresh_review_before_creating_worktree(acc
 
 
 @pytest.mark.parametrize("approved", [True, False])
-def test_handoff_native_sdk_roundtrip(accepted_handoff_base, approved):
+@pytest.mark.parametrize("language", ["en", "ko"])
+def test_handoff_native_sdk_roundtrip(accepted_handoff_base, approved, language):
     from datetime import timedelta
 
     from mcp import ClientSession, StdioServerParameters, types
     from mcp.client.stdio import stdio_client
 
     repo = accepted_handoff_base
+    (repo / ".devkit/config.local.toml").write_text(f'[presentation]\nlanguage="{language}"\n')
     before = git(repo, "show-ref")
     calls = []
 
@@ -753,6 +755,7 @@ def test_handoff_native_sdk_roundtrip(accepted_handoff_base, approved):
         assert git(repo, "show-ref") == before
         assert params.requestedSchema["properties"]["activity_effort"]["default"] == "high"
         calls.append(params.message)
+        assert ("별도 승인" in params.message) == (language == "ko")
         return types.ElicitResult(action="accept", content={"approve": approved, "activity_effort": "medium"})
 
     async def run():

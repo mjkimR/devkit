@@ -19,6 +19,7 @@ TEMPLATE_KINDS = frozenset({"instruction", "guidance", "document", "skill"})
 class Variable:
     kind: str
     default: Scalar | None = None
+    default_from: str | None = None
 
 
 def declarations(raw: Any) -> dict[str, Variable]:
@@ -26,7 +27,7 @@ def declarations(raw: Any) -> dict[str, Variable]:
         raise BundleError("variables: expected a table")
     result = {}
     for name, item in raw.items():
-        if not NAME.fullmatch(name) or not isinstance(item, dict) or set(item) - {"type", "default"}:
+        if not NAME.fullmatch(name) or not isinstance(item, dict) or set(item) - {"type", "default", "default_from"}:
             raise BundleError(f"variables.{name}: expected an identifier and type/default declaration")
         kind = item.get("type")
         if not isinstance(kind, str) or kind not in TYPES:
@@ -34,16 +35,22 @@ def declarations(raw: Any) -> dict[str, Variable]:
         default = item.get("default")
         if "default" in item and type(default) is not TYPES[kind]:
             raise BundleError(f"variables.{name}: default must be {kind}")
-        result[name] = Variable(kind, default)
+        reference = item.get("default_from")
+        if "default_from" in item and (kind != "string" or reference != "presentation.language"):
+            raise BundleError(f"variables.{name}: default_from requires string presentation.language")
+        result[name] = Variable(kind, default, reference)
     return result
 
 
-def resolve_variables(declared: dict[str, Variable], supplied: dict[str, Scalar], bundle: str) -> dict[str, Scalar]:
+def resolve_variables(
+    declared: dict[str, Variable], supplied: dict[str, Scalar], bundle: str, *, language: str | None = None
+) -> dict[str, Scalar]:
     if unknown := supplied.keys() - declared.keys():
         raise ConfigError(f"{bundle}: undeclared template variables: {sorted(unknown)}")
     result = {}
     for name, variable in declared.items():
-        value = supplied.get(name, variable.default)
+        default = language if variable.default_from is not None and language is not None else variable.default
+        value = supplied.get(name, default)
         if value is None:
             raise ConfigError(f"{bundle}: missing required template variable: {name}")
         if type(value) is not TYPES[variable.kind]:

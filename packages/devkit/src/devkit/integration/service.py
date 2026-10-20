@@ -27,6 +27,7 @@ from devkit.core.git import run_git
 from devkit.core.mcp import Confirmation
 from devkit.core.mcp_context import capture_terminal_removal, guard_execution
 from devkit.core.paths import normalize_relpath
+from devkit.core.presentation import approval_language
 from devkit.core.project import read_project_config
 from devkit.integration import providers, receipts
 from devkit.integration.errors import (
@@ -199,9 +200,10 @@ class IntegrationService:
         self, branch: str, task: Task, confirm: Confirmation, route: str = "local"
     ) -> IntegrationResult:
         guard_execution()
+        language = approval_language(self.root)
         result = await asyncio.to_thread(self.prepare, branch, task, route)
         request = result.request
-        message = request.confirmation_message()
+        message = request.confirmation_message(language)
         try:
             reply = await confirm(
                 message,
@@ -210,7 +212,9 @@ class IntegrationService:
                     "properties": {
                         "approve": {
                             "type": "boolean",
-                            "title": "Approve this exact integration",
+                            "title": "이 정확한 통합 작업 승인"
+                            if language == "ko"
+                            else "Approve this exact integration",
                             "default": False,
                         }
                     },

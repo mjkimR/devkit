@@ -6,6 +6,7 @@ default_preset = "all"
 [variables.language]
 type = "string"
 default = "auto"
+default_from = "presentation.language"
 
 [[assets]]
 id = "response-style"

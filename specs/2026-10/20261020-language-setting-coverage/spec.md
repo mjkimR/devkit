@@ -2,7 +2,7 @@
 id: SPEC-language-setting-coverage
 title: Extend language settings to MCP approval content
 summary: Share a local-capable presentation language preference between response-style and domain-owned English/Korean MCP approval content, without claiming host UI localization.
-status: planned
+status: in-progress
 created: 2026-10-20
 related_capabilities: []
 related_stories: []

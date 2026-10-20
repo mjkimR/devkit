@@ -165,94 +165,11 @@ class IntegrationRequest:
             "pull_request": self.pr_number if self.pr_number else "create",
         }
 
-    def confirmation_message(self) -> str:
-        """Show decisions and exact effect targets without implementation diagnostics."""
-        plan = self.context.finish
+    def confirmation_message(self, language: str = "en") -> str:
+        """Render owned copy; preserve exact evidence and business scope."""
+        from devkit.integration.language import confirmation_message
 
-        def display(value: str) -> str:
-            return json.dumps(value, ensure_ascii=False)
-
-        presentation = {item.code: item.value for item in self.readiness.evidence}
-
-        def brief(value: str, limit: int = 1500) -> str:
-            return display(value if len(value) <= limit else value[:limit] + "… [truncated]")
-
-        branch, target = display(plan.branch), display(plan.target_branch)
-        if self.repository:
-            return "\n".join(
-                [
-                    (
-                        f"Approve pull request cleanup of {branch}, already merged into {display(self.repository.selector)} {target}?"
-                        if plan.already_merged
-                        else f"Approve pull request integration of {branch} into {display(self.repository.selector)} {target} with a merge commit?"
-                    ),
-                    f"Source: {plan.source_sha}; confirmation target: {plan.target_sha}",
-                    (
-                        f"PR {self.pr_number} is already merged. Fetch target; fast-forward local target; perform the selected cleanup below."
-                        if plan.already_merged
-                        else f"Push source; {'use PR ' + str(self.pr_number) if self.pr_number else 'create PR'}; merge; fetch; fast-forward local target."
-                    ),
-                    f"Remove worktree: {display(plan.path) if plan.worktree_identity else 'no'}; delete local and remote source branches: {plan.delete_branch} (remote lease {plan.source_sha}).",
-                    f"Additional cleanup: {display(json.dumps([asdict(scope) for scope in self.cleanup]))}",
-                    f"GitHub automatic branch deletion: {self.repository.delete_on_merge}; when enabled the platform can delete the remote branch regardless of devkit delete_branch policy.",
-                    (
-                        "Checked landing evidence was not recorded in this process. Cleanup reports INTEGRATION_LANDED_UNCHECKED (not-recorded); run the landed-target check after cleanup."
-                        if plan.already_merged
-                        else "Merge runs now only when required checks and reviews pass; otherwise resume later on the unchanged checked target. A frequently advancing target may prevent this route from ever merging. A target commit landing after the last check can merge without devkit checks; this is reported and does not stop cleanup."
-                    ),
-                    f"Unverified platform rules: {display(str(self.unverified_rules))}",
-                    f"Result check: {display(self.readiness.disclosure)}; landed-target check after cleanup: {display(self.readiness.landed_check)}",
-                    "A host timeout can leave execution running; inspect integration_status before recovery.",
-                ]
-            )
-        if plan.already_merged:
-            lines = [f"Approve cleanup of {branch}, already merged into {target}?"]
-        elif plan.merge_method == "no-ff":
-            lines = [f"Approve local integration of {branch} into {target} with a merge commit?"]
-        else:
-            lines = [f"Approve local integration of {branch} into {target} by fast-forward?"]
-        for code, label in (("TASK_TITLE", "Work"), ("TASK_SUMMARY", "Goal"), ("RESULT_SUMMARY", "Completed work")):
-            if presentation.get(code):
-                lines.append(f"{label}: {brief(presentation[code])}")
-        if plan.already_merged:
-            lines.append(
-                "The branch is already merged into the target: nothing is merged; only the cleanup below runs."
-            )
-        elif plan.merge_method == "no-ff":
-            lines += [
-                "Later commits on the target are merged in without another confirmation only if the merge is clean,"
-                " the integration policy is unchanged and readiness provider"
-                f" {display(self.provider)} passes again on the merged result; otherwise nothing changes on the"
-                " target.",
-                f"Result check: {display(self.readiness.disclosure)}",
-            ]
-        else:
-            lines.append(
-                "The target advances to the verified source commit (fast-forward); if the target moved, nothing"
-                " changes on the target."
-            )
-        lines += [
-            "",
-            f"Repository: {display(plan.base)}",
-            f"Task: {display(self.context.task.id)}",
-            f"Source: {display(plan.branch)} @ {plan.source_sha}",
-            f"Target: {display(plan.target_branch)} @ {plan.target_sha} (at confirmation)",
-            f"Remove worktree: {display(plan.path)}" if plan.worktree_identity is not None else "Remove worktree: no",
-            f"Delete local branch: {display(plan.branch)}" if plan.delete_branch else "Delete local branch: no",
-            "Additional cleanup:",
-        ]
-        targets = [
-            f"- {display(scope.extension)}: {display(target.kind)} {display(target.identity)}"
-            for scope in self.cleanup
-            for target in scope.targets
-        ]
-        lines.extend(targets or ["- none"])
-        lines += [
-            "",
-            "Approve only if this work and the cleanup above are ready.",
-            "No fetch, push, remote deletion or PR operations.",
-        ]
-        return "\n".join(lines)
+        return confirmation_message(self, language)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self) | {
