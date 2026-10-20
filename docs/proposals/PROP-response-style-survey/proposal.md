@@ -1,21 +1,24 @@
 ---
 id: PROP-response-style-survey
 title: Survey reply-style practice to refine response-style
-summary: Surveys reply-style guidance across agent tooling repositories and writing guides, measures candidate rules with a small benchmark, and folds the results into the response-style bundle, including whether its always-on guidance needs more than the 300-byte fragment.
+summary: "Selects established first-party prompt sources and official writing guides, then evaluates one portable response-style candidate with a bounded English/Korean pilot while retaining the 300-byte guidance contract."
 status: reviewing
 created_at: 2026-10-19
 target_area: distribution/
-priority: medium                      # critical | high | medium | low
-size: M                               # S | M | L | XL
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
+priority: medium
+size: M
+planning_effort: medium
+dev_effort: medium
 boundaries:
   owns:
     - distribution/
     - packages/devkit-catalog/src/devkit_catalog/response_style/
+    - packages/devkit-catalog/tests/test_bundles.py
+    - scripts/smoke.sh
   excludes:
-    - docs/decisions/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
+    - packages/devkit-dist/src/
+    - packages/devkit-spec/src/
+task_kind: feature
 workflow: sdd-proposal
 ---
 
@@ -23,45 +26,69 @@ workflow: sdd-proposal
 
 ## 1. Background & Hypothesis
 
-- **Problem**: The `response-style` bundle was rewritten once from one external project's ideas (an AGPL output-style
-  plugin, used for principles only). A single source gives one author's taste, not a tested practice, and nothing
-  measures whether the rules change replies at all.
-- **Constraint found in that rewrite**: a `guidance` fragment is limited to 300 UTF-8 bytes
-  (`CAP-DIST-manifest-spec`), so only one core sentence is always loaded; the rest lives in the skill, which an agent
-  reads once per context and which fades in long sessions. The user allows relaxing the limit if the evidence needs it.
-- **Hypothesis**: Rules drawn from several independent sources and kept only when a small benchmark shows an effect
-  give replies that are shorter, answer-first and loss-free on every host, without model-specific wording.
+The existing response-style has no recorded behavioral comparison. Popular prompt sources can identify useful
+practices, but stars are a screening signal and do not prove that their instructions improve replies. The
+previous single-source rewrite's origin is not independently audited or reused in this survey.
 
-## 2. Technical Spike Questions
+The selected direction is one portable style that preserves decision-relevant content, adapts length to the
+request and avoids unnecessary framing. Its improvement over the current style remains a hypothesis until the
+paired pilot runs. No source consensus, model-wide benefit or cross-host effectiveness is asserted in Planning.
+The 300-UTF-8-byte guidance-fragment limit in `CAP-DIST-manifest-spec` remains in force. A once-read skill fading
+in long sessions is unmeasured, and does not yet justify a shared distribution-contract change.
 
-- **Q1 (Sources)**: Which repositories and guides to survey: agent output styles and system prompts published by tool
-  vendors, open agent harnesses (Claude Code plugins, Codex `AGENTS.md` collections, Cursor and Windsurf rules),
-  technical writing guides (English and Korean product writing guides), and what each claims with evidence.
-- **Q2 (Licensing)**: How survey notes record each source's license, and the rule that only ideas, never wording,
-  examples or structure, move into the bundle from copyleft sources.
-- **Q3 (Measurement)**: A small benchmark (about ten to fifteen prompts: focused question, broad survey, depth
-  request, acknowledgment, artifact request, blocking question, a Korean subset) run headless per host with no style,
-  the current style and a candidate. Metrics: answer in the first sentence, length, wrapper-free artifacts, kept
-  numbers and scope conditions. Where it lives (`materials/` scripts or a repository script) and how it stays cheap.
-- **Q4 (Always-on budget)**: Whether the benchmark shows a gain from more always-loaded text than one 300-byte
-  fragment, and if so: raise the limit for all bundles, allow a per-bundle exception, or allow several fragments.
-  This is a `CAP-DIST-manifest-spec` contract change in `devkit-dist`.
-- **Q5 (Variants)**: Whether the bundle should offer presets (for example a terse heads-down variant and a fuller
-  status variant) or stay one style with variables.
-- **Q6 (Precedence)**: How the "content versus form" rule interacts with the spec bundle's report formats, and whether
-  those formats should shrink instead.
+## 2. Technical Spike Conclusions
+
+- **Q1 (Sources)**: Select OpenCode, Aider, Continue, gptme, Anthropic's official explanatory output-style plugin
+  and Goose. All six meet the >=1,000-star, non-archived, <=180-day default-branch-commit screen, with pinned
+  prompt/license sources. Add official Google, Microsoft and Toss writing guides as a separate evidence class.
+  `MAT-response-style-source-selection` records current counts, source diversity, provenance limits, exclusions
+  and the candidate-rule ledger. No majority vote treats unverified shared ancestry as independent evidence.
+- **Q2 (Reuse)**: Keep per-source notes and original synthesis. Do not copy source wording, examples or structure;
+  unresolved website terms are explicit. `PADR-response-style-source-selection` defines the screening and reuse
+  direction without treating a license label as legal clearance.
+- **Q3 (Measurement)**: Use twelve fixed English/Korean fixtures, no added bundle style/current/candidate arms,
+  two fresh repetitions and at most 72 completed generations per selected host. Preserve semantic obligations
+  before optimizing form or length; publish raw synthetic outputs, blinded judgments and incomplete cells.
+  `PADR-response-style-measurement` and `MAT-response-style-measurement-design` define the protocol. Execution
+  host, isolation method and collection budget remain the single open Planning question. Existing interactive
+  native subagents inherit style and are not valid no-style baselines.
+- **Q4 (Always-on budget)**: Retain one <=300-byte pointer and the discoverable skill. No manifest exception,
+  universal limit increase or fragment splitting. An optional <=16-generation synthetic position diagnostic
+  cannot prove compaction behavior. An actual contract expansion needs a separately accepted design supported by
+  observed host behavior; this proposal promises no such expansion (`PADR-response-style-guidance-budget`).
+- **Q5 (Variants)**: Keep one style and existing `language` configuration. Presets, new variables and host-specific
+  prompt variants add unsupported branches and are excluded.
+- **Q6 (Precedence)**: User and workflow requirements determine necessary content and required formats. Style
+  controls presentation within those obligations. A required table, risk, field or verification number survives
+  concision; the pilot tests that interaction. No spec report-schema change is proposed.
 
 ## 3. Proposed Design & Impact
 
-- Planning: a survey note per source in `materials/` with its license, claims and evidence; a benchmark design; PADRs
-  for the source policy, the measurement and the always-on budget.
-- Development: the revised skill and guidance in `devkit-catalog`, the benchmark and its first results, and the
-  manifest contract change only if Q4 decides one.
-- Affected: the `response-style` bundle, its tests and smoke assertions, `CAP-DIST-content-packages`, and
-  `CAP-DIST-manifest-spec` plus guidance validation in `devkit-dist` only under Q4.
+Planning writes the pinned survey notes, twelve-case evaluation design and three PADRs inside this proposal.
+After the open execution decision and `plan-accept`, handoff promotes source materials and decisions through the
+normal workflow; Development writes its spec, plan and tasks before editing the bundle.
+
+Development freezes the baseline and fixtures, writes one original candidate and a small spec-local standard-library
+import/scoring script, collects the selected host cohort and records the first results. Reject a candidate that
+loses required facts or fails artifact/report obligations. Adopt it only when the predeclared paired criteria pass;
+otherwise retain the current style and publish the negative result. Each retained rule is labelled as existing
+local policy, source-supported hypothesis or measured bundle behavior; no per-rule causal claim is inferred.
+
+The production change, if supported, is limited to the response-style bundle, its existing deployment tests and
+smoke assertions. Reflect its current contract in `CAP-DIST-content-packages`. Preserve template/language behavior,
+opt-in packaging and projection for Codex, Claude Code and Antigravity. Deployment coverage is not a live reply
+quality measurement; unmeasured hosts stay visible in the results. Shared guidance validation and
+`CAP-DIST-manifest-spec` remain unchanged. No report format or unrelated bundle changes.
+
+Verification: complete and uncontaminated result matrix for the selected host; original-source provenance and
+license-scope review; scorer rejection tests for missing/duplicate records and incomplete facts; existing language
+and host-projection coverage; applicable lint/type checks, `just test-affected`, consumer smoke, repository rules
+and independent medium Development review. No live model call or production change occurs during Planning.
 
 ## 4. Lifecycle & Retirement Criteria
 
-- Preliminary decisions: `devkit spec proposal padr response-style-survey "<title>"`.
-- On acceptance (`plan-accept`): hand off with `devkit spec proposal handoff response-style-survey`.
-- On rejection: `status: rejected` with the user's reason in the commit message.
+Accept the direction only after the execution host and budget are selected and independent Planning criticism is
+resolved. Record the user's `plan-accept` decision through the workflow. Development starts by normal handoff;
+no generation method, merge, push or publication is authorized merely by this document. At completion keep the
+first results and the selected/retained style rationale, with explicit limits on host and long-session claims.
+Rejection follows the workflow with its reason and preserves any open feedback before retirement.
