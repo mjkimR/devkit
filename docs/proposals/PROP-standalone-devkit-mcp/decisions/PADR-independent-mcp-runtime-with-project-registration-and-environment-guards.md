@@ -53,7 +53,7 @@ setup never bypasses it. No tracked ignore-file edits or Git clean-state bypass 
 requires exact ownership, including after package uninstall. The committed installation receipt remains portable.
 
 Retained executable, retained domain executor and owning config workspace are separate identities. Configuration
-uses the independent copied local file contract of `PROP-local-config-execution-environment`; no live parent
+uses the independent copied local file contract of `SPEC-local-config-execution-environment`; no live parent
 inheritance is introduced here. Cloud auto-registration exposes the read-only service subset. Both runtime and
 domain mutation boundaries refuse cloud interactive approval and resumed mutation; no missing UI grants authority.
 

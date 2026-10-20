@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: PROP-local-config-execution-environment
+by: user
+at: '2026-10-20T05:03:36.555791Z'

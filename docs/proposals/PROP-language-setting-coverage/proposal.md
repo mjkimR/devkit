@@ -29,8 +29,8 @@ approval forms, may remain in a different language. A consistent preference coul
 messages and form labels, but the actual rendering boundary depends on the host client. The feasibility of a fully
 localized approval screen is not established.
 
-This is a follow-up to `PROP-local-config-execution-environment` and `PROP-standalone-devkit-mcp`, not an expansion
-of their active Planning scope. Reuse their effective configuration and MCP runtime contracts when available.
+This is a follow-up to `SPEC-local-config-execution-environment` and `PROP-standalone-devkit-mcp`, not an expansion
+of their implementation scope. Reuse their effective configuration and MCP runtime contracts when available.
 The broad existing `packages/` boundary accommodates the future MCP package location; Planning must narrow it to
 actual configuration, language rendering, approval content and response-style owners before Development.
 
