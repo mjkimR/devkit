@@ -13,7 +13,7 @@ targets:
   - file: docs/stories/governance/US-keep-the-living-spec-consistent.md
 ---
 
-# [Blueprint] PROP-periodic-drift-reconciliation: Target Living Spec Structure for Periodic spec-code drift check and user-driven reconciliation sweep
+# [Blueprint] PROP-periodic-drift-reconciliation: Target Living Spec Structure for Spec-code drift reconciliation maintenance playbook
 
 This document defines the target blueprint of how the docs/ backbone (Living Spec) will evolve if proposal PROP-periodic-drift-reconciliation is accepted. It represents a hypothesis plan subject to adjustment during implementation. Upon handoff, it is copied into specs/ to serve as a baseline for plan.md boundaries and reconcile.md targets. The frontmatter `targets` list is the structured form of the documents named below; paths that do not exist yet are planned documents.
 
@@ -21,8 +21,7 @@ This document defines the target blueprint of how the docs/ backbone (Living Spe
 
 ## 1. System Capabilities Plan (docs/capabilities/)
 
-- New CAP-DLV-drift-reconciliation (planned path in targets): the drift report and the user-driven reconciliation
-  sweep.
+- New CAP-DLV-drift-reconciliation (planned path in targets): the manually invocable reconciliation playbook, evidence report, user dispositions, and verification.
 - `CAP-DLV-delivery-workflows`: link the periodic sweep to per-feature reconciliation (`spec-sync`).
 - `CAP-TRACE-code-entrypoints`: a consumer note if the sweep reads entrypoints; path-only stale-document hints stay
   rejected (proposal section 4).
@@ -31,21 +30,22 @@ This document defines the target blueprint of how the docs/ backbone (Living Spe
 
 ## 2. User Stories Plan (docs/stories/)
 
-- `US-keep-the-living-spec-consistent`: extend with the periodic sweep trigger.
+- `US-keep-the-living-spec-consistent`: cover manual maintenance review and the update-documentation, fix-code, or defer outcomes.
 
 ---
 
 ## 3. Architecture & Decision Impact (docs/architecture/ & docs/decisions/)
 
-A candidate PADR for the detection threshold and noise policy; `ADR-dual-source-of-truth-and-periodic-reconciliation`
-stays the parent decision.
+`ADR-dual-source-of-truth-and-periodic-reconciliation` stays the parent decision. No detector threshold or scheduling
+trigger decision is part of this playbook delivery.
 
 ---
 
 ## 4. Development Conventions & Governance (docs/development/ & .devkit/)
 
-A detection command (working name `devkit spec drift`) or a procedure over existing commands, and a sweep skill or
-playbook (proposal Q3).
+A maintenance playbook over existing commands and evidence review, with a demonstrated manual run. Catalog bundle
+and preset placement remain a Planning question; no dedicated detection command, standalone skill, or scheduler
+integration is included.
 
 ---
 
@@ -53,5 +53,5 @@ playbook (proposal Q3).
 
 | Aspect | Before | After |
 | --- | --- | --- |
-| Drift detection | Reading by eye | A report of suspected spec-code mismatches |
-| Cleanup | Ad hoc, after drift piles up | A periodic sweep where the user decides per finding: update spec, fix code or waive |
+| Drift review | Ad hoc inspection | A scoped playbook combining existing checks and semantic evidence review |
+| Cleanup | Ad hoc, after drift piles up | A manually invoked sweep with user dispositions, verified changes, and traceable deferrals |

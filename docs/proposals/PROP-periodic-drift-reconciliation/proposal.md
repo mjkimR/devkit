@@ -1,9 +1,10 @@
 ---
 id: PROP-periodic-drift-reconciliation
-title: Periodic spec-code drift check and user-driven reconciliation sweep
-summary: "Explores a lightweight drift check between the Living Spec and code plus a user-driven sweep that decides per finding whether to update the spec, fix the code or waive it: the Tier 2 reconciliation of ADR-dual-source-of-truth-and-periodic-reconciliation."
+title: Spec-code drift reconciliation maintenance playbook
+summary: "Defines a manually invocable maintenance playbook that checks Living Spec, code, and guidance consistency using existing commands and evidence review, then resolves findings through user decisions: the Tier 2 reconciliation of ADR-dual-source-of-truth-and-periodic-reconciliation."
 status: draft                         # draft | reviewing | accepted | rejected
 created_at: 2026-10-14
+milestone: MS-drift-reconciliation
 target_area: capabilities/delivery/
 priority: medium                      # critical | high | medium | low
 size: M                               # S | M | L | XL
@@ -19,7 +20,7 @@ workflow: sdd-proposal
 workflow_hash: sha256:90918c632715461d07f99f683b8381bdbe6381ad6689a7575a72c002c18c1399
 ---
 
-# [PROP-periodic-drift-reconciliation] Periodic spec-code drift check and user-driven reconciliation sweep
+# [PROP-periodic-drift-reconciliation] Spec-code drift reconciliation maintenance playbook
 
 - **Parent decision**: `ADR-dual-source-of-truth-and-periodic-reconciliation`
 
@@ -36,41 +37,59 @@ workflow_hash: sha256:90918c632715461d07f99f683b8381bdbe6381ad6689a7575a72c002c1
 
 ### 1.2 Hypothesis
 
-- A **lightweight drift check** based on static analysis and heuristics lets the user notice drift before it crosses a
-  threshold.
-- Instead of the agent rewriting documents on its own, an interactive **reconciliation sweep** ("check report, user's
-  intent, paired cleanup") keeps the Living Spec fresh at minimal effort.
+- A manually invocable **maintenance playbook** combining existing commands and evidence-based review can expose
+  accumulated drift without requiring a new detector or scheduler.
+- A user-driven reconciliation sweep keeps spec and code aligned by deciding whether each finding calls for a
+  documentation update, a code fix, or a documented deferral. Neither ledger is automatically authoritative.
 
-## 2. Technical Spike Questions
+## 2. Planning Questions
 
-- **Q1. Detection targets with acceptable precision.** Which of the candidates in 3.1 produce findings worth a user's
-  attention? Section 4 records one candidate already rejected on data.
-- **Q2. Check strength.** How strict can the check be before cleanup feels like homework? Collect how often, and in
-  what form, cleanup sessions are needed when the bundle runs in other repositories.
-- **Q3. Command or skill.** Whether detection needs a command (working name `devkit spec drift`) or the sweep can be a
-  procedure over existing commands (`devkit spec list --file`, `devkit spec refs`, `devkit rules check`), for example a
-  playbook next to `feedback-hygiene`.
+- **Q1. Scope and evidence.** Which documented commands, options, interfaces, terms, and behaviors should a bounded
+  sweep examine, and which existing checks and source inspection support each finding?
+- **Q2. Finding quality.** How should the playbook distinguish deterministic failures from suspected semantic drift,
+  limit noise, and present enough evidence for a user decision? Section 4 records a rejected detection candidate.
+- **Q3. Procedure and distribution.** What inputs, review steps, disposition records, and verification make the
+  playbook reusable? The deliverable is a playbook; its catalog bundle and preset placement remain to be agreed.
 
 ## 3. Proposed Design & Impact
 
-### 3.1 Lightweight Drift Detection
+### 3.1 Playbook Intake and Evidence Review
 
-- **Candidate targets**:
-  - Whether CLI flags and main interfaces or symbols named in `docs/capabilities/` exist in the code.
-  - Whether file paths and module references are valid (`RULE-code-entrypoints` already checks declared
-    entrypoints).
-  - Living Spec documents left unchanged for long while the code they anchor changed.
-- **Output**: suspected mismatches as sentinel lines or a Markdown report, following the agent-first output contract.
+- **Invocation**: explicit manual invocation with a selected area or contract scope and repository revision.
+  Scheduler integration and trigger design are outside this proposal.
+- **Existing tools**: use document lookup, references, declared entrypoints, and governance checks where relevant
+  (`CAP-DOCS-document-lookup`, `CAP-TRACE-code-entrypoints`, `CAP-GOV-evaluation-lifecycle`), then inspect the
+  implementation and consumer-facing guidance for semantic consistency.
+- **Review targets**:
+  - Documented CLI commands and options, main interfaces, terminology, and behavior against implementation.
+  - File paths and module references, reusing existing checks rather than duplicating them.
+  - Consumer-facing guides and instructions that restate the reviewed contract.
+- **Evidence limits**: changed paths or document age may help select review scope but do not establish drift.
+  Entrypoint-based stale-document hints remain rejected under section 4.
+- **Output**: findings cite both sides of the mismatch, distinguish deterministic failures from agent assessments,
+  and explain the suspected discrepancy. Detailed evidence belongs in a report artifact; command output follows
+  `ARCH-08-1-agent-output` and `CAP-ADV-agent-advisory-protocol`.
 
 ### 3.2 User-Driven Reconciliation
 
-For each finding the agent offers three branches to the user:
+For each finding, obtain an explicit disposition:
 
-1. **Update the spec**: the code is the new truth; rewrite the document to match.
-2. **Fix the code**: the spec's intent is right and the code regressed; handle it as a bug.
-3. **Waive**: out of scope for now, or an intentional temporary gap.
+1. **Update the spec or guidance**: the implemented behavior is intended; align the documentation with it.
+2. **Fix the code**: the documented intent remains correct; handle the regression through the applicable delivery path.
+3. **Defer or waive**: record the reason and a follow-up destination or the rationale for an intentional gap.
 
-The sweep refactors documents interactively, through a dedicated skill or playbook (Q3).
+Apply agreed changes through the applicable delivery and approval boundaries, verify the affected behavior and
+references, and record detected, resolved, and deferred findings separately. Repeated sweeps reuse existing feedback
+or proposals instead of duplicating follow-ups.
+
+### 3.3 Delivery and Verification
+
+- Deliver a playbook with defined inputs, scope selection, evidence collection, user decisions, cleanup, verification,
+  and completion evidence; demonstrate it with a manual run that records findings and their dispositions.
+- Complement per-work-unit `spec-sync`; broad structural cleanup belongs to the review/refactoring playbook unless
+  needed to resolve an agreed drift finding.
+- A dedicated detection command, a new standalone skill, automated scheduling, and automatic contract rewriting are
+  excluded. A future detector requires a separately evidenced gap and scope decision.
 
 ## 4. Rejected Candidate: Entrypoint-Based Stale-Document Hints
 
@@ -96,9 +115,10 @@ The sweep refactors documents interactively, through a dedicated skill or playbo
 
 ## 5. Lifecycle & Retirement Criteria
 
-- **Priority**: low until the bundle runs in other repositories; mature this proposal from the drift patterns observed
-  there.
-- Preliminary decisions: a PADR for the detection threshold and noise policy if Q1 settles on a check; the parent
-  decision stays `ADR-dual-source-of-truth-and-periodic-reconciliation`.
-- On acceptance: set `status: accepted` and run `devkit spec proposal handoff periodic-drift-reconciliation`.
-- On rejection: record a rejection ADR in `docs/decisions/` and delete the proposal directory.
+- **Milestone**: `MS-drift-reconciliation`; manual playbook delivery is independent of scheduling.
+- **Priority**: medium. Evidence from other repositories can refine the playbook but is not a prerequisite for its
+  initial delivery and manual verification.
+- The parent decision remains `ADR-dual-source-of-truth-and-periodic-reconciliation`. Existing rejected-detector
+  evidence and its reopen condition remain in force; this proposal does not introduce a new detector threshold.
+- Acceptance follows the proposal approval workflow; Development handoff follows acceptance.
+- On rejection, preserve the decision and relevant evidence through the proposal retirement workflow.
