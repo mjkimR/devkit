@@ -40,5 +40,5 @@ def decomposition_source(root: Path, value: str | None, slug: str) -> str | None
             target_files=["--decomposed-from"],
             fix="Pass PROP-<source-slug> of the draft being decomposed",
         )
-    check_backlog_editable(root, value)
+    check_backlog_editable(root, value, decomposition=True)
     return value

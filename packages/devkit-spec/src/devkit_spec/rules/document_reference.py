@@ -18,13 +18,15 @@ provenance field, in current documents only (within the targets, when the run na
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 
 from devkit.rules import Phase, RuleContext, Severity, Violation
 from devkit.rules.rules import BaseRule
 
 from devkit_spec.documents import Document, DocumentIndex, Reference, is_id, rewrite
-from devkit_spec.documents.ids import Kind
+from devkit_spec.documents.ids import ID_SOURCE, Kind
+from devkit_spec.documents.markdown import visible_lines
 from devkit_spec.rules import FIX_COMMAND, document_index, is_material, reportable
 
 RULE_ID = "RULE-document-reference"
@@ -154,6 +156,7 @@ class DocumentReferenceRule(BaseRule):
                 if current not in seen:
                     seen.add(current)
                     pending.extend(graph.get(current, []))
+        found.extend(self._glossary(ctx, index))
         return found
 
     def _reference(self, index: DocumentIndex, document: Document, ref: Reference, historical: bool, add: Add) -> None:
@@ -222,6 +225,51 @@ class DocumentReferenceRule(BaseRule):
                     f"Replace the Markdown link with `{destination.id}`",
                     column=link.start + 1,
                 )
+
+    def _glossary(self, ctx: RuleContext, index: DocumentIndex) -> list[Violation]:
+        """Resolve only Owner references in the ID-free root glossary's five-column tables."""
+        path = "docs/glossary.md"
+        if not ctx.is_file_targeted(path):
+            return []
+        # find_files honors snapshot contents, exclusions and symlink policy; never read the live tree directly.
+        if ctx.workspace_root / path not in ctx.cache.find_files(ctx.workspace_root / "docs", extensions=(".md",)):
+            return []
+        text = ctx.cache.read_text_strict(path)
+        if text is None:
+            return []
+        found: list[Violation] = []
+        state, previous = "", 0
+        for line in visible_lines(text):
+            if line.number != previous + 1:
+                state = ""
+            previous = line.number
+            cells = line.text.strip().removeprefix("|").removesuffix("|").split("|")
+            cells = [cell.strip() for cell in cells]
+            if cells == ["Term", "Definition", "Owner", "Avoid", "Code identifiers"]:
+                state = "header"
+                continue
+            if state == "header":
+                state = "rows" if len(cells) == 5 and all(re.fullmatch(r":?-{3,}:?", c) for c in cells) else ""
+                continue
+            if state != "rows" or "|" not in line.text:
+                state = ""
+                continue
+            # Markdown rows may omit trailing cells or include surplus ones; the header fixes Owner at column 3.
+            owner = cells[2] if len(cells) > 2 else ""
+            for match in re.finditer(rf"`({ID_SOURCE})`|\[({ID_SOURCE})\]", owner):
+                target = match.group(1) or match.group(2)
+                problem = _resolve_problem(index, target)
+                if problem:
+                    found.append(
+                        Violation(
+                            rule_id=self.id,
+                            file=path,
+                            line=line.number,
+                            message=problem,
+                            remediation="Correct the glossary Owner ID or give its intended document a unique ID",
+                        )
+                    )
+        return found
 
     def fix(self, ctx: RuleContext) -> list[str]:
         index = document_index(ctx)
