@@ -1,0 +1,29 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T07:20:08.112271Z'
+status: completed
+review: review-01.yaml
+summary: 'Medium implementer reverified both independent P1 reproductions: relative imported packages include initializers; root CLI consumers retain broad spec coverage despite fine imports. Three new regression cases pass.'
+findings:
+- issue: Relative imports omit helper packages when resolving imported names.
+  evidence: scripts/affected_tests.py:264
+  failure_condition: A fine test imports devkit_spec.documents and from . import helpers; tests/__init__.py exists and helpers/__init__.py imports devkit_spec.scope. The existing initializer prevents fallback but helpers/__init__.py is omitted, excluding the consumer for a scope change.
+  suggested_action: Resolve relative imported names as both module files and package initializers and add an independent regression fixture.
+  resolution: resolved
+  severity: P1
+- issue: Root CLI consumers lose broad dependency coverage when they also import a fine module.
+  evidence: scripts/affected_tests.py:354
+  failure_condition: A test imports devkit.cli.cli and devkit_spec.documents while exercising the spec entry point; a scope change excludes it because the fine import suppresses the owner edge.
+  suggested_action: Preserve explicit broad spec coverage for root CLI consumers independently of fine imports and extend the fixture.
+  resolution: resolved
+  severity: P1
+assumptions:
+- Mandatory initial isolated review completed. Medium fix verification performed by implementer using reviewer reproduction inputs; fixes are committed in diff_scope.head.
+checks:
+  tests: PASS affected tests 72 including 63 selector cases
+  lint: PASS Ruff check/format and Pyright 0 errors/warnings
+diff_scope:
+  base: 29e7dd36845455d92d42e858e3372e3dd812a22e
+  head: d94c914e94ce9c31c7839f23f8c3af3e6b019470
