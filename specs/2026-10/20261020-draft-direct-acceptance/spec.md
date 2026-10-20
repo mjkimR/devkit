@@ -46,7 +46,7 @@ Handed off from proposal PROP-draft-direct-acceptance on 2026-10-20.
 
 `devkit spec proposal accept` becomes the one writer of every acceptance: the Planning form in one validated step,
 `--direct` for an eligible draft on the base checkout (Backlog work, no Planning run), a read-only `--check`, and a
-`--direct` repair of an accepted proposal that has no gate record and no Planning run. The handoff of a bound
+`--direct` repair of an accepted proposal that has no gate record and no Planning run. The handoff of an `sdd-proposal`
 proposal requires the recorded acceptance and carries its note. The guidance describes the direct path and the
 session reclassification of a queued draft, the one stated exception to lowering depth only through a handoff.
 
@@ -157,11 +157,12 @@ session reclassification of a queued draft, the one stated exception to lowering
   `--note`)
 
 ### [AC-09] The handoff guard
-- **Given** a bundle bound to a workflow with `status: accepted` but no effective accepted `gate:plan-accept` (the
-  rule that carries it), on `dev-<slug>`
+- **Given** a bundle bound to `sdd-proposal` with `status: accepted` but no effective accepted `gate:plan-accept`
+  (the rule that carries it), on `dev-<slug>`
 - **When** `devkit spec proposal handoff <slug>` runs
 - **Then** it exits `2` with `SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED` (`INTERACTION`) and nothing is written or removed;
-  an unbound or single-file proposal with `status: accepted` still hands off on the status alone
+  an unbound or single-file proposal, or one bound to another workflow, with `status: accepted` still hands off on
+  the status alone
 
 ### [AC-10] The carried note survives
 - **Given** a proposal whose effective `gate:plan-accept` note is `direct acceptance, Planning skipped: X; task_kind

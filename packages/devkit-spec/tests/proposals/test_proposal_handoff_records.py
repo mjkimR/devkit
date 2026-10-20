@@ -177,6 +177,15 @@ def test_an_unbound_or_single_file_proposal_hands_off_on_its_status(workspace: P
     assert handoff_proposal(workspace, "solo", today=TODAY).carried_gates == []
 
 
+def test_a_proposal_bound_to_another_workflow_hands_off_on_its_status(workspace: Path) -> None:
+    proposal = _proposal(workspace, "custom")
+    write_workflow(workspace, "custom-proposal", INCUBATED.replace("id: sdd-proposal", "id: custom-proposal"))
+    text = proposal.read_text(encoding="utf-8").replace("workflow: sdd-proposal", "workflow: custom-proposal")
+    proposal.write_text(text, encoding="utf-8")
+    accept(proposal)
+    assert handoff_proposal(workspace, "custom", today=TODAY).carried_gates == []
+
+
 def test_the_carried_acceptance_keeps_the_proposals_note(workspace: Path) -> None:
     accept(_proposal(workspace, "noted"))
     note = "direct acceptance, Planning skipped: X; task_kind feature confirmed"

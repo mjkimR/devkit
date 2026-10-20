@@ -200,7 +200,7 @@ class ProposalGateNotOpenError(SpecError):
 
 
 class ProposalAcceptanceUnrecordedError(SpecError):
-    """``proposal handoff``: a bound proposal says ``status: accepted`` but has no effective accepted
+    """``proposal handoff``: a proposal bound to ``sdd-proposal`` says ``status: accepted`` but has no effective accepted
     ``gate:plan-accept`` record (``INTERACTION``); nothing was written."""
 
     code = "SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED"

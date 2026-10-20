@@ -16,6 +16,7 @@ from proposals.support import TODAY, write_workflow
 from scope.support import git, write
 
 import devkit_spec
+from devkit_spec.proposals import accept as accept_module
 from devkit_spec.proposals import accept_proposal, create_proposal
 
 PROPOSAL_DEFINITION = (Path(devkit_spec.__file__).parent / "bundle" / "workflows" / "sdd-proposal.md").read_text(
@@ -141,7 +142,7 @@ def test_every_failed_condition_is_listed_and_nothing_is_written(tmp_path: Path)
     assert _snapshot(root, "small") == before
 
 
-@pytest.mark.parametrize("place", ["linked", "detached", "dev-branch", "not-origin-head"])
+@pytest.mark.parametrize("place", ["linked", "detached", "dev-branch", "plan-branch", "not-origin-head"])
 def test_a_direct_acceptance_runs_only_on_the_base_checkout(tmp_path: Path, place: str) -> None:
     root = _repo(tmp_path)
     _draft(root)
@@ -155,6 +156,8 @@ def test_a_direct_acceptance_runs_only_on_the_base_checkout(tmp_path: Path, plac
         git(root, "checkout", "-q", "--detach")
     elif place == "dev-branch":
         git(root, "checkout", "-q", "-b", "dev-small")
+    elif place == "plan-branch":
+        git(root, "checkout", "-q", "-b", "plan-other")
     else:
         git(root, "update-ref", "refs/remotes/origin/trunk", "HEAD")
         git(root, "symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/trunk")
@@ -167,19 +170,48 @@ def test_a_direct_acceptance_runs_only_on_the_base_checkout(tmp_path: Path, plac
         "linked": "linked worktree",
         "detached": "detached HEAD",
         "dev-branch": "activity branch dev-small",
+        "plan-branch": "activity branch plan-other",
         "not-origin-head": "integration base trunk",
     }[place]
     assert any(expected in line for line in error["details"])
     assert _snapshot(where, "small") == before
 
 
-def test_the_base_branch_without_origin_head_is_the_main_worktrees(tmp_path: Path) -> None:
+def test_the_base_branch_is_the_origin_head_target(tmp_path: Path) -> None:
     root = _repo(tmp_path)
     git(root, "checkout", "-q", "-b", "trunk")
     _draft(root)
     git(root, "update-ref", "refs/remotes/origin/trunk", "HEAD")
     git(root, "symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/trunk")
     assert _accept(root, "small", "--direct", "--note", "settled").exit_code == 0
+
+
+def test_without_origin_head_the_main_worktrees_branch_is_the_base(tmp_path: Path) -> None:
+    root = _repo(tmp_path)
+    git(root, "checkout", "-q", "-b", "hand-made")
+    _draft(root)
+    assert _accept(root, "small", "--direct", "--note", "settled").exit_code == 0
+
+
+@pytest.mark.parametrize("hold", ["question", "malformed"])
+def test_a_pending_question_or_a_malformed_worker_holds_it(tmp_path: Path, hold: str) -> None:
+    root = _repo(tmp_path)
+    _draft(root)
+    head = (
+        "kind: worker\nstage: intent-proposal\nworkflow: sdd-proposal\nsegment: 0\ncreated_at: '2026-10-13T00:00:00Z'\n"
+    )
+    body = (
+        "status: needs_input\nsummary: asks\nfindings: []\nquestions:\n  - id: scope\n    title: Which scope?\n    prompt: Pick the scope.\n"
+        if hold == "question"
+        else "status: [broken\n"
+    )
+    write(root, f"{UNIT.format(slug='small')}/envelopes/worker-01.yaml", head + body)
+    before = _snapshot(root, "small")
+    error = _error(_accept(root, "small", "--direct", "--note", "settled", "--format", "json"))
+    assert error["code"] == "SPEC_PROPOSAL_NOT_ELIGIBLE"
+    expected = "unanswered question scope" if hold == "question" else "malformed worker envelope"
+    assert any(line.startswith("blocking: envelope hold:") and expected in line for line in error["details"])
+    assert _snapshot(root, "small") == before
 
 
 def test_the_check_reports_a_pending_intent_and_writes_nothing(tmp_path: Path) -> None:
@@ -230,6 +262,29 @@ def test_the_sweep_switched_off_by_policy_lets_the_gate_open(tmp_path: Path) -> 
     _draft(root, swept=False)
     assert _accept(root, "small", "--direct", "--note", "settled").exit_code == 0
     assert len(_plan_accepts(root, "small")) == 1
+
+
+def test_a_proposal_with_crlf_line_endings_is_accepted(tmp_path: Path) -> None:
+    root = _repo(tmp_path)
+    proposal = _draft(root)
+    proposal.write_bytes(proposal.read_bytes().replace(b"\n", b"\r\n"))
+    before = proposal.read_bytes()
+    accept_proposal(root, "small", by="user", note="settled", direct=True)
+    assert proposal.read_bytes() == before.replace(b"status: draft", b"status: accepted", 1)
+
+
+def test_any_failure_after_the_status_write_restores_it(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    root = _repo(tmp_path)
+    proposal = _draft(root)
+    before = proposal.read_bytes()
+
+    def fail(*args: object, **kwargs: object) -> object:
+        raise OSError("disk full")
+
+    monkeypatch.setattr(accept_module, "record_answer", fail)
+    with pytest.raises(OSError, match="disk full"):
+        accept_proposal(root, "small", by="user", note="settled", direct=True)
+    assert proposal.read_bytes() == before and _plan_accepts(root, "small") == []
 
 
 def test_the_status_line_keeps_its_comment(tmp_path: Path) -> None:

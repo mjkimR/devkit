@@ -53,12 +53,12 @@ removes it.
    cannot be indexed never blocks them.
 2. **Approval is explicit and recorded**: handoff MUST require `status: accepted`, which `accept` writes once the
    user gave `plan-accept`. Anything else is `SPEC_PROPOSAL_NOT_APPROVED` (`INTERACTION`: stop and ask the user; its
-   `[FIX]` names `devkit spec proposal accept`). A bundle bound to a workflow MUST also have its effective accepted
+   `[FIX]` names `devkit spec proposal accept`). A bundle bound to `sdd-proposal` MUST also have its effective accepted
    `gate:plan-accept` record (the rule of rule 12 that carries it); without it the handoff refuses before writing
    (`SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED`, `INTERACTION`: never record an acceptance unasked; without a `worker`
    envelope the user's acceptance is repaired with `accept --direct` on the base, with one the user decides on
-   reverting the Planning merge). A single-file or unbound proposal, which carries no gate record, keeps the
-   status-only rule. A proposal marked `needs_decompose: true` is split in Backlog, never handed off
+   reverting the Planning merge). A single-file or unbound proposal, which carries no gate record, and one bound to
+   another workflow keep the status-only rule. A proposal marked `needs_decompose: true` is split in Backlog, never handed off
    (`SPEC_PROPOSAL_NEEDS_DECOMPOSE`), and one proposal hands off to exactly one spec.
 3. **The follow-up workflow comes from `task_kind`; effort hints stay on the proposal**: `workflow` in `proposal.md` is devkit's
    binding of the proposal unit itself; `task_kind` (`feature` or `bugfix`, confirmed at `plan-accept`) selects the follow-up workflow `sdd-spec-<task_kind>` (any other value is `SPEC_PROPOSAL_INVALID`), while `planning_effort` and `dev_effort` (`low` | `medium` | `high`, scaffolded default `medium`) are non-authoritative activity-effort hints on `proposal.md`. `planning_effort` guides Planning and `dev_effort` is refined before `plan-accept` to guide Development (`[HANDOFF]` and `HandoffResult.dev_effort` expose it). After handoff the bound workflow carries the
@@ -115,8 +115,8 @@ removes it.
     `gate:plan-intent` and `gate:plan-accept` whose effective record in the proposal's bound workflow (its latest
     that is not a `cancel`, followed by no return record that is not a `cancel`: stricter than devkit's voiding) is
     `accept`, the handoff records the same request in the bound spec with the record's `by` and note
-   `PROP-<slug>: <the record's note>` (`PROP-<slug>` when it has none), so the spec shows how its direction was
-   accepted, a direct acceptance included.
+    `PROP-<slug>: <the record's note>` (`PROP-<slug>` when it has none), so the spec shows how its direction was
+    accepted, a direct acceptance included.
     `gate:plan-intent`, open at the spec's `intent` stage, is answered through devkit's `record_answer`;
     `gate:plan-accept`, which no spec workflow asks, is written as a decision record of the spec's workflow with the
     proposal's stage, kept for the audit trail and satisfying no stage. A gate of the spec answered by policy is
@@ -172,8 +172,8 @@ work and does not prove its completion. Handoff never marks source feedback reso
 resolution during reconciliation under `ADR-feedback-resolution-lifecycle`.
 
 Without handoff, rejection/decomposition return keeps feedback in place until authorized Host deletion; a draft
-deleted for a session reclassification (rule 13) preserves its open feedback the same way, in its deletion commit. Before any
-such deletion, the Host moves open files once to `specs/<current-month>/feedback/<today>-<name>.md` in the same
+deleted for a session reclassification (rule 13) preserves its open feedback the same way, in its deletion commit.
+Before any such deletion, the Host moves open files once to `specs/<current-month>/feedback/<today>-<name>.md` in the same
 commit, preserving observation dates; settled records remain in Git. Inspect all source/destination paths and IDs.
 Keep the source on invalid input, collision, failed move or unresolved live dependency. Update relative links;
 historical references to retired proposal/PADR/settled-feedback IDs use existing strikethrough syntax plus retrievable
@@ -485,7 +485,7 @@ directory whose namespace applies when `namespace` is omitted);
 | `SPEC_PROPOSAL_IN_PLANNING` | `ERROR` (`INPUT_ERROR`) | `ProposalInPlanningError` | `check`: Backlog may not change the proposal, because its `plan-<slug>` exists (locally or fetched; rule 13) or it is no longer `draft`. `padr`: `plan-<slug>` exists and the checkout is not on it. |
 | `SPEC_PROPOSAL_INVALID` | `ERROR` (`MAINTENANCE`) | `ProposalInvalidError` | The proposal, its blueprint or a PADR cannot be read or its frontmatter does not parse; or, at handoff, `namespace` is not a string naming `global` or a registered namespace, `summary` is not a string, `task_kind` is not `feature` or `bugfix`, or `planning_effort`/`dev_effort` is present and not `low`, `medium` or `high`. |
 | `SPEC_PROPOSAL_NOT_APPROVED` | `ERROR` (`INTERACTION`) | `ProposalNotApprovedError` | `handoff`: status is not `accepted`, `plan-accept` was not given; `[FIX]` records it with `devkit spec proposal accept` after the user's acceptance. `new`: the proposal `--supersedes` names is not `accepted`; a supersede replaces an accepted proposal only. |
-| `SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED` | `ERROR` (`INTERACTION`) | `ProposalAcceptanceUnrecordedError` | `handoff`: a bound bundle says `accepted` without an effective accepted `gate:plan-accept` (rule 2); nothing written. |
+| `SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED` | `ERROR` (`INTERACTION`) | `ProposalAcceptanceUnrecordedError` | `handoff`: a bundle bound to `sdd-proposal` says `accepted` without an effective accepted `gate:plan-accept` (rule 2); nothing written. |
 | `SPEC_PROPOSAL_ACCEPT_REFUSED` | `ERROR` (`INPUT_ERROR`) | `ProposalAcceptRefusedError` | `accept`: the status does not allow the form (a draft without `--direct`, a proposal in review with it, an accepted proposal whose record exists, a rejected one), or the proposal is single-file or unbound (rule 14). |
 | `SPEC_PROPOSAL_NOT_ELIGIBLE` | `ERROR` (`INTERACTION`) | `ProposalNotEligibleError` | `accept --direct`: one or more direct-acceptance conditions fail, each a `blocking:` or `pending:` detail; nothing written. |
 | `SPEC_PROPOSAL_GATE_NOT_OPEN` | `ERROR` (`MAINTENANCE`) | `ProposalGateNotOpenError` | `accept`: the workflow did not open `gate:plan-accept` (a missing sweep, a hold); the status is restored and `[DETAIL]` lists the unmet checks and hold reasons. |

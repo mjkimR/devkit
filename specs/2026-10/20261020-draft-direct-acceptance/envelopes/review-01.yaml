@@ -1,0 +1,54 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T23:19:18.709543Z'
+status: completed
+summary: 'round 1; code-reviewer reviewed b8c3a77..5aeb321 against AC-01..AC-12 and the three ADRs: no P1, one P2 (CRLF status rewrite) and five P3s.'
+findings:
+- issue: 'accept cannot rewrite the status line of a proposal.md with CRLF line endings: _frontmatter_end does not allow ''\r'' before the closing ''---'', so _write_status finds no status line although the parser and --check accept the file.'
+  evidence: packages/devkit-spec/src/devkit_spec/proposals/accept.py:279
+  failure_condition: proposal.md has CRLF line endings; every check passes, then accept is refused with SPEC_PROPOSAL_INVALID 'has no status line to change'.
+  suggested_action: Match the closing fence as r'^---[ \t]*\r?$' and add a CRLF case to test_the_status_line_keeps_its_comment.
+  resolution: open
+  severity: P2
+- issue: After the status is written only an AdvisoryError from record_answer restores proposal.md; any other exception leaves status accepted without a gate:plan-accept record.
+  evidence: packages/devkit-spec/src/devkit_spec/proposals/accept.py:181
+  failure_condition: write_decision raises a non-advisory error (OSError, PermissionError); proposal.md stays accepted without its record.
+  suggested_action: Restore the original bytes on any exception; re-raise a non-advisory exception after restoring; keep ProposalGateNotOpenError for AdvisoryError only.
+  resolution: open
+  severity: P3
+- issue: Two guidance sentences still name devkit workflow answer --action accept as the way to record plan-accept and add the accept command only as a qualifier.
+  evidence: packages/devkit-spec/src/devkit_spec/bundle/skills/spec-next/references/workflow-signals.md:9; packages/devkit-spec/src/devkit_spec/bundle/skills/spec/SKILL.md:41
+  failure_condition: An agent following the first clause records plan-accept with workflow answer and gets REQUEST_UNKNOWN unless it edits the status by hand, which sdd-proposal.md forbids.
+  suggested_action: Limit workflow answer --action accept to plan-intent and decline to both gates; name devkit spec proposal accept as the only command accepting plan-accept.
+  resolution: open
+  severity: P3
+- issue: The handoff guard covers a bundle bound to any workflow, broader than the ADR's 'bound to sdd-proposal'.
+  evidence: packages/devkit-spec/src/devkit_spec/proposals/handoff.py:295; docs/decisions/2026-10/20261020-direct-acceptance-command-and-handoff-guard.md:96
+  failure_condition: A proposal bound to another workflow without a plan-accept gate can never be handed off and accept cannot record the gate.
+  suggested_action: Narrow the guard to the sdd-proposal binding as the ADR states, or keep the broader rule and say so in reconcile.md.
+  resolution: open
+  severity: P3
+- issue: 'Some AC-02/AC-03 cases lack tests and test_the_base_branch_without_origin_head_is_the_main_worktrees is misnamed: no hand-made branch without origin/HEAD, no plan-* checkout, no pending-question or malformed-worker hold.'
+  evidence: packages/devkit-spec/tests/proposals/test_proposal_accept.py:144; packages/devkit-spec/tests/proposals/test_proposal_accept.py:176; packages/devkit-spec/tests/proposals/test_proposal_accept.py:117
+  failure_condition: A regression in base_checkout_problem or in how hold reasons reach the details would pass the suite.
+  suggested_action: Rename the origin/HEAD test and add a hand-made branch without origin/HEAD (accepted), a plan-other branch (refused), and pending-question and malformed-worker holds.
+  resolution: open
+  severity: P3
+- issue: 'Formatting: an unwrapped 202-character line in the bundle AGENTS.md, rule 12 continuation indented 3 spaces and an overlong §3.1 line in CAP-DLV-proposal-incubation.'
+  evidence: packages/devkit-spec/src/devkit_spec/bundle/AGENTS.md:46; docs/capabilities/delivery/CAP-DLV-proposal-incubation.md:118; docs/capabilities/delivery/CAP-DLV-proposal-incubation.md:175
+  failure_condition: Always; inconsistent wrap and indentation, no behavior effect.
+  suggested_action: Rewrap AGENTS.md:46-47 at 120 columns, indent CAP lines 118-119 by 4 spaces, rewrap CAP line 175.
+  resolution: open
+  severity: P3
+unverified_areas:
+- repair when proposal_gates rejects a record the engine still counts (accept then a non-cancel return)
+checks:
+  tests: PASS reviewer rerun 42 passed; caller just test devkit-spec 1022, test-affected 1030
+  lint: PASS just lint devkit-spec
+  typecheck: PASS pyright 0 errors
+diff_scope:
+  base: b8c3a775b53ad28377f774f894a2a2bbff5f575d
+  head: 5aeb32180b8f896151cee24ed0a4dd427008f986
+activity_effort: high

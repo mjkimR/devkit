@@ -186,11 +186,17 @@ def accept_proposal(
         details = _not_open_details(workspace, unit, exc)
         if form != REPAIR:
             path.write_bytes(original)
+        undone = "nothing was recorded" if form == REPAIR else "the status was restored"
         raise ProposalGateNotOpenError(
-            f"{ACCEPT_GATE} of PROP-{slug} is not open; {'nothing was recorded' if form == REPAIR else 'the status was restored'}",
+            f"{ACCEPT_GATE} of PROP-{slug} is not open; {undone}",
             *details,
             target_files=[rel],
         ) from exc
+    except BaseException:
+        # Any other failure (a write error, an interruption) leaves no status without its record.
+        if form != REPAIR:
+            path.write_bytes(original)
+        raise
     return AcceptResult(
         f"PROP-{slug}",
         rel,
@@ -276,7 +282,7 @@ def _write_status(path: Path, original: bytes, rel: str) -> None:
 
 def _frontmatter_end(text: str) -> int:
     """The offset just past the closing ``---`` of the frontmatter (0 when there is none)."""
-    match = re.match(r"---\r?\n.*?^---[ \t]*$", text, re.DOTALL | re.MULTILINE)
+    match = re.match(r"---\r?\n.*?^---[ \t]*\r?$", text, re.DOTALL | re.MULTILINE)
     return match.end() if match else 0
 
 

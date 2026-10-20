@@ -23,9 +23,9 @@ path it would create), then:
    (``proposal_gates``, ``_record_gates``), each with the note ``PROP-<slug>: <the proposal record's note>``: a carried
    approval is never turned into the approval of another decision.
 
-A bundle bound to a workflow hands off only with its effective accepted ``gate:plan-accept`` (the rule that carries
-it), not on ``status: accepted`` alone (``ProposalAcceptanceUnrecordedError``); a single-file or unbound proposal,
-which can carry no gate record, keeps the status-only rule.
+A bundle bound to ``sdd-proposal`` hands off only with its effective accepted ``gate:plan-accept`` (the rule that
+carries it), not on ``status: accepted`` alone (``ProposalAcceptanceUnrecordedError``); a single-file or unbound
+proposal, which can carry no gate record, and one bound to another workflow keep the status-only rule.
 
 A legacy proposal or PADR whose slug starts with a number (``PROP-2024-budget``) is refused: the ID it would become
 breaks ``RULE-id-convention``. A failure of any kind in steps 1 to 4 removes what they wrote, moves what they moved
@@ -84,6 +84,7 @@ from devkit_spec.proposals.binding import (
     DEV_EFFORT,
     EFFORTS,
     PLANNING_EFFORT,
+    PROPOSAL_WORKFLOW,
     TASK_KINDS,
     resolve_binding,
     spec_workflow,
@@ -292,7 +293,11 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
             target_files=[proposal_rel],
         )
     gates = proposal_gates(bundle, text_value(meta.get("workflow"))) if is_bundle else []
-    if is_bundle and text_value(meta.get("workflow")) and ACCEPT_GATE not in {gate.request for gate in gates}:
+    if (
+        is_bundle
+        and text_value(meta.get("workflow")) == PROPOSAL_WORKFLOW
+        and ACCEPT_GATE not in {gate.request for gate in gates}
+    ):
         raise ProposalAcceptanceUnrecordedError(
             f"proposal PROP-{slug} is accepted but has no effective accepted {ACCEPT_GATE} record; the handoff needs"
             " the user's recorded acceptance",

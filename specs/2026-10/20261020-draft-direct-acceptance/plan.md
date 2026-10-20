@@ -79,7 +79,7 @@ Order (each refusal before any write):
 worktree, on a detached `HEAD`, on a `plan-*` or `dev-*` branch, or, when `refs/remotes/origin/HEAD` resolves, on a
 branch other than its target.
 
-Handoff: after the status check, a bundle whose `workflow` is set and whose `_proposal_gates` lacks an accepted
+Handoff: after the status check, a bundle bound to `sdd-proposal` whose `_proposal_gates` lacks an accepted
 `gate:plan-accept` raises `SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED` (`INTERACTION`) before any write. `_record_gates`
 writes the note `PROP-<slug>: <note>` when the proposal's record has a note, else `PROP-<slug>`.
 
