@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-envelope-record-gaps
 feature: SPEC-envelope-record-gaps
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md
     resolution: modified

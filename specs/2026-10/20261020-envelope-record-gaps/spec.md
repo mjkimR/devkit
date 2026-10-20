@@ -2,7 +2,7 @@
 id: SPEC-envelope-record-gaps
 title: 'Close gaps in Planning records: folded challenger findings, settled assumptions, proposal boundaries'
 summary: "Lets a reverify close a challenger round, gives answer envelopes a settles list for worker assumptions the user decided, and adds a warning rule that proposal boundaries name existing paths, so Planning records match what actually happened."
-status: in-progress
+status: completed
 created: 2026-10-20
 related_capabilities:
   - CAP-DLV-workflow-envelopes
