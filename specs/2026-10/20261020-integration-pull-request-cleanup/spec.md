@@ -8,7 +8,6 @@ related_capabilities: []
 related_stories: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-integration-pull-request-cleanup] Integration through pull requests with no-ff merge and cleanup
 
@@ -44,18 +43,55 @@ removing unmerged work.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. Other hosting platforms, fork PRs, merge queues, squash/rebase merges, auto-merge and admin bypass.
+2. Persisting approval authority across process restarts or changing the local integration route.
+3. Automatically fixing source failures or overwriting dirty/divergent local state.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Explicit remote approval
+- **Given** a GitHub task with an eligible upstream target.
+- **When** the pull-request route prepares and confirms.
+- **Then** the immutable request binds repository, refs, source SHA, confirmation target, PR identity, no-ff method and every cleanup target; declining performs no remote write.
+
+### [AC-02] Prepare refusals
+- **Given** a missing authenticated gh, unsupported remote, fork/draft/wrong-base PR, queue, merge prohibition, divergent remote source or invalid target upstream.
+- **When** prepare runs.
+- **Then** a stable refusal precedes confirmation and no remote write occurs.
+
+### [AC-03] Pinned merge and readiness
+- **Given** an approved source and a descendant target with unchanged effective policy.
+- **When** the approving call executes.
+- **Then** it pushes the exact source without force, creates or uses the bound PR, checks a prospective merge, rechecks target and required checks/reviews, then merges with a head pin only.
+
+### [AC-04] Pending and resume
+- **Given** checks or reviews are pending after push and PR creation.
+- **When** the call returns and is resumed.
+- **Then** INTEGRATION_CHECKS_PENDING is successful but incomplete; resume merges only on the last checked target, refuses a changed source/base/draft/closed PR or moved target and never waits for checks.
+
+### [AC-05] Landing evidence
+- **Given** the PR reports MERGED.
+- **When** its merge commit and fetched target are inspected.
+- **Then** only a second parent equal to the approved source confirms the merge; exact checked parent/tree/containment establishes checked landing, otherwise INTEGRATION_LANDED_UNCHECKED identifies the reason and declared landed-target check; missing source ancestry prevents cleanup.
+
+### [AC-06] Ordered cleanup and re-entry
+- **Given** a confirmed merge retains source ancestry.
+- **When** cleanup or resume runs.
+- **Then** it fast-forwards a clean local target, removes the worktree/local branch, leases selected remote deletion after dependent-PR inspection, then runs scoped cleanup; failures retain explicit step states and restart cleanup has not-recorded landing evidence.
+
+### [AC-07] Unknown outcomes and bounds
+- **Given** a network mutation times out or fails without a recognized refusal.
+- **When** the result is inspected or resumed.
+- **Then** unknown steps are resolved from remote state before destructive work; bounded network calls and nonblocking resume locking are disclosed and tested.
+
+### [AC-08] Local compatibility
+- **Given** local integration or CLI finish is selected.
+- **When** the existing entry point runs.
+- **Then** existing local behavior is preserved and required PR policy refuses local integration with a directive naming the PR route.
 
 ## 5. Carried Proposal Notes
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+The accepted implementation decisions below define the detailed contracts for AC-01 through AC-08.
 
 ### 2. Planning Scope
 
@@ -295,3 +331,11 @@ advances only within its call). The user's decisions on q-checks-wait and q-unch
 - On acceptance (`plan-accept`): hand off with `devkit spec proposal handoff integration-pull-request-cleanup`.
 - On rejection: `status: rejected` with the user's reason in the commit message.
 
+
+## Source feedback
+
+`FB-pr-remote-and-squash-integration` is resolved only after remote integration and cleanup are implemented and verified.
+
+## Development assumptions
+
+The readiness provider is the module `packages/devkit-spec/src/devkit_spec/integration.py`, not a directory. The Host expanded the write boundary to that module and its `tests/test_integration.py`.
