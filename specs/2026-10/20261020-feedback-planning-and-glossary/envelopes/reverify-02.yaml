@@ -1,0 +1,23 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T03:02:05.071852Z'
+status: completed
+review: review-01.yaml
+summary: 'Committed-head self-reverification at medium: compact and subsequent Owner rows are validated; approved recovery and narrow scope remain intact.'
+findings:
+- issue: Removing every leading and trailing pipe discards empty table cells and suppresses subsequent Owner checks.
+  evidence: packages/devkit-spec/src/devkit_spec/rules/document_reference.py:246
+  failure_condition: A recognized glossary table contains a compact row with empty Avoid and Code identifiers cells; the missing Owner and following ordinary rows emit no violations.
+  suggested_action: Remove at most one outer pipe from each end and add compact-row plus following-row regression coverage.
+  resolution: resolved
+  severity: P1
+assumptions:
+- Prior reverify-01 observed the uncommitted fix; this record pins the committed fix content
+checks:
+  tests: PASS 1111 affected tests; tested content committed unchanged
+  lint: PASS Ruff format Pyright
+diff_scope:
+  base: aa9e256ca1517a4413d1d33a3454bf23d747460a
+  head: fa5a771a34039a4d3d362db089170a9ca0e1058c

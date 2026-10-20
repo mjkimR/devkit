@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-19
 ---
 
@@ -46,3 +46,7 @@ devkit spec resolve CAP-ADV-protocol   -> [ERROR] (SPEC_ID_UNRESOLVED) no docume
 devkit spec resolve CAP-HOST-lifecycle -> [ERROR] (SPEC_ID_UNRESOLVED) no document has the ID CAP-HOST-lifecycle
 devkit rules check --ci --base <base>  -> [SUMMARY: errors=0 warnings=0]
 ```
+
+## Disposition
+
+Directly addressed by `SPEC-feedback-planning-and-glossary` without promotion. RULE-document-reference validates root glossary Owner IDs against the existing document index while leaving the glossary ID-free and unindexed. Regression coverage verifies unresolved/ambiguous IDs, masking and narrow column scope, compact/omitted trailing cells, targeting/exclusions, no autofix and staged snapshot isolation. Independent medium review identified a compact-cell defect; the corrected parser and regression passed self-reverification and the 1,111-test affected suite. This resolution does not assert integration.

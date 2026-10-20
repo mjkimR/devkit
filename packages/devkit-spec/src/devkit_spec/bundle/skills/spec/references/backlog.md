@@ -22,6 +22,28 @@ proposals, and follow-ups as feedback. No external tracker is involved.
   deletion commit only on the base checkout, once you settled that you can push to the base (or that there is no
   remote); a protected base keeps the draft on Planning. Undo a stranded commit with `git revert`, never a reset.
 
+## Return from Planning for decomposition
+
+When Planning discovers a split is needed, its executor follows [Planning](planning.md): preserve evidence in
+`materials/`, set `status: draft` and `needs_decompose: true`, close every open question with an answer recording
+that Planning returned to Backlog, and commit the return with the run's records. Do not create children on the
+Planning branch or retry `--decomposed-from` there.
+
+The Host then checks the committed return and obtains explicit user authorization to merge that return and
+perform cleanup under the existing Git policy. For a local merge, use `devkit worktree finish plan-<slug> --merge
+--local-only` from the base after preparing the branch and clearing envelope holds; use the required PR path when
+policy requires it. The MCP unit integration path requires an accepted proposal and cannot integrate this draft
+return. Do not manufacture `plan-accept` to satisfy that readiness check. This is a return of a draft, not `plan-accept` or authorization to
+implement the old proposal. Preserve the committed return on the base before removing the local Planning branch
+and worktree. A fetched remote Planning branch also blocks Backlog: coordinate its authorized remote removal and
+refresh/prune the fetched ref under existing network authority; do not hide a live remote branch by deleting only
+its tracking ref. If authorization or branch cleanup is pending, keep the return pending and do not decompose.
+
+On the base, run `devkit spec proposal check <slug>` again. Only after it passes may Backlog create the children
+with `--decomposed-from`, preserve source feedback and retire the parent as described above. `status: draft` alone
+is insufficient while a local or fetched Planning branch exists. This procedure adds no merge, push or deletion
+permission and gives workers no additional Git actions.
+
 ## Direct acceptance
 
 An eligible draft may skip Planning on the user's explicit `plan-accept` (`ADR-eligibility-for-direct-acceptance`,
