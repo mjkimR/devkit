@@ -40,4 +40,4 @@ SPEC-hook-driven-integration-cleanup Non-Goal 3 & spec-integrate/SKILL.md Step 5
 "Fallback / manual CLI recovery: when the host does not support interactive MCP confirmation (INTEGRATION_CONFIRMATION_UNAVAILABLE) or the user invokes the CLI directly after giving dev-integration approval, run devkit worktree finish <branch> --merge --local-only in the base checkout."
 ```
 
-- **Disposition**: `PROP-integration-host-confirmation`: split out of `PROP-integration-follow-ups` in its Planning.
+- **Disposition**: `PROP-integration-host-confirmation`: split out of `SPEC-integration-follow-ups` in its Planning.

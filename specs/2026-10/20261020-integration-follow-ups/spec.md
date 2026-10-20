@@ -1,29 +1,21 @@
 ---
-id: PROP-integration-follow-ups
-title: "Integration base advances: merge commits, effective policy digest and readiness on the result"
-summary: "Lets an approved local integration absorb target commits that land during its confirmation: tasks land as merge commits built outside the base checkout, the approval binds the effective integration policy instead of raw file bytes, and readiness runs again on the merged result."
-status: accepted                      # draft | reviewing | accepted | rejected
-created_at: 2026-10-19
-target_area: integration/
-priority: high                        # critical | high | medium | low
-size: L                               # S | M | L | XL
-planning_effort: high                 # low | medium | high (hint for Planning)
-dev_effort: high                      # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - integration/
-    - worktree/
-    - delivery/
-    - packages/devkit/src/devkit/integration/
-    - packages/devkit/src/devkit/worktree/
-    - packages/devkit-spec/src/devkit_spec/
-    - docs/roadmap/MS-multi-host-native-integration.md
-  excludes: []                       # docs/decisions/ is written only by the handoff's PADR promotion
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+id: SPEC-integration-follow-ups
+title: 'Integration base advances: merge commits, effective policy digest and readiness on the result'
+summary: 'Lets an approved local integration absorb target commits that land during its confirmation: tasks land as merge commits built outside the base checkout, the approval binds the effective integration policy instead of raw file bytes, and readiness runs again on the merged result.'
+status: planned
+created: 2026-10-20
+related_capabilities: []
+related_stories: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-integration-follow-ups] Integration base advances: merge commits, effective policy digest and readiness on the result
+# [SPEC-integration-follow-ups] Integration base advances: merge commits, effective policy digest and readiness on the result
+
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-integration-follow-ups on 2026-10-20.
+- **Preserved Materials**: `docs/materials/2026-10/20261020-integration-follow-ups`
 
 - **Merged draft**: this draft also carries the former `integration-base-advance` draft (Backlog merge), whose
   questions are E1 to E6 below.
@@ -32,9 +24,9 @@ workflow: sdd-proposal
   `PROP-integration-host-confirmation`, both drafts; auto dispatch (Q2) stays as the open feedback it came from.
 - **Related**: `CAP-INT-mcp-services`, `CAP-WT-task-worktrees`, `ADR-integration-approval-asserted`.
 
-## 1. Background & Hypothesis
+### 1. Background & Hypothesis
 
-### 1.1 Problem
+#### 1.1 Problem
 
 `SPEC-hook-driven-integration-cleanup` shipped approval-bound local integration under `dev-integration = ask` and
 deferred three extensions (its Non-Goal 3); daily use since then added a fourth problem. Each is recorded as feedback;
@@ -61,7 +53,7 @@ this proposal now addresses the first, and 3.1 says where the other three went:
 The deferral of the last three waited for ask-mode integration to be used in real workflows. Several sessions have
 since completed local integrations through `integration_integrate` with `authority="mcp-elicitation"`.
 
-### 1.2 Hypothesis
+#### 1.2 Hypothesis
 
 The four extensions share the integration service, its confirmation binding and the scoped cleanup, so one Planning
 could settle their common contract and decide whether they are delivered together or split. Planning split them
@@ -69,7 +61,26 @@ could settle their common contract and decide whether they are delivered togethe
 first, here. An approval can then bind the approved source, the confirmation target and its descendants within one
 call, and land a clean merge with readiness checked again on the result, without a second confirmation.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Integration base advances: merge commits, effective policy digest and readiness on the result so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1 (Split and order)**: One spec or several? Which extension comes first, and which depends on another?
   Decided in 3.1.
@@ -108,13 +119,13 @@ The deferred extensions, kept here as asked at the start of Planning; 3.1 moved 
 - **Q4 (Host adapters)**: which confirmation surfaces do Claude Code, Antigravity and other hosts offer that keep the
   binding to `request.id` and the approved scope and never let the agent approve itself?
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 Spike evidence: `envelopes/scout-01.yaml`, the option comparison in
-[materials/20261019-base-advance-options.md](materials/20261019-base-advance-options.md) and the PADRs under
+[materials/20261019-base-advance-options.md](../../../docs/materials/2026-10/20261020-integration-follow-ups/20261019-base-advance-options.md) and the PADRs under
 `decisions/`. Challenger rounds are in `envelopes/challenger-NN.yaml`.
 
-### 3.1 Split and order (Q1)
+#### 3.1 Split and order (Q1)
 
 Decided (`answer-01.yaml` q1-split): this proposal keeps the base advances (E1 to E6), is retitled to that scope and
 goes to `plan-accept`. The other extensions are handled as follows; their order is a preference, not a dependency,
@@ -138,7 +149,7 @@ except where named:
    `devkit host mcp setup --host claude` adapter and verification of Claude Desktop, the VS Code extension, the Agent
    SDK, Antigravity and OpenCode surfaces, in step with `MS-multi-host-native-integration`.
 
-### 3.2 Base advances
+#### 3.2 Base advances
 
 Terms: the **confirmation target** is the target SHA shown in the form; a **build** is one attempt that reads the
 current target (the **build target**), builds the **result commit** and fast-forwards the base onto it.
@@ -280,7 +291,7 @@ SHA, confirmation target and its descendants, worktree and branch cleanup, clean
 policy, target-bound evidence codes and the provider's result-check disclosure), no network operation without explicit authority, and no deletion of unmerged
 work.
 
-### 3.3 Impact and coordination
+#### 3.3 Impact and coordination
 
 - **Impact**: `packages/devkit/src/devkit/integration/` (request and execution context, policy
   digest, builds, recovery, confirmation text, new codes `INTEGRATION_TARGET_MOVED`, `INTEGRATION_RECEIPT_CONFLICT`, the cleanup-only request), `packages/devkit/src/devkit/worktree/` (`config.py`
@@ -303,7 +314,7 @@ work.
   completed, its branch gone); `integration/` and `worktree/` are in `packages/devkit` (devkit-agt) and `host/` in
   `packages/devkit-dist`.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - Preliminary decisions: `devkit spec proposal padr integration-follow-ups "<title>"`.
 - Split done in Planning (3.1): the child drafts were created with `devkit spec proposal new` and name this proposal
@@ -317,3 +328,4 @@ work.
   dispatch later reads as delivered.
 - On acceptance (`plan-accept`): hand off with `devkit spec proposal handoff integration-follow-ups`.
 - On rejection: `status: rejected` with the user's reason in the commit message.
+

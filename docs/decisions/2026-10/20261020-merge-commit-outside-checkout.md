@@ -1,15 +1,15 @@
 ---
-id: PADR-merge-commit-outside-checkout
+id: ADR-merge-commit-outside-checkout
 title: Merge commit built outside the base checkout
 summary: Integration lands each task as a merge commit (no-ff by default, ff-only as the [worktree] merge alternative), built in the object store from the current target and the approved source and fast-forwarded onto the base, so the base checkout never sees a conflict.
-proposal: PROP-integration-follow-ups
-status: draft
+proposal: SPEC-integration-follow-ups
+status: accepted
 created_at: 2026-10-19
 ---
 
-# [PADR-merge-commit-outside-checkout] Merge commit built outside the base checkout
+# [ADR-merge-commit-outside-checkout] Merge commit built outside the base checkout
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-19
 
 ---
@@ -59,7 +59,7 @@ otherwise; it takes the integration lock in its command entry. `ff`, squash and 
 
 - One `--first-parent` line per task; stage commits stay bisectable; ancestry checks keep working.
 - `commit-tree` runs no commit hooks: the result's tree is checked by the readiness provider
-  (`PADR-target-advance-readiness`), not by the commit gates.
+  (`ADR-target-advance-readiness`), not by the commit gates.
 - `validate_finish(merged=True)` and the service's merge recovery change from "HEAD equals the source" to "HEAD
   contains the latest result commit".
 - One extra commit per integration even when the target did not move.

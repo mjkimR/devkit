@@ -1,15 +1,15 @@
 ---
-id: PADR-target-advance-readiness
+id: ADR-target-advance-readiness
 title: Approval tolerates target advances with readiness on the result
 summary: The approval shows and records the target SHA at confirmation without requiring it to hold; execution merges later target commits only when the merge is clean, the effective policy is unchanged and readiness passes again on the result commit, in one build per call.
-proposal: PROP-integration-follow-ups
-status: draft
+proposal: SPEC-integration-follow-ups
+status: accepted
 created_at: 2026-10-19
 ---
 
-# [PADR-target-advance-readiness] Approval tolerates target advances with readiness on the result
+# [ADR-target-advance-readiness] Approval tolerates target advances with readiness on the result
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-19
 
 ---
@@ -44,7 +44,7 @@ reasons and evidence equal to the approved evidence except the codes it declared
 declared set is digested). The provider also declares a required result-check disclosure (one line, at most 200
 characters; missing or malformed fails closed at `prepare`), shown in the form and digested. devkit-spec declares `TARGET_SHA` and `RESULT_SHA`, evaluates the unit from the source tree, binds its `[tool.spec]` policy through a source-bound `SPEC_POLICY` item and runs its CI rules on the result
 tree. `prepare` still requires the source to contain the target, except for a source the target already contains,
-which yields a cleanup-only request (`PADR-merge-commit-outside-checkout`), so only advances after it are tolerated.
+which yields a cleanup-only request (`ADR-merge-commit-outside-checkout`), so only advances after it are tolerated.
 Tests are not re-run on the result: only the CI rules run on it, and the form and the integration report say that tests and review ran on the source
 only (user decision). One build per call (no in-call retry); the approval tolerates target advances only within the
 integrate call that asked for it (user decision): `integration_resume` continues only onto the last build target, and

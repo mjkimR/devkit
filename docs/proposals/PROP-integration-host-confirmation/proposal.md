@@ -24,7 +24,7 @@ workflow: sdd-proposal
 
 # [PROP-integration-host-confirmation] Native integration confirmation on hosts beyond Codex
 
-- **Split from**: `PROP-integration-follow-ups` (its question Q4), split during that proposal's Planning, which kept
+- **Split from**: `SPEC-integration-follow-ups` (its question Q4), split during that proposal's Planning, which kept
   only the base advances. Created without `decomposed_from`: `devkit spec proposal new --decomposed-from` refuses a
   source in Planning (`SPEC_PROPOSAL_IN_PLANNING`).
 - **Source feedback**: `FB-multi-host-integration-ergonomics`.
@@ -38,7 +38,7 @@ Native integration confirmation runs through MCP form elicitation (`integration_
 `INTEGRATION_CONFIRMATION_UNAVAILABLE` and fall back to `devkit worktree finish <branch> --merge --local-only` after a
 conversational approval.
 
-What is already known (from the Planning of `PROP-integration-follow-ups`): the Claude Code terminal CLI is a
+What is already known (from the Planning of `SPEC-integration-follow-ups`): the Claude Code terminal CLI is a
 verified native path (`SPEC-claude-terminal-mcp-approval`, docs only), and the `Confirmation` callable in
 `devkit.host.mcp` is host-agnostic form elicitation. What is left is research-led.
 
@@ -57,7 +57,7 @@ scope and that the agent cannot answer itself; devkit adds setup and routing onl
 ## 3. Proposed Design & Impact
 
 To be designed in this proposal's Planning, in step with `MS-multi-host-native-integration`. The confirmation text
-and binding come from `PROP-integration-follow-ups` (confirmation target and its descendants within one call).
+and binding come from `SPEC-integration-follow-ups` (confirmation target and its descendants within one call).
 
 ## 4. Lifecycle & Retirement Criteria
 

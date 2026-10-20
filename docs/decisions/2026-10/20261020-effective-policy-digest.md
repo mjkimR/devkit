@@ -1,15 +1,15 @@
 ---
-id: PADR-effective-policy-digest
+id: ADR-effective-policy-digest
 title: Effective policy digest
 summary: The approval binds a digest of the parsed integration policy devkit owns (approvals, worktree and integration provider keys) instead of the raw config and receipt bytes, and refuses a merge that makes a tracked receipt record inconsistent.
-proposal: PROP-integration-follow-ups
-status: draft
+proposal: SPEC-integration-follow-ups
+status: accepted
 created_at: 2026-10-19
 ---
 
-# [PADR-effective-policy-digest] Effective policy digest
+# [ADR-effective-policy-digest] Effective policy digest
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-19
 
 ---

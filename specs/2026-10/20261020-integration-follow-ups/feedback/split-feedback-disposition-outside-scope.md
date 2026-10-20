@@ -24,7 +24,7 @@ created_at: 2026-10-19
   and the feedback that is no longer planned anywhere is open again.
 - **Actual**: `FB-auto-integration-dispatch`, `FB-pr-remote-and-squash-integration` and
   `FB-multi-host-integration-ergonomics` live in a completed spec's `feedback/` with `status: promoted` and the
-  disposition `PROP-integration-follow-ups`. The planning worker may write only inside its proposal directory and new
+  disposition `SPEC-integration-follow-ups`. The planning worker may write only inside its proposal directory and new
   drafts, so it cannot set auto dispatch back to `open` or point the other two at their drafts; the handoff routes
   only this proposal's own feedback.
 - **Workaround (or Interpretation Chosen)**: Left the three files unchanged, recorded the needed edits as open

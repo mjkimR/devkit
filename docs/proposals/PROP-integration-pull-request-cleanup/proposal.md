@@ -24,7 +24,7 @@ workflow: sdd-proposal
 
 # [PROP-integration-pull-request-cleanup] Integration through pull requests with no-ff merge and cleanup
 
-- **Split from**: `PROP-integration-follow-ups` (its question Q3), split during that proposal's Planning, which kept
+- **Split from**: `SPEC-integration-follow-ups` (its question Q3), split during that proposal's Planning, which kept
   only the base advances. Created without `decomposed_from`: `devkit spec proposal new --decomposed-from` refuses a
   source in Planning (`SPEC_PROPOSAL_IN_PLANNING`).
 - **Source feedback**: `FB-pr-remote-and-squash-integration`.
@@ -37,7 +37,7 @@ workflow: sdd-proposal
 Non-Goal 3). The integration service forbids network operations, refuses `[worktree] pull_request = "required"`
 (`WORKTREE_PR_POLICY`) and executes only local merges.
 
-`PROP-integration-follow-ups` defines local integration with merge commits (`[worktree] merge = "no-ff"` by default).
+`SPEC-integration-follow-ups` defines local integration with merge commits (`[worktree] merge = "no-ff"` by default).
 This proposal uses the same no-ff history shape for pull request integration: the target receives a merge commit
 and every source SHA cited by the unit's records stays reachable as an ancestor of the target.
 
@@ -48,7 +48,7 @@ removing unmerged work.
 ## 2. Planning Scope
 
 The direction is settled: one approval covers the complete PR integration, the merge method is no-ff, target
-advances follow the local integration principles of `PROP-integration-follow-ups`, and the agent handles failures
+advances follow the local integration principles of `SPEC-integration-follow-ups`, and the agent handles failures
 from actionable operation results. Planning specifies the implementation within these decisions:
 
 - Bind the remote repository, PR identity, source/target branches and cleanup targets into the approval request.
@@ -100,7 +100,7 @@ The agent inspects the result and chooses the next command. This proposal does n
 background recovery service or a separate recovery workflow. Inspection and re-entry reuse existing operation
 mechanisms where practical. Re-entry after a confirmed merge continues only the remaining approved cleanup after
 revalidating its scope and merge evidence. An unmerged request resumed outside its approving call needs a new
-approval if the target has advanced, matching `PROP-integration-follow-ups`' approval lifetime.
+approval if the target has advanced, matching `SPEC-integration-follow-ups`' approval lifetime.
 
 **Non-Goals**: squash/rebase integration or cleanup, tree/patch-equivalence proofs for rewritten commits, archival
 refs for otherwise unreachable source SHAs, and automated failure recovery.
