@@ -4,97 +4,56 @@ title: Non-blocking guidance for session branches in a shared checkout
 summary: Adds concise guidance for --no-worktree branches in shared checkouts, leaving coordination to the direct user or local orchestration main agent without requiring worktrees or adding execution barriers.
 status: planned
 created: 2026-10-20
-related_capabilities: []
+related_capabilities: [CAP-DLV-project-policy, CAP-WT-task-worktrees]
 related_stories: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
-# [SPEC-shared-checkout-session-isolation] Non-blocking guidance for session branches in a shared checkout
+# [SPEC-shared-checkout-session-isolation] Shared checkout session guidance
 
 ## 1. Problem Statement & Motivation
 
-Handed off from proposal PROP-shared-checkout-session-isolation on 2026-10-20.
-
-### 1. Background & Hypothesis
-
-- **Problem**: A `session` task may run on a branch started with `devkit worktree start <branch> --no-worktree` in the
-  base checkout. When several agent sessions share that checkout, another session's commit can land on the task
-  branch while it is checked out. One such branch held a foreign proposal commit, local integration refused it, and
-  the work had to be cherry-picked onto a fresh worktree branch (`FB-no-worktree-session-branch-shared-checkout`).
-- **Responsibility**: In direct mode the user coordinates sessions sharing a checkout. In local orchestration the
-  main agent coordinates worker checkout and branch use. Uncoordinated concurrent writes to one checkout are outside
-  this proposal's supported isolation guarantees.
-- **Hypothesis**: Brief agent-facing guidance clarifies shared branch state and coordination responsibility without
-  changing command behavior. An unconditional runtime notice does not identify actual concurrent work and adds no
-  useful signal.
+A branch switch in a shared checkout affects every session using that directory. Another session can therefore
+commit to the task branch. Explain that limitation beside branch creation and assign coordination to the direct
+user or local orchestration Host, preserving existing worktree and integration policy.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Non-blocking guidance for session branches in a shared checkout so that system capabilities are extended.
+- **US-1**: As an agent starting a session branch, I want to understand shared branch state and who coordinates it,
+  so that I can choose a separate worktree when useful without assuming per-session isolation.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+- **Scope Excluded**: runtime notices, session detection, locks, additional approvals or refusals, mandatory
+  worktrees for direct session tasks, foreign-commit detection and automatic mixed-branch recovery.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### Scenario 1 [AC-01]: Carried from proposal
-- In `git-policy.md`, place the shared-checkout caveat beside the session branch guidance; in `branches.md`,
-  place it in §2 beside `start --no-worktree`. State that switching branches changes the branch seen by every
-  session using that directory, so another session can commit to the checked-out task branch.
+### Scenario 1: [AC-01] Shared branch state beside branch guidance
+- **Given** the session branch guidance in git-policy.md and branch-only guidance in branches.md section 2,
+- **When** an agent reads how to use `start --no-worktree`,
+- **Then** both explain that switching branches changes the branch seen by every session in that directory and
+  another session can commit to the checked-out task branch.
 
-### Scenario 2 [AC-02]: Carried from proposal
-- In `CAP-DLV-project-policy` §3.6 and `CAP-WT-task-worktrees` §2a, clarify the same responsibility boundary:
-  the direct user coordinates shared sessions; the local orchestration main agent coordinates workers. Preserve
-  the existing rule that local-orchestrated workers run in worktrees. This clarification grants no new permission
-  to run workers in a shared checkout. A separate worktree remains an option for a direct session task.
+### Scenario 2: [AC-02] Coordination and isolation boundaries
+- **Given** `CAP-DLV-project-policy` section 3 item 6 and `CAP-WT-task-worktrees` section 2a,
+- **When** their shared-checkout guidance is read together with the two skill references,
+- **Then** the direct user coordinates shared sessions and the local orchestration Host coordinates workers;
+  workers still use worktrees, while a separate worktree remains an option for a direct session task.
 
-### Scenario 3 [AC-03]: Carried from proposal
-- Review all four documents together for those statements and for unchanged policy levels, command output,
-  integration checks and approval requirements. No runtime behavior or new policy is introduced, so no PADR or
-  production-code change is needed. Development effort remains `low`.
+### Scenario 3: [AC-03] Existing policy preserved
+- **Given** the approved documentation-only scope,
+- **When** the final diff is reviewed,
+- **Then** only the four specified documents and this spec bundle change, without changing policy levels,
+  command output, integration checks or approval requirements.
 
-### Scenario 4 [AC-04]: Carried from proposal
-- Verify the documentation with `uv run --no-sync devkit rules check` on the four changed paths and the normal
-  staged/cumulative rule checks. Run `just test-affected` for the final diff and follow any selected checks;
-  no new test is needed for this wording-only clarification.
+### Scenario 4: [AC-04] Verification
+- **Given** the final documentation diff,
+- **When** path and cumulative governance checks, lint, types and `just test-affected` run,
+- **Then** all selected checks pass; no new test is added for this wording-only clarification.
 
-## 5. Carried Proposal Notes
+## 5. Assumptions and Source Feedback
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
-
-### 2. Planning Scope
-
-The scope is documentation only: add the minimum guidance in the `spec` references and clarify the corresponding
-capability contracts. No command implementation, runtime notice, session detection or coordination infrastructure
-is needed.
-
-### 3. Proposed Design & Impact
-
-- Keep `--no-worktree` available under its existing policy. Do not require or automatically create a worktree for
-  session tasks, change `GIT_POLICY` levels, add confirmation steps, introduce new refusals or acquire a session
-  ownership lock.
-- Add brief guidance to the `spec` skill's git-policy and branches references: `--no-worktree` switches the current
-  checkout to the task branch, and other sessions using that directory observe the same branch. Direct users and
-  local orchestration main agents coordinate checkout use; a separate worktree remains an available option.
-- Reflect that responsibility boundary in `CAP-DLV-project-policy` and `CAP-WT-task-worktrees` (§2a). Keep command
-  output and success behavior unchanged; do not add an unconditional runtime notice.
-- Keep existing integration checks. Do not add foreign-commit detection, automatic commit separation or a new
-  integration refusal for shared-checkout use.
-
-**Non-Goals**: guaranteed isolation between concurrent sessions in one checkout, shared-session detection,
-runtime notices, mandatory worktrees, session locks, additional approval gates and automatic recovery of mixed branches.
-
-### 5. Source Feedback
-
-`FB-no-worktree-session-branch-shared-checkout` is terminal as `promoted`; its existing disposition selects this
-documentation-only scope. The reference preserves provenance and creates no source-feedback update or completion
-check under `ADR-feedback-terminal-outcomes`. Implementation and verification are tracked in the receiving spec.
-
-### 6. Lifecycle & Retirement Criteria
-
-- Preliminary decisions: `devkit spec proposal padr shared-checkout-session-isolation "<title>"`.
-- On acceptance (`plan-accept`): hand off with `devkit spec proposal handoff shared-checkout-session-isolation`.
-- On rejection: `status: rejected` with the user's reason in the commit message.
-
+The four target paths and existing policy still match the accepted proposal at handoff. This clarifies existing
+Git behavior and responsibility, so no ADR or production-code change is needed. Development effort is low.
+`FB-no-worktree-session-branch-shared-checkout` is terminal promoted provenance; it needs no update or completion check.
