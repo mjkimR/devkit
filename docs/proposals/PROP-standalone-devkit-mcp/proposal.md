@@ -2,7 +2,7 @@
 id: PROP-standalone-devkit-mcp
 title: Independent devkit-mcp runtime and default approval integration
 summary: "Extract the shared MCP runtime into devkit-mcp, manage project registrations through sync, and make native MCP the default interactive approval route while retaining domain services in their owning packages."
-status: draft
+status: reviewing
 created_at: 2026-10-20
 target_area: host/
 priority: high
