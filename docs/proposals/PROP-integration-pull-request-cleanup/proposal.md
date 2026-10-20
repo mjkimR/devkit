@@ -105,6 +105,61 @@ approval if the target has advanced, matching `PROP-integration-follow-ups`' app
 **Non-Goals**: squash/rebase integration or cleanup, tree/patch-equivalence proofs for rewritten commits, archival
 refs for otherwise unreachable source SHAs, and automated failure recovery.
 
+### 3.4 Route design (Planning)
+
+Evidence: `envelopes/scout-01.yaml`, [materials/20261020-pull-request-merge-options.md](materials/20261020-pull-request-merge-options.md)
+and the PADRs under `decisions/`. Premise: `PROP-integration-follow-ups` as accepted (no-ff result built outside the
+checkout, effective policy digest, readiness on the result, approval tolerating advances only within its call).
+
+- **Route selection**: `integration_prepare` takes `route = "local" | "pull-request"`. `[worktree] pull_request =
+  "required"` (base or source policy) refuses `local` with `WORKTREE_PR_POLICY` and admits only `pull-request`;
+  under `auto` the caller chooses. The CLI `devkit worktree finish --merge` stays local and keeps refusing under
+  `required`; the pull request route exists only behind native confirmation. No policy value grants the authority:
+  `pull_request = "required"` only restricts the route (`ADR-integration-approval-asserted`).
+- **Platform** (`PADR-github-pull-request-adapter-in-devkit-worktree`): GitHub only, through `gh` behind an
+  injectable port in `devkit.worktree`. Refused at `prepare`, before any form, with stable codes: a non-GitHub remote,
+  `gh` missing or unauthenticated, a fork (cross-repository) PR, an existing PR for the branch whose base is not the
+  target, a merge queue on the target, and any merge-commit prohibition that can be read: `[worktree] merge =
+  "ff-only"` in either policy, `mergeCommitAllowed = false`, a linear-history rule or allowed merge methods excluding
+  merge (`gh ruleset check`). Rules devkit cannot read (classic protection without admin) are disclosed in the form as
+  unverified; the platform's refusal of the merge lands nothing and is reported as a refusal.
+- **Approval binding**: the request additionally binds the route, the remote name and URL, the repository, the PR
+  number or "create", the remote source and target refs, the merge method `no-ff`, and the selected cleanup targets
+  with the remote branch's expected SHA (the approved source). The form says "Approve pull request integration of
+  <branch> into <remote>/<target> with a merge commit?", lists push, PR create/update, merge, fetch and local
+  fast-forward and each cleanup target, and states the race disclosure below.
+- **Execution** (one call): push the source to the remote branch (non-forced; a remote branch that is not an ancestor
+  of the source refuses), create or update the PR, fetch the target, require it to descend from the confirmation
+  target, build the prospective merge and check policy and readiness on it as the local route does, recheck the remote
+  target is still that build target, then `gh pr merge --merge --match-head-commit <source>` with the devkit-composed
+  subject `chore(merge): integrate <branch> into <target>`. Never `--auto`, `--admin` or `--delete-branch`.
+- **Landing verification** (`PADR-pull-request-merge-with-pinned-source-and-verified-landing`): fetch, read the PR's
+  merge commit `M`; `M^2` must be the source and `M` contained in the fetched target. `M^1` equal to the checked build
+  target and `M`'s tree equal to the checked tree is a checked landing; otherwise the outcome is the "landed onto an
+  unchecked target" case (question q-unchecked-landing).
+- **Required checks and review**: decided by question q-checks-wait (the approving call publishes, so checks start
+  after the approval).
+- **Local target and cleanup**: the local target fast-forwards to the fetched target only when it is checked out clean
+  in the base checkout (`merge --ff-only`) or not checked out anywhere (ref update refused unless fast-forward);
+  dirty, divergent or otherwise checked-out state is reported without change. Cleanup runs only after PR state
+  `MERGED` and the source and `M` contained in the fetched target: worktree removal and `git branch -d` as today,
+  the remote branch deleted with a lease on the source SHA (already gone, such as with `deleteBranchOnMerge`, counts as
+  done), then package-owned scope records. Remote deletion follows the effective `delete_branch` and is listed in the
+  form when selected.
+- **Failures and re-entry**: each step reports `completed`, `failed`, `not_run` or `unknown`. A merge call with an
+  unknown outcome is resolved only from the PR state; while unknown nothing destructive runs. `integration_resume`
+  continues an approved request under the follow-ups lifetime: only onto the last build target before the merge, and
+  only the remaining cleanup after a verified merge. After a process restart, a fresh `prepare` of a merged branch
+  yields the follow-ups cleanup-only request, which for this route also verifies PR state and offers the remote
+  deletion.
+- **Contracts**: no ADR is superseded. Development amends `CAP-INT-mcp-services` (sections 1, 2, 4, 5 and 6:
+  network exclusion becomes route-scoped), `CAP-WT-task-worktrees` (section 5: devkit pushes and opens a PR only on
+  the approved pull request route; the `WORKTREE_PR_POLICY` fix names that route), `CAP-DLV-project-policy`, the
+  `spec-integrate` skill's PR path and `docs/development/reference/integration.md` and `worktree.md`; the handoff
+  promotes the PADRs. Cleanup extensions keep `integration_local_only` (only the executor touches the remote).
+- **Coordination**: Development starts after `PROP-integration-follow-ups`' Development lands on `main`; it builds on
+  that execution context, build and recovery code rather than the current ff-only code.
+
 ## 4. Lifecycle & Retirement Criteria
 
 - Preliminary decisions: `devkit spec proposal padr integration-pull-request-cleanup "<title>" --summary "<what it decides>"`.
