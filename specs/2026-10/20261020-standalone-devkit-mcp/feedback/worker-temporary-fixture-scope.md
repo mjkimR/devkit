@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-20
 ---
 
@@ -41,3 +41,18 @@ argument --basetemp: basetemp must not be ... any parent directory of [cwd]
 TEST_SELECTION: mode=full reason=packages/devkit-dist/pyproject.toml
 3884 passed, 14 skipped
 ```
+
+## Disposition
+
+Resolved directly in a session change to
+`packages/devkit-spec/src/devkit_spec/bundle/subagents/development-worker.md` and
+`packages/devkit-spec/tests/test_role_contracts.py`. Authored scratch stays inside the worktree; pytest-managed
+isolated system temporary fixtures are explicitly allowed outside it, subject to sandbox permissions. Both the
+procedure and denied-path list name the exception. Recursive pytest runs pass custom `--basetemp` through the
+parent command line instead of `PYTEST_ADDOPTS`.
+
+Verification: `just test-affected --base main` passed 1,140 tests; `just lint-check spec` passed; `just check spec`
+reported zero errors and warnings. Low-effort self-review checked the exception against the unchanged caller-checkout
+and sandbox restrictions. The existing scratch-file contract in `CAP-DLV-delivery-workflows` is unchanged; this
+clarifies pytest fixture placement in the worker instructions. No test runner or fixture implementation change was
+needed, and this session does not claim a new full-suite reproduction of the historical failures.
