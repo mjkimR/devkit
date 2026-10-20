@@ -123,6 +123,25 @@ Then report to the user:
 
 Ask whether to commit. Do not commit on your own.
 
+## Personal checkout preferences
+
+Keep personal settings in ignored `.devkit/config.local.toml`, for example:
+
+```toml
+[bundles.response-style.variables]
+language = "ko"
+```
+
+Run `uv run devkit sync`; the selected bundle must declare that input. Personal output must be ignored and
+untracked, including affected native projections. Shared receipt and root guidance remain canonical. Inspect the
+result with `uv run devkit config show --effective --format json`. Governance and selection keys cannot be local.
+
+`uv run devkit sync --cloud` saves a cloud execution constraint in this checkout; `--local` returns to local.
+Cloud never grants approval. `--dry-run` and `--check` preview without persistence; `--no-save` keeps the selection
+for one invocation. `devkit worktree start` copies local preferences before setup into each new worktree; later edits
+are independent and attach preserves an existing file or intentional absence. Raw Git worktrees and clones need
+explicit provisioning. Do not commit the local file or render ledger.
+
 ## Troubleshooting
 
 | Code or symptom | Meaning | What to do |

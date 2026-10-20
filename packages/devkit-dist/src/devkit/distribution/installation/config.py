@@ -30,6 +30,7 @@ from tomlkit.exceptions import TOMLKitError
 from devkit.advisory import AdvisoryError
 from devkit.core.config_template import TemplateKey
 from devkit.core.errors import ConfigError
+from devkit.core.local_config import read_effective_config, validate_runtime_tables
 from devkit.core.project import read_toml
 from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH, Receipt
 from devkit.distribution.bundles.common import AGENT_NAMES, SLUG
@@ -60,6 +61,8 @@ RESERVED_TABLES = ("rules", "workflow", "gates", "worktree", "integration")
 FIELDS = frozenset(
     {
         "schema",
+        "execution",
+        "mcp",
         "agents",
         "presets",
         "playbooks",
@@ -157,6 +160,7 @@ def _load(root: Path) -> dict[str, Any] | None:
     unknown = set(data) - FIELDS
     if unknown:
         raise ConfigError(f"config: unknown fields: {sorted(unknown)}")
+    validate_runtime_tables(data, root / CONFIG_PATH)
     validate_tool_tables(data.get("tool"))
     return data
 
@@ -322,8 +326,9 @@ def validate_playbooks_config(playbooks: object) -> dict[str, int | float | str]
 
 
 def read_playbook_config(root: Path) -> dict[str, int | float | str]:
-    data = _load(root)
-    return validate_playbooks_config(data.get("playbooks")) if data else {}
+    _load(root)
+    data = read_effective_config(root).values
+    return validate_playbooks_config(data.get("playbooks"))
 
 
 def bundle_variables(raw: object) -> dict[str, dict[str, Scalar]]:
@@ -349,8 +354,15 @@ def bundle_variables(raw: object) -> dict[str, dict[str, Scalar]]:
     return result
 
 
-def read_config(root: Path) -> ProjectConfig:
+def read_config(root: Path, *, effective: bool = True) -> ProjectConfig:
     data = _load(root)
+    overlay = read_effective_config(root)
+    if effective:
+        data = overlay.values
+    return parse_config(data)
+
+
+def parse_config(data: dict[str, Any] | None) -> ProjectConfig:
     if data is None:
         return ProjectConfig()
     validate_playbooks_config(data.get("playbooks"))

@@ -93,7 +93,7 @@ is the JSON the command prints.
 - `installation/`: the consumer workspace side.
   - `workspace.py`: well-known paths, path safety for reads and writes, file snapshots.
   - `transaction.py`: project lock, write-ahead journal, atomic replacement (also used to save
-    `.devkit/config.toml`), recovery, `prune_empty_parents`.
+    `.devkit/config.toml` and local configuration), recovery, `prune_empty_parents`.
   - `receipt.py`: strict receipt reading (`devkit.core.receipt` plus ownership rules) and serialization.
   - `config.py`: `.devkit/config.toml` reading (the closed field list with the reserved harness tables
     `RESERVED_TABLES` passed through unread), selection resolution, edits checked before a sync and saved after it,
@@ -135,3 +135,14 @@ those values against declarations and renders selected instruction, guidance, do
 including raw project overrides, into final managed `.md` files before transaction planning and receipt hashing.
 Skill projections use the rendered filenames and contents before native invocation settings are inserted.
 This does not execute bundle Python code or alter the verbatim contract of native host configurations.
+
+
+## Shared configuration and personal runtime views
+
+Core `local_config.py` owns restricted local validation, recursive merge, source provenance and explicit-workspace
+execution resolution, independent of distribution and harness. Governance keeps `read_project_config` and canonical
+receipt loading. Distribution `local_render.py` compares effective and canonical inventory, checks ignored/untracked
+output eligibility, captures configuration inputs and validates transient render evidence. `sync.py` journals local
+configuration and ledger writes alongside output and shared selection edits. Runtime context/status receive a
+validated receipt view; that view never becomes engine or snapshot authority. Worktree lifecycle captures and copies
+local preferences before setup on creation only. See `CAP-DIST-sync-and-transactions` and `CAP-WT-task-worktrees`.

@@ -32,6 +32,7 @@ from devkit.distribution.installation.config import (
 )
 from devkit.distribution.installation.discovery import InstalledBundle, unusable_bundles, unusable_notices
 from devkit.distribution.installation.engines import engine_notices
+from devkit.distribution.installation.local_render import runtime_receipt
 from devkit.distribution.installation.override_commands import override_statuses
 from devkit.distribution.installation.receipt import read_receipt
 from devkit.distribution.installation.results import (
@@ -358,7 +359,8 @@ def get_project_status(root: Path, installed: list[InstalledBundle]) -> ProjectS
     with project_lock(root, shared=True):
         receipt = read_receipt(root, check_disk=False)
         config = read_config(root)
-        files = _files_status(root, dict(receipt.file_records) if receipt else {})
+        effective_receipt = runtime_receipt(root, receipt) if receipt else None
+        files = _files_status(root, dict(effective_receipt.file_records) if effective_receipt else {})
         # Drift of deployed assets only, as ``devkit sync`` reports it; records kept for assets that are not
         # deployed (a deselected bundle, a narrowed preset) are reported when the asset is selected again.
         deployed = {(asset.bundle, asset.id) for asset in receipt.asset_records} if receipt else set()

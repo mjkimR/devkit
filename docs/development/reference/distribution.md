@@ -78,7 +78,8 @@ existing shared host files are never edited by locked sync. See `CAP-HOST-lifecy
 - `--no-agents`: records `agents = []`, which unlinks unchanged native projections and keeps managed copies.
 - `--preset <bundle>[:<name>]`: selects `<bundle>` with `<name>` (else its default preset), replacing that bundle's
   entry. Repeat a bundle to select a union; `<bundle>:all` selects every asset.
-- `--no-save`: applies the selection flags to this run only, without editing `.devkit/config.toml`.
+- `--no-save`: applies selection/environment flags to this run only, without saving shared selection or local environment.
+- `--cloud` / `--local`: mutually exclusive checkout environment selection; ordinary sync preserves the saved value.
 - `--dry-run`: computes the inventory and returns the planned `actions` without writing files or configuration,
   under the shared (reader) project lock.
 - `--format text|json` (also on `add` and `remove`): the `[SYNC]`/`[CHANGE]` lines (default) or the whole
@@ -309,3 +310,22 @@ Declare typed `[variables.<identifier>]` inputs in `bundle.toml` and set project
 `[bundles.<bundle>.variables]` in `.devkit/config.toml`, then `devkit sync`. Templates use `{{ vars.language }}`.
 The engine loads only during rendering. See `CAP-DIST-manifest-spec` for syntax and restrictions and
 `CAP-DIST-sync-and-transactions` for input resolution, overrides and receipt behavior.
+
+
+## Checkout-local preferences
+
+Edit ignored `.devkit/config.local.toml` for `[execution].environment`, `[mcp].register`, `[playbooks]` search
+preferences and `[bundles.<bundle>.variables]` scalar inputs. `devkit config show --effective --format json` shows
+values and source paths. Governance and bundle selection remain shared. `devkit sync --cloud` selects cloud;
+`devkit sync --local` explicitly returns to local. Neither grants approval authority.
+
+Personal rendering may change only ignored untracked human-readable asset kinds, preserving canonical receipt,
+guidance and seeds. Details and persistence behavior: `CAP-DIST-sync-and-transactions`.
+
+| Code | Exit | Action |
+| --- | --- | --- |
+| `CONFIG_LOCAL_KEY_FORBIDDEN` | 2 | Remove the local governance/selection/unknown key. |
+| `CONFIG_LOCAL_NOT_IGNORED` | 2 | Untrack the named personal path and correct its effective ignore rule. |
+| `CONFIG_LOCAL_RENDER_FORBIDDEN` | 2 | Remove the local variable or separate its shared template use. |
+| `CONFIG_LOCAL_RENDER_STALE` | 1 | Run sync to refresh local evidence and output. |
+| `CONFIG_LOCAL_CHANGED` | 1 | Finish concurrent configuration edits and rerun sync. |

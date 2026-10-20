@@ -2,7 +2,7 @@
 id: SPEC-local-config-execution-environment
 title: Local configuration and execution environments
 summary: Add ignored checkout-local configuration overlays and an explicit cloud execution environment, with creation-time worktree copying and shared receipt preservation.
-status: planned
+status: in-progress
 created: 2026-10-20
 related_capabilities: [CAP-DIST-sync-and-transactions, CAP-DIST-workspace-ownership, CAP-WT-task-worktrees]
 related_stories: []
@@ -238,13 +238,9 @@ artifacts; a generalized runtime settings plugin mechanism. `PROP-standalone-dev
 using this configuration. Its independent extraction can proceed in parallel; environment-dependent behavior waits
 for this contract's implementation and shared integration tests.
 
-### 4. Lifecycle & Retirement Criteria
+### 4. Delivery boundary
 
-Remain reviewing until the user decides `plan-accept`. The recommendation becomes a Development input only after
-acceptance and explicit handoff. No environment or approval policy is changed during Planning. The local resolver
-and shared/local rendering boundary must be implemented before the dependent MCP environment behavior is declared
-complete. Planning's artifact checks are not implementation verification.
-
+The resolver and shared/local rendering boundary must be implemented before dependent MCP environment behavior is declared complete. MCP binding, registration and approval enforcement remain in `PROP-standalone-devkit-mcp`. Planning checks are not implementation verification.
 
 ## Assumptions and source feedback
 

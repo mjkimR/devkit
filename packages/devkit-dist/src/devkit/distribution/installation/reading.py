@@ -8,6 +8,7 @@ from devkit.core.project import find_project_root
 from devkit.core.receipt import OVERRIDES_PATH, RECEIPT_PATH, Receipt
 from devkit.distribution.content import signature
 from devkit.distribution.errors import NotSynchronizedError
+from devkit.distribution.installation.local_render import runtime_receipt
 from devkit.distribution.installation.receipt import read_receipt
 from devkit.distribution.installation.transaction import require_no_journal
 from devkit.distribution.installation.workspace import checked_path, snapshot
@@ -30,7 +31,7 @@ def read_synchronized(root: Path) -> Receipt:
     receipt = read_receipt(root)
     if receipt is None:
         raise NotSynchronizedError(f"no synchronized project at {root}: {RECEIPT_PATH} does not exist")
-    return receipt
+    return runtime_receipt(root, receipt)
 
 
 def read_owned(root: Path, receipt: Receipt, name: str) -> bytes:

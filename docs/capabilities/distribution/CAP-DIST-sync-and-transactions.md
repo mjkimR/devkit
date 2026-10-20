@@ -270,8 +270,7 @@ devkit remove starter             # deselects; unchanged deployed files are remo
   `default_preset`; `devkit add <bundle>` pins it.
 - Selection commands render their edit under the project lock, from `config.toml` as it is then (so concurrent
   selection commands never lose an edit), check that the file can be rewritten (a regular file, not a symlink, in a
-  writable directory), write it, and synchronize from it; when the sync fails before it commits, the previous file is
-  put back. Post-sync extensions therefore see the saved selection.
+  writable directory), and plan from that selection in memory. The configuration edit commits through the same journal as outputs and local environment changes. Post-sync extensions see the committed selection.
 
 ### Unselected and Auto-Selected Bundles
 
@@ -379,7 +378,7 @@ committed one (the `tool` version aside, which it leaves as committed) and every
 copy to it: a `create` of a missing file the receipt records, an `update` of a recorded file still as this clone's
 last sync left it (`.devkit/transient/deployed.json`), or a `remove` of such an unchanged file the receipt no longer
 records. The last two are a clone whose committed receipt moved under it (a pull of another clone's sync). Since the
-receipt is unchanged, each written file carries its recorded SHA-256 and mode; a hand-edited copy is a
+receipt is unchanged, each written file carries its canonical or validated personal SHA-256 and the recorded mode; a hand-edited copy is a
 `SYNC_CONFLICT` as in a plain sync. A seeded file the receipt records but the project deleted is left missing (a plain
 sync seeds it again). Any other plan (a seed, the guidance block, `.devkit/.gitignore`, a new or changed
 receipt) writes nothing and raises `ReceiptStaleError` (`RECEIPT_STALE`): an `INTERACTION` error with exit code `1`,
@@ -405,9 +404,7 @@ when planning a selected bundle. Unselected bundle settings remain stored withou
 language = "ko"
 ```
 
-Project values override manifest defaults; no other resolution tiers exist. Configuration is Git-tracked and input
-to the desired inventory, including dry-run, check and locked sync. A configuration change that changes final bytes
-changes their receipt hashes; locked sync refuses any resulting committed-state change under its existing contract.
+Shared project values override manifest defaults and determine canonical inventory and receipt hashes. Eligible checkout-local values override shared values only for personal rendering, as described below. Changes to shared output hashes still require an ordinary sync.
 
 Template overrides retain their `.md.jinja` source paths and raw-source digests. Inventory chooses the upstream or
 project override, renders and validates it, then writes the resulting `.md` into the managed tree. Receipt asset
@@ -415,3 +412,51 @@ paths and guidance references name that managed result even when a template is o
 only rendered content. Skill entry and supporting Markdown templates follow the same raw override and rendered
 consumer-path contract; native skill projections receive rendered filenames and contents. Non-template overrides retain their existing paths and ownership behavior. A template error
 aborts before transaction writes; override commands restore their preliminary writes when planning fails.
+
+
+### Checkout-local configuration and execution
+
+`.devkit/config.local.toml` is an optional, ignored, regular TOML file. It accepts optional `schema = 1`,
+`[execution] environment = "local" | "cloud"`, `[mcp] register = true | false`, the existing `[playbooks]`
+search settings, and scalar `[bundles.<bundle>.variables]` inputs. Shared configuration also accepts `execution`
+and `mcp`; environment defaults to `local`, registration to `true`. Registration reconciliation belongs to the
+MCP service. The local file is not a secret store.
+
+Core `read_effective_config(root)` returns values and leaf-key source paths. Tables merge recursively; scalars and
+arrays replace whole values without type coercion. Array replacement is a merge primitive, not permission to use
+arrays in local fields. Every present local input is validated, including settings the immediate reader does not
+use. Unknown local keys, including governance, selection and command settings, fail with
+`CONFIG_LOCAL_KEY_FORBIDDEN` (exit 2). Invalid TOML, schema, types, symlinks and nonregular files fail with
+`CONFIG_INVALID` (exit 2) naming the source. Unknown bundle variables are checked when that bundle is selected.
+`read_project_config(root)` remains explicitly shared-only for policy and snapshots.
+
+`devkit config show --effective [--format json]` returns `configuration`, per-key `sources`, and
+`execution_environment` under the project read lock. `resolve_execution_environment(root)` requires an existing
+bound devkit workspace and returns `environment` and its `source`; it never searches another checkout. Missing
+local files use shared/default values. Cloud means interactive approval is unavailable, never permission to change
+an ask policy to auto; local does not prove host interactivity. No process-global environment latch exists.
+
+`sync --cloud` and `sync --local` are mutually exclusive and select the invocation's environment in memory.
+A writing sync saves only that local key, preserving other local bytes and the file mode. Ordinary sync retains the
+saved selection. `--no-save` suppresses shared selection and environment persistence. Dry-run and check report the
+pending local edit without saving it; check exits 1 when it or any other write is needed. The result includes
+`execution_environment`. Locked sync permits an ignored environment edit and eligible personal output only while
+canonical receipt and tracked outputs remain fixed; otherwise `RECEIPT_STALE` writes nothing. Shared configuration
+writers never edit local preferences. Shared/local input snapshots are rechecked before writes; concurrent changes
+raise `CONFIG_LOCAL_CHANGED` (exit 1, rerun). Journal failures restore the prior environment and output; post-sync
+extension warnings retain the committed environment.
+
+### Personal rendering and evidence
+
+Sync builds canonical inventory from shared variables and compares a second inventory using effective variables.
+Only bytes of assets with kind `skill`, `instruction`, `subagent` or `playbook` may differ, at ignored untracked
+destinations. Asset selection, paths, modes, manifests, constitutions, executable asset kinds, hooks, guidance and
+seeds remain canonical. A forbidden difference is `CONFIG_LOCAL_RENDER_FORBIDDEN` (exit 2), before any write.
+Existing template-kind validation can reject an executable template earlier during bundle loading.
+
+`.devkit/transient/local-render.json` records only differing file signatures, bound to the canonical receipt digest
+and effective variable digest. The deployed ledger records actual output. Context and status use a validated runtime
+receipt view; core receipt loading, rule/workflow/gate engines and snapshot checks retain canonical authority.
+Missing or stale evidence or changed variables raise `CONFIG_LOCAL_RENDER_STALE` (exit 1, run sync). Missing outputs
+use normal sync repair and hand edits retain conflict checks. Removing preferences restores canonical bytes and
+removes obsolete local evidence. The personal language fixture is `[bundles.response-style.variables] language = "ko"`.

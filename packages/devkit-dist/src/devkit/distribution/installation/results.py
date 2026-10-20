@@ -116,10 +116,12 @@ class SyncResult:
     unprojected: list[Unprojected]
     unselected: list[Unselected]
     notices: list[AdvisoryError] = field(default_factory=list)
+    execution_environment: str = "local"
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "dry_run": self.dry_run,
+            "execution_environment": self.execution_environment,
             "selection": selection_json(self.selection),
             "packages": [package_json(item) for item in self.packages],
             "assets": [asset_json(asset) for asset in self.assets],
