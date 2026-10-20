@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-19
 ---
 
@@ -57,3 +57,11 @@ Probe under <worktree>/docs/proposals/PROP-<slug>/.lab: "1 root=base: write file
 ```
 
 Historical source: Git `1b8478093a44cf2d0b74c412bffc93f259459ef0:docs/proposals/PROP-worktree-host-compatibility/feedback/planning-probe-lab-location.md`; relative evidence paths refer to that proposal bundle.
+
+## Disposition
+
+Directly resolved by `SPEC-feedback-planning-parser`. The Planning payload names an ignored probe path within the proposal write boundary, requires temporary-repository cleanup before the last commit and retains only evidence in materials. Unsupported locations require Host boundary expansion.
+
+Independent medium code review passed all four acceptance criteria without findings. The affected suite passed
+1,113 tests, including parser default/order/error cases and existing consumer checks; lint, type checks and
+cumulative governance checks passed. This disposition records verified branch work, not integration.

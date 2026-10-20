@@ -13,7 +13,7 @@ from devkit.workflow.unit.envelope import Envelopes, collect_envelopes, is_envel
 from devkit.worktree.lifecycle import locate
 
 from devkit_spec.attach import PROPOSAL_UNIT, SPEC_UNIT, attach_check
-from devkit_spec.entrypoints.bundle import _targets, parse_boundaries
+from devkit_spec.entrypoints.bundle import parse_boundaries, parse_targets
 from devkit_spec.errors import SpecError
 
 
@@ -170,7 +170,7 @@ def derive_scope(root: Path, tip: str, unit: str) -> list[dict[str, Any]]:
         entries.extend({"path": prefix(p), "source": "boundary", "task": task.index} for p in task.values)
     parts = PurePosixPath(unit).parts
     entries.append({"path": str(PurePosixPath(*parts[:-3], "docs", "materials", *parts[-2:])), "source": "materials"})
-    for target in _targets(read(root, tip, f"{unit}/reconcile.md"), f"{unit}/reconcile.md"):
+    for target in parse_targets(read(root, tip, f"{unit}/reconcile.md"), f"{unit}/reconcile.md"):
         entries.append({"path": prefix(target.file), "source": "reconcile"})
     section = re.search(r"(?im)^## [^\n]*Source feedback[^\n]*\n(.*?)(?=^## |\Z)", text, re.DOTALL)
     for identifier in sorted(set(re.findall(r"\bFB-[a-z0-9-]+", section[1] if section else ""))):

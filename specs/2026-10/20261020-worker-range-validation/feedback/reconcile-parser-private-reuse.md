@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-20
 ---
 
@@ -46,3 +46,11 @@ created_at: 2026-10-20
 entrypoints/bundle.py: parse_boundaries(text), load_bundle(root, directory), _targets(text, relative)
 worker/inputs.py: from devkit_spec.entrypoints.bundle import _targets, parse_boundaries
 ```
+
+## Disposition
+
+Directly resolved by `SPEC-feedback-planning-parser`. Public parse_targets(text, relative) replaces the private parser import in committed inspection and is shared with disk bundle loading; parser behavior is unchanged.
+
+Independent medium code review passed all four acceptance criteria without findings. The affected suite passed
+1,113 tests, including parser default/order/error cases and existing consumer checks; lint, type checks and
+cumulative governance checks passed. This disposition records verified branch work, not integration.

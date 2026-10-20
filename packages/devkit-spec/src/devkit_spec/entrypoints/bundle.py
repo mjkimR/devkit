@@ -144,7 +144,7 @@ def load_bundle(root: Path, directory: str) -> Bundle:
     if isinstance(spec.get("status"), str):
         status = spec["status"].strip()
     tasks = parse_boundaries(_read(base / "tasks.md", f"{directory}/tasks.md"))
-    targets = _targets(_read(base / "reconcile.md", f"{directory}/reconcile.md"), f"{directory}/reconcile.md")
+    targets = parse_targets(_read(base / "reconcile.md", f"{directory}/reconcile.md"), f"{directory}/reconcile.md")
     return Bundle(dir=directory, spec_id=spec_id, status=status, targets=targets, tasks=tuple(tasks))
 
 
@@ -157,7 +157,13 @@ def _read(path: Path, relative: str) -> str:
         raise EntrypointsInputInvalidError(f"cannot read {relative}: {exc}", target_files=[relative]) from exc
 
 
-def _targets(text: str, relative: str) -> tuple[Target, ...]:
+def parse_targets(text: str, relative: str) -> tuple[Target, ...]:
+    """Parse reconciliation targets from text without reading files.
+
+    Preserve target order and existing empty-field defaults. ``relative`` identifies the
+    source in ``EntrypointsInputInvalidError`` diagnostics; it is not opened or resolved.
+    """
+
     def invalid(problem: str) -> EntrypointsInputInvalidError:
         return EntrypointsInputInvalidError(f"cannot read {relative}: {problem}", target_files=[relative])
 

@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-20
 ---
 
@@ -48,3 +48,11 @@ Entry-checkout instruction: close a challenger round with reverify --from envelo
 Assigned-worktree CLI: ENVELOPE_FROM_INVALID --from must name a review or reverify envelope, not challenger.
 Assigned-worktree envelope instruction: the highest sequence of a kind is current.
 ```
+
+## Disposition
+
+Directly resolved by `SPEC-feedback-planning-parser`. Planning instructions and CLI now resolve from the same assigned worktree. Required newer CLI features trigger Host refresh instead of mixed-version instructions or fabricated records.
+
+Independent medium code review passed all four acceptance criteria without findings. The affected suite passed
+1,113 tests, including parser default/order/error cases and existing consumer checks; lint, type checks and
+cumulative governance checks passed. This disposition records verified branch work, not integration.
