@@ -13,6 +13,8 @@ targets:
   - file: docs/architecture/ARCH-07-deployment.md
   - file: docs/capabilities/host/CAP-HOST-lifecycle-observation.md
   - file: docs/capabilities/integration/CAP-INT-mcp-services.md
+  - file: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md
+  - file: docs/capabilities/worktree/CAP-WT-task-worktrees.md
   - file: docs/development/reference/host.md
   - file: docs/development/reference/integration.md
 ---
@@ -27,7 +29,7 @@ targets:
 - `CAP-HOST-lifecycle-observation`: extract MCP behavior, preserve hook ownership and narrowly authorize project registration.
 - `CAP-INT-mcp-services`: Host-owned approval, cloud/resume guards and environment origin.
 - `ADR-dist-module-split` and `ADR-dist-command-composition`: narrowly superseded MCP clauses via promoted PADR.
-- Relevant handoff/worktree capability discovered during Development: configuration identity and unchanged exact-scope handoff authority.
+- `CAP-DLV-proposal-incubation` and `CAP-WT-task-worktrees`: explicit config identity, clean-state-compatible registration and unchanged exact-scope handoff authority.
 - Package READMEs, docs/development/reference/host.md, integration reference, release/install guides and AGENTS.md package overview.
 
 Existing accepted ADR bodies remain append-only; promote the PADR with explicit supersession rather than editing

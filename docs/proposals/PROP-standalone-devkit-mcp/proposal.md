@@ -30,6 +30,8 @@ boundaries:
     - guides/install/
     - docs/capabilities/host/
     - docs/capabilities/integration/
+    - docs/capabilities/delivery/
+    - docs/capabilities/worktree/
   excludes:
     - packages/devkit-advisory/
     - packages/devkit-spec/src/devkit_spec/scope/
@@ -82,8 +84,28 @@ no host permission setting. Unsupported selected hosts get an explicit unsupport
 The desired descriptor and ownership ledger are machine-local and excluded from the committed installation
 receipt. Dist records the exact entry it last wrote under ignored `.devkit/transient/mcp/registrations.json`, with
 host, destination, server key, owning checkout and launch descriptor. It never claims the complete host file.
-Project host files can contain other tracked settings; do not ignore or rewrite the entire file as an owned asset.
-Generated absolute-path entries are local configuration and documentation explains their machine-specific nature.
+Host files can contain tracked settings. Automatic reconciliation MUST NOT dirty a checkout: a tracked destination
+is never modified, even when Git ignores its path. Return `MCP_REGISTRATION_UNAVAILABLE` with explicit CLI/PR
+fallback and host-owned setup instructions. Do not weaken clean-tree checks, stage generated entries, use
+skip-worktree/assume-unchanged, or rewrite tracked `.gitignore` to conceal the change.
+
+An absent destination may be created only after it is already ignored or sync adds a narrowly scoped, owned entry
+to clone-local Git `info/exclude`; never ignore an entire host directory. A pre-existing ignored directory already
+satisfies this prerequisite. Existing untracked destinations are writable only when already ignored; visible
+foreign untracked files are left unchanged with the same unavailable diagnostic, rather than silently hidden.
+Preserve foreign settings in an eligible destination. The local ownership ledger records exact exclude entries it
+created. Exclusions remain as clone-local setup after registration removal; report their retention and an explicit
+manual cleanup instruction instead of exposing another worktree's generated or foreign file. Before adding a
+pattern, inspect registered linked worktrees for currently visible foreign untracked files it would newly hide;
+refuse the exclusion with an actionable diagnostic if any exist. A broad pre-existing ignore rule is user-owned,
+never adopted or removed. Exclude changes use the common-Git-directory lock as well as the checkout registration
+lock, in a fixed order; normal linked worktrees share that file. Existing patterns remain byte-preserved. A non-Git workspace
+cannot satisfy the native Git workflow and receives an explicit unsupported registration diagnostic in this scope.
+
+The generated absolute-path entry is local setup, not a tracked portable asset. Sync checks tracked/ignored state
+again immediately before its registration write and aborts on changed ownership/state. Setup/remove use the same
+cleanliness and ownership rules; they do not force-write tracked configuration. An independently managed existing
+host registration may still provide the native route; status reports it without adopting or changing it.
 
 Reconciliation uses the project lock, validates every destination before writes, rejects symlinks/nonregular files,
 duplicate keys and malformed config, and atomically updates entries and the local ledger with recoverable journal
@@ -120,9 +142,12 @@ The owning configuration workspace is the checkout being synchronized, passed as
 argument; never derive it from client cwd, MCP roots or the executor's cwd. A linked checkout resolves the executor
 base through verified common-Git-directory identity and requires the same clone. The executor's ordinary integration
 safety checks still validate target branch and cleanup scope. Runtime binaries remain on disk after task removal.
-The configuration path can disappear when its worktree is cleaned: finish already authorized work under its
-captured scope, but reject a later approval request with `MCP_WORKSPACE_UNAVAILABLE`; reconnect from a retained
-checkout. Read-only retained diagnostics remain available. No daemon, shared approval store or reconnect token is
+The configuration path can disappear when its worktree is cleaned. Before deliberately removing that exact
+owning workspace, validate its identity and local environment one final time. Only terminal cleanup already
+included in the same in-flight approval may finish using that captured context after the expected self-removal;
+this exception cannot perform a new merge/push, expand scope, survive a returned partial result, authorize resume,
+or excuse an unexpectedly missing workspace. Reject later mutation/approval requests with
+`MCP_WORKSPACE_UNAVAILABLE`; reconnect from a retained checkout. Read-only retained diagnostics remain available. No daemon, shared approval store or reconnect token is
 introduced. Concurrent processes have independent confirmation authority and use existing domain locks; after
 restart a request ID cannot resume another process's approval.
 
@@ -139,7 +164,8 @@ with the latter reporting the environment and its source. A valid workspace with
 value/default; this is distinct from a missing or wrong workspace identity.
 
 Resolve the owning configuration workspace on each invocation, before opening a form and after the reply before
-mutation, including resume and later mutation steps. Malformed/missing required config identity fails closed. A
+mutation, including resume and later mutation steps. Malformed/missing required config identity fails closed, except the narrowly bounded same-call terminal cleanup
+after expected self-removal described above. A
 `cloud` result refuses interactive approval with stable `MCP_INTERACTIVE_UNAVAILABLE` and an action to use a local
 interactive Host or an independently authorized explicit CLI/PR route. No wait, form, worktree creation, merge,
 push or cleanup starts under that refusal. Guard after waiting for locks as well as after the form. A transition
@@ -195,14 +221,20 @@ Acceptance must demonstrate:
    accept/decline/cancel/disconnect handling and missing-form refusal, under the supported installed SDK/protocol.
 3. Repeated sync converges both host files and ownership state; dry-run/check write nothing; opt-out, uninstall,
    unsupported host, absent retained runtime, user shadowing, edited entry, duplicate key, file-mode preservation,
-   external edit and journal recovery have explicit tests. Simultaneous syncs serialize per checkout. No tests or
+   external edit and journal recovery have explicit tests. Absent host files become locally excluded, existing ignored
+   destinations remain eligible, and tracked/visible foreign untracked destinations remain byte-identical with
+   actionable unavailable diagnostics. Exercise worktree start setup, native handoff and integration clean-state
+   preflights for each case; no tracked ignore-file changes are allowed. Common exclude updates and per-checkout
+   writes serialize. No tests or
    smoke checks edit real user host settings or trust stores.
 4. Local-to-cloud changes before invocation, during form wait and during lock wait stop the next mutation;
    cloud stale/direct registrations and resume cannot obtain/use interactive approval. Read-only status works
    without elicitation capability. Prepare is not falsely advertised as the cloud read-only subset. Cross-worktree
    tests use different copied config values and verify the owning config path, not the retained executor's value.
 5. Removing the task does not remove the executable/import source. Reconnect cannot import old process authority;
-   concurrent server approval records remain independent. A vanished config workspace prevents new approval.
+   concurrent server approval records remain independent. A vanished config workspace prevents new approval and
+   resume; unexpected removal stops mutation, while only the declared same-call terminal cleanup may finish after
+   deliberate removal of its own config workspace.
 6. Real Codex CLI and Claude Code terminal sessions separately record registration, trust, discovery, native form,
    decline/cancel, post-approval effects and permission prompts with versions. Simulated transport tests alone do
    not establish UI support. If real-host evidence is unavailable, report it as unverified and do not claim that

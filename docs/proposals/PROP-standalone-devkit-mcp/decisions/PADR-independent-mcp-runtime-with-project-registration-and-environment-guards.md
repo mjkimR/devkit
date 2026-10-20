@@ -45,7 +45,11 @@ project host-file transactions and ignored machine-local ownership ledger. The r
 selection and requirements. Dist-only operations neither import nor require the runtime.
 
 Default sync registration targets selected Codex CLI/Claude Code project files with `[mcp] register=true`. It
-preserves foreign entries and refuses collisions rather than modifying global host configuration or trust. Removal
+preserves foreign entries and refuses collisions rather than modifying global host configuration or trust.
+Automatic writes require an untracked ignored destination: newly created files receive narrow clone-local exclude
+entries, while tracked or visible foreign untracked files are left unchanged with explicit registration-unavailable
+and CLI/PR fallback guidance. This limitation preserves native handoff/integration clean-state requirements;
+setup never bypasses it. No tracked ignore-file edits or Git clean-state bypass is introduced. Removal
 requires exact ownership, including after package uninstall. The committed installation receipt remains portable.
 
 Retained executable, retained domain executor and owning config workspace are separate identities. Configuration
@@ -66,8 +70,11 @@ contains the detailed acceptance evidence and failure semantics.
 
 A new release wheel, command path and testing matrix are required. No external consumers require a migration
 shim; previous user-scoped entries get explicit conflict/recovery instructions rather than automatic conversion.
-Machine-local registration ownership must survive normal sync and detect edits; the project files may still be
-tracked by a consumer, so generated absolute paths are documented as local setup. Runtime registration cannot
+Machine-local registration ownership must survive normal sync and detect edits. Consumers that track native
+project config cannot receive automatic machine-specific registration in that file; an existing host-managed
+registration or the explicit CLI/PR route remains available. Exclusions created for new files are narrowly owned
+and retained as clone-local setup, with explicit cleanup guidance; creating them must not hide existing foreign
+untracked host files in another registered worktree. Generated absolute paths are local setup. Runtime registration cannot
 prove actual host discovery, trust or form UI. Those require separate implementation evidence.
 
 The configuration proposal is an integration-order dependency, not an assumed accepted contract. This proposal

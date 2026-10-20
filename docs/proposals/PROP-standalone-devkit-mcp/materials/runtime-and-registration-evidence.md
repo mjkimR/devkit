@@ -55,3 +55,20 @@ Claude default stdio cwd were not established; explicit roots and conflict refus
 
 No live host trust, connection, approval UI, destructive cleanup, cloud provider or release operation was exercised
 in Planning. Those remain named implementation checks, not assumptions supporting a completed implementation.
+
+## Challenger disposition and author verification
+
+The medium nested challenger found one P1: writing machine-specific project entries can dirty tracked native config
+or expose a new untracked file. Existing `handoff_mcp.py` rejects dirty retained bases and dirty setup-created
+worktrees; integration similarly requires clean state. The author changed the design to permit only ignored,
+untracked destinations, establish exact clone-local excludes only for newly generated files, and leave tracked or
+visible foreign untracked destinations untouched with an explicit diagnostic/fallback. No clean-tree bypass or
+tracked ignore-file edit is allowed. The acceptance matrix now exercises these cases through worktree setup,
+handoff and integration. This is author verification of the changed contract, not a claim that the challenger
+reviewed later edits or that implementation tests passed.
+
+Author self-review also clarified the expected-self-removal case: a task-bound server can finish only terminal
+cleanup already authorized within that same call after deliberately removing its own config workspace. It cannot
+start a new merge/push, resume after a returned result, or treat unexpected disappearance as permission. The
+captured identity/environment is checked immediately before that removal. This keeps later config checks and
+retained-runtime lifetime from contradicting each other.
