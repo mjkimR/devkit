@@ -13,6 +13,12 @@ only) one `MS` ID and `depends_on` (milestones only) a list of `MS` IDs, without
   well-formed ID): their relation fields, the `` `ID` `` and `[ID]` references in their prose, and their relative
   Markdown links. Provenance fields need no existing target: a spec's `proposal:` is not checked, and an anchor's
   `decomposed_from` and `supersedes` must only be `PROP-` IDs.
+- **Root glossary Owners**: additionally, `docs/glossary.md` is checked without adding an ID or indexing it.
+  In five-column tables headed `Term | Definition | Owner | Avoid | Code identifiers`, followed by a Markdown
+  separator row, full IDs in backticks or brackets in the `Owner` cell must resolve uniquely. Empty owners and
+  non-reference text are allowed. Only resolution is checked, with no glossary autofix or reference-graph edges;
+  prose outside tables, other columns, other ID-free files and legacy tables are outside this extension. The same
+  prose masking, targeting, exclusions and snapshot cache apply.
 - **What is not**: reference extraction skips code fences, indented code, inline code other than a single ID, HTML
   comments, escapes, link labels, `~~strikethrough~~` (a historical mention of a removed document stays allowed
   there) and a heading's own ID. External URLs, images, code files, documents without IDs, links with a fragment or

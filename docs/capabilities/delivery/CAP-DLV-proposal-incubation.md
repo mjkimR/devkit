@@ -133,6 +133,11 @@ removes it.
     draft directly (rule 14), the one status change it makes, and, on the user's explicit decision at pickup, delete a
     draft without PADRs to do it as a `session` task (`ADR-session-reclassification-of-a-queued-draft`), preserving
     its open feedback (3.1); both commit only on the base checkout.
+    For decomposition discovered in Planning, its executor commits `draft` plus `needs_decompose: true`, retained
+    materials and answers closing pending questions. The Host integrates that return and removes local and fetched
+    Planning branch blockers under existing merge, cleanup and network authority, then reruns the Backlog check on
+    the base before creating children. Changing status alone is insufficient. The decomposition refusal retains
+    `SPEC_PROPOSAL_IN_PLANNING` and directs the caller to this Host-managed return, never to retry on the plan branch.
 14. **One writer of an acceptance**: `accept` records the user's acceptance in one step, after the user's explicit
     acceptance only (`--by user`, the only value: `plan-accept` is never delegated). Its form follows from the
     status: `planning` for a proposal in review on its `plan-<slug>` (another branch is

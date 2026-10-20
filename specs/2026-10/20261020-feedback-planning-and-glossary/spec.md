@@ -2,7 +2,7 @@
 id: SPEC-feedback-planning-and-glossary
 title: Clarify proposal decomposition recovery and validate glossary owners
 summary: Keep decomposition in Backlog with actionable Planning return guidance and validate Owner IDs in the repository glossary.
-status: planned
+status: in-progress
 created: 2026-10-20
 related_capabilities:
   - CAP-DLV-proposal-incubation

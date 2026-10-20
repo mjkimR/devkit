@@ -19,7 +19,9 @@ created_at: 2026-10-13
 The document model decides which files are spec documents, how each one is identified and how documents reference
 each other. `devkit_spec.documents` implements it as a workspace index rebuilt from the files on every load. The
 lookup commands (`CAP-DOCS-document-lookup`), document search (`CAP-DOCS-document-search`), namespaces
-(`CAP-DOCS-namespaces`) and every spec rule (`CAP-GOV-spec-rules`) read documents only through this index.
+(`CAP-DOCS-namespaces`) and spec rules (`CAP-GOV-spec-rules`) resolve document identities through this index.
+`RULE-document-reference` also reads root glossary Owner cells through the rules workspace cache; the glossary
+stays ID-free and unindexed, and its Owner references do not become graph edges.
 
 ## 2. Scope & Boundary
 
