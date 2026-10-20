@@ -2,7 +2,7 @@
 id: PROP-response-style-survey
 title: Survey reply-style practice to refine response-style
 summary: Surveys reply-style guidance across agent tooling repositories and writing guides, measures candidate rules with a small benchmark, and folds the results into the response-style bundle, including whether its always-on guidance needs more than the 300-byte fragment.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing
 created_at: 2026-10-19
 target_area: distribution/
 priority: medium                      # critical | high | medium | low
