@@ -257,8 +257,18 @@ def test_historical_record_citations(workspace: Path, write: Write, history: str
         run_git(workspace, "add", ".")
         if history == "untracked":
             run_git(workspace, "rm", "--cached", record.relative_to(workspace).as_posix())
-        run_git(workspace, "-c", "user.name=Test", "-c", "user.email=test@example.com", "-c", "core.hooksPath=/dev/null",
-                "commit", "-m", "Evidence")
+        run_git(
+            workspace,
+            "-c",
+            "user.name=Test",
+            "-c",
+            "user.email=test@example.com",
+            "-c",
+            "core.hooksPath=/dev/null",
+            "commit",
+            "-m",
+            "Evidence",
+        )
         head = run_git(workspace, "rev-parse", "HEAD").decode().strip()
         if history == "dirty":
             record.write_text("kind: answer\nsummary: changed\n")

@@ -91,6 +91,7 @@ from devkit_spec.proposals.binding import (
 )
 from devkit_spec.proposals.body import CarriedProposal, carry_proposal_body
 from devkit_spec.proposals.feedback import plan_open_feedback
+from devkit_spec.proposals.history import rewrite_history
 from devkit_spec.proposals.rewrite import (
     ID,
     RelocationPlan,
@@ -430,6 +431,7 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
     index = DocumentIndex.load(root)
     sources = markdown_files(root, plan, completed_bundles(index))
     report = RewriteReport()
+    rewrite_history(root, sources, plan, records, report)
     rewrite_links(root, sources, plan, report)
     rewrite_ids(root, sources, plan, index, report)
     rewrite_paths(root, sources, plan, report)

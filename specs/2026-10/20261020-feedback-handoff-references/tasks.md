@@ -6,13 +6,13 @@ plan: PLAN-feedback-handoff-references
 
 # Tasks: `SPEC-feedback-handoff-references`
 
-- [ ] **Task 1**: Preserve generic directory spans and test concrete reference preservation.
+- [x] **Task 1**: Preserve generic directory spans and test concrete reference preservation.
   - **_Boundary**: `packages/devkit-spec/src/devkit_spec/proposals/rewrite.py`, `packages/devkit-spec/tests/proposals/test_proposal_handoff.py`
   - _Requirements: AC-01, AC-03_
-- [ ] **Task 2**: Pin dropped-record citations only with verified committed evidence, with regression coverage.
+- [x] **Task 2**: Pin dropped-record citations only with verified committed evidence, with regression coverage.
   - **_Boundary**: `packages/devkit-spec/src/devkit_spec/proposals/handoff.py`, `packages/devkit-spec/src/devkit_spec/proposals/history.py`, `packages/devkit-spec/tests/proposals/test_proposal_handoff_records.py`
   - _Requirements: AC-02, AC-03, AC-04_
-- [ ] **Task 3**: Repair two existing ADR citations and verify their historical source.
+- [x] **Task 3**: Repair two existing ADR citations and verify their historical source.
   - **_Boundary**: `docs/decisions/2026-10/20261020-reverify-closes-challenger-rounds.md`, `docs/decisions/2026-10/20261020-proposal-boundaries-name-existing-paths.md`
   - _Requirements: AC-05_
 

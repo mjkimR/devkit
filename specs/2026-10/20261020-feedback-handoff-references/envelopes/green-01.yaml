@@ -1,0 +1,16 @@
+kind: green
+stage: fix-verify
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-20T04:18:15.574877Z'
+status: completed
+summary: Generic directory prose survives; committed dropped record citations are pinned; both existing ADR citations corrected without decision changes
+findings: []
+assumptions:
+- Verification includes uncommitted implementation; last refinement verified with focused record tests
+checks:
+  resolved: PASS five reproduction cases now pass; historical source contains both cited answers
+  preserved: PASS affected tests 1115; final history refinement 21 record tests; spec lint and type checks pass
+diff_scope:
+  base: b9c051b59df6a590d57472cb85f0914e8a5adadf
+  head: ''

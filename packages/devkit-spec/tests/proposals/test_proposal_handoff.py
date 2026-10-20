@@ -453,7 +453,10 @@ def test_rewrites_code_span_paths_into_the_bundle(workspace: Path) -> None:
         encoding="utf-8",
     )
     padr = proposal.parent / "decisions/PADR-pick-a.md"
-    padr.write_text(padr.read_text(encoding="utf-8") + "\nSee `materials/notes.md`; every draft has `materials/`.\n", encoding="utf-8")
+    padr.write_text(
+        padr.read_text(encoding="utf-8") + "\nSee `materials/notes.md`; every draft has `materials/`.\n",
+        encoding="utf-8",
+    )
     accept(proposal)
 
     result = handoff_proposal(workspace, "span-paths", today=TODAY)

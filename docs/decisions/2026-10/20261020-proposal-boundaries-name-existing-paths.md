@@ -71,7 +71,8 @@ after the user accepted and turns a later path move into an error on an unchange
   clears every `RULE-proposal-boundaries` report (`workflows/sdd-proposal.md` gate rules, next to the `dev_effort`
   review). An accepted proposal whose owned path later moves keeps its warning; Development treats a boundary that no
   longer holds as a problem and a close, never an edit of the proposal.
-- **Paths the Development will create** (the user's answer `new-boundary-paths`, `envelopes/answer-01.yaml`): the
+- **Paths the Development will create** (the user's answer `new-boundary-paths`, historical Git
+  `5551f9f4fc2920b973276aa43a2b0e36778c2f7a:docs/proposals/PROP-envelope-record-gaps/envelopes/answer-01.yaml`): the
   proposal names the nearest existing parent directory in `target_area` or `boundaries.owns` (for example
   `packages/devkit-spec/src/devkit_spec/bundle/rules/` for a new rule folder) and names the new path itself in the
   proposal text. No new frontmatter key or entry marker; handoff copies the boundary unchanged. The rule's guide and
