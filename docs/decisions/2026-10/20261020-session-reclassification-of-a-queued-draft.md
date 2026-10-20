@@ -59,7 +59,7 @@ low to save cost. The user chose to allow it on their explicit decision (`answer
   The `session` criteria cannot hold for a draft marked `needs_decompose` (not yet classified, `classification.md` §1),
   a draft with `supersedes` or a depth escalation's draft (each exists because a direction must be decided first), so
   the Host does not propose it for them.
-- **The request** names what goes: the draft and its gate records, `docs/materials/2026-10/20261020-draft-direct-acceptance/` (kept in Git history only), the
+- **The request** names what goes: the draft and its gate records, its `materials/` (kept in Git history only), the
   `milestone` membership (a `session` task cannot be a member; no hygiene check reports the lost member, even for a
   done or dropped milestone, so the user reviews the milestone's exit condition here), and the open feedback that is
   preserved. The same exchange may also agree the session's intent, which has no record file; each decision is
