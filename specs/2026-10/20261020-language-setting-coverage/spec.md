@@ -209,4 +209,3 @@ Scope excluded: translating all CLI/advisory/machine output, repository document
 MCP tool descriptions and result payloads; host-owned UI, permission/trust configuration, VS Code/SDK/desktop host
 support, locale detection, dynamic translation services, arbitrary preference registries and new approval authority.
 SDK transport fixtures are evidence only and do not add SDK-host product support.
-
