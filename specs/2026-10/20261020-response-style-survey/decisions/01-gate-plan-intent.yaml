@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: PROP-response-style-survey
+by: user
+at: '2026-10-20T01:58:14.634674Z'

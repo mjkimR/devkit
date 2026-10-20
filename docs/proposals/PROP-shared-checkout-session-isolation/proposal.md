@@ -2,7 +2,7 @@
 id: PROP-shared-checkout-session-isolation
 title: Non-blocking guidance for session branches in a shared checkout
 summary: "Adds concise guidance for --no-worktree branches in shared checkouts, leaving coordination to the direct user or local orchestration main agent without requiring worktrees or adding execution barriers."
-status: draft                         # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-19
 target_area: delivery/
 priority: medium                      # critical | high | medium | low
@@ -11,8 +11,10 @@ planning_effort: low                  # low | medium | high (hint for Planning)
 dev_effort: low                       # low | medium | high (hint for Development)
 boundaries:
   owns:
-    - delivery/
-    - worktree/
+    - packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/git-policy.md
+    - packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/branches.md
+    - docs/capabilities/delivery/CAP-DLV-project-policy.md
+    - docs/capabilities/worktree/CAP-WT-task-worktrees.md
   excludes:
     - docs/decisions/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
@@ -48,7 +50,7 @@ is needed.
 - Add brief guidance to the `spec` skill's git-policy and branches references: `--no-worktree` switches the current
   checkout to the task branch, and other sessions using that directory observe the same branch. Direct users and
   local orchestration main agents coordinate checkout use; a separate worktree remains an available option.
-- Reflect that responsibility boundary in `CAP-DLV-project-policy` and the worktree capability area. Keep command
+- Reflect that responsibility boundary in `CAP-DLV-project-policy` and `CAP-WT-task-worktrees` (§2a). Keep command
   output and success behavior unchanged; do not add an unconditional runtime notice.
 - Keep existing integration checks. Do not add foreign-commit detection, automatic commit separation or a new
   integration refusal for shared-checkout use.
@@ -56,7 +58,29 @@ is needed.
 **Non-Goals**: guaranteed isolation between concurrent sessions in one checkout, shared-session detection,
 runtime notices, mandatory worktrees, session locks, additional approval gates and automatic recovery of mixed branches.
 
-## 4. Lifecycle & Retirement Criteria
+## 4. Development Acceptance & Verification
+
+- In `git-policy.md`, place the shared-checkout caveat beside the session branch guidance; in `branches.md`,
+  place it in §2 beside `start --no-worktree`. State that switching branches changes the branch seen by every
+  session using that directory, so another session can commit to the checked-out task branch.
+- In `CAP-DLV-project-policy` §3.6 and `CAP-WT-task-worktrees` §2a, clarify the same responsibility boundary:
+  the direct user coordinates shared sessions; the local orchestration main agent coordinates workers. Preserve
+  the existing rule that local-orchestrated workers run in worktrees. This clarification grants no new permission
+  to run workers in a shared checkout. A separate worktree remains an option for a direct session task.
+- Review all four documents together for those statements and for unchanged policy levels, command output,
+  integration checks and approval requirements. No runtime behavior or new policy is introduced, so no PADR or
+  production-code change is needed. Development effort remains `low`.
+- Verify the documentation with `uv run --no-sync devkit rules check` on the four changed paths and the normal
+  staged/cumulative rule checks. Run `just test-affected` for the final diff and follow any selected checks;
+  no new test is needed for this wording-only clarification.
+
+## 5. Source Feedback
+
+`FB-no-worktree-session-branch-shared-checkout` is terminal as `promoted`; its existing disposition selects this
+documentation-only scope. The reference preserves provenance and creates no source-feedback update or completion
+check under `ADR-feedback-terminal-outcomes`. Implementation and verification are tracked in the receiving spec.
+
+## 6. Lifecycle & Retirement Criteria
 
 - Preliminary decisions: `devkit spec proposal padr shared-checkout-session-isolation "<title>"`.
 - On acceptance (`plan-accept`): hand off with `devkit spec proposal handoff shared-checkout-session-isolation`.
