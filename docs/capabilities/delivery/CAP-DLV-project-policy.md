@@ -134,7 +134,7 @@ collect-feedback = "off"    # switch a stage off by id
 
 [worktree]
 pull_request = "required"   # always integrate through pull requests (default "auto": as the task needs)
-delete_branch = true        # delete the merged branch
+delete_branch = true        # delete the merged local branch; also select leased remote deletion on the native PR route
 merge = "no-ff"             # a merge commit per task (default); "ff-only" keeps linear history
 setup = "uv sync"           # run in each new worktree
 
@@ -203,3 +203,7 @@ tables = template()  # list[devkit.core.TemplateTable]: [tool.spec], its namespa
 
 devkit's own errors pass through: `CONFIG_INVALID` (an unreadable file), `WORKFLOW_CONFIG_INVALID`,
 `WORKTREE_CONFIG_INVALID`.
+
+On the native PR route (`CAP-INT-mcp-services`), `delete_branch` selects local and remote branch deletion in the
+confirmation form; it grants no authority. GitHub automatic branch deletion is separately disclosed. Required PR
+policy restricts route selection without granting push, merge or cleanup permission.

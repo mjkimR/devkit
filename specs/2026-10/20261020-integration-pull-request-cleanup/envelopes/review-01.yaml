@@ -1,0 +1,36 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T01:26:17.576958Z'
+status: completed
+summary: round 1; independent code reviewer reproduced three P1 defects in repository authority, checked landing and unknown recovery.
+findings:
+- issue: Git mutations can reach repositories outside the approved scope because only the first push URL is bound.
+  evidence: packages/devkit/src/devkit/worktree/pull_request.py:148; packages/devkit/src/devkit/worktree/pull_request.py:194; packages/devkit/src/devkit/worktree/pull_request.py:432
+  failure_condition: Multiple push URLs, including one added after prepare, publish to both bound and unbound repositories.
+  suggested_action: Inspect all effective push destinations during preparation and validation; refuse expanded configurations and test both initial and added destinations.
+  resolution: open
+  severity: P1
+- issue: Landing verification ignores build_checked and can report checked=true after failed readiness.
+  evidence: packages/devkit/src/devkit/integration/pull_request.py:445
+  failure_condition: A prospective build fails readiness and another actor merges the same parent and tree before resume.
+  suggested_action: Require build_checked; report not-recorded with landed-check directive and test failed-build/manual-merge/resume.
+  resolution: open
+  severity: P1
+- issue: Git mutation timeouts expose GIT_FAILED rather than INTEGRATION_STEP_UNKNOWN recovery.
+  evidence: packages/devkit/src/devkit/worktree/pull_request.py:121; packages/devkit/src/devkit/integration/pull_request.py:552
+  failure_condition: Push or remote deletion times out or has an unrecognized transport failure; the unknown step carries the unrelated generic Git directive.
+  suggested_action: Normalize mutation failures to INTEGRATION_STEP_UNKNOWN with diagnostic details and status/observation recovery; test push and deletion.
+  resolution: open
+  severity: P1
+unverified_areas:
+- No live GitHub mutations or host cancellation tests
+checks:
+  affected: PASS 1774 tests
+  lint-types-rules: PASS both packages and cumulative rules
+  independent-probes: FAIL three offline reproductions
+diff_scope:
+  base: 3e4f4c91222ece1900dc3cafa928f36c35b37239
+  head: aea9ecb807ff9728b1b2f16a13c5f395f171dbc8
+activity_effort: high

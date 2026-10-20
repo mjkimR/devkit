@@ -1,0 +1,24 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T01:37:39.183070Z'
+status: completed
+summary: 'round 1; closes reconcile-check-01; developer self-verifies the exact requested wording additions in the two named documents. Minor-fix conditions hold: only named prose, unchanged implemented contract, no code/API change; diff and scoped rules confirm agreement.'
+findings:
+- issue: PR preparation input and remote restrictions are incompletely documented.
+  evidence: docs/capabilities/integration/CAP-INT-mcp-services.md:248; docs/development/reference/integration.md:14
+  failure_condition: Previously undocumented task ID and remote restrictions caused preparation refusals.
+  suggested_action: Exact reviewer-requested existing restrictions added to the named capability and reference paragraphs.
+  resolution: resolved
+  severity: P2
+unverified_areas:
+- Live GitHub and host cancellation remain unverified
+checks:
+  reflection: PASS exact task ID regex and three remote restrictions match implementation
+  minor-fix: PASS named locations only; existing meaning unchanged; concrete suggested edit applied
+  rules: PASS affected documents and completed unit
+diff_scope:
+  base: 4a8b34c2814809b2ce25b296e43d99509edad7c7
+  head: ''
+activity_effort: high

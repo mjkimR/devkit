@@ -1,0 +1,20 @@
+kind: answer
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T23:36:04.682338Z'
+status: completed
+summary: Host withdraws its obsolete structured-cohort selection request; no user execution choice or budget approval is recorded.
+findings: []
+assumptions:
+- Administrative withdrawal by the Host of its own question, not an inferred user answer or plan-accept approval.
+checks: {}
+answers_to: worker-01.yaml
+answers:
+- question: pilot-execution
+  choice: null
+  decision: The Host withdraws the structured-cohort execution question because it is unnecessary for the current recommendation and illustrative design review.
+  constraints:
+  - No live-generation host, spending allowance or collection protocol is selected or authorized.
+  - Any later request for live controlled comparison states its scope and budget separately.
+  - Final plan acceptance remains the user gate.

@@ -14,6 +14,7 @@ TASK_SCHEMA = {
     "type": "object",
     "properties": {
         "branch": {"type": "string"},
+        "route": {"type": "string", "enum": ["local", "pull-request"], "default": "local"},
         "task_kind": {"type": "string", "enum": ["unit", "session"]},
         "task_id": {"type": "string", "minLength": 1, "maxLength": 256},
         "unit": {"type": "string"},
@@ -54,10 +55,12 @@ def create_tools(root: Path) -> tuple[McpTool, ...]:
         )
 
     async def prepare(args: dict, _confirm: Confirmation) -> dict:
-        return (await asyncio.to_thread(service.prepare, args["branch"], task(args))).compact_dict()
+        return (
+            await asyncio.to_thread(service.prepare, args["branch"], task(args), args.get("route", "local"))
+        ).compact_dict()
 
     async def integrate(args: dict, confirm: Confirmation) -> dict:
-        return (await service.integrate(args["branch"], task(args), confirm)).compact_dict()
+        return (await service.integrate(args["branch"], task(args), confirm, args.get("route", "local"))).compact_dict()
 
     async def resume(args: dict, _confirm: Confirmation) -> dict:
         return (await asyncio.to_thread(service.resume, args["request_id"])).compact_dict()
@@ -69,10 +72,11 @@ def create_tools(root: Path) -> tuple[McpTool, ...]:
     return (
         McpTool(
             "integration_prepare",
-            "Optional read-only preflight: inspect concise local integration scope and readiness without approval or Git mutations. Not required before integration_integrate, which prepares its own request. Use integration_status(detail=true) for full retained diagnostics.",
+            "Optional preflight: inspect integration scope. The pull-request route fetches the remote target but performs no remote write. Not required before integration_integrate, which prepares its own request. Use integration_status(detail=true) for full retained diagnostics.",
             TASK_SCHEMA,
             prepare,
             read_only=True,
+            open_world=True,
         ),
         McpTool(
             "integration_integrate",
@@ -88,10 +92,11 @@ def create_tools(root: Path) -> tuple[McpTool, ...]:
             "otherwise changed scope blocks execution with nothing changed on the target. "
             "After approval, effects may include advancing the base branch, removing the source worktree, "
             "deleting its local branch and running the listed scoped cleanup. "
-            "No fetch, push, remote deletion or PR operations. Requires the configured readiness provider.",
+            "The default local route excludes network operations. route=pull-request confirms push, PR merge, fetch, local fast-forward and disclosed cleanup, including selected leased remote branch deletion. Pending checks return for integration_resume; unchecked landings carry a notice. Requires the configured readiness provider.",
             TASK_SCHEMA,
             integrate,
             destructive=True,
+            open_world=True,
         ),
         McpTool(
             "integration_resume",
@@ -99,6 +104,7 @@ def create_tools(root: Path) -> tuple[McpTool, ...]:
             REQUEST_SCHEMA,
             resume,
             destructive=True,
+            open_world=True,
         ),
         McpTool(
             "integration_status",
@@ -106,5 +112,6 @@ def create_tools(root: Path) -> tuple[McpTool, ...]:
             STATUS_SCHEMA,
             status,
             read_only=True,
+            open_world=True,
         ),
     )

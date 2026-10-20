@@ -1,0 +1,29 @@
+kind: worker
+stage: integration-approval
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T01:40:03.462416Z'
+status: completed
+summary: Completed specify, build/verify, three fresh code-review rounds, independent reconciliation, feedback and final report. PR route now binds one native approval to pinned synchronous GitHub merge and safe resumable cleanup. Stopped at dev-integration gate; no merge or push performed.
+findings: []
+assumptions:
+- 'Emulated contract: absolute workdir and git -C, exact scoped escalations, read-only nested-role payloads and Host range validation substitute for native isolation'
+- Approved scope corrections cover devkit_spec/integration.py and new repository-binding ADR; synchronous REST preserves no-queue authority
+- Host main advanced from3efccb0 to12a6637e13747f9f3fbc07fa043061565640ea8f through separately authorized work; Host incorporates current base after return
+unverified_areas:
+- Live GitHub operations, SSH/Enterprise endpoints and host cancellation were not exercised; official documentation plus offline bare-repository tests only
+- Offline measured approving calls1.678s completed and0.729s pending are not live bounds; local/provider checks may exceed host timeout
+- Combined result with advanced main awaits Host incorporation and revalidation
+checks:
+  tests: PASS affected suite1779 tests in33.10s
+  lint: PASS devkit and devkit-spec lint-check
+  types: PASS devkit and devkit-spec zero errors
+  rules: PASS cumulative committed scope0 errors0 warnings and normal commit gates
+  review: PASS three fresh native-role code reviewers; three P1 and one P2 resolved
+  reconcile: PASS independent reviewer plus exact wording minor-fix self-verification
+  scope: PASS actual changed paths within Host-approved boundaries; no live remote mutations
+  workflow: PASS final report holds; integration-approval waiting
+diff_scope:
+  base: 3e4f4c91222ece1900dc3cafa928f36c35b37239
+  head: 9304a3d1dbbefda740ee6de5b8edf76d6d8f7fa0
+activity_effort: high

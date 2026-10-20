@@ -1,0 +1,38 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T01:28:29.059675Z'
+status: completed
+review: review-01.yaml
+summary: 'round 1 fixes; all three P1 reproductions now pass: all push destinations validated, successful build required for checked landing, unknown Git mutations normalized. Fresh round 2 required because behavior and public advisory output changed.'
+findings:
+- issue: Git mutations can reach repositories outside the approved scope because only the first push URL is bound.
+  evidence: packages/devkit/src/devkit/worktree/pull_request.py:148; packages/devkit/src/devkit/worktree/pull_request.py:194; packages/devkit/src/devkit/worktree/pull_request.py:432
+  failure_condition: Multiple push URLs, including one added after prepare, publish to both bound and unbound repositories.
+  suggested_action: Inspect all effective push destinations during preparation and validation; refuse expanded configurations and test both initial and added destinations.
+  resolution: resolved
+  severity: P1
+- issue: Landing verification ignores build_checked and can report checked=true after failed readiness.
+  evidence: packages/devkit/src/devkit/integration/pull_request.py:445
+  failure_condition: A prospective build fails readiness and another actor merges the same parent and tree before resume.
+  suggested_action: Require build_checked; report not-recorded with landed-check directive and test failed-build/manual-merge/resume.
+  resolution: resolved
+  severity: P1
+- issue: Git mutation timeouts expose GIT_FAILED rather than INTEGRATION_STEP_UNKNOWN recovery.
+  evidence: packages/devkit/src/devkit/worktree/pull_request.py:121; packages/devkit/src/devkit/integration/pull_request.py:552
+  failure_condition: Push or remote deletion times out or has an unrecognized transport failure; the unknown step carries the unrelated generic Git directive.
+  suggested_action: Normalize mutation failures to INTEGRATION_STEP_UNKNOWN with diagnostic details and status/observation recovery; test push and deletion.
+  resolution: resolved
+  severity: P1
+unverified_areas:
+- Live GitHub latency and host cancellation remain unverified
+checks:
+  regressions: PASS four scenarios failed before fixes and pass after
+  affected: PASS 1778 tests in 32.05s
+  lint-types: PASS devkit; unchanged devkit-spec prior PASS
+  timing: PASS offline completed 1.678s pending 0.729s
+diff_scope:
+  base: aea9ecb807ff9728b1b2f16a13c5f395f171dbc8
+  head: ''
+activity_effort: high

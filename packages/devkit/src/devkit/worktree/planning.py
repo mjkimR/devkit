@@ -88,6 +88,7 @@ def plan_finish(
     pull_request: str = "auto",
     delete_branch: bool = True,
     merge_method: str = "no-ff",
+    target_sha: str | None = None,
 ) -> FinishPlan:
     """Preflight local integration and exact cleanup without fetching, pushing or changing Git state.
 
@@ -115,7 +116,7 @@ def plan_finish(
     if entry and not _clean(path):
         raise DirtyError("the task worktree has uncommitted or untracked changes", target_files=[str(path)])
     source = _git(position.base, "rev-parse", "--verify", f"refs/heads/{branch}^{{commit}}")
-    target = _git(position.base, "rev-parse", "--verify", "HEAD^{commit}")
+    target = target_sha or _git(position.base, "rev-parse", "--verify", "HEAD^{commit}")
     already = _merged(position.base, source, target)
     if not already and not _merged(position.base, target, source):
         raise MergeNotFastForwardError(
@@ -152,6 +153,7 @@ def validate_finish(
     finalized: bool = False,
     result: str | None = None,
     target: str | None = None,
+    check_upstream: bool = True,
 ) -> None:
     """Recheck identities immediately before a mutation; allow only the executor's own completed transitions.
 
@@ -206,5 +208,5 @@ def validate_finish(
             )
     elif entry is not None:
         raise ConflictError("a worktree appeared outside the approved cleanup scope")
-    if plan.delete_branch:
+    if plan.delete_branch and check_upstream:
         _deletable(base, plan.branch)

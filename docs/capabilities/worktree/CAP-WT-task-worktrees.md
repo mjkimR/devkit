@@ -7,6 +7,7 @@ status: active
 entrypoints:
   - packages/devkit/src/devkit/worktree/lifecycle.py
   - packages/devkit/src/devkit/worktree/merging.py
+  - packages/devkit/src/devkit/worktree/pull_request.py
 created_at: 2026-10-17
 ---
 
@@ -125,7 +126,7 @@ setup = "uv sync"       # run in each new worktree (default: none)
 stale_after = "14d"     # an activity branch idle this long is stale (default "14d"; "<N>d" or "<N>w")
 ```
 
-The table is read from the devkit project containing the directory a command runs in (`-w`, else the current directory). An unknown key, a wrong type, a `pull_request` other than `"auto"` or `"required"`, a `merge` other than `"no-ff"` or `"ff-only"` or a `stale_after` other than `"<N>d"` or `"<N>w"` (`N` from 1 to 9999) is `WORKTREE_CONFIG_INVALID`. `pull_request` states whether integration must go through a pull request, not whether one is opened: devkit never pushes the task branch or opens a pull request, and under `"auto"` the agent picks the path a task needs.
+The table is read from the devkit project containing the directory a command runs in (`-w`, else the current directory). An unknown key, a wrong type, a `pull_request` other than `"auto"` or `"required"`, a `merge` other than `"no-ff"` or `"ff-only"` or a `stale_after` other than `"<N>d"` or `"<N>w"` (`N` from 1 to 9999) is `WORKTREE_CONFIG_INVALID`. `pull_request` states whether integration must go through a pull request, not whether one is opened: the confirmed `pull-request` route in `CAP-INT-mcp-services` can push the task branch and open its PR. Under `"auto"` the caller chooses the route; `finish --merge` remains local and refuses required PR policy with a directive naming the native PR route.
 
 ## 6. Stale Branches
 

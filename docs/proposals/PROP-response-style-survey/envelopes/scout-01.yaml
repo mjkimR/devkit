@@ -1,0 +1,23 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T23:07:22.258033Z'
+status: completed
+summary: Six established first-party prompt sources and three official writing guides selected; they establish practice, not effectiveness. Host subsequently pinned and revalidated repository sources.
+findings:
+- issue: Six shortlisted repositories exceed the proposed 1,000-star screen and expose relevant public prompt sources.
+  evidence: https://github.com/anomalyco/opencode; https://github.com/Aider-AI/aider; https://api.github.com/repos/continuedev/continue; https://github.com/gptme/gptme; https://github.com/anthropics/claude-plugins-official; https://api.github.com/repos/block/goose
+  resolution: open
+- issue: Goose repository redirection and Anthropic explanatory ancestry must not become duplicate independent votes.
+  evidence: https://api.github.com/repos/block/goose; https://github.com/anthropics/claude-plugins-official/blob/main/plugins/explanatory-output-style/hooks-handlers/session-start.sh
+  resolution: open
+- issue: The Anthropic plugin has its own license scope, while Cline remains a reserve because its production prompt paths were not confirmed.
+  evidence: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/explanatory-output-style/LICENSE; https://raw.githubusercontent.com/cline/cline/main/src/core/prompts/system.ts; https://raw.githubusercontent.com/cline/cline/main/src/core/prompts/system-prompt/components/rules.ts
+  resolution: open
+assumptions:
+- Codex Scout used an isolated native context with an emulated read-only contract; no writes were requested or observed.
+unverified_areas:
+- No model measurements; source ancestry beyond explicit redirects/attribution is not established.
+- Microsoft and Toss page-specific reuse terms remain unresolved; no source expression is imported.
+checks: {}
