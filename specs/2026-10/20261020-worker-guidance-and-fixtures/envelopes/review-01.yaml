@@ -1,0 +1,22 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T03:02:21.154825Z'
+status: completed
+summary: 'Independent medium code review: AC02-05 pass; preserve settles-only answers in AC01 guidance.'
+findings:
+- issue: The new prohibition on answer envelopes without a referenced question excludes valid settles-only answers.
+  evidence: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/worker-records.md:45
+  failure_condition: A user settles a recorded worker assumption without answering any recorded question; the new instruction forbids the existing permitted answer record.
+  suggested_action: Preserve answers that settle recorded assumptions and apply document/worker summaries to other unsolicited direction.
+  resolution: open
+  severity: P1
+assumptions:
+- Emulated read-only review with explicit cwd, git -C and clean before/after status; no native confinement.
+checks:
+  tests: PASS 3791 passed14 skipped; scope103 in-worktree
+  lint: PASS Ruff and Pyright; cumulative rules clean
+diff_scope:
+  base: 8f58df5ccd5267e5ed02d9344a8e44076d22ffd7
+  head: 7db85ba940a3dac99b35b9fa02e8cd52e7b5f360

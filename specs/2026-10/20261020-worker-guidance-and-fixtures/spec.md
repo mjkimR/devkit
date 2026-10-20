@@ -26,7 +26,7 @@ receipt-write exceptions. No change to pending-question answers or integration a
 ### [AC-01] Unsolicited direction
 - **Given** a user direction without a recorded question,
 - **When** Planning incorporates it,
-- **Then** the proposal/PADR and subsequent worker record capture the decision without fabricated questions or a new envelope kind; existing pending questions still use answer records.
+- **Then** the proposal/PADR and subsequent worker record capture the decision without fabricated questions or a new envelope kind; existing pending questions and recorded-assumption settlements still use their existing answer procedure.
 
 ### [AC-02] Official documentation authority
 - **Given** a design depends on external platform facts,

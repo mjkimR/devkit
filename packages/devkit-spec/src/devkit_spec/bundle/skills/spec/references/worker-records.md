@@ -40,9 +40,11 @@ devkit workflow envelope answer --unit <dir> --stage <stage> --summary "q1, q2 d
 
 ### Direction without a recorded question
 
-When the user supplies direction without answering a recorded question, reflect the decision and its reason in the
+When the user supplies direction that neither answers a recorded question nor settles a recorded worker assumption,
+reflect the decision and its reason in the
 proposal/PADR (or spec/plan during Development) and summarize its incorporation in the next worker record. Do not
-fabricate a question or create an answer envelope without a referenced question. Existing pending questions still
+fabricate a question or create an answer envelope unless it answers a recorded question or settles a recorded worker
+assumption. Existing pending questions still
 follow the answer procedure above; unsolicited direction does not itself settle them.
 
 ## 3. Problems and resolutions

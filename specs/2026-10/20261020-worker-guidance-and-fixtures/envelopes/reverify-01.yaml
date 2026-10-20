@@ -1,0 +1,17 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T03:02:21.274296Z'
+status: completed
+review: review-01.yaml
+summary: Implementer reverified the narrow wording correction against the existing settles-only answer contract; pending questions and assumption settlements retain their procedure. No code or test changes.
+findings:
+- issue: The new prohibition on answer envelopes without a referenced question excludes valid settles-only answers.
+  evidence: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/worker-records.md:45
+  failure_condition: A user settles a recorded worker assumption without answering any recorded question; the new instruction forbids the existing permitted answer record.
+  suggested_action: Preserve answers that settle recorded assumptions and apply document/worker summaries to other unsolicited direction.
+  resolution: resolved
+  severity: P1
+checks:
+  guidance: PASS worker-records section2 and CAP-DLV-workflow-envelopes agree
