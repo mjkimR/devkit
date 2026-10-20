@@ -10,6 +10,7 @@ from conftest import Write
 from devkit.workflow import Workspace, load_decisions
 from proposals.support import CHARACTERIZE, GATED, INCUBATED, MONTH, STAMP, TODAY, accept, spec_dir, write_workflow
 
+from devkit_spec.errors import ProposalAcceptanceUnrecordedError
 from devkit_spec.proposals import CarriedGate, create_padr, create_proposal, handoff_proposal
 from devkit_spec.proposals import handoff as handoff_module
 
@@ -152,16 +153,42 @@ def test_keeps_who_answered(workspace: Path) -> None:
     ],
     ids=["none", "declined", "cancelled", "declined-after-accept", "returned", "other-workflow"],
 )
-def test_carries_nothing_without_an_accepted_record(
+def test_a_bound_proposal_without_an_accepted_record_is_not_handed_off(
     workspace: Path, records: list[tuple[str, dict[str, object]]]
 ) -> None:
-    accept(_proposal(workspace, "ask"))
+    proposal = _proposal(workspace, "ask")
+    accept(proposal)
     for name, fields in records:
         _record(workspace, "ask", name, **fields)
     assert load_decisions(workspace / UNIT.format(slug="ask")).errors == []
-    result = handoff_proposal(workspace, "ask", today=TODAY)
-    assert result.carried_gates == []
-    assert _spec_records(workspace, "ask") == []
+    with pytest.raises(ProposalAcceptanceUnrecordedError) as raised:
+        handoff_proposal(workspace, "ask", today=TODAY)
+    assert raised.value.code == "SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED" and raised.value.actor == "USER"
+    assert raised.value.fix is not None and "--direct" in raised.value.fix and "never record" in raised.value.fix
+    assert proposal.is_file() and not (workspace / "specs").exists()
+
+
+def test_an_unbound_or_single_file_proposal_hands_off_on_its_status(workspace: Path) -> None:
+    write_workflow(workspace, "sdd-spec-feature", GATED.format(id="sdd-spec-feature", middle=""))
+    accept(workspace / create_proposal(workspace, "bare", today=TODAY).path)  # sdd-proposal unavailable: unbound
+    single = workspace / "docs/proposals/PROP-solo.md"
+    single.write_text("---\nid: PROP-solo\nstatus: accepted\n---\n\n# Solo\n", encoding="utf-8")
+    assert handoff_proposal(workspace, "bare", today=TODAY).carried_gates == []
+    assert handoff_proposal(workspace, "solo", today=TODAY).carried_gates == []
+
+
+def test_the_carried_acceptance_keeps_the_proposals_note(workspace: Path) -> None:
+    accept(_proposal(workspace, "noted"))
+    note = "direct acceptance, Planning skipped: X; task_kind feature confirmed"
+    _record(
+        workspace, "noted", "01-gate-plan-intent.yaml", request="gate:plan-intent", stage="intent-proposal", by="user"
+    )
+    _record(workspace, "noted", "02-gate-plan-accept.yaml", by="user", note=note)
+    handoff_proposal(workspace, "noted", today=TODAY)
+    assert [record["note"] for record in _spec_records(workspace, "noted")] == [
+        "PROP-noted",
+        f"PROP-noted: {note}",
+    ]
 
 
 def test_a_cancel_after_the_users_accept_changes_nothing(workspace: Path) -> None:

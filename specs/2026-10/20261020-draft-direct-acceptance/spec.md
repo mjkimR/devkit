@@ -2,7 +2,7 @@
 id: SPEC-draft-direct-acceptance
 title: Direct acceptance of drafts that need no Planning
 summary: Lets the user accept a settled draft in Backlog on the base, without a Planning branch or run, through the planned accept command recording plan-accept with a Planning-skipped note; a session-depth draft may instead be deleted at pickup and done as a session on the user's decision.
-status: planned
+status: in-progress
 created: 2026-10-20
 related_capabilities:
   - CAP-DLV-proposal-incubation
