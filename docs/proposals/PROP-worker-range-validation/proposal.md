@@ -59,6 +59,10 @@ conventions without introducing a separate scope authority or validation lifecyc
 - Affected: a small `devkit spec` command, `spec-delegate` and `spec-orchestrate` guidance, reviewer payload guidance,
   and `CAP-DLV-delivery-workflows`. No new worker envelope fields are required.
 
+- Settled design (inputs, per-check `pass`/`fail`/`not-run` results, exit codes, reviewer fields, no writes):
+  `PADR-informational-range-inspection-reuses-existing-checks`.
+  No committed delegation record exists today, so the write scope comes from the Host's arguments.
+
 **Non-Goals**: automatic scope derivation or expansion, link-repair ownership inference, base-drift detection or
 merging, worktree environment refresh, new approval gates, and automatic enforcement of helper findings.
 
