@@ -39,14 +39,24 @@ changed paths a read-only reviewer needs (`FB-reconcile-reviewer-no-diff-list`).
 
 ## 4. Decision Outcome
 
-- The command is `devkit spec worker inspect --unit <dir> --base <accepted> --head <returned>
+- The command is `devkit spec worker inspect [--unit <dir>] --base <accepted> --head <returned>
   [--scope <prefix>... | --scope-file <path>] [--base-checkout <path>]`, in a new small `worker` group of
   `devkit spec`.
-- Inputs are explicit: the unit directory, the last accepted head (`--base`), the returned head (`--head`) and,
-  optionally, the write scope the Host passed the worker in the payload's `allowed_boundaries` (`--scope`,
-  repeatable directory or path prefixes, or `--scope-file`). The command derives no base, head or scope by itself
-  and never falls back to the scope registry (`devkit spec scope`), whose declared spec paths differ from a
-  worker's write scope.
+- Inputs: the last accepted head (`--base`) and the returned head (`--head`) are required, because only the Host
+  knows the last accepted head and the HEAD-equals-returned-head check needs an explicit returned head; the write
+  scope the Host passed the worker in the payload's `allowed_boundaries` is optional (`--scope`, repeatable
+  directory or path prefixes, or `--scope-file`). The command derives no base, head or scope by itself and never
+  falls back to the scope registry (`devkit spec scope`), whose declared spec paths differ from a worker's write
+  scope.
+- The unit is optional (user decision at the `plan-accept` review). An explicit `--unit` wins. Without it the
+  command infers the unit from the branch/unit binding devkit-spec already uses for the worktree's activity branch:
+  the `branch.<branch>.devkitUnit` marker `devkit worktree start --existing-branch --unit` records, else the
+  activity-branch correspondence of the `devkit.attach_check` extension (`plan-<slug>` to
+  `docs/proposals/PROP-<slug>`; `dev-<slug>` to its spec bundle `specs/<YYYY-MM>/<YYYYMMDD>-<slug>`, or before the
+  handoff the proposal bundle `docs/proposals/PROP-<slug>`). A detached HEAD, a branch that is not an activity
+  branch, or no or more than one matching unit directory means the command could not run: exit `2` with a stable
+  code (such as `WORKER_UNIT_UNRESOLVED`) whose action is to pass `--unit`. The result names the unit used and
+  whether it was given or inferred.
 - Each check reports `pass`, `fail` or `not-run` (with its cause), so a check that could not run is distinct from a
   negative result. The checks: ancestry of base to head; worktree HEAD equals `--head`; changed paths of
   `git diff --name-only <base> <head>` with those outside the scope (`not-run` when no scope was given, leaving the
@@ -57,9 +67,11 @@ changed paths a read-only reviewer needs (`FB-reconcile-reviewer-no-diff-list`).
   that checkout's HEAD and dirty paths as information, not as a check: comparing them with what the Host recorded
   before spawning stays the Host's step.
 - Exit codes follow the convention: `0` every check passed, `1` at least one check failed (a negative result, not a
-  refusal), `2` the command could not run (bad arguments, not a Git worktree, unknown refs). A `not-run` check alone
+  refusal), `2` the command could not run (bad arguments, not a Git worktree, unknown refs, no unit given or
+  inferable). A `not-run` check alone
   does not make the exit `1`; it is reported as a notice.
-- Structured output (`--format json`) is one object with the compared `base` and `head`, `changed_paths`,
+- Structured output (`--format json`) is one object with the `unit` (and whether it was given or inferred), the
+  compared `base` and `head`, `changed_paths`,
   `outside_scope` (absent when no scope was given), `base_checkout` (its `head` and `dirty_paths`, only with
   `--base-checkout`) and the per-check results; this object, or its `base`, `head` and `changed_paths`, is what the Host
   passes a read-only reviewer.

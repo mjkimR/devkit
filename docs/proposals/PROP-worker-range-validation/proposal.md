@@ -37,9 +37,12 @@ workflow: sdd-proposal
 ## 2. Planning Scope
 
 Implement a thin wrapper in `devkit-spec` around the checks the Host already performs:
-`devkit spec worker inspect --unit <dir> --base <accepted> --head <returned> [--scope <prefix>... | --scope-file <path>]
-[--base-checkout <path>]`. The starting head and returned head are explicit; the write scope is explicit and
-optional. It is the same write scope the Host already puts into the delegation payload's `allowed_boundaries`,
+`devkit spec worker inspect [--unit <dir>] --base <accepted> --head <returned> [--scope <prefix>... | --scope-file <path>]
+[--base-checkout <path>]`. The starting head and returned head are explicit and required: only the Host knows the
+last accepted head, and the check that the worktree HEAD equals the returned head needs the returned head given. The
+unit is optional: without `--unit` the command infers it from the unit bound to the worktree's activity branch, an
+explicit `--unit` wins, and when neither yields a unit the command could not run (exit `2`, a stable code). The
+write scope is explicit and optional. It is the same write scope the Host already puts into the delegation payload's `allowed_boundaries`,
 usually a handful of directory or path prefixes. The command does not fall back to the scope registry or any other
 record, workers author no new mandatory committed scope record and the envelope schema is not extended.
 
@@ -64,7 +67,9 @@ conventions without introducing a separate scope authority or validation lifecyc
 - Affected: a small `devkit spec worker` command group, `spec-delegate` and `spec-orchestrate` guidance, reviewer payload guidance,
   and `CAP-DLV-delivery-workflows`. No new worker envelope fields are required.
 
-- Settled design (command name, inputs, per-check `pass`/`fail`/`not-run` results, exit codes, reviewer fields, no
+- Unit inference (user decision at the `plan-accept` review): `--unit` became optional and is inferred from the
+  existing branch/unit binding; `--base` and `--head` stay required.
+- Settled design (command name, inputs, unit inference, per-check `pass`/`fail`/`not-run` results, exit codes, reviewer fields, no
   writes): `PADR-informational-range-inspection-reuses-existing-checks`. No committed delegation record exists today,
   so the write scope comes only from the Host's arguments.
 
