@@ -47,7 +47,7 @@ in long sessions is unmeasured, and does not yet justify a shared distribution-c
   unresolved website terms are explicit. `PADR-response-style-source-selection` defines the screening and reuse
   direction without treating a license label as legal clearance.
 - **Q3 (Measurement)**: Use twelve fixed English/Korean fixtures, no added bundle style/current/candidate arms,
-  two fresh repetitions and at most 72 completed generations per selected host. Preserve semantic obligations
+  two fresh repetitions and at most 72 generation attempts per selected host. Preserve semantic obligations
   before optimizing form or length; publish raw synthetic outputs, blinded judgments and incomplete cells.
   `PADR-response-style-measurement` and `MAT-response-style-measurement-design` define the protocol. Execution
   host, isolation method and collection budget remain the single open Planning question. Existing interactive

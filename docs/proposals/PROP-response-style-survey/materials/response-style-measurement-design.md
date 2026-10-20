@@ -52,7 +52,7 @@ reruns as independent confirmation of the original candidate.
 
 ## Collection and cost bound
 
-Per selected host: 12 cases x 3 arms x 2 independent fresh runs = 72 completed generations maximum. No automatic
+Per selected host: 12 cases x 3 arms x 2 independent fresh runs = 72 generation attempts maximum. No automatic
 retries; failures remain recorded with status and cause. An explicit user-authorized rerun starts a named new
 attempt and keeps the failed output. Use the same host build, model identifier, reasoning setting, token limit,
 tool settings, language and supplied facts for all arms. Randomize and record arm order per fixture/repetition.
@@ -75,21 +75,44 @@ host-by-host coverage table. An unavailable host remains unmeasured, and results
 
 The scorer enforces full cell identity `(host, model, arm, fixture, repetition)`, unique cells, no missing outputs,
 exact artifact constraints, and the presence of required numeric/identifier tokens. A token check cannot prove
-that a number has the right unit, condition or polarity. A separate blinded evaluator reads outputs with arm
+that a number has the right unit, condition or polarity. An evaluator other than the candidate author reads outputs with arm
 labels hidden and checks every fixture's semantic obligation, unsupported assertions, mandatory format,
 answer-first (except artifact-only requests), requested depth, Korean register and unnecessary wrappers.
 Save each judgment with a short reason and evidence span. A second independent blind check adjudicates every
-proposed candidate regression and every disagreement between structural checks and semantic judgment; if still
+claimed candidate improvement, proposed regression and every disagreement between structural checks and semantic judgment; if still
 unresolved, the fixture fails. Automated LLM judgment alone is not a proof of correctness.
 
 A candidate is eligible only with zero failed semantic obligations, zero fabricated completion/actions, and all
 artifact/report constraints met across its 24 outputs; it must not introduce a failure the current style avoided.
-Compare paired style results by fixture, not by treating two repeats as a large independent sample. Require a
-strict improvement over current style on at least two predeclared primary style checks in different intent
-categories, with no primary style regression on any held-out fixture. This is a practical selection threshold,
-not a significance test. Report the unchanged current style when the candidate does not qualify; do not change
-the scoring contract to obtain a winner. Retained existing rules can remain local preferences when no isolated
-benefit is measured; source agreement and aggregate improvement do not establish per-rule causality.
+Primary style is a binary score per output, not a subjective ranking. Freeze these observable anchors with the
+exact fixtures before collection; a fixture passes only if all its applicable primary anchors hold:
+
+| Fixtures | Primary pass anchors |
+| --- | --- |
+| EN01/KO01 | The first sentence states the requested cap/boundary conclusion; no greeting, scene-setting or announcement precedes it. Semantic checks separately require every number, unit and condition. |
+| EN02/KO02 | The first sentence gives the recommendation/path required by the supplied need; the response retains the supplied comparison tradeoffs. |
+| EN03/KO03 | Every explicitly requested step is explained with its supplied purpose or consequence, without substituting a summary for requested detail. No length penalty. |
+| EN04/KO04 | Exactly one acknowledgment sentence names the authorized activity; there is no extra offer, question, preface or claim of work already done. |
+| EN05 | The entire trimmed output parses as the one required JSON object with exact supplied values; no fence or surrounding prose. |
+| KO05 | One English commit-subject line contains the supplied identifier verbatim; no wrapper, explanation or extra line. |
+| EN06 | Exactly one decision question names the supplied choices and appears last; the response states that the purge awaits that decision without claiming it ran. |
+| KO06 | Every required report field and the required table appears once; supplied pass/fail/skip categories and the material risk remain explicit. |
+
+Count primary passes across the two repetitions: each arm has a fixture score in `{0, 1, 2}`. A strict improvement
+means candidate score > current score; a tie means equality (including one pass each, regardless of which repeat
+passed); regression means candidate score < current score. Do not choose a preferred repeat or break a tie using
+unanchored prose preferences. For adoption require strict improvements on at least two fixtures from distinct
+intent categories, at least one of them held-out, and no regression on any held-out fixture. Apply the same binary
+rubric to all arms. Missing or unresolved judgments never become passes. These are engineering thresholds, not
+significance tests; two repetitions do not establish a population effect.
+
+Report the unchanged current style when the candidate does not qualify; do not change the scoring contract to
+obtain a winner. Retained existing rules can remain local preferences when no isolated benefit is measured;
+source agreement and aggregate improvement do not establish per-rule causality. The native independent reviewer
+may audit anonymized outputs against this rubric because it is judging, not generating a no-style baseline.
+No additional external model-judge API calls are authorized by the 72-answer-generation budget; any such calls
+need their own agreed allowance. Qualitative readability comments are reported separately and cannot change the
+binary adoption decision.
 
 Report lengths by language and intent only for semantically passing outputs. Show paired median and range for
 brief-intent cases; never optimize the detailed-request or mandatory-report cases by deleting content. Record
@@ -112,3 +135,13 @@ results. A contract expansion needs actual host reloading/compaction evidence, a
 and a reviewed design. The current Development can finish with a documented retain-limit decision and a measured
 candidate, without implementing a speculative distribution change. No current requirement demands presets;
 one portable style with existing language configuration remains the selected direction.
+
+## Execution feasibility observed during Planning
+
+`command -v` finds both `claude` and `codex`, but neither has generated a benchmark answer. The installed
+`claude --help` advertises non-interactive output, safe-mode suppression of customizations, explicit system
+prompts, disabled tools, no session persistence, model selection and an API-budget flag. This is a reason to
+propose Claude as the first cohort, not proof of live instruction isolation, account availability or a hard total
+currency ceiling. Verify those effects in Development before collection. Do not use bare mode as a shortcut
+that requires discovering or exporting API keys, and do not alter the real user profile. The orchestration path
+can stay native independently of the benchmark's headless generation method.

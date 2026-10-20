@@ -30,10 +30,12 @@ keep collection bounded, and distinguish measured quality from rendered host sup
 
 ## 4. Decision Outcome
 
-Use twelve English/Korean fixtures, three style arms and two fresh repetitions, at most 72 completed generations
+Use twelve English/Korean fixtures, three style arms and two fresh repetitions, at most 72 generation attempts
 per selected host. `MAT-response-style-measurement-design` defines isolation, exact obligations, calibration and
 held-out groups, blind semantic checks, promotion thresholds, error preservation and cost records. Select the
-host and execution budget with the user before live collection. Until then host coverage is an open Planning
+host and execution budget with the user before live collection. Freeze observable binary primary anchors; sum
+the two passes per fixture, treat equal sums as ties, and require improvements in two intent categories including
+one held-out fixture with no held-out regression. Until then host coverage is an open Planning
 question, not a claim of portability. Only synthetic inputs and owned style text are submitted.
 
 Keep fixture/result/scorer materials inside the Development spec Unit. The scorer is standard-library and
