@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-delivery-workflows
 title: Delivery Workflows
-summary: "Five delivery workflows define stages, gates, checks, bounded reviews and run records, verified source-feedback resolution, integration readiness, and native Codex workers with emulated boundaries and scoped approvals."
+summary: "Five delivery workflows define stages, gates, checks, bounded reviews and run records, verified source-feedback resolution, integration readiness, informational committed worker-result inspection, and native Codex workers with emulated boundaries and scoped approvals."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -14,6 +14,9 @@ entrypoints:
   - packages/devkit-spec/src/devkit_spec/integration.py
   - packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/review-loop.md
   - packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/planning.md
+  - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-delegate/
+  - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-orchestrate/
+  - packages/devkit-spec/src/devkit_spec/worker/
 ---
 
 # [CAP-DLV-delivery-workflows] Delivery Workflows
@@ -35,7 +38,8 @@ sequence.
 - **In-Scope**: the five definitions (layout, anchor, stages, gates, entry and exit checks, returns, declared checks),
   the gate semantics of `plan-intent`, `plan-accept`, `dev-integration` and the `exception` stage, the envelope kinds
   the stages require, the `activity-effort` rules of review and reconcile, the six role contracts, and the
-  `devkit.integration.readiness` provider (`devkit_spec.integration.check`) for Unit and `session` tasks.
+  `devkit.integration.readiness` provider (`devkit_spec.integration.check`) for Unit and `session` tasks, and
+  informational `devkit spec worker inspect` evidence for worker-result acceptance.
 - **Out-of-Scope**:
   - Evaluating a definition, recording answers and envelopes, binding units: devkit's `devkit workflow` commands.
   - Creating and binding a spec bundle: `CAP-DLV-spec-bundles`.
