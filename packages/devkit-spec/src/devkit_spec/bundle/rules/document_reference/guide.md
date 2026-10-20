@@ -17,7 +17,8 @@ only) one `MS` ID and `depends_on` (milestones only) a list of `MS` IDs, without
   In five-column tables headed `Term | Definition | Owner | Avoid | Code identifiers`, followed by a Markdown
   separator row, full IDs in backticks or brackets in the `Owner` cell must resolve uniquely. Empty owners and
   non-reference text are allowed. Only resolution is checked, with no glossary autofix or reference-graph edges;
-  prose outside tables, other columns, other ID-free files and legacy tables are outside this extension. The same
+  prose outside tables, other columns, other ID-free files and legacy tables are outside this extension.
+  The header fixes the Owner column even when rows omit trailing cells or add surplus cells. The same
   prose masking, targeting, exclusions and snapshot cache apply.
 - **What is not**: reference extraction skips code fences, indented code, inline code other than a single ID, HTML
   comments, escapes, link labels, `~~strikethrough~~` (a historical mention of a removed document stays allowed

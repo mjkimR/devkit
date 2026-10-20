@@ -90,7 +90,8 @@ Documents reference each other by exact, resolvable full IDs. Checks every curre
 The root `docs/glossary.md` is an additional, ID-free input: in five-column tables headed
 `Term | Definition | Owner | Avoid | Code identifiers` with a Markdown separator row, backticked or bracketed full
 IDs in the Owner column MUST resolve to exactly one indexed document. Missing and ambiguous owners produce errors
-at their source line. Empty cells and non-reference text are allowed. This extension only validates resolution:
+at their source line. Empty cells and non-reference text are allowed. The header fixes the Owner column;
+rows may omit trailing cells or have surplus cells without moving that column. This extension only validates resolution:
 no autofix, mandatory owners, glossary indexing or graph edges. Other columns, surrounding prose, legacy tables,
 package glossaries and other ID-free files are outside its scope. Existing prose masking, file targeting,
 exclusions and snapshot cache rules apply.

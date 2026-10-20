@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-19
 ---
 
@@ -45,3 +45,7 @@ $ devkit spec proposal new integration-pull-request-cleanup --decomposed-from PR
 check_backlog_editable: refuses while planning_branches() has the slug, and when status != "draft"
 proposal.md section 4 (scaffold): "If Planning splits the work: decompose into child drafts with --decomposed-from"
 ```
+
+## Disposition
+
+Directly addressed by `SPEC-feedback-planning-and-glossary` without promotion. The decomposition guard keeps its draft/no-Planning-branch restriction and supplies Host-managed return advice. Planning/Backlog guidance preserves evidence, closes questions, commits the draft return and names authorized CLI/PR integration and branch cleanup before rechecking editability. Local/fetched branch and non-draft refusal tests verify no mutation, the useful directive and successful creation once editable; independent medium code review confirmed the guidance. The affected suite passed 1,111 tests. This resolution does not assert integration.
