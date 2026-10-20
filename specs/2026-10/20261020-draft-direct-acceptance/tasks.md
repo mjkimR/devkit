@@ -16,7 +16,7 @@ plan: PLAN-draft-direct-acceptance
   - **_Boundary**: packages/devkit-spec/src/devkit_spec/proposals/handoff.py,
     packages/devkit-spec/src/devkit_spec/errors.py, packages/devkit-spec/tests/proposals/
   - _Requirements: AC-09, AC-10, AC-11_
-- [ ] **Task 3**: Guidance, scaffold lifecycle line and seed README for the direct acceptance and the session
+- [x] **Task 3**: Guidance, scaffold lifecycle line and seed README for the direct acceptance and the session
   reclassification, with a guidance test.
   - **_Boundary**: packages/devkit-spec/src/devkit_spec/bundle/, packages/devkit-spec/src/devkit_spec/proposals/scaffold.py,
     packages/devkit-spec/tests/

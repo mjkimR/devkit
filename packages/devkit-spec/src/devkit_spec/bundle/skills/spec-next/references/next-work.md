@@ -17,7 +17,10 @@ merely because its branch exists.
      then ID.
    - Within a group: priority critical/high/medium/low, size S/M/L/XL, draft created_at, draft ID. Missing
      priority/size use the scaffold defaults high/M; missing created_at sorts after dated peers, then by ID.
-4. Recommend the first eligible draft; without a recorded plan-intent, recommend confirming intent first. Report
+4. Recommend the first eligible draft; without a recorded plan-intent, recommend confirming intent first. Offer
+   Planning, or a direct acceptance when its direction is settled (`devkit spec proposal accept <slug> --by user
+   --direct --check` first), and for `session`-depth work the session reclassification at pickup (the `spec` skill's
+   `references/backlog.md`); the user chooses. Report
    noncritical drafts in unready/done/dropped milestones and needs_decompose drafts as Backlog actions. Mention open
    feedback as a possible hygiene pass. Do not start, accept or activate anything automatically.
 5. Count done milestones (milestone history). At three done milestones or on/after 2027-01-31, whichever occurs first,

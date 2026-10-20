@@ -39,6 +39,6 @@ routes the observation; only verified task completion resolves it. Omit this sec
 
 ## 4. Lifecycle & Retirement Criteria
 <!-- 
-- On Acceptance: handed off to a spec bundle on dev-<slug>; the proposal is deleted there and its decisions become ADRs
+- On Acceptance: recorded with devkit spec proposal accept (after Planning, or --direct for an eligible draft in Backlog); handed off to a spec bundle on dev-<slug>; the proposal is deleted there and its decisions become ADRs
 - On Rejection: status: rejected only, with the user's reason in the commit message; a later hygiene pass writes the rejection ADR and deletes the proposal
 -->

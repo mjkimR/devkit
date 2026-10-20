@@ -1,6 +1,7 @@
 # Feedback preservation before proposal deletion
 
-Read before deleting a proposal without handoff: rejected-proposal hygiene, Backlog decomposition, supersede or abandon.
+Read before deleting a proposal without handoff: rejected-proposal hygiene, Backlog decomposition, supersede, abandon
+or the session reclassification of a queued draft.
 The Host owns this operation; a rejection starts no worker and retains feedback in the proposal until later cleanup.
 A normal handoff routes the feedback itself.
 
