@@ -38,7 +38,8 @@ conditional remote branch deletion. `integration` may import `worktree`, never t
 
 The second option. `devkit.worktree` gains a pull request port (remote and repository identity, merge-method
 permissions and applicable rules, PR find/create/update by head and base, PR state with `headRefOid`, `baseRefOid`,
-`mergeCommit` and `state`, merge with `--merge --match-head-commit <source>` and a devkit-composed subject, and remote
+`mergeCommit`, `state`, `isDraft` and the check, review and mergeability state that tells pending from failed and
+from mergeable, merge with `--merge --match-head-commit <source>` and a devkit-composed subject, and remote
 branch deletion leased on the expected SHA) implemented with `gh`, with no terminal prompt, a bound per call, exit status, stdout and stderr returned, and
 `-R <owner>/<repo>` resolved by `gh` from the bound remote on every call (SSH host aliases and GitHub Enterprise hosts
 `gh` resolves are accepted). Remote branch deletion is `git push --force-with-lease=refs/heads/<branch>:<sha> <remote>

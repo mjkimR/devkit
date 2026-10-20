@@ -84,9 +84,11 @@ is unchanged and readiness passes again on the merge result. A target reset or r
 apply these conditions to the remote merge rather than freezing the target at its confirmation SHA or silently
 accepting a platform merge that cannot enforce them. The result discloses what was checked on the merge result.
 
-After the merge, cleanup verifies recorded PR merge state and that the fetched target contains the approved source
-and the recorded merge result; exact equality with either SHA is not required. Later target commits do not by
-themselves prevent cleanup. Updating the local target requires a fast-forward; divergent or dirty local state is
+After the merge, cleanup verifies the confirmed PR merge (its state and a merge commit whose second parent is the
+approved source) and that the fetched target contains the approved source; exact equality with either SHA is not
+required. Later target commits do not by themselves prevent cleanup, and neither does a merge that landed on a target
+devkit did not check: that landing is reported as a notice, never as a checked success (decided, `answer-01.yaml`
+q-unchecked-landing). Cleanup stops only when the fetched target does not contain the approved source. Updating the local target requires a fast-forward; divergent or dirty local state is
 reported without overwriting it. Source ancestry preserves cited SHAs without an archival ref.
 
 ### 3.3 Failures are handed back to the agent
@@ -111,7 +113,8 @@ Evidence: `envelopes/scout-01.yaml`, `envelopes/challenger-01.yaml`, the compari
 [materials/20261020-pull-request-merge-options.md](materials/20261020-pull-request-merge-options.md) and the PADRs
 under `decisions/`. Premise: `PROP-integration-follow-ups` as accepted (no-ff result built outside the checkout,
 execution context, effective policy digest, readiness on the result, cleanup-only request, approval tolerating
-advances only within its call). Two choices wait for the user: q-checks-wait and q-unchecked-landing (`worker-01.yaml`).
+advances only within its call). The user's decisions on q-checks-wait and q-unchecked-landing are recorded in
+`envelopes/answer-01.yaml` and folded below.
 
 - **Route selection**: `integration_prepare` takes `route = "local" | "pull-request"`. `[worktree] pull_request =
   "required"` (base or source policy) refuses `local` with `WORKTREE_PR_POLICY`, whose fix names the pull request
@@ -147,23 +150,47 @@ advances only within its call). Two choices wait for the user: q-checks-wait and
   form says "Approve pull request integration of <branch> into <owner>/<repo> <target> with a merge commit?", shows
   the confirmation target, lists push, PR create or use, merge, fetch, local fast-forward and each cleanup target,
   states that `deleteBranchOnMerge = true` deletes the remote branch on the platform regardless of `delete_branch`,
-  and carries the race disclosure.
+  says that the merge runs in this call when the PR's required checks and reviews already pass and otherwise later
+  through `integration_resume` while the target is unchanged, and carries the race disclosure: a target commit
+  landing between devkit's last check and the platform merge is merged without devkit's checks, reported as such,
+  and does not stop cleanup.
 - **Execution**: push an explicit refspec `<source>:refs/heads/<branch>` without `-u` and without force (the bound
   `source_upstream` stays unchanged); create the PR when bound to "create"; then the merge section: fetch the target,
   require it to descend from the confirmation target, build the prospective merge and run guards, the receipt check,
   the policy digests and readiness on it as the local route does, recheck the remote target with `ls-remote` is still
   that build target, and call `gh pr merge <n> --merge --match-head-commit <source> --subject "chore(merge):
-  integrate <branch> into <target>" --body "<task ID>"`. Never `--auto`, `--admin` or `--delete-branch`. When
-  required checks or reviews are not satisfied at the merge step, q-checks-wait decides what happens.
-- **Landing verification** (`PADR-pull-request-merge-with-pinned-source-and-verified-landing`): fetch and read the PR's
-  merge commit `M`; `M^2` must be the source and `M` contained in the fetched target. `M^1` equal to the checked build
-  target with `M`'s tree equal to the checked tree is a checked landing. Three other cases get distinct codes and are
-  never reported as checked: `M^1` a descendant of the build target (an advance in the window between the last check
-  and the merge, which devkit cannot close), `M^1` not descending from the confirmation target (a rewritten target),
-  and an equal first parent with a different tree. The result policy digest is evaluated on `M`, not on the local base
-  after its fast-forward (later foreign commits on the target do not block cleanup). What follows each case is
-  q-unchecked-landing.
-- **Local target and cleanup order**, after a verified landing and PR state `MERGED`: (1) fast-forward the local target
+  integrate <branch> into <target>" --body "<task ID>"`. Never `--auto`, `--admin` or `--delete-branch`.
+- **Required checks and review** (decided, `answer-01.yaml` q-checks-wait option a): the approving call never waits.
+  At the merge step, after the build and checks, devkit reads the PR (`headRefOid` must be the source; check, review
+  and mergeability state). When the platform reports it mergeable with required checks and reviews satisfied (the
+  agent already pushed the branch and opened a ready PR, as `spec-integrate`'s PR path does today, and they passed),
+  the same call merges. When checks are pending, a review is missing or mergeability is not yet computed, the call
+  returns `INTEGRATION_CHECKS_PENDING` with the push and PR steps `completed` and the merge `not_run`; the last build
+  target and its checked result stay in the process-local result. A failed required check, a requested change or a
+  conflict is `INTEGRATION_MERGE_REFUSED` (a fix changes the source, so a new `prepare`). `integration_resume` on a
+  pending request takes the lock, fetches the target and merges only while the remote target still equals that last
+  build target, reusing its checked result (same source and target); a moved target is `INTEGRATION_TARGET_MOVED`
+  with nothing changed and needs a new `prepare` and confirmation, and checks still pending return
+  `INTEGRATION_CHECKS_PENDING` again. The lock is not held while waiting. A process restart drops the pending
+  request; a fresh `prepare` then finds the pushed PR and, once its checks pass, the approving call merges at once.
+- **Landing verification** (`PADR-pull-request-merge-with-pinned-source-and-verified-landing`; decided,
+  `answer-01.yaml` q-unchecked-landing): fetch and read the PR's merge commit `M`. The merge is **confirmed** when the
+  PR is `MERGED` and `M^2` is the source. `M^1` equal to the checked build target, `M`'s tree equal to the checked tree
+  and `M` contained in the fetched target is a **checked landing**. Every other confirmed merge is an **unchecked
+  landing**, with a `landing` reason: `advanced` (`M^1` descends from the build target: a commit landed in the window
+  between the last check and the merge, which devkit cannot close), `tree-mismatch` (equal first parent, different
+  tree), `rewritten-base` (`M^1` does not descend from the confirmation target) or `merge-not-contained` (`M` is not in
+  the fetched target). An unchecked landing does not hold cleanup: the result carries the notice
+  `INTEGRATION_LANDED_UNCHECKED` (level `WARNING`, under `notices`, exit code unchanged) with the reason, `M`, its first
+  parent and the fetched target, and an `[ACTION]` to run the unit's readiness checks on the landed target and not to
+  report the integration as checked. devkit does not re-run guards, readiness or the policy digest on `M`; the
+  cleanup scope is the one bound in the approved request, never re-read from the target, so later foreign commits or
+  config changes on the target do not block it. The only stop is the source not being an ancestor of the fetched
+  target (the target was rewritten so the source commits are no longer reachable from it):
+  `INTEGRATION_SOURCE_NOT_CONTAINED`, cleanup `not_run`, nothing deleted, because removing the branches could lose
+  commits.
+- **Local target and cleanup order**, after a confirmed merge with the source an ancestor of the fetched target,
+  checked or unchecked landing alike: (1) fast-forward the local target
   to the fetched target (`merge --ff-only` in the clean base checkout; dirty or divergent state stops here with a code
   and nothing deleted, and `integration_resume` continues once it is fast-forwardable); (2) worktree removal and
   `git branch -d`, with the local target now containing the source; (3) the remote branch, when selected, deleted with
@@ -174,12 +201,14 @@ advances only within its call). Two choices wait for the user: q-checks-wait and
   nonzero exit of push, PR creation, merge or remote deletion that is not a recognised refusal is `unknown` and
   resolved only from the remote (`ls-remote`, PR state and `mergeCommit`); while the merge is unknown nothing
   destructive runs. `integration_resume` follows the follow-ups lifetime: before the merge only onto the last build
-  target, after a verified merge only the remaining cleanup. After a process restart a fresh PR-route `prepare` fetches
-  the target and yields the cleanup-only request when the PR is `MERGED`, `mergeCommit^2` is the source and the fetched
-  target contains it; its first step is the local fast-forward.
+  target (the pending path above), after a confirmed merge only the remaining cleanup, which rechecks that the fetched
+  target still contains the source. After a process restart a fresh PR-route `prepare` fetches the target and yields
+  the cleanup-only request when the PR is `MERGED`, `mergeCommit^2` is the source and the fetched target contains the
+  source; its first step is the local fast-forward, and since no checked landing survives the restart its result
+  carries `INTEGRATION_LANDED_UNCHECKED` with reason `not-recorded`.
 - **Lock and time budget**: the Git common-directory lock is held for the merge section (fetch, build and checks,
-  recheck, merge call, landing verification) and for the local fast-forward and cleanup, not across push and PR
-  creation. Every network step has a bound; Development measures the total of one call against Codex and Claude Code
+  PR state read, recheck, merge call, landing verification) and for the local fast-forward and cleanup, not across
+  push and PR creation and never while checks are pending. Every network step has a bound; Development measures the total of one call against Codex and Claude Code
   MCP tool-call timeouts, documents that a host-side timeout leaves the server-side execution running (inspected with
   `integration_status`), and lowers bounds where a host would cut the call.
 - **Codes** (names proposed; Development keeps them consistent with the follow-ups codes):
@@ -192,16 +221,23 @@ advances only within its call). Two choices wait for the user: q-checks-wait and
   | `INTEGRATION_MERGE_COMMIT_FORBIDDEN` | prepare | nothing changed | integrate outside devkit; no squash or rebase fallback |
   | `INTEGRATION_PR_CONFLICT` | prepare, execute | nothing changed | resolve the PR (base, draft, closed, new), prepare again |
   | `INTEGRATION_REMOTE_BRANCH_DIVERGED` | prepare, push | nothing changed | merge the remote branch into the source, re-verify |
-  | `INTEGRATION_MERGE_REFUSED` | merge | published, not merged | read the platform reason; fix and prepare again |
+  | `INTEGRATION_CHECKS_PENDING` | merge (approving call, resume) | published, not merged | wait for the PR's checks and reviews, then `integration_resume`; a moved target needs a new `prepare` |
+  | `INTEGRATION_TARGET_MOVED` (follow-ups) | resume before the merge | published, not merged | `prepare` again and confirm the new target |
+  | `INTEGRATION_MERGE_REFUSED` | merge | published, not merged | read the platform reason (failed check, requested change, conflict, protection); fix the source and prepare again |
   | `INTEGRATION_STEP_UNKNOWN` | any network step | unknown | `integration_status`; no destructive retry |
-  | `INTEGRATION_LANDED_ADVANCED`, `INTEGRATION_LANDED_REWRITTEN`, `INTEGRATION_LANDED_TREE_MISMATCH` | landing | merged, not checked | per q-unchecked-landing |
+  | `INTEGRATION_LANDED_UNCHECKED` (notice, `WARNING`) | landing | merged, cleanup runs | run the unit's readiness checks on the landed target; do not report the integration as checked |
+  | `INTEGRATION_SOURCE_NOT_CONTAINED` | landing, cleanup, resume | merged or unknown, nothing deleted | inspect the remote target history; restore the source commits on the target, then `integration_resume` |
   | `INTEGRATION_LOCAL_TARGET_BLOCKED` | cleanup (1) | merged, cleanup not run | make the base checkout clean and fast-forwardable, `integration_resume` |
   | `INTEGRATION_REMOTE_DELETE_BLOCKED` | cleanup (3) | partial | remote branch kept; inspect dependent PRs or the lease |
 
 - **Tests offline**: a scripted fake of the PR port backed by a local bare repository as the remote, whose merge
-  writes a merge commit with a configurable first parent, tree, exit status and timeout. Acceptance covers a checked
-  landing, an advanced landing, a rewritten target, a tree mismatch, an unknown merge, a rejected push, a diverged
-  remote branch, a lease failure, a blocked local fast-forward, restart re-entry and the prepare refusals.
+  writes a merge commit with a configurable first parent, tree, exit status and timeout, and whose PR check and
+  review state is scripted. Acceptance covers a pre-pushed PR with passing checks merged in the approving call,
+  `INTEGRATION_CHECKS_PENDING` then a resume that merges onto the unchanged target, a resume refused after the target
+  moved, a failed check refused, a checked landing, each unchecked landing reason continuing cleanup with
+  `INTEGRATION_LANDED_UNCHECKED`, a rewritten target that drops the source stopping before cleanup, an unknown merge,
+  a rejected push, a diverged remote branch, a lease failure, a blocked local fast-forward, restart re-entry and the
+  prepare refusals.
 - **Contracts**: no ADR is superseded. Development amends `CAP-INT-mcp-services` (sections 1, 2, 4, 5 and 6: the
   network exclusion becomes route-scoped; the MCP tools that reach the network declare `openWorldHint`),
   `CAP-WT-task-worktrees` (section 5: devkit pushes and opens a PR only on the approved pull request route; the
@@ -211,7 +247,8 @@ advances only within its call). Two choices wait for the user: q-checks-wait and
 - **Platform facts to verify first**: this Planning ran without network; only local `gh` 2.96.0 help was verified.
   Development verifies against GitHub's documentation (and a test repository where possible) before relying on them:
   merge commit parent order, no base pin in the merge API, head-pin refusal status, required-check and mergeability
-  timing after a push, self-approval prohibition, readability of rulesets and classic protection, `deleteBranchOnMerge`
+  timing after a push, which `gh pr view --json` fields (`mergeStateStatus`, `statusCheckRollup`, `reviewDecision`)
+  distinguish pending from failed and from mergeable, self-approval prohibition, readability of rulesets and classic protection, `deleteBranchOnMerge`
   and dependent-PR effects of branch deletion, and whether GitHub's merge tree equals `git merge-tree` for clean
   merges. A fact that turns out otherwise and changes this design is a problem for the Host, not a silent adaptation.
 - **Coordination**: Development starts after `PROP-integration-follow-ups`' Development lands on `main`; it builds on

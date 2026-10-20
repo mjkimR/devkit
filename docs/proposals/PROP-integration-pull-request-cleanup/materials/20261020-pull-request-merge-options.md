@@ -22,6 +22,10 @@ queue behaviour unverified, no network in this Planning).
 
 Selected: A (`decisions/PADR-pull-request-merge-with-pinned-source-and-verified-landing.md`).
 
+Refined by the user's answers (`envelopes/answer-01.yaml`): A merges only when required checks and reviews already
+pass, otherwise it publishes and returns `INTEGRATION_CHECKS_PENDING` for a resume onto the unchanged target; after
+the merge the landing is classified, not re-checked, and an unchecked landing is a notice that does not hold cleanup.
+
 ## Platform abstraction
 
 | Option | Pros | Cons |

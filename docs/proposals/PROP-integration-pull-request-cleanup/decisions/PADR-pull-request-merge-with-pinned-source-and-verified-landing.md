@@ -1,7 +1,7 @@
 ---
 id: PADR-pull-request-merge-with-pinned-source-and-verified-landing
 title: Pull request merge with pinned source and verified landing
-summary: The pull request route merges with the PR head pinned to the approved source after checking a locally built merge on the fetched target, then verifies the platform merge commit's parents and tree; a merge onto an unchecked target is never reported as a checked success.
+summary: The pull request route merges with the PR head pinned to the approved source once required checks pass, after checking a locally built merge on the fetched target. An unchecked landing is a notice, never a checked success; cleanup stops only when the target lacks the source.
 proposal: PROP-integration-pull-request-cleanup
 status: draft
 created_at: 2026-10-20
@@ -27,7 +27,8 @@ at that moment.
 - The approved source SHA is what lands; a changed source needs a new approval.
 - Required CI, review and branch protection stay conditions of the merge (the PR is the gate, not bypassed).
 - What lands is checked; what could not be checked is reported as such, never as success.
-- No destructive cleanup on an unknown outcome.
+- No destructive cleanup on an unknown outcome, and none that could lose source commits.
+- The approving call never waits for CI or review.
 
 ## 3. Considered Options
 
@@ -49,14 +50,33 @@ merge commit `M`: `M^2` equals the source and `M` is contained in the fetched ta
 and `M`'s tree equals the checked tree, the landing is checked. Three other cases get distinct codes and are never
 reported as checked: `M^1` descends from the checked target (an advance in the window between the last check and the
 merge, which devkit cannot close), `M^1` does not descend from the confirmation target (a rewritten target), and an
-equal first parent with a different tree (the platform merged differently). The result policy digest is evaluated on
-`M`. What follows each case (post-hoc checks, cleanup or a stop) follows the user's decision in this Planning. A merge call whose outcome is unknown is resolved only from the PR state; while it stays unknown no
-cleanup runs. B is not required; C is rejected for this route (it removes the PR gate the route exists for).
+equal first parent with a different tree (the platform merged differently). B is not required; C is rejected for this
+route (it removes the PR gate the route exists for).
+
+Decided by the user in this Planning (`envelopes/answer-01.yaml`):
+
+- **Checks and review** (q-checks-wait a): the merge call is made only when the PR is mergeable with required checks
+  and reviews satisfied, which happens in the approving call when the agent already pushed a ready PR whose checks
+  passed. Otherwise the approving call publishes and returns `INTEGRATION_CHECKS_PENDING`, and `integration_resume`
+  merges later only while the remote target still equals the last build target (else a new confirmation).
+- **Unchecked landing** (q-unchecked-landing, outside the offered options): once the merge is confirmed (PR `MERGED`,
+  `M^2` the source) and the source is an ancestor of the fetched target, cleanup runs whether or not the landing was
+  checked. Every landing other than the checked one (an advance in the window, a tree mismatch, a first parent outside
+  the confirmation target's history, `M` not in the fetched target) is reported as the notice
+  `INTEGRATION_LANDED_UNCHECKED` with its reason and a directive to run the readiness checks on the landed target.
+  devkit does not re-run guards, readiness or the policy digest on `M`; cleanup uses the scope bound in the approved
+  request. Cleanup stops only when the fetched target does not contain the source (`INTEGRATION_SOURCE_NOT_CONTAINED`).
+
+A merge call whose outcome is unknown is resolved only from the PR state; while it stays unknown no cleanup runs.
 
 ## 5. Consequences
 
-- A residual race remains and is disclosed in the form and the result.
+- A residual race remains and is disclosed in the form and the result; a commit landing in the window is merged
+  without devkit's checks and only reported, since cleanup does not wait for it.
+- On a repository with required checks or reviews the usual flow is two calls (approve, then `integration_resume`)
+  unless the agent opened the PR and let its checks pass before `prepare`; a target commit landing while checks run
+  costs a new confirmation.
 - The merge commit is GitHub's: its committer, signature and message handling are the platform's; no local commit
   hooks or trailers apply.
-- Cleanup verifies PR state `MERGED`, the source contained in the fetched target and the recorded merge commit
-  contained in it; later target commits do not block cleanup.
+- Cleanup verifies PR state `MERGED`, `M^2` the source and the source contained in the fetched target; later target
+  commits and an unchecked landing do not block cleanup.
