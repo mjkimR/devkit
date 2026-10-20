@@ -2,7 +2,7 @@
 id: PROP-scope-registry-sandbox-access
 title: Work scope registry access across sandboxed worktrees
 summary: "Compare Git-directory storage, shared devkit state, and MCP-mediated access for the work scope registry across sandboxed worktrees. Define permission boundaries and query behavior without assuming that relocating state removes approval requirements."
-status: draft
+status: accepted
 created_at: 2026-10-20
 target_area: collaboration/
 priority: medium
@@ -13,6 +13,7 @@ boundaries:
   owns:
     - packages/devkit-spec/src/devkit_spec/scope/
     - packages/devkit-spec/src/devkit_spec/cli/scope.py
+    - packages/devkit-spec/tests/scope/
     - docs/capabilities/collaboration/
   excludes:
     - Git internals and host-wide sandbox policy
@@ -65,24 +66,40 @@ using the current Git-directory implementation with scoped escalation as the bas
 
 ## 3. Proposed Design & Impact
 
-No storage or transport choice is accepted in this draft. Planning compares these alternatives using the same
-concurrency, permission, lifecycle and recovery scenarios:
+Recommend retaining Git common-directory discovery, registry storage and per-worktree tokens, and separating
+read access from mutation. `PADR-keep-shared-storage-and-separate-read-access` records the direction; the comparison
+and verification design are in `materials/access-comparison.md`. This recommendation awaits plan acceptance.
 
-| Alternative | Benefit | Cost or open constraint |
-| --- | --- | --- |
-| Git-directory registry with scoped escalation | Existing cross-worktree discovery and token isolation | Protected Git paths require escalation, including current queries |
-| Shared `.devkit/state/` plus per-worktree state | Separate tool-owned state; permit only the needed directories | Explicit shared-path discovery, cross-worktree write access and ignore rules |
-| MCP-mediated registry operations | Agents access bounded operations while the server owns storage | Server privileges, tool authorization, lifecycle and unavailable-service behavior |
+Both ordinary `query` (including `--spec`) and `query --history` MUST perform no filesystem mutation: no directory
+or lock creation, writable opens, journal append, token cleanup or interrupted-record cleanup. Ownership lookup
+MUST read tokens without cleanup. Mutating callers retain cleanup and current ownership/revision checks.
 
-Evaluate query-side-effect reduction independently of the storage or transport choice. Preserve ownership checks,
-atomic updates, revision checks and cross-worktree overlap visibility unless an explicit decision replaces their
-contract. Retaining the current backend is a valid outcome if its measured operational cost is lower.
+For an existing namespace, open its existing regular, non-symlink `.lock` read-only and take a shared flock with
+the existing deadline. Writers continue using the same inode and exclusive flock. Hold the reader lock across
+record enumeration and reads, or journal reads, preserving namespace-consistent observations relative to writers. Record and journal operations remain separate
+observations, not one transaction. Unsafe nonregular files, including FIFOs, MUST fail without blocking in open.
+Do not unlink or replace the lock while the namespace is in use. This is a proposed localfs reader primitive;
+no change to the shared core lock API is required. Preserve unsupported-platform and timeout errors.
 
-Expected impact includes `CAP-COLL-work-scope-registry` and, if configuration or worktree preparation changes,
-`CAP-DLV-project-policy`. Candidate code areas are the scope location, local filesystem registry and CLI adapter;
-MCP and worktree integration boundaries must be identified during Planning before implementation is authorized.
-Any `.devkit` state design must name the precise ignored runtime paths while retaining tracked configuration and
-installation records. Ordinary Git writes for commits and worktree creation remain outside this proposal's problem.
+An absent namespace returns an empty result only after an actual ENOENT observation; it creates nothing. That
+observation may precede a concurrent first registration. An existing namespace without a lock is an initialization
+or damage condition: fail with `SPEC_SCOPE_SHARED_PATH_UNAVAILABLE`, never read unlocked or silently initialize.
+An authorized registration from a worktree without an owner token reaches existing lock initialization; queries
+never do so. Release and sweep may query first and MUST NOT be advertised as missing-lock recovery. For a damaged
+namespace without an eligible registration, require explicit operator repair of the missing lock after writers
+are quiescent; do not remove records, tokens or replace an existing lock to recover. Permission,
+unsafe-path and other IO failures are errors, not evidence of empty state. Existing per-record invalid-data warnings
+remain visible, and no empty or partial registry result certifies that active work has no overlap.
+
+Keep configured absolute `shared_path` and namespace behavior unchanged. This work adds no MCP server, implicit
+fallback, relocation, sandbox settings, permission provisioner or new policy configuration. Mutations still need
+access to the namespace (lock, record temporaries, records and journal) and, when applicable, the worktree Git
+directory (token, token temporaries and cleanup). Hosts grant exact command-scoped access where needed; refusal
+stops that operation. A successful read grants no mutation permission.
+
+The affected contract is `CAP-COLL-work-scope-registry`. `CAP-DLV-project-policy` is examined but unchanged because
+configuration and host authorization remain unchanged. Development targets the scope implementation, CLI tests
+and collaboration contract; medium Development effort remains appropriate. Ordinary Git writes remain separate.
 
 ### Verification scenarios for the selected direction
 
@@ -106,8 +123,8 @@ installation records. Ordinary Git writes for commits and worktree creation rema
 
 ## 4. Lifecycle & Retirement Criteria
 
-This draft records the agreed investigation scope at feature/proposal depth, with medium Planning effort and a
-provisional medium Development effort. Draft creation does not start a Planning worker or authorize implementation.
+Planning recommends the bounded read-access change at feature/proposal depth, with medium Planning and Development
+effort. Acceptance and implementation remain separate user-controlled transitions.
 
 Planning is ready for acceptance when it provides an evidence-backed comparison, recommends a direction (including
 retaining the baseline), identifies all storage and permission boundaries, answers the spike questions and maps the
