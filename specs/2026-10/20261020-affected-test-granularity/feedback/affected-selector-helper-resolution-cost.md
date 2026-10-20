@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: noise
 recurring: true
-status: open
+status: dismissed
 created_at: 2026-10-20
 ---
 
@@ -48,3 +48,15 @@ Baseline selector medians: approximately 0.6–0.7 seconds.
 New selector medians: approximately 1.2–1.4 seconds.
 Gate selection: 1,073 to 301 tests; scope: 1,118 to 1,048; proposals: 1,118 to 1,065.
 ```
+
+## Disposition
+
+Dismissed: additional measurement on source revision `6b21869d9029e22886fc6d5511b82c67bc9297cc` found
+approximately 1.15–1.55 seconds of extra selector time across the nine cases. A helper inventory does not have
+enough demonstrated benefit to justify additional dependency-resolution complexity. Separate single pytest runs
+with eight workers, plus selector medians from three samples, retained net improvements for gate
+(14.58 to 10.78 seconds) and rules (61.34 to 54.80 seconds). Scope, documents and proposals retain the costly
+integration consumers; removed scope/proposal tests account for only 0.08/0.06 summed worker-seconds in the full
+run. Scope's single selected execution was slower, so no universal runtime improvement is claimed. Whole-workspace
+verification passed 3,993 tests with 12 skipped, and all six selected executions passed. Keep the existing selector
+and investigate repeated integration-test preparation separately; no selector optimization is required.
