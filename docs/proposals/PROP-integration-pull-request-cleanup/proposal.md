@@ -2,7 +2,7 @@
 id: PROP-integration-pull-request-cleanup
 title: Integration through pull requests with no-ff merge and cleanup
 summary: "Defines one approval for push, no-ff PR merge and cleanup, fixing the source SHA while allowing checked target advances. Reports partial completion and actionable failures for agent-led recovery."
-status: reviewing                       # draft | reviewing | accepted | rejected
+status: accepted                        # draft | reviewing | accepted | rejected
 created_at: 2026-10-19
 target_area: integration/
 priority: medium                      # critical | high | medium | low
