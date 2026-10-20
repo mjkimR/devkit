@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-19
 ---
 
@@ -40,5 +40,12 @@ created_at: 2026-10-19
   unresolved".
 - Handoff output and `devkit workflow next` for the unit name no change since `plan-accept`.
 
-- **Disposition**: Deferred as open feedback. `SPEC-worker-range-validation` covers existing worker-result checks
-  only; handoff premise drift is outside its scope.
+- **Earlier deferral**: `SPEC-worker-range-validation` covered existing worker-result checks only; handoff premise
+  drift remained outside its scope.
+
+## Disposition
+
+Dismissed after reassessment. Checking accepted premises against the current base remains the responsibility
+of the Host and Development worker. In the reported case the worker found the change and incorporated it into
+the work. Handoff change notifications would be a convenience feature; this observation establishes no missed
+premise change. No additional notification or checking procedure is introduced.
