@@ -36,9 +36,12 @@ workflow: sdd-proposal
 
 ## 2. Planning Scope
 
-Implement a thin wrapper in `devkit-spec` around the checks the Host already performs. Use an explicit starting
-head, returned head and Host-supplied write scope. Reuse an existing delegation record when available; do not make
-workers author a new mandatory committed scope record or extend the envelope schema just for this helper.
+Implement a thin wrapper in `devkit-spec` around the checks the Host already performs:
+`devkit spec worker inspect --unit <dir> --base <accepted> --head <returned> [--scope <prefix>... | --scope-file <path>]
+[--base-checkout <path>]`. The starting head and returned head are explicit; the write scope is explicit and
+optional. It is the same write scope the Host already puts into the delegation payload's `allowed_boundaries`,
+usually a handful of directory or path prefixes. The command does not fall back to the scope registry or any other
+record, workers author no new mandatory committed scope record and the envelope schema is not extended.
 
 Planning settles only the CLI arguments, concise result fields and reuse of existing check APIs. Prefer existing
 conventions without introducing a separate scope authority or validation lifecycle.
@@ -46,7 +49,9 @@ conventions without introducing a separate scope authority or validation lifecyc
 ## 3. Proposed Design & Impact
 
 - One invocation reports ancestry, changed paths, paths outside the supplied scope, worktree status, existing
-  envelope validation, cumulative rules results and `devkit workflow next`. Include the compared heads and changed
+  envelope validation, cumulative rules results and `devkit workflow next`. Without `--scope` or `--scope-file` it
+  reports only the changed paths and the outside-scope check is `not-run`, left to the Host's judgment. With
+  `--base-checkout <path>` it also reports that checkout's HEAD and dirty paths, as information only. Include the compared heads and changed
   paths in information the agent can pass to a read-only reviewer.
 - Default output carries the result and actionable findings; structured output is one JSON object. Preserve the
   stable codes and actions of existing checks and report checks that could not run distinctly from negative results.
@@ -56,12 +61,12 @@ conventions without introducing a separate scope authority or validation lifecyc
   weakens them nor adds a new blocking prerequisite to accepting a worker result.
 - The agent decides how to act on findings and runs any corrective commands. The helper does not modify files,
   merge the base, refresh environments, run `devkit sync`, retry operations or automatically enlarge write scope.
-- Affected: a small `devkit spec` command, `spec-delegate` and `spec-orchestrate` guidance, reviewer payload guidance,
+- Affected: a small `devkit spec worker` command group, `spec-delegate` and `spec-orchestrate` guidance, reviewer payload guidance,
   and `CAP-DLV-delivery-workflows`. No new worker envelope fields are required.
 
-- Settled design (inputs, per-check `pass`/`fail`/`not-run` results, exit codes, reviewer fields, no writes):
-  `PADR-informational-range-inspection-reuses-existing-checks`.
-  No committed delegation record exists today, so the write scope comes from the Host's arguments.
+- Settled design (command name, inputs, per-check `pass`/`fail`/`not-run` results, exit codes, reviewer fields, no
+  writes): `PADR-informational-range-inspection-reuses-existing-checks`. No committed delegation record exists today,
+  so the write scope comes only from the Host's arguments.
 
 **Non-Goals**: automatic scope derivation or expansion, link-repair ownership inference, base-drift detection or
 merging, worktree environment refresh, new approval gates, and automatic enforcement of helper findings.

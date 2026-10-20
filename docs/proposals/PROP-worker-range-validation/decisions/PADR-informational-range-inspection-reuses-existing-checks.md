@@ -30,26 +30,38 @@ changed paths a read-only reviewer needs (`FB-reconcile-reviewer-no-diff-list`).
 
 ## 3. Considered Options
 
-1. A thin command in `devkit-spec` that calls the existing checks and aggregates their results (chosen).
+1. A thin command in `devkit-spec` that calls the existing checks and aggregates their results (chosen), named
+   `devkit spec worker inspect`; `devkit spec range inspect` and `devkit spec scope inspect` (mixing it with the
+   scope registry) were the alternatives.
 2. A new check class in the workflow engine evaluated at a stage's exit: rejected, it would become a gate.
 3. Documentation-only (a shell recipe in `spec-delegate`): rejected, the hand-written scope pattern stays per run and
    the reviewer payload still lacks a generated path list.
 
 ## 4. Decision Outcome
 
-- Inputs are explicit: the unit directory, the last accepted head (`--base`), the returned head (`--head`) and the
-  write scope the Host passed the worker. The command derives no base, head or scope by itself.
+- The command is `devkit spec worker inspect --unit <dir> --base <accepted> --head <returned>
+  [--scope <prefix>... | --scope-file <path>] [--base-checkout <path>]`, in a new small `worker` group of
+  `devkit spec`.
+- Inputs are explicit: the unit directory, the last accepted head (`--base`), the returned head (`--head`) and,
+  optionally, the write scope the Host passed the worker in the payload's `allowed_boundaries` (`--scope`,
+  repeatable directory or path prefixes, or `--scope-file`). The command derives no base, head or scope by itself
+  and never falls back to the scope registry (`devkit spec scope`), whose declared spec paths differ from a
+  worker's write scope.
 - Each check reports `pass`, `fail` or `not-run` (with its cause), so a check that could not run is distinct from a
   negative result. The checks: ancestry of base to head; worktree HEAD equals `--head`; changed paths of
-  `git diff --name-only <base> <head>` with those outside the scope; worktree status; `devkit workflow envelope check`
+  `git diff --name-only <base> <head>` with those outside the scope (`not-run` when no scope was given, leaving the
+  judgment to the Host); worktree status; `devkit workflow envelope check`
   results (malformed files, `blocked`, `pending_questions`); the cumulative rules check over the range (the
   `devkit rules check --ci --base <base>` evaluation, run only when the worktree HEAD equals `--head`, otherwise
-  `not-run`); and the stage `devkit workflow next` names.
+  `not-run`); and the stage `devkit workflow next` names. With `--base-checkout <path>` the result also carries
+  that checkout's HEAD and dirty paths as information, not as a check: comparing them with what the Host recorded
+  before spawning stays the Host's step.
 - Exit codes follow the convention: `0` every check passed, `1` at least one check failed (a negative result, not a
   refusal), `2` the command could not run (bad arguments, not a Git worktree, unknown refs). A `not-run` check alone
   does not make the exit `1`; it is reported as a notice.
 - Structured output (`--format json`) is one object with the compared `base` and `head`, `changed_paths`,
-  `outside_scope` and the per-check results; this object, or its `base`, `head` and `changed_paths`, is what the Host
+  `outside_scope` (absent when no scope was given), `base_checkout` (its `head` and `dirty_paths`, only with
+  `--base-checkout`) and the per-check results; this object, or its `base`, `head` and `changed_paths`, is what the Host
   passes a read-only reviewer.
 - The command modifies no file, writes no record, runs no `devkit sync`, merges nothing, retries nothing and enlarges
   no scope. Whether a finding blocks the worker's result stays the Host's decision under the existing
