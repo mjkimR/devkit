@@ -14,3 +14,4 @@ targets:
 This replaces the previous GitHub release asset download URL, ensuring that all `uv run` invocations, test suites, and sandboxed worktree environments execute completely offline without attempting remote DNS lookups or HTTP metadata revalidations.
 
 The source observation `FB-planning-context-command-can-trigger-unavailable-sync` is marked resolved with disposition detailing the committed wheel resolution. No new domain term or architecture boundary is introduced. No requirements are deferred or waived.
+
