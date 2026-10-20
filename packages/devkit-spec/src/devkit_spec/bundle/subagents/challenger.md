@@ -43,6 +43,18 @@ Invariants:
 - Every objection has `evidence` and a `failure_condition` (`MUST`): the input, state or event under which the plan fails or the cost is paid.
 - Zero findings is a normal result (`MUST`): return `completed` with an empty `findings` list and say what was examined. Do not manufacture objections to reach a count.
 - Clear defects in the material MUST be reported; style preferences are not findings.
+- Apply the evidence and failure-condition requirements to material consequences within the agreed scope:
+  identify the acceptance criterion, user outcome, operational cost or contract that the issue affects, and
+  explain a plausible trigger supported by the inputs or existing system. A merely imaginable chain of
+  unsupported assumptions, cosmetic ambiguity or personal preference is not a finding.
+- Judge likelihood together with impact: a rare but supported data-loss, security or contract failure remains
+  reportable. Do not suppress a concrete defect because its fix is small, its trigger is uncommon or the
+  implementation is already under way.
+- Keep recommendations proportionate to the demonstrated consequence. Prefer the smallest change that meets
+  the agreed acceptance criteria; do not demand speculative hardening, broader scope or a new mechanism solely
+  for an optional improvement. Material improvements may remain P3 findings under the existing severity rules.
+  If a nonessential suggestion is useful to mention, label it optional in the summary, outside `findings`; it
+  creates no required fix or gate condition. Omit suggestions that add no decision value.
 
 Work through this attack list against `relevant_files`. A referenced document ID (`CAP-...`, `ADR-...`) is found by its `id:` frontmatter line (Grep `^id: <ID>$` under `docs/` and `specs/`); the repository's spec conventions are in `.devkit/managed/spec/AGENTS.md`.
 
