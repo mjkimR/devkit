@@ -13,8 +13,15 @@ depends_on: []
 
 Advances `ARCH-01-introduction-and-goals` §1.2 (Repository Governance & Deterministic Verification), §1.3 (Delivery Workflow Orchestration), and §3.3 (Strict Layering) by providing a maintenance playbook for broad review and refactoring before a release, after substantial feature growth, or on user request. The playbook addresses accumulated AI slop in code and agent guidance, using repository evidence and engineering judgment beyond deterministic hygiene checks (`CAP-GOV-evaluation-lifecycle`). It can be invoked manually without a scheduler.
 
+Delivery belongs to the opt-in `maintenance` bundle in `devkit-catalog`, containing three independently invocable
+playbooks: `weekly-report`, `drift-reconciliation`, and `review-refactor`. This milestone owns `review-refactor`.
+The bundle offers `reporting` (weekly report), `upkeep` (drift reconciliation and review/refactoring), and `all`
+(all three, the default) presets. Selecting or invoking one playbook does not require invoking the others; bodies
+remain loaded on demand. The three playbooks share one bundle rather than separate bundles or packages.
+
 ## Exit condition
 
+- `review-refactor` is distributed as a playbook asset of `maintenance` in `devkit-catalog`, with its applicable preset selections, package validation, and bundle recommendation documentation verified. The bundle's target composition is the three playbooks above; this milestone verifies its own contribution without waiting for the others to be implemented.
 - A review/refactoring playbook defines intake, review scope, candidate prioritization, agreed changes, verification, and completion evidence; a manual run demonstrates the path. Review findings and implemented changes are recorded separately, with deferred work linked to existing or new follow-ups without duplication.
 - Research into AI slop patterns, causes, reduction methods, and refactoring techniques produces cited findings and repository-applicable review criteria. Criteria distinguish evidenced problems from stylistic preference and state limitations of automated detection.
 - Code review covers redundant behavior, unnecessary abstractions, speculative compatibility paths, unused code, and boilerplate without a demonstrated purpose. Findings cite concrete locations and explain the maintenance cost; refactoring preserves agreed behavior and passes relevant verification.

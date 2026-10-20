@@ -13,6 +13,7 @@ dev_effort: medium                    # low | medium | high (hint for Developmen
 boundaries:
   owns:
     - capabilities/delivery/
+    - capabilities/distribution/
   excludes:
     - docs/decisions/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
@@ -48,8 +49,9 @@ workflow_hash: sha256:90918c632715461d07f99f683b8381bdbe6381ad6689a7575a72c002c1
   sweep examine, and which existing checks and source inspection support each finding?
 - **Q2. Finding quality.** How should the playbook distinguish deterministic failures from suspected semantic drift,
   limit noise, and present enough evidence for a user decision? Section 4 records a rejected detection candidate.
-- **Q3. Procedure and distribution.** What inputs, review steps, disposition records, and verification make the
-  playbook reusable? The deliverable is a playbook; its catalog bundle and preset placement remain to be agreed.
+- **Q3. Procedure and verification.** What inputs, review steps, disposition records, and verification make the
+  playbook reusable, and how should its manual run demonstrate the complete reconciliation path? Catalog placement
+  is the `maintenance` bundle described in section 3.4.
 
 ## 3. Proposed Design & Impact
 
@@ -90,6 +92,21 @@ or proposals instead of duplicating follow-ups.
   needed to resolve an agreed drift finding.
 - A dedicated detection command, a new standalone skill, automated scheduling, and automatic contract rewriting are
   excluded. A future detector requires a separately evidenced gap and scope decision.
+
+### 3.4 Catalog Bundle and Presets
+
+- Ship `drift-reconciliation` as a playbook asset of the opt-in, content-only `maintenance` bundle in
+  `devkit-catalog`. The same bundle contains the independent `weekly-report` and `review-refactor` playbooks;
+  do not create separate bundles or packages for these three procedures.
+- Presets: `reporting` selects `weekly-report`; `upkeep` selects `drift-reconciliation` and `review-refactor`;
+  the reserved `all` preset selects all three and is the bundle default. Keep `auto_select` disabled, following
+  `CAP-DIST-content-packages` and `CAP-DIST-manifest-spec`.
+- Each playbook is invoked independently and its body is read on demand. A reconciliation run does not require
+  reporting or review/refactoring to run first; installing all three does not imply running all three.
+- This proposal delivers and verifies the reconciliation asset and its preset membership, reusing or establishing
+  the shared bundle as needed. It does not implement the other two playbooks or wait for their delivery.
+- Verify bundle discovery, preset selection, package validation, and a manual reconciliation run. Update package
+  documentation, installation recommendations, and the affected Living Spec distribution contract.
 
 ## 4. Rejected Candidate: Entrypoint-Based Stale-Document Hints
 

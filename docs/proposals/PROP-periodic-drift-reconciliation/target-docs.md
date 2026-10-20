@@ -7,6 +7,7 @@ created_at: 2026-10-14
 # The Living Spec files this proposal changes, one "- file: <workspace-relative path>" each;
 # devkit spec scope compare reads them to find overlaps with other work.
 targets:
+  - file: docs/capabilities/distribution/CAP-DIST-content-packages.md
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
   - file: docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md
   - file: docs/capabilities/delivery/CAP-DLV-drift-reconciliation.md
@@ -20,6 +21,8 @@ This document defines the target blueprint of how the docs/ backbone (Living Spe
 ---
 
 ## 1. System Capabilities Plan (docs/capabilities/)
+
+- `CAP-DIST-content-packages`: document the opt-in `maintenance` catalog bundle, independent playbooks, and preset selection.
 
 - New CAP-DLV-drift-reconciliation (planned path in targets): the manually invocable reconciliation playbook, evidence report, user dispositions, and verification.
 - `CAP-DLV-delivery-workflows`: link the periodic sweep to per-feature reconciliation (`spec-sync`).
@@ -43,9 +46,15 @@ trigger decision is part of this playbook delivery.
 
 ## 4. Development Conventions & Governance (docs/development/ & .devkit/)
 
-A maintenance playbook over existing commands and evidence review, with a demonstrated manual run. Catalog bundle
-and preset placement remain a Planning question; no dedicated detection command, standalone skill, or scheduler
-integration is included.
+Deliver `drift-reconciliation` as an independent playbook in the opt-in, content-only `maintenance` bundle of
+`devkit-catalog`, alongside `weekly-report` and `review-refactor`. Presets are `reporting` (weekly report), `upkeep`
+(drift reconciliation and review/refactoring), and the reserved `all` (all three, the default); keep `auto_select`
+disabled. Playbook bodies are read on demand and invocation is independent.
+
+This proposal delivers the drift asset and its applicable preset membership without requiring implementation of the
+other two playbooks. Verify package discovery and preset selection, update package documentation and installation
+recommendations, and demonstrate a manual reconciliation run. No dedicated detection command, standalone skill,
+or scheduler integration is included.
 
 ---
 

@@ -13,8 +13,15 @@ depends_on: []
 
 Advances `ARCH-01-introduction-and-goals` §1.2 (Repository Governance & Deterministic Verification), §1.3 (Delivery Workflow Orchestration), and §2 (Agent-First Design Philosophy) by providing a maintenance playbook that turns a week's repository evidence into a report of completed work, decisions, repository health, and next actions. The playbook can be invoked manually without a scheduler.
 
+Delivery belongs to the opt-in `maintenance` bundle in `devkit-catalog`, containing three independently invocable
+playbooks: `weekly-report`, `drift-reconciliation`, and `review-refactor`. This milestone owns `weekly-report`.
+The bundle offers `reporting` (weekly report), `upkeep` (drift reconciliation and review/refactoring), and `all`
+(all three, the default) presets. Selecting or invoking one playbook does not require invoking the others; bodies
+remain loaded on demand. The three playbooks share one bundle rather than separate bundles or packages.
+
 ## Exit condition
 
+- `weekly-report` is distributed as a playbook asset of `maintenance` in `devkit-catalog`, with its applicable preset selections, package validation, and bundle recommendation documentation verified. The bundle's target composition is the three playbooks above; this milestone verifies its own contribution without waiting for the others to be implemented.
 - A reporting playbook defines its inputs, observation period and timezone, evidence collection, report generation, publication, and completion evidence; a manual run demonstrates the path.
 - Reports summarize completed work, added or changed ADRs, important behavior changes, unresolved problems, and next actions, linking claims to commits, work units, decisions, or check results.
 - Reports identify their scope, repository revision, observation period, evidence sources, and missing or stale evidence; unavailable maintenance results are distinguishable from clean results.
