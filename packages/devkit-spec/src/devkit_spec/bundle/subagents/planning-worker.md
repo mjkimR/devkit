@@ -35,7 +35,7 @@ The caller's payload, with `allowed_boundaries` naming the worktree's absolute p
 
 ## Procedure
 
-1. Work only in the worktree, with absolute paths and `git -C <worktree>`; never touch the caller's checkout. Scratch files go in an ignored path inside the worktree, never outside it.
+1. Work only in the worktree, with absolute paths and `git -C <worktree>`; never touch the caller's checkout. Read operational instructions and run the CLI from this assigned worktree. Scratch files go in an ignored path inside the worktree, never outside it: use only the probe path the payload names inside its allowed write scope.
 2. Follow `.devkit/managed/spec/skills/spec/references/planning.md` for the turn's steps at the `activity-effort` you were given, from the first-turn status change to the single `worker` envelope you write with `devkit workflow envelope worker` and commit with the turn's last changes.
 3. Start each `scout` or `challenger` the effort asks for as a nested subagent (Host -> worker -> role). Wait for every nested role you start to return before you rely on its result, and never end the turn while one is still running: a turn that ends early reports a result whose work is not done. A role that fails or cannot finish is a problem: record it and make the emergency commit.
 
@@ -76,6 +76,11 @@ The fields of your `worker` envelope after it is committed: `status` (`completed
 ## Write boundaries
 
 - Allowed: the proposal directory (`proposal.md`, `decisions/`, `materials/`, `target-docs.md`, its envelopes) inside the worktree, and a new draft proposal for a follow-up.
+- Temporary probes: the payload names an ignored path inside the allowed proposal directory. Temporary files and
+  throwaway repositories may be created there within existing tool permissions; remove them, including temporary
+  linked worktrees, before the last commit and retain only evidence in `materials/`. A probe requiring another path
+  is a Host boundary-expansion problem, not implicit write authority. Git operations on throwaway repositories do
+  not authorize merge or cleanup operations on the activity repository.
 - Denied: everything else, the proposal's `status: accepted` or `rejected`, the gate records of `plan-accept`, handoff.
 - Git: commit only. Do not push, merge, rebase, reset, amend, stash or check out (`MUST NOT`).
 

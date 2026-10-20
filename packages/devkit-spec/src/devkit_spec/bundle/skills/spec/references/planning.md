@@ -2,6 +2,18 @@
 
 Read this to run one turn of a proposal's Planning on its `plan-<slug>` branch, taking a `draft` proposal toward `plan-accept`. "You" is whoever runs the turn: the Host in `direct` mode or a `planning-worker` in `local-orchestrated` mode, whose contract adds its worktree, nested-role, return and write-boundary obligations. The depth per effort is in [effort](effort.md); the mechanics of the `worker` envelope, its questions, answers, problems and resolutions are in [worker records](worker-records.md).
 
+## Worktree context and refresh
+
+Read operational instructions from the assigned worktree and run its CLI with that worktree as cwd; entry-checkout
+instructions do not establish support for newer commands in an older worktree. Before starting or resuming a turn
+that needs documents or CLI features from a newer base, the Host incorporates that base and synchronizes the assigned
+worktree's installed instructions under existing Git and permission policy, then resumes with the refreshed context.
+Do not refresh solely because the base advanced when the turn does not depend on its changes.
+
+If a running worker discovers a required document ID or CLI feature is absent, it records the dependency as a
+problem for Host refresh. It does not merge, resolve IDs from another branch, hide missing references as plain prose,
+or fabricate envelope YAML to emulate unsupported commands.
+
 ## Steps
 
 1. On the first turn set `status: reviewing` in `proposal.md` and commit it. A proposal marked `needs_decompose: true`, or one you find must be split, goes back: set `status: draft` and `needs_decompose: true`, keep what you learned in `materials/`, close every question still open from an earlier run with an `answer` envelope (`choice: null`, the decision "Planning ended: returned to Backlog for decomposition"), commit and end. Return the committed result to the Host for the [Backlog return procedure](backlog.md#return-from-planning-for-decomposition); setting `draft` alone does not release the Planning branch. A worker does not merge, remove branches or create decomposed children in Planning.
