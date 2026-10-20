@@ -1,0 +1,21 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T07:26:24.026212Z'
+status: completed
+summary: 'Implemented per-file affected-test groups and fine devkit_spec dependency nodes with conservative fallback. Same-revision evidence: gate1073 to301, scope1118 to1048, proposals1118 to1065; documents remains1118. Independent review findings fixed and reconciliation verified.'
+findings: []
+assumptions:
+- Static dependency inference retains coarse owners and explicit runtime consumers; complete nightly/manual/release checks remain the backstop.
+- Median selector overhead about 0.6 seconds per call is documented, not a cross-machine guarantee; testsupport.gate imports remain intact.
+- Medium activity used independent code and reconcile reviewers; confined execution is emulated through explicit paths and Host diff validation.
+unverified_areas:
+- Arbitrary runtime discovery is outside the accepted static graph contract; full suite not separately executed because affected selection was partial.
+checks:
+  tests: 'PASS just test-affected original base: 72 tests including 63 selector cases; independent graph fixtures and preserved CLI/full/frontend/MCP checks'
+  build: PASS selector imports and executes; reproducible full pytest collection 3929 cases; no wheel or frontend assets changed
+  lint: PASS Ruff check/format and Pyright for all three changed Python files; cumulative rules 0 errors/warnings
+diff_scope:
+  base: 29e7dd36845455d92d42e858e3372e3dd812a22e
+  head: 469fe07b3fe0dd67b6669e16379ae0050b6a8713
