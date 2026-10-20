@@ -7,6 +7,7 @@ status: active
 entrypoints:
   - packages/devkit/src/devkit/worktree/lifecycle.py
   - packages/devkit/src/devkit/worktree/merging.py
+  - packages/devkit/src/devkit/worktree/pull_request.py
 created_at: 2026-10-17
 ---
 

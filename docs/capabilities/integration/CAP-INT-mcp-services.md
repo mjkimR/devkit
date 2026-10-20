@@ -320,3 +320,8 @@ branch retention, scoped cleanup, merge-then-cleanup failure recovery, merge com
 conflicting, moved, reset, policy and receipt changes), cleanup-only requests and the lock wait. No external API call is needed.
 Consumer smoke installs the wheel extra and checks the installed transport. Native host UI, actual host permission
 prompts and the installed devkit-spec provider remain separate validation evidence, not consequences of SDK tests.
+
+
+A fresh cleanup-only PR confirmation says the PR is already merged and lists only remaining fetch, local
+fast-forward and selected cleanup. It does not promise another push or merge, or waiting for required checks.
+It discloses `not-recorded` checked-landing evidence and the provider's landed-target check after cleanup.

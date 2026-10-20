@@ -1,0 +1,22 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T01:31:33.584550Z'
+status: completed
+summary: round 2; independent reviewer verified all three prior findings resolved; additional P2 cleanup-only confirmation wording remains, outside this round diff and not a recurrence.
+findings:
+- issue: Cleanup-only PR approval incorrectly promises publication, another merge and waiting for required checks.
+  evidence: packages/devkit/src/devkit/integration/models.py:184; packages/devkit/src/devkit/integration/models.py:186; packages/devkit/src/devkit/integration/models.py:190
+  failure_condition: Fresh preparation finds an already-merged PR; structured already_merged is true but confirmation still describes push and merge that execution skips.
+  suggested_action: Condition PR heading, operation list and pending/race explanation on already_merged; describe remaining fetch, fast-forward, cleanup and not-recorded landing with the landed check; add a presentation regression.
+  resolution: open
+  severity: P2
+checks:
+  prior-findings: PASS all three fixes verified
+  affected: PASS 1778 tests caller evidence
+  rules-diff: PASS independent cumulative rules and diff check
+diff_scope:
+  base: aea9ecb807ff9728b1b2f16a13c5f395f171dbc8
+  head: f57eea5dcdd83a008ca08e70bd6ef211a0f7c57e
+activity_effort: high

@@ -1,0 +1,23 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T01:33:18.980449Z'
+status: completed
+review: review-02.yaml
+summary: round 2 fixes; cleanup-only PR confirmation now names only remaining fetch, local fast-forward and selected cleanup, with not-recorded landing disclosure. Fresh round 3 verifies the public confirmation change and reconciliation draft.
+findings:
+- issue: Cleanup-only PR approval incorrectly promises publication, another merge and waiting for required checks.
+  evidence: packages/devkit/src/devkit/integration/models.py:184; packages/devkit/src/devkit/integration/models.py:186; packages/devkit/src/devkit/integration/models.py:190
+  failure_condition: Fresh preparation finds an already-merged PR; structured already_merged is true but confirmation still describes push and merge that execution skips.
+  suggested_action: Condition PR heading, operation list and pending/race explanation on already_merged; describe remaining fetch, fast-forward, cleanup and not-recorded landing with the landed check; add a presentation regression.
+  resolution: resolved
+  severity: P2
+checks:
+  affected: PASS 1779 tests in 36.65s
+  lint-types: PASS devkit
+  entrypoints-rules: PASS adapter capability lookup and scoped rules
+diff_scope:
+  base: f57eea5dcdd83a008ca08e70bd6ef211a0f7c57e
+  head: ''
+activity_effort: high

@@ -181,14 +181,25 @@ class IntegrationRequest:
         if self.repository:
             return "\n".join(
                 [
-                    f"Approve pull request integration of {branch} into {display(self.repository.selector)} {target} with a merge commit?",
+                    (
+                        f"Approve pull request cleanup of {branch}, already merged into {display(self.repository.selector)} {target}?"
+                        if plan.already_merged
+                        else f"Approve pull request integration of {branch} into {display(self.repository.selector)} {target} with a merge commit?"
+                    ),
                     f"Source: {plan.source_sha}; confirmation target: {plan.target_sha}",
-                    f"Push source; {'use PR ' + str(self.pr_number) if self.pr_number else 'create PR'}; merge; fetch; fast-forward local target.",
+                    (
+                        f"PR {self.pr_number} is already merged. Fetch target; fast-forward local target; perform the selected cleanup below."
+                        if plan.already_merged
+                        else f"Push source; {'use PR ' + str(self.pr_number) if self.pr_number else 'create PR'}; merge; fetch; fast-forward local target."
+                    ),
                     f"Remove worktree: {display(plan.path) if plan.worktree_identity else 'no'}; delete local and remote source branches: {plan.delete_branch} (remote lease {plan.source_sha}).",
                     f"Additional cleanup: {display(json.dumps([asdict(scope) for scope in self.cleanup]))}",
                     f"GitHub automatic branch deletion: {self.repository.delete_on_merge}; when enabled the platform can delete the remote branch regardless of devkit delete_branch policy.",
-                    "Merge runs now only when required checks and reviews pass; otherwise resume later on the unchanged checked target. A frequently advancing target may prevent this route from ever merging.",
-                    "A target commit landing after the last check can merge without devkit checks; this is reported and does not stop cleanup.",
+                    (
+                        "Checked landing evidence was not recorded in this process. Cleanup reports INTEGRATION_LANDED_UNCHECKED (not-recorded); run the landed-target check after cleanup."
+                        if plan.already_merged
+                        else "Merge runs now only when required checks and reviews pass; otherwise resume later on the unchanged checked target. A frequently advancing target may prevent this route from ever merging. A target commit landing after the last check can merge without devkit checks; this is reported and does not stop cleanup."
+                    ),
                     f"Unverified platform rules: {display(str(self.unverified_rules))}",
                     f"Result check: {display(self.readiness.disclosure)}; landed-target check after cleanup: {display(self.readiness.landed_check)}",
                     "A host timeout can leave execution running; inspect integration_status before recovery.",

@@ -113,9 +113,9 @@ def remote_service(repo, ready_provider, monkeypatch, tmp_path):
 
 
 async def approve(message, schema):
-    assert "pull request integration" in message
+    assert "pull request" in message
     assert "github.example/owner/repo" in message
-    assert "race" in message or "after the last check" in message
+    assert "after the last check" in message or "not recorded" in message
     return ConfirmationReply("accept", {"approve": True})
 
 
@@ -376,3 +376,19 @@ def test_git_mutation_timeout_preserves_unknown_recovery(remote_service, monkeyp
     assert result.steps["remote_delete" if deletion else "push"] == "unknown"
     assert "integration_status" in result.errors[0].fix
     assert worktree.exists() != deletion
+
+
+def test_cleanup_only_confirmation_describes_only_remaining_operations(remote_service):
+    service, fake, base, _worktree = remote_service
+    fake.pending = True
+    pending = run(service)
+    fake.merge(pending.request.repository, 12, pending.request.context.finish.source_sha, "dev-demo", "main", TASK.id)
+    restarted = IntegrationService(base)
+    restarted.github = fake
+    request = restarted.prepare("dev-demo", TASK, "pull-request").request
+    message = request.confirmation_message()
+    assert request.context.finish.already_merged
+    assert "Approve pull request cleanup" in message and "PR 12 is already merged" in message
+    assert "Fetch target; fast-forward local target" in message and "not-recorded" in message
+    assert "Push source" not in message and "Merge runs now" not in message
+    assert "devkit rules check" in message
