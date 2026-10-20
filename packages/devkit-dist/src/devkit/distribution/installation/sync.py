@@ -806,11 +806,29 @@ def read_deployed(root: Path) -> dict[str, FileRecord]:
     return deployed
 
 
-def _record_deployed(root: Path, files: Mapping[str, FileRecord], recorded: dict[str, FileRecord]) -> None:
-    """Remember the signatures the sync left: after a commit every file the receipt records matches it."""
-    if dict(files) != recorded:
-        data = {"files": {name: {"sha256": r.sha256, "mode": r.mode} for name, r in sorted(files.items())}}
-        atomic_write(root, DEPLOYED, json_content(data))
+def _deployed_personal(root: Path, deployed: Mapping[str, FileRecord], canonical: Mapping[str, FileRecord]) -> set[str]:
+    """Personal provenance survives loss of the render ledger; unknown provenance fails closed."""
+    try:
+        data = json.loads(checked_path(root, DEPLOYED).read_bytes())
+        personal = data.get("personal") if isinstance(data, dict) else None
+    except (OSError, ValueError):
+        personal = None
+    if isinstance(personal, list) and all(isinstance(name, str) for name in personal):
+        return set(personal) & deployed.keys()
+    return {name for name in canonical if name in deployed and deployed[name] != canonical[name]}
+
+
+def _record_deployed(
+    root: Path, files: Mapping[str, FileRecord], recorded: dict[str, FileRecord], personal: set[str]
+) -> None:
+    """Remember actual signatures and personal provenance, including an explicit empty set."""
+    data = {
+        "files": {name: {"sha256": r.sha256, "mode": r.mode} for name, r in sorted(files.items())},
+        "personal": sorted(personal),
+    }
+    content = json_content(data)
+    if dict(files) != recorded or snapshot(root, DEPLOYED) != content:
+        atomic_write(root, DEPLOYED, content)
 
 
 def sync_project(
@@ -924,7 +942,9 @@ def commit_locked(
     seeded = _plan_seeds(root, inventory.seeds, recorded_seeds, changes, actions, locked=locked)
     _plan_devkit_gitignore(root, changes, actions)
     fresh_ignore = not (root / DEVKIT_GITIGNORE).exists()
-    prior_personal = local_render.recorded_paths(root) & old_files.keys()
+    prior_personal = (
+        local_render.recorded_paths(root) | _deployed_personal(root, deployed, old_files)
+    ) & old_files.keys()
     for name in set(personal) | (prior_personal & changes.keys()):
         local_render.require_ignored(root, name, planned_ignore=fresh_ignore and name.startswith(".devkit/managed/"))
     block_hash, block_notices = _plan_guidance_block(
@@ -985,7 +1005,10 @@ def commit_locked(
         if not dry_run:
             _record_seen_bundles(root, installed, seen)
             _record_deployed(
-                root, {name: FileRecord(*signature(content)) for name, content in effective.files.items()}, deployed
+                root,
+                {name: FileRecord(*signature(content)) for name, content in effective.files.items()},
+                deployed,
+                set(personal),
             )
         result = _sync_result(
             root,

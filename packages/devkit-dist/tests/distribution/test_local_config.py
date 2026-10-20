@@ -350,3 +350,39 @@ def test_input_snapshot_precedes_selection_save(fixture) -> None:
     assert (root / ".devkit/config.toml").read_text() == changed
     assert (root / ".devkit/installation.json").read_bytes() == before
     assert not (root / LOCAL_CONFIG_PATH).exists()
+
+
+@pytest.mark.parametrize("evidence", ["missing", "malformed"])
+@pytest.mark.parametrize("tracked", [False, True])
+def test_restoration_keeps_personal_ownership_when_render_evidence_is_lost(
+    fixture, evidence: str, tracked: bool
+) -> None:
+    root, item = fixture
+    local(root)
+    sync.sync_project(root, [item])
+    path = ".devkit/managed/style/style.md"
+    if tracked:
+        git(root, "add", "-f", path)
+    else:
+        (root / ".devkit/.gitignore").write_text("/transient/\n/config.local.toml\n")
+    (root / LOCAL_CONFIG_PATH).unlink()
+    ledger = root / LOCAL_RENDER
+    if evidence == "missing":
+        ledger.unlink()
+    else:
+        ledger.write_text("broken")
+    before = (root / path).read_bytes()
+    with pytest.raises(LocalNotIgnoredError):
+        sync.sync_project(root, [item])
+    assert (root / path).read_bytes() == before
+
+
+def test_shared_render_changes_do_not_acquire_personal_provenance(fixture) -> None:
+    root, item = fixture
+    path = ".devkit/managed/style/style.md"
+    git(root, "add", "-f", path)
+    config = root / ".devkit/config.toml"
+    config.write_text(config.read_text() + '\n[bundles.style.variables]\nlanguage="ja"\n')
+    sync.sync_project(root, [item])
+    assert "Language: ja" in (root / path).read_text()
+    assert json.loads((root / ".devkit/transient/deployed.json").read_text())["personal"] == []

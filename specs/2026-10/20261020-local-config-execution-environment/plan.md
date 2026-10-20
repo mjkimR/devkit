@@ -33,3 +33,5 @@ Personal rendering compares complete inventories, including selection, modes, gu
 AC-01/06: core merge/schema/provenance/root tests. AC-02/03/05/06: distribution transaction, personal rendering, ignore/index, reader, race and CLI matrix tests. AC-04: worktree creation/resume/copy failure tests. Run lint/type checks for dist and harness, `just test-affected --base main` with full fallback, distribution-only and snapshot regressions, governance, independent code review and reconcile review at medium effort.
 
 The existing ignore-file regression is updated to the accepted managed local-entry contract: its unrelated-rule preservation assertion remains and a second sync must be a no-op. Transaction path checks retain case-insensitive alias rejection while allowing the exact shared config path in the journal.
+
+The existing deployed ledger also records personal destination provenance. It preserves restoration eligibility when local-render evidence is missing, while an explicit empty provenance list keeps normal tracked shared-template updates distinct. Unknown provenance uses conservative differing-signature evidence.

@@ -455,7 +455,7 @@ seeds remain canonical. A forbidden difference is `CONFIG_LOCAL_RENDER_FORBIDDEN
 Existing template-kind validation can reject an executable template earlier during bundle loading.
 
 `.devkit/transient/local-render.json` records only differing file signatures, bound to the canonical receipt digest
-and effective variable digest. The deployed ledger records actual output. Context and status use a validated runtime
+and effective variable digest. The deployed ledger records actual output and personal destination provenance, so loss of render evidence cannot bypass ownership checks during restoration. Unknown provenance falls back conservatively to deployed signatures differing from canonical records. Context and status use a validated runtime
 receipt view; core receipt loading, rule/workflow/gate engines and snapshot checks retain canonical authority.
 Missing or stale evidence or changed variables raise `CONFIG_LOCAL_RENDER_STALE` (exit 1, run sync). Missing outputs
 use normal sync repair and hand edits retain conflict checks. Removing preferences restores canonical bytes and

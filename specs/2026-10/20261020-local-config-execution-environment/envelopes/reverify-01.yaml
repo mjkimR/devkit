@@ -1,0 +1,46 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T05:25:34.769055Z'
+status: completed
+review: review-01.yaml
+summary: Independent fix review closes findings 1, 2 and 4; finding 3 remains for missing or malformed local render evidence.
+findings:
+- issue: Worktree local-config copying follows symlinked destination parents.
+  evidence: packages/devkit/src/devkit/worktree/lifecycle.py:368
+  failure_condition: A newly checked-out branch contains a symlinked .devkit or project ancestor and an absent local-config leaf; copying writes outside the checkout.
+  suggested_action: Reject symlinked ancestors and escaping paths before writes; preserve copy failure and skip setup/sync.
+  resolution: resolved
+  severity: P1
+- issue: Local-render ledger mutations bypass locked-sync and ignore/index validation.
+  evidence: packages/devkit-dist/src/devkit/distribution/installation/sync.py:970
+  failure_condition: The ledger is tracked or unignored with equal-to-canonical variables or removed preferences; ledger mutations occur after locked validation.
+  suggested_action: Plan the ledger before final locked validation and check every ledger mutation for ignored/untracked eligibility.
+  resolution: resolved
+  severity: P1
+- issue: Restoring canonical output skips eligibility checks for previously personalized files.
+  evidence: packages/devkit-dist/src/devkit/distribution/installation/sync.py:923
+  failure_condition: A prior personal output is force-tracked or unignored and its preference removed; ordinary sync writes canonical bytes without refusal.
+  suggested_action: Validate affected previously personalized destinations as well as new personal destinations.
+  resolution: open
+  severity: P1
+- issue: Input snapshot starts after shared-config save preparation and can lose concurrent edits.
+  evidence: packages/devkit-dist/src/devkit/distribution/installation/sync.py:847
+  failure_condition: Shared config changes after ConfigUpdate preparation but before the input snapshot; the stale prepared text overwrites the edit.
+  suggested_action: Capture inputs before save and carry the snapshot through planning and final validation.
+  resolution: resolved
+  severity: P1
+- issue: 'recurs: envelopes/review-01.yaml #3; canonical restoration skips prior personal-output eligibility when render evidence is unavailable.'
+  evidence: packages/devkit-dist/src/devkit/distribution/installation/sync.py:927
+  failure_condition: Personal output becomes tracked or unignored, its preference is removed, and local-render.json is deleted or malformed; prior paths disappear although deployed signatures remain.
+  suggested_action: Retain prior personal destination evidence independently of the render ledger and test missing/malformed ledger restoration.
+  resolution: open
+  severity: P1
+assumptions:
+- Emulated read-only reviewer; caller verified clean index and unchanged head.
+checks:
+  focused: PASS 37 focused tests including 13 regressions
+diff_scope:
+  base: 4965dd99309f88b384bb22b6857950d1d01481b6
+  head: f22d14e444ae4a895fe19d88a305c1785ccae9c5
