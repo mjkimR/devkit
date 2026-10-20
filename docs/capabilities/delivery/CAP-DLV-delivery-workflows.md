@@ -484,3 +484,45 @@ Native local Development starts may use `spec_handoff` (`CAP-DLV-proposal-incuba
 the accepted plan and lets the user override the `dev_effort` hint before the worktree and spec handoff are created.
 The returned `activity_effort` is the run input and is recorded on that run's worker envelope. This supplies the
 local user interaction otherwise provided by an external runner; final integration retains its separate approval.
+
+## Worker result inspection
+
+`devkit spec worker inspect [--unit <dir>] [--base <accepted>] [--head <returned>]
+[--scope <prefix>... | --scope-file <file>] [--base-checkout <path>]` collects evidence in the activity worktree.
+It derives its inputs from committed HEAD records and reports each value's source; explicit flags replace only
+that input. Scope-file is UTF-8, one nonempty literal repository-relative prefix per line; a scope override
+replaces the entire derived scope. Literal paths match themselves and descendants at path-component boundaries.
+
+- Unit: the branch's `devkitUnit` marker, else its activity-branch correspondence. A Development spec takes
+  precedence over its accepted pre-handoff proposal; ambiguous or absent correspondence is unresolved.
+- Head: the unique commit adding the highest-numbered worker envelope. Base: the commit adding the previous
+  worker envelope when its state is unblocked, otherwise the common `diff_scope.base` of its unresolved problems.
+  With no previous worker, use the single merge base with `devkitBase`, or the registered base checkout's branch.
+- Scope: a Planning proposal directory; for Development, the unit directory, literal task boundaries, materials
+  directory, reconciliation targets and explicitly linked Source feedback files. Entries retain their source,
+  task number or feedback ID. Missing or invalid scope records leave the scope check not-run.
+- Base checkout: the worktree's registered common-directory checkout; absent when run in the base itself. Its
+  HEAD and dirty paths are observations for the Host's comparison with its saved state, not checks.
+
+Checks report `pass`, `fail` or `not-run`: base ancestry, worktree HEAD equality, changed paths and outside-scope
+paths, worktree cleanliness, committed envelope validation (including unresolved problems and pending questions),
+cumulative `devkit rules check --ci --base` and `devkit workflow next`. Both old and new paths of renames are
+included. Rules run only when worktree HEAD equals returned head. Wrapped results retain their codes and actions.
+
+`--format json` emits one object containing `inputs` (value/source), `scope` entries, `base`, `head`, `changed_paths`,
+optional `outside_scope` and `base_checkout`, `checks`, `notices` and `exit_code`. Text output emits inspection,
+input, scope, changed-path and check sentinels. The compared commits and changed paths are reviewer payload
+information. Exit 0 means no failed check, 1 means at least one failed check, and 2 means invalid invocation,
+invalid Git inputs or unresolved required unit/head/base. A not-run check alone is a notice, not exit 1.
+
+| Code | Meaning and action |
+| --- | --- |
+| `WORKER_UNIT_UNRESOLVED` | Supply `--unit` with the committed unit directory. |
+| `WORKER_HEAD_UNRESOLVED` | Supply `--head` when there is no uniquely added latest worker envelope. |
+| `WORKER_BASE_UNRESOLVED` | Supply `--base` when previous blocked records or base branch do not determine it. |
+| `WORKER_SCOPE_UNRESOLVED` | Supply complete literal paths with `--scope` or `--scope-file`. |
+| `WORKER_CHECK_NOT_RUN` | Inspect the reported cause and rerun the named check after correcting it. |
+
+The helper MUST NOT write records, modify files, repair, retry, synchronize, merge or widen scope. It adds no
+approval request, workflow gate, integration refusal or scope registration. The Host's delegation payload remains
+authoritative, and the Host decides acceptance under the existing procedure.

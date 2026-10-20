@@ -2,7 +2,7 @@
 id: SPEC-worker-range-validation
 title: One-command worker result inspection for orchestrated units
 summary: "Collects existing worker-result checks and reviewer diff information using committed records, with explicit input overrides and no new approval gate."
-status: planned
+status: in-progress
 created: 2026-10-20
 related_capabilities:
   - CAP-DLV-delivery-workflows
