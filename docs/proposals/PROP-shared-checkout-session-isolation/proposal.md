@@ -2,7 +2,7 @@
 id: PROP-shared-checkout-session-isolation
 title: Non-blocking guidance for session branches in a shared checkout
 summary: "Adds concise guidance for --no-worktree branches in shared checkouts, leaving coordination to the direct user or local orchestration main agent without requiring worktrees or adding execution barriers."
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-19
 target_area: delivery/
 priority: medium                      # critical | high | medium | low
