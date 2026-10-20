@@ -2,7 +2,7 @@
 id: SPEC-scope-registry-sandbox-access
 title: Side-effect-free work scope registry queries
 summary: "Keep shared Git-directory storage while making record and history queries side-effect-free, with shared reader locking and explicit mutation permissions."
-status: in-progress
+status: completed
 created: 2026-10-20
 related_capabilities:
   - CAP-COLL-work-scope-registry
