@@ -44,6 +44,11 @@ The command ends with `[NEXT_CMD: cd <path>]`: the task continues in the worktre
 
 `start <branch> --no-worktree` starts the activity branch in the current checkout instead, for a task that needs a branch but no separate directory: it creates the branch at the current HEAD and switches to it with `git switch -c`, which carries uncommitted changes over (work begun on the base continues on the branch). The name rule and the refusals of step 3 apply unchanged. It runs in the base checkout (`WORKTREE_NESTED` in a linked worktree, which `finish` would remove) on a branch (`WORKTREE_BASE_DETACHED` on a detached HEAD: nothing would say where the task integrates). The branch gets the marker, with the checkout's path, and `devkitBase`, the branch the checkout was on. No setup or sync runs: the checkout already has its environment. It prints `[BRANCH_STARTED: <branch> checkout=<path> from=<branch>]`.
 
+Switching branches changes the branch seen by every session using that directory, so another session can commit
+to the checked-out task branch. The direct user coordinates shared sessions; a separate worktree remains an option
+for a direct session task. The local orchestration Host coordinates workers, which still run in their own
+worktrees under `CAP-DLV-project-policy`. Shared-checkout use provides no isolation between concurrent sessions.
+
 The branch is integrated by `finish` like a worktree's ([section 3](#3-finish)) once the base checkout is back on the branch it started from: `finish --merge` refuses from any other branch (`WORKTREE_CONFLICT`, whose `[FIX]` switches to the recorded `devkitBase`), since it would integrate the task into that branch instead. The finish result's `path` is the checkout the branch was started in, where a `devkit.post_finish` extension finds what it registered for the task.
 
 ## 2b. start --existing-branch

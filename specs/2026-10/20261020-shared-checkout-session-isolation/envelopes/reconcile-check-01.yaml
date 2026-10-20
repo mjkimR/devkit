@@ -1,0 +1,15 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T03:10:54.921890Z'
+status: completed
+summary: 'Low-effort self-verification: project policy section 3 item 6 and worktree section 2a agree with both reference additions. Direct users coordinate shared sessions; Host coordinates worktree workers. Existing policy and runtime preserved. Entrypoint candidates rejected as wording-only.'
+findings: []
+assumptions:
+- Reconcile record is inspected uncommitted; cumulative governance check follows its commit.
+checks:
+  reconcile: PASS both modified capability targets and four-document diff inspected
+diff_scope:
+  base: c71e4f3c64d51b890a8fdf8d40a7e1dd7f9753be
+  head: a13620da1a436704052c2c8154578dd860e3beb1
