@@ -35,7 +35,9 @@ take `--format json`. Every other command prints exactly one JSON object on stdo
 wraps its entries as `{"overrides": [...]}`), or `{"error": {...}}` when the command fails. A JSON result carries
 its errors, warnings and notices, so nothing is rendered on stderr in JSON mode; in text mode they are Agent
 Advisory Protocol blocks on stderr. Exit code `0` is success; `1` is returned by `devkit sync --check` when a synchronization is needed,
-by `devkit sync --locked` when it would change committed files, and by `devkit status` when its report shows a problem; `2` is any error, including an invalid argument such as a
+by `devkit sync --locked` when it would change committed files, by `devkit status` when its report shows a problem,
+and for `CONFIG_LOCAL_CHANGED` or `CONFIG_LOCAL_RENDER_STALE`. Other failures use their advisory exit status,
+usually `2`, including an invalid argument such as a
 malformed `bundle[:preset]` or `--agent` combined with `--no-agents` (see
 `ARCH-08-cross-cutting`).
 
@@ -78,24 +80,28 @@ existing shared host files are never edited by locked sync. See `CAP-HOST-lifecy
 - `--no-agents`: records `agents = []`, which unlinks unchanged native projections and keeps managed copies.
 - `--preset <bundle>[:<name>]`: selects `<bundle>` with `<name>` (else its default preset), replacing that bundle's
   entry. Repeat a bundle to select a union; `<bundle>:all` selects every asset.
-- `--no-save`: applies the selection flags to this run only, without editing `.devkit/config.toml`.
+- `--no-save`: applies selection/environment flags to this run only, without saving shared selection or local environment.
+- `--cloud` / `--local`: mutually exclusive checkout environment selection; ordinary sync preserves the saved value.
 - `--dry-run`: computes the inventory and returns the planned `actions` without writing files or configuration,
   under the shared (reader) project lock.
 - `--format text|json` (also on `add` and `remove`): the `[SYNC]`/`[CHANGE]` lines (default) or the whole
   `SyncResult` object ([Sync output and notices](#sync-output-and-notices)).
 - `--check`: read-only, for CI, under the shared (reader) project lock. Exits `1` when the workspace needs a synchronization (a missing or stale guidance
-  block, a seeded file not written yet and a missing `.devkit/.gitignore` included) and `2` on any error (for example a hand-edited managed file,
-  `SYNC_CONFLICT`). Existing seeded files are never compared. An orphan alone does not fail `--check`: it is no
+  block, a seeded file not written yet and a missing `.devkit/.gitignore` included). Concurrent configuration
+  changes also exit `1` (`CONFIG_LOCAL_CHANGED`); other failures use their advisory exit status, such as `2` for
+  a hand-edited managed file (`SYNC_CONFLICT`). Existing seeded files are never compared. An orphan alone does not fail `--check`: it is no
   longer managed, so it appears as an `ORPHAN_LEFT` warning on that run and as a `stray` file afterwards if it sits
   under the managed root.
 - `--locked`: for a fresh clone, a new worktree and CI. Restores only the Git-ignored managed copies (and native
-  projections a repository ignores) to the committed receipt, exactly as recorded: it creates missing ones, updates
+  projections a repository ignores) to canonical or validated personal output: it creates missing ones, updates
   and removes ones this clone's last sync left unchanged after a pull moved the receipt, and never writes the
   receipt, the root `AGENTS.md` block, seeded files (a deleted one stays missing) or `.devkit/.gitignore`. When the sync
   would change any of them (the installed bundles no longer match the receipt, or there is no receipt), it writes
-  nothing and fails with `RECEIPT_STALE` (`INTERACTION`, exit `1`: a negative result, as for `--check`); every other
-  error exits `2` as in a plain sync (a missing package is `SELECTION_INVALID`). It runs post-sync extensions only when it committed, and
-  takes no other selection or mode flag (`CAP-DIST-sync-and-transactions`).
+  nothing and fails with `RECEIPT_STALE` (`INTERACTION`, exit `1`: a negative result, as for `--check`); each other
+  error follows its code-specific exit status as in a plain sync: concurrent configuration changes are
+  `CONFIG_LOCAL_CHANGED` (exit `1`), and a missing package is `SELECTION_INVALID` (exit `2`). It runs post-sync extensions only when it committed, and
+  permits `--cloud` or `--local` to save the environment in the ignored local file, but no selection flag,
+  `--dry-run`, `--check` or `--no-save` (`CAP-DIST-sync-and-transactions`).
 
 ---
 
@@ -309,3 +315,22 @@ Declare typed `[variables.<identifier>]` inputs in `bundle.toml` and set project
 `[bundles.<bundle>.variables]` in `.devkit/config.toml`, then `devkit sync`. Templates use `{{ vars.language }}`.
 The engine loads only during rendering. See `CAP-DIST-manifest-spec` for syntax and restrictions and
 `CAP-DIST-sync-and-transactions` for input resolution, overrides and receipt behavior.
+
+
+## Checkout-local preferences
+
+Edit ignored `.devkit/config.local.toml` for `[execution].environment`, `[mcp].register`, `[playbooks]` search
+preferences and `[bundles.<bundle>.variables]` scalar inputs. `devkit config show --effective --format json` shows
+values and source paths. Governance and bundle selection remain shared. `devkit sync --cloud` selects cloud;
+`devkit sync --local` explicitly returns to local. Neither grants approval authority.
+
+Personal rendering may change only ignored untracked human-readable asset kinds, preserving canonical receipt,
+guidance and seeds. Details and persistence behavior: `CAP-DIST-sync-and-transactions`.
+
+| Code | Exit | Action |
+| --- | --- | --- |
+| `CONFIG_LOCAL_KEY_FORBIDDEN` | 2 | Remove the local governance/selection/unknown key. |
+| `CONFIG_LOCAL_NOT_IGNORED` | 2 | Untrack the named personal path and correct its effective ignore rule. |
+| `CONFIG_LOCAL_RENDER_FORBIDDEN` | 2 | Remove the local variable or separate its shared template use. |
+| `CONFIG_LOCAL_RENDER_STALE` | 1 | Run sync to refresh local evidence and output. |
+| `CONFIG_LOCAL_CHANGED` | 1 | Finish concurrent configuration edits and rerun sync. |

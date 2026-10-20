@@ -399,3 +399,9 @@ class PostFinishExtensionFailedNotice(WorktreeError):
 
     code = "POST_FINISH_EXTENSION_FAILED"
     level = Level.WARNING
+
+
+class LocalCopyError(WorktreeError):
+    """The checkout exists, but its initial preference copy failed before setup."""
+
+    code = "WORKTREE_LOCAL_CONFIG_COPY_FAILED"

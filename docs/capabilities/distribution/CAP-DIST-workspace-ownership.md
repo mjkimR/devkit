@@ -1,9 +1,11 @@
 ---
 id: CAP-DIST-workspace-ownership
 title: "Workspace Ownership & Overrides"
-summary: "Workspace layout, managed assets, guidance block maintenance, and project override drift review."
+summary: "Shared and checkout-local workspace ownership, managed assets, guidance maintenance, and project override drift review."
 area: distribution
 status: active
+entrypoints:
+  - packages/devkit-dist/src/devkit/distribution/installation/workspace.py
 created_at: 2026-10-17
 ---
 
@@ -13,8 +15,9 @@ created_at: 2026-10-17
 
 ```text
 .devkit/
-  .gitignore              # Ignores managed/ and transient/; seeded by sync when absent, then project-owned (Git-tracked)
+  .gitignore              # Seeded ignore rules plus managed /config.local.toml entry; preserves other rules (Git-tracked)
   config.toml             # Project configuration: selection, agents, module tables (Git-tracked)
+  config.local.toml       # Optional checkout preferences; ignored and never receipt-owned
   generated.toml          # Optional generated-file registry of `devkit generated` (Git-tracked)
   installation.json       # Receipt: packages, selection, file hashes & modes (Git-tracked)
   managed/<bundle>/       # Upstream copies and rendered Markdown template outputs (generated)
@@ -25,7 +28,8 @@ created_at: 2026-10-17
     lock                  # Project lock (fcntl.flock): exclusive for writers, shared for readers (a reader on a read-only file system reads without it)
     sync-journal.json     # Write-ahead journal of an unfinished transaction
     seen-bundles.json     # Installed bundles this clone was told about (BUNDLE_UNSELECTED is announced once)
-    deployed.json         # Signatures of the files this clone's last sync left (tells stale files from edits)
+    deployed.json         # Last deployed signatures and personal destination provenance
+    local-render.json     # Personal signatures bound to canonical receipt and effective variables
 <agent native paths>      # Projected native assets (.agents/, .codex/, .claude/)
 AGENTS.md                 # Project-owned; only the DEVKIT:START/END block inside it is managed (Git-tracked)
 <seeded targets>          # Files a seeded document asset wrote once; project-owned (Git-tracked)
@@ -116,9 +120,7 @@ See `CAP-HOST-lifecycle-observation`.
 8. **Git policy**: commit `.devkit/config.toml`, `.devkit/generated.toml`, `.devkit/overrides/`,
    `.devkit/installation.json`, `.devkit/.gitignore`, the root `AGENTS.md` and seeded files.
    - `.devkit/managed/` and `.devkit/transient/` are ignored by `.devkit/.gitignore`. A writing sync seeds it when
-     it is absent (a `seed` action, so `sync --check` exits `1` until then) and never compares or updates it
-     afterwards: a project may edit it, and one deleted is seeded again (empty it instead to stop ignoring). A bundle
-     that seeds the same path takes precedence. The receipt never records it.
+     it is absent (a `seed` action, so `sync --check` exits `1` until then) and preserves project comments/rules afterwards. Every writing sync manages exactly `/config.local.toml`, appending it when absent; other existing entries are not rewritten. A deleted file is seeded again. The receipt never records it.
    - Native copies (`.agents/`, `.codex/`, `.claude/`) live beside project-owned files, so ignoring them is left to
      the repository's own `.gitignore`; devkit never modifies the repository's `.gitignore` or the Git index.
 
@@ -130,7 +132,7 @@ and upstream line shifts cannot make them fail to apply.
 
 Template overrides keep raw `.md.jinja` sources and baselines at the original bundle-relative paths. The sync
 renders the effective source into managed `.md` output; guidance and `get-context` cite that rendered file, whose
-final bytes must match the receipt. Changes to a raw template require a sync before consumers read their effect.
+final bytes must match the canonical receipt or validated local render ledger. Changes to a raw template require a sync before consumers read their effect.
 Raw-source override digests and upstream drift checks remain independent of template inputs and final output hashes.
 
 ### Creating an Override
@@ -195,3 +197,13 @@ bundle and path but loses content keeps applying, with drift reported, until the
   baseline files, prunes empty directories and synchronizes the upstream sources (rendered for templates), under one lock with the same
   rollback as `create`; the receipt entry disappears with that sync. Any other project file under the asset's override
   paths stays and is reported as an `ORPHAN_LEFT` warning.
+
+
+## Checkout-local ownership
+
+`.devkit/config.local.toml` and `.devkit/transient/local-render.json` belong only to this checkout. Sync refuses
+tracked local configuration or personal outputs and effective ignore negations with `CONFIG_LOCAL_NOT_IGNORED`
+(exit 2), naming the source path and required ignore/index action. It never changes the Git index. Dry-run/check
+report the ignore edit; locked sync refuses a required `.devkit/.gitignore` change. Projects tracking native
+projections must explicitly untrack and ignore the affected outputs before personalization. The receipt, root
+guidance, seeds and shared config stay canonical; see `CAP-DIST-sync-and-transactions`.

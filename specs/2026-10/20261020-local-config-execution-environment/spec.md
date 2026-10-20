@@ -1,37 +1,22 @@
 ---
-id: PROP-local-config-execution-environment
+id: SPEC-local-config-execution-environment
 title: Local configuration and execution environments
-summary: "Add ignored checkout-local configuration overlays and an explicit cloud execution environment, with creation-time worktree copying and shared receipt preservation."
-status: accepted
-created_at: 2026-10-20
-target_area: distribution/
-priority: high
-size: M
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/devkit-dist/src/devkit/core/
-    - packages/devkit-dist/src/devkit/distribution/
-    - packages/devkit-dist/tests/
-    - packages/devkit/src/devkit/worktree/
-    - packages/devkit/tests/worktree/
-    - packages/devkit/tests/rules/
-    - docs/capabilities/distribution/
-    - docs/capabilities/worktree/
-    - docs/development/reference/distribution.md
-    - docs/architecture/ARCH-05-4-distribution-components.md
-    - guides/
-  excludes:
-    - packages/devkit-advisory/
-    - packages/devkit-spec/src/devkit_spec/mcp.py
-task_kind: feature
-workflow: sdd-proposal
+summary: Add ignored checkout-local configuration overlays and an explicit cloud execution environment, with creation-time worktree copying and shared receipt preservation.
+status: completed
+created: 2026-10-20
+related_capabilities: [CAP-DIST-sync-and-transactions, CAP-DIST-workspace-ownership, CAP-WT-task-worktrees]
+related_stories: []
+workflow: sdd-spec-feature
 ---
 
-# [PROP-local-config-execution-environment] Local configuration and execution environments
+# [SPEC-local-config-execution-environment] Local configuration and execution environments
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-local-config-execution-environment on 2026-10-20.
+- **Preserved Materials**: `docs/materials/2026-10/20261020-local-config-execution-environment`
+
+### 1. Background & Hypothesis
 
 Shared configuration cannot express personal preferences and execution-environment constraints without changing
 tracked repository files. A response-style language preference is one concrete consumer; a cloud run that cannot
@@ -42,11 +27,56 @@ replacing unrelated ignore entries.
 This supplies the configuration contract consumed by `PROP-standalone-devkit-mcp`. Execution environment describes
 runtime constraints; it does not grant approval or turn an ask policy into automatic execution.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer, I want checkout-local preferences and explicit execution constraints while shared policy and receipts remain reproducible.
+- **US-2**: As a worktree caller, I want an independent initial local configuration before setup and synchronization.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: MCP extraction, registration and approval enforcement; shared worker storage; host trust or sandbox changes; governance overrides; secrets; local bundle selection; personalized tracked artifacts; generalized settings plugins.
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] Restricted effective configuration
+- **Given** shared configuration and an optional local file.
+- **When** a runtime consumer reads configuration.
+- **Then** validate every present local file, recursively merge eligible preferences, preserve shared policy reads, and reject invalid types/files with CONFIG_INVALID or forbidden keys with CONFIG_LOCAL_KEY_FORBIDDEN (exit 2).
+
+### [AC-02] Personal rendering preserves canonical state
+- **Given** an ignored personal language preference and ignored untracked projections.
+- **When** ordinary or locked sync renders eligible skill content.
+- **Then** write personal bytes and a bound local ledger while shared config, receipt and guidance stay byte-identical; refuse tracked output or changes to executable assets/guidance before writes.
+
+### [AC-03] Transactional environment selection
+- **Given** a local/shared environment and customized ignore rules.
+- **When** sync selects cloud/local, runs ordinarily, checks, dry-runs, uses no-save/locked, or fails.
+- **Then** follow the persistence matrix below, preserve unrelated ignore lines and local bytes in shared writers, and reject tracked or effectively unignored local files.
+
+### [AC-04] Creation-time independent worktree snapshot
+- **Given** a retained-base caller and optional valid local configuration.
+- **When** a new worktree is created or an existing one resumed.
+- **Then** copy exact source bytes/mode before setup and sync only on creation; preserve existing/absent destinations on resume, reject invalid sources before creation and report partial copy failures without setup/sync.
+
+### [AC-05] Verified runtime reads and canonical snapshots
+- **Given** personal rendering exists, becomes stale, is edited or removed.
+- **When** context/status, sync, snapshot checks and dist-only consumers run.
+- **Then** reject stale evidence with CONFIG_LOCAL_RENDER_STALE (exit 1), retain hand-edit conflict checks, restore canonical bytes when preferences disappear and preserve canonical engine/snapshot checks.
+
+### [AC-06] Snapshot consistency and source inspection
+- **Given** an explicitly bound project root and shared/local configuration.
+- **When** configuration inspection or a sync with concurrently changed inputs runs.
+- **Then** show effective values and per-key source paths; resolve the bound workspace environment with no approval grant; reject missing roots and abort changed inputs as CONFIG_LOCAL_CHANGED (exit 1) before writes.
+
+## 5. Detailed behavioral contract
+
+The accepted design below defines the acceptance matrix and implementation boundaries.
+
+### 2. Technical Spike Questions
 
 The Planning recommendation is specified below and in
-`PADR-separate-shared-configuration-from-local-execution-and-rendering`. Repository evidence and alternatives
-are in `materials/configuration-evidence.md`. Acceptance remains a user decision.
+`ADR-separate-shared-configuration-from-local-execution-and-rendering`. Repository evidence and alternatives
+are in `docs/materials/2026-10/20261020-local-config-execution-environment/configuration-evidence.md`. Planning acceptance is recorded in the carried decision.
 
 - **Q1: Effective configuration.** A core accessor validates a restricted overlay; governance remains shared.
 - **Q2: Worktree semantics.** Copy the source local file before setup and first sync; each worktree then owns
@@ -56,9 +86,9 @@ are in `materials/configuration-evidence.md`. Acceptance remains a user decision
 - **Q4: Environment controls.** `sync --cloud` and `sync --local` persist only after successful sync. Ordinary
   sync preserves the saved choice; planning modes are read-only. Environment is read from the explicitly bound execution workspace.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Configuration schema and readers
+#### Configuration schema and readers
 
 `devkit-dist` owns both schemas, following `ADR-dist-config-receipt-ownership` and
 `ADR-dist-foundation-ownership`. Add core APIs `read_effective_config(root)` and
@@ -90,7 +120,7 @@ config only; no general local setters or local template expansion are added. Use
 `sync --cloud|--local` are the only new local-writing commands. Runtime readers validate local config, including
 ordinary sync and `get-context`; governance readers keep using shared config.
 
-### Execution environment and worktrees
+#### Execution environment and worktrees
 
 `devkit worktree start` copies the source project's `.devkit/config.local.toml` to the corresponding project
 path in a newly created worktree after Git checkout and before setup or the first locked sync. Copy the complete
@@ -125,7 +155,7 @@ existing values. Explicit return to local is `devkit sync --local`. This is an e
 approval-policy change or a claim of sandbox enforcement. A missing/deleted local file resolves according to shared
 config/defaults; host capabilities still independently determine whether interaction is possible.
 
-### Transactions, ignore management and read-only modes
+#### Transactions, ignore management and read-only modes
 
 Sync holds the existing project lock and plans the selected environment in memory. On a writing sync, local
 config, local ledger, generated outputs and shared changes commit through the existing journal together. Any
@@ -146,7 +176,7 @@ file or a tracked local output, or an effective negation that leaves either unig
 or index action the user must take; never alter the Git index. Check/dry-run report the proposed ignore edit;
 locked sync refuses it as a tracked change. Tests cover an existing custom ignore file and a later negation.
 
-### Personal rendering without shared drift
+#### Personal rendering without shared drift
 
 Plan a canonical shared inventory from shared configuration only. `.devkit/installation.json`, guidance blocks,
 seeded files and their hashes continue to describe those bytes. Build a second in-memory inventory with effective
@@ -174,7 +204,7 @@ The response-style language template currently changes the skill only, so
 or special response-style setting is necessary. Projects tracking native projections must first ignore/untrack the
 affected projections themselves; this feature refuses to create personal tracked changes.
 
-### Acceptance evidence and delivery boundaries
+#### Acceptance evidence and delivery boundaries
 
 - **AC1:** An absent local file preserves current preferences and canonical bytes. Invalid local files
   and forbidden governance keys fail with the specified codes and paths, including settings unused by the immediate reader. Tests exercise recursive merge, whole-array replacement in the merge utility and field validation.
@@ -208,9 +238,10 @@ artifacts; a generalized runtime settings plugin mechanism. `PROP-standalone-dev
 using this configuration. Its independent extraction can proceed in parallel; environment-dependent behavior waits
 for this contract's implementation and shared integration tests.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Delivery boundary
 
-Remain reviewing until the user decides `plan-accept`. The recommendation becomes a Development input only after
-acceptance and explicit handoff. No environment or approval policy is changed during Planning. The local resolver
-and shared/local rendering boundary must be implemented before the dependent MCP environment behavior is declared
-complete. Planning's artifact checks are not implementation verification.
+The resolver and shared/local rendering boundary must be implemented before dependent MCP environment behavior is declared complete. MCP binding, registration and approval enforcement remain in `PROP-standalone-devkit-mcp`. Planning checks are not implementation verification.
+
+## Assumptions and source feedback
+
+Existing core/distribution/worktree interfaces are present at the handoff base. The canonical root policy still rejects nested Git projects; nested-path copying is exercised at the worktree helper boundary without changing project discovery. `FB-planning-context-command-can-trigger-unavailable-sync` is retained as follow-up feedback, not a direct-fix requirement.

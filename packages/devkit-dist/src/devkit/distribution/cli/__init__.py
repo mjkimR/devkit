@@ -296,6 +296,8 @@ def _sync_and_save(
     deselect: tuple[str, ...] = (),
     dry_run: bool = False,
     locked: bool = False,
+    environment: str | None = None,
+    save_environment: bool = True,
 ) -> SyncResult:
     """Synchronize; ``save`` builds a configuration edit that the sync renders and writes under the project lock.
 
@@ -317,13 +319,23 @@ def _sync_and_save(
                 root,
                 installed,
                 deselect=deselect,
+                environment=environment,
+                save_environment=save_environment,
                 save=lambda: prepare_config_update(root, **save(installed, selected())),
             )
         selection = selected()
         if save is not None:
             save(installed, selection)  # a preview refuses what the command would refuse
         return sync_project(
-            root, installed, agents=agents, presets=selection, deselect=deselect, dry_run=dry_run, locked=locked
+            root,
+            installed,
+            agents=agents,
+            presets=selection,
+            deselect=deselect,
+            dry_run=dry_run,
+            locked=locked,
+            environment=environment,
+            save_environment=save_environment,
         )
 
 
@@ -337,6 +349,8 @@ def _sync_and_save(
     multiple=True,
     help="Select bundle[:preset]; a bare bundle uses its default preset; repeat a bundle for a union.",
 )
+@click.option("--cloud", is_flag=True, help="Select cloud execution in this checkout.")
+@click.option("--local", is_flag=True, help="Select local execution in this checkout.")
 @click.option("--no-save", is_flag=True, help="Apply selection flags to this run without editing .devkit/config.toml.")
 @click.option("--dry-run", is_flag=True, help="Report planned actions without writing files or configuration.")
 @click.option("--check", is_flag=True, help="Read-only check; exit 1 when synchronization is needed, 2 on error.")
@@ -353,6 +367,8 @@ def sync(
     no_agents: bool,
     presets: tuple[str, ...],
     no_save: bool,
+    cloud: bool,
+    local: bool,
     dry_run: bool,
     check: bool,
     locked: bool,
@@ -364,6 +380,8 @@ def sync(
     Git-ignored copies the committed receipt records and never changes the
     receipt, the root AGENTS.md block or seeded files.
     """
+    if cloud and local:
+        raise ArgumentError("--cloud and --local cannot be combined", target_files=["--cloud", "--local"])
     if agents and no_agents:
         raise ArgumentError(
             "--agent and --no-agents cannot be combined",
@@ -399,6 +417,8 @@ def sync(
         presets=requested,
         dry_run=dry_run or check,
         locked=locked,
+        environment="cloud" if cloud else "local" if local else None,
+        save_environment=not no_save,
     )
     _report(result, output_format, check=check)
 
@@ -504,6 +524,29 @@ def status(workspace_root: str | None) -> None:
 @click.group()
 def config() -> None:
     """Maintain the project configuration, .devkit/config.toml."""
+
+
+@config.command(name="show")
+@WORKSPACE
+@click.option("--effective", is_flag=True, required=True, help="Show effective configuration and source paths.")
+@FORMAT_OPTION
+@boundary
+def config_show(workspace_root: str | None, effective: bool, output_format: str) -> None:
+    """Inspect effective checkout preferences without changing configuration."""
+    from devkit.core.local_config import read_effective_config
+    from devkit.distribution.installation.transaction import project_lock
+
+    root = resolve_root(workspace_root)
+    with project_lock(root, shared=True):
+        read_config(root)
+        result = read_effective_config(root)
+    echo_json(
+        {
+            "configuration": result.values,
+            "sources": result.sources,
+            "execution_environment": result.values["execution"]["environment"],
+        }
+    )
 
 
 @config.command(name="template")

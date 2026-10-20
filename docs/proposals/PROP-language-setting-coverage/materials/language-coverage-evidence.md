@@ -17,7 +17,7 @@ No live approval fixture was launched. All proposed behavior is pending Developm
 | `packages/devkit-catalog/src/devkit_catalog/response_style/bundle/bundle.toml:6-8` | String language defaults auto | Preserve explicit override; inherit shared preference only when absent. |
 | `packages/devkit-dist/src/devkit/distribution/bundles/templates.py:16-86` | Explicit type/default declarations, vars-only sandbox | Add one whitelisted default source; do not expose raw config/context. |
 
-`PROP-local-config-execution-environment` is accepted at this Planning base and defines shared/effective readers,
+The accepted proposal now carried by `SPEC-local-config-execution-environment` defines shared/effective readers,
 local allowlist, canonical receipts and eligible local rendering. `PROP-standalone-devkit-mcp` is accepted and
 selects separate owning config workspace and retained executor. Neither implementation is assumed present here.
 No active spec appeared in this worktree's spec listing (its recorded specs have completed status); concurrently

@@ -31,7 +31,7 @@ DEPLOYED = f"{TRANSIENT}/deployed.json"
 # Ignores the generated parts of ``.devkit/``; written by a sync when absent, then project-owned.
 DEVKIT_GITIGNORE = ".devkit/.gitignore"
 DEVKIT_GITIGNORE_TEXT = """\
-# Written by devkit sync when missing; edit freely, devkit never changes it.
+# Written by devkit sync when missing; only /config.local.toml is managed afterwards.
 # Generated content: `devkit sync` rebuilds it from the installed packages.
 /managed/
 /transient/
@@ -93,7 +93,7 @@ def project_path(root: Path, name: str) -> Path:
     folded = name.casefold()
     if (
         folded.split("/", 1)[0] == ".git"
-        or folded == CONFIG_PATH.casefold()
+        or (folded == CONFIG_PATH.casefold() and name != CONFIG_PATH)
         or folded.startswith(OVERRIDES_PATH.casefold() + "/")
     ):
         raise UnsafeWorkspaceError(f"unsafe deployment path: {name}", target_files=[name])

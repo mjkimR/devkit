@@ -1,15 +1,15 @@
 ---
-id: PADR-separate-shared-configuration-from-local-execution-and-rendering
+id: ADR-separate-shared-configuration-from-local-execution-and-rendering
 title: Separate shared configuration from local execution and rendering
 summary: Use validated local preferences, explicit workspace execution constraints and a separate ignored render overlay while preserving shared approval policy and committed receipt verification.
-proposal: PROP-local-config-execution-environment
-status: draft
+proposal: SPEC-local-config-execution-environment
+status: accepted
 created_at: 2026-10-20
 ---
 
-# [PADR-separate-shared-configuration-from-local-execution-and-rendering] Separate shared configuration from local execution and rendering
+# [ADR-separate-shared-configuration-from-local-execution-and-rendering] Separate shared configuration from local execution and rendering
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-20
 
 ---
@@ -18,7 +18,7 @@ created_at: 2026-10-20
 
 Current template variables change committed receipt hashes and can change tracked guidance. Ignored files do not
 travel with worktrees. A local environment label must constrain execution without granting approval authority.
-The evidence is in the proposal's `materials/configuration-evidence.md`; this decision is proposed, not accepted.
+The evidence is in the proposal's `docs/materials/2026-10/20261020-local-config-execution-environment/configuration-evidence.md`; this decision is proposed, not accepted.
 
 ## 2. Decision Drivers
 

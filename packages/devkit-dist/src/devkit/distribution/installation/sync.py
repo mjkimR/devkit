@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import tomllib
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from importlib import metadata
@@ -11,8 +12,11 @@ from types import MappingProxyType
 
 from devkit.advisory import AdvisoryError, ExitCode, Level
 from devkit.core.errors import ArgumentError
-from devkit.core.project import require_devkit_root
+from devkit.core.git import run_git
+from devkit.core.local_config import LOCAL_CONFIG_PATH
+from devkit.core.project import git_toplevel, require_devkit_root
 from devkit.core.receipt import (
+    CONFIG_PATH,
     MANAGED_PATH,
     OVERRIDES_PATH,
     RECEIPT_PATH,
@@ -36,13 +40,14 @@ from devkit.distribution.errors import (
     UnprojectedNotice,
     UnsafeWorkspaceError,
 )
-from devkit.distribution.installation import guidance_block
+from devkit.distribution.installation import guidance_block, local_render
 from devkit.distribution.installation.config import (
     ConfigUpdate,
     ProjectConfig,
     default_selection,
     effective_selection,
     missing_selection_error,
+    parse_config,
     read_config,
 )
 from devkit.distribution.installation.discovery import InstalledBundle, unusable_notices
@@ -323,6 +328,8 @@ def _plan_inventory(
     installed: list[InstalledBundle],
     selection: Selection,
     previous_overrides: dict[str, dict[str, OverrideRecord]],
+    *,
+    effective: bool = False,
 ) -> Inventory:
     """What the selection deploys: the inventory of the selected bundles' assets."""
     return desired_inventory(
@@ -331,7 +338,7 @@ def _plan_inventory(
         list(selection.agents),
         root=root,
         previous_overrides=previous_overrides,
-        variables=read_config(root).variables,
+        variables=read_config(root, effective=effective).variables,
     )
 
 
@@ -443,10 +450,16 @@ def _plan_seeds(
 
 
 def _plan_devkit_gitignore(root: Path, changes: Changes, actions: list[Action]) -> None:
-    """Seed ``.devkit/.gitignore`` (managed copies, transient state) when it is absent; never touch an existing one."""
-    if snapshot(root, DEVKIT_GITIGNORE) is None:
-        changes[DEVKIT_GITIGNORE] = Content(DEVKIT_GITIGNORE_TEXT.encode("utf-8"), 0o644)
-        actions.append(Action(DEVKIT_GITIGNORE, "seed"))
+    """Preserve project rules and manage only the local-configuration entry."""
+    before = snapshot(root, DEVKIT_GITIGNORE)
+    text = before.data.decode("utf-8") if before else DEVKIT_GITIGNORE_TEXT
+    added = "/config.local.toml" not in text.splitlines()
+    if added:
+        text += ("" if text.endswith("\n") else "\n") + "/config.local.toml\n"
+    if before is None or added:
+        changes[DEVKIT_GITIGNORE] = Content(text.encode(), before.mode if before else 0o644)
+        actions.append(Action(DEVKIT_GITIGNORE, "update" if before else "seed"))
+    local_render.require_ignored(root, LOCAL_CONFIG_PATH, planned_ignore=added)
 
 
 def _carried_overrides(
@@ -793,11 +806,29 @@ def read_deployed(root: Path) -> dict[str, FileRecord]:
     return deployed
 
 
-def _record_deployed(root: Path, files: Mapping[str, FileRecord], recorded: dict[str, FileRecord]) -> None:
-    """Remember the signatures the sync left: after a commit every file the receipt records matches it."""
-    if dict(files) != recorded:
-        data = {"files": {name: {"sha256": r.sha256, "mode": r.mode} for name, r in sorted(files.items())}}
-        atomic_write(root, DEPLOYED, json_content(data))
+def _deployed_personal(root: Path, deployed: Mapping[str, FileRecord], canonical: Mapping[str, FileRecord]) -> set[str]:
+    """Personal provenance survives loss of the render ledger; unknown provenance fails closed."""
+    try:
+        data = json.loads(checked_path(root, DEPLOYED).read_bytes())
+        personal = data.get("personal") if isinstance(data, dict) else None
+    except (OSError, ValueError):
+        personal = None
+    if isinstance(personal, list) and all(isinstance(name, str) for name in personal):
+        return set(personal) & deployed.keys()
+    return {name for name in canonical if name in deployed and deployed[name] != canonical[name]}
+
+
+def _record_deployed(
+    root: Path, files: Mapping[str, FileRecord], recorded: dict[str, FileRecord], personal: set[str]
+) -> None:
+    """Remember actual signatures and personal provenance, including an explicit empty set."""
+    data = {
+        "files": {name: {"sha256": r.sha256, "mode": r.mode} for name, r in sorted(files.items())},
+        "personal": sorted(personal),
+    }
+    content = json_content(data)
+    if dict(files) != recorded or snapshot(root, DEPLOYED) != content:
+        atomic_write(root, DEPLOYED, content)
 
 
 def sync_project(
@@ -810,6 +841,8 @@ def sync_project(
     dry_run: bool = False,
     locked: bool = False,
     save: Callable[[], ConfigUpdate] | None = None,
+    environment: str | None = None,
+    save_environment: bool = True,
 ) -> SyncResult:
     """Deploy the bundles selected in ``config.toml`` and the built-in bundles it does not opt out of.
 
@@ -817,27 +850,33 @@ def sync_project(
     one-run selections over the configuration. ``save`` persists a selection
     instead: it renders the configuration edit under the project lock, from the
     configuration as it is then, so concurrent selection commands never lose
-    an edit; the edit is written before the sync reads the configuration and
-    put back when the sync fails, and post-sync extensions see it. ``save`` is never
+    an edit; the rendered edit is planned in memory and journaled with outputs,
+    and post-sync extensions see the committed configuration. ``save`` is never
     called on ``dry_run``. ``locked`` keeps the committed state: the sync only
     restores the Git-ignored files to what the receipt records, or raises ``ReceiptStaleError``
     (``RECEIPT_STALE``) without writing anything. Post-sync extensions run after
     the project lock is released, except on a dry run.
     """
+    if environment is not None and environment not in ("local", "cloud"):
+        raise ArgumentError("environment must be local or cloud")
     root = require_project_dir(root)
     # A dry run (``--dry-run``, ``--check``) writes nothing, so it reads under the shared lock like any reader.
     with project_lock(root, shared=dry_run):
+        captured = local_render.inputs(root)
         update = save() if save is not None and not dry_run else None
-        if update is not None:
-            update.apply()
-        try:
-            finish = commit_locked(
-                root, installed, agents=agents, presets=presets, deselect=deselect, dry_run=dry_run, locked=locked
-            )
-        except BaseException:
-            if update is not None:
-                update.revert()
-            raise
+        finish = commit_locked(
+            root,
+            installed,
+            agents=agents,
+            presets=presets,
+            deselect=deselect,
+            dry_run=dry_run,
+            locked=locked,
+            environment=environment,
+            save_environment=save_environment,
+            config_update=update,
+            captured_inputs=captured,
+        )
         result = finish()
     if update is not None:
         result.notices.extend(update.notices)
@@ -856,6 +895,10 @@ def commit_locked(
     dry_run: bool = False,
     locked: bool = False,
     rebaseline: tuple[str, str] | None = None,
+    environment: str | None = None,
+    save_environment: bool = True,
+    config_update: ConfigUpdate | None = None,
+    captured_inputs: dict[str, bytes | None] | None = None,
 ) -> Callable[[], SyncResult]:
     """Plan a sync and, unless ``dry_run``, commit it; the caller holds the project lock. Runs no post-sync extension.
 
@@ -871,7 +914,11 @@ def commit_locked(
     A ``dry_run`` writes nothing, so the caller may hold the shared lock.
     """
     require_no_journal(root)
-    config = read_config(root)
+    captured = captured_inputs if captured_inputs is not None else local_render.inputs(root)
+    local_render.unchanged(root, captured)
+    config = read_config(root, effective=False)
+    if config_update is not None and config_update.text is not None:
+        config = parse_config(tomllib.loads(config_update.text))
     previous = read_receipt(root)
     selection = _resolve_selection(installed, config, previous, agents, presets, deselect)
     auto_selected = _new_auto_selected(installed, config, previous, selection, presets or {})
@@ -879,6 +926,8 @@ def commit_locked(
     if rebaseline is not None:
         previous_overrides.get(rebaseline[0], {}).pop(rebaseline[1], None)
     inventory = _plan_inventory(root, installed, selection, previous_overrides)
+    effective = _plan_inventory(root, installed, selection, previous_overrides, effective=True)
+    personal = local_render.personal_files(root, inventory, effective)
     if config.override_drift == "block":
         _refuse_override_drift(inventory.drift)
     old_files = dict(previous.file_records) if previous else {}
@@ -888,10 +937,16 @@ def commit_locked(
     notices = unusable_notices(installed, selection.presets)
     deployed = read_deployed(root)
     plan_host_hooks(root, previous.host_hooks if previous else (), inventory.host_hooks, changes, actions)
-    notices.extend(_plan_managed_files(root, old_files, deployed, inventory.files, changes, actions, conflicts))
+    notices.extend(_plan_managed_files(root, old_files, deployed, effective.files, changes, actions, conflicts))
     recorded_seeds = frozenset(entry.path for entry in previous.seeded) if previous else frozenset()
     seeded = _plan_seeds(root, inventory.seeds, recorded_seeds, changes, actions, locked=locked)
     _plan_devkit_gitignore(root, changes, actions)
+    fresh_ignore = not (root / DEVKIT_GITIGNORE).exists()
+    prior_personal = (
+        local_render.recorded_paths(root) | _deployed_personal(root, deployed, old_files)
+    ) & old_files.keys()
+    for name in set(personal) | (prior_personal & changes.keys()):
+        local_render.require_ignored(root, name, planned_ignore=fresh_ignore and name.startswith(".devkit/managed/"))
     block_hash, block_notices = _plan_guidance_block(
         root,
         changes,
@@ -908,11 +963,40 @@ def commit_locked(
     overrides = _carried_overrides(root, installed, previous, inventory.overrides)
     receipt = _build_receipt(selection, inventory, overrides, seeded, block_hash)
     notices.extend(engine_notices(receipt.asset_records))
+    if config_update is not None and config_update.text is not None:
+        changes[CONFIG_PATH] = Content(
+            config_update.text.encode(), config_update.before.mode if config_update.before else 0o644
+        )
+    if save_environment:
+        local_render.plan_environment(root, environment, changes, actions)
+    if not locked:
+        # A personal-only update never rewrites the canonical receipt for the running tool version.
+        personalized = set(personal) | prior_personal
+        canonical_changes = {
+            name: value for name, value in changes.items() if name != LOCAL_CONFIG_PATH and name not in personalized
+        }
+        receipt_changes: Changes = dict(canonical_changes)
+        notices.extend(_plan_receipt(previous, receipt, receipt_changes, actions))
+        if RECEIPT_PATH in receipt_changes:
+            changes[RECEIPT_PATH] = receipt_changes[RECEIPT_PATH]
+    pending_receipt = changes.get(RECEIPT_PATH)
+    receipt_bytes = (
+        pending_receipt.data
+        if pending_receipt
+        else ((root / RECEIPT_PATH).read_bytes() if previous is not None else receipt_content(receipt).data)
+    )
+    local_render.plan_ledger(root, personal, receipt_bytes, changes, actions)
+    if local_render.LOCAL_RENDER in changes or (root / local_render.LOCAL_RENDER).exists():
+        local_render.require_ignored(root, local_render.LOCAL_RENDER, planned_ignore=fresh_ignore)
     if locked:
-        if not _restores_only(previous, receipt, actions, deployed):
+        locked_actions = [a for a in actions if a.path not in (LOCAL_CONFIG_PATH, local_render.LOCAL_RENDER)]
+        tracked_changes = (
+            bool(changes) and git_toplevel(root) is not None and bool(run_git(root, "ls-files", "--", *changes).strip())
+        )
+        if tracked_changes or not _restores_only(previous, receipt, locked_actions, deployed):
             raise _receipt_stale(previous, receipt, actions, deployed)
-    else:
-        notices.extend(_plan_receipt(previous, receipt, changes, actions))
+    require_writable(root, changes)
+    local_render.unchanged(root, captured)
     seen = _read_seen_bundles(root)
     if not dry_run:
         apply_changes(root, changes)
@@ -920,8 +1004,13 @@ def commit_locked(
     def finish() -> SyncResult:
         if not dry_run:
             _record_seen_bundles(root, installed, seen)
-            _record_deployed(root, receipt.file_records, deployed)
-        return _sync_result(
+            _record_deployed(
+                root,
+                {name: FileRecord(*signature(content)) for name, content in effective.files.items()},
+                deployed,
+                set(personal),
+            )
+        result = _sync_result(
             root,
             installed,
             selection,
@@ -934,6 +1023,10 @@ def commit_locked(
             auto_selected=auto_selected,
             dry_run=dry_run,
         )
+        from devkit.core.local_config import read_effective_config
+
+        result.execution_environment = environment or read_effective_config(root).values["execution"]["environment"]
+        return result
 
     return finish
 

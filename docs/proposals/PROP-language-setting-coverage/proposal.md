@@ -33,9 +33,9 @@ messages in English, and MCP transports that supplied text to the host. Share a 
 between these concrete consumers. Localize devkit-owned copy, while keeping host controls and embedded repository
 or provider content outside that promise.
 
-`PADR-shared-language-preference-with-bounded-approval-content` records the recommendation. The evidence and
+`PADR-shared-language-preference-with-bounded-approval-content` records the accepted design. The evidence and
 alternatives are in `materials/language-coverage-evidence.md`; `target-docs.md` names reconciliation targets.
-These are Planning recommendations awaiting `plan-accept`, not implemented behavior or UI certification.
+Design acceptance does not establish implementation or localized native UI support.
 
 ## 2. Selected Design
 
@@ -54,7 +54,7 @@ not import domains, transport or catalog bundles. A shared-only resolution path 
 Expose the same provenance and fallback through `devkit config show --effective`; this is diagnostic metadata,
 not translated agent output. The preference grants no execution authority.
 
-`PROP-local-config-execution-environment` owns overlay validation, precedence, worktree copies and render ledgers.
+`SPEC-local-config-execution-environment` owns overlay validation, precedence, worktree copies and render ledgers.
 This follow-up extends its local allowlist by exactly `presentation.language`. Shared config then local config
 selects each preference key. Copy and independent-worktree semantics remain its contract. Development starts after
 that implementation and `PROP-standalone-devkit-mcp` are integrated and their concrete APIs rechecked; Planning

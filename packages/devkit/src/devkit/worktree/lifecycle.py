@@ -32,6 +32,7 @@ from typing import Any
 from devkit.advisory import AdvisoryError
 from devkit.core.errors import ArgumentError, GitError
 from devkit.core.git import run_git
+from devkit.core.local_config import LOCAL_CONFIG_PATH, read_local_config
 from devkit.core.logs import get_logger
 from devkit.core.project import require_git_toplevel
 from devkit.core.receipt import RECEIPT_PATH
@@ -349,6 +350,45 @@ def _clean(checkout: Path) -> bool:
     return not _git(checkout, "status", "--porcelain", "--untracked-files=normal")
 
 
+def _local_snapshot(base: Path, project: Path | None) -> tuple[Path, bytes, int] | None:
+    source_root = base / (project or Path("."))
+    read_local_config(source_root)
+    source = source_root / LOCAL_CONFIG_PATH
+    if not source.exists():
+        return None
+    return source, source.read_bytes(), source.stat().st_mode & 0o7777
+
+
+def _copy_local_snapshot(path: Path, project: Path | None, captured: tuple[Path, bytes, int] | None) -> None:
+    if captured is None:
+        return
+    from devkit.worktree.errors import LocalCopyError
+
+    source, content, mode = captured
+    destination = path / (project or Path(".")) / LOCAL_CONFIG_PATH
+    try:
+        relative = destination.relative_to(path)
+        if ".." in relative.parts or (project is not None and project.is_absolute()):
+            raise OSError("destination escapes the created checkout")
+        ancestor = path
+        for part in relative.parts[:-1]:
+            ancestor /= part
+            if ancestor.is_symlink():
+                raise OSError(f"destination parent is a symlink: {ancestor}")
+        if destination.exists() or destination.is_symlink():
+            raise OSError("destination already exists; refusing to overwrite it")
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        with destination.open("xb") as stream:
+            stream.write(content)
+        destination.chmod(mode)
+    except (OSError, ValueError) as exc:
+        raise LocalCopyError(
+            f"worktree created but local configuration copy failed: {source} -> {destination}: {exc}",
+            target_files=[str(source), str(destination)],
+            fix=f"Deliberately copy {shlex.quote(str(source))} to {shlex.quote(str(destination))}, then rerun setup and devkit sync --locked in {shlex.quote(str(path))}",
+        ) from exc
+
+
 def start(
     position: Position,
     branch: str,
@@ -405,8 +445,10 @@ def start(
     if path.exists() or path.is_symlink():
         raise ConflictError(f"{path} exists and is not a worktree of this repository")
     notices = _refuse_existing(position.base, branch)
+    captured_local = _local_snapshot(position.base, project)
     _add(position.base, path, branch, revision=revision)
     _log.info("created worktree %s on %s", path, branch)
+    _copy_local_snapshot(path, project, captured_local)
     setup_ran, synced = _prepare(path, setup, project, notices)
     return StartResult(branch, path, position.base, True, setup_ran, synced, notices)
 
@@ -600,6 +642,7 @@ def attach(
             )
     if not reuse and (path.exists() or path.is_symlink()):
         raise ConflictError(f"{path} exists and is not a worktree of this repository")
+    captured_local = _local_snapshot(base, project) if not reuse else None
     if back is not None:
         run_git(base, "switch", "--quiet", back)
         _log.info("switched the base checkout from %s back to %s", branch, back)
@@ -612,6 +655,7 @@ def attach(
     if not reuse:
         _add(base, path, branch, existing=True)
         _log.info("attached worktree %s to the existing branch %s", path, branch)
+        _copy_local_snapshot(path, project, captured_local)
         setup_ran, synced = _prepare(path, setup, project, notices)
     run_git(base, "config", "--local", _marker(branch), str(path))
     run_git(base, "config", "--local", _marker(branch, UNIT_KEY), unit)

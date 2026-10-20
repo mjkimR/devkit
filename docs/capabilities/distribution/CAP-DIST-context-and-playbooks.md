@@ -1,9 +1,12 @@
 ---
 id: CAP-DIST-context-and-playbooks
 title: "Context Loading & Playbooks"
-summary: "On-demand bundle context loading, instruction catalog discovery, and hybrid playbook search."
+summary: "On-demand context loading and playbook search using canonical or validated personal assets and effective search preferences."
 area: distribution
 status: active
+entrypoints:
+  - packages/devkit-dist/src/devkit/distribution/installation/reading.py
+  - packages/devkit-dist/src/devkit/distribution/installation/status.py
 created_at: 2026-10-17
 ---
 
@@ -33,7 +36,9 @@ the file system is read-only for it, it reads without the lock (`CAP-DIST-sync-a
   `description`) and absolute `path`. An ordinary overridden instruction is read from
   `.devkit/overrides/<bundle>/...`. A template instruction is read from rendered managed `.md` output, including
   when its raw `.md.jinja` source is overridden; source or variable changes require a sync. Every file read outside
-  the override tree must match its receipt hash (`NOT_SYNCHRONIZED` otherwise). Bodies are never returned.
+  the override tree must match its canonical receipt hash or validated personal render evidence. Missing or stale
+  personal evidence is `CONFIG_LOCAL_RENDER_STALE`; other unsynchronized files are `NOT_SYNCHRONIZED`. Both direct
+  the caller to sync. Bodies are never returned; see `CAP-DIST-sync-and-transactions`.
 
 ```markdown
 ---
@@ -100,8 +105,9 @@ bodies never are.
 
 - **Bounds**: `limit` 1–20 (default 5), `min_score` $\ge 0$ (default 0.1, the BM25 floor), `min_similarity` 0–1
   (default 0.35, the cosine floor of `dense` and `hybrid`), `max_bytes` 1024–65536 (default 8192), and `mode`,
-  defined once in `installation/config.py` and applied to `[playbooks]` in `.devkit/config.toml` and to the command
-  options alike. In `hybrid` each floor applies to its own ranking before the fusion. The default similarity floor
+  validated for shared configuration, restricted local configuration and command options alike. Search reads
+  effective `[playbooks]` preferences: local values override shared values, and explicit command options override
+  both. In `hybrid` each floor applies to its own ranking before the fusion. The default similarity floor
   was measured on English metadata: it drops the long tail of weak similarities and keeps the gain of hybrid ranking. A query is at most 512 UTF-8 bytes. An out-of-range option or a query that is not English Latin
   text is `ARGUMENT_INVALID` (exit `2`), naming the option in `target_files`.
 - **Budget**: the JSON output stays within `max_bytes`; whole records that do not fit are omitted and

@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-local-config-execution-environment
+by: user
+at: '2026-10-20T05:03:36.557917Z'

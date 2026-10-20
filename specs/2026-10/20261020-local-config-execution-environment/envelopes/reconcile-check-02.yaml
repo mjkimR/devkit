@@ -1,0 +1,23 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T05:34:40.990423Z'
+status: completed
+summary: Independent recheck closes reconcile-check-01 finding 1; the adjacent check-mode summary has the same blanket exit-code error.
+findings:
+- issue: The --check reference still states that every error exits 2.
+  evidence: docs/development/reference/distribution.md:88; LocalChangedError exits 1 and input snapshot validation also runs in check mode.
+  failure_condition: Configuration changes during sync --check planning produce CONFIG_LOCAL_CHANGED exit 1.
+  suggested_action: Qualify check-mode failures with code-specific exit statuses, including CONFIG_LOCAL_CHANGED.
+  resolution: open
+  severity: P1
+assumptions:
+- Emulated read-only review; unchanged HEAD and clean index validated.
+unverified_areas:
+- Tests not repeated for documentation-only changes.
+checks: {}
+diff_scope:
+  base: c127d1097a1a0d24d789d91c2edaf22fb15441fa
+  head: 88f4a7ca63be6c51ca5aeb8bcfc6995efbd09478
+activity_effort: medium

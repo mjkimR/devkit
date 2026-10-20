@@ -153,11 +153,10 @@ restart a request ID cannot resume another process's approval.
 
 ### Environment and approval restrictions
 
-Consume the core resolver from `PROP-local-config-execution-environment`: `[execution] environment` is `local` or
+Consume the core resolver from `SPEC-local-config-execution-environment`: `[execution] environment` is `local` or
 `cloud`, default `local`, with `.devkit/config.local.toml` copied by `devkit worktree start` before setup/first sync
-and independent thereafter. No live parent fallback or automatic propagation is assumed. That proposal's exact API
-is a Development dependency and must be integrated/rechecked before environment work starts; its Planning is not
-an accepted contract in this branch.
+and independent thereafter. No live parent fallback or automatic propagation is assumed. The accepted design's API
+is a Development dependency and its implementation must be integrated/rechecked before environment work starts.
 
 The agreed provisional core APIs are `read_effective_config(root)` and `resolve_execution_environment(root)`,
 with the latter reporting the environment and its source. A valid workspace with no local overlay uses the shared

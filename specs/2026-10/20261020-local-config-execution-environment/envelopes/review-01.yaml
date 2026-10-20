@@ -1,0 +1,41 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T05:21:45.830838Z'
+status: completed
+summary: 'Independent medium review: four P1 correctness findings require fixes for copy boundaries, ledger/output eligibility and snapshot ordering.'
+findings:
+- issue: Worktree local-config copying follows symlinked destination parents.
+  evidence: packages/devkit/src/devkit/worktree/lifecycle.py:368
+  failure_condition: A newly checked-out branch contains a symlinked .devkit or project ancestor and an absent local-config leaf; copying writes outside the checkout.
+  suggested_action: Reject symlinked ancestors and escaping paths before writes; preserve copy failure and skip setup/sync.
+  resolution: open
+  severity: P1
+- issue: Local-render ledger mutations bypass locked-sync and ignore/index validation.
+  evidence: packages/devkit-dist/src/devkit/distribution/installation/sync.py:970
+  failure_condition: The ledger is tracked or unignored with equal-to-canonical variables or removed preferences; ledger mutations occur after locked validation.
+  suggested_action: Plan the ledger before final locked validation and check every ledger mutation for ignored/untracked eligibility.
+  resolution: open
+  severity: P1
+- issue: Restoring canonical output skips eligibility checks for previously personalized files.
+  evidence: packages/devkit-dist/src/devkit/distribution/installation/sync.py:923
+  failure_condition: A prior personal output is force-tracked or unignored and its preference removed; ordinary sync writes canonical bytes without refusal.
+  suggested_action: Validate affected previously personalized destinations as well as new personal destinations.
+  resolution: open
+  severity: P1
+- issue: Input snapshot starts after shared-config save preparation and can lose concurrent edits.
+  evidence: packages/devkit-dist/src/devkit/distribution/installation/sync.py:847
+  failure_condition: Shared config changes after ConfigUpdate preparation but before the input snapshot; the stale prepared text overwrites the edit.
+  suggested_action: Capture inputs before save and carry the snapshot through planning and final validation.
+  resolution: open
+  severity: P1
+assumptions:
+- Codex role isolation emulated through explicit worktree paths, read-only operations and caller diff/index validation.
+checks:
+  tests: PASS 3854 passed, 14 skipped; dist-only 1017 passed
+  lint: PASS both modules
+  build: PASS both module type checks
+diff_scope:
+  base: 3564ccbbd48a31282f457dbd40149e0c687aac23
+  head: 4965dd99309f88b384bb22b6857950d1d01481b6

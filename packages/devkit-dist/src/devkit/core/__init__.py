@@ -36,6 +36,12 @@ from devkit.core.errors import (
 from devkit.core.files import atomic_write_bytes, atomic_write_text, remove_empty_tree
 from devkit.core.frontmatter import Frontmatter, FrontmatterBlock
 from devkit.core.git import run_git
+from devkit.core.local_config import (
+    EffectiveConfig,
+    ExecutionEnvironment,
+    read_effective_config,
+    resolve_execution_environment,
+)
 from devkit.core.locks import file_lock
 from devkit.core.paths import is_safe_relpath, normalize_relpath, resolve_within
 from devkit.core.plugins import (
@@ -94,6 +100,8 @@ __all__ = [
     "DeadlineExceededError",
     "DevkitCoreError",
     "DevkitRootNestedError",
+    "EffectiveConfig",
+    "ExecutionEnvironment",
     "FileRecord",
     "Frontmatter",
     "FrontmatterBlock",
@@ -128,11 +136,13 @@ __all__ = [
     "load_subclasses",
     "normalize_relpath",
     "parse_receipt",
+    "read_effective_config",
     "read_project_config",
     "read_toml",
     "remove_empty_tree",
     "require_devkit_root",
     "require_git_toplevel",
+    "resolve_execution_environment",
     "resolve_within",
     "run_git",
     "verified_asset_file",

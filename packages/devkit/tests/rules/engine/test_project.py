@@ -376,3 +376,16 @@ def test_rules_see_the_snapshot_they_evaluate(tmp_path: Path) -> None:
     assert run.context is not None and run.context.snapshot is snapshot
     assert snapshot.mode == "staged" and snapshot.changed == ("a.md",) and snapshot.deleted == ("gone.md",)
     assert run_project_rules(root).context.snapshot is None  # type: ignore[union-attr]
+
+
+def test_snapshot_policy_ignores_personal_language(tmp_path: Path) -> None:
+    root = _committed_repo(tmp_path)
+    _write(root, ".devkit/config.toml", '[rules]\nexclude = ["vendor/**"]\n')
+    _write(root, ".devkit/.gitignore", "/config.local.toml\n/transient/\n/managed/\n")
+    _write(root, "docs/a.md", BROKEN)
+    _git(root, "add", ".")
+    before = run_project_rules(root, snapshot=git_snapshot(root, staged=True))
+    _write(root, ".devkit/config.local.toml", '[bundles.response-style.variables]\nlanguage="ko"\n')
+    after = run_project_rules(root, snapshot=git_snapshot(root, staged=True))
+    assert _files(before.result.violations) == _files(after.result.violations)
+    assert before.config == after.config
