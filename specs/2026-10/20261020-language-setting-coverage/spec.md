@@ -8,7 +8,6 @@ related_capabilities: []
 related_stories: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-language-setting-coverage] Extend language settings to MCP approval content
 
@@ -31,16 +30,15 @@ Design acceptance does not establish implementation or localized native UI suppo
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Extend language settings to MCP approval content so that system capabilities are extended.
+- **US-1**: As a developer, I want a shared local-capable language preference so that response guidance and devkit-owned approval content can use English or Korean consistently.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: Host-owned UI, arbitrary provider/user text, CLI/advisory output, locale detection, dynamic translation, host registration and approval authority.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-The existing `packages/` parent is required only because the accepted MCP extraction's `packages/devkit-mcp/`
-does not exist at this Planning base. It permits that future runtime's context-plumbing modules/tests and, among
+The integrated prerequisites provide `core.local_config`, `core.mcp_context` and `devkit_mcp.server`. It permits that future runtime's context-plumbing modules/tests and, among
 existing packages, only: dist core/config/CLI, distribution variable declarations and inventory/readers with their
 tests; agt integration rendering/service/tests; spec handoff rendering/tests; catalog response-style manifest and
 its tests. New translation helpers belong beside their domains. No other package behavior, host registration,
@@ -48,17 +46,26 @@ approval enforcement or catalog bundle is included. Development narrows file bou
 prerequisites before implementation. Documentation boundaries are limited to the targets named in `target-docs.md`.
 
 ### Scenario 1 [AC-01]: Carried from proposal
+- **Given** the accepted shared-language contract below and integrated prerequisite APIs.
+- **When** the corresponding configuration, rendering or approval flow is exercised.
+- **Then** the following verification obligations hold.
 1. Configuration tests cover absent/shared/local values, exact `auto/en/ko`, unsupported-string English fallback
    with visible provenance, wrong types, malformed local files and inherited worktree copies. Dist-only imports
    remain SDK/domain-free. MCP requests resolve the owning workspace while executor preferences differ.
 
 ### Scenario 2 [AC-02]: Carried from proposal
+- **Given** the accepted shared-language contract below and integrated prerequisite APIs.
+- **When** the corresponding configuration, rendering or approval flow is exercised.
+- **Then** the following verification obligations hold.
 2. Manifest tests cover the one valid `default_from` reference, invalid references/types, absent versus explicit
    consumer overrides, projectless defaults and existing free-text overrides. Shared receipts stay fixed under
    local language changes; eligible response-style outputs change; tracked/forbidden outputs refuse; sync repairs
    stale local-render state. An explicit shared consumer override versus a local global preference is exercised.
 
 ### Scenario 3 [AC-03]: Carried from proposal
+- **Given** the accepted shared-language contract below and integrated prerequisite APIs.
+- **When** the corresponding configuration, rendering or approval flow is exercised.
+- **Then** the following verification obligations hold.
 3. English/Korean static-template parity checks cover every integration route and conditional branch plus handoff.
    Assert decision-relevant statements and identical interpolated scope/evidence, escaping and truncation limits.
    Domain reviewers inspect both languages for semantic equivalence; substring/snapshot checks alone are not a
@@ -66,12 +73,18 @@ prerequisites before implementation. Documentation boundaries are limited to the
    remains sufficient when all schema titles/descriptions are omitted by a fixture client.
 
 ### Scenario 4 [AC-04]: Carried from proposal
+- **Given** the accepted shared-language contract below and integrated prerequisite APIs.
+- **When** the corresponding configuration, rendering or approval flow is exercised.
+- **Then** the following verification obligations hold.
 4. SDK/stdio fixtures assert UTF-8 preservation, schema keys/enum/default/required equivalence and canonical reply
    parsing. Both languages exercise explicit approval, submit false, decline/cancel, unavailable form, malformed
    reply and stale-scope behavior. Local/cloud and workspace-identity guards remain independent of language.
    Changing preference during an open form does not change its text or confer new authority; a new request uses it.
 
 ### Scenario 5 [AC-05]: Carried from proposal
+- **Given** the accepted shared-language contract below and integrated prerequisite APIs.
+- **When** the corresponding configuration, rendering or approval flow is exercised.
+- **Then** the following verification obligations hold.
 5. Harmless native fixtures for each available CLI record exact client/server/SDK/protocol versions, requested
    content and observed message/title/description/enum behavior separately. Their accept/decline/cancel handlers
    return data only and cannot create worktrees, merge, push, clean or change real config/trust. Record omitted or
@@ -79,11 +92,14 @@ prerequisites before implementation. Documentation boundaries are limited to the
    If fixtures cannot run under current permissions, retain an explicit per-host unverified status in docs/report.
 
 ### Scenario 6 [AC-06]: Carried from proposal
+- **Given** the accepted shared-language contract below and integrated prerequisite APIs.
+- **When** the corresponding configuration, rendering or approval flow is exercised.
+- **Then** the following verification obligations hold.
 6. Run lint/type checks, `just test-affected`, focused distribution-only/packaging checks where imports change,
    governance checks, mandatory medium code review and separate reconcile review. No product-wide output
    translation or unrelated regression expansion is required. Development effort remains medium.
 
-## 5. Carried Proposal Notes
+## 5. Accepted Design and Development Assumptions
 
 Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
 
