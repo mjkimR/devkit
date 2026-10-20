@@ -39,8 +39,7 @@ sentence gives the overall answer or explicitly unknown result. Use `→ **Core 
 for each ordinary explanatory point, with blank lines between points and no fixed point or sentence count.
 The bold lead is a complete conclusion, not a topic label; supporting text carries needed reasons and conditions.
 
-Presentation-preference authority: user. A one-sentence reply may omit the marker; ordered steps or choices use
-numbers, requested artifacts and required reports follow their own formats, and ASCII-only media use `->`.
+Presentation-preference authority: user. Requested artifacts and required reports follow their own formats.
 Keep the language variable and short Korean-specific wording guidance. Add no presets or extra decorative marks.
 The 300-byte cap applies only to the guidance fragment; no skill-body length ceiling is introduced.
 

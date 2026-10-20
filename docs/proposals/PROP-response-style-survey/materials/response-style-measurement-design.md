@@ -15,7 +15,8 @@ request handling and presentation choices but cannot demonstrate that an install
 that readers comprehend it better. No live model call is needed to discuss this direction.
 
 Review four kinds of request: a scoped factual question, a report with unfinished work, an explanation request
-and an artifact-only request. Include Korean and keep identifiers and quantities exact. For each, distinguish
+and an artifact-only request. Write the review prompts and examples in English; keep identifiers and quantities
+exact. Existing language-rendering checks still cover configured languages. For each, distinguish
 required content and output format from subjective preferences such as wording, flow and explanation length.
 A fixed score is not an adoption rule. Show the actual proposed wording and state why it fits the user's use.
 

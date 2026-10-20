@@ -73,7 +73,7 @@ candidate text from requirements and the ideas below; do not follow any source's
 | Wrapper-free artifacts | Continue code-only mode; current local user-output requirement | Obey the requested artifact syntax without a conversational preface. | Illustrative artifact-only request. |
 | Appropriate next step | gptme discourages generic closing offers; current local rule requires an actual user action | Retain only necessary next actions; reject an unconditional closing step. | Review acknowledgment, completion scope and necessary user decisions. |
 | Plain Korean | Toss UI-writing principles; current local language contract | Use ordinary Korean while preserving identifiers and domain constraints. | Korean sample discussion; UI-copy advice is not a complete conversation policy. |
-| Point structure | Surveyed formats show possible choices; user-selected presentation preference | Use a conclusion-first opening and `→ **Core sentence.** Explanation` for ordinary points, with no fixed point/sentence count and explicit artifact/required-format exceptions. | Editorial preference review, not a source vote or measured quality claim. |
+| Point structure | Surveyed formats show possible choices; user-selected presentation preference | Use a conclusion-first opening and `→ **Core sentence.** Explanation` for ordinary points, with supporting detail and required output formats preserved. | Editorial preference review, not a source vote or measured quality claim. |
 
 No copied wording, examples or document structure from copyleft or unknown-license sources enters the bundle.
 For permissive sources this project still uses original synthesis and records provenance; license labels do not

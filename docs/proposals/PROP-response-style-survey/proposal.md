@@ -50,8 +50,7 @@ it does not establish that their rules improve devkit replies.
 - **Presentation:** Use `→ **Core sentence.** Supporting explanation` as the default ordinary point format,
   with blank lines between points. The bold sentence states that point's conclusion; the first point carries the
   overall answer and later points add distinct information. Use no block-count or sentence-count threshold.
-  A one-sentence reply may omit the marker; use numbers for order/choices, preserve required user/workflow
-  formats, and output requested artifacts without a conversational prefix. Use `->` for ASCII-only media.
+  Follow required user/workflow formats, and return artifact-only requests without conversational framing.
 - **Work reports:** Name the scope of what is finished and what remains, with actual verification and material
   limitations. A completed survey, edit or test does not imply completion of the whole request. Show necessary
   user decisions without appending empty offers or creating new approval requests.
