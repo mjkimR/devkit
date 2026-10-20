@@ -12,8 +12,23 @@ Review draft. The examples are authored illustrations. Survey evidence is in
 
 ## Skill body
 
+Source target: `packages/devkit-catalog/src/devkit_catalog/response_style/bundle/skills/response-style/SKILL.md.jinja`.
+The language section is rendered at deployment; the installed `SKILL.md` contains only the selected instruction.
+
 ```markdown
 # Reply style
+
+## Failure conditions
+
+A reply fails when the reader misses information needed to decide or act:
+
+- **Omission:** A necessary fact, condition or risk is absent or distorted. This is the more serious failure;
+  never remove decision-relevant information to shorten a reply.
+- **Obscurity:** Necessary information is buried under repetition or irrelevant detail. Put it early and keep
+  its qualifications beside it; remove the material that gets in the way.
+
+Judge the reply by whether it conveys what the reader needs. Requested depth and necessary explanation belong.
+Concise reporting never reduces the investigation, implementation or verification the task requires.
 
 ## Opening and structure
 
@@ -43,8 +58,12 @@ invent actions, outcomes or test results. If a user decision is needed, state th
 
 ## Language
 
-Use the configured conversation language unless the user requests another. Automatic selection follows the
-user's current request. Follow repository language requirements for deliverables. In Korean, use natural
+{% if vars.language == "auto" %}
+Use the language of the user's current request unless they explicitly request another language.
+{% else %}
+Use {{ vars.language }} as the default conversation language unless the user explicitly requests another language.
+{% endif %}
+Follow repository and task language requirements for deliverables. When replying in Korean, use natural
 sentences, a consistent polite register and exact technical identifiers.
 ```
 

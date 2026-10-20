@@ -18,12 +18,18 @@ Review four kinds of request: a scoped factual question, a report with unfinishe
 and an artifact-only request. Write the review prompts and examples in English; keep identifiers and quantities
 exact. Existing language-rendering checks still cover configured languages. For each, distinguish
 required content and output format from subjective preferences such as wording, flow and explanation length.
+Reject examples that omit or distort a supplied decision-relevant fact, condition or risk. Also review whether
+repetition or irrelevant detail separates a necessary qualification from its claim or hides the result. Shortening
+such an example must preserve its required information; a request for depth still gets the needed explanation.
 A fixed score is not an adoption rule. Show the actual proposed wording and state why it fits the user's use.
 
 ## Development verification
 
 Implement the accepted direction in the response-style bundle and preserve the existing language configuration,
-opt-in packaging and host projections. Run relevant lint, type checks, `just test-affected`, consumer smoke and
+opt-in packaging and host projections. Render the draft's Jinja language section for `auto` and configured
+languages (including `ko` and `en`): only the selected default instruction remains, an explicit user request can
+override it, and repository/task deliverable requirements remain present. No unresolved Jinja expressions may
+reach installed or projected files. Run relevant lint, type checks, `just test-affected`, consumer smoke and
 repository rules. Review the real diff and Living Spec reflection at the agreed medium effort. Existing
 workflow gates and required reports still apply; examples do not waive missing facts or verification.
 

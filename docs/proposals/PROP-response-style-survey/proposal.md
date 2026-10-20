@@ -39,6 +39,9 @@ it does not establish that their rules improve devkit replies.
 
 ## 2. Proposed Direction
 
+- **Failure conditions:** Treat missing or distorted decision-relevant information as the more serious failure.
+  Also reject necessary information buried under repetition or irrelevant detail. Preserve the facts, place them
+  early with their qualifications, and remove distractions. Concise reporting does not reduce required work.
 - **Content and output obligations:** Preserve required facts, units, scoped conditions, material risks and
   requested formats. A style rule cannot drop a workflow field or change a supplied fact to shorten a reply.
 - **First sentence:** For an ordinary reply, its first sentence states the overall answer, recommendation or
@@ -54,8 +57,10 @@ it does not establish that their rules improve devkit replies.
 - **Work reports:** Name the scope of what is finished and what remains, with actual verification and material
   limitations. A completed survey, edit or test does not imply completion of the whole request. Show necessary
   user decisions without appending empty offers or creating new approval requests.
-- **Language and deployment:** Keep one style and the existing language variable, with short Korean wording
-  guidance. Preserve opt-in packaging and all current projections. No presets or host-specific style variants.
+- **Language and deployment:** Keep one style and the existing Jinja `vars.language` branch: `auto` follows the
+  current request; a configured language supplies the default; an explicit user language request overrides either.
+  Repository/task requirements govern deliverables. Retain short Korean wording guidance, opt-in packaging and
+  all current projections. No presets or host-specific style variants.
 - **Always-loaded guidance:** Keep one pointer within the 300-UTF-8-byte contract in `CAP-DIST-manifest-spec`.
   This applies to the guidance fragment inserted into `AGENTS.md`, not the whole file or the skill body.
   Detailed rules stay in `SKILL.md` without a new byte, word or token ceiling. Actual compaction behavior is

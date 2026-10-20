@@ -16,6 +16,11 @@ fixed paragraph sizes are separate choices from a consistent point format; none 
 benefits. The selected presentation preference uses a complete core sentence followed by supporting explanation.
 A successful edit or survey also needs to remain distinct from completion of the whole task in a progress report.
 
+The existing `SKILL.md.jinja` already names omission and overload, limits brevity to reporting rather than work,
+and renders `vars.language` into a concrete instruction. Preserve these behaviors in the rewrite. The proposed
+change removes fixed block/sentence thresholds and adopts marked core sentences; it does not replace language
+rendering with a generic instruction to use an unspecified configuration.
+
 ## 2. Decision Drivers
 
 Preserve meaning and required formats, adapt depth to the request, keep a portable bundle, and give users clear
@@ -40,7 +45,11 @@ for each ordinary explanatory point, with blank lines between points and no fixe
 The bold lead is a complete conclusion, not a topic label; supporting text carries needed reasons and conditions.
 
 Presentation-preference authority: user. Requested artifacts and required reports follow their own formats.
-Keep the language variable and short Korean-specific wording guidance. Add no presets or extra decorative marks.
+Keep the language variable, its Jinja `auto`/configured-language branches and short Korean-specific wording
+guidance. An explicit user language request overrides the conversation default; repository and task requirements
+govern deliverables. State omission/distortion and obscurity as failure conditions, with omission the more serious
+failure. Required content stays present and discoverable; concise reporting never reduces required work.
+Add no presets or extra decorative marks.
 The 300-byte cap applies only to the guidance fragment; no skill-body length ceiling is introduced.
 
 The draft is a direction for user review, not a `plan-accept` decision or deployed instruction. Formal adoption
