@@ -1,7 +1,7 @@
 ---
 id: MAT-language-development-evidence
 title: Language content Development evidence
-summary: "Separates tested bilingual domain/SDK content from unobserved Codex and Claude terminal form rendering."
+summary: "Records bilingual domain/SDK content tests and a user-confirmed Korean Codex native integration form, with Claude rendering and individual host controls unverified."
 created_at: 2026-10-20
 ---
 
@@ -35,3 +35,19 @@ operations for UI evidence. Therefore no assertion is made about omitted/transfo
 buttons, host headings, validation text or permission prompts. Existing English Claude approval evidence does not
 establish Korean rendering. A future harmless data-returning native fixture may close this explicit evidence gap;
 that gap does not weaken tested supplied-content or authorization contracts.
+
+## Subsequent native integration observation
+
+After the Development evidence above was collected, the user confirmed that a native MCP integration form in
+the Codex session displayed Korean with local `presentation.language = "ko"`. The independently authorized
+`worker-temporary-fixture-scope` session was reviewed and verified before requesting integration; this was a real
+approval, not a data-only fixture. Request `a0d16ea1a3474e859c558422117826b0` returned `ui_action: accept`,
+`authority: mcp-elicitation` and `status: completed`, producing merge
+`03dd9f863653b67306f52fafeba7cc9f1fb5e762` and completing worktree/branch cleanup.
+
+This establishes user-observed Korean form rendering in that Codex session and a successful accepted reply.
+The exact live client/protocol versions and per-field metadata/widget/control rendering were not captured;
+the installed versions above are earlier inspection evidence. Decline and cancellation were not exercised.
+Claude Code rendering remains unverified. The user accepted the shared form interface as sufficient reason to
+skip a separate Claude observation and close `FB-native-language-form-evidence-gap`; this does not establish
+identical rendering in the two hosts or require a further fixture test.

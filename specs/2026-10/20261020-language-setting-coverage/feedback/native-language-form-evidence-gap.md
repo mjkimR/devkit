@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-20
 ---
 
@@ -51,3 +51,18 @@ MCP SDK: 1.30.0
 Native visible form: unverified for each host
 Domain/SDK tests: supplied message and schema/reply behavior verified
 ```
+
+## Disposition
+
+Closed after the user confirmed a Korean native form during the independently authorized integration of the
+`worker-temporary-fixture-scope` session. With local `presentation.language = "ko"`,
+`integration_integrate` returned request `a0d16ea1a3474e859c558422117826b0`, `ui_action: accept`,
+`authority: mcp-elicitation` and `status: completed`; the resulting merge is
+`03dd9f863653b67306f52fafeba7cc9f1fb5e762`. The user reported that the displayed form was Korean.
+This was the real approved integration, not a data-only fixture.
+
+The user accepted this evidence and waived a separate Claude Code observation because the hosts share the
+form interface. Claude rendering remains unverified; shared transport does not establish identical host rendering.
+Exact live client/protocol versions, individual metadata fields, widgets, client-owned controls and decline/cancel
+behavior were not captured by this observation. No additional fixture or host validation is retained as required
+follow-up. The observation and its limits are recorded in `MAT-language-development-evidence`.
