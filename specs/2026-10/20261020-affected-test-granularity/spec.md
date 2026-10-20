@@ -2,7 +2,7 @@
 id: SPEC-affected-test-granularity
 title: Finer affected-test groups and dependency nodes
 summary: Reduce unnecessary affected-test execution with finer test groups and source dependency nodes while preserving conservative fallback and required coverage.
-status: planned
+status: in-progress
 created: 2026-10-20
 related_capabilities: []
 related_stories: []

@@ -61,10 +61,16 @@ reuse valid check results and rerun only missing or stale checks. Lint, types an
     `conftest.py`, `uv.lock`, the shared test helpers `testsupport` and `distsupport`) select the full suite.
   - Repository files that tests read (`docs/`, `examples/`, `models/`, the recipe scripts and `justfile`) select
     those tests from a fixed table.
-  - A package source change selects the test groups (a `devkit-dist` or `devkit-agt` area, a top-level test file of
-    either, another workspace package) that import its area or an area importing it, transitively by static imports;
-    a `devkit-dist` or `devkit-agt` source change also selects the tests over the whole devkit source tree (layering,
-    documented codes, CLI wiring, stdout kinds).
+  - A package source change selects individual `test_*.py` files, including embedded rule tests, through
+    transitive static imports. Production nodes remain `devkit` areas and coarse workspace packages by default;
+    `devkit_spec` uses module nodes, including package initializers. Fine tests keep their specific dependencies;
+    opaque/root imports and known CLI, bundle and source-tree consumers retain broad owner dependencies.
+    A `devkit-dist` or `devkit-agt` source change also selects mandatory whole-source-tree checks (layering,
+    documented codes, CLI wiring and stdout kinds). MCP changes retain their explicit integration consumers.
+  - Dependency discovery includes absolute/relative imports, literal dynamic import/resource calls, re-exports,
+    executed initializers, transitive local helpers (including function-local imports), and ancestor conftests.
+    Ambiguous static dependencies widen conservatively. Unreadable or unparseable relevant files, ambiguous source
+    inventories, unknown sources and deleted/renamed fine modules that cannot be reconstructed select full.
   - A changed `test_*.py` in a `tests` directory selects itself; any other file there selects its directory.
   - The devkit-viewer frontend (`packages/devkit-viewer/frontend/`, `scripts/viewer.sh`) selects no pytest test:
     pytest never exercises it. The result names the frontend checks instead (below); the page they rebuild under
@@ -83,10 +89,11 @@ reuse valid check results and rerun only missing or stale checks. Lint, types an
   with its preflight, options and exit code, and `none` exits `0`. A base without a merge base is the input error
   `TEST_BASE_UNKNOWN` (exit `2`), whose `[FIX]` lists the existing branches; a failing `git diff` or `git ls-files`
   is `TEST_CHANGES_UNREADABLE` (exit `2`), for the user to resolve in the repository before rerunning.
-- **Limits**: a group's dependencies include those of the shared helpers it imports at module level,
-  not of helpers imported inside a test function; static imports also do not show tests that run the CLI in a
-  subprocess or load entry points. Nightly and release full CI cover these misses; an undetected regression can
-  remain on the default branch until a complete CI runs. The selector's full-suite fallback remains in place.
+- **Limits**: selection is static and does not execute production modules or pytest. Known subprocess/entry-point
+  consumers have explicit mappings; arbitrary runtime discovery is not inferred. Helper modules keep all their real
+  imports even when only one helper function is used. Complete nightly/manual/release checks remain the backstop;
+  an undetected runtime dependency can leave a regression until complete CI runs. Full-suite fallback is preserved.
+
 
 Before starting pytest or its workers, both recipes run `scripts/check_test_environment.py` through the
 workspace Python environment. The check sends and receives one byte through a local socket pair, with
