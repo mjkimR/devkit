@@ -2,7 +2,7 @@
 id: PROP-worker-range-validation
 title: One-command worker result inspection for orchestrated units
 summary: "Bundles existing worker-result checks and reviewer diff information into one command, using the Host-supplied scope and leaving interpretation to the agent without adding an approval gate."
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                      # draft | reviewing | accepted | rejected
 created_at: 2026-10-19
 target_area: delivery/
 priority: critical                      # critical | high | medium | low
