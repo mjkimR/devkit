@@ -4,11 +4,10 @@ title: Local configuration and execution environments
 summary: Add ignored checkout-local configuration overlays and an explicit cloud execution environment, with creation-time worktree copying and shared receipt preservation.
 status: planned
 created: 2026-10-20
-related_capabilities: []
+related_capabilities: [CAP-DIST-sync-and-transactions, CAP-DIST-workspace-ownership, CAP-WT-task-worktrees]
 related_stories: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-local-config-execution-environment] Local configuration and execution environments
 
@@ -30,28 +29,54 @@ runtime constraints; it does not grant approval or turn an ask policy into autom
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Local configuration and execution environments so that system capabilities are extended.
+- **US-1**: As a developer, I want checkout-local preferences and explicit execution constraints while shared policy and receipts remain reproducible.
+- **US-2**: As a worktree caller, I want an independent initial local configuration before setup and synchronization.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: MCP extraction, registration and approval enforcement; shared worker storage; host trust or sandbox changes; governance overrides; secrets; local bundle selection; personalized tracked artifacts; generalized settings plugins.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Restricted effective configuration
+- **Given** shared configuration and an optional local file.
+- **When** a runtime consumer reads configuration.
+- **Then** validate every present local file, recursively merge eligible preferences, preserve shared policy reads, and reject invalid types/files with CONFIG_INVALID or forbidden keys with CONFIG_LOCAL_KEY_FORBIDDEN (exit 2).
 
-## 5. Carried Proposal Notes
+### [AC-02] Personal rendering preserves canonical state
+- **Given** an ignored personal language preference and ignored untracked projections.
+- **When** ordinary or locked sync renders eligible skill content.
+- **Then** write personal bytes and a bound local ledger while shared config, receipt and guidance stay byte-identical; refuse tracked output or changes to executable assets/guidance before writes.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-03] Transactional environment selection
+- **Given** a local/shared environment and customized ignore rules.
+- **When** sync selects cloud/local, runs ordinarily, checks, dry-runs, uses no-save/locked, or fails.
+- **Then** follow the persistence matrix below, preserve unrelated ignore lines and local bytes in shared writers, and reject tracked or effectively unignored local files.
+
+### [AC-04] Creation-time independent worktree snapshot
+- **Given** a retained-base caller and optional valid local configuration.
+- **When** a new worktree is created or an existing one resumed.
+- **Then** copy exact source bytes/mode before setup and sync only on creation; preserve existing/absent destinations on resume, reject invalid sources before creation and report partial copy failures without setup/sync.
+
+### [AC-05] Verified runtime reads and canonical snapshots
+- **Given** personal rendering exists, becomes stale, is edited or removed.
+- **When** context/status, sync, snapshot checks and dist-only consumers run.
+- **Then** reject stale evidence with CONFIG_LOCAL_RENDER_STALE (exit 1), retain hand-edit conflict checks, restore canonical bytes when preferences disappear and preserve canonical engine/snapshot checks.
+
+### [AC-06] Snapshot consistency and source inspection
+- **Given** an explicitly bound project root and shared/local configuration.
+- **When** configuration inspection or a sync with concurrently changed inputs runs.
+- **Then** show effective values and per-key source paths; resolve the bound workspace environment with no approval grant; reject missing roots and abort changed inputs as CONFIG_LOCAL_CHANGED (exit 1) before writes.
+
+## 5. Detailed behavioral contract
+
+The accepted design below defines the acceptance matrix and implementation boundaries.
 
 ### 2. Technical Spike Questions
 
 The Planning recommendation is specified below and in
 `ADR-separate-shared-configuration-from-local-execution-and-rendering`. Repository evidence and alternatives
-are in `docs/materials/2026-10/20261020-local-config-execution-environment/configuration-evidence.md`. Acceptance remains a user decision.
+are in `docs/materials/2026-10/20261020-local-config-execution-environment/configuration-evidence.md`. Planning acceptance is recorded in the carried decision.
 
 - **Q1: Effective configuration.** A core accessor validates a restricted overlay; governance remains shared.
 - **Q2: Worktree semantics.** Copy the source local file before setup and first sync; each worktree then owns
@@ -220,3 +245,7 @@ acceptance and explicit handoff. No environment or approval policy is changed du
 and shared/local rendering boundary must be implemented before the dependent MCP environment behavior is declared
 complete. Planning's artifact checks are not implementation verification.
 
+
+## Assumptions and source feedback
+
+Existing core/distribution/worktree interfaces are present at the handoff base. The canonical root policy still rejects nested Git projects; nested-path copying is exercised at the worktree helper boundary without changing project discovery. `FB-planning-context-command-can-trigger-unavailable-sync` is retained as follow-up feedback, not a direct-fix requirement.
