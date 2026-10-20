@@ -1,0 +1,16 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T06:52:34.345875Z'
+status: completed
+summary: Swept accumulated Development records, recovery, and final diff. One concrete fixture-scope observation is captured as FB-worker-temporary-fixture-scope; no additional observations or duplicate records. Ordinary implementation/reconciliation defects were fixed in scope.
+findings: []
+assumptions:
+- Observed capture policy applies; the retained record covers temporary-root and nested-pytest friction from the original run.
+checks:
+  swept: PASS recorded=1 duplicates=0
+diff_scope:
+  base: ''
+  head: bf8bcfcabcce29bf2e81fd30bcf29c260bb2a391
+activity_effort: medium
