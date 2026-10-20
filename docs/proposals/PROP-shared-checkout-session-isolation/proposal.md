@@ -2,7 +2,7 @@
 id: PROP-shared-checkout-session-isolation
 title: Non-blocking guidance for session branches in a shared checkout
 summary: "Adds concise guidance for --no-worktree branches in shared checkouts, leaving coordination to the direct user or local orchestration main agent without requiring worktrees or adding execution barriers."
-status: reviewing                     # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-19
 target_area: delivery/
 priority: medium                      # critical | high | medium | low
@@ -76,10 +76,9 @@ runtime notices, mandatory worktrees, session locks, additional approval gates a
 
 ## 5. Source Feedback
 
-`FB-no-worktree-session-branch-shared-checkout` stays `promoted` during Planning. Its existing disposition already
-selects this documentation-only scope. After implementation, the Host reviews the four-file diff and verification
-before deciding source resolution; Planning alone is not fix verification. The source feedback file is outside
-this worker's proposal-only write scope.
+`FB-no-worktree-session-branch-shared-checkout` is terminal as `promoted`; its existing disposition selects this
+documentation-only scope. The reference preserves provenance and creates no source-feedback update or completion
+check under `ADR-feedback-terminal-outcomes`. Implementation and verification are tracked in the receiving spec.
 
 ## 6. Lifecycle & Retirement Criteria
 
