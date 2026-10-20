@@ -1,0 +1,16 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T23:10:35.870328Z'
+status: completed
+summary: 'Narrow independent recheck resolves challenger-01 finding 1 at 61f5d9f: binary anchors, sums, ties, improvement/regression and held-out thresholds are explicit; no remaining finding in changed scope.'
+findings: []
+assumptions:
+- Same isolated Challenger rechecked only the changed measurement design and PADR, read-only under an emulated Codex role boundary.
+unverified_areas:
+- Live instruction isolation, account availability, collection cost and output quality await Development.
+checks: {}
+diff_scope:
+  base: d795eb2a67061f36bfe15292bea03df91ee68912
+  head: 61f5d9fa7bb41d6e1ea7d4cd8fd9de1139959957
