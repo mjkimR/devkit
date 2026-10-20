@@ -1,0 +1,21 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T23:34:23.691610Z'
+status: completed
+summary: 'round 2; closes reconcile-check-01; reconcile-reviewer verified 7d4bec3..21fe407: the P1, P2 and P3 of round 1 are fixed; one new P3 (rule 14 command and executor table row without --note).'
+findings:
+- issue: Rule 14 of CAP-DLV-delivery-workflows spells the direct-acceptance command without --note, and the executor table lists --note as optional without saying --direct requires it.
+  evidence: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:132-133; docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:438
+  failure_condition: An agent copying the rule 14 command gets ARGUMENT_INVALID [TARGET] --note; nothing is written.
+  suggested_action: Add --note "<reason>" to the rule 14 command; in the table row write [--direct --note <reason>].
+  resolution: open
+  severity: P3
+checks:
+  targets_complete: PASS
+  docs_vs_implementation: PASS with one P3
+diff_scope:
+  base: 7d4bec38916fe533f77bf3128d7b42a6c38c83e9
+  head: 21fe4076141a8facf4ce84151c1dcfd3c017516b
+activity_effort: high

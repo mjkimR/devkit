@@ -24,6 +24,7 @@ from devkit.workflow.unit.decisions import load_decisions, utc_timestamp
 from devkit.workflow.unit.envelope.model import (
     ANSWER,
     ANSWER_KEYS,
+    CLOSABLE,
     EFFORTS,
     FINDING_KEYS,
     QUESTION_KEYS,
@@ -36,6 +37,7 @@ from devkit.workflow.unit.envelope.model import (
     Finding,
     Problem,
     Question,
+    Settle,
     parse_answer,
     parse_envelope_text,
     parse_finding,
@@ -74,12 +76,13 @@ def skeleton(kind: str, stage: str, created_at: str, workflow: str = "", segment
         "checks: {}",
     ]
     if kind == "reverify":
-        lines.append("review: review-NN.yaml        # the review round this reverify closes")
+        lines.append("review: review-NN.yaml        # the review (or challenger-NN.yaml) round this reverify closes")
     if kind in {"review", "reverify", "final-report"}:
         lines.append('diff_scope: { base: "", head: "" }')
     if kind == ANSWER:
         lines.append("answers_to: worker-NN.yaml    # the worker envelope whose questions this answers")
         lines.append("answers: []                   # question, choice, decision, constraints")
+        lines.append("# settles: []                 # assumption (1-based position in answers_to), decision")
     if kind == RESOLUTION:
         lines.append("resolves: worker-NN.yaml      # the envelope whose problem this resolves")
     if kind == WORKER:
@@ -118,6 +121,18 @@ def parse_waive_flag(text: str) -> tuple[int, str]:
             fix='--waive "2=protocol-wide format kept"',
         )
     return int(number), reason
+
+
+def parse_settle_flag(text: str) -> Settle:
+    """``N=decision``: the 1-based position of an assumption of the answered worker envelope and the user's decision."""
+    number, sep, decision = text.partition("=")
+    decision = decision.strip()
+    if not sep or not number.strip().isdigit() or int(number) < 1 or not decision:
+        raise EnvelopeFlagError(
+            f"--settle {text!r} must be <assumption-number>=<decision>",
+            fix='--settle "2=Keep the TOML layout"',
+        )
+    return Settle(int(number), decision)
 
 
 def parse_resolve_flag(text: str) -> int | None:
@@ -164,10 +179,10 @@ def parse_findings(text: str, kind: str) -> tuple[Finding, ...]:
                 f"--findings-file: finding {i} needs issue and evidence",
                 fix="Add the missing key",
             )
-        if kind == "review" and finding.resolution != "open":
+        if kind in CLOSABLE and finding.resolution != "open":
             raise EnvelopeFlagError(
-                f"--findings-file: finding {i}: a review records findings as found (open); close them in a reverify",
-                fix="Drop resolution, or write a reverify envelope",
+                f"--findings-file: finding {i}: a {kind} records findings as found (open); close them in a reverify",
+                fix=f"Drop resolution; close the round with `devkit workflow envelope reverify --from envelopes/{kind}-NN.yaml`",
             )
         out.append(finding)
     return tuple(out)
@@ -220,17 +235,17 @@ def parse_answers(text: str) -> tuple[Answer, ...]:
 
 
 def carried_findings(envelopes: Envelopes, source: str, unit_dir: Path) -> tuple[tuple[Finding, ...], str]:
-    """Findings copied forward for a reverify, and the ``review-NN.yaml`` round they belong to.
+    """Findings copied forward for a reverify, and the ``review-NN.yaml`` or ``challenger-NN.yaml`` round they belong to.
 
     ``latest`` takes the deciding review state (the latest review round, or the
-    last reverify closing it); a path names a review or reverify file.
+    last reverify closing it); a path names a review, challenger or reverify file.
     """
     if source == FROM_LATEST:
         env = envelopes.review_state()
         if env is None:
             raise EnvelopeFromError(
                 "no review envelope to carry forward",
-                fix="Write a review envelope first, or drop --from",
+                fix="Write a review envelope first; close a challenger round with --from envelopes/challenger-NN.yaml",
             )
     else:
         path = Path(source)
@@ -240,12 +255,12 @@ def carried_findings(envelopes: Envelopes, source: str, unit_dir: Path) -> tuple
         except EnvelopeFormatError as exc:
             raise EnvelopeFromError(
                 f"--from {source}: {exc.message}",
-                fix="Use --from latest, or pass an existing, well-formed envelopes/<review|reverify>-NN.yaml",
+                fix="Use --from latest, or pass an existing, well-formed envelopes/<review|challenger|reverify>-NN.yaml",
             ) from exc
-    if env.kind not in {"review", "reverify"}:
+    if env.kind not in {*CLOSABLE, "reverify"}:
         raise EnvelopeFromError(
-            f"--from must name a review or reverify envelope, not {env.kind}",
-            fix="Use --from latest or a review/reverify file",
+            f"--from must name a review, challenger or reverify envelope, not {env.kind}",
+            fix="Use --from latest for the review round, or --from envelopes/challenger-NN.yaml for a challenger round",
         )
     review = env.review if env.kind == "reverify" else Path(env.file).name
     return env.findings, review
@@ -294,7 +309,7 @@ def _check_flag_combination(kind: str, source: str | None, closing: bool, head: 
         )
     if kind == "reverify" and source is None:
         raise EnvelopeFromError(
-            "reverify needs --from latest (or a review/reverify file) to name the round it closes",
+            "reverify needs --from latest (or a review, challenger or reverify file) to name the round it closes",
             fix="Add --from latest",
         )
     if head and not is_revision(head):
@@ -326,6 +341,7 @@ def compose_envelope(
     questions_yaml: str | None = None,
     answers_to: str = "",
     answers_yaml: str | None = None,
+    settle: Iterable[str] = (),
     problem: str = "",
     attempts: Iterable[str] = (),
     recovery: str = "",
@@ -354,6 +370,7 @@ def compose_envelope(
             fix=f"Use one of {'|'.join(STATUSES)}",
         )
     resolve_list = [parse_resolve_flag(r) for r in resolve]
+    settle_list = tuple(parse_settle_flag(s) for s in settle)
     waive_map = dict(parse_waive_flag(w) for w in waive)
     _check_flag_combination(kind, source, bool(resolve_list or waive_map), head)
     check_map = dict(parse_check_flag(c) for c in checks)
@@ -388,6 +405,7 @@ def compose_envelope(
         questions=parse_questions(questions_yaml) if questions_yaml is not None else (),
         answers_to=Path(answers_to).name if answers_to else "",
         answers=parse_answers(answers_yaml) if answers_yaml is not None else (),
+        settles=settle_list,
         problem=Problem(problem, recovery, attempt_list) if problem else None,
         resolves=Path(resolves).name if resolves else "",
         activity_effort=effort,
@@ -414,13 +432,16 @@ def _check_contract(draft: Envelope, loaded: Envelopes) -> None:
         raise EnvelopeReferenceError(
             problem,
             fix="Name an envelope `devkit workflow envelope check` lists: --answers-to a worker-NN.yaml with those"
-            " questions and options, --resolves a worker-NN.yaml with a problem",
+            " questions, options and assumptions, --resolves a worker-NN.yaml with a problem",
         )
 
 
 def _contract_fix(kind: str) -> str:
     if kind == ANSWER:
-        return "Pass --answers-to worker-NN.yaml and --answers-file; an answer envelope has status completed"
+        return (
+            "Pass --answers-to worker-NN.yaml and --answers-file or --settle (each assumption number once);"
+            " an answer envelope has status completed"
+        )
     if kind == RESOLUTION:
         return "Pass --resolves worker-NN.yaml and --summary; a resolution has status completed"
     return (
@@ -455,6 +476,8 @@ def render_envelope(draft: Envelope, created_at: str) -> str:
         data["answers_to"] = draft.answers_to
     if draft.answers:
         data["answers"] = [a.to_dict() for a in draft.answers]
+    if draft.settles:
+        data["settles"] = [s.to_dict() for s in draft.settles]
     if draft.problem is not None:
         data["problem"] = draft.problem.to_dict()
     if draft.resolves:

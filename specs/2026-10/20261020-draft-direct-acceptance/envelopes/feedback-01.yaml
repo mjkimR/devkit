@@ -1,0 +1,11 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T23:35:28.512336Z'
+status: completed
+summary: 'Swept the Development session across repository and upstream assets: recorded FB-handoff-rewrites-generic-materials-span and FB-handoff-ordering-dependency-unchecked; checked against existing feedback (FB-handoff-carried-padr-path is a different case), no duplicates.'
+findings: []
+checks:
+  swept: PASS recorded=2 duplicates=0
+activity_effort: high

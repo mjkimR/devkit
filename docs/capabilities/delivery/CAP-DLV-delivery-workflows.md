@@ -44,8 +44,9 @@ sequence.
   - The procedures a stage names (the `spec*` skills), classification, Backlog, depth changes and closes:
     `CAP-HARN-agent-guidance`.
 - **Non-Goals**:
-  - **Scope Excluded**: conditional stages. Each classification is one workflow; a change of depth adds a Unit or
-    closes the work, never a stage switched on by content.
+  - **Scope Excluded**: conditional stages. Each classification is one workflow; a change of depth adds a Unit,
+    closes the work or, for a queued draft the user reclassifies as `session` at pickup, deletes the draft in Backlog
+    (`ADR-session-reclassification-of-a-queued-draft`), never a stage switched on by content.
   - **Scope Excluded**: a Development direction gate. Choices inside the agreed intent are the executor's; a problem
     that breaks the agreement stops the work as a problem.
   - **Scope Excluded**: a runner. Dispatching stages, the integration queue, the shared-docs write lock, retry caps,
@@ -69,10 +70,12 @@ sequence.
    as `SHARED_STAGE_MISMATCH`. Returns are each workflow's own.
 4. **Gates are named `<activity>-<decision>`**: `plan-intent`, `plan-accept` and `dev-integration`; the `exception`
    stage belongs to no activity. Numbered gate names are not used.
-5. **Approval is never inferred**: `plan-intent` and `plan-accept` pass only with a decision recorded by
-   `devkit workflow answer --unit <dir> --request gate:<gate> --action accept|decline --by user`, written only after
-   the user's explicit answer; their only accepted policy is `ask`. The record names the authority and carries no conversation:
-   no quotes, paraphrase or dates of it; a decline note states the reason as a decision. `dev-integration` passes
+5. **Approval is never inferred**: `plan-intent` and `plan-accept` pass only with a decision record written after
+   the user's explicit answer: a `plan-intent` answer and a decline of either gate with `devkit workflow answer --unit
+   <dir> --request gate:<gate> --action accept|decline --by user`, an acceptance of `plan-accept` only with
+   `devkit spec proposal accept <slug> --by user`, which writes `status: accepted` and records the decision through
+   devkit's `record_answer` in one step (`CAP-DLV-proposal-incubation`). Their only accepted policy is `ask`. The
+   record names the authority and carries no conversation: no quotes, paraphrase or dates of it; a decline note states the reason as a decision. `dev-integration` passes
    only with `--given dev-integration`, passed to each `devkit workflow next` after the user's explicit OK and never
    recorded, or with the PR ready state a runner binds (`ADR-integration-approval-asserted`); under `auto` it passes by
    policy (`[GATE_PASSED: dev-integration ... source=policy]`, JSON `passed_gates`) and the executor MUST report the
@@ -81,7 +84,8 @@ sequence.
    <stage>` voids the approvals of that stage and later ones, and the envelopes recorded for them before the return.
 6. **`plan-intent` opens every task**: goal, scope, verification (for a bugfix, the expected behavior), `task-kind`
    and `planning-depth` are confirmed by the user. For `spec` depth the gate opens once the anchor exists and is
-   recorded in inline Planning; for `proposal` depth it is the user's confirmation of the draft in Backlog; a spec
+   recorded in inline Planning; for `proposal` depth it is the user's confirmation of the draft in Backlog, which one
+   request may ask together with a direct acceptance's `plan-accept` (two explicit answers, neither inferred); a spec
    handed off from a proposal carries the proposal's `gate:plan-intent` and `gate:plan-accept` records under the same
    names (`CAP-DLV-proposal-incubation`).
 7. **No Development direction gate**: Development starts from the agreed intent. Implementation choices inside it
@@ -123,6 +127,12 @@ sequence.
     candidates, because devkit's `devkit workflow handoff` rebinds a unit in place and refuses a candidate with
     another anchor (`HANDOFF_LAYOUT_MISMATCH`). Once `plan-accept` holds, `next` reports the unit complete
     (`[STAGE: - complete=true]`, no `[HANDOFF]` line) and Development starts with `devkit spec proposal handoff <slug>`.
+    An eligible draft may skip Planning by a **direct acceptance** (`ADR-direct-acceptance-command-and-handoff-guard`):
+    Backlog work on the base checkout, under every pull-request policy, where the Host sweeps its own acceptance
+    session at `collect-feedback` and records `plan-accept` with `devkit spec proposal accept <slug> --by user
+    --direct --note "<reason>"`, without `reviewing`. It has no Planning branch, run, `activity-effort` or `worker` envelope; the
+    stage schema is unchanged, and the request shows "Planning: skipped (direct acceptance)" where a Planning
+    acceptance shows its effort record.
 15. **`activity-effort` sets the review, never the floor**: Development of a spec unit reviews at `low` by the author
     (stated as self-review in the envelope), at `medium` with one mandatory initial `code-reviewer` pass regardless
     of size and a separate `reconcile-reviewer` check, at `high` with both reviewers in the bounded review loop below.
@@ -141,14 +151,19 @@ sequence.
     At `high`, code review, reconcile verification and Planning criticism run in rounds. Each round is a fresh
     reviewer given the earlier rounds' findings, the round's diff scope and the effort: round 1 covers the whole
     change, each later round every fix since the previous round, never a subset. The implementer fixes every finding
-    of a round together (a `P2` or `P3` may be waived with a reason) and closes the round with `reverify`, a new
-    `reconcile-check`, or the next `challenger-NN` or `worker` summary; a P1 the implementer holds invalid stays open
+    of a round together (a `P2` or `P3` may be waived with a reason) and closes the round with `reverify` (for
+    Planning, a reverify of the `challenger-NN` round, written after each fold at `medium` too) or a new
+    `reconcile-check`; a P1 the implementer holds invalid stays open
     there with its counter-evidence and sends the batch to the next round. The loop ends when a round finds nothing, or
     when every fix of the batch is minor (confined to the named location, a text-only or prescribed edit, no contract
     change, shown by a test or by the diff) and is self-verified with its reason and evidence; the initial reviewer
     calls, the first reconcile verification included, are never replaced by a self-check, and a recurring finding is
     never self-verified. Each round's summary starts with `round <N>;`; the cap is 3 rounds after the initial one and
-    is not reset by `devkit workflow return` within a segment. A batch not minor at the cap round and a recurring P1
+    is not reset by `devkit workflow return` within a segment. Each loop counts its own kind; a round without the
+    marker counts, in sequence order, only before the loop's first marked round and only when a `worker` envelope of
+    the segment written before that marker records `activity_effort: high`; the higher number holds when a marker
+    disagrees with that count, a `reverify` is never a round, and a fold of the user's answers is a new batch of the same loop that gets at most one
+    fresh round outside the cap (`ADR-reverify-closes-challenger-rounds`). A batch not minor at the cap round and a recurring P1
     (`recurs:` at the start of the reviewer's `issue`) stop the work (rule 7). A finding whose `evidence` path is not
     in the round's diff file list is out of scope: it is fixed with the batch and never counts as a recurrence; a
     `challenger` finding whose `suggested_action` starts with `Decision needed:` stays out of the loop and goes to
@@ -170,7 +185,8 @@ sequence.
     confirmed `activity-effort` of each run is recorded only on its `worker-NN.yaml` envelope (with any override reason
     in `summary`). The effort is always proposed with a reason when the activity starts, and the `plan-accept`
     request shows each Planning run's effort, the refined `dev_effort` hint and the support-role envelopes present,
-    naming a `challenger`, or a `scout` at `high`, that the effort required and no envelope shows. Gates, exit checks
+    naming a `challenger`, or a `scout` at `high`, that the effort required and no envelope shows, and each
+    `challenger` round with the `reverify` that closes it. Gates, exit checks
     and `required` policies hold at every effort.
 16. **Only the workers write to Git**: a read-only role never stages or commits (`x-git-actions: [read]`). The two
     workers (`[read, commit]`) commit on their activity branch, write their own records and never push, merge, rebase,
@@ -235,7 +251,10 @@ sweep evidence, then its single worker record. Latest-envelope checks do not enf
 the executor validates coverage. Stage-off writes no envelope, requested-only writes policy-skip PASS, zero
 observations passes, and incomplete coverage records FAIL with its gap. Rejection starts no new agent and uses the
 last recorded coverage/skip/gap. A rejected proposal may show an unmet collect-feedback check; it is ended work, not
-an instruction to start another sweep. Handoff drops Planning envelopes; Development runs its own sweep.
+an instruction to start another sweep. A direct acceptance has no Planning run: the Host's sweep covers the acceptance
+session, under the same policy, before `devkit spec proposal accept --direct`; a draft deleted for a session
+reclassification preserves its open feedback like a rejection's cleanup. Handoff drops Planning envelopes; Development
+runs its own sweep.
 
 The `spike` stage of `sdd-proposal` delegates to the `scout` role (isolation `preferred`, skill `spec-delegate`) and
 writes into the proposal's `materials/`; `scout` and `challenger` returns are recorded as envelopes at
@@ -251,8 +270,9 @@ writes into the proposal's `materials/`; `scout` and `challenger` returns are re
 | `dev-integration` | `integration-approval`, `approval-session` | `dev-integration` (`ask` or `auto`) |
 
 - A gate waiting for the user: `devkit workflow next` prints `[WAITING: human gate:<gate>]` with a
-  `[REQUEST: id=gate:<gate> ...]`. A `plan-intent` or `plan-accept` answer is `devkit workflow answer --unit <dir>
-  --request gate:<gate> --action accept --by user` (or `--action decline --by user --note "<reason>"`). A
+  `[REQUEST: id=gate:<gate> ...]`. A `plan-intent` answer is `devkit workflow answer --unit <dir> --request
+  gate:plan-intent --action accept --by user`, a `plan-accept` acceptance `devkit spec proposal accept <slug> --by user`
+  (`--direct` for a direct acceptance), and a decline of either `--action decline --by user --note "<reason>"`. A
   `dev-integration` OK is `--given dev-integration` on every later `next`, and an objection about the change takes the
   stage's return path; where a runner binds `gate:dev-integration` to PR state, the PR ready state answers it. Every
   definition with that gate declares `gates: {dev-integration: {answer: given}}`, so `next` ends its `[REQUEST]` with
@@ -265,8 +285,10 @@ writes into the proposal's `materials/`; `scout` and `challenger` returns are re
   `plan-accept` take only `ask`, `dev-integration` takes `ask` or `auto`. A configured policy outside them stops every
   devkit command that evaluates the unit with `WORKFLOW_GATE_POLICY`, and `devkit spec policy` reports the same rule
   (`CAP-DLV-project-policy`).
-- `plan-accept` is asked only for a proposal in review: the `direction-handoff` exit is
-  `frontmatter(proposal.md status reviewing|accepted)`, so a draft or a rejected proposal gets no request.
+- `plan-accept` is asked only for a proposal in review, or for a draft once a direct acceptance wrote
+  `status: accepted`: the `direction-handoff` exit is `frontmatter(proposal.md status reviewing|accepted)`, so a draft
+  otherwise, or a rejected proposal, gets no request. A `plan-accept` acceptance is recorded with
+  `devkit spec proposal accept`.
 
 ### 4.4 Checks
 
@@ -299,15 +321,15 @@ Envelopes are devkit envelope files under a unit's `envelopes/`, written with
 
 | Kind | File | Written by |
 | --- | --- | --- |
-| `review`, `reverify` | `envelopes/review-NN.yaml`, `envelopes/reverify-NN.yaml` | the reviewing executor; reverify closes the round |
+| `review`, `reverify` | `envelopes/review-NN.yaml`, `envelopes/reverify-NN.yaml` | the reviewing executor; reverify closes the review round, and in Planning the executor's reverify (`--from envelopes/challenger-NN.yaml`, `review: challenger-NN.yaml`) closes a `challenger` round |
 | `red` | `envelopes/red-NN.yaml` (`checks.reproduced`) | the implementer |
 | `green` | `envelopes/green-NN.yaml` (`checks.resolved`, `checks.preserved`) | the implementer |
 | `feedback` | `envelopes/feedback-NN.yaml` (`checks.swept`), in the proposal or spec Unit | the executor; each Planning run supplies fresh coverage |
 | `final-report` | `envelopes/final-report-NN.yaml` (`checks.tests`, `build`, `lint`) | the implementer |
-| `challenger`, `scout` | role returns | the caller, from the role's fields |
+| `challenger`, `scout` | role returns | the caller, from the role's fields; a `challenger` round is closed by a `reverify` |
 | `reconcile-check` | the reconcile verification at `living-spec-draft`, read by its exit (`envelope-completed(reconcile-check)`) | the implementer: self-check at `low`, reconcile-reviewer's returned fields at `medium`/`high`, medium self-verification of the initial check or `high` self-verification of a minor-fix batch under rule 15; identify verifier, evidence, any initial omission reason and, at `high`, the `round <N>;` marker |
 | `worker` | one run's result, exactly one per run: the applied `activity-effort`, the run's `questions` (status `needs_input`) and its `problem` (`cause`, `attempts`, `recovery`; `failed` requires it) | the run itself: a worker, the Host in `direct`, or the Host for a range it blocks |
-| `answer` | the rewritten answers to a run's questions (`answers_to: worker-NN.yaml`), one decision per question | the run that processes them, first, in a commit of its own |
+| `answer` | the rewritten answers to a run's questions (`answers_to: worker-NN.yaml`), one decision per question, and the run's `assumptions` the user settled (`settles`, by 1-based position; an answer may hold settles alone) | the run that processes them, first, in a commit of its own |
 | `resolution` | the fix of a run's problem (`resolves: worker-NN.yaml`, `summary`) | whoever actually fixed it, with the fix |
 
 A unit is held while a `worker` envelope's problem has no `resolution` naming it (blocked) or a question has no
@@ -418,12 +440,13 @@ prompt.
 | --- | --- |
 | `devkit workflow next --unit <dir> [--given <check>]...` | Current stage, unmet checks, `[NEXT_SKILL]`, `[WAITING]`, `[DELEGATE]`, `[SKIPPED]`. |
 | `devkit workflow show <id>` / `--unit <dir>` | Render a definition. |
-| `devkit workflow answer --unit <dir> --request gate:<gate> --action accept\|decline --by user` | Record a `plan-intent` or `plan-accept` decision. |
+| `devkit workflow answer --unit <dir> --request gate:<gate> --action accept\|decline --by user` | Record a `plan-intent` decision, or decline `plan-accept`. |
+| `devkit spec proposal accept <slug> --by user [--note <text>] [--direct --note <reason>] [--check]` | Record a `plan-accept` acceptance with `status: accepted` in one step; `--direct` for an eligible draft on the base (`CAP-DLV-proposal-incubation`). |
 | `devkit workflow return --unit <dir> --to <stage>` | Go back within the activity; voids later approvals and earlier envelopes of those stages. |
 | `devkit workflow bind --unit <dir> --workflow <id>` | Bind an unbound unit, or change its workflow. |
 | `devkit workflow validate` | Validate definitions; `SHARED_STAGE_MISMATCH` across definitions. |
 | `devkit workflow list` | List units of every layout. |
-| `devkit workflow envelope worker\|answer\|resolution --unit <dir> ...` | A run's record (`--stage` and `--effort` always; `--questions-file`, `--problem`, `--tried`, `--recovery`), its answers (`--answers-to`, `--answers-file`) or a fix (`--resolves`). |
+| `devkit workflow envelope worker\|answer\|resolution --unit <dir> ...` | A run's record (`--stage` and `--effort` always; `--questions-file`, `--problem`, `--tried`, `--recovery`), its answers (`--answers-to`, `--answers-file`, `--settle`) or a fix (`--resolves`). |
 | `devkit workflow envelope check --unit <dir> [--format json]` | Malformed envelopes and the hold: `[BLOCKED]`, `[PENDING_QUESTION]`; `blocked`, `problems`, `pending_questions` in JSON. |
 | `devkit worktree start <branch> [--no-worktree \| --existing-branch <branch> --unit <dir>]` | Start `plan-<slug>` or `dev-<slug>` in a worktree or the current checkout, or continue an existing branch after devkit-spec's attach check. |
 | `devkit worktree finish <branch> [--merge [--local-only]]` | Land the branch on the base as a merge commit, or a fast-forward under `[worktree] merge = "ff-only"` (skipping `fetch`/`push` when `--local-only`), remove the worktree, delete the branch when `delete_branch=yes`, and run the post-finish extension. |

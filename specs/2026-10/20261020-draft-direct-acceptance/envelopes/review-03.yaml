@@ -1,0 +1,24 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T23:27:36.967375Z'
+status: completed
+summary: 'round 3; code-reviewer reviewed 2036edf..3deeca9: the restore gap is fixed with a test and AC-05 holds; one recurring P3 on line wrapping remains.'
+findings:
+- issue: 'recurs: review-02.yaml #2; the CAP §3.1 rewrap moved the overflow to line 177 (123 characters); proposals/__init__.py:4 is 123 characters, followed by a short line.'
+  evidence: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md:177; packages/devkit-spec/src/devkit_spec/proposals/__init__.py:4
+  failure_condition: Always; inconsistent wrap, no behavior effect.
+  suggested_action: Rewrap CAP lines 176-178 and the __init__.py docstring lines 3-5 at 120, or waive as cosmetic.
+  resolution: open
+  severity: P3
+unverified_areas:
+- repair when proposal_gates rejects a record the engine still counts
+- accept on a proposal bound to a custom workflow without gate:plan-accept
+checks:
+  tests: PASS reviewer 29 passed; caller just test devkit-spec 1030
+  rules: PASS devkit rules check --ci --base b8c3a77
+diff_scope:
+  base: 2036edfde60892f87707c1a9e6b9c0e61eedda61
+  head: 3deeca9cd63a49559f005b27c0da0a8795307e34
+activity_effort: high

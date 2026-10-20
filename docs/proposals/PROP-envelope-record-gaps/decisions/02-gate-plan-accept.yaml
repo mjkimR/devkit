@@ -1,9 +1,0 @@
-request: gate:plan-accept
-kind: approve
-action: accept
-workflow: sdd-proposal
-stage: direction-handoff
-note: direction of the three PADRs (Q1-Q3) with answers same-loop-extra-round and
-  nearest-ancestor accepted as presented; dev_effort medium
-by: user
-at: '2026-10-19T06:34:40.892116Z'

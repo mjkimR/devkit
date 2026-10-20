@@ -11,7 +11,17 @@ import pytest
 from conftest import Write
 from devkit.core import FrontmatterError
 from devkit.core.frontmatter import parse
-from proposals.support import INCUBATED, MONTH, STAMP, TODAY, WORKFLOW, accept, spec_dir, write_workflow
+from proposals.support import (
+    INCUBATED,
+    MONTH,
+    STAMP,
+    TODAY,
+    WORKFLOW,
+    accept,
+    record_acceptance,
+    spec_dir,
+    write_workflow,
+)
 
 from devkit_spec.errors import (
     ProposalHandoffError,
@@ -123,6 +133,9 @@ def test_only_an_accepted_proposal_is_handed_off(workspace: Path, status: str) -
     with pytest.raises(ProposalNotApprovedError) as raised:
         handoff_proposal(workspace, "pending", today=TODAY)
     assert "plan-accept" in raised.value.message
+    # The directive names the one writer of an acceptance, never a hand-set status.
+    assert raised.value.fix is not None and "devkit spec proposal accept" in raised.value.fix
+    assert "--direct" in raised.value.fix and "set status: accepted" not in raised.value.fix
     assert proposal.is_file() and not (workspace / "specs").exists()
 
 
@@ -557,6 +570,7 @@ def test_the_proposal_units_own_binding_is_not_carried(workspace: Path) -> None:
     proposal = _new(workspace, "unit")
     assert "workflow: sdd-proposal" in proposal.read_text(encoding="utf-8")
     accept(proposal)
+    record_acceptance(proposal)
     result = handoff_proposal(workspace, "unit", today=TODAY)
     assert result.workflow == "sdd-spec-feature"
     spec = parse((spec_dir(workspace, "unit") / "spec.md").read_text(encoding="utf-8")).data

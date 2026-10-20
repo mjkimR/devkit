@@ -136,8 +136,9 @@ class ProposalNotApprovedError(SpecError):
     actor = Actor.USER
     what_to_report = "The proposal's status, and that its handoff needs the user's plan-accept of its direction"
     fix = (
-        "Ask the user for plan-accept; after the explicit acceptance, record gate:plan-accept, set status: accepted "
-        "in the proposal and commit, then rerun the handoff"
+        "Ask the user for plan-accept; after the explicit acceptance record it with devkit spec proposal accept: "
+        "--direct for an eligible draft on the base checkout (Backlog), or without it on plan-<slug> after Planning. "
+        "Commit and merge that acceptance into this branch, then rerun the handoff"
     )
 
 
@@ -155,11 +156,64 @@ class ProposalNeedsDecomposeError(SpecError):
 
 
 class ProposalWrongWorktreeError(SpecError):
-    """A handoff runs in a linked worktree whose branch is not ``dev-<slug>`` (``INPUT_ERROR``): the spec bundle
-    would land on another task's branch."""
+    """A handoff runs in a checkout whose branch is not ``dev-<slug>``, or the Planning form of ``accept`` in one
+    whose branch is not ``plan-<slug>`` (``INPUT_ERROR``): the change would land on another task's branch."""
 
     code = "SPEC_PROPOSAL_WRONG_WORKTREE"
     input_error = True
+
+
+class ProposalAcceptRefusedError(SpecError):
+    """``proposal accept``: the command does not accept the proposal in this form (``INPUT_ERROR``): a draft without
+    ``--direct``, a proposal in review with it, an accepted proposal whose ``gate:plan-accept`` is recorded, a
+    rejected one, or a single-file or unbound proposal, which has no gate records."""
+
+    code = "SPEC_PROPOSAL_ACCEPT_REFUSED"
+    input_error = True
+
+
+class ProposalNotEligibleError(SpecError):
+    """``proposal accept --direct``: the proposal fails a direct-acceptance condition (``INTERACTION``); every failed
+    condition is a detail line, ``blocking: ...`` or ``pending: ...``. Nothing was written."""
+
+    code = "SPEC_PROPOSAL_NOT_ELIGIBLE"
+    actor = Actor.USER
+    what_to_report = (
+        "Each condition in [DETAIL], and that the draft runs Planning instead unless the condition is resolved"
+    )
+    fix = (
+        "Report the conditions to the user; on the user's decision resolve them (record plan-intent with devkit "
+        "workflow answer, run it from the base checkout) and rerun, or start Planning on plan-<slug>. Never edit the "
+        "status or the gate records by hand"
+    )
+
+
+class ProposalGateNotOpenError(SpecError):
+    """``proposal accept``: the workflow did not open ``gate:plan-accept`` (``MAINTENANCE``), such as a missing
+    ``collect-feedback`` sweep or an envelope hold; the status was restored and nothing was recorded."""
+
+    code = "SPEC_PROPOSAL_GATE_NOT_OPEN"
+    fix = (
+        "Resolve the unmet checks and hold reasons in [DETAIL] (for collect-feedback, sweep the session with the "
+        "spec-feedback skill and record its feedback envelope), then rerun the same accept command"
+    )
+
+
+class ProposalAcceptanceUnrecordedError(SpecError):
+    """``proposal handoff``: a proposal bound to ``sdd-proposal`` says ``status: accepted`` but has no effective
+    accepted ``gate:plan-accept`` record (``INTERACTION``); nothing was written."""
+
+    code = "SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED"
+    actor = Actor.USER
+    what_to_report = (
+        "That the proposal's acceptance is not recorded, and whether a worker envelope shows that Planning ran"
+    )
+    fix = (
+        "Stop and ask the user; never record an acceptance unasked. Without a worker envelope, after the user's "
+        "explicit acceptance repair it on the base checkout with devkit spec proposal accept <slug> --by user "
+        "--direct --note <reason>, merge the base into dev-<slug> and rerun the handoff. With one, report it: on the "
+        "user's decision the whole Planning merge is reverted on the base and Planning runs again"
+    )
 
 
 class ProposalWorkflowError(SpecError):

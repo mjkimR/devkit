@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T23:19:01.507834Z'
+status: completed
+summary: 'SPEC-envelope-record-gaps complete: reverify closes challenger rounds (deciding state, --from, challenger findings refusal, review= in check output); answer envelopes carry settles via --settle; new warning RULE-proposal-boundaries with guide, tests and bundle registration; review-loop, planning, worker-records, envelope, spec-delegate, sdd-proposal and proposal template text; six Living Spec capabilities reconciled; FB-review-loop-round-count-across-procedure-change resolved. Code review: 2 P3 fixed (reverify-01). Reconcile: 1 P1 + 3 P2 fixed, self-verified (reconcile-check-02).'
+findings: []
+assumptions:
+- The new rule reaches this repository's .devkit installation only after the Host runs devkit sync
+unverified_areas:
+- just smoke not run (packaging of the new rule asset)
+checks:
+  tests: PASS just test-affected 1921 passed (mode=partial)
+  build: PASS just check pyright 0 errors in every module
+  lint: PASS just lint-check all modules; devkit rules check --ci --base 03eef3f errors=0 warnings=0
+diff_scope:
+  base: 03eef3f5fa6373b9b4698de08dc1bdce037ba498
+  head: 192a70c65727a2380fffcab5da08c9d3fa6560a0
+activity_effort: medium

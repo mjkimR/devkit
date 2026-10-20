@@ -1,11 +1,13 @@
 """devkit_spec.proposals: proposals and the spec bundles they become.
 
 ``create_proposal`` scaffolds ``docs/proposals/PROP-<slug>/`` (bound to workflow ``sdd-proposal`` when the project
-has it), ``create_padr`` a preliminary decision inside it, and ``handoff_proposal`` turns an approved proposal
-into ``specs/<YYYY-MM>/<YYYYMMDD>-<slug>/``, promoting PADRs to ADRs, moving materials and rewriting what pointed into
+has it), ``create_padr`` a preliminary decision inside it, ``accept_proposal`` records the user's acceptance (also a
+direct acceptance of an eligible draft), and ``handoff_proposal`` turns an approved proposal into
+``specs/<YYYY-MM>/<YYYYMMDD>-<slug>/``, promoting PADRs to ADRs, moving materials and rewriting what pointed into
 the proposal. ``create_spec`` creates a spec bundle without a proposal. Contracts: ``CAP-DLV-proposal-incubation`` and ``CAP-DLV-spec-bundles`` (``docs/capabilities/delivery/``).
 """
 
+from devkit_spec.proposals.accept import AcceptResult, accept_proposal
 from devkit_spec.proposals.binding import (
     BUGFIX_WORKFLOW,
     DEFAULT_EFFORT,
@@ -55,6 +57,7 @@ __all__ = [
     "TARGET_DOCS",
     "TASK_KIND",
     "TASK_KINDS",
+    "AcceptResult",
     "CarriedGate",
     "CarriedProposal",
     "CreatedDecision",
@@ -65,6 +68,7 @@ __all__ = [
     "RelocationPlan",
     "Rewritten",
     "Unresolved",
+    "accept_proposal",
     "carry_proposal_body",
     "clean_slug",
     "create_padr",

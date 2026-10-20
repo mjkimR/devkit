@@ -20,7 +20,12 @@ path it would create), then:
 5. rewrites links and ID references that pointed into the proposal (``rewrite``);
 6. removes the proposal;
 7. carries the proposal's ``gate:plan-intent`` and ``gate:plan-accept`` records to the spec under the same names
-   (``_proposal_gates``, ``_record_gates``): a carried approval is never turned into the approval of another decision.
+   (``proposal_gates``, ``_record_gates``), each with the note ``PROP-<slug>: <the proposal record's note>``: a carried
+   approval is never turned into the approval of another decision.
+
+A bundle bound to ``sdd-proposal`` hands off only with its effective accepted ``gate:plan-accept`` (the rule that
+carries it), not on ``status: accepted`` alone (``ProposalAcceptanceUnrecordedError``); a single-file or unbound
+proposal, which can carry no gate record, and one bound to another workflow keep the status-only rule.
 
 A legacy proposal or PADR whose slug starts with a number (``PROP-2024-budget``) is refused: the ID it would become
 breaks ``RULE-id-convention``. A failure of any kind in steps 1 to 4 removes what they wrote, moves what they moved
@@ -58,6 +63,7 @@ from devkit_spec.branches import require_development_branch
 from devkit_spec.config import GLOBAL
 from devkit_spec.documents import DocumentIndex, parse_document
 from devkit_spec.errors import (
+    ProposalAcceptanceUnrecordedError,
     ProposalCleanupWarning,
     ProposalGateNotCarriedWarning,
     ProposalHandoffError,
@@ -78,6 +84,7 @@ from devkit_spec.proposals.binding import (
     DEV_EFFORT,
     EFFORTS,
     PLANNING_EFFORT,
+    PROPOSAL_WORKFLOW,
     TASK_KINDS,
     resolve_binding,
     spec_workflow,
@@ -249,7 +256,7 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
     ``ProposalGateNotCarriedWarning``. Raises, before writing anything: ``ProposalSlugError`` (also for a
     proposal or PADR slug whose first segment has no letter), ``ProposalNotFoundError``, ``ProposalInvalidError``
     (also a ``task_kind`` outside ``TASK_KINDS`` or a ``planning_effort``/``dev_effort`` outside ``EFFORTS``),
-    ``ProposalNotApprovedError``, ``ProposalNeedsDecomposeError``,
+    ``ProposalNotApprovedError``, ``ProposalAcceptanceUnrecordedError``, ``ProposalNeedsDecomposeError``,
     ``ProposalSlugConflictError``, ``ProposalWorkflowError``,
     ``ProposalTargetExistsError``, ``ProposalWrongWorktreeError`` (``_check_worktree``). A failure while writing
     removes what was written, moves the materials and carried files back and keeps the proposal, then raises
@@ -285,6 +292,17 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
             f"proposal PROP-{slug} is marked {NEEDS_DECOMPOSE}: true; it is split in Backlog, never handed off",
             target_files=[proposal_rel],
         )
+    gates = proposal_gates(bundle, text_value(meta.get("workflow"))) if is_bundle else []
+    if (
+        is_bundle
+        and text_value(meta.get("workflow")) == PROPOSAL_WORKFLOW
+        and ACCEPT_GATE not in {gate.request for gate in gates}
+    ):
+        raise ProposalAcceptanceUnrecordedError(
+            f"proposal PROP-{slug} is accepted but has no effective accepted {ACCEPT_GATE} record; the handoff needs"
+            " the user's recorded acceptance",
+            target_files=[proposal_rel],
+        )
     namespace = _namespace(root, meta, proposal_rel)
     summary = _summary(meta, proposal_rel)
     kind = _task_kind(meta, proposal_rel)
@@ -307,14 +325,12 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
     extras: list[tuple[Path, Path]] = []
     feedback: list[tuple[Path, Path]] = []
     records: list[Path] = []
-    gates: list[Decision] = []
     if is_bundle:
         if (bundle / TARGET_DOCS).is_file():
             target_docs_text = _read(bundle / TARGET_DOCS, root)
         decisions = _plan_decisions(root, bundle / DECISIONS, month, stamp)
         targets += [decision.target for decision in decisions]
         records = _unit_records(bundle)
-        gates = _proposal_gates(bundle, text_value(meta.get("workflow")))
         preserved = root / "docs" / MATERIALS / month / f"{stamp}-{slug}"
         feedback = plan_open_feedback(root, bundle, target_dir)
         extras = _plan_extras(
@@ -606,7 +622,7 @@ def _effort(meta: dict[str, Any], field: str, proposal_rel: str) -> str | None:
     )
 
 
-def _proposal_gates(bundle: Path, workflow: str) -> list[Decision]:
+def proposal_gates(bundle: Path, workflow: str) -> list[Decision]:
     """The proposal's approvals the spec carries (``CARRIED_GATES``, in order): for each, the latest record of the
     unit's bound ``workflow`` that is not ``cancel``, when it is ``accept`` and no return record that is not a
     ``cancel`` follows it. Stricter than devkit's voiding, so a doubtful approval is asked again rather than carried.
@@ -636,20 +652,22 @@ def _record_gates(
     gates: list[Decision],
     notices: list[AdvisoryError],
 ) -> list[CarriedGate]:
-    """Record each of the proposal's ``gates`` in the spec under its own name, with its ``by`` and a note naming
-    ``PROP-<slug>``. A gate that is an open request of the bound spec (``gate:plan-intent`` at its ``intent`` stage)
+    """Record each of the proposal's ``gates`` in the spec under its own name, with its ``by`` and the note
+    ``PROP-<slug>: <the gate's note>`` (``PROP-<slug>`` when it has none), so the spec shows how its direction was
+    accepted. A gate that is an open request of the bound spec (``gate:plan-intent`` at its ``intent`` stage)
     is answered with devkit's ``record_answer``; one the spec's workflow never asks (``gate:plan-accept``) is written
     as a decision record of the spec's workflow with the proposal's stage, kept for the audit trail and counting for
     no stage. A gate the spec answered by policy is skipped. The first failure of any kind stops and is added to
     ``notices`` as a ``ProposalGateNotCarriedWarning``: the handoff itself is done by then."""
     rel = target_dir.relative_to(root).as_posix()
-    note = f"PROP-{slug}"
+    origin = f"PROP-{slug}"
     carried: list[CarriedGate] = []
     request = gates[0].request
     try:
         workspace = Workspace(root, lint=None, ancestor=None)
         for gate in gates:
             request = gate.request
+            note = f"{origin}: {gate.note.strip()}" if gate.note and gate.note.strip() else origin
             unit = workspace.resolve_unit(rel)
             evaluation = workspace.evaluate_unit(unit, lint=False)
             if request in {open_request.id for open_request in evaluation.requests}:
@@ -672,7 +690,7 @@ def _record_gates(
         detail = f"{exc.code}: {exc.message}" if isinstance(exc, AdvisoryError) else str(exc)
         notices.append(
             ProposalGateNotCarriedWarning(
-                f"{request} of SPEC-{slug} was not carried from {note}",
+                f"{request} of SPEC-{slug} was not carried from {origin}",
                 detail,
                 target_files=[f"{rel}/{SPEC_FILE}"],
                 fix=f"Once the cause is resolved, ask the user again for each gate devkit workflow next --unit {rel} "

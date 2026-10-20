@@ -46,5 +46,7 @@ Python 3.12 or later, macOS or Linux. The [development guide](../../docs/develop
 Repository roadmaps use global `docs/roadmap/MS-<slug>.md` milestone documents. Assign one with
 `devkit spec proposal new <slug> --milestone MS-<slug>` or `devkit spec new <slug> --milestone MS-<slug>`;
 `proposal new --decomposed-from PROP-<parent>` preserves the original draft's identity. The Backlog and spec-next
-skills own lifecycle decisions and next-work ordering. See `CAP-DOCS-document-model`, `CAP-DLV-proposal-incubation`
-and `CAP-HARN-agent-guidance`; GitHub issue integration is excluded.
+skills own lifecycle decisions and next-work ordering. `devkit spec proposal accept <slug> --by user` records the
+user's acceptance in one step, after Planning or, with `--direct`, for an eligible draft on the base checkout without
+Planning. See `CAP-DOCS-document-model`, `CAP-DLV-proposal-incubation` and `CAP-HARN-agent-guidance`; GitHub issue
+integration is excluded.
