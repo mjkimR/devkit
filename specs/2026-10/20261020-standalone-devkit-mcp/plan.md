@@ -2,42 +2,62 @@
 id: PLAN-standalone-devkit-mcp
 spec: SPEC-standalone-devkit-mcp
 ---
-<!-- devkit:skeleton -->
 
-# Technical Plan: `SPEC-standalone-devkit-mcp` Independent devkit-mcp runtime and default approval integration
+# Technical Plan: `SPEC-standalone-devkit-mcp`
 
-## 1. Architecture Overview & Impact
-- Target Area: host/
-- Target Docs Blueprint: `PROP-standalone-devkit-mcp-target` (Living Spec targets for this plan and reconcile.md)
+## 1. Constitution & Invariant Review
 
-## 2. Component Breakdown & Interface Contracts
+`ADR-independent-mcp-runtime-with-project-registration-and-environment-guards` authorizes the narrow MCP
+ownership changes to `ADR-dist-module-split`, `ADR-dist-command-composition` and host project settings.
+The current core resolver is integrated and supplies `read_effective_config(root).values` and
+`resolve_execution_environment(root).environment/source`. Existing service factories accept an executor root;
+retain that interface and carry a process-local invocation context through core contracts to bind the separate
+configuration workspace without importing the SDK into domain packages.
 
-### Planned Boundaries:
-- `packages/`
-- `pyproject.toml`
-- `uv.lock`
-- `justfile`
-- `AGENTS.md`
-- `.github/workflows/`
-- `docs/architecture/`
-- `docs/development/`
-- `docs/decisions/`
-- `packages/devkit-dist/src/devkit/core/`
-- `packages/devkit-dist/src/devkit/host/`
-- `packages/devkit-dist/src/devkit/distribution/`
-- `packages/devkit/src/devkit/integration/`
-- `packages/devkit-spec/src/devkit_spec/handoff_mcp.py`
-- `packages/devkit-spec/src/devkit_spec/bundle/skills/spec/`
-- `scripts/`
-- `guides/install/`
-- `docs/capabilities/host/`
-- `docs/capabilities/integration/`
-- `docs/capabilities/delivery/`
-- `docs/capabilities/worktree/`
+## 2. Architecture Overview & Impact
 
-### Excluded Boundaries:
-- `packages/devkit-advisory/`
-- `packages/devkit-spec/src/devkit_spec/scope/`
+- `devkit.core.mcp`: dependency-free tool/confirmation contracts and explicit execution context guard.
+- `devkit_mcp`: command plugin, service discovery, SDK transport, retained runtime descriptor provider.
+- `devkit.host`: narrow registration provider discovery and exact project-entry reconciliation.
+- Distribution sync: ordinary reconciliation and read-only planning/locked verification, separate from receipts.
+- Integration and handoff: guards before form, after reply/locks and at mutation boundaries.
+- Package, test-selector, release and installation matrices include the optional wheel.
 
-## 3. Verification & Test Plan
-- <commands and checks that verify the acceptance criteria>
+The new wheel requires the same-version dist wheel, `mcp>=1.30,<2` and directly imported `jsonschema`.
+No compatibility reader, command alias or global setup writer is retained.
+
+## 3. Component & Interface Design
+
+The provider returns a launch descriptor with executable, executor root, configuration workspace and profile.
+Only retained base/tool-installed imports with the same installed domain providers qualify. Explicit setup may
+choose a verified executable. Configuration identity binds resolved checkout and common Git directory; tool
+arguments cannot override it. A context guard resolves the local environment on every protected boundary.
+Execution classifications are read_only, preflight, interactive and approved_resume; cloud profiles list only
+read_only services. Transport and domain layers both enforce restrictions.
+
+Registration discovers providers without a hard runtime import. Codex TOML and Claude JSON entries preserve
+foreign configuration. Plan all destinations before any write; reject duplicate keys, unsafe paths, tracked or
+visible foreign destinations and edited/unowned entries. Lock common Git state before the checkout project lock.
+An ignored local ledger stores exact entries and owned exclusion lines. A recoverable journal records previous
+and desired file bytes/modes; recovery refuses foreign edits. Recheck Git eligibility and file identity before
+writes. Existing user/ancestor/managed collisions remain untouched and effective host behavior stays unknown.
+
+## 4. Failure Modes
+
+Missing provider removes only exact owned project entries. Provider load errors fail closed. Missing retained
+runtime leaves new registration absent with a deterministic advisory. Explicit opt-out uses the same ownership
+checks. Exclusions stay local after removal with manual cleanup guidance. Cloud transition stops the next mutation
+and preserves completed effects as a partial result. Only a same-call, final captured cleanup context can survive
+intentional deletion of its exact configuration checkout; later calls and resume fail closed.
+
+## 5. Verification & Test Plan
+
+AC-01: isolated built-wheel combinations, module/path overlap checks, dist-only and command discovery.
+AC-02: existing transport tests moved to the runtime wheel plus SDK capability/protocol cases.
+AC-03: isolated Git repositories, linked worktrees, ignored/tracked/foreign files, byte/mode preservation,
+provider failures, collisions, journal recovery and dry-run/locked sync tests.
+AC-04/05: independent workspace overlays, cloud transitions at form/lock/mutation boundaries, deleted workspace,
+retained executable/import source and process-local authority tests.
+AC-06: record available host version evidence; actual native UI remains explicitly unverified if unavailable.
+Run relevant lint/types, `just test-affected`, dist-only, wheel smoke, release validation without publication,
+and cumulative governance. Medium review uses an independent code reviewer and separate reconcile reviewer.

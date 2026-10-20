@@ -1,14 +1,13 @@
 ---
 id: SPEC-standalone-devkit-mcp
 title: Independent devkit-mcp runtime and default approval integration
-summary: Extract the shared MCP runtime into devkit-mcp, manage project registrations through sync, and make native MCP the default interactive approval route while retaining domain services in their owning packages.
+summary: "Extract the shared MCP runtime into devkit-mcp, manage project registrations through sync, and make native MCP the default interactive approval route while retaining domain services in their owning packages."
 status: planned
 created: 2026-10-20
 related_capabilities: []
 related_stories: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-standalone-devkit-mcp] Independent devkit-mcp runtime and default approval integration
 
@@ -26,16 +25,15 @@ adaptation, installed service discovery and runtime diagnostics. Domain executio
 
 `ADR-independent-mcp-runtime-with-project-registration-and-environment-guards` records the package and authority
 boundary. `docs/materials/2026-10/20261020-standalone-devkit-mcp/runtime-and-registration-evidence.md` records code evidence, official platform support,
-alternatives and the verification matrix. These are proposed contracts pending `plan-accept`, not implemented
-behavior. No Development or integration is authorized by this Planning run.
+alternatives and the verification matrix. The accepted ADR authorizes this Development contract; integration remains a separate Host action.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Independent devkit-mcp runtime and default approval integration so that system capabilities are extended.
+- **US-1**: As a local Host, I want independently installed MCP services with exact project registration and scoped native approval, so that I can review and integrate work without binding runtime lifetime to a removable task checkout.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: Shared worker coordination state, unattended policy-authorized merge/cleanup, remote multi-host serving, desktop/VS Code adapters, global host mutation, trust/sandbox changes, compatibility shims and presentation language changes.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
@@ -48,17 +46,23 @@ remain unchanged. Reconcile the explicit project-settings exception in `CAP-HOST
 
 Acceptance must demonstrate:
 
-### Scenario 1 [AC-01]: Carried from proposal
-1. Built-wheel matrices: dist alone, runtime+dist, agt without SDK, agt[mcp], and spec+runtime. No circular dependency,
+### Scenario 1 [AC-01]: Independent installations
+- **Given** built wheels in isolated environments.
+- **When** installing supported package combinations.
+- **Then** Built-wheel matrices: dist alone, runtime+dist, agt without SDK, agt[mcp], and spec+runtime. No circular dependency,
    duplicate installed path, missing direct dependency or import via the monorepo masks packaging faults. CLI
    discovery and server version identify devkit-mcp; dist remains the owner of the devkit executable/receipt.
 
-### Scenario 2 [AC-02]: Carried from proposal
-2. Extraction preserves schema validation, service duplicate/load failures, stdout protocol isolation, native
+### Scenario 2 [AC-02]: Transport and confirmation
+- **Given** installed service providers and an MCP client.
+- **When** discovering and invoking tools.
+- **Then** Extraction preserves schema validation, service duplicate/load failures, stdout protocol isolation, native
    accept/decline/cancel/disconnect handling and missing-form refusal, under the supported installed SDK/protocol.
 
-### Scenario 3 [AC-03]: Carried from proposal
-3. Repeated sync converges both host files and ownership state; dry-run/check write nothing; opt-out, uninstall,
+### Scenario 3 [AC-03]: Registration ownership
+- **Given** selected supported agents and project registration state.
+- **When** sync, dry-run, check, setup or remove reconciles the project.
+- **Then** Repeated sync converges both host files and ownership state; dry-run/check write nothing; opt-out, uninstall,
    unsupported host, absent retained runtime, user shadowing, edited entry, duplicate key, file-mode preservation,
    external edit and journal recovery have explicit tests. Absent host files become locally excluded, existing ignored
    destinations remain eligible, and tracked/visible foreign untracked destinations remain byte-identical with
@@ -67,20 +71,26 @@ Acceptance must demonstrate:
    writes serialize. No tests or
    smoke checks edit real user host settings or trust stores.
 
-### Scenario 4 [AC-04]: Carried from proposal
-4. Local-to-cloud changes before invocation, during form wait and during lock wait stop the next mutation;
+### Scenario 4 [AC-04]: Execution constraints
+- **Given** explicit owning configuration workspace and retained executor.
+- **When** environment changes before invocation or during confirmation/lock waits.
+- **Then** Local-to-cloud changes before invocation, during form wait and during lock wait stop the next mutation;
    cloud stale/direct registrations and resume cannot obtain/use interactive approval. Read-only status works
    without elicitation capability. Prepare is not falsely advertised as the cloud read-only subset. Cross-worktree
    tests use different copied config values and verify the owning config path, not the retained executor's value.
 
-### Scenario 5 [AC-05]: Carried from proposal
-5. Removing the task does not remove the executable/import source. Reconnect cannot import old process authority;
+### Scenario 5 [AC-05]: Runtime lifetime
+- **Given** a retained executable/import source and an approved task scope.
+- **When** task cleanup removes the owning configuration workspace.
+- **Then** Removing the task does not remove the executable/import source. Reconnect cannot import old process authority;
    concurrent server approval records remain independent. A vanished config workspace prevents new approval and
    resume; unexpected removal stops mutation, while only the declared same-call terminal cleanup may finish after
    deliberate removal of its own config workspace.
 
-### Scenario 6 [AC-06]: Carried from proposal
-6. Real Codex CLI and Claude Code terminal sessions separately record registration, trust, discovery, native form,
+### Scenario 6 [AC-06]: Host evidence
+- **Given** available Codex CLI and Claude Code terminal hosts.
+- **When** collecting separately attributable UI evidence without changing real settings.
+- **Then** Real Codex CLI and Claude Code terminal sessions separately record registration, trust, discovery, native form,
    decline/cancel, post-approval effects and permission prompts with versions. Simulated transport tests alone do
    not establish UI support. If real-host evidence is unavailable, report it as unverified and do not claim that
    host is fully validated. No desktop/VS Code/SDK adapter is included.
@@ -93,11 +103,7 @@ changes are validated without publishing. Extraction is the first internal stage
 guard work follows the integrated configuration contract, then guidance and host evidence. This is one coherent
 proposal, not permission for a partial extraction-only completion.
 
-## 5. Carried Proposal Notes
-
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
-
-### 2. Settled Design
+## 5. Accepted Design
 
 #### Package and service ownership
 
@@ -247,14 +253,9 @@ previous user authorization can be used only when it already covers the exact ac
 No automatic policy dispatcher or unattended mutation authority is added. Handoff retains its effort choice and
 never authorizes final integration. Worker contracts and integration/handoff guidance reflect Host ownership.
 
-### 4. Lifecycle & Retirement Criteria
+## 6. Development Assumptions
 
-Ready for `plan-accept` when the PADR, evidence, cross-proposal dependency and challenger disposition are reviewed.
-Acceptance selects the design; it does not prove runtime/UI behavior or start Development. No essential design
-question remains for this turn beyond accepting or declining the proposal.
-
-Scope excluded: coordination storage and generic shared-filesystem APIs (`PROP-worker-shared-state-mcp`),
-policy-authorized unattended merge/cleanup (`PROP-policy-authorized-integration`), remote multi-host serving,
-VS Code/SDK/desktop adapters, trust/sandbox bypass, global host configuration mutation and compatibility shims.
-Future shared-state services can consume the runtime contract without moving their domain behavior into it.
-
+The integrated local-config API exposes `EffectiveConfig.values` and `ExecutionEnvironment.environment/source`;
+this implementation consumes those APIs without adding another resolver. The supplied worktree and committed
+handoff define the write boundary. Real-host form UI evidence can remain explicitly unverified; isolated protocol
+and filesystem tests do not claim host UI support. No source feedback files require direct-fix resolution.
