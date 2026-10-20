@@ -227,3 +227,20 @@ def test_glossary_uses_staged_snapshot_contents(tmp_path: Path) -> None:
     assert _found(check(RULE, materialized, targets=list(snapshot.changed))) == [
         ("docs/glossary.md", 3, "no document has the ID ADR-missing")
     ]
+
+
+def test_glossary_compact_empty_cells_keep_owner_and_following_rows(tmp_path: Path) -> None:
+    text = (
+        _GLOSSARY_HEADER
+        + "|term|definition|`ADR-missing`|||\n"
+        + "| term | definition | `ADR-next` | | |\n"
+        + "term|definition|`ADR-no-border`||\n"
+        + "| term | definition |\n"
+        + "| term | definition | `ADR-extra` | | | ignored surplus |\n"
+    )
+    assert _found(check(RULE, tmp_path, {"docs/glossary.md": text})) == [
+        ("docs/glossary.md", 3, "no document has the ID ADR-missing"),
+        ("docs/glossary.md", 4, "no document has the ID ADR-next"),
+        ("docs/glossary.md", 5, "no document has the ID ADR-no-border"),
+        ("docs/glossary.md", 7, "no document has the ID ADR-extra"),
+    ]

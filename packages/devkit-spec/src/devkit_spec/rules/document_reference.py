@@ -243,7 +243,7 @@ class DocumentReferenceRule(BaseRule):
             if line.number != previous + 1:
                 state = ""
             previous = line.number
-            cells = line.text.strip().strip("|").split("|")
+            cells = line.text.strip().removeprefix("|").removesuffix("|").split("|")
             cells = [cell.strip() for cell in cells]
             if cells == ["Term", "Definition", "Owner", "Avoid", "Code identifiers"]:
                 state = "header"
@@ -251,10 +251,12 @@ class DocumentReferenceRule(BaseRule):
             if state == "header":
                 state = "rows" if len(cells) == 5 and all(re.fullmatch(r":?-{3,}:?", c) for c in cells) else ""
                 continue
-            if state != "rows" or len(cells) != 5:
+            if state != "rows" or "|" not in line.text:
                 state = ""
                 continue
-            for match in re.finditer(rf"`({ID_SOURCE})`|\[({ID_SOURCE})\]", cells[2]):
+            # Markdown rows may omit trailing cells or include surplus ones; the header fixes Owner at column 3.
+            owner = cells[2] if len(cells) > 2 else ""
+            for match in re.finditer(rf"`({ID_SOURCE})`|\[({ID_SOURCE})\]", owner):
                 target = match.group(1) or match.group(2)
                 problem = _resolve_problem(index, target)
                 if problem:
