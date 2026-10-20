@@ -2,7 +2,7 @@
 id: PROP-language-setting-coverage
 title: Extend language settings to MCP approval content
 summary: "Share a local-capable presentation language preference between response-style and domain-owned English/Korean MCP approval content, without claiming host UI localization."
-status: reviewing
+status: accepted
 created_at: 2026-10-20
 target_area: host/
 priority: medium
