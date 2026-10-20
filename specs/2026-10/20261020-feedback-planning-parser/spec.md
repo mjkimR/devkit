@@ -2,7 +2,7 @@
 id: SPEC-feedback-planning-parser
 title: Clarify Planning execution context and expose reconciliation parsing
 summary: "Align Planning context, temporary probe boundaries and reusable reconciliation text parsing."
-status: in-progress
+status: completed
 created: 2026-10-20
 related_capabilities:
   - CAP-DLV-delivery-workflows
