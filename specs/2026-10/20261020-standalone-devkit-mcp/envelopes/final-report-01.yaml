@@ -1,0 +1,31 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T06:53:28.511760Z'
+status: completed
+summary: Completed the accepted standalone devkit-mcp wheel and command, exact project registration and recovery, retained-runtime/configuration binding, cloud and later-mutation guards, fresh-worktree registration initialization, package matrices and Host-owned approval guidance. Independent code and reconciliation reviews pass; worker-01 boundary blocker is resolved. Ready for Host validation and dev-integration.
+findings: []
+assumptions:
+- Emulated confinement used explicit worktree cwd, git -C, scoped permissions and Host diff validation; no native isolation guarantee.
+- Refusal-only child constraints carry identity, never native approval, resume or terminal-removal authority; retained executor is distinct from configuration owner.
+- Host authorized lifecycle initialization and system temporary fixture scopes plus ARCH-08-1-agent-output correction; no accepted implementation requirements deferred.
+- 'Source assets needing Host sync: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/backlog.md and completion.md; bundle/subagents/development-worker.md and planning-worker.md.'
+- Host owns final asset sync/receipt, newer-main incorporation and integration. No real settings, global trust stores, merge, push or publication changed.
+unverified_areas:
+- Real Codex 0.163.0 and Claude Code 2.1.304 terminal registration/connection, discovery, trust, native forms and permission UI; protocol tests do not establish UI behavior.
+- Live cloud transport availability; final Host synchronization, receipt and integration.
+checks:
+  tests: 'PASS just test-affected mode=full fallback: 3888 passed, 14 skipped in 67.24s; isolated HOME/config/temp; final code unchanged since verification'
+  dist-only: PASS 1029 passed in 10.85s without agt/runtime SDK leakage
+  build: 'PASS all 5 built-wheel combinations: dist, runtime, agt, agt-mcp, spec-runtime; zero duplicate installed paths or SDK leakage; offline release script built 8 wheels plus SHA256SUMS without publication'
+  lint: PASS 38 changed Python files Ruff lint and format; diff check clean
+  types: PASS scoped Pyright zero errors and warnings
+  code-review: PASS independent review and reverify closed four initial P1 findings plus child-process guard P1; no remaining findings
+  reconcile: PASS separate independent reviewer confirmed all three doc findings resolved; reconcile-check-03; spec completed and reconcile resolved
+  governance: PASS cumulative original base through 292a579 zero errors/warnings; normal commit gates passed
+  feedback: PASS swept accumulated run and recovery; one observed fixture-scope record, no duplicates
+diff_scope:
+  base: 2712c2844ffe25cf3320cb245af6965d7c96ab5f
+  head: 292a57954856d86f67131cea76f5dad369b41c21
+activity_effort: medium
