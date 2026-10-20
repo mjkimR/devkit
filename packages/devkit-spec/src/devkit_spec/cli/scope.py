@@ -302,7 +302,7 @@ def query_cmd(
     mine: Record | None
     unreadable: ScopeRecordInvalidWarning | None = None
     try:
-        found = own(session)
+        found = own(session, cleanup=False)
         mine, others, problems = found.record, found.others, found.problems
     except (ScopeTokenMissingError, ScopeRecordMissingError, ScopeRecordInvalidWarning) as exc:
         # listing needs no own record: one that may be unreadable is reported with the other unreadable files

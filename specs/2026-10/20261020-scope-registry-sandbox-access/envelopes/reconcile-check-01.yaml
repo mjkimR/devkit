@@ -1,0 +1,20 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T02:01:11.635232Z'
+status: completed
+summary: 'Independent medium reconcile-reviewer reconcile_reads: PASS; capability reflects all access changes and reconcile targets cover the durable contract; no findings.'
+findings: []
+assumptions:
+- Reviewer /root/scope_reads_dev/reconcile_reads used emulated read-only scope, explicit absolute workdir and unchanged clean HEAD validation; no native confinement guarantee.
+unverified_areas:
+- Reviewer reused tests/platform evidence; Linux evidence covers native tmpfs, not Docker Desktop host bind mounts that failed flock exclusion.
+checks:
+  reflection: PASS implementation, capability, accepted ADR and AC comparison
+  targets: PASS searched related contracts; single capability target complete
+  continuity: PASS no code changes since reviewed f4a28477404206d958c364da08209d706d978df0
+  entrypoints: PASS existing scope directory and CLI cover implementation; tests candidate excluded
+diff_scope:
+  base: 17dc472345e435d0ed6363e8a1d5fb1f65357d0c
+  head: 9960cb4dbba70226753af95d88c41ba1a5ed479c

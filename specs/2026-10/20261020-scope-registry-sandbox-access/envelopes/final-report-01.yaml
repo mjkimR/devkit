@@ -1,0 +1,21 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T02:02:22.308065Z'
+status: completed
+summary: Registry record/history queries now use existing read-opened shared locks and cleanup-free token lookup. Missing or unsafe locks fail visibly; mutation storage, cleanup and authorization remain unchanged. Verified through independent medium code/reconcile reviews and actual platform/sandbox execution.
+findings: []
+assumptions:
+- Development effort medium; user-approved retained Git storage and read-access separation. Emulated worker and support-role scope enforced by explicit workdir, scoped commands and committed-range validation; not native path confinement.
+unverified_areas:
+- Linux kernel compatibility probe used native tmpfs; Docker Desktop host bind mounts failed flock exclusion and are unsupported. Full scope suite executed on macOS.
+checks:
+  tests: 'PASS just test-affected partial selection: 1099 tests; no production code changes afterward'
+  build: 'PASS just check devkit-spec: zero Pyright errors/warnings; Python-only change with no packaging artifact changes'
+  lint: PASS just lint devkit-spec; git diff --check; cumulative rules check --ci --base 17dc472345e435d0ed6363e8a1d5fb1f65357d0c zero errors/warnings
+  platforms: PASS Darwin 24.6.0 and Linux 6.10.14 native tmpfs read-only shared flock compatibility
+  sandbox: PASS ordinary, --spec and --history actual protected-Git queries without escalation
+diff_scope:
+  base: 17dc472345e435d0ed6363e8a1d5fb1f65357d0c
+  head: 504e9e3d982020f87a593b892bb17ff67e8c9310

@@ -140,7 +140,7 @@ def test_locker_errors_pass_through(tmp_path: Path) -> None:
     with pytest.raises(ScopeLockUnsupportedError):
         registry(tmp_path, locker=_Unsupported()).register(record("a", "/wt"), Deadline(5))
     with pytest.raises(ScopeTimeoutError):
-        registry(tmp_path, locker=_Blocking()).query("ns", Deadline(0.05))
+        registry(tmp_path, reader_locker=_Blocking()).query("ns", Deadline(0.05))
 
 
 def test_flock_timeout_and_recovery(tmp_path: Path) -> None:
