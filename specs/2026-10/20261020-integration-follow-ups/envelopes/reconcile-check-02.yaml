@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T23:47:22.156396Z'
+status: completed
+summary: 'round 2; closes reconcile-check-01; fresh reconcile-reviewer verified both fixes: CAP-COLL item 9 states the post-merge criterion matching cleanup._is_post_git, CAP-INT section 4 the execution context matching IntegrationService._context, section 5 the 20 s wait within the ADR''s 30 s bound; reconcile.md lists 9 targets; no findings'
+findings: []
+checks:
+  targets: PASS 9/9 listed and matching
+diff_scope:
+  base: ''
+  head: e3606e2e52b9c351a039e6356991f946e478fff5
