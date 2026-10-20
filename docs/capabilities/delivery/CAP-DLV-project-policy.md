@@ -68,6 +68,10 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
    checkout holds changes unrelated to the task (the user's uncommitted work must stay put), another task is in flight
    in the checkout, or the user asks; otherwise the current checkout, on the activity branch started with
    `devkit worktree start <branch> --no-worktree`.
+   Switching branches in that checkout changes the branch seen by every session using its directory; another
+   session can commit to the checked-out task branch. The direct user coordinates shared sessions and may choose
+   a separate worktree for a session task. The local orchestration Host coordinates workers, which still run
+   in their own worktrees.
    `pull_request = "required"` integrates every task, `session` depth included, through a pull request (`devkit worktree
    finish --merge` and `IntegrationService.prepare` are refused with `WORKTREE_PR_POLICY`); `"auto"` uses one when the task needs platform review or CI, the base branch refuses
    direct pushes, or the user asks, otherwise a local merge. The integration path does not choose the worktree: a task integrating
