@@ -42,9 +42,12 @@ approval** solves these problems together:
    impacts, and waived Challenger risks—into the MCP-owned shared workspace (`PROP-worker-shared-state-mcp`, local
    default `<base-checkout>/.devkit/.shared/`) in the configured `[presentation] language` (`SPEC-language-setting-coverage`,
    e.g., Korean) with a 7-day TTL and `source_sha` binding, keeping tracked repository files in English.
-2. **Minimal native MCP `plan-accept` screen**: the Host opens a native MCP confirmation dialog showing only minimal
-   metadata (title, one-line summary, PADR list, recommended `dev_effort`) and a clickable link (or local
-   `devkit-viewer` route) to the shared review report.
+2. **Minimal native MCP `plan-accept` screen and sandbox-delegated execution**: the primary reason to execute
+   `plan-accept` merge and handoff through MCP is **sandbox privilege delegation**—merging/removing `../<repo>-wt-plan-<slug>`
+   and creating/initializing `../<repo>-wt-dev-<slug>` mutate sibling directories and `.git/` administration that per-command
+   shell sandboxes block (`MAT-codex-native-worker-evidence`)—while leveraging the already-established MCP native form UI
+   (`CAP-MCP-runtime-registration`) to display only minimal metadata (title, one-line summary, PADR list, recommended
+   `dev_effort`) and a clickable link (or local `devkit-viewer` route) to the shared review report.
 3. **Hold/defer for interactive Q&A**: if the user wants to inspect later or ask questions and request edits, choosing
    decline/cancel holds the proposal so the user can review and refine it conversationally (or in an isolated review
    session via a dedicated review skill) and regenerate the report when ready.

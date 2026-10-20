@@ -33,8 +33,19 @@ artifacts—specifically proposal review reports (`PROP-proposal-review-and-appr
 trees or committing localized temporary documents into the public English repository.
 
 The hypothesis is that an MCP-owned shared workspace and coordination layer with a pluggable storage adapter can
-serve both bounded coordination records and TTL-governed shared artifacts across linked worktrees and cloud agents:
+serve both bounded coordination records and TTL-governed shared artifacts across linked worktrees and cloud agents.
+The primary architectural driver for routing through MCP rather than plain CLI calls or a custom background daemon is
+**sandbox privilege delegation without daemon management** (`ARCH-01-introduction-and-goals` §3.4):
 
+- **Sandbox boundary delegation**: in linked worktrees, host shell sandboxes block writes outside the active worktree
+  (such as `<base-checkout>/.devkit/.shared/`, sibling worktrees, `.git/`, and external network/IPC endpoints, as
+  observed in `MAT-codex-native-worker-evidence`). Because the host spawns the MCP server from the retained base
+  runtime outside the per-command shell sandbox (`CAP-MCP-runtime-registration`), MCP tool calls can read and write
+  shared state without repeated OS sandbox escalations or blocked daemon socket connections.
+- **Host-managed process lifecycle (no custom daemon yet)**: MCP `stdio` gives a proven, host-managed privilege proxy
+  today without maintaining a background daemon, socket lifecycle, or crash-recovery supervisor; if future multi-session
+  in-memory coordination or heavy shared resources justify a dedicated local daemon, the adapter boundary can evolve
+  behind the same tool contract.
 - **Default local adapter (`.devkit/.shared/`)**: resolves to the retained base checkout's `.devkit/.shared/`
   directory from any linked worktree (via common-Git-directory discovery), automatically excluded from Git tracking so
   base-checkout cleanliness checks (`git status --porcelain`) remain clean while IDE `file://` links and local viewers
@@ -42,7 +53,8 @@ serve both bounded coordination records and TTL-governed shared artifacts across
 - **Pluggable server adapter (e.g., Firestore)**: selectable via environment variables or local execution
   configuration for Cloud Agent environments where no shared local filesystem exists.
 - **MCP-only agent access**: workers and host agents always read, write and list shared workspace artifacts through
-  devkit MCP tools (built on `SPEC-standalone-devkit-mcp`), never by hardcoding storage paths.
+  devkit MCP tools (built on `SPEC-standalone-devkit-mcp` and `CAP-MCP-runtime-registration`), never by hardcoding
+  storage paths.
 
 ## 2. Technical Spike Questions
 
