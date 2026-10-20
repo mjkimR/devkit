@@ -24,7 +24,7 @@ workflow: sdd-proposal
 
 ## 1. Background & Hypothesis
 
-`PROP-scope-registry-sandbox-access` retains Git storage and separates side-effect-free query/history access from
+`SPEC-scope-registry-sandbox-access` retains Git storage and separates side-effect-free query/history access from
 mutations. Register, update, release and recovery still need shared registry and per-worktree token writes.
 `CAP-COLL-work-scope-registry` coordinates several workers against that state. Relocating it to one checkout's
 `.devkit` does not make that path writable from every sandbox or eliminate ownership-token access.

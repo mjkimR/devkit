@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: PROP-scope-registry-sandbox-access
+by: user
+at: '2026-10-20T01:48:50.414349Z'

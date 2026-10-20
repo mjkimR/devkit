@@ -1,30 +1,24 @@
 ---
-id: PROP-scope-registry-sandbox-access
+id: SPEC-scope-registry-sandbox-access
 title: Work scope registry access across sandboxed worktrees
-summary: "Compare Git-directory storage, shared devkit state, and MCP-mediated access for the work scope registry across sandboxed worktrees. Define permission boundaries and query behavior without assuming that relocating state removes approval requirements."
-status: accepted
-created_at: 2026-10-20
-target_area: collaboration/
-priority: medium
-size: M
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/devkit-spec/src/devkit_spec/scope/
-    - packages/devkit-spec/src/devkit_spec/cli/scope.py
-    - packages/devkit-spec/tests/scope/
-    - docs/capabilities/collaboration/
-  excludes:
-    - Git internals and host-wide sandbox policy
-    - General-purpose agent scratch storage
-task_kind: feature
-workflow: sdd-proposal
+summary: Compare Git-directory storage, shared devkit state, and MCP-mediated access for the work scope registry across sandboxed worktrees. Define permission boundaries and query behavior without assuming that relocating state removes approval requirements.
+status: planned
+created: 2026-10-20
+related_capabilities: []
+related_stories: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-scope-registry-sandbox-access] Work scope registry access across sandboxed worktrees
+# [SPEC-scope-registry-sandbox-access] Work scope registry access across sandboxed worktrees
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-scope-registry-sandbox-access on 2026-10-20.
+- **Preserved Materials**: `docs/materials/2026-10/20261020-scope-registry-sandbox-access`
+- Target Docs Blueprint: `PROP-scope-registry-sandbox-access-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 `CAP-COLL-work-scope-registry` stores the shared registry below the Git common directory and each worktree's
 ownership token in its own Git directory. The common directory gives every linked worktree the same registry
@@ -46,7 +40,26 @@ Hypothesis: an explicit registry access boundary can preserve cross-worktree coo
 permissions. Planning should determine whether the operational benefit justifies changing storage or transport,
 using the current Git-directory implementation with scoped escalation as the baseline.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Work scope registry access across sandboxed worktrees so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1 — Shared location and identity:** How do base and linked worktrees discover one registry without confusing
   different clones? Compare Git common-directory discovery, a shared `.devkit/state/` location and a service-owned
@@ -64,11 +77,11 @@ using the current Git-directory implementation with scoped escalation as the bas
   concurrency and error reporting? Compare server startup, availability and maintenance cost with direct CLI access;
   define behavior when the service is unavailable without silently widening permissions.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 Recommend retaining Git common-directory discovery, registry storage and per-worktree tokens, and separating
-read access from mutation. `PADR-keep-shared-storage-and-separate-read-access` records the direction; the comparison
-and verification design are in `materials/access-comparison.md`. This recommendation awaits plan acceptance.
+read access from mutation. `ADR-keep-shared-storage-and-separate-read-access` records the direction; the comparison
+and verification design are in `docs/materials/2026-10/20261020-scope-registry-sandbox-access/access-comparison.md`. This recommendation awaits plan acceptance.
 
 Both ordinary `query` (including `--spec`) and `query --history` MUST perform no filesystem mutation: no directory
 or lock creation, writable opens, journal append, token cleanup or interrupted-record cleanup. Ownership lookup
@@ -101,7 +114,7 @@ The affected contract is `CAP-COLL-work-scope-registry`. `CAP-DLV-project-policy
 configuration and host authorization remain unchanged. Development targets the scope implementation, CLI tests
 and collaboration contract; medium Development effort remains appropriate. Ordinary Git writes remain separate.
 
-### Verification scenarios for the selected direction
+#### Verification scenarios for the selected direction
 
 - **V1:** From a base checkout and two linked worktrees, registered scope is mutually visible and overlaps are
   reported against the same registry; an unrelated repository remains isolated.
@@ -114,14 +127,14 @@ and collaboration contract; medium Development effort remains appropriate. Ordin
 - **V5:** If MCP is selected, verify authorized calls, denied calls and server unavailability. If file relocation is
   selected, verify path discovery, ignore rules and per-worktree token placement together.
 
-### Non-goals
+#### Non-goals
 
 - Implementing a general-purpose agent scratchpad, remote multi-host coordination or a new authentication platform.
 - Disabling sandbox protections globally, guaranteeing approval from every host, or removing Git's own write needs.
 - Selecting MCP or relocating state solely because a sandboxed command failed once.
 - Changing production behavior or current capability contracts as part of this draft.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Planning recommends the bounded read-access change at feature/proposal depth, with medium Planning and Development
 effort. Acceptance and implementation remain separate user-controlled transitions.
@@ -134,3 +147,4 @@ review Development effort against the resulting scope before handoff.
 If the baseline is retained without implementation, close the proposal with its rationale and operational guidance
 rather than creating an empty Development unit. If a change is selected, obtain plan acceptance before handoff and
 reconcile only the contracts affected by the implemented direction.
+
