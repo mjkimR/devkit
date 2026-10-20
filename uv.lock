@@ -417,7 +417,7 @@ search = [
 ]
 
 [package.dev-dependencies]
-dev = [
+dist-test = [
     { name = "pytest" },
     { name = "pytest-xdist" },
 ]
@@ -426,7 +426,7 @@ dev = [
 requires-dist = [
     { name = "click", specifier = ">=8.1.7" },
     { name = "devkit-advisory", editable = "packages/devkit-advisory" },
-    { name = "devkit-embed", marker = "extra == 'search'", url = "https://github.com/mjkimR/devkit/releases/download/v0.1.0/devkit_embed-0.1.0-py3-none-any.whl" },
+    { name = "devkit-embed", marker = "extra == 'search'", path = "models/devkit-embed/wheels/devkit_embed-0.1.0-py3-none-any.whl" },
     { name = "jinja2", specifier = ">=3.1.6,<4" },
     { name = "numpy", marker = "extra == 'search'", specifier = ">=2.0" },
     { name = "pyyaml", specifier = ">=6.0.1" },
@@ -436,7 +436,7 @@ requires-dist = [
 provides-extras = ["search"]
 
 [package.metadata.requires-dev]
-dev = [
+dist-test = [
     { name = "pytest", specifier = ">=8.0.0" },
     { name = "pytest-xdist", specifier = ">=3.6.0" },
 ]
@@ -444,9 +444,9 @@ dev = [
 [[package]]
 name = "devkit-embed"
 version = "0.1.0"
-source = { url = "https://github.com/mjkimR/devkit/releases/download/v0.1.0/devkit_embed-0.1.0-py3-none-any.whl" }
+source = { path = "models/devkit-embed/wheels/devkit_embed-0.1.0-py3-none-any.whl" }
 wheels = [
-    { url = "https://github.com/mjkimR/devkit/releases/download/v0.1.0/devkit_embed-0.1.0-py3-none-any.whl", hash = "sha256:2b8534b60d85e36c2027e2c0d13d110289fa877b9c0b2639b8c4daedbe461f38" },
+    { filename = "devkit_embed-0.1.0-py3-none-any.whl", hash = "sha256:2b8534b60d85e36c2027e2c0d13d110289fa877b9c0b2639b8c4daedbe461f38" },
 ]
 
 [[package]]

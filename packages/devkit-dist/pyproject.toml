@@ -34,16 +34,15 @@ observe = "devkit.host.observation:observe"
 
 # The dist-only check (`just test-dist`) syncs devkit-dist with this group alone, without the workspace's.
 [dependency-groups]
-dev = [
+dist-test = [
     "pytest>=8.0.0",
     "pytest-xdist>=3.6.0",
 ]
 
 [tool.uv.sources]
 devkit-advisory = { workspace = true }
-# The model wheel is built by hand and attached to the release that first ships its version (models/devkit-embed),
-# so every install of devkit-dist[search] (and devkit-agt[search]), from this workspace or from Git, gets the model files.
-devkit-embed = { url = "https://github.com/mjkimR/devkit/releases/download/v0.1.0/devkit_embed-0.1.0-py3-none-any.whl" }
+# The model wheel is committed in models/devkit-embed/wheels/ so that installation and uv run do not require network access.
+devkit-embed = { path = "../../models/devkit-embed/wheels/devkit_embed-0.1.0-py3-none-any.whl" }
 
 [build-system]
 requires = ["hatchling"]

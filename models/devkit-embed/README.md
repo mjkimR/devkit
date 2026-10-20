@@ -8,9 +8,9 @@ data-only package for dense and hybrid search in
 `devkit-agt[search]` extra.
 
 It sits outside the uv workspace and is built by hand only when the model
-changes: devkit installs the released wheel from the URL in its
-`[tool.uv.sources]` (root README, Releasing). `model.json` pins the source
-revision and the SHA-256 of every file. The weights and tokenizer are not
+changes: devkit installs the committed wheel from `wheels/` via the local path
+in `[tool.uv.sources]`. `model.json` pins the source
+revision and the SHA-256 of every file. The raw weights and tokenizer source files are not
 committed: `just model-build` downloads them from the pinned revision, verifies
-them, writes the float16 conversion and builds the wheel; building the wheel
-fails without them. Licensing: `LICENSE` (MIT) and `NOTICE`.
+them, writes the float16 conversion and builds the wheel into `dist/model/`; copying
+it to `wheels/` updates the committed wheel. Licensing: `LICENSE` (MIT) and `NOTICE`.

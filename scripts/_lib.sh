@@ -3,12 +3,13 @@
 # Pure bash and awk, so discovery does not depend on whichever python3 is on PATH.
 # Every function fails (nonzero status, message on stderr) instead of printing nothing.
 
-# The release URL of the devkit-embed model wheel, pinned in the devkit-dist package's [tool.uv.sources]
+# The path to the committed devkit-embed model wheel, pinned in the devkit-dist package's [tool.uv.sources]
 # (its search extra requires the model).
-model_wheel_url() {
-    awk -F'"' '/^devkit-embed[[:space:]]*=[[:space:]]*\{[[:space:]]*url[[:space:]]*=/ { print $2; found = 1; exit }
-        END { if (!found) exit 1 }' packages/devkit-dist/pyproject.toml || {
-        echo "error: no devkit-embed url source in packages/devkit-dist/pyproject.toml" >&2
+model_wheel_path() {
+    awk -F'"' '/^devkit-embed[[:space:]]*=[[:space:]]*\{[[:space:]]*path[[:space:]]*=/ {
+        sub(/^\.\.\/\.\.\//, "", $2); print $2; found = 1; exit
+    } END { if (!found) exit 1 }' packages/devkit-dist/pyproject.toml || {
+        echo "error: no devkit-embed path source in packages/devkit-dist/pyproject.toml" >&2
         return 1
     }
 }

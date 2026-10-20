@@ -11,7 +11,7 @@ env_dir=$(mktemp -d "${TMPDIR:-/tmp}/devkit-dist-only.XXXXXX")
 trap 'rm -rf "$env_dir"' EXIT
 
 echo "==> syncing an environment with devkit-dist only into $env_dir"
-UV_PROJECT_ENVIRONMENT="$env_dir" uv sync --no-active --frozen --exact --package devkit-dist --all-extras --quiet
+UV_PROJECT_ENVIRONMENT="$env_dir" uv sync --no-active --frozen --exact --package devkit-dist --all-extras --no-default-groups --group dist-test --quiet
 python="$env_dir/bin/python"
 
 # The check means nothing if the harness leaked in: refuse to run instead of reporting a pass.
