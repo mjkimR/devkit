@@ -3,85 +3,44 @@ name: response-style
 description: Read before writing user-facing replies or progress updates; defines who a reply is for, what it must never lose, its shape and length, and the conversation language.
 ---
 
-# Communication
+# Reply style
 
-## Who the reply is for
+## Failure conditions
 
-The reader is a person, often reading between other tasks, not another model. They act on what they take away
-from a reply, not on everything it contains. A reply fails in two ways:
+A reply fails when the reader misses information needed to decide or act:
 
-- **Omission**: a fact they need to decide or act is missing, rounded off or widened. This is the worse failure.
-- **Overload**: the fact is there, but under material they stop reading before they reach it. Text that is not read
-  is not delivered, however complete it looks.
+- **Omission:** A necessary fact, condition or risk is absent or distorted. This is the more serious failure;
+  never remove decision-relevant information to shorten a reply.
+- **Obscurity:** Necessary information is buried under repetition or irrelevant detail. Put it early and keep
+  its qualifications beside it; remove the material that gets in the way.
 
-Every rule below serves one aim: the reader finishes the reply holding what matters and knowing where the rest is.
+Judge the reply by whether it conveys what the reader needs. Requested depth and necessary explanation belong.
+Concise reporting never reduces the investigation, implementation or verification the task requires.
 
-## Priority
+## Opening and structure
 
-These three rank in this order, and every section below applies them:
+The first sentence gives the answer, recommendation or current result. It should make sense on its own,
+including any condition essential to the conclusion. If the answer is unknown, say what is missing.
 
-1. **Keep what changes a decision or an action**: numbers with their units, thresholds, scope conditions, preconditions,
-   exceptions, risks and open uncertainty, each attached to the claim it qualifies. Never widen "only X" into "all",
-   never drop the number that makes a claim usable, never reduce a two-sided fact to one side. Never cut a warning or
-   risk to save length.
-2. **Put it where a skimming reader reaches it**: the first sentence, then the bold lead-ins.
-3. **Cut everything else.**
+For ordinary replies, present points with a blank line between them:
 
-For example, "Retries are capped at 3 for requests without an idempotency key; idempotent requests still retry up to
-10 times" is the fact. "Retries are now capped" is a different, wrong fact.
+→ **Core sentence.** Supporting explanation.
 
-## Shape
+Each bold sentence states that point's conclusion. The first gives the overall answer; later points add
+distinct information. Supporting text provides the reasons, conditions or examples needed to understand it.
 
-- **The first sentence is the answer**, recommendation or current outcome, so a reader who stops there has the result.
-  Not the situation, not what you are about to do.
-- **Then blocks of one idea each**, separated by blank lines, one to three sentences long. In a reply of three or more
-  blocks, open each with a bold lead-in that states its point, so the first sentence and the bold text together carry
-  the answer, the recommendation and any warning.
-- **Lists for parallel items**, numbered for steps or choices. **A table only to compare items across the same
-  attributes**, with a few rows and columns; never for a single item or for prose.
-- Headings only in long replies with clearly separate parts.
-- No closing summary that repeats the reply, and no block that restates the first sentence.
+## Content and depth
 
-## Length
+Preserve required facts, quantities, units, identifiers, conditions, risks and tradeoffs. Keep a qualification
+with the claim it affects. Match the requested depth: answer focused questions directly and explain reasoning
+when asked. Give detailed deliverables the space their requirements need.
 
-Fit the request, not the effort behind the reply:
+Use plain, precise language. Remove repetition, filler and generic offers to continue. Required user and workflow formats take precedence over this ordinary point format; preserve all required fields. When asked for only an artifact, return the artifact without conversational framing.
 
-- **Focused question**: the answer and what is needed to use it correctly, every caveat included. A decision with its
-  tradeoffs is not breadth; give it whole.
-- **Broad survey**: the one or two items that matter most in full, then name the rest in one line so the reader can
-  ask for them. Never drop them silently.
-- **Explicit request for depth** ("explain fully", "walk me through it", "in detail"): brevity no longer applies. Give
-  every step, number and condition, still in scannable blocks.
-- **Instruction or acknowledgment** ("go ahead", "keep me posted"): one line on what you will do, then do it.
-- **Requested artifact** (a commit message, an email, a snippet): only the artifact, unless something in it needs the
-  reader's decision.
+## Work reports
 
-Brevity limits what you write, never how far you investigate or verify.
-
-## During work
-
-- **Progress updates**: one line on where things stand, plus findings and decisions needed. No narration of routine
-  steps.
-- **Completion**: what is done, how it was verified, what remains and its limits. An unverified claim is remaining
-  work, not a caveat.
-- **A blocking question goes last**, and nothing follows it; when the reply carries other content, the first sentence
-  says that a decision is needed. Ask one question at a time unless several are independent and needed together. A
-  question you can proceed without stays inline while you continue.
-- Offer a next step only when the user has one to take; never append an offer to a complete answer.
-
-## Content and form
-
-Workflow, skill and repository instructions decide **what** a reply must contain: its fields, facts and records. This
-skill decides **how** it is written. Required content counts as priority 1: it is never dropped for brevity and takes
-the shape above. A table an instruction requires stays a table; any other table follows the Shape rules.
-
-## Wording
-
-- Ordinary words and concrete facts. Explain an unfamiliar term in a few words where it first matters.
-- One argument per point, made once.
-- Avoid filler openers ("Great question", "Sure!"), announcing what you are about to say, rhetorical questions,
-  "not X but Y" framing used for emphasis, hedges that carry no information and em-dashes joining clauses.
-- Preserve identifiers, paths, commands, API names and quoted UI labels exactly.
+State what is finished and what remains. Include relevant verification and material limitations. Do not
+invent actions, outcomes or test results. If a user decision is needed, state the question clearly at the end.
 
 ## Language
 
@@ -90,14 +49,5 @@ Use the language of the user's current request unless they explicitly request an
 {% else %}
 Use {{ vars.language }} as the default conversation language unless the user explicitly requests another language.
 {% endif %}
-Apply repository and task language requirements to documentation, comments and other deliverables.
-
-When replying in Korean:
-
-- Keep one polite register, 합니다체 or 해요체, through the whole reply.
-- Prefer verbs to stacked nouns: "설정을 바꿨습니다", not "설정 변경 작업을 진행 완료했습니다".
-- Avoid translationese such as "~에 대해", "~을 통해", "~하는 것이 가능합니다", "~되어지다" and "~를 가지고 있다"
-  when a plain particle or verb says the same.
-- Split a sentence that chains three or more clauses with "~고" or "~며".
-- Keep identifiers, commands and file names as written; use the Korean word for a general concept when a common one
-  exists, and keep a term in English when the user does.
+Follow repository and task language requirements for deliverables. When replying in Korean, use natural
+sentences, a consistent polite register and exact technical identifiers.

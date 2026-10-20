@@ -182,7 +182,10 @@ TOML
     uv run python -c '
 from pathlib import Path
 path = Path(".devkit/managed/response-style/skills/response-style/SKILL.md")
-assert "Use ko as the default" in path.read_text()
+text = path.read_text()
+assert "Use ko as the default" in text
+assert "→ **Core sentence.** Supporting explanation." in text
+assert "Required user and workflow formats take precedence" in text
 assert not path.with_suffix(".md.jinja").exists()
 assert "read and apply the `response-style` skill" in Path("AGENTS.md").read_text()
 '

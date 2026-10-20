@@ -1,13 +1,13 @@
 ---
-id: PADR-response-style-source-selection
+id: ADR-response-style-source-selection
 title: Select established independent response-style sources
 summary: "Uses popularity and maintenance to screen first-party prompt sources, and original synthesis with provenance rather than star-ranked rule selection."
-proposal: PROP-response-style-survey
-status: draft
+proposal: SPEC-response-style-survey
+status: accepted
 created_at: 2026-10-20
 ---
 
-# [PADR-response-style-source-selection] Select established independent response-style sources
+# [ADR-response-style-source-selection] Select established independent response-style sources
 
 ## 1. Context & Problem Statement
 

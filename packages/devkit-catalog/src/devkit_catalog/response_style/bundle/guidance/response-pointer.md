@@ -1,1 +1,1 @@
-- When replying to the user: answer first; keep every number, condition or risk they need to decide; cut the rest. First read and apply the `response-style` skill.
+- Before replying, read and apply the `response-style` skill. Put the conclusion in the first sentence. Use `→ **Core sentence.** Explanation` for ordinary points; preserve required facts and formats, and make unfinished work and necessary user decisions clear.
