@@ -10,7 +10,7 @@ agent: antigravity
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-17
 ---
 
@@ -43,3 +43,8 @@ When to Reconsider: Once the tracked follow-up items (FB-auto-integration-dispat
 ```
 
 - **Disposition**: open. Split out of `SPEC-integration-follow-ups` in its Planning: it stays open until the user decides whether a policy may grant merge and deletion authority, which `ADR-integration-approval-asserted` currently rules out.
+
+## Promotion
+
+Handed to `PROP-policy-authorized-integration` for policy-authorized local integration and scoped cleanup,
+including host permission feasibility. This is a terminal handoff; the proposal owns the remaining decisions.
