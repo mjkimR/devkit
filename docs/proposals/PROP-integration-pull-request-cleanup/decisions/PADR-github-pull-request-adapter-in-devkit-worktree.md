@@ -39,10 +39,14 @@ conditional remote branch deletion. `integration` may import `worktree`, never t
 The second option. `devkit.worktree` gains a pull request port (remote and repository identity, merge-method
 permissions and applicable rules, PR find/create/update by head and base, PR state with `headRefOid`, `baseRefOid`,
 `mergeCommit` and `state`, merge with `--merge --match-head-commit <source>` and a devkit-composed subject, and remote
-branch deletion leased on the expected SHA) implemented with `gh`, with no terminal prompt and a bound per call.
-`gh pr merge --delete-branch` is not used (it deletes the local branch outside devkit's guards). Refused before the
-confirmation with stable codes: a remote whose URL is not GitHub, `gh` missing or not authenticated, a cross-repository
-(fork) PR, a merge queue on the target, and any path that would need `--auto` or `--admin`. Authentication is `gh`'s;
+branch deletion leased on the expected SHA) implemented with `gh`, with no terminal prompt, a bound per call, exit status, stdout and stderr returned, and
+`-R <owner>/<repo>` resolved by `gh` from the bound remote on every call (SSH host aliases and GitHub Enterprise hosts
+`gh` resolves are accepted). Remote branch deletion is `git push --force-with-lease=refs/heads/<branch>:<sha> <remote>
+--delete <branch>`, the only leased form. `gh pr merge --delete-branch` is not used (it deletes the local branch
+outside devkit's guards). Refused before the confirmation with stable codes: a remote `gh` cannot resolve, `gh`
+missing or not authenticated, a cross-repository (fork) PR, a merge queue on the target, and any path that would need
+`--auto` or `--admin`. A nonzero exit that is not a recognised refusal is an unknown outcome, resolved from the
+remote. Authentication is `gh`'s;
 devkit stores no token.
 
 ## 5. Consequences

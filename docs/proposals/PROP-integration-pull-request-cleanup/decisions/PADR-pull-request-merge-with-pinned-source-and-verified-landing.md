@@ -41,14 +41,16 @@ at that moment.
 
 ## 4. Decision Outcome
 
-Option A. The approval binds the source SHA (enforced server-side by the head pin) and the confirmation target;
-before the merge call the fetched target must descend from the confirmation target, the prospective merge must be
+Option A. `prepare` fetches the target's remote ref; the fetched remote SHA is the confirmation target, the
+source must contain it and the target policy is read from it. The approval binds the source SHA (enforced
+server-side by the head pin) and that confirmation target; before the merge call the fetched target must descend from the confirmation target, the prospective merge must be
 clean, the effective policy unchanged and readiness must pass on it. After the call, devkit fetches and reads the PR's
 merge commit `M`: `M^2` equals the source and `M` is contained in the fetched target. When `M^1` is the checked target
-and `M`'s tree equals the checked tree, the landing is checked. Otherwise the target advanced between the last check
-and the platform merge (a window devkit cannot close) or the platform merged differently; the result reports a distinct
-code, runs readiness on `M` after the fact and reports it, and the handling of cleanup follows the user's decision in
-this Planning. A merge call whose outcome is unknown is resolved only from the PR state; while it stays unknown no
+and `M`'s tree equals the checked tree, the landing is checked. Three other cases get distinct codes and are never
+reported as checked: `M^1` descends from the checked target (an advance in the window between the last check and the
+merge, which devkit cannot close), `M^1` does not descend from the confirmation target (a rewritten target), and an
+equal first parent with a different tree (the platform merged differently). The result policy digest is evaluated on
+`M`. What follows each case (post-hoc checks, cleanup or a stop) follows the user's decision in this Planning. A merge call whose outcome is unknown is resolved only from the PR state; while it stays unknown no
 cleanup runs. B is not required; C is rejected for this route (it removes the PR gate the route exists for).
 
 ## 5. Consequences
