@@ -37,7 +37,7 @@ objective quality guarantee.
 
 ## 4. Decision Outcome
 
-Recommend the third option. `MAT-response-style-rewrite-draft` supplies reviewable text, a <=300-byte pointer
+Adopt the third option. `MAT-response-style-rewrite-draft` supplies reviewable text, a <=300-byte pointer
 and clearly labelled authored examples. Respect user/repository output contracts; preserve decision-relevant
 facts and material limits; distinguish a finished step from a finished request. For an ordinary reply, the first
 sentence gives the overall answer or explicitly unknown result. Use `→ **Core sentence.** Supporting explanation`
@@ -52,8 +52,9 @@ failure. Required content stays present and discoverable; concise reporting neve
 Add no presets or extra decorative marks.
 The 300-byte cap applies only to the guidance fragment; no skill-body length ceiling is introduced.
 
-The draft is a direction for user review, not a `plan-accept` decision or deployed instruction. Formal adoption
-follows the existing workflow; a source citation or illustrative reply does not establish observed runtime quality.
+During Planning, the draft supplied a direction for user review rather than an approval or deployed instruction.
+This ADR records the accepted direction; deployment follows the delivery workflow. A source citation or
+illustrative reply does not establish observed runtime quality.
 
 ## 5. Consequences
 
