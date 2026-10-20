@@ -1,0 +1,10 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-integration-pull-request-cleanup: goal, scope (one approval for push,
+  no-ff PR merge and cleanup; no squash, rebase or automated recovery), verification,
+  task-kind feature, planning-depth proposal and Planning effort medium confirmed'
+by: user
+at: '2026-10-20T00:52:35.852999Z'

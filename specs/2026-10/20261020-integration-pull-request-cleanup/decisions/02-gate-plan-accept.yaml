@@ -1,0 +1,11 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: 'PROP-integration-pull-request-cleanup: direction accepted including cleanup
+  on a rewritten base while the source stays contained; Planning effort medium in
+  both runs against the high hint, with scout-01 and challenger rounds 01-02; recommended
+  dev_effort high; Development starts after SPEC-integration-follow-ups is integrated'
+by: user
+at: '2026-10-20T00:52:35.855367Z'
