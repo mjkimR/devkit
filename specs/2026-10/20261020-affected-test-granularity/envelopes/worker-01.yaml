@@ -1,0 +1,24 @@
+kind: worker
+stage: integration-approval
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T07:27:13.671358Z'
+status: completed
+summary: Completed specify, build-verify, review-refine, living-spec-draft, collect-feedback and final-change-report. File groups and module-level spec dependencies implemented; two independent review P1 findings fixed; separate reconcile review passed. Awaiting Host integration handling.
+findings: []
+assumptions:
+- 'Emulated confinement: absolute worktree commands, scoped approvals and Host committed-range validation; no native path guarantee.'
+- Accepted premises hold on integrated MCP base; runtime consumers and full fallback retained.
+- Auto-review rejected one precommit reverify write; recovered by committing fixes first and recording their actual SHA. No rejected operation was bypassed.
+unverified_areas:
+- Arbitrary runtime imports remain outside static selection; complete nightly/manual/release checks remain necessary.
+- No merge, push, integration approval or official sync performed; Host owns these actions.
+checks:
+  tests: PASS affected72 including selector63; same-revision collection3929 with all nine baseline/new file/count/timing cases
+  lint: PASS Ruff check/format and Pyright on all changed Python files; cumulative rules 0 errors/warnings
+  review: PASS initial independent code review followed by regression-verified fixes; independent reconciliation zero findings
+  boundaries: PASS only authorized script/test, development references, dated materials and own unit changed; no bundle source assets or projections changed
+diff_scope:
+  base: 29e7dd36845455d92d42e858e3372e3dd812a22e
+  head: 09a9c7fe3876350c2a0159716fc0d5b506e70e7b
+activity_effort: medium

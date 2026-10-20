@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: PROP-affected-test-granularity
+by: user
+at: '2026-10-20T07:00:35.726528Z'

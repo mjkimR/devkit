@@ -25,6 +25,9 @@ Before committing changes, ensure that:
 1. `just lint` applies clean formatting.
 2. `just check` passes with 0 Pyright errors.
 3. During development, `just test-affected` or `just test <module> <area...>` passes the affected tests.
+   Automatic selection uses individual test files, devkit area nodes and module-level devkit_spec dependencies;
+   helper/conftest imports and conservative full fallbacks remain part of selection. Other packages retain coarse
+   ownership by default. Complete nightly/manual/release checks cover runtime dependencies static analysis misses.
    Before integration, `just test-affected --base <base-ref>` verifies the final content after incorporating a moved
    base and resolving conflicts. Keep its full-suite fallback and frontend checks. Reuse this result after merging
    unchanged verified content; no separate local full-suite or post-merge test run is required. Complete CI runs

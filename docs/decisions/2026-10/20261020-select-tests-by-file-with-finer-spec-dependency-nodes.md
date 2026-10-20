@@ -1,15 +1,15 @@
 ---
-id: PADR-select-tests-by-file-with-finer-spec-dependency-nodes
+id: ADR-select-tests-by-file-with-finer-spec-dependency-nodes
 title: Select tests by file with finer spec dependency nodes
 summary: "Use per-test-file selection and module-level devkit_spec dependency nodes while preserving conservative fallback, fixtures and explicit dynamic dependency coverage."
-proposal: PROP-affected-test-granularity
-status: draft
+proposal: SPEC-affected-test-granularity
+status: accepted
 created_at: 2026-10-20
 ---
 
-# [PADR-select-tests-by-file-with-finer-spec-dependency-nodes] Select tests by file with finer spec dependency nodes
+# [ADR-select-tests-by-file-with-finer-spec-dependency-nodes] Select tests by file with finer spec dependency nodes
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-20
 
 ---

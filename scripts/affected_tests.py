@@ -14,6 +14,7 @@ import os
 import re
 import subprocess
 import sys
+import tomllib
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from functools import cached_property
@@ -117,96 +118,196 @@ class Group:
     depends: frozenset[str]
 
 
-class Workspace:
-    """The nodes, their static import graph and the test groups of one workspace checkout.
+class UnsafeGraph(Exception):
+    """An inventory or parse failure makes partial selection unsafe."""
 
-    A devkit area lives in one of the ``HOMES`` distributions, with its source under ``src/devkit/<area>`` and its
-    tests under ``tests/<area>`` there.
-    """
+
+class Workspace:
+    """Static source inventory and per-file test dependencies; never imports inspected code."""
 
     def __init__(self, root: Path) -> None:
         self.root = root
         self.packages = self._packages()
-        self._helpers: dict[Path, set[str]] = {}
-        self.homes: dict[str, str] = {}  # devkit area -> the distribution directory it lives in
+        self._trees: dict[Path, ast.Module] = {}
+        self._helper_paths: dict[tuple[Path, str], set[Path]] = {}
+        self.homes: dict[str, str] = {}
         for home in HOMES:
-            directories = [*(root / home / "src/devkit").iterdir(), *(root / home / "tests").iterdir()]
-            for name in {p.name for p in directories if p.is_dir()} - {"__pycache__", *HELPERS}:
-                self.homes.setdefault(name, home)
+            for directory in (root / home / "src/devkit", root / home / "tests"):
+                if directory.is_dir():
+                    for path in sorted(directory.iterdir()):
+                        if path.is_dir() and path.name not in {"__pycache__", *HELPERS}:
+                            self.homes.setdefault(path.name, home)
         self.areas = sorted(self.homes)
+        self.fine: dict[str, Path] = {}
+        for directory, package in self.packages.items():
+            if package != "devkit_spec":
+                continue
+            base = root / "packages" / directory / "src"
+            for path in self._python(base / package, tests=False):
+                parts = path.relative_to(base).with_suffix("").parts
+                module = ".".join(parts[:-1] if parts[-1] == "__init__" else parts)
+                if module in self.fine:
+                    raise UnsafeGraph(f"ambiguous:{module}")
+                self.fine[module] = path
+        self.modules = {path: module for module, path in self.fine.items()}
+        self.test_roots = sorted((root / "packages").glob("*/tests"))
+        config = root / "pyproject.toml"
+        if config.exists():
+            try:
+                options = tomllib.loads(config.read_text()).get("tool", {}).get("pytest", {}).get("ini_options", {})
+                self.test_roots += [root / path for path in options.get("pythonpath", [])]
+            except (OSError, ValueError) as exc:
+                raise UnsafeGraph("pyproject.toml") from exc
+        self.test_roots = sorted(set(self.test_roots))
 
     def _packages(self) -> dict[str, str]:
-        """Package directory -> its import package, for every workspace package outside the devkit namespace."""
         found: dict[str, str] = {}
         homes = {home.rsplit("/", 1)[-1] for home in HOMES}
         for src in sorted((self.root / "packages").glob("*/src")):
             directory = src.parent.name
             if directory in homes or directory == "devkit-advisory":
                 continue
-            names = [p.name for p in src.iterdir() if p.is_dir() and p.name.isidentifier()]
-            if len(names) == 1:
-                found[directory] = names[0]
+            names = [p.name for p in src.iterdir() if p.is_dir() and p.name.isidentifier() and p.name != "__pycache__"]
+            if len(names) != 1:
+                raise UnsafeGraph(f"inventory:{directory}")
+            found[directory] = names[0]
         return found
 
     def node_of(self, module: str) -> str | None:
-        """The node a dotted module name belongs to."""
         parts = module.split(".")
         if parts[0] == "devkit" and len(parts) > 1:
             if parts[1] in ("cli", "__main__"):
                 return "devkit.core"
             return f"devkit.{parts[1]}" if parts[1] in self.areas or parts[1] == "advisory" else None
+        if parts[0] == "devkit_spec":
+            return module if module in self.fine and len(parts) > 1 else "@devkit_spec"
         return parts[0] if parts[0] in self.packages.values() else None
 
-    def imports(self, files: Iterable[Path]) -> set[str]:
-        """The nodes the given Python files import, by statement or by an importing call on a literal name."""
-        found: set[str] = set()
-        for path in files:
+    def _tree(self, path: Path) -> ast.Module:
+        if path not in self._trees:
             try:
-                tree = ast.parse(path.read_bytes())
+                self._trees[path] = ast.parse(path.read_bytes())
             except (OSError, SyntaxError, ValueError) as exc:
-                logger.info("skipped %s: %s", path, exc)
+                raise UnsafeGraph(path.relative_to(self.root).as_posix()) from exc
+        return self._trees[path]
+
+    def _owner(self, path: Path) -> str | None:
+        relative = path.relative_to(self.root).as_posix()
+        for home in HOMES:
+            for prefix in (f"{home}/tests/", f"{home}/src/devkit/"):
+                if relative.startswith(prefix):
+                    area = relative[len(prefix) :].split("/")[0]
+                    return f"devkit.{area}" if area in self.areas else None
+        for directory, package in self.packages.items():
+            if relative.startswith(f"packages/{directory}/"):
+                return "@devkit_spec" if package == "devkit_spec" else package
+        return None
+
+    def _module_dependencies(self, module: str, *, exact_root: bool = False) -> set[str]:
+        node = "devkit_spec" if exact_root and module == "devkit_spec" else self.node_of(module)
+        found = {node} if node else set()
+        if module in self.fine:
+            parts = module.split(".")
+            for end in range(1, len(parts)):
+                parent = ".".join(parts[:end])
+                if parent in self.fine and self.fine[parent].name == "__init__.py":
+                    found.add(parent)
+        return found
+
+    def _helpers_for(self, path: Path, module: str) -> set[Path]:
+        """Union all plausible test-root/local resolutions; never guess a same-named helper."""
+        key = (path.parent, module)
+        if key in self._helper_paths:
+            return self._helper_paths[key]
+        found: set[Path] = set()
+        for base in {*self.test_roots, path.parent}:
+            target = base.joinpath(*module.split("."))
+            for candidate in (target.with_suffix(".py"), target / "__init__.py"):
+                if candidate.is_file():
+                    found.add(candidate)
+            # Importing a nested helper executes its package initializers as well.
+            for parent in target.parents:
+                if parent == base or base not in parent.parents:
+                    break
+                if (parent / "__init__.py").is_file():
+                    found.add(parent / "__init__.py")
+        self._helper_paths[key] = found
+        return found
+
+    def imports(self, files: Iterable[Path]) -> set[str]:
+        found: set[str] = set()
+        pending, seen = list(files), set()
+        while pending:
+            path = pending.pop()
+            if path in seen:
                 continue
-            for node in ast.walk(tree):
-                names: list[str] = []
+            seen.add(path)
+            for node in ast.walk(self._tree(path)):
+                names: list[tuple[str, bool]] = []
                 if isinstance(node, ast.Import):
-                    names = [alias.name for alias in node.names]
-                elif isinstance(node, ast.ImportFrom) and not node.level and node.module:
-                    names = [node.module, *(f"{node.module}.{alias.name}" for alias in node.names)]
+                    names = [(alias.name, False) for alias in node.names]
+                elif isinstance(node, ast.ImportFrom):
+                    module = node.module or ""
+                    if node.level:
+                        current = self.modules.get(path)
+                        if current:
+                            package = current if path.name == "__init__.py" else current.rpartition(".")[0]
+                            parents = package.split(".")
+                            module = ".".join(
+                                [*parents[: len(parents) - node.level + 1], *([module] if module else [])]
+                            )
+                        else:
+                            base = path.parent
+                            for _ in range(node.level - 1):
+                                base = base.parent
+                            target = base.joinpath(*module.split(".")) if module else base
+                            helpers = [target.with_suffix(".py"), target / "__init__.py"]
+                            helpers += [
+                                candidate
+                                for alias in node.names
+                                for candidate in (target / f"{alias.name}.py", target / alias.name / "__init__.py")
+                            ]
+                            resolved = [helper for helper in helpers if helper.is_file()]
+                            pending.extend(resolved)
+                            if not resolved and (owner := self._owner(path)):
+                                found.add(owner)
+                            continue
+                    names = [(module, True)] if module else []
+                    for alias in node.names:
+                        candidate = f"{module}.{alias.name}"
+                        if alias.name == "*" and module.startswith("devkit_spec"):
+                            found.add("@devkit_spec")
+                        elif candidate in self.fine:
+                            names.append((candidate, True))
+                        elif not module.startswith("devkit_spec"):
+                            names.append((candidate, False))
                 elif isinstance(node, ast.Call) and node.args:
                     func = node.func
                     called = func.attr if isinstance(func, ast.Attribute) else getattr(func, "id", None)
-                    first = node.args[0]
-                    if called in _IMPORTING_CALLS and isinstance(first, ast.Constant) and isinstance(first.value, str):
-                        names = [first.value]
-                found.update(n for n in map(self.node_of, names) if n)
-            found |= self._helper_imports(tree)
-        return found
-
-    def _helper_imports(self, tree: ast.Module) -> set[str]:
-        """The nodes of the shared ``HELPERS`` a file imports at module level.
-
-        A helper imported inside a function counts for that test only, so it is left out like any data dependency.
-        """
-        found: set[str] = set()
-        for node in tree.body:
-            modules: list[str] = []
-            if isinstance(node, ast.Import):
-                modules = [alias.name for alias in node.names]
-            elif isinstance(node, ast.ImportFrom) and not node.level and node.module:
-                modules = [node.module, *(f"{node.module}.{alias.name}" for alias in node.names)]
-            for module in modules:
-                parts = module.split(".")
-                if parts[0] not in HELPERS or len(parts) < 2:
-                    continue
-                helper = self.root / HELPERS[parts[0]] / f"{parts[1]}.py"
-                if helper not in self._helpers:
-                    self._helpers[helper] = set()  # a cycle between helpers ends here
-                    self._helpers[helper] = self.imports([helper]) if helper.is_file() else set()
-                found |= self._helpers[helper]
+                    if called in _IMPORTING_CALLS:
+                        first = node.args[0]
+                        if (
+                            isinstance(first, ast.Constant)
+                            and isinstance(first.value, str)
+                            and not first.value.startswith(".")
+                        ):
+                            names = [(first.value, False)]
+                        else:
+                            # A runtime name cannot establish any narrower dependency.
+                            if owner := self._owner(path):
+                                found.add(owner)
+                for name, exact_root in names:
+                    found |= self._module_dependencies(name, exact_root=exact_root)
+                    if name in {"devkit.cli", "devkit.__main__"}:
+                        found.add("@root_cli")
+                    if not self.node_of(name):
+                        helpers = self._helpers_for(path, name)
+                        pending.extend(helpers)
+                        if len(helpers) > 1 and (owner := self._owner(path)):
+                            found.add(owner)
         return found
 
     def _python(self, directory: Path, *, tests: bool) -> Iterator[Path]:
-        """The Python files under a directory: only those in a ``tests`` directory, or only those outside one."""
         if not directory.is_dir():
             return
         for path in sorted(directory.rglob("*.py")):
@@ -215,49 +316,66 @@ class Workspace:
                 yield path
 
     def sources(self) -> dict[str, Path]:
-        """Node -> its production source directory."""
         nodes = {f"devkit.{area}": self.root / home / "src/devkit" / area for area, home in self.homes.items()}
         for directory, package in self.packages.items():
-            nodes[package] = self.root / "packages" / directory / "src" / package
-        return nodes
+            if package != "devkit_spec":
+                nodes[package] = self.root / "packages" / directory / "src" / package
+        return {**nodes, **self.fine}
 
     def dependents(self, changed: set[str]) -> set[str]:
-        """The changed nodes and every node that imports one of them, transitively."""
         imported_by: dict[str, set[str]] = {}
-        for node, directory in self.sources().items():
-            for imported in self.imports(self._python(directory, tests=False)):
+        for node, source in self.sources().items():
+            files = [source] if source.is_file() else self._python(source, tests=False)
+            for imported in self.imports(files):
                 if imported != node:
                     imported_by.setdefault(imported, set()).add(node)
-        # Optional transport loads these domain services through entrypoints, not static imports.
-        imported_by.setdefault("devkit_mcp", set()).update({"devkit.integration", "devkit_spec"})
+        imported_by.setdefault("devkit_mcp", set()).update({"devkit.integration", "@devkit_spec"})
+        changed = changed | (set(self.fine) if "@devkit_spec" in changed else set())
         affected, pending = set(changed), list(changed)
         while pending:
-            for node in imported_by.get(pending.pop(), ()):
-                if node not in affected:
-                    affected.add(node)
-                    pending.append(node)
+            node = pending.pop()
+            followers = set(imported_by.get(node, ()))
+            if node.startswith("devkit_spec"):
+                followers.add("@devkit_spec")
+            for follower in followers - affected:
+                affected.add(follower)
+                pending.append(follower)
         return affected
-
-    def _has_tests(self, directory: Path) -> bool:
-        return directory.is_dir() and any(p.name.startswith("test_") for p in directory.rglob("*.py"))
 
     @cached_property
     def groups(self) -> list[Group]:
         groups: list[Group] = []
-        for area, home in sorted(self.homes.items()):
-            tests, src = self.root / home / "tests" / area, self.root / home / "src/devkit" / area
-            paths = [p for p in (tests, src) if self._has_tests(p)]
-            if paths:
-                files = [*self._python(tests, tests=False), *self._python(src, tests=True)]
-                groups.append(Group(self._relative(paths), frozenset({f"devkit.{area}", *self.imports(files)})))
-        for home in HOMES:
-            for path in sorted((self.root / home / "tests").glob("test_*.py")):
-                groups.append(Group(self._relative([path]), frozenset(self.imports([path]))))
-        for directory, package in self.packages.items():
-            base = self.root / "packages" / directory
-            paths = [p for p in (base / "tests", base / "src") if self._has_tests(p)]
-            files = [*self._python(base / "tests", tests=False), *self._python(base / "src", tests=True)]
-            groups.append(Group(self._relative(paths), frozenset({package, *self.imports(files)})))
+        for path in sorted((self.root / "packages").rglob("test_*.py")):
+            if "tests" not in path.relative_to(self.root).parts or "__pycache__" in path.parts:
+                continue
+            files = [path]
+            for parent in path.parents:
+                if parent == self.root.parent:
+                    break
+                conftest = parent / "conftest.py"
+                if conftest.is_file():
+                    files.append(conftest)
+            depends = self.imports(files)
+            owner = self._owner(path)
+            if "@root_cli" in depends and (
+                owner == "@devkit_spec" or any(node.startswith("devkit_spec") for node in depends)
+            ):
+                # Root CLI loading of the spec entry point is independent of any direct fine imports.
+                depends.add("@devkit_spec")
+            depends.discard("@root_cli")
+            if owner and (owner != "@devkit_spec" or not any(n.startswith("devkit_spec") for n in depends)):
+                depends.add(owner)
+            # These consumers scan sources or load the command/bundle through runtime entry points.
+            if (owner == "@devkit_spec" and "/src/" in path.relative_to(self.root).as_posix()) or path.relative_to(
+                self.root
+            ).as_posix() in {
+                "packages/devkit-spec/tests/test_documented_codes.py",
+                "packages/devkit-spec/tests/test_package.py",
+                "packages/devkit-spec/tests/test_workflows.py",
+                "packages/devkit-spec/tests/test_integration.py",
+            }:
+                depends.add("@devkit_spec")
+            groups.append(Group(self._relative([path]), frozenset(depends)))
         return groups
 
     def _relative(self, paths: Iterable[Path]) -> tuple[str, ...]:
@@ -273,12 +391,28 @@ def _source_node(workspace: Workspace, path: str) -> str | None:
     for home in HOMES:
         if path.startswith(f"{home}/src/devkit/"):
             area = path[len(home) + len("/src/devkit/") :].split("/")
-            return f"devkit.{area[0]}" if len(area) > 1 else None
+            return f"devkit.{area[0]}" if len(area) > 1 and area[0] in workspace.areas else None
     match = re.fullmatch(r"packages/([^/]+)/src/.+", path)
-    return workspace.packages.get(match.group(1)) if match else None
+    package = workspace.packages.get(match.group(1)) if match else None
+    if package == "devkit_spec":
+        if path.endswith(".py"):
+            module = workspace.modules.get(workspace.root / path)
+            if module is None:
+                raise UnsafeGraph(path)
+            return module
+        return "@devkit_spec"
+    return package
 
 
 def select(root: Path, changed: Iterable[str]) -> Selection:
+    changed = sorted(set(changed))
+    try:
+        return _select(root, changed)
+    except UnsafeGraph as exc:
+        return Selection("full", (), str(exc), any(path.startswith(FRONTEND_PREFIXES) for path in changed))
+
+
+def _select(root: Path, changed: Iterable[str]) -> Selection:
     """The test paths a set of changed repository-relative paths can affect."""
     changed = sorted(set(changed))
     frontend = any(path.startswith(FRONTEND_PREFIXES) for path in changed)
@@ -298,9 +432,10 @@ def select(root: Path, changed: Iterable[str]) -> Selection:
             if path.startswith(tuple(f"{home}/src/" for home in HOMES)):
                 paths.update(SOURCE_TREE_TESTS)
             node = _source_node(workspace, path)
-            if node:
-                nodes.add(node)
-            causes.add(node or path)
+            if not node:
+                return Selection("full", (), path, frontend)
+            nodes.add(node)
+            causes.add(node)
         elif re.fullmatch(r"packages/[^/]+/tests/.+", path):
             name = path.rsplit("/", 1)[-1]
             paths.add(path if re.fullmatch(r"test_.+\.py", name) else path.rsplit("/", 1)[0])
