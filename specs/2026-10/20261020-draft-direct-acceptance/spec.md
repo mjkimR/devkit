@@ -122,7 +122,7 @@ session reclassification of a queued draft, the one stated exception to lowering
 
 ### [AC-04] Read-only check with a pending intent
 - **Given** a draft eligible except that `gate:plan-intent` is not recorded
-- **When** `accept --direct --check --by user` runs
+- **When** `accept --direct --check --by user --note "<reason>"` runs
 - **Then** it exits `0` with `[ACCEPT_CHECK: PROP-<slug> form=direct path=<proposal.md> eligible=yes
   pending=gate:plan-intent]` and writes nothing; with a blocking condition as well it exits `2` with
   `SPEC_PROPOSAL_NOT_ELIGIBLE`, whose details list the blocking condition and the pending intent separately, and

@@ -15,6 +15,8 @@ targets:
     resolution: modified
   - file: docs/decisions/2026-10/20261020-session-reclassification-of-a-queued-draft.md
     resolution: modified
+  - file: docs/glossary.md
+    resolution: modified
 ---
 
 # Reconciliation: Direct acceptance of drafts that need no Planning
@@ -39,6 +41,7 @@ targets:
 - `ADR-session-reclassification-of-a-queued-draft`: the handoff's code-span rewrite had turned the generic
   `materials/` of "what goes" into this proposal's own materials path; restored to the draft's `materials/` (wording
   only).
+- `docs/glossary.md`: the terms "direct acceptance" and "session reclassification", owned by their ADRs.
 
 Mirrors outside the Living Spec, kept in step: the bundled guidance (`sdd-proposal` body, bundle `AGENTS.md`, the
 `spec`, `spec-next` and `spec-orchestrate` skills and references, the seed proposals README, the proposal template),

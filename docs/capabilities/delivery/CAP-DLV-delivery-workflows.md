@@ -70,12 +70,12 @@ sequence.
    as `SHARED_STAGE_MISMATCH`. Returns are each workflow's own.
 4. **Gates are named `<activity>-<decision>`**: `plan-intent`, `plan-accept` and `dev-integration`; the `exception`
    stage belongs to no activity. Numbered gate names are not used.
-5. **Approval is never inferred**: `plan-intent` and `plan-accept` pass only with a decision recorded by
-   `devkit workflow answer --unit <dir> --request gate:<gate> --action accept|decline --by user`, written only after
-   the user's explicit answer; an acceptance of `plan-accept` is recorded with `devkit spec proposal accept <slug>
-   --by user`, which writes `status: accepted` and records the same decision through devkit's `record_answer` in one
-   step (`CAP-DLV-proposal-incubation`). Their only accepted policy is `ask`. The record names the authority and carries no conversation:
-   no quotes, paraphrase or dates of it; a decline note states the reason as a decision. `dev-integration` passes
+5. **Approval is never inferred**: `plan-intent` and `plan-accept` pass only with a decision record written after
+   the user's explicit answer: a `plan-intent` answer and a decline of either gate with `devkit workflow answer --unit
+   <dir> --request gate:<gate> --action accept|decline --by user`, an acceptance of `plan-accept` only with
+   `devkit spec proposal accept <slug> --by user`, which writes `status: accepted` and records the decision through
+   devkit's `record_answer` in one step (`CAP-DLV-proposal-incubation`). Their only accepted policy is `ask`. The
+   record names the authority and carries no conversation: no quotes, paraphrase or dates of it; a decline note states the reason as a decision. `dev-integration` passes
    only with `--given dev-integration`, passed to each `devkit workflow next` after the user's explicit OK and never
    recorded, or with the PR ready state a runner binds (`ADR-integration-approval-asserted`); under `auto` it passes by
    policy (`[GATE_PASSED: dev-integration ... source=policy]`, JSON `passed_gates`) and the executor MUST report the
@@ -264,8 +264,9 @@ writes into the proposal's `materials/`; `scout` and `challenger` returns are re
 | `dev-integration` | `integration-approval`, `approval-session` | `dev-integration` (`ask` or `auto`) |
 
 - A gate waiting for the user: `devkit workflow next` prints `[WAITING: human gate:<gate>]` with a
-  `[REQUEST: id=gate:<gate> ...]`. A `plan-intent` or `plan-accept` answer is `devkit workflow answer --unit <dir>
-  --request gate:<gate> --action accept --by user` (or `--action decline --by user --note "<reason>"`). A
+  `[REQUEST: id=gate:<gate> ...]`. A `plan-intent` answer is `devkit workflow answer --unit <dir> --request
+  gate:plan-intent --action accept --by user`, a `plan-accept` acceptance `devkit spec proposal accept <slug> --by user`
+  (`--direct` for a direct acceptance), and a decline of either `--action decline --by user --note "<reason>"`. A
   `dev-integration` OK is `--given dev-integration` on every later `next`, and an objection about the change takes the
   stage's return path; where a runner binds `gate:dev-integration` to PR state, the PR ready state answers it. Every
   definition with that gate declares `gates: {dev-integration: {answer: given}}`, so `next` ends its `[REQUEST]` with

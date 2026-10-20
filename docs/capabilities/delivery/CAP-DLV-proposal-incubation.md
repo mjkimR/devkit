@@ -377,7 +377,7 @@ uv run devkit spec proposal new fast-engine --summary "Replaces the regex rule e
 uv run devkit spec proposal padr fast-engine "Use AST parser"        # decisions/PADR-use-ast-parser.md
 uv run devkit spec proposal padr fast-engine "2024 roadmap" --slug roadmap-2024
 uv run devkit spec proposal accept fast-engine --by user --note "..."                # plan-<slug>, after review
-uv run devkit spec proposal accept small-fix --by user --direct --check             # Backlog, read-only first
+uv run devkit spec proposal accept small-fix --by user --direct --check --note "<reason>"  # read-only first
 uv run devkit spec proposal accept small-fix --by user --direct --note "<reason>"   # base checkout, after the sweep
 uv run devkit spec proposal handoff fast-engine                      # status: accepted (plan-accept recorded)
 uv run devkit spec proposal prune [<slug>]                           # base checkout; finish's extension does it per slug
