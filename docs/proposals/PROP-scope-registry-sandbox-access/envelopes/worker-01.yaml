@@ -1,0 +1,22 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-20T00:54:22.478487Z'
+status: completed
+summary: 'Ready for user plan-accept: retain Git registry/token storage, make query and history side-effect-free with shared read-opened locking and pure token reads. Scout evidence and zero-finding challenger recorded and reverified; fresh feedback sweep completed. Mutations still require explicit host access or scoped approval.'
+findings: []
+assumptions:
+- 'Emulated worker and support-role confinement: explicit worktree commands, proposal-only writes, scoped escalations and final diff validation; no native path guarantee.'
+- Linux/macOS local filesystem support and stable lock inode remain; no service, relocation or policy provisioner selected.
+unverified_areas:
+- Production implementation, read-only-fd flock on both platforms and actual host sandbox checks remain Development work. Mutating sandbox access is not solved by this direction.
+checks:
+  rules: PASS proposal bundle zero errors and warnings
+  review: PASS scout and medium challenger completed; no actionable findings
+  scope: PASS all changed paths within assigned proposal
+  feedback: PASS fresh feedback-01 recorded=1 duplicates=0
+diff_scope:
+  base: 3efccb03e332e6d0d98aa8487f373fa3aab885f2
+  head: 497a4c5c91b136f1f75a67f66bc6fd7342cb3201
+activity_effort: medium
