@@ -23,9 +23,10 @@ plan: PLAN-envelope-record-gaps
     `packages/devkit-spec/tests/`
   - _Requirements: AC-08, AC-09, AC-10_
   - **Verification**: `just test devkit-spec`
-- [ ] **Task 4**: Bundle procedure text (review loop, Planning, worker records, envelope reference, `sdd-proposal`,
+- [x] **Task 4**: Bundle procedure text (review loop, Planning, worker records, envelope reference, `sdd-proposal`,
   proposal template) with wording tests, and the linked source feedback's disposition
   - **_Boundary**: `packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/`,
+    `packages/devkit-spec/src/devkit_spec/bundle/skills/spec-delegate/SKILL.md`,
     `packages/devkit-spec/src/devkit_spec/bundle/workflows/sdd-proposal.md`,
     `packages/devkit-spec/src/devkit_spec/bundle/templates/proposal.md`, `packages/devkit-spec/tests/`,
     `specs/2026-10/feedback/20261019-review-loop-round-count-across-procedure-change.md`
