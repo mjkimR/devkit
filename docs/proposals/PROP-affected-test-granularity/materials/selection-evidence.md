@@ -17,6 +17,12 @@ compact/runner.py resolve to the same area as the corresponding existing files l
 those historical names; Development reproduction must use the existing paths. No file-change execution claim is
 made by this synthetic path-selection experiment.
 
+The final Planning worker independently asserted equality of the complete `Selection` result for each of the
+four historical/existing path pairs above: gate, workflow, rules and compact all passed. Selected path counts
+were 10, 12, 19 and 21 respectively (these are selected file/directory paths, not collected test counts).
+This confirms the baseline path substitution under the current resolver; it does not repeat or extend the
+file-group simulation or establish fine-source implementation coverage.
+
 | Existing representative source | Current count | File groups only, retaining owner edges |
 | --- | ---: | ---: |
 | packages/devkit/src/devkit/gate/engine/runner.py | 1,072 | 301 |
