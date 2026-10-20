@@ -1,0 +1,25 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-20T00:14:41.591250Z'
+status: completed
+summary: Independent readiness review found one P2 consistency defect in the source-selection PADR. Ready for user plan-accept after correction; no design blocker or additional formatting rule warranted.
+findings:
+- issue: The source-selection PADR still requires tracing each candidate rule to observed fixture results, although the proposal makes live comparison optional.
+  evidence: decisions/PADR-response-style-source-selection.md:37-38 requires observed fixture results; proposal.md:76-83 and materials/response-style-measurement-design.md:36-39 use authored illustrations and optional live comparison.
+  failure_condition: Promoting the PADR unchanged at handoff creates an apparent obligation to collect observations for every rule, expanding the accepted verification scope or leaving an apparently unmet decision.
+  suggested_action: Replace the unconditional observed-fixture requirement with tracing rules to their source idea or local requirement and the agreed example review. Require observed results only when an optional live comparison is undertaken.
+  resolution: open
+  severity: P2
+assumptions:
+- Fresh native Challenger context with emulated read-only role boundaries; Host verified unchanged HEAD, index and working tree after return.
+- User preference supplies authority for arrow-marked core sentences; draft replaces the body while retaining existing skill frontmatter.
+unverified_areas:
+- Live model compliance, reader comprehension and compaction behavior; external source accuracy and licensing were not independently revalidated; implementation checks remain Development work.
+checks:
+  deployment: PASS Host temporary candidate bundle load and sync for auto, ko and en, selected language, managed and projected skill files, AGENTS pointer and no remaining Jinja files
+diff_scope:
+  base: 5551f9f4fc2920b973276aa43a2b0e36778c2f7a
+  head: ccec04fcbcd9cd75f1945a1b40d5ff3d7c21647a
+activity_effort: medium
