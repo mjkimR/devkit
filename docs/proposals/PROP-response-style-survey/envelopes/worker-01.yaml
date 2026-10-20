@@ -1,0 +1,33 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-19T23:11:01.948178Z'
+status: needs_input
+summary: Completed pinned source survey and medium Planning critique/recheck; source selection and scoring design are committed. Await execution-host and collection-budget choice before plan-accept.
+findings: []
+unverified_areas:
+- No reply generations; live host isolation, account/model availability, collection cost and cross-host quality remain unverified.
+checks:
+  rules: PASS proposal rules and diff whitespace
+  source-pins: PASS six prompt/license sources verified at immutable commits
+diff_scope:
+  base: 5551f9f4fc2920b973276aa43a2b0e36778c2f7a
+  head: 0b29e69f82cb432c7f6158fc2825e72494d4a2f0
+questions:
+- id: pilot-execution
+  title: 첫 실측 호스트와 호출 예산
+  prompt: 첫 실측은 어느 경로로 정할까요? 추천은 Claude headless 한 곳에서 72회 생성입니다. 12문항 × 스타일 없음/현재/후보 × 2회이며, 추가 16회 진단과 자동 재시도는 제외합니다. 원하는 별도 금액 상한이 있으면 함께 적어주세요.
+  context: 현재 대화의 native 하위 에이전트는 기존 스타일을 물려받으므로 비교군으로 쓸 수 없습니다. 별도 격리된 headless 세션으로 생성하고 실제 모델과 설정을 모든 비교군에서 고정합니다. Codex headless를 고르면 벤치마크 생성에 codex exec를 사용하며, 이 작업의 오케스트레이션은 native를 유지합니다. 각 선택은 첫 수집의 답변 생성 횟수 상한이며 금액을 보장하는 한도는 아닙니다. 사용 계정·모델·지침 격리와 요청한 예산 제한을 사전 확인하지 못하면 생성하지 않고 보고합니다. 이번 답변은 최종 설계 승인이나 구현 시작을 대신하지 않습니다.
+  options:
+  - id: claude-72
+    description: Claude headless 1개 호스트, 답변 생성 최대 72회; 오케스트레이션은 native 유지. 격리·계정·예산 조건이 확인되지 않으면 수집 중단.
+    recommended: true
+  - id: codex-72
+    description: Codex headless 1개 호스트, codex exec로 답변 생성 최대 72회; 오케스트레이션은 native 유지. 격리·계정·예산 조건이 확인되지 않으면 수집 중단.
+    recommended: false
+  - id: both-144
+    description: Claude·Codex headless에서 각각 최대 72회, 총 144회 생성하고 호스트별 결과를 따로 평가. 확인되지 않은 호스트는 생성하지 않고 보고.
+    recommended: false
+  allow_note: true
+activity_effort: medium
