@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-worker-guidance-and-fixtures
 feature: SPEC-worker-guidance-and-fixtures
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md
     resolution: modified
