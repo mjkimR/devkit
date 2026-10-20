@@ -21,6 +21,7 @@ devkit is structured as a Python monorepo using `uv` workspaces:
 graph TD
     subgraph DevkitWorkspace ["devkit Monorepo (uv workspace)"]
         PkgDist["packages/devkit-dist<br>(devkit-dist wheel, devkit executable)"]
+        PkgMcp["packages/devkit-mcp<br>(optional devkit-mcp wheel)"]
         PkgDevkit["packages/devkit<br>(devkit-agt wheel)"]
         PkgSpec["packages/devkit-spec<br>(devkit-spec wheel)"]
         PkgAdv["packages/devkit-advisory<br>(devkit-advisory wheel)"]
@@ -37,6 +38,9 @@ graph TD
 
     PkgAdv -.->|Runtime dependency (std-lib only)| Runtime
     PkgDist -->|Same-version dependency| PkgAdv
+    PkgMcp -->|Same-version dependency| PkgDist
+    PkgMcp -.->|MCP transport and native forms| DevTools
+    PkgDevkit -.->|Optional mcp extra| PkgMcp
     PkgDevkit -->|Same-version dependency| PkgDist
     PkgDist -.->|Dev dependency (asset distribution only)| DevTools
     PkgDevkit -.->|Dev dependency (CLI harness)| DevTools

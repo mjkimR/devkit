@@ -1,7 +1,7 @@
 ---
 id: ARCH-05-2-components
 title: Building Block View - Components
-summary: "Internal subsystems of the devkit-dist and devkit-agt wheels, their per-wheel layering invariants, and dependency relationships."
+summary: "Internal subsystems of the devkit-dist, devkit-agt and optional devkit-mcp wheels, their per-wheel layering invariants, and dependency relationships."
 status: active
 created_at: 2026-10-17
 ---
@@ -18,7 +18,9 @@ created_at: 2026-10-17
 The `devkit` modules ship in two wheels that share the `devkit` namespace (`ARCH-05-1-containers`,
 `ADR-dist-module-split`): `devkit-dist` (`packages/devkit-dist`) holds the foundation, distribution, host hooks,
 search and the root command line; `devkit-agt` (`packages/devkit`) holds the harness engines. Each wheel enforces its
-own layering with a unit test (`packages/devkit-dist/tests/test_layering.py`, `packages/devkit/tests/test_layering.py`):
+own layering with a unit test (`packages/devkit-dist/tests/test_layering.py`, `packages/devkit/tests/test_layering.py`).
+The optional `devkit-mcp` wheel owns the separate `devkit_mcp` namespace and adapts dependency-free core service
+contracts to MCP transport and native forms:
 
 ```mermaid
 graph TD
@@ -34,11 +36,16 @@ graph TD
         Compact["devkit.compact (Bounded Runner)"]
     end
 
+    subgraph Mcp ["devkit-mcp: optional runtime"]
+        Runtime["devkit_mcp.server (Transport and Forms)"]
+        Provider["devkit_mcp.configuration (Registration Launch Provider)"]
+    end
+
     subgraph Dist ["devkit-dist: distribution and foundation"]
         Distribution["devkit.distribution"]
         Host["devkit.host"]
         Search["devkit.search (Hybrid Search)"]
-        Core["devkit.core (Paths, Locks, Git, Receipts, Frontmatter)"]
+        Core["devkit.core (Shared Primitives and MCP Service Contracts)"]
     end
 
     Advisory["devkit.advisory (Protocol & Error Types, devkit-advisory)"]
@@ -46,6 +53,11 @@ graph TD
     CLI -->|built-in commands| Distribution
     CLI -->|built-in commands| Host
     CLI -.->|devkit.commands entry points| Agt
+    CLI -.->|devkit.commands: mcp| Mcp
+    Runtime --> Core
+    Provider --> Core
+    Runtime -.->|devkit.host.services discovery| Integration
+    Host -.->|devkit.mcp.registrations discovery| Provider
     Agt --> Core
     Integration --> Host
     Distribution --> Search
@@ -76,7 +88,10 @@ graph TD
     command executes; `devkit-agt` commands come from `devkit.commands` entry points (`ARCH-05-3-command-plugins`).
 13. An area that loads an entry point group may load a target of a higher area only through a declared dependency
     inversion: `devkit.post_sync` (gate), `devkit.config_tables` (workflow, worktree), `devkit.host.services`
-    (integration), `devkit.hygiene` (worktree) and `devkit.finish_guard` (workflow).
+    (runtime loading domain services), `devkit.mcp.registrations` (host loading the optional runtime launch provider),
+    `devkit.hygiene` (worktree) and `devkit.finish_guard` (workflow).
+14. `devkit_mcp` imports dist core contracts and discovers domain services through entry points; dist never imports
+    `devkit_mcp` or the MCP SDK. Domain services consume core contracts without importing the transport.
 
 ---
 

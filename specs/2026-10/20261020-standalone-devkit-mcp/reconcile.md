@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-standalone-devkit-mcp
 feature: SPEC-standalone-devkit-mcp
-status: resolved
+status: pending
 targets:
   - file: docs/architecture/ARCH-05-1-containers.md
     resolution: modified
@@ -45,3 +45,7 @@ Entrypoint candidates were derived and reviewed; existing focused capability pat
 runtime capability names its runtime, dependency-free contracts, invocation constraints and registration provider.
 Broad cross-capability package/test/tooling candidates were rejected. No accepted implementation requirement was
 deferred; real-host UI evidence remains explicitly unverified under the accepted validation boundary.
+
+The independent reconciliation recheck resolves both topology and confirmation-ownership findings. One P1 remains:
+ARCH-08-1-agent-output still names the removed command. Its correction is outside the worker write boundary and
+awaits Host scope expansion; the final reconciliation check and final change report are therefore not complete.

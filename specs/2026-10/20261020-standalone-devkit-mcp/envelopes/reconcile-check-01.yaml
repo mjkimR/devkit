@@ -1,0 +1,33 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T06:43:29.930186Z'
+status: failed
+summary: Independent reconciliation found one missing contract target and two incomplete ownership/topology reflections; implementation review remains passed.
+findings:
+- issue: Agent-output contract names the removed MCP command and is absent from reconcile.md.
+  evidence: docs/architecture/ARCH-08-1-agent-output.md:40 names the removed host MCP subgroup.
+  suggested_action: Replace it with devkit mcp serve and add the modified target.
+  resolution: open
+  severity: P1
+- issue: Architecture diagrams omit the optional runtime and registration-provider inversion.
+  evidence: ARCH-05-1-containers section 1 and ARCH-05-2-components section 1 omit runtime nodes and provider relationships.
+  suggested_action: Update both diagrams and the declared inversion list.
+  resolution: open
+  severity: P2
+- issue: Integration introduction assigns native confirmation to devkit.host.
+  evidence: CAP-INT-mcp-services line 14 conflicts with the runtime adapter and core Confirmation contract.
+  suggested_action: Name devkit-mcp and the dependency-free core confirmation contract.
+  resolution: open
+  severity: P2
+assumptions:
+- Reviewer confinement was emulated by read-only absolute worktree commands and caller diff validation, not native isolation.
+unverified_areas:
+- Real Codex/Claude terminal connection, trust, forms and permissions; live cloud transport; Host final sync/integration.
+checks:
+  independent-reconcile: FAIL P1 obsolete agent-output command; P2 missing runtime topology; P2 confirmation ownership
+diff_scope:
+  base: 2712c2844ffe25cf3320cb245af6965d7c96ab5f
+  head: 6bb3742b33e9781be63122f5bb10f9de631857c6
+activity_effort: medium
