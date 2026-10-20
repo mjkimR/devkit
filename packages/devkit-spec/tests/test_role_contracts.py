@@ -155,7 +155,12 @@ def test_the_development_worker_commits_at_stage_boundaries_and_on_a_problem() -
 def test_the_development_worker_result_is_self_contained() -> None:
     body = _contract("development-worker")[1]
     assert "run `devkit rules fix <unit>/spec.md`" in body
-    assert "pytest's `tmp_path` or an ignored path inside the worktree" in body
+    assert "Authored scratch files go in an ignored path inside the worktree" in body
+    assert "Pytest-managed temporary fixtures (`tmp_path`, `tmp_path_factory`" in body
+    assert "MAY use an isolated system temporary directory outside the worktree" in body
+    assert "does not override sandbox permissions" in body
+    assert "pass a custom `--basetemp` on the parent command line rather than through `PYTEST_ADDOPTS`" in body
+    assert "except the pytest-managed temporary fixtures described above" in body
     # activity-effort decides the nested roles; the reconcile reviewer only verifies.
     assert "a separate `reconcile-reviewer` nested subagent that verifies" in body
 
