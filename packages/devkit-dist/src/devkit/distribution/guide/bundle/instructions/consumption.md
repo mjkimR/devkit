@@ -132,8 +132,9 @@ anything: managed files, override drift, the guidance block, seeded files,
 package availability, a pending journal and the devkit version that wrote the
 receipt. It lists what needs acting on under `errors`, each with its
 `advisory`, and exits 1 when there is any. `uv run devkit sync --check` exits 1
-with one `[CHANGE: ...]` line per pending write when a sync is needed, and 2 on
-an error. Every command takes `-w <dir>` for another project.
+with one `[CHANGE: ...]` line per pending write when a sync is needed. Concurrent
+configuration changes also exit 1 (`CONFIG_LOCAL_CHANGED`); other failures use their
+advisory exit status. Every command takes `-w <dir>` for another project.
 
 ## Recovering an interrupted sync
 

@@ -35,7 +35,9 @@ take `--format json`. Every other command prints exactly one JSON object on stdo
 wraps its entries as `{"overrides": [...]}`), or `{"error": {...}}` when the command fails. A JSON result carries
 its errors, warnings and notices, so nothing is rendered on stderr in JSON mode; in text mode they are Agent
 Advisory Protocol blocks on stderr. Exit code `0` is success; `1` is returned by `devkit sync --check` when a synchronization is needed,
-by `devkit sync --locked` when it would change committed files, and by `devkit status` when its report shows a problem; `2` is any error, including an invalid argument such as a
+by `devkit sync --locked` when it would change committed files, by `devkit status` when its report shows a problem,
+and for `CONFIG_LOCAL_CHANGED` or `CONFIG_LOCAL_RENDER_STALE`. Other failures use their advisory exit status,
+usually `2`, including an invalid argument such as a
 malformed `bundle[:preset]` or `--agent` combined with `--no-agents` (see
 `ARCH-08-cross-cutting`).
 
@@ -85,8 +87,9 @@ existing shared host files are never edited by locked sync. See `CAP-HOST-lifecy
 - `--format text|json` (also on `add` and `remove`): the `[SYNC]`/`[CHANGE]` lines (default) or the whole
   `SyncResult` object ([Sync output and notices](#sync-output-and-notices)).
 - `--check`: read-only, for CI, under the shared (reader) project lock. Exits `1` when the workspace needs a synchronization (a missing or stale guidance
-  block, a seeded file not written yet and a missing `.devkit/.gitignore` included) and `2` on any error (for example a hand-edited managed file,
-  `SYNC_CONFLICT`). Existing seeded files are never compared. An orphan alone does not fail `--check`: it is no
+  block, a seeded file not written yet and a missing `.devkit/.gitignore` included). Concurrent configuration
+  changes also exit `1` (`CONFIG_LOCAL_CHANGED`); other failures use their advisory exit status, such as `2` for
+  a hand-edited managed file (`SYNC_CONFLICT`). Existing seeded files are never compared. An orphan alone does not fail `--check`: it is no
   longer managed, so it appears as an `ORPHAN_LEFT` warning on that run and as a `stray` file afterwards if it sits
   under the managed root.
 - `--locked`: for a fresh clone, a new worktree and CI. Restores only the Git-ignored managed copies (and native
