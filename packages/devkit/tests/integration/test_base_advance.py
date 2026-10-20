@@ -145,6 +145,7 @@ def test_receipt_and_asset_only_advance_is_absorbed(repo):
         '[integration]\nprovider = "fixture"\n[worktree]\nmerge = "ff-only"\n',
         '[integration]\nprovider = "fixture"\n[worktree]\npull_request = "required"\n',
         '[integration]\nprovider = "other"\n',
+        '[integration]\nprovider = "fixture"\n[workflow.approvals]\ndev-integration = "auto"\n',
     ],
 )
 def test_policy_advance_is_stale(repo, config):

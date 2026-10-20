@@ -1,0 +1,26 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T23:36:27.518229Z'
+status: completed
+summary: round 1; whole change 8acab92..8073e79 reviewed by code-reviewer against AC-01..AC-17 and the three ADRs; AC-01..AC-06 and AC-08..AC-17 confirmed by code, tests and probes; AC-07 dev-integration advance returns INTEGRATION_CONFIG_INVALID instead of STALE; one unexplained ADR wording edit
+findings:
+- issue: AC-07 lists a change to [workflow.approvals] dev-integration among advances that must report INTEGRATION_REQUEST_STALE; the pre-merge validation calls providers.policy, which refuses a non-ask value with INTEGRATION_CONFIG_INVALID before the digest comparison, and the test leaves dev-integration out
+  evidence: packages/devkit/src/devkit/integration/service.py:266
+  failure_condition: 'a target commit setting dev-integration = "auto" lands during the confirmation and the user approves: blocked with INTEGRATION_CONFIG_INVALID instead of INTEGRATION_REQUEST_STALE'
+  suggested_action: compare the effective policy digest before the dev-integration=ask gate and raise StaleRequestError on a mismatch; add a dev-integration case to test_policy_advance_is_stale
+  resolution: open
+  severity: P2
+- issue: the accepted ADR-target-advance-readiness trace (answer-01.yaml m-milestone-wording) became (user decision) with no stated reason, outside every task boundary
+  evidence: docs/decisions/2026-10/20261020-target-advance-readiness.md:68
+  failure_condition: a reader tracing the milestone wording finds only (user decision) and the review sees an unexplained change to an accepted ADR
+  suggested_action: state the reason in the worker report, or restore a reference that resolves
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS just test-affected (mode=full, 3627 passed, 14 skipped); reran integration/worktree 116 passed, devkit-spec 28 passed
+  lint: PASS just lint devkit, devkit-spec; devkit rules check --ci --base 8acab92 errors=0
+diff_scope:
+  base: 8acab92601a562a7878f19a2f09919bede14ce70
+  head: 8073e799b7c54e3b592f7eec876120f4d47e6374

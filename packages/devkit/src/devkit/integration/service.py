@@ -260,12 +260,12 @@ class IntegrationService:
         target: str | None = None,
     ) -> None:
         plan = request.context.finish
-        if merged:
-            current, expected = providers.current_policy(self.root), request.post_policy_digest
-        else:
-            current, expected = providers.policy(self.root)[1], request.policy_digest
-        if current != expected:
+        # The digest comparison comes first: a changed policy is a stale request whatever its new value is.
+        expected = request.post_policy_digest if merged else request.policy_digest
+        if providers.current_policy(self.root) != expected:
             raise StaleRequestError("the effective integration policy changed outside the approved merge")
+        if not merged:
+            providers.policy(self.root)
         if providers.guards() != request.guards:
             raise StaleRequestError("finish guard registrations changed")
         context = context or request.context
