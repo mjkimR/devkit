@@ -1,28 +1,20 @@
 ---
-id: PROP-integration-pull-request-cleanup
+id: SPEC-integration-pull-request-cleanup
 title: Integration through pull requests with no-ff merge and cleanup
-summary: "Defines one approval for push, no-ff PR merge and cleanup, fixing the source SHA while allowing checked target advances. Reports partial completion and actionable failures for agent-led recovery."
-status: accepted                        # draft | reviewing | accepted | rejected
-created_at: 2026-10-19
-target_area: integration/
-priority: medium                      # critical | high | medium | low
-size: L                               # S | M | L | XL
-planning_effort: high                 # low | medium | high (hint for Planning)
-dev_effort: high                      # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - integration/
-    - worktree/
-    - packages/devkit/src/devkit/integration/
-    - packages/devkit/src/devkit/worktree/
-    - packages/devkit-spec/src/devkit_spec/
-  excludes:
-    - docs/decisions/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+summary: Defines one approval for push, no-ff PR merge and cleanup, fixing the source SHA while allowing checked target advances. Reports partial completion and actionable failures for agent-led recovery.
+status: completed
+created: 2026-10-20
+related_capabilities: []
+related_stories: []
+workflow: sdd-spec-feature
 ---
 
-# [PROP-integration-pull-request-cleanup] Integration through pull requests with no-ff merge and cleanup
+# [SPEC-integration-pull-request-cleanup] Integration through pull requests with no-ff merge and cleanup
+
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-integration-pull-request-cleanup on 2026-10-20.
+- **Preserved Materials**: `docs/materials/2026-10/20261020-integration-pull-request-cleanup`
 
 - **Split from**: `SPEC-integration-follow-ups` (its question Q3), split during that proposal's Planning, which kept
   only the base advances. Created without `decomposed_from`: `devkit spec proposal new --decomposed-from` refuses a
@@ -31,7 +23,7 @@ workflow: sdd-proposal
 - **Related**: `CAP-INT-mcp-services`, `CAP-WT-task-worktrees`, `ADR-integration-approval-asserted`,
   `ADR-branch-guards-and-close-discard` (supersedes `ADR-worktree-and-pull-request-levels`).
 
-## 1. Background & Hypothesis
+### 1. Background & Hypothesis
 
 `SPEC-hook-driven-integration-cleanup` shipped local, approval-bound integration and deferred remote work (its
 Non-Goal 3). The integration service forbids network operations, refuses `[worktree] pull_request = "required"`
@@ -45,7 +37,63 @@ Hypothesis: remote push and pull request merge can get their own explicit author
 integration, and verified PR merge state plus source ancestry in the fetched target can authorize cleanup without
 removing unmerged work.
 
-## 2. Planning Scope
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Integration through pull requests with no-ff merge and cleanup so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. Other hosting platforms, fork PRs, merge queues, squash/rebase merges, auto-merge and admin bypass.
+2. Persisting approval authority across process restarts or changing the local integration route.
+3. Automatically fixing source failures or overwriting dirty/divergent local state.
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] Explicit remote approval
+- **Given** a GitHub task with an eligible upstream target.
+- **When** the pull-request route prepares and confirms.
+- **Then** the immutable request binds repository, refs, source SHA, confirmation target, PR identity, no-ff method and every cleanup target; declining performs no remote write.
+
+### [AC-02] Prepare refusals
+- **Given** a missing authenticated gh, unsupported remote, fork/draft/wrong-base PR, queue, merge prohibition, divergent remote source or invalid target upstream.
+- **When** prepare runs.
+- **Then** a stable refusal precedes confirmation and no remote write occurs.
+
+### [AC-03] Pinned merge and readiness
+- **Given** an approved source and a descendant target with unchanged effective policy.
+- **When** the approving call executes.
+- **Then** it pushes the exact source without force, creates or uses the bound PR, checks a prospective merge, rechecks target and required checks/reviews, then merges with a head pin only.
+
+### [AC-04] Pending and resume
+- **Given** checks or reviews are pending after push and PR creation.
+- **When** the call returns and is resumed.
+- **Then** INTEGRATION_CHECKS_PENDING is successful but incomplete; resume merges only on the last checked target, refuses a changed source/base/draft/closed PR or moved target and never waits for checks.
+
+### [AC-05] Landing evidence
+- **Given** the PR reports MERGED.
+- **When** its merge commit and fetched target are inspected.
+- **Then** only a second parent equal to the approved source confirms the merge; exact checked parent/tree/containment establishes checked landing, otherwise INTEGRATION_LANDED_UNCHECKED identifies the reason and declared landed-target check; missing source ancestry prevents cleanup.
+
+### [AC-06] Ordered cleanup and re-entry
+- **Given** a confirmed merge retains source ancestry.
+- **When** cleanup or resume runs.
+- **Then** it fast-forwards a clean local target, removes the worktree/local branch, leases selected remote deletion after dependent-PR inspection, then runs scoped cleanup; failures retain explicit step states and restart cleanup has not-recorded landing evidence.
+
+### [AC-07] Unknown outcomes and bounds
+- **Given** a network mutation times out or fails without a recognized refusal.
+- **When** the result is inspected or resumed.
+- **Then** unknown steps are resolved from remote state before destructive work; bounded network calls and nonblocking resume locking are disclosed and tested.
+
+### [AC-08] Local compatibility
+- **Given** local integration or CLI finish is selected.
+- **When** the existing entry point runs.
+- **Then** existing local behavior is preserved and required PR policy refuses local integration with a directive naming the PR route.
+
+## 5. Carried Proposal Notes
+
+The accepted implementation decisions below define the detailed contracts for AC-01 through AC-08.
+
+### 2. Planning Scope
 
 The direction is settled: one approval covers the complete PR integration, the merge method is no-ff, target
 advances follow the local integration principles of `SPEC-integration-follow-ups`, and the agent handles failures
@@ -58,9 +106,9 @@ from actionable operation results. Planning specifies the implementation within 
   platform policy forbids no-ff merge commits, including an applicable `ff-only` constraint.
 - Identify any ADR change needed to permit remote operations under the existing approval contract.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### 3.1 One approval for the complete operation
+#### 3.1 One approval for the complete operation
 
 One approval MUST cover the disclosed remote and local scope: push the approved source branch, create or update its
 PR, merge it with a no-ff merge commit, fetch and fast-forward the local target, then remove the linked worktree,
@@ -72,7 +120,7 @@ The platform's PR merge updates the remote target; no separate push of the local
 review and branch protection remain conditions of the merge. A failure stops the dependent steps and is reported
 to the agent.
 
-### 3.2 No-ff and SHA rules shared with local integration
+#### 3.2 No-ff and SHA rules shared with local integration
 
 PR integration MUST use a no-ff merge commit, preserving source commits and every SHA cited by the unit's records.
 Squash and rebase merge methods MUST NOT be offered by this route. A policy that forbids merge commits prevents this
@@ -91,7 +139,7 @@ devkit did not check: that landing is reported as a notice, never as a checked s
 q-unchecked-landing). Cleanup stops only when the fetched target does not contain the approved source. Updating the local target requires a fast-forward; divergent or dirty local state is
 reported without overwriting it. Source ancestry preserves cited SHAs without an archival ref.
 
-### 3.3 Failures are handed back to the agent
+#### 3.3 Failures are handed back to the agent
 
 The operation reports completed steps, the failing or unconfirmed step, observed Git/PR state and a stable failure
 code with a deterministic next action. Failure diagnostics follow `CAP-ADV-agent-advisory-protocol`; default output
@@ -107,10 +155,10 @@ approval if the target has advanced, matching `SPEC-integration-follow-ups`' app
 **Non-Goals**: squash/rebase integration or cleanup, tree/patch-equivalence proofs for rewritten commits, archival
 refs for otherwise unreachable source SHAs, and automated failure recovery.
 
-### 3.4 Route design (Planning)
+#### 3.4 Route design (Planning)
 
 Evidence: `envelopes/scout-01.yaml`, `envelopes/challenger-01.yaml`, `envelopes/challenger-02.yaml`, the comparison in
-[materials/20261020-pull-request-merge-options.md](materials/20261020-pull-request-merge-options.md) and the PADRs
+[materials/20261020-pull-request-merge-options.md](../../../docs/materials/2026-10/20261020-integration-pull-request-cleanup/20261020-pull-request-merge-options.md) and the PADRs
 under `decisions/`. Premise: `SPEC-integration-follow-ups` as accepted (no-ff result built outside the checkout,
 execution context, effective policy digest, readiness on the result, cleanup-only request, approval tolerating
 advances only within its call). The user's decisions on q-checks-wait and q-unchecked-landing are recorded in
@@ -122,7 +170,7 @@ advances only within its call). The user's decisions on q-checks-wait and q-unch
   `required`; the pull request route exists only behind native confirmation. No policy value grants authority:
   `pull_request` only restricts the route and `delete_branch` only selects a cleanup target, both shown in the form
   (`ADR-integration-approval-asserted`).
-- **Platform** (`PADR-github-pull-request-adapter-in-devkit-worktree`): GitHub only, through `gh` behind an
+- **Platform** (`ADR-github-pull-request-adapter-in-devkit-worktree`): GitHub only, through `gh` behind an
   injectable port in `devkit.worktree`. Every call passes `-R <owner>/<repo>` resolved from the bound remote by `gh`
   (SSH host aliases and GitHub Enterprise hosts that `gh` resolves are accepted), runs without a prompt within a bound
   and returns exit status, stdout and stderr.
@@ -158,8 +206,11 @@ advances only within its call). The user's decisions on q-checks-wait and q-unch
   `source_upstream` stays unchanged); create the PR when bound to "create"; then the merge section: fetch the target,
   require it to descend from the confirmation target, build the prospective merge and run guards, the receipt check,
   the policy digests and readiness on it as the local route does, recheck the remote target with `ls-remote` is still
-  that build target, and call `gh pr merge <n> --merge --match-head-commit <source> --subject "chore(merge):
-  integrate <branch> into <target>" --body "<task ID>"`. Never `--auto`, `--admin` or `--delete-branch`.
+  that build target, and call the synchronous REST merge endpoint through explicitly bound `gh api`, with
+  `sha=<source>`, `merge_method=merge`, title `chore(merge): integrate <branch> into <target>` and body `<task ID>`.
+  Never enqueue, enable auto-merge, bypass protection or request merge-time branch deletion.
+  `ADR-github-pull-request-repository-binding` corrects the originally proposed CLI mechanics: `gh pr merge`
+  implicitly enqueues when a queue is required, while the synchronous REST endpoint does not support merge queues.
 - **Required checks and review** (decided, `answer-01.yaml` q-checks-wait option a): the approving call never waits.
   At the merge step, after the build and checks, devkit reads the PR (`headRefOid` must be the source; check, review
   and mergeability state). When the platform reports it mergeable with required checks and reviews satisfied (the
@@ -187,7 +238,7 @@ advances only within its call). The user's decisions on q-checks-wait and q-unch
   may never merge; the form and `CAP-INT-mcp-services` state this, and the agent reports it to the user after a repeated
   `INTEGRATION_TARGET_MOVED`. A process restart drops a pending request; a fresh `prepare` merges in its approving
   call only when the target has not moved since the source last contained it and the PR's checks have passed.
-- **Landing verification** (`PADR-pull-request-merge-with-pinned-source-and-verified-landing`; decided,
+- **Landing verification** (`ADR-pull-request-merge-with-pinned-source-and-verified-landing`; decided,
   `answer-01.yaml` q-unchecked-landing): fetch and read the PR's merge commit `M`. The merge is **confirmed** when the
   PR is `MERGED` and `M^2` is the source. `M^1` equal to the checked build target, `M`'s tree equal to the checked tree
   and `M` contained in the fetched target is a **checked landing**. Every other confirmed merge is an **unchecked
@@ -260,7 +311,8 @@ advances only within its call). The user's decisions on q-checks-wait and q-unch
   `INTEGRATION_LANDED_UNCHECKED` (including `not-recorded`), a rewritten target that drops the source stopping before cleanup, an unknown merge,
   a rejected push, a diverged remote branch, a lease failure, a blocked local fast-forward, restart re-entry and the
   prepare refusals.
-- **Contracts**: no ADR is superseded. Development amends `CAP-INT-mcp-services` (sections 1, 2, 4, 5 and 6: the
+- **Contracts**: `ADR-github-pull-request-repository-binding` supersedes the adapter ADR solely for the Host-approved
+  repository-binding and synchronous no-queue mechanics corrections. Development amends `CAP-INT-mcp-services` (sections 1, 2, 4, 5 and 6: the
   network exclusion becomes route-scoped; the MCP tools that reach the network declare `openWorldHint`),
   `CAP-WT-task-worktrees` (section 5: devkit pushes and opens a PR only on the approved pull request route; the
   `WORKTREE_PR_POLICY` fix), `CAP-DLV-project-policy` (`delete_branch` also selects remote deletion on the PR route),
@@ -277,8 +329,17 @@ advances only within its call). The user's decisions on q-checks-wait and q-unch
 - **Coordination**: Development starts after `SPEC-integration-follow-ups`' Development lands on `main`; it builds on
   that execution context, build and recovery code rather than the current ff-only code.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - Preliminary decisions: `devkit spec proposal padr integration-pull-request-cleanup "<title>" --summary "<what it decides>"`.
 - On acceptance (`plan-accept`): hand off with `devkit spec proposal handoff integration-pull-request-cleanup`.
 - On rejection: `status: rejected` with the user's reason in the commit message.
+
+
+## Source feedback
+
+`FB-pr-remote-and-squash-integration` is resolved only after remote integration and cleanup are implemented and verified.
+
+## Development assumptions
+
+The readiness provider is the module `packages/devkit-spec/src/devkit_spec/integration.py`, not a directory. The Host expanded the write boundary to that module and its `tests/test_integration.py`.

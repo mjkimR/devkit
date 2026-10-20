@@ -1,15 +1,15 @@
 ---
-id: PADR-github-pull-request-adapter-in-devkit-worktree
+id: ADR-github-pull-request-adapter-in-devkit-worktree
 title: GitHub pull request adapter in devkit.worktree
 summary: Remote and pull request operations run through gh behind a narrow injectable protocol in devkit.worktree, GitHub only; other remotes, a missing or unauthenticated gh, merge queues, auto-merge and admin bypass are refused before the confirmation.
-proposal: PROP-integration-pull-request-cleanup
-status: draft
+proposal: SPEC-integration-pull-request-cleanup
+status: accepted
 created_at: 2026-10-20
 ---
 
-# [PADR-github-pull-request-adapter-in-devkit-worktree] GitHub pull request adapter in devkit.worktree
+# [ADR-github-pull-request-adapter-in-devkit-worktree] GitHub pull request adapter in devkit.worktree
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-20
 
 ---

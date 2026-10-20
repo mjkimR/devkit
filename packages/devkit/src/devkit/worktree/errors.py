@@ -62,7 +62,7 @@ class PullRequestPolicyError(_Guardrail):
     """``finish --merge`` under ``[worktree] pull_request = "required"`` (``BLOCKED``): integration is a PR."""
 
     code = "WORKTREE_PR_POLICY"
-    fix = "Merge the pull request, then run finish without --merge"
+    fix = "Use integration_integrate with route=pull-request for native approval, or merge the PR under existing authority and run finish without --merge"
 
 
 class UnsupportedLayoutError(_Guardrail):

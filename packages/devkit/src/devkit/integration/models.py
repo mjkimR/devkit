@@ -9,6 +9,7 @@ from typing import Any, Protocol
 
 from devkit.advisory import AdvisoryError
 from devkit.worktree import FinishPlan, FinishResult
+from devkit.worktree.pull_request import Repository
 
 
 def digest(value: Any) -> str:
@@ -64,6 +65,7 @@ class Readiness:
     result_sha: str | None = None
     target_bound: tuple[str, ...] = ()
     disclosure: str = ""
+    landed_check: str = ""
 
     def comparable(self) -> tuple[object, ...]:
         """The part a build's readiness must repeat: everything except target-bound evidence and the commits."""
@@ -73,6 +75,7 @@ class Readiness:
             tuple(item for item in self.evidence if item.code not in bound),
             self.target_bound,
             self.disclosure,
+            self.landed_check,
         )
 
 
@@ -123,6 +126,11 @@ class IntegrationRequest:
     guards: tuple[str, ...]
     readiness: Readiness
     cleanup: tuple[CleanupScope, ...]
+    route: str = "local"
+    repository: Repository | None = None
+    pr_number: int | None = None
+    local_target: str | None = None
+    unverified_rules: tuple[str, ...] = ()
 
     @property
     def digest(self) -> str:
@@ -151,7 +159,10 @@ class IntegrationRequest:
             ],
             "merge_method": plan.merge_method,
             "already_merged": plan.already_merged,
-            "network_operations": "excluded",
+            "network_operations": "excluded" if self.route == "local" else "approved-pull-request",
+            "route": self.route,
+            "remote": self.repository.public_scope() if self.repository else None,
+            "pull_request": self.pr_number if self.pr_number else "create",
         }
 
     def confirmation_message(self) -> str:
@@ -167,6 +178,33 @@ class IntegrationRequest:
             return display(value if len(value) <= limit else value[:limit] + "… [truncated]")
 
         branch, target = display(plan.branch), display(plan.target_branch)
+        if self.repository:
+            return "\n".join(
+                [
+                    (
+                        f"Approve pull request cleanup of {branch}, already merged into {display(self.repository.selector)} {target}?"
+                        if plan.already_merged
+                        else f"Approve pull request integration of {branch} into {display(self.repository.selector)} {target} with a merge commit?"
+                    ),
+                    f"Source: {plan.source_sha}; confirmation target: {plan.target_sha}",
+                    (
+                        f"PR {self.pr_number} is already merged. Fetch target; fast-forward local target; perform the selected cleanup below."
+                        if plan.already_merged
+                        else f"Push source; {'use PR ' + str(self.pr_number) if self.pr_number else 'create PR'}; merge; fetch; fast-forward local target."
+                    ),
+                    f"Remove worktree: {display(plan.path) if plan.worktree_identity else 'no'}; delete local and remote source branches: {plan.delete_branch} (remote lease {plan.source_sha}).",
+                    f"Additional cleanup: {display(json.dumps([asdict(scope) for scope in self.cleanup]))}",
+                    f"GitHub automatic branch deletion: {self.repository.delete_on_merge}; when enabled the platform can delete the remote branch regardless of devkit delete_branch policy.",
+                    (
+                        "Checked landing evidence was not recorded in this process. Cleanup reports INTEGRATION_LANDED_UNCHECKED (not-recorded); run the landed-target check after cleanup."
+                        if plan.already_merged
+                        else "Merge runs now only when required checks and reviews pass; otherwise resume later on the unchanged checked target. A frequently advancing target may prevent this route from ever merging. A target commit landing after the last check can merge without devkit checks; this is reported and does not stop cleanup."
+                    ),
+                    f"Unverified platform rules: {display(str(self.unverified_rules))}",
+                    f"Result check: {display(self.readiness.disclosure)}; landed-target check after cleanup: {display(self.readiness.landed_check)}",
+                    "A host timeout can leave execution running; inspect integration_status before recovery.",
+                ]
+            )
         if plan.already_merged:
             lines = [f"Approve cleanup of {branch}, already merged into {target}?"]
         elif plan.merge_method == "no-ff":
@@ -218,9 +256,13 @@ class IntegrationRequest:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self) | {
+            "repository": self.repository.public_scope() if self.repository else None,
             "digest": self.digest,
             "merge_method": self.context.finish.merge_method,
-            "network_operations": "excluded",
+            "network_operations": "excluded" if self.route == "local" else "approved-pull-request",
+            "route": self.route,
+            "remote": self.repository.public_scope() if self.repository else None,
+            "pull_request": self.pr_number if self.pr_number else "create",
         }
 
 
@@ -243,6 +285,9 @@ class IntegrationResult:
     # The latest build of this process, outside the request digest: the target it read and the commit it built.
     build_target: str | None = None
     result_sha: str | None = None
+    build_checked: bool = False
+    pull_request: dict[str, Any] = field(default_factory=dict)
+    landing: dict[str, Any] = field(default_factory=dict)
 
     def build(self) -> dict[str, Any] | None:
         if self.build_target is None:
@@ -260,6 +305,8 @@ class IntegrationResult:
             "status": self.status,
             "authority": self.authority,
             "steps": dict(self.steps),
+            "pull_request": dict(self.pull_request),
+            "landing": dict(self.landing),
             "errors": [error.to_dict() for error in self.errors],
             "notices": [notice.to_dict() for notice in self.notices],
         }
@@ -282,12 +329,14 @@ class IntegrationResult:
             "authority": self.authority,
             "ui_action": self.ui_action,
             "steps": dict(self.steps),
+            "pull_request": dict(self.pull_request),
+            "landing": dict(self.landing),
             "cleanup_steps": dict(self.cleanup_steps),
             "finish": self.finish.to_dict() if self.finish else None,
             "observed": self.observed,
             "failing_operation": self.failing_operation,
             "build": self.build(),
-            "network_operations": "excluded",
+            "network_operations": "excluded" if self.request.route == "local" else "approved-pull-request",
             "errors": [error.to_dict() for error in self.errors],
             "notices": [notice.to_dict() for notice in self.notices],
         }

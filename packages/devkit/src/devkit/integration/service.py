@@ -92,10 +92,13 @@ class IntegrationService:
     """Trusted application service. No method accepts a caller-supplied approval boolean or serialized authority."""
 
     def __init__(self, root: Path) -> None:
+        from devkit.worktree.pull_request import GitHub
+
         self.root = root.resolve()
+        self.github = GitHub(self.root)
         self._records: dict[str, _Record] = {}
 
-    def prepare(self, branch: str, task: Task) -> IntegrationResult:
+    def prepare(self, branch: str, task: Task, route: str = "local") -> IntegrationResult:
         if (
             task.kind not in {"unit", "session"}
             or not isinstance(task.id, str)
@@ -127,6 +130,14 @@ class IntegrationService:
                     "the process already retains 128 pending requests; inspect and finish them before preparing more"
                 )
             self._records.pop(retired)
+        if route == "pull-request":
+            from devkit.integration.pull_request import prepare
+
+            result = prepare(self, branch, task)
+            self._records[result.request.id] = _Record(result)
+            return result
+        if route != "local":
+            raise IntegrationConfigError("route must be local or pull-request")
         name, policy_digest = providers.policy(self.root)
         config = read_worktree_config(self.root)
         position = locate(self.root)
@@ -182,8 +193,10 @@ class IntegrationService:
             raise AuthorityError("request is not retained in this process; inspect Git before preparing new scope")
         return record
 
-    async def integrate(self, branch: str, task: Task, confirm: Confirmation) -> IntegrationResult:
-        result = await asyncio.to_thread(self.prepare, branch, task)
+    async def integrate(
+        self, branch: str, task: Task, confirm: Confirmation, route: str = "local"
+    ) -> IntegrationResult:
+        result = await asyncio.to_thread(self.prepare, branch, task, route)
         request = result.request
         message = request.confirmation_message()
         try:
@@ -194,7 +207,7 @@ class IntegrationService:
                     "properties": {
                         "approve": {
                             "type": "boolean",
-                            "title": "Approve this exact local integration",
+                            "title": "Approve this exact integration",
                             "default": False,
                         }
                     },
@@ -218,6 +231,10 @@ class IntegrationService:
         return await asyncio.to_thread(self._run, request.id, LOCK_WAIT, True)
 
     def _observe(self, request: IntegrationRequest) -> dict:
+        if request.route == "pull-request":
+            from devkit.integration.pull_request import observe
+
+            return observe(self, request)
         plan = request.context.finish
         observed: dict = {"worktree_exists": Path(plan.path).exists() if plan.worktree_identity else None}
         for key, ref in (
@@ -299,6 +316,10 @@ class IntegrationService:
         if not record.lock.acquire(blocking=False):
             raise AuthorityError("this request is already executing; inspect it after the current call finishes")
         try:
+            if record.result.request.route == "pull-request":
+                from devkit.integration.pull_request import execute
+
+                return execute(self, record, wait, approving)
             plan = record.result.request.context.finish
             try:
                 with integration_lock(Path(plan.common_dir), timeout=wait):

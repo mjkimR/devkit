@@ -41,5 +41,11 @@ SPEC-hook-driven-integration-cleanup AC-06 & Non-Goal 3:
 "pull_request = 'required' fails closed with WORKTREE_PR_POLICY."
 ```
 
-- **Disposition**: `PROP-integration-pull-request-cleanup`: remote/PR authority and cleanup after a no-ff merge,
+- **Disposition**: `SPEC-integration-pull-request-cleanup`: remote/PR authority and cleanup after a no-ff merge,
   preserving source SHAs. Squash/rebase support is excluded from the promoted scope.
+
+
+- **Implementation disposition**: `SPEC-integration-pull-request-cleanup` implements the remote-authority and
+  source-preserving no-ff cleanup portion, with offline GitHub adapter and bare-repository regressions for approval,
+  pending/resume, landing evidence and deletion safety, plus independent code review. Squash/rebase provenance and
+  non-ancestor cleanup remain outside the accepted scope; this item stays promoted for that remaining work.

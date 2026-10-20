@@ -1,15 +1,15 @@
 ---
-id: PADR-pull-request-merge-with-pinned-source-and-verified-landing
+id: ADR-pull-request-merge-with-pinned-source-and-verified-landing
 title: Pull request merge with pinned source and verified landing
 summary: The pull request route merges with the PR head pinned to the approved source once required checks pass, after checking a locally built merge on the fetched target. An unchecked landing is a notice, never a checked success; cleanup stops only when the target lacks the source.
-proposal: PROP-integration-pull-request-cleanup
-status: draft
+proposal: SPEC-integration-pull-request-cleanup
+status: accepted
 created_at: 2026-10-20
 ---
 
-# [PADR-pull-request-merge-with-pinned-source-and-verified-landing] Pull request merge with pinned source and verified landing
+# [ADR-pull-request-merge-with-pinned-source-and-verified-landing] Pull request merge with pinned source and verified landing
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-20
 
 ---
