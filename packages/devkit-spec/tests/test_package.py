@@ -28,6 +28,7 @@ RULES = (
     "RULE-spec-lifecycle",
     "RULE-reconcile-contract",
     "RULE-code-entrypoints",
+    "RULE-proposal-boundaries",
     "RULE-document-summary",
 )
 # The instructions holding each rule's judgment (``related``); the other rules declare none.

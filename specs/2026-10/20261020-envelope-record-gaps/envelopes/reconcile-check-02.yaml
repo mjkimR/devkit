@@ -1,0 +1,15 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T23:17:44.693434Z'
+status: completed
+summary: 'Implementer self-verification (medium, discretionary repeat call not made) closing reconcile-check-01: all four findings fixed at the named locations. 1 (P1): CAP-DLV-cli-and-output answer synopsis now [--answers-to FILE] [--answers-file PATH|-] [--settle N=DECISION]..., error-code table names --settle refusals; file added to reconcile.md as modified. 2: delivery-workflows answer row names settles, command table --settle. 3: review/reverify and challenger rows name Planning''s reverify closing a challenger round. 4: rule 15 adds sequence order, ''written before that marker'', the higher number holds, a reverify is never a round. Evidence: each edited sentence matches model.py/authoring.py/cli and review-loop.md section 1; devkit rules check over docs/capabilities and the unit errors=0; test_documented_codes PASS.'
+findings: []
+checks:
+  targets_vs_diff: PASS six modified targets cover every changed contract
+  rules: PASS errors=0 warnings=0
+diff_scope:
+  base: 129e27c78f67a2cc5aa44f44241792d6a6ea693a
+  head: 02807529c4f07cf1185d2b0b4fbb63b830de7757
+activity_effort: medium

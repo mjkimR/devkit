@@ -33,9 +33,10 @@ Unanswered questions (`[PENDING_QUESTION: ...]`) hold the gate of the run's stag
 ```bash
 devkit workflow envelope answer --unit <dir> --stage <stage> --summary "q1, q2 decided" \
   --answers-to worker-NN.yaml --answers-file -    # - { question: q1, choice: a, decision: "...", constraints: [...] }
+  # add --settle "2=<decision>" for each of the worker's assumptions the answers settle
 ```
 
-- One decision sentence per question; `choice: null` for an answer outside the options; `constraints` only for what the answer adds. When a rejection or a return to Backlog for decomposition ends the Planning, the party ending it closes every question still open the same way: `choice: null` and the reason (`"Planning ended: rejected by the user"`) as the decision, in the commit that ends it; otherwise the open questions hold the Planning branch's merge. Never the raw conversation, the reasoning or the question again. An answer that leaves something ambiguous becomes a new question in the next run's `worker` envelope, never a guess.
+- One decision sentence per question; `choice: null` for an answer outside the options; `constraints` only for what the answer adds. A decision that settles one of the answered run's `assumptions` goes into `settles` (`--settle N=<decision>`, `N` its 1-based position), never into `constraints`; an answer may carry settles alone. Settling holds and releases nothing. When a rejection or a return to Backlog for decomposition ends the Planning, the party ending it closes every question still open the same way: `choice: null` and the reason (`"Planning ended: rejected by the user"`) as the decision, in the commit that ends it; otherwise the open questions hold the Planning branch's merge. Never the raw conversation, the reasoning or the question again. An answer that leaves something ambiguous becomes a new question in the next run's `worker` envelope, never a guess.
 
 ## 3. Problems and resolutions
 

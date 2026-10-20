@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: PROP-envelope-record-gaps
+by: user
+at: '2026-10-19T22:57:32.456017Z'

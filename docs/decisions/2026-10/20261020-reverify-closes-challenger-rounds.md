@@ -1,15 +1,15 @@
 ---
-id: PADR-reverify-closes-challenger-rounds
+id: ADR-reverify-closes-challenger-rounds
 title: Reverify closes challenger rounds
 summary: Lets a reverify close a challenger round, so folded Planning findings end resolved or waived in the record, and counts review-loop rounds an earlier high run recorded without the round marker in sequence order.
-proposal: PROP-envelope-record-gaps
-status: draft
+proposal: SPEC-envelope-record-gaps
+status: accepted
 created_at: 2026-10-19
 ---
 
-# [PADR-reverify-closes-challenger-rounds] Reverify closes challenger rounds
+# [ADR-reverify-closes-challenger-rounds] Reverify closes challenger rounds
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-19
 
 ---
@@ -21,7 +21,7 @@ A Planning worker folds every `challenger` finding into the proposal, but the re
 `plan-accept` request then shows open counts for settled findings (`FB-challenger-findings-stay-open`). Separately,
 `references/review-loop.md` reads round counts only from the `round <N>;` marker, so rounds recorded before the
 marker existed have no defined count, and folding the user's answers into a reviewed proposal is named neither a
-batch nor a fresh loop (`FB-review-loop-round-count-across-procedure-change`). Evidence: `materials/spike-evidence.md`.
+batch nor a fresh loop (`FB-review-loop-round-count-across-procedure-change`). Evidence: `docs/materials/2026-10/20261020-envelope-record-gaps/spike-evidence.md`.
 
 ## 2. Decision Drivers
 

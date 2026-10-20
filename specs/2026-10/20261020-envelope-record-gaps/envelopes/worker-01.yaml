@@ -1,0 +1,23 @@
+kind: worker
+stage: integration-approval
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-19T23:19:14.095622Z'
+status: completed
+summary: 'Development turn from specify to final-change-report: spec/plan/tasks written; Q1 reverify closes challenger rounds, Q2 answer settles, Q3 RULE-proposal-boundaries implemented with tests; bundle procedure text and six Living Spec capabilities reconciled; code-reviewer initial pass (2 P3 fixed, reverify-01) and reconcile-reviewer (1 P1 + 3 P2 fixed, self-verified reconcile-check-02); FB-review-loop-round-count-across-procedure-change resolved; feedback sweep and final report recorded. Next: dev-integration gate (Host).'
+findings: []
+assumptions:
+- Challenger-reverify step placed in references/planning.md step 3 (the planning-worker contract no longer holds the steps)
+- CAP-DLV-cli-and-output and CAP-HARN-agent-guidance edited beyond the proposal's listed areas because their envelope synopsis and rule list would otherwise be stale; spec-delegate SKILL.md added to Task 4's boundary
+- 'Accepted ADRs left unchanged: the dangling envelopes/answer-01.yaml citation is not an ID-rewrite leftover; recorded as FB-promoted-adr-cites-deleted-proposal-envelope'
+unverified_areas:
+- just smoke not run
+- The new rule is not deployed in this repository's .devkit until the Host runs devkit sync
+checks:
+  tests: PASS just test-affected 1921 passed
+  build: PASS just check pyright 0 errors
+  lint: PASS just lint-check; rules check --ci errors=0
+diff_scope:
+  base: 03eef3f5fa6373b9b4698de08dc1bdce037ba498
+  head: f46af7f0251c672d59283e8af07ee3db1e29aa02
+activity_effort: medium

@@ -42,7 +42,7 @@ def test_the_loop_defines_round_fixing_next_round_end_and_count() -> None:
     assert "each later round reviews every fix made since the previous round" in loop and "never a subset" in loop
     assert "fixes every finding of the round, P1, P2 and P3 together" in loop
     assert "`reverify` for code; a new `reconcile-check` for reconcile;" in loop
-    assert "the next `challenger-NN` summary or the `worker` envelope's summary" in loop
+    assert "for Planning, a `reverify --from envelopes/challenger-NN.yaml` after the fold" in loop
     assert "The round returns no finding, or every fix of the batch meets section 2 and is self-verified" in loop
     assert "stays open in that closing record with the counter-evidence" in loop
     assert "or a P1 stays open as contested" in loop
@@ -60,7 +60,8 @@ def test_minor_fix_self_verification_has_four_conditions_per_review_kind() -> No
     loop = _text(LOOP)
     assert "Uncertainty on any condition, for any fix, requires the next round for the whole batch" in loop
     assert (
-        "in `reverify` for code, in the new `reconcile-check` for reconcile, in the `worker` envelope's summary" in loop
+        "in `reverify` for code, in the new `reconcile-check` for reconcile, in the closing `reverify` of the"
+        " `challenger` round for Planning" in loop
     )
     assert "A recurring finding can no longer be closed by self-verification" in loop
     assert (

@@ -380,3 +380,28 @@ def test_lint_clean_skips_the_temporary_files_of_writes_in_progress(tmp_path: Pa
 
     assert evaluate_definition(doc, _opts(tmp_path, unit, lint=lint, skip_lint=False)).complete
     assert linted == ["u/.notes.tmp", "u/task.md"]
+
+
+# AC-02 (SPEC-envelope-record-gaps)
+def test_challenger_state_follows_its_reverify_and_review_state_ignores_it(tmp_path: Path) -> None:
+    doc = parse_definition(
+        "---\nid: w\nschema_version: 1\nstages:\n  - id: a\n"
+        "    exit: [envelope-completed(challenger), envelope-review-passed]\n---\n"
+    )
+    unit = write_unit(tmp_path, "work/a")
+    finding = "findings: [{issue: x, evidence: y, severity: P2}]\n"
+    _write_env(unit, "review-01.yaml", "kind: review\nstatus: completed\n" + finding)
+    _write_env(unit, "challenger-01.yaml", "kind: challenger\nstatus: completed\n" + finding)
+    res = evaluate_definition(doc, _opts(tmp_path, unit))
+    assert [u.detail for u in res.unmet] == [
+        "envelopes/challenger-01.yaml status=completed open_findings=1",
+        "envelopes/review-01.yaml status=completed open_findings=1",
+    ]
+    _write_env(
+        unit,
+        "reverify-01.yaml",
+        "kind: reverify\nstatus: completed\nreview: challenger-01.yaml\n"
+        "findings: [{issue: x, evidence: y, severity: P2, resolution: resolved}]\n",
+    )
+    res = evaluate_definition(doc, _opts(tmp_path, unit))
+    assert [u.detail for u in res.unmet] == ["envelopes/review-01.yaml status=completed open_findings=1"]
