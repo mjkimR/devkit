@@ -1,37 +1,23 @@
 ---
-id: PROP-envelope-record-gaps
+id: SPEC-envelope-record-gaps
 title: 'Close gaps in Planning records: folded challenger findings, settled assumptions, proposal boundaries'
 summary: Lets folded challenger findings close in the record, gives answer envelopes a place for assumptions the user settled, and checks that a proposal's boundaries name existing areas, so Planning records match what actually happened.
-status: accepted                        # draft | reviewing | accepted | rejected
-created_at: 2026-10-19
-target_area: delivery/
-priority: medium                      # critical | high | medium | low
-size: M                               # S | M | L | XL
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - delivery/
-    - governance/
-    - packages/devkit/src/devkit/workflow/
-    - packages/devkit-spec/src/devkit_spec/
-    - packages/devkit/tests/
-    - packages/devkit-spec/tests/
-  excludes:
-    - docs/decisions/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+status: planned
+created: 2026-10-20
+related_capabilities: []
+related_stories: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-envelope-record-gaps] Close gaps in Planning records: folded challenger findings, settled assumptions, proposal boundaries
+# [SPEC-envelope-record-gaps] Close gaps in Planning records: folded challenger findings, settled assumptions, proposal boundaries
 
-## Source feedback
+## 1. Problem Statement & Motivation
 
-- `FB-review-loop-round-count-across-procedure-change` and `FB-review-round-count-before-markers`: Q1 receives
-  the counting of earlier unmarked high-effort rounds and the treatment of user-answer folds. Preserve these IDs
-  through handoff and verify their resolution when the accepted Q1 design is implemented.
+Handed off from proposal PROP-envelope-record-gaps on 2026-10-20.
+- **Preserved Materials**: `docs/materials/2026-10/20261020-envelope-record-gaps`
 
-## 1. Background & Hypothesis
+### 1. Background & Hypothesis
 
 - **Folded challenger findings stay open** (`FB-challenger-findings-stay-open`): a planning worker folds every
   `challenger` finding into the proposal, but the envelope keeps them `open`, because only a `reverify` closes findings
@@ -46,7 +32,32 @@ workflow: sdd-proposal
   area that does not exist (`capabilities/core/`), and no rule reports it.
 - **Hypothesis**: small record and rule changes make Planning records match the work, without changing gates.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Close gaps in Planning records: folded challenger findings, settled assumptions, proposal boundaries so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### Source feedback
+
+- `FB-review-loop-round-count-across-procedure-change` and `FB-review-round-count-before-markers`: Q1 receives
+  the counting of earlier unmarked high-effort rounds and the treatment of user-answer folds. Preserve these IDs
+  through handoff and verify their resolution when the accepted Q1 design is implemented.
+
+### 2. Technical Spike Questions
 
 - **Q1 (Challenger closure)**: a `reverify`-like closing record for `challenger` envelopes, `--resolve` on a later
   `challenger` round, or a rule that a folded finding is resolved by the next round's summary; and how the review-loop
@@ -56,11 +67,11 @@ workflow: sdd-proposal
 - **Q3 (Boundaries rule)**: a rule that every `boundaries.owns` and `target_area` entry names an existing area or path,
   with the placeholder `capabilities/<area>/` reported separately.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-Decisions of this Planning (evidence and the option comparison: `materials/spike-evidence.md`):
+Decisions of this Planning (evidence and the option comparison: `docs/materials/2026-10/20261020-envelope-record-gaps/spike-evidence.md`):
 
-- **Q1** (`PADR-reverify-closes-challenger-rounds`, refines `ADR-bounded-high-effort-review-loop`):
+- **Q1** (`ADR-reverify-closes-challenger-rounds`, refines `ADR-bounded-high-effort-review-loop`):
   `reverify --from challenger-NN.yaml` closes a challenger round (`--resolve`, `--waive`); the `review` key keeps its
   name and may name a `challenger-NN.yaml`; the deciding state of `challenger` follows its last reverify;
   `envelope new --kind challenger` refuses non-open resolutions; `envelope check` shows `review=<file>` on reverify
@@ -69,10 +80,10 @@ Decisions of this Planning (evidence and the option comparison: `materials/spike
   otherwise a `high` loop starts at round 1. A fold of the user's answers is a new batch in the same loop; a fold
   that reaches the cap gets one fresh round outside the cap, like a fix the user requested (user answer
   `answer-fold-round`, `envelopes/answer-01.yaml`).
-- **Q2** (`PADR-answer-envelopes-settle-worker-assumptions`): an `answer` envelope may carry
+- **Q2** (`ADR-answer-envelopes-settle-worker-assumptions`): an `answer` envelope may carry
   `settles: [{assumption: <1-based position in the answered worker's assumptions>, decision}]`, written with
   `devkit workflow envelope answer --settle N=DECISION`; `answers` may then be empty; it holds and releases nothing.
-- **Q3** (`PADR-proposal-boundaries-name-existing-paths`): a new warning rule `RULE-proposal-boundaries` reports each
+- **Q3** (`ADR-proposal-boundaries-name-existing-paths`): a new warning rule `RULE-proposal-boundaries` reports each
   `target_area` and `boundaries.owns` entry of a `draft`, `reviewing` or `accepted` proposal that resolves to no
   existing path (repository path, namespace or global docs-root path, or capability area), and the `<...>`
   placeholder under its own message; the Planning executor clears its reports before the `plan-accept` request. How
@@ -93,8 +104,9 @@ Coordination: `SPEC-direct-planning-procedure` (integrated) moved the ordered Pl
 `planning-worker` contract into the `spec` skill's `references/planning.md`. This Development puts the
 challenger-reverify step into that reference instead of the contract.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - Preliminary decisions: `devkit spec proposal padr envelope-record-gaps "<title>"`.
 - On acceptance (`plan-accept`): hand off with `devkit spec proposal handoff envelope-record-gaps`.
 - On rejection: `status: rejected` with the user's reason in the commit message.
+

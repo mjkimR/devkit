@@ -1,15 +1,15 @@
 ---
-id: PADR-answer-envelopes-settle-worker-assumptions
+id: ADR-answer-envelopes-settle-worker-assumptions
 title: Answer envelopes settle worker assumptions
 summary: Adds an optional settles list to answer envelopes, each item naming a worker assumption by its position and the user's decision on it, written with a repeatable --settle flag.
-proposal: PROP-envelope-record-gaps
-status: draft
+proposal: SPEC-envelope-record-gaps
+status: accepted
 created_at: 2026-10-19
 ---
 
-# [PADR-answer-envelopes-settle-worker-assumptions] Answer envelopes settle worker assumptions
+# [ADR-answer-envelopes-settle-worker-assumptions] Answer envelopes settle worker assumptions
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-19
 
 ---
@@ -20,7 +20,7 @@ When the user's answers also settle assumptions a worker recorded (its `worker` 
 `answer` envelope has no place for them: its items are `{question, choice, decision, constraints}`, each tied to a
 question. A run recorded them as `constraints` prefixed "Settled by the user in the same round:"
 (`FB-answer-envelope-no-slot-for-settled-assumptions`), which stretches `constraints` ("only for what the answer
-adds", `references/worker-records.md` section 2). Evidence: `materials/spike-evidence.md`.
+adds", `references/worker-records.md` section 2). Evidence: `docs/materials/2026-10/20261020-envelope-record-gaps/spike-evidence.md`.
 
 ## 2. Decision Drivers
 
