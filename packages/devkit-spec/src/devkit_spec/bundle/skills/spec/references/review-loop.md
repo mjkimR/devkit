@@ -41,7 +41,17 @@ After a round, its batch MAY be self-verified instead of starting the next round
 
 Every finding of a `review`, `reconcile-check` or `challenger` envelope carries `severity` as exactly `P1`, `P2` or `P3`, at every effort (a `low` self-review included). Severity is the reviewer's: the implementer records it as returned, never relabels it, and `reverify` carries it forward. It has no effect on checks; the stage exits still count every open finding.
 
-A reviewer given earlier findings marks a finding that repeats one of them by starting its `issue` with `recurs: <envelope> #<n>;` (the earlier envelope file and the finding's 1-based position).
+A reviewer given earlier findings marks a finding that repeats one of them by starting its `issue` with
+`recurs: <envelope> #<n>;` (the earlier envelope file and the finding's 1-based position). Recurrence means the same
+failure condition remains after an attempted fix, including an incomplete fix, or returns. Explain the shared
+failure condition alongside the earlier finding reference; the same file, topic or causal connection alone is
+insufficient. The out-of-scope exclusion in section 1 still applies.
+
+For example, if an earlier finding requires cleanup to check ownership, a fix that still permits deleting another
+owner's work is recurring. If that ownership failure is resolved but the replacement command uses an unsupported
+option, the unsupported option is a new finding with its own failure condition. A separate defect introduced by a
+fix uses no recurrence marker solely because the fix caused it; it still follows the same severity, minor-fix and
+round-cap rules. A different proposed remedy does not make an unresolved earlier failure a new finding.
 
 ## 4. Hand-over to the user
 
