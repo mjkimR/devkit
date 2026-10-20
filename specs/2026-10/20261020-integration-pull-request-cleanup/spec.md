@@ -2,7 +2,7 @@
 id: SPEC-integration-pull-request-cleanup
 title: Integration through pull requests with no-ff merge and cleanup
 summary: Defines one approval for push, no-ff PR merge and cleanup, fixing the source SHA while allowing checked target advances. Reports partial completion and actionable failures for agent-led recovery.
-status: in-progress
+status: completed
 created: 2026-10-20
 related_capabilities: []
 related_stories: []

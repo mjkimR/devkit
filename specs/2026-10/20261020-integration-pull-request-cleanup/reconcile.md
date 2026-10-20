@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-integration-pull-request-cleanup
 feature: SPEC-integration-pull-request-cleanup
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/integration/CAP-INT-mcp-services.md
     resolution: modified

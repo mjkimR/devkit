@@ -245,6 +245,9 @@ replay a serialized result as authority.
 and owner/repository, using supported gh syntax, including Enterprise hosts and aliases resolved by gh. Credentials
 remain owned by gh. No caller-authored PR title or body is accepted; devkit composes them from validated names/task ID.
 
+PR preparation requires a 1–256 character task ID matching `[A-Za-z0-9][A-Za-z0-9_.:-]{0,255}`. The selected
+remote must have exactly one effective push destination, and fetch/push destinations must resolve to the same
+GitHub repository. Credential-bearing HTTP(S) remote URLs are refused; authentication stays with gh.
 Prepare fetches the same-named upstream of the checked-out target branch. That fetched commit supplies the
 confirmation target and target policy. A local target ahead of or divergent from upstream, divergent remote source,
 missing authenticated gh, unsupported/fork/draft/wrong-base PR, merge queue, or readable merge-commit prohibition

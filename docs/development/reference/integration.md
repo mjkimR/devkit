@@ -11,7 +11,7 @@ Canonical behavior: `CAP-INT-mcp-services`.
 | MCP `integration_resume` | Recover only the remaining scope of an already approved request in this process |
 | `devkit worktree finish BRANCH --merge --local-only` | Public merge/cleanup operation excluding fetch and push (a merge commit, or a fast-forward under `[worktree] merge = "ff-only"`; the branch must contain the base HEAD); caller supplies existing authority |
 
-Task tools accept `branch`, `task_kind`, `task_id`, optional `unit`, optional `claims`, and `route="local"|"pull-request"` (default local). Status accepts `request_id` and optional boolean `detail` (default false); resume accepts only `request_id`. No tool accepts an approval boolean, arbitrary command, cleanup path or merge strategy:
+Task tools accept `branch`, `task_kind`, `task_id`, optional `unit`, optional `claims`, and `route="local"|"pull-request"` (default local). On the PR route only, `task_id` must contain 1–256 characters matching `[A-Za-z0-9][A-Za-z0-9_.:-]{0,255}`. Status accepts `request_id` and optional boolean `detail` (default false); resume accepts only `request_id`. No tool accepts an approval boolean, arbitrary command, cleanup path or merge strategy:
 the merge method is the project policy (`[worktree] merge`, `ff-only` in either the base's or the source's policy wins).
 
 The approving `integration_integrate` call absorbs target commits that land during the confirmation in one build
