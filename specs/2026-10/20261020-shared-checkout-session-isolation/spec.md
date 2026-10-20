@@ -2,7 +2,7 @@
 id: SPEC-shared-checkout-session-isolation
 title: Non-blocking guidance for session branches in a shared checkout
 summary: Adds concise guidance for --no-worktree branches in shared checkouts, leaving coordination to the direct user or local orchestration main agent without requiring worktrees or adding execution barriers.
-status: in-progress
+status: completed
 created: 2026-10-20
 related_capabilities: [CAP-DLV-project-policy, CAP-WT-task-worktrees]
 related_stories: []
