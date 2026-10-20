@@ -67,7 +67,8 @@ rounds recorded before its marker existed) without superseding it.
   before that marker records `activity_effort: high`; otherwise unmarked rounds (a `medium` or `low` run's) never
   count, and a `high` loop that follows them starts at round 1. When a marker disagrees with the inferred count, the
   higher number holds, so the cap is never extended. A `reverify` is never a round.
-- **Folding user answers** (the user's answer `answer-fold-round`, `envelopes/answer-01.yaml`): a Planning turn that
+- **Folding user answers** (the user's answer `answer-fold-round`, historical Git
+  `5551f9f4fc2920b973276aa43a2b0e36778c2f7a:docs/proposals/PROP-envelope-record-gaps/envelopes/answer-01.yaml`): a Planning turn that
   folds the user's answers into a proposal already reviewed in a `high` loop treats the fold as a new batch of the
   same loop, never a fresh loop; the round count continues. When the fold's batch reaches the cap round and would need
   another round, it gets one further fresh round outside the cap, as a fix the user requested does (section 4 of the

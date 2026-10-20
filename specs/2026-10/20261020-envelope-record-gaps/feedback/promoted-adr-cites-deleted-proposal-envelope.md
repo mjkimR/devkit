@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-20
 ---
 
@@ -40,3 +40,11 @@ docs/decisions/2026-10/20261020-proposal-boundaries-name-existing-paths.md, sect
   "(the user's answer `new-boundary-paths`, `envelopes/answer-01.yaml`)"
 git show --stat 03eef3f: docs/proposals/PROP-envelope-record-gaps/envelopes/answer-01.yaml deleted
 ```
+
+## Disposition
+
+Directly resolved by `SPEC-feedback-handoff-references`. Dropped-record references now identify verified full-commit Git evidence; unavailable history is reported unresolved. Both identified ADR citations were repaired without decision changes.
+
+Verification: five regression cases failed before the fix and pass after it; 1,115 affected tests passed,
+with 21 record tests rerun after the final refinement. Lint, type checks and independent code review passed.
+The historical source was verified with `git show`. Integration remains a separate Host step.

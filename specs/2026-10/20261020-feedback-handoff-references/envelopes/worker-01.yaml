@@ -1,0 +1,25 @@
+kind: worker
+stage: integration-approval
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-20T04:24:22.117171Z'
+status: completed
+summary: Completed characterize through final-change-report for handoff feedback 5 and 6; clean committed result awaits Host integration
+findings: []
+assumptions:
+- 'Codex role is emulated: scoped absolute-worktree commands and Host committed-range validation substitute native path enforcement'
+- Only unchanged record bytes available at HEAD receive full Git historical pins; other citations are unresolved
+- Accepted ADR edits are user-authorized citation-only repairs with decisions unchanged
+unverified_areas:
+- Integration and remote publication belong to Host; this worker did neither
+checks:
+  red_green: PASS five characterized regression failures became passing cases
+  tests: PASS 1115 affected tests; final history refinement 21 record tests
+  lint_types: PASS spec lint-check and pyright
+  rules: PASS cumulative rules zero errors/warnings and diff check
+  reviews: PASS independent code and reconcile reviewers; no open findings
+  feedback: PASS two explicitly authorized direct-fix sources resolved; no terminal sources changed; zero new observations
+diff_scope:
+  base: b9c051b59df6a590d57472cb85f0914e8a5adadf
+  head: 7d9fa175b8fa5b37a75e382595b5e5bc3e2ac17b
+activity_effort: medium
