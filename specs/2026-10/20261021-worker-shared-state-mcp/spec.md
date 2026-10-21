@@ -1,42 +1,24 @@
 ---
-id: PROP-worker-shared-state-mcp
+id: SPEC-worker-shared-state-mcp
 title: Shared state and workspace across worktrees and cloud agents
-summary: "Define immutable expiring shared artifacts with local CLI and MCP access, preserving scope-registry authority and providing a public remote-adapter extension contract while deferring concrete remote backends."
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-10-20
-target_area: capabilities/collaboration/
-priority: high                        # critical | high | medium | low
-size: M                               # S | M | L | XL
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
+summary: Define immutable expiring shared artifacts with local CLI and MCP access, preserving scope-registry authority and providing a public remote-adapter extension contract while deferring concrete remote backends.
+status: planned
+created: 2026-10-21
 milestone: MS-autonomous-backlog-and-orchestration
-boundaries:
-  owns:
-    - packages/devkit-dist/src/devkit/
-    - packages/devkit-dist/tests/
-    - packages/devkit-dist/pyproject.toml
-    - packages/devkit-dist/README.md
-    - packages/devkit-mcp/src/devkit_mcp/
-    - packages/devkit-mcp/tests/
-    - packages/devkit-mcp/README.md
-    - docs/capabilities/collaboration/
-    - docs/capabilities/mcp/
-    - docs/capabilities/harness/
-    - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-orchestrate/
-    - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-delegate/references/hosts.md
-    - packages/devkit-spec/tests/entrypoints/test_bundle.py
-    - docs/architecture/
-    - docs/development/reference/
-  excludes:
-    - docs/decisions/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+related_capabilities: []
+related_stories: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
+# [SPEC-worker-shared-state-mcp] Shared state and workspace across worktrees and cloud agents
 
-# [PROP-worker-shared-state-mcp] Shared state and workspace across worktrees and cloud agents
+## 1. Problem Statement & Motivation
 
-## 1. Problem and Planning Recommendation
+Handed off from proposal PROP-worker-shared-state-mcp on 2026-10-21.
+- **Preserved Materials**: `docs/materials/2026-10/20261021-worker-shared-state-mcp`
+
+### 1. Problem and Planning Recommendation
 
 Linked workers need a shared, untracked home for regenerable proposal review reports. `PROP-proposal-review-and-approval`
 is the first consumer. `CAP-COLL-work-scope-registry` already owns authoritative coordination records, revisions,
@@ -48,9 +30,64 @@ registration contract, with equivalent CLI and local MCP access. A concrete prod
 scope coordination are excluded from this delivery. `FB-remote-shared-adapter-follow-up` tracks the backend destination,
 dependencies and restart criteria. A protocol fake does not make cross-host production sharing work.
 
-## 2. Selected Technical Contract
+## 2. User Stories
 
-### 2.1 Ownership and interfaces
+- **US-1**: As a developer/agent, I want to implement Shared state and workspace across worktrees and cloud agents so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### Scenario 1 [AC-01]: Carried from proposal
+- **AC1**: Given two linked worktrees with matching local configuration, put through CLI and get through a local MCP
+  service resolve the same artifact and namespace; a separate clone cannot resolve it.
+
+### Scenario 2 [AC-02]: Carried from proposal
+- **AC2**: Given safe initially absent storage, first put adds only a narrow exclusion and leaves both base and linked
+  `git status --porcelain --untracked-files=normal` clean. Tracked, foreign-visible, symlink and wrong-repository
+  fixtures refuse without writes or hidden files.
+
+### Scenario 3 [AC-03]: Carried from proposal
+- **AC3**: Concurrent identical puts and retry after a lost response return the same creation/expiry metadata within the live lifetime; after expiry the same content gets a fresh generation/URI
+  and the old URI remains unavailable. Different bodies coexist. Interrupted publication never yields partial envelopes.
+
+### Scenario 4 [AC-04]: Carried from proposal
+- **AC4**: With an injected clock, get/list expire at exactly seven days without writes; bounded explicit cleanup
+  removes only expired valid artifacts. Read-only permissions allow initialized get/list; registry records and tokens
+  remain byte-identical before and after all artifact operations.
+
+### Scenario 5 [AC-05]: Carried from proposal
+- **AC5**: CLI/MCP validation and errors match for oversized content, traversal, corruption, missing/expired keys,
+  lock timeout and denied access. Local-orchestrated guidance checks connected project tools before dependent
+  operations, requests user connection repair when absent, and does not automatically select CLI. Cloud MCP lists no mutation tools and rejects forged mutation calls; local bounded
+  writes never elicit a business approval form. Consumer source_sha mismatch is detectable from metadata.
+
+### Scenario 6 [AC-06]: Carried from proposal
+- **AC6**: Adapter config precedence and explicit failure on unknown adapter are tested in base, linked and owning
+  MCP workspaces. Load a test adapter through the public entry-point contract and run the reusable semantic
+  conformance suite; duplicate/unloadable/malformed registrations fail without fallback. This is not remote production evidence.
+
+Development owns the new `packages/devkit-dist/src/devkit/shared/` area (declared by its existing parent), dist CLI,
+core local-config and MCP classification, MCP transport guards, package entry points/tests, and affected architecture,
+capability and quick-reference documentation. Narrow spec-orchestrate and spec-delegate host guidance changes plus
+bundle tests implement the local MCP-first connection precondition; they do not convert the asset set to templates.
+`PROP-cloud-agent-rendering` owns that conversion and environment-driven rendering. It does not modify scope-registry semantics, proposal approval flow,
+viewer code or tracked localized reports. `PROP-proposal-review-and-approval` owns report composition, language
+resolution, display, stale-commit rejection and acceptance authority.
+
+Verification: dist and MCP focused tests including concurrency/crash/permission fixtures, layering checks and
+`just test-dist`; `just lint-check`, `just check`, `just test-affected` preserve the selector's full fallback.
+Planning and recommended Development effort are medium; multiple packages alone do not require high effort.
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Selected Technical Contract
+
+#### 2.1 Ownership and interfaces
 
 The SDD-agnostic implementation belongs in a new `devkit.shared` area shipped by `devkit-dist`, beside its existing
 core/search/host areas. It imports only core and advisory; dist CLI mounts `devkit shared`. `devkit.shared.mcp`
@@ -87,7 +124,7 @@ allowing reports for the same commit to coexist without lost updates.
 optional source_sha/language, and a stable cursor, returning at most 100 metadata entries. Consumers choose a report
 and recheck its commit and language. Returned raw content is data, never instructions to the caller.
 
-### 2.2 Discovery, local configuration and isolation
+#### 2.2 Discovery, local configuration and isolation
 
 Resolve the common Git identity and registered main checkout using existing Git worktree discovery, then verify that
 checkout resolves back to the same common directory. Store under its `.devkit/.shared/artifacts/`. Do not assume
@@ -117,7 +154,7 @@ foreign content the rule would hide. Tracked content or foreign visible content 
 `SHARED_EXCLUSION_CONFLICT`; do not modify tracked ignore files or hide existing files. Check/read/list never install
 an exclusion. Preserve safe exclusion entries after expiry; they are repository infrastructure, not artifacts.
 
-### 2.3 Transactions, expiration and operational bounds
+#### 2.3 Transactions, expiration and operational bounds
 
 Use one stable regular non-symlink namespace lock with shared readers and exclusive writers; never replace it.
 Put publishes a single UTF-8 `.md` envelope (canonical metadata frontmatter followed by the report body) using
@@ -143,7 +180,7 @@ Put-time cleanup failure after successful publication is a returned notice with 
 never a false write failure. Sweep failure before a requested effect is an AdvisoryError. Permission denial is
 `SHARED_ACCESS_DENIED` and cannot cause transport switching, root switching or retry through MCP to evade refusal.
 
-### 2.4 MCP classification and CLI parity
+#### 2.4 MCP classification and CLI parity
 
 Add a narrowly defined `bounded_write` execution classification for non-form artifact put/apply-sweep operations.
 It is distinct from interactive approval and MUST remain blocked in cloud profiles under
@@ -161,7 +198,7 @@ the cloud surface and executes the same library under its caller's OS permission
 storage within one checkout. Cross-host sharing requires an installed, configured production remote adapter and
 is not satisfied by local CLI or by the proposed test adapter.
 
-### 2.5 Existing cloud rendering: feasibility and scope boundary
+#### 2.5 Existing cloud rendering: feasibility and scope boundary
 
 The desired direction is to reuse `devkit sync --cloud` and existing Jinja rendering so deployed cloud agent guidance
 uses CLI and omits MCP instructions, while local guidance checks connection and prefers MCP. This section records
@@ -199,7 +236,7 @@ implementation boundaries without a scope decision. The scope decision assigns t
 artifact delivery documents the local MCP-first connection precondition and cloud CLI API only. No runtime config,
 managed output, source bundle or production code was changed by this feasibility investigation.
 
-## 3. Selected Delivery and Alternatives
+### 3. Selected Delivery and Alternatives
 
 | Option | Benefit | Cost and limits |
 | --- | --- | --- |
@@ -223,42 +260,11 @@ model, repository namespace provisioning owner and test environment are availabl
 transaction consistency, retention, failure/retry behavior, setup/operating cost and real integration evidence before
 its plan-accept. No credentials or mock deployment are invented here.
 
-## 4. Acceptance Evidence and Delivery Boundaries
-
-- **AC1**: Given two linked worktrees with matching local configuration, put through CLI and get through a local MCP
-  service resolve the same artifact and namespace; a separate clone cannot resolve it.
-- **AC2**: Given safe initially absent storage, first put adds only a narrow exclusion and leaves both base and linked
-  `git status --porcelain --untracked-files=normal` clean. Tracked, foreign-visible, symlink and wrong-repository
-  fixtures refuse without writes or hidden files.
-- **AC3**: Concurrent identical puts and retry after a lost response return the same creation/expiry metadata within the live lifetime; after expiry the same content gets a fresh generation/URI
-  and the old URI remains unavailable. Different bodies coexist. Interrupted publication never yields partial envelopes.
-- **AC4**: With an injected clock, get/list expire at exactly seven days without writes; bounded explicit cleanup
-  removes only expired valid artifacts. Read-only permissions allow initialized get/list; registry records and tokens
-  remain byte-identical before and after all artifact operations.
-- **AC5**: CLI/MCP validation and errors match for oversized content, traversal, corruption, missing/expired keys,
-  lock timeout and denied access. Local-orchestrated guidance checks connected project tools before dependent
-  operations, requests user connection repair when absent, and does not automatically select CLI. Cloud MCP lists no mutation tools and rejects forged mutation calls; local bounded
-  writes never elicit a business approval form. Consumer source_sha mismatch is detectable from metadata.
-- **AC6**: Adapter config precedence and explicit failure on unknown adapter are tested in base, linked and owning
-  MCP workspaces. Load a test adapter through the public entry-point contract and run the reusable semantic
-  conformance suite; duplicate/unloadable/malformed registrations fail without fallback. This is not remote production evidence.
-
-Development owns the new `packages/devkit-dist/src/devkit/shared/` area (declared by its existing parent), dist CLI,
-core local-config and MCP classification, MCP transport guards, package entry points/tests, and affected architecture,
-capability and quick-reference documentation. Narrow spec-orchestrate and spec-delegate host guidance changes plus
-bundle tests implement the local MCP-first connection precondition; they do not convert the asset set to templates.
-`PROP-cloud-agent-rendering` owns that conversion and environment-driven rendering. It does not modify scope-registry semantics, proposal approval flow,
-viewer code or tracked localized reports. `PROP-proposal-review-and-approval` owns report composition, language
-resolution, display, stale-commit rejection and acceptance authority.
-
-Verification: dist and MCP focused tests including concurrency/crash/permission fixtures, layering checks and
-`just test-dist`; `just lint-check`, `just check`, `just test-affected` preserve the selector's full fallback.
-Planning and recommended Development effort are medium; multiple packages alone do not require high effort.
-
-## 5. Lifecycle
+### 5. Lifecycle
 
 Planning has no open direction question. The proposal remains reviewing for Host/user plan-accept; acceptance,
-merge and Development start are separate actions. `PADR-separate-shared-artifacts-from-scope` records the selected
+merge and Development start are separate actions. `ADR-separate-shared-artifacts-from-scope` records the selected
 local-first direction. `PROP-cloud-agent-rendering` owns the separate environment-driven asset work.
 `FB-remote-shared-adapter-follow-up` retains the concrete remote backend follow-up through handoff; it is not a
 completion claim or an automatically scheduled implementation. Recommended Development effort remains medium.
+

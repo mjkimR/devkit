@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: PROP-worker-shared-state-mcp
+by: user
+at: '2026-10-20T23:46:28.524149Z'

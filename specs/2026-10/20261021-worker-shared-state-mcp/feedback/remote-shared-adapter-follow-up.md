@@ -18,7 +18,7 @@ created_at: 2026-10-21
 
 ## 2. Suggestion / Change Request
 
-- **Current Procedure**: `PROP-worker-shared-state-mcp` delivers local artifacts and a public remote extension
+- **Current Procedure**: `SPEC-worker-shared-state-mcp` delivers local artifacts and a public remote extension
   protocol/registration contract. A local store or test adapter cannot share reports between independent hosts.
 - **Proposed Procedure**: Preserve this item through handoff and promote it to a separate concrete remote artifact
   adapter Backlog proposal when cross-host consumption is needed. Do not implement a backend as incidental scope.
@@ -46,7 +46,7 @@ scope-registry coordination remains separate because artifact storage grants no 
 - **Versions**: Planning based on worktree start d0c4428c01650ada6069606e6c340e9f065c16fa.
 - **Conditions**: Independent hosts lack a common local filesystem; local linked worktrees do not have this gap.
 - **Workarounds Attempted**: Selected local adapter for immediate review-report consumer; no remote workaround run.
-- **Related Assets**: `PROP-worker-shared-state-mcp`, `PROP-proposal-review-and-approval`,
+- **Related Assets**: `SPEC-worker-shared-state-mcp`, `PROP-proposal-review-and-approval`,
   `CAP-COLL-work-scope-registry` and the planned devkit.shared adapter authoring reference.
 
 ## Evidence

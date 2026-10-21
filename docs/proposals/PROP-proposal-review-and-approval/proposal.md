@@ -39,7 +39,7 @@ approval** solves these problems together:
 
 1. **Shared-workspace review report**: when Planning reaches `plan-accept`, the executor or Host writes a concise
    review report—focused on newly added PADRs (decision, rejected alternatives, trade-offs), surface/boundary
-   impacts, and waived Challenger risks—into the shared workspace (`PROP-worker-shared-state-mcp`, local default
+   impacts, and waived Challenger risks—into the shared workspace (`SPEC-worker-shared-state-mcp`, local default
    `<base-checkout>/.devkit/.shared/` or configured server adapter, accessed via MCP when connected locally or via the
    equivalent CLI command in Cloud Agent / non-MCP sessions) in the configured `[presentation] language`
    (`SPEC-language-setting-coverage`, e.g., Korean) with a 7-day TTL and `source_sha` binding, keeping tracked
@@ -88,7 +88,7 @@ Planning should specify four connected deliverables across `CAP-DLV-proposal-inc
 and `CAP-VIEW-repository-viewer`:
 
 1. **Proposal review report generator and MCP shared-workspace storage**:
-   - Written via the shared workspace MCP interface (`PROP-worker-shared-state-mcp`) under a deterministic key per
+   - Written via the shared workspace MCP interface (`SPEC-worker-shared-state-mcp`) under a deterministic key per
      proposal slug, with metadata (`slug`, `source_sha`, `language`, `created_at`, `expires_at` = 7 days).
    - Summarizes each `PADR-*.md` (problem, chosen outcome, rejected options, lasting constraints), key contract or
      boundary changes, Planning effort/envelope coverage, and waived Challenger items in the user's configured
@@ -131,6 +131,6 @@ with `accept_only` or `--direct`.
 
 ## 4. Lifecycle & Retirement Criteria
 
-Depends on `SPEC-standalone-devkit-mcp` (MCP runtime), `PROP-worker-shared-state-mcp` (shared workspace adapter and
+Depends on `SPEC-standalone-devkit-mcp` (MCP runtime), `SPEC-worker-shared-state-mcp` (shared workspace adapter and
 7-day TTL storage) and `SPEC-language-setting-coverage` (presentation language resolution). Medium Planning should
 settle the exact MCP tool names, form schema, report template and partial-failure recovery semantics before handoff.
