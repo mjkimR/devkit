@@ -7,7 +7,8 @@ merely because its branch exists.
 1. Query `devkit spec list proposal --all-namespaces -n 0` and `devkit spec list milestone --all-namespaces -n 0`.
    Read frontmatter for ordering fields the output omits and use the displayed proposal status (a base draft with a
    Planning branch displays reviewing).
-2. Eligible drafts have displayed status draft and no true `needs_decompose`. A milestone is ready when every ID in
+2. Apply the direct unit prerequisite procedure below to every candidate, including critical drafts, before ranking.
+   Eligible drafts are unit-ready, have displayed status draft and no true `needs_decompose`. A milestone is ready when every ID in
    depends_on is done or dropped; use `--history` or resolve dependencies individually, never assume a hidden
    dependency is absent or ready. Invalid/missing/ambiguous dependencies are Backlog actions.
 3. Order eligible drafts by enum rank, not text:
@@ -29,3 +30,27 @@ merely because its branch exists.
    session's current date.
 
 Milestones are global: consider queued drafts across all namespaces and keep the namespace in the recommendation.
+
+
+## Direct unit prerequisite procedure
+
+Use this procedure for idle recommendations, explicit proposal pickup and direct-spec intake. Dependencies are
+optional frontmatter, for example `depends_on: [PROP-foundation, SPEC-parser]`; omit the field when empty.
+No creation flag, readiness command or delivery certification is added.
+
+1. Identify the local base ref from the current worktree policy. Resolve it once with `git rev-parse <base>` and
+   report the base ref and commit. Read candidates and target anchors from that same commit using `git ls-tree -r
+   --name-only <commit> -- docs specs` and `git show <commit>:<path>`, across all namespaces and completed history.
+   Do not fetch implicitly or claim remote freshness. Never substitute completion found only on an activity branch.
+2. Inspect each direct depends_on edge. Only an exact ID resolving to one SPEC anchor with status completed in
+   that snapshot is satisfied. Do not recursively reopen prerequisites of a completed SPEC. No dependencies means
+   unit-ready. This is a status-based scheduling signal, not verification of tasks, reconciliation, approvals or
+   outcome coverage.
+3. Report each blocked candidate and its exact prerequisite ID with the reason: unfinished proposal, rejected
+   proposal, unfinished spec, or invalid/unknown target. Missing, ambiguous, malformed or unreadable base evidence
+   is a Backlog repair action; a hidden history target is not missing. A critical blocked draft stays blocked.
+   Apply the existing milestone readiness and critical-priority milestone exception only to unit-ready drafts.
+4. Explicit user pickup can override order: show the unsatisfied IDs and reasons and record the chosen override in
+   the ordinary intent decision. It cannot waive malformed references or cycle diagnostics. No new gate or hard
+   readiness refusal is introduced. Direct-spec intake and explicit pickup inspect these same fields even when
+   idle recommendation is not running.
