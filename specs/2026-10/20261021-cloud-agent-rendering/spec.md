@@ -8,7 +8,6 @@ related_capabilities: []
 related_stories: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-cloud-agent-rendering] Render cloud agent assets without MCP guidance
 
@@ -30,27 +29,53 @@ are outside the supported templated kinds. Environment-aware output also affects
 repeat-sync behavior. Therefore complete cloud guidance removal needs a bounded distribution change and an
 asset audit rather than a manually supplied template variable.
 
-This proposal separates that work from shared artifact storage. It is queued for Planning; no rendering or
-runtime policy change is authorized by this draft alone.
+This change implements the accepted rendering direction while leaving runtime authority unchanged.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Render cloud agent assets without MCP guidance so that system capabilities are extended.
+- **US-1**: As a cloud coding agent, I want only executable CLI guidance so that I do not attempt unavailable connection or native approval operations.
+- **US-2**: As a local developer, I want reversible environment rendering with receipt evidence so that local routes and personal preferences remain verifiable.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: Runtime authorization, host permissions, workflow gates, cloud integration mutation, remote storage, third-party content rewriting and executable asset templating.
+2. **Scope Excluded**: Exact-playbook retrieval implementation, which is already present in the current base.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Complete maintained cloud guidance
+- **Given** maintained selected bundles without custom overrides and each supported host projection.
+- **When** cloud sync renders their complete reachable guidance corpus.
+- **Then** operational output contains no MCP identifiers, discovery, registration, connection, native-form or fallback routes; supported CLI inspection/artifact flows and Host boundaries remain, and an inventory test classifies every surface.
 
-## 5. Carried Proposal Notes
+### [AC-02] Canonical environment selection and reversibility
+- **Given** shared/local execution settings and optional invocation flags.
+- **When** sync resolves the invocation, effective setting, then local default and renders local → cloud → local.
+- **Then** canonical/effective inventories share that value, output and receipts restore deterministically, repeat sync is idempotent, locked canonical changes refuse, dry-run/check do not write, and no-save leaves runtime settings intact while status/check detects the pending difference even for identical bytes.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-03] Narrow template expansion
+- **Given** explicit constitution or common subagent Markdown templates, ordinary Markdown, overrides, native variants, and personal/language variables.
+- **When** inventory validates and renders with or without selected agents.
+- **Then** rendered validation precedes writes/projections; collisions, malformed headers, unsupported names/kinds and native variant templates refuse; final paths end in .md, override evidence remains raw, and personal restrictions remain enforced.
+
+### [AC-04] Render evidence without runtime authority
+- **Given** recorded or unrecorded canonical receipts and optional personal evidence.
+- **When** sync/status/check/context reads them across environment changes.
+- **Then** the optional strictly typed execution_environment records actual output; absence remains unrecorded, ordinary sync refreshes it without losing ownership, locked sync refuses refresh, canonical context remains readable, personal evidence requiring an unrecorded mode is stale, and race/rollback/manual-edit/override/worktree isolation checks remain enforced.
+
+### [AC-05] Local routes, packaging and authority preservation
+- **Given** local and cloud output and independently resolved runtime configuration.
+- **When** agents retrieve skills/references or perform guarded runtime operations.
+- **Then** local orchestration retains connection checks, cloud guidance preserves approval boundaries without inventing mutation equivalence, runtime cloud restrictions remain unchanged, packaged templates resolve to final Markdown links, and installation guides separate cloud setup from optional local onboarding.
+
+## 5. Accepted Design and Assumptions
+
+The current base includes exact-playbook retrieval. Its existing CLI is retained; this task changes no retrieval API.
+The accepted decision is `ADR-execution-aware-agent-rendering`; the following carried design is the implementation contract.
+
+
+
+
 
 ### 2. Resolved Direction
 
