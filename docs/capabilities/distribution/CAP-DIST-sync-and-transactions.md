@@ -5,14 +5,8 @@ summary: "Transactional deployment, canonical receipts and restricted checkout-l
 area: distribution
 status: active
 entrypoints:
-  - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/inventory.py
-  - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/overrides.py
-  - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/engines.py
-  - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/config_template.py
-  - packages/devkit-dist/src/devkit_dist/features/project/repositories/local_config.py
-  - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/local_render.py
   - packages/devkit-dist/src/devkit_dist/features/distribution/usecases/sync.py
-  - packages/devkit-dist/src/devkit_dist/features/project/services/presentation.py
+  - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/
 created_at: 2026-10-17
 ---
 

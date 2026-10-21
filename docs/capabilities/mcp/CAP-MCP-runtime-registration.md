@@ -5,11 +5,9 @@ summary: "An optional retained MCP runtime binds approval and presentation conte
 status: active
 area: mcp
 entrypoints:
-  - packages/devkit-mcp/src/devkit_mcp
-  - packages/devkit-core/src/devkit_core/base/mcp.py
-  - packages/devkit-dist/src/devkit_dist/features/project/repositories/invocation.py
+  - packages/devkit-mcp/src/devkit_mcp/
   - packages/devkit-dist/src/devkit_dist/features/host/usecases/registrations.py
-  - packages/devkit-dist/src/devkit_dist/features/project/services/presentation.py
+  - packages/devkit-core/src/devkit_core/base/mcp.py
 created: 2026-10-20
 updated: 2026-10-20
 ---

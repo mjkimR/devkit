@@ -14,11 +14,6 @@ entrypoints:
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/
   - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py
-  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/review-loop.md
-  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/planning.md
-  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/
-  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orchestrate/
-  - packages/devkit-spec/src/devkit_spec/features/worker/
 ---
 
 # [CAP-DLV-delivery-workflows] Delivery Workflows
