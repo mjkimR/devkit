@@ -1,7 +1,7 @@
 ---
 id: US-keep-the-living-spec-consistent
 title: Keep the Living Spec Consistent
-summary: A developer or AI coding agent relies on deterministic spec rules, run locally, at the commit gate and in CI, to keep document IDs, references, links, summaries, task coverage, spec lifecycle and code entrypoints consistent as documents and code change.
+summary: "A developer or AI coding agent uses deterministic spec rules for structural consistency and an explicitly invoked bounded maintenance review for semantic drift, with user-decided corrections, deferrals and waivers."
 area: governance
 actor: AI coding agent, developer
 status: active
@@ -9,6 +9,7 @@ capabilities:
   - CAP-DOCS-document-model
   - CAP-GOV-spec-rules
   - CAP-TRACE-code-entrypoints
+  - CAP-DLV-drift-reconciliation
 created_at: 2026-10-13
 ---
 
@@ -62,3 +63,17 @@ the files the run targets, and leaves completed spec bundles alone as work histo
 - **Given**: a commit marks a spec's `reconcile.md` `resolved` with a `modified` target that the commit does not change
 - **When**: the commit gate runs `devkit rules check --staged`
 - **Then**: `RULE-reconcile-contract` reports the target, and committing the Living Spec edit with the record clears it
+
+### Scenario 5: A bounded manual review exposes semantic drift
+
+- **Given**: the maintenance playbook is explicitly invoked for selected contracts, code and guidance at a recorded revision
+- **When**: the agent compares both sides and applicable checks
+- **Then**: the report records reviewed coverage, precise finding evidence and coverage gaps; structural checks alone
+  do not establish semantic consistency
+
+### Scenario 6: The user decides which ledger changes
+
+- **Given**: evidenced findings in a bounded review
+- **When**: the user chooses documentation update, code fix, deferral or waiver for each finding
+- **Then**: only decided corrections enter the applicable workflow and verification; deferrals retain destinations
+  and restart conditions, waivers retain rationale, and unanswered findings remain pending

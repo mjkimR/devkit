@@ -24,6 +24,10 @@ keeps the declarations alive (`RULE-code-entrypoints`), finds documents by path 
 `CAP-DOCS-document-lookup`) and proposes declarations from the spec bundles that already name both sides
 (`devkit spec entrypoints derive`). `devkit_spec.entrypoints` implements it.
 
+The manual sweep in `CAP-DLV-drift-reconciliation` consumes entrypoints only to locate evidence. Changed paths,
+document age and passing path checks establish neither semantic drift nor consistency; path-based stale-document
+hints remain outside this capability.
+
 ## 2. Scope & Boundary
 
 - **In-Scope**: the path contract, which documents carry `entrypoints`, the rule, the reverse query, derivation from

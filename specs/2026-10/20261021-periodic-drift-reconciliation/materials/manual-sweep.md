@@ -23,3 +23,10 @@ line-numbered manifest and entrypoint inspection. These are navigation/structura
 Detected 0, resolved 0, deferred 0, waived 0, pending 0; two reviewed claims, one excluded candidate, one coverage gap.
 No source correction or user disposition is needed for this zero-finding batch. No whole-repository consistency claim.
 The final report must revalidate these claims if its revision or relevant dirty content changes.
+
+## Final evidence revalidation
+
+After implementation commit 03382f09a23b8f67f185d60df2598a1ec5c2c7bc and review record 2f97a9a,
+re-read the two claims: entrypoint and response-style declarations remain unchanged. The current documentation
+adds maintenance separately without altering either reviewed claim. Relevant source dirty paths are now empty;
+only planned Living Spec/unit records are dirty. Counts and the explicitly limited verdict remain unchanged.
