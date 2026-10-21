@@ -21,7 +21,7 @@ created_at: 2026-10-21
 The nature is retained companion delivery, separate from the completed drift procedure.
 
 - **Current Procedure**: The accepted design retains an eventual review-refactor playbook in upkeep; current sources contain only drift-reconciliation.
-- **Proposed Procedure**: At separately authorized intake, specify and implement independent review-refactor, then extend upkeep and implicit all with its real asset. Weekly-report/reporting belongs to `PROP-weekly-report`, separately owned Planning work, not duplicated here.
+- **Proposed Procedure**: At separately authorized intake, specify and implement independent review-refactor, then extend upkeep and implicit all with its real asset. Weekly-report/reporting belongs to `SPEC-weekly-report`, separately owned delivery work, not duplicated here.
 - **Expected Benefit**: Complete the retained maintenance organization without placeholder assets or coupled invocation.
 - **Cost & Risk**: Requires its own intent, bounded procedure, acceptance evidence and discovery/preset/opt-in tests; cannot be inferred from this drift task.
 - **Attempted**: Confirmed companion absence in source and retained initial upkeep membership; no companion implementation attempted.

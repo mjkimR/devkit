@@ -1,47 +1,58 @@
 ---
-id: PROP-weekly-report
+id: SPEC-weekly-report
 title: Evidence-based weekly maintenance reporting
 summary: Define a manually invoked weekly-report playbook that turns revision-bound repository evidence into a report and prioritized follow-ups while separating generation from authorized publication.
-status: accepted                         # draft | reviewing | accepted | rejected
-created_at: 2026-10-21
-target_area: capabilities/delivery/
-priority: high                        # critical | high | medium | low
-size: M                               # S | M | L | XL
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
+status: planned
+created: 2026-10-21
 milestone: MS-reporting-and-actionable-insights
-boundaries:
-  owns:
-    - packages/devkit-catalog/
-    - guides/
-    - docs/capabilities/delivery/
-    - docs/capabilities/distribution/
-    - docs/stories/governance/
-  excludes:
-    - packages/devkit/src/devkit/integration/
-    - packages/devkit-dist/src/devkit/shared/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+related_capabilities: []
+related_stories: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-weekly-report] Evidence-based weekly maintenance reporting
+# [SPEC-weekly-report] Evidence-based weekly maintenance reporting
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-weekly-report on 2026-10-21.
+- **Preserved Materials**: `docs/materials/2026-10/20261021-weekly-report`
+
+### 1. Background & Hypothesis
 
 `MS-reporting-and-actionable-insights` calls for a manually invoked report that makes completed work, decisions,
 repository health and next actions inspectable. The maintenance bundle introduced by `SPEC-periodic-drift-reconciliation`
 is the delivery home. A reporting procedure can consume available evidence without running drift or refactoring
 first, and without a scheduler or history backend.
 
-## 2. Planning Outcome
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Evidence-based weekly maintenance reporting so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Planning Outcome
 
 Deliver a manually invoked, content-only `maintenance/weekly-report` playbook. It collects available evidence,
 writes a local Markdown report and separately publishes only when destination and authority are explicit.
 The recommended Development effort remains medium. No runtime, scheduler, detector, or history backend is needed.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### 3.1 Intake and observation boundaries
+#### 3.1 Intake and observation boundaries
 
 Record repository identity (a local canonical path or configured remote, without credentials), scope, inspected
 commit SHA, selected integration branch/ref and its resolved SHA, generation timestamp, and dirty state before
@@ -61,7 +72,7 @@ uncommitted changes only when expressly selected, preserving an evidence diff/ar
 it separately. If the inspected state changes during collection, mark affected evidence unverified or restart
 collection against a newly captured revision; do not silently mix snapshots.
 
-### 3.2 Evidence and report structure
+#### 3.2 Evidence and report structure
 
 Use existing Git inspection, `CAP-DOCS-document-lookup` (including completed specs through `--history`, all intended
 namespaces and complete pagination), workflow records and existing check artifacts. Inspect changed decisions,
@@ -94,7 +105,7 @@ Rank actions by demonstrated impact and urgency, state the reason and next step,
 or proposals. Terminal feedback remains traceability and is not reopened merely because it appears in history.
 The report recommends follow-ups; generation creates no feedback, proposals or fixes automatically.
 
-### 3.3 Artifact identity, reruns and publication
+#### 3.3 Artifact identity, reruns and publication
 
 Write to an explicitly selected local artifact location, defaulting to the owning work unit's materials directory
 or the repository's existing materials location. If neither exists, resolve the output location at invocation;
@@ -121,7 +132,7 @@ for that run and digest; if it cannot be verified, leave unknown and request a d
 publication. Destination replacement requires explicit authority and collision checks. No publisher or unavailable
 permissions leave publication pending; publication failure never erases successful generation.
 
-### 3.4 Distribution, dependencies and verification
+#### 3.4 Distribution, dependencies and verification
 
 Build on the accepted content layout of `SPEC-periodic-drift-reconciliation`: the opt-in content-only maintenance
 bundle in `packages/devkit-catalog/`, `default_preset = "all"`, no `auto_select` and no reserved `[presets.all]`.
@@ -158,7 +169,7 @@ Use relevant catalog tests and package smoke, governance rules and the affected-
 procedure with recorded manual scenarios. Fixture publication needs no real external destination. No generic
 publisher runtime or automation test harness is introduced solely to test prose.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Feature / proposal depth. Planning and recommended Development effort are medium. This proposal is ready for the
 user's direction gate once its independent challenger findings are settled; acceptance is not Development start.
@@ -169,3 +180,4 @@ transition belongs to this proposal.
 new detection commands, standalone skills, a report database, GitHub orphan-branch history storage
 (`MS-maintenance-history`), automatic follow-up creation, and publication without authorization. The future history
 milestone remains the tracked destination for durable history integration and does not block manual reporting.
+

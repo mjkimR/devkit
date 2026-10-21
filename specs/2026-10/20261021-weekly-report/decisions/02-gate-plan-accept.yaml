@@ -1,7 +1,8 @@
 request: gate:plan-accept
 kind: approve
 action: accept
-workflow: sdd-proposal
+workflow: sdd-spec-feature
 stage: direction-handoff
+note: PROP-weekly-report
 by: user
-at: '2026-10-21T00:14:02.406821Z'
+at: '2026-10-21T01:57:06.838366Z'
