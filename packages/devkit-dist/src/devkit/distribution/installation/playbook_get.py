@@ -18,8 +18,8 @@ from devkit.distribution.installation.results import PlaybookResult
 from devkit.distribution.installation.transaction import project_lock
 
 
-def get_playbook(start: Path, selector: str) -> PlaybookResult:
-    """Return effective bytes as validated metadata and complete body, without following the procedure."""
+def validate_playbook_id(selector: str) -> tuple[str, str]:
+    """Validate the exact selector before any workspace resolution, including at CLI boundaries."""
     parts = selector.split("/")
     if len(parts) != 2 or not all(SLUG.fullmatch(part) for part in parts):
         raise ArgumentError(
@@ -27,7 +27,12 @@ def get_playbook(start: Path, selector: str) -> PlaybookResult:
             target_files=["PLAYBOOK_ID"],
             fix="Use an exact <bundle>/<playbook> selector",
         )
-    bundle, asset_id = parts
+    return parts[0], parts[1]
+
+
+def get_playbook(start: Path, selector: str) -> PlaybookResult:
+    """Return effective bytes as validated metadata and complete body, without following the procedure."""
+    bundle, asset_id = validate_playbook_id(selector)
     root = synchronized_project_root(start)
     with project_lock(root, shared=True):
         try:

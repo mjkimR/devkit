@@ -254,3 +254,8 @@ def test_generated_exact_invocation_guidance():
         "Ordinary task requests",
     ]:
         assert phrase in BODY
+
+
+def test_invalid_selector_precedes_invalid_workspace(tmp_path):
+    problem = error(tmp_path / "nonexistent", "INVALID", "ARGUMENT_INVALID")
+    assert problem["advisory"]["target_files"] == ["PLAYBOOK_ID"]
