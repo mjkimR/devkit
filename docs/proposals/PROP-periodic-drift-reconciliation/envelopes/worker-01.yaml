@@ -1,0 +1,34 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-20T23:24:08.766881Z'
+status: needs_input
+summary: Selected bounded manual evidence review with explicit human dispositions, retained coverage and verification report, and existing catalog/playbook mechanisms. Medium challenger completed with zero findings and reverify; staged preset delivery awaits one user choice. Recommended dev_effort remains medium.
+findings: []
+assumptions:
+- Worker and challenger Codex contracts are emulated; absolute cwd, narrow write payload, scoped approvals and Host committed-range validation substitute for native confinement.
+unverified_areas:
+- Implementation, package/deployment tests and real/fixture manual exercise belong to Development and were not run.
+- Challenger read response-style from base once; disclosed in challenger-01 and FB-nested-role-skill-read-scope; design evidence and all writes remained assigned-worktree-local.
+checks:
+  rules: PASS proposal directory zero errors/warnings
+  diff: PASS whitespace and assigned proposal-only changes
+  swept: PASS feedback-01 recorded=1 duplicates=0
+diff_scope:
+  base: 6387059f7d8f4845b20de957840f3c9bbd3cc119
+  head: 933101747572ea733c7d92d88df05c6a344bbc0e
+questions:
+- id: staged-maintenance-presets
+  title: maintenance preset 단계적 배포
+  prompt: 아직 없는 동반 playbook을 기다리지 않고 drift-reconciliation부터 배포할까요?
+  context: 현재 catalog에는 maintenance와 동반 playbook이 없고, manifest는 없는 asset 참조와 빈 preset을 허용하지 않습니다. 이번 개발에서 drift만 배포할지, 별도 동반 작업 완료까지 기다릴지 결정합니다.
+  options:
+  - id: staged
+    description: 단계적 배포 (권장). 처음에는 upkeep과 기본 all에 drift만 포함하고 reporting은 weekly-report가 생길 때 추가합니다. Development 시작 시 동반 asset이 이미 있으면 보존하여 함께 검증합니다.
+    recommended: true
+  - id: wait
+    description: 동반 작업 대기. 별도 weekly-report와 review-refactor가 모두 존재할 때 reporting/upkeep/all의 최종 구성을 출시합니다. 이번 proposal은 두 동반 playbook을 구현하지 않습니다.
+    recommended: false
+  allow_note: true
+activity_effort: medium
