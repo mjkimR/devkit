@@ -293,7 +293,7 @@ Nested detail.
 
     spec = (spec_dir(workspace, "carry") / "spec.md").read_text(encoding="utf-8")
     assert "## 1. Problem Statement & Motivation\n\nHanded off from proposal PROP-carry on 2026-10-13." in spec
-    assert "milestone: 'v0.5: First'\n" in spec
+    assert "milestone:" not in spec
     assert (
         "Intro paragraph before any H2 with a link to [CAP-X](../../../docs/capabilities/lifecycle/CAP-X.md)." in spec
     )

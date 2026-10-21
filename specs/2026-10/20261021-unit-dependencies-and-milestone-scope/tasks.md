@@ -6,10 +6,10 @@ plan: PLAN-unit-dependencies-and-milestone-scope
 
 # Task Breakdown: `SPEC-unit-dependencies-and-milestone-scope`
 
-- [ ] **Task 1**: Typed dependency parsing, reference validation and projected handoff, with regression tests
+- [x] **Task 1**: Typed dependency parsing, reference validation and projected handoff, with regression tests
   - **_Boundary**: packages/devkit-spec/src/devkit_spec/, packages/devkit-spec/tests/
   - _Requirements: AC-01, AC-02_
-- [ ] **Task 2**: Proposal-only milestone membership and removed spec creation inputs, with tests
+- [x] **Task 2**: Proposal-only milestone membership and removed spec creation inputs, with tests
   - **_Boundary**: packages/devkit-spec/src/devkit_spec/, packages/devkit-spec/tests/
   - _Requirements: AC-04_
 - [ ] **Task 3**: Base recommendation, lifecycle repair and coarse milestone guidance, with contract fixtures

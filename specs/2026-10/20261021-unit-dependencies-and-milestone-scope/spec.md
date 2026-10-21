@@ -2,7 +2,7 @@
 id: SPEC-unit-dependencies-and-milestone-scope
 title: Unit-level depends_on and coarse milestone scope
 summary: Allows proposal and spec anchors to declare depends_on prerequisites across units and defines milestone authoring guidance so milestones remain multi-unit themes rather than single-proposal gates.
-status: planned
+status: in-progress
 created: 2026-10-21
 related_capabilities: []
 related_stories: []

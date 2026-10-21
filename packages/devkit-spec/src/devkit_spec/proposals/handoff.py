@@ -40,7 +40,7 @@ from __future__ import annotations
 import os
 import re
 import shutil
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -62,6 +62,8 @@ from devkit.workflow import (
 from devkit_spec.branches import require_development_branch
 from devkit_spec.config import GLOBAL
 from devkit_spec.documents import DocumentIndex, parse_document
+from devkit_spec.documents.dependencies import cycle_members, live_unit, target_problem
+from devkit_spec.documents.model import Document
 from devkit_spec.errors import (
     ProposalAcceptanceUnrecordedError,
     ProposalCleanupWarning,
@@ -310,6 +312,11 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
     _effort(meta, PLANNING_EFFORT, proposal_rel)
     dev_effort = _effort(meta, DEV_EFFORT, proposal_rel)
     index = DocumentIndex.load(root)
+    source = next((d for d in index.documents if d.path == proposal_rel), None)
+    if source is None or any("depends_on" in issue.message for issue in source.issues):
+        raise ProposalInvalidError(
+            "proposal depends_on must be a list of string anchor IDs", target_files=[proposal_rel]
+        )
     check_spec_conflict(index, slug)
     # The default task-kind binds like no field: a project without its workflow gets an unbound spec and a notice.
     explicit = spec_workflow(kind) if kind and kind != DEFAULT_TASK_KIND else None
@@ -376,6 +383,10 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
         # sdd-spec-bugfix writes plan.md and tasks.md in its plan-tasks stage; skeletons would have to match the
         # characterized criteria for the characterize stage's lint-clean exit.
         files = {SPEC_FILE: files[SPEC_FILE]}
+
+    _check_dependency_projection(
+        index, proposal_rel, target_dir.relative_to(root).as_posix() + "/spec.md", files[SPEC_FILE]
+    )
 
     written: list[Path] = []
     moved: list[tuple[Path, Path]] = []
@@ -855,3 +866,44 @@ def _result(
         )
     result.notices = notices
     return result
+
+
+def _check_dependency_projection(index: DocumentIndex, source_path: str, target_path: str, text: str) -> None:
+    """Validate the resulting live unit graph before handoff's first write."""
+    source = next((d for d in index.documents if d.path == source_path), None)
+    target = parse_document(target_path, text)
+    if source is None or target is None:
+        raise ProposalInvalidError("handoff dependency anchor cannot be indexed", target_files=[source_path])
+    if any("depends_on" in issue.message for issue in source.issues):
+        raise ProposalInvalidError(
+            "proposal depends_on must be a list of string anchor IDs", target_files=[source_path]
+        )
+    projected = DocumentIndex(root=index.root)
+    for document in [*(d for d in index.documents if d.path != source_path), target]:
+        copied: Document = document
+        if live_unit(document):
+            copied = replace(
+                document,
+                references=[
+                    replace(ref, target=target.id) if ref.field == "depends_on" and ref.target == source.id else ref
+                    for ref in document.references
+                ],
+            )
+        projected.documents.append(copied)
+        projected.by_id.setdefault(copied.id, []).append(copied)
+    problems = []
+    for document in projected.documents:
+        if not live_unit(document):
+            continue
+        problems.extend(f"{document.id}: {issue.message}" for issue in document.issues if "depends_on" in issue.message)
+        for ref in document.references:
+            if ref.field == "depends_on" and (problem := target_problem(projected, ref.target)):
+                problems.append(f"{document.id}: {problem}")
+    problems.extend(f"unit dependency cycle includes {name}" for name in sorted(cycle_members(projected)))
+    if problems:
+        raise ProposalInvalidError(
+            "handoff projected dependency graph is invalid",
+            *problems,
+            target_files=[source_path],
+            fix="Repair the listed depends_on references and cycles, then rerun handoff",
+        )
