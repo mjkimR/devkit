@@ -1,0 +1,16 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-21T02:36:46.958126Z'
+status: completed
+review: challenger-01.yaml
+summary: D5, PADR and Development acceptance now remove direct-spec --milestone/API input, name CAP-DLV-spec-bundles, and test unknown-option rejection without compatibility shims.
+findings:
+- issue: PROP-only membership leaves direct spec creation --milestone option unspecified.
+  evidence: packages/devkit-spec/src/devkit_spec/proposals/specs.py:355,379,402; CAP-DLV-spec-bundles sections 4 and 6; proposal.md D5
+  failure_condition: A user creates a direct spec with --milestone and expects membership although membership queries now exclude SPEC anchors.
+  suggested_action: Remove direct-spec --milestone option and API parameter, update CAP-DLV-spec-bundles and documentation, and add a focused creation test without migration or compatibility shim.
+  resolution: resolved
+  severity: P2
+checks: {}
