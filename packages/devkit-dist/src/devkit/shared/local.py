@@ -145,6 +145,8 @@ def _eligible(context: RepositoryContext, budget: Deadline) -> None:
                 pattern = re.sub(r"\\(.)", r"\1", line[1:].rstrip()).removesuffix("/")
                 anchored = pattern.startswith("/") or "/" in pattern
                 pattern = pattern.removeprefix("/").replace("**/", "*")
+                # Conservatively cover Git bracket expressions, including POSIX classes.
+                pattern = re.sub(r"\[.*\]", "*", pattern)
                 components = candidate.split("/")
                 targets = ["/".join(components[:i]) for i in range(1, len(components) + 1)] if anchored else components
                 if any(fnmatch.fnmatchcase(value, pattern) for value in targets):
@@ -341,6 +343,8 @@ class LocalAdapter:
     ) -> Page:
         validate_filter(kind, slug, source_sha, language)
         validate_page(cursor, limit)
+        if cursor is not None:
+            decode_cursor(cursor)
         with self._operation() as budget:
             entries = []
             now = self.clock()
@@ -360,6 +364,8 @@ class LocalAdapter:
 
     def sweep(self, *, apply: bool = False, cursor: str | None = None) -> SweepResult:
         validate_page(cursor, 100)
+        if cursor is not None:
+            decode_cursor(cursor)
         with self._operation(write=apply) as budget:
             paths = self._paths(budget, cursor)
             entries, invalid = [], []

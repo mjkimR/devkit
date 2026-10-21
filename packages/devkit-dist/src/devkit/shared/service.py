@@ -66,6 +66,9 @@ class CheckedAdapter:
     def _call(self, name: str, expected: type, *args, **kwargs) -> Any:
         try:
             value = getattr(self.delegate, name)(*args, **kwargs)
+        except (TypeError, AttributeError) as exc:
+            raise AdapterError("adapter violated its invocation contract") from exc
+        try:
             if not isinstance(value, expected):
                 raise TypeError("invalid result type")
             if isinstance(value, Artifact):

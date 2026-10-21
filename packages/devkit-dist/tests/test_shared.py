@@ -385,6 +385,8 @@ def test_required_put_fields_cannot_be_null(repository, request_data, field):
     "pattern",
     [
         "!/.devkit/.shared/",
+        "!/.devkit/.sh[[:lower:]]red/",
+        "!/.devkit/.sh[a[:lower:]]red/",
         "!**/.devkit/.shared/",
         "!/.devkit/**/.shared/",
         "!/.devkit/.shared/\n!/.devkit/.shared/artifacts/\n/.devkit/.shared/artifacts/*\n!/.devkit/.shared/artifacts/a*.md",
@@ -491,3 +493,22 @@ def test_null_stored_metadata_is_corruption(repository, request_data):
 def test_unrelated_negative_ignore_does_not_block_shared_storage(repository, request_data):
     (repository / ".gitignore").write_text("!unrelated/\n")
     assert adapter(repository).put(request_data).content == request_data.content
+
+
+def test_adapter_preserves_backend_input_error(repository, monkeypatch):
+    from types import SimpleNamespace
+
+    class Rejecting(LocalAdapter):
+        adapter_id = "fixture"
+
+        def list(self, kind, slug, *, source_sha=None, language=None, cursor=None, limit=100):
+            raise InputError("cursor belongs to another query")
+
+    monkeypatch.setenv("DEVKIT_SHARED_ADAPTER", "fixture")
+    monkeypatch.setattr(
+        "devkit.shared.service.metadata.entry_points",
+        lambda **_: [SimpleNamespace(name="fixture", load=lambda: Rejecting)],
+    )
+    with pytest.raises(InputError) as error:
+        adapter(repository).list("proposal-review", "validation", cursor="backend-specific:query")
+    assert error.value.code == "SHARED_INPUT_INVALID"

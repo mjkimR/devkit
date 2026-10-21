@@ -31,10 +31,14 @@ Run focused tests, affected-package lint/type checks, just test-affected with it
 
 First-write safety requires the shared directory itself to stay excluded, not one probe filename. Applicable
 ancestor ignore negations are checked before infrastructure effects, because Git's check-ignore can omit an
-ancestor negation for an absent descendant. Matching is conservative for recursive globs; an exclusion conflict
+ancestor negation for an absent descendant. Matching is conservative for recursive globs and bracket expressions (including Git POSIX classes); an exclusion conflict
 requires policy inspection, never automatic ignore rewriting. All writer initialization decisions serialize
 under the existing common exclusion lock, preserving fail-closed missing-lock handling after interrupted setup.
 
 Host-authorized narrow boundary extensions add the glossary term and distribution's shared schema/default
 template. Registered adapter method binding and operation-result validation fail explicitly before consumers
 can mistake malformed responses for artifacts.
+
+Registered backend AdvisoryErrors retain their codes; only invocation/result contract violations map to adapter
+unavailability. Continuation tokens stay opaque at the shared boundary; only the local backend decodes its own
+filename tokens. The built-in shared template precedes installed harness tables to preserve their tool adjacency.

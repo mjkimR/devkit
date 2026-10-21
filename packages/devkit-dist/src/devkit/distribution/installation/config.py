@@ -578,7 +578,8 @@ def _template(root: Path) -> tuple[str | None, str, list[str], list[AdvisoryErro
 def _templates() -> tuple[list[ToolTemplate], list[ToolTemplate], list[AdvisoryError]]:
     """The installed ``[tool.<name>]`` templates, the reserved tables' templates and the warnings of both loads."""
     reserved, reserved_notices = load_reserved_templates(RESERVED_TABLES)
-    reserved.append(
+    reserved.insert(
+        0,
         ToolTemplate(
             "shared",
             (
@@ -593,7 +594,7 @@ def _templates() -> tuple[list[ToolTemplate], list[ToolTemplate], list[AdvisoryE
                 ),
             ),
             "devkit-dist",
-        )
+        ),
     )
     tools, tool_notices = load_tool_templates()
     return tools, reserved, [*reserved_notices, *tool_notices]

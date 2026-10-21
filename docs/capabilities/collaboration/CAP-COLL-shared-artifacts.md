@@ -41,7 +41,8 @@ or nonregular paths before effects. This is same-user POSIX storage; network fil
 
 Initialization checks every registered worktree for tracked or visible foreign content before adding only
 /.devkit/.shared/ to clone-local info/exclude under the common exclusion lock. Conflicts raise
-SHARED_EXCLUSION_CONFLICT without hiding files. Reads never install exclusions. Narrow exclusions remain after
+SHARED_EXCLUSION_CONFLICT without hiding files. Applicable ancestor ignore negations are refused before
+infrastructure writes; recursive globs and bracket expressions are conservatively matched. Reads never install exclusions. Narrow exclusions remain after
 expiry. Created artifact files/locks have mode 0600 and storage directories 0700. The service shares local OS
 permissions; worktree identity does not authenticate other processes.
 
@@ -75,7 +76,8 @@ but permission refusal cannot authorize rerouting. Compare adapter/namespace acr
 
 Installed devkit.shared.adapters entry points name factories accepting RepositoryContext and returning
 SharedArtifactAdapter. Built-in local is reserved. Duplicate, unknown, unloadable or malformed adapters fail with
-SHARED_ADAPTER_UNAVAILABLE, without fallback. Public input/result types and the reusable assert_conformance helper
+SHARED_ADAPTER_UNAVAILABLE, without fallback. Backend advisory codes are preserved and continuation tokens
+are opaque to the adapter boundary. Public input/result types and the reusable assert_conformance helper
 cover immutable generations, live retry, exact expiry, pagination, cleanup and error mapping. Adapter authors own
 remote namespace provisioning, authentication and transaction consistency. Protocol checks and the test adapter
 provide no production cross-host evidence. No concrete remote backend is shipped; the retained follow-up is

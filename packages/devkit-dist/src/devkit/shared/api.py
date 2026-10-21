@@ -164,10 +164,8 @@ def decode_cursor(cursor: str) -> str:
 def validate_page(cursor: str | None, limit: int) -> None:
     if type(limit) is not int or not 1 <= limit <= 100:
         raise InputError("limit must be 1..100")
-    if cursor is not None:
-        if not isinstance(cursor, str):
-            raise InputError("cursor must be a string")
-        decode_cursor(cursor)
+    if cursor is not None and not isinstance(cursor, str):
+        raise InputError("cursor must be a string")
 
 
 def generation(artifact_uri: str, namespace: str) -> str:
