@@ -1,47 +1,87 @@
 ---
-id: PROP-weekly-report
+id: SPEC-weekly-report
 title: Evidence-based weekly maintenance reporting
 summary: Define a manually invoked weekly-report playbook that turns revision-bound repository evidence into a report and prioritized follow-ups while separating generation from authorized publication.
-status: accepted                         # draft | reviewing | accepted | rejected
-created_at: 2026-10-21
-target_area: capabilities/delivery/
-priority: high                        # critical | high | medium | low
-size: M                               # S | M | L | XL
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
+status: completed
+created: 2026-10-21
 milestone: MS-reporting-and-actionable-insights
-boundaries:
-  owns:
-    - packages/devkit-catalog/
-    - guides/
-    - docs/capabilities/delivery/
-    - docs/capabilities/distribution/
-    - docs/stories/governance/
-  excludes:
-    - packages/devkit/src/devkit/integration/
-    - packages/devkit-dist/src/devkit/shared/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+related_capabilities: [CAP-DLV-weekly-report]
+related_stories: [US-inspect-weekly-repository-progress]
+workflow: sdd-spec-feature
 ---
 
-# [PROP-weekly-report] Evidence-based weekly maintenance reporting
+# [SPEC-weekly-report] Evidence-based weekly maintenance reporting
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-weekly-report on 2026-10-21.
+- **Preserved Materials**: `docs/materials/2026-10/20261021-weekly-report`
+
+### 1. Background & Hypothesis
 
 `MS-reporting-and-actionable-insights` calls for a manually invoked report that makes completed work, decisions,
 repository health and next actions inspectable. The maintenance bundle introduced by `SPEC-periodic-drift-reconciliation`
 is the delivery home. A reporting procedure can consume available evidence without running drift or refactoring
 first, and without a scheduler or history backend.
 
-## 2. Planning Outcome
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want a revision-bound weekly report so that delivered work, health gaps and next actions can be inspected without publishing or running maintenance.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: Schedulers, detectors, standalone skills, runtime publishers, history databases, automatic maintenance or follow-up creation, and unauthorized publication.
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] Distribution and invocation
+- **Given** the maintenance bundle already supplies drift-reconciliation and upkeep.
+- **When** reporting, upkeep and implicit all are selected and synchronized.
+- **Then** reporting deploys only weekly-report, upkeep retains drift-reconciliation, and all deploys both; search and exact retrieval validate headers without execution.
+
+### [AC-02] Identity and interval
+- **Given** an explicit manual invocation and repository scope.
+- **When** the report intake is collected.
+- **Then** repository identity, captured SHA, integration ref/SHA, dirty state and generation time are recorded; the previous complete local Monday-to-Monday interval or explicit endpoints records inclusive start, exclusive end, timezone and both UTC offsets, including DST; unknown timezone requires input.
+
+### [AC-03] Revision-bound delivery evidence
+- **Given** completed and unintegrated work plus changed decisions.
+- **When** available evidence is collected.
+- **Then** claims cite revision/path or document ID and artifacts; completed spec/session work requires verification and reachability at integration SHA, dated claims identify event basis, and missing integration time never becomes an interval delivery claim.
+
+### [AC-04] Health and comparison limitations
+- **Given** missing, stale, failed and incompatible maintenance evidence and optional prior report.
+- **When** health and actions are assessed.
+- **Then** every source records revision, scope, observation time and result; no absent result is clean, no absent finding is resolved, compatible evidence alone supports comparison, and existing open follow-ups are linked without creation.
+
+### [AC-05] Dirty and changing state
+- **Given** checkout-only lookup, dirty documents or a changing captured revision.
+- **When** evidence is reconciled.
+- **Then** committed evidence remains the default, checkout observations are labeled and checked at the SHA, selected uncommitted evidence has a preserved diff reference, and changed evidence is re-collected or marked unverified.
+
+### [AC-06] Immutable generation and reruns
+- **Given** a selected local output location and same-period rerun.
+- **When** generation finishes.
+- **Then** verified artifacts contain all six report sections, a logical repository/scope/interval/timezone key, unique run ID and source SHA; reruns preserve predecessors and name supersession; identity or artifact-write failure fails generation while optional evidence gaps remain limitations.
+
+### [AC-07] Independent authorized publication
+- **Given** a generated immutable artifact.
+- **When** publication is considered or retried.
+- **Then** a separate outcome record preserves digest, destination, authority and receipt; absent permission or destination stays pending, verified receipt is published, confirmed failure is failed, lost response is unknown; unknown is inspected before retry, retry retains exact bytes/run, replacement needs explicit authority and collision checks, and generation remains completed.
+
+## 5. Detailed Behavioral Contract and Assumptions
+
+The accepted direction below remains binding. Current-base assumption: maintenance and upkeep exist; extend them. The earlier absent-base contingency is historical and does not apply to this implementation.
+
+### 2. Planning Outcome
 
 Deliver a manually invoked, content-only `maintenance/weekly-report` playbook. It collects available evidence,
 writes a local Markdown report and separately publishes only when destination and authority are explicit.
 The recommended Development effort remains medium. No runtime, scheduler, detector, or history backend is needed.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### 3.1 Intake and observation boundaries
+#### 3.1 Intake and observation boundaries
 
 Record repository identity (a local canonical path or configured remote, without credentials), scope, inspected
 commit SHA, selected integration branch/ref and its resolved SHA, generation timestamp, and dirty state before
@@ -61,7 +101,7 @@ uncommitted changes only when expressly selected, preserving an evidence diff/ar
 it separately. If the inspected state changes during collection, mark affected evidence unverified or restart
 collection against a newly captured revision; do not silently mix snapshots.
 
-### 3.2 Evidence and report structure
+#### 3.2 Evidence and report structure
 
 Use existing Git inspection, `CAP-DOCS-document-lookup` (including completed specs through `--history`, all intended
 namespaces and complete pagination), workflow records and existing check artifacts. Inspect changed decisions,
@@ -94,7 +134,7 @@ Rank actions by demonstrated impact and urgency, state the reason and next step,
 or proposals. Terminal feedback remains traceability and is not reopened merely because it appears in history.
 The report recommends follow-ups; generation creates no feedback, proposals or fixes automatically.
 
-### 3.3 Artifact identity, reruns and publication
+#### 3.3 Artifact identity, reruns and publication
 
 Write to an explicitly selected local artifact location, defaulting to the owning work unit's materials directory
 or the repository's existing materials location. If neither exists, resolve the output location at invocation;
@@ -121,7 +161,7 @@ for that run and digest; if it cannot be verified, leave unknown and request a d
 publication. Destination replacement requires explicit authority and collision checks. No publisher or unavailable
 permissions leave publication pending; publication failure never erases successful generation.
 
-### 3.4 Distribution, dependencies and verification
+#### 3.4 Distribution, dependencies and verification
 
 Build on the accepted content layout of `SPEC-periodic-drift-reconciliation`: the opt-in content-only maintenance
 bundle in `packages/devkit-catalog/`, `default_preset = "all"`, no `auto_select` and no reserved `[presets.all]`.
@@ -158,7 +198,7 @@ Use relevant catalog tests and package smoke, governance rules and the affected-
 procedure with recorded manual scenarios. Fixture publication needs no real external destination. No generic
 publisher runtime or automation test harness is introduced solely to test prose.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Feature / proposal depth. Planning and recommended Development effort are medium. This proposal is ready for the
 user's direction gate once its independent challenger findings are settled; acceptance is not Development start.
@@ -169,3 +209,4 @@ transition belongs to this proposal.
 new detection commands, standalone skills, a report database, GitHub orphan-branch history storage
 (`MS-maintenance-history`), automatic follow-up creation, and publication without authorization. The future history
 milestone remains the tracked destination for durable history integration and does not block manual reporting.
+

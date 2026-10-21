@@ -1,0 +1,28 @@
+{
+  "run_id": "fixture-1",
+  "artifact": "fixture-1-report.md",
+  "sha256": "bc74df264e3698de052c05455ffb49dd616b7f8f0ba9b46eefd809fe3464f33b",
+  "generation": "completed",
+  "publication": "published",
+  "destination": "controlled local fixture-publication-receipt.txt",
+  "authority": "simulated local exercise only",
+  "receipt": "fixture-publication-receipt.txt",
+  "attempts": [
+    {
+      "outcome": "pending",
+      "reason": "no destination/authority; no send"
+    },
+    {
+      "outcome": "failed",
+      "reason": "simulated confirmed fixture denial; generation retained"
+    },
+    {
+      "outcome": "unknown",
+      "reason": "simulated lost response; no blind retry"
+    },
+    {
+      "outcome": "published",
+      "reason": "inspected local receipt matches run and digest; no duplicate resend"
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 id: MS-scheduled-jobs
 title: Playbook entrypoint for externally scheduled execution
 summary: "Delivers exact-ID playbook retrieval for external runners and an ADR that delegates scheduling to external systems, keeping scheduler implementation outside devkit's scope."
-status: planned
+status: done
 created_at: 2026-10-18
 depends_on: []
 ---
