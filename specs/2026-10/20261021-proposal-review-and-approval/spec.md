@@ -9,7 +9,6 @@ related_capabilities: []
 related_stories: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-proposal-review-and-approval] Proposal review reports and unified plan-accept MCP approval
 
@@ -29,7 +28,7 @@ alone. The report supplies evidence, never approval. The selected design is reco
 
 - **US-1**: As a developer/agent, I want to implement Proposal review reports and unified plan-accept MCP approval so that system capabilities are extended.
 
-## 3. Non-Goals
+## 3. Delivery Scenarios
 
 - AC1: Publish a complete ko/en briefing from a committed Planning HEAD; verify all PADRs and effort/envelope
   coverage, exact identity and clean tracked state. Reject false SHA, mismatched slug/repo/language, oversized or
@@ -59,10 +58,35 @@ approval credentials; atomic rollback across Git and setup; removal of standalon
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Publish a source-bound report
+- **Given** a clean committed Planning HEAD or accepted base and a complete ko/en briefing.
+- **When** the CLI or MCP report producer publishes it.
+- **Then** validate the exact commit, repository, slug, language, all PADRs and required sections; reject false or oversized inputs; identical live retries retain identity and expired retries create a new generation.
+
+### [AC-02] Explicit lifecycle approval
+- **Given** a ready proposal with an exact live report.
+- **When** the native form selects accept_only or accept_and_handoff.
+- **Then** execute only the disclosed selected effects after explicit approve=true and action=accept; decline, cancellation, unavailable forms and unresolved worker questions perform no lifecycle effects.
+
+### [AC-03] Staleness and partial recovery
+- **Given** a prepared approval binding source, base, policy, environment and report.
+- **When** any binding changes or an effect fails.
+- **Then** refuse stale input before effects, return exact completed steps and recovery, and require fresh approval for remaining effects without replaying acceptance or duplicating worktrees; required-PR refuses local combination.
+
+### [AC-04] Standalone handoff report
+- **Given** a previously accepted proposal on the retained base.
+- **When** standalone handoff receives an exact report URI.
+- **Then** validate its current base and expiry before and after the native form, show the concise report link and all worktree/setup effects, and request refresh explicitly on stale reports.
+
+### [AC-05] Read-only report view
+- **Given** a registered local repository and valid immutable report.
+- **When** the optional viewer report route is requested.
+- **Then** display only that exact report with source, language and expiry, sanitize Markdown, reject traversal/wrong repository/expired input, preserve HTTP protections, and perform no adapter writes.
+
+### [AC-06] Review guidance and connection readiness
+- **Given** a local-orchestrated or cloud Planning activity.
+- **When** the Host reviews or refines the proposal.
+- **Then** local orchestration requires connected report/approval tools; cloud CLI remains usable; refinement keeps exclusive worktree ownership, commits changes and republishes the exact source-bound report.
 
 ## 5. Carried Proposal Notes
 
@@ -79,9 +103,7 @@ Sections of the proposal that did not map to a spec section. Trim or promote the
   Report reading therefore requires a narrow ADR supersession at handoff; ordinary Git endpoints stay unchanged.
 - `ADR-shared-language-preference-with-bounded-approval-content` resolves form language once, preserves machine
   values and source quotations, and does not promise control of host chrome or automatic source translation.
-- `SPEC-worker-shared-state-mcp` is an accepted design dependency, not an implemented API. Its selected
-  interface contract is reflected here; Development waits for the implemented adapter, or returns for scope
-  clarification if that contract changes.
+- `SPEC-worker-shared-state-mcp` is implemented on the current base. Use its public adapter, PutRequest and immutable Artifact metadata without changes to dist.
 
 ### 3. Selected Design & Impact
 
@@ -196,8 +218,7 @@ its no-write/no-approval and existing Git endpoint contracts remain intact.
 
 ### 5. Lifecycle & Retirement Criteria
 
-The design is accepted following the medium challenger pass and resolution of its findings. Development waits for
-`SPEC-worker-shared-state-mcp` implementation; the report uses its local adapter and public protocol seam only.
+The design is accepted following the medium challenger pass and resolution of its findings. The report uses the implemented shared local adapter and public protocol seam only.
 The shared-storage dependency is separately accepted; neither acceptance starts Development. The replacement
 ADR and capability updates are produced through normal handoff/reconciliation. No direction question remains.
 
