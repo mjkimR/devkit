@@ -1,7 +1,7 @@
 ---
 id: CAP-DOCS-document-model
 title: Document Model
-summary: "Defines Markdown document locations, IDs, kinds, references and the workspace index, including the distinction between feedback promotion and verified resolution."
+summary: "Defines Markdown document identity, references and indexing, including typed direct unit prerequisites, terminal completed targets and proposal-only milestone membership."
 area: documents
 status: active
 stories:

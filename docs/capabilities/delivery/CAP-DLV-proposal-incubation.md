@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-proposal-incubation
 title: Proposal Incubation and Handoff
-summary: "Proposal incubation, acceptance and handoff create bound specs from recorded approval, promote decisions, preserve materials and feedback, and relocate references while retaining generic directory prose and verified historical record citations."
+summary: "Proposal incubation and handoff preserve approved scope, decisions, materials and feedback, validating projected direct prerequisites before writes and relocating live references without carrying milestone membership."
 area: delivery
 status: active
 created_at: 2026-10-13

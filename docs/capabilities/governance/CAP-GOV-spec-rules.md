@@ -1,7 +1,7 @@
 ---
 id: CAP-GOV-spec-rules
 title: Spec Governance Rules
-summary: Defines the eleven governance rules the spec bundle ships for devkit rules (references, IDs, frontmatter, traceability, task coverage, spec lifecycle and progress, reconcile records, entrypoints, proposal boundaries, summaries), their shared targeting and snapshot behavior, fixes and layout.
+summary: "Defines the eleven spec governance rules, their snapshot targeting and fixes, including separate milestone/unit dependency graphs and proposal-only milestone hygiene."
 area: governance
 status: active
 stories:

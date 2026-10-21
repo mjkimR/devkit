@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-spec-bundles
 title: Spec Bundles
-summary: "Spec bundle creation validates summaries up to 300 stripped characters before writes, scaffolds SPEC/PLAN/TASKS documents under specs/<YYYY-MM>/<YYYYMMDD>-<slug>/ and binds spec.md to a delivery workflow."
+summary: "Spec creation validates summaries and scaffolds bound SPEC/PLAN/TASKS documents without milestone membership; optional direct prerequisites are authored in frontmatter."
 area: delivery
 status: active
 created_at: 2026-10-13
