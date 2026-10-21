@@ -5,19 +5,19 @@ summary: "Pluggable commit hooks, shell wrappers, layered policies, and snapshot
 area: gate
 status: active
 entrypoints:
-  - packages/devkit/src/devkit/gate/hooks/hooks.py
-  - packages/devkit/src/devkit/gate/hooks/local_config.py
+  - packages/devkit/src/devkit_agt/features/gate/usecases/hooks/hooks.py
+  - packages/devkit/src/devkit_agt/features/gate/usecases/hooks/local_config.py
 created_at: 2026-10-17
 ---
 
 # [CAP-GATE-commit-gates] Commit Gate: Architecture Overview
 
-**Package**: `devkit.gate` (`devkit gate` CLI). Commands, exit codes and error codes: [Gate Reference](../../development/reference/gate.md).
+**Package**: `devkit_agt.features.gate` (`devkit gate` CLI). Commands, exit codes and error codes: [Gate Reference](../../development/reference/gate.md).
 **Related**: `CAP-DIST-manifest-spec`, `CAP-DIST-sync-and-transactions`, `CAP-GOV-rules-engine`.
 
 ## 1. Overview and Objectives
 
-`devkit.gate` runs policy at Git's commit hooks. It owns the **system**: hook wrappers, configuration layering, gate discovery and the stage runner. It owns almost no **policy**: gates that encode a team's or a person's commit rules ship in content wheels as `kind = "gate"` bundle assets, so installing a wheel, selecting its bundle and running `devkit sync` adds them, exactly as rules are added to `devkit.rules`.
+`devkit_agt.features.gate` runs policy at Git's commit hooks. It owns the **system**: hook wrappers, configuration layering, gate discovery and the stage runner. It owns almost no **policy**: gates that encode a team's or a person's commit rules ship in content wheels as `kind = "gate"` bundle assets, so installing a wheel, selecting its bundle and running `devkit sync` adds them, exactly as rules are added to `devkit_agt.features.rules`.
 
 1. **System in the core, policy in bundles.** The only built-ins are the gate system's own integrations: the rule engine's commit-time check (`rules-check`, policy-free: the rules it evaluates ship in bundles and are tuned in `[rules]`), the runner of the project's own verification commands (`verify-commands`, policy-free: the project supplies the commands) and the non-empty message check (`message-nonempty`). Identity checks, timestamp handling, message conventions and similar rules belong to the content wheels that need them.
 2. **Shared dispatchers, runtime discovery.** Writing syncs install POSIX dispatchers and a separate `20-devkit` script for each stage with enabled gates. Each commit discovers gates from the installation receipt; sync also appends the commented tables of new gates to `devkit.config` ([Settings Template](#6a-settings-template)).
@@ -28,7 +28,7 @@ created_at: 2026-10-17
 ## 2. Library
 
 ```python
-from devkit.gate import Stage, load_gate_project, run_hook
+from devkit_agt.features.gate import Stage, load_gate_project, run_hook
 
 project = load_gate_project(root)  # any directory inside the work tree; project.root is its top level
 project.validation.errors          # every registry, configuration and settings problem (what `gate status` reports)
@@ -38,7 +38,7 @@ report = run_hook(root, Stage.COMMIT_MSG, ["MSG"])   # args are the hook argumen
 report.ok, report.problems, report.exit_code         # exit_code: the highest exit code among the problems
 ```
 
-`load_gate_project` collects problems instead of raising them; only a failed Git query raises (`GitError`, `GIT_FAILED`). `run_hook` loads the project and runs the stage with `run_stage`, so the CLI (a thin layer over these two) and a library caller cannot diverge. The steps underneath are public too: `project_registry`, `load_gates_config`, `validate_gates` and `run_stage`. `python -m devkit.gate` is the gate CLI alone, which the wrappers exec.
+`load_gate_project` collects problems instead of raising them; only a failed Git query raises (`GitError`, `GIT_FAILED`). `run_hook` loads the project and runs the stage with `run_stage`, so the CLI (a thin layer over these two) and a library caller cannot diverge. The steps underneath are public too: `project_registry`, `load_gates_config`, `validate_gates` and `run_stage`. `python -m devkit_agt.features.gate` is the gate CLI alone, which the wrappers exec.
 
 ## 2a. Built-in Gates
 
@@ -66,11 +66,11 @@ commands = ["just lint-check", "just check"]
 
 Hooks run with Git's environment, where the project's `.venv/bin` is usually not on `PATH`: call project tools through `uv run` or a recipe runner (`just`), never as bare `devkit`, `pytest` or `ruff`.
 
-- Each command line runs with `sh -c` from the top level of the work tree, in order, through `devkit.compact.run_command`: the full output goes to a log file and the refusal carries only the compact view. Every command runs, so one attempt reports every failure.
+- Each command line runs with `sh -c` from the top level of the work tree, in order, through `devkit_agt.features.compact.run_command`: the full output goes to a log file and the refusal carries only the compact view. Every command runs, so one attempt reports every failure.
 - A failure is `GATE_VERIFY_FAILED` (`BLOCKED`, exit `1`) naming the failed commands, with per command a `[DETAIL]` `command: <line>  exit=<n>  log=<path>`, then its recognized summaries, its failed tests, its last 10 output lines (summaries left out) and the error blocks of nested `devkit` commands (`  > ` lines). `RUN_SLOW_COMMAND` notices of the runs are returned as they are.
 - A nested `devkit` command that could not do its job (exit `2` with an error block of its own: rules that cannot load, a worktree or checkout that needs `devkit sync`) did not judge the commit, so the gate raises `GATE_VERIFY_NOT_RUN` (exit `2`) with the same details instead of the `BLOCKED` refusal. It is `AUTO` with the relayed fix when every relayed error is `AUTO` with the same one (managed files missing: `devkit sync`, then commit again), else `MAINTENANCE`.
 - The commands see the working tree, not the index. When tracked files have unstaged changes or untracked files exist, the gate adds a `GATE_VERIFY_UNSTAGED` notice (in a refusal, a final `note:` detail) listing up to 10 of them, and does not refuse for it. A check that must match the commit exactly evaluates the index itself, as `rules-check` and `devkit rules check --staged` do: it reads `.devkit/config.toml`, the receipt and the synchronized rules from the staged tree (in place when the working tree holds exactly that tree, else from a materialized copy), and so cannot depend on unstaged edits or per-clone configuration (`CAP-GOV-evaluation-lifecycle`).
-- The hook's `GIT_DIR`, `GIT_INDEX_FILE`, `GIT_WORK_TREE` and `GIT_PREFIX` are removed from the commands' environment, so a test suite that runs Git in its own repositories is not pointed at this commit's index. The index is passed as `DEVKIT_GIT_INDEX_FILE` instead; devkit's staged snapshot uses it for this repository only (`devkit.core.git.commit_index`), so `devkit rules check --staged` evaluates exactly what `git commit -a` or `git commit <paths>` commits, a temporary index.
+- The hook's `GIT_DIR`, `GIT_INDEX_FILE`, `GIT_WORK_TREE` and `GIT_PREFIX` are removed from the commands' environment, so a test suite that runs Git in its own repositories is not pointed at this commit's index. The index is passed as `DEVKIT_GIT_INDEX_FILE` instead; devkit's staged snapshot uses it for this repository only (`devkit_core.core.git.commit_index`), so `devkit rules check --staged` evaluates exactly what `git commit -a` or `git commit <paths>` commits, a temporary index.
 - Keep the list to what is quick enough for every commit; slower suites belong in CI. Interrupting a command (Ctrl-C, `SIGTERM`, `SIGHUP`) stops it, skips the remaining commands and gates, and aborts the commit: `devkit gate run` exits `128 + N` (`130` for Ctrl-C), as `devkit run` does.
 
 `message-nonempty` sees the message before Git's cleanup. Whether Git strips comment lines depends on how the commit was made (`git commit -m "#123 fix"` keeps the `#` line; the editor template strips it; `core.commentChar` changes the character), so the gate refuses only a message that is blank above the scissors line. A message that is empty only once comments are stripped is left to Git, which aborts such a commit itself unless `--allow-empty-message` is given.
@@ -108,10 +108,10 @@ payloads such as `pre-push` requires a replay contract so every child receives t
   until then `devkit gate status` warns with `GATE_HOOK_ENTRY_MISSING` naming the stage and its gates.
 - **Gate entry**: `20-devkit` selects the worktree's `.venv/bin/python` when devkit is installed there,
   otherwise the absolute fallback recorded by install (`sys.executable` or `--python`), then runs
-  `python -m devkit.gate run <stage>` through a small `<python> -P -c` bootstrap in the same process.
-  `-P` prevents repository modules from shadowing imports. The fallback must import `devkit.gate` at
+  `python -m devkit_agt.features.gate run <stage>` through a small `<python> -P -c` bootstrap in the same process.
+  `-P` prevents repository modules from shadowing imports. The fallback must import `devkit_agt.features.gate` at
   install time (`GATE_PYTHON_INVALID`); it does not depend on `PATH`. When at commit time the interpreter
-  is missing or cannot import `devkit.gate` (removed, or a broken or incompatible devkit), the entry prints
+  is missing or cannot import `devkit_agt.features.gate` (removed, or a broken or incompatible devkit), the entry prints
   `GATE_INTERPRETER_UNAVAILABLE` with `[DETAIL] python=<path>` and the reason, never a traceback, and exits
   `2` in a blocking stage (an `[ERROR]`: the gates could not run, not a refusal) and `0` in `post-commit`
   (a `[WARN]`).
@@ -123,7 +123,7 @@ payloads such as `pre-push` requires a replay contract so every child receives t
   Existing backups are never overwritten (`GATE_BACKUP_EXISTS`). `00-legacy` and `20-devkit` are reserved;
   foreign files there, or symlinked script directories, are refused (`GATE_HOOK_LAYOUT_INVALID`).
 - **Writing**: mutations, and the settings template refresh in `devkit.config`, are serialized by a clone-wide
-  `devkit-hooks.lock` (an exclusive `devkit.core.file_lock`, waited for without a bound). Scripts are LF-only
+  `devkit-hooks.lock` (an exclusive `devkit_core.core.locks.file_lock`, waited for without a bound). Scripts are LF-only
   executable files, replaced atomically without writing through symlinks. Identical scripts are left untouched.
   All stages are checked for conflicts before writing. If dispatcher replacement fails after a hook moves,
   the original hook is restored.
@@ -131,7 +131,7 @@ payloads such as `pre-push` requires a replay contract so every child receives t
   `--locked`; it does not run on `--dry-run` or `--check`, or install outside a Git worktree. Unsafe layouts,
   custom `core.hooksPath` and installation failures produce `GATE_HOOK_INSTALL_SKIPPED` warnings with the
   reason code and remediation. Automatic sync retains each existing fallback that is executable and can import
-  `devkit.gate`, validated under the clone-wide lock, so a linked worktree does not replace a valid shared fallback
+  `devkit_agt.features.gate`, validated under the clone-wide lock, so a linked worktree does not replace a valid shared fallback
   with its own disposable interpreter. Missing or invalid fallbacks of active entries use the validated sync
   interpreter. Explicit `devkit gate install` replaces active fallbacks with `sys.executable` or its `--python`
   argument. The sync succeeds unless warnings trigger `--strict`.
@@ -160,7 +160,7 @@ class Gate(Protocol):
 ```
 
 - **Passing and skipping**: return `GateResult.passed(note)` or `GateResult.skipped(reason)`; `None` means passed. `GateResult.passed(note, notices=[...])` also returns warnings and notices (`AdvisoryError` at level `WARNING` or `NOTICE`; an `ERROR` is lowered to `WARNING`), which `devkit gate run` prints without blocking the commit, unless `DEVKIT_STRICT=1` and one is a warning. A notice that is not an `AdvisoryError` fails the gate with `GATE_RESULT_INVALID`. Each outcome is logged and shows as an `[INFO]` line under `-v`. A `GateResult` cannot carry `FAILED` (constructing one raises `GateResultError`, `GATE_RESULT_INVALID`, `MAINTENANCE`), and any other return value fails the gate with the same code.
-- **Refusing**: raise `GateRefusedError(message, *details, code=..., fix=..., target_files=...)`: message first, remediation in `fix`, and the gate's own code (default `GATE_FAILED`). It is `BLOCKED` and exits `1` (`FINDINGS`): the negative result of a check that ran. Any other `AdvisoryError` fails the gate as it is (most exit `2`: the check could not run); any other exception, and `SystemExit` from a gate that calls `sys.exit()`, is wrapped as `UNEXPECTED_ERROR` (exit `2`), and the stage's later gates still run. Every failed gate therefore reports an advisory. `KeyboardInterrupt` is not caught: it aborts the run, and a blocking stage exits nonzero. Neither is `devkit.compact.CommandInterrupted`, though it is a `SystemExit`: a gate whose `run_command` is interrupted aborts the run the same way, exiting `128 + N` for signal `N`.
+- **Refusing**: raise `GateRefusedError(message, *details, code=..., fix=..., target_files=...)`: message first, remediation in `fix`, and the gate's own code (default `GATE_FAILED`). It is `BLOCKED` and exits `1` (`FINDINGS`): the negative result of a check that ran. Any other `AdvisoryError` fails the gate as it is (most exit `2`: the check could not run); any other exception, and `SystemExit` from a gate that calls `sys.exit()`, is wrapped as `UNEXPECTED_ERROR` (exit `2`), and the stage's later gates still run. Every failed gate therefore reports an advisory. `KeyboardInterrupt` is not caught: it aborts the run, and a blocking stage exits nonzero. Neither is `devkit_agt.features.compact.CommandInterrupted`, though it is a `SystemExit`: a gate whose `run_command` is interrupted aborts the run the same way, exiting `128 + N` for signal `N`.
 - **Context**: `ctx.repo_root` (top level of the work tree), `ctx.git_dir` (this worktree's git dir, for `MERGE_HEAD`, rebase state and the like), `ctx.common_git_dir` (shared by every worktree), `ctx.stage`, `ctx.args` (hook arguments), `ctx.settings` (the gate's effective settings) and `ctx.message_file` for `commit-msg`.
 - **Ordering**: gates in a stage run by `(order, id)`. Message transforms use `order < 100`, checks default to `100`, and the built-in `message-nonempty` runs at `900` so it sees the transformed message. A `post-commit` gate that rewrites `HEAD` must take a low order so later gates observe the final commit.
 - **No short-circuit**: a failing gate does not stop later gates, so one commit attempt reports every refusal.
@@ -175,7 +175,7 @@ gates/
     tests/test_limits.py # never imported by devkit
 ```
 
-Gate packages are loaded like rule packages, with `devkit.core.plugins.load_subclasses`: every module of the package is imported and every concrete `BaseGate` subclass defined in one of them is instantiated without arguments, in module then definition order. `BaseGate` is abstract, so a shared base class that leaves `run` abstract is skipped. Loading is atomic per package: if any module fails to import, or any gate of the package fails to instantiate or has invalid metadata (`id`, `stage`, `order`; `GateDefinitionError`), the package contributes no gate and the failure is reported as `GATE_LOAD_FAILED` naming the package. A gate's `settings` dataclass fields may be `int`, `float`, `str`, `bool` or `list[str]`, each optionally `| None`: the type vocabulary and checker of rule settings (`devkit.rules.engine.settings`). Any other annotation is a defect of the gate (`GATE_DEFINITION_INVALID`, `MAINTENANCE`). A gate package may import from any package installed in the same environment, so a content wheel can keep its logic in a library module and ship only a thin gate package.
+Gate packages are loaded like rule packages, with `devkit_core.core.plugins.load_subclasses`: every module of the package is imported and every concrete `BaseGate` subclass defined in one of them is instantiated without arguments, in module then definition order. `BaseGate` is abstract, so a shared base class that leaves `run` abstract is skipped. Loading is atomic per package: if any module fails to import, or any gate of the package fails to instantiate or has invalid metadata (`id`, `stage`, `order`; `GateDefinitionError`), the package contributes no gate and the failure is reported as `GATE_LOAD_FAILED` naming the package. A gate's `settings` dataclass fields may be `int`, `float`, `str`, `bool` or `list[str]`, each optionally `| None`: the type vocabulary and checker of rule settings (`devkit_agt.features.rules.models.settings`). Any other annotation is a defect of the gate (`GATE_DEFINITION_INVALID`, `MAINTENANCE`). A gate package may import from any package installed in the same environment, so a content wheel can keep its logic in a library module and ship only a thin gate package.
 
 ## 5. Distribution
 
@@ -191,7 +191,7 @@ source = "gates/staged_file_limit"     # a plugin package directory; a file is B
 assets = ["staged-file-limit"]
 ```
 
-`devkit sync` copies the selected gate packages to `.devkit/managed/<bundle>/` (a project override under `.devkit/overrides/<bundle>/` replaces the managed copy of each file it overrides) and records their files in `.devkit/installation.json`. At commit time the registry reads the receipt with `devkit.core.receipt` (strict: a malformed receipt or an unsafe path is an error) and loads every `kind = "gate"` asset as one package whose modules are its listed `.py` files, whatever their names (test files excepted). Packages are found and their files checked with `devkit.core.verified_asset_packages`, as for rule packages: a file with a `files` entry in the receipt must match its SHA-256; only a project override under `.devkit/overrides/` may lack one and is then loaded as it is; any other file without one is refused, and a package with a refused file is not loaded.
+`devkit sync` copies the selected gate packages to `.devkit/managed/<bundle>/` (a project override under `.devkit/overrides/<bundle>/` replaces the managed copy of each file it overrides) and records their files in `.devkit/installation.json`. At commit time the registry reads the receipt with `devkit_dist.features.project.repositories.receipt` (strict: a malformed receipt or an unsafe path is an error) and loads every `kind = "gate"` asset as one package whose modules are its listed `.py` files, whatever their names (test files excepted). Packages are found and their files checked with `devkit_dist.features.project.repositories.receipt.verified_asset_packages`, as for rule packages: a file with a `files` entry in the receipt must match its SHA-256; only a project override under `.devkit/overrides/` may lack one and is then loaded as it is; any other file without one is refused, and a package with a refused file is not loaded.
 
 | State | Effect at commit time |
 | --- | --- |

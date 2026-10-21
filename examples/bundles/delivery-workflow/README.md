@@ -1,7 +1,7 @@
 # delivery-workflow example bundle
 
 A minimal bundle that ships one `kind = "workflow"` asset for
-`devkit.workflow`. Synchronizing it installs the definition under
+`devkit_agt.features.workflow`. Synchronizing it installs the definition under
 `.devkit/managed/delivery-workflow/workflows/direct-delivery.md`, records it in
 the installation receipt, and generates the shared `devkit-workflow` entry
 skill for every selected agent. Repositories that do not select this bundle

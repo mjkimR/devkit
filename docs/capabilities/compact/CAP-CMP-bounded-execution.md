@@ -9,7 +9,7 @@ created_at: 2026-10-17
 
 # [CAP-CMP-bounded-execution] Compact Command Output: Architecture Overview
 
-**Package**: `devkit.compact` (`devkit run` CLI). Usage, error codes and module map: [Compact Reference](../../development/reference/compact.md).
+**Package**: `devkit_agt.features.compact` (`devkit run` CLI). Usage, error codes and module map: [Compact Reference](../../development/reference/compact.md).
 **Related**: `ARCH-08-1-agent-output`, `CAP-ADV-agent-advisory-protocol`.
 
 ## 1. Overview and Objectives
@@ -27,7 +27,7 @@ Test runners, linters and type checkers print for people: progress dots, passed 
 
 ## 2. Execution
 
-`devkit.compact.run_command` runs the command in the current directory:
+`devkit_agt.features.compact.run_command` runs the command in the current directory:
 
 - stdout and stderr go to one log file, in the order they were written;
 - stdin is closed (`/dev/null`), so a command that waits for input ends instead of hanging the agent;
@@ -46,7 +46,7 @@ The `devkit-run-<uid>` directory and each project's directory in it are created 
 
 ## 4. The Bounded View
 
-One pass over the log (`devkit.compact.scan`) produces every part of the view. Each line is first reduced to what a terminal would show: ANSI escape sequences (colour and cursor control, OSC hyperlinks and titles, character set selection) are removed, and a carriage return starts the line over, so a progress bar leaves only its last non-blank state. Only the last 64,000 characters of a line are kept (its first 1,000 as well); a line longer than 1,000 characters is recognized by its start only. A line longer than 64,000 characters appears in the excerpt as its first and last 1,000 characters with a `[... N characters of log line L omitted ...]` line between them, unless a carriage return overwrote it.
+One pass over the log (`devkit_agt.features.compact.services.scan`) produces every part of the view. Each line is first reduced to what a terminal would show: ANSI escape sequences (colour and cursor control, OSC hyperlinks and titles, character set selection) are removed, and a carriage return starts the line over, so a progress bar leaves only its last non-blank state. Only the last 64,000 characters of a line are kept (its first 1,000 as well); a line longer than 1,000 characters is recognized by its start only. A line longer than 64,000 characters appears in the excerpt as its first and last 1,000 characters with a `[... N characters of log line L omitted ...]` line between them, unless a carriage return overwrote it.
 
 | Part | Content | Budget |
 | --- | --- | --- |
@@ -110,9 +110,9 @@ stderr in text mode, after the result: the relayed `[WARN]` and `[NOTICE]` block
 
 ## 6. Library
 
-`devkit.compact` exports `run_command`, which never prints and returns a `CommandRun` (`argv`, `exit_code`, `log`, `duration`, `scan`, `notices`, `interrupted`, with `passed` and `command`), or raises `CommandInterrupted` (a `SystemExit` with code `128 + N`, carrying the interrupted `CommandRun` as `run`, its scan empty) once it has stopped the command's group, and `scan`, which reads any text stream into a `Scan` (`summaries`, `failures` as `Failure`, `warnings` as `ToolWarning`, `advisories` as `RelayedAdvisory`, `output`, `omitted` as `Omitted`, `filtered`, `last_lines`, and `read`, the characters it read; whether to show the last lines and the failures is the caller's choice). A bundled gate or workflow check can run a command through `run_command` and report the same view. `compact` imports only `core` and `advisory`.
+`devkit_agt.features.compact` exports `run_command`, which never prints and returns a `CommandRun` (`argv`, `exit_code`, `log`, `duration`, `scan`, `notices`, `interrupted`, with `passed` and `command`), or raises `CommandInterrupted` (a `SystemExit` with code `128 + N`, carrying the interrupted `CommandRun` as `run`, its scan empty) once it has stopped the command's group, and `scan`, which reads any text stream into a `Scan` (`summaries`, `failures` as `Failure`, `warnings` as `ToolWarning`, `advisories` as `RelayedAdvisory`, `output`, `omitted` as `Omitted`, `filtered`, `last_lines`, and `read`, the characters it read; whether to show the last lines and the failures is the caller's choice). A bundled gate or workflow check can run a command through `run_command` and report the same view. `compact` imports only `core` and `advisory`.
 
-`devkit.compact` ships with `devkit-agt`, which mounts `devkit run` under the `devkit` executable through `devkit.commands` (`ADR-dist-module-split`); without it, `devkit run` answers with `HARNESS_COMMAND_UNAVAILABLE` (`ARCH-05-3-command-plugins`). Agents in consumer repositories learn the command from the `devkit-run` instruction of the auto-selected `harness` bundle of `devkit-agt` (`CAP-DIST-content-packages`), which also recommends putting `devkit run` inside a project's verification recipes. By default it is not an `AGENTS.md` line: running a command without the wrapper costs context, not correctness, and a project that runs its checks through recipes wraps them once there. The instruction's header is visible only after `devkit get-context harness`, though, and agents often run a narrowed command (one test file, `-k`) outside the recipes; a project where they do selects the opt-in preset `harness:run`, whose one `AGENTS.md` line (about 200 bytes per turn) sends them to `devkit run` and its instruction.
+`devkit_agt.features.compact` ships with `devkit-agt`, which mounts `devkit run` under the `devkit` executable through `devkit.commands` (`ADR-dist-module-split`); without it, `devkit run` answers with `HARNESS_COMMAND_UNAVAILABLE` (`ARCH-05-3-command-plugins`). Agents in consumer repositories learn the command from the `devkit-run` instruction of the auto-selected `harness` bundle of `devkit-agt` (`CAP-DIST-content-packages`), which also recommends putting `devkit run` inside a project's verification recipes. By default it is not an `AGENTS.md` line: running a command without the wrapper costs context, not correctness, and a project that runs its checks through recipes wraps them once there. The instruction's header is visible only after `devkit get-context harness`, though, and agents often run a narrowed command (one test file, `-k`) outside the recipes; a project where they do selects the opt-in preset `harness:run`, whose one `AGENTS.md` line (about 200 bytes per turn) sends them to `devkit run` and its instruction.
 
 ## 7. Scope
 

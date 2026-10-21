@@ -5,13 +5,14 @@ description = "Local read-only viewer of devkit repositories: the Living Spec, p
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "devkit-core==0.1.1",
     "click>=8.1.7",
     "devkit-agt>=0.1,<0.2",
 ]
 
 # The command group mounted under devkit: `devkit viewer ...`.
 [project.entry-points."devkit.commands"]
-viewer = "devkit_viewer.cli:cli"
+viewer = "devkit_viewer.features.browse.cli.app:cli"
 
 [dependency-groups]
 dev = [
@@ -22,6 +23,7 @@ dev = [
 ]
 
 [tool.uv.sources]
+devkit-core = { workspace = true }
 devkit-agt = { workspace = true }
 
 [build-system]
@@ -51,11 +53,11 @@ venv = ".venv"
 pythonVersion = "3.12"
 typeCheckingMode = "basic"
 include = ["src", "tests"]
-extraPaths = ["tests"]
+extraPaths = ["tests/support"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["tests"]
+pythonpath = ["tests/support"]
 addopts = ["--import-mode=importlib"]
 log_level = "INFO"
 

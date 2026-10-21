@@ -2,9 +2,8 @@
 
 Agent asset distribution in one Python package with the `devkit` command line: bundles, native agent projections,
 transactional sync and the installation receipt, context loading, playbooks and native host hooks. The distribution
-name is `devkit-dist`; imports are `devkit.*` (`devkit.core`, `devkit.search`, `devkit.host`, `devkit.shared`, `devkit.distribution`,
-`devkit.cli`). It owns the sole `devkit` console script, the `.devkit/config.toml` schema and the receipt format.
-Requires Python 3.12 or later; runtime dependencies are `click`, `jinja2`, `pyyaml`, `tomlkit` and `devkit-advisory`
+name is `devkit-dist`; imports are under `devkit_dist`. It owns the sole `devkit` console script, the `.devkit/config.toml` schema and the receipt format.
+Requires Python 3.12 or later; runtime dependencies are `click`, `jinja2`, `pyyaml`, `tomlkit`, `devkit-core` and `devkit-advisory`
 (the `devkit.advisory` library, same version). The `search` extra (`devkit-dist[search]`) adds `numpy`, `tokenizers`
 and the embedding model package for dense and hybrid search. Optional `devkit-mcp` owns native stdio and forms;
 dist owns exact project registration and does not import the SDK.
@@ -19,8 +18,8 @@ name the requirement to add.
 
 ## Install
 
-No package index hosts the wheel; install it from Git (which brings `devkit-advisory` from the same commit) or by URL
-from a GitHub Release with the `devkit-advisory` wheel next to it (see the
+No package index hosts the wheel; install it from Git (which brings `devkit-core` and `devkit-advisory` from the same commit) or by URL
+from a GitHub Release with the `devkit-core` and `devkit-advisory` wheels next to it (see the
 [root README](../../README.md#using-devkit-in-another-project)):
 
 ```bash
@@ -34,21 +33,52 @@ same commit; only a release-wheel installation names the `devkit-dist` wheel nex
 installation names the script owner and adds the harness:
 `uv tool install 'devkit-dist @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-dist' --with 'devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit'`.
 
-## Modules
+## Package structure
 
-| Module | Purpose | CLI | Reference |
-| --- | --- | --- | --- |
-| `devkit.core` | Shared foundation: frontmatter grammar, installation receipt, safe paths, atomic writes, Git runner, deadlines, file locks, plugin loading, project discovery, CLI plumbing | none | [core reference](../../docs/development/reference/core.md) |
-| `devkit.distribution` | Bundle packaging and transactional synchronization, plus the built-in `devkit` guide bundle | `devkit sync`, `add`, `remove`, `list`, `status`, ... | [distribution reference](../../docs/development/reference/distribution.md) |
-| `devkit.host` | Lifecycle hooks, service handlers and exact project MCP registrations; distribution owns hook deployment | `devkit host` | [host reference](../../docs/development/reference/host.md) |
-| `devkit.shared` | Immutable seven-day report artifacts and public adapter contract | `devkit shared put/get/list/sweep` | [shared reference](../../docs/development/reference/shared.md) |
-| `devkit.search` | Lexical, dense and hybrid document search; dense needs the `search` extra | none | [search reference](../../docs/development/reference/search.md) |
-| `devkit.cli` | The root `devkit` group: built-in commands, then `devkit.commands` plugins, then the name-only harness list | `devkit` | `ARCH-05-3-command-plugins` |
+`devkit_dist` is an independently owned regular package. `devkit.advisory` remains the public advisory library
+in its own distribution. No application modules share that namespace.
 
-The built-in bundles are `devkit` (consumption guidance, auto-selected), `advisory` (the Agent Advisory Protocol guides,
-auto-selected; data area `devkit.advisory_guide`) and `git-commits` (commit message conventions, opt-in; data area
-`devkit.commits_guide`).
+| Area | Responsibility |
+| --- | --- |
+| `base/errors.py` | Error contracts shared by distribution features and command loading |
+| `adapters/` | Shared CLI output boundaries and command workspace bootstrap |
+| `features/project/models/` | Immutable receipt records and configuration template contracts |
+| `features/project/repositories/` | Project discovery, configuration/receipt readers and live execution-context guards |
+| `features/project/services/` | Configuration template rendering and presentation language |
+| `features/project/usecases/` | Workspace/configuration queries and invocation revalidation for transport adapters |
+| `features/distribution/` | Bundle validation/packaging, installation synchronization, context, playbooks and overrides |
+| `features/host/` | Hook models, host adapters, configuration services, dispatch and MCP registration use cases |
+| `features/shared/` | Artifact models, local repository, execution use cases with adapter selection and CLI/MCP adapters |
+| `features/search/` | Search errors and lexical/dense/hybrid search services |
+| `bundles/{devkit,advisory,git_commits}/bundle/` | Built-in data bundles |
+| `cli.py` | Lazy root command composition and installed command discovery |
 
-Layering (`advisory` < `core` < `search`/`host`/`shared` < `distribution`; the data-only bundle areas import nothing) is
-enforced by `tests/test_layering.py`, which also refuses any reference to a `devkit-agt` area. The tests run without
-`devkit-agt` installed: `just test-dist` syncs an environment with only this package and its extras.
+Features contain only the layers their implementation uses. `cli` and `mcp` adapt invocations; `usecases`
+coordinate operations through typed `BaseUseCase.execute` entrypoints; `services` implement feature behavior; `repositories` read or write external state;
+`models` carry contracts and results. Models never depend on implementations or transports. Services and
+repositories never depend on their feature's adapters or use cases. Shared project configuration and receipt
+behavior belongs to the project feature. There is no package-level `core` or aggregate compatibility facade.
+
+Distribution depends on project, search and host; host and shared depend on project. This wheel never imports
+`devkit_agt`, including lazy module strings and entry points. Bundle rule source is data loaded from a synchronized
+copy and may use the public rule API. The repository development bundle checks feature/layer direction; `tests/unit/architecture/test_layering.py` independently checks wheel ownership and data-only bundle boundaries, and `tests/integration/cli/test_cli_imports.py`
+checks lazy command loading. `just test-dist` runs the package tests without the harness installed.
+
+The independent [devkit-core](../devkit-core/README.md) package owns filesystem/Git/parsing/plugin primitives,
+logging, extension dispatch and SDK-free MCP contracts. Its tests prohibit dependencies on this wheel.
+
+## Tests
+
+`tests/unit/` covers isolated contracts, algorithms and static architecture checks. `tests/integration/`
+covers real filesystem/Git state, command composition, installed plugins and connected feature behavior,
+mirroring feature, adapter and bundle areas. Shared fixture helpers live in `tests/support/distsupport/`.
+Built-wheel installation and public CLI/MCP end-to-end combinations are verified by the repository smoke suite.
+
+Distribution CLI commands are grouped in `features/distribution/cli/`: bundle packaging, selection/sync,
+configuration, context, playbooks and overrides each have a named module. `app.py` composes their command set;
+`output.py` owns shared output formatting. `__init__.py` exposes the command set without implementing behavior.
+
+Public selection operations in `features/distribution/usecases/commands.py` own selection replacement,
+additive preset merging, persistence and installed-bundle discovery. Adapters supply parsed selections to
+`sync_selection` or `add_selection`; they do not construct configuration callbacks. Project listing, status
+and override operations keep discovered package resources open until their results have been collected.

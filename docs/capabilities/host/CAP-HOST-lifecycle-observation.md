@@ -5,16 +5,16 @@ summary: "Host lifecycle hook dispatch, exact project MCP registration for Codex
 area: host
 status: active
 entrypoints:
-  - packages/devkit-dist/src/devkit/host/cli.py
-  - packages/devkit-dist/src/devkit/host/errors.py
-  - packages/devkit-dist/src/devkit/host/registrations.py
+  - packages/devkit-dist/src/devkit_dist/features/host/cli.py
+  - packages/devkit-dist/src/devkit_dist/features/host/models/errors.py
+  - packages/devkit-dist/src/devkit_dist/features/host/usecases/registrations.py
 created_at: 2026-10-17
 ---
 
 # [CAP-HOST-lifecycle-observation] Host Integration
 
-`devkit.host` (shipped by `devkit-dist`, so native hooks work without `devkit-agt`) connects host
-lifecycle events to installed service handlers. `devkit.distribution` deploys hook
+`devkit_dist.features.host` (shipped by `devkit-dist`, so native hooks work without `devkit-agt`) connects host
+lifecycle events to installed service handlers. `devkit_dist.features.distribution` deploys hook
 definitions and manages their registrations. The host module owns native input/output and service dispatch; a
 service owns its domain behavior. The integration service uses this boundary without placing Git
 execution, SDD models or approval policy inside an adapter. Quick reference: [reference.md](../../development/reference/host.md).
@@ -23,12 +23,12 @@ execution, SDD models or approval policy inside an adapter. Quick reference: [re
 
 - `host/hooks`: host-neutral `HookDefinition`, `HookEvent` and `HookResponse` contracts.
 - `host/adapters/codex`: Codex CLI event capabilities, command registration and native response rendering.
-- `host/runner`: receipt-bound dispatch to the `devkit.host.handlers` entry-point group.
+- `host/runner`: receipt-bound dispatch to the `devkit_dist.features.host.handlers` entry-point group.
 - `distribution`: manifest validation, selection, overrides, shared-file planning, receipt, transaction and removal.
 
 `host` depends only on `core` and `advisory`; `distribution` may depend on `host`. No service is required to import
 distribution internals. The separate `devkit_mcp` runtime supplies optional SDK stdio transport and native
-confirmation for installed service factories (`devkit.host.services`). `CAP-INT-mcp-services` defines the domain
+confirmation for installed service factories (`devkit_dist.features.host.services`). `CAP-INT-mcp-services` defines the domain
 approval contract, while `host/registrations` reconciles exact local project entries. Host adapters grant no filesystem/network permission and
 contain no Git executor, automatic policy dispatch or background recovery. Setup: [MCP services](../../development/reference/host.md#mcp-services).
 
@@ -113,7 +113,7 @@ my-context = "my_package.host:context"
 ```
 
 ```python
-from devkit.host import HookEvent, HookResponse
+from devkit_dist.features.host import HookEvent, HookResponse
 
 def context(event: HookEvent) -> HookResponse:
     return HookResponse(additional_context="Read the repository's delivery contract.")

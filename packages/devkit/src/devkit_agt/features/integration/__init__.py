@@ -1,0 +1,55 @@
+"""Methodology-neutral, approval-bound local integration on devkit worktree and host contracts."""
+
+from devkit_agt.features.integration.models.contracts import (
+    CleanupResult,
+    CleanupScope,
+    CleanupTarget,
+    Evidence,
+    IntegrationContext,
+    IntegrationRequest,
+    IntegrationResult,
+    Readiness,
+    ReadinessProvider,
+    ScopedCleanup,
+    Task,
+)
+from devkit_agt.features.integration.models.errors import (
+    AuthorityError,
+    CleanupContractError,
+    CleanupIncompleteWarning,
+    IntegrationConfigError,
+    IntegrationError,
+    ProviderError,
+    ReadinessError,
+    ReceiptConflictError,
+    RuntimeLocationError,
+    StaleRequestError,
+    TargetMovedError,
+)
+from devkit_agt.features.integration.usecases.service import IntegrationService
+
+__all__ = [
+    "AuthorityError",
+    "CleanupContractError",
+    "CleanupIncompleteWarning",
+    "CleanupResult",
+    "CleanupScope",
+    "CleanupTarget",
+    "Evidence",
+    "IntegrationConfigError",
+    "IntegrationContext",
+    "IntegrationError",
+    "IntegrationRequest",
+    "IntegrationResult",
+    "IntegrationService",
+    "ProviderError",
+    "Readiness",
+    "ReadinessError",
+    "ReadinessProvider",
+    "ReceiptConflictError",
+    "RuntimeLocationError",
+    "ScopedCleanup",
+    "StaleRequestError",
+    "TargetMovedError",
+    "Task",
+]

@@ -7,8 +7,8 @@ status: active
 stories:
   - US-find-the-right-documents
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/namespaces.py
-  - packages/devkit-spec/src/devkit_spec/config.py
+  - packages/devkit-spec/src/devkit_spec/features/documents/services/namespaces.py
+  - packages/devkit-spec/src/devkit_spec/features/policy/services/config.py
 created_at: 2026-10-13
 ---
 
@@ -19,7 +19,7 @@ created_at: 2026-10-13
 A monorepo registers its packages as namespaces, each with its own Living Spec under `docs/packages/<name>/` (the
 same layout as `docs/`). A namespace narrows what browsing shows, never what exists: `devkit spec list` and
 `devkit spec search` show the selected namespace plus the global documents, while IDs, `resolve`, `refs` and the
-reference rules stay repository-wide. `devkit_spec.namespaces` implements it.
+reference rules stay repository-wide. `devkit_spec.features.documents.services.namespaces` implements it.
 
 ## 2. Scope & Boundary
 
@@ -109,13 +109,13 @@ path = "services/api"   # the package's source directory
 
 | Code | Level | Class | Condition |
 | --- | --- | --- | --- |
-| `SPEC_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_spec.errors.SpecConfigError` | `[tool.spec.namespaces]` is not an array of tables, an entry has keys other than exactly `name` and `path`, a name is malformed or `global`, a path is unsafe or not in canonical form, or a name or path is registered twice. |
-| `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit.core.ArgumentError` | `--namespace` names neither `global` nor a registered namespace (also when none is registered), or is combined with `--all-namespaces`. |
+| `SPEC_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_spec.base.errors.SpecConfigError` | `[tool.spec.namespaces]` is not an array of tables, an entry has keys other than exactly `name` and `path`, a name is malformed or `global`, a path is unsafe or not in canonical form, or a name or path is registered twice. |
+| `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_core.base.errors.ArgumentError` | `--namespace` names neither `global` nor a registered namespace (also when none is registered), or is combined with `--all-namespaces`. |
 
 ### 4.5 Library
 
-`devkit_spec.namespaces`: `select` (the selection of the options or the current directory), `detect` (the namespace
+`devkit_spec.features.documents.services.namespaces`: `select` (the selection of the options or the current directory), `detect` (the namespace
 of a directory), `require` (validate a name), `namespace_resolver` (the namespace of each indexed document),
 `living_path` (`docs/packages/<name>/X` as the `docs/X` it mirrors, for the given namespaces or, given `None`, for
 every `docs/packages/<name>/`) and `docs_roots` (`docs` plus every namespace docs root).
-`devkit_spec.config.read_spec_config(root).namespaces` reads the registry.
+`devkit_spec.features.policy.services.config.read_spec_config(root).namespaces` reads the registry.

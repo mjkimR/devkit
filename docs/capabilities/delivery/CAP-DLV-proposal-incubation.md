@@ -8,12 +8,12 @@ created_at: 2026-10-13
 stories:
   - US-incubate-and-hand-off-a-proposal
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/proposal_report.py
-  - packages/devkit-spec/src/devkit_spec/plan_accept_mcp.py
-  - packages/devkit-spec/src/devkit_spec/proposals/
-  - packages/devkit-spec/src/devkit_spec/cli/proposals.py
-  - packages/devkit-spec/src/devkit_spec/handoff_mcp.py
-  - packages/devkit-spec/src/devkit_spec/handoff_language.py
+  - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/report.py
+  - packages/devkit-spec/src/devkit_spec/features/delivery/mcp/plan_accept.py
+  - packages/devkit-spec/src/devkit_spec/features/proposals/
+  - packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py
+  - packages/devkit-spec/src/devkit_spec/features/delivery/mcp/handoff.py
+  - packages/devkit-spec/src/devkit_spec/features/proposals/models/approval.py
 ---
 
 # [CAP-DLV-proposal-incubation] Proposal Incubation and Handoff
@@ -22,7 +22,7 @@ entrypoints:
 
 A proposal incubates an idea (a feature, a technical spike, an architectural change) before it becomes a feature
 spec: `proposal`-depth work, whose direction must be decided first, shapes it in a proposal bundle bound to workflow
-`sdd-proposal`. `devkit_spec.proposals`
+`sdd-proposal`. `devkit_spec.features.proposals`
 implements the lifecycle and `devkit spec proposal new|padr|accept|handoff|prune|check` exposes it. `accept` is the
 one writer of an acceptance, after Planning or directly for an eligible draft in Backlog
 (`ADR-direct-acceptance-command-and-handoff-guard`). The handoff is a cross-layout
@@ -44,7 +44,7 @@ removes it.
   - Format and reference rules over proposal files: `CAP-GOV-spec-rules`.
 - **Non-Goals**:
   - **Scope Excluded**: inferring approval. Neither `accept` nor handoff derives the user's choice from context;
-    `accept` runs only after the user's explicit acceptance and never records `plan-intent`.
+    `accept` requires explicit user acceptance or owning `plan-accept=auto` policy and never records `plan-intent`.
   - **Scope Excluded**: moving into a worktree. Handoff runs in the workspace it is given; task worktrees are
     devkit's `devkit worktree`.
   - **Scope Excluded**: archives. Rejected and handed-off proposals are deleted; Git history keeps them.
@@ -55,7 +55,7 @@ removes it.
    `new` and `handoff` MUST refuse a slug whose `SPEC-<slug>` exists (`SPEC_PROPOSAL_SLUG_CONFLICT`); a document that
    cannot be indexed never blocks them.
 2. **Approval is explicit and recorded**: handoff MUST require `status: accepted`, which `accept` writes once the
-   user gave `plan-accept`. Anything else is `SPEC_PROPOSAL_NOT_APPROVED` (`INTERACTION`: stop and ask the user; its
+   user gave `plan-accept` or owning policy delegated it. Anything else is `SPEC_PROPOSAL_NOT_APPROVED` (`INTERACTION`: stop and ask the user; its
    `[FIX]` names `devkit spec proposal accept`). A bundle bound to `sdd-proposal` MUST also have its effective accepted
    `gate:plan-accept` record (the rule of rule 12 that carries it); without it the handoff refuses before writing
    (`SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED`, `INTERACTION`: never record an acceptance unasked; without a `worker`
@@ -142,7 +142,7 @@ removes it.
     the base before creating children. Changing status alone is insufficient. The decomposition refusal retains
     `SPEC_PROPOSAL_IN_PLANNING` and directs the caller to this Host-managed return, never to retry on the plan branch.
 14. **One writer of an acceptance**: `accept` records the user's acceptance in one step, after the user's explicit
-    acceptance only (`--by user`, the only value: `plan-accept` is never delegated). Its form follows from the
+    acceptance (`--by user`) or validated owning policy delegation (`--by policy`). Its form follows from the
     status: `planning` for a proposal in review on its `plan-<slug>` (another branch is
     `SPEC_PROPOSAL_WRONG_WORKTREE`), `direct` with `--direct` for an eligible draft, `repair` with `--direct` for an
     `accepted` proposal without an effective `gate:plan-accept`; every other combination, a `rejected`, single-file or
@@ -394,7 +394,7 @@ A handoff deletes the proposal in the worktree it runs in; merging that branch r
 base checkout but leaves their directories. `devkit spec proposal prune [<slug>]` removes `docs/proposals/PROP-<slug>/` (every `PROP-*` directory without a slug) when it
 holds no file at any depth (a symbolic link counts as a file; devkit's `remove_empty_tree`). A directory holding any
 file is kept, and one that cannot be listed fails the prune before anything is removed. devkit-spec's
-`devkit.post_finish` extension (`devkit_spec.cleanup.after_finish`) prunes the finished slug after a successful `devkit worktree finish`
+`devkit.post_finish` extension (`devkit_spec.features.delivery.usecases.cleanup.after_finish`) prunes the finished slug after a successful `devkit worktree finish`
 (`ADR-cleanup-after-worktree-finish`) and, on the approval-bound `IntegrationService` path (`SPEC-hook-driven-integration-cleanup`), plans and executes the exact `CleanupTarget(kind="proposal-prune", identity="docs/proposals/PROP-<slug>", revision=<source_sha>)` target, emitting `SPEC_POST_FINISH_CLEANUP` notices; the command remains for other checkouts and a failed extension (`integration_resume` retries a partial post-finish run).
 
 ### 4.9 Commands and Options
@@ -432,7 +432,7 @@ uv run devkit spec proposal check fast-engine                        # before an
 | `--slug` | `padr` | The PADR slug for its ID and file name (default: the title's slug); refused when its first segment has no letter. |
 | `--summary` | `new`, `padr` | Write `summary: <text>`. After stripping surrounding whitespace, empty, longer than 300 characters, or with a letter outside the Latin script: `ARGUMENT_INVALID` (`[TARGET] --summary`), nothing written. A promoted ADR keeps its PADR's summary. |
 | `--with-target-docs` | `new` | Also write `target-docs.md`. |
-| `--by` | `accept` | Required: `user`, written only after the user's explicit acceptance; any other value is a usage error (exit `2`). |
+| `--by` | `accept` | Required: `user` for explicit acceptance or `policy` under owning `plan-accept=auto`; other values are usage errors (exit `2`). |
 | `--note` | `accept` | The decision note; with `--direct` the eligibility reason, required (blank: `ARGUMENT_INVALID`, `[TARGET] --note`, before the proposal is read). |
 | `--direct` | `accept` | Accept an eligible draft on the base checkout, or repair an accepted proposal without its record and without a `worker` envelope (rule 14). |
 | `--check` | `accept` | Run every check of the form and write nothing. |
@@ -489,7 +489,7 @@ uv run devkit spec proposal check fast-engine                        # before an
 ### 4.11 Library
 
 ```python
-from devkit_spec.proposals import accept_proposal, create_padr, create_proposal, handoff_proposal, prune_proposals
+from devkit_spec.features.proposals import accept_proposal, create_padr, create_proposal, handoff_proposal, prune_proposals
 
 created = create_proposal(root, "fast-engine", title="Fast Engine", with_target_docs=True)  # CreatedProposal
 create_padr(root, "fast-engine", "Use AST parser", summary="Parses rules with an AST.")  # CreatedDecision
@@ -539,7 +539,7 @@ directory whose namespace applies when `namespace` is omitted);
 
 ## Local native MCP handoff
 
-Installing devkit-spec registers `spec_handoff` through `devkit.host.services`. This is the local alternative to
+Installing devkit-spec registers `spec_handoff` through `devkit_dist.features.host.services`. This is the local alternative to
 an external runner's user interaction; it does not call or modify AutoHub. The caller supplies the accepted proposal slug and exact `report_uri`. From a clean retained base checkout on its base branch, the service reads the committed proposal
 and requires its `sdd-proposal` workflow to be complete with satisfied `plan-intent` and `plan-accept` gates;
 disabling their stages does not replace those approvals. A native form displays the title, goal, immutable report link,
@@ -602,7 +602,9 @@ Development effort and approval effects. Every current committed PADR has proble
 and consequences; committed envelope names and declared effort are accounted for. The Host verifies meaning.
 Publication rejects incomplete or false identity and oversized content; it never edits tracked documents.
 Exact immutable URI, content digest, generation and seven-day expiry come from the shared adapter; identical live
-retries keep the generation, expired retries create a different one. No read refreshes or deletes an artifact.
+retries keep the generation, expired retries create a different one. Publication responses contain the exact URI,
+metadata and available local links without repeating the submitted Markdown; `shared_get` retrieves the body.
+No read refreshes or deletes an artifact.
 
 `spec_plan_accept(slug, report_uri)` requires local native confirmation even when Development integration policy
 is auto. Its message includes title, summary, PADR IDs, report link, Planning support, recommended effort and exact
@@ -631,3 +633,15 @@ protocol tests. See `ADR-source-bound-review-reports-and-explicit-lifecycle-appr
 | `PROPOSAL_REVIEW_REFRESH_REQUIRED` | Exact report is missing, expired, changed or bound to another source/language. | Publish a new report outside any pending form and request fresh review. |
 | `PROPOSAL_APPROVAL_NOT_READY` | Planning or native reply prerequisites do not hold. | Resolve the named prerequisite and request a fresh form. |
 | `PROPOSAL_APPROVAL_STALE` | Reviewed scope or exact acceptance delta changed. | Inspect preserved effects, refresh evidence and approve only remaining scope. |
+
+### Policy-aware native decision boundaries
+
+`plan-accept`, `proposal-handoff`, and `dev-integration` independently allow `ask` or `auto`, default `ask`.
+`spec_plan_accept` binds the exact immutable report, source and base commits, configuration, environment and setup.
+Owning `plan-accept=auto` authorizes checked acceptance and the Planning merge regardless of Development's final-result
+policy. Source-only auto cannot grant authority, and prospective revocation refuses execution. With handoff auto it
+continues into Development using the accepted `dev_effort`; with handoff ask it leaves the accepted proposal waiting
+for its separate start decision. A native user form can explicitly include both acceptance and handoff once. The optional operation `mode` is `accept_only` or `accept_and_handoff` (default); `accept_only` never starts Development even when both policies are auto, and its form cannot widen that requested scope.
+`spec_handoff` uses a form under ask and the default effort under auto. The low-level CLI handoff is an instructed executor: the Host must already possess user or policy authority for `proposal-handoff`; invoking it does not itself prove approval. Exact report validation, snapshot checks,
+readiness, rollback and partial-effect recovery apply under either authority. Internal worker sequencing, review,
+retries and fixes inside the approved scope are delegated to the Host, rather than additional user approval gates.

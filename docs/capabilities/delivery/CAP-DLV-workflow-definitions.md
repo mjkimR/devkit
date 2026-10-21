@@ -9,7 +9,7 @@ created_at: 2026-10-17
 
 # [CAP-DLV-workflow-definitions] Workflow Definitions and Checks
 
-**Package**: `devkit.workflow`. Review envelopes: `CAP-DLV-workflow-envelopes`; what `next` prints: `CAP-DLV-cli-and-output`.
+**Package**: `devkit_agt.features.workflow`. Review envelopes: `CAP-DLV-workflow-envelopes`; what `next` prints: `CAP-DLV-cli-and-output`.
 **Related**: `CAP-DLV-workflow-orchestration`, `CAP-GOV-rule-authoring`.
 
 ## 1. Workflow Definition File
@@ -137,7 +137,7 @@ A check reference is `name` or `name(arg1 arg2 ...)`. Arguments are whitespace-s
 | Class | Who evaluates | Satisfied when |
 | --- | --- | --- |
 | `disk` | the engine, from files in the unit directory and Git | the primitive holds |
-| `lint` | the engine, by running `devkit.rules` | no violation in the unit's files |
+| `lint` | the engine, by running `devkit_agt.features.rules` | no violation in the unit's files |
 | `runner` | an external runner (CI); declared only | named in `--given` |
 | `human` | a person; declared only | an accepted `check:<name>` decision record of the current segment for the stage being evaluated, or named in `--given` |
 
@@ -147,12 +147,12 @@ A check reference is `name` or `name(arg1 arg2 ...)`. Arguments are whitespace-s
 | --- | --- | --- |
 | `file-exists` | `file` | the file exists in the unit directory (every `file` argument is a relative path inside the unit) |
 | `frontmatter` | `file field value` | the file's top-level frontmatter field equals the value, or one of the values `value` joins with `\|` (`frontmatter(proposal.md status reviewing\|accepted)`) |
-| `tasks-checked` | `file` | the file has at least one `- [ ]`/`- [x]` task and none unchecked; items inside YAML frontmatter or fenced code are not tasks (the counter is `devkit.rules.count_tasks`, shared with rules) |
+| `tasks-checked` | `file` | the file has at least one `- [ ]`/`- [x]` task and none unchecked; items inside YAML frontmatter or fenced code are not tasks (the counter is `devkit_agt.features.rules.count_tasks`, shared with rules) |
 | `not-skeleton` | `file` | the file is missing or has no line equal to `<!-- devkit:skeleton -->` |
 | `envelope-completed` | `kind` | the deciding `envelopes/<kind>-NN.yaml` of the current segment (`CAP-DLV-workflow-envelopes`) has `status: completed` and no open finding |
 | `envelope-check-pass` | `kind key` | the deciding envelope is completed and `checks.<key>` starts with `PASS` |
 | `revision-ancestor` | `ancestor-kind descendant-kind` | `diff_scope.head` of the latest ancestor-kind envelope is a Git ancestor of, or equal to, that of the latest descendant-kind envelope; both must be hexadecimal commit ids. When Git cannot answer (not a repository, an unknown commit as in a shallow clone, a timeout) the check is unsatisfied and `evaluated=false`, with Git's error in the detail |
-| `lint-clean` | none | `devkit.rules` reports no violation for files under the unit directory (`CAP-DLV-workflow-orchestration`); the detail quotes the first three violations and counts the rest, naming `devkit rules check <unit>`. Temporary files of writes in progress (`.<name>.<12 hex digits>.tmp`) are not linted; another file removed while the rules run can fail the run, since the rule engine refuses a target that no longer exists, and running the command again resolves it. A unit directory that resolves outside the workspace root (an absolute `--unit` path outside it, or a symbolic link leaving it) cannot be linted: the check fails with a `PATH_UNSAFE` lint error; an absolute `--unit` inside the root is linted as usual |
+| `lint-clean` | none | `devkit_agt.features.rules` reports no violation for files under the unit directory (`CAP-DLV-workflow-orchestration`); the detail quotes the first three violations and counts the rest, naming `devkit rules check <unit>`. Temporary files of writes in progress (`.<name>.<12 hex digits>.tmp`) are not linted; another file removed while the rules run can fail the run, since the rule engine refuses a target that no longer exists, and running the command again resolves it. A unit directory that resolves outside the workspace root (an absolute `--unit` path outside it, or a symbolic link leaving it) cannot be linted: the check fails with a `PATH_UNSAFE` lint error; an absolute `--unit` inside the root is linted as usual |
 
 ### Aliases
 

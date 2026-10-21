@@ -9,7 +9,7 @@ created_at: 2026-10-17
 
 # [CAP-GEN-tracked-artifacts] Generated Files: Overview
 
-`devkit.generated` manages files that a command generates but Git tracks: lockfiles, devkit's installation receipt, generated clients, rendered snapshots. Git merges them as text, so two branches that each regenerated one conflict even when their inputs merge cleanly, and a textual merge of such a file is rarely what the generator would write. A project registers each artifact with its paths and the command that regenerates it. `resolve` settles a conflict in those paths by regenerating instead of merging, `check` reports files committed out of date, and `regen` rewrites them. Quick reference: [reference.md](../../development/reference/generated.md).
+`devkit_agt.features.generated` manages files that a command generates but Git tracks: lockfiles, devkit's installation receipt, generated clients, rendered snapshots. Git merges them as text, so two branches that each regenerated one conflict even when their inputs merge cleanly, and a textual merge of such a file is rarely what the generator would write. A project registers each artifact with its paths and the command that regenerates it. `resolve` settles a conflict in those paths by regenerating instead of merging, `check` reports files committed out of date, and `regen` rewrites them. Quick reference: [reference.md](../../development/reference/generated.md).
 
 The module is trigger-agnostic. Nothing runs automatically: an agent or a person runs `resolve` when a merge, rebase or cherry-pick stops, and a CI job runs `check`. Section 6 covers the integration points (merge drivers, hooks, bots) that a project can build on top.
 

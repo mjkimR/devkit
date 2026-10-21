@@ -2,12 +2,12 @@
 
 The devkit developer harness: repository rules, delivery workflows, commit gates, task worktrees, tracked generated
 files, approval-bound integration and compact command output, mounted under the `devkit` command line of
-[`devkit-dist`](../devkit-dist/README.md). The distribution name is `devkit-agt`; imports remain `devkit.*`. It
+[`devkit-dist`](../devkit-dist/README.md). The distribution name is `devkit-agt`; imports use the regular `devkit_agt` package. It
 depends on `devkit-dist` and `devkit-advisory` at its own version (the three are released in lockstep), so installing
 `devkit-agt` installs the whole CLI: every distribution command of `devkit-dist` plus `devkit rules`,
 `devkit workflow`, `devkit gate`, `devkit worktree`, `devkit generated`, `devkit integration` and `devkit run`. It
 ships no console script of its own: its commands are `devkit.commands` plugins (`ARCH-05-3-command-plugins`).
-Requires Python 3.12 or later; runtime dependencies are `click`, `pyyaml`, `tomlkit`, `devkit-dist` and
+Requires Python 3.12 or later; runtime dependencies are `devkit-core`, `click`, `pyyaml`, `tomlkit`, `devkit-dist` and
 `devkit-advisory`. The `search` extra selects `devkit-dist[search]` for dense/hybrid search. The `mcp` extra selects the same-version
 `devkit-mcp` wheel for optional transport and forms. Domain integration imports only dependency-free core contracts.
 
@@ -38,21 +38,45 @@ and agent guide size rules with their playbooks,
 
 | Module | Purpose | CLI | Reference |
 | --- | --- | --- | --- |
-| `devkit.rules` | Repository rule engine with autofix, project policy and Git snapshot gates | `devkit rules` | [rules reference](../../docs/development/reference/rules.md) |
-| `devkit.workflow` | Data-driven delivery workflow engine | `devkit workflow` | [workflow reference](../../docs/development/reference/workflow.md) |
-| `devkit.gate` | Pluggable Git commit gates and extensible hook dispatchers installed by sync | `devkit gate` | [gate reference](../../docs/development/reference/gate.md) |
-| `devkit.worktree` | Activity branches (`plan-<slug>`, `dev-<slug>`) and one Git worktree per task: start (new, without a worktree, or attached to an existing branch), finish (integrate, remove, delete the branch), status, stale branches | `devkit worktree` | [worktree reference](../../docs/development/reference/worktree.md) |
-| `devkit.integration` | Approval-bound local/GitHub PR integration, readiness providers, verified landing and resumable cleanup | `devkit integration` and host MCP tools | [integration reference](../../docs/development/reference/integration.md) |
-| `devkit.generated` | Tracked generated files: settle their merge conflicts by regenerating, check and regenerate them | `devkit generated` | [generated reference](../../docs/development/reference/generated.md) |
-| `devkit.compact` | Verification commands with the full log on disk and a bounded view for agents | `devkit run` | [compact reference](../../docs/development/reference/compact.md) |
-| `devkit.harness_guide`, `devkit.authoring_guide` | Data-only areas of the built-in `harness` and `authoring` bundles | none | [distribution reference](../../docs/development/reference/distribution.md) |
+| `devkit_agt.features.rules` | Repository rule engine with autofix, project policy and Git snapshot gates | `devkit rules` | [rules reference](../../docs/development/reference/rules.md) |
+| `devkit_agt.features.workflow` | Data-driven delivery workflow engine | `devkit workflow` | [workflow reference](../../docs/development/reference/workflow.md) |
+| `devkit_agt.features.gate` | Pluggable Git commit gates and extensible hook dispatchers installed by sync | `devkit gate` | [gate reference](../../docs/development/reference/gate.md) |
+| `devkit_agt.features.worktree` | Activity branches (`plan-<slug>`, `dev-<slug>`) and one Git worktree per task: start (new, without a worktree, or attached to an existing branch), finish (integrate, remove, delete the branch), status, stale branches | `devkit worktree` | [worktree reference](../../docs/development/reference/worktree.md) |
+| `devkit_agt.features.integration` | Approval-bound local/GitHub PR integration, readiness providers, verified landing and resumable cleanup | `devkit integration` and host MCP tools | [integration reference](../../docs/development/reference/integration.md) |
+| `devkit_agt.features.generated` | Tracked generated files: settle their merge conflicts by regenerating, check and regenerate them | `devkit generated` | [generated reference](../../docs/development/reference/generated.md) |
+| `devkit_agt.features.compact` | Verification commands with the full log on disk and a bounded view for agents | `devkit run` | [compact reference](../../docs/development/reference/compact.md) |
+| `devkit_agt.bundles.harness`, `devkit_agt.bundles.authoring` | Data-only areas of the built-in `harness` and `authoring` bundles | none | [distribution reference](../../docs/development/reference/distribution.md) |
 
-`devkit.core`, `devkit.search`, `devkit.host`, `devkit.distribution` and the root command line are
-[`devkit-dist`](../devkit-dist/README.md) modules; `devkit.advisory` is the `devkit-advisory` distribution.
+Each wheel owns a regular package: `devkit_agt` for the harness, `devkit_dist` for distribution and `devkit_core` for shared primitives. `devkit.advisory` remains the advisory library's public namespace.
 
-Layering is checked per wheel. Here: `compact` and `worktree` use only `core` and `advisory`; `rules` also uses
-`compact`; `workflow` and `gate` build on `rules` (`gate` also on `compact`); `generated` uses `compact`;
-`integration` uses `host` and `worktree`; the data-only bundle areas import nothing (`authoring_guide`'s rule
-content uses the public rule API); enforced by `tests/test_layering.py`, which also keeps the harness command names
-`devkit-dist` holds equal to the commands mounted here. The shared CLI conventions (`-w/--workspace-root`,
-`--format`, exit codes) and the documentation index are in the `ARCH-01-introduction-and-goals`.
+## Package structure
+
+`features/<feature>/` owns each harness capability. Its `cli` or `mcp` adapter exposes application operations in
+`usecases/` through concrete `devkit_core.base.usecase.BaseUseCase` implementations with typed `execute` methods.
+Internal helpers remain functions. Constructors only wire dependencies; operations over a shared `Workspace` or
+`IntegrationService` retain that engine instance and its caches, authority records and locks. The base introduces
+no approval hooks, mandatory DTOs or service/repository inheritance.
+`services/` contains reusable domain logic, `repositories/` reads and writes configuration, records,
+Git state or provider data, and `models/` defines contracts, values and errors. Layers exist only when the feature
+has code for them. Workflow definition parsing and layout calculations stay in models; the definition and layout
+repositories own definition file loading and existing unit discovery. Feature `__init__.py` files provide explicit public library facades. The package has no `core/`;
+shared low-level primitives live in `devkit_core`. Package-level `base/` and `utils/` may be introduced when needed.
+
+The `bundles/authoring/` and `bundles/harness/` resource packages retain their `bundle/` content. They load without
+importing feature implementations; authoring rule files use the public harness rule API when loaded as plugins.
+
+The repository `devkit-dev` architecture rule checks layering; package tests verify namespace, entry points and bundle isolation. Transports depend on use cases, services depend on repositories
+and models, and feature dependencies remain explicit. `compact` and `worktree` are independent harness features;
+`rules` and `generated` use `compact`; `workflow` uses `rules`; `gate` uses `rules` and `compact`; `integration` uses
+`worktree` and distribution host contracts. The rule context currently constructs its default workspace cache; that exact repository edge is documented in the repository architecture rule.
+
+The shared CLI conventions (`-w/--workspace-root`, `--format`, exit codes) and the documentation index are in
+`ARCH-01-introduction-and-goals`.
+
+## Tests
+
+`tests/unit/` checks isolated parsing, models and policies; `tests/integration/` exercises real files, Git,
+command wiring and bundle deployment. Both follow `features/<feature>/` for feature-owned tests; bundle tests
+live under `integration/bundles/`, and package metadata and repository tooling checks under
+`integration/package/`. Shared fixtures and helpers live in `tests/support/testsupport/`. Rules keep their
+shipped tests beside each rule. Installed-wheel CLI and MCP end-to-end scenarios run in the repository smoke suite.

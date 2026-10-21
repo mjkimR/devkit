@@ -5,14 +5,16 @@ summary: "Scoped integration MCP tools bind shared policy authority to local int
 area: integration
 status: active
 entrypoints:
-  - packages/devkit/src/devkit/integration/
+  - packages/devkit/src/devkit_agt/features/integration/
 created_at: 2026-10-17
+stories:
+  - US-drive-development-to-integration
 ---
 
 # [CAP-INT-mcp-services] Scoped Integration
 
-`devkit.integration` prepares an immutable request, derives local policy authority or obtains native confirmation through the optional
-`devkit-mcp` runtime using the dependency-free `devkit.core.mcp.Confirmation` contract, and
+`devkit_agt.features.integration` prepares an immutable request, derives local policy authority or obtains native confirmation through the optional
+`devkit-mcp` runtime using the dependency-free `devkit_core.base.mcp.Confirmation` contract, and
 lands the task through the selected route: locally (a merge commit built outside the base checkout, or a fast-forward under
 `[worktree] merge = "ff-only"`) or through a GitHub PR merge commit, with its exact cleanup scope. `devkit-mcp` owns MCP transport and native UI adaptation;
 integration owns authorization binding, policy, readiness and execution. It imports no SDD models. Command and
@@ -113,7 +115,7 @@ source's policy wins.
 
 **One build per approving call** (`ADR-merge-commit-outside-checkout`, `ADR-target-advance-readiness`): after the
 native acceptance the call reads the current target (the build target), which must descend from the confirmation
-target (a reset or rewritten target is `INTEGRATION_REQUEST_STALE`). `devkit.worktree.build_result` builds the result
+target (a reset or rewritten target is `INTEGRATION_REQUEST_STALE`). `devkit_agt.features.worktree.build_result` builds the result
 commit in the object store: under `no-ff` a commit with the build target as first parent, the approved source tip as
 second and the message `chore(merge): integrate <branch> into <target>`, whose tree is the source tree when the target
 did not advance and the `git merge-tree --write-tree` result when it did (Git 2.38 or later,
@@ -252,7 +254,7 @@ replay a serialized result as authority. A fresh auto request must derive curren
 
 `route="pull-request"` implements `ADR-github-pull-request-repository-binding` and
 `ADR-pull-request-merge-with-pinned-source-and-verified-landing`. The gh-backed injectable port lives in
-`devkit.worktree`; provider/cleanup extensions remain local-only. Every repository operation binds the resolved host
+`devkit_agt.features.worktree`; provider/cleanup extensions remain local-only. Every repository operation binds the resolved host
 and owner/repository, using supported gh syntax, including Enterprise hosts and aliases resolved by gh. Credentials
 remain owned by gh. No caller-authored PR title or body is accepted; devkit composes them from validated names/task ID.
 

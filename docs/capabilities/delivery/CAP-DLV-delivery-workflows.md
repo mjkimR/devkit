@@ -8,15 +8,17 @@ created_at: 2026-10-13
 stories:
   - US-route-development-intent
   - US-incubate-and-hand-off-a-proposal
+  - US-drive-development-to-integration
+  - US-handle-delivery-problems-and-exceptions
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/bundle/workflows/
-  - packages/devkit-spec/src/devkit_spec/bundle/subagents/
-  - packages/devkit-spec/src/devkit_spec/integration.py
-  - packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/review-loop.md
-  - packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/planning.md
-  - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-delegate/
-  - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-orchestrate/
-  - packages/devkit-spec/src/devkit_spec/worker/
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/
+  - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/review-loop.md
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/planning.md
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orchestrate/
+  - packages/devkit-spec/src/devkit_spec/features/worker/
 ---
 
 # [CAP-DLV-delivery-workflows] Delivery Workflows
@@ -24,9 +26,9 @@ entrypoints:
 ## 1. Summary
 
 The `spec` bundle ships one devkit workflow definition per combination of `planning-depth` and `task-kind`
-(`kind = "workflow"` assets in `packages/devkit-spec/src/devkit_spec/bundle/workflows/`), six host-neutral role contracts
-(`kind = "subagent"` assets in `packages/devkit-spec/src/devkit_spec/bundle/subagents/`), all in the `core` preset, and the
-`devkit.integration.readiness` provider `spec` (`packages/devkit-spec/src/devkit_spec/integration.py`). devkit's workflow engine
+(`kind = "workflow"` assets in `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/`), six host-neutral role contracts
+(`kind = "subagent"` assets in `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/`), all in the `core` preset, and the
+`devkit_agt.features.integration.readiness` provider `spec` (`packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py`). devkit's workflow engine
 evaluates the definitions (`CAP-DLV-workflow-orchestration`);
 `devkit sync` projects the roles into each agent host's subagent directory
 (`CAP-DIST-agent-projections`). The
@@ -38,7 +40,7 @@ sequence.
 - **In-Scope**: the five definitions (layout, anchor, stages, gates, entry and exit checks, returns, declared checks),
   the gate semantics of `plan-intent`, `plan-accept`, `dev-integration` and the `exception` stage, the envelope kinds
   the stages require, the `activity-effort` rules of review and reconcile, the six role contracts, and the
-  `devkit.integration.readiness` provider (`devkit_spec.integration.check`) for Unit and `session` tasks, and
+  `devkit_agt.features.integration.readiness` provider (`devkit_spec.features.delivery.usecases.integration.check`) for Unit and `session` tasks, and
   informational `devkit spec worker inspect` evidence for worker-result acceptance.
 - **Out-of-Scope**:
   - Evaluating a definition, recording answers and envelopes, binding units: devkit's `devkit workflow` commands.
@@ -74,20 +76,15 @@ sequence.
    as `SHARED_STAGE_MISMATCH`. Returns are each workflow's own.
 4. **Gates are named `<activity>-<decision>`**: `plan-intent`, `plan-accept` and `dev-integration`; the `exception`
    stage belongs to no activity. Numbered gate names are not used.
-5. **Approval is never inferred**: `plan-intent` and `plan-accept` pass only with a decision record written after
-   the user's explicit answer: a `plan-intent` answer and a decline of either gate with `devkit workflow answer --unit
-   <dir> --request gate:<gate> --action accept|decline --by user`, an acceptance of `plan-accept` only with
-   `devkit spec proposal accept <slug> --by user`, which writes `status: accepted` and records the decision through
-   devkit's `record_answer` in one step (`CAP-DLV-proposal-incubation`). Their only accepted policy is `ask`. The
-   record names the authority and carries no conversation: no quotes, paraphrase or dates of it; a decline note states the reason as a decision. `dev-integration` passes
-   only with `--given dev-integration`, passed to each `devkit workflow next` after the user's explicit OK and never
-   recorded, or with the PR ready state a runner binds (`ADR-integration-approval-asserted`); under `auto` it passes by
-   policy (`[GATE_PASSED: dev-integration ... source=policy]`, JSON `passed_gates`) and the executor MUST report the
-   delegation as the authority, never as a human approval.
-   Shared base auto also authorizes verified local merge and exact cleanup through the MCP integration executor, reporting `authority: policy` without elicitation (`ADR-policy-authorized-local-integration`). It grants no commit, publication or host permission authority; auto PR and cloud execution refuse. `devkit workflow return --unit <dir> --to
-   <stage>` voids the approvals of that stage and later ones, and the envelopes recorded for them before the return.
+5. **Decision boundaries and authority**: `plan-accept`, `proposal-handoff`, and `dev-integration` independently permit
+   `ask` or `auto`, default `ask`. User decisions are explicit; policy delegation is reported as policy, never fabricated
+   user consent. `accept --by user|policy` records acceptance and status together; `policy` requires owning base auto
+   and prospective source auto. Planning merge is an acceptance effect, not Development result acceptance. Native
+   accept-and-handoff may combine included asks into one form. Verified local effects still obey readiness, exact report,
+   SHA, worktree, cleanup and environment guards; publication and host permissions remain separate.
+   `workflow return` voids the stage and later decision records and envelopes. Policy delegation never disables checks.
 6. **`plan-intent` opens every task**: goal, scope, verification (for a bugfix, the expected behavior), `task-kind`
-   and `planning-depth` are confirmed by the user. For `spec` depth the gate opens once the anchor exists and is
+   and `planning-depth` describe the instructed task. An explicit task instruction supplies this intent without a repeated prompt; `auto` permits policy satisfaction. For `spec` depth the gate opens once the anchor exists and is
    recorded in inline Planning; for `proposal` depth it is the user's confirmation of the draft in Backlog, which one
    request may ask together with a direct acceptance's `plan-accept` (two explicit answers, neither inferred); a spec
    handed off from a proposal carries the proposal's `gate:plan-intent` and `gate:plan-accept` records under the same
@@ -276,8 +273,9 @@ writes into the proposal's `materials/`; `scout` and `challenger` returns are re
 
 | Gate | Stage(s) | Approval key (`[workflow.approvals]`) |
 | --- | --- | --- |
-| `plan-intent` | `intent`, `intent-session`, `intent-proposal` | none: always the user's |
-| `plan-accept` | `direction-handoff` | none: always the user's |
+| `plan-intent` | `intent`, `intent-session`, `intent-proposal` | task intent: `ask` or `auto` |
+| `plan-accept` | `direction-handoff` | `ask` or `auto` |
+| `proposal-handoff` | native Development start | `ask` or `auto` |
 | `dev-integration` | `integration-approval`, `approval-session` | `dev-integration` (`ask` or `auto`) |
 
 - A gate waiting for the user: `devkit workflow next` prints `[WAITING: human gate:<gate>]` with a
@@ -293,7 +291,7 @@ writes into the proposal's `materials/`; `scout` and `challenger` returns are re
   every report cites.
 - `--given <gate>` asserts a gate for one run (a runner's binding).
 - The workflow definitions fix the policies each gate accepts (`gates.<gate>.policies`): `plan-intent` and
-  `plan-accept` take only `ask`, `dev-integration` takes `ask` or `auto`. A configured policy outside them stops every
+  `plan-accept`, `proposal-handoff` and `dev-integration` take `ask` or `auto`. A configured policy outside them stops every
   devkit command that evaluates the unit with `WORKFLOW_GATE_POLICY`, and `devkit spec policy` reports the same rule
   (`CAP-DLV-project-policy`).
 - `plan-accept` is asked only for a proposal in review, or for a draft once a direct acceptance wrote
@@ -372,7 +370,7 @@ they run at the session's effort like the Host whose work they take over. The pr
 `activity-effort` and applies only when the projected agent is spawned: a role the main session runs itself uses
 the session's effort. An emulated named-role projection still applies its declared preset; workers declare none. On Claude Code a per-call `effort` or
 `CLAUDE_CODE_EFFORT_LEVEL` overrides the preset; on Codex the preset wins over a spawn value.
-`packages/devkit-spec/tests/test_role_contracts.py` pins role, profile and preset for every contract.
+`packages/devkit-spec/tests/integration/bundles/spec/test_role_contracts.py` pins role, profile and preset for every contract.
 
 | Role | Skill | Model profile | Reasoning effort | Writes | Envelope kind |
 | --- | --- | --- | --- | --- | --- |
@@ -473,13 +471,13 @@ prompt.
 | `devkit workflow envelope check --unit <dir> [--format json]` | Malformed envelopes and the hold: `[BLOCKED]`, `[PENDING_QUESTION]`; `blocked`, `problems`, `pending_questions` in JSON. |
 | `devkit worktree start <branch> [--no-worktree \| --existing-branch <branch> --unit <dir>]` | Start `plan-<slug>` or `dev-<slug>` in a worktree or the current checkout, or continue an existing branch after devkit-spec's attach check. |
 | `devkit worktree finish <branch> [--merge [--local-only]]` | Land the branch on the base as a merge commit, or a fast-forward under `[worktree] merge = "ff-only"` (skipping `fetch`/`push` when `--local-only`), remove the worktree, delete the branch when `delete_branch=yes`, and run the post-finish extension. |
-| `devkit worktree stale` | Activity branches idle beyond `[worktree] stale_after`; also warned by `devkit rules check -p hygiene`. |
+| `devkit worktree status --stale` | Activity branches idle beyond `[worktree] stale_after`; also warned by `devkit rules check -p hygiene`. |
 
-### 4.8 SDD Integration Readiness Provider (`packages/devkit-spec/src/devkit_spec/integration.py`)
+### 4.8 SDD Integration Readiness Provider (`packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py`)
 
-Registered under the `devkit.integration.readiness` entry point as `spec` and selected by `[integration] provider = "spec"` (`ADR-integration-approval-asserted`, `SPEC-hook-driven-integration-cleanup`). `check(context: IntegrationContext) -> Readiness` evaluates the committed `context.finish.source_sha` against `context.finish.target_sha` (at a build of an approved request, the build target, with the result commit as `context.result_sha`; `ADR-target-advance-readiness`) inside an isolated temporary workspace materialized from Git (populating `.devkit/managed/` only when files match the committed `.devkit/installation.json` SHA-256 digests), so uncommitted worktree or base edits never influence readiness:
+Registered under the `devkit_agt.features.integration.readiness` entry point as `spec` and selected by `[integration] provider = "spec"` (`ADR-integration-approval-asserted`, `SPEC-hook-driven-integration-cleanup`). `check(context: IntegrationContext) -> Readiness` evaluates the committed `context.finish.source_sha` against `context.finish.target_sha` (at a build of an approved request, the build target, with the result commit as `context.result_sha`; `ADR-target-advance-readiness`) inside an isolated temporary workspace materialized from Git (populating `.devkit/managed/` only when files match the committed `.devkit/installation.json` SHA-256 digests), so uncommitted worktree or base edits never influence readiness:
 
-1. **Policy and configuration**: validates `[tool.spec]` (`read_spec_config`) and `[workflow.approvals]` (`check_approvals`, accepting ask or auto while keeping intent and acceptance human) in both the base checkout and the materialized `source_sha` snapshot.
+1. **Policy and configuration**: validates `[tool.spec]` (`read_spec_config`) and `[workflow.approvals]` (`check_approvals`, accepting ask or auto for task intent and the three main boundaries) in both the base checkout and the materialized `source_sha` snapshot.
 2. **Unit tasks (`task.kind == "unit"`)**: verifies branch-to-unit correspondence through `attach_check(base, branch, unit, source_sha)` and `task.id` agreement (`<slug>`, `SPEC-<slug>` or `PROP-<slug>`), then evaluates the unit in `Workspace(..., ancestor=...)`:
    - `dev-<slug>` (`sdd-spec-feature` or `sdd-spec-bugfix`): evaluated with `given=("dev-integration",)`; requires `current_stage == "integrate"`, zero unmet checks across earlier stages (`specify`/`characterize`, `build-verify` or `reproduce`/`fix-verify`, `review-refine`, `living-spec-draft`, `collect-feedback` when enabled, `final-change-report`, `integration-approval`), no envelope hold (`blocked` or `pending_questions`), `spec.md` `status: completed`, `reconcile.md` `status: resolved`, and (when handed off from a proposal) carried `gate:plan-accept` accepted.
    - `plan-<slug>` (`sdd-proposal`): requires `proposal.md` `status: accepted`, `gate:plan-intent` and `gate:plan-accept` accepted, `collect-feedback` satisfied when enabled, `complete == True` (`current_stage is None`), and no envelope hold.
@@ -510,7 +508,7 @@ local user interaction otherwise provided by an external runner; final integrati
 ## Worker result inspection
 
 `devkit spec worker inspect [--unit <dir>] [--base <accepted>] [--head <returned>]
-[--scope <prefix>... | --scope-file <file>] [--base-checkout <path>]` collects evidence in the activity worktree.
+[--scope <prefix>... | --scope-file <file>] [--base-checkout <path>] [--details]` collects evidence in the activity worktree.
 It derives its inputs from committed HEAD records and reports each value's source; explicit flags replace only
 that input. Scope-file is UTF-8, one nonempty literal repository-relative prefix per line; a scope override
 replaces the entire derived scope. Literal paths match themselves and descendants at path-component boundaries.
@@ -537,7 +535,7 @@ Wrapped results retain their codes and actions.
 `--format json` emits one object containing `inputs` (value/source), `scope` entries, `base`, `head`, `changed_paths`,
 optional `outside_scope` and `base_checkout`, `checks`, `notices` and `exit_code`. Text output emits inspection,
 input, scope, changed-path and check sentinels. The compared commits and changed paths are reviewer payload
-information. Exit 0 means no failed check, 1 means at least one failed check, and 2 means invalid invocation,
+information. Default JSON keeps each check status, actionable findings, violations, notices, errors, unresolved problems, pending questions and recovery evidence; envelope entries contain metadata and current open findings rather than historical bodies. Successful wrapped check bodies are omitted. Workflow output retains the next action and approval evidence, with only stage identity, role, isolation and returns instead of the full stage definition. Unknown failed check payloads and diagnostic stdout/stderr remain intact. `--details --format json` includes all original wrapped results and envelope bodies. Both modes run every check and derive the same verdict from complete evidence. Exit 0 means no failed check, 1 means at least one failed check, and 2 means invalid invocation,
 invalid Git inputs or unresolved required unit/head/base. A not-run check alone is a notice, not exit 1.
 
 | Code | Meaning and action |

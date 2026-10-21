@@ -13,6 +13,8 @@ members = [
     "devkit-advisory",
     "devkit-agt",
     "devkit-catalog",
+    "devkit-core",
+    "devkit-dev",
     "devkit-dist",
     "devkit-mcp",
     "devkit-spec",
@@ -23,6 +25,7 @@ members = [
 [manifest.dependency-groups]
 dev = [
     { name = "devkit-agt", extras = ["search", "mcp"], editable = "packages/devkit" },
+    { name = "devkit-dev", editable = "tools/devkit-dev" },
     { name = "devkit-spec", extras = ["search"], editable = "packages/devkit-spec" },
     { name = "devkit-viewer", editable = "packages/devkit-viewer" },
     { name = "pyright", specifier = ">=1.1.390" },
@@ -349,6 +352,7 @@ source = { editable = "packages/devkit" }
 dependencies = [
     { name = "click" },
     { name = "devkit-advisory" },
+    { name = "devkit-core" },
     { name = "devkit-dist" },
     { name = "pyyaml" },
     { name = "tomlkit" },
@@ -371,6 +375,7 @@ dev = [
 requires-dist = [
     { name = "click", specifier = ">=8.1.7" },
     { name = "devkit-advisory", editable = "packages/devkit-advisory" },
+    { name = "devkit-core", editable = "packages/devkit-core" },
     { name = "devkit-dist", editable = "packages/devkit-dist" },
     { name = "devkit-dist", extras = ["search"], marker = "extra == 'search'", editable = "packages/devkit-dist" },
     { name = "devkit-mcp", marker = "extra == 'mcp'", editable = "packages/devkit-mcp" },
@@ -398,12 +403,43 @@ dev = [
 dev = [{ name = "devkit-dist", editable = "packages/devkit-dist" }]
 
 [[package]]
+name = "devkit-core"
+version = "0.1.1"
+source = { editable = "packages/devkit-core" }
+dependencies = [
+    { name = "devkit-advisory" },
+    { name = "pyyaml" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "devkit-advisory", editable = "packages/devkit-advisory" },
+    { name = "pyyaml", specifier = ">=6.0.1" },
+]
+
+[[package]]
+name = "devkit-dev"
+version = "0.1.0"
+source = { editable = "tools/devkit-dev" }
+
+[package.dev-dependencies]
+dev = [
+    { name = "devkit-agt" },
+]
+
+[package.metadata]
+
+[package.metadata.requires-dev]
+dev = [{ name = "devkit-agt", editable = "packages/devkit" }]
+
+[[package]]
 name = "devkit-dist"
 version = "0.1.1"
 source = { editable = "packages/devkit-dist" }
 dependencies = [
     { name = "click" },
     { name = "devkit-advisory" },
+    { name = "devkit-core" },
     { name = "jinja2" },
     { name = "pyyaml" },
     { name = "tomlkit" },
@@ -426,6 +462,7 @@ dist-test = [
 requires-dist = [
     { name = "click", specifier = ">=8.1.7" },
     { name = "devkit-advisory", editable = "packages/devkit-advisory" },
+    { name = "devkit-core", editable = "packages/devkit-core" },
     { name = "devkit-embed", marker = "extra == 'search'", path = "models/devkit-embed/wheels/devkit_embed-0.1.0-py3-none-any.whl" },
     { name = "jinja2", specifier = ">=3.1.6,<4" },
     { name = "numpy", marker = "extra == 'search'", specifier = ">=2.0" },
@@ -454,6 +491,7 @@ name = "devkit-mcp"
 version = "0.1.1"
 source = { editable = "packages/devkit-mcp" }
 dependencies = [
+    { name = "devkit-core" },
     { name = "devkit-dist" },
     { name = "jsonschema" },
     { name = "mcp" },
@@ -461,6 +499,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "devkit-core", editable = "packages/devkit-core" },
     { name = "devkit-dist", editable = "packages/devkit-dist" },
     { name = "jsonschema", specifier = ">=4.23,<5" },
     { name = "mcp", specifier = ">=1.30,<2" },
@@ -473,6 +512,7 @@ source = { editable = "packages/devkit-spec" }
 dependencies = [
     { name = "click" },
     { name = "devkit-agt" },
+    { name = "devkit-core" },
 ]
 
 [package.optional-dependencies]
@@ -493,6 +533,7 @@ requires-dist = [
     { name = "click", specifier = ">=8.1.7" },
     { name = "devkit-agt", editable = "packages/devkit" },
     { name = "devkit-agt", extras = ["search"], marker = "extra == 'search'", editable = "packages/devkit" },
+    { name = "devkit-core", editable = "packages/devkit-core" },
 ]
 provides-extras = ["search"]
 
@@ -526,6 +567,7 @@ source = { editable = "packages/devkit-viewer" }
 dependencies = [
     { name = "click" },
     { name = "devkit-agt" },
+    { name = "devkit-core" },
 ]
 
 [package.dev-dependencies]
@@ -540,6 +582,7 @@ dev = [
 requires-dist = [
     { name = "click", specifier = ">=8.1.7" },
     { name = "devkit-agt", editable = "packages/devkit" },
+    { name = "devkit-core", editable = "packages/devkit-core" },
 ]
 
 [package.metadata.requires-dev]

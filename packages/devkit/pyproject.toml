@@ -5,6 +5,7 @@ description = "Developer harness for devkit: repository rules, delivery workflow
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "devkit-core==0.1.1",
     "click>=8.1.7",
     "devkit-advisory==0.1.1",  # released in lockstep with devkit-dist and devkit-agt, from the same tag
     "devkit-dist==0.1.1",  # the devkit executable and the shared foundation, released in lockstep from the same tag
@@ -20,36 +21,36 @@ search = ["devkit-dist[search]"]
 
 # devkit-agt ships no console script: devkit-dist owns `devkit`, and these commands mount under it.
 [project.entry-points."devkit.commands"]
-gate = "devkit.gate.cli:cli"
-generated = "devkit.generated.cli:cli"
-integration = "devkit.integration.cli:cli"
-rules = "devkit.rules.cli:cli"
-run = "devkit.compact.cli:run_cmd"
-workflow = "devkit.workflow.cli:cli"
-worktree = "devkit.worktree.cli:cli"
+gate = "devkit_agt.features.gate.cli:cli"
+generated = "devkit_agt.features.generated.cli:cli"
+integration = "devkit_agt.features.integration.cli:cli"
+rules = "devkit_agt.features.rules.cli:cli"
+run = "devkit_agt.features.compact.cli:run_cmd"
+workflow = "devkit_agt.features.workflow.cli:cli"
+worktree = "devkit_agt.features.worktree.cli:cli"
 
 [project.entry-points."devkit.bundles"]
-authoring = "devkit.authoring_guide"
-harness = "devkit.harness_guide"
+authoring = "devkit_agt.bundles.authoring"
+harness = "devkit_agt.bundles.harness"
 
 # Commented templates of the reserved harness tables in .devkit/config.toml, rendered by `devkit config template`.
 [project.entry-points."devkit.config_tables"]
-workflow = "devkit.workflow.project.config:config_tables"
-worktree = "devkit.worktree.config:config_tables"
+workflow = "devkit_agt.features.workflow.repositories.project.config:config_tables"
+worktree = "devkit_agt.features.worktree.repositories.config:config_tables"
 
 [project.entry-points."devkit.post_sync"]
-gate-hooks = "devkit.gate.hooks.local_config:post_sync"
+gate-hooks = "devkit_agt.features.gate.usecases.hooks.local_config:post_sync"
 
 [project.entry-points."devkit.hygiene"]
-worktree-stale = "devkit.worktree.stale:hygiene"
+worktree-stale = "devkit_agt.features.worktree.usecases.stale:hygiene"
 
 # The integration guard of `devkit worktree finish --merge`: a branch whose units hold an unresolved problem or an
 # unanswered question in their envelopes is not merged.
 [project.entry-points."devkit.finish_guard"]
-workflow-envelopes = "devkit.workflow.integration:finish_guard"
+workflow-envelopes = "devkit_agt.features.workflow.usecases.integration:finish_guard"
 
 [project.entry-points."devkit.host.services"]
-integration = "devkit.integration.mcp:create_tools"
+integration = "devkit_agt.features.integration.mcp:create_tools"
 
 [dependency-groups]
 dev = [
@@ -57,6 +58,7 @@ dev = [
 ]
 
 [tool.uv.sources]
+devkit-core = { workspace = true }
 devkit-mcp = { workspace = true }
 devkit-advisory = { workspace = true }
 devkit-dist = { workspace = true }
@@ -66,13 +68,12 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-# `devkit` is a namespace package: devkit/advisory/ comes from devkit-advisory, core, search, host, distribution,
-# cli.py and __main__.py from devkit-dist; every installed path belongs to one wheel.
-packages = ["src/devkit"]
+# The regular devkit_agt package owns every harness module and its bundled resources.
+packages = ["src/devkit_agt"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "src"]  # rule tests live in each rule's folder (`<rule>/tests/`)
 # devkit-agt's tests also use devkit-dist's test helpers (`distsupport`); devkit-dist's tests never use these.
-pythonpath = ["tests", "../devkit-dist/tests"]
+pythonpath = ["tests/support", "../devkit-dist/tests/support"]
 addopts = ["--import-mode=importlib"]
 log_level = "INFO"

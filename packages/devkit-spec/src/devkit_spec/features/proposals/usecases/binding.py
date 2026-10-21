@@ -1,0 +1,57 @@
+"""Bind a new anchor (a spec bundle's ``spec.md``, a proposal's ``proposal.md``) to a devkit workflow.
+
+The workflow is resolved and validated with devkit's own ``Workspace`` (project definitions in
+``.devkit/workflows/`` and synchronized ones), before anything is written. A workflow named explicitly must resolve
+and validate; a default that is not available leaves the anchor unbound, with a notice.
+"""
+
+from __future__ import annotations
+
+import logging
+from pathlib import Path
+
+from devkit.advisory import AdvisoryError
+from devkit_agt.features.workflow import Binding, Workspace
+
+from devkit_spec.base.errors import ProposalWorkflowError, SpecError
+from devkit_spec.features.proposals.models.axes import DEFAULT_WORKFLOW
+
+_log = logging.getLogger(__name__)
+
+
+def resolve_binding(
+    root: Path,
+    value: object,
+    source: str,
+    *,
+    field: str = "workflow",
+    default: str = DEFAULT_WORKFLOW,
+    error: type[SpecError] = ProposalWorkflowError,
+) -> tuple[Binding | None, AdvisoryError | None]:
+    """The binding for ``value`` (a workflow id, or ``None``/empty for ``default``), or ``None`` with the reason.
+
+    ``source`` names where ``value`` came from (a file, or a command option) and ``field`` its key, for messages. An
+    explicit ``value`` that is not a string, does not resolve, does not validate or names a definition by a path that
+    is not the one discovered for its id (devkit's ``Workspace.require_bindable``, ``WORKFLOW_NOT_BINDABLE``) raises
+    ``error``.
+    """
+    if value is not None and not isinstance(value, str):
+        raise error(f"{source}: {field} must be a workflow id", target_files=[source])
+    explicit = (value or "").strip()
+    workflow = explicit or default
+    try:
+        workspace = Workspace(root, lint=None, ancestor=None)
+        doc = workspace.definition(workflow)
+        # A binding records only the id: a definition named by a path must be the one discovered for that id.
+        workspace.require_bindable(doc, explicit or None)
+    except AdvisoryError as exc:
+        if explicit:
+            raise error(
+                f"{field} {workflow} cannot be bound: {exc.message}",
+                f"{exc.code}: {exc.message}",
+                *exc.details,
+                target_files=[source],
+            ) from exc
+        _log.info("default workflow %s not bound: %s (%s)", workflow, exc.message, exc.code)
+        return None, exc
+    return Binding(doc.id), None

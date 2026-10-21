@@ -31,7 +31,7 @@ The tests load the bundles with the manifest reader of `devkit-dist`, the packag
 4. Add a row to the table above and to the recommendation table in
    [Bundle Recommendations](../../guides/install/bundle-recommendations.md), with the signal that warrants it.
 
-`tests/test_bundles.py` enforces the entry point, version, opt-in and naming
+`tests/integration/bundles/test_bundles.py` enforces the entry point, version, opt-in and naming
 rules. See `CAP-DIST-content-packages` and the
 `CAP-DIST-manifest-spec`.
 

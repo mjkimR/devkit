@@ -1,0 +1,298 @@
+# Single declaration for repository-owned Python layout and dependency direction.
+schema = 1
+
+[[packages]]
+namespace = "devkit.advisory"
+root = "packages/devkit-advisory/src/devkit/advisory"
+kind = "advisory"
+root_modules = ["advisory", "types", "error"]
+
+[[packages]]
+namespace = "devkit_core"
+root = "packages/devkit-core/src/devkit_core"
+kind = "foundation"
+root_modules = ["base", "core"]
+dependencies = ["devkit.advisory"]
+
+[[packages]]
+namespace = "devkit_dist"
+root = "packages/devkit-dist/src/devkit_dist"
+kind = "features"
+features = ["project", "distribution", "host", "shared", "search"]
+feature_dependencies.project = []
+feature_dependencies.distribution = ["devkit_dist.features.host", "devkit_dist.features.project", "devkit_dist.features.search"]
+feature_dependencies.host = ["devkit_dist.features.project"]
+feature_dependencies.shared = ["devkit_dist.features.project"]
+feature_dependencies.search = []
+root_modules = ["cli", "__main__", "bootstrap", "adapters"]
+data_roots = ["bundles"]
+dependencies = ["devkit_core", "devkit.advisory"]
+
+public_modules = [
+    "devkit_dist.features.shared.models.api",
+    "devkit_dist.features.shared.models.errors",
+    "devkit_dist.features.shared.repositories.local",
+    "devkit_dist.features.host.models.errors",
+    "devkit_dist.features.distribution.services.installation.config",
+    "devkit_dist.features.distribution.services.installation.transaction",
+    "devkit_dist.features.project.repositories.invocation",
+    "devkit_dist.features.project.usecases.invocation",
+    "devkit_dist.features.project.services.presentation",
+    "devkit_dist.features.project.usecases.workspace",
+    "devkit_dist.features.project.usecases.configuration",
+    "devkit_dist.features.project.models.receipt",
+    "devkit_dist.features.project.models.invocation",
+    "devkit_dist.features.project.models.templates",
+    "devkit_dist.features.project.repositories.project",
+    "devkit_dist.features.project.repositories.receipt",
+    "devkit_dist.features.project.repositories.local_config",
+    "devkit_dist.features.project.services.config_template",
+    "devkit_dist.features.host.usecases",
+    "devkit_dist.features.host.usecases.registrations",
+]
+
+[[packages]]
+namespace = "devkit_agt"
+root = "packages/devkit/src/devkit_agt"
+kind = "features"
+features = ["rules", "workflow", "gate", "worktree", "integration", "generated", "compact"]
+feature_dependencies.rules = ["devkit_agt.features.compact", "devkit_dist.features.project"]
+feature_dependencies.workflow = ["devkit_agt.features.rules", "devkit_dist.features.project"]
+feature_dependencies.gate = ["devkit_agt.features.compact", "devkit_agt.features.rules", "devkit_dist.features.project"]
+feature_dependencies.worktree = ["devkit_dist.features.project"]
+feature_dependencies.integration = ["devkit_agt.features.worktree", "devkit_dist.features.project"]
+feature_dependencies.generated = ["devkit_agt.features.compact", "devkit_dist.features.project"]
+feature_dependencies.compact = ["devkit_dist.features.project"]
+root_modules = ["bootstrap"]
+data_roots = ["bundles"]
+embedded_test_roots = ["features/rules/services/builtins"]
+dependencies = ["devkit_dist", "devkit_core", "devkit.advisory"]
+
+public_modules = [
+    "devkit_agt.features.rules.services.builtins",
+    "devkit_agt.features.worktree.usecases.lifecycle",
+    "devkit_agt.features.integration.models.contracts",
+    "devkit_agt.features.integration.usecases.service",
+    "devkit_agt.features.rules.repositories.workspace.markdown",
+    "devkit_agt.features.workflow.services.envelope",
+    "devkit_agt.features.workflow.repositories.git",
+
+    "devkit_agt.features.rules.models.settings",
+    "devkit_agt.features.worktree.repositories.pull_request",
+    "devkit_agt.features.worktree.models.lifecycle",
+    "devkit_agt.features.worktree.models.planning",
+    "devkit_agt.features.worktree.models.pull_request",
+]
+
+[[packages]]
+namespace = "devkit_spec"
+root = "packages/devkit-spec/src/devkit_spec"
+kind = "features"
+features = ["documents", "proposals", "scope", "entrypoints", "worker", "policy", "delivery", "governance"]
+feature_dependencies.documents = ["devkit_agt.features.rules", "devkit_dist.features.search", "devkit_spec.features.policy"]
+feature_dependencies.proposals = ["devkit_agt.features.integration", "devkit_agt.features.rules", "devkit_agt.features.workflow", "devkit_agt.features.worktree", "devkit_dist.features.project", "devkit_dist.features.shared", "devkit_spec.features.documents", "devkit_spec.features.policy"]
+feature_dependencies.scope = ["devkit_spec.features.entrypoints", "devkit_spec.features.policy", "devkit_spec.features.proposals"]
+feature_dependencies.entrypoints = ["devkit_spec.features.documents"]
+feature_dependencies.worker = ["devkit_agt.features.workflow", "devkit_agt.features.worktree", "devkit_spec.features.delivery", "devkit_spec.features.entrypoints"]
+feature_dependencies.policy = ["devkit_agt.features.workflow", "devkit_agt.features.worktree", "devkit_dist.features.project"]
+feature_dependencies.delivery = ["devkit_agt.features.integration", "devkit_agt.features.rules", "devkit_agt.features.workflow", "devkit_agt.features.worktree", "devkit_dist.features.project", "devkit_dist.features.shared", "devkit_spec.features.policy", "devkit_spec.features.proposals", "devkit_spec.features.scope"]
+feature_dependencies.governance = ["devkit_agt.features.rules", "devkit_dist.features.project", "devkit_spec.features.documents", "devkit_spec.features.entrypoints", "devkit_spec.features.policy"]
+root_modules = ["cli", "bootstrap"]
+data_roots = ["bundles"]
+dependencies = ["devkit_agt", "devkit_dist", "devkit_core", "devkit.advisory"]
+
+public_modules = [
+    "devkit_spec.features.policy.repositories.branches",
+    "devkit_spec.features.delivery.usecases.attach",
+    "devkit_spec.features.documents.models.ids",
+    "devkit_spec.features.documents.models.markdown",
+    "devkit_spec.features.documents.models.model",
+    "devkit_spec.features.documents.repositories.index",
+    "devkit_spec.features.documents.services.dependencies",
+    "devkit_spec.features.documents.services.namespaces",
+    "devkit_spec.features.documents.services.rewrite",
+    "devkit_spec.features.entrypoints.repositories.bundle",
+    "devkit_spec.features.entrypoints.services.paths",
+    "devkit_spec.features.policy.services.config",
+    "devkit_spec.features.policy.usecases.approvals",
+    "devkit_spec.features.policy.models.config",
+    "devkit_spec.features.proposals.models.approval",
+    "devkit_spec.features.proposals.models.axes",
+    "devkit_spec.features.proposals.models.handoff",
+    "devkit_spec.features.proposals.services.status",
+    "devkit_spec.features.proposals.usecases.accept",
+    "devkit_spec.features.proposals.usecases.backlog",
+    "devkit_spec.features.proposals.usecases.report",
+    "devkit_spec.features.proposals.mcp.report",
+    "devkit_spec.features.proposals.usecases.prune",
+    "devkit_spec.features.proposals.usecases.scaffold",
+    "devkit_spec.features.proposals.usecases.specs",
+    "devkit_spec.features.scope.models.model",
+    "devkit_spec.features.scope.cli.output",
+    "devkit_spec.features.scope.repositories.location",
+    "devkit_spec.features.scope.usecases.flow",
+]
+
+[[packages]]
+namespace = "devkit_mcp"
+root = "packages/devkit-mcp/src/devkit_mcp"
+kind = "features"
+features = ["runtime"]
+feature_dependencies.runtime = ["devkit_dist.features.distribution", "devkit_dist.features.host", "devkit_dist.features.project"]
+root_modules = ["bootstrap"]
+dependencies = ["devkit_dist", "devkit_core", "devkit.advisory"]
+
+[[packages]]
+namespace = "devkit_viewer"
+root = "packages/devkit-viewer/src/devkit_viewer"
+kind = "features"
+features = ["browse"]
+feature_dependencies.browse = ["devkit_dist.features.project", "devkit_dist.features.shared"]
+root_modules = ["bootstrap"]
+data_roots = ["static"]
+dependencies = ["devkit_dist", "devkit_core", "devkit.advisory"]
+
+[[packages]]
+namespace = "devkit_dev"
+root = "tools/devkit-dev/src/devkit_dev"
+kind = "content"
+data_roots = ["bundle"]
+
+[[packages]]
+namespace = "devkit_starter"
+root = "packages/devkit-starter/src/devkit_starter"
+kind = "content"
+data_roots = ["bundle"]
+
+[[packages]]
+namespace = "devkit_catalog"
+root = "packages/devkit-catalog/src/devkit_catalog"
+kind = "content"
+data_roots = ["response_style", "host_observer", "maintenance"]
+
+[[import_exceptions]]
+source = "devkit_agt.features.rules.models.contracts"
+target = "devkit_agt.features.rules.repositories.workspace.cache"
+reason = "RuleContext constructs its default WorkspaceCache; split the context/cache factory in a later contract change."
+
+[[import_exceptions]]
+source = "devkit_mcp.features.runtime.cli.serve"
+target = "devkit_mcp.features.runtime.mcp.server"
+reason = "Transport bootstrap starts the MCP server; it does not execute domain operations."
+
+[[import_exceptions]]
+source = "devkit_viewer.features.browse.cli.app"
+target = "devkit_viewer.features.browse.http.server"
+reason = "Transport bootstrap starts the HTTP server; domain queries remain in usecases."
+
+# Transport bootstrap, dependency factories and pure output/input helpers; not domain execution.
+
+[[usecase_exceptions]]
+source = 'devkit_agt.features.gate.cli.commands'
+target = 'devkit_dist.features.project.usecases.workspace.require_git_toplevel'
+reason = 'Resolve the Git workspace for transport bootstrap before constructing gate operations.'
+
+[[usecase_exceptions]]
+source = 'devkit_agt.features.rules.cli.commands'
+target = 'devkit_agt.features.rules.usecases.rule_tests.run_notices'
+reason = 'Project deduplicated advisories from completed rule test results without I/O.'
+
+[[usecase_exceptions]]
+source = 'devkit_agt.features.rules.cli.commands'
+target = 'devkit_agt.features.rules.usecases.rule_tests.summary'
+reason = 'Count completed rule test outcomes for CLI output without I/O.'
+
+[[usecase_exceptions]]
+source = 'devkit_dist.adapters.cli'
+target = 'devkit_dist.features.project.usecases.workspace.find_project_root'
+reason = 'Select the workspace from an invocation path; this is transport bootstrap, not an application operation.'
+
+[[usecase_exceptions]]
+source = 'devkit_dist.adapters.cli'
+target = 'devkit_dist.features.project.usecases.workspace.require_devkit_root'
+reason = 'Resolve the transport workspace before constructing an operation; this is shared CLI bootstrap.'
+
+[[usecase_exceptions]]
+source = 'devkit_dist.features.distribution.cli.playbooks'
+target = 'devkit_dist.features.distribution.usecases.playbook_get.validate_playbook_id'
+reason = 'Validate the CLI asset selector before invoking the operation; no I/O or execution effects.'
+
+[[usecase_exceptions]]
+source = 'devkit_dist.features.host.cli'
+target = 'devkit_dist.features.project.usecases.workspace.find_project_root'
+reason = 'Select the workspace from an invocation path; this is transport bootstrap, not an application operation.'
+
+[[usecase_exceptions]]
+source = 'devkit_dist.features.shared.mcp'
+target = 'devkit_dist.features.project.usecases.invocation.configuration_workspace'
+reason = 'Select the owning configuration workspace from the invocation binding.'
+
+[[usecase_exceptions]]
+source = 'devkit_dist.features.shared.mcp'
+target = 'devkit_dist.features.project.usecases.invocation.guard_execution'
+reason = 'Revalidate host execution restrictions at the transport boundary; it does not grant approval authority.'
+
+[[usecase_exceptions]]
+source = 'devkit_mcp.features.runtime.mcp.server'
+target = 'devkit_dist.features.project.usecases.invocation.execution_binding'
+reason = 'Construct the MCP transport invocation binding for executor and owner workspaces.'
+
+[[usecase_exceptions]]
+source = 'devkit_mcp.features.runtime.mcp.server'
+target = 'devkit_dist.features.project.usecases.invocation.guard_execution'
+reason = 'Revalidate host execution restrictions at the transport boundary; it does not grant approval authority.'
+
+[[usecase_exceptions]]
+source = 'devkit_mcp.features.runtime.mcp.server'
+target = 'devkit_dist.features.project.usecases.invocation.invocation'
+reason = 'Bind and restore the MCP invocation context around transport dispatch.'
+
+[[usecase_exceptions]]
+source = 'devkit_mcp.features.runtime.mcp.server'
+target = 'devkit_mcp.features.runtime.usecases.discovery.load_tools'
+reason = 'Discover transport tool declarations during MCP server bootstrap; registered domain callbacks invoke BaseUseCase.'
+
+[[usecase_exceptions]]
+source = 'devkit_spec.features.documents.cli.commands'
+target = 'devkit_spec.features.documents.usecases.browse._feedback_fields'
+reason = 'Project already-loaded feedback fields for CLI output without I/O.'
+
+[[usecase_exceptions]]
+source = 'devkit_spec.features.documents.cli.commands'
+target = 'devkit_spec.features.documents.usecases.browse._planning_fields'
+reason = 'Project already-loaded planning document fields for CLI output without I/O.'
+
+[[usecase_exceptions]]
+source = 'devkit_spec.features.documents.cli.commands'
+target = 'devkit_spec.features.documents.usecases.browse._proposal_fields'
+reason = 'Project already-loaded proposal fields for CLI output without I/O.'
+
+[[usecase_exceptions]]
+source = 'devkit_spec.features.documents.cli.commands'
+target = 'devkit_spec.features.documents.usecases.browse._shown_status'
+reason = 'Choose the display status of an already-loaded document without I/O.'
+
+[[usecase_exceptions]]
+source = 'devkit_spec.features.entrypoints.cli.commands'
+target = 'devkit_spec.features.entrypoints.usecases.derive._check_options'
+reason = 'Validate mutually exclusive CLI option combinations without I/O.'
+
+[[usecase_exceptions]]
+source = 'devkit_spec.features.scope.cli.commands'
+target = 'devkit_spec.features.scope.usecases.flow.open_session'
+reason = 'Construct the scope registry/deadline dependency from workspace settings and Git location; domain operations run in execute.'
+
+[[usecase_exceptions]]
+source = 'devkit_spec.features.scope.cli.commands'
+target = 'devkit_spec.features.scope.usecases.query._record_warnings'
+reason = 'Convert returned registry problems into advisories without I/O or registry changes.'
+
+[[usecase_exceptions]]
+source = 'devkit_spec.features.scope.cli.commands'
+target = 'devkit_spec.features.scope.usecases.query._spec_dir'
+reason = 'Normalize and validate the input bundle path before passing it to the scope operation.'
+
+[[usecase_exceptions]]
+source = 'devkit_spec.features.worker.cli.commands'
+target = 'devkit_spec.features.worker.usecases.summary.summarize_inspection'
+reason = 'Project complete inspection evidence into the requested compact CLI output without I/O.'

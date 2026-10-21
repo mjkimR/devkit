@@ -45,7 +45,7 @@ jobs:
       # devkit-dist must work without devkit-agt: its tests in an environment synced with devkit-dist alone.
       - run: just test-dist
       # Exercise the runner around its own tests independently of the direct full suite.
-      - run: uv run --no-active devkit run -- uv run --no-active pytest packages/devkit/tests/compact
+      - run: uv run --no-active devkit run -- uv run --no-active pytest packages/devkit/tests/unit/features/compact packages/devkit/tests/integration/features/compact
       - run: just rules-check
 
   consumer-smoke:

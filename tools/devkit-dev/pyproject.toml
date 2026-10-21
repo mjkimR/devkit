@@ -1,0 +1,23 @@
+[project]
+name = "devkit-dev"
+version = "0.1.0"
+description = "Repository development conventions and structure checks"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.entry-points."devkit.bundles"]
+devkit-dev = "devkit_dev"
+
+[dependency-groups]
+dev = ["devkit-agt"]
+
+[tool.uv.sources]
+devkit-agt = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/devkit_dev"]

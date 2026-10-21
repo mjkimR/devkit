@@ -1,7 +1,7 @@
-# devkit.distribution
+# devkit_dist.features.distribution
 
 Distribution commands of the `devkit` CLI: packaging, projecting and synchronizing AI agent assets. They ship in
-the `devkit-dist` wheel with `devkit.core`, `devkit.search`, `devkit.host` and the root command line; the harness
+the `devkit-dist` wheel with project support, `devkit_dist.features.search`, `devkit_dist.features.host` and the root command line; the harness
 commands of `devkit-agt` mount under the same executable. The normative specifications are listed in
 [section 5](#5-specifications).
 
@@ -68,7 +68,6 @@ Shared-file ownership, codes and setup: [Host Integration Reference](host.md).
 | `devkit override remove <bundle>:<asset>` | Deletes the override files of the asset's upstream files and its baseline, then synchronizes the pristine upstream files; any other project file under the override stays (`ORPHAN_LEFT`). |
 | `devkit bundle validate <source>` | Verifies `bundle.toml`, the declared sources, the kind-specific headers (instructions, playbooks, workflows, role contracts) and every per-agent rule a sync applies (`CAP-DIST-manifest-spec`). `<source>` is the bundle directory. Prints `name`, `version` and `assets` (the number of declared assets). |
 | `devkit bundle plan <source> [--preset <name>] [--agent <name>]...` | Previews every destination a local bundle deploys (managed copies, native projections, generated entry skills, seeded files), computed by the same inventory as `sync`, without a consumer project. Defaults: the default preset (else `all`) and every supported agent. Prints `bundle`, `version`, `preset`, `agents`, `assets` (as in the sync result), `files` (`destination`, `sha256`, `mode`) and `seeded` (`destination`, `asset`, `sha256`). |
-| `devkit bundle build <source> --output <zip>` | Builds a deterministic ZIP archive (`CAP-DIST-manifest-spec`). Prints `path`, `sha256` (of the archive) and `files` (the number of archived files, `inventory.json` included). |
 
 Override semantics are specified in `CAP-DIST-workspace-ownership`.
 
@@ -128,16 +127,16 @@ min_similarity = 0.35                 # cosine floor of dense and hybrid
 limit = 5
 max_bytes = 8192
 
-[rules.severity_overrides]            # owned by devkit.rules
+[rules.severity_overrides]            # owned by devkit_agt.features.rules
 RULE-file-length = "error"
 
-[workflow]                            # owned by devkit.workflow
+[workflow]                            # owned by devkit_agt.features.workflow
 default = "direct-delivery"
 
-[worktree]                            # owned by devkit.worktree
+[worktree]                            # owned by devkit_agt.features.worktree
 pull_request = "required"             # integrate through pull requests only (default "auto")
 
-[gates.settings.message-nonempty]     # owned by devkit.gate
+[gates.settings.message-nonempty]     # owned by devkit_agt.features.gate
 enabled = true
 
 [tool.example]                        # [tool.<name>] is passed through unread for tools built on devkit
@@ -228,16 +227,16 @@ under `--strict`. `sync --check` remains the check that says whether a sync is n
 
 ### Error codes
 
-Every error the library raises is an `AdvisoryError`; the CLI renders it as it is. `devkit.core` errors pass
+Every error the library raises is an `AdvisoryError`; the CLI renders it as it is. Foundation and project errors pass
 through: an unreadable or invalid `.devkit/installation.json` (including paths devkit never writes) is
 `ReceiptError` (`RECEIPT_INVALID`), an invalid `.devkit/config.toml` is `ConfigError` (`CONFIG_INVALID`), and
 a malformed selector, query, search bound (`--limit`, `--min-score`, `--max-bytes`), workspace root, archive
 `--output` or flag combination is `ArgumentError` (`ARGUMENT_INVALID`, `INPUT_ERROR`). Remediation is in each
-error's `fix`, never in its message. The others are `DistributionError` subclasses from `devkit.distribution.errors`:
+error's `fix`, never in its message. The others are `DistributionError` subclasses from `devkit_dist.features.distribution.models.errors`:
 
 | Class | Code | Mode | When |
 | --- | --- | --- | --- |
-| `DistributionError` | `DISTRIBUTION_FAILED` | `MAINTENANCE` | the base class, raised as it is only for an internal defect of `devkit.distribution` |
+| `DistributionError` | `DISTRIBUTION_FAILED` | `MAINTENANCE` | the base class, raised as it is only for an internal defect of `devkit_dist.features.distribution` |
 | `BundleError` | `BUNDLE_INVALID` | `INPUT_ERROR` | `bundle.toml`, a declared source or an asset header is invalid or unreadable; from `bundle validate`, `plan` and `build`, `target_files` names the bundle directory |
 | `PackageError` | `BUNDLE_PACKAGE_INVALID` | `MAINTENANCE` | an installed content package registers an unusable, misnamed or duplicate bundle, or its resource module fails to import or load; `fix` names the package to upgrade or uninstall. Only a selected bundle's package (or a duplicate) is an error; any other is a `WARNING` under `notices` (`CAP-DIST-content-packages`) |
 | `SelectionError` | `SELECTION_INVALID` | `INPUT_ERROR` | an unknown or unselected bundle, preset, asset or override, or a selected bundle (by `config.toml`, or deployed per the receipt) whose package is not installed; `fix`: install it (`uv sync`) or `devkit remove <bundle>` |
@@ -247,7 +246,7 @@ error's `fix`, never in its message. The others are `DistributionError` subclass
 | `BundleConflictError` | `BUNDLE_CONFLICT` | `INTERACTION` | two selected bundles claim one path or one projected skill directory or subagent file, or a seeded and a managed file claim one path |
 | `OverrideDriftError` | `OVERRIDE_DRIFT` | `BLOCKED` | `override_drift = "block"` and an override hides upstream changes |
 | `UnsafeWorkspaceError` | `WORKSPACE_UNSAFE` | `BLOCKED` | a symlink or non-regular file where devkit reads or writes, a file where a destination's directory must be, or a reserved path |
-| `LockHeldError` | `LOCK_HELD` | `DEFER` | another devkit command holds the project lock; also a `devkit.core.LockHeldError`, so catching either class catches it |
+| `LockHeldError` | `LOCK_HELD` | `DEFER` | another devkit command holds the project lock; also a `devkit_core.base.errors.LockHeldError`, so catching either class catches it |
 | `PendingTransactionError` | `TRANSACTION_PENDING` | `AUTO` (`devkit recover`) | an interrupted sync left its journal |
 | `RecoveryError` | `RECOVERY_BLOCKED` | `HALT` | the journal is unusable (one an earlier devkit wrote, without a `directories` entry, is refused with a `fix` to roll back with that version or by hand), or later edits block its rollback |
 | `GuidanceBlockError` | `GUIDANCE_BLOCK_INVALID` | `INPUT_ERROR` | the root `AGENTS.md` has malformed devkit markers or is not UTF-8 |
@@ -260,7 +259,7 @@ error's `fix`, never in its message. The others are `DistributionError` subclass
 describes: a constitution (`AGENTS.md`) with the consumption contracts and three instructions, delivered through
 `devkit get-context devkit`. It describes distribution only and names no harness command as a directive. It is
 auto-selected with its default and only preset, `core`, which adds nothing to `AGENTS.md`; `uv run devkit remove
-devkit` opts out. The sources live in `packages/devkit-dist/src/devkit/distribution/guide/bundle/` and are the
+devkit` opts out. The sources live in `packages/devkit-dist/src/devkit_dist/bundles/devkit/bundle/` and are the
 consumer-facing mirror of these documents; keep them in step.
 
 | Asset | Read before |
@@ -273,13 +272,13 @@ consumer-facing mirror of these documents; keep them in step.
 constitution with the rules-and-gates and snapshot-gate contracts and the guidance for the harness. Its default
 preset `core` adds nothing to `AGENTS.md`; the opt-in preset `run` (`uv run devkit add harness:run`) adds the
 guidance fragment `run-pointer`, one `AGENTS.md` line that sends agents to `devkit run` for tests, linters and type
-checks and to the `devkit-run` instruction. Its sources live in `packages/devkit/src/devkit/harness_guide/bundle/`.
+checks and to the `devkit-run` instruction. Its sources live in `packages/devkit/src/devkit_agt/bundles/harness/bundle/`.
 
 | Asset | Read before |
 | --- | --- |
 | `harness-consumption` | Running, configuring or troubleshooting rules, commit gates or delivery workflows: their configuration tables, the `devkit-workflow` entry skill, `devkit rules`, `devkit gate` and snapshot gates. |
 | `harness-assets` | Adding or testing a rule, gate or workflow asset, including the rules of an in-repository bundle in Git snapshot gates. |
-| `devkit-run` | Running tests, linters or type checks directly, or setting up recipes for them: `devkit run` and its output; see [devkit.compact](compact.md). |
+| `devkit-run` | Running tests, linters or type checks directly, or setting up recipes for them: `devkit run` and its output; see [devkit_agt.features.compact](compact.md). |
 
 Bundles shipped by `devkit-dist` or `devkit-agt` count as built in (`builtin` in `devkit list` and
 `devkit status`). The other built-in bundles are documented with the module whose engine they use, but each lives in
@@ -288,10 +287,10 @@ failing engine import cannot make the bundle unusable):
 
 | Bundle | Wheel | Resource module | Selection | Contents |
 | --- | --- | --- | --- | --- |
-| `advisory` | `devkit-dist` | `devkit.advisory_guide` | Auto-selected (`core`); `devkit add advisory:python` for Python repositories | Agent Advisory Protocol guides and, in `python`, `RULE-advisory-unique-code` (run by the rule engine of `devkit-agt`); see [devkit.advisory](advisory.md). |
-| `git-commits` | `devkit-dist` | `devkit.commits_guide` | Opt-in: `devkit add git-commits` | Commit message conventions and their `AGENTS.md` pointer; see [devkit.gate](gate.md#built-in-git-commits-bundle). |
-| `authoring` | `devkit-agt` | `devkit.authoring_guide` | Opt-in: `devkit add authoring` (`all`), or one of the presets `skill-authoring`, `agent-guide-authoring` | Size rules and restructuring playbooks for skills and agent guides; see [devkit.rules](rules.md#built-in-authoring-bundle). |
-| `harness` | `devkit-agt` | `devkit.harness_guide` | Auto-selected (`core`); `devkit add harness:run` for the `AGENTS.md` pointer | The harness guidance above. |
+| `advisory` | `devkit-dist` | `devkit_dist.bundles.advisory` | Auto-selected (`core`); `devkit add advisory:python` for Python repositories | Agent Advisory Protocol guides and, in `python`, `RULE-advisory-unique-code` (run by the rule engine of `devkit-agt`); see [devkit.advisory](advisory.md). |
+| `git-commits` | `devkit-dist` | `devkit_dist.bundles.git_commits` | Opt-in: `devkit add git-commits` | Commit message conventions and their `AGENTS.md` pointer; see [devkit_agt.features.gate](gate.md#built-in-git-commits-bundle). |
+| `authoring` | `devkit-agt` | `devkit_agt.bundles.authoring` | Opt-in: `devkit add authoring` (`all`), or one of the presets `skill-authoring`, `agent-guide-authoring` | Size rules and restructuring playbooks for skills and agent guides; see [devkit_agt.features.rules](rules.md#built-in-authoring-bundle). |
+| `harness` | `devkit-agt` | `devkit_agt.bundles.harness` | Auto-selected (`core`); `devkit add harness:run` for the `AGENTS.md` pointer | The harness guidance above. |
 
 ---
 

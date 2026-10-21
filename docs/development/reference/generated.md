@@ -1,4 +1,4 @@
-# devkit.generated
+# devkit_agt.features.generated
 
 Tracked generated files: register them, check them, regenerate them, and settle their merge conflicts by regenerating. Semantics: `CAP-GEN-tracked-artifacts`.
 
@@ -58,14 +58,14 @@ Exit codes: `0` success; `1` from `check` when an artifact is stale; `2` a refus
 | `GENERATED_OUTPUT_UNDECLARED` | `ERROR` (`MAINTENANCE`) | `OutputUndeclaredError` | A command changed files outside its `paths` and `updates`. The changes stay in the work tree; nothing was staged. |
 | `GENERATED_STALE` | `ERROR` (`MAINTENANCE`, exit `1`) | `StaleError` | `check`: artifacts differ from what their command produces at the commit; `[FIX]` is `devkit generated regen <ids>`, then commit. |
 | `GENERATED_CONFLICTS_REMAIN` | `WARNING` | `ConflictsRemainWarning` | `resolve` settled the generated conflicts; conflicts no artifact owns remain (listed). |
-| `CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit.core.ConfigError` | `.devkit/generated.toml` cannot be read or is not valid TOML. |
-| `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit.core.ArgumentError` | An unknown or disabled artifact id (`check` names one registered only in the working tree as not committed at `--rev`), or a `--rev` that is not a commit. |
-| `GIT_FAILED` | `ERROR` | `devkit.core.GitError` | Not in a Git work tree, or another Git command failed. |
+| `CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_dist.base.errors.ConfigError` | `.devkit/generated.toml` cannot be read or is not valid TOML. |
+| `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_core.base.errors.ArgumentError` | An unknown or disabled artifact id (`check` names one registered only in the working tree as not committed at `--rev`), or a `--rev` that is not a commit. |
+| `GIT_FAILED` | `ERROR` | `devkit_core.base.errors.GitError` | Not in a Git work tree, or another Git command failed. |
 
 ## Library
 
 ```python
-from devkit.generated import check, load_registry, regenerate, resolve
+from devkit_agt.features.generated import check, load_registry, regenerate, resolve
 
 registry = load_registry(project_root)       # Registry(artifacts); .get(id), .owner(path), .closure(ids)
 result = resolve(project_root)               # ResolveResult(operation, artifacts, remaining, next_command, notices)

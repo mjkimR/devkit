@@ -5,7 +5,7 @@ summary: "Bundle schema, asset kinds, execution-aware Markdown templates with bo
 area: distribution
 status: active
 entrypoints:
-  - packages/devkit-dist/src/devkit/distribution/bundles/
+  - packages/devkit-dist/src/devkit_dist/features/distribution/services/bundles/
 created_at: 2026-10-17
 ---
 
@@ -44,18 +44,18 @@ standards are in the `ARCH-08-2-resource-taxonomy`.
   `devkit get-context` catalogs. Every file of the source, including each file of a directory source, carries one.
 - `playbook`: a procedure for an occasional task, found through explicit playbook search or retrieved by exact manifest ID; header rules are in
   `CAP-DIST-context-and-playbooks`.
-- `rule`: Python governance rules run by `devkit.rules`, shipped as one plugin package directory per asset (see
+- `rule`: Python governance rules run by `devkit_agt.features.rules`, shipped as one plugin package directory per asset (see
   **Plugin packages** below). The receipt lists every deployed file under the asset's `paths` and `devkit rules`
   loads the package from there; a consumer configures the rules in `[rules]` of `.devkit/config.toml`.
-- `workflow`: one Markdown delivery workflow definition (frontmatter `id` and `stages`) run by `devkit.workflow`.
+- `workflow`: one Markdown delivery workflow definition (frontmatter `id` and `stages`) run by `devkit_agt.features.workflow`.
   Distribution validates the header only (`devkit workflow validate` checks stage semantics). When at least one
   workflow is synchronized, `devkit sync` generates the `devkit-workflow` entry skill under
   `.devkit/managed/_devkit/skills/`, projects it into every selected agent, and records the definition under
   `entrypoints` in the receipt so `devkit workflow` finds it without configuration.
-- `gate`: Python commit gates in one plugin package directory per asset, run by `devkit.gate` at a Git hook stage,
+- `gate`: Python commit gates in one plugin package directory per asset, run by `devkit_agt.features.gate` at a Git hook stage,
   loaded from the receipt's `paths` and configured in `[gates]` of `.devkit/config.toml` or the per-clone `.git/devkit.config`; see the
   `CAP-GATE-commit-gates`.
-- The engines of `rule`, `workflow` and `gate` assets (`devkit.rules`, `devkit.workflow`, `devkit.gate`) ship with
+- The engines of `rule`, `workflow` and `gate` assets (`devkit_agt.features.rules`, `devkit_agt.features.workflow`, `devkit_agt.features.gate`) ship with
   `devkit-agt`; `devkit-dist` deploys these kinds without them and reports them with `HARNESS_ENGINE_MISSING`
   (`CAP-DIST-sync-and-transactions`).
 - `hook`: one declarative TOML file selecting a host, event and installed service handler. Sync manages exact
@@ -157,7 +157,7 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
 - **Strict schema**: unknown top-level keys or table fields are errors.
 - **Slugs**: bundle names, asset ids and preset names match `^[a-z][a-z0-9-]*$`.
 - **Versions**: bundle versions are `MAJOR.MINOR.PATCH`.
-- **Source paths**: canonical relative POSIX paths (validated by `devkit.core.paths`); `..`, redundant `.` segments
+- **Source paths**: canonical relative POSIX paths (validated by `devkit_core.core.paths`); `..`, redundant `.` segments
   or separators, symlinks and special files are rejected, and so are backslashes, so a manifest names the same files
   on every platform.
 - **Editing by-products**: inside a directory source, `.DS_Store`, `__pycache__/` and `*.pyc` are not bundle content:
@@ -181,12 +181,12 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
   entries; `__init__.py` is optional. The directory must contain at least one module, every directory and file name
   of a module must be a Python identifier, and no module may have two files (`a.py` beside `a/__init__.py` or
   beside a package directory `a/`). Modules import each other relatively; the loading model is
-  [`devkit.core.plugins`](../../development/reference/core.md). Guides, resources and tests ship in the same directory; a rule's
+  [`devkit_core.core.plugins`](../../development/reference/core.md). Guides, resources and tests ship in the same directory; a rule's
   tests in its `tests/` folder run with `devkit rules test` (`CAP-GOV-rule-authoring`).
 - **Native subagents**: each `subagent` variant is one file with the agent's native suffix: `.toml` for `codex`,
   `.md` for `claude-code` and `antigravity`.
 - **Headers**: instruction, playbook and workflow headers and role contracts follow the frontmatter grammar of
-  `devkit.core.frontmatter` (a `---` opener, a `---` or `...` closer, a YAML mapping without duplicate keys).
+  `devkit_core.core.frontmatter` (a `---` opener, a `---` or `...` closer, a YAML mapping without duplicate keys).
 - **Role contracts**: a `subagent` declared with `source` is a single Markdown file whose frontmatter has `role` equal
   to the asset id, `title`, `description`, a `hosts` table with a block for every supported agent (valid statuses,
   allowlisted keys), and a nonempty body (`CAP-DIST-agent-projections`).
@@ -206,8 +206,8 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
 
 ## 5. Deterministic Local Archive Build
 
-`devkit bundle build <source> --output <zip>` produces a bit-for-bit reproducible ZIP for local export and
-verification; projects receive bundles as installed wheels, not archives.
+`build_source(source, output)` remains an application usecase for deterministic local ZIP export and
+verification. It has no public CLI command; projects receive bundles as installed wheels, not archives.
 
 - Entries are sorted by archive path, timestamps pinned to `1980-01-01 00:00:00 UTC`, modes normalized to `0644` or
   `0755`.

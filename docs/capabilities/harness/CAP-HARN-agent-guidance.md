@@ -8,23 +8,24 @@ created_at: 2026-10-13
 stories:
   - US-route-development-intent
   - US-adopt-in-an-existing-repository
+  - US-handle-delivery-problems-and-exceptions
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-review-proposal/SKILL.md.jinja
-  - packages/devkit-spec/src/devkit_spec/bundle/bundle.toml
-  - packages/devkit-spec/src/devkit_spec/bundle/AGENTS.md.jinja
-  - packages/devkit-spec/src/devkit_spec/bundle/guidance/
-  - packages/devkit-spec/src/devkit_spec/bundle/instructions/
-  - packages/devkit-spec/src/devkit_spec/bundle/skills/
-  - packages/devkit-spec/src/devkit_spec/bundle/playbooks/
-  - packages/devkit-spec/src/devkit_spec/bundle/templates/
-  - packages/devkit-spec/src/devkit_spec/bundle/seed/
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-review-proposal/SKILL.md.jinja
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/bundle.toml
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/AGENTS.md.jinja
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/guidance/
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/instructions/
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/templates/
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/seed/
 ---
 
 # [CAP-HARN-agent-guidance] Agent Guidance Assets
 
 ## 1. Summary
 
-The `spec` bundle (`packages/devkit-spec/src/devkit_spec/bundle/`, registered through the `devkit.bundles` entry point `spec`) is the
+The `spec` bundle (`packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/`, registered through the `devkit.bundles` entry point `spec`) is the
 half of devkit-spec an agent reads: it tells every session how spec-driven delivery works, which route a request
 takes and which procedure each stage runs. devkit distributes it like any content package
 (`CAP-DIST-manifest-spec`): `devkit

@@ -5,6 +5,7 @@ advisory = "python"
 spec = ["core", "docs-skeleton"]
 authoring = "skill-authoring"
 response-style = "all"
+devkit-dev = "structure"
 
 [workflow.approvals] 
 dev-integration = "auto"

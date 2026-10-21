@@ -1,45 +1,25 @@
-# devkit.workflow
+# devkit_agt.features.workflow
 
 A data-driven delivery workflow engine for coding agents. A workflow is a Markdown file whose frontmatter declares stages with exit checks and approval gates; `devkit workflow` checks them against the files of a work unit and tells the agent which stage it is in, what is unmet and which skill to open next. The CLI is a thin layer over the library ([Library](#library)). Requires Python 3.12 or later.
 
 ## Structure
 
 ```text
-src/devkit/workflow/
-├── workspace.py         # Workspace: cached sources, unit resolution, bind_unit, evaluate_unit, describe
-├── answers.py           # record_answer, validate_answer, return_to
-├── handoff.py           # candidate evaluation, plan_handoff, apply_handoff
-├── render.py            # sentinel text lines (public render_* functions, used by the CLI)
-├── errors.py            # WorkflowError and one subclass per error code
-├── definition/
-│   ├── definition.py    # workflow document model (StageDefinition, ...), parse_definition, load_definition
-│   ├── validation.py    # validate_definition, compare_shared_stages, validate_definitions
-│   ├── discovery.py     # definitions_dir plus synchronized workflow assets; discover_definitions, resolve_definition
-│   ├── checks.py        # check registry: syntax, classes, primitives, aliases, plugin registration
-│   └── ids.py           # the shared [a-z][a-z0-9-]* identifier grammar
-├── project/
-│   ├── config.py        # [workflow], [workflow.approvals] and [workflow.stages]
-│   ├── layout.py        # unit_path template, discovery, per-definition layout spec
-│   └── roles.py         # subagent role vocabulary from receipt subagent assets and roles_dir
-├── unit/
-│   ├── units.py         # create_unit, list_units
-│   ├── binding.py       # workflow / workflow_history in the anchor file
-│   ├── frontmatter.py   # anchor frontmatter on devkit.core.frontmatter; in-place key updates
-│   ├── decisions.py     # decisions/NN-<request>.yaml records, scoped to a workflow segment
-│   ├── records.py       # record files: directory lock, unique sequences, whole, never replaced; temporary names
-│   └── envelope/        # model.py (envelopes/<kind>-NN.yaml, review state, hold, write_envelope), authoring.py (compose_envelope)
-├── evaluation/
-│   ├── evaluate.py      # pure stage evaluation: evaluate_definition (Options -> UnitEvaluation)
-│   ├── results.py       # UnitEvaluation, GateStatus, Delegate, Waiting, Skipped
-│   ├── requests.py      # Request, Option, Target and how requests are built
-│   ├── primitives.py    # evaluators of the disk primitives
-│   ├── git.py           # merge-base ancestry for revision checks
-│   └── lint.py          # the lint-clean binding to devkit.rules
-├── integration.py       # finish_guard: the devkit.finish_guard extension refusing a held branch
-└── cli/                 # app.py (group, options, error boundary), units.py, run.py, definitions.py, envelope.py
+src/devkit_agt/features/workflow/
+├── models/              # definitions, layouts, bindings, decisions and evaluation results
+│   ├── definition.py    # WorkflowDocument and pure parse_definition
+│   └── layout.py        # TemplateLayout path rendering and discovery_glob
+├── repositories/        # configuration, workflow sources, Git and unit records
+│   ├── definitions.py   # load_definition, discover_definitions, resolve_definition
+│   ├── layout.py        # discover_units: real filesystem discovery from a layout
+│   ├── project/         # workflow configuration and role vocabulary
+│   └── unit/            # bindings, frontmatter, immutable records and decisions
+├── services/            # definition validation, primitive evaluation and envelope policy
+├── usecases/            # workspace, units, evaluation, answers, handoff and envelopes
+└── cli/                 # app, definitions, units, run, envelope and rendering adapters
 ```
 
-Everything public is exported from `devkit.workflow`; import from there
+Everything public is exported from `devkit_agt.features.workflow`; import from there
 rather than from the subpackages.
 
 ## CLI usage
@@ -53,7 +33,7 @@ just workflow new login-flow                          # create and bind a unit
 just workflow next --unit .devkit/transient/work/login-flow
 just workflow next --unit <dir> --given integration   # assert a gate for this run only (every run for an answer=given gate)
 just workflow next --unit <dir> --format json
-just workflow requests --unit <dir>                   # open human requests (approvals, choices)
+just workflow next --view requests --unit <dir>                   # open human requests (approvals, choices)
 just workflow answer --unit <dir> --request gate:integration --action accept
 just workflow return --unit <dir> --to build-verify   # take the unit back; later approvals are asked again
 just workflow handoff --unit <dir>                    # continue a completed unit with the recorded or auto choice
@@ -112,7 +92,7 @@ definitions and roles once for every call. Every
 failure is an `AdvisoryError` with a stable `code`, one class per code: a
 `WorkflowError` subclass (`WorkflowConfigError`, `DefinitionError`,
 `LayoutError`, `CheckError`, `HandoffChoiceRequiredError`, ...),
-or a `devkit.core` or `devkit.rules` error passed through unchanged
+or a foundation, project or `devkit_agt.features.rules` error passed through unchanged
 (`RECEIPT_INVALID`, `GIT_FAILED`, the error that stopped `lint-clean`). Branch
 on `exc.code` or the class, never on the message. Problems the library
 collects rather than raises are instances of the same classes:
@@ -126,7 +106,7 @@ form the CLI prints under `errors`.
 ```python
 from pathlib import Path
 
-from devkit.workflow import Workspace
+from devkit_agt.features.workflow import Workspace
 
 ws = Workspace(Path("."))  # Workspace() uses the project containing the current directory
 unit = ws.resolve_unit(".devkit/transient/work/login")

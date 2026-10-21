@@ -8,9 +8,9 @@ stories:
   - US-keep-the-living-spec-consistent
   - US-run-parallel-work-safely
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/entrypoints/
-  - packages/devkit-spec/src/devkit_spec/cli/entrypoints.py
-  - packages/devkit-spec/src/devkit_spec/rules/code_entrypoints.py
+  - packages/devkit-spec/src/devkit_spec/features/entrypoints/
+  - packages/devkit-spec/src/devkit_spec/features/entrypoints/cli/commands.py
+  - packages/devkit-spec/src/devkit_spec/features/governance/usecases/code_entrypoints.py
 created_at: 2026-10-13
 ---
 
@@ -22,7 +22,7 @@ Capabilities and stories MAY declare `entrypoints` in their frontmatter: the fil
 implementation starts. An entrypoint is an anchor for finding code from a document and documents from code. devkit-spec
 keeps the declarations alive (`RULE-code-entrypoints`), finds documents by path (`devkit spec list --file`,
 `CAP-DOCS-document-lookup`) and proposes declarations from the spec bundles that already name both sides
-(`devkit spec entrypoints derive`). `devkit_spec.entrypoints` implements it.
+(`devkit spec entrypoints derive`). `devkit_spec.features.entrypoints` implements it.
 
 The manual sweep in `CAP-DLV-drift-reconciliation` consumes entrypoints only to locate evidence. Changed paths,
 document age and passing path checks establish neither semantic drift nor consistency; path-based stale-document
@@ -108,7 +108,7 @@ joins them.
 5. **Pairs**: every document is paired with every candidate. `state` is `declared` when an existing entrypoint equals
    the path or is a directory containing it, else `new`; `exists` tells whether the path is in the working tree.
 
-The reusable `devkit_spec.entrypoints.bundle.parse_targets(text, relative)` function parses reconciliation text
+The reusable `devkit_spec.features.entrypoints.repositories.bundle.parse_targets(text, relative)` function parses reconciliation text
 without reading files. Both disk bundle loading and committed worker-record inspection use it. It returns targets
 in source order, defaults an absent file or non-string resolution to an empty string, and treats an absent or falsy
 `targets` value as empty. Malformed frontmatter, a truthy non-list `targets`, or an entry without a string-valued
@@ -222,12 +222,12 @@ could not be indexed are `SPEC_DOCUMENT_INVALID` warnings under `notices`.
 | `SPEC_ENTRYPOINTS_APPLY_FAILED` | `ERROR` (`MAINTENANCE`) | `EntrypointsApplyError` | `--apply` could not read or write some documents, or their `entrypoints` is not a list of strings; `[TARGET]` lists them, the documents listed as applied were written. |
 | `SPEC_ID_DUPLICATE` | `ERROR` (`MAINTENANCE`) | `DuplicateIdError` | A `--target` ID is declared by several documents. |
 | `SPEC_DOCUMENT_INVALID` | `WARNING` | `DocumentInvalidWarning` | A file could not be indexed; a malformed `spec.md` leaves its bundle out of `--all`. |
-| `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit.core.ArgumentError` | An option conflict (section 4.1). |
+| `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_core.base.errors.ArgumentError` | An option conflict (section 4.1). |
 
 ### 4.6 Library
 
-`devkit_spec.entrypoints`: `normalize`, `covers`, `overlaps`, `exists`, `entrypoint_bearing` (the path contract;
-it maps every `docs/packages/<name>/` through `devkit_spec.namespaces.living_path`, registered or not, so it needs no
+`devkit_spec.features.entrypoints`: `normalize`, `covers`, `overlaps`, `exists`, `entrypoint_bearing` (the path contract;
+it maps every `docs/packages/<name>/` through `devkit_spec.features.documents.services.namespaces.living_path`, registered or not, so it needs no
 configuration); `load_bundle`, `parse_boundaries` (inputs); `derive`, `aggregate`, `select`, `exclude`,
 `classify_boundary`, `declared_entrypoints` (pairs); `apply`, `collapse`, `set_entrypoints` (writing). Libraries never
 print; the command renders the results.

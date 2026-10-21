@@ -23,54 +23,75 @@ from typing import Literal
 
 import click
 from devkit.advisory import Actor, AdvisoryError, Retry
-from devkit.core.cli import boundary
+from devkit_dist.adapters.cli import boundary
 
 ROOT = Path(__file__).resolve().parents[1]
 DEVKIT = "packages/devkit"
 DIST = "packages/devkit-dist"
-DIST_SRC = f"{DIST}/src/devkit"
-# The distributions whose areas share the devkit namespace (devkit-advisory, the lowest layer, triggers the full suite).
-HOMES = (DIST, DEVKIT)
+DIST_SRC = f"{DIST}/src/devkit_dist"
+# Application features are separate dependency nodes; foundation changes still trigger the full suite.
+HOMES = {DIST: "devkit_dist", DEVKIT: "devkit_agt"}
 # Shared test helper packages: name -> directory.
-HELPERS = {"distsupport": f"{DIST}/tests/distsupport", "testsupport": f"{DEVKIT}/tests/testsupport"}
+HELPERS = {"distsupport": f"{DIST}/tests/support/distsupport", "testsupport": f"{DEVKIT}/tests/support/testsupport"}
 
 logger = logging.getLogger(__name__)
 
 # Changes every test can depend on: the lowest layers, the CLI assembly, packaging and shared test fixtures.
-FULL_PREFIXES = (f"{DIST_SRC}/core/", "packages/devkit-advisory/", *(f"{path}/" for path in HELPERS.values()))
-FULL_FILES = frozenset({f"{DIST_SRC}/cli.py", f"{DIST_SRC}/__main__.py", "uv.lock"})
+FULL_PREFIXES = (
+    "packages/devkit-core/",
+    f"{DIST_SRC}/base/",
+    f"{DIST_SRC}/adapters/",
+    f"{DIST_SRC}/features/project/",
+    "packages/devkit-advisory/",
+    *(f"{path}/" for path in HELPERS.values()),
+)
+FULL_FILES = frozenset({f"{DIST_SRC}/cli.py", f"{DIST_SRC}/__main__.py", f"{DIST_SRC}/__init__.py", "uv.lock"})
 FULL_NAMES = frozenset({"pyproject.toml", "conftest.py"})
 
 # Repository files that tests read directly, which imports do not show: prefix -> test paths.
 DATA: tuple[tuple[str, tuple[str, ...]], ...] = (
     (
+        ".devkit/architecture.toml",
+        (
+            "tools/devkit-dev/tests",
+            "tools/devkit-dev/src/devkit_dev/bundle/rules/architecture/tests",
+        ),
+    ),
+    (
         "packages/devkit-mcp/",
-        ("packages/devkit-mcp/tests", f"{DEVKIT}/tests/integration", "packages/devkit-spec/tests/test_integration.py"),
+        (
+            "packages/devkit-mcp/tests",
+            f"{DEVKIT}/tests/integration/features/integration",
+            "packages/devkit-spec/tests/e2e/features/delivery/test_integration.py",
+        ),
     ),
     (
         "docs/",
         (
-            f"{DEVKIT}/tests/test_documented_codes.py",
-            "packages/devkit-spec/tests/test_documented_codes.py",
-            f"{DEVKIT}/tests/rules/test_docs.py",
-            f"{DEVKIT}/tests/workflow/test_library.py",
+            f"{DEVKIT}/tests/integration/package/test_documented_codes.py",
+            "packages/devkit-spec/tests/integration/package/test_documented_codes.py",
+            f"{DEVKIT}/tests/integration/features/rules/test_docs.py",
+            f"{DEVKIT}/tests/integration/features/workflow/test_library.py",
         ),
     ),
-    ("examples/", ("packages/devkit-starter/tests", f"{DEVKIT}/tests/workflow/test_library.py")),
-    ("models/", (f"{DIST}/tests/search",)),
-    ("scripts/module.sh", (f"{DEVKIT}/tests/test_module_script.py",)),
-    ("scripts/_lib.sh", (f"{DEVKIT}/tests/test_module_script.py",)),
-    ("justfile", (f"{DEVKIT}/tests/test_module_script.py",)),
-    ("scripts/check_test_environment.py", (f"{DEVKIT}/tests/test_test_environment.py",)),
-    ("scripts/fetch_model.py", (f"{DIST}/tests/search/test_packaging.py",)),
-    ("scripts/affected_tests.py", (f"{DEVKIT}/tests/test_affected_tests.py",)),
+    ("examples/", ("packages/devkit-starter/tests", f"{DEVKIT}/tests/integration/features/workflow/test_library.py")),
+    ("models/", (f"{DIST}/tests/unit/features/search", f"{DIST}/tests/integration/features/search")),
+    ("scripts/module.sh", (f"{DEVKIT}/tests/integration/package/test_module_script.py",)),
+    ("scripts/_lib.sh", (f"{DEVKIT}/tests/integration/package/test_module_script.py",)),
+    ("justfile", (f"{DEVKIT}/tests/integration/package/test_module_script.py",)),
+    ("scripts/check_test_environment.py", (f"{DEVKIT}/tests/integration/package/test_test_environment.py",)),
+    ("scripts/fetch_model.py", (f"{DIST}/tests/integration/features/search/test_packaging.py",)),
+    ("scripts/affected_tests.py", (f"{DEVKIT}/tests/e2e/package/test_affected_tests.py",)),
 )
 # Tests over devkit's whole source tree (layering, documented codes, CLI wiring, stdout kinds), run for any source
 # change in either devkit distribution.
 SOURCE_TREE_TESTS = (
-    *(f"{DIST}/tests/{name}" for name in ("test_layering.py", "test_cli_imports.py", "test_cli_plugins.py")),
-    f"{DIST}/tests/core/test_cli.py",
-    *(f"{DEVKIT}/tests/{name}" for name in ("test_layering.py", "test_documented_codes.py")),
+    f"{DIST}/tests/unit/architecture/test_layering.py",
+    f"{DIST}/tests/integration/cli/test_cli_imports.py",
+    f"{DIST}/tests/integration/cli/test_cli_plugins.py",
+    f"{DIST}/tests/integration/adapters/test_cli.py",
+    f"{DEVKIT}/tests/integration/package/test_layering.py",
+    f"{DEVKIT}/tests/integration/package/test_documented_codes.py",
 )
 
 # The devkit-viewer frontend: pytest never exercises it, so a change there selects no tests and names the frontend
@@ -96,7 +117,7 @@ UNTESTED_PREFIXES = (
 )
 UNTESTED_FILES = frozenset({".gitignore", ".python-version"})
 # Markdown at the repository root or a package root (README, AGENTS).
-UNTESTED_MARKDOWN = re.compile(r"(packages/[^/]+/)?[^/]+\.md")
+UNTESTED_MARKDOWN = re.compile(r"((packages|tools)/[^/]+/)?[^/]+\.md")
 
 # Calls whose first argument, a module name, is imported (as in the layering test).
 _IMPORTING_CALLS = frozenset({"import_module", "find_spec", "files", "__import__"})
@@ -131,18 +152,24 @@ class Workspace:
         self._trees: dict[Path, ast.Module] = {}
         self._helper_paths: dict[tuple[Path, str], set[Path]] = {}
         self.homes: dict[str, str] = {}
-        for home in HOMES:
-            for directory in (root / home / "src/devkit", root / home / "tests"):
-                if directory.is_dir():
-                    for path in sorted(directory.iterdir()):
-                        if path.is_dir() and path.name not in {"__pycache__", *HELPERS}:
-                            self.homes.setdefault(path.name, home)
+        for home, namespace in HOMES.items():
+            source = root / home / "src" / namespace
+            if source.is_dir():
+                for directory in sorted(source.iterdir()):
+                    if not directory.is_dir() or directory.name == "__pycache__":
+                        continue
+                    if directory.name == "features":
+                        for feature in sorted(directory.iterdir()):
+                            if feature.is_dir() and feature.name != "__pycache__":
+                                self.homes[f"{namespace}.features.{feature.name}"] = home
+                    else:
+                        self.homes[f"{namespace}.{directory.name}"] = home
         self.areas = sorted(self.homes)
         self.fine: dict[str, Path] = {}
         for directory, package in self.packages.items():
             if package != "devkit_spec":
                 continue
-            base = root / "packages" / directory / "src"
+            base = root / directory / "src"
             for path in self._python(base / package, tests=False):
                 parts = path.relative_to(base).with_suffix("").parts
                 module = ".".join(parts[:-1] if parts[-1] == "__init__" else parts)
@@ -150,7 +177,7 @@ class Workspace:
                     raise UnsafeGraph(f"ambiguous:{module}")
                 self.fine[module] = path
         self.modules = {path: module for module, path in self.fine.items()}
-        self.test_roots = sorted((root / "packages").glob("*/tests"))
+        self.test_roots = sorted(root.glob("packages/*/tests")) + sorted(root.glob("tools/*/tests"))
         config = root / "pyproject.toml"
         if config.exists():
             try:
@@ -162,10 +189,9 @@ class Workspace:
 
     def _packages(self) -> dict[str, str]:
         found: dict[str, str] = {}
-        homes = {home.rsplit("/", 1)[-1] for home in HOMES}
-        for src in sorted((self.root / "packages").glob("*/src")):
-            directory = src.parent.name
-            if directory in homes or directory == "devkit-advisory":
+        for src in sorted([*self.root.glob("packages/*/src"), *self.root.glob("tools/*/src")]):
+            directory = src.parent.relative_to(self.root).as_posix()
+            if directory in HOMES or directory == "packages/devkit-advisory":
                 continue
             names = [p.name for p in src.iterdir() if p.is_dir() and p.name.isidentifier() and p.name != "__pycache__"]
             if len(names) != 1:
@@ -175,10 +201,10 @@ class Workspace:
 
     def node_of(self, module: str) -> str | None:
         parts = module.split(".")
-        if parts[0] == "devkit" and len(parts) > 1:
-            if parts[1] in ("cli", "__main__"):
-                return "devkit.core"
-            return f"devkit.{parts[1]}" if parts[1] in self.areas or parts[1] == "advisory" else None
+        if module == "devkit.advisory" or module.startswith("devkit.advisory."):
+            return "devkit.advisory"
+        if parts[0] in HOMES.values():
+            return next((area for area in self.areas if module == area or module.startswith(f"{area}.")), None)
         if parts[0] == "devkit_spec":
             return module if module in self.fine and len(parts) > 1 else "@devkit_spec"
         return parts[0] if parts[0] in self.packages.values() else None
@@ -193,13 +219,19 @@ class Workspace:
 
     def _owner(self, path: Path) -> str | None:
         relative = path.relative_to(self.root).as_posix()
-        for home in HOMES:
-            for prefix in (f"{home}/tests/", f"{home}/src/devkit/"):
-                if relative.startswith(prefix):
-                    area = relative[len(prefix) :].split("/")[0]
-                    return f"devkit.{area}" if area in self.areas else None
+        for home, namespace in HOMES.items():
+            if relative.startswith(f"{home}/src/{namespace}/"):
+                module = relative[len(f"{home}/src/") :].replace("/", ".").removesuffix(".py")
+                return self.node_of(module)
+            if relative.startswith(f"{home}/tests/"):
+                parts = relative[len(f"{home}/tests/") :].split("/")
+                if parts[0] in {"unit", "integration", "e2e"}:
+                    parts = parts[1:]
+                area = parts[1] if parts[0] == "features" and len(parts) > 1 else parts[0]
+                feature = f"{namespace}.features.{area}"
+                return feature if feature in self.homes else self.node_of(f"{namespace}.{area}")
         for directory, package in self.packages.items():
-            if relative.startswith(f"packages/{directory}/"):
+            if relative.startswith(f"{directory}/"):
                 return "@devkit_spec" if package == "devkit_spec" else package
         return None
 
@@ -298,7 +330,7 @@ class Workspace:
                                 found.add(owner)
                 for name, exact_root in names:
                     found |= self._module_dependencies(name, exact_root=exact_root)
-                    if name in {"devkit.cli", "devkit.__main__"}:
+                    if name in {"devkit_dist.cli", "devkit_dist.__main__"}:
                         found.add("@root_cli")
                     if not self.node_of(name):
                         helpers = self._helpers_for(path, name)
@@ -316,10 +348,10 @@ class Workspace:
                 yield path
 
     def sources(self) -> dict[str, Path]:
-        nodes = {f"devkit.{area}": self.root / home / "src/devkit" / area for area, home in self.homes.items()}
+        nodes = {area: self.root / home / "src" / Path(*area.split(".")) for area, home in self.homes.items()}
         for directory, package in self.packages.items():
             if package != "devkit_spec":
-                nodes[package] = self.root / "packages" / directory / "src" / package
+                nodes[package] = self.root / directory / "src" / package
         return {**nodes, **self.fine}
 
     def dependents(self, changed: set[str]) -> set[str]:
@@ -329,7 +361,7 @@ class Workspace:
             for imported in self.imports(files):
                 if imported != node:
                     imported_by.setdefault(imported, set()).add(node)
-        imported_by.setdefault("devkit_mcp", set()).update({"devkit.integration", "@devkit_spec"})
+        imported_by.setdefault("devkit_mcp", set()).update({"devkit_agt.features.integration", "@devkit_spec"})
         changed = changed | (set(self.fine) if "@devkit_spec" in changed else set())
         affected, pending = set(changed), list(changed)
         while pending:
@@ -345,7 +377,7 @@ class Workspace:
     @cached_property
     def groups(self) -> list[Group]:
         groups: list[Group] = []
-        for path in sorted((self.root / "packages").rglob("test_*.py")):
+        for path in sorted([*self.root.glob("packages/**/test_*.py"), *self.root.glob("tools/**/test_*.py")]):
             if "tests" not in path.relative_to(self.root).parts or "__pycache__" in path.parts:
                 continue
             files = [path]
@@ -369,10 +401,10 @@ class Workspace:
             if (owner == "@devkit_spec" and "/src/" in path.relative_to(self.root).as_posix()) or path.relative_to(
                 self.root
             ).as_posix() in {
-                "packages/devkit-spec/tests/test_documented_codes.py",
-                "packages/devkit-spec/tests/test_package.py",
-                "packages/devkit-spec/tests/test_workflows.py",
-                "packages/devkit-spec/tests/test_integration.py",
+                "packages/devkit-spec/tests/integration/package/test_documented_codes.py",
+                "packages/devkit-spec/tests/e2e/package/test_package.py",
+                "packages/devkit-spec/tests/integration/bundles/spec/test_workflows.py",
+                "packages/devkit-spec/tests/e2e/features/delivery/test_integration.py",
             }:
                 depends.add("@devkit_spec")
             groups.append(Group(self._relative([path]), frozenset(depends)))
@@ -383,16 +415,25 @@ class Workspace:
 
 
 def _full_trigger(path: str) -> bool:
-    return path in FULL_FILES or path.rsplit("/", 1)[-1] in FULL_NAMES or path.startswith(FULL_PREFIXES)
+    if path in UNTESTED_FILES or path.startswith(UNTESTED_PREFIXES) or bool(UNTESTED_MARKDOWN.fullmatch(path)):
+        return False
+    return (
+        path in FULL_FILES
+        or path.rsplit("/", 1)[-1] in FULL_NAMES
+        or path.startswith(FULL_PREFIXES)
+        or bool(re.fullmatch(r"(?:packages|tools)/[^/]+/tests/support(?:/.*)?", path))
+    )
 
 
 def _source_node(workspace: Workspace, path: str) -> str | None:
     """The node a changed source file belongs to, if it is a package source file."""
+    if path.endswith(".py") and not (workspace.root / path).is_file():
+        raise UnsafeGraph(path)
     for home in HOMES:
-        if path.startswith(f"{home}/src/devkit/"):
-            area = path[len(home) + len("/src/devkit/") :].split("/")
-            return f"devkit.{area[0]}" if len(area) > 1 and area[0] in workspace.areas else None
-    match = re.fullmatch(r"packages/([^/]+)/src/.+", path)
+        prefix = f"{home}/src/"
+        if path.startswith(prefix):
+            return workspace.node_of(path[len(prefix) :].replace("/", ".").removesuffix(".py"))
+    match = re.fullmatch(r"((?:packages|tools)/[^/]+)/src/.+", path)
     package = workspace.packages.get(match.group(1)) if match else None
     if package == "devkit_spec":
         if path.endswith(".py"):
@@ -404,15 +445,15 @@ def _source_node(workspace: Workspace, path: str) -> str | None:
     return package
 
 
-def select(root: Path, changed: Iterable[str]) -> Selection:
+def select(root: Path, changed: Iterable[str], *, include_e2e: bool = False) -> Selection:
     changed = sorted(set(changed))
     try:
-        return _select(root, changed)
+        return _select(root, changed, include_e2e=include_e2e)
     except UnsafeGraph as exc:
         return Selection("full", (), str(exc), any(path.startswith(FRONTEND_PREFIXES) for path in changed))
 
 
-def _select(root: Path, changed: Iterable[str]) -> Selection:
+def _select(root: Path, changed: Iterable[str], *, include_e2e: bool = False) -> Selection:
     """The test paths a set of changed repository-relative paths can affect."""
     changed = sorted(set(changed))
     frontend = any(path.startswith(FRONTEND_PREFIXES) for path in changed)
@@ -421,22 +462,26 @@ def _select(root: Path, changed: Iterable[str]) -> Selection:
             return Selection("full", (), path, frontend)
     workspace = Workspace(root)
     paths: set[str] = set()
+    data_targets: set[str] = set()
     causes: set[str] = set()
     nodes: set[str] = set()
+    has_e2e_change = any("/tests/e2e/" in path or path.startswith("tests/e2e/") for path in changed)
+    allow_e2e = include_e2e or has_e2e_change
     for path in changed:
         data = [(prefix, tests) for prefix, tests in DATA if path.startswith(prefix)]
         for prefix, tests in data:
             paths.update(tests)
+            data_targets.update(tests)
             causes.add(prefix)
-        if re.fullmatch(r"packages/[^/]+/src/.+", path):
-            if path.startswith(tuple(f"{home}/src/" for home in HOMES)):
+        if re.fullmatch(r"(?:packages|tools)/[^/]+/src/.+", path):
+            if path.startswith((f"{DIST}/src/", f"{DEVKIT}/src/")):
                 paths.update(SOURCE_TREE_TESTS)
             node = _source_node(workspace, path)
             if not node:
                 return Selection("full", (), path, frontend)
             nodes.add(node)
             causes.add(node)
-        elif re.fullmatch(r"packages/[^/]+/tests/.+", path):
+        elif re.fullmatch(r"(?:packages|tools)/[^/]+/tests/.+", path):
             name = path.rsplit("/", 1)[-1]
             paths.add(path if re.fullmatch(r"test_.+\.py", name) else path.rsplit("/", 1)[0])
             causes.add("tests")
@@ -452,6 +497,8 @@ def _select(root: Path, changed: Iterable[str]) -> Selection:
             if group.depends & affected:
                 paths.update(group.paths)
     kept = sorted(p for p in paths if (root / p).exists())
+    if not allow_e2e:
+        kept = [p for p in kept if "/tests/e2e/" not in p or p in data_targets]
     kept = [p for p in kept if not any(p.startswith(f"{other}/") for other in kept)]
     if not kept:
         return Selection("none", (), "frontend" if frontend else "untested", frontend)
@@ -503,12 +550,13 @@ def _replace_process(argv: list[str]) -> None:
 @click.command(context_settings={"ignore_unknown_options": True})
 @click.option("--base", default="main", show_default=True, help="Ref whose merge base with HEAD starts the changes.")
 @click.option("--list", "list_only", is_flag=True, help="Print the selection and its paths without running pytest.")
+@click.option("--e2e", "include_e2e", is_flag=True, help="Include slow end-to-end tests.")
 @click.argument("pytest_args", nargs=-1, type=click.UNPROCESSED)
 @boundary
-def main(base: str, list_only: bool, pytest_args: tuple[str, ...]) -> None:
+def main(base: str, list_only: bool, include_e2e: bool, pytest_args: tuple[str, ...]) -> None:
     """Run the tests the changes since BASE can affect; arguments after `--` go to pytest."""
     changed = changed_paths(ROOT, base)
-    selection = select(ROOT, changed)
+    selection = select(ROOT, changed, include_e2e=include_e2e)
     click.echo(
         f"[TEST_SELECTION: mode={selection.mode} base={base} changed={len(changed)} "
         f"paths={len(selection.paths)} reason={selection.reason}]"

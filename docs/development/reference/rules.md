@@ -1,4 +1,4 @@
-# devkit.rules
+# devkit_agt.features.rules
 
 A sequential Python rule engine for repository governance: deterministic checks
 over a workspace, with autofix, project policy and Git snapshot gates. The engine
@@ -148,7 +148,7 @@ parseable:
   reported with the warnings.
 
 ```text
-[RULE_TEST: RULE-markdown-link tests=packages/devkit/src/devkit/rules/rules/markdown_link/tests result=passed exit=0 log=/tmp/devkit-run-501/a8ae3cd8d8a1/20261013-135346-python3-m-uysb0n32.log]
+[RULE_TEST: RULE-markdown-link tests=packages/devkit/src/devkit_agt/features/rules/services/builtins/markdown_link/tests result=passed exit=0 log=/tmp/devkit-run-501/a8ae3cd8d8a1/20261013-135346-python3-m-uysb0n32.log]
 [RULE_TEST: RULE-doc-heading tests=rules/doc_heading/tests result=failed exit=1 log=/tmp/devkit-run-501/a8ae3cd8d8a1/20261013-135346-python3-m-8k9ofwgf.log]
 [RULE_TEST_SUMMARY: RULE-doc-heading "1 failed, 1 passed in 0.04s"]
 [RULE_TEST_OUTPUT: RULE-doc-heading shown=1188 omitted=0 filtered=4]
@@ -209,11 +209,11 @@ executes, with the rule ID in the message.
 
 | Rule | Module | Phase, severity | Checks | Guide |
 | --- | --- | --- | --- | --- |
-| `RULE-markdown-link` | `rules.markdown_link` | linter, error | relative Markdown links point at existing files and no link uses a `file:` URL (never fixable); autofix rewrites a broken link when exactly one Markdown file has its basename | [guide.md](../../../packages/devkit/src/devkit/rules/rules/markdown_link/guide.md) |
-| `RULE-file-length` | `rules.file_length` | hygiene, warning | files above `max_lines` (settings `max_lines`, `extensions`) | [guide.md](../../../packages/devkit/src/devkit/rules/rules/file_length/guide.md) |
-| `RULE-secret-leak` | `rules.secret_leak` | linter, error | credential file names and private key or token patterns in explicit targets | [guide.md](../../../packages/devkit/src/devkit/rules/rules/secret_leak/guide.md) |
-| `RULE-clean-artifacts` | `rules.clean_artifacts` | linter, error | compiled binaries, database files and logs above 1 MiB in explicit targets | [guide.md](../../../packages/devkit/src/devkit/rules/rules/clean_artifacts/guide.md) |
-| `RULE-cli-contract` | `rules.cli_contract` | linter, error | `devkit` invocations in Markdown code name commands and options the running command line has, plugins included (settings `exclude`, `unchecked_commands`) | [guide.md](../../../packages/devkit/src/devkit/rules/rules/cli_contract/guide.md) |
+| `RULE-markdown-link` | `rules.markdown_link` | linter, error | relative Markdown links point at existing files and no link uses a `file:` URL (never fixable); autofix rewrites a broken link when exactly one Markdown file has its basename | [guide.md](../../../packages/devkit/src/devkit_agt/features/rules/services/builtins/markdown_link/guide.md) |
+| `RULE-file-length` | `rules.file_length` | hygiene, warning | files above `max_lines` (settings `max_lines`, `extensions`) | [guide.md](../../../packages/devkit/src/devkit_agt/features/rules/services/builtins/file_length/guide.md) |
+| `RULE-secret-leak` | `rules.secret_leak` | linter, error | credential file names and private key or token patterns in explicit targets | [guide.md](../../../packages/devkit/src/devkit_agt/features/rules/services/builtins/secret_leak/guide.md) |
+| `RULE-clean-artifacts` | `rules.clean_artifacts` | linter, error | compiled binaries, database files and logs above 1 MiB in explicit targets | [guide.md](../../../packages/devkit/src/devkit_agt/features/rules/services/builtins/clean_artifacts/guide.md) |
+| `RULE-cli-contract` | `rules.cli_contract` | linter, error | `devkit` invocations in Markdown code name commands and options the running command line has, plugins included (settings `exclude`, `unchecked_commands`) | [guide.md](../../../packages/devkit/src/devkit_agt/features/rules/services/builtins/cli_contract/guide.md) |
 
 The guide of each rule is canonical for its behavior; `devkit rules explain
 <RULE-id>` prints it. The safety rules report nothing for a run without
@@ -221,7 +221,7 @@ explicit targets.
 
 ### Built-in authoring bundle
 
-The opt-in bundle `authoring` (sources in `src/devkit/authoring_guide/bundle/`, the data-only module `devkit.authoring_guide`)
+The opt-in bundle `authoring` (sources in `src/devkit_agt/bundles/authoring/bundle/`, the data-only module `devkit_agt.bundles.authoring`)
 is deployed only when a project selects it. Both rules run in the `hygiene`
 phase only, so they never block a commit or a CI linter run:
 
@@ -233,8 +233,8 @@ uv run devkit rules check --phase hygiene
 
 | Preset | Rule (warning, hygiene) | Playbook |
 | --- | --- | --- |
-| `skill-authoring` | `RULE-skill-document-size`: a skill or playbook Markdown file above `max_bytes` (12288 UTF-8 bytes) ([guide](../../../packages/devkit/src/devkit/authoring_guide/bundle/rules/skill_document_size/guide.md)) | `skill-authoring`: router structure for new skills, the four restructuring steps, helper-script rules |
-| `agent-guide-authoring` | `RULE-agent-guide-size`: an `AGENTS.md` or `CLAUDE.md` above `max_bytes` (8192 UTF-8 bytes), reporting the devkit guidance block's share ([guide](../../../packages/devkit/src/devkit/authoring_guide/bundle/rules/agent_guide_size/guide.md)) | `agent-guide-authoring`: what stays in an always-loaded guide (no structure trees; module specifics only as links), where the rest moves, per-host loading |
+| `skill-authoring` | `RULE-skill-document-size`: a skill or playbook Markdown file above `max_bytes` (12288 UTF-8 bytes) ([guide](../../../packages/devkit/src/devkit_agt/bundles/authoring/bundle/rules/skill_document_size/guide.md)) | `skill-authoring`: router structure for new skills, the four restructuring steps, helper-script rules |
+| `agent-guide-authoring` | `RULE-agent-guide-size`: an `AGENTS.md` or `CLAUDE.md` above `max_bytes` (8192 UTF-8 bytes), reporting the devkit guidance block's share ([guide](../../../packages/devkit/src/devkit_agt/bundles/authoring/bundle/rules/agent_guide_size/guide.md)) | `agent-guide-authoring`: what stays in an always-loaded guide (no structure trees; module specifics only as links), where the rest moves, per-host loading |
 
 Both remediations name the playbook and its `uv run devkit playbook search`
 query. The rules are bundle assets (one plugin package directory each) loaded
@@ -243,12 +243,12 @@ checked paths and settings.
 
 ### Built-in advisory bundle
 
-The auto-selected `advisory` bundle (`devkit.advisory_guide`, shipped by `devkit-dist`) ships one rule in its `python` preset
+The auto-selected `advisory` bundle (`devkit_dist.bundles.advisory`, shipped by `devkit-dist`) ships one rule in its `python` preset
 (`uv run devkit add advisory:python`), loaded from the receipt like the authoring rules:
 
 | Rule | Phase, severity | Checks |
 | --- | --- | --- |
-| `RULE-advisory-unique-code` | linter, error | a code is declared by one `AdvisoryError` class and its subclasses, in class bodies or through `code=` at calls; the workspace's Python files are read statically (settings `bases`, `exclude`) ([guide](../../../packages/devkit-dist/src/devkit/advisory_guide/bundle/rules/unique_code/guide.md)) |
+| `RULE-advisory-unique-code` | linter, error | a code is declared by one `AdvisoryError` class and its subclasses, in class bodies or through `code=` at calls; the workspace's Python files are read statically (settings `bases`, `exclude`) ([guide](../../../packages/devkit-dist/src/devkit_dist/bundles/advisory/bundle/rules/unique_code/guide.md)) |
 
 ## Library
 

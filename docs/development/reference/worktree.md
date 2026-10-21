@@ -1,4 +1,4 @@
-# devkit.worktree
+# devkit_agt.features.worktree
 
 One activity branch (`plan-<slug>`, `dev-<slug>`) per task activity, with its own Git worktree when it needs one, integrated and removed by one command. Semantics: `CAP-WT-task-worktrees`.
 
@@ -13,7 +13,7 @@ uv run devkit worktree finish dev-login --discard  # close: drop the unmerged br
 uv run devkit worktree start dev-login --no-worktree   # or: the branch in this checkout, no separate directory
 uv run devkit worktree start dev-login --existing-branch origin/dev-login --unit docs/specs/login  # continue it
 uv run devkit worktree status                    # leftovers: unmerged or dirty worktrees, stray branches
-uv run devkit worktree stale                     # plan-*/dev-* branches idle longer than [worktree] stale_after
+uv run devkit worktree status --stale                     # plan-*/dev-* branches idle longer than [worktree] stale_after
 ```
 
 Every command takes `-w/--workspace-root` (any directory in the checkout; default the current directory), `--format text|json` and the shared output options.
@@ -47,7 +47,7 @@ Every command takes `-w/--workspace-root` (any directory in the checkout; defaul
 | `devkit.finish_guard` | `finish --merge`, before the first change | `extension(base, branch, merge_base, tip)` | returned reasons refuse (`WORKTREE_BLOCKED`); a failure refuses (`WORKTREE_GUARD_FAILED`) |
 | `devkit.attach_check` | `start --existing-branch`, before the first change | `extension(root, branch, unit, tip)` | returned reasons refuse (`WORKTREE_ATTACH_REFUSED`); a failure refuses (`WORKTREE_ATTACH_CHECK_FAILED`) |
 
-`devkit.worktree` itself registers the `devkit.hygiene` extension `worktree-stale` (`CAP-WT-task-worktrees`).
+`devkit_agt.features.worktree` itself registers the `devkit.hygiene` extension `worktree-stale` (`CAP-WT-task-worktrees`).
 
 ## Error codes
 
@@ -95,13 +95,13 @@ Every command takes `-w/--workspace-root` (any directory in the checkout; defaul
 | `WORKTREE_STALE_PR_UNKNOWN` | `NOTICE` | `StalePullRequestsUnknownNotice` | `gh pr list` failed; branches were judged by their last commit alone. |
 | `WORKTREE_SETUP_FAILED` | `WARNING` | `SetupFailedWarning` | The `setup` command failed or timed out; `[FIX]` reruns it. |
 | `WORKTREE_SYNC_FAILED` | `WARNING` | `SyncFailedWarning` | `devkit sync --locked` failed or timed out in the new worktree. The message names the sync's own error code and message; `[TARGET]`, `[DETAIL]` and `[FIX]` are that error's (its fix prefixed with the worktree path), or the rerun command when the output was not an error object. |
-| `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit.core.ArgumentError` | A name that is not an activity branch (`plan-<slug>`, `dev-<slug>`); `--existing-branch` that is neither the branch nor `<remote>/<branch>`, or names a branch several remotes have; `--existing-branch` without `--unit` or the reverse; `--no-worktree` with either. |
-| `GIT_FAILED` | `ERROR` | `devkit.core.GitError` | Not in a Git work tree, or another Git command failed. |
+| `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_core.base.errors.ArgumentError` | A name that is not an activity branch (`plan-<slug>`, `dev-<slug>`); `--existing-branch` that is neither the branch nor `<remote>/<branch>`, or names a branch several remotes have; `--existing-branch` without `--unit` or the reverse; `--no-worktree` with either. |
+| `GIT_FAILED` | `ERROR` | `devkit_core.base.errors.GitError` | Not in a Git work tree, or another Git command failed. |
 
 ## Library
 
 ```python
-from devkit.worktree import attach, finish, locate, read_worktree_config, stale_branches, start, start_branch, status
+from devkit_agt.features.worktree import attach, finish, locate, read_worktree_config, stale_branches, start, start_branch, status
 
 position = locate(Path.cwd())
 config = read_worktree_config(project_root)
@@ -116,7 +116,7 @@ report = status(position)                                             # StatusRe
 stale = stale_branches(position, config.stale_after)                  # StaleResult(checked, stale, notices, ...)
 ```
 
-`attach`'s `check` and `finish`'s `guard` refuse by raising; the CLI passes the `devkit.attach_check` and `devkit.finish_guard` extensions (`run_attach_checks`, `run_finish_guards` in `devkit.worktree.extensions`). A refusal raised after `finish` changed something has the partial `FinishResult` as `error.result`, also an `AdvisoryError` that `before_remove` raises (unless it defines a `result` of its own); rerunning `finish` resumes, also when only the merged branch is left and carries the `branch.<branch>.devkitWorktree` marker `start` records (`CAP-WT-task-worktrees`).
+`attach`'s `check` and `finish`'s `guard` refuse by raising; the CLI passes the `devkit.attach_check` and `devkit.finish_guard` extensions (`run_attach_checks`, `run_finish_guards` in `devkit_agt.features.worktree.services.extensions`). A refusal raised after `finish` changed something has the partial `FinishResult` as `error.result`, also an `AdvisoryError` that `before_remove` raises (unless it defines a `result` of its own); rerunning `finish` resumes, also when only the merged branch is left and carries the `branch.<branch>.devkitWorktree` marker `start` records (`CAP-WT-task-worktrees`).
 
 
 ## Local-only integration

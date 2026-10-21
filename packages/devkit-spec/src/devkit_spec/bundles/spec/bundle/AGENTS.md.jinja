@@ -1,0 +1,90 @@
+# Spec-Driven Delivery
+
+Development here is spec-driven: start it with the `spec` skill (`/spec <intent>`); `/spec-next` orients in work
+already under way. Explicit user instructions take precedence. Agents MUST NOT unilaterally terminate the user's
+session.
+
+## 1. Context
+
+- Read this guide once per agent context before development work, including work started without a skill.
+- Read each relevant instruction listed with it before the action it governs. Instructions hold judgment and policy,
+  playbooks (`devkit-playbook`) occasional procedures, rules (`devkit rules`) deterministic checks; an instruction
+  never overrides a mandatory check (report a conflict).
+- Add a rule or check only for an identifiable failure or a reusable practice, at proportionate cost.
+
+## 2. Living Spec and Scope
+
+- `docs/` is the Living Spec, the current contract (capabilities, stories, architecture, decisions): rewrite changed
+  statements in place; history belongs in Git, ADRs and dated materials, temporary task lists in `specs/`.
+- A feature spec is `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/` (`spec.md`, `plan.md`, `tasks.md`), kept as history once
+  completed. Read current contracts and active specs (`devkit spec list spec`) before drafting new work.
+- Packages may keep a Living Spec namespace under `docs/packages/<name>/`: `list` and `search` cover the current
+  directory's namespace plus global documents (`--all-namespaces` for cross-package impact); IDs are repository-wide.
+- Frontmatter `summary` is English, one or two sentences (`devkit spec search` finds it); other text may use any
+  language.
+- Refer to ID-bearing documents by full ID (`` `CAP-...` ``), never by path (`devkit spec resolve <ID>`,
+  `devkit spec refs <ID> --direction out|in`).
+- Agents MUST NOT implement Non-Goals or add unrequested features, refactors or speculative scope; unstated assumptions
+  are not permissions. A lasting policy change or an exception to a MUST needs an ADR; a one-off exception within the
+  approved scope is stated in the review or final report.
+- A task's `_Boundary:_` is the expected scope: explain a necessary extension in the report. Write boundaries given to
+  a delegated role are strict.
+
+## 3. Classification and Workflows
+
+The agent classifies authorized work on three axes; `plan-intent` records the instructed intent without asking again:
+
+- **`task-kind`**: `feature` (default) or `bugfix` (a defect against an agreed contract: reproduce, Red then Green).
+- **`planning-depth`**: what must be settled first, not size. `session`: nothing, no Unit. `spec`: the contract, with
+  a clear direction; a spec Unit. `proposal`: the direction; a proposal Unit, Planning, then handoff.
+- **`activity-effort`**: `low`, `medium` (default) or `high` per activity: how thorough review and verification are,
+  never lowering gates, exit checks or `required` policies.
+
+The workflow is `sdd-<planning-depth>[-<task-kind>]`: `sdd-session-feature`, `sdd-session-bugfix`, `sdd-spec-feature`,
+`sdd-spec-bugfix` and `sdd-proposal` (handed off to `sdd-spec-<task_kind>`); a team review is `proposal` depth plus PR
+policy. Depth is raised by the Host (`[tool.spec] depth_escalation`), never by a worker, and never lowered except by a
+proposal's handoff or, on the user's explicit decision at pickup, the session reclassification of a queued draft.
+Unit depths write `spec.md`, `plan.md` and `tasks.md` before production code. Follow the workflow definition's
+stages, checks, gates and returns, never an ad-hoc sequence (`devkit workflow next --unit <dir>`).
+
+Read `devkit spec policy` before classification, gate and Git decisions. The main decision boundaries are
+`plan-accept` (proposal direction), `proposal-handoff` (start Development), and `dev-integration` (accept the
+Development result). Each permits `ask` or `auto`, defaulting to `ask`; a boundary does not necessarily require a
+human interruption. `plan-intent` records goal, scope, verification, expected bugfix behavior, `task-kind` and
+`planning-depth`: an explicit task instruction supplies that intent, so do not request the same consent again.
+Record its authority with `devkit workflow answer --by user` when a Unit needs a record; `auto` satisfies it by policy.
+Accept proposals with `devkit spec proposal accept --by user|policy`, using `policy` only under owning
+`plan-accept=auto`. Source-only auto never grants authority; prospective revocation stops remaining effects.
+A native accept-and-handoff form may cover both included decisions in one explicit approval. Otherwise keep them
+separate so accepted proposals can wait in Backlog. Within approved scope the Host chooses sequencing, parallel
+workers, implementation, review and fixes without extra user approvals; scope or constraint changes need new authority.
+Records name `user` or `policy` and carry decisions, never conversation quotes, paraphrases or dates; a decline note
+{% if execution.environment == "local" %}states the reason as a decision. Shared base `dev-integration=auto` authorizes verified local merge and exact cleanup through the MCP executor; it grants no publication authority or host permission. Report stages the policy
+{% else %}states the reason as a decision. Shared base `dev-integration=auto` grants no cloud mutation or publication authority. Return verified results to the Host unless a separately authorized CLI/PR route exists; host permissions still apply. Report stages the policy
+{% endif %}switched off as skipped. Before formal worktree work read the `spec` skill's `references/worktree.md`; before
+completion or Git actions its `references/completion.md`.
+
+Mode per activity: the Host chooses `direct` (default; the Host implements) or `local-orchestrated` (one-shot
+workers in their own worktrees) within authorized scope and resource constraints, without another approval solely
+for delegation. `cloud-pr` requires existing external execution and publication authority. A `session` task runs
+only in `direct` or the `cloud-pr` general PR path, as a supported-mode constraint.
+
+## 4. Verification and Completion
+
+Before reporting completion compare the final diff, the agreed requirements, the check results and the Living Spec
+impact (`spec-review`, `spec-sync`). Fix implementation defects rather than rewriting documentation to endorse them.
+Reconcile changed behavior, capabilities and constraints into the Living Spec; recheck after further changes.
+
+Spec Units keep a resolved `reconcile.md` and stay in place when completed. A `session` task writes no Unit, envelope,
+gate record, planning or reconcile file and reports the change, effort, review result, verification and remaining
+constraints in its final response or PR body (a needed Living Spec change raises it to `spec`). The `rules-check`
+commit gate (on by default) runs the spec rules on every commit (`devkit rules check --staged` reproduces it); CI runs
+`devkit rules check --ci --base <ref>`. Completion, commit, integration and ending the session are separate events.
+
+## 5. Templates and Policy Files
+
+- Templates: `.devkit/managed/spec/templates/{capability,story,decision,proposal,milestone}.md`.
+- Policy lives in `.devkit/config.toml` (`[workflow.approvals]` with the three main boundaries and task intent, `[workflow.stages]`,
+  `[worktree]`, `[tool.spec]`); read it through `devkit spec policy`, never by parsing the file.
+- Never edit `.devkit/managed/`; change it through `devkit override` or the project's own bundle.
+

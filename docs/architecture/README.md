@@ -9,7 +9,7 @@ The architecture of devkit in arc42 chapters, with C4 diagrams in Mermaid. Each 
 | 01 | Introduction and Goals | `ARCH-01-introduction-and-goals` | Mission, core modules, agent-first design, quality goals |
 | 02 | Architecture Constraints | `ARCH-08-cross-cutting` | Layering, POSIX platforms, Python runtime, standard library boundary |
 | 03 | System Scope and Context | `ARCH-03-context` | C4 L1: AI coding agents, Git work trees, package managers, host runtime |
-| 04 | Solution Strategy | `ARCH-01-introduction-and-goals` | One CLI over the distribution and harness wheels, standard library advisory protocol, opt-in bundles |
+| 04 | Solution Strategy | `ARCH-04-delivery-strategy`, `ARCH-04-1-ecosystem-boundaries`, `ARCH-04-2-delivery-policy` | Delivery lifecycle, three-axis classification, execution modes, ecosystem boundaries, policy principles |
 | 05 | Building Block View | `ARCH-05-1-containers`, `ARCH-05-2-components`, `ARCH-05-3-command-plugins`, `ARCH-05-4-distribution-components` | C4 L2: package topology (`devkit-dist`, `devkit-agt`, `devkit-advisory`, content packages); C4 L3: internal modules and per-wheel layering, command plugins, distribution components |
 | 06 | Runtime View | `ARCH-06-runtime-view` | Sync transactions, rule evaluation and fix cycles, workflow execution, worktrees |
 | 07 | Deployment View | `ARCH-07-deployment` | Wheel distribution, Git dependency sources, projected agent directory layout |

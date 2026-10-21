@@ -5,8 +5,8 @@ summary: "Immutable seven-day Markdown artifacts share exact report references a
 status: active
 area: collaboration
 entrypoints:
-  - packages/devkit-dist/src/devkit/shared
-  - packages/devkit-dist/tests/test_shared.py
+  - packages/devkit-dist/src/devkit_dist/features/shared
+  - packages/devkit-dist/tests/integration/features/shared/test_shared.py
 created: 2026-10-21
 updated: 2026-10-21
 ---
@@ -15,7 +15,7 @@ updated: 2026-10-21
 
 ## Domain and identity
 
-`devkit.shared` belongs to devkit-dist and imports only core/advisory. It stores regenerable reports, never scope
+`devkit_dist.features.shared` belongs to devkit-dist and uses core/advisory plus the project feature execution-context contract. It stores regenerable reports, never scope
 records, tokens, ownership or approval authority (`ADR-separate-shared-artifacts-from-scope`). The initial kind is
 proposal-review. Inputs are a lowercase kebab slug (up to 120 characters), a full lowercase 40/64-hex source_sha,
 ko/en language and UTF-8 Markdown of at most 1 MiB. Consumers verify that source_sha is their actual reviewed commit.
@@ -59,6 +59,8 @@ CLI commands are devkit shared put|get|list|sweep. Put reads stdin; --format jso
 tools are shared_put, shared_get, shared_list, shared_sweep (plan only) and shared_sweep_apply. Fixed bounded-write
 classification applies only to put/apply-sweep; cloud excludes and refuses these tools. Local writes elicit no
 business approval form. `CAP-MCP-runtime-registration` owns transport execution guards.
+Put responses return the exact artifact URI, metadata and available local links without echoing the submitted
+Markdown body. Get returns the full body for that exact URI. Adapter and use-case artifacts retain their content.
 
 List requires kind/slug with optional source_sha/language, limit 1..100 and an opaque continuation cursor. Sweep
 examines at most 100 entries in deterministic filename order, returns a continuation cursor, and retains/reports
@@ -75,7 +77,7 @@ but permission refusal cannot authorize rerouting. Compare adapter/namespace acr
 
 ## Public extensions
 
-Installed devkit.shared.adapters entry points name factories accepting RepositoryContext and returning
+Installed devkit_dist.features.shared.adapters entry points name factories accepting RepositoryContext and returning
 SharedArtifactAdapter. Built-in local is reserved. Duplicate, unknown, unloadable or malformed adapters fail with
 SHARED_ADAPTER_UNAVAILABLE, without fallback. Backend advisory codes are preserved and continuation tokens
 are opaque to the adapter boundary. Public input/result types and the reusable assert_conformance helper

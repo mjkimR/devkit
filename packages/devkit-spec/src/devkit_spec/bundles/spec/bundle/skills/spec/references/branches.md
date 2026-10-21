@@ -1,0 +1,43 @@
+# Activity branches: start, continue, leftovers and stale branches
+
+Read this when you start an activity's branch without a worktree, continue a branch that already exists, or report leftover and stale branches in `/spec-next`. Starting and finishing a worktree is [worktree](worktree.md).
+
+## 1. Names
+
+Every `spec` and `proposal` activity runs on its own branch, whatever the mode: `plan-<slug>` for a proposal's Planning, `dev-<slug>` for Development (`<slug>` the proposal or spec slug). A `session` task bound for a PR uses `dev-<slug>`. Every `devkit worktree` command takes the full branch name. A new start refuses a branch that exists locally or on a remote. One slug's activity runs in one place only: never start it again, continue it (§3).
+
+## 2. Branch only (`direct`, no worktree)
+
+When `GIT_POLICY` leaves the worktree to you and the task needs none ([git policy](git-policy.md)), start the branch in this checkout:
+
+- `devkit worktree start <branch> --no-worktree` creates the branch from the current HEAD, switches this checkout to it, carries uncommitted changes and records the branch it started from (`[BRANCH_STARTED: <branch> checkout= from=]`). The branch switch is shared by every session using that directory, so another session can commit to the checked-out task branch. The direct user coordinates those sessions; a separate worktree remains an option for a direct session task. The local orchestration Host coordinates workers, which still run in their own worktrees.
+- `session` → `spec` during Development: on the session's own `dev-<slug>` keep going; otherwise run this command in the same checkout, then `devkit spec new <slug>` ([classification](classification.md) §3).
+- No scope record: the registry tracks linked worktrees only, so a branch in the base checkout (and a handoff there) registers nothing.
+- Integrate from the base branch: `git switch <from>`, then `devkit worktree finish <branch> --merge` (or the PR path). While the base checkout is still on the branch, `finish` (and `finish --discard`) refuses with `WORKTREE_BASE_ON_BRANCH`, whose `[FIX]` is that switch: run it and rerun, without asking. `--merge` from a third branch is `WORKTREE_CONFLICT`: that checkout is someone's work in progress, so ask the user before switching.
+
+## 3. Continue an existing branch
+
+Resuming after a stop, switching an activity's mode, and handing an inline-Planned `dev-<slug>` to a worker or a cloud run all continue the branch explicitly, never by starting anew:
+
+```bash
+devkit worktree start <branch> --existing-branch <branch|remote/branch> --unit <dir>
+```
+
+- `<dir>` is the activity's unit, relative to the project: `docs/proposals/PROP-<slug>` on `plan-<slug>`; on `dev-<slug>` the spec bundle `specs/<YYYY-MM>/<YYYYMMDD>-<slug>`, or the accepted proposal before Development's handoff. devkit-spec refuses another unit, another slug or a binding that does not fit. Nothing is reset: the unit's records and approvals stay, and the run continues from the stage `devkit workflow next --unit <dir>` names.
+- Fetch first to see a branch made elsewhere. Synchronize a local branch behind or diverged from the remote with the user, never by reset; push one that is ahead when the work is shared.
+- A base checkout on the branch is switched back to its recorded start branch first (clean only), else refused.
+- Continue a branch only once its earlier run ended. Before taking a cloud run's branch local, confirm the pull request has no active run.
+- A document added to the base after the branch started (a Backlog draft proposal, say) does not exist on the branch, so `RULE-document-reference` refuses its full ID there. To cite it by ID, merge the base into the branch first (`git merge <base>`); otherwise name its slug in prose, without the ID prefix.
+
+## 4. Leftovers and stale branches
+
+`devkit worktree status` (from the base or any worktree; read-only) lists each worktree as `[WORKTREE: <path> branch= head= role= merged= dirty= prunable=]` and each local branch no worktree checks out and the base HEAD does not contain as `[BRANCH: <name> head= merged=no]`.
+
+- A linked worktree with `merged=yes dirty=no` (including one with no commits yet): `devkit worktree finish <branch>` cleans it.
+- `merged=no`, `dirty=yes`, `dirty=-` (unreadable), `prunable=yes` or a `[BRANCH]` line: remove only with the user's authorization. An unmerged activity branch is dropped only with `devkit worktree finish <branch> --discard` (a close, [classification](classification.md) §4); never `git branch -D` or `--force` by hand. A prunable worktree's directory is already gone; `git worktree prune` forgets it.
+- `devkit spec scope sweep` lists registry records whose worktree is gone (`verdict=stale`); `--apply` removes them.
+
+`devkit worktree status --stale` (and `devkit rules check -p hygiene`) reports each `plan-*` or `dev-*` branch idle longer than `[worktree] stale_after` as `[STALE_BRANCH: ...]` with the resume command; nothing blocks. Report them with the two ways on, and do neither unasked:
+
+- **Resume**: the `--existing-branch` command it prints. When its unit is `-`, map the slug: `plan-<slug>` → `docs/proposals/PROP-<slug>`; `dev-<slug>` → the spec bundle whose path matches `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/spec.md` exactly in `git ls-tree -r --name-only <branch> -- specs` (the eight-digit date, then the whole slug: `-login` never matches `...-user-login`), else the accepted proposal.
+- **Discard**: only once the user decides: close its pull request, drop the branch with the `devkit worktree finish <branch> --discard` command it prints (any activity branch, so never a `git branch -D` fallback), and for an accepted proposal follow a close ([classification](classification.md) §4).

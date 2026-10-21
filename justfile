@@ -25,7 +25,11 @@ check module="all":
 test module="all" *args:
     bash scripts/module.sh test "$@"
 
-# Run only the tests the changes since a base can affect (just test-affected [--base REF] [--list] [-- PYTEST-ARGS])
+# Run e2e tests for a module or all; areas or paths after a module narrow it (just test-e2e [module])
+test-e2e module="all" *args:
+    bash scripts/module.sh test-e2e "$@"
+
+# Run only the tests the changes since a base can affect (just test-affected [--base REF] [--list] [--e2e] [-- PYTEST-ARGS])
 test-affected *args:
     uv run --no-active python scripts/affected_tests.py "$@"
 

@@ -5,14 +5,14 @@ summary: "Transactional deployment, canonical receipts and restricted checkout-l
 area: distribution
 status: active
 entrypoints:
-  - packages/devkit-dist/src/devkit/distribution/installation/inventory.py
-  - packages/devkit-dist/src/devkit/distribution/installation/overrides.py
-  - packages/devkit-dist/src/devkit/distribution/installation/engines.py
-  - packages/devkit-dist/src/devkit/distribution/installation/config_template.py
-  - packages/devkit-dist/src/devkit/core/local_config.py
-  - packages/devkit-dist/src/devkit/distribution/installation/local_render.py
-  - packages/devkit-dist/src/devkit/distribution/installation/sync.py
-  - packages/devkit-dist/src/devkit/core/presentation.py
+  - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/inventory.py
+  - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/overrides.py
+  - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/engines.py
+  - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/config_template.py
+  - packages/devkit-dist/src/devkit_dist/features/project/repositories/local_config.py
+  - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/local_render.py
+  - packages/devkit-dist/src/devkit_dist/features/distribution/usecases/sync.py
+  - packages/devkit-dist/src/devkit_dist/features/project/services/presentation.py
 created_at: 2026-10-17
 ---
 
@@ -103,10 +103,10 @@ The receipt is the single record of the installed state, committed to Git, `sche
 
 - `execution_environment`: optional, strictly `local` or `cloud`, records the actual canonical render mode; every writing sync supplies it. Absence is explicitly unrecorded, never inferred from configuration. Ordinary sync retains ownership/conflict evidence and refreshes the field; status/check report missing evidence, and locked sync refuses the required receipt update. This is one current schema, with no version dispatch or migration reader. The field never authorizes runtime operations.
 
-The receipt format (`devkit.core.receipt`) and its writer belong to `devkit-dist`, as does the
+The receipt format (`devkit_dist.features.project.repositories.receipt`) and its writer belong to `devkit-dist`, as does the
 `.devkit/config.toml` schema below.
 
-The receipt holds no absolute paths or timestamps. It is read with the strict reader of `devkit.core.receipt`
+The receipt holds no absolute paths or timestamps. It is read with the strict reader of `devkit_dist.features.project.repositories.receipt`
 (unknown keys, wrong types, non-canonical or escaping paths are `RECEIPT_INVALID`) plus distribution ownership
 rules: `files` may only name managed or projected destinations, and asset `paths` only those or the bundle's own
 `.devkit/overrides/<bundle>/` files.
@@ -152,8 +152,8 @@ devkit = false                          # opt out of an auto-selected bundle
 - **`override_drift`**: `"warn"` (default) or `"block"`; see
   `CAP-DIST-workspace-ownership`.
 - **`[playbooks]`**: search defaults; see `CAP-DIST-context-and-playbooks`.
-- **`[rules]`, `[workflow]`, `[gates]`, `[worktree]`, `[integration]`**: reserved names owned by `devkit.rules`,
-  `devkit.workflow`, `devkit.gate`, `devkit.worktree` and `devkit.integration` (`devkit-agt`); passed through
+- **`[rules]`, `[workflow]`, `[gates]`, `[worktree]`, `[integration]`**: reserved names owned by `devkit_agt.features.rules`,
+  `devkit_agt.features.workflow`, `devkit_agt.features.gate`, `devkit_agt.features.worktree` and `devkit_agt.features.integration` (`devkit-agt`); passed through
   untouched, never read by distribution.
 - **`[tool.<name>]`**: the extension namespace, as in `pyproject.toml`. A tool built on devkit keeps its own policy
   there and reads it itself; devkit only checks that `<name>` matches `[a-z][a-z0-9_-]*` and the value is a table,
@@ -216,7 +216,7 @@ spec = "core"
   commented `agents` lists the agents devkit supports now; leaving it unset also projects for those a later devkit
   adds.
 - **Reserved tables**: a package registers a callable under the `devkit.config_tables` entry-point group, named
-  after a reserved top-level table, returning `list[devkit.core.TemplateTable]` with paths below that table. devkit
+  after a reserved top-level table, returning `list[devkit_dist.features.project.services.config_template.TemplateTable]` with paths below that table. devkit
   renders them after the project's tables and before tool tables, in entry-point name order and without an intro
   line. `devkit-agt` registers `workflow` (`[workflow.approvals]` with the gate name `integration` at `ask`,
   `[workflow.stages]` with `collect-feedback` at `on`: representative names, not a fixed schema) and `worktree`
@@ -226,7 +226,7 @@ spec = "core"
   and before any `[tool.*]` table, in the order and text shown above (`ADR-dist-config-receipt-ownership`). See `CAP-DLV-workflow-orchestration` and `CAP-WT-task-worktrees` for their
   behavior.
 - **Tool tables**: a package registers a callable under the `devkit.config_template` entry-point group, named after
-  its `[tool.<name>]` table. Called with no argument, it returns `list[devkit.core.TemplateTable]`
+  its `[tool.<name>]` table. Called with no argument, it returns `list[devkit_dist.features.project.services.config_template.TemplateTable]`
   ([Core Reference](../../development/reference/core.md#modules)); devkit renders the headers from the entry-point name, so a tool
   never writes outside its own table, and the template is the same for every project. The tables go at the end of
   the file in entry-point name order, after one intro line per tool naming its package.
@@ -309,7 +309,7 @@ Every mutating command follows these steps:
    (`CAP-DIST-workspace-ownership`). The result
    lists every planned write under `actions` (`create`, `update` or `remove` per path, `seed` for a seeded file,
    `AGENTS.md` included).
-2. **Project lock**: `fcntl.flock` on `.devkit/transient/lock` (`devkit.core.file_lock`, POSIX only). Writers
+2. **Project lock**: `fcntl.flock` on `.devkit/transient/lock` (`devkit_core.core.locks.file_lock`, POSIX only). Writers
    (`sync`, `add`, `remove`, `recover`, `override create|accept|remove`) take it exclusively and fail at once when it is held (`LOCK_HELD`,
    `DEFER`). Readers (`get-context`, `playbook search`, `playbook get`, `status`, `list`, `override list|diff`, and `sync`, `add`
    and `remove` under `--dry-run` or `--check`, which write nothing) share it and wait
@@ -327,7 +327,7 @@ Every mutating command follows these steps:
    the same sync all deletes is removed once they are, just before the file is written in its place, and a rollback
    restores its files in place of the file. Such a directory that holds anything else (a file devkit does not own or
    does not delete, a symlink) is `WORKSPACE_UNSAFE` in the pre-flight, whose `[FIX]` moves it out of the way.
-4. **Atomic replacement**: each file is written with `devkit.core.atomic_write_bytes` (a temporary sibling,
+4. **Atomic replacement**: each file is written with `devkit_core.core.files.atomic_write_bytes` (a temporary sibling,
    `fchmod`ed, `fsync`ed and moved into place with `os.replace`); directory entries are `fsync`ed, deletions' too.
 5. **Directory pruning**: removing a managed or projected file removes the directories it leaves empty, up to its
    owned prefix (`.claude/skills/<id>/` goes, `.claude/skills/` stays). Seeded targets' directories are never

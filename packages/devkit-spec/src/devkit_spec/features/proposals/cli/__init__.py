@@ -1,0 +1,1 @@
+"""Proposal CLI transport wiring."""

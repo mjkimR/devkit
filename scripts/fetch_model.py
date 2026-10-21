@@ -64,7 +64,9 @@ def to_float16(source: Path, target: Path) -> None:
 def main(directory: Path) -> None:
     spec = json.loads((directory / "model.json").read_text(encoding="utf-8"))
     source, files = spec["source"], spec["files"]
-    missing = [name for name, digest in files.items() if not (directory / name).is_file() or sha256(directory / name) != digest]
+    missing = [
+        name for name, digest in files.items() if not (directory / name).is_file() or sha256(directory / name) != digest
+    ]
     if not missing:
         print(f"[OK: {spec['name']} files are present and verified in {directory}]")
         return

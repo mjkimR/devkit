@@ -14,25 +14,31 @@ validate_module "$target"
 # `${a[@]+"${a[@]}"}` expands an empty array under `set -u` on macOS's bash 3.2.
 given=("$@")
 
-# The directory names under a module's tests/, the areas a selector can name (shared helpers excluded).
+# Named test categories and source areas; support packages and empty cache directories are not selectors.
 areas() {
-    local dir names=()
-    for dir in "$1"/tests/*/; do
+    local dir search=()
+    if [ "$action" = test-e2e ]; then
+        search=("$1"/tests/e2e "$1"/tests/e2e/* "$1"/tests/e2e/features/*)
+    else
+        search=(
+            "$1"/tests/{unit,integration,e2e} "$1"/tests/{unit,integration,e2e}/* \
+            "$1"/tests/{unit,integration,e2e}/features/* "$1"/src/*/features/*
+        )
+    fi
+    for dir in "${search[@]}"; do
         [ -d "$dir" ] || continue
-        dir=$(basename "$dir")
-        case "$dir" in
-            __pycache__|testsupport|distsupport) ;;
-            *) names+=("$dir") ;;
+        [ -n "$(find "$dir" -type f -name '*.py' -not -path '*/__pycache__/*' -print -quit)" ] || continue
+        case "$(basename "$dir")" in
+            __pycache__|support|features) ;;
+            *) basename "$dir" ;;
         esac
-    done
-    echo "${names[*]-}"
+    done | sort -u | tr '\n' ' '
 }
 
-# Append the test paths one selector names to `selected`: an existing path (a `::` node suffix allowed) from the
-# repository root as given, else a path-like selector (with `/` or `::`) from the module directory, else the area's
-# existing `tests/<name>` and `src/*/<name>` directories.
+# Explicit repository/module paths may include pytest node suffixes. Named feature selectors collect the
+# corresponding tests in every category and their source subtree (including embedded rule tests).
 add_selector() {
-    local base=$1 selector=$2 dir found=0
+    local base=$1 selector=$2 dir found=0 search_dirs=()
     if [ -e "${selector%%::*}" ]; then
         selected+=("$selector")
         return 0
@@ -41,8 +47,17 @@ add_selector() {
         selected+=("$base/$selector")
         return 0
     fi
-    for dir in "$base/tests/$selector" "$base"/src/*/"$selector"; do
-        if [ -d "$dir" ]; then
+    if [ "$action" = test-e2e ]; then
+        search_dirs=("$base/tests/e2e/$selector" "$base/tests/e2e/features/$selector")
+    else
+        search_dirs=(
+            "$base/tests/$selector" "$base"/tests/{unit,integration,e2e}/"$selector" \
+            "$base"/tests/{unit,integration,e2e}/features/"$selector" \
+            "$base"/src/*/"$selector" "$base"/src/*/features/"$selector"
+        )
+    fi
+    for dir in "${search_dirs[@]}"; do
+        if [ -d "$dir" ] && [ -n "$(find "$dir" -type f -name '*.py' -not -path '*/__pycache__/*' -print -quit)" ]; then
             selected+=("$dir")
             found=1
         fi
@@ -60,7 +75,7 @@ add_selector() {
 selected=()
 if [ "$target" != all ]; then
     case "$action" in
-        test|test-cov)
+        test|test-cov|test-e2e)
             module_path=$(resolve_module_path "$target")
             while [ $# -gt 0 ] && [ "${1#-}" = "$1" ]; do
                 add_selector "$module_path" "$1" || exit 2
@@ -102,7 +117,7 @@ run_check() {
 # asyncio and the MCP SDK use local sockets to wake their event loops from threads.
 # Fail before pytest starts when a sandbox blocks those writes; the caller owns approval and retry.
 case "$action" in
-    test|test-cov)
+    test|test-cov|test-e2e)
         uv run --no-active --no-sync python scripts/check_test_environment.py -- just "$action" "$requested_target" \
             ${given[@]+"${given[@]}"}
         ;;
@@ -113,6 +128,19 @@ if [ "$target" = all ]; then
     case "$action" in
         test)
             run_check pytest "${xdist[@]}" "$@"
+            exit 0
+            ;;
+        test-e2e)
+            e2e_paths=()
+            for module in $modules; do
+                mpath=$(resolve_module_path "$module")
+                if [ -d "$mpath/tests/e2e" ]; then
+                    e2e_paths+=("$mpath/tests/e2e")
+                fi
+            done
+            if [ ${#e2e_paths[@]} -gt 0 ]; then
+                run_check pytest "${xdist[@]}" "${e2e_paths[@]}" "$@"
+            fi
             exit 0
             ;;
         test-cov)
@@ -148,6 +176,13 @@ for module in $modules; do
             ;;
         check) run_check pyright "$path" ;;
         test) run_check pytest "${xdist[@]}" "${test_paths[@]}" "$@" ;;
+        test-e2e)
+            if [ ${#selected[@]} -gt 0 ]; then
+                run_check pytest "${xdist[@]}" "${selected[@]}" "$@"
+            elif [ -d "$path/tests/e2e" ]; then
+                run_check pytest "${xdist[@]}" "$path/tests/e2e" "$@"
+            fi
+            ;;
         test-cov)
             COVERAGE_FILE=".coverage.$module" \
                 run_check pytest "${xdist[@]}" --cov="$path/src" --cov-config=pyproject.toml "${test_paths[@]}" "$@"
