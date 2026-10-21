@@ -271,3 +271,49 @@ def test_required_pr_policy_refuses_before_native_form(pending):
     result = asyncio.run(PlanAcceptService(repo).accept("idea", uri, forbidden))
     assert result["status"] == "blocked", result
     assert "status: reviewing" in (wt / "docs/proposals/PROP-idea/proposal.md").read_text()
+
+
+@pytest.mark.parametrize("uri", ["", "shared://wrong/invalid"])
+def test_remaining_effects_require_report_before_form(pending, uri):
+    from devkit_spec.proposal_report import ReviewRefreshRequiredError
+
+    repo, _wt, report = pending
+
+    async def accept(*_):
+        return ConfirmationReply("accept", {"approve": True, "mode": "accept_only"})
+
+    assert asyncio.run(PlanAcceptService(repo).accept("idea", report, accept))["status"] == "accepted"
+    before = git(repo, "show-ref")
+
+    async def forbidden(*_):
+        raise AssertionError("invalid report must refuse before confirmation")
+
+    with pytest.raises(ReviewRefreshRequiredError):
+        asyncio.run(PlanAcceptService(repo).accept("idea", uri, forbidden))
+    assert git(repo, "show-ref") == before
+    assert not git(repo, "branch", "--list", "dev-idea")
+
+
+@pytest.mark.parametrize("failure", ["returned", "raised"])
+def test_combined_partial_failure_has_recovery_directive(pending, monkeypatch, failure):
+    from devkit_spec.handoff_mcp import HandoffService
+    from devkit_spec.plan_accept_mcp import ProposalApprovalStaleError
+
+    repo, _wt, uri = pending
+
+    def failed(*_):
+        if failure == "raised":
+            raise ProposalApprovalStaleError("injected prerequisite change after integration")
+        return {"status": "needs_recovery", "errors": [], "notices": [], "worktree": {"created": True}}
+
+    monkeypatch.setattr(HandoffService, "_execute", failed)
+
+    async def confirm(*_):
+        return ConfirmationReply("accept", {"approve": True, "mode": "accept_and_handoff", "activity_effort": "low"})
+
+    result = asyncio.run(PlanAcceptService(repo).accept("idea", uri, confirm))
+    assert result["status"] == "needs_recovery", result
+    assert "merge" in result["completed_steps"]
+    assert "fresh accepted-base report" in result["next_action"]
+    assert "fresh approval" in result["next_action"]
+    assert result["next_action"] != "Acceptance complete"

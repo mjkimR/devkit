@@ -240,8 +240,10 @@ class PlanAcceptService:
 
     async def _remaining(self, slug: str, report_uri: str, confirm: Confirmation) -> dict:
         from devkit_spec.handoff_mcp import HandoffService, prepare
+        from devkit_spec.proposal_report import validate
 
         preview = await asyncio.to_thread(prepare, self.root, slug, report_uri)
+        validate(self.root, slug, preview.head, report_uri)
         language = approval_language(self.root)
         snapshot = _configuration(self.root)
         message = (
@@ -266,6 +268,7 @@ class PlanAcceptService:
             mode == "accept_and_handoff" and effort not in EFFORTS
         ):
             raise ProposalApprovalNotReadyError("choose a valid mode and Development effort")
+        validate(self.root, slug, preview.head, report_uri)
         if _configuration(self.root) != snapshot or prepare(self.root, slug, report_uri) != preview:
             raise ProposalApprovalStaleError("accepted base, report, policy or environment changed")
         if mode == "accept_only":
@@ -350,14 +353,23 @@ class PlanAcceptService:
                 payload.update(
                     status=handed["status"],
                     handoff=handed,
-                    next_action=handed.get("next_command", payload["next_action"]),
+                    next_action=handed.get("next_command")
+                    or (
+                        "Inspect the preserved accepted base and Development worktree; resolve reported setup/handoff "
+                        "failure, publish a fresh accepted-base report and request fresh approval for remaining effects"
+                    ),
                 )
                 if handed["status"] == "handed_off":
                     payload["completed_steps"] += ["worktree_setup", "handoff"]
                     if handed.get("scope_token"):
                         payload["completed_steps"].append("scope_registration")
             except AdvisoryError as exc:
-                payload.update(status="needs_recovery", errors=[exc.to_dict()])
+                payload.update(
+                    status="needs_recovery",
+                    errors=[exc.to_dict()],
+                    next_action="Inspect the preserved accepted base and Development worktree; resolve the reported "
+                    "prerequisite, publish a fresh accepted-base report and request fresh approval for remaining effects",
+                )
             return payload
 
 
