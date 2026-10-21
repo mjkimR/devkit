@@ -2,7 +2,7 @@
 id: MS-reporting-and-actionable-insights
 title: Weekly reporting and actionable repository insights playbook
 summary: "Delivers a manually invocable weekly reporting playbook covering completed work, ADR changes, repository health, and actionable follow-ups, with evidence and an explicit publication step."
-status: planned
+status: done
 created_at: 2026-10-18
 depends_on: []
 ---
