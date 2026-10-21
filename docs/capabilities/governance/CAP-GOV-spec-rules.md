@@ -9,7 +9,7 @@ stories:
   - US-adopt-in-an-existing-repository
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/governance/
-  - packages/devkit-spec/src/devkit_spec/bundle/rules/
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/
   - packages/devkit-spec/src/devkit_spec/features/governance/usecases/hygiene.py
 created_at: 2026-10-13
 ---
@@ -312,7 +312,7 @@ subclass, so the deployed file and the `devkit_spec.features.governance.<name>` 
 it with `check(RULE, tmp_path, files, ...)`; they use nothing from the repository's `tests/`. `devkit rules test
 RULE-<id>` runs the deployed copy's tests in an isolated pytest run (no project configuration or `conftest.py`), and
 without IDs every rule's tests. The repository's own `pytest` collects the same files under
-`packages/devkit-spec/src/devkit_spec/bundle/rules/`.
+`packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/`.
 
 ### 4.4 Error Codes
 

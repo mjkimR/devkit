@@ -9,13 +9,13 @@ stories:
   - US-route-development-intent
   - US-incubate-and-hand-off-a-proposal
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/bundle/workflows/
-  - packages/devkit-spec/src/devkit_spec/bundle/subagents/
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/
   - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py
-  - packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/review-loop.md
-  - packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/planning.md
-  - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-delegate/
-  - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-orchestrate/
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/review-loop.md
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/planning.md
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orchestrate/
   - packages/devkit-spec/src/devkit_spec/features/worker/
 ---
 
@@ -24,8 +24,8 @@ entrypoints:
 ## 1. Summary
 
 The `spec` bundle ships one devkit workflow definition per combination of `planning-depth` and `task-kind`
-(`kind = "workflow"` assets in `packages/devkit-spec/src/devkit_spec/bundle/workflows/`), six host-neutral role contracts
-(`kind = "subagent"` assets in `packages/devkit-spec/src/devkit_spec/bundle/subagents/`), all in the `core` preset, and the
+(`kind = "workflow"` assets in `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/`), six host-neutral role contracts
+(`kind = "subagent"` assets in `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/`), all in the `core` preset, and the
 `devkit_agt.features.integration.readiness` provider `spec` (`packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py`). devkit's workflow engine
 evaluates the definitions (`CAP-DLV-workflow-orchestration`);
 `devkit sync` projects the roles into each agent host's subagent directory
@@ -372,7 +372,7 @@ they run at the session's effort like the Host whose work they take over. The pr
 `activity-effort` and applies only when the projected agent is spawned: a role the main session runs itself uses
 the session's effort. An emulated named-role projection still applies its declared preset; workers declare none. On Claude Code a per-call `effort` or
 `CLAUDE_CODE_EFFORT_LEVEL` overrides the preset; on Codex the preset wins over a spawn value.
-`packages/devkit-spec/tests/test_role_contracts.py` pins role, profile and preset for every contract.
+`packages/devkit-spec/tests/integration/bundles/spec/test_role_contracts.py` pins role, profile and preset for every contract.
 
 | Role | Skill | Model profile | Reasoning effort | Writes | Envelope kind |
 | --- | --- | --- | --- | --- | --- |

@@ -59,6 +59,6 @@ packages = ["src/devkit_dist"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["tests"]
+pythonpath = ["tests/support"]
 addopts = ["--import-mode=importlib"]
 log_level = "INFO"

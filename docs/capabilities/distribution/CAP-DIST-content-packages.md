@@ -6,7 +6,7 @@ area: distribution
 status: active
 entrypoints:
   - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/discovery.py
-  - packages/devkit/src/devkit_agt/harness_guide/
+  - packages/devkit/src/devkit_agt/bundles/harness/
   - packages/devkit-catalog/src/devkit_catalog/response_style/
   - packages/devkit-catalog/src/devkit_catalog/maintenance/
 created_at: 2026-10-17
@@ -52,6 +52,11 @@ src/package_b_playbooks/
   build time with Hatch `force-include`.
 - The same wheel may also mount commands under `devkit` through the `devkit.commands` entry-point group
   (`ARCH-05-3-command-plugins`).
+
+Within this repository, application packages place bundle resource modules under
+`<namespace>/bundles/<name>/bundle/`, even when they ship a single bundle. Content-only packages
+may retain their bundle-only layouts. This source convention does not change the installed
+`devkit.bundles` resource-module contract or consumer-facing bundle names (`ARCH-05-2-components`).
 
 ## 2. Installation and Lifecycle
 

@@ -49,17 +49,17 @@ _DISTRIBUTION = "devkit_dist.features.distribution.cli"
 
 # Top-level command name -> "module:attribute" of its click command; only modules devkit-dist ships.
 COMMANDS: dict[str, str] = {
-    "get-context": f"{_DISTRIBUTION}:context",
-    "playbook": f"{_DISTRIBUTION}:playbook",
-    "bundle": f"{_DISTRIBUTION}:bundle",
-    "sync": f"{_DISTRIBUTION}:sync",
-    "add": f"{_DISTRIBUTION}:add",
-    "remove": f"{_DISTRIBUTION}:remove",
-    "list": f"{_DISTRIBUTION}:list_resources",
-    "status": f"{_DISTRIBUTION}:status",
-    "config": f"{_DISTRIBUTION}:config",
-    "recover": f"{_DISTRIBUTION}:recover",
-    "override": f"{_DISTRIBUTION}:override",
+    "get-context": f"{_DISTRIBUTION}.context:context",
+    "playbook": f"{_DISTRIBUTION}.playbooks:playbook",
+    "bundle": f"{_DISTRIBUTION}.bundles:bundle",
+    "sync": f"{_DISTRIBUTION}.selection:sync",
+    "add": f"{_DISTRIBUTION}.selection:add",
+    "remove": f"{_DISTRIBUTION}.selection:remove",
+    "list": f"{_DISTRIBUTION}.selection:list_resources",
+    "status": f"{_DISTRIBUTION}.selection:status",
+    "config": f"{_DISTRIBUTION}.configuration:config",
+    "recover": f"{_DISTRIBUTION}.selection:recover",
+    "override": f"{_DISTRIBUTION}.overrides:override",
     "host": "devkit_dist.features.host.cli:cli",
     "shared": "devkit_dist.features.shared.cli:cli",
 }

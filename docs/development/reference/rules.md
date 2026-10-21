@@ -221,7 +221,7 @@ explicit targets.
 
 ### Built-in authoring bundle
 
-The opt-in bundle `authoring` (sources in `src/devkit_agt/authoring_guide/bundle/`, the data-only module `devkit_agt.authoring_guide`)
+The opt-in bundle `authoring` (sources in `src/devkit_agt/bundles/authoring/bundle/`, the data-only module `devkit_agt.bundles.authoring`)
 is deployed only when a project selects it. Both rules run in the `hygiene`
 phase only, so they never block a commit or a CI linter run:
 
@@ -233,8 +233,8 @@ uv run devkit rules check --phase hygiene
 
 | Preset | Rule (warning, hygiene) | Playbook |
 | --- | --- | --- |
-| `skill-authoring` | `RULE-skill-document-size`: a skill or playbook Markdown file above `max_bytes` (12288 UTF-8 bytes) ([guide](../../../packages/devkit/src/devkit_agt/authoring_guide/bundle/rules/skill_document_size/guide.md)) | `skill-authoring`: router structure for new skills, the four restructuring steps, helper-script rules |
-| `agent-guide-authoring` | `RULE-agent-guide-size`: an `AGENTS.md` or `CLAUDE.md` above `max_bytes` (8192 UTF-8 bytes), reporting the devkit guidance block's share ([guide](../../../packages/devkit/src/devkit_agt/authoring_guide/bundle/rules/agent_guide_size/guide.md)) | `agent-guide-authoring`: what stays in an always-loaded guide (no structure trees; module specifics only as links), where the rest moves, per-host loading |
+| `skill-authoring` | `RULE-skill-document-size`: a skill or playbook Markdown file above `max_bytes` (12288 UTF-8 bytes) ([guide](../../../packages/devkit/src/devkit_agt/bundles/authoring/bundle/rules/skill_document_size/guide.md)) | `skill-authoring`: router structure for new skills, the four restructuring steps, helper-script rules |
+| `agent-guide-authoring` | `RULE-agent-guide-size`: an `AGENTS.md` or `CLAUDE.md` above `max_bytes` (8192 UTF-8 bytes), reporting the devkit guidance block's share ([guide](../../../packages/devkit/src/devkit_agt/bundles/authoring/bundle/rules/agent_guide_size/guide.md)) | `agent-guide-authoring`: what stays in an always-loaded guide (no structure trees; module specifics only as links), where the rest moves, per-host loading |
 
 Both remediations name the playbook and its `uv run devkit playbook search`
 query. The rules are bundle assets (one plugin package directory each) loaded

@@ -30,8 +30,8 @@ workflow = "devkit_agt.features.workflow.cli:cli"
 worktree = "devkit_agt.features.worktree.cli:cli"
 
 [project.entry-points."devkit.bundles"]
-authoring = "devkit_agt.authoring_guide"
-harness = "devkit_agt.harness_guide"
+authoring = "devkit_agt.bundles.authoring"
+harness = "devkit_agt.bundles.harness"
 
 # Commented templates of the reserved harness tables in .devkit/config.toml, rendered by `devkit config template`.
 [project.entry-points."devkit.config_tables"]
@@ -74,6 +74,6 @@ packages = ["src/devkit_agt"]
 [tool.pytest.ini_options]
 testpaths = ["tests", "src"]  # rule tests live in each rule's folder (`<rule>/tests/`)
 # devkit-agt's tests also use devkit-dist's test helpers (`distsupport`); devkit-dist's tests never use these.
-pythonpath = ["tests", "../devkit-dist/tests"]
+pythonpath = ["tests/support", "../devkit-dist/tests/support"]
 addopts = ["--import-mode=importlib"]
 log_level = "INFO"

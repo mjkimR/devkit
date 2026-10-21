@@ -273,7 +273,7 @@ consumer-facing mirror of these documents; keep them in step.
 constitution with the rules-and-gates and snapshot-gate contracts and the guidance for the harness. Its default
 preset `core` adds nothing to `AGENTS.md`; the opt-in preset `run` (`uv run devkit add harness:run`) adds the
 guidance fragment `run-pointer`, one `AGENTS.md` line that sends agents to `devkit run` for tests, linters and type
-checks and to the `devkit-run` instruction. Its sources live in `packages/devkit/src/devkit_agt/harness_guide/bundle/`.
+checks and to the `devkit-run` instruction. Its sources live in `packages/devkit/src/devkit_agt/bundles/harness/bundle/`.
 
 | Asset | Read before |
 | --- | --- |
@@ -290,7 +290,7 @@ failing engine import cannot make the bundle unusable):
 | --- | --- | --- | --- | --- |
 | `advisory` | `devkit-dist` | `devkit_dist.bundles.advisory` | Auto-selected (`core`); `devkit add advisory:python` for Python repositories | Agent Advisory Protocol guides and, in `python`, `RULE-advisory-unique-code` (run by the rule engine of `devkit-agt`); see [devkit.advisory](advisory.md). |
 | `git-commits` | `devkit-dist` | `devkit_dist.bundles.git_commits` | Opt-in: `devkit add git-commits` | Commit message conventions and their `AGENTS.md` pointer; see [devkit_agt.features.gate](gate.md#built-in-git-commits-bundle). |
-| `authoring` | `devkit-agt` | `devkit_agt.authoring_guide` | Opt-in: `devkit add authoring` (`all`), or one of the presets `skill-authoring`, `agent-guide-authoring` | Size rules and restructuring playbooks for skills and agent guides; see [devkit_agt.features.rules](rules.md#built-in-authoring-bundle). |
+| `authoring` | `devkit-agt` | `devkit_agt.bundles.authoring` | Opt-in: `devkit add authoring` (`all`), or one of the presets `skill-authoring`, `agent-guide-authoring` | Size rules and restructuring playbooks for skills and agent guides; see [devkit_agt.features.rules](rules.md#built-in-authoring-bundle). |
 | `harness` | `devkit-agt` | `devkit_agt.bundles.harness` | Auto-selected (`core`); `devkit add harness:run` for the `AGENTS.md` pointer | The harness guidance above. |
 
 ---

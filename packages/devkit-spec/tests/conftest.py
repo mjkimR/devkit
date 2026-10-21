@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from pathlib import Path
 
 import pytest
-
-Write = Callable[[str, str], Path]
+from spec_support.delivery import synced_template as synced_template
+from spec_support.types import Write
 
 
 @pytest.fixture

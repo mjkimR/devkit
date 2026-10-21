@@ -45,7 +45,7 @@ and agent guide size rules with their playbooks,
 | `devkit_agt.features.integration` | Approval-bound local/GitHub PR integration, readiness providers, verified landing and resumable cleanup | `devkit integration` and host MCP tools | [integration reference](../../docs/development/reference/integration.md) |
 | `devkit_agt.features.generated` | Tracked generated files: settle their merge conflicts by regenerating, check and regenerate them | `devkit generated` | [generated reference](../../docs/development/reference/generated.md) |
 | `devkit_agt.features.compact` | Verification commands with the full log on disk and a bounded view for agents | `devkit run` | [compact reference](../../docs/development/reference/compact.md) |
-| `devkit_agt.harness_guide`, `devkit_agt.authoring_guide` | Data-only areas of the built-in `harness` and `authoring` bundles | none | [distribution reference](../../docs/development/reference/distribution.md) |
+| `devkit_agt.bundles.harness`, `devkit_agt.bundles.authoring` | Data-only areas of the built-in `harness` and `authoring` bundles | none | [distribution reference](../../docs/development/reference/distribution.md) |
 
 Each wheel owns a regular package: `devkit_agt` for the harness, `devkit_dist` for distribution and `devkit_core` for shared primitives. `devkit.advisory` remains the advisory library's public namespace.
 
@@ -57,7 +57,7 @@ Git state or provider data, and `models/` defines contracts, values and errors. 
 has code for them. Feature `__init__.py` files provide explicit public library facades. The package has no `core/`;
 shared low-level primitives live in `devkit_core`. Package-level `base/` and `utils/` may be introduced when needed.
 
-The `authoring_guide/` and `harness_guide/` resource packages retain their `bundle/` content. They load without
+The `bundles/authoring/` and `bundles/harness/` resource packages retain their `bundle/` content. They load without
 importing feature implementations; authoring rule files use the public harness rule API when loaded as plugins.
 
 The repository `devkit-dev` architecture rule checks layering; package tests verify namespace, entry points and bundle isolation. Transports depend on use cases, services depend on repositories
@@ -67,3 +67,11 @@ and models, and feature dependencies remain explicit. `compact` and `worktree` a
 
 The shared CLI conventions (`-w/--workspace-root`, `--format`, exit codes) and the documentation index are in
 `ARCH-01-introduction-and-goals`.
+
+## Tests
+
+`tests/unit/` checks isolated parsing, models and policies; `tests/integration/` exercises real files, Git,
+command wiring and bundle deployment. Both follow `features/<feature>/` for feature-owned tests; bundle tests
+live under `integration/bundles/`, and package metadata and repository tooling checks under
+`integration/package/`. Shared fixtures and helpers live in `tests/support/testsupport/`. Rules keep their
+shipped tests beside each rule. Installed-wheel CLI and MCP end-to-end scenarios run in the repository smoke suite.

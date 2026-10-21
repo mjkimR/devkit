@@ -14,23 +14,22 @@ validate_module "$target"
 # `${a[@]+"${a[@]}"}` expands an empty array under `set -u` on macOS's bash 3.2.
 given=("$@")
 
-# The directory names under a module's tests/, the areas a selector can name (shared helpers excluded).
+# Named test categories and source areas; support packages and empty cache directories are not selectors.
 areas() {
-    local dir names=()
-    for dir in "$1"/tests/*/; do
+    local dir
+    for dir in "$1"/tests/{unit,integration,e2e} "$1"/tests/{unit,integration,e2e}/* \
+        "$1"/tests/{unit,integration,e2e}/features/* "$1"/src/*/features/*; do
         [ -d "$dir" ] || continue
-        dir=$(basename "$dir")
-        case "$dir" in
-            __pycache__|testsupport|distsupport) ;;
-            *) names+=("$dir") ;;
+        [ -n "$(find "$dir" -type f -name '*.py' -not -path '*/__pycache__/*' -print -quit)" ] || continue
+        case "$(basename "$dir")" in
+            __pycache__|support|features) ;;
+            *) basename "$dir" ;;
         esac
-    done
-    echo "${names[*]-}"
+    done | sort -u | tr '\n' ' '
 }
 
-# Append the test paths one selector names to `selected`: an existing path (a `::` node suffix allowed) from the
-# repository root as given, else a path-like selector (with `/` or `::`) from the module directory, else the area's
-# existing `tests/<name>` and `src/*/<name>` directories.
+# Explicit repository/module paths may include pytest node suffixes. Named feature selectors collect the
+# corresponding tests in every category and their source subtree (including embedded rule tests).
 add_selector() {
     local base=$1 selector=$2 dir found=0
     if [ -e "${selector%%::*}" ]; then
@@ -41,8 +40,10 @@ add_selector() {
         selected+=("$base/$selector")
         return 0
     fi
-    for dir in "$base/tests/$selector" "$base"/src/*/"$selector" "$base"/src/*/features/"$selector"; do
-        if [ -d "$dir" ] && [ -n "$(find "$dir" -type f -name '*.py' -print -quit)" ]; then
+    for dir in "$base/tests/$selector" "$base"/tests/{unit,integration,e2e}/"$selector" \
+        "$base"/tests/{unit,integration,e2e}/features/"$selector" \
+        "$base"/src/*/"$selector" "$base"/src/*/features/"$selector"; do
+        if [ -d "$dir" ] && [ -n "$(find "$dir" -type f -name '*.py' -not -path '*/__pycache__/*' -print -quit)" ]; then
             selected+=("$dir")
             found=1
         fi

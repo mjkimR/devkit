@@ -32,7 +32,7 @@ DIST_SRC = f"{DIST}/src/devkit_dist"
 # Application features are separate dependency nodes; foundation changes still trigger the full suite.
 HOMES = {DIST: "devkit_dist", DEVKIT: "devkit_agt"}
 # Shared test helper packages: name -> directory.
-HELPERS = {"distsupport": f"{DIST}/tests/distsupport", "testsupport": f"{DEVKIT}/tests/testsupport"}
+HELPERS = {"distsupport": f"{DIST}/tests/support/distsupport", "testsupport": f"{DEVKIT}/tests/support/testsupport"}
 
 logger = logging.getLogger(__name__)
 
@@ -59,32 +59,39 @@ DATA: tuple[tuple[str, tuple[str, ...]], ...] = (
     ),
     (
         "packages/devkit-mcp/",
-        ("packages/devkit-mcp/tests", f"{DEVKIT}/tests/integration", "packages/devkit-spec/tests/test_integration.py"),
+        (
+            "packages/devkit-mcp/tests",
+            f"{DEVKIT}/tests/integration/features/integration",
+            "packages/devkit-spec/tests/integration/features/delivery/test_integration.py",
+        ),
     ),
     (
         "docs/",
         (
-            f"{DEVKIT}/tests/test_documented_codes.py",
-            "packages/devkit-spec/tests/test_documented_codes.py",
-            f"{DEVKIT}/tests/rules/test_docs.py",
-            f"{DEVKIT}/tests/workflow/test_library.py",
+            f"{DEVKIT}/tests/integration/package/test_documented_codes.py",
+            "packages/devkit-spec/tests/integration/package/test_documented_codes.py",
+            f"{DEVKIT}/tests/integration/features/rules/test_docs.py",
+            f"{DEVKIT}/tests/integration/features/workflow/test_library.py",
         ),
     ),
-    ("examples/", ("packages/devkit-starter/tests", f"{DEVKIT}/tests/workflow/test_library.py")),
-    ("models/", (f"{DIST}/tests/features/search",)),
-    ("scripts/module.sh", (f"{DEVKIT}/tests/test_module_script.py",)),
-    ("scripts/_lib.sh", (f"{DEVKIT}/tests/test_module_script.py",)),
-    ("justfile", (f"{DEVKIT}/tests/test_module_script.py",)),
-    ("scripts/check_test_environment.py", (f"{DEVKIT}/tests/test_test_environment.py",)),
-    ("scripts/fetch_model.py", (f"{DIST}/tests/features/search/test_packaging.py",)),
-    ("scripts/affected_tests.py", (f"{DEVKIT}/tests/test_affected_tests.py",)),
+    ("examples/", ("packages/devkit-starter/tests", f"{DEVKIT}/tests/integration/features/workflow/test_library.py")),
+    ("models/", (f"{DIST}/tests/unit/features/search", f"{DIST}/tests/integration/features/search")),
+    ("scripts/module.sh", (f"{DEVKIT}/tests/integration/package/test_module_script.py",)),
+    ("scripts/_lib.sh", (f"{DEVKIT}/tests/integration/package/test_module_script.py",)),
+    ("justfile", (f"{DEVKIT}/tests/integration/package/test_module_script.py",)),
+    ("scripts/check_test_environment.py", (f"{DEVKIT}/tests/integration/package/test_test_environment.py",)),
+    ("scripts/fetch_model.py", (f"{DIST}/tests/integration/features/search/test_packaging.py",)),
+    ("scripts/affected_tests.py", (f"{DEVKIT}/tests/integration/package/test_affected_tests.py",)),
 )
 # Tests over devkit's whole source tree (layering, documented codes, CLI wiring, stdout kinds), run for any source
 # change in either devkit distribution.
 SOURCE_TREE_TESTS = (
-    *(f"{DIST}/tests/{name}" for name in ("test_layering.py", "test_cli_imports.py", "test_cli_plugins.py")),
-    f"{DIST}/tests/adapters/test_cli.py",
-    *(f"{DEVKIT}/tests/{name}" for name in ("test_layering.py", "test_documented_codes.py")),
+    f"{DIST}/tests/unit/architecture/test_layering.py",
+    f"{DIST}/tests/integration/cli/test_cli_imports.py",
+    f"{DIST}/tests/integration/cli/test_cli_plugins.py",
+    f"{DIST}/tests/integration/adapters/test_cli.py",
+    f"{DEVKIT}/tests/integration/package/test_layering.py",
+    f"{DEVKIT}/tests/integration/package/test_documented_codes.py",
 )
 
 # The devkit-viewer frontend: pytest never exercises it, so a change there selects no tests and names the frontend
@@ -218,6 +225,8 @@ class Workspace:
                 return self.node_of(module)
             if relative.startswith(f"{home}/tests/"):
                 parts = relative[len(f"{home}/tests/") :].split("/")
+                if parts[0] in {"unit", "integration", "e2e"}:
+                    parts = parts[1:]
                 area = parts[1] if parts[0] == "features" and len(parts) > 1 else parts[0]
                 feature = f"{namespace}.features.{area}"
                 return feature if feature in self.homes else self.node_of(f"{namespace}.{area}")
@@ -392,10 +401,10 @@ class Workspace:
             if (owner == "@devkit_spec" and "/src/" in path.relative_to(self.root).as_posix()) or path.relative_to(
                 self.root
             ).as_posix() in {
-                "packages/devkit-spec/tests/test_documented_codes.py",
-                "packages/devkit-spec/tests/test_package.py",
-                "packages/devkit-spec/tests/test_workflows.py",
-                "packages/devkit-spec/tests/test_integration.py",
+                "packages/devkit-spec/tests/integration/package/test_documented_codes.py",
+                "packages/devkit-spec/tests/integration/package/test_package.py",
+                "packages/devkit-spec/tests/integration/bundles/spec/test_workflows.py",
+                "packages/devkit-spec/tests/integration/features/delivery/test_integration.py",
             }:
                 depends.add("@devkit_spec")
             groups.append(Group(self._relative([path]), frozenset(depends)))
@@ -406,7 +415,12 @@ class Workspace:
 
 
 def _full_trigger(path: str) -> bool:
-    return path in FULL_FILES or path.rsplit("/", 1)[-1] in FULL_NAMES or path.startswith(FULL_PREFIXES)
+    return (
+        path in FULL_FILES
+        or path.rsplit("/", 1)[-1] in FULL_NAMES
+        or path.startswith(FULL_PREFIXES)
+        or bool(re.fullmatch(r"(?:packages|tools)/[^/]+/tests/support(?:/.*)?", path))
+    )
 
 
 def _source_node(workspace: Workspace, path: str) -> str | None:

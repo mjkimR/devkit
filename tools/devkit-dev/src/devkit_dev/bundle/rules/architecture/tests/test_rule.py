@@ -232,3 +232,48 @@ public_modules = ["other.features.two.usecases"]
         config.read_text().replace('public_modules = ["other.features.two.usecases"]', "public_modules = []")
     )
     assert any("bypasses public API" in message for _, _, message in inspect(tmp_path))
+
+
+def test_package_management_functions_and_dynamic_loading_in_init_are_allowed(tmp_path: Path) -> None:
+    assert not _inspect(
+        tmp_path,
+        {
+            "src/sample/features/one/__init__.py": (
+                "from importlib import import_module\n"
+                "__all__ = ['Result']\n"
+                "def __getattr__(name):\n"
+                "    return getattr(import_module('.models', package=__name__), name)\n"
+            ),
+            "src/sample/features/one/models.py": "class Result: pass\n",
+        },
+    )
+
+
+def test_package_tests_require_a_boundary_category_but_keep_root_fixtures(tmp_path: Path) -> None:
+    found = _inspect(
+        tmp_path,
+        {
+            "src/sample/__init__.py": "",
+            "tests/test_misplaced.py": "pass\n",
+            "tests/features/test_misplaced.py": "pass\n",
+            "tests/unit/features/one/test_models.py": "pass\n",
+            "tests/integration/features/one/test_repository.py": "pass\n",
+            "tests/e2e/test_cli.py": "pass\n",
+            "tests/support/factories.py": "pass\n",
+            "tests/conftest.py": "pass\n",
+            "tests/__init__.py": "",
+        },
+    )
+    assert found == ["tests belong under unit, integration, e2e or support"] * 2
+
+
+def test_executable_bundle_manifests_use_the_named_resource_directory(tmp_path: Path) -> None:
+    found = _inspect(
+        tmp_path,
+        {
+            "src/sample/bundle/bundle.toml": "name='old'\n",
+            "src/sample/bundles/example/bundle/bundle.toml": "name='example'\n",
+        },
+        'data_roots = ["bundles"]\n',
+    )
+    assert found == ["executable bundle belongs at bundles/<name>/bundle"]

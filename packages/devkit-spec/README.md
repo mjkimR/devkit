@@ -65,7 +65,7 @@ The command writes and repairs nothing. See `CAP-DLV-delivery-workflows`.
 
 ## Package structure
 
-`bundle/` contains distributable agent assets. Runtime behavior lives in `features/`, grouped by documents,
+`bundles/spec/bundle/` contains distributable agent assets. Runtime behavior lives in `features/`, grouped by documents,
 proposals, scope, entrypoints, worker inspection, delivery integration, policy and governance. Each feature keeps
 its CLI and MCP adapters beside its use cases, services, repositories and models; only layers the feature needs
 are present. `cli.py` composes the command group. `base/errors.py` owns shared advisory contracts, and
@@ -73,3 +73,9 @@ are present. `cli.py` composes the command group. `base/errors.py` owns shared a
 
 CLI and MCP adapters call feature behavior. Shared contracts do not depend on feature code, and domain code
 does not import CLI or MCP adapters. Public command names, MCP tool names and bundle identifiers remain stable.
+
+Tests mirror runtime features under `tests/unit/features/` for pure parsing and transformation, and
+`tests/integration/features/` for filesystem, Git and component wiring. Bundle rendering and guidance contracts
+live under `tests/integration/bundles/spec/`; installed entry-point contracts are under
+`tests/integration/package/`. Shared fixtures live in `tests/support/spec_support/`. Rule-owned tests remain
+with their distributable rule folders. Repository consumer smoke checks exercise wheel installation end to end.

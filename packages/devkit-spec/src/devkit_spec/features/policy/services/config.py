@@ -37,8 +37,8 @@ from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 
 from devkit_core.core import is_safe_relpath
+from devkit_dist.features.project.models.templates import TemplateKey, TemplateTable
 from devkit_dist.features.project.repositories.project import read_project_config
-from devkit_dist.features.project.services.config_template import TemplateKey, TemplateTable
 
 from devkit_spec.base.errors import SpecConfigError
 

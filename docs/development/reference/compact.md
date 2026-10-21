@@ -6,7 +6,7 @@ Compact command output for agents (`devkit run`, shipped by `devkit-agt` and mou
 
 ```bash
 uv run devkit run -- just test
-uv run devkit run -- uv run pytest packages/devkit/tests/compact -x
+uv run devkit run -- uv run pytest packages/devkit/tests/unit/features/compact packages/devkit/tests/integration/features/compact -x
 uv run devkit run --format json -- npm run check
 uv run devkit run -q --slow-after 120 -- just lint-check
 ```
@@ -62,7 +62,7 @@ run.scan.summaries, run.scan.last_lines, run.scan.failures, run.scan.warnings, r
 
 ## Agent guidance
 
-The `harness` bundle of `devkit-agt` (selected by default wherever it is installed) carries the instruction `devkit-run`: when to use `devkit run`, how to read its output and log, and how to put it inside a project's recipes. Agents find it through `devkit get-context harness`; by default it adds nothing to `AGENTS.md`. The opt-in preset `harness:run` (`devkit add harness:run`) adds one `AGENTS.md` line pointing at `devkit run` and this instruction (`CAP-CMP-bounded-execution`). Its source is `packages/devkit/src/devkit_agt/harness_guide/bundle/instructions/devkit-run.md`; keep it in step with this reference. Without `devkit-agt`, `devkit run` answers with `HARNESS_COMMAND_UNAVAILABLE` ([core reference](core.md)).
+The `harness` bundle of `devkit-agt` (selected by default wherever it is installed) carries the instruction `devkit-run`: when to use `devkit run`, how to read its output and log, and how to put it inside a project's recipes. Agents find it through `devkit get-context harness`; by default it adds nothing to `AGENTS.md`. The opt-in preset `harness:run` (`devkit add harness:run`) adds one `AGENTS.md` line pointing at `devkit run` and this instruction (`CAP-CMP-bounded-execution`). Its source is `packages/devkit/src/devkit_agt/bundles/harness/bundle/instructions/devkit-run.md`; keep it in step with this reference. Without `devkit-agt`, `devkit run` answers with `HARNESS_COMMAND_UNAVAILABLE` ([core reference](core.md)).
 
 ## Module map
 

@@ -182,6 +182,33 @@ def inspect_architecture(root: Path, config_path: str = ".devkit/architecture.to
                 if "__pycache__" not in path.parts and not any(path.is_relative_to(owner) for owner in declared_roots):
                     findings.append((path.relative_to(root).as_posix(), 1, "source has no declared package owner"))
 
+    for package in packages:
+        source = root / package["root"]
+        # Namespace packages can have multiple path components below src.
+        owner = source
+        while owner != root and owner.name != "src":
+            owner = owner.parent
+        package_root = owner.parent if owner.name == "src" else source.parent.parent
+        tests = package_root / "tests"
+        for path in sorted(tests.rglob("*.py")):
+            if "__pycache__" in path.parts:
+                continue
+            relative = path.relative_to(tests)
+            if relative.parts[0] in {"unit", "integration", "e2e", "support"}:
+                continue
+            if len(relative.parts) == 1 and relative.name in {"conftest.py", "__init__.py"}:
+                continue
+            findings.append(
+                (path.relative_to(root).as_posix(), 1, "tests belong under unit, integration, e2e or support")
+            )
+        if package["kind"] == "features":
+            for manifest in sorted(source.rglob("bundle.toml")):
+                relative = manifest.relative_to(source)
+                if len(relative.parts) != 4 or relative.parts[0] != "bundles" or relative.parts[2] != "bundle":
+                    findings.append(
+                        (manifest.relative_to(root).as_posix(), 1, "executable bundle belongs at bundles/<name>/bundle")
+                    )
+
     modules: dict[str, Module] = {}
     for package in packages:
         source = root / package["root"]

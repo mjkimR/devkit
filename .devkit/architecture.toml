@@ -52,7 +52,7 @@ root = "packages/devkit/src/devkit_agt"
 kind = "features"
 features = ["rules", "workflow", "gate", "worktree", "integration", "generated", "compact"]
 root_modules = ["bootstrap"]
-data_roots = ["authoring_guide", "harness_guide"]
+data_roots = ["bundles"]
 embedded_test_roots = ["features/rules/services/builtins"]
 dependencies = ["devkit_dist", "devkit_core", "devkit.advisory"]
 
@@ -78,7 +78,7 @@ root = "packages/devkit-spec/src/devkit_spec"
 kind = "features"
 features = ["documents", "proposals", "scope", "entrypoints", "worker", "policy", "delivery", "governance"]
 root_modules = ["cli", "bootstrap"]
-data_roots = ["bundle"]
+data_roots = ["bundles"]
 dependencies = ["devkit_agt", "devkit_dist", "devkit_core", "devkit.advisory"]
 
 public_modules = [
@@ -145,11 +145,11 @@ target = "devkit_agt.features.rules.repositories.workspace.cache"
 reason = "RuleContext constructs its default WorkspaceCache; split the context/cache factory in a later contract change."
 
 [[import_exceptions]]
-source = "devkit_mcp.features.runtime.cli"
+source = "devkit_mcp.features.runtime.cli.serve"
 target = "devkit_mcp.features.runtime.mcp.server"
 reason = "Transport bootstrap starts the MCP server; it does not execute domain operations."
 
 [[import_exceptions]]
-source = "devkit_viewer.features.browse.cli"
+source = "devkit_viewer.features.browse.cli.app"
 target = "devkit_viewer.features.browse.http.server"
 reason = "Transport bootstrap starts the HTTP server; domain queries remain in usecases."

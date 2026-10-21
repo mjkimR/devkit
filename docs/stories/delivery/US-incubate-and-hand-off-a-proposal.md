@@ -6,7 +6,7 @@ area: delivery
 actor: AI coding agent
 status: active
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/bundle/workflows/sdd-proposal.md
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/sdd-proposal.md
   - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/accept.py
   - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/feedback.py
   - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py

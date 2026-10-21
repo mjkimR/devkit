@@ -35,7 +35,14 @@ behind the justfile recipes, `guides/` the agent-facing installation guides, and
 Application packages place behavior in `features/<feature>/`, with transport adapters, use cases,
 services, repositories and models added as needed. Shared contracts and technical helpers belong in
 optional `base/` and `utils/`; `devkit_core` uses `base/` and `core/` for the shared foundation.
-Content packages and `tools/devkit-dev` can remain bundle-only. See `ARCH-05-2-components` for dependencies.
+Application-owned content lives in `bundles/<name>/bundle/`, including single-bundle packages.
+Content packages and `tools/devkit-dev` can remain bundle-only. Package initializers manage exports,
+imports and loading; business logic lives in named modules. See `ARCH-05-2-components` for dependencies.
+
+Package tests use `tests/unit/`, `tests/integration/` and `tests/e2e/` as needed, mirroring source
+ownership within each tier, with helpers in `tests/support/`. Rule tests stay beside their rules.
+The repository's wheel-installation consumer smoke is cross-package e2e coverage; see
+[CI/CD](docs/development/ci-cd.md#2-test-execution-and-restricted-environments).
 
 ## Development
 
@@ -59,7 +66,7 @@ just --list                # every recipe (rules-fix, rules-phases, rules-explai
 Module commands discover projects from `packages/*/pyproject.toml` and
 `tools/*/pyproject.toml`; pass a project name (`devkit-core`, `devkit-dist`, `devkit-agt`, `devkit-advisory`,
 `devkit-spec`, `devkit-starter`, `devkit-catalog` or `devkit-viewer`) or `all`. `devkit` remains a module-command
-alias for `devkit-agt`, `core` is one for `devkit-core`, and `dist` is one for `devkit-dist`. Area names (directories under the module's `tests/`, with the matching `src` package) or paths after the module narrow `test` and `test-cov`, and extra pytest arguments follow them: `just test devkit gate worktree -k cache`. `just test-affected [--base REF] [--list] [-- PYTEST-ARGS]` derives the paths from the changes since the merge base with `main`.
+alias for `devkit-agt`, `core` is one for `devkit-core`, and `dist` is one for `devkit-dist`. Feature names select their tests across tiers and matching source subtrees; tier names (`unit`, `integration`, `e2e`) or explicit paths also narrow `test` and `test-cov`, and extra pytest arguments follow them: `just test devkit gate worktree -k cache`. `just test-affected [--base REF] [--list] [-- PYTEST-ARGS]` derives the paths from the changes since the merge base with `main`.
 
 This repository's lint, type-check and test recipes use `devkit run` for bounded output.
 When changing or repairing the runner, use `DEVKIT_RUN_MODE=raw just test` (also supported by

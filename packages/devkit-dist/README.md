@@ -61,8 +61,19 @@ behavior belongs to the project feature. There is no package-level `core` or agg
 
 Distribution depends on project, search and host; host and shared depend on project. This wheel never imports
 `devkit_agt`, including lazy module strings and entry points. Bundle rule source is data loaded from a synchronized
-copy and may use the public rule API. The repository development bundle checks feature/layer direction; `tests/test_layering.py` independently checks wheel ownership and data-only bundle boundaries, and `tests/test_cli_imports.py`
+copy and may use the public rule API. The repository development bundle checks feature/layer direction; `tests/unit/architecture/test_layering.py` independently checks wheel ownership and data-only bundle boundaries, and `tests/integration/cli/test_cli_imports.py`
 checks lazy command loading. `just test-dist` runs the package tests without the harness installed.
 
 The independent [devkit-core](../devkit-core/README.md) package owns filesystem/Git/parsing/plugin primitives,
 logging, extension dispatch and SDK-free MCP contracts. Its tests prohibit dependencies on this wheel.
+
+## Tests
+
+`tests/unit/` covers isolated contracts, algorithms and static architecture checks. `tests/integration/`
+covers real filesystem/Git state, command composition, installed plugins and connected feature behavior,
+mirroring feature, adapter and bundle areas. Shared fixture helpers live in `tests/support/distsupport/`.
+Built-wheel installation and public CLI/MCP end-to-end combinations are verified by the repository smoke suite.
+
+Distribution CLI commands are grouped in `features/distribution/cli/`: bundle packaging, selection/sync,
+configuration, context, playbooks and overrides each have a named module. `app.py` composes their command set;
+`output.py` owns shared output formatting. `__init__.py` exposes the command set without implementing behavior.

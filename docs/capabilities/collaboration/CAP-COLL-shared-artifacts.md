@@ -6,7 +6,7 @@ status: active
 area: collaboration
 entrypoints:
   - packages/devkit-dist/src/devkit_dist/features/shared
-  - packages/devkit-dist/tests/test_shared.py
+  - packages/devkit-dist/tests/integration/features/shared/test_shared.py
 created: 2026-10-21
 updated: 2026-10-21
 ---

@@ -38,6 +38,24 @@ page, a script and `/api/repos`.
 
 ## 2. Test Execution and Restricted Environments
 
+Package tests use `tests/unit/`, `tests/integration/` and `tests/e2e/`, creating only tiers they
+need. Below each tier, paths mirror source ownership (`features/<feature>/`, `base/`, `core/`,
+`adapters/` or `bundles/`); package-wide installation and architecture checks use `package/`.
+Shared helper modules live in `tests/support/`, and fixtures live in the narrowest useful
+`conftest.py`.
+
+- **Unit** tests isolate a behavior or contract. CLI parsing and output with a substituted use case
+  are unit tests.
+- **Integration** tests connect real components or exercise filesystem, Git, entry-point discovery
+  and other external boundaries. A temporary filesystem still exercises that boundary.
+- **E2e** tests exercise an installed product through its public CLI or MCP interface. The
+  repository-owned `scripts/smoke*.py` and `scripts/smoke.sh` cover clean wheel installations and
+  cross-package consumer combinations; packages do not duplicate that shared suite.
+
+A rule's tests remain under `<rule>/tests/`, where they deploy and can run independently with the
+rule (`CAP-GOV-rule-authoring`). These tiers classify the exercised boundary, regardless of whether
+the owning package is an application, library or content wheel.
+
 `just test [module]` and `just test-cov [module]` use pytest-xdist with
 `-n auto --maxprocesses 8 --dist worksteal`: up to eight workers, sharing work as workers become available.
 Extra pytest arguments follow these defaults, so `just test all -n0` runs serially.
@@ -49,20 +67,21 @@ or content changes before merging, refresh affected tests and the checks that co
 reuse valid check results and rerun only missing or stale checks. Lint, types and governance remain required:
 
 - **Selectors**: for a single module, the arguments before the first option are areas or paths that replace the
-  module's default paths. An area is a directory under the module's `tests/` together with the matching
-  `src/<package>/<area>` directory (`just test devkit gate worktree -k cache`); a path from the repository root is
-  passed as given and one from the module directory (`tests/gate/test_hooks.py`) is prefixed with it, a `::` node
-  suffix included. An unknown area exits `2`, lists the module's areas (shared helpers such as `testsupport` and
-  `distsupport` excluded) and says where paths are taken from, before any tool runs. `all` passes its arguments to pytest unchanged.
+  module's default paths. A feature name selects its tests across the available tiers together with its
+  matching source subtree, including embedded rule tests (`just test devkit gate worktree -k cache`). A tier
+  selector such as `unit` selects that category. A path from the repository root is passed as given and one
+  from the module directory (`tests/integration/features/gate/test_hooks.py`) is prefixed with it, a `::` node
+  suffix included. An unknown area exits `2`, lists the module's areas (shared `support` helpers excluded)
+  and says where paths are taken from, before any tool runs. `all` passes its arguments to pytest unchanged.
 - **`just test-affected [--base REF] [--list] [-- PYTEST-ARGS]`** (`scripts/affected_tests.py`): collects the paths
   changed since the merge base of `HEAD` and `REF` (default `main`; committed, staged, unstaged, untracked, both
   sides of a rename) and selects tests from them:
   - Shared foundations (`devkit-core`, `devkit-advisory`, `cli.py`, `__main__.py`, any `pyproject.toml` or
-    `conftest.py`, `uv.lock`, the shared test helpers `testsupport` and `distsupport`) select the full suite.
+    `conftest.py`, `uv.lock`, the shared helpers in `tests/support/`) select the full suite.
   - Repository files that tests read (`docs/`, `examples/`, `models/`, the recipe scripts and `justfile`) select
     those tests from a fixed table.
   - A package source change selects individual `test_*.py` files, including embedded rule tests, through
-    transitive static imports. Production nodes remain `devkit` areas and coarse workspace packages by default;
+    transitive static imports. Production nodes remain feature areas and coarse workspace packages by default;
     `devkit_spec` uses module nodes, including package initializers. Fine tests keep their specific dependencies;
     opaque/root imports and known CLI, bundle and source-tree consumers retain broad owner dependencies.
     A `devkit-dist` or `devkit-agt` source change also selects mandatory whole-source-tree checks (layering,

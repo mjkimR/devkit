@@ -1,7 +1,7 @@
 ---
 id: ARCH-05-2-components
 title: Building Block View - Components
-summary: "Internal subsystems of the devkit-dist, devkit-agt and optional devkit-mcp wheels, their per-wheel layering invariants, and dependency relationships."
+summary: "Application feature layers, package initialization and bundle ownership conventions, dependency relationships, and unit/integration/e2e test boundaries across the devkit workspace."
 status: active
 created_at: 2026-10-17
 ---
@@ -53,6 +53,7 @@ Application behavior lives under `features/<feature>/`. A feature adds only the 
 <package>/
 ├── base/                     # optional contracts shared by features
 ├── utils/                    # optional technical helpers
+├── bundles/<name>/bundle/    # application-owned content, when present
 └── features/<feature>/
     ├── cli/                  # command adapters
     ├── mcp/                  # SDK-free tool adapters
@@ -67,9 +68,21 @@ package-level `core/`, or a layer solely to forward a call. `base/` and
 `utils/` are optional. The foundation package is the explicit exception: `devkit_core.base` holds
 shared errors and SDK-free MCP contracts, and `devkit_core.core` holds generic implementations.
 A package may explicitly declare shared transport adapters: dist owns `adapters/cli.py` for
-its common CLI boundary. These adapters remain above application layers. Bundle-only packages
-may contain only their bundle assets. `tools/devkit-dev` owns the repository's
+its common CLI boundary. These adapters remain above application layers. Application-owned bundles live under
+`bundles/<name>/bundle/`, including a package with only one bundle. Content-only packages
+may retain their existing bundle-only layouts. `tools/devkit-dev` owns the repository's
 structure and layering rules in a development bundle; its initial layout is bundle-only.
+
+Package initializers own package management: explicit exports, import control, lazy loading and
+dynamic discovery are allowed in `__init__.py`. Business operations, domain validation and command
+handlers belong in named modules. A CLI directory can split related command groups into separate
+modules and assemble its Click group in `app.py`; there is no one-command-per-file requirement.
+
+Use cases may be typed functions or classes when they own state. A feature introduces repository
+`Protocol` contracts when implementations need substitution, and a shared base class only when it
+provides actual common behavior. There is no required `BaseUseCase`, `BaseRepository`, Command
+registry or Unit of Work. CLI commands are transport adapters, not an additional mandatory domain
+Command layer.
 
 ### 1.2 Layering Rules
 
@@ -95,6 +108,35 @@ structure and layering rules in a development bundle; its initial layout is bund
 
 Repository structure rules check folder conventions and layer direction. Package tests additionally
 check feature dependencies and package ownership; independent-wheel tests cover import isolation.
+
+### 1.3 Test Layout
+
+Each package uses only the test tiers it needs, with source ownership mirrored below the tier:
+
+```text
+tests/
+├── unit/
+│   ├── base/
+│   └── features/<feature>/
+├── integration/
+│   ├── features/<feature>/
+│   └── bundles/
+├── e2e/
+├── support/
+└── conftest.py
+```
+
+Unit tests isolate a behavior or contract; CLI parsing and output with a substituted use case can
+be unit tests. Integration tests connect real components or exercise filesystem, Git, provider
+discovery and other external boundaries. E2e tests exercise the installed product through public
+CLI/MCP entry points. These distinctions depend on the exercised boundary, not whether the
+package is an application or a library. Foundation tests mirror `base/` and `core/` instead of
+features. Content-package tests use the same tiers around bundle loading and validation.
+
+Rule tests remain in `<rule>/tests/` so they deploy and run with the rule. Shared helpers belong
+in `tests/support/`; keep fixtures at the narrowest useful `conftest.py` scope. Repository-owned
+consumer smoke scripts build and install wheels in fresh environments and cover cross-package
+e2e combinations; individual packages need no duplicate installation suites.
 
 ---
 
