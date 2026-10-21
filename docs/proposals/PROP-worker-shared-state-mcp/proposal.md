@@ -2,7 +2,7 @@
 id: PROP-worker-shared-state-mcp
 title: Shared state and workspace across worktrees and cloud agents
 summary: "Define immutable expiring shared artifacts with local CLI and MCP access, preserving scope-registry authority and providing a public remote-adapter extension contract while deferring concrete remote backends."
-status: reviewing                     # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-20
 target_area: capabilities/collaboration/
 priority: high                        # critical | high | medium | low
