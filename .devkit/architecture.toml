@@ -184,3 +184,115 @@ reason = "Transport bootstrap starts the MCP server; it does not execute domain 
 source = "devkit_viewer.features.browse.cli.app"
 target = "devkit_viewer.features.browse.http.server"
 reason = "Transport bootstrap starts the HTTP server; domain queries remain in usecases."
+
+# Transport bootstrap, dependency factories and pure output/input helpers; not domain execution.
+
+[[usecase_exceptions]]
+source = 'devkit_agt.features.gate.cli.commands'
+target = 'devkit_dist.features.project.usecases.workspace.require_git_toplevel'
+reason = 'Resolve the Git workspace for transport bootstrap before constructing gate operations.'
+
+[[usecase_exceptions]]
+source = 'devkit_agt.features.rules.cli.commands'
+target = 'devkit_agt.features.rules.usecases.rule_tests.run_notices'
+reason = 'Project deduplicated advisories from completed rule test results without I/O.'
+
+[[usecase_exceptions]]
+source = 'devkit_agt.features.rules.cli.commands'
+target = 'devkit_agt.features.rules.usecases.rule_tests.summary'
+reason = 'Count completed rule test outcomes for CLI output without I/O.'
+
+[[usecase_exceptions]]
+source = 'devkit_dist.adapters.cli'
+target = 'devkit_dist.features.project.usecases.workspace.find_project_root'
+reason = 'Select the workspace from an invocation path; this is transport bootstrap, not an application operation.'
+
+[[usecase_exceptions]]
+source = 'devkit_dist.adapters.cli'
+target = 'devkit_dist.features.project.usecases.workspace.require_devkit_root'
+reason = 'Resolve the transport workspace before constructing an operation; this is shared CLI bootstrap.'
+
+[[usecase_exceptions]]
+source = 'devkit_dist.features.distribution.cli.playbooks'
+target = 'devkit_dist.features.distribution.usecases.playbook_get.validate_playbook_id'
+reason = 'Validate the CLI asset selector before invoking the operation; no I/O or execution effects.'
+
+[[usecase_exceptions]]
+source = 'devkit_dist.features.host.cli'
+target = 'devkit_dist.features.project.usecases.workspace.find_project_root'
+reason = 'Select the workspace from an invocation path; this is transport bootstrap, not an application operation.'
+
+[[usecase_exceptions]]
+source = 'devkit_dist.features.shared.mcp'
+target = 'devkit_dist.features.project.usecases.invocation.configuration_workspace'
+reason = 'Select the owning configuration workspace from the invocation binding.'
+
+[[usecase_exceptions]]
+source = 'devkit_dist.features.shared.mcp'
+target = 'devkit_dist.features.project.usecases.invocation.guard_execution'
+reason = 'Revalidate host execution restrictions at the transport boundary; it does not grant approval authority.'
+
+[[usecase_exceptions]]
+source = 'devkit_mcp.features.runtime.mcp.server'
+target = 'devkit_dist.features.project.usecases.invocation.execution_binding'
+reason = 'Construct the MCP transport invocation binding for executor and owner workspaces.'
+
+[[usecase_exceptions]]
+source = 'devkit_mcp.features.runtime.mcp.server'
+target = 'devkit_dist.features.project.usecases.invocation.guard_execution'
+reason = 'Revalidate host execution restrictions at the transport boundary; it does not grant approval authority.'
+
+[[usecase_exceptions]]
+source = 'devkit_mcp.features.runtime.mcp.server'
+target = 'devkit_dist.features.project.usecases.invocation.invocation'
+reason = 'Bind and restore the MCP invocation context around transport dispatch.'
+
+[[usecase_exceptions]]
+source = 'devkit_mcp.features.runtime.mcp.server'
+target = 'devkit_mcp.features.runtime.usecases.discovery.load_tools'
+reason = 'Discover transport tool declarations during MCP server bootstrap; registered domain callbacks invoke BaseUseCase.'
+
+[[usecase_exceptions]]
+source = 'devkit_spec.features.documents.cli.commands'
+target = 'devkit_spec.features.documents.usecases.browse._feedback_fields'
+reason = 'Project already-loaded feedback fields for CLI output without I/O.'
+
+[[usecase_exceptions]]
+source = 'devkit_spec.features.documents.cli.commands'
+target = 'devkit_spec.features.documents.usecases.browse._planning_fields'
+reason = 'Project already-loaded planning document fields for CLI output without I/O.'
+
+[[usecase_exceptions]]
+source = 'devkit_spec.features.documents.cli.commands'
+target = 'devkit_spec.features.documents.usecases.browse._proposal_fields'
+reason = 'Project already-loaded proposal fields for CLI output without I/O.'
+
+[[usecase_exceptions]]
+source = 'devkit_spec.features.documents.cli.commands'
+target = 'devkit_spec.features.documents.usecases.browse._shown_status'
+reason = 'Choose the display status of an already-loaded document without I/O.'
+
+[[usecase_exceptions]]
+source = 'devkit_spec.features.entrypoints.cli.commands'
+target = 'devkit_spec.features.entrypoints.usecases.derive._check_options'
+reason = 'Validate mutually exclusive CLI option combinations without I/O.'
+
+[[usecase_exceptions]]
+source = 'devkit_spec.features.scope.cli.commands'
+target = 'devkit_spec.features.scope.usecases.flow.open_session'
+reason = 'Construct the scope registry/deadline dependency from workspace settings and Git location; domain operations run in execute.'
+
+[[usecase_exceptions]]
+source = 'devkit_spec.features.scope.cli.commands'
+target = 'devkit_spec.features.scope.usecases.query._record_warnings'
+reason = 'Convert returned registry problems into advisories without I/O or registry changes.'
+
+[[usecase_exceptions]]
+source = 'devkit_spec.features.scope.cli.commands'
+target = 'devkit_spec.features.scope.usecases.query._spec_dir'
+reason = 'Normalize and validate the input bundle path before passing it to the scope operation.'
+
+[[usecase_exceptions]]
+source = 'devkit_spec.features.worker.cli.commands'
+target = 'devkit_spec.features.worker.usecases.summary.summarize_inspection'
+reason = 'Project complete inspection evidence into the requested compact CLI output without I/O.'

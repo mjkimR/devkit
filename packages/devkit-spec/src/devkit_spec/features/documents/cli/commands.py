@@ -38,13 +38,13 @@ from devkit_dist.adapters.cli import (
 
 from devkit_spec.features.documents import Kind
 from devkit_spec.features.documents.usecases.browse import (
+    ListDocumentsUseCase,
+    ReferenceDocumentsUseCase,
+    ResolveDocumentsUseCase,
     _feedback_fields,
     _planning_fields,
     _proposal_fields,
     _shown_status,
-    list_documents,
-    reference_documents,
-    resolve_documents,
 )
 from devkit_spec.utils.output import echo_page, sentinel
 
@@ -78,7 +78,7 @@ def _finish(notices: Sequence[AdvisoryError]) -> None:
 @boundary
 def resolve_cmd(ids: tuple[str, ...], workspace_root: str | None, output_format: str) -> None:
     """Print the path of each document ID."""
-    found, errors, notices = resolve_documents(resolve_root(workspace_root), ids)
+    found, errors, notices = ResolveDocumentsUseCase().execute(resolve_root(workspace_root), ids)
     if is_json(output_format):
         echo_json(
             {
@@ -115,7 +115,7 @@ def refs_cmd(
     document_id: str, direction: str, limit: int, offset: int, workspace_root: str | None, output_format: str
 ) -> None:
     """List the documents a document references, or the documents referencing it."""
-    document, keys, items, notices = reference_documents(
+    document, keys, items, notices = ReferenceDocumentsUseCase().execute(
         resolve_root(workspace_root), document_id, direction, limit, offset
     )
     if is_json(output_format):
@@ -199,7 +199,7 @@ def list_cmd(
     feedback, material. In a workspace with namespaces, the namespace of the current directory (plus the
     global documents) is shown unless --namespace or --all-namespaces says otherwise.
     """
-    selected, shown, tasks, notices, scope, planning, where, historical = list_documents(
+    selected, shown, tasks, notices, scope, planning, where, historical = ListDocumentsUseCase().execute(
         resolve_root(workspace_root),
         kinds,
         status,

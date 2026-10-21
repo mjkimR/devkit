@@ -25,6 +25,7 @@ import yaml
 from devkit.advisory import AdvisoryError
 from devkit_agt.features.workflow import write_binding
 from devkit_core.base.errors import ArgumentError
+from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import parse
 
@@ -321,92 +322,25 @@ def create_proposal(
     today: date | None = None,
     cwd: Path | None = None,
 ) -> CreatedProposal:
-    """Scaffold ``docs/proposals/PROP-<slug>/`` under the workspace ``root`` and bind ``proposal.md``.
-
-    ``task_kind`` (default ``feature``), ``planning_effort`` (default ``medium``) and ``dev_effort`` (default
-    ``medium``) are always written; ``summary`` only when given (without it, a commented placeholder line);
-    ``supersedes`` (a ``PROP-<slug>`` ID) and ``needs_decompose`` only when given; ``namespace`` when given, else the
-    namespace ``cwd`` lies in (``bundle_namespace``, reported on the result). Handoff resolves
-    ``sdd-spec-<task_kind>``, carries the namespace and summary, and returns ``dev_effort`` without writing the effort
-    hints to ``spec.md``. ``proposal.md`` is bound to ``sdd-proposal`` when it resolves and validates, else left
-    unbound with a ``SPEC_PROPOSAL_UNBOUND`` notice. Raises ``ProposalSlugError`` for a slug without letters or
-    digits, ``ArgumentError`` for a ``task_kind`` outside ``TASK_KINDS``, a ``planning_effort`` or ``dev_effort``
-    outside ``EFFORTS``, a ``supersedes`` that is not a proposal ID, a ``namespace`` that is neither ``global`` nor
-    registered or a ``summary`` that is empty, not English or longer than 300 stripped characters,
-    ``ProposalNotFoundError`` for a ``supersedes`` naming no proposal and ``ProposalNotApprovedError`` for one that is not ``accepted``, ``ProposalExistsError`` when the
-    bundle or a single-file proposal of the slug exists, ``ProposalSlugConflictError`` when ``SPEC-<slug>`` exists.
-    """
-    root = root.resolve()
-    slug = new_slug(slug)
-    namespace, reported = bundle_namespace(root, namespace, cwd)
-    summary = require_summary(summary)
-    kind = require_task_kind(task_kind)
-    planning = require_effort(planning_effort, "--planning-effort")
-    dev = require_effort(dev_effort, "--dev-effort")
-    from devkit_spec.features.proposals.usecases.roadmap import decomposition_source, milestone_id
-
-    milestone = milestone_id(root, milestone)
-    decomposed_from = decomposition_source(root, decomposed_from, slug)
-    replaced = _supersedes(supersedes, slug)
-    _check_superseded(root, replaced)
-    title = (title or "").strip() or slug
-    area = (target_area or "").strip() or DEFAULT_TARGET_AREA
-    area = area if area.endswith("/") else area + "/"
-    bundle = bundle_dir(root, slug)
-    for existing in (bundle, single_file(root, slug)):
-        if existing.exists():
-            rel = existing.relative_to(root).as_posix()
-            raise ProposalExistsError(f"proposal PROP-{slug} already exists: {rel}", target_files=[rel])
-    check_spec_conflict(DocumentIndex.load(root), slug)
-    binding, unbound = resolve_binding(
-        root, None, PROPOSAL_FILE, default=PROPOSAL_WORKFLOW, error=ProposalWorkflowError
-    )
-
-    created = (today or date.today()).isoformat()
-    (bundle / DECISIONS).mkdir(parents=True)
-    (bundle / MATERIALS).mkdir()
-    proposal = bundle / PROPOSAL_FILE
-    text = _proposal(
+    """Compose the application entrypoint for internal callers."""
+    return CreateProposalUseCase().execute(
+        root,
         slug,
-        title,
-        area,
-        (milestone or "").strip(),
-        kind,
-        namespace or "",
-        summary or "",
-        created,
-        planning_effort=planning,
-        dev_effort=dev,
-        supersedes=replaced,
+        title=title,
+        target_area=target_area,
+        milestone=milestone,
+        task_kind=task_kind,
+        planning_effort=planning_effort,
+        dev_effort=dev_effort,
+        namespace=namespace,
+        summary=summary,
+        supersedes=supersedes,
         decomposed_from=decomposed_from,
         needs_decompose=needs_decompose,
+        with_target_docs=with_target_docs,
+        today=today,
+        cwd=cwd,
     )
-    proposal.write_text(text, encoding="utf-8")
-    if binding is not None:
-        write_binding(proposal, binding)
-    target_docs = None
-    if with_target_docs:
-        target_docs = bundle / TARGET_DOCS
-        target_docs.write_text(_target_docs(slug, title, created), encoding="utf-8")
-    result = CreatedProposal(
-        id=f"PROP-{slug}",
-        dir=bundle.relative_to(root).as_posix(),
-        path=proposal.relative_to(root).as_posix(),
-        target_docs=target_docs.relative_to(root).as_posix() if target_docs else None,
-        workflow=binding.workflow if binding else None,
-        namespace=reported,
-        planning_effort=planning,
-        dev_effort=dev,
-    )
-    if unbound is not None:
-        result.notices.append(
-            ProposalUnboundNotice(
-                f"PROP-{slug} is not bound to a workflow: {PROPOSAL_WORKFLOW} is not available ({unbound.code})",
-                target_files=[result.path],
-                fix=f"Bind it with devkit workflow bind --unit {result.dir} --workflow <id> once a workflow fits it",
-            )
-        )
-    return result
 
 
 def _proposal(
@@ -554,57 +488,8 @@ def create_padr(
     padr_slug: str | None = None,
     today: date | None = None,
 ) -> CreatedDecision:
-    """Scaffold ``decisions/PADR-<padr slug>.md`` in the bundle of proposal ``slug``.
-
-    The PADR slug is ``padr_slug`` when given (a leading ``PADR-`` dropped), else the title's (``new_slug``); the
-    title stays free text, so ``"2024 roadmap"`` works with ``padr_slug="roadmap-2024"``. ``summary`` is written only
-    when given; the promoted ADR keeps it. Raises ``ProposalSlugError`` for a slug without letters or digits or a
-    PADR slug whose first segment has no letter, ``ArgumentError`` for a ``summary`` that is empty, not English or
-    longer than 300 stripped characters, ``ProposalNotFoundError`` when the bundle does not exist, ``ProposalInPlanningError`` when ``plan-<slug>`` exists
-    and the checkout is not on it (a proposal in Planning is changed on that branch only, 01 §4.7),
-    ``ProposalExistsError`` when any document already declares the PADR ID.
-    """
-    root = root.resolve()
-    slug = require_slug(slug)
-    summary = require_summary(summary)
-    title = title.strip()
-    if padr_slug is not None:
-        padr_id = f"PADR-{new_slug(padr_slug.strip().removeprefix('PADR-'), '--slug', limit=None)}"
-    else:
-        padr_id = "PADR-" + new_slug(
-            title,
-            "title",
-            fix="Pass --slug with a slug whose first word has a letter (for example --slug roadmap-2024), keeping the"
-            " title as it is",
-            limit=None,
-        )
-    bundle = bundle_dir(root, slug)
-    if not bundle.is_dir():
-        rel = bundle.relative_to(root).as_posix()
-        raise ProposalNotFoundError(
-            f"proposal bundle {rel} does not exist",
-            target_files=[rel],
-            fix=f"Create the bundle first with devkit spec proposal new {slug}",
-        )
-    branch = planning_branch_elsewhere(root, slug)
-    if branch is not None:
-        rel = (bundle / PROPOSAL_FILE).relative_to(root).as_posix()
-        raise ProposalInPlanningError(
-            f"PROP-{slug} is in Planning on {branch}; a PADR is written on that branch only",
-            target_files=[rel],
-            fix=f"Run it in the checkout of {branch} (devkit worktree start plan-{slug} --existing-branch {branch}"
-            f" --unit docs/proposals/PROP-{slug} attaches one), or wait until that branch is merged and removed",
-        )
-    path = bundle / DECISIONS / f"{padr_id}.md"
-    existing = [document.path for document in DocumentIndex.load(root).by_id.get(padr_id, [])]
-    if path.exists() and path.relative_to(root).as_posix() not in existing:
-        existing.append(path.relative_to(root).as_posix())
-    if existing:
-        raise ProposalExistsError(f"PADR ID {padr_id} already exists: {', '.join(existing)}", target_files=existing)
-    created = (today or date.today()).isoformat()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(_padr(padr_id, title, summary, slug, created), encoding="utf-8")
-    return CreatedDecision(id=padr_id, path=path.relative_to(root).as_posix(), proposal=f"PROP-{slug}")
+    """Compose the application entrypoint for internal callers."""
+    return CreateProposalDecisionUseCase().execute(root, slug, title, summary=summary, padr_slug=padr_slug, today=today)
 
 
 def _padr(padr_id: str, title: str, summary: str | None, slug: str, created: str) -> str:
@@ -638,3 +523,180 @@ created_at: {created}
 
 ## 5. Consequences
 """
+
+
+class CreateProposalUseCase(BaseUseCase):
+    """Application entrypoint for create proposal."""
+
+    def execute(
+        self,
+        root: Path,
+        slug: str,
+        *,
+        title: str | None = None,
+        target_area: str | None = None,
+        milestone: str | None = None,
+        task_kind: str | None = None,
+        planning_effort: str | None = None,
+        dev_effort: str | None = None,
+        namespace: str | None = None,
+        summary: str | None = None,
+        supersedes: str | None = None,
+        decomposed_from: str | None = None,
+        needs_decompose: bool = False,
+        with_target_docs: bool = False,
+        today: date | None = None,
+        cwd: Path | None = None,
+    ) -> CreatedProposal:
+        """Scaffold ``docs/proposals/PROP-<slug>/`` under the workspace ``root`` and bind ``proposal.md``.
+
+        ``task_kind`` (default ``feature``), ``planning_effort`` (default ``medium``) and ``dev_effort`` (default
+        ``medium``) are always written; ``summary`` only when given (without it, a commented placeholder line);
+        ``supersedes`` (a ``PROP-<slug>`` ID) and ``needs_decompose`` only when given; ``namespace`` when given, else the
+        namespace ``cwd`` lies in (``bundle_namespace``, reported on the result). Handoff resolves
+        ``sdd-spec-<task_kind>``, carries the namespace and summary, and returns ``dev_effort`` without writing the effort
+        hints to ``spec.md``. ``proposal.md`` is bound to ``sdd-proposal`` when it resolves and validates, else left
+        unbound with a ``SPEC_PROPOSAL_UNBOUND`` notice. Raises ``ProposalSlugError`` for a slug without letters or
+        digits, ``ArgumentError`` for a ``task_kind`` outside ``TASK_KINDS``, a ``planning_effort`` or ``dev_effort``
+        outside ``EFFORTS``, a ``supersedes`` that is not a proposal ID, a ``namespace`` that is neither ``global`` nor
+        registered or a ``summary`` that is empty, not English or longer than 300 stripped characters,
+        ``ProposalNotFoundError`` for a ``supersedes`` naming no proposal and ``ProposalNotApprovedError`` for one that is not ``accepted``, ``ProposalExistsError`` when the
+        bundle or a single-file proposal of the slug exists, ``ProposalSlugConflictError`` when ``SPEC-<slug>`` exists.
+        """
+        root = root.resolve()
+        slug = new_slug(slug)
+        namespace, reported = bundle_namespace(root, namespace, cwd)
+        summary = require_summary(summary)
+        kind = require_task_kind(task_kind)
+        planning = require_effort(planning_effort, "--planning-effort")
+        dev = require_effort(dev_effort, "--dev-effort")
+        from devkit_spec.features.proposals.usecases.roadmap import decomposition_source, milestone_id
+
+        milestone = milestone_id(root, milestone)
+        decomposed_from = decomposition_source(root, decomposed_from, slug)
+        replaced = _supersedes(supersedes, slug)
+        _check_superseded(root, replaced)
+        title = (title or "").strip() or slug
+        area = (target_area or "").strip() or DEFAULT_TARGET_AREA
+        area = area if area.endswith("/") else area + "/"
+        bundle = bundle_dir(root, slug)
+        for existing in (bundle, single_file(root, slug)):
+            if existing.exists():
+                rel = existing.relative_to(root).as_posix()
+                raise ProposalExistsError(f"proposal PROP-{slug} already exists: {rel}", target_files=[rel])
+        check_spec_conflict(DocumentIndex.load(root), slug)
+        binding, unbound = resolve_binding(
+            root, None, PROPOSAL_FILE, default=PROPOSAL_WORKFLOW, error=ProposalWorkflowError
+        )
+
+        created = (today or date.today()).isoformat()
+        (bundle / DECISIONS).mkdir(parents=True)
+        (bundle / MATERIALS).mkdir()
+        proposal = bundle / PROPOSAL_FILE
+        text = _proposal(
+            slug,
+            title,
+            area,
+            (milestone or "").strip(),
+            kind,
+            namespace or "",
+            summary or "",
+            created,
+            planning_effort=planning,
+            dev_effort=dev,
+            supersedes=replaced,
+            decomposed_from=decomposed_from,
+            needs_decompose=needs_decompose,
+        )
+        proposal.write_text(text, encoding="utf-8")
+        if binding is not None:
+            write_binding(proposal, binding)
+        target_docs = None
+        if with_target_docs:
+            target_docs = bundle / TARGET_DOCS
+            target_docs.write_text(_target_docs(slug, title, created), encoding="utf-8")
+        result = CreatedProposal(
+            id=f"PROP-{slug}",
+            dir=bundle.relative_to(root).as_posix(),
+            path=proposal.relative_to(root).as_posix(),
+            target_docs=target_docs.relative_to(root).as_posix() if target_docs else None,
+            workflow=binding.workflow if binding else None,
+            namespace=reported,
+            planning_effort=planning,
+            dev_effort=dev,
+        )
+        if unbound is not None:
+            result.notices.append(
+                ProposalUnboundNotice(
+                    f"PROP-{slug} is not bound to a workflow: {PROPOSAL_WORKFLOW} is not available ({unbound.code})",
+                    target_files=[result.path],
+                    fix=f"Bind it with devkit workflow bind --unit {result.dir} --workflow <id> once a workflow fits it",
+                )
+            )
+        return result
+
+
+class CreateProposalDecisionUseCase(BaseUseCase):
+    """Application entrypoint for create padr."""
+
+    def execute(
+        self,
+        root: Path,
+        slug: str,
+        title: str,
+        *,
+        summary: str | None = None,
+        padr_slug: str | None = None,
+        today: date | None = None,
+    ) -> CreatedDecision:
+        """Scaffold ``decisions/PADR-<padr slug>.md`` in the bundle of proposal ``slug``.
+
+        The PADR slug is ``padr_slug`` when given (a leading ``PADR-`` dropped), else the title's (``new_slug``); the
+        title stays free text, so ``"2024 roadmap"`` works with ``padr_slug="roadmap-2024"``. ``summary`` is written only
+        when given; the promoted ADR keeps it. Raises ``ProposalSlugError`` for a slug without letters or digits or a
+        PADR slug whose first segment has no letter, ``ArgumentError`` for a ``summary`` that is empty, not English or
+        longer than 300 stripped characters, ``ProposalNotFoundError`` when the bundle does not exist, ``ProposalInPlanningError`` when ``plan-<slug>`` exists
+        and the checkout is not on it (a proposal in Planning is changed on that branch only, 01 §4.7),
+        ``ProposalExistsError`` when any document already declares the PADR ID.
+        """
+        root = root.resolve()
+        slug = require_slug(slug)
+        summary = require_summary(summary)
+        title = title.strip()
+        if padr_slug is not None:
+            padr_id = f"PADR-{new_slug(padr_slug.strip().removeprefix('PADR-'), '--slug', limit=None)}"
+        else:
+            padr_id = "PADR-" + new_slug(
+                title,
+                "title",
+                fix="Pass --slug with a slug whose first word has a letter (for example --slug roadmap-2024), keeping the"
+                " title as it is",
+                limit=None,
+            )
+        bundle = bundle_dir(root, slug)
+        if not bundle.is_dir():
+            rel = bundle.relative_to(root).as_posix()
+            raise ProposalNotFoundError(
+                f"proposal bundle {rel} does not exist",
+                target_files=[rel],
+                fix=f"Create the bundle first with devkit spec proposal new {slug}",
+            )
+        branch = planning_branch_elsewhere(root, slug)
+        if branch is not None:
+            rel = (bundle / PROPOSAL_FILE).relative_to(root).as_posix()
+            raise ProposalInPlanningError(
+                f"PROP-{slug} is in Planning on {branch}; a PADR is written on that branch only",
+                target_files=[rel],
+                fix=f"Run it in the checkout of {branch} (devkit worktree start plan-{slug} --existing-branch {branch}"
+                f" --unit docs/proposals/PROP-{slug} attaches one), or wait until that branch is merged and removed",
+            )
+        path = bundle / DECISIONS / f"{padr_id}.md"
+        existing = [document.path for document in DocumentIndex.load(root).by_id.get(padr_id, [])]
+        if path.exists() and path.relative_to(root).as_posix() not in existing:
+            existing.append(path.relative_to(root).as_posix())
+        if existing:
+            raise ProposalExistsError(f"PADR ID {padr_id} already exists: {', '.join(existing)}", target_files=existing)
+        created = (today or date.today()).isoformat()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(_padr(padr_id, title, summary, slug, created), encoding="utf-8")
+        return CreatedDecision(id=padr_id, path=path.relative_to(root).as_posix(), proposal=f"PROP-{slug}")

@@ -21,13 +21,13 @@ from devkit_dist.features.distribution.models.settings import (
     SLUG,
 )
 from devkit_dist.features.distribution.usecases.commands import (
-    add_selection,
-    inspect_project,
-    list_project,
-    remove_selection,
-    sync_selection,
+    AddSelection,
+    InspectProject,
+    ListProject,
+    RemoveSelection,
+    SyncSelection,
 )
-from devkit_dist.features.distribution.usecases.sync import recover_project, sync_registrations
+from devkit_dist.features.distribution.usecases.sync import RecoverProject, SyncRegistrations
 
 from .output import WORKSPACE, _json_command, _report
 
@@ -101,7 +101,7 @@ def sync(
     if registrations_only:
         if any((agents, no_agents, presets, no_save, cloud, local, dry_run, check, locked)):
             raise ArgumentError("--registrations-only cannot be combined with other sync modes or selections")
-        registration = sync_registrations(resolve_root(workspace_root))
+        registration = SyncRegistrations().execute(resolve_root(workspace_root))
         if is_json(output_format):
             echo_json({"actions": registration.changes, "notices": [item.to_dict() for item in registration.notices]})
         else:
@@ -138,7 +138,7 @@ def sync(
             )
     requested = _parse_selections(presets, "--preset")
     active_agents = [] if no_agents else (list(agents) if agents else None)
-    result = sync_selection(
+    result = SyncSelection().execute(
         resolve_root(workspace_root),
         save=not no_save,
         agents=active_agents,
@@ -165,7 +165,7 @@ def add(selections: tuple[str, ...], workspace_root: str | None, dry_run: bool, 
     """
     requested = _parse_selections(selections, "SELECTIONS")
     _report(
-        add_selection(
+        AddSelection().execute(
             resolve_root(workspace_root),
             requested,
             dry_run=dry_run,
@@ -187,7 +187,7 @@ def remove(bundles: tuple[str, ...], workspace_root: str | None, dry_run: bool, 
     selected by default again; `devkit add` selects it again. A deployed bundle
     whose package is no longer installed only leaves the receipt.
     """
-    _report(remove_selection(resolve_root(workspace_root), bundles, dry_run=dry_run), output_format)
+    _report(RemoveSelection().execute(resolve_root(workspace_root), bundles, dry_run=dry_run), output_format)
 
 
 @click.command(name="list")
@@ -198,7 +198,7 @@ def list_resources(workspace_root: str | None) -> None:
 
     An installed package the project does not deploy that fails to load is a warning on stderr.
     """
-    listing = list_project(resolve_root(workspace_root))
+    listing = ListProject().execute(resolve_root(workspace_root))
     echo_json(listing.to_dict())
     echo_notices(listing.notices)
     exit_on_warnings(listing.notices)
@@ -216,7 +216,7 @@ def status(workspace_root: str | None) -> None:
     under errors and rendered on stderr; any exits 1. A package the project
     does not deploy that fails to load is a warning under notices.
     """
-    report = inspect_project(resolve_root(workspace_root))
+    report = InspectProject().execute(resolve_root(workspace_root))
     echo_json(report.to_dict())
     echo_notices(report.notices)
     exit_on_problems(report.errors, report=True)
@@ -228,4 +228,4 @@ def status(workspace_root: str | None) -> None:
 @_json_command
 def recover(workspace_root: str | None) -> object:
     """Roll back an interrupted synchronization without overwriting later edits."""
-    return {"recovered_files": recover_project(resolve_root(workspace_root))}
+    return {"recovered_files": RecoverProject().execute(resolve_root(workspace_root))}

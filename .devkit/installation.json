@@ -92,6 +92,16 @@
       ]
     },
     {
+      "bundle": "devkit-dev",
+      "id": "usecase-boundaries",
+      "kind": "rule",
+      "paths": [
+        ".devkit/managed/devkit-dev/rules/usecase-boundaries/guide.md",
+        ".devkit/managed/devkit-dev/rules/usecase-boundaries/rule.py",
+        ".devkit/managed/devkit-dev/rules/usecase-boundaries/tests/test_rule.py"
+      ]
+    },
+    {
       "bundle": "harness",
       "id": "harness-consumption",
       "kind": "instruction",
@@ -1170,11 +1180,11 @@
     },
     ".devkit/managed/devkit-dev/bundle.toml": {
       "mode": 420,
-      "sha256": "13c619f88daf7860164a5bbe08a3089aab0d251f9a40ffd0f823e17b16afe427"
+      "sha256": "29a0ae9939a00c17f22824dd2b6d10caa6ef1d7e12286a3a2aa1454ed8db0555"
     },
     ".devkit/managed/devkit-dev/instructions/project-structure.md": {
       "mode": 420,
-      "sha256": "0a4fda54978e7169f31bdf2f5889008bb42bb907700bc142e07bc0df6d70f712"
+      "sha256": "aa14cc0041fc3d40ffa7c58bc1e6d1e41785b199223457687b0d679d7ed8111b"
     },
     ".devkit/managed/devkit-dev/rules/architecture/guide.md": {
       "mode": 420,
@@ -1182,11 +1192,23 @@
     },
     ".devkit/managed/devkit-dev/rules/architecture/rule.py": {
       "mode": 420,
-      "sha256": "ba79eec8c97eea759c7aa8c59dd11aaea8cfb22b865f3454f9c2bb0d8dbfa59e"
+      "sha256": "338701ed6453e89d59356fa8d73fc81f302a2e1fbd2dc8281f5e174cd0a22114"
     },
     ".devkit/managed/devkit-dev/rules/architecture/tests/test_rule.py": {
       "mode": 420,
       "sha256": "fc3f0f5116d0cd692dd305230f755a515e228d7cebbca93588532d4cdae906ed"
+    },
+    ".devkit/managed/devkit-dev/rules/usecase-boundaries/guide.md": {
+      "mode": 420,
+      "sha256": "cd037f2c16d8439b3c76e5fc00dd66eeaf1f67e189441e790e25d21d05ace204"
+    },
+    ".devkit/managed/devkit-dev/rules/usecase-boundaries/rule.py": {
+      "mode": 420,
+      "sha256": "5af3987dd41541413cdc2a26f9dd7169e44f3c61895f9e13f92754c8b995dafa"
+    },
+    ".devkit/managed/devkit-dev/rules/usecase-boundaries/tests/test_rule.py": {
+      "mode": 420,
+      "sha256": "0481a141871d954aff5e59da808c7eba9cc1a52f191308ad4dd330f066319590"
     },
     ".devkit/managed/devkit/AGENTS.md": {
       "mode": 420,

@@ -185,7 +185,7 @@ sync.registrations.clone_lock = lock
 sync.registrations.apply = lambda *a, **k: (_ for _ in ()).throw(AssertionError("registration mutation"))
 sync.commit_locked = lambda *a, **k: (_ for _ in ()).throw(AssertionError("asset mutation"))
 try:
-    if sys.argv[3] == "registration": sync.sync_registrations(target)
+    if sys.argv[3] == "registration": sync.SyncRegistrations().execute(target)
     else: sync.sync_project(target, [], locked=True)
 except AdvisoryError as exc:
     print(json.dumps({"code": exc.code}))

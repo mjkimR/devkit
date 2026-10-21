@@ -20,3 +20,11 @@ Feature dependency declarations and the actual import graph must be acyclic.
 Every feature declares its permitted feature dependencies, including dependencies
 across packages; public API access does not grant permission to reverse direction.
 Run its bundled tests with `uv run pytest tools/devkit-dev -q`.
+
+`RULE-usecase-boundaries` enforces typed `BaseUseCase.execute` at CLI/MCP
+execution boundaries. Internal helper functions remain valid. The AST check follows
+explicit aliases, facade exports and retained instances; constructors wire dependencies
+and defer operations to `execute`. Exact callable transport helper exceptions use
+`[[usecase_exceptions]]` with `source`, `target` and `reason` in the architecture
+declaration. Stale exceptions fail. Computed dispatch and semantic side effects still
+require review; this rule is not a runtime approval or authorization mechanism.

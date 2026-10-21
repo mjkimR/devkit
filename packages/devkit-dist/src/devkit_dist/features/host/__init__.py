@@ -18,11 +18,12 @@ from devkit_dist.features.host.models.errors import (
 from devkit_dist.features.host.models.hooks import HookDefinition, HookEvent, HookResponse
 from devkit_dist.features.host.repositories.adapters.codex import CodexAdapter
 from devkit_dist.features.host.services.configuration import adapter_for, plan_config, read_hook
-from devkit_dist.features.host.usecases.runner import dispatch
-from devkit_dist.features.host.usecases.status import HostStatus, inspect_host
+from devkit_dist.features.host.usecases.runner import DispatchHostHook
+from devkit_dist.features.host.usecases.status import HostStatus, InspectHost
 
 __all__ = [
     "CodexAdapter",
+    "DispatchHostHook",
     "HookConflictError",
     "HookDefinition",
     "HookDefinitionError",
@@ -36,9 +37,8 @@ __all__ = [
     "HostMcpError",
     "HostMcpInputError",
     "HostStatus",
+    "InspectHost",
     "adapter_for",
-    "dispatch",
-    "inspect_host",
     "plan_config",
     "read_hook",
 ]

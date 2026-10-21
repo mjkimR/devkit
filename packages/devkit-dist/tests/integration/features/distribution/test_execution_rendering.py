@@ -11,7 +11,7 @@ from devkit_dist.features.distribution.models.errors import BundleError, Receipt
 from devkit_dist.features.distribution.services.bundles import load_bundle
 from devkit_dist.features.distribution.services.installation.inventory import desired_inventory
 from devkit_dist.features.distribution.services.installation.local_render import LocalRenderStaleError
-from devkit_dist.features.distribution.usecases.context import get_context
+from devkit_dist.features.distribution.usecases.context import GetContext
 from devkit_dist.features.distribution.usecases.status import get_project_status
 from devkit_dist.features.distribution.usecases.sync import sync_project
 from devkit_dist.features.project.repositories.local_config import resolve_execution_environment
@@ -52,7 +52,7 @@ def test_reversal_no_save_context_status_and_idempotence(tmp_path: Path):
     assert parse_receipt(local).execution_environment == "local"
     sync_project(root, [item], environment="cloud", save_environment=False)
     assert resolve_execution_environment(root).environment == "local"
-    assert get_context(root, "execution").constitution == "Constitution cloud\n"
+    assert GetContext().execute(root, "execution").constitution == "Constitution cloud\n"
     assert parse_receipt(receipt.read_bytes()).execution_environment == "cloud"
     assert not get_project_status(root, [item]).ok
     assert sync_project(root, [item], dry_run=True).actions
@@ -74,7 +74,7 @@ def test_unrecorded_canonical_bootstrap_and_personal_evidence(tmp_path: Path):
     raw.pop("execution_environment")
     path.write_text(json.dumps(raw))
     assert parse_receipt(path.read_bytes()).execution_environment is None
-    assert get_context(root, "execution").constitution == "Constitution local\n"
+    assert GetContext().execute(root, "execution").constitution == "Constitution local\n"
     assert not get_project_status(root, [item]).ok
     with pytest.raises(ReceiptStaleError):
         sync_project(root, [item], locked=True)
@@ -82,14 +82,14 @@ def test_unrecorded_canonical_bootstrap_and_personal_evidence(tmp_path: Path):
     assert parse_receipt(path.read_bytes()).execution_environment == "local"
     (root / ".devkit/config.local.toml").write_text('[bundles.execution.variables]\nlanguage="ko"\n')
     sync_project(root, [item], environment="cloud", save_environment=False)
-    assert get_context(root, "execution").constitution == "Constitution cloud\n"
+    assert GetContext().execute(root, "execution").constitution == "Constitution cloud\n"
     raw = json.loads(path.read_text())
     raw.pop("execution_environment")
     path.write_text(json.dumps(raw))
     with pytest.raises(LocalRenderStaleError):
-        get_context(root, "execution")
+        GetContext().execute(root, "execution")
     sync_project(root, [item])
-    assert get_context(root, "execution").constitution == "Constitution local\n"
+    assert GetContext().execute(root, "execution").constitution == "Constitution local\n"
 
 
 @pytest.mark.parametrize("invalid", [None, True, 1, "", "CLOUD", [], {}])

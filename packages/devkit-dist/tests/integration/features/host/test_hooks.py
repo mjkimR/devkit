@@ -21,13 +21,13 @@ from devkit_dist.features.distribution.services.installation.receipt import read
 from devkit_dist.features.distribution.usecases.status import get_project_status
 from devkit_dist.features.distribution.usecases.sync import sync_project
 from devkit_dist.features.host import (
+    DispatchHostHook,
     HookConflictError,
     HookDefinitionError,
     HookDispatchError,
     HookResponse,
     HostConfigError,
-    dispatch,
-    inspect_host,
+    InspectHost,
     read_hook,
 )
 from devkit_dist.features.project.repositories.receipt import RECEIPT_PATH, parse_receipt
@@ -200,9 +200,14 @@ def test_dispatch_observes_only_metadata_and_status_distinguishes_delivery(
     project: Path, bundle: InstalledBundle
 ) -> None:
     deploy(project, bundle)
-    assert inspect_host(project).hooks[0]["last_received"] is None
-    assert dispatch(project, "codex", KEY, event(project, prompt="SECRET", tool_input={"command": "PRIVATE"})) == {}
-    status = inspect_host(project).to_dict()
+    assert InspectHost().execute(project).hooks[0]["last_received"] is None
+    assert (
+        DispatchHostHook().execute(
+            project, "codex", KEY, event(project, prompt="SECRET", tool_input={"command": "PRIVATE"})
+        )
+        == {}
+    )
+    status = InspectHost().execute(project).to_dict()
     assert status["ok"] and status["trust"] == "unknown" and status["execution_permissions"] == "unknown"
     assert status["hooks"][0]["last_received"]["event"] == "PreToolUse"
     stored = (project / ".devkit/transient/host/codex/sample/trace.json").read_text()
@@ -215,13 +220,13 @@ def test_dispatch_rejects_stale_definition_wrong_event_and_unknown_asset(
     deploy(project, bundle)
     for key, payload in [("sample:missing", event(project)), (KEY, event(project, hook_event_name="Stop"))]:
         with pytest.raises(HookDispatchError):
-            dispatch(project, "codex", key, payload)
+            DispatchHostHook().execute(project, "codex", key, payload)
     path = project / ".devkit/overrides/sample/hooks/trace.toml"
     path.parent.mkdir(parents=True)
     path.write_text(SOURCE.replace("PreToolUse", "PostToolUse"))
     sync_project(project, [bundle])
     with pytest.raises(HookDispatchError):
-        dispatch(project, "codex", KEY, event(project))
+        DispatchHostHook().execute(project, "codex", KEY, event(project))
 
 
 def test_handler_context_and_failures_do_not_corrupt_protocol(
@@ -323,7 +328,7 @@ with patch("devkit_dist.features.host.usecases.runner.metadata.entry_points", re
         env=os.environ,
     )
     assert result.returncode == 0 and result.stderr == "" and json.loads(result.stdout) == {}
-    assert inspect_host(project).hooks[0]["last_received"] is not None
+    assert InspectHost().execute(project).hooks[0]["last_received"] is not None
 
 
 def test_changed_override_handler_requires_sync(project: Path, bundle: InstalledBundle) -> None:
@@ -334,7 +339,7 @@ def test_changed_override_handler_requires_sync(project: Path, bundle: Installed
     sync_project(project, [bundle])
     override.write_text(SOURCE.replace('handler = "observe"', 'handler = "other-service"'))
     with pytest.raises(HookDispatchError) as caught:
-        dispatch(project, "codex", KEY, event(project))
+        DispatchHostHook().execute(project, "codex", KEY, event(project))
     assert caught.value.code == "HOST_HOOK_DISPATCH_FAILED"
     assert not (project / ".devkit/transient/host/codex/sample/trace.json").exists()
 

@@ -7,6 +7,7 @@ from pathlib import Path
 
 from devkit.advisory import AdvisoryError
 from devkit_core.base.errors import ArgumentError
+from devkit_core.base.usecase import BaseUseCase
 
 from devkit_spec.base.errors import (
     ScopeRecordInvalidWarning,
@@ -66,42 +67,48 @@ def _record_warnings(
     ]
 
 
-def compare_inputs(root: Path, proposals: tuple[str, ...], specs: tuple[str, ...]):
-    sets: list[ScopeSet] = [from_proposal(root, slug) for slug in proposals]
-    for value in specs:
-        relative = _bundle_dir(root, value)
-        sets.append(from_spec(root, relative))
-    pairs = compare_all(sets)
-    summary = {"sets": len(sets), "pairs": len(pairs), "overlapping": _overlapping(pairs)}
-    return sets, pairs, summary
+class CompareScopesUseCase(BaseUseCase):
+    def execute(
+        self, root: Path, proposals: tuple[str, ...], specs: tuple[str, ...]
+    ) -> tuple[list[ScopeSet], list[PairResult], dict[str, int]]:
+        sets: list[ScopeSet] = [from_proposal(root, slug) for slug in proposals]
+        for value in specs:
+            relative = _bundle_dir(root, value)
+            sets.append(from_spec(root, relative))
+        pairs = compare_all(sets)
+        summary = {"sets": len(sets), "pairs": len(pairs), "overlapping": _overlapping(pairs)}
+        return sets, pairs, summary
 
 
-def query_scopes(root: Path, session: Session, spec_dir: str | None):
-    location = session.location
-    mine: Record | None
-    unreadable: ScopeRecordInvalidWarning | None = None
-    try:
-        found = own(session, cleanup=False)
-        mine, others, problems = found.record, found.others, found.problems
-    except (ScopeTokenMissingError, ScopeRecordMissingError, ScopeRecordInvalidWarning) as exc:
-        # listing needs no own record: one that may be unreadable is reported with the other unreadable files
-        unreadable = exc if isinstance(exc, ScopeRecordInvalidWarning) else None
-        mine = None
-        others, problems = session.registry.query(location.namespace, session.deadline)
-    if spec_dir is not None:
-        planned = from_spec(root, _spec_dir(root, spec_dir))
-        pairs = compare_with(planned, [record.to_set() for record in others])
-    elif mine is not None:
-        pairs = compare_with(mine.to_set(), [record.to_set() for record in others])
-    else:
-        pairs = compare_all([record.to_set() for record in others])
-    notices = _record_warnings(location, problems, unreadable)
-    records = [*([mine] if mine else []), *others]
-    summary = {
-        "namespace": location.namespace,
-        "records": len(records),
-        "pairs": len(pairs),
-        "overlapping": _overlapping(pairs),
-        "problems": len(problems),
-    }
-    return mine, others, records, pairs, summary, notices
+class QueryScopesUseCase(BaseUseCase):
+    def execute(
+        self, root: Path, session: Session, spec_dir: str | None
+    ) -> tuple[Record | None, list[Record], list[Record], list[PairResult], dict[str, str | int], list[AdvisoryError]]:
+        location = session.location
+        mine: Record | None
+        unreadable: ScopeRecordInvalidWarning | None = None
+        try:
+            found = own(session, cleanup=False)
+            mine, others, problems = found.record, found.others, found.problems
+        except (ScopeTokenMissingError, ScopeRecordMissingError, ScopeRecordInvalidWarning) as exc:
+            # listing needs no own record: one that may be unreadable is reported with the other unreadable files
+            unreadable = exc if isinstance(exc, ScopeRecordInvalidWarning) else None
+            mine = None
+            others, problems = session.registry.query(location.namespace, session.deadline)
+        if spec_dir is not None:
+            planned = from_spec(root, _spec_dir(root, spec_dir))
+            pairs = compare_with(planned, [record.to_set() for record in others])
+        elif mine is not None:
+            pairs = compare_with(mine.to_set(), [record.to_set() for record in others])
+        else:
+            pairs = compare_all([record.to_set() for record in others])
+        notices = _record_warnings(location, problems, unreadable)
+        records = [*([mine] if mine else []), *others]
+        summary = {
+            "namespace": location.namespace,
+            "records": len(records),
+            "pairs": len(pairs),
+            "overlapping": _overlapping(pairs),
+            "problems": len(problems),
+        }
+        return mine, others, records, pairs, summary, notices

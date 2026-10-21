@@ -68,9 +68,11 @@ from devkit_agt.features.worktree.usecases.lifecycle import (
     BranchStatus,
     FinishResult,
     Position,
+    StartBranch,
     StartResult,
     StatusResult,
     WorktreeStatus,
+    WorktreeStatusQuery,
     attach,
     check_branch,
     discard,
@@ -80,8 +82,6 @@ from devkit_agt.features.worktree.usecases.lifecycle import (
     path_for,
     slug_of,
     start,
-    start_branch,
-    status,
 )
 from devkit_agt.features.worktree.usecases.planning import FinishPlan, plan_finish, validate_finish
 from devkit_agt.features.worktree.usecases.stale import StaleBranch, StaleResult, stale_branches
@@ -129,6 +129,7 @@ __all__ = [
     "StalePullRequestsUnknownNotice",
     "StaleResult",
     "StaleSkippedNotice",
+    "StartBranch",
     "StartResult",
     "StatusResult",
     "SyncFailedWarning",
@@ -139,6 +140,7 @@ __all__ = [
     "WorktreeConfigError",
     "WorktreeError",
     "WorktreeStatus",
+    "WorktreeStatusQuery",
     "attach",
     "build_result",
     "check_branch",
@@ -160,7 +162,5 @@ __all__ = [
     "slug_of",
     "stale_branches",
     "start",
-    "start_branch",
-    "status",
     "validate_finish",
 ]

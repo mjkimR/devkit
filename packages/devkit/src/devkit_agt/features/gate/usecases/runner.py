@@ -2,7 +2,7 @@
 
 The library entry points behind ``devkit gate``: ``load_gate_project`` reads a
 repository's gates and their validated configuration (what ``gate status``
-reports), ``run_hook`` runs one stage the way the hook wrappers do.
+reports), ``RunHookUseCase.execute`` runs one stage the way the hook wrappers do.
 ``validate_gates`` and ``run_stage`` are the steps underneath.
 """
 
@@ -16,6 +16,7 @@ from types import MappingProxyType
 from typing import Any
 
 from devkit.advisory import AdvisoryError, ExitCode, Level, as_advisory_error
+from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core.logs import get_logger
 from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.project.repositories.project import require_git_toplevel
@@ -189,35 +190,44 @@ class GateProject:
         )
 
 
-def load_gate_project(root: Path) -> GateProject:
-    """Load the gates and the validated ``[gates]`` configuration of the Git work tree containing ``root``.
+class LoadGateProjectUseCase(BaseUseCase):
+    """Application entrypoint for load gate project."""
 
-    ``root`` may be any directory inside the work tree; the project is its top
-    level. Registry, configuration and settings problems (including a
-    configuration file that cannot be read, the core ``ConfigError``) are
-    collected in ``validation.errors`` rather than raised; only a failed Git
-    query raises (``GitError``, ``GIT_FAILED``).
-    """
-    top = require_git_toplevel(root)
-    common = git.common_git_dir(top)
-    registry = project_registry(top)
-    load_errors: list[AdvisoryError] = []
-    try:
-        config = load_gates_config(top, common)
-    except ConfigError as exc:
-        config = GatesConfig()
-        load_errors.append(exc)
-    checked = validate_gates(registry, config)
-    validation = Validation(checked.settings, (*load_errors, *checked.errors))
-    return GateProject(top, git.git_dir(top), common, registry, config, validation)
+    def execute(self, root: Path) -> GateProject:
+        """Load the gates and the validated ``[gates]`` configuration of the Git work tree containing ``root``.
+
+        ``root`` may be any directory inside the work tree; the project is its top
+        level. Registry, configuration and settings problems (including a
+        configuration file that cannot be read, the core ``ConfigError``) are
+        collected in ``validation.errors`` rather than raised; only a failed Git
+        query raises (``GitError``, ``GIT_FAILED``).
+        """
+        top = require_git_toplevel(root)
+        common = git.common_git_dir(top)
+        registry = project_registry(top)
+        load_errors: list[AdvisoryError] = []
+        try:
+            config = load_gates_config(top, common)
+        except ConfigError as exc:
+            config = GatesConfig()
+            load_errors.append(exc)
+        checked = validate_gates(registry, config)
+        validation = Validation(checked.settings, (*load_errors, *checked.errors))
+        return GateProject(top, git.git_dir(top), common, registry, config, validation)
 
 
-def run_hook(root: Path, stage: Stage, args: Sequence[str] = ()) -> StageReport:
-    """Run one stage's gates for the work tree containing ``root``, as the hook wrapper does.
+load_gate_project = LoadGateProjectUseCase().execute
 
-    ``args`` are the arguments Git passed to the hook (the message file of
-    ``commit-msg``). The report's ``exit_code`` is what a blocking stage exits
-    with; raises only what ``load_gate_project`` raises.
-    """
-    project = load_gate_project(root)
-    return run_stage(project.context(stage, args), project.registry, project.config, project.validation)
+
+class RunHookUseCase(BaseUseCase):
+    """Application entrypoint for run hook."""
+
+    def execute(self, root: Path, stage: Stage, args: Sequence[str] = ()) -> StageReport:
+        """Run one stage's gates for the work tree containing ``root``, as the hook wrapper does.
+
+        ``args`` are the arguments Git passed to the hook (the message file of
+        ``commit-msg``). The report's ``exit_code`` is what a blocking stage exits
+        with; raises only what ``load_gate_project`` raises.
+        """
+        project = load_gate_project(root)
+        return run_stage(project.context(stage, args), project.registry, project.config, project.validation)

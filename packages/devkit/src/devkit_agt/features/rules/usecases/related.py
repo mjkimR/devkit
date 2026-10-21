@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from devkit_core.base.usecase import BaseUseCase
 from devkit_dist.base.errors import ReceiptError
 from devkit_dist.features.project.repositories.receipt import load_receipt
 
@@ -42,50 +43,53 @@ def _article(word: str) -> str:
     return "an" if word[:1] in "aeiou" else "a"
 
 
-def resolve_related(root: Path, rule: Rule) -> tuple[list[RelatedAsset], list[RelatedUnresolvedNotice]]:
-    """Each ``related`` entry of ``rule`` resolved through the receipt, and a notice for each one that is not.
+class ResolveRelatedUseCase(BaseUseCase):
+    """Application entrypoint for resolve related."""
 
-    A receipt that cannot be read resolves nothing and is one notice naming the
-    receipt's problem and its fix, not one "not deployed" notice per entry.
-    """
-    refs: tuple[str, ...] = tuple(getattr(rule, "related", ()) or ())
-    if not refs:
-        return [], []
-    try:
-        receipt = load_receipt(root)
-    except ReceiptError as exc:
-        notice = RelatedUnresolvedNotice(
-            f"{rule.id}: related {', '.join(refs)} cannot be resolved: ({exc.code}) {exc.message}",
-            target_files=list(exc.target_files),
-            fix=exc.fix,
-        )
-        return [RelatedAsset(ref, None, None) for ref in refs], [notice]
-    assets = {(asset.bundle, asset.id): asset for asset in receipt.assets()} if receipt is not None else {}
-    resolved: list[RelatedAsset] = []
-    notices: list[RelatedUnresolvedNotice] = []
-    for ref in refs:
-        bundle, _, asset_id = ref.partition(":")
-        asset = assets.get((bundle, asset_id))
-        if asset is None:
-            notices.append(
-                RelatedUnresolvedNotice(f"{rule.id}: related {ref} is not deployed", fix=f"devkit add {bundle}")
+    def execute(self, root: Path, rule: Rule) -> tuple[list[RelatedAsset], list[RelatedUnresolvedNotice]]:
+        """Each ``related`` entry of ``rule`` resolved through the receipt, and a notice for each one that is not.
+
+        A receipt that cannot be read resolves nothing and is one notice naming the
+        receipt's problem and its fix, not one "not deployed" notice per entry.
+        """
+        refs: tuple[str, ...] = tuple(getattr(rule, "related", ()) or ())
+        if not refs:
+            return [], []
+        try:
+            receipt = load_receipt(root)
+        except ReceiptError as exc:
+            notice = RelatedUnresolvedNotice(
+                f"{rule.id}: related {', '.join(refs)} cannot be resolved: ({exc.code}) {exc.message}",
+                target_files=list(exc.target_files),
+                fix=exc.fix,
             )
-            resolved.append(RelatedAsset(ref, None, None))
-            continue
-        if asset.kind not in RELATED_KINDS:
-            reason = f"{_article(asset.kind)} {asset.kind} asset, not an instruction or playbook"
-            notices.append(RelatedUnresolvedNotice(f"{rule.id}: related {ref} is {reason}"))
-            resolved.append(RelatedAsset(ref, asset.kind, None))
-            continue
-        path = _entry_file(asset.paths)
-        if path is None:
-            notices.append(
-                RelatedUnresolvedNotice(
-                    f"{rule.id}: related {ref} is {_article(asset.kind)} {asset.kind} asset without a Markdown file",
-                    fix=f"Add the {asset.kind}'s Markdown file to {ref} in bundle {bundle}, then run `devkit sync`",
+            return [RelatedAsset(ref, None, None) for ref in refs], [notice]
+        assets = {(asset.bundle, asset.id): asset for asset in receipt.assets()} if receipt is not None else {}
+        resolved: list[RelatedAsset] = []
+        notices: list[RelatedUnresolvedNotice] = []
+        for ref in refs:
+            bundle, _, asset_id = ref.partition(":")
+            asset = assets.get((bundle, asset_id))
+            if asset is None:
+                notices.append(
+                    RelatedUnresolvedNotice(f"{rule.id}: related {ref} is not deployed", fix=f"devkit add {bundle}")
                 )
-            )
-            resolved.append(RelatedAsset(ref, asset.kind, None))
-            continue
-        resolved.append(RelatedAsset(ref, asset.kind, path))
-    return resolved, notices
+                resolved.append(RelatedAsset(ref, None, None))
+                continue
+            if asset.kind not in RELATED_KINDS:
+                reason = f"{_article(asset.kind)} {asset.kind} asset, not an instruction or playbook"
+                notices.append(RelatedUnresolvedNotice(f"{rule.id}: related {ref} is {reason}"))
+                resolved.append(RelatedAsset(ref, asset.kind, None))
+                continue
+            path = _entry_file(asset.paths)
+            if path is None:
+                notices.append(
+                    RelatedUnresolvedNotice(
+                        f"{rule.id}: related {ref} is {_article(asset.kind)} {asset.kind} asset without a Markdown file",
+                        fix=f"Add the {asset.kind}'s Markdown file to {ref} in bundle {bundle}, then run `devkit sync`",
+                    )
+                )
+                resolved.append(RelatedAsset(ref, asset.kind, None))
+                continue
+            resolved.append(RelatedAsset(ref, asset.kind, path))
+        return resolved, notices

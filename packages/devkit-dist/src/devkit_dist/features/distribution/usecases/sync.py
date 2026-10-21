@@ -12,6 +12,7 @@ from types import MappingProxyType
 
 from devkit.advisory import AdvisoryError, ExitCode, Level
 from devkit_core.base.errors import ArgumentError
+from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core.git import run_git
 
 from devkit_dist.features.distribution.models.content import Content, json_content, same_content, signature
@@ -1076,20 +1077,26 @@ def commit_locked(
     return finish
 
 
-def recover_project(root: Path) -> int:
-    """Roll back an interrupted synchronization; return the number of files restored."""
-    root = require_project_dir(root)
-    with project_lock(root):
-        return recover_locked(root)
+class RecoverProject(BaseUseCase):
+    """Execute the recover project application operation."""
+
+    def execute(self, root: Path) -> int:
+        """Roll back an interrupted synchronization; return the number of files restored."""
+        root = require_project_dir(root)
+        with project_lock(root):
+            return recover_locked(root)
 
 
-def sync_registrations(root: Path) -> registrations.RegistrationPlan:
-    """Reconcile only optional local registrations after locked worktree asset restoration."""
-    root = require_project_dir(root)
-    guard_execution()
-    with registrations.clone_lock(root), project_lock(root):
+class SyncRegistrations(BaseUseCase):
+    """Execute the sync registrations application operation."""
+
+    def execute(self, root: Path) -> registrations.RegistrationPlan:
+        """Reconcile only optional local registrations after locked worktree asset restoration."""
+        root = require_project_dir(root)
         guard_execution()
-        registrations.recover(root)
-        result = registrations.plan(root, read_config(root).agents)
-        registrations.apply(result)
-    return result
+        with registrations.clone_lock(root), project_lock(root):
+            guard_execution()
+            registrations.recover(root)
+            result = registrations.plan(root, read_config(root).agents)
+            registrations.apply(result)
+        return result

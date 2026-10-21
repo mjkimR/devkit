@@ -28,9 +28,7 @@ from devkit_agt.features.rules.models.phases import (
     transition_entries,
 )
 from devkit_agt.features.rules.models.settings import SettingsResolver
-from devkit_agt.features.rules.usecases.explain import explain_entry as explain_entry
-from devkit_agt.features.rules.usecases.explain import guide_display as guide_display
-from devkit_agt.features.rules.usecases.explain import read_guide
+from devkit_agt.features.rules.usecases.explain import ReadRuleGuideUseCase
 from devkit_agt.features.rules.usecases.rule_tests import RuleTestRun
 
 OK_TEXT = "no error-severity violation remains"
@@ -191,7 +189,7 @@ def print_explain(rule: Rule, entry: dict[str, Any], resolver: SettingsResolver 
         for override in resolver.overrides:
             values = " ".join(f"{k}={_value(v)}" for k, v in override.values.items())
             click.echo(f"[SETTING_OVERRIDE: path={override.path} {values}]")
-    guide = read_guide(rule)
+    guide = ReadRuleGuideUseCase().execute(rule)
     if guide is not None:
         click.echo()
         click.echo(guide.rstrip())

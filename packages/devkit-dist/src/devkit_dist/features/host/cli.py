@@ -19,7 +19,9 @@ from devkit_dist.adapters.cli import (
     resolve_root,
     workspace_option,
 )
-from devkit_dist.features.host import HookDispatchError, dispatch, inspect_host
+from devkit_dist.features.host.models.errors import HookDispatchError
+from devkit_dist.features.host.usecases.runner import DispatchHostHook
+from devkit_dist.features.host.usecases.status import InspectHost
 from devkit_dist.features.project.usecases.workspace import find_project_root
 
 MAX_EVENT_BYTES = 1024 * 1024
@@ -27,7 +29,7 @@ MAX_EVENT_BYTES = 1024 * 1024
 
 @click.group()
 def cli() -> None:
-    """Host adapters: inspect lifecycle hooks and dispatch native events to services."""
+    """Host adapters: inspect lifecycle hooks and DispatchHostHook native events to services."""
 
 
 @cli.command()
@@ -37,7 +39,7 @@ def cli() -> None:
 @boundary
 def status(host: str, workspace_root: str | None, output_format: str) -> None:
     """Inspect installed hooks and metadata-only observations; trust and permissions remain host-owned."""
-    report = inspect_host(resolve_root(workspace_root), host)
+    report = InspectHost().execute(resolve_root(workspace_root), host)
     if is_json(output_format):
         echo_json(report.to_dict())
     else:
@@ -74,7 +76,7 @@ def hook(host: str, asset: str, workspace_root: str | None) -> None:
             root = find_project_root(Path(cwd))
         else:
             raise HookDispatchError("hook event must include an absolute cwd")
-        response = dispatch(root, host, asset, payload)
+        response = DispatchHostHook().execute(root, host, asset, payload)
     except AdvisoryError as exc:
         echo_notices([exc.with_level(Level.WARNING)])
     except (ValueError, UnicodeError, OSError, RecursionError) as exc:

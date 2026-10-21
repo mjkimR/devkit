@@ -35,7 +35,7 @@ from devkit_dist.adapters.cli import (
 
 from devkit_spec.features.entrypoints import Applied
 from devkit_spec.features.entrypoints.models.derive import Pair, Skipped, State
-from devkit_spec.features.entrypoints.usecases.derive import _check_options, derive_entrypoints
+from devkit_spec.features.entrypoints.usecases.derive import DeriveEntrypointsUseCase, _check_options
 from devkit_spec.utils.output import fields_line, sentinel
 
 DEFAULT_STATUS = "completed,in-progress"
@@ -80,7 +80,7 @@ def derive_cmd(
     """
     _check_options(spec_dir, every, status, min_count, write, targets)
     root = resolve_root(workspace_root)
-    pairs, skipped, applied, summary, errors, notices = derive_entrypoints(
+    pairs, skipped, applied, summary, errors, notices = DeriveEntrypointsUseCase().execute(
         root, spec_dir, status, min_count, write, targets, codes, excludes
     )
     if is_json(output_format):

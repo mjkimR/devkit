@@ -9,11 +9,11 @@ from pathlib import Path
 import devkit_agt.features.workflow as workflow
 import pytest
 from devkit_agt.features.workflow import (
+    CreateUnitUseCase,
+    ListUnitsUseCase,
     UnitNotFoundError,
     WorkflowError,
     Workspace,
-    create_unit,
-    list_units,
     plan_handoff,
     record_answer,
 )
@@ -41,7 +41,7 @@ def test_reference_library_example_runs(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     root = _workspace(tmp_path)
-    create_unit(Workspace(root), "login")
+    CreateUnitUseCase().execute(Workspace(root), "login")
     example = next(block for block in _python_blocks(REFERENCE.read_text()) if "Workspace(" in block)
     monkeypatch.chdir(root)
     exec(compile(example, str(REFERENCE), "exec"), {})
@@ -58,9 +58,9 @@ def test_library_errors_carry_codes(tmp_path: Path) -> None:
     with pytest.raises(WorkflowError) as raised:
         ws.resolve_unit("nowhere")
     assert raised.value.code == "UNIT_NOT_FOUND"
-    unit = create_unit(ws, "login")
+    unit = CreateUnitUseCase().execute(ws, "login")
     with pytest.raises(WorkflowError) as raised:
-        create_unit(ws, "login")
+        CreateUnitUseCase().execute(ws, "login")
     assert raised.value.code == "UNIT_EXISTS"
     with pytest.raises(WorkflowError) as raised:
         record_answer(ws, unit, "gate:integration", "accept", lint=False)
@@ -75,7 +75,7 @@ def test_library_errors_carry_codes(tmp_path: Path) -> None:
         "direct-delivery",
         "intent",
     )
-    assert [row.unit for row in list_units(ws)] == [".devkit/transient/work/login"]
+    assert [row.unit for row in ListUnitsUseCase().execute(ws).units] == [".devkit/transient/work/login"]
     assert issubclass(UnitNotFoundError, WorkflowError)
 
 

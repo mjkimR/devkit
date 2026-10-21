@@ -1,5 +1,5 @@
 """Informational inspection of committed worker ranges."""
 
-from devkit_spec.features.worker.usecases.inspect import inspect
+from devkit_spec.features.worker.usecases.inspect import InspectWorkerUseCase
 
-__all__ = ["inspect"]
+__all__ = ["InspectWorkerUseCase"]

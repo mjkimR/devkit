@@ -71,7 +71,10 @@ its CLI and MCP adapters beside its use cases, services, repositories and models
 are present. `cli.py` composes the command group. `base/errors.py` owns shared advisory contracts, and
 `utils/output.py` contains shared CLI presentation helpers.
 
-CLI and MCP adapters call feature behavior. Delivery owns cross-feature orchestration: its proposal CLI group
+CLI and MCP execution entrypoints implement `devkit_core.base.usecase.BaseUseCase` with a typed
+`execute` method. Internal parsing, rendering and composition helpers remain functions. Constructors wire
+dependencies and runtime state; approval and effect checks stay in the existing execution paths.
+Delivery owns cross-feature orchestration: its proposal CLI group
 and native handoff/acceptance tools combine proposal operations, worktrees and scope registration. The shared
 handoff operation merges registration notices and permits a cancellation guard between the handoff and registry
 mutation. Proposal mutation remains in the proposals feature. Scope repositories own Git observations and token

@@ -17,8 +17,8 @@ from devkit_dist.features.distribution.services.bundles.playbooks import read_pl
 from devkit_dist.features.distribution.services.installation.config import update_config
 from devkit_dist.features.distribution.services.installation.playbook_skill import MANAGED_ROOT
 from devkit_dist.features.distribution.services.installation.workspace import JOURNAL
-from devkit_dist.features.distribution.usecases.context import get_context
-from devkit_dist.features.distribution.usecases.playbook_search import search_playbooks
+from devkit_dist.features.distribution.usecases.context import GetContext
+from devkit_dist.features.distribution.usecases.playbook_search import SearchPlaybooks
 from devkit_dist.features.distribution.usecases.sync import sync_project
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH, RECEIPT_PATH
 from devkit_dist.features.search import Embedder
@@ -43,24 +43,24 @@ def test_search_aliases_across_bundles_without_body_disclosure(tmp_path: Path, t
     sync_project(target, installed)
     nested = target / "nested"
     nested.mkdir()
-    result = search_playbooks(nested, "POSTGRES standby repair").to_dict()
+    result = SearchPlaybooks().execute(nested, "POSTGRES standby repair").to_dict()
     assert [entry["bundle"] for entry in result["results"]] == ["ops", "team"]
     assert all(entry["id"] == "recovery" for entry in result["results"])
     assert "BODY_ONLY_SECRET" not in json.dumps(result)
     assert "BODY_ONLY_SECRET" in Path(result["results"][0]["path"]).read_text()
-    assert search_playbooks(target, "bodyonlytoken").to_dict()["results"] == []
-    assert search_playbooks(target, "unrelatednomatch").to_dict()["results"] == []
-    assert "restore-replica" not in str(get_context(target, "team"))
-    assert get_context(target, "team").to_dict()["constitution"] == "# Shared contracts\n"
+    assert SearchPlaybooks().execute(target, "bodyonlytoken").to_dict()["results"] == []
+    assert SearchPlaybooks().execute(target, "unrelatednomatch").to_dict()["results"] == []
+    assert "restore-replica" not in str(GetContext().execute(target, "team"))
+    assert GetContext().execute(target, "team").to_dict()["constitution"] == "# Shared contracts\n"
 
 
 def test_search_caps_threshold_and_cli_budget(tmp_path: Path, target: Path) -> None:
     select(target, "team", "ops")
     sync_project(target, [make_bundle(tmp_path, "team"), make_bundle(tmp_path, "ops")])
-    limited = search_playbooks(target, "replica", limit=1).to_dict()
+    limited = SearchPlaybooks().execute(target, "replica", limit=1).to_dict()
     assert len(limited["results"]) == 1
     assert limited["truncated"] is True
-    assert search_playbooks(target, "replica", min_score=100).to_dict()["results"] == []
+    assert SearchPlaybooks().execute(target, "replica", min_score=100).to_dict()["results"] == []
     runner = CliRunner()
     result = runner.invoke(
         cli, ["playbook", "search", "replica", "--workspace-root", str(target), "--max-bytes", "1024"]
@@ -96,11 +96,11 @@ def test_generated_skill_policies_and_sync_lifecycle(tmp_path: Path, target: Pat
     assert sync_project(target, installed).to_dict()["actions"] == []
     assert (target / RECEIPT_PATH).read_bytes() == receipt
     sync_project(target, installed, presets={"team": ["guidance"]})
-    assert [item["bundle"] for item in search_playbooks(target, "replica").to_dict()["results"]] == ["ops"]
+    assert [item["bundle"] for item in SearchPlaybooks().execute(target, "replica").to_dict()["results"]] == ["ops"]
     sync_project(target, installed, presets={"team": ["guidance"], "ops": ["guidance"]})
     assert not (codex / "SKILL.md").exists()
     assert not (target / MANAGED_ROOT / "SKILL.md").exists()
-    assert search_playbooks(target, "replica").to_dict()["results"] == []
+    assert SearchPlaybooks().execute(target, "replica").to_dict()["results"] == []
     sync_project(target, installed, agents=[])
     assert (target / MANAGED_ROOT / "SKILL.md").exists()
     assert not (claude / "SKILL.md").exists()
@@ -134,11 +134,11 @@ def test_search_rejects_modified_files_and_pending_transactions(tmp_path: Path, 
     sync_project(target, [make_bundle(tmp_path, "team")])
     (target / JOURNAL).write_text("{}")
     with pytest.raises(PendingTransactionError, match="interrupted synchronization"):
-        search_playbooks(target, "replica")
+        SearchPlaybooks().execute(target, "replica")
     (target / JOURNAL).unlink()
     (target / ".devkit/managed/team/recovery.md").write_text("unowned changes")
     with pytest.raises(NotSynchronizedError, match="modified context"):
-        search_playbooks(target, "replica")
+        SearchPlaybooks().execute(target, "replica")
 
 
 @pytest.mark.parametrize(
@@ -218,7 +218,7 @@ limit = 1
 max_bytes = 4096
 """)
     # With limit=1 from config, only 1 result is returned
-    res = search_playbooks(target, "replica").to_dict()
+    res = SearchPlaybooks().execute(target, "replica").to_dict()
     assert len(res["results"]) == 1
     assert res["truncated"] is True
 
@@ -228,7 +228,7 @@ max_bytes = 4096
 [playbooks]
 min_score = 50.0
 """)
-    assert search_playbooks(target, "replica").to_dict()["results"] == []
+    assert SearchPlaybooks().execute(target, "replica").to_dict()["results"] == []
 
 
 def test_cli_overrides_playbooks_config(tmp_path: Path, target: Path) -> None:
@@ -284,8 +284,8 @@ def test_playbook_extension_keys_are_accepted_but_not_indexed(tmp_path: Path, ta
     select(target, "team")
     sync_project(target, [item], agents=["codex"])
     assert "x-trigger" in (target / ".devkit/managed/team/recovery.md").read_text()
-    assert search_playbooks(target, "zebra").to_dict()["results"] == []
-    hit = search_playbooks(target, "replica").to_dict()["results"][0]
+    assert SearchPlaybooks().execute(target, "zebra").to_dict()["results"] == []
+    hit = SearchPlaybooks().execute(target, "replica").to_dict()["results"][0]
     assert hit["name"] == "restore-replica" and "x-trigger" not in json.dumps(hit)
 
 
@@ -316,25 +316,25 @@ def test_auto_search_is_hybrid_with_a_model_and_finds_other_wording(
 ) -> None:
     select(target, "team", "ops")
     sync_project(target, [make_bundle(tmp_path, "team"), make_bundle(tmp_path, "ops")])
-    hybrid = search_playbooks(target, "database broken").to_dict()
+    hybrid = SearchPlaybooks().execute(target, "database broken").to_dict()
     assert hybrid["mode"] == "hybrid" and model == ["potion-base-8m"]
     assert [(entry["bundle"], entry["id"]) for entry in hybrid["results"]] == [
         ("ops", "recovery"),
         ("team", "recovery"),
     ]
     assert hybrid["results"][0]["score"] == pytest.approx(1 / 61, abs=1e-6)  # fused: ranked first by dense alone
-    lexical = search_playbooks(target, "database broken", mode="lexical").to_dict()
+    lexical = SearchPlaybooks().execute(target, "database broken", mode="lexical").to_dict()
     assert lexical == {"query": "database broken", "mode": "lexical", "results": [], "truncated": False}
     # The dense floor applies before fusion: nothing is similar enough, and nothing matches lexically.
-    assert search_playbooks(target, "database broken", min_similarity=1.0).to_dict()["results"] == []
-    dense = search_playbooks(target, "publish software", mode="DENSE").to_dict()
+    assert SearchPlaybooks().execute(target, "database broken", min_similarity=1.0).to_dict()["results"] == []
+    dense = SearchPlaybooks().execute(target, "publish software", mode="DENSE").to_dict()
     assert dense["mode"] == "dense" and {entry["id"] for entry in dense["results"]} == {"release"}
 
 
 def test_auto_search_is_lexical_without_a_model(tmp_path: Path, target: Path) -> None:
     select(target, "team")
     sync_project(target, [make_bundle(tmp_path, "team")])
-    result = search_playbooks(target, "replica").to_dict()
+    result = SearchPlaybooks().execute(target, "replica").to_dict()
     assert result["mode"] == "lexical" and [entry["id"] for entry in result["results"]] == ["recovery"]
     runner = CliRunner()
     for mode in ("hybrid", "dense"):
@@ -347,14 +347,14 @@ def test_auto_search_is_lexical_without_a_model(tmp_path: Path, target: Path) ->
 def test_search_without_playbooks_never_loads_the_model(tmp_path: Path, target: Path, model: list[str]) -> None:
     update_config(target, presets={"team": ["guidance"]})
     sync_project(target, [make_bundle(tmp_path, "team")])
-    assert search_playbooks(target, "replica").to_dict()["mode"] == "lexical" and model == []
+    assert SearchPlaybooks().execute(target, "replica").to_dict()["mode"] == "lexical" and model == []
 
 
 def test_mode_and_min_similarity_come_from_config_and_options(tmp_path: Path, target: Path, model: list[str]) -> None:
     select(target, "team")
     sync_project(target, [make_bundle(tmp_path, "team")])
     (target / CONFIG_PATH).write_text((target / CONFIG_PATH).read_text() + '\n[playbooks]\nmode = "lexical"\n')
-    assert search_playbooks(target, "database broken").to_dict()["mode"] == "lexical"
+    assert SearchPlaybooks().execute(target, "database broken").to_dict()["mode"] == "lexical"
     runner = CliRunner()
     hybrid = runner.invoke(cli, ["playbook", "search", "database broken", "-w", str(target), "--mode", "HYBRID"])
     assert hybrid.exit_code == 0 and json.loads(hybrid.stdout)["mode"] == "hybrid"

@@ -25,6 +25,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError, Level
+from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import ArgumentError, GitError, run_git
 from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.project.repositories.project import require_git_toplevel
@@ -292,69 +293,72 @@ def _plan(
     return registry.closure(ids) if ids else registry.artifacts
 
 
-def resolve(root: Path, *, dry_run: bool = False) -> ResolveResult:
-    """Settle the conflicts whose paths a generated artifact owns, regenerate, and stage; see the module docstring.
+class ResolveArtifacts(BaseUseCase):
+    """Settle the conflicts whose paths a generated artifact owns, regenerate, and stage; see the module docstring."""
 
-    Raises ``InputsConflictedError`` before any change when a conflict no artifact owns may be read by an artifact
-    to regenerate; ``CommandFailedError`` or ``OutputUndeclaredError`` when a command fails or writes outside its
-    files, with nothing staged (rerunning starts over from the same conflicts).
-    """
-    checkout = open_checkout(root)
-    registry = load_registry(checkout.root)
-    result = ResolveResult(operation(checkout.top), dry_run=dry_run)
-    conflicts = unmerged(checkout.top)
-    owned: dict[str, list[str]] = {}
-    unowned: list[str] = []
-    for path in sorted(conflicts):
-        rel = checkout.project_path(path)
-        owner = registry.owner(rel) if rel is not None else None
-        if owner is None:
-            unowned.append(path)
-        else:
-            owned.setdefault(owner.id, []).append(path)
-    plan = registry.closure(owned)
-    readers: dict[str, list[str]] = {}
-    for path in unowned:
-        rel = checkout.project_path(path)
-        for artifact in plan:
-            if not artifact.inputs or (rel is not None and artifact.may_read(rel)):
-                readers.setdefault(path, []).append(artifact.id)
-    if readers:
-        raise InputsConflictedError(
-            f"{len(readers)} conflict(s) no artifact owns may be read by the artifacts to regenerate; nothing was changed",
-            *_listed([f"{path}: read by {', '.join(ids)}" for path, ids in readers.items()]),
-            target_files=list(readers)[:LISTED],
-        )
-    files = tracked(checkout.top) if any(item.optional for item in plan) else set()
-    runs = [
-        ArtifactRun(
-            item.id,
-            item.command,
-            conflicts=tuple(owned.get(item.id, ())),
-            skipped=item.id not in owned and _skipped(checkout, item, files),
-        )
-        for item in plan
-    ]
-    if dry_run:
-        result.artifacts, result.remaining = runs, unowned
-        return result
-    _seed(checkout, plan, owned, conflicts)
-    staged: set[str] = {path for paths in owned.values() for path in paths}
-    for index, (artifact, run) in enumerate(zip(plan, runs, strict=True)):
-        if not run.skipped:
-            changed = _regenerate(checkout, artifact)
-            runs[index] = ArtifactRun(run.id, run.command, run.conflicts, changed)
-            staged.update(changed)
-    _stage(checkout.top, sorted(staged))
-    result.artifacts = runs
-    result.remaining = sorted(unmerged(checkout.top))
-    if result.remaining:
-        result.notices.append(
-            ConflictsRemainWarning(
-                f"{len(result.remaining)} conflict(s) no artifact owns remain", *_listed(result.remaining)
+    def execute(self, root: Path, *, dry_run: bool = False) -> ResolveResult:
+        """Settle the conflicts whose paths a generated artifact owns, regenerate, and stage; see the module docstring.
+
+        Raises ``InputsConflictedError`` before any change when a conflict no artifact owns may be read by an artifact
+        to regenerate; ``CommandFailedError`` or ``OutputUndeclaredError`` when a command fails or writes outside its
+        files, with nothing staged (rerunning starts over from the same conflicts).
+        """
+        checkout = open_checkout(root)
+        registry = load_registry(checkout.root)
+        result = ResolveResult(operation(checkout.top), dry_run=dry_run)
+        conflicts = unmerged(checkout.top)
+        owned: dict[str, list[str]] = {}
+        unowned: list[str] = []
+        for path in sorted(conflicts):
+            rel = checkout.project_path(path)
+            owner = registry.owner(rel) if rel is not None else None
+            if owner is None:
+                unowned.append(path)
+            else:
+                owned.setdefault(owner.id, []).append(path)
+        plan = registry.closure(owned)
+        readers: dict[str, list[str]] = {}
+        for path in unowned:
+            rel = checkout.project_path(path)
+            for artifact in plan:
+                if not artifact.inputs or (rel is not None and artifact.may_read(rel)):
+                    readers.setdefault(path, []).append(artifact.id)
+        if readers:
+            raise InputsConflictedError(
+                f"{len(readers)} conflict(s) no artifact owns may be read by the artifacts to regenerate; nothing was changed",
+                *_listed([f"{path}: read by {', '.join(ids)}" for path, ids in readers.items()]),
+                target_files=list(readers)[:LISTED],
             )
-        )
-    return result
+        files = tracked(checkout.top) if any(item.optional for item in plan) else set()
+        runs = [
+            ArtifactRun(
+                item.id,
+                item.command,
+                conflicts=tuple(owned.get(item.id, ())),
+                skipped=item.id not in owned and _skipped(checkout, item, files),
+            )
+            for item in plan
+        ]
+        if dry_run:
+            result.artifacts, result.remaining = runs, unowned
+            return result
+        _seed(checkout, plan, owned, conflicts)
+        staged: set[str] = {path for paths in owned.values() for path in paths}
+        for index, (artifact, run) in enumerate(zip(plan, runs, strict=True)):
+            if not run.skipped:
+                changed = _regenerate(checkout, artifact)
+                runs[index] = ArtifactRun(run.id, run.command, run.conflicts, changed)
+                staged.update(changed)
+        _stage(checkout.top, sorted(staged))
+        result.artifacts = runs
+        result.remaining = sorted(unmerged(checkout.top))
+        if result.remaining:
+            result.notices.append(
+                ConflictsRemainWarning(
+                    f"{len(result.remaining)} conflict(s) no artifact owns remain", *_listed(result.remaining)
+                )
+            )
+        return result
 
 
 def _seed(
@@ -382,17 +386,20 @@ def _stage(top: Path, paths: Sequence[str]) -> None:
         run_git(top, "rm", "--cached", "--quiet", "--ignore-unmatch", "--", *_literal(absent))
 
 
-def regenerate(root: Path, ids: Sequence[str] = ()) -> RunResult:
-    """Run the commands of ``ids`` and the artifacts after them (every artifact when empty) in place; stage nothing.
+class RegenerateArtifacts(BaseUseCase):
+    """Run the commands of ``ids`` and the artifacts after them (every artifact when empty) in place; stage nothing."""
 
-    Raises ``UnmergedError`` when the index has unmerged paths: a command would read conflict markers.
-    """
-    checkout = open_checkout(root)
-    plan = _plan(load_registry(checkout.root), ids)
-    conflicts = sorted(unmerged(checkout.top))
-    if conflicts:
-        raise UnmergedError(f"{len(conflicts)} unmerged path(s); nothing ran", *_listed(conflicts))
-    return RunResult(_run_all(checkout, plan))
+    def execute(self, root: Path, ids: Sequence[str] = ()) -> RunResult:
+        """Run the commands of ``ids`` and the artifacts after them (every artifact when empty) in place; stage nothing.
+
+        Raises ``UnmergedError`` when the index has unmerged paths: a command would read conflict markers.
+        """
+        checkout = open_checkout(root)
+        plan = _plan(load_registry(checkout.root), ids)
+        conflicts = sorted(unmerged(checkout.top))
+        if conflicts:
+            raise UnmergedError(f"{len(conflicts)} unmerged path(s); nothing ran", *_listed(conflicts))
+        return RunResult(_run_all(checkout, plan))
 
 
 def _run_all(checkout: Checkout, plan: Sequence[Artifact]) -> list[ArtifactRun]:
@@ -406,32 +413,38 @@ def _run_all(checkout: Checkout, plan: Sequence[Artifact]) -> list[ArtifactRun]:
     return runs
 
 
-def check(root: Path, ids: Sequence[str] = (), *, rev: str = "HEAD") -> RunResult:
-    """Regenerate in a temporary detached worktree of ``rev`` and report the artifacts that differ from it.
+class CheckArtifacts(BaseUseCase):
+    """Regenerate in a temporary detached worktree of ``rev`` and report the artifacts that differ from it."""
 
-    The registry is read from that commit; the checkout is left as it was. An artifact is stale when its command
-    changed one of its files there (``RunResult.stale``).
-    """
-    checkout = open_checkout(root)
-    try:
-        commit = _decode(run_git(checkout.top, "rev-parse", "--verify", "--quiet", f"{rev}^{{commit}}").strip())
-    except GitError as exc:
-        raise ArgumentError(
-            f"--rev {rev}: not a commit", target_files=["--rev"], fix="Pass a commit, branch or tag"
-        ) from exc
-    temporary = Path(tempfile.mkdtemp(prefix="devkit-generated-"))
-    tree = temporary / checkout.top.name
-    try:
-        run_git(checkout.top, "worktree", "add", "--detach", "--quiet", str(tree), commit, timeout=WORKTREE_TIMEOUT)
-        clone = Checkout(tree / checkout.prefix if checkout.prefix else tree, tree, checkout.prefix)
-        plan = _plan(load_registry(clone.root), ids, working=checkout.root, rev=rev)
-        return RunResult(_run_all(clone, plan), commit=commit)
-    finally:
-        with contextlib.suppress(GitError):
-            run_git(checkout.top, "worktree", "remove", "--force", str(tree))
-        shutil.rmtree(temporary, ignore_errors=True)
+    def execute(self, root: Path, ids: Sequence[str] = (), *, rev: str = "HEAD") -> RunResult:
+        """Regenerate in a temporary detached worktree of ``rev`` and report the artifacts that differ from it.
+
+        The registry is read from that commit; the checkout is left as it was. An artifact is stale when its command
+        changed one of its files there (``RunResult.stale``).
+        """
+        checkout = open_checkout(root)
+        try:
+            commit = _decode(run_git(checkout.top, "rev-parse", "--verify", "--quiet", f"{rev}^{{commit}}").strip())
+        except GitError as exc:
+            raise ArgumentError(
+                f"--rev {rev}: not a commit", target_files=["--rev"], fix="Pass a commit, branch or tag"
+            ) from exc
+        temporary = Path(tempfile.mkdtemp(prefix="devkit-generated-"))
+        tree = temporary / checkout.top.name
+        try:
+            run_git(checkout.top, "worktree", "add", "--detach", "--quiet", str(tree), commit, timeout=WORKTREE_TIMEOUT)
+            clone = Checkout(tree / checkout.prefix if checkout.prefix else tree, tree, checkout.prefix)
+            plan = _plan(load_registry(clone.root), ids, working=checkout.root, rev=rev)
+            return RunResult(_run_all(clone, plan), commit=commit)
+        finally:
+            with contextlib.suppress(GitError):
+                run_git(checkout.top, "worktree", "remove", "--force", str(tree))
+            shutil.rmtree(temporary, ignore_errors=True)
 
 
-def list_artifacts(root: Path) -> tuple[Artifact, ...]:
+class ListArtifacts(BaseUseCase):
     """Return built-in and project artifacts in their effective registration order."""
-    return load_registry(root).artifacts
+
+    def execute(self, root: Path) -> tuple[Artifact, ...]:
+        """Return built-in and project artifacts in their effective registration order."""
+        return load_registry(root).artifacts

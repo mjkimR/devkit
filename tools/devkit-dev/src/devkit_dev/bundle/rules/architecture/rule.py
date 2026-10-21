@@ -193,7 +193,7 @@ def inspect_architecture(root: Path, config_path: str = ".devkit/architecture.to
             "public_modules",
             "feature_dependencies",
         }
-        if set(config) - {"schema", "packages", "import_exceptions"}:
+        if set(config) - {"schema", "packages", "import_exceptions", "usecase_exceptions"}:
             raise ValueError("unknown architecture declaration field")
         for package in packages:
             if not isinstance(package["namespace"], str) or not all(

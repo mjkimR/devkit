@@ -1,7 +1,7 @@
 """Pluggable Git commit gates for devkit workspaces.
 
 Library entry points: ``load_gate_project`` (a repository's gates and their
-validated configuration) and ``run_hook`` (run one stage as the hook wrapper
+validated configuration) and ``RunHookUseCase.execute`` (run one stage as the hook wrapper
 does). ``devkit gate`` is a thin command line over them.
 """
 
@@ -35,10 +35,10 @@ from devkit_agt.features.gate.usecases.registry import (
 from devkit_agt.features.gate.usecases.runner import (
     GateProject,
     GateRun,
+    RunHookUseCase,
     StageReport,
     Validation,
     load_gate_project,
-    run_hook,
     run_stage,
     validate_gates,
 )
@@ -70,6 +70,7 @@ __all__ = [
     "HookPreservedNotice",
     "HooksPathSetError",
     "Outcome",
+    "RunHookUseCase",
     "Stage",
     "StageReport",
     "Validation",
@@ -79,7 +80,6 @@ __all__ = [
     "load_gates_config",
     "project_registry",
     "resolve_settings",
-    "run_hook",
     "run_stage",
     "validate_gates",
 ]

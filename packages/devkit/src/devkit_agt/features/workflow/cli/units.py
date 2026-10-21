@@ -10,7 +10,8 @@ from devkit_dist.adapters.cli import FORMAT_OPTION, boundary, echo_json, is_json
 
 from devkit_agt.features.workflow.cli.app import ANCHOR, UNIT, WORKSPACE, cli, parse_date, workspace
 from devkit_agt.features.workflow.cli.render import quote, render_document
-from devkit_agt.features.workflow.usecases.units import create_unit, layouts_in_use, list_units
+from devkit_agt.features.workflow.usecases.operations import BindUnitUseCase, DescribeWorkflowUseCase
+from devkit_agt.features.workflow.usecases.units import CreateUnitUseCase, ListUnitsUseCase
 
 
 @cli.command(name="new", hidden=True)
@@ -25,7 +26,7 @@ from devkit_agt.features.workflow.usecases.units import create_unit, layouts_in_
 def new_cmd(workspace_root: str | None, slug: str, workflow_ref: str | None, when: str | None, status: str) -> None:
     """Create a work unit from the layout template and bind it to a workflow."""
     ws = workspace(workspace_root)
-    unit = create_unit(ws, slug, workflow=workflow_ref, when=parse_date(when), status=status)
+    unit = CreateUnitUseCase().execute(ws, slug, workflow=workflow_ref, when=parse_date(when), status=status)
     click.echo(f"[UNIT: {unit.rel} workflow={unit.doc.id} anchor={unit.anchor}]")
 
 
@@ -43,7 +44,7 @@ def new_cmd(workspace_root: str | None, slug: str, workflow_ref: str | None, whe
 def bind_cmd(workspace_root: str | None, unit: str, anchor: str | None, workflow_ref: str | None) -> None:
     """Record which workflow a unit follows."""
     ws = workspace(workspace_root)
-    ref = ws.bind_unit(unit, workflow_ref, anchor=anchor)
+    ref = BindUnitUseCase(ws).execute(unit, workflow_ref, anchor=anchor)
     click.echo(f"[BOUND: {ref.doc.id}]")
 
 
@@ -74,11 +75,7 @@ def show_cmd(
             fix="Drop --anchor, or run `devkit workflow show --unit <dir> --anchor <file>`",
         )
     ws = workspace(workspace_root)
-    if unit is not None:
-        description = ws.describe_unit(unit, anchor=anchor)
-    else:
-        assert ref is not None
-        description = ws.describe(ws.load_definition(ref))
+    description = DescribeWorkflowUseCase(ws).execute(ref, unit=unit, anchor=anchor)
     doc, binding = description.doc, description.binding
     if is_json(output_format):
         echo_json(description.to_dict())
@@ -105,12 +102,13 @@ def list_cmd(
 ) -> None:
     """List discovered work units with their status and binding, across every layout in use."""
     ws = workspace(workspace_root)
-    rows = list_units(ws, statuses=statuses, excluded=excluded)
+    listing = ListUnitsUseCase().execute(ws, statuses=statuses, excluded=excluded)
+    rows = listing.units
     if is_json(output_format):
         echo_json({"units": [row.to_dict() for row in rows]})
         return
     if not rows:
-        dirs = ", ".join(dict.fromkeys(layout.work_dir for layout in layouts_in_use(ws)))
+        dirs = ", ".join(listing.directories)
         click.echo(f"[UNITS: none under {dirs}]")
         return
     for row in rows:

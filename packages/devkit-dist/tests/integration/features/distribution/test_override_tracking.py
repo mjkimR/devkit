@@ -19,7 +19,7 @@ from devkit_dist.features.distribution.usecases.override_commands import (
     list_overrides,
     remove_override,
 )
-from devkit_dist.features.distribution.usecases.playbook_search import search_playbooks
+from devkit_dist.features.distribution.usecases.playbook_search import SearchPlaybooks
 from devkit_dist.features.distribution.usecases.sync import sync_project
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH, OVERRIDES_PATH, RECEIPT_PATH
 from distsupport.distribution import instruction, reload, write_bundle
@@ -89,7 +89,7 @@ def test_overridden_playbook_is_searched_from_its_override(item: InstalledBundle
     override = target / OVERRIDES_PATH / "team/playbooks/recovery.md"
     override.write_text("---\nname: disaster-recovery\ndescription: Recover a replica, our way.\n---\n1. Ours\n")
     sync_project(target, [item])
-    (found,) = search_playbooks(target, "replica").to_dict()["results"]
+    (found,) = SearchPlaybooks().execute(target, "replica").to_dict()["results"]
     assert found["path"] == str(override.resolve())
     assert found["description"] == "Recover a replica, our way."
 

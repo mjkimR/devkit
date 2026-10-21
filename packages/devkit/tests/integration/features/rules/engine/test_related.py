@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from devkit_agt.features.rules import RelatedAsset, resolve_related
+from devkit_agt.features.rules import RelatedAsset, ResolveRelatedUseCase
 from devkit_agt.features.rules.models.errors import RuleDefinitionError
 from devkit_agt.features.rules.services.builtins import BaseRule
 
@@ -41,11 +41,11 @@ def test_malformed_references_are_definition_errors() -> None:
 
 
 def test_unresolved_references_are_notices(tmp_path: Path) -> None:
-    related, notices = resolve_related(tmp_path, _Rule("authoring:skill-authoring"))
+    related, notices = ResolveRelatedUseCase().execute(tmp_path, _Rule("authoring:skill-authoring"))
     assert related == [RelatedAsset("authoring:skill-authoring", None, None)]
     assert [n.code for n in notices] == ["RULES_RELATED_UNRESOLVED"]
     assert notices[0].fix == "devkit add authoring"
-    assert resolve_related(tmp_path, _Rule()) == ([], [])
+    assert ResolveRelatedUseCase().execute(tmp_path, _Rule()) == ([], [])
 
 
 def test_explain_resolves_related_playbooks(tmp_path: Path) -> None:
@@ -83,7 +83,7 @@ def test_an_instruction_without_a_markdown_file_is_reported_as_such(tmp_path: Pa
             {"bundle": "team", "id": "check", "kind": "rule", "paths": [".devkit/managed/team/check/rule.py"]},
         ],
     )
-    related, notices = resolve_related(tmp_path, _Rule("team:guide", "team:check"))
+    related, notices = ResolveRelatedUseCase().execute(tmp_path, _Rule("team:guide", "team:check"))
     assert related == [RelatedAsset("team:guide", "instruction", None), RelatedAsset("team:check", "rule", None)]
     assert [n.message for n in notices] == [
         "RULE-x: related team:guide is an instruction asset without a Markdown file",
@@ -95,7 +95,7 @@ def test_an_instruction_without_a_markdown_file_is_reported_as_such(tmp_path: Pa
 def test_a_malformed_receipt_is_reported_instead_of_not_deployed(tmp_path: Path) -> None:
     (tmp_path / ".devkit").mkdir()
     (tmp_path / ".devkit/installation.json").write_text("{not json", encoding="utf-8")
-    related, notices = resolve_related(tmp_path, _Rule("team:a", "team:b"))
+    related, notices = ResolveRelatedUseCase().execute(tmp_path, _Rule("team:a", "team:b"))
     assert related == [RelatedAsset("team:a", None, None), RelatedAsset("team:b", None, None)]
     (notice,) = notices
     assert notice.code == "RULES_RELATED_UNRESOLVED" and "(RECEIPT_INVALID)" in notice.message

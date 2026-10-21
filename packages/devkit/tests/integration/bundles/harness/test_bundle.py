@@ -17,7 +17,7 @@ from devkit_dist.cli import cli
 from devkit_dist.features.distribution.services.bundles import load_bundle
 from devkit_dist.features.distribution.services.installation.config import update_config
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle, discover_bundles
-from devkit_dist.features.distribution.usecases.context import get_context
+from devkit_dist.features.distribution.usecases.context import GetContext
 from devkit_dist.features.distribution.usecases.override_commands import create_override
 from devkit_dist.features.distribution.usecases.sync import sync_project
 
@@ -106,7 +106,7 @@ def test_the_context_delivers_the_moved_guidance(tmp_path: Path) -> None:
     target.mkdir()
     update_config(target, presets={"harness": ["core"]}, agents=[])
     sync_project(target, [InstalledBundle("devkit-agt", "0.1.0", load_bundle(BUNDLE))])
-    context = get_context(target, "harness").to_dict()
+    context = GetContext().execute(target, "harness").to_dict()
     assert "Rules and gates run as code" in context["constitution"]
     headers = {entry["header"].split("\n", 1)[0] for entry in context["instructions"]}
     assert headers == {f"name: {name}" for name in INSTRUCTIONS}

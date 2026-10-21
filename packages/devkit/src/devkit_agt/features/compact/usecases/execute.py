@@ -29,6 +29,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError
+from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core.logs import get_logger
 from devkit_dist.base.errors import DevkitRootNestedError
 from devkit_dist.features.project.repositories.project import find_project_root, git_toplevel
@@ -142,112 +143,126 @@ def _unusable(directory: Path, error: OSError) -> LogDirectoryError:
     )
 
 
-def run_command(
-    argv: Sequence[str],
-    *,
-    cwd: Path | None = None,
-    env: Mapping[str, str] | None = None,
-    slow_after: float = 60.0,
-    notices: bool = True,
-    log_dir: Path | None = None,
-) -> CommandRun:
-    """Run ``argv`` to completion and scan its combined stdout and stderr.
+class RunCommand(BaseUseCase):
+    """Run ``argv`` to completion and scan its combined stdout and stderr."""
 
-    ``slow_after`` (seconds, ``0`` off) adds a ``RUN_SLOW_COMMAND`` notice;
-    ``notices=False`` drops relayed ``[NOTICE]`` blocks. The newest
-    ``KEEP_LOGS`` logs of ``log_dir`` (default ``default_log_dir``) are kept.
-    Raises ``CommandNotStartedError`` when there is no command, the command
-    cannot be started, or the working directory cannot be entered;
-    ``LogDirectoryError`` when the log cannot be written; and
-    ``CommandInterrupted`` when the run is interrupted after the command
-    started.
-    """
-    argv = tuple(argv)
-    if not argv:
-        raise CommandNotStartedError("no command to start", fix="Pass the command and its arguments")
-    try:
-        given = cwd or Path.cwd()
-        directory = given.resolve()
-    except FileNotFoundError as error:  # the shell's current directory was removed
-        raise _directory_error(argv, os.environ.get("PWD", "."), "the current directory no longer exists") from error
-    if not directory.is_dir():
-        raise _directory_error(argv, str(directory), "not an existing directory")
-    # Warning locations are made relative to the directory as given and as resolved; the command may remove it.
-    base = (directory, given)
-    logs = log_dir or default_log_dir(directory)
-    if log_dir is None:
-        _ensure_private(log_root())
-        _ensure_private(logs)
-    prefix = f"{time.strftime('%Y%m%d-%H%M%S')}-{_slug(argv)}-"
-    with contextlib.ExitStack() as opened:
+    def execute(
+        self,
+        argv: Sequence[str],
+        *,
+        cwd: Path | None = None,
+        env: Mapping[str, str] | None = None,
+        slow_after: float = 60.0,
+        notices: bool = True,
+        log_dir: Path | None = None,
+    ) -> CommandRun:
+        """Run ``argv`` to completion and scan its combined stdout and stderr.
+
+        ``slow_after`` (seconds, ``0`` off) adds a ``RUN_SLOW_COMMAND`` notice;
+        ``notices=False`` drops relayed ``[NOTICE]`` blocks. The newest
+        ``KEEP_LOGS`` logs of ``log_dir`` (default ``default_log_dir``) are kept.
+        Raises ``CommandNotStartedError`` when there is no command, the command
+        cannot be started, or the working directory cannot be entered;
+        ``LogDirectoryError`` when the log cannot be written; and
+        ``CommandInterrupted`` when the run is interrupted after the command
+        started.
+        """
+        argv = tuple(argv)
+        if not argv:
+            raise CommandNotStartedError("no command to start", fix="Pass the command and its arguments")
         try:
-            logs.mkdir(parents=True, exist_ok=True)
-            _prune(logs, KEEP_LOGS - 1)
-            log = opened.enter_context(
-                tempfile.NamedTemporaryFile(mode="rb", prefix=prefix, suffix=".log", dir=logs, delete=False)
-            )
-            path = Path(log.name)
-            # The command writes through a descriptor of its own, appending: a process that outlives it then
-            # cannot write where the scan reads, which a shared file offset would make it do.
-            output = os.open(path, os.O_WRONLY | os.O_APPEND | os.O_NOFOLLOW | os.O_CLOEXEC)
-        except OSError as error:
-            raise _unusable(logs, error) from error
-        started = time.monotonic()
-        interrupts = _Interrupts()
-        # Handlers first: a signal right after the start must still stop the command's process group.
-        with _signals(interrupts.handle, *INTERRUPTS):
+            given = cwd or Path.cwd()
+            directory = given.resolve()
+        except FileNotFoundError as error:  # the shell's current directory was removed
+            raise _directory_error(
+                argv, os.environ.get("PWD", "."), "the current directory no longer exists"
+            ) from error
+        if not directory.is_dir():
+            raise _directory_error(argv, str(directory), "not an existing directory")
+        # Warning locations are made relative to the directory as given and as resolved; the command may remove it.
+        base = (directory, given)
+        logs = log_dir or default_log_dir(directory)
+        if log_dir is None:
+            _ensure_private(log_root())
+            _ensure_private(logs)
+        prefix = f"{time.strftime('%Y%m%d-%H%M%S')}-{_slug(argv)}-"
+        with contextlib.ExitStack() as opened:
             try:
-                process = subprocess.Popen(
-                    argv,
-                    cwd=directory,
-                    env=None if env is None else dict(env),
-                    stdin=subprocess.DEVNULL,
-                    stdout=output,
-                    stderr=subprocess.STDOUT,
-                    start_new_session=True,
+                logs.mkdir(parents=True, exist_ok=True)
+                _prune(logs, KEEP_LOGS - 1)
+                log = opened.enter_context(
+                    tempfile.NamedTemporaryFile(mode="rb", prefix=prefix, suffix=".log", dir=logs, delete=False)
                 )
+                path = Path(log.name)
+                # The command writes through a descriptor of its own, appending: a process that outlives it then
+                # cannot write where the scan reads, which a shared file offset would make it do.
+                output = os.open(path, os.O_WRONLY | os.O_APPEND | os.O_NOFOLLOW | os.O_CLOEXEC)
             except OSError as error:
-                log.close()
-                path.unlink(missing_ok=True)
-                reason = error.strerror or str(error)
-                # The child reports a failed chdir with the directory as filename, a failed exec with the command.
-                if error.filename is not None and Path(error.filename) == directory:
-                    raise _directory_error(argv, str(directory), reason) from error
-                raise CommandNotStartedError(f"cannot start {argv[0]!r}: {reason}", target_files=[argv[0]]) from error
-            finally:
-                os.close(output)
-            try:
-                interrupts.started()
-                code = _exit_code(process.wait())
-                duration = time.monotonic() - started
-                # What the command wrote until it exited; the open file is read, since a concurrent run may
-                # already have pruned the path.
-                size = os.fstat(log.fileno()).st_size
-                # Only "\n" ends a line: a carriage return redraws it, and the scan keeps what is left visible.
-                with io.TextIOWrapper(
-                    io.BufferedReader(_LogReader(log.fileno(), size)), encoding="utf-8", errors="replace", newline="\n"
-                ) as reader:
-                    result = scan(reader, notices=notices, base=base)
-            except _Signalled as signalled:
-                _stop(process)
-                code = _exit_code(process.returncode)
-                run = CommandRun(argv, code, path, time.monotonic() - started, Scan(), interrupted=signalled.signum)
-                _log.info("%s interrupted by signal %d; log %s", shlex.join(argv), signalled.signum, path)
-                raise CommandInterrupted(run) from None
-            except BaseException:
-                _stop(process)
-                raise
-    _log.info("%s exited %d after %.1fs in %s; log %s", shlex.join(argv), code, duration, directory, path)
-    found: list[AdvisoryError] = []
-    if slow_after and duration >= slow_after:
-        found.append(
-            SlowCommandNotice(
-                f"{shlex.join(argv)} ran {duration:.0f}s, longer than --slow-after {slow_after:g}s",
-                "Narrow the run (a test path, a keyword filter) or look for slow fixtures and external waits; "
-                "--slow-after 0 turns this notice off",
+                raise _unusable(logs, error) from error
+            started = time.monotonic()
+            interrupts = _Interrupts()
+            # Handlers first: a signal right after the start must still stop the command's process group.
+            with _signals(interrupts.handle, *INTERRUPTS):
+                try:
+                    process = subprocess.Popen(
+                        argv,
+                        cwd=directory,
+                        env=None if env is None else dict(env),
+                        stdin=subprocess.DEVNULL,
+                        stdout=output,
+                        stderr=subprocess.STDOUT,
+                        start_new_session=True,
+                    )
+                except OSError as error:
+                    log.close()
+                    path.unlink(missing_ok=True)
+                    reason = error.strerror or str(error)
+                    # The child reports a failed chdir with the directory as filename, a failed exec with the command.
+                    if error.filename is not None and Path(error.filename) == directory:
+                        raise _directory_error(argv, str(directory), reason) from error
+                    raise CommandNotStartedError(
+                        f"cannot start {argv[0]!r}: {reason}", target_files=[argv[0]]
+                    ) from error
+                finally:
+                    os.close(output)
+                try:
+                    interrupts.started()
+                    code = _exit_code(process.wait())
+                    duration = time.monotonic() - started
+                    # What the command wrote until it exited; the open file is read, since a concurrent run may
+                    # already have pruned the path.
+                    size = os.fstat(log.fileno()).st_size
+                    # Only "\n" ends a line: a carriage return redraws it, and the scan keeps what is left visible.
+                    with io.TextIOWrapper(
+                        io.BufferedReader(_LogReader(log.fileno(), size)),
+                        encoding="utf-8",
+                        errors="replace",
+                        newline="\n",
+                    ) as reader:
+                        result = scan(reader, notices=notices, base=base)
+                except _Signalled as signalled:
+                    _stop(process)
+                    code = _exit_code(process.returncode)
+                    run = CommandRun(argv, code, path, time.monotonic() - started, Scan(), interrupted=signalled.signum)
+                    _log.info("%s interrupted by signal %d; log %s", shlex.join(argv), signalled.signum, path)
+                    raise CommandInterrupted(run) from None
+                except BaseException:
+                    _stop(process)
+                    raise
+        _log.info("%s exited %d after %.1fs in %s; log %s", shlex.join(argv), code, duration, directory, path)
+        found: list[AdvisoryError] = []
+        if slow_after and duration >= slow_after:
+            found.append(
+                SlowCommandNotice(
+                    f"{shlex.join(argv)} ran {duration:.0f}s, longer than --slow-after {slow_after:g}s",
+                    "Narrow the run (a test path, a keyword filter) or look for slow fixtures and external waits; "
+                    "--slow-after 0 turns this notice off",
+                )
             )
-        )
-    return CommandRun(argv, code, path, duration, result, tuple(found))
+        return CommandRun(argv, code, path, duration, result, tuple(found))
+
+
+run_command = RunCommand().execute
 
 
 def _exit_code(returncode: int) -> int:

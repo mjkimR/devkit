@@ -14,7 +14,7 @@ from devkit_dist.adapters.cli import FORMAT_OPTION, boundary, echo_json, exit_on
 from devkit_agt.features.workflow.cli.app import ANCHOR, UNIT, WORKSPACE, cli, workspace
 from devkit_agt.features.workflow.cli.render import quote, render_hold
 from devkit_agt.features.workflow.models.errors import EnvelopeFlagError
-from devkit_agt.features.workflow.usecases.envelopes import check_envelopes, write_envelope_request
+from devkit_agt.features.workflow.usecases.envelopes import CheckEnvelopesUseCase, WriteEnvelopeUseCase
 
 # Kinds whose fields need options of their own; ``envelope new`` refuses them.
 KIND_COMMANDS = ("worker", "answer", "resolution", "review", "reverify")
@@ -129,7 +129,7 @@ def _write(
             "only one of --findings-file, --questions-file and --answers-file can read stdin",
             fix="Pass the others as files",
         )
-    result = write_envelope_request(
+    result = WriteEnvelopeUseCase().execute(
         kind,
         workspace=workspace(workspace_root),
         authoring=authoring,
@@ -312,7 +312,7 @@ def envelope_check_cmd(workspace_root: str | None, unit: str, details: bool, out
     unanswered questions ([PENDING_QUESTION]); neither changes the exit code.
     """
     ws = workspace(workspace_root)
-    envelopes = check_envelopes(ws, unit)
+    envelopes = CheckEnvelopesUseCase().execute(ws, unit)
     loaded = envelopes.all()
     hold = envelopes.hold()
     errors = sorted(envelopes.errors, key=lambda e: e.file)

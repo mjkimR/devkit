@@ -18,8 +18,8 @@ from devkit_dist.features.distribution.models.settings import (
     PLAYBOOK_MAX_BYTES_MAX,
     PLAYBOOK_MAX_BYTES_MIN,
 )
-from devkit_dist.features.distribution.usecases.playbook_get import get_playbook, validate_playbook_id
-from devkit_dist.features.distribution.usecases.playbook_search import search_playbooks
+from devkit_dist.features.distribution.usecases.playbook_get import GetPlaybook, validate_playbook_id
+from devkit_dist.features.distribution.usecases.playbook_search import SearchPlaybooks
 from devkit_dist.features.search import SearchMode
 
 from .output import WORKSPACE, _json_command
@@ -37,7 +37,7 @@ def playbook() -> None:
 def playbook_get(playbook_id: str, workspace_root: str | None) -> object:
     """Return a complete synchronized playbook by exact bundle/asset ID without executing it."""
     validate_playbook_id(playbook_id)
-    return get_playbook(resolve_root(workspace_root), playbook_id)
+    return GetPlaybook().execute(resolve_root(workspace_root), playbook_id)
 
 
 @playbook.command(name="search")
@@ -88,7 +88,7 @@ def search(
     max_bytes: int | None,
 ) -> object:
     """Search synchronized playbook metadata with an English query; return headers only."""
-    return search_playbooks(
+    return SearchPlaybooks().execute(
         resolve_root(workspace_root),
         query,
         limit=limit,

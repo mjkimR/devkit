@@ -9,6 +9,12 @@ from pathlib import Path
 from devkit_core.base.mcp import Confirmation, McpTool
 
 from devkit_agt.features.integration.models.contracts import Task
+from devkit_agt.features.integration.usecases.operations import (
+    InspectIntegrationUseCase,
+    IntegrateUseCase,
+    PrepareIntegrationUseCase,
+    ResumeIntegrationUseCase,
+)
 from devkit_agt.features.integration.usecases.service import IntegrationService
 
 TASK_SCHEMA = {
@@ -49,6 +55,10 @@ REQUEST_SCHEMA = {
 
 def create_tools(root: Path) -> tuple[McpTool, ...]:
     service = IntegrationService(root)
+    prepare_integration = PrepareIntegrationUseCase(service)
+    integrate_task = IntegrateUseCase(service)
+    resume_integration = ResumeIntegrationUseCase(service)
+    inspect_integration = InspectIntegrationUseCase(service)
 
     def task(args: dict) -> Task:
         return Task(
@@ -57,17 +67,19 @@ def create_tools(root: Path) -> tuple[McpTool, ...]:
 
     async def prepare(args: dict, _confirm: Confirmation) -> dict:
         return (
-            await asyncio.to_thread(service.prepare, args["branch"], task(args), args.get("route", "local"))
+            await asyncio.to_thread(prepare_integration.execute, args["branch"], task(args), args.get("route", "local"))
         ).compact_dict()
 
     async def integrate(args: dict, confirm: Confirmation) -> dict:
-        return (await service.integrate(args["branch"], task(args), confirm, args.get("route", "local"))).compact_dict()
+        return (
+            await integrate_task.execute(args["branch"], task(args), confirm, args.get("route", "local"))
+        ).compact_dict()
 
     async def resume(args: dict, _confirm: Confirmation) -> dict:
-        return (await asyncio.to_thread(service.resume, args["request_id"])).compact_dict()
+        return (await asyncio.to_thread(resume_integration.execute, args["request_id"])).compact_dict()
 
     async def status(args: dict, _confirm: Confirmation) -> dict:
-        result = await asyncio.to_thread(service.inspect, args["request_id"])
+        result = await asyncio.to_thread(inspect_integration.execute, args["request_id"])
         return result.to_dict() if args.get("detail", False) else result.compact_dict()
 
     return (

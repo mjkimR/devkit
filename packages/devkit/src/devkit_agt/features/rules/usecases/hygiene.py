@@ -15,6 +15,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError
+from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core.extensions import run_extensions
 
 from devkit_agt.features.rules.models.errors import HygieneExtensionFailedNotice, HygieneNotice
@@ -29,11 +30,14 @@ def _failed(name: str, problem: str) -> HygieneExtensionFailedNotice:
     )
 
 
-def run_hygiene_extensions(root: Path) -> list[AdvisoryError]:
-    """Call every registered extension with ``root``; return the notices they produced, in entry-point name order."""
-    return run_extensions(
-        HYGIENE_GROUP,
-        lambda extension: extension(root),
-        failed=_failed,
-        notice=lambda line, name: HygieneNotice(line, f"extension: {name}"),
-    )
+class RunHygieneExtensionsUseCase(BaseUseCase):
+    """Run registered whole-workspace hygiene checks."""
+
+    def execute(self, root: Path) -> list[AdvisoryError]:
+        """Call every registered extension with ``root``; return the notices they produced, in entry-point name order."""
+        return run_extensions(
+            HYGIENE_GROUP,
+            lambda extension: extension(root),
+            failed=_failed,
+            notice=lambda line, name: HygieneNotice(line, f"extension: {name}"),
+        )

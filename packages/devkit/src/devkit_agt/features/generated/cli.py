@@ -31,11 +31,11 @@ from devkit_dist.adapters.cli import (
 from devkit_agt.features.generated.models.errors import StaleError
 from devkit_agt.features.generated.usecases.engine import (
     ArtifactRun,
+    CheckArtifacts,
+    ListArtifacts,
+    RegenerateArtifacts,
+    ResolveArtifacts,
     RunResult,
-    check,
-    list_artifacts,
-    regenerate,
-    resolve,
 )
 
 WORKSPACE = workspace_option()
@@ -64,7 +64,7 @@ def cli() -> None:
 @boundary
 def list_cmd(workspace_root: str | None, output_format: str) -> None:
     """List the registered artifacts: devkit's built-in ones and those of .devkit/generated.toml."""
-    artifacts = list_artifacts(resolve_root(workspace_root))
+    artifacts = ListArtifacts().execute(resolve_root(workspace_root))
     if is_json(output_format):
         echo_json({"artifacts": [item.to_dict() for item in artifacts]})
         return
@@ -91,7 +91,7 @@ def regen_cmd(ids: tuple[str, ...], workspace_root: str | None, output_format: s
 
     Stages nothing; refused while the index has unmerged paths (use resolve).
     """
-    result = regenerate(resolve_root(workspace_root), ids)
+    result = RegenerateArtifacts().execute(resolve_root(workspace_root), ids)
     if is_json(output_format):
         echo_json(result.to_dict())
         return
@@ -123,7 +123,7 @@ def check_cmd(ids: tuple[str, ...], rev: str, workspace_root: str | None, output
 
     The checkout is not changed. Run it in CI to catch generated files committed out of date.
     """
-    result = check(resolve_root(workspace_root), ids, rev=rev)
+    result = CheckArtifacts().execute(resolve_root(workspace_root), ids, rev=rev)
     stale = _stale_error(result) if result.stale else None
     if is_json(output_format):
         echo_json(result.to_dict() | ({"errors": [stale.to_dict()]} if stale else {}))
@@ -149,7 +149,7 @@ def resolve_cmd(dry_run: bool, workspace_root: str | None, output_format: str) -
     Run it while a merge, rebase or cherry-pick stops on conflicts. Never commits; other conflicts stay for you
     to resolve. Refused, with nothing changed, while such a conflict may feed a regeneration.
     """
-    result = resolve(resolve_root(workspace_root), dry_run=dry_run)
+    result = ResolveArtifacts().execute(resolve_root(workspace_root), dry_run=dry_run)
     if is_json(output_format):
         echo_json(result.to_dict())
     else:

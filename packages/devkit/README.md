@@ -52,7 +52,11 @@ Each wheel owns a regular package: `devkit_agt` for the harness, `devkit_dist` f
 ## Package structure
 
 `features/<feature>/` owns each harness capability. Its `cli` or `mcp` adapter exposes application operations in
-`usecases/`; `services/` contains reusable domain logic, `repositories/` reads and writes configuration, records,
+`usecases/` through concrete `devkit_core.base.usecase.BaseUseCase` implementations with typed `execute` methods.
+Internal helpers remain functions. Constructors only wire dependencies; operations over a shared `Workspace` or
+`IntegrationService` retain that engine instance and its caches, authority records and locks. The base introduces
+no approval hooks, mandatory DTOs or service/repository inheritance.
+`services/` contains reusable domain logic, `repositories/` reads and writes configuration, records,
 Git state or provider data, and `models/` defines contracts, values and errors. Layers exist only when the feature
 has code for them. Workflow definition parsing and layout calculations stay in models; the definition and layout
 repositories own definition file loading and existing unit discovery. Feature `__init__.py` files provide explicit public library facades. The package has no `core/`;

@@ -18,7 +18,7 @@ from devkit_dist.features.distribution.services.installation.local_render import
     LocalRenderStaleError,
 )
 from devkit_dist.features.distribution.usecases import sync
-from devkit_dist.features.distribution.usecases.context import get_context
+from devkit_dist.features.distribution.usecases.context import GetContext
 from devkit_dist.features.distribution.usecases.status import get_project_status
 from devkit_dist.features.project.repositories.local_config import LOCAL_CONFIG_PATH, resolve_execution_environment
 from devkit_dist.features.project.repositories.receipt import load_receipt
@@ -78,7 +78,7 @@ def test_personal_render_locked_restore_stale_and_removal(fixture) -> None:
     assert "Language: ko" in output.read_text()
     assert tracked_state(root) == canonical
     assert load_receipt(root) == canonical_receipt
-    assert get_context(root, "style").instructions
+    assert GetContext().execute(root, "style").instructions
     assert get_project_status(root, [item]).ok
     ledger = json.loads((root / LOCAL_RENDER).read_text())
     assert list(ledger["files"]) == [".devkit/managed/style/style.md"]
@@ -87,7 +87,7 @@ def test_personal_render_locked_restore_stale_and_removal(fixture) -> None:
     assert "Language: ko" in output.read_text()
     local(root, '[bundles.style.variables]\nlanguage="ja"\n')
     with pytest.raises(LocalRenderStaleError):
-        get_context(root, "style")
+        GetContext().execute(root, "style")
     with pytest.raises(LocalRenderStaleError):
         get_project_status(root, [item])
     sync.sync_project(root, [item])
@@ -246,7 +246,7 @@ def test_missing_ledger_and_post_sync_warning(fixture, monkeypatch: pytest.Monke
     sync.sync_project(root, [item])
     (root / LOCAL_RENDER).unlink()
     with pytest.raises(LocalRenderStaleError):
-        get_context(root, "style")
+        GetContext().execute(root, "style")
     from devkit_dist.features.distribution.models.errors import OrphanLeftNotice
 
     monkeypatch.setattr(sync, "run_post_sync", lambda *args: [OrphanLeftNotice("post-sync warning")])
@@ -427,10 +427,10 @@ def test_presentation_inheritance_and_canonical_receipt(fixture, override: str |
     output = root / ".devkit/managed/style/style.md"
     assert f"Language: {override if override is not None else 'ko'}" in output.read_text()
     assert tracked_state(root) == canonical
-    assert get_context(root, "style").instructions
+    assert GetContext().execute(root, "style").instructions
     local(root, '[presentation]\nlanguage="unsupported"\n')
     with pytest.raises(LocalRenderStaleError):
-        get_context(root, "style")
+        GetContext().execute(root, "style")
     sync.sync_project(root, [item], locked=True)
     assert f"Language: {override if override is not None else 'en'}" in output.read_text()
     result = CliRunner().invoke(cli, ["config", "show", "--effective", "-w", str(root)])

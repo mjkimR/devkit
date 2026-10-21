@@ -23,7 +23,7 @@ from devkit_dist.features.distribution.services.installation.discovery import (
     InstalledBundle,
     discover_bundles,
 )
-from devkit_dist.features.distribution.usecases.commands import add_selection, sync_selection
+from devkit_dist.features.distribution.usecases.commands import AddSelection, SyncSelection
 from devkit_dist.features.distribution.usecases.status import get_project_status
 from devkit_dist.features.distribution.usecases.sync import sync_project
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH, RECEIPT_PATH
@@ -371,9 +371,9 @@ def test_public_add_unions_and_sync_replaces_without_transport(
     bundles: list[InstalledBundle], target: Path, monkeypatch: pytest.MonkeyPatch, dry_run: bool
 ) -> None:
     monkeypatch.setattr("devkit_dist.features.distribution.usecases.commands.discover_bundles", lambda: _found(bundles))
-    sync_selection(target, agents=[], presets={"opt": ["core"]})
+    SyncSelection().execute(target, agents=[], presets={"opt": ["core"]})
     before = (target / CONFIG_PATH).read_bytes()
-    added = add_selection(target, {"opt": ["more"]}, dry_run=dry_run)
+    added = AddSelection().execute(target, {"opt": ["more"]}, dry_run=dry_run)
     assert list(added.selection.presets["opt"]) == ["core", "more"]
     if dry_run:
         assert (target / CONFIG_PATH).read_bytes() == before
@@ -381,7 +381,7 @@ def test_public_add_unions_and_sync_replaces_without_transport(
     else:
         assert _config(target)["presets"]["opt"] == ["core", "more"]
         assert _selection(target)["opt"] == ["core", "more"]
-    replaced = sync_selection(target, presets={"opt": ["more"]}, dry_run=dry_run)
+    replaced = SyncSelection().execute(target, presets={"opt": ["more"]}, dry_run=dry_run)
     assert list(replaced.selection.presets["opt"]) == ["more"]
     if dry_run:
         assert (target / CONFIG_PATH).read_bytes() == before

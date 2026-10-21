@@ -46,7 +46,7 @@ from devkit_dist.features.distribution.services.installation.config import Proje
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle, discover_bundles
 from devkit_dist.features.distribution.services.installation.plan import BundlePlan, plan_bundle
 from devkit_dist.features.distribution.services.installation.receipt import read_receipt
-from devkit_dist.features.distribution.usecases.context import get_context
+from devkit_dist.features.distribution.usecases.context import GetContext
 from devkit_dist.features.distribution.usecases.override_commands import (
     accept_override,
     create_override,
@@ -54,15 +54,15 @@ from devkit_dist.features.distribution.usecases.override_commands import (
     list_overrides,
     remove_override,
 )
-from devkit_dist.features.distribution.usecases.playbook_get import get_playbook
-from devkit_dist.features.distribution.usecases.playbook_search import search_playbooks
+from devkit_dist.features.distribution.usecases.playbook_get import GetPlaybook
+from devkit_dist.features.distribution.usecases.playbook_search import SearchPlaybooks
 from devkit_dist.features.distribution.usecases.status import (
     ProjectListing,
     ProjectStatus,
     get_project_listing,
     get_project_status,
 )
-from devkit_dist.features.distribution.usecases.sync import recover_project, sync_project
+from devkit_dist.features.distribution.usecases.sync import RecoverProject, sync_project
 
 __all__ = [
     "Asset",
@@ -74,6 +74,8 @@ __all__ = [
     "ConflictError",
     "ContextResult",
     "DistributionError",
+    "GetContext",
+    "GetPlaybook",
     "GuidanceBlockError",
     "InstalledBundle",
     "LockHeldError",
@@ -91,7 +93,9 @@ __all__ = [
     "ProjectConfig",
     "ProjectListing",
     "ProjectStatus",
+    "RecoverProject",
     "RecoveryError",
+    "SearchPlaybooks",
     "SearchResult",
     "SelectionError",
     "SyncNotice",
@@ -103,8 +107,6 @@ __all__ = [
     "create_override",
     "diff_override",
     "discover_bundles",
-    "get_context",
-    "get_playbook",
     "get_project_listing",
     "get_project_status",
     "list_overrides",
@@ -112,9 +114,7 @@ __all__ = [
     "plan_bundle",
     "read_config",
     "read_receipt",
-    "recover_project",
     "remove_override",
-    "search_playbooks",
     "sync_project",
     "update_config",
 ]

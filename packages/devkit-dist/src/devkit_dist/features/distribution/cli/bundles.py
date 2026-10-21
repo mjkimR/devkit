@@ -10,8 +10,8 @@ from devkit_dist.features.distribution.models.settings import (
     AGENT_NAMES,
 )
 from devkit_dist.features.distribution.usecases.commands import (
-    plan_source,
-    validate_source,
+    PlanSource,
+    ValidateSource,
 )
 
 from .output import SOURCE, _json_command
@@ -27,7 +27,7 @@ def bundle() -> None:
 @_json_command
 def validate(source: Path) -> object:
     """Validate bundle.toml and every declared source."""
-    return validate_source(source)
+    return ValidateSource().execute(source)
 
 
 @bundle.command(name="plan")
@@ -37,4 +37,4 @@ def validate(source: Path) -> object:
 @_json_command
 def plan(source: Path, preset: str | None, agents: tuple[str, ...]) -> object:
     """Preview every destination a bundle deploys, without a consumer project."""
-    return plan_source(source, preset, agents)
+    return PlanSource().execute(source, preset, agents)

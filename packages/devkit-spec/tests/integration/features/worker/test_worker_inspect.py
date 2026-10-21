@@ -7,15 +7,19 @@ import json
 import subprocess
 from collections.abc import Sequence
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from click.testing import CliRunner
 
 from devkit_spec.cli import cli
 from devkit_spec.features.worker.usecases.inputs import BaseUnresolved, HeadUnresolved, UnitUnresolved
-from devkit_spec.features.worker.usecases.inspect import inspect
+from devkit_spec.features.worker.usecases.inspect import InspectWorkerUseCase
 
 UNIT = "specs/2026-10/20261020-example"
+
+
+inspect = InspectWorkerUseCase().execute
 
 
 def git(root: Path, *args: str) -> str:
@@ -222,7 +226,11 @@ def test_cli_json_and_mutually_exclusive_scope(repo: Path, monkeypatch: pytest.M
     worker(repo, 1)
     monkeypatch.chdir(repo)
     module = importlib.import_module("devkit_spec.features.worker.cli.commands")
-    monkeypatch.setattr(module, "inspect", lambda root, **kw: inspect(root, **kw, runner=passed))
+    monkeypatch.setattr(
+        module,
+        "InspectWorkerUseCase",
+        lambda: SimpleNamespace(execute=lambda root, **kw: inspect(root, **kw, runner=passed)),
+    )
     runner = CliRunner()
     result = runner.invoke(cli, ["worker", "inspect", "--format", "json"])
     assert result.exit_code == 0, result.output
@@ -251,7 +259,11 @@ def test_cli_summary_keeps_current_findings_and_failures_details_restore_history
     worker(repo, 1, problem_base=git(repo, "rev-parse", "main"))
     monkeypatch.chdir(repo)
     module = importlib.import_module("devkit_spec.features.worker.cli.commands")
-    monkeypatch.setattr(module, "inspect", lambda root, **kw: inspect(root, **kw, runner=passed))
+    monkeypatch.setattr(
+        module,
+        "InspectWorkerUseCase",
+        lambda: SimpleNamespace(execute=lambda root, **kw: inspect(root, **kw, runner=passed)),
+    )
     runner = CliRunner()
     compact = runner.invoke(cli, ["worker", "inspect", "--format", "json"])
     detailed = runner.invoke(cli, ["worker", "inspect", "--format", "json", "--details"])
@@ -327,7 +339,11 @@ def test_scope_file_unknown_ref_and_notice_cli(repo: Path, monkeypatch: pytest.M
     worker(repo, 1)
     monkeypatch.chdir(repo)
     module = importlib.import_module("devkit_spec.features.worker.cli.commands")
-    monkeypatch.setattr(module, "inspect", lambda root, **kw: inspect(root, **kw, runner=passed))
+    monkeypatch.setattr(
+        module,
+        "InspectWorkerUseCase",
+        lambda: SimpleNamespace(execute=lambda root, **kw: inspect(root, **kw, runner=passed)),
+    )
     runner = CliRunner()
     write(repo, "scope.txt", "src\n")
     result = runner.invoke(cli, ["worker", "inspect", "--scope-file", "scope.txt", "--format", "json"])
@@ -404,7 +420,11 @@ def test_text_scope_unknown_omits_outside_and_history(repo: Path, monkeypatch: p
     worker(repo, 1)
     monkeypatch.chdir(repo)
     module = importlib.import_module("devkit_spec.features.worker.cli.commands")
-    monkeypatch.setattr(module, "inspect", lambda root, **kw: inspect(root, **kw, runner=passed))
+    monkeypatch.setattr(
+        module,
+        "InspectWorkerUseCase",
+        lambda: SimpleNamespace(execute=lambda root, **kw: inspect(root, **kw, runner=passed)),
+    )
     result = CliRunner().invoke(cli, ["worker", "inspect"])
     assert result.exit_code == 0, result.output
     assert "[CHANGED:" in result.stdout
@@ -425,7 +445,11 @@ def test_structured_advisories_use_stderr_once(repo: Path, monkeypatch: pytest.M
     def runner(_root: Path, _args: object) -> dict:
         return {"status": "not-run", "result": {"errors": [error]}, "stderr": ""}
 
-    monkeypatch.setattr(module, "inspect", lambda root, **kw: inspect(root, **kw, runner=runner))
+    monkeypatch.setattr(
+        module,
+        "InspectWorkerUseCase",
+        lambda: SimpleNamespace(execute=lambda root, **kw: inspect(root, **kw, runner=runner)),
+    )
     result = CliRunner().invoke(cli, ["worker", "inspect"])
     assert result.exit_code == 0, result.output
     assert "ARGUMENT_INVALID" not in result.stdout

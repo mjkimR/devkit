@@ -53,7 +53,7 @@ from devkit_agt.features.rules.usecases.project import (
     load_project_rules,
     run_project_rules,
 )
-from devkit_agt.features.rules.usecases.related import RelatedAsset, resolve_related
+from devkit_agt.features.rules.usecases.related import RelatedAsset, ResolveRelatedUseCase
 
 __all__ = [
     "Autofixable",
@@ -74,6 +74,7 @@ __all__ = [
     "RelatedAsset",
     "RelatedUnresolvedNotice",
     "RelocatedLink",
+    "ResolveRelatedUseCase",
     "Rule",
     "RuleContext",
     "RuleDefinitionError",
@@ -111,7 +112,6 @@ __all__ = [
     "relocate_links",
     "resolve_managed_rules",
     "resolve_phases",
-    "resolve_related",
     "run_project_rules",
     "validate_pattern",
     "validate_policy",

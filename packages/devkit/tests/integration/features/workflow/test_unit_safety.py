@@ -14,13 +14,13 @@ import devkit_agt.features.workflow.usecases.units as units_module
 import pytest
 from click.testing import CliRunner, Result
 from devkit_agt.features.workflow import (
+    CreateUnitUseCase,
     LayoutError,
     TemplateLayout,
     UnitDirNotEmptyError,
     UnitExistsError,
     WorkflowNotBindableError,
     Workspace,
-    create_unit,
     parse_layout_spec,
     read_binding,
     validate_template,
@@ -345,7 +345,7 @@ def test_bind_and_new_refuse_a_definition_path_outside_discovery(tmp_path: Path)
     assert created.exit_code == 2 and "(WORKFLOW_NOT_BINDABLE)" in created.stderr
     assert not (root / ".devkit/transient/work/v").exists()
     with pytest.raises(WorkflowNotBindableError):
-        create_unit(Workspace(root), "v", workflow="elsewhere/x.md")
+        CreateUnitUseCase().execute(Workspace(root), "v", workflow="elsewhere/x.md")
 
     # Evaluating against the file without binding stays possible.
     assert run_cli("next", "-w", str(root), "--unit", SIMPLE_UNIT, "--workflow", "elsewhere/x.md").exit_code == 0
@@ -389,7 +389,7 @@ def test_new_refuses_a_directory_without_an_anchor_holding_records(tmp_path: Pat
         root / SIMPLE_UNIT, "01-gate-g.yaml", request="gate:g", kind="approve", action="accept", workflow="w", stage="s"
     )
     with pytest.raises(UnitDirNotEmptyError) as raised:
-        create_unit(Workspace(root), "u")
+        CreateUnitUseCase().execute(Workspace(root), "u")
     assert raised.value.code == "UNIT_DIR_NOT_EMPTY"
     assert raised.value.target_files == (f"{SIMPLE_UNIT}/decisions/01-gate-g.yaml",)
     assert not (root / SIMPLE_UNIT / "task.md").exists()
@@ -400,7 +400,7 @@ def test_new_refuses_a_directory_without_an_anchor_holding_records(tmp_path: Pat
     (root / SIMPLE_UNIT / "envelopes").mkdir()
     (root / SIMPLE_UNIT / "envelopes/review-01.yml").write_text("kind: review\nstatus: completed\n")
     with pytest.raises(UnitDirNotEmptyError) as raised:
-        create_unit(Workspace(root), "u")
+        CreateUnitUseCase().execute(Workspace(root), "u")
     assert raised.value.target_files == (f"{SIMPLE_UNIT}/envelopes/review-01.yml",)
 
 
@@ -411,7 +411,7 @@ def test_new_uses_an_existing_directory_without_records(tmp_path: Path) -> None:
     (unit_dir / "envelopes").mkdir()
     for name in (".DS_Store", ".gitkeep", "notes.md", "decisions/README.md", "decisions/.01-x.yaml.0123456789ab.tmp"):
         (unit_dir / name).write_text("kept")
-    unit = create_unit(Workspace(root), "u")
+    unit = CreateUnitUseCase().execute(Workspace(root), "u")
     assert unit.anchor_path.is_file() and (unit.dir / "envelopes").is_dir()
     assert (unit_dir / "notes.md").read_text() == "kept" and (unit_dir / ".gitkeep").is_file()
 
@@ -431,7 +431,7 @@ def test_concurrent_new_calls_create_one_unit(tmp_path: Path, monkeypatch: pytes
 
     def create(_: int) -> str:
         try:
-            create_unit(Workspace(root), "u")
+            CreateUnitUseCase().execute(Workspace(root), "u")
         except (UnitExistsError, UnitDirNotEmptyError) as exc:
             return exc.code
         return "created"

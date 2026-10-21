@@ -170,7 +170,7 @@ def test_unexpected_errors_are_maintenance_and_exit_2(
     def explode(*args: object, **kwargs: object) -> None:
         raise RuntimeError("boom")
 
-    monkeypatch.setattr("devkit_dist.features.distribution.cli.selection.inspect_project", explode)
+    monkeypatch.setattr("devkit_dist.features.distribution.cli.selection.InspectProject.execute", explode)
     result = _invoke("status", "-w", str(target))
     assert result.exit_code == int(ExitCode.ERROR)
     assert json.loads(result.stdout)["error"]["advisory"]["action"].startswith("MAINTENANCE — ")
@@ -225,7 +225,7 @@ def test_status_with_problems_exits_one_whatever_their_own_codes(
     assert problem.exit_code == ExitCode.ERROR
     report = SimpleNamespace(errors=(problem,), notices=(), to_dict=lambda: {"errors": [problem.to_dict()]})
     monkeypatch.setattr(
-        "devkit_dist.features.distribution.cli.selection.inspect_project", lambda *args, **kwargs: report
+        "devkit_dist.features.distribution.cli.selection.InspectProject.execute", lambda *args, **kwargs: report
     )
     result = _invoke("status", "-w", str(target))
     assert result.exit_code == int(ExitCode.FINDINGS)
@@ -377,7 +377,7 @@ def test_public_sync_selection_matches_cli_policy(item: InstalledBundle, tmp_pat
     elif mode == "environment":
         kwargs["environment"] = "cloud"
         flags.append("--cloud")
-    direct = operations.sync_selection(roots[0], **kwargs).to_dict()
+    direct = operations.SyncSelection().execute(roots[0], **kwargs).to_dict()
     transport = _invoke("sync", *flags, "--format", "json", "-w", str(roots[1]))
     assert transport.exit_code == 0, transport.output
     assert direct == json.loads(transport.stdout)
@@ -396,7 +396,7 @@ def test_public_sync_selection_matches_cli_policy(item: InstalledBundle, tmp_pat
 def test_public_add_selection_joins_presets_without_cli(item: InstalledBundle, target: Path, dry_run: bool) -> None:
     update_config(target, presets={"team": ["all"]}, agents=[])
     before = (target / CONFIG_PATH).read_bytes()
-    result = operations.add_selection(target, {"team": ["all"]}, dry_run=dry_run)
+    result = operations.AddSelection().execute(target, {"team": ["all"]}, dry_run=dry_run)
     assert list(result.selection.presets["team"]) == ["all"]
     if dry_run:
         assert (target / CONFIG_PATH).read_bytes() == before
@@ -406,11 +406,11 @@ def test_public_add_selection_joins_presets_without_cli(item: InstalledBundle, t
 
 
 def test_public_selection_rolls_back_config_when_sync_conflicts(item: InstalledBundle, target: Path) -> None:
-    operations.sync_selection(target, agents=[], presets={"team": ["all"]})
+    operations.SyncSelection().execute(target, agents=[], presets={"team": ["all"]})
     before = (target / CONFIG_PATH).read_bytes()
     (target / ".devkit/managed/team/guide.md").write_text("edited\n")
     with pytest.raises(ConflictError):
-        operations.sync_selection(target, agents=["codex"], presets={"team": ["all"]})
+        operations.SyncSelection().execute(target, agents=["codex"], presets={"team": ["all"]})
     assert (target / CONFIG_PATH).read_bytes() == before
 
 
@@ -440,12 +440,12 @@ def test_application_discovery_stays_open_until_result_is_collected(
 
     monkeypatch.setattr(status_operations, "get_project_listing", collect_while_open)
     monkeypatch.setattr(operations, "discover_bundles", found)
-    operations.sync_selection(target, agents=[], presets={"team": ["all"]})
+    operations.SyncSelection().execute(target, agents=[], presets={"team": ["all"]})
     assert not active
-    assert operations.list_project(target).installed
+    assert operations.ListProject().execute(target).installed
     assert not active
-    assert not operations.inspect_project(target).errors
+    assert not operations.InspectProject().execute(target).errors
     assert not active
-    assert not operations.list_project_overrides(target)
+    assert not operations.ListProjectOverrides().execute(target)
     assert not active
     assert len(calls) == 4

@@ -7,13 +7,17 @@ from pathlib import Path
 
 from devkit_core.base.mcp import Confirmation, McpTool
 
-from devkit_spec.features.proposals.usecases.report import publish_workspace_report
+from devkit_spec.features.proposals.usecases.report import PublishWorkspaceProposalReportUseCase
 
 
 def create_tools(root: Path) -> tuple[McpTool, ...]:
     async def report(arguments: dict, _confirm: Confirmation) -> dict:
         artifact = await asyncio.to_thread(
-            publish_workspace_report, root, arguments["slug"], arguments["source_sha"], arguments["body"]
+            PublishWorkspaceProposalReportUseCase().execute,
+            root,
+            arguments["slug"],
+            arguments["source_sha"],
+            arguments["body"],
         )
         return artifact.receipt_dict()
 

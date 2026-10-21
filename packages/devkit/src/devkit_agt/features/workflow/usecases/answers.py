@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any
 
+from devkit_core.base.usecase import BaseUseCase
+
 from devkit_agt.features.workflow.models.decision_records import Decision
 from devkit_agt.features.workflow.models.errors import DecisionInvalidError, RequestUnknownError, ReturnInvalidError
 from devkit_agt.features.workflow.models.requests import Request
@@ -64,90 +66,101 @@ def validate_answer(request: Request, action: str, values: Sequence[str]) -> Any
     return values[0]
 
 
-def record_answer(
-    ws: Workspace,
-    unit: str | UnitRef,
-    request_id: str,
-    action: str,
-    values: Sequence[str] = (),
-    *,
-    note: str = "",
-    by: str = "",
-    lint: bool = True,
-) -> Decision:
-    """Validate an answer against the unit's open requests and write its decision record.
+class RecordAnswerUseCase(BaseUseCase):
+    """Execute the record answer operation."""
 
-    ``feedback:<target>`` is accepted at any time with exactly one ``--value``
-    on accept. Every other id must be an open request of the unit. An
-    ``action`` outside ``ACTIONS`` raises ``DecisionInvalidError``
-    (``DECISION_INVALID``) for every request.
-    """
-    ref = unit if isinstance(unit, UnitRef) else ws.resolve_unit(unit)
-    if not is_request_id(request_id):
-        raise RequestUnknownError(
-            f"--request {request_id!r} is not a request id",
-            fix="Use an id printed by `devkit workflow next --view requests`, or feedback:<target>",
-        )
-    stage = ""
-    if request_id.startswith(FEEDBACK_PREFIX):
-        if action not in ACTIONS:
-            raise DecisionInvalidError(f"--action {action!r} is not one of {'|'.join(ACTIONS)}")
-        if action == "accept":
-            if len(values) != 1 or not values[0].strip():
-                raise DecisionInvalidError(
-                    "feedback requires exactly one --value with the text",
-                    fix="Pass --value <text>",
-                )
-        elif values:
-            raise DecisionInvalidError("--value is only valid with --action accept", fix="Drop --value")
-        value: Any = values[0] if values else None
-    else:
-        result = ws.evaluate_unit(ref, lint=lint)
-        open_requests = {r.id: r for r in result.requests}
-        request = open_requests.get(request_id)
-        if request is None:
+    def execute(
+        self,
+        ws: Workspace,
+        unit: str | UnitRef,
+        request_id: str,
+        action: str,
+        values: Sequence[str] = (),
+        *,
+        note: str = "",
+        by: str = "",
+        lint: bool = True,
+    ) -> Decision:
+        """Validate an answer against the unit's open requests and write its decision record.
+
+        ``feedback:<target>`` is accepted at any time with exactly one ``--value``
+        on accept. Every other id must be an open request of the unit. An
+        ``action`` outside ``ACTIONS`` raises ``DecisionInvalidError``
+        (``DECISION_INVALID``) for every request.
+        """
+        ref = unit if isinstance(unit, UnitRef) else ws.resolve_unit(unit)
+        if not is_request_id(request_id):
             raise RequestUnknownError(
-                f"{request_id!r} is not an open request of {ref.rel}",
-                *([f"open: {rid}" for rid in open_requests] or ["open: none"]),
-                fix="Run `devkit workflow next --view requests --unit <dir>` and answer one of the listed ids",
+                f"--request {request_id!r} is not a request id",
+                fix="Use an id printed by `devkit workflow next --view requests`, or feedback:<target>",
             )
-        if request.answer == "envelope":
-            source, _, question = request.target.name.partition("#")
-            raise DecisionInvalidError(
-                f"{request_id} is a question; its answer is an answer envelope, not a decision record",
-                fix=f"devkit workflow envelope answer --unit {ref.rel} --answers-to {source}"
-                f" --answers-file <file with `- question: {question}`, choice, decision>",
+        stage = ""
+        if request_id.startswith(FEEDBACK_PREFIX):
+            if action not in ACTIONS:
+                raise DecisionInvalidError(f"--action {action!r} is not one of {'|'.join(ACTIONS)}")
+            if action == "accept":
+                if len(values) != 1 or not values[0].strip():
+                    raise DecisionInvalidError(
+                        "feedback requires exactly one --value with the text",
+                        fix="Pass --value <text>",
+                    )
+            elif values:
+                raise DecisionInvalidError("--value is only valid with --action accept", fix="Drop --value")
+            value: Any = values[0] if values else None
+        else:
+            result = ws.evaluate_unit(ref, lint=lint)
+            open_requests = {r.id: r for r in result.requests}
+            request = open_requests.get(request_id)
+            if request is None:
+                raise RequestUnknownError(
+                    f"{request_id!r} is not an open request of {ref.rel}",
+                    *([f"open: {rid}" for rid in open_requests] or ["open: none"]),
+                    fix="Run `devkit workflow next --view requests --unit <dir>` and answer one of the listed ids",
+                )
+            if request.answer == "envelope":
+                source, _, question = request.target.name.partition("#")
+                raise DecisionInvalidError(
+                    f"{request_id} is a question; its answer is an answer envelope, not a decision record",
+                    fix=f"devkit workflow envelope answer --unit {ref.rel} --answers-to {source}"
+                    f" --answers-file <file with `- question: {question}`, choice, decision>",
+                )
+            value = validate_answer(request, action, values)
+            stage = request.target.stage or ""
+        decisions = load_decisions(ref.dir)
+        record = new_decision(
+            decisions, request_id, action, workflow=ref.doc.id, stage=stage, value=value, note=note, by=by
+        )
+        return write_decision(ref.dir, record)
+
+
+# Internal library callers share the same implementation as the transport entry point.
+record_answer = RecordAnswerUseCase().execute
+
+
+class ReturnToStageUseCase(BaseUseCase):
+    """Execute the return to operation."""
+
+    def execute(
+        self, ws: Workspace, unit: str | UnitRef, stage: str, *, note: str = "", by: str = "", lint: bool = True
+    ) -> Decision:
+        """Take the unit back to ``stage``: approvals for it and every later stage must be given again.
+
+        ``stage`` must not come after the current stage (any stage once the workflow is complete).
+        """
+        ref = unit if isinstance(unit, UnitRef) else ws.resolve_unit(unit)
+        target = ref.doc.stage_index(stage)
+        if target < 0:
+            raise ReturnInvalidError(
+                f"{stage!r} is not a stage of {ref.doc.id}",
+                fix=f"Use one of: {', '.join(s.id for s in ref.doc.stages)}",
             )
-        value = validate_answer(request, action, values)
-        stage = request.target.stage or ""
-    decisions = load_decisions(ref.dir)
-    record = new_decision(
-        decisions, request_id, action, workflow=ref.doc.id, stage=stage, value=value, note=note, by=by
-    )
-    return write_decision(ref.dir, record)
-
-
-def return_to(
-    ws: Workspace, unit: str | UnitRef, stage: str, *, note: str = "", by: str = "", lint: bool = True
-) -> Decision:
-    """Take the unit back to ``stage``: approvals for it and every later stage must be given again.
-
-    ``stage`` must not come after the current stage (any stage once the workflow is complete).
-    """
-    ref = unit if isinstance(unit, UnitRef) else ws.resolve_unit(unit)
-    target = ref.doc.stage_index(stage)
-    if target < 0:
-        raise ReturnInvalidError(
-            f"{stage!r} is not a stage of {ref.doc.id}",
-            fix=f"Use one of: {', '.join(s.id for s in ref.doc.stages)}",
-        )
-    result = ws.evaluate_unit(ref, lint=lint)
-    if result.stage is not None and target > ref.doc.stage_index(result.stage.id):
-        raise ReturnInvalidError(
-            f"stage {stage!r} comes after the current stage {result.stage.id!r}",
-            fix=f"Return to {result.stage.id!r} or an earlier stage",
-        )
-    return _record_return(ref, stage, note=note, by=by)
+        result = ws.evaluate_unit(ref, lint=lint)
+        if result.stage is not None and target > ref.doc.stage_index(result.stage.id):
+            raise ReturnInvalidError(
+                f"stage {stage!r} comes after the current stage {result.stage.id!r}",
+                fix=f"Return to {result.stage.id!r} or an earlier stage",
+            )
+        return _record_return(ref, stage, note=note, by=by)
 
 
 def _record_return(unit: UnitRef, to: str, *, note: str = "", by: str = "") -> Decision:

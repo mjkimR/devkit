@@ -8,11 +8,11 @@ from devkit_dist.adapters.cli import (
     resolve_root,
 )
 from devkit_dist.features.distribution.usecases.commands import (
-    accept_project_override,
-    create_project_override,
-    diff_project_override,
-    list_project_overrides,
-    remove_project_override,
+    AcceptProjectOverride,
+    CreateProjectOverride,
+    DiffProjectOverride,
+    ListProjectOverrides,
+    RemoveProjectOverride,
 )
 
 from .output import WORKSPACE, _json_command, _report_change
@@ -30,7 +30,7 @@ def override() -> None:
 @_json_command
 def override_create(selector: str, workspace_root: str | None, force: bool) -> None:
     """Copy an installed asset (bundle:asset) into .devkit/overrides/ and synchronize."""
-    change = create_project_override(resolve_root(workspace_root), selector, force=force)
+    change = CreateProjectOverride().execute(resolve_root(workspace_root), selector, force=force)
     _report_change(change)
 
 
@@ -40,7 +40,7 @@ def override_create(selector: str, workspace_root: str | None, force: bool) -> N
 @_json_command
 def override_diff(selector: str, workspace_root: str | None) -> object:
     """Per file: upstream vs override, and recorded baseline vs current upstream (bundle:asset)."""
-    return diff_project_override(resolve_root(workspace_root), selector)
+    return DiffProjectOverride().execute(resolve_root(workspace_root), selector)
 
 
 @override.command(name="accept")
@@ -49,7 +49,7 @@ def override_diff(selector: str, workspace_root: str | None) -> object:
 @_json_command
 def override_accept(selector: str, workspace_root: str | None) -> object:
     """Record the current upstream as the override's baseline (bundle:asset)."""
-    return accept_project_override(resolve_root(workspace_root), selector)
+    return AcceptProjectOverride().execute(resolve_root(workspace_root), selector)
 
 
 @override.command(name="remove")
@@ -58,7 +58,7 @@ def override_accept(selector: str, workspace_root: str | None) -> object:
 @_json_command
 def override_remove(selector: str, workspace_root: str | None) -> None:
     """Remove a local override and synchronize the pristine upstream asset (bundle:asset)."""
-    change = remove_project_override(resolve_root(workspace_root), selector)
+    change = RemoveProjectOverride().execute(resolve_root(workspace_root), selector)
     _report_change(change)
 
 
@@ -67,4 +67,4 @@ def override_remove(selector: str, workspace_root: str | None) -> None:
 @_json_command
 def override_list(workspace_root: str | None) -> object:
     """List tracked overrides and their drift status."""
-    return {"overrides": [item.to_dict() for item in list_project_overrides(resolve_root(workspace_root))]}
+    return {"overrides": [item.to_dict() for item in ListProjectOverrides().execute(resolve_root(workspace_root))]}

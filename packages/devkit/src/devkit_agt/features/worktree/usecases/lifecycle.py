@@ -30,6 +30,7 @@ from typing import Any
 
 from devkit.advisory import AdvisoryError, Level
 from devkit_core.base.errors import ArgumentError, GitError
+from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core.git import run_git
 from devkit_core.core.logs import get_logger
 from devkit_dist.features.project.repositories.invocation import constraint_environment, guard_execution
@@ -422,44 +423,47 @@ def _remote_holders(base: Path, branch: str) -> tuple[list[str], list[AdvisoryEr
     return holders, notices
 
 
-def start_branch(position: Position, branch: str) -> BranchStartResult:
-    """Create the activity branch at the current HEAD and switch the current checkout to it, without a worktree.
+class StartBranch(BaseUseCase):
+    """Create the activity branch at the current HEAD and switch the current checkout to it, without a worktree."""
 
-    ``git switch -c`` carries uncommitted changes over to the branch. The same name rule and refusals as ``start``
-    apply: a branch that exists locally or on a remote is ``WORKTREE_BRANCH_EXISTS``. The branch gets the marker
-    (the checkout's path) and ``devkitBase``, the branch the checkout was on, so ``finish --merge`` can integrate it
-    from the base once the checkout is back on that branch. It runs in the base checkout (``WORKTREE_NESTED`` in a
-    linked worktree, which ``finish`` would remove) on a branch (``WORKTREE_BASE_DETACHED`` otherwise: nothing would
-    say where the task integrates).
-    """
-    check_branch(branch)
-    if position.linked:
-        raise NestedError(
-            f"{position.root} is a linked worktree; activity branches are started in the base checkout",
-            target_files=[str(position.base)],
-        )
-    if position.branch is None:
-        raise BaseDetachedError(
-            f"{position.root} is on a detached HEAD; the branch would record no branch to integrate into",
-            target_files=[str(position.root)],
-        )
-    for entry in _entries(position.base):
-        if entry.branch == branch:
-            raise BranchExistsError(f"branch {branch} is checked out at {entry.path}", fix=_attach_fix(branch))
-    notices = _refuse_existing(position.base, branch)
-    try:
-        run_git(position.root, "switch", "--quiet", "-c", branch)
-    except GitError as exc:
-        if f"a branch named '{branch}' already exists" in exc.stderr:
-            raise BranchExistsError(
-                f"branch {branch} already exists: it was created while start ran; nothing was changed",
-                fix=_attach_fix(branch),
-            ) from exc
-        raise
-    run_git(position.base, "config", "--local", _marker(branch), str(position.root))
-    run_git(position.base, "config", "--local", _marker(branch, BASE_KEY), position.branch)
-    _log.info("switched %s to the new branch %s from %s", position.root, branch, position.branch)
-    return BranchStartResult(branch, position.root, position.branch, notices)
+    def execute(self, position: Position, branch: str) -> BranchStartResult:
+        """Create the activity branch at the current HEAD and switch the current checkout to it, without a worktree.
+
+        ``git switch -c`` carries uncommitted changes over to the branch. The same name rule and refusals as ``start``
+        apply: a branch that exists locally or on a remote is ``WORKTREE_BRANCH_EXISTS``. The branch gets the marker
+        (the checkout's path) and ``devkitBase``, the branch the checkout was on, so ``finish --merge`` can integrate it
+        from the base once the checkout is back on that branch. It runs in the base checkout (``WORKTREE_NESTED`` in a
+        linked worktree, which ``finish`` would remove) on a branch (``WORKTREE_BASE_DETACHED`` otherwise: nothing would
+        say where the task integrates).
+        """
+        check_branch(branch)
+        if position.linked:
+            raise NestedError(
+                f"{position.root} is a linked worktree; activity branches are started in the base checkout",
+                target_files=[str(position.base)],
+            )
+        if position.branch is None:
+            raise BaseDetachedError(
+                f"{position.root} is on a detached HEAD; the branch would record no branch to integrate into",
+                target_files=[str(position.root)],
+            )
+        for entry in _entries(position.base):
+            if entry.branch == branch:
+                raise BranchExistsError(f"branch {branch} is checked out at {entry.path}", fix=_attach_fix(branch))
+        notices = _refuse_existing(position.base, branch)
+        try:
+            run_git(position.root, "switch", "--quiet", "-c", branch)
+        except GitError as exc:
+            if f"a branch named '{branch}' already exists" in exc.stderr:
+                raise BranchExistsError(
+                    f"branch {branch} already exists: it was created while start ran; nothing was changed",
+                    fix=_attach_fix(branch),
+                ) from exc
+            raise
+        run_git(position.base, "config", "--local", _marker(branch), str(position.root))
+        run_git(position.base, "config", "--local", _marker(branch, BASE_KEY), position.branch)
+        _log.info("switched %s to the new branch %s from %s", position.root, branch, position.branch)
+        return BranchStartResult(branch, position.root, position.branch, notices)
 
 
 def attach(
@@ -1366,42 +1370,45 @@ def _config(base: Path, key: str) -> str:
     return _query(base, "config", "--get", key) or ""
 
 
-def status(position: Position) -> StatusResult:
+class WorktreeStatusQuery(BaseUseCase):
     """Every worktree with its merge and dirty state, and the unmerged branches no worktree checks out."""
-    base = position.base
-    entries = _entries(base)
-    base_branch = _query(base, "symbolic-ref", "--quiet", "--short", "HEAD")
-    base_head = _head(base)
 
-    def merged(rev: str | None) -> bool:
-        return _merged(base, rev, base_head)
+    def execute(self, position: Position) -> StatusResult:
+        """Every worktree with its merge and dirty state, and the unmerged branches no worktree checks out."""
+        base = position.base
+        entries = _entries(base)
+        base_branch = _query(base, "symbolic-ref", "--quiet", "--short", "HEAD")
+        base_head = _head(base)
 
-    worktrees: list[WorktreeStatus] = []
-    for entry in entries:
-        is_base = entry.path == base
-        dirty: bool | None = None
-        if not entry.prunable and entry.path.is_dir():
-            try:
-                dirty = not _clean(entry.path)
-            except GitError:
-                dirty = None
-        worktrees.append(
-            WorktreeStatus(
-                path=entry.path,
-                branch=entry.branch,
-                head=entry.head[:7] if entry.head else None,
-                role="base" if is_base else "linked",
-                merged=None if is_base else merged(f"refs/heads/{entry.branch}" if entry.branch else entry.head),
-                dirty=dirty,
-                prunable=entry.prunable,
+        def merged(rev: str | None) -> bool:
+            return _merged(base, rev, base_head)
+
+        worktrees: list[WorktreeStatus] = []
+        for entry in entries:
+            is_base = entry.path == base
+            dirty: bool | None = None
+            if not entry.prunable and entry.path.is_dir():
+                try:
+                    dirty = not _clean(entry.path)
+                except GitError:
+                    dirty = None
+            worktrees.append(
+                WorktreeStatus(
+                    path=entry.path,
+                    branch=entry.branch,
+                    head=entry.head[:7] if entry.head else None,
+                    role="base" if is_base else "linked",
+                    merged=None if is_base else merged(f"refs/heads/{entry.branch}" if entry.branch else entry.head),
+                    dirty=dirty,
+                    prunable=entry.prunable,
+                )
             )
-        )
-    checked_out = {entry.branch for entry in entries if entry.branch}
-    branches = []
-    refs = _git(base, "for-each-ref", "--format=%(refname:short) %(objectname)", "refs/heads/")
-    for line in refs.splitlines():
-        name, _, head = line.partition(" ")
-        if name and name not in checked_out and not merged(head):
-            branches.append(BranchStatus(name, head[:7]))
-    branches.sort(key=lambda item: item.name)
-    return StatusResult(base, base_branch, worktrees, branches)
+        checked_out = {entry.branch for entry in entries if entry.branch}
+        branches = []
+        refs = _git(base, "for-each-ref", "--format=%(refname:short) %(objectname)", "refs/heads/")
+        for line in refs.splitlines():
+            name, _, head = line.partition(" ")
+            if name and name not in checked_out and not merged(head):
+                branches.append(BranchStatus(name, head[:7]))
+        branches.sort(key=lambda item: item.name)
+        return StatusResult(base, base_branch, worktrees, branches)

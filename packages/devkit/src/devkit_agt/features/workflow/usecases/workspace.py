@@ -483,7 +483,7 @@ class Workspace:
 
         Approvals for stages after the current one (the unit went back) are
         listed in ``UnitEvaluation.stale_approvals`` and keep counting until
-        ``return_to`` voids them.
+        ``ReturnToStageUseCase`` voids them.
         """
         self.check_given(unit.doc, given)
         result = evaluate_definition(unit.doc, self.options(unit, given=given, lint=lint))

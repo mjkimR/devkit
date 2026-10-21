@@ -205,7 +205,7 @@ def test_managed_tests_kept_by_an_override_run_against_the_overridden_module(tmp
     modules = plugin_modules([("helpers", managed / "helpers.py"), ("rule", override / "rule.py")])
     registry = RuleRegistry()
     (rule,) = registry.discover_from_packages([PluginPackage("team:good", managed, modules)])
-    (result,) = rule_tests.run_rule_tests(tmp_path, [rule])
+    (result,) = rule_tests.RunRuleTestsUseCase().execute(tmp_path, [rule])
     assert result.tests == (managed / "tests").resolve()
     assert result.result is rule_tests.RuleTestResult.FAILED  # the managed tests caught the broken override
 

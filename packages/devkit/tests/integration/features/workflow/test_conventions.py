@@ -17,15 +17,15 @@ from click.testing import CliRunner, Result
 from devkit.advisory import ActionMode, AdvisoryError
 from devkit_agt.features.workflow import (
     AnchorInvalidError,
+    CreateUnitUseCase,
     DecisionRecordError,
     DefinitionProblem,
     EnvelopeFormatError,
     HistoryEntry,
+    ListUnitsUseCase,
     WorkflowConfigError,
     WorkflowError,
     Workspace,
-    create_unit,
-    list_units,
     load_decisions,
     load_envelopes,
     read_binding,
@@ -133,7 +133,7 @@ def test_unit_info_error_is_coded(tmp_path: Path) -> None:
     broken = root / ".devkit/transient/work/broken"
     broken.mkdir(parents=True)
     (broken / "task.md").write_text("---\nid: [x\n---\n")
-    [row] = list_units(Workspace(root))
+    [row] = ListUnitsUseCase().execute(Workspace(root)).units
     assert isinstance(row.error, AnchorInvalidError)
     assert row.error.to_dict()["code"] == "ANCHOR_INVALID" and row.to_dict()["error"] is not None
     listed = _run("list", "-w", str(root))
@@ -156,7 +156,7 @@ def test_semantic_argument_checks_are_argument_invalid(tmp_path: Path) -> None:
 
 def test_bind_unit_rebinds_and_keeps_history(tmp_path: Path) -> None:
     ws = Workspace(_workspace(tmp_path))
-    unit = create_unit(ws, "u")
+    unit = CreateUnitUseCase().execute(ws, "u")
     old = read_binding(unit.anchor_path)
     write_binding(unit.anchor_path, type(old)("direct-delivery", (HistoryEntry("triage", "2026-10-12", 2),)))
     rebound = ws.bind_unit(unit.rel)
@@ -185,7 +185,7 @@ def test_workspace_loads_each_source_once(tmp_path: Path, monkeypatch: pytest.Mo
         ws.load_definition("direct-delivery")
         ws.definition()
         ws.validate_definitions()
-    unit = create_unit(ws, "u")
+    unit = CreateUnitUseCase().execute(ws, "u")
     ws.evaluate_unit(ws.resolve_unit(unit.rel), lint=False)
     assert calls == {"receipt": 1, "discover": 1}
     assert ws.config.layout is ws.config.layout
@@ -202,5 +202,5 @@ def test_lint_errors_pass_through(tmp_path: Path) -> None:
         "---\nid: direct-delivery\nschema_version: 1\nstages:\n  - id: s\n    exit: [lint-clean]\n---\n"
     )
     ws = Workspace(root, lint=lint)
-    unit = create_unit(ws, "u")
+    unit = CreateUnitUseCase().execute(ws, "u")
     assert ws.evaluate_unit(unit).lint_error is refusal

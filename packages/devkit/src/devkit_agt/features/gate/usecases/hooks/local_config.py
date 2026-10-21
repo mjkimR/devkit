@@ -51,6 +51,7 @@ from typing import Any
 import tomlkit
 from devkit.advisory import AdvisoryError, as_advisory_error
 from devkit_core.base.errors import GitError
+from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import UnsafePathError, atomic_write_text
 from devkit_core.core.logs import get_logger
 from devkit_dist.base.errors import ConfigError
@@ -221,36 +222,42 @@ def _refresh(path: Path, gates: list[Gate], project: GatesConfig | None) -> Temp
     return TemplateResult(path, TemplateState.UPDATED)
 
 
-def refresh_project_template(repo_root: Path) -> TemplateResult:
-    """``refresh_template`` for the work tree at ``repo_root``, with the gates its registry loads.
+class RefreshGateTemplateUseCase(BaseUseCase):
+    """Application entrypoint for refresh project template."""
 
-    Gates that fail to load are left out; `devkit gate status` reports them. A
-    ``.devkit/config.toml`` whose ``[gates]`` cannot be read skips the refresh:
-    without it, a table would offer the project's keys at their defaults. Never
-    raises once the common Git directory is found: any other failure is a
-    ``SKIPPED`` result, so the caller still reports what it did before.
-    """
-    common = git.common_git_dir(repo_root)
-    try:
-        project = load_project_gates_config(repo_root)
-    except ConfigError as exc:
-        return _skipped(
-            common / LOCAL_CONFIG,
-            f"{CONFIG_PATH} cannot be read: {exc.message}",
-            fix=f"Correct {CONFIG_PATH} (`devkit gate status` reports the problem), {_INSTALL_FIX}",
-            target=CONFIG_PATH,
-        )
-    try:
-        return refresh_template(common, project_registry(repo_root).get_all(), project)
-    except Exception as exc:  # the template is secondary: never lose the install's own result over it
-        error = as_advisory_error(exc)
-        path = common / LOCAL_CONFIG
-        return _skipped(
-            path,
-            f"refresh failed: {error.code}: {error.message}",
-            fix=error.fix or f"Correct the cause, {_INSTALL_FIX}",
-            target=next(iter(error.target_files), None),
-        )
+    def execute(self, repo_root: Path) -> TemplateResult:
+        """``refresh_template`` for the work tree at ``repo_root``, with the gates its registry loads.
+
+        Gates that fail to load are left out; `devkit gate status` reports them. A
+        ``.devkit/config.toml`` whose ``[gates]`` cannot be read skips the refresh:
+        without it, a table would offer the project's keys at their defaults. Never
+        raises once the common Git directory is found: any other failure is a
+        ``SKIPPED`` result, so the caller still reports what it did before.
+        """
+        common = git.common_git_dir(repo_root)
+        try:
+            project = load_project_gates_config(repo_root)
+        except ConfigError as exc:
+            return _skipped(
+                common / LOCAL_CONFIG,
+                f"{CONFIG_PATH} cannot be read: {exc.message}",
+                fix=f"Correct {CONFIG_PATH} (`devkit gate status` reports the problem), {_INSTALL_FIX}",
+                target=CONFIG_PATH,
+            )
+        try:
+            return refresh_template(common, project_registry(repo_root).get_all(), project)
+        except Exception as exc:  # the template is secondary: never lose the install's own result over it
+            error = as_advisory_error(exc)
+            path = common / LOCAL_CONFIG
+            return _skipped(
+                path,
+                f"refresh failed: {error.code}: {error.message}",
+                fix=error.fix or f"Correct the cause, {_INSTALL_FIX}",
+                target=next(iter(error.target_files), None),
+            )
+
+
+refresh_project_template = RefreshGateTemplateUseCase().execute
 
 
 def post_sync(root: Path, result: dict[str, Any]) -> list[AdvisoryError] | None:

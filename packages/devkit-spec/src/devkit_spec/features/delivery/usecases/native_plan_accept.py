@@ -7,6 +7,7 @@ import hashlib
 import json
 import re
 from pathlib import Path
+from typing import Any
 
 from devkit.advisory import AdvisoryError
 from devkit_agt.features.integration.models.contracts import (
@@ -20,6 +21,7 @@ from devkit_agt.features.integration.usecases.service import IntegrationService
 from devkit_agt.features.workflow import Workspace
 from devkit_agt.features.worktree import locate, path_for, read_worktree_config
 from devkit_core.base.mcp import Confirmation
+from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import GitError, run_git
 from devkit_core.core.frontmatter import parse
 from devkit_dist.features.project.usecases.configuration import (
@@ -274,13 +276,13 @@ class _Acceptance:
         return head
 
 
-class PlanAcceptService:
-    def __init__(self, root: Path):
-        self.root = root.resolve()
+class PlanAcceptUseCase(BaseUseCase):
+    def __init__(self, root: Path) -> None:
+        self.root = root
         self._lock = asyncio.Lock()
 
     async def _remaining(self, slug: str, report_uri: str, confirm: Confirmation, mode: str) -> dict:
-        from devkit_spec.features.delivery.usecases.native_handoff import HandoffService, prepare
+        from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase, prepare
         from devkit_spec.features.proposals.usecases.report import validate
 
         preview = await asyncio.to_thread(prepare, self.root, slug, report_uri)
@@ -302,7 +304,7 @@ class PlanAcceptService:
                 "next_action": "Acceptance already complete",
             }
         if approval_policy(self.root, "proposal-handoff") == "auto":
-            handed = await asyncio.to_thread(HandoffService(self.root)._execute, preview, preview.effort)
+            handed = await asyncio.to_thread(HandoffUseCase(self.root)._execute, preview, preview.effort)
             return {
                 "status": handed["status"],
                 "completed_steps": ["acceptance_commit", "merge"],
@@ -331,7 +333,7 @@ class PlanAcceptService:
             raise ProposalApprovalStaleError("accepted base, report, policy or environment changed")
         if selected_mode == "accept_only":
             return {**result, "status": "accepted", "next_action": "Acceptance already complete"}
-        handed = await asyncio.to_thread(HandoffService(self.root)._execute, preview, str(effort))
+        handed = await asyncio.to_thread(HandoffUseCase(self.root)._execute, preview, str(effort))
         return {
             **result,
             "status": handed["status"],
@@ -340,9 +342,10 @@ class PlanAcceptService:
             "next_action": handed.get("next_command", result["next_action"]),
         }
 
-    async def accept(
+    async def execute(
         self, slug: str, report_uri: str, confirm: Confirmation, *, mode: str = "accept_and_handoff"
-    ) -> dict:
+    ) -> dict[str, Any]:
+        self.root = self.root.resolve()
         slug = require_slug(slug)
         if mode not in {"accept_only", "accept_and_handoff"}:
             raise ProposalApprovalNotReadyError("choose accept_only or accept_and_handoff")
@@ -407,7 +410,7 @@ class PlanAcceptService:
                 ):
                     payload["next_action"] = "Acceptance complete; request proposal handoff approval separately"
                 return payload
-            from devkit_spec.features.delivery.usecases.native_handoff import HandoffService, prepare
+            from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase, prepare
 
             try:
                 guard_execution()
@@ -419,7 +422,7 @@ class PlanAcceptService:
                     raise ProposalApprovalStaleError("setup differs from the disclosed prospective source setup")
                 if preview.head != landed:
                     raise ProposalApprovalStaleError("base changed between integration and handoff")
-                handed = await asyncio.to_thread(HandoffService(self.root)._execute, preview, lifecycle.effort)
+                handed = await asyncio.to_thread(HandoffUseCase(self.root)._execute, preview, lifecycle.effort)
                 payload.update(
                     status=handed["status"],
                     handoff=handed,

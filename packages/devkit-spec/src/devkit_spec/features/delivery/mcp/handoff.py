@@ -4,17 +4,17 @@ from pathlib import Path
 
 from devkit_core.base.mcp import Confirmation, McpTool
 
-from devkit_spec.features.delivery.usecases.native_handoff import HandoffService
+from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase
 
 
 def create_tools(root: Path) -> tuple[McpTool, ...]:
     from devkit_spec.features.delivery.mcp import plan_accept as plan_accept_mcp
     from devkit_spec.features.proposals.mcp import report as proposal_report_mcp
 
-    service = HandoffService(root)
+    service = HandoffUseCase(root)
 
     async def handoff(arguments: dict, confirm: Confirmation) -> dict:
-        return await service.handoff(arguments["slug"], arguments["report_uri"], confirm)
+        return await service.execute(arguments["slug"], arguments["report_uri"], confirm)
 
     return (
         McpTool(

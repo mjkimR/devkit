@@ -48,13 +48,13 @@ in its own distribution. No application modules share that namespace.
 | `features/project/usecases/` | Workspace/configuration queries and invocation revalidation for transport adapters |
 | `features/distribution/` | Bundle validation/packaging, installation synchronization, context, playbooks and overrides |
 | `features/host/` | Hook models, host adapters, configuration services, dispatch and MCP registration use cases |
-| `features/shared/` | Artifact models, local repository, adapter selection use case and CLI/MCP adapters |
+| `features/shared/` | Artifact models, local repository, execution use cases with adapter selection and CLI/MCP adapters |
 | `features/search/` | Search errors and lexical/dense/hybrid search services |
 | `bundles/{devkit,advisory,git_commits}/bundle/` | Built-in data bundles |
 | `cli.py` | Lazy root command composition and installed command discovery |
 
 Features contain only the layers their implementation uses. `cli` and `mcp` adapt invocations; `usecases`
-coordinate operations; `services` implement feature behavior; `repositories` read or write external state;
+coordinate operations through typed `BaseUseCase.execute` entrypoints; `services` implement feature behavior; `repositories` read or write external state;
 `models` carry contracts and results. Models never depend on implementations or transports. Services and
 repositories never depend on their feature's adapters or use cases. Shared project configuration and receipt
 behavior belongs to the project feature. There is no package-level `core` or aggregate compatibility facade.

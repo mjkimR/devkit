@@ -11,6 +11,7 @@ from pathlib import Path
 import yaml
 from devkit.advisory import AdvisoryError
 from devkit_agt.features.worktree import find, locate
+from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import run_git
 from devkit_core.core.frontmatter import parse
 from devkit_dist.features.project.usecases.configuration import approval_language
@@ -217,10 +218,8 @@ def template(root: Path, slug: str, sha: str) -> str:
 
 
 def publish(root: Path, slug: str, sha: str, body: str) -> Artifact:
-    selected = source(root, slug, sha)
-    store = adapter(root)
-    _check(body, slug, selected, store.repository_namespace)
-    return store.put(PutRequest("proposal-review", slug, sha, selected.language, body))
+    """Compose the application entrypoint for internal callers."""
+    return PublishProposalReportUseCase().execute(root, slug, sha, body)
 
 
 def validate_artifact(root: Path, slug: str, sha: str, uri: str) -> Artifact:
@@ -260,10 +259,28 @@ def validate(root: Path, slug: str, sha: str, uri: str) -> Artifact:
 
 
 def publish_workspace_report(root: Path, slug: str, source_sha: str, body: str) -> Artifact:
-    """Publish from the matching Planning source without changing the caller's checkout."""
-    guard_execution()
-    position = locate(root)
-    selected = root
-    if not position.linked and run_git(root, "rev-parse", "HEAD").decode().strip() != source_sha:
-        selected = find(position, f"plan-{slug}")
-    return publish(selected, slug, source_sha, body)
+    """Compose the application entrypoint for internal callers."""
+    return PublishWorkspaceProposalReportUseCase().execute(root, slug, source_sha, body)
+
+
+class PublishProposalReportUseCase(BaseUseCase):
+    """Application entrypoint for publish."""
+
+    def execute(self, root: Path, slug: str, sha: str, body: str) -> Artifact:
+        selected = source(root, slug, sha)
+        store = adapter(root)
+        _check(body, slug, selected, store.repository_namespace)
+        return store.put(PutRequest("proposal-review", slug, sha, selected.language, body))
+
+
+class PublishWorkspaceProposalReportUseCase(BaseUseCase):
+    """Application entrypoint for publish workspace report."""
+
+    def execute(self, root: Path, slug: str, source_sha: str, body: str) -> Artifact:
+        """Publish from the matching Planning source without changing the caller's checkout."""
+        guard_execution()
+        position = locate(root)
+        selected = root
+        if not position.linked and run_git(root, "rev-parse", "HEAD").decode().strip() != source_sha:
+            selected = find(position, f"plan-{slug}")
+        return publish(selected, slug, source_sha, body)

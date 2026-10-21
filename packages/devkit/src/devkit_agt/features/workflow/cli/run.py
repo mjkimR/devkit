@@ -8,8 +8,8 @@ from devkit_dist.adapters.cli import FORMAT_OPTION, Reported, boundary, echo_jso
 from devkit_agt.features.workflow.cli.app import ANCHOR, NO_LINT, UNIT, WORKSPACE, cli, parse_date, workspace
 from devkit_agt.features.workflow.cli.render import quote, render_evaluation, render_requests
 from devkit_agt.features.workflow.models.decisions import ACTIONS
-from devkit_agt.features.workflow.usecases.answers import record_answer, return_to
-from devkit_agt.features.workflow.usecases.handoff import apply_handoff, plan_handoff
+from devkit_agt.features.workflow.usecases.answers import RecordAnswerUseCase, ReturnToStageUseCase
+from devkit_agt.features.workflow.usecases.operations import EvaluateUnitUseCase, HandoffWorkflowUseCase
 
 
 @cli.command(name="next")
@@ -44,8 +44,7 @@ def next_cmd(
     unchanged after the result and sets the exit code.
     """
     ws = workspace(workspace_root)
-    ref = ws.resolve_unit(unit, workflow_ref, anchor=anchor)
-    result = ws.evaluate_unit(ref, given=given, lint=not no_lint)
+    result = EvaluateUnitUseCase(ws).execute(unit, workflow_ref, anchor=anchor, given=given, lint=not no_lint)
     lint_error = result.lint_error
     if view == "requests":
         if is_json(output_format):
@@ -95,7 +94,7 @@ def answer_cmd(
 ) -> None:
     """Record a decision for an open request as <unit>/decisions/NN-<request>.yaml."""
     ws = workspace(workspace_root)
-    decision = record_answer(
+    decision = RecordAnswerUseCase().execute(
         ws, ws.resolve_unit(unit, anchor=anchor), request_id, action, values, note=note, by=by, lint=not no_lint
     )
     if is_json(output_format):
@@ -126,7 +125,9 @@ def return_cmd(
 ) -> None:
     """Take a unit back to a stage; approvals for it and later stages must be given again."""
     ws = workspace(workspace_root)
-    decision = return_to(ws, ws.resolve_unit(unit, anchor=anchor), stage, note=note, by=by, lint=not no_lint)
+    decision = ReturnToStageUseCase().execute(
+        ws, ws.resolve_unit(unit, anchor=anchor), stage, note=note, by=by, lint=not no_lint
+    )
     if is_json(output_format):
         echo_json(decision.to_dict())
     else:
@@ -163,9 +164,7 @@ def handoff_cmd(
     """Hand a completed unit to one of its workflow's next candidates and rebind it."""
     ws = workspace(workspace_root)
     day = parse_date(when)
-    ref = ws.resolve_unit(unit, anchor=anchor)
-    result = ws.evaluate_unit(ref, lint=not no_lint)
-    outcome = apply_handoff(plan_handoff(ws, ref, result, workflow_ref), when=day, by=by)
+    outcome = HandoffWorkflowUseCase(ws).execute(unit, workflow_ref, anchor=anchor, when=day, by=by, lint=not no_lint)
     if is_json(output_format):
         echo_json(outcome.to_dict())
         return

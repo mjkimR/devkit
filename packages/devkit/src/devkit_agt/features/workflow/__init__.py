@@ -3,8 +3,8 @@
 Start from ``Workspace``: it loads the project's configuration, definitions,
 and roles once, resolves a unit directory (``resolve_unit``),
 binds it (``bind_unit``) and evaluates it with the project's policies
-(``evaluate_unit``), following the current definition. ``create_unit``,
-``list_units``, ``record_answer``, ``return_to``,
+(``evaluate_unit``), following the current definition. ``CreateUnitUseCase``,
+``ListUnitsUseCase``, ``RecordAnswerUseCase``, ``ReturnToStageUseCase``,
 ``plan_handoff``/``apply_handoff`` and the envelope helpers cover the
 commands; ``evaluate_definition`` is the pure evaluation underneath.
 
@@ -107,7 +107,12 @@ from devkit_agt.features.workflow.services.envelope import (
     render_envelope,
     write_envelope,
 )
-from devkit_agt.features.workflow.usecases.answers import record_answer, return_to, validate_answer
+from devkit_agt.features.workflow.usecases.answers import (
+    RecordAnswerUseCase,
+    ReturnToStageUseCase,
+    record_answer,
+    validate_answer,
+)
 from devkit_agt.features.workflow.usecases.evaluate import LintFunc, Options, evaluate_definition
 from devkit_agt.features.workflow.usecases.handoff import (
     CandidateResult,
@@ -118,7 +123,7 @@ from devkit_agt.features.workflow.usecases.handoff import (
     plan_handoff,
 )
 from devkit_agt.features.workflow.usecases.lint import lint_with_rules
-from devkit_agt.features.workflow.usecases.units import UnitInfo, create_unit, list_units
+from devkit_agt.features.workflow.usecases.units import CreateUnitUseCase, ListUnitsUseCase, UnitInfo
 from devkit_agt.features.workflow.usecases.workspace import DefinitionDescription, UnitRef, UnitScope, Workspace
 
 __all__ = [
@@ -135,6 +140,7 @@ __all__ = [
     "CheckError",
     "CheckReferenceProblem",
     "CheckResult",
+    "CreateUnitUseCase",
     "Decision",
     "DecisionInvalidError",
     "DecisionRecordError",
@@ -177,13 +183,16 @@ __all__ = [
     "LayoutError",
     "LayoutSpec",
     "LintFunc",
+    "ListUnitsUseCase",
     "Option",
     "Options",
+    "RecordAnswerUseCase",
     "Registry",
     "Request",
     "RequestUnknownError",
     "Return",
     "ReturnInvalidError",
+    "ReturnToStageUseCase",
     "RoleUnknownProblem",
     "SharedStageMismatchError",
     "Skipped",
@@ -213,14 +222,12 @@ __all__ = [
     "apply_handoff",
     "compare_shared_stages",
     "compose_envelope",
-    "create_unit",
     "discover_definitions",
     "discover_roles",
     "envelope_timestamp",
     "evaluate_definition",
     "is_ancestor",
     "lint_with_rules",
-    "list_units",
     "load_decisions",
     "load_definition",
     "load_definition_dir",
@@ -236,7 +243,6 @@ __all__ = [
     "record_answer",
     "render_envelope",
     "resolve_definition",
-    "return_to",
     "validate_answer",
     "validate_definition",
     "validate_definitions",

@@ -10,16 +10,25 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import remove_empty_tree
 
 from devkit_spec.features.proposals.usecases.scaffold import PROPOSALS, require_slug
 
 
 def prune_proposals(root: Path, slug: str | None = None) -> list[str]:
-    """Remove empty ``docs/proposals/PROP-<slug>/`` trees (every ``PROP-*`` one without ``slug``); return them."""
-    base = root / PROPOSALS
-    if slug is not None:
-        candidates = [base / f"PROP-{require_slug(slug)}"]
-    else:
-        candidates = sorted(base.glob("PROP-*")) if base.is_dir() else []
-    return [path.relative_to(root).as_posix() for path in candidates if remove_empty_tree(path)]
+    """Compose the application entrypoint for internal callers."""
+    return PruneProposalsUseCase().execute(root, slug)
+
+
+class PruneProposalsUseCase(BaseUseCase):
+    """Application entrypoint for prune proposals."""
+
+    def execute(self, root: Path, slug: str | None = None) -> list[str]:
+        """Remove empty ``docs/proposals/PROP-<slug>/`` trees (every ``PROP-*`` one without ``slug``); return them."""
+        base = root / PROPOSALS
+        if slug is not None:
+            candidates = [base / f"PROP-{require_slug(slug)}"]
+        else:
+            candidates = sorted(base.glob("PROP-*")) if base.is_dir() else []
+        return [path.relative_to(root).as_posix() for path in candidates if remove_empty_tree(path)]

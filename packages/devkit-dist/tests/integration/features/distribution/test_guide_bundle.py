@@ -16,7 +16,7 @@ from devkit_dist.features.distribution.models.errors import SelectionError
 from devkit_dist.features.distribution.services.bundles import load_bundle
 from devkit_dist.features.distribution.services.installation.config import update_config
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
-from devkit_dist.features.distribution.usecases.context import get_context
+from devkit_dist.features.distribution.usecases.context import GetContext
 from devkit_dist.features.distribution.usecases.sync import sync_project
 
 INSTRUCTIONS = ["consumption", "in-repo-bundle", "resource-kinds"]
@@ -106,7 +106,7 @@ def test_guide_bundle_context_delivers_constitution_and_headers(tmp_path: Path) 
     target.mkdir()
     update_config(target, presets={"devkit": ["core"]}, agents=[])
     sync_project(target, [InstalledBundle("devkit", "0.1.0", bundle)])
-    context = get_context(target, "devkit").to_dict()
+    context = GetContext().execute(target, "devkit").to_dict()
     assert context["constitution"] and "devkit get-context <bundle>" in context["constitution"]
     headers = {entry["header"].split("\n", 1)[0] for entry in context["instructions"]}
     assert headers == {f"name: {name}" for name in INSTRUCTIONS}
@@ -123,7 +123,7 @@ def test_an_unsynchronized_bundle_names_a_runnable_fix_and_the_synchronized_bund
     update_config(target, presets={"devkit": ["core"]}, agents=[])
     sync_project(target, [InstalledBundle("devkit", "0.1.0", load_bundle(_root()))])
     with pytest.raises(SelectionError) as raised:
-        get_context(target, "nope")
+        GetContext().execute(target, "nope")
     # One exact command, never a guess such as `devkit add nope` for a name that may not exist.
     assert raised.value.fix == "devkit list"
     assert raised.value.details == ("synchronized bundles: devkit",)

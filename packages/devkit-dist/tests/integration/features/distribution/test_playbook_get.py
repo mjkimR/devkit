@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from devkit_dist.features.distribution import get_playbook
+from devkit_dist.features.distribution import GetPlaybook
 from devkit_dist.features.distribution.services.installation.config import update_config
 from devkit_dist.features.distribution.services.installation.workspace import JOURNAL
 from devkit_dist.features.distribution.usecases.override_commands import create_override
@@ -66,7 +66,7 @@ def test_complete_body_identity_and_no_resource_reads(tmp_path: Path, directory:
     )
     nested = root / "nested"
     nested.mkdir()
-    result = get_playbook(nested, "team/recovery").to_dict()
+    result = GetPlaybook().execute(nested, "team/recovery").to_dict()
     assert result == {
         "bundle": "team",
         "id": "recovery",
@@ -113,7 +113,7 @@ def test_exact_selection_errors(deployed, selector):
 def test_snapshot_and_unselected_asset(deployed):
     root, installed = deployed
     update_config(root, presets={"team": ["guidance"]})
-    assert get_playbook(root, "team/recovery").id == "recovery"
+    assert GetPlaybook().execute(root, "team/recovery").id == "recovery"
     sync_project(root, installed)
     error(root, "team/recovery", "SELECTION_INVALID")
 
@@ -123,7 +123,7 @@ def test_live_override_and_missing_override(deployed):
     create_override(root, installed, "team:recovery")
     path = root / ".devkit/overrides/team/recovery/SKILL.md"
     path.write_text("---\nname: edited\ndescription: Live edit.\n---\n  keep spaces\n")
-    result = get_playbook(root, "team/recovery").to_dict()
+    result = GetPlaybook().execute(root, "team/recovery").to_dict()
     assert result["name"] == "edited" and result["id"] == "recovery"
     assert result["body"] == "  keep spaces\n"
     assert result["source"] == {"path": str(path), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
@@ -205,7 +205,7 @@ def test_writer_lock_failure(deployed, monkeypatch):
 
 
 def test_empty_context(tmp_path):
-    from devkit_dist.features.distribution.usecases.context import get_context
+    from devkit_dist.features.distribution.usecases.context import GetContext
     from distsupport.distribution import write_bundle
 
     item = write_bundle(
@@ -217,8 +217,12 @@ def test_empty_context(tmp_path):
     root.mkdir()
     update_config(root, presets={"empty": ["all"]}, agents=[])
     sync_project(root, [item])
-    assert get_context(root, "empty").to_dict() == {"bundle": "empty", "constitution": None, "instructions": []}
-    assert get_playbook(root, "empty/run").to_dict()["context"]["policy"] == "once-per-agent-context"
+    assert GetContext().execute(root, "empty").to_dict() == {
+        "bundle": "empty",
+        "constitution": None,
+        "instructions": [],
+    }
+    assert GetPlaybook().execute(root, "empty/run").to_dict()["context"]["policy"] == "once-per-agent-context"
 
 
 def test_unrelated_stale_personal_evidence(tmp_path):
@@ -240,7 +244,7 @@ def test_unrelated_stale_personal_evidence(tmp_path):
     sync_project(root, [item, playbooks])
     (root / LOCAL_CONFIG_PATH).write_text('[bundles.style.variables]\nlanguage="ko"\n')
     sync_project(root, [item, playbooks])
-    assert get_playbook(root, "team/recovery").id == "recovery"
+    assert GetPlaybook().execute(root, "team/recovery").id == "recovery"
     (root / LOCAL_CONFIG_PATH).write_text('[bundles.style.variables]\nlanguage="ja"\n')
     error(root, "team/recovery", "CONFIG_LOCAL_RENDER_STALE")
 

@@ -22,6 +22,7 @@ from devkit_agt.features.worktree import (
     DirtyError,
     NestedError,
     NotFoundError,
+    StartBranch,
     UnitInvalidError,
     UnmergedError,
     attach,
@@ -29,7 +30,6 @@ from devkit_agt.features.worktree import (
     finish,
     locate,
     start,
-    start_branch,
 )
 from devkit_core.base.errors import ArgumentError
 from testsupport.cli import cli
@@ -77,7 +77,7 @@ def remote_branch(repo: Path, tmp_path: Path, branch: str, unit: str = "docs/spe
 def test_start_refuses_a_branch_a_remote_has(repo: Path, tmp_path: Path) -> None:
     with_remote(repo, tmp_path)
     remote_branch(repo, tmp_path, "dev-demo")  # never fetched: only ls-remote sees it
-    for begin in (lambda: start(locate(repo), "dev-demo"), lambda: start_branch(locate(repo), "dev-demo")):
+    for begin in (lambda: start(locate(repo), "dev-demo"), lambda: StartBranch().execute(locate(repo), "dev-demo")):
         with pytest.raises(BranchExistsError, match="already exists on origin") as raised:
             begin()
         assert raised.value.fix is not None and "--existing-branch origin/dev-demo" in raised.value.fix
@@ -102,30 +102,30 @@ def test_an_unreachable_remote_is_judged_by_its_tracking_ref_with_a_warning(repo
 
 def test_start_branch_switches_the_checkout_and_carries_uncommitted_changes(repo: Path) -> None:
     write(repo, "wip.txt", "carried\n")
-    result = start_branch(locate(repo), "dev-demo")
+    result = StartBranch().execute(locate(repo), "dev-demo")
     assert (result.branch, result.slug, result.checkout, result.started_from) == ("dev-demo", "demo", repo, "main")
     assert git(repo, "branch", "--show-current") == "dev-demo" and (repo / "wip.txt").read_text() == "carried\n"
     assert config(repo, "dev-demo", "devkitWorktree") == str(repo)
     assert config(repo, "dev-demo", "devkitBase") == "main"
     with pytest.raises(BranchExistsError):
-        start_branch(locate(repo), "dev-demo")
+        StartBranch().execute(locate(repo), "dev-demo")
 
 
 def test_start_branch_refusals(repo: Path) -> None:
     created = start(locate(repo), "dev-task")
     with pytest.raises(NestedError):
-        start_branch(locate(created.path), "dev-other")
+        StartBranch().execute(locate(created.path), "dev-other")
     with pytest.raises(BranchExistsError, match="checked out at"):
-        start_branch(locate(repo), "dev-task")
+        StartBranch().execute(locate(repo), "dev-task")
     git(repo, "checkout", "-q", "--detach")
     with pytest.raises(BaseDetachedError):
-        start_branch(locate(repo), "dev-other")
+        StartBranch().execute(locate(repo), "dev-other")
     with pytest.raises(ArgumentError):
-        start_branch(locate(repo), "other")
+        StartBranch().execute(locate(repo), "other")
 
 
 def test_a_branch_without_a_worktree_is_integrated_from_the_base(repo: Path) -> None:
-    start_branch(locate(repo), "dev-demo")
+    StartBranch().execute(locate(repo), "dev-demo")
     commit(repo, "work.txt")
     with pytest.raises(BaseOnBranchError) as raised:  # routine: the agent switches back and reruns
         finish(locate(repo), "dev-demo", merge=True)
@@ -243,7 +243,7 @@ def test_attach_refuses_a_local_branch_behind_its_remote_and_accepts_one_ahead(r
 
 
 def test_attach_moves_the_base_checkout_off_the_branch_to_its_recorded_base(repo: Path) -> None:
-    start_branch(locate(repo), "dev-demo")
+    StartBranch().execute(locate(repo), "dev-demo")
     commit(repo, "docs/specs/demo/spec.md")
     write(repo, "wip.txt", "x\n")
     with pytest.raises(ConflictError, match="uncommitted changes"):
@@ -351,7 +351,7 @@ def test_the_start_flags_go_together(repo: Path) -> None:
 
 def test_attach_compares_a_branch_without_upstream_with_the_remote_that_has_it(repo: Path, tmp_path: Path) -> None:
     with_remote(repo, tmp_path)
-    start_branch(locate(repo), "dev-demo")
+    StartBranch().execute(locate(repo), "dev-demo")
     commit(repo, "docs/specs/demo/spec.md")
     git(repo, "push", "-q", "origin", "dev-demo")  # no -u: start_branch sets no upstream
     git(repo, "switch", "-q", "main")
@@ -398,7 +398,7 @@ def test_discard_drops_an_unmerged_branch_and_its_worktree(repo: Path) -> None:
     done = discard(locate(repo), "dev-demo", before_remove=lambda result: seen.append(result.branch))
     assert (done.discarded, done.merged, done.removed, done.branch_deleted) == (True, False, True, True)
     assert seen == ["dev-demo"] and not created.path.exists() and git(repo, "branch", "--list", "dev-demo") == ""
-    start_branch(locate(repo), "dev-solo")
+    StartBranch().execute(locate(repo), "dev-solo")
     commit(repo, "solo.txt")
     with pytest.raises(BaseOnBranchError):
         discard(locate(repo), "dev-solo")  # the base checkout is on it

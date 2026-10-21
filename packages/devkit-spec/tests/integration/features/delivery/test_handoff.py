@@ -120,7 +120,7 @@ def test_native_handoff_keeps_registration_notices_outside_nested_handoff(
         return completed
 
     monkeypatch.setattr(native_handoff, "handoff_and_register", complete)
-    result = native_handoff.HandoffService(base)._execute(preview, "medium")
+    result = native_handoff.HandoffUseCase(base)._execute(preview, "medium")
 
     completed = captured[0]
     assert result["status"] == "handed_off", result

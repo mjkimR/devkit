@@ -39,9 +39,18 @@ viewer static assets and the foundation use their declared special layouts.
 
 # Contracts and adapters
 
-Use cases SHOULD expose explicit input/result contracts. Functions are sufficient
-for stateless operations; use classes when they own state or shared behavior.
-Do not introduce empty `BaseUseCase` or `BaseRepository` classes for uniformity.
+CLI/MCP execution entrypoints MUST be concrete `BaseUseCase` subclasses
+from `devkit_core.base.usecase`, exposing a typed `execute` method (sync or async).
+Adapters construct or receive these objects and invoke `execute`; usecases own
+business coordination. Constructors MUST only retain inputs and wire dependencies,
+never perform execution, filesystem reads/writes or subprocess operations. Internal
+helpers MAY remain functions; they are not transport execution entrypoints.
+`RULE-usecase-boundaries` follows explicit imports, aliases and facade exports,
+including retained instances, without importing product code. It checks declared
+contracts and known calls, not arbitrary Python behavior or runtime authority.
+A necessary transport-only helper exception MUST declare exact source module,
+callable target and reason in `[[usecase_exceptions]]`; never exempt whole modules.
+Do not add BaseRepository, Command or Unit of Work solely for uniformity.
 A replaceable repository boundary SHOULD use a feature-owned `Protocol` when
 multiple implementations or test substitution need a shared contract. Add a base
 implementation only when implementations actually share behavior. CLI commands

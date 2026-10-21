@@ -57,7 +57,7 @@ from devkit_dist.features.distribution.usecases.sync import (
     require_project_dir,
     tool_identity,
 )
-from devkit_dist.features.host import HostError, inspect_host
+from devkit_dist.features.host import HostError, InspectHost
 from devkit_dist.features.project.repositories.local_config import read_effective_config
 from devkit_dist.features.project.repositories.receipt import (
     AssetRecord,
@@ -401,7 +401,7 @@ def get_project_status(root: Path, installed: list[InstalledBundle]) -> ProjectS
         host_errors: list[AdvisoryError] = []
         for host in sorted({record.host for record in receipt.host_hooks} if receipt else set()):
             try:
-                host_report = inspect_host(root, host, check_handlers=False)
+                host_report = InspectHost().execute(root, host, check_handlers=False)
                 host_hooks.extend(host_report.hooks)
                 host_errors.extend(host_report.errors)
             except HostError as exc:

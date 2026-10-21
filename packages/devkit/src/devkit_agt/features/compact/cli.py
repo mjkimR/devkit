@@ -44,7 +44,7 @@ from devkit_dist.adapters.cli import (
 )
 
 from devkit_agt.features.compact.models.scan import Failure, Omitted, RelayedAdvisory
-from devkit_agt.features.compact.usecases.execute import CommandInterrupted, CommandRun, run_command
+from devkit_agt.features.compact.usecases.execute import CommandInterrupted, CommandRun, RunCommand
 
 _BARE = re.compile(r'[^\s"\]]+')
 
@@ -194,7 +194,7 @@ def run_cmd(slow_after: float, output_format: str, command: tuple[str, ...]) -> 
         STRICT_ENV: "1" if settings.strict else "0",
     }
     try:
-        run = run_command(command, env=env, slow_after=slow_after, notices=not settings.quiet)
+        run = RunCommand().execute(command, env=env, slow_after=slow_after, notices=not settings.quiet)
     except CommandInterrupted as interrupted:
         # The command's group is stopped; the log shows where it stopped.
         _echo(interrupted.run, output_format)

@@ -10,7 +10,7 @@ from devkit.advisory import Actor, AdvisoryError, Level, Retry
 from devkit_core.base.errors import ArgumentError
 from devkit_dist.adapters.cli import FORMAT_OPTION, boundary, echo_json, echo_notices, is_json
 
-from devkit_spec.features.worker.usecases.inspect import CheckNotRun, inspect
+from devkit_spec.features.worker.usecases.inspect import CheckNotRun, InspectWorkerUseCase
 from devkit_spec.features.worker.usecases.summary import summarize_inspection
 from devkit_spec.utils.output import sentinel
 
@@ -53,7 +53,7 @@ def inspect_cmd(
             raise ArgumentError(
                 f"Cannot read scope file: {exc}", fix="Pass --scope-file with a readable UTF-8 file"
             ) from exc
-    result = inspect(
+    result = InspectWorkerUseCase().execute(
         Path.cwd(), unit=unit, base=base, head=head, scope=entries, base_checkout=base_checkout, details=details
     )
     if is_json(output_format):

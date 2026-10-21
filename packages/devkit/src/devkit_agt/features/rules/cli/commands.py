@@ -42,11 +42,17 @@ from devkit_agt.features.rules.models.contracts import Phase, Rule
 from devkit_agt.features.rules.models.errors import RuleProblem
 from devkit_agt.features.rules.models.phases import resolve_phases
 from devkit_agt.features.rules.models.snapshot import Snapshot
-from devkit_agt.features.rules.usecases.hygiene import run_hygiene_extensions
-from devkit_agt.features.rules.usecases.project import ProjectRules, load_project_rules, run_project_rules
-from devkit_agt.features.rules.usecases.related import resolve_related
-from devkit_agt.features.rules.usecases.rule_tests import RuleTestsInterrupted, run_notices, run_rule_tests, summary
-from devkit_agt.features.rules.usecases.snapshot import snapshot_request as _snapshot_request
+from devkit_agt.features.rules.usecases.explain import ExplainRuleUseCase
+from devkit_agt.features.rules.usecases.hygiene import RunHygieneExtensionsUseCase
+from devkit_agt.features.rules.usecases.project import LoadProjectRulesUseCase, ProjectRules, RunProjectRulesUseCase
+from devkit_agt.features.rules.usecases.related import ResolveRelatedUseCase
+from devkit_agt.features.rules.usecases.rule_tests import (
+    RuleTestsInterrupted,
+    RunRuleTestsUseCase,
+    run_notices,
+    summary,
+)
+from devkit_agt.features.rules.usecases.snapshot import CaptureRulesSnapshotUseCase
 
 
 @dataclass(frozen=True)
@@ -80,7 +86,7 @@ def _execute(request: RunRequest) -> None:
                 output.echo_ok(output.NOTHING_TO_CHECK)
             return
 
-    run = run_project_rules(
+    run = RunProjectRulesUseCase().execute(
         request.root,
         targets=(request.targets or None) if snapshot is None else None,
         snapshot=snapshot,
@@ -94,7 +100,7 @@ def _execute(request: RunRequest) -> None:
     errors = run.errors
     notices = run.notices
     if request.phase is Phase.HYGIENE and snapshot is None and not request.fix and run.whole_workspace:
-        notices = [*notices, *run_hygiene_extensions(run.workspace_root)]
+        notices = [*notices, *RunHygieneExtensionsUseCase().execute(run.workspace_root)]
     if request.json:
         echo_json(
             {
@@ -183,7 +189,9 @@ def check_cmd(
     root = resolve_root(workspace_root)
     snapshot = None
     if staged or ci:
-        snapshot = _snapshot_request(root, phase=phase, targets=files, staged=staged, ci=ci, base=base)
+        snapshot = CaptureRulesSnapshotUseCase().execute(
+            root, phase=phase, targets=files, staged=staged, ci=ci, base=base
+        )
         root = snapshot.root
     _execute(
         RunRequest(
@@ -242,7 +250,7 @@ def fix_cmd(
 @boundary
 def phases_cmd(workspace_root: str | None, rules_dir: str | None, output_format: str) -> None:
     """Show each rule's default and effective phase, project overrides, and pending promotions."""
-    project = load_project_rules(resolve_root(workspace_root), _rules_path(rules_dir))
+    project = LoadProjectRulesUseCase().execute(resolve_root(workspace_root), _rules_path(rules_dir))
     errors = project.errors
     entries = sorted(resolve_phases(project.rules, project.config.phase_overrides), key=lambda e: e.rule_id)
     if is_json(output_format):
@@ -280,7 +288,7 @@ def explain_cmd(workspace_root: str | None, rules_dir: str | None, output_format
     exit with status 2, and an unknown rule ID is an argument error.
     """
     root = resolve_root(workspace_root)
-    project = load_project_rules(root, _rules_path(rules_dir))
+    project = LoadProjectRulesUseCase().execute(root, _rules_path(rules_dir))
     rule = project.registry.get(rule_id)
     errors: list[AdvisoryError] = [p for p in project.policy_errors if _concerns(p, rule)]
     warnings = [p.with_level(Level.WARNING) for p in project.errors if p not in errors]
@@ -288,8 +296,8 @@ def explain_cmd(workspace_root: str | None, rules_dir: str | None, output_format
         echo_notices(warnings)
         raise _unknown_rule(project, rule_id)
     resolver = project.resolvers.get(rule.id)
-    entry = output.explain_entry(rule, project.config, resolver, root)
-    related, unresolved = resolve_related(root, rule)
+    entry = ExplainRuleUseCase().execute(rule, project.config, resolver, root)
+    related, unresolved = ResolveRelatedUseCase().execute(root, rule)
     entry["related"] = [item.to_dict() for item in related]
     warnings = [*warnings, *unresolved]
     if is_json(output_format):
@@ -339,7 +347,7 @@ def test_cmd(
     Loading and policy problems are reported as warnings.
     """
     root = resolve_root(workspace_root)
-    project = load_project_rules(root, _rules_path(rules_dir))
+    project = LoadProjectRulesUseCase().execute(root, _rules_path(rules_dir))
     warnings: list[AdvisoryError] = [p.with_level(Level.WARNING) for p in project.errors]
     if rule_ids:
         selected: list[Rule] = []
@@ -353,7 +361,7 @@ def test_cmd(
         selected = sorted(project.rules, key=lambda r: r.id)
     interrupted: RuleTestsInterrupted | None = None
     try:
-        results = run_rule_tests(root, selected, ctx.meta.get(PYTEST_ARGS, ()))
+        results = RunRuleTestsUseCase().execute(root, selected, ctx.meta.get(PYTEST_ARGS, ()))
     except AdvisoryError:
         echo_notices(warnings)
         raise

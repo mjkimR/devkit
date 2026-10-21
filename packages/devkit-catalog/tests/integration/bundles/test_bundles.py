@@ -89,7 +89,7 @@ def test_response_style_has_one_bounded_guidance_pointer() -> None:
 def test_maintenance_selection_and_independent_lookup(tmp_path: Path, preset: str) -> None:
     from devkit_dist.features.distribution.services.installation.config import update_config
     from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
-    from devkit_dist.features.distribution.usecases.playbook_search import search_playbooks
+    from devkit_dist.features.distribution.usecases.playbook_search import SearchPlaybooks
     from devkit_dist.features.distribution.usecases.sync import sync_project
 
     bundle = load_bundle(_bundle_root(ENTRY_POINTS["maintenance"]))
@@ -100,7 +100,7 @@ def test_maintenance_selection_and_independent_lookup(tmp_path: Path, preset: st
     update_config(tmp_path, agents=["codex"], presets={"maintenance": [preset]})
     sync_project(tmp_path, installed)
     root = tmp_path / ".devkit/managed/maintenance"
-    from devkit_dist.features.distribution.usecases.playbook_get import get_playbook
+    from devkit_dist.features.distribution.usecases.playbook_get import GetPlaybook
 
     selected = {
         "all": {"drift-reconciliation", "weekly-report"},
@@ -112,9 +112,9 @@ def test_maintenance_selection_and_independent_lookup(tmp_path: Path, preset: st
         *(f"playbooks/{name}.md" for name in selected),
     }
     for name in selected:
-        result = search_playbooks(tmp_path, name.replace("-", " "), mode="lexical")
+        result = SearchPlaybooks().execute(tmp_path, name.replace("-", " "), mode="lexical")
         assert any(item.id == name and item.bundle == "maintenance" for item in result.results)
-        exact = get_playbook(tmp_path, f"maintenance/{name}")
+        exact = GetPlaybook().execute(tmp_path, f"maintenance/{name}")
         assert exact.name == name
         assert exact.body.strip()
     assert not (tmp_path / "materials").exists()

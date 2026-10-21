@@ -1,7 +1,7 @@
 """``devkit gate`` commands: install and uninstall the hook wrappers, report the setup, run a stage.
 
 A thin command line over the library: ``status`` renders
-``devkit_agt.features.gate.load_gate_project`` and ``run`` renders ``devkit_agt.features.gate.run_hook``.
+``devkit_agt.features.gate.load_gate_project`` and ``run`` renders ``RunHookUseCase.execute``.
 Every command works on the top level of the Git work tree containing
 ``--workspace-root`` (default: the current directory), resolved with
 ``devkit_dist.features.project.repositories.project.require_git_toplevel``. ``status --format json`` prints one
@@ -36,7 +36,8 @@ import devkit_agt.features.gate.usecases.hooks.hooks as hooks
 import devkit_agt.features.gate.usecases.hooks.local_config as local_config
 from devkit_agt.features.gate.models.contracts import Outcome, Stage
 from devkit_agt.features.gate.models.paths import display_path
-from devkit_agt.features.gate.usecases.runner import StageReport, load_gate_project, run_hook
+from devkit_agt.features.gate.usecases.runner import RunHookUseCase, StageReport
+from devkit_agt.features.gate.usecases.status import GateStatusUseCase
 
 WORKSPACE = workspace_option(
     "Any directory inside the repository [default: the current directory]; "
@@ -80,10 +81,10 @@ def install_cmd(workspace_root: str | None, force: bool, python: str | None) -> 
     mention yet; existing lines are never changed.
     """
     root = _repo_root(workspace_root)
-    installed = hooks.install(root, python or sys.executable, force=force)
+    installed = hooks.InstallHooksUseCase().execute(root, python or sys.executable, force=force)
     for action in installed.actions:
         click.echo(f"[HOOK: {action}]")
-    template = local_config.refresh_project_template(root)
+    template = local_config.RefreshGateTemplateUseCase().execute(root)
     click.echo(f"[CONFIG: template={template.state} path={template.path}]")
     notices = installed.notices + ([template.notice] if template.notice is not None else [])
     echo_notices(notices)
@@ -95,7 +96,7 @@ def install_cmd(workspace_root: str | None, force: bool, python: str | None) -> 
 @boundary
 def uninstall_cmd(workspace_root: str | None) -> None:
     """Remove managed wrappers and restore hooks moved aside by install."""
-    actions = hooks.uninstall(_repo_root(workspace_root))
+    actions = hooks.UninstallHooksUseCase().execute(_repo_root(workspace_root))
     for action in actions or ["no managed hooks"]:
         click.echo(f"[HOOK: {action}]")
 
@@ -111,9 +112,8 @@ def status_cmd(workspace_root: str | None, output_format: str) -> None:
     Warns (GATE_HOOK_ENTRY_MISSING) about enabled gates whose stage has no installed hook entry, so they do not run;
     when core.hooksPath sends Git to another hooks directory, warns once (GATE_HOOKS_PATH_SET) instead, naming every
     enabled gate. Exits 1 when any problem is reported and 2 when the status cannot be read (not a Git work tree)."""
-    project = load_gate_project(_start(workspace_root))
-    location = hooks.locate(project.root)
-    statuses = hooks.status(project.root, location)
+    result = GateStatusUseCase().execute(_start(workspace_root))
+    project, location, statuses = result.project, result.location, result.hooks
     hook_rows = [
         {
             "stage": item.stage.value,
@@ -138,7 +138,7 @@ def status_cmd(workspace_root: str | None, output_format: str) -> None:
     ]
     sources = [display_path(path, project.root) for path in project.config.sources]
     errors = project.validation.errors
-    notices = hooks.missing_entry_notices(project, statuses, location)
+    notices = result.notices
     if is_json(output_format):
         echo_json(
             {
@@ -223,7 +223,7 @@ def run_cmd(workspace_root: str | None, stage: str, hook_args: tuple[str, ...]) 
     Options go before STAGE; hooks set DEVKIT_QUIET, DEVKIT_VERBOSE or DEVKIT_STRICT instead."""
     current = Stage(stage)
     try:
-        report = run_hook(_start(workspace_root), current, hook_args)
+        report = RunHookUseCase().execute(_start(workspace_root), current, hook_args)
     except Exception as exc:
         if current.blocking:
             raise

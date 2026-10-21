@@ -23,6 +23,7 @@ from typing import Any
 
 from devkit.advisory import AdvisoryError
 from devkit_core.base.errors import GitError
+from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core.git import run_git
 
 from devkit_agt.features.worktree.models.errors import (
@@ -193,54 +194,60 @@ def _pr_updated(item: dict[str, Any] | None) -> datetime | None:
         return None
 
 
-def stale_branches(
-    position: Position, stale_after: str = "14d", *, gh: GhRunner | None = None, now: datetime | None = None
-) -> StaleResult:
-    """The activity branches idle longer than ``stale_after`` (``<N>d`` or ``<N>w``), most idle first.
+class StaleBranches(BaseUseCase):
+    """The activity branches idle longer than ``stale_after`` (``<N>d`` or ``<N>w``), most idle first."""
 
-    ``gh`` runs the GitHub CLI (``run_gh`` when ``None``, looked up at call time); ``now`` defaults to the clock.
-    """
-    gh = gh or run_gh
-    period = parse_period(stale_after)
-    base = position.base
-    code, _ = gh(base, ["auth", "status"])
-    if code != 0:
-        reason = "gh is not installed" if code == 127 else "gh auth status failed"
-        return StaleResult(
-            False,
-            stale_after,
-            0,
-            notices=[
-                StaleSkippedNotice(
-                    f"{reason}, so activity branches were not checked for staleness",
-                    fix="Log in with gh auth login to have stale plan-*/dev-* branches reported",
-                )
-            ],
-        )
-    branches = _activity_branches(base)
-    pulls = _pull_requests(base, gh) if branches else {}
-    notices: list[AdvisoryError] = []
-    if pulls is None:
-        notices.append(
-            StalePullRequestsUnknownNotice(
-                "gh pr list failed, so activity branches were judged by their last commit alone",
-                fix="Check gh pr list in this repository, then rerun",
+    def execute(
+        self, position: Position, stale_after: str = "14d", *, gh: GhRunner | None = None, now: datetime | None = None
+    ) -> StaleResult:
+        """The activity branches idle longer than ``stale_after`` (``<N>d`` or ``<N>w``), most idle first.
+
+        ``gh`` runs the GitHub CLI (``run_gh`` when ``None``, looked up at call time); ``now`` defaults to the clock.
+        """
+        gh = gh or run_gh
+        period = parse_period(stale_after)
+        base = position.base
+        code, _ = gh(base, ["auth", "status"])
+        if code != 0:
+            reason = "gh is not installed" if code == 127 else "gh auth status failed"
+            return StaleResult(
+                False,
+                stale_after,
+                0,
+                notices=[
+                    StaleSkippedNotice(
+                        f"{reason}, so activity branches were not checked for staleness",
+                        fix="Log in with gh auth login to have stale plan-*/dev-* branches reported",
+                    )
+                ],
             )
-        )
-    moment = now or datetime.now(UTC)
-    stale: list[StaleBranch] = []
-    for name, (committed, refs) in sorted(branches.items()):
-        item = pulls.get(name) if pulls is not None else None
-        updated = _pr_updated(item)
-        last = max(committed, updated) if updated is not None else committed
-        if moment - last <= period:
-            continue
-        unit = _unit(base, name, refs)
-        state = _pr_state(item) if pulls is not None else "unknown"
-        url = item.get("url") if item and isinstance(item.get("url"), str) else None
-        stale.append(StaleBranch(name, unit, last, state, url, tuple(refs)))
-    stale.sort(key=lambda item: (item.last_activity, item.branch))
-    return StaleResult(True, stale_after, len(branches), stale, notices)
+        branches = _activity_branches(base)
+        pulls = _pull_requests(base, gh) if branches else {}
+        notices: list[AdvisoryError] = []
+        if pulls is None:
+            notices.append(
+                StalePullRequestsUnknownNotice(
+                    "gh pr list failed, so activity branches were judged by their last commit alone",
+                    fix="Check gh pr list in this repository, then rerun",
+                )
+            )
+        moment = now or datetime.now(UTC)
+        stale: list[StaleBranch] = []
+        for name, (committed, refs) in sorted(branches.items()):
+            item = pulls.get(name) if pulls is not None else None
+            updated = _pr_updated(item)
+            last = max(committed, updated) if updated is not None else committed
+            if moment - last <= period:
+                continue
+            unit = _unit(base, name, refs)
+            state = _pr_state(item) if pulls is not None else "unknown"
+            url = item.get("url") if item and isinstance(item.get("url"), str) else None
+            stale.append(StaleBranch(name, unit, last, state, url, tuple(refs)))
+        stale.sort(key=lambda item: (item.last_activity, item.branch))
+        return StaleResult(True, stale_after, len(branches), stale, notices)
+
+
+stale_branches = StaleBranches().execute
 
 
 def _unit(base: Path, branch: str, refs: list[str]) -> str | None:

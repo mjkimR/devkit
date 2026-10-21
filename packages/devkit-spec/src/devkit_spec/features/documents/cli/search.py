@@ -26,7 +26,7 @@ from devkit_spec.features.documents.cli.commands import ALL_NAMESPACES, NAMESPAC
 from devkit_spec.features.documents.usecases.search import (
     DEFAULT_LIMIT,
     DEFAULT_MIN_SIMILARITY,
-    search_workspace,
+    SearchDocumentsUseCase,
 )
 from devkit_spec.utils.output import fields_line, sentinel
 
@@ -90,7 +90,7 @@ def search_cmd(
             target_files=["QUERY"],
             fix="Pass at least one non-blank word as QUERY",
         )
-    result, notices, scope = search_workspace(
+    result, notices, scope = SearchDocumentsUseCase().execute(
         resolve_root(workspace_root), query, kinds, namespace, all_namespaces, history, mode, limit, min_similarity
     )
     if is_json(output_format):

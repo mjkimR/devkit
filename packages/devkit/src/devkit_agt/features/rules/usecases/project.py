@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 
 from devkit.advisory import AdvisoryError
+from devkit_core.base.usecase import BaseUseCase
 
 from devkit_agt.features.rules.models.contracts import Phase, Rule, RuleContext, Violation
 from devkit_agt.features.rules.models.errors import PolicyError, RuleProblem, RulesDirError, RulesRunError
@@ -68,31 +69,37 @@ class ProjectRules:
         return [*self.load_errors, *self.policy_errors]
 
 
-def load_project_rules(root: Path, rules_dir: Path | None = None, *, source_root: Path | None = None) -> ProjectRules:
-    """Read the ``[rules]`` policy of ``root``, load its rules and validate the policy against them.
+class LoadProjectRulesUseCase(BaseUseCase):
+    """Application entrypoint for load project rules."""
 
-    The rules are those of ``build_project_registry``. Raises
-    ``RulesConfigError`` (``RULES_CONFIG_INVALID``) for an invalid ``[rules]``
-    table and the core ``ConfigError`` for an unreadable config file; loading
-    and policy problems are collected, not raised.
-    """
-    config = load_rules_config(root)
-    rules_path = rules_dir.resolve() if rules_dir is not None else None
-    registry = build_project_registry(root, rules_dir=rules_path, source_root=source_root)
-    resolvers, policy_errors = validate_policy(
-        registry.get_all(),
-        phase_overrides=config.phase_overrides,
-        severity_overrides=config.severity_overrides,
-        settings=config.settings,
-    )
-    return ProjectRules(
-        config=config,
-        registry=registry,
-        rules_dir=rules_path,
-        load_errors=tuple(registry.errors),
-        policy_errors=tuple(policy_errors),
-        resolvers=resolvers,
-    )
+    def execute(self, root: Path, rules_dir: Path | None = None, *, source_root: Path | None = None) -> ProjectRules:
+        """Read the ``[rules]`` policy of ``root``, load its rules and validate the policy against them.
+
+        The rules are those of ``build_project_registry``. Raises
+        ``RulesConfigError`` (``RULES_CONFIG_INVALID``) for an invalid ``[rules]``
+        table and the core ``ConfigError`` for an unreadable config file; loading
+        and policy problems are collected, not raised.
+        """
+        config = load_rules_config(root)
+        rules_path = rules_dir.resolve() if rules_dir is not None else None
+        registry = build_project_registry(root, rules_dir=rules_path, source_root=source_root)
+        resolvers, policy_errors = validate_policy(
+            registry.get_all(),
+            phase_overrides=config.phase_overrides,
+            severity_overrides=config.severity_overrides,
+            settings=config.settings,
+        )
+        return ProjectRules(
+            config=config,
+            registry=registry,
+            rules_dir=rules_path,
+            load_errors=tuple(registry.errors),
+            policy_errors=tuple(policy_errors),
+            resolvers=resolvers,
+        )
+
+
+load_project_rules = LoadProjectRulesUseCase().execute
 
 
 def _source(rule: Rule, root: Path) -> str | None:
@@ -254,108 +261,115 @@ def _run(
     )
 
 
-def run_project_rules(
-    root: Path,
-    *,
-    targets: Sequence[str | Path] | None = None,
-    snapshot: Snapshot | None = None,
-    phase: Phase = Phase.LINTER,
-    fix: bool = False,
-    dry_run: bool = False,
-    rules_dir: Path | None = None,
-) -> ProjectRun:
-    """Load the project's rule policy and rules, then evaluate them.
+class RunProjectRulesUseCase(BaseUseCase):
+    """Application entrypoint for run project rules."""
 
-    ``root`` is the project working tree. The ``[rules]`` policy comes from
-    ``root/.devkit/config.toml`` and the rules are the built-ins, then the
-    rule assets recorded in the installation receipt, then the plugin packages
-    under ``rules_dir``.
+    def execute(
+        self,
+        root: Path,
+        *,
+        targets: Sequence[str | Path] | None = None,
+        snapshot: Snapshot | None = None,
+        phase: Phase = Phase.LINTER,
+        fix: bool = False,
+        dry_run: bool = False,
+        rules_dir: Path | None = None,
+    ) -> ProjectRun:
+        """Load the project's rule policy and rules, then evaluate them.
 
-    ``targets`` selects what is checked: ``None`` checks the whole workspace;
-    otherwise each entry is a file or directory (relative to ``root`` or
-    absolute inside it) and directories expand to the files under them. An
-    empty selection checks nothing. ``[rules] exclude`` applies either way.
+        ``root`` is the project working tree. The ``[rules]`` policy comes from
+        ``root/.devkit/config.toml`` and the rules are the built-ins, then the
+        rule assets recorded in the installation receipt, then the plugin packages
+        under ``rules_dir``.
 
-    With ``snapshot`` (from ``git_snapshot(root, ...)``) the snapshot's tree is
-    materialized into a temporary directory that becomes the workspace: the
-    policy, the receipt and tracked rules come from the snapshot, Git-ignored
-    managed rule copies come from ``root`` when they match the receipt's hash,
-    and the snapshot's changed files are the targets, together with the
-    Markdown files whose links point at a path the snapshot deletes. ``rules_dir`` must lie
-    inside the repository and is read from the snapshot (``RulesDirError``
-    otherwise), so unstaged rule edits cannot change the result. A snapshot
-    run cannot take ``targets`` or ``fix``, and ``snapshot`` must come from
-    ``root``; violating that contract is a programming error (``ValueError``).
-    A staged snapshot whose tracked files all match the working tree and with
-    no untracked file under ``.devkit/`` (``matches_working_tree``), run without
-    ``rules_dir``, is evaluated in place on the same targets: nothing is
-    materialized, so the cost follows what the commit changes, and untracked
-    files elsewhere are visible to the rules.
+        ``targets`` selects what is checked: ``None`` checks the whole workspace;
+        otherwise each entry is a file or directory (relative to ``root`` or
+        absolute inside it) and directories expand to the files under them. An
+        empty selection checks nothing. ``[rules] exclude`` applies either way.
 
-    Raises ``RulesConfigError`` (``RULES_CONFIG_INVALID``) for an invalid ``[rules]``
-    table, ``TargetError`` (``RULES_TARGET_INVALID``) for an invalid explicit
-    target, ``RulesDirError`` (``RULES_DIR_INVALID``) and ``SnapshotError``
-    (``RULES_SNAPSHOT_FAILED``) when the snapshot cannot be materialized. Rule
-    loading problems (``RuleLoadError``) are returned in ``load_errors``;
-    policy problems (``PolicyError``, ``SettingsError``) and rule execution
-    errors (``RuleExecutionError``) in ``result.errors``.
-    """
-    if snapshot is None:
-        return _run(
-            root.resolve(),
-            targets=targets,
-            expand=True,
-            phase=phase,
-            fix=fix,
-            dry_run=dry_run,
-            rules_dir=rules_dir,
-            source_root=None,
-        )
-    if targets is not None:
-        raise ValueError("a snapshot run checks the snapshot's changed files; do not pass targets")
-    if fix:
-        raise ValueError("a snapshot run cannot apply fixes")
-    if snapshot.root != root.resolve():
-        raise ValueError(f"snapshot was taken from {snapshot.root}, not {root.resolve()}")
-    if rules_dir is None and matches_working_tree(snapshot):
-        # The working tree holds the staged tree: evaluate there, without writing the whole tree out.
-        workspace = snapshot.root
-        return _run(
-            workspace,
-            targets=snapshot_targets(snapshot, workspace, git_filter=True),
-            expand=False,
-            phase=phase,
-            fix=False,
-            dry_run=False,
-            rules_dir=None,
-            source_root=None,
-            snapshot=snapshot,
-        )
-    rules_rel = _snapshot_rules_dir(snapshot, rules_dir)
-    with tempfile.TemporaryDirectory(prefix=SNAPSHOT_PREFIX) as directory:
-        workspace = Path(directory).resolve()
-        materialize_snapshot(snapshot, workspace)
-        snapshot_rules = None
-        if rules_rel is not None:
-            snapshot_rules = workspace / rules_rel
-            if not snapshot_rules.is_dir():
-                raise RulesDirError(
-                    f"rules directory {rules_rel.as_posix()} is not in the {snapshot.mode} snapshot; "
-                    "commit or stage it (untracked and ignored files are not part of a snapshot)",
-                    target_files=["--rules-dir"],
-                    fix=f"git add {rules_rel.as_posix()}",
-                )
-        return _run(
-            workspace,
-            targets=snapshot_targets(snapshot, workspace),
-            expand=False,
-            phase=phase,
-            fix=False,
-            dry_run=False,
-            rules_dir=snapshot_rules,
-            source_root=snapshot.root,
-            snapshot=snapshot,
-        )
+        With ``snapshot`` (from ``git_snapshot(root, ...)``) the snapshot's tree is
+        materialized into a temporary directory that becomes the workspace: the
+        policy, the receipt and tracked rules come from the snapshot, Git-ignored
+        managed rule copies come from ``root`` when they match the receipt's hash,
+        and the snapshot's changed files are the targets, together with the
+        Markdown files whose links point at a path the snapshot deletes. ``rules_dir`` must lie
+        inside the repository and is read from the snapshot (``RulesDirError``
+        otherwise), so unstaged rule edits cannot change the result. A snapshot
+        run cannot take ``targets`` or ``fix``, and ``snapshot`` must come from
+        ``root``; violating that contract is a programming error (``ValueError``).
+        A staged snapshot whose tracked files all match the working tree and with
+        no untracked file under ``.devkit/`` (``matches_working_tree``), run without
+        ``rules_dir``, is evaluated in place on the same targets: nothing is
+        materialized, so the cost follows what the commit changes, and untracked
+        files elsewhere are visible to the rules.
+
+        Raises ``RulesConfigError`` (``RULES_CONFIG_INVALID``) for an invalid ``[rules]``
+        table, ``TargetError`` (``RULES_TARGET_INVALID``) for an invalid explicit
+        target, ``RulesDirError`` (``RULES_DIR_INVALID``) and ``SnapshotError``
+        (``RULES_SNAPSHOT_FAILED``) when the snapshot cannot be materialized. Rule
+        loading problems (``RuleLoadError``) are returned in ``load_errors``;
+        policy problems (``PolicyError``, ``SettingsError``) and rule execution
+        errors (``RuleExecutionError``) in ``result.errors``.
+        """
+        if snapshot is None:
+            return _run(
+                root.resolve(),
+                targets=targets,
+                expand=True,
+                phase=phase,
+                fix=fix,
+                dry_run=dry_run,
+                rules_dir=rules_dir,
+                source_root=None,
+            )
+        if targets is not None:
+            raise ValueError("a snapshot run checks the snapshot's changed files; do not pass targets")
+        if fix:
+            raise ValueError("a snapshot run cannot apply fixes")
+        if snapshot.root != root.resolve():
+            raise ValueError(f"snapshot was taken from {snapshot.root}, not {root.resolve()}")
+        if rules_dir is None and matches_working_tree(snapshot):
+            # The working tree holds the staged tree: evaluate there, without writing the whole tree out.
+            workspace = snapshot.root
+            return _run(
+                workspace,
+                targets=snapshot_targets(snapshot, workspace, git_filter=True),
+                expand=False,
+                phase=phase,
+                fix=False,
+                dry_run=False,
+                rules_dir=None,
+                source_root=None,
+                snapshot=snapshot,
+            )
+        rules_rel = _snapshot_rules_dir(snapshot, rules_dir)
+        with tempfile.TemporaryDirectory(prefix=SNAPSHOT_PREFIX) as directory:
+            workspace = Path(directory).resolve()
+            materialize_snapshot(snapshot, workspace)
+            snapshot_rules = None
+            if rules_rel is not None:
+                snapshot_rules = workspace / rules_rel
+                if not snapshot_rules.is_dir():
+                    raise RulesDirError(
+                        f"rules directory {rules_rel.as_posix()} is not in the {snapshot.mode} snapshot; "
+                        "commit or stage it (untracked and ignored files are not part of a snapshot)",
+                        target_files=["--rules-dir"],
+                        fix=f"git add {rules_rel.as_posix()}",
+                    )
+            return _run(
+                workspace,
+                targets=snapshot_targets(snapshot, workspace),
+                expand=False,
+                phase=phase,
+                fix=False,
+                dry_run=False,
+                rules_dir=snapshot_rules,
+                source_root=snapshot.root,
+                snapshot=snapshot,
+            )
+
+
+run_project_rules = RunProjectRulesUseCase().execute
 
 
 def snapshot_targets(snapshot: Snapshot, workspace: Path, *, git_filter: bool = False) -> list[str]:

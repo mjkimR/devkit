@@ -12,7 +12,7 @@ from devkit_dist.features.distribution.services.bundles import load_bundle
 from devkit_dist.features.distribution.services.installation.config import update_config
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
 from devkit_dist.features.distribution.services.installation.receipt import read_receipt
-from devkit_dist.features.distribution.usecases.context import get_context
+from devkit_dist.features.distribution.usecases.context import GetContext
 from devkit_dist.features.distribution.usecases.override_commands import (
     accept_override,
     create_override,
@@ -71,7 +71,7 @@ def target(tmp_path: Path) -> Path:
 def test_override_create_and_sync_instruction(installed: list[InstalledBundle], target: Path) -> None:
     sync_project(target, installed)
     # Initially get-context shows upstream header
-    ctx = get_context(target, "team").to_dict()
+    ctx = GetContext().execute(target, "team").to_dict()
     assert "upstream guide description" in ctx["instructions"][0]["header"]
 
     # Create override for guide
@@ -94,7 +94,7 @@ def test_override_create_and_sync_instruction(installed: list[InstalledBundle], 
     assert override_meta.relative_path == "guide.md"
 
     # get-context now returns the customized instruction
-    ctx_after = get_context(target, "team").to_dict()
+    ctx_after = GetContext().execute(target, "team").to_dict()
     assert "customized guide description" in ctx_after["instructions"][0]["header"]
     assert (target / OVERRIDES_PATH / "team/guide.md").as_posix() in ctx_after["instructions"][0]["path"]
 
@@ -168,7 +168,7 @@ def test_override_drift_diff_accept_and_remove(installed: list[InstalledBundle],
     assert "guide" not in receipt_after_remove.overrides.get("team", {})
 
     # get-context reverts to upstream content
-    ctx_reverted = get_context(target, "team").to_dict()
+    ctx_reverted = GetContext().execute(target, "team").to_dict()
     assert "upstream v2 security update" in ctx_reverted["instructions"][0]["header"]
 
 

@@ -8,6 +8,7 @@ from pathlib import Path
 
 from devkit.advisory import AdvisoryError
 from devkit_core.base.errors import ArgumentError
+from devkit_core.base.usecase import BaseUseCase
 
 from devkit_spec.base.errors import (
     EntrypointsApplyError,
@@ -91,60 +92,66 @@ def _resolve_targets(index: DocumentIndex, targets: Sequence[str], derived: set[
     return only
 
 
-def derive_entrypoints(
-    root: Path,
-    spec_dir: str | None,
-    status: str | None,
-    min_count: int | None,
-    write: bool,
-    targets: tuple[str, ...],
-    codes: tuple[str, ...],
-    excludes: tuple[str, ...],
-):
-    index = DocumentIndex.load(root)
-    documents = {document.path: document for document in index.documents}
-    skipped: list[Skipped] = []
-    if spec_dir is not None:
-        pairs, skipped = derive(root, load_bundle(root, _bundle_dir(root, spec_dir)), documents)
-    else:
-        per_bundle: list[list[Pair]] = []
-        for spec in _specs(index, status or DEFAULT_STATUS):
-            bundle_dir = spec.path.rsplit("/", 1)[0]
-            try:
-                bundle = load_bundle(root, bundle_dir)
-            except (EntrypointsInputMissingError, EntrypointsInputInvalidError) as exc:
-                reason = Reason.INPUT_MISSING if isinstance(exc, EntrypointsInputMissingError) else Reason.INVALID_INPUT
-                skipped.append(Skipped(SkipKind.BUNDLE, bundle_dir, reason, spec=spec.id))
-                continue
-            bundle_pairs, bundle_skipped = derive(root, bundle, documents)
-            per_bundle.append(bundle_pairs)
-            skipped += bundle_skipped
-        pairs = aggregate(per_bundle, 1 if min_count is None else min_count)
+class DeriveEntrypointsUseCase(BaseUseCase):
+    """DeriveEntrypoints execution boundary."""
 
-    derived = {pair.doc_path for pair in pairs}
-    pairs = select(pairs, codes)
-    pairs, excluded = exclude(pairs, excludes)
-    skipped += excluded
-    applied: list[Applied] = []
-    errors: list[AdvisoryError] = []
-    if write:
-        only = _resolve_targets(index, targets, derived)
-        result = apply(root, pairs, only)
-        applied, skipped = result.applied, skipped + result.skipped
-        if result.failures:
-            paths = [path for path, _ in result.failures]
-            errors.append(
-                EntrypointsApplyError(
-                    f"{len(paths)} document(s) could not be written",
-                    *(f"{path}: {problem}" for path, problem in result.failures),
-                    target_files=paths,
+    def execute(
+        self,
+        root: Path,
+        spec_dir: str | None,
+        status: str | None,
+        min_count: int | None,
+        write: bool,
+        targets: tuple[str, ...],
+        codes: tuple[str, ...],
+        excludes: tuple[str, ...],
+    ) -> tuple[list[Pair], list[Skipped], list[Applied], dict[str, int], list[AdvisoryError], Sequence[AdvisoryError]]:
+        index = DocumentIndex.load(root)
+        documents = {document.path: document for document in index.documents}
+        skipped: list[Skipped] = []
+        if spec_dir is not None:
+            pairs, skipped = derive(root, load_bundle(root, _bundle_dir(root, spec_dir)), documents)
+        else:
+            per_bundle: list[list[Pair]] = []
+            for spec in _specs(index, status or DEFAULT_STATUS):
+                bundle_dir = spec.path.rsplit("/", 1)[0]
+                try:
+                    bundle = load_bundle(root, bundle_dir)
+                except (EntrypointsInputMissingError, EntrypointsInputInvalidError) as exc:
+                    reason = (
+                        Reason.INPUT_MISSING if isinstance(exc, EntrypointsInputMissingError) else Reason.INVALID_INPUT
+                    )
+                    skipped.append(Skipped(SkipKind.BUNDLE, bundle_dir, reason, spec=spec.id))
+                    continue
+                bundle_pairs, bundle_skipped = derive(root, bundle, documents)
+                per_bundle.append(bundle_pairs)
+                skipped += bundle_skipped
+            pairs = aggregate(per_bundle, 1 if min_count is None else min_count)
+
+        derived = {pair.doc_path for pair in pairs}
+        pairs = select(pairs, codes)
+        pairs, excluded = exclude(pairs, excludes)
+        skipped += excluded
+        applied: list[Applied] = []
+        errors: list[AdvisoryError] = []
+        if write:
+            only = _resolve_targets(index, targets, derived)
+            result = apply(root, pairs, only)
+            applied, skipped = result.applied, skipped + result.skipped
+            if result.failures:
+                paths = [path for path, _ in result.failures]
+                errors.append(
+                    EntrypointsApplyError(
+                        f"{len(paths)} document(s) could not be written",
+                        *(f"{path}: {problem}" for path, problem in result.failures),
+                        target_files=paths,
+                    )
                 )
-            )
-    summary = {
-        "pairs": len(pairs),
-        "new": sum(pair.state is State.NEW for pair in pairs),
-        "declared": sum(pair.state is State.DECLARED for pair in pairs),
-        "skipped": len(skipped),
-        "applied": len(applied),
-    }
-    return pairs, skipped, applied, summary, errors, index.problems
+        summary = {
+            "pairs": len(pairs),
+            "new": sum(pair.state is State.NEW for pair in pairs),
+            "declared": sum(pair.state is State.DECLARED for pair in pairs),
+            "skipped": len(skipped),
+            "applied": len(applied),
+        }
+        return pairs, skipped, applied, summary, errors, index.problems

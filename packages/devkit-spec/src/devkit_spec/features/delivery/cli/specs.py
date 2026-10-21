@@ -22,7 +22,7 @@ from devkit_dist.adapters.cli import (
     workspace_option,
 )
 
-from devkit_spec.features.delivery.usecases.specs import create_and_register_spec
+from devkit_spec.features.delivery.usecases.specs import CreateSpecUseCase
 from devkit_spec.features.scope.cli.output import echo_registered, registered_dict
 from devkit_spec.utils.output import sentinel
 
@@ -67,7 +67,7 @@ def spec_new_cmd(
     output_format: str,
 ) -> None:
     """Create the spec bundle specs/<YYYY-MM>/<YYYYMMDD>-<SLUG>/ (SPEC, PLAN and TASKS skeletons) and bind spec.md."""
-    initialized = create_and_register_spec(
+    initialized = CreateSpecUseCase().execute(
         resolve_root(workspace_root),
         slug,
         title=title,

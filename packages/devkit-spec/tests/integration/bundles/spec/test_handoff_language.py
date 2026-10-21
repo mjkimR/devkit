@@ -54,7 +54,7 @@ def test_handoff_language_does_not_change_authority(tmp_path, monkeypatch, langu
     from devkit_dist.features.host.models.errors import HostConfirmationError
 
     from devkit_spec.base.errors import HandoffReplyError, HandoffStaleError
-    from devkit_spec.features.delivery.usecases.native_handoff import HandoffService
+    from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase
 
     (tmp_path / ".devkit").mkdir()
     local = tmp_path / ".devkit/config.local.toml"
@@ -64,7 +64,7 @@ def test_handoff_language_does_not_change_authority(tmp_path, monkeypatch, langu
     )
     monkeypatch.setattr("devkit_spec.features.delivery.usecases.native_handoff.prepare", lambda *args: preview)
     monkeypatch.setattr("devkit_spec.features.delivery.usecases.native_handoff.validate", lambda *args: None)
-    service = HandoffService(tmp_path)
+    service = HandoffUseCase(tmp_path)
     executed = []
 
     def execute(current, effort):
@@ -91,9 +91,9 @@ def test_handoff_language_does_not_change_authority(tmp_path, monkeypatch, langu
     error = {"unavailable": HostConfirmationError, "malformed": HandoffReplyError, "stale": HandoffStaleError}.get(case)
     if error:
         with pytest.raises(error):
-            asyncio.run(service.handoff("idea", "shared://fixture", confirm))
+            asyncio.run(service.execute("idea", "shared://fixture", confirm))
     else:
-        result = asyncio.run(service.handoff("idea", "shared://fixture", confirm))
+        result = asyncio.run(service.execute("idea", "shared://fixture", confirm))
         assert (
             result["status"]
             == {"accept": "fixture-only", "false": "not_approved", "decline": "declined", "cancel": "cancelled"}[case]

@@ -18,7 +18,7 @@ import click
 from devkit_dist.adapters.cli import boundary
 
 from devkit_viewer.features.browse.http.server import ViewerServer
-from devkit_viewer.features.browse.usecases.register import register
+from devkit_viewer.features.browse.usecases.register import RegisterRepositoriesUseCase
 
 DISTRIBUTION = "devkit-viewer"
 DEFAULT_PORT = 8765
@@ -63,7 +63,7 @@ def _stop(_signum: int, _frame: FrameType | None) -> None:
 @boundary
 def serve_cmd(repos: tuple[str, ...], scans: tuple[str, ...], port: int) -> None:
     """Serve repositories on 127.0.0.1 until interrupted; with no --repo or --scan, the current devkit project."""
-    repositories = register(repos, scans, Path.cwd())
+    repositories = RegisterRepositoriesUseCase().execute(repos, scans, Path.cwd())
     server = ViewerServer(repositories, port)
     signal.signal(signal.SIGTERM, _stop)
     click.echo(f"[VIEWER: url={server.url} repos={len(repositories)}]")

@@ -35,11 +35,11 @@ from devkit_agt.features.worktree import (
     RunFromBaseError,
     UnmergedError,
     UnsupportedLayoutError,
+    WorktreeStatusQuery,
     finish,
     locate,
     path_for,
     start,
-    status,
 )
 from devkit_core.base.errors import ArgumentError, GitError
 from testsupport.rules import git, init_repo, write
@@ -180,7 +180,7 @@ def _assert_gone(pid: int, what: str, timeout: float = 5.0) -> None:
 
 
 def _only_the_base(repo: Path, slug: str) -> None:
-    assert [entry.path for entry in status(locate(repo)).worktrees] == [repo]
+    assert [entry.path for entry in WorktreeStatusQuery().execute(locate(repo)).worktrees] == [repo]
     assert not (repo.parent / f"repo-wt-{slug}").exists() and git(repo, "branch", "--list", slug) == ""
 
 
@@ -327,7 +327,7 @@ def test_a_setup_that_times_out_is_stopped_with_its_children(
 def test_status_treats_a_worktree_on_an_unborn_branch_as_unmerged(repo: Path) -> None:
     created = start(locate(repo), "dev-demo")
     git(created.path, "switch", "-q", "--orphan", "fresh")
-    rows = {item.path: item for item in status(locate(repo)).worktrees}
+    rows = {item.path: item for item in WorktreeStatusQuery().execute(locate(repo)).worktrees}
     assert (rows[created.path].branch, rows[created.path].head, rows[created.path].merged) == ("fresh", None, False)
 
 
@@ -354,7 +354,7 @@ def test_finish_refuses_a_worktree_that_is_not_on_the_slugs_branch(repo: Path) -
     git(moved.path, "switch", "-q", "-c", "elsewhere")
     commit(moved.path, "work.txt")
     head = git(repo, "rev-parse", "HEAD")
-    rows = {item.path: item for item in status(locate(repo)).worktrees}
+    rows = {item.path: item for item in WorktreeStatusQuery().execute(locate(repo)).worktrees}
     for slug, path in (("dev-detached", detached.path), ("dev-moved", moved.path)):
         assert rows[path].merged is False  # status and finish judge the same commits
         for merge in (False, True):
@@ -666,7 +666,7 @@ def test_status_reports_worktrees_and_unmerged_branches_without_changing_anythin
     commit(repo, "side.txt")
     git(repo, "checkout", "-q", "main")
     git(repo, "branch", "-q", "lonely", "side")
-    result = status(locate(open_.path))
+    result = WorktreeStatusQuery().execute(locate(open_.path))
     rows = {item.path.name: item for item in result.worktrees}
     assert result.base == repo and result.base_branch == "main"
     assert (rows["repo"].role, rows["repo"].merged, rows["repo"].dirty) == ("base", None, False)

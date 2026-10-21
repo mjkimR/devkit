@@ -30,14 +30,16 @@ def test_descriptor_view_is_read_only_and_honors_explicit_executable(
 
     observed = []
 
-    def descriptor(root, *, executable=None):
+    def descriptor(_self, root, *, executable=None):
         assert executable is not None
         observed.append((root, executable))
         return Descriptor(executable)
 
-    monkeypatch.setattr(module, "descriptor", descriptor)
+    monkeypatch.setattr(module.BuildLaunchDescriptorUseCase, "execute", descriptor)
     monkeypatch.setattr(
-        module.registration, "status", lambda *_: pytest.fail("descriptor view must not inspect registrations")
+        module.registration.InspectMcpUseCase,
+        "execute",
+        lambda *_: pytest.fail("descriptor view must not inspect registrations"),
     )
     runner = CliRunner()
     result = runner.invoke(

@@ -893,7 +893,7 @@ def test_unexpected_errors_exit_2_as_advisories(tmp_path: Path, monkeypatch: pyt
     def explode(*_args: object, **_kwargs: object) -> None:
         raise RuntimeError("disk on fire")
 
-    monkeypatch.setattr("devkit_agt.features.rules.cli.commands.run_project_rules", explode)
+    monkeypatch.setattr("devkit_agt.features.rules.cli.commands.RunProjectRulesUseCase.execute", explode)
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path)])
     assert result.exit_code == 2
     assert (

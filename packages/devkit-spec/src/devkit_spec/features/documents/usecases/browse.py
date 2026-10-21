@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError
 from devkit_core.base.errors import ArgumentError
+from devkit_core.base.usecase import BaseUseCase
 
 from devkit_spec.base.errors import ListStatusUnknownNotice
 from devkit_spec.features.documents import Document, DocumentIndex, Kind, Reference
@@ -237,70 +238,93 @@ class _RefGroup:
         }
 
 
-def resolve_documents(root: Path, ids: tuple[str, ...]):
-    index = DocumentIndex.load(root)
-    found: list[Document] = []
-    errors: list[AdvisoryError] = []
-    for document_id in ids:
-        try:
-            found.append(index.resolve(document_id))
-        except AdvisoryError as error:
-            errors.append(error)
-    return found, errors, index.problems
+class ResolveDocumentsUseCase(BaseUseCase):
+    """ResolveDocuments execution boundary."""
+
+    def execute(
+        self, root: Path, ids: tuple[str, ...]
+    ) -> tuple[list[Document], list[AdvisoryError], Sequence[AdvisoryError]]:
+        index = DocumentIndex.load(root)
+        found: list[Document] = []
+        errors: list[AdvisoryError] = []
+        for document_id in ids:
+            try:
+                found.append(index.resolve(document_id))
+            except AdvisoryError as error:
+                errors.append(error)
+        return found, errors, index.problems
 
 
-def reference_documents(root: Path, document_id: str, direction: str, limit: int, offset: int):
-    _check_page(limit, offset)
-    index = DocumentIndex.load(root)
-    document = index.resolve(document_id)
-    groups = index.outgoing(document) if direction == "out" else index.incoming(document.id)
-    keys = list(groups)
-    shown = page(keys, offset, limit)
-    items = [_RefGroup.of(index, key, groups[key]) for key in shown]
-    return document, keys, items, index.problems
+class ReferenceDocumentsUseCase(BaseUseCase):
+    """ReferenceDocuments execution boundary."""
+
+    def execute(
+        self, root: Path, document_id: str, direction: str, limit: int, offset: int
+    ) -> tuple[Document, list[str], list[_RefGroup], Sequence[AdvisoryError]]:
+        _check_page(limit, offset)
+        index = DocumentIndex.load(root)
+        document = index.resolve(document_id)
+        groups = index.outgoing(document) if direction == "out" else index.incoming(document.id)
+        keys = list(groups)
+        shown = page(keys, offset, limit)
+        items = [_RefGroup.of(index, key, groups[key]) for key in shown]
+        return document, keys, items, index.problems
 
 
-def list_documents(
-    root: Path,
-    kinds: tuple[str, ...],
-    status: str | None,
-    area: str | None,
-    query: str | None,
-    file: str | None,
-    history: bool,
-    namespace: str | None,
-    all_namespaces: bool,
-    where_items: tuple[str, ...],
-    offset: int,
-    limit: int,
-):
-    _check_page(limit, offset)
-    where = parse_filter_options(where_items, file)
-    index = DocumentIndex.load(root)
-    scope = NamespaceScope.of(index, namespace, all_namespaces)
-    requested = (
-        list(dict.fromkeys(part.strip().lower() for part in status.split(",") if part.strip())) if status else []
-    )
-    statuses = set(requested)
-    wanted = {Kind(kind) for kind in kinds}
-    planning = _planning(index)
-    selected = [
-        document
-        for document in index.documents
-        if (not wanted or document.kind in wanted)
-        and (history or not index.is_historical(document))
-        and (not statuses or _shown_status(document, planning).lower() in statuses)
-        and (not area or area.lower() in document.area.lower())
-        and (not query or query.lower() in document.id.lower() or query.lower() in document.title.lower())
-        and _matches(document, where)
-        and scope.accepts(document)
-        and (file is None or _overlaps(document, file))
-    ]
-    selected.sort(
-        key=lambda document: (_KIND_ORDER[document.kind], _severity_rank(document), document.id, document.path)
-    )
-    shown = page(selected, offset, limit)
-    tasks = {document.path: _tasks(index.root, document) for document in shown}
-    notices = [*index.problems, *_unknown_statuses(index, wanted, requested)]
-    historical = {document.path: index.is_historical(document) for document in shown}
-    return selected, shown, tasks, notices, scope, planning, where, historical
+class ListDocumentsUseCase(BaseUseCase):
+    """ListDocuments execution boundary."""
+
+    def execute(
+        self,
+        root: Path,
+        kinds: tuple[str, ...],
+        status: str | None,
+        area: str | None,
+        query: str | None,
+        file: str | None,
+        history: bool,
+        namespace: str | None,
+        all_namespaces: bool,
+        where_items: tuple[str, ...],
+        offset: int,
+        limit: int,
+    ) -> tuple[
+        list[Document],
+        list[Document],
+        dict[str, str | None],
+        list[AdvisoryError],
+        NamespaceScope,
+        dict[str, str],
+        Where,
+        dict[str, bool],
+    ]:
+        _check_page(limit, offset)
+        where = parse_filter_options(where_items, file)
+        index = DocumentIndex.load(root)
+        scope = NamespaceScope.of(index, namespace, all_namespaces)
+        requested = (
+            list(dict.fromkeys(part.strip().lower() for part in status.split(",") if part.strip())) if status else []
+        )
+        statuses = set(requested)
+        wanted = {Kind(kind) for kind in kinds}
+        planning = _planning(index)
+        selected = [
+            document
+            for document in index.documents
+            if (not wanted or document.kind in wanted)
+            and (history or not index.is_historical(document))
+            and (not statuses or _shown_status(document, planning).lower() in statuses)
+            and (not area or area.lower() in document.area.lower())
+            and (not query or query.lower() in document.id.lower() or query.lower() in document.title.lower())
+            and _matches(document, where)
+            and scope.accepts(document)
+            and (file is None or _overlaps(document, file))
+        ]
+        selected.sort(
+            key=lambda document: (_KIND_ORDER[document.kind], _severity_rank(document), document.id, document.path)
+        )
+        shown = page(selected, offset, limit)
+        tasks = {document.path: _tasks(index.root, document) for document in shown}
+        notices = [*index.problems, *_unknown_statuses(index, wanted, requested)]
+        historical = {document.path: index.is_historical(document) for document in shown}
+        return selected, shown, tasks, notices, scope, planning, where, historical

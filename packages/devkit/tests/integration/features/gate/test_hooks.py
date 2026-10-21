@@ -13,7 +13,7 @@ import devkit_agt.features.gate.usecases.hooks.hooks as hooks
 import pytest
 from click.testing import CliRunner
 from devkit.advisory import ExitCode
-from devkit_agt.features.gate import load_gate_project, run_hook
+from devkit_agt.features.gate import RunHookUseCase, load_gate_project
 from devkit_agt.features.gate.cli import cli
 from devkit_agt.features.gate.models.contracts import Stage
 from testsupport.gate import deploy_gate, gate_source, git
@@ -512,11 +512,11 @@ def test_library_entry_points(repo: Path) -> None:
     assert [g.id for g in project.registry.get_all()] == ["rules-check", "verify-commands", "message-nonempty"]
 
     (repo / "MSG").write_text("\n")
-    report = run_hook(repo, Stage.COMMIT_MSG, ["MSG"])
+    report = RunHookUseCase().execute(repo, Stage.COMMIT_MSG, ["MSG"])
     assert not report.ok and report.exit_code is ExitCode.FINDINGS
     assert [e.code for e in report.problems] == ["GATE_MESSAGE_EMPTY"]
 
-    report = run_hook(repo, Stage.COMMIT_MSG)
+    report = RunHookUseCase().execute(repo, Stage.COMMIT_MSG)
     assert [e.code for e in report.problems] == ["ARGUMENT_INVALID"] and report.exit_code is ExitCode.ERROR
 
 

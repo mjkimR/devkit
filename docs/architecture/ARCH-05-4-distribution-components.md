@@ -91,8 +91,9 @@ The dist wheel never depends on `devkit-agt`. Feature imports use absolute paths
 - `models/` owns content values, bundle and installation contracts, results, notices and error types.
   Results expose `to_dict()` for the JSON command result.
 
-The distribution feature exports operations such as `sync_project`, `load_bundle`, `get_context`,
-`get_playbook`, `search_playbooks`, override operations, `plan_bundle`, `get_project_status` and
+The distribution feature exposes transport operations through `BaseUseCase.execute`, including
+`SyncSelection`, `GetContext`, `GetPlaybook`, `SearchPlaybooks` and override operations. Internal
+composition retains helpers such as `sync_project`, `load_bundle`, `plan_bundle`, `get_project_status` and
 `get_project_listing`. CLI adapters expose these operations through use cases; internal services do not
 import transport code.
 

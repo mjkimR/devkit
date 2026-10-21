@@ -10,7 +10,7 @@ from devkit_dist.features.distribution.services.bundles.common import AGENT_NAME
 from devkit_dist.features.distribution.services.installation.config import update_config
 from devkit_dist.features.distribution.services.installation.discovery import discover_bundles
 from devkit_dist.features.distribution.services.installation.inventory import desired_inventory
-from devkit_dist.features.distribution.usecases.context import get_context
+from devkit_dist.features.distribution.usecases.context import GetContext
 from devkit_dist.features.distribution.usecases.sync import sync_project
 
 MAINTAINED = {"advisory", "authoring", "devkit", "harness", "response-style", "spec"}
@@ -50,7 +50,7 @@ def test_complete_maintained_cloud_inventory(agent: str, tmp_path: Path):
     for name, content in inventory.files.items():
         assert (root / name).read_bytes() == content.data
     for item in selected:
-        context = get_context(root, item.bundle.name)
+        context = GetContext().execute(root, item.bundle.name)
         if context.constitution is not None:
             assert (
                 context.constitution.encode() == inventory.files[f".devkit/managed/{item.bundle.name}/AGENTS.md"].data

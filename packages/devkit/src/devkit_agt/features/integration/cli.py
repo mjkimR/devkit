@@ -6,6 +6,7 @@ import click
 from devkit_dist.adapters.cli import FORMAT_OPTION, boundary, echo_json, is_json, resolve_root, workspace_option
 
 from devkit_agt.features.integration.models.contracts import Task
+from devkit_agt.features.integration.usecases.operations import PrepareIntegrationUseCase
 from devkit_agt.features.integration.usecases.service import IntegrationService
 
 
@@ -35,7 +36,9 @@ def prepare(
     output_format: str,
 ) -> None:
     """Validate committed BRANCH and prepare its exact local request; approval and execution use MCP."""
-    result = IntegrationService(resolve_root(workspace_root)).prepare(branch, Task(task_kind, task_id, unit, claims))
+    result = PrepareIntegrationUseCase(IntegrationService(resolve_root(workspace_root))).execute(
+        branch, Task(task_kind, task_id, unit, claims)
+    )
     if is_json(output_format):
         echo_json(result.to_dict())
     else:

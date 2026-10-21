@@ -5,12 +5,14 @@ from __future__ import annotations
 import asyncio
 import hashlib
 from pathlib import Path
+from typing import Any
 
 from devkit.advisory import AdvisoryError
 from devkit_agt.features.workflow import Workspace
 from devkit_agt.features.worktree import StartResult, locate, path_for, read_worktree_config, start
 from devkit_agt.features.worktree.usecases.lifecycle import _prepare
 from devkit_core.base.mcp import Confirmation
+from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import run_git
 from devkit_core.core.frontmatter import parse
 from devkit_dist.features.project.usecases.configuration import approval_language
@@ -108,12 +110,13 @@ def prepare(root: Path, slug: str, report_uri: str = "") -> HandoffPreview:
     )
 
 
-class HandoffService:
-    def __init__(self, root: Path):
-        self.root = root.resolve()
+class HandoffUseCase(BaseUseCase):
+    def __init__(self, root: Path) -> None:
+        self.root = root
         self._lock = asyncio.Lock()
 
-    async def handoff(self, slug: str, report_uri: str, confirm: Confirmation) -> dict:
+    async def execute(self, slug: str, report_uri: str, confirm: Confirmation) -> dict[str, Any]:
+        self.root = self.root.resolve()
         guard_execution()
         async with self._lock:
             guard_execution()

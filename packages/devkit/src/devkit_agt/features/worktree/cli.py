@@ -34,14 +34,14 @@ from devkit_dist.adapters.cli import (
 
 from devkit_agt.features.worktree.models.config import WorktreeConfig
 from devkit_agt.features.worktree.models.errors import WorktreeError
-from devkit_agt.features.worktree.usecases.configured import finish_activity, locate_project, start_activity
+from devkit_agt.features.worktree.usecases.configured import FinishActivity, LocateProject, StartActivity
 from devkit_agt.features.worktree.usecases.lifecycle import (
     FinishResult,
     Position,
-    start_branch,
-    status,
+    StartBranch,
+    WorktreeStatusQuery,
 )
-from devkit_agt.features.worktree.usecases.stale import stale_branches
+from devkit_agt.features.worktree.usecases.stale import StaleBranches
 
 WORKSPACE = workspace_option("Any directory inside the checkout [default: the current directory]")
 BRANCH = click.argument("branch")
@@ -62,7 +62,7 @@ def _position(workspace_root: str | None) -> tuple[Position, WorktreeConfig, Pat
     """The checkout containing ``--workspace-root`` (default: the current directory), its devkit project's
     ``[worktree]`` settings, and that project's directory relative to the checkout (``None`` outside it)."""
     start = existing_directory(workspace_root) if workspace_root is not None else Path.cwd()
-    return locate_project(start)
+    return LocateProject().execute(start)
 
 
 @click.group(name="worktree")
@@ -120,7 +120,7 @@ def start_cmd(
         )
     position, config, project = _position(workspace_root)
     if no_worktree:
-        started = start_branch(position, branch)
+        started = StartBranch().execute(position, branch)
         if is_json(output_format):
             echo_json(started.to_dict())
         else:
@@ -131,7 +131,7 @@ def start_cmd(
         echo_notices(started.notices)
         exit_on_warnings(started.notices)
         return
-    result = start_activity(position, config, project, branch, existing=existing, unit=unit)
+    result = StartActivity().execute(position, config, project, branch, existing=existing, unit=unit)
     if is_json(output_format):
         echo_json(result.to_dict())
     else:
@@ -189,7 +189,9 @@ def finish_cmd(
         raise ArgumentError("--merge and --discard exclude each other", target_files=["--discard"])
     position, config, _ = _position(workspace_root)
     try:
-        result = finish_activity(position, config, branch, merge=merge, discard_branch=discard, local_only=local_only)
+        result = FinishActivity().execute(
+            position, config, branch, merge=merge, discard_branch=discard, local_only=local_only
+        )
     except WorktreeError as error:
         partial = error.result
         if not isinstance(partial, FinishResult):
@@ -222,7 +224,7 @@ def status_cmd(workspace_root: str | None, output_format: str, stale: bool) -> N
     if stale:
         _show_stale(workspace_root, output_format)
         return
-    result = status(_position(workspace_root)[0])
+    result = WorktreeStatusQuery().execute(_position(workspace_root)[0])
     if is_json(output_format):
         echo_json(result.to_dict())
         return
@@ -248,7 +250,7 @@ def _show_stale(workspace_root: str | None, output_format: str) -> None:
     once the user decides, how to discard it; without gh the check is skipped with a notice.
     """
     position, config, _ = _position(workspace_root)
-    result = stale_branches(position, config.stale_after)
+    result = StaleBranches().execute(position, config.stale_after)
     notices = [*result.notices, *(item.warning(position.base, config.stale_after) for item in result.stale)]
     if is_json(output_format):
         echo_json(result.to_dict() | {"notices": [notice.to_dict() for notice in notices]})

@@ -19,7 +19,7 @@ from devkit_dist.adapters.cli import (
 
 from devkit_agt.features.workflow.cli.app import WORKSPACE, cli, workspace
 from devkit_agt.features.workflow.cli.render import quote
-from devkit_agt.features.workflow.models.checks import Registry
+from devkit_agt.features.workflow.usecases.operations import ListChecksUseCase, ValidateWorkflowsUseCase
 
 
 @cli.command(name="checks", hidden=True)
@@ -29,7 +29,7 @@ from devkit_agt.features.workflow.models.checks import Registry
 def checks_cmd(workspace_root: str | None, output_format: str) -> None:
     """List registered check names, classes and parameters."""
     ws = workspace(workspace_root)
-    entries = Registry.build(ws.config.anchor).entries()
+    entries = ListChecksUseCase(ws).execute()
     if is_json(output_format):
         echo_json({"checks": [c.to_dict() for c in entries]})
         return
@@ -61,7 +61,7 @@ def validate_cmd(workspace_root: str | None, paths: tuple[str, ...], output_form
             target_files=missing,
             fix="Pass existing definition files or directories",
         )
-    report = ws.validate_definitions([Path(p).resolve() for p in paths])
+    report = ValidateWorkflowsUseCase(ws).execute([Path(p).resolve() for p in paths])
     if is_json(output_format):
         echo_json(report.to_dict(ws.root))
     else:

@@ -10,7 +10,7 @@ import click
 from devkit_dist.adapters.cli import boundary, echo_json, resolve_root
 from devkit_dist.features.shared.models.api import MAX_BYTES, PutRequest
 from devkit_dist.features.shared.models.errors import InputError
-from devkit_dist.features.shared.usecases.service import adapter
+from devkit_dist.features.shared.usecases.commands import GetArtifact, ListArtifacts, PutArtifact, SweepArtifacts
 
 
 @click.group()
@@ -29,8 +29,7 @@ def filters(fn):
     return fn
 
 
-def emit(result: dict, selected, output_format: str) -> None:
-    result.update(adapter=selected.adapter_id, repository_namespace=selected.repository_namespace)
+def emit(result: dict, output_format: str) -> None:
     if output_format == "json":
         echo_json(result)
     else:
@@ -48,9 +47,7 @@ def put(kind: str, slug: str, source_sha: str, language: str, workspace_root: st
     except UnicodeError as exc:
         raise InputError("content is not UTF-8") from exc
     request = PutRequest(kind, slug, source_sha, language, content)
-    request.validate()
-    selected = adapter(resolve_root(workspace_root))
-    emit(selected.put(request).receipt_dict(), selected, output_format)
+    emit(PutArtifact().execute(resolve_root(workspace_root), request), output_format)
 
 
 @cli.command()
@@ -58,8 +55,7 @@ def put(kind: str, slug: str, source_sha: str, language: str, workspace_root: st
 @common
 @boundary
 def get(artifact_uri: str, workspace_root: str | None, output_format: str) -> None:
-    selected = adapter(resolve_root(workspace_root))
-    emit(selected.get(artifact_uri).to_dict(), selected, output_format)
+    emit(GetArtifact().execute(resolve_root(workspace_root), artifact_uri), output_format)
 
 
 @cli.command(name="list")
@@ -81,10 +77,16 @@ def list_artifacts(
     workspace_root: str | None,
     output_format: str,
 ) -> None:
-    selected = adapter(resolve_root(workspace_root))
     emit(
-        selected.list(kind, slug, source_sha=source_sha, language=language, cursor=cursor, limit=limit).to_dict(),
-        selected,
+        ListArtifacts().execute(
+            resolve_root(workspace_root),
+            kind,
+            slug,
+            source_sha=source_sha,
+            language=language,
+            cursor=cursor,
+            limit=limit,
+        ),
         output_format,
     )
 
@@ -95,5 +97,4 @@ def list_artifacts(
 @common
 @boundary
 def sweep(apply_changes: bool, cursor: str | None, workspace_root: str | None, output_format: str) -> None:
-    selected = adapter(resolve_root(workspace_root))
-    emit(selected.sweep(apply=apply_changes, cursor=cursor).to_dict(), selected, output_format)
+    emit(SweepArtifacts().execute(resolve_root(workspace_root), apply=apply_changes, cursor=cursor), output_format)

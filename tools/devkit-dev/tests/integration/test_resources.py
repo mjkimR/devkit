@@ -14,5 +14,5 @@ def test_bundle_loads_with_its_declared_default_preset() -> None:
     assert bundle.version == project["version"]
     assert bundle.default_preset == "structure"
     assert bundle.default_preset in bundle.presets
-    assert {asset.id for asset in bundle.assets} == {"project-structure", "architecture"}
+    assert {asset.id for asset in bundle.assets} == {"project-structure", "architecture", "usecase-boundaries"}
     assert project["dependencies"] == []

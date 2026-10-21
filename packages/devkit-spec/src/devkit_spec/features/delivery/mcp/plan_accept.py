@@ -4,14 +4,14 @@ from pathlib import Path
 
 from devkit_core.base.mcp import Confirmation, McpTool
 
-from devkit_spec.features.delivery.usecases.native_plan_accept import PlanAcceptService
+from devkit_spec.features.delivery.usecases.native_plan_accept import PlanAcceptUseCase
 
 
 def create_tools(root: Path) -> tuple[McpTool, ...]:
-    service = PlanAcceptService(root)
+    service = PlanAcceptUseCase(root)
 
     async def accept(arguments: dict, confirm: Confirmation) -> dict:
-        return await service.accept(
+        return await service.execute(
             arguments["slug"], arguments["report_uri"], confirm, mode=arguments.get("mode", "accept_and_handoff")
         )
 

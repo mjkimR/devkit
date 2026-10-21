@@ -15,11 +15,11 @@ import pytest
 import yaml
 from click.testing import CliRunner, Result
 from devkit_agt.features.workflow import (
+    CreateUnitUseCase,
     DecisionInvalidError,
     DefinitionError,
     Options,
     Workspace,
-    create_unit,
     evaluate_definition,
     load_decisions,
     load_envelopes,
@@ -618,7 +618,7 @@ def test_cli_handoff_uses_recorded_choice(tmp_path: Path) -> None:
 def test_feedback_answers_validate_the_action(tmp_path: Path) -> None:
     root = simple_workspace(tmp_path)
     ws = Workspace(root)
-    unit = create_unit(ws, "u")
+    unit = CreateUnitUseCase().execute(ws, "u")
     with pytest.raises(DecisionInvalidError):
         record_answer(ws, unit, "feedback:x", "approve", ["text"])
     assert not (unit.dir / "decisions").exists()

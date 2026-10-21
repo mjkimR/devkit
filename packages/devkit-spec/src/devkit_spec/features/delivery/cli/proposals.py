@@ -50,10 +50,11 @@ from devkit_dist.adapters.cli import (
     workspace_option,
 )
 
-from devkit_spec.features.delivery.usecases.handoff import handoff_and_register
-from devkit_spec.features.proposals import create_padr, create_proposal, prune_proposals
-from devkit_spec.features.proposals.usecases.accept import ACTOR, accept_proposal
-from devkit_spec.features.proposals.usecases.backlog import check_backlog_editable
+from devkit_spec.features.delivery.usecases.handoff import HandoffProposalUseCase
+from devkit_spec.features.proposals.usecases.accept import ACTOR, AcceptProposalUseCase
+from devkit_spec.features.proposals.usecases.backlog import CheckBacklogUseCase
+from devkit_spec.features.proposals.usecases.prune import PruneProposalsUseCase
+from devkit_spec.features.proposals.usecases.scaffold import CreateProposalDecisionUseCase, CreateProposalUseCase
 from devkit_spec.features.scope.cli.output import echo_registered, registered_dict
 from devkit_spec.utils.output import sentinel
 
@@ -128,7 +129,7 @@ def new_cmd(
     output_format: str,
 ) -> None:
     """Scaffold the proposal bundle docs/proposals/PROP-<SLUG>/."""
-    created = create_proposal(
+    created = CreateProposalUseCase().execute(
         resolve_root(workspace_root),
         slug,
         title=title,
@@ -193,7 +194,9 @@ def padr_cmd(
     output_format: str,
 ) -> None:
     """Record a preliminary decision PADR-<slug> in proposal SLUG's decisions/ (the title's slug unless --slug)."""
-    created = create_padr(resolve_root(workspace_root), slug, title, summary=summary, padr_slug=padr_slug)
+    created = CreateProposalDecisionUseCase().execute(
+        resolve_root(workspace_root), slug, title, summary=summary, padr_slug=padr_slug
+    )
     if is_json(output_format):
         echo_json(created.to_dict())
         return
@@ -238,7 +241,9 @@ def accept_cmd(
     Without --direct: a proposal in review, on its plan-<slug>. With --direct: an eligible draft on the base
     checkout (Backlog work). Never records plan-intent, commits, merges or hands off.
     """
-    result = accept_proposal(resolve_root(workspace_root), slug, by=actor, note=note, direct=direct, check=check_only)
+    result = AcceptProposalUseCase().execute(
+        resolve_root(workspace_root), slug, by=actor, note=note, direct=direct, check=check_only
+    )
     if is_json(output_format):
         echo_json(result.to_dict())
         return
@@ -274,7 +279,7 @@ def accept_cmd(
 def handoff_cmd(slug: str, workspace_root: str | None, output_format: str) -> None:
     """Hand the accepted proposal SLUG off to a spec bundle sdd-spec-<task_kind> and remove the proposal."""
     root = resolve_root(workspace_root)
-    completed = handoff_and_register(root, slug)
+    completed = HandoffProposalUseCase().execute(root, slug)
     result, registered = completed.handoff, completed.registered
     if is_json(output_format):
         scope = registered_dict(registered.location, registered.record, registered.token) if registered else None
@@ -332,7 +337,7 @@ def prune_cmd(slug: str | None, workspace_root: str | None, output_format: str) 
 
     Run it in the base checkout after `devkit worktree finish`; a directory holding any file is kept.
     """
-    pruned = prune_proposals(resolve_root(workspace_root), slug)
+    pruned = PruneProposalsUseCase().execute(resolve_root(workspace_root), slug)
     if is_json(output_format):
         echo_json({"pruned": pruned})
     elif pruned:
@@ -352,7 +357,7 @@ def check_cmd(slug: str, workspace_root: str | None, output_format: str) -> None
 
     Run it before every Backlog change of a proposal. Remote branches count once fetched (git fetch first).
     """
-    checked = check_backlog_editable(resolve_root(workspace_root), slug)
+    checked = CheckBacklogUseCase().execute(resolve_root(workspace_root), slug)
     if is_json(output_format):
         echo_json(checked.to_dict())
         return
@@ -375,9 +380,11 @@ def report_cmd(slug: str, source_sha: str, body_file, workspace_root: str | None
     """Publish a source-bound proposal review report through the shared adapter."""
     from devkit_dist.features.shared.models.api import MAX_BYTES
 
-    from devkit_spec.features.proposals.usecases.report import publish
+    from devkit_spec.features.proposals.usecases.report import PublishProposalReportUseCase
 
-    result = publish(resolve_root(workspace_root), slug, source_sha, body_file.read(MAX_BYTES + 1))
+    result = PublishProposalReportUseCase().execute(
+        resolve_root(workspace_root), slug, source_sha, body_file.read(MAX_BYTES + 1)
+    )
     if is_json(output_format):
         echo_json(result.receipt_dict())
     else:

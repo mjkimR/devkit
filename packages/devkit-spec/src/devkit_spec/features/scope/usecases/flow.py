@@ -14,6 +14,7 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from devkit.advisory import Actor, AdvisoryError, Level, Retry
+from devkit_core.base.usecase import BaseUseCase
 
 from devkit_spec.base.errors import (
     ScopeAckFailedError,
@@ -163,52 +164,60 @@ def collect(
     return scope
 
 
-def register(session: Session, spec_dir: str, task_id: str | None = None, *, source: str = "") -> Registered:
-    """Register the bundle at the workspace-relative ``spec_dir`` as this worktree's task and save its token.
+class RegisterScopeUseCase(BaseUseCase):
+    def execute(self, session: Session, spec_dir: str, task_id: str | None = None, *, source: str = "") -> Registered:
+        """Register the bundle at the workspace-relative ``spec_dir`` as this worktree's task and save its token.
 
-    ``task_id`` defaults to the spec ID. The record keeps HEAD as ``base_revision`` and the branch the base checkout
-    is on as ``base_ref``. Raises ``ScopeTokenExistsError`` when this worktree already holds a token, also when a
-    concurrent registration saved its token first; a record whose token could not be saved is removed again.
-    """
-    location, registry, deadline = session.location, session.registry, session.deadline
-    if location.token_path.exists():
-        raise ScopeTokenExistsError("this worktree already registered a task", target_files=[str(location.token_path)])
-    stamp = utc_now()
-    base = head_revision(location.root, deadline)
-    ref = base_ref(location, deadline)
-    scope = collect(location, spec_dir, base, deadline, stamp, base_ref=ref)
-    record = Record(
-        namespace=location.namespace,
-        task_id=task_id or scope.id,
-        worktree=str(location.root),
-        base_revision=base,
-        base_ref=ref,
-        spec=spec_dir,
-        scopes=tuple(scope.all_paths()),
-        unresolved=tuple(scope.unresolved),
-    )
-    token, stored = registry.register(record, deadline)
-    try:
-        save_token(location.token_path, token)
-    except OSError as exc:
-        # never leave a record nobody can release; a failed rollback is a detail of the original error
-        details = _rollback(registry, stored, token)
-        target = [str(location.token_path)]
-        if isinstance(exc, FileExistsError):
+        ``task_id`` defaults to the spec ID. The record keeps HEAD as ``base_revision`` and the branch the base checkout
+        is on as ``base_ref``. Raises ``ScopeTokenExistsError`` when this worktree already holds a token, also when a
+        concurrent registration saved its token first; a record whose token could not be saved is removed again.
+        """
+        location, registry, deadline = session.location, session.registry, session.deadline
+        if location.token_path.exists():
             raise ScopeTokenExistsError(
-                "another registration in this worktree saved its token first", *details, target_files=target
-            ) from exc
-        raise ScopeSharedPathError(f"the token could not be saved: {exc}", *details, target_files=target) from exc
-    notices: list[AdvisoryError] = []
-    if stored.shared_worktree:
-        notices.append(
-            ScopeSharedWorktreeWarning(
-                f"another task registered this worktree too; changes observed in {stored.worktree} count for both",
-                target_files=[stored.worktree],
+                "this worktree already registered a task", target_files=[str(location.token_path)]
             )
+        stamp = utc_now()
+        base = head_revision(location.root, deadline)
+        ref = base_ref(location, deadline)
+        scope = collect(location, spec_dir, base, deadline, stamp, base_ref=ref)
+        record = Record(
+            namespace=location.namespace,
+            task_id=task_id or scope.id,
+            worktree=str(location.root),
+            base_revision=base,
+            base_ref=ref,
+            spec=spec_dir,
+            scopes=tuple(scope.all_paths()),
+            unresolved=tuple(scope.unresolved),
         )
-    notices += journal(registry, location.namespace, [record_event(EventKind.REGISTER, stored, source)])
-    return Registered(location, stored, token, notices)
+        token, stored = registry.register(record, deadline)
+        try:
+            save_token(location.token_path, token)
+        except OSError as exc:
+            # never leave a record nobody can release; a failed rollback is a detail of the original error
+            details = _rollback(registry, stored, token)
+            target = [str(location.token_path)]
+            if isinstance(exc, FileExistsError):
+                raise ScopeTokenExistsError(
+                    "another registration in this worktree saved its token first", *details, target_files=target
+                ) from exc
+            raise ScopeSharedPathError(f"the token could not be saved: {exc}", *details, target_files=target) from exc
+        notices: list[AdvisoryError] = []
+        if stored.shared_worktree:
+            notices.append(
+                ScopeSharedWorktreeWarning(
+                    f"another task registered this worktree too; changes observed in {stored.worktree} count for both",
+                    target_files=[stored.worktree],
+                )
+            )
+        notices += journal(registry, location.namespace, [record_event(EventKind.REGISTER, stored, source)])
+        return Registered(location, stored, token, notices)
+
+
+def register(session: Session, spec_dir: str, task_id: str | None = None, *, source: str = "") -> Registered:
+    """Register scope for an internal composite operation."""
+    return RegisterScopeUseCase().execute(session, spec_dir, task_id, source=source)
 
 
 def _rollback(registry: Registry, stored: Record, token: str) -> list[str]:
@@ -375,72 +384,78 @@ def _diff_scopes(before: Sequence[ScopePath], after: Sequence[ScopePath]) -> tup
     return len(now - was), len(was - now)
 
 
-def update(session: Session, spec_dir: str, request_id: str | None = None, *, source: str = "") -> Ack:
-    """Recollect the bundle's declared and observed scope, write it with this worktree's token and the revision just
-    read, and compare it with the namespace's other records.
+class UpdateScopeUseCase(BaseUseCase):
+    def execute(self, session: Session, spec_dir: str, request_id: str | None = None, *, source: str = "") -> Ack:
+        """Recollect the bundle's declared and observed scope, write it with this worktree's token and the revision just
+        read, and compare it with the namespace's other records.
 
-    The observed range forks from the record's ``base_ref`` (``observe_git``); a record without one, or whose
-    ``base_ref`` no longer names a commit (renamed or deleted), takes the base branch detected now when that one does
-    (``_current_base_ref``). ``request_id`` retries an update
-    whose outcome was not observed: an ID the record already applied is answered from the stored record, with the
-    ``added`` and ``removed`` counts that request recorded, before anything is collected or written. Never raises
-    for a registry failure: the ACK carries it.
-    """
-    location, registry, deadline = session.location, session.registry, session.deadline
-    ack = Ack(status=AckStatus.APPLIED, request_id=request_id or new_request_id())
-    current: Record | None = None
-    try:
-        mine = own(session)
-        current = mine.record
-        ack.problems = mine.problems
-        if request_id and current.last_request_id == request_id:
-            stored = current  # already applied: answered from the stored record
-        else:
-            stamp = utc_now()
-            ref = _current_base_ref(location, current.base_ref, deadline)
-            scope = collect(location, spec_dir, current.base_revision, deadline, stamp, base_ref=ref)
-            added, removed = _diff_scopes(current.scopes, scope.all_paths())
-            proposed = current.with_(
-                base_ref=ref,
-                spec=spec_dir,
-                scopes=tuple(scope.all_paths()),
-                unresolved=tuple(scope.unresolved),
-                last_added=added,
-                last_removed=removed,
-            )
-            stored = registry.update(mine.token, current.revision, ack.request_id, proposed, deadline)
-    except AdvisoryError as exc:
-        ack.error = exc
-        if isinstance(exc, ScopeStaleRevisionError):
-            ack.status = AckStatus.STALE
-        elif isinstance(exc, ScopeTimeoutError):
-            ack.status = AckStatus.TIMEOUT
-        else:
+        The observed range forks from the record's ``base_ref`` (``observe_git``); a record without one, or whose
+        ``base_ref`` no longer names a commit (renamed or deleted), takes the base branch detected now when that one does
+        (``_current_base_ref``). ``request_id`` retries an update
+        whose outcome was not observed: an ID the record already applied is answered from the stored record, with the
+        ``added`` and ``removed`` counts that request recorded, before anything is collected or written. Never raises
+        for a registry failure: the ACK carries it.
+        """
+        location, registry, deadline = session.location, session.registry, session.deadline
+        ack = Ack(status=AckStatus.APPLIED, request_id=request_id or new_request_id())
+        current: Record | None = None
+        try:
+            mine = own(session)
+            current = mine.record
+            ack.problems = mine.problems
+            if request_id and current.last_request_id == request_id:
+                stored = current  # already applied: answered from the stored record
+            else:
+                stamp = utc_now()
+                ref = _current_base_ref(location, current.base_ref, deadline)
+                scope = collect(location, spec_dir, current.base_revision, deadline, stamp, base_ref=ref)
+                added, removed = _diff_scopes(current.scopes, scope.all_paths())
+                proposed = current.with_(
+                    base_ref=ref,
+                    spec=spec_dir,
+                    scopes=tuple(scope.all_paths()),
+                    unresolved=tuple(scope.unresolved),
+                    last_added=added,
+                    last_removed=removed,
+                )
+                stored = registry.update(mine.token, current.revision, ack.request_id, proposed, deadline)
+        except AdvisoryError as exc:
+            ack.error = exc
+            if isinstance(exc, ScopeStaleRevisionError):
+                ack.status = AckStatus.STALE
+            elif isinstance(exc, ScopeTimeoutError):
+                ack.status = AckStatus.TIMEOUT
+            else:
+                ack.status = AckStatus.FAILED
+        except OSError as exc:
+            ack.error = ScopeAckFailedError(f"the scope update failed: {exc}")
             ack.status = AckStatus.FAILED
-    except OSError as exc:
-        ack.error = ScopeAckFailedError(f"the scope update failed: {exc}")
-        ack.status = AckStatus.FAILED
-    else:
-        ack.revision = stored.revision
-        ack.added, ack.removed = stored.last_added, stored.last_removed  # a replay reports the counts it recorded
-        ack.record = stored
-        ack.unresolved = len(stored.unresolved)
-        ack.pairs = compare_with(stored.to_set(), [other.to_set() for other in mine.others])
-        ack.overlaps = sum(pair.overlapping for pair in ack.pairs)
-    event = Event(
-        event=str(EventKind.UPDATE),
-        task=current.task_id if current else "",
-        slug=slug_from_spec(spec_dir),
-        revision=ack.revision if ack.record else (current.revision if current else 0),
-        request_id=ack.request_id,
-        status=ack.status,
-        counts=AckCounts(ack.added, ack.removed, ack.overlaps, ack.unresolved) if ack.record else None,
-        worktree=str(location.root),
-        spec=spec_dir,
-        source=source,
-    )
-    ack.notices += journal(registry, location.namespace, [event])
-    return ack
+        else:
+            ack.revision = stored.revision
+            ack.added, ack.removed = stored.last_added, stored.last_removed  # a replay reports the counts it recorded
+            ack.record = stored
+            ack.unresolved = len(stored.unresolved)
+            ack.pairs = compare_with(stored.to_set(), [other.to_set() for other in mine.others])
+            ack.overlaps = sum(pair.overlapping for pair in ack.pairs)
+        event = Event(
+            event=str(EventKind.UPDATE),
+            task=current.task_id if current else "",
+            slug=slug_from_spec(spec_dir),
+            revision=ack.revision if ack.record else (current.revision if current else 0),
+            request_id=ack.request_id,
+            status=ack.status,
+            counts=AckCounts(ack.added, ack.removed, ack.overlaps, ack.unresolved) if ack.record else None,
+            worktree=str(location.root),
+            spec=spec_dir,
+            source=source,
+        )
+        ack.notices += journal(registry, location.namespace, [event])
+        return ack
+
+
+def update(session: Session, spec_dir: str, request_id: str | None = None, *, source: str = "") -> Ack:
+    """Update scope for an internal composite operation."""
+    return UpdateScopeUseCase().execute(session, spec_dir, request_id, source=source)
 
 
 # --- release ------------------------------------------------------------------------------------------------------
@@ -457,43 +472,49 @@ class Released:
     notices: list[AdvisoryError] = field(default_factory=list)
 
 
-def release(session: Session, task_id: str | None = None, *, source: str = "") -> Released:
-    """Remove this worktree's record with its token and delete the token; repeating is a no-op.
+class ReleaseScopeUseCase(BaseUseCase):
+    def execute(self, session: Session, task_id: str | None = None, *, source: str = "") -> Released:
+        """Remove this worktree's record with its token and delete the token; repeating is a no-op.
 
-    Without ``task_id`` and without a token nothing happens (``registered`` false); an incomplete token file (one
-    ``load_token`` takes for no token) is removed. With ``task_id`` the token must own that record
-    (``ScopeTokenMismatchError``), and a token is required (``ScopeTokenMissingError``). A token whose record is gone
-    is removed (orphaned), unless an unreadable record file may hold that record. ``SPEC_SCOPE_RECORD_INVALID`` at
-    ``ERROR`` (the token kept) is raised only when the record looked for may be unreadable: with ``task_id`` when
-    that task's own record file cannot be read, without it when an unreadable file may hold this token's record.
-    """
-    location, registry, deadline = session.location, session.registry, session.deadline
-    token = load_token(location.token_path)
-    if token is None:
+        Without ``task_id`` and without a token nothing happens (``registered`` false); an incomplete token file (one
+        ``load_token`` takes for no token) is removed. With ``task_id`` the token must own that record
+        (``ScopeTokenMismatchError``), and a token is required (``ScopeTokenMissingError``). A token whose record is gone
+        is removed (orphaned), unless an unreadable record file may hold that record. ``SPEC_SCOPE_RECORD_INVALID`` at
+        ``ERROR`` (the token kept) is raised only when the record looked for may be unreadable: with ``task_id`` when
+        that task's own record file cannot be read, without it when an unreadable file may hold this token's record.
+        """
+        location, registry, deadline = session.location, session.registry, session.deadline
+        token = load_token(location.token_path)
+        if token is None:
+            if task_id:
+                raise ScopeTokenMissingError(
+                    "this worktree holds no scope registry token", target_files=[str(location.token_path)]
+                )
+            if incomplete_token(location.token_path):
+                remove_token(location.token_path)  # a token nobody can present: an interrupted save
+            return Released("", 0, registered=False, already=False)
+        records, problems = registry.query(location.namespace, deadline)
+        digest = token_hash(token)
+        suspects = _suspects(session, problems, digest)
         if task_id:
-            raise ScopeTokenMissingError(
-                "this worktree holds no scope registry token", target_files=[str(location.token_path)]
-            )
-        if incomplete_token(location.token_path):
-            remove_token(location.token_path)  # a token nobody can present: an interrupted save
-        return Released("", 0, registered=False, already=False)
-    records, problems = registry.query(location.namespace, deadline)
-    digest = token_hash(token)
-    suspects = _suspects(session, problems, digest)
-    if task_id:
-        target = next((record for record in records if record.task_id == task_id), None)
-        named = [problem for problem in problems if problem.file == registry.record_file(task_id)]
-        if target is None and named:
-            raise _unreadable(location, named, f"the record of task {task_id} cannot be read")
-    else:
-        target = next((record for record in records if record.token_hash == digest), None)
-        if target is None and suspects:
-            raise _unreadable(location, suspects, _OWN_UNREADABLE)
-    if target is None:
-        if not suspects and not any(record.token_hash == digest for record in records):
-            remove_token(location.token_path)  # orphaned: its record was released or swept
-        return Released(task_id or "", 0, registered=True, already=True)
-    registry.release(location.namespace, target.task_id, token, deadline)
-    remove_token(location.token_path)
-    notices = journal(registry, location.namespace, [record_event(EventKind.RELEASE, target, source)])
-    return Released(target.task_id, target.revision, registered=True, already=False, notices=notices)
+            target = next((record for record in records if record.task_id == task_id), None)
+            named = [problem for problem in problems if problem.file == registry.record_file(task_id)]
+            if target is None and named:
+                raise _unreadable(location, named, f"the record of task {task_id} cannot be read")
+        else:
+            target = next((record for record in records if record.token_hash == digest), None)
+            if target is None and suspects:
+                raise _unreadable(location, suspects, _OWN_UNREADABLE)
+        if target is None:
+            if not suspects and not any(record.token_hash == digest for record in records):
+                remove_token(location.token_path)  # orphaned: its record was released or swept
+            return Released(task_id or "", 0, registered=True, already=True)
+        registry.release(location.namespace, target.task_id, token, deadline)
+        remove_token(location.token_path)
+        notices = journal(registry, location.namespace, [record_event(EventKind.RELEASE, target, source)])
+        return Released(target.task_id, target.revision, registered=True, already=False, notices=notices)
+
+
+def release(session: Session, task_id: str | None = None, *, source: str = "") -> Released:
+    """Release scope for an internal composite operation."""
+    return ReleaseScopeUseCase().execute(session, task_id, source=source)

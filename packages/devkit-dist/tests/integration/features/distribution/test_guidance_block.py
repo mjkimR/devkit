@@ -15,7 +15,7 @@ from devkit_dist.features.distribution.services.installation import guidance_blo
 from devkit_dist.features.distribution.services.installation.config import update_config
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
 from devkit_dist.features.distribution.services.installation.workspace import AGENTS_FILE, JOURNAL
-from devkit_dist.features.distribution.usecases.sync import recover_project, sync_project
+from devkit_dist.features.distribution.usecases.sync import RecoverProject, sync_project
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH, RECEIPT_PATH
 from distsupport.distribution import cli
 
@@ -222,7 +222,7 @@ def test_block_write_is_journaled_and_rolled_back(
     assert (target / AGENTS_FILE).read_text() == "# My project\n"
     assert not (target / JOURNAL).exists()
     monkeypatch.setattr(transaction, "atomic_write", original)
-    assert recover_project(target) == 0
+    assert RecoverProject().execute(target) == 0
 
 
 def test_cli_check_reports_stale_block(

@@ -28,8 +28,8 @@ from devkit_dist.features.distribution.services.installation.discovery import In
 from devkit_dist.features.distribution.services.installation.guidance_block import START
 from devkit_dist.features.distribution.services.installation.receipt import read_receipt
 from devkit_dist.features.distribution.services.installation.workspace import AGENTS_FILE, LOCK, project_path
-from devkit_dist.features.distribution.usecases.context import get_context
-from devkit_dist.features.distribution.usecases.sync import recover_project, sync_project
+from devkit_dist.features.distribution.usecases.context import GetContext
+from devkit_dist.features.distribution.usecases.sync import RecoverProject, sync_project
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH, RECEIPT_PATH
 from distsupport.distribution import instruction, write_bundle
 
@@ -129,7 +129,7 @@ def test_receipt_paths_cannot_leave_the_project(item: InstalledBundle, target: P
             asset["paths"] = [".devkit/overrides/team/../../../../secret.md"]
     (target / RECEIPT_PATH).write_text(json.dumps(receipt))
     with pytest.raises(ReceiptError, match=r"must not contain '\.\.'"):
-        get_context(target, "team")
+        GetContext().execute(target, "team")
 
 
 @pytest.mark.parametrize(
@@ -146,7 +146,7 @@ def test_malformed_receipt_entries_are_receipt_errors(item: InstalledBundle, tar
     mutate(receipt)
     (target / RECEIPT_PATH).write_text(json.dumps(receipt))
     with pytest.raises(ReceiptError, match=match) as raised:
-        get_context(target, "team")
+        GetContext().execute(target, "team")
     assert raised.value.code == "RECEIPT_INVALID"
     with pytest.raises(ReceiptError, match=match):
         read_receipt(target)
@@ -158,14 +158,14 @@ def test_readers_share_the_lock_and_writers_exclude_them(
     sync_project(target, [item])
     assert (target / LOCK).is_file()
     with transaction.project_lock(target, shared=True):
-        assert get_context(target, "team").to_dict()["bundle"] == "team"
+        assert GetContext().execute(target, "team").to_dict()["bundle"] == "team"
         with pytest.raises(LockHeldError, match="project lock"):
             sync_project(target, [item])
     monkeypatch.setattr(transaction, "READ_LOCK_TIMEOUT", 0.05)
     with transaction.project_lock(target), pytest.raises(LockHeldError, match="project lock"):
-        get_context(target, "team")
+        GetContext().execute(target, "team")
     with transaction.project_lock(target), pytest.raises(CoreLockHeldError, match="project lock") as raised:
-        get_context(target, "team")  # the core class catches it too
+        GetContext().execute(target, "team")  # the core class catches it too
     assert raised.value.seconds == 0.05
 
 
@@ -179,7 +179,7 @@ def test_a_reader_on_a_read_only_file_system_reads_without_the_lock(
         raise OSError(code, os.strerror(code))
 
     monkeypatch.setattr(transaction, "file_lock", refuse)
-    assert get_context(target, "team").to_dict()["bundle"] == "team"
+    assert GetContext().execute(target, "team").to_dict()["bundle"] == "team"
     with pytest.raises(OSError) as raised, transaction.project_lock(target):
         pass  # a writer never proceeds without the lock
     assert raised.value.errno == code
@@ -200,7 +200,7 @@ def test_reader_waits_for_a_writer(item: InstalledBundle, target: Path) -> None:
     try:
         timer = threading.Timer(0.2, released.set)
         timer.start()
-        assert get_context(target, "team").to_dict()["bundle"] == "team"
+        assert GetContext().execute(target, "team").to_dict()["bundle"] == "team"
     finally:
         released.set()
         writer.join()
@@ -210,7 +210,7 @@ def test_post_sync_extensions_run_after_the_lock_is_released(
     item: InstalledBundle, target: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     def hook(root: Path, result: dict) -> list[str]:
-        return [f"hook read {get_context(root, 'team').to_dict()['bundle']}"]
+        return [f"hook read {GetContext().execute(root, 'team').to_dict()['bundle']}"]
 
     entry = type("Entry", (), {"name": "reader", "value": "x:reader", "load": staticmethod(lambda: hook)})()
     monkeypatch.setattr(
@@ -332,7 +332,7 @@ def test_an_interrupted_directory_to_file_transition_is_recovered(
     with pytest.raises(SystemExit):
         sync_project(target, [upgraded])
     monkeypatch.undo()
-    assert recover_project(target) > 0
+    assert RecoverProject().execute(target) > 0
     assert (target / NOTES_FILE / "SKILL.md").read_text() == "directory\n"
     assert not (target / ".devkit/transient/sync-journal.json").exists()
     sync_project(target, [upgraded])

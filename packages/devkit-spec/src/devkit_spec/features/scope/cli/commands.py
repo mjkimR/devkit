@@ -41,30 +41,23 @@ from devkit_dist.adapters.cli import (
     workspace_option,
 )
 
-from devkit_spec.base.errors import (
-    ScopeStaleRevisionError,
-)
 from devkit_spec.features.scope import (
     Event,
     PairResult,
     Record,
     Session,
-    Verdict,
-    journal,
     open_session,
-    register,
-    release,
-    sweep_events,
-    update,
 )
 from devkit_spec.features.scope.cli.output import echo_registered, registered_dict
-from devkit_spec.features.scope.usecases.history import query_history
+from devkit_spec.features.scope.usecases.flow import RegisterScopeUseCase, ReleaseScopeUseCase, UpdateScopeUseCase
+from devkit_spec.features.scope.usecases.history import QueryScopeHistoryUseCase
 from devkit_spec.features.scope.usecases.query import (
+    CompareScopesUseCase,
+    QueryScopesUseCase,
     _record_warnings,
     _spec_dir,
-    compare_inputs,
-    query_scopes,
 )
+from devkit_spec.features.scope.usecases.sweep import SweepScopesUseCase
 from devkit_spec.utils.output import fields_line, sentinel
 
 
@@ -132,7 +125,7 @@ def compare_cmd(
             fix="Pass two or more --proposal <slug> / --spec <dir> options",
         )
     root = resolve_root(workspace_root)
-    sets, pairs, summary = compare_inputs(root, proposals, specs)
+    sets, pairs, summary = CompareScopesUseCase().execute(root, proposals, specs)
     if is_json(output_format):
         echo_json(
             {"sets": [item.to_dict() for item in sets], "pairs": [pair.to_dict() for pair in pairs], "summary": summary}
@@ -164,7 +157,7 @@ def register_cmd(spec_dir: str | None, task_id: str | None, workspace_root: str 
     """
     root = resolve_root(workspace_root)
     relative = _spec_dir(root, spec_dir)
-    registered = register(open_session(root), relative, task_id or None)
+    registered = RegisterScopeUseCase().execute(open_session(root), relative, task_id or None)
     if is_json(output_format):
         echo_json(
             registered_dict(registered.location, registered.record, registered.token)
@@ -233,7 +226,7 @@ def query_cmd(
     if history:
         _history(session, task, limit or 50, cursor, output_format)
         return
-    mine, others, records, pairs, summary, notices = query_scopes(root, session, spec_dir)
+    mine, others, records, pairs, summary, notices = QueryScopesUseCase().execute(root, session, spec_dir)
     if is_json(output_format):
         echo_json(
             {
@@ -259,7 +252,7 @@ def _event_line(event: Event) -> str:
 
 
 def _history(session: Session, task: str | None, limit: int, cursor: str | None, output_format: str) -> None:
-    result = query_history(session, task=task, limit=limit, cursor=cursor)
+    result = QueryScopeHistoryUseCase().execute(session, task=task, limit=limit, cursor=cursor)
     if is_json(output_format):
         echo_json(result.to_dict())
     else:
@@ -291,7 +284,7 @@ def update_cmd(spec_dir: str | None, request_id: str | None, workspace_root: str
     root = resolve_root(workspace_root)
     relative = _spec_dir(root, spec_dir)
     session = open_session(root)
-    ack = update(session, relative, request_id or None)
+    ack = UpdateScopeUseCase().execute(session, relative, request_id or None)
     notices = [*_record_warnings(session.location, ack.problems), *ack.notices]
     if is_json(output_format):
         document: dict[str, object] = {
@@ -336,7 +329,7 @@ def release_cmd(task_id: str | None, workspace_root: str | None, output_format: 
     Repeating it, or running it in a worktree that registered nothing, changes nothing and succeeds.
     """
     root = resolve_root(workspace_root)
-    released = release(open_session(root), task_id or None)
+    released = ReleaseScopeUseCase().execute(open_session(root), task_id or None)
     fields = {
         "released": released.registered and not released.already,
         "registered": released.registered,
@@ -390,21 +383,8 @@ def sweep_cmd(apply: bool, expects: tuple[str, ...], workspace_root: str | None,
     expected = _expected(expects)
     root = resolve_root(workspace_root)
     session = open_session(root)
-    location = session.location
-    if apply and not expects:
-        records, _ = session.registry.query(location.namespace, session.deadline)
-        expected = {record.task_id: record.revision for record in records}
-    results = session.registry.sweep(location.namespace, apply, expected, session.deadline)
-    notices = journal(session.registry, location.namespace, sweep_events(results))
-    counts = {str(verdict): sum(result.verdict is verdict for result in results) for verdict in Verdict}
-    summary = {"namespace": location.namespace, **counts}
-    moved = [result.task_id for result in results if result.reason == "stale-revision"]
-    error = None
-    if moved:
-        error = ScopeStaleRevisionError(
-            f"{len(moved)} stale record(s) changed since they were read and were kept: {', '.join(moved)}",
-            fix="Run devkit spec scope sweep again and pass the revisions it reports to --apply --expect",
-        )
+    swept = SweepScopesUseCase().execute(session, apply=apply, expected=expected)
+    results, summary, notices, error = swept.results, swept.summary, swept.notices, swept.error
     if is_json(output_format):
         document: dict[str, object] = {
             "results": [result.to_dict() for result in results],

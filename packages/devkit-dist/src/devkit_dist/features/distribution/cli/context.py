@@ -7,7 +7,7 @@ import click
 from devkit_dist.adapters.cli import (
     resolve_root,
 )
-from devkit_dist.features.distribution.usecases.context import get_context
+from devkit_dist.features.distribution.usecases.context import GetContext
 
 from .output import WORKSPACE, _json_command
 
@@ -18,4 +18,4 @@ from .output import WORKSPACE, _json_command
 @_json_command
 def context(bundle_name: str, workspace_root: str | None) -> object:
     """Return the full constitution and instruction headers for a synced bundle."""
-    return get_context(resolve_root(workspace_root), bundle_name)
+    return GetContext().execute(resolve_root(workspace_root), bundle_name)

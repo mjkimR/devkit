@@ -78,11 +78,18 @@ dynamic discovery are allowed in `__init__.py`. Business operations, domain vali
 handlers belong in named modules. A CLI directory can split related command groups into separate
 modules and assemble its Click group in `app.py`; there is no one-command-per-file requirement.
 
-Use cases may be typed functions or classes when they own state. A feature introduces repository
-`Protocol` contracts when implementations need substitution, and a shared base class only when it
-provides actual common behavior. There is no required `BaseUseCase`, `BaseRepository`, Command
-registry or Unit of Work. CLI commands are transport adapters, not an additional mandatory domain
-Command layer.
+CLI/MCP-exposed application operations implement `devkit_core.base.usecase.BaseUseCase` with a
+fully typed `execute` method. Each operation keeps its existing arguments and result type; a request DTO
+is not mandatory. Constructors receive dependencies and retain shared engines without executing domain
+operations. Internal composition and helper functions remain functions. Synchronous and asynchronous
+implementations use the same identification contract. The base does not add authorization, transactions,
+retries or logging, and cannot replace runtime policy checks.
+
+`RULE-usecase-boundaries` checks these exposed boundaries without importing application code. It complements
+import-direction checks: a directory name alone does not identify an executable operation. Explicit
+transport bootstrap and infrastructure helpers are declared narrowly rather than exempting feature modules.
+A feature introduces repository `Protocol` contracts when implementations need substitution; there is no
+required `BaseRepository`, Command registry or Unit of Work. CLI commands remain transport adapters.
 
 ### 1.2 Layering Rules
 

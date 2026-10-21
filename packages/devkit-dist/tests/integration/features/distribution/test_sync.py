@@ -25,7 +25,7 @@ from devkit_dist.features.distribution.services.installation.config import updat
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle, discover_bundles
 from devkit_dist.features.distribution.services.installation.workspace import JOURNAL, SEEN_BUNDLES, snapshot
 from devkit_dist.features.distribution.usecases.status import get_project_status
-from devkit_dist.features.distribution.usecases.sync import recover_project, sync_project
+from devkit_dist.features.distribution.usecases.sync import RecoverProject, sync_project
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH, RECEIPT_PATH
 from distsupport.distribution import cli
 
@@ -223,10 +223,10 @@ def test_interruption_recovery_and_later_edit_protection(
     guide = target / ".devkit/managed/team/guide.md"
     guide.write_text("subsequent edit")
     with pytest.raises(RecoveryError, match="subsequent edit"):
-        recover_project(target)
+        RecoverProject().execute(target)
     assert guide.read_text() == "subsequent edit"
     guide.write_bytes((installed[0].bundle.root / "guide.md").read_bytes())
-    assert recover_project(target) > 0
+    assert RecoverProject().execute(target) > 0
     assert snapshot(target, JOURNAL) is None
     assert snapshot(target, RECEIPT_PATH) is None
     assert not guide.exists()

@@ -13,5 +13,10 @@ id = "architecture"
 kind = "rule"
 source = "rules/architecture"
 
+[[assets]]
+id = "usecase-boundaries"
+kind = "rule"
+source = "rules/usecase-boundaries"
+
 [presets.structure]
-assets = ["project-structure", "architecture"]
+assets = ["project-structure", "architecture", "usecase-boundaries"]

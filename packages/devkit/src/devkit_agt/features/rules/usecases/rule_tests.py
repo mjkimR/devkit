@@ -9,7 +9,7 @@ plugin package the package's root in the tree that module came from (a
 project override's copy when the class is defined there, else the managed
 copy or the ``--rules-dir`` package).
 
-``run_rule_tests`` runs ``python -m pytest <tests> --import-mode=importlib
+``RunRuleTestsUseCase.execute`` runs ``python -m pytest <tests> --import-mode=importlib
 -p no:cacheprovider`` once per tests directory, in a subprocess of the
 interpreter running devkit, from the workspace root, with
 ``PYTHONDONTWRITEBYTECODE=1``: neither a bytecode cache nor a pytest cache is
@@ -32,6 +32,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from devkit.advisory import AdvisoryError
+from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core.plugins import TESTS_DIRECTORY
 
 from devkit_agt.features.rules.models.contracts import Rule
@@ -130,54 +131,59 @@ def pytest_available() -> bool:
     return importlib.util.find_spec("pytest") is not None
 
 
-def run_rule_tests(root: Path, rules: Sequence[Rule], pytest_args: Sequence[str] = ()) -> list[RuleTestRun]:
-    """Run each rule's tests, in the given order, and return one ``RuleTestRun`` per rule.
+class RunRuleTestsUseCase(BaseUseCase):
+    """Application entrypoint for run rule tests."""
 
-    ``root`` is the workspace root pytest runs from. Each run is isolated from the
-    project: no configuration file is read (``-c os.devnull``) and the rule folder
-    is the root and the conftest boundary, so the project's ``addopts``,
-    ``filterwarnings`` and ``conftest.py`` files never apply; a rule's tests depend
-    on its folder alone. ``pytest_args`` are appended to every run.
-    A rule without a tests directory, or whose tests collect nothing (pytest
-    exit code 5), is ``no-tests``; any other nonzero exit code is ``failed``.
-    Raises ``RulesTestUnavailableError`` (``RULES_TEST_UNAVAILABLE``) when
-    pytest is not importable, the compact errors when a run cannot start or
-    log, and ``RuleTestsInterrupted`` with the results so far when a run is
-    interrupted.
-    """
-    if not pytest_available():
-        raise RulesTestUnavailableError(
-            f"pytest is not importable by {sys.executable}, which runs devkit; rule tests need it",
-            target_files=["pyproject.toml"],
-        )
-    from devkit_agt.features.compact import CommandInterrupted, run_command
+    def execute(self, root: Path, rules: Sequence[Rule], pytest_args: Sequence[str] = ()) -> list[RuleTestRun]:
+        """Run each rule's tests, in the given order, and return one ``RuleTestRun`` per rule.
 
-    env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
-    runs: dict[Path, CommandRun] = {}
-    results: list[RuleTestRun] = []
-    for rule in rules:
-        tests = tests_directory(rule)
-        if tests is None or not tests.is_dir():
-            results.append(RuleTestRun(rule.id, tests, RuleTestResult.NO_TESTS))
-            continue
-        if tests not in runs:
-            folder = str(tests.parent)
-            isolation = ("-c", os.devnull, "--rootdir", folder, "--confcutdir", folder)
-            argv = [sys.executable, "-m", "pytest", str(tests), *PYTEST_OPTIONS, *isolation, *pytest_args]
-            try:
-                runs[tests] = run_command(argv, cwd=root, env=env, slow_after=0)
-            except CommandInterrupted as stopped:
-                results.append(RuleTestRun(rule.id, tests, RuleTestResult.INTERRUPTED, stopped.run))
-                raise RuleTestsInterrupted(results, stopped.code if isinstance(stopped.code, int) else 130) from stopped
-        run = runs[tests]
-        if run.exit_code == 0:
-            result = RuleTestResult.PASSED
-        elif run.exit_code == NO_TESTS_COLLECTED:
-            result = RuleTestResult.NO_TESTS
-        else:
-            result = RuleTestResult.FAILED
-        results.append(RuleTestRun(rule.id, tests, result, run))
-    return results
+        ``root`` is the workspace root pytest runs from. Each run is isolated from the
+        project: no configuration file is read (``-c os.devnull``) and the rule folder
+        is the root and the conftest boundary, so the project's ``addopts``,
+        ``filterwarnings`` and ``conftest.py`` files never apply; a rule's tests depend
+        on its folder alone. ``pytest_args`` are appended to every run.
+        A rule without a tests directory, or whose tests collect nothing (pytest
+        exit code 5), is ``no-tests``; any other nonzero exit code is ``failed``.
+        Raises ``RulesTestUnavailableError`` (``RULES_TEST_UNAVAILABLE``) when
+        pytest is not importable, the compact errors when a run cannot start or
+        log, and ``RuleTestsInterrupted`` with the results so far when a run is
+        interrupted.
+        """
+        if not pytest_available():
+            raise RulesTestUnavailableError(
+                f"pytest is not importable by {sys.executable}, which runs devkit; rule tests need it",
+                target_files=["pyproject.toml"],
+            )
+        from devkit_agt.features.compact import CommandInterrupted, run_command
+
+        env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
+        runs: dict[Path, CommandRun] = {}
+        results: list[RuleTestRun] = []
+        for rule in rules:
+            tests = tests_directory(rule)
+            if tests is None or not tests.is_dir():
+                results.append(RuleTestRun(rule.id, tests, RuleTestResult.NO_TESTS))
+                continue
+            if tests not in runs:
+                folder = str(tests.parent)
+                isolation = ("-c", os.devnull, "--rootdir", folder, "--confcutdir", folder)
+                argv = [sys.executable, "-m", "pytest", str(tests), *PYTEST_OPTIONS, *isolation, *pytest_args]
+                try:
+                    runs[tests] = run_command(argv, cwd=root, env=env, slow_after=0)
+                except CommandInterrupted as stopped:
+                    results.append(RuleTestRun(rule.id, tests, RuleTestResult.INTERRUPTED, stopped.run))
+                    raise RuleTestsInterrupted(
+                        results, stopped.code if isinstance(stopped.code, int) else 130
+                    ) from stopped
+            run = runs[tests]
+            if run.exit_code == 0:
+                result = RuleTestResult.PASSED
+            elif run.exit_code == NO_TESTS_COLLECTED:
+                result = RuleTestResult.NO_TESTS
+            else:
+                result = RuleTestResult.FAILED
+            results.append(RuleTestRun(rule.id, tests, result, run))
+        return results
 
 
 def run_notices(results: Sequence[RuleTestRun]) -> list[AdvisoryError]:

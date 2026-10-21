@@ -16,7 +16,7 @@ from devkit_dist.features.distribution.services.installation.discovery import In
 from devkit_dist.features.distribution.services.installation.plan import plan_bundle
 from devkit_dist.features.distribution.services.installation.receipt import read_receipt
 from devkit_dist.features.distribution.services.installation.workspace import JOURNAL
-from devkit_dist.features.distribution.usecases.sync import recover_project, sync_project
+from devkit_dist.features.distribution.usecases.sync import RecoverProject, sync_project
 from devkit_dist.features.project.repositories.receipt import RECEIPT_PATH
 from distsupport.distribution import cli
 
@@ -324,7 +324,7 @@ def test_seed_writes_are_journaled_and_rolled_back(
     assert not (target / "docs/spec/glossary.md").exists()
     assert not (target / JOURNAL).exists()
     monkeypatch.setattr(transaction, "atomic_write", original)
-    assert recover_project(target) == 0
+    assert RecoverProject().execute(target) == 0
     sync_project(target, installed)
     assert (target / "docs/README.md").exists()
 
@@ -346,7 +346,7 @@ def test_rollback_removes_the_directories_a_failed_transaction_created(
         sync_project(target, installed)
     monkeypatch.setattr(transaction, "atomic_write", original)
     assert (target / "docs/spec/stories/README.md").exists() and (target / JOURNAL).exists()
-    assert recover_project(target) > 0
+    assert RecoverProject().execute(target) > 0
     # The project's own docs/ stays; docs/spec/ and .devkit/managed/, created by the transaction, are gone.
     assert sorted(path.name for path in (target / "docs").iterdir()) == ["ours.md"]
     assert not (target / ".devkit/managed").exists()
@@ -368,10 +368,10 @@ def test_rollback_removes_the_directories_a_failed_transaction_created(
 
 
 def test_seeded_document_is_not_bundle_context(installed: list[InstalledBundle], target: Path) -> None:
-    from devkit_dist.features.distribution.usecases.context import get_context
+    from devkit_dist.features.distribution.usecases.context import GetContext
 
     sync_project(target, installed)
-    context = get_context(target, "sdd").to_dict()
+    context = GetContext().execute(target, "sdd").to_dict()
     assert [item["path"].rsplit("/", 1)[-1] for item in context["instructions"]] == ["guide.md"]
 
 

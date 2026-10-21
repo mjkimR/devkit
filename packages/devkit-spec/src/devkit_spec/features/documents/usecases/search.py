@@ -19,11 +19,13 @@ The policy on top of the generic ranking:
 
 from __future__ import annotations
 
-from collections.abc import Callable, Collection
+from collections.abc import Callable, Collection, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
 import yaml
+from devkit.advisory import AdvisoryError
+from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import parse
 from devkit_dist.features.search import SearchDocument, SearchIndex, SearchMode, tokenize
@@ -176,27 +178,31 @@ def search_documents(
     return SpecSearchResult(query, expanded, resolved, hits[:limit] if limit else hits)
 
 
-def search_workspace(
-    root: Path,
-    query: str,
-    kinds: tuple[str, ...],
-    namespace: str | None,
-    all_namespaces: bool,
-    history: bool,
-    mode: str,
-    limit: int,
-    min_similarity: float,
-):
-    index = DocumentIndex.load(root)
-    scope = NamespaceScope.of(index, namespace, all_namespaces)
-    result = search_documents(
-        index,
-        query,
-        kinds={Kind(kind) for kind in kinds},
-        history=history,
-        mode=SearchMode(mode),
-        limit=limit,
-        min_similarity=min_similarity,
-        accept=scope.accepts,
-    )
-    return result, index.problems, scope
+class SearchDocumentsUseCase(BaseUseCase):
+    """SearchDocuments execution boundary."""
+
+    def execute(
+        self,
+        root: Path,
+        query: str,
+        kinds: tuple[str, ...],
+        namespace: str | None,
+        all_namespaces: bool,
+        history: bool,
+        mode: str,
+        limit: int,
+        min_similarity: float,
+    ) -> tuple[SpecSearchResult, Sequence[AdvisoryError], NamespaceScope]:
+        index = DocumentIndex.load(root)
+        scope = NamespaceScope.of(index, namespace, all_namespaces)
+        result = search_documents(
+            index,
+            query,
+            kinds={Kind(kind) for kind in kinds},
+            history=history,
+            mode=SearchMode(mode),
+            limit=limit,
+            min_similarity=min_similarity,
+            accept=scope.accepts,
+        )
+        return result, index.problems, scope

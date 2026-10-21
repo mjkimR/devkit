@@ -33,6 +33,7 @@ from devkit_agt.features.workflow import (
     write_decision,
 )
 from devkit_core.base.errors import ArgumentError
+from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import parse
 
@@ -106,136 +107,8 @@ class AcceptResult:
 def accept_proposal(
     root: Path, slug: str, *, by: str, note: str = "", direct: bool = False, check: bool = False
 ) -> AcceptResult:
-    """Accept proposal ``slug`` under the workspace ``root`` for the recorded authority (see the module docstring).
-
-    Raises, before writing anything: ``ArgumentError`` (``by`` other than ``user`` or authorized ``policy``; ``direct`` without a non-blank
-    ``note``), ``ProposalSlugError``, ``ProposalNotFoundError``, ``ProposalInvalidError``,
-    ``ProposalAcceptRefusedError`` (a form the status does not allow, a single-file or unbound proposal),
-    ``ProposalWrongWorktreeError`` (the Planning form off ``plan-<slug>``) and ``ProposalNotEligibleError`` (every
-    failed direct condition in its details). After writing the status: ``ProposalGateNotOpenError``, with the status
-    restored.
-    """
-    if by not in {ACTOR, "policy"}:
-        raise ArgumentError(
-            f"--by {by!r}: expected user or policy",
-            target_files=["--by"],
-            fix="Use user for explicit acceptance or policy when owning policy delegates plan-accept",
-        )
-    policy = approval_policy(root, "plan-accept")
-    if by == "policy" and policy != "auto":
-        raise ArgumentError("--by policy requires owning plan-accept=auto")
-    reason = note.strip()
-    if direct and not reason:
-        raise ArgumentError(
-            "--note is required with --direct: the reason the draft was eligible",
-            target_files=["--note"],
-            fix='Pass --note "<why the direction leaves nothing to compare>"',
-        )
-    root = root.resolve()
-    slug = require_slug(slug.strip().removeprefix("PROP-"))
-    bundle, single = bundle_dir(root, slug), single_file(root, slug)
-    if not bundle.is_dir():
-        if single.is_file():
-            raise ProposalAcceptRefusedError(
-                f"PROP-{slug} is a single-file proposal, which has no gate records",
-                target_files=[single.relative_to(root).as_posix()],
-                fix="Its acceptance is its status line alone: after the user's explicit acceptance set status: "
-                "accepted by hand",
-            )
-        raise ProposalNotFoundError(f"proposal PROP-{slug} not found", target_files=[f"PROP-{slug}"])
-    path = bundle / PROPOSAL_FILE
-    rel = path.relative_to(root).as_posix()
-    try:
-        original = path.read_bytes()
-        meta: dict[str, Any] = parse(original.decode("utf-8")).data or {}
-    except (OSError, UnicodeDecodeError) as exc:
-        raise ProposalInvalidError(f"{rel} cannot be read: {exc}", target_files=[rel]) from exc
-    except FrontmatterError as exc:
-        raise ProposalInvalidError(f"{rel}: {exc.message}", target_files=[rel]) from exc
-    workflow = text_value(meta.get("workflow"))
-    if not workflow:
-        raise ProposalAcceptRefusedError(
-            f"PROP-{slug} is not bound to a workflow, so it has no gate records",
-            target_files=[rel],
-            fix="Bind it with devkit workflow bind --unit <dir> --workflow sdd-proposal and rerun, or, after the "
-            "user's explicit acceptance, set status: accepted by hand (an unbound proposal's acceptance is its status)",
-        )
-    status = text_value(meta.get("status")).lower()
-    gates = {gate.request for gate in proposal_gates(bundle, workflow)}
-    form = _form(slug, status, direct, ACCEPT_GATE in gates, rel)
-    pending: list[str] = []
-    workspace = Workspace(root, lint=None, ancestor=None)
-    unit = workspace.resolve_unit(bundle.relative_to(root).as_posix())
-    if form == PLANNING:
-        found = checkout(root)
-        expected = f"{PLANNING_PREFIX}{slug}"
-        if found is not None and found[1] != expected:
-            raise ProposalWrongWorktreeError(
-                f"the Planning acceptance of PROP-{slug} runs on branch {expected}, not on"
-                f" {found[1] or '- (detached HEAD)'}",
-                target_files=[rel],
-                fix=f"Run it in the checkout of {expected}; for a draft on the base checkout use --direct",
-            )
-    else:
-        blocking = _direct_conditions(root, bundle, slug, meta, form, workspace, unit)
-        if INTENT_GATE not in gates and workspace.config.policy("plan-intent") != "auto":
-            pending.append(INTENT_GATE)
-        if blocking or (pending and not check):
-            raise ProposalNotEligibleError(
-                f"PROP-{slug} is not eligible for a direct acceptance ({form})",
-                *(f"blocking: {item}" for item in blocking),
-                *(f"pending: {item} is not recorded (the user's explicit answer first)" for item in pending),
-                target_files=[rel],
-            )
-    if check:
-        return AcceptResult(f"PROP-{slug}", rel, form, status, True, pending=tuple(pending))
-
-    recorded = _note(meta, form, reason)
-    if form != REPAIR:
-        _write_status(path, original, rel)
-    try:
-        if workspace.config.policy("plan-accept") == "auto":
-            evaluation = workspace.evaluate_unit(unit, lint=False)
-            if evaluation.errors or evaluation.hold.reasons() or not evaluation.complete:
-                raise ProposalGateNotOpenError("automatic acceptance still requires completed Planning checks")
-            decision = write_decision(
-                unit.dir,
-                new_decision(
-                    load_decisions(unit.dir),
-                    ACCEPT_GATE,
-                    "accept",
-                    workflow=unit.doc.id,
-                    stage="direction-handoff",
-                    note=recorded,
-                    by=by,
-                ),
-            )
-        else:
-            decision = record_answer(workspace, unit, ACCEPT_GATE, "accept", note=recorded, by=by, lint=False)
-    except BaseException as exc:
-        # Any failure (the gate not open, a write error, an interruption, also while collecting the reasons below)
-        # leaves no status without its record: the original bytes are restored before anything is raised.
-        try:
-            details = _not_open_details(workspace, unit, exc) if isinstance(exc, AdvisoryError) else []
-        finally:
-            if form != REPAIR:
-                path.write_bytes(original)
-        if not isinstance(exc, AdvisoryError):
-            raise
-        undone = "nothing was recorded" if form == REPAIR else "the status was restored"
-        raise ProposalGateNotOpenError(
-            f"{ACCEPT_GATE} of PROP-{slug} is not open; {undone}",
-            *details,
-            target_files=[rel],
-        ) from exc
-    return AcceptResult(
-        f"PROP-{slug}",
-        rel,
-        form,
-        ACCEPTED,
-        False,
-        decision=f"{bundle.relative_to(root).as_posix()}/{decision.file}",
-    )
+    """Compose the application entrypoint for internal callers."""
+    return AcceptProposalUseCase().execute(root, slug, by=by, note=note, direct=direct, check=check)
 
 
 def _form(slug: str, status: str, direct: bool, recorded: bool, rel: str) -> str:
@@ -324,3 +197,141 @@ def _not_open_details(workspace: Workspace, unit: UnitRef, exc: AdvisoryError) -
         details += [f"hold: {line}" for line in evaluation.hold.reasons()]
     details.append(f"{exc.code}: {exc.message}")
     return details
+
+
+class AcceptProposalUseCase(BaseUseCase):
+    """Application entrypoint for accept proposal."""
+
+    def execute(
+        self, root: Path, slug: str, *, by: str, note: str = "", direct: bool = False, check: bool = False
+    ) -> AcceptResult:
+        """Accept proposal ``slug`` under the workspace ``root`` for the recorded authority (see the module docstring).
+
+        Raises, before writing anything: ``ArgumentError`` (``by`` other than ``user`` or authorized ``policy``; ``direct`` without a non-blank
+        ``note``), ``ProposalSlugError``, ``ProposalNotFoundError``, ``ProposalInvalidError``,
+        ``ProposalAcceptRefusedError`` (a form the status does not allow, a single-file or unbound proposal),
+        ``ProposalWrongWorktreeError`` (the Planning form off ``plan-<slug>``) and ``ProposalNotEligibleError`` (every
+        failed direct condition in its details). After writing the status: ``ProposalGateNotOpenError``, with the status
+        restored.
+        """
+        if by not in {ACTOR, "policy"}:
+            raise ArgumentError(
+                f"--by {by!r}: expected user or policy",
+                target_files=["--by"],
+                fix="Use user for explicit acceptance or policy when owning policy delegates plan-accept",
+            )
+        policy = approval_policy(root, "plan-accept")
+        if by == "policy" and policy != "auto":
+            raise ArgumentError("--by policy requires owning plan-accept=auto")
+        reason = note.strip()
+        if direct and not reason:
+            raise ArgumentError(
+                "--note is required with --direct: the reason the draft was eligible",
+                target_files=["--note"],
+                fix='Pass --note "<why the direction leaves nothing to compare>"',
+            )
+        root = root.resolve()
+        slug = require_slug(slug.strip().removeprefix("PROP-"))
+        bundle, single = bundle_dir(root, slug), single_file(root, slug)
+        if not bundle.is_dir():
+            if single.is_file():
+                raise ProposalAcceptRefusedError(
+                    f"PROP-{slug} is a single-file proposal, which has no gate records",
+                    target_files=[single.relative_to(root).as_posix()],
+                    fix="Its acceptance is its status line alone: after the user's explicit acceptance set status: "
+                    "accepted by hand",
+                )
+            raise ProposalNotFoundError(f"proposal PROP-{slug} not found", target_files=[f"PROP-{slug}"])
+        path = bundle / PROPOSAL_FILE
+        rel = path.relative_to(root).as_posix()
+        try:
+            original = path.read_bytes()
+            meta: dict[str, Any] = parse(original.decode("utf-8")).data or {}
+        except (OSError, UnicodeDecodeError) as exc:
+            raise ProposalInvalidError(f"{rel} cannot be read: {exc}", target_files=[rel]) from exc
+        except FrontmatterError as exc:
+            raise ProposalInvalidError(f"{rel}: {exc.message}", target_files=[rel]) from exc
+        workflow = text_value(meta.get("workflow"))
+        if not workflow:
+            raise ProposalAcceptRefusedError(
+                f"PROP-{slug} is not bound to a workflow, so it has no gate records",
+                target_files=[rel],
+                fix="Bind it with devkit workflow bind --unit <dir> --workflow sdd-proposal and rerun, or, after the "
+                "user's explicit acceptance, set status: accepted by hand (an unbound proposal's acceptance is its status)",
+            )
+        status = text_value(meta.get("status")).lower()
+        gates = {gate.request for gate in proposal_gates(bundle, workflow)}
+        form = _form(slug, status, direct, ACCEPT_GATE in gates, rel)
+        pending: list[str] = []
+        workspace = Workspace(root, lint=None, ancestor=None)
+        unit = workspace.resolve_unit(bundle.relative_to(root).as_posix())
+        if form == PLANNING:
+            found = checkout(root)
+            expected = f"{PLANNING_PREFIX}{slug}"
+            if found is not None and found[1] != expected:
+                raise ProposalWrongWorktreeError(
+                    f"the Planning acceptance of PROP-{slug} runs on branch {expected}, not on"
+                    f" {found[1] or '- (detached HEAD)'}",
+                    target_files=[rel],
+                    fix=f"Run it in the checkout of {expected}; for a draft on the base checkout use --direct",
+                )
+        else:
+            blocking = _direct_conditions(root, bundle, slug, meta, form, workspace, unit)
+            if INTENT_GATE not in gates and workspace.config.policy("plan-intent") != "auto":
+                pending.append(INTENT_GATE)
+            if blocking or (pending and not check):
+                raise ProposalNotEligibleError(
+                    f"PROP-{slug} is not eligible for a direct acceptance ({form})",
+                    *(f"blocking: {item}" for item in blocking),
+                    *(f"pending: {item} is not recorded (the user's explicit answer first)" for item in pending),
+                    target_files=[rel],
+                )
+        if check:
+            return AcceptResult(f"PROP-{slug}", rel, form, status, True, pending=tuple(pending))
+
+        recorded = _note(meta, form, reason)
+        if form != REPAIR:
+            _write_status(path, original, rel)
+        try:
+            if workspace.config.policy("plan-accept") == "auto":
+                evaluation = workspace.evaluate_unit(unit, lint=False)
+                if evaluation.errors or evaluation.hold.reasons() or not evaluation.complete:
+                    raise ProposalGateNotOpenError("automatic acceptance still requires completed Planning checks")
+                decision = write_decision(
+                    unit.dir,
+                    new_decision(
+                        load_decisions(unit.dir),
+                        ACCEPT_GATE,
+                        "accept",
+                        workflow=unit.doc.id,
+                        stage="direction-handoff",
+                        note=recorded,
+                        by=by,
+                    ),
+                )
+            else:
+                decision = record_answer(workspace, unit, ACCEPT_GATE, "accept", note=recorded, by=by, lint=False)
+        except BaseException as exc:
+            # Any failure (the gate not open, a write error, an interruption, also while collecting the reasons below)
+            # leaves no status without its record: the original bytes are restored before anything is raised.
+            try:
+                details = _not_open_details(workspace, unit, exc) if isinstance(exc, AdvisoryError) else []
+            finally:
+                if form != REPAIR:
+                    path.write_bytes(original)
+            if not isinstance(exc, AdvisoryError):
+                raise
+            undone = "nothing was recorded" if form == REPAIR else "the status was restored"
+            raise ProposalGateNotOpenError(
+                f"{ACCEPT_GATE} of PROP-{slug} is not open; {undone}",
+                *details,
+                target_files=[rel],
+            ) from exc
+        return AcceptResult(
+            f"PROP-{slug}",
+            rel,
+            form,
+            ACCEPTED,
+            False,
+            decision=f"{bundle.relative_to(root).as_posix()}/{decision.file}",
+        )

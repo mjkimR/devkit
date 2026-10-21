@@ -12,7 +12,7 @@ from devkit_dist.features.distribution.models.errors import BundleError, Receipt
 from devkit_dist.features.distribution.services.bundles import load_bundle
 from devkit_dist.features.distribution.services.bundles.templates import render_template
 from devkit_dist.features.distribution.services.installation.inventory import desired_inventory
-from devkit_dist.features.distribution.usecases.context import get_context
+from devkit_dist.features.distribution.usecases.context import GetContext
 from devkit_dist.features.distribution.usecases.override_commands import create_override, remove_override
 from devkit_dist.features.distribution.usecases.sync import sync_project
 from distsupport.distribution import instruction, write_bundle
@@ -61,7 +61,7 @@ def test_render_sync_configuration_and_locked_restore(tmp_path: Path) -> None:
     assert "Language: ko" in output.read_text()
     assert not output.with_suffix(".md.jinja").exists()
     assert ".devkit/managed/style/style.md; language ko" in (root / "AGENTS.md").read_text()
-    assert get_context(root, "style").to_dict()["instructions"][0]["path"].endswith("style.md")
+    assert GetContext().execute(root, "style").to_dict()["instructions"][0]["path"].endswith("style.md")
     receipt = (root / ".devkit/installation.json").read_bytes()
     assert sync_project(root, [item]).to_dict()["actions"] == []
     output.unlink()
@@ -94,7 +94,7 @@ def test_defaults_and_raw_override_lifecycle(tmp_path: Path) -> None:
     sync_project(root, [item])
     output = root / ".devkit/managed/style/style.md"
     assert "Custom ko" in output.read_text()
-    assert get_context(root, "style").to_dict()["instructions"][0]["path"] == str(output)
+    assert GetContext().execute(root, "style").to_dict()["instructions"][0]["path"] == str(output)
     recorded = json.loads((root / ".devkit/installation.json").read_text())
     assert recorded["overrides"]["style"]["style"]["relative_path"] == "style.md.jinja"
     remove_override(root, [item], "style:style")

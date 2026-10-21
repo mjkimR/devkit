@@ -20,7 +20,7 @@ from devkit_dist.adapters.cli import (
     workspace_option,
 )
 
-from devkit_spec.features.policy.usecases.inspect import inspect_policy
+from devkit_spec.features.policy.usecases.inspect import InspectPolicyUseCase
 from devkit_spec.utils.output import fields_line, sentinel
 
 # Keys that name no gate: ``exception`` is a shared stage a person always handles (03 §2).
@@ -35,7 +35,7 @@ def policy_cmd(workspace_root: str | None, output_format: str) -> None:
     """Print effective approval, stage, Git, routing and feedback policy; read it before routing or recording
     feedback."""
     root = resolve_root(workspace_root)
-    policy, notices = inspect_policy(root)
+    policy, notices = InspectPolicyUseCase().execute(root)
     approvals = policy["approvals"]
     stages_off = policy["stages_off"]
     git = policy["git"]
